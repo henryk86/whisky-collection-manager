@@ -1,0 +1,1341 @@
+:root {
+    --navy: #102c4b;
+    --navy-deep: #092039;
+    --blue: #173b5c;
+    --gold: #bd9862;
+    --gold-light: #e2c398;
+    --cream: #f7f5ef;
+    --paper: #fffefa;
+    --ink: #1e3245;
+    --muted: #77808a;
+    --line: #e4e1da;
+    --serif: Georgia,'Times New Roman',serif;
+    --sans: system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--cream);
+    font-synthesis: none;
+}
+* {
+    box-sizing: border-box;
+}
+html {
+    scroll-behavior: smooth;
+    /* Reserve a real scrollbar track on short pages as well as long pages.
+       Unlike scrollbar-gutter: stable, this does not leave a blank strip
+       beside fixed backdrops, the dark header or the right-hand drawer. */
+    overflow-y: scroll;
+}
+body {
+    margin: 0;
+    min-height: 100vh;
+}
+#app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+button {
+    cursor: pointer;
+}
+a {
+    color: #285a83;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.whisky-card:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 3px;
+}
+.site-header {
+    background: var(--navy-deep);
+    border-bottom: 1px solid #ffffff22;
+    color: #fff;
+    position: relative;
+    z-index: 10;
+}
+.header-inner {
+    max-width: 1350px;
+    margin: auto;
+    min-height: 93px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 15px 30px;
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    cursor: pointer;
+}
+.brand-emblem {
+    width: 57px;
+    height: 57px;
+    border: 1px solid #d6bc8a;
+    color: #e6d3ad;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: 20px var(--serif);
+    letter-spacing: -3px;
+    transform: rotate(-3deg);
+}
+.brand-emblem span {
+    color: var(--gold-light);
+    padding: 0 3px;
+}
+.brand-copy {
+    min-width: 0;
+}
+.brand-overline {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 3.5px;
+    color: #d9bd8a;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+.brand h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 20px;
+    letter-spacing: 1px;
+    margin: 0;
+    white-space: nowrap;
+}
+.brand h1 em {
+    font-weight: 400;
+    color: #e8d3ae;
+}
+.top-actions,
+.actions,
+.toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 43px;
+    border: 1px solid #d7d6d0;
+    border-radius: 2px;
+    padding: 11px 17px;
+    background: var(--paper);
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .65px;
+    text-decoration: none;
+    transition: background .18s,color .18s,border-color .18s,transform .18s;
+}
+.btn:hover {
+    background: #f0ebe1;
+    text-decoration: none;
+    border-color: var(--gold);
+}
+.btn.primary {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #10263c;
+}
+.btn.primary:hover {
+    background: #d6b27b;
+    border-color: #d6b27b;
+}
+.btn.dark {
+    background: var(--navy);
+    color: white;
+    border-color: var(--navy);
+}
+.btn.danger {
+    color: #9d4338;
+    border-color: #cfb9af;
+}
+.btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+.btn.small {
+    min-height: 34px;
+    padding: 8px 12px;
+    font-size: 11px;
+}
+.header-btn {
+    background: transparent;
+    color: #f2eadd;
+    border-color: #52677b;
+}
+.header-btn:hover {
+    background: #254563;
+    color: white;
+}
+.site-footer {
+    border-top: 1px solid var(--line);
+    max-width: 1290px;
+    margin: 10px auto 0;
+    width: 100%;
+    padding: 16px 28px 22px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    color: #7e827e;
+    font-size: 11px;
+    letter-spacing: .7px;
+}
+.site-footer span:first-child {
+    color: var(--navy);
+    font-family: var(--serif);
+    letter-spacing: 1px;
+}
+main {
+    width: 100%;
+    max-width: 1350px;
+    margin: 0 auto;
+    padding: 0 30px 20px;
+    flex: 1 0 auto;
+}
+.collection-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    isolation: isolate;
+    min-height: 386px;
+    background: linear-gradient(115deg,#0a2440 0%,#103452 60%,#153a58 100%);
+    color: #fff;
+    padding: 58px clamp(28px,6vw,88px);
+    margin: 26px 0 42px;
+}
+.hero-media {
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+}
+.hero-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    filter: saturate(.88) contrast(.96) brightness(.66);
+}
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background: linear-gradient(90deg,rgba(7,20,33,.84) 0%,rgba(8,24,39,.70) 34%,rgba(11,29,45,.38) 62%,rgba(11,29,45,.55) 100%);
+}
+.collection-hero:before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0) 30%,rgba(2,9,16,.14) 100%);
+}
+.collection-hero:after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 38%;
+    background: linear-gradient(180deg,transparent,rgba(7,18,30,.22) 40%,rgba(7,18,30,.54) 100%);
+    pointer-events: none;
+}
+.hero-content {
+    max-width: 610px;
+    position: relative;
+    z-index: 2;
+}
+.eyebrow {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #946d3e;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-transform: uppercase;
+}
+.eyebrow-line {
+    display: inline-block;
+    width: 31px;
+    height: 1px;
+    background: #946d3e;
+}
+.eyebrow.dark {
+    color: #a57b45;
+}
+/* The home hero is intentionally dark in BOTH themes. Keep the gold
+   eyebrow legible without changing the global light-theme labels. */
+.collection-hero .eyebrow { color: #e2c398; }
+.collection-hero .eyebrow-line { background: #e2c398; }
+.collection-hero h2 {
+    font-family: var(--serif);
+    font-size: clamp(33px,4vw,52px);
+    line-height: 1.28;
+    font-weight: 400;
+    letter-spacing: -1.3px;
+    margin: 23px 0 17px;
+}
+.collection-hero h2 em {
+    color: #e3c69b;
+    font-weight: 400;
+}
+.hero-content>p {
+    max-width: 465px;
+    font-size: 14px;
+    line-height: 1.85;
+    color: #dbe2e9;
+    margin: 0;
+    text-shadow: 0 1px 8px rgba(0,0,0,.25);
+}
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 27px;
+}
+.hero-secondary {
+    background: #ffffff08;
+    color: #fff;
+    border-color: #ffffff55;
+}
+.hero-secondary:hover {
+    background: #ffffff20;
+    color: #fff;
+}
+.hero-footnote {
+    position: absolute;
+    right: 35px;
+    bottom: 23px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #d6c29b;
+    text-shadow: 0 1px 8px rgba(0,0,0,.35);
+}
+.collection-heading {
+    margin-bottom: 23px;
+}
+.section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin: 20px 0 12px;
+}
+.detail-heading-meta {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    column-gap: 8px;
+    row-gap: 3px;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+.detail-heading-meta .card-kicker {
+    font-size: inherit;
+    line-height: inherit;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.detail-heading-separator {
+    color: var(--muted);
+}
+.detail-page-head {
+    align-items: flex-start;
+}
+.detail-head-actions {
+    margin-left: auto;
+    justify-content: flex-end;
+    align-items: flex-start;
+}
+.detail-head-actions .btn {
+    white-space: nowrap;
+}
+.section-head h2 {
+    font-family: var(--serif);
+    font-size: clamp(26px,3vw,36px);
+    line-height: 1.25;
+    font-weight: 400;
+    letter-spacing: -.8px;
+    margin: 10px 0;
+}
+.heading-period {
+    color: var(--gold);
+}
+h2 {
+    font-family: var(--serif);
+    font-size: 29px;
+    font-weight: 400;
+    letter-spacing: -.65px;
+    margin: 0 0 8px;
+}
+h3 {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 400;
+    margin: 0 0 15px;
+    line-height: 1.5;
+}
+.intro {
+    color: #7f8588;
+    margin: 4px 0 0;
+    font-size: 13px;
+}
+.muted {
+    color: var(--muted);
+}
+.panel {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 23px;
+    box-shadow: 0 8px 24px #0f2e4410;
+}
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 11px;
+    margin: 0 0 26px;
+}
+.stat {
+    border-top: 3px solid var(--gold);
+    position: relative;
+    min-height: 116px;
+}
+.stat span {
+    color: #7a8184;
+    text-transform: uppercase;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+}
+.stat strong {
+    display: block;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 30px;
+    color: var(--navy);
+    margin-top: 12px;
+    letter-spacing: -1px;
+}
+.toolbar {
+    margin: 21px 0 22px;
+    padding: 17px;
+    background: #ece9e1;
+    border: 1px solid #e8e2d6;
+    gap: 9px;
+}
+.toolbar input {
+    flex: 1;
+    min-width: 200px;
+}
+.field,
+input,
+select,
+textarea {
+    border: 1px solid #d8d8d2;
+    border-radius: 2px;
+    padding: 11px 12px;
+    min-height: 44px;
+    background: #fffefa;
+    color: var(--ink);
+    min-width: 0;
+    font-size: 13px;
+}
+.field:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid #c7ab7b;
+    outline-offset: 1px;
+}
+textarea {
+    resize: vertical;
+    min-height: 94px;
+}
+.toolbar select {
+    max-width: 170px;
+}
+.toolbar input[type=search] {
+    background: #fffefa;
+}
+/* All five selectors share the same toolbar row, when the viewport allows it. */
+.toolbar #filter-distillery {
+    max-width: 185px;
+}
+.toolbar #filter-volume-type {
+    max-width: 170px;
+}
+/* The view switch is a full-height toolbar control, not a small action button. */
+.toolbar [data-act="toggle-view"] {
+    height: 44px;
+    min-height: 44px;
+    padding: 0 12px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 20px;
+    align-items: stretch; /* All cards in each auto-sized grid row share its height, independent of other rows. */
+}
+/* Keep four desktop columns even on the final/filtered page.
+   Only the viewport breakpoints determine the column count. */
+.whisky-card {
+    background: var(--paper);
+    border: 1px solid #e3dfd5;
+    cursor: pointer;
+    transition: transform .2s,box-shadow .2s,border-color .2s;
+    overflow: hidden;
+}
+.whisky-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 17px 30px #1029411d;
+    border-color: #cbb998;
+}
+.card-img {
+    height: 265px;
+    background: radial-gradient(ellipse at 50% 88%,#ddd7c9 0%,transparent 45%),linear-gradient(165deg,#f2f0e9,#e7e5de);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #bcaa8e;
+    font-family: var(--serif);
+    font-size: 76px;
+    position: relative;
+}
+.card-img:after {
+    content: '';
+    position: absolute;
+    inset: auto 18px 13px;
+    height: 1px;
+    background: #b8ab9455;
+}
+.card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Keep the image visibly above the decorative bottom rule (13px from edge). */
+    padding: 13px 18px 27px;
+    mix-blend-mode: multiply;
+}
+.card-img .image-placeholder,
+.hero-photo .image-placeholder {
+    width: min(46%, 168px);
+    height: auto;
+    padding: 0;
+    mix-blend-mode: multiply;
+    opacity: .78;
+    filter: drop-shadow(0 8px 18px rgba(16, 43, 72, .08));
+}
+.card-body {
+    padding: 22px 19px 23px;
+}
+.card-kicker {
+    font-size: 10px;
+    color: #a17d4c;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+.card-body h3 {
+    font-family: var(--serif);
+    color: var(--navy);
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 400;
+    min-height: 0;
+    margin: 0 0 5px;
+    overflow-wrap: anywhere;
+}
+.card-body .card-kicker {
+    margin-bottom: 7px;
+}
+.card-facts {
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0 0 9px;
+}
+.badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 2px;
+    padding: 5px 8px;
+    background: #eeece5;
+    color: #526271;
+}
+.badge.open {
+    background: #f7ead7;
+    color: #926a32;
+}
+.badge.closed {
+    background: #e7eee6;
+    color: #386b4c;
+}
+.badge.empty {
+    background: #f2e5e3;
+    color: #89534d;
+}
+.two-col {
+    display: grid;
+    grid-template-columns: minmax(235px,340px) minmax(0,1fr);
+    gap: 26px;
+}
+.hero-photo {
+    background: linear-gradient(140deg,#e9e6dd,#f7f4ec);
+    border: 1px solid var(--line);
+    min-height: 300px;
+    padding: 8px 8px 12px; /* Extra clearance at the bottom of the photo preview. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: 80px var(--serif);
+    color: #bba988;
+    overflow: hidden;
+}
+.hero-photo-open {
+    width: 100%;
+    cursor: zoom-in;
+    appearance: none;
+}
+.hero-photo-open:hover, .hero-photo-open:focus-visible {
+    border-color: var(--gold);
+}
+.hero-photo img {
+    width: 100%;
+    max-height: 460px;
+    object-fit: contain;
+}
+.hero-photo .image-placeholder {
+    width: min(40%, 170px);
+}
+.forms {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 14px;
+}
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 12px;
+    font-weight: 700;
+    color: #435465;
+}
+/* Native controls have their own intrinsic size on mobile browsers.
+   A label's flex/grid width must constrain the actual form control as well. */
+.form-field > :is(input:not([type="checkbox"]):not([type="radio"]):not([type="date"]), select, textarea) {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+.form-field.full {
+    grid-column: 1/-1;
+}
+/* Keep native date pickers, but not iOS WebKit's implicit button sizing.
+   iOS otherwise enforces content-box/min-width and can draw dates outside a form.
+   Do not use display:block for temporal controls: WebKit misaligns the value. */
+input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-inline-size: 0;
+    min-height: 44px;
+    text-align: left;
+    line-height: 1.25;
+    color-scheme: inherit;
+}
+/* Safari puts the rendered date inside an additional internal value element.
+   Keep it left aligned and give empty dates a stable line height. */
+input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+    min-height: 1.2em;
+    margin: 0;
+}
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+    padding-block: 0;
+    margin-block: 0;
+}
+@media (max-width: 740px) {
+    .form-field > input[type="date"] {
+        display: inline-flex;
+        height: 44px;
+        min-height: 44px;
+        padding: 0 12px;
+        font-size: 16px;
+    }
+}
+
+.section {
+    margin: 26px 0;
+}
+.bottle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    padding: 15px 18px;
+    margin-bottom: 8px;
+}
+.bottle .info {
+    flex: 1;
+    min-width: 0;
+}
+.bottle .info strong {
+    display: block;
+    margin-bottom: 7px;
+}
+.bottle .info span {
+    font-size: 12px;
+    color: #7b8184;
+}
+.empty-state {
+    text-align: center;
+    padding: 75px 25px;
+    background: var(--paper);
+    border: 1px dashed #c9c0af;
+    color: #7b817f;
+}
+.empty-state strong {
+    display: block;
+    font: 23px var(--serif);
+    color: var(--navy);
+    margin-bottom: 12px;
+}
+.table-wrap {
+    overflow-x: auto;
+    background: var(--paper);
+    border: 1px solid var(--line);
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+}
+th,
+td {
+    text-align: left;
+    padding: 16px 13px;
+    border-bottom: 1px solid var(--line);
+}
+th {
+    background: #eeeae0;
+    color: #6c6f6c;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+tr.clickable {
+    cursor: pointer;
+}
+tr.clickable:hover {
+    background: #f3eee4;
+}
+.inline-link {
+    border: none;
+    background: none;
+    color: #986f38;
+    padding: 0;
+    font-weight: 700;
+    font-size: 12px;
+}
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    max-width: 370px;
+    background: var(--navy);
+    color: white;
+    padding: 16px 21px;
+    border-left: 3px solid var(--gold);
+    box-shadow: 0 12px 32px #0004;
+    z-index: 100;
+    font-size: 13px;
+}
+.toast.error {
+    background: #943d37;
+    border-left-color: #eab3aa;
+}
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: #081c2dcc;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+}
+.dialog {
+    width: min(650px,100%);
+    max-height: 94vh;
+    overflow: auto;
+    background: var(--paper);
+    padding: 28px;
+    box-shadow: 0 25px 80px #0005;
+    border-top: 5px solid var(--gold);
+}
+.dialog.wide {
+    width: min(860px,100%);
+}
+.dialog-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 22px;
+    padding-bottom: 17px;
+    border-bottom: 1px solid var(--line);
+}
+.dialog-head h2 {
+    font-size: 24px;
+    margin: 0;
+}
+.hint {
+    font-size: 13px;
+    color: #747e82;
+    line-height: 1.65;
+}
+.preview {
+    max-width: 100%;
+    max-height: 180px;
+    object-fit: contain;
+    background: #f0ece4;
+    margin-top: 8px;
+}
+.scan-preview {
+    width: 100%;
+    max-height: 300px;
+    background: black;
+}
+.divider {
+    border: 0;
+    border-top: 1px solid var(--line);
+    margin: 24px 0;
+}
+.warning {
+    padding: 15px;
+    background: #faf0da;
+    color: #836237;
+    border-left: 3px solid var(--gold);
+    font-size: 13px;
+}
+.clickable:focus-visible {
+    outline: 3px solid var(--gold);
+}
+.kbd {
+    font-family: monospace;
+    background: #e9e7df;
+    padding: 2px 4px;
+}
+.wb-area {
+    border: 1px solid var(--line);
+    padding: 16px;
+    margin: 11px 0;
+}
+.wb-results {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    max-height: 280px;
+    overflow: auto;
+    margin: 10px 0;
+}
+.wb-result {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    text-align: left;
+    padding: 13px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    gap: 6px;
+    width: 100%;
+}
+.wb-result:hover {
+    border-color: var(--gold);
+}
+.wb-result small,
+.wb-choice small {
+    display: block;
+    opacity: .75;
+    font-size: 12px;
+}
+/* Compact, clickable import options: reset the global 44px input height for checkboxes. */
+.wb-preview {
+    padding: 17px;
+    font-weight: 400;
+}
+.wb-choice-list {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 8px;
+    margin-top: 14px;
+}
+.wb-choice {
+    display: grid;
+    grid-template-columns: 20px minmax(0,1fr);
+    align-items: center;
+    column-gap: 12px;
+    min-width: 0;
+    min-height: 56px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--paper);
+    cursor: pointer;
+}
+.wb-choice:hover,
+.wb-choice:has(input:checked) {
+    border-color: var(--gold);
+}
+.wb-choice:has(input:checked) {
+    background: color-mix(in srgb,var(--gold) 8%,var(--paper));
+}
+.wb-choice:has(input:disabled) {
+    opacity: .65;
+    cursor: not-allowed;
+}
+.wb-choice:focus-within {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+}
+.wb-choice input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 0;
+    margin: 0;
+    justify-self: center;
+    align-self: center;
+    accent-color: var(--gold);
+}
+.wb-choice-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    line-height: 1.4;
+}
+.wb-choice-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+}
+.wb-choice-value {
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.wb-choice .wb-choice-current {
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+    opacity: 1;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 680px) {
+    .wb-choice-list { grid-template-columns: 1fr; }
+}
+/* Tablet and phone: a single compact app bar instead of a wrapped button row. */
+@media(max-width:960px) {
+    .header-inner {
+        display: grid;
+        grid-template-columns: minmax(0,1fr) auto;
+        align-items: center;
+        gap: 12px;
+        min-height: 66px;
+        padding: 10px 18px;
+    }
+    .brand { min-width: 0; }
+    .brand-emblem { flex: 0 0 auto; width: 46px; height: 46px; }
+    .top-actions {
+        flex-wrap: nowrap;
+        gap: 6px;
+        margin-left: 0;
+    }
+    .top-actions .btn {
+        flex: 0 0 42px;
+        width: 42px;
+        min-width: 42px;
+        min-height: 42px;
+        padding: 0;
+        font-size: 17px;
+        letter-spacing: 0;
+    }
+    .top-actions .btn span { display: none; }
+}
+@media(max-width:1020px) {
+    .collection-hero {
+        min-height: 354px;
+    }
+    .header-inner {
+        padding: 14px 23px;
+    }
+    .brand h1 {
+        font-size: 17px;
+    }
+    .toolbar select {
+        max-width: none;
+        flex: 1;
+    }
+    .grid {
+        grid-template-columns: repeat(3,minmax(0,1fr));
+    }
+}
+@media(max-width:740px) {
+    .header-inner {
+        min-height: 64px;
+        padding: 10px 12px;
+        gap: 8px;
+    }
+    .brand { gap: 8px; }
+    .brand-emblem {
+        width: 40px;
+        height: 40px;
+    }
+    .brand-overline {
+        font-size: 7px;
+        letter-spacing: 1.4px;
+        margin-bottom: 4px;
+    }
+    .brand h1 {
+        font-size: 12px;
+        letter-spacing: .2px;
+    }
+    .top-actions { gap: 4px; }
+    .top-actions .btn {
+        flex-basis: 40px;
+        width: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        font-size: 17px;
+    }
+    main {
+        padding: 0 14px 17px;
+    }
+    .collection-hero {
+        margin: 15px 0 32px;
+        min-height: 344px;
+        padding: 35px 25px 82px;
+    }
+    .collection-hero h2 {
+        font-size: 34px;
+        line-height: 1.32;
+    }
+    .hero-content>p {
+        font-size: 12px;
+        line-height: 1.8;
+        max-width: 310px;
+    }
+    .hero-media img {
+        object-position: 58% center;
+    }
+    .hero-footnote {
+        right: 25px;
+        bottom: 23px;
+        font-size: 9px;
+    }
+    .hero-actions .btn {
+        font-size: 10px;
+    }
+    .stats {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 9px;
+        margin-bottom: 20px;
+    }
+    .stat {
+        padding: 16px;
+        min-height: 105px;
+    }
+    .stat strong {
+        font-size: 26px;
+    }
+    .stat span {
+        font-size: 9px;
+    }
+    .toolbar {
+        padding: 11px;
+        gap: 8px;
+    }
+    /* Prevent intrinsic iOS/Android form-control widths from overflowing their
+       grid/flex column; keep desktop sizing and checkbox/radio controls intact. */
+    :where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
+        box-sizing: border-box;
+        min-width: 0;
+        max-inline-size: 100%;
+    }
+    :is(.forms, .toolbar, .analytics-filters, .backup-form-grid) > *,
+    .form-field,
+    .backup-fieldset {
+        min-width: 0;
+        max-width: 100%;
+    }
+    .toolbar input[type="search"] {
+        flex: 1 1 100%;
+        width: 100%;
+        min-width: 0;
+    }
+    .toolbar select {
+        flex: 1 1 120px;
+        min-width: min(100%, 120px);
+        max-width: 100%;
+    }
+    .toolbar input {
+        width: 100%;
+        flex-basis: 100%;
+    }
+    .toolbar select {
+        flex: 1;
+        min-width: 110px;
+        font-size: 11px;
+    }
+    .grid {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 10px;
+    }
+    .card-img {
+        height: 175px;
+    }
+    .card-img img {
+        padding: 10px 10px 27px;
+    }
+    .card-body {
+        padding: 14px 12px;
+    }
+    .card-body h3 {
+        font-size: 14px;
+        min-height: 0;
+    }
+    .card-kicker {
+        font-size: 8px;
+        letter-spacing: 1px;
+    }
+    .card-facts {
+        font-size: 11px;
+    }
+    .badge {
+        font-size: 9px;
+    }
+    .two-col {
+        grid-template-columns: 1fr;
+    }
+    .forms {
+        grid-template-columns: 1fr;
+    }
+    .form-field.full {
+        grid-column: auto;
+    }
+    .dialog {
+        padding: 18px;
+    }
+    .dialog-head h2 {
+        font-size: 21px;
+    }
+    .bottle {
+        flex-wrap: wrap;
+    }
+    .bottle .actions {
+        width: 100%;
+    }
+    .site-footer {
+        margin-top: 6px;
+        padding: 14px 15px calc(18px + env(safe-area-inset-bottom, 0px));
+        flex-direction: column;
+    }
+.section-head h2 {
+        font-size: 27px;
+    }
+    .section-head {
+        align-items: flex-start;
+    }
+    /* The detail title gets the entire row on phones. Actions are below it,
+       instead of squeezing long bottling names into a narrow column. */
+    .detail-page-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .detail-page-head > div:first-child {
+        width: 100%;
+        min-width: 0;
+    }
+    .detail-page-head h2 {
+        overflow-wrap: anywhere;
+    }
+    .detail-head-actions {
+        display: grid;
+        width: 100%;
+        margin-left: 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        align-items: stretch;
+    }
+    .detail-head-actions .btn {
+        width: 100%;
+        min-width: 0;
+        min-height: 44px;
+        padding: 9px 8px;
+        font-size: 12px;
+        letter-spacing: .2px;
+    }
+    .detail-head-actions [data-act="bottling-map"] {
+        grid-column: 1 / -1;
+    }
+    /* Native iOS search/select controls and the view switch share one height. */
+    .toolbar input[type="search"],
+    .toolbar select,
+    .toolbar [data-act="toggle-view"] {
+        box-sizing: border-box;
+        height: 44px;
+        min-height: 44px;
+        max-height: 44px;
+        margin-block: 0;
+        padding-block: 0;
+        line-height: normal;
+    }
+    .section-head>.btn {
+        font-size: 10px;
+    }
+}
+@media(max-width:450px) {
+    .header-inner { gap: 6px; padding: 9px 11px; }
+    /* Keep all four actions; stack only the wordmark at phone widths. */
+    .brand h1 { font-size: 11.5px; line-height: 1.08; }
+    .brand h1 em { display: block; }
+    .brand-overline { letter-spacing: 1.1px; font-size: 6.5px; }
+}
+@media(max-width:380px) {
+    .grid {
+        grid-template-columns: minmax(0,1fr);
+    }
+    .header-inner { min-height: 58px; gap: 5px; padding: 8px 9px; }
+    .brand { gap: 6px; }
+    .brand h1 { font-size: 11px; }
+    .brand-emblem { width: 34px; height: 34px; }
+    /* On a 320 px screen the small eyebrow would otherwise consume
+       the tap-target space reserved for the four action buttons. */
+    .brand-overline { display: none; }
+    .top-actions { gap: 3px; }
+    .top-actions .btn {
+        flex-basis: 37px;
+        width: 37px;
+        min-width: 37px;
+        min-height: 40px;
+        font-size: 16px;
+    }
+    .collection-hero h2 {
+        font-size: 30px;
+    }
+    .hero-actions {
+        gap: 7px;
+    }
+    .hero-actions .btn {
+        padding: 9px;
+    }
+    .card-img {
+        height: 145px;
+    }
+}
+@media(prefers-reduced-motion:reduce) {
+    *,
+    *:before,
+    *:after {
+        scroll-behavior: auto!important;
+        transition: none!important;
+    }
+}
+
+/* The photo viewer uses a light backdrop on light theme; other dialogs stay dimmed. */
+.overlay:has(.photo-lightbox) {
+    background: rgba(246,243,237,.92);
+}
+
+/* Full-size bottle photos are displayed within the existing app modal. */
+.dialog:has(.photo-lightbox) {
+    width: min(1100px, 100%);
+    padding: 16px;
+}
+.dialog:has(.photo-lightbox) .dialog-head {
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+.photo-lightbox { margin: 0; }
+.photo-lightbox-stage {
+    background: #f1eee7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: min(42vh, 280px);
+}
+.photo-lightbox-image {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: calc(94vh - 180px);
+    object-fit: contain;
+    padding: 10px;
+}
+.photo-lightbox-footer {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    font-size: 13px;
+}
+.photo-lightbox-caption { overflow-wrap: anywhere; }
+.photo-lightbox-navigation { display: flex; align-items: center; gap: 10px; }
+.photo-lightbox-count { min-width: 58px; text-align: center; font-variant-numeric: tabular-nums; }
+@media (max-width: 740px) {
+    .dialog:has(.photo-lightbox) { padding: 10px; }
+    .photo-lightbox-image { max-height: calc(94dvh - 165px); padding: 5px; }
+}

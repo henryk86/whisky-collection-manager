@@ -1,0 +1,7 @@
+ONNX Runtime Web, version 1.31.1
+Copyright (c) Microsoft Corporation. All rights reserved.
+License: MIT
+Project: https://github.com/microsoft/onnxruntime
+
+The binary distribution is downloaded from the version-pinned npm CDN at Docker
+build/install preparation time. It is served from the application's own origin.

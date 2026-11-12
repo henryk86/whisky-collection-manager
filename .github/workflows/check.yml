@@ -1,0 +1,43 @@
+name: Checks
+
+# Development builds on develop; review-gated release candidate on PR to main.
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npx playwright-core install --with-deps chromium
+      - run: npm run test:browser
+      - name: Only develop may be merged to main; release version must be unused
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        env:
+          PR_SOURCE: ${{ github.head_ref }}
+          PR_SOURCE_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$PR_SOURCE" = develop && test "$PR_SOURCE_REPO" = "$GITHUB_REPOSITORY" || {
+            echo 'Release pull requests to main must originate from develop in this repository.' >&2
+            exit 1
+          }
+          node scripts/release-version.js check --fresh

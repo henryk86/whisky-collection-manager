@@ -1,0 +1,297 @@
+/* User-selectable light/dark theme, with system preference as the initial default. */
+.settings-icon { display: block; width: 19px; height: 19px; flex: 0 0 19px; }
+.scan-icon { display: block; width: 19px; height: 19px; flex: 0 0 19px; }
+.new-icon { display: block; width: 19px; height: 19px; flex: 0 0 19px; }
+.action-icon { display: block; width: 17px; height: 17px; flex: 0 0 17px; }
+.theme-icon { display: block; width: 19px; height: 19px; flex: 0 0 19px; }
+.btn.small .action-icon { width: 15px; height: 15px; flex-basis: 15px; }
+.theme-toggle {
+    width: 43px;
+    min-width: 43px;
+    padding: 8px;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: normal;
+}
+:root[data-theme="dark"] {
+    --navy: #d7e4ef;
+    --navy-deep: #0a1724;
+    --blue: #b9d2e6;
+    --gold: #c9a46b;
+    --gold-light: #e7c991;
+    --cream: #101923;
+    --paper: #182532;
+    --ink: #e6edf4;
+    --muted: #abb8c4;
+    --line: #334454;
+    color-scheme: dark;
+    background: var(--cream);
+}
+:root[data-theme="dark"] body {
+    background: var(--cream);
+    color: var(--ink);
+}
+:root[data-theme="dark"] .site-header {
+    background: #091724;
+    border-color: #334251;
+}
+:root[data-theme="dark"] .brand h1,
+:root[data-theme="dark"] .brand {
+    color: #f1f4f7;
+}
+:root[data-theme="dark"] .btn {
+    background: #233547;
+    border-color: #526071;
+    color: #f1f5f9;
+}
+:root[data-theme="dark"] .btn:hover {
+    background: #314960;
+    border-color: var(--gold);
+}
+:root[data-theme="dark"] .btn.primary {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #10263c;
+}
+:root[data-theme="dark"] .btn.primary:hover {
+    background: #e0bb80;
+    border-color: #e0bb80;
+    color: #10263c;
+}
+:root[data-theme="dark"] .btn.dark {
+    background: #35536e;
+    border-color: #58738a;
+    color: #fff;
+}
+:root[data-theme="dark"] .btn.danger {
+    color: #f2afa4;
+    border-color: #915d5b;
+}
+:root[data-theme="dark"] .header-btn {
+    background: transparent;
+    color: #f2eadd;
+    border-color: #52677b;
+}
+:root[data-theme="dark"] .header-btn:hover {
+    background: #254563;
+    color: #fff;
+}
+:root[data-theme="dark"] .hero-secondary {
+    background: #ffffff16;
+    color: #fff;
+    border-color: #ffffff66;
+}
+:root[data-theme="dark"] .hero-secondary:hover {
+    background: #ffffff2d;
+}
+:root[data-theme="dark"] .collection-hero {
+    color: #fff;
+    background: linear-gradient(115deg,#0a2440 0%,#103452 60%,#153a58 100%);
+}
+:root[data-theme="dark"] .hero-media img {
+    filter: saturate(.88) contrast(.96) brightness(.66);
+}
+:root[data-theme="dark"] .hero-overlay {
+    background: linear-gradient(90deg,rgba(7,20,33,.84) 0%,rgba(8,24,39,.70) 34%,rgba(11,29,45,.38) 62%,rgba(11,29,45,.55) 100%);
+}
+:root[data-theme="dark"] .collection-hero:before {
+    background: linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0) 30%,rgba(2,9,16,.14) 100%);
+}
+:root[data-theme="dark"] .collection-hero:after {
+    background: linear-gradient(180deg,transparent,rgba(7,18,30,.22) 40%,rgba(7,18,30,.54) 100%);
+}
+:root[data-theme="dark"] .collection-hero .eyebrow {
+    color: var(--gold-light);
+}
+:root[data-theme="dark"] .collection-hero .eyebrow-line {
+    background: var(--gold-light);
+}
+:root[data-theme="dark"] .collection-hero h2 em {
+    color: #e3c69b;
+}
+:root[data-theme="dark"] .hero-content>p {
+    color: #dbe2e9;
+    text-shadow: 0 1px 8px rgba(0,0,0,.25);
+}
+:root[data-theme="dark"] .hero-footnote {
+    color: #d6c29b;
+    text-shadow: 0 1px 8px rgba(0,0,0,.35);
+}
+:root[data-theme="dark"] .toolbar {
+    background: #1b2936;
+    border-color: var(--line);
+}
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] .field {
+    background: #111e2b;
+    border-color: #485867;
+    color: #e6edf4;
+}
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+    color: #a3b1bd;
+}
+:root[data-theme="dark"] input[type="checkbox"] {
+    accent-color: #c9a46b;
+}
+:root[data-theme="dark"] .toolbar input[type="search"] {
+    background: #111e2b;
+}
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .whisky-card,
+:root[data-theme="dark"] .table-wrap,
+:root[data-theme="dark"] .bottle,
+:root[data-theme="dark"] .dialog,
+:root[data-theme="dark"] .empty-state {
+    background: var(--paper);
+    border-color: var(--line);
+    color: var(--ink);
+}
+:root[data-theme="dark"] .stat span,
+:root[data-theme="dark"] .intro,
+:root[data-theme="dark"] .hint,
+:root[data-theme="dark"] .bottle .info span,
+:root[data-theme="dark"] .muted,
+:root[data-theme="dark"] .site-footer {
+    color: #acbac7;
+}
+:root[data-theme="dark"] .stat strong,
+:root[data-theme="dark"] .card-body h3,
+:root[data-theme="dark"] .empty-state strong,
+:root[data-theme="dark"] .site-footer span:first-child {
+    color: #f1e8dc;
+}
+:root[data-theme="dark"] .form-field {
+    color: #e0e9f1;
+}
+:root[data-theme="dark"] .card-img,
+:root[data-theme="dark"] .hero-photo {
+    background: linear-gradient(145deg,#263849,#1a2937);
+    color: #c4b197;
+}
+:root[data-theme="dark"] .card-img img {
+    mix-blend-mode: normal;
+}
+:root[data-theme="dark"] .badge {
+    background: #344555;
+    color: #e2eaf2;
+}
+:root[data-theme="dark"] .badge.open {
+    background: #52412b;
+    color: #f6d7a5;
+}
+:root[data-theme="dark"] .badge.closed {
+    background: #254738;
+    color: #c2eed1;
+}
+:root[data-theme="dark"] .badge.empty {
+    background: #512f38;
+    color: #f4c9c9;
+}
+:root[data-theme="dark"] th {
+    background: #293949;
+    color: #d1dbe5;
+}
+:root[data-theme="dark"] tr.clickable:hover {
+    background: #263849;
+}
+:root[data-theme="dark"] .inline-link,
+:root[data-theme="dark"] a {
+    color: #dcb981;
+}
+:root[data-theme="dark"] .inline-link:hover,
+:root[data-theme="dark"] a:hover {
+    color: #f3d8aa;
+}
+:root[data-theme="dark"] .btn,
+:root[data-theme="dark"] .photo-add {
+    color: #f1f5f9;
+}
+:root[data-theme="dark"] .btn.primary {
+    color: #10263c;
+}
+:root[data-theme="dark"] .hero-actions .btn.primary {
+    color: #10263c;
+}
+:root[data-theme="dark"] .photo-tile,
+:root[data-theme="dark"] .preview {
+    background: #263746;
+}
+:root[data-theme="dark"] .photo-add {
+    background: #263746;
+    border-color: #8a7557;
+}
+:root[data-theme="dark"] .photo-add:hover {
+    background: #334758;
+}
+:root[data-theme="dark"] .warning {
+    background: #463a29;
+    color: #f2d6a9;
+}
+:root[data-theme="dark"] .kbd {
+    background: #334453;
+    color: #e8eff5;
+}
+:root[data-theme="dark"] .distillery-option:hover {
+    background: #293c4e;
+}
+:root[data-theme="dark"] .distillery-options {
+    background: #172532;
+    border-color: var(--line);
+}
+:root[data-theme="dark"] .wb-result {
+    background: #1a2a38;
+    border-color: var(--line);
+    color: var(--ink);
+}
+:root[data-theme="dark"] .wb-result:hover {
+    border-color: var(--gold);
+}
+:root[data-theme="dark"] .wb-area,
+:root[data-theme="dark"] .wb-choice {
+    border-color: var(--line);
+}
+:root[data-theme="dark"] .wb-choice:hover,
+:root[data-theme="dark"] .wb-choice:has(input:checked) {
+    border-color: var(--gold);
+}
+:root[data-theme="dark"] .toast {
+    background: #243d53;
+    color: #fff;
+}
+:root[data-theme="dark"] .toast.error {
+    background: #963d38;
+}
+:root[data-theme="dark"] .overlay {
+    background: #020911dd;
+}
+:root[data-theme="dark"] .overlay:has(.photo-lightbox) {
+    background: #020911dd;
+}
+:root[data-theme="dark"] .photo-lightbox-stage {
+    background: #1a2e40;
+}
+:root[data-theme="dark"] .eyebrow.dark,
+:root[data-theme="dark"] .heading-period {
+    color: #d4ab72;
+}
+:root[data-theme="dark"] button:focus-visible,
+:root[data-theme="dark"] a:focus-visible,
+:root[data-theme="dark"] input:focus-visible,
+:root[data-theme="dark"] select:focus-visible,
+:root[data-theme="dark"] textarea:focus-visible {
+    outline-color: var(--gold);
+}
+@media(max-width:960px) {
+    .theme-toggle { font-size: 20px; }
+}
+:root[data-theme="dark"] .site-footer,
+:root[data-theme="dark"] .section-head {
+    color: var(--ink);
+}
+:root[data-theme="dark"] .photo-remove {
+    background: #31495e;
+    color: #fff;
+}

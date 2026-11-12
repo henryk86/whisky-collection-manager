@@ -1,0 +1,194 @@
+/* Photos belong to an individual physical bottle, not to the bottling. */
+.bottle-entry {
+    align-items: flex-start;
+}
+.bottle-photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 13px 0 8px;
+}
+.photo-tile {
+    width: 102px;
+    height: 110px;
+    position: relative;
+    border: 1px solid var(--line);
+    background: #f1ede6;
+}
+.photo-tile .photo-open {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 8px; /* Keep existing bottle photos clear of the thumbnail border. */
+    background: transparent;
+    border: 0;
+    cursor: zoom-in;
+}
+.photo-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.photo-remove {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    width: 26px;
+    height: 26px;
+    background: #102b40;
+    color: white;
+    border: 0;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 22px;
+}
+.photo-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 102px;
+    height: 110px;
+    padding: 8px;
+    text-align: center;
+    border: 1px dashed #bda981;
+    background: #f5f1e8;
+    color: #806137;
+    font-size: 12px;
+    cursor: pointer;
+}
+.photo-add:hover {
+    background: #ebe2d0;
+}
+.brand-emblem {
+    letter-spacing: normal;
+    transform: none;
+}
+/* The supplied SVG already includes its circular motif; avoid a second square frame. */
+.brand-emblem {
+    border: 0;
+}
+.brand-logo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+/* Multi-distillery selection for blends and vattings. */
+.distillery-options {
+    max-height: 190px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(210px,1fr));
+    gap: 2px 9px;
+}
+.distillery-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    font-size: 12px;
+    font-weight: 400;
+    cursor: pointer;
+}
+.distillery-option:hover {
+    background: #f0ebdf;
+}
+.distillery-option[hidden] {
+    display: none;
+}
+.distillery-option input {
+    min-height: auto;
+    flex-shrink: 0;
+    accent-color: var(--navy);
+}
+.distillery-filter {
+    width: 100%;
+}
+@media(max-width:740px) {
+    .distillery-options {
+        grid-template-columns: 1fr;
+        max-height: 230px;
+    }
+}
+
+/* Samples are properties of physical bottles; surface them on cards and rows. */
+/* Match the status badge's borderless appearance in both themes. */
+.badge.sample { background: #f1dfb4; color: #5e431c; border: 0; }
+:root[data-theme="dark"] .badge.sample { background: #4b3a25; color: #f0d9a6; }
+/* On a physical bottle, status and sample badges are inline siblings. */
+.bottle-entry .info > strong > .badge.sample { margin-left: 12px; }
+.bottle-size { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 9px; }
+
+/* In table view, Standardflaschen and Samples are exclusive groups. */
+.inventory-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Position the mode selector beside the collection heading, where the
+   static "N Abfüllungen" label used to be. It stays above the statistics. */
+.collection-heading > :first-child { min-width: 0; }
+.collection-heading .collection-mode-toggle {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 7px;
+    margin: 0;
+}
+.collection-mode-button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 9px;
+    min-height: 42px;
+    padding: 9px 15px;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+}
+.collection-mode-button:hover { border-color: var(--gold); }
+.collection-mode-button.active {
+    background: var(--navy-deep);
+    border-color: var(--navy-deep);
+    color: #fff;
+}
+.collection-mode-button:focus-visible, tr.clickable:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 3px;
+}
+.collection-mode-count {
+    font-size: 11px;
+    opacity: .82;
+    font-variant-numeric: tabular-nums;
+}
+.card-bottle-meta {
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--ink);
+    line-height: 1.4;
+    margin: 1px 0 5px;
+}
+/* At narrow widths the selector takes a new flex row *within the heading*;
+   never fall back to the old slot below the statistics. */
+@media (max-width: 740px) {
+    .collection-heading { flex-wrap: wrap; gap: 12px; }
+    .collection-heading .collection-mode-toggle {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+@media (max-width: 380px) {
+    .collection-mode-button { flex: 1 1 auto; padding-inline: 10px; font-size: 12px; }
+}

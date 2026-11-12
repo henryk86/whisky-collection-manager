@@ -1,0 +1,43 @@
+import { getPageSizePreference } from './domain/page-size-preference.js';
+
+/** UI state only. Persistent data is replaced by GET /api/collection after mutations. */
+export function createState(route) {
+    return {
+        collection: null,
+        warehouse: null,
+        warehouseRoomId: route.roomId || null,
+        warehouseFurnitureId: route.furnitureId || null,
+        warehouseSearch: '',
+        warehouseSelectedFurnitureIds: [],
+        warehouseHiddenFurnitureIds: [],
+        warehouseUnassigned: false,
+        warehousePlanMode: '3d',
+        warehousePlanCorner: 'nw',
+        warehousePlanZoom: 100,
+        version: '',
+        page: route.page,
+        selected: route.selected,
+        search: '',
+        status: 'all',
+        distillery: 'all',
+        volumeType: 'all',
+        completion: 'all',
+        view: 'cards',
+        overviewMode: 'bottlings',
+        sort: 'name',
+        pageNumber: 1,
+        pageSize: getPageSizePreference(),
+        analyticsFilters: route.filters || { distillery: 'all', country: 'all', status: 'all', volumeType: 'all' },
+        analyticsPeriod: 'month',
+        analyticsStartDate: '',
+        analyticsEndDate: '',
+        distillerySearch: '',
+        modal: null,
+        backupUnlocked: false,
+        backupDashboard: null,
+        backupError: '',
+        scanner: null,
+        scanReturn: null,
+        highlightBottleId: null,
+    };
+}

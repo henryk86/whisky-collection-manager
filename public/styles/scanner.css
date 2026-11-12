@@ -1,0 +1,46 @@
+/* Camera scanner: keep the live preview usable on narrow iPhone screens. */
+.scan-reader {
+    width: 100%;
+    max-width: 520px;
+    min-height: 180px;
+    margin: 10px auto;
+    overflow: hidden;
+    background: #132536;
+    border: 1px solid var(--line);
+}
+.scan-reader video {
+    width: 100%!important;
+    max-height: 55vh;
+    object-fit: contain;
+}
+.scan-reader img {
+    max-width: 100%;
+}
+.scan-reader canvas {
+    max-width: 100%;
+}
+/* Scanner feedback is visible in both themes. */
+#scan-error {
+    padding: 10px 12px;
+    border-left: 3px solid var(--gold);
+    background: var(--paper);
+    color: var(--ink);
+}
+#scan-error[data-status=success] {
+    border-left-color: #328b55;
+}
+#scan-error[data-status=error] {
+    border-left-color: #bf504b;
+}
+#scan-error[data-status=warning] {
+    border-left-color: #bf8a32;
+}
+.scan-reader {
+    width: 100%;
+    min-height: 180px;
+    overflow: hidden;
+    background: #091b2a;
+}
+.scan-reader video {
+    max-width: 100%;
+}

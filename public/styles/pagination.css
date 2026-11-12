@@ -1,0 +1,54 @@
+/* Only the visible page of bottlings is rendered after search, filters and sorting. */
+.pagination-topline,
+.collection-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 13px 16px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 12px;
+}
+.pagination-topline { margin: 0 0 16px; }
+.collection-pagination { margin-top: 22px; }
+.pagination-topactions,
+.pagination-pages {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.pagination-summary { color: var(--muted); }
+.pagination-topactions .btn,
+.pagination-pages .btn { min-width: 34px; }
+.pagination-pages .current {
+    background: var(--navy);
+    color: #fff;
+    border-color: var(--navy);
+    cursor: default;
+}
+.pagination-pages .current:hover { background: var(--navy); color: #fff; }
+.pagination-ellipsis { padding: 0 4px; color: var(--muted); }
+.pagination-size {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+.pagination-size select {
+    min-height: 34px;
+    padding: 6px 8px;
+    width: auto;
+}
+@media (max-width: 740px) {
+    .pagination-topline,
+    .collection-pagination { padding: 10px 11px; }
+    .collection-pagination { justify-content: center; }
+    .pagination-summary { flex: 1 0 100%; text-align: center; }
+    .pagination-topline { flex-direction: column; }
+    .pagination-pages .btn { padding: 7px 8px; }
+}

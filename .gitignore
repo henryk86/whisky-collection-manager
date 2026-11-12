@@ -1,0 +1,25 @@
+node_modules/
+/data/
+/images/
+/documents/
+/backups/
+/certs/
+.env
+.env.*
+!.env.example
+test-artifacts/
+coverage/
+.DS_Store
+*.log
+*.tmp
+# Pi deployment: never commit collections, cloud tokens or encryption passwords
+/deploy/.env
+/deploy/storage/
+/deploy/backup-control/
+/deploy/backup-targets/
+/deploy/rclone/
+/deploy/secrets/
+
+# Versioned AI binaries prepared during image build, not committed
+/public/ai/vendor/
+/public/ai/models/*.onnx

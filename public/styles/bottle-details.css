@@ -1,0 +1,156 @@
+/* Scan result: highlight the physical bottle, without opening an editor. */
+.bottle-entry.scanned-bottle {
+    border: 2px solid var(--gold);
+    background: #fbf3e4;
+    box-shadow: 0 0 0 4px rgba(189,152,98,.20);
+    scroll-margin-block: 20px;
+}
+.bottle-meta {
+    display: block;
+    margin-top: 5px;
+}
+.bottling-context {
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--gold);
+    background: var(--cream);
+    padding: 17px 19px;
+    margin-bottom: 18px;
+}
+.bottling-context-heading {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--ink);
+    margin-bottom: 8px;
+}
+.bottling-context-name {
+    display: block;
+    font-family: var(--serif);
+    font-weight: normal;
+    font-size: 23px;
+    color: var(--ink);
+    margin-bottom: 13px;
+}
+.bottling-context dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 10px 17px;
+}
+.bottling-context dl>div {
+    min-width: 0;
+}
+.bottling-context dt {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 3px;
+}
+.bottling-context dd {
+    margin: 0;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+:root[data-theme="dark"] .bottle-entry.scanned-bottle {
+    background: #3c3529;
+    box-shadow: 0 0 0 4px rgba(201,164,107,.25);
+}
+:root[data-theme="dark"] .bottling-context {
+    background: #172638;
+}
+@media(max-width:520px) {
+    .bottling-context dl {
+        grid-template-columns: 1fr 1fr;
+    }
+    .bottling-context {
+        padding: 14px;
+    }
+}
+
+/* Receipts and supporting documents are attached to individual bottles, not bottlings. */
+.bottle-documents { margin: 18px 0 5px; padding-top: 12px; border-top: 1px solid var(--line); }
+.bottle-documents h4 { margin: 0 0 10px; color: var(--ink); font: 600 13px var(--sans); }
+.document-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.document-list li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.document-list a { overflow-wrap: anywhere; max-width: 100%; font-size: 13px; }
+.document-size { font-size: 11px; white-space: nowrap; }
+.document-add { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; margin-top: 10px; background: var(--cream); border: 1px dashed var(--gold); font-size: 12px; color: var(--ink); cursor: pointer; }
+.document-add input { width: 100%; font-size: 12px; padding: 8px; min-height: 0; }
+:root[data-theme="dark"] .document-add { background: #1b2c3e; }
+
+/* Type and status are part of the same inventory group, never separate counts. */
+.badge.sample.open { background: #f2cf95; color: #68461d; }
+:root[data-theme="dark"] .badge.sample.open { background: #6a4a2a; color: #ffe0ab; }
+
+/* Drag-and-drop gallery ordering (desktop mouse, touch and accessible buttons). */
+.photo-tile { height: 137px; }
+.photo-tile .photo-open { height: 107px; }
+.photo-controls { position: absolute; left: 2px; right: 2px; bottom: 2px; height: 25px; display: flex; justify-content: space-between; align-items: center; gap: 1px; }
+.photo-move, .photo-drag-handle { background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 2px; min-height: 24px; min-width: 25px; padding: 0; display: grid; place-items: center; cursor: pointer; font-size: 14px; }
+.photo-drag-handle { flex: 1; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.photo-drag-handle:active { cursor: grabbing; }
+.photo-dragging { opacity: .55; }
+.photo-drop-target { outline: 3px solid var(--gold); outline-offset: 2px; }
+.photo-drag-handle:focus-visible, .photo-move:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+
+.wb-import-photo { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 0; }
+.wb-import-photo img { max-height: 140px; max-width: 105px; object-fit: contain; background: var(--paper); border: 1px solid var(--line); padding: 8px; }
+.wb-import-photo label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.wb-import-photo input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 0;
+    margin: 0;
+    flex: 0 0 18px;
+    accent-color: var(--gold);
+}
+.wb-import-photo.form-field { flex-direction: row; justify-content: flex-start; }
+.wb-existing-photo { margin: 12px 0; padding: 12px; border: 1px solid var(--line); }
+.photo-source { position: absolute; bottom: 29px; left: 3px; font: 9px var(--sans); font-weight: bold; padding: 2px 4px; background: var(--navy); color: white; pointer-events: none; }
+
+/* Whiskybase import previews use the same in-page photo viewer. */
+.wb-preview-photo-open { background: transparent; border: 0; padding: 0; cursor: zoom-in; display: block; }
+.wb-preview-photo-open:hover img { border-color: var(--gold); }
+
+/* New bottle: select an existing bottling without duplicating its master data. */
+.bottling-choice { display: grid; gap: 17px; }
+.bottling-choice > p { margin: 0; line-height: 1.5; }
+.bottling-choice form { display: grid; gap: 13px; }
+.bottling-choice .form-field { min-width: 0; }
+.bottling-choice #bottling-choice-select { width: 100%; max-width: 100%; }
+.bottling-choice #bottling-choice-count { margin: 0; }
+.bottling-choice-divider { position: relative; display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; }
+.bottling-choice-divider::before, .bottling-choice-divider::after { content: ''; flex: 1; border-top: 1px solid var(--line); }
+@media (max-width: 520px) { .bottling-choice .actions .btn { width: 100%; } }
+
+/* Local bottle cutout preview: both full images remain visible at any aspect ratio. */
+.photo-tile .photo-cutout { position: absolute; left: 3px; top: 3px; z-index: 1; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 3px; padding: 4px 5px; font: 600 10px var(--sans); cursor: pointer; }
+.photo-tile .photo-cutout:focus-visible { outline: 2px solid var(--gold); }
+.photo-cutout-badge { position: absolute; right: 3px; top: 4px; font-size: 13px; color: var(--gold); pointer-events: none; }
+.photo-capture { display: inline-flex; }
+.dialog:has(.cutout-workspace) { width: min(1000px, 100%); }
+.dialog:has(.cutout-workspace) .dialog-head { margin-bottom: 12px; padding-bottom: 12px; }
+.cutout-workspace { display: grid; gap: 10px; }
+.cutout-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.cutout-compare figure { margin: 0; min-width: 0; }
+.cutout-compare figcaption { margin-top: 6px; text-align: center; font-size: 13px; color: var(--muted); }
+/* Use flex, not an auto-sized grid track: intrinsic image heights must never enlarge
+   the track and end up clipped by the preview frame's overflow boundary. */
+.cutout-image-frame { display: flex; align-items: center; justify-content: center; height: clamp(180px, 55dvh, 580px); min-width: 0; min-height: 0; padding: 8px; background: var(--cream); border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.cutout-image-frame img { display: block; flex: 0 1 auto; width: auto; height: auto; min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; object-fit: contain; }
+.cutout-checker { background-color: #f4f4f4; background-image: linear-gradient(45deg,#d7d7d7 25%, transparent 25%),linear-gradient(-45deg,#d7d7d7 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d7d7d7 75%),linear-gradient(-45deg,transparent 75%,#d7d7d7 75%); background-size: 22px 22px; background-position: 0 0,0 11px,11px -11px,-11px 0; }
+.cutout-image-frame img[hidden] { display: none; }
+.cutout-status { margin: 0; font-size: 13px; color: var(--muted); min-height: 1.4em; }
+.cutout-status[data-error="true"] { color: var(--danger, #b13a3a); }
+.cutout-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* On narrow screens, retain a legible full-size image instead of squeezing two
+   portrait photos into thumbnail-width columns. The dialog itself can scroll. */
+@media (max-width: 600px) {
+    .cutout-compare { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .cutout-image-frame { height: min(55dvh, 500px); padding: 6px; }
+    .cutout-actions > .btn { flex: 1 1 42%; }
+}
+@media (min-width: 601px) and (max-height: 570px) {
+    .cutout-image-frame { height: min(43dvh, 250px); }
+}

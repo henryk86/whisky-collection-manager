@@ -1,0 +1,156 @@
+/* Extendable site navigation. The existing quick actions remain in the header. */
+.menu-button { min-width: 43px; padding-inline: 11px; }
+.menu-icon { display: block; width: 19px; height: 19px; flex: 0 0 19px; }
+.site-drawer-backdrop { position: fixed; inset: 0; z-index: 80; background: rgba(3,14,25,.58); }
+.site-drawer { position: fixed; z-index: 81; inset: 0 0 0 auto; width: min(310px,90vw); padding: 20px; background: var(--paper); color: var(--ink); box-shadow: -6px 0 35px rgba(0,0,0,.25); overflow-y: auto; }
+.site-drawer h2 { font: 29px var(--serif); margin: 0; }
+.site-drawer-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.site-nav { display: grid; gap: 7px; margin-top: 19px; }
+.site-nav a { display: flex; align-items: center; gap: 12px; padding: 13px 12px; border: 1px solid var(--line); color: var(--ink); font-weight: 650; text-decoration: none; background: var(--paper); border-radius: 3px; }
+.site-nav a:hover { border-color: var(--gold); }
+.site-nav a[aria-current="page"] { background: var(--navy-deep); border-color: var(--navy-deep); color: #fff; }
+.site-nav svg { width: 19px; height: 19px; flex-shrink: 0; }
+:root[data-theme="dark"] .site-nav a[aria-current="page"] { background: #34506b; }
+/* Map title, summary and split view */
+.map-heading { margin-top: 30px; }
+.map-summary { display: flex; flex-wrap: wrap; gap: 11px; margin-bottom: 17px; }
+.map-summary > span { display: inline-flex; align-items: center; gap: 8px; background: var(--paper); border: 1px solid var(--line); padding: 10px 13px; font-size: 12px; color: var(--muted); }
+.map-summary strong { font-size: 18px; color: var(--ink); font-variant-numeric: tabular-nums; }
+/* Optional extra map layer: all catalogued distilleries. */
+.map-all-toggle { display: inline-flex; align-items: center; justify-content: space-between; gap: 14px; margin-left: auto; padding: 9px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-size: 12px; font-weight: 650; cursor: pointer; user-select: none; }
+.map-all-toggle input { appearance: none; -webkit-appearance: none; position: relative; box-sizing: border-box; flex: 0 0 35px; width: 35px; min-width: 35px; height: 20px; min-height: 20px; max-height: 20px; padding: 0; margin: 0; border: 1px solid var(--muted); border-radius: 20px; background: var(--line); cursor: pointer; transition: background .16s, border-color .16s; }
+.map-all-toggle input::before { content: ''; position: absolute; width: 14px; height: 14px; top: 2px; left: 2px; background: var(--paper); border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .16s; }
+.map-all-toggle input:checked { background: #a77b40; border-color: #a77b40; }
+.map-all-toggle input:checked::before { transform: translateX(15px); background: #fff; }
+.map-all-toggle input:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.map-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(265px,325px); align-items: start; gap: 17px; }
+.map-stage { min-width: 0; }
+.map-canvas { width: 100%; height: min(68vh,655px); min-height: 360px; overflow: hidden; position: relative; border: 1px solid var(--line); background: #c4d7d4; }
+.map-viewport { position: absolute; inset: 0; touch-action: none; cursor: grab; overflow: hidden; }
+.map-viewport:active { cursor: grabbing; }
+.map-viewport:focus-visible { outline: 3px solid var(--gold); outline-offset: -4px; }
+.map-movable, .map-tiles, .map-markers { position: absolute; inset: 0; }
+.map-movable { will-change: transform; }
+.map-tiles img { position: absolute; width: 256px; height: 256px; user-select: none; pointer-events: none; }
+.map-markers { pointer-events: none; }
+/* Keep OpenStreetMap's standard tiles and attribution. Match the active theme
+ * on the raster layer only: the interactive markers retain their colours.
+ * CSS reacts immediately when data-theme changes, without tile reloading.
+ */
+:root[data-theme="dark"] .map-canvas { background: #2a4052; }
+:root[data-theme="dark"] .map-tiles { filter: invert(.91) hue-rotate(180deg) brightness(1.02) saturate(.80) contrast(.96); }
+:root[data-theme="dark"] .map-controls button { background: #1c3348; color: #edf3fa; border-color: #65798b; }
+:root[data-theme="dark"] .map-zoom-level { background: #182e41e8; color: #e7eff7; }
+:root[data-theme="dark"] .map-attribution { background: #182e41e8; color: #e7eff7; }
+:root[data-theme="dark"] .map-attribution a { color: #e5c18b; }
+.map-marker-stem { position: absolute; height: 2px; background: #a27238; opacity: .8; transform-origin: left center; pointer-events: none; z-index: 1; }
+.map-marker { position: absolute; transform: translate(-50%,-50%); border-radius: 50%; font-size: 12px; font-weight: 800; cursor: pointer; z-index: 2; pointer-events: auto; font-variant-numeric: tabular-nums; padding: 0; }
+/* Shared shape for stocked individual distilleries. */
+.map-stock-visual { background: #173b5c; border: 3px solid #ffead1; border-radius: 50%; color: #fff; box-shadow: 0 3px 13px rgba(0,0,0,.34); }
+.map-marker:hover, .map-marker:focus-visible { background: #a7732f; z-index: 10; }
+.map-marker.selected { background: #b18446; border-color: #fff; }
+.map-marker.selected { z-index: 5; }
+/* Unstocked distilleries are represented by a single pagoda-roof icon. */
+.map-marker-pagoda { display: flex; align-items: center; justify-content: center; background: #f5ebd7; border: 2px solid #334b5c; color: #213a51; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+.map-marker-pagoda:hover, .map-marker-pagoda:focus-visible { background: #f4d49b; color: #17334b; }
+.map-marker-pagoda.selected { background: #d2ad76; color: #132e46; border-color: #fff; }
+.map-pagoda-icon { width: 24px; height: 24px; display: block; flex-shrink: 0; }
+.map-pagoda-legend .map-pagoda-icon { width: 20px; height: 20px; color: #a77b40; }
+.map-controls { position: absolute; left: 12px; top: 12px; display: grid; gap: 3px; }
+.map-controls button { width: 40px; height: 40px; background: #fff; color: #19364d; border: 1px solid #b5b5b5; font-size: 24px; cursor: pointer; }
+.map-controls button:focus-visible { outline: 3px solid var(--gold); }
+.map-zoom-level { position: absolute; right: 12px; top: 12px; padding: 6px 9px; background: #fffdf3dd; font-size: 11px; color: #1e3245; }
+.map-attribution { position: absolute; bottom: 0; right: 0; padding: 4px 7px; font-size: 10px; color: #172e39; background: #ffffffdb; }
+.map-attribution a { color: #174f7c; }
+/* Compact, content-sized legend: related markers stay together, with no
+ * expanding grid columns or detached separators when the row wraps. */
+.map-legend { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 10px 18px; padding: 9px 12px; color: var(--ink); border: 1px solid var(--line); border-top: 0; font-size: 12px; }
+.map-legend-section { display: inline-flex; flex: 0 0 auto; flex-wrap: nowrap; align-items: center; column-gap: 9px; row-gap: 6px; min-width: 0; }
+.map-legend-heading { color: var(--muted); font-weight: 650; white-space: nowrap; }
+.map-legend-item { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* The samples are deliberately compact; map markers retain their live sizes.
+ * Borders and colours are still shared, without map-only visual effects. */
+.map-legend .map-legend-marker { display: inline-flex; position: relative; flex: 0 0 var(--legend-diameter); align-items: center; justify-content: center; box-sizing: border-box; width: var(--legend-diameter); height: var(--legend-diameter); line-height: 1; font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; border-width: 2px; box-shadow: none; filter: none; text-shadow: none; }
+.map-legend .map-cluster-legend-icon { font-size: 11px; }
+.map-legend .map-pagoda-icon { width: 18px; height: 18px; box-shadow: none; filter: none; text-shadow: none; }
+.map-no-sites { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); max-width: 82%; padding: 18px; background: var(--paper); border: 1px solid var(--line); color: var(--ink); text-align: center; pointer-events: none; }
+.map-sidebar { padding: 18px; border: 1px solid var(--line); background: var(--paper); min-width: 0; }
+.map-sidebar .form-field { display: grid; gap: 6px; }
+.map-sidebar input, .map-sidebar select { width: 100%; min-width: 0; }
+.map-site-heading { margin: 16px 0 11px; display: grid; gap: 6px; }
+.map-site-title { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-width: 0; }
+.map-site-heading strong { flex: 1; min-width: 0; font: 25px var(--serif); overflow-wrap: anywhere; }
+.map-site-heading span { color: var(--muted); font-size: 12px; }
+.map-empty-site { padding: 8px 0 2px; }
+.map-position-edit { flex: 0 0 34px; width: 34px; height: 34px; padding: 7px; min-height: 34px; }
+.map-position-edit .action-icon { width: 17px; height: 17px; }
+.map-bottling-list { display: grid; gap: 4px; max-height: 380px; overflow-y: auto; }
+.map-bottling-link { background: transparent; color: var(--ink); border: 0; border-bottom: 1px solid var(--line); display: grid; text-align: left; gap: 5px; padding: 10px 2px; cursor: pointer; }
+.map-bottling-link:hover { color: var(--gold); }
+.map-bottling-link span { font-weight: 650; line-height: 1.3; }
+.map-bottling-link small { color: var(--muted); font-size: 11px; }
+.map-bottling-link .map-bottling-facts { line-height: 1.4; overflow-wrap: anywhere; }
+.map-list-pager { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-top: 12px; font-size: 12px; }
+.map-list-pager button { background: var(--paper); border: 1px solid var(--line); color: var(--ink); min-width: 36px; min-height: 32px; }
+.map-missing { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
+.map-missing summary { cursor: pointer; font-weight: 650; }
+.map-missing-row { display: flex; justify-content: space-between; align-items: center; gap: 9px; border-bottom: 1px solid var(--line); padding: 9px 0; font-size: 12px; }
+.map-missing-row span { overflow-wrap: anywhere; }
+.map-coordinates-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; }
+.map-location-results { display: grid; gap: 6px; max-height: 235px; overflow-y: auto; }
+.map-location-choice { background: var(--paper); color: var(--ink); padding: 10px; border: 1px solid var(--line); text-align: left; font-size: 12px; }
+.map-location-choice:hover { border-color: var(--gold); }
+.map-location-choice small { display: block; margin-top: 4px; color: var(--muted); }
+@media (max-width: 950px) { .map-layout { grid-template-columns: minmax(0,1fr); } .map-canvas { height: min(64vh,570px); } .map-bottling-list { max-height: 300px; } }
+@media (max-width: 450px) { .map-canvas { min-height: 350px; height: 48vh; } .map-summary > span { flex: 1 1 115px; } .map-sidebar { padding: 13px; } .map-coordinates-fields { grid-template-columns: 1fr; } }
+/* Compact mobile action row, with the menu at the far right. */
+@media (max-width: 960px) { .top-actions .menu-button { display: inline-flex; } }
+@media (max-width: 450px) { .header-inner { gap: 4px; padding-inline: 8px; } .brand-emblem { display: flex; width: 32px; height: 32px; flex: 0 0 32px; } .brand { gap: 10px; } .top-actions { gap: 3px; } .top-actions .btn { flex-basis: 37px; width: 37px; min-width: 37px; } }
+@media (max-width: 380px) { .header-inner { padding-inline: 7px; } .top-actions { gap: 2px; } .top-actions .btn { flex-basis: 35px; width: 35px; min-width: 35px; min-height: 40px; } .brand h1 { font-size: 10px; } }
+
+@media (max-width: 380px) { .brand-emblem { width: 28px; height: 28px; flex-basis: 28px; } .brand { gap: 8px; } }
+
+/* Closed sites are identifiable by symbol AND muted colour, not colour alone. */
+.map-marker-closed { background: #626773; border-color: #d3d5d9; color: #fff; border-style: dashed; }
+.map-marker-closed.map-marker-pagoda { background: #d7d9de; border-color: #626773; color: #343b46; }
+.map-marker-closed:hover, .map-marker-closed:focus-visible { background: #818590; }
+.map-marker-closed.selected { background: #747985; border-color: #fff; }
+.map-closed-legend .map-pagoda-icon { color: #626773; }
+
+/* Gold circular clusters remain distinct from blue/grey individual sites.
+ * Their numeric label always shows the sum of physical bottles. */
+.map-cluster-visual {
+    --cluster-fill: #a27238;
+    --cluster-rim: #fff5dc;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cluster-fill);
+    border: 3px solid var(--cluster-rim);
+    border-radius: 50%;
+    color: #152738;
+    box-shadow: 0 3px 14px rgba(0,0,0,.4);
+    font-size: 14px;
+    font-weight: 800;
+}
+.map-marker-cluster:hover, .map-marker-cluster:focus-visible { --cluster-fill: #865726; z-index: 10; }
+.map-marker-cluster.selected { --cluster-fill: #986526; }
+:root[data-theme="dark"] .map-cluster-visual { --cluster-fill: #a97b41; --cluster-rim: #ffe9c0; }
+:root[data-theme="dark"] .map-marker-cluster:hover, :root[data-theme="dark"] .map-marker-cluster:focus-visible { --cluster-fill: #c6985c; }
+@media (max-width: 600px) {
+    .map-legend { gap: 9px 14px; padding: 9px 10px; font-size: 11px; }
+    .map-legend-section { column-gap: 7px; row-gap: 5px; }
+}
+@media (max-width: 420px) {
+    .map-legend-section { flex: 0 1 auto; flex-wrap: wrap; }
+}
+
+/* Direct link from a bottling's details: one site or several constituent distilleries. */
+.map-related-bottling { padding: 0 0 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+.map-related-bottling > strong { display: block; font-size: 12px; line-height: 1.5; margin-bottom: 9px; color: var(--ink); overflow-wrap: anywhere; }
+.map-related-sites { display: flex; flex-wrap: wrap; gap: 7px; }
+.map-related-site { padding: 7px 9px; border: 1px solid var(--line); border-radius: 5px; color: var(--ink); background: var(--cream); font-size: 12px; cursor: pointer; }
+.map-related-site:hover, .map-related-site:focus-visible { border-color: var(--gold); outline-offset: 2px; }
+.map-related-missing { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; color: var(--muted); font-size: 12px; }
+.map-related-set-location { background: none; border: 0; padding: 0; color: var(--blue); text-decoration: none; cursor: pointer; font-size: inherit; }
+.map-related-set-location:hover, .map-related-set-location:focus-visible { text-decoration: underline; }
