@@ -1,6 +1,6 @@
 {
   "name": "whisky-collection-manager",
-  "version": "0.16.11",
+  "version": "0.16.12",
   "private": true,
   "description": "Lokale Whisky-Sammlungsverwaltung mit JSON-Datenspeicherung",
   "type": "module",

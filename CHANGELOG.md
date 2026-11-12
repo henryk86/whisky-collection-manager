@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.16.12 - 2026-11-12
+
+- new version
+
 ## 0.16.11 - 2026-11-13
 
 - Dependabot-Update von playwright-core auf 1.65.0 uebernommen und Release-/Docker-Tests auf konsistente, fest gepinnte Versionen umgestellt.
