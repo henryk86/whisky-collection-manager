@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.16.11 - 2026-11-13
+
+- Dependabot-Update von playwright-core auf 1.65.0 uebernommen und Release-/Docker-Tests auf konsistente, fest gepinnte Versionen umgestellt.
+
 ## 0.16.10 - 2026-11-12
 
 - Alten HTML-Import und vorherige Fragmentformate entfernt; nur neues generisches Importprotokoll, externe Erweiterung ausgelagert und Dokumentation neutralisiert
