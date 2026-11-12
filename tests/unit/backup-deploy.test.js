@@ -59,5 +59,10 @@ test('single combined image ships app, scheduler, Restic/Rclone; release builds 
     const checks = read('.github/workflows/check.yml');
     assert.match(checks, /actions\/checkout@v7/);
     assert.match(checks, /actions\/setup-node@v7/);
-    assert.equal(JSON.parse(read('package.json')).devDependencies['playwright-core'], '1.64.1');
+    const manifest = JSON.parse(read('package.json'));
+    const lock = JSON.parse(read('package-lock.json'));
+    const pinnedVersion = manifest.devDependencies['playwright-core'];
+    assert.match(pinnedVersion, /^\d+\.\d+\.\d+$/, 'playwright-core must have an exact version');
+    assert.equal(lock.packages[''].devDependencies['playwright-core'], pinnedVersion);
+    assert.equal(lock.packages['node_modules/playwright-core'].version, pinnedVersion);
 });

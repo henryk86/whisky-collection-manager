@@ -1,6 +1,6 @@
 {
   "name": "whisky-collection-manager",
-  "version": "0.16.10",
+  "version": "0.16.11",
   "private": true,
   "description": "Lokale Whisky-Sammlungsverwaltung mit JSON-Datenspeicherung",
   "type": "module",
@@ -27,6 +27,6 @@
     "three": "0.187.0"
   },
   "devDependencies": {
-    "playwright-core": "1.64.1"
+    "playwright-core": "1.65.0"
   }
 }
