@@ -44,6 +44,9 @@ export function verifyReleaseMetadata(root = ROOT, { allowReadmeMismatch = false
     if (!allowReadmeMismatch && !content('README.md').startsWith(`# Whisky Collection Manager v${version}\n`)) {
         throw new Error('README.md enthaelt nicht die Release-Version im Titel.');
     }
+    if (!content('docs/TESTSTATUS.md').startsWith(`# Teststatus - Whisky Collection Manager v${version}\n`)) {
+        throw new Error(`docs/TESTSTATUS.md enthaelt nicht die Release-Version v${version}. Bitte release:bump verwenden.`);
+    }
     const changelog = content('CHANGELOG.md');
     const match = /^# Changelog\s*\n\s*## ([^\s]+) - (\d{4}-\d{2}-\d{2})\s*\n([\s\S]*?)(?=\n## |$)/.exec(changelog);
     if (!match || match[1] !== version || !/^- /m.test(match[3]) || /BITTE_ERGAENZEN/.test(match[3])) {
@@ -79,11 +82,49 @@ function syncReadme() {
     console.log(`README-Titel synchronisiert: v${version}`);
 }
 
+/** A version bump starts a new test cycle. Never inherit passed checks from an old release. */
+export function pendingTestStatus(version, note, date) {
+    parseVersion(version);
+    return `# Teststatus - Whisky Collection Manager v${version}
+
+**Stand:** ${date}. **Status:** Pruefungen fuer v${version} noch ausstehend. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+## Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| \`npm run release:check\` | **Noch nicht ausgefuehrt** | Nach dem Versionswechsel ausfuehren. |
+| \`npm run check\` | **Noch nicht ausgefuehrt** | Syntax, Uebersetzungen und Dokumentationslinks. |
+| \`npm test\` | **Noch nicht ausgefuehrt** | Unit- und Integrationstests; Ergebnis erst nach dem Testlauf eintragen. |
+| \`npm run test:browser\` | **Nicht lokal ausgeführt** | Browserpruefungen separat dokumentieren. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach einem Release auf dem Zielsystem pruefen. |
+
+## Aenderungen v${version}
+
+- ${note.trim()}
+
+Nach Durchfuehrung der Pruefungen die Ergebnisse und ihre Grenzen hier dokumentieren.
+`;
+}
+
+function archivePreviousTestStatus(version, source) {
+    const header = `## Testbericht v${version} (vor dem naechsten Versionswechsel)`;
+    const history = read('docs/TESTHISTORIE.md');
+    if (history.includes(header)) return;
+    // Demote former H2 headings under the archived report's H2.
+    const report = source.replace(/^## /gm, '### ')
+        .replace(/^# Teststatus[^\n]*\n/, `${header}\n`);
+    write('docs/TESTHISTORIE.md', `${history.trimEnd()}\n\n---\n\n${report.trim()}\n`);
+}
+
 function bump(part, note) {
     if (!note?.trim() || note.length > 500 || /[\r\n]/.test(note)) {
         throw new Error('Ein kurzer, einzeiliger Changelog-Eintrag ist erforderlich.');
     }
     const { version: current } = verifyReleaseMetadata(ROOT, { allowReadmeMismatch: true });
+    // Check all inputs before changing any tracked file.
+    const previousStatus = read('docs/TESTSTATUS.md');
+    read('docs/TESTHISTORIE.md');
     const version = nextVersion(current, part);
     const pkg = JSON.parse(read('package.json'));
     pkg.version = version;
@@ -96,6 +137,8 @@ function bump(part, note) {
     const date = new Date().toISOString().slice(0, 10);
     write('CHANGELOG.md', read('CHANGELOG.md').replace(/^# Changelog\s*\n/,
         `# Changelog\n\n## ${version} - ${date}\n\n- ${note.trim()}\n\n`));
+    archivePreviousTestStatus(current, previousStatus);
+    write('docs/TESTSTATUS.md', pendingTestStatus(version, note, date));
     verifyReleaseMetadata();
     console.log(`Version ${current} -> ${version}. Jetzt nach develop committen und danach develop -> main mergen.`);
 }

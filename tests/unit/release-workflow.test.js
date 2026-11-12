@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { compareVersions, nextVersion, parseVersion, updateReadmeTitle, verifyReleaseMetadata } from '../../scripts/release-version.js';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { compareVersions, nextVersion, parseVersion, updateReadmeTitle, pendingTestStatus, verifyReleaseMetadata } from '../../scripts/release-version.js';
 import { prohibitedReleasePath } from '../../scripts/verify-release-files.js';
 const read = file => fs.readFileSync(file, 'utf8');
 
@@ -104,4 +107,42 @@ test('README heading can be repaired without relaxing CI metadata validation', (
     assert.equal(updateReadmeTitle('# Project overview\n\nText', version), '# Whisky Collection Manager v0.8.8\n\nText');
     assert.equal(updateReadmeTitle('Text only', version), '# Whisky Collection Manager v0.8.8\n\nText only');
     assert.equal((updateReadmeTitle('# Other title\n', version).match(/^# /gm) || []).length, 1);
+});
+
+
+test('release:bump updates the test status and archives old results without claiming new tests passed', () => {
+    const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-release-bump-'));
+    try {
+        fs.mkdirSync(path.join(temp, 'scripts'));
+        fs.mkdirSync(path.join(temp, 'docs'));
+        fs.copyFileSync('scripts/release-version.js', path.join(temp, 'scripts/release-version.js'));
+        fs.writeFileSync(path.join(temp, 'package.json'), JSON.stringify({type: 'module', version: '0.16.11'}));
+        fs.writeFileSync(path.join(temp, 'package-lock.json'), JSON.stringify({version: '0.16.11', packages: {'': {version: '0.16.11'}}}));
+        fs.writeFileSync(path.join(temp, 'README.md'), '# Whisky Collection Manager v0.16.11\n');
+        fs.writeFileSync(path.join(temp, 'CHANGELOG.md'), '# Changelog\n\n## 0.16.11 - 2026-11-12\n\n- Previous fix\n');
+        fs.writeFileSync(path.join(temp, 'docs/TESTSTATUS.md'), '# Teststatus - Whisky Collection Manager v0.16.11\n\n## Durchgefuehrte Pruefungen\n\n- 341/341 bestanden\n');
+        fs.writeFileSync(path.join(temp, 'docs/TESTHISTORIE.md'), '# Historie\n');
+        execFileSync(process.execPath, [path.join(temp, 'scripts/release-version.js'), 'bump', 'patch', 'CI-Korrektur'], {cwd: temp});
+        execFileSync(process.execPath, [path.join(temp, 'scripts/release-version.js'), 'check'], {cwd: temp});
+        assert.equal(JSON.parse(fs.readFileSync(path.join(temp, 'package.json'), 'utf8')).version, '0.16.12');
+        const status = fs.readFileSync(path.join(temp, 'docs/TESTSTATUS.md'), 'utf8');
+        assert.match(status, /^# Teststatus - Whisky Collection Manager v0\.16\.12\n/);
+        assert.match(status, /npm test[^\n]*Noch nicht ausgefuehrt/);
+        assert.doesNotMatch(status, /341\/341 bestanden/);
+        const history = fs.readFileSync(path.join(temp, 'docs/TESTHISTORIE.md'), 'utf8');
+        assert.match(history, /## Testbericht v0\.16\.11/);
+        assert.match(history, /341\/341 bestanden/);
+        fs.writeFileSync(path.join(temp, 'docs/TESTSTATUS.md'), '# Teststatus - Whisky Collection Manager v0.16.11\n');
+        assert.throws(() => verifyReleaseMetadata(temp), /docs\/TESTSTATUS\.md/);
+    } finally {
+        fs.rmSync(temp, {recursive: true, force: true});
+    }
+});
+
+test('pending test report is truthful and retains browser visibility', () => {
+    const doc = pendingTestStatus('0.16.13', 'Kleinere Korrektur', '2026-11-13');
+    assert.match(doc, /v0\.16\.13/);
+    assert.match(doc, /npm test[^\n]*Noch nicht ausgefuehrt/);
+    assert.match(doc, /npm run test:browser[^\n]*Nicht lokal ausgeführt/);
+    assert.match(doc, /TESTHISTORIE\.md/);
 });

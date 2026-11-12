@@ -27,17 +27,19 @@ Jeder Release erhaelt eine neue Version. Der Versionstyp wird vor dem Bump anhan
 
 ### Version auf develop vorbereiten
 
-Vor **jedem Merge nach `main`** die Version einmal erhoehen, da jeder Merge genau einen neuen Release erzeugt. Der Befehl aktualisiert `package.json`, `package-lock.json`, den README-Titel und erzeugt einen Changelog-Eintrag:
+Vor **jedem Merge nach `main`** die Version einmal erhoehen, da jeder Merge genau einen neuen Release erzeugt. Der Befehl aktualisiert `package.json`, `package-lock.json`, den README-Titel, den Changelog und `docs/TESTSTATUS.md`. Dabei wird der vorherige Testbericht nach `docs/TESTHISTORIE.md` archiviert. Der neue Teststatus wird wahrheitsgemaess auf **noch nicht ausgefuehrt** gesetzt:
 
 ```bash
 # Auf develop; Beispiel fuer einen Patch-Release:
 npm run release:bump -- patch "Fehlerbehebungen und Verbesserungen"
 npm run release:check
 npm run verify
-git add package.json package-lock.json README.md CHANGELOG.md
+git add package.json package-lock.json README.md CHANGELOG.md docs/TESTSTATUS.md docs/TESTHISTORIE.md
 git commit -m "chore(release): prepare vX.Y.Z"
 git push origin develop
 ```
+
+Nach `npm run verify` die tatsaechlichen Ergebnisse in `docs/TESTSTATUS.md` eintragen (zuvor keine pauschale Erfolgsmeldung). `npm run release:check` validiert auch die Teststatus-Version, sodass eine Abweichung bereits vor CI auffaellt.
 
 Wenn `README.md enthaelt nicht die Release-Version im Titel` gemeldet wird, kann `npm run release:sync` den README-Titel aus der Version in `package.json` korrigieren. Anschliessend `npm run release:check` ausfuehren und die README-Aenderung committen. `release:bump` kann einen abweichenden README-Titel ebenfalls selbst korrigieren; der CI-Check bleibt strikt und aendert nie Dateien.
 
