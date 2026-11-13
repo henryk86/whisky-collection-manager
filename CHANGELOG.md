@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.16.12 - 2026-11-12
+
+- Release-Bump synchronisiert jetzt automatisch docs/TESTSTATUS.md, archiviert den vorherigen Pruefbericht und markiert neue Pruefungen als ausstehend. release:check validiert den Teststatus ebenfalls; Regressionstests ergaenzt. Anwendungslogik und Deployment bleiben unveraendert.
+
 ## 0.16.11 - 2026-11-13
 
 - Dependabot-Update von playwright-core auf 1.65.0 uebernommen und Release-/Docker-Tests auf konsistente, fest gepinnte Versionen umgestellt.
