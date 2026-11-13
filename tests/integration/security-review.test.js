@@ -94,7 +94,7 @@ test('security: malformed percent-encoded paths are client errors, not server cr
         context.child.stderr.on('data', chunk => errors.push(String(chunk)));
         const response = await fetch(context.base + '/%E0');
         assert.equal(response.status, 400);
-        assert.match((await response.json()).error, /Ungültiger Pfad/);
+        assert.match((await response.json()).error, /Invalid path/);
         assert.equal((await fetch(context.base + '/images/%E0')).status, 400);
         assert.equal((await fetch(context.base + '/api/version')).status, 200);
         assert.ok(!errors.some(message => /URIError|stacktrace/i.test(message)), errors.join(''));

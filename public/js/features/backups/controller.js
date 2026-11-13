@@ -1,7 +1,8 @@
 import { t } from '../../i18n/index.js';
 /** Backup admin key is intentionally held in memory only, never in localStorage. */
 import { query, escapeHtml as h } from '../../ui/dom.js';
-import { request } from '../../api.js';
+import { request, httpResponseError } from '../../api.js';
+import { jobErrorText } from '../../i18n/job-errors.js';
 import { toast } from '../../ui/notifications.js';
 import { profileForm } from '../../views/backups.js';
 export function createBackupController({ state, render, showModal, closeModal }) {
@@ -21,7 +22,7 @@ export function createBackupController({ state, render, showModal, closeModal })
             redraw();
             if (!quiet) toast(t("backups.status.refreshed"));
         } catch (err) {
-            if (String(err.message).includes('Administrator-Schlüssel')) lock();
+            if (err.code === 'api.errors.backupManagementIsLockedAdministratorKeyRequired' || err.status === 401) lock();
             else { state.backupError = err.message; if (!quiet) toast(err.message, true); }
         }
     }
@@ -117,7 +118,7 @@ export function createBackupController({ state, render, showModal, closeModal })
             });
             if (!response.ok) {
                 const body = await response.json().catch(() => ({}));
-                throw Error(body.error || `Download fehlgeschlagen: HTTP ${response.status}`);
+                throw httpResponseError(response.status, body);
             }
             const disposition = response.headers.get('content-disposition') || '';
             const name = disposition.match(/filename="?([^";]+)"?/i)?.[1] || 'whisky-backup.zip';
@@ -155,7 +156,7 @@ export function createBackupController({ state, render, showModal, closeModal })
                         try { promptPreparedZip(found.importId, found.filename); }
                         catch (error) { toast(error.message, true); }
                     } else {
-                        toast(found.state === 'success' ? (found.message || t("backups.jobs.succeeded")) : (found.error || t("backups.jobs.failed")), found.state === 'failed');
+                        toast(found.state === 'success' ? (found.message || t("backups.jobs.succeeded")) : jobErrorText(found.error), found.state === 'failed');
                     }
                 } else if (attempts >= 180) {
                     clearInterval(pollTimer); pollTimer = null;
@@ -170,9 +171,8 @@ export function createBackupController({ state, render, showModal, closeModal })
             headers: { 'X-Backup-Admin-Token': token }, cache: 'no-store'
         });
         if (!response.ok) {
-            let message;
-            try { message = (await response.json()).error; } catch { /* unknown response */ }
-            return toast(message || `Download fehlgeschlagen (HTTP ${response.status})`, true);
+            const body = await response.json().catch(() => ({}));
+            return toast(httpResponseError(response.status, body).message, true);
         }
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
@@ -221,7 +221,7 @@ export function createBackupController({ state, render, showModal, closeModal })
         const response = await fetch(`/api/backups/import-zip/${encodeURIComponent(id)}/download`, {
             headers: { 'X-Backup-Admin-Token': token }, cache: 'no-store'
         });
-        if (!response.ok) throw Error(`ZIP-Download fehlgeschlagen: HTTP ${response.status}`);
+        if (!response.ok) throw httpResponseError(response.status, await response.json().catch(() => ({})));
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         try {
@@ -242,7 +242,7 @@ export function createBackupController({ state, render, showModal, closeModal })
                 method: 'POST', headers: { 'Content-Type': 'application/zip', 'X-Backup-Admin-Token': token, 'X-Backup-Zip-Password': encodeURIComponent(form.elements.password.value) }, body: file
             });
             const result = await response.json();
-            if (!response.ok) throw Error(result.error || `HTTP ${response.status}`);
+            if (!response.ok) throw httpResponseError(response.status, result);
             restorePassword = form.elements.password.value;
             showZipPreview(result, file.name);
         } catch (error) { toast(error.message, true); }

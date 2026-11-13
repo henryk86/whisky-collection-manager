@@ -1,9 +1,10 @@
+import { t } from '../../i18n/index.js';
 /** Keep decoder settings stable; changes require actual barcode-device testing. */
 export const scannerFormatNames = ['QR_CODE', 'CODE_128', 'CODE_39', 'CODE_93', 'EAN_13', 'EAN_8', 'UPC_A', 'UPC_E', 'ITF', 'DATA_MATRIX', 'CODABAR'];
 export function supportedFormats(supported = {}) {
     const formats = scannerFormatNames.map(name => supported[name]).filter(Number.isInteger);
     if (!formats.length) {
-        throw Error('Scannerformate konnten nicht geladen werden');
+        throw Error(t('errors.scanner.formatsUnavailable'));
     }
     return formats;
 }

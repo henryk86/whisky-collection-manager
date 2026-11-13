@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { request } from '../api.js';
 
 export const fileAccept = '.pdf,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif,.txt,.csv,.eml,.docx,.xlsx,.odt,.ods';
@@ -13,17 +14,17 @@ export function formatFileSize(bytes) {
 function validateFile(file) {
     const extension = file.name.split('.').pop()?.toLowerCase();
     if (!extensions.has(extension)) {
-        throw Error(`Dateityp nicht unterstuetzt: ${file.name}`);
+        throw Error(t('errors.files.unsupportedType', {name: file.name}));
     }
     if (!file.size || file.size > MAX_BYTES) {
-        throw Error(`Datei leer oder groesser als 15 MB: ${file.name}`);
+        throw Error(t('errors.files.invalidSize', {name: file.name}));
     }
 }
 function toDataUrl(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(Error(`Datei konnte nicht gelesen werden: ${file.name}`));
+        reader.onerror = () => reject(Error(t('errors.files.readFailed', {name: file.name})));
         reader.readAsDataURL(file);
     });
 }
@@ -40,7 +41,7 @@ export async function uploadFiles(bottleId, files) {
             saved++;
         }
         catch (error) {
-            throw Error(`${saved} von ${files.length} Dateien gespeichert. ${error.message}`);
+            throw Error(t('errors.files.partiallySaved', {saved, total: files.length, error: error.message}));
         }
     }
     return saved;

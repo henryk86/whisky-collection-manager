@@ -1,3 +1,4 @@
+import { t } from '../../i18n/index.js';
 /** Reversible editing parameters: original/cutout image files are never modified. */
 export const PHOTO_ADJUSTMENT_GROUPS = Object.freeze([
     { key: 'light', sliders: [
@@ -24,12 +25,12 @@ const clip = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
 export function validatePhotoAdjustments(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value) ||
         Object.keys(value).some(key => !PHOTO_ADJUSTMENT_FIELDS.some(field => field.key === key)))
-        throw new RangeError('Ungültige Bildkorrekturen');
+        throw new RangeError(t('errors.photoEditor.invalidAdjustments'));
     const result = {};
     for (const {key, min, max} of PHOTO_ADJUSTMENT_FIELDS) {
         const number = value[key] ?? 0;
         if (typeof number !== 'number' || !Number.isFinite(number) || number < min || number > max)
-            throw new RangeError(`Ungültiger Wert für ${key}`);
+            throw new RangeError(t('errors.photoEditor.invalidAdjustmentValue', {field: key}));
         result[key] = number;
     }
     return result;
@@ -39,7 +40,7 @@ export const photoAdjustmentsChanged = value => PHOTO_ADJUSTMENT_FIELDS.some(({k
 /** Reset only one editor group; all other adjustments remain untouched. */
 export function resetPhotoAdjustmentGroup(current, groupKey) {
     const group = PHOTO_ADJUSTMENT_GROUPS.find(entry => entry.key === groupKey);
-    if (!group) throw new RangeError('Ungültige Korrekturgruppe');
+    if (!group) throw new RangeError(t('errors.photoEditor.invalidGroup'));
     const next = validatePhotoAdjustments(current);
     for (const {key} of group.sliders) next[key] = 0;
     return next;
@@ -57,12 +58,12 @@ export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTM
         !data || data.length !== width * height * 4 ||
         !area || ![area.x,area.y,area.width,area.height].every(Number.isFinite) ||
         area.width <= 0 || area.height <= 0)
-        throw new RangeError('Ungültiger Weißabgleich-Bereich');
+        throw new RangeError(t('errors.photoEditor.invalidWhiteBalanceArea'));
     const x0 = Math.max(0, Math.floor(area.x));
     const x1 = Math.min(width, Math.ceil(area.x + area.width));
     const y0 = Math.max(0, Math.floor(area.y));
     const y1 = Math.min(height, Math.ceil(area.y + area.height));
-    if (x1 <= x0 || y1 <= y0) throw new RangeError('Ungültiger Weißabgleich-Bereich');
+    if (x1 <= x0 || y1 <= y0) throw new RangeError(t('errors.photoEditor.invalidWhiteBalanceArea'));
     // Do not compensate the pre-existing WB a second time. Estimate both WB controls
     // afresh from the reference, while preserving exposure and other corrections.
     const neutral = adjustPhotoPixels(source, {...settings, temperature: 0, tint: 0});
@@ -74,7 +75,7 @@ export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTM
         if (data[i+3] < 192 || Math.min(red,green,blue) < 12 || Math.max(red,green,blue) > 247) continue;
         r += red; g += green; b += blue; count++;
     }
-    if (!count) throw new RangeError('Keine geeigneten Pixel für den Weißabgleich');
+    if (!count) throw new RangeError(t('errors.photoEditor.noWhiteBalancePixels'));
     r /= count; g /= count; b /= count;
     // Invert the exact RGB gain model used by adjustPhotoPixels:
     // r*(1+.18*T+.065*I) = g*(1-.12*I) = b*(1-.18*T+.065*I)
@@ -83,7 +84,7 @@ export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTM
     const d = -.18*b, e = .065*b + .12*g;
     const det = a*e - c*d;
     if (!Number.isFinite(det) || Math.abs(det) < 1e-6)
-        throw new RangeError('Keine geeigneten Pixel für den Weißabgleich');
+        throw new RangeError(t('errors.photoEditor.noWhiteBalancePixels'));
     const temperature = Math.round(clip(((g-r)*e - c*(g-b))/det*100, -100, 100));
     const tint = Math.round(clip((a*(g-b) - d*(g-r))/det*100, -100, 100));
     return {...settings, temperature, tint};
@@ -129,7 +130,7 @@ export function adjustPhotoPixels(source, values) {
     const {width, height, data} = source;
     if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 ||
         !data || data.length !== width * height * 4)
-        throw new TypeError('Ungültige Bilddaten');
+        throw new TypeError(t('errors.images.invalidData'));
     const result = new Uint8ClampedArray(data);
     if (!photoAdjustmentsChanged(settings)) return {width, height, data:result};
     const ev = 2 ** settings.exposure;

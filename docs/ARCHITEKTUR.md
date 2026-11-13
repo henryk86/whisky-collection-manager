@@ -125,6 +125,10 @@ Das öffentliche WCM-Projekt enthält weder eine Browser-Erweiterung noch einen 
 
 **Einzige unterstützte Übergabe:** `#wcm-import=<URL-kodiertes JSON>` mit einem Objekt der Form `{ "version": 2, "source": "external", "fields": { ... } }`. Die Daten werden anhand erlaubter Felder geprüft. Das URL-Fragment wird unmittelbar nach Empfang aus der Adressleiste entfernt. Ein bestehender Bearbeitungsdialog wird nicht ohne Bestätigung verworfen.
 
+**Trennung der Importzuständigkeiten (ab v0.17.11):** `public/js/features/import/` enthält die generische Feldvorschau, die optionale lokale Bildübernahme, die Destillerie-Zuordnung und die Ereignissteuerung. Das gemeinsame Payload-Modul übernimmt Feld-Whitelist, Textvalidierung, Bild-Token und Normalisierung. Ein quellenspezifischer Adapter validiert die Kennung und URL, entscheidet über Dubletten und liefert die Feldbezeichnungen. `public/js/features/editor-controller.js` verwendet nur `fromImport`, `importReferencePhoto` und neutrale Import-Callbacks. HTML-Selektoren, CSS-Klassen und Übersetzungen für die Vorschau sind quellunabhängig.
+
+Der Bild-Zwischenspeicher akzeptiert zusätzlich `source: null` für Bilder ohne besondere Quellenmarkierung; bestehende Erweiterungs-Uploads ohne `source`-Angabe behalten aus Kompatibilitätsgründen ihre bisherige Markierung. Persistierte Quell-IDs, Weblinks und Foto-Herkunftsangaben werden nicht umbenannt. Die HTTP-Endpunkte, Fragmentversion und das Datenschema bleiben unverändert.
+
 Das Schema verlangt weiterhin einen gültigen Flaschennamen, eine passende WB-ID und den zugehörigen HTTPS-Quellenlink. WCM öffnet oder durchsucht dabei keine fremden Webseiten. Ein optionaler, kurzlebiger Bild-Token verweist ausschließlich auf ein zuvor lokal übergebenes Bild.
 
 **Keine alten Importpfade:** Früher verwendete Fragmentnamen, Payload-Version 1 und der serverseitige HTML-Import-Endpunkt sind entfernt. Für die Übernahme ist eine Erweiterung erforderlich, die das neue Format selbst erstellt. Bereits gespeicherte Sammlungen, IDs, Links und Fotos werden unverändert weiterverwendet.

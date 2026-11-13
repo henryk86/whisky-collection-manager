@@ -39,6 +39,26 @@ test('Whiskybase image is physically copied to an individual bottle only on appr
     } finally { await ctx.stop(); }
 });
 
+test('generic staged import does not falsely label a reference image as Whiskybase', async () => {
+    const ctx = await startTestServer();
+    try {
+        const created = await requestJson(ctx.base, '/api/bottlings', 'POST', { name: 'Generic Import' });
+        const id = created.data.bottle.id;
+        const staged = await requestJson(ctx.base, '/api/import-image/stage', 'POST', { image, source: null });
+        assert.equal(staged.status, 201);
+        const attached = await requestJson(ctx.base, `/api/bottles/${id}/photos/from-stage`, 'POST', { token: staged.data.token });
+        assert.equal(attached.status, 201);
+        assert.equal(Object.hasOwn(attached.data, 'source'), false);
+        const photos = (await requestJson(ctx.base, '/api/collection')).data.bottlings[0].bottles[0].photos;
+        assert.equal(Object.hasOwn(photos[0], 'source'), false);
+        const otherSource = await requestJson(ctx.base, '/api/import-image/stage', 'POST', { image, source: 'other-catalog' });
+        assert.equal(otherSource.status, 201);
+        const otherPhoto = await requestJson(ctx.base, `/api/bottles/${id}/photos/from-stage`, 'POST', { token: otherSource.data.token });
+        assert.equal(otherPhoto.status, 201);
+        assert.equal(Object.hasOwn(otherPhoto.data, 'source'), false);
+    } finally { await ctx.stop(); }
+});
+
 test('malformed / oversized / non-image stage rejects without writing collection', async () => {
     const ctx = await startTestServer();
     try {

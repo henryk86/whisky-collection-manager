@@ -1,3 +1,4 @@
+import { t } from '../../i18n/index.js';
 /** Local browser inference: no image bytes, telemetry or prompts leave the device. */
 export const MODEL_SIZE = 320;
 const PIXELS = MODEL_SIZE * MODEL_SIZE;
@@ -8,7 +9,7 @@ let inferenceSession;
 /** NCHW float32, RGB in [0,1], ImageNet normalization used by U2Netp. */
 export function modelInput(imageData) {
     if (!imageData || imageData.width !== MODEL_SIZE || imageData.height !== MODEL_SIZE)
-        throw new Error('Ungültige Modellbildgröße');
+        throw new Error(t('errors.cutout.invalidModelSize'));
     const data = new Float32Array(3 * PIXELS);
     for (let i = 0; i < PIXELS; i++) {
         const pixel = i * 4;
@@ -21,15 +22,15 @@ export function modelInput(imageData) {
 
 /** U2Netp output d0 is normalized like rembg and interpreted as alpha. */
 export function normalizedMask(raw) {
-    if (!raw || raw.length < PIXELS) throw new Error('Ungültige Modellmaske');
+    if (!raw || raw.length < PIXELS) throw new Error(t('errors.cutout.invalidModelMask'));
     let minimum = Infinity, maximum = -Infinity;
     for (let i = 0; i < PIXELS; i++) {
         const value = raw[i];
-        if (!Number.isFinite(value)) throw new Error('Ungültige KI-Berechnung');
+        if (!Number.isFinite(value)) throw new Error(t('errors.cutout.invalidInference'));
         minimum = Math.min(minimum, value);
         maximum = Math.max(maximum, value);
     }
-    if (maximum - minimum < 1e-7) throw new Error('Keine Flasche erkannt');
+    if (maximum - minimum < 1e-7) throw new Error(t('errors.cutout.noBottle'));
     const mask = new Uint8ClampedArray(PIXELS);
     for (let i = 0; i < PIXELS; i++) mask[i] = Math.round(255 * (raw[i] - minimum) / (maximum - minimum));
     return mask;

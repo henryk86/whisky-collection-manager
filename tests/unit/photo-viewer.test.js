@@ -126,8 +126,8 @@ test('photo markup is escaped and old new-tab photo links are gone', () => {
     assert.match(detail, /class="photo-open" data-act="open-photo"/);
     assert.match(detail, /class="hero-photo hero-photo-open" data-act="open-photo"/);
     assert.doesNotMatch(detail, /href="\$\{imageUrl\(photo\.path\)\}" target="_blank"/);
-    const preview = fs.readFileSync('public/js/features/whiskybase/controller.js', 'utf8');
-    assert.match(preview, /class="wb-preview-photo-open" data-act="open-photo"/);
+    const preview = fs.readFileSync('public/js/features/import/controller.js', 'utf8');
+    assert.match(preview, /class="import-preview-photo-open" data-act="open-photo"/);
     const events = fs.readFileSync('public/js/events.js', 'utf8');
     assert.match(events, /'photo-next': \(\) => photoViewer\.step\(1\)/);
 });

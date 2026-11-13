@@ -241,20 +241,20 @@
     background: #172532;
     border-color: var(--line);
 }
-:root[data-theme="dark"] .wb-result {
+:root[data-theme="dark"] .import-result {
     background: #1a2a38;
     border-color: var(--line);
     color: var(--ink);
 }
-:root[data-theme="dark"] .wb-result:hover {
+:root[data-theme="dark"] .import-result:hover {
     border-color: var(--gold);
 }
-:root[data-theme="dark"] .wb-area,
-:root[data-theme="dark"] .wb-choice {
+:root[data-theme="dark"] .import-area,
+:root[data-theme="dark"] .import-choice {
     border-color: var(--line);
 }
-:root[data-theme="dark"] .wb-choice:hover,
-:root[data-theme="dark"] .wb-choice:has(input:checked) {
+:root[data-theme="dark"] .import-choice:hover,
+:root[data-theme="dark"] .import-choice:has(input:checked) {
     border-color: var(--gold);
 }
 :root[data-theme="dark"] .toast {

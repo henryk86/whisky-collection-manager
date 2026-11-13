@@ -93,10 +93,10 @@
 .photo-drop-target { outline: 3px solid var(--gold); outline-offset: 2px; }
 .photo-drag-handle:focus-visible, .photo-move:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 
-.wb-import-photo { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 0; }
-.wb-import-photo img { max-height: 140px; max-width: 105px; object-fit: contain; background: var(--paper); border: 1px solid var(--line); padding: 8px; }
-.wb-import-photo label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-.wb-import-photo input[type="checkbox"] {
+.import-photo { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 0; }
+.import-photo img { max-height: 140px; max-width: 105px; object-fit: contain; background: var(--paper); border: 1px solid var(--line); padding: 8px; }
+.import-photo label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.import-photo input[type="checkbox"] {
     width: 18px;
     height: 18px;
     min-width: 18px;
@@ -106,13 +106,13 @@
     flex: 0 0 18px;
     accent-color: var(--gold);
 }
-.wb-import-photo.form-field { flex-direction: row; justify-content: flex-start; }
-.wb-existing-photo { margin: 12px 0; padding: 12px; border: 1px solid var(--line); }
+.import-photo.form-field { flex-direction: row; justify-content: flex-start; }
+.import-existing-photo { margin: 12px 0; padding: 12px; border: 1px solid var(--line); }
 .photo-source { position: absolute; bottom: 29px; left: 3px; font: 9px var(--sans); font-weight: bold; padding: 2px 4px; background: var(--navy); color: white; pointer-events: none; }
 
-/* Whiskybase import previews use the same in-page photo viewer. */
-.wb-preview-photo-open { background: transparent; border: 0; padding: 0; cursor: zoom-in; display: block; }
-.wb-preview-photo-open:hover img { border-color: var(--gold); }
+/* Imported reference previews use the same in-page photo viewer. */
+.import-preview-photo-open { background: transparent; border: 0; padding: 0; cursor: zoom-in; display: block; }
+.import-preview-photo-open:hover img { border-color: var(--gold); }
 
 /* New bottle: select an existing bottling without duplicating its master data. */
 .bottling-choice { display: grid; gap: 17px; }

@@ -91,7 +91,7 @@ export function createHomeView({ state, selectors, shell }) {
             // cover photo as the bottling overview (without modifying photo data).
             const photo = displayPhotoPath((bottle?.photos || [])[0]) || coverPhoto(bottling.id);
             const bottleInfo = bottle ? [
-                bottle.inventoryNumber ? `#${escapeHtml(bottle.inventoryNumber)}` : t("whiskybase.bottles.noInventoryNumber"),
+                bottle.inventoryNumber ? `#${escapeHtml(bottle.inventoryNumber)}` : t("imports.bottles.noInventoryNumber"),
                 bottle.volumeMl != null ? `${escapeHtml(bottle.volumeMl)} ml` : '',
             ].filter(Boolean).join(' · ') : '';
             return `<article tabindex="0" class="whisky-card" data-act="open" data-id="${escapeHtml(bottling.id)}"${bottle ? ` data-bottle-id="${escapeHtml(bottle.id)}" aria-label="${escapeHtml(t("home.image.bottleAccessibleName",{name:bottling.name,number:bottle.inventoryNumber || t("home.inventory.withoutInventoryNumber")}))}"` : ''}>
@@ -110,12 +110,12 @@ export function createHomeView({ state, selectors, shell }) {
             const physicalBottles = bottle ? [bottle] : bottles(bottling.id);
             if (bottle) return `<tr class="clickable" tabindex="0" data-act="open" data-id="${escapeHtml(bottling.id)}" data-bottle-id="${escapeHtml(bottle.id)}" aria-label="${escapeHtml(t("home.image.bottleAccessibleName",{name:bottling.name,number:bottle.inventoryNumber || t("home.inventory.withoutInventoryNumber")}))}">
     <td><strong>${escapeHtml(bottling.name)}</strong></td>
-    <td>${bottle.inventoryNumber ? `#${escapeHtml(bottle.inventoryNumber)}` : t("whiskybase.bottles.noInventoryNumber")}</td>
+    <td>${bottle.inventoryNumber ? `#${escapeHtml(bottle.inventoryNumber)}` : t("imports.bottles.noInventoryNumber")}</td>
     <td>${escapeHtml(bottlingOriginLabel(bottling, distilleryNames))}</td>
     <td>${overviewField(bottling.ageYears)}</td>
     <td>${overviewField(bottling.abv, ' %')}</td>
     <td><span class="badge ${escapeHtml(bottle.status || '')}">${escapeHtml(statusText(bottle.status))}</span></td>
-    <td>${bottle.volumeType === 'sample' ? t("whiskybase.bottles.sample") : t("whiskybase.bottles.standard")}</td>
+    <td>${bottle.volumeType === 'sample' ? t("imports.bottles.sample") : t("imports.bottles.standard")}</td>
     <td>${bottle.volumeMl != null ? `${escapeHtml(bottle.volumeMl)} ml` : ''}</td>
     </tr>`;
             return `<tr class="clickable" tabindex="0" data-act="open" data-id="${escapeHtml(bottling.id)}">

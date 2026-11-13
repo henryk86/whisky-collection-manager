@@ -940,3 +940,56 @@ Die echte U2Netp-/ONNX-Erkennungsqualität wurde nicht geprüft; der Chromium-Te
 - Kein Eingriff in Bildkorrekturen, Freistellung, Speicherformat oder Bildauflösung.
 
 Die gezielte Chromium-Prüfung nutzte eine synthetische lokale Flaschenbilddatei; die vollständige Browser- und die ONNX-Erkennungsprüfung wurden nicht ausgeführt.
+
+---
+
+## Testbericht v0.17.9 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.17.8; ausschließlich Fehlerkorrekturen im Fotoeditor und passende Regressionstests. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version in Paket, Lockfile, README, Changelog und Teststatus konsistent. |
+| `npm run check` | **Bestanden** | 220 JavaScript-Dateien, 928 referenzierte Übersetzungsschlüssel, 98 relative Markdown-Links geprüft. |
+| `npm test` | **366/366 bestanden** | Unit- und Integrationstests des ursprünglichen Funktionsumfangs. |
+| Gezielte Chromium-Prüfung im lokalen DOM-Modus | **6/6 bestanden** | Fotoeditor-Layout, gespeicherte Freistellung und Umschalten, synchroner Originalvergleich, Maskenpinsel, reversible Bildkorrekturen, Weißabgleich. |
+| ONNX-abhängige Browserregressionen (Tests 50 und 51) | **2/2 bestanden unter angepasstem Testaufbau** | Separater Validierungsklon mit synthetischem ONNX-Modul und für die lokale Sandbox korrigierter Import-URL; die Hilfsänderung ist **nicht** Teil des Releases. |
+| Vollständiges `npm run test:browser` im normalen Navigationsmodus | **Nicht lokal ausgeführt** | Chromium blockiert hier `http://127.0.0.1` mit `ERR_BLOCKED_BY_ADMINISTRATOR`. Vollständige GitHub-CI-Prüfung steht aus. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Prüfung auf dem Zielsystem offen. |
+
+### Änderungen v0.17.9
+
+- Vorher/Nachher zeichnet das ursprüngliche, vollständig deckende Foto vor dem Umschalten des UI-Zustands. Dadurch bleibt nicht kurzzeitig die transparente Freistellung sichtbar.
+- Bereits gespeicherte Original- und Freistellungsbilder werden beim Öffnen des Editors vorgeladen; der Vorschauwechsel erfolgt ohne asynchrones Nachladen.
+- Browser-Test zum Entfernen einer Freistellung prüft weiterhin vorhandene Originalkorrekturen statt fälschlich das uneditierte Originalbild zu erwarten.
+- Regressionstest zur unmittelbar vollständigen Originalvorschau ergänzt; Slider-Test vergleicht numerische Werte statt browserabhängiger Zeichenfolgen.
+
+**Keine Etikettenerkennung / OCR:** Ausgangspunkt ist ausdrücklich das Archiv v0.17.8. Die in v0.18.0 eingeführten Funktionen sind nicht enthalten.
+
+---
+
+## Testbericht v0.17.10 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.17.9 ohne Etikettenerkennung/OCR. Fehlertexte und API-Fehlerausgabe wurden lokalisiert. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Paket, Lockfile, README, Changelog und Teststatus verwenden v0.17.10. |
+| `npm run check` | **Bestanden** | 225 JavaScript-Dateien, 959 referenzierte Übersetzungsschlüssel und 99 relative Dokumentationslinks. |
+| `npm test` | **371/371 bestanden** | Alle Unit- und Integrationstests einschließlich 5 neuer Fehlerlokalisierungs-Tests. |
+| Neue API-Integrationstests | **Bestanden** | Englischsprachiger API-Fallback und stabile Fehlercodes am echten Testserver. |
+| Neue Browser-Testläufe (`npm run test:browser`) | **Nicht lokal ausgeführt** | UI wurde über Unit-/Integrationstests geprüft; vollständige Chromium-/GitHub-CI-Prüfung bleibt offen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem noch zu prüfen. |
+
+### Änderungen v0.17.10
+
+- Bekannte Bildverarbeitungs-, Datei-, Import- und Scannerfehler verwenden stabile Übersetzungsschlüssel in Deutsch und Englisch statt fest eingebauter deutscher Texte.
+- 182 bekannte API-Fehlertexte erhalten einen maschinenlesbaren `errorCode` und einen englischen Standardtext; zusätzlich einige Validierungsfehler mit benannten Parametern.
+- Das Frontend zeigt den passenden übersetzten Text an. Unbekannte oder alte API-Fehler werden nicht als unveränderte deutsche Rohmeldungen angezeigt.
+- Fehlende oder leere Übersetzungseinträge fallen auf Englisch zurück; der englische Katalog ist dafür lokal verfügbar.
+- Auch im Backup-Dialog werden bekannte API-Fehler übersetzt, unbekannte Hintergrund-Fehlermeldungen neutral dargestellt.
+- **Keine Funktionen aus der verworfenen 0.18.x-Reihe übernommen.**

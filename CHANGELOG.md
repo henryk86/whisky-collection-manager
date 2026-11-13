@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.17.11 - 2026-11-13
+
+- Generische Importsteuerung in `public/js/features/import/` ausgelagert (Feldvorschau, Payload-Normalisierung, Destillerie-Abgleich, Bestätigung, Bildzuordnung). Quellenspezifischer Adapter übernimmt ausschließlich Payload-Validierung und Dublettenabgleich.
+- `importReferencePhoto`, `fromImport`, `import-`-Selektoren und neutrale Übersetzungsschlüssel in allgemeinen Formularen und Ereignissen durch neutrale Bezeichnungen ersetzt.
+- Bild-Zwischenspeicher unterstützt Referenzbilder ohne Anbieter-Markierung; alte Uploads, Quellenangaben, externe URLs, API-Pfade und Fragmentformat bleiben kompatibel.
+- Tests für generische Importquellen und Kompatibilität bestehender Imports ergänzt; README und Architektur dokumentiert.
+
+## 0.17.10 - 2026-11-13
+
+- Fehlermeldungen lokalisiert: Fotoeditor, Dateien und API-Validierung mit deutschen/englischen Texten und englischem Fallback
+
 ## 0.17.9 - 2026-11-13
 
 - Fotoeditor: Vorher/Nachher rendert sofort das unbeschnittene Original; gespeicherte Freistellungen ohne Verlust der Originalkorrekturen umschalten und loeschen.

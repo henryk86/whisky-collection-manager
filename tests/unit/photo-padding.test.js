@@ -9,5 +9,5 @@ test('existing photo previews have inner spacing to the border', () => {
 
     assert.match(gallery, /\.photo-tile \.photo-open\s*\{[^}]*padding:\s*8px\s*;/s);
     assert.match(detail, /\.hero-photo\s*\{[^}]*padding:\s*8px 8px 12px\s*;/s);
-    assert.match(importPreview, /\.wb-import-photo img\s*\{[^}]*padding:\s*8px\s*;/s);
+    assert.match(importPreview, /\.import-photo img\s*\{[^}]*padding:\s*8px\s*;/s);
 });

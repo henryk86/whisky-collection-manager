@@ -138,8 +138,8 @@ test('browser: bottling editor shows external import preview only after incoming
         await open();
         await page.locator('[data-act="new"]').first().click();
         await page.locator('#bottling-form').waitFor();
-        assert.equal(await page.locator('#bottling-form #wb-panel').count(), 0);
-        assert.equal(await page.locator('#bottling-form [data-act="wb-search"]').count(), 0);
+        assert.equal(await page.locator('#bottling-form #import-panel').count(), 0);
+        assert.equal(await page.locator('#bottling-form [data-act="import-search"]').count(), 0);
         assert.equal(await page.locator('#bottling-form a[href*="whiskybase.com"]').count(), 0);
         await page.locator('#bottling-form [data-act="close-modal"]').click();
         await page.evaluate(() => {
@@ -152,10 +152,10 @@ test('browser: bottling editor shows external import preview only after incoming
             };
             location.hash = '#wcm-import=' + encodeURIComponent(JSON.stringify(payload));
         });
-        await page.locator('#wb-panel .wb-preview').waitFor();
-        assert.equal(await page.locator('#bottling-form #wb-panel').count(), 1);
-        assert.equal(await page.locator('#wb-panel [data-act="wb-apply"]').count(), 1);
-        assert.equal(await page.locator('#wb-panel input[data-wb-field="name"]').count(), 1);
+        await page.locator('#import-panel .import-preview').waitFor();
+        assert.equal(await page.locator('#bottling-form #import-panel').count(), 1);
+        assert.equal(await page.locator('#import-panel [data-act="import-apply"]').count(), 1);
+        assert.equal(await page.locator('#import-panel input[data-import-field="name"]').count(), 1);
     });
 });
 
@@ -176,13 +176,13 @@ test('browser: Whiskybase import assigns four comma-separated distilleries to on
             };
             location.hash = '#wcm-import=' + encodeURIComponent(JSON.stringify(payload));
         });
-        await page.locator('#wb-panel input[name="wb-distillery"]').first().waitFor();
-        const importOptions = page.locator('#wb-panel input[name="wb-distillery"]');
+        await page.locator('#import-panel input[name="import-distillery"]').first().waitFor();
+        const importOptions = page.locator('#import-panel input[name="import-distillery"]');
         assert.equal(await importOptions.count(), 4);
         assert.deepEqual(await importOptions.evaluateAll(inputs => inputs.map(input => input.value)), expectedIds);
-        assert.equal(await page.locator('#wb-panel input[name="wb-distillery"]:checked').count(), 4);
-        assert.equal(await page.locator('#wb-panel input[name="wb-distillery"]:disabled').count(), 0);
-        await page.locator('#wb-panel [data-act="wb-apply"]').click();
+        assert.equal(await page.locator('#import-panel input[name="import-distillery"]:checked').count(), 4);
+        assert.equal(await page.locator('#import-panel input[name="import-distillery"]:disabled').count(), 0);
+        await page.locator('#import-panel [data-act="import-apply"]').click();
         const selectedIds = await page.locator('#bottling-form input[name="distilleryIds"]:checked')
             .evaluateAll(inputs => inputs.map(input => input.value));
         assert.deepEqual(new Set(selectedIds), new Set(expectedIds));
@@ -2405,7 +2405,7 @@ test('browser: adjustments followed by cutting create one corrected editable cut
     await session(async ({base,page,open}) => {
         const created = await seed(base,'CUT-EDIT');
         const png = 'data:image/png;base64,' + fs.readFileSync(
-            new URL('../fixtures/photo-wb-reference.png', import.meta.url)).toString('base64');
+            new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
         const photo = (await requestJson(base,`/api/bottles/${created.bottle.id}/photos`,'POST',{image:png})).data;
         // Synthetic bottle silhouette isolates editor orchestration from ONNX installation.
         // Geometry + real adjustment pipeline and server persistence still execute.
@@ -2494,7 +2494,7 @@ test('browser: first cutout before/after compares the uncut photo without slider
     await session(async ({base,page,open}) => {
         const created = await seed(base,'CUT-BEFORE');
         const png = 'data:image/png;base64,' + fs.readFileSync(
-            new URL('../fixtures/photo-wb-reference.png', import.meta.url)).toString('base64');
+            new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
         const photo = (await requestJson(base,`/api/bottles/${created.bottle.id}/photos`,'POST',{image:png})).data;
         const fakeOrt = `export const env={wasm:{}};
             export class Tensor {constructor(type,data,shape){this.data=data;} dispose(){}}
@@ -2653,7 +2653,7 @@ test('browser: saved transparent cutout Before displays all opaque original pixe
     await session(async ({base,page,open}) => {
         const {bottle,bottling} = await seed(base,'CUT-OPAQUE');
         const opaque = 'data:image/png;base64,' + fs.readFileSync(
-            new URL('../fixtures/photo-wb-reference.png', import.meta.url)).toString('base64');
+            new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
         const transparent = 'data:image/png;base64,' + fs.readFileSync(
             new URL('../fixtures/photo-cutout-transparent.png', import.meta.url)).toString('base64');
         const photo = (await requestJson(base,`/api/bottles/${bottle.id}/photos`,'POST',{image:opaque})).data;
@@ -2681,7 +2681,7 @@ test('browser: cutout mask brush erases at preview zoom, supports undo, and save
     await session(async ({base,page,open,dir}) => {
         const created = await seed(base,'MASK-EDIT');
         const originalPng = 'data:image/png;base64,' + fs.readFileSync(
-            new URL('../fixtures/photo-wb-reference.png', import.meta.url)).toString('base64');
+            new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
         const photo = (await requestJson(base,`/api/bottles/${created.bottle.id}/photos`,'POST',
             {image:originalPng})).data;
         const url = `/api/bottles/${created.bottle.id}/photos/${photo.id}/cutout`;
@@ -2868,7 +2868,7 @@ test('browser: photo editor group resets and white-balance eyedropper select rea
     await session(async ({page, open, base}) => {
         const created = await seed(base, '002019');
         const png = 'data:image/png;base64,' + fs.readFileSync(
-            new URL('../fixtures/photo-wb-reference.png', import.meta.url)).toString('base64');
+            new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
         const upload = await requestJson(base, `/api/bottles/${created.bottle.id}/photos`, 'POST', {image:png});
         assert.equal(upload.status,201);
         await open();

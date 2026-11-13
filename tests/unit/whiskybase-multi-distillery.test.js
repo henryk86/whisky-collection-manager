@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { splitDistilleryNames, matchImportedDistilleries } from '../../public/js/features/whiskybase/distillery-matching.js';
-import { importChoice } from '../../public/js/features/whiskybase/choice-template.js';
+import { splitDistilleryNames, matchImportedDistilleries } from '../../public/js/features/import/distillery-matching.js';
+import { importChoice } from '../../public/js/features/import/choice-template.js';
 import { validateExtensionPayload } from '../../public/js/features/whiskybase/payload.js';
 
 const distilleries = [
@@ -40,8 +40,8 @@ test('Whiskybase: unknown contributors are listed separately, disabled and escap
         distillery: true, distilleryId: matches[0].id, checked: true });
     const unknown = importChoice({ label: 'Destillerie', value: matches[1].name,
         distillery: true, disabled: true });
-    assert.match(known, /name="wb-distillery" value="d-ard" checked/);
-    assert.match(unknown, /name="wb-distillery" disabled/);
+    assert.match(known, /name="import-distillery" value="d-ard" checked/);
+    assert.match(unknown, /name="import-distillery" disabled/);
     assert.match(unknown, /New &amp; &lt;Scotch&gt; Works/);
     assert.doesNotMatch(unknown, /<Scotch>/);
     assert.match(unknown, /Nicht gefunden/);
