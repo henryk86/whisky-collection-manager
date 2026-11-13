@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.17.9 - 2026-11-13
+
+- Fotoeditor: Vorher/Nachher rendert sofort das unbeschnittene Original; gespeicherte Freistellungen ohne Verlust der Originalkorrekturen umschalten und loeschen.
+
 ## 0.17.8 - 2026-11-13
 
 - Bildeditor: Vorschau und rechte Regler-/Tab-Spalte schließen auf Desktop wieder exakt bündig ab; die fehlerhafte zusätzliche Höhe von 44 Pixeln entfällt. Nur die Tab-Inhalte scrollen, Status- und Aktionsleiste bleiben klar getrennt.

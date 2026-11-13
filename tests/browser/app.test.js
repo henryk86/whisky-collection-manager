@@ -2477,7 +2477,7 @@ test('browser: adjustments followed by cutting create one corrected editable cut
         assert.match(await tile.locator('img').getAttribute('src'),/-edit-[\w-]+\.webp$/);
         await pen.click();
         await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]').disabled);
-        assert.equal(await page.locator('[data-photo-slider="exposure"]').inputValue(),'.6');
+        assert.equal(Number(await page.locator('[data-photo-slider="exposure"]').inputValue()),.6);
         await page.locator('[data-act="photo-editor-before"]').click();
         await page.waitForFunction(() => document.querySelector('[data-act="photo-editor-before"]')
             ?.getAttribute('aria-pressed') === 'true');
@@ -2640,8 +2640,40 @@ test('browser: a saved photo cutout can be previewed, toggled and deleted withou
         await page.locator('[data-photo-editor-tab="cutout"]').click();
         await page.locator('[data-act="photo-editor-remove-cutout"]').click();
         await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`).waitFor();
-        assert.equal((await requestJson(base, '/api/collection')).data.bottlings[0].bottles[0].photos[0].cutout, undefined);
-        assert.equal(await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`).getAttribute('src'), `/${photo.path}`);
+        const photoAfterDelete = (await requestJson(base, '/api/collection')).data.bottlings[0].bottles[0].photos[0];
+        assert.equal(photoAfterDelete.cutout, undefined);
+        assert.equal(photoAfterDelete.path, photo.path, 'original image remains stored');
+        assert.equal(photoAfterDelete.adjustment.settings.exposure,.6, 'original edits survive cutout deletion');
+        assert.equal(await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`).getAttribute('src'),
+            `/${photoAfterDelete.adjustment.path}`);
+    });
+});
+
+test('browser: saved transparent cutout Before displays all opaque original pixels synchronously', async () => {
+    await session(async ({base,page,open}) => {
+        const {bottle,bottling} = await seed(base,'CUT-OPAQUE');
+        const opaque = 'data:image/png;base64,' + fs.readFileSync(
+            new URL('../fixtures/photo-wb-reference.png', import.meta.url)).toString('base64');
+        const transparent = 'data:image/png;base64,' + fs.readFileSync(
+            new URL('../fixtures/photo-cutout-transparent.png', import.meta.url)).toString('base64');
+        const photo = (await requestJson(base,`/api/bottles/${bottle.id}/photos`,'POST',{image:opaque})).data;
+        await requestJson(base,`/api/bottles/${bottle.id}/photos/${photo.id}/cutout`,'PUT',{image:transparent});
+        await open();
+        await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
+        await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]').disabled);
+        const transparentCount = () => page.locator('[data-photo-editor-preview]').evaluate(canvas => {
+            const pixels = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+            let count = 0;
+            for (let index=3;index<pixels.length;index+=4) if (pixels[index]===0) count++;
+            return count;
+        });
+        assert.ok((await transparentCount()) > 0);
+        await page.locator('[data-act="photo-editor-before"]').click();
+        assert.equal(await page.locator('[data-act="photo-editor-before"]').getAttribute('aria-pressed'),'true');
+        assert.equal(await transparentCount(),0);
+        await page.locator('[data-act="photo-editor-before"]').click();
+        assert.ok((await transparentCount()) > 0);
     });
 });
 

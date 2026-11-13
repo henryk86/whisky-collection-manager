@@ -32,6 +32,7 @@ const canvasFromImage = (image, maxSide) => {
 };
 const imageDataFromCanvas = canvas => canvas.getContext('2d', {willReadFrequently: true})
     .getImageData(0, 0, canvas.width, canvas.height);
+const clonePixels = pixels => new ImageData(new Uint8ClampedArray(pixels.data), pixels.width, pixels.height);
 const blobFromCanvas = (canvas, quality = .97) => new Promise((resolve, reject) =>
     canvas.toBlob(blob => blob ? resolve(blob) : reject(Error(t('photoEditor.error'))), 'image/webp', quality));
 const blobAsDataUrl = blob => new Promise((resolve, reject) => {
@@ -61,6 +62,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     let cutoutMaskStrokes = [];
     let showingBefore = false;
     let originalPreviewData = null; // Before/after for a cutout always shows the complete original.
+    let sourceImages = {original:null,cutout:null}; // Already decoded, for synchronous source switching.
+    let sourcePixels = {original:null,cutout:null};
     let activeTab = 'adjustments';
     let whitePicking = false;
     let pickStart = null;
@@ -415,28 +418,47 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         });
     }
 
+    function paintPreview() {
+        const host = root();
+        if (!host || !sourceData) return;
+        const canvas = host.querySelector('[data-photo-editor-preview]');
+        if (!canvas) return;
+        // The comparison must switch canvas pixels before aria-pressed / UI state
+        // advertises completion; otherwise browser assertions and users briefly
+        // see the previous (potentially transparent) frame.
+        const adjusted = showingBefore
+            ? (previewCutout ? originalPreviewData || sourceData : sourceData)
+            : adjustPhotoPixels(sourceData, values);
+        if (canvas.width !== adjusted.width || canvas.height !== adjusted.height) {
+            canvas.width = adjusted.width;
+            canvas.height = adjusted.height;
+        }
+        canvas.getContext('2d', {willReadFrequently: true})
+            .putImageData(new ImageData(adjusted.data, adjusted.width, adjusted.height), 0, 0);
+    }
+
     function schedulePreview() {
         const thisGeneration = generation;
         if (renderId) cancelAnimationFrame(renderId);
         renderId = requestAnimationFrame(() => {
             renderId = 0;
-            const host = root();
-            if (!host || !sourceData || thisGeneration !== generation) return;
-            const canvas = host.querySelector('[data-photo-editor-preview]');
-            if (!canvas) return;
-            // "Before" compares the entire editing result: when a background has
-            // been removed, show the uncut original rather than only neutralizing
-            // sliders on the already transparent image.
-            const adjusted = showingBefore
-                ? (previewCutout ? originalPreviewData || sourceData : sourceData)
-                : adjustPhotoPixels(sourceData, values);
-            if (canvas.width !== adjusted.width || canvas.height !== adjusted.height) {
-                canvas.width = adjusted.width;
-                canvas.height = adjusted.height;
-            }
-            canvas.getContext('2d', {willReadFrequently: true})
-                .putImageData(new ImageData(adjusted.data, adjusted.width, adjusted.height), 0, 0);
+            if (thisGeneration === generation) paintPreview();
         });
+    }
+
+    function showPreviewNow() {
+        if (renderId) cancelAnimationFrame(renderId);
+        renderId = 0;
+        paintPreview();
+    }
+    async function loadSourceImage(path) {
+        const loaded = new Image();
+        loaded.decoding = 'async';
+        loaded.crossOrigin = 'anonymous';
+        loaded.src = imageUrl(path);
+        if (typeof loaded.decode === 'function') await loaded.decode();
+        else await new Promise((resolve,reject) => {loaded.onload=resolve; loaded.onerror=reject;});
+        return loaded;
     }
 
     async function open(button) {
@@ -459,6 +481,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         cutoutMaskStrokes = [];
         sourceData = null;
         originalPreviewData = null;
+        sourceImages = {original:null,cutout:null};
+        sourcePixels = {original:null,cutout:null};
         image = null;
         pendingCutout = null;
         maskBaseData = null; maskStrokes = []; brushMode = null; brushSize = DEFAULT_MASK_BRUSH_SIZE; activeBrush = null;
@@ -570,28 +594,30 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         attachMaskBrush(host.querySelector('[data-photo-editor-preview]'));
         attachViewport(host.querySelector('[data-photo-editor-preview]'));
         try {
-            const loaded = new Image();
-            loaded.decoding = 'async';
-            loaded.crossOrigin = 'anonymous';
-            loaded.src = imageUrl(sourcePath);
-            if (typeof loaded.decode === 'function') await loaded.decode();
-            else await new Promise((resolve, reject) => {
-                loaded.onload = resolve;
-                loaded.onerror = reject;
-            });
+            // Preload *both* saved sources. Source selection is a purely local
+            // preview operation and must be immediate once the editor is ready.
+            const [originalImage, cutoutImage] = await Promise.all([
+                loadSourceImage(photo.path),
+                photo.cutout?.path ? loadSourceImage(photo.cutout.path) : Promise.resolve(null)
+            ]);
             if (currentGeneration !== generation || !root()) return;
-            image = loaded;
-            const inputCanvas = canvasFromImage(image, MAX_PREVIEW_SIDE);
-            sourceData = imageDataFromCanvas(inputCanvas);
-            if (!previewCutout) originalPreviewData = sourceData;
-            maskBaseData = photo.cutout?.selected ? imageDataFromCanvas(inputCanvas) : null;
+            sourceImages = {original:originalImage,cutout:cutoutImage};
+            sourcePixels = {
+                original:imageDataFromCanvas(canvasFromImage(originalImage, MAX_PREVIEW_SIDE)),
+                cutout:cutoutImage ? imageDataFromCanvas(canvasFromImage(cutoutImage, MAX_PREVIEW_SIDE)) : null
+            };
+            originalPreviewData = sourcePixels.original;
+            const sourceKey = previewCutout ? 'cutout' : 'original';
+            image = sourceImages[sourceKey];
+            sourceData = clonePixels(sourcePixels[sourceKey]);
+            maskBaseData = previewCutout ? clonePixels(sourcePixels.cutout) : null;
             const preview = root().querySelector('[data-photo-editor-preview]');
-            preview.width = inputCanvas.width;
-            preview.height = inputCanvas.height;
+            preview.width = sourceData.width;
+            preview.height = sourceData.height;
+            showPreviewNow();
             root().querySelector('[data-photo-editor-message]').textContent = t('photoEditor.hint');
             syncSliders();
             resetViewport();
-            schedulePreview();
 
         } catch (error) {
             if (currentGeneration !== generation || !root()) return;
@@ -632,8 +658,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         if (!root() || !sourceData || busy) return;
         if (showingBefore) {
             showingBefore = false;
+            showPreviewNow();
             syncSliders();
-            schedulePreview();
             return;
         }
         stopPicking();
@@ -665,8 +691,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         }
         if (!root()) return;
         showingBefore = true;
+        showPreviewNow();
         syncSliders();
-        schedulePreview();
     }
 
     // Generate a new transparent cutout from the retained original. The segmentation
@@ -719,9 +745,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
             preview.width = canvas.width;
             preview.height = canvas.height;
             showingBefore = false;
-            message.textContent = t('photoEditor.cutoutReady');
             resetViewport();
-            schedulePreview();
+            showPreviewNow();
+            message.textContent = t('photoEditor.cutoutReady');
         } catch (error) {
             if (generation === thisGeneration && root()) {
                 message.textContent = t('cutout.failed');
@@ -734,49 +760,28 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
             }
         }
     }
-    async function toggleCutout() {
+    function toggleCutout() {
         const photo = selection && findPhoto(selection.bottleId, selection.photoId);
         if (!photo?.cutout || busy || pendingCutout || !root()) return;
         const next = !previewCutout;
-        busy = true;
+        const key = next ? 'cutout' : 'original';
+        if (!sourceImages[key] || !sourcePixels[key]) return;
         stopPicking();
         stopBrush();
         if (previewCutout) cutoutMaskStrokes = maskStrokes.map(stroke => ({...stroke}));
         sourceValues[previewCutout ? 'cutout' : 'original'] = {...values};
+        image = sourceImages[key];
+        maskBaseData = next ? clonePixels(sourcePixels.cutout) : null;
+        maskStrokes = next ? cutoutMaskStrokes.map(stroke => ({...stroke})) : [];
+        sourceData = next && maskStrokes.length
+            ? applyMaskStrokes(maskBaseData,maskStrokes) : clonePixels(sourcePixels[key]);
+        previewCutout = next;
+        values = {...sourceValues[key]};
+        showingBefore = false;
+        resetViewport();
+        showPreviewNow();
+        root().querySelector('[data-photo-editor-message]').textContent = t('photoEditor.hint');
         syncSliders();
-        const thisGeneration = generation;
-        try {
-            const loaded = new Image();
-            loaded.decoding = 'async';
-            loaded.crossOrigin = 'anonymous';
-            loaded.src = imageUrl(next ? photo.cutout.path : photo.path);
-            if (typeof loaded.decode === 'function') await loaded.decode();
-            else await new Promise((resolve,reject) => {loaded.onload = resolve; loaded.onerror = reject;});
-            if (thisGeneration !== generation || !root()) return;
-            const canvas = canvasFromImage(loaded, MAX_PREVIEW_SIDE);
-            image = loaded;
-            if (!next) originalPreviewData = imageDataFromCanvas(canvas);
-            maskBaseData = next ? imageDataFromCanvas(canvas) : null;
-            maskStrokes = next ? cutoutMaskStrokes.map(stroke => ({...stroke})) : [];
-            sourceData = next && maskStrokes.length
-                ? applyMaskStrokes(maskBaseData,maskStrokes) : imageDataFromCanvas(canvas);
-            previewCutout = next;
-            values = {...sourceValues[next ? 'cutout' : 'original']};
-            const preview = root().querySelector('[data-photo-editor-preview]');
-            preview.width = canvas.width;
-            preview.height = canvas.height;
-            showingBefore = false;
-            root().querySelector('[data-photo-editor-message]').textContent = t('photoEditor.hint');
-            resetViewport();
-            schedulePreview();
-        } catch (error) {
-            if (thisGeneration === generation && root()) toast(error.message,true);
-        } finally {
-            if (thisGeneration === generation) {
-                busy = false;
-                if (root()) syncSliders();
-            }
-        }
     }
     async function removeCutout() {
         const photo = selection && findPhoto(selection.bottleId, selection.photoId);
