@@ -58,3 +58,11 @@ OpenStreetMap verlangt bei Browser-Kacheln einen Referer und untersagt eine
 Policy, die diesen komplett unterdrueckt.
 Siehe https://operations.osmfoundation.org/policies/tiles/.
 Die visuelle Browserabnahme nach CSP-Einfuehrung ist noch offen.
+
+
+### Kartenposition nach Destillenänderungen (v0.16.15)
+
+- Beim Speichern einer Namens- oder Statusänderung bleiben der aktuelle Kartenmittelpunkt und der Zoom erhalten; der Karten-Viewer wird nicht neu aufgebaut.
+- Bei geänderten Koordinaten wird ausschließlich die neue Destillenposition zentriert, ohne Zoomanpassung.
+- Die Marker, Statistiken und die Auswahl in der Seitenleiste werden mit den aktuellen Daten aktualisiert.
+- Nur die Schaltfläche „Alle Standorte anzeigen“ passt den Kartenausschnitt bewusst wieder an alle Datenpunkte an.

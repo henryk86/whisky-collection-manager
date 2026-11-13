@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.16.17 - 2026-11-13
+
+- Radio- und Checkbox-Markierungen in der Lagerzuordnung auf normale 18-Pixel-Groesse begrenzt; keine Layoutaenderungen.
+
+## 0.16.16 - 2026-11-13
+
+- Flaschenvorschau im Lagerort-Zuordnungsdialog korrigiert: Hochformatige Flaschenfotos bleiben vollständig innerhalb des festen Bildrahmens (72 × 96 Pixel, mobil 58 × 77 Pixel), ohne Verzerrung oder Abschneiden.
+- CSS-Grid-Mindestgrößenproblem in Chrome durch unabhängig begrenzte Bildpositionierung behoben; Browser-Regressionstest prüft große Hochformatbilder auf Desktop und Smartphone.
+
+## 0.16.15 - 2026-11-13
+
+- Lagerort-Dialog neu gestaltet: betroffene Flasche und bisheriger Lagerort als kompakte Übersicht, getrennte Auswahl für Raum, Möbel und Fach, sichtbare Fachbelegung, klare Option „Ohne Lagerort“ und responsive Darstellung.
+- Kartenfehler aus v0.16.14 behoben: Nach dem Speichern wird die bestehende Karteninstanz mit ihren Koordinaten und ihrer Zoomstufe beibehalten. Nur tatsächlich geänderte Destillenkoordinaten führen zum gezielten Zentrieren.
+- Die Karten-Sidebar, Marker und Statistik werden nach einer Datenänderung direkt aktualisiert, ohne den Kartenausschnitt neu aufzubauen.
+- Zusätzliche Unit- und Chromium-Regressionstests für Lagerort-Dialog und Kartenmittelpunkt; keine Änderung an Datenmodell, Importprotokoll oder Docker-Konfiguration.
+
 ## 0.16.14 - 2026-11-13
 
 - Kartenansicht behaelt beim Speichern einer Destillenposition die Zoomstufe und zentriert nur den korrigierten Standort.

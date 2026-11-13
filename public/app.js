@@ -112,7 +112,8 @@ async function refresh() {
     state.collection = collection;
     state.warehouse = warehouse;
     state.version = meta.version;
-    render();
+    if (state.page === 'map') mapView.refreshData();
+    else render();
 }
 async function action(task) {
     try {

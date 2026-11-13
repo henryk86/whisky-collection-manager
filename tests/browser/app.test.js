@@ -1573,6 +1573,8 @@ test('browser: editing map coordinates keeps zoom and recenters only after a pos
             .find(site => site.id === ardbeg.id).latitude, 55.7101);
 
         // A metadata-only edit must not shift the map, and must preserve zoom.
+        // Retain the same DOM node; rebuilding the viewer can lose the exact camera.
+        await page.locator('#distillery-map').evaluate(element => { element.dataset.cameraIdentity = 'keep'; });
         await page.locator('[data-map-control="out"]').click();
         const zoomAfterOut = await page.locator('.map-zoom-level').innerText();
         const viewport = await page.locator('.map-viewport').boundingBox();
@@ -1592,6 +1594,8 @@ test('browser: editing map coordinates keeps zoom and recenters only after a pos
         await page.locator('#distillery-form button[type="submit"]').click();
         await page.locator('.overlay').waitFor({ state: 'detached' });
         assert.equal(await page.locator('.map-zoom-level').innerText(), zoomAfterOut);
+        assert.equal(await page.locator('#distillery-map').getAttribute('data-camera-identity'), 'keep',
+            'a metadata edit should update map markers without remounting the map viewer');
         assert.equal(await page.locator('#map-site-select').inputValue(), ardbeg.id);
         const samePosition = await page.locator('.map-marker[aria-label^="Ardbeg:"]').evaluate(element => {
             const marker = element.getBoundingClientRect();
@@ -2008,6 +2012,55 @@ test('browser: shelf bottle opens details modal, can relocate and links to its h
         assert.equal(await link.getAttribute('href'),`/?bottling=${created.bottling.id}`);
         await dialog.locator('[data-act="warehouse-assign"]').click();
         assert.equal(await page.locator('#warehouse-form').count(),1,'relocation remains available in modal');
+        const assign = page.locator('#warehouse-form');
+        assert.equal(await assign.locator('[data-assignment-room]').inputValue(),room.id);
+        assert.equal(await assign.locator('[data-assignment-furniture]').inputValue(),furniture.id);
+        assert.equal(await assign.locator('[data-assignment-shelf]').inputValue(),shelf.id);
+        assert.match(await assign.locator('.warehouse-assignment-current').innerText(),/Flaschenraum \/ Testregal \/ Flaschenfach/);
+        assert.match(await assign.locator('.warehouse-assignment-feedback').innerText(),/1 von 6/);
+        // A tall real bottle photo used to inflate the CSS grid's intrinsic row
+        // beyond the fixed preview frame, silently cropping the bottom in Chrome.
+        await assign.evaluate(element => {
+            const photo = element.querySelector('.warehouse-assignment-photo');
+            const image = document.createElement('img');
+            image.alt = '';
+            image.src = 'data:image/svg+xml,' + encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="2400">'
+                + '<rect width="600" height="2400" fill="green"/>'
+                + '<rect y="2300" width="600" height="100" fill="red"/>'
+                + '</svg>');
+            photo.replaceChildren(image);
+        });
+        await assign.locator('.warehouse-assignment-photo img').evaluate(image => image.decode());
+        const checkPhotoSize = async () => {
+            const bounds = await assign.evaluate(element => {
+                const frame = element.querySelector('.warehouse-assignment-photo').getBoundingClientRect();
+                const image = element.querySelector('.warehouse-assignment-photo img').getBoundingClientRect();
+                return {frame:{x:frame.x,y:frame.y,w:frame.width,h:frame.height},
+                    image:{x:image.x,y:image.y,w:image.width,h:image.height},
+                    fit:getComputedStyle(element.querySelector('.warehouse-assignment-photo img')).objectFit};
+            });
+            assert.equal(bounds.fit,'contain');
+            assert.ok(bounds.image.x >= bounds.frame.x - 1 && bounds.image.y >= bounds.frame.y - 1
+                && bounds.image.x + bounds.image.w <= bounds.frame.x + bounds.frame.w + 1
+                && bounds.image.y + bounds.image.h <= bounds.frame.y + bounds.frame.h + 1,
+                `tall bottle photo must fit entirely in preview: ${JSON.stringify(bounds)}`);
+        };
+        await checkPhotoSize();
+        await assign.locator('[name="warehouseAssignmentMode"][value="none"]').check();
+        assert.equal(await assign.locator('[data-assignment-room]').isDisabled(),true);
+        assert.equal(await assign.locator('[data-assignment-shelf]').isDisabled(),true);
+        await assign.locator('[name="warehouseAssignmentMode"][value="shelf"]').check();
+        assert.equal(await assign.locator('[data-assignment-shelf]').isEnabled(),true);
+        await page.setViewportSize({width:390,height:844});
+        const assignmentFrame = await assign.evaluate(element => ({
+            width: element.closest('.dialog').getBoundingClientRect().width,
+            viewport: document.documentElement.clientWidth,
+            columns: getComputedStyle(element.querySelector('.warehouse-assignment-selectors')).gridTemplateColumns.split(' ').length,
+        }));
+        assert.ok(assignmentFrame.width <= assignmentFrame.viewport + 1, 'dialog must fit mobile width');
+        assert.equal(assignmentFrame.columns,1,'mobile assignment selects should stack vertically');
+        await checkPhotoSize();
         await page.locator('#modal-root [data-act="close-modal"]').first().click();
         await symbol.click();
         await page.locator('#modal-root [data-act="open"]').click();

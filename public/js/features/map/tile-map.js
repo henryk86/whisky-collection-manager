@@ -8,12 +8,13 @@ import { pagodaRoofIcon, closedDistilleryIcon } from '../../ui/action-icons.js';
 import { clusterMapSites } from '../../domain/map-clusters.js';
 
 const TILE_BASE = 'https://tile.openstreetmap.org';
-export function createTileMap(element, sites, onSelect, selectedId = null, { showAllDistilleries = false, focusSiteIds = [], initialView = null } = {}) {
+export function createTileMap(element, initialSites, onSelect, selectedId = null, { showAllDistilleries = false, focusSiteIds = [], initialView = null } = {}) {
     const layer = element.querySelector('.map-movable');
     const tiles = element.querySelector('.map-tiles');
     const markers = element.querySelector('.map-markers');
     const viewport = element.querySelector('.map-viewport');
     if (!layer || !tiles || !markers || !viewport) throw new Error(t("features.map.containerMissing"));
+    let sites = initialSites;
     let center, zoom, viewChanged = false, destroyed = false, pinnedId = null;
     const pointers = new Map();
     let drag = null, pinch = null, lastDrag = 0;
@@ -254,6 +255,12 @@ export function createTileMap(element, sites, onSelect, selectedId = null, { sho
     }
     return {
         focus, centerOn, fitSites,
+        updateSites(nextSites, nextSelectedId) {
+            // Keep the live camera and pointer state. Only markers/data change.
+            sites = nextSites;
+            selectedId = nextSelectedId;
+            update();
+        },
         getView() { return center ? { lat: center.lat, lon: center.lon, zoom } : null; },
         select(id) { selectedId = id; update(); },
         fit,
