@@ -1,22 +1,21 @@
-# Teststatus - Whisky Collection Manager v0.17.12
+# Teststatus - Whisky Collection Manager v0.17.13
 
-**Stand:** 2026-11-13. **Status:** Node-Pruefungen erfolgreich; vollstaendige Browser- und Docker-Pruefungen offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-13. **Status:** Node-Pruefungen erfolgreich, Browser- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Bestanden** | Versionsdaten 0.17.12 konsistent. |
-| `npm run check` | **Bestanden** | 229 JavaScript-Dateien, 962 referenzierte i18n-Schluessel, 18 Markdown-Dateien. |
-| `npm test` | **376/376 bestanden** | Unit- und Integrationstests; reine Namens-Abwesenheitstests wurden entfernt. |
-| Reproduktion des CI-Fehlers | **Bestanden** | 0.17.10 mit 0.17.11 ueberschrieben: 231 JavaScript-Dateien und exakt der gemeldete fehlende Schluessel. Nach Entfernen der beiden alten Dateien: 229 Dateien und `npm run check` gruen. |
-| `npm run test:browser` | **Nicht lokal ausgeführt** | Chromium-Tests sind separat in CI zu pruefen. |
-| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach einem Release auf dem Zielsystem pruefen. |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.17.13 konsistent. |
+| `npm run check` | **Bestanden** | 229 JavaScript-Dateien, 962 i18n-Referenzen, 18 Markdown-Dateien und 2 referenzierte Testbilddateien vorhanden. |
+| Negativprobe ohne Testbild | **Bestanden** | Beim kurzzeitigen Entfernen der neuen Referenz-PNG meldet `scripts/check.js` den genauen fehlenden Dateipfad; nach Wiederherstellung gruener Check. |
+| `npm test` | **376/376 bestanden** | Vollstaendiger Unit- und Integrationstestlauf. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Playwright-Abhaengigkeiten sind lokal nicht verfuegbar; `npm ci --offline` scheitert am fehlenden npm-Cache. Die 59 Chromium-Tests muessen in GitHub Actions laufen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem pruefen. |
 
-## Aenderungen v0.17.12
+## Aenderungen v0.17.13
 
-- Zwei beim Provider-Refactoring entfallene Quelldateien muessen bei bestehendem Git-Checkout geloescht und die Loeschungen committed werden; es fehlen keine Uebersetzungen in der aktuellen Importimplementierung.
-- Fragile Tests, die lediglich das Nichtvorkommen von `Whiskybase` im Quelltext oder in der Dokumentation verlangen, entfernt. Positive Import- und API-Verhaltenstests bleiben erhalten.
-- Upgrade-Hinweis samt konkretem `git rm`-Befehl in README dokumentiert.
+- Die bisher vorhandene 120x180-PNG `tests/fixtures/photo-wb-reference.png` wurde ohne Inhaltsaenderung nach `tests/fixtures/photo-import-reference.png` umbenannt. Alle fuenf fehlerhaften Browserfaelle verwenden nun eine existierende Datei.
+- `npm run check` prueft relative `../fixtures/`-Referenzen in Tests, bevor CI die Browser-Suite startet. Keine Browser-Tests entfernt und keine Produktivfunktionen veraendert.
 
-Eine vollstaendige GitHub-Actions- und Browser-Abnahme von 0.17.12 steht noch aus.
+**Hinweis:** Ein erfolgreicher Node-Testlauf und die Fixture-Pruefung bestaetigen nicht die erfolgreiche Ausfuehrung der Browser-Tests. Der vollstaendige CI-Browserlauf bleibt ausstehend.

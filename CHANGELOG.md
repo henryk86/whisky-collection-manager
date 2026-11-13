@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.17.13 - 2026-11-13
+
+- Beim Import-Refactoring umbenannte Browser-Foto-Fixture physisch in `photo-import-reference.png` umbenannt (Bildinhalt unverändert); alle fünf bestehenden Browserfälle behalten.
+- `npm run check` prüft statisch referenzierte Test-Fixtures auf Existenz, sodass fehlende Dateien vor den Browser-Tests auffallen.
+
 ## 0.17.12 - 2026-11-13
 
 - CI-Korrektur beim Upgrade von 0.17.10: Die zwei ersetzten Module `whiskybase/choice-template.js` und `whiskybase/distillery-matching.js` muessen aus dem Git-Index entfernt werden; ein ZIP-Ueberschreiben allein entfernt keine Dateien.

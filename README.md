@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.17.12
+# Whisky Collection Manager v0.17.13
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der **Abfüllung** über einzelne **physische Flaschen** bis zum **Lagerfach**. Eine Abfüllung kann mehrere Flaschen mit unterschiedlichen Inventarnummern, Zuständen, Größen, Fotos und Belegen enthalten.
 
@@ -133,6 +133,10 @@ npm run check
 
 Bei einem vollständig neuen Checkout sind diese Dateien nicht vorhanden und der Schritt entfällt. Die Module liegen seit v0.17.11 unter `public/js/features/import/`. Wenn die alte `choice-template.js` erhalten bleibt, wird `whiskybase.import.choiceNotFound` weiter referenziert, obwohl der neue Übersetzungsschlüssel `imports.preview.choiceNotFound` lautet. Die korrekte Lösung ist das **Entfernen der alten Dateien**, nicht das Wiederherstellen des alten Übersetzungsschlüssels. Git muss die Löschungen als Änderungen sehen und mit dem Patch committen.
 
+### Foto-Testdatei nach v0.17.13
+
+Die Browser-Tests verwenden jetzt `tests/fixtures/photo-import-reference.png`. Diese Datei wurde aus `photo-wb-reference.png` **umbenannt**, nicht gelöscht oder durch andere Bilddaten ersetzt. Bei einem Git-Update muss die Dateiumbenennung auch im Index ankommen; beim Überkopieren von ZIP-Dateien kann die alte Testdatei daneben stehen bleiben. `npm run check` kontrolliert die Verfügbarkeit der in Browser-Tests verwendeten Fixtures jetzt vorab.
+
 ## Lokal entwickeln
 
 **Node.js 20 oder neuer** ist erforderlich. Es gibt keine Datenbank und keinen Frontend-Bundler. Für die optionale lokale KI-Freistellung ist ein einmaliger Download der versionierten ONNX-Dateien nötig (`npm run cutout:prepare`). Docker-Images erledigen das beim Build.
@@ -150,7 +154,7 @@ Die Beispiel-IP durch die lokale Adresse ersetzen. Die Standardeinstellung ist H
 ### Qualität und Tests
 
 ```bash
-npm run check           # JavaScript, Modulimporte, i18n-Schlüssel, Dokumentationslinks
+npm run check           # JavaScript, Modulimporte, Browser-Testdateien, i18n, Dokumentationslinks
 npm test                # Unit- und Integrationstests
 npm run release:check   # Versionsmetadaten
 npx playwright-core install chromium
