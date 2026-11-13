@@ -20,6 +20,8 @@ POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB
 | POST | `/api/import-image/stage` | Optionales Bild (Data-URL) für 15 Minuten im Arbeitsspeicher hinterlegen, liefert `{ "token", "expiresInSeconds" }` |
 | GET | `/api/import-image/stage/:token` | Temporäre Bildvorschau; nicht Teil der Sammlung |
 | POST | `/api/bottles/:id/photos/from-stage` | Kopiert das zuvor übertragene Bild als eigene Datei zur angegebenen Flasche, JSON `{ "token": "uuid" }` |
+| PUT | `/api/bottles/:id/photos/:photoId/adjustments` | Nicht-destruktive Bildkorrektur als WebP-Derivat und Zahlenwerte speichern |
+| DELETE | `/api/bottles/:id/photos/:photoId/adjustments` | Bildkorrektur entfernen; Original und Freistellung behalten |
 | DELETE | `/api/bottles/:id/photos/:photoId` | Einzelnes Foto entfernt |
 | POST | `/api/bottles/:id/files` | Anhang zu einer physischen Flasche, Status 201 |
 | GET | `/api/bottles/:id/files/:fileId` | Anhang als Datei herunterladen, nicht inline anzeigen |
@@ -98,6 +100,10 @@ Antwort: `{ "bottling": { ... }, "bottle": { ... } }`. Die separate `bottle` in 
 
 Der Foto-Endpunkt akzeptiert `{ "image": "data:image/jpeg;base64,..." }`. Das ist nur das Uploadformat: Auf dem Datenträger entsteht eine separate Bilddatei, im JSON lediglich `{ "id", "path", "createdAt" }`. Unterstützte Bildtypen: JPEG, PNG, WebP, GIF. Base64-Bilddaten werden nicht in der Sammlung gespeichert. Die Reihenfolge entspricht der Reihenfolge des `photos[]`-Arrays; bei Umordnung bleiben IDs und relative Pfade unverändert. Ein extern übergebenes Foto kann als fremdes Referenzbild gekennzeichnet sein; diese Information wird bei bestehenden Fotos beibehalten. Das temporäre Server-Staging liegt nur im Arbeitsspeicher, verfällt nach 15 Minuten und ist kein persistenter externer Link.
 
+## Bildkorrekturen
+
+`PUT /api/bottles/:id/photos/:photoId/adjustments` erwartet `{ "image": "data:image/webp;base64,...", "settings": { "exposure": 0.5, "contrast": 12, "highlights": -20, "shadows": 20, "temperature": 0, "tint": 0, "saturation": 0, "clarity": 10, "sharpen": 10 } }`. Die neun Zahlen werden begrenzt und geprüft (Belichtung −2..+2; Lichter/Tiefen, Kontrast, Temperatur, Tönung, Sättigung, Klarheit jeweils −100..100; Schärfe 0..100). Unbekannte Felder und ungültige Daten werden abgelehnt. Das WebP darf maximal 10 MB groß sein. Quelle, Pfad, Bild-ID und Datenträgerverzeichnisse werden ausschließlich serverseitig bestimmt. Ein abgeschlossener PUT löscht die alte Ableitung, nie das Original. `DELETE` entfernt nur die Ableitung der **aktiven** Variante. Original und Freistellung können eigene Bearbeitungssätze besitzen (`photo.adjustment` und `photo.cutout.adjustment`); bei alten Sammlungen bleibt ein einzelnes `adjustment` mit `sourcePath` zur Freistellung lesbar. Alle Derivate werden im vollständigen Backup berücksichtigt.
+
 ## Dateien & Nachweise
 
 `POST /api/bottles/:id/files` benötigt ein JSON-Objekt mit `filename` (Originaldateiname) und `data` (Data-URL mit Base64-Kodierung, beispielsweise `data:application/pdf;base64,...`). Das Uploadformat ist **nicht** das Speicherformat. Die Datei liegt nach der Übertragung als normale Binärdatei in `documents/<bottleId>/`, in `collection.json` bleibt nur eine Referenz (`id`, `name`, `path`, `size`, `mimeType`, `sha256`, `uploadedAt`). Maximal 15 MiB pro Datei, bis 26 MiB JSON-Anfragegröße. Unterstützte Dateitypen: PDF, JPG/JPEG, PNG, WebP, GIF, HEIC/HEIF, TXT, CSV, EML, DOCX, XLSX, ODT und ODS. Der Server prüft Dateiname, Erweiterung und grundlegende Dateisignaturen.
@@ -156,7 +162,7 @@ Möbel bieten außerdem optionale Seitenwände, Rückwand, Türflügel und Glasr
 
 ## Optionale Foto-Freistellung (v0.16.0)
 
-- `PUT /api/bottles/:bottleId/photos/:photoId/cutout` – `{ "image": "data:image/png;base64,..." }` speichert eine neue transparente Ableitung und wählt sie zur Anzeige aus; ersetzt eine vorherige Ableitung nach erfolgreicher Transaktion.
+- `PUT /api/bottles/:bottleId/photos/:photoId/cutout` – `{ "image": "data:image/png;base64,..." }` speichert eine neue transparente Ableitung. Optional erlaubt der Request zusätzlich `{ "adjustment": { "image": "data:image/webp;base64,...", "settings": { "exposure": 0.5 } } }`, um die korrigierte Vorschau **atomar zusammen mit der Freistellung** abzulegen. Die Basismaske ist uneditiert; die aktuelle Korrektur wird nur einmal auf das freigestellte Bild angewendet. Vorhandene Korrekturen des Originalbilds werden nicht gelöscht. Der Server entscheidet über Quellpfade und Dateinamen.
 - `PATCH /api/bottles/:bottleId/photos/:photoId/cutout` – `{ "selected": true|false }` wechselt die Anzeige zwischen Freistellung und unverändertem Original.
 - `DELETE /api/bottles/:bottleId/photos/:photoId/cutout` – entfernt ausschließlich die Ableitung; das Original bleibt erhalten.
 

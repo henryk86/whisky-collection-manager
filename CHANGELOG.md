@@ -1,5 +1,60 @@
 # Changelog
 
+## 0.17.8 - 2026-11-13
+
+- Bildeditor: Vorschau und rechte Regler-/Tab-Spalte schließen auf Desktop wieder exakt bündig ab; die fehlerhafte zusätzliche Höhe von 44 Pixeln entfällt. Nur die Tab-Inhalte scrollen, Status- und Aktionsleiste bleiben klar getrennt.
+- Statusmeldung unterhalb beider Spalten kompakt eingefasst; Abstände in der Dialogüberschrift und vor dem Speichern reduziert. Responsive Layout bei 1366×900, 1366×768, 1152×648, 844×390, 390×844 und 320×568 in Chromium geprüft.
+
+## 0.17.7 - 2026-11-13
+
+- Vorher/Nachher vergleicht auch bei einer neu erzeugten oder bereits gespeicherten Freistellung das vollständige Original mit dem transparenten Ergebnis. Bildkorrekturen, Auswahl und Speicherzustand bleiben unangetastet.
+- Weißabgleich-Pipette als gut unterscheidbares SVG mit Glaskörper, Ballon und schmaler Spitze überarbeitet. Browser-Regression für die Freistellungs-Vorher/Nachher-Ansicht ergänzt.
+
+## 0.17.6 - 2026-11-13
+
+- Fotoeditor für neue Fotos ohne Freistellung oder bisherige Bildkorrekturen repariert: fehlende `cutout`-/`adjustment`-Daten werden korrekt erkannt und mit neutralen Reglerwerten initialisiert. Alte Freistellungen behalten ihre Einstellungen.
+- Regressionstests für unbearbeitete neue Fotos und vorhandene Original-/Freistellungswerte ergänzt; gezielt in Chromium auf Desktop und Mobil geprüft.
+
+## 0.17.5 - 2026-11-13
+
+- Bildvarianten im Fotoeditor nur lokal umschalten; Auswahl und Korrekturen erst beim Speichern uebernehmen.
+- Zoom und Vorher/Nachher als überlagernde Bedienelemente am Bildrand; Statushinweis unter der gesamten Editorbreite, ohne die feste Bildgröße zu verändern. Der rechte Reglerbereich nutzt die frei gewordene Höhe.
+
+## 0.17.4 - 2026-11-13
+
+- Bildeditor rechts in zwei Tabs aufgeteilt: Bildanpassungen und Freistellung (einschließlich Pinsel, Wiederherstellen und Entfernen); links bleibt das einzelne Vorschaubild beim Umschalten gleich groß. Mobile Ansicht bleibt separat scrollbar; Tabs unterstützen Pfeiltasten.
+- Korrekturwerte bleiben beim Freistellen, nach dem gemeinsamen Speichern und beim erneuten Öffnen erhalten. Für ältere Freistellungen ohne eigene Korrekturwerte übernimmt der Editor beim Öffnen die bereits gespeicherten Werte des Originals, ohne dessen Bild als neue Freistellungsgrundlage zu verwenden.
+- Freistellungen werden wieder in der Pixelauflösung des Original-Ausschnitts berechnet (bis maximal 4096 px statt pauschal 1600 px); nur bei der 10-MB-Dateigrenze wird stufenweise verkleinert. Der korrigierte WebP-Export nutzt bis zu 4096 px und versucht zuerst höhere Kompression bei gleichen Bildmaßen.
+- Neue Regressionstests für Exportauflösung und Wiederherstellung älterer Bildkorrekturen; gezielter Chromium-Test mit synthetischer Maske belegt, dass freigestelltes WebP tatsächlich korrigierte Pixel und dieselben Bildmaße wie das PNG besitzt.
+
+## 0.17.3 - 2026-11-13
+
+- Ein einzelner Stift-Button öffnet den kombinierten Bildeditor; den redundanten Freistell-Button in der Galerie entfernt. Eine bestehende Freistellung lässt sich separat löschen, ohne die Originalbild-Korrekturen anzutasten.
+- Weißabgleich-Pipette im Farbblock direkt links neben dem gruppenweisen Reset-Symbol platziert.
+- Reiner Vorschau-Zoom (100–600 %, Mausrad, Touch und Schaltflächen) mit Verschieben ohne Änderung der gespeicherten Pixel.
+- Neue Freistellmasken-Werkzeuge: Radierer, Wiederherstellen, anpassbare Pinselgröße und Strich-Rückgängig. Pinselstriche werden unabhängig von der Zoomstufe in Bildkoordinaten gespeichert und beim Export in voller Quellauflösung auf die Alpha-Maske angewendet. Original und Farbkorrekturen bleiben getrennt.
+- Responsive Anordnung der Pinselwerkzeuge, überarbeitete ältere Browser-Selektoren und neue Brush-Unit- sowie Browser-Regressionstests.
+
+## 0.17.2 - 2026-11-13
+
+- Bildeditor und automatische Flaschenfreistellung in einem Dialog mit einer einzigen Vorschau vereint; das Scheren-Symbol öffnet denselben Editor wie der Stift.
+- Freistellen nach Belichtung/Weißabgleich/weiteren Korrekturen übernimmt die aktuelle Bearbeitung ohne doppelte Anwendung; Freistellung und Original behalten getrennte nachbearbeitbare WebP-Ableitungen. Ein gemeinsamer API-Speichervorgang sichert Freistellung und Korrektur atomar.
+- Scheren- und Stift-Button in der Galerie auf identische 28 × 28 Pixel gebracht; Reset-Symbole der Reglergruppen in der Kopfzeile platziert, ohne Schieberegler zu überlagern.
+- Bestehende Bilddaten bleiben ohne Migration kompatibel; neue Unit-/Integrationstests und Chromium-Prüfungen sichern Speicherung und Bedienung.
+
+## 0.17.1 - 2026-11-13
+
+- Flaschenbild bearbeiten: Textschaltflaeche durch Stift-Icon ersetzt, analog Freistellungs-Icon.
+- Eigener Reset-Icon-Button fuer die drei Reglergruppen Licht, Farbe und Details; andere Korrekturen bleiben erhalten.
+- Weißabgleich-Pipette: Eine neutrale Flaeche per Ziehen oder Tippen im Foto markieren; Temperatur und Toenung werden aus den Originalpixeln berechnet. Transparente, ausgebrannte und zu dunkle Pixel werden ignoriert.
+
+## 0.17.0 - 2026-11-13
+
+- Nicht-destruktiven Flaschenbildeditor mit Live-Vorschau, Belichtung, Kontrast, Lichtern/Tiefen, Weißabgleich, Details, automatischer Korrektur und Vorher/Nachher ergänzt; getrennte, reversible WebP-Ableitung und sichere API mit Backup-Unterstützung.
+
+- Achtung: Die neue Bildbearbeitung erweitert bestehende Bildobjekte optional um `adjustment` mit Einstellungen, Quellenpfad und WebP-Ableitung; Altbestände bleiben ohne Migration kompatibel.
+- Umfangreiche Tests für die nicht-destruktive Speicherung und die Chromium-Bedienung; keine neue Laufzeit-Abhängigkeit.
+
 ## 0.16.17 - 2026-11-13
 
 - Radio- und Checkbox-Markierungen in der Lagerzuordnung auf normale 18-Pixel-Groesse begrenzt; keine Layoutaenderungen.

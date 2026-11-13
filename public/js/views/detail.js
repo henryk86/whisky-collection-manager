@@ -41,7 +41,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <button type="button" class="photo-open" data-act="open-photo" title="${t("detail.photos.enlarge")}" aria-label="${t("detail.photos.openOverlay")}">
     <img draggable="false" src="${imageUrl(displayPhotoPath(photo))}" alt="${t("detail.photos.bottleWithNumber",{kind:photo.source === 'whiskybase' ? t("whiskybase.images.reference") : t("detail.photos.personalPhoto"),number:entry.inventoryNumber||''})}" loading="lazy">
     </button>
-    <button class="photo-cutout" type="button" data-act="cutout-open" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" title="${t('cutout.title')}" aria-label="${t('cutout.title')}">${t('cutout.button')}</button>
+    <button class="photo-edit-trigger" type="button" data-act="photo-editor-open" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" title="${t('photoEditor.title')}" aria-label="${t('photoEditor.title')}">${editIcon}</button>
     ${photo.cutout ? `<span class="photo-cutout-badge" title="${t('cutout.result')}">✦</span>` : ''}
     <button class="photo-remove" type="button" data-act="delete-photo" data-id="${entry.id}" data-photo-id="${photo.id}" aria-label="${t("ui.confirmations.deletePhoto")}">×</button>
     ${photo.source === 'whiskybase' ? `<span class="photo-source" title="${t('detail.photos.whiskybaseReferenceNotice')}">WB</span>` : ''}

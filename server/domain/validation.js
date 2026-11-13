@@ -1,3 +1,4 @@
+import {validatePhotoAdjustments} from '../../public/js/features/photo-editor/adjustments.js';
 /** Validate the complete JSON document before any write or import. No filesystem access. */
 import { assert } from './errors.js';
 import { allBottles, WHISKY_TYPES } from './collection.js';
@@ -98,6 +99,26 @@ export function validate(collection) {
                 assert(!photoPaths.has(cutout.path), 'Doppelte Freistellung');
                 photoPaths.add(cutout.path);
             }
+            const verifyAdjustment = (edit, expectedSource) => {
+                assert(isObject(edit) && validImagePath(edit.path) &&
+                    edit.path.startsWith(`images/${bottle.id}/`) && edit.path.endsWith('.webp') &&
+                    edit.path !== photo.path && edit.path !== photo.cutout?.path &&
+                    edit.sourcePath === expectedSource,
+                'Ungültige Bildkorrektur');
+                try { validatePhotoAdjustments(edit.settings); }
+                catch { assert(false, 'Ungültige Bildkorrekturwerte'); }
+                assert(!photoPaths.has(edit.path), 'Doppelte Bildkorrektur');
+                photoPaths.add(edit.path);
+            };
+            if (photo.adjustment !== undefined) {
+                // Old v0.17.x datasets could reference either base; new edits
+                // on selected cutouts are stored within cutout.adjustment.
+                assert(photo.adjustment.sourcePath === photo.path ||
+                    photo.adjustment.sourcePath === photo.cutout?.path, 'Ungültige Bildquelle');
+                verifyAdjustment(photo.adjustment, photo.adjustment.sourcePath);
+            }
+            if (photo.cutout?.adjustment !== undefined)
+                verifyAdjustment(photo.cutout.adjustment, photo.cutout.path);
             assert(!photoIds.has(photo.id) && !photoPaths.has(photo.path), 'Doppeltes Flaschenfoto');
             photoIds.add(photo.id);
             photoPaths.add(photo.path);

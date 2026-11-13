@@ -692,3 +692,225 @@ Der gezielte Chromium-Test deckt die beschriebenen Abläufe ab, ersetzt aber nic
 - Browser-Regressionstest für ungewöhnlich hohe Bilddateien bei beiden Bildschirmgrößen ergänzt.
 
 Ein gezielter Chromium-CSS-Test wurde mit einem synthetischen Testbild und der tatsächlichen CSS-Regel durchgeführt. Das ersetzt keine vollständige Browser-CI-Prüfung der Anwendung.
+
+---
+
+## Testbericht v0.16.17 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.16.16 mit gezielter Korrektur der Radio- und Checkbox-Marker. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsangaben in Paketdateien, README, Changelog und Teststatus stimmen überein. |
+| `npm run check` | **Bestanden** | 213 JavaScript-Dateien, 906 referenzierte Übersetzungsschlüssel und 86 relative Dokumentationslinks geprüft. |
+| `npm test` | **348/348 bestanden** | Unit- und Integrationstests einschließlich neuem CSS-Regressionstest. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Direkter Chromium-Versuch konnte hier nicht abgeschlossen werden; keine vollständige Browser-Prüfung. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach Veröffentlichung auf dem Raspberry Pi prüfen. |
+
+### Änderungen v0.16.17
+
+- Die nativen Radio-Markierungen im Lagerort-Zuordnungsdialog und die Checkboxen der Möbel-Mehrfachauswahl werden auf 18 × 18 Pixel begrenzt, einschließlich `min-height`, `padding` und `margin`.
+- Die allgemeine Formularregel (`min-height: 44px`, `padding: 11px 12px`) beeinflusst diese beiden Auswahlmarkierungen nicht mehr.
+- Sonstige Gestaltung, Kartenauswahl, Abstände, Ereignisverarbeitung, Datenmodell und Docker-Konfiguration unverändert.
+
+---
+
+## Testbericht v0.17.0 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.16.17. Neuer nicht-destruktiver Bildeditor auf der Abfüllungsdetailseite. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionen in Paketdateien, README, Changelog und Teststatus konsistent. |
+| `npm run check` | **Bestanden** | 217 JavaScript-Dateien, 919 Übersetzungsschlüssel und 89 Dokumentationslinks geprüft. |
+| `npm test` | **353/353 bestanden** | Unit- und Integrationstests inklusive Parametergrenzen, RGB/Alpha, Auto-Korrektur, Dateischutz, Korrekturwechsel und Backup. |
+| Gezielt: `browser: photo editor` | **Bestanden** | Chromium im DOM-Testmodus: Vorschau, EV-Regler, Vorher/Nachher, Speichern, Regler wiederherstellen, Zurücksetzen. |
+| Desktop/Mobil: gezielter Chromium-Durchlauf | **Bestanden** | 1400 × 900 und 390 × 844 Pixel; Vorschau verändert, Speichern, erneutes Öffnen, Original wiederhergestellt. |
+| `npm run test:browser` (vollständige CI-Suite) | **Nicht abgeschlossen** | 20 Tests bestanden, 1 browserabhängiger Test übersprungen; Testlauf danach wegen Zeitlimit abgebrochen. Kein vollständiges CI-Ergebnis. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Veröffentlichung und Prüfung auf Raspberry Pi nach GitHub-Release. |
+
+### Änderungen v0.17.0
+
+- Neue Bildkorrektur in der Fotogalerie mit neun Reglern (Belichtung, Kontrast, Lichter, Tiefen, Temperatur, Tönung, Sättigung, Klarheit, Schärfe), automatischem Vorschlag, Live-Vorschau und Vorher/Nachher.
+- Ausgangsbild und aktive Freistellung bleiben unverändert. Reversible Reglerwerte plus separat gerenderte WebP-Ableitung mit Upload-Limit und serverseitiger Validierung.
+- Löschen und erneutes Speichern räumen alte Ableitungen auf; vollständige ZIP-Backups enthalten neue Bilddateien. Lager- und Sammlungsansicht verwenden die bearbeitete Darstellung.
+- Neue Unit-, Integration- und Browser-Regressionsprüfungen. Keine neue Abhängigkeit und keine Änderung der Schema-Versionsnummer.
+
+---
+
+## Testbericht v0.17.1 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-13. **Status:** v0.17.1 geprueft. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Alle Release-Metadaten auf 0.17.1. |
+| `npm run check` | **Bestanden** | Syntax, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **357/357 bestanden** | Einschliesslich Reset-Gruppen und Pixelberechnung der Weißabgleich-Pipette. |
+| `npm run test:browser` | **Nicht abgeschlossen** | Playwright-Core aus dem npm-Registry-Download nicht verfuegbar; gezielter Chromium-Test separat mit Python-Playwright und lokalem Server-Request-Routing auf Desktop (1366px) sowie 390px Viewport bestanden. Neuer CI-Browser-Regressionstest enthalten, noch nicht im kompletten Node-Browserlauf ausgefuehrt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach einem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.17.1
+
+- Flaschenbild bearbeiten: Textschaltflaeche durch Stift-Icon ersetzt, analog Freistellungs-Icon.
+- Eigene Reset-Buttons fuer Licht, Farbe und Details; Weißabgleich-Pipette mit markierbarem neutralen Referenzbereich, ohne Aenderung des Originals.
+
+Originalbilder und Freistellungen werden bei diesem UI-Update nicht veraendert; der Browser-Test hat die Ruecksetzung einzelner Gruppen und die Korrektur anhand eines markierten neutralen Bereichs geprueft.
+
+---
+
+## Testbericht v0.17.2 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.17.1 mit korrigiertem kombinierten Fotoeditor. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsdateien stimmen überein. |
+| `npm run check` | **Bestanden** | JavaScript-Syntax, Module, Übersetzungen und Dokumentationslinks. |
+| `npm test` | **358/358 bestanden** | Vollständige Unit-/Integrationstests inklusive atomarer Korrektur-/Freistell-Speicherung, Wechsel und Entfernen. |
+| Gezielter Chromium-Lauf Desktop | **Bestanden** | 1366 px; 28×28-Icon-Buttons, kein Reset/Slider-Overlap, genau eine Vorschau, Belichtung 0,6 → Freistellen → Speichern → erneut bearbeiten. |
+| Gezielter Chromium-Lauf Mobil | **Bestanden** | 390 px; dieselben Bedienabläufe und Größenprüfungen. |
+| `npm run test:browser` | **Nicht abgeschlossen** | Ein zusätzlicher Browser-Regressionstest ist enthalten; der vollständige Node-Playwright-Lauf wurde in dieser Umgebung nicht ausgeführt. Bei den gezielten Chromium-Prüfungen wurde die ONNX-Segmentierung durch eine deterministische Testmaske ersetzt. |
+| Echte ONNX-Freistellung / ARM64-Docker | **Nicht lokal ausgeführt** | Nach dem Release visuell und auf dem Raspberry Pi prüfen. |
+
+### Änderungen v0.17.2
+
+- Bildeditor und Freistellung in einer einzigen Oberfläche mit einer Vorschau statt zweier Bilder.
+- Bestehende Korrekturen bleiben beim Freistellen erhalten; Original/Freistellung haben getrennte reversible Korrektursätze.
+- Galerie-Stift und Schere identisch groß; Gruppen-Reset-Symbole überlagern die Regler nicht mehr.
+- Kombinierte Bilddateien werden serverseitig innerhalb einer Collection-Änderung zusammen gespeichert; Original bleibt unverändert.
+
+---
+
+## Testbericht v0.17.3 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.17.2 mit vereinheitlichtem Bildeditor, Zoom und manueller Freistellmasken-Korrektur. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsangaben, Changelog und Teststatus sind konsistent. |
+| `npm run check` | **Bestanden** | JavaScript-Module, Übersetzungsschlüssel und Dokumentationslinks geprüft. |
+| `npm test` | **362/362 bestanden** | Unit- und Integrationstests; vier neue Masken-Pinseltests prüfen Alpha, Wiederherstellen, Zoom-unabhängige Normalisierung und Rückgängig. |
+| Chromium: Desktop und Mobil | **Gezielte Tests bestanden** | 1366 × 900 und 390 × 844: Editieren einer vorhandenen Freistellung, Radieren bei 150 % Zoom, Strich-Rückgängig, Werkzeugwechsel und Speichern als neues PNG; Original bleibt erhalten. Chromium lief im DOM-Testmodus mit abgefangenen lokalen Netzwerkaufrufen. |
+| `npm run test:browser` | **Nicht vollständig ausgeführt** | Ein neuer automatisierter Browser-Regressionstest ist enthalten; die komplette Suite wurde hier nicht durchlaufen. |
+| Echte ONNX-Maskenerkennung / ARM64-Docker | **Nicht lokal ausgeführt** | Modellqualität und Raspberry-Pi-Deployment sind separat zu prüfen. |
+
+### Änderungen v0.17.3
+
+- Nur ein Galerie-Stift-Button führt zum Fotoeditor; Freistellung kann separat entfernt werden.
+- Weißabgleich-Pipette direkt vor dem Gruppen-Reset der Farbe.
+- Anzeige-Zoom bis 600 %, ohne den Export zu beeinflussen.
+- Lokales Radieren, Wiederherstellen und Rückgängig der Freistellmaske; Pinselgröße und Alpha-Export auch bei Zoom unterstützt.
+
+**Grenze der Wiederherstellung:** Der Wiederherstellen-Pinsel greift auf den Alphakanal der beim Öffnen vorhandenen Freistellung zurück. Er kann keine schon vom Segmentierungsmodell vollständig entfernten Bildteile rekonstruieren. Gespeicherte Maskenkorrekturen erzeugen eine neue transparente PNG-Basis; das Foto-Original wird nicht überschrieben.
+
+---
+
+## Testbericht v0.17.4 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.17.3 mit korrigierter, höher auflösender Foto-Pipeline und konstant großer Vorschau mit zwei Tabs. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Paket- und Dokumentationsversion konsistent. |
+| `npm run check` | **Bestanden** | 220 JavaScript-Dateien, 928 referenzierte Übersetzungsschlüssel und 93 Dokumentationslinks geprüft. |
+| `npm test` | **364/364 bestanden** | Vollständige Unit- und Integrationstests einschließlich der neuen Auflösungs- und Altbestandsprüfungen. |
+| Chromium: fester Ausschnitt und Tabs | **Gezielte Desktop-/Mobiltests bestanden** | Tabwechsel verändert die Vorschauhöhe nicht: Desktop 567 px, Mobil 390 px. |
+| Chromium: Korrigieren → Freistellen → Speichern → erneut öffnen | **Gezielter Test bestanden** | Belichtung +0,6 bleibt gespeichert; das gerenderte freigestellte WebP ist heller als das rohe Freistell-PNG (mittlere RGB-Werte 111,2 statt 91,0) und hat identische Abmessungen von 1514 × 2271 px. |
+| `npm run test:browser` | **Nicht abgeschlossen** | Die volle Node-Playwright-CI-Suite steht weiterhin aus; der gezielte Chromium-Test lief als Python-Playwright-Test mit abgefangenen lokalen Seitenaufrufen. |
+| Echte ONNX-Freistellung / ARM64-Docker | **Nicht lokal ausgeführt** | Chromium verwendete eine reproduzierbare Testmaske. Erkennungsqualität an Glas und realen Fotos muss separat geprüft werden. |
+
+### Änderungen v0.17.4
+
+- Bildansicht behält ihre Größe, unabhängig vom aktiven Tab und von vorhandenen Radierer-Werkzeugen.
+- Freistellung bis 4096 px Crop-Höhe (statt bisher maximal 1600 px), sofern die PNG-Dateigrenze es erlaubt; hochauflösender WebP-Export verwendet angepasste Qualitätsstufen vor einer etwaigen Verkleinerung.
+- Farbanpassungen werden beim Freistellen und Speichern erhalten. Fehlende Cutout-Reglerwerte älterer Fotos werden beim Öffnen aus dem bearbeiteten Original übernommen.
+- Zwei Tabs rechts: Anpassungen und Freistellung mit Radierer, Wiederherstellen und Maskenwerkzeugen.
+
+**Grenzen:** Die Freistellmaske wurde im gezielten Browser-Test synthetisch erzeugt. Die Prüfung belegt Speichern, Pixeländerung, Auflösung und UI-Zustand, nicht die Güte der echten KI-Erkennung. Das Bild wird nur bei Upload- oder Speicherlimits herunterskaliert.
+
+---
+
+## Testbericht v0.17.5 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-13. **Status:** Reguläre Prüfungen bestanden; vollständiger Browserlauf offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsangaben stimmen überein. |
+| `npm run check` | **Bestanden** | 220 JavaScript-Dateien, 928 referenzierte Übersetzungsschlüssel und 94 relative Dokumentationslinks geprüft. |
+| `npm test` | **364/364 bestanden** | Öffentliche Unit- und Integrationstests. |
+| `npm run test:browser` | **Nicht abgeschlossen** | Gesamtsuite nicht ausgeführt; gezielte Chromium-Prüfungen separat erfolgreich. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach einem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.17.5
+
+- Bildvarianten im Fotoeditor nur lokal umschalten; Auswahl und Korrekturen erst beim Speichern uebernehmen.
+- Zoom und Vorher/Nachher überlagern nur die Bildvorschau; der Hinweis steht über die gesamte Editorbreite. Der Reglerbereich nutzt auf Desktop 44 px zusätzliche Höhe.
+- Gezielt in Chromium mit 1366 × 900, 844 × 390, 390 × 844 und 320 × 568 geprüft: Bildrahmen unverändert; Zoom/Vorher-Nachher innerhalb des Bildrahmens, Klicks und Zoomzustand funktionieren. Original/Freistellung lokal umgeschaltet und erst beim Speichern übernommen (Desktop/Mobil). Die vollstaendige Browser-CI-Suite wurde nicht ausgeführt.
+
+Nach Durchfuehrung der Pruefungen die Ergebnisse und ihre Grenzen hier dokumentieren.
+
+---
+
+## Testbericht v0.17.6 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-13. **Status:** Reguläre Prüfungen und gezielte Browserprüfungen bestanden; vollständige Browser-CI-Suite noch offen. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Metadaten und Versionsangaben stimmen überein. |
+| `npm run check` | **Bestanden** | 220 JavaScript-Dateien, 928 referenzierte Übersetzungsschlüssel und 95 relative Dokumentationslinks geprüft. |
+| `npm test` | **366/366 bestanden** | Unit- und Integrationstests inklusive zwei neuer Regressionstests für fehlende Bildmetadaten. |
+| `npm run test:browser` | **Nicht abgeschlossen** | Gesamtsuite nicht ausgeführt; gezielter Chromium-Test für frisches Foto wurde separat ausgeführt. |
+| Chromium: Neues Bild → Bearbeiten → Speichern → erneut öffnen | **Bestanden** | Desktop 1366 × 900 und Mobil 390 × 844; neue Fotos ohne `cutout`/`adjustment` öffnen mit neutralen Reglern, speichern +0,5 Belichtung und laden sie erneut. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach Release auf dem Raspberry Pi prüfen. |
+
+### Änderungen v0.17.6
+
+- Fehler beim Öffnen neuer Flaschenfotos ohne Freistellung behoben: ein Vergleich zweier fehlender Eigenschaften wurde bisher irrtümlich als vorhandene Freistellungsanpassung behandelt und führte zu `Cannot read properties of undefined (reading 'adjustment')`.
+- Anfangswerte für Original und Freistellung werden jetzt mit expliziten Existenzprüfungen ermittelt. Fehlende Bearbeitungsdaten starten bei neutralen Reglerwerten; bereits bearbeitete Originale und Freistellungen behalten ihre gespeicherten Werte.
+- Zwei Unit-Regressionstests für neue Bilder ohne Bearbeitungsdaten und für die getrennten gespeicherten Korrekturen ergänzt. Die vorhandenen Browserfälle für frisch hochgeladene Bilder bleiben bestehen.
+
+Die vollständige Chromium-CI-Suite und ein Docker-/ARM64-Livetest wurden hier nicht erneut ausgeführt.
+
+---
+
+## Testbericht v0.17.7 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.17.6; Vergleich nach Freistellung und Pipetten-Icon korrigiert. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Dateien und Version 0.17.7 stimmen überein. |
+| `npm run check` | **Bestanden** | 220 JavaScript-Dateien, 928 referenzierte Übersetzungsschlüssel und 96 relative Dokumentationslinks geprüft. |
+| `npm test` | **366/366 bestanden** | Unit- und Integrationstests. |
+| Gezielter Chromium-Test | **Bestanden** | Direkt nach erster Freistellung sowie nach Speichern/erneutem Öffnen: Vorher zeigt das deckende Original, Nachher die transparente Freistellung. Geprüft bei 1366 × 900 und 390 × 844; synthetische ONNX-Testmaske. |
+| `npm run test:browser` | **Nicht abgeschlossen** | Vollständige Browser-Suite lokal nicht ausgeführt; neuer Browser-Regressionstest hinzugefügt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Ausführung auf Raspberry Pi nach CI-Release prüfen. |
+
+### Änderungen v0.17.7
+
+- Vorher/Nachher berücksichtigt neben Farbkorrekturen jetzt auch die Freistellung selbst, ohne Dialogwechsel oder Speichern.
+- Das Original für den Vergleich wird bei frisch freigestellten Fotos im Editor gehalten und bei gespeicherten Freistellungen bei Bedarf nachgeladen.
+- Das Pipetten-Icon wurde auf eine klar erkennbare Pipettenform umgestellt; das übrige Editorlayout bleibt unverändert.
+
+Die echte U2Netp-/ONNX-Erkennungsqualität wurde nicht geprüft; der Chromium-Test verwendet eine deterministische synthetische Maske.

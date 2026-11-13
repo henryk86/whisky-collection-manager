@@ -11,7 +11,7 @@ function button(html, action) {
     return found[0];
 }
 
-function detailMarkup() {
+function detailMarkup({photos = []} = {}) {
     const originalDocument = globalThis.document;
     globalThis.document = { querySelectorAll: () => [] };
     try {
@@ -24,7 +24,7 @@ function detailMarkup() {
             selectors: {
                 bottles: () => [{
                     id: 'physical-a', inventoryNumber: '001', status: 'closed',
-                    photos: [], files: [{ id: 'file-a', name: 'Beleg.pdf', size: 1234 }],
+                    photos, files: [{ id: 'file-a', name: 'Beleg.pdf', size: 1234 }],
                 }],
                 coverPhoto: () => '',
                 distilleryNames: () => '',
@@ -67,4 +67,17 @@ test('the bottling and individual-bottle buttons show edit and delete SVGs befor
 
 test('the redundant photo ownership note is absent from the detail page', () => {
     assert.doesNotMatch(detailMarkup(), /Fotos gehören jeweils einer physischen Flasche/);
+});
+
+test('photo editor uses only the shared pencil icon, with an accessible tooltip like the cutout button', () => {
+    const html = detailMarkup({photos: [{id: 'photo-a', path: 'bottle.webp'}]});
+    const edit = button(html, 'photo-editor-open');
+    assert.doesNotMatch(html, /data-act="cutout-open"/, 'no redundant second gallery button');
+    assert.ok(edit.includes(editIcon), 'the existing pencil icon is reused');
+    assert.match(edit, /title="Flaschenbild bearbeiten"/);
+    assert.match(edit, /aria-label="Flaschenbild bearbeiten"/);
+    assert.doesNotMatch(edit, /Anpassen|Adjust/);
+    const css = fs.readFileSync('public/styles/bottle-details.css', 'utf8');
+    assert.match(css, /\.photo-tile \.photo-edit-trigger \{[^}]*width: 28px; height: 28px;/);
+    assert.match(css, /\.photo-tile \.photo-edit-trigger \.action-icon \{[^}]*width: 16px; height: 16px;/);
 });
