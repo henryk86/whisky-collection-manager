@@ -1,5 +1,7 @@
 import { read, change } from '../storage/collection-store.js';
 import { saveImage, deleteImage, validateImageData } from '../storage/photos.js';
+import {basePhotoPath} from '../../public/js/domain/photo-images.js';
+import {validatePhotoAdjustments} from '../../public/js/features/photo-editor/adjustments.js';
 import { saveDocument, readDocument, deleteDocument } from '../storage/documents.js';
 import { normalizeBottle } from '../domain/normalization.js';
 import { markNumber } from '../domain/inventory.js';
@@ -108,6 +110,8 @@ export async function removePhoto(bottleId, photoId) {
     });
     deleteImage(removed.path);
     deleteImage(removed.cutout?.path);
+    deleteImage(removed.adjustment?.path);
+    deleteImage(removed.cutout?.adjustment?.path);
     return {
         ok: true
     };
@@ -118,26 +122,50 @@ export async function removePhoto(bottleId, photoId) {
 export async function savePhotoCutout(bottleId, photoId, input) {
     const photo = requireBottle(read(), bottleId).bottle.photos?.find(item => item.id === photoId);
     if (!photo) throw fail('Foto nicht gefunden', 404);
-    // No arbitrary image files or imported URLs; the client generates a transparent PNG.
+    // The unedited transparent cutout remains the editable base image. The optional
+    // processed derivative uses the SAME adjustments as the original, never baked twice.
     if (typeof input?.image !== 'string' || !input.image.startsWith('data:image/png;base64,'))
         throw fail('Freistellung muss ein PNG-Bild sein');
     validateImageData(input.image);
+    let settings;
+    if (input.adjustment !== undefined) {
+        try { settings = validatePhotoAdjustments(input.adjustment?.settings); }
+        catch { throw fail('Ungültige Bildkorrekturen'); }
+        if (Object.values(settings).every(value => value === 0) ||
+            typeof input.adjustment?.image !== 'string' ||
+            !input.adjustment.image.startsWith('data:image/webp;base64,'))
+            throw fail('Ungültige korrigierte Freistellung');
+        validateImageData(input.adjustment.image);
+    }
     const stored = saveImage(input.image, bottleId, `photo-${photoId}-cutout-${uid()}`);
-    let previous;
+    let edited;
+    try {
+        if (settings) edited = saveImage(input.adjustment.image, bottleId, `photo-${photoId}-edit-${uid()}`);
+    } catch (error) { deleteImage(stored); throw error; }
+    let previous, previousAdjusted, legacyAdjusted;
     try {
         const updated = await change(collection => {
-            const { bottle } = requireBottle(collection, bottleId);
+            const {bottle} = requireBottle(collection, bottleId);
             const item = (bottle.photos || []).find(p => p.id === photoId);
             if (!item) throw fail('Foto nicht gefunden', 404);
             previous = item.cutout?.path;
-            item.cutout = { path: stored, model: 'u2netp-v1', selected: true };
+            previousAdjusted = item.cutout?.adjustment?.path;
+            // Older projects kept both edit variants in one slot. Discard only
+            // an obsolete cutout derivative, NEVER the original's adjustments.
+            if (previous && item.adjustment?.sourcePath === previous) {
+                legacyAdjusted = item.adjustment.path;
+                delete item.adjustment;
+            }
+            item.cutout = {path: stored, model: 'u2netp-v1', selected: true,
+                ...(edited ? {adjustment:{path: edited, sourcePath: stored, settings}} : {})};
             bottle.updatedAt = now();
             return item;
         });
-        if (previous && previous !== stored) deleteImage(previous);
+        for (const file of [previous,previousAdjusted,legacyAdjusted]) if (file && file !== stored && file !== edited) deleteImage(file);
         return updated;
     } catch (error) {
         deleteImage(stored);
+        deleteImage(edited);
         throw error;
     }
 }
@@ -163,12 +191,85 @@ export async function removePhotoCutout(bottleId, photoId) {
         if (!photo) throw fail('Foto nicht gefunden', 404);
         if (!photo.cutout) throw fail('Keine Freistellung vorhanden', 404);
         const path = photo.cutout.path;
+        const adjustmentPath = photo.cutout.adjustment?.path;
+        const legacyAdjustmentPath = photo.adjustment?.sourcePath === path ? photo.adjustment.path : null;
+        if (legacyAdjustmentPath) delete photo.adjustment;
         delete photo.cutout;
+        bottle.updatedAt = now();
+        return {path, adjustmentPath, legacyAdjustmentPath};
+    });
+    deleteImage(old.path);
+    deleteImage(old.adjustmentPath);
+    deleteImage(old.legacyAdjustmentPath);
+    return { ok: true };
+}
+
+/** Rendered WebP is a disposable derivative; the unedited source + slider settings stay available. */
+export async function savePhotoAdjustments(bottleId, photoId, input) {
+    const photo = requireBottle(read(), bottleId).bottle.photos?.find(item => item.id === photoId);
+    if (!photo) throw fail('Foto nicht gefunden', 404);
+    let settings;
+    try { settings = validatePhotoAdjustments(input?.settings); }
+    catch { throw fail('Ungültige Bildkorrekturen'); }
+    if (Object.values(settings).every(value => value === 0))
+        throw fail('Keine Bildkorrekturen gewählt');
+    if (typeof input?.image !== 'string' || !input.image.startsWith('data:image/webp;base64,'))
+        throw fail('Bearbeitetes Bild muss WebP sein');
+    validateImageData(input.image);
+    const stored = saveImage(input.image, bottleId, `photo-${photoId}-edit-${uid()}`);
+    const sourcePath = basePhotoPath(photo);
+    let previous;
+    try {
+        const result = await change(collection => {
+            const {bottle} = requireBottle(collection, bottleId);
+            const item = (bottle.photos || []).find(entry => entry.id === photoId);
+            if (!item || basePhotoPath(item) !== sourcePath) throw fail('Bildquelle hat sich geändert', 409);
+            const cutoutActive = item.cutout?.selected && item.cutout.path === sourcePath;
+            if (cutoutActive) {
+                previous = item.cutout.adjustment?.path ||
+                    (item.adjustment?.sourcePath === sourcePath ? item.adjustment.path : null);
+                if (item.adjustment?.sourcePath === sourcePath) delete item.adjustment;
+                item.cutout.adjustment = {path: stored, sourcePath, settings};
+            } else {
+                if (item.cutout && item.adjustment?.sourcePath === item.cutout.path) {
+                    // Preserve previously saved cutout edits when migrating an old
+                    // v0.17.x collection from its single adjustment slot.
+                    if (!item.cutout.adjustment) item.cutout.adjustment = item.adjustment;
+                    else previous = item.adjustment.path;
+                } else previous = item.adjustment?.path;
+                item.adjustment = {path: stored, sourcePath, settings};
+            }
+            bottle.updatedAt = now();
+            return item;
+        });
+        if (previous) deleteImage(previous);
+        return result;
+    } catch (error) {
+        deleteImage(stored);
+        throw error;
+    }
+}
+/** Reset edits without touching the source photo or existing cutout. */
+export async function removePhotoAdjustments(bottleId, photoId) {
+    const old = await change(collection => {
+        const {bottle} = requireBottle(collection, bottleId);
+        const photo = (bottle.photos || []).find(item => item.id === photoId);
+        if (!photo) throw fail('Foto nicht gefunden', 404);
+        let path;
+        if (photo.cutout?.selected) {
+            path = photo.cutout.adjustment?.path ||
+                (photo.adjustment?.sourcePath === photo.cutout.path ? photo.adjustment.path : null);
+            delete photo.cutout.adjustment;
+            if (photo.adjustment?.sourcePath === photo.cutout.path) delete photo.adjustment;
+        } else {
+            path = photo.adjustment?.sourcePath === photo.path ? photo.adjustment.path : null;
+            if (path) delete photo.adjustment;
+        }
         bottle.updatedAt = now();
         return path;
     });
     deleteImage(old);
-    return { ok: true };
+    return {ok: true};
 }
 
 /** Attach a receipt, photo, or document to one concrete physical bottle. */

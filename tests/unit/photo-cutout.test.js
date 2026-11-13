@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { modelInput, normalizedMask, MODEL_SIZE } from '../../public/js/features/cutout/model.js';
-import { displayPhotoPath } from '../../public/js/domain/photo-images.js';
+import { displayPhotoPath, initialPhotoAdjustmentSettings } from '../../public/js/domain/photo-images.js';
+import {cutoutExportSizes} from '../../public/js/features/cutout/image.js';
 import { analyzeBottleMask, bottleCropRect, cutoutOutputSize } from '../../public/js/features/cutout/crop.js';
 
 const size = MODEL_SIZE * MODEL_SIZE;
@@ -213,4 +214,25 @@ test('raster-level trim eliminates vertical transparent rows but does not clip w
     assert.equal(trimmed.width * 3, trimmed.height * 2);
     assert.equal(tightenedCrop(old, {width,height}, {top:2,bottom:56}, 39), old,
         'a wide shape is never clipped in order to eliminate vertical margins');
+});
+
+test('cutout export starts at native crop resolution instead of shrinking to 1600 px', () => {
+    const full = cutoutExportSizes(3600);
+    assert.equal(full[0], 3600);
+    assert.ok(full.indexOf(2800) > 0);
+    assert.deepEqual(cutoutOutputSize({height:3600},full[0]),{width:2400,height:3600});
+    assert.equal(cutoutExportSizes(4600)[0],4096,'very large inputs respect browser memory safety');
+    assert.equal(cutoutExportSizes(1400)[0],1400,'small inputs are not upscaled');
+});
+
+test('editor restores adjustments from an original for earlier cutouts missing their derivative', () => {
+    const photo={path:'images/a/source.png', adjustment:{sourcePath:'images/a/source.png',
+        path:'images/a/edited.webp',settings:{exposure:.6,contrast:22}},
+    cutout:{path:'images/a/mask.png',selected:true}};
+    assert.deepEqual(initialPhotoAdjustmentSettings(photo),{exposure:.6,contrast:22});
+    photo.cutout.adjustment={sourcePath:'images/a/mask.png',path:'images/a/mask-edit.webp',
+        settings:{exposure:1.2}};
+    assert.equal(initialPhotoAdjustmentSettings(photo).exposure,1.2);
+    photo.cutout.selected=false;
+    assert.equal(initialPhotoAdjustmentSettings(photo).exposure,.6);
 });

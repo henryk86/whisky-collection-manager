@@ -5,6 +5,7 @@ import { sharpenCutoutAlpha } from './edge.js';
 async function loadImage(url) {
     const image = new Image();
     image.decoding = 'async';
+    image.crossOrigin = 'anonymous';
     image.src = url;
     if (typeof image.decode === 'function') await image.decode();
     else await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = reject; });
@@ -17,6 +18,14 @@ function canvas(width, height) {
     result.width = width;
     result.height = height;
     return result;
+}
+
+/** Keep native crop resolution whenever feasible. Limit canvas memory/bytes
+ * for huge camera sources and only step down if the PNG exceeds upload limits. */
+export function cutoutExportSizes(cropHeight) {
+    const native = Math.max(1, Math.min(4096, Math.ceil(cropHeight)));
+    return [native, 3200, 2800, 2400, 2000, 1600, 1280, 1024, 800]
+        .filter((size, index, all) => size > 0 && size <= native && all.indexOf(size) === index);
 }
 
 /** Composite a precomputed segmentation mask; keeps inference separate from image geometry. */
@@ -56,7 +65,9 @@ export function composeCutout(image, rawMask) {
         return result;
     }
 
-    for (const maxSide of [1600, 1280, 1024, 800]) {
+    // Use the crop's native pixel height first; downsample ONLY when the
+    // backend's 10 MB image limit would otherwise reject the cutout PNG.
+    for (const maxSide of cutoutExportSizes(geometry.crop.height)) {
         let crop = geometry.crop;
         let size = cutoutOutputSize(crop, maxSide);
         let output = render(crop, size);
@@ -81,12 +92,15 @@ export function composeCutout(image, rawMask) {
 }
 
 /** Segment locally in the browser, then composite without changing the original photo. */
-export async function cutoutImage(url, onProgress = () => {}) {
+export async function cutoutImage(url, onProgress = () => {}, {segmentationUrl} = {}) {
     onProgress('loading');
     const image = await loadImage(url);
     const input = canvas(MODEL_SIZE, MODEL_SIZE);
     const inputContext = input.getContext('2d', {willReadFrequently:true});
-    inputContext.drawImage(image, 0, 0, MODEL_SIZE, MODEL_SIZE);
+    // Segmentation sees the currently corrected colors; compositing uses the
+    // untouched original, so slider corrections are applied once after cutting.
+    const segmentationImage = segmentationUrl ? await loadImage(segmentationUrl) : image;
+    inputContext.drawImage(segmentationImage, 0, 0, MODEL_SIZE, MODEL_SIZE);
     onProgress('segmenting');
     const mask = await segment(inputContext.getImageData(0, 0, MODEL_SIZE, MODEL_SIZE));
     onProgress('compositing');

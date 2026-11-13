@@ -10,7 +10,7 @@ import { createNavigation } from './js/navigation/controller.js';
 import { createThemeController } from './js/theme/controller.js';
 import { createModal } from './js/ui/modal.js';
 import { createPhotoViewer } from './js/ui/photo-viewer.js';
-import { createCutoutController } from './js/features/cutout/controller.js';
+import { createPhotoEditor } from './js/features/photo-editor/controller.js';
 import { createShell } from './js/ui/shell.js';
 import { escapeHtml } from './js/ui/dom.js';
 import { toast } from './js/ui/notifications.js';
@@ -41,7 +41,7 @@ const modal = createModal({
     state, onClose: () => scanner?.stopScan()
 });
 const photoViewer = createPhotoViewer({ state, showModal: modal.showModal });
-const cutout = createCutoutController({ state, showModal: modal.showModal, closeModal: modal.closeModal, action });
+const photoEditor = createPhotoEditor({ state, showModal: modal.showModal, closeModal: modal.closeModal, action });
 const navigation = createNavigation({
     state, render, closeModal: modal.closeModal
 });
@@ -127,7 +127,7 @@ async function action(task) {
 }
 navigation.listen();
 bindEvents(root, {
-    state, render, action, navigate, editors, settings, backup, scanner, whiskybase, modal, photoViewer, cutout, theme, resolveCode, warehouseView
+    state, render, action, navigate, editors, settings, backup, scanner, whiskybase, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView
 });
 // The extension can send a second import into an already open manager tab.
 // A fragment-only navigation triggers hashchange, not a page reload.

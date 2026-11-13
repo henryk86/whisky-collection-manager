@@ -1,19 +1,24 @@
-# Teststatus - Whisky Collection Manager v0.16.17
+# Teststatus - Whisky Collection Manager v0.17.9
 
-**Stand:** 13.11.2026. **Basis:** v0.16.16 mit gezielter Korrektur der Radio- und Checkbox-Marker. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 13.11.2026. **Basis:** v0.17.8; ausschließlich Fehlerkorrekturen im Fotoeditor und passende Regressionstests. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgeführte Prüfungen
 
 | Prüfung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Bestanden** | Versionsangaben in Paketdateien, README, Changelog und Teststatus stimmen überein. |
-| `npm run check` | **Bestanden** | 213 JavaScript-Dateien, 906 referenzierte Übersetzungsschlüssel und 86 relative Dokumentationslinks geprüft. |
-| `npm test` | **348/348 bestanden** | Unit- und Integrationstests einschließlich neuem CSS-Regressionstest. |
-| `npm run test:browser` | **Nicht lokal ausgeführt** | Direkter Chromium-Versuch konnte hier nicht abgeschlossen werden; keine vollständige Browser-Prüfung. |
-| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach Veröffentlichung auf dem Raspberry Pi prüfen. |
+| `npm run release:check` | **Bestanden** | Version in Paket, Lockfile, README, Changelog und Teststatus konsistent. |
+| `npm run check` | **Bestanden** | 220 JavaScript-Dateien, 928 referenzierte Übersetzungsschlüssel, 98 relative Markdown-Links geprüft. |
+| `npm test` | **366/366 bestanden** | Unit- und Integrationstests des ursprünglichen Funktionsumfangs. |
+| Gezielte Chromium-Prüfung im lokalen DOM-Modus | **6/6 bestanden** | Fotoeditor-Layout, gespeicherte Freistellung und Umschalten, synchroner Originalvergleich, Maskenpinsel, reversible Bildkorrekturen, Weißabgleich. |
+| ONNX-abhängige Browserregressionen (Tests 50 und 51) | **2/2 bestanden unter angepasstem Testaufbau** | Separater Validierungsklon mit synthetischem ONNX-Modul und für die lokale Sandbox korrigierter Import-URL; die Hilfsänderung ist **nicht** Teil des Releases. |
+| Vollständiges `npm run test:browser` im normalen Navigationsmodus | **Nicht lokal ausgeführt** | Chromium blockiert hier `http://127.0.0.1` mit `ERR_BLOCKED_BY_ADMINISTRATOR`. Vollständige GitHub-CI-Prüfung steht aus. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Prüfung auf dem Zielsystem offen. |
 
-## Änderungen v0.16.17
+## Änderungen v0.17.9
 
-- Die nativen Radio-Markierungen im Lagerort-Zuordnungsdialog und die Checkboxen der Möbel-Mehrfachauswahl werden auf 18 × 18 Pixel begrenzt, einschließlich `min-height`, `padding` und `margin`.
-- Die allgemeine Formularregel (`min-height: 44px`, `padding: 11px 12px`) beeinflusst diese beiden Auswahlmarkierungen nicht mehr.
-- Sonstige Gestaltung, Kartenauswahl, Abstände, Ereignisverarbeitung, Datenmodell und Docker-Konfiguration unverändert.
+- Vorher/Nachher zeichnet das ursprüngliche, vollständig deckende Foto vor dem Umschalten des UI-Zustands. Dadurch bleibt nicht kurzzeitig die transparente Freistellung sichtbar.
+- Bereits gespeicherte Original- und Freistellungsbilder werden beim Öffnen des Editors vorgeladen; der Vorschauwechsel erfolgt ohne asynchrones Nachladen.
+- Browser-Test zum Entfernen einer Freistellung prüft weiterhin vorhandene Originalkorrekturen statt fälschlich das uneditierte Originalbild zu erwarten.
+- Regressionstest zur unmittelbar vollständigen Originalvorschau ergänzt; Slider-Test vergleicht numerische Werte statt browserabhängiger Zeichenfolgen.
+
+**Keine Etikettenerkennung / OCR:** Ausgangspunkt ist ausdrücklich das Archiv v0.17.8. Die in v0.18.0 eingeführten Funktionen sind nicht enthalten.

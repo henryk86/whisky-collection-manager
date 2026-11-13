@@ -1,5 +1,6 @@
 /** Physical storage locations and individual bottle allocations. No collection mutations. */
 import crypto from 'node:crypto';
+import {displayPhotoPath} from '../../public/js/domain/photo-images.js';
 import { read } from '../storage/collection-store.js';
 import { readWarehouse, changeWarehouse } from '../storage/warehouse-store.js';
 import { fail } from '../domain/errors.js';
@@ -39,7 +40,7 @@ function physicalBottles() {
         id: bottle.id, bottlingId: bottling.id, name: bottling.name,
         number: bottle.inventoryNumber || '', volumeType: bottle.volumeType || 'standard', status: bottle.status,
         volumeMl: bottle.volumeMl ?? bottling.volumeMl ?? null,
-        photoPath: (() => { const photo = bottle.photos?.find(entry => typeof entry?.path === 'string' && entry.path); return photo?.cutout?.selected ? photo.cutout.path : (photo?.path || null); })()
+        photoPath: displayPhotoPath(bottle.photos?.find(entry => typeof entry?.path === 'string' && entry.path)) || null
     })));
 }
 export function getWarehouse() {

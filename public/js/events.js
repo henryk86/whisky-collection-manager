@@ -6,7 +6,7 @@ import { movePhoto } from './features/photo-order.js';
 import { routeUrl } from './navigation/routes.js';
 import { readAnalyticsDate } from './domain/analytics-period.js';
 /** One delegated click handler; HTML data-act values are the UI action names. */
-export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, whiskybase, modal, photoViewer, cutout, theme, resolveCode, warehouseView }) {
+export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, whiskybase, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView }) {
     const suggestNumber = async (fieldName) => {
         const result = await request('/api/suggest-number');
         const field = query(`[name=${fieldName}]`);
@@ -157,11 +157,22 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
             toast(t("ui.confirmations.attachmentDeleted"));
         })),
         'open-photo': button => photoViewer.open(button),
-        'cutout-open': button => cutout.open(button),
-        'cutout-generate': () => cutout.generate(),
-        'cutout-save': () => cutout.save(),
-        'cutout-toggle': () => cutout.toggle(),
-        'cutout-remove': () => cutout.remove(),
+        'photo-editor-open': button => photoEditor.open(button),
+        'photo-editor-tab': button => photoEditor.selectTab(button.dataset.photoEditorTab),
+        'photo-editor-before': () => photoEditor.before(),
+        'photo-editor-auto': () => photoEditor.auto(),
+        'photo-editor-reset': () => photoEditor.reset(),
+        'photo-editor-reset-group': button => photoEditor.resetGroup(button.dataset.photoGroup),
+        'photo-editor-pick-white': () => photoEditor.toggleWhitePicker(),
+        'photo-editor-brush-mode': button => photoEditor.toggleBrush(button.dataset.photoBrushMode),
+        'photo-editor-brush-undo': () => photoEditor.undoBrush(),
+        'photo-editor-zoom-in': () => photoEditor.zoom(1.5),
+        'photo-editor-zoom-out': () => photoEditor.zoom(1/1.5),
+        'photo-editor-zoom-reset': () => photoEditor.zoom(0),
+        'photo-editor-save': () => photoEditor.save(),
+        'photo-editor-cutout': () => photoEditor.cutout(),
+        'photo-editor-toggle-cutout': () => photoEditor.toggleCutout(),
+        'photo-editor-remove-cutout': () => photoEditor.removeCutout(),
         'photo-prev': () => photoViewer.step(-1),
         'photo-next': () => photoViewer.step(1),
         'move-photo': button => movePhoto(button.dataset.id, button.dataset.photoId, Number(button.dataset.dir), action),

@@ -100,6 +100,12 @@ const routes = [
         method: 'DELETE', path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/cutout$/, run: ([id, photoId]) => bottles.removePhotoCutout(id, photoId)
     },
     {
+        method: 'PUT', path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/adjustments$/, run: ([id, photoId], body) => bottles.savePhotoAdjustments(id, photoId, body)
+    },
+    {
+        method: 'DELETE', path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/adjustments$/, run: ([id, photoId]) => bottles.removePhotoAdjustments(id, photoId)
+    },
+    {
         method: 'DELETE', path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)$/, run: ([id, photoId]) => bottles.removePhoto(id, photoId)
     },
     {
