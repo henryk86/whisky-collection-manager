@@ -1,3 +1,4 @@
+import { t } from '../../i18n/index.js';
 import { MODEL_SIZE, segment } from './model.js';
 import { analyzeBottleMask, cutoutOutputSize, tightenedCrop, visibleAlphaRows } from './crop.js';
 import { sharpenCutoutAlpha } from './edge.js';
@@ -9,7 +10,7 @@ async function loadImage(url) {
     image.src = url;
     if (typeof image.decode === 'function') await image.decode();
     else await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = reject; });
-    if (!image.naturalWidth || !image.naturalHeight) throw new Error('Foto konnte nicht geöffnet werden');
+    if (!image.naturalWidth || !image.naturalHeight) throw new Error(t('errors.images.openFailed'));
     return image;
 }
 
@@ -88,7 +89,7 @@ export function composeCutout(image, rawMask) {
         const data = output.toDataURL('image/png');
         if (data.length < 13000000) return data;
     }
-    throw new Error('Freigestelltes Bild ist zu groß');
+    throw new Error(t('errors.cutout.resultTooLarge'));
 }
 
 /** Segment locally in the browser, then composite without changing the original photo. */

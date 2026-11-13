@@ -1,5 +1,6 @@
 /** Key-based UI localization: no matching against rendered German source text. */
 import german from '../../locales/de.json' with { type: 'json' };
+import english from '../../locales/en.json' with { type: 'json' };
 import { escapeHtml } from '../ui/dom.js';
 
 const DEFAULT_LANGUAGE = 'de';
@@ -7,7 +8,7 @@ const STORAGE_KEY = 'whisky-language';
 const PRESENTATION_ATTRIBUTES = ['aria-label', 'aria-description', 'title', 'placeholder', 'alt'];
 let language = DEFAULT_LANGUAGE;
 let languages = Object.freeze({ de: 'Deutsch' });
-let translator = createTranslator(german);
+let translator = createTranslator(german, english);
 
 function formatMessage(template, params, locale) {
     // A small ICU-compatible plural subset. Use Intl's language-specific categories;
@@ -25,11 +26,11 @@ function formatMessage(template, params, locale) {
         Object.hasOwn(params, key) ? String(params[key]) : match);
 }
 
-/** Pure key lookup with explicit German fallback and named placeholders. */
-export function createTranslator(messages = {}, fallback = german, locale = DEFAULT_LANGUAGE) {
+/** Pure key lookup with English fallback and named placeholders. */
+export function createTranslator(messages = {}, fallback = english, locale = DEFAULT_LANGUAGE) {
     return (key, params = {}) => {
         if (typeof key !== 'string') return key;
-        const message = Object.hasOwn(messages, key) && typeof messages[key] === 'string'
+        const message = Object.hasOwn(messages, key) && typeof messages[key] === 'string' && messages[key].trim()
             ? messages[key] : fallback[key];
         if (typeof message !== 'string') return key;
         return formatMessage(message, params && typeof params === 'object' ? params : {}, locale);
@@ -56,7 +57,7 @@ export function chooseLanguage(code) {
     return true;
 }
 
-/** Locale files use the same stable keys; any missing translations fall back to de.json. */
+/** Locale files use the same stable keys; missing translations fall back to English. */
 export async function initializeLanguage(fetcher = globalThis.fetch) {
     if (typeof fetcher !== 'function') return language;
     try {
@@ -72,7 +73,7 @@ export async function initializeLanguage(fetcher = globalThis.fetch) {
     const fromQuery = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('lang') : null;
     const requested = fromQuery || savedLanguage() || DEFAULT_LANGUAGE;
     language = Object.hasOwn(languages, requested) ? requested : DEFAULT_LANGUAGE;
-    let messages = german;
+    let messages = language === 'en' ? english : german;
     if (language !== DEFAULT_LANGUAGE) {
         try {
             const response = await fetcher(`/locales/${language}.json`);
@@ -80,9 +81,9 @@ export async function initializeLanguage(fetcher = globalThis.fetch) {
             const catalog = await response.json();
             if (!catalog || typeof catalog !== 'object' || Array.isArray(catalog)) throw new Error('Invalid language file');
             messages = catalog;
-        } catch { language = DEFAULT_LANGUAGE; }
+        } catch { language = 'en'; messages = english; }
     }
-    translator = createTranslator(messages, german, language);
+    translator = createTranslator(messages, english, language);
     if (typeof document !== 'undefined') {
         document.documentElement.lang = language;
         document.title = t('app.meta.title');

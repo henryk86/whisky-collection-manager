@@ -36,17 +36,17 @@ export function createEditors({ state, selectors, bottlingForm, bottleForm, show
         const b = state.collection.bottlings.find(x => x.id === state.selected);
         showModal(t("features.bottlings.edit"), bottlingForm(b), true);
     }
-    function showNewBottleEditor(bottling, { fromWhiskybase = false, fromOverview = false } = {}) {
-        const token = fromWhiskybase ? getPendingImageToken() : null;
+    function showNewBottleEditor(bottling, { fromImport = false, fromOverview = false } = {}) {
+        const token = fromImport ? getPendingImageToken() : null;
         let form = bottleForm({}, bottling.id);
         if (fromOverview) form = form.replace('<form id="bottle-form"', '<form id="bottle-form" data-from-overview="1"');
-        const photoOption = token ? `<label class="wb-import-photo form-field full"><input type="checkbox" name="importWhiskybasePhoto" checked> ${t("features.photos.copyWhiskybaseReference")}</label>` : '';
+        const photoOption = token ? `<label class="import-photo form-field full"><input type="checkbox" name="importReferencePhoto" checked> ${t("imports.images.copyReference")}</label>` : '';
         showModal(`Weitere Flasche · ${bottling.name}`, form.replace('</form>', `${photoOption}</form>`), true);
     }
-    function newBottle(fromWhiskybase = false) {
+    function newBottle(fromImport = false) {
         const bottling = state.collection.bottlings.find(item => item.id === state.selected);
         if (!bottling) throw Error(t('features.bottlings.selectFirst'));
-        showNewBottleEditor(bottling, { fromWhiskybase });
+        showNewBottleEditor(bottling, { fromImport });
     }
     function editBottle(id) {
         const found = findBottle(id);
@@ -91,7 +91,7 @@ export function createEditors({ state, selectors, bottlingForm, bottleForm, show
                             toast(t("features.bottlings.photoUploadFailed",{error:err.message}), true);
                         }
                     }
-                    if (getPendingImageToken() && form.querySelector('#wb-import-image:checked')) {
+                    if (getPendingImageToken() && form.querySelector('#import-image:checked')) {
                         try {
                             await request(`/api/bottles/${encodeURIComponent(firstBottleId)}/photos/from-stage`, {
                                 method: 'POST', body: JSON.stringify({ token: getPendingImageToken() })
@@ -107,13 +107,13 @@ export function createEditors({ state, selectors, bottlingForm, bottleForm, show
                             await uploadFiles(firstBottleId, documents);
                         }
                         catch (err) {
-                            toast(`Abf\u00fcllung gespeichert, aber Datei-Upload fehlgeschlagen: ${err.message}`, true);
+                            toast(t('errors.files.bottlingSavedUploadFailed', {error: err.message}), true);
                         }
                     }
                 }
                 await refresh();
                 navigate('detail', id);
-                toast(importPhotoError ? t("features.bottlings.whiskybaseImageFailed",{error:importPhotoError}) : t("features.bottlings.saved"), Boolean(importPhotoError));
+                toast(importPhotoError ? t("imports.errors.bottlingSavedImageFailed",{error:importPhotoError}) : t("features.bottlings.saved"), Boolean(importPhotoError));
             });
         }
         else if (ev.target.id === 'bottle-form') {
@@ -149,10 +149,10 @@ export function createEditors({ state, selectors, bottlingForm, bottleForm, show
                         await uploadPhotos(bottleId, files);
                     }
                     catch (err) {
-                        toast(`Flasche gespeichert, aber Foto-Upload fehlgeschlagen: ${err.message}`, true);
+                        toast(t('errors.files.bottleSavedPhotoFailed', {error: err.message}), true);
                     }
                 }
-                if (form.elements.importWhiskybasePhoto?.checked && getPendingImageToken()) {
+                if (form.elements.importReferencePhoto?.checked && getPendingImageToken()) {
                     try {
                         await request(`/api/bottles/${encodeURIComponent(bottleId)}/photos/from-stage`, {
                             method: 'POST', body: JSON.stringify({ token: getPendingImageToken() })
@@ -168,11 +168,11 @@ export function createEditors({ state, selectors, bottlingForm, bottleForm, show
                         await uploadFiles(bottleId, documents);
                     }
                     catch (err) {
-                        toast(`Flasche gespeichert, aber Datei-Upload fehlgeschlagen: ${err.message}`, true);
+                        toast(t('errors.files.bottleSavedUploadFailed', {error: err.message}), true);
                     }
                 }
                 closeModal();
-                toast(importPhotoError ? `Flasche gespeichert, aber Whiskybase-Bild fehlgeschlagen: ${importPhotoError}` : t("features.notifications.bottleSaved"), Boolean(importPhotoError));
+                toast(importPhotoError ? t('imports.errors.bottleSavedImageFailed', {error: importPhotoError}) : t("features.notifications.bottleSaved"), Boolean(importPhotoError));
                 return { bottleId };
             });
             if (result && !form.dataset.id && form.dataset.fromOverview === '1') {

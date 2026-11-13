@@ -1,4 +1,4 @@
-/** Whiskybase sometimes lists several contributors in a single distillery field. */
+/** Imported data can list multiple distilleries in a single field. */
 export function splitDistilleryNames(raw) {
     if (typeof raw !== 'string') return [];
     const names = [];

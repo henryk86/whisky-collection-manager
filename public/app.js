@@ -62,11 +62,11 @@ const bottlingForm = createBottlingForm({
 const bottleForm = createBottleForm({
     state, selectors
 });
-let whiskybase;
+let externalImport;
 const editors = createEditors({
     state, selectors, bottlingForm, bottleForm, ...modal, navigate, action, refresh,
-    getPendingImageToken: () => whiskybase?.getPendingImageToken(),
-    markImageAttached: () => whiskybase?.markImageAttached()
+    getPendingImageToken: () => externalImport?.getPendingImageToken(),
+    markImageAttached: () => externalImport?.markImageAttached()
 });
 const backup = createBackupController({ state, render, showModal: modal.showModal, closeModal: modal.closeModal });
 const settings = createSettingsController({
@@ -84,7 +84,7 @@ const resolveCode = createCodeResolver({
 scanner = createScanner({
     state, showModal: modal.showModal, resolveCode
 });
-whiskybase = createWhiskybase({
+externalImport = createWhiskybase({
     state, navigate, showModal: modal.showModal, closeModal: modal.closeModal, action, ...editors
 });
 function render() {
@@ -127,14 +127,14 @@ async function action(task) {
 }
 navigation.listen();
 bindEvents(root, {
-    state, render, action, navigate, editors, settings, backup, scanner, whiskybase, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView
+    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView
 });
 // The extension can send a second import into an already open manager tab.
 // A fragment-only navigation triggers hashchange, not a page reload.
 window.addEventListener('hashchange', () => {
-    if (state.collection) whiskybase.importFromExtension();
+    if (state.collection) externalImport.importFromExtension();
 });
-refresh().then(whiskybase.importFromExtension).catch(error => {
+refresh().then(externalImport.importFromExtension).catch(error => {
     root.innerHTML = `<main>
     <h2>${t("ui.errors.serverConnectionFailed")}</h2>
     <p>${escapeHtml(error.message)}</p>

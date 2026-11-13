@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.17.13 - 2026-11-13
+
+- Beim Import-Refactoring umbenannte Browser-Foto-Fixture physisch in `photo-import-reference.png` umbenannt (Bildinhalt unverändert); alle fünf bestehenden Browserfälle behalten.
+- `npm run check` prüft statisch referenzierte Test-Fixtures auf Existenz, sodass fehlende Dateien vor den Browser-Tests auffallen.
+
+## 0.17.12 - 2026-11-13
+
+- CI-Korrektur beim Upgrade von 0.17.10: Die zwei ersetzten Module `whiskybase/choice-template.js` und `whiskybase/distillery-matching.js` muessen aus dem Git-Index entfernt werden; ein ZIP-Ueberschreiben allein entfernt keine Dateien.
+- Ausschliesslich auf das Fehlen des Wortes „Whiskybase“ im Quelltext oder in Markdown pruefende Tests entfernt. Verhaltenstests fuer Import, Quellenmarkierung und Payloads bleiben bestehen.
+- README ergaenzt den konkreten `git rm`-Schritt fuer bestehende Arbeitsverzeichnisse.
+
+## 0.17.11 - 2026-11-13
+
+- Generische Importsteuerung in `public/js/features/import/` ausgelagert (Feldvorschau, Payload-Normalisierung, Destillerie-Abgleich, Bestätigung, Bildzuordnung). Quellenspezifischer Adapter übernimmt ausschließlich Payload-Validierung und Dublettenabgleich.
+- `importReferencePhoto`, `fromImport`, `import-`-Selektoren und neutrale Übersetzungsschlüssel in allgemeinen Formularen und Ereignissen durch neutrale Bezeichnungen ersetzt.
+- Bild-Zwischenspeicher unterstützt Referenzbilder ohne Anbieter-Markierung; alte Uploads, Quellenangaben, externe URLs, API-Pfade und Fragmentformat bleiben kompatibel.
+- Tests für generische Importquellen und Kompatibilität bestehender Imports ergänzt; README und Architektur dokumentiert.
+
+## 0.17.10 - 2026-11-13
+
+- Fehlermeldungen lokalisiert: Fotoeditor, Dateien und API-Validierung mit deutschen/englischen Texten und englischem Fallback
+
 ## 0.17.9 - 2026-11-13
 
 - Fotoeditor: Vorher/Nachher rendert sofort das unbeschnittene Original; gespeicherte Freistellungen ohne Verlust der Originalkorrekturen umschalten und loeschen.

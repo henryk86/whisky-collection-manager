@@ -89,3 +89,11 @@ Siehe [DOCKER_BACKUP.md](DOCKER_BACKUP.md) und [API.md](API.md).
 Quellcodeänderungen erfolgen auf `develop`, ein Merge nach `main` führt zum Release-Build. **Kleine Änderungen erhöhen den Patchlevel**, größere Funktionen wie neue Seiten die Minor-Version, inkompatible Änderungen die Major-Version. Release-Metadaten sind synchron zu halten.
 
 `npm run check`, `npm test`, `npm run release:check` und für Browserfunktionalität `npm run test:browser` sind getrennt auszuwerten. Bestandenes Unit-Testing ist kein Nachweis für Browser- oder Hardware-Kompatibilität. Der aktuelle Prüfstatus einschließlich offener iOS-/Android-Abnahmen steht in [TESTSTATUS.md](TESTSTATUS.md). Weitere technische Hinweise: [ARCHITEKTUR.md](ARCHITEKTUR.md) und [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
+
+
+## Mehrsprachige Fehlermeldungen (v0.17.10)
+
+- UI-Validierungs- und Bildverarbeitungsfehler nutzen stabile Übersetzungsschlüssel (`de`, `en`).
+- API-Validierungsfehler erhalten einen stabilen `errorCode`; das Frontend lokalisiert anhand dieses Codes.
+- Der englische API-Text dient als Standard-Fallback und wird nicht als Übersetzung per Textvergleich genutzt.
+- Unbekannte serverseitige Fehler zeigen weder deutsche Rohtexte noch interne Diagnoseinformationen, sondern eine neutrale, lokalisierte Meldung.

@@ -1,14 +1,15 @@
+import { t } from '../../i18n/index.js';
 /** Alpha-only corrections. Source RGB and source alpha stay immutable. */
 export const MASK_BRUSH_MODES = Object.freeze(['erase', 'restore']);
 export const DEFAULT_MASK_BRUSH_SIZE = 4;
 
 /** A stroke position/radius is relative to the smaller image side, not the screen zoom. */
 export function paintMaskSegment(current, reference, width, height, from, to, sizePercent, mode) {
-    if (!MASK_BRUSH_MODES.includes(mode)) throw new RangeError('Invalid brush mode');
+    if (!MASK_BRUSH_MODES.includes(mode)) throw new RangeError(t('errors.photoEditor.invalidBrushMode'));
     if (!(width > 0 && height > 0) || current.length !== width*height*4 || reference.length !== current.length)
-        throw new RangeError('Invalid image dimensions');
+        throw new RangeError(t('errors.images.invalidDimensions'));
     if (![from?.x,from?.y,to?.x,to?.y,sizePercent].every(Number.isFinite))
-        throw new RangeError('Invalid brush position');
+        throw new RangeError(t('errors.photoEditor.invalidBrushPosition'));
     const radius = Math.max(.5, Math.min(width,height) * Math.max(.5, Math.min(20,sizePercent)) / 200);
     const x0=from.x*width, y0=from.y*height, x1=to.x*width, y1=to.y*height;
     const dx=x1-x0, dy=y1-y0, distance2=dx*dx+dy*dy;

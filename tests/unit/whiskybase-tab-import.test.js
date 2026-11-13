@@ -73,7 +73,7 @@ test('incoming hash import does not discard an already open form without confirm
         assert.ok(confirmation, 'requires the in-app confirmation modal');
         assert.equal(confirmation[1], 'Externe Importdaten bereit');
         assert.match(confirmation[2], /ungespeicherte Eingaben/);
-        assert.match(confirmation[2], /data-act="wb-import-continue"/);
+        assert.match(confirmation[2], /data-act="import-continue"/);
         assert.equal(confirmation[4], true, 'keep the existing dialog nested underneath');
         assert.ok(!calls.some(call => call[0] === 'navigate'));
         assert.ok(!calls.some(call => call[0] === 'createBottling'));

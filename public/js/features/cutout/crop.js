@@ -1,3 +1,4 @@
+import { t } from '../../i18n/index.js';
 /** Pure geometry for isolating and straightening the dominant bottle in a transparent 2:3 PNG. */
 export const CUTOUT_WIDTH_RATIO = 2;
 export const CUTOUT_HEIGHT_RATIO = 3;
@@ -9,7 +10,7 @@ const MAX_AUTO_ROTATION = 20 * Math.PI / 180;
 function validateMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight) {
     if (!mask || mask.length !== maskWidth * maskHeight || !Number.isInteger(maskWidth) || !Number.isInteger(maskHeight)
         || maskWidth < 1 || maskHeight < 1 || !Number.isFinite(sourceWidth) || !Number.isFinite(sourceHeight)
-        || sourceWidth <= 0 || sourceHeight <= 0) throw new Error('Ungültige Freistellmaske');
+        || sourceWidth <= 0 || sourceHeight <= 0) throw new Error(t('errors.cutout.invalidMask'));
 }
 
 /**
@@ -106,7 +107,7 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth, sour
     }
     const largest = components.reduce((winner, item) => !winner || item.area > winner.area ? item : winner, null);
     if (!largest || largest.area < Math.max(4, Math.floor(mask.length / 10000)))
-        throw new Error('Keine Flasche erkannt');
+        throw new Error(t('errors.cutout.noBottle'));
 
     // Prefer a substantial connected component near the photo centre, not an edge artifact.
     // If the photographed bottle is off-centre, fall back to the largest component.
@@ -185,14 +186,14 @@ export function bottleCropRect(mask, maskWidth, maskHeight, sourceWidth, sourceH
 
 /** Output dimensions preserve an exact 2:3 ratio (without needless upscaling). */
 export function cutoutOutputSize(crop, maxSide) {
-    if (!(crop?.height > 0) || !(maxSide > 0)) throw new Error('Ungültiger Bildausschnitt');
+    if (!(crop?.height > 0) || !(maxSide > 0)) throw new Error(t('errors.images.invalidCrop'));
     const width = Math.max(2, Math.floor(Math.min(crop.height, maxSide) / CUTOUT_HEIGHT_RATIO) * CUTOUT_WIDTH_RATIO);
     return {width, height:width * CUTOUT_HEIGHT_RATIO / CUTOUT_WIDTH_RATIO};
 }
 
 /** Visible vertical bounds of a rasterized alpha mask; both endpoints are inclusive. */
 export function visibleAlphaRows(rgba, width, height, minAlpha = FEATHER_ALPHA) {
-    if (!rgba || rgba.length !== width * height * 4) throw new Error('Ungültige Bilddaten');
+    if (!rgba || rgba.length !== width * height * 4) throw new Error(t('errors.images.invalidData'));
     let first = height, last = -1;
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {

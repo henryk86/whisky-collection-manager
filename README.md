@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.17.9
+# Whisky Collection Manager v0.17.13
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der **Abfüllung** über einzelne **physische Flaschen** bis zum **Lagerfach**. Eine Abfüllung kann mehrere Flaschen mit unterschiedlichen Inventarnummern, Zuständen, Größen, Fotos und Belegen enthalten.
 
@@ -15,6 +15,8 @@ Die Anwendung nutzt Node.js und Browser-ES-Module, **ohne Datenbank und ohne Fro
 | **Lager** | Räume, Möbel und Fächer mit Zuordnung einzelner Flaschen. Klick auf eine Flasche im Fach zeigt ein Detail-Modal mit Link zur markierten Flasche auf der Detailseite und separater Umlagern-Aktion. 2D-Grundriss (10-cm-Raster) und Three.js-3D-Ansicht; getrennte Höhenebenen, Kollisionsprüfung, Möbel-/Fachbearbeitung und Mehrfachaktionen. |
 | **Sicherung** | Geschützte AES-256-ZIP-Backups manuell oder zeitgesteuert auf USB, NAS und Rclone-Ziele; Prüfung und bestätigte Wiederherstellung. |
 | **Oberfläche** | Responsive Light-/Darkmode-Oberfläche; Deutsch und Englisch über semantische Sprachschlüssel. |
+
+Die Importvorschau verwendet nun einen **quellunabhängigen Formularablauf**: Auswahl der Felder, Destillerie-Abgleich und Zuordnung eines Referenzfotos sind getrennt von der Validierung des jeweiligen Katalogformats. Vorhandene Importlinks, gespeicherte Quellenangaben und die optionale Browser-Erweiterung bleiben kompatibel. Weitere Details stehen unter [Externe Importdaten](docs/ARCHITEKTUR.md#externe-importdaten).
 
 Die [automatische Flaschenfreistellung](docs/PHOTO_FREISTELLUNG.md) arbeitet ohne externen KI-Dienst, entfernt abgetrennte Maskenreste, richtet leicht bis mäßig schiefe Flaschen (bis 20° erkannte Neigung) anhand ihrer Hauptachse gerade aus und beschneidet das transparente Ergebnis oben und unten ohne gewollten Rand auf **2:3** und reduziert breite halbtransparente Farbsäume entlang der Flaschenkontur. Original- und Freistellungsbild bleiben getrennt. Freistellung und Bildkorrekturen teilen sich seit v0.17.2 einen Editor mit genau **einer Bildvorschau**, auch auf Smartphones. Das **Stift-Symbol** am Flaschenbild öffnet diesen Editor mit reversiblen Korrekturwerten. Bei einer Freistellung nach einer Bearbeitung werden dieselben Korrekturen auf das transparente Ergebnis übernommen; Original und Freistellung besitzen getrennte editierbare WebP-Ableitungen. Die Bildbearbeitung und Freistellmaske sind als **zwei Tabs rechts neben der unveränderten Bildvorschau** organisiert; die Pinselwerkzeuge befinden sich im Tab *Freistellung*. Der Bildausschnitt bleibt beim Tabwechsel gleich groß. Freistellungen werden mit möglichst unveränderter Quellauflösung bis 4096 px Höhe erzeugt; das Backend-Limit von 10 MB pro Bild kann eine Reduzierung erzwingen. Die Bildvorschau lässt sich zum Prüfen von Details bis auf 600 % vergrößern (ohne Einfluss auf den Export). Ein Pinsel kann die Freistellungsmaske lokal radieren, versehentlich radierte Anteile wiederherstellen und einzelne Pinselstriche rückgängig machen. Details und Einschränkungen sind in [Flaschenfoto-Bearbeitung](docs/PHOTO_FREISTELLUNG.md#bildkorrekturen-ab-v0170) dokumentiert.
 
@@ -119,6 +121,22 @@ docker compose ps
 
 Für reproduzierbare Deployments `IMAGE_TAG=vX.Y.Z` statt `latest` in `.env` setzen. Vor Updates ein externes, testweise geprüftes Backup aufbewahren. Niemals bestehende Datenordner durch Dateien aus einem Quellcode-ZIP ersetzen.
 
+## Umstieg von v0.17.10 auf v0.17.11 oder neuer
+
+Beim Entpacken eines neuen Quellcode-ZIPs **über** ein vorhandenes Git-Arbeitsverzeichnis werden zuvor verschobene Dateien nicht automatisch gelöscht. Aus v0.17.10 können insbesondere diese inzwischen überflüssigen Dateien zurückbleiben:
+
+```powershell
+# Im Repository-Stammverzeichnis: alte, in Git verfolgte Importmodule entfernen
+git rm -- public/js/features/whiskybase/choice-template.js public/js/features/whiskybase/distillery-matching.js
+npm run check
+```
+
+Bei einem vollständig neuen Checkout sind diese Dateien nicht vorhanden und der Schritt entfällt. Die Module liegen seit v0.17.11 unter `public/js/features/import/`. Wenn die alte `choice-template.js` erhalten bleibt, wird `whiskybase.import.choiceNotFound` weiter referenziert, obwohl der neue Übersetzungsschlüssel `imports.preview.choiceNotFound` lautet. Die korrekte Lösung ist das **Entfernen der alten Dateien**, nicht das Wiederherstellen des alten Übersetzungsschlüssels. Git muss die Löschungen als Änderungen sehen und mit dem Patch committen.
+
+### Foto-Testdatei nach v0.17.13
+
+Die Browser-Tests verwenden jetzt `tests/fixtures/photo-import-reference.png`. Diese Datei wurde aus `photo-wb-reference.png` **umbenannt**, nicht gelöscht oder durch andere Bilddaten ersetzt. Bei einem Git-Update muss die Dateiumbenennung auch im Index ankommen; beim Überkopieren von ZIP-Dateien kann die alte Testdatei daneben stehen bleiben. `npm run check` kontrolliert die Verfügbarkeit der in Browser-Tests verwendeten Fixtures jetzt vorab.
+
 ## Lokal entwickeln
 
 **Node.js 20 oder neuer** ist erforderlich. Es gibt keine Datenbank und keinen Frontend-Bundler. Für die optionale lokale KI-Freistellung ist ein einmaliger Download der versionierten ONNX-Dateien nötig (`npm run cutout:prepare`). Docker-Images erledigen das beim Build.
@@ -136,7 +154,7 @@ Die Beispiel-IP durch die lokale Adresse ersetzen. Die Standardeinstellung ist H
 ### Qualität und Tests
 
 ```bash
-npm run check           # JavaScript, Modulimporte, i18n-Schlüssel, Dokumentationslinks
+npm run check           # JavaScript, Modulimporte, Browser-Testdateien, i18n, Dokumentationslinks
 npm test                # Unit- und Integrationstests
 npm run release:check   # Versionsmetadaten
 npx playwright-core install chromium
@@ -149,7 +167,7 @@ Die Browser-Suite setzt Chromium und seine Systembibliotheken voraus. Bestehende
 
 ## Internationalisierung
 
-Die GUI-Texte liegen in [`de.json`](public/locales/de.json) und [`en.json`](public/locales/en.json) unter **identischen semantischen Schlüsseln**. Alle sichtbaren neuen Texte sind über `t('bereich.funktion.schluessel', params)` zu referenzieren; keine Textsuche im DOM und keine aus deutschen Sätzen generierten Schlüssel. Zusätzliche Sprachen werden in [`index.json`](public/locales/index.json) registriert. Fehlende Übersetzungen fallen auf Deutsch zurück. **Eigennamen und Benutzerdaten werden nicht übersetzt.** Backend-Fehlertexte sind aktuell noch nicht durchgehend lokalisiert.
+Die GUI-Texte liegen in [`de.json`](public/locales/de.json) und [`en.json`](public/locales/en.json) unter **identischen semantischen Schlüsseln**. Alle sichtbaren neuen Texte sind über `t('bereich.funktion.schluessel', params)` zu referenzieren; keine Textsuche im DOM und keine aus deutschen Sätzen generierten Schlüssel. Zusätzliche Sprachen werden in [`index.json`](public/locales/index.json) registriert. Fehlende Übersetzungen fallen auf **Englisch** zurück. **Eigennamen und Benutzerdaten werden nicht übersetzt.** Benutzerseitige Fehler aus Bildfreistellung, Fotoeditor, Scanner und Datei-Uploads verwenden ebenfalls die Übersetzungsschlüssel. Die API liefert für bekannte Fehler einen stabilen `errorCode` sowie einen englischen Standardtext. Der Browser übersetzt den Fehlercode in die eingestellte Sprache; für unbekannte Serverfehler erscheint ein neutraler englischer Text (in der deutschen Oberfläche entsprechend auf Deutsch) statt unübersetzter Rohmeldungen.
 
 ## Versions- und Release-Prozess
 

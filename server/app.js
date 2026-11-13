@@ -3,6 +3,7 @@ import { handleApi } from './routes.js';
 import { serveStatic } from './http/static-files.js';
 import { send } from './http/response.js';
 import { fail } from './domain/errors.js';
+import { publicErrorResponse } from './domain/public-error-response.js';
 import { allowedExtensionOrigin, requireSameOriginMutation, requireAllowedHost } from './http/request-security.js';
 import { initialize } from './storage/collection-store.js';
 import { initWarehouse } from './storage/warehouse-store.js';
@@ -55,9 +56,7 @@ export function createRequestHandler() {
                 return;
             }
             if (!response.headersSent) {
-                send(response, error.status || 500, {
-                    error: error.status ? error.message : 'Interner Serverfehler'
-                });
+                send(response, error.status || 500, publicErrorResponse(error));
             }
             else {
                 response.destroy();

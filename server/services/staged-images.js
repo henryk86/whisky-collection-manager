@@ -17,8 +17,12 @@ export function stageImage(input) {
     cleanup();
     assert(pending.size < MAX_PENDING, 'Zu viele ausstehende Bilder; bitte später erneut versuchen');
     const { bytes, mediaType } = validateImageData(input.image);
+    // Legacy browser-extension uploads have no source property and originate from
+    // Whiskybase. New import adapters can explicitly use null for unlabelled photos.
+    const source = input.source === undefined || input.source === 'whiskybase'
+        ? 'whiskybase' : null; // Unknown import providers must never be mislabelled.
     const token = crypto.randomUUID();
-    pending.set(token, { image: input.image, bytes, mediaType, expires: Date.now() + TTL });
+    pending.set(token, { image: input.image, bytes, mediaType, source, expires: Date.now() + TTL });
     setTimeout(() => pending.delete(token), TTL).unref();
     return { token, expiresInSeconds: TTL / 1000 };
 }
@@ -32,8 +36,8 @@ export async function attachImageToBottle(bottleId, input) {
     cleanup();
     if (typeof input.token !== 'string' || !/^[0-9a-f-]{36}$/i.test(input.token)) throw fail('Ungültiger Bild-Token');
     const entry = pending.get(input.token);
-    if (!entry) throw fail('Whiskybase-Bild nicht mehr verfügbar. Bitte erneut importieren.', 404);
-    const photo = await addPhoto(bottleId, { image: entry.image, source: 'whiskybase' });
+    if (!entry) throw fail('Importiertes Bild nicht mehr verfügbar. Bitte erneut importieren.', 404);
+    const photo = await addPhoto(bottleId, { image: entry.image, ...(entry.source ? { source: entry.source } : {}) });
     pending.delete(input.token);
     return photo;
 }

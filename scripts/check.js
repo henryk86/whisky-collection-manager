@@ -46,6 +46,21 @@ function visit(file, stack = []) {
 for (const file of graph.keys()) {
     visit(file);
 }
+// Validate local assets referenced by browser tests before running Chromium.
+// In particular, an import refactor must rename the fixture on disk as well.
+const fixtureReferences = new Set();
+for (const file of sources.filter(file => file.includes(`${path.sep}tests${path.sep}`))) {
+    const source = fs.readFileSync(file, 'utf8');
+    for (const match of source.matchAll(/new URL\(\s*['"](\.\.\/fixtures\/[^'"]+)['"]\s*,\s*import\.meta\.url\s*\)/g)) {
+        const fixture = path.resolve(path.dirname(file), match[1]);
+        if (!fs.existsSync(fixture)) {
+            throw new Error(`Missing test fixture: ${path.relative('.', fixture)} (referenced by ${path.relative('.', file)})`);
+        }
+        fixtureReferences.add(fixture);
+    }
+}
+console.log(`${fixtureReferences.size} test fixture files: references OK.`);
+
 console.log(`${sources.length} JavaScript files: syntax/imports OK, no circular imports.`);
 
 const i18nCheck = spawnSync(process.execPath, ['scripts/check-i18n.js'], {encoding: 'utf8'});

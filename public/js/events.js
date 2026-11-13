@@ -6,7 +6,7 @@ import { movePhoto } from './features/photo-order.js';
 import { routeUrl } from './navigation/routes.js';
 import { readAnalyticsDate } from './domain/analytics-period.js';
 /** One delegated click handler; HTML data-act values are the UI action names. */
-export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, whiskybase, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView }) {
+export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView }) {
     const suggestNumber = async (fieldName) => {
         const result = await request('/api/suggest-number');
         const field = query(`[name=${fieldName}]`);
@@ -118,11 +118,11 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'backup-confirm-delete': button => backup.confirmDelete(button.dataset.id),
         'suggest-first': () => suggestNumber('firstInventoryNumber'),
         'suggest-bottle': () => suggestNumber('inventoryNumber'),
-        'wb-apply': () => whiskybase.wbApply(),
-        'wb-import-continue': () => whiskybase.confirmPendingImport(),
-        'wb-existing-bottle': () => editors.newBottle(true),
-        'wb-existing-photo': () => whiskybase.attachToExistingBottle(),
-        'wb-existing-edit': () => whiskybase.editExisting(),
+        'import-apply': () => externalImport.applyImport(),
+        'import-continue': () => externalImport.confirmPendingImport(),
+        'import-existing-bottle': () => editors.newBottle(true),
+        'import-existing-photo': () => externalImport.attachToExistingBottle(),
+        'import-existing-edit': () => externalImport.editExisting(),
         new: () => editors.newBottling(),
         'new-bottling-direct': () => editors.createBottling(),
         back: () => navigate('home'),

@@ -1,24 +1,21 @@
-# Teststatus - Whisky Collection Manager v0.17.9
+# Teststatus - Whisky Collection Manager v0.17.13
 
-**Stand:** 13.11.2026. **Basis:** v0.17.8; ausschließlich Fehlerkorrekturen im Fotoeditor und passende Regressionstests. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-13. **Status:** Node-Pruefungen erfolgreich, Browser- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
-## Durchgeführte Prüfungen
+## Durchgefuehrte Pruefungen
 
-| Prüfung | Ergebnis | Einordnung |
+| Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Bestanden** | Version in Paket, Lockfile, README, Changelog und Teststatus konsistent. |
-| `npm run check` | **Bestanden** | 220 JavaScript-Dateien, 928 referenzierte Übersetzungsschlüssel, 98 relative Markdown-Links geprüft. |
-| `npm test` | **366/366 bestanden** | Unit- und Integrationstests des ursprünglichen Funktionsumfangs. |
-| Gezielte Chromium-Prüfung im lokalen DOM-Modus | **6/6 bestanden** | Fotoeditor-Layout, gespeicherte Freistellung und Umschalten, synchroner Originalvergleich, Maskenpinsel, reversible Bildkorrekturen, Weißabgleich. |
-| ONNX-abhängige Browserregressionen (Tests 50 und 51) | **2/2 bestanden unter angepasstem Testaufbau** | Separater Validierungsklon mit synthetischem ONNX-Modul und für die lokale Sandbox korrigierter Import-URL; die Hilfsänderung ist **nicht** Teil des Releases. |
-| Vollständiges `npm run test:browser` im normalen Navigationsmodus | **Nicht lokal ausgeführt** | Chromium blockiert hier `http://127.0.0.1` mit `ERR_BLOCKED_BY_ADMINISTRATOR`. Vollständige GitHub-CI-Prüfung steht aus. |
-| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Prüfung auf dem Zielsystem offen. |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.17.13 konsistent. |
+| `npm run check` | **Bestanden** | 229 JavaScript-Dateien, 962 i18n-Referenzen, 18 Markdown-Dateien und 2 referenzierte Testbilddateien vorhanden. |
+| Negativprobe ohne Testbild | **Bestanden** | Beim kurzzeitigen Entfernen der neuen Referenz-PNG meldet `scripts/check.js` den genauen fehlenden Dateipfad; nach Wiederherstellung gruener Check. |
+| `npm test` | **376/376 bestanden** | Vollstaendiger Unit- und Integrationstestlauf. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Playwright-Abhaengigkeiten sind lokal nicht verfuegbar; `npm ci --offline` scheitert am fehlenden npm-Cache. Die 59 Chromium-Tests muessen in GitHub Actions laufen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem pruefen. |
 
-## Änderungen v0.17.9
+## Aenderungen v0.17.13
 
-- Vorher/Nachher zeichnet das ursprüngliche, vollständig deckende Foto vor dem Umschalten des UI-Zustands. Dadurch bleibt nicht kurzzeitig die transparente Freistellung sichtbar.
-- Bereits gespeicherte Original- und Freistellungsbilder werden beim Öffnen des Editors vorgeladen; der Vorschauwechsel erfolgt ohne asynchrones Nachladen.
-- Browser-Test zum Entfernen einer Freistellung prüft weiterhin vorhandene Originalkorrekturen statt fälschlich das uneditierte Originalbild zu erwarten.
-- Regressionstest zur unmittelbar vollständigen Originalvorschau ergänzt; Slider-Test vergleicht numerische Werte statt browserabhängiger Zeichenfolgen.
+- Die bisher vorhandene 120x180-PNG `tests/fixtures/photo-wb-reference.png` wurde ohne Inhaltsaenderung nach `tests/fixtures/photo-import-reference.png` umbenannt. Alle fuenf fehlerhaften Browserfaelle verwenden nun eine existierende Datei.
+- `npm run check` prueft relative `../fixtures/`-Referenzen in Tests, bevor CI die Browser-Suite startet. Keine Browser-Tests entfernt und keine Produktivfunktionen veraendert.
 
-**Keine Etikettenerkennung / OCR:** Ausgangspunkt ist ausdrücklich das Archiv v0.17.8. Die in v0.18.0 eingeführten Funktionen sind nicht enthalten.
+**Hinweis:** Ein erfolgreicher Node-Testlauf und die Fixture-Pruefung bestaetigen nicht die erfolgreiche Ausfuehrung der Browser-Tests. Der vollstaendige CI-Browserlauf bleibt ausstehend.

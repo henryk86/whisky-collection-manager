@@ -97,7 +97,7 @@ function bottleSymbol(b) {
 function bottlePreview(w, bottle, bottling, physicalBottle) {
     const statusKey = {closed:'home.status.closed', open:'analytics.inventory.openedStatus', empty:'home.status.empty'}[bottle.status];
     const fields = [
-        [t('forms.bottle.inventoryNumber'), bottle.number || t('whiskybase.bottles.noInventoryNumber')],
+        [t('forms.bottle.inventoryNumber'), bottle.number || t('imports.bottles.noInventoryNumber')],
         [t('forms.bottle.statusLabel'), statusKey ? t(statusKey) : null],
         [t('forms.bottle.type'), t(bottle.volumeType === 'sample' ? 'forms.bottle.sampleBottle' : 'forms.bottle.normalBottle')],
         [t('warehouse.bottles.volume'), bottle.volumeMl == null ? null : `${formatNumber(bottle.volumeMl)} ml`],
