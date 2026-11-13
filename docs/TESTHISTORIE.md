@@ -552,3 +552,143 @@ V0.6.3: Bestandszählung wird auf Karten und in Tabellen in disjunkte Gruppen (S
 - Die maschinelle Segmentierung, WebAssembly-Inferenz und tatsächliche Bildergebnisse konnten hier wegen fehlender Modell-/Runtime-Assets **nicht end-to-end getestet** werden. Dies ist eine funktionale Freigabegrenze, keine bestandene Browserprüfung.
 
 [Freistellungskonzept und Betrieb](PHOTO_FREISTELLUNG.md)
+
+---
+
+## Testbericht v0.16.12 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.16.11 mit automatischer Synchronisierung des Teststatus beim Versionssprung auf 0.16.12; Anwendungscode, Abhaengigkeiten und Docker-Konfiguration sind unveraendert. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsangaben im öffentlichen Projekt stimmen überein. |
+| `npm run check` | **Bestanden** | 209 JavaScript-Dateien, 892 referenzierte Übersetzungsschlüssel und 81 relative Links geprüft. |
+| `npm test` (mit `--test-concurrency=4`) | **343/343 bestanden** | Öffentliche Unit- und Integrationstests, einschließlich Verbot älterer Importformate und entferntem HTML-Endpunkt. |
+| Private Erweiterung: `npm test` | **Nicht erneut ausgefuehrt** | Separates privates Projekt; nicht Bestandteil dieses Quellpakets. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Reale Browserinteraktion und Zusammenspiel mit Erweiterung offen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Ausführung auf Raspberry Pi nach CI-Release prüfen. |
+
+Die öffentlichen Unit-/Integrationstests wurden mit `node --test --test-concurrency=4 tests/unit/*.test.js tests/integration/*.test.js` ausgeführt. Eine echte angemeldete Quellseite und der Browser-Erweiterungsablauf wurden hier nicht live geprüft.
+
+### Änderungen v0.16.12
+
+- Release-Metadaten auf 0.16.12 fortgeschrieben; das Bump-Skript aktualisiert nun auch den Teststatus und archiviert vorherige Pruefberichte.
+- release:check validiert jetzt die Teststatus-Version; die neuen Regressionstests verhindern erneute CI-Ausfaelle durch einen veralteten Teststatus. Kein Eingriff in Programmfunktionen, Importprotokoll oder Deployment.
+- Ein fehlender Remote-Branch `develop` wird nicht durch dieses ZIP angelegt und muss auf GitHub separat eingerichtet werden.
+
+### Historische Änderungen v0.16.11
+
+- Dependabot-Abhaengigkeit `playwright-core` von 1.64.1 auf 1.65.0 aktualisiert; `package-lock.json` enthaelt die passende Archiv-URL und Integritaetspruefsumme.
+- Zwei Tests fuer Docker- und Release-Workflow lesen die exakte `playwright-core`-Version aus `package.json` und verifizieren die Uebereinstimmung mit dem Lockfile. Dadurch scheitert CI nicht mehr durch legitime Dependabot-Updates.
+- Sonstige Anwendungslogik, Datenformate, Importprotokoll und Deployment-Konfiguration bleiben unveraendert.
+
+### Unveraenderte Funktionen aus v0.16.10
+
+- Nur noch `#wcm-import=` mit Payload-Version 2 und `source: "external"` wird angenommen. Alte Fragmente und Payload-Version 1 werden nicht mehr verarbeitet.
+- Alten HTML-Importparser samt API-Endpunkt und den dazugehörigen Unit-Tests entfernt; ein Integrationstest prüft den entfallenen Endpunkt.
+- Öffentliches Repository ohne Erweiterungsdateien und ohne anbieterspezifische Anleitung.
+- WB-ID und Quellenlink bleiben im Datenmodell, Formular und bereits gespeicherten Einträgen erhalten. Kein Datenbankschemawechsel.
+- Die private Erweiterung wurde auf das neue Format umgestellt; beide Projekte müssen gemeinsam aktualisiert werden.
+
+---
+
+## Testbericht v0.16.13 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.16.12; Korrektur der Fotosortierung auf der Abfuellungsdetailseite. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten und Teststatus zeigen v0.16.13. |
+| `npm run check` | **Bestanden** | 210 JavaScript-Dateien, 892 Uebersetzungsschluessel, 82 relative Markdown-Links. |
+| `npm test` (mit `--test-concurrency=4`) | **345/345 bestanden** | Unit- und Integrationstests einschliesslich neuer Tests zur Fotosortierung. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Neuer Playwright-Chromium-Regressionstest vorhanden; im aktuellen Buildsystem waren die Browser-Testabhaengigkeiten nicht verfuegbar. Ausfuehrung in CI erforderlich. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach Release auf Raspberry Pi pruefen. |
+
+Die Unit-/Integrationstests wurden mit `node --test --test-concurrency=4 tests/unit/*.test.js tests/integration/*.test.js` ausgefuehrt. Der hinzugefuegte Browser-Test fuer Maus-Drag am Griff und Bild, Drop ausserhalb und normales Oeffnen der Grossansicht wurde hier nicht live ausgefuehrt.
+
+### Aenderungen v0.16.13
+
+- Fotosortierung verwendet fuer Desktop-Maus, Touch und Stift einheitliche Pointer-Events mit Pointer Capture statt des nativen HTML-Drag-and-Drop-Verhaltens von Chrome.
+- Auf Desktop kann am Sortiergriff oder direkt auf dem Vorschaubild gezogen werden. Auf Touch-Geraeten ist weiterhin nur der Griff Drag-aktiv, damit das Scrollen und die normale Foto-Grossansicht funktionieren.
+- Die Position beim Loslassen bestimmt das Ziel. Abbruch ausserhalb einer Galerie oder an derselben Foto-Position speichert nichts; der durch Drag synthetisierte Klick oeffnet keine Grossansicht.
+- Die Links-/Rechts-Pfeilbuttons bleiben als barrierearme Alternative erhalten. Zwei Unit-Tests und ein Playwright-Browser-Regressionstest hinzugefuegt.
+- Keine Aenderung am Datenmodell, API-Vertrag, Importformat oder Docker-Deployment.
+
+---
+
+## Testbericht v0.16.14 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.16.13, Korrektur der Kartenkamera nach dem Speichern einer Destillerieposition. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsangaben und Release-Metadaten stimmen überein. |
+| `npm run check` | **Bestanden** | 210 JavaScript-Dateien, 892 Übersetzungsschlüssel und 83 relative Links geprüft (vor finaler Dokumentationsprüfung). |
+| `npm test` | **345/345 bestanden** | Vollständige Unit- und Integrationstests mit `--test-concurrency=4`; bestehende Funktionen ohne Regression. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Neuer Chromium-Regressionstest für Erhalt von Zoom, Zentrierung und Metadatenänderungen ergänzt; Playwright-Installation hier nicht abgeschlossen (Timeout). |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Raspberry Pi nach erfolgreichem Release prüfen. |
+
+### Änderungen v0.16.14
+
+- Der Karten-Viewer kann die aktuelle Kamera (Mittelpunkt und Zoomstufe) beim Neuzeichnen übernehmen, anstatt alle Standorte erneut einzupassen.
+- Bei geänderten Destilleriekoordinaten wird ausschließlich zur aktualisierten Position geschwenkt, ohne die gewählte Zoomstufe zu verändern. Reine Status- und Namensänderungen lösen keine Neuzentrierung aus.
+- Der Schalter „Alle Destillerien anzeigen“ führt weiterhin bewusst eine Neuberechnung des Kartenausschnitts aus; das Aufrufen der Karte aus einer Abfüllungsdetailseite behält seine gezielte Fokussierung.
+- Browser-Regressionstest ergänzt; echte Chromium-Ausführung auf CI noch zu bestätigen. Anwendungsdaten, Importformat und Docker-Konfiguration unverändert.
+
+---
+
+## Testbericht v0.16.15 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.16.14 mit Korrektur des Karten-Updates und einem neu gestalteten Lagerort-Dialog. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version in Paketdateien, README, Changelog und Teststatus konsistent. |
+| `npm run check` | **Bestanden** | 212 JavaScript-Dateien, 906 verwendete Übersetzungsschlüssel und 84 relative Links geprüft. |
+| `npm test` | **347/347 bestanden** | Vollständige öffentliche Unit- und Integrationstestsuite, einschließlich neuer Lagerort-Regressionstests. |
+| Gezielter Chromium-DOM-Test: Karte | **Bestanden** | Nach Statusänderung bleibt der verschobene Kartenmarker bei exakt demselben Bildschirmpunkt (55/25 Pixel); Zoom 12 bleibt erhalten. Neue Koordinaten verändern den Zoom nicht. |
+| Gezielter Chromium-DOM-Test: Lagerort | **Bestanden** | Dreistufige Auswahl und Belegungsanzeige, Umschaltung auf „Ohne Lagerort“ und mobile Ansicht mit einer Spalte (390 Pixel). |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Vollständige Node-Playwright-Browsersuite wegen fehlender `playwright-core`-Installation hier nicht gestartet. Der gezielte Chromium-Test verwendete Python Playwright mit abgefangenen HTTP-Anfragen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Prüfung nach CI-Release auf dem Raspberry Pi. |
+
+### Änderungen v0.16.15
+
+- Der Lagerort-Dialog stellt den aktuellen Lagerplatz und die Zielauswahl getrennt dar, inklusive Kapazität pro Fach, einer expliziten Option ohne Lagerplatz und einem responsiven Layout.
+- Die Karte wird bei Datenaktualisierungen nicht mehr zerstört und neu aufgebaut. Marker und Seitendaten werden in-place aktualisiert, wodurch Panning, Zoom und Kameramittelpunkt bei reinen Metadatenänderungen erhalten bleiben.
+- Nur bei geänderten Destillenkoordinaten erfolgt ein gezieltes Zentrieren auf die korrigierte Position mit der vorherigen Zoomstufe.
+- Der Browser-Regressionstest für Kartenänderungen verlangt nun zusätzlich, dass das Kartelement beim Speichern identisch bleibt.
+
+Der gezielte Chromium-Test deckt die beschriebenen Abläufe ab, ersetzt aber nicht die vollständige Browser-CI-Suite.
+
+---
+
+## Testbericht v0.16.16 (vor dem naechsten Versionswechsel)
+
+**Stand:** 13.11.2026. **Basis:** v0.16.15 mit Korrektur der Flaschenbild-Skalierung im Lagerort-Zuordnungsdialog. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Version in Paketdateien, README, Changelog und Teststatus konsistent. |
+| `npm run check` | **Bestanden** | 212 JavaScript-Dateien, 906 verwendete Übersetzungsschlüssel und 85 relative Dokumentationslinks geprüft. |
+| `npm test` (Unit- und Integrationstests) | **347/347 bestanden** | `node --test --test-concurrency=4 tests/unit/*.test.js tests/integration/*.test.js`. |
+| Gezielter Chromium-CSS-Test | **Bestanden** | Großes Hochformatbild: vorherige CSS-Version überragt 96-Pixel-Vorschau mit 288 Pixel Bildhöhe, neue Variante misst 96 Pixel. Mobile: alt 232 Pixel im 77-Pixel-Rahmen, neu 77 Pixel. `object-fit: contain` bleibt aktiv. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Der vorhandene Chromium-Regressionstest wurde um die Bildgrößenprüfung auf Desktop/Mobil erweitert, die komplette Node-Playwright-Suite wurde hier nicht gestartet. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Prüfung nach CI-Release auf dem Raspberry Pi. |
+
+### Änderungen v0.16.16
+
+- Das Bild im Lagerort-Zuordnungsdialog ist jetzt absolut innerhalb eines fest dimensionierten Vorschaucontainers positioniert. Dadurch kann die intrinsische Größe hoher Flaschenfotos nicht mehr das CSS-Grid aufweiten und das Bild abschneiden.
+- Die ursprünglichen Proportionen bleiben erhalten (`object-fit: contain`). Das Vorschaubild passt vollständig in den verfügbaren Rahmen auf Desktop und Mobilgeräten.
+- Browser-Regressionstest für ungewöhnlich hohe Bilddateien bei beiden Bildschirmgrößen ergänzt.
+
+Ein gezielter Chromium-CSS-Test wurde mit einem synthetischen Testbild und der tatsächlichen CSS-Regel durchgeführt. Das ersetzt keine vollständige Browser-CI-Prüfung der Anwendung.

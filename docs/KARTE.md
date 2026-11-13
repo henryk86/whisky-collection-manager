@@ -8,6 +8,7 @@ Die Seite **Landkarte** ist über den Menübutton im Kopfbereich erreichbar. Sta
 - Für **alle 450 im mitgelieferten Katalog enthaltenen Destillerien** sind Kartenpositionen verfügbar. Für historische, stillgelegte und nicht exakt dokumentierte Standorte verwenden wir in vielen Fällen **ungefähre Ortskoordinaten**, keine fiktiven exakten Gebäudepositionen. Die Kartenansicht kennzeichnet diese als „Ungefähre Lage“. Neue oder selbst angelegte Destillerien erscheinen nur dann unter „Noch nicht verortet“, wenn keine Position gefunden wird; bei 0 fehlenden Standorten wird die gesamte Rubrik ausgeblendet.
 - Über „Ort festlegen“ für neue Destillerien bzw. das kleine Stift-Icon rechts neben dem Destillerienamen öffnet sich das Destillerieformular. Dort können Breitengrad und Längengrad direkt eingegeben werden. Optional findet „Standort über OpenStreetMap suchen“ einzelne Kandidaten. **Der Benutzer prüft und wählt** den richtigen Standort, anschließend speichert er die Destillerie.
 - Die Koordinaten werden optional als `distillery.latitude` und `distillery.longitude` in `collection.json` gespeichert, im vollständigen Backup erfasst und durch JSON-Import wiederhergestellt. Das bisherige `schemaVersion: 4` bleibt kompatibel.
+- **Nach dem Speichern einer Destillerieposition** behält die Landkarte die aktuelle Zoomstufe. Wenn sich die Koordinaten tatsächlich geändert haben, wird nur der betroffene Standort neu zentriert. Änderungen an Name oder Betriebsstatus sowie gewöhnliche Datenaktualisierungen setzen weder Zoom noch Kartenausschnitt zurück; der Button „Alle Standorte anzeigen“ bleibt der bewusste Weg, alle Punkte einzupassen.
 - Beim Öffnen und mit „Alle Standorte anzeigen“ berechnet die Karte den Ausschnitt aus den gerade eingeblendeten Orten. Im Standardmodus passen Islay-Bestände die Karte auf Islay an. Mit dem Schalter für alle Destillerien erweitert sich der Ausschnitt auf deren Standorte; nach dem Ausschalten wird wieder der Bestandsausschnitt angezeigt. Bei nur einem Standort wird Zoomstufe 11 verwendet. Ohne Standorte zeigt die Karte das Ausgangsgebiet.
 
 ## Marker, Bestand und große Destillerien
@@ -57,3 +58,11 @@ OpenStreetMap verlangt bei Browser-Kacheln einen Referer und untersagt eine
 Policy, die diesen komplett unterdrueckt.
 Siehe https://operations.osmfoundation.org/policies/tiles/.
 Die visuelle Browserabnahme nach CSP-Einfuehrung ist noch offen.
+
+
+### Kartenposition nach Destillenänderungen (v0.16.15)
+
+- Beim Speichern einer Namens- oder Statusänderung bleiben der aktuelle Kartenmittelpunkt und der Zoom erhalten; der Karten-Viewer wird nicht neu aufgebaut.
+- Bei geänderten Koordinaten wird ausschließlich die neue Destillenposition zentriert, ohne Zoomanpassung.
+- Die Marker, Statistiken und die Auswahl in der Seitenleiste werden mit den aktuellen Daten aktualisiert.
+- Nur die Schaltfläche „Alle Standorte anzeigen“ passt den Kartenausschnitt bewusst wieder an alle Datenpunkte an.

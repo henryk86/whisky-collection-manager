@@ -145,8 +145,7 @@ export function createMapView({ state, shell, navigate, settings }) {
         if (focusMap) tileMap?.focus(sites.find(site => site.id === id));
         else tileMap?.select(id);
     }
-    function render() {
-        tileMap?.destroy(); tileMap = null;
+    function syncSites() {
         const mapData = buildDistilleryMap(state.collection, { includeAllDistilleries: showAllDistilleries });
         sites = mapData.located;
         missing = mapData.missing;
@@ -160,15 +159,49 @@ export function createMapView({ state, shell, navigate, settings }) {
             selectedId = relatedBottling ? (relatedSites.find(site => site.location)?.id || null)
                 : (sites.find(site => site.bottleCount > 0)?.id || sites[0]?.id || null);
         }
+    }
+    function refreshData() {
+        // A saved distillery edit must not tear down the interactive map:
+        // keeping the existing viewer preserves its exact camera, drag state,
+        // selected marker and zoom, even when marker metadata changes.
+        if (!tileMap || !document.getElementById('distillery-map')) {
+            render();
+            return;
+        }
+        syncSites();
+        renderSidebar();
+        tileMap.updateSites(sites, selectedId);
+        const summary = document.querySelector('.map-summary');
+        const locatedCount = summary?.querySelector('[data-map-stat="located"] strong');
+        const bottleCount = summary?.querySelector('[data-map-stat="bottles"] strong');
+        if (locatedCount) locatedCount.textContent = String(sites.length);
+        if (bottleCount) bottleCount.textContent = String(sites.reduce((sum, site) => sum + site.bottleCount, 0));
+        let missingCount = summary?.querySelector('[data-map-stat="missing"]');
+        if (!missing.length) missingCount?.remove();
+        else {
+            if (!missingCount) {
+                missingCount = document.createElement('span');
+                missingCount.dataset.mapStat = 'missing';
+                const total = document.createElement('strong');
+                missingCount.append(total, document.createTextNode(` ${t("map.filters.withoutLocation")}`));
+                summary.insertBefore(missingCount, summary.querySelector('.map-all-toggle'));
+            }
+            missingCount.querySelector('strong').textContent = String(missing.length);
+        }
+    }
+    function render({ preserveView = true } = {}) {
+        const initialView = preserveView ? tileMap?.getView() : null;
+        tileMap?.destroy(); tileMap = null;
+        syncSites();
         const bottleTotal = sites.reduce((sum, site) => sum + site.bottleCount, 0);
         shell(`<section class="section-head map-heading"><div>
           <span class="eyebrow dark">${t("map.page.eyebrow")}</span>
           <h2>${t("navigation.map")}<span class="heading-period">.</span></h2>
           <p class="intro">${t("map.page.description")}</p></div>
           ${backToCollectionButton}</section>
-          <div class="map-summary"><span><strong>${sites.length}</strong> ${t("map.statistics.mappedDistilleries")}</span>
-          <span><strong>${bottleTotal}</strong> ${t("map.statistics.assignedBottles")}</span>
-          ${missing.length > 0 ? `<span><strong>${missing.length}</strong> ${t("map.filters.withoutLocation")}</span>` : ''}
+          <div class="map-summary"><span data-map-stat="located"><strong>${sites.length}</strong> ${t("map.statistics.mappedDistilleries")}</span>
+          <span data-map-stat="bottles"><strong>${bottleTotal}</strong> ${t("map.statistics.assignedBottles")}</span>
+          ${missing.length > 0 ? `<span data-map-stat="missing"><strong>${missing.length}</strong> ${t("map.filters.withoutLocation")}</span>` : ''}
           <label class="map-all-toggle" for="map-all-distilleries"><span>${t("map.actions.showAllDistilleries")}</span>
           <input id="map-all-distilleries" type="checkbox" role="switch" ${showAllDistilleries ? 'checked' : ''}></label></div>
           <div class="map-layout">
@@ -184,13 +217,24 @@ export function createMapView({ state, shell, navigate, settings }) {
             showAllDistilleries = event.target.checked;
             try { localStorage.setItem(ALL_SITES_PREF, showAllDistilleries ? '1' : '0'); }
             catch { /* Browsers without storage can still switch modes. */ }
-            render();
+            render({ preserveView: false });
         });
         tileMap = createTileMap(document.getElementById('distillery-map'), sites, id => select(id), selectedId, {
             showAllDistilleries,
             focusSiteIds: relatedSites.filter(site => site.location).map(site => site.id),
+            initialView,
         });
     }
+    function centerOnUpdatedLocation(id) {
+        const site = sites.find(entry => entry.id === id && entry.location);
+        if (!site || !tileMap) return;
+        selectedId = id;
+        search = '';
+        page = 1;
+        renderSidebar();
+        // A saved location may be far away: pan to it, but do not change zoom.
+        tileMap.centerOn(site);
+    }
     function destroy() { tileMap?.destroy(); tileMap = null; }
-    return { render, destroy };
+    return { render, refreshData, destroy, centerOnUpdatedLocation };
 }

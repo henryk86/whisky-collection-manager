@@ -152,3 +152,12 @@ Der 2D-Raumplan zeigt ein nicht-interaktives Raster mit Linien im Abstand von 0,
 - `public/js/domain/warehouse-3d-model.js` und `public/js/ui/warehouse-three-scene.js`: 3D-Modell beziehungsweise Three.js-Renderer.
 
 Die Modulgrenzen und ihr Datenfluss sind auch in [ARCHITEKTUR.md](ARCHITEKTUR.md) dokumentiert.
+
+
+### Dialog zum Umlagern einer Flasche (v0.16.15)
+
+- Der Dialog zeigt die betroffene Flasche und ihren aktuellen Lagerort als separate Zusammenfassung.
+- Ein neuer Lagerort wird über die aufeinander aufbauenden Felder **Raum**, **Möbel** und **Fach** ausgewählt.
+- Belegte und freie Fachkapazitäten werden angezeigt; volle Fächer sind für neue Zuordnungen deaktiviert.
+- Die Option **Ohne Lagerort** hebt eine bestehende Zuordnung ausdrücklich auf.
+- Auf schmalen Bildschirmen werden alle Felder untereinander angezeigt; die API erhält unverändert nur die Ziel-Fach-ID.

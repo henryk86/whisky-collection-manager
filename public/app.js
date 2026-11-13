@@ -70,7 +70,10 @@ const editors = createEditors({
 });
 const backup = createBackupController({ state, render, showModal: modal.showModal, closeModal: modal.closeModal });
 const settings = createSettingsController({
-    state, action, navigate, ...modal
+    state, action, navigate, ...modal,
+    onDistilleryLocationChanged: id => {
+        if (state.page === 'map') mapView.centerOnUpdatedLocation(id);
+    }
 });
 const mapView = createMapView({ state, shell, navigate, settings });
 const analyticsView = createAnalyticsView({ state, shell });
@@ -109,7 +112,8 @@ async function refresh() {
     state.collection = collection;
     state.warehouse = warehouse;
     state.version = meta.version;
-    render();
+    if (state.page === 'map') mapView.refreshData();
+    else render();
 }
 async function action(task) {
     try {

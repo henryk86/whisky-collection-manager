@@ -89,6 +89,7 @@
 .photo-drag-handle { flex: 1; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .photo-drag-handle:active { cursor: grabbing; }
 .photo-dragging { opacity: .55; }
+.photo-dragging .photo-open, .photo-dragging .photo-drag-handle { cursor: grabbing; }
 .photo-drop-target { outline: 3px solid var(--gold); outline-offset: 2px; }
 .photo-drag-handle:focus-visible, .photo-move:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 

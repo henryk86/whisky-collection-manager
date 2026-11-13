@@ -276,3 +276,70 @@
   .warehouse-plan-tools .warehouse-plan-filter select {width:auto;}
   .warehouse-wall-toggles {grid-template-columns:1fr;}
 }
+
+/* Bottle relocation: clear context, progressive room > furniture > shelf controls. */
+.warehouse-assignment-form .forms { display: block; margin: 0 0 12px; }
+.warehouse-assignment { display: grid; gap: 19px; min-width: 0; }
+.warehouse-assignment-bottle {
+    display: grid; grid-template-columns: 72px minmax(0,1fr); align-items: center;
+    gap: 15px; padding: 14px; border-radius: 9px;
+    background: color-mix(in srgb,var(--gold) 6%,var(--paper)); border: 1px solid var(--line);
+}
+.warehouse-assignment-photo {
+    /* Absolute image positioning avoids the intrinsic min-content grid track
+       growing beyond the thumbnail frame for especially tall bottle photos. */
+    position: relative; display: flex; align-items: center; justify-content: center;
+    box-sizing: border-box; flex: 0 0 auto; width: 72px; height: 96px;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 6px;
+    overflow: hidden;
+}
+.warehouse-assignment-photo img {
+    position: absolute; inset: 0; display: block;
+    width: 100%; height: 100%; min-width: 0; min-height: 0;
+    object-fit: contain; object-position: center;
+}
+.warehouse-assignment-photo svg { width: 35px; height: 75px; fill: var(--gold); opacity: .7; }
+.warehouse-assignment-bottle-details { display: grid; gap: 7px; min-width: 0; }
+.warehouse-assignment-eyebrow { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+.warehouse-assignment-bottle-details strong { font-size: 17px; color: var(--ink); overflow-wrap: anywhere; }
+.warehouse-assignment-current { display: grid; gap: 3px; min-width: 0; font-size: 12px; }
+.warehouse-assignment-current span:first-child { color: var(--muted); }
+.warehouse-assignment-current span:last-child { color: var(--ink); font-weight: 650; overflow-wrap: anywhere; }
+.warehouse-assignment-target { min-width: 0; border: 1px solid var(--line); border-radius: 9px; margin: 0; padding: 15px; }
+.warehouse-assignment-target legend { color: var(--ink); font-size: 14px; font-weight: 700; padding: 0 6px; }
+.warehouse-assignment-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 1px 0 16px; }
+.warehouse-assignment-modes label {
+    display: flex; align-items: center; gap: 8px; min-width: 0; padding: 11px;
+    border: 1px solid var(--line); border-radius: 6px; cursor: pointer;
+    font-size: 13px; color: var(--ink); background: var(--paper);
+}
+.warehouse-assignment-modes label:has(input:checked) { border-color: var(--gold); background: color-mix(in srgb,var(--gold) 10%,var(--paper)); }
+/* Native check/radio marks must not inherit the global 44px field height and 11px padding.
+   The former rule stretched their browser-drawn shapes into tall ovals/rectangles. */
+.warehouse-assignment-modes input[type="radio"],
+.warehouse-bulk-check[type="checkbox"] {
+    appearance: auto;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 0;
+    margin: 0;
+    flex: 0 0 18px;
+    accent-color: var(--gold);
+}
+.warehouse-assignment-selectors { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; min-width: 0; }
+.warehouse-assignment-selectors .warehouse-assignment-shelf { grid-column: 1 / -1; }
+.warehouse-assignment-selectors select { min-width: 0; width: 100%; max-width: 100%; color: var(--ink); background: var(--paper); }
+.warehouse-assignment-selectors.is-disabled { opacity: .45; }
+.warehouse-assignment-feedback { min-height: 18px; margin: 13px 0 0; font-size: 12px; color: var(--muted); }
+.warehouse-assignment-form .warehouse-form-actions { border-top: 1px solid var(--line); margin: 10px 0 0; padding-top: 17px; }
+@media (max-width: 570px) {
+    .warehouse-assignment { gap: 13px; }
+    .warehouse-assignment-bottle { grid-template-columns: 58px minmax(0,1fr); gap: 11px; padding: 10px; }
+    .warehouse-assignment-photo { width: 58px; height: 77px; }
+    .warehouse-assignment-modes, .warehouse-assignment-selectors { grid-template-columns: minmax(0,1fr); }
+    .warehouse-assignment-selectors .warehouse-assignment-shelf { grid-column: auto; }
+    .warehouse-assignment-target { padding: 12px; }
+    .warehouse-assignment-bottle-details strong { font-size: 15px; }
+}

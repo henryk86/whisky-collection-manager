@@ -11,6 +11,7 @@ import { moveFurnitureTowards } from '../domain/warehouse-placement.js';
 import { routeUrl } from '../navigation/routes.js';
 import { createFurnitureActivation } from '../ui/warehouse-furniture-activation.js';
 import { eyeIcon, eyeOffIcon } from '../ui/action-icons.js';
+import { renderWarehouseAssignment, mountWarehouseAssignment, assignmentPayload } from '../ui/warehouse-assignment.js';
 import { FRONT_KEYS, CAMERA_KEYS, ROOM_SECTION_KEYS, typeChoices, typeName, num, capacityLabel, safe, count, field, choices, footer, bottleLabel, bottleRow, bottlePreview, roomOptions, findFurniture, roomDiagram, shelfPanel } from './warehouse-presentation.js';
 export { storagePath } from './warehouse-presentation.js';
 function attachBottlePhotos() {
@@ -327,10 +328,10 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
             const bottle = data.bottles.find(b=>b.id===id);
             if (!bottle) return toast(t("features.errors.bottleNotFound"),true);
             title=t('warehouse.bottles.assignTitle'); endpoint=`/api/warehouse/bottles/${id}`;method='PUT';
-            const options=[['',t('warehouse.bottles.unassignedLabel')],...data.rooms.flatMap(r=>r.furniture.flatMap(f=>f.shelves.map(s=>[s.id,`${r.name} / ${f.name} / ${s.name}${s.capacity === 0 ? ` (${t('warehouse.shelves.noBottles')})` : ` (${count(data,s.id)}${s.capacity !== null ? ' / '+s.capacity : ''})`}`])) )];
-            fields=`<p class="hint">${safe(bottleLabel(bottle))}</p>`+choices('shelfId',t("warehouse.bottles.selectStorageLocation"),options,data.assignments[id]||'');
+            fields=renderWarehouseAssignment(data,bottle);
         }
-        modal.showModal(title,`<form id="warehouse-form" data-endpoint="${safe(endpoint)}" data-method="${method}" data-new-furniture="${kind==='furniture'&&!id?'true':'false'}" data-bulk="${kind==='furniture-bulk'}" class="warehouse-form"><div class="forms">${fields}</div>${footer()}</form>`);
+        modal.showModal(title,`<form id="warehouse-form" data-endpoint="${safe(endpoint)}" data-method="${method}" data-new-furniture="${kind==='furniture'&&!id?'true':'false'}" data-bulk="${kind==='furniture-bulk'}" class="warehouse-form${kind==='assign'?' warehouse-assignment-form':''}"><div class="forms">${fields}</div>${footer()}</form>`, kind === 'assign');
+        if (kind === 'assign') mountWarehouseAssignment(document.querySelector('#warehouse-form'), data, id);
         const editor = document.querySelector('.warehouse-door-ranges');
         if (editor) editor.addEventListener('click', event => {
             if (event.target.closest('.warehouse-door-range-remove')) event.target.closest('.warehouse-door-range')?.remove();
@@ -370,7 +371,11 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
             } catch(err) {toast(err.message,true);}
             return;
         }
-        const data=Object.fromEntries(new FormData(form).entries());
+        let data=Object.fromEntries(new FormData(form).entries());
+        if (form.classList.contains('warehouse-assignment-form')) {
+            try { data=assignmentPayload(data.warehouseAssignmentMode,form.querySelector('[data-assignment-shelf]')?.value,w()); }
+            catch (error) { toast(error.message,true); return; }
+        }
         for (const key of ['width','height','depth','x','y','rotation','elevation','itemHeight']) if (key in data) data[key] = Number(data[key]);
         if (form.dataset.newFurniture === 'true' || ['leftSidePanel','rightSidePanel','backPanel'].some(key=>form.elements.namedItem(key))) {
             for (const key of ['leftSidePanel','rightSidePanel','backPanel']) if (form.elements.namedItem(key)) data[key] = form.elements.namedItem(key).checked;

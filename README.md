@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.16.12
+# Whisky Collection Manager v0.16.17
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der **Abfüllung** über einzelne **physische Flaschen** bis zum **Lagerfach**. Eine Abfüllung kann mehrere Flaschen mit unterschiedlichen Inventarnummern, Zuständen, Größen, Fotos und Belegen enthalten.
 
@@ -9,7 +9,7 @@ Die Anwendung nutzt Node.js und Browser-ES-Module, **ohne Datenbank und ohne Fro
 | Bereich | Umfang |
 | --- | --- |
 | **Sammlung** | Abfüllungen und physische Flaschen erfassen, suchen, filtern, sortieren; Kachel-/Tabellenansicht und Scanner. Inventarnummern bleiben bei gleichzeitiger Belegung eindeutig, früher verwendete Nummern dürfen nach Freigabe erneut manuell zugeteilt werden. |
-| **Details & Medien** | Destillerien, Kauf-/Verkostungsdaten, Fotos (inklusive optionaler lokaler KI-Freistellung mit Original-Erhalt), Rechnungen und andere Anhänge je Flasche. Vorschau für explizit übergebene, strukturierte Abfüllungsdaten (ohne öffentlich mitgelieferte Erweiterung). |
+| **Details & Medien** | Destillerien, Kauf-/Verkostungsdaten, Fotos (inklusive optionaler lokaler KI-Freistellung mit Original-Erhalt) mit Sortierung per Maus/Touch-Griff oder Pfeilbuttons, Rechnungen und andere Anhänge je Flasche. Vorschau für explizit übergebene, strukturierte Abfüllungsdaten (ohne öffentlich mitgelieferte Erweiterung). |
 | **Analyse** | Übersicht und sechs Themenbereiche mit insgesamt 38 Auswertungen, Filtern und Zeitaggregationen. |
 | **Landkarte** | OpenStreetMap, Destilleriekatalog, manuell gepflegte Standorte, Cluster und Filter für aktive/geschlossene Destillerien. |
 | **Lager** | Räume, Möbel und Fächer mit Zuordnung einzelner Flaschen. Klick auf eine Flasche im Fach zeigt ein Detail-Modal mit Link zur markierten Flasche auf der Detailseite und separater Umlagern-Aktion. 2D-Grundriss (10-cm-Raster) und Three.js-3D-Ansicht; getrennte Höhenebenen, Kollisionsprüfung, Möbel-/Fachbearbeitung und Mehrfachaktionen. |
