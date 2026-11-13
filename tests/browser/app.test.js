@@ -238,6 +238,64 @@ test('browser: create a bottling, read-only bottle context, edit and photo uploa
         assert.equal(saved.data.bottles, undefined);
     });
 });
+test('browser: Chrome pointer dragging reorders bottle photos without opening the viewer', async () => {
+    await session(async ({ page, open, base }) => {
+        const { bottling, bottle } = await seed(base, '000325');
+        const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+        const photos = [];
+        for (let i = 0; i < 3; i++) {
+            const saved = await requestJson(base, `/api/bottles/${bottle.id}/photos`, 'POST', { image: png });
+            assert.equal(saved.status, 201);
+            photos.push(saved.data.id);
+        }
+        await open({ query: `?bottling=${bottling.id}` });
+        const gallery = page.locator(`[data-photo-list="${bottle.id}"]`);
+        await gallery.locator('[data-photo-tile]').first().waitFor();
+        const order = () => gallery.locator('[data-photo-tile]')
+            .evaluateAll(tiles => tiles.map(tile => tile.dataset.photoId));
+        const drag = async (source, target) => {
+            const start = await source.boundingBox();
+            const end = await target.boundingBox();
+            assert.ok(start && end);
+            await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+            await page.mouse.down();
+            await page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 8 });
+            await page.mouse.up();
+        };
+        // Dragging the handle must use the position under the pointer at release.
+        await drag(gallery.locator('[data-photo-tile]').first().locator('[data-photo-drag]'),
+            gallery.locator('[data-photo-tile]').last());
+        await page.waitForFunction(expected => {
+            const tiles = document.querySelectorAll('[data-photo-list] [data-photo-tile]');
+            return JSON.stringify([...tiles].map(t => t.dataset.photoId)) === JSON.stringify(expected);
+        }, [photos[1], photos[2], photos[0]]);
+        assert.deepEqual(await order(), [photos[1], photos[2], photos[0]]);
+
+        // Chrome starts native image dragging by default. Pointer-based thumbnail
+        // dragging must save the order without opening the photo lightbox.
+        await drag(gallery.locator('[data-photo-tile]').last().locator('.photo-open'),
+            gallery.locator('[data-photo-tile]').first());
+        await page.waitForFunction(expected => {
+            const tiles = document.querySelectorAll('[data-photo-list] [data-photo-tile]');
+            return JSON.stringify([...tiles].map(t => t.dataset.photoId)) === JSON.stringify(expected);
+        }, [photos[0], photos[1], photos[2]]);
+        assert.equal(await page.locator('.photo-lightbox-image').count(), 0);
+        assert.deepEqual((await requestJson(base, '/api/collection')).data.bottlings[0].bottles[0]
+            .photos.map(p => p.id), [photos[0], photos[1], photos[2]]);
+
+        // Cancel a drag outside the gallery: no stale target should be saved.
+        await drag(gallery.locator('[data-photo-tile]').first().locator('[data-photo-drag]'),
+            page.locator('.section-head h2').first());
+        assert.deepEqual(await order(), [photos[0], photos[1], photos[2]]);
+
+        // A plain photo click still opens the lightbox after the drag.
+        await gallery.locator('.photo-open').first().click();
+        await page.locator('.photo-lightbox-image').waitFor();
+        await page.keyboard.press('Escape');
+        await page.locator('.photo-lightbox-image').waitFor({ state: 'detached' });
+    });
+});
+
 test('browser: new bottle can reuse an existing bottling or create a new one', async () => {
     await session(async ({ page, open, base }) => {
         const existing = await seed(base, '009100');
@@ -1470,6 +1528,81 @@ test('browser: unknown distillery can be positioned in app and large per-site li
     });
 });
 
+
+test('browser: editing map coordinates keeps zoom and recenters only after a position change', async () => {
+    await session(async ({ page, open, base }) => {
+        const distilleries = (await requestJson(base, '/api/collection')).data.distilleries;
+        const ardbeg = distilleries.find(site => site.name === 'Ardbeg');
+        const kilchoman = distilleries.find(site => site.name === 'Kilchoman');
+        assert.ok(ardbeg && kilchoman);
+        for (const [distillery, number] of [[ardbeg, '071411'], [kilchoman, '071412']]) {
+            const created = await requestJson(base, '/api/bottlings', 'POST', {
+                name: `Map position edit ${distillery.name}`,
+                distilleryIds: [distillery.id],
+                firstBottle: { inventoryNumber: number, status: 'closed' },
+            });
+            assert.equal(created.status, 201);
+        }
+        await open();
+        await page.locator('[data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-map"]').click();
+        await page.locator('#map-site-select').selectOption(ardbeg.id);
+        await page.locator('[data-map-control="in"]').click();
+        await page.locator('[data-map-control="in"]').click();
+        const zoomBefore = await page.locator('.map-zoom-level').innerText();
+        assert.ok(Number(zoomBefore.replace('Zoom ', '')) >= 12);
+
+        await page.locator('.map-position-edit').click();
+        await page.locator('#distillery-latitude').fill('55.7101');
+        await page.locator('#distillery-longitude').fill('-6.2202');
+        await page.locator('#distillery-form button[type="submit"]').click();
+        await page.locator('.overlay').waitFor({ state: 'detached' });
+        assert.equal(await page.locator('.map-zoom-level').innerText(), zoomBefore,
+            'saving an edited location must never refit all map points');
+        assert.equal(await page.locator('#map-site-select').inputValue(), ardbeg.id);
+        const marker = page.locator('.map-marker[aria-label^="Ardbeg:"]');
+        const position = await marker.evaluate(element => {
+            const marker = element.getBoundingClientRect();
+            const view = document.querySelector('.map-viewport').getBoundingClientRect();
+            return { x: marker.left + marker.width / 2 - view.left - view.width / 2,
+                y: marker.top + marker.height / 2 - view.top - view.height / 2 };
+        });
+        assert.ok(Math.abs(position.x) < 3 && Math.abs(position.y) < 3,
+            `corrected location should be centered at the original zoom: ${JSON.stringify(position)}`);
+        assert.equal((await requestJson(base, '/api/collection')).data.distilleries
+            .find(site => site.id === ardbeg.id).latitude, 55.7101);
+
+        // A metadata-only edit must not shift the map, and must preserve zoom.
+        await page.locator('[data-map-control="out"]').click();
+        const zoomAfterOut = await page.locator('.map-zoom-level').innerText();
+        const viewport = await page.locator('.map-viewport').boundingBox();
+        await page.mouse.move(viewport.x + viewport.width / 2 + 110, viewport.y + viewport.height / 2 + 65);
+        await page.mouse.down();
+        await page.mouse.move(viewport.x + viewport.width / 2 + 165, viewport.y + viewport.height / 2 + 90, { steps: 5 });
+        await page.mouse.up();
+        const displaced = await page.locator('.map-marker[aria-label^="Ardbeg:"]').evaluate(element => {
+            const marker = element.getBoundingClientRect();
+            const view = document.querySelector('.map-viewport').getBoundingClientRect();
+            return { x: marker.left + marker.width / 2 - view.left - view.width / 2,
+                y: marker.top + marker.height / 2 - view.top - view.height / 2 };
+        });
+        assert.ok(Math.abs(displaced.x) > 25, 'dragging should move the marker away from center');
+        await page.locator('.map-position-edit').click();
+        await page.locator('#distillery-status').selectOption('closed');
+        await page.locator('#distillery-form button[type="submit"]').click();
+        await page.locator('.overlay').waitFor({ state: 'detached' });
+        assert.equal(await page.locator('.map-zoom-level').innerText(), zoomAfterOut);
+        assert.equal(await page.locator('#map-site-select').inputValue(), ardbeg.id);
+        const samePosition = await page.locator('.map-marker[aria-label^="Ardbeg:"]').evaluate(element => {
+            const marker = element.getBoundingClientRect();
+            const view = document.querySelector('.map-viewport').getBoundingClientRect();
+            return { x: marker.left + marker.width / 2 - view.left - view.width / 2,
+                y: marker.top + marker.height / 2 - view.top - view.height / 2 };
+        });
+        assert.ok(Math.abs(samePosition.x - displaced.x) < 3 && Math.abs(samePosition.y - displaced.y) < 3,
+            'a status-only edit must preserve the panned map center');
+    });
+});
 
 test('browser: OSM tiles switch theme and wheel zoom holds cursor geography', async () => {
     await session(async ({ page, base, open }) => {

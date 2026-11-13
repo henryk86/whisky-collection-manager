@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.16.14 - 2026-11-13
+
+- Kartenansicht behaelt beim Speichern einer Destillenposition die Zoomstufe und zentriert nur den korrigierten Standort.
+
+## 0.16.13 - 2026-11-13
+
+- Fotos auf der Abfuellungsdetailseite lassen sich in Chrome jetzt per Pointer-Events statt nativem HTML-Drag-and-Drop umsortieren; das Ziel wird beim Loslassen bestimmt und ein abgebrochener Drag speichert nichts.
+- Mit der Maus kann auch am Vorschaubild gezogen werden; ein normaler Klick oeffnet weiterhin die Grossansicht. Touch-Bedienung ueber den Griff und Pfeiltasten-Buttons bleiben erhalten. Browser-Regressionstest und Unit-Tests fuer die Reihenfolge hinzugefuegt.
+
 ## 0.16.12 - 2026-11-12
 
 - Release-Bump synchronisiert jetzt automatisch docs/TESTSTATUS.md, archiviert den vorherigen Pruefbericht und markiert neue Pruefungen als ausstehend. release:check validiert den Teststatus ebenfalls; Regressionstests ergaenzt. Anwendungslogik und Deployment bleiben unveraendert.

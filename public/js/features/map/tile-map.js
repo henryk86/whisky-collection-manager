@@ -3,12 +3,12 @@ import { t } from '../../i18n/index.js';
  * Downloads ONLY tiles in the current viewport (no prefetch/offline cache).
  * The browser honours tile.openstreetmap.org's HTTP cache and Referer policy.
  */
-import { MAX_MAP_ZOOM, clusterMarkerDiameter, fitMapToSites, markerDiameter, project, tileSize, unproject, zoomAroundPoint } from '../../domain/distillery-map.js';
+import { MAX_MAP_ZOOM, clusterMarkerDiameter, fitMapToSites, markerDiameter, project, tileSize, unproject, zoomAroundPoint, clampZoom } from '../../domain/distillery-map.js';
 import { pagodaRoofIcon, closedDistilleryIcon } from '../../ui/action-icons.js';
 import { clusterMapSites } from '../../domain/map-clusters.js';
 
 const TILE_BASE = 'https://tile.openstreetmap.org';
-export function createTileMap(element, sites, onSelect, selectedId = null, { showAllDistilleries = false, focusSiteIds = [] } = {}) {
+export function createTileMap(element, sites, onSelect, selectedId = null, { showAllDistilleries = false, focusSiteIds = [], initialView = null } = {}) {
     const layer = element.querySelector('.map-movable');
     const tiles = element.querySelector('.map-tiles');
     const markers = element.querySelector('.map-markers');
@@ -147,14 +147,18 @@ export function createTileMap(element, sites, onSelect, selectedId = null, { sho
         viewChanged = true;
         update();
     }
-    function focus(site) {
+    function centerOn(site) {
         if (!site?.location) return;
-        center = { ...site.location };
-        zoom = Math.max(zoom, 10);
+        center = { lat: site.location.lat, lon: site.location.lon };
         viewChanged = true;
         selectedId = site.id;
         pinnedId = site.id;
         update();
+    }
+    function focus(site) {
+        if (!site?.location) return;
+        zoom = Math.max(zoom, 10);
+        centerOn(site);
     }
     const down = event => {
         if (event.target.closest('button,a')) return;
@@ -235,10 +239,22 @@ export function createTileMap(element, sites, onSelect, selectedId = null, { sho
     element.addEventListener('click', handleZoom);
     const resize = new ResizeObserver(() => { if (!destroyed) viewChanged ? update() : fit(); });
     resize.observe(viewport);
-    fit();
-    if (focusSiteIds.length) fitSites(focusSiteIds);
+    // Collection refreshes rebuild the map DOM. Reuse the prior camera instead
+    // of fitting all distilleries again, even if the map was not manually moved.
+    const restored = initialView && Number.isFinite(initialView.lat)
+        && Number.isFinite(initialView.lon) && Number.isFinite(initialView.zoom);
+    if (restored) {
+        center = { lat: initialView.lat, lon: initialView.lon };
+        zoom = clampZoom(initialView.zoom);
+        viewChanged = true;
+        update();
+    } else {
+        fit();
+        if (focusSiteIds.length) fitSites(focusSiteIds);
+    }
     return {
-        focus, fitSites,
+        focus, centerOn, fitSites,
+        getView() { return center ? { lat: center.lat, lon: center.lon, zoom } : null; },
         select(id) { selectedId = id; update(); },
         fit,
         destroy() {

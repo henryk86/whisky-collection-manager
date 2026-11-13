@@ -145,7 +145,8 @@ export function createMapView({ state, shell, navigate, settings }) {
         if (focusMap) tileMap?.focus(sites.find(site => site.id === id));
         else tileMap?.select(id);
     }
-    function render() {
+    function render({ preserveView = true } = {}) {
+        const initialView = preserveView ? tileMap?.getView() : null;
         tileMap?.destroy(); tileMap = null;
         const mapData = buildDistilleryMap(state.collection, { includeAllDistilleries: showAllDistilleries });
         sites = mapData.located;
@@ -184,13 +185,24 @@ export function createMapView({ state, shell, navigate, settings }) {
             showAllDistilleries = event.target.checked;
             try { localStorage.setItem(ALL_SITES_PREF, showAllDistilleries ? '1' : '0'); }
             catch { /* Browsers without storage can still switch modes. */ }
-            render();
+            render({ preserveView: false });
         });
         tileMap = createTileMap(document.getElementById('distillery-map'), sites, id => select(id), selectedId, {
             showAllDistilleries,
             focusSiteIds: relatedSites.filter(site => site.location).map(site => site.id),
+            initialView,
         });
     }
+    function centerOnUpdatedLocation(id) {
+        const site = sites.find(entry => entry.id === id && entry.location);
+        if (!site || !tileMap) return;
+        selectedId = id;
+        search = '';
+        page = 1;
+        renderSidebar();
+        // A saved location may be far away: pan to it, but do not change zoom.
+        tileMap.centerOn(site);
+    }
     function destroy() { tileMap?.destroy(); tileMap = null; }
-    return { render, destroy };
+    return { render, destroy, centerOnUpdatedLocation };
 }

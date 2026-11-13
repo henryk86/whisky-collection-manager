@@ -4,7 +4,7 @@ import { escapeHtml, query } from '../ui/dom.js';
 import { request } from '../api.js';
 import { toast } from '../ui/notifications.js';
 /** Settings workflows use app dialogs instead of blocking browser prompt/confirm. */
-export function createSettingsController({ state, action, navigate, closeModal, showModal }) {
+export function createSettingsController({ state, action, navigate, closeModal, showModal, onDistilleryLocationChanged }) {
     function promptDistillery(id = null) {
         const current = id ? state.collection.distilleries.find(entry => entry.id === id) : null;
         if (id && !current) return toast(t("features.errors.distilleryNotFound"), true);
@@ -36,6 +36,8 @@ export function createSettingsController({ state, action, navigate, closeModal, 
         const form = event.target;
         const name = form.querySelector('[name="name"]').value.trim();
         const id = form.dataset.id;
+        const previousDistillery = id ? state.collection.distilleries.find(entry => entry.id === id) : null;
+        const previousLocation = previousDistillery ? locationFor(previousDistillery) : null;
         const status = form.elements.namedItem('status').value;
         if (!name) return toast(t("features.validation.distilleryNameRequired"), true);
         const rawLat = form.elements.namedItem('latitude').value.trim().replace(',', '.');
@@ -56,6 +58,11 @@ export function createSettingsController({ state, action, navigate, closeModal, 
         }));
         if (!saved) { submit.disabled = false; return; }
         closeModal();
+        const updatedLocation = locationFor(saved);
+        if (updatedLocation && (!previousLocation || previousLocation.lat !== updatedLocation.lat
+            || previousLocation.lon !== updatedLocation.lon)) {
+            onDistilleryLocationChanged?.(saved.id);
+        }
         // Creating a new distillery from an open bottling form must preserve all
         // unsaved fields and files and select the new distillery in that form.
         const parentForm = query('#bottling-form');

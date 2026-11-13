@@ -70,7 +70,10 @@ const editors = createEditors({
 });
 const backup = createBackupController({ state, render, showModal: modal.showModal, closeModal: modal.closeModal });
 const settings = createSettingsController({
-    state, action, navigate, ...modal
+    state, action, navigate, ...modal,
+    onDistilleryLocationChanged: id => {
+        if (state.page === 'map') mapView.centerOnUpdatedLocation(id);
+    }
 });
 const mapView = createMapView({ state, shell, navigate, settings });
 const analyticsView = createAnalyticsView({ state, shell });

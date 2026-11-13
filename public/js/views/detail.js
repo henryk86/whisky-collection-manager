@@ -39,7 +39,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <strong>${entry.inventoryNumber ? `#${escapeHtml(entry.inventoryNumber)}` : t("whiskybase.bottles.noInventoryNumber")} <span class="badge ${entry.status}">${bottleStatusText(entry.status)}</span>${entry.volumeType === 'sample' ? '<span class="badge sample">Sample</span>' : ''}${entry.volumeMl != null ? `<span class="bottle-size">${escapeHtml(entry.volumeMl)} ml</span>` : ''}
     </strong>${displayBottleMeta(entry) ? `<span class="bottle-meta">${escapeHtml(displayBottleMeta(entry))}</span>` : ''}${state.warehouse ? `<span class="bottle-meta">${t("detail.fields.storagePrefix")} ${state.warehouse.assignments[entry.id] ? `<button class="inline-link" data-act="warehouse-focus" data-id="${escapeHtml(state.warehouse.assignments[entry.id])}">${escapeHtml(storagePath(state.warehouse, state.warehouse.assignments[entry.id])?.label || t("detail.fields.unassigned"))}</button>` : t("detail.fields.unassigned")}</span>` : ''}<div class="bottle-photos" data-photo-list="${escapeHtml(entry.id)}">${(entry.photos || []).map(photo => `<div class="photo-tile" data-photo-tile data-photo-id="${escapeHtml(photo.id)}">
     <button type="button" class="photo-open" data-act="open-photo" title="${t("detail.photos.enlarge")}" aria-label="${t("detail.photos.openOverlay")}">
-    <img src="${imageUrl(displayPhotoPath(photo))}" alt="${t("detail.photos.bottleWithNumber",{kind:photo.source === 'whiskybase' ? t("whiskybase.images.reference") : t("detail.photos.personalPhoto"),number:entry.inventoryNumber||''})}" loading="lazy">
+    <img draggable="false" src="${imageUrl(displayPhotoPath(photo))}" alt="${t("detail.photos.bottleWithNumber",{kind:photo.source === 'whiskybase' ? t("whiskybase.images.reference") : t("detail.photos.personalPhoto"),number:entry.inventoryNumber||''})}" loading="lazy">
     </button>
     <button class="photo-cutout" type="button" data-act="cutout-open" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" title="${t('cutout.title')}" aria-label="${t('cutout.title')}">${t('cutout.button')}</button>
     ${photo.cutout ? `<span class="photo-cutout-badge" title="${t('cutout.result')}">✦</span>` : ''}
@@ -47,7 +47,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     ${photo.source === 'whiskybase' ? `<span class="photo-source" title="${t('detail.photos.whiskybaseReferenceNotice')}">WB</span>` : ''}
     <div class="photo-controls">
     <button class="photo-move" type="button" data-act="move-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" data-dir="-1" aria-label="${t("detail.photos.moveForward")}">←</button>
-    <span class="photo-drag-handle" draggable="true" data-photo-drag title="${t("detail.photos.reorderHint")}">⠿</span>
+    <button class="photo-drag-handle" type="button" data-photo-drag title="${t("detail.photos.reorderHint")}" aria-label="${t("detail.photos.reorderHint")}">⠿</button>
     <button class="photo-move" type="button" data-act="move-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" data-dir="1" aria-label="${t("detail.photos.moveBackward")}">→</button>
     </div>
     </div>`).join('')}<label class="photo-add">${t("detail.actions.addPhotos")}<input type="file" accept="${photoAccept}" multiple hidden data-bottle-photos="${entry.id}">
