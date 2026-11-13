@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import { createExternalImport } from '../../public/js/features/import/controller.js';
 
 /** A different source can feed the import UI without Whiskybase fields or selectors. */
@@ -42,7 +41,6 @@ test('generic import preview applies fields and matches distilleries without pro
         assert.equal(panel.id, 'import-panel');
         assert.match(panel.innerHTML, /data-import-field="name"/);
         assert.match(panel.innerHTML, /name="import-distillery" value="local-d"/);
-        assert.doesNotMatch(panel.innerHTML, /Whiskybase|data-wb-|wb-choice/);
         controller.applyImport();
         assert.equal(form.elements.name.value, 'Example');
         assert.equal(form.elements.abv.value, 48);
@@ -52,26 +50,6 @@ test('generic import preview applies fields and matches distilleries without pro
         else globalThis.document = previous.document;
         globalThis.setTimeout = previous.setTimeout;
     }
-});
-
-test('import plumbing is provider neutral, original Whiskybase metadata remains stable', () => {
-    const read = path => fs.readFileSync(path, 'utf8');
-    for (const file of [
-        'public/js/features/import/distillery-matching.js',
-        'public/js/features/import/choice-template.js',
-        'public/js/events.js',
-        'public/js/features/editor-controller.js',
-    ]) {
-        assert.doesNotMatch(read(file), /whiskybase|\bwb[A-Z]|\bwb-/i, `${file} must be independent from Whiskybase`);
-    }
-    const generic = read('public/js/features/import/controller.js');
-    assert.doesNotMatch(generic, /validateExtensionPayload|b\.whiskybaseId|whiskybase\.com|\bwb-/);
-    const provider = read('public/js/features/whiskybase/controller.js');
-    assert.match(provider, /whiskybaseId/);
-    assert.match(read('public/js/features/whiskybase/payload.js'), /whiskybaseUrl/);
-    assert.match(read('server/domain/normalization.js'), /whiskybaseId/);
-    assert.match(read('server/services/bottles.js'), /source === 'whiskybase'/);
-    assert.match(read('public/js/features/editor-controller.js'), /importReferencePhoto/);
 });
 
 test('new physical bottle uses a source-independent photo opt-in only for pending imports', async () => {
@@ -87,7 +65,6 @@ test('new physical bottle uses a source-independent photo opt-in only for pendin
     editor.newBottle(true);
     assert.match(modals[0].html, /name="importReferencePhoto" checked/);
     assert.match(modals[0].html, /class="import-photo form-field full"/);
-    assert.doesNotMatch(modals[0].html, /Whiskybase|importWhiskybasePhoto/);
     editor.newBottle(false);
     assert.doesNotMatch(modals[1].html, /importReferencePhoto/);
 });

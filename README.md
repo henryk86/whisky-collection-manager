@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.17.11
+# Whisky Collection Manager v0.17.12
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der **Abfüllung** über einzelne **physische Flaschen** bis zum **Lagerfach**. Eine Abfüllung kann mehrere Flaschen mit unterschiedlichen Inventarnummern, Zuständen, Größen, Fotos und Belegen enthalten.
 
@@ -120,6 +120,18 @@ docker compose ps
 ```
 
 Für reproduzierbare Deployments `IMAGE_TAG=vX.Y.Z` statt `latest` in `.env` setzen. Vor Updates ein externes, testweise geprüftes Backup aufbewahren. Niemals bestehende Datenordner durch Dateien aus einem Quellcode-ZIP ersetzen.
+
+## Umstieg von v0.17.10 auf v0.17.11 oder neuer
+
+Beim Entpacken eines neuen Quellcode-ZIPs **über** ein vorhandenes Git-Arbeitsverzeichnis werden zuvor verschobene Dateien nicht automatisch gelöscht. Aus v0.17.10 können insbesondere diese inzwischen überflüssigen Dateien zurückbleiben:
+
+```powershell
+# Im Repository-Stammverzeichnis: alte, in Git verfolgte Importmodule entfernen
+git rm -- public/js/features/whiskybase/choice-template.js public/js/features/whiskybase/distillery-matching.js
+npm run check
+```
+
+Bei einem vollständig neuen Checkout sind diese Dateien nicht vorhanden und der Schritt entfällt. Die Module liegen seit v0.17.11 unter `public/js/features/import/`. Wenn die alte `choice-template.js` erhalten bleibt, wird `whiskybase.import.choiceNotFound` weiter referenziert, obwohl der neue Übersetzungsschlüssel `imports.preview.choiceNotFound` lautet. Die korrekte Lösung ist das **Entfernen der alten Dateien**, nicht das Wiederherstellen des alten Übersetzungsschlüssels. Git muss die Löschungen als Änderungen sehen und mit dem Patch committen.
 
 ## Lokal entwickeln
 
