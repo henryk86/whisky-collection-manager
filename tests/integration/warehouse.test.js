@@ -313,3 +313,44 @@ test('multi-delete is atomic for occupied shelves and optional wall settings sur
         assert.equal((await api(ctx.base,'/api/warehouse')).data.rooms[0].furniture.length,0);
     } finally {await ctx.stop();}
 });
+
+test('occupied room removal requires explicit opt-in and atomically unassigns only its bottles', async () => {
+    const ctx = await startTestServer();
+    try {
+        const create = (route, body) => api(ctx.base,route,'POST',body);
+        const a = (await create('/api/warehouse/rooms',{name:'To remove',width:4,height:3})).data;
+        const b = (await create('/api/warehouse/rooms',{name:'Keep',width:4,height:3})).data;
+        const furnitureA = (await create(`/api/warehouse/rooms/${a.id}/furniture`,{name:'Shelf A',type:'regal',x:0,y:0,width:1,depth:.5})).data;
+        const furnitureB = (await create(`/api/warehouse/rooms/${b.id}/furniture`,{name:'Shelf B',type:'regal',x:0,y:0,width:1,depth:.5})).data;
+        const shelfA1 = (await create(`/api/warehouse/furniture/${furnitureA.id}/shelves`,{name:'Level 1'})).data;
+        const shelfA2 = (await create(`/api/warehouse/furniture/${furnitureA.id}/shelves`,{name:'Level 2'})).data;
+        const shelfB = (await create(`/api/warehouse/furniture/${furnitureB.id}/shelves`,{name:'Level 1'})).data;
+        const bottling = (await create('/api/bottlings',{name:'Whisky',firstBottle:{inventoryNumber:'A001'}})).data;
+        const physical = [bottling.bottle.id];
+        for (const number of ['A002','B001']) {
+            const bottle = (await create('/api/bottles',{bottlingId:bottling.bottling.id,inventoryNumber:number})).data;
+            physical.push(bottle.id);
+        }
+        for (const [id,shelfId] of [[physical[0],shelfA1.id],[physical[1],shelfA2.id],[physical[2],shelfB.id]]) {
+            assert.equal((await api(ctx.base,`/api/warehouse/bottles/${id}`,'PUT',{shelfId})).status,200);
+        }
+        const oldCollection=fs.readFileSync(path.join(ctx.dir,'data/collection.json'));
+        const oldWarehouse=fs.readFileSync(path.join(ctx.dir,'data/warehouse.json'));
+        assert.equal((await api(ctx.base,`/api/warehouse/rooms/${a.id}`,'DELETE')).status,409);
+        assert.equal((await api(ctx.base,`/api/warehouse/rooms/${a.id}?unassignBottles=maybe`,'DELETE')).status,400);
+        assert.deepEqual(fs.readFileSync(path.join(ctx.dir,'data/warehouse.json')),oldWarehouse,'rejections may not alter room or assignments');
+        const removed=await api(ctx.base,`/api/warehouse/rooms/${a.id}?unassignBottles=true`,'DELETE');
+        assert.equal(removed.status,200);
+        const result=(await api(ctx.base,'/api/warehouse')).data;
+        assert.deepEqual(result.rooms.map(room=>room.id),[b.id]);
+        assert.equal(result.assignments[physical[0]],undefined);
+        assert.equal(result.assignments[physical[1]],undefined);
+        assert.equal(result.assignments[physical[2]],shelfB.id,'other rooms must retain their assignments');
+        assert.equal(result.bottles.length,3,'bottles must remain in collection');
+        assert.deepEqual(fs.readFileSync(path.join(ctx.dir,'data/collection.json')),oldCollection,'collection is never modified by room removal');
+        assert.equal((await api(ctx.base,`/api/warehouse/rooms/${a.id}?unassignBottles=true`,'DELETE')).status,404);
+        // An empty room (with no assigned bottles) is still deletable without opt-in.
+        assert.equal((await api(ctx.base,`/api/warehouse/bottles/${physical[2]}`,'PUT',{shelfId:null})).status,200);
+        assert.equal((await api(ctx.base,`/api/warehouse/rooms/${b.id}`,'DELETE')).status,200);
+    } finally { await ctx.stop(); }
+});

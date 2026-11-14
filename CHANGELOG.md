@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.19.16 - 2026-11-14
+
+- Raumloeschung mit belegten Faechern: Bestaetigung zum atomaren Entfernen aller Lagerzuordnungen und anschliessendem Loeschen des Raums
+
 ## 0.19.15 - 2026-11-14
 
 - Browser-Regressionstests fuer Raumplan, verschachtelte Modals und Moebelverwaltung an aktuelle Oberflaeche anpassen

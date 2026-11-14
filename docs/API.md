@@ -33,6 +33,12 @@ POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB
 | GET | `/api/export/zip` | AES-256-verschlüsseltes ZIP mit Sammlung, Lager, Fotos und Dokumenten; Admin-Token erforderlich |
 | POST | `/api/import/json` | Ersetzt Sammlung, erhält reservierte Nummern; Bilder und Nachweise separat |
 
+## Lagerraum löschen (ab v0.19.16)
+
+- `DELETE /api/warehouse/rooms/:id` löscht nur Räume ohne zugeordnete Flaschen; bei Belegung antwortet die API mit **409** und speichert keine Teillöschung.
+- `DELETE /api/warehouse/rooms/:id?unassignBottles=true` ist der ausdrücklich bestätigte Weg für belegte Räume. Er entfernt sämtliche Zuordnungen zu den Fächern dieses Raums (auch verwaiste Zuordnungen) und löscht den Raum mitsamt Möbeln und Fächern **atomar** aus `warehouse.json`.
+- Physische Flaschen und Abfüllungen in `collection.json` sowie Fotos und Anhänge werden **nicht** gelöscht. Andere Raum- und Flaschenzuordnungen bleiben erhalten. Ungültige Werte für `unassignBottles` werden mit **400** abgewiesen.
+
 ## Portabler Raumtransfer (ab v0.19.0)
 
 | Methode | Pfad | Funktion |

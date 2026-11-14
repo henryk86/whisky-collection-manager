@@ -65,10 +65,22 @@ export const updateRoom = (id, input) => changeWarehouse(data => {
     for (const furniture of room.furniture) layout({ ...furniture }, next);
     Object.assign(room, next); return room;
 });
-export const deleteRoom = id => changeWarehouse(data => {
+/** Remove a room in one warehouse write. With explicit opt-in, assigned
+ * bottles become unassigned; their collection records remain unchanged. */
+export const deleteRoom = (id, {unassignBottles = false} = {}) => changeWarehouse(data => {
     const room = roomById(data, id);
-    refuseOccupied(data, new Set(room.furniture.flatMap(f => f.shelves.map(s => s.id))));
-    data.rooms.splice(data.rooms.indexOf(room), 1); return { ok: true };
+    const shelves = new Set(room.furniture.flatMap(f => f.shelves.map(s => s.id)));
+    if (unassignBottles === true) {
+        // Remove every reference to these shelves, including stale bottle IDs.
+        // This must happen in the same transaction as removing the room.
+        for (const [bottleId, shelfId] of Object.entries(data.assignments)) {
+            if (shelves.has(shelfId)) delete data.assignments[bottleId];
+        }
+    } else {
+        refuseOccupied(data, shelves);
+    }
+    data.rooms.splice(data.rooms.indexOf(room), 1);
+    return {ok:true};
 });
 export const createFurniture = (roomId, input) => changeWarehouse(data => {
     const room = roomById(data, roomId);

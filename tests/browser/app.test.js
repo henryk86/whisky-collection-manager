@@ -2979,3 +2979,37 @@ test('browser: photo editor group resets and white-balance eyedropper select rea
         assert.equal(await page.locator('[data-photo-slider="clarity"]').inputValue(),'0');
     });
 });
+
+test('browser: deleting an occupied room asks to unassign its bottles, with cancel preserving everything', async () => {
+    await session(async ({base,page,open}) => {
+        const bottle=await seed(base,'071615');
+        const room=(await requestJson(base,'/api/warehouse/rooms','POST',{name:'Löschtest',width:4,height:3})).data;
+        const other=(await requestJson(base,'/api/warehouse/rooms','POST',{name:'Bleibt',width:4,height:3})).data;
+        const furniture=(await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',
+            {name:'Regal',type:'regal',x:0,y:0,width:1,depth:.5})).data;
+        const shelf=(await requestJson(base,`/api/warehouse/furniture/${furniture.id}/shelves`,'POST',{name:'Fach'})).data;
+        assert.equal((await requestJson(base,`/api/warehouse/bottles/${bottle.bottle.id}`,'PUT',{shelfId:shelf.id})).status,200);
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        await page.locator('#warehouse-room-select').selectOption(room.id);
+        await page.locator('.warehouse-room-toolbar [data-act="warehouse-room-delete"]').click();
+        const dialog=page.locator('#modal-root [role="dialog"]');
+        assert.match(await dialog.textContent(),/1 Flasche/);
+        assert.equal(await dialog.locator('[data-act="warehouse-confirm-delete-unassign"]').count(),1);
+        assert.equal(await dialog.locator('[data-act="warehouse-confirm-delete"]').count(),0);
+        await dialog.getByRole('button',{name:'Abbrechen'}).click();
+        assert.equal(await dialog.count(),0);
+        const afterCancel=(await requestJson(base,'/api/warehouse')).data;
+        assert.equal(afterCancel.rooms.length,2);
+        assert.equal(afterCancel.assignments[bottle.bottle.id],shelf.id);
+        await page.locator('.warehouse-room-toolbar [data-act="warehouse-room-delete"]').click();
+        await dialog.locator('[data-act="warehouse-confirm-delete-unassign"]').click();
+        await page.locator('#modal-root [role="dialog"]').waitFor({state:'detached'});
+        const afterDelete=(await requestJson(base,'/api/warehouse')).data;
+        assert.deepEqual(afterDelete.rooms.map(entry=>entry.id),[other.id]);
+        assert.equal(afterDelete.assignments[bottle.bottle.id],undefined);
+        assert.ok(afterDelete.bottles.some(entry=>entry.id===bottle.bottle.id));
+    });
+});

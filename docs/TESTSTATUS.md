@@ -1,23 +1,22 @@
-# Teststatus - Whisky Collection Manager v0.19.15
+# Teststatus - Whisky Collection Manager v0.19.16
 
-**Stand:** 2026-11-14. Node-Pruefungen und gezielte Chromium-DOM-Tests erfolgreich. Historische Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-14. Unit-, Integrations- und gezielter Chromium-DOM-Test erfolgreich. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent auf v0.19.15. |
-| `npm run check` | **Bestanden** | JavaScript-Syntax/Importe, Uebersetzungsschluessel und Dokumentationslinks geprueft. |
-| `npm test` | **460/460 bestanden** | Vollstaendige Unit- und Integrationstests. |
-| Gezielte Chromium-Tests (DOM-Modus) | **3/3 bestanden** | Die drei zuvor in GitHub Actions gescheiterten Browser-Testfaelle (Raumplan/Three.js, Fachuebersicht/Modal, Moebelwerkzeuge) bestehen zusammen bei Ausfuehrung mit `WHISKY_BROWSER_DOM_ONLY=true` und lokalem Chromium. Verwendet wurde die lokal verfuegbare Playwright-Laufzeit, nicht das in package-lock.json festgelegte Paket. |
-| `npm run test:browser` (normaler Lauf) | **Nicht abgeschlossen** | Direkte Browser-Navigation auf `127.0.0.1` wird hier mit `ERR_BLOCKED_BY_ADMINISTRATOR` abgelehnt. GitHub-Actions-Lauf mit realer Navigation separat pruefen. |
-| Vollstaendige Browser-Suite / Docker / ARM64 | **Nicht ausgefuehrt** | Auf CI- beziehungsweise Zielsystem separat pruefen. |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent auf v0.19.16. |
+| `npm run check` | **Bestanden** | JavaScript, Sprachschluessel und Dokumentationslinks geprueft. |
+| `npm test` | **462/462 bestanden** | Vollstaendige Unit- und Integrationstests, darunter Tests fuer belegte und leere Raeume, fehlende Zustimmung, atomare Auslagerung und unveraenderte Flaschenstammdaten. |
+| Gezielter Chromium-Test (DOM-Modus) | **1/1 bestanden** | Im Raumplan geloester Raum mit Flasche: Modal, Abbrechen ohne Aenderung sowie anschliessende Auslagerung mit Raumloeschung im Browser geprueft. |
+| `npm run test:browser` (normaler Lauf) | **Nicht lokal ausgeführt** | Vollstaendige Browser-Suite mit regulaerer Navigation nicht lokal geprueft. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
 
-## Aenderungen v0.19.15
+## Aenderungen v0.19.16
 
-- 3D-Raumplan-Browsertest an den aktuellen Wechsel zu `Regale & Faecher` angepasst. Testmoebel erhalten ein Fach, damit sie in der Regalwand sichtbar sind.
-- Modal-Browsertest waehlt eindeutig den Schliessen-Button in der Dialog-Kopfzeile statt auch `Abbrechen` zu treffen. Inerte Flaschenbilder werden mit einem echten Mauszeiger-Klick auf die Bildflaeche geprueft.
-- Mehrfachbearbeitungs-Browsertest prueft vier Aktionen im separaten Moebelverwaltungsmodal statt im Reiter `Raumplaene`. Der eigentliche Raumplan bleibt frei von diesen Aktionen.
-- Keine Aenderung der Anwendungslogik oder der bisherigen Flaschen- und Fachklicks.
+- Belegte Raeume bieten eine Anwendungssicherheitsabfrage mit den Optionen "Abbrechen" oder "Flaschen auslagern und Raum loeschen" und zeigen die Anzahl betroffener Flaschen.
+- Der Server entfernt nach ausdruecklicher Zustimmung nur die Zuordnungen zu Faechern des betroffenen Raums und den Raum selbst in einer atomaren Warehouse-Schreiboperation; `collection.json` und andere Raeume bleiben unveraendert.
+- Leere Raeume erhalten weiterhin eine normale Loeschbestaetigung. Neue Regressionstests pruefen Schutzverhalten, UI, API und Persistenz.
 
-**Offen:** Erneuter GitHub-Actions-Browserlauf mit normaler Navigation, komplette Browser-Suite und reale mobile Endgeraete.
+**Offen:** Vollstaendige Browser-Suite, reale mobile Endgeraete und Raspberry-Pi-/Docker-Livebetrieb verifizieren.
