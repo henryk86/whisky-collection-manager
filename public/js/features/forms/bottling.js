@@ -15,7 +15,6 @@ export function createBottlingForm({ state, selectors }) {
     <input type="checkbox" name="distilleryIds" value="${escapeHtml(distillery.id)}" ${selected.has(distillery.id) ? 'checked' : ''}>
     <span>${escapeHtml(distillery.name)}${distillery.status === 'closed' ? ` · ${t('home.status.closed').toLowerCase()}` : ''}</span>
     </label>`).join('')}</div>
-    <small class="hint">${t("forms.bottling.blendComponentsHint")}</small>
     </div>`;
     }
     function bottlingForm(bottling = {}) {
@@ -24,7 +23,7 @@ export function createBottlingForm({ state, selectors }) {
             required: true, full: true, placeholder: t('forms.bottling.exampleName')
         })}${selectInput(t("forms.bottling.whiskyCategory"), 'whiskyType', [['', t('forms.bottling.notProvided')], ...Object.entries(whiskyTypeLabels)], bottling.whiskyType)}${textInput(t("forms.bottling.brandOrProductLine"), 'brand', bottling.brand, {
             placeholder: t('forms.bottling.exampleBrand')
-        })}${distilleryPicker(bottling)}<p class="hint">${t("forms.bottling.originDerivedHint")}</p>${selectInput(t("forms.bottling.blendCompositionComplete"), 'compositionComplete', [['false', t('forms.bottling.compositionUnknown')], ['true', t('forms.bottling.compositionKnown')]], String(bottling.compositionComplete === true))}<div class="form-field">${t("forms.bottling.newDistillery")}<button type="button" class="btn" data-act="add-distillery">${t("forms.common.createButton")}</button>
+        })}${distilleryPicker(bottling)}${selectInput(t("forms.bottling.blendCompositionComplete"), 'compositionComplete', [['false', t('forms.bottling.compositionUnknown')], ['true', t('forms.bottling.compositionKnown')]], String(bottling.compositionComplete === true))}<div class="form-field">${t("forms.bottling.newDistillery")}<button type="button" class="btn" data-act="add-distillery">${t("forms.common.createButton")}</button>
     </div>${textInput(t("forms.bottling.bottler"), 'bottler', bottling.bottler)}${textInput(t("forms.bottling.ageYears"), 'ageYears', bottling.ageYears, {
             type: 'number'
         })}${textInput(t("forms.bottling.abv"), 'abv', bottling.abv, {

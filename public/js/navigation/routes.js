@@ -28,6 +28,7 @@ export function parseRoute(search) {
         const focusBottling = params.get('focusBottling');
         return { page: 'map', selected: focusBottling && /^[a-zA-Z0-9-]{1,100}$/.test(focusBottling) ? focusBottling : null };
     }
+    if (params.get('view') === 'help') return { page: 'help', selected: null };
     if (params.get('view') === 'settings') {
         return {
             page: 'settings', selected: null
@@ -63,6 +64,7 @@ export function routeUrl(page, selected, filters = {}) {
         }
         return '/?' + params.toString();
     }
+    if (page === 'help') return '/?view=help';
     if (page === 'settings') {
         return '/?view=settings';
     }

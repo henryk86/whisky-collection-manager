@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.20.1
+# Whisky Collection Manager v0.23.6
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der Abfüllung über einzelne physische Flaschen bis zum Lagerfach. Eine Abfüllung kann mehrere Flaschen mit eigenen Inventarnummern, Zuständen, Fotos und Belegen enthalten.
 
@@ -19,8 +19,9 @@ Die Anwendung wurde **vollständig durch ChatGPT programmiert**. Der Projektinit
 | **Lager** | Räume, Möbel und Fächer; 2D- und 3D-Raumplan, virtuelle Regalwand, Fachinhalt-Modal sowie Einzel- und Mehrfach-Umlagerung. Import und Export von Raumplänen einschließlich optionaler Flaschenzuordnungen; bei belegten Räumen sichere Löschung mit vorheriger Freigabe aller Flaschen. |
 | **Datensicherung** | Verschlüsselte AES-256-ZIP-Backups, manuell oder zeitgesteuert, für USB-, NAS- und Cloud-Ziele; Wiederherstellung nach Bestätigung. |
 | **Oberfläche** | Responsive Light-/Darkmode-Oberfläche auf Deutsch und Englisch. |
+| **Hilfe** | Eigene Hilfeseite mit Bedienhinweisen zu Sammlung, Lager, Landkarte, Fotos, Sicherung und Datenhaltung. |
 
-In der 3D-Raumansicht öffnet ein Doppelklick auf ein **belegtes Fach** den Fachinhalt direkt im Raumplan. In der Regalansicht ist der Fachinhalt ebenfalls als Modal verfügbar. Die Flaschenkarten bieten direkt **Umlagern** und **Zur Detailseite** sowie vorhandene Flaschendaten; ein vorgeschaltetes verkürztes Detailmodal ist nicht nötig. Ein Doppelklick auf eine Flasche in der Regalwand oeffnet ihre Einzelvorschau. Verschachtelte Dialoge kehren beim Schliessen jeweils zur vorherigen Ansicht zurueck.
+Die Bedienhinweise sind in der Anwendung über **Menü → Hilfe** (`/?view=help`) abrufbar. Lange Anleitungen werden nicht mehr dauerhaft in Arbeitsansichten und Formularen angezeigt; sicherheitsrelevante Warnungen bleiben vor den jeweiligen Aktionen sichtbar.
 
 Ausführliche Funktions- und Bedienhinweise: [Lagerverwaltung](docs/LAGER.md), [Fotoeditor und Freistellung](docs/PHOTO_FREISTELLUNG.md), [Analysen](docs/ANALYSE.md), [Landkarte](docs/KARTE.md) und [Anforderungen](docs/ANFORDERUNGEN.md). Änderungen einzelner Versionen stehen ausschließlich im [Changelog](CHANGELOG.md).
 

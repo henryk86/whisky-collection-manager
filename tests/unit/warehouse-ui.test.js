@@ -31,7 +31,7 @@ test('warehouse view renders room plan, separate bottle assignment and responsiv
 });
 
 
-test('warehouse uses the same page header and section-tab layout as analytics on every subsection', () => {
+test('warehouse uses the same page header and section sidebar as analytics on every subsection', () => {
     const state = { warehouse: { schemaVersion: 1, rooms: [], bottles: [], assignments: {} },
         selected: 'overview', warehouseSearch: '', warehouseUnassigned: false };
     let html = '';
@@ -44,12 +44,13 @@ test('warehouse uses the same page header and section-tab layout as analytics on
         state.selected = id;
         view.render();
         assert.match(html, /class="analytics-page warehouse-page"/);
-        assert.match(html, /<header class="analytics-header warehouse-heading"><span class="eyebrow dark">DEINE FLASCHEN IM BLICK<\/span><h2>Lagerverwaltung<span class="heading-period">\.<\/span><\/h2>/);
-        assert.match(html, /class="analytics-tabs warehouse-tabs"/);
-        const active = html.match(/<button[^>]*class="analytics-tab active"[^>]*>/g) || [];
-        assert.equal(active.length, 1, `exactly one active warehouse tab for ${id}`);
+        assert.match(html, /<header class="section-head warehouse-heading"><div class="page-heading-copy"><span class="eyebrow dark">DEINE FLASCHEN IM BLICK<\/span><h2>Lagerverwaltung<span class="heading-period">\.<\/span><\/h2>/);
+        assert.match(html, /class="section-nav-desktop warehouse-tabs"/);
+        assert.match(html, /data-section-switch="warehouse"/);
+        const active = html.match(/<button[^>]*class="section-nav-item active"[^>]*>/g) || [];
+        assert.equal(active.length, 1, `exactly one active warehouse section for ${id}`);
         assert.match(active[0], new RegExp(`data-section="${id}" aria-current="page"`));
-        assert.match(html, new RegExp(`data-section="${id}" aria-current="page">${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+        assert.match(html, new RegExp(`data-section="${id}" aria-current="page">${title.replaceAll('&','&amp;').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
     }
     } finally {
         if (previousDocument === undefined) delete globalThis.document;
@@ -57,7 +58,7 @@ test('warehouse uses the same page header and section-tab layout as analytics on
     }
     const css = fs.readFileSync('public/styles/warehouse.css', 'utf8');
     assert.doesNotMatch(css, /\.warehouse-heading\s+h2|\.warehouse-tabs\s+button|\.warehouse-page\s*\{[^}]*padding:/,
-        'warehouse must not override shared analytics header or tab styles');
+        'warehouse must not override shared analytics heading or navigation styles');
 });
 
 test('warehouse shelf rendering includes copy controls and thumbnails only where a physical bottle photo exists', () => {
@@ -402,4 +403,22 @@ test('deleting an occupied room asks to unassign bottles before deletion; empty 
     view.askDelete('room','r');
     assert.match(dialogs.at(-1).html,/data-act="warehouse-confirm-delete"/);
     assert.doesNotMatch(dialogs.at(-1).html,/warehouse-confirm-delete-unassign/);
+});
+
+test('unassigned bottles tray shows only search and bottles without the long help paragraph', async () => {
+    const { renderUnassignedTray } = await import('../../public/js/views/warehouse-unassigned-tray.js');
+    const warehouse = { rooms: [], bottles: [], assignments: {} };
+    const html = renderUnassignedTray(warehouse, [], { embedded: true, expanded: true });
+    assert.match(html, /id="warehouse-unassigned-wall-search"/);
+    assert.match(html, /class="warehouse-unassigned-page-search"/);
+    assert.match(html, /placeholder="Flaschenname oder Inventarnummer suchen"/);
+    const footer = html.match(/<div class="warehouse-unassigned-pagination">([\s\S]*?)<\/div>\s*<\/div>/)?.[1] || '';
+    assert.ok(footer.includes('warehouse-unassigned-page-summary'), 'item counter must appear in footer');
+    assert.ok(footer.indexOf('warehouse-unassigned-page-summary') < footer.indexOf('warehouse-unassigned-wall-search'), 'search must follow item counter');
+    assert.ok(footer.indexOf('warehouse-unassigned-wall-search') < footer.indexOf('warehouse-unassigned-page-controls'), 'search must precede pagination buttons');
+    assert.doesNotMatch(html, /warehouse-unassigned-search-label/);
+    assert.match(html, /aria-label="Flaschen suchen"/);
+    assert.doesNotMatch(html, /Virtuelles Ablageregal|höchstens 24 Flaschen|unassignedHint/);
+    const locale = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
+    assert.equal(Object.hasOwn(locale, 'warehouse.wall.unassignedHint'), false);
 });

@@ -1,8 +1,10 @@
 # Lagerverwaltung: Räume, Möbel und Fächer
 
+Die kompakten Arbeitsansichten zeigen keine dauerhaften Bedienanleitungen mehr. Bedienhinweise zu 2D-/3D-Raumplan, Regalwand, Fachübersicht und Flaschenaktionen sind unter **Menü → Hilfe** in der Anwendung zusammengefasst.
+
 Der Bereich **Lager** im rechten Hauptmenü bildet die physische Lagerung der Whisky-Sammlung ab. Er ist ausdrücklich **getrennt von der eigentlichen Sammlung**: Die strukturierten Lagerdaten stehen in `data/warehouse.json` unter dem konfigurierten Datenverzeichnis (`WHISKY_DATA_DIR`); die Abfüllungen und Flaschen bleiben ausschließlich in `data/collection.json`. Das bestehende Sammlungsschema bleibt unverändert.
 
-Die Seite verwendet denselben Kopfbereich und dieselbe responsive Unternavigation wie der Analysebereich. Die aktive Lager-Unterseite wird auch auf schmalen Displays innerhalb der Tab-Leiste sichtbar gehalten.
+Die Seite verwendet denselben Kopfbereich und dieselbe linke Bereichsnavigation wie Analyse, Hilfe und Einstellungen. Auf schmalen Displays ersetzt ein Auswahlfeld die Seitennavigation.
 
 **Raumvorschau in der Übersicht:** Jede Raumkachel zeigt **neben dem Raumtext** eine kleine statische 3D-Darstellung der zugehörigen Möbel im Raum. Sie entsteht aus demselben Three.js-Geometriemodell wie der interaktive 3D-Raumplan (fester Kamerawinkel Nordwest) und ist kein zweiter Editor. Sichtbare Kacheln werden bei Bedarf mit einem gemeinsam genutzten, anschließend freigegebenen WebGL-Renderer als Vorschaubild erzeugt und für unveränderte Raumdaten und unverändertes Theme zwischengespeichert. Auch leere Räume erhalten ein Bild ihrer leeren Bodenfläche. Ohne verfügbares WebGL bleibt die Raumkachel bedienbar und zeigt einen Hinweis statt des Bildes. Light- und Darkmode werden berücksichtigt.
 
@@ -14,7 +16,7 @@ Die Seite verwendet denselben Kopfbereich und dieselbe responsive Unternavigatio
 4. In der Regalansicht kann ein einzelnes Fach mit **Kopieren** in dasselbe oder ein anderes Möbel kopiert werden (Name, Kapazität, Fachhöhe und Fronttyp ohne Flaschenzuordnung). Über **Kopieren** am Möbel lässt sich ein Regal oder eine Vitrine wahlweise **mit sämtlichen Fächern** oder **ohne Fächer** im gleichen oder einem anderen Raum duplizieren. Das System sucht einen freien Standort im Raumplan; falls kein Platz vorhanden ist, wird nichts geändert und eine Fehlermeldung angezeigt. Kopien erhalten eigene IDs und übernehmen **niemals** Flaschenzuordnungen.
 5. Unter **Flaschen finden** nach Abfüllung, Inventarnummer, Alter, Erscheinungsjahr, Fasstyp oder Lagerort suchen, auf „Nur ohne Lagerort“ eingrenzen und eine physische Flasche einem Fach zuordnen. Die linksbündige Flaschenliste zeigt Alter, Erscheinungsjahr und Fasstyp an, sofern sie in der Abfüllung hinterlegt sind. Auf der Abfüllungsdetailseite zeigt jede Flasche den Lagerort sowie den Button **Lagerort** zum Zuordnen/Umlagern.
 
-Die virtuelle Ablage **„Nicht zugeordnet“** oberhalb der Regalwand ist beim Öffnen der Seite zunächst **eingeklappt**. Ein Klick auf die Überschrift blendet Suche, Flaschen und Seitennavigation ein; erneutes Klicken klappt sie zu. Bei Neuzeichnungen der Regalwand bleibt der Zustand erhalten. Pro Seite werden maximal 24 Flaschen angezeigt. Auch hier sind Alter, Erscheinungsjahr und Fasstyp verfügbar, wenn die Angaben zur Abfüllung existieren. Diese drei Felder sind Teil der lesenden Lager-API, nicht der gespeicherten Lagerzuordnungen.
+Die virtuelle Ablage **„Nicht zugeordnet“** oberhalb der Regalwand ist beim Öffnen der Seite zunächst **eingeklappt**. Ein Klick auf die Überschrift blendet ohne zusätzlichen Erklärungstext direkt Suche, Flaschen und Seitennavigation ein; erneutes Klicken klappt sie zu. Bei Neuzeichnungen der Regalwand bleibt der Zustand erhalten. Pro Seite werden maximal 24 Flaschen angezeigt. Auch hier sind Alter, Erscheinungsjahr und Fasstyp verfügbar, wenn die Angaben zur Abfüllung existieren. Diese drei Felder sind Teil der lesenden Lager-API, nicht der gespeicherten Lagerzuordnungen.
 
 ## Virtuelle Regalwand und Flaschen-Umlagerung
 
@@ -195,7 +197,8 @@ Die Modulgrenzen und ihr Datenfluss sind auch in [ARCHITEKTUR.md](ARCHITEKTUR.md
 
 ### Dialog zum Umlagern einer Flasche (v0.16.15)
 
-- Der Dialog zeigt die betroffene Flasche und ihren aktuellen Lagerort als separate Zusammenfassung.
+- Das Modal **Lagerort** zeigt die betroffene Flasche und den aktuellen Lagerort deutlich getrennt von den Bearbeitungsfeldern.
+- **Lagerort ändern** ist anfangs eingeklappt. Erst beim Öffnen werden die Eingaben und die Aktion **Speichern** sichtbar; unveränderte Lagerorte können ohne Speichern angesehen werden.
 - Ein neuer Lagerort wird über die aufeinander aufbauenden Felder **Raum**, **Möbel** und **Fach** ausgewählt.
 - Belegte und freie Fachkapazitäten werden angezeigt; volle Fächer sind für neue Zuordnungen deaktiviert.
 - Die Option **Ohne Lagerort** hebt eine bestehende Zuordnung ausdrücklich auf.
@@ -205,3 +208,6 @@ Die Modulgrenzen und ihr Datenfluss sind auch in [ARCHITEKTUR.md](ARCHITEKTUR.md
 ### Platzhalter bei Fachinhalten
 
 Ohne eigenes Flaschenfoto zeigen die Flaschenkarten im Fachinhalt-Modal die einheitliche SVG-Platzhaltergrafik `/assets/photo-placeholder.svg` aus der Sammlungsübersicht. Die Uebersichtskacheln verwenden denselben Platzhalter bewusst etwas groesser als zuvor, waehrend die Detailseite denselben Goldton auch im Dark Mode beibehaelt. Die kleine, schematische Flaschendarstellung innerhalb der Regalwand bleibt eigenstaendig erhalten.
+
+
+Bei den nicht zugeordneten Flaschen steht die Suche **in derselben Footer-Zeile zwischen dem Zähler „X von Y Flaschen“ und der Seitennavigation**. Das Suchfeld hat kein sichtbares Label; der Placeholder beschreibt die Suche nach Flaschenname oder Inventarnummer, während `aria-label` die Barrierefreiheit sicherstellt. Beim Eingeben wird nur das Ergebnisgitter samt Zähler und Seitenschaltflächen aktualisiert, damit der Fokus und die Cursorposition im Suchfeld erhalten bleiben. Auf schmalen Bildschirmen ordnet sich die Footer-Zeile responsiv um. Der Raumüberschriftsblock besitzt denselben eckigen Rahmen wie die übrigen Inhaltsblöcke.

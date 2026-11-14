@@ -1,6 +1,6 @@
 # Funktions- und Anforderungsspezifikation – Whisky Collection Manager
 
-**Produktstand:** v0.15.7 · **Stand:** 12.11.2026 · **Datenformat:** `schemaVersion: 4`
+**Produktstand:** v0.23.2 · **Stand:** 14.11.2026 · **Datenformat:** `schemaVersion: 4`
 
 Dieses Dokument beschreibt den **aktuellen Funktionsumfang und die einzuhaltenden Regeln**. Es ersetzt den früheren Entwurf vom 05.11.2026, der teilweise noch React/TypeScript, XLSX-Export und eine externen Such-API als Planung enthielt. Für tatsächlich ausgeführte Tests gilt [TESTSTATUS.md](TESTSTATUS.md), für ältere technische Entscheidungen [TESTHISTORIE.md](TESTHISTORIE.md).
 
@@ -33,12 +33,13 @@ Es gibt keine zwingende Cloud, keine externe Datenbank und keinen Build-Schritt 
 - **Destilleriefilter:** nur Destillerien mit mindestens einer erfassten Abfüllung; auch mehrfache Zuordnungen. Status- und Flaschentypfilter beziehen sich in Kombination auf dieselbe physische Flasche.
 - **Detailseite:** Stammdaten und Fotos, sämtliche physischen Flaschen mit Inventarnummer, Status, Kauf-/Verkostungsdaten, Nachweisen und Bearbeitungsaktionen. Flaschenfotos lassen sich mit der Maus am Bild oder Sortiergriff ziehen, auf Touch-Geraeten am Griff umsortieren sowie ueber die Pfeilbuttons verschieben. Ein abgebrochener Drag aendert die Reihenfolge nicht. Kartenlink öffnet einen oder mehrere zugehörige Standorte.
 - **Scanner:** QR-/Barcode-Etiketten mit manueller Eingabe als Rückfall. Bekannte Codes führen zur passenden Flasche; unbekannte können einer Flasche zugeordnet werden. Keine Funktion für Etikettengenerierung oder -druck.
-- **Design:** Responsive Desktop-/Mobilansichten, Light/Dark Theme, einheitliche Icons. Mobile Eingaben und Dialoge dürfen auch bei schmalen Bildschirmen keinen horizontalen Überlauf auslösen.
+- **Design:** Responsive Desktop-/Mobilansichten, Light/Dark Theme, einheitliche Icons. Mobile Eingaben und Dialoge dürfen auch bei schmalen Bildschirmen keinen horizontalen Überlauf auslösen. Das Erscheinungsbild der Sammlung ist Massstab: Inhaltsflaechen und Karten-/Formular-Panels in Analyse, Hilfe, Lager, Karte und Einstellungen verwenden einheitliche eckige Rahmen. Kleine Bedienelemente haben eine einheitliche, minimale Abrundung (2 px); absichtlich runde Elemente (Radio-Buttons, Kartensymbole, Kreischarts) behalten ihre Form. Die linke Bereichsnavigation ist pro Seite in ihrer Breite abgestimmt; lange Hilfe-Themen wechseln auf Tablets zum mobilen Auswahlfeld.
+- **Hilfe:** Eigene, direkt aufrufbare Hilfeseite (`/?view=help`) mit Hauptnavigationseintrag in beiden Sprachen. Allgemeine Bedienhinweise, Datenhaltung und Backupgrundlagen stehen dort; auf den Arbeitsseiten verbleiben nur notwendige Eingabehinweise und sicherheitsrelevante Warnungen. Desktop: gemeinsame Seitennavigation mit Analyse und gerader goldener Aktivmarkierung ohne gerundete Flaeche; kleinere Bildschirme: Auswahlfeld. Die Anleitungen stehen unverkuerzt in nummerierten Inhaltsabschnitten.
 
 ## 4. Destilleriekatalog und Landkarte
 
 - Der mitgelieferte Katalog enthält **450 Destillerien** mit Länderangaben und Kartenpositionen. Historische Standorte können nur näherungsweise lokalisiert sein; individuell gespeicherte Koordinaten haben Vorrang.
-- Die Landkarte zeigt standardmäßig Standorte der Sammlung; optional alle Katalog-Destillerien, auch ohne Bestand (Pagodendach-Icons). Aktive und geschlossene Standorte sind unterscheidbar.
+- Die Landkarte zeigt standardmäßig Standorte der Sammlung; optional alle Katalog-Destillerien, auch ohne Bestand (Pagodendach-Icons). Aktive und geschlossene Standorte sind unterscheidbar. Beim Ein- und Ausschalten des Gesamtkatalogs bleiben die aktuelle Position und Zoomstufe unverändert; nur der eigene Fit-Button passt den Ausschnitt neu an.
 - Bestandsmarker zeigen **physische Flaschen**, Cluster die addierte Flaschenzahl. Beim maximalen Zoom werden alle Destillerien einzeln auswählbar. Die Kartenlegende verwendet kompakte, runde Gruppenmarker ohne Schatten/Glow in den Beispielen.
 - Destillerien lassen sich manuell verorten oder **auf Benutzeraktion** über eine einzelne OpenStreetMap-Nominatim-Suche finden. Kein Massengeocoding und kein Vorabladen aller Kacheln. OSM-Attribution muss sichtbar sein.
 - Lange Standortlisten sind durchsuchbar und paginiert. Abfüllungsnamen erhalten, soweit vorhanden, Alter, ABV und Destillations-/Abfülljahr zur Unterscheidung.
@@ -61,7 +62,7 @@ Dashboard mit **sechs Unterseiten und 38 Auswertungen**: Sammlungsbestand, Herku
 - Originalabfüllungen umfassen insbesondere den Abfüllerwert **„Distillery Bottling“** sowie passende Destillerienamen.
 - Preise verschiedener Währungen werden nicht ohne nachgewiesenen Kurs addiert; ausgewiesen werden dokumentierte Ausgaben, nicht Marktwerte.
 - Zeitraumdiagramme aggregieren nach Monat oder Jahr. **„Von“ und „Bis“ sind einzelne Datumsfelder mit Tagespräzision** (`JJJJ-MM-TT`), die Auswahl wirkt vor der zeitlichen Aggregation; leere Grenzen bedeuten keine Begrenzung. Summen für die gesamte Sammlung bleiben von diesen Zeitgrenzen unberührt.
-- Diagramme verlinken, soweit sinnvoll, zu passenden Filtern oder Detailseiten. Die aktive Analyse-Unterseite muss bei horizontal scrollbarerer Mobilnavigation sichtbar bleiben.
+- Diagramme verlinken, soweit sinnvoll, zu passenden Filtern oder Detailseiten. Analyse, Hilfe, Einstellungen und Lager verwenden dieselbe linke Bereichsnavigation und bei schmalen Ansichten einen Themenwähler; der aktive Bereich muss erkennbar bleiben.
 
 Details der Kennzahlen: [ANALYSE.md](ANALYSE.md).
 
@@ -83,6 +84,8 @@ Details der Kennzahlen: [ANALYSE.md](ANALYSE.md).
 - Der Docker-Service `app` stellt HTTPS auf 3543 bereit. Der Backup-Worker läuft im selben Container. Kein allgemein erreichbarer HTTP-Server ohne zusätzliche Zugriffskontrolle.
 
 Siehe [DOCKER_BACKUP.md](DOCKER_BACKUP.md) und [API.md](API.md).
+
+Die Anwendung nutzt auf iOS ein eigenes Apple-Touch-Icon. Bereits zum Home-Bildschirm hinzugefuegte PWAs koennen ihr bisheriges Symbol bis zur erneuten Installation zwischenspeichern.
 
 ## 9. Entwicklung, Qualität und Releases
 

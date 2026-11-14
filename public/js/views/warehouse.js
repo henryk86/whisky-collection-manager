@@ -3,7 +3,7 @@ import { t, tHtml } from '../i18n/index.js';
 import { roomCapacity, totalCapacity } from '../domain/warehouse-capacity.js';
 import { toast } from '../ui/notifications.js';
 import { request } from '../api.js';
-import { revealActiveTab } from '../ui/tab-navigation.js';
+import { sectionWorkspace } from '../ui/section-navigation.js';
 import { WAREHOUSE_CAMERAS } from '../domain/warehouse-3d-model.js';
 import { mountWarehouseThree } from '../ui/warehouse-three-scene.js';
 import { mountWarehouseRoomPreviews } from '../ui/warehouse-room-previews.js';
@@ -108,7 +108,14 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         if (!results || !w()) return;
         const data = unassignedWallPage(w(), {query:unassignedWallQuery, page:unassignedWallPageNumber});
         unassignedWallPageNumber = data.page;
-        results.outerHTML = renderUnassignedTrayPage(w(),selectedBottleIds(), {query:unassignedWallQuery,page:data.page});
+        const template = document.createElement('template');
+        template.innerHTML = renderUnassignedTrayPage(w(),selectedBottleIds(), {query:unassignedWallQuery,page:data.page});
+        const updated = template.content.firstElementChild;
+        // Patch only the changing results and pagination. The search input stays
+        // mounted, so typing does not lose focus or its caret position.
+        for (const selector of ['.warehouse-unassigned-grid', '.warehouse-unassigned-page-summary', '.warehouse-unassigned-page-controls']) {
+            results.querySelector(selector)?.replaceWith(updated.querySelector(selector));
+        }
         attachBottlePhotos();
         syncBottleSelection();
     }
@@ -261,7 +268,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         const overallCapacity = totalCapacity(data);
         let content = '';
         if (section === 'overview') {
-            content = `<div class="warehouse-stats"><div><strong>${data.rooms.length}</strong><span>${t("warehouse.rooms.title")}</span></div><div><strong>${data.rooms.reduce((n,r)=>n+r.furniture.length,0)}</strong><span>${t("warehouse.furniture.plural")}</span></div><div><strong>${assigned} / ${total}</strong><span>${t("warehouse.bottles.assigned")}</span></div><div><strong>${overallCapacity.shelves===0 ? '–' : overallCapacity.unlimited && overallCapacity.defined===0 ? t('warehouse.capacity.open') : `${overallCapacity.defined}${overallCapacity.unlimited ? '+' : ''}`}</strong><span>${t('warehouse.capacity.title')}${overallCapacity.unlimited ? ` ${t('warehouse.capacity.unlimitedExtra',{count:overallCapacity.unlimited})}` : ''}</span></div></div><h3>${t("warehouse.rooms.yourRooms")}</h3><div class="warehouse-cards">${data.rooms.map(room => {const cap=roomCapacity(room,data);return `<button class="warehouse-room-card" data-act="warehouse-select-room" data-id="${safe(room.id)}"><span class="warehouse-room-preview" data-preview-room-id="${safe(room.id)}" aria-hidden="true">${t("warehouse.preview.loading3d")}</span><span class="warehouse-room-card-details"><strong data-i18n-ignore>${safe(room.name)}</strong><span>${t("warehouse.rooms.furnitureAndDimensions", {count:room.furniture.length,width:num(room.width),depth:num(room.height)})}</span><span>${t("warehouse.capacity.summary", {capacity:capacityLabel(cap)})}</span><span>${t("warehouse.occupancy.count", {count:cap.occupied})}</span></span></button>`;}).join('') || `<p class="hint">${t("warehouse.rooms.getStarted")}</p>`}</div><div class="actions"><button class="btn primary" data-act="warehouse-room-new">${t("warehouse.rooms.createWithPlus")}</button><button class="btn" data-act="warehouse-find">${t("warehouse.bottles.unassignedCount", {count:total-assigned})}</button><button class="btn" data-act="warehouse-rooms-transfer">${t('warehouse.transfer.action')}</button></div>`;
+            content = `<div class="stats warehouse-stats"><div class="panel stat"><span>${t("warehouse.rooms.title")}</span><strong>${data.rooms.length}</strong></div><div class="panel stat"><span>${t("warehouse.furniture.plural")}</span><strong>${data.rooms.reduce((n,r)=>n+r.furniture.length,0)}</strong></div><div class="panel stat"><span>${t("warehouse.bottles.assigned")}</span><strong>${assigned} / ${total}</strong></div><div class="panel stat"><span>${t('warehouse.capacity.title')}${overallCapacity.unlimited ? ` ${t('warehouse.capacity.unlimitedExtra',{count:overallCapacity.unlimited})}` : ''}</span><strong>${overallCapacity.shelves===0 ? '–' : overallCapacity.unlimited && overallCapacity.defined===0 ? t('warehouse.capacity.open') : `${overallCapacity.defined}${overallCapacity.unlimited ? '+' : ''}`}</strong></div></div><h3>${t("warehouse.rooms.yourRooms")}</h3><div class="warehouse-cards">${data.rooms.map(room => {const cap=roomCapacity(room,data);return `<button class="warehouse-room-card" data-act="warehouse-select-room" data-id="${safe(room.id)}"><span class="warehouse-room-preview" data-preview-room-id="${safe(room.id)}" aria-hidden="true">${t("warehouse.preview.loading3d")}</span><span class="warehouse-room-card-details"><strong data-i18n-ignore>${safe(room.name)}</strong><span>${t("warehouse.rooms.furnitureAndDimensions", {count:room.furniture.length,width:num(room.width),depth:num(room.height)})}</span><span>${t("warehouse.capacity.summary", {capacity:capacityLabel(cap)})}</span><span>${t("warehouse.occupancy.count", {count:cap.occupied})}</span></span></button>`;}).join('') || `<p class="hint">${t("warehouse.rooms.getStarted")}</p>`}</div><div class="actions"><button class="btn primary" data-act="warehouse-room-new">${t("warehouse.rooms.createWithPlus")}</button><button class="btn" data-act="warehouse-find">${t("warehouse.bottles.unassignedCount", {count:total-assigned})}</button><button class="btn" data-act="warehouse-rooms-transfer">${t('warehouse.transfer.action')}</button></div>`;
         } else if (section === 'rooms' || section === 'shelves') {
             const room = currentRoom();
             const roomManagementActions = section === 'rooms'
@@ -285,17 +292,13 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
                     // Room plans own spatial layout only: 2D/3D positioning,
                     // camera and visibility. All furniture/shelf editing and
                     // physical bottle work lives in Regale & Fächer.
-                    const instruction = planMode === '3d'
-                        ? t('warehouse.view.threeDimensionalInstructions')
-                        : t('warehouse.placement.twoDimensionalHint');
                     content += roomSummary + planToolbar
                         + (planMode === '3d'
                             ? `<div class="warehouse-plan-workspace"><div class="warehouse-plan-stage">${plan}</div>${selectionPanel(room, {isolate:true,compact:true,layoutOnly:true})}</div>`
                             : `${plan}${selectionPanel(room,{layoutOnly:true})}`)
-                        + `<p class="hint warehouse-plan-help">${instruction}</p>`
                         + `<div class="warehouse-section-boundary${furniture ? ' warehouse-plan-focus' : ''}">${furniture
                             ? `<div class="warehouse-plan-focus-info"><strong>${safe(furniture.name)}</strong><span>${safe(typeName(furniture.type))} · X: ${num(furniture.x)} m · Y: ${num(furniture.y)} m · ${t('warehouse.fields.bottomElevationMeters')}: ${num(furniture.elevation ?? 0)} m</span></div>`
-                            : `<p>${t('warehouse.rooms.planOnlyHint')}</p>`}
+                            : ''}
                            <button type="button" class="btn primary" data-act="warehouse-open-shelves">${t('warehouse.navigation.shelves')}</button></div>`;
                 } else {
                     const createButton = `<button type="button" class="btn primary" data-act="warehouse-furniture-new" data-id="${safe(room.id)}">${t('warehouse.furniture.place')}</button>`;
@@ -310,10 +313,14 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
             content = `<div class="warehouse-search-toolbar"><input type="search" id="warehouse-search" placeholder="${t("warehouse.bottles.searchPlaceholder")}" value="${safe(term)}" aria-label="${t("warehouse.bottles.searchInventory")}"><label><input type="checkbox" id="warehouse-unassigned" ${state.warehouseUnassigned?'checked':''}> ${t("warehouse.bottles.unassignedOnly")}</label></div>${bottleSelectionTools(true)}<div class="warehouse-bottle-list">${data.bottles.filter(b=>!state.warehouseUnassigned || !data.assignments[b.id]).map(b=>bottleRow(data,b,selectedBottleIds().includes(b.id))).join('') || `<p class="hint">${t("warehouse.bottles.noResults")}</p>`}</div>`;
         }
         const warehouseTabs = ['overview', 'rooms', 'shelves', 'find'].map(id => [id, t(ROOM_SECTION_KEYS[id])]);
-        const nav = `<nav class="analytics-tabs warehouse-tabs" aria-label="${t("warehouse.rooms.storageAreas")}">${warehouseTabs.map(([id, label]) => `<button type="button" class="analytics-tab${section === id ? ' active' : ''}" data-act="warehouse-section" data-section="${id}" aria-current="${section === id ? 'page' : 'false'}">${label}</button>`).join('')}</nav>`;
-        shell(`<div class="analytics-page warehouse-page"><header class="analytics-header warehouse-heading"><span class="eyebrow dark">${t("warehouse.page.eyebrow")}</span><h2>${t("warehouse.page.title")}<span class="heading-period">.</span></h2><p>${esc(t('warehouse.page.intro'))}</p></header>${nav}${content}<p class="warehouse-note">${t("warehouse.storage.dataFilePrefix")} <code>${'data/warehouse.json'}</code> ${t("warehouse.storage.dataFileSuffix")}</p></div>`);
+        const workspace = sectionWorkspace({
+            sections: warehouseTabs.map(([id, label]) => ({id,label})), activeId:section,
+            action:'warehouse-section', itemAttribute:'data-section',
+            label:t('warehouse.rooms.storageAreas'), switchKind:'warehouse',
+            desktopClass:'warehouse-tabs',
+        }, `<h2 class="analytics-section-title">${t(ROOM_SECTION_KEYS[section] || ROOM_SECTION_KEYS.overview)}</h2>${content}`);
+        shell(`<div class="analytics-page warehouse-page"><header class="section-head warehouse-heading"><div class="page-heading-copy"><span class="eyebrow dark">${t("warehouse.page.eyebrow")}</span><h2>${t("warehouse.page.title")}<span class="heading-period">.</span></h2><p class="intro">${esc(t('warehouse.page.intro'))}</p></div></header>${workspace}</div>`);
         if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
-            revealActiveTab(document.querySelector('.warehouse-tabs'));
             restoreWallScroll();
 
         }
@@ -518,13 +525,13 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         } else if (kind === 'assign-bulk') {
             const bottles = data.bottles.filter(b => selectedBottleIds().includes(b.id));
             if (!bottles.length) return toast(t('warehouse.bottles.bulkNothingSelected'),true);
-            title = t('warehouse.bottles.bulkAssignTitle',{count:bottles.length});
+            title = t('detail.fields.storageLocation');
             endpoint = '/api/warehouse/bottles/bulk'; method = 'POST';
             fields = renderWarehouseAssignment(data,bottles);
         } else if (kind === 'assign') {
             const bottle = data.bottles.find(b=>b.id===id);
             if (!bottle) return toast(t("features.errors.bottleNotFound"),true);
-            title=t('warehouse.bottles.assignTitle'); endpoint=`/api/warehouse/bottles/${id}`;method='PUT';
+            title=t('detail.fields.storageLocation'); endpoint=`/api/warehouse/bottles/${id}`;method='PUT';
             fields=renderWarehouseAssignment(data,bottle);
         }
         modal.showModal(title,`<form id="warehouse-form" data-endpoint="${safe(endpoint)}" data-method="${method}" data-new-furniture="${kind==='furniture'&&!id?'true':'false'}" data-bulk="${kind==='furniture-bulk'}" data-bottle-bulk="${kind==='assign-bulk'}" class="warehouse-form${['assign','assign-bulk'].includes(kind)?' warehouse-assignment-form':''}"><div class="forms">${fields}</div>${footer()}</form>`, kind === 'assign');
@@ -572,6 +579,8 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         }
         let data=Object.fromEntries(new FormData(form).entries());
         if (form.classList.contains('warehouse-assignment-form')) {
+            // The current location is read-only until the user explicitly opens the editor.
+            if (!form.querySelector('.warehouse-assignment-editor')?.open) return;
             try {
                 const ids = form.dataset.bottleBulk === 'true' ? selectedBottleIds() :
                     [decodeURIComponent(form.dataset.endpoint.split('/').at(-1))];

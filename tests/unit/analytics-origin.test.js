@@ -47,11 +47,13 @@ test('Distillery Bottling counts as original bottling (case and whitespace insen
     assert.equal(result.find(row => row.name === 'Nicht angegeben').count, 1);
 });
 
-test('bottling form omits manual origin fields and explains the distillery source', async () => {
+test('bottling form omits origin explanations; help page explains distillery sourcing', async () => {
     const { createBottlingForm } = await import('../../public/js/features/forms/bottling.js');
     const state = { collection: { distilleries: sites } };
     const bottlingForm = createBottlingForm({ state, selectors: { distilleryIds: b => b.distilleryIds || [] } });
     const html = bottlingForm(entry('test', ['ard'], 'Distillery Bottling'));
     assert.doesNotMatch(html, /name="(?:country|region)"/);
-    assert.match(html, /Herkunftsland und Whiskyregion werden anhand der ausgewählten Destillerien ermittelt/);
+    assert.doesNotMatch(html, /Herkunftsland und Whiskyregion werden anhand/);
+    const { helpView } = await import('../../public/js/views/help.js');
+    assert.match(helpView(), /Die Herkunft wird aus zugeordneten Destillerien abgeleitet/);
 });

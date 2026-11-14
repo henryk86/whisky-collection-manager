@@ -17,6 +17,7 @@ import { toast } from './js/ui/notifications.js';
 import { createHomeView } from './js/views/home.js';
 import { createDetailView } from './js/views/detail.js';
 import { createSettingsView } from './js/views/settings.js';
+import { helpView } from './js/views/help.js';
 import { createMapView } from './js/views/map.js';
 import { createAnalyticsView } from './js/views/analytics.js';
 import { createWarehouseView } from './js/views/warehouse.js';
@@ -94,6 +95,7 @@ function render() {
     if (state.page === 'map') return mapView.render();
     mapView.destroy();
     if (state.page === 'analytics') return analyticsView();
+    if (state.page === 'help') return shell(helpView());
     if (state.page === 'warehouse') return warehouseView.render();
     if (state.page === 'detail') {
         return detail();
