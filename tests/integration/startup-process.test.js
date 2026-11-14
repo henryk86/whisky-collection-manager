@@ -17,6 +17,7 @@ test('npm start runs cutout preparation before launching the server, without rei
     fs.mkdirSync(path.join(root, 'scripts'));
     fs.mkdirSync(path.join(root, 'server'));
     fs.copyFileSync(path.join(projectRoot, 'scripts/start.js'), path.join(root, 'scripts/start.js'));
+    fs.copyFileSync(path.join(projectRoot, 'scripts/offline-bundle.js'), path.join(root, 'scripts/offline-bundle.js'));
     // The two controlled substitutes validate the actual npm/start process flow.
     // No external ONNX download, certificate tool or network is required.
     fs.writeFileSync(path.join(root, 'scripts/prepare-cutout-assets.js'), 'console.log("[smoke] cutout prepared")\n');

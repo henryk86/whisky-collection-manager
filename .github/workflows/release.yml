@@ -1,4 +1,4 @@
-name: Release (main -> GitHub Release -> ZIP + GHCR)
+name: Release (main -> GitHub Release + offline archives + GHCR)
 
 # The same workflow builds artifacts for a newly merged main version and for
 # releases published manually. Releases created with GITHUB_TOKEN do NOT emit
@@ -116,7 +116,44 @@ jobs:
           # Explicit check against accidentally tracked runtime credentials/data.
           unzip -Z1 "dist/$archive" | node scripts/verify-release-files.js
           (cd dist && sha256sum "$archive" > "$archive.sha256")
-      - name: Upload versioned ZIP and SHA256 to GitHub Release
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Build and verify fully offline installation ZIP
+        shell: bash
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          set -euo pipefail
+          source_zip="dist/whisky-collection-manager-${TAG}.zip"
+          offline_zip="whisky-collection-manager-${TAG}-offline.zip"
+          build_dir="$(mktemp -d)"
+          check_dir="$(mktemp -d)"
+          trap 'rm -rf "$build_dir" "$check_dir"' EXIT
+          unzip -q "$source_zip" -d "$build_dir"
+          (
+            cd "$build_dir"
+            npm ci --ignore-scripts --no-audit --no-fund --cache .offline/npm-cache
+            node scripts/prepare-cutout-assets.js
+            node scripts/prepare-cutout-assets.js --verify
+            node scripts/offline-bundle.js seal
+            rm -rf node_modules
+            # The release contains source, npm tarball cache and AI binaries;
+            # it intentionally contains no private data, certs or runtime state.
+            zip -q -r "$GITHUB_WORKSPACE/dist/$offline_zip" .
+          )
+          unzip -t "dist/$offline_zip" >/dev/null
+          unzip -q "dist/$offline_zip" -d "$check_dir"
+          (
+            cd "$check_dir"
+            node scripts/offline-bundle.js verify
+            # Force npm completely offline and exercise the real startup path.
+            HTTPS_ENABLED=false npm_config_offline=true node --input-type=module -e               'import { prepareStartup } from "./scripts/start.js"; prepareStartup({env:{...process.env, HTTPS_ENABLED:"false"}});'
+            node scripts/prepare-cutout-assets.js --verify
+            node -e "require.resolve('three'); require.resolve('html5-qrcode');"
+          )
+          (cd dist && sha256sum "$offline_zip" > "$offline_zip.sha256")
+      - name: Upload source and offline ZIPs and SHA256 to GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.prepare.outputs.tag }}
@@ -179,9 +216,52 @@ jobs:
             echo "$platform: package.json, entrypoint and backup tools are valid ($actual)"
           done
 
+  docker-offline:
+    needs: [prepare, docker]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
+    steps:
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Save and verify installable ARM64 and AMD64 images
+        shell: bash
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:$TAG"
+          mkdir -p dist
+          for arch in arm64 amd64; do
+            platform="linux/$arch"
+            archive="whisky-collection-manager-${TAG}-linux-${arch}.tar.gz"
+            docker pull --platform "$platform" "$image"
+            # Docker 28+ saves just the requested architecture, not an accidental
+            # host-architecture image with the same tag.
+            docker image save --platform "$platform" "$image" | gzip -n > "dist/$archive"
+            test -s "dist/$archive"
+            gzip -t "dist/$archive"
+            (cd dist && sha256sum "$archive" > "$archive.sha256")
+            # Verify the actual tar archive can be reimported without a registry.
+            docker image rm "$image"
+            gzip -dc "dist/$archive" | docker load
+            docker run --rm --network none --platform "$platform" --entrypoint /bin/sh "$image"               -c 'node scripts/prepare-cutout-assets.js --verify && restic version && rclone version'
+          done
+      - name: Upload self-contained Docker archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: gh release upload "$TAG" dist/*.tar.gz dist/*.tar.gz.sha256 --clobber
+
   publish:
-    # Promote `latest` only after the versioned image and release ZIP have succeeded.
-    needs: [prepare, package, docker]
+    # Promote `latest` only after source, offline package and both image archives succeed.
+    needs: [prepare, package, docker, docker-offline]
     runs-on: ubuntu-latest
     permissions:
       contents: write

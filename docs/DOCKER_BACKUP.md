@@ -111,6 +111,11 @@ nicht mehr alle Flaschen.
 
 `sh deploy/setup-pi.sh` erstellt bzw. ergänzt `WCM_DATA_DIR` in der projektweiten `.env` als **absoluten Pfad außerhalb des Git-Repositories**. Vorgabe: `$HOME/whisky-collection-manager-data`. Die Compose-Bind-Mounts verweisen auf `storage/`, `backup-control/`, `backup-targets/`, `rclone/` und `secrets/` **unter diesem Verzeichnis**, nicht unter `deploy/`. Das Setup migriert keine alten Laufzeitordner; Backups vor Änderungen separat prüfen. Zertifikate liegen unter `${WCM_DATA_DIR}/secrets/certs`, der Admin-Token unter `${WCM_DATA_DIR}/secrets/backup-admin-token`.
 
+
+### Offline-Archiv der Anwendung
+
+Zusätzlich zu den verschlüsselten Sammlungsbackups kann ab v0.20.0 jedes GitHub-Release mit KI-Modell, npm-Cache und als ARM64-/AMD64-Containerimage separat auf dem gleichen USB-/NAS-Medium gesichert werden. Dafür die Release-Artefakte und ihre SHA-256-Dateien herunterladen und `sh deploy/save-offline-release.sh SOURCE_DIR BACKUP_TARGET_ROOT` ausführen. Die Dateien liegen danach unter `whisky-releases/vX.Y.Z/`; die geplanten Daten-ZIP-Backups werden **nicht** vergrößert. Eine automatische Übertragung in der Backup-Oberfläche ist nicht implementiert. Vollständige Anleitung: [Offline-Releases](OFFLINE_RELEASES.md).
+
 ## 1. Sofort-Backup erstellen und herunterladen
 
 1. Anwendung öffnen → **Einstellungen & Datensicherung → Datensicherung** und mit dem Backup-Admin-Schlüssel entsperren (Schlüssel liegt unter `${WCM_DATA_DIR}/secrets/backup-admin-token`).

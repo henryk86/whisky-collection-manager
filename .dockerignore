@@ -1,6 +1,7 @@
 .git
 .github
 node_modules
+.offline
 .env
 .env.*
 !.env.example

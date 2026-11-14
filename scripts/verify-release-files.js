@@ -6,7 +6,7 @@ export function prohibitedReleasePath(name) {
     const path = name.replaceAll('\\', '/').replace(/^\.\//, '');
     if (!path || path.includes('..') || path.startsWith('/') || /[\x00-\x1f]/.test(path)) return true;
     const parts = path.replace(/\/$/, '').split('/');
-    if (parts.some(part => ['node_modules', 'certs', '.git', 'test-artifacts', 'coverage'].includes(part))) return true;
+    if (parts.some(part => ['node_modules', 'certs', '.git', '.offline', 'test-artifacts', 'coverage'].includes(part))) return true;
     if (['data', 'images', 'documents', 'backups'].includes(parts[0])) return true;
     if (parts[0] === 'deploy' && ['storage', 'secrets', 'rclone', 'backup-control', 'backup-targets'].includes(parts[1])) return true;
     if (parts.some(part => part === '.env' || (part.startsWith('.env.') && part !== '.env.example'))) return true;

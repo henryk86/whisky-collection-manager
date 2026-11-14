@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.20.0 - 2026-11-14
+
+- Offline-Release-Artefakte fuer npm, KI-Modelle und ARM64/AMD64-Docker-Images mit verifizierter Wiederherstellung
+- Release-Archive mit SHA-256-Pruefung auf konfigurierten USB-/NAS-Backupzielen ablegen, ohne die verschluesselten Sammlungsbackups zu vergroessern
+
 ## 0.19.16 - 2026-11-14
 
 - Raumloeschung mit belegten Faechern: Bestaetigung zum atomaren Entfernen aller Lagerzuordnungen und anschliessendem Loeschen des Raums

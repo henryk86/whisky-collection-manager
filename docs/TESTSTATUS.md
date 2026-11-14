@@ -1,22 +1,28 @@
-# Teststatus - Whisky Collection Manager v0.19.16
+# Teststatus - Whisky Collection Manager v0.20.0
 
-**Stand:** 2026-11-14. Unit-, Integrations- und gezielter Chromium-DOM-Test erfolgreich. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-14. Pruefungen der Quellcode-Aenderungen abgeschlossen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent auf v0.19.16. |
-| `npm run check` | **Bestanden** | JavaScript, Sprachschluessel und Dokumentationslinks geprueft. |
-| `npm test` | **462/462 bestanden** | Vollstaendige Unit- und Integrationstests, darunter Tests fuer belegte und leere Raeume, fehlende Zustimmung, atomare Auslagerung und unveraenderte Flaschenstammdaten. |
-| Gezielter Chromium-Test (DOM-Modus) | **1/1 bestanden** | Im Raumplan geloester Raum mit Flasche: Modal, Abbrechen ohne Aenderung sowie anschliessende Auslagerung mit Raumloeschung im Browser geprueft. |
-| `npm run test:browser` (normaler Lauf) | **Nicht lokal ausgeführt** | Vollstaendige Browser-Suite mit regulaerer Navigation nicht lokal geprueft. |
-| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten auf v0.20.0 konsistent. |
+| `npm run check` | **Bestanden** | 256 JavaScript-Dateien, 1015 i18n-Referenzen und 19 Markdown-Dateien mit 129 relativen Links geprueft. |
+| `npm test` | **468/468 bestanden** | Unit- und Integrationstests, darunter 6 neue Offline-Release-Tests. |
+| `node --test tests/unit/offline-release.test.js` | **6/6 bestanden** | SHA-256-Versiegelung, fehlende/manipulierte Assets, Symlinkschutz, ausschliesslich lokale Installation und Release-Workflow-Verknuepfung. |
+| `sh -n deploy/save-offline-release.sh` und Kopiertest | **Bestanden** | SHA-256-Verifikation vor/nach Kopie, Wiederholung ohne Ueberschreiben und Ablehnung einer manipulierten Zieldatei. |
+| YAML-Syntax | **Bestanden** | Release-Workflow mit Ruby YAML-Parser geladen. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Keine Browser-/WebGL-Abnahme fuer v0.20.0. |
+| Offline-Bundle mit echten npm-/ONNX-Dateien | **Nicht lokal ausfuehrbar** | Paketserver/Modellhosting nicht erreichbar. Vollstaendiger Neuinstallationstest mit `npm_config_offline=true` ist im Release-Workflow hinterlegt, aber noch nicht in GitHub Actions ausgefuehrt. |
+| Docker-Image-Export ARM64/AMD64 und `docker load` | **Nicht lokal ausfuehrbar** | Docker Engine in der Testumgebung nicht vorhanden; automatisierte Tests im GitHub-Release-Workflow hinterlegt, aber noch nicht ausgefuehrt. |
+| Raspberry-Pi-Live-Test und USB/NAS-Laufwerk | **Nicht ausgefuehrt** | Vor der produktiven Verwendung auf dem Zielsystem pruefen. |
 
-## Aenderungen v0.19.16
+## Aenderungen v0.20.0
 
-- Belegte Raeume bieten eine Anwendungssicherheitsabfrage mit den Optionen "Abbrechen" oder "Flaschen auslagern und Raum loeschen" und zeigen die Anzahl betroffener Flaschen.
-- Der Server entfernt nach ausdruecklicher Zustimmung nur die Zuordnungen zu Faechern des betroffenen Raums und den Raum selbst in einer atomaren Warehouse-Schreiboperation; `collection.json` und andere Raeume bleiben unveraendert.
-- Leere Raeume erhalten weiterhin eine normale Loeschbestaetigung. Neue Regressionstests pruefen Schutzverhalten, UI, API und Persistenz.
+- GitHub-Releases erzeugen kuenftig ein Offline-Installations-ZIP mit allen npm-Abhaengigkeiten, KI-Modell, ONNX/WASM-Laufzeit, Lizenzen und SHA-256-Manifest.
+- Offline-Start validiert das Archiv, installiert fehlende Pakete mit `npm ci --offline` aus einer temporaeren Cache-Kopie und verzichtet auf Downloadversuche.
+- Separate ARM64- und AMD64-Docker-Archive mit `docker save` und Offline-Import-/Startpruefung im Release-Workflow.
+- Verifizierte, getrennte Archivierung der Release-Dateien auf USB/NAS-Zielen neben den verschluesselten Datenbackups.
+- Anleitung: [OFFLINE_RELEASES.md](OFFLINE_RELEASES.md).
 
-**Offen:** Vollstaendige Browser-Suite, reale mobile Endgeraete und Raspberry-Pi-/Docker-Livebetrieb verifizieren.
+**Offen:** GitHub-Actions-Release-Build und echte Wiederherstellung aus den dort erzeugten Offline-Artefakten; Pi- und Mobil-/Browser-Abnahme.

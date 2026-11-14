@@ -119,3 +119,9 @@ ist. Die Datei muss aus dem betreffenden Image mit `docker run --entrypoint cat`
 oder `docker cp` gelesen werden.
 
 **Seit v0.16.9:** Die Browser-Erweiterung liegt in einem gesonderten privaten Projekt und ist nicht mehr Bestandteil des öffentlichen Release-ZIPs. Der Release-Check prüft deshalb nur `package.json` und `package-lock.json` und lehnt versehentlich beigefügte `extension/`-Dateien ab.
+
+## Offline-Artefakte ab v0.20.0
+
+Bei jedem Release wird zusätzlich ein vollständiges Offline-Installations-ZIP (npm-Cache, ONNX/WASM, Modell und Lizenzen) gebaut, in einem frischen Verzeichnis mit `npm_config_offline=true` installiert und anhand SHA-256 versiegelt. Außerdem werden die publizierten Images als separate ARM64-/AMD64-Docker-TARs gesichert und ohne Netzwerkverbindung getestet. Das `latest`-Tag wird erst nach erfolgreichem Abschluss aller Release-Jobs befördert.
+
+Für Archivierung und Wiederherstellung siehe [Offline-Releases](OFFLINE_RELEASES.md). Ein normales `git archive` enthält weiterhin **keine** großen KI-Dateien oder npm-Cache; diese sind ausschließlich im Offline-Artefakt enthalten.
