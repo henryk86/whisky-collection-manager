@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.17.14 - 2026-11-14
+
+- Erklaerende Klammerzusätze aus Abfüllungs- und Flaschenfeldbeschriftungen entfernt (DE/EN).
+
 ## 0.17.13 - 2026-11-13
 
 - Beim Import-Refactoring umbenannte Browser-Foto-Fixture physisch in `photo-import-reference.png` umbenannt (Bildinhalt unverändert); alle fünf bestehenden Browserfälle behalten.
