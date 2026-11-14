@@ -5,8 +5,10 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { verifyOfflineBundle } from './offline-bundle.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -85,17 +87,29 @@ function defaultExecute(command, args, { root, env }) {
 /** Exposed for deterministic tests without installing packages or downloading models. */
 export function prepareStartup({ root = ROOT, env = process.env, execute = defaultExecute } = {}) {
     const production = env.NODE_ENV === 'production';
+    const offline = fs.existsSync(path.join(root, '.offline')); // Fail closed if an offline bundle is incomplete.
+    if (offline) verifyOfflineBundle(root);
     if (needsNpmCi(root, { production })) {
         console.log('[Start] Installing missing/stale npm dependencies...');
         const [binary, prefix] = npmCommand(env);
-        execute(binary, [...prefix, 'ci', ...(production ? ['--omit=dev'] : [])], { root, env });
+        // npm mutates its cache indexes even in offline mode. Always work on a
+        // disposable copy so the signed offline archive stays verifiable on
+        // subsequent starts, reinstalls and migrations.
+        const offlineCache = offline ? fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-offline-npm-')) : null;
+        try {
+            if (offlineCache) fs.cpSync(path.join(root, '.offline', 'npm-cache'), offlineCache, { recursive: true });
+            execute(binary, [...prefix, 'ci', ...(production ? ['--omit=dev'] : []),
+                ...(offlineCache ? ['--offline', '--ignore-scripts', '--cache', offlineCache] : [])], { root, env });
+        } finally {
+            if (offlineCache) fs.rmSync(offlineCache, { recursive: true, force: true });
+        }
         if (needsNpmCi(root, { production })) {
             throw new Error('npm ci did not install all dependencies. Check package-lock.json and node_modules.');
         }
     }
 
     console.log('[Start] Checking local bottle cutout assets...');
-    execute(process.execPath, ['scripts/prepare-cutout-assets.js'], { root, env });
+    execute(process.execPath, ['scripts/prepare-cutout-assets.js', ...(offline ? ['--verify'] : [])], { root, env });
 
     if (!fs.existsSync(path.join(root, '.env')) && !production) {
         fs.copyFileSync(path.join(root, '.env.example'), path.join(root, '.env'), fs.constants.COPYFILE_EXCL);

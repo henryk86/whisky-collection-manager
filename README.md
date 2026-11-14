@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.19.15
+# Whisky Collection Manager v0.20.0
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der Abfüllung über einzelne physische Flaschen bis zum Lagerfach. Eine Abfüllung kann mehrere Flaschen mit eigenen Inventarnummern, Zuständen, Fotos und Belegen enthalten.
 
@@ -16,7 +16,7 @@ Die Anwendung wurde **vollständig durch ChatGPT programmiert**. Der Projektinit
 | **Flaschen & Medien** | Inventarnummern, Zustände, Kauf- und Verkostungsdaten, Fotos, Belege und Anhänge. Nicht-destruktiver Fotoeditor mit optionaler lokaler KI-Freistellung. Fehlende Bilder werden durch ein einheitliches Flaschenmotiv ersetzt. |
 | **Analyse** | Bestands-, Wert- und Sammlungsanalysen mit Filtern und Zeitaggregationen. |
 | **Landkarte** | OpenStreetMap-Destilleriekarte mit Standorten, Clustern und Statusfiltern. |
-| **Lager** | Räume, Möbel und Fächer; 2D- und 3D-Raumplan, virtuelle Regalwand, Fachinhalt-Modal sowie Einzel- und Mehrfach-Umlagerung. Import und Export von Raumplänen einschließlich optionaler Flaschenzuordnungen. |
+| **Lager** | Räume, Möbel und Fächer; 2D- und 3D-Raumplan, virtuelle Regalwand, Fachinhalt-Modal sowie Einzel- und Mehrfach-Umlagerung. Import und Export von Raumplänen einschließlich optionaler Flaschenzuordnungen; bei belegten Räumen sichere Löschung mit vorheriger Freigabe aller Flaschen. |
 | **Datensicherung** | Verschlüsselte AES-256-ZIP-Backups, manuell oder zeitgesteuert, für USB-, NAS- und Cloud-Ziele; Wiederherstellung nach Bestätigung. |
 | **Oberfläche** | Responsive Light-/Darkmode-Oberfläche auf Deutsch und Englisch. |
 
@@ -51,7 +51,7 @@ Die Screenshots zeigen Beispielansichten mit einer leeren Demo-Sammlung, keine p
 npm start
 ```
 
-Der Starthelfer installiert bei Bedarf npm-Abhängigkeiten, bereitet die lokalen KI-Dateien für die Freistellung vor, legt eine fehlende `.env` aus `.env.example` an und richtet bei Bedarf HTTPS-Zertifikate ein. Für den **ersten Start** ist daher Internetzugang erforderlich; für HTTPS wird `mkcert` oder OpenSSL benötigt. Vorhandene Konfigurationen werden nicht überschrieben.
+Der Starthelfer installiert bei Bedarf npm-Abhängigkeiten, bereitet die lokalen KI-Dateien für die Freistellung vor, legt eine fehlende `.env` aus `.env.example` an und richtet bei Bedarf HTTPS-Zertifikate ein. Beim Start aus dem **normalen Quellcode-ZIP** ist dafür zunächst Internetzugang erforderlich. Das gesonderte Offline-Release-ZIP bringt die Pakete und KI-Dateien bereits mit. Für HTTPS wird `mkcert` oder OpenSSL benötigt. Vorhandene Konfigurationen werden nicht überschrieben.
 
 Die Anwendung verwendet standardmäßig **HTTPS auf Port 3543**. Für ein Zertifikat mit einer bestimmten LAN-IP:
 
@@ -61,6 +61,12 @@ npm start
 ```
 
 Die Beispiel-IP durch die eigene Adresse ersetzen. Automatischen Server-Neustart beim Entwickeln bietet `npm run dev` (nach dem ersten `npm start`). Weiterführende Hinweise: [Entwicklung](docs/ENTWICKLUNG.md).
+
+## Langfristige Offline-Wiederherstellung
+
+GitHub Releases enthalten ab v0.20.0 neben dem Quellcode ein **Offline-Installations-ZIP mit npm-Paketcache und KI-Dateien** sowie archivierte Docker-Images fuer **ARM64 (Raspberry Pi)** und **AMD64**. Jedes Archiv hat eine SHA-256-Pruefsumme. Eine Neuinstallation aus den archivierten Artefakten ist ohne Paketserver, Modellhosting oder Container-Registry moeglich, sofern Node.js beziehungsweise Docker bereits auf dem Zielgeraet vorhanden sind. Die Datenbackups bleiben davon getrennt.
+
+Die Offline-Artefakte lassen sich mit einem mitgelieferten Skript verifiziert auf denselben USB-/NAS-Datentraegern ablegen wie die bestehenden Backups. Vollstaendige Anleitung und Grenzen: [Offline-Releases](docs/OFFLINE_RELEASES.md).
 
 ## Raspberry Pi / Docker
 

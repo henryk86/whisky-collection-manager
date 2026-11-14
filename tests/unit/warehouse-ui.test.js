@@ -383,3 +383,23 @@ test('single furniture modal stays scoped to the clicked cabinet; batch edit has
         assert.doesNotMatch(page,/warehouse-furniture-panel|warehouse-management-drawer/);
     } finally {if(oldDocument===undefined) delete globalThis.document; else globalThis.document=oldDocument;}
 });
+
+test('deleting an occupied room asks to unassign bottles before deletion; empty room offers normal removal', () => {
+    const room={id:'r',name:'My <Room>',width:4,height:3,furniture:[{id:'f',name:'Shelf',shelves:[{id:'s1'},{id:'s2'}]}]};
+    const state={warehouse:{rooms:[room,{id:'other',name:'Other',furniture:[{shelves:[{id:'other-shelf'}]}]}],
+        assignments:{b1:'s1',b2:'s2',b3:'other-shelf'},bottles:[]}};
+    const dialogs=[];
+    const view=createWarehouseView({state,shell:()=>{},navigate:()=>{},modal:{showModal:(title,html)=>dialogs.push({title,html})},refresh:async()=>{}});
+    view.askDelete('room','r');
+    assert.match(dialogs.at(-1).title,/Raum/);
+    assert.match(dialogs.at(-1).html,/2 Flaschen/);
+    assert.match(dialogs.at(-1).html,/My &lt;Room&gt;/);
+    assert.doesNotMatch(dialogs.at(-1).html,/<Room>/);
+    assert.match(dialogs.at(-1).html,/data-act="close-modal"/);
+    assert.match(dialogs.at(-1).html,/data-act="warehouse-confirm-delete-unassign"/);
+    assert.doesNotMatch(dialogs.at(-1).html,/data-act="warehouse-confirm-delete"/);
+    state.warehouse.assignments={b3:'other-shelf'};
+    view.askDelete('room','r');
+    assert.match(dialogs.at(-1).html,/data-act="warehouse-confirm-delete"/);
+    assert.doesNotMatch(dialogs.at(-1).html,/warehouse-confirm-delete-unassign/);
+});

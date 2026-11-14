@@ -24,7 +24,11 @@ const routes = [
     { method: 'POST', path: /^\/api\/warehouse\/rooms\/import$/, run: (_, body) => warehouse.importRooms(body) },
     { method: 'POST', path: /^\/api\/warehouse\/rooms$/, status: 201, run: (_, body) => warehouse.createRoom(body) },
     { method: 'PATCH', path: /^\/api\/warehouse\/rooms\/([\w-]+)$/, run: ([id], body) => warehouse.updateRoom(id, body) },
-    { method: 'DELETE', path: /^\/api\/warehouse\/rooms\/([\w-]+)$/, run: ([id]) => warehouse.deleteRoom(id) },
+    { method: 'DELETE', path: /^\/api\/warehouse\/rooms\/([\w-]+)$/, run: ([id], _body, req) => {
+        const option = new URL(req.url, 'http://localhost').searchParams.get('unassignBottles');
+        if (option !== null && option !== 'true' && option !== 'false') throw fail('Ungültige Löschoption');
+        return warehouse.deleteRoom(id, {unassignBottles: option === 'true'});
+    } },
     { method: 'POST', path: /^\/api\/warehouse\/rooms\/([\w-]+)\/furniture$/, status: 201, run: ([id], body) => warehouse.createFurniture(id, body) },
     { method: 'PATCH', path: /^\/api\/warehouse\/furniture\/bulk$/, run: (_, body) => warehouse.bulkUpdateFurniture(body) },
     { method: 'POST', path: /^\/api\/warehouse\/furniture\/bulk\/delete$/, run: (_, body) => warehouse.bulkDeleteFurniture(body) },

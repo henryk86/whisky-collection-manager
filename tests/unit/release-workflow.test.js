@@ -37,9 +37,9 @@ test('GHCR images and ZIP are published only by the release workflow', () => {
     assert.match(workflow, /gh release upload/);
     assert.match(workflow, /gh release edit/);
     assert.match(workflow, /docker buildx imagetools create/);
-    assert.match(workflow, /needs: \[prepare, package, docker\]/);
+    assert.match(workflow, /needs: \[prepare, package, docker, docker-offline\]/);
     assert.match(workflow, /--draft=false/);
-    assert.match(workflow, /needs: \[prepare, package, docker\]/);
+    assert.match(workflow, /needs: \[prepare, package, docker, docker-offline\]/);
     assert.match(workflow, /docker\/build-push-action@v7/);
     assert.match(workflow, /platforms: linux\/arm64,linux\/amd64/);
     assert.doesNotMatch(workflow, /suffix: '-backup'/);
@@ -75,7 +75,7 @@ test('Docker build and the uploaded images validate package.json before latest i
     assert.match(workflow, /require\("\/app\/package\.json"\)\.version/);
     assert.match(workflow, /--check \/app\/docker\/entrypoint\.js/);
     assert.match(workflow, /node --version && restic version && rclone version && ssh -V/);
-    assert.match(workflow, /needs: \[prepare, package, docker\]/);
+    assert.match(workflow, /needs: \[prepare, package, docker, docker-offline\]/);
 });
 
 test('release ZIP rejects secrets but retains source and example config', () => {
@@ -85,7 +85,7 @@ test('release ZIP rejects secrets but retains source and example config', () => 
         'deploy/storage/data/collection.json', 'deploy/secrets/restic-password',
         'deploy/rclone/rclone.conf', 'deploy/backup-control/profiles.json',
         'deploy/backup-control/backup-zip-password',
-        'node_modules/foo.js', '../data/collection.json'
+        'node_modules/foo.js', '.offline/npm-cache/data', '../data/collection.json'
     ]) assert.ok(prohibitedReleasePath(unsafe), unsafe);
     for (const safe of [
         '.env.example', 'deploy/.env.example', 'package.json',

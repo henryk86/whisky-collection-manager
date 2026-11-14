@@ -1,5 +1,5 @@
 import { escapeHtml as esc } from '../ui/dom.js';
-import { t } from '../i18n/index.js';
+import { t, tHtml } from '../i18n/index.js';
 import { roomCapacity, totalCapacity } from '../domain/warehouse-capacity.js';
 import { toast } from '../ui/notifications.js';
 import { request } from '../api.js';
@@ -670,14 +670,29 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
     function askDelete(kind,id) {
         const endpoints={room:`/api/warehouse/rooms/${id}`,furniture:`/api/warehouse/furniture/${id}`,shelf:`/api/warehouse/shelves/${id}`};
         pendingDelete=endpoints[kind];
+        if (kind === 'room') {
+            const room=w().rooms.find(entry => entry.id === id);
+            if (!room) return;
+            const shelfIds=new Set(room.furniture.flatMap(furniture => furniture.shelves.map(shelf => shelf.id)));
+            const occupied=Object.values(w().assignments || {}).filter(shelfId => shelfIds.has(shelfId)).length;
+            if (occupied) {
+                modal.showModal(t('warehouse.rooms.deleteOccupiedTitle'),`<p>${tHtml('warehouse.rooms.deleteOccupiedMessage',{name:room.name,count:occupied})}</p><div class="actions warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">${t('common.actions.cancel')}</button><button type="button" class="btn danger" data-act="warehouse-confirm-delete-unassign">${t('warehouse.rooms.unassignAndDelete')}</button></div>`);
+                return;
+            }
+            modal.showModal(t('warehouse.rooms.delete'),`<p>${tHtml('warehouse.rooms.deleteEmptyMessage',{name:room.name})}</p><div class="actions warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">${t('common.actions.cancel')}</button><button type="button" class="btn danger" data-act="warehouse-confirm-delete">${t('common.actions.remove')}</button></div>`);
+            return;
+        }
         modal.showModal(t("warehouse.bottles.removeStorageLocation"),`<p>${t("warehouse.shelves.deleteOccupiedConfirmation")}</p><div class="actions warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button><button type="button" class="btn danger" data-act="warehouse-confirm-delete">${t("common.actions.remove")}</button></div>`);
     }
-    async function deleteConfirmed(){
+    async function deleteConfirmed(unassignBottles = false){
         if(!pendingDelete)return;
-        const target=pendingDelete;pendingDelete=null;
+        const target=pendingDelete;
+        const bulk=typeof target === 'object';
+        const endpoint=unassignBottles && !bulk && target.startsWith('/api/warehouse/rooms/')
+            ? `${target}?unassignBottles=true` : target;
         try {
-            const bulk=typeof target === 'object';
-            await request(bulk?'/api/warehouse/furniture/bulk/delete':target,{method:bulk?'POST':'DELETE',...(bulk?{body:JSON.stringify(target)}:{})});
+            await request(bulk?'/api/warehouse/furniture/bulk/delete':endpoint,{method:bulk?'POST':'DELETE',...(bulk?{body:JSON.stringify(target)}:{})});
+            pendingDelete=null;
             modal.closeModal();state.warehouseFurnitureId=null;
             if(bulk) state.warehouseSelectedFurnitureIds=[];
             await refresh();toast(bulk?t("warehouse.bulk.deletedSuccess", {count:target.ids.length}):t("warehouse.bottles.storageLocationRemoved"));

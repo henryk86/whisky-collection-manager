@@ -90,6 +90,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
             navigate('warehouse', 'shelves');
         },
         'warehouse-confirm-delete': () => warehouseView.deleteConfirmed(),
+        'warehouse-confirm-delete-unassign': () => warehouseView.deleteConfirmed(true),
         'analytics-section': button => navigate('analytics', button.dataset.section),
         'analytics-reset': () => {
             state.analyticsFilters = { distillery: 'all', country: 'all', volumeType: 'all', status: 'all' };

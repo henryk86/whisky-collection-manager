@@ -1,23 +1,28 @@
-# Teststatus - Whisky Collection Manager v0.19.15
+# Teststatus - Whisky Collection Manager v0.20.0
 
-**Stand:** 2026-11-14. Node-Pruefungen und gezielte Chromium-DOM-Tests erfolgreich. Historische Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-14. Pruefungen der Quellcode-Aenderungen abgeschlossen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent auf v0.19.15. |
-| `npm run check` | **Bestanden** | JavaScript-Syntax/Importe, Uebersetzungsschluessel und Dokumentationslinks geprueft. |
-| `npm test` | **460/460 bestanden** | Vollstaendige Unit- und Integrationstests. |
-| Gezielte Chromium-Tests (DOM-Modus) | **3/3 bestanden** | Die drei zuvor in GitHub Actions gescheiterten Browser-Testfaelle (Raumplan/Three.js, Fachuebersicht/Modal, Moebelwerkzeuge) bestehen zusammen bei Ausfuehrung mit `WHISKY_BROWSER_DOM_ONLY=true` und lokalem Chromium. Verwendet wurde die lokal verfuegbare Playwright-Laufzeit, nicht das in package-lock.json festgelegte Paket. |
-| `npm run test:browser` (normaler Lauf) | **Nicht abgeschlossen** | Direkte Browser-Navigation auf `127.0.0.1` wird hier mit `ERR_BLOCKED_BY_ADMINISTRATOR` abgelehnt. GitHub-Actions-Lauf mit realer Navigation separat pruefen. |
-| Vollstaendige Browser-Suite / Docker / ARM64 | **Nicht ausgefuehrt** | Auf CI- beziehungsweise Zielsystem separat pruefen. |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten auf v0.20.0 konsistent. |
+| `npm run check` | **Bestanden** | 256 JavaScript-Dateien, 1015 i18n-Referenzen und 19 Markdown-Dateien mit 129 relativen Links geprueft. |
+| `npm test` | **468/468 bestanden** | Unit- und Integrationstests, darunter 6 neue Offline-Release-Tests. |
+| `node --test tests/unit/offline-release.test.js` | **6/6 bestanden** | SHA-256-Versiegelung, fehlende/manipulierte Assets, Symlinkschutz, ausschliesslich lokale Installation und Release-Workflow-Verknuepfung. |
+| `sh -n deploy/save-offline-release.sh` und Kopiertest | **Bestanden** | SHA-256-Verifikation vor/nach Kopie, Wiederholung ohne Ueberschreiben und Ablehnung einer manipulierten Zieldatei. |
+| YAML-Syntax | **Bestanden** | Release-Workflow mit Ruby YAML-Parser geladen. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Keine Browser-/WebGL-Abnahme fuer v0.20.0. |
+| Offline-Bundle mit echten npm-/ONNX-Dateien | **Nicht lokal ausfuehrbar** | Paketserver/Modellhosting nicht erreichbar. Vollstaendiger Neuinstallationstest mit `npm_config_offline=true` ist im Release-Workflow hinterlegt, aber noch nicht in GitHub Actions ausgefuehrt. |
+| Docker-Image-Export ARM64/AMD64 und `docker load` | **Nicht lokal ausfuehrbar** | Docker Engine in der Testumgebung nicht vorhanden; automatisierte Tests im GitHub-Release-Workflow hinterlegt, aber noch nicht ausgefuehrt. |
+| Raspberry-Pi-Live-Test und USB/NAS-Laufwerk | **Nicht ausgefuehrt** | Vor der produktiven Verwendung auf dem Zielsystem pruefen. |
 
-## Aenderungen v0.19.15
+## Aenderungen v0.20.0
 
-- 3D-Raumplan-Browsertest an den aktuellen Wechsel zu `Regale & Faecher` angepasst. Testmoebel erhalten ein Fach, damit sie in der Regalwand sichtbar sind.
-- Modal-Browsertest waehlt eindeutig den Schliessen-Button in der Dialog-Kopfzeile statt auch `Abbrechen` zu treffen. Inerte Flaschenbilder werden mit einem echten Mauszeiger-Klick auf die Bildflaeche geprueft.
-- Mehrfachbearbeitungs-Browsertest prueft vier Aktionen im separaten Moebelverwaltungsmodal statt im Reiter `Raumplaene`. Der eigentliche Raumplan bleibt frei von diesen Aktionen.
-- Keine Aenderung der Anwendungslogik oder der bisherigen Flaschen- und Fachklicks.
+- GitHub-Releases erzeugen kuenftig ein Offline-Installations-ZIP mit allen npm-Abhaengigkeiten, KI-Modell, ONNX/WASM-Laufzeit, Lizenzen und SHA-256-Manifest.
+- Offline-Start validiert das Archiv, installiert fehlende Pakete mit `npm ci --offline` aus einer temporaeren Cache-Kopie und verzichtet auf Downloadversuche.
+- Separate ARM64- und AMD64-Docker-Archive mit `docker save` und Offline-Import-/Startpruefung im Release-Workflow.
+- Verifizierte, getrennte Archivierung der Release-Dateien auf USB/NAS-Zielen neben den verschluesselten Datenbackups.
+- Anleitung: [OFFLINE_RELEASES.md](OFFLINE_RELEASES.md).
 
-**Offen:** Erneuter GitHub-Actions-Browserlauf mit normaler Navigation, komplette Browser-Suite und reale mobile Endgeraete.
+**Offen:** GitHub-Actions-Release-Build und echte Wiederherstellung aus den dort erzeugten Offline-Artefakten; Pi- und Mobil-/Browser-Abnahme.

@@ -1,4 +1,5 @@
 node_modules/
+.offline/
 /data/
 /images/
 /documents/
