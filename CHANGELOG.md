@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.23.6 - 2026-11-14
+
+- Browser-Regressionstests an Einstellungsnavigation und geaendertes Karten-Zoomverhalten angepasst; Kartenmarker uebernehmen Destillerie-Anzeigemodus ohne Rezentrierung
+
 ## 0.23.5 - 2026-11-14
 
 - Einstellungen: Abstand zwischen Allgemein-Ueberschrift und Inhaltsblock um 2 px angleichen

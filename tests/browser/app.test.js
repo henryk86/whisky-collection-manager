@@ -94,6 +94,15 @@ async function openSettingsFromMenu(page) {
     await page.locator('#site-drawer [data-act="goto-settings-menu"]').click();
     await page.getByRole('heading', { name: 'Einstellungen & Datensicherung' }).waitFor();
 }
+// Settings now have four mutually exclusive panels. Tests must explicitly open
+// the required panel instead of interacting with controls hidden in another one.
+// Use the same desktop navigation/mobile selector as a real user.
+async function openSettingsSection(page, id) {
+    const desktop = page.locator(`.settings-page .section-nav-desktop [data-settings-section="${id}"]`);
+    if (await desktop.isVisible()) await desktop.click();
+    else await page.locator('.settings-page [data-section-switch="settings"]').selectOption(id);
+    await page.locator(`[data-settings-panel="${id}"]`).waitFor({ state: 'visible' });
+}
 async function seed(base, number = '000123') {
     const result = await requestJson(base, '/api/bottlings', 'POST', {
         name: 'Browser Test Blend', whiskyType: 'blended_malt', abv: 46, volumeMl: 700,
@@ -701,8 +710,9 @@ test('browser: real back/forward navigation and direct reload', {
         await page.goForward();
         await page.waitForURL('**/?view=settings');
         await page.getByRole('heading', { name: 'Einstellungen & Datensicherung' }).waitFor();
-        // The legacy JSON import is intentionally hidden in a closed <details>.
-        // Verify that it can be opened instead of waiting for a hidden input.
+        // Import/export is a separate settings panel; the legacy JSON import
+        // inside it remains in a closed <details> until the user opens it.
+        await openSettingsSection(page, 'transfer');
         await page.locator('details:has(#import-file) > summary').click();
         await page.locator('#import-file').waitFor({ state: 'visible' });
         await page.goto(`${base}/?bottling=${data.bottling.id}`);
@@ -899,18 +909,20 @@ test('browser: 450 bottlings keep a fixed page size with only divisor-friendly g
     });
 });
 
-test('browser: distillery management stays compact and uses app dialogs for create and rename', async () => {
+test('browser: distillery management uses normal page scrolling and app dialogs for create and rename', async () => {
     await session(async ({ page, base, open }) => {
         await open();
         await openSettingsFromMenu(page);
-        await page.waitForSelector('.distillery-list');
+        await openSettingsSection(page, 'distilleries');
         const metrics = await page.locator('.distillery-list').evaluate(el => ({
-            height: el.getBoundingClientRect().height,
-            maxHeight: parseFloat(getComputedStyle(el).maxHeight),
+            maxHeight: getComputedStyle(el).maxHeight,
             scrolling: getComputedStyle(el).overflowY,
+            rowCount: el.querySelectorAll('.distillery-row').length,
+            height: el.getBoundingClientRect().height,
         }));
-        assert.ok(metrics.height <= metrics.maxHeight + 1, 'list must not grow taller than its cap');
-        assert.equal(metrics.scrolling, 'auto');
+        assert.equal(metrics.maxHeight, 'none', 'distilleries must not have a fixed height cap');
+        assert.equal(metrics.scrolling, 'visible', 'the page, not the list, should scroll');
+        assert.ok(metrics.rowCount > 100 && metrics.height > 400, 'all distilleries remain in the full-height list');
         await page.locator('#distillery-search').fill('Ardbeg');
         assert.equal(await page.locator('.distillery-row:visible').count(), 1);
         assert.match(await page.locator('#distillery-count').innerText(), /1 von/);
@@ -1265,10 +1277,22 @@ test('browser: map can toggle every catalogued distillery and show pagoda marker
         assert.equal(await page.locator('.map-marker-pagoda').count(), 0);
         assert.equal(await page.locator('.map-marker').count(), 1);
         assert.equal(await page.locator('.map-zoom-level').innerText(), 'Zoom 11');
+        const originalCamera = await page.locator('.map-tiles img').first().evaluate(img => ({
+            tile: img.getAttribute('src'), left: img.style.left, top: img.style.top,
+        }));
 
         await toggle.check();
         assert.equal(await page.locator('#map-site-select option').count(), catalog.length);
-        assert.equal(await page.locator('.map-marker-pagoda .map-pagoda-icon').count() > 0, true);
+        // Toggling all distilleries must NOT reset zoom or recenter the map.
+        assert.equal(await page.locator('.map-zoom-level').innerText(), 'Zoom 11');
+        assert.deepEqual(await page.locator('.map-tiles img').first().evaluate(img => ({
+            tile: img.getAttribute('src'), left: img.style.left, top: img.style.top,
+        })), originalCamera, 'toggle preserves the original map position');
+        // The overview is a separate, intentional user action; only then can
+        // worldwide pagoda markers and clusters be expected in the viewport.
+        await page.getByRole('button', { name: 'Alle Standorte anzeigen' }).click();
+        // At world scale, every unstocked site can be part of a cluster.
+        // The selected empty distillery is checked for an individual pagoda below.
         assert.equal(await page.locator('.map-legend .map-pagoda-icon').count(), 2, 'active and closed distilleries have distinct legend icons');
         assert.ok(await page.locator('.map-marker-cluster').count() > 0, 'all-sites overview must cluster nearby distilleries');
         assert.ok((await page.locator('.map-legend').innerText()).includes('Gruppiert'));
@@ -1355,10 +1379,12 @@ test('browser: map can toggle every catalogued distillery and show pagoda marker
         await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
         assert.ok(await page.locator('#map-site-select option').count() === catalog.length, 'all sites stay individually selectable');
         const allZoom = Number((await page.locator('.map-zoom-level').innerText()).replace('Zoom ', ''));
-        assert.ok(allZoom < 11, 'showing all distilleries must fit a wider geographic area');
+        assert.ok(allZoom < 11, 'explicitly fitting all locations should zoom out to the wider geographic area');
         await page.locator('#map-site-select').selectOption(aberfeldy.id);
         const emptyMarker = page.locator('.map-marker-pagoda[aria-label^="Aberfeldy:"]');
         await emptyMarker.waitFor({ state: 'visible' });
+        assert.equal(await emptyMarker.locator('.map-pagoda-icon').count(), 1,
+            'focusing an empty distillery reveals its pagoda marker, even if the overview showed only clusters');
         assert.match(await page.locator('.map-site-heading').innerText(), /0 Abfüllungen · 0 Flaschen/);
         assert.equal(await page.locator('.map-empty-site').isVisible(), true);
         assert.equal(await page.locator('#map-bottling-search').count(), 0);
@@ -1377,11 +1403,13 @@ test('browser: map can toggle every catalogued distillery and show pagoda marker
         const overflow = await page.evaluate(() => document.body.scrollWidth - document.body.getBoundingClientRect().width);
         assert.ok(overflow <= 1, `mobile map layer causes overflow: ${overflow}px`);
 
+        const focusedZoom = await page.locator('.map-zoom-level').innerText();
         await page.getByRole('switch', { name: 'Alle Destillerien anzeigen' }).uncheck();
         assert.equal(await page.locator('#map-site-select option').count(), 1);
         assert.equal(await page.locator('.map-marker-pagoda').count(), 0);
         assert.equal(await page.locator('.map-marker[aria-label^="Kilchoman:"]').count(), 1);
-        assert.equal(await page.locator('.map-zoom-level').innerText(), 'Zoom 11');
+        assert.equal(await page.locator('.map-zoom-level').innerText(), focusedZoom,
+            'hiding the full catalog also preserves the current zoom');
     });
 });
 
@@ -1866,6 +1894,7 @@ test('browser: phone detail title, mobile analytics selector and period controls
         }
         await page.setViewportSize({ width: 390, height: 844 });
         await openSettingsFromMenu(page);
+        await openSettingsSection(page, 'distilleries');
         await page.locator('#distillery-search').fill('Ardbeg');
         await page.locator('.distillery-row:visible [data-act="rename-distillery"]').first().click();
         await page.locator('#distillery-form').waitFor();

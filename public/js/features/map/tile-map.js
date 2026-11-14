@@ -15,6 +15,7 @@ export function createTileMap(element, initialSites, onSelect, selectedId = null
     const viewport = element.querySelector('.map-viewport');
     if (!layer || !tiles || !markers || !viewport) throw new Error(t("features.map.containerMissing"));
     let sites = initialSites;
+    let showingAllDistilleries = showAllDistilleries;
     let center, zoom, viewChanged = false, destroyed = false, pinnedId = null;
     const pointers = new Map();
     let drag = null, pinch = null, lastDrag = 0;
@@ -79,7 +80,7 @@ export function createTileMap(element, initialSites, onSelect, selectedId = null
             } else {
                 const site = group.sites[0];
                 const location = site.location;
-                const isPagoda = showAllDistilleries && site.bottleCount === 0;
+                const isPagoda = showingAllDistilleries && site.bottleCount === 0;
                 const isClosed = site.status === 'closed';
                 const diameter = isPagoda ? 35 : markerDiameter(site.bottleCount);
                 marker.className = `map-marker${isPagoda ? ' map-marker-pagoda' : ' map-stock-visual'}${isClosed ? ' map-marker-closed' : ''}${selected ? ' selected' : ''}`;
@@ -255,10 +256,13 @@ export function createTileMap(element, initialSites, onSelect, selectedId = null
     }
     return {
         focus, centerOn, fitSites,
-        updateSites(nextSites, nextSelectedId) {
-            // Keep the live camera and pointer state. Only markers/data change.
+        updateSites(nextSites, nextSelectedId, nextShowAllDistilleries = showingAllDistilleries) {
+            // Keep the live camera and pointer state while updating both the
+            // catalog AND its display mode. Otherwise unstocked sites keep
+            // stock-style markers when "All distilleries" is switched on.
             sites = nextSites;
             selectedId = nextSelectedId;
+            showingAllDistilleries = nextShowAllDistilleries;
             update();
         },
         getView() { return center ? { lat: center.lat, lon: center.lon, zoom } : null; },

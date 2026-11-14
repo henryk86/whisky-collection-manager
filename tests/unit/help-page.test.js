@@ -106,6 +106,6 @@ test('distillery filter updates site data without recreating the map or changing
     assert.match(source, /showAllDistilleries = event\.target\.checked/);
     assert.match(source, /refreshData\(\);\s*\}\);\s*tileMap = createTileMap/);
     assert.doesNotMatch(source,/render\(\{ preserveView: false \}\)/);
-    assert.match(source,/tileMap\.updateSites\(sites, selectedId\)/);
+    assert.match(source,/tileMap\.updateSites\(sites, selectedId, showAllDistilleries\)/);
     assert.match(source,/legend\.outerHTML = mapLegendHtml\(showAllDistilleries\)/);
 });

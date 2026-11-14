@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.23.5
+# Whisky Collection Manager v0.23.6
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der Abfüllung über einzelne physische Flaschen bis zum Lagerfach. Eine Abfüllung kann mehrere Flaschen mit eigenen Inventarnummern, Zuständen, Fotos und Belegen enthalten.
 

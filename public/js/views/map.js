@@ -170,7 +170,7 @@ export function createMapView({ state, shell, navigate, settings }) {
         }
         syncSites();
         renderSidebar();
-        tileMap.updateSites(sites, selectedId);
+        tileMap.updateSites(sites, selectedId, showAllDistilleries);
         // Changing which distilleries are displayed must not refit the camera.
         const legend = document.querySelector('.map-legend');
         if (legend) legend.outerHTML = mapLegendHtml(showAllDistilleries);
