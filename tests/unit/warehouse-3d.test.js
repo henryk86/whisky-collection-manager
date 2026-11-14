@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { WAREHOUSE_CAMERAS, furnitureFootprint, cameraDirection, cameraForFurniture, warehouse3DGeometry } from '../../public/js/domain/warehouse-3d-model.js';
+import { WAREHOUSE_CAMERAS, furnitureFootprint, cameraDirection, cameraForFurniture, warehouse3DGeometry, shelfIdAtHeight } from '../../public/js/domain/warehouse-3d-model.js';
 import { createWarehouseView } from '../../public/js/views/warehouse.js';
 import { warehouseCameraHalfHeight } from '../../public/js/ui/warehouse-three-scene.js';
 
@@ -125,21 +125,25 @@ test('cabinet doors, showcase glass and drawers follow the physical front at 0, 
 });
 
 test('warehouse multi-edit selection panel and optional properties are wired for the current room', () => {
-    let html='';let form='';const state={warehouse,selected:'rooms',warehouseRoomId:room.id,warehousePlanMode:'2d',warehouseSelectedFurnitureIds:[]};
+    let html='';let form='';const state={warehouse,selected:'shelves',warehouseRoomId:room.id,warehousePlanMode:'2d',warehouseSelectedFurnitureIds:[]};
     const before=JSON.stringify(warehouse);
     const previous=globalThis.document;
     globalThis.document={querySelector:()=>null,querySelectorAll:()=>[]};
     try {
         const view=createWarehouseView({state,shell:output=>html=output,navigate:()=>{},modal:{showModal:(_title,content)=>form=content},refresh:async()=>{}});
         view.render();
-        assert.equal((html.match(/class="warehouse-bulk-check"/g)||[]).length,3);
-        assert.match(html,/data-act="warehouse-bulk-edit" disabled/);
-        assert.match(html,/data-act="warehouse-bulk-delete" disabled/);
+        assert.doesNotMatch(html,/warehouse-bulk-check/,'no furniture editor duplicates the shelf wall');
+        view.openFurnitureBulkManager();
+        assert.equal((form.match(/class="warehouse-bulk-pick"/g)||[]).length,3);
+        assert.doesNotMatch(form,/warehouse-furniture-panel/);
+        assert.match(form,/data-act="warehouse-bulk-edit" disabled/);
+        assert.match(form,/data-act="warehouse-bulk-delete" disabled/);
         view.toggleFurnitureSelection('cabinet',true);
         view.toggleFurnitureSelection('rack',true);
-        view.render();
-        assert.match(html,/2 von 3 ausgewählt/);
-        assert.match(html,/data-act="warehouse-bulk-delete"/);
+        view.openFurnitureBulkManager();
+        assert.match(form,/2 von 3 ausgewählt/);
+        assert.equal((form.match(/aria-pressed="true"/g)||[]).length,2);
+        assert.match(form,/data-act="warehouse-bulk-delete"/);
         view.askBulkDelete();
         assert.match(form,/2 Lagermöbel wirklich löschen/);
         view.openForm('furniture-bulk');
@@ -152,7 +156,9 @@ test('warehouse multi-edit selection panel and optional properties are wired for
         view.selectAllFurniture();
         assert.equal(state.warehouseSelectedFurnitureIds.length,3);
         state.selected='shelves';view.render();
-        assert.equal((html.match(/class="warehouse-bulk-check"/g)||[]).length,3);
+        view.openFurnitureBulkManager();
+        assert.equal((form.match(/class="warehouse-bulk-pick"/g)||[]).length,3);
+        assert.doesNotMatch(form,/warehouse-furniture-panel/);
     } finally {if(previous===undefined)delete globalThis.document;else globalThis.document=previous;}
     assert.equal(JSON.stringify(warehouse),before,'selection must not edit the warehouse until a save action');
 });
@@ -178,7 +184,7 @@ test('rotated rack side and back panels follow the local axes and remain separat
 });
 
 
-test('furniture selection stays in the room plan, updates the URL and scrolls to its shelves', () => {
+test('room plan furniture selection highlights layout without opening shelf details or scrolling', () => {
     const originalDocument=globalThis.document, originalWindow=globalThis.window;
     let html='', scrolls=0, navigations=0, replaced='';
     globalThis.document={querySelector:selector=>selector==='.warehouse-furniture-panel'?{scrollIntoView:options=>{assert.equal(options.block,'start');assert.equal(options.behavior,'instant');scrolls++;}}:null,querySelectorAll:()=>[]};
@@ -190,9 +196,9 @@ test('furniture selection stays in the room plan, updates the URL and scrolls to
         assert.equal(state.warehouseFurnitureId,'rack');
         assert.equal(state.selected,'rooms');
         assert.equal(navigations,0);
-        assert.equal(scrolls,1);
+        assert.equal(scrolls,0);
         assert.match(replaced,/section=rooms.*furniture=rack/);
-        assert.match(html,/Test|Fach 1/);
+        assert.doesNotMatch(html,/warehouse-furniture-panel|warehouse-room-wall/);
         assert.equal((html.match(/class="warehouse-bulk-item/g)||[]).length,3);
         assert.doesNotMatch(html,/warehouse-room-card/);
     }finally{if(originalDocument===undefined)delete globalThis.document;else globalThis.document=originalDocument;
@@ -337,4 +343,52 @@ test('3D room uses almost the available viewport at default 100% zoom without cl
     const before=7/(2*(Math.max(4,7/1.7)*0.62+0.15)*1.7);
     const after=7/(2*warehouseCameraHalfHeight(7,4,1.7)*1.7);
     assert.ok(after>before+0.08,'camera framing significantly reduces empty space');
+});
+
+test('3D picking resolves individual bay heights, not the furniture as a whole',()=>{
+    const rack={id:'mixed',type:'regal',elevation:1.9,itemHeight:1.2,
+        shelves:[{id:'bottom',heightCm:20},{id:'middle',heightCm:35},{id:'top',heightCm:45}]};
+    assert.equal(shelfIdAtHeight(rack,1.95),'bottom');
+    assert.equal(shelfIdAtHeight(rack,2.20),'middle');
+    assert.equal(shelfIdAtHeight(rack,2.73),'top');
+    assert.equal(shelfIdAtHeight(rack,1.5),null);
+    assert.equal(shelfIdAtHeight(rack,3.2),null);
+    assert.equal(shelfIdAtHeight(null,2),null);
+    assert.equal(shelfIdAtHeight(rack,NaN),null);
+    const withClearance={...rack,shelves:[{id:'low',heightCm:20},{id:'high',heightCm:30}]};
+    assert.equal(shelfIdAtHeight(withClearance,2.35),'high');
+    assert.equal(shelfIdAtHeight(withClearance,2.8),null,'unused clearance above explicit heights is not a shelf');
+    const blocked={...rack,shelves:[{id:'blocked',capacity:0},{id:'usable'}]};
+    assert.equal(shelfIdAtHeight(blocked,2),null,'unassignable shelves cannot be opened');
+    assert.equal(shelfIdAtHeight(blocked,2.8),'usable');
+});
+
+test('3D room-plan double-click opens only occupied shelf contents in place, never furniture editing',()=>{
+    const room={id:'room',name:'Raum',furniture:[{id:'rack',name:'Regal',shelves:[
+        {id:'occupied',name:'Unten',capacity:4},
+        {id:'empty',name:'Oben',capacity:4},
+        {id:'blocked',name:'Gesperrt',capacity:0},
+    ]}]};
+    const warehouse={rooms:[room],assignments:{b:'occupied'},bottles:[{id:'b',name:'Flasche',number:'27'}]};
+    const state={warehouse,selected:'rooms',warehouseRoomId:'room',warehouseFurnitureId:null};
+    const modals=[];const navigation=[];
+    const view=createWarehouseView({state,shell:()=>{},navigate:(...args)=>navigation.push(args),
+        modal:{showModal:(...args)=>modals.push(args)},refresh:async()=>{}});
+    assert.equal(view.openOccupiedShelfDetails('empty'),false);
+    assert.equal(view.openOccupiedShelfDetails('blocked'),false);
+    assert.equal(view.openOccupiedShelfDetails('missing'),false);
+    assert.deepEqual(modals,[]);
+    assert.equal(view.openOccupiedShelfDetails('occupied'),true);
+    assert.equal(modals.length,1);
+    assert.equal(modals[0][0],'Raum / Regal / Unten');
+    assert.match(modals[0][1],/Flasche/);
+    assert.match(modals[0][1],/warehouse-shelf-detail-grid/);
+    assert.equal(state.selected,'rooms');
+    assert.equal(state.warehouseFurnitureId,null);
+    assert.deepEqual(navigation,[]);
+    const scene=fs.readFileSync('public/js/ui/warehouse-three-scene.js','utf8');
+    const page=fs.readFileSync('public/js/views/warehouse.js','utf8');
+    assert.match(scene,/shelfIdAtHeight\(furnitureById\.get\(furnitureId\),hit\.point\.y\)/);
+    assert.match(page,/onOpenShelf:openOccupiedShelfDetails/);
+    assert.match(page,/createFurnitureActivation\(selectFurniture, editFurnitureFromPlan\)/,'2D furniture editing remains unchanged');
 });

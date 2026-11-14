@@ -11,6 +11,12 @@
 
 Weitere Details: `docs/RELEASE_WORKFLOW.md`.
 
+## Einheitliche Bestaetigungsdialoge
+
+- Rueckfragen, Zustimmung zu Aenderungen und Warnbestaetigungen **immer** als Anwendungsmodal rendern, niemals native Browserdialoge (`window.confirm`, `window.prompt` oder `window.alert`) verwenden.
+- Wenn aus einem vorhandenen Bearbeitungsdialog eine Bestaetigung geoeffnet wird, muss die Rueckfrage verschachtelt erscheinen und beim Abbruch die urspruenglichen Formulareingaben erhalten.
+- Bei Abbruch oder Schliessen der Rueckfrage darf keine Datenaenderung erfolgen. Mausklick, Tastaturbedienung und die beiden Sprachkataloge beruecksichtigen.
+
 ## Dokumentation und Tests
 
 - Bei jedem Release README, `docs/TESTSTATUS.md` und betroffene Fachdokumente an die **tatsächlich implementierten** Funktionen anpassen.

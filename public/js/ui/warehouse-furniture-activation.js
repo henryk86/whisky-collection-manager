@@ -4,17 +4,17 @@
 export function createFurnitureActivation(onSelect, onEdit, delay = 330) {
     let pending = null;
     return {
-        activate(id) {
-            if (pending?.id === id) {
+        activate(id, target = id) {
+            if (pending?.id === id && pending.target === target) {
                 clearTimeout(pending.timer);
                 pending = null;
-                onEdit(id);
+                onEdit(id, target);
                 return;
             }
             if (pending) {
                 clearTimeout(pending.timer);
             }
-            const item = {id, timer:null};
+            const item = {id, target, timer:null};
             pending = item;
             item.timer = setTimeout(() => {
                 if (pending !== item) return;

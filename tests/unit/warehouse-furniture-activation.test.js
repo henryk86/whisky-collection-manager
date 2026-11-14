@@ -32,3 +32,22 @@ test('cancelled activation and switching objects do not trigger stale clicks', a
     handler.activate('r1');handler.cancel();await pause(35);
     assert.deepEqual(calls,['select:r2']);
 });
+
+test('3D double-clicks target a specific bay and never open a neighbouring bay', async()=>{
+    const calls=[];
+    const handler=createFurnitureActivation(id=>calls.push(['select',id]),(id,shelfId)=>calls.push(['open',id,shelfId]),20);
+    handler.activate('rack','upper');handler.activate('rack','upper');
+    assert.deepEqual(calls,[['open','rack','upper']]);
+    handler.activate('rack','lower');handler.activate('rack','upper');
+    await pause(35);
+    assert.deepEqual(calls,[['open','rack','upper'],['select','rack']], 'different compartments do not count as the same double-click');
+    handler.cancel();
+});
+
+test('3D double-click of an unassigned height does not become a furniture edit',()=>{
+    const calls=[];
+    const handler=createFurnitureActivation(()=>{},(_id,shelfId)=>{if(shelfId) calls.push(shelfId);},20);
+    handler.activate('rack',null);handler.activate('rack',null);
+    assert.deepEqual(calls,[]);
+    handler.cancel();
+});

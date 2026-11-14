@@ -43,16 +43,21 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'goto-analysis': () => navigate('analytics', 'overview'),
         'goto-warehouse': () => navigate('warehouse', 'overview'),
         'warehouse-section': button => navigate('warehouse', button.dataset.section),
-        'warehouse-plan-mode': button => {state.warehousePlanMode = button.dataset.mode === '3d' ? '3d' : '2d'; render();},
+        'warehouse-plan-mode': button => {state.warehousePlanMode = ['2d','3d'].includes(button.dataset.mode) ? button.dataset.mode : '2d'; render();},
         'warehouse-camera': button => { if (['nw','ne','se','sw'].includes(button.dataset.corner)) {state.warehousePlanCorner = button.dataset.corner; render();} },
         'warehouse-visibility-toggle': button => warehouseView.toggleFurnitureVisibility(button.dataset.id),
         'warehouse-show-all': () => warehouseView.showAllFurniture(),
         'warehouse-find': () => navigate('warehouse', 'find'),
+        'warehouse-open-shelves': () => navigate('warehouse', 'shelves'),
         'warehouse-room-new': () => warehouseView.openForm('room'),
+        'warehouse-rooms-transfer': () => warehouseView.openRoomTransfer(),
         'warehouse-room-edit': button => warehouseView.openForm('room', button.dataset.id),
         'warehouse-room-delete': button => warehouseView.askDelete('room', button.dataset.id),
         'warehouse-select-room': button => warehouseView.selectRoom(button.dataset.id),
         'warehouse-furniture-new': () => warehouseView.openForm('furniture'),
+        'warehouse-furniture-manage': button => warehouseView.openFurnitureManager(button.dataset.id),
+        'warehouse-furniture-bulk': () => warehouseView.openFurnitureBulkManager(),
+        'warehouse-toggle-furniture': button => warehouseView.toggleFurnitureBulkSelection(button.dataset.id),
         'warehouse-bulk-select-all': () => warehouseView.selectAllFurniture(),
         'warehouse-bulk-clear': () => warehouseView.clearFurnitureSelection(),
         'warehouse-bulk-edit': () => warehouseView.openForm('furniture-bulk'),
@@ -62,13 +67,21 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'warehouse-furniture-delete': button => warehouseView.askDelete('furniture', button.dataset.id),
         'warehouse-select-furniture': button => warehouseView.selectFurniture(button.dataset.id),
         'warehouse-shelf-new': button => warehouseView.openForm('shelf', button.dataset.id),
+        'warehouse-shelf-view': button => warehouseView.openShelfDetails(button.dataset.shelfId || button.dataset.id),
         'warehouse-shelf-up': button => warehouseView.moveShelf(button.dataset.id,'up'),
         'warehouse-shelf-down': button => warehouseView.moveShelf(button.dataset.id,'down'),
         'warehouse-shelf-edit': button => warehouseView.openForm('shelf', button.dataset.id),
         'warehouse-shelf-copy': button => warehouseView.openForm('shelf-copy', button.dataset.id),
         'warehouse-shelf-delete': button => warehouseView.askDelete('shelf', button.dataset.id),
         'warehouse-assign': button => warehouseView.openForm('assign', button.dataset.id),
+        'warehouse-bottles-assign-selected': () => warehouseView.assignSelectedBottles(),
+        'warehouse-bottles-select-clear': () => warehouseView.clearBottleSelection(),
+        'warehouse-bottles-select-all': () => warehouseView.selectAllBottles(),
         'warehouse-bottle-preview': button => warehouseView.openBottlePreview(button.dataset.id),
+        'warehouse-bottle-select': button => warehouseView.toggleWallBottleSelection(button.dataset.id),
+        'warehouse-bottles-preview-selected': () => warehouseView.previewSelectedBottle(),
+        'warehouse-unassigned-prev': () => warehouseView.stepUnassignedWallPage(-1),
+        'warehouse-unassigned-next': () => warehouseView.stepUnassignedWallPage(1),
         'warehouse-focus': button => {
             const place = state.warehouse?.rooms.find(r => r.furniture.some(f => f.shelves.some(s => s.id === button.dataset.id)));
             if (!place) return navigate('warehouse', 'find');
@@ -140,6 +153,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'add-bottle': () => editors.newBottle(),
         'edit-bottle': button => editors.editBottle(button.dataset.id),
         'close-modal': () => modal.closeModal(),
+        'modal-confirm-accept': () => modal.acceptConfirmation(),
         'add-distillery': () => settings.promptDistillery(),
         'rename-distillery': button => settings.promptDistillery(button.dataset.id),
         scan: () => scanner.scanCode(),
@@ -196,6 +210,11 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         if (!button || button.disabled) {
             return;
         }
+        // Opening a whole wall compartment requires a double-click. Keep
+        // the single click available for bottle selection and drag gestures.
+        // Flaschen im Moebelmanager besitzen einen eigenen Einzel-Detail-Button;
+        // nur Doppelklick auf die Fachflaeche oeffnet den Fachinhalt.
+        if (button.dataset.act === 'warehouse-shelf-view' && button.classList?.contains('warehouse-wall-bay')) return;
         if (button.tagName === 'A') {
             if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
             event.preventDefault();
@@ -205,6 +224,34 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
         catch (error) {
             toast(error.message, true);
+        }
+    });
+    root.addEventListener('dblclick', event => {
+        // A bottle in the room-wide rack opens its own details on double-click.
+        // Single clicks still toggle bulk selection; the surrounding bay must
+        // never interpret this as a compartment double-click.
+        const bottle = event.target.closest?.('.warehouse-room-wall .warehouse-bottle-symbol[data-act="warehouse-bottle-select"]');
+        if (bottle?.dataset?.id) {
+            try { warehouseView.openBottlePreview(bottle.dataset.id); }
+            catch (error) { toast(error.message, true); }
+            return;
+        }
+        const shelf = event.target.closest?.('.warehouse-wall-bay[data-shelf-id], .warehouse-furniture-manager .warehouse-shelf[data-shelf-id]');
+        if (!shelf || shelf.dataset?.capacity === '0') return;
+        // A bottle is independently selectable and draggable. Double-clicks
+        // on bottle symbols or explicit buttons must not also open the shelf.
+        const action = event.target.closest?.('[data-act]');
+        if (action && action !== shelf) return;
+        if (event.target.closest?.('button, a, input, select, textarea')) return;
+        try { warehouseView.openShelfDetails(shelf.dataset.shelfId); }
+        catch (error) { toast(error.message, true); }
+    });
+    root.addEventListener('keydown', event => {
+        if (!['Enter',' '].includes(event.key)) return;
+        const bay=event.target.closest?.('.warehouse-wall-bay[data-act="warehouse-shelf-view"]');
+        if (bay && bay.dataset?.capacity !== '0' && event.target === bay) {
+            event.preventDefault();
+            warehouseView.openShelfDetails(bay.dataset.shelfId);
         }
     });
     root.addEventListener('submit', event => {
@@ -254,7 +301,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
             }
             return;
         }
-        if (event.target.matches('.warehouse-bulk-check')) {warehouseView.toggleFurnitureSelection(event.target.dataset.id,event.target.checked);return;}
+        if (event.target.matches('.warehouse-bottle-check')) {warehouseView.toggleBottleSelection(event.target.dataset.id,event.target.checked);return;}
         if (event.target.id === 'warehouse-room-select') { warehouseView.selectRoom(event.target.value, state.selected === 'shelves' ? 'shelves' : 'rooms'); return; }
         if (event.target.id === 'warehouse-plan-layer') { state.warehousePlanLevel=event.target.value; render(); return; }
         if (event.target.id === 'warehouse-plan-zoom') { state.warehousePlanZoom = [100,150,200].includes(Number(event.target.value)) ? Number(event.target.value) : 100; warehouseView.update3DZoom(state.warehousePlanZoom); return; }
@@ -282,6 +329,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
     });
     root.addEventListener('input', event => {
+        if (event.target.id === 'warehouse-unassigned-wall-search') {warehouseView.setUnassignedWallSearch(event.target.value);return;}
         if (event.target.id === 'warehouse-search') {state.warehouseSearch=event.target.value;warehouseView.filterSearch();return;}
         if (event.target.id === 'bottling-choice-search') {
             editors.filterExistingBottlings(event.target.value);

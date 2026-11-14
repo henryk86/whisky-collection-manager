@@ -1,5 +1,107 @@
 # Changelog
 
+## 0.19.14 - 2026-11-14
+
+- Fachuebersicht: Flaschenbilder ohne Dialogaktion; direkte Aktionen und Modal-Rueckkehr bleiben erhalten
+
+## 0.19.13 - 2026-11-14
+
+- Regalwand-Flaschen per Doppelklick oeffnen; verschachtelte Modals bewahren ihre Vorgänger und kehren beim Schliessen zurueck
+
+## 0.19.12 - 2026-11-14
+
+- Moebelmodal: Klick auf eine Flasche oeffnet wieder die Einzel-Flaschenvorschau mit Umlagern und Zu den Flaschendetails, nicht die Fachuebersicht; redundanten Flaschen-anzeigen-Button entfernen
+- Regalwand: Vorschau einer einzelnen markierten Flasche zeigt deren Einzeldaten statt des ganzen Fachs; Fach-Doppelklick und Mehrfachauswahl bleiben erhalten
+
+## 0.19.11 - 2026-11-14
+
+- Fachinhalt-Modal ohne Flaschenauswahl; Markierung in der Regalwand innerhalb der Flaschenplaetze halten
+
+## 0.19.10 - 2026-11-14
+
+- Platzhaltergrafik in Sammlungskacheln an die sichtbare Hoehe echter Flaschenfotos angleichen, ohne deren Darstellung zu veraendern
+- Platzhaltergrafik auf der Detailseite farblich an die Sammlung angleichen; im Dark Mode bleibt das Goldmotiv sichtbar
+
+## 0.19.9 - 2026-11-14
+
+- Platzhaltergrafik in Uebersichtskacheln verkleinern und im Fachinhalt-Modal vereinheitlichen
+- README als kompakten Projekteinstieg ueberarbeiten; versionsspezifische Aenderungen und technische Details auf Changelog/Fachdokumentation verweisen
+
+## 0.19.8 - 2026-11-14
+
+- Fachinhalt in Raumplan und Regalansicht mit direkten Flaschenaktionen, Inventarnummer, Alkoholgehalt und Status
+
+## 0.19.7 - 2026-11-14
+
+- 3D-Raumplan: Doppelklick auf belegtes Fach oeffnet Fachinhalt als Modal ohne Reiterwechsel; leere Faecher bleiben geschlossen
+- README: Vollstaendige Programmierung durch ChatGPT sowie Anforderungs-/Korrekturvorgaben durch den Projektinitiator und regelmaessige Code-Reviews mit Claude dokumentiert
+
+## 0.19.6 - 2026-11-14
+
+- Oberstes Fach: Abstand zwischen Holzrahmen und Fachbeschriftung angleichen
+
+## 0.19.5 - 2026-11-14
+
+- Regalwand: Hinweis fuer leere belegbare Faecher auf dieselbe Schriftgroesse wie Nicht belegbar reduzieren
+
+## 0.19.4 - 2026-11-14
+
+- Regalwand: Moebelmodal ueber internes Bearbeiten-Icon mit Namens-Tooltip oeffnen; bei Kapazitaet 0 keine 0/0-Anzeige
+
+## 0.19.3 - 2026-11-14
+
+- Kapazitaetsueberschreitungen werden per deutschem/englischem Anwendungsmodal bestaetigt; beim Schliessen bleibt die vorherige Zuordnung unveraendert und ein bestehender Zuordnungsdialog erhalten.
+- Gestapelte Moebel zeigen ihre Namen vor der Fachbezeichnung im normalen Layout statt in einer ueberlappenden absoluten Position; Regressionstests fuer beide Faelle.
+
+## 0.19.2 - 2026-11-14
+
+- Nicht belegbare Faecher ohne Fachmodal; optional bestaetigte automatische Kapazitaetserhoehung beim Umlagern
+
+## 0.19.1 - 2026-11-14
+
+- Fachmodal per Doppelklick auf die Fachflaeche statt einfachem Klick; Flaschenauswahl und Drag-and-drop bleiben unveraendert
+
+## 0.19.0 - 2026-11-14
+
+- Auswahlaktionen und die standardmaessig eingeklappte Ablage "Nicht zugeordnet" teilen sich in der Regalwand eine kompakte Werkzeugleiste. Die Ablage klappt ohne zweite Kopfzeile innerhalb desselben Bereichs auf.
+- Kompakter gemeinsamer Raumtransfer-Dialog mit Export- und Import-Reitern, statt separater Aktionen; optionaler Transfer von Flaschenzuordnungen und komplette Fachbelegung in eigenem Modal statt horizontalem Fach-Scrollen.
+- Raumtransfer als JSON mit Mehrfachauswahl, Importvorschau, sicherem Ueberspringen bestehender Raeume, optionalem Ersetzen leerer Raeume, ID-/Inventarnummer-Abgleich und atomarer Uebernahme.
+- Regalwand zeigt maximal fuenf Flaschen in der Frontansicht und eine Restzahl. Neues Fachmodal zeigt alle Flaschen eines Fachs sowie vorhandene Metadaten und Auswahl-/Detailfunktionen.
+- API-, Integrations- und Unit-Regressionstests fuer beide Funktionen hinzugefuegt.
+
+## 0.18.6 - 2026-11-14
+
+- Flaschenbilder und Flaschensymbole in den Faecherlisten des einzelnen Moebelmodals wiederhergestellt, ohne die Regalwand zu duplizieren.
+
+## 0.18.5 - 2026-11-14
+
+- Virtuelle Ablage „Nicht zugeordnet“ ist initial eingeklappt und behaelt ihren Aufklappzustand beim Neuzeichnen der Regalwand.
+- Unter „Flaschen finden“ sind die Zeilen wieder linksbuendig; Alter, Erscheinungsjahr und Fasstyp werden in der Liste und der virtuellen Ablage aus bestehenden Abfuellungsdaten angezeigt.
+- Lesende Lager-API um diese drei Metadaten ergaenzt, ohne Lagerdaten oder Zuordnungen zu veraendern; Regressionstests hinzugefuegt.
+
+## 0.18.4 - 2026-11-14
+
+- Virtuelle, global durchsuchbare Ablage fuer nicht zugeordnete Flaschen mit 24 Eintraegen je Seite und direktem Drag-and-drop in ein Fach; oberer Leerraum der Regalwand reduziert.
+- Einzelmoebel-Modals enthalten nur das angeklickte Moebel und dessen Faecher. Mehrfachbearbeitung wurde in ein eigenes Modal mit hervorgehobenen Auswahlkacheln verlegt, ohne Checkboxen.
+- Regressionstests fuer grosse Ablagen, Auswahl, Moebel-Modal und getrennte Mehrfachbearbeitung.
+
+## 0.18.3 - 2026-11-14
+
+- Regalwand nur einmal anzeigen, breite Obermoebel korrekt stapeln, Auswahl im Raumplan sichtbar machen und Scrollposition beim Umlagern behalten; Moebel- und Fachbearbeitung als Modal statt ausklappbarem Bereich.
+
+## 0.18.2 - 2026-11-14
+
+- Regalwand nach realen Raumpositionen und Montageebenen anordnen; Flaschen per Hervorhebung statt Checkboxen mehrfach auswaehlen.
+- Lager-Unterseiten fachlich getrennt: Raumpläne nur für Raumgeometrie/2D/3D-Positionierung, Regalwand und Möbel-/Fach-/Flaschenverwaltung ausschließlich unter Regale & Fächer; direkter Wechsel aus Raumplan möglich.
+
+## 0.18.1 - 2026-11-14
+
+- Regalwand mit durchgehender Hoehe, massstabsgetreuen Schrank- und Fachhoehen sowie atomarer Mehrfachzuordnung von Flaschen
+
+## 0.18.0 - 2026-11-14
+
+- Raumweite virtuelle Regalwand mit Frontansichten aller Fachmoebel; Flaschen per Maus/Touch innerhalb und zwischen Regalen umlagern (inklusive Kapazitaetspruefung und Auto-Scroll)
+
 ## 0.17.15 - 2026-11-14
 
 - npm start prepares missing dependencies, local cutout assets and initial HTTPS setup before launching the server

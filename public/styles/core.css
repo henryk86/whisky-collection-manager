@@ -537,10 +537,17 @@ textarea {
     padding: 13px 18px 27px;
     mix-blend-mode: multiply;
 }
+/* Size the bottle illustration to the visible area used by a real bottle
+   photo. Actual photos retain their existing dimensions and padding. */
+.card-img .image-placeholder {
+    width: auto;
+    height: calc(100% - 40px);
+    max-height: 225px;
+    max-width: 65%;
+    object-fit: contain;
+}
 .card-img .image-placeholder,
 .hero-photo .image-placeholder {
-    width: min(46%, 168px);
-    height: auto;
     padding: 0;
     mix-blend-mode: multiply;
     opacity: .78;

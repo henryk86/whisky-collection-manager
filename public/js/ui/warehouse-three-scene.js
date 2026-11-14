@@ -1,5 +1,5 @@
 import { t } from '../i18n/index.js';
-import { warehouse3DGeometry, cameraDirection } from '../domain/warehouse-3d-model.js';
+import { warehouse3DGeometry, cameraDirection, shelfIdAtHeight } from '../domain/warehouse-3d-model.js';
 import { createFurnitureActivation } from './warehouse-furniture-activation.js';
 
 const PALETTE = {
@@ -146,7 +146,7 @@ export function frameWarehouseCamera(THREE, camera, roomWidth, roomDepth, maxHei
 }
 
 /** Mount only when the 3D tab is visible. All imports load from local npm files. */
-export async function mountWarehouseThree(viewport,{room,warehouse,corner='nw',zoom=100,hiddenIds=[],onSelect,onEdit=()=>{}}) {
+export async function mountWarehouseThree(viewport,{room,warehouse,corner='nw',zoom=100,hiddenIds=[],onSelect,onOpenShelf=()=>{}}) {
     if (!viewport || !viewport.isConnected) return {dispose(){},setZoom(){return false;},setHighlightedFurniture(){}};
     const [THREE, {OrbitControls}] = await Promise.all([
         import('/vendor/three.module.js'),
@@ -187,7 +187,10 @@ export async function mountWarehouseThree(viewport,{room,warehouse,corner='nw',z
     resize();
     const ray=new THREE.Raycaster();
     let down=null;
-    const activation=createFurnitureActivation(onSelect,onEdit);
+    const activation=createFurnitureActivation(onSelect,(_furnitureId,shelfId)=>{
+        if (shelfId) onOpenShelf(shelfId);
+    });
+    const furnitureById=new Map((room.furniture || []).map(item=>[item.id,item]));
     function pointerDown(e){down={x:e.clientX,y:e.clientY};}
     function pointerUp(e){
         if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>7){down=null;return;}
@@ -196,7 +199,13 @@ export async function mountWarehouseThree(viewport,{room,warehouse,corner='nw',z
         const mouse=new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);
         ray.setFromCamera(mouse,camera);
         const hit=ray.intersectObjects(model.selectables.filter(mesh => mesh.visible),false)[0];
-        if(hit?.object?.userData?.furnitureId)activation.activate(hit.object.userData.furnitureId);
+        const furnitureId=hit?.object?.userData?.furnitureId;
+        if (furnitureId) {
+            const shelfId=shelfIdAtHeight(furnitureById.get(furnitureId),hit.point.y);
+            // Selection stays furniture-wide; only a double-click into the
+            // same physical bay can open that bay's occupied contents.
+            activation.activate(furnitureId,shelfId);
+        }
     }
     canvas.addEventListener('pointerdown',pointerDown);
     canvas.addEventListener('pointerup',pointerUp);

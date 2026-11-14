@@ -33,6 +33,16 @@ POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB
 | GET | `/api/export/zip` | AES-256-verschlüsseltes ZIP mit Sammlung, Lager, Fotos und Dokumenten; Admin-Token erforderlich |
 | POST | `/api/import/json` | Ersetzt Sammlung, erhält reservierte Nummern; Bilder und Nachweise separat |
 
+## Portabler Raumtransfer (ab v0.19.0)
+
+| Methode | Pfad | Funktion |
+| --- | --- | --- |
+| POST | `/api/warehouse/rooms/export` | `{ "roomIds": "all" | ["room-id", ...], "includeAssignments": true | false }` → JSON-Dokument mit einem, mehreren oder allen ausgewählten Räumen und optionalen Flaschenreferenzen |
+| POST | `/api/warehouse/rooms/import/preview` | `{ "document": <Raumtransfer-Datei>, "includeAssignments": true | false, "conflictPolicy": "skip" | "replace" }` → Vorschau der möglichen Auswirkungen, **ohne zu speichern** |
+| POST | `/api/warehouse/rooms/import` | Dieselbe Payload wie die Vorschau; prüft erneut gegen den aktuellen Lagerstand und schreibt **atomar** oder gar nicht |
+
+Die JSON-Datei benutzt `format: "wcm-room-transfer"` und `formatVersion: 1`; die exportierten `rooms[]` enthalten Raumgeometrie, Möbel und Fächer, `assignments[]` optional `{ "bottleId": "...", "shelfId": "...", "inventoryNumber": "..." }`. Flaschenstammdaten und Medien gehören nicht zum Raumtransfer. Im Ziel erhalten neue Räume, Möbel und Fächer neue IDs; Zuordnungen erfolgen nur für bereits existierende, über ID oder eindeutige Inventarnummer erkannte physische Flaschen. Bestehende Flaschenzuordnungen werden nicht überschrieben. Konflikte werden standardmäßig übersprungen; `replace` ersetzt nur Räume ohne zugeordnete Flaschen, andernfalls HTTP 409 ohne Teilschreibvorgang. Die Antwort enthält Zählwerte für übernommene, fehlende, mehrdeutige, belegte und kapazitätsbedingt verworfene Flaschenzuordnungen. Die Vorschau und der Import akzeptieren maximal 200 Räume sowie Dateien bis 12 MiB.
+
 ## Schreibschutz und Anfrageformat (ab v0.15.10)
 
 - Jeder JSON-POST/PATCH/PUT erwartet `Content-Type: application/json`
@@ -143,7 +153,8 @@ Die Lagerdaten werden unabhängig von der Sammlung gespeichert. Alle Ressourcen 
 | POST | `/api/warehouse/furniture/:id/shelves` | Fach anlegen |
 | PATCH / DELETE | `/api/warehouse/shelves/:id` | Fach bearbeiten/entfernen |
 | POST | `/api/warehouse/shelves/:id/copy` | Fach (optional in anderes Möbel) kopieren. Body `{ "furnitureId": "zielmoebel", "name": "..." }` (optional), Kapazität wird übernommen, keine Zuordnungen |
-| PUT | `/api/warehouse/bottles/:id` | Einzelne physische Flasche zuordnen, Body `{ "shelfId": "fach-id" }`, oder mit `null` entkoppeln |
+| PUT | `/api/warehouse/bottles/:id` | Einzelne physische Flasche zuordnen, Body `{ "shelfId": "fach-id" }`, oder mit `null` entkoppeln; bei bestaetigter Ueberbelegung optional `increaseCapacityTo` als maximal genehmigte neue Kapazitaet |
+| POST | `/api/warehouse/bottles/bulk` | Bis zu 500 verschiedene physische Flaschen gemeinsam zuordnen: `{ "ids": ["id1", "id2"], "shelfId": "fach-id" }`; `null` hebt die Zuordnung auf. Kapazitaetspruefung und Speicherung atomar; bei Platzmangel HTTP 409 ohne Teilzuordnung, es sei denn `increaseCapacityTo` ist nach Benutzerbestaetigung ausreichend |
 
 Lagermöbel-POST/-PATCH erlauben zusätzlich `elevation` (Unterkante über Boden, 0–10 m) und `itemHeight` (Möbelhöhe, 0,1–5 m). Beide Felder sind für Bestandsdaten optional. Der Typ `haengeregal` ist zulässig; die Kopierfunktion berücksichtigt getrennte Höhenbereiche bei gleichen Grundflächen. Die Gesamtkapazität pro Raum wird clientseitig aus den vorhandenen Fachkapazitäten ermittelt, nicht als redundantes Datenfeld gespeichert.
 
@@ -156,7 +167,7 @@ Validierungsfehler liefern HTTP 400; unbekannte IDs 404, ein volles Fach oder ei
 - `POST /api/warehouse/shelves/:id/copy` und `POST /api/warehouse/furniture/:id/copy` übernehmen auch Fachfronten und Höhen, aber **keine** Flaschenzuordnungen. Wird die Möbelhöhe überschritten, antwortet die API mit HTTP 409.
 - `PATCH /api/warehouse/furniture/bulk` mit `{"ids":["..."],"changes":{"rotation":90,"elevation":1}}` ändert ausgewählte Eigenschaften bei allen Möbeln atomar. Unterstützt `rotation`, `elevation`, `itemHeight`, `width`, `depth`, `leftSidePanel`, `rightSidePanel`, `backPanel`, `doorLeaves` und `glassFrame`. Sind Maße/Positionen oder bereits definierte Fachhöhen ungültig, wird nichts gespeichert.
 
-Möbel bieten außerdem optionale Seitenwände, Rückwand, Türflügel und Glasrahmen. Zusammenhängende `doorRanges` legen Fronten über fortlaufende Fachnummern fest (von unten nach oben, keine Überlappungen). Leere Fachkapazität (`null`) ist unbegrenzt; `0` verbietet jede Flaschenzuordnung.
+Möbel bieten außerdem optionale Seitenwände, Rückwand, Türflügel und Glasrahmen. Zusammenhängende `doorRanges` legen Fronten über fortlaufende Fachnummern fest (von unten nach oben, keine Überlappungen). Leere Fachkapazität (`null`) ist unbegrenzt; `0` verbietet jede Flaschenzuordnung. Fuer positive, zu kleine Kapazitaeten kann das Frontend nach einer ausdruecklichen Rueckfrage `increaseCapacityTo` (ganze Zahl bis 10000) mitsenden. Der Server erhoeht die Fachkapazitaet **nur auf den tatsaechlich benoetigten Wert** und fuehrt die Zuordnungen im selben atomaren Vorgang durch. Ist der Bedarf hoeher als der genehmigte Wert, bleibt alles unveraendert (HTTP 409). Fuer Kapazitaet 0 ist diese Freigabe gesperrt.
 
 `warehouse.json` behält `schemaVersion: 1` und ist rückwärtskompatibel. Das Collection-JSON wird nicht durch Lagerbefehle verändert.
 
