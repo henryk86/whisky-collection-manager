@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { analyzeCollection, filterAnalyticsCollection, analyticsFilterOptions } from '../../public/js/domain/analytics.js';
 import { createAnalyticsView, ANALYSIS_PAGES } from '../../public/js/views/analytics.js';
 import { parseRoute, routeUrl } from '../../public/js/navigation/routes.js';
@@ -27,6 +28,34 @@ const collection = () => ({
                 status: 'empty', purchasePrice: 30, currency: 'USD', createdAt: '2026-01-01' }] },
         { id: 'no-bottle', name: 'Limited Ghost', distilleryIds: [], bottles: [], completionStatus: 'incomplete' },
     ],
+});
+
+test('analytics filters retain their light appearance but use a dark surface in dark mode', () => {
+    const analyticsCss = fs.readFileSync('public/styles/analytics.css', 'utf8');
+    const themesCss = fs.readFileSync('public/styles/themes.css', 'utf8');
+    assert.match(analyticsCss, /\.analytics-filters\s*\{[^}]*background:\s*#ece9e1;/);
+    assert.match(themesCss, /:root\[data-theme="dark"\]\s+\.analytics-filters\s*\{[^}]*background:\s*#1b2936;[^}]*border-color:\s*var\(--line\);/);
+});
+
+test('analytics overview subtitle is a complete sentence in German and English', () => {
+    const de = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
+    const en = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
+    assert.equal(de['analytics.summary.highlights'], 'Das Wichtigste auf einen Blick.');
+    assert.equal(en['analytics.summary.highlights'], 'Key figures at a glance.');
+    assert.equal(ANALYSIS_PAGES[0].sub, de['analytics.summary.highlights']);
+});
+
+test('analytics page headline keeps its overview punchline on every tab', () => {
+    const state = { collection: { schemaVersion:4, distilleries:[], bottlings:[] },
+        analyticsFilters:{}, analyticsPeriod:'month', analyticsStartDate:'', analyticsEndDate:'', selected:'overview' };
+    let html = '';
+    const render = createAnalyticsView({state, shell: value => { html = value; }});
+    for (const page of ANALYSIS_PAGES) {
+        state.selected = page.id;
+        render();
+        assert.match(html, /<p class="intro">Das Wichtigste auf einen Blick\.<\/p>/,
+            `the header subtitle must not change on the ${page.id} tab`);
+    }
 });
 
 test('analytics: global filters match the same physical bottle and keep multi-distillery allocations honest', () => {

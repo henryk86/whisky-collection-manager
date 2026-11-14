@@ -2,6 +2,9 @@
 
 Die Hauptnavigation enthält **Analyse** (`/?view=analysis`). Das Dashboard führt zu sechs Unterseiten:
 
+Die Unterseiten werden am Desktop ueber eine **linke Seitennavigation** gewechselt. Der aktive Bereich besitzt nur eine gerade goldene Linie, keine runde Flaeche. Auf kleineren Bildschirmen (bis 1180 px) ersetzt ein Auswahlfeld die Seitenleiste. Dieselbe Komponente wird auf der Hilfeseite eingesetzt; die bestehende Analysefilterung, Browserhistorie und Deep Links bleiben unveraendert. Die Filter liegen in einem zusammenhaengenden Raster, ohne einzelne Bedienelemente ungeordnet in eine neue Zeile zu druecken.
+
+
 | Unterseite | URL-Parameter `section` | Auswertungen |
 | --- | --- | --- |
 | Dashboard | nicht gesetzt / `overview` | Kennzahlen, Flaschenstatus, Rangliste, Bereichskarten |

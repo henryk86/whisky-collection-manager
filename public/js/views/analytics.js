@@ -3,8 +3,7 @@ import { t, currentLanguage } from '../i18n/index.js';
 import { analyzeCollection, analyticsFilterOptions } from '../domain/analytics.js';
 import { escapeHtml } from '../ui/dom.js';
 import { readAnalyticsDate } from '../domain/analytics-period.js';
-import { revealActiveTab } from '../ui/tab-navigation.js';
-export { revealActiveTab as revealActiveAnalyticsTab };
+import { sectionWorkspace } from '../ui/section-navigation.js';
 
 export const ANALYSIS_PAGES = Object.freeze([
     { id: 'overview', get title() { return t("analytics.navigation.overview"); }, get sub() { return t("analytics.summary.highlights"); }, icon: '◫' },
@@ -54,9 +53,9 @@ function panel(title, content, note = '', extra = '') {
     return `<section class="analytics-panel ${extra}"><h3>${safe(title)}</h3>${content}${note ? `<p class="analytics-note">${safe(note)}</p>` : ''}</section>`;
 }
 function metric(label, value, detail = '') {
-    return `<div class="analytics-metric"><span>${safe(label)}</span><strong>${safe(value)}</strong>${detail ? `<small>${safe(detail)}</small>` : ''}</div>`;
+    return `<div class="panel stat analytics-metric"><span>${safe(label)}</span><strong>${safe(value)}</strong>${detail ? `<small>${safe(detail)}</small>` : ''}</div>`;
 }
-function metricGrid(cards) { return `<div class="analytics-metrics">${cards.join('')}</div>`; }
+function metricGrid(cards) { return `<div class="stats analytics-metrics">${cards.join('')}</div>`; }
 function sectionHeading(text) { return `<h2 class="analytics-group-title">${safe(text)}</h2>`; }
 function two(...items) { return `<div class="analytics-two">${items.join('')}</div>`; }
 function rankBars(rows, { value = 'count', format = number, limit = 14, drill = false } = {}) {
@@ -251,12 +250,14 @@ export function createAnalyticsView({ state, shell }) {
             profile: () => profile(data), finance: () => finance(data, state),
             timeline: () => timeline(data, state), quality: () => quality(data),
         };
-        const nav = `<nav class="analytics-tabs" aria-label="${t("analytics.navigation.sections")}">${ANALYSIS_PAGES.map(page => `<button type="button" class="analytics-tab${page.id === current.id ? ' active' : ''}" data-act="analytics-section" data-section="${safe(page.id)}" aria-current="${page.id === current.id ? 'page' : 'false'}">${safe(page.title)}</button>`).join('')}</nav>`;
-        shell(`<div class="analytics-page"><header class="analytics-header"><span class="eyebrow dark">${t("analytics.summary.eyebrow")}</span><h2>${t("navigation.analytics")}<span class="heading-period">.</span></h2><p>${safe(current.sub)}</p></header>
-            ${nav}${filterControls(state, options)}<h2 class="analytics-section-title">${safe(current.title)}</h2>${contents[current.id]()}
-            <p class="analytics-footnote">${t("analytics.notes.dataSourcePolicy")}</p></div>`);
-        if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
-            revealActiveTab(document.querySelector('.analytics-tabs'));
-        }
+        const content = `${filterControls(state, options)}<h2 class="analytics-section-title">${safe(current.title)}</h2>${contents[current.id]()}`;
+        const workspace = sectionWorkspace({
+            sections: ANALYSIS_PAGES.map(page => ({id:page.id,label:page.title})),
+            activeId: current.id, action:'analytics-section', itemAttribute:'data-section',
+            label:t('analytics.navigation.sections'), switchKind:'analytics',
+        }, content);
+        shell(`<div class="analytics-page"><header class="section-head analytics-page-heading"><div class="page-heading-copy"><span class="eyebrow dark">${t("analytics.summary.eyebrow")}</span><h2>${t("navigation.analytics")}<span class="heading-period">.</span></h2><p class="intro">${safe(t("analytics.summary.highlights"))}</p></div></header>
+            ${workspace}
+            </div>`);
     };
 }

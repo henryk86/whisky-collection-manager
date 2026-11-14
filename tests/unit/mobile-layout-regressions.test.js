@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { revealActiveAnalyticsTab } from '../../public/js/views/analytics.js';
+import { sectionWorkspace } from '../../public/js/ui/section-navigation.js';
 
 const read = file => fs.readFileSync(file, 'utf8');
 
@@ -40,17 +40,25 @@ test('responsive fields are width-constrained without shrinking checkboxes or de
     assert.match(settings, /\.backup-form-grid\s*\{[^}]*minmax\(min\(100%, 125px\), 1fr\)/);
 });
 
-test('analytics nav reveals the active tab without scrolling the whole page', () => {
-    const tab = { getBoundingClientRect: () => ({ left: 500, right: 640 }) };
-    const nav = { scrollLeft: 0, querySelector: () => tab, getBoundingClientRect: () => ({ left: 100, right: 390 }) };
-    revealActiveAnalyticsTab(nav);
-    assert.equal(nav.scrollLeft, 260);
-    tab.getBoundingClientRect = () => ({ left: 40, right: 120 });
-    revealActiveAnalyticsTab(nav);
-    assert.equal(nav.scrollLeft, 190);
-    nav.querySelector = () => null;
-    revealActiveAnalyticsTab(nav);
-    assert.equal(nav.scrollLeft, 190);
+test('analysis and help use a native mobile selector instead of horizontally scrolling tabs', () => {
+    const html = sectionWorkspace({
+        sections:[{id:'overview',label:'Übersicht'},{id:'quality',label:'Datenqualität'}],
+        activeId:'quality',action:'analytics-section',itemAttribute:'data-section',
+        label:'Analyse-Unterseiten',switchKind:'analytics',
+    }, '<p>Inhalt</p>');
+    assert.match(html, /class="section-nav-desktop"/);
+    assert.match(html, /class="section-nav-mobile"/);
+    assert.match(html, /data-section-switch="analytics"/);
+    assert.match(html, /value="quality" selected/);
+    assert.match(html, /data-section="quality" aria-current="page"/);
+    const css = read('public/styles/analytics.css');
+    assert.match(css, /@media \(max-width: 980px\)/);
+    assert.match(css, /@media \(min-width: 981px\) and \(max-width: 1180px\)/);
+    assert.match(css, /\.help-page \.section-nav-desktop \{ display: none; \}/);
+    assert.match(css, /\.section-nav-desktop \{ display: none; \}/);
+    assert.match(css, /\.section-nav-mobile \{ display: grid;/);
+    assert.match(css, /\.section-nav-item\.active \{ border-left-color: var\(--gold\);/);
+    assert.doesNotMatch(css, /\.section-nav-item\.active[^}]*border-radius:/);
 });
 
 test('date controls in bottling editor and analytics avoid iOS WebKit intrinsic width and alignment bugs', () => {

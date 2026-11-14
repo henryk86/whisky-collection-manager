@@ -171,6 +171,17 @@ export function createMapView({ state, shell, navigate, settings }) {
         syncSites();
         renderSidebar();
         tileMap.updateSites(sites, selectedId);
+        // Changing which distilleries are displayed must not refit the camera.
+        const legend = document.querySelector('.map-legend');
+        if (legend) legend.outerHTML = mapLegendHtml(showAllDistilleries);
+        const emptyNotice = document.querySelector('.map-no-sites');
+        if (sites.length) emptyNotice?.remove();
+        else if (!emptyNotice) {
+            const notice = document.createElement('div');
+            notice.className = 'map-no-sites';
+            notice.textContent = t('map.empty.noMappedDistilleries');
+            document.querySelector('.map-stage')?.append(notice);
+        }
         const summary = document.querySelector('.map-summary');
         const locatedCount = summary?.querySelector('[data-map-stat="located"] strong');
         const bottleCount = summary?.querySelector('[data-map-stat="bottles"] strong');
@@ -217,7 +228,7 @@ export function createMapView({ state, shell, navigate, settings }) {
             showAllDistilleries = event.target.checked;
             try { localStorage.setItem(ALL_SITES_PREF, showAllDistilleries ? '1' : '0'); }
             catch { /* Browsers without storage can still switch modes. */ }
-            render({ preserveView: false });
+            refreshData();
         });
         tileMap = createTileMap(document.getElementById('distillery-map'), sites, id => select(id), selectedId, {
             showAllDistilleries,

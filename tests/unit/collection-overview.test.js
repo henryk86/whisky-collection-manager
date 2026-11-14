@@ -138,7 +138,7 @@ test('physical bottle cards use their own photo, identifier, status and volume; 
         assert.match(html, /id="filter-distillery"/);
         assert.match(html, /id="filter-volume-type"/);
         assert.match(html, /<option value="sample"\s*>Samples<\/option>/);
-        const toolbar = html.match(/<div class="toolbar">([\s\S]*?)<\/div>/)?.[1];
+        const toolbar = html.match(/<div class="toolbar collection-filters">([\s\S]*?)<\/div>/)?.[1];
         assert.ok(toolbar, 'overview toolbar must exist');
         assert.doesNotMatch(toolbar, /overview-quick-filters|overview-quick-field|Schnellfilter/,
             'quick filters must not have a separate labelled row');

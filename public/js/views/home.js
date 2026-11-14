@@ -130,6 +130,9 @@ export function createHomeView({ state, selectors, shell }) {
     <td>${bottling.completionStatus === 'complete' ? t("detail.status.complete") : t("detail.status.incomplete")}</td>
     </tr>`;
         }).join('');
+        // The original description stays verbatim. CSS keeps the whole copy on
+        // one line on desktop and permits natural wrapping on small screens.
+        const heroCopy = escapeHtml(t('home.hero.description'));
         shell(`<section class="collection-hero">
     <div class="hero-media" aria-hidden="true">
     <img src="/assets/hero-header.jpg" alt="">
@@ -143,7 +146,7 @@ export function createHomeView({ state, selectors, shell }) {
     <h2>${t("home.hero.oneCollection")}<br>
     <em>${t("home.hero.manyStories")}</em>
     </h2>
-    <p>${t("home.hero.description")}</p>
+    <p class="hero-description">${heroCopy}</p>
     <div class="hero-actions">
     <button class="btn primary" type="button" data-act="new" aria-label="${t("collection.actions.newBottle")}">${newBottlingIcon}<span>${t("collection.actions.newBottle")}</span></button>
     <button class="btn hero-secondary" type="button" data-act="scan" aria-label="${t("collection.actions.scanInventory")}">${inventoryScanIcon}<span>${t("collection.actions.scanInventory")}</span></button>
@@ -181,7 +184,7 @@ export function createHomeView({ state, selectors, shell }) {
     <strong>${open}</strong>
     </div>
     </div>
-    <div class="toolbar">
+    <div class="toolbar collection-filters">
     <input type="search" id="search" aria-label="${t("home.filters.searchCollection")}" placeholder="${t("home.filters.searchPlaceholder")}" value="${escapeHtml(state.search)}">
     <select id="filter-status" aria-label="${t("forms.bottle.status")}">
     <option value="all">${t("home.filters.allStatuses")}</option>${Object.entries(bottleStatusLabels).map(([k, v]) => `<option value="${k}" ${state.status === k ? 'selected' : ''}>${statusText(k)}</option>`).join('')}</select>

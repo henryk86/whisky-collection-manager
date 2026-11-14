@@ -1,5 +1,67 @@
 # Changelog
 
+## 0.23.5 - 2026-11-14
+
+- Einstellungen: Abstand zwischen Allgemein-Ueberschrift und Inhaltsblock um 2 px angleichen
+
+## 0.23.4 - 2026-11-14
+
+- Analyse: Filterleiste verwendet im Darkmode dunkle Flaeche und themengerechte Rahmenfarbe.
+
+## 0.23.3 - 2026-11-14
+
+- Lager-Ablage: Suche exakt zwischen Flaschenzaehler und Seitennavigation in derselben Footer-Zeile; Suchfokus bleibt beim Filtern erhalten. Allgemeine Einstellungen: gleicher Abstand zwischen Bereichsueberschrift und Panel wie in den anderen Gruppen. Raumkopf: eckiger Rahmen. Hilfe: freigegebene Darstellung des rechten Inhalts als eckiges, weisses Analyse-Panel mit Abschnittsueberschrift ausserhalb; linke Navigation unveraendert.
+
+## 0.23.2 - 2026-11-14
+
+- Die vollstaendige unveraenderte Startseitenbeschreibung steht auf Desktopbreiten in einer einzigen Zeile (bei schmalen Telefonansichten weiterhin responsiver Umbruch).
+- Suche nach nicht zugeordneten Flaschen in den Footer der Ablage verschoben, ohne sichtbares Label; Placeholder benennt Flaschenname und Inventarnummer.
+- Einstellungen erhalten dieselben eckigen, weiss hinterlegten Analyse-Panels; Inhaltspaneele in Sammlung, Analyse, Hilfe, Lager und Karte verwenden eine gemeinsame eckige Formensprache statt abwechselnd gerundeter Rahmen.
+- Seitenabhaengige Breiten der linken Navigation; Hilfe nutzt auf Tablets den Bereichswaehler, um lange Themenbezeichnungen nicht umzubrechen. Browser-Favicon zeigt das goldene Logo transparent, iOS-Icon unveraendert.
+
+## 0.23.1 - 2026-11-14
+
+- Lager-Ablagehinweis entfernt, Hero-Saetze auf Desktop einzeilig und Destillerienliste ohne eigenen Scrollbereich; Einstellungen als flache Inhaltsbereiche.
+
+## 0.23.0 - 2026-11-14
+
+- Gemeinsame Seitennavigation fuer Lager und Einstellungen; Hilfe als ruhiger Analyse-Inhaltsbereich, einheitliche Abstaende und korrigierte Textumbrueche ohne Aenderung der Originaltexte.
+- iOS-PWA-Icon mit deckendem Logo und Apple-Touch-Icon-Rootpfad; Lagerort-Modal mit hervorgehobener aktueller Position und standardmaessig eingeklappter Bearbeitung.
+
+## 0.22.0 - 2026-11-14
+
+- Analyse und Hilfe: gemeinsame Desktop-Seitennavigation mit gerader goldener Aktivlinie; unter 1181 px ein mobiler Bereichswaehler statt horizontaler Reiter.
+- Hilfe: breitere Navigation ohne umgebrochene Desktop-Themennamen und gegliederte, nummerierte Anleitungen im eckigen Inhaltsfeld.
+- Sammlung: Filterbereich mit gleichmaessigen responsiven Zeilen; originaler Hero-Text bleibt erhalten und bricht auf Desktopbreite zwischen den beiden Saetzen um.
+- Analyse: Filterraster ohne isolierten Zuruecksetzen-Button bei Tabletbreite; Kennzahlen und Inhaltselemente orientieren sich weiter an der Sammlungsseite, die feste Punchline bleibt bestehen.
+
+## 0.21.4 - 2026-11-14
+
+- Hilfe mit denselben horizontalen Themenreitern wie Analyse: jeweils ein Themenbereich sichtbar, inklusive Tastaturbedienung
+- Hilfeseite ohne eingeschraenkte Inhaltsbreite und lange Erklaertexte im Inhalt statt im Seitenkopf
+- Originaltexte der Startseiten- und Hilfebeschreibung unveraendert beibehalten
+- Einheitliche Kennzahlen-Kacheln in Analyse und Lager auf Basis der vier Sammlungs-Kacheln (goldene Oberkante, Typografie, Abstaende, mobile Spalten)
+- Analyse: feste Punchline "Das Wichtigste auf einen Blick." unabhaengig vom aktiven Reiter
+
+## 0.21.3 - 2026-11-14
+
+- Seitenheader und Inhaltsbreite vereinheitlicht; Hilfeseite besser lesbar und Einstellungen mit Untertitel
+
+## 0.21.2 - 2026-11-14
+
+- Analyse: Untertitel auf der Uebersichtsseite mit abschliessendem Punkt versehen
+- Hilfe: kurze Punchline statt einer langen Themenaufzaehlung; konkrete Einleitung im Seiteninhalt beibehalten
+
+## 0.21.1 - 2026-11-14
+
+- Hilfeseite: Einleitung durch konkrete Themen und Anwendungsbeispiele ersetzen
+
+## 0.21.0 - 2026-11-14
+
+- Landkarte: Umschalten zwischen Bestands- und Gesamtkatalog aktualisiert nur Marker, Legende und Zaehler und behaelt Kartenmittelpunkt sowie Zoom
+- Neue Hauptseite Hilfe (Deutsch/Englisch) mit Bedienhinweisen zu Sammlung, Blends, Lager, Landkarte, Fotos, Analysen, Backups und Datenhaltung
+- Lange Erklaertexte aus Raumplan, Regalwand, Fach- und Abfuellungsformularen, Einstellungen und Analyse entfernt; wichtige Sicherheitswarnungen bleiben sichtbar
+
 ## 0.20.1 - 2026-11-14
 
 - GitHub-Release-Upload der Offline-Docker-Archive ohne lokalen Git-Checkout reparieren; Repository fuer beide Upload-Schritte explizit setzen und Regressionstest ergaenzen

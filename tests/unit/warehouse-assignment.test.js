@@ -16,6 +16,12 @@ test('assignment dialog separates room, furniture and shelf with current path an
     const {warehouse,shelf} = fixture();
     const html = renderWarehouseAssignment(warehouse,warehouse.bottles[0]);
     assert.match(html,/class="warehouse-assignment-bottle"/);
+    assert.match(html, /class="warehouse-assignment-current"/);
+    assert.match(html, /Aktueller Lagerort/);
+    assert.match(html, /<strong>Whiskyzimmer \/ Regal &lt;1&gt; \/ Fach 1<\/strong>/);
+    assert.match(html, /<details class="warehouse-assignment-editor">/);
+    assert.doesNotMatch(html, /<details class="warehouse-assignment-editor"[^>]*open/);
+    assert.match(html, /<summary>Lagerort ändern<\/summary>/);
     assert.match(html,/data-assignment-room/);
     assert.match(html,/data-assignment-furniture/);
     assert.match(html,/data-assignment-shelf/);

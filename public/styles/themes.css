@@ -121,6 +121,12 @@
     background: #1b2936;
     border-color: var(--line);
 }
+/* Analysis filter bar must follow dark mode just like the collection toolbar.
+   Its light-mode beige background is intentionally retained in analytics.css. */
+:root[data-theme="dark"] .analytics-filters {
+    background: #1b2936;
+    border-color: var(--line);
+}
 :root[data-theme="dark"] input,
 :root[data-theme="dark"] select,
 :root[data-theme="dark"] textarea,

@@ -1741,3 +1741,308 @@ Die erfolgreiche Node-Testsuite ersetzt weder einen Chromium-Interaktionstest no
 - Anleitung: [OFFLINE_RELEASES.md](OFFLINE_RELEASES.md).
 
 **Offen:** GitHub-Actions-Release-Build und echte Wiederherstellung aus den dort erzeugten Offline-Artefakten; Pi- und Mobil-/Browser-Abnahme.
+
+---
+
+## Testbericht v0.20.1 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Die lokalen Quellcode- und Node-Pruefungen wurden nach der Workflow-Korrektur erfolgreich ausgefuehrt. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.20.1 konsistent. |
+| `npm run check` | **Bestanden** | 256 JavaScript-Dateien und 19 Markdown-Dateien, Sprachschluessel und relative Links geprueft. |
+| `npm test` | **469/469 bestanden** | Unit- und Integrationstests, einschliesslich neuem Regressionstest fuer die GitHub-Release-Uploads ohne Checkout. |
+| YAML-Syntax | **Bestanden** | `.github/workflows/release.yml` mit Ruby YAML-Parser geladen. |
+| `node --test tests/unit/offline-release.test.js tests/unit/release-workflow.test.js` | **15/15 bestanden** | Workflow-Abhaengigkeiten, explizite Repository-Auswahl, Offline-Bundle-Verifikation. |
+| GitHub Actions Release-Workflow | **Noch nicht ausgefuehrt** | Ob der Upload auf GitHub erfolgreich ist, muss nach Merge und neuem Release v0.20.1 bestaetigt werden. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | UI- und WebGL-Verhalten wurde nicht veraendert. |
+| Docker-Archiv-Erstellung und ARM64-/AMD64-Import | **Nicht lokal ausgefuehrt** | Keine lokale Docker Engine; Build und Upload in GitHub Actions offen. |
+
+### Aenderungen v0.20.1
+
+- Der `docker-offline`-Job besitzt bewusst keinen Checkout; `gh release upload` konnte deshalb das Repository nicht aus `.git` ermitteln.
+- Beide Asset-Upload-Schritte uebergeben `--repo "$GITHUB_REPOSITORY"`, sodass das Repository unabhaengig vom Arbeitsverzeichnis eindeutig feststeht.
+- Regressionstest sichert die explizite Repository-Angabe fuer beide Upload-Schritte ab.
+
+**Offen:** Vollstaendigen GitHub-Actions-Lauf und erfolgreiche Veroeffentlichung der Offline-Archive beobachten. Ein erneuter Lauf des alten v0.20.0-Workflows enthaelt diese Aenderung noch nicht.
+
+---
+
+## Testbericht v0.21.0 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Ergebnisse fuer v0.21.0; historische Testberichte stehen in [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version 0.21.0 und Release-Metadaten konsistent. |
+| `npm run check` | **Bestanden** | 258 JavaScript-Dateien, Sprachschluessel beider Sprachen und 19 Markdown-Dateien inklusive relativer Links geprueft. |
+| `npm test` | **473/473 bestanden** | Unit- und Integrationstests, darunter neue Help-Routing-, Inhalts- und Karten-Regressionstests. |
+| Gezielter Chromium-DOM-Test | **Bestanden** | Hilfeseite mit 8 Bereichen; Kartenmittelpunkt und Zoom nach Ein-/Ausschalten des Gesamtkatalogs identisch; keine JavaScript-Fehler. |
+| Chromium-DOM bei 375 px | **Bestanden** | Hilfeseite ohne horizontales Ueberlaufen (375 px Dokument / 375 px Viewport). |
+| `npm run test:browser` (komplette Suite) | **Nicht lokal ausgeführt** | `playwright-core` ist hier nicht installiert. Der direkte Chromium-Aufruf der App wird von der Umgebung blockiert (`ERR_BLOCKED_BY_ADMINISTRATOR`). Der gezielte DOM-Test verwendete deshalb abgefangene lokale Requests. |
+| Docker / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.21.0
+
+- Landkarten-Schalter zeigt oder verbirgt Katalog-Destillerien ohne Kamera-Reset; Legende, Sidebar und Zaehler aktualisieren sich.
+- Neue Hilfe-Hauptseite (Deutsch/Englisch) mit direkt verlinkten Themenbereichen zu Sammlung, Destillerien, Lagerung, Karte, Fotos, Analyse, Backups und Datenhaltung.
+- Erklaertexte von Arbeitsseiten und Formularen entfernt. Bestaetigungen und wichtige Sicherungswarnungen bleiben direkt an der Aktion.
+
+**Offen:** Gesamte Browser-Suite in GitHub Actions, weitere Geraete/Browser und Docker-Betrieb.
+
+---
+
+## Testbericht v0.21.1 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Ergebnisse fuer v0.21.1; fruehere Testberichte stehen in [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version 0.21.1 und Release-Metadaten konsistent. |
+| `npm run check` | **Bestanden** | 258 JavaScript-Dateien, Sprachschluessel in Deutsch/Englisch, 19 Markdown-Dateien und 132 relative Links geprueft. |
+| `npm test` | **473/473 bestanden** | Unit- und Integrationstests inklusive aktualisiertem Regressionstest fuer die konkrete Einleitung der Hilfeseite. |
+| `npm run test:browser` | **Nicht lokal ausgefuehrt** | Reine Textaenderung der Hilfe-Einleitung; keine neue Browserpruefung fuer diese Version. |
+| Docker / ARM64-Live-Test | **Nicht ausgefuehrt** | Keine Aenderung an Server, Docker oder Betriebsablauf. |
+
+### Aenderungen v0.21.1
+
+- Einleitung der Hilfeseite nennt konkrete Hilfethemen und typische Aufgaben statt allgemeiner Aussagen; deutsche und englische Texte angepasst.
+- Regressionstest fuer die Hilfeseiten-Einleitung ergaenzt.
+
+**Offen:** Vollstaendige Browser-Suite in GitHub Actions sowie Prüfungen auf weiteren Geraeten und im Docker-Betrieb.
+
+---
+
+## Testbericht v0.21.2 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Ergebnisse fuer v0.21.2; fruehere Testberichte stehen in [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version 0.21.2 und Release-Metadaten konsistent. |
+| `npm run check` | **Bestanden** | 258 JavaScript-Dateien, Sprachschluessel in Deutsch/Englisch und relative Dokumentationslinks geprueft. |
+| `npm test` | **474/474 bestanden** | Unit- und Integrationstests einschliesslich Regressionstests fuer den Analyse-Untertitel und die kurze Hilfeseiten-Einleitung. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Text- und Layoutanpassung an der Hilfeseite; Browser-Pruefung dieser Version nicht ausgefuehrt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Keine Aenderung an Server, Docker oder Deployment. |
+
+### Aenderungen v0.21.2
+
+- Satzpunkt beim Analyse-Untertitel in Deutsch und Englisch ergaenzt.
+- Regressionstest fuer beide Uebersetzungen hinzugefuegt.
+- Hilfeseite: kurze Punchline und bisherige ausfuehrliche Erklaerung in den Seiteninhalt verschoben; Regressionstest angepasst.
+
+**Offen:** Vollstaendige Browser-Suite in GitHub Actions und weitere Geraete-/Docker-Pruefungen.
+
+---
+
+## Testbericht v0.21.3 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Die Node-Pruefungen wurden nach Abschluss der Aenderungen erfolgreich ausgefuehrt. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten konsistent auf v0.21.3. |
+| `npm run check` | **Bestanden** | 258 JavaScript-Dateien, Uebersetzungen und 19 Markdown-Dateien geprueft. |
+| `npm test` | **474/474 bestanden** | Unit- und Integrationstests, einschliesslich neuer Regressionstests fuer gemeinsame Seitenheader, Breiten und Einstellungen-Punchline. |
+| `npm run test:browser` | **Nicht lokal ausgefuehrt** | Keine vollstaendige visuelle Browser-Abnahme dieser Version; in GitHub Actions nachholen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Nicht von diesen UI-Anpassungen betroffen. |
+
+### Aenderungen v0.21.3
+
+- Sammlung, Analyse, Lager, Landkarte, Einstellungen und Hilfe verwenden das gleiche Headerlayout und dessen Typografie; das Sammlung-Headerbild bleibt erhalten.
+- Hilfe nutzt die volle Inhaltsbreite. Die ausfuehrliche Einleitung wird unter dem Kopf als kompakter Fliesstext angezeigt.
+- Einstellungsseite um eine deutsche und englische Punchline ergaenzt; zusaetzliche obere Abstaende in Analyse, Lager, Landkarte und Einstellungen entfernt.
+- Bestehende Abstands-/Header-Tests aktualisiert und neue Regressionstests hinzugefuegt.
+
+**Offen:** Vollstaendige Browser-Suite, visuelle Pruefung unterschiedlicher Displaybreiten und Pi-Docker-Betrieb.
+
+---
+
+## Testbericht v0.21.4 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Node-Pruefungen erfolgreich durchgefuehrt. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent auf v0.21.4. |
+| `npm run check` | **Bestanden** | 258 JavaScript-Dateien, Uebersetzungen und 19 Markdown-Dateien einschliesslich Links geprueft. |
+| `npm test` | **478/478 bestanden** | Unit- und Integrationstests, einschliesslich der UI-Regressionstests fuer einheitliche Kennzahlen-Kacheln, Hilfereiter und die feste Analyse-Punchline. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Browser-Suite nicht in dieser Umgebung ausgefuehrt; visuelle Abnahme in GitHub Actions nachholen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Nicht von dieser Text-/CSS-Aenderung betroffen. |
+
+### Aenderungen v0.21.4
+
+- Hilfe mit horizontalen Reitern und einem sichtbaren Themenbereich, einschliesslich Tastaturbedienung.
+- Einleitungs- und Startseitentexte in ihrer urspruenglichen Form beibehalten; lange Hilfebeschreibung nur innerhalb des ersten Hilfereiters anzeigen.
+- Sammlung als verbindliche Designreferenz: Analyse- und Lagerkennzahlen nutzen dieselben Kachelklassen, goldene Oberkante, Abstaende, Typografie und mobilen Spalten wie die Sammlung.
+- Analyse-Punchline auf allen Reitern dauerhaft "Das Wichtigste auf einen Blick." (beziehungsweise englische Uebersetzung) setzen.
+- Regressionstests fuer alle Analyse-Reiter und die gemeinsamen Kennzahlen-Stile ergaenzen.
+
+**Offen:** Vollstaendiger Browser-Testlauf und visuelle Abnahme von Desktop- und Mobilansichten.
+
+---
+
+## Testbericht v0.22.0 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Tests und gezielte Chromium-DOM-Pruefungen bestanden. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version 0.22.0 mit README, Lockfile und Changelog abgeglichen. |
+| `npm run check` | **Bestanden** | Syntax, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **481/481 bestanden** | Node-Tests einschliesslich Navigation und Text-/Filterlayout. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Vollstaendige Browser-Suite bleibt in GitHub Actions zu pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Erneut nach dem Release auf dem Zielsystem pruefen. |
+
+### Gezielt lokal geprueft
+
+- Chromium-DOM-Modus: **5 von 5 Browser-Tests bestanden**. Untersucht wurden Analyse-Uebersicht, Deep Links und Filter, mobile Analyse mit Datumsfeldern, Hilfe direkt ueber Navigation, gemeinsame Seitennavigation und neues responsives Layout bei 390/1040/1440 px.
+- In Headless Chromium zusaetzlich Screenshots bei 390/1040/1440 px erstellt und untersucht: keine horizontalen Ueberlaeufe, einzeilige Seitennavigation bei 1440 px, bewusst getrennte zwei Saetze im Startseiten-Hero bei Desktopbreite, geordnetes Filterraster.
+- Browser-Live-Navigation statt DOM-Modus, andere Browserengines sowie der komplette CI-Lauf sind damit **nicht** als bestanden nachgewiesen.
+
+### Aenderungen v0.22.0
+
+- Hilfe und Analyse teilen sich die neue linke Bereichsnavigation auf Desktopbreiten und den mobilen Auswahlwaehler.
+- Der aktive Bereich wird mit einer geraden Goldlinie statt einer runden Hervorhebung markiert.
+- Hilfeinhalt mit nummerierten Textabschnitten, die nicht durch unruhige Listen oder zu schmale Spalten zerteilt werden.
+- Sammlung und Analyse mit responsiven Filterbereichen ohne ungewollte isolierte Zeilen; Hero-Text der Sammlung bleibt wortgleich.
+
+---
+
+## Testbericht v0.23.0 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node- und gezielte Chromium-DOM-Pruefungen bestanden. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version v0.23.0 und Release-Metadaten synchron. |
+| `npm run check` | **Bestanden** | JavaScript-Syntax, Imports, i18n und Dokumentationslinks. |
+| `npm test` | **482/482 bestanden** | Alle Unit- und Integrationstests bestanden, einschliesslich iOS-Icon-Dateien und Lagerort-Darstellung. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Vollstaendige Browsersuite offen; 5/5 gezielte Chromium-DOM-Tests bestanden (Lagerortmodal, Hilfenavigation, Analyse/Filter, Einstellungen und Lager). |
+| iOS Safari / PWA auf echtem iPhone | **Nicht lokal ausgeführt** | Icon-Datei und Apple-Touch-Verweis geprueft, aber echtes Hinzufuegen zum Home-Bildschirm nicht getestet; iOS kann bereits installierte Icons zwischenspeichern. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem beziehungsweise im GitHub-Release pruefen. |
+
+### Aenderungen v0.23.0
+
+- Vereinheitlichte, auf der Sammlungsseite basierende Seitenstruktur mit linker Navigation fuer Analyse, Hilfe, Einstellungen und Lager; mobil ein Bereichswaehler. Einstellungen behalten ungespeicherte Formularwerte beim Bereichswechsel.
+- Hilfe als ruhiger Analyse-Inhaltsbereich ohne Kachelrahmen; mehr Abstand zum Seitenheader.
+- Verbesserte Anordnung des virtuell nicht zugeordneten Flaschenregals und der Filter. Startseitenbeschreibung unveraendert; Umbrueche gestalterisch begrenzt.
+- Quadratisches, deckendes Apple-Touch-Icon mit dem App-Logo statt Platzhalterbuchstabe; iOS-Safari-Hardwarepruefung offen.
+- Modal **Lagerort** mit hervorgehobener aktueller Zuordnung und standardmaessig geschlossenem Bereich **Lagerort aendern**; Bearbeiten und Speichern erst nach dem Aufklappen moeglich.
+
+---
+
+## Testbericht v0.23.1 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Tests und gezielte Chromium-DOM-Pruefungen bestanden. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Version v0.23.1 und Metadaten synchron. |
+| `npm run check` | **Bestanden** | Syntax, Module, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **483/483 bestanden** | Vollstaendige Node-Unit- und Integrationstests, inklusive der angepassten UI-Regressionstests. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Die komplette Browsersuite bleibt offen. 3 gezielte Chromium-DOM-Tests zu Hero-Umbruechen, Einstellungs-Liste und responsivem Layout bestanden. |
+| iOS Safari / PWA auf echtem iPhone | **Nicht lokal ausgeführt** | Icon-Abnahme aus v0.23.0 ist weiterhin offen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Weiterhin auf Zielsystem beziehungsweise in GitHub Actions zu pruefen. |
+
+### Aenderungen v0.23.1
+
+- Lange Einblendung zur virtuellen Ablage **Nicht zugeordnet** entfernt; Suche und paginierte Flaschenkarten bleiben unveraendert verfuegbar.
+- Die beiden originalen Saetze der Startseitenbeschreibung stehen ab Desktopbreite jeweils auf einer vollstaendigen Zeile. Kein Text wurde umformuliert.
+- **Einstellungen / Destillerien**: doppelten Bereichstitel entfernt, Suchfeld, Trefferzahl und Hinzufuegen-Aktion zusammengefuehrt. Die komplette Destillerienliste scrollt mit der Seite statt in einem eigenen kleinen Fenster.
+- Einstellungsinhalte werden ohne zusaetzliche hochgestellte Aussenkacheln angezeigt; bestehende Formulare, Backup-Dialoge, Filter und modale Aktionen bleiben erhalten.
+
+---
+
+## Testbericht v0.23.2 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node- und gezielte Chromium-DOM-Pruefungen bestanden. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | v0.23.2 und Release-Metadaten synchron. |
+| `npm run check` | **Bestanden** | Syntax, Importgraph, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **484/484 bestanden** | Vollstaendige Node-Unit- und Integrationstests, einschliesslich gemeinsamer Designregel. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Komplette Browsersuite offen. Vier gezielte Chromium-DOM-Tests zu Seitenlayout, Menuebreiten, Einstellungen und einzeiligem Hero-Text bestanden. |
+| iOS Safari / PWA auf echtem iPhone | **Nicht lokal ausgeführt** | Favicon in Chromium per Code geprueft; Apple-Icon auf echtem Geraet separat pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Weiterhin auf Zielsystem oder in GitHub Actions zu pruefen. |
+
+### Aenderungen v0.23.2
+
+- Ganze originale Startseitenbeschreibung ab 741 px auf einer Zeile; keine Textkuerzung, kein horizontaler Ueberlauf in den getesteten Desktopgroessen.
+- Ablage-Suchfeld nach unten verlegt, sichtbares Label entfaellt; beschreibender Placeholder und zugaengliches `aria-label` vorhanden.
+- Einstellungsbereiche wie Analyse-Panels mit weiss hinterlegten, eckigen Rahmen; weitere Informationsbloecke seitenuebergreifend an der Sammlungsseite ausgerichtet.
+- Eigene Menuebreiten je Seite und Tablet-Auswahl fuer die laengeren Hilfethemen. Goldene Aktivlinie bleibt unveraendert.
+- Browser-Tab-Favicon transparent mit goldenem Motiv; iOS-Home-Screen-Icon bleibt deckend.
+
+---
+
+## Testbericht v0.23.3 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** gezielte Pruefungen bestanden. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten v0.23.3 konsistent. |
+| `npm run check` | **Bestanden** | 262 JavaScript-Dateien, 1004 Referenzschluessel, 19 Markdown-Dateien. |
+| `npm test` | **485/485 bestanden** | Alle Node-Unit- und Integrationstests. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Vollstaendige Browser-Suite bleibt fuer GitHub Actions offen. |
+| Gezielte Chromium-DOM-Tests | **3/3 bestanden** | Lager-Footer-Suche inkl. Fokus; Einstellungen-Abstaende; rechtsseitiges Hilfe-Panel bei 1440 und 390 px sowie Themenwechsel. |
+| Browser-Sichtpruefung Hilfe | **Bestanden** | Reale CSS-Darstellung bei 1440 und 390 px: eckiges, weisses Panel unter Themenueberschrift; linke Navigation unveraendert; kein horizontaler Ueberlauf. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach dem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.23.3
+
+- Lager-Ablage: Suche exakt zwischen Flaschenzaehler und Seitennavigation in derselben Footer-Zeile; Suchfokus bleibt beim Filtern erhalten.
+- Allgemeine Einstellungen: einheitlicher Abstand zwischen Bereichsueberschrift und Panel.
+- Raumkopf: eckiger Rahmen.
+- Hilfe: freigegebene Darstellung **nur rechts** als weisses, eckiges Analyse-Panel. Themenueberschrift ausserhalb des Panels; linke Navigation und Hilfetexte bleiben unveraendert.
+
+Die lokale volle Chromium-HTTP-Suite, reale Geraeteabnahme und ARM64-Live-Tests wurden nicht ausgefuehrt.
+
+---
+
+## Testbericht v0.23.4 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** gezielte Pruefungen bestanden. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten v0.23.4 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Uebersetzungen und Dokumentation geprueft. |
+| `npm test` | **486/486 bestanden** | Alle Node-Unit- und Integrationstests, inklusive neuer Darkmode-Regression. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Vollstaendige Browser-Suite bleibt fuer GitHub Actions offen. |
+| Gezielter Chromium-DOM-Test | **Bestanden** | Analyse-Filterfarben im Lightmode (rgb 236/233/225) und Darkmode (rgb 27/41/54), passende dunkle Umrandung sowie die vier Auswahlfelder geprueft. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach dem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.23.4
+
+- Analyse: Die Filterleiste behaelt ihre beige Lightmode-Farbe, verwendet im Darkmode jedoch denselben dunklen Hintergrund wie die Sammlung-Toolbar und die thematische Rahmenfarbe.
+- Regressionstest stellt sicher, dass die explizite Darkmode-Regel erhalten bleibt.
+
+Die lokale volle Chromium-HTTP-Suite, reale Geraeteabnahme und ARM64-Live-Tests wurden nicht ausgefuehrt.

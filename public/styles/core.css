@@ -299,7 +299,7 @@ main {
     font-weight: 400;
 }
 .hero-content>p {
-    max-width: 465px;
+    max-width: 400px;
     font-size: 14px;
     line-height: 1.85;
     color: #dbe2e9;
@@ -1346,3 +1346,57 @@ tr.clickable:hover {
     .dialog:has(.photo-lightbox) { padding: 10px; }
     .photo-lightbox-image { max-height: calc(94dvh - 165px); padding: 5px; }
 }
+
+/* Help, Analytics and Storage share a full-width header; Help and Analytics use the shared section workspace. */
+.page-heading-copy { flex: 1 1 auto; min-width: 0; }
+.page-heading-copy > .intro,
+.page-heading-copy > .muted { max-width: 72ch; }
+.help-page { width: 100%; margin: 0; padding-bottom: 36px; }
+.help-heading { margin-bottom: 12px; }
+.help-description { margin: 0 0 18px; line-height: 1.6; font-size: 14px; }
+.help-section { min-width: 0; }
+.help-section[hidden] { display: none; }
+.help-section h3 { margin: 0 0 14px; }
+
+/* Help reads like an analytics section, not a second set of cards. */
+.help-section { padding: 0; margin: 0; background: transparent; border: 0; box-shadow: none; }
+.help-section .analytics-section-title { margin: 0 0 18px; }
+/* Approved right-hand layout: the heading remains outside; only help content
+   sits in the same flat, square-edged panel as an analytics block. */
+.help-content-panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--surface-corner, 0); padding: 22px 26px; box-shadow: none; }
+.help-content-panel .help-description { font-size: 14px; line-height: 1.6; margin: 0 0 18px; max-width: 100%; text-wrap: pretty; }
+.help-steps { list-style: none; counter-reset: help-step; padding: 0; margin: 0; }
+.help-steps li { counter-increment: help-step; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 16px; align-items: baseline; padding: 14px 0; line-height: 1.65; border-top: 1px solid var(--line); overflow-wrap: normal; }
+.help-steps li::before { content: counter(help-step, decimal-leading-zero); color: #a57b45; font-size: 11px; font-weight: 700; letter-spacing: .05em; }
+.help-steps li:last-child { padding-bottom: 0; }
+@media(max-width:740px) {
+    .help-content-panel { padding: 16px; }
+    .help-steps li { gap: 11px; padding: 15px 0; }
+}
+
+
+/* The COMPLETE original hero description occupies one uninterrupted line
+   on desktop. The heading still sits at the left; the copy can use the full
+   banner width instead of being constrained by the heading's text column.
+   On narrow phones the normal responsive paragraph wraps naturally. */
+@media (min-width: 741px) {
+    .collection-hero .hero-content { width: 100%; max-width: none; }
+    .collection-hero .hero-description {
+        max-width: none;
+        white-space: nowrap;
+        font-size: clamp(10px, 1.15vw, 15px);
+        letter-spacing: -.15px;
+    }
+}
+
+/* Collection quick filters keep regular, intentional rows at every width. */
+.collection-filters { display: grid; grid-template-columns: minmax(220px, 2.2fr) repeat(5, minmax(105px, 1fr)) auto; align-items: center; }
+.collection-filters input[type="search"],
+.collection-filters select,
+.collection-filters [data-act="toggle-view"] { box-sizing: border-box; width: 100%; min-width: 0; max-width: none; flex: initial; }
+@media(max-width:1200px) {
+    .collection-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .collection-filters input[type="search"] { grid-column: 1 / -1; }
+}
+@media(max-width:520px) { .collection-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media(max-width:340px) { .collection-filters { grid-template-columns: minmax(0, 1fr); } }

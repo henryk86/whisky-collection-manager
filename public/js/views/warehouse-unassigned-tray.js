@@ -19,7 +19,8 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [], {query = '
     return `<div class="warehouse-unassigned-results" aria-live="polite">
         <div class="warehouse-unassigned-grid">${cards || `<p class="hint warehouse-unassigned-empty">${t(empty)}</p>`}</div>
         <div class="warehouse-unassigned-pagination">
-            <span>${t('warehouse.wall.unassignedShown',{shown:data.filtered,total:data.total})}</span>
+            <span class="warehouse-unassigned-page-summary">${t('warehouse.wall.unassignedShown',{shown:data.filtered,total:data.total})}</span>
+            <input type="search" id="warehouse-unassigned-wall-search" class="warehouse-unassigned-page-search" value="${safe(query)}" placeholder="${safe(t('warehouse.wall.unassignedSearchPlaceholder'))}" aria-label="${safe(t('warehouse.wall.unassignedSearch'))}" autocomplete="off">
             <div class="warehouse-unassigned-page-controls">
                 <button type="button" class="btn small" data-act="warehouse-unassigned-prev" ${data.page === 1 ? 'disabled' : ''}>${t('home.pagination.previous')}</button>
                 <span>${t('home.pagination.pageOf',{page:data.page,total:data.pages})}</span>
@@ -33,12 +34,6 @@ export function renderUnassignedTray(warehouse, selectedIds = [], options = {}) 
     const total = unassignedWallPage(warehouse).total;
     const label = safe(t('warehouse.wall.unassignedTitle',{count:total}));
     const content = `<div class="warehouse-unassigned-content">
-            <div class="warehouse-unassigned-head">
-                <p>${t('warehouse.wall.unassignedHint')}</p>
-                <label class="warehouse-unassigned-search-label">${t('warehouse.wall.unassignedSearch')}
-                    <input type="search" id="warehouse-unassigned-wall-search" value="${safe(options.query || '')}" placeholder="${safe(t('warehouse.wall.unassignedSearchPlaceholder'))}" autocomplete="off">
-                </label>
-            </div>
             ${renderUnassignedTrayPage(warehouse, selectedIds, options)}
         </div>`;
     // Inside a room wall, the staging tray shares the selection toolbar's

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { createHomeView } from '../../public/js/views/home.js';
 
 const createBottlings = count => Array.from({ length: count }, (_, index) => ({
@@ -60,4 +61,20 @@ test('changing the viewport does not change page content or multiply the chosen 
             else globalThis[key] = value;
         }
     }
+});
+
+test('home hero preserves the established descriptive copy without hard-coded line breaks', () => {
+    const de = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
+    const en = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
+    assert.equal(de['home.hero.description'], 'Von der besonderen Abfüllung bis zum letzten Dram. Entdecke, erfasse und verwalte deine Whisky-Sammlung.');
+    assert.equal(en['home.hero.description'], 'From a special bottling to the last dram. Discover, document and manage your whisky collection.');
+    for (const catalog of [de, en]) {
+        assert.doesNotMatch(catalog['home.hero.description'], /\n|<br\s*\/?\s*>/i);
+    }
+    const source = fs.readFileSync('public/js/views/home.js', 'utf8');
+    assert.match(source, /const heroCopy = escapeHtml\(t\('home.hero.description'\)\)/);
+    assert.match(source, /<p class="hero-description">\$\{heroCopy\}<\/p>/);
+    assert.doesNotMatch(source, /hero-description-sentence/);
+    const styles = fs.readFileSync('public/styles/core.css', 'utf8');
+    assert.match(styles, /\.collection-hero \.hero-description\s*\{[^}]*white-space:\s*nowrap;/s);
 });

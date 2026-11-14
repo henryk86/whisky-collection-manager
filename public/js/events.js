@@ -5,6 +5,8 @@ import { toast } from './ui/notifications.js';
 import { movePhoto } from './features/photo-order.js';
 import { routeUrl } from './navigation/routes.js';
 import { readAnalyticsDate } from './domain/analytics-period.js';
+import { activateHelpTopic } from './views/help.js';
+import { activateSettingsSection } from './views/settings.js';
 /** One delegated click handler; HTML data-act values are the UI action names. */
 export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView }) {
     const suggestNumber = async (fieldName) => {
@@ -39,10 +41,15 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'close-menu': () => setMenu(false),
         'goto-home': () => navigate('home'),
         'goto-map': () => navigate('map'),
+        'goto-help': () => navigate('help'),
+        'help-tab': button => activateHelpTopic(button.dataset.helpTopic, button.closest('.help-page')),
         'bottling-map': () => navigate('map', state.selected),
         'goto-analysis': () => navigate('analytics', 'overview'),
         'goto-warehouse': () => navigate('warehouse', 'overview'),
         'warehouse-section': button => navigate('warehouse', button.dataset.section),
+        'settings-section': button => {
+            if (activateSettingsSection(button.dataset.settingsSection,button.closest('.settings-page'))) state.settingsSection = button.dataset.settingsSection;
+        },
         'warehouse-plan-mode': button => {state.warehousePlanMode = ['2d','3d'].includes(button.dataset.mode) ? button.dataset.mode : '2d'; render();},
         'warehouse-camera': button => { if (['nw','ne','se','sw'].includes(button.dataset.corner)) {state.warehousePlanCorner = button.dataset.corner; render();} },
         'warehouse-visibility-toggle': button => warehouseView.toggleFurnitureVisibility(button.dataset.id),
@@ -289,6 +296,22 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
     });
     root.addEventListener('change', event => {
         if (event.target.id === 'ui-language') { chooseLanguage(event.target.value); return; }
+        if (event.target.dataset.sectionSwitch === 'analytics') {
+            navigate('analytics', event.target.value);
+            return;
+        }
+        if (event.target.dataset.sectionSwitch === 'warehouse') {
+            navigate('warehouse', event.target.value);
+            return;
+        }
+        if (event.target.dataset.sectionSwitch === 'settings') {
+            if (activateSettingsSection(event.target.value,event.target.closest('.settings-page'))) state.settingsSection = event.target.value;
+            return;
+        }
+        if (event.target.dataset.sectionSwitch === 'help') {
+            activateHelpTopic(event.target.value, event.target.closest('.help-page'));
+            return;
+        }
         if (event.target.name === 'type' && event.target.closest?.('#warehouse-form')?.dataset.newFurniture === 'true') {
             const form = event.target.closest('#warehouse-form');
             const bottom = form.querySelector('[name="elevation"]');
@@ -363,6 +386,23 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
     });
     document.addEventListener('keydown', event => {
+        // Sidebar buttons are native buttons: Tab and Enter/Space work without
+        // special handling. ArrowUp/Down and Home/End offer fast navigation.
+        if (event.target.matches?.('.section-nav-desktop .section-nav-item')) {
+            const items = [...event.target.closest('.section-nav-desktop').querySelectorAll('.section-nav-item')];
+            const current = items.indexOf(event.target);
+            let next = current;
+            if (event.key === 'ArrowDown') next = (current + 1) % items.length;
+            else if (event.key === 'ArrowUp') next = (current - 1 + items.length) % items.length;
+            else if (event.key === 'Home') next = 0;
+            else if (event.key === 'End') next = items.length - 1;
+            if (next !== current) {
+                event.preventDefault();
+                items[next].click();
+                document.querySelector(`.section-nav-desktop .section-nav-item:nth-child(${next + 1})`)?.focus();
+                return;
+            }
+        }
         if (event.key === 'Escape' && state.modal) {
             modal.closeModal();
         } else if (event.key === 'Escape' && document.getElementById('site-drawer')?.hidden === false) {

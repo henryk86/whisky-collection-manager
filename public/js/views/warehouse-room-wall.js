@@ -81,7 +81,6 @@ export function renderWarehouseRoomWall(room, warehouse, selectedBottleIds = [],
         return `<div class="warehouse-wall-stack${group.items.length > 1 ? ' warehouse-wall-stack--layered' : ''}${changeWall ? ' warehouse-wall-stack--new-direction' : ''}" data-facing="${group.orientation}" style="--wall-stack-width:${px(group.width)}px;--wall-stack-height:${px(group.height)}px">${furnitureHtml}</div>`;
     }).join('');
     return `<section class="warehouse-room-wall" aria-label="${safe(t('warehouse.wall.aria',{room:room.name}))}">
-        <p class="warehouse-wall-instructions">${t('warehouse.wall.instructions')}</p>
         <div class="warehouse-wall-controls">
             <div class="warehouse-bottle-bulk-tools" aria-label="${safe(t('warehouse.bottles.bulkTools'))}">
                 <span class="warehouse-bottle-selection-count" aria-live="polite">${safe(t('warehouse.bottles.bulkSelected',{count:selected.size}))}</span>

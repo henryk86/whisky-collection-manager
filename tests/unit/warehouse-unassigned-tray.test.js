@@ -92,3 +92,18 @@ test('wall combines unassigned disclosure and selected-bottle actions into one c
     assert.equal((html.match(/data-act="warehouse-bottles-assign-selected"/g)||[]).length,1);
     assert.match(html,/data-unassigned-id="b1"/);
 });
+
+
+test('search is inline between bottle count and pager, and the input value survives pagination', () => {
+    const warehouse=inventory(50);
+    const html=renderUnassignedTrayPage(warehouse,[],{query:'Whisky 00',page:2});
+    const count=html.indexOf('class="warehouse-unassigned-page-summary"');
+    const search=html.indexOf('id="warehouse-unassigned-wall-search"');
+    const controls=html.indexOf('class="warehouse-unassigned-page-controls"');
+    assert.ok(count!==-1 && count<search && search<controls);
+    assert.match(html,/value="Whisky 00"/);
+    assert.doesNotMatch(html,/warehouse-unassigned-search-footer/);
+    const view=readFileSync(new URL('../../public/js/views/warehouse.js',import.meta.url),'utf8');
+    assert.match(view,/results\.querySelector\(selector\)\?\.replaceWith/);
+    assert.doesNotMatch(view,/results\.outerHTML = renderUnassignedTrayPage/);
+});
