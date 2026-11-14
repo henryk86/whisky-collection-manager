@@ -1,28 +1,24 @@
-# Teststatus - Whisky Collection Manager v0.20.0
+# Teststatus - Whisky Collection Manager v0.20.1
 
-**Stand:** 2026-11-14. Pruefungen der Quellcode-Aenderungen abgeschlossen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-14. Die lokalen Quellcode- und Node-Pruefungen wurden nach der Workflow-Korrektur erfolgreich ausgefuehrt. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Bestanden** | Versionsmetadaten auf v0.20.0 konsistent. |
-| `npm run check` | **Bestanden** | 256 JavaScript-Dateien, 1015 i18n-Referenzen und 19 Markdown-Dateien mit 129 relativen Links geprueft. |
-| `npm test` | **468/468 bestanden** | Unit- und Integrationstests, darunter 6 neue Offline-Release-Tests. |
-| `node --test tests/unit/offline-release.test.js` | **6/6 bestanden** | SHA-256-Versiegelung, fehlende/manipulierte Assets, Symlinkschutz, ausschliesslich lokale Installation und Release-Workflow-Verknuepfung. |
-| `sh -n deploy/save-offline-release.sh` und Kopiertest | **Bestanden** | SHA-256-Verifikation vor/nach Kopie, Wiederholung ohne Ueberschreiben und Ablehnung einer manipulierten Zieldatei. |
-| YAML-Syntax | **Bestanden** | Release-Workflow mit Ruby YAML-Parser geladen. |
-| `npm run test:browser` | **Nicht lokal ausgeführt** | Keine Browser-/WebGL-Abnahme fuer v0.20.0. |
-| Offline-Bundle mit echten npm-/ONNX-Dateien | **Nicht lokal ausfuehrbar** | Paketserver/Modellhosting nicht erreichbar. Vollstaendiger Neuinstallationstest mit `npm_config_offline=true` ist im Release-Workflow hinterlegt, aber noch nicht in GitHub Actions ausgefuehrt. |
-| Docker-Image-Export ARM64/AMD64 und `docker load` | **Nicht lokal ausfuehrbar** | Docker Engine in der Testumgebung nicht vorhanden; automatisierte Tests im GitHub-Release-Workflow hinterlegt, aber noch nicht ausgefuehrt. |
-| Raspberry-Pi-Live-Test und USB/NAS-Laufwerk | **Nicht ausgefuehrt** | Vor der produktiven Verwendung auf dem Zielsystem pruefen. |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.20.1 konsistent. |
+| `npm run check` | **Bestanden** | 256 JavaScript-Dateien und 19 Markdown-Dateien, Sprachschluessel und relative Links geprueft. |
+| `npm test` | **469/469 bestanden** | Unit- und Integrationstests, einschliesslich neuem Regressionstest fuer die GitHub-Release-Uploads ohne Checkout. |
+| YAML-Syntax | **Bestanden** | `.github/workflows/release.yml` mit Ruby YAML-Parser geladen. |
+| `node --test tests/unit/offline-release.test.js tests/unit/release-workflow.test.js` | **15/15 bestanden** | Workflow-Abhaengigkeiten, explizite Repository-Auswahl, Offline-Bundle-Verifikation. |
+| GitHub Actions Release-Workflow | **Noch nicht ausgefuehrt** | Ob der Upload auf GitHub erfolgreich ist, muss nach Merge und neuem Release v0.20.1 bestaetigt werden. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | UI- und WebGL-Verhalten wurde nicht veraendert. |
+| Docker-Archiv-Erstellung und ARM64-/AMD64-Import | **Nicht lokal ausgefuehrt** | Keine lokale Docker Engine; Build und Upload in GitHub Actions offen. |
 
-## Aenderungen v0.20.0
+## Aenderungen v0.20.1
 
-- GitHub-Releases erzeugen kuenftig ein Offline-Installations-ZIP mit allen npm-Abhaengigkeiten, KI-Modell, ONNX/WASM-Laufzeit, Lizenzen und SHA-256-Manifest.
-- Offline-Start validiert das Archiv, installiert fehlende Pakete mit `npm ci --offline` aus einer temporaeren Cache-Kopie und verzichtet auf Downloadversuche.
-- Separate ARM64- und AMD64-Docker-Archive mit `docker save` und Offline-Import-/Startpruefung im Release-Workflow.
-- Verifizierte, getrennte Archivierung der Release-Dateien auf USB/NAS-Zielen neben den verschluesselten Datenbackups.
-- Anleitung: [OFFLINE_RELEASES.md](OFFLINE_RELEASES.md).
+- Der `docker-offline`-Job besitzt bewusst keinen Checkout; `gh release upload` konnte deshalb das Repository nicht aus `.git` ermitteln.
+- Beide Asset-Upload-Schritte uebergeben `--repo "$GITHUB_REPOSITORY"`, sodass das Repository unabhaengig vom Arbeitsverzeichnis eindeutig feststeht.
+- Regressionstest sichert die explizite Repository-Angabe fuer beide Upload-Schritte ab.
 
-**Offen:** GitHub-Actions-Release-Build und echte Wiederherstellung aus den dort erzeugten Offline-Artefakten; Pi- und Mobil-/Browser-Abnahme.
+**Offen:** Vollstaendigen GitHub-Actions-Lauf und erfolgreiche Veroeffentlichung der Offline-Archive beobachten. Ein erneuter Lauf des alten v0.20.0-Workflows enthaelt diese Aenderung noch nicht.

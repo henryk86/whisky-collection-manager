@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.20.1 - 2026-11-14
+
+- GitHub-Release-Upload der Offline-Docker-Archive ohne lokalen Git-Checkout reparieren; Repository fuer beide Upload-Schritte explizit setzen und Regressionstest ergaenzen
+
 ## 0.20.0 - 2026-11-14
 
 - Offline-Release-Artefakte fuer npm, KI-Modelle und ARM64/AMD64-Docker-Images mit verifizierter Wiederherstellung

@@ -1,0 +1,187 @@
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index 6496998..59a7adf 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -157,7 +157,7 @@ jobs:
+         env:
+           GH_TOKEN: ${{ github.token }}
+           TAG: ${{ needs.prepare.outputs.tag }}
+-        run: gh release upload "$TAG" dist/*.zip dist/*.sha256 --clobber
++        run: gh release upload "$TAG" dist/*.zip dist/*.sha256 --clobber --repo "$GITHUB_REPOSITORY"
+ 
+   docker:
+     needs: prepare
+@@ -257,7 +257,9 @@ jobs:
+         env:
+           GH_TOKEN: ${{ github.token }}
+           TAG: ${{ needs.prepare.outputs.tag }}
+-        run: gh release upload "$TAG" dist/*.tar.gz dist/*.tar.gz.sha256 --clobber
++        # This job deliberately has no checkout, so gh cannot infer its
++        # repository from .git. Set it explicitly via the Actions environment.
++        run: gh release upload "$TAG" dist/*.tar.gz dist/*.tar.gz.sha256 --clobber --repo "$GITHUB_REPOSITORY"
+ 
+   publish:
+     # Promote `latest` only after source, offline package and both image archives succeed.
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 873ac97..d739845 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,9 @@
+ # Changelog
+ 
++## 0.20.1 - 2026-11-14
++
++- GitHub-Release-Upload der Offline-Docker-Archive ohne lokalen Git-Checkout reparieren; Repository fuer beide Upload-Schritte explizit setzen und Regressionstest ergaenzen
++
+ ## 0.20.0 - 2026-11-14
+ 
+ - Offline-Release-Artefakte fuer npm, KI-Modelle und ARM64/AMD64-Docker-Images mit verifizierter Wiederherstellung
+diff --git a/README.md b/README.md
+index de69ac4..2ff924e 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,4 @@
+-# Whisky Collection Manager v0.20.0
++# Whisky Collection Manager v0.20.1
+ 
+ Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der Abfüllung über einzelne physische Flaschen bis zum Lagerfach. Eine Abfüllung kann mehrere Flaschen mit eigenen Inventarnummern, Zuständen, Fotos und Belegen enthalten.
+ 
+diff --git a/docs/TESTHISTORIE.md b/docs/TESTHISTORIE.md
+index 6b0299e..5c0cfe3 100644
+--- a/docs/TESTHISTORIE.md
++++ b/docs/TESTHISTORIE.md
+@@ -1710,3 +1710,34 @@ Die erfolgreiche Node-Testsuite ersetzt weder einen Chromium-Interaktionstest no
+ - Leere Raeume erhalten weiterhin eine normale Loeschbestaetigung. Neue Regressionstests pruefen Schutzverhalten, UI, API und Persistenz.
+ 
+ **Offen:** Vollstaendige Browser-Suite, reale mobile Endgeraete und Raspberry-Pi-/Docker-Livebetrieb verifizieren.
++
++---
++
++## Testbericht v0.20.0 (vor dem naechsten Versionswechsel)
++
++**Stand:** 2026-11-14. Pruefungen der Quellcode-Aenderungen abgeschlossen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
++
++### Durchgefuehrte Pruefungen
++
++| Pruefung | Ergebnis | Einordnung |
++| --- | --- | --- |
++| `npm run release:check` | **Bestanden** | Versionsmetadaten auf v0.20.0 konsistent. |
++| `npm run check` | **Bestanden** | 256 JavaScript-Dateien, 1015 i18n-Referenzen und 19 Markdown-Dateien mit 129 relativen Links geprueft. |
++| `npm test` | **468/468 bestanden** | Unit- und Integrationstests, darunter 6 neue Offline-Release-Tests. |
++| `node --test tests/unit/offline-release.test.js` | **6/6 bestanden** | SHA-256-Versiegelung, fehlende/manipulierte Assets, Symlinkschutz, ausschliesslich lokale Installation und Release-Workflow-Verknuepfung. |
++| `sh -n deploy/save-offline-release.sh` und Kopiertest | **Bestanden** | SHA-256-Verifikation vor/nach Kopie, Wiederholung ohne Ueberschreiben und Ablehnung einer manipulierten Zieldatei. |
++| YAML-Syntax | **Bestanden** | Release-Workflow mit Ruby YAML-Parser geladen. |
++| `npm run test:browser` | **Nicht lokal ausgeführt** | Keine Browser-/WebGL-Abnahme fuer v0.20.0. |
++| Offline-Bundle mit echten npm-/ONNX-Dateien | **Nicht lokal ausfuehrbar** | Paketserver/Modellhosting nicht erreichbar. Vollstaendiger Neuinstallationstest mit `npm_config_offline=true` ist im Release-Workflow hinterlegt, aber noch nicht in GitHub Actions ausgefuehrt. |
++| Docker-Image-Export ARM64/AMD64 und `docker load` | **Nicht lokal ausfuehrbar** | Docker Engine in der Testumgebung nicht vorhanden; automatisierte Tests im GitHub-Release-Workflow hinterlegt, aber noch nicht ausgefuehrt. |
++| Raspberry-Pi-Live-Test und USB/NAS-Laufwerk | **Nicht ausgefuehrt** | Vor der produktiven Verwendung auf dem Zielsystem pruefen. |
++
++### Aenderungen v0.20.0
++
++- GitHub-Releases erzeugen kuenftig ein Offline-Installations-ZIP mit allen npm-Abhaengigkeiten, KI-Modell, ONNX/WASM-Laufzeit, Lizenzen und SHA-256-Manifest.
++- Offline-Start validiert das Archiv, installiert fehlende Pakete mit `npm ci --offline` aus einer temporaeren Cache-Kopie und verzichtet auf Downloadversuche.
++- Separate ARM64- und AMD64-Docker-Archive mit `docker save` und Offline-Import-/Startpruefung im Release-Workflow.
++- Verifizierte, getrennte Archivierung der Release-Dateien auf USB/NAS-Zielen neben den verschluesselten Datenbackups.
++- Anleitung: [OFFLINE_RELEASES.md](OFFLINE_RELEASES.md).
++
++**Offen:** GitHub-Actions-Release-Build und echte Wiederherstellung aus den dort erzeugten Offline-Artefakten; Pi- und Mobil-/Browser-Abnahme.
+diff --git a/docs/TESTSTATUS.md b/docs/TESTSTATUS.md
+index cfe9d5d..62e1479 100644
+--- a/docs/TESTSTATUS.md
++++ b/docs/TESTSTATUS.md
+@@ -1,28 +1,24 @@
+-# Teststatus - Whisky Collection Manager v0.20.0
++# Teststatus - Whisky Collection Manager v0.20.1
+ 
+-**Stand:** 2026-11-14. Pruefungen der Quellcode-Aenderungen abgeschlossen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
++**Stand:** 2026-11-14. Die lokalen Quellcode- und Node-Pruefungen wurden nach der Workflow-Korrektur erfolgreich ausgefuehrt. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+ 
+ ## Durchgefuehrte Pruefungen
+ 
+ | Pruefung | Ergebnis | Einordnung |
+ | --- | --- | --- |
+-| `npm run release:check` | **Bestanden** | Versionsmetadaten auf v0.20.0 konsistent. |
+-| `npm run check` | **Bestanden** | 256 JavaScript-Dateien, 1015 i18n-Referenzen und 19 Markdown-Dateien mit 129 relativen Links geprueft. |
+-| `npm test` | **468/468 bestanden** | Unit- und Integrationstests, darunter 6 neue Offline-Release-Tests. |
+-| `node --test tests/unit/offline-release.test.js` | **6/6 bestanden** | SHA-256-Versiegelung, fehlende/manipulierte Assets, Symlinkschutz, ausschliesslich lokale Installation und Release-Workflow-Verknuepfung. |
+-| `sh -n deploy/save-offline-release.sh` und Kopiertest | **Bestanden** | SHA-256-Verifikation vor/nach Kopie, Wiederholung ohne Ueberschreiben und Ablehnung einer manipulierten Zieldatei. |
+-| YAML-Syntax | **Bestanden** | Release-Workflow mit Ruby YAML-Parser geladen. |
+-| `npm run test:browser` | **Nicht lokal ausgeführt** | Keine Browser-/WebGL-Abnahme fuer v0.20.0. |
+-| Offline-Bundle mit echten npm-/ONNX-Dateien | **Nicht lokal ausfuehrbar** | Paketserver/Modellhosting nicht erreichbar. Vollstaendiger Neuinstallationstest mit `npm_config_offline=true` ist im Release-Workflow hinterlegt, aber noch nicht in GitHub Actions ausgefuehrt. |
+-| Docker-Image-Export ARM64/AMD64 und `docker load` | **Nicht lokal ausfuehrbar** | Docker Engine in der Testumgebung nicht vorhanden; automatisierte Tests im GitHub-Release-Workflow hinterlegt, aber noch nicht ausgefuehrt. |
+-| Raspberry-Pi-Live-Test und USB/NAS-Laufwerk | **Nicht ausgefuehrt** | Vor der produktiven Verwendung auf dem Zielsystem pruefen. |
++| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.20.1 konsistent. |
++| `npm run check` | **Bestanden** | 256 JavaScript-Dateien und 19 Markdown-Dateien, Sprachschluessel und relative Links geprueft. |
++| `npm test` | **469/469 bestanden** | Unit- und Integrationstests, einschliesslich neuem Regressionstest fuer die GitHub-Release-Uploads ohne Checkout. |
++| YAML-Syntax | **Bestanden** | `.github/workflows/release.yml` mit Ruby YAML-Parser geladen. |
++| `node --test tests/unit/offline-release.test.js tests/unit/release-workflow.test.js` | **15/15 bestanden** | Workflow-Abhaengigkeiten, explizite Repository-Auswahl, Offline-Bundle-Verifikation. |
++| GitHub Actions Release-Workflow | **Noch nicht ausgefuehrt** | Ob der Upload auf GitHub erfolgreich ist, muss nach Merge und neuem Release v0.20.1 bestaetigt werden. |
++| `npm run test:browser` | **Nicht lokal ausgeführt** | UI- und WebGL-Verhalten wurde nicht veraendert. |
++| Docker-Archiv-Erstellung und ARM64-/AMD64-Import | **Nicht lokal ausgefuehrt** | Keine lokale Docker Engine; Build und Upload in GitHub Actions offen. |
+ 
+-## Aenderungen v0.20.0
++## Aenderungen v0.20.1
+ 
+-- GitHub-Releases erzeugen kuenftig ein Offline-Installations-ZIP mit allen npm-Abhaengigkeiten, KI-Modell, ONNX/WASM-Laufzeit, Lizenzen und SHA-256-Manifest.
+-- Offline-Start validiert das Archiv, installiert fehlende Pakete mit `npm ci --offline` aus einer temporaeren Cache-Kopie und verzichtet auf Downloadversuche.
+-- Separate ARM64- und AMD64-Docker-Archive mit `docker save` und Offline-Import-/Startpruefung im Release-Workflow.
+-- Verifizierte, getrennte Archivierung der Release-Dateien auf USB/NAS-Zielen neben den verschluesselten Datenbackups.
+-- Anleitung: [OFFLINE_RELEASES.md](OFFLINE_RELEASES.md).
++- Der `docker-offline`-Job besitzt bewusst keinen Checkout; `gh release upload` konnte deshalb das Repository nicht aus `.git` ermitteln.
++- Beide Asset-Upload-Schritte uebergeben `--repo "$GITHUB_REPOSITORY"`, sodass das Repository unabhaengig vom Arbeitsverzeichnis eindeutig feststeht.
++- Regressionstest sichert die explizite Repository-Angabe fuer beide Upload-Schritte ab.
+ 
+-**Offen:** GitHub-Actions-Release-Build und echte Wiederherstellung aus den dort erzeugten Offline-Artefakten; Pi- und Mobil-/Browser-Abnahme.
++**Offen:** Vollstaendigen GitHub-Actions-Lauf und erfolgreiche Veroeffentlichung der Offline-Archive beobachten. Ein erneuter Lauf des alten v0.20.0-Workflows enthaelt diese Aenderung noch nicht.
+diff --git a/package-lock.json b/package-lock.json
+index 1adc106..cbf002f 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1,12 +1,12 @@
+ {
+   "name": "whisky-collection-manager",
+-  "version": "0.20.0",
++  "version": "0.20.1",
+   "lockfileVersion": 3,
+   "requires": true,
+   "packages": {
+     "": {
+       "name": "whisky-collection-manager",
+-      "version": "0.20.0",
++      "version": "0.20.1",
+       "license": "MIT",
+       "dependencies": {
+         "html5-qrcode": "2.3.8",
+diff --git a/package.json b/package.json
+index e72b449..b414a62 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "whisky-collection-manager",
+-  "version": "0.20.0",
++  "version": "0.20.1",
+   "private": true,
+   "description": "Lokale Whisky-Sammlungsverwaltung mit JSON-Datenspeicherung",
+   "type": "module",
+diff --git a/tests/unit/offline-release.test.js b/tests/unit/offline-release.test.js
+index b3b956c..63d5b66 100644
+--- a/tests/unit/offline-release.test.js
++++ b/tests/unit/offline-release.test.js
+@@ -115,3 +115,16 @@ test('offline release workflow archives source dependencies, validates restorati
+     assert.match(fs.readFileSync('.dockerignore','utf8'), /^\.offline$/m);
+     assert.match(fs.readFileSync('.gitignore','utf8'), /^\.offline\/$/m);
+ });
++
++
++test('GitHub Release uploads specify their repository without requiring checkout in the Docker archive job', () => {
++    const workflow = fs.readFileSync('.github/workflows/release.yml', 'utf8');
++    const uploads = workflow.match(/^\s*run: gh release upload .*$/gm) || [];
++    assert.equal(uploads.length, 2, 'source and Docker archive upload steps must both be checked');
++    for (const upload of uploads) {
++        assert.match(upload, /--repo "\$GITHUB_REPOSITORY"/, 'GitHub CLI must not infer the repository from a local .git directory');
++    }
++    const dockerOffline = workflow.split(/^  docker-offline:/m)[1]?.split(/^  publish:/m)[0];
++    assert.ok(dockerOffline, 'Docker offline job must exist');
++    assert.doesNotMatch(dockerOffline, /actions\/checkout@/, 'the archive job deliberately runs without a checkout');
++});
