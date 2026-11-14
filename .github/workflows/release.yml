@@ -157,7 +157,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.prepare.outputs.tag }}
-        run: gh release upload "$TAG" dist/*.zip dist/*.sha256 --clobber
+        run: gh release upload "$TAG" dist/*.zip dist/*.sha256 --clobber --repo "$GITHUB_REPOSITORY"
 
   docker:
     needs: prepare
@@ -257,7 +257,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.prepare.outputs.tag }}
-        run: gh release upload "$TAG" dist/*.tar.gz dist/*.tar.gz.sha256 --clobber
+        # This job deliberately has no checkout, so gh cannot infer its
+        # repository from .git. Set it explicitly via the Actions environment.
+        run: gh release upload "$TAG" dist/*.tar.gz dist/*.tar.gz.sha256 --clobber --repo "$GITHUB_REPOSITORY"
 
   publish:
     # Promote `latest` only after source, offline package and both image archives succeed.
