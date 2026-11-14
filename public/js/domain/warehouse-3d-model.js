@@ -34,6 +34,20 @@ export function furnitureFront(item) {
 }
 
 
+/** Resolve a hit in the 3D model to the actual stored compartment.
+ * Shelf heights may differ; free clearance above the last shelf is not a bay.
+ * A small tolerance includes the physical top/bottom board edges.
+ */
+export function shelfIdAtHeight(furniture, height) {
+    if (!furniture) return null;
+    const y = Number(height);
+    if (!Number.isFinite(y)) return null;
+    const levels = shelfLevels(furniture);
+    if (!levels.length || y < levels[0].bottom - 0.035 || y > levels.at(-1).top + 0.035) return null;
+    const level = levels.find(entry => y < entry.top) || levels.at(-1);
+    return level.shelf.capacity === 0 ? null : level.shelf.id;
+}
+
 /** Convert known warehouse furniture types into actual solid physical pieces.
  * All primitives occupy physical space: WebGL's depth buffer handles occlusion.
  */

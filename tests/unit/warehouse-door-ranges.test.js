@@ -33,7 +33,7 @@ test('furniture form exposes range configuration and zero-capacity shelves hide 
         const view=createWarehouseView({state:{warehouse,selected:'shelves',warehouseRoomId:'r',warehouseFurnitureId:'f'},shell:value=>html=value,navigate:()=>{},modal:{showModal:(_title,body)=>form=body},refresh:async()=>{}});
         view.render();
         assert.ok(!html.includes('0 / 0 Flaschen'));
-        assert.equal((html.match(/Fach ist leer/g)||[]).length,4);
+        assert.equal((html.match(/Fach ist leer/g)||[]).length,4,'the room wall renders four compartments once; edit controls live in a modal');
         view.openForm('furniture','f');
         assert.match(form,/warehouse-door-range-list/);
         assert.match(form,/door-range-from/);

@@ -48,10 +48,24 @@ function choices(name, label, options, chosen = '') {
 }
 function footer() { return `<div class="actions warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button><button type="submit" class="btn primary">${t("common.actions.save")}</button></div>`; }
 function bottleLabel(b) { return `${b.number ? '#'+b.number+' · ' : ''}${b.name}${b.volumeType==='sample'?' · Sample':''}`; }
-function bottleRow(w, bottle) {
-    const place = storagePath(w, w.assignments[bottle.id]);
-    return `<div class="warehouse-bottle-row" data-bottle-search="${safe((bottleLabel(bottle)+' '+(place?.label||'')).toLocaleLowerCase('de'))}"><div><strong>${safe(bottleLabel(bottle))}</strong><small>${place ? safe(place.label) : t("detail.fields.unassigned")}</small></div><button class="btn small" type="button" data-act="warehouse-assign" data-id="${safe(bottle.id)}">${place?t("warehouse.bottles.relocate"):t("warehouse.bottles.assignAction")}</button></div>`;
+/** Read-only bottling facts; missing values are never synthesized. */
+function bottleListFacts(bottle) {
+    const facts = [
+        ['forms.bottling.ageYears', bottle.ageYears == null || bottle.ageYears === '' ? null : t('home.facts.years', {count:bottle.ageYears})],
+        ['forms.bottling.releaseYear', bottle.releaseYear == null || bottle.releaseYear === '' ? null : bottle.releaseYear],
+        ['forms.bottling.caskType', bottle.caskType == null || String(bottle.caskType).trim() === '' ? null : bottle.caskType],
+    ];
+    return facts.filter(([,value]) => value !== null).map(([key,value]) =>
+        `<span class="warehouse-bottle-fact"><span class="warehouse-bottle-fact-label">${safe(t(key))}:</span> ${safe(value)}</span>`).join('');
 }
+function bottleRow(w, bottle, selected = false) {
+    const place = storagePath(w, w.assignments[bottle.id]);
+    const facts = bottleListFacts(bottle);
+    const searchable = [bottleLabel(bottle), place?.label, bottle.ageYears, bottle.releaseYear, bottle.caskType]
+        .filter(value => value != null).join(' ').toLocaleLowerCase('de');
+    return `<div class="warehouse-bottle-row" data-bottle-search="${safe(searchable)}"><label class="warehouse-bottle-row-select"><input type="checkbox" class="warehouse-bottle-check" data-id="${safe(bottle.id)}" aria-label="${safe(t('warehouse.bottles.bulkSelectOne',{name:bottle.name}))}" ${selected ? 'checked' : ''}></label><div class="warehouse-bottle-row-info"><strong>${safe(bottleLabel(bottle))}</strong><small>${place ? safe(place.label) : t("detail.fields.unassigned")}</small>${facts ? `<div class="warehouse-bottle-facts">${facts}</div>` : ''}</div><button class="btn small" type="button" data-act="warehouse-assign" data-id="${safe(bottle.id)}">${place?t("warehouse.bottles.relocate"):t("warehouse.bottles.assignAction")}</button></div>`;
+}
+
 function roomOptions(w, roomId) { return w.rooms.find(room => room.id === roomId); }
 function findFurniture(w, furnitureId) {
     for (const room of w.rooms) { const furniture = room.furniture.find(f => f.id === furnitureId); if (furniture) return {room,furniture}; }
@@ -88,12 +102,34 @@ function roomDiagram(room, w, layer = 'all') {
     }).join('');
     return `<div class="warehouse-map-wrap"><svg class="warehouse-floor" viewBox="0 0 ${vbW} ${vbH}" data-room-id="${safe(room.id)}" aria-label="${safe(t("warehouse.view.roomPlanAria",{name:room.name}))}"><rect class="warehouse-boundary" x="1" y="1" width="${vbW-2}" height="${vbH-2}" rx="2"/>${grid}${shapes}<text class="warehouse-room-hint" x="10" y="${vbH-9}">${t("warehouse.view.twoDimensionalInstructions")}</text></svg></div>`;
 }
-function bottleSymbol(b) {
-    const photo = b.photoPath ? `<img class="warehouse-bottle-photo" src="${safe(imageUrl(b.photoPath))}" alt="" loading="lazy">` : '';
-    return `<button type="button" class="warehouse-bottle-symbol" data-act="warehouse-bottle-preview" data-id="${safe(b.id)}" title="${safe(t("warehouse.bottles.openDetailsNamed",{name:bottleLabel(b)}))}" aria-label="${safe(t("warehouse.bottles.openDetailsNamed",{name:bottleLabel(b)}))}"><svg viewBox="0 0 24 60" aria-hidden="true"><rect x="8" y="2" width="8" height="12" rx="2"/><path d="M8 14 Q3 19 3 25V54Q3 58 7 58H17Q21 58 21 54V25Q21 19 16 14Z"/><rect class="warehouse-label" x="5" y="31" width="14" height="16" rx="1"/></svg>${photo}</button>`;
+function bottleSymbol(b, { selectable = false, selected = false, placeholderImage = false, staticImage = false } = {}) {
+    // Shelf detail cards reuse the same missing-photo icon as the collection overview.
+    // Small shelf/wall silhouettes remain unchanged so their layout is unaffected.
+    const showPlaceholder = placeholderImage && !b.photoPath;
+    const photo = b.photoPath ? `<img class="warehouse-bottle-photo" src="${safe(imageUrl(b.photoPath))}" alt="" loading="lazy">`
+        : showPlaceholder ? '<img class="warehouse-bottle-photo warehouse-bottle-placeholder" src="/assets/photo-placeholder.svg" alt="" aria-hidden="true">' : '';
+    // In the shelf content dialog the picture is decorative. Selection and
+    // relocation are intentionally handled outside this picture (actions below).
+    const content = `<svg viewBox="0 0 24 60" aria-hidden="true"><rect x="8" y="2" width="8" height="12" rx="2"/><path d="M8 14 Q3 19 3 25V54Q3 58 7 58H17Q21 58 21 54V25Q21 19 16 14Z"/><rect class="warehouse-label" x="5" y="31" width="14" height="16" rx="1"/></svg>${photo}`;
+    if (staticImage) {
+        return `<span class="warehouse-bottle-symbol warehouse-bottle-static${showPlaceholder ? ' has-photo' : ''}" aria-hidden="true">${content}</span>`;
+    }
+    const action = selectable ? 'warehouse-bottle-select' : 'warehouse-bottle-preview';
+    const selectLabel = t('warehouse.bottles.bulkSelectOne',{name:bottleLabel(b)});
+    const deselectLabel = t('warehouse.bottles.bulkDeselectOne',{name:bottleLabel(b)});
+    const accessible = selectable ? (selected ? deselectLabel : selectLabel)
+        : t('warehouse.bottles.openDetailsNamed',{name:bottleLabel(b)});
+    return `<button type="button" class="warehouse-bottle-symbol${showPlaceholder ? ' has-photo' : ''}" data-act="${action}" data-id="${safe(b.id)}" ${selectable ? `aria-pressed="${selected}" data-select-label="${safe(selectLabel)}" data-deselect-label="${safe(deselectLabel)}"` : ''} title="${safe(accessible)}" aria-label="${safe(accessible)}">${content}</button>`;
 }
-/** Read-only summary for a physical bottle. The separate detail link keeps the
- * actual bottling route (including its physical-bottle highlight) accessible. */
+/** Reused actions for the shelf cards and an unassigned bottle preview.
+ * The detail link retains the physical-bottle highlight on the destination page. */
+function bottleActionButtons(bottle, { detailLabelKey = 'warehouse.bottles.goToDetails' } = {}) {
+    const detailsLink = bottle.bottlingId
+        ? `<a class="btn primary" href="${safe(routeUrl('detail', bottle.bottlingId))}" data-act="open" data-id="${safe(bottle.bottlingId)}" data-bottle-id="${safe(bottle.id)}">${t(detailLabelKey)}</a>`
+        : '';
+    return `<button type="button" class="btn" data-act="warehouse-assign" data-id="${safe(bottle.id)}">${t('warehouse.bottles.relocate')}</button>${detailsLink}`;
+}
+/** Read-only summary for an unassigned bottle (a compartment has none to show). */
 function bottlePreview(w, bottle, bottling, physicalBottle) {
     const statusKey = {closed:'home.status.closed', open:'analytics.inventory.openedStatus', empty:'home.status.empty'}[bottle.status];
     const fields = [
@@ -103,6 +139,8 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
         [t('warehouse.bottles.volume'), bottle.volumeMl == null ? null : `${formatNumber(bottle.volumeMl)} ml`],
         [t('detail.fields.storageLocation'), storagePath(w, w.assignments[bottle.id])?.label || t('detail.fields.unassigned')],
         [t('forms.bottling.ageYears'), bottling?.ageYears == null ? null : t('home.facts.years', {count:bottling.ageYears})],
+        [t('forms.bottling.releaseYear'), bottling?.releaseYear ?? null],
+        [t('forms.bottling.caskType'), bottling?.caskType || null],
         [t('forms.bottling.abv'), bottling?.abv == null ? null : `${formatNumber(bottling.abv)} % Vol.`],
         [t('forms.bottle.purchaseDate'), physicalBottle?.purchaseDate],
         [t('forms.bottle.purchasePrice'), physicalBottle?.purchasePrice == null ? null : `${formatNumber(physicalBottle.purchasePrice)} ${physicalBottle.currency || 'EUR'}`],
@@ -112,9 +150,6 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
     const photo = bottle.photoPath
         ? `<img src="${safe(imageUrl(bottle.photoPath))}" alt="${safe(bottle.name)}">`
         : `<img src="/assets/photo-placeholder.svg" alt="" aria-hidden="true">`;
-    const detailsLink = bottle.bottlingId
-        ? `<a class="btn primary" href="${safe(routeUrl('detail', bottle.bottlingId))}" data-act="open" data-id="${safe(bottle.bottlingId)}" data-bottle-id="${safe(bottle.id)}">${t('warehouse.bottles.goToDetails')}</a>`
-        : '';
     return `<div class="warehouse-bottle-preview">
         <div class="warehouse-bottle-preview-photo">${photo}</div>
         <div class="warehouse-bottle-preview-info"><strong class="warehouse-bottle-preview-name">${safe(bottle.name)}</strong>
@@ -123,11 +158,10 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
         </div>
     </div>
     <div class="actions warehouse-bottle-preview-actions">
-        <button type="button" class="btn" data-act="warehouse-assign" data-id="${safe(bottle.id)}">${t('warehouse.bottles.relocate')}</button>
-        ${detailsLink}
+        ${bottleActionButtons(bottle, {detailLabelKey:'warehouse.bottles.goToBottleDetails'})}
     </div>`;
 }
-function shelfPanel(w, room, furniture) {
+function shelfPanel(w, room, furniture, { managementOnly = false } = {}) {
     const levels = shelfLevels(furniture);
     const shelves = levels.slice().reverse().map(level => {
         const shelf=level.shelf;
@@ -137,20 +171,20 @@ function shelfPanel(w, room, furniture) {
         const front=t(FRONT_KEYS[visibleShelfFront(furniture,i)]);
         const height=level.heightCm;
         const doorLabel = ['door','glass'].includes(range?.front || level.front) ? ` · ${(range?.doorLeaves ?? shelf.doorLeaves ?? furniture.doorLeaves ?? ((range?.front || level.front) === 'glass' ? 1 : 2)) === 1 ? t("warehouse.doors.singleLeaf") : t("warehouse.doors.doubleLeaf")}${(range?.front || level.front) === 'glass' ? ((range?.glassFrame ?? shelf.glassFrame ?? furniture.glassFrame) ? ` · ${t('warehouse.walls.withFrame').replace(/^./,ch=>ch.toLowerCase())}` : ` · ${t('warehouse.walls.withoutFrame').replace(/^./,ch=>ch.toLowerCase())}`) : ''}${range ? ` · ${t("warehouse.shelves.doorAcross",{from:range.from,to:range.to})}` : ''}` : '';
-        return `<div class="warehouse-shelf"><div class="warehouse-shelf-head"><strong>${safe(shelf.name)}</strong>
+        return `<div class="warehouse-shelf" data-shelf-id="${safe(shelf.id)}" data-capacity="${shelf.capacity ?? 'unlimited'}"><div class="warehouse-shelf-head"><strong>${safe(shelf.name)}</strong>
             <span class="warehouse-shelf-meta">${safe(front)}${doorLabel} · ${num(height)} cm${shelf.heightCm == null ? ` ${t('warehouse.shelves.automaticHeight')}` : ''}${shelf.capacity === 0 ? '' : ` · ${occupants.length}${shelf.capacity === null?'':` / ${shelf.capacity}`} ${t("forms.bottle.plural")}`}</span>
             <div class="actions"><button class="btn small" type="button" data-act="warehouse-shelf-up" data-id="${safe(shelf.id)}" ${i===furniture.shelves.length-1 ? 'disabled' : ''} title="${t("warehouse.shelves.moveUp")}">↑</button><button class="btn small" type="button" data-act="warehouse-shelf-down" data-id="${safe(shelf.id)}" ${i===0 ? 'disabled' : ''} title="${t("warehouse.shelves.moveDown")}">↓</button><button class="btn small" data-act="warehouse-shelf-copy" data-id="${safe(shelf.id)}">${t("warehouse.furniture.copy")}</button><button class="btn small" data-act="warehouse-shelf-edit" data-id="${safe(shelf.id)}">${t("common.actions.edit")}</button><button class="btn small danger" data-act="warehouse-shelf-delete" data-id="${safe(shelf.id)}">${t("common.actions.remove")}</button></div></div>
-            <div class="warehouse-bottle-silhouettes">${occupants.map(bottleSymbol).join('') || (shelf.capacity === 0 ? '' : `<span class="hint">${t('warehouse.shelves.empty')}</span>`)}</div></div>`;
+            <div class="warehouse-bottle-silhouettes">${occupants.slice(0,6).map(b => bottleSymbol(b)).join('')}${occupants.length > 6 ? `<button type="button" class="btn small warehouse-shelf-overflow" data-act="warehouse-shelf-view" data-id="${safe(shelf.id)}">+${occupants.length-6}</button>` : ''}${!occupants.length && shelf.capacity !== 0 ? `<span class="hint">${t('warehouse.shelves.empty')}</span>` : ''}</div></div>`;
     }).join('');
     const height=furnitureHeight(furniture);
     const used=levels.reduce((sum,entry)=>sum+entry.height,0);
     const topSpace=Math.max(0,Math.round((height-used)*100));
     return `<div class="panel warehouse-furniture-panel"><div class="warehouse-panel-head"><div><h3>${safe(furniture.name)} <span class="muted">(${safe(typeName(furniture.type))})</span></h3><p class="hint">${t("warehouse.furniture.sizeDescription", {width:num(furniture.width),depth:num(furniture.depth),rotation:furniture.rotation,elevation:num(furniture.elevation ?? 0),height:num(height),shelves:furniture.shelves.length})}</p></div><div class="actions"><button class="btn small" data-act="warehouse-furniture-copy" data-id="${safe(furniture.id)}">${t("warehouse.furniture.copy")}</button><button class="btn small" data-act="warehouse-furniture-edit" data-id="${safe(furniture.id)}">${t("common.actions.edit")}</button><button class="btn small danger" data-act="warehouse-furniture-delete" data-id="${safe(furniture.id)}">${t("common.actions.remove")}</button></div></div>
-    <p class="warehouse-shelf-instruction">${t("warehouse.shelves.rangeStart")} <strong>${t("warehouse.shelves.orderTopDown")}</strong> ${t("warehouse.shelves.reorderAndCustomizeHint")}</p>
+    <p class="warehouse-shelf-instruction">${t("warehouse.shelves.rangeStart")} <strong>${t("warehouse.shelves.orderTopDown")}</strong> ${t("warehouse.shelves.reorderAndCustomizeHint")} ${t("warehouse.shelves.dragHint")}</p>
     ${topSpace>=1 ? `<p class="hint">${t("warehouse.shelves.remainingHeight", {height:num(topSpace)})}</p>`:''}
-    <div class="warehouse-shelves">${shelves || `<p class="hint">${t("warehouse.shelves.noShelves")}</p>`}</div>
+    <div class="warehouse-shelves${managementOnly ? ' warehouse-shelves--management' : ''}">${shelves || `<p class="hint">${t("warehouse.shelves.noShelves")}</p>`}</div>
     <div class="actions"><button type="button" class="btn" data-act="warehouse-shelf-new" data-id="${safe(furniture.id)}">${t("warehouse.shelves.addWithPlus")}</button><button type="button" class="btn" data-act="warehouse-find">${t("warehouse.bottles.assign")}</button></div></div>`;
 }
 
 
-export { FRONT_KEYS, CAMERA_KEYS, ROOM_SECTION_KEYS, typeChoices, typeName, num, capacityLabel, safe, count, field, choices, footer, bottleLabel, bottleRow, bottlePreview, roomOptions, findFurniture, roomDiagram, shelfPanel };
+export { bottleSymbol, FRONT_KEYS, CAMERA_KEYS, ROOM_SECTION_KEYS, typeChoices, typeName, num, capacityLabel, safe, count, field, choices, footer, bottleLabel, bottleListFacts, bottleRow, bottlePreview, bottleActionButtons, roomOptions, findFurniture, roomDiagram, shelfPanel };

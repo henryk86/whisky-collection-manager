@@ -69,8 +69,10 @@ test('shelf edit form offers front and centimeter height and panel lists fronts 
         view.render();
         assert.ok(html.indexOf('Glas oben')<html.indexOf('Offenes Fach'));
         assert.ok(html.indexOf('Offenes Fach')<html.indexOf('Untertür'));
-        assert.match(html,/Glastür · 1-flügelig · ohne Rahmen · 60 cm/);
-        assert.match(html,/Fach nach oben verschieben/);
+        view.openFurnitureManager('c');
+        assert.match(form,/Glastür · 1-flügelig · ohne Rahmen · 60 cm/);
+        assert.match(form,/Fach nach oben verschieben/);
+        assert.doesNotMatch(html,/warehouse-furniture-panel/,'furniture editing is modal only');
         view.openForm('shelf','mid');
         assert.match(form,/name="heightCm"/);
         assert.match(form,/name="front"/);

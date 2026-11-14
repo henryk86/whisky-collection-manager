@@ -1,4 +1,6 @@
 @echo off
 cd /d "%~dp0"
-node server\index.js
+call npm start
+set "WCM_EXIT_CODE=%ERRORLEVEL%"
 pause
+exit /b %WCM_EXIT_CODE%

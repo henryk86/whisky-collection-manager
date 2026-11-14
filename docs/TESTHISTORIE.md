@@ -1043,3 +1043,619 @@ Die gezielte Chromium-Prüfung nutzte eine synthetische lokale Flaschenbilddatei
 - Upgrade-Hinweis samt konkretem `git rm`-Befehl in README dokumentiert.
 
 Eine vollstaendige GitHub-Actions- und Browser-Abnahme von 0.17.12 steht noch aus.
+
+---
+
+## Testbericht v0.17.13 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-13. **Status:** Node-Pruefungen erfolgreich, Browser- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.17.13 konsistent. |
+| `npm run check` | **Bestanden** | 229 JavaScript-Dateien, 962 i18n-Referenzen, 18 Markdown-Dateien und 2 referenzierte Testbilddateien vorhanden. |
+| Negativprobe ohne Testbild | **Bestanden** | Beim kurzzeitigen Entfernen der neuen Referenz-PNG meldet `scripts/check.js` den genauen fehlenden Dateipfad; nach Wiederherstellung gruener Check. |
+| `npm test` | **376/376 bestanden** | Vollstaendiger Unit- und Integrationstestlauf. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Playwright-Abhaengigkeiten sind lokal nicht verfuegbar; `npm ci --offline` scheitert am fehlenden npm-Cache. Die 59 Chromium-Tests muessen in GitHub Actions laufen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.17.13
+
+- Die bisher vorhandene 120x180-PNG `tests/fixtures/photo-wb-reference.png` wurde ohne Inhaltsaenderung nach `tests/fixtures/photo-import-reference.png` umbenannt. Alle fuenf fehlerhaften Browserfaelle verwenden nun eine existierende Datei.
+- `npm run check` prueft relative `../fixtures/`-Referenzen in Tests, bevor CI die Browser-Suite startet. Keine Browser-Tests entfernt und keine Produktivfunktionen veraendert.
+
+**Hinweis:** Ein erfolgreicher Node-Testlauf und die Fixture-Pruefung bestaetigen nicht die erfolgreiche Ausfuehrung der Browser-Tests. Der vollstaendige CI-Browserlauf bleibt ausstehend.
+
+---
+
+## Testbericht v0.17.14 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Unit-/Integrationstests, Versions- und statische Prüfungen bestanden; Browser- und Docker-Prüfungen für diese Version nicht ausgeführt. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten v0.17.14 sind konsistent. |
+| `npm run check` | **Bestanden** | JavaScript-Importe und Syntax, i18n-Kataloge, Dokumentationslinks sowie Test-Fixtures geprüft. |
+| `npm test` | **378/378 bestanden** | Gesamte lokal ausführbare Unit-/Integrationssuite, einschließlich zwei neuer Sprach-Regressionstests. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Browser-Verhalten für diese Version nicht überprüft. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Deployment weiterhin separat prüfen. |
+| Windows-PowerShell-Testlauf | **Nicht lokal ausgeführt** | Windows-spezifische Probleme aus früheren Testberichten sind hiermit nicht behoben oder neu geprüft. |
+
+### Änderungen v0.17.14
+
+- Sichtbare erklärende Klammerzusätze aus Formular- und Detailbeschriftungen der Abfüllungs- und Flaschenansicht entfernt, sowohl auf Deutsch als auch auf Englisch.
+- Informationen, die echte Werte darstellen (beispielsweise Anzahl von Fotos), behalten ihre dynamischen Zähler.
+- Zwei gezielte Tests schützen die geänderten deutschen und englischen Beschriftungen vor Regressionen.
+
+**Abgrenzung:** Es wurden nur Übersetzungstexte und Tests für diese Darstellung geändert, keine gespeicherten Daten, Feldtypen oder Validierungsregeln.
+
+---
+
+## Testbericht v0.17.15 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Unit-/Integrationstests, Versions- und statische Pruefungen erfolgreich. Browser-, Windows- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten fuer 0.17.15 konsistent. |
+| `npm run check` | **Bestanden** | Node-Syntax, Imports, Test-Fixtures, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **386/386 bestanden** | Vollstaendige lokale Unit-/Integrationssuite inklusive sieben Start-Unit-Tests und einem realen `npm start`-Prozess-Smoke-Test in einer isolierten Testinstallation. |
+| Start-Prozess-Smoke-Test | **Bestanden** | Ruft wirklich `npm start` auf; prueft Vorbereitung vor Serverstart ohne Netzwerkbedarf durch ersetzte Modellvorbereitung und einen Testserver. |
+| Echte Erstinstallation (`npm ci` + ONNX-/WASM-Download + TLS-Erstellung) | **Nicht lokal ausgefuehrt** | Ohne Netz-/Systemvoraussetzungen hier nicht vollstaendig end-to-end getestet; Ablauf und Fehlerfaelle in Unit-Tests geprueft. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Chromium-Suite fuer diese Version nicht ausgefuehrt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Docker-Entrypoint bleibt unveraendert, Build nicht erneut getestet. |
+| Windows-PowerShell-Starttest | **Nicht lokal ausgeführt** | Verhalten unter nativem Windows nicht verifiziert; plattformunabhaengiger Node-Starter und Batch-Aufruf vorhanden. |
+
+### Aenderungen v0.17.15
+
+- `npm start` startet nun `scripts/start.js`: fehlende/veraltete npm-Abhaengigkeiten ueber `npm ci` einrichten; Cutout-Assets pruefen und bei Bedarf herunterladen; `.env` bei lokalem Erststart anlegen; bei fehlenden Standardzertifikaten lokale HTTPS-Einrichtung starten; anschliessend Server ausfuehren.
+- Vorhandene Installationen und Zertifikate bleiben erhalten. Bei Fehlern in der Vorbereitung startet der Server nicht unvollstaendig.
+- `start-unix.sh` und `start-windows.bat` verwenden denselben Startablauf. Der Docker-Entrypoint und sein Buildzeit-Installationsprozess bleiben unveraendert.
+- Neue Regressionstests pruefen Reihenfolge, notwendige/skippbare Installationen, Produktionsmodus, TLS-Konfiguration und Fehlerabbruch sowie den realen Prozessaufruf.
+
+**Hinweis:** Die lokale Erstinstallation und der echte Download aller ONNX-Dateien wurden hier nicht mit realem Netzwerkzugriff ausgefuehrt. Ein erfolgreicher Modell-Download, Windows-Start und Browserlauf sind damit nicht zugesichert.
+
+---
+
+## Testbericht v0.18.0 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen erfolgreich; vollstaendige Browser- und Docker-Abnahme ausstehend. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten 0.18.0 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Importe, Uebersetzungen, Referenz-Bilddateien und Dokumentationslinks geprueft. |
+| `npm test` | **394/394 bestanden** | Vollstaendiger Unit- und Integrationstestlauf einschliesslich virtueller Regalwand, Drag-and-drop und serverseitiger Umlagerung zwischen gegenueberstehenden Regalen. |
+| Gezielte Pointer-Tests | **Bestanden** | Volle Faecher, Quellfach, Abbruch, Auto-Scroll und einmalige Speicherung getestet. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Playwright-Abhaengigkeiten fehlen; ein npm-ci-Versuch erreichte das Zeitlimit. Ein direkter Chromium-Smoke-Test blieb ebenfalls am Browserstart haengen. Daher keine behauptete Browser-Freigabe. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Separat in GitHub Actions und auf dem Raspberry Pi pruefen. |
+
+### Aenderungen v0.18.0
+
+- Neuer Modus **Regalwand** in den Raumplaenen: alle Moebel mit Faechern eines Raums werden virtuell nebeneinander als Frontansichten gezeigt, auch wenn sie sich gegenueberstehen. Kein neues Lagerdatenformat.
+- Drag-and-drop physischer Flaschen innerhalb einer Einzelregalansicht und zwischen allen Regalen der virtuellen Wand. Zielmarkierung, schwebende Flaschenvorschau und automatisches Scrollen am Rand. Auf Touch-Geraeten nutzbare Pointer Events; das Umlagern ueber das Flaschendetail bleibt erhalten.
+- Kapazitaet und Existenz des Zielfachs werden clientseitig vorgeprueft und serverseitig ueber den bestehenden API-Endpunkt verbindlich validiert. Keine lokale Aenderung der Zuordnung vor Serverbestaetigung.
+- Deutsch/Englisch, Dokumentation und Regressionstests aktualisiert. Keine OCR-Komponenten aus der verworfenen frueheren 0.18-Reihe enthalten.
+
+**Einschraenkung:** Unit- und Integrationstests belegen nicht die gerateuebergreifende Bedienung in echten Browsern. Der Browser-CI-Lauf ist vor der Freigabe auf `main` erforderlich.
+
+---
+
+## Testbericht v0.18.1 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Tests, statische Pruefungen und Versionspruefung bestanden; Browser- und Docker-Abnahme ausstehend. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.18.1 konsistent. |
+| `npm run check` | **Bestanden** | 240 JavaScript-Dateien, Sprachkataloge, Test-Fixtures und Dokumentationslinks geprueft. |
+| `npm test` | **402/402 bestanden** | Gesamte Node-Unit- und Integrationssuite, einschliesslich atomarem Bulk-API-Test, Einzel- und Gruppendrag, Sortierung, Schrankhoehen, Fachhoehen und Scroll-CSS. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Playwright-Suite hier nicht ausgefuehrt; reale Ansicht und Touch-Bedienung in CI/auf Geraeten pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach einem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.18.1
+
+- Regalwand sortiert Möbelnamen natuerlich; Schrankhoehe, Fachhoehe und Montagehoehe im gemeinsamen Massstab. Keine Streckung flacher Faecher oder Phantom-Faecher fuer Resthoehen.
+- Regalwand hat keine eigene vertikale Scrollbar und keine `vh`-Grenze mehr: komplette Hoehe ist direkt im Seitenlayout vorhanden; nur horizontales Scrollen innerhalb der Wand (auch beim Drag-and-drop).
+- Mehrere physische Flaschen per Checkbox in der Flaschenliste oder Regalwand auswaehlen, gemeinsam einem Fach zuweisen oder ausgewaehlte Gruppe ziehen. Neues `POST /api/warehouse/bottles/bulk` prueft die Gesamtbelegung und speichert alle Zuordnungen zusammen oder gar keine. Datenmodell unveraendert.
+
+**Grenze:** Die Node-Tests verifizieren API und generiertes Markup/CSS, nicht die tatsaechliche Darstellung und Touchsteuerung in einem Browser. Vor Merge nach `main` Browser-CI pruefen.
+
+---
+
+## Testbericht v0.18.2 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen bestanden. Vollstaendige Chromium- und Docker-Abnahme offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.18.2 konsistent. |
+| `npm run check` | **Bestanden** | JavaScript-Syntax und Importgraph, deutsche/englische Uebersetzungen, Dateireferenzen und Markdown-Links. |
+| `npm test` | **407/407 bestanden** | Vollstaendige Unit- und Integrationstests, einschliesslich neuer Abgrenzung zwischen Raumplaenen und Regalen/Faechern. |
+| Gezielte Lager-Unit-Tests | **Bestanden** | Regalwand-Geometrie, mehrfache Flaschenauswahl, Fachverwaltung sowie Trennung der Raum- und Regalansichten. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Playwright-Abhaengigkeit lokal nicht installiert; direkter Chromium-Start haengt in der Ausfuehrungsumgebung. Die geaenderten Browser-Tests muessen in CI ausgefuehrt werden. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Separat auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.18.2
+
+- Die Regalwand folgt Raumkoordinaten und Blickrichtung; uebereinander montierte Moebel stehen uebereinander.
+- Flaschen werden in der Regalwand ohne Checkboxen durch farbige Hinterlegung markiert und koennen gemeinsam umgelagert werden.
+- Die Raumplan-Registerkarte enthaelt nur Raumverwaltung und 2D-/3D-Positionierung. Moebel-Mehrfachbearbeitung, Fachverwaltung und die komplette Regalwand befinden sich unter **Regale & Faecher**.
+- Die bisherige Mehrfach-Umlagerung, Fachkapazitaetspruefung und gespeicherte Lagerstruktur bleiben unveraendert.
+
+Ein gruener Node-Testlauf ersetzt keine visuelle Browserpruefung oder mobile Touch-Abnahme.
+
+---
+
+## Testbericht v0.18.3 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen bestanden. Vollstaendige Chromium-, native Touch- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten v0.18.3 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Modulgraph, DE/EN-Uebersetzungen, Test-Fixtures und Markdown-Links. |
+| `npm test` | **413/413 bestanden** | Gesamte Node-Unit-/Integrationstestsuite inklusive Lagerwand-/Modalregressionen. |
+| Gezielte Regalwand-Regressionspruefung | **Bestanden** | Breites Obermoebel ueber mehreren Unterschraenken, gespeicherte horizontale Scrollposition, Raumplan-Auswahl, keine duplizierte Fachansicht und Moebelverwaltung im Modal. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Die Browserabhaengigkeit ist in dieser Arbeitskopie nicht installiert; auch der direkte Chromium-Smoke-Test startet hier nicht erfolgreich (Timeout). Die angepassten Browserfaelle muessen in CI ausgefuehrt werden. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Separat auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.18.3
+
+- Einfache Raumplan-Auswahl zeigt eine sichtbare Positionszusammenfassung mit Weg zu **Regale & Faecher** statt einer wirkungslosen Auswahl.
+- Kein zweites Regal bzw. keine zweite Flaschendarstellung mehr unter der virtuellen Regalwand. Die Fach-/Moebelverwaltung wird mit einem breiten Modal geoeffnet, entweder ueber **Moebel und Faecher bearbeiten** oder direkt durch Klick auf den Moebelnamen in der Regalwand.
+- Physisch ueber mehrere Unterschraenke reichende Obermoebel werden ueber die gemeinsame Breite angeordnet.
+- Nach dem Umlagern von Flaschen bleibt die horizontale Regalwand-Position pro Raum erhalten; auch die Dokument-Scrollposition wird wiederhergestellt.
+- Datenmodell, APIs und Lagerzuordnungen bleiben unveraendert.
+
+Eine gruene Node-Suite ist kein Nachweis fuer eine bestandene visuelle Browserpruefung oder mobile Touch-Abnahme.
+
+---
+
+## Testbericht v0.18.4 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen erfolgreich, Browser- und Docker-Abnahme offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Importe, Uebersetzungen, Testbildreferenzen und Dokumentationslinks. |
+| `npm test` | **418/418 bestanden** | Vollstaendiger lokaler Unit- und Integrationstestlauf unter Linux. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Browserpruefungen separat dokumentieren. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach einem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.18.4
+
+- Virtuelle globale Ablage fuer nicht zugeordnete Flaschen, Suche, Seitennavigation und gemeinsame Flaschenauswahl ohne neue physische Lagerstellen.
+- Einzelmoebel-Modals zeigen ausschliesslich das angeklickte Moebel. Die Moebel-Mehrfachbearbeitung hat eine getrennte Auswahlansicht mit hervorgehobenen Kacheln.
+- Oberer Leerraum der Regalwand reduziert. Vorhandene physische Lagerzuordnungen und APIs bleiben unveraendert.
+
+**Abgrenzung:** Die vollstaendige Chromium- und Touch-Bedienung sowie der native Windows-Testlauf und der Docker-/ARM64-Test sind nicht lokal ausgefuehrt. Der erfolgreiche Node-Testlauf belegt nicht die visuelle Browsertauglichkeit.
+
+---
+
+## Testbericht v0.18.5 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen erfolgreich; Browser- und Docker-Abnahme offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.18.5 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Imports, Uebersetzungen, Testbildverweise und Dokumentationslinks. |
+| `npm test` | **422/422 bestanden** | Vollstaendige Unit- und Integrationstestsuite inklusive neuer Metadaten- und Aufklapptests. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Browserpruefungen separat dokumentieren. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach einem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.18.5
+
+- Ablage fuer nicht zugeordnete Flaschen standardmaessig einklappen, mit Zustandserhalt nach Neuzeichnung.
+- Flaschenlisten links ausrichten und Alter, Erscheinungsjahr und Fasstyp aus Abfuellungsdaten anzeigen.
+- Backend liefert nur lesbare Flaschen-Metadaten; gespeicherte Lagerdaten und API-Aktionen bleiben unveraendert.
+
+**Grenzen:** Die vollstaendige Browser-/Touch- und Docker-/ARM64-Pruefung wurde in dieser Umgebung nicht durchgefuehrt. Ein erfolgreicher Node-Testlauf ist keine visuelle Browserabnahme.
+
+---
+
+## Testbericht v0.18.6 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen erfolgreich; Browser- und Docker-Abnahme offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version v0.18.6 in allen Release-Dateien konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Modulimports, Uebersetzungen, Fixtures und Dokumentationslinks. |
+| `npm test` | **422/422 bestanden** | Vollstaendiger Unit- und Integrationstestlauf; zusaetzlich gezielter Modal-Test nach Nachschaerfung bestanden. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Vollstaendige Chromium-Tests bleiben fuer CI offen; neuer Browser-Regressionstest ist enthalten. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach dem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.18.6
+
+- Die Fachliste im Einzelmoebel-Modal zeigt wieder alle diesem Moebel zugeordneten Flaschen als Symbole bzw. geladene Fotos und ermoeglicht das Oeffnen der Flaschendetails.
+- Die Regalwand bleibt die einzige dauerhaft sichtbare Gesamtansicht; andere Moebel und ihre Flaschen erscheinen nicht im Einzelmoebel-Modal.
+- Regressionstests pruefen die Anzeige und die Begrenzung auf das angeklickte Moebel.
+
+**Grenzen:** Browserdarstellung, Touch-Bedienung und Docker/ARM64 wurden hier nicht abschliessend geprueft. Unit-/Integrationstests ersetzen keine visuelle Browserabnahme.
+
+---
+
+## Testbericht v0.19.0 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen erfolgreich, Browser- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.19.0 sind konsistent. |
+| `npm run check` | **Bestanden** | JavaScript-Syntax, Module, Uebersetzungsreferenzen und Dokumentationschecks. |
+| `npm test` | **433/433 bestanden** | Vollstaendige Node-Unit- und Integrationssuite, inklusive Transfer zwischen zwei Instanzen, Fach mit 15 Flaschen und kombiniertem Export-/Import-Dialog und zusammengefuehrter Flaschenleiste. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Die Browser-Suite konnte nicht erfolgreich gestartet werden. Ein direkter Chromium-Headless-Aufruf haengt hier schon bei einem statischen Minimaldokument; UI, Datei-Download und Touch-Bedienung sind nicht visuell bestaetigt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach Uebernahme in CI bzw. auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.19.0
+
+- Auswahlaktionen und virtuelle Ablage „Nicht zugeordnet“ stehen in einer einzigen kompakten Regalwand-Leiste; die Ablage wird ohne zweiten Header eingeblendet.
+- Kombinierter Dialog „Räume übertragen“ mit Export-/Import-Reitern; portabler Raumtransfer fuer einen, mehrere oder alle Raeume, mit oder ohne Flaschenzuordnung.
+- Importvorschau, sichere Konfliktregeln und Neuvergabe der Raum-, Moebel- und Fach-IDs; Zuordnung vorhandener Flaschen nur anhand eindeutiger Referenzen.
+- Fachbezogenes Flaschenmodal: Die Frontansicht zeigt nur die erste sichtbare Reihe und `+N`, der Dialog zeigt alle enthaltenen Flaschen (Regressionstest: 15 Flaschen).
+
+**Einschraenkung:** Die Testzahlen bestaetigen die serverseitigen Importregeln, die HTML-Ausgabe und das Ansprechen der Ansichten im Code; sie ersetzen keine vollstaendige Browser- und Touch-Pruefung.
+
+---
+
+## Testbericht v0.19.1 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen erfolgreich; Browser- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.19.1 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, ES-Modulimporte, Uebersetzungsreferenzen, Test-Fixtures und Dokumentationslinks. |
+| `npm test` | **437/437 bestanden** | Vollstaendige Unit- und Integrationssuite, inklusive vier neuer Tests fuer Fach-Doppelklick und Auswahl-/Tastaturabgrenzung. |
+| `node --test tests/unit/warehouse-shelf-doubleclick.test.js tests/unit/warehouse-shelf-dialog.test.js tests/unit/warehouse-room-wall.test.js` | **20/20 bestanden** | Fach-Dialog per Doppelklick, unveraenderte Flaschenauswahl, direkte Buttonaktion und Tastaturbedienung. |
+| `npm run test:browser` | **Nicht lokal ausgefuehrt** | Vollstaendige Chromium- und Touch-Pruefung noch offen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgefuehrt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.19.1
+
+- Doppelklick auf die Fachflaeche der Regalwand oeffnet das Fachmodal; einfacher Klick auf den Fachhintergrund tut dies nicht mehr.
+- Doppelklick auf einen nicht-interaktiven Bereich eines Fachs im Moebelmodal ist ebenfalls moeglich; die explizite Schaltflaeche `Flaschen anzeigen` bleibt einfach anklickbar.
+- Anklickbare Flaschen, Drag-and-drop und Tastaturaktivierung (Enter/Leertaste) bleiben unabhaengig vom Fach-Doppelklick.
+- Deutsche und englische Bedienhinweise, README und Lagerdokumentation aktualisiert.
+
+**Einschraenkung:** Der Node-Testlauf bestaetigt die delegierte Ereignisbehandlung und die HTML-Erzeugung; eine visuelle Browser- und Touch-Abnahme steht aus.
+
+---
+
+## Testbericht v0.19.2 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen erfolgreich, Browser- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.19.2 konsistent. |
+| `npm run check` | **Bestanden** | 254 JavaScript-Dateien, Uebersetzungen, Test-Fixtures und Dokumentationslinks. |
+| `npm test` | **442/442 bestanden** | Vollstaendiger Unit- und Integrationstestlauf. |
+| `node --test tests/unit/warehouse-assignment.test.js tests/unit/warehouse-bottle-drag.test.js tests/unit/warehouse-room-wall.test.js tests/unit/warehouse-shelf-dialog.test.js tests/unit/warehouse-shelf-doubleclick.test.js tests/integration/warehouse-bulk-bottles.test.js` | **34/34 bestanden** | Fachinteraktion, Drag-and-drop, Kapazitaetsbestaetigung und atomare Zuordnung. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Visuelle Chromium- und Touch-Pruefung ausstehend. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.19.2
+
+- Faecher mit Kapazitaet 0 sind keine anklickbaren Fachdialog-Ziele. Kein `role=button`, kein `tabindex`, kein Doppelklick- oder Tastaturoeffnen und kein Hand-Mauszeiger. Die ausdrueckliche Fachbearbeitung bleibt moeglich.
+- Bei positiver Fachkapazitaet und zu wenig Platz fragt die Oberflaeche bei Einzel- und Mehrfachzuordnung sowie Drag-and-drop nach einer Erhoehung auf die benoetigte Anzahl. Abbruch veraendert keine Daten.
+- API nimmt das optionale, zuvor bestaetigte `increaseCapacityTo` entgegen und schreibt Kapazitaet und Flaschenzuordnungen atomar. Nicht ausreichende Freigaben oder Kapazitaet 0 fuehren weiterhin zu HTTP 409 ohne Teiloperation.
+- Regressionstests fuer Serverzustand, wiederholte Umlagerung, Kapazitaet 0 und Bestaetigung ergänzt.
+
+**Hinweis:** Erfolgreiche Node-Tests ersetzen keine Browserabnahme des Bestaetigungsdialogs mit Maus und Touch.
+
+---
+
+## Testbericht v0.19.3 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen erfolgreich, Browser- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.19.3 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Imports, Uebersetzungen, Testbilder und Dokumentationslinks. |
+| `npm test` | **446/446 bestanden** | Vollstaendiger Unit- und Integrationstestlauf, einschliesslich Modal-Bestaetigung und gestapelter Moebelbeschriftungen. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Die vollstaendige Chromium-Browser-Suite ist noch offen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.19.3
+
+- Kapazitaetserhoehungen werden ausschliesslich ueber ein Anwendungsmodal bestaetigt; eine verschachtelte Rueckfrage erhaelt den bestehenden Zuordnungsdialog und seine Formulareingaben. Abbruch aendert nichts.
+- Bei gestapelten Moebeln werden Moebelname und Fachbeschriftung ohne Ueberlagerung untereinander dargestellt.
+- Zusaetzliche Regressionstests fuer Annahme/Ablehnung der Modal-Rueckfrage, die Erhaltung verschachtelter Formulare und die Moebelbeschriftung.
+
+**Hinweis:** Bestehende Browser- und Touch-Bedienablaeufe sind mit den Node-Tests nicht visuell abgenommen.
+
+---
+
+## Testbericht v0.19.4 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen erfolgreich; visuelle Browser- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.19.4 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Imports, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **446/446 bestanden** | Alle Unit- und Integrationstests einschliesslich neuer Regalwand-Regressionen. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Die vollstaendige Browser-Suite und das Hover-Verhalten muessen noch visuell geprueft werden. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.19.4
+
+- Sichtbare Moebelname-Kopfzeilen vollstaendig entfernt. Stattdessen ein kleines Bearbeiten-Icon in der rechten oberen Ecke innerhalb jedes Moebels, mit Namen als Tooltip und barrierefreiem Label; unveraenderte physische Hoehen und Fachpositionen.
+- Kapazitaet-0-Faecher bleiben sichtbar und nicht interaktiv, zeigen jedoch keine `0/0`-Belegung mehr.
+- Bestehende Regalwand- und Browser-Tests fuer den neuen Bedieneinstieg angepasst; der ueberfluessige obere Titelabstand wurde reduziert.
+
+**Hinweis:** Der erfolgreiche Node-Testlauf ersetzt keine visuelle Browser- oder Touch-Abnahme.
+
+---
+
+## Testbericht v0.19.5 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen erfolgreich; visuelle Browser- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.19.5 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Imports, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **447/447 bestanden** | Alle Unit- und Integrationstests, einschliesslich Schriftgroessen-Regression. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Die visuelle Darstellung bleibt im Browser zu pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.19.5
+
+- Die Schriftgroesse von "Fach ist leer" in der Regalwand entspricht mit 10 px der Schriftgroesse von "Nicht belegbar"; beide Platzhalter haben dieselbe Zeilenhoehe. An anderen Fachansichten wurde nichts geaendert.
+- CSS-Regressionstest fuer gleiche Schriftgroesse beider Hinweise ergaenzt.
+
+**Hinweis:** Node-Pruefungen ersetzen keine visuelle Browser- oder Touch-Abnahme.
+
+---
+
+## Testbericht v0.19.6 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Pruefungen erfolgreich; visuelle Browser- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten v0.19.6 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Imports, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **448/448 bestanden** | Unit- und Integrationstests einschliesslich Top-Fach-Abstandsregel. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Visuelle Pruefung von oberem Fachrahmen und anderen Fachhoehen steht aus. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.19.6
+
+- Die obere Holzleiste wird innerhalb des Moebelrahmens gezeichnet und ueberlagerte bislang die ersten Pixel des obersten Fachs. Dessen Kopfzeile erhaelt bei fehlendem oberen Freiraum einen um 5 px groesseren Innenabstand (8 statt 3 px).
+- Andere Faecher, kleine Faecher und Faecher hinter einem oberen Freiraum behalten ihren bisherigen Innenabstand. Die reale Fachhoehe, Moebelpositionen und Flaschenauswahl bleiben unveraendert.
+- Neuer gezielter Regressionstest fuer die Sonderregel und unveraenderte Fachhoehen.
+
+**Hinweis:** Die CSS-Regel ist automatisiert geprueft. Ein visueller Chromium- oder Touch-Test wurde nicht durchgefuehrt.
+
+---
+
+## Testbericht v0.19.7 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Release-Metadaten, Quellcodepruefung sowie Unit- und Integrationstests erfolgreich; Browsertests und Docker-Livetest offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten konsistent mit v0.19.7. |
+| `npm run check` | **Bestanden** | 254 JavaScript-Dateien; 1015 referenzierte Sprachschluessel; 18 Markdown-Dateien und 120 relative Links. |
+| `npm test` | **Bestanden** | 452 Tests, 452 bestanden, 0 fehlgeschlagen. |
+| `npm run test:browser` | **Nicht ausgefuehrt** | `playwright-core` fehlt; `npm ci --offline` scheiterte wegen fehlender Pakete im npm-Cache, Online-Nachinstallation war nicht erfolgreich. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach einem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.19.7
+
+- 3D-Raumplan: Doppelklick auf belegtes Fach oeffnet Fachinhalt als Modal ohne Reiterwechsel; leere Faecher bleiben geschlossen
+
+Die Browser-Interaktion im echten Chromium sowie der Docker-Build und ein ARM64-Livetest bleiben ungetestet; das erfolgreiche `npm test` ersetzt diese Pruefungen nicht.
+
+---
+
+## Testbericht v0.19.8 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Release-Metadaten, statische Pruefungen sowie Unit- und Integrationstests bestanden; Browser- und Docker-Livepruefungen offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten konsistent mit v0.19.8. |
+| `npm run check` | **Bestanden** | 254 JavaScript-Dateien; 1015 referenzierte Sprachschluessel; 18 Markdown-Dateien und 121 relative Links. |
+| `npm test` | **Bestanden** | 454 Tests, 454 bestanden, 0 fehlgeschlagen. |
+| `npm run test:browser` | **Blockiert, nicht durchgefuehrt** | Playwright kann nicht importiert werden (`node_modules/playwright-core/index.js` fehlt); Abbruch vor Ausfuehrung der Browserfaelle. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgefuehrt** | Nach einem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.19.8
+
+- Das identische Fachinhalt-Modal zeigt in 3D-Raumplan und Regalansicht je Flasche die vorhandene Inventarnummer, den Alkoholgehalt der Abfuellung und den Status.
+- Je Flasche direkt im Fachinhalt: **Umlagern** und **Zur Detailseite** (mit Hervorhebung der konkreten Flasche). Die verkleinerte Zwischenvorschau entfaellt fuer eingelagerten Flaschen.
+- Aus der Regalwand fuehrt die Aktion fuer genau eine ausgewählte, eingelagerte Flasche direkt zum Fachinhalt; die Flaschensymbole im Moebelmodal fuehren ebenfalls dorthin. Mehrfachauswahl und Drag-and-drop bleiben erhalten. Nicht zugeordnete Flaschen behalten ihre Einzelvorschau.
+- Regressionstests fuer vorhandene/fehlende Metadaten, HTML-Escaping, Direktaktionen und die gemeinsame Fachansicht ergaenzt. Browser-Testaktualisierung vorgenommen, jedoch wegen der nicht verfuegbaren Playwright-Installation nicht ausgefuehrt.
+
+Die erfolgreiche Node-Testsuite ersetzt weder einen Chromium-Interaktionstest noch die Mobil-/Docker-Pruefung.
+
+---
+
+## Testbericht v0.19.9 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Die Node-Pruefungen wurden nach Abschluss der Aenderungen erfolgreich ausgefuehrt. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent auf v0.19.9. |
+| `npm run check` | **Bestanden** | 254 JavaScript-Dateien, Sprachschluessel, 18 Markdown-Dateien und relative Links geprueft. |
+| `npm test` | **456/456 bestanden** | Unit- und Integrationstests, darunter neue Regressionstests fuer die Platzhaltergrafik in Uebersicht und Fachinhalt. |
+| `npm run test:browser` | **Nicht durchfuehrbar** | Versuch unternommen; Browser-Suite startet nicht, weil `playwright-core/index.js` in der lokalen Installation fehlt (`ERR_MODULE_NOT_FOUND`). Kein Browser-Test bestanden oder ausgefuehrt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
+
+### Aenderungen v0.19.9
+
+- Platzhalter in Sammlungskacheln kleiner darstellen, vorhandene Flaschenfotos unveraendert lassen.
+- Platzhaltermotiv fuer Flaschen ohne Foto im Fachinhalt-Modal an die Sammlungsuebersicht angleichen; Regalwand-Symbole unveraendert.
+- README auf dauerhafte Projektinformationen konzentrieren; veraltete Release- und Migrationsdetails entfernen und Lagerdokumentation an das aktuelle Fachmodal angleichen.
+
+**Offen:** Browser-/WebGL-Darstellung, verschiedene Displaybreiten, reale Mobilgeraete und Pi-Docker-Betrieb verifizieren.
+
+---
+
+## Testbericht v0.19.10 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Die Node-Pruefungen wurden nach Abschluss der Aenderungen erfolgreich ausgefuehrt. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent auf v0.19.10. |
+| `npm run check` | **Bestanden** | 254 JavaScript-Dateien, Sprachschluessel, 18 Markdown-Dateien und relative Links geprueft. |
+| `npm test` | **457/457 bestanden** | Unit- und Integrationstests, darunter aktualisierte Regressionstests fuer die an Flaschenfotos angeglichene Platzhaltergroesse und die Dark-Mode-Farben auf der Detailseite. |
+| `npm run test:browser` | **Blockiert** | Versuch unternommen; Browser-Suite startet nicht, weil `playwright-core/index.js` in der lokalen Installation fehlt (`ERR_MODULE_NOT_FOUND`). Kein Browser-Test bestanden oder ausgefuehrt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
+
+### Aenderungen v0.19.10
+
+- Platzhalter in Sammlungskacheln auf die sichtbare Hoehe echter Flaschenfotos vergroessern, ohne reale Fotos zu beeinflussen.
+- Platzhalter auf der Detailseite farblich an die Sammlung angleichen; im Dark Mode bleibt das Goldmotiv sichtbar statt dunkel ueberblendet.
+- Lagerdokumentation und Tests an die getrennte Behandlung von Kachel- und Detail-Platzhaltern angepasst.
+
+**Offen:** Browser-/WebGL-Darstellung, verschiedene Displaybreiten, reale Mobilgeraete und Pi-Docker-Betrieb verifizieren.
+
+---
+
+## Testbericht v0.19.11 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Die Node-Pruefungen wurden nach Abschluss der Aenderungen erfolgreich ausgefuehrt. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent auf v0.19.11. |
+| `npm run check` | **Bestanden** | 254 JavaScript-Dateien, Sprachschluessel, 18 Markdown-Dateien und relative Links geprueft. |
+| `npm test` | **458/458 bestanden** | Unit- und Integrationstests, darunter Regressionen fuer statische Flaschenbilder im Fachmodal und die innenliegende Regalwand-Auswahlmarkierung. |
+| `npm run test:browser` | **Nicht durchfuehrbar** | Versuch unternommen; Browser-Suite startet wegen fehlendem `playwright-core/index.js` (`ERR_MODULE_NOT_FOUND`) nicht. Kein Browser-Test bestanden oder ausgefuehrt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
+
+### Aenderungen v0.19.11
+
+- Fachinhalt-Modal: Flaschenbilder sind rein dekorativ, keine Mehrfachauswahl und keine doppelten Markierungsrahmen. Aktionen **Umlagern** und **Zur Detailseite** bleiben erhalten.
+- Regalwand: Auswahl bleibt unveraendert moeglich, der Markierungsrahmen liegt innerhalb der festen Flaschenplatz-Grenzen und ueberlagert keine Holzleisten.
+
+**Offen:** Browser-/WebGL-Darstellung, schmale Displaybreiten, reale Mobilgeraete und Pi-Docker-Betrieb verifizieren.
+
+---
+
+## Testbericht v0.19.12 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Die Node-Pruefungen wurden nach Abschluss der Aenderungen erfolgreich ausgefuehrt. Historische Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent auf v0.19.12. |
+| `npm run check` | **Bestanden** | 254 JavaScript-Dateien, 1013 referenzierte Sprachschluessel, 18 Markdown-Dateien und relative Links geprueft. |
+| `npm test` | **458/458 bestanden** | Unit- und Integrationstests, darunter Regressionen fuer Einzel-Flaschenvorschau im Moebelmodal, Fach-Doppelklick und direkte Aktionen. |
+| `npm run test:browser` | **Nicht durchfuehrbar** | Testlauf gestartet, wegen fehlendem `playwright-core/index.js` jedoch vor Ausfuehrung gescheitert (`ERR_MODULE_NOT_FOUND`). Keine Browser-Tests bestanden. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
+
+### Aenderungen v0.19.12
+
+- Im Einzelmoebel-Modal oeffnet ein Klick auf eine Flasche die Einzel-Flaschenvorschau mit **Umlagern** und **Zu den Flaschendetails** statt die Fachuebersicht.
+- Die ausgeschriebene Schaltflaeche **Flaschen anzeigen** im Einzelmoebel-Modal entfaellt. Der Doppelklick auf die Fachflaeche und die `+N`-Anzeige fuer weitere Flaschen bleiben erhalten.
+- Bei genau einer markierten Flasche in der Regalwand fuehrt die Vorschau-Aktion ebenfalls zur Einzel-Flaschenansicht; die Mehrfachauswahl und das Umlagern per Drag-and-drop bleiben bestehen.
+
+**Offen:** Visuelle Chromium-/WebGL-Pruefung, schmale Displaybreiten, reale Mobilgeraete und Pi-Docker-Betrieb.
+
+---
+
+## Testbericht v0.19.13 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Die Unit- und Integrationstests sowie die Versions-/Konsistenzpruefung wurden nach Abschluss der Aenderungen erfolgreich ausgefuehrt. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent auf v0.19.13. |
+| `npm run check` | **Bestanden** | 254 JavaScript-Dateien, Sprachschluessel, 18 Markdown-Dateien und relative Links geprueft. |
+| `npm test` | **460/460 bestanden** | Unit- und Integrationstests, darunter automatische dreistufige Modal-Rueckkehr, Formularerhalt und Flaschen-Doppelklick. |
+| `npm run test:browser` | **Blockiert** | Versuch unternommen; Browser-Suite startet nicht, weil `playwright-core` in der lokalen Installation fehlt (`ERR_MODULE_NOT_FOUND`). Kein Browser-Test bestanden oder ausgefuehrt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
+
+### Aenderungen v0.19.13
+
+- Regalwand: Doppelklick auf eine Flasche oeffnet deren Einzelvorschau; Einzelklick, Fach-Doppelklick und Drag-and-drop bleiben getrennt.
+- Aus dem Fachinhalt-Modal oeffnet ein Flaschenbild die Einzel-Flaschenvorschau, ohne Mehrfachauswahl.
+- Modalverwaltung: Folge-Dialoge werden standardmaessig verschachtelt. Schliessen (X, Escape, Hintergrund) kehrt jeweils eine Ebene zurueck, bei expliziten Seitenwechseln wird die gesamte Kette beendet.
+- Bestehende ungespeicherte Eingaben und Dateiauswahlen im vorherigen Modal bleiben beim Zurueckkehren erhalten.
+
+**Offen:** Browserbasierte End-to-End-Pruefung der Dialogkette, unterschiedliche Displaybreiten, reale Mobilgeraete und Pi-Docker-Betrieb.
+
+---
+
+## Testbericht v0.19.14 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. Die Unit- und Integrationstests sowie die Versions- und Konsistenzpruefungen wurden nach den Aenderungen erfolgreich ausgefuehrt. Historische Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten konsistent auf v0.19.14. |
+| `npm run check` | **Bestanden** | 254 JavaScript-Dateien, Uebersetzungen, 18 Markdown-Dateien und relative Links geprueft. |
+| `npm test` | **460/460 bestanden** | Unit- und Integrationstests; Fachuebersicht-Bilder ohne Klickaktion, direkte Fachaktionen, Flaschenvorschau im Moebelmodal und Rueckkehr in der Modalkette. |
+| `npm run test:browser` | **Blockiert** | Lauf versucht, startet wegen fehlendem Paket `playwright-core` nicht (`ERR_MODULE_NOT_FOUND`). Die Browser-Regression ist aktualisiert, aber nicht ausgefuehrt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
+
+### Aenderungen v0.19.14
+
+- Flaschenbilder der Fachinhalt-Uebersicht sind reine Anzeige ohne Klickaktion und ohne Mehrfachauswahl.
+- `Umlagern` und `Zur Detailseite` bleiben direkt auf jeder Fachkarte; ein Umlagern-Modal kehrt beim Schliessen zur Fachuebersicht zurueck.
+- Flaschen im Moebelmodal bleiben einzeln anklickbar; die Regalwand behaelt Doppelklick fuer Flaschendetails sowie Einfachklick fuer Mehrfachauswahl.
+- Browser-Test und Lagerdokumentation an die voneinander getrennten Modalaktionen angepasst.
+
+**Offen:** End-to-End-Pruefung im Browser, mobile Geraete und Pi-Docker-Betrieb.

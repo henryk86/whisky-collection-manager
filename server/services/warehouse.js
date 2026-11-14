@@ -1,6 +1,7 @@
 /** Physical storage locations and individual bottle allocations. No collection mutations. */
 import crypto from 'node:crypto';
 import {displayPhotoPath} from '../../public/js/domain/photo-images.js';
+import {createRoomExport, planRoomImport} from './room-transfer.js';
 import { read } from '../storage/collection-store.js';
 import { readWarehouse, changeWarehouse } from '../storage/warehouse-store.js';
 import { fail } from '../domain/errors.js';
@@ -39,6 +40,8 @@ function physicalBottles() {
     return read().bottlings.flatMap(bottling => bottling.bottles.map(bottle => ({
         id: bottle.id, bottlingId: bottling.id, name: bottling.name,
         number: bottle.inventoryNumber || '', volumeType: bottle.volumeType || 'standard', status: bottle.status,
+        ageYears: bottling.ageYears ?? null, releaseYear: bottling.releaseYear ?? null,
+        caskType: bottling.caskType || null,
         volumeMl: bottle.volumeMl ?? bottling.volumeMl ?? null,
         photoPath: displayPhotoPath(bottle.photos?.find(entry => typeof entry?.path === 'string' && entry.path)) || null
     })));
@@ -246,6 +249,23 @@ export const copyShelf = (id, input = {}) => changeWarehouse(data => {
     return item;
 });
 
+/** Raising a positive shelf capacity is opt-in and part of the same atomic
+ * warehouse transaction as its bottle assignments. Capacity zero is a hard
+ * no-storage designation and can never be overridden by this operation. */
+function enforceAssignmentCapacity(data, shelf, shelfId, selectedIds, known, increaseCapacityTo) {
+    if (shelf.capacity === null) return;
+    const selected = new Set(selectedIds);
+    const others = Object.entries(data.assignments).filter(([id, assigned]) =>
+        assigned === shelfId && !selected.has(id) && known.has(id)).length;
+    const required = others + selected.size;
+    if (required <= shelf.capacity) return;
+    if (shelf.capacity === 0 || !Number.isInteger(increaseCapacityTo) ||
+        increaseCapacityTo < required || increaseCapacityTo > 10000 || required > 10000) {
+        throw fail('This shelf has insufficient free capacity', 409);
+    }
+    shelf.capacity = required;
+}
+
 export const assignBottle = (bottleId, input) => changeWarehouse(data => {
     const known = new Set(physicalBottles().map(item => item.id));
     if (!known.has(bottleId)) throw fail('Physische Flasche nicht gefunden', 404);
@@ -255,12 +275,59 @@ export const assignBottle = (bottleId, input) => changeWarehouse(data => {
     }
     if (typeof id !== 'string') throw fail('Ungültige Fach-ID');
     const { shelf } = shelfById(data, id);
-    if (shelf.capacity !== null) {
-        const used = Object.entries(data.assignments).filter(([bid, sid]) => bid !== bottleId && sid === id && known.has(bid)).length;
-        if (used >= shelf.capacity) throw fail('Dieses Fach ist voll belegt', 409);
-    }
+    enforceAssignmentCapacity(data, shelf, id, [bottleId], known, input?.increaseCapacityTo);
     data.assignments[bottleId] = id;
     // Removing stale references is safe: absent bottles can no longer be reassigned.
     for (const bid of Object.keys(data.assignments)) if (!known.has(bid)) delete data.assignments[bid];
     return { bottleId, shelfId: id };
+});
+
+/** Atomically assign multiple physical bottles to one shelf (or unassign them).
+ * The final occupancy is checked before any warehouse assignments are mutated.
+ */
+export const assignBottles = input => changeWarehouse(data => {
+    const ids = input?.ids;
+    if (!Array.isArray(ids) || ids.length < 1 || ids.length > 500 ||
+        ids.some(id => typeof id !== 'string' || !id.trim() || id.length > 120) ||
+        new Set(ids).size !== ids.length) throw fail('Select 1 to 500 different bottles');
+    const known = new Set(physicalBottles().map(bottle => bottle.id));
+    if (ids.some(id => !known.has(id))) throw fail('Physical bottle not found', 404);
+    const target = input?.shelfId;
+    if (target !== null && (typeof target !== 'string' || !target.trim())) throw fail('Invalid shelf ID');
+    const shelf = target === null ? null : shelfById(data, target).shelf;
+    if (shelf) enforceAssignmentCapacity(data, shelf, target, ids, known, input?.increaseCapacityTo);
+    // All validation succeeded. Persist one coherent assignment update.
+    for (const id of ids) {
+        if (target === null) delete data.assignments[id];
+        else data.assignments[id] = target;
+    }
+    for (const id of Object.keys(data.assignments)) if (!known.has(id)) delete data.assignments[id];
+    return {count:ids.length, shelfId:target};
+});
+
+/** Export is read-only and portable across independently initialized instances. */
+export function exportRooms(input) {
+    return createRoomExport(getWarehouse(),input?.roomIds,input?.includeAssignments ?? false);
+}
+export function previewRoomImport(input) {
+    return planRoomImport(getWarehouse(),input?.document,{
+        includeAssignments:input?.includeAssignments ?? true,
+        conflictPolicy:input?.conflictPolicy ?? 'skip'
+    }).summary;
+}
+/** One atomic store mutation. Failed validation or conflicts never partially import. */
+export const importRooms = input => changeWarehouse(data => {
+    const plan=planRoomImport({...data,bottles:physicalBottles()},input?.document,{
+        includeAssignments:input?.includeAssignments ?? true,
+        conflictPolicy:input?.conflictPolicy ?? 'skip'
+    });
+    if (plan.summary.blockedRooms) throw fail('Cannot replace a room containing allocated bottles',409);
+    for (const room of plan.toReplace) {
+        const index=data.rooms.findIndex(existing=>existing.id===room.id);
+        if(index<0) throw fail('Room changed during import',409);
+        data.rooms[index]=room;
+    }
+    data.rooms.push(...plan.toAdd);
+    for (const [bottleId,shelfId] of plan.transfers) data.assignments[bottleId]=shelfId;
+    return plan.summary;
 });

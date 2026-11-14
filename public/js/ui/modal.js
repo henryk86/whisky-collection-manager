@@ -1,10 +1,18 @@
 import { t } from '../i18n/index.js';
 import { escapeHtml, query } from './dom.js';
-/** Modal lifecycle. A nested dialog can temporarily cover a form without losing
- * its unsaved inputs or selected files (the original DOM node is restored). */
+/** Modal lifecycle. Dialogs opened from another dialog are nested by default.
+ * Closing returns to the exact parent DOM, preserving inputs, files and scroll.
+ * Explicit nested=false replaces the stack; closeModal(true) clears it on navigation. */
 export function createModal({ state, onClose }) {
     const suspended = [];
-    function showModal(title, content, wide = false, nested = false) {
+    let pendingConfirmation = null;
+    function showModal(title, content, wide = false, nested = true) {
+        // Replacing a confirmation must cancel its awaiting caller.
+        if (pendingConfirmation) {
+            const resolve = pendingConfirmation;
+            pendingConfirmation = null;
+            resolve(false);
+        }
         const host = query('#modal-root');
         if (nested && state.modal && host?.firstElementChild) {
             suspended.push({ modal: state.modal, overlay: host.firstElementChild });
@@ -29,6 +37,11 @@ export function createModal({ state, onClose }) {
         });
     }
     function closeModal(all = false) {
+        if (pendingConfirmation) {
+            const resolve = pendingConfirmation;
+            pendingConfirmation = null;
+            resolve(false);
+        }
         onClose();
         const host = query('#modal-root');
         if (!all && suspended.length) {
@@ -41,5 +54,25 @@ export function createModal({ state, onClose }) {
         state.modal = null;
         if (host) host.innerHTML = '';
     }
-    return { showModal, renderModal, closeModal };
+    /** Asynchronous application-owned confirmation, preserving a parent form
+     * and its unsaved DOM when launched from an already open modal. */
+    function confirm(title, message, acceptLabel, cancelLabel = t('common.actions.cancel')) {
+        return new Promise(resolve => {
+            showModal(title, `<p>${escapeHtml(message)}</p><div class="actions warehouse-form-actions">
+              <button type="button" class="btn" data-act="close-modal">${escapeHtml(cancelLabel)}</button>
+              <button type="button" class="btn primary" data-act="modal-confirm-accept">${escapeHtml(acceptLabel)}</button>
+            </div>`, false, Boolean(state.modal));
+            pendingConfirmation = resolve;
+            query('#modal-root [data-act="close-modal"]')?.focus?.();
+        });
+    }
+    function acceptConfirmation() {
+        if (!pendingConfirmation) return false;
+        const resolve = pendingConfirmation;
+        pendingConfirmation = null;
+        closeModal();
+        resolve(true);
+        return true;
+    }
+    return { showModal, renderModal, closeModal, confirm, acceptConfirmation };
 }

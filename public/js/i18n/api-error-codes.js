@@ -1,5 +1,14 @@
 /** Stable mappings for legacy backend validation messages. Server responses only expose English text and a locale-independent code. */
 const codes = Object.freeze({
+    "Invalid room selection": "api.errors.roomTransferInvalidRoomSelection",
+    "Invalid assignment option": "api.errors.roomTransferInvalidAssignmentOption",
+    "Invalid or unsupported room transfer file": "api.errors.roomTransferInvalidFile",
+    "Room transfer file is too large": "api.errors.roomTransferTooLarge",
+    "Room transfer file exceeds the supported size": "api.errors.roomTransferTooManyItems",
+    "Invalid bottle reference in room transfer file": "api.errors.roomTransferInvalidBottle",
+    "Invalid room import options": "api.errors.roomTransferInvalidOptions",
+    "Cannot replace a room containing allocated bottles": "api.errors.roomTransferOccupiedRoom",
+    "Room changed during import": "api.errors.roomTransferRoomChanged",
     "API-Endpunkt nicht gefunden": "api.errors.apiEndpointNotFound",
     "Abfüllung nicht gefunden": "api.errors.bottlingNotFound",
     "Abfüllung referenziert unbekannte Destillerie": "api.errors.bottlingReferencesAnUnknownDistillery",

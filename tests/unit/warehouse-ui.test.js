@@ -72,13 +72,28 @@ test('warehouse shelf rendering includes copy controls and thumbnails only where
     globalThis.document={querySelector:()=>null,querySelectorAll:()=>[]};
     try {
         view.render();
-        assert.match(html,/data-act="warehouse-furniture-copy" data-id="f"/);
-        assert.match(html,/data-act="warehouse-shelf-copy" data-id="s"/);
+        assert.doesNotMatch(html,/data-act="warehouse-furniture-copy" data-id="f"/);
+        view.openFurnitureManager('f');
+        assert.match(forms.at(-1).content,/data-act="warehouse-furniture-copy" data-id="f"/);
+        assert.match(forms.at(-1).content,/data-act="warehouse-shelf-copy" data-id="s"/);
         assert.match(html,/class="warehouse-bottle-photo" src="\/images\/b1\/sample.jpg"/);
-        assert.equal((html.match(/class="warehouse-bottle-photo"/g)||[]).length,1);
+        assert.equal((html.match(/class="warehouse-bottle-photo"/g)||[]).length,1,'the permanently visible wall displays the photo only once');
         assert.doesNotMatch(html, /\|\| '<span class=\"hint\">Fach ist leer/, 'no unrendered template suffixes');
-        assert.equal((html.match(/class="warehouse-bottle-symbol"/g)||[]).length,2,'fallback silhouettes remain for bottles without photos');
-        assert.match(html,/data-act="warehouse-bottle-preview" data-id="b1"/);
+        assert.equal((html.match(/class="warehouse-bottle-symbol"/g)||[]).length,2,'the page renders each bottle silhouette once');
+        assert.doesNotMatch(html,/warehouse-management-drawer|warehouse-furniture-panel/);
+        assert.equal((forms.at(0).content.match(/class="warehouse-bottle-symbol/g)||[]).length,2, 'single furniture modal shows its assigned bottles');
+        assert.match(forms.at(0).content, /class="warehouse-bottle-symbol" data-act="warehouse-bottle-preview" data-id="b1"/);
+        assert.match(forms.at(0).content, /class="warehouse-bottle-photo" src="\/images\/b1\/sample.jpg"/);
+        assert.match(forms.at(0).content, /data-act="warehouse-bottle-preview" data-id="b2"/);
+        assert.doesNotMatch(forms.at(0).content, />Flaschen anzeigen<\/button>/);
+        view.openBottlePreview('b1');
+        assert.match(forms.at(-1).content, /warehouse-bottle-preview/);
+        assert.match(forms.at(-1).content, /data-act="warehouse-assign" data-id="b1"/);
+        view.openShelfDetails('s');
+        assert.match(forms.at(-1).content, /Whisky mit Foto/);
+        assert.match(forms.at(-1).content, /data-act="warehouse-assign" data-id="b1"/);
+        assert.match(html,/data-act="warehouse-bottles-preview-selected"/);
+        assert.match(html,/data-act="warehouse-bottle-select" data-id="b1"/);
         assert.doesNotMatch(html,/data-act="warehouse-assign" data-id="b1"/);
         view.openForm('furniture-copy','f');
         assert.match(forms.at(-1).content,/name="withShelves" checked/);
@@ -118,6 +133,7 @@ test('shelf bottle opens a read-only details modal with the exact bottle link an
     assert.match(dialog.html,/My &lt;comment&gt;/);
     assert.doesNotMatch(dialog.html,/<Whisky>|<City>|<comment>/);
     assert.match(dialog.html,/class="warehouse-bottle-preview-photo"/);
+    assert.match(dialog.html,/>Zu den Flaschendetails<\/a>/);
     assert.match(dialog.html,/data-act="warehouse-assign" data-id="bottle-123"/);
     assert.match(dialog.html,/href="\/\?bottling=bottling-456" data-act="open" data-id="bottling-456" data-bottle-id="bottle-123"/);
 });
@@ -208,17 +224,20 @@ test('bulk furniture edit uses the same small button size as the other warehouse
     const state = { warehouse: { schemaVersion: 1, rooms: [{ id: 'r', name: 'Raum', width: 3, height: 3,
         furniture: [{ id: 'f', name: 'Regal', type: 'regal', x: 0, y: 0, width: 1, depth: .5,
             rotation: 0, shelves: [] }] }], bottles: [], assignments: {} },
-        selected: 'rooms', warehouseRoomId: 'r', warehousePlanMode: '3d', warehouseSelectedFurnitureIds: ['f'] };
-    let html = '';
+        selected: 'shelves', warehouseRoomId: 'r', warehousePlanMode: '3d', warehouseSelectedFurnitureIds: ['f'] };
+    let html = '', manager = '';
     const savedDocument = globalThis.document;
     globalThis.document = { querySelector: () => null, querySelectorAll: () => [], getElementById: () => null };
     try {
-        createWarehouseView({ state, shell: output => { html = output; }, navigate: () => {}, modal: {}, refresh: async () => {} }).render();
+        const view = createWarehouseView({ state, shell: output => { html = output; }, navigate: () => {}, modal: {showModal:(_title,content)=>{manager=content;}}, refresh: async () => {} });
+        view.render();
+        assert.doesNotMatch(html,/warehouse-bulk-edit/);
+        view.openFurnitureBulkManager();
     } finally {
         if (savedDocument === undefined) delete globalThis.document;
         else globalThis.document = savedDocument;
     }
-    const actionButtons = [...html.matchAll(/<button[^>]*data-act="warehouse-bulk-(?:select-all|clear|delete|edit)"[^>]*>/g)].map(match => match[0]);
+    const actionButtons = [...manager.matchAll(/<button[^>]*data-act="warehouse-bulk-(?:select-all|clear|delete|edit)"[^>]*>/g)].map(match => match[0]);
     assert.equal(actionButtons.length, 4);
     for (const button of actionButtons) assert.match(button, /class="btn small(?: |")/);
 });
@@ -255,4 +274,112 @@ test('furniture wall switches render independently with accessible labels and pr
     const css=fs.readFileSync('public/styles/warehouse.css','utf8');
     assert.match(css,/warehouse-wall-toggle:has\(input:checked\)/);
     assert.match(css,/warehouse-bulk-panel--sidebar \.warehouse-bulk-actions \.btn \{height:48px/);
+});
+
+
+test('Raumpläne are limited to spatial layout, while Regale & Fächer owns wall, editing and bottle actions', () => {
+    const room={id:'r',name:'Lager',width:4,height:3,furniture:[{
+        id:'f',name:'Regal 1',type:'regal',x:0,y:0,width:1,depth:.5,
+        elevation:0,itemHeight:1.5,rotation:0,shelves:[{id:'s',name:'Fach',capacity:3}]
+    }]};
+    const state={warehouse:{rooms:[room],bottles:[{id:'b',name:'Bottle'}],assignments:{b:'s'}},
+        selected:'rooms',warehouseRoomId:'r',warehousePlanMode:'2d'};
+    let html='';
+    const original=globalThis.document;
+    globalThis.document={querySelector:()=>null,querySelectorAll:()=>[],getElementById:()=>null};
+    try {
+        const view=createWarehouseView({state,shell:value=>{html=value;},navigate:()=>{},modal:{},refresh:async()=>{}});
+        view.render();
+        assert.match(html,/class="warehouse-floor"/);
+        assert.match(html,/data-act="warehouse-open-shelves"/);
+        assert.doesNotMatch(html,/warehouse-room-wall|warehouse-furniture-panel|warehouse-shelf-new|warehouse-furniture-new|warehouse-bulk-edit|warehouse-bottle-symbol|data-mode="wall"/);
+        state.selected='shelves';
+        state.warehouseFurnitureId='f';
+        view.render();
+        assert.match(html,/class="warehouse-room-wall"/);
+        assert.match(html,/data-act="warehouse-furniture-new"/);
+        assert.match(html,/data-act="warehouse-furniture-bulk"/);
+        assert.match(html,/data-act="warehouse-furniture-manage"/);
+        assert.doesNotMatch(html,/warehouse-bulk-edit|warehouse-furniture-panel/);
+        assert.match(html,/warehouse-bottle-select/);
+        assert.doesNotMatch(html,/warehouse-floor|warehouse-three-viewport|warehouse-plan-tools|data-act="warehouse-room-new"/);
+    } finally {
+        if(original===undefined) delete globalThis.document;
+        else globalThis.document=original;
+    }
+});
+
+
+test('a selected furniture in Raumpläne presents an actionable position summary, not a shelf editor', () => {
+    const room={id:'r',name:'Plan room',width:4,height:3,furniture:[{id:'f',name:'Top unit',type:'haengeregal',x:1.2,y:.4,elevation:1.9,width:1,depth:.4,rotation:0,shelves:[{id:'s',name:'Fach'}]}]};
+    const state={warehouse:{rooms:[room],bottles:[],assignments:{}},selected:'rooms',warehousePlanMode:'2d',warehouseRoomId:room.id,warehouseFurnitureId:'f'};
+    let html=''; const previous=globalThis.document;
+    globalThis.document={querySelector:()=>null,querySelectorAll:()=>[]};
+    try {createWarehouseView({state,shell:markup=>{html=markup;},navigate:()=>{},modal:{},refresh:async()=>{}}).render();}
+    finally {if(previous===undefined) delete globalThis.document; else globalThis.document=previous;}
+    assert.match(html,/class="warehouse-section-boundary warehouse-plan-focus"/);
+    assert.match(html,/Top unit/);
+    assert.match(html,/X: 1,2 m/);
+    assert.match(html,/data-act="warehouse-open-shelves"/);
+    assert.doesNotMatch(html,/class="warehouse-management-drawer"|warehouse-furniture-panel/);
+});
+
+test('shelf management shows bottles in its modal without duplicating the wall on the page', () => {
+    const room={id:'r',name:'Storage',width:5,height:4,furniture:[{id:'f',name:'Shelf',type:'regal',width:1,depth:.5,itemHeight:1.5,shelves:[{id:'s',name:'One',capacity:2}]}]};
+    const state={warehouse:{rooms:[room],bottles:[{id:'b',name:'Bottle'}],assignments:{b:'s'}},selected:'shelves',warehouseRoomId:'r',warehouseFurnitureId:'f'};
+    let html='', manager='', wide=false;const previous=globalThis.document;
+    globalThis.document={querySelector:()=>null,querySelectorAll:()=>[]};
+    try {
+        const view=createWarehouseView({state,shell:markup=>{html=markup;},navigate:()=>{},modal:{showModal:(_title,content,isWide)=>{manager=content;wide=isWide;}},refresh:async()=>{}});
+        view.render();
+        assert.match(html,/data-act="warehouse-furniture-manage"/);
+        assert.doesNotMatch(html,/warehouse-management-drawer|warehouse-furniture-panel|warehouse-shelf-edit/);
+        assert.equal((html.match(/class="warehouse-bottle-symbol"/g)||[]).length,1);
+        view.openFurnitureManager('f');
+        assert.equal(wide,true);
+        assert.match(manager,/class="warehouse-furniture-manager warehouse-shelves-management"/);
+        assert.match(manager,/data-act="warehouse-shelf-edit"/);
+        assert.match(manager,/data-act="warehouse-furniture-edit"/);
+        assert.match(manager,/data-act="warehouse-bottle-preview" data-id="b"/);
+        assert.equal((manager.match(/class="warehouse-bottle-symbol/g)||[]).length,1,'only bottles from the selected furniture are shown');
+    } finally {if(previous===undefined)delete globalThis.document;else globalThis.document=previous;}
+});
+
+test('single furniture modal stays scoped to the clicked cabinet; batch edit has a separate dialog', () => {
+    const room={id:'room',name:'Room',width:5,height:4,furniture:[
+        {id:'a',name:'Left cabinet',type:'schrank',x:0,y:0,width:1,depth:.5,itemHeight:1.5,shelves:[{id:'sa',name:'Left shelf'}]},
+        {id:'b',name:'Right cabinet',type:'schrank',x:1,y:0,width:1,depth:.5,itemHeight:1.5,shelves:[{id:'sb',name:'Right shelf'}]},
+    ]};
+    const state={warehouse:{rooms:[room],bottles:[{id:'left-bottle',name:'Left whisky'},{id:'right-bottle',name:'Right whisky'}],assignments:{'left-bottle':'sa','right-bottle':'sb'}},selected:'shelves',warehouseRoomId:'room',warehouseFurnitureId:'a'};
+    const oldDocument=globalThis.document;
+    let page='',dialog='',title='';
+    const viewport={dataset:{roomId:'room'},scrollLeft:0,isConnected:true};
+    globalThis.document={
+        querySelector(selector) {return selector==='.warehouse-wall-scroll' ? viewport : null;},
+        querySelectorAll:()=>[],
+    };
+    try {
+        const view=createWarehouseView({state,shell:html=>{page=html;},modal:{showModal:(label,content)=>{title=label;dialog=content;}},navigate:()=>{},refresh:async()=>{}});
+        view.render();
+        view.openFurnitureManager('a');
+        assert.equal(title,'Left cabinet');
+        assert.match(dialog,/Left shelf/);
+        assert.match(dialog,/data-act="warehouse-bottle-preview" data-id="left-bottle"/);
+        assert.doesNotMatch(dialog,/right-bottle|Right shelf|warehouse-bulk-list|warehouse-bulk-check|warehouse-bulk-pick/);
+        viewport.scrollLeft=275;
+        view.openFurnitureManager('b');
+        assert.equal(title,'Right cabinet');
+        assert.match(dialog,/Right shelf/);
+        assert.match(dialog,/data-act="warehouse-bottle-preview" data-id="right-bottle"/);
+        assert.doesNotMatch(dialog,/left-bottle|Left shelf|warehouse-bulk-list/);
+        assert.equal(viewport.scrollLeft,275);
+        view.openFurnitureBulkManager();
+        assert.match(dialog,/warehouse-furniture-bulk-manager/);
+        assert.match(dialog,/data-act="warehouse-toggle-furniture"/);
+        assert.doesNotMatch(dialog,/warehouse-furniture-panel|warehouse-shelf-edit|type="checkbox"/);
+        view.toggleFurnitureBulkSelection('a');
+        view.openFurnitureBulkManager();
+        assert.match(dialog,/aria-pressed="true"/);
+        assert.doesNotMatch(page,/warehouse-furniture-panel|warehouse-management-drawer/);
+    } finally {if(oldDocument===undefined) delete globalThis.document; else globalThis.document=oldDocument;}
 });
