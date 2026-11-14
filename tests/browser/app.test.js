@@ -1891,6 +1891,10 @@ test('browser: warehouse room plan mounts local Three.js and keeps the 2D plan a
         const rack=await requestJson(base,`/api/warehouse/rooms/${room.data.id}/furniture`,'POST',
             {name:'Offenes Regal',type:'regal',x:0.3,y:0.2,width:1.7,depth:0.6,rotation:0,elevation:0,itemHeight:1.8});
         assert.equal(rack.status,201);
+        // Only furniture with configured shelves appears in the room-wide shelf wall.
+        const shelf=await requestJson(base,`/api/warehouse/furniture/${rack.data.id}/shelves`,'POST',
+            {name:'Regalfach',capacity:6});
+        assert.equal(shelf.status,201);
         await open();
         await page.locator('header [data-act="toggle-menu"]').click();
         await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
@@ -1925,10 +1929,12 @@ test('browser: warehouse room plan mounts local Three.js and keeps the 2D plan a
         await page.locator('.warehouse-bulk-open').first().click();
         assert.equal(await page.locator('.warehouse-furniture-panel').count(),0,'room plan does not edit shelves');
         await page.locator('[data-act="warehouse-open-shelves"]').click();
+        assert.equal(await page.locator('.warehouse-tabs [data-section="shelves"]').getAttribute('aria-current'),'page');
         assert.equal(await page.locator('.warehouse-furniture-panel').count(),0,'editing is confined to a modal');
-        await page.locator('[data-act="warehouse-furniture-manage"]').first().click();
+        // Editing is only accessible through the furniture icon in Regale & Faecher.
+        await page.locator(`.warehouse-wall-furniture-edit[data-id="${rack.data.id}"]`).click();
         assert.equal(await page.locator('#modal-root .warehouse-furniture-panel').count(),1,'furniture management opens in a modal');
-        await page.locator('#modal-root [data-act="close-modal"]').click();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
         await page.locator('.warehouse-tabs [data-section="rooms"]').click();
         await page.locator('.warehouse-tabs [data-section="rooms"]').click();
         await page.locator('[data-act="warehouse-plan-mode"][data-mode="2d"]').click();
@@ -2011,13 +2017,13 @@ test('browser: shelf overview keeps decorative bottles inert; furniture and rack
         assert.equal(await managedBottle.count(),1);
         await managedBottle.click();
         assert.equal(await page.locator('#modal-root .warehouse-bottle-preview').count(),1);
-        await page.locator('#modal-root [data-act="close-modal"]').click();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
         assert.equal(await manager.locator('.warehouse-shelf').count(),1,'closing bottle preview returns to furniture modal');
 
         // Shelf editing itself is another nested modal, with a return to its parent.
         await manager.locator('[data-act="warehouse-shelf-edit"]').click();
         assert.equal(await page.locator('#modal-root #warehouse-form').count(),1);
-        await page.locator('#modal-root [data-act="close-modal"]').click();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
         assert.equal(await manager.locator('.warehouse-shelf').count(),1,'closing shelf edit returns to furniture modal');
 
         // The shelf overview is read-only: clicking a bottle image never opens
@@ -2028,16 +2034,20 @@ test('browser: shelf overview keeps decorative bottles inert; furniture and rack
         const decorativeBottle = shelfOverview.locator('.warehouse-bottle-static');
         assert.equal(await decorativeBottle.count(),1);
         assert.equal(await shelfOverview.locator('[data-act="warehouse-bottle-preview"]').count(),0);
-        await decorativeBottle.click();
+        // Decorative images deliberately ignore pointer events; a physical
+        // click on their image area reaches the card and must stay inert.
+        const bottleBounds=await decorativeBottle.boundingBox();
+        assert.ok(bottleBounds,'decorative bottle image must be visible');
+        await page.mouse.click(bottleBounds.x+bottleBounds.width/2,bottleBounds.y+bottleBounds.height/2);
         assert.equal(await page.locator('#modal-root .warehouse-shelf-detail-grid').count(),1);
         assert.equal(await page.locator('#modal-root .warehouse-bottle-preview').count(),0);
         await shelfOverview.locator(`[data-act="warehouse-assign"][data-id="${created.bottle.id}"]`).click();
         assert.equal(await page.locator('#modal-root #warehouse-form').count(),1);
         await page.keyboard.press('Escape');
         assert.equal(await page.locator('#modal-root .warehouse-shelf-detail-grid').count(),1,'Escape returns to shelf overview from relocation');
-        await page.locator('#modal-root [data-act="close-modal"]').click();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
         assert.equal(await manager.locator('.warehouse-shelf').count(),1,'closing compartment overview returns to furniture modal');
-        await page.locator('#modal-root [data-act="close-modal"]').click();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
         assert.equal(await page.locator('#modal-root [role="dialog"]').count(),0);
 
         // A click still selects for batch relocation, a double-click opens bottle details.
@@ -2107,7 +2117,7 @@ test('browser: shelf overview keeps decorative bottles inert; furniture and rack
         assert.ok(assignmentFrame.width <= assignmentFrame.viewport + 1, 'dialog must fit mobile width');
         assert.equal(assignmentFrame.columns,1,'mobile assignment selects should stack vertically');
         await checkPhotoSize();
-        await page.locator('#modal-root [data-act="close-modal"]').first().click();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').first().click();
         assert.equal(await page.locator('#modal-root .warehouse-bottle-preview').count(),1,
             'closing relocation restores the bottle modal');
         await page.locator('#modal-root [data-act="open"]').click();
@@ -2325,6 +2335,9 @@ test('browser: compact room tools, uniform bulk buttons and furniture wall toggl
             leftSidePanel:true,rightSidePanel:false,backPanel:true,
         });
         assert.equal(created.status,201);
+        const shelf=await requestJson(base,`/api/warehouse/furniture/${created.data.id}/shelves`,'POST',
+            {name:'Wandfach',capacity:4});
+        assert.equal(shelf.status,201);
         await open();
         await page.locator('header [data-act="toggle-menu"]').click();
         await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
@@ -2332,18 +2345,24 @@ test('browser: compact room tools, uniform bulk buttons and furniture wall toggl
         await page.locator('#warehouse-room-select').selectOption(room.id);
         const desktop=await page.evaluate(() => {
             const el = selector => document.querySelector(selector)?.getBoundingClientRect();
-            const buttons=[...document.querySelectorAll('.warehouse-bulk-actions .btn')].map(node=>node.getBoundingClientRect().height);
             return { roomName:el('.warehouse-room-identity h3'),metrics:el('.warehouse-room-metrics'),
                 modes:el('.warehouse-view-switch'), cameras:el('.warehouse-camera-toolbar'),
-                zoom:el('.warehouse-plan-filter'),buttons };
+                zoom:el('.warehouse-plan-filter') };
         });
-        assert.equal(desktop.buttons.length,4);
-        assert.ok(desktop.buttons.every(h=>Math.abs(h-desktop.buttons[0])<1),`bulk buttons need equal heights ${JSON.stringify(desktop.buttons)}`);
+        assert.equal(await page.locator('.warehouse-bulk-actions').count(),0,
+            'Raumplaene must not expose furniture bulk editing');
         assert.ok(Math.abs(desktop.modes.top-desktop.cameras.top)<4,`camera and view switch share a row: ${JSON.stringify(desktop)}`);
         assert.ok(Math.abs(desktop.modes.top-desktop.zoom.top)<4,`zoom and view switch share a row: ${JSON.stringify(desktop)}`);
         assert.ok(Math.abs(desktop.roomName.top-desktop.metrics.top)<40,`room title and metrics share a header: ${JSON.stringify(desktop)}`);
         await page.locator('.warehouse-room-summary').screenshot({path:'test-artifacts/warehouse-room-header-0147.png'});
         await page.locator('.warehouse-tabs [data-section="shelves"]').click();
+        await page.locator('[data-act="warehouse-furniture-bulk"]').click();
+        const bulkButtons=await page.locator('#modal-root .warehouse-furniture-bulk-manager .warehouse-bulk-actions .btn')
+            .evaluateAll(buttons=>buttons.map(button=>button.getBoundingClientRect().height));
+        assert.equal(bulkButtons.length,4,'bulk controls belong in the separate furniture management modal');
+        assert.ok(bulkButtons.every(height=>Math.abs(height-bulkButtons[0])<1),
+            `bulk buttons need equal heights ${JSON.stringify(bulkButtons)}`);
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
         await page.locator('.warehouse-wall-furniture-edit').click();
         assert.equal(await page.locator('#modal-root .warehouse-furniture-panel').count(),1);
         await page.locator('#modal-root [data-act="warehouse-furniture-edit"]').click();

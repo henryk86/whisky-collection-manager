@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.19.15 - 2026-11-14
+
+- Browser-Regressionstests fuer Raumplan, verschachtelte Modals und Moebelverwaltung an aktuelle Oberflaeche anpassen
+
 ## 0.19.14 - 2026-11-14
 
 - Fachuebersicht: Flaschenbilder ohne Dialogaktion; direkte Aktionen und Modal-Rueckkehr bleiben erhalten
