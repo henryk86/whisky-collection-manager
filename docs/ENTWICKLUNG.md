@@ -3,13 +3,12 @@
 ## Schnellstart
 
 ```bash
-npm ci
-npm run cutout:prepare   # einmaliger Asset-Download für die Freistellung
-npm run verify
-npm start
+npm start               # npm ci bei Bedarf, cutout:prepare, lokale TLS-Ersteinrichtung, Server
 ```
 
-Die Anwendung startet ohne Build. `npm run dev` verwendet den Node-Watch-Modus für den Server; Frontend-Änderungen durch Neuladen im Browser anzeigen. Die Standardkonfiguration aktiviert ausschließlich HTTPS auf 3543. Tests starten ihre eigenen kurzlebigen Server, Ports und Datenverzeichnisse und ändern nicht die produktive Sammlung.
+Der Starter liegt in `scripts/start.js`. Er vergleicht die installierten npm-Pakete mit `package-lock.json` und installiert nur fehlende oder abweichende Versionen; `scripts/prepare-cutout-assets.js` prüft die ONNX-/WASM-Dateien vor jedem Serverstart. Eine fehlende `.env` wird beim lokalen Erststart aus `.env.example` übernommen; bei fehlenden Standard-TLS-Dateien wird `scripts/setup-https.js` verwendet (benötigt `mkcert` oder OpenSSL). Individuelle Zertifikatspfade werden nie überschrieben. Ein Fehler beim Installieren oder Vorbereiten verhindert den Serverstart. `npm start` ist kein CI-Lauf und führt weder `npm run verify` noch Browser-Tests aus; diese gehören vor einen Merge.
+
+Die Anwendung startet ohne Frontend-Build. `npm run dev` verwendet den Node-Watch-Modus für den Server und setzt eine vorherige Vorbereitung durch `npm start` voraus; Frontend-Änderungen durch Neuladen im Browser anzeigen. Die Standardkonfiguration aktiviert ausschließlich HTTPS auf 3543. Tests starten ihre eigenen kurzlebigen Server, Ports und Datenverzeichnisse und ändern nicht die produktive Sammlung.
 
 ## Konventionen
 

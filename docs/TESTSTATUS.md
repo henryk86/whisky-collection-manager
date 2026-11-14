@@ -1,22 +1,25 @@
-# Teststatus - Whisky Collection Manager v0.17.14
+# Teststatus - Whisky Collection Manager v0.17.15
 
-**Stand:** 2026-11-14. **Status:** Unit-/Integrationstests, Versions- und statische Prüfungen bestanden; Browser- und Docker-Prüfungen für diese Version nicht ausgeführt. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-14. **Status:** Node-Unit-/Integrationstests, Versions- und statische Pruefungen erfolgreich. Browser-, Windows- und Docker-Abnahme weiterhin offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
-## Durchgeführte Prüfungen
+## Durchgefuehrte Pruefungen
 
-| Prüfung | Ergebnis | Einordnung |
+| Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Bestanden** | Release-Metadaten v0.17.14 sind konsistent. |
-| `npm run check` | **Bestanden** | JavaScript-Importe und Syntax, i18n-Kataloge, Dokumentationslinks sowie Test-Fixtures geprüft. |
-| `npm test` | **378/378 bestanden** | Gesamte lokal ausführbare Unit-/Integrationssuite, einschließlich zwei neuer Sprach-Regressionstests. |
-| `npm run test:browser` | **Nicht lokal ausgeführt** | Browser-Verhalten für diese Version nicht überprüft. |
-| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Deployment weiterhin separat prüfen. |
-| Windows-PowerShell-Testlauf | **Nicht lokal ausgeführt** | Windows-spezifische Probleme aus früheren Testberichten sind hiermit nicht behoben oder neu geprüft. |
+| `npm run release:check` | **Bestanden** | Versionsmetadaten fuer 0.17.15 konsistent. |
+| `npm run check` | **Bestanden** | Node-Syntax, Imports, Test-Fixtures, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **386/386 bestanden** | Vollstaendige lokale Unit-/Integrationssuite inklusive sieben Start-Unit-Tests und einem realen `npm start`-Prozess-Smoke-Test in einer isolierten Testinstallation. |
+| Start-Prozess-Smoke-Test | **Bestanden** | Ruft wirklich `npm start` auf; prueft Vorbereitung vor Serverstart ohne Netzwerkbedarf durch ersetzte Modellvorbereitung und einen Testserver. |
+| Echte Erstinstallation (`npm ci` + ONNX-/WASM-Download + TLS-Erstellung) | **Nicht lokal ausgefuehrt** | Ohne Netz-/Systemvoraussetzungen hier nicht vollstaendig end-to-end getestet; Ablauf und Fehlerfaelle in Unit-Tests geprueft. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Chromium-Suite fuer diese Version nicht ausgefuehrt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Docker-Entrypoint bleibt unveraendert, Build nicht erneut getestet. |
+| Windows-PowerShell-Starttest | **Nicht lokal ausgeführt** | Verhalten unter nativem Windows nicht verifiziert; plattformunabhaengiger Node-Starter und Batch-Aufruf vorhanden. |
 
-## Änderungen v0.17.14
+## Aenderungen v0.17.15
 
-- Sichtbare erklärende Klammerzusätze aus Formular- und Detailbeschriftungen der Abfüllungs- und Flaschenansicht entfernt, sowohl auf Deutsch als auch auf Englisch.
-- Informationen, die echte Werte darstellen (beispielsweise Anzahl von Fotos), behalten ihre dynamischen Zähler.
-- Zwei gezielte Tests schützen die geänderten deutschen und englischen Beschriftungen vor Regressionen.
+- `npm start` startet nun `scripts/start.js`: fehlende/veraltete npm-Abhaengigkeiten ueber `npm ci` einrichten; Cutout-Assets pruefen und bei Bedarf herunterladen; `.env` bei lokalem Erststart anlegen; bei fehlenden Standardzertifikaten lokale HTTPS-Einrichtung starten; anschliessend Server ausfuehren.
+- Vorhandene Installationen und Zertifikate bleiben erhalten. Bei Fehlern in der Vorbereitung startet der Server nicht unvollstaendig.
+- `start-unix.sh` und `start-windows.bat` verwenden denselben Startablauf. Der Docker-Entrypoint und sein Buildzeit-Installationsprozess bleiben unveraendert.
+- Neue Regressionstests pruefen Reihenfolge, notwendige/skippbare Installationen, Produktionsmodus, TLS-Konfiguration und Fehlerabbruch sowie den realen Prozessaufruf.
 
-**Abgrenzung:** Es wurden nur Übersetzungstexte und Tests für diese Darstellung geändert, keine gespeicherten Daten, Feldtypen oder Validierungsregeln.
+**Hinweis:** Die lokale Erstinstallation und der echte Download aller ONNX-Dateien wurden hier nicht mit realem Netzwerkzugriff ausgefuehrt. Ein erfolgreicher Modell-Download, Windows-Start und Browserlauf sind damit nicht zugesichert.

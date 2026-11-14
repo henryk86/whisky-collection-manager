@@ -1,3 +1,3 @@
 #!/bin/sh
-cd "$(dirname "$0")"
-exec node server/index.js
+cd "$(dirname "$0")" || exit 1
+exec npm start

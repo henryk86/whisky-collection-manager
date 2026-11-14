@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.17.14
+# Whisky Collection Manager v0.17.15
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der **Abfüllung** über einzelne **physische Flaschen** bis zum **Lagerfach**. Eine Abfüllung kann mehrere Flaschen mit unterschiedlichen Inventarnummern, Zuständen, Größen, Fotos und Belegen enthalten.
 
@@ -139,17 +139,29 @@ Die Browser-Tests verwenden jetzt `tests/fixtures/photo-import-reference.png`. D
 
 ## Lokal entwickeln
 
-**Node.js 20 oder neuer** ist erforderlich. Es gibt keine Datenbank und keinen Frontend-Bundler. Für die optionale lokale KI-Freistellung ist ein einmaliger Download der versionierten ONNX-Dateien nötig (`npm run cutout:prepare`). Docker-Images erledigen das beim Build.
+**Node.js 20 oder neuer** ist erforderlich. Es gibt keine Datenbank und keinen Frontend-Bundler. Für lokale Installationen reicht beim ersten und bei späteren Starts:
 
 ```bash
-npm ci
-npm run cutout:prepare   # einmalig: KI-Modell und WASM lokal bereitstellen
-cp .env.example .env
+npm start
+```
+
+Der plattformübergreifende Starthelfer führt die erforderlichen Schritte automatisch in dieser Reihenfolge aus:
+
+1. Bei fehlenden, unvollständigen oder nicht zum Lockfile passenden Abhängigkeiten **`npm ci`** ausführen. Bereits korrekt installierte Pakete bleiben unverändert; bei `NODE_ENV=production` werden Entwickler-Abhängigkeiten ausgelassen.
+2. **`cutout:prepare`** ausführen: Das Programm prüft die lokalen ONNX-/WASM-Dateien und lädt fehlende oder beschädigte Dateien herunter. Bei späteren Starts mit vollständigen Assets ist kein Download notwendig.
+3. Falls noch nicht vorhanden, die lokale **`.env`** aus `.env.example` anlegen. Wenn HTTPS aktiviert ist und die üblichen lokalen Zertifikate fehlen, die **HTTPS-Ersteinrichtung** automatisch durchführen. Dazu muss `mkcert` oder `openssl` verfügbar sein. Eigene Zertifikatspfade und vorhandene Zertifikate werden nicht überschrieben.
+4. Erst nach erfolgreicher Vorbereitung den Server starten.
+
+Beim **ersten Start sind Internetzugriff für npm und die KI-Dateien** sowie gegebenenfalls `mkcert` oder OpenSSL für die Zertifikate erforderlich. Scheitert ein Schritt, wird der Server nicht mit unvollständiger Vorbereitung gestartet; die Fehlermeldung nennt den fehlgeschlagenen Schritt. Weitere Aufrufe von `npm start` verwenden die bereits vorbereiteten Dateien auch ohne Internet.
+
+Wer ein bestimmtes LAN-Zertifikat (z. B. für den Smartphone-Zugriff) benötigt, kann es weiterhin gezielt erneuern:
+
+```bash
 npm run https:setup -- --ip 192.168.178.50
 npm start
 ```
 
-Die Beispiel-IP durch die lokale Adresse ersetzen. Die Standardeinstellung ist HTTPS auf Port 3543. Für den Entwicklungsmodus `npm run dev` verwenden. **Bestehende lokale Installationen** aus aelteren Releases koennen noch eine `.env` ohne `CERT_*` besitzen. Bei Zugriff ueber LAN-IP das Zertifikat mit `npm run https:setup -- --ip <LAN-IP>` erneut einrichten oder den aufgerufenen Namen unter `ALLOWED_HOSTS` ergaenzen. Eine nicht zum Zertifikat passende Adresse erfordert zusaetzlich eine Zertifikatserneuerung; `ALLOWED_HOSTS` allein beseitigt keine TLS-Warnung.
+Die Beispiel-IP durch die lokale Adresse ersetzen. Die Standardeinstellung ist HTTPS auf Port 3543. `npm start` führt **keine Tests oder CI-Workflows** aus. Für den Entwicklungsmodus mit automatischem Node-Neustart `npm run dev` verwenden; dieser Modus setzt die erstmalige Vorbereitung durch `npm start` voraus. Im Docker-Image erfolgen `npm ci` und die Vorbereitung der Freistellung weiterhin beim Image-Build; der bestehende Container-Entrypoint wird nicht geändert. **Bestehende lokale Installationen** aus aelteren Releases koennen noch eine `.env` ohne `CERT_*` besitzen. Bei Zugriff ueber LAN-IP das Zertifikat mit `npm run https:setup -- --ip <LAN-IP>` erneut einrichten oder den aufgerufenen Namen unter `ALLOWED_HOSTS` ergaenzen. Eine nicht zum Zertifikat passende Adresse erfordert zusaetzlich eine Zertifikatserneuerung; `ALLOWED_HOSTS` allein beseitigt keine TLS-Warnung.
 
 ### Qualität und Tests
 

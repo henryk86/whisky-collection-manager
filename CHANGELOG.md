@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.17.15 - 2026-11-14
+
+- npm start prepares missing dependencies, local cutout assets and initial HTTPS setup before launching the server
+
 ## 0.17.14 - 2026-11-14
 
 - Erklaerende Klammerzusätze aus Abfüllungs- und Flaschenfeldbeschriftungen entfernt (DE/EN).
