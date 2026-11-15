@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.27.12 - 2026-11-15
+
+- Fehlenden Benachrichtigungsimport bei Flaschen-Anhaengen und Foto-Uploads behoben; nach dem Upload wird die Detailansicht wieder aktualisiert.
+- Browserregressionstests fuer Filter, Verkostungen, Dialoge und Fotoaktionen an die aktuelle Bedienung angepasst; im DOM-Browsermodus bleibt der simulierte KI-Lauf erreichbar.
+
+## 0.27.11 - 2026-11-15
+
+- Filterleiste der Sammlung so angepasst, dass die Select-Texte nicht abgeschnitten werden.
+
 ## 0.27.10 - 2026-11-15
 
 - Verkostungsdetails: Optional-Hinweis beim Titel nur im Bearbeitungsmodus anzeigen.

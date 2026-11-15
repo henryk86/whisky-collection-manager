@@ -12,6 +12,7 @@ import { bottleStatusLabels, photoAccept } from '../domain/labels.js';
 
 import { uploadPhotos } from '../features/photos.js';
 import { uploadFiles, fileAccept, formatFileSize } from '../features/files.js';
+import { toast } from '../ui/notifications.js';
 import { attachPhotoSorting } from '../features/photo-order.js';
 import { bottlingDetails, hasBottlingDetail } from '../domain/bottling-details.js';
 import { bottlingOriginLabel } from '../domain/bottling-origin.js';

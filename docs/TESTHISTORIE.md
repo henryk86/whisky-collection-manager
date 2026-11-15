@@ -2573,3 +2573,52 @@ Die lokale volle Chromium-HTTP-Suite, reale Geraeteabnahme und ARM64-Live-Tests 
 - Regressionstests fuer Button-Position sowie DOM-Reihenfolge und Grid-Aufteilung ergaenzt.
 
 Die tatsaechliche Browserdarstellung wurde hier nicht visuell abgenommen.
+
+---
+
+## Testbericht v0.27.10 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Statische Projektpruefungen und 545 Unit-/Integrationstests erfolgreich. Vorherige Testberichte: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten der Version 0.27.10 stimmen ueberein. |
+| `npm run check` | **Bestanden** | Syntax, Modulimporte, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **545/545 bestanden** | Unit- und Integrationstests, inklusive Lesemodus-/Bearbeitungsmodus-Regression. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Visuelle Browserpruefung steht aus. |
+| iOS Safari, Android, Docker/ARM64 | **Nicht lokal ausgeführt** | Endgeraete- und Deployment-Pruefungen stehen aus. |
+
+### Aenderungen v0.27.10
+
+- In gespeicherten Verkostungen lautet die Titelbeschriftung im Lesemodus nur noch „Titel“ (englisch „Title“); bei der Bearbeitung bleibt „Titel (optional)“ (englisch „Title (optional)“).
+- Regressionstest stellt die unterschiedlichen Beschriftungen in beiden Modi sicher.
+
+Die tatsaechliche Browserdarstellung wurde hier nicht visuell abgenommen.
+
+---
+
+## Testbericht v0.27.11 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Kernpruefungen fuer v0.27.11 erfolgreich, manuelle Browser-/Zielsystempruefungen noch offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Erfolgreich** | Release-Metadaten fuer v0.27.11 konsistent. |
+| `npm run check` | **Erfolgreich** | 290 JavaScript-Dateien, Uebersetzungen und 165 Markdown-Links geprueft. |
+| `npm test` | **Erfolgreich (545/545 Tests)** | Unit- und Integrationstests komplett gruen. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Kein separater Browserlauf in diesem Release dokumentiert. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Weiterhin auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.27.11
+
+- Filterleiste der Sammlung so angepasst, dass lange Select-Beschriftungen wie „Alle Bewertungen“ und „Alle Flaschentypen“ nicht mehr abgeschnitten werden.
+- Desktop-Layout der Sammlungsfilter bekommt frueher einen Zeilenumbruch, bevor Controls unleserlich eng werden.
+
+### Hinweise
+
+- Die Aenderung betrifft ausschliesslich das Layout der Filterleiste auf der Sammlungsseite.
+- Eine manuelle Sichtpruefung im Browser, insbesondere fuer schmale Desktop-Breiten und Mobilgeraete, ist weiterhin empfohlen.

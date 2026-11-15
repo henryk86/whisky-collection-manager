@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.27.10
+# Whisky Collection Manager v0.27.12
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der Abfüllung über einzelne physische Flaschen bis zum Lagerfach. Eine Abfüllung kann mehrere Flaschen mit eigenen Inventarnummern, Zuständen, Fotos und Belegen enthalten.
 
@@ -22,6 +22,8 @@ Die Anwendung wurde **vollständig durch ChatGPT programmiert**. Der Projektinit
 | **Hilfe** | Eigene Hilfeseite mit praktischen Bedienhinweisen und ausklappbaren technischen Backup-Anleitungen für zentrales ZIP-Passwort, USB, NAS, Rclone/Dropbox, OneDrive und Wiederherstellung. |
 
 Verkostungsunterseiten zeigen die Zurück-Navigation oberhalb des Seitentitels. Abfüllungsdaten stehen im ersten Inhaltsblock ohne zusätzliche Überschrift; das vorhandene Abfüllungsfoto aus der Abfüllungsdetailseite wird darin kompakt neben den Stammdaten angezeigt. Die Verkostungslisten verwenden die Zeilenstruktur von Lager → Flasche finden. Externe Abfüllungsdaten werden nur bei der erstmaligen Erfassung direkt eingegeben; danach erscheinen sie lesend mit einem Stift-Button zum Bearbeiten. Die drei Notizfelder bleiben oben ausgerichtet und einzeln in der Höhe veränderbar. Gespeicherte Verkostungen öffnen im Lesemodus; ein Stift-Button im ersten Datenblock (Datum und Titel) aktiviert die Bearbeitung. Der Info-Block einer Sammlungsabfüllung bietet einen direkten Link „Zu den Abfüllungsdetails“.
+
+Der Upload von Belegen, Dokumenten und Fotos an physischen Flaschen aktualisiert die Detailansicht nach erfolgreicher Speicherung.
 
 Anlegeaktionen verwenden dasselbe Plus-Symbol. In den Abfüllungsdetails steht „Neue Verkostung“ wie „Weitere Flasche“ über der jeweiligen Kachel; in Verkostungslisten befindet sich die Aktion innerhalb des Listenblocks. Im Verkostungseditor stehen Datum (schmal), Titel (breit) und Bearbeitungsaktionen in einer dreispaltigen Zeile, bei schmalen Ansichten umbrechend.
 

@@ -26,6 +26,10 @@ async function openApp(page, base, options = {}) {
     if (domOnly || options.localeOverrides) await page.route(`${base}/**`, async (route) => {
         const request = route.request();
         const pathname = new URL(request.url()).pathname;
+        // The photo cutout tests register a synthetic ONNX runtime before open().
+        // In DOM-only mode this catch-all route is installed later, so it must
+        // defer to that earlier, more specific route rather than shadow it.
+        if (domOnly && pathname === '/ai/vendor/ort.wasm.min.mjs') return route.fallback();
         if (options.localeOverrides && Object.hasOwn(options.localeOverrides, pathname)) {
             return route.fulfill({status:200, contentType:'application/json',
                 headers:{'Access-Control-Allow-Origin':'*'},
@@ -262,13 +266,28 @@ test('browser: Chrome pointer dragging reorders bottle photos without opening th
         await gallery.locator('[data-photo-tile]').first().waitFor();
         const order = () => gallery.locator('[data-photo-tile]')
             .evaluateAll(tiles => tiles.map(tile => tile.dataset.photoId));
-        const drag = async (source, target) => {
+        const drag = async (source, target = null) => {
+            // Mouse coordinates do not automatically scroll an offscreen gallery.
+            // The tasting section above the physical bottles can place the photos
+            // below the viewport, where raw page.mouse events never hit them.
+            await source.scrollIntoViewIfNeeded();
+            if (target) await target.scrollIntoViewIfNeeded();
             const start = await source.boundingBox();
-            const end = await target.boundingBox();
+            const end = target ? await target.boundingBox() : await gallery.boundingBox();
             assert.ok(start && end);
-            await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+            const viewport = page.viewportSize();
+            const startPoint = {x: start.x + start.width / 2, y: start.y + start.height / 2};
+            // A cancelled drag can end just to the left of the gallery. Do not
+            // scroll the distant page heading into view and hide the source.
+            const endPoint = target
+                ? {x: end.x + end.width / 2, y: end.y + end.height / 2}
+                : {x: Math.max(2, end.x - 20), y: startPoint.y};
+            assert.ok([startPoint, endPoint].every(point => point.x >= 0 && point.y >= 0 &&
+                point.x < viewport.width && point.y < viewport.height),
+            'photo drag coordinates must be visible to pointer events');
+            await page.mouse.move(startPoint.x, startPoint.y);
             await page.mouse.down();
-            await page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 8 });
+            await page.mouse.move(endPoint.x, endPoint.y, { steps: 8 });
             await page.mouse.up();
         };
         // Dragging the handle must use the position under the pointer at release.
@@ -293,8 +312,7 @@ test('browser: Chrome pointer dragging reorders bottle photos without opening th
             .photos.map(p => p.id), [photos[0], photos[1], photos[2]]);
 
         // Cancel a drag outside the gallery: no stale target should be saved.
-        await drag(gallery.locator('[data-photo-tile]').first().locator('[data-photo-drag]'),
-            page.locator('.section-head h2').first());
+        await drag(gallery.locator('[data-photo-tile]').first().locator('[data-photo-drag]'));
         assert.deepEqual(await order(), [photos[0], photos[1], photos[2]]);
 
         // A plain photo click still opens the lightbox after the drag.
@@ -773,10 +791,18 @@ test('browser: upload and remove invoice for one physical bottle', async () => {
         await open();
         await page.locator('.whisky-card').click();
         const files = page.locator(`#bottle-${data.bottle.id} input[data-bottle-files]`);
+        // Verify the actual upload response before waiting for the refreshed DOM.
+        // Otherwise a rejected upload is misreported as a generic selector timeout.
+        const uploaded = page.waitForResponse(response =>
+            response.request().method() === 'POST' &&
+            new URL(response.url()).pathname === `/api/bottles/${data.bottle.id}/files`);
         await files.setInputFiles({
             name: 'Rechnung.pdf', mimeType: 'application/pdf',
-            buffer: Buffer.from('%PDF-1.4\n%%EOF\n')
+            buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n')
         });
+        const uploadResponse = await uploaded;
+        assert.equal(uploadResponse.status(), 201,
+            `attachment upload must succeed: ${await uploadResponse.text()}`);
         await page.waitForSelector(`#bottle-${data.bottle.id} .document-list a`);
         assert.equal(await page.locator('.document-list a').innerText(), 'Rechnung.pdf');
         const saved = (await requestJson(base, '/api/collection')).data;
@@ -1126,12 +1152,13 @@ test('browser: overview quick filters list only used distilleries and combine st
                 }));
             });
             assert.deepEqual(layout.map(item => item.tag),
-                ['INPUT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'BUTTON']);
+                ['INPUT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'BUTTON'],
+                'search, six quick filters (including rating), and the view switch');
             assert.ok(layout.every(item => Math.abs(item.height - 44) <= 1),
                 `${width}px: all controls including view switch must be 44px high`);
             if (width === 1366) {
-                assert.ok(layout.every(item => Math.abs(item.top - layout[0].top) <= 1),
-                    'desktop: all five selectors, search and view switch must share the first toolbar row');
+                assert.ok(layout[1].top > layout[0].top,
+                    'narrow desktop: search uses its own row so no filter caption is truncated');
             }
         }
     });
@@ -3603,12 +3630,12 @@ test('browser: v0.25.4 tasting hierarchy matches analytics and gold-filled glass
         assert.equal(await section.locator('.tasting-senses-section h3').textContent(),'Geschmacksprofil');
         assert.equal(await section.locator('.tasting-panel > section.analytics-panel h3').first().textContent(),'Verkostungsnotizen');
         assert.equal(await section.locator('.tasting-panel > section.analytics-panel h3').last().textContent(),'Gesamtbewertung');
-        assert.equal(await section.locator(':scope > .section-head h3').textContent(),'Verkostung');
+        assert.equal(await section.locator(':scope > .section-head h3').textContent(),'Eindrücke');
         assert.equal(await section.locator('svg[aria-label*="Bewertung kann"]').count(),0);
         const appearance=await panels.first().evaluate(el=>{
             const style=getComputedStyle(el);
             return {radius:style.borderTopLeftRadius,border:style.borderTopWidth,shadow:style.boxShadow,
-                background:style.backgroundColor,header:getComputedStyle(el.querySelector('h3')).fontFamily};
+                background:style.backgroundColor,header:getComputedStyle(document.querySelector('.tasting-color-panel h3')).fontFamily};
         });
         assert.equal(appearance.radius,'0px');
         assert.equal(appearance.border,'1px');
@@ -3714,10 +3741,11 @@ test('browser: v0.26.0 multiple dated tastings, latest summary, individual editi
         await page.locator('[data-act="tastings-back-list"]').click();
         await page.locator('[data-act="tasting-delete"]').first().click();
         assert.equal(await page.locator('[data-act="confirm-action"]').count(),1);
-        await page.locator('[data-act="close-modal"]').click();
+        await page.getByRole('button', {name:'Abbrechen',exact:true}).click();
         assert.equal(await page.locator('.tasting-list-row').count(),2,'cancel preserves record');
         await page.locator('[data-act="tasting-delete"]').first().click();
         await page.locator('[data-act="confirm-action"]').click();
+        await page.waitForFunction(() => document.querySelectorAll('.tasting-list-row').length === 1);
         assert.equal(await page.locator('.tasting-list-row').count(),1);
         await page.locator('[data-act="tastings-back-detail"]').click();
         assert.match(await page.locator('.tasting-summary-rating').innerText(),/81 \/ 100/);

@@ -1389,11 +1389,28 @@ tr.clickable:hover {
     }
 }
 
-/* Collection quick filters keep regular, intentional rows at every width. */
-.collection-filters { display: grid; grid-template-columns: minmax(220px, 2.2fr) repeat(6, minmax(105px, 1fr)) auto; align-items: center; }
+/* Collection quick filters keep regular, intentional rows at every width.
+   The longer translated select labels need visibly more room than the global
+   toolbar defaults, otherwise options like "Alle Bewertungen" are clipped. */
+.collection-filters {
+    display: grid;
+    grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(130px, 1fr)) repeat(3, minmax(145px, 1.12fr)) auto;
+    align-items: center;
+}
 .collection-filters input[type="search"],
 .collection-filters select,
-.collection-filters [data-act="toggle-view"] { box-sizing: border-box; width: 100%; min-width: 0; max-width: none; flex: initial; }
+.collection-filters [data-act="toggle-view"] {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    flex: initial;
+}
+.collection-filters select { max-width: none; }
+@media(max-width:1380px) {
+    .collection-filters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .collection-filters input[type="search"] { grid-column: 1 / -1; }
+}
 @media(max-width:1200px) {
     .collection-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .collection-filters input[type="search"] { grid-column: 1 / -1; }
