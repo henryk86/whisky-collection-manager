@@ -2,6 +2,10 @@ import {validatePhotoAdjustments} from '../../public/js/features/photo-editor/ad
 /** Validate the complete JSON document before any write or import. No filesystem access. */
 import { assert } from './errors.js';
 import { allBottles, WHISKY_TYPES } from './collection.js';
+import { normalizeTastingNotes, normalizeTastingRating } from '../../public/js/domain/tasting.js';
+import { normalizeTastingRecord } from '../../public/js/domain/tasting-records.js';
+import { normalizeStandaloneTasting } from '../../public/js/domain/standalone-tastings.js';
+import { normalizeWhiskyColor } from '../../public/js/domain/whisky-colors.js';
 import { isDocumentPath } from '../storage/documents.js';
 const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
 const isString = value => typeof value === 'string';
@@ -73,7 +77,57 @@ export function validate(collection) {
                 assert(bottling[yearField] == null || bottling[yearField] === Number(bottling[field].slice(0, 4)), `${field} widerspricht ${yearField}`);
             }
         }
+        if (bottling.tastings !== undefined) {
+            assert(Array.isArray(bottling.tastings), 'Ungültige Verkostungsliste');
+            const tastingIds=new Set();
+            for (const tasting of bottling.tastings) {
+                assert(isObject(tasting) && isString(tasting.id) && /^[a-zA-Z0-9-]{1,100}$/.test(tasting.id) &&
+                    isString(tasting.createdAt) && !Number.isNaN(Date.parse(tasting.createdAt)) &&
+                    isString(tasting.updatedAt) && !Number.isNaN(Date.parse(tasting.updatedAt)), 'Ungültige Verkostungsmetadaten');
+                assert(!tastingIds.has(tasting.id),'Doppelte Verkostungs-ID');
+                tastingIds.add(tasting.id);
+                const {id,createdAt,updatedAt,...editable}=tasting;
+                try { normalizeTastingRecord(editable); }
+                catch { assert(false,'Ungültiger Verkostungseintrag'); }
+            }
+        }
+        if (bottling.tastingNotes !== undefined) {
+            try { normalizeTastingNotes(bottling.tastingNotes); }
+            catch { assert(false, 'Ungültige Abfüllungs-Verkostungsnotizen'); }
+        }
+        if (bottling.rating !== undefined) {
+            try { normalizeTastingRating(bottling.rating); }
+            catch { assert(false, 'Ungültige Abfüllungsbewertung'); }
+        }
+        if (bottling.whiskyColor !== undefined) {
+            try { normalizeWhiskyColor(bottling.whiskyColor); }
+            catch { assert(false, 'Ungültige Whiskyfarbe'); }
+        }
+        if (bottling.legacyTastings !== undefined) {
+            assert(Array.isArray(bottling.legacyTastings), 'Ungültige ehemalige Flaschenbewertungen');
+            for (const entry of bottling.legacyTastings) {
+                assert(isObject(entry) && isString(entry.bottleId) && optionalString(entry.inventoryNumber), 'Ungültiger Eintrag früherer Verkostungen');
+                try { normalizeTastingNotes(entry.tastingNotes); normalizeTastingRating(entry.rating); }
+                catch { assert(false, 'Ungültiger früherer Verkostungseintrag'); }
+            }
+        }
         bottlingIds.add(bottling.id);
+    }
+    if (collection.externalTastings !== undefined) {
+        assert(Array.isArray(collection.externalTastings), 'Ungültige externe Verkostungsliste');
+        const ids = new Set();
+        for (const record of collection.externalTastings) {
+            assert(isObject(record) && isString(record.id) && /^[a-zA-Z0-9-]{1,100}$/.test(record.id) &&
+                !ids.has(record.id) &&
+                isString(record.createdAt) && !Number.isNaN(Date.parse(record.createdAt)) &&
+                isString(record.updatedAt) && !Number.isNaN(Date.parse(record.updatedAt)), 'Ungültige externe Verkostungsmetadaten');
+            ids.add(record.id);
+            assert(Object.keys(record).every(k=>['id','createdAt','updatedAt','bottling','tastedOn','title','flavorProfile','tastingNotes','rating','whiskyColor'].includes(k)),
+                'Unbekanntes externes Verkostungsfeld');
+            const {id,createdAt,updatedAt,...editable} = record;
+            try { normalizeStandaloneTasting(editable); }
+            catch { assert(false, 'Ungültige externe Verkostungsdaten'); }
+        }
     }
     for (const bottle of allBottles(collection)) {
         assert(isObject(bottle) && isString(bottle.id) && !Object.hasOwn(bottle, 'bottlingId'), 'Ungültige verschachtelte Flasche');

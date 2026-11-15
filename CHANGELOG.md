@@ -1,5 +1,96 @@
 # Changelog
 
+## 0.27.10 - 2026-11-15
+
+- Verkostungsdetails: Optional-Hinweis beim Titel nur im Bearbeitungsmodus anzeigen.
+
+## 0.27.9 - 2026-11-15
+
+- Verkostungsdatum, Titel und Editieraktionen in einer Zeile angeordnet; Neue Verkostung auf der Abfuellungsdetailseite oberhalb der Kachel platziert.
+
+## 0.27.8 - 2026-11-15
+
+- Verkostungsaktionen in die Kacheln verschoben, Abstaende und Glencairn-Ausrichtung korrigiert sowie Plus-Icons vereinheitlicht
+
+## 0.27.7 - 2026-11-15
+
+- Verkostungsdarstellung vereinheitlicht: Bearbeiten im Datenblock, Ausrichtung von Bewertungen, Farbe und Radar sowie Navigation und Abfuellungsfoto korrigiert.
+
+## 0.27.6 - 2026-11-15
+
+- Abfüllungsfoto (dasselbe Titelbild wie in den Abfüllungsdetails) im Verkostungs-Infoblock und dezentere Glencairn-Anzeige ohne Badge-Hintergrund in der Sammlung
+- Verkostungsnotizen nach dem Speichern zunächst nur lesend öffnen; Stift-Button schaltet den Editor frei, „Fertig“ schaltet zurück. Neue Verkostungen bleiben direkt bearbeitbar.
+- Link „Zu den Abfüllungsdetails“ im Infoblock vorhandener Sammlungsabfüllungen auf Verkostungsseiten; keine Verknüpfung bei externen Einzelverkostungen.
+
+## 0.27.5 - 2026-11-15
+
+- Bereich und Navigation heißen „Verkostungsnotizen“ (englisch „Tasting notes“); keine redundanten Seitentitel.
+- Zurück-Links auf allen Verkostungsunterseiten oberhalb des kompletten Seitenkopfs; ganze Listenzeilen sind direkt und per Tastatur öffenbar.
+- Letzte Bewertung erscheint als fünf anteilig gefüllte Glencairn-Gläser im Bild der Sammlungskarte. Neuer Schnellfilter nach Bewertungsbereich bzw. unbewerteten Abfüllungen.
+- Glencairn-Symbol in der Seitennavigation für ein mit den übrigen Icons vergleichbares optisches Gewicht angepasst.
+- Externe Einzelverkostungen lassen sich über einen Auswahldialog einer vorhandenen Sammlungsabfüllung zuordnen; serverseitig atomar verschoben, ohne Duplikate oder Verlust von Datum und Notizen.
+
+## 0.27.4 - 2026-11-15
+
+- Verkostungsseiten: Navigation unter dem Header, flache Listen wie im Lager und externe Abfuellungsinfos mit getrenntem Bearbeitungsmodus
+
+## 0.27.3 - 2026-11-15
+
+- Verkostungsseiten: allgemeine Seitenüberschriften ohne Icon, Abfüllungsinformationen als erster Inhaltsblock, Notizfelder dauerhaft am oberen Label ausgerichtet; globaler App-Header und Abfüllungsdetails unverändert
+
+## 0.27.2 - 2026-11-15
+
+- Verkostungsseiten vereinheitlicht, Glencairn-Seitenicon und Abfüllungsangaben ergänzt; externe Verkostungen ohne separate Flaschenverwaltung.
+
+## 0.27.1 - 2026-11-15
+
+- Überschriftenbereich der Verkostungsstartseite an Analyse und andere Hauptseiten angeglichen; globaler App-Header unverändert.
+
+## 0.27.0 - 2026-11-15
+
+- Eigenständige Verkostungsstartseite, externe Whisky-Verkostungen ohne Sammlungseintrag und Zurücksetzen des Geschmacksprofils
+
+## 0.26.0 - 2026-11-15
+
+- Eigenständige Verkostungen je Abfüllung mit chronologischer Übersicht und Bewertungszusammenfassung
+
+## 0.25.5 - 2026-11-15
+
+- Verkostung: Farbauswahl eindeutig markieren, Entfernen-Aktionen in Panel-Titelleisten und Bewertung als einzelnes editierbares Punktefeld
+
+## 0.25.4 - 2026-11-15
+
+- Verkostung in vier konsistente Inhaltsbereiche gliedern: Farbe separat, Radar und Regler gemeinsam, Notizen und Gesamtbewertung darunter; keine redundante Bewertungserklaerung
+
+## 0.25.3 - 2026-11-15
+
+- Verkostungsblock im Analyse-Stil einheitlich abgesetzt; Glencairn-Gläser zeigen Bewertungsanteile durch goldene Füllhöhe im Kelch und exakte Punktzahl.
+
+## 0.25.2 - 2026-11-15
+
+- Verkostungsansicht: Farben links im 3x4-Raster, Radardiagramm mittig und kompakte 2x4-Achsenregler rechts; responsive Ansicht vereinheitlicht
+
+## 0.25.1 - 2026-11-15
+
+- Abfüllungsdetails: Bild- und Datenblock gleich hoch, ohne das Flaschenbild zu beschneiden.
+- Geschmacksprofil als kompakte dreispaltige Ansicht mit Radardiagramm und zwei Vierergruppen verkürzter Regler.
+- Originalgetreue Glencairn-Bewertungsicons nach der gelieferten Vorlage; manuelle Werte von 0 bis 100 mit einer Nachkommastelle (z. B. 87,5) ergänzen die Glas-Auswahl.
+- Zwölfstufige, optionale Whiskyfarbskala auf Abfüllungsebene mit unveränderlichen Farben in Light- und Darkmode.
+- Verkostungsablauf: Farbe, Geschmacksprofil, Notizen, Gesamtbewertung; Undo/Redo nur als Icon-Buttons und mit gemeinsamer seitenlokaler Historie.
+- Serverseitige Farbvalidierung, zweisprachige Beschriftung sowie zusätzliche Unit- und Browser-Regressionstests.
+
+## 0.25.0 - 2026-11-15
+
+- Abfuellungsbezogene Verkostung mit Glencairn-Bewertung, verlustfreier Migration, direkter Detailbearbeitung und bereinigter Hilfe sowie Moebelfotos
+
+## 0.24.0 - 2026-11-15
+
+- Abfuellungsbezogenes interaktives Geschmacksprofil mit acht sprachabhaengig beschrifteten Achsen (0–10), SVG-Radar und nativen Reglern; englisch **Feinty**, deutsch **Alkoholisch**.
+- Fachbearbeitung: Vorheriges/Naechstes mit Speichern/Verwerfen/Abbrechen bei ungespeicherten Eingaben; geaenderte Kapazitaeten sofort in der offenen Regalansicht sichtbar.
+- Moebelfotos: bis zu 24 Bilder je Moebel hochladen, ansehen, sortieren und loeschen; Bilddateien und Zuordnungen Bestandteil des verschluesselten ZIP-Backups.
+- Modals: zentrale Scrollsperre fuer den Seitenhintergrund mit Erhalt der Seitenposition und scrollbar bleibendem Modalinhalt.
+- Hilfe: konkrete aufklappbare technische Backup-Anleitungen fuer zentrales Passwort, Admin-Schluessel, USB, NAS, Dropbox/OneDrive und weitere Rclone-Ziele samt Restore; weitere Hilfethemen ergaenzt.
+
 ## 0.23.6 - 2026-11-14
 
 - Browser-Regressionstests an Einstellungsnavigation und geaendertes Karten-Zoomverhalten angepasst; Kartenmarker uebernehmen Destillerie-Anzeigemodus ohne Rezentrierung

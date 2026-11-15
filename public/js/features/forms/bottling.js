@@ -1,4 +1,5 @@
 import { t } from '../../i18n/index.js';
+import { addActionLabel } from '../../ui/action-icons.js';
 import { escapeHtml } from '../../ui/dom.js';
 import { textInput, selectInput, areaInput } from '../../ui/fields.js';
 import { bottleStatusLabels, whiskyTypeLabels, photoAccept } from '../../domain/labels.js';
@@ -23,7 +24,7 @@ export function createBottlingForm({ state, selectors }) {
             required: true, full: true, placeholder: t('forms.bottling.exampleName')
         })}${selectInput(t("forms.bottling.whiskyCategory"), 'whiskyType', [['', t('forms.bottling.notProvided')], ...Object.entries(whiskyTypeLabels)], bottling.whiskyType)}${textInput(t("forms.bottling.brandOrProductLine"), 'brand', bottling.brand, {
             placeholder: t('forms.bottling.exampleBrand')
-        })}${distilleryPicker(bottling)}${selectInput(t("forms.bottling.blendCompositionComplete"), 'compositionComplete', [['false', t('forms.bottling.compositionUnknown')], ['true', t('forms.bottling.compositionKnown')]], String(bottling.compositionComplete === true))}<div class="form-field">${t("forms.bottling.newDistillery")}<button type="button" class="btn" data-act="add-distillery">${t("forms.common.createButton")}</button>
+        })}${distilleryPicker(bottling)}${selectInput(t("forms.bottling.blendCompositionComplete"), 'compositionComplete', [['false', t('forms.bottling.compositionUnknown')], ['true', t('forms.bottling.compositionKnown')]], String(bottling.compositionComplete === true))}<div class="form-field">${t("forms.bottling.newDistillery")}<button type="button" class="btn" data-act="add-distillery">${addActionLabel(t("forms.common.createButton"))}</button>
     </div>${textInput(t("forms.bottling.bottler"), 'bottler', bottling.bottler)}${textInput(t("forms.bottling.ageYears"), 'ageYears', bottling.ageYears, {
             type: 'number'
         })}${textInput(t("forms.bottling.abv"), 'abv', bottling.abv, {

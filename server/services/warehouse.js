@@ -5,6 +5,7 @@ import {createRoomExport, planRoomImport} from './room-transfer.js';
 import { read } from '../storage/collection-store.js';
 import { readWarehouse, changeWarehouse } from '../storage/warehouse-store.js';
 import { fail } from '../domain/errors.js';
+import { saveImage, deleteImage } from '../storage/photos.js';
 import { furnitureBounds, furnitureCollision, furnitureOverlap } from '../../public/js/domain/warehouse-placement.js';
 import { name, number, capacity, shelfFront, doorLeaves, glassFrame, doorRanges, shelfHeight, ensureShelfHeights, layout } from '../domain/warehouse-fields.js';
 
@@ -67,7 +68,9 @@ export const updateRoom = (id, input) => changeWarehouse(data => {
 });
 /** Remove a room in one warehouse write. With explicit opt-in, assigned
  * bottles become unassigned; their collection records remain unchanged. */
-export const deleteRoom = (id, {unassignBottles = false} = {}) => changeWarehouse(data => {
+export const deleteRoom = async (id, {unassignBottles = false} = {}) => {
+    let deletedPhotos = [];
+    const result = await changeWarehouse(data => {
     const room = roomById(data, id);
     const shelves = new Set(room.furniture.flatMap(f => f.shelves.map(s => s.id)));
     if (unassignBottles === true) {
@@ -79,12 +82,16 @@ export const deleteRoom = (id, {unassignBottles = false} = {}) => changeWarehous
     } else {
         refuseOccupied(data, shelves);
     }
+    deletedPhotos = room.furniture.flatMap(furniture => (furniture.photos || []).map(photo => photo.path));
     data.rooms.splice(data.rooms.indexOf(room), 1);
     return {ok:true};
-});
+    });
+    for (const file of deletedPhotos) deleteImage(file);
+    return result;
+};
 export const createFurniture = (roomId, input) => changeWarehouse(data => {
     const room = roomById(data, roomId);
-    const item = { id: newId(), ...layout(input || {}, room), shelves: [] };
+    const item = { id: newId(), ...layout(input || {}, room), shelves: [], photos: [] };
     ensureNoFurnitureCollision(room, item);
     room.furniture.push(item); return item;
 });
@@ -135,22 +142,70 @@ export const bulkUpdateFurniture = input => changeWarehouse(data => {
 });
 
 /** Atomic multi-delete. Verify every selected location before removing anything. */
-export const bulkDeleteFurniture = input => changeWarehouse(data => {
+export const bulkDeleteFurniture = async input => {
+    let deletedPhotos = [];
+    const result = await changeWarehouse(data => {
     const ids = input?.ids;
     if (!Array.isArray(ids) || ids.length < 1 || ids.length > 200 ||
         !ids.every(id => typeof id === 'string' && id.length > 0) || new Set(ids).size !== ids.length)
         throw fail('Bitte 1 bis 200 unterschiedliche Lagermöbel auswählen');
     const targets = ids.map(id => furnishingById(data, id));
     refuseOccupied(data, new Set(targets.flatMap(({furniture}) => furniture.shelves.map(shelf => shelf.id))));
+    deletedPhotos = targets.flatMap(({furniture}) => (furniture.photos || []).map(photo => photo.path));
     for (const {room, furniture} of targets) room.furniture.splice(room.furniture.indexOf(furniture), 1);
     return {ok:true, deleted:ids, count:ids.length};
-});
+    });
+    for (const file of deletedPhotos) deleteImage(file);
+    return result;
+};
 
-export const deleteFurniture = id => changeWarehouse(data => {
-    const { room, furniture } = furnishingById(data, id);
-    refuseOccupied(data, new Set(furniture.shelves.map(s => s.id)));
-    room.furniture.splice(room.furniture.indexOf(furniture), 1); return { ok: true };
+export const deleteFurniture = async id => {
+    let removedPhotos = [];
+    const result = await changeWarehouse(data => {
+        const { room, furniture } = furnishingById(data, id);
+        refuseOccupied(data, new Set(furniture.shelves.map(s => s.id)));
+        removedPhotos = (furniture.photos || []).map(photo => photo.path);
+        room.furniture.splice(room.furniture.indexOf(furniture), 1); return { ok: true };
+    });
+    for (const file of removedPhotos) deleteImage(file);
+    return result;
+};
+/** Furniture images use the existing, backup-covered images tree. */
+export async function addFurniturePhoto(id, input) {
+    furnishingById(readWarehouse(), id);
+    const photoId = newId();
+    const photoPath = saveImage(input?.image, id, `furniture-${photoId}`);
+    try {
+        return await changeWarehouse(data => {
+            const {furniture} = furnishingById(data, id);
+            furniture.photos ??= [];
+            if (furniture.photos.length >= 24) throw fail('Maximal 24 Möbelfotos erlaubt');
+            const photo = {id:photoId,path:photoPath,createdAt:new Date().toISOString()};
+            furniture.photos.push(photo);
+            return photo;
+        });
+    } catch (error) { deleteImage(photoPath); throw error; }
+}
+export const reorderFurniturePhotos = (id, input) => changeWarehouse(data => {
+    const {furniture} = furnishingById(data, id);
+    const photos = furniture.photos || [];
+    const ids = input?.photoIds;
+    if (!Array.isArray(ids) || ids.length !== photos.length || new Set(ids).size !== ids.length ||
+        ids.some(photoId => !photos.some(photo => photo.id === photoId))) throw fail('Ungültige Möbelfoto-Reihenfolge');
+    furniture.photos = ids.map(photoId => photos.find(photo => photo.id === photoId));
+    return furniture.photos;
 });
+export async function deleteFurniturePhoto(id, photoId) {
+    const result = await changeWarehouse(data => {
+        const {furniture} = furnishingById(data, id);
+        const index = (furniture.photos || []).findIndex(photo => photo.id === photoId);
+        if (index < 0) throw fail('Möbelfoto nicht gefunden',404);
+        return furniture.photos.splice(index,1)[0];
+    });
+    deleteImage(result.path);
+    return {ok:true};
+}
+
 export const createShelf = (furnitureId, input) => changeWarehouse(data => {
     const { furniture } = furnishingById(data, furnitureId);
     const item = { id: newId(), name: name(input?.name), capacity: capacity(input?.capacity),
@@ -243,6 +298,8 @@ export const copyFurniture = (id, input = {}) => changeWarehouse(data => {
         id: newId(),
         ...layout({ ...source.furniture, ...position,
             name: input.name === undefined ? copiedName(source.furniture.name, targetRoom.furniture) : name(input.name) }, targetRoom),
+        // Furniture copies never inherit the original photo metadata or bytes.
+        photos: [],
         shelves: withShelves ? source.furniture.shelves.map(shelf => ({...shelf, id:newId()})) : [],
         doorRanges: withShelves ? (source.furniture.doorRanges || []).map(range=>({...range})) : []
     };

@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.23.6
+# Whisky Collection Manager v0.27.10
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der Abfüllung über einzelne physische Flaschen bis zum Lagerfach. Eine Abfüllung kann mehrere Flaschen mit eigenen Inventarnummern, Zuständen, Fotos und Belegen enthalten.
 
@@ -12,18 +12,22 @@ Die Anwendung wurde **vollständig durch ChatGPT programmiert**. Der Projektinit
 
 | Bereich | Umfang |
 | --- | --- |
-| **Sammlung** | Abfüllungen und physische Flaschen verwalten; Suche, Filter, Sortierung, Kachel- und Tabellenansicht sowie Scanner. |
-| **Flaschen & Medien** | Inventarnummern, Zustände, Kauf- und Verkostungsdaten, Fotos, Belege und Anhänge. Nicht-destruktiver Fotoeditor mit optionaler lokaler KI-Freistellung. Fehlende Bilder werden durch ein einheitliches Flaschenmotiv ersetzt. |
+| **Sammlung** | Abfüllungen und physische Flaschen verwalten; 0–n eigenständige datierte Verkostungen je Abfüllung sowie unabhängige Einzelverkostungen für nicht besessene Whiskys; Geschmacksprofil, Notizen, Farbe und Fünf-Gläser-Bewertung, mit Anzeige der letzten Bewertung in den Abfüllungsdetails und als dezente Glencairn-Gläser ohne Hintergrund auf dem Flaschenbild; Suche, Filter, Sortierung, Kachel- und Tabellenansicht sowie Scanner. |
+| **Flaschen & Medien** | Inventarnummern, Zustände, Kaufdaten, Fotos, Belege und Anhänge; Verkostungsnotizen lassen sich über eine gemeinsame Hauptseite erfassen – für Sammlungsabfüllungen mit 0–n Verkostungen oder unabhängig als einzelne Verkostung mit eingebetteten Angaben zum Whisky. Das Geschmacksprofil kann vollständig zurückgesetzt werden. Nicht-destruktiver Fotoeditor mit optionaler lokaler KI-Freistellung. Fehlende Bilder werden durch ein einheitliches Flaschenmotiv ersetzt. |
 | **Analyse** | Bestands-, Wert- und Sammlungsanalysen mit Filtern und Zeitaggregationen. |
 | **Landkarte** | OpenStreetMap-Destilleriekarte mit Standorten, Clustern und Statusfiltern. |
-| **Lager** | Räume, Möbel und Fächer; 2D- und 3D-Raumplan, virtuelle Regalwand, Fachinhalt-Modal sowie Einzel- und Mehrfach-Umlagerung. Import und Export von Raumplänen einschließlich optionaler Flaschenzuordnungen; bei belegten Räumen sichere Löschung mit vorheriger Freigabe aller Flaschen. |
+| **Lager** | Räume, Möbel und Fächer; 2D- und 3D-Raumplan, virtuelle Regalwand, Fachnavigation mit Schutz ungespeicherter Änderungen, sofort aktualisierte Kapazitäten, mehrere Fotos je Möbelstück sowie Einzel- und Mehrfach-Umlagerung. Import und Export von Raumplänen einschließlich optionaler Flaschenzuordnungen; bei belegten Räumen sichere Löschung mit vorheriger Freigabe aller Flaschen. |
 | **Datensicherung** | Verschlüsselte AES-256-ZIP-Backups, manuell oder zeitgesteuert, für USB-, NAS- und Cloud-Ziele; Wiederherstellung nach Bestätigung. |
 | **Oberfläche** | Responsive Light-/Darkmode-Oberfläche auf Deutsch und Englisch. |
-| **Hilfe** | Eigene Hilfeseite mit Bedienhinweisen zu Sammlung, Lager, Landkarte, Fotos, Sicherung und Datenhaltung. |
+| **Hilfe** | Eigene Hilfeseite mit praktischen Bedienhinweisen und ausklappbaren technischen Backup-Anleitungen für zentrales ZIP-Passwort, USB, NAS, Rclone/Dropbox, OneDrive und Wiederherstellung. |
+
+Verkostungsunterseiten zeigen die Zurück-Navigation oberhalb des Seitentitels. Abfüllungsdaten stehen im ersten Inhaltsblock ohne zusätzliche Überschrift; das vorhandene Abfüllungsfoto aus der Abfüllungsdetailseite wird darin kompakt neben den Stammdaten angezeigt. Die Verkostungslisten verwenden die Zeilenstruktur von Lager → Flasche finden. Externe Abfüllungsdaten werden nur bei der erstmaligen Erfassung direkt eingegeben; danach erscheinen sie lesend mit einem Stift-Button zum Bearbeiten. Die drei Notizfelder bleiben oben ausgerichtet und einzeln in der Höhe veränderbar. Gespeicherte Verkostungen öffnen im Lesemodus; ein Stift-Button im ersten Datenblock (Datum und Titel) aktiviert die Bearbeitung. Der Info-Block einer Sammlungsabfüllung bietet einen direkten Link „Zu den Abfüllungsdetails“.
+
+Anlegeaktionen verwenden dasselbe Plus-Symbol. In den Abfüllungsdetails steht „Neue Verkostung“ wie „Weitere Flasche“ über der jeweiligen Kachel; in Verkostungslisten befindet sich die Aktion innerhalb des Listenblocks. Im Verkostungseditor stehen Datum (schmal), Titel (breit) und Bearbeitungsaktionen in einer dreispaltigen Zeile, bei schmalen Ansichten umbrechend.
 
 Die Bedienhinweise sind in der Anwendung über **Menü → Hilfe** (`/?view=help`) abrufbar. Lange Anleitungen werden nicht mehr dauerhaft in Arbeitsansichten und Formularen angezeigt; sicherheitsrelevante Warnungen bleiben vor den jeweiligen Aktionen sichtbar.
 
-Ausführliche Funktions- und Bedienhinweise: [Lagerverwaltung](docs/LAGER.md), [Fotoeditor und Freistellung](docs/PHOTO_FREISTELLUNG.md), [Analysen](docs/ANALYSE.md), [Landkarte](docs/KARTE.md) und [Anforderungen](docs/ANFORDERUNGEN.md). Änderungen einzelner Versionen stehen ausschließlich im [Changelog](CHANGELOG.md).
+Ausführliche Funktions- und Bedienhinweise: [Geschmacksprofil](docs/GESCHMACKSPROFIL.md), [Lagerverwaltung](docs/LAGER.md), [Fotoeditor und Freistellung](docs/PHOTO_FREISTELLUNG.md), [Analysen](docs/ANALYSE.md), [Landkarte](docs/KARTE.md) und [Anforderungen](docs/ANFORDERUNGEN.md). Änderungen einzelner Versionen stehen ausschließlich im [Changelog](CHANGELOG.md).
 
 ## Einblicke in die Oberfläche
 

@@ -27,8 +27,8 @@ export function createShell({ root, state, applyTheme, renderModal }) {
     <aside class="site-drawer" id="site-drawer" aria-label="${t("ui.navigation.sideMenu")}" hidden>
       <div class="site-drawer-head"><h2>${t("ui.navigation.label")}</h2><button type="button" class="btn small" data-act="close-menu" aria-label="${t("ui.navigation.closeMenu")}">✕</button></div>
       <nav class="site-nav" aria-label="${t("ui.navigation.primary")}">${MAIN_PAGES.map(item => `
-        <a href="${item.url}" data-act="${item.action}" ${item.id === state.page || (item.id === 'home' && state.page === 'detail') ? 'aria-current="page"' : ''}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${item.icon}</svg>${item.label}
+        <a href="${item.url}" data-act="${item.action}" ${item.id === state.page || (item.id === 'home' && state.page === 'detail') || (item.id === 'tastings-home' && ['tastings','tasting','external-tasting'].includes(state.page)) ? 'aria-current="page"' : ''}>
+          <svg class="${item.navClass || ''}" viewBox="${item.viewBox || '0 0 24 24'}" fill="${item.filled?'currentColor':'none'}" stroke="${item.filled?'none':'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${item.icon}</svg>${item.label}
         </a>`).join('')}</nav>
     </aside>
     <main>${content}</main>

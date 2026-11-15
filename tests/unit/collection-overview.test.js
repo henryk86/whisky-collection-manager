@@ -142,12 +142,13 @@ test('physical bottle cards use their own photo, identifier, status and volume; 
         assert.ok(toolbar, 'overview toolbar must exist');
         assert.doesNotMatch(toolbar, /overview-quick-filters|overview-quick-field|Schnellfilter/,
             'quick filters must not have a separate labelled row');
-        assert.equal((toolbar.match(/<select\b/g) || []).length, 5,
-            'all five filter and sort dropdowns belong directly in one toolbar');
+        assert.equal((toolbar.match(/<select\b/g) || []).length, 6,
+            'all six filter and sort dropdowns belong directly in one toolbar');
         assert.ok(toolbar.indexOf('id="filter-sort"') < toolbar.indexOf('id="filter-distillery"'));
         assert.ok(toolbar.indexOf('id="filter-volume-type"') < toolbar.indexOf('data-act="toggle-view"'));
         assert.match(toolbar, /<select id="filter-distillery" aria-label="Destillerie filtern">/);
         assert.match(toolbar, /<select id="filter-volume-type" aria-label="Flaschentyp filtern">/);
+        assert.match(toolbar, /<select id="filter-rating" aria-label="Nach Bewertung filtern">/);
         state.view = 'table';
         view();
         assert.equal((html.match(/<tr class="clickable"/g) || []).length, 3);
@@ -175,4 +176,54 @@ test('pagination in bottle mode counts physical bottles rather than their shared
     assert.equal(paginate(bottleEntries).total, 28);
     assert.equal(paginate(bottleEntries).pageCount, 2);
     assert.equal(paginate(bottleEntries, 2).items.length, 4);
+});
+
+test('latest tasting rating filters are applied before pagination in both overview modes',async()=>{
+    const {matchesOverviewRating}=await import('../../public/js/domain/collection-overview.js');
+    const collection=sample();
+    const date='2026-11-15';
+    collection.bottlings[0].tastings=[
+        {id:'old',tastedOn:'2026-01-01',rating:99},
+        {id:'new',tastedOn:date,rating:87.5}
+    ];
+    collection.bottlings[1].tastings=[];
+    assert.equal(matchesOverviewRating(collection.bottlings[0],'5'),true);
+    assert.equal(matchesOverviewRating(collection.bottlings[0],'4'),false);
+    assert.equal(matchesOverviewRating(collection.bottlings[1],'unrated'),true);
+    assert.deepEqual(collectionOverviewEntries(collection,{mode:'bottlings',rating:'5'}).map(e=>e.bottling.id),['a']);
+    assert.equal(collectionOverviewEntries(collection,{mode:'bottles',rating:'5'}).length,3);
+    assert.deepEqual(collectionOverviewEntries(collection,{mode:'bottlings',rating:'unrated'}).map(e=>e.bottling.id),['z']);
+    collection.bottlings[0].tastings.push({id:'scoreless',tastedOn:'2026-12-01',rating:null});
+    assert.equal(collectionOverviewEntries(collection,{rating:'5'}).length,0);
+    assert.deepEqual(collectionOverviewEntries(collection,{rating:'unrated'}).map(e=>e.bottling.id),['z','a']);
+    collection.bottlings[0].tastings=[{id:'zero',tastedOn:date,rating:0}];
+    assert.equal(matchesOverviewRating(collection.bottlings[0],'1'),true,'zero belongs to the first glass');
+    assert.equal(matchesOverviewRating({tastings:[{id:'edge',tastedOn:date,rating:20.1}]},'2'),true);
+});
+
+test('glencairn rating is drawn over the bottle image with five proportional fills and unique IDs per bottle',async()=>{
+    const {collectionCardRating}=await import('../../public/js/views/home.js');
+    const bottling={id:'own',tastings:[{id:'new',tastedOn:'2026-11-15',rating:87.5}]};
+    const a=collectionCardRating(bottling,'bottle-1');
+    const b=collectionCardRating(bottling,'bottle-2');
+    assert.match(a,/class="collection-card-rating"/);
+    assert.equal((a.match(/glencairn-rating-symbol/g)||[]).length,5);
+    assert.match(a,/y="236\.125" width="220" height="94\.875"/);
+    assert.match(a,/overview-rating-bottle-1-0/);
+    assert.match(b,/overview-rating-bottle-2-0/);
+    assert.doesNotMatch(b,/overview-rating-bottle-1-0/);
+    assert.equal(collectionCardRating({id:'no-score',tastings:[]}), '');
+});
+
+
+test('collection card glass rating has no badge background or frame',async()=>{
+    const {readFile}=await import('node:fs/promises');
+    const css=await readFile(new URL('../../public/styles/core.css',import.meta.url),'utf8');
+    const rule=css.match(/\.collection-card-rating \{([^}]*)\}/)?.[1];
+    assert.ok(rule);
+    assert.match(rule,/background:transparent;/);
+    assert.match(rule,/border:0;/);
+    assert.match(rule,/box-shadow:none;/);
+    assert.match(rule,/padding:0;/);
+    assert.match(css,/\.collection-card-rating \.glencairn-symbol \{[^}]*filter:drop-shadow/);
 });

@@ -32,9 +32,7 @@ export function createBottleForm({ state, selectors }) {
             type: 'number', step: '0.01'
         })}${textInput(t("forms.bottle.currency"), 'currency', bottle.currency || 'EUR')}${textInput(t("forms.bottle.seller"), 'merchant', bottle.merchant)}${textInput(t("forms.bottle.openingDate"), 'openedAt', bottle.openedAt, {
             type: 'date'
-        })}${textInput(t("forms.bottle.rating"), 'rating', bottle.rating, {
-            type: 'number'
-        })}${areaInput(t("forms.bottle.personalComment"), 'comment', bottle.comment)}${areaInput(t("forms.bottling.nose"), 'tastingNose', bottle.tastingNotes?.nose)}${areaInput(t("forms.bottling.palate"), 'tastingPalate', bottle.tastingNotes?.palate)}${areaInput(t("forms.bottling.finish"), 'tastingFinish', bottle.tastingNotes?.finish)}<label class="form-field full">${t("forms.bottle.additionalPhotos")}<input type="file" name="photos" accept="${photoAccept}" multiple>
+        })}${areaInput(t("forms.bottle.personalComment"), 'comment', bottle.comment)}<label class="form-field full">${t("forms.bottle.additionalPhotos")}<input type="file" name="photos" accept="${photoAccept}" multiple>
     </label>
     <label class="form-field full">${t("forms.bottle.attachments")}
     <input type="file" name="documents" accept="${fileAccept}" multiple>

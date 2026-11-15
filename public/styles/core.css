@@ -1390,7 +1390,7 @@ tr.clickable:hover {
 }
 
 /* Collection quick filters keep regular, intentional rows at every width. */
-.collection-filters { display: grid; grid-template-columns: minmax(220px, 2.2fr) repeat(5, minmax(105px, 1fr)) auto; align-items: center; }
+.collection-filters { display: grid; grid-template-columns: minmax(220px, 2.2fr) repeat(6, minmax(105px, 1fr)) auto; align-items: center; }
 .collection-filters input[type="search"],
 .collection-filters select,
 .collection-filters [data-act="toggle-view"] { box-sizing: border-box; width: 100%; min-width: 0; max-width: none; flex: initial; }
@@ -1400,3 +1400,26 @@ tr.clickable:hover {
 }
 @media(max-width:520px) { .collection-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media(max-width:340px) { .collection-filters { grid-template-columns: minmax(0, 1fr); } }
+
+/* iOS Safari: only the foreground dialog may pan while a modal is open. */
+.overlay { overscroll-behavior:contain; }
+.dialog { overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y; max-height:min(94dvh,94vh); }
+
+/* Expanded help guides follow the shared squared analytics panels. */
+.help-technical-guides { border-top:1px solid var(--line); margin-top:24px; padding-top:18px; }
+.help-guide { border-top:1px solid var(--line); }
+.help-guide:last-child { border-bottom:1px solid var(--line); }
+.help-guide summary { cursor:pointer; padding:15px 8px; font-weight:600; }
+.help-guide[open] summary { color:var(--ink); }
+.help-guide ol { margin:0 8px 18px 24px; padding:0; }
+.help-guide li { padding:5px 0; line-height:1.65; overflow-wrap:anywhere; }
+
+/* Glencairn rating floats directly over the photo without a badge background.
+   A subtle shadow on the glass shapes (not a surrounding panel) aids contrast. */
+.collection-card-rating { position:absolute; right:26px; bottom:18px; z-index:2; display:flex;
+    align-items:center; gap:2px; padding:0; border:0; background:transparent; box-shadow:none;
+    pointer-events:none; opacity:.9; }
+.collection-card-rating .glencairn-symbol { display:block; width:11px; height:19px;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.38)); }
+.collection-card-rating .glencairn-rating-outline { fill:#f5efe2; }
+.collection-card-rating .glencairn-rating-fill { fill:#d6ad62; }

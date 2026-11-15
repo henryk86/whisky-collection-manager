@@ -116,6 +116,8 @@ nicht mehr alle Flaschen.
 
 Zusätzlich zu den verschlüsselten Sammlungsbackups kann ab v0.20.0 jedes GitHub-Release mit KI-Modell, npm-Cache und als ARM64-/AMD64-Containerimage separat auf dem gleichen USB-/NAS-Medium gesichert werden. Dafür die Release-Artefakte und ihre SHA-256-Dateien herunterladen und `sh deploy/save-offline-release.sh SOURCE_DIR BACKUP_TARGET_ROOT` ausführen. Die Dateien liegen danach unter `whisky-releases/vX.Y.Z/`; die geplanten Daten-ZIP-Backups werden **nicht** vergrößert. Eine automatische Übertragung in der Backup-Oberfläche ist nicht implementiert. Vollständige Anleitung: [Offline-Releases](OFFLINE_RELEASES.md).
 
+Die Anwendung enthält ab v0.24.0 zusätzlich unter **Hilfe → Datensicherung** aufklappbare Schritt-für-Schritt-Anleitungen für die zentrale Passwort-Einrichtung, USB- und NAS-Ziele, Dropbox/OneDrive/Google Drive über Rclone sowie die Wiederherstellung. Maßgeblich bleiben die technischen Konfigurationen und Sicherheitsgrenzen dieses Dokuments.
+
 ## 1. Sofort-Backup erstellen und herunterladen
 
 1. Anwendung öffnen → **Einstellungen & Datensicherung → Datensicherung** und mit dem Backup-Admin-Schlüssel entsperren (Schlüssel liegt unter `${WCM_DATA_DIR}/secrets/backup-admin-token`).

@@ -15,13 +15,13 @@ const collection = () => ({
             whiskyType: 'blended_malt', ageYears: 12, abv: 46, country: 'Scotland', region: 'Islay',
             caskType: 'Sherry', distillationYear: 2005, bottlingYear: 2017, releaseYear: 2018,
             limitedEditionCount: 1000, completionStatus: 'complete', whiskybaseId: '123',
+            rating:85, tastingNotes:{nose:'Sherry',palate:'',finish:''},
             bottles: [
                 { id: 'one', volumeType: 'standard', volumeMl: 700, status: 'closed', purchasePrice: 50, currency: 'EUR',
-                    merchant: 'Bottle Shop', purchaseDate: '2025-03-01', createdAt: '2025-02-28T12:00:00Z', rating: 85,
-                    tastingNotes: { nose: 'Sherry', palate: '', finish: '' } },
+                    merchant: 'Bottle Shop', purchaseDate: '2025-03-01', createdAt: '2025-02-28T12:00:00Z' },
                 { id: 'two', volumeType: 'sample', volumeMl: 50, status: 'open', purchasePrice: 8, currency: 'EUR',
                     merchant: 'Bottle Shop', purchaseDate: '2025-04-01', createdAt: '2025-04-01T12:00:00Z',
-                    openedAt: '2025-04-15', rating: 90 },
+                    openedAt: '2025-04-15' },
             ] },
         { id: 'single', name: 'Alpha Distillery', distilleryIds: ['a'], bottler: 'Alpha', country: 'Ireland',
             completionStatus: 'incomplete', bottles: [{ id: 'three', volumeType: 'standard', volumeMl: 700,
@@ -84,7 +84,7 @@ test('analytics: totals use physical bottles, multiple distilleries count toward
     assert.equal(a.quality.missing.find(d => d.name === 'Alter').count, 2);
     assert.equal(a.quality.whiskybase.find(d => d.name === 'Verknüpft').count, 1);
     assert.equal(a.tasting.notes.find(d => d.name === 'Mit Notizen').count, 1);
-    assert.equal(a.tasting.rating.avg, 87.5);
+    assert.equal(a.tasting.rating.avg, 85);
     assert.equal(a.timeline.opened[0].name, '2025-04');
     assert.deepEqual(a.timeline.openedDaily.map(row => row.name), ['2025-04-15']);
     assert.deepEqual(a.finance.costDaily.filter(row => row.currency === 'EUR').map(row => row.name), ['2025-03-01', '2025-04-01']);

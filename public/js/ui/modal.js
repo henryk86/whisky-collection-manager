@@ -6,19 +6,44 @@ import { escapeHtml, query } from './dom.js';
 export function createModal({ state, onClose }) {
     const suspended = [];
     let pendingConfirmation = null;
+    let pendingChoice = null;
+    let scrollLock = null;
+    function lockBackground() {
+        if (scrollLock || typeof document === 'undefined') return;
+        const body = document.body, html = document.documentElement;
+        if (!body || !html) return;
+        const top = typeof window !== 'undefined' ? window.scrollY : 0;
+        scrollLock = { top, bodyCss: body.getAttribute('style'), htmlCss: html.getAttribute('style') };
+        body.style.position = 'fixed';
+        body.style.top = `-${top}px`;
+        body.style.left = '0'; body.style.right = '0'; body.style.width = '100%';
+        html.style.overflow = 'hidden'; html.style.overscrollBehavior = 'none';
+    }
+    function unlockBackground() {
+        if (!scrollLock || typeof document === 'undefined') return;
+        const { top, bodyCss, htmlCss } = scrollLock;
+        scrollLock = null;
+        if (bodyCss === null) document.body.removeAttribute('style'); else document.body.setAttribute('style', bodyCss);
+        if (htmlCss === null) document.documentElement.removeAttribute('style'); else document.documentElement.setAttribute('style', htmlCss);
+        if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') window.scrollTo(0, top);
+    }
     function showModal(title, content, wide = false, nested = true) {
         // Replacing a confirmation must cancel its awaiting caller.
+        if (pendingChoice) { const callback = pendingChoice; pendingChoice = null; callback('cancel'); }
         if (pendingConfirmation) {
             const resolve = pendingConfirmation;
             pendingConfirmation = null;
             resolve(false);
         }
         const host = query('#modal-root');
-        if (nested && state.modal && host?.firstElementChild) {
+        if (nested === 'replace') {
+            // Swap sibling forms without piling up modal layers.
+        } else if (nested && state.modal && host?.firstElementChild) {
             suspended.push({ modal: state.modal, overlay: host.firstElementChild });
         } else {
             suspended.length = 0;
         }
+        lockBackground();
         state.modal = { title, content, wide };
         renderModal();
     }
@@ -32,11 +57,18 @@ export function createModal({ state, onClose }) {
     <button class="btn small" type="button" data-act="close-modal" aria-label="${t("common.actions.close")}">✕</button>
     </div>${state.modal.content}</div>
     </div>`;
-        host.querySelector('.overlay').addEventListener('click', ev => {
+        const overlay = host.querySelector('.overlay');
+        overlay.addEventListener('click', ev => {
             if (ev.target === ev.currentTarget) closeModal();
         });
+        // Avoid page rubber-band scrolling when touching the backdrop on iOS.
+        // Do not suppress touchmove inside the dialog: its own scroll must work.
+        overlay.addEventListener('touchmove', event => {
+            if (!event.target.closest('.dialog')) event.preventDefault();
+        }, { passive:false });
     }
     function closeModal(all = false) {
+        if (pendingChoice) { const callback = pendingChoice; pendingChoice = null; callback('cancel'); }
         if (pendingConfirmation) {
             const resolve = pendingConfirmation;
             pendingConfirmation = null;
@@ -53,6 +85,7 @@ export function createModal({ state, onClose }) {
         suspended.length = 0;
         state.modal = null;
         if (host) host.innerHTML = '';
+        unlockBackground();
     }
     /** Asynchronous application-owned confirmation, preserving a parent form
      * and its unsaved DOM when launched from an already open modal. */
@@ -74,5 +107,33 @@ export function createModal({ state, onClose }) {
         resolve(true);
         return true;
     }
-    return { showModal, renderModal, closeModal, confirm, acceptConfirmation };
+    /** Three-way application modal for navigating away from dirty forms. */
+    function choose(title, message, options) {
+        return new Promise(resolve => {
+            const buttons = options.map(({id,label,primary}) =>
+                `<button type="button" class="btn${primary ? ' primary' : ''}" data-act="modal-choice" data-choice="${escapeHtml(id)}">${escapeHtml(label)}</button>`).join('');
+            showModal(title, `<p>${escapeHtml(message)}</p><div class="actions warehouse-form-actions">${buttons}</div>`,false,Boolean(state.modal));
+            pendingChoice = resolve;
+            query('#modal-root [data-choice="cancel"]')?.focus?.();
+        });
+    }
+    function acceptChoice(choice) {
+        if (!pendingChoice || !['save','discard','cancel'].includes(choice)) return false;
+        const resolve = pendingChoice;
+        pendingChoice = null;
+        closeModal();
+        resolve(choice);
+        return true;
+    }
+    /** Update content in the visible parent without losing the modal stack. */
+    function updateContent(content) {
+        if (!state.modal) return;
+        state.modal.content = content;
+        const host = query('#modal-root');
+        const dialog = host?.querySelector('.dialog');
+        if (!dialog) return;
+        for (const element of [...dialog.children].filter(child => !child.classList.contains('dialog-head'))) element.remove();
+        dialog.insertAdjacentHTML('beforeend', content);
+    }
+    return { showModal, renderModal, closeModal, confirm, acceptConfirmation, choose, acceptChoice, updateContent };
 }

@@ -5,10 +5,16 @@ export function parseRoute(search) {
     const params = new URLSearchParams(search);
     const bottlingId = params.get('bottling');
     if (bottlingId && /^[a-zA-Z0-9-]{1,100}$/.test(bottlingId)) {
-        return {
-            page: 'detail', selected: bottlingId
-        };
+        const tastingId = params.get('tasting');
+        if (tastingId && /^[a-zA-Z0-9-]{1,100}$/.test(tastingId))
+            return {page:'tasting',selected:bottlingId,tastingId};
+        if (params.get('view') === 'tastings') return {page:'tastings',selected:bottlingId};
+        return {page:'detail',selected:bottlingId};
     }
+    const externalTasting=params.get('externalTasting');
+    if (externalTasting && /^[a-zA-Z0-9-]{1,100}$/.test(externalTasting))
+        return {page:'external-tasting',selected:externalTasting,tastingId:null};
+    if (params.get('view') === 'tastings') return {page:'tastings-home', selected:null};
     if (params.get('view') === 'analysis') {
         const allowed = new Set(['overview', 'inventory', 'origins', 'profile', 'finance', 'timeline', 'quality']);
         const section = params.get('section') || 'overview';
@@ -39,11 +45,23 @@ export function parseRoute(search) {
     };
 }
 export function routeUrl(page, selected, filters = {}) {
-    if (page === 'detail') {
+    if (['detail','tasting','tastings'].includes(page)) {
         if (!selected || !/^[a-zA-Z0-9-]{1,100}$/.test(selected)) {
             throw new Error(t("navigation.errors.invalidBottlingId"));
         }
-        return '/?bottling=' + encodeURIComponent(selected);
+        const prefix='/?bottling=' + encodeURIComponent(selected);
+        if (page === 'tastings') return prefix + '&view=tastings';
+        if (page === 'tasting') {
+            if (!filters.tastingId || !/^[a-zA-Z0-9-]{1,100}$/.test(filters.tastingId))
+                throw new Error('Ungültige Verkostungs-ID');
+            return prefix + '&tasting=' + encodeURIComponent(filters.tastingId);
+        }
+        return prefix;
+    }
+    if (page === 'tastings-home') return '/?view=tastings';
+    if (page === 'external-tasting') {
+        if (!selected || !/^[a-zA-Z0-9-]{1,100}$/.test(selected)) throw new Error('Ungültige Verkostungs-ID');
+        return '/?externalTasting='+encodeURIComponent(selected);
     }
     if (page === 'analytics') {
         const section = ['overview', 'inventory', 'origins', 'profile', 'finance', 'timeline', 'quality'].includes(selected) ? selected : 'overview';

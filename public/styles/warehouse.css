@@ -577,3 +577,16 @@
     .warehouse-unassigned-page-controls { margin-left: auto; }
     .warehouse-wall-controls .warehouse-unassigned-grid { grid-template-columns: repeat(auto-fill,minmax(136px,1fr)); }
 }
+
+/* Furniture photos follow the existing bottle-photo UI and square panels. */
+.warehouse-furniture-photos { border-top:1px solid var(--line); margin:18px 0; padding-top:16px; }
+.warehouse-furniture-photo-list { display:flex; flex-wrap:wrap; gap:12px; margin:10px 0; }
+.warehouse-furniture-photo { width: min(180px,46%); border:1px solid var(--line); padding:6px; }
+.warehouse-furniture-photo img { display:block; width:100%; height:140px; object-fit:contain; }
+.warehouse-furniture-photo .actions { flex-wrap:nowrap; justify-content:center; gap:4px; }
+
+.warehouse-shelf-editor-navigation { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; border-bottom:1px solid var(--line); padding:0 0 16px; margin-bottom:18px; }
+.warehouse-shelf-editor-navigation>span { font-size:13px; font-weight:650; }
+
+.warehouse-photo-open { display:block; border:0; padding:0; background:transparent; cursor:zoom-in; width:100%; }
+.warehouse-photo-lightbox img { display:block; max-width:100%; max-height:72dvh; margin:auto; object-fit:contain; }

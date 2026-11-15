@@ -18,6 +18,18 @@ Die Seite verwendet denselben Kopfbereich und dieselbe linke Bereichsnavigation 
 
 Die virtuelle Ablage **„Nicht zugeordnet“** oberhalb der Regalwand ist beim Öffnen der Seite zunächst **eingeklappt**. Ein Klick auf die Überschrift blendet ohne zusätzlichen Erklärungstext direkt Suche, Flaschen und Seitennavigation ein; erneutes Klicken klappt sie zu. Bei Neuzeichnungen der Regalwand bleibt der Zustand erhalten. Pro Seite werden maximal 24 Flaschen angezeigt. Auch hier sind Alter, Erscheinungsjahr und Fasstyp verfügbar, wenn die Angaben zur Abfüllung existieren. Diese drei Felder sind Teil der lesenden Lager-API, nicht der gespeicherten Lagerzuordnungen.
 
+## Fachbearbeitung und Kapazitätsaktualisierung (v0.24.0)
+
+Der Fach-Editor besitzt **Vorheriges/Nächstes** für die Fächer desselben Möbels in der sichtbaren Reihenfolge (oben nach unten). Ungespeicherte Eingaben werden vor dem Wechsel durch ein anwendungseigenes Modal mit **Speichern, Verwerfen, Abbrechen** geschützt. Speichern erfolgt vor dem Wechsel; ein Validierungsfehler verhindert den Wechsel. Ohne Änderungen kann direkt gewechselt werden.
+
+Beim Speichern der Fachkapazität wird die bereits geöffnete Möbelübersicht mit den neuesten Lagerdaten aktualisiert. Die Kapazität und Belegungsanzeige erscheinen sofort ohne erneutes Öffnen des Regals. Die Änderungsfunktion nutzt den bisherigen Lagerdatensatz und erfindet keine separate Kopie der Fachinformationen.
+
+## Fotos an Möbelstücken (v0.24.0)
+
+Möbelstücke (einschließlich Regale, Schränke und Vitrinen) besitzen optional eine sortierte Liste `photos`. Im Möbelmanager können mehrere Bilder hochgeladen, vergrößert, umsortiert und einzeln gelöscht werden. Die Obergrenze beträgt **24 Fotos pro Möbelstück**. Neue Fotos werden unter `images/<möbel-id>/furniture-<foto-id>.<format>` im bestehenden persistenten Bildspeicher abgelegt; die zugehörigen IDs und Pfade stehen in `data/warehouse.json`. Alte Lagerdateien ohne `photos` bleiben gültig.
+
+Beim Duplizieren eines Möbels werden die Fotos **nicht** übernommen. Beim Löschen von Möbeln werden ihre Bilder entfernt. Ein vollständiges AES-256-ZIP-Backup enthält die `images/`-Dateien sowie die Lagerdatei und erhält so auch die Fotozuordnung und Reihenfolge. Ein einfacher Sammlungs-JSON-Export ist kein vollständiges Lager-/Bild-Backup. Raumplanübertragungen sind hiervon getrennt und übertragen keine Foto-Dateien.
+
 ## Virtuelle Regalwand und Flaschen-Umlagerung
 
 Die Lagerverwaltung trennt **Raumpläne** und **Regale & Fächer** bewusst nach Zuständigkeit:

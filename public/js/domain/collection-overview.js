@@ -1,5 +1,6 @@
 /** Presentation-only entries: one row per bottling or one row per physical bottle. */
 import { bottleStatusLabels, whiskyTypeName } from './labels.js';
+import { displayedTastingRating } from './tasting-records.js';
 
 export const OVERVIEW_MODES = Object.freeze(['bottlings', 'bottles']);
 
@@ -18,6 +19,16 @@ function isMatchingBottleType(bottle, volumeType) {
     return volumeType === 'all' || (bottle.volumeType || 'standard') === volumeType;
 }
 
+/** One rating range per Glencairn; the newest tasting is the sole source. */
+export function matchesOverviewRating(bottling, filter = 'all') {
+    if (filter === 'all') return true;
+    const score = displayedTastingRating(bottling);
+    if (filter === 'unrated') return score == null;
+    const bucket = Number(filter);
+    if (!Number.isInteger(bucket) || bucket < 1 || bucket > 5 || score == null || !Number.isFinite(Number(score))) return false;
+    return Math.max(1, Math.ceil(Number(score) / 20)) === bucket;
+}
+
 function matchingBottlingText(bottling, distilleryNames) {
     return [bottling.name, distilleryNames(bottling), bottling.bottler, bottling.brand, whiskyTypeName(bottling)];
 }
@@ -32,11 +43,12 @@ function matchingBottleText(bottle) {
 /** Filter before slicing, so each physical bottle counts as its own result. */
 export function collectionOverviewEntries(collection, {
     mode = 'bottlings', search = '', status = 'all', completion = 'all', sort = 'name',
-    distillery = 'all', volumeType = 'all', distilleryNames = () => '',
+    distillery = 'all', volumeType = 'all', rating = 'all', distilleryNames = () => '',
 } = {}) {
     const needle = String(search).trim().toLocaleLowerCase('de');
     const entries = [];
     for (const bottling of collection.bottlings) {
+        if (!matchesOverviewRating(bottling, rating)) continue;
         const distilleryIds = Array.isArray(bottling.distilleryIds)
             ? bottling.distilleryIds : (bottling.distilleryId ? [bottling.distilleryId] : []);
         if (distillery !== 'all' && !distilleryIds.includes(distillery)) continue;

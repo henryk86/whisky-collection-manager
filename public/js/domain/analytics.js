@@ -1,3 +1,4 @@
+import { displayedTastingRating } from './tasting-records.js';
 /** Pure analytics over the existing schema-v4 collection. No storage writes, no inferred market values. */
 import { whiskyTypeName } from './labels.js';
 import { bottlingOrigins, bottlingDistilleryIds } from './distillery-origin.js';
@@ -91,8 +92,10 @@ export function analyzeCollection(collection, filters = {}) {
                 const currency = currencyOf(bottle);
                 c.costs.set(currency, (c.costs.get(currency) || 0) + bottle.purchasePrice);
             }
-            if (isNumber(bottle.rating)) c.ratings.push(bottle.rating);
         }
+    }
+    for (const bottling of bottlings) if (isNumber(displayedTastingRating(bottling))) {
+        for (const id of idsOf(bottling)) distilleryCounts.get(id)?.ratings.push(displayedTastingRating(bottling));
     }
     const sortDistilleries = field => [...distilleries].sort((a, b) => b[field] - a[field] || a.name.localeCompare(b.name, 'de'));
     const status = grouped(bottles, b => statusLabels[b.status] || 'Unbekannt');
@@ -146,15 +149,14 @@ export function analyzeCollection(collection, filters = {}) {
         });
         return [...map.values()];
     }).sort((a, b) => a.currency.localeCompare(b.currency) || b.count - a.count);
-    const ratings = bottleEntries.filter(({ bottle }) => isNumber(bottle.rating) && bottle.rating >= 0 && bottle.rating <= 100);
-    const rated = validNumbers(ratings, entry => entry.bottle.rating);
-    const bestRated = rank(ratings.map(e => ({ id: e.bottling.id, bottleId: e.bottle.id, name: e.bottling.name, rating: e.bottle.rating }))
-        .sort((a, b) => b.rating - a.rating));
+    const ratings = bottlings.filter(b => isNumber(displayedTastingRating(b)) && displayedTastingRating(b) >= 0 && displayedTastingRating(b) <= 100);
+    const rated = ratings.map(displayedTastingRating);
+    const bestRated = rank(ratings.map(b => ({id:b.id, name:b.name, rating:displayedTastingRating(b)}))
+        .sort((a,b) => b.rating - a.rating));
     const distilleryRatings = distilleries.filter(d => d.ratings.length)
-        .map(d => ({ id: d.id, name: d.name, count: d.ratings.length, avg: avg(d.ratings) }))
-        .sort((a, b) => b.avg - a.avg || b.count - a.count);
-    const hasNotes = bottle => ['nose', 'palate', 'finish'].some(key => text(bottle.tastingNotes?.[key]));
-    const notesCount = bottles.filter(hasNotes).length;
+        .map(d => ({ id:d.id, name:d.name, count:d.ratings.length, avg:avg(d.ratings) }))
+        .sort((a,b) => b.avg-a.avg || b.count-a.count);
+    const notesCount = bottlings.filter(b => ['nose','palate','finish'].some(key => text(b.tastingNotes?.[key]))).length;
     const missingField = [
         ['Alter', b => isNumber(b.ageYears)], ['Alkoholgehalt', b => isNumber(b.abv)],
         ['Destillationsjahr', b => !!yearOf(b.distillationDate, b.distillationYear)],
@@ -169,9 +171,10 @@ export function analyzeCollection(collection, filters = {}) {
     const missingPurchase = [
         ['Kaufpreis', b => amount(b.purchasePrice) != null],
         ['Kaufdatum', b => !!dateMonth(b.purchaseDate)],
-        ['Bewertung', b => isNumber(b.rating)],
     ].map(([name, has]) => ({ name, count: bottles.filter(b => !has(b)).length,
         ids: bottleEntries.filter(entry => !has(entry.bottle)).map(entry => ({ id: entry.bottling.id, bottleId: entry.bottle.id })) }));
+    missingPurchase.push({name:'Bewertung', count:bottlings.filter(b => !isNumber(displayedTastingRating(b))).length,
+        ids:bottlings.filter(b => !isNumber(displayedTastingRating(b))).map(b => b.id)});
     const complete = bottlings.filter(b => b.completionStatus === 'complete').length;
     const incomplete = bottlings.filter(b => b.completionStatus === 'incomplete').length;
     const baseConnected = bottlings.filter(b => !!text(b.whiskybaseUrl) || !!text(b.whiskybaseId)).length;
@@ -216,10 +219,10 @@ export function analyzeCollection(collection, filters = {}) {
             boughtDaily: byDay(bottleEntries, e => e.bottle.purchaseDate),
             openedDaily: byDay(bottleEntries, e => e.bottle.openedAt),
         },
-        tasting: { rating: stats(rated), histogram: grouped(ratings, ({ bottle }) =>
-            bottle.rating === 100 ? '100' : `${Math.floor(bottle.rating / 10) * 10}–${Math.floor(bottle.rating / 10) * 10 + 9}`),
+        tasting: { rating: stats(rated), histogram: grouped(ratings, b =>
+            displayedTastingRating(b) === 100 ? '100' : `${Math.floor(displayedTastingRating(b) / 10) * 10}–${Math.floor(displayedTastingRating(b) / 10) * 10 + 9}`),
             bestRated, byDistillery: distilleryRatings,
-            notes: [{ name: 'Mit Notizen', count: notesCount }, { name: 'Ohne Notizen', count: bottles.length - notesCount }] },
+            notes: [{ name: 'Mit Notizen', count: notesCount }, { name: 'Ohne Notizen', count: bottlings.length - notesCount }] },
         quality: {
             completion: [ { name: 'Vollständig', count: complete }, { name: 'Unvollständig', count: incomplete },
                 { name: 'Nicht klassifiziert', count: bottlings.length - complete - incomplete } ],

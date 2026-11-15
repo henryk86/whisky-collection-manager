@@ -1,5 +1,6 @@
 import { t, tHtml, currentLanguage } from '../i18n/index.js';
 /** One place for manual, scheduled and restorative backups. All archives are ZIP. */
+import { addActionLabel } from '../ui/action-icons.js';
 import { escapeHtml as h } from '../ui/dom.js';
 import { jobErrorText } from '../i18n/job-errors.js';
 
@@ -53,7 +54,7 @@ export function renderBackupSection(state) {
       </div>
       <div class="backup-step"><div class="backup-head"><div><h4>${t("backups.sections.scheduledBackups")}</h4><p class="muted">${t("backups.targets.storageRetentionDescription")}</p></div></div>
         <p class="muted">${targets.length ? t("backups.targets.preparedLocalTargets",{targets:targets.map(item => item.label).join(', ')}) : `${t("backups.usb.mountInstructionBefore")} <code>sh deploy/setup-usb.sh</code> ${t("backups.usb.mountInstructionAfter")}`}</p>
-        <div class="actions backup-tools"><button type="button" class="btn primary" data-act="backup-new">${t("backups.targets.configure")}</button>
+        <div class="actions backup-tools"><button type="button" class="btn primary" data-act="backup-new">${addActionLabel(t("backups.targets.configure"))}</button>
           <button type="button" class="btn" data-act="backup-refresh">${t("backups.actions.refresh")}</button>
           <button type="button" class="btn" data-act="backup-lock">${t("backups.security.lock")}</button></div>
         ${!dash.worker?.online ? `<p class="warning">${t("backups.status.workerUnavailable")}</p>` : ''}

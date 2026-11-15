@@ -1,5 +1,8 @@
+import { escapeHtml } from './dom.js';
 /** Shared accessible action icons: the header and hero reuse the same SVGs. */
 export const newBottlingIcon = '<svg class="new-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>';
+/** For translated add/create labels that previously carried a typed '+' glyph. */
+export const addActionLabel = label => `<span class="add-action-label">${newBottlingIcon}<span>${escapeHtml(String(label).replace(/^\+\s*/, ''))}</span></span>`;
 
 export const inventoryScanIcon = '<svg class="scan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/><path d="M8 9v6m3-6v6m3-6v6m3-6v6"/></svg>';
 

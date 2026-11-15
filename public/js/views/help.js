@@ -3,11 +3,12 @@ import { t } from '../i18n/index.js';
 import { escapeHtml } from '../ui/dom.js';
 import { backToCollectionButton } from '../ui/navigation-controls.js';
 import { sectionWorkspace } from '../ui/section-navigation.js';
+import { helpGuides } from './help-guides.js';
 
 export const HELP_TOPICS = Object.freeze([
     { id: 'basics', items: 4 },
-    { id: 'bottlings', items: 4 },
-    { id: 'storage', items: 5 },
+    { id: 'bottlings', items: 6 },
+    { id: 'storage', items: 7 },
     { id: 'map', items: 3 },
     { id: 'photos', items: 3 },
     { id: 'analysis', items: 2 },
@@ -24,7 +25,7 @@ export function helpView(activeTopic = 'basics') {
             <h2 class="analytics-section-title" id="help-title-${topic.id}">${title(topic.id)}</h2>
             <div class="help-content-panel">
                 ${topic.id === 'basics' ? `<p class="help-description muted">${escapeHtml(t('help.description'))}</p>` : ''}
-                <ol class="help-steps">${Array.from({length:topic.items}, (_, index) => `<li>${escapeHtml(t(`help.${topic.id}.${index + 1}`))}</li>`).join('')}</ol>
+                <ol class="help-steps">${Array.from({length:topic.items}, (_, index) => `<li>${escapeHtml(t(`help.${topic.id}.${index + 1}`))}</li>`).join('')}</ol>${helpGuides(topic.id)}
             </div>
         </section>`).join('');
     const workspace = sectionWorkspace({
