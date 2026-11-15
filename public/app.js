@@ -16,6 +16,7 @@ import { escapeHtml } from './js/ui/dom.js';
 import { toast } from './js/ui/notifications.js';
 import { createHomeView } from './js/views/home.js';
 import { createDetailView } from './js/views/detail.js';
+import { createTastingsView } from './js/views/tastings.js';
 import { createSettingsView } from './js/views/settings.js';
 import { helpView } from './js/views/help.js';
 import { createMapView } from './js/views/map.js';
@@ -56,6 +57,7 @@ const home = createHomeView({
 const detail = createDetailView({
     state, selectors, shell, navigate, action
 });
+const tastingsView = createTastingsView({state,selectors,shell,navigate,refresh,showModal:modal.showModal,closeModal:modal.closeModal});
 const settingsView = createSettingsView(state);
 const bottlingForm = createBottlingForm({
     state, selectors
@@ -97,6 +99,9 @@ function render() {
     if (state.page === 'analytics') return analyticsView();
     if (state.page === 'help') return shell(helpView());
     if (state.page === 'warehouse') return warehouseView.render();
+    if (state.page === 'tastings-home') return tastingsView.home();
+    if (['tastings','external-tastings'].includes(state.page)) return tastingsView.list();
+    if (['tasting','external-tasting'].includes(state.page)) return tastingsView.editor();
     if (state.page === 'detail') {
         return detail();
     }
@@ -129,7 +134,7 @@ async function action(task) {
 }
 navigation.listen();
 bindEvents(root, {
-    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView
+    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView
 });
 // The extension can send a second import into an already open manager tab.
 // A fragment-only navigation triggers hashchange, not a page reload.

@@ -1,10 +1,12 @@
+import { latestTasting } from '../domain/tasting-records.js';
 import { displayPhotoPath } from '../domain/photo-images.js';
 import { t } from '../i18n/index.js';
 const bottleStatusText = status => t(({closed:'home.status.closed',open:'analytics.inventory.openedStatus',empty:'home.status.empty'})[status] || 'features.distilleries.unknownStatus');
 const FACT_KEYS = Object.freeze({'Whisky-Kategorie':'forms.bottling.whiskyCategory','Marke':'forms.bottling.brandOrProductLine','Beteiligte Destillerien':'forms.bottling.participatingDistilleries','Zusammensetzung vollständig':'detail.facts.labelCompositionComplete','Alter':'forms.bottling.ageYears','Alkoholgehalt':'forms.bottling.abv','Erscheinungsjahr':'forms.bottling.releaseYear','Nennfüllmenge laut Abfüllung':'forms.bottling.nominalVolume','Abfüller':'forms.bottling.bottler','Region':'detail.facts.labelRegion','Land':'detail.facts.labelCountry','Fasstyp':'forms.bottling.caskType','Destilliert am':'forms.bottling.distillationDate','Abgefüllt am':'forms.bottling.bottlingDate','Fassnummer':'forms.bottling.caskNumber','Limitierte Auflage':'detail.facts.labelLimitedEdition'});
 const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
 import { escapeHtml, queryAll } from '../ui/dom.js';
-import { editIcon, deleteIcon, locationIcon } from '../ui/action-icons.js';
+import { editIcon, deleteIcon, locationIcon, newBottlingIcon, addActionLabel } from '../ui/action-icons.js';
+import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
 import { imageUrl, formatValue, formatDate } from '../ui/format.js';
 import { bottleStatusLabels, photoAccept } from '../domain/labels.js';
 
@@ -27,6 +29,8 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
             });
             return;
         }
+        const latest = latestTasting(bottling);
+        const tastingCount = bottling.tastings?.length || 0;
         const physicalBottles = bottles(bottling.id);
         const facts = bottlingDetails(bottling, distilleryNames, state.collection.distilleries);
         const originLabel = bottlingOriginLabel(bottling, distilleryNames);
@@ -50,7 +54,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <button class="photo-drag-handle" type="button" data-photo-drag title="${t("detail.photos.reorderHint")}" aria-label="${t("detail.photos.reorderHint")}">⠿</button>
     <button class="photo-move" type="button" data-act="move-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" data-dir="1" aria-label="${t("detail.photos.moveBackward")}">→</button>
     </div>
-    </div>`).join('')}<label class="photo-add">${t("detail.actions.addPhotos")}<input type="file" accept="${photoAccept}" multiple hidden data-bottle-photos="${entry.id}">
+    </div>`).join('')}<label class="photo-add">${addActionLabel(t("detail.actions.addPhotos"))}<input type="file" accept="${photoAccept}" multiple hidden data-bottle-photos="${entry.id}">
     </label><label class="photo-add photo-capture">${t('cutout.takePhoto')}<input type="file" accept="image/*" capture="environment" hidden data-bottle-photos="${escapeHtml(entry.id)}"></label>
     </div>
     <small class="muted">${t("detail.statistics.photoCount", {count:(entry.photos || []).length})}</small>
@@ -61,7 +65,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <span class="muted document-size">${formatFileSize(file.size)}</span>
     <button class="btn small danger" type="button" data-act="delete-file" data-id="${escapeHtml(entry.id)}" data-file-id="${escapeHtml(file.id)}" aria-label="${t("detail.documents.deleteNamed",{name:escapeHtml(file.name)})}">${deleteIcon}<span>${t("common.actions.delete")}</span></button>
     </li>`).join('')}</ul>` : `<p class="hint">${t("detail.empty.noAttachments")}</p>`}
-    <label class="document-add">${t("detail.actions.addAttachments")}
+    <label class="document-add">${addActionLabel(t("detail.actions.addAttachments"))}
     <input type="file" accept="${fileAccept}" multiple data-bottle-files="${escapeHtml(entry.id)}">
     </label>
     </section>
@@ -85,8 +89,8 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <button class="btn danger" data-act="delete-bottling">${deleteIcon}<span>${t("common.actions.delete")}</span></button>
     </div>
     </div>
-    <div class="two-col">
-    <div>
+    <div class="two-col detail-summary-grid">
+    <div class="detail-summary-photo">
     ${coverPhoto(bottling.id) ? `<button type="button" class="hero-photo hero-photo-open" data-act="open-photo" title="${t("detail.photos.enlargeBottle")}" aria-label="${t("detail.photos.openOverlay")}"><img src="${imageUrl(coverPhoto(bottling.id))}" alt="${t("ui.photos.bottlePhoto")}"></button>` : '<div class="hero-photo"><img class="image-placeholder" src="/assets/photo-placeholder.svg" alt="" aria-hidden="true"></div>'}
     </div>
     <div class="panel">
@@ -100,10 +104,32 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <a href="${escapeHtml(whiskybaseUrl)}" target="_blank" rel="noopener noreferrer">${t("detail.actions.openWhiskybase")}</a>` : ''}</div>
     </div>
     </div>
+    <section class="section tasting-summary" aria-label="${escapeHtml(t('tastings.title'))}">
+        <div class="section-head">
+            <h3>${escapeHtml(t('tastings.title'))}</h3>
+            <button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t(tastingCount ? 'tastings.add' : 'tastings.first'))}</span></button>
+        </div>
+        <div class="panel tasting-summary-card">
+            <div class="tasting-summary-content">
+                <div><span class="muted">${escapeHtml(t('tastings.latest'))}</span>
+                <div class="tasting-summary-score">
+                    ${latest?.rating != null ? `<span class="tasting-summary-glasses" aria-hidden="true">${Array.from({length:5},(_,i)=>glencairnRatingSymbol({fill:Math.max(0,Math.min(100,(Number(latest.rating)-i*20)*5)),id:`detail-tasting-${i}`})).join('')}</span>` : ''}
+                    <div class="tasting-summary-rating">${latest ? (latest.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(latest.rating)} / 100`) : escapeHtml(t('tastings.none'))}</div>
+                </div>
+                ${latest ? `<span class="muted">${escapeHtml(formatDate(latest.tastedOn))} · ${escapeHtml(t('tastings.count',{count:tastingCount}))}</span>` : ''}</div>
+                <div class="actions tasting-summary-actions">
+                    <button type="button" class="btn" data-act="tastings-open" ${tastingCount === 1 ? `data-tasting-id="${escapeHtml(latest.id)}"` : ''}>${escapeHtml(t(tastingCount === 1 ? 'tastings.openOne' : 'tastings.openAll'))}</button>
+                </div>
+            </div>
+        </div>
+        ${bottling.legacyTastings?.length ? `<details class="panel tasting-history"><summary>${escapeHtml(t('tasting.legacyHistory'))} (${bottling.legacyTastings.length})</summary>
+            <ol class="tasting-history-list">${bottling.legacyTastings.map(entry => `<li><strong>${escapeHtml(entry.inventoryNumber || entry.bottleId)}</strong>${entry.rating == null ? '' : ` · ${entry.rating} / 100`}
+            ${['nose','palate','finish'].map(key => entry.tastingNotes?.[key] ? `<p>${escapeHtml(t(`forms.bottling.${key}`))}: ${escapeHtml(entry.tastingNotes[key])}</p>` : '').join('')}</li>`).join('')}</ol></details>` : ''}
+    </section>
     <div class="section">
     <div class="section-head">
     <h3>${t("detail.statistics.bottleAndSampleCount", {count:physicalBottles.length})}</h3>
-    <button class="btn primary" data-act="add-bottle">${t("detail.actions.addAnotherBottle")}</button>
+    <button class="btn primary" data-act="add-bottle">${newBottlingIcon}<span>${escapeHtml(t('detail.actions.addAnotherBottle').replace(/^\+\s*/, ''))}</span></button>
     </div>
     <div class="panel">${list || `<p class="muted">${t("detail.empty.noPhysicalBottles")}</p>`}</div>
     </div>`);

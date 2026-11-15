@@ -7,8 +7,9 @@ import { routeUrl } from './navigation/routes.js';
 import { readAnalyticsDate } from './domain/analytics-period.js';
 import { activateHelpTopic } from './views/help.js';
 import { activateSettingsSection } from './views/settings.js';
+import { handleFlavorRange, setFlavorFromPointer } from './ui/flavor-profile.js';
 /** One delegated click handler; HTML data-act values are the UI action names. */
-export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView }) {
+export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView }) {
     const suggestNumber = async (fieldName) => {
         const result = await request('/api/suggest-number');
         const field = query(`[name=${fieldName}]`);
@@ -40,6 +41,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'toggle-menu': () => setMenu(document.getElementById('site-drawer')?.hidden !== false),
         'close-menu': () => setMenu(false),
         'goto-home': () => navigate('home'),
+        'goto-tastings-home': () => navigate('tastings-home'),
         'goto-map': () => navigate('map'),
         'goto-help': () => navigate('help'),
         'help-tab': button => activateHelpTopic(button.dataset.helpTopic, button.closest('.help-page')),
@@ -78,6 +80,48 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'warehouse-shelf-up': button => warehouseView.moveShelf(button.dataset.id,'up'),
         'warehouse-shelf-down': button => warehouseView.moveShelf(button.dataset.id,'down'),
         'warehouse-shelf-edit': button => warehouseView.openForm('shelf', button.dataset.id),
+        'warehouse-shelf-switch': button => warehouseView.switchShelf(button.dataset.target),
+        'warehouse-photo-move': button => warehouseView.moveFurniturePhoto(button.dataset.id,button.dataset.photoId,button.dataset.direction),
+        'warehouse-photo-delete': button => warehouseView.deleteFurniturePhoto(button.dataset.id,button.dataset.photoId),
+        'warehouse-photo-open': button => warehouseView.openFurniturePhoto(button.dataset.path,button.dataset.title),
+        'flavor-detail-undo': () => tastingsView.undoFlavor(),
+        'flavor-detail-redo': () => tastingsView.redoFlavor(),
+        'tasting-flavor-clear': () => tastingsView.clearFlavor(),
+        'tasting-rating': button => tastingsView.chooseRating(Number(button.dataset.ratingPoints)),
+        'tasting-rating-clear': () => tastingsView.chooseRating(null),
+        'tasting-color': button => tastingsView.chooseColor(button.dataset.colorKey),
+        'tasting-color-clear': () => tastingsView.chooseColor(null),
+        'tastings-back-detail': () => navigate('detail',state.selected),
+        'tastings-back-home': () => navigate('tastings-home'),
+        'tastings-back-list': () => navigate('tastings',state.selected),
+        'tastings-open': button => button.dataset.tastingId
+            ? navigate('tasting',state.selected,{tastingId:button.dataset.tastingId})
+            : navigate('tastings',state.selected),
+        'tastings-new': () => navigate('tasting',state.selected,{tastingId:'new'}),
+        'tastings-start-choice': () => tastingsView.toggleCreateChoice(),
+        'tastings-start-owned': () => {
+            const id=document.querySelector('[data-owned-tasting-bottling]')?.value;
+            if (id && state.collection.bottlings.some(b=>b.id===id)) navigate('tasting',id,{tastingId:'new'});
+        },
+        'tastings-start-external': () => navigate('external-tasting','new'),
+        'tastings-home-open': button => button.dataset.external==='1'
+            ? navigate('external-tasting',button.dataset.bottlingId)
+            : navigate('tasting',button.dataset.bottlingId,{tastingId:button.dataset.tastingId}),
+        'tasting-create': () => tastingsView.saveDraft(),
+        'tasting-edit-start': () => tastingsView.startEditing(),
+        'tasting-edit-done': () => tastingsView.finishEditing(),
+        'tasting-open-bottling': () => navigate('detail',state.selected),
+        'tasting-external-edit': () => tastingsView.startExternalEdit(),
+        'tasting-external-cancel': () => tastingsView.cancelExternalEdit(),
+        'tasting-external-save': () => tastingsView.persistExternalDetails(),
+        'tasting-external-assign': () => tastingsView.showAssignDialog(),
+        'tasting-external-assign-confirm': () => tastingsView.assignExternalToBottling(),
+        'tasting-delete': button => confirmInModal(t('tastings.delete'),t('tastings.deleteConfirm'),async()=>{
+            const id=button.dataset.tastingId;
+            const external=state.page==='external-tasting';
+            await action(()=>request(external?`/api/external-tastings/${encodeURIComponent(id)}`:`/api/bottlings/${encodeURIComponent(state.selected)}/tastings/${encodeURIComponent(id)}`,{method:'DELETE'}));
+            navigate(external?'tastings-home':'tastings',external?null:state.selected,{replace:true});
+        },t('common.actions.delete')),
         'warehouse-shelf-copy': button => warehouseView.openForm('shelf-copy', button.dataset.id),
         'warehouse-shelf-delete': button => warehouseView.askDelete('shelf', button.dataset.id),
         'warehouse-assign': button => warehouseView.openForm('assign', button.dataset.id),
@@ -162,6 +206,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'edit-bottle': button => editors.editBottle(button.dataset.id),
         'close-modal': () => modal.closeModal(),
         'modal-confirm-accept': () => modal.acceptConfirmation(),
+        'modal-choice': button => modal.acceptChoice(button.dataset.choice),
         'add-distillery': () => settings.promptDistillery(),
         'rename-distillery': button => settings.promptDistillery(button.dataset.id),
         scan: () => scanner.scanCode(),
@@ -262,6 +307,23 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
             warehouseView.openShelfDetails(bay.dataset.shelfId);
         }
     });
+    root.addEventListener('input', event => {
+        handleFlavorRange(event);
+        if (event.target.matches?.('[data-flavor-detail] [data-tasting-score]')) tastingsView.previewRating();
+    });
+    root.addEventListener('change', event => {
+        if (event.target.matches?.('[data-flavor-detail] [data-flavor-range], [data-flavor-detail] [data-tasting-note], [data-flavor-detail] [data-tasting-score]')) tastingsView.commitFlavor();
+        if (event.target.matches?.('[data-flavor-detail] [data-tasting-date], [data-flavor-detail] [data-tasting-title]')) void tastingsView.persistMeta();
+    });
+    let flavorPointer = null;
+    root.addEventListener('pointerdown', event => {
+        const hit = event.target?.closest?.('[data-flavor-hit]');
+        if (!hit) return;
+        flavorPointer = event.pointerId; hit.setPointerCapture?.(event.pointerId); setFlavorFromPointer(event);
+    });
+    root.addEventListener('pointermove', event => { if (flavorPointer === event.pointerId) setFlavorFromPointer(event); });
+    root.addEventListener('pointerup', event => { if (flavorPointer === event.pointerId) { flavorPointer = null; if (event.target.closest?.('[data-flavor-detail]')) tastingsView.commitFlavor(); } });
+    root.addEventListener('pointercancel', event => { if (flavorPointer === event.pointerId) flavorPointer = null; });
     root.addEventListener('submit', event => {
         if (event.target.id === 'new-bottle-choice-form') {
             event.preventDefault();
@@ -295,6 +357,9 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
     });
     root.addEventListener('change', event => {
+        if (event.target.matches?.('input[data-furniture-photos]')) {
+            warehouseView.uploadFurniturePhotos(event.target.dataset.furniturePhotos,[...event.target.files]); return;
+        }
         if (event.target.id === 'ui-language') { chooseLanguage(event.target.value); return; }
         if (event.target.dataset.sectionSwitch === 'analytics') {
             navigate('analytics', event.target.value);

@@ -34,6 +34,10 @@ export function validateWarehouse(data) {
                 (furniture.doorLeaves != null && ![1,2].includes(furniture.doorLeaves)) ||
                 (furniture.glassFrame != null && typeof furniture.glassFrame !== 'boolean') ||
                 !Array.isArray(furniture.shelves)) throw fail('Ungültiges Lagermöbel');
+            if (furniture.photos !== undefined && (!Array.isArray(furniture.photos) || furniture.photos.length > 24 ||
+                furniture.photos.some(photo => !photo || !validText(photo.id,120) || !validText(photo.path,300) ||
+                    !/^images\/[\w-]+\/furniture-[\w-]+\.(?:jpg|png|webp|gif)$/.test(photo.path) ||
+                    photo.path.split('/')[1] !== furniture.id))) throw fail('Ungültige Möbelfotos');
             if (furniture.doorRanges !== undefined) {
                 if (!Array.isArray(furniture.doorRanges) || furniture.doorRanges.length > 100) throw fail('Ungültige Türbereiche');
                 const covered = new Set();

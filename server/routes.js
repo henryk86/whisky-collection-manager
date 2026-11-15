@@ -6,6 +6,8 @@ import * as collection from './services/collection.js';
 import * as warehouse from './services/warehouse.js';
 import * as settings from './services/settings.js';
 import * as bottlings from './services/bottlings.js';
+import * as tastings from './services/tastings.js';
+import * as standaloneTastings from './services/standalone-tastings.js';
 import * as bottles from './services/bottles.js';
 import * as distilleries from './services/distilleries.js';
 import { findDistilleryLocations } from './services/distillery-geocoding.js';
@@ -34,6 +36,9 @@ const routes = [
     { method: 'POST', path: /^\/api\/warehouse\/furniture\/bulk\/delete$/, run: (_, body) => warehouse.bulkDeleteFurniture(body) },
     { method: 'PATCH', path: /^\/api\/warehouse\/furniture\/([\w-]+)$/, run: ([id], body) => warehouse.updateFurniture(id, body) },
     { method: 'DELETE', path: /^\/api\/warehouse\/furniture\/([\w-]+)$/, run: ([id]) => warehouse.deleteFurniture(id) },
+    { method: 'POST', path: /^\/api\/warehouse\/furniture\/([\w-]+)\/photos$/, status: 201, run: ([id], body) => warehouse.addFurniturePhoto(id,body) },
+    { method: 'PUT', path: /^\/api\/warehouse\/furniture\/([\w-]+)\/photos\/order$/, run: ([id], body) => warehouse.reorderFurniturePhotos(id,body) },
+    { method: 'DELETE', path: /^\/api\/warehouse\/furniture\/([\w-]+)\/photos\/([\w-]+)$/, run: ([id,photoId]) => warehouse.deleteFurniturePhoto(id,photoId) },
     { method: 'POST', path: /^\/api\/warehouse\/furniture\/([\w-]+)\/copy$/, status: 201, run: ([id], body) => warehouse.copyFurniture(id, body) },
     { method: 'POST', path: /^\/api\/warehouse\/furniture\/([\w-]+)\/shelves$/, status: 201, run: ([id], body) => warehouse.createShelf(id, body) },
     { method: 'PATCH', path: /^\/api\/warehouse\/shelves\/([\w-]+)\/move$/, run: ([id], body) => warehouse.moveShelf(id, body) },
@@ -83,6 +88,17 @@ const routes = [
     {
         method: 'DELETE', path: /^\/api\/bottlings\/([\w-]+)$/, run: ([id]) => bottlings.deleteBottling(id)
     },
+    { method:'GET', path:/^\/api\/external-tastings$/, run:()=>standaloneTastings.list() },
+    { method:'GET', path:/^\/api\/external-tastings\/([\w-]+)$/, run:([id])=>standaloneTastings.get(id) },
+    { method:'POST', path:/^\/api\/external-tastings$/, status:201, run:(_a,body)=>standaloneTastings.create(body) },
+    { method:'PATCH', path:/^\/api\/external-tastings\/([\w-]+)$/, run:([id],body)=>standaloneTastings.update(id,body) },
+    { method:'DELETE', path:/^\/api\/external-tastings\/([\w-]+)$/, run:([id])=>standaloneTastings.remove(id) },
+    { method:'POST', path:/^\/api\/external-tastings\/([\w-]+)\/assign$/, run:([id],body)=>standaloneTastings.assignToBottling(id,body) },
+    { method:'GET', path:/^\/api\/bottlings\/([\w-]+)\/tastings$/, run:([id])=>tastings.listTastings(id) },
+    { method:'GET', path:/^\/api\/bottlings\/([\w-]+)\/tastings\/([\w-]+)$/, run:([id,tastingId])=>tastings.getTasting(id,tastingId) },
+    { method:'POST', path:/^\/api\/bottlings\/([\w-]+)\/tastings$/, status:201, run:([id],body)=>tastings.createTasting(id,body) },
+    { method:'PATCH', path:/^\/api\/bottlings\/([\w-]+)\/tastings\/([\w-]+)$/, run:([id,tastingId],body)=>tastings.updateTasting(id,tastingId,body) },
+    { method:'DELETE', path:/^\/api\/bottlings\/([\w-]+)\/tastings\/([\w-]+)$/, run:([id,tastingId])=>tastings.deleteTasting(id,tastingId) },
     {
         method: 'POST', path: /^\/api\/bottles$/, status: 201, run: (_, body) => bottles.createBottle(body)
     },

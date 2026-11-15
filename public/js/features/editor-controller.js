@@ -120,12 +120,6 @@ export function createEditors({ state, selectors, bottlingForm, bottleForm, show
             ev.preventDefault();
             const form = ev.target;
             const data = formValues(form);
-            data.tastingNotes = {
-                nose: data.tastingNose || '', palate: data.tastingPalate || '', finish: data.tastingFinish || ''
-            };
-            delete data.tastingNose;
-            delete data.tastingPalate;
-            delete data.tastingFinish;
             const result = await action(async () => {
                 let bottleId;
                 let importPhotoError = null;

@@ -14,7 +14,7 @@ export function createBottling(input) {
     return change(collection => {
         const timestamp = now();
         const bottling = {
-            ...normalizeBottling(input), id: uid(), bottles: [], createdAt: timestamp, updatedAt: timestamp
+            ...normalizeBottling(input), id: uid(), bottles: [], tastings: [], createdAt: timestamp, updatedAt: timestamp
         };
         checkDistilleries(collection, bottling);
         const bottle = {
@@ -37,6 +37,9 @@ export function updateBottling(id, input) {
         if (!bottling) {
             throw fail('Abfüllung nicht gefunden', 404);
         }
+        if (Array.isArray(bottling.tastings) &&
+            ['rating','tastingNotes','flavorProfile','whiskyColor'].some(key => Object.hasOwn(input,key)))
+            throw fail('Verkostungsdaten dürfen nur innerhalb einer Verkostung geändert werden',400);
         const updated = normalizeBottling(input, bottling);
         checkDistilleries(collection, updated);
         Object.assign(bottling, updated, {

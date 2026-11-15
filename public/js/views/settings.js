@@ -1,3 +1,4 @@
+import { addActionLabel } from '../ui/action-icons.js';
 import { escapeHtml } from '../ui/dom.js';
 import { availableLanguages, currentLanguage, t } from '../i18n/index.js';
 import { renderBackupSection } from './backups.js';
@@ -32,7 +33,7 @@ export function createSettingsView(state) {
     <div class="distillery-tools">
     <input type="search" class="distillery-search" id="distillery-search" value="${escapeHtml(state.distillerySearch || '')}" placeholder="${t("settings.distilleries.searchPlaceholder")}" aria-label="${t("settings.distilleries.search")}" autocomplete="off">
     <span class="distillery-count" id="distillery-count" role="status" aria-live="polite">${state.collection.distilleries.filter(d => d.name.toLocaleLowerCase('de').includes((state.distillerySearch || '').trim().toLocaleLowerCase('de'))).length} von ${state.collection.distilleries.length}</span>
-    <button class="btn" type="button" data-act="add-distillery">${t("settings.distilleries.add")}</button>
+    <button class="btn" type="button" data-act="add-distillery">${addActionLabel(t("settings.distilleries.add"))}</button>
     </div>
     <div class="distillery-list" role="list" aria-label="${t("backups.summary.distilleriesLabel")}">${state.collection.distilleries.slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).map(distillery => `<div class="distillery-row" role="listitem" ${distillery.name.toLocaleLowerCase('de').includes((state.distillerySearch || '').trim().toLocaleLowerCase('de')) ? '' : 'hidden'}>
     <strong data-i18n-ignore>${escapeHtml(distillery.name)}</strong>

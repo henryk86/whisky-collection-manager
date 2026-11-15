@@ -28,13 +28,22 @@
  * @property {Photo[]} [photos]
  * @property {BottleFile[]} [files] Invoice PDFs, supporting pictures, and other records.
  * @property {string} [comment]
- * @property {{nose: string, palate: string, finish: string}} [tastingNotes]
  * @property {string} [purchaseDate]
  * @property {number|null} [purchasePrice]
  * @property {string} [currency]
- * @property {number|null} [rating]
  * @property {string} [createdAt]
  * @property {string} [updatedAt]
+ *
+ * @typedef {Object} Tasting
+ * @property {string} id Independent, immutable tasting UUID.
+ * @property {string} tastedOn YYYY-MM-DD local tasting date.
+ * @property {string} [title] Optional tasting title.
+ * @property {{nose:string,palate:string,finish:string}} tastingNotes
+ * @property {number|null} rating Optional score from 0 to 100.
+ * @property {Object|null} flavorProfile Eight sensory axes.
+ * @property {string|null} whiskyColor One of the fixed whisky colour keys.
+ * @property {string} createdAt ISO timestamp.
+ * @property {string} updatedAt ISO timestamp.
  *
  * @typedef {Object} Bottling
  * @property {string} id
@@ -52,6 +61,10 @@
  * @property {number|null} [distillationYear]
  * @property {number|null} [bottlingYear]
  * @property {'complete'|'incomplete'} [completionStatus]
+ * @property {Tasting[]} [tastings] Independent tastings; absent in older schema-v4 collections.
+ * @property {{nose:string,palate:string,finish:string}} [tastingNotes] Read-only compatibility projection of the last tasting.
+ * @property {number|null} [rating] Read-only compatibility projection of the last tasting.
+ * @property {{bottleId:string,inventoryNumber:string,tastingNotes:Object,rating:number|null}[]} [legacyTastings] Original per-bottle observations retained on migration.
  * @property {Bottle[]} bottles Physical bottles are nested; no top-level bottles array.
  * @property {string} [createdAt]
  * @property {string} [updatedAt]
@@ -65,6 +78,18 @@
  * @property {number|null} [latitude] Optional surveyed coordinate; takes precedence over curated locations.
  * @property {number|null} [longitude]
  *
+ * @typedef {Object} ExternalTastingBottling
+ * @property {string} id Stable ID, never present in owned bottlings[].
+ * @property {string} name Release name of an unowned whisky.
+ * @property {string} distillery Optional free-text distillery.
+ * @property {string} bottler Optional free-text bottler.
+ * @property {number|null} ageYears
+ * @property {number|null} abv
+ * @property {number|null} releaseYear
+ * @property {Tasting[]} tastings
+ * @property {string} createdAt
+ * @property {string} updatedAt
+ *
  * @typedef {Object} Collection
  * @property {4} schemaVersion
  * @property {number} nextInventoryNumber
@@ -72,5 +97,6 @@
  * @property {{establishedYear: number|null}} [settings] Optional collection-wide preferences; older archives omit this.
  * @property {Distillery[]} distilleries
  * @property {Bottling[]} bottlings
+ * @property {(Tasting & {bottling: Object})[]} [externalTastings] Standalone tastings of unowned whisky, excluded from inventory and analytics.
  */
 export {};

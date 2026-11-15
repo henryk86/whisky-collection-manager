@@ -154,3 +154,6 @@
 .map-related-missing { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; color: var(--muted); font-size: 12px; }
 .map-related-set-location { background: none; border: 0; padding: 0; color: var(--blue); text-decoration: none; cursor: pointer; font-size: inherit; }
 .map-related-set-location:hover, .map-related-set-location:focus-visible { text-decoration: underline; }
+
+/* The tall Glencairn silhouette needs the same visual weight as the other side-menu icons. */
+.site-nav svg.nav-glencairn { transform:scale(1.14); }

@@ -2,6 +2,8 @@
 .settings-icon { display: block; width: 19px; height: 19px; flex: 0 0 19px; }
 .scan-icon { display: block; width: 19px; height: 19px; flex: 0 0 19px; }
 .new-icon { display: block; width: 19px; height: 19px; flex: 0 0 19px; }
+.add-action-label { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-width:0; }
+.photo-add .add-action-label { flex-wrap:wrap; }
 .action-icon { display: block; width: 17px; height: 17px; flex: 0 0 17px; }
 .theme-icon { display: block; width: 19px; height: 19px; flex: 0 0 19px; }
 .btn.small .action-icon { width: 15px; height: 15px; flex-basis: 15px; }

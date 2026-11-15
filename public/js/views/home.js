@@ -11,6 +11,8 @@ import { hasBottlingDetail } from '../domain/bottling-details.js';
 import { paginate, visiblePages, PAGE_SIZE_OPTIONS, homePageUrl } from '../domain/pagination.js';
 import { savePageSizePreference } from '../domain/page-size-preference.js';
 import { availableOverviewDistilleries, collectionOverviewEntries } from '../domain/collection-overview.js';
+import { displayedTastingRating } from '../domain/tasting-records.js';
+import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
 /**
  * The count labels represent mutually exclusive bottle types. Sample bottles
  * are not displayed again in the Standardflaschen count.
@@ -31,6 +33,19 @@ function overviewFacts(bottling) {
         hasBottlingDetail(bottling.ageYears) ? t('home.facts.years',{count:bottling.ageYears}) : '',
         overviewField(bottling.abv, ' % Vol.'),
     ].filter(Boolean);
+}
+
+/** Compact, non-interactive rating shown inside the photo frame. */
+export function collectionCardRating(bottling, photoId = null) {
+    const score = displayedTastingRating(bottling);
+    if (score == null || !Number.isFinite(Number(score))) return '';
+    const safe = Math.min(100, Math.max(0, Number(score)));
+    const unique = String(photoId || bottling.id || 'bottling').replace(/[^a-zA-Z0-9_-]/g,'-');
+    const glasses = Array.from({length:5},(_,i) => {
+        const fill = Math.max(0, Math.min(100, (safe-i*20)*5));
+        return glencairnRatingSymbol({fill,id:`overview-rating-${unique}-${i}`});
+    }).join('');
+    return `<span class="collection-card-rating" role="img" aria-label="${escapeHtml(t('home.filters.ratingScore',{score:String(safe).replace('.',',')}))}" title="${escapeHtml(t('home.filters.ratingScore',{score:String(safe).replace('.',',')}))}">${glasses}</span>`;
 }
 
 /** Render only the necessary page controls; page content is loaded from local JSON. */
@@ -74,7 +89,7 @@ export function createHomeView({ state, selectors, shell }) {
         // The mode changes the unit of filtering, counting and pagination, not the collection data.
         const list = collectionOverviewEntries(collection, {
             mode, search: state.search, status: state.status, completion: state.completion,
-            sort: state.sort, distillery: state.distillery, volumeType: state.volumeType, distilleryNames,
+            sort: state.sort, distillery: state.distillery, volumeType: state.volumeType, rating: state.rating, distilleryNames,
         });
         const pageSize = state.pageSize;
         const pageData = paginate(list, state.pageNumber, pageSize);
@@ -95,7 +110,7 @@ export function createHomeView({ state, selectors, shell }) {
                 bottle.volumeMl != null ? `${escapeHtml(bottle.volumeMl)} ml` : '',
             ].filter(Boolean).join(' · ') : '';
             return `<article tabindex="0" class="whisky-card" data-act="open" data-id="${escapeHtml(bottling.id)}"${bottle ? ` data-bottle-id="${escapeHtml(bottle.id)}" aria-label="${escapeHtml(t("home.image.bottleAccessibleName",{name:bottling.name,number:bottle.inventoryNumber || t("home.inventory.withoutInventoryNumber")}))}"` : ''}>
-    <div class="card-img">${photo ? `<img src="${imageUrl(photo)}" alt="${escapeHtml(t("home.image.bottleAlt",{name:bottling.name}))}" loading="lazy">` : '<img class="image-placeholder" src="/assets/photo-placeholder.svg" alt="" aria-hidden="true">'}</div>
+    <div class="card-img">${photo ? `<img src="${imageUrl(photo)}" alt="${escapeHtml(t("home.image.bottleAlt",{name:bottling.name}))}" loading="lazy">` : '<img class="image-placeholder" src="/assets/photo-placeholder.svg" alt="" aria-hidden="true">'}${collectionCardRating(bottling, bottle?.id)}</div>
     <div class="card-body">
     ${origin ? `<div class="card-kicker">${escapeHtml(origin)}</div>` : ''}
     <h3 data-i18n-ignore>${escapeHtml(bottling.name)}</h3>
@@ -203,6 +218,11 @@ export function createHomeView({ state, selectors, shell }) {
     <option value="all">${t("home.filters.allDistilleries")}</option>
     ${distilleries.map(item => `<option value="${escapeHtml(item.id)}" ${state.distillery === item.id ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}
     </select>
+    <select id="filter-rating" aria-label="${t('home.filters.filterRating')}">
+    <option value="all" ${state.rating === 'all' ? 'selected' : ''}>${t('home.filters.allRatings')}</option>
+    ${[1,2,3,4,5].map(level=>`<option value="${level}" ${state.rating === String(level) ? 'selected' : ''}>${t('home.filters.ratingRange',{from:level===1?'0':`${(level-1)*20},1`,to:level*20})}</option>`).join('')}
+    <option value="unrated" ${state.rating === 'unrated' ? 'selected' : ''}>${t('home.filters.unrated')}</option>
+    </select>
     <select id="filter-volume-type" aria-label="${t("home.filters.filterBottleType")}">
     <option value="all" ${state.volumeType === 'all' ? 'selected' : ''}>${t("home.filters.allBottleTypes")}</option>
     <option value="standard" ${state.volumeType === 'standard' ? 'selected' : ''}>${t("home.inventory.standardBottles")}</option>
@@ -287,7 +307,7 @@ export function createHomeView({ state, selectors, shell }) {
             query('#search').setSelectionRange(cursor, cursor);
         });
         for (const [sel, key] of [['#filter-status', 'status'], ['#filter-completion', 'completion'], ['#filter-sort', 'sort'],
-            ['#filter-distillery', 'distillery'], ['#filter-volume-type', 'volumeType']]) {
+            ['#filter-distillery', 'distillery'], ['#filter-volume-type', 'volumeType'], ['#filter-rating', 'rating']]) {
             query(sel).addEventListener('change', ev => {
                 state[key] = ev.target.value;
                 state.pageNumber = 1;

@@ -2,8 +2,11 @@
 import { fail } from './errors.js';
 import { requireField } from './validation.js';
 import { WHISKY_TYPES } from './collection.js';
-const fields = ['name', 'distilleryIds', 'distilleryId', 'whiskyType', 'brand', 'compositionComplete', 'bottler', 'ageYears', 'releaseYear', 'distillationYear', 'bottlingYear', 'distillationDate', 'bottlingDate', 'abv', 'volumeMl', 'caskType', 'caskNumber', 'limitedEditionCount', 'country', 'region', 'whiskybaseUrl', 'whiskybaseId', 'description', 'completionStatus'];
-const bottleFields = ['inventoryNumber', 'volumeType', 'volumeMl', 'status', 'purchaseDate', 'purchasePrice', 'currency', 'merchant', 'openedAt', 'comment', 'tastingNotes', 'rating'];
+import { normalizeFlavorProfile } from '../../public/js/domain/flavor-profile.js';
+import { normalizeTastingNotes, normalizeTastingRating } from '../../public/js/domain/tasting.js';
+import { normalizeWhiskyColor } from '../../public/js/domain/whisky-colors.js';
+const fields = ['name', 'distilleryIds', 'distilleryId', 'whiskyType', 'brand', 'compositionComplete', 'bottler', 'ageYears', 'releaseYear', 'distillationYear', 'bottlingYear', 'distillationDate', 'bottlingDate', 'abv', 'volumeMl', 'caskType', 'caskNumber', 'limitedEditionCount', 'country', 'region', 'whiskybaseUrl', 'whiskybaseId', 'description', 'completionStatus', 'flavorProfile', 'tastingNotes', 'rating', 'whiskyColor'];
+const bottleFields = ['inventoryNumber', 'volumeType', 'volumeMl', 'status', 'purchaseDate', 'purchasePrice', 'currency', 'merchant', 'openedAt', 'comment'];
 function filtered(source, keys) {
     const obj = {};
     for (const k of keys) {
@@ -65,6 +68,22 @@ export function normalizeBottling(input, old = {}) {
             value[yearField] = Number(value[dateField].slice(0, 4));
         }
     }
+    if (Object.hasOwn(input, 'flavorProfile')) {
+        try { value.flavorProfile = normalizeFlavorProfile(input.flavorProfile); }
+        catch (error) { throw fail(error.message); }
+    }
+    if (Object.hasOwn(input, 'tastingNotes')) {
+        try { value.tastingNotes = normalizeTastingNotes(input.tastingNotes); }
+        catch (error) { throw fail(error.message); }
+    }
+    if (Object.hasOwn(input, 'rating')) {
+        try { value.rating = normalizeTastingRating(input.rating); }
+        catch (error) { throw fail(error.message); }
+    }
+    if (Object.hasOwn(input, 'whiskyColor')) {
+        try { value.whiskyColor = normalizeWhiskyColor(input.whiskyColor); }
+        catch (error) { throw fail(error.message); }
+    }
     value.completionStatus = value.completionStatus === 'complete' ? 'complete' : 'incomplete';
     return value;
 }
@@ -75,6 +94,9 @@ export function normalizeBottle(input, old = {}) {
     const val = {
         ...old, ...filtered(input, bottleFields)
     };
+    // Sensory observations are owned by the bottling, including for legacy PATCH callers.
+    delete val.rating;
+    delete val.tastingNotes;
     val.status = ['closed', 'open', 'empty'].includes(val.status) ? val.status : 'closed';
     if (val.volumeType != null && !['sample', 'standard'].includes(val.volumeType)) {
         throw fail('Ungültiger Flaschentyp');
@@ -92,14 +114,8 @@ export function normalizeBottle(input, old = {}) {
     if (val.purchasePrice === '') {
         val.purchasePrice = null;
     }
-    if (val.rating === '') {
-        val.rating = null;
-    }
     if (val.purchasePrice != null && (!Number.isFinite(Number(val.purchasePrice)) || Number(val.purchasePrice) < 0)) {
         throw fail('Ungültiger Kaufpreis');
-    }
-    if (val.rating != null && (!Number.isFinite(Number(val.rating)) || Number(val.rating) < 0 || Number(val.rating) > 100)) {
-        throw fail('Bewertung muss zwischen 0 und 100 liegen');
     }
     return val;
 }

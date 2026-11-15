@@ -15,7 +15,7 @@ const files = directories.flatMap(collect).sort();
 if (!files.length) {
     throw new Error('No test files found');
 }
-const result = spawnSync(process.execPath, ['--test', ...files], {
+const result = spawnSync(process.execPath, ['--test', '--test-concurrency=4', ...files], {
     stdio: 'inherit'
 });
 if (result.error) {

@@ -33,6 +33,92 @@ POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB
 | GET | `/api/export/zip` | AES-256-verschlüsseltes ZIP mit Sammlung, Lager, Fotos und Dokumenten; Admin-Token erforderlich |
 | POST | `/api/import/json` | Ersetzt Sammlung, erhält reservierte Nummern; Bilder und Nachweise separat |
 
+### Eigenständige Verkostungen je Abfüllung (v0.26.0)
+
+Eine Abfüllung kann 0–n unabhängige Verkostungen in `bottlings[].tastings[]`
+führen (weiterhin `schemaVersion: 4`). Das Array kann in älteren Sammlungen
+fehlen, ohne dass eine Datenmigration erforderlich ist. **Vorhandene
+Altbewertungen werden nicht automatisch zu Verkostungseinträgen umgewandelt.**
+
+| Methode | Endpunkt | Funktion |
+| --- | --- | --- |
+| GET | `/api/bottlings/:id/tastings` | Verkostungen nach Datum absteigend |
+| GET | `/api/bottlings/:id/tastings/:tastingId` | Einzelner Eintrag, Status 404 bei falscher Zuordnung |
+| POST | `/api/bottlings/:id/tastings` | Eintrag erstellen (Status 201) |
+| PATCH | `/api/bottlings/:id/tastings/:tastingId` | Nur angegebene editierbare Felder ändern |
+| DELETE | `/api/bottlings/:id/tastings/:tastingId` | Eintrag löschen |
+
+**POST-Beispiel** (der Server vergibt `id`, `createdAt`, `updatedAt`):
+
+```json
+{
+  "tastedOn": "2026-11-15",
+  "title": "Vergleichsverkostung",
+  "flavorProfile": null,
+  "tastingNotes": {"nose": "Vanille", "palate": "", "finish": ""},
+  "whiskyColor": "butter",
+  "rating": 87.5
+}
+```
+
+`tastedOn` ist ein gültiges ISO-Kalenderdatum (`YYYY-MM-DD`, erforderlich),
+`title` ein optionaler String mit maximal 120 Zeichen. Alle übrigen Felder
+sind optional: Bewertung `null` oder 0–100, Farbe aus dem festen Farbkatalog,
+Geschmacksprofil `null` oder acht Achsen im Bereich 0–10 sowie die drei
+Notizfelder. Nicht freigegebene Felder und ungültige Eingaben werden abgelehnt.
+
+Die aktuelle Bewertung ist diejenige der Verkostung mit dem jüngsten Datum;
+bei Gleichstand entscheidet `createdAt` und danach die ID. **Eine letzte
+Verkostung ohne Bewertung bleibt unbewertet**, auch wenn ältere Bewertungen
+existieren. Die bestehenden Felder `rating`, `flavorProfile`, `whiskyColor` und
+`tastingNotes` an der Abfüllung sind bei neuen Verkostungen nur noch
+serverseitig abgeleitete Kompatibilitätswerte. Für Abfüllungen mit `tastings[]`
+sind sie über `PATCH /api/bottlings/:id` schreibgeschützt. Das vorhandene
+`legacyTastings`-Archiv bleibt unverändert und erzeugt keine neuen Einträge.
+
+JSON- und vollständige ZIP-Sicherungen enthalten alle `tastings[]`-Datensätze;
+CSV bleibt beim bisherigen Abfüllungs-/Flaschenexport.
+
+### Verkostungsstartseite und nicht besessene Whiskys (v0.27.2)
+
+Die Hauptnavigation enthält **Verkostungsnotizen** (`/?view=tastings`) mit einer
+übergreifenden, nach Verkostungsdatum sortierten Liste. Eine neue Verkostung
+wird entweder mit einer Abfüllung aus der Sammlung verknüpft (0–n Verkostungen)
+oder als eigenständiger, nicht bestandswirksamer Eintrag angelegt. Die
+Abfüllungsdetailseite und der globale App-Header bleiben unverändert.
+
+Die zweite Variante erzeugt **keine externe Abfüllung** und erlaubt keine
+Mehrfachverkostungen zu einem externen Whisky. Alle Informationen stehen in
+**einem** `externalTastings[]`-Eintrag (weiterhin `schemaVersion: 4`):
+Tasting-Felder (Datum, Titel, Farbe, Profil, Nase, Geschmack, Abgang, Bewertung),
+`id`, `createdAt`, `updatedAt` und ein eingebettetes `bottling`-Objekt mit
+`name` (Pflicht), optional `distillery`, `bottler`, `ageYears`, `abv`,
+`releaseYear`. Keine separate Erfassung oder Verwaltung einer externen Flasche.
+
+| Methode | Endpunkt | Funktion |
+| --- | --- | --- |
+| GET | `/api/external-tastings` | Eigenständige Verkostungen auflisten |
+| GET | `/api/external-tastings/:id` | Einzelne Verkostung abrufen |
+| POST | `/api/external-tastings` | Eigenständige Verkostung mit eingebetteten Abfüllungsangaben erstellen |
+| PATCH | `/api/external-tastings/:id` | Verkostung und/oder Abfüllungsangaben bearbeiten |
+| DELETE | `/api/external-tastings/:id` | Einzelne Verkostung löschen |
+| POST | `/api/external-tastings/:id/assign` | Externe Verkostung einer vorhandenen Abfüllung zuordnen (`{"bottlingId":"..."}`); Eintrag wird atomar verschoben, nicht kopiert |
+
+`POST` erwartet beispielsweise
+`{"tastedOn":"2026-11-15","bottling":{"name":"Beispielwhisky","abv":46},"rating":85}`.
+Beim `PATCH` bleiben nicht genannte Felder erhalten. Für den Namen sind 1–180
+Zeichen erlaubt; `distillery` und `bottler` sind optionale Freitexte (bis 140
+Zeichen), `ageYears` (0–200), `abv` (0–100), `releaseYear` (1800–2200)
+optionale Zahlen. Ungültige Werte werden abgewiesen. Eine eigenständige
+Verkostung erscheint weder in `bottlings[]`, noch in Sammlungs- und
+Bestandsanalysen, wird aber in JSON-/ZIP-Sicherungen vollständig gespeichert.
+Keine Migration oder Altformat-Unterstützung für `tastingBottlings[]`.
+
+Auf der Verkostungsübersicht und der einzelnen Verkostung einer Sammlungsabfüllung
+stehen die verfügbaren Angaben **Alter, Fasstyp, Alkoholgehalt** unter dem
+Abfüllungsnamen. Unbekannte Angaben werden ausgelassen. „Profil zurücksetzen“
+speichert `flavorProfile: null`, wiederherstellbar über Rückgängig.
+
 ## Lagerraum löschen (ab v0.19.16)
 
 - `DELETE /api/warehouse/rooms/:id` löscht nur Räume ohne zugeordnete Flaschen; bei Belegung antwortet die API mit **409** und speichert keine Teillöschung.
@@ -156,6 +242,9 @@ Die Lagerdaten werden unabhängig von der Sammlung gespeichert. Alle Ressourcen 
 | PATCH | `/api/warehouse/furniture/bulk` | Ausgewählte Eigenschaften mehrerer Möbel atomar ändern (`ids`, `changes`) |
 | POST | `/api/warehouse/furniture/bulk/delete` | Mehrere ausgewählte Möbel atomar löschen (`ids`); belegte Möbel verhindern die gesamte Löschung |
 | POST | `/api/warehouse/furniture/:id/copy` | Möbel (optional in anderem Raum) kopieren. Body `{ "roomId": "zielraum", "name": "...", "withShelves": true }` (alles optional); neue IDs, keine Zuordnungen. Bei fehlendem Platz 409 |
+| POST | `/api/warehouse/furniture/:id/photos` | Möbelbild hinzufügen (JSON `{ "image": "data:image/...;base64,..." }`), Rückgabe Foto-ID und Bildpfad |
+| PUT | `/api/warehouse/furniture/:id/photos/order` | Möbelfotos umsortieren, Body `{ "photoIds": ["..."] }` |
+| DELETE | `/api/warehouse/furniture/:id/photos/:photoId` | Möbelbild einschließlich Bilddatei löschen |
 | POST | `/api/warehouse/furniture/:id/shelves` | Fach anlegen |
 | PATCH / DELETE | `/api/warehouse/shelves/:id` | Fach bearbeiten/entfernen |
 | POST | `/api/warehouse/shelves/:id/copy` | Fach (optional in anderes Möbel) kopieren. Body `{ "furnitureId": "zielmoebel", "name": "..." }` (optional), Kapazität wird übernommen, keine Zuordnungen |
@@ -168,6 +257,8 @@ Validierungsfehler liefern HTTP 400; unbekannte IDs 404, ein volles Fach oder ei
 
 ## Gemischte Lagerfächer und Mehrfachbearbeitung
 
+- `POST /api/bottlings` / `PATCH /api/bottlings/:id`: Optionales Feld `flavorProfile` mit acht benannten Werten `woody`, `cereal`, `peaty`, `fruity`, `floral`, `winey`, `feinty`, `sulphury` als ganze Zahlen 0–10 oder `null`. Es gehört zur Abfüllung, nicht zur Flasche.
+- Möbelfotos werden in `warehouse.json` als sortiertes `photos`-Array zugeordnet. Maximal 24 Bilder pro Möbel; vollständige ZIP-Backups umfassen das Bildverzeichnis und die Zuordnungen.
 - `POST /api/warehouse/furniture/:id/shelves` / `PATCH /api/warehouse/shelves/:id`: Fachname, `capacity`, optional `front` (`open`, `door`, `glass`, `drawer`, `null`) und `heightCm` (5–500 cm oder `null`). Ohne Angabe gelten Frontstandard und automatische Höhenverteilung.
 - `PATCH /api/warehouse/shelves/:id/move` mit `{"direction":"up"}` bzw. `{"direction":"down"}` ändert die Reihenfolge von unten nach oben; IDs und Flaschenzuordnungen bleiben erhalten.
 - `POST /api/warehouse/shelves/:id/copy` und `POST /api/warehouse/furniture/:id/copy` übernehmen auch Fachfronten und Höhen, aber **keine** Flaschenzuordnungen. Wird die Möbelhöhe überschritten, antwortet die API mit HTTP 409.

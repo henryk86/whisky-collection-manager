@@ -1,6 +1,8 @@
+import { displayedTastingRating } from '../domain/tasting-records.js';
 /** Warehouse presentation helpers: pure HTML/SVG fragments and display labels.
  * No API writes, navigation or modal state. The controller is in warehouse.js.
  */
+import { addActionLabel } from '../ui/action-icons.js';
 import { escapeHtml as esc } from '../ui/dom.js';
 import { imageUrl } from '../ui/format.js';
 import { routeUrl } from '../navigation/routes.js';
@@ -145,7 +147,7 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
         [t('forms.bottle.purchaseDate'), physicalBottle?.purchaseDate],
         [t('forms.bottle.purchasePrice'), physicalBottle?.purchasePrice == null ? null : `${formatNumber(physicalBottle.purchasePrice)} ${physicalBottle.currency || 'EUR'}`],
         [t('forms.bottle.seller'), physicalBottle?.merchant],
-        [t('forms.bottle.rating'), physicalBottle?.rating],
+        [t('forms.bottle.rating'), displayedTastingRating(bottling)],
     ].filter(([,value]) => value !== null && value !== undefined && value !== '');
     const photo = bottle.photoPath
         ? `<img src="${safe(imageUrl(bottle.photoPath))}" alt="${safe(bottle.name)}">`
@@ -182,7 +184,8 @@ function shelfPanel(w, room, furniture, { managementOnly = false } = {}) {
     return `<div class="panel warehouse-furniture-panel"><div class="warehouse-panel-head"><div><h3>${safe(furniture.name)} <span class="muted">(${safe(typeName(furniture.type))})</span></h3><p class="hint">${t("warehouse.furniture.sizeDescription", {width:num(furniture.width),depth:num(furniture.depth),rotation:furniture.rotation,elevation:num(furniture.elevation ?? 0),height:num(height),shelves:furniture.shelves.length})}</p></div><div class="actions"><button class="btn small" data-act="warehouse-furniture-copy" data-id="${safe(furniture.id)}">${t("warehouse.furniture.copy")}</button><button class="btn small" data-act="warehouse-furniture-edit" data-id="${safe(furniture.id)}">${t("common.actions.edit")}</button><button class="btn small danger" data-act="warehouse-furniture-delete" data-id="${safe(furniture.id)}">${t("common.actions.remove")}</button></div></div>
     ${topSpace>=1 ? `<p class="hint">${t("warehouse.shelves.remainingHeight", {height:num(topSpace)})}</p>`:''}
     <div class="warehouse-shelves${managementOnly ? ' warehouse-shelves--management' : ''}">${shelves || `<p class="hint">${t("warehouse.shelves.noShelves")}</p>`}</div>
-    <div class="actions"><button type="button" class="btn" data-act="warehouse-shelf-new" data-id="${safe(furniture.id)}">${t("warehouse.shelves.addWithPlus")}</button><button type="button" class="btn" data-act="warehouse-find">${t("warehouse.bottles.assign")}</button></div></div>`;
+    ${managementOnly ? `<section class="warehouse-furniture-photos"><h4>${t('warehouse.photos.title')}</h4><div class="warehouse-furniture-photo-list">${(furniture.photos || []).map((photo,i,all) => `<div class="warehouse-furniture-photo"><button type="button" class="warehouse-photo-open" data-act="warehouse-photo-open" data-path="${safe(photo.path)}" data-title="${safe(furniture.name)}" aria-label="${t('warehouse.photos.view')}"><img src="/${safe(photo.path)}" loading="lazy" alt="${safe(furniture.name)}"></button><div class="actions"><button type="button" class="btn small danger" data-act="warehouse-photo-delete" data-id="${safe(furniture.id)}" data-photo-id="${safe(photo.id)}" aria-label="${t('warehouse.photos.remove')}">×</button></div></div>`).join('')}</div><label class="photo-add">${t('warehouse.photos.add')}<input type="file" data-furniture-photos="${safe(furniture.id)}" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden></label><label class="photo-add photo-capture">${t('cutout.takePhoto')}<input type="file" accept="image/*" capture="environment" data-furniture-photos="${safe(furniture.id)}" hidden></label></section>` : ''}
+    <div class="actions"><button type="button" class="btn" data-act="warehouse-shelf-new" data-id="${safe(furniture.id)}">${addActionLabel(t("warehouse.shelves.addWithPlus"))}</button><button type="button" class="btn" data-act="warehouse-find">${t("warehouse.bottles.assign")}</button></div></div>`;
 }
 
 

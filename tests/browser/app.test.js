@@ -26,6 +26,10 @@ async function openApp(page, base, options = {}) {
     if (domOnly || options.localeOverrides) await page.route(`${base}/**`, async (route) => {
         const request = route.request();
         const pathname = new URL(request.url()).pathname;
+        // The photo cutout tests register a synthetic ONNX runtime before open().
+        // In DOM-only mode this catch-all route is installed later, so it must
+        // defer to that earlier, more specific route rather than shadow it.
+        if (domOnly && pathname === '/ai/vendor/ort.wasm.min.mjs') return route.fallback();
         if (options.localeOverrides && Object.hasOwn(options.localeOverrides, pathname)) {
             return route.fulfill({status:200, contentType:'application/json',
                 headers:{'Access-Control-Allow-Origin':'*'},
@@ -262,13 +266,28 @@ test('browser: Chrome pointer dragging reorders bottle photos without opening th
         await gallery.locator('[data-photo-tile]').first().waitFor();
         const order = () => gallery.locator('[data-photo-tile]')
             .evaluateAll(tiles => tiles.map(tile => tile.dataset.photoId));
-        const drag = async (source, target) => {
+        const drag = async (source, target = null) => {
+            // Mouse coordinates do not automatically scroll an offscreen gallery.
+            // The tasting section above the physical bottles can place the photos
+            // below the viewport, where raw page.mouse events never hit them.
+            await source.scrollIntoViewIfNeeded();
+            if (target) await target.scrollIntoViewIfNeeded();
             const start = await source.boundingBox();
-            const end = await target.boundingBox();
+            const end = target ? await target.boundingBox() : await gallery.boundingBox();
             assert.ok(start && end);
-            await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+            const viewport = page.viewportSize();
+            const startPoint = {x: start.x + start.width / 2, y: start.y + start.height / 2};
+            // A cancelled drag can end just to the left of the gallery. Do not
+            // scroll the distant page heading into view and hide the source.
+            const endPoint = target
+                ? {x: end.x + end.width / 2, y: end.y + end.height / 2}
+                : {x: Math.max(2, end.x - 20), y: startPoint.y};
+            assert.ok([startPoint, endPoint].every(point => point.x >= 0 && point.y >= 0 &&
+                point.x < viewport.width && point.y < viewport.height),
+            'photo drag coordinates must be visible to pointer events');
+            await page.mouse.move(startPoint.x, startPoint.y);
             await page.mouse.down();
-            await page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 8 });
+            await page.mouse.move(endPoint.x, endPoint.y, { steps: 8 });
             await page.mouse.up();
         };
         // Dragging the handle must use the position under the pointer at release.
@@ -293,8 +312,7 @@ test('browser: Chrome pointer dragging reorders bottle photos without opening th
             .photos.map(p => p.id), [photos[0], photos[1], photos[2]]);
 
         // Cancel a drag outside the gallery: no stale target should be saved.
-        await drag(gallery.locator('[data-photo-tile]').first().locator('[data-photo-drag]'),
-            page.locator('.section-head h2').first());
+        await drag(gallery.locator('[data-photo-tile]').first().locator('[data-photo-drag]'));
         assert.deepEqual(await order(), [photos[0], photos[1], photos[2]]);
 
         // A plain photo click still opens the lightbox after the drag.
@@ -773,10 +791,18 @@ test('browser: upload and remove invoice for one physical bottle', async () => {
         await open();
         await page.locator('.whisky-card').click();
         const files = page.locator(`#bottle-${data.bottle.id} input[data-bottle-files]`);
+        // Verify the actual upload response before waiting for the refreshed DOM.
+        // Otherwise a rejected upload is misreported as a generic selector timeout.
+        const uploaded = page.waitForResponse(response =>
+            response.request().method() === 'POST' &&
+            new URL(response.url()).pathname === `/api/bottles/${data.bottle.id}/files`);
         await files.setInputFiles({
             name: 'Rechnung.pdf', mimeType: 'application/pdf',
-            buffer: Buffer.from('%PDF-1.4\n%%EOF\n')
+            buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n')
         });
+        const uploadResponse = await uploaded;
+        assert.equal(uploadResponse.status(), 201,
+            `attachment upload must succeed: ${await uploadResponse.text()}`);
         await page.waitForSelector(`#bottle-${data.bottle.id} .document-list a`);
         assert.equal(await page.locator('.document-list a').innerText(), 'Rechnung.pdf');
         const saved = (await requestJson(base, '/api/collection')).data;
@@ -1126,12 +1152,13 @@ test('browser: overview quick filters list only used distilleries and combine st
                 }));
             });
             assert.deepEqual(layout.map(item => item.tag),
-                ['INPUT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'BUTTON']);
+                ['INPUT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'BUTTON'],
+                'search, six quick filters (including rating), and the view switch');
             assert.ok(layout.every(item => Math.abs(item.height - 44) <= 1),
                 `${width}px: all controls including view switch must be 44px high`);
             if (width === 1366) {
-                assert.ok(layout.every(item => Math.abs(item.top - layout[0].top) <= 1),
-                    'desktop: all five selectors, search and view switch must share the first toolbar row');
+                assert.ok(layout[1].top > layout[0].top,
+                    'narrow desktop: search uses its own row so no filter caption is truncated');
             }
         }
     });
@@ -3365,5 +3392,369 @@ test('browser: settings General heading uses the same panel gap as other setting
             return panel.top-title.bottom;
         });
         assert.ok(Math.abs(gap - 16) < 0.75, `General heading and first panel should have the same 16px spacing as other settings groups, got ${gap}px`);
+    });
+});
+
+test('browser: bottling tasting block edits eight-axis flavor, notes and five Glencairn glasses with undo/redo', async () => {
+    await session(async ({page,base,open}) => {
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        const form=page.locator('#bottling-form');
+        await form.locator('[name="name"]').fill('Flavor profile browser test');
+        assert.equal(await form.locator('[data-flavor-range]').count(),0,
+            'tasting belongs to the second detail block, not the bottling master-data form');
+        await form.locator('button[type="submit"]').click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        const section = page.locator('[data-flavor-detail]');
+        await section.waitFor({state:'visible'});
+        assert.match(await section.locator('.flavor-chart').textContent(),/Alkoholisch/);
+        await section.locator('[data-flavor-range="6"]').evaluate(input => {
+            input.value='8'; input.dispatchEvent(new Event('input',{bubbles:true}));
+            input.dispatchEvent(new Event('change',{bubbles:true}));
+        });
+        await section.locator('[data-rating-points="80"]').click();
+        assert.equal(await section.locator('[data-tasting-rating]').getAttribute('data-rating-value'),'80');
+        const note = section.locator('[data-tasting-note="nose"]');
+        await note.fill('Sherry and vanilla');
+        await note.press('Tab');
+        assert.equal(await section.locator('[data-flavor-value="6"]').textContent(),'8');
+        await page.waitForFunction(async () => {
+            const response=await fetch('/api/collection');
+            const data=await response.json();
+            const b=data.bottlings?.[0];
+            return b?.rating===80 && b?.flavorProfile?.feinty===8 && b?.tastingNotes?.nose==='Sherry and vanilla';
+        });
+        const saved=(await requestJson(base,'/api/collection')).data.bottlings[0];
+        assert.equal(saved.bottles[0].rating,undefined);
+        assert.equal(saved.bottles[0].tastingNotes,undefined);
+        await section.locator('[data-act="flavor-detail-undo"]').click();
+        assert.equal(await section.locator('[data-tasting-note="nose"]').inputValue(),'');
+        await section.locator('[data-act="flavor-detail-redo"]').click();
+        assert.equal(await section.locator('[data-tasting-note="nose"]').inputValue(),'Sherry and vanilla');
+        await page.locator('[data-act="tastings-back-list"]').click();
+        await page.locator('[data-act="tastings-back-detail"]').click();
+        await page.locator('[data-act="edit-bottling"]').click();
+        assert.equal(await page.locator('#bottling-form [data-flavor-range]').count(),0);
+    });
+});
+
+test('browser: v0.24 shelf editor saves capacity in suspended manager and switches with three-way confirmation', async () => {
+    await session(async ({page,base,open}) => {
+        const room=(await requestJson(base,'/api/warehouse/rooms','POST',{name:'Dialograum',width:4,height:4})).data;
+        const furniture=(await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',
+            {name:'Dialogregal',type:'regal',x:.2,y:.2,width:1,depth:.5,rotation:0,itemHeight:1.8})).data;
+        const shelf1=(await requestJson(base,`/api/warehouse/furniture/${furniture.id}/shelves`,'POST',{name:'Fach unten',capacity:4})).data;
+        const shelf2=(await requestJson(base,`/api/warehouse/furniture/${furniture.id}/shelves`,'POST',{name:'Fach oben',capacity:6})).data;
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="shelves"]').click();
+        await page.locator('#warehouse-room-select').selectOption(room.id);
+        await page.locator(`.warehouse-wall-furniture-edit[data-id="${furniture.id}"]`).click();
+        const manager=page.locator('#modal-root .warehouse-furniture-manager');
+        await manager.locator(`[data-act="warehouse-shelf-edit"][data-id="${shelf2.id}"]`).click();
+        await page.locator('#warehouse-form [name="capacity"]').fill('12');
+        await page.locator('#warehouse-form [data-act="warehouse-shelf-switch"]').filter({hasText:'Nächstes'}).click();
+        await page.locator('[data-choice="cancel"]').click();
+        assert.equal(await page.locator('#warehouse-form [name="capacity"]').inputValue(),'12');
+        await page.locator('#warehouse-form [data-act="warehouse-shelf-switch"]').filter({hasText:'Nächstes'}).click();
+        await page.locator('[data-choice="save"]').click();
+        await page.locator(`#warehouse-form[data-endpoint="/api/warehouse/shelves/${shelf1.id}"]`).waitFor();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        const updated=manager.locator(`.warehouse-shelf[data-shelf-id="${shelf2.id}"]`);
+        assert.match(await updated.locator('.warehouse-shelf-meta').textContent(),/12/);
+        assert.equal((await requestJson(base,'/api/warehouse')).data.rooms[0].furniture[0].shelves[1].capacity,12);
+        await manager.locator('input[data-furniture-photos]:not([capture])').setInputFiles({
+            name:'shelf.png',mimeType:'image/png',
+            buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAOfb9AcAAAAASUVORK5CYII=','base64')
+        });
+        await manager.locator('.warehouse-furniture-photo').waitFor();
+        await manager.locator('[data-act="warehouse-photo-open"]').click();
+        await page.locator('.warehouse-photo-lightbox img').waitFor();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        assert.equal(await manager.locator('.warehouse-furniture-photo').count(),1);
+    });
+});
+
+test('browser: v0.24 nested mobile modal fixes page scrolling and technical help is expandable',async()=>{
+    await session(async ({page,open})=>{
+        await page.setViewportSize({width:390,height:844});
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        assert.equal(await page.evaluate(()=>document.body.style.position),'fixed');
+        assert.equal(await page.evaluate(()=>document.documentElement.style.overflow),'hidden');
+        const scrollable=await page.locator('.dialog').evaluate(el=>({touchAction:getComputedStyle(el).touchAction,overflow:getComputedStyle(el).overflowY}));
+        assert.match(scrollable.touchAction,/pan-y/);
+        assert.match(scrollable.overflow,/auto/);
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        assert.notEqual(await page.evaluate(()=>document.body.style.position),'fixed');
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-help"]').click();
+        await page.locator('[data-section-switch="help"]').selectOption('backups');
+        const technical=page.locator('#help-panel-backups .help-technical-guides');
+        assert.ok(await technical.isVisible());
+        await technical.locator('details').first().locator('summary').click();
+        assert.match(await technical.locator('details').first().textContent(),/Backup-Administrator-Schlüssel/);
+    });
+});
+
+test('browser: v0.25.1 palette, precise Glencairn rating, undo history and compact detail layout', async () => {
+    await session(async ({page,base,open}) => {
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form [name="name"]').fill('Color and Glencairn test');
+        await page.locator('#bottling-form button[type="submit"]').click();
+        const summary=page.locator('.detail-summary-grid');
+        await page.setViewportSize({width:1440,height:900});
+        const row=await summary.evaluate(el=>{
+            const image=el.querySelector('.detail-summary-photo > .hero-photo').getBoundingClientRect();
+            const facts=el.querySelector(':scope > .panel').getBoundingClientRect();
+            return {imageHeight:image.height,factsHeight:facts.height};
+        });
+        assert.ok(Math.abs(row.imageHeight-row.factsHeight) < 1.5, `image and facts equal height: ${JSON.stringify(row)}`);
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        const section=page.locator('[data-flavor-detail]');
+        await section.waitFor({state:'visible'});
+        assert.equal(await section.locator('.whisky-color-choice').count(),12);
+        const columns=await section.locator('.flavor-sliders').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
+        assert.equal(columns,2,'two grouped slider columns beside the radar chart');
+        await section.locator('[data-act="tasting-color"][data-color-key="amber"]').click();
+        await section.screenshot({path:'test-artifacts/wcm_0251_tasting_light.png'});
+        const color=section.locator('[data-color-key="amber"] .glencairn-liquid');
+        const before=await color.evaluate(el=>getComputedStyle(el).fill);
+        await page.locator('[data-act="toggle-theme"]').click();
+        const after=await section.locator('[data-color-key="amber"] .glencairn-liquid').evaluate(el=>getComputedStyle(el).fill);
+        assert.equal(before,after,'whisky colour must not follow the light/dark theme');
+        await section.screenshot({path:'test-artifacts/wcm_0251_tasting_dark.png'});
+        const score=section.locator('[data-tasting-score]');
+        await score.fill('101');
+        await score.press('Tab');
+        assert.equal(await score.getAttribute('aria-invalid'),'true');
+        assert.equal((await requestJson(base,'/api/collection')).data.bottlings[0].rating ?? null,null,
+            'invalid scores cannot be persisted');
+        await score.fill('87,5');
+        assert.equal(await section.locator('[data-tasting-rating]').getAttribute('data-rating-value'),'87.5',
+            'the Glencairn visualization should update immediately, without waiting for blur');
+        await score.press('Tab');
+        assert.equal(await score.getAttribute('aria-invalid'),null);
+        assert.equal(await section.locator('[data-tasting-rating]').getAttribute('data-rating-value'),'87.5',
+            'the preview and persisted score must agree');
+        await page.waitForFunction(async () => {
+            const data=await (await fetch('/api/collection')).json();
+            const b=data.bottlings?.[0];
+            return b?.whiskyColor==='amber' && b?.rating===87.5;
+        });
+        assert.equal((await requestJson(base,'/api/collection')).data.bottlings[0].rating,87.5);
+        await section.locator('[data-act="flavor-detail-undo"]').click();
+        assert.equal(await section.locator('[data-tasting-score]').inputValue(),'');
+        await section.locator('[data-act="flavor-detail-redo"]').click();
+        assert.equal(await section.locator('[data-tasting-score]').inputValue(),'87,5');
+        const labels=await section.locator('.flavor-history-actions button').count();
+        assert.equal(labels,2);
+        assert.equal(await section.locator('[data-act="flavor-detail-undo"] svg').count(),1);
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+        await page.setViewportSize({width:390,height:844});
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,
+            'color selectors and rating controls must not overflow on mobile');
+    });
+});
+
+test('browser: v0.25.4 Full HD tasting layout groups colour separately from radar and compact 2x4 sliders', async () => {
+    await session(async ({page,open}) => {
+        await page.setViewportSize({width:1920,height:1080});
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form [name="name"]').fill('Full HD Geschmacksprofil');
+        await page.locator('#bottling-form button[type="submit"]').click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        const panel=page.locator('[data-flavor-detail]');
+        await panel.waitFor({state:'visible'});
+        const color=panel.locator('.tasting-color-panel');
+        const palette=color.locator('.whisky-color-grid');
+        const graph=panel.locator('.flavor-chart');
+        const sliders=panel.locator('.flavor-sliders');
+        assert.equal(await palette.locator('.whisky-color-choice').count(),12);
+        const metrics=await panel.evaluate(el=>{
+            const css=selector=>getComputedStyle(el.querySelector(selector));
+            const rect=selector=>{
+                const {x,y,width,height}=el.querySelector(selector).getBoundingClientRect();return {x,y,width,height};
+            };
+            return {outer:css('.tasting-top-row').gridTemplateColumns.split(' ').length,
+                inner:css('.flavor-editor').gridTemplateColumns.split(' ').length,
+                colorColumns:css('.whisky-color-grid').gridTemplateColumns.split(' ').length,
+                sliderColumns:css('.flavor-sliders').gridTemplateColumns.split(' ').length,
+                color:rect('.tasting-color-panel'),flavor:rect('.tasting-senses-section'),
+                chart:rect('.flavor-chart'),bars:rect('.flavor-sliders'),
+                scrollbar:document.documentElement.scrollWidth-innerWidth};
+        });
+        assert.equal(metrics.outer,2,`two sibling panels at Full HD: ${JSON.stringify(metrics)}`);
+        assert.equal(metrics.inner,2,'radar and sliders share the same flavor panel');
+        assert.equal(metrics.colorColumns,3,'palette must show 3 columns and 4 rows');
+        assert.equal(metrics.sliderColumns,2,'eight sliders must sit in two groups of four');
+        assert.ok(metrics.color.x+metrics.color.width <= metrics.flavor.x + 2);
+        assert.ok(metrics.chart.x+metrics.chart.width <= metrics.bars.x + 2);
+        assert.ok(metrics.scrollbar <= 1,'Full HD layout must not create horizontal overflow');
+        assert.equal(await sliders.locator('input[data-flavor-range]').count(),8);
+        await page.setViewportSize({width:1040,height:900});
+        assert.equal(await panel.locator('.tasting-top-row').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),1);
+        assert.equal(await panel.locator('.flavor-editor').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),2);
+        await page.setViewportSize({width:390,height:844});
+        assert.equal(await panel.locator('.flavor-editor').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),1);
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+        await color.locator('[data-color-key="amber"]').click();
+        assert.equal(await color.locator('[data-color-key="amber"]').getAttribute('aria-pressed'),'true');
+    });
+});
+
+test('browser: v0.25.4 tasting hierarchy matches analytics and gold-filled glasses preserve precise scores', async () => {
+    await session(async ({page,open}) => {
+        await page.setViewportSize({width:1440,height:900});
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form [name="name"]').fill('Tasting panel consistency');
+        await page.locator('#bottling-form button[type="submit"]').click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        const section=page.locator('[data-flavor-detail]');
+        await section.waitFor({state:'visible'});
+        const panels=section.locator('.tasting-panel .analytics-panel');
+        assert.equal(await panels.count(),5,'date/title, color, profile, notes, and rating use separate analytics-style panels');
+        assert.equal(await section.locator('.tasting-color-panel h3').textContent(),'Farbe');
+        assert.equal(await section.locator('.tasting-senses-section h3').textContent(),'Geschmacksprofil');
+        assert.equal(await section.locator('.tasting-panel > section.analytics-panel h3').first().textContent(),'Verkostungsnotizen');
+        assert.equal(await section.locator('.tasting-panel > section.analytics-panel h3').last().textContent(),'Gesamtbewertung');
+        assert.equal(await section.locator(':scope > .section-head h3').textContent(),'Eindrücke');
+        assert.equal(await section.locator('svg[aria-label*="Bewertung kann"]').count(),0);
+        const appearance=await panels.first().evaluate(el=>{
+            const style=getComputedStyle(el);
+            return {radius:style.borderTopLeftRadius,border:style.borderTopWidth,shadow:style.boxShadow,
+                background:style.backgroundColor,header:getComputedStyle(document.querySelector('.tasting-color-panel h3')).fontFamily};
+        });
+        assert.equal(appearance.radius,'0px');
+        assert.equal(appearance.border,'1px');
+        assert.equal(appearance.shadow,'none');
+        assert.ok(appearance.header.length>0);
+        const colorPanel=section.locator('.tasting-color-panel');
+        const ratingPanel=section.locator('.tasting-rating-panel');
+        assert.equal(await colorPanel.locator('.whisky-color-current, .whisky-color-footer').count(),0);
+        assert.equal(await colorPanel.locator('[data-act="tasting-color-clear"]').count(),1);
+        assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').count(),1);
+        assert.equal(await colorPanel.locator('.tasting-panel-heading [data-act="tasting-color-clear"]').isDisabled(),true);
+        assert.equal(await ratingPanel.locator('.tasting-panel-heading [data-act="tasting-rating-clear"]').isDisabled(),true);
+        const headerPositions=await section.evaluate(() => {
+            const positions = selector => {
+                const panel=document.querySelector(selector);
+                const head=panel.querySelector('.tasting-panel-heading h3').getBoundingClientRect();
+                const button=panel.querySelector('.tasting-panel-heading button').getBoundingClientRect();
+                const bounds=panel.getBoundingClientRect();
+                return {headingY:head.y,buttonY:button.y,buttonRight:button.right,panelRight:bounds.right};
+            };
+            return [positions('.tasting-color-panel'),positions('.tasting-rating-panel')];
+        });
+        for (const pos of headerPositions) {
+            assert.ok(Math.abs(pos.headingY-pos.buttonY)<24,'remove control belongs to the section heading row');
+            assert.ok(pos.panelRight-pos.buttonRight < 35,'remove control is right-aligned');
+        }
+        await colorPanel.locator('[data-color-key="butter"]').click();
+        assert.equal(await colorPanel.locator('[data-color-key="butter"]').getAttribute('aria-pressed'),'true');
+        assert.ok(await colorPanel.locator('[data-color-key="butter"]').evaluate(el=>getComputedStyle(el,'::after').content.includes('✓')));
+        assert.equal(await colorPanel.locator('[data-act="tasting-color-clear"]').isEnabled(),true);
+        await colorPanel.locator('[data-act="tasting-color-clear"]').click();
+        assert.equal(await colorPanel.locator('.is-selected').count(),0);
+        assert.equal(await colorPanel.locator('[data-act="tasting-color-clear"]').isDisabled(),true);
+        const rating=section.locator('[data-tasting-rating]');
+        assert.equal(await rating.locator('.glencairn-rating-outline').count(),5);
+        assert.equal(await rating.locator('.glencairn-rating-fill').count(),5);
+        assert.equal(await rating.locator('.glencairn-rating-fill[clip-path]').count(),5,'filled bowls are clipped to the original glass shape');
+        await rating.locator('[data-tasting-score]').fill('87,5');
+        assert.equal(await rating.locator('[data-tasting-score]').inputValue(),'87,5');
+        assert.equal(await rating.locator('[data-tasting-rating-total]').count(),0,'rating is displayed only in the editable input');
+        assert.equal(await rating.locator('[data-glass-state="full"]').count(),4);
+        assert.equal(await rating.locator('[data-glass-state="partial"]').count(),1);
+        const fifthFill = await rating.locator('[data-glass-state="partial"] [data-rating-fill]').evaluate(node => ({y:+node.getAttribute('y'),height:+node.getAttribute('height')}));
+        assert.ok(Math.abs(fifthFill.height - 94.875)<0.001,'87.5 points fill 37.5% of the fifth glass from the bottom');
+        assert.ok(Math.abs(fifthFill.y - (331 - 94.875))<0.001);
+        await rating.locator('[data-tasting-score]').press('Tab');
+        assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').isEnabled(),true);
+        await ratingPanel.locator('[data-act="tasting-rating-clear"]').click();
+        assert.equal(await rating.locator('[data-tasting-score]').inputValue(),'');
+        assert.equal(await rating.locator('[data-glass-state="empty"]').count(),5);
+        assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').isDisabled(),true);
+        await section.locator('[data-act="flavor-detail-undo"]').click();
+        assert.equal(await rating.locator('[data-tasting-score]').inputValue(),'87,5');
+        assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').isEnabled(),true);
+        await section.screenshot({path:'test-artifacts/wcm_0253_tasting_light.png'});
+        await page.locator('[data-act="toggle-theme"]').click();
+        assert.equal(await rating.locator('.glencairn-rating-fill').count(),5);
+        assert.equal(await rating.locator('[data-tasting-score]').inputValue(),'87,5');
+        await section.screenshot({path:'test-artifacts/wcm_0253_tasting_dark.png'});
+        await page.setViewportSize({width:390,height:844});
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+    });
+});
+
+test('browser: v0.26.0 multiple dated tastings, latest summary, individual editing and modal delete', async () => {
+    await session(async ({page,base,open}) => {
+        const bottling = (await requestJson(base,'/api/bottlings','POST',{
+            name:'Chronological tastings',firstBottle:{inventoryNumber:'998170'}
+        })).data.bottling;
+        await open();
+        await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
+        assert.equal(await page.locator('[data-flavor-detail]').count(),0,'no editor on master details');
+        assert.match(await page.locator('.tasting-summary').innerText(),/Noch keine Verkostung/);
+        await page.locator('[data-act="tastings-new"]').click();
+        assert.equal((await requestJson(base,'/api/collection')).data.bottlings[0].tastings.length,0,
+            'opening draft never persists it');
+        await page.locator('[data-tasting-date]').fill('2026-10-10');
+        await page.locator('[data-tasting-score]').fill('81');
+        await page.locator('[data-tasting-score]').press('Tab');
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tastings-back-list"]').click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-tasting-date]').fill('2026-11-12');
+        await page.locator('[data-tasting-title]').fill('Spätere Verkostung');
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tastings-back-list"]').click();
+        const list=page.locator('.tasting-list-row');
+        assert.equal(await list.count(),2);
+        assert.match(await list.first().innerText(),/Spätere Verkostung/);
+        await page.locator('[data-act="tastings-back-detail"]').click();
+        assert.match(await page.locator('.tasting-summary-rating').innerText(),/Nicht bewertet/,
+            'latest tasting without score must not fall back to 81');
+        await page.locator('[data-act="tastings-open"]').first().click();
+        await list.first().locator('[data-act="tastings-open"]').click();
+        assert.equal(await page.locator('[data-tasting-score]').count(),0,'saved tasting is read-only on opening');
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        await page.locator('[data-tasting-score]').fill('87,5');
+        await page.locator('[data-tasting-score]').press('Tab');
+        await page.waitForFunction(async id => {
+            const data=await(await fetch('/api/collection')).json();
+            return data.bottlings.find(b=>b.id===id)?.rating===87.5;
+        },bottling.id);
+        await page.locator('[data-act="tastings-back-list"]').click();
+        await page.locator('[data-act="tasting-delete"]').first().click();
+        assert.equal(await page.locator('[data-act="confirm-action"]').count(),1);
+        await page.getByRole('button', {name:'Abbrechen',exact:true}).click();
+        assert.equal(await page.locator('.tasting-list-row').count(),2,'cancel preserves record');
+        await page.locator('[data-act="tasting-delete"]').first().click();
+        await page.locator('[data-act="confirm-action"]').click();
+        await page.waitForFunction(() => document.querySelectorAll('.tasting-list-row').length === 1);
+        assert.equal(await page.locator('.tasting-list-row').count(),1);
+        await page.locator('[data-act="tastings-back-detail"]').click();
+        assert.match(await page.locator('.tasting-summary-rating').innerText(),/81 \/ 100/);
+        await page.setViewportSize({width:320,height:720});
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+        if (!domOnly) {
+            await page.goto(base+`/?bottling=${bottling.id}&view=tastings`);
+            await page.locator('.tasting-list-row').waitFor();
+            assert.equal(await page.locator('.tasting-list-row').count(),1,'direct route can reload');
+        }
     });
 });

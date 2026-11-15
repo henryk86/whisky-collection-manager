@@ -16,8 +16,8 @@ Es gibt keine zwingende Cloud, keine externe Datenbank und keinen Build-Schritt 
 | --- | --- | --- |
 | Sammlung | `schemaVersion: 4`, `settings`, `reservedInventoryNumbers`, `distilleries[]`, `bottlings[]` | Eine zentrale, atomar gespeicherte `collection.json` |
 | Destillerie | `id`, `name`, optional `country`, `region`, `status`, `latitude`, `longitude` | Stammdaten und geografische Herkunft; benutzerdefinierte Positionen haben Vorrang |
-| Abfüllung | `id`, `distilleryIds[]`, `name`, `bottler`, `whiskyType`, `ageYears`, `abv`, Nenn-`volumeMl`, Fass- und Jahrgangsangaben, WB-ID / Quellenlink, `completionStatus`, `bottles[]` | Eine Abfüllung kann mehrere beteiligte Destillerien und beliebig viele physische Flaschen haben |
-| Physische Flasche | `id`, `inventoryNumber`, `volumeType`, `volumeMl`, `status`, Preise/Kaufdaten, Öffnungsdatum, Bewertung, Verkostung, `photos[]`, `files[]` | Individuelle Eigenschaften liegen **nur** an dieser konkreten Flasche |
+| Abfüllung | `id`, `distilleryIds[]`, `name`, `bottler`, `whiskyType`, `ageYears`, `abv`, Nenn-`volumeMl`, Fass- und Jahrgangsangaben, WB-ID / Quellenlink, `completionStatus`, `bottles[]`, `tastings[]` | Eine Abfüllung kann mehrere beteiligte Destillerien und beliebig viele physische Flaschen haben |
+| Physische Flasche | `id`, `inventoryNumber`, `volumeType`, `volumeMl`, `status`, Preise/Kaufdaten, Öffnungsdatum, `photos[]`, `files[]` | Individuelle Eigenschaften liegen **nur** an dieser konkreten Flasche |
 
 - `distilleryIds[]` ist die aktuelle Zuordnung, nicht das alte Einzel-Feld `distilleryId`. Mehrere Destillerien zählen in Herkunfts- und Kartenstatistiken jeweils als beteiligt, duplizieren aber keine Flaschen.
 - `volumeType` ist `standard` oder `sample` **an der physischen Flasche**. Die Nennmenge einer Abfüllung ist kein Ersatz für die individuelle Flaschengröße.
@@ -35,6 +35,13 @@ Es gibt keine zwingende Cloud, keine externe Datenbank und keinen Build-Schritt 
 - **Scanner:** QR-/Barcode-Etiketten mit manueller Eingabe als Rückfall. Bekannte Codes führen zur passenden Flasche; unbekannte können einer Flasche zugeordnet werden. Keine Funktion für Etikettengenerierung oder -druck.
 - **Design:** Responsive Desktop-/Mobilansichten, Light/Dark Theme, einheitliche Icons. Mobile Eingaben und Dialoge dürfen auch bei schmalen Bildschirmen keinen horizontalen Überlauf auslösen. Das Erscheinungsbild der Sammlung ist Massstab: Inhaltsflaechen und Karten-/Formular-Panels in Analyse, Hilfe, Lager, Karte und Einstellungen verwenden einheitliche eckige Rahmen. Kleine Bedienelemente haben eine einheitliche, minimale Abrundung (2 px); absichtlich runde Elemente (Radio-Buttons, Kartensymbole, Kreischarts) behalten ihre Form. Die linke Bereichsnavigation ist pro Seite in ihrer Breite abgestimmt; lange Hilfe-Themen wechseln auf Tablets zum mobilen Auswahlfeld.
 - **Hilfe:** Eigene, direkt aufrufbare Hilfeseite (`/?view=help`) mit Hauptnavigationseintrag in beiden Sprachen. Allgemeine Bedienhinweise, Datenhaltung und Backupgrundlagen stehen dort; auf den Arbeitsseiten verbleiben nur notwendige Eingabehinweise und sicherheitsrelevante Warnungen. Desktop: gemeinsame Seitennavigation mit Analyse und gerader goldener Aktivmarkierung ohne gerundete Flaeche; kleinere Bildschirme: Auswahlfeld. Die Anleitungen stehen unverkuerzt in nummerierten Inhaltsabschnitten.
+
+### Interaktives Geschmacksprofil je Verkostung (v0.26.0)
+
+- Jede Abfüllung besitzt **0–n eigenständige Verkostungen**. Jede Verkostung besitzt optional ein Geschmacksprofil mit acht Achsen und ganzzahligen Ausprägungen zwischen 0 und 10.
+- Achsen sind sprachneutral persistiert; die Anzeige übersetzt sie für Deutsch und Englisch. Insbesondere entspricht `feinty` der deutschen Beschriftung **„Alkoholisch“**.
+- SVG mit Touch-/Zeigersteuerung und nativen Reglern erlaubt Bearbeitung in der Einzelverkostung; die Abfüllungsdetails zeigen nur die letzte Gesamtbewertung. Nicht erfasste Profile sind `null`, nicht acht automatisch gespeicherte Nullen.
+- Details: [GESCHMACKSPROFIL.md](GESCHMACKSPROFIL.md).
 
 ## 4. Destilleriekatalog und Landkarte
 
@@ -66,6 +73,19 @@ Dashboard mit **sechs Unterseiten und 38 Auswertungen**: Sammlungsbestand, Herku
 
 Details der Kennzahlen: [ANALYSE.md](ANALYSE.md).
 
+### Eigenständige Verkostungen (ab v0.26.0)
+
+- Eine Abfüllung hat 0–n einzeln datierte und unabhängige Verkostungen.
+- Jede Verkostung enthält Datum, optionalen Titel, Farbe, acht Geschmacksachsen,
+  Notizen (Nase, Geschmack, Abgang) und eine optionale Bewertung 0–100.
+- Die Abfüllungsdetails zeigen die Bewertung der Verkostung mit dem jüngsten Datum;
+  eine unbewertete jüngste Verkostung bleibt unbewertet.
+- Verkostungen lassen sich in eigenen Ansichten erstellen, bearbeiten und nach
+  Bestätigung im Anwendungsmodal löschen. Keine neue Migration bestehender
+  Abfüllungsbewertungen oder Verkostungsnotizen in `tastings[]`.
+- Analysen berücksichtigen die **letzte Bewertung je Abfüllung**, nicht alle
+  Verkostungen einzeln.
+
 ## 7. Lagerverwaltung
 
 - Jeder Raum enthält Möbel, jedes Möbel Fächer. Die Zuordnung einer Flasche erfolgt über stabile IDs in der getrennten `warehouse.json` (Schema 1).
@@ -73,6 +93,8 @@ Details der Kennzahlen: [ANALYSE.md](ANALYSE.md).
 - Kollisionsregeln prüfen rotierte Grundflächen **und** Höhenbereiche. Höher angebrachte Möbel dürfen dieselbe Grundfläche teilen, solange sich ihre Höhenbereiche nicht überlappen. Ungültige Mehrfachänderungen werden vollständig verworfen.
 - Fächer können offen, mit Holz-/Glastüren oder Schubladen ausgestattet und in ihrer Höhe festgelegt werden. Türbereiche dürfen mehrere aufeinanderfolgende Fächer umfassen; Seitenwände und Rückwand sind unabhängig steuerbar.
 - Kapazität `null`/leer bedeutet unbegrenzt, `0` verbietet Flaschen, positive Ganzzahlen geben ein Maximum an. Belegte Lagerorte können nicht gelöscht werden.
+- Nach Kapazitätsänderungen muss die bereits geöffnete Möbelansicht sofort die neue Kapazität und Belegung anzeigen. Fachbearbeitung ermöglicht Vorheriges/Nächstes und fragt bei ungespeicherten Werten per Anwendungsmodal nach Speichern, Verwerfen oder Abbrechen.
+- Möbel können bis zu 24 eigenständige Fotos besitzen, die unter der Regaldarstellung mit denselben Hinzufügen-/Aufnehmen-Aktionen wie Flaschen angezeigt werden. Die Dateien liegen im normalen Bildspeicher und müssen vollständig gesichert und wiederhergestellt werden. Möbelkopien übernehmen keine Fotos.
 - Die Lagerdatei ist Teil eines vollständigen Backups, nicht des reinen Collection-JSON-Exports. [Lagerdetails](LAGER.md).
 
 ## 8. Sicherung, Import und Export
@@ -81,6 +103,8 @@ Details der Kennzahlen: [ANALYSE.md](ANALYSE.md).
 - Manuelle und geplante Sicherungen verwenden dasselbe ZIP-Format. Profile für USB/NAS und Rclone-Ziele sowie Wiederherstellungs-Vorschau sind vorhanden. Separate Admin-Token- und Backup-Passwortverwaltung.
 - JSON-Import ersetzt strukturelle Daten nach Validierung, ersetzt aber keine vollständige Wiederherstellung mit Bildern. Eine vollständige Wiederherstellung erfolgt über das ZIP.
 - Auf dem Raspberry Pi liegen persistente Daten und Secrets **außerhalb des Git-Repositories** unter `WCM_DATA_DIR` (Vorgabe `$HOME/whisky-collection-manager-data`). Das Setup migriert alte `deploy/`-Laufzeitordner nicht automatisch.
+- Die technische Hilfe behandelt Administrator-Schlüssel, zentrales ZIP-Passwort (getrennt von Cloud-Zugangsdaten), USB, NAS, Dropbox, OneDrive, weitere Rclone-Ziele, Zeitpläne, Prüfung und Restore in aufklappbaren Abschnitten.
+- Bei geöffnetem Modal darf auf iOS der Seitenhintergrund nicht mitgescrollt werden; der Modalinhalt bleibt scrollbar und die Ausgangsposition wird nach dem Schließen wiederhergestellt.
 - Der Docker-Service `app` stellt HTTPS auf 3543 bereit. Der Backup-Worker läuft im selben Container. Kein allgemein erreichbarer HTTP-Server ohne zusätzliche Zugriffskontrolle.
 
 Siehe [DOCKER_BACKUP.md](DOCKER_BACKUP.md) und [API.md](API.md).
@@ -100,3 +124,15 @@ Quellcodeänderungen erfolgen auf `develop`, ein Merge nach `main` führt zum Re
 - API-Validierungsfehler erhalten einen stabilen `errorCode`; das Frontend lokalisiert anhand dieses Codes.
 - Der englische API-Text dient als Standard-Fallback und wird nicht als Übersetzung per Textvergleich genutzt.
 - Unbekannte serverseitige Fehler zeigen weder deutsche Rohtexte noch interne Diagnoseinformationen, sondern eine neutrale, lokalisierte Meldung.
+
+## Verkostungsnotizen (v0.27.5)
+
+- Die Hauptnavigation enthält eine eigene Verkostungsstartseite mit gemeinsamer chronologischer Liste; als Seitenicon wird das bestehende Glencairn-Bewertungsglas verwendet.
+- Für Sammlungsabfüllungen sind 0–n Verkostungen möglich. Übersichts- und Einzelverkostungsseite zeigen allgemeine Seitentitel ohne Icons. Die Abfüllung erscheint im ersten Informationsblock mit vorhandenen Angaben zu Alter, Fasstyp und Alkoholgehalt. Zurück-Links befinden sich oberhalb der vollständigen Seitenüberschrift.
+- Für Whiskys außerhalb der Sammlung entsteht **ein einzelner Verkostungseintrag** mit eingebetteten Abfüllungsdaten. Eine externe Abfüllung als verwaltbares Objekt sowie Mehrfachverkostungen sind nicht vorgesehen.
+- Eine externe Verkostung verlangt einen Abfüllungsnamen und kann optional Destillerie, Abfüller, Alter, Alkoholgehalt und Abfülljahr enthalten. Sie verändert weder Sammlung noch Bestandsanalysen.
+- Geschmacksprofil samt Radar und Reglern kann vollständig zurückgesetzt und wiederhergestellt werden.
+- Die Übersicht verwendet vollständig anklickbare Zeilen wie „Lager → Flasche finden“. Das Glencairn-Symbol wird in der Seitennavigation mit angeglichener Strichstärke verwendet.
+- Die letzte Bewertung wird in der Sammlungsübersicht als fünf anteilig gefüllte Glencairn-Gläser auf dem Flaschenbild angezeigt und lässt sich über einen Bewertungs-Schnellfilter eingrenzen.
+- Externe Einzelverkostungen lassen sich ohne Duplikat einer vorhandenen Sammlungsabfüllung zuordnen; ihre ID und Verkostungsdaten bleiben erhalten.
+- Globaler App-Header und vorhandene Abfüllungsdetailseite werden durch diese Funktion nicht verändert.

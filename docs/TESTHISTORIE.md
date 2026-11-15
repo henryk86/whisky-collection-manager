@@ -2069,3 +2069,556 @@ Die lokale volle Chromium-HTTP-Suite, reale Geraeteabnahme und ARM64-Live-Tests 
 - Einstellungen: Der Allgemein-Abschnitt erhaelt 2 px mehr Abstand zwischen Bereichsueberschrift und erstem Inhaltspanel (16 statt 14 px), entsprechend den anderen Einstellungsgruppen. Keine anderen Oberflaechenfunktionen veraendert.
 
 Die lokale volle Chromium-HTTP-Suite, reale Geraeteabnahme und ARM64-Live-Tests wurden nicht ausgefuehrt.
+
+---
+
+## Testbericht v0.23.6 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-14. **Status:** Node-Tests und gezielte Browserpruefungen bestanden. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten v0.23.6 konsistent. |
+| `npm run check` | **Bestanden** | JavaScript-Syntax, Uebersetzungen und Dokumentationslinks geprueft. |
+| `npm test` | **487/487 bestanden** | Alle Node-Unit- und Integrationstests. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Vollstaendige HTTP-Browser-Suite einschliesslich echtem Zurueck-/Vorwaerts-Navigieren in GitHub Actions pruefen. |
+| Gezielte Chromium-DOM-Tests | **4/4 bestanden** | Destillerienverwaltung, mobile Einstellungen, alle Destillerien samt Pagoden und Karten-Kameraerhalt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach dem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.23.6
+
+- Browser-Tests oeffnen vor dem Importdialog und der Destillerienverwaltung die dafuer vorgesehenen Einstellungsbereiche (Desktop-Seitenmenue oder mobiler Bereichswaehler).
+- Destillerien-Test prueft nun die explizit gewollte vollstaendige Liste ohne eigenen Scrollbereich statt der alten Hoehenbegrenzung.
+- Kartentest prueft den unveraenderten Zoom beim Ein-/Ausschalten und verwendet erst danach ausdruecklich "Alle Standorte anzeigen" fuer den Weltkartenausschnitt.
+- Kartenfehler behoben: Beim Wechsel des Destillerien-Anzeigemodus werden die Pagoden-Marker ohne erneuten Kartenaufbau aktualisiert.
+
+**Grenze:** Der HTTP-basierte Test fuer echte Browser-History und die komplette GitHub-Actions-Browsersuite konnten in der lokalen, auf DOM-Zugriff beschraenkten Umgebung nicht ausgefuehrt werden. Die Korrektur dieses History-Tests wurde im Quellcode und anhand der gemeinsamen Einstellungsnavigation kontrolliert, nicht in einem vollstaendigen realen Navigationslauf.
+
+---
+
+## Testbericht v0.24.0 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Node-Tests, gezielte Chromium-DOM-Tests und Release-Metadatenpruefungen bestanden. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten v0.24.0 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Modulimporte, Uebersetzungsschluessel und Dokumentationslinks. |
+| `npm test` | **495/495 bestanden** | Vollstaendige Node-Unit- und Integrationstests inklusive Geschmacksprofil, Fachnavigation und Moebelfoto-API. |
+| Gezielte Chromium-DOM-Tests | **5/5 bestanden** | Interaktives Profil, Fachwechsel/sofortige Kapazitaet, Moebelfotos, Help-Accordion und iOS-artige Modal-Sperre; zudem Regressionen fuer bestehende Flaschen-/Regaldialoge. |
+| AES-256-ZIP mit Moebelfotos | **Bestanden** | Backup erstellt, AES-256-Archiv authentifiziert und entpackt; Bilddateien, Zuordnung und Reihenfolge verglichen. |
+| `npm run test:browser` | **Nicht vollstaendig lokal ausgefuehrt** | Vollstaendige HTTP-Browser-Suite einschliesslich echtem Zurueck-/Vorwaerts-Navigieren muss in GitHub Actions geprueft werden. |
+| Echtes iPhone / iOS Safari | **Nicht ausgefuehrt** | Hintergrund-Scrollfokus, verschachtelte Dialoge und Bildschirmtastatur auf echter Hardware pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Nach dem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.24.0
+
+- Interaktives achtachsiges Geschmacksprofil je Abfuellung; deutsche und englische Achsenbeschriftungen einschliesslich **Alkoholisch** / **Feinty**, Skala 0–10, SVG und Regler.
+- Kapazitaetsanzeige der bereits geoeffneten Regalansicht aktualisiert sich unmittelbar nach dem Speichern; Vorheriges/Naechstes Fach mit dreistufigem Anwendungsmodal bei ungespeicherten Aenderungen.
+- Mehrere Fotos pro Moebelstueck inklusive Anzeige, Reihenfolge, Loeschung und Einbindung in AES-256-ZIP-Sicherungen.
+- Zentrale Hintergrund-Scrollsperre bei offenen Modals mit Erhalt der Seitenposition, insbesondere fuer iOS Safari vorgesehen.
+- Technische Backup-Hilfe zu Administrator-Schluessel und zentralem ZIP-Passwort, USB, NAS, Dropbox, OneDrive und weiteren Rclone-Zielen; zusaetzliche Hinweise in den anderen sieben Hilfethemen.
+
+**Grenze:** Die erfolgreichen gezielten DOM-Browserpruefungen sind kein Ersatz fuer die vollstaendige GitHub-Actions-Browsersuite oder einen Test des Scrollverhaltens auf einem echten iPhone.
+
+---
+
+## Testbericht v0.25.0 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Node-Tests, gezielte Chromium-DOM-Tests und Release-Pruefungen bestanden. Fruehere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version v0.25.0 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Modulimporte, Uebersetzungen und Dokumentation. |
+| `npm test` | **502/502 bestanden** | Vollstaendige Node-Testreihe inklusive datenverlustfreier Migration, Bewertungsdarstellung und Historie. |
+| Gezielte Chromium-DOM-Tests | **3/3 bestanden** | Abfuellungsverkostung mit Glencairn-Auswahl und Rueckgaengig/Wiederholen, Fachbearbeitung mit Moebelfotos, mobile Dialoge und Backup-Hilfe. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Vollstaendige HTTP-Browser-Suite einschliesslich echter Navigation muss in GitHub Actions laufen; gezielte DOM-Tests sind kein Ersatz. |
+| Echtes iPhone / iOS Safari | **Nicht ausgefuehrt** | Scroll- und Eingabeverhalten auf realer Hardware pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Nach Release auf Zielsystem pruefen. |
+
+### Aenderungen v0.25.0
+
+- Gemeinsamer zweiter Detailblock fuer Geschmacksprofil, drei Verkostungsnotizen und Fuenf-Glencairn-Bewertung, direkt aenderbar mit seitenlokalem Rueckgaengig/Wiederholen.
+- Bewertungen bleiben im Datenmodell auf 0–100 Punkten, um bestehende Zwischenwerte nicht zu runden.
+- Migration verschiebt bisherige Bewertungen und Notizen in die Abfuellung. Abweichende Einzelwerte bleiben als archivierte Originaleintraege mit Flaschenbezug erhalten; die vorhandene Collection wird vor der Migration gesichert.
+- Analysen und Kurzansichten zaehlen die gemeinsamen Werte je Abfuellung statt je physischer Flasche.
+- Hilfe enthaelt nur noch sinnvoll erweiterte Themen, detaillierte Backup-Anleitungen bleiben aufklappbar.
+- Moebelfotos stehen unter der Regalansicht. Hinzufuegen und Kameraaufnahme entsprechen den Flaschen; unnoetige Verschieben-Schaltflaechen sind entfernt.
+
+**Grenze:** Keine vollstaendige GitHub-Actions-Browsersuite und keine echte iPhone-Abnahme in dieser Umgebung.
+
+---
+
+## Testbericht v0.25.1 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Node-Tests, gezielte Chromium-DOM-Tests und Release-Pruefungen bestanden. Fruehere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version v0.25.1 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Modulimporte, Uebersetzungen und Dokumentation. |
+| `npm test` | **504/504 bestanden** | Node-Tests inklusive Farbspeicherung, dezimaler Ratingvalidierung, Glencairn-Symbol und Historiendaten. |
+| Gezielte Chromium-DOM-Tests | **3/3 bestanden** | Neue Detailseite, Glas-Bewertung, Farbwahl, Undo/Redo, bestehende Fachnavigation. |
+| Darstellung | **Geprueft** | 1440px und 390px, Dark- und Lightmode; Bild- und Faktenblock gleich hoch, kein horizontaler Ueberlauf. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Echte Browsernavigation muss in GitHub Actions geprueft werden; DOM-Tests ersetzen diese nicht. |
+| Echtes iPhone / iOS Safari | **Nicht ausgefuehrt** | Mobile Eingaben und Touch-Slider auf realem Geraet pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgefuehrt** | Nach Release auf Zielsystem pruefen. |
+
+### Aenderungen v0.25.1
+
+- Gleich hoher Foto- und Faktenblock; das Bild wird weder verzerrt noch abgeschnitten.
+- Dreispaltiges Geschmackslayout aus Radardiagramm und zwei Reglergruppen.
+- Glencairn-Bewertungsicons direkt anhand der vom Nutzer gelieferten Silhouette gezeichnet.
+- Manuelle Bewertungszahlen zwischen 0 und 100 mit hoechstens einer Nachkommastelle; deutsche und englische Dezimaltrennung.
+- Optionale, themaunabhaengige zwoelfstufige Whiskyfarbe; Farbwerte pro Abfuellung, mit Validierung bei API-Schreibvorgaengen.
+- Die Gesamtbewertung steht am Schluss; seitenlokale Undo-/Redo-Aktionen erscheinen als Icon-Buttons.
+
+**Grenze:** Die vollstaendige GitHub-Actions-Browsersuite und eine echte iPhone-Abnahme wurden nicht ausgefuehrt.
+
+---
+
+## Testbericht v0.25.2 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Node-, gezielte Chromium-DOM- und Release-Pruefungen bestanden. Fruehere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version v0.25.2 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Modulimporte, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **505/505 bestanden** | Node-Tests einschliesslich Drei-Spalten-Markup und unveraenderten Datenmodellen. |
+| Gezielte Chromium-DOM-Tests | **2/2 bestanden** | Bestandstest v0.25.1 und neuer Full-HD-Layouttest mit Palette 3x4, Radar und Reglern 2x4. |
+| Responsive Darstellung | **Geprueft** | Chromium bei 1920 x 1080, 1040 x 900 und 390 x 844; kein horizontaler Ueberlauf. |
+| Screenshots | **Erstellt** | Echte Full-HD-Browserbilder in Light- und Darkmode mit Beispielwerten; nicht Teil des Quellcode-Releases. |
+| `npm run test:browser` | **Nicht komplett lokal ausgefuehrt** | Echte Browsernavigation muss in GitHub Actions geprueft werden. |
+| Echtes iPhone / iOS Safari | **Nicht ausgefuehrt** | Touch-Interaktion auf realem Geraet separat pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Nach Release auf Zielsystem pruefen. |
+
+### Aenderungen v0.25.2
+
+- Whiskyfarben links mit zwoelf Glencairn-Glas-Piktogrammen in einem 3 x 4-Raster.
+- Radardiagramm als mittlere Spalte, acht kurze Geschmacksregler rechts in zwei Spalten mit jeweils vier Werten.
+- Responsive Layoutumbrueche bei Tablets und Smartphones, mit unveraenderter Farbdarstellung beider Themes.
+- Keine Aenderung an Datenmodell, Geschmackswerten, Foto- oder Bewertungsfunktionen.
+
+**Grenze:** Die vollstaendige GitHub-Actions-Browsersuite und eine echte iPhone-Abnahme stehen noch aus.
+
+---
+
+## Testbericht v0.25.3 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Node-, gezielte Chromium-DOM- und Release-Pruefungen bestanden. Fruehere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version v0.25.3 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Modulimporte, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **505/505 bestanden** | Node-Unit- und Integrationstests, einschliesslich der Glencairn-Fuellhoehe. |
+| Gezielter Chromium-DOM-Test | **1/1 bestanden** | Drei eckige Analyse-Panels, exakte 87,5 Punkte und 4 volle sowie ein anteilig goldgefuelltes Glencairn-Glas im Light- und Darkmode. |
+| Responsive Darstellung | **Geprueft** | Test bei 1440 px und 390 px ohne horizontalen Ueberlauf. |
+| `npm run test:browser` | **Nicht komplett lokal ausgefuehrt** | Echte Browsernavigation muss in GitHub Actions geprueft werden. |
+| Echtes iPhone / iOS Safari | **Nicht ausgefuehrt** | Bedienung auf realem Geraet separat pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
+
+### Aenderungen v0.25.3
+
+- Die Verkostung wird in drei getrennten, flachen Inhalts-Panels nach den bestehenden Analyse-/Einstellungsregeln dargestellt: Geschmacksprofil, Verkostungsnotizen und Bewertung.
+- Bei der Bewertung werden die Original-Glencairn-Silhouetten im Kelch von unten mit Whisky-Gold gefuellt. Die Fuellhoehe stellt je Glas die entsprechende Teilbewertung von 0 bis 20 Punkten dar; Kontur und Glanzstrich bleiben sichtbar.
+- Der genaue Punktestand (z. B. 87,5 / 100) wird deutlich angezeigt; die manuelle Eingabe und die vorhandene Datenhaltung bleiben unveraendert.
+
+**Grenze:** Die vollstaendige GitHub-Actions-Browsersuite und eine echte iPhone-Abnahme stehen noch aus.
+
+---
+
+## Testbericht v0.25.4 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Node-, gezielte Chromium-DOM- und Release-Pruefungen bestanden. Fruehere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version v0.25.4 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Modulimporte, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **505/505 bestanden** | Node-Unit- und Integrationstests ohne Funktionsaenderung. |
+| Gezielte Chromium-DOM-Tests | **2/2 bestanden** | Full HD: getrennte Farb- und Geschmacksprofil-Panels, 3x4 Farbpalette, gemeinsames Radar mit 2x4-Reglern; vier eckige Analyse-Panels, goldgefuellte Glencairn-Glaser und exakte 87,5-Punkte-Eingabe. |
+| Responsive Darstellung | **Geprueft** | Chromium bei 1920, 1040, 1440 und 390 px ohne horizontalen Ueberlauf. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Echte Browsernavigation muss in GitHub Actions geprueft werden. |
+| Echtes iPhone / iOS Safari | **Nicht ausgefuehrt** | Bedienung auf realem Geraet separat pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
+
+### Aenderungen v0.25.4
+
+- Die Verkostung hat vier klar benannte, eckige Inhalts-Panels: Farbe, Geschmacksprofil, Verkostungsnotizen und Gesamtbewertung. Farbe ist fachlich vom Geschmacksprofil getrennt; Radar und Regler bleiben gemeinsam in einem Block.
+- Uebergeordnet ist nur eine Ueberschrift „Verkostung“ sichtbar, statt wiederholter oder unterschiedlich gewichteter Titelleisten.
+- Bewertung erfolgt weiterhin durch von unten goldgefuellte Glencairn-Glaeser und manuelle Praezision bis eine Nachkommastelle. Keine redundanten Info-Icons oder Erklaertexte.
+- Speichermodell, Farben, Notizen, Bewertung und Undo/Redo sind unveraendert.
+
+**Grenze:** Die vollstaendige GitHub-Actions-Browsersuite und eine echte iPhone-Abnahme stehen noch aus.
+
+---
+
+## Testbericht v0.25.5 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Node-, gezielte Chromium-DOM- und Release-Pruefungen bestanden. Fruehere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version v0.25.5 in Release-Dateien konsistent. |
+| `npm run check` | **Bestanden** | 276 JavaScript-Dateien, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **505/505 bestanden** | Node-Unit- und Integrationstests. |
+| Gezielter Chromium-DOM-Test | **Bestanden** | Echtes Chromium mit abgefangenen HTTP-Requests: neue Abfuellung, Farbe auswaehlen/entfernen, 87,5 Punkte eingeben, anteilige Glasfuellung, Bewertung entfernen und per Undo wiederherstellen, keine JS-Fehler. |
+| Responsive Darstellung | **Bestanden** | Chromium bei 1920, 390 und 320 px ohne horizontalen Ueberlauf; Light- und Darkmode-Screenshots bei 390 px, Darkmode-Screenshot auf Desktop. |
+| `npm run test:browser` | **Nicht ausgefuehrt** | Vollstaendige Playwright-Node-Browsersuite nicht verfuegbar, da npm-Abhaengigkeiten hier nicht installiert werden konnten. Gezielte Chromium-DOM-Pruefung separat durchgefuehrt. |
+| Echtes iPhone / iOS Safari | **Nicht ausgefuehrt** | Pruefung auf einem realen Geraet separat erforderlich. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
+
+### Aenderungen v0.25.5
+
+- Aktive Whiskyfarbe durch zusaetzliche goldgetoente Kachel, ausgepraegten Rahmen und Haekchen sichtbar hervorgehoben. Unnoetige wiederholte Farbbezeichnung unter der Palette entfernt.
+- „Farbe entfernen“ und „Bewertung entfernen“ rechtsbuendig in den jeweiligen Panel-Ueberschriften. Aktivierung und Deaktivierung bleiben auch nach Undo/Redo synchron.
+- Gesamtbewertung mit fuenf goldgefuellten Glaesern und genau **einer** numerischen Darstellung: editierbares Punktefeld mit `/ 100`, ohne separat wiederholte grosse Zahl. Die bisherige Praezision und Validierung sind unveraendert.
+
+**Grenze:** Vollstaendige GitHub-Actions-Browsersuite, echtes iOS Safari und ARM64-Live-Test stehen weiterhin aus.
+
+---
+
+## Testbericht v0.26.0 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Node-, Release- und gezielte Chromium-DOM-Pruefungen bestanden. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsangaben fuer 0.26.0 konsistent. |
+| `npm run check` | **Bestanden** | Syntax/Imports, Sprachkataloge und Dokumentationslinks. |
+| `npm test` | **510/510 bestanden** | Node-Unit- und Integrationstests, darunter neue Verkostungs-API, Datumsreihenfolge, Loeschen, No-Migration-Fall und Analytics. |
+| Gezielter Chromium-DOM-Test | **Bestanden** | Abfuellungsdetails, Entwurf ohne Persistenz, Anlegen, Wertbearbeitung, Navigation sowie Punkte-/Farbwahl. |
+| Responsive Darstellung | **Bestanden** | Chromium bei 1440, 390 und 320 px ohne JS-Fehler und horizontalen Ueberlauf; Desktop-/Mobil-Screenshots. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Vollstaendige Node-Playwright-Suite lokal nicht verfuegbar (fehlendes `playwright-core`); die gezielte Chromium-DOM-Pruefung ersetzt sie nicht. |
+| Echtes iPhone / iOS Safari | **Nicht lokal ausgeführt** | Abnahme auf realer Hardware steht aus. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Deployment auf Zielsystem muss separat geprueft werden. |
+
+### Aenderungen v0.26.0
+
+- 0-n eigenstaendige, datierte Verkostungen je Abfuellung. Uebersicht und Editor auf separaten Seiten, Punkte der letzten (nach Verkostungsdatum) in den Abfuellungsdetails.
+- Datumsfeld und optionaler Titel; eigenes Geschmacksprofil, Farbe, Nase/Geschmack/Abgang und Gesamtbewertung je Verkostung.
+- Erstellen erst nach explizitem Speichern, spaetere Aenderungen automatisch, Loeschen mit Anwendungsmodal.
+- Neue CRUD-API fuer Verkostungen und schreibgeschuetzte Kompatibilitaetsprojektionen auf der Abfuellung, unveraendertes Sammlungsschema 4.
+- **Keine neue Datenmigration**: Bestehende Bewertungen/Notizen werden nicht in `tastings[]` umgewandelt. Bestehende Abfuellungsdaten bleiben gespeichert.
+- Analysen zeigen nur die letzte Bewertung je Abfuellung; vorhandenes `legacyTastings`-Archiv bleibt lesbar.
+
+**Grenzen:** Vollstaendige Browser-Regression, echtes iOS Safari und ARM64-Live-Abnahme sind noch offen.
+
+---
+
+## Testbericht v0.27.0 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Node-, Release- und gezielte Chromium-DOM-Prüfungen bestanden. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Versionsangaben für v0.27.0 konsistent. |
+| `npm run check` | **Bestanden** | JS-Syntax/Imports, Lokalisierungen und Dokumentationslinks. |
+| `npm test` (`--test-concurrency=4`) | **513/513 bestanden** | Unit- und Integrationstests einschließlich separater externer Verkostungen und vollständig zurücksetzbarem Geschmacksprofil. |
+| Gezielter Chromium-DOM-Test | **Bestanden** | Externe Abfüllung erfassen, erste Verkostung speichern, Wertbearbeitung, Radar entfernen, Undo, Gesamtbewertung und Abgrenzung zur Sammlungsansicht. |
+| Responsive Darstellung | **Bestanden** | Chromium bei 1440, 390 und 320 px ohne JS-Fehler oder horizontalen Überlauf auf der Startseite. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Vollständige Browser-Suite erfordert lokal `playwright-core`; gezielter Python-/Chromium-DOM-Test ist kein Ersatz. |
+| Echtes iPhone / iOS Safari | **Nicht lokal ausgeführt** | Abnahme auf echter Hardware steht aus. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Deployment auf dem Zielsystem separat prüfen. |
+
+### Änderungen v0.27.0
+
+- Neue Verkostungsstartseite im Hauptmenü mit chronologischer Übersicht aller Verkostungen und Einstieg für eigene Abfüllungen.
+- Externe Abfüllungen mit Stammdaten und 0–n Verkostungen, getrennt unter `collection.tastingBottlings[]` von `collection.bottlings[]`. Keine Sammlungs-, Bestands- oder Analysezuordnung; Daten in Export und Backup enthalten.
+- Eigenständiger Editor und CRUD für externe Verkostungen; vollständige Radar-Zurücksetzung (`flavorProfile: null`) einschließlich Undo/Redo.
+- Abfüllungsdetailseite unverändert; bestehende Sammlungen benötigen keine Migration und behalten Schema 4.
+
+**Grenzen:** Vollständige Browserregression, echtes iOS Safari und ARM64-Live-Abnahme stehen aus.
+
+---
+
+## Testbericht v0.27.1 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Statische Pruefungen und alle Unit-/Integrationstests bestanden. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten v0.27.1 konsistent. |
+| `npm run check` | **Bestanden** | 286 JavaScript-Dateien, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **515/515 bestanden** | Unit-/Integrationstests inklusive Header-Gleichheit und Seitenueberschrift. |
+| Quellcodeabgleich mit v0.27.0 | **Bestanden** | `public/js/ui/shell.js` (globaler App-Header) und `public/js/views/detail.js` byte-identisch zur Vorversion. |
+| `npm run test:browser` | **Nicht ausgefuehrt** | Lokale Chromium-Navigation durch Umgebung blockiert (`ERR_BLOCKED_BY_ADMINISTRATOR`); visuelle Abnahme offen. |
+| iOS Safari / Android / Docker | **Nicht ausgefuehrt** | Geraete- und Deploymentpruefungen offen. |
+
+### Aenderungen v0.27.1
+
+- Ausschliesslich den internen Ueberschriftenbereich der Verkostungsstartseite an die gemeinsame Hauptseiten-Hierarchie angeglichen: Eyebrow, Titel, goldener Punkt und Beschreibung.
+- Der globale App-Header, seine Aktionen und die Abfuellungsdetailseite sind unveraendert.
+- Regressionstests sichern die Header-Gleichheit ueber alle Seiten hinweg ab.
+
+---
+
+## Testbericht v0.27.2 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Statische Prüfungen und die vollständige Unit-/Integrationstestsuite bestanden. Frühere Berichte: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgeführte Prüfungen
+
+| Prüfung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten v0.27.2 konsistent. |
+| `npm run check` | **Bestanden** | JS-Syntax und Importe, Deutsch/Englisch, relative Dokumentationslinks. |
+| `npm test` | **516/516 bestanden** | Unit-/Integrationstests einschließlich neuer externer Einzelverkostung und Abfüllungsmetadaten in Listen- und Einzelansicht. |
+| Vergleich `public/js/views/detail.js` mit v0.27.1 | **Bestanden** | Abfüllungsdetailseite unverändert. |
+| Globaler App-Header auf allen Seiten | **Bestanden (Unit-Test)** | Identischer Header einschließlich Aktionen. |
+| Direkte API-Smoke-Prüfung | **Bestanden** | Abfüllung mit Alter/Fasstyp/Alkoholgehalt und eigenständige externe Verkostung angelegt. |
+| Chromium-Screenshot | **Nicht erfolgreich** | Headless Chromium hängt in der lokalen Umgebung; keine visuelle Browserabnahme behauptet. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Playwright-Browserabhängigkeiten hier nicht installiert. |
+| iOS Safari / Android / Docker | **Nicht ausgeführt** | Gerätespezifische und Deployment-Prüfungen offen. |
+
+### Änderungen v0.27.2
+
+- Einheitliche Seitenüberschriften und Abstände auf der Verkostungsstartseite, mit wiederverwendetem Glencairn-Icon aus der Bewertung.
+- Abfüllungsname als Hauptüberschrift in Abfüllungs-Verkostungsliste und Einzelverkostung. Vorhandenes Alter, Fasstyp und Alkoholgehalt erscheinen darunter; fehlende Informationen werden nicht angezeigt.
+- Sichtbare Zurück-Pfeile zu Abfüllung beziehungsweise Verkostungsübersicht.
+- Gemeinsames chronologisches Journal. Externe Verkostungen sind einzelne Datensätze mit eingebetteten Abfüllungsangaben (`externalTastings[]`); keine Verwaltung externer Abfüllungen, keine Mehrfachverkostungen und keine Altformatmigration.
+- Globaler App-Header und Abfüllungsdetailseite werden nicht verändert.
+
+---
+
+## Testbericht v0.27.3 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Quellcode- und automatisierte Unit-/Integrationstests erfolgreich; visuelle Browserpruefung offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Package, Lockfile, README, CHANGELOG und Teststatus auf 0.27.3 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Importe, Uebersetzungen und Dokumentationslinks. |
+| `npm test` (identische Testdateien mit `node --test --test-concurrency=2`) | **519/519 bestanden** | Unit- und Integrationstests einschliesslich neuer Header-/Infoblock-/Notizfeld-Regressionstests. Der regulaere Gesamtlauf blieb zuvor nach Teiltests haengen; die Wiederholung mit begrenzter Parallelitaet wurde vollstaendig abgeschlossen. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Chromium-Start mit einfachem Screenshot-Probelauf in dieser Umgebung nach 10 Sekunden abgebrochen; visuelle Browserpruefung offen. |
+| iOS Safari / Android Browser | **Nicht lokal ausgeführt** | Echte Geraete gesondert pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.27.3
+
+- Keine Icons in den Verkostungs-Seitentiteln; gemeinsame Ueberschriftengeometrie.
+- In der Verkostungsuebersicht und in der Einzelverkostung steht die Abfuellung samt verfuegbaren Informationen im ersten Informationspanel. Die Zurueck-Links bleiben mit sichtbarem Pfeil erhalten.
+- Die drei Notizfelder sind oben an den Labels verankert, auch wenn ein Feld vertikal vergroessert wird.
+- Der globale App-Header, die Abfuellungsdetailseite, das Datenmodell und die API bleiben unveraendert.
+
+---
+
+## Testbericht v0.27.4 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Quellcode- und automatisierte Unit-/Integrationstests erfolgreich; visuelle Browserpruefung offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Package, Lockfile, README, CHANGELOG und Teststatus auf 0.27.4 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Importe, Uebersetzungen und Dokumentationslinks. |
+| `npm test` (identische Testdateien mit `node --test --test-concurrency=2`) | **523/523 bestanden** | Unit- und Integrationstests einschliesslich Navigation, Listenlayout und explizitem Bearbeiten/Abbrechen externer Abfuellungsinformationen. Alle Tests wurden im Gesamtlauf erfolgreich abgeschlossen. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Chromium startete schon beim minimalen lokalen DOM-Probelauf nicht innerhalb von 9 Sekunden; visuelle Browserpruefung offen. |
+| iOS Safari / Android Browser | **Nicht lokal ausgeführt** | Echte Geraete gesondert pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.27.4
+
+- Zurueck-Navigation ist auf untergeordneten Verkostungsseiten eine eigene Zeile unmittelbar unter dem Seitenheader.
+- Keine zusaetzliche Ueberschrift "Abfuellungsangaben" im ersten Informationsblock; keine doppelten "Verkostungen"-Titel.
+- Eintraege verwenden die eingerahmten, getrennten Zeilen aus Lager -> Flasche finden und jeweils eigene Aktionsbuttons.
+- Externe Verkostungen zeigen die eingebetteten Abfuellungsdaten nach der Ersterfassung lesend. Der bestehende Stift-Icon-Button wechselt in einen expliziten Bearbeitungsmodus mit Speichern und Abbrechen.
+- Globaler App-Header, Abfuellungsdetailseite und Datenmodell bleiben unveraendert.
+
+---
+
+## Testbericht v0.27.5 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Quellcode- und automatisierte Unit-/Integrationstests erfolgreich; visuelle Browserpruefung offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Package, Lockfile, README, CHANGELOG und Teststatus auf v0.27.5 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Importe, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **529/529 bestanden** | Unit- und Integrationstests, einschliesslich Bewertungsfilter, proportionalen Glencairn-Fuellungen, klickbarer Verkostungslisten und atomarer Zuordnung externer Verkostungen. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Chromium-/Screenshotpruefungen fuer diese Version nicht abgeschlossen; visuelle Browserpruefung offen. |
+| iOS Safari / Android Browser | **Nicht lokal ausgeführt** | Echte Geraete gesondert pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.27.5
+
+- Hauptbereich heisst „Verkostungsnotizen“ auf Deutsch und „Tasting notes“ auf Englisch; Titel und Navigation verwenden dieselbe Terminologie.
+- Zurueck-Navigation auf den Verkostungsunterseiten oberhalb der Seitenueberschrift; ganze Listeneintraege oeffnen die Verkostung, separate Loeschaktion bleibt erhalten.
+- Sammlungsuebersicht zeigt die Bewertung der letzten Verkostung in Glencairn-Glaesern im Flaschenbild und bietet einen Bewertungs-Schnellfilter.
+- Glencairn-Navigationssymbol mit staerkerem optischem Gewicht; externe Einzelverkostungen koennen atomar bestehenden Sammlungsabfuellungen zugeordnet werden.
+
+---
+
+## Testbericht v0.27.6 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Quellcode- und automatisierte Unit-/Integrationstests erfolgreich; visuelle Browserpruefung offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten fuer v0.27.6 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Importe, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **534/534 bestanden** | Unit- und Integrationstests einschliesslich Abfuellungsfoto, externen Einzelverkostungen, transparenter Bewertungsdarstellung sowie Lesemodus und manuell aktivierter Bearbeitung fuer eigene und externe Verkostungen. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Lokaler Chromium-Probelauf brach nach Timeout ab, daher keine visuelle Browserfreigabe. |
+| iOS Safari / Android Browser | **Nicht lokal ausgeführt** | Echte Geraete gesondert pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.27.6
+
+- Vorhandenes Abfuellungsfoto (dieselbe Coverbild-Auswahl wie in den Abfuellungsdetails) in der ersten Abfuellungs-Infobox auf den Sammlungs-Verkostungsseiten anzeigen; aktuelle Freistellung/Bearbeitung beruecksichtigen. Bei fehlendem Foto oder externer Einzelverkostung kein Platzhalter.
+- Glencairn-Bewertung auf den Sammlungskarten ohne Badge-Hintergrund, Rahmen und Schatten des Containers. Glasformen bleiben ablesbar und anteilig gefuellt.
+- Gespeicherte Verkostungen im Lesemodus mit statischer Darstellung von Datum, Farbe, Radar, Notizen und Bewertung; Stift-Button aktiviert Bearbeiten, Fertig schliesst es. Neue Verkostungen bleiben direkt im Editor.
+- Im Abfuellungs-Infoblock eigener Sammlungsabfuellungen fuehrt ein Button direkt zu deren Abfuellungsdetails.
+
+---
+
+## Testbericht v0.27.7 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Automatisierte Quellcode-, Unit- und Integrationstests bestanden; visuelle Browserpruefung offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten v0.27.7 stimmen ueberein. |
+| `npm run check` | **Bestanden** | 288 JavaScript-Dateien, Imports, Uebersetzungen und Dokumentationslinks geprueft. |
+| `npm test` | **541/541 bestanden** | Vollstaendige Unit- und Integrationstests, inklusive neuer Regressionstests fuer Button-Position, Navigationsziel, Abfuellungsfoto und Bewertungsdarstellung. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Keine vollstaendige Playwright-Browsersuite; visuelle Darstellung nicht freigegeben. |
+| iOS Safari / Android Browser | **Nicht lokal ausgeführt** | Auf echten Geraeten gesondert pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.27.7
+
+- "Bearbeiten" fuer gespeicherte Verkostungen innerhalb des ersten Datenblocks (Datum/Titel), nicht mehr in der Abschnittsueberschrift "Eindruecke".
+- Erstellung neuer Verkostungen in den Abfuellungsdetails als Plus-Aktion oberhalb der Bewertungskachel; Glencairn-Glaeser vor der Bewertung.
+- Auf der Verkostungsstartseite die neue Verkostung wieder in der Kopfzeile des Listenpanels. Einheitliche Glas- und Punktespalten, mehr Abstand zur Trennlinie.
+- Abfuellungsfoto links vor dem Informationstext; leere Verkostungslisten aus den Abfuellungsdetails ohne ungueltige ID erreichbar.
+- Deutlichere Farbanzeige in der Leseansicht und Punkte des Radars ohne Zeilenumbruch.
+
+---
+
+## Testbericht v0.27.8 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Quellcode-, Release-, Unit- und Integrationstests bestanden; visuelle Browserpruefung offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version 0.27.8 ueber alle Release-Dateien konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Imports, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **544/544 bestanden** | Vollstaendige Unit- und Integrationstests, inklusive Position der Aktionen, einheitlicher Plus-Icons und Glencairn-Ausrichtung. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Visuelle Browserpruefung und vollstaendige Playwright-Suite offen. |
+| iOS Safari / Android Browser | **Nicht lokal ausgeführt** | Auf echten Geraeten gesondert pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach dem Release auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.27.8
+
+- Die Aktion "Neue Verkostung" befindet sich in den Abfuellungsdetails wieder innerhalb der Bewertungskachel; die zur Abfuellung gehoerende Verkostungsliste zeigt die Neuanlage im Listenpanel.
+- Rueckgaengig/Wiederholen, Fertig und Loeschen stehen beim Editieren im ersten Datenpanel statt neben der Ueberschrift "Eindruecke"; dessen Abstand zum Panel ist an die anderen Abschnitte angeglichen.
+- Einheitliches SVG-Plus fuer Aktionen zum Anlegen/Hinzufuegen; statt separater Text-Pluszeichen in Schaltflaechen.
+- Die kleine Glencairn-Bewertung in den Sammlungskarten wurde etwas weiter links ausgerichtet.
+
+---
+
+## Testbericht v0.27.9 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Statische Projektpruefungen und 545 Unit-/Integrationstests erfolgreich. Vorherige Testberichte: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version 0.27.9 und Release-Metadaten stimmen ueberein. |
+| `npm run check` | **Bestanden** | Syntax, Modulimporte, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **545/545 bestanden** | Unit- und Integrationstests mit begrenzter Parallelitaet. |
+| `npm run test:browser` | **Nicht lokal ausgefuehrt** | Visuelle Browserpruefung steht aus. |
+| iOS Safari, Android, Docker/ARM64 | **Nicht lokal ausgefuehrt** | Endgeraete- und Deployment-Pruefungen stehen aus. |
+
+### Aenderungen v0.27.9
+
+- „Neue Verkostung“ in Abfuellungsdetails in die Abschnittsueberschrift ueber der Bewertungskachel verschoben; der Button in der Verkostungslistenansicht bleibt innerhalb ihrer Kachel.
+- Der Bearbeitungsblock fuer Verkostungen nutzt Desktop-seitig drei Spalten: schmales Datum, breiter Titel, rechts die Aktionen. Responsive Umbrueche fuer schmale Ansichten.
+- Regressionstests fuer Button-Position sowie DOM-Reihenfolge und Grid-Aufteilung ergaenzt.
+
+Die tatsaechliche Browserdarstellung wurde hier nicht visuell abgenommen.
+
+---
+
+## Testbericht v0.27.10 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Statische Projektpruefungen und 545 Unit-/Integrationstests erfolgreich. Vorherige Testberichte: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Release-Metadaten der Version 0.27.10 stimmen ueberein. |
+| `npm run check` | **Bestanden** | Syntax, Modulimporte, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **545/545 bestanden** | Unit- und Integrationstests, inklusive Lesemodus-/Bearbeitungsmodus-Regression. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Visuelle Browserpruefung steht aus. |
+| iOS Safari, Android, Docker/ARM64 | **Nicht lokal ausgeführt** | Endgeraete- und Deployment-Pruefungen stehen aus. |
+
+### Aenderungen v0.27.10
+
+- In gespeicherten Verkostungen lautet die Titelbeschriftung im Lesemodus nur noch „Titel“ (englisch „Title“); bei der Bearbeitung bleibt „Titel (optional)“ (englisch „Title (optional)“).
+- Regressionstest stellt die unterschiedlichen Beschriftungen in beiden Modi sicher.
+
+Die tatsaechliche Browserdarstellung wurde hier nicht visuell abgenommen.
+
+---
+
+## Testbericht v0.27.11 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Kernpruefungen fuer v0.27.11 erfolgreich, manuelle Browser-/Zielsystempruefungen noch offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Erfolgreich** | Release-Metadaten fuer v0.27.11 konsistent. |
+| `npm run check` | **Erfolgreich** | 290 JavaScript-Dateien, Uebersetzungen und 165 Markdown-Links geprueft. |
+| `npm test` | **Erfolgreich (545/545 Tests)** | Unit- und Integrationstests komplett gruen. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Kein separater Browserlauf in diesem Release dokumentiert. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Weiterhin auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.27.11
+
+- Filterleiste der Sammlung so angepasst, dass lange Select-Beschriftungen wie „Alle Bewertungen“ und „Alle Flaschentypen“ nicht mehr abgeschnitten werden.
+- Desktop-Layout der Sammlungsfilter bekommt frueher einen Zeilenumbruch, bevor Controls unleserlich eng werden.
+
+### Hinweise
+
+- Die Aenderung betrifft ausschliesslich das Layout der Filterleiste auf der Sammlungsseite.
+- Eine manuelle Sichtpruefung im Browser, insbesondere fuer schmale Desktop-Breiten und Mobilgeraete, ist weiterhin empfohlen.
