@@ -30,13 +30,6 @@ const collection = () => ({
     ],
 });
 
-test('analytics filters retain their light appearance but use a dark surface in dark mode', () => {
-    const analyticsCss = fs.readFileSync('public/styles/analytics.css', 'utf8');
-    const themesCss = fs.readFileSync('public/styles/themes.css', 'utf8');
-    assert.match(analyticsCss, /\.analytics-filters\s*\{[^}]*background:\s*#ece9e1;/);
-    assert.match(themesCss, /:root\[data-theme="dark"\]\s+\.analytics-filters\s*\{[^}]*background:\s*#1b2936;[^}]*border-color:\s*var\(--line\);/);
-});
-
 test('analytics overview subtitle is a complete sentence in German and English', () => {
     const de = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
     const en = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));

@@ -27,57 +27,6 @@ test('release files match app, lockfile, README and top changelog', () => {
     assert.equal(release.tag, `v${expected}`);
 });
 
-test('GHCR images and ZIP are published only by the release workflow', () => {
-    const workflow = read('.github/workflows/release.yml');
-    const checks = read('.github/workflows/check.yml');
-    assert.match(workflow, /branches: \[main\]/);
-    assert.match(workflow, /types: \[published\]/);
-    assert.match(workflow, /gh release create/);
-    assert.match(workflow, /--draft/);
-    assert.match(workflow, /gh release upload/);
-    assert.match(workflow, /gh release edit/);
-    assert.match(workflow, /docker buildx imagetools create/);
-    assert.match(workflow, /needs: \[prepare, package, docker, docker-offline\]/);
-    assert.match(workflow, /--draft=false/);
-    assert.match(workflow, /needs: \[prepare, package, docker, docker-offline\]/);
-    assert.match(workflow, /docker\/build-push-action@v7/);
-    assert.match(workflow, /platforms: linux\/arm64,linux\/amd64/);
-    assert.doesNotMatch(workflow, /suffix: '-backup'/);
-    assert.match(workflow, /file: docker\/app\.Dockerfile/);
-    assert.match(workflow, /packages: write/);
-    assert.match(workflow, /git archive/);
-    assert.match(workflow, /verify-release-files\.js/);
-    assert.doesNotMatch(workflow, /branches: \[main, master\]/);
-    assert.equal(fs.existsSync('.github/workflows/docker-publish.yml'), false);
-    assert.equal(fs.existsSync('extension/manifest.json'), false, 'extension lives in private repository');
-    assert.match(checks, /branches: \[develop\]/);
-    assert.match(checks, /branches: \[develop, main\]/);
-    assert.match(checks, /release-version\.js check --fresh/);
-    assert.match(checks, /actions\/checkout@v7/);
-    assert.match(checks, /actions\/setup-node@v7/);
-    const manifest = JSON.parse(read('package.json'));
-    const lock = JSON.parse(read('package-lock.json'));
-    const pinnedVersion = manifest.devDependencies['playwright-core'];
-    assert.match(pinnedVersion, /^\d+\.\d+\.\d+$/, 'playwright-core must have an exact version');
-    assert.equal(lock.packages[''].devDependencies['playwright-core'], pinnedVersion);
-    assert.equal(lock.packages['node_modules/playwright-core'].version, pinnedVersion);
-});
-
-test('Docker build and the uploaded images validate package.json before latest is updated', () => {
-    const dockerfile = read('docker/app.Dockerfile');
-    const workflow = read('.github/workflows/release.yml');
-    assert.doesNotThrow(() => JSON.parse(read('package.json')));
-    assert.match(dockerfile, /JSON\.parse\(fs\.readFileSync\(f/);
-    assert.match(dockerfile, /node --check docker\/entrypoint\.js/);
-    assert.match(workflow, /docker pull --platform/);
-    assert.match(workflow, /docker run --rm --platform/);
-    assert.match(workflow, /--entrypoint node/);
-    assert.match(workflow, /require\("\/app\/package\.json"\)\.version/);
-    assert.match(workflow, /--check \/app\/docker\/entrypoint\.js/);
-    assert.match(workflow, /node --version && restic version && rclone version && ssh -V/);
-    assert.match(workflow, /needs: \[prepare, package, docker, docker-offline\]/);
-});
-
 test('release ZIP rejects secrets but retains source and example config', () => {
     for (const unsafe of [
         '.env', 'deploy/.env', 'certs/server-key.pem', 'data/collection.json',
@@ -93,10 +42,6 @@ test('release ZIP rejects secrets but retains source and example config', () => 
         'public/js/features/backups/controller.js', 'docker-compose.yml',
         '.github/workflows/release.yml'
     ]) assert.equal(prohibitedReleasePath(safe), false, safe);
-    const compose = read('docker-compose.yml');
-    assert.equal((compose.match(/\$\{IMAGE_TAG:-latest\}/g) || []).length, 1);
-    assert.match(read('.gitignore'), /\/backups\//);
-    assert.match(read('.dockerignore'), /!public\/js\/features\/backups\/\*\*/);
 });
 
 

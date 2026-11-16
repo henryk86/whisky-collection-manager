@@ -61,8 +61,6 @@ test('the bottling and individual-bottle buttons show edit and delete SVGs befor
         assert.ok(button(html, action).includes(`${deleteIcon}<span>Löschen</span>`), action);
     }
     assert.match(button(html, 'delete-file'), /aria-label="Datei Beleg\.pdf löschen"/);
-    const css = fs.readFileSync('public/styles/themes.css', 'utf8');
-    assert.match(css, /\.action-icon\s*\{[^}]*width:\s*17px;[^}]*height:\s*17px;/);
 });
 
 test('physical-bottle detail offers direct Umlagern while the Lagerort fact stays labelled', () => {
@@ -85,9 +83,6 @@ test('photo editor uses only the shared pencil icon, with an accessible tooltip 
     assert.match(edit, /title="Flaschenbild bearbeiten"/);
     assert.match(edit, /aria-label="Flaschenbild bearbeiten"/);
     assert.doesNotMatch(edit, /Anpassen|Adjust/);
-    const css = fs.readFileSync('public/styles/bottle-details.css', 'utf8');
-    assert.match(css, /\.photo-tile \.photo-edit-trigger \{[^}]*width: 28px; height: 28px;/);
-    assert.match(css, /\.photo-tile \.photo-edit-trigger \.action-icon \{[^}]*width: 16px; height: 16px;/);
 });
 
 test('physical bottle layout uses the first sorted photo as a large preview and preserves every gallery action', () => {
@@ -113,9 +108,6 @@ test('physical bottle layout uses the first sorted photo as a large preview and 
     assert.ok(card.indexOf('bottle-entry-content') < card.indexOf('bottle-entry-gallery'));
     assert.ok(card.indexOf('bottle-entry-gallery') < card.indexOf('bottle-documents'));
     assert.ok(card.indexOf('bottle-entry-visual') < card.indexOf('data-photo-list="physical-a"'));
-    const css = fs.readFileSync('public/styles/bottle-details.css', 'utf8');
-    assert.match(css, /grid-template-areas: "visual content" "gallery gallery" "documents documents"/);
-    assert.match(css, /\.bottle-entry-facts \{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
     assert.equal((card.match(/data-photo-list="physical-a"/g) || []).length, 1);
     assert.equal((card.match(/data-photo-tile/g) || []).length, 2);
     assert.equal((card.match(/data-act="photo-editor-open"/g) || []).length, 2);

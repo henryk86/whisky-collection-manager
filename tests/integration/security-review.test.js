@@ -77,6 +77,8 @@ test('security: served HTML has CSP, referrer and framing protections with valid
         assert.match(csp, /frame-ancestors 'none'/);
         assert.match(csp, /script-src 'self'/);
         assert.ok(!csp.includes("script-src 'self' 'unsafe-inline'"));
+        assert.ok(csp.includes("'wasm-unsafe-eval'"), 'ONNX WebAssembly is permitted');
+        assert.ok(!csp.includes("'unsafe-eval'"), 'unrestricted code evaluation remains forbidden');
         const html = await response.text();
         const inlines = [...html.matchAll(/<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)];
         assert.equal(inlines.length, 2);

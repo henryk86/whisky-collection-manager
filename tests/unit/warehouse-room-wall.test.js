@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { renderWarehouseRoomWall, wallFurniture, WALL_PIXELS_PER_METRE } from '../../public/js/views/warehouse-room-wall.js';
 import { wallFurnitureGroups } from '../../public/js/domain/warehouse-wall-layout.js';
 import { createWarehouseView } from '../../public/js/views/warehouse.js';
@@ -106,9 +105,6 @@ test('stacked furniture has an in-place edit icon without altering the bay layou
     assert.match(stacked,/class="warehouse-wall-furniture-edit" data-act="warehouse-furniture-manage" data-id="upper" title="Kamin"/);
     assert.doesNotMatch(stacked,/warehouse-wall-furniture-header|warehouse-wall-furniture-name|>Kamin<|0 \/ 0/);
     assert.match(stacked,/Glas|Offen/);
-    const css=readFileSync(new URL('../../public/styles/warehouse.css',import.meta.url),'utf8');
-    assert.match(css,/\.warehouse-wall-furniture-edit \{ position: absolute; top: 3px; right: 10px/);
-    assert.match(css,/\.warehouse-wall-bay--top \.warehouse-wall-bay-title \{ padding-right: 30px;/);
 });
 
 test('overlapping but same-height furniture and units on opposite walls never stack', () => {
@@ -165,22 +161,9 @@ test('room wall does not stretch numerous shallow compartments beyond the cabine
     assert.match(html,/--wall-furniture-height:184px/);
     assert.equal((html.match(/--wall-bay-height:23px/g)||[]).length,8);
     assert.doesNotMatch(html,/--wall-clearance-height:/);
-    const css=readFileSync(new URL('../../public/styles/warehouse.css',import.meta.url),'utf8');
-    assert.match(css,/\.warehouse-shelf\.warehouse-wall-bay\s*\{[^}]*min-height:\s*0;/);
-    assert.match(css,/\.warehouse-wall-furniture\s*\{[^}]*height:\s*var\(--wall-furniture-height\)/);
-    assert.match(css,/\.warehouse-wall-furniture\s*\{[^}]*bottom:\s*var\(--wall-elevation\)/);
-    assert.match(css,/\.warehouse-wall-stack\s*\{[^}]*height:\s*var\(--wall-stack-height\)/);
-    assert.doesNotMatch(css,/flex-basis:\s*min\(var\(--wall-furniture-width\)/);
 });
 
 test('wall fills its complete physical height and only scrolls horizontally', () => {
-    const css=readFileSync(new URL('../../public/styles/warehouse.css',import.meta.url),'utf8');
-    const rule=css.match(/\.warehouse-wall-scroll\s*\{([^}]+)\}/)?.[1] || '';
-    assert.match(rule,/height:\s*auto/);
-    assert.match(rule,/max-height:\s*none/);
-    assert.match(rule,/overflow-x:\s*auto/);
-    assert.match(rule,/overflow-y:\s*hidden/);
-    assert.doesNotMatch(rule,/74vh|850px|overflow:\s*auto/);
     const {room,warehouse}=createWarehouse();
     const html=renderWarehouseRoomWall(room,warehouse,['b1']);
     assert.match(html,/class="warehouse-wall-bottle is-selected"/);
@@ -261,27 +244,11 @@ test('an empty bay has the same label font size as a non-assignable bay', () => 
     const html=renderWarehouseRoomWall(room,{bottles:[],assignments:{}});
     assert.match(html,/class="hint">Fach ist leer<\/span>/);
     assert.match(html,/class="warehouse-wall-no-space">Nicht belegbar<\/span>/);
-    const css=readFileSync(new URL('../../public/styles/warehouse.css',import.meta.url),'utf8');
-    assert.match(css,/\.warehouse-wall-no-space, \.warehouse-wall-bay \.warehouse-bottle-silhouettes > \.hint \{ font-size: 10px;/);
 });
 
 
 test('first room-wall bay clears the inset top frame without shifting shelf geometry', () => {
-    const css=readFileSync(new URL('../../public/styles/warehouse.css',import.meta.url),'utf8');
-    assert.match(css,/\.warehouse-wall-furniture-body \{[^}]*box-shadow: inset 0 5px 0 #a17d4c/);
-    assert.match(css,/\.warehouse-wall-furniture-body > \.warehouse-wall-bay--top:first-child:not\(\.warehouse-wall-bay--tiny\) \{ padding-top: 8px; \}/);
-    // Only the first bay (and only if there is no clearance before it) gets
-    // the compensating padding. All levels retain their physical CSS heights.
-    assert.match(css,/\.warehouse-shelf\.warehouse-wall-bay \{[^}]*height: var\(--wall-bay-height\)/);
     const {room,warehouse}=createWarehouse();
     const html=renderWarehouseRoomWall(room,warehouse);
     assert.match(html,/warehouse-wall-bay--top[^\"]*\"[^>]*--wall-bay-height:/);
-});
-
-
-test('selected bottle marker stays inside its fixed-size shelf slot without protruding over the rail', () => {
-    const css = readFileSync('public/styles/warehouse.css','utf8');
-    assert.match(css, /\.warehouse-wall-bay \.warehouse-wall-bottle\.is-selected \{ box-shadow: none; \}/);
-    assert.match(css, /\.warehouse-wall-bay \.warehouse-wall-bottle\.is-selected::after \{[^}]*inset: 1px;[^}]*border: 2px solid var\(--gold\)/s);
-    assert.match(css, /\.warehouse-wall-bay \.warehouse-wall-bottle \{[^}]*overflow: hidden;/);
 });

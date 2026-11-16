@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import { createTastingsView } from '../../public/js/views/tastings.js';
 import { createDetailView } from '../../public/js/views/detail.js';
 
@@ -64,15 +63,6 @@ test('tasting subject photo precedes details inside the information panel',()=>{
     const info=html.match(/<div class="tasting-bottling-summary tasting-bottling-photo-layout">[\s\S]*?<\/section>/)?.[0];
     assert.ok(info);
     assert.ok(info.indexOf('class="tasting-bottling-photo"') < info.indexOf('class="tasting-bottling-copy"'));
-});
-
-test('fixed rating width and glass padding prevent jagged columns and bottom-edge crowding',async()=>{
-    const bottleCss=await readFile(new URL('../../public/styles/bottle-details.css',import.meta.url),'utf8');
-    const mainCss=await readFile(new URL('../../public/styles/core.css',import.meta.url),'utf8');
-    assert.match(bottleCss,/\.tasting-list-rating\s*\{[^}]*width:90px;/);
-    assert.match(bottleCss,/\.tasting-entry-trailing \.tasting-list-glasses\s*\{[^}]*width:68px;/);
-    assert.match(bottleCss,/\.tasting-list-glasses\s*\{[^}]*transform:translateY\(-2px\);/);
-    assert.match(mainCss,/\.collection-card-rating\s*\{[^}]*right:26px; bottom:18px;/);
 });
 
 test('saved tasting edit control sits inside the record data panel rather than the section heading',()=>{

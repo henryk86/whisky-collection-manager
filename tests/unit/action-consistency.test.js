@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import { createShell } from '../../public/js/ui/shell.js';
 import { createHomeView } from '../../public/js/views/home.js';
 import { newBottlingIcon, inventoryScanIcon, settingsIcon, settingsIconPaths } from '../../public/js/ui/action-icons.js';
@@ -69,13 +68,3 @@ test('settings icon is a clean, symmetrical gear outline without stray paths', (
     assert.equal((settingsIcon.match(/<svg/g) || []).length, 1);
     assert.equal((settingsIcon.match(/<\/svg>/g) || []).length, 1);
 });
-
-test('the new-bottle action opens the corresponding creation dialog', () => {
-    const editor = requireEditorSource();
-    assert.match(editor, /showModal\(t\("[^"]+"\), bottlingChoiceDialog\(state.collection\), true\)/);
-    assert.match(editor, /showModal\(t\("collection.actions.newBottling"\), bottlingForm\(\), true\)/);
-});
-
-function requireEditorSource() {
-    return fs.readFileSync('public/js/features/editor-controller.js', 'utf8');
-}

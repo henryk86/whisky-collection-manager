@@ -1,27 +1,29 @@
-# Teststatus - Whisky Collection Manager v1.3.3
+# Teststatus - Whisky Collection Manager v1.4.0
 
-**Stand:** 2026-11-16. **Status:** Node-/Integrationstests und Architekturchecks bestanden. Die vollständige Chromium-Browserprüfung für v1.3.3 und der reguläre GitHub-CI-Lauf stehen aus. Frühere Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-16. **Status:** B-5-Umsetzung lokal mit Node- und Chromium-Verhaltenstests bestanden. Der regulaere GitHub-Actions-Browserlauf fuer **v1.4.0** und Zielsystempruefungen stehen noch aus. Fruehere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
 
-## Durchgeführte Prüfungen
+## Durchgefuehrte Pruefungen
 
-| Prüfung | Ergebnis | Einordnung |
+| Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Bestanden** | Version, Metadaten und Quellmanifest stimmen überein. |
-| `npm run check` | **Bestanden** | Syntax, Importe, Dokumentationslinks, Übersetzungen und Architekturregeln. |
-| `npm test` | **546/546 bestanden** | Vollständiger Node-Unit-/Integrationstestlauf einschließlich der Beschriftung „Umlagern“ in gerenderten Flaschendetails. |
-| `npm run test:browser` | **Nicht lokal ausgeführt** | Die Node-Abhängigkeit `playwright-core` ist in dieser Umgebung nicht funktionsfähig verfügbar. Die erweiterten Regressionstests sind für den CI-Lauf enthalten. |
-| Chromium-Layoutprüfung (isoliertes Dialogmarkup) | **Bestanden** | Echte Projekt-CSS und das gerenderte Dialogmarkup: Desktop 740 × 452 px bei 1366 px Viewport; Mobilansicht 360 × 695 px bei 390 px Viewport, ohne horizontales Überlaufen. Kein Ersatz für die vollständige Browser-Suite. |
-| GitHub Actions / reguläre Browsernavigation | **Ausstehend** | Vollständige Suite für v1.3.3 nach Einspielen des Patches prüfen. |
-| Docker / Raspberry Pi ARM64 / mobile Endgeräte | **Nicht lokal ausgeführt** | Auf dem Zielsystem separat prüfen. |
+| `npm run release:check` | **Bestanden** | Version, Metadaten und Quellmanifest v1.4.0 konsistent. |
+| `npm run check` | **Bestanden** | Syntax, Module, Uebersetzungen, Links, Verbot von Anwendungsquelltexttests und Deployment-Vertraege. |
+| `npm test` | **532/532 bestanden** | Fach-Unit- und Integrationstests; ehemals statische Quelltexttests wurden entfernt, fachliche Verhaltenspruefungen beibehalten bzw. ersetzt. |
+| `npm run test:browser` (Chromium DOM-Modus, 9 getrennte Fachsuiten) | **109 bestanden, 0 fehlgeschlagen, 1 uebersprungen** | Alle Fachsuiten einzeln vollstaendig abgeschlossen; die gemeinsame Ausfuehrung erreichte die lokale Zeitgrenze. Uebersprungen: echte HTTP-History-Navigation im DOM-Modus. |
+| Neue B-5-Verhaltenstests | **8/8 bestanden** | Browser-Messungen fuer Lager/3D-nahe Layouts, Verkostungen, Import, Dialoge, Branding und Bildplatzhalter. |
+| Deployment-Vertragstests | **8/8 bestanden** | Positivtest und sieben absichtlich verletzte Docker-/CI-Sicherheitsbedingungen. |
+| GitHub Actions / regulaere Browsernavigation v1.4.0 | **Ausstehend** | Der lokale DOM-Modus ersetzt keinen gruenen CI-Lauf fuer den neuen Commit. |
+| Docker-Image / Raspberry Pi ARM64 / echte WebGL- und Mobilgeraete | **Nicht lokal ausgefuehrt** | Bei entsprechenden Aenderungen auf Zielsystemen separat pruefen. |
 
-## Änderungen v1.3.3
+## Aenderungen v1.4.0
 
-- Der Aktionsbutton der physischen Flasche in den Abfüllungsdetails heißt „Umlagern“.
-- Der gleiche, sofort geöffnete Zielwahldialog wird aus Flaschendetails und Lagerfach verwendet, ohne aufrufabhängiges Sonderverhalten.
-- Kompakte Darstellung innerhalb des allgemeinen Dialogstils: Kontextfelder auf Desktop nebeneinander, drei Lagerziel-Selektoren in einer Zeile; responsive Stapelung auf Mobilgeräten.
-- Chromium-Regressionstests kontrollieren Desktopmaße, direkte Auswahl aus Flaschendetails und mobile Darstellung.
+- Historische Tests, die CSS-/JS-Quelldateien anhand von Regex-Implementierungsdetails kontrollierten, entfernt; gerenderte HTML-Ausgaben und fachliche Datenregeln bleiben durch ihre bestehenden Verhaltenstests abgesichert.
+- Neue Browserregressionen pruefen berechnete Lagerfachgeometrie, responsives Verkostungsformular, Import-Checkboxen, Modalzustaende, Bildplatzhalter und tatsaechlich geladene Bild-/Icon-Dateien.
+- 3D-Mesh-Hervorhebung und Material-Ruecksetzung als ausgefuehrtes Domainverhalten geprueft statt per Quelltextsuche.
+- Deklarative Docker-, HTTPS-, Backup-, Offline-Release- und GitHub-CI-Vertraege aus alten Unit-Quelltexttests in `scripts/check-deployment-config.js` ausgelagert und durch gezielte Negativtests abgesichert.
+- `scripts/source-regex-budgets.json` entfernt; `npm run check` untersagt neue CSS-/JS-Anwendungsquelltexttests in Unit- und Integrationstests. [B-5-Teststrategie](TESTSTRATEGIE.md) und [TECHNISCHE_SCHULDEN.md](TECHNISCHE_SCHULDEN.md) aktualisiert.
 
-## Offene Abnahme
+## Offene Freigabe
 
-- Vollständigen Browsertest in GitHub Actions durchführen; die Node-Tests belegen nicht die visuelle Darstellung in Chromium.
-- Datenmodell, Migration, API und die bisherige fachliche Zuordnungslogik wurden nicht geändert.
+- Das Code-Review-Thema B-5 ist **implementierungsseitig abgeschlossen**. Die regulare GitHub-Actions-Suite fuer diesen Commit ist vor einem Merge noch auszufuehren.
+- Keine Aenderungen an Schema, Migration, Sammlung, Lagerdaten, API oder produktiver Fachlogik.

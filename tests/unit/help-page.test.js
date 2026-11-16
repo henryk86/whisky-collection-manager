@@ -10,9 +10,6 @@ test('help route and drawer destination work on direct navigation and reload', (
     assert.deepEqual(parseRoute('?view=help'), {page:'help', selected:null});
     assert.equal(routeUrl('help'), '/?view=help');
     assert.ok(MAIN_PAGES.some(item => item.id === 'help' && item.action === 'goto-help' && item.url === '/?view=help'));
-    const app = fs.readFileSync('public/app.js','utf8');
-    assert.match(app, /state\.page === 'help'\) return shell\(helpView\(\)\)/);
-    assert.match(fs.readFileSync('public/js/events.js','utf8'), /'goto-help': \(\) => navigate\('help'\)/);
 });
 
 test('help topics are translated in both languages and render in the shared sidebar', () => {
@@ -52,8 +49,6 @@ test('help topics are translated in both languages and render in the shared side
     // while its section heading and the left navigation remain outside.
     assert.equal((html.match(/class="help-content-panel"/g) || []).length, HELP_TOPICS.length);
     assert.match(html, /class="analytics-section-title" id="help-title-basics">[^<]+<\/h2>\s*<div class="help-content-panel">/);
-    const css = fs.readFileSync('public/styles/core.css','utf8');
-    assert.match(css, /\.help-content-panel\s*\{[^}]*background:\s*var\(--paper\);[^}]*border:\s*1px solid var\(--line\);[^}]*border-radius:\s*var\(--surface-corner, 0\);/);
     assert.match(html, /data-help-topic="basics" aria-current="page"/);
     assert.match(html, /id="help-panel-basics"/);
     assert.match(html,/data-act="goto-home"/);
@@ -104,25 +99,12 @@ test('selecting help topics synchronizes sidebar, selector and visible panel wit
     assert.deepEqual(panels.filter(panel => !panel.hidden).map(panel => panel.id),['help-panel-storage']);
     assert.equal(activateHelpTopic('not-a-topic',container),false);
     assert.equal(selector.value,'storage');
-    const events = fs.readFileSync('public/js/events.js','utf8');
-    assert.match(events, /'help-tab': button => activateHelpTopic/);
-    assert.match(events, /dataset\.sectionSwitch === 'help'/);
 });
 
-test('routine screens do not repeat long help texts or implementation filenames', () => {
-    const read = path => fs.readFileSync(path,'utf8');
-    const wall = read('public/js/views/warehouse-room-wall.js');
-    const warehouse = read('public/js/views/warehouse.js');
-    const form = read('public/js/features/forms/bottling.js');
-    const settings = read('public/js/views/settings.js');
-    assert.doesNotMatch(wall,/warehouse\.wall\.instructions/);
-    assert.doesNotMatch(warehouse,/threeDimensionalInstructions|twoDimensionalHint|dataFilePrefix|warehouse-plan-help/);
-    assert.doesNotMatch(form,/blendComponentsHint|originDerivedHint/);
-    assert.doesNotMatch(settings,/localStorageAndMapNotice|addingLanguagesHint/);
-    assert.match(helpView(),/data\/collection\.json/);
-    assert.match(helpView(),/data\/warehouse\.json/);
-    // Confirmations and safety notices deliberately remain in context.
-    assert.match(settings,/jsonDoesNotIncludeAttachments/);
+test('technical storage paths belong in help documentation rather than a routine screen', () => {
+    const help = helpView();
+    assert.match(help, /data\/collection\.json/);
+    assert.match(help, /data\/warehouse\.json/);
 });
 
 test('map legend shows empty catalog sites only when the all-distilleries filter is active', () => {

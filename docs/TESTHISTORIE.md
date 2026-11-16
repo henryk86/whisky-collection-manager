@@ -157,3 +157,9 @@ Die folgenden Eintraege enthalten historische Pruefwerte bzw. den ersten dokumen
 ## Testbericht v1.3.2
 
 - npm run release:check: Bestanden; npm run check: Bestanden; npm test: 545/545 bestanden; npm run test:browser: Nicht lokal ausgeführt; GitHub Actions / regulaere Browsernavigation: Ausstehend
+
+---
+
+## Testbericht v1.3.3
+
+- npm run release:check: Bestanden; npm run check: Bestanden; npm test: 546/546 bestanden; npm run test:browser: Nicht lokal ausgeführt; GitHub Actions / reguläre Browsernavigation: Ausstehend

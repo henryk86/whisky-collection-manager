@@ -3,17 +3,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createModal} from '../../public/js/ui/modal.js';
 import {helpView} from '../../public/js/views/help.js';
-
-test('shelf navigation has a three-way application dialog and parent manager updates after save',()=>{
-    const code=fs.readFileSync('public/js/views/warehouse.js','utf8');
-    assert.match(code,/data-act="warehouse-shelf-switch"/);
-    assert.match(code,/modal\.choose\(/);
-    assert.match(code,/\{id:'save'/);
-    assert.match(code,/\{id:'discard'/);
-    assert.match(code,/\{id:'cancel'/);
-    assert.match(code,/refreshFurnitureModal\(\); \/\/ refresh a suspended furniture manager/);
-    assert.doesNotMatch(code,/window\.confirm\(/);
-});
 test('modal supports choice and replaces current sibling while preserving the original stack',async()=>{
     const prior=globalThis.document;
     let overlay;

@@ -124,16 +124,20 @@ const docCheck = spawnSync(process.execPath, ['scripts/check-docs.js'], {encodin
 if (docCheck.status !== 0) throw new Error(docCheck.stderr || docCheck.stdout);
 process.stdout.write(docCheck.stdout);
 
-// B-5: Existing source-text assertions are a shrinking legacy budget.
-// New unit tests must verify observable behaviour rather than CSS/JS spelling;
-// increasing the existing budget or creating a new source-regex suite fails CI.
-const sourceRegexBudgets = JSON.parse(fs.readFileSync('scripts/source-regex-budgets.json','utf8'));
-for (const file of files('tests/unit')) {
-    const relative = path.relative('.', file).replaceAll(path.sep, '/');
+// B-5: Application-source-content tests are forbidden in *all* unit and integration
+// suites. Test observable output/behaviour instead; configuration/security
+// contracts belong in the dedicated deployment checker invoked below.
+for (const file of sources.filter(name => name.includes(`${path.sep}tests${path.sep}`))) {
+    if (!/(?:unit|integration)/.test(path.relative('tests',file))) continue;
+    const relative = path.relative('.',file).replaceAll(path.sep,'/');
     const source = fs.readFileSync(file,'utf8');
-    const matches = (source.match(/\bassert\.(?:match|doesNotMatch)\s*\(/g) || []).length;
-    if (source.includes('readFileSync') && (source.includes('public/') || source.includes("'../")) && matches > (sourceRegexBudgets[relative] || 0)) {
-        throw new Error(`New source-text regex assertions forbidden in ${relative}: ${matches} > ${sourceRegexBudgets[relative] || 0}. Use runtime/Chromium checks.`);
+    const forbidden = /(?:readFileSync|readFile)\s*\(\s*(?:['"`](?:\.\.\/)*|new URL\(\s*['"`](?:\.\.\/)*)(?:public\/js\/|public\/styles\/|server\/|shared\/|worker\/|docker\/entrypoint\.js)/;
+    const delegated = /\bread\(\s*['"](?:public\/js\/|public\/styles\/|server\/|shared\/|worker\/)/;
+    if (forbidden.test(source) || delegated.test(source)) {
+        throw new Error(`B-5: Source-code text test forbidden in ${relative}. Use behavioural tests.`);
     }
 }
-console.log('No new source-regex unit assertions (existing legacy budget only decreases).');
+const deployCheck = spawnSync(process.execPath,['scripts/check-deployment-config.js'],{encoding:'utf8'});
+if (deployCheck.status !== 0) throw new Error(deployCheck.stderr || deployCheck.stdout);
+process.stdout.write(deployCheck.stdout);
+console.log('B-5: No application-source-text unit/integration assertions.');

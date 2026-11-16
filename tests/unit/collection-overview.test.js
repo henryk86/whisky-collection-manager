@@ -214,16 +214,3 @@ test('glencairn rating is drawn over the bottle image with five proportional fil
     assert.doesNotMatch(b,/overview-rating-bottle-1-0/);
     assert.equal(collectionCardRating({id:'no-score',tastings:[]}), '');
 });
-
-
-test('collection card glass rating has no badge background or frame',async()=>{
-    const {readFile}=await import('node:fs/promises');
-    const css=await readFile(new URL('../../public/styles/core.css',import.meta.url),'utf8');
-    const rule=css.match(/\.collection-card-rating \{([^}]*)\}/)?.[1];
-    assert.ok(rule);
-    assert.match(rule,/background:transparent;/);
-    assert.match(rule,/border:0;/);
-    assert.match(rule,/box-shadow:none;/);
-    assert.match(rule,/padding:0;/);
-    assert.match(css,/\.collection-card-rating \.glencairn-symbol \{[^}]*filter:drop-shadow/);
-});

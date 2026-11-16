@@ -122,14 +122,6 @@ test('photo markup is escaped and old new-tab photo links are gone', () => {
         assert.doesNotMatch(h.html, /<script>/);
         assert.match(h.html, /&lt;script&gt;/);
     } finally { h.restore(); }
-    const detail = fs.readFileSync('public/js/views/detail.js', 'utf8');
-    assert.match(detail, /class="photo-open" data-act="open-photo"/);
-    assert.match(detail, /class="hero-photo hero-photo-open" data-act="open-photo"/);
-    assert.doesNotMatch(detail, /href="\$\{imageUrl\(photo\.path\)\}" target="_blank"/);
-    const preview = fs.readFileSync('public/js/features/import/controller.js', 'utf8');
-    assert.match(preview, /class="import-preview-photo-open" data-act="open-photo"/);
-    const events = fs.readFileSync('public/js/events.js', 'utf8');
-    assert.match(events, /'photo-next': \(\) => photoViewer\.step\(1\)/);
 });
 
 test('the large physical bottle preview opens only its own sorted photo gallery', () => {

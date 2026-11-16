@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0 - 2026-11-16
+
+- B-5 abgeschlossen: historische CSS-/JS-Quelltexttests durch Browser-, Domain- und Deployment-Vertragspruefungen ersetzt
+
 ## 1.3.3 - 2026-11-16
 
 - Flaschendetails: Der bisherige Button „Lagerort“ heißt nun „Umlagern“; beide Einstiegspunkte verwenden denselben sofort bedienbaren Dialog.

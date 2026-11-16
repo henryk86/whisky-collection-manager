@@ -28,12 +28,5 @@ test('main ruleset requires the actual PR test job and checks develop as source'
     const checks = ruleset.rules.find(rule => rule.type === 'required_status_checks')?.parameters;
     assert.equal(checks.strict_required_status_checks_policy, true);
     assert.deepEqual(checks.required_status_checks, [{context: 'test'}]);
-    const workflow = read('.github/workflows/check.yml');
-    assert.match(workflow, /^  test:\s*$/m);
-    assert.match(workflow, /PR_SOURCE:.*github\.head_ref/);
-    assert.match(workflow, /PR_SOURCE_REPO:.*github\.event\.pull_request\.head\.repo\.full_name/);
-    assert.match(workflow, /test "\$PR_SOURCE" = develop/);
-    assert.match(workflow, /"\$PR_SOURCE_REPO" = "\$GITHUB_REPOSITORY"/);
-    assert.match(workflow, /node scripts\/release-version\.js check --fresh/);
-    assert.match(workflow, /npm run test:browser/);
+
 });

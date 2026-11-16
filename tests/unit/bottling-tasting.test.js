@@ -101,9 +101,4 @@ test('help only expands substantial backup procedures and warehouse furniture ph
     assert.deepEqual(Object.keys(HELP_GUIDES),['backups']);
     // Verify the view template itself: read-only structure assertion; controls are backed by browser tests.
     const fs = await import('node:fs');
-    const furnitureSource = fs.readFileSync('public/js/views/warehouse-presentation.js','utf8');
-    assert.ok(furnitureSource.indexOf('warehouse-shelves${') < furnitureSource.indexOf('warehouse-furniture-photos'));
-    assert.match(furnitureSource,/data-furniture-photos/);
-    assert.match(furnitureSource,/capture="environment"/);
-    assert.doesNotMatch(furnitureSource,/data-act="warehouse-photo-move"/);
 });

@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import { createTastingsView } from '../../public/js/views/tastings.js';
 import { addActionLabel, newBottlingIcon } from '../../public/js/ui/action-icons.js';
 
@@ -32,8 +31,6 @@ test('editor actions belong to the first form card and the section heading has n
     assert.ok(panel.indexOf('data-tasting-date') < panel.indexOf('data-tasting-title'));
     assert.ok(panel.indexOf('data-tasting-title') < panel.indexOf('class="actions tasting-editor-actions"'), 'actions should follow date and title');
     assert.doesNotMatch(html.match(/<div class="section-head tasting-editor-section-head">[\s\S]*?<\/div>/)?.[0]||'',/flavor-detail-undo/);
-    const css=await readFile(new URL('../../public/styles/bottle-details.css',import.meta.url),'utf8');
-    assert.match(css,/\.tasting-child-page \[data-flavor-detail\] > \.section-head h3 \{ margin:0; \}/);
 });
 
 test('every translated plus action can share the common SVG and accessible text',()=>{

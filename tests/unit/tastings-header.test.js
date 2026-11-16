@@ -107,15 +107,6 @@ test('external tasting stores editable bottling information as the first panel, 
     assert.doesNotMatch(html,/data-act="tasting-external-edit"/);
 });
 
-test('tasting notes use top-aligned labels and text areas even when one is resized', async () => {
-    const {readFile}=await import('node:fs/promises');
-    const css=await readFile(new URL('../../public/styles/bottle-details.css',import.meta.url),'utf8');
-    assert.match(css,/\.tasting-notes\s*\{[^}]*align-items:start;/);
-    assert.match(css,/\.tasting-notes label\s*\{[^}]*align-self:start;/);
-    assert.match(css,/\.tasting-notes label\s*\{[^}]*align-content:start;/);
-    assert.match(css,/\.tasting-notes textarea\s*\{[^}]*resize:vertical;/);
-});
-
 
 test('return navigation is above the entire page heading on every tasting subpage',()=>{
     const bottling={id:'mine',name:'A bottling',tastings:[{id:'taste',tastedOn:'2026-11-14',rating:80,tastingNotes:{nose:'',palate:'',finish:''}}]};
@@ -137,14 +128,6 @@ test('return navigation is above the entire page heading on every tasting subpag
     assert.match(html,/<div class="analytics-page tasting-child-page">\s*<nav class="tasting-back-nav"[^>]*>\s*<button[^>]*data-act="tastings-back-home"/);
     assert.ok(html.indexOf('<nav class="tasting-back-nav"')<html.indexOf('<header class="section-head analytics-page-heading"'));
     assert.ok(html.indexOf('<header class="section-head analytics-page-heading"')<html.indexOf('data-external-field="name"'));
-});
-
-test('return navigation shares the standard detail link typography and spacing', async () => {
-    const {readFile}=await import('node:fs/promises');
-    const css=await readFile(new URL('../../public/styles/bottle-details.css',import.meta.url),'utf8');
-    assert.match(css,/\.tasting-child-page > \.tasting-back-nav\s*\{[^}]*margin:0 0 18px;/);
-    assert.match(css,/\.tasting-child-page > \.analytics-page-heading\s*\{[^}]*margin-top:0;/);
-    assert.doesNotMatch(css,/\.tasting-back > span\s*\{[^}]*font-size:/);
 });
 
 test('tasting lists reuse Lager -> Flasche finden framed rows, not card grids',()=>{
@@ -271,14 +254,6 @@ test('owned tasting information shows the same bottling cover photo as the bottl
     state.page='external-tasting';state.selected='new';
     view.editor();
     assert.doesNotMatch(html,/class="tasting-bottling-photo"/,'external tasting has no collection photo');
-});
-
-test('owned tasting photo stays compact beside the bottling facts on mobile',async()=>{
-    const {readFile}=await import('node:fs/promises');
-    const css=await readFile(new URL('../../public/styles/bottle-details.css',import.meta.url),'utf8');
-    assert.match(css,/\.tasting-bottling-photo-layout \{[^}]*display:flex;/);
-    assert.match(css,/\.tasting-bottling-photo \{[^}]*object-fit:contain;/);
-    assert.match(css,/@media\(max-width:420px\) \{[\s\S]*?\.tasting-bottling-photo \{ width:72px; height:90px;/);
 });
 
 

@@ -30,8 +30,4 @@ test('flight renders a separate drag grip without making note buttons draggable'
     assert.equal((html.match(/data-act="tasting-flight-note-open"/g)||[]).length,3);
     assert.match(html,/aria-label="Reihenfolge per Ziehen ändern"/);
     assert.match(html,/data-act="tasting-flight-move"/,'keyboard/accessible buttons remain');
-    const css=fs.readFileSync(new URL('../../public/styles/bottle-details.css',import.meta.url),'utf8');
-    assert.match(css,/\.tasting-flight-member-score\s*\{\s*display:grid;\s*grid-template-columns:68px 118px/);
-    assert.match(css,/\.tasting-flight-member-score > strong\s*\{[^}]*width:118px; text-align:right/);
-    assert.match(css,/\.tasting-flight-drag-handle\s*\{[^}]*touch-action:none/);
 });

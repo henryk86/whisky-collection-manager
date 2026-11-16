@@ -44,7 +44,7 @@ docs/                          Anforderungen, Betrieb und Fachthemen
 
 ### Verhaltenspruefungen der Oberflaeche
 
-Bei Layout- und Navigationsaenderungen werden tatsaechliche Browser-Eigenschaften geprueft. `tests/browser/layout-runtime.test.js` misst unter Chromium beispielsweise berechnete CSS-Stile, Abstaende, Header-/Formularanordnung und Kartenfarben an mehreren Viewportgroessen. Reine CSS- und Quelltext-Regex-Tests werden nur entfernt, wenn passende Laufzeitabdeckung besteht. Die noch vorhandenen Lager-/3D-Quelltexttests stehen unter dem begrenzten, nicht anwachsenden Budget in `scripts/source-regex-budgets.json`; sie gelten nicht als gleichwertiger Ersatz fuer reale UI-Tests.
+Bei Layout- und Navigationsaenderungen werden tatsaechliche Browser-Eigenschaften geprueft. `tests/browser/layout-runtime.test.js` und `tests/browser/b5-runtime-contracts.test.js` messen unter Chromium berechnete CSS-Stile, Abstaende, Fachgeometrie, Header-/Formularanordnung und Kartenfarben. Historische Tests, die den Anwendungs- oder CSS-Quelltext durchsuchen, wurden durch Verhaltenspruefungen ersetzt; `scripts/check.js` verbietet ihre Wiedereinfuehrung. Die deklarativen Docker-/GitHub-Konfigurationsvertraege prueft `scripts/check-deployment-config.js` separat, inklusive Negativtests. Siehe [TESTSTRATEGIE.md](TESTSTRATEGIE.md).
 
 `scripts/check.js` sperrt native `alert`/`prompt`/`confirm`-Browserdialoge in der Anwendung. `scripts/check-docs.js` weist historische Versionsnummern in Ueberschriften der aktuellen Fachdokumente zurueck; Versionsgeschichte gehoert in `CHANGELOG.md`.
 
