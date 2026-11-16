@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.3.2",
+  "version": "1.3.3",
   "files": {
     "public/js/api.js": "b1344f831bd2bc467d5e09e67cdaa25460a3dd05051820309ebd360e237e0637",
     "public/js/domain/analytics-period.js": "9ff6505e10e50447d249fc7decc253964e2f8a6973fbe3f0a8f34fe1a7b18de3",
@@ -89,7 +89,7 @@
     "public/js/ui/whisky-color-selector.js": "1906be7d92a25ac177f0e22bf699eba5273c37d01f813cec9ff508dec445b84c",
     "public/js/views/analytics.js": "82b8bdeb2d1fd74b868c8c9d6c10bea05c99489e056504afea8b9ffa3675624f",
     "public/js/views/backups.js": "6432e542d08e72c3f691b991d7512ccb80dfea22e67fe1f230e8d25973bf2d8f",
-    "public/js/views/detail.js": "630ef0b462734ffe5a4f8c3a530f9c4a1923fa328aea6350fc39df1cd6d31431",
+    "public/js/views/detail.js": "d52b463cb86d1757c5c556a19c005c267cb88d1d85385ae284096b8eee0c298a",
     "public/js/views/help-guides.js": "2245b6123a934a93c4a47ab2e4af5f7573786633e878ebd19826fd874957795f",
     "public/js/views/help.js": "1f1ea2ca031d299262fa8c7d6654bdcfde6a394ab48a946a33bf90be907989b7",
     "public/js/views/home.js": "3a92dbfaa172634d54d619f0dd89cba0bda8f594355a685d66762867ce88035f",

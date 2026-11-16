@@ -65,6 +65,14 @@ test('the bottling and individual-bottle buttons show edit and delete SVGs befor
     assert.match(css, /\.action-icon\s*\{[^}]*width:\s*17px;[^}]*height:\s*17px;/);
 });
 
+test('physical-bottle detail offers direct Umlagern while the Lagerort fact stays labelled', () => {
+    const html = detailMarkup();
+    const relocation = button(html, 'warehouse-assign');
+    assert.ok(relocation.includes('data-id="physical-a"'));
+    assert.ok(relocation.endsWith('>Umlagern</button>'));
+    assert.ok(!relocation.includes('>Lagerort</button>'));
+});
+
 test('the redundant photo ownership note is absent from the detail page', () => {
     assert.doesNotMatch(detailMarkup(), /Fotos gehören jeweils einer physischen Flasche/);
 });

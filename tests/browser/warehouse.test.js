@@ -203,6 +203,21 @@ test('browser: shelf overview keeps decorative bottles inert; furniture and rack
         assert.equal(await assign.locator('[data-assignment-room]').isVisible(), true);
         assert.equal(await assign.locator('[data-assignment-furniture]').isVisible(), true);
         assert.equal(await assign.locator('[data-assignment-shelf]').isVisible(), true);
+        // Desktop relocation is compact without hiding its controls: the bottle
+        // and current location share a row and the three selectors share another.
+        const compact = await assign.evaluate(element => {
+            const dialog = element.closest('.dialog').getBoundingClientRect();
+            const bottle = element.querySelector('.warehouse-assignment-bottle').getBoundingClientRect();
+            const current = element.querySelector('.warehouse-assignment-current').getBoundingClientRect();
+            const selectors = element.querySelector('.warehouse-assignment-selectors');
+            return { dialogWidth:dialog.width, dialogHeight:dialog.height,
+                bottleTop:bottle.top, currentTop:current.top,
+                columns:getComputedStyle(selectors).gridTemplateColumns.split(' ').length };
+        });
+        assert.ok(compact.dialogWidth <= 742, `relocation modal should not span the full page: ${JSON.stringify(compact)}`);
+        assert.ok(Math.abs(compact.bottleTop - compact.currentTop) <= 2,
+            `bottle and current location must share one row: ${JSON.stringify(compact)}`);
+        assert.equal(compact.columns, 3, 'desktop relocation choices fit on one row');
         await assign.locator('.warehouse-form-actions [type="submit"]').waitFor({state:'visible'});
         const radioStyle = await assign.locator('.warehouse-assignment-modes input[type="radio"]').first().evaluate(input => {
             const style = getComputedStyle(input);
@@ -314,6 +329,33 @@ test('browser: Umlagern directly offers destination selectors and saves a differ
         assert.equal(unassigned.status,200);
         assert.equal(unassigned.data.assignments[bottle.id] ?? null, null,
             'Ohne Lagerort should be saved without opening an extra editor');
+    });
+});
+
+test('browser: bottle detail Umlagern opens the same compact destination form', async () => {
+    await session(async ({base,page,open}) => {
+        const created = await seed(base,'033321');
+        await open({query:`?bottling=${created.bottling.id}`});
+        const relocate = page.locator(`#bottle-${created.bottle.id} .bottle-entry-actions [data-act="warehouse-assign"]`);
+        await relocate.waitFor();
+        assert.equal(await relocate.innerText(), 'Umlagern');
+        await relocate.click();
+        const form = page.locator('#modal-root .warehouse-assignment-form');
+        await form.waitFor();
+        assert.equal(await form.locator('details, summary').count(),0);
+        for (const key of ['room','furniture','shelf']) {
+            assert.equal(await form.locator(`[data-assignment-${key}]`).isVisible(),true,
+                `${key} must be immediately available from bottle details`);
+        }
+        assert.equal(await form.locator('button[type="submit"]').isVisible(), true);
+        await page.setViewportSize({width:390,height:844});
+        const mobile = await form.evaluate(element => ({
+            width:element.closest('.dialog').getBoundingClientRect().width,
+            viewport:document.documentElement.clientWidth,
+            columns:getComputedStyle(element.querySelector('.warehouse-assignment-selectors')).gridTemplateColumns.split(' ').length
+        }));
+        assert.ok(mobile.width <= mobile.viewport + 1, `modal must fit mobile viewport: ${JSON.stringify(mobile)}`);
+        assert.equal(mobile.columns,1,'mobile selectors must be stacked and usable');
     });
 });
 

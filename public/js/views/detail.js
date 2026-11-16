@@ -77,7 +77,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                             ${entry.volumeMl != null ? `<span class="bottle-size">${escapeHtml(entry.volumeMl)} ml</span>` : ''}
                         </div>
                         <div class="actions bottle-entry-actions">
-                            <button class="btn small" data-act="warehouse-assign" data-id="${escapeHtml(entry.id)}">${t('detail.fields.storageLocation')}</button>
+                            <button class="btn small" data-act="warehouse-assign" data-id="${escapeHtml(entry.id)}">${t('warehouse.bottles.relocate')}</button>
                             <button class="btn small" data-act="edit-bottle" data-id="${escapeHtml(entry.id)}">${editIcon}<span>${t('common.actions.edit')}</span></button>
                             <button class="btn small danger" data-act="delete-bottle" data-id="${escapeHtml(entry.id)}">${deleteIcon}<span>${t('common.actions.delete')}</span></button>
                         </div>
