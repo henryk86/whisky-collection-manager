@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-/** Publish an approved release snapshot on main and synchronize develop.
- * Both refs are updated atomically. No force pushes, PR merges or data changes.
+/** Prepare a protected-main release PR and synchronize develop only after that PR merges.
+ * No direct writes to protected main and no force pushes.
  */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -70,54 +70,71 @@ function prepareDivergedDevelop({tip,base,snapshot,tag}) {
     }
 }
 
-export function synchronizeRelease({tag,merge}) {
+/** A version PR can only contain the tested, immutable release snapshot. */
+export function prepareSyncPR({tag,merge}) {
+    const {snapshot}=releaseRefs({tag,merge});
+    git('fetch','--no-tags','origin',
+        '+refs/heads/main:refs/remotes/origin/main',
+        '+refs/heads/develop:refs/remotes/origin/develop');
+    const main=git('rev-parse','refs/remotes/origin/main');
+    const branch=`release/version-${tag}`;
+    if(main!==merge) {
+        if(isCompletedMainSync({tag,merge,main,snapshot}))
+            return {tag,branch,main,snapshot,alreadyMerged:true};
+        throw new Error('main changed after the approved develop merge; refusing version PR.');
+    }
+    const remote=git('ls-remote','--heads','origin',`refs/heads/${branch}`).split(/\s+/)[0];
+    if(remote && remote!==snapshot) throw new Error('Version PR branch exists but points at another commit');
+    if(!remote) git('push','origin',`${snapshot}:refs/heads/${branch}`);
+    return {tag,branch,main,snapshot,alreadyMerged:false};
+}
+
+/** Validate that GitHub merged the exact tagged release commit through a PR. */
+function isCompletedMainSync({tag,merge,main,snapshot}) {
+    const mainParents=parents(main);
+    return mainParents.length===2 && mainParents[0]===merge && mainParents[1]===snapshot
+        && versionAt(main)===tag.slice(1);
+}
+
+/** After the protected-main PR succeeds, update only the unprotected develop ref. */
+export function finishSync({tag,merge}) {
     const {snapshot,developAtMerge}=releaseRefs({tag,merge});
-    // Non-forced ref updates, atomic across both branches. GitHub's workflow
-    // token writes do not trigger another push workflow (no release loop).
     git('fetch','--no-tags','origin',
         '+refs/heads/main:refs/remotes/origin/main',
         '+refs/heads/develop:refs/remotes/origin/develop');
     const main=git('rev-parse','refs/remotes/origin/main');
     const develop=git('rev-parse','refs/remotes/origin/develop');
-    if(main!==merge && main!==snapshot)
-        throw new Error('main has advanced beyond the approved release merge; refusing to overwrite it');
+    if(!isCompletedMainSync({tag,merge,main,snapshot}))
+        throw new Error('Protected main does not contain the approved version PR merge; refusing develop sync.');
     let target;
-    if(ancestor(develop,snapshot)) target=snapshot;
-    else if(ancestor(snapshot,develop)) {
-        // Already synchronized; more development commits can exist afterward.
+    if(ancestor(develop,main)) target=main;
+    else if(ancestor(main,develop)) {
         if(versionAt(develop)!==tag.slice(1))
-            throw new Error('develop descends from this release but contains a different version');
+            throw new Error('develop includes main release but reports a different version');
         target=develop;
     } else {
-        // A previous successful run may have synchronized a busy develop by
-        // creating a metadata-only commit rather than fast-forwarding it.
         const subjects=git('log','--format=%s',`${developAtMerge}..${develop}`).split('\n');
-        const synchronized=subjects.includes(`chore(release): synchronize ${tag} on develop`);
-        if(synchronized && versionAt(develop)===tag.slice(1)) target=develop;
+        const already=subjects.includes(`chore(release): synchronize ${tag} on develop`);
+        if(already && versionAt(develop)===tag.slice(1)) target=develop;
         else target=prepareDivergedDevelop({tip:develop,base:developAtMerge,snapshot,tag});
     }
-    if(target!==develop && !ancestor(target,snapshot) && !ancestor(snapshot,target)) {
-        // A metadata-only commit on a busy develop must not make the NEXT
-        // develop -> main PR unmergeable (notably the source manifest).
-        // merge-tree is a read-only preview, never an automated merge.
-        try {git('merge-tree','--write-tree',snapshot,target);}
-        catch {throw new Error('Version sync would cause conflicts on the next develop -> main merge. Resolve manually before publishing.');}
+    if(target!==develop && !ancestor(target,main) && !ancestor(main,target)) {
+        try {git('merge-tree','--write-tree',main,target);}
+        catch {throw new Error('develop synchronization would conflict with the next main merge. Resolve manually.');}
     }
-    if(main===snapshot && develop===target) return {tag,main:snapshot,develop:target,unchanged:true};
-    // This must be a single atomic update. Never fall back to two pushes:
-    // one branch updated without the other would make versions inconsistent.
-    git('push','--atomic','origin',
-        `${snapshot}:refs/heads/main`,`${target}:refs/heads/develop`);
-    return {tag,main:snapshot,develop:target,unchanged:false};
+    if(target!==develop) git('push','origin',`${target}:refs/heads/develop`);
+    return {tag,main,develop:target,unchanged:target===develop};
 }
 
 const running=process.argv[1] && path.resolve(process.argv[1])===fileURLToPath(import.meta.url);
 if(running) {
     try {
-        const get=name=>process.argv[process.argv.indexOf(name)+1];
-        if(!process.argv.includes('--tag') || !process.argv.includes('--merge'))
-            throw new Error('Usage: sync-release-branches.js --tag vX.Y.Z --merge 40_HEX_SHA');
-        const result=synchronizeRelease({tag:get('--tag'),merge:get('--merge')});
+        const [command,...args]=process.argv.slice(2);
+        const get=name=>{const i=args.indexOf(name);return i>=0?args[i+1]:null;};
+        const tag=get('--tag'),merge=get('--merge');
+        if(!['prepare','finish'].includes(command) || !tag || !merge)
+            throw new Error('Usage: sync-release-branches.js prepare|finish --tag vX.Y.Z --merge 40_HEX_SHA');
+        const result=command==='prepare'?prepareSyncPR({tag,merge}):finishSync({tag,merge});
         console.log(JSON.stringify(result));
     } catch(error) {console.error(error.message);process.exitCode=1;}
 }

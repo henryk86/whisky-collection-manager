@@ -262,3 +262,27 @@ test('free-account release gate accepts only the matching merged same-repository
     }
     assert.throws(()=>verifyMergedPRs([],sha,repo),/Release blocked/);
 });
+
+test('main release gate recognizes approved version PRs without starting a second release',async()=>{
+    const {verifyMainMerge}=await import('../../scripts/verify-merged-pr.js');
+    const sha='a'.repeat(40), repo='owner/repo';
+    const version={merged_at:'2026-11-16T20:00:00Z',merge_commit_sha:sha,
+        title:'chore(release): synchronize v1.4.1',user:{login:'github-actions[bot]'},
+        head:{ref:'release/version-v1.4.1',repo:{full_name:repo}},
+        base:{ref:'main',repo:{full_name:repo}}};
+    assert.equal(verifyMainMerge([version],sha,repo),'version-sync');
+    const release={...version,title:'Merge develop into main',
+        head:{ref:'develop',repo:{full_name:repo}}};
+    assert.equal(verifyMainMerge([release],sha,repo),'release');
+    assert.throws(()=>verifyMainMerge([{...version,head:{...version.head,ref:'dependabot/npm'}}],sha,repo));
+    assert.throws(()=>verifyMainMerge([{...version,user:{login:'malicious-user'}}],sha,repo));
+});
+
+test('version PR API merge helper rejects swapped heads and foreign targets',async()=>{
+    const {assertVersionPR}=await import('../../scripts/merge-version-pr.js');
+    const pr={number:42,state:'OPEN',baseRefName:'main',headRefName:'release/version-v1.4.1',headRefOid:'abc'};
+    assert.doesNotThrow(()=>assertVersionPR(pr,pr.headRefName,'abc'));
+    assert.throws(()=>assertVersionPR({...pr,headRefOid:'def'},pr.headRefName,'abc'));
+    assert.throws(()=>assertVersionPR({...pr,baseRefName:'develop'},pr.headRefName,'abc'));
+    assert.throws(()=>assertVersionPR({...pr,headRefName:'dependabot/npm'},pr.headRefName,'abc'));
+});
