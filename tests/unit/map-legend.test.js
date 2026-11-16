@@ -5,7 +5,6 @@ import { mapLegendHtml, legendMarkerDiameter } from '../../public/js/views/map.j
 import { markerDiameter } from '../../public/js/domain/distillery-map.js';
 import { initializeLanguage } from '../../public/js/i18n/index.js';
 
-const css = fs.readFileSync(new URL('../../public/styles/map.css', import.meta.url), 'utf8');
 
 test('map legend explains stocked status before the compact bottle-size scale and clusters', () => {
     const html = mapLegendHtml(false);
@@ -40,20 +39,9 @@ test('both stocked and empty-site legend sections use heading followed by status
     assert.equal((html.match(/map-legend-status-icon/g) || []).length, 2);
 });
 
-test('compact legend uses round gold clusters and keeps borders without any shadows', () => {
-    assert.match(css, /\.map-stock-visual\s*\{[^}]*box-shadow:\s*0 3px 13px/);
-    assert.match(css, /\.map-marker-closed\s*\{[^}]*border-style:\s*dashed/);
-    assert.match(css, /\.map-cluster-visual\s*\{[^}]*box-shadow:\s*0 3px 14px/);
-    assert.match(css, /\.map-cluster-visual\s*\{[^}]*border-radius:\s*50%/);
-    assert.doesNotMatch(css, /clip-path:\s*polygon\(/);
-    assert.match(css, /\.map-legend\s*\{\s*display:\s*flex;\s*flex-wrap:\s*wrap;/);
-    assert.doesNotMatch(css, /\.map-legend-section \+ \.map-legend-section\s*\{[^}]*border-left/);
-    assert.match(css, /\.map-legend \.map-legend-marker\s*\{[^}]*box-shadow:\s*none;\s*filter:\s*none;\s*text-shadow:\s*none/);
-    assert.match(css, /:root\[data-theme="dark"\] \.map-cluster-visual/);
-    assert.doesNotMatch(css, /\.map-legend-item i\s*\{/);
+test('legend marker sizes remain compact relative to real map markers', () => {
     assert.deepEqual([1, 10, 100].map(legendMarkerDiameter), [21, 27, 37]);
-    assert.ok(legendMarkerDiameter(100) < markerDiameter(100), 'large sample should not dominate the legend');
-    assert.match(css, /\.map-legend \.map-legend-marker\s*\{[^}]*border-width:\s*2px/);
+    assert.ok(legendMarkerDiameter(100) < markerDiameter(100));
 });
 
 test('map legend translates active and closed distillery statuses in English for stocked and empty sites', async () => {

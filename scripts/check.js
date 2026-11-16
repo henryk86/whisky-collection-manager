@@ -99,6 +99,21 @@ for (const file of sources.filter(name => name.includes(`${path.sep}public${path
     }
 }
 
+// Architectural rule: user confirmation must be an application modal, not a
+// native prompt that bypasses our accessibility and nested-dialog lifecycle.
+for (const file of sources.filter(name => name.includes(`${path.sep}public${path.sep}`))) {
+    const source = fs.readFileSync(file, 'utf8');
+    const relative = path.relative('.', file).replaceAll(path.sep, '/');
+    // The modal controller intentionally exports its own `confirm()` method.
+    // That is an application dialog, not the native window.confirm API.
+    const forbidden = relative === 'public/js/ui/modal.js'
+        ? /\b(?:window|globalThis)\.(?:alert|prompt|confirm)\s*\(/
+        : /(?<![\w.])(?:(?:window|globalThis)\.)?(?:alert|prompt|confirm)\s*\(/;
+    if (forbidden.test(source)) {
+        throw new Error(`Native browser dialog forbidden: ${path.relative('.', file)}`);
+    }
+}
+
 console.log(`${sources.length} JavaScript files: syntax/imports OK, no circular imports.`);
 
 const i18nCheck = spawnSync(process.execPath, ['scripts/check-i18n.js'], {encoding: 'utf8'});

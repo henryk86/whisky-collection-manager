@@ -118,14 +118,14 @@ Quellcodeänderungen erfolgen auf `develop`, ein Merge nach `main` führt zum Re
 `npm run check`, `npm test`, `npm run release:check` und für Browserfunktionalität `npm run test:browser` sind getrennt auszuwerten. Bestandenes Unit-Testing ist kein Nachweis für Browser- oder Hardware-Kompatibilität. Der aktuelle Prüfstatus einschließlich offener iOS-/Android-Abnahmen steht in [TESTSTATUS.md](TESTSTATUS.md). Weitere technische Hinweise: [ARCHITEKTUR.md](ARCHITEKTUR.md) und [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
 
 
-## Mehrsprachige Fehlermeldungen (v0.17.10)
+## Mehrsprachige Fehlermeldungen
 
 - UI-Validierungs- und Bildverarbeitungsfehler nutzen stabile Übersetzungsschlüssel (`de`, `en`).
 - API-Validierungsfehler erhalten einen stabilen `errorCode`; das Frontend lokalisiert anhand dieses Codes.
 - Der englische API-Text dient als Standard-Fallback und wird nicht als Übersetzung per Textvergleich genutzt.
 - Unbekannte serverseitige Fehler zeigen weder deutsche Rohtexte noch interne Diagnoseinformationen, sondern eine neutrale, lokalisierte Meldung.
 
-## Verkostungsnotizen (v0.27.5)
+## Verkostungsnotizen
 
 - Die Hauptnavigation enthält eine eigene Verkostungsstartseite mit gemeinsamer chronologischer Liste; als Seitenicon wird das bestehende Glencairn-Bewertungsglas verwendet.
 - Für Sammlungsabfüllungen sind 0–n Verkostungen möglich. Übersichts- und Einzelverkostungsseite zeigen allgemeine Seitentitel ohne Icons. Die Abfüllung erscheint im ersten Informationsblock mit vorhandenen Angaben zu Alter, Fasstyp und Alkoholgehalt. Zurück-Links befinden sich oberhalb der vollständigen Seitenüberschrift.
@@ -138,7 +138,7 @@ Quellcodeänderungen erfolgen auf `develop`, ein Merge nach `main` führt zum Re
 - Globaler App-Header und vorhandene Abfüllungsdetailseite werden durch diese Funktion nicht verändert.
 
 
-### Optionale Tasting-Flights (v0.28.0)
+### Optionale Tasting-Flights
 
 - Ein Tasting-Flight gruppiert bereits vorhandene oder neu erstellte Verkostungsnotizen aus der Sammlung und von externen Whiskys; jede Notiz gehört zu höchstens **einem** Flight.
 - Ein Flight besitzt einen Namen, ein Datum, eine optionale gemeinsame Notiz und eine **explizit geordnete** Liste von Verkostungs-IDs. Positionen können auf- und abwärts verschoben werden. Wiedereinstieg oder direktes Öffnen muss möglich sein.

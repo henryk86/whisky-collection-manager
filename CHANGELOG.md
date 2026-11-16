@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1 - 2026-11-16
+
+- B-5: Redundante CSS-/Quelltext-Unit-Tests entfernt, fachliche Verhaltenspruefungen erhalten. Acht neue Chromium-Tests messen mobile/desktop Layouts, Navigation, Kartenfarben und Einstellungen zur Laufzeit.
+- Bestehendes Regex-Assertion-Budget von 933 auf 754 gesenkt; Altbestand (insbesondere Lager/3D) verbleibt bis zu gleichwertiger Laufzeitabdeckung.
+- Architekturregeln verbieten neue native Browser-Bestaetigungsdialoge und historische Versionsueberschriften in aktuellen Fachdokumenten. Keine Aenderung an Schema, Persistenz oder API.
+
 ## 1.3.0 - 2026-11-16
 
 - B-1: Einheitlicher DOM-Abgleich fuer regulaere Ansichten; normale Startseiten- und Kartenereignisse zentral delegiert. Interaktive Karten-, Lager-, SVG-, Drag- und 3D-Inseln werden mit eindeutigem Widget-Lebenszyklus aktualisiert.

@@ -1,28 +1,27 @@
-# Teststatus - Whisky Collection Manager v1.3.0
+# Teststatus - Whisky Collection Manager v1.3.1
 
-**Stand:** 2026-11-16. **Status:** Vollstaendige Node- und lokale Chromium-DOM-Browsersuite fuer v1.3.0 erfolgreich; GitHub-CI mit echter Seitennavigation sowie ARM64-/Mobilgeraetepruefungen noch offen. Historische Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-16. **Status:** Node-Tests und alle acht Chromium-Browser-Fachsuiten im lokalen DOM-Modus erfolgreich. Regulare Browsernavigation in GitHub Actions und Zielsystempruefungen sind fuer diesen Stand noch offen. Fruehere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Erfolgreich** | Release-Version v1.3.0 samt SHA-256-Quellmanifest konsistent. |
-| `npm run check` | **Erfolgreich** | Syntax, Imports, i18n, Markdown-Links, Widget-Listener und Quelltexttest-Budget geprueft. |
-| `npm test` | **572/572 bestanden** | Vollstaendige Node-Unit-/Integrationstests einschliesslich Mutationsdeltas und ZIP-Upgrade-Datenschutz. |
-| `npm run test:browser` | **91 bestanden, 0 fehlgeschlagen, 1 uebersprungen** | Chromium-DOM-Modus, seriell; der History-Fall benoetigt echte HTTP-Seitennavigation. |
-| GitHub Actions / CI v1.3.0 | **Ausstehend** | Vollstaendige CI-Suite mit echter Navigation auf dem genauen Commit ausfuehren, bevor nach `main` gemergt wird. |
-| Docker / ARM64 / WebGL auf Zielhardware / iOS / Android | **Nicht lokal ausgefuehrt** | Separat auf den Zielsystemen verifizieren. |
+| `npm run release:check` | **Bestanden** | Version 1.3.1, Release-Metadaten und Source-Manifest geprueft. |
+| `npm run check` | **Bestanden** | Syntax, Architektur-, Dokumentations-, Dialog- und Quelltexttest-Regeln. |
+| `npm test` | **546/546 bestanden** | Vollstaendige Node-Unit-/Integrationstests. Die niedrigere Anzahl ist Folge entfernter reiner Quelltext-/CSS-Tests, nicht ausgefallener Tests. |
+| `npm run test:browser` (acht Fachsuiten einzeln im Chromium-DOM-Modus) | **99 bestanden, 0 fehlgeschlagen, 1 uebersprungen** | Echte Browser-Runtime mit berechneten Styles, Layout und Navigation; der History-Test setzt echte Seitenaufrufe voraus. |
+| Gemeinsamer lokaler Browserlauf | **Nicht abgeschlossen** | Die Ausfuehrung aller Fachsuiten in einem lokalen Testprozess erreichte nach 29 Erfolgen die Zeitgrenze; danach wurden alle acht Fachsuiten einzeln vollstaendig erfolgreich ausgefuehrt. |
+| GitHub Actions / regulaere Browsernavigation | **Ausstehend** | CI fuer genau diese Version pruefen, einschliesslich Browser-History-Test. |
+| Docker / Raspberry Pi ARM64 / echte Mobilgeraete | **Nicht lokal ausgefuehrt** | Zielsystem- und Safari-Abnahme getrennt durchfuehren. |
 
-## Aenderungen v1.3.0
+## Aenderungen v1.3.1
 
-- B-1: Generischer DOM-Abgleich fuer alle regulaeren Seiten; zentrale Startseiten-/Kartenereignisse und getrennte Widget-Lebenszyklen bei Karte, Lager, SVG und 3D.
-- B-2: Inkrementelle, revisionsgesicherte Mutationsantworten mit GET-Fallback nach Fremdaenderungen; unveraendertes Standard-API-Verhalten.
-- B-5: Neue Integrations- und Browser-Verhaltenstests. Quelltext-Regex-Neuzugaenge durch CI-Budget verboten; vorhandene Altpruefungen nur mit gleichwertiger Abdeckung weiter abbauen.
-- B-6: Kompaktindex fuer alte Testberichte, fachliche Dokumentationsbereinigung sowie SHA-256-Manifest zur sicheren Erkennung verwaister Module beim ZIP-Upgrade.
-- Keine Aenderung an Sammlungsschema, Lagerdaten, Medien, Bestandsmigration oder Backupformat.
+- B-5: Bestehende doppelte CSS-/Quelltextassertions in Unit-Tests reduziert; funktionale Daten- und Rendererpruefungen erhalten.
+- Acht neue Chromium-Verhaltenspruefungen fuer mobiles und Desktop-Layout, Header, Seitentitel, Formularfelder, Kartenstile und Settings-Navigation.
+- `npm run check` blockiert die erneute Einfuehrung nativer Browserdialoge und historischer Versionsueberschriften in aktuellen Fachdokumenten.
+- Das Budget der bestehenden Regex-Assertions wurde von 933 auf 754 gesenkt. Verbleibende alte Source-Assertions werden weiterhin als technische Schuld gefuehrt.
 
-## Verbleibende Abnahmen und Legacy-Bestand
+## Noch offen
 
-- Der Browser-History-Test wurde im verwalteten Chromium-DOM-Modus uebersprungen. Der regulare CI-Browserlauf ist daher weiterhin eine Freigabevoraussetzung.
-- Alte Quelltext-Regex-Assertions sind nicht als Verhaltenstest zu betrachten. Neue sind untersagt; verbleibende werden bei der naechsten fachlichen Aenderung mit Browser-/Domain-Abdeckung ersetzt, statt ohne gleichwertige Pruefung geloescht.
-- Freigabe nach `main` erst nach gruener CI. Separate Docker-/Pi-/Mobilgeraete-Abnahmen sind noch nicht behauptet.
+- Die verbleibenden historischen Quelltext-/CSS-Regex-Tests, insbesondere in den Lager-/3D-Suiten, nur mit nachgewiesener gleichwertiger Laufzeitabdeckung ersetzen.
+- Die regulaere GitHub-CI-Browserabnahme und Hardwarepruefungen fuer v1.3.1 abwarten.

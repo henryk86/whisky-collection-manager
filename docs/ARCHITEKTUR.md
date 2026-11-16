@@ -42,6 +42,12 @@ tests/                         Unit-, Integration- und Browserprüfungen
 docs/                          Anforderungen, Betrieb und Fachthemen
 ```
 
+### Verhaltenspruefungen der Oberflaeche
+
+Bei Layout- und Navigationsaenderungen werden tatsaechliche Browser-Eigenschaften geprueft. `tests/browser/layout-runtime.test.js` misst unter Chromium beispielsweise berechnete CSS-Stile, Abstaende, Header-/Formularanordnung und Kartenfarben an mehreren Viewportgroessen. Reine CSS- und Quelltext-Regex-Tests werden nur entfernt, wenn passende Laufzeitabdeckung besteht. Die noch vorhandenen Lager-/3D-Quelltexttests stehen unter dem begrenzten, nicht anwachsenden Budget in `scripts/source-regex-budgets.json`; sie gelten nicht als gleichwertiger Ersatz fuer reale UI-Tests.
+
+`scripts/check.js` sperrt native `alert`/`prompt`/`confirm`-Browserdialoge in der Anwendung. `scripts/check-docs.js` weist historische Versionsnummern in Ueberschriften der aktuellen Fachdokumente zurueck; Versionsgeschichte gehoert in `CHANGELOG.md`.
+
 ### Browser-Datenfluss
 
 ```text
@@ -140,7 +146,7 @@ Das öffentliche WCM-Projekt enthält weder eine Browser-Erweiterung noch einen 
 
 **Einzige unterstützte Übergabe:** `#wcm-import=<URL-kodiertes JSON>` mit einem Objekt der Form `{ "version": 2, "source": "external", "fields": { ... } }`. Die Daten werden anhand erlaubter Felder geprüft. Das URL-Fragment wird unmittelbar nach Empfang aus der Adressleiste entfernt. Ein bestehender Bearbeitungsdialog wird nicht ohne Bestätigung verworfen.
 
-**Trennung der Importzuständigkeiten (ab v0.17.11):** `public/js/features/import/` enthält die generische Feldvorschau, die optionale lokale Bildübernahme, die Destillerie-Zuordnung und die Ereignissteuerung. Das gemeinsame Payload-Modul übernimmt Feld-Whitelist, Textvalidierung, Bild-Token und Normalisierung. Ein quellenspezifischer Adapter validiert die Kennung und URL, entscheidet über Dubletten und liefert die Feldbezeichnungen. `public/js/features/editor-controller.js` verwendet nur `fromImport`, `importReferencePhoto` und neutrale Import-Callbacks. HTML-Selektoren, CSS-Klassen und Übersetzungen für die Vorschau sind quellunabhängig.
+**Trennung der Importzuständigkeiten:** `public/js/features/import/` enthält die generische Feldvorschau, die optionale lokale Bildübernahme, die Destillerie-Zuordnung und die Ereignissteuerung. Das gemeinsame Payload-Modul übernimmt Feld-Whitelist, Textvalidierung, Bild-Token und Normalisierung. Ein quellenspezifischer Adapter validiert die Kennung und URL, entscheidet über Dubletten und liefert die Feldbezeichnungen. `public/js/features/editor-controller.js` verwendet nur `fromImport`, `importReferencePhoto` und neutrale Import-Callbacks. HTML-Selektoren, CSS-Klassen und Übersetzungen für die Vorschau sind quellunabhängig.
 
 Der Bild-Zwischenspeicher akzeptiert zusätzlich `source: null` für Bilder ohne besondere Quellenmarkierung; bestehende Erweiterungs-Uploads ohne `source`-Angabe behalten aus Kompatibilitätsgründen ihre bisherige Markierung. Persistierte Quell-IDs, Weblinks und Foto-Herkunftsangaben werden nicht umbenannt. Die HTTP-Endpunkte, Fragmentversion und das Datenschema bleiben unverändert.
 
@@ -148,7 +154,7 @@ Das Schema verlangt weiterhin einen gültigen Flaschennamen, eine passende WB-ID
 
 **Keine alten Importpfade:** Früher verwendete Fragmentnamen, Payload-Version 1 und der serverseitige HTML-Import-Endpunkt sind entfernt. Für die Übernahme ist eine Erweiterung erforderlich, die das neue Format selbst erstellt. Bereits gespeicherte Sammlungen, IDs, Links und Fotos werden unverändert weiterverwendet.
 
-## Schrittweise Rendering- und Cache-Verbesserungen (ab v1.1.0)
+## Rendering und Cache
 
 `public/js/ui/dom-reconcile.js` gleicht explizit freigegebene Seitenbereiche
 statt pauschaler `innerHTML`-Ersetzung ab. Detailseite, Einstellungen und Hilfe
@@ -170,6 +176,6 @@ verwaiste, nicht modifizierte Module zwischen entpacktem altem und neuem Release
 Datenverzeichnisse werden niemals angeruehrt. Der Dateiabgleich ist ein
 zusätzlicher Upgrade-Schutz, kein Ersatz fuer Backups oder Docker-Releases.
 
-### Asynchrone Verkostungserstellung (v1.2.1)
+### Asynchrone Verkostungserstellung
 
 Beim Anlegen einer neuen Verkostung sperrt der Editor seine Eingaben und Ruecknavigation vom Start des POST bis zum abgeschlossenen Sammlungs-Refresh. Dadurch kann die Liste nicht vor dem Update mit altem Zustand aufgebaut werden. Doppelte POSTs durch wiederholte Speicherklicks sind abgefangen. Bei einer fehlgeschlagenen Anfrage werden die Eingaben wieder freigegeben und bleiben erhalten. Eine zwischenzeitliche anderweitige Navigation wird nach dem Abschluss nicht ueberschrieben. Die Browser-Suite prueft diese Rennen mit kuenstlich verzoegerter Antwort und einem HTTP-500-Fehler.

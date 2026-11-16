@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import { createDetailView } from '../../public/js/views/detail.js';
 
 function renderDetail(distilleryIds, bottler) {
@@ -34,10 +33,6 @@ test('detail headline uses the overview card kicker for distillery, and a muted 
     const html = renderDetail(['distillery-laphroaig']);
     assert.match(html, /<span class="card-kicker">Laphroaig<\/span>/);
     assert.match(html, /<span class="detail-heading-separator" aria-hidden="true">·<\/span><span class="muted">Unvollständig<\/span>/);
-    const css = fs.readFileSync('public/styles/core.css', 'utf8');
-    assert.match(css, /\.card-kicker\s*\{[^}]*color:\s*#a17d4c;[^}]*text-transform:\s*uppercase;/s);
-    assert.match(css, /\.detail-heading-meta\s*\{[^}]*flex-wrap:\s*wrap;/s);
-    assert.match(css, /\.detail-heading-meta \.card-kicker\s*\{[^}]*font-size:\s*inherit;[^}]*line-height:\s*inherit;/s, 'Kicker font size must match the 13 px status even on mobile');
 });
 
 test('detail headline without distillery shows status only, no separator', () => {
@@ -62,6 +57,4 @@ test('detail offers a right-aligned map link with location icon for one or sever
     const multiple = renderDetail(['distillery-laphroaig', 'distillery-ardbeg']);
     assert.match(multiple, /data-act="bottling-map"[^>]*><svg class="action-icon"[\s\S]*?<span>Standorte auf Landkarte<\/span><\/button>/);
     assert.doesNotMatch(renderDetail([]), /data-act="bottling-map"/);
-    const css = fs.readFileSync('public/styles/core.css', 'utf8');
-    assert.match(css, /\.detail-head-actions\s*\{[^}]*margin-left:\s*auto;[^}]*justify-content:\s*flex-end;[^}]*align-items:\s*flex-start;/s);
 });

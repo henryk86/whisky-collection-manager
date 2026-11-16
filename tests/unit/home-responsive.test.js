@@ -71,10 +71,4 @@ test('home hero preserves the established descriptive copy without hard-coded li
     for (const catalog of [de, en]) {
         assert.doesNotMatch(catalog['home.hero.description'], /\n|<br\s*\/?\s*>/i);
     }
-    const source = fs.readFileSync('public/js/views/home.js', 'utf8');
-    assert.match(source, /const heroCopy = escapeHtml\(t\('home.hero.description'\)\)/);
-    assert.match(source, /<p class="hero-description">\$\{heroCopy\}<\/p>/);
-    assert.doesNotMatch(source, /hero-description-sentence/);
-    const styles = fs.readFileSync('public/styles/core.css', 'utf8');
-    assert.match(styles, /\.collection-hero \.hero-description\s*\{[^}]*white-space:\s*nowrap;/s);
 });
