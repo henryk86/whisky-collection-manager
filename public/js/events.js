@@ -381,6 +381,9 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
     });
     root.addEventListener('change', event => {
+        if (event.target.matches?.('input[data-bottle-files], input[data-bottle-photos]')) {
+            void detail.handleUploadChange(event); return;
+        }
         if (event.target.matches?.('input[data-furniture-photos]')) {
             warehouseView.uploadFurniturePhotos(event.target.dataset.furniturePhotos,[...event.target.files]); return;
         }

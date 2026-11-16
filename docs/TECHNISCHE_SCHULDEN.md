@@ -1,6 +1,27 @@
 # Technische Schulden und bewusste Grenzen
 
-**Stand:** v0.15.12 (Wartung und Browser-Testkorrektur). Diese Liste ist kein Fehlerbericht: Sie trennt nachgewiesene Einschränkungen von möglichen künftigen Architekturmaßnahmen. In der reinen Wartungsversion wurden keine APIs, Datenmodelle oder Bedienabläufe geändert.
+**Stand:** v0.28.8. Das historische Wartungsreview v0.15.12 steht weiter unten. Aktuelle, noch nicht behobene Risiken aus dem Code-Review v0.28.6 sind hier nach Dringlichkeit dokumentiert.
+
+## Code-Review v0.28.6: umgesetzte und offene Befunde (Stand v0.28.8)
+
+**In v0.28.8 erledigt:** A-1 (Upload-Mehrfachlistener durch delegierte Eingaben ersetzt, Browser-Regressionstest), A-2 (Browser-Testannahmen und unbewertete Flight-Eintraege korrigiert, DOM-Chromium 80 bestanden, 1 History-Test uebersprungen), B-2.1 (Flight-Referenzen per Map validiert). Die echten CI-Browserlaeufe sind noch zu bestaetigen.
+
+**Im naechsten Bugfix gesondert bearbeiten:**
+
+- **A-3 / Fehlerbehandlung:** `action()` darf einen fehlgeschlagenen API-Aufruf nicht als Erfolg erscheinen lassen. Navigation, Modal-Schliessen und Loeschen muessen einen klaren Erfolgsstatus auswerten. Regressionstest fuer fehlgeschlagenes Loeschen einer Verkostung.
+- **A-4 / Statische Dateien:** `ETag`/`Last-Modified` und `304 Not Modified` implementieren, besonders fuer grosse AI-Dateien. Cache-Policy fuer versionierte Artefakte gesondert klaeren.
+- **B-1.1 / Event-Lebenszyklen:** Rendernahe Listener in `public/js/views/**` gezielt auditieren und delegieren oder an einen nachweislich einmaligen Lebenszyklus binden. Erst danach eine passende statische Architekturregel einfuehren. Nicht alle Canvas-/Map-Listener sind automatisch fehlerhaft.
+
+**Als eigene Architektur-Releases planen (keine beiläufige Migration):**
+
+- **B-1.2 / Rendering:** Ein einheitlicher, getesteter Mechanismus zur Teilerneuerung statt unterschiedlicher Sonderregeln pro Seite und `outerHTML`-Abgleich. Kein Frameworkwechsel als Voraussetzung.
+- **B-2.2/3 / Datenzugriff:** Cache im Collection-Store und konditionelle GETs fuer Sammlung und Lager mit Invalidation und Restore-Tests.
+- **B-3 / Schema 5:** Historische Tastings, abgeleitete Bewertungszusammenfassung und Backup-Kompatibilitaet kontrolliert bereinigen; vorab Fixtures realer alter Datenformen, Pre-Migrationsbackup und Ablehnung unbekannter neuer Schemas.
+- **B-4 / Shared-Modulgrenze:** DOM-freie Domainmodule von `public/js` nach `shared/`, inklusive Importregeln in `scripts/check.js`; Abhaengigkeiten des Fotoeditors entkoppeln.
+- **B-5 / Teststrategie:** Quelltext-Regex-Tests schrittweise durch echte Verhaltenspruefungen ersetzen; Browser-Suite in Fachmodule trennen und verpflichtend vor UI-Releases vollstaendig ausfuehren.
+- **B-6 / Dokumentations- und Releasepflege:** `ARCHITEKTUR.md` und `ANFORDERUNGEN.md` fachlich aktualisieren, Fachdokumente von historischen Versionsabsaetzen befreien und ZIP-Restdateien bei Upgrades absichern.
+
+## Historischer Wartungsstand v0.15.12
 
 ## In dieser Wartungsversion abgebaut
 

@@ -1,4 +1,5 @@
 import test, { before, after } from 'node:test';
+import { HELP_TOPICS } from '../../public/js/views/help.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chromium } from 'playwright-core';
@@ -767,8 +768,8 @@ test('browser: overview and detail mark individual samples, not the bottling its
             const metrics = await page.evaluate(({ id, theme }) => {
                 document.documentElement.dataset.theme = theme;
                 const info = document.getElementById(`bottle-${id}`);
-                const status = info.querySelector('.info > strong > .badge.closed');
-                const sample = info.querySelector('.info > strong > .badge.sample');
+                const status = info.querySelector('.bottle-entry-identity > .badge.closed');
+                const sample = info.querySelector('.bottle-entry-identity > .badge.sample');
                 const statusRect = status.getBoundingClientRect();
                 const sampleRect = sample.getBoundingClientRect();
                 return {
@@ -834,6 +835,15 @@ test('browser: removing a photo or attachment does not bounce the detail page to
         assert.equal((await uploaded).status(),201);
         await page.locator('.document-list a').waitFor();
         await page.evaluate(() => {window.__coverBefore = document.querySelector('.detail-summary-grid .hero-photo');});
+        // Keep room below the content: when a deletion shortens a page that is
+        // scrolled to its very end, the browser must clamp scrollY. That is
+        // correct behaviour, not a bounce, so the probe must not sit at the end.
+        await page.evaluate(() => {
+            const spacer = document.createElement('div');
+            spacer.id = 'scroll-room-probe';
+            spacer.style.height = '1200px';
+            document.body.append(spacer);
+        });
 
         // Observe complete animation frames after unlocking the confirmation
         // dialog. A scroll-to-top followed by smooth restoration must fail.
@@ -1139,6 +1149,7 @@ test('browser: switch between bottlings and physical bottles, filter, navigate a
             await page.goForward();
             assert.equal(await page.locator('.whisky-card').count(), 2);
             await page.reload();
+            await page.locator('.whisky-card').nth(1).waitFor();
             assert.equal(await page.locator('.whisky-card').count(), 2);
         }
         await page.locator('#filter-status').selectOption('open');
@@ -1898,6 +1909,7 @@ test('browser: detail map link opens all locations of a multi-distillery bottlin
         assert.equal(await page.locator('#map-site-select').inputValue(), kilchoman.id);
         if (!domOnly) {
             await page.reload();
+            await page.locator('.map-related-site').nth(1).waitFor();
             assert.equal(await page.locator('.map-related-site').count(), 2);
         }
     });
@@ -3181,7 +3193,7 @@ test('browser: help page is available from the menu and on direct navigation', a
         await page.locator('header [data-act="toggle-menu"]').click();
         await page.locator('#site-drawer [data-act="goto-help"]').click();
         await page.locator('.help-page').waitFor();
-        assert.equal(await page.locator('.section-nav-item[data-help-topic]').count(), 8);
+        assert.equal(await page.locator('.section-nav-item[data-help-topic]').count(), HELP_TOPICS.length);
         assert.equal(await page.locator('.section-nav-mobile select').count(), 1);
         assert.equal(await page.locator('.help-section:not([hidden])').count(), 1);
         await page.locator('[data-help-topic="storage"]').click();
@@ -3917,5 +3929,41 @@ test('browser: mobile owned tasting list keeps full titles and ratings readable 
             assert.ok(actual.titleHeight<=actual.fontSize*1.45,`MixMontag wraps unexpectedly at ${width}: ${JSON.stringify(actual)}`);
             assert.deepEqual(actual.ratings.sort(),['80 / 100','80 / 100','82 / 100']);
         }
+    });
+});
+
+test('browser: one upload selection stores exactly one photo and one file after repeated detail re-renders', async () => {
+    await session(async ({ page, base, open }) => {
+        const { bottling, bottle } = await seed(base, '004711');
+        await open({query:`?bottling=${bottling.id}`});
+        await page.locator('[data-bottle-files]').waitFor({state:'attached'});
+        // Editing the bottling only changes the page head. The bottle section
+        // (with the upload inputs) is retained by the partial shell update.
+        for (let i = 0; i < 3; i++) {
+            await page.locator('[data-act="edit-bottling"]').click();
+            await page.locator('#bottling-form').waitFor();
+            await page.locator('#bottling-form [name="name"]').fill(`Upload Probe ${i}`);
+            await page.locator('#bottling-form [type="submit"], #bottling-form button.primary').first().click();
+            await page.waitForFunction(name => document.querySelector('main h2')?.textContent.includes(name), `Upload Probe ${i}`);
+        }
+        const posts = {photos:0, files:0};
+        page.on('request', request => {
+            if (request.method() !== 'POST') return;
+            const path = new URL(request.url()).pathname;
+            if (path === `/api/bottles/${bottle.id}/photos`) posts.photos++;
+            if (path === `/api/bottles/${bottle.id}/files`) posts.files++;
+        });
+        const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=', 'base64');
+        await page.locator('[data-bottle-photos]').first().setInputFiles({name:'probe.png', mimeType:'image/png', buffer:png});
+        await page.locator('.photo-tile').first().waitFor();
+        await page.locator('[data-bottle-files]').setInputFiles({name:'probe.pdf', mimeType:'application/pdf',
+            buffer:Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n')});
+        await page.locator('.document-list a').waitFor();
+        await page.waitForTimeout(300);
+        const stored = (await requestJson(base, '/api/collection')).data.bottlings
+            .find(entry => entry.id === bottling.id).bottles.find(entry => entry.id === bottle.id);
+        assert.deepEqual(posts, {photos:1, files:1}, 'one selection must trigger exactly one upload request each');
+        assert.equal(stored.photos.length, 1);
+        assert.equal(stored.files.length, 1);
     });
 });

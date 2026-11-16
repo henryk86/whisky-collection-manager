@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.28.8 - 2026-11-16
+
+- Review-Fixes: doppelte Datei- und Foto-Uploads verhindern, Browser-Tests und Flight-Validierung korrigieren.
+
 ## 0.28.7 - 2026-11-16
 
 - Race-Condition in der Testserver-Portvergabe beseitigt: Jeder isolierte Integrationstest-Server bindet selbst einen freien Port und meldet ihn erst nach erfolgreichem Start per IPC.

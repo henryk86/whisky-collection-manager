@@ -323,7 +323,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             <button type="button" class="tasting-flight-member-open" data-act="tasting-flight-note-open" data-tasting-id="${escapeHtml(item.record.id)}" data-bottling-id="${escapeHtml(item.external?item.record.id:item.bottling.id)}" data-external="${item.external?'1':'0'}">
                 <strong>${escapeHtml(item.bottling.name)}</strong><small>${escapeHtml(item.record.title || formatDate(item.record.tastedOn))}</small>
             </button>
-            <span class="tasting-flight-member-score">${tastingListGlasses(item.record)}<strong>${tastingRating(item.record)}</strong></span>
+            <span class="tasting-flight-member-score">${tastingListGlasses(item.record) || '<span class="tasting-list-glasses" aria-hidden="true"></span>'}<strong>${tastingRating(item.record)}</strong></span>
             <div class="tasting-flight-member-actions">
                 <button type="button" class="btn small" data-act="tasting-flight-move" data-index="${i}" data-direction="-1" ${i===0?'disabled':''} aria-label="${escapeHtml(t('tastingFlights.moveUp'))}">↑</button>
                 <button type="button" class="btn small" data-act="tasting-flight-move" data-index="${i}" data-direction="1" ${i===refs.length-1?'disabled':''} aria-label="${escapeHtml(t('tastingFlights.moveDown'))}">↓</button>

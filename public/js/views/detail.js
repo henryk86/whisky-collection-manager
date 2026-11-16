@@ -4,7 +4,7 @@ import { t } from '../i18n/index.js';
 const bottleStatusText = status => t(({closed:'home.status.closed',open:'analytics.inventory.openedStatus',empty:'home.status.empty'})[status] || 'features.distilleries.unknownStatus');
 const FACT_KEYS = Object.freeze({'Whisky-Kategorie':'forms.bottling.whiskyCategory','Marke':'forms.bottling.brandOrProductLine','Beteiligte Destillerien':'forms.bottling.participatingDistilleries','Zusammensetzung vollständig':'detail.facts.labelCompositionComplete','Alter':'forms.bottling.ageYears','Alkoholgehalt':'forms.bottling.abv','Erscheinungsjahr':'forms.bottling.releaseYear','Nennfüllmenge laut Abfüllung':'forms.bottling.nominalVolume','Abfüller':'forms.bottling.bottler','Region':'detail.facts.labelRegion','Land':'detail.facts.labelCountry','Fasstyp':'forms.bottling.caskType','Destilliert am':'forms.bottling.distillationDate','Abgefüllt am':'forms.bottling.bottlingDate','Fassnummer':'forms.bottling.caskNumber','Limitierte Auflage':'detail.facts.labelLimitedEdition'});
 const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
-import { escapeHtml, queryAll } from '../ui/dom.js';
+import { escapeHtml } from '../ui/dom.js';
 import { editIcon, deleteIcon, locationIcon, newBottlingIcon, addActionLabel } from '../ui/action-icons.js';
 import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
 import { imageUrl, formatValue, formatDate } from '../ui/format.js';
@@ -166,24 +166,32 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <div class="bottle-entry-list">${list || `<div class="panel"><p class="muted">${t("detail.empty.noPhysicalBottles")}</p></div>`}</div>
     </div>`);
         attachPhotoSorting(action);
-        queryAll('[data-bottle-files]').forEach(el => el.addEventListener('change', async (ev) => {
-            const selected = [...ev.target.files];
-            if (!selected.length) return;
+    }
+    /** Delegated from events.js. Upload inputs may survive a partial re-render,
+     * so they must never receive per-render listeners (duplicate uploads). */
+    detail.handleUploadChange = async function handleUploadChange(event) {
+        const input = event.target;
+        if (input.matches?.('input[data-bottle-files]')) {
+            const selected = [...input.files];
+            input.value = '';
+            if (!selected.length) return true;
             await action(async () => {
-                const count = await uploadFiles(el.dataset.bottleFiles, selected);
+                const count = await uploadFiles(input.dataset.bottleFiles, selected);
                 toast(t("detail.notifications.filesSaved", {count}));
             });
-        }));
-        queryAll('[data-bottle-photos]').forEach(el => el.addEventListener('change', async (ev) => {
-            const files = [...ev.target.files];
-            if (!files.length) {
-                return;
-            }
+            return true;
+        }
+        if (input.matches?.('input[data-bottle-photos]')) {
+            const files = [...input.files];
+            input.value = '';
+            if (!files.length) return true;
             await action(async () => {
-                await uploadPhotos(el.dataset.bottlePhotos, files);
+                await uploadPhotos(input.dataset.bottlePhotos, files);
                 toast(t("detail.notifications.photosSaved", {count:files.length}));
             });
-        }));
-    }
+            return true;
+        }
+        return false;
+    };
     return detail;
 }

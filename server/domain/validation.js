@@ -133,7 +133,9 @@ export function validate(collection) {
     // Flights are optional so existing schema-v4 collections/backups remain valid.
     if (collection.tastingFlights !== undefined) {
         assert(Array.isArray(collection.tastingFlights), 'Ungültige Flight-Liste');
-        const flights=new Set(),assigned=new Set(),known=allTastingReferences(collection);
+        const flights=new Set(),assigned=new Set(),referenceCount=new Map();
+        // Count once instead of filtering all references for every flight member (was O(n²)).
+        for (const item of allTastingReferences(collection)) referenceCount.set(item.record.id,(referenceCount.get(item.record.id)||0)+1);
         for (const flight of collection.tastingFlights) {
             assert(isObject(flight) && isString(flight.id) && /^[a-zA-Z0-9-]{1,100}$/.test(flight.id) &&
                 !flights.has(flight.id) && isString(flight.createdAt) && !Number.isNaN(Date.parse(flight.createdAt)) &&
@@ -145,7 +147,7 @@ export function validate(collection) {
             assert(Array.isArray(flight.tastingIds) && flight.tastingIds.length<=FLIGHT_LIMIT, 'Ungültige Flight-Reihenfolge');
             for (const id of flight.tastingIds) {
                 assert(isString(id) && /^[a-zA-Z0-9-]{1,100}$/.test(id) && !assigned.has(id) &&
-                    known.filter(item=>item.record.id===id).length===1, 'Flight-Verkostung fehlt oder ist mehrfach zugeordnet');
+                    referenceCount.get(id)===1, 'Flight-Verkostung fehlt oder ist mehrfach zugeordnet');
                 assigned.add(id);
             }
         }
