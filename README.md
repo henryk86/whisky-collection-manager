@@ -8,6 +8,11 @@ Die Anwendung verwendet Node.js und Browser-ES-Module **ohne Datenbank und ohne 
 
 **Release-Strategie:** Aenderungen werden als Conventional Commits auf `develop` gesammelt; ein von dir freigegebener Merge nach `main` erzeugt automatisch genau einen getaggten Release-Snapshot mit der passenden Semantic-Version, dem Changelog, ZIPs und Docker-Images. Versionserhoehungen pro Entwicklungscommit entfallen. Fuer versionierte Quellcodeinstallationen das Git-Tag verwenden, nicht die unveraenderten Versionsdateien auf `main`. Details: [Release-Ablauf](docs/RELEASE_WORKFLOW.md).
 
+### Commit-Nachrichten (Entwicklung)
+
+Bei lokalen Aenderungen einmal pro Klon `npm run hooks:install` ausfuehren. Der lokale `commit-msg`-Hook verhindert ungueltige Conventional-Commit-Nachrichten bereits bei `git commit` (z. B. `fix(warehouse): Fach korrigieren`, `feat: neue Ansicht`). Neue Versionen werden weiterhin erst beim manuell gemergten PR `develop -> main` erstellt. Die GitHub-CI prueft Commit-Nachrichten zusaetzlich, weil lokale Git-Hooks umgangen werden koennen. [Release-Workflow](docs/RELEASE_WORKFLOW.md).
+
+
 **GitHub Free (privat):** Rulesets und Branch-Protection werden nicht durchgesetzt. Der Release-Workflow veroeffentlicht deshalb nur nach einem nachweislich gemergten PR von `develop` nach `main`; unerlaubte Pushes auf `main` kann er nicht verhindern.
 
 

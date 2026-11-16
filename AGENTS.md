@@ -4,6 +4,7 @@
 
 - Einzelne Aenderungen auf `develop` erhalten **keine Versionsaenderung**. Stattdessen sind Conventional Commits Pflicht: `fix:`, `feat:`, `refactor:`, `test:`, `docs:`, `chore:` usw.; `!` oder ein `BREAKING CHANGE:`-Footer kennzeichnet inkompatible Aenderungen.
 - Direkte Commits nach `develop` sind der normale Weg; spaetere PRs sind moeglich. Die Checks validieren beide Varianten.
+- Einmal pro lokalem Git-Checkout `npm run hooks:install` ausfuehren: der repo-lokale `commit-msg`-Hook lehnt neue ungueltige Commit-Nachrichten sofort ab. Der GitHub-Check bleibt notwendig (Hooks sind optional und mit `--no-verify` umgehbar).
 - **Nur der vom Benutzer freigegebene Merge `develop -> main` startet den Release**, als Merge-Commit (nicht Squash); der Workflow prueft den gemergten PR per GitHub-API, weil Rulesets auf privaten GitHub-Free-Repositories nicht durchgesetzt werden. Die hoechste relevante Commit-Stufe bestimmt einmalig `MAJOR.MINOR.PATCH`. Ein Merge nur mit Wartungscommits bekommt ein Patch-Release.
 - Die Action erzeugt auf einem separaten Tag-Snapshot konsistente Versionsdateien, Changelog und SHA-256-Quellmanifest. **Keine Bot-Commits, automatische Merges oder Versions-Bumps auf `main`/`develop`.**
 - `npm run release:bump` nicht mehr bei Implementierungsaufgaben ausfuehren; `release:check` dient der Pruefung fertiger Tags. Fuer konkrete Releases nur Git-Tags oder GitHub-Release-Artefakte verteilen.

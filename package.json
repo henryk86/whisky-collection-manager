@@ -13,6 +13,7 @@
     "check": "node scripts/check.js",
     "verify": "npm run check && npm test",
     "release:check": "node scripts/release-version.js check",
+    "hooks:install": "node scripts/install-git-hooks.js",
     "upgrade:audit": "node scripts/upgrade-manifest.js",
     "release:sync": "node scripts/release-version.js sync",
     "release:bump": "node scripts/release-version.js bump",

@@ -38,11 +38,23 @@ Bei mehreren Commits wird **einmalig die hoechste Stufe** verwendet (Major vor M
 
 **Einmaliger Umstieg bei bestehender Git-Historie:** Beim ersten PR `develop -> main`, der `scripts/release-automation.js` einfuehrt, sucht die Release-Planung den ersten Commit, der diese Datei hinzugefuegt hat. Nur dieser Commit und nachfolgende Commits muessen die neue Namenskonvention einhalten. Historische Commits davor (z. B. `Refactor unit tests ...`) werden weder abgelehnt noch erneut fuer einen Minor-/Major-Sprung ausgewertet; ihre bereits manuell veroeffentlichten Aenderungen bleiben in der Git-Historie und bisherigen Changelogs erhalten. Die Anzahl solcher Alt-Commits steht im Release-Plan. Ab dem zweiten Release werden alle neuen Commits strikt geprueft. Keine Aenderung der Git-Historie, kein Force-Push erforderlich.
 
+### Lokale Commit-Validierung (einmal pro Checkout einrichten)
+
+```bash
+npm run hooks:install
+```
+
+Der Befehl setzt **nur fuer dieses Repository** `git config --local core.hooksPath .githooks` und aktiviert `.githooks/commit-msg`. Neue nicht-konventionelle Nachrichten werden bei `git commit` abgelehnt, bevor Git den Commit schreibt. Der Hook ruft denselben `classifyCommit()`-Validator wie `scripts/release-automation.js` auf, einschliesslich `BREAKING CHANGE` im Nachrichtenkoerper. Echte Merge-Commits werden anhand von `MERGE_HEAD` ausgenommen; ein willkuerlicher Commit mit dem Betreff `Merge ...` dagegen nicht.
+
+Bei vorhandener eigener `core.hooksPath`-Konfiguration oder einem bestehenden `commit-msg`-Hook wird die Installation abgelehnt, statt andere Hooks still zu ersetzen. In diesem Fall die Hooks manuell integrieren. Die Einstellung liegt in `.git/config` und muss nach einem neuen Klonen erneut vorgenommen werden. Der Installer aendert keine globale Git-Konfiguration und ist keine Voraussetzung fuer die Anwendung zur Laufzeit.
+
+**Grenze bei GitHub Free:** Ein lokaler Hook ist **keine serverseitige Zugangssperre**. `git -c core.hooksPath=/dev/null commit` oder `git commit --no-verify` umgehen ihn. GitHub Actions validiert daher weiter direkte Pushes nach `develop` und jeden Release-PR; bei Fehlern wird die Pipeline rot, aber ein bereits gepushter Commit kann auf einem nicht geschuetzten Branch nicht rueckwirkend abgelehnt werden. Historische Commits werden weder umgeschrieben noch durch die Hook-Einrichtung geprueft.
+
 Bei spaeteren PRs nach `develop` kann per Squash gemergt werden; der entstehende Commit muss konventionell benannt sein. Fuer den **Release-PR `develop -> main`** dagegen ausschliesslich `Create a merge commit` verwenden, sonst kann die Herkunft der Einzelcommits nicht zuverlaessig ermittelt werden.
 
 ## Ablauf in GitHub
 
-1. Commits mit Conventional-Commit-Betreff direkt nach `develop` pushen. Die Checks auf `develop` pruefen den neuen Push-Bereich; optionale PRs nach `develop` werden ebenfalls geprueft. Versionsdateien nicht manuell erhoehen.
+1. Einmal lokal `npm run hooks:install` ausfuehren. Danach Commits mit Conventional-Commit-Betreff direkt nach `develop` pushen. Die Checks auf `develop` pruefen den neuen Push-Bereich; optionale PRs nach `develop` werden ebenfalls geprueft. Versionsdateien nicht manuell erhoehen.
 2. Wenn ausreichend Aenderungen gesammelt sind, einen PR **`develop -> main`** oeffnen. `Checks / test` prueft Unit-/Integrationstests, den Browser und **berechnet die geplante neue Version** bereits auf dem PR-Merge-Stand. Quellbranch und Zielbranch werden geprueft.
 3. **Nur du** startest den Merge ueber GitHub, als *Create a merge commit*. Die Actions haben keine Rechte, Branches zu mergen.
 4. GitHub startet auf `main` den Release-Workflow. Zunaechst prueft er ueber die GitHub-API, ob genau dieser Commit aus einem gemergten `develop -> main`-PR stammt. Ohne diesen Nachweis werden **weder Tag noch ZIP oder Docker-Image** erstellt. Vor Erstellen des Tags werden alle Tests auf dem freigegebenen Merge-Quellstand erneut ausgefuehrt. Danach werden die Versionsdateien nur im Detached-HEAD-Snapshot angelegt und durch `release:check` und `check` geprueft.
@@ -64,6 +76,7 @@ Bei spaeteren PRs nach `develop` kann per Squash gemergt werden; der entstehende
 ```bash
 npm run check
 npm test
+npm run hooks:install  # einmal pro lokalem Klon
 node scripts/release-automation.js validate --range BASE..HEAD
 node scripts/release-automation.js plan --json  # Nur auf einem Merge-Commit
 ```
