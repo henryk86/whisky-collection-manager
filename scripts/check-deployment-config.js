@@ -17,7 +17,10 @@ export function verifyDeploymentConfiguration(read=name=>fs.readFileSync(path.jo
     const docker=read('docker/app.Dockerfile');
     const checkWorkflow=read('.github/workflows/check.yml');
     const release=read('.github/workflows/release.yml');
+    const recover=read('.github/workflows/recover-release.yml');
+    const gate=release.split('  prepare:')[0];
     const ignored=read('.dockerignore')+'\n'+read('.gitignore');
+    const dependabot=read('.github/dependabot.yml');
     const pkg=JSON.parse(read('package.json'));
     const lock=JSON.parse(read('package-lock.json'));
 
@@ -46,28 +49,41 @@ export function verifyDeploymentConfiguration(read=name=>fs.readFileSync(path.jo
     noText(docker,'EXPOSE 3100','production image must not expose the old HTTP port');
     check(!/COPY\s+\.\s+\./.test(docker),'do not copy private working-tree files into the image');
 
-    // Free private repositories cannot rely on GitHub rulesets to prevent
-    // bypasses. A release must verify the merged PR with the GitHub API.
+    // Protected public main requires GitHub PR merges. No direct workflow push.
     requireText(checkWorkflow,'  test:','required GitHub status job must exist');
     for(const command of ['npm run check','npm test','npm run test:browser','release-automation.js plan --json', 'release-automation.js validate --range'])
         requireText(checkWorkflow,command,`PR CI must execute ${command}`);
-    requireText(checkWorkflow,'test "$PR_SOURCE" = develop','only develop may merge to main');
+    requireText(checkWorkflow,'if [ "$PR_SOURCE" = develop ]; then','develop release PR must be distinguished from version PR');
+    requireText(checkWorkflow,'node scripts/verify-version-pr.js','version PR must prove its exact immutable tagged snapshot');
     requireText(release,'Verify the merged develop pull request',
         'release must independently verify approved develop-to-main PR');
     requireText(release,'/commits/${MERGE_SHA}/pulls',
         'release must query the PR associated with its exact merge commit');
-    requireText(release,'node scripts/verify-merged-pr.js',
+    requireText(gate,'node scripts/verify-merged-pr.js',
         'release must check exact PR origin and merge SHA with the API payload');
-    requireText(release,'pull-requests: read',
+    requireText(gate,'pull-requests: read',
         'release must request permission to query private merged PRs');
     requireText(release,'release-automation.js snapshot --output',
         'release must create versioned tagged snapshots automatically');
     requireText(release,'branches: [main]', 'release must be triggered by main');
     requireText(release,'git checkout --detach "$tag"', 'package must use tagged snapshot');
-    requireText(release,'node scripts/sync-release-branches.js --tag',
-        'publish must synchronize main and develop from the approved release snapshot');
-    requireText(release,'Synchronize release version on main and develop',
-        'both branches must receive release metadata before publication');
+    requireText(read('scripts/sync-release-branches.js'),'export function prepareSyncPR',
+        'release must prepare a trusted version PR for protected main');
+    requireText(release,'node scripts/merge-version-pr.js',
+        'release must create the GitHub version PR');
+    requireText(read('scripts/merge-version-pr.js'),"gh('pr','merge'",
+        'only the version PR may be merged through the GitHub API');
+    requireText(recover,'workflow_dispatch:',
+        'failed draft releases must have an explicit, safe recovery path');
+    requireText(recover,'node scripts/merge-version-pr.js',
+        'recovery must use the same protected-main PR path');
+    requireText(release,'sync-release-branches.js finish --tag',
+        'develop must be synchronized only after version PR merge');
+    requireText(release,"needs.gate.outputs.kind == 'release'",
+        'version PR merges must never retrigger publication');
+    noText(release,'git push --atomic', 'protected main must not be pushed directly');
+    check((dependabot.match(/target-branch: "develop"/g)||[]).length===2,
+        'both npm and GitHub Actions version updates must target develop');
     requireText(checkWorkflow,'"$PR_SOURCE_REPO" = "$GITHUB_REPOSITORY"','PR source must be same repository');
 
     for(const command of ['npm run test:browser','git archive','verify-release-files.js',

@@ -43,16 +43,23 @@ jobs:
       - name: Validate future pull requests to develop
         if: github.event_name == 'pull_request' && github.base_ref == 'develop'
         run: node scripts/release-automation.js validate --range "HEAD^1..HEAD^2"
-      - name: Only develop may be merged to main; preview semantic release
+      - name: Validate develop release or the trusted version-only PR to main
         if: github.event_name == 'pull_request' && github.base_ref == 'main'
         env:
           PR_SOURCE: ${{ github.head_ref }}
           PR_SOURCE_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         shell: bash
         run: |
           set -euo pipefail
-          test "$PR_SOURCE" = develop && test "$PR_SOURCE_REPO" = "$GITHUB_REPOSITORY" || {
-            echo 'Release pull requests to main must originate from develop in this repository.' >&2
+          test "$PR_SOURCE_REPO" = "$GITHUB_REPOSITORY" || {
+            echo 'Pull requests to main must originate in this repository.' >&2
             exit 1
           }
-          node scripts/release-automation.js plan --json
+          if [ "$PR_SOURCE" = develop ]; then
+            node scripts/release-automation.js plan --json
+          else
+            node scripts/verify-version-pr.js
+          fi
