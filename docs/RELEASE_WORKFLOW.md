@@ -53,31 +53,35 @@ und `develop`, im Tag, ZIP, Docker-Image und im App-Footer.
    `Allow GitHub Actions to create and approve pull requests` aktivieren.
    Der Workflow fordert `contents: write` und `pull-requests: write` nur
    fuer die Version-PR-Aktion an.
-4. **Wenn `main` erforderliche Statuschecks hat:** Mit dem normalen
-   `GITHUB_TOKEN` erzeugte PRs koennen genehmigungspflichtige Workflow-Runs
-   ausloesen. Fuer vollautomatische Pruefung und Merge kann optional das
-   Repository-Secret **`WCM_RELEASE_PR_TOKEN`** mit einem Fine-Grained PAT
-   (nur dieses Repository, Contents: Read/Write, Pull requests: Read/Write)
-   angelegt werden. Es kostet nichts und wird ausschliesslich fuer den
-   Versions-PR verwendet. Ohne Token wartet die Action bei blockierten
-   Checks auf GitHub-Auto-Merge und endet mit einem klaren Fehler, falls die
-   Checks nicht rechtzeitig freigeschaltet werden. Keine Schutzregel wird
-   umgangen. `main`-Entwicklungs-PRs mergt der Bot nie.
-5. **Settings -> General -> Default branch -> develop** (einmalig):
-   GitHub eroeffnet **Sicherheitsupdates von Dependabot immer gegen den
-   Default-Branch**. Nur wenn `develop` der Default-Branch ist, gehen somit
-   sowohl Sicherheits- als auch Versionsupdate-PRs nach `develop`. Die
-   `.github/dependabot.yml` setzt `target-branch: develop` fuer npm und Actions.
-   Diese Datei muss auf dem Default-Branch vorhanden sein. Bereits offene
-   Dependabot-PRs gegen `main` werden durch die Konfigurationsaenderung nicht
-   automatisch umgestellt; diese bitte manuell umstellen oder schliessen.
+4. **Wenn `main` erforderliche Statuschecks hat:** PRs, die mit dem normalen
+   `GITHUB_TOKEN` erstellt werden, loesen nicht immer die gewuenschten
+   `pull_request`-Workflows aus. Fuer die automatisch gepruefte Version-PR
+   ist deshalb das Repository-Secret **`WCM_RELEASE_PR_TOKEN`** vorgesehen:
+   ein auf **dieses eine Repository** begrenzter Fine-Grained PAT mit
+   Contents: Read/Write und Pull requests: Read/Write. Die Action verwendet
+   es nur beim Erstellen/Mergen des Version-PRs. Ohne passenden Token oder
+   mit ausstehenden Pflichtchecks stoppt der Release mit einer Meldung;
+   es wird weder `--admin` noch ein Bypass eingesetzt. Das Token allein
+   hebt keine vorgeschriebenen menschlichen Reviews auf. Regulare
+   Entwicklungs- und Dependabot-PRs werden vom Bot nie gemergt.
+5. **Settings -> General -> Default branch -> main**: `main` als oeffentlichen
+   Standardbranch **beibehalten**. GitHub zeigt dann die stabile Anwendung auf
+   der Repository-Startseite an. Die `.github/dependabot.yml` muss auf `main`
+   vorhanden sein und setzt `target-branch: develop` fuer regulaere npm- und
+   Actions-Updates. **Wichtig: Dependabot-Sicherheitsupdates richten sich
+   trotzdem nach dem Default-Branch (`main`)** und lassen sich nicht ueber
+   `target-branch` auf `develop` umstellen. Diese PRs **nicht** direkt in
+   `main` mergen, sondern die Sicherheitskorrektur zuerst manuell nach
+   `develop` uebernehmen und ueber `develop -> main` freigeben.
+   Eine automatische Weiterleitung von Sicherheits-PRs ist nicht implementiert;
+   bestehende PRs werden nicht automatisch verschoben.
 
 ## Wiederaufnahme eines zuvor gescheiterten Releases
 
 Falls der alte Workflow bereits Tag, Draft, ZIP und Docker-Images erstellt hat,
 aber erst beim verbotenen Direktpush auf `main` mit `GH006` scheiterte, **kein
-neues Release dafuer berechnen**. Nach Aktivierung dieses Workflows auf dem
-Default-Branch `develop` die Action **Recover previously built draft release**
+neues Release dafuer berechnen**. Sobald dieser Workflow auf dem
+Default-Branch `main` vorhanden ist, die Action **Recover previously built draft release**
 manuell starten; erforderlich sind der vorhandene Tag und die 40-stellige SHA
 seines urspruenglichen genehmigten `develop -> main`-Merges. Die Action prueft
 PR-Ursprung, Tag, den vorhandenen Draft und dessen Artefakte und fuehrt dann
@@ -85,8 +89,12 @@ nur noch Versions-PR, `develop`-Abgleich und Veroeffentlichung durch. Falls
 `main` seit dem urspruenglichen Merge bereits andere Commits erhalten hat,
 stoppt die Wiederaufnahme bewusst statt fremde Aenderungen zu ueberschreiben.
 
-Die beiden Standard-Release-Jobs sind idempotent; ein bereits gemergter
-Versions-PR wird bei einer Wiederholung nicht erneut erstellt.
+Die Versions-PR-Erzeugung ist idempotent; ein bereits gemergter Versions-PR
+wird bei einer Wiederholung nicht erneut erstellt. Der normale Release-Merge
+muss jedoch **vor** einem neuen Release abgeschlossen sein: Falls `main`
+oder `develop` inzwischen unerwartet abweichen, verweigert das Skript die
+Synchronisierung. Tag und Draft nicht von Hand loeschen oder Versionen
+zuruecksetzen; den fehlgeschlagenen Job kontrolliert wiederaufnehmen.
 
 ## Verifikation
 

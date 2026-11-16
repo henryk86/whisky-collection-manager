@@ -66,8 +66,8 @@ jobs:
           MERGE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          # GitHub Free does not enforce rulesets on private repositories.
-          # Release only after a real merged PR from develop to main.
+          # Main is a protected branch in this public repository.
+          # Always verify the actual merged develop PR, independent of branch protection.
           gh api --paginate "repos/${GITHUB_REPOSITORY}/commits/${MERGE_SHA}/pulls" \
             --jq '.[] | @json' | node scripts/verify-merged-pr.js
       - name: Analyze commits from the approved develop merge

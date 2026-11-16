@@ -15,7 +15,7 @@
 | B-3 Alte Schemagenerationen | Schema 5, Originalbackup, Erhalt von Sammlung und Lager, nur alte Verkostungsdaten verfallen | Aeltere Clients duerfen neue Dateien nicht oeffnen |
 | B-4 Server-Frontend-Abhaengigkeit | Gemeinsame DOM-freie `shared/`-Module und Importgrenzen in `npm run check` | Neue Shared-Module nur nach browserseitiger Freigabe ausliefern |
 | B-5 Fragile Quelltexttests | **Technisch abgeschlossen:** historisches CSS-/JS-Quelltext-Screening aus Unit-/Integrationstests entfernt; Lager-/3D-/Layout-Verhalten durch Domain- und Chromiumtests gesichert; Deployment-Konfiguration separat geprueft; Verbot neuer Quelltext-Tests in `npm run check` | Vollstaendige GitHub-CI-Browserabnahme fuer den jeweiligen Commit und Hardware-WebGL-Pruefungen weiterhin erforderlich; siehe [Teststrategie](TESTSTRATEGIE.md) |
-| B-6 Releases und Altdateien | Kompakte Testhistorie, aktuelle Fachdokumentation, SHA-256-Quellmanifest und nichtdestruktive Upgrade-Audits | Versionsfreigabe erst nach gruenem CI-Lauf; Docker/Pi separat pruefen |
+| B-6 Releases und Altdateien | Gebuendelte Releases mit Conventional Commits, getaggtem Versions-Snapshot, geschuetztem Versions-PR, anschliessender `develop`-Synchronisierung, kompakter Testhistorie und SHA-256-Upgrade-Audit | Fehlgeschlagene Version-PR-/Synchronisierungsjobs kontrolliert wiederaufnehmen; Docker/Pi separat pruefen |
 
 ## Unabhaengige verbleibende Risiken
 
@@ -33,6 +33,8 @@
 4. Release-ZIP und Upgrade-Audit pruefen; Nutzdaten duerfen niemals in einem Quellcode-ZIP enthalten sein.
 5. Pi-/Docker-/Mobilgeraete-Ergebnisse im [Teststatus](TESTSTATUS.md) gesondert dokumentieren.
 
-## GitHub Free: Merge-Schutz ohne wirksame Rulesets
+## GitHub-Branch-Schutz und Dependabot-Sicherheitsupdates
 
-Bei privaten Repositories im Free-Tarif verhindern Rulesets/Branch-Protection einen direkten Push nach `main` nicht. Der Release-Workflow verifiziert deshalb den GitHub-PR und den exakten Merge-Commit (Quelle `develop`, Ziel `main`) vor Tag- und Artefakterzeugung. Ein unerlaubter Push kann nicht rueckgaengig gemacht oder verhindert werden; er erzeugt aber **keinen Release**. Der Nutzer kontrolliert den Merge manuell.
+Das Repository ist **oeffentlich**. Der PR-Schutz von `main` ist wirksam: ein direkter Versions-Push wurde mit `GH006` abgelehnt. Statt ihn abzuschalten, erstellt der Release-Workflow nach erfolgreichen Artefaktchecks einen Versions-PR aus dem Tag. **Nur diesen PR** darf GitHub automatisch per normaler Merge-API mergen; der Benutzer mergt den eigentlichen `develop -> main`-Release-PR selbst. Die Synchronisierung pusht anschliessend nur `develop` und verwendet weder Force-Push noch `--admin`. Statuschecks und ein gegebenenfalls benoetigtes `WCM_RELEASE_PR_TOKEN` sind in [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md) dokumentiert.
+
+`main` bleibt der gewuenschte Default-Branch. `.github/dependabot.yml` richtet **regulaere** Updates nach `develop`, nicht aber Dependabot-**Sicherheitsupdates**: Diese werden von GitHub weiterhin gegen `main` angelegt. Eine automatische, sichere Uebertragung nach `develop` ist **noch nicht implementiert**. Bis dahin muss die Korrektur manuell zuerst nach `develop` uebernommen werden; ein direkter Security-PR-Merge nach `main` wuerde die normale Release-Kette umgehen.

@@ -58,7 +58,7 @@ CERT_DNS_NAMES=home-pi,home-pi.local,localhost
 CERT_IP_ADDRESSES=127.0.0.1,192.168.178.40
 ```
 
-Das Image ist `ghcr.io/henryk86/whisky-collection-manager:${IMAGE_TAG:-latest}`. Für reproduzierbare Installationen lieber einen festen Tag (z. B. `v0.15.10`) verwenden. `latest` wird erst nach erfolgreicher Veröffentlichung eines neuen Releases aktualisiert. Bei Updates auf `main` bleiben die externen Daten erhalten: `git pull --ff-only && docker compose pull && docker compose up -d --remove-orphans`. Speicherverzeichnisse nicht löschen und keine Volumes mit `down -v` entfernen.
+Das Image ist `ghcr.io/henryk86/whisky-collection-manager:${IMAGE_TAG:-latest}`. Für reproduzierbare Installationen einen festen, tatsaechlich veroeffentlichten `vMAJOR.MINOR.PATCH`-Tag statt `latest` verwenden. `latest` wird erst nach erfolgreicher Veröffentlichung eines neuen Releases aktualisiert. Bei Updates auf `main` bleiben die externen Daten erhalten: `git pull --ff-only && docker compose pull && docker compose up -d --remove-orphans`. Speicherverzeichnisse nicht löschen und keine Volumes mit `down -v` entfernen.
 
 Der Zugriff erfolgt unter `https://home-pi.local:3543` oder `https://192.168.178.40:3543`, sofern Name beziehungsweise IP im Zertifikat enthalten sind. Eigene DNS-Namen und IPs über `.env` anpassen und bei vorhandenem Zertifikat `sh deploy/setup-pi.sh --renew-cert && docker compose restart app` ausführen. Das neue öffentliche Zertifikat auf dem PC erneut importieren; den privaten Schlüssel nie kopieren.
 

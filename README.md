@@ -6,14 +6,14 @@ Die Anwendung verwendet Node.js und Browser-ES-Module **ohne Datenbank und ohne 
 
 ## Entwicklung und Code-Reviews
 
-**Release-Strategie:** Aenderungen werden als Conventional Commits auf `develop` gesammelt; ein von dir freigegebener Merge nach `main` erzeugt automatisch genau einen getaggten Release-Snapshot mit der passenden Semantic-Version, dem Changelog, ZIPs und Docker-Images. Versionserhoehungen pro Entwicklungscommit entfallen. Nach erfolgreichem Release werden auch die Versionsdateien auf `main` und `develop` atomar mit dem Tag abgeglichen. Damit zeigen ein Checkout beider Branches und die offiziellen Release-Artefakte dieselbe zuletzt veroeffentlichte Version; die eigentlichen Anwendungsdateien werden weiterhin aus dem Tag gebaut. Details: [Release-Ablauf](docs/RELEASE_WORKFLOW.md).
+**Release-Strategie:** Aenderungen werden als Conventional Commits auf `develop` gesammelt; erst ein manuell freigegebener Merge-PR `develop -> main` loest die automatische Semantic-Versionierung aus. Nach erfolgreicher CI des Merge-Stands erstellt der Workflow einen getaggten Release-Snapshot; **danach** folgen ZIP-, Offline- und Docker-Pruefungen. Ein **separater Versions-PR** bringt dessen Versionsdateien und aktuelle Dokumentation auf das PR-geschuetzte `main`; **nur diesen** PR darf der Bot automatisch mergen. Anschliessend wird `develop` ohne Force-Push synchronisiert und das Release veroeffentlicht. Das ist **kein atomarer Direktpush** auf beide Branches: bei Konflikten oder ausstehenden PR-Checks stoppt der Ablauf. Aenderungen auf `develop` bekommen keine eigenen Versionsspruenge. Details: [Release-Ablauf](docs/RELEASE_WORKFLOW.md).
 
 ### Commit-Nachrichten (Entwicklung)
 
 Bei lokalen Aenderungen einmal pro Klon `npm run hooks:install` ausfuehren. Der lokale `commit-msg`-Hook verhindert ungueltige Conventional-Commit-Nachrichten bereits bei `git commit` (z. B. `fix(warehouse): Fach korrigieren`, `feat: neue Ansicht`). Neue Versionen werden weiterhin erst beim manuell gemergten PR `develop -> main` erstellt. Die GitHub-CI prueft Commit-Nachrichten zusaetzlich, weil lokale Git-Hooks umgangen werden koennen. [Release-Workflow](docs/RELEASE_WORKFLOW.md).
 
 
-**GitHub Free (privat):** Rulesets und Branch-Protection werden nicht durchgesetzt. Der Release-Workflow veroeffentlicht deshalb nur nach einem nachweislich gemergten PR von `develop` nach `main`; unerlaubte Pushes auf `main` kann er nicht verhindern.
+**GitHub-Branches und Dependabot:** Das Repository ist **oeffentlich**; `main` soll als Default-Branch die stabile Startseite zeigen und hat eine durchgesetzte PR-Pflicht (ein direkter Push wurde mit `GH006` abgelehnt). Die CI kontrolliert zusaetzlich die Herkunft des Release-Merges. Regulaere Dependabot-PRs fuer npm und GitHub Actions gehen per `target-branch` nach `develop`. **Sicherheitsupdates gehen weiterhin nach `main`, solange `main` Default-Branch ist**; diese muessen manuell zuerst nach `develop` uebernommen werden. Es gibt derzeit keine automatische Sicherheits-PR-Weiterleitung. Der Versions-PR nutzt optional das auf dieses Repository beschraenkte Secret `WCM_RELEASE_PR_TOKEN`, damit seine CI-Checks regulär anlaufen und GitHub ihn ohne Schutz-Bypass mergen kann.
 
 
 Die Anwendung wurde **vollständig durch ChatGPT programmiert**. Der Projektinitiator hat die Anforderungen formuliert und Korrekturen beziehungsweise Anpassungen angefordert, jedoch selbst keinen Anwendungscode geschrieben. Der Quellcode wird **regelmäßig mit Claude Code-Reviews unterzogen**.
@@ -144,7 +144,7 @@ Die Oberfläche ist auf Deutsch und Englisch lokalisiert. Die Sprachdateien lieg
 
 ## Versionierung und Release
 
-Entwicklung erfolgt auf `develop`: direkte Commits und optional PRs. Jeder Commit verwendet ein Conventional-Commit-Praefix, z. B. `fix:`, `feat:`, `refactor:` oder `docs:`. Einzelne Commits erhoehen **keine** Versionsnummer. Ausschliesslich ein durch dich gemergter PR `develop -> main` startet nach den CI-Pruefungen einen versionierten GitHub Release mit Quellcode-ZIP und Docker-Image fuer AMD64/ARM64. Der hoechste Commit-Typ entscheidet einmalig ueber Patch, Minor oder Major.
+Entwicklung erfolgt auf `develop`: direkte Commits und optional PRs. Jeder Commit verwendet ein Conventional-Commit-Praefix, z. B. `fix:`, `feat:`, `refactor:` oder `docs:`. Einzelne Commits erhoehen **keine** Versionsnummer. Nur ein durch dich gemergter PR `develop -> main` startet nach CI-Pruefungen die einmalige Versionsberechnung (Patch, Minor oder Major). Die Action erzeugt Tag und Artefakte und synchronisiert die Versionsdokumente ueber einen **automatisch mergebaren Versions-PR** nach `main` und anschliessend nach `develop`. Eine offene Versions-PR-Synchronisierung darf nicht durch einen weiteren Release-Merge uebersprungen werden.
 
 ```bash
 npm run check           # Entwicklungspruefungen

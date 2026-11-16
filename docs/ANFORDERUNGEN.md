@@ -113,7 +113,7 @@ Die Anwendung nutzt auf iOS ein eigenes Apple-Touch-Icon. Bereits zum Home-Bilds
 
 ## 9. Entwicklung, Qualität und Releases
 
-Quellcodeänderungen erfolgen auf `develop`, ein Merge nach `main` führt zum Release-Build. **Kleine Änderungen erhöhen den Patchlevel**, größere Funktionen wie neue Seiten die Minor-Version, inkompatible Änderungen die Major-Version. Release-Metadaten sind synchron zu halten.
+Quellcodeänderungen werden auf `develop` gesammelt, ohne fuer jeden Commit die Version zu erhoehen. Commit-Nachrichten verwenden Conventional Commits (`fix`, `feat`, `!`/`BREAKING CHANGE`). Erst der **manuell freigegebene PR-Merge `develop -> main`** loest einen gemeinsamen Release-Snapshot aus: Der hoechste Aenderungstyp bestimmt genau einen Patch-, Minor- oder Major-Sprung. Der neue Stand wird aus dem getaggten Snapshot ueber einen geschuetzten Versions-PR auf `main` und anschliessend nach `develop` synchronisiert; historische Versionsangaben in Fachdokumenten werden dabei nicht umgeschrieben.
 
 `npm run check`, `npm test`, `npm run release:check` und für Browserfunktionalität `npm run test:browser` sind getrennt auszuwerten. Bestandenes Unit-Testing ist kein Nachweis für Browser- oder Hardware-Kompatibilität. Der aktuelle Prüfstatus einschließlich offener iOS-/Android-Abnahmen steht in [TESTSTATUS.md](TESTSTATUS.md). Weitere technische Hinweise: [ARCHITEKTUR.md](ARCHITEKTUR.md) und [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
 
