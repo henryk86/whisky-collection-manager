@@ -47,6 +47,18 @@ Alternativ `minor` oder `major` anstelle von `patch`. `npm run release:bump` **n
 
 **Wichtig:** Wenn noch kein Release-Tag existiert, wird die Version aus `package.json` für den ersten Tag verwendet. Danach muss jeder Merge nach `main` eine neue, noch unbenutzte Version enthalten. Bestehende Release-Tags nicht überschreiben.
 
+### Upgrade aus entpackten ZIP-Dateien: verwaiste Module erkennen
+
+Beim Ueberschreiben eines alten Quellcode-ZIPs bleiben entfernte Dateien auf der Platte zurueck. Fuer Installationen, die **nicht** ueber Docker-Images erneuert werden, gibt es deshalb einen expliziten, nicht destruktiven Abgleich. Alte und neue Release-ZIPs zuerst in **zwei getrennte Verzeichnisse** entpacken. Die dritte Angabe ist die laufende Installation:
+
+```bash
+node scripts/upgrade-audit.js /pfad/alter-release /pfad/neuer-release /pfad/installation
+```
+
+Der Befehl gibt drei Listen aus: `removable` (verwaiste, bytegleich alte Module), `changed` (seit dem alten Release veraenderte Module) und `absent` (bereits fehlend). Ohne weitere Option werden **keine Dateien geloescht**. Nach Kontrolle kann der Aufruf mit `--prune` ausschliesslich unveraenderte, entfallene Module unter `public/js/`, `server/`, `shared/` und `worker/` entfernen. Geaenderte Dateien und Symlinks werden nicht angeruehrt. Anschliessend das neue Release in die Installation kopieren. Bei Bedarf kann der Abgleich auch nach dem Kopieren erfolgen, solange die beiden Vergleichsverzeichnisse unveraendert sind.
+
+**Wichtig:** Die Pruefung uebernimmt nicht das Upgrade selbst und ersetzt kein Backup. `collection.json`, `warehouse.json`, Fotos, Belege, Konfiguration und Deploy-Verzeichnisse werden weder verglichen noch entfernt. Auf Docker-basierten Installationen ist die Datei-Abloesung durch das neue Image bereits sichergestellt. Niemals die alten und neuen Vergleichsverzeichnisse auf denselben Pfad setzen.
+
 ### Release-Ablauf
 
 1. Pull Request `develop` -> `main` erstellen.

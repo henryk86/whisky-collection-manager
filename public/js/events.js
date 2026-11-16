@@ -255,7 +255,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         },
         'confirm-import': () => settings.confirmImport(),
         'delete-file': button => confirmInModal(t("ui.confirmations.deleteAttachment"), t("ui.confirmations.deleteAttachmentQuestion"), async () => {
-            const result = await action(() => request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/files/${encodeURIComponent(button.dataset.fileId)}`, { method: 'DELETE' }));
+            const result = await action(() => request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/files/${encodeURIComponent(button.dataset.fileId)}`, { method: 'DELETE' }), {scope:'collection'});
             if (result.ok) toast(t("ui.confirmations.attachmentDeleted"));
             return result;
         }),
@@ -280,7 +280,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'photo-next': () => photoViewer.step(1),
         'move-photo': button => movePhoto(button.dataset.id, button.dataset.photoId, Number(button.dataset.dir), action),
         'delete-photo': button => confirmInModal(t("ui.confirmations.deletePhoto"), t("ui.confirmations.deletePhotoQuestion"), async () => {
-            const result = await action(() => request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/photos/${encodeURIComponent(button.dataset.photoId)}`, { method: 'DELETE' }));
+            const result = await action(() => request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/photos/${encodeURIComponent(button.dataset.photoId)}`, { method: 'DELETE' }), {scope:'collection'});
             if (result.ok) toast(t("ui.confirmations.photoDeleted"));
             return result;
         }),

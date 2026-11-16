@@ -153,7 +153,7 @@ export function createSettingsController({ state, action, navigate, closeModal, 
         button.disabled = true;
         const saved = await action(() => request('/api/settings', {
             method: 'PATCH', body: JSON.stringify({ establishedYear: year })
-        }));
+        }), {scope:'collection'});
         if (!saved.ok) { button.disabled = false; return; }
         toast(year === null ? t("features.notifications.foundingYearRemoved") : t("features.notifications.foundingYearSaved"));
     }

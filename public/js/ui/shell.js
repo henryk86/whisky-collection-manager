@@ -10,12 +10,13 @@ export function createShell({ root, state, applyTheme, renderModal }) {
         // especially after deleting a photo or attachment. Only actual route
         // changes require a full shell; they scroll to the top in navigation.
         const route = [state.page, state.selected, state.tastingId, state.flightId].join('::');
+        const liveRegions = ['detail', 'settings', 'help'].includes(state.page);
         const main = root.querySelector?.(':scope > main');
         if (main && displayedRoute === route) {
             const scrollY = typeof window !== 'undefined' ? window.scrollY : null;
             const next = document.createElement('template');
             next.innerHTML = content;
-            if (main.hasAttribute('data-live-regions')) {
+            if (liveRegions && main.hasAttribute('data-live-regions')) {
                 // Only pages with delegated handlers opt in: other pages rebuild
                 // controls with view-local lifecycle hooks after each render.
                 reconcileChildren(main, next.content);
@@ -60,7 +61,7 @@ export function createShell({ root, state, applyTheme, renderModal }) {
           <svg class="${item.navClass || ''}" viewBox="${item.viewBox || '0 0 24 24'}" fill="${item.filled?'currentColor':'none'}" stroke="${item.filled?'none':'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${item.icon}</svg>${item.label}
         </a>`).join('')}</nav>
     </aside>
-    <main${state.page === 'detail' ? ' data-live-regions' : ''}>${content}</main>
+    <main${liveRegions ? ' data-live-regions' : ''}>${content}</main>
     <footer class="site-footer">
     <span>${t("ui.branding.whiskyCollection")}</span>
     <span>${t('ui.shell.footer', {version: state.version ? `v${state.version}` : t('ui.status.unknownVersion')})}</span>

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0 - 2026-11-16
+
+- Review B-1/B-2/B-6: DOM-Abgleich fuer Settings/Hilfe, gezielter Sammlungsrefresh und sicheres Upgrade-Audit
+
 ## 1.0.2 - 2026-11-16
 
 - CI-Browserregressionen: eindeutige Foto-Keys beim DOM-Abgleich, Schema-5-Testdaten und Verkostungs-Loeschtest korrigiert

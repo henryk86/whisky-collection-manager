@@ -144,3 +144,25 @@ Der Bild-Zwischenspeicher akzeptiert zusätzlich `source: null` für Bilder ohne
 Das Schema verlangt weiterhin einen gültigen Flaschennamen, eine passende WB-ID und den zugehörigen HTTPS-Quellenlink. WCM öffnet oder durchsucht dabei keine fremden Webseiten. Ein optionaler, kurzlebiger Bild-Token verweist ausschließlich auf ein zuvor lokal übergebenes Bild.
 
 **Keine alten Importpfade:** Früher verwendete Fragmentnamen, Payload-Version 1 und der serverseitige HTML-Import-Endpunkt sind entfernt. Für die Übernahme ist eine Erweiterung erforderlich, die das neue Format selbst erstellt. Bereits gespeicherte Sammlungen, IDs, Links und Fotos werden unverändert weiterverwendet.
+
+## Schrittweise Rendering- und Cache-Verbesserungen (ab v1.1.0)
+
+`public/js/ui/dom-reconcile.js` gleicht explizit freigegebene Seitenbereiche
+statt pauschaler `innerHTML`-Ersetzung ab. Detailseite, Einstellungen und Hilfe
+haben keine direkt an die zu erhaltenden Seitenknoten gebundenen View-Listener
+und koennen den gemeinsamen Abgleich nutzen. Startseite, Karte, Lager und
+interaktive Verkostungseditoren behalten vorlaeufig ihre bisherige Lebenszyklussteuerung;
+diese Ausnahmen sind **nicht** als abgeschlossener B-1-Umbau zu interpretieren.
+
+Clientseitige Mutationen nutzen weiter standardmaessig `refresh('all')` mit
+bedingten HTTP-Requests. Nur ausdruecklich als sammlungsbezogen markierte
+Operationen (Medienuploads/-loeschungen und Sammlungseinstellungen) verwenden
+`refresh('collection')` und lassen das unveraenderte Lagerobjekt bestehen.
+`public/js/ui/refresh-resources.js` fordert beide Ressourcen beim ersten Laden
+und bei unbekanntem Zustand sicherheitshalber an. Die vollstaendige Aufloesung
+aller Mutationen durch inkrementelle Objektupdates ist eine spaetere B-2-Aufgabe.
+
+Ein nicht destruktiver Quellcode-Abgleich (`scripts/upgrade-audit.js`) erkennt
+verwaiste, nicht modifizierte Module zwischen entpacktem altem und neuem Release.
+Datenverzeichnisse werden niemals angeruehrt. Der Dateiabgleich ist ein
+zusätzlicher Upgrade-Schutz, kein Ersatz fuer Backups oder Docker-Releases.

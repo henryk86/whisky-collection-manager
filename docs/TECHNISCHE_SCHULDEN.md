@@ -1,6 +1,6 @@
 # Technische Schulden und bewusste Grenzen
 
-**Stand:** v1.0.1. Das historische Wartungsreview v0.15.12 steht weiter unten. Aktuelle, noch nicht behobene Risiken aus dem Code-Review v0.28.6 sind hier nach Dringlichkeit dokumentiert.
+**Stand:** v1.1.0. Das historische Wartungsreview v0.15.12 steht weiter unten. Aktuelle, noch nicht behobene Risiken aus dem Code-Review v0.28.6 sind hier nach Dringlichkeit dokumentiert.
 
 ## Code-Review v0.28.6: umgesetzte und offene Befunde (Stand v0.28.9)
 
@@ -23,7 +23,11 @@
 - **B-1.2 – Generischer Detailabgleich:** Die Detailseite nutzt eine wiederverwendbare DOM-Regionenabgleich-Funktion mit stabilen Schluesseln und ohne den alten `outerHTML`-Vergleich. Andere Seiten bleiben bis zur Browserabnahme beim Komplettaustausch.
 - **B-5 – Browserstruktur:** Fachsuiten statt einer einzigen grossen `app.test.js`, gemeinsamer Browser-Helper; Cache-/Schema-Integrationstests ergaenzt.
 
-**Weiterhin offen:** Die komplette Browser-Suite muss nach den groesseren DOM- und Datenmodell-Umbauten in einer geeigneten Chromium-/CI-Umgebung laufen. Die alten zahlreichen Quelltext-Regex-Tests sollen schrittweise durch Verhaltenspruefungen ersetzt werden; das ist noch **nicht** vollstaendig erledigt. Weitere Direktlistener in bestehenden Widget-Views werden bei spaeteren Teilrendern gesondert geprueft. B-6 (historische Dokubereinigung und ZIP-Upgrade-Restdateien) ist noch offen.
+**v1.0.2 / CI:** Nach sieben Fehlern in v1.0.1 wurden die Browser-Fixtures und der Foto-DOM-Abgleich korrigiert; fuer v1.0.2 hat der Anwender einen komplett gruenen CI-Testlauf gemeldet (82/82). Das ist ein bestaetigter Verlauf, kein lokaler Browsertest.
+
+**B-1, B-2 und B-6 (v1.1.0 in Bearbeitung):** Der generische DOM-Abgleich wurde auf Settings und Hilfe ausgeweitet. Sammlungsbezogene Medien- und Einstellungsmutationen vermeiden jetzt die redundante Lager-Anforderung (mit Fallback auf einen vollstaendigen Erstabruf). Das neue Upgrade-Audit meldet verwaiste Quellcodedateien und entfernt mit `--prune` ausschliesslich hashidentische Altmodule, niemals Daten oder lokal geaenderten Code. Diese Schritte schliessen B-1, B-2 und B-6 **noch nicht vollstaendig** ab.
+
+**Weiterhin offen:** Die komplette Browser-Suite muss fuer den naechsten Release in einer geeigneten Chromium-/CI-Umgebung laufen. Die alten zahlreichen Quelltext-Regex-Tests sollen schrittweise durch Verhaltenspruefungen ersetzt werden; das ist noch **nicht** vollstaendig erledigt. Weitere Direktlistener in bestehenden Widget-Views werden bei spaeteren Teilrendern gesondert geprueft. B-6 (historische Dokubereinigung und ZIP-Upgrade-Restdateien) ist noch offen.
 
 ## Historischer Wartungsstand v0.15.12
 

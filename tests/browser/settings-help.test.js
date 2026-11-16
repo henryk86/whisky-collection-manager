@@ -310,3 +310,31 @@ test('browser: settings General heading uses the same panel gap as other setting
         assert.ok(Math.abs(gap - 16) < 0.75, `General heading and first panel should have the same 16px spacing as other settings groups, got ${gap}px`);
     });
 });
+
+test('browser: saving settings retains the form node and does not reload unchanged warehouse data', async () => {
+    await session(async ({page,open,base}) => {
+        await open();
+        await openSettingsFromMenu(page);
+        const field=page.locator('#established-year');
+        await field.fill('2019');
+        await field.evaluate(node => {window.__settingsFieldBeforeSave=node;});
+        const warehouseGets=[];
+        page.on('request', request => {
+            if (request.method() === 'GET' && new URL(request.url()).pathname === '/api/warehouse') {
+                warehouseGets.push(request.url());
+            }
+        });
+        await page.locator('#collection-settings-form button[type="submit"]').click();
+        // The success toast is emitted only after the mutation and full scoped
+        // render have both finished, unlike checking persistence alone.
+        await page.locator('.toast:not(.error)').waitFor({state:'visible'});
+        await page.waitForFunction(async () => {
+            const res=await fetch('/api/collection');
+            return res.ok && (await res.json()).settings?.establishedYear === 2019;
+        });
+        assert.equal(await field.evaluate(node => node === window.__settingsFieldBeforeSave),true,
+            'a setting refresh must not destroy the form element');
+        assert.equal(await field.inputValue(),'2019');
+        assert.deepEqual(warehouseGets,[], 'collection-only settings update must not request the warehouse');
+    });
+});

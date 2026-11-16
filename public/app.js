@@ -15,6 +15,7 @@ import { createShell } from './js/ui/shell.js';
 import { escapeHtml } from './js/ui/dom.js';
 import { toast } from './js/ui/notifications.js';
 import { runAction } from './js/ui/action-result.js';
+import { loadResources } from './js/ui/refresh-resources.js';
 import { createHomeView } from './js/views/home.js';
 import { createDetailView } from './js/views/detail.js';
 import { createTastingsView } from './js/views/tastings.js';
@@ -112,20 +113,17 @@ function render() {
     }
     home();
 }
-async function refresh() {
-    const [collection, warehouse, meta] = await Promise.all([
-        requestCachedJson('/api/collection'),
-        requestCachedJson('/api/warehouse'),
+async function refresh(scope = 'all') {
+    const [_, meta] = await Promise.all([
+        loadResources(state, requestCachedJson, scope),
         state.version ? Promise.resolve({ version: state.version }) : request('/api/version').catch(() => ({ version: '' }))
     ]);
-    state.collection = collection;
-    state.warehouse = warehouse;
     state.version = meta.version;
     if (state.page === 'map') mapView.refreshData();
     else render();
 }
-async function action(task) {
-    return runAction(task, refresh, error => toast(error.message, true));
+async function action(task, { scope = 'all' } = {}) {
+    return runAction(task, () => refresh(scope), error => toast(error.message, true));
 }
 navigation.listen();
 bindEvents(root, {

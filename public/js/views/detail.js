@@ -172,7 +172,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
             const selected = [...input.files];
             input.value = '';
             if (!selected.length) return true;
-            const result = await action(() => uploadFiles(input.dataset.bottleFiles, selected));
+            const result = await action(() => uploadFiles(input.dataset.bottleFiles, selected), {scope:'collection'});
             if (result.ok) toast(t("detail.notifications.filesSaved", {count:result.value}));
             return result.ok;
         }
@@ -180,7 +180,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
             const files = [...input.files];
             input.value = '';
             if (!files.length) return true;
-            const result = await action(() => uploadPhotos(input.dataset.bottlePhotos, files));
+            const result = await action(() => uploadPhotos(input.dataset.bottlePhotos, files), {scope:'collection'});
             if (result.ok) toast(t("detail.notifications.photosSaved", {count:files.length}));
             return result.ok;
         }

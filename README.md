@@ -1,4 +1,4 @@
-# Whisky Collection Manager v1.0.2
+# Whisky Collection Manager v1.1.0
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der Abfüllung über einzelne physische Flaschen bis zum Lagerfach. Eine Abfüllung kann mehrere Flaschen mit eigenen Inventarnummern, Zuständen, Fotos und Belegen enthalten.
 
@@ -70,6 +70,12 @@ npm start
 ```
 
 Die Beispiel-IP durch die eigene Adresse ersetzen. Automatischen Server-Neustart beim Entwickeln bietet `npm run dev` (nach dem ersten `npm start`). Weiterführende Hinweise: [Entwicklung](docs/ENTWICKLUNG.md).
+
+## Quellcode-ZIP ohne Datenverlust aktualisieren
+
+Beim Ueberschreiben von ZIP-Versionen koennen entfernte JavaScript-Module auf der Platte bleiben. Fuer einen sicheren Abgleich den bisherigen und den neuen Release jeweils in **eigene Verzeichnisse** entpacken. Mit `node scripts/upgrade-audit.js <alt> <neu> <installation>` werden verwaiste Dateien nur angezeigt. Die ausdrueckliche Option `--prune` entfernt ausschliesslich unveraenderte alte Quellmodule, nicht aber Daten, Fotos, Belege, Einstellungen oder lokal modifizierte Dateien. **Vor jedem Upgrade ein vollstaendiges Backup** von Sammlung, Lager und Medien erstellen. Details und Beispiele: [Release-Workflow](docs/RELEASE_WORKFLOW.md).
+
+Docker-Updates bleiben unveraendert und benoetigen diesen ZIP-Abgleich nicht.
 
 ## Langfristige Offline-Wiederherstellung
 
