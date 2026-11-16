@@ -5,6 +5,7 @@ import { allBottles, WHISKY_TYPES } from './collection.js';
 import { normalizeTastingNotes, normalizeTastingRating } from '../../public/js/domain/tasting.js';
 import { normalizeTastingRecord } from '../../public/js/domain/tasting-records.js';
 import { normalizeStandaloneTasting } from '../../public/js/domain/standalone-tastings.js';
+import {normalizeFlightFields,FLIGHT_LIMIT,allTastingReferences} from '../../public/js/domain/tasting-flights.js';
 import { normalizeWhiskyColor } from '../../public/js/domain/whisky-colors.js';
 import { isDocumentPath } from '../storage/documents.js';
 const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
@@ -127,6 +128,26 @@ export function validate(collection) {
             const {id,createdAt,updatedAt,...editable} = record;
             try { normalizeStandaloneTasting(editable); }
             catch { assert(false, 'Ungültige externe Verkostungsdaten'); }
+        }
+    }
+    // Flights are optional so existing schema-v4 collections/backups remain valid.
+    if (collection.tastingFlights !== undefined) {
+        assert(Array.isArray(collection.tastingFlights), 'Ungültige Flight-Liste');
+        const flights=new Set(),assigned=new Set(),known=allTastingReferences(collection);
+        for (const flight of collection.tastingFlights) {
+            assert(isObject(flight) && isString(flight.id) && /^[a-zA-Z0-9-]{1,100}$/.test(flight.id) &&
+                !flights.has(flight.id) && isString(flight.createdAt) && !Number.isNaN(Date.parse(flight.createdAt)) &&
+                isString(flight.updatedAt) && !Number.isNaN(Date.parse(flight.updatedAt)), 'Ungültige Flight-Metadaten');
+            flights.add(flight.id);
+            assert(Object.keys(flight).every(k=>['id','name','date','notes','tastingIds','createdAt','updatedAt'].includes(k)), 'Unbekanntes Flight-Feld');
+            try { normalizeFlightFields({name:flight.name,date:flight.date,notes:flight.notes}); }
+            catch { assert(false,'Ungültiger Flight'); }
+            assert(Array.isArray(flight.tastingIds) && flight.tastingIds.length<=FLIGHT_LIMIT, 'Ungültige Flight-Reihenfolge');
+            for (const id of flight.tastingIds) {
+                assert(isString(id) && /^[a-zA-Z0-9-]{1,100}$/.test(id) && !assigned.has(id) &&
+                    known.filter(item=>item.record.id===id).length===1, 'Flight-Verkostung fehlt oder ist mehrfach zugeordnet');
+                assigned.add(id);
+            }
         }
     }
     for (const bottle of allBottles(collection)) {

@@ -136,3 +136,13 @@ Quellcodeänderungen erfolgen auf `develop`, ein Merge nach `main` führt zum Re
 - Die letzte Bewertung wird in der Sammlungsübersicht als fünf anteilig gefüllte Glencairn-Gläser auf dem Flaschenbild angezeigt und lässt sich über einen Bewertungs-Schnellfilter eingrenzen.
 - Externe Einzelverkostungen lassen sich ohne Duplikat einer vorhandenen Sammlungsabfüllung zuordnen; ihre ID und Verkostungsdaten bleiben erhalten.
 - Globaler App-Header und vorhandene Abfüllungsdetailseite werden durch diese Funktion nicht verändert.
+
+
+### Optionale Tasting-Flights (v0.28.0)
+
+- Ein Tasting-Flight gruppiert bereits vorhandene oder neu erstellte Verkostungsnotizen aus der Sammlung und von externen Whiskys; jede Notiz gehört zu höchstens **einem** Flight.
+- Ein Flight besitzt einen Namen, ein Datum, eine optionale gemeinsame Notiz und eine **explizit geordnete** Liste von Verkostungs-IDs. Positionen können auf- und abwärts verschoben werden. Wiedereinstieg oder direktes Öffnen muss möglich sein.
+- Einzelne Verkostungsdaten bleiben an ihrem ursprünglichen Ort, inklusive ihrer individuellen Bewertung und der bestehenden „letzte Verkostung“-Regel. Ein Flight hat **keine** neue Gesamtbewertung und erfasst keine einzelnen Schluckwechsel.
+- Eine aus dem Flight heraus neu angelegte Sammlungs- oder externe Verkostung wird in einer atomaren Speicherung erzeugt und angehängt.
+- Wird eine externe Verkostung später einer eigenen Abfüllung zugeordnet, bleibt ihre Flight-Position erhalten. Beim Löschen eines einzelnen Eintrags wird sein Flight-Verweis entfernt. Beim Löschen eines Flights bleiben alle verkosteten Einträge bestehen.
+- Die Anzeige von Namen/Bewertung in der mobilen Verkostungsliste erhält genügend Platz und vermeidet Umbruch einzelner kurzer Wörter.

@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.27.12
+# Whisky Collection Manager v0.28.0
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der Abfüllung über einzelne physische Flaschen bis zum Lagerfach. Eine Abfüllung kann mehrere Flaschen mit eigenen Inventarnummern, Zuständen, Fotos und Belegen enthalten.
 
@@ -13,7 +13,7 @@ Die Anwendung wurde **vollständig durch ChatGPT programmiert**. Der Projektinit
 | Bereich | Umfang |
 | --- | --- |
 | **Sammlung** | Abfüllungen und physische Flaschen verwalten; 0–n eigenständige datierte Verkostungen je Abfüllung sowie unabhängige Einzelverkostungen für nicht besessene Whiskys; Geschmacksprofil, Notizen, Farbe und Fünf-Gläser-Bewertung, mit Anzeige der letzten Bewertung in den Abfüllungsdetails und als dezente Glencairn-Gläser ohne Hintergrund auf dem Flaschenbild; Suche, Filter, Sortierung, Kachel- und Tabellenansicht sowie Scanner. |
-| **Flaschen & Medien** | Inventarnummern, Zustände, Kaufdaten, Fotos, Belege und Anhänge; Verkostungsnotizen lassen sich über eine gemeinsame Hauptseite erfassen – für Sammlungsabfüllungen mit 0–n Verkostungen oder unabhängig als einzelne Verkostung mit eingebetteten Angaben zum Whisky. Das Geschmacksprofil kann vollständig zurückgesetzt werden. Nicht-destruktiver Fotoeditor mit optionaler lokaler KI-Freistellung. Fehlende Bilder werden durch ein einheitliches Flaschenmotiv ersetzt. |
+| **Flaschen & Medien** | Inventarnummern, Zustände, Kaufdaten, Fotos, Belege und Anhänge; Verkostungsnotizen lassen sich über eine gemeinsame Hauptseite erfassen – für Sammlungsabfüllungen mit 0–n Verkostungen oder unabhängig als einzelne Verkostung mit eingebetteten Angaben zum Whisky. **Tasting-Flights** gruppieren optional mehrere Verkostungsnotizen in einer festen Reihenfolge, mit einem gemeinsamen Kommentar. Jede Notiz kann höchstens einem Flight zugeordnet sein. Das Geschmacksprofil kann vollständig zurückgesetzt werden. Nicht-destruktiver Fotoeditor mit optionaler lokaler KI-Freistellung. Fehlende Bilder werden durch ein einheitliches Flaschenmotiv ersetzt. |
 | **Analyse** | Bestands-, Wert- und Sammlungsanalysen mit Filtern und Zeitaggregationen. |
 | **Landkarte** | OpenStreetMap-Destilleriekarte mit Standorten, Clustern und Statusfiltern. |
 | **Lager** | Räume, Möbel und Fächer; 2D- und 3D-Raumplan, virtuelle Regalwand, Fachnavigation mit Schutz ungespeicherter Änderungen, sofort aktualisierte Kapazitäten, mehrere Fotos je Möbelstück sowie Einzel- und Mehrfach-Umlagerung. Import und Export von Raumplänen einschließlich optionaler Flaschenzuordnungen; bei belegten Räumen sichere Löschung mit vorheriger Freigabe aller Flaschen. |

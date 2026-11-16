@@ -1,6 +1,7 @@
 import { read, change } from '../storage/collection-store.js';
 import { now, uid } from '../domain/collection.js';
 import { fail } from '../domain/errors.js';
+import {detachTastings} from '../../public/js/domain/tasting-flights.js';
 import { normalizeTastingRecord, sortedTastings, syncTastingSummary } from '../../public/js/domain/tasting-records.js';
 function requireBottling(collection, id) {
     const bottling = collection.bottlings.find(b => b.id === id);
@@ -47,6 +48,7 @@ export function deleteTasting(id,tastingId) {
         const index=(bottling.tastings || []).findIndex(entry=>entry.id===tastingId);
         if (index < 0) throw fail('Verkostung nicht gefunden',404);
         bottling.tastings.splice(index,1);
+        detachTastings(collection,[tastingId]);
         syncTastingSummary(bottling);
         bottling.updatedAt=now();
         return {ok:true};

@@ -509,3 +509,50 @@
 .tasting-readonly-glasses .glencairn-symbol { width:25px; height:44px; }
 .tasting-readonly-rating > strong { font-size:1.25rem; }
 @media (max-width:540px) { .tasting-readonly-rating { gap:10px; } .tasting-readonly-glasses .glencairn-symbol { width:19px; height:36px; } }
+
+/* v0.28: Flights are simple optional groupings, not a second tasting editor. */
+.tasting-flight-home { margin-bottom:18px; }
+.tasting-flight-home-link { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;
+    padding:13px 16px; color:var(--ink); background:transparent; border:0; border-bottom:1px solid var(--line); text-align:left; cursor:pointer; }
+.tasting-flight-home-link:last-child { border-bottom:0; }
+.tasting-flight-home-link:hover,.tasting-flight-member-open:hover { background:var(--cream); }
+.tasting-flight-home-link span:first-child { display:grid; gap:4px; min-width:0; }
+.tasting-flight-home-link strong,.tasting-flight-member-open strong { overflow-wrap:break-word; word-break:normal; }
+.tasting-flight-home-link small,.tasting-flight-member-open small { color:var(--muted); }
+.tasting-flight-summary { margin-bottom:18px; }
+.tasting-flight-summary .tasting-panel-heading { align-items:start; }
+.tasting-flight-summary .tasting-panel-heading p { margin:6px 0 0; }
+.tasting-flight-comment { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; margin:18px 0 0; }
+.tasting-flight-form { display:grid; gap:14px; }
+.tasting-flight-form label,.tasting-flight-add label { display:grid; gap:7px; min-width:0; }
+.tasting-flight-form input,.tasting-flight-form textarea,.tasting-flight-add select { width:100%; box-sizing:border-box; }
+.tasting-flight-form .actions { justify-content:flex-end; }
+.tasting-flight-add { padding:16px; border:1px solid var(--line); background:var(--cream); display:grid; gap:16px; margin:14px 0 18px; }
+.tasting-flight-add-existing,.tasting-flight-add-new { display:flex; align-items:end; gap:10px; flex-wrap:wrap; }
+.tasting-flight-add-existing label,.tasting-flight-add-new label { flex:1 1 250px; }
+.tasting-flight-member { display:grid; grid-template-columns:36px minmax(0,1fr) auto auto; gap:12px;
+    align-items:center; padding:12px; border-bottom:1px solid var(--line); }
+.tasting-flight-member:last-child { border-bottom:0; }
+.tasting-flight-position { display:grid; place-items:center; min-width:34px; min-height:34px; background:var(--cream); font-weight:700; }
+.tasting-flight-member-open { min-width:0; border:0; background:transparent; cursor:pointer; text-align:left; color:var(--ink);
+    display:grid; gap:5px; padding:9px 4px; }
+.tasting-flight-member-score { display:flex; gap:8px; align-items:center; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.tasting-flight-member-score .tasting-list-glasses { display:inline-flex; }
+.tasting-flight-member-actions { display:flex; gap:5px; justify-content:flex-end; }
+.tasting-flight-member-actions .btn { min-width:36px; }
+.tasting-flight-context { margin:0 0 14px; color:var(--muted); }
+.tasting-flight-context .inline-link { font-weight:600; }
+/* Avoid squeezing the name between five glasses and the score on phones. */
+@media(max-width:720px) {
+    .tasting-flight-member { grid-template-columns:34px minmax(0,1fr); gap:7px 10px; }
+    .tasting-flight-member-score { grid-column:2; justify-content:flex-start; }
+    .tasting-flight-member-actions { grid-column:2; justify-content:flex-start; flex-wrap:wrap; }
+}
+@media(max-width:540px) {
+    .tasting-entry-open { grid-template-columns:minmax(0,1fr); }
+    .tasting-entry-info strong { overflow-wrap:break-word; word-break:normal; }
+    .tasting-entry-trailing { grid-column:1; justify-content:flex-start; }
+    .tasting-entry-open .tasting-entry-info { width:100%; }
+    .tasting-flight-add { padding:12px; }
+    .tasting-flight-add-existing .btn,.tasting-flight-add-new .btn { flex:1 1 auto; }
+}

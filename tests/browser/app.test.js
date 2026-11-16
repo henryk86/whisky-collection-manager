@@ -3758,3 +3758,75 @@ test('browser: v0.26.0 multiple dated tastings, latest summary, individual editi
         }
     });
 });
+
+test('browser: flight groups owned and new external notes with an ordered sequence and no duplicate records',async()=>{
+    await session(async({base,page,open})=>{
+        const owned=(await requestJson(base,'/api/bottlings','POST',{name:'Islay bottling'})).data.bottling;
+        const first=(await requestJson(base,`/api/bottlings/${owned.id}/tastings`,'POST',{tastedOn:'2026-11-15',rating:86,title:'First glass'})).data;
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();
+        await page.locator('[data-act="tasting-flight-new"]').click();
+        await page.locator('#modal-root [data-flight-name]').fill('Islay comparison');
+        await page.locator('#modal-root [data-flight-notes]').fill('Peat gets stronger near the end');
+        await page.locator('#modal-root [data-act="tasting-flight-create-confirm"]').click();
+        await page.locator('.tasting-flight-page').waitFor();
+        assert.match(await page.locator('.tasting-flight-summary').innerText(),/Islay comparison/);
+        await page.locator('[data-act="tasting-flight-toggle-add"]').click();
+        await page.locator('[data-flight-tasting-option]').selectOption(first.id);
+        await page.locator('[data-act="tasting-flight-attach"]').click();
+        await page.waitForFunction(()=>document.querySelectorAll('.tasting-flight-member').length===1);
+        await page.locator('[data-act="tasting-flight-new-external"]').click();
+        await page.locator('[data-external-field="name"]').fill('A whisky outside the collection');
+        await page.locator('[data-tasting-title]').fill('Second glass');
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-tasting-readonly="true"]').waitFor();
+        assert.match(await page.locator('.tasting-flight-context').innerText(),/Position 2 von 2/);
+        await page.locator('[data-act="tasting-back-flight"]').click();
+        await page.waitForFunction(()=>document.querySelectorAll('.tasting-flight-member').length===2);
+        assert.equal(await page.locator('.tasting-flight-add').count(),0,'returning from a new note closes the add panel');
+        const before=(await requestJson(base,'/api/collection')).data;
+        assert.equal(before.bottlings.length,1);
+        assert.equal(before.externalTastings.length,1);
+        assert.equal(before.tastingFlights[0].tastingIds.length,2);
+        await page.locator('[data-act="tasting-flight-move"][data-index="1"][data-direction="-1"]').click();
+        await page.waitForFunction(id=>document.querySelector('.tasting-flight-member')?.dataset.tastingId===id, before.externalTastings[0].id);
+        const after=(await requestJson(base,'/api/collection')).data;
+        assert.deepEqual(after.tastingFlights[0].tastingIds,[before.externalTastings[0].id,first.id]);
+        assert.equal(after.externalTastings[0].title,'Second glass');
+        await page.screenshot({path:'test-artifacts/flight-desktop.png',fullPage:true});
+        for (const width of [390,320]) {
+            await page.setViewportSize({width,height:812});
+            const dimensions=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:window.innerWidth}));
+            assert.ok(dimensions.scroll<=dimensions.viewport+2,`flight page overflows at ${width}: ${JSON.stringify(dimensions)}`);
+            if (width===390) await page.screenshot({path:'test-artifacts/flight-mobile.png',fullPage:true});
+        }
+    });
+});
+
+test('browser: mobile owned tasting list keeps full titles and ratings readable at 390 and 320 px',async()=>{
+    await session(async({base,page,open})=>{
+        const owned=(await requestJson(base,'/api/bottlings','POST',{name:'Big Peat'})).data.bottling;
+        for (const [title,rating] of [['MixMontag',80],['',82],['',80]]) {
+            assert.equal((await requestJson(base,`/api/bottlings/${owned.id}/tastings`,'POST',{
+                tastedOn:'2026-11-15',title,rating
+            })).status,201);
+        }
+        await open({query:`?bottling=${owned.id}&view=tastings`});
+        await page.locator('.tasting-entry-row').first().waitFor();
+        for (const width of [390,320]) {
+            await page.setViewportSize({width,height:812});
+            const actual=await page.evaluate(()=>{
+                const headings=[...document.querySelectorAll('.tasting-entry-info strong')];
+                const top=headings.find(el=>el.textContent==='MixMontag');
+                return {scroll:document.documentElement.scrollWidth,viewport:window.innerWidth,
+                    titleHeight:top?.getBoundingClientRect().height || 0,
+                    fontSize:top?parseFloat(getComputedStyle(top).fontSize):0,
+                    ratings:[...document.querySelectorAll('.tasting-list-rating')].map(el=>el.textContent)};
+            });
+            assert.ok(actual.scroll<=actual.viewport+2,`horizontal page overflow at ${width}: ${JSON.stringify(actual)}`);
+            assert.ok(actual.titleHeight<=actual.fontSize*1.45,`MixMontag wraps unexpectedly at ${width}: ${JSON.stringify(actual)}`);
+            assert.deepEqual(actual.ratings.sort(),['80 / 100','80 / 100','82 / 100']);
+        }
+    });
+});

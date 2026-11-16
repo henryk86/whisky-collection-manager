@@ -100,6 +100,7 @@ function render() {
     if (state.page === 'help') return shell(helpView());
     if (state.page === 'warehouse') return warehouseView.render();
     if (state.page === 'tastings-home') return tastingsView.home();
+    if (state.page === 'tasting-flight') return tastingsView.flight();
     if (['tastings','external-tastings'].includes(state.page)) return tastingsView.list();
     if (['tasting','external-tasting'].includes(state.page)) return tastingsView.editor();
     if (state.page === 'detail') {

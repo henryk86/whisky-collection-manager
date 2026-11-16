@@ -91,6 +91,28 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'tasting-rating-clear': () => tastingsView.chooseRating(null),
         'tasting-color': button => tastingsView.chooseColor(button.dataset.colorKey),
         'tasting-color-clear': () => tastingsView.chooseColor(null),
+        'tasting-flight-back': () => navigate('tastings-home'),
+        'tasting-back-flight': () => state.flightId && navigate('tasting-flight',state.flightId),
+        'tasting-open-flight': button => navigate('tasting-flight',button.dataset.flightId),
+        'tasting-flight-open': button => navigate('tasting-flight',button.dataset.flightId),
+        'tasting-flight-new': () => tastingsView.startFlight(),
+        'tasting-flight-create-confirm': () => tastingsView.createFlight(),
+        'tasting-flight-edit': () => tastingsView.toggleFlightEdit(true),
+        'tasting-flight-cancel-edit': () => tastingsView.toggleFlightEdit(false),
+        'tasting-flight-save': () => tastingsView.saveFlight(),
+        'tasting-flight-delete': () => confirmInModal(t('tastingFlights.plural'),t('tastingFlights.deleteConfirm'),()=>tastingsView.deleteFlight(),t('common.actions.delete')),
+        'tasting-flight-toggle-add': () => tastingsView.toggleFlightAdd(),
+        'tasting-flight-attach': () => tastingsView.attachFlightMember(),
+        'tasting-flight-remove-note': button => tastingsView.detachFlightMember(button.dataset.tastingId),
+        'tasting-flight-move': button => tastingsView.moveFlightMember(Number(button.dataset.index),Number(button.dataset.direction)),
+        'tasting-flight-note-open': button => button.dataset.external==='1'
+            ? navigate('external-tasting',button.dataset.bottlingId,{flightId:state.selected})
+            : navigate('tasting',button.dataset.bottlingId,{tastingId:button.dataset.tastingId,flightId:state.selected}),
+        'tasting-flight-new-owned': () => {
+            const id=document.querySelector('[data-flight-owned-bottling]')?.value;
+            if (id && state.collection.bottlings.some(b=>b.id===id)) navigate('tasting',id,{tastingId:'new',flightId:state.selected});
+        },
+        'tasting-flight-new-external': () => navigate('external-tasting','new',{flightId:state.selected}),
         'tastings-back-detail': () => navigate('detail',state.selected),
         'tastings-back-home': () => navigate('tastings-home'),
         'tastings-back-list': () => navigate('tastings',state.selected),

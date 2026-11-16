@@ -170,3 +170,25 @@ im Quellcode unverändert.
 ## Bedienoberflaeche v0.27.8
 
 In den Abfuellungsdetails steht „Neue Verkostung“ oberhalb der Bewertungskachel auf Hoehe der Abschnittsueberschrift (wie „Weitere Flasche“). In den Verkostungslisten steht die Anlegeaktion innerhalb des jeweiligen Listenblocks. Im Bearbeitungsmodus sind Datum (schmal), Titel (breit) und Aktionsbuttons in einer Zeile im ersten Eingabeblock angeordnet, auf kleinen Displays responsiv umgebrochen. Der Abschnitt "Eindruecke" verwendet denselben Abstand zum darunterliegenden Block wie die anderen Abschnitte. Anlegeaktionen verwenden ein gemeinsames SVG-Plus. Die Glencairn-Anzeige in Sammlungsbildern ist mit etwas mehr Abstand zum rechten Bildrand ausgerichtet.
+
+
+## Tasting-Flights (v0.28.0)
+
+Unter **Verkostungsnotizen** können optionale **Tasting-Flights** angelegt werden.
+Ein Flight hält `name`, `date`, `notes` und eine sortierbare Liste `tastingIds[]`.
+Einzelne Verkostungen bleiben ausschließlich unter `bottlings[].tastings[]` oder
+`externalTastings[]` gespeichert. Ein Flight kopiert keine Einzelbewertungen.
+
+- Bestehende eigene oder externe Verkostungen können hinzugefügt werden, sofern
+  sie keinem anderen Flight angehören.
+- Neue Verkostungen werden direkt aus dem Flight heraus angelegt und atomar
+  zugeordnet. Der einzelne Eintrag verlinkt zurück auf den Flight samt Position.
+- Die Reihenfolge wird manuell mit Auf-/Ab-Aktionen gepflegt. Weitere Schluck- oder
+  Durchgangsprotokolle sowie eine automatische Interpretation von Reihenfolge und
+  Wertung sind bewusst nicht Bestandteil der Funktion.
+- Beim späteren Erwerb eines extern verkosteten Whiskys bleibt die Zuordnung
+  anhand der unveränderlichen Verkostungs-ID bestehen.
+- Entfernen eines Eintrags aus einem Flight entfernt nur die Zuordnung.
+  Das Löschen eines Flights löscht niemals die einzelnen Verkostungsnotizen.
+- Das optionale `tastingFlights[]` ist auch in JSON-/ZIP-Backups enthalten;
+  bestehende Sammlungen ohne dieses Feld bleiben valide (Schema 4, keine Migration).

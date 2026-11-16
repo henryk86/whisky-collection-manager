@@ -119,6 +119,37 @@ stehen die verfügbaren Angaben **Alter, Fasstyp, Alkoholgehalt** unter dem
 Abfüllungsnamen. Unbekannte Angaben werden ausgelassen. „Profil zurücksetzen“
 speichert `flavorProfile: null`, wiederherstellbar über Rückgängig.
 
+## Tasting-Flights (v0.28.0)
+
+Tasting-Flights sind optionale, nur für die Verkostungsorganisation verwendete
+Gruppen in `collection.json`. Sie verändern weder Sammlungsbestand noch
+Bewertungszusammenfassungen. Das Schema bleibt `schemaVersion: 4`.
+
+| Methode | Endpunkt | Wirkung |
+| --- | --- | --- |
+| GET | `/api/tasting-flights` | Alle Flights anzeigen |
+| POST | `/api/tasting-flights` | Flight mit `{name,date,notes}` erstellen |
+| GET | `/api/tasting-flights/:id` | Flight abrufen |
+| PATCH | `/api/tasting-flights/:id` | Name, Datum und/oder gemeinsame Notiz aktualisieren |
+| DELETE | `/api/tasting-flights/:id` | Nur Flight löschen, **nicht** seine einzelnen Verkostungen |
+| PUT | `/api/tasting-flights/:id/tastings` | Zugehörigkeit und Reihenfolge atomar setzen: `{ "tastingIds": ["id1", "id2"] }` |
+| POST | `/api/tasting-flights/:id/tastings` | Neue Verkostung samt Flight-Zuordnung **atomar** speichern |
+
+Der letzte `POST` erwartet für eine eigene Abfüllung `bottlingId` sowie die
+gewöhnlichen Verkostungsfelder; bei einer externen Abfüllung stattdessen das
+gewohnte eingebettete `bottling`-Objekt. Antwort: `{record,bottlingId}`.
+Ein Flight darf bis zu 100 unterschiedliche vorhandene Verkostungs-IDs enthalten;
+dieselbe ID darf in **höchstens einem** Flight vorkommen. Eine zweite Zuordnung
+antwortet mit HTTP 409. Ungültige, verwaiste, mehrdeutige oder doppelte IDs
+werden abgewiesen, ohne die Datei teilweise zu ändern. Nach dem Verschieben
+einer externen Notiz zur Sammlung bleibt ihre Flight-Referenz erhalten. Beim
+Löschen einzelner Verkostungen bzw. ganzer Abfüllungen werden nur die zugehörigen
+Referenzen bereinigt.
+
+Direkte URL: `/?view=tasting-flight&flight=<id>`. Eine neue oder vorhandene
+Einzelverkostung kann beim Öffnen aus einem Flight zusätzlich `flight=<id>`
+in der URL mitführen. Bestehende URLs bleiben unverändert funktionsfähig.
+
 ## Lagerraum löschen (ab v0.19.16)
 
 - `DELETE /api/warehouse/rooms/:id` löscht nur Räume ohne zugeordnete Flaschen; bei Belegung antwortet die API mit **409** und speichert keine Teillöschung.

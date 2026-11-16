@@ -8,6 +8,7 @@ import * as settings from './services/settings.js';
 import * as bottlings from './services/bottlings.js';
 import * as tastings from './services/tastings.js';
 import * as standaloneTastings from './services/standalone-tastings.js';
+import * as tastingFlights from './services/tasting-flights.js';
 import * as bottles from './services/bottles.js';
 import * as distilleries from './services/distilleries.js';
 import { findDistilleryLocations } from './services/distillery-geocoding.js';
@@ -88,6 +89,13 @@ const routes = [
     {
         method: 'DELETE', path: /^\/api\/bottlings\/([\w-]+)$/, run: ([id]) => bottlings.deleteBottling(id)
     },
+    { method:'GET', path:/^\/api\/tasting-flights$/, run:()=>tastingFlights.list() },
+    { method:'POST', path:/^\/api\/tasting-flights$/, status:201, run:(_args,body)=>tastingFlights.create(body) },
+    { method:'GET', path:/^\/api\/tasting-flights\/([\w-]+)$/, run:([id])=>tastingFlights.get(id) },
+    { method:'PATCH', path:/^\/api\/tasting-flights\/([\w-]+)$/, run:([id],body)=>tastingFlights.update(id,body) },
+    { method:'DELETE', path:/^\/api\/tasting-flights\/([\w-]+)$/, run:([id])=>tastingFlights.remove(id) },
+    { method:'PUT', path:/^\/api\/tasting-flights\/([\w-]+)\/tastings$/, run:([id],body)=>tastingFlights.setTastings(id,body) },
+    { method:'POST', path:/^\/api\/tasting-flights\/([\w-]+)\/tastings$/, status:201, run:([id],body)=>tastingFlights.createTasting(id,body) },
     { method:'GET', path:/^\/api\/external-tastings$/, run:()=>standaloneTastings.list() },
     { method:'GET', path:/^\/api\/external-tastings\/([\w-]+)$/, run:([id])=>standaloneTastings.get(id) },
     { method:'POST', path:/^\/api\/external-tastings$/, status:201, run:(_a,body)=>standaloneTastings.create(body) },

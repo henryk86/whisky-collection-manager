@@ -7,7 +7,7 @@ import { validate } from '../domain/validation.js';
 import { migrateCollection } from './migrations.js';
 const seedFile = new URL('../../seed/distillery.json', import.meta.url);
 export const empty = () => ({
-    schemaVersion: 4, nextInventoryNumber: 1, reservedInventoryNumbers: [], settings: { establishedYear: null }, distilleries: JSON.parse(fs.readFileSync(seedFile, 'utf8')), bottlings: []
+    schemaVersion: 4, nextInventoryNumber: 1, reservedInventoryNumbers: [], settings: { establishedYear: null }, distilleries: JSON.parse(fs.readFileSync(seedFile, 'utf8')), bottlings: [], tastingFlights: []
 });
 export function initialize() {
     for (const directory of [DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR]) {

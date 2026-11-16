@@ -90,6 +90,15 @@
  * @property {string} createdAt
  * @property {string} updatedAt
  *
+ * @typedef {Object} TastingFlight
+ * @property {string} id Stable UUID for the tasting session.
+ * @property {string} name Name of the flight.
+ * @property {string} date YYYY-MM-DD tasting session date.
+ * @property {string} notes Optional comparison notes.
+ * @property {string[]} tastingIds Ordered references to individual owned or external tastings; each tasting is in at most one flight.
+ * @property {string} createdAt
+ * @property {string} updatedAt
+ *
  * @typedef {Object} Collection
  * @property {4} schemaVersion
  * @property {number} nextInventoryNumber
@@ -98,5 +107,6 @@
  * @property {Distillery[]} distilleries
  * @property {Bottling[]} bottlings
  * @property {(Tasting & {bottling: Object})[]} [externalTastings] Standalone tastings of unowned whisky, excluded from inventory and analytics.
+ * @property {TastingFlight[]} [tastingFlights] Optional ordered session groups; no duplication of individual notes.
  */
 export {};

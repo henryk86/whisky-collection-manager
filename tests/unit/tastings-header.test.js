@@ -17,7 +17,7 @@ test('the global app header is identical on every main and tasting page', () => 
     assert.match(reference, /data-act="new"/);
     assert.match(reference, /data-act="toggle-theme"/);
     assert.match(reference, /data-act="toggle-menu"/);
-    for (const page of ['detail','analytics','settings','tastings-home','tastings','tasting','external-tasting']) {
+    for (const page of ['detail','analytics','settings','tastings-home','tastings','tasting','external-tasting','tasting-flight']) {
         assert.equal(headerFor(page),reference, `global header differs for ${page}`);
     }
 });

@@ -1,26 +1,27 @@
-# Teststatus - Whisky Collection Manager v0.27.12
+# Teststatus - Whisky Collection Manager v0.28.0
 
-**Stand:** 2026-11-15. **Status:** Node- und Chromium-Pruefungen erfolgreich. Browser-History ausserhalb des DOM-Testmodus, iOS Safari und Docker/ARM64 bleiben separat zu pruefen. Aeltere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-15. **Status:** Unit- und Integrationstests erfolgreich; gezielte Chromium-Tests erfolgreich. Vollständiger Browser-Gesamtlauf nicht abgeschlossen. Historische Berichte: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Erfolgreich** | Release-Metadaten stimmen fuer v0.27.12 ueberein. |
-| `npm run check` | **Erfolgreich** | Syntax, Uebersetzungen und Dokumentationslinks. |
-| `npm test` | **545/545 bestanden** | Unit- und Integrationstests vollstaendig abgeschlossen. |
-| `npm run test:browser` | **Bestanden (76/77)** | Chromium im DOM-Testmodus: 76 erfolgreich, 0 fehlgeschlagen, 1 uebersprungen (echte Browser-History). |
-| iOS Safari / Android | **Nicht lokal ausgeführt** | Manuelle Endgeraetepruefung ausstehend. |
-| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf dem Zielsystem ausstehend. |
+| `npm run release:check` | **Bestanden** | Version 0.28.0 in den Release-Metadaten. |
+| `npm run check` | **Bestanden** | Syntax/Importe, Übersetzungen und Markdown-Links. |
+| `npm test` | **551/551 bestanden** | Enthält sechs gezielte neue Unit-/Integrationstests für Flight-Modell, Exklusivität, Anlegen, Sortieren, Löschen und Navigation. |
+| `npm run test:browser` | **Nicht abgeschlossen** | Vollständiger lokaler DOM-Modus-Lauf nach 27 protokollierten Browserfällen (26 bestanden, 1 übersprungen) ohne Testergebnis wegen Timeouts beendet. Nicht als bestanden gewertet. |
+| `tests/browser/app.test.js` (gezielt) | **2/2 bestanden** | Chromium: Flight anlegen, vorhandene eigene Notiz anhängen, neue externe Notiz atomar anlegen, Reihenfolge ändern; mobile Liste und Flight bei 390 und 320 px ohne horizontalen Überlauf. |
+| Echter iOS Safari / Android / Docker ARM64 | **Nicht lokal ausgeführt** | Prüfen auf realen Zielgeräten. |
 
-## Aenderungen v0.27.12
+## Aenderungen v0.28.0
 
-- Fehlenden `toast`-Import in der Abfuellungsdetailansicht korrigiert. Dokumente und Fotos laden nach dem Speichern wieder korrekt in die aktualisierte Ansicht.
-- Foto-Sortierung im Browsertest erst nach dem Scrollen der Galerie in den sichtbaren Bereich simuliert.
-- Tests fuer den sechsten Schnellfilter, den Abschnitt `Eindruecke`, eindeutig benannte Modalschaltflaechen und den Abschluss asynchroner Loeschvorgaenge aktualisiert.
-- In der DOM-Browser-Testumgebung haben spezifische Mock-Routen fuer den Freistellungsdienst Vorrang vor der allgemeinen Request-Weiterleitung.
+- Optionale Tasting-Flights: Name, Datum, gemeinsame Notiz und geordnete Verkostungs-IDs.
+- Eine Verkostungsnotiz darf maximal einem Flight angehören; Server validiert dies atomar.
+- Bereits vorhandene und neue eigene/externe Verkostungen können in einen Flight aufgenommen werden.
+- Eine spätere externe Zuordnung zur Sammlung behält den Flight-Eintrag und seine Position.
+- Beim Löschen des Flights werden die Einzelverkostungen nicht gelöscht; beim Löschen der Verkostung wird nur die Flight-Referenz bereinigt.
+- Mobile Verkostungslisten: Titel und Bewertung auf getrennten Zeilen, damit kurze Titel nicht mehr gebrochen werden.
 
 ## Grenzen
 
-- Der Chromium-Lauf verwendete `WHISKY_BROWSER_DOM_ONLY=true`, weil der direkte Aufruf lokaler Browser-URLs in dieser Umgebung blockiert ist. Der explizit uebersprungene Test fuer Browser-History wird in diesem Modus nicht ausgefuehrt.
-- Die beiden vorher fehlgeschlagenen KI-Mock-Tests wurden nach Korrektur des Routing-Verhaltens erneut erfolgreich ausgefuehrt und sind Teil der obigen 76 Browser-Pruefungen.
+Die visuelle Darstellung wurde mit Chromium bei Desktop- und Mobilbreite geprüft. Die vollständige Browsertestsuite hat in dieser Umgebung nach Test 27 nicht abgeschlossen. Daraus wird kein Erfolg der restlichen Testfälle abgeleitet.

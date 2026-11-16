@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.28.0 - 2026-11-15
+
+- Tasting-Flights als optionale Gruppierung von Verkostungsnotizen mit Reihenfolge und gemeinsamem Kommentar; maximal ein Flight pro Notiz.
+
 ## 0.27.12 - 2026-11-15
 
 - Fehlenden Benachrichtigungsimport bei Flaschen-Anhaengen und Foto-Uploads behoben; nach dem Upload wird die Detailansicht wieder aktualisiert.

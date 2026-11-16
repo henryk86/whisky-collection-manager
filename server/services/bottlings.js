@@ -3,6 +3,7 @@ import { normalizeBottle, normalizeBottling } from '../domain/normalization.js';
 import { markNumber } from '../domain/inventory.js';
 import { now, uid } from '../domain/collection.js';
 import { fail } from '../domain/errors.js';
+import {detachTastings} from '../../public/js/domain/tasting-flights.js';
 function checkDistilleries(collection, bottling) {
     const knownIds = new Set(collection.distilleries.map(distillery => distillery.id));
     if (bottling.distilleryIds.some(id => !knownIds.has(id))) {
@@ -57,6 +58,7 @@ export function deleteBottling(id) {
         if (collection.bottlings[index].bottles.length) {
             throw fail('Zuerst alle zugeordneten Flaschen löschen', 409);
         }
+        detachTastings(collection,(collection.bottlings[index].tastings || []).map(t=>t.id));
         collection.bottlings.splice(index, 1);
         return {
             ok: true
