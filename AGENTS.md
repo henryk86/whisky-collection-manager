@@ -2,14 +2,13 @@
 
 ## Release-Versionierung
 
-- **Kleine Aenderungen** (Bugfixes, kleinere UI-Aenderungen, Anpassungen bestehender Funktionen) erhoehen den **Patchlevel**: `X.Y.Z` -> `X.Y.(Z+1)`.
-- **Groessere funktionale Aenderungen**, insbesondere **neue Seiten**, erhoehen die **Minor-Version**: `X.Y.Z` -> `X.(Y+1).0`.
-- Inkompatible Aenderungen an bestehenden Schnittstellen oder Datenformaten erhoehen die Major-Version.
-- Diese Regel ist bei jeder kuenftigen Codeaenderung anzuwenden. Vor jedem Merge von `develop` nach `main` die passende Version erhoehen.
-- Immer `npm run release:bump -- patch|minor|major "Beschreibung"` benutzen und `npm run release:check` ausfuehren.
-- `package.json`, `package-lock.json`, `README.md` und `CHANGELOG.md` muessen dieselbe Release-Version abbilden.
+- Einzelne Aenderungen auf `develop` erhalten **keine Versionsaenderung**. Stattdessen sind Conventional Commits Pflicht: `fix:`, `feat:`, `refactor:`, `test:`, `docs:`, `chore:` usw.; `!` oder ein `BREAKING CHANGE:`-Footer kennzeichnet inkompatible Aenderungen.
+- Direkte Commits nach `develop` sind der normale Weg; spaetere PRs sind moeglich. Die Checks validieren beide Varianten.
+- **Nur der vom Benutzer freigegebene Merge `develop -> main` startet den Release**, als Merge-Commit (nicht Squash). Die hoechste relevante Commit-Stufe bestimmt einmalig `MAJOR.MINOR.PATCH`. Ein Merge nur mit Wartungscommits bekommt ein Patch-Release.
+- Die Action erzeugt auf einem separaten Tag-Snapshot konsistente Versionsdateien, Changelog und SHA-256-Quellmanifest. **Keine Bot-Commits, automatische Merges oder Versions-Bumps auf `main`/`develop`.**
+- `npm run release:bump` nicht mehr bei Implementierungsaufgaben ausfuehren; `release:check` dient der Pruefung fertiger Tags. Fuer konkrete Releases nur Git-Tags oder GitHub-Release-Artefakte verteilen.
 
-Weitere Details: `docs/RELEASE_WORKFLOW.md`.
+Details: [Release-Workflow](docs/RELEASE_WORKFLOW.md).
 
 ## Einheitliche Bestaetigungsdialoge
 

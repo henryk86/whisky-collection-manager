@@ -27,3 +27,11 @@
 
 - Das Code-Review-Thema B-5 ist **implementierungsseitig abgeschlossen**. Die regulare GitHub-Actions-Suite fuer diesen Commit ist vor einem Merge noch auszufuehren.
 - Keine Aenderungen an Schema, Migration, Sammlung, Lagerdaten, API oder produktiver Fachlogik.
+
+## Laufende Entwicklung: Release-Automatisierung nach v1.4.0 (B-6)
+
+- Die GitHub-CI fuer **v1.4.0** wurde vom Projektbetreiber als bestanden bestaetigt.
+- Die neue Release-Automatik ist noch **kein neues veroeffentlichtes Release**; der Semantic-Version-Sprung erfolgt erst beim naechsten freigegebenen Merge `develop -> main`.
+- Lokal: `npm run check`, `npm run release:check` und **536/536 Node-Tests bestanden** (einschliesslich Git-Repositories fuer Merge-/Tag-/Retry-Faelle).
+- Der regulaere Browser-CI-Lauf fuer die neuen B-6-Aenderungen steht aus; `npm ci` zum Nachinstallieren des lokalen Playwright-Pakets war in dieser Umgebung nicht erfolgreich (Zeitgrenze). Ein lokal nicht durchgefuehrter Browserlauf gilt nicht als bestanden.
+- Kein Docker-/Raspberry-Pi-/Hardwaretest fuer diese Entwicklungsaenderung durchgefuehrt.

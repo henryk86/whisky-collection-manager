@@ -53,9 +53,16 @@ export function verifyDeploymentConfiguration(read=name=>fs.readFileSync(path.jo
         rule.parameters?.required_status_checks?.some(item=>item.context==='test')),
         'main requires the actual test status job');
     requireText(checkWorkflow,'  test:','required GitHub status job must exist');
-    for(const command of ['npm run check','npm test','npm run test:browser','release-version.js check --fresh'])
+    for(const command of ['npm run check','npm test','npm run test:browser','release-automation.js plan --json', 'release-automation.js validate --range'])
         requireText(checkWorkflow,command,`PR CI must execute ${command}`);
     requireText(checkWorkflow,'test "$PR_SOURCE" = develop','only develop may merge to main');
+    check(ruleset.rules.find(rule=>rule.type==='pull_request')?.parameters?.allowed_merge_methods?.join(',')==='merge',
+        'main must require merge commits for traceable release history');
+    requireText(release,'release-automation.js snapshot --output',
+        'release must create versioned tagged snapshots automatically');
+    requireText(release,'branches: [main]', 'release must be triggered by main');
+    requireText(release,'git checkout --detach "$tag"', 'package must use tagged snapshot');
+    noText(release,'git push origin main', 'release workflow must never push to protected main');
     requireText(checkWorkflow,'"$PR_SOURCE_REPO" = "$GITHUB_REPOSITORY"','PR source must be same repository');
 
     for(const command of ['npm run test:browser','git archive','verify-release-files.js',

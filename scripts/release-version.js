@@ -163,6 +163,50 @@ function bump(part, note) {
     console.log(`Version ${current} -> ${version}. Jetzt nach develop committen und danach develop -> main mergen.`);
 }
 
+/** Only the release snapshot (not develop or main) receives the new version. */
+export function applyAutomatedRelease(version,commits,mergeSha,previousTag) {
+    parseVersion(version);
+    if (!commits.length || !/^[a-f0-9]{40}$/.test(mergeSha)) throw new Error('Invalid automated release plan');
+    const current = JSON.parse(read('package.json')).version;
+    // Release snapshots are intentionally not merged into main. Carry forward
+    // the complete changelog and test history from the previous *tag*, not
+    // from the stale release metadata present on the development branches.
+    if (!/^v\d+\.\d+\.\d+$/.test(previousTag)) throw new Error('Invalid previous release tag');
+    const releasedFile = name => {
+        try { return execFileSync('git', ['show', `${previousTag}:${name}`],
+            {cwd:ROOT,encoding:'utf8',maxBuffer:16*1024*1024}); }
+        catch { return null; } // Initial transition if no previous tag exists.
+    };
+    const previousStatus = releasedFile('docs/TESTSTATUS.md') || read('docs/TESTSTATUS.md');
+    const previousHistory = releasedFile('docs/TESTHISTORIE.md');
+    if (previousHistory !== null) write('docs/TESTHISTORIE.md', previousHistory);
+    const previousChangelog = releasedFile('CHANGELOG.md') || read('CHANGELOG.md');
+    const pkg = JSON.parse(read('package.json'));
+    pkg.version = version;
+    write('package.json', JSON.stringify(pkg,null,2)+'\n');
+    const lock = JSON.parse(read('package-lock.json'));
+    lock.version = version;
+    lock.packages[''].version = version;
+    write('package-lock.json', JSON.stringify(lock,null,2)+'\n');
+    write('README.md',updateReadmeTitle(read('README.md'),version));
+    const date = new Date().toISOString().slice(0,10);
+    const changes = commits.map(commit=>`- ${commit.subject.replace(/[\r\n]/g,' ')}`).join('\n');
+    write('CHANGELOG.md',previousChangelog.replace(/^# Changelog\s*\n/,
+        `# Changelog\n\n## ${version} - ${date}\n\n${changes}\n\n`));
+    archivePreviousTestStatus(previousHistory !== null ? previousTag.slice(1) : current,previousStatus);
+    write('docs/TESTSTATUS.md', `# Teststatus - Whisky Collection Manager v${version}\n\n`
+        + `**Stand:** ${date}. Automatischer Release-Snapshot aus Merge ${mergeSha.slice(0,12)} (${previousTag}).\n\n`
+        + `## Pruefungen\n\n`
+        + `- Vor Erstellung des Tags: GitHub-CI fuer den Merge-Quellstand mit \`npm run check\`, \`npm test\` und \`npm run test:browser\`.\n`
+        + `- Release-Metadaten und SHA-256-Quellmanifest werden im Snapshot separat geprueft.\n`
+        + `- Docker/ARM64/AMD64 sowie ZIP-/Offline-Archive werden vom Release-Workflow vor der Veroeffentlichung geprueft.\n`
+        + `- Externe Hardware-/Pi-Pruefungen sind nicht Bestandteil dieses CI-Laufs.\n\n`
+        + `## Aenderungen\n\n${changes}\n\n`
+        + `Fruehere CI-Resultate: [TESTHISTORIE.md](TESTHISTORIE.md).\n`);
+    writeSourceManifest(ROOT);
+    verifyReleaseMetadata();
+}
+
 const isCLI = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isCLI) {
     try {

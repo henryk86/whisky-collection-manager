@@ -28,7 +28,7 @@
 ## Verbindliche Freigabekette
 
 1. `npm run check` und `npm test` einschliesslich Datenmigration und Backup-Restore.
-2. `npm run release:check` einschliesslich Source-Manifest und Dateiversion.
+2. `npm run check` und Conventional-Commit-Pruefung auf `develop`; `npm run release:check` einschliesslich Source-Manifest und Dateiversion erst auf dem getaggten Release-Snapshot.
 3. `npm run test:browser` komplett mit echter Navigation in GitHub Actions, fuer **diesen** Commit.
 4. Release-ZIP und Upgrade-Audit pruefen; Nutzdaten duerfen niemals in einem Quellcode-ZIP enthalten sein.
 5. Pi-/Docker-/Mobilgeraete-Ergebnisse im [Teststatus](TESTSTATUS.md) gesondert dokumentieren.

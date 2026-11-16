@@ -23,7 +23,7 @@ for(const [description,file,search,replacement] of [
     ['rejects an extra backup container','docker-compose.yml','  app:\n','  app:\n  backup-worker:\n'],
     ['rejects a missing browser suite in PR checks','.github/workflows/check.yml','npm run test:browser','npm run test:skipped'],
     ['rejects missing offline isolation in release','.github/workflows/release.yml','--network none','--network host'],
-    ['rejects unscoped GitHub upload commands','.github/workflows/release.yml','--repo "$GITHUB_REPOSITORY"',''],
+    ['rejects unscoped GitHub upload commands','.github/workflows/release.yml','run: gh release upload "$TAG" dist/*.zip dist/*.sha256 --clobber --repo "$GITHUB_REPOSITORY"','run: gh release upload "$TAG" dist/*.zip dist/*.sha256 --clobber'],
     ['rejects production builds that omit AI asset preparation','docker/app.Dockerfile','node scripts/prepare-cutout-assets.js','node scripts/no-cutout-assets.js'],
 ]) {
     test(`configuration validation ${description}`,()=>{

@@ -24,6 +24,6 @@ Der normale Check (`npm run check`) verbietet neue Quellcode-Leseassertions in `
 1. `npm run check` prueft Syntax, Modulgrenzen, Sprachdateien, Links, das Verbot neuer Quelltexttests und deklarative Deployment-Vertraege.
 2. `npm test` prueft Fachregeln, Rendering-Ausgaben, API, Persistenz, Restore, Sicherheitsreaktionen und Negativfaelle.
 3. `npm run test:browser` prueft die Anwendung und ihre CSS-Geometrie in Chromium. Im eingeschraenkten DOM-Modus ist der echte HTTP-History-Fall uebersprungen; ein solcher Lauf ist daher **keine vollstaendige CI-Freigabe**.
-4. Vor jedem Merge muss die GitHub-Actions-Browser-Suite fuer genau den ausgelieferten Commit gruen sein. Docker-/ARM64-/WebGL-Hardware pruefen, wenn die betroffenen Laufzeitkomponenten veraendert werden.
+4. Vor jedem Merge muss die GitHub-Actions-Browser-Suite fuer den freizugebenden Merge-Quellstand gruen sein; beim Merge nach `main` prueft die Release-Pipeline den Merge erneut und versioniert erst danach den Tag-Snapshot. Docker-/ARM64-/WebGL-Hardware pruefen, wenn die betroffenen Laufzeitkomponenten veraendert werden.
 
 Ein fehlgeschlagener Test darf nicht durch blosses Entfernen seiner Assertion behoben werden. Beim Ersatz einer Quelltextpruefung muss der Zweck in mindestens einem vorhandenen oder neu hinzugefuegten Verhaltens-/Deployment-Test wiederzufinden sein.
