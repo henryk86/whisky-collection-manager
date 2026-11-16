@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0 - 2026-11-16
+
+- fix(ci): make release cutover deterministic
+- feat: implement local commit message validation with git hooks
+- fix(ci): exclude historical commits from first release
+- fix(ci): correct initial release transition and PR validation
+- feat(release-automation): implement automated release planning and snapshot creation
+
 ## 1.4.0 - 2026-11-16
 
 - B-5 abgeschlossen: historische CSS-/JS-Quelltexttests durch Browser-, Domain- und Deployment-Vertragspruefungen ersetzt
