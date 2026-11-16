@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.28.6 - 2026-11-16
+
+- Beim Loeschen von Fotos und Dateien sowie anderen Aktualisierungen derselben Seite bleibt die Scrollposition ohne Sprung oder sanftes Zurueckscrollen erhalten.
+- Gemeinsames App-Rendering behaelt Header, modale Ebene und unveraenderte Detailabschnitte im DOM; bei einem geaenderten Abfuellungsfoto bleibt die Bildhoehe waehrend des Ladens stabil.
+- Dialog- und Navigations-Scrollpositionen werden sofort statt animiert wiederhergestellt; Fotogalerien erhalten keine doppelten Drag-Handler.
+
+## 0.28.5 - 2026-11-16
+
+- Flaschenkarte: ein Kartenrahmen, dreispaltige Daten ohne Linien und volle Breite fuer Fotos und Nachweise
+
+## 0.28.4 - 2026-11-16
+
+- Flaschendaten an Abfuellungsdaten angepasst und Fotogalerie platzsparend neben der Bildvorschau angeordnet.
+
+## 0.28.3 - 2026-11-16
+
+- Flaschenkarte mit grosser Fotovorschau, geordneten Stammdaten und vollstaendiger Foto- und Nachweisverwaltung neu gestaltet.
+
+## 0.28.2 - 2026-11-16
+
+- Integrierte Hilfe um aktuelle Verkostungsnotizen und Tasting-Flights erweitert und veraltete Abfuellungsanleitungen korrigiert.
+
+## 0.28.1 - 2026-11-16
+
+- Tasting-Flight: Glencairn-Bewertungen einheitlich ausrichten und Verkostungsreihenfolge per Drag-and-drop ändern.
+
 ## 0.28.0 - 2026-11-15
 
 - Tasting-Flights als optionale Gruppierung von Verkostungsnotizen mit Reihenfolge und gemeinsamem Kommentar; maximal ein Flight pro Notiz.

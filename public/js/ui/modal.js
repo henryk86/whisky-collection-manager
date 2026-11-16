@@ -25,7 +25,11 @@ export function createModal({ state, onClose }) {
         scrollLock = null;
         if (bodyCss === null) document.body.removeAttribute('style'); else document.body.setAttribute('style', bodyCss);
         if (htmlCss === null) document.documentElement.removeAttribute('style'); else document.documentElement.setAttribute('style', htmlCss);
-        if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') window.scrollTo(0, top);
+        // The default CSS used to animate this restoration, causing a visible
+        // jump to the page top and a slow scroll back after confirmation.
+        if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+            window.scrollTo({top, left: 0, behavior: 'instant'});
+        }
     }
     function showModal(title, content, wide = false, nested = true) {
         // Replacing a confirmation must cancel its awaiting caller.

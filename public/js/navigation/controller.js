@@ -19,7 +19,7 @@ export function createNavigation({ state, render, closeModal, browser = window }
         state.flightId = ['tasting','external-tasting'].includes(page) ? flightId : null;
         state.highlightBottleId = highlightBottleId;
         render();
-        browser.scrollTo(0, 0);
+        browser.scrollTo({top: 0, left: 0, behavior: 'instant'});
     }
     function restoreRoute() {
         if (state.modal) {

@@ -41,7 +41,7 @@ test('scan navigation scrolls to the page top and preserves bottle highlighting'
         highlightBottleId: 'bottle-a'
     });
     assert.equal(context.state.highlightBottleId, 'bottle-a');
-    assert.deepEqual(context.calls, [['pushState', '/?bottling=bottling-a'], ['render'], ['scroll', 0, 0]]);
+    assert.deepEqual(context.calls, [['pushState', '/?bottling=bottling-a'], ['render'], ['scroll', {top: 0, left: 0, behavior: 'instant'}]]);
 });
 test('same route does not add duplicate history entries', () => {
     const context = setup();

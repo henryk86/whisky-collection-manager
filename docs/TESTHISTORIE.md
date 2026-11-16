@@ -2651,3 +2651,155 @@ Die tatsaechliche Browserdarstellung wurde hier nicht visuell abgenommen.
 
 - Der Chromium-Lauf verwendete `WHISKY_BROWSER_DOM_ONLY=true`, weil der direkte Aufruf lokaler Browser-URLs in dieser Umgebung blockiert ist. Der explizit uebersprungene Test fuer Browser-History wird in diesem Modus nicht ausgefuehrt.
 - Die beiden vorher fehlgeschlagenen KI-Mock-Tests wurden nach Korrektur des Routing-Verhaltens erneut erfolgreich ausgefuehrt und sind Teil der obigen 76 Browser-Pruefungen.
+
+---
+
+## Testbericht v0.28.0 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-15. **Status:** Unit- und Integrationstests erfolgreich; gezielte Chromium-Tests erfolgreich. Vollständiger Browser-Gesamtlauf nicht abgeschlossen. Historische Berichte: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Bestanden** | Version 0.28.0 in den Release-Metadaten. |
+| `npm run check` | **Bestanden** | Syntax/Importe, Übersetzungen und Markdown-Links. |
+| `npm test` | **551/551 bestanden** | Enthält sechs gezielte neue Unit-/Integrationstests für Flight-Modell, Exklusivität, Anlegen, Sortieren, Löschen und Navigation. |
+| `npm run test:browser` | **Nicht abgeschlossen** | Vollständiger lokaler DOM-Modus-Lauf nach 27 protokollierten Browserfällen (26 bestanden, 1 übersprungen) ohne Testergebnis wegen Timeouts beendet. Nicht als bestanden gewertet. |
+| `tests/browser/app.test.js` (gezielt) | **2/2 bestanden** | Chromium: Flight anlegen, vorhandene eigene Notiz anhängen, neue externe Notiz atomar anlegen, Reihenfolge ändern; mobile Liste und Flight bei 390 und 320 px ohne horizontalen Überlauf. |
+| Echter iOS Safari / Android / Docker ARM64 | **Nicht lokal ausgeführt** | Prüfen auf realen Zielgeräten. |
+
+### Aenderungen v0.28.0
+
+- Optionale Tasting-Flights: Name, Datum, gemeinsame Notiz und geordnete Verkostungs-IDs.
+- Eine Verkostungsnotiz darf maximal einem Flight angehören; Server validiert dies atomar.
+- Bereits vorhandene und neue eigene/externe Verkostungen können in einen Flight aufgenommen werden.
+- Eine spätere externe Zuordnung zur Sammlung behält den Flight-Eintrag und seine Position.
+- Beim Löschen des Flights werden die Einzelverkostungen nicht gelöscht; beim Löschen der Verkostung wird nur die Flight-Referenz bereinigt.
+- Mobile Verkostungslisten: Titel und Bewertung auf getrennten Zeilen, damit kurze Titel nicht mehr gebrochen werden.
+
+### Grenzen
+
+Die visuelle Darstellung wurde mit Chromium bei Desktop- und Mobilbreite geprüft. Die vollständige Browsertestsuite hat in dieser Umgebung nach Test 27 nicht abgeschlossen. Daraus wird kein Erfolg der restlichen Testfälle abgeleitet.
+
+---
+
+## Testbericht v0.28.1 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-16. **Status:** Unit-/Integrationstests und gezielte Chromium-Pruefung erfolgreich. Weitere Browser- und Zielsystempruefungen offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Erfolgreich** | Release-Metadaten fuer v0.28.1 konsistent. |
+| `npm run check` | **Erfolgreich** | Syntax/Imports, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **553/553 bestanden** | Vollstaendige Unit-/Integrationssuite, inklusive zweier neuer Flight-Tests. |
+| Gezielter Chromium-Check | **Erfolgreich** | Bei drei Flight-Eintraegen blieben Glas- und Punktespalten exakt ausgerichtet; Pointer-Ziehen veraenderte die Reihenfolge und speicherte sie ueber die API; bei 320 px kein horizontaler Ueberlauf. |
+| `npm run test:browser` | **Nicht abgeschlossen** | Ein Regressionstest fuer das Ziehen wurde in die Suite aufgenommen. Der gezielte Browser-Check erfolgte separat im DOM-Modus mit Python-Playwright. |
+| iOS Safari / Android / Docker ARM64 | **Nicht lokal ausgefuehrt** | Auf Zielgeraeten pruefen. |
+
+### Aenderungen v0.28.1
+
+- Die Bewertung eines Flight-Eintrags verwendet feste Breiten fuer die Glencairn-Darstellung und die Punktzahl.
+- Ein Griff neben der Positionsnummer ermoeglicht das Umsortieren per Ziehen mit Maus, Touch oder Stift. Beim Loslassen wird die neue Reihenfolge ueber die bestehende Flight-API gespeichert. Auf-/Ab-Buttons bleiben bestehen.
+- Die einzelne Verkostungsnotiz bleibt nach der Sortierung unveraendert; nur ihre Position im Flight aendert sich.
+
+---
+
+## Testbericht v0.28.2 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-16. **Status:** Kernpruefungen erfolgreich, Browser- und Zielsystempruefungen noch offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Erfolgreich** | Release-Metadaten von v0.28.2 konsistent. |
+| `npm run check` | **Erfolgreich** | Syntax, Importpfade, Uebersetzungen und relative Dokumentationslinks. |
+| `npm test` | **554/554 bestanden** | Unit- und Integrationstests, einschliesslich erweiterter Hilfeseitentests. |
+| `node --test tests/unit/help-page.test.js` | **Erfolgreich (6/6)** | Hilfe in beiden Sprachen, Themen-Navigation und neue Verkostungs-/Flight-Inhalte. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Visuelle und interaktive Browserpruefung steht noch aus. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach Einspielen auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.28.2
+
+- Eigenstaendige Hilfethemen fuer Verkostungsnotizen und Tasting-Flights ergaenzt, jeweils in Deutsch und Englisch.
+- Lesemodus, Neu- und Mehrfachverkostung, letzte Bewertung, Whiskyfarbe, Radar, externe Abfuellungen, spaetere Zuordnung, Flight-Mitgliedschaft und Reihenfolge dokumentiert.
+- Veraltete Hilfeaussagen zur Bearbeitung von Geschmacksprofil und Bewertung direkt an der Abfuellung entfernt.
+- Hilfe-Einleitung, Menueuebersicht und README auf die vorhandenen Funktionen aktualisiert.
+
+---
+
+## Testbericht v0.28.3 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-16. **Status:** Kernpruefungen erfolgreich, visuelle Layoutpruefungen in Chromium durchgefuehrt; Browser-End-to-End und Zielsystempruefungen noch offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Erfolgreich** | Release-Metadaten von v0.28.3 konsistent. |
+| `npm run check` | **Erfolgreich** | Syntax, Importpfade, Uebersetzungen und relative Dokumentationslinks. |
+| `npm test` | **557/557 bestanden** | Unit- und Integrationstests einschliesslich neuer Flaschenkarten- und Fotovorschau-Tests. |
+| `node --test tests/unit/detail-action-icons.test.js tests/unit/photo-viewer.test.js` | **Erfolgreich (11/11)** | Unveraenderte Foto-Aktionen, eine Galerie je Flasche, Bildbetrachter und Ansicht ohne Bild. |
+| Chromium Layoutpruefung | **Erfolgreich** | Gerenderter Detailmarkup/CSS-Stand mit Bild und ohne Bild bei 1440 px (Light), 390 px (Light) und 320 px (Dark): kein horizontaler Ueberlauf, Bild und Daten in erwarteter Reihenfolge. Kein vollstaendiger App-E2E-Lauf. |
+| `npm run test:browser` | **Nicht lokal ausgefuehrt** | Foto-/Datei-Aktionen weiterhin im integrierten Browser-End-to-End-Lauf zu pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgefuehrt** | Nach Einspielen auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.28.3
+
+- Physische Flaschenkarten: grosse Vorschau des ersten gespeicherten Fotos links; Galerie mit allen bestehenden WB-/Freistellungskennzeichen, Editier-, Sortier-, Upload- und Loeschaktionen direkt darunter.
+- Inventarnummer, Status und Groesse sowie Kaufdatum, Preis, Lagerort und weitere vorhandene Angaben rechts; Dokumente und Nachweise unterhalb in voller Kartenbreite.
+- Bei Flaschen ohne Fotos entfaellt die linke Bildspalte. Neue Fotos koennen trotzdem direkt hinzugefuegt oder aufgenommen werden.
+- Bildbetrachter navigiert von der grossen Vorschau nur innerhalb der Galerie derselben physischen Flasche. Weder Foto- noch Dateiablageformat wurden veraendert.
+
+---
+
+## Testbericht v0.28.4 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-16. **Status:** Kernpruefungen erfolgreich. Chromium-Layoutpruefung durchgefuehrt; kompletter Browser-End-to-End-Lauf und Tests auf echten Mobilgeraeten noch offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Erfolgreich** | Release-Metadaten fuer v0.28.4 konsistent. |
+| `npm run check` | **Erfolgreich** | Syntax, Importpfade, beide Sprachkataloge und Dokumentationslinks. |
+| `npm test` | **557/557 bestanden** | Unit- und Integrationstests inklusive Fotoaktionstests und Layoutstruktur der Flaschenkarte. |
+| `node --test tests/unit/detail-action-icons.test.js tests/unit/photo-viewer.test.js` | **11/11 bestanden** | Fotogalerie-Aktionen, einzelne Bildvorschau, Bearbeitung, Sortierung, Anzeige ohne Foto. |
+| Chromium-Layoutpruefung | **Erfolgreich** | HTML/CSS in Chromium bei 1440 px (Light), 390 px (Light) und 320 px (Dark); kein horizontaler Ueberlauf, korrekte Layoutspalten und mobile Reihenfolge. Standalone-Rendering, kein vollstaendiger App-End-to-End-Test. |
+| `npm run test:browser` | **Nicht lokal ausgefuehrt** | Interaktive Foto- und Dateiablaufe noch im integrierten Browser-End-to-End-Test pruefen. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgefuehrt** | Nach Einspielen auf dem Zielsystem pruefen. |
+
+### Aenderungen v0.28.4
+
+- Flaschendaten im zweispaltigen Beschriftungs-/Wertstil der Abfuellungsdaten statt der bisherigen horizontalen Kennzahlenleiste; einheitlicher Abschnittstitel.
+- Bei Flaschen mit Fotos: erstes Foto weiterhin gross links, komplette sortierbare Thumbnail-Leiste mit Bildbearbeitung, WB-/Freistellungskennzeichnung, Upload und Kameraaufnahme platzsparend rechts unter den Flaschendaten.
+- Auf schmalen Displays: grosses Bild, Fotoaktionen, Flaschendaten und Nachweise untereinander; ohne Foto keine leere Bildspalte.
+- Dateien und Nachweise bleiben am Ende der Karte ueber die volle Breite; Datenformat und vorhandene Foto-/Dateiaktionen unveraendert.
+
+---
+
+## Testbericht v0.28.5 (vor dem naechsten Versionswechsel)
+
+**Stand:** 2026-11-16. **Status:** Kernpruefungen erfolgreich; vollstaendige Browser-Suite und echte Mobilgeraete noch offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+
+### Durchgefuehrte Pruefungen
+
+| Pruefung | Ergebnis | Einordnung |
+| --- | --- | --- |
+| `npm run release:check` | **Erfolgreich** | Release-Metadaten v0.28.5 konsistent. |
+| `npm run check` | **Erfolgreich** | JavaScript, Uebersetzungen und Dokumentationslinks geprueft. |
+| `npm test` | **557/557 bestanden** | Unit- und Integrationstests. |
+| Gezielt gerendertes Chromium-Layout | **Erfolgreich** | 1440 px (Light/Dark), 390 px (Light), 320 px (Dark): drei bzw. zwei Datenspalten, eine Flaschenkarte, kleinere Vorschau, Fotos und Nachweise linksbuendig ueber volle Kartenbreite, kein horizontaler Ueberlauf. |
+| `npm run test:browser` (vollstaendig) | **Nicht lokal ausgeführt** | Eine vollstaendige End-to-End-Suite wurde fuer diesen Release nicht ausgefuehrt. |
+| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf Zielsystem pruefen. |
+| Echte iOS-/Android-Geraete | **Nicht lokal ausgeführt** | Mobile Browser weiterhin separat pruefen. |
+
+### Aenderungen v0.28.5
+
+- Doppelte Kartenrahmen der physischen Flaschen entfernt.
+- Flaschendetails drei Spalten ohne Linien zwischen den Feldern auf breiten Viewports.
+- Kompaktere Flaschenfoto-Vorschau; Fotos und Nachweise beginnen jeweils links unter der Kopfzeile und nutzen die volle Kartenbreite.
+- WB-Kennzeichnung, Bildeditor, Drag-and-drop-Sortierung, Pfeile, Upload, Kamera und Dateien beibehalten.

@@ -817,6 +817,77 @@ test('browser: upload and remove invoice for one physical bottle', async () => {
     });
 });
 
+test('browser: removing a photo or attachment does not bounce the detail page to the top', async () => {
+    await session(async ({ page, base, open }) => {
+        const { bottling, bottle } = await seed(base, '002286');
+        const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+        for (let i = 0; i < 8; i++) {
+            assert.equal((await requestJson(base, `/api/bottles/${bottle.id}/photos`, 'POST', {image:png})).status, 201);
+        }
+        await open({query:`?bottling=${bottling.id}`});
+        await page.locator('.photo-tile').first().waitFor();
+        const invoice = page.locator(`[data-bottle-files="${bottle.id}"]`);
+        const uploaded = page.waitForResponse(response => response.request().method() === 'POST' &&
+            new URL(response.url()).pathname === `/api/bottles/${bottle.id}/files`);
+        await invoice.setInputFiles({name:'receipt.pdf',mimeType:'application/pdf',
+            buffer:Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n')});
+        assert.equal((await uploaded).status(),201);
+        await page.locator('.document-list a').waitFor();
+        await page.evaluate(() => {window.__coverBefore = document.querySelector('.detail-summary-grid .hero-photo');});
+
+        // Observe complete animation frames after unlocking the confirmation
+        // dialog. A scroll-to-top followed by smooth restoration must fail.
+        async function confirmAndCheck(selector, expectedSelector, expectedCount) {
+            const trigger = selector === 'photo' ? page.locator('[data-act="delete-photo"]').nth(4)
+                : selector === 'cover' ? page.locator('[data-act="delete-photo"]').first()
+                    : page.locator(selector);
+            await trigger.click();
+            await page.locator('#modal-root [data-act="confirm-action"]').waitFor();
+            const previous = await page.evaluate(() => ({
+                y: -Number.parseInt(document.body.style.top, 10),
+                cardTop: document.querySelector('.bottle-entry').getBoundingClientRect().top,
+            }));
+            assert.ok(previous.y > 100, 'the confirmation must start from a scrolled detail page');
+            await page.evaluate(() => {
+                window.__scrollSamples = [];
+                window.__stopScrollSamples = false;
+                const sample = () => {
+                    window.__scrollSamples.push({
+                        y:window.scrollY, fixed:document.body.style.position === 'fixed',
+                        cardTop:document.querySelector('.bottle-entry')?.getBoundingClientRect().top,
+                    });
+                    if (!window.__stopScrollSamples) requestAnimationFrame(sample);
+                };
+                requestAnimationFrame(sample);
+            });
+            await page.locator('#modal-root [data-act="confirm-action"]').click();
+            await page.waitForFunction(({selector,count}) => document.querySelectorAll(selector).length === count,
+                {selector:expectedSelector,count:expectedCount});
+            await page.waitForTimeout(120);
+            const samples = await page.evaluate(() => {
+                window.__stopScrollSamples = true;
+                return window.__scrollSamples.filter(sample => !sample.fixed);
+            });
+            assert.ok(samples.length, 'scroll positions must be observed after closing the dialog');
+            assert.ok(samples.every(sample => sample.y >= previous.y - 125),
+                `same-page refresh must not jump to top: ${JSON.stringify(samples)}`);
+            assert.ok(samples.every(sample => Math.abs(sample.cardTop - previous.cardTop) <= 3),
+                `visible bottle card must not move while saving: ${JSON.stringify(samples)}`);
+        }
+        await page.locator('.photo-tile').nth(4).scrollIntoViewIfNeeded();
+        await confirmAndCheck('photo', '.photo-tile', 7);
+        assert.equal(await page.evaluate(() => window.__coverBefore === document.querySelector('.detail-summary-grid .hero-photo')),
+            true, 'unchanged cover image must remain mounted');
+        // Deleting the cover must also keep the upper photo area stable while
+        // the next image is decoded, rather than shifting the entire page.
+        await page.locator('.photo-tile').first().scrollIntoViewIfNeeded();
+        await confirmAndCheck('cover', '.photo-tile', 6);
+        await page.locator('[data-act="delete-file"]').scrollIntoViewIfNeeded();
+        await confirmAndCheck('[data-act="delete-file"]', '.document-list a', 0);
+        assert.equal(await page.locator('.photo-tile').count(),6);
+    });
+});
+
 test('browser: six bottlings still use four columns on desktop', async () => {
     await session(async ({ page, base, open }) => {
         const collection = (await requestJson(base, '/api/collection')).data;
@@ -3794,6 +3865,24 @@ test('browser: flight groups owned and new external notes with an ordered sequen
         const after=(await requestJson(base,'/api/collection')).data;
         assert.deepEqual(after.tastingFlights[0].tastingIds,[before.externalTastings[0].id,first.id]);
         assert.equal(after.externalTastings[0].title,'Second glass');
+        // The drag grip reorders notes without opening their detail view. The
+        // glass/score columns must remain aligned for differing score lengths.
+        const ratingCoordinates=await page.locator('.tasting-flight-member-score').evaluateAll(items=>items.map(item=>({
+            glasses:item.querySelector('.tasting-list-glasses').getBoundingClientRect().x,
+            score:item.querySelector('strong').getBoundingClientRect().x
+        })));
+        assert.ok(ratingCoordinates.every(item=>item.glasses===ratingCoordinates[0].glasses && item.score===ratingCoordinates[0].score));
+        const dragGrip=await page.locator('[data-flight-drag]').first().boundingBox();
+        const dropRow=await page.locator('.tasting-flight-member').last().boundingBox();
+        const origin={x:dragGrip.x+dragGrip.width/2,y:dragGrip.y+dragGrip.height/2};
+        const end={x:dropRow.x+dropRow.width/2,y:dropRow.y+dropRow.height-5};
+        await page.mouse.move(origin.x,origin.y);
+        await page.mouse.down();
+        await page.mouse.move(end.x,end.y,{steps:14});
+        await page.mouse.up();
+        await page.waitForFunction(id=>document.querySelector('.tasting-flight-member:last-child')?.dataset.tastingId===id,after.externalTastings[0].id);
+        assert.deepEqual((await requestJson(base,'/api/collection')).data.tastingFlights[0].tastingIds,[first.id,before.externalTastings[0].id]);
+        assert.equal(await page.locator('.tasting-flight-page').count(),1,'drag does not navigate into tasting details');
         await page.screenshot({path:'test-artifacts/flight-desktop.png',fullPage:true});
         for (const width of [390,320]) {
             await page.setViewportSize({width,height:812});

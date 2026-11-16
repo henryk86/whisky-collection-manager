@@ -176,6 +176,7 @@ In den Abfuellungsdetails steht „Neue Verkostung“ oberhalb der Bewertungskac
 
 Unter **Verkostungsnotizen** können optionale **Tasting-Flights** angelegt werden.
 Ein Flight hält `name`, `date`, `notes` und eine sortierbare Liste `tastingIds[]`.
+Ab v0.28.1 lässt sich diese Reihenfolge direkt über einen Ziehgriff (Maus, Touch, Stift) umsortieren; der bestehende API-Endpunkt speichert die neue Reihenfolge. Die Auf-/Ab-Buttons bleiben als Tastatur-Alternative erhalten. Glencairn-Gläser und Punktwerte sind in stabilen Spalten positioniert, auch bei unterschiedlich hohen Bewertungen.
 Einzelne Verkostungen bleiben ausschließlich unter `bottlings[].tastings[]` oder
 `externalTastings[]` gespeichert. Ein Flight kopiert keine Einzelbewertungen.
 
@@ -183,7 +184,7 @@ Einzelne Verkostungen bleiben ausschließlich unter `bottlings[].tastings[]` ode
   sie keinem anderen Flight angehören.
 - Neue Verkostungen werden direkt aus dem Flight heraus angelegt und atomar
   zugeordnet. Der einzelne Eintrag verlinkt zurück auf den Flight samt Position.
-- Die Reihenfolge wird manuell mit Auf-/Ab-Aktionen gepflegt. Weitere Schluck- oder
+- Die Reihenfolge wird mit Ziehgriff oder alternativ mit Auf-/Ab-Aktionen gepflegt. Weitere Schluck- oder
   Durchgangsprotokolle sowie eine automatische Interpretation von Reihenfolge und
   Wertung sind bewusst nicht Bestandteil der Funktion.
 - Beim späteren Erwerb eines extern verkosteten Whiskys bleibt die Zuordnung

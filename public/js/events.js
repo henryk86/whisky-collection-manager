@@ -3,6 +3,7 @@ import { chooseLanguage, t } from './i18n/index.js';
 import { request } from './api.js';
 import { toast } from './ui/notifications.js';
 import { movePhoto } from './features/photo-order.js';
+import { bindFlightSorting } from './features/flight-order.js';
 import { routeUrl } from './navigation/routes.js';
 import { readAnalyticsDate } from './domain/analytics-period.js';
 import { activateHelpTopic } from './views/help.js';
@@ -280,6 +281,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         })),
         import: () => settings.importJSON(),
     };
+    bindFlightSorting(root, (from,to,after) => tastingsView.reorderFlightMember(from,to,after));
     root.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-act]');
         if (!button || button.disabled) {

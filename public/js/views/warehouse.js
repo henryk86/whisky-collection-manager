@@ -727,7 +727,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
             }
             await refresh();
             if (previousPageY !== null && typeof window.scrollTo === 'function') {
-                window.scrollTo(0, previousPageY);
+                window.scrollTo({top: previousPageY, left: 0, behavior: 'instant'});
             }
             toast(t('warehouse.shelves.dragSuccess'));
         } catch (error) {

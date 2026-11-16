@@ -13,6 +13,7 @@ import { sortedTastings } from '../domain/tasting-records.js';
 import {allTastingReferences,flightEntries,flightForTasting} from '../domain/tasting-flights.js';
 import { allStandaloneTastings } from '../domain/standalone-tastings.js';
 import { editIcon, newBottlingIcon } from '../ui/action-icons.js';
+import { reorderFlightIds } from '../features/flight-order.js';
 
 /** Tasting list and single-record editor; no migration of earlier bottling notes. */
 export function createTastingsView({state,selectors,shell,navigate,refresh,showModal,closeModal}) {
@@ -316,7 +317,9 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         const available=allTastingReferences(state.collection).filter(item=>!flightForTasting(state.collection,item.record.id))
             .sort((a,b)=>a.bottling.name.localeCompare(b.bottling.name));
         const entryRow=(item,i)=>`<div class="tasting-flight-member" data-tasting-id="${escapeHtml(item.record.id)}">
-            <span class="tasting-flight-position" aria-label="${escapeHtml(t('tastingFlights.position',{position:i+1,count:refs.length}))}">${i+1}</span>
+            <div class="tasting-flight-order-control"><button type="button" class="tasting-flight-drag-handle" data-flight-drag aria-label="${escapeHtml(t('tastingFlights.dragHandle'))}" title="${escapeHtml(t('tastingFlights.dragHandle'))}">
+                <svg width="17" height="19" viewBox="0 0 16 20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="10" r="1.5"/><circle cx="11" cy="10" r="1.5"/><circle cx="5" cy="17" r="1.5"/><circle cx="11" cy="17" r="1.5"/></svg>
+            </button><span class="tasting-flight-position" aria-label="${escapeHtml(t('tastingFlights.position',{position:i+1,count:refs.length}))}">${i+1}</span></div>
             <button type="button" class="tasting-flight-member-open" data-act="tasting-flight-note-open" data-tasting-id="${escapeHtml(item.record.id)}" data-bottling-id="${escapeHtml(item.external?item.record.id:item.bottling.id)}" data-external="${item.external?'1':'0'}">
                 <strong>${escapeHtml(item.bottling.name)}</strong><small>${escapeHtml(item.record.title || formatDate(item.record.tastedOn))}</small>
             </button>
@@ -374,6 +377,11 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}/tastings`,{method:'PUT',body:JSON.stringify({tastingIds:ids})});
             await refresh();
         } catch(error) {toast(error.message,true);}
+    }
+    function reorderFlightMember(sourceId,targetId,after) {
+        const record=(state.collection?.tastingFlights || []).find(x=>x.id===state.selected);
+        const reordered=record && reorderFlightIds(record.tastingIds,sourceId,targetId,after);
+        if (reordered) return updateFlightMembers(reordered);
     }
     function moveFlightMember(index,step) {
         const record=(state.collection?.tastingFlights || []).find(x=>x.id===state.selected);
@@ -667,7 +675,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             if (confirmButton?.isConnected) confirmButton.disabled=false;
         }
     }
-    return {home,list,editor,flight,startFlight,createFlight,saveFlight,deleteFlight,moveFlightMember,attachFlightMember,detachFlightMember,toggleFlightEdit,toggleFlightAdd,saveDraft,persistMeta,toggleCreateChoice,commitFlavor:commitTasting,chooseRating,previewRating,chooseColor,clearFlavor,
+    return {home,list,editor,flight,startFlight,createFlight,saveFlight,deleteFlight,moveFlightMember,reorderFlightMember,attachFlightMember,detachFlightMember,toggleFlightEdit,toggleFlightAdd,saveDraft,persistMeta,toggleCreateChoice,commitFlavor:commitTasting,chooseRating,previewRating,chooseColor,clearFlavor,
         showAssignDialog,assignExternalToBottling,startEditing,finishEditing,
         startExternalEdit:()=>showExternalEdit(true),cancelExternalEdit,persistExternalDetails,
         undoFlavor:()=>stepFlavor(-1),redoFlavor:()=>stepFlavor(1)};

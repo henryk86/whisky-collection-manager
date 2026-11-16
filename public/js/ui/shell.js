@@ -2,7 +2,61 @@ import { t } from '../i18n/index.js';
 import { newBottlingIcon, inventoryScanIcon, themeMoonIcon } from './action-icons.js';
 import { MAIN_PAGES } from '../navigation/pages.js';
 export function createShell({ root, state, applyTheme, renderModal }) {
+    let displayedRoute = null;
     function shell(content) {
+        // Data updates must not tear down the header, page scroll container and
+        // modal host. Rebuilding #app briefly sends long pages to the top,
+        // especially after deleting a photo or attachment. Only actual route
+        // changes require a full shell; they scroll to the top in navigation.
+        const route = [state.page, state.selected, state.tastingId, state.flightId].join('::');
+        const main = root.querySelector?.(':scope > main');
+        if (main && displayedRoute === route) {
+            const scrollY = typeof window !== 'undefined' ? window.scrollY : null;
+            const next = document.createElement('template');
+            next.innerHTML = content;
+            if (state.page === 'detail' && main.children.length === next.content.children.length) {
+                // Only replace changed top-level detail sections. The cover
+                // picture and tasting section remain mounted when a physical
+                // photo/file changes, avoiding a visible image-size collapse.
+                const previous = [...main.children];
+                const incoming = [...next.content.children];
+                for (let i = 0; i < incoming.length; i++) {
+                    if (previous[i].outerHTML !== incoming[i].outerHTML) {
+                        const oldHero = previous[i].querySelector('.detail-summary-grid .hero-photo');
+                        const newHero = incoming[i].querySelector('.detail-summary-grid .hero-photo');
+                        if (oldHero && newHero && newHero.querySelector('img')) {
+                            // When the first photo changes, keep the old image
+                            // area stable until its replacement is decoded.
+                            const previousStyle = newHero.getAttribute('style');
+                            newHero.style.minHeight = `${oldHero.getBoundingClientRect().height}px`;
+                            const image = newHero.querySelector('img');
+                            const done = () => {
+                                if (previousStyle === null) newHero.removeAttribute('style');
+                                else newHero.setAttribute('style', previousStyle);
+                            };
+                            if (image.complete && image.naturalWidth) {
+                                requestAnimationFrame(done);
+                            } else {
+                                image.addEventListener('load', done, {once:true});
+                                image.addEventListener('error', done, {once:true});
+                            }
+                        }
+                        previous[i].replaceWith(incoming[i]);
+                    }
+                }
+            } else {
+                main.replaceChildren(next.content);
+            }
+            // Guard against scroll anchoring changing the viewport when a
+            // replaced section is shorter (e.g. one fewer photo tile).
+            if (scrollY != null && Math.abs(window.scrollY - scrollY) > 1) {
+                window.scrollTo({top: scrollY, left: 0, behavior: 'instant'});
+            }
+            applyTheme();
+            if (state.modal) renderModal();
+            return;
+        }
+        displayedRoute = route;
         root.innerHTML = `<header class="site-header">
     <div class="header-inner">
     <div class="brand" role="button" tabindex="0" data-act="back" aria-label="${t("ui.navigation.backToCollection")}">
