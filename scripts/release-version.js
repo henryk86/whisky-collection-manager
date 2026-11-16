@@ -163,7 +163,7 @@ function bump(part, note) {
     console.log(`Version ${current} -> ${version}. Jetzt nach develop committen und danach develop -> main mergen.`);
 }
 
-/** Only the release snapshot (not develop or main) receives the new version. */
+/** Create the versioned release snapshot; a later verified step synchronizes both branches. */
 export function applyAutomatedRelease(version,commits,mergeSha,previousTag) {
     parseVersion(version);
     if (!commits.length || !/^[a-f0-9]{40}$/.test(mergeSha)) throw new Error('Invalid automated release plan');

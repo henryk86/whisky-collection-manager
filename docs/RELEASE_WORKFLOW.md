@@ -57,9 +57,9 @@ Bei spaeteren PRs nach `develop` kann per Squash gemergt werden; der entstehende
 1. Einmal lokal `npm run hooks:install` ausfuehren. Danach Commits mit Conventional-Commit-Betreff direkt nach `develop` pushen. Die Checks auf `develop` pruefen den neuen Push-Bereich; optionale PRs nach `develop` werden ebenfalls geprueft. Versionsdateien nicht manuell erhoehen.
 2. Wenn ausreichend Aenderungen gesammelt sind, einen PR **`develop -> main`** oeffnen. `Checks / test` prueft Unit-/Integrationstests, den Browser und **berechnet die geplante neue Version** bereits auf dem PR-Merge-Stand. Quellbranch und Zielbranch werden geprueft.
 3. **Nur du** startest den Merge ueber GitHub, als *Create a merge commit*. Die Actions haben keine Rechte, Branches zu mergen.
-4. GitHub startet auf `main` den Release-Workflow. Zunaechst prueft er ueber die GitHub-API, ob genau dieser Commit aus einem gemergten `develop -> main`-PR stammt. Ohne diesen Nachweis werden **weder Tag noch ZIP oder Docker-Image** erstellt. Vor Erstellen des Tags werden alle Tests auf dem freigegebenen Merge-Quellstand erneut ausgefuehrt. Danach werden die Versionsdateien nur im Detached-HEAD-Snapshot angelegt und durch `release:check` und `check` geprueft.
-5. Das Git-Tag `vX.Y.Z` und ein Draft-Release werden erzeugt. Die vorhandenen ZIP-/Offline-/Docker-Jobs arbeiten mit diesem Tag. Erst nach bestandenen Artefakt- und Image-Pruefungen wird der Draft veroeffentlicht und das Docker-Tag `latest` aktualisiert.
-6. Ein abgebrochener oder erneut gestarteter Workflow auf **demselben Merge-Commit** nutzt denselben existierenden Tag und Entwurf. Kein doppeltes Bumping oder Ueberschreiben bereits veroeffentlichter Tags. Nach einem Fehler den Workflow in GitHub erneut starten, nicht manuell die Version auf `main` erhoehen.
+4. GitHub startet auf `main` den Release-Workflow. Zunaechst prueft er ueber die GitHub-API, ob genau dieser Commit aus einem gemergten `develop -> main`-PR stammt. Ohne diesen Nachweis werden **weder Tag noch ZIP oder Docker-Image** erstellt. Vor Erstellen des Tags werden alle Tests auf dem freigegebenen Merge-Quellstand erneut ausgefuehrt. Danach werden die Versionsdateien im Detached-HEAD-Snapshot angelegt und durch `release:check` und `check` geprueft.
+5. Das Git-Tag `vX.Y.Z` und ein Draft-Release werden erzeugt. Die vorhandenen ZIP-/Offline-/Docker-Jobs arbeiten mit diesem Tag. Erst nach bestandenen Artefakt- und Image-Pruefungen **synchronisiert die Action `main` und `develop` gemeinsam auf den freigegebenen Versionsstand** (ohne Force-Push), aktualisiert `latest` und veroeffentlicht den Draft. Auf beiden Branches stimmen danach `package.json`, `package-lock.json`, README, Changelog, Teststatus/-historie und das Quellmanifest mit der neuen Version ueberein.
+6. Ein abgebrochener oder erneut gestarteter Workflow auf **demselben Merge-Commit** nutzt denselben existierenden Tag und Entwurf. Die Branch-Synchronisierung ist wiederholbar. Kein doppeltes Bumping oder Ueberschreiben bereits veroeffentlichter Tags. Nach einem Fehler den Workflow in GitHub erneut starten, nicht manuell die Version auf `main` erhoehen.
 
 **Keine neue kostenpflichtige Infrastruktur, kein PAT und kein Token mit Branch-Bypass:** Die Release-Action benoetigt `contents: write` lediglich fuer Tag und Release; `packages: write` fuer GHCR. Das von GitHub bereitgestellte `GITHUB_TOKEN` genuegt. Ein Tag oder Draft, den dieses Token erzeugt, startet keinen zweiten Workflow; alle Builds bleiben daher absichtlich in `.github/workflows/release.yml`.
 
@@ -71,6 +71,16 @@ Bei spaeteren PRs nach `develop` kann per Squash gemergt werden; der entstehende
 4. Das bestehende GHCR-Repository fuer GitHub Actions und Docker-Installationen erreichbar halten. Auf dem Raspberry Pi bei privaten Images mit einem `read:packages`-Token anmelden.
 5. **Einmaliger Umstieg:** Wenn `main` noch z. B. v1.3.3 enthaelt, `develop` aber schon die bisher manuell versionierte v1.4.0, akzeptiert die Automatik diesen Unterschied **nur beim erstmaligen Hinzufuegen** von `scripts/release-automation.js` auf `main`. Ein `v1.4.0`-Tag ist dafuer hilfreich, aber nicht zwingend erforderlich. Danach werden manuelle Versionsspruenge wieder abgelehnt. Vorhandene Changelog- und Testhistorie bleiben beim ersten Release erhalten.
 
+### Automatischer Abgleich von `main` und `develop`
+
+Nach Fertigstellung aller Release-Artefakte fuehrt `scripts/sync-release-branches.js` einen **atomaren Git-Push** aus: `main` zeigt auf den bereits getesteten, getaggten Release-Commit, `develop` auf denselben Stand. Damit sind Versionsnummer, Footer und aktuelle Versionsangaben in README, Changelog und Teststatus auf beiden Branches synchron. Es wird kein Merge durch die Action initiiert und niemals `--force` eingesetzt.
+
+Wenn zwischen Merge und Release auf `develop` weitere Anwendungscommits eingehen, bleibt deren Code erhalten: Ein neuer Metadaten-Commit synchronisiert gezielt `package.json`, Lockfile, README, Changelog, Teststatus/-historie und das Quellmanifest mit dem Release-Tag; die Hashes des Quellmanifests werden fuer den weiterentwickelten Code neu berechnet. Vor dem Push prueft eine read-only `git merge-tree`-Simulation, ob dadurch beim naechsten Release ein Merge-Konflikt (insbesondere im Quellmanifest) entstuende. Falls ja, stoppt der Prozess, statt einen konfliktbehafteten Branchzustand zu erzeugen. Die Versionsnummer zeigt weiterhin die **zuletzt veroeffentlichte** Version, nicht einen automatisch vorweggenommenen naechsten Release.
+
+Wurden im Zwischenzeitraum auch diese Metadatendateien editiert, oder wurde `main` anderweitig veraendert, verweigert der Synchronisierungsschritt den Push **fuer beide Branches**. Der Release verbleibt als Draft und `latest` wird nicht aktualisiert. Die Aenderungen muessen manuell geklaert werden; anschliessend kann der Workflow erneut ausgefuehrt werden. Historische `vX.Y.Z`-Referenzen in Fachdokumenten werden absichtlich nicht pauschal ersetzt.
+
+Der GitHub-`GITHUB_TOKEN`-Push loest keine weitere `push`-Action aus. Dadurch entsteht keine Release-Schleife. Die Release-Checks laufen zuvor auf dem freigegebenen Merge-Stand, und der Snapshot wird gesondert validiert.
+
 ## Verifikation
 
 ```bash
@@ -81,7 +91,7 @@ node scripts/release-automation.js validate --range BASE..HEAD
 node scripts/release-automation.js plan --json  # Nur auf einem Merge-Commit
 ```
 
-Die neuen Integrationstests erzeugen temporaere lokale Git-Repositories und pruefen Versionsprioritaet, Tag-Snapshot ohne Branch-Push, Retry ohne Doppel-Release und Ablehnung ungueltiger Commits bzw. direkter `main`-Pushes. Docker-/Offline-Pruefungen bleiben unveraendert Teil der GitHub-Release-Jobs. Das alte `npm run release:bump` ist fuer den Normalablauf **nicht mehr zu verwenden**; es bleibt nur als historisches Hilfswerkzeug erhalten.
+Die neuen Integrationstests erzeugen temporaere lokale Git-Repositories und pruefen Versionsprioritaet, Tag-Snapshot, atomaren Branch-Abgleich, Retry ohne Doppel-Release und Ablehnung ungueltiger Commits bzw. direkter `main`-Pushes. Docker-/Offline-Pruefungen bleiben unveraendert Teil der GitHub-Release-Jobs. Das alte `npm run release:bump` ist fuer den Normalablauf **nicht mehr zu verwenden**; es bleibt nur als historisches Hilfswerkzeug erhalten.
 
 ---
 

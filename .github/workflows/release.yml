@@ -1,7 +1,7 @@
 name: Release (merge develop -> main)
 
-# No manual bump and no commits to main. A tag points to a release-only
-# versioned child commit of the human-approved main merge.
+# The human-approved develop -> main merge triggers publication. After all
+# artifacts pass, an atomic non-forced push aligns main and develop to the tag.
 on:
   push:
     branches: [main]
@@ -58,8 +58,8 @@ jobs:
           set -euo pipefail
           node scripts/release-automation.js snapshot --output "$RUNNER_TEMP/wcm-release"
           source "$RUNNER_TEMP/wcm-release/release-info.txt"
-          # The versioned snapshot is an independent tag commit; neither
-          # main nor develop is modified or pushed by this workflow.
+          # Prepare the versioned tag before packaging; main and develop
+          # are only advanced together after every release artifact passes.
           git checkout --detach "$tag"
           node scripts/release-version.js check
           npm run check
@@ -253,6 +253,22 @@ jobs:
       contents: write
       packages: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Synchronize release version on main and develop
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          APPROVED_MERGE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node scripts/sync-release-branches.js --tag "$RELEASE_TAG" --merge "$APPROVED_MERGE_SHA"
       - uses: docker/setup-buildx-action@v4
       - uses: docker/login-action@v4
         with:
