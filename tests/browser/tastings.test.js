@@ -395,6 +395,8 @@ test('browser: rejected tasting DELETE keeps the editing page and confirmation o
         await open();
         await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
         await page.locator('[data-act="tastings-open"]').first().click();
+        // Existing tastings open read-only; deletion is available after Edit.
+        await page.locator('[data-act="tasting-edit-start"]').click();
         await page.locator('[data-act="tasting-delete"]').first().click();
         await page.route(`**/api/bottlings/${bottling.id}/tastings/${tasting.id}`, async route => {
             if (route.request().method() === 'DELETE') {

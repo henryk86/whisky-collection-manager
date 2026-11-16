@@ -1,9 +1,12 @@
 /** Small, dependency-free keyed DOM reconciliation for explicitly opted-in page regions.
  * Unlike string outerHTML comparisons, this preserves unchanged images, focus and
  * event-bound controls while updating only changed nodes. No direct event binding. */
+// Only photo *tiles* are keyed by photo ID. Their edit, delete and move
+// controls share the same data-photo-id but must never be reconciled as
+// interchangeable siblings (the old key discarded edit buttons on refresh).
 const keyFor = node => node.nodeType === 1
     ? (node.getAttribute('data-region') || node.id ||
-        (node.hasAttribute('data-photo-id') ? `photo:${node.getAttribute('data-photo-id')}` : null))
+        (node.hasAttribute('data-photo-tile') ? `photo:${node.getAttribute('data-photo-id')}` : null))
     : null;
 function compatible(a, b) {
     return a?.nodeType === b?.nodeType &&

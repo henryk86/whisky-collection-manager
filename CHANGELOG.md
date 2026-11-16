@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2 - 2026-11-16
+
+- CI-Browserregressionen: eindeutige Foto-Keys beim DOM-Abgleich, Schema-5-Testdaten und Verkostungs-Loeschtest korrigiert
+
 ## 1.0.1 - 2026-11-16
 
 - B-3: verlustfreie Schema-5-Migration aller Bestands- und Lagerdaten; ausschliesslich alte Verkostungsdaten entfallen

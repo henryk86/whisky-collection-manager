@@ -1,6 +1,6 @@
 # Architektur und Orientierung
 
-**Stand:** v1.0.1 (Shared-Module, HTTP-Cache, Schema-5-Migration und DOM-Regionen). Dieses Dokument beschreibt die eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
+**Stand:** v1.0.2 (Shared-Module, HTTP-Cache, Schema-5-Migration und DOM-Regionen). Dieses Dokument beschreibt die eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
 
 ## Grundprinzipien
 
@@ -55,6 +55,8 @@ Benutzeraktion
 ```
 
 ### Fehler- und DOM-Ereignislebenszyklus
+
+Der DOM-Abgleich in `public/js/ui/dom-reconcile.js` verwendet Fotokachel-IDs nur fuer Elemente mit `data-photo-tile`. Aktionsschaltflaechen (`data-act`), auch wenn sie `data-photo-id` tragen, erhalten keinen Fotokachel-Key; sonst koennen mehrere Geschwister denselben Key bekommen und sich gegenseitig verdraengen. Der Verhaltenstest `dom-reconcile-photo.test.js` prueft diesen Fall.
 
 `public/app.js` ruft Mutationen ueber `ui/action-result.js` auf und liefert ausdruecklich `{ok:true,value}` bzw. `{ok:false,error}`. Eine erfolgreiche Mutation muss die Sammlung und das Lager erneut laden koennen, bevor eine View navigiert, ein Modal schliesst oder einen Erfolg meldet. Bei API- oder Ladefehlern wird der Fehler angezeigt und die aufrufende Funktion prueft `ok` statt einem falsy API-Ergebnis zu vertrauen. Destruktive Bestaetigungen bleiben bei Fehlschlag offen; `events.js` verhindert Mehrfachausloesung waehrend laufender Bestaetigung.
 

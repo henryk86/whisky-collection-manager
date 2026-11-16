@@ -797,7 +797,7 @@ test('browser: six bottlings still use four columns on desktop', async () => {
         collection.bottlings = Array.from({ length: 6 }, (_, index) => ({
             id: `six-${index + 1}`,
             name: `Six Malt ${index + 1}`,
-            distilleryIds: [], bottles: [],
+            distilleryIds: [], bottles: [], tastings: [],
             createdAt: '2026-11-06T08:00:00.000Z',
         }));
         assert.equal((await requestJson(base, '/api/import/json', 'POST', collection)).status, 200);
@@ -818,9 +818,9 @@ test('browser: selected entries per page survive F5 in both collection modes', a
         collection.bottlings = Array.from({ length: 75 }, (_, index) => ({
             id: `persist-${index + 1}`,
             name: `Malt ${index + 1}`,
-            distilleryIds: [], bottles: [{
+            distilleryIds: [], tastings: [], bottles: [{
                 id: `bottle-persist-${index + 1}`,
-                inventoryNumber: String(index + 1), status: 'closed',
+                inventoryNumber: String(index + 1), status: 'closed', volumeType: 'standard',
             }],
             createdAt: '2026-11-06T08:00:00.000Z',
         }));
@@ -856,7 +856,7 @@ test('browser: 450 bottlings keep a fixed page size with only divisor-friendly g
             id: `bulk-${String(index + 1).padStart(4, '0')}`,
             name: `Malt ${String(index + 1).padStart(4, '0')}`,
             distilleryIds: [],
-            bottles: [],
+            bottles: [], tastings: [],
             createdAt: '2026-11-06T08:00:00.000Z',
         }));
         const result = await requestJson(base, '/api/import/json', 'POST', collection);
