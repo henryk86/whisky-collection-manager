@@ -1,6 +1,6 @@
-# Teststatus - Whisky Collection Manager v1.5.1
+# Teststatus - Whisky Collection Manager v1.5.2
 
-**Stand:** 2026-11-16. Automatischer Release-Snapshot aus Merge 99735bddf25c (v1.5.0).
+**Stand:** 2026-11-16. Automatischer Release-Snapshot aus Merge 18847d0334c0 (v1.5.1).
 
 ## Pruefungen
 
@@ -13,6 +13,7 @@
 
 ## Aenderungen
 
-- fix(release): synchronize versions on main and develop
+- fix(ci): correct generated release test status
+- fix(ci): implement version PR workflow and synchronization for protected main
 
 Fruehere CI-Resultate: [TESTHISTORIE.md](TESTHISTORIE.md).
