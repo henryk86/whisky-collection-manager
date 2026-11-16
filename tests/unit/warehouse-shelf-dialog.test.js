@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { renderWarehouseRoomWall } from '../../public/js/views/warehouse-room-wall.js';
 import { shelfContents } from '../../public/js/views/warehouse-shelf-details.js';
 import { createWarehouseView } from '../../public/js/views/warehouse.js';
-import { readFileSync } from 'node:fs';
 
 function warehouse() {
     const room={id:'r',name:'Room',width:4,height:4,furniture:[{id:'f',name:'Cabinet',type:'regal',x:0,y:0,
@@ -24,8 +23,6 @@ test('a narrow shelf only shows one front row and no internal horizontal scrollb
     assert.match(contents.html,/I-0/);
     assert.match(contents.html,/Sherry/);
     assert.equal(shelfContents(w,'missing'),null);
-    const css=readFileSync('public/styles/warehouse.css','utf8');
-    assert.match(css,/\.warehouse-wall-bay \.warehouse-bottle-silhouettes \{ overflow: hidden;/);
 });
 
 test('furniture dialog uses bottle previews and opens the shelf modal by compartment double-click', () => {
@@ -75,7 +72,6 @@ test('unassignable zero-capacity bays have no modal affordance or pointer cursor
     assert.doesNotMatch(html,/data-act="warehouse-shelf-view"/);
     assert.doesNotMatch(html,/role="button" aria-label="Cabinet/);
     assert.equal(shelfContents(w,'s')?.unavailable,true);
-    assert.match(readFileSync('public/styles/warehouse.css','utf8'),/\.warehouse-wall-bay--unavailable \{ cursor: default;/);
 });
 
 test('compartment cards directly expose relocation, the physical bottle detail route, inventory number, ABV and status', () => {

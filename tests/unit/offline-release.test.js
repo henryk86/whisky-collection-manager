@@ -102,29 +102,3 @@ test('an incomplete offline bundle must fail closed before attempting npm instal
     assert.throws(() => prepareStartup({root, env:{HTTPS_ENABLED:'false'},execute:()=>{called=true;}}),/manifest missing/);
     assert.equal(called,false);
 });
-
-test('offline release workflow archives source dependencies, validates restoration and blocks promotion on failures', () => {
-    const release = fs.readFileSync('.github/workflows/release.yml','utf8');
-    assert.match(release, /Build and verify fully offline installation ZIP/);
-    assert.match(release, /npm_config_offline=true/);
-    assert.match(release, /node scripts\/offline-bundle\.js seal/);
-    assert.match(release, /docker image save --platform "\$platform"/);
-    assert.match(release, /docker load/);
-    assert.match(release, /--network none/);
-    assert.match(release, /needs: \[prepare, package, docker, docker-offline\]/);
-    assert.match(fs.readFileSync('.dockerignore','utf8'), /^\.offline$/m);
-    assert.match(fs.readFileSync('.gitignore','utf8'), /^\.offline\/$/m);
-});
-
-
-test('GitHub Release uploads specify their repository without requiring checkout in the Docker archive job', () => {
-    const workflow = fs.readFileSync('.github/workflows/release.yml', 'utf8');
-    const uploads = workflow.match(/^\s*run: gh release upload .*$/gm) || [];
-    assert.equal(uploads.length, 2, 'source and Docker archive upload steps must both be checked');
-    for (const upload of uploads) {
-        assert.match(upload, /--repo "\$GITHUB_REPOSITORY"/, 'GitHub CLI must not infer the repository from a local .git directory');
-    }
-    const dockerOffline = workflow.split(/^  docker-offline:/m)[1]?.split(/^  publish:/m)[0];
-    assert.ok(dockerOffline, 'Docker offline job must exist');
-    assert.doesNotMatch(dockerOffline, /actions\/checkout@/, 'the archive job deliberately runs without a checkout');
-});

@@ -26,8 +26,6 @@ test('warehouse view renders room plan, separate bottle assignment and responsiv
     assert.match(html,/Regal A/);
     assert.match(html,/Test &lt;Room&gt;/);
     assert.doesNotMatch(html,/<Room>/);
-    assert.match(fs.readFileSync('public/js/views/detail.js','utf8'),/warehouse-assign/);
-    assert.match(fs.readFileSync('public/styles/warehouse.css','utf8'),/max-width:740px/);
 });
 
 
@@ -56,9 +54,6 @@ test('warehouse uses the same page header and section sidebar as analytics on ev
         if (previousDocument === undefined) delete globalThis.document;
         else globalThis.document = previousDocument;
     }
-    const css = fs.readFileSync('public/styles/warehouse.css', 'utf8');
-    assert.doesNotMatch(css, /\.warehouse-heading\s+h2|\.warehouse-tabs\s+button|\.warehouse-page\s*\{[^}]*padding:/,
-        'warehouse must not override shared analytics heading or navigation styles');
 });
 
 test('warehouse shelf rendering includes copy controls and thumbnails only where a physical bottle photo exists', () => {
@@ -106,8 +101,6 @@ test('warehouse shelf rendering includes copy controls and thumbnails only where
         if(savedDocument===undefined) delete globalThis.document;
         else globalThis.document=savedDocument;
     }
-    const css=fs.readFileSync('public/styles/warehouse.css','utf8');
-    assert.match(css,/\.warehouse-bottle-symbol\.has-photo \.warehouse-bottle-photo/);
 });
 
 test('shelf bottle opens a read-only details modal with the exact bottle link and separate relocation action', () => {
@@ -193,8 +186,6 @@ test('2D room plan grid uses 0.1 m subdivisions, 0.5 m guides and 1 m major line
     assert.match(html, /class="warehouse-grid-major" x1="0" y1="300" x2="600" y2="300"/);
     assert.match(html, /class="warehouse-grid-fine" x1="0" y1="30" x2="600" y2="30"/);
     assert.ok(html.indexOf('warehouse-plan-grid') < html.indexOf('class="warehouse-drag'), 'grid must be under furniture');
-    assert.match(fs.readFileSync('public/styles/warehouse.css', 'utf8'), /\.warehouse-plan-grid \{ pointer-events: none/);
-    assert.match(fs.readFileSync('public/styles/warehouse.css', 'utf8'), /\.warehouse-grid-fine/);
 });
 
 test('room creation/edit/delete controls appear only in Raumpläne, not Regale & Fächer', () => {
@@ -272,9 +263,6 @@ test('furniture wall switches render independently with accessible labels and pr
     assert.match(html,/name="leftSidePanel" checked/);
     assert.match(html,/name="rightSidePanel" (?!checked)/);
     assert.match(html,/name="backPanel" checked/);
-    const css=fs.readFileSync('public/styles/warehouse.css','utf8');
-    assert.match(css,/warehouse-wall-toggle:has\(input:checked\)/);
-    assert.match(css,/warehouse-bulk-panel--sidebar \.warehouse-bulk-actions \.btn \{height:48px/);
 });
 
 

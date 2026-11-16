@@ -1,4 +1,4 @@
-# Whisky Collection Manager v0.27.12
+# Whisky Collection Manager v1.4.0
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der Abfüllung über einzelne physische Flaschen bis zum Lagerfach. Eine Abfüllung kann mehrere Flaschen mit eigenen Inventarnummern, Zuständen, Fotos und Belegen enthalten.
 
@@ -6,24 +6,38 @@ Die Anwendung verwendet Node.js und Browser-ES-Module **ohne Datenbank und ohne 
 
 ## Entwicklung und Code-Reviews
 
+**Release-Strategie:** Aenderungen werden als Conventional Commits auf `develop` gesammelt; ein von dir freigegebener Merge nach `main` erzeugt automatisch genau einen getaggten Release-Snapshot mit der passenden Semantic-Version, dem Changelog, ZIPs und Docker-Images. Versionserhoehungen pro Entwicklungscommit entfallen. Fuer versionierte Quellcodeinstallationen das Git-Tag verwenden, nicht die unveraenderten Versionsdateien auf `main`. Details: [Release-Ablauf](docs/RELEASE_WORKFLOW.md).
+
+### Commit-Nachrichten (Entwicklung)
+
+Bei lokalen Aenderungen einmal pro Klon `npm run hooks:install` ausfuehren. Der lokale `commit-msg`-Hook verhindert ungueltige Conventional-Commit-Nachrichten bereits bei `git commit` (z. B. `fix(warehouse): Fach korrigieren`, `feat: neue Ansicht`). Neue Versionen werden weiterhin erst beim manuell gemergten PR `develop -> main` erstellt. Die GitHub-CI prueft Commit-Nachrichten zusaetzlich, weil lokale Git-Hooks umgangen werden koennen. [Release-Workflow](docs/RELEASE_WORKFLOW.md).
+
+
+**GitHub Free (privat):** Rulesets und Branch-Protection werden nicht durchgesetzt. Der Release-Workflow veroeffentlicht deshalb nur nach einem nachweislich gemergten PR von `develop` nach `main`; unerlaubte Pushes auf `main` kann er nicht verhindern.
+
+
 Die Anwendung wurde **vollständig durch ChatGPT programmiert**. Der Projektinitiator hat die Anforderungen formuliert und Korrekturen beziehungsweise Anpassungen angefordert, jedoch selbst keinen Anwendungscode geschrieben. Der Quellcode wird **regelmäßig mit Claude Code-Reviews unterzogen**.
+
+Die technische Architektur verwendet einen gemeinsamen DOM-Abgleich und zentrale Ereignisbehandlung. Schreibvorgaenge aktualisieren den lokalen Zustand ueber revisionsgepruefte API-Aenderungen; bei konkurrierenden Aenderungen werden die betroffenen Daten neu geladen. Quellcode-ZIP-Upgrades koennen mit einem SHA-256-Dateimanifest auf entfernte Altmodule geprueft werden, ohne die Sammlung, das Lager oder Medien anzutasten. Details: [Architektur](docs/ARCHITEKTUR.md), [API](docs/API.md) und [Release-Ablauf](docs/RELEASE_WORKFLOW.md).
 
 ## Funktionen
 
 | Bereich | Umfang |
 | --- | --- |
 | **Sammlung** | Abfüllungen und physische Flaschen verwalten; 0–n eigenständige datierte Verkostungen je Abfüllung sowie unabhängige Einzelverkostungen für nicht besessene Whiskys; Geschmacksprofil, Notizen, Farbe und Fünf-Gläser-Bewertung, mit Anzeige der letzten Bewertung in den Abfüllungsdetails und als dezente Glencairn-Gläser ohne Hintergrund auf dem Flaschenbild; Suche, Filter, Sortierung, Kachel- und Tabellenansicht sowie Scanner. |
-| **Flaschen & Medien** | Inventarnummern, Zustände, Kaufdaten, Fotos, Belege und Anhänge; Verkostungsnotizen lassen sich über eine gemeinsame Hauptseite erfassen – für Sammlungsabfüllungen mit 0–n Verkostungen oder unabhängig als einzelne Verkostung mit eingebetteten Angaben zum Whisky. Das Geschmacksprofil kann vollständig zurückgesetzt werden. Nicht-destruktiver Fotoeditor mit optionaler lokaler KI-Freistellung. Fehlende Bilder werden durch ein einheitliches Flaschenmotiv ersetzt. |
+| **Flaschen & Medien** | Inventarnummern, Zustände, Kaufdaten, Fotos, Belege und Anhänge; Verkostungsnotizen lassen sich über eine gemeinsame Hauptseite erfassen – für Sammlungsabfüllungen mit 0–n Verkostungen oder unabhängig als einzelne Verkostung mit eingebetteten Angaben zum Whisky. **Tasting-Flights** gruppieren optional mehrere Verkostungsnotizen mit gemeinsamem Kommentar. Die Verkostungsreihenfolge lässt sich per Ziehgriff mit Maus oder Touch ändern; Auf-/Ab-Buttons bleiben alternativ nutzbar. Die Glencairn- und Punktebewertungen sind in festen Spalten ausgerichtet. Jede Notiz kann höchstens einem Flight zugeordnet sein. Das Geschmacksprofil kann vollständig zurückgesetzt werden. Nicht-destruktiver Fotoeditor mit optionaler lokaler KI-Freistellung. Fehlende Bilder werden durch ein einheitliches Flaschenmotiv ersetzt. |
 | **Analyse** | Bestands-, Wert- und Sammlungsanalysen mit Filtern und Zeitaggregationen. |
 | **Landkarte** | OpenStreetMap-Destilleriekarte mit Standorten, Clustern und Statusfiltern. |
 | **Lager** | Räume, Möbel und Fächer; 2D- und 3D-Raumplan, virtuelle Regalwand, Fachnavigation mit Schutz ungespeicherter Änderungen, sofort aktualisierte Kapazitäten, mehrere Fotos je Möbelstück sowie Einzel- und Mehrfach-Umlagerung. Import und Export von Raumplänen einschließlich optionaler Flaschenzuordnungen; bei belegten Räumen sichere Löschung mit vorheriger Freigabe aller Flaschen. |
 | **Datensicherung** | Verschlüsselte AES-256-ZIP-Backups, manuell oder zeitgesteuert, für USB-, NAS- und Cloud-Ziele; Wiederherstellung nach Bestätigung. |
 | **Oberfläche** | Responsive Light-/Darkmode-Oberfläche auf Deutsch und Englisch. |
-| **Hilfe** | Eigene Hilfeseite mit praktischen Bedienhinweisen und ausklappbaren technischen Backup-Anleitungen für zentrales ZIP-Passwort, USB, NAS, Rclone/Dropbox, OneDrive und Wiederherstellung. |
+| **Hilfe** | Eigene Hilfeseite mit aktuellen Bedienhinweisen zu Abfüllungen, Verkostungsnotizen (inklusive externer Abfüllungen, Lesemodus und Bewertung), Tasting-Flights (Zuordnung, Reihenfolge und Löschen), Lager und weiteren Funktionen sowie ausklappbaren technischen Backup-Anleitungen. |
 
 Verkostungsunterseiten zeigen die Zurück-Navigation oberhalb des Seitentitels. Abfüllungsdaten stehen im ersten Inhaltsblock ohne zusätzliche Überschrift; das vorhandene Abfüllungsfoto aus der Abfüllungsdetailseite wird darin kompakt neben den Stammdaten angezeigt. Die Verkostungslisten verwenden die Zeilenstruktur von Lager → Flasche finden. Externe Abfüllungsdaten werden nur bei der erstmaligen Erfassung direkt eingegeben; danach erscheinen sie lesend mit einem Stift-Button zum Bearbeiten. Die drei Notizfelder bleiben oben ausgerichtet und einzeln in der Höhe veränderbar. Gespeicherte Verkostungen öffnen im Lesemodus; ein Stift-Button im ersten Datenblock (Datum und Titel) aktiviert die Bearbeitung. Der Info-Block einer Sammlungsabfüllung bietet einen direkten Link „Zu den Abfüllungsdetails“.
 
-Der Upload von Belegen, Dokumenten und Fotos an physischen Flaschen aktualisiert die Detailansicht nach erfolgreicher Speicherung.
+Auf der Abfüllungsdetailseite erhält jede physische Flasche **eine einzelne Karte ohne verschachtelten Rahmen**. Bei vorhandenen Fotos steht das **erste Bild der gespeicherten Reihenfolge links als kleinere Vorschau**, daneben stehen die **Flaschendaten in drei Spalten** mit Beschriftung über dem Wert und **ohne Trennlinien zwischen den Angaben** (an schmalen Viewports zweispaltig). **Fotos und Dateien/Nachweise beginnen jeweils links über die ganze Kartenbreite unter dem Kopfbereich.** Die Fotoleiste behält WB-/Freistellungsmarkierungen, Bildeditor, Löschen, Sortiergriff, Pfeile, Upload und Kameraaufnahme. Auf Mobilgeräten folgen auf die Vorschau erst die Flaschendaten, dann Fotos und Nachweise. Ohne Foto entfällt die Bildspalte; die Fotoaktionen bleiben verfügbar. Nach einer Umordnung wechselt das große Vorschaubild automatisch.
+
+Der Upload von Belegen, Dokumenten und Fotos an physischen Flaschen aktualisiert die Detailansicht nach erfolgreicher Speicherung. **Foto- und Dateiaenderungen aktualisieren die Seite ohne sichtbares Hoch- und Zurueckscrollen; bestaetigte Dialogaktionen behalten die aktuelle Scrollposition bei.**
 
 Anlegeaktionen verwenden dasselbe Plus-Symbol. In den Abfüllungsdetails steht „Neue Verkostung“ wie „Weitere Flasche“ über der jeweiligen Kachel; in Verkostungslisten befindet sich die Aktion innerhalb des Listenblocks. Im Verkostungseditor stehen Datum (schmal), Titel (breit) und Bearbeitungsaktionen in einer dreispaltigen Zeile, bei schmalen Ansichten umbrechend.
 
@@ -68,6 +82,12 @@ npm start
 ```
 
 Die Beispiel-IP durch die eigene Adresse ersetzen. Automatischen Server-Neustart beim Entwickeln bietet `npm run dev` (nach dem ersten `npm start`). Weiterführende Hinweise: [Entwicklung](docs/ENTWICKLUNG.md).
+
+## Quellcode-ZIP ohne Datenverlust aktualisieren
+
+Beim Ueberschreiben von ZIP-Versionen koennen entfernte JavaScript-Module auf der Platte bleiben. Fuer einen sicheren Abgleich den bisherigen und den neuen Release jeweils in **eigene Verzeichnisse** entpacken. Mit `node scripts/upgrade-audit.js <alt> <neu> <installation>` werden verwaiste Dateien nur angezeigt. Die ausdrueckliche Option `--prune` entfernt ausschliesslich unveraenderte alte Quellmodule, nicht aber Daten, Fotos, Belege, Einstellungen oder lokal modifizierte Dateien. **Vor jedem Upgrade ein vollstaendiges Backup** von Sammlung, Lager und Medien erstellen. Details und Beispiele: [Release-Workflow](docs/RELEASE_WORKFLOW.md).
+
+Docker-Updates bleiben unveraendert und benoetigen diesen ZIP-Abgleich nicht.
 
 ## Langfristige Offline-Wiederherstellung
 
@@ -118,21 +138,21 @@ npm run test:browser    # Browser-Tests (Playwright/Chromium erforderlich)
 npm run release:check   # Versionskonsistenz
 ```
 
-Der aktuelle Stand der tatsächlich durchgeführten Tests und offene Prüfungen sind in [TESTSTATUS](docs/TESTSTATUS.md) dokumentiert. Testhistorie: [TESTHISTORIE](docs/TESTHISTORIE.md). Browser- und Geräteprüfungen sind nicht durch die Node-Tests ersetzt.
+Die [Teststrategie](docs/TESTSTRATEGIE.md) beschreibt die Verhaltensabdeckung und die Trennung von Runtime- und Deployment-Vertragspruefungen. Der aktuelle Stand der tatsächlich durchgeführten Tests und offene Prüfungen sind in [TESTSTATUS](docs/TESTSTATUS.md) dokumentiert. Testhistorie: [TESTHISTORIE](docs/TESTHISTORIE.md). Browser- und Geräteprüfungen sind nicht durch die Node-Tests ersetzt.
 
 Die Oberfläche ist auf Deutsch und Englisch lokalisiert. Die Sprachdateien liegen in [`public/locales`](public/locales/index.json); fachliche Konventionen und API-Verträge erläutern [Entwicklung](docs/ENTWICKLUNG.md) und [API](docs/API.md).
 
 ## Versionierung und Release
 
-Entwicklung erfolgt auf `develop`. Ein erfolgreicher Pull Request nach `main` startet den GitHub-Release-Prozess mit Quellcode-ZIP und Docker-Image für AMD64/ARM64.
-
-Kleine Änderungen erhöhen den **Patchlevel**, größere Erweiterungen die **Minor-Version**, inkompatible Änderungen die **Major-Version**:
+Entwicklung erfolgt auf `develop`: direkte Commits und optional PRs. Jeder Commit verwendet ein Conventional-Commit-Praefix, z. B. `fix:`, `feat:`, `refactor:` oder `docs:`. Einzelne Commits erhoehen **keine** Versionsnummer. Ausschliesslich ein durch dich gemergter PR `develop -> main` startet nach den CI-Pruefungen einen versionierten GitHub Release mit Quellcode-ZIP und Docker-Image fuer AMD64/ARM64. Der hoechste Commit-Typ entscheidet einmalig ueber Patch, Minor oder Major.
 
 ```bash
-npm run release:bump -- patch "Kurze Änderungsbeschreibung"
-npm run release:check
-npm run verify
+npm run check           # Entwicklungspruefungen
+npm test                # Verhaltens- und Integrationstests
+npm run release:check   # Fertigen Release-Snapshot pruefen, kein Entwicklungs-Bump
 ```
+
+`npm run release:bump` ist nur noch ein historisches Werkzeug und darf im normalen Entwicklungsablauf nicht ausgefuehrt werden.
 
 [Release-Workflow](docs/RELEASE_WORKFLOW.md) · [Changelog](CHANGELOG.md)
 

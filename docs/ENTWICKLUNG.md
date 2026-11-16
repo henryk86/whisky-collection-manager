@@ -34,7 +34,7 @@ t('warehouse.selection.count', {selected: 2, total: 5}); // 2 von 5 ausgewählt
 
 Englisch ist mit `public/locales/en.json` vollständig enthalten und in `public/locales/index.json` registriert. Weitere Sprachen mit **denselben Schlüsseln** als zusätzliche JSON-Datei ablegen und registrieren. Fehlende übersetzte Schlüssel fallen auf Deutsch zurück; vom Benutzer angegebene Bezeichnungen wie Raum-, Whisky- und Destillerienamen bleiben davon unberührt. `{count}` bzw. `{name}` sind benannte Parameter; ein begrenzter ICU-Pluralformat-Teil (`{count, plural, one {# Flasche} other {# Flaschen}}`) wird mittels `Intl.PluralRules` unterstützt. Beim Sprachwechsel über Einstellungen lädt die App neu, sodass alle dynamischen Ansichten konsistent neu aufgebaut werden.
 
-**Schlüsselkonvention (ab v0.15.2):** Jeder Key benennt die fachliche Funktion auf Englisch, nicht die deutsche Beschriftung. Beispiele: `analytics.quality.title`, `backups.restore.confirmReplaceCollection`, `warehouse.furniture.types.cabinet`. Neue Kennungen müssen stabil und sprachneutral sein. Bei gespeicherten Möbeltypen, Frontarten und Kamerarichtungen erfolgt der Zugriff über explizite Lookup-Tabellen (`FURNITURE_TYPE_KEYS`, `FRONT_KEYS`, `CAMERA_KEYS`, `ROOM_SECTION_KEYS`); ein Übersetzungsschlüssel darf nicht durch Stringverkettung zusammengebaut werden. Methoden der Browser-History, Dateipfade und technische Konstanten sind **keine** UI-Übersetzungen. `npm run check` erkennt fehlende und automatisch erzeugt wirkende Schlüssel sowie verbotene Stringverkettungen.
+**Schlüsselkonvention:** Jeder Key benennt die fachliche Funktion auf Englisch, nicht die deutsche Beschriftung. Beispiele: `analytics.quality.title`, `backups.restore.confirmReplaceCollection`, `warehouse.furniture.types.cabinet`. Neue Kennungen müssen stabil und sprachneutral sein. Bei gespeicherten Möbeltypen, Frontarten und Kamerarichtungen erfolgt der Zugriff über explizite Lookup-Tabellen (`FURNITURE_TYPE_KEYS`, `FRONT_KEYS`, `CAMERA_KEYS`, `ROOM_SECTION_KEYS`); ein Übersetzungsschlüssel darf nicht durch Stringverkettung zusammengebaut werden. Methoden der Browser-History, Dateipfade und technische Konstanten sind **keine** UI-Übersetzungen. `npm run check` erkennt fehlende und automatisch erzeugt wirkende Schlüssel sowie verbotene Stringverkettungen.
 
 **Verbindliche Konvention:** Keine neuen deutschen GUI-Literale in Views, Formularen oder Benachrichtigungen; neue Texte in `de.json` mit fachlichem Schlüssel ergänzen und `t()` nutzen. Benutzerinhalte weiterhin vor HTML-Injektion mit `escapeHtml()` absichern. Übersetzungen aus Dateikatalogen sind statische UI-Ressourcen und sollten keine HTML-Tags enthalten. `npm run check` prüft referenzierte Schlüssel, Schlüsselformat und die Platzhalter in zusätzlichen Sprachdateien. Für serverseitig generierte API-Fehler ist eine spätere Erweiterung mit stabilen API-Fehlercodes sinnvoll; bisherige Fehlertexte aus dem Backend bleiben unverändert und werden nicht über deutsche Satzmuster übersetzt.
 
@@ -52,6 +52,8 @@ Die Breite aller Hauptseiten wird allein vom gemeinsamen `main` in `public/style
 ## Tests
 
 `npm test` entdeckt alle `*.test.js` unter `tests/unit/` und `tests/integration/` mit Node-eigenem Test-Runner. Keine Bash-Globs, damit derselbe Aufruf auch unter Windows funktioniert. OpenSSL ist für den TLS-Integrationstest erforderlich; ohne OpenSSL wird dieser Test explizit ausgelassen.
+
+Integrationstests starten über `tests/helpers/server.js` jeweils einen eigenen kurzlebigen Node-Prozess mit eigenem Datenverzeichnis. Der Server bindet selbst einen freien Port (`listen(0)`), meldet den tatsächlich gebundenen Port per IPC und wird erst danach von seinem Test verwendet. Einen zuvor getesteten Port **nicht** freigeben und an einen neuen Prozess weiterreichen: Bei parallelen CI-Workern führt das zu Portkollisionen und unbeabsichtigten Zugriffen auf fremde Testdaten. `tests/integration/server-isolation.test.js` prüft vier gleichzeitig gestartete Server. Der Produktions-Serverstart bleibt unverändert.
 
 `npm run check` prüft JavaScript-Syntax, statische relative ES-Modulimporte, Übersetzungsschlüssel und lokale Markdown-Links. Es meldet fehlende Zieldateien, Importzyklen und nicht auflösbare Dokumentationslinks. Es ist **kein** vollständiger Linter, TypeScript-Compiler oder Security-Audit. JSDoc in `shared/types.js` dokumentiert das Datenmodell, erzwingt aber keine statische Typprüfung.
 
@@ -88,7 +90,7 @@ Die Zeitreihen werden in der Anzeige nach Monat/Jahr aggregiert, ihre beiden **D
 
 ## Lagerverwaltung weiterentwickeln
 
-Für Lagerfunktionen `server/storage/warehouse-store.js`, `server/domain/warehouse-fields.js`, `server/services/warehouse.js`, `public/js/views/warehouse.js`, `public/js/views/warehouse-presentation.js` und `public/styles/warehouse.css` beachten. Pure Geometriemodule in `public/js/domain/warehouse-compartments.js` und `warehouse-placement.js` werden von Browser **und** Server importiert; DOM-/Netzwerkabhängigkeiten dort vermeiden. Separates Datenformat unter `data/warehouse.json`, keine neuen Lagerfelder in `collection.json` einführen. Tests: `tests/integration/warehouse.test.js`, `tests/unit/warehouse-ui.test.js`; API-/ZIP- und UI-Regressionsprüfungen durchführen. Details: [LAGER.md](LAGER.md).
+Für Lagerfunktionen `server/storage/warehouse-store.js`, `server/domain/warehouse-fields.js`, `server/services/warehouse.js`, `public/js/views/warehouse.js`, `public/js/views/warehouse-presentation.js` und `public/styles/warehouse.css` beachten. Pure Geometriemodule in `shared/warehouse-compartments.js` und `shared/warehouse-placement.js` werden von Browser **und** Server importiert; DOM-/Netzwerkabhängigkeiten dort vermeiden. Separates Datenformat unter `data/warehouse.json`, keine neuen Lagerfelder in `collection.json` einführen. Tests: `tests/integration/warehouse.test.js`, `tests/unit/warehouse-ui.test.js`; API-/ZIP- und UI-Regressionsprüfungen durchführen. Details: [LAGER.md](LAGER.md).
 
 ### Sprach-Regressionstests
 
@@ -101,7 +103,7 @@ Neue GUI-Beschriftungen müssen in beiden Katalogen (`public/locales/de.json`, `
 - Der Codecheck ruft `scripts/check-docs.js` auf. Er überprüft relative Markdown-Ziele, aber keine externen URLs oder die Semantik von Überschriften.
 - Bewusst verbleibende technische Schulden und nicht ohne Funktionstest mögliche Umbauten stehen in [TECHNISCHE_SCHULDEN.md](TECHNISCHE_SCHULDEN.md).
 
-## Security-Regressionen (v0.15.10)
+## Security-Regressionen
 
 `tests/integration/security-review.test.js` prueft JSON-Medientypen,
 CSRF-/Host-Abwehr, HTML-Sicherheitsheader und ungueltige Pfade.

@@ -1,6 +1,6 @@
 # Funktions- und Anforderungsspezifikation – Whisky Collection Manager
 
-**Produktstand:** v0.23.2 · **Stand:** 14.11.2026 · **Datenformat:** `schemaVersion: 4`
+**Produktstand:** aktuelles Schema 5 · **Stand:** 16.11.2026 · **Datenformat:** `schemaVersion: 5`
 
 Dieses Dokument beschreibt den **aktuellen Funktionsumfang und die einzuhaltenden Regeln**. Es ersetzt den früheren Entwurf vom 05.11.2026, der teilweise noch React/TypeScript, XLSX-Export und eine externen Such-API als Planung enthielt. Für tatsächlich ausgeführte Tests gilt [TESTSTATUS.md](TESTSTATUS.md), für ältere technische Entscheidungen [TESTHISTORIE.md](TESTHISTORIE.md).
 
@@ -14,7 +14,7 @@ Es gibt keine zwingende Cloud, keine externe Datenbank und keinen Build-Schritt 
 
 | Objekt | Struktur und wesentliche Felder | Fachregel |
 | --- | --- | --- |
-| Sammlung | `schemaVersion: 4`, `settings`, `reservedInventoryNumbers`, `distilleries[]`, `bottlings[]` | Eine zentrale, atomar gespeicherte `collection.json` |
+| Sammlung | `schemaVersion: 5`, `settings`, `reservedInventoryNumbers`, `distilleries[]`, `bottlings[]` | Eine zentrale, atomar gespeicherte `collection.json` |
 | Destillerie | `id`, `name`, optional `country`, `region`, `status`, `latitude`, `longitude` | Stammdaten und geografische Herkunft; benutzerdefinierte Positionen haben Vorrang |
 | Abfüllung | `id`, `distilleryIds[]`, `name`, `bottler`, `whiskyType`, `ageYears`, `abv`, Nenn-`volumeMl`, Fass- und Jahrgangsangaben, WB-ID / Quellenlink, `completionStatus`, `bottles[]`, `tastings[]` | Eine Abfüllung kann mehrere beteiligte Destillerien und beliebig viele physische Flaschen haben |
 | Physische Flasche | `id`, `inventoryNumber`, `volumeType`, `volumeMl`, `status`, Preise/Kaufdaten, Öffnungsdatum, `photos[]`, `files[]` | Individuelle Eigenschaften liegen **nur** an dieser konkreten Flasche |
@@ -24,19 +24,19 @@ Es gibt keine zwingende Cloud, keine externe Datenbank und keinen Build-Schritt 
 - Die Inventarnummer ist ein eindeutiger **String**, damit führende Nullen erhalten bleiben. Früher verwendete Nummern bleiben im Verlauf hinterlegt und werden bei automatischen Vorschlägen übersprungen; eine manuelle Wiedervergabe ist erlaubt, sobald die Nummer keiner aktuellen Flasche mehr gehört. Bei gleichzeitig vorhandenen Flaschen bleibt die Nummer eindeutig; ein gescannter QR-/Barcode ist genau diese Inventarnummer, kein zweites Etikettenfeld.
 - Fotos und Dokumente liegen als Dateien außerhalb der JSON und sind über relative Pfade den physischen Flaschen zugeordnet. Es gibt keine separate Ablage von Bildern auf Abfüllungsebene.
 - **Herkunftsland und Whiskyregion werden aus den Destilleriestammdaten ermittelt**, nicht mehr im Abfüllungseditor eingegeben. Historische Abfüllungsfelder bleiben ausschließlich zur Kompatibilität lesbar. Schottische Standorte heißen **Schottland**, nicht UK/GB. Uneindeutige Regionen bleiben unbekannt.
-- Die Validierung und Aktualisierung liegt in `server/domain/`, `server/services/` und `server/storage/`; Änderungen an `collection.json` sind atomar und erfolgen nach Validierung. Vor erforderlichen Schema-Migrationen wird gesichert.
+- Die Validierung und Aktualisierung liegt in `server/domain/`, `server/services/` und `server/storage/`; Änderungen an `collection.json` sind atomar und erfolgen nach Validierung. Sammlungen der Schemaversionen 1 bis 4 werden nach Sicherung und Validierung migriert; alle Nicht-Verkostungsdaten und die gesamte Lagerdatei bleiben erhalten. Nur historische Verkostungsdaten entfallen.
 
 ## 3. Sammlung, Erfassung und Detailansichten
 
 - **Neue Flasche:** bestehende Abfüllung suchen und weitere Flasche hinzufügen oder neue Abfüllung samt erster Flasche erstellen. Vorhandene Stammdaten werden bei einer zusätzlichen Flasche nicht überschrieben.
 - **Übersicht:** Kachel- und Tabellenansicht, Ansichtsmodus Abfüllungen/physische Flaschen, Suche, Status, Destillerie und Flaschentyp, Sortierung, Pagination (12/24/48/96). Die Anzahl pro Seite bleibt nach F5 im selben Browser erhalten. Filter greifen vor der Pagination.
 - **Destilleriefilter:** nur Destillerien mit mindestens einer erfassten Abfüllung; auch mehrfache Zuordnungen. Status- und Flaschentypfilter beziehen sich in Kombination auf dieselbe physische Flasche.
-- **Detailseite:** Stammdaten und Fotos, sämtliche physischen Flaschen mit Inventarnummer, Status, Kauf-/Verkostungsdaten, Nachweisen und Bearbeitungsaktionen. Flaschenfotos lassen sich mit der Maus am Bild oder Sortiergriff ziehen, auf Touch-Geraeten am Griff umsortieren sowie ueber die Pfeilbuttons verschieben. Ein abgebrochener Drag aendert die Reihenfolge nicht. Kartenlink öffnet einen oder mehrere zugehörige Standorte.
+- **Detailseite:** Stammdaten und Fotos; bei physischen Flaschen mit Foto wird das erste Bild der gespeicherten Reihenfolge links groß gezeigt, die komplette bearbeitbare Fotogalerie bleibt direkt darunter. Ohne Fotos entfällt die Bildspalte. Status, Kauf-/Lagerdaten und Aktionen stehen daneben, Dateien/Nachweise unten über die ganze Kartenbreite. Alle physischen Flaschen behalten Inventarnummer und Bearbeitungsaktionen. Flaschenfotos lassen sich mit der Maus am Bild oder Sortiergriff ziehen, auf Touch-Geraeten am Griff umsortieren sowie ueber die Pfeilbuttons verschieben. Ein abgebrochener Drag aendert die Reihenfolge nicht. Kartenlink öffnet einen oder mehrere zugehörige Standorte.
 - **Scanner:** QR-/Barcode-Etiketten mit manueller Eingabe als Rückfall. Bekannte Codes führen zur passenden Flasche; unbekannte können einer Flasche zugeordnet werden. Keine Funktion für Etikettengenerierung oder -druck.
 - **Design:** Responsive Desktop-/Mobilansichten, Light/Dark Theme, einheitliche Icons. Mobile Eingaben und Dialoge dürfen auch bei schmalen Bildschirmen keinen horizontalen Überlauf auslösen. Das Erscheinungsbild der Sammlung ist Massstab: Inhaltsflaechen und Karten-/Formular-Panels in Analyse, Hilfe, Lager, Karte und Einstellungen verwenden einheitliche eckige Rahmen. Kleine Bedienelemente haben eine einheitliche, minimale Abrundung (2 px); absichtlich runde Elemente (Radio-Buttons, Kartensymbole, Kreischarts) behalten ihre Form. Die linke Bereichsnavigation ist pro Seite in ihrer Breite abgestimmt; lange Hilfe-Themen wechseln auf Tablets zum mobilen Auswahlfeld.
 - **Hilfe:** Eigene, direkt aufrufbare Hilfeseite (`/?view=help`) mit Hauptnavigationseintrag in beiden Sprachen. Allgemeine Bedienhinweise, Datenhaltung und Backupgrundlagen stehen dort; auf den Arbeitsseiten verbleiben nur notwendige Eingabehinweise und sicherheitsrelevante Warnungen. Desktop: gemeinsame Seitennavigation mit Analyse und gerader goldener Aktivmarkierung ohne gerundete Flaeche; kleinere Bildschirme: Auswahlfeld. Die Anleitungen stehen unverkuerzt in nummerierten Inhaltsabschnitten.
 
-### Interaktives Geschmacksprofil je Verkostung (v0.26.0)
+### Interaktives Geschmacksprofil je Verkostung
 
 - Jede Abfüllung besitzt **0–n eigenständige Verkostungen**. Jede Verkostung besitzt optional ein Geschmacksprofil mit acht Achsen und ganzzahligen Ausprägungen zwischen 0 und 10.
 - Achsen sind sprachneutral persistiert; die Anzeige übersetzt sie für Deutsch und Englisch. Insbesondere entspricht `feinty` der deutschen Beschriftung **„Alkoholisch“**.
@@ -73,7 +73,7 @@ Dashboard mit **sechs Unterseiten und 38 Auswertungen**: Sammlungsbestand, Herku
 
 Details der Kennzahlen: [ANALYSE.md](ANALYSE.md).
 
-### Eigenständige Verkostungen (ab v0.26.0)
+### Eigenständige Verkostungen
 
 - Eine Abfüllung hat 0–n einzeln datierte und unabhängige Verkostungen.
 - Jede Verkostung enthält Datum, optionalen Titel, Farbe, acht Geschmacksachsen,
@@ -118,14 +118,14 @@ Quellcodeänderungen erfolgen auf `develop`, ein Merge nach `main` führt zum Re
 `npm run check`, `npm test`, `npm run release:check` und für Browserfunktionalität `npm run test:browser` sind getrennt auszuwerten. Bestandenes Unit-Testing ist kein Nachweis für Browser- oder Hardware-Kompatibilität. Der aktuelle Prüfstatus einschließlich offener iOS-/Android-Abnahmen steht in [TESTSTATUS.md](TESTSTATUS.md). Weitere technische Hinweise: [ARCHITEKTUR.md](ARCHITEKTUR.md) und [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
 
 
-## Mehrsprachige Fehlermeldungen (v0.17.10)
+## Mehrsprachige Fehlermeldungen
 
 - UI-Validierungs- und Bildverarbeitungsfehler nutzen stabile Übersetzungsschlüssel (`de`, `en`).
 - API-Validierungsfehler erhalten einen stabilen `errorCode`; das Frontend lokalisiert anhand dieses Codes.
 - Der englische API-Text dient als Standard-Fallback und wird nicht als Übersetzung per Textvergleich genutzt.
 - Unbekannte serverseitige Fehler zeigen weder deutsche Rohtexte noch interne Diagnoseinformationen, sondern eine neutrale, lokalisierte Meldung.
 
-## Verkostungsnotizen (v0.27.5)
+## Verkostungsnotizen
 
 - Die Hauptnavigation enthält eine eigene Verkostungsstartseite mit gemeinsamer chronologischer Liste; als Seitenicon wird das bestehende Glencairn-Bewertungsglas verwendet.
 - Für Sammlungsabfüllungen sind 0–n Verkostungen möglich. Übersichts- und Einzelverkostungsseite zeigen allgemeine Seitentitel ohne Icons. Die Abfüllung erscheint im ersten Informationsblock mit vorhandenen Angaben zu Alter, Fasstyp und Alkoholgehalt. Zurück-Links befinden sich oberhalb der vollständigen Seitenüberschrift.
@@ -136,3 +136,13 @@ Quellcodeänderungen erfolgen auf `develop`, ein Merge nach `main` führt zum Re
 - Die letzte Bewertung wird in der Sammlungsübersicht als fünf anteilig gefüllte Glencairn-Gläser auf dem Flaschenbild angezeigt und lässt sich über einen Bewertungs-Schnellfilter eingrenzen.
 - Externe Einzelverkostungen lassen sich ohne Duplikat einer vorhandenen Sammlungsabfüllung zuordnen; ihre ID und Verkostungsdaten bleiben erhalten.
 - Globaler App-Header und vorhandene Abfüllungsdetailseite werden durch diese Funktion nicht verändert.
+
+
+### Optionale Tasting-Flights
+
+- Ein Tasting-Flight gruppiert bereits vorhandene oder neu erstellte Verkostungsnotizen aus der Sammlung und von externen Whiskys; jede Notiz gehört zu höchstens **einem** Flight.
+- Ein Flight besitzt einen Namen, ein Datum, eine optionale gemeinsame Notiz und eine **explizit geordnete** Liste von Verkostungs-IDs. Positionen können auf- und abwärts verschoben werden. Wiedereinstieg oder direktes Öffnen muss möglich sein.
+- Einzelne Verkostungsdaten bleiben an ihrem ursprünglichen Ort, inklusive ihrer individuellen Bewertung und der bestehenden „letzte Verkostung“-Regel. Ein Flight hat **keine** neue Gesamtbewertung und erfasst keine einzelnen Schluckwechsel.
+- Eine aus dem Flight heraus neu angelegte Sammlungs- oder externe Verkostung wird in einer atomaren Speicherung erzeugt und angehängt.
+- Wird eine externe Verkostung später einer eigenen Abfüllung zugeordnet, bleibt ihre Flight-Position erhalten. Beim Löschen eines einzelnen Eintrags wird sein Flight-Verweis entfernt. Beim Löschen eines Flights bleiben alle verkosteten Einträge bestehen.
+- Die Anzeige von Namen/Bewertung in der mobilen Verkostungsliste erhält genügend Platz und vermeidet Umbruch einzelner kurzer Wörter.

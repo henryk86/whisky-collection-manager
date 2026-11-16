@@ -14,17 +14,17 @@ Die Seite verwendet denselben Kopfbereich und dieselbe linke Bereichsnavigation 
 2. Unter **Raumpläne** Räume verwalten und die Positionen vorhandener Lagermöbel im Grundriss bearbeiten. Möbel werden unter **Regale & Fächer** angelegt und konfiguriert. Unterstützt werden Regale, **Hängeregale**, Vitrinen, Schränke, Kommoden/Schubladen, Kisten und sonstige Lagermöbel. Position X/Y, Breite, Tiefe, Drehung sowie **Unterkante über Boden** und **Möbelhöhe** (jeweils Meter) sind einstellbar. Möbel lassen sich im 2D-Raumplan ziehen; die Änderung wird serverseitig gespeichert. Möbel dürfen nicht außerhalb der Raumgrenzen liegen oder andere Möbel im selben Höhenbereich schneiden. Das gilt für Neuanlage, Bearbeitung, Mehrfachbearbeitung und direktes Verschieben. Berühren von Kanten ist zulässig. Im 2D-Raumplan gibt es eine 10-cm-Rasterunterteilung mit deutlich sichtbaren 50-cm- und 1-m-Linien; die Positionsgenauigkeit bleibt 1 cm (kein automatisches Einrasten). Die Auswahl „Planebene“ trennt in 2D Bodenmöbel und erhöht platzierte Möbel, damit übereinanderliegende Möbel einzeln erreichbar sind. Die Raumpläne öffnen sich standardmäßig als interaktive 3D-Ansicht; die 2D-Ansicht mit Verschiebefunktion kann jederzeit ausgewählt werden.
 3. Unter **Regale & Fächer** Möbel anlegen, einzeln oder mehrfach bearbeiten und beliebige Fächer hinzufügen. **Gemischte Möbel:** Jedes Fach besitzt unabhängig vom Möbeltyp eine Frontart: Standard des Möbeltyps, **offen**, **Holztür**, **Glastür** oder **Schublade**. So lassen sich unten kleine Holztüren, darüber offene Regalböden und oben Glastüren in **einem Möbel** kombinieren. Die Fächer werden von **unten nach oben** gespeichert, aber von **oben nach unten** in der Oberfläche angezeigt; die Pfeile ↑/↓ ändern ihre reale Reihenfolge. Für jedes Fach lässt sich eine optionale Höhe in **Zentimetern** festlegen (5–500 cm). Ohne Höhenangabe verteilt sich die nach festen Fachhöhen verbleibende Möbelhöhe gleichmäßig auf die automatischen Fächer. Die Summe festgelegter Fachhöhen darf die Möbelhöhe nicht überschreiten. Sind alle Fachhöhen festgelegt, darf oben ein freier Rest verbleiben; er wird angezeigt und kein Fach künstlich vergrößert. Optional kann pro Fach eine maximale Flaschenzahl angegeben werden (leer = unbegrenzt, 0 = keine Flaschen erlaubt). Eine visuelle Regal-Vorderansicht zeigt die zugeordneten Flaschen mit ihren vorhandenen Fotos, falls vorhanden, sonst als Flaschensymbole. Bilder stammen aus den bereits lokal gespeicherten Fotos der jeweiligen physischen Flasche; es werden keine zusätzlichen Bilder kopiert.
 4. In der Regalansicht kann ein einzelnes Fach mit **Kopieren** in dasselbe oder ein anderes Möbel kopiert werden (Name, Kapazität, Fachhöhe und Fronttyp ohne Flaschenzuordnung). Über **Kopieren** am Möbel lässt sich ein Regal oder eine Vitrine wahlweise **mit sämtlichen Fächern** oder **ohne Fächer** im gleichen oder einem anderen Raum duplizieren. Das System sucht einen freien Standort im Raumplan; falls kein Platz vorhanden ist, wird nichts geändert und eine Fehlermeldung angezeigt. Kopien erhalten eigene IDs und übernehmen **niemals** Flaschenzuordnungen.
-5. Unter **Flaschen finden** nach Abfüllung, Inventarnummer, Alter, Erscheinungsjahr, Fasstyp oder Lagerort suchen, auf „Nur ohne Lagerort“ eingrenzen und eine physische Flasche einem Fach zuordnen. Die linksbündige Flaschenliste zeigt Alter, Erscheinungsjahr und Fasstyp an, sofern sie in der Abfüllung hinterlegt sind. Auf der Abfüllungsdetailseite zeigt jede Flasche den Lagerort sowie den Button **Lagerort** zum Zuordnen/Umlagern.
+5. Unter **Flaschen finden** nach Abfüllung, Inventarnummer, Alter, Erscheinungsjahr, Fasstyp oder Lagerort suchen, auf „Nur ohne Lagerort“ eingrenzen und eine physische Flasche einem Fach zuordnen. Die linksbündige Flaschenliste zeigt Alter, Erscheinungsjahr und Fasstyp an, sofern sie in der Abfüllung hinterlegt sind. Auf der Abfüllungsdetailseite zeigt jede Flasche den bisherigen Lagerort sowie den Button **Umlagern**, der unmittelbar die Zielauswahl öffnet.
 
 Die virtuelle Ablage **„Nicht zugeordnet“** oberhalb der Regalwand ist beim Öffnen der Seite zunächst **eingeklappt**. Ein Klick auf die Überschrift blendet ohne zusätzlichen Erklärungstext direkt Suche, Flaschen und Seitennavigation ein; erneutes Klicken klappt sie zu. Bei Neuzeichnungen der Regalwand bleibt der Zustand erhalten. Pro Seite werden maximal 24 Flaschen angezeigt. Auch hier sind Alter, Erscheinungsjahr und Fasstyp verfügbar, wenn die Angaben zur Abfüllung existieren. Diese drei Felder sind Teil der lesenden Lager-API, nicht der gespeicherten Lagerzuordnungen.
 
-## Fachbearbeitung und Kapazitätsaktualisierung (v0.24.0)
+## Fachbearbeitung und Kapazitätsaktualisierung
 
 Der Fach-Editor besitzt **Vorheriges/Nächstes** für die Fächer desselben Möbels in der sichtbaren Reihenfolge (oben nach unten). Ungespeicherte Eingaben werden vor dem Wechsel durch ein anwendungseigenes Modal mit **Speichern, Verwerfen, Abbrechen** geschützt. Speichern erfolgt vor dem Wechsel; ein Validierungsfehler verhindert den Wechsel. Ohne Änderungen kann direkt gewechselt werden.
 
 Beim Speichern der Fachkapazität wird die bereits geöffnete Möbelübersicht mit den neuesten Lagerdaten aktualisiert. Die Kapazität und Belegungsanzeige erscheinen sofort ohne erneutes Öffnen des Regals. Die Änderungsfunktion nutzt den bisherigen Lagerdatensatz und erfindet keine separate Kopie der Fachinformationen.
 
-## Fotos an Möbelstücken (v0.24.0)
+## Fotos an Möbelstücken
 
 Möbelstücke (einschließlich Regale, Schränke und Vitrinen) besitzen optional eine sortierte Liste `photos`. Im Möbelmanager können mehrere Bilder hochgeladen, vergrößert, umsortiert und einzeln gelöscht werden. Die Obergrenze beträgt **24 Fotos pro Möbelstück**. Neue Fotos werden unter `images/<möbel-id>/furniture-<foto-id>.<format>` im bestehenden persistenten Bildspeicher abgelegt; die zugehörigen IDs und Pfade stehen in `data/warehouse.json`. Alte Lagerdateien ohne `photos` bleiben gültig.
 
@@ -90,14 +90,14 @@ Die 3D-Ansicht basiert nun auf **Three.js/WebGL2** und verwendet aus den bestehe
 
 Die 3D-Szene ist nur eine Darstellung der vorhandenen Lagerorte. Sie speichert keine weiteren 3D-Objekte und verändert weder `warehouse.json` noch `collection.json`. Die 2D-Ansicht bleibt für das Positionieren/Verschieben maßgeblich.
 
-## Virtuelle Regalwand und Mehrfachzuordnung (ab v0.18.1)
+## Virtuelle Regalwand und Mehrfachzuordnung
 
 - Die Regalwand unter **Regale & Fächer** zeigt die Frontansichten aller Schränke/Regale nach den Koordinaten im Grundriss und ihrer Blickrichtung (0°, 90°, 180°, 270°). Gegenüberstehende Wände werden hintereinander zu einer virtuellen Wand entfaltet; innerhalb einer Blickrichtung wird die reale seitliche Position beibehalten. Möbel mit weitgehend gleicher Grundfläche und unterschiedlichen, nicht überlappenden Höhen (zum Beispiel Schrank und Hängeregal darüber) werden in **einer gemeinsamen Spalte auf den gespeicherten Höhen** dargestellt. Namenssortierung ist nur noch ein Tie-Breaker. Die tatsächlichen Breiten, Möbelhöhen, Fachhöhen und Unterkantenhöhen folgen einem Maßstab. Explizit festgelegte Fachhöhen werden nicht gestreckt; eine verbleibende ungenutzte Höhe wird nicht als neues Fach dargestellt.
 - Die virtuelle Wand hat **keine eigene vertikale Scrollbar und keine `vh`-Höhenbegrenzung**. Ihre Höhe richtet sich nach dem höchsten Möbel (einschließlich Montagehöhe), sodass die Seite normal vertikal scrollt. Nur die horizontale Bewegung findet innerhalb der Regalwand statt.
 - In der **Regalwand** markiert ein Klick/Tipp auf eine Flasche diese mit einer sichtbaren farbigen Hinterlegung; erneutes Klicken entfernt sie aus der Auswahl. Checkboxen in der Regalwand entfallen. Flaschen können einzeln oder als markierte Gruppe per Pointer Events zwischen Fächern und Regalen verschoben werden. Ein **Doppelklick auf eine Flasche** oeffnet die Einzel-Flaschenvorschau. Die Schaltflaeche **Flaschendetails** oeffnet bei genau einer markierten Flasche dieselbe Vorschau; fuer nicht zugeordnete Flaschen gilt dies ebenfalls. In der separaten Flaschenliste sind Checkboxen weiterhin verfügbar; der Dialog **Auswahl zuordnen** bleibt für die gemeinsame Zuordnung erhalten.
 - `POST /api/warehouse/bottles/bulk` nimmt `{ "ids": ["bottleId", ...], "shelfId": "shelfId" }` entgegen; `shelfId: null` entfernt die Zuordnungen. Der Server validiert Flaschen, Ziel und **gemeinsame** Kapazität vor jeder Änderung und speichert die Zuordnung atomar. Der bisherige Einzel-Endpunkt bleibt bestehen.
 
-## Einzel-/Mehrraum-Transfer (ab v0.19.0)
+## Einzel-/Mehrraum-Transfer
 
 In **Lagerübersicht** und **Raumpläne** öffnet **Räume übertragen** einen einzelnen Dialog mit den Reitern **Räume exportieren** und **Räume importieren**. Die Reiter belegen nie gleichzeitig Platz; beim Wechsel bleiben die bereits gewählten Optionen erhalten. Im Export-Reiter können Räume ausgewählt und als JSON-Datei heruntergeladen werden. Ein einzelner Raum, mehrere oder alle Räume sind möglich; Flaschenzuordnungen werden nur bei aktivierter Option in die Datei aufgenommen. Möbel/Fächer einschließlich ihrer Maße, Positionen, Türbereiche und Kapazitäten werden übertragen. Die Sammlung, Bilder, Belege und die Flaschenstammdaten sind ausdrücklich **kein** Bestandteil dieses Formats.
 
@@ -105,7 +105,7 @@ Der Reiter **Räume importieren** liest eine solche Datei. Eine serverseitige Vo
 
 Format: `format: "wcm-room-transfer"`, `formatVersion: 1`, `includesAssignments`, `rooms[]`, `assignments[]`. Jede Zuordnung enthält `bottleId`, `shelfId` und `inventoryNumber` (falls vorhanden). Beim Import kann die Übernahme der Zuordnungen nochmals abgewählt werden. Es handelt sich **nicht** um das vollständige Sicherungsformat. Das verschlüsselte ZIP-Backup ist für den Umzug der gesamten Installation einschließlich Medien vorzuziehen.
 
-## Fachmodal für mehrere Flaschenreihen (ab v0.19.0)
+## Fachmodal für mehrere Flaschenreihen
 
 Fächer zeigen in der Regalwand nur die vordere Reihe (maximal fünf Flaschen). Die bisherige horizontale Scrollbar innerhalb einzelner Fächer entfällt. Die Anzeige `+N` nennt die Flaschen hinter der sichtbaren Reihe. Ein **Doppelklick** auf die Fachfläche der Regalwand (Tastatur: Enter/Leertaste) oder auf die Fachflaeche im Einzelmoebel-Modal öffnet eine eigene vollständige Fachansicht als Dialog. Ein einfacher Klick auf die Fachfläche öffnet keinen Dialog. Einzelklick auf eine Flasche markiert sie fuer die Mehrfachbearbeitung; ein Doppelklick auf eine Flasche oeffnet deren Einzel-Flaschenvorschau. Drag-and-drop bleibt unabhaengig davon bedienbar. Dieser zeigt saemtliche Flaschen des Fachs als Karten, vorhandene Alter-/Jahrgang-/Fassangaben, Foto/Symbol sowie direkte Aktionen zum Umlagern und zur Detailseite. Klicks auf einzelne Flaschen im Einzelmöbel-Modal öffnen stattdessen die Einzel-Flaschenansicht mit Umlagern und dem Link **Zu den Flaschendetails**. Der separate Button **Flaschen anzeigen** im Moebelmodal entfaellt; die `+N`-Anzeige bei mehr als sechs Flaschen kann weiterhin den kompletten Fachinhalt oeffnen. Die Auswahlsteuerung der Regalwand wird im Fachdialog nicht dupliziert. Die reale Kapazität und das Umlagern per Drag-and-drop sind unabhängig von der gekürzten Frontansicht.
 
@@ -198,7 +198,7 @@ Der 2D-Raumplan zeigt ein nicht-interaktives Raster mit Linien im Abstand von 0,
 
 - `public/js/views/warehouse.js`: Getrennte Teilansichten für Raumpläne (Raumgeometrie und 2D/3D-Positionierung) und Regale & Fächer (Möbel- und Fachverwaltung, Flaschen-Umlagerung), gemeinsame Auswahl- und Speichervorgänge.
 - `public/js/views/warehouse-presentation.js`: reine HTML- und SVG-Darstellung einschließlich Fachlisten und Grundriss.
-- `public/js/domain/warehouse-compartments.js` und `warehouse-placement.js`: gemeinsame browserunabhängige Fachhöhen-, Möbeltyp- und Kollisionsregeln für Browser und Server.
+- `shared/warehouse-compartments.js` und `shared/warehouse-placement.js`: gemeinsame browserunabhängige Fachhöhen-, Möbeltyp- und Kollisionsregeln für Browser und Server.
 - `server/domain/warehouse-fields.js`: Normalisierung und Prüfung eingehender Fach- und Möbelwerte.
 - `server/services/warehouse.js`: atomare Anwendungsfälle für Raum-, Möbel-, Fach- und Flaschenzuordnungen.
 - `server/storage/warehouse-store.js`: Validierung und persistenter Dateiersatz.
@@ -207,11 +207,11 @@ Der 2D-Raumplan zeigt ein nicht-interaktives Raster mit Linien im Abstand von 0,
 Die Modulgrenzen und ihr Datenfluss sind auch in [ARCHITEKTUR.md](ARCHITEKTUR.md) dokumentiert.
 
 
-### Dialog zum Umlagern einer Flasche (v0.16.15)
+### Dialog zum Umlagern einer Flasche
 
-- Das Modal **Lagerort** zeigt die betroffene Flasche und den aktuellen Lagerort deutlich getrennt von den Bearbeitungsfeldern.
-- **Lagerort ändern** ist anfangs eingeklappt. Erst beim Öffnen werden die Eingaben und die Aktion **Speichern** sichtbar; unveränderte Lagerorte können ohne Speichern angesehen werden.
-- Ein neuer Lagerort wird über die aufeinander aufbauenden Felder **Raum**, **Möbel** und **Fach** ausgewählt.
+- Das gemeinsame Modal **Lagerort** zeigt die betroffene Flasche und den aktuellen Lagerort auf breiten Bildschirmen kompakt nebeneinander; auf schmalen Geräten stehen beide Angaben untereinander.
+- Nach **Umlagern** sind die Auswahl für den neuen Lagerort und **Speichern** unmittelbar sichtbar – es gibt keinen weiteren Schritt **Lagerort ändern**. Der bisherige Lagerort bleibt als Information darüber stehen.
+- Ein neuer Lagerort wird über die aufeinander aufbauenden Felder **Raum**, **Möbel** und **Fach** ausgewählt. Auf Desktop stehen die drei Auswahlfelder nebeneinander, mobil untereinander. Die Größen und Abstände folgen weiterhin dem üblichen Dialogstil.
 - Belegte und freie Fachkapazitäten werden angezeigt; volle Fächer sind für neue Zuordnungen deaktiviert.
 - Die Option **Ohne Lagerort** hebt eine bestehende Zuordnung ausdrücklich auf.
 - Auf schmalen Bildschirmen werden alle Felder untereinander angezeigt; die API erhält unverändert nur die Ziel-Fach-ID.

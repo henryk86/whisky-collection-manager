@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {startTestServer,requestJson as api} from '../helpers/server.js';
+import {latestTasting} from '../../shared/tasting-records.js';
 const notes=nose=>({nose,palate:'',finish:''});
 test('tasting CRUD, latest-date summary, no implicit migration and cross-bottling isolation',async()=>{
     const server=await startTestServer();
@@ -18,7 +19,8 @@ test('tasting CRUD, latest-date summary, no implicit migration and cross-bottlin
         assert.equal(old.status,201);
         let current=(await api(server.base,'/api/collection')).data.bottlings[0];
         assert.deepEqual(current.tastings.map(x=>x.rating),[80,91.5,99]);
-        assert.equal(current.rating,91.5,'latest date, not insertion order');
+        assert.equal(latestTasting(current).rating,91.5,'latest date, not insertion order');
+        assert.equal(current.rating,undefined,'no persisted summary');
         assert.deepEqual((await api(server.base,endpoint)).data.map(x=>x.rating),[91.5,80,99]);
         assert.equal((await api(server.base,`${endpoint}/${first.data.id}`)).data.rating,80);
         assert.equal((await api(server.base,`/api/bottlings/${b.id}/tastings/${first.data.id}`)).status,404);
@@ -27,18 +29,18 @@ test('tasting CRUD, latest-date summary, no implicit migration and cross-bottlin
         const edit=await api(server.base,`${endpoint}/${recent.data.id}`,'PATCH',{rating:null,tastingNotes:notes('Vanilla')});
         assert.equal(edit.status,200);
         current=(await api(server.base,'/api/collection')).data.bottlings[0];
-        assert.equal(current.rating,null,'latest without score remains unscored');
-        assert.equal(current.tastingNotes.nose,'Vanilla');
+        assert.equal(latestTasting(current).rating,null,'latest without score remains unscored');
+        assert.equal(latestTasting(current).tastingNotes.nose,'Vanilla');
         assert.equal((await api(server.base,endpoint,'POST',{tastedOn:'2026-02-31',rating:99})).status,400);
         assert.equal((await api(server.base,`${endpoint}/${recent.data.id}`,'PATCH',{id:'tamper'})).status,400);
         assert.equal((await api(server.base,`${endpoint}/${recent.data.id}`,'DELETE')).status,200);
         current=(await api(server.base,'/api/collection')).data.bottlings[0];
-        assert.equal(current.rating,80);
+        assert.equal(latestTasting(current).rating,80);
         await api(server.base,`${endpoint}/${first.data.id}`,'DELETE');
         await api(server.base,`${endpoint}/${old.data.id}`,'DELETE');
         current=(await api(server.base,'/api/collection')).data.bottlings[0];
         assert.equal(current.tastings.length,0);
-        assert.equal(current.rating,null);
+        assert.equal(latestTasting(current),null);
         const exported=await api(server.base,'/api/collection');
         assert.deepEqual(exported.data.bottlings[0].tastings,[]);
     } finally {await server.stop();}

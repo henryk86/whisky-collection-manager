@@ -3,7 +3,7 @@
  * Keep the existing input normalization and error messages compatible.
  */
 import { fail } from './errors.js';
-import { FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm } from '../../public/js/domain/warehouse-compartments.js';
+import { FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm } from '../../shared/warehouse-compartments.js';
 
 const types = new Set(FURNITURE_TYPES);
 export function name(value) {

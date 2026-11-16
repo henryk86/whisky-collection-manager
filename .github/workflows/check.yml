@@ -28,7 +28,22 @@ jobs:
       - run: npm test
       - run: npx playwright-core install --with-deps chromium
       - run: npm run test:browser
-      - name: Only develop may be merged to main; release version must be unused
+      - name: Validate directly pushed develop commits
+        if: github.event_name == 'push'
+        env:
+          PUSH_BEFORE: ${{ github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git cat-file -e "$PUSH_BEFORE^{commit}" 2>/dev/null; then
+            node scripts/release-automation.js validate --range "$PUSH_BEFORE..HEAD"
+          else
+            node scripts/release-automation.js validate --range "HEAD^..HEAD"
+          fi
+      - name: Validate future pull requests to develop
+        if: github.event_name == 'pull_request' && github.base_ref == 'develop'
+        run: node scripts/release-automation.js validate --range "HEAD^1..HEAD^2"
+      - name: Only develop may be merged to main; preview semantic release
         if: github.event_name == 'pull_request' && github.base_ref == 'main'
         env:
           PR_SOURCE: ${{ github.head_ref }}
@@ -40,4 +55,4 @@ jobs:
             echo 'Release pull requests to main must originate from develop in this repository.' >&2
             exit 1
           }
-          node scripts/release-version.js check --fresh
+          node scripts/release-automation.js plan --json

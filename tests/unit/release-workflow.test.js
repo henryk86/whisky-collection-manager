@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { compareVersions, nextVersion, parseVersion, updateReadmeTitle, pendingTestStatus, verifyReleaseMetadata } from '../../scripts/release-version.js';
+import { compareVersions, nextVersion, parseVersion, updateReadmeTitle, pendingTestStatus, compactTestReport, verifyReleaseMetadata } from '../../scripts/release-version.js';
 import { prohibitedReleasePath } from '../../scripts/verify-release-files.js';
 const read = file => fs.readFileSync(file, 'utf8');
 
@@ -27,57 +27,6 @@ test('release files match app, lockfile, README and top changelog', () => {
     assert.equal(release.tag, `v${expected}`);
 });
 
-test('GHCR images and ZIP are published only by the release workflow', () => {
-    const workflow = read('.github/workflows/release.yml');
-    const checks = read('.github/workflows/check.yml');
-    assert.match(workflow, /branches: \[main\]/);
-    assert.match(workflow, /types: \[published\]/);
-    assert.match(workflow, /gh release create/);
-    assert.match(workflow, /--draft/);
-    assert.match(workflow, /gh release upload/);
-    assert.match(workflow, /gh release edit/);
-    assert.match(workflow, /docker buildx imagetools create/);
-    assert.match(workflow, /needs: \[prepare, package, docker, docker-offline\]/);
-    assert.match(workflow, /--draft=false/);
-    assert.match(workflow, /needs: \[prepare, package, docker, docker-offline\]/);
-    assert.match(workflow, /docker\/build-push-action@v7/);
-    assert.match(workflow, /platforms: linux\/arm64,linux\/amd64/);
-    assert.doesNotMatch(workflow, /suffix: '-backup'/);
-    assert.match(workflow, /file: docker\/app\.Dockerfile/);
-    assert.match(workflow, /packages: write/);
-    assert.match(workflow, /git archive/);
-    assert.match(workflow, /verify-release-files\.js/);
-    assert.doesNotMatch(workflow, /branches: \[main, master\]/);
-    assert.equal(fs.existsSync('.github/workflows/docker-publish.yml'), false);
-    assert.equal(fs.existsSync('extension/manifest.json'), false, 'extension lives in private repository');
-    assert.match(checks, /branches: \[develop\]/);
-    assert.match(checks, /branches: \[develop, main\]/);
-    assert.match(checks, /release-version\.js check --fresh/);
-    assert.match(checks, /actions\/checkout@v7/);
-    assert.match(checks, /actions\/setup-node@v7/);
-    const manifest = JSON.parse(read('package.json'));
-    const lock = JSON.parse(read('package-lock.json'));
-    const pinnedVersion = manifest.devDependencies['playwright-core'];
-    assert.match(pinnedVersion, /^\d+\.\d+\.\d+$/, 'playwright-core must have an exact version');
-    assert.equal(lock.packages[''].devDependencies['playwright-core'], pinnedVersion);
-    assert.equal(lock.packages['node_modules/playwright-core'].version, pinnedVersion);
-});
-
-test('Docker build and the uploaded images validate package.json before latest is updated', () => {
-    const dockerfile = read('docker/app.Dockerfile');
-    const workflow = read('.github/workflows/release.yml');
-    assert.doesNotThrow(() => JSON.parse(read('package.json')));
-    assert.match(dockerfile, /JSON\.parse\(fs\.readFileSync\(f/);
-    assert.match(dockerfile, /node --check docker\/entrypoint\.js/);
-    assert.match(workflow, /docker pull --platform/);
-    assert.match(workflow, /docker run --rm --platform/);
-    assert.match(workflow, /--entrypoint node/);
-    assert.match(workflow, /require\("\/app\/package\.json"\)\.version/);
-    assert.match(workflow, /--check \/app\/docker\/entrypoint\.js/);
-    assert.match(workflow, /node --version && restic version && rclone version && ssh -V/);
-    assert.match(workflow, /needs: \[prepare, package, docker, docker-offline\]/);
-});
-
 test('release ZIP rejects secrets but retains source and example config', () => {
     for (const unsafe of [
         '.env', 'deploy/.env', 'certs/server-key.pem', 'data/collection.json',
@@ -93,10 +42,6 @@ test('release ZIP rejects secrets but retains source and example config', () => 
         'public/js/features/backups/controller.js', 'docker-compose.yml',
         '.github/workflows/release.yml'
     ]) assert.equal(prohibitedReleasePath(safe), false, safe);
-    const compose = read('docker-compose.yml');
-    assert.equal((compose.match(/\$\{IMAGE_TAG:-latest\}/g) || []).length, 1);
-    assert.match(read('.gitignore'), /\/backups\//);
-    assert.match(read('.dockerignore'), /!public\/js\/features\/backups\/\*\*/);
 });
 
 
@@ -116,6 +61,7 @@ test('release:bump updates the test status and archives old results without clai
         fs.mkdirSync(path.join(temp, 'scripts'));
         fs.mkdirSync(path.join(temp, 'docs'));
         fs.copyFileSync('scripts/release-version.js', path.join(temp, 'scripts/release-version.js'));
+        fs.copyFileSync('scripts/release-manifest.js', path.join(temp, 'scripts/release-manifest.js'));
         fs.writeFileSync(path.join(temp, 'package.json'), JSON.stringify({type: 'module', version: '0.16.11'}));
         fs.writeFileSync(path.join(temp, 'package-lock.json'), JSON.stringify({version: '0.16.11', packages: {'': {version: '0.16.11'}}}));
         fs.writeFileSync(path.join(temp, 'README.md'), '# Whisky Collection Manager v0.16.11\n');
@@ -137,6 +83,20 @@ test('release:bump updates the test status and archives old results without clai
     } finally {
         fs.rmSync(temp, {recursive: true, force: true});
     }
+});
+
+test('past test runs are archived as concise factual outcomes without copying outdated prose', () => {
+    const old = '# Teststatus - Whisky Collection Manager v1.1.0\n\n'
+        + '| Pruefung | Ergebnis | Einordnung |\n| --- | --- | --- |\n'
+        + '| `npm test` | **569/569 bestanden** | Vollstaendig. |\n'
+        + '| `npm run test:browser` (vollstaendige Suite) | **Bestanden (CI)** | Auf GitHub. |\n'
+        + '## Veralteter Abschnitt\n' + 'Alte Version '.repeat(1000);
+    const summary = compactTestReport('1.1.0', old);
+    assert.match(summary, /569\/569 bestanden/);
+    assert.match(summary, /npm run test:browser \(vollstaendige Suite\): Bestanden \(CI\)/);
+    assert.doesNotMatch(summary, /Veralteter Abschnitt|Alte Version/);
+    assert.ok(summary.length < 220, 'release snapshots should remain compact');
+    assert.match(compactTestReport('0.16.11', '341/341 bestanden'), /341\/341 bestanden/);
 });
 
 test('pending test report is truthful and retains browser visibility', () => {

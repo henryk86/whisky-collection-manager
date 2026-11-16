@@ -18,6 +18,7 @@ export function createState(route) {
         page: route.page,
         selected: route.selected,
         tastingId: route.tastingId || null,
+        flightId: route.flightId || null,
         search: '',
         status: 'all',
         distillery: 'all',

@@ -1,6 +1,6 @@
 /** Presentation-only entries: one row per bottling or one row per physical bottle. */
 import { bottleStatusLabels, whiskyTypeName } from './labels.js';
-import { displayedTastingRating } from './tasting-records.js';
+import { displayedTastingRating } from '../../../shared/tasting-records.js';
 
 export const OVERVIEW_MODES = Object.freeze(['bottlings', 'bottles']);
 

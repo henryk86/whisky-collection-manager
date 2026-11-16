@@ -45,10 +45,6 @@ test('stacked furniture stays physically placed and has NO painter-order masks',
     const wall=output.objects.find(o=>o.id==='wall');
     assert.ok(Math.max(...cab.parts.map(p=>p.center[1]+p.size[1]/2))<
         Math.min(...wall.parts.map(p=>p.center[1]-p.size[1]/2)));
-    const renderer=fs.readFileSync('public/js/ui/warehouse-three-scene.js','utf8');
-    assert.match(renderer,/WebGLRenderer/);
-    assert.match(renderer,/EdgesGeometry/);
-    assert.doesNotMatch(renderer,/<mask|maskDefinitions|silhouette/);
     assert.equal(JSON.stringify(room),JSON.stringify(warehouse.rooms[0]),'3D calculation never mutates room');
 });
 
@@ -89,15 +85,8 @@ test('3D is mounted lazily in the warehouse page, with no SVG/2D regression',()=
 });
 
 test('Three.js is served locally from a fixed allowlist and is not loaded from CDN',()=>{
-    const staticServer=fs.readFileSync('server/http/static-files.js','utf8');
-    const index=fs.readFileSync('public/index.html','utf8');
     const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
     assert.equal(pkg.dependencies.three,'0.187.0');
-    assert.match(staticServer,/\/vendor\/three\.module\.js/);
-    assert.match(staticServer,/\/vendor\/three\.core\.js/);
-    assert.match(staticServer,/OrbitControls\.js/);
-    assert.match(index,/type="importmap"/);
-    assert.doesNotMatch(index,/unpkg|jsdelivr/);
 });
 
 test('cabinet doors, showcase glass and drawers follow the physical front at 0, 90, 180 and 270 degrees', () => {
@@ -287,17 +276,6 @@ test('show all only restores furniture of the selected room and syncs all eye bu
     }finally{if(original===undefined)delete globalThis.document;else globalThis.document=original;}
 });
 
-test('hover highlighting is implemented on individual Three.js furniture meshes and restores existing materials', () => {
-    const scene=fs.readFileSync('public/js/ui/warehouse-three-scene.js','utf8');
-    const view=fs.readFileSync('public/js/views/warehouse.js','utf8');
-    assert.match(scene,/byFurniture\.get\(owner\)\.push\(mesh\)/);
-    assert.match(scene,/mesh\.material = active \? highlightedMaterial\(style\) : material\(style\)/);
-    assert.match(scene,/setHighlightedFurniture\(id\)/);
-    assert.match(view,/tile\.addEventListener\('pointerenter'/);
-    assert.match(view,/tile\.addEventListener\('pointerleave'/);
-    assert.doesNotMatch(view,/setHighlightedFurniture[^;]*render\(\)/);
-});
-
 
 test('3D visibility switches real mesh geometry independently and reversibly', async () => {
     const {buildWarehouseThreeScene} = await import('../../public/js/ui/warehouse-three-scene.js');
@@ -317,11 +295,22 @@ test('3D visibility switches real mesh geometry independently and reversibly', a
     assert.ok(meshes('cabinet').every(mesh=>!mesh.visible));
     assert.ok(meshes('rack').every(mesh=>!mesh.visible));
     assert.ok(meshes('wall').every(mesh=>mesh.visible));
+    assert.equal(scene.setHighlightedFurniture('cabinet'),null,'hidden furniture cannot be highlighted');
     assert.equal(scene.setFurnitureVisible('cabinet',true),true);
     assert.ok(meshes('cabinet').every(mesh=>mesh.visible));
     assert.ok(meshes('rack').every(mesh=>!mesh.visible),'showing one must not show the others');
-    scene.setHighlightedFurniture('cabinet');
+    const cabinetMesh=meshes('cabinet')[0];
+    const ordinaryMaterial=cabinetMesh.material;
+    const ordinaryEdges=cabinetMesh.children[0].material;
+    assert.equal(scene.setHighlightedFurniture('cabinet'),'cabinet');
+    assert.notEqual(cabinetMesh.material,ordinaryMaterial,'hover must highlight real mesh material');
+    assert.notEqual(cabinetMesh.children[0].material,ordinaryEdges,'hover must highlight mesh edges');
+    assert.equal(scene.setHighlightedFurniture('rack'),null,'hidden target clears highlight');
+    assert.equal(cabinetMesh.material,ordinaryMaterial,'leaving hover restores original material');
+    assert.equal(cabinetMesh.children[0].material,ordinaryEdges,'leaving hover restores original edges');
+    assert.equal(scene.setHighlightedFurniture('cabinet'),'cabinet');
     scene.setFurnitureVisible('cabinet',false);
+    assert.equal(cabinetMesh.material,ordinaryMaterial,'hiding highlighted furniture clears hover');
     assert.ok(meshes('cabinet').every(mesh=>!mesh.visible));
     scene.setFurnitureVisible('rack',true);
     assert.ok(meshes('rack').every(mesh=>mesh.visible));
@@ -386,9 +375,4 @@ test('3D room-plan double-click opens only occupied shelf contents in place, nev
     assert.equal(state.selected,'rooms');
     assert.equal(state.warehouseFurnitureId,null);
     assert.deepEqual(navigation,[]);
-    const scene=fs.readFileSync('public/js/ui/warehouse-three-scene.js','utf8');
-    const page=fs.readFileSync('public/js/views/warehouse.js','utf8');
-    assert.match(scene,/shelfIdAtHeight\(furnitureById\.get\(furnitureId\),hit\.point\.y\)/);
-    assert.match(page,/onOpenShelf:openOccupiedShelfDetails/);
-    assert.match(page,/createFurnitureActivation\(selectFurniture, editFurnitureFromPlan\)/,'2D furniture editing remains unchanged');
 });

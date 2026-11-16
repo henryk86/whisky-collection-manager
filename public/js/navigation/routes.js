@@ -3,17 +3,21 @@ import { t } from '../i18n/index.js';
 // because the local Node server already serves / for all query strings.
 export function parseRoute(search) {
     const params = new URLSearchParams(search);
+    const flightId = params.get('flight');
+    const validFlight = flightId && /^[a-zA-Z0-9-]{1,100}$/.test(flightId) ? flightId : null;
     const bottlingId = params.get('bottling');
     if (bottlingId && /^[a-zA-Z0-9-]{1,100}$/.test(bottlingId)) {
         const tastingId = params.get('tasting');
         if (tastingId && /^[a-zA-Z0-9-]{1,100}$/.test(tastingId))
-            return {page:'tasting',selected:bottlingId,tastingId};
-        if (params.get('view') === 'tastings') return {page:'tastings',selected:bottlingId};
+            return {page:'tasting',selected:bottlingId,tastingId,...(validFlight?{flightId:validFlight}:{})};
+        if (params.get('view') === 'tasting-flight' && validFlight) return {page:'tasting-flight',selected:validFlight};
+    if (params.get('view') === 'tastings') return {page:'tastings',selected:bottlingId};
         return {page:'detail',selected:bottlingId};
     }
     const externalTasting=params.get('externalTasting');
     if (externalTasting && /^[a-zA-Z0-9-]{1,100}$/.test(externalTasting))
-        return {page:'external-tasting',selected:externalTasting,tastingId:null};
+        return {page:'external-tasting',selected:externalTasting,tastingId:null,...(validFlight?{flightId:validFlight}:{})};
+    if (params.get('view') === 'tasting-flight' && validFlight) return {page:'tasting-flight',selected:validFlight};
     if (params.get('view') === 'tastings') return {page:'tastings-home', selected:null};
     if (params.get('view') === 'analysis') {
         const allowed = new Set(['overview', 'inventory', 'origins', 'profile', 'finance', 'timeline', 'quality']);
@@ -54,14 +58,18 @@ export function routeUrl(page, selected, filters = {}) {
         if (page === 'tasting') {
             if (!filters.tastingId || !/^[a-zA-Z0-9-]{1,100}$/.test(filters.tastingId))
                 throw new Error('Ungültige Verkostungs-ID');
-            return prefix + '&tasting=' + encodeURIComponent(filters.tastingId);
+            return prefix + '&tasting=' + encodeURIComponent(filters.tastingId) + (filters.flightId ? '&flight='+encodeURIComponent(filters.flightId) : '');
         }
         return prefix;
     }
     if (page === 'tastings-home') return '/?view=tastings';
+    if (page === 'tasting-flight') {
+        if (!selected || !/^[a-zA-Z0-9-]{1,100}$/.test(selected)) throw new Error('Ungültige Flight-ID');
+        return '/?view=tasting-flight&flight='+encodeURIComponent(selected);
+    }
     if (page === 'external-tasting') {
         if (!selected || !/^[a-zA-Z0-9-]{1,100}$/.test(selected)) throw new Error('Ungültige Verkostungs-ID');
-        return '/?externalTasting='+encodeURIComponent(selected);
+        return '/?externalTasting='+encodeURIComponent(selected)+(filters.flightId ? '&flight='+encodeURIComponent(filters.flightId) : '');
     }
     if (page === 'analytics') {
         const section = ['overview', 'inventory', 'origins', 'profile', 'finance', 'timeline', 'quality'].includes(selected) ? selected : 'overview';

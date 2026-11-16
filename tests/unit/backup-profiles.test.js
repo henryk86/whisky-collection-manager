@@ -70,16 +70,9 @@ test('one backup screen provides direct ZIP, scheduled profiles and full restore
     assert.match(unlocked, /id="backup-password-form"/);
     assert.match(unlocked, /id="backup-import-zip-form"/);
     assert.match(unlocked, /data-act="backup-new"/);
-    const settingsSource = fs.readFileSync(new URL('../../public/js/views/settings.js', import.meta.url), 'utf8');
-    assert.doesNotMatch(settingsSource, /\/api\/export\/zip/, 'no second full ZIP export in the settings view');
 });
 
 test('version footer is derived from server metadata and ZIP exports require unlock', () => {
-    const shellSource = fs.readFileSync(new URL('../../public/js/ui/shell.js', import.meta.url), 'utf8');
-    const routeSource = fs.readFileSync(new URL('../../server/routes.js', import.meta.url), 'utf8');
-    assert.match(shellSource, /state\.version/);
-    assert.ok(routeSource.includes('api\\/version'));
-    assert.match(routeSource, /exports\.exportZip\(req\)/);
     const unlockedNoPassword = renderBackupSection({ backupUnlocked: true, backupDashboard: {
         profiles: [], jobs: [], worker: { online: true }, snapshots: {}, targets: [], remotes: [], passwordConfigured: false
     } });

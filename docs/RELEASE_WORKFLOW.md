@@ -1,104 +1,89 @@
-# GitHub-Workflow: develop -> main = Release
+# GitHub-Workflow: Sammeln auf develop, Release beim Merge nach main
 
-## Ziel
+## Grundregel
 
-- **`develop`** ist der Entwicklungsbranch. Jeder Push und Pull Request nach `develop` wird durch `.github/workflows/check.yml` getestet.
-- **`main`** ist nur fuer Releases. Ein Pull Request **`develop` -> `main`** muss die Checks bestehen und eine neue, konsistente Version enthalten.
-- **Nach dem Merge nach `main`** erzeugt `.github/workflows/release.yml` automatisch einen Tag `vX.Y.Z` und einen **Draft-Release**. Nach erneutem Testen werden ein Projekt-ZIP (+ SHA-256) und **ein kombiniertes Docker-Image** fuer `linux/arm64` (Pi 4) und `linux/amd64` erzeugt. Erst wenn der Image-Build und der ZIP-Upload erfolgreich sind, wird der Draft als GitHub Release veroeffentlicht.
-- **Manuell veroeffentlichte Releases** (`release.published`) loesen denselben Paket- und Container-Build aus. Der Release-Tag muss auf einem Commit liegen, der bereits nach `main` gemergt wurde, und mit der Version in `package.json` uebereinstimmen.
-- **Kein Docker-Publish von `develop` oder bei normalen Code-Pushes**. Der fruehere `docker-publish.yml`-Workflow wurde entfernt, um doppelte Builds zu vermeiden.
+- **Direkte Commits auf `develop`** sind der Normalfall; spaetere PRs nach `develop` sind ebenfalls moeglich. `Checks / test` prueft beide Varianten.
+- **Kein Versionssprung pro Commit oder PR:** `package.json`, `package-lock.json`, README-Versionskopf, Teststatus und Quellmanifest werden in `develop` nicht fuer jede Aenderung aktualisiert. Dort steht die letzte eingecheckte Basisversion; die gueltige veroeffentlichte Version ist der neueste Release-Tag.
+- **Nur der Benutzer merged `develop -> main`:** fuer Releases einen PR ueber GitHub mit *Create a merge commit* (kein Squash) verwenden. Auf privaten GitHub-Free-Repositories sind Branch-Schutz und Rulesets nicht durchgesetzt: GitHub kann einen direkten Push auf `main` daher nicht verhindern. Die Release-Action verweigert jedoch ohne nachweislich gemergten `develop -> main`-PR jede Veroeffentlichung. Keine Action fuehrt automatisch einen Merge aus.
+- **Der Merge ist der einzige normale Release-Ausloeser.** `.github/workflows/release.yml` erstellt nach erneut erfolgreichen Tests einen versionierten Snapshot-Commit, dessen Parent der freigegebene Merge-Commit ist. Ausschliesslich der Tag verweist auf diesen Snapshot. Weder `main` noch `develop` erhalten Bot-Commits.
+- Das vorhandene Release-Verfahren (Draft, Quell-ZIP, Offline-ZIP, SHA-256, GHCR fuer ARM64/AMD64, Offline-Docker-Archive und `latest` erst zum Schluss) laeuft anschliessend auf dem getaggten Snapshot weiter.
 
-### Einmalig GitHub einrichten
+### Warum ein Release-Snapshot und keine vierte Versionsstelle?
 
-1. `main` und `develop` als Branches anlegen. Empfohlen: `main` als Default-Branch setzen (Pull Requests zielen dann standardmaessig auf `main`); Commits und Entwicklung erfolgen auf `develop`. Die Workflow-Dateien muessen auch auf dem Default-Branch existieren, damit manuelle Releases den `release.published`-Workflow ausloesen koennen.
-2. Unter **Settings -> Rules -> Rulesets** `main` gegen direkte Pushes schuetzen, Pull Requests und die Checks verlangen. `main` nur aus `develop` mergen; die CI prueft das ebenfalls. **Keinen Branch-Protection-Bypass fuer normale Entwickler** einrichten.
-3. Unter **Settings -> Actions -> General** die Ausfuehrung der verwendeten Actions erlauben. Der Token braucht fuer den Release-Workflow `contents: write` (Tag, Release, ZIP) und `packages: write` (GHCR). Beide Rechte sind **nur den entsprechenden Jobs** zugewiesen. Falls eine Organisationsrichtlinie GitHub-Token auf Lesen begrenzt, muss diese zunaechst angepasst werden.
-4. In GHCR gegebenenfalls die Zugriffsberechtigung des Repositorys fuer das Image aktivieren. Bei privaten Images auf dem Pi `docker login ghcr.io` mit einem Token mit `read:packages`.
-5. **Auf dem Raspberry Pi das Repository immer auf `main` auschecken**, auch wenn auf `develop` entwickelt wird (`git clone --branch main ...`). So bleiben die Deployment-Skripte auf dem freigegebenen Stand.
-6. GHCR-Image ist `ghcr.io/henryk86/whisky-collection-manager` (Tag `latest` oder `vX.Y.Z`). Die vollständige Compose-Datei im Projektstamm enthält den Pfad bereits.
+`MAJOR.MINOR.PATCH` bleibt erhalten. Die Versionsdateien werden **erst fuer den getaggten Release-Zustand** aktualisiert. So stehen in ZIP und Docker-Image die exakte Versionsnummer und das passende SHA-256-Quellmanifest, obwohl `main` und `develop` vorerst die letzte eingecheckte Basisversion anzeigen. Ein Git-Tag `vX.Y.Z` zeigt auf einen echten Commit mit konsistenten Release-Metadaten. Der Versions-Snapshot ist ein Kind des freigegebenen Merge-Commits, liegt aber auf keinem Branch.
 
-### Verbindliche Versionsrichtlinie
+**Wichtig fuer Quellcodeinstallationen:** `main` ist der Entwicklungsstand fuer den Release-Merge, nicht der unveraenderliche Versions-Snapshot. Fuer einen bestimmten Softwarestand den **Release-Tag** auschecken (`git fetch --tags && git checkout vX.Y.Z`) oder das Release-ZIP verwenden. Docker-Installationen verwenden das veroeffentlichte Image mit Tag `vX.Y.Z` bzw. `latest`. Ein direkter Start vom Branch `main` kann im angezeigten Versionskopf die eingecheckte Basisversion enthalten; fuer versionierte Deployments daher den Release-Tag nutzen.
 
-- **Patch (`X.Y.Z` → `X.Y.(Z+1)`):** kleinere Aenderungen, Fehlerbehebungen, UI-Feinschliff und begrenzte Verbesserungen bestehender Funktionen.
-- **Minor (`X.Y.Z` → `X.(Y+1).0`):** groessere funktionale Erweiterungen, insbesondere neue Seiten oder umfangreiche neue Funktionen.
-- **Major (`X.Y.Z` → `(X+1).0.0`):** inkompatible Aenderungen, die vorhandene Schnittstellen, Konfiguration oder Datenformate brechen.
+## Conventional Commits
 
-Jeder Release erhaelt eine neue Version. Der Versionstyp wird vor dem Bump anhand des Aenderungsumfangs festgelegt, nicht erst nach dem Merge. Interne Aufräumarbeiten ohne Funktionsänderung sind Patch-Releases; neue Seiten oder größere Funktionen sind Minor-Releases.
+Jeder **neue nicht-Merge-Commit ab Einfuehrung dieser Automatik** muss folgendes Format haben:
 
-### Version auf develop vorbereiten
-
-Vor **jedem Merge nach `main`** die Version einmal erhoehen, da jeder Merge genau einen neuen Release erzeugt. Der Befehl aktualisiert `package.json`, `package-lock.json`, den README-Titel, den Changelog und `docs/TESTSTATUS.md`. Dabei wird der vorherige Testbericht nach `docs/TESTHISTORIE.md` archiviert. Der neue Teststatus wird wahrheitsgemaess auf **noch nicht ausgefuehrt** gesetzt:
-
-```bash
-# Auf develop; Beispiel fuer einen Patch-Release:
-npm run release:bump -- patch "Fehlerbehebungen und Verbesserungen"
-npm run release:check
-npm run verify
-git add package.json package-lock.json README.md CHANGELOG.md docs/TESTSTATUS.md docs/TESTHISTORIE.md
-git commit -m "chore(release): prepare vX.Y.Z"
-git push origin develop
+```text
+fix(warehouse): Fachzuordnung beim Umlagern korrigieren
+feat(tasting): neue Bewertungsansicht ergaenzen
+refactor(api): Zustandsaktualisierung vereinfachen
+test: Browserregression fuer Bildeditor ergaenzen
+docs: Lagerdokumentation aktualisieren
+feat!: inkompatibles API-Format einfuehren
 ```
 
-Nach `npm run verify` die tatsaechlichen Ergebnisse in `docs/TESTSTATUS.md` eintragen (zuvor keine pauschale Erfolgsmeldung). `npm run release:check` validiert auch die Teststatus-Version, sodass eine Abweichung bereits vor CI auffaellt.
+| Typ | Release-Wirkung |
+| --- | --- |
+| `fix`, `perf`, `revert` | Patch |
+| `feat` | Minor |
+| `!` hinter Typ/Scope oder `BREAKING CHANGE:` im Commit-Body | Major |
+| `refactor`, `test`, `docs`, `ci`, `build`, `chore`, `style` | Keine eigenstaendige Erhoehung |
 
-Wenn `README.md enthaelt nicht die Release-Version im Titel` gemeldet wird, kann `npm run release:sync` den README-Titel aus der Version in `package.json` korrigieren. Anschliessend `npm run release:check` ausfuehren und die README-Aenderung committen. `release:bump` kann einen abweichenden README-Titel ebenfalls selbst korrigieren; der CI-Check bleibt strikt und aendert nie Dateien.
+Bei mehreren Commits wird **einmalig die hoechste Stufe** verwendet (Major vor Minor vor Patch). Enthaelt ein freigegebener Release-Merge ausschliesslich Wartungs-, Dokumentations- oder Testcommits, erfolgt **ein Patch-Sprung**, weil jeder Merge nach `main` einen eindeutigen Release-Tag bekommen soll. Unbekannte Commit-Typen fuehren zu einem Fehler und werden nicht still als Minor eingestuft. Bei neuen Features bewusst `feat:` verwenden, bei kompatiblen Korrekturen `fix:`.
 
-Alternativ `minor` oder `major` anstelle von `patch`. `npm run release:bump` **niemals nachtraeglich auf `main`** ausfuehren. Die PR-Checks fuer `main` verhindern, dass eine bereits benutzte Version erneut veroeffentlicht wird. Der automatische Release-Prozess schreibt keine Commit-Aenderungen auf `main` (funktioniert mit geschuetztem Release-Branch).
+**Einmaliger Umstieg bei bestehender Git-Historie:** Beim ersten PR `develop -> main`, der `scripts/release-automation.js` einfuehrt, sucht die Release-Planung den ersten Commit, der diese Datei hinzugefuegt hat. Nur dieser Commit und nachfolgende Commits muessen die neue Namenskonvention einhalten. Historische Commits davor (z. B. `Refactor unit tests ...`) werden weder abgelehnt noch erneut fuer einen Minor-/Major-Sprung ausgewertet; ihre bereits manuell veroeffentlichten Aenderungen bleiben in der Git-Historie und bisherigen Changelogs erhalten. Die Anzahl solcher Alt-Commits steht im Release-Plan. Ab dem zweiten Release werden alle neuen Commits strikt geprueft. Keine Aenderung der Git-Historie, kein Force-Push erforderlich.
 
-**Wichtig:** Wenn noch kein Release-Tag existiert, wird die Version aus `package.json` für den ersten Tag verwendet. Danach muss jeder Merge nach `main` eine neue, noch unbenutzte Version enthalten. Bestehende Release-Tags nicht überschreiben.
-
-### Release-Ablauf
-
-1. Pull Request `develop` -> `main` erstellen.
-2. `Checks` abwarten, PR mergen.
-3. Workflow `Release (main -> GitHub Release -> ZIP + GHCR)` laeuft automatisch:
-   - Version/Tag pruefen; `npm ci`, `npm run verify`, Playwright-Browsertests.
-   - Tag auf **genau den Merge-Commit** setzen, GitHub Release als **Draft** anlegen. Das kann bei einem abgebrochenen Lauf erneut gestartet werden, solange der Draft zum selben Commit gehoert.
-   - `whisky-collection-manager-vX.Y.Z.zip` und `.zip.sha256` aus **getrackten Dateien des Tags** erzeugen; private Runtime-Dateien werden vor dem Upload geprueft.
-   - Ein Multiarchitektur-Image `ghcr.io/henryk86/whisky-collection-manager:vX.Y.Z` (auch ohne `v`) nach GHCR pushen.
-   - **Erst nachdem das Container-Image und das ZIP erfolgreich erstellt wurden**, GHCR-Image auf `latest` setzen und den GitHub Release veroeffentlichen.
-4. Auf dem Pi im Projektstamm `docker compose pull` und `docker compose up -d --remove-orphans` ausfuehren. Der Container verwendet `IMAGE_TAG` (`latest` oder fest `vX.Y.Z`).
-
-### Warum alles innerhalb eines Workflows?
-
-GitHub blockiert Folge-Workflows, deren Event von `GITHUB_TOKEN` erzeugt wurde. Ein automatisch mit diesem Token veroeffentlichter Release loest deshalb **nicht** zuverlaessig einen separaten `on: release`-Workflow aus. Durch `prepare -> package + docker -> publish` im selben Lauf entsteht dieses Problem nicht. Der `release.published`-Trigger bleibt fuer manuell veroeffentlichte Releases erhalten.
-
-### Fehlerbehandlung
-
-- **Fehler bei Tests:** Kein Release/Tag wird erstellt. Tests auf `develop` korrigieren und erneut mergen (mit neuer Version).
-- **Fehler nach Draft-/Tag-Erstellung:** Release bleibt **Draft**. Workflow fuer **denselben Commit** erneut ausfuehren; bereits existierende Tags werden nur mit identischem SHA und vorhandenem Draft wiederverwendet.
-- **Tag bereits veroeffentlicht:** Ein zweiter automatischer Release mit derselben Version wird verweigert.
-- **Fehler beim manuell veroeffentlichten Release:** Paket-/Image-Jobs koennen durch erneutes Ausfuehren des Workflows wiederholt werden.
-- **Version auf main passt nicht zum Tag:** Build stoppt, statt ein falsch beschriftetes Image zu erzeugen.
-
-### Sicherheit und Daten
-
-Im GitHub Release landen nur die im Repository getrackten Quellcodedateien. **`collection.json`, Fotos, Belege, Zertifikate, Cloud-Tokens, Restic-Schluessel und alle `deploy`-Laufzeitverzeichnisse duerfen nicht ins Repository eingecheckt werden.** Das ZIP wird zusaetzlich auf solche Dateien geprueft. **Persistente Daten liegen unter `${WCM_DATA_DIR}` außerhalb des Git-Checkouts** und bleiben bei `docker compose pull && docker compose up -d --remove-orphans` erhalten. Mit `--remove-orphans` wird beim Wechsel von v0.6.33 der nicht mehr benoetigte zweite Container entfernt, ohne die Datenordner zu loeschen.
-
-**Hinweis:** Der `latest`-Tag wird erst nach erfolgreichem ZIP-Upload und Image-Build aktualisiert. Fuer einen reproduzierbaren Rollout `IMAGE_TAG=vX.Y.Z` verwenden.
-
-### Ruleset fuer main importieren
-
-Die versionierte Ruleset-Vorlage liegt unter **`.github/rulesets/main.json`**. GitHub wendet diese Datei **nicht automatisch** an, nur weil sie im Repository vorhanden ist. Einmalig im Repository unter **Settings -> Rules -> Rulesets -> New ruleset -> Import a ruleset** die JSON-Datei auswaehlen und als aktives Ruleset speichern. Alternativ mit GitHub CLI (Rechte: Repository-Administration/Write):
+### Lokale Commit-Validierung (einmal pro Checkout einrichten)
 
 ```bash
-gh auth login
-gh api --method POST repos/OWNER/REPO/rulesets --input .github/rulesets/main.json
+npm run hooks:install
 ```
 
-`OWNER/REPO` durch den tatsaechlichen Repository-Pfad ersetzen. Nicht beides ausfuehren: ein bereits importiertes Ruleset nicht doppelt erstellen.
+Der Befehl setzt **nur fuer dieses Repository** `git config --local core.hooksPath .githooks` und aktiviert `.githooks/commit-msg`. Neue nicht-konventionelle Nachrichten werden bei `git commit` abgelehnt, bevor Git den Commit schreibt. Der Hook ruft denselben `classifyCommit()`-Validator wie `scripts/release-automation.js` auf, einschliesslich `BREAKING CHANGE` im Nachrichtenkoerper. Echte Merge-Commits werden anhand von `MERGE_HEAD` ausgenommen; ein willkuerlicher Commit mit dem Betreff `Merge ...` dagegen nicht.
 
-**Ruleset "main - release branch (develop -> main)":**
+Bei vorhandener eigener `core.hooksPath`-Konfiguration oder einem bestehenden `commit-msg`-Hook wird die Installation abgelehnt, statt andere Hooks still zu ersetzen. In diesem Fall die Hooks manuell integrieren. Die Einstellung liegt in `.git/config` und muss nach einem neuen Klonen erneut vorgenommen werden. Der Installer aendert keine globale Git-Konfiguration und ist keine Voraussetzung fuer die Anwendung zur Laufzeit.
 
-- Gilt ausschliesslich fuer `refs/heads/main`, aktiv, **kein Bypass** (auch nicht fuer Administratoren).
-- **Pull Request ist Pflicht**; Merge-Commit oder Squash-Merge sind erlaubt. Direkte Pushes nach `main`, Force-Pushes und Loeschen von `main` sind blockiert.
-- **Pflichtcheck `test`** (der konkrete Jobname in `check.yml`, nicht der Anzeigename `Checks`). Er beinhaltet Syntax-/Unit-/Integrationstests, Playwright und beim PR nach `main` zusaetzlich den Check, dass der Quellbranch `develop` **aus demselben Repository** stammt und die Release-Version noch unbenutzt ist. Somit duerfen nur PRs `develop -> main` gemergt werden.
-- **Require branches to be up to date** ist eingeschaltet. Offene Review-Diskussionen muessen geloest sein.
-- **0 verpflichtende Approvals:** geeignet fuer einen allein entwickelnden Repository-Besitzer. Wer mindestens einen anderen Reviewer hat, kann `required_approving_review_count` auf `1` setzen; der PR-Autor kann sich nicht selbst genehmigen.
-- Kein Tag-Ruleset fuer `v*`, weil der vorhandene GitHub-Actions-Release-Workflow die Tags mit `GITHUB_TOKEN` selbst erstellen muss. Das Branch-Ruleset verbietet keine von diesem Workflow angelegten Release-Tags.
-- Keine Ruleset-Regel fuer `develop`; Pushes nach `develop` sollen weiter die Entwicklung triggern. Fuer `develop` ist ein separates, optionales Schutz-Ruleset moeglich.
+**Grenze bei GitHub Free:** Ein lokaler Hook ist **keine serverseitige Zugangssperre**. `git -c core.hooksPath=/dev/null commit` oder `git commit --no-verify` umgehen ihn. GitHub Actions validiert daher weiter direkte Pushes nach `develop` und jeden Release-PR; bei Fehlern wird die Pipeline rot, aber ein bereits gepushter Commit kann auf einem nicht geschuetzten Branch nicht rueckwirkend abgelehnt werden. Historische Commits werden weder umgeschrieben noch durch die Hook-Einrichtung geprueft.
 
-**Vor Aktivierung pruefen:** `main` und `develop` existieren, und `Checks / test` ist mindestens einmal auf einem PR nach `main` gelaufen. Bei einem privaten Repository sind GitHub Rulesets laut GitHub-Planbedingungen ggf. nicht verfuegbar bzw. nicht durchgesetzt (fuer private Repositories mindestens GitHub Pro/Team/Enterprise, fuer oeffentliche auch GitHub Free). Nach der Aktivierung einen PR `develop -> main` ausprobieren. Der Actions-Release-Workflow muss Tag und Release weiterhin schreiben duerfen (`contents: write`, `packages: write`).
+Bei spaeteren PRs nach `develop` kann per Squash gemergt werden; der entstehende Commit muss konventionell benannt sein. Fuer den **Release-PR `develop -> main`** dagegen ausschliesslich `Create a merge commit` verwenden, sonst kann die Herkunft der Einzelcommits nicht zuverlaessig ermittelt werden.
+
+## Ablauf in GitHub
+
+1. Einmal lokal `npm run hooks:install` ausfuehren. Danach Commits mit Conventional-Commit-Betreff direkt nach `develop` pushen. Die Checks auf `develop` pruefen den neuen Push-Bereich; optionale PRs nach `develop` werden ebenfalls geprueft. Versionsdateien nicht manuell erhoehen.
+2. Wenn ausreichend Aenderungen gesammelt sind, einen PR **`develop -> main`** oeffnen. `Checks / test` prueft Unit-/Integrationstests, den Browser und **berechnet die geplante neue Version** bereits auf dem PR-Merge-Stand. Quellbranch und Zielbranch werden geprueft.
+3. **Nur du** startest den Merge ueber GitHub, als *Create a merge commit*. Die Actions haben keine Rechte, Branches zu mergen.
+4. GitHub startet auf `main` den Release-Workflow. Zunaechst prueft er ueber die GitHub-API, ob genau dieser Commit aus einem gemergten `develop -> main`-PR stammt. Ohne diesen Nachweis werden **weder Tag noch ZIP oder Docker-Image** erstellt. Vor Erstellen des Tags werden alle Tests auf dem freigegebenen Merge-Quellstand erneut ausgefuehrt. Danach werden die Versionsdateien nur im Detached-HEAD-Snapshot angelegt und durch `release:check` und `check` geprueft.
+5. Das Git-Tag `vX.Y.Z` und ein Draft-Release werden erzeugt. Die vorhandenen ZIP-/Offline-/Docker-Jobs arbeiten mit diesem Tag. Erst nach bestandenen Artefakt- und Image-Pruefungen wird der Draft veroeffentlicht und das Docker-Tag `latest` aktualisiert.
+6. Ein abgebrochener oder erneut gestarteter Workflow auf **demselben Merge-Commit** nutzt denselben existierenden Tag und Entwurf. Kein doppeltes Bumping oder Ueberschreiben bereits veroeffentlichter Tags. Nach einem Fehler den Workflow in GitHub erneut starten, nicht manuell die Version auf `main` erhoehen.
+
+**Keine neue kostenpflichtige Infrastruktur, kein PAT und kein Token mit Branch-Bypass:** Die Release-Action benoetigt `contents: write` lediglich fuer Tag und Release; `packages: write` fuer GHCR. Das von GitHub bereitgestellte `GITHUB_TOKEN` genuegt. Ein Tag oder Draft, den dieses Token erzeugt, startet keinen zweiten Workflow; alle Builds bleiben daher absichtlich in `.github/workflows/release.yml`.
+
+## Einmalige GitHub-Einstellungen
+
+1. `main` und `develop` beibehalten. Direkte Commits nach `develop` sind erlaubt. Releases ausschliesslich ueber einen GitHub-PR `develop -> main` mit *Create a merge commit* ausloesen. Vor dem Merge den erfolgreichen Status `Checks / test` kontrollieren.
+2. **Private GitHub-Free-Repositories:** Rulesets und klassische Branch-Protection werden nicht durchgesetzt. Es ist keine Ruleset-Konfiguration erforderlich und auch keine vorhanden, auf die sich der Releaseprozess verlaesst. Die Action kann einen unerlaubten Push auf `main` nicht verhindern, aber ihre Tag-/ZIP-/Docker-Veroeffentlichung blockieren, wenn kein gemergter PR aus `develop` mit identischem Merge-SHA ueber die GitHub-API nachweisbar ist.
+3. Unter **Settings -> Actions -> General** die erforderlichen Actions und Schreibrechte fuer das `GITHUB_TOKEN` sicherstellen. Der Release-Workflow nutzt `contents: write`, `pull-requests: read` und fuer GHCR `packages: write`; kein PAT und kein Branch-Bypass notwendig.
+4. Das bestehende GHCR-Repository fuer GitHub Actions und Docker-Installationen erreichbar halten. Auf dem Raspberry Pi bei privaten Images mit einem `read:packages`-Token anmelden.
+5. **Einmaliger Umstieg:** Wenn `main` noch z. B. v1.3.3 enthaelt, `develop` aber schon die bisher manuell versionierte v1.4.0, akzeptiert die Automatik diesen Unterschied **nur beim erstmaligen Hinzufuegen** von `scripts/release-automation.js` auf `main`. Ein `v1.4.0`-Tag ist dafuer hilfreich, aber nicht zwingend erforderlich. Danach werden manuelle Versionsspruenge wieder abgelehnt. Vorhandene Changelog- und Testhistorie bleiben beim ersten Release erhalten.
+
+## Verifikation
+
+```bash
+npm run check
+npm test
+npm run hooks:install  # einmal pro lokalem Klon
+node scripts/release-automation.js validate --range BASE..HEAD
+node scripts/release-automation.js plan --json  # Nur auf einem Merge-Commit
+```
+
+Die neuen Integrationstests erzeugen temporaere lokale Git-Repositories und pruefen Versionsprioritaet, Tag-Snapshot ohne Branch-Push, Retry ohne Doppel-Release und Ablehnung ungueltiger Commits bzw. direkter `main`-Pushes. Docker-/Offline-Pruefungen bleiben unveraendert Teil der GitHub-Release-Jobs. Das alte `npm run release:bump` ist fuer den Normalablauf **nicht mehr zu verwenden**; es bleibt nur als historisches Hilfswerkzeug erhalten.
+
+---
 
 ## GHCR-Image vor Veroeffentlichung pruefen
 

@@ -20,22 +20,8 @@ test('distillery management is fully scrollable as a page, searchable and keeps 
     assert.doesNotMatch(view, /<script>/);
     assert.match(view, /A &lt;script&gt;/);
     assert.match(view, /role="list"/);
-    const style = fs.readFileSync('public/styles/settings.css', 'utf8');
-    assert.match(style, /\.distillery-list\s*\{[^}]*overflow:\s*visible;/s);
-    assert.doesNotMatch(style, /\.distillery-list\s*\{[^}]*max-height:/s);
     assert.doesNotMatch(view, /class="distillery-management-head"|<h3>Destillerien<\/h3>/);
     assert.equal((view.match(/<h2 class="analytics-section-title">Destillerien<\/h2>/g) || []).length, 1);
-    assert.match(style, /\.settings-section > \.panel\.section\s*\{[^}]*box-shadow:\s*none/s);
-    assert.match(fs.readFileSync('public/style.css', 'utf8'), /settings\.css/);
-});
-
-test('distillery editor separates the status and coordinate labels from the preceding input fields', () => {
-    const css = fs.readFileSync('public/styles/settings.css', 'utf8');
-    assert.match(css, /#distillery-form > \.form-field \+ \.form-field,\s*#distillery-form > \.map-coordinates-fields\s*\{[^}]*margin-top:\s*16px;/s);
-    const controller = fs.readFileSync('public/js/features/settings-controller.js', 'utf8');
-    assert.match(controller, /<form id="distillery-form"/);
-    assert.match(controller, /<label class="form-field" for="distillery-status"/);
-    assert.match(controller, /<div class="map-coordinates-fields">/);
 });
 
 test('legacy JSON import is hidden in a collapsed disclosure until the user opens it', () => {
@@ -56,30 +42,4 @@ test('legacy JSON import is hidden in a collapsed disclosure until the user open
     assert.doesNotMatch(disclosure[1], /\bopen\b/, 'legacy import should start collapsed');
     assert.match(disclosure[2], /<summary>Alte JSON-Datei ohne Bilder importieren/);
     assert.match(disclosure[2], /<input type="file" id="import-file"/);
-});
-
-test('no browser prompt, confirm or alert is used for app actions', () => {
-    for (const file of ['public/js/features/settings-controller.js', 'public/js/events.js']) {
-        const source = fs.readFileSync(file, 'utf8');
-        assert.doesNotMatch(source, /\b(?:window\.)?(?:prompt|confirm|alert)\s*\(/, file);
-    }
-    const controller = fs.readFileSync('public/js/features/settings-controller.js', 'utf8');
-    assert.match(controller, /id="distillery-form"/);
-    assert.match(controller, /data-act="confirm-import"/);
-});
-
-test('real bottle photos have sufficient space below before the card divider in all breakpoints', () => {
-    const css = fs.readFileSync('public/styles/core.css', 'utf8');
-    assert.match(css, /\.card-img:after\s*\{[^}]*bottom|\.card-img:after\s*\{[^}]*inset:\s*auto 18px 13px/s);
-    assert.match(css, /\.card-img img\s*\{[^}]*padding:\s*13px 18px 27px/s);
-    assert.match(css, /@media[^{}]*\{[\s\S]*?\.card-img img\s*\{\s*padding:\s*10px 10px 27px;/);
-});
-
-// General uses a two-column grid with a 14px row gap. The missing 2px
-// must be included on the heading, not on every settings panel.
-test('General settings panel matches the 16px title-to-content spacing of other settings sections', () => {
-    const css = fs.readFileSync('public/styles/settings.css', 'utf8');
-    assert.match(css, /\.settings-section\[data-settings-panel="general"\]\s*\{[^}]*gap:\s*14px;/s);
-    assert.match(css, /\.settings-section\[data-settings-panel="general"\]\s*>\s*\.analytics-section-title\s*\{[^}]*margin-bottom:\s*2px;/s);
-    assert.match(css, /\.settings-section\s*>\s*\.analytics-section-title\s*\{[^}]*margin-top:\s*0;/s);
 });

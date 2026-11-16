@@ -56,24 +56,24 @@ export function createSettingsController({ state, action, navigate, closeModal, 
             method: id ? 'PATCH' : 'POST',
             body: JSON.stringify({ name, status, latitude, longitude })
         }));
-        if (!saved) { submit.disabled = false; return; }
+        if (!saved.ok) { submit.disabled = false; return; }
         closeModal();
-        const updatedLocation = locationFor(saved);
+        const updatedLocation = locationFor(saved.value);
         if (updatedLocation && (!previousLocation || previousLocation.lat !== updatedLocation.lat
             || previousLocation.lon !== updatedLocation.lon)) {
-            onDistilleryLocationChanged?.(saved.id);
+            onDistilleryLocationChanged?.(saved.value.id);
         }
         // Creating a new distillery from an open bottling form must preserve all
         // unsaved fields and files and select the new distillery in that form.
         const parentForm = query('#bottling-form');
         if (!id && parentForm) {
             const options = parentForm.querySelector('.distillery-options');
-            if (options && ![...options.querySelectorAll('input[name="distilleryIds"]')].some(input => input.value === saved.id)) {
+            if (options && ![...options.querySelectorAll('input[name="distilleryIds"]')].some(input => input.value === saved.value.id)) {
                 const label = document.createElement('label');
                 label.className = 'distillery-option';
-                label.innerHTML = `<input type="checkbox" name="distilleryIds" value="${escapeHtml(saved.id)}" checked><span>${escapeHtml(saved.name)}</span>`;
+                label.innerHTML = `<input type="checkbox" name="distilleryIds" value="${escapeHtml(saved.value.id)}" checked><span>${escapeHtml(saved.value.name)}</span>`;
                 const matching = [...options.querySelectorAll('.distillery-option')].find(option =>
-                    option.querySelector('span').textContent.localeCompare(saved.name, 'de') > 0);
+                    option.querySelector('span').textContent.localeCompare(saved.value.name, 'de') > 0);
                 options.insertBefore(label, matching || null);
             }
         }
@@ -131,11 +131,11 @@ export function createSettingsController({ state, action, navigate, closeModal, 
         const result = await action(async () => request('/api/import/json', {
             method: 'POST', body: JSON.stringify(data)
         }));
-        if (!result) { button.disabled = false; return; }
+        if (!result.ok) { button.disabled = false; return; }
         closeModal(true);
         navigate('home', null, { replace: true });
-        if (result.inventoryConflicts?.length) {
-            toast(t("features.import.inventoryConflicts",{count:result.inventoryConflicts.length}), true);
+        if (result.value?.inventoryConflicts?.length) {
+            toast(t("features.import.inventoryConflicts",{count:result.value.inventoryConflicts.length}), true);
         } else {
             toast(t("features.notifications.jsonImported"));
         }
@@ -153,8 +153,8 @@ export function createSettingsController({ state, action, navigate, closeModal, 
         button.disabled = true;
         const saved = await action(() => request('/api/settings', {
             method: 'PATCH', body: JSON.stringify({ establishedYear: year })
-        }));
-        if (!saved) { button.disabled = false; return; }
+        }), {scope:'collection'});
+        if (!saved.ok) { button.disabled = false; return; }
         toast(year === null ? t("features.notifications.foundingYearRemoved") : t("features.notifications.foundingYearSaved"));
     }
     return { promptDistillery, saveDistillery, findDistilleryLocation, applyDistilleryLocation, importJSON, confirmImport, saveCollectionSettings };

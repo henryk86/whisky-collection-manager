@@ -1,5 +1,5 @@
 /**
- * Documentation contracts for the JSON format (schemaVersion 4).
+ * Documentation contracts for the JSON format (schemaVersion 5).
  * These JSDoc types do not add runtime validation or a build step.
  * Runtime validation lives in server/domain/validation.js.
  * Optional metadata is intentionally omitted from minimal examples.
@@ -61,10 +61,8 @@
  * @property {number|null} [distillationYear]
  * @property {number|null} [bottlingYear]
  * @property {'complete'|'incomplete'} [completionStatus]
- * @property {Tasting[]} [tastings] Independent tastings; absent in older schema-v4 collections.
- * @property {{nose:string,palate:string,finish:string}} [tastingNotes] Read-only compatibility projection of the last tasting.
- * @property {number|null} [rating] Read-only compatibility projection of the last tasting.
- * @property {{bottleId:string,inventoryNumber:string,tastingNotes:Object,rating:number|null}[]} [legacyTastings] Original per-bottle observations retained on migration.
+ * @property {Tasting[]} tastings Independent tastings; the only persisted owned-tasting source.
+ * No legacy tasting fields or redundant rating summaries are persisted.
  * @property {Bottle[]} bottles Physical bottles are nested; no top-level bottles array.
  * @property {string} [createdAt]
  * @property {string} [updatedAt]
@@ -90,13 +88,23 @@
  * @property {string} createdAt
  * @property {string} updatedAt
  *
+ * @typedef {Object} TastingFlight
+ * @property {string} id Stable UUID for the tasting session.
+ * @property {string} name Name of the flight.
+ * @property {string} date YYYY-MM-DD tasting session date.
+ * @property {string} notes Optional comparison notes.
+ * @property {string[]} tastingIds Ordered references to individual owned or external tastings; each tasting is in at most one flight.
+ * @property {string} createdAt
+ * @property {string} updatedAt
+ *
  * @typedef {Object} Collection
- * @property {4} schemaVersion
+ * @property {5} schemaVersion
  * @property {number} nextInventoryNumber
  * @property {string[]} reservedInventoryNumbers Historical numbers skipped by automatic suggestions; may be manually reassigned once free.
  * @property {{establishedYear: number|null}} [settings] Optional collection-wide preferences; older archives omit this.
  * @property {Distillery[]} distilleries
  * @property {Bottling[]} bottlings
  * @property {(Tasting & {bottling: Object})[]} [externalTastings] Standalone tastings of unowned whisky, excluded from inventory and analytics.
+ * @property {TastingFlight[]} [tastingFlights] Optional ordered session groups; no duplication of individual notes.
  */
 export {};

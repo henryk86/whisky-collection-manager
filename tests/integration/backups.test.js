@@ -193,6 +193,59 @@ test('ZIP restore is previewed before confirmation and saves the current collect
 });
 
 
+test('schema-4 ZIP restore upgrades collection without losing bottles, warehouse assignments or media', async () => {
+    const ctx = await fixture();
+    const legacyDir=fs.mkdtempSync(path.join(os.tmpdir(),'whisky-v4-restore-'));
+    try {
+        const {writeReadableZip}=await import('../../shared/backup-zip.js');
+        const created=await request(ctx.base,'/api/bottlings','POST',{
+            name:'Private inventory',firstBottle:{inventoryNumber:'000765',comment:'Do not discard'}
+        });
+        assert.equal(created.status,201);
+        const bottleId=created.data.bottle.id;
+        const room=(await request(ctx.base,'/api/warehouse/rooms','POST',{name:'Storage',width:5,height:3})).data;
+        const furniture=(await request(ctx.base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',{
+            name:'Rack',type:'regal',x:0,y:0,width:1,depth:0.5})).data;
+        const shelf=(await request(ctx.base,`/api/warehouse/furniture/${furniture.id}/shelves`,'POST',{name:'Shelf'})).data;
+        assert.equal((await request(ctx.base,`/api/warehouse/bottles/${bottleId}`,'PUT',{shelfId:shelf.id})).status,200);
+        const collection=JSON.parse(fs.readFileSync(path.join(ctx.dir,'data/collection.json'),'utf8'));
+        collection.schemaVersion=4;
+        collection.bottlings[0].tastings=[{id:'demo-score'}];
+        collection.bottlings[0].rating=88;
+        const warehouse=JSON.parse(fs.readFileSync(path.join(ctx.dir,'data/warehouse.json'),'utf8'));
+        for (const folder of ['data','images','documents']) fs.cpSync(path.join(ctx.dir,folder),path.join(legacyDir,folder),{recursive:true});
+        fs.writeFileSync(path.join(legacyDir,'data/collection.json'),JSON.stringify(collection));
+        fs.mkdirSync(path.join(legacyDir,'images',bottleId),{recursive:true});
+        fs.writeFileSync(path.join(legacyDir,'images',bottleId,'preserve.png'),'picture content');
+        fs.mkdirSync(path.join(legacyDir,'documents',bottleId),{recursive:true});
+        fs.writeFileSync(path.join(legacyDir,'documents',bottleId,'preserve.pdf'),'receipt content');
+        const archive=path.join(ctx.control,'schema4-backup.zip');
+        writeReadableZip(legacyDir,archive,zipPass);
+        const uploaded=await fetch(ctx.base+'/api/backups/import-zip',{
+            method:'POST',headers:{'Content-Type':'application/zip','X-Backup-Admin-Token':token,
+                'X-Backup-Zip-Password':encodeURIComponent(zipPass)},body:fs.readFileSync(archive)
+        });
+        assert.equal(uploaded.status,201,await uploaded.clone().text());
+        const preview=await uploaded.json();
+        assert.equal(preview.bottlings,1);
+        const apply=await request(ctx.base,`/api/backups/import-zip/${preview.id}/apply`,'POST',{
+            acknowledge:true,password:zipPass
+        });
+        assert.equal(apply.status,200,JSON.stringify(apply.data));
+        const upgraded=(await request(ctx.base,'/api/collection')).data;
+        assert.equal(upgraded.schemaVersion,5);
+        assert.equal(upgraded.bottlings[0].id,created.data.bottling.id);
+        assert.equal(upgraded.bottlings[0].bottles[0].id,bottleId);
+        assert.equal(upgraded.bottlings[0].bottles[0].comment,'Do not discard');
+        assert.deepEqual(upgraded.bottlings[0].tastings,[]);
+        assert.equal(upgraded.bottlings[0].rating,undefined);
+        const warehouseAfter=JSON.parse(fs.readFileSync(path.join(ctx.dir,'data/warehouse.json'),'utf8'));
+        assert.deepEqual(warehouseAfter,warehouse);
+        assert.equal(fs.readFileSync(path.join(ctx.dir,'images',bottleId,'preserve.png'),'utf8'),'picture content');
+        assert.equal(fs.readFileSync(path.join(ctx.dir,'documents',bottleId,'preserve.pdf'),'utf8'),'receipt content');
+    } finally {fs.rmSync(legacyDir,{recursive:true,force:true});await ctx.stop();}
+});
+
 test('manual full ZIP download uses shared backup archive and can be inspected with the restore reader', async () => {
     const ctx = await fixture();
     try {

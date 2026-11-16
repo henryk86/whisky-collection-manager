@@ -1,7 +1,8 @@
 import { read, change } from '../storage/collection-store.js';
 import { now, uid } from '../domain/collection.js';
 import { fail } from '../domain/errors.js';
-import { normalizeTastingRecord, sortedTastings, syncTastingSummary } from '../../public/js/domain/tasting-records.js';
+import {detachTastings} from '../../shared/tasting-flights.js';
+import { normalizeTastingRecord, sortedTastings } from '../../shared/tasting-records.js';
 function requireBottling(collection, id) {
     const bottling = collection.bottlings.find(b => b.id === id);
     if (!bottling) throw fail('Abfüllung nicht gefunden',404);
@@ -25,7 +26,7 @@ export function createTasting(id,input) {
         const tasting={...clean(input),id:uid(),createdAt:timestamp,updatedAt:timestamp};
         if (!Array.isArray(bottling.tastings)) bottling.tastings=[];
         bottling.tastings.push(tasting);
-        syncTastingSummary(bottling);
+
         bottling.updatedAt=timestamp;
         return tasting;
     });
@@ -36,7 +37,7 @@ export function updateTasting(id,tastingId,input) {
         const tasting=requireTasting(bottling,tastingId);
         const updated=clean(input,tasting);
         Object.assign(tasting,updated,{updatedAt:now()});
-        syncTastingSummary(bottling);
+
         bottling.updatedAt=tasting.updatedAt;
         return tasting;
     });
@@ -47,7 +48,8 @@ export function deleteTasting(id,tastingId) {
         const index=(bottling.tastings || []).findIndex(entry=>entry.id===tastingId);
         if (index < 0) throw fail('Verkostung nicht gefunden',404);
         bottling.tastings.splice(index,1);
-        syncTastingSummary(bottling);
+        detachTastings(collection,[tastingId]);
+
         bottling.updatedAt=now();
         return {ok:true};
     });

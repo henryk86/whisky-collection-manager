@@ -1,4 +1,4 @@
-import { WHISKY_COLORS } from '../domain/whisky-colors.js';
+import { WHISKY_COLORS } from '../../../shared/whisky-colors.js';
 import { glencairnSymbol } from './glencairn-icon.js';
 import { t } from '../i18n/index.js';
 import { escapeHtml } from './dom.js';

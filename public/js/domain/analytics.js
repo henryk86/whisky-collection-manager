@@ -1,5 +1,5 @@
-import { displayedTastingRating } from './tasting-records.js';
-/** Pure analytics over the existing schema-v4 collection. No storage writes, no inferred market values. */
+import { displayedTastingRating, latestTasting } from '../../../shared/tasting-records.js';
+/** Pure analytics over the current schema-v5 collection. No storage writes, no inferred market values. */
 import { whiskyTypeName } from './labels.js';
 import { bottlingOrigins, bottlingDistilleryIds } from './distillery-origin.js';
 import { readAnalyticsDate } from './analytics-period.js';
@@ -156,7 +156,7 @@ export function analyzeCollection(collection, filters = {}) {
     const distilleryRatings = distilleries.filter(d => d.ratings.length)
         .map(d => ({ id:d.id, name:d.name, count:d.ratings.length, avg:avg(d.ratings) }))
         .sort((a,b) => b.avg-a.avg || b.count-a.count);
-    const notesCount = bottlings.filter(b => ['nose','palate','finish'].some(key => text(b.tastingNotes?.[key]))).length;
+    const notesCount = bottlings.filter(b => ['nose','palate','finish'].some(key => text(latestTasting(b)?.tastingNotes?.[key]))).length;
     const missingField = [
         ['Alter', b => isNumber(b.ageYears)], ['Alkoholgehalt', b => isNumber(b.abv)],
         ['Destillationsjahr', b => !!yearOf(b.distillationDate, b.distillationYear)],

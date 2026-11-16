@@ -1,5 +1,111 @@
 # Changelog
 
+## 1.4.0 - 2026-11-16
+
+- B-5 abgeschlossen: historische CSS-/JS-Quelltexttests durch Browser-, Domain- und Deployment-Vertragspruefungen ersetzt
+
+## 1.3.3 - 2026-11-16
+
+- Flaschendetails: Der bisherige Button „Lagerort“ heißt nun „Umlagern“; beide Einstiegspunkte verwenden denselben sofort bedienbaren Dialog.
+- Umlagerungsdialog kompakter: Flaschenkontext und bisheriger Lagerort auf Desktop in einer Zeile, darunter Raum/Möbel/Fach in einer Zeile; mobil übersichtlich gestapelt. Keine Änderung von Datenmodell, API oder Speicherverhalten.
+- Browserregression für direkte Umlagerung aus den Flaschendetails und responsive Dialogmaße ergänzt.
+
+## 1.3.2 - 2026-11-16
+
+- Der Umlagerdialog zeigt den bisherigen Lagerort sowie Raum-, Möbel- und Fachauswahl sofort. Die zusaetzliche Aufklappaktion „Lagerort ändern“ und die daran gekoppelte Ausblendung des Speichern-Buttons entfallen, auch bei Mehrfachzuordnung.
+- Browserregression fuer direktes Umlagern in ein anderes Fach und anschliessendes Entfernen der Zuordnung; beide Abläufe wurden zusaetzlich im Chromium-DOM-Modus gegen den echten Testserver getestet.
+- B-5: Alte CSS-Regex-Pruefung fuer Lagerort-Radiobuttons entfernt und durch Messung der berechneten Darstellung im Chromium ersetzt; Source-Regex-Budget 754 -> 751. Keine Aenderung an Datenmodell, Migration oder API.
+
+## 1.3.1 - 2026-11-16
+
+- B-5: Redundante CSS-/Quelltext-Unit-Tests entfernt, fachliche Verhaltenspruefungen erhalten. Acht neue Chromium-Tests messen mobile/desktop Layouts, Navigation, Kartenfarben und Einstellungen zur Laufzeit.
+- Bestehendes Regex-Assertion-Budget von 933 auf 754 gesenkt; Altbestand (insbesondere Lager/3D) verbleibt bis zu gleichwertiger Laufzeitabdeckung.
+- Architekturregeln verbieten neue native Browser-Bestaetigungsdialoge und historische Versionsueberschriften in aktuellen Fachdokumenten. Keine Aenderung an Schema, Persistenz oder API.
+
+## 1.3.0 - 2026-11-16
+
+- B-1: Einheitlicher DOM-Abgleich fuer regulaere Ansichten; normale Startseiten- und Kartenereignisse zentral delegiert. Interaktive Karten-, Lager-, SVG-, Drag- und 3D-Inseln werden mit eindeutigem Widget-Lebenszyklus aktualisiert.
+- B-2: Revisionsgepruefte, ID-basierte Mutationsdeltas fuer Sammlung und Lager; bestehende API bleibt ohne opt-in unveraendert. Der Client vermeidet nach erfolgreichen Schreibvorgaengen Komplettabrufe und laedt bei veralteter Revision sicher neu.
+- B-5: Neue Integrationstests fuer unveraenderte API-Vertraege, Cache-/Delta-Rekonstruktion und Manifest-Sicherheit; neue Quelltext-Regex-Assertions per Architekturregel untersagt. CSS-Quelltextpruefungen durch echte Chromium-Layoutpruefungen ersetzt. Der historische Bestand an Regex-Tests bleibt als kontrolliertes Abbaubudget erhalten.
+- B-6: Testhistorie als kompakter Index statt duplizierter Langberichte; aktuelle Architektur-, API-, Foto- und Upgrade-Dokumentation konsolidiert. SHA-256-Quellmanifest pro Release mit nichtdestruktivem ZIP-Upgrade-Audit; keine Bestandsdateien werden entfernt.
+- Datenhaltung, Schema 5 und Backup-/Restore-Migration unveraendert. Chromium-DOM-Suite und CI-Abnahme werden im jeweiligen Teststatus getrennt ausgewiesen.
+
+## 1.2.1 - 2026-11-16
+
+- CI-Regression bei mehreren datierten Verkostungen: Waehrend eines noch laufenden POST-Speichervorgangs werden Ruecknavigation und erneutes Speichern gesperrt; kein veralteter Listenstand oder spaetes Zurueckspringen in den Editor.
+- Browser-Regressionstests pruefen explizit einen verzögerten POST, den Erhalt beider Verkostungen und die Wiederholbarkeit nach einem HTTP-500-Fehler.
+
+## 1.2.0 - 2026-11-16
+
+- Review B-1: Generischen DOM-Abgleich fuer die Verkostungsstartseite und Verkostungslisten aktiviert, nicht fuer den Editor oder die Flight-Drag-Ansicht.
+- Review B-2: Verkostungs-/Flight-Mutationen und gespeicherte Fotoreihenfolgen laden nur die Sammlung; unbeteiligte Lagerdaten werden nicht erneut abgefragt.
+- Review B-5: Zwei fragile CSS-/Quelltext-Regex-Tests durch Browser-Pruefungen berechneter Layoutregeln ersetzt; Chromium-Test fuer Verkostungs-UI und scoped Refresh ergaenzt.
+- Review B-6: Kuenftige Release-Bumps archivieren kompakte historische Testergebnisse statt den ganzen alten Teststatus zu duplizieren.
+
+## 1.1.0 - 2026-11-16
+
+- Review B-1/B-2/B-6: DOM-Abgleich fuer Settings/Hilfe, gezielter Sammlungsrefresh und sicheres Upgrade-Audit
+
+## 1.0.2 - 2026-11-16
+
+- CI-Browserregressionen: eindeutige Foto-Keys beim DOM-Abgleich, Schema-5-Testdaten und Verkostungs-Loeschtest korrigiert
+
+## 1.0.1 - 2026-11-16
+
+- B-3: verlustfreie Schema-5-Migration aller Bestands- und Lagerdaten; ausschliesslich alte Verkostungsdaten entfallen
+
+## 1.0.0 - 2026-11-16
+
+- **Zurueckgezogen: Diese fehlerhafte Version darf nicht installiert werden; sie setzt Sammlungs- und Lagerdaten bei Schema 4 zurueck. Korrigierter Nachfolger: v1.0.1.**
+- Schema 5 ohne Altdatenmigration; gemeinsame Fachmodule, API-Cache mit ETags, DOM-Regionen und fachlich getrennte Browsertests
+
+## 0.28.9 - 2026-11-16
+
+- Code-Review A-3: Aktionen geben einen expliziten Erfolgs-/Fehlerstatus zurueck; fehlgeschlagene Mutationen loesen keine Navigation, kein Modal-Schliessen und keine Erfolgsmeldung mehr aus. Bestaetigungen bleiben fuer erneuten Versuch offen.
+- Code-Review A-4: Statische Dateien inklusive AI-Modell, WASM und Vendor-JavaScript erhalten `ETag` und `Last-Modified`; bedingte GETs liefern `304 Not Modified`. Unversionierte Dateien bleiben revalidierungspflichtig.
+- B-1.1: Statische Schutzregel fuer neue Direktlistener in Views mit expliziter Bestands-Ausnahmeliste.
+- CI-Regression: `teststatus.test.js` akzeptiert korrekte Browserergebnisse mit Zahlenangaben (`80 bestanden`), ohne fehlgeschlagene/laengst nicht absolvierte Browserpruefungen als bestanden auszugeben.
+- Neue Unit-/Integrationstests fuer Aktionsausgaenge und HTTP-Cache sowie Browser-Regression fuer fehlgeschlagenes Verkostungs-DELETE.
+
+## 0.28.8 - 2026-11-16
+
+- Review-Fixes: doppelte Datei- und Foto-Uploads verhindern, Browser-Tests und Flight-Validierung korrigieren.
+
+## 0.28.7 - 2026-11-16
+
+- Race-Condition in der Testserver-Portvergabe beseitigt: Jeder isolierte Integrationstest-Server bindet selbst einen freien Port und meldet ihn erst nach erfolgreichem Start per IPC.
+- Regressionstest fuer parallele Testserver und getrennte Sammlungsdaten ergaenzt.
+
+## 0.28.6 - 2026-11-16
+
+- Beim Loeschen von Fotos und Dateien sowie anderen Aktualisierungen derselben Seite bleibt die Scrollposition ohne Sprung oder sanftes Zurueckscrollen erhalten.
+- Gemeinsames App-Rendering behaelt Header, modale Ebene und unveraenderte Detailabschnitte im DOM; bei einem geaenderten Abfuellungsfoto bleibt die Bildhoehe waehrend des Ladens stabil.
+- Dialog- und Navigations-Scrollpositionen werden sofort statt animiert wiederhergestellt; Fotogalerien erhalten keine doppelten Drag-Handler.
+
+## 0.28.5 - 2026-11-16
+
+- Flaschenkarte: ein Kartenrahmen, dreispaltige Daten ohne Linien und volle Breite fuer Fotos und Nachweise
+
+## 0.28.4 - 2026-11-16
+
+- Flaschendaten an Abfuellungsdaten angepasst und Fotogalerie platzsparend neben der Bildvorschau angeordnet.
+
+## 0.28.3 - 2026-11-16
+
+- Flaschenkarte mit grosser Fotovorschau, geordneten Stammdaten und vollstaendiger Foto- und Nachweisverwaltung neu gestaltet.
+
+## 0.28.2 - 2026-11-16
+
+- Integrierte Hilfe um aktuelle Verkostungsnotizen und Tasting-Flights erweitert und veraltete Abfuellungsanleitungen korrigiert.
+
+## 0.28.1 - 2026-11-16
+
+- Tasting-Flight: Glencairn-Bewertungen einheitlich ausrichten und Verkostungsreihenfolge per Drag-and-drop ändern.
+
+## 0.28.0 - 2026-11-15
+
+- Tasting-Flights als optionale Gruppierung von Verkostungsnotizen mit Reihenfolge und gemeinsamem Kommentar; maximal ein Flight pro Notiz.
+
 ## 0.27.12 - 2026-11-15
 
 - Fehlenden Benachrichtigungsimport bei Flaschen-Anhaengen und Foto-Uploads behoben; nach dem Upload wird die Detailansicht wieder aktualisiert.

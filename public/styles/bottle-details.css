@@ -509,3 +509,195 @@
 .tasting-readonly-glasses .glencairn-symbol { width:25px; height:44px; }
 .tasting-readonly-rating > strong { font-size:1.25rem; }
 @media (max-width:540px) { .tasting-readonly-rating { gap:10px; } .tasting-readonly-glasses .glencairn-symbol { width:19px; height:36px; } }
+
+/* v0.28: Flights are simple optional groupings, not a second tasting editor. */
+.tasting-flight-home { margin-bottom:18px; }
+.tasting-flight-home-link { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;
+    padding:13px 16px; color:var(--ink); background:transparent; border:0; border-bottom:1px solid var(--line); text-align:left; cursor:pointer; }
+.tasting-flight-home-link:last-child { border-bottom:0; }
+.tasting-flight-home-link:hover,.tasting-flight-member-open:hover { background:var(--cream); }
+.tasting-flight-home-link span:first-child { display:grid; gap:4px; min-width:0; }
+.tasting-flight-home-link strong,.tasting-flight-member-open strong { overflow-wrap:break-word; word-break:normal; }
+.tasting-flight-home-link small,.tasting-flight-member-open small { color:var(--muted); }
+.tasting-flight-summary { margin-bottom:18px; }
+.tasting-flight-summary .tasting-panel-heading { align-items:start; }
+.tasting-flight-summary .tasting-panel-heading p { margin:6px 0 0; }
+.tasting-flight-comment { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; margin:18px 0 0; }
+.tasting-flight-form { display:grid; gap:14px; }
+.tasting-flight-form label,.tasting-flight-add label { display:grid; gap:7px; min-width:0; }
+.tasting-flight-form input,.tasting-flight-form textarea,.tasting-flight-add select { width:100%; box-sizing:border-box; }
+.tasting-flight-form .actions { justify-content:flex-end; }
+.tasting-flight-add { padding:16px; border:1px solid var(--line); background:var(--cream); display:grid; gap:16px; margin:14px 0 18px; }
+.tasting-flight-add-existing,.tasting-flight-add-new { display:flex; align-items:end; gap:10px; flex-wrap:wrap; }
+.tasting-flight-add-existing label,.tasting-flight-add-new label { flex:1 1 250px; }
+.tasting-flight-member { display:grid; grid-template-columns:62px minmax(0,1fr) auto auto; gap:12px;
+    align-items:center; padding:12px; border-bottom:1px solid var(--line); }
+.tasting-flight-order-control { display:flex; align-items:center; gap:4px; min-width:0; }
+.tasting-flight-drag-handle { display:grid; place-items:center; flex:0 0 24px; width:24px; height:36px;
+    border:0; background:transparent; color:var(--muted); padding:0; cursor:grab; touch-action:none; user-select:none; }
+.tasting-flight-drag-handle:active { cursor:grabbing; }
+.tasting-flight-drag-handle:hover,.tasting-flight-drag-handle:focus-visible { color:var(--ink); }
+.tasting-flight-member.is-dragging { opacity:.55; }
+.tasting-flight-member.is-drop-before { box-shadow:inset 0 3px 0 var(--gold); }
+.tasting-flight-member.is-drop-after { box-shadow:inset 0 -3px 0 var(--gold); }
+.tasting-flight-member:last-child { border-bottom:0; }
+.tasting-flight-position { display:grid; place-items:center; flex:0 0 32px; min-width:32px; min-height:34px; background:var(--cream); font-weight:700; }
+.tasting-flight-member-open { min-width:0; border:0; background:transparent; cursor:pointer; text-align:left; color:var(--ink);
+    display:grid; gap:5px; padding:9px 4px; }
+/* Stable glass and number columns: neither two/three-digit scores nor absent ratings
+   may shift the rating glasses between flight entries. */
+.tasting-flight-member-score { display:grid; grid-template-columns:68px 118px; gap:10px;
+    align-items:center; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.tasting-flight-member-score .tasting-list-glasses { display:inline-flex; width:68px; min-width:68px;
+    justify-content:flex-end; transform:none; }
+.tasting-flight-member-score > strong { display:block; width:118px; text-align:right; }
+.tasting-flight-member-actions { display:flex; gap:5px; justify-content:flex-end; }
+.tasting-flight-member-actions .btn { min-width:36px; }
+.tasting-flight-context { margin:0 0 14px; color:var(--muted); }
+.tasting-flight-context .inline-link { font-weight:600; }
+/* Avoid squeezing the name between five glasses and the score on phones. */
+@media(max-width:720px) {
+    .tasting-flight-member { grid-template-columns:62px minmax(0,1fr); gap:7px 10px; }
+    .tasting-flight-member-score { grid-column:2; grid-template-columns:54px minmax(0,1fr); gap:7px; min-width:0; }
+    .tasting-flight-member-score .tasting-list-glasses { width:54px; min-width:54px; }
+    .tasting-flight-member-score > strong { width:auto; }
+    .tasting-flight-member-actions { grid-column:2; justify-content:flex-start; flex-wrap:wrap; }
+}
+@media(max-width:540px) {
+    .tasting-entry-open { grid-template-columns:minmax(0,1fr); }
+    .tasting-entry-info strong { overflow-wrap:break-word; word-break:normal; }
+    .tasting-entry-trailing { grid-column:1; justify-content:flex-start; }
+    .tasting-entry-open .tasting-entry-info { width:100%; }
+    .tasting-flight-add { padding:12px; }
+    .tasting-flight-add-existing .btn,.tasting-flight-add-new .btn { flex:1 1 auto; }
+}
+
+/* One border per physical bottle, using the same hierarchy as bottling data.
+   Only the photo preview and metadata share the first row; the sortable photos
+   and the documents both start at the left edge of the whole card. */
+.bottle-entry-list { display: grid; gap: 14px; min-width: 0; }
+.bottle-entry-list > .bottle-entry { margin: 0; }
+.bottle-entry {
+    display: grid;
+    grid-template-columns: minmax(185px, 220px) minmax(0, 1fr);
+    grid-template-areas: "visual content" "gallery gallery" "documents documents";
+    align-items: start;
+    gap: 20px 24px;
+    padding: 20px;
+}
+.bottle-entry.without-photos {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "content" "gallery" "documents";
+}
+.bottle-entry-visual { grid-area: visual; min-width: 0; }
+.bottle-entry-content { grid-area: content; min-width: 0; }
+.bottle-entry-gallery { grid-area: gallery; min-width: 0; }
+.bottle-entry-main-photo {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 250px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--cream);
+    cursor: zoom-in;
+}
+.bottle-entry-main-photo img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.bottle-main-source, .bottle-main-cutout {
+    position: absolute;
+    bottom: 9px;
+    padding: 3px 5px;
+    font-size: 10px;
+    font-weight: 700;
+    pointer-events: none;
+}
+.bottle-main-source { left: 9px; color: #fff; background: var(--navy); }
+.bottle-main-cutout { right: 9px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); }
+.bottle-entry-head { display: flex; align-items: flex-start; flex-wrap: wrap; justify-content: space-between; gap: 12px 15px; }
+.bottle-entry-identity { min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; }
+.bottle-entry-identity strong { margin: 0; font-size: 20px; overflow-wrap: anywhere; }
+.bottle-entry-identity .badge, .bottle-entry-identity .bottle-size { margin: 0; }
+.bottle-entry-identity .bottle-size { font-size: 13px; }
+.bottle-entry-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 7px; margin: 0 0 0 auto; }
+.bottle-entry-actions .btn { white-space: nowrap; }
+.bottle-entry-data-title {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.5;
+    margin: 19px 0 12px;
+}
+.bottle-entry-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px 23px;
+    margin: 0;
+    padding: 0;
+}
+/* No rules or separators between individual bottle facts. */
+.bottle-entry-facts > div { min-width: 0; border: 0; padding: 0; }
+.bottle-entry-facts dt { margin: 0; color: var(--muted); font-size: 12px; }
+.bottle-entry-facts dd { margin: 4px 0 0; font-size: 14px; font-weight: 650; overflow-wrap: anywhere; }
+.bottle-entry-facts .inline-link { font-weight: inherit; font-size: inherit; text-align: left; }
+.bottle-entry-gallery { padding-top: 16px; border-top: 1px solid var(--line); }
+.bottle-entry-gallery h4, .bottle-entry .bottle-documents h4 {
+    margin: 0 0 11px;
+    font: 400 17px/1.5 var(--serif);
+    color: var(--ink);
+}
+.bottle-entry-gallery .bottle-photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 9px;
+}
+.bottle-entry-gallery .photo-tile { width: 84px; height: 122px; }
+.bottle-entry-gallery .photo-tile .photo-open { height: 92px; padding: 7px; }
+.bottle-entry-gallery .photo-remove { width: 23px; height: 23px; }
+.bottle-entry-gallery .photo-tile .photo-edit-trigger { top: 2px; left: 2px; }
+.bottle-entry-gallery .photo-source { bottom: 28px; }
+.bottle-photo-add-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.bottle-entry-gallery .photo-add {
+    display: inline-flex;
+    min-width: 0;
+    width: auto;
+    height: 39px;
+    padding: 8px 12px;
+    border: 1px dashed var(--gold);
+    background: var(--cream);
+    font-size: 12px;
+}
+.bottle-entry .bottle-documents {
+    grid-area: documents;
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding-top: 17px;
+}
+.bottle-entry .document-add { max-width: 720px; }
+@media (max-width: 960px) {
+    .bottle-entry { grid-template-columns: minmax(160px, 190px) minmax(0, 1fr); gap: 17px; }
+    .bottle-entry.without-photos { grid-template-columns: minmax(0, 1fr); }
+    .bottle-entry-main-photo { height: 230px; }
+    .bottle-entry-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .bottle-entry-actions { width: 100%; justify-content: flex-start; margin-left: 0; }
+}
+@media (max-width: 680px) {
+    .bottle-entry, .bottle-entry.without-photos {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "visual" "content" "gallery" "documents";
+        gap: 15px;
+        padding: 14px;
+    }
+    .bottle-entry.without-photos { grid-template-areas: "content" "gallery" "documents"; }
+    .bottle-entry-main-photo { max-width: 220px; height: 245px; }
+    .bottle-entry-identity strong { font-size: 18px; }
+    .bottle-entry-gallery { padding-top: 15px; }
+    .bottle-entry .bottle-documents { padding-top: 14px; }
+}
+@media (max-width: 380px) {
+    .bottle-entry-actions .btn { flex: 1 1 auto; justify-content: center; }
+    .bottle-entry-facts { gap: 14px 10px; }
+}

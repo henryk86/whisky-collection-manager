@@ -8,7 +8,7 @@ import { sectionWorkspace } from '../ui/section-navigation.js';
 import { WAREHOUSE_CAMERAS } from '../domain/warehouse-3d-model.js';
 import { mountWarehouseThree } from '../ui/warehouse-three-scene.js';
 import { mountWarehouseRoomPreviews } from '../ui/warehouse-room-previews.js';
-import { moveFurnitureTowards } from '../domain/warehouse-placement.js';
+import { moveFurnitureTowards } from '../../../shared/warehouse-placement.js';
 import { routeUrl } from '../navigation/routes.js';
 import { createFurnitureActivation } from '../ui/warehouse-furniture-activation.js';
 import { eyeIcon, eyeOffIcon, addActionLabel } from '../ui/action-icons.js';
@@ -320,7 +320,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
             label:t('warehouse.rooms.storageAreas'), switchKind:'warehouse',
             desktopClass:'warehouse-tabs',
         }, `<h2 class="analytics-section-title">${t(ROOM_SECTION_KEYS[section] || ROOM_SECTION_KEYS.overview)}</h2>${content}`);
-        shell(`<div class="analytics-page warehouse-page"><header class="section-head warehouse-heading"><div class="page-heading-copy"><span class="eyebrow dark">${t("warehouse.page.eyebrow")}</span><h2>${t("warehouse.page.title")}<span class="heading-period">.</span></h2><p class="intro">${esc(t('warehouse.page.intro'))}</p></div></header>${workspace}</div>`);
+        shell(`<div class="analytics-page warehouse-page" data-reconcile="replace"><header class="section-head warehouse-heading"><div class="page-heading-copy"><span class="eyebrow dark">${t("warehouse.page.eyebrow")}</span><h2>${t("warehouse.page.title")}<span class="heading-period">.</span></h2><p class="intro">${esc(t('warehouse.page.intro'))}</p></div></header>${workspace}</div>`);
         if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
             restoreWallScroll();
 
@@ -648,8 +648,6 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         }
         let data=Object.fromEntries(new FormData(form).entries());
         if (form.classList.contains('warehouse-assignment-form')) {
-            // The current location is read-only until the user explicitly opens the editor.
-            if (!form.querySelector('.warehouse-assignment-editor')?.open) return;
             try {
                 const ids = form.dataset.bottleBulk === 'true' ? selectedBottleIds() :
                     [decodeURIComponent(form.dataset.endpoint.split('/').at(-1))];
@@ -727,7 +725,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
             }
             await refresh();
             if (previousPageY !== null && typeof window.scrollTo === 'function') {
-                window.scrollTo(0, previousPageY);
+                window.scrollTo({top: previousPageY, left: 0, behavior: 'instant'});
             }
             toast(t('warehouse.shelves.dragSuccess'));
         } catch (error) {

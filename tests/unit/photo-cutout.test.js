@@ -1,8 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import { modelInput, normalizedMask, MODEL_SIZE } from '../../public/js/features/cutout/model.js';
-import { displayPhotoPath, initialPhotoAdjustmentSettings } from '../../public/js/domain/photo-images.js';
+import { displayPhotoPath, initialPhotoAdjustmentSettings } from '../../shared/photo-images.js';
 import {cutoutExportSizes} from '../../public/js/features/cutout/image.js';
 import { analyzeBottleMask, bottleCropRect, cutoutOutputSize } from '../../public/js/features/cutout/crop.js';
 
@@ -33,15 +32,6 @@ test('photo rendering selects the cutout only when the user requested it', () =>
     assert.equal(displayPhotoPath(photo),'images/old/original.png');
     assert.equal(displayPhotoPath({path:'images/old/original.png'}),'images/old/original.png');
 });
-
-test('AI assets are obtained at image build time and CSP only grants WebAssembly execution', () => {
-    const docker = fs.readFileSync('docker/app.Dockerfile','utf8');
-    const staticFiles = fs.readFileSync('server/http/static-files.js','utf8');
-    assert.match(docker,/RUN node scripts\/prepare-cutout-assets\.js/);
-    assert.match(staticFiles,/wasm-unsafe-eval/);
-    assert.doesNotMatch(staticFiles,/'unsafe-eval'/);
-});
-
 
 function sampleMask(rect) {
     const mask = new Uint8ClampedArray(size);

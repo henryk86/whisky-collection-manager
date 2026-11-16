@@ -3,8 +3,8 @@ import { parseRoute, routeUrl } from './routes.js';
 import { homePageUrl, pageFromSearch, overviewModeFromSearch } from '../domain/pagination.js';
 /** History changes navigate to the page top; a scanned bottle is highlighted, not focused. */
 export function createNavigation({ state, render, closeModal, browser = window }) {
-    function navigate(page, selected = null, { replace = false, highlightBottleId = null, tastingId = null } = {}) {
-        const url = page === 'home' ? homePageUrl(state.pageNumber || 1, state.overviewMode) : routeUrl(page, selected, page === 'warehouse' ? {roomId:state.warehouseRoomId, furnitureId:state.warehouseFurnitureId} : ['tasting','external-tasting'].includes(page) ? {tastingId} : state.analyticsFilters);
+    function navigate(page, selected = null, { replace = false, highlightBottleId = null, tastingId = null, flightId = null } = {}) {
+        const url = page === 'home' ? homePageUrl(state.pageNumber || 1, state.overviewMode) : routeUrl(page, selected, page === 'warehouse' ? {roomId:state.warehouseRoomId, furnitureId:state.warehouseFurnitureId} : ['tasting','external-tasting'].includes(page) ? {tastingId,flightId} : state.analyticsFilters);
         if (browser.location.pathname + browser.location.search !== url) {
             browser.history[replace ? 'replaceState' : 'pushState']({
                 whiskyRoute: true
@@ -16,9 +16,10 @@ export function createNavigation({ state, render, closeModal, browser = window }
         state.page = page;
         state.selected = selected;
         state.tastingId = ['tasting','external-tasting'].includes(page) ? tastingId : null;
+        state.flightId = ['tasting','external-tasting'].includes(page) ? flightId : null;
         state.highlightBottleId = highlightBottleId;
         render();
-        browser.scrollTo(0, 0);
+        browser.scrollTo({top: 0, left: 0, behavior: 'instant'});
     }
     function restoreRoute() {
         if (state.modal) {
@@ -28,6 +29,7 @@ export function createNavigation({ state, render, closeModal, browser = window }
         state.page = route.page;
         state.selected = route.selected;
         state.tastingId = route.tastingId || null;
+        state.flightId = route.flightId || null;
         if (route.page === 'analytics') state.analyticsFilters = route.filters;
         if (route.page === 'warehouse') { state.warehouseRoomId = route.roomId; state.warehouseFurnitureId = route.furnitureId; }
         if (route.page === 'home') {

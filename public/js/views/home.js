@@ -1,4 +1,4 @@
-import { displayPhotoPath } from '../domain/photo-images.js';
+import { displayPhotoPath } from '../../../shared/photo-images.js';
 import { t } from '../i18n/index.js';
 const statusText = status => t(({closed:'home.status.closed',open:'analytics.inventory.openedStatus',empty:'home.status.empty'})[status] || 'features.distilleries.unknownStatus');
 import { newBottlingIcon, inventoryScanIcon } from '../ui/action-icons.js';
@@ -11,7 +11,7 @@ import { hasBottlingDetail } from '../domain/bottling-details.js';
 import { paginate, visiblePages, PAGE_SIZE_OPTIONS, homePageUrl } from '../domain/pagination.js';
 import { savePageSizePreference } from '../domain/page-size-preference.js';
 import { availableOverviewDistilleries, collectionOverviewEntries } from '../domain/collection-overview.js';
-import { displayedTastingRating } from '../domain/tasting-records.js';
+import { displayedTastingRating } from '../../../shared/tasting-records.js';
 import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
 /**
  * The count labels represent mutually exclusive bottle types. Sample bottles
@@ -71,9 +71,63 @@ function pagerHtml({ page, pageCount, total, from, to }, selectedSize, mode = 'b
     </nav>`;
 }
 
-/** Collection overview owns its own filter bindings, never data writes. */
+/** Collection overview uses delegated root events; render does not bind listeners. */
 export function createHomeView({ state, selectors, shell }) {
     const { allBottles, bottles, coverPhoto, distilleryNames } = selectors;
+    let activeList = [];
+    let activePageSize = 1;
+    function updatePageUrl(replace = false) {
+        const url = homePageUrl(state.pageNumber, state.overviewMode);
+        if (location.pathname + location.search !== url) {
+            history[replace ? 'replaceState' : 'pushState']({ whiskyRoute: true }, '', url);
+        }
+    }
+    function changePage(target) {
+        const next = paginate(activeList, target, activePageSize).page;
+        if (next === state.pageNumber) return;
+        state.pageNumber = next;
+        updatePageUrl();
+        home();
+        document.querySelector('.collection-heading')?.scrollIntoView({block:'start',behavior:'auto'});
+    }
+    function handleClick(button) {
+        if (state.page !== 'home') return;
+        if (button.dataset.collectionMode) {
+            if (state.overviewMode === button.dataset.collectionMode) return;
+            state.overviewMode = button.dataset.collectionMode;
+            state.pageNumber = 1;
+            updatePageUrl();
+            home();
+        } else if (button.dataset.pageTo) changePage(Number(button.dataset.pageTo));
+    }
+    function handleChange(input) {
+        if (state.page !== 'home') return;
+        if (input.id === 'pagination-size') {
+            state.pageSize = Number(input.value);
+            savePageSizePreference(state.pageSize);
+        } else {
+            const field = {
+                'filter-status':'status','filter-completion':'completion','filter-sort':'sort',
+                'filter-distillery':'distillery','filter-volume-type':'volumeType', 'filter-rating':'rating'
+            }[input.id];
+            if (!field) return;
+            state[field] = input.value;
+        }
+        state.pageNumber = 1;
+        updatePageUrl(true);
+        home();
+        if (input.id === 'pagination-size') document.querySelector('.collection-heading')?.scrollIntoView({block:'start',behavior:'auto'});
+    }
+    function handleInput(input) {
+        if (state.page !== 'home' || input.id !== 'search') return;
+        state.search = input.value;
+        state.pageNumber = 1;
+        updatePageUrl(true);
+        const cursor = input.selectionStart;
+        home();
+        const node = document.getElementById('search');
+        if (node) { node.focus(); node.setSelectionRange(cursor, cursor); }
+    }
     function home() {
         const collection = state.collection;
         const physical = allBottles();
@@ -98,6 +152,8 @@ export function createHomeView({ state, selectors, shell }) {
             history.replaceState({ whiskyRoute: true }, '', homePageUrl(pageData.page, mode));
         }
         const visibleList = pageData.items;
+        activeList = list;
+        activePageSize = pageSize;
         const cards = visibleList.map(({ bottling, bottle }) => {
             const physicalBottles = bottle ? [bottle] : bottles(bottling.id);
             const origin = bottlingOriginLabel(bottling, distilleryNames);
@@ -263,58 +319,10 @@ export function createHomeView({ state, selectors, shell }) {
     <p>${mode === 'bottles' && !physical.length && collection.bottlings.length ? t("home.empty.addBottleToExistingHint") : collection.bottlings.length ? t("home.filters.changeFiltersHint") : t("home.empty.getStartedHint")}</p>
     ${collection.bottlings.length ? '' : `<button class="btn primary" data-act="new">${t("collection.actions.newBottle")}</button>`}
     </div>`}${pageData.total ? pagerHtml(pageData, state.pageSize, mode) : ''}`);
-        // Keep the home URL in sync without polluting browser history for filter changes.
-        function updatePageUrl(replace = false) {
-            const url = homePageUrl(state.pageNumber, state.overviewMode);
-            if (location.pathname + location.search !== url) {
-                history[replace ? 'replaceState' : 'pushState']({ whiskyRoute: true }, '', url);
-            }
-        }
-        function changePage(target) {
-            const next = paginate(list, target, pageSize).page;
-            if (next === state.pageNumber) return;
-            state.pageNumber = next;
-            updatePageUrl();
-            home();
-            document.querySelector('.collection-heading')?.scrollIntoView({ block: 'start', behavior: 'auto' });
-        }
-        document.querySelectorAll('[data-collection-mode]').forEach(button => button.addEventListener('click', () => {
-            const nextMode = button.dataset.collectionMode;
-            if (nextMode === state.overviewMode) return;
-            state.overviewMode = nextMode;
-            state.pageNumber = 1;
-            updatePageUrl();
-            home();
-        }));
-        document.querySelectorAll('[data-page-to]').forEach(button => button.addEventListener('click', () => {
-            changePage(Number(button.dataset.pageTo));
-        }));
-        query('#pagination-size')?.addEventListener('change', event => {
-            state.pageSize = Number(event.target.value);
-            savePageSizePreference(state.pageSize);
-            state.pageNumber = 1;
-            updatePageUrl(true);
-            home();
-            document.querySelector('.collection-heading')?.scrollIntoView({ block: 'start', behavior: 'auto' });
-        });
-        query('#search').addEventListener('input', ev => {
-            state.search = ev.target.value;
-            state.pageNumber = 1;
-            updatePageUrl(true);
-            const cursor = ev.target.selectionStart;
-            home();
-            query('#search').focus();
-            query('#search').setSelectionRange(cursor, cursor);
-        });
-        for (const [sel, key] of [['#filter-status', 'status'], ['#filter-completion', 'completion'], ['#filter-sort', 'sort'],
-            ['#filter-distillery', 'distillery'], ['#filter-volume-type', 'volumeType'], ['#filter-rating', 'rating']]) {
-            query(sel).addEventListener('change', ev => {
-                state[key] = ev.target.value;
-                state.pageNumber = 1;
-                updatePageUrl(true);
-                home();
-            });
-        }
+
     }
+    home.handleClick = handleClick;
+    home.handleChange = handleChange;
+    home.handleInput = handleInput;
     return home;
 }

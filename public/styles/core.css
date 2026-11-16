@@ -20,7 +20,8 @@
     box-sizing: border-box;
 }
 html {
-    scroll-behavior: smooth;
+    /* Never animate implicit viewport restoration during data updates. */
+    scroll-behavior: auto;
     /* Reserve a real scrollbar track on short pages as well as long pages.
        Unlike scrollbar-gutter: stable, this does not leave a blank strip
        beside fixed backdrops, the dark header or the right-hand drawer. */

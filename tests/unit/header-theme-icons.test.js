@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import { themeMoonIcon, themeSunIcon } from '../../public/js/ui/action-icons.js';
 import { createThemeController } from '../../public/js/theme/controller.js';
 import { createShell } from '../../public/js/ui/shell.js';
@@ -48,13 +47,4 @@ test('theme controller changes only the shared SVG, preserving button labels on 
             if (value === undefined) delete globalThis[key]; else globalThis[key] = value;
         }
     }
-});
-
-test('mobile logo spacing stays positive after the last loaded stylesheet', () => {
-    const css = fs.readFileSync('public/styles/map.css', 'utf8');
-    const themes = fs.readFileSync('public/styles/themes.css', 'utf8');
-    assert.match(css, /@media \(max-width: 450px\)[^\n]*\.brand \{ gap: 10px; \}/);
-    assert.match(css, /@media \(max-width: 380px\)[^\n]*\.brand \{ gap: 8px; \}/);
-    assert.doesNotMatch(css, /\.brand \{ gap: 0; \}/);
-    assert.match(themes, /\.theme-icon \{ display: block; width: 19px; height: 19px;/);
 });

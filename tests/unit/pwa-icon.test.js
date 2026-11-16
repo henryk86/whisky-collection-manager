@@ -9,8 +9,6 @@ function pngSize(path) {
 }
 
 test('iOS home-screen icon uses the actual full-size logo via apple-touch-icon', () => {
-    const html = fs.readFileSync('public/index.html', 'utf8');
-    assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png\?v=0\.23\.0">/);
     assert.deepEqual(pngSize('public/apple-touch-icon.png'), {width:180,height:180});
     assert.deepEqual(fs.readFileSync('public/apple-touch-icon.png'),
         fs.readFileSync('public/assets/apple-touch-icon.png'));

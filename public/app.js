@@ -1,6 +1,6 @@
 import { t } from './js/i18n/index.js';
 /** Composition root: create feature controllers and connect them, then load the collection. */
-import { request } from './js/api.js';
+import { request, requestCachedJson } from './js/api.js';
 import { initializeLanguage } from './js/i18n/index.js';
 import { createState } from './js/state.js';
 import { pageFromSearch, overviewModeFromSearch } from './js/domain/pagination.js';
@@ -14,6 +14,8 @@ import { createPhotoEditor } from './js/features/photo-editor/controller.js';
 import { createShell } from './js/ui/shell.js';
 import { escapeHtml } from './js/ui/dom.js';
 import { toast } from './js/ui/notifications.js';
+import { runAction } from './js/ui/action-result.js';
+import { loadResources } from './js/ui/refresh-resources.js';
 import { createHomeView } from './js/views/home.js';
 import { createDetailView } from './js/views/detail.js';
 import { createTastingsView } from './js/views/tastings.js';
@@ -67,7 +69,7 @@ const bottleForm = createBottleForm({
 });
 let externalImport;
 const editors = createEditors({
-    state, selectors, bottlingForm, bottleForm, ...modal, navigate, action, refresh,
+    state, selectors, bottlingForm, bottleForm, ...modal, navigate, action,
     getPendingImageToken: () => externalImport?.getPendingImageToken(),
     markImageAttached: () => externalImport?.markImageAttached()
 });
@@ -100,6 +102,7 @@ function render() {
     if (state.page === 'help') return shell(helpView());
     if (state.page === 'warehouse') return warehouseView.render();
     if (state.page === 'tastings-home') return tastingsView.home();
+    if (state.page === 'tasting-flight') return tastingsView.flight();
     if (['tastings','external-tastings'].includes(state.page)) return tastingsView.list();
     if (['tasting','external-tasting'].includes(state.page)) return tastingsView.editor();
     if (state.page === 'detail') {
@@ -110,31 +113,21 @@ function render() {
     }
     home();
 }
-async function refresh() {
-    const [collection, warehouse, meta] = await Promise.all([
-        request('/api/collection'),
-        request('/api/warehouse'),
+async function refresh(scope = 'all') {
+    const [_, meta] = await Promise.all([
+        loadResources(state, requestCachedJson, scope),
         state.version ? Promise.resolve({ version: state.version }) : request('/api/version').catch(() => ({ version: '' }))
     ]);
-    state.collection = collection;
-    state.warehouse = warehouse;
     state.version = meta.version;
     if (state.page === 'map') mapView.refreshData();
     else render();
 }
-async function action(task) {
-    try {
-        const result = await task();
-        await refresh();
-        return result;
-    }
-    catch (error) {
-        toast(error.message, true);
-    }
+async function action(task, { scope = 'all' } = {}) {
+    return runAction(task, () => refresh(scope), error => toast(error.message, true));
 }
 navigation.listen();
 bindEvents(root, {
-    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView
+    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView
 });
 // The extension can send a second import into an already open manager tab.
 // A fragment-only navigation triggers hashchange, not a page reload.

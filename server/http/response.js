@@ -1,7 +1,7 @@
 /** Consistent JSON responses and downloadable files. */
-export function send(res, status, data, type = 'application/json; charset=utf-8') {
+export function send(res, status, data, type = 'application/json; charset=utf-8', extraHeaders = {}) {
     res.writeHead(status, {
-        'Content-Type': type, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store'
+        'Content-Type': type, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store', ...extraHeaders
     });
     res.end(type.startsWith('application/json') ? JSON.stringify(data) : data);
 }

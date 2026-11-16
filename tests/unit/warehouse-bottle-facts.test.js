@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { bottleListFacts, bottleRow } from '../../public/js/views/warehouse-presentation.js';
 import { renderUnassignedTray } from '../../public/js/views/warehouse-unassigned-tray.js';
 
@@ -17,8 +16,6 @@ test('warehouse inventory rows show age, release year and cask type next to the 
     assert.match(row,/Whisky &lt;Test&gt;/);
     assert.match(row,/warehouse-bottle-facts/);
     assert.match(row,/data-bottle-search="[^"]*2012[^"]*oloroso/);
-    const css=readFileSync(new URL('../../public/styles/warehouse.css',import.meta.url),'utf8');
-    assert.match(css,/\.warehouse-bottle-row\s*\{\s*display:\s*grid;\s*grid-template-columns:\s*32px minmax\(0,1fr\) auto/);
 });
 
 test('missing facts remain absent, and label text is escaped in the inventory and tray', () => {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { warehouse3DGeometry } from '../../public/js/domain/warehouse-3d-model.js';
-import { visibleShelfFront } from '../../public/js/domain/warehouse-compartments.js';
+import { visibleShelfFront } from '../../shared/warehouse-compartments.js';
 import { createWarehouseView } from '../../public/js/views/warehouse.js';
 
 const item={id:'f',name:'Vitrinenschrank',type:'regal',x:0,y:0,width:1.2,depth:0.5,rotation:0,elevation:0,itemHeight:2,

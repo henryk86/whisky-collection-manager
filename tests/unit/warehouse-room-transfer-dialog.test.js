@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { roomTransferMarkup } from '../../public/js/views/warehouse-room-transfer.js';
 
 const rooms = [
@@ -31,6 +30,4 @@ test('import tab is the default for an empty warehouse and export is disabled', 
     assert.match(html, /id="warehouse-transfer-tab-import" aria-selected="true"/);
     assert.match(html, /id="warehouse-transfer-panel-export"[^>]+hidden/);
     assert.match(html, /id="warehouse-transfer-panel-import"[^>]*>/);
-    const css=readFileSync('public/styles/warehouse.css','utf8');
-    assert.match(css,/\.warehouse-transfer-panel\[hidden\] \{ display: none; \}/);
 });

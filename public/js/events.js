@@ -3,13 +3,14 @@ import { chooseLanguage, t } from './i18n/index.js';
 import { request } from './api.js';
 import { toast } from './ui/notifications.js';
 import { movePhoto } from './features/photo-order.js';
+import { bindFlightSorting } from './features/flight-order.js';
 import { routeUrl } from './navigation/routes.js';
 import { readAnalyticsDate } from './domain/analytics-period.js';
 import { activateHelpTopic } from './views/help.js';
 import { activateSettingsSection } from './views/settings.js';
 import { handleFlavorRange, setFlavorFromPointer } from './ui/flavor-profile.js';
 /** One delegated click handler; HTML data-act values are the UI action names. */
-export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView }) {
+export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView }) {
     const suggestNumber = async (fieldName) => {
         const result = await request('/api/suggest-number');
         const field = query(`[name=${fieldName}]`);
@@ -18,6 +19,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
     };
     let pendingConfirmation = null;
+    let confirmationBusy = false;
     function confirmInModal(title, message, task, buttonLabel = 'Endgültig löschen') {
         pendingConfirmation = task;
         modal.showModal(title, `<p>${escapeHtml(message)}</p>
@@ -91,6 +93,28 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'tasting-rating-clear': () => tastingsView.chooseRating(null),
         'tasting-color': button => tastingsView.chooseColor(button.dataset.colorKey),
         'tasting-color-clear': () => tastingsView.chooseColor(null),
+        'tasting-flight-back': () => navigate('tastings-home'),
+        'tasting-back-flight': () => state.flightId && navigate('tasting-flight',state.flightId),
+        'tasting-open-flight': button => navigate('tasting-flight',button.dataset.flightId),
+        'tasting-flight-open': button => navigate('tasting-flight',button.dataset.flightId),
+        'tasting-flight-new': () => tastingsView.startFlight(),
+        'tasting-flight-create-confirm': () => tastingsView.createFlight(),
+        'tasting-flight-edit': () => tastingsView.toggleFlightEdit(true),
+        'tasting-flight-cancel-edit': () => tastingsView.toggleFlightEdit(false),
+        'tasting-flight-save': () => tastingsView.saveFlight(),
+        'tasting-flight-delete': () => confirmInModal(t('tastingFlights.plural'),t('tastingFlights.deleteConfirm'),()=>tastingsView.deleteFlight(),t('common.actions.delete')),
+        'tasting-flight-toggle-add': () => tastingsView.toggleFlightAdd(),
+        'tasting-flight-attach': () => tastingsView.attachFlightMember(),
+        'tasting-flight-remove-note': button => tastingsView.detachFlightMember(button.dataset.tastingId),
+        'tasting-flight-move': button => tastingsView.moveFlightMember(Number(button.dataset.index),Number(button.dataset.direction)),
+        'tasting-flight-note-open': button => button.dataset.external==='1'
+            ? navigate('external-tasting',button.dataset.bottlingId,{flightId:state.selected})
+            : navigate('tasting',button.dataset.bottlingId,{tastingId:button.dataset.tastingId,flightId:state.selected}),
+        'tasting-flight-new-owned': () => {
+            const id=document.querySelector('[data-flight-owned-bottling]')?.value;
+            if (id && state.collection.bottlings.some(b=>b.id===id)) navigate('tasting',id,{tastingId:'new',flightId:state.selected});
+        },
+        'tasting-flight-new-external': () => navigate('external-tasting','new',{flightId:state.selected}),
         'tastings-back-detail': () => navigate('detail',state.selected),
         'tastings-back-home': () => navigate('tastings-home'),
         'tastings-back-list': () => navigate('tastings',state.selected),
@@ -119,8 +143,10 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'tasting-delete': button => confirmInModal(t('tastings.delete'),t('tastings.deleteConfirm'),async()=>{
             const id=button.dataset.tastingId;
             const external=state.page==='external-tasting';
-            await action(()=>request(external?`/api/external-tastings/${encodeURIComponent(id)}`:`/api/bottlings/${encodeURIComponent(state.selected)}/tastings/${encodeURIComponent(id)}`,{method:'DELETE'}));
+            const result = await action(()=>request(external?`/api/external-tastings/${encodeURIComponent(id)}`:`/api/bottlings/${encodeURIComponent(state.selected)}/tastings/${encodeURIComponent(id)}`,{method:'DELETE'}), {scope:'collection'});
+            if (!result.ok) return result;
             navigate(external?'tastings-home':'tastings',external?null:state.selected,{replace:true});
+            return result;
         },t('common.actions.delete')),
         'warehouse-shelf-copy': button => warehouseView.openForm('shelf-copy', button.dataset.id),
         'warehouse-shelf-delete': button => warehouseView.askDelete('shelf', button.dataset.id),
@@ -214,15 +240,25 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'submit-code': button => resolveCode(query('[name=manualCode]').value, button.dataset.assign === '1'),
         'confirm-action': async () => {
             const task = pendingConfirmation;
-            pendingConfirmation = null;
-            modal.closeModal(true);
-            if (task) await task();
+            if (!task || confirmationBusy) return;
+            confirmationBusy = true;
+            const confirmation = state.modal;
+            try {
+                const result = await task();
+                if (result?.ok === false || result === false) return;
+                pendingConfirmation = null;
+                // A successful task may have navigated or closed this modal itself.
+                if (state.modal === confirmation) modal.closeModal(true);
+            } finally {
+                confirmationBusy = false;
+            }
         },
         'confirm-import': () => settings.confirmImport(),
-        'delete-file': button => confirmInModal(t("ui.confirmations.deleteAttachment"), t("ui.confirmations.deleteAttachmentQuestion"), () => action(async () => {
-            await request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/files/${encodeURIComponent(button.dataset.fileId)}`, { method: 'DELETE' });
-            toast(t("ui.confirmations.attachmentDeleted"));
-        })),
+        'delete-file': button => confirmInModal(t("ui.confirmations.deleteAttachment"), t("ui.confirmations.deleteAttachmentQuestion"), async () => {
+            const result = await action(() => request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/files/${encodeURIComponent(button.dataset.fileId)}`, { method: 'DELETE' }), {scope:'collection'});
+            if (result.ok) toast(t("ui.confirmations.attachmentDeleted"));
+            return result;
+        }),
         'open-photo': button => photoViewer.open(button),
         'photo-editor-open': button => photoEditor.open(button),
         'photo-editor-tab': button => photoEditor.selectTab(button.dataset.photoEditorTab),
@@ -243,22 +279,32 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'photo-prev': () => photoViewer.step(-1),
         'photo-next': () => photoViewer.step(1),
         'move-photo': button => movePhoto(button.dataset.id, button.dataset.photoId, Number(button.dataset.dir), action),
-        'delete-photo': button => confirmInModal(t("ui.confirmations.deletePhoto"), t("ui.confirmations.deletePhotoQuestion"), () => action(async () => {
-            await request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/photos/${encodeURIComponent(button.dataset.photoId)}`, { method: 'DELETE' });
-            toast(t("ui.confirmations.photoDeleted"));
-        })),
-        'delete-bottle': button => confirmInModal(t("ui.confirmations.deleteBottle"), t("ui.confirmations.deleteBottleQuestion"), () => action(async () => {
-            await request(`/api/bottles/${encodeURIComponent(button.dataset.id)}`, { method: 'DELETE' });
-            toast(t("ui.confirmations.bottleDeleted"));
-        })),
-        'delete-bottling': () => confirmInModal(t("ui.confirmations.deleteBottling"), t("ui.confirmations.deleteBottlingQuestion"), () => action(async () => {
-            await request(`/api/bottlings/${encodeURIComponent(state.selected)}`, { method: 'DELETE' });
-            navigate('home', null, { replace: true });
-            toast(t("ui.confirmations.bottlingDeleted"));
-        })),
+        'delete-photo': button => confirmInModal(t("ui.confirmations.deletePhoto"), t("ui.confirmations.deletePhotoQuestion"), async () => {
+            const result = await action(() => request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/photos/${encodeURIComponent(button.dataset.photoId)}`, { method: 'DELETE' }), {scope:'collection'});
+            if (result.ok) toast(t("ui.confirmations.photoDeleted"));
+            return result;
+        }),
+        'delete-bottle': button => confirmInModal(t("ui.confirmations.deleteBottle"), t("ui.confirmations.deleteBottleQuestion"), async () => {
+            const result = await action(() => request(`/api/bottles/${encodeURIComponent(button.dataset.id)}`, { method: 'DELETE' }));
+            if (result.ok) toast(t("ui.confirmations.bottleDeleted"));
+            return result;
+        }),
+        'delete-bottling': () => confirmInModal(t("ui.confirmations.deleteBottling"), t("ui.confirmations.deleteBottlingQuestion"), async () => {
+            const result = await action(() => request(`/api/bottlings/${encodeURIComponent(state.selected)}`, { method: 'DELETE' }));
+            if (result.ok) {
+                navigate('home', null, { replace: true });
+                toast(t("ui.confirmations.bottlingDeleted"));
+            }
+            return result;
+        }),
         import: () => settings.importJSON(),
     };
+    bindFlightSorting(root, (from,to,after) => tastingsView.reorderFlightMember(from,to,after));
     root.addEventListener('click', async (event) => {
+        const mapButton = event.target.closest?.('[data-map-focus], [data-map-page], [data-map-bottling], [data-map-edit]');
+        if (state.page === 'map' && mapButton) { mapView.handleClick(mapButton); return; }
+        const overviewButton = event.target.closest?.('[data-collection-mode], [data-page-to]');
+        if (overviewButton && state.page === 'home') { home.handleClick(overviewButton); return; }
         const button = event.target.closest('[data-act]');
         if (!button || button.disabled) {
             return;
@@ -357,6 +403,13 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
     });
     root.addEventListener('change', event => {
+        if (state.page === 'map' && event.target.matches?.('#map-site-select, #map-all-distilleries')) {
+            mapView.handleChange(event.target); return;
+        }
+        if (state.page === 'home' && event.target.matches?.('#pagination-size, [id^=filter-]')) { home.handleChange(event.target); return; }
+        if (event.target.matches?.('input[data-bottle-files], input[data-bottle-photos]')) {
+            void detail.handleUploadChange(event); return;
+        }
         if (event.target.matches?.('input[data-furniture-photos]')) {
             warehouseView.uploadFurniturePhotos(event.target.dataset.furniturePhotos,[...event.target.files]); return;
         }
@@ -418,6 +471,10 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
     });
     root.addEventListener('input', event => {
+        if (state.page === 'map' && event.target.matches?.('#map-bottling-search, #map-missing-search')) {
+            mapView.handleInput(event.target); return;
+        }
+        if (state.page === 'home' && event.target.id === 'search') { home.handleInput(event.target); return; }
         if (event.target.id === 'warehouse-unassigned-wall-search') {warehouseView.setUnassignedWallSearch(event.target.value);return;}
         if (event.target.id === 'warehouse-search') {state.warehouseSearch=event.target.value;warehouseView.filterSearch();return;}
         if (event.target.id === 'bottling-choice-search') {

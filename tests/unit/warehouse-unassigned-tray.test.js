@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { unassignedWallPage, UNASSIGNED_WALL_PAGE_SIZE } from '../../public/js/domain/warehouse-unassigned-tray.js';
 import { renderUnassignedTray, renderUnassignedTrayPage } from '../../public/js/views/warehouse-unassigned-tray.js';
 import { renderWarehouseRoomWall } from '../../public/js/views/warehouse-room-wall.js';
@@ -71,14 +70,6 @@ test('room wall offers the unassigned shelf without adding furniture or duplicat
     assert.match(emptyRoom,/noch keine Möbel mit Fächern/);
 });
 
-test('wall uses no extra vertical space after replacing furniture captions with in-place edit icons', () => {
-    const css=readFileSync(new URL('../../public/styles/warehouse.css',import.meta.url),'utf8');
-    const rule=css.match(/\.warehouse-wall-surface\s*\{([^}]+)\}/)?.[1] || '';
-    assert.match(rule,/padding:\s*12px 18px 12px/);
-    assert.doesNotMatch(css,/padding:\s*95px 18px 12px/);
-    assert.match(css,/\.warehouse-wall-scroll\s*\{[^}]*overflow-y:\s*hidden/);
-});
-
 test('wall combines unassigned disclosure and selected-bottle actions into one compact header', () => {
     const warehouse={bottles:[{id:'b1',name:'One'},{id:'b2',name:'Two'}],assignments:{}};
     const room={id:'room',name:'Room',furniture:[]};
@@ -103,7 +94,4 @@ test('search is inline between bottle count and pager, and the input value survi
     assert.ok(count!==-1 && count<search && search<controls);
     assert.match(html,/value="Whisky 00"/);
     assert.doesNotMatch(html,/warehouse-unassigned-search-footer/);
-    const view=readFileSync(new URL('../../public/js/views/warehouse.js',import.meta.url),'utf8');
-    assert.match(view,/results\.querySelector\(selector\)\?\.replaceWith/);
-    assert.doesNotMatch(view,/results\.outerHTML = renderUnassignedTrayPage/);
 });

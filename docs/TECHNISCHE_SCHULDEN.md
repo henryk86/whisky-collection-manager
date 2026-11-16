@@ -1,64 +1,38 @@
-# Technische Schulden und bewusste Grenzen
+# Technische Schulden und offene Abnahmen
 
-**Stand:** v0.15.12 (Wartung und Browser-Testkorrektur). Diese Liste ist kein Fehlerbericht: Sie trennt nachgewiesene Einschränkungen von möglichen künftigen Architekturmaßnahmen. In der reinen Wartungsversion wurden keine APIs, Datenmodelle oder Bedienabläufe geändert.
+**Aktueller Stand:** Die Fehler- und Architekturpunkte des Reviews v0.28.6 wurden im aktuellen Entwicklungsstand bearbeitet. Diese Datei ist eine Bestandsaufnahme **offener Restrisiken**, keine zweite Release-Chronik. Einzelne historische Entscheidungen und ihre Versionsnummern stehen im [Changelog](../CHANGELOG.md). Verbindliche Testresultate stehen in [TESTSTATUS.md](TESTSTATUS.md).
 
-## In dieser Wartungsversion abgebaut
+## Urspruengliches Code-Review
 
-- **Server-Lagerdienst:** Eingabeprüfung, Normalisierung von Möbeln und Fachhöhen aus dem CRUD-Dienst nach `server/domain/warehouse-fields.js` ausgelagert. Der Dienst konzentriert sich auf Anwendungsfälle und Datenänderungen.
-- **Browser-Lagerseite:** Render-Helfer für 2D-Grundriss, Fächer, Formulare und Texte in `public/js/views/warehouse-presentation.js` gekapselt; `views/warehouse.js` verwaltet weiterhin den Lebenszyklus der Seite, Events und API-Aktionen.
-- **Möbeltypen:** Kanonische Typ-Liste in `public/js/domain/warehouse-compartments.js`; Eingabenormalisierung und Persistenzvalidierung verwenden dieselbe Definition. Eine verwaiste deutschsprachige Frontnamen-Tabelle wurde entfernt.
-- **Dokumentation:** README als Einstieg und Übersicht, ARCHITEKTUR als aktuelle Modulreferenz, Funktions- und Betriebsdetails in den jeweiligen Fachdokumenten. Ein neuer Link-Check schützt lokale Markdown-Verweise.
-- **Tests:** Bestehende Lager-, API- und i18n-Regressionen wurden nach jedem Modulschritt erneut ausgeführt; reine Wartungsänderungen erhalten eigene Domain-Tests.
-
-## Bewusst offen geblieben
-
-| Bereich | Beobachtung / Risiko | Für eine spätere Änderung |
+| Befund | Umgesetzte Gegenmassnahme | Noch zu beachten |
 | --- | --- | --- |
-| **Gemeinsame Lagergeometrie** | Browser und Server importieren reine Logik aus `public/js/domain/`. Das ist technisch gültig, aber der Verzeichnispfad vermittelt eine falsche Schichtzugehörigkeit. | In ein vom Webserver gezielt auslieferbares Shared-Paket umziehen; Importpfade und Zugriffsschutz sorgfältig testen. |
-| **UI-Ereignisse** | `public/js/events.js` verwaltet viele Delegationsfälle zentral; weitere Features machen die Datei schwerer zu lesen. | Handler nach Fachmodulen gruppieren, bei unverändertem `data-act`-Vertrag und Event-Reihenfolge. |
-| **Lager-Controller** | `views/warehouse.js` ist trotz der Render-Auslagerung noch für mehrere Formulare, Drag-and-drop und Auswahl zuständig. | Form-/Drag-Lebenszyklen separat testen und in kleine Controller verschieben. |
-| **Persistenz über zwei Dateien** | Sammlung und Lager haben je eine atomare Schreibwarteschlange, aber keine gemeinsame Transaktion über beide Dateien. | Nur mit explizitem Wiederherstellungs-/Konsistenzkonzept umbauen; kein stiller Schemawechsel. |
-| **Fehlerlokalisierung** | Backend-Fehler sind deutsche Texte statt stabiler API-Fehlercodes. | Versionierten Fehlercode zusätzlich zu bestehenden Meldungen einführen und UI pro Sprache lokalisieren. |
-| **Testabdeckung im Browser** | Node-Tests sichern Domain-/API-Fälle sehr gut ab; DOM-Modus ersetzt keinen vollständigen HTTP-Browserlauf. | GitHub-Actions-Browser-Suite, WebGL/GPU-Abnahme und echte mobile Geräte separat protokollieren. |
-| **Statische Codequalität** | `npm run check` validiert Syntax, Importzyklen, i18n und Dokumentationslinks; es ist kein vollständiger Typechecker oder Linter. | Optional ESLint/TypeScript-JSDoc in einem eigenen, risikobewussten Schritt einführen. |
-| **Historische Datensicherung** | Alte Restic-Profile und frühere ZIP-Versionen bleiben absichtlich lesbar. | Nicht entfernen, bevor eine explizite Migration mit realen Bestandsarchiven getestet wurde. |
+| A-1 Mehrfachuploads | Upload-Ereignisse zentral delegiert, Browser-Regression | Weitere neue Widgets duerfen keine Listener bei jeder Aktualisierung stapeln |
+| A-2 Browser-Fehlschlaege | Browser-Fixtures und visuelle Regressionen korrigiert | Je Release vollstaendige GitHub-CI-Browser-Suite erforderlich |
+| A-3 Verschluckte Fehler | Explizite Aktionsergebnisse, erfolgreiche Navigation nur nach bestaetigter Mutation | Fehler- und Retry-Pfade testen |
+| A-4 Cache statischer Assets | HTTP-ETags, Last-Modified, 304 | Grosse Modellassets ohne stabilen Hashpfad bleiben revalidierungspflichtig |
+| B-1 Uneinheitliches Rendering | Gemeinsamer DOM-Abgleich fuer Views, delegierte normale Ereignisse, Widget-Islands mit explizitem Neuaufbau | Karten-, Lager-, 3D- und Drag-Widgets brauchen ihre getrennten Browser-/Lebenszyklustests |
+| B-2 Teure Datenabrufe | Validierte Store-Caches, HTTP-ETags, revisionsgebundene API-Mutationsdeltas und sicherer GET-Fallback | Mehrprozessschreiber sind nicht vorgesehen; grosse Bestandsdaten weiterhin auf Zielhardware messen |
+| B-3 Alte Schemagenerationen | Schema 5, Originalbackup, Erhalt von Sammlung und Lager, nur alte Verkostungsdaten verfallen | Aeltere Clients duerfen neue Dateien nicht oeffnen |
+| B-4 Server-Frontend-Abhaengigkeit | Gemeinsame DOM-freie `shared/`-Module und Importgrenzen in `npm run check` | Neue Shared-Module nur nach browserseitiger Freigabe ausliefern |
+| B-5 Fragile Quelltexttests | **Technisch abgeschlossen:** historisches CSS-/JS-Quelltext-Screening aus Unit-/Integrationstests entfernt; Lager-/3D-/Layout-Verhalten durch Domain- und Chromiumtests gesichert; Deployment-Konfiguration separat geprueft; Verbot neuer Quelltext-Tests in `npm run check` | Vollstaendige GitHub-CI-Browserabnahme fuer den jeweiligen Commit und Hardware-WebGL-Pruefungen weiterhin erforderlich; siehe [Teststrategie](TESTSTRATEGIE.md) |
+| B-6 Releases und Altdateien | Kompakte Testhistorie, aktuelle Fachdokumentation, SHA-256-Quellmanifest und nichtdestruktive Upgrade-Audits | Versionsfreigabe erst nach gruenem CI-Lauf; Docker/Pi separat pruefen |
 
-## Nicht Teil eines reinen Refactorings
+## Unabhaengige verbleibende Risiken
 
-Eine Änderung an `collection.json`-Schema 4, `warehouse.json`-Schema 1, Inventarnummern-/Kapazitätsregeln, API-Endpunkten, UI-Semantik, CSS-Layout, Authentifizierung, Backupformat oder Deployment-Pfaden wäre **funktional** und braucht ein eigenes Ticket mit Migrations-/Kompatibilitätstests. Mehr Moduldateien sind für sich allein keine bessere Architektur; eine Trennung erfolgt nur bei klar unterscheidbarer Verantwortung.
+- **Browser-Abnahme:** Chromium-DOM-Modus prueft reale Module und API-Interaktionen, aber nicht History-Verhalten mit HTTP-Seitennavigation. GitHub Actions muss fuer den konkreten Commit gruen sein; WebGL und echte iOS-/Android-Geraete benoetigen eigene Abnahme.
+- **B-5-Abnahmekriterium:** Keine Unit-/Integrationstests lesen Anwendungs-JavaScript oder CSS, um Quelltextmuster zu suchen. Das Regex-Budget wurde beseitigt; die verbleibenden Regex pruefen *erzeugte Ergebnisse*. Aenderungen an Docker-/GitHub-Konfigurationen unterliegen expliziten Deployment-Vertraegen und deren Negativtests. Die [Teststrategie](TESTSTRATEGIE.md) ordnet jeder ersetzten Pruefklasse beobachtbares Verhalten zu.
+- **Widget-Lebenszyklen:** Direkte Listener fuer kurzfristige SVG-, 3D-, Drag- und Dialoginteraktion sind bewusst isoliert und in `scripts/check.js` mengenmaessig begrenzt. Bei jeder Aenderung dieser Komponenten ist ein gezielter Browser-Test erforderlich.
+- **Speichern ueber zwei JSON-Dateien:** Sammlung und Lager haben unabhaengige atomare Schreibwarteschlangen, aber keine gemeinsame Dateisystemtransaktion. Das Restore-Verfahren muss beide Dateien und Medien konsistent handhaben.
+- **Sicherheit und Betrieb:** Keine oeffentliche Benutzeranmeldung, daher nur in vertrauenswuerdigen Netzen oder hinter expliziter Zugriffskontrolle betreiben. ARM64-, HTTPS-, WebGL- und Restore-Live-Abnahmen sind von CI-Unit-Tests getrennt.
 
-## Prüfverfahren
+## Verbindliche Freigabekette
 
-1. `npm run check` – Syntax, Imports, i18n- und Markdown-Verweise.
-2. `npm test` – vollständige Unit-/Integrationstests.
-3. `npm run release:check` – Release-Metadaten.
-4. `npm run test:browser` – separater echter Browserlauf, sofern Chromium vorhanden und lokale HTTP-Navigation erlaubt.
-5. WebGL-, iOS-/Android- und Docker-Checks **explizit offen** lassen, bis sie tatsächlich durchgeführt wurden.
+1. `npm run check` und `npm test` einschliesslich Datenmigration und Backup-Restore.
+2. `npm run check` und Conventional-Commit-Pruefung auf `develop`; `npm run release:check` einschliesslich Source-Manifest und Dateiversion erst auf dem getaggten Release-Snapshot.
+3. `npm run test:browser` komplett mit echter Navigation in GitHub Actions, fuer **diesen** Commit.
+4. Release-ZIP und Upgrade-Audit pruefen; Nutzdaten duerfen niemals in einem Quellcode-ZIP enthalten sein.
+5. Pi-/Docker-/Mobilgeraete-Ergebnisse im [Teststatus](TESTSTATUS.md) gesondert dokumentieren.
 
-Der tatsächliche Durchführungsstand steht ausschließlich in [TESTSTATUS.md](TESTSTATUS.md); die früheren Ergebnisse im [TESTHISTORIE.md](TESTHISTORIE.md).
+## GitHub Free: Merge-Schutz ohne wirksame Rulesets
 
-## Nachpruefung v0.15.10: im Patch v0.15.11 geklaert
-
-- **NEU-1:** Ablehnungen durch die Host-Allowlist sind im Start-/Warn-Log
-  sichtbar; Upgrade-Anleitung fuer bestehende LAN-Namen und IPs ergaenzt.
-- **NEU-2:** HTTP-Upstream hinter einem TLS-terminierenden Proxy bleibt bewusst
-  nicht unterstuetzt; nur HTTPS bis zum Backend mit erhaltenem `Host`.
-- **NEU-3:** Abgebrochene Downloads erzeugen keine erwarteten
-  Verbindungsabbruch-Stacktraces mehr; echte Dateilesefehler bleiben sichtbar.
-- **NEU-4:** Historischer Teststand v0.15.9/v0.15.10 nachgetragen.
-- **NEU-5:** Hinweise zur doppelten HTML-Maskierung bei `tHtml()` ergaenzt.
-
-## Review v0.15.9: absichtlich nicht ohne weitere Tests geaendert
-
-- **UI-1:** Der reservierte Scrollbar-Gutter koennte in einigen Windows-/Firefox-
-  Konfigurationen einen hellen Streifen neben Header oder Modal erzeugen.
-  Optisch auf echten Browsern pruefen, bevor das Layout geaendert wird.
-- **MAINT-1:** `tHtml()` ist vorhanden, aber nicht alle bisherigen HTML-Templates
-  sind darauf umgestellt. Aufrufstellen mit dynamischen Benutzerdaten pruefen.
-- **MAINT-3:** Gemischt verschluesselte ZIPs bleiben lesbar, damit historische
-  Sicherungen nicht ausgesperrt werden. Striktere Regeln erst mit echten
-  Legacy-Archivtests und ausdruecklicher Kompatibilitaetsentscheidung.
-- **SEC-3/TEST-1:** CSP und die reparierte Scrollbar-Wirkungspruefung benoetigen
-  noch echte Chromium-/Firefox-/WebGL-/Scanner-Abnahme.
-
-Details: [CODE_REVIEW_0159.md](CODE_REVIEW_0159.md).
+Bei privaten Repositories im Free-Tarif verhindern Rulesets/Branch-Protection einen direkten Push nach `main` nicht. Der Release-Workflow verifiziert deshalb den GitHub-PR und den exakten Merge-Commit (Quelle `develop`, Ziel `main`) vor Tag- und Artefakterzeugung. Ein unerlaubter Push kann nicht rueckgaengig gemacht oder verhindert werden; er erzeugt aber **keinen Release**. Der Nutzer kontrolliert den Merge manuell.

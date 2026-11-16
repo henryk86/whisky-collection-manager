@@ -270,67 +270,95 @@
   .warehouse-wall-toggles {grid-template-columns:1fr;}
 }
 
-/* Bottle relocation: clear context, progressive room > furniture > shelf controls. */
-.warehouse-assignment-form .forms { display: block; margin: 0 0 12px; }
-.warehouse-assignment { display: grid; gap: 19px; min-width: 0; }
+/* Relocation uses the regular dialog vocabulary, but keeps the context and
+   three destination controls visible without creating a second, tall panel. */
+.dialog:has(.warehouse-assignment-form) {
+    width: min(740px,100%);
+    padding: 20px 22px 18px;
+}
+.dialog:has(.warehouse-assignment-form) .dialog-head {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+}
+.warehouse-assignment-form .forms { display: block; margin: 0 0 5px; }
+.warehouse-assignment {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1.15fr);
+    gap: 11px;
+    min-width: 0;
+}
 .warehouse-assignment-bottle {
-    display: grid; grid-template-columns: 72px minmax(0,1fr); align-items: center;
-    gap: 15px; padding: 14px; border-radius: 9px;
-    background: color-mix(in srgb,var(--gold) 6%,var(--paper)); border: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 54px minmax(0,1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: color-mix(in srgb,var(--gold) 6%,var(--paper));
 }
 .warehouse-assignment-photo {
-    /* Absolute image positioning avoids the intrinsic min-content grid track
-       growing beyond the thumbnail frame for especially tall bottle photos. */
-    position: relative; display: flex; align-items: center; justify-content: center;
-    box-sizing: border-box; flex: 0 0 auto; width: 72px; height: 96px;
-    background: var(--paper); border: 1px solid var(--line); border-radius: 6px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 54px;
+    height: 72px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
     overflow: hidden;
 }
 .warehouse-assignment-photo img {
-    position: absolute; inset: 0; display: block;
-    width: 100%; height: 100%; min-width: 0; min-height: 0;
-    object-fit: contain; object-position: center;
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    object-fit: contain;
+    object-position: center;
 }
-.warehouse-assignment-photo svg { width: 35px; height: 75px; fill: var(--gold); opacity: .7; }
-.warehouse-assignment-bottle-details { display: grid; gap: 7px; min-width: 0; }
+.warehouse-assignment-photo svg { width: 29px; height: 58px; fill: var(--gold); opacity: .7; }
+.warehouse-assignment-bottle-details { display: grid; gap: 4px; min-width: 0; }
 .warehouse-assignment-eyebrow { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
-.warehouse-assignment-bottle-details strong { font-size: 17px; color: var(--ink); overflow-wrap: anywhere; }
-.warehouse-assignment-bulk-list { color: var(--muted); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
-/* The existing location is the primary information. Editing is optional. */
+.warehouse-assignment-bottle-details strong { font-size: 15px; color: var(--ink); overflow-wrap: anywhere; }
+.warehouse-assignment-bulk-list { color: var(--muted); font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
 .warehouse-assignment-current {
-    display: grid; gap: 9px; padding: 18px 20px; min-width: 0;
-    border: 1px solid var(--line); border-left: 4px solid var(--gold);
+    display: grid;
+    align-content: center;
+    gap: 5px;
+    min-width: 0;
+    padding: 10px 13px;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--gold);
     background: var(--paper);
 }
 .warehouse-assignment-current > span { color: var(--muted); font-size: 12px; font-weight: 700; }
-.warehouse-assignment-current > strong { color: var(--ink); font-size: 17px; line-height: 1.5; font-weight: 650; overflow-wrap: anywhere; }
-.warehouse-assignment-editor { border-top: 1px solid var(--line); padding-top: 12px; }
-.warehouse-assignment-editor > summary {
-    display: flex; gap: 12px; align-items: center; padding: 12px 14px;
-    border: 1px solid var(--line); background: var(--paper); color: var(--ink);
-    font-size: 13px; font-weight: 700; cursor: pointer; list-style: none;
-}
-.warehouse-assignment-editor > summary::-webkit-details-marker { display: none; }
-.warehouse-assignment-editor > summary::after {
-    content: ''; width: 7px; height: 7px; margin-left: auto;
-    border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
-    transform: rotate(45deg); transition: transform .15s ease;
-}
-.warehouse-assignment-editor[open] > summary::after { transform: rotate(225deg); }
-.warehouse-assignment-editor > summary:hover { border-color: var(--gold); }
-.warehouse-assignment-editor > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.warehouse-assignment-editor[open] > .warehouse-assignment-target { margin-top: 14px; }
+.warehouse-assignment-current > strong { color: var(--ink); font-size: 14px; line-height: 1.4; font-weight: 650; overflow-wrap: anywhere; }
+.warehouse-assignment-editor { min-width: 0; grid-column: 1 / -1; }
+.warehouse-assignment:not(:has(.warehouse-assignment-current)) .warehouse-assignment-bottle { grid-column: 1 / -1; }
 .warehouse-assignment-form .warehouse-form-actions button[hidden] { display: none; }
-.warehouse-assignment-target { min-width: 0; border: 1px solid var(--line); border-radius: 9px; margin: 0; padding: 15px; }
+.warehouse-assignment-target { min-width: 0; border: 1px solid var(--line); border-radius: 9px; margin: 0; padding: 11px 13px; }
 .warehouse-assignment-target legend { color: var(--ink); font-size: 14px; font-weight: 700; padding: 0 6px; }
-.warehouse-assignment-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 1px 0 16px; }
+.warehouse-assignment-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 10px; }
 .warehouse-assignment-modes label {
-    display: flex; align-items: center; gap: 8px; min-width: 0; padding: 11px;
-    border: 1px solid var(--line); border-radius: 6px; cursor: pointer;
-    font-size: 13px; color: var(--ink); background: var(--paper);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--paper);
 }
 .warehouse-assignment-modes label:has(input:checked) { border-color: var(--gold); background: color-mix(in srgb,var(--gold) 10%,var(--paper)); }
-/* Native radio marks must not inherit global text-field dimensions. */
 .warehouse-assignment-modes input[type="radio"] {
     appearance: auto;
     width: 18px;
@@ -342,22 +370,29 @@
     flex: 0 0 18px;
     accent-color: var(--gold);
 }
-.warehouse-assignment-selectors { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; min-width: 0; }
-.warehouse-assignment-selectors .warehouse-assignment-shelf { grid-column: 1 / -1; }
+.warehouse-assignment-selectors { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; min-width: 0; }
+.warehouse-assignment-selectors .warehouse-assignment-shelf { grid-column: auto; }
 .warehouse-assignment-selectors select { min-width: 0; width: 100%; max-width: 100%; color: var(--ink); background: var(--paper); }
 .warehouse-assignment-selectors.is-disabled { opacity: .45; }
-.warehouse-assignment-feedback { min-height: 18px; margin: 13px 0 0; font-size: 12px; color: var(--muted); }
-.warehouse-assignment-form .warehouse-form-actions { border-top: 1px solid var(--line); margin: 10px 0 0; padding-top: 17px; }
+.warehouse-assignment-feedback { min-height: 18px; margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.warehouse-assignment-form .warehouse-form-actions { border-top: 1px solid var(--line); margin: 8px 0 0; padding-top: 11px; }
+@media (max-width: 700px) {
+    .warehouse-assignment { grid-template-columns: minmax(0,1fr); }
+    .warehouse-assignment-editor { grid-column: auto; }
+    .warehouse-assignment-selectors { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .warehouse-assignment-selectors .warehouse-assignment-shelf { grid-column: 1 / -1; }
+}
 @media (max-width: 570px) {
-    .warehouse-assignment { gap: 13px; }
-    .warehouse-assignment-bottle { grid-template-columns: 58px minmax(0,1fr); gap: 11px; padding: 10px; }
-    .warehouse-assignment-photo { width: 58px; height: 77px; }
+    .dialog:has(.warehouse-assignment-form) { padding: 17px 15px; }
+    .warehouse-assignment { gap: 9px; }
+    .warehouse-assignment-bottle { grid-template-columns: 46px minmax(0,1fr); gap: 9px; padding: 8px; }
+    .warehouse-assignment-photo { width: 46px; height: 62px; }
     .warehouse-assignment-modes, .warehouse-assignment-selectors { grid-template-columns: minmax(0,1fr); }
     .warehouse-assignment-selectors .warehouse-assignment-shelf { grid-column: auto; }
-    .warehouse-assignment-target { padding: 12px; }
-    .warehouse-assignment-bottle-details strong { font-size: 15px; }
-    .warehouse-assignment-current { padding: 14px; }
-    .warehouse-assignment-current > strong { font-size: 15px; }
+    .warehouse-assignment-target { padding: 9px 10px; }
+    .warehouse-assignment-bottle-details strong { font-size: 14px; }
+    .warehouse-assignment-current { padding: 9px 11px; }
+    .warehouse-assignment-current > strong { font-size: 13px; }
 }
 
 /* Drag-and-drop relocation of physical bottles inside the currently visible rack. */

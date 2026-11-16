@@ -1,4 +1,5 @@
 import { t } from '../../i18n/index.js';
+import { validateAdjustmentValues } from '../../../../shared/photo-adjustments.js';
 /** Reversible editing parameters: original/cutout image files are never modified. */
 export const PHOTO_ADJUSTMENT_GROUPS = Object.freeze([
     { key: 'light', sliders: [
@@ -23,18 +24,14 @@ const clip = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
 
 /** Reject unknown keys and non-finite numeric values at the server boundary. */
 export function validatePhotoAdjustments(value) {
-    if (!value || typeof value !== 'object' || Array.isArray(value) ||
-        Object.keys(value).some(key => !PHOTO_ADJUSTMENT_FIELDS.some(field => field.key === key)))
+    try { return validateAdjustmentValues(value); }
+    catch (error) {
+        if (error.code === 'INVALID_ADJUSTMENT_FIELD')
+            throw new RangeError(t('errors.photoEditor.invalidAdjustmentValue', {field: error.field}));
         throw new RangeError(t('errors.photoEditor.invalidAdjustments'));
-    const result = {};
-    for (const {key, min, max} of PHOTO_ADJUSTMENT_FIELDS) {
-        const number = value[key] ?? 0;
-        if (typeof number !== 'number' || !Number.isFinite(number) || number < min || number > max)
-            throw new RangeError(t('errors.photoEditor.invalidAdjustmentValue', {field: key}));
-        result[key] = number;
     }
-    return result;
 }
+
 export const photoAdjustmentsChanged = value => PHOTO_ADJUSTMENT_FIELDS.some(({key}) => Number(value?.[key] || 0) !== 0);
 
 /** Reset only one editor group; all other adjustments remain untouched. */

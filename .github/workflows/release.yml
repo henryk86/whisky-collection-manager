@@ -1,19 +1,16 @@
-name: Release (main -> GitHub Release + offline archives + GHCR)
+name: Release (merge develop -> main)
 
-# The same workflow builds artifacts for a newly merged main version and for
-# releases published manually. Releases created with GITHUB_TOKEN do NOT emit
-# another workflow run, so create/build/publish must happen in this run.
+# No manual bump and no commits to main. A tag points to a release-only
+# versioned child commit of the human-approved main merge.
 on:
   push:
     branches: [main]
-  release:
-    types: [published]
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-main
   cancel-in-progress: false
 
 jobs:
@@ -21,76 +18,63 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: read
     outputs:
       tag: ${{ steps.version.outputs.tag }}
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v7
         with:
-          # On a manually published release, use exactly the release tag.
-          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
           fetch-tags: true
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-      - name: Validate version files and release tag
-        id: version
+      - name: Verify the merged develop pull request
         shell: bash
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          GH_TOKEN: ${{ github.token }}
+          MERGE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          node scripts/release-version.js check
-          tag="$(node scripts/release-version.js tag)"
-          if [ "$EVENT_NAME" = release ] && [ "$RELEASE_TAG" != "$tag" ]; then
-            echo "Published release $RELEASE_TAG does not match package version $tag" >&2
-            exit 1
-          fi
-          if [ "$EVENT_NAME" = release ]; then
-            git fetch origin +refs/heads/main:refs/remotes/origin/main --no-tags
-            git merge-base --is-ancestor HEAD origin/main || {
-              echo 'The release must be based on a commit merged into main.' >&2
-              exit 1
-            }
-          fi
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          # GitHub Free does not enforce rulesets on private repositories.
+          # Release only after a real merged PR from develop to main.
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/commits/${MERGE_SHA}/pulls" \
+            --jq '.[] | @json' | node scripts/verify-merged-pr.js
+      - name: Analyze commits from the approved develop merge
+        run: node scripts/release-automation.js plan --json
       - run: npm ci
       - run: npm run verify
       - run: npx playwright-core install --with-deps chromium
       - run: npm run test:browser
-      - name: Create or reuse draft release (push to main only)
-        if: github.event_name == 'push'
+      - name: Create or reuse versioned release snapshot and draft
+        id: version
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.version.outputs.tag }}
         run: |
           set -euo pipefail
-          # A retry may find a tag and draft left by a failed run. Only ever
-          # reuse it when it references precisely this merge commit.
-          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-            tag_sha="$(git rev-list -n 1 "$TAG")"
-            test "$tag_sha" = "$GITHUB_SHA" || {
-              echo "Tag $TAG already belongs to another commit" >&2
-              exit 1
-            }
-          else
-            node scripts/release-version.js check --fresh
-            git tag "$TAG" "$GITHUB_SHA"
-            git push origin "refs/tags/$TAG"
-          fi
-          if gh release view "$TAG" --json isDraft --jq .isDraft > /tmp/release-draft 2>/dev/null; then
+          node scripts/release-automation.js snapshot --output "$RUNNER_TEMP/wcm-release"
+          source "$RUNNER_TEMP/wcm-release/release-info.txt"
+          # The versioned snapshot is an independent tag commit; neither
+          # main nor develop is modified or pushed by this workflow.
+          git checkout --detach "$tag"
+          node scripts/release-version.js check
+          npm run check
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          git push origin "refs/tags/$tag"
+          if gh release view "$tag" --json isDraft --jq .isDraft > /tmp/release-draft 2>/dev/null; then
             test "$(cat /tmp/release-draft)" = true || {
-              echo "Release $TAG was already published; refusing to republish it" >&2
+              echo "Release $tag already published; refusing to republish" >&2
               exit 1
             }
           else
-            gh release create "$TAG" --verify-tag --draft \
-              --title "$TAG" --generate-notes
+            gh release create "$tag" --verify-tag --draft \
+              --title "$tag" --notes-file "$RUNNER_TEMP/wcm-release/release-notes.md" \
+              --repo "$GITHUB_REPOSITORY"
           fi
 
   package:

@@ -1,6 +1,6 @@
 {
   "name": "whisky-collection-manager",
-  "version": "0.27.12",
+  "version": "1.4.0",
   "private": true,
   "description": "Lokale Whisky-Sammlungsverwaltung mit JSON-Datenspeicherung",
   "type": "module",
@@ -13,6 +13,8 @@
     "check": "node scripts/check.js",
     "verify": "npm run check && npm test",
     "release:check": "node scripts/release-version.js check",
+    "hooks:install": "node scripts/install-git-hooks.js",
+    "upgrade:audit": "node scripts/upgrade-manifest.js",
     "release:sync": "node scripts/release-version.js sync",
     "release:bump": "node scripts/release-version.js bump",
     "cutout:prepare": "node scripts/prepare-cutout-assets.js",

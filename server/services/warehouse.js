@@ -1,12 +1,12 @@
 /** Physical storage locations and individual bottle allocations. No collection mutations. */
 import crypto from 'node:crypto';
-import {displayPhotoPath} from '../../public/js/domain/photo-images.js';
+import {projectedWarehouseBottles} from '../../shared/warehouse-bottle-projection.js';
 import {createRoomExport, planRoomImport} from './room-transfer.js';
 import { read } from '../storage/collection-store.js';
 import { readWarehouse, changeWarehouse } from '../storage/warehouse-store.js';
 import { fail } from '../domain/errors.js';
 import { saveImage, deleteImage } from '../storage/photos.js';
-import { furnitureBounds, furnitureCollision, furnitureOverlap } from '../../public/js/domain/warehouse-placement.js';
+import { furnitureBounds, furnitureCollision, furnitureOverlap } from '../../shared/warehouse-placement.js';
 import { name, number, capacity, shelfFront, doorLeaves, glassFrame, doorRanges, shelfHeight, ensureShelfHeights, layout } from '../domain/warehouse-fields.js';
 
 const newId = () => crypto.randomUUID();
@@ -37,16 +37,7 @@ function refuseOccupied(data, shelfIds) {
     for (const id of Object.keys(data.assignments)) if (!liveIds.has(id)) delete data.assignments[id];
     if (Object.values(data.assignments).some(id => shelfIds.has(id))) throw fail('Lagerort enthält Flaschen. Bitte zuerst umlagern.', 409);
 }
-function physicalBottles() {
-    return read().bottlings.flatMap(bottling => bottling.bottles.map(bottle => ({
-        id: bottle.id, bottlingId: bottling.id, name: bottling.name,
-        number: bottle.inventoryNumber || '', volumeType: bottle.volumeType || 'standard', status: bottle.status,
-        ageYears: bottling.ageYears ?? null, releaseYear: bottling.releaseYear ?? null,
-        caskType: bottling.caskType || null,
-        volumeMl: bottle.volumeMl ?? bottling.volumeMl ?? null,
-        photoPath: displayPhotoPath(bottle.photos?.find(entry => typeof entry?.path === 'string' && entry.path)) || null
-    })));
-}
+function physicalBottles() { return projectedWarehouseBottles(read()); }
 export function getWarehouse() {
     const data = readWarehouse();
     const bottles = physicalBottles();

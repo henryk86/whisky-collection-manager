@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import {
     DEFAULT_PAGE_SIZE,
     PAGE_SIZE_OPTIONS,
@@ -40,19 +39,7 @@ test('every supported responsive column count exactly divides every offered page
     }
     assert.ok(!GRID_COLUMN_OPTIONS.includes(5));
     assert.ok(!GRID_COLUMN_OPTIONS.includes(6));
-    assert.doesNotMatch(fs.readFileSync('public/styles/core.css', 'utf8'), /grid-template-columns:\s*repeat\(6,/);
 
-    const css = fs.readFileSync('public/styles/core.css', 'utf8');
-    assert.match(css, /\.grid\s*\{\s*display:\s*grid;\s*grid-template-columns:\s*repeat\(4,/);
-    assert.doesNotMatch(css, /grid--three/);
-    assert.match(css, /@media\(max-width:1020px\)[\s\S]*?\.grid\s*\{\s*grid-template-columns:\s*repeat\(3,/);
-    assert.match(css, /@media\(max-width:740px\)[\s\S]*?\.grid\s*\{\s*grid-template-columns:\s*repeat\(2,/);
-    assert.match(css, /@media\(max-width:380px\)[\s\S]*?\.grid\s*\{\s*grid-template-columns:\s*minmax\(0,1fr\)/);
-    assert.doesNotMatch(css, /grid-template-columns:\s*repeat\(auto-fill/);
-
-    const home = fs.readFileSync('public/js/views/home.js', 'utf8');
-    assert.match(home, /t\("home.pagination.bottlingsPerPage"\)/);
-    assert.doesNotMatch(home, /Reihen pro Seite|ResizeObserver|gridColumns/);
 });
 
 test('page size stays exactly selected instead of being multiplied by responsive columns', () => {

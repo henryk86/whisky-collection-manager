@@ -4,7 +4,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { DATA_DIR } from './paths.js';
 import { fail } from '../domain/errors.js';
-import { FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm } from '../../public/js/domain/warehouse-compartments.js';
+import { trackMutation } from '../domain/mutation-tracker.js';
+import { FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm } from '../../shared/warehouse-compartments.js';
 
 export const WAREHOUSE_FILE = path.join(DATA_DIR, 'warehouse.json');
 export const emptyWarehouse = () => ({ schemaVersion: 1, rooms: [], assignments: {} });
@@ -77,14 +78,39 @@ export function validateWarehouse(data) {
     return data;
 }
 
+let warehouseCache = null;
+let warehouseIdentity = null;
+let warehouseRevision = crypto.randomUUID();
+function identity() {
+    const {dev, ino, size, mtimeMs, ctimeMs} = fs.statSync(WAREHOUSE_FILE);
+    return `${dev}:${ino}:${size}:${mtimeMs}:${ctimeMs}`;
+}
+export function invalidateWarehouseCache() {
+    warehouseCache = null;
+    warehouseIdentity = null;
+    warehouseRevision = crypto.randomUUID();
+}
+function loadWarehouse() {
+    const current = identity();
+    if (warehouseCache === null || warehouseIdentity !== current) {
+        warehouseCache = structuredClone(validateWarehouse(JSON.parse(fs.readFileSync(WAREHOUSE_FILE, 'utf8'))));
+        warehouseIdentity = current;
+        warehouseRevision = crypto.randomUUID();
+    }
+}
+export function warehouseETag() {
+    initWarehouse();
+    loadWarehouse();
+    return `W/"warehouse-${warehouseRevision}"`;
+}
 export function initWarehouse() {
     fs.mkdirSync(DATA_DIR, { recursive: true });
     if (!fs.existsSync(WAREHOUSE_FILE)) writeWarehouse(emptyWarehouse());
-    validateWarehouse(JSON.parse(fs.readFileSync(WAREHOUSE_FILE, 'utf8')));
+    loadWarehouse();
 }
 export function readWarehouse() {
     initWarehouse();
-    return validateWarehouse(JSON.parse(fs.readFileSync(WAREHOUSE_FILE, 'utf8')));
+    return structuredClone(warehouseCache);
 }
 function writeWarehouse(data) {
     validateWarehouse(data);
@@ -93,6 +119,9 @@ function writeWarehouse(data) {
     try {
         fs.writeFileSync(temporary, JSON.stringify(data, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
         fs.renameSync(temporary, WAREHOUSE_FILE);
+        warehouseCache = structuredClone(data);
+        warehouseIdentity = identity();
+        warehouseRevision = crypto.randomUUID();
     } finally { if (fs.existsSync(temporary)) fs.rmSync(temporary); }
 }
 let pending = Promise.resolve();
@@ -100,7 +129,10 @@ export function changeWarehouse(mutator) {
     const task = pending.then(async () => {
         const data = readWarehouse();
         const result = await mutator(data);
+        const previous = warehouseCache;
+        const beforeEtag = warehouseETag();
         writeWarehouse(data);
+        trackMutation('warehouse', previous, data, beforeEtag, warehouseETag());
         return result;
     });
     pending = task.catch(() => {});

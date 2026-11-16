@@ -8,15 +8,21 @@ import { createTastingHistory } from '../domain/tasting-history.js';
 import { glencairnRating, syncGlencairnRating } from '../ui/glencairn-rating.js';
 import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
 import { whiskyColorSelector, whiskyColorDisplay } from '../ui/whisky-color-selector.js';
-import { parseTastingScore, emptyTastingNotes } from '../domain/tasting.js';
-import { sortedTastings } from '../domain/tasting-records.js';
-import { allStandaloneTastings } from '../domain/standalone-tastings.js';
+import { parseTastingScore, emptyTastingNotes } from '../../../shared/tasting.js';
+import { sortedTastings } from '../../../shared/tasting-records.js';
+import {allTastingReferences,flightEntries,flightForTasting} from '../../../shared/tasting-flights.js';
+import { allStandaloneTastings } from '../../../shared/standalone-tastings.js';
 import { editIcon, newBottlingIcon } from '../ui/action-icons.js';
+import { reorderFlightIds } from '../features/flight-order.js';
 
 /** Tasting list and single-record editor; no migration of earlier bottling notes. */
 export function createTastingsView({state,selectors,shell,navigate,refresh,showModal,closeModal}) {
     let flavorSession = null;
     let createChoiceOpen = false;
+    let flightEditing = false;
+    let flightAdding = false;
+    let flightCreating = false;
+    let lastFlightId = null;
     const isExternal = () => state.page === 'external-tasting';
     const standalone = () => allStandaloneTastings(state.collection || {});
     const subject = () => state.collection?.bottlings?.find(b => b.id === state.selected);
@@ -57,6 +63,13 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             </div>
         </div>`}
     </section>`;
+    };
+    const associatedFlight = record => record?.id ? flightForTasting(state.collection,record.id) : null;
+    const flightHint = record => {
+        const flight=associatedFlight(record);
+        if (!flight) return '';
+        const pos=flight.tastingIds.indexOf(record.id)+1;
+        return `<div class="tasting-flight-context"><button type="button" class="inline-link" data-act="tasting-open-flight" data-flight-id="${escapeHtml(flight.id)}">${escapeHtml(flight.name)} · ${escapeHtml(t('tastingFlights.position',{position:pos,count:flight.tastingIds.length}))}</button></div>`;
     };
     const tastingRating = record => record.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(String(record.rating))} / 100`;
     const blank = value => value == null || String(value).trim() === '' ? '<span class="muted">&ndash;</span>' : escapeHtml(String(value));
@@ -106,6 +119,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
     const emptyRecord = () => ({tastedOn:localToday(),title:'',flavorProfile:null,tastingNotes:emptyTastingNotes(),rating:null,whiskyColor:null});
     const emptyBottling = () => ({name:'',distillery:'',bottler:'',ageYears:null,abv:null,releaseYear:null});
     let flavorSaveQueue = Promise.resolve();
+    let draftSavePending = null;
     function flavorNode() { return globalThis.document?.querySelector?.('[data-flavor-detail]') || null; }
     function readTastingEditor() {
         const node = flavorNode();
@@ -259,6 +273,144 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         if (!data.name) { node.querySelector('[data-external-field="name"]')?.reportValidity(); return null; }
         return data;
     }
+    const flightList = () => [...(state.collection?.tastingFlights || [])].sort((a,b)=>b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+    function homeFlights() {
+        const flights=flightList();
+        return `<section class="analytics-panel tasting-flight-home">
+            <div class="tasting-panel-heading"><h3>${escapeHtml(t('tastingFlights.plural'))}</h3>
+                <button type="button" class="btn small" data-act="tasting-flight-new">${newBottlingIcon}<span>${escapeHtml(t('tastingFlights.create'))}</span></button></div>
+            ${flights.length ? `<div class="warehouse-bottle-list tasting-flight-list">${flights.map(item=>`<button class="tasting-flight-home-link" type="button" data-act="tasting-flight-open" data-flight-id="${escapeHtml(item.id)}">
+                <span><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(formatDate(item.date))} · ${escapeHtml(t(item.tastingIds.length===1?'tastingFlights.oneEntry':'tastingFlights.entriesCount',{count:item.tastingIds.length}))}</small></span>
+                <span class="tasting-entry-chevron" aria-hidden="true">›</span></button>`).join('')}</div>` : `<p class="hint">${escapeHtml(t('tastingFlights.none'))}</p>`}
+        </section>`;
+    }
+    function startFlight() {
+        showModal(t('tastingFlights.create'),`<div class="tasting-flight-form">
+            <label>${escapeHtml(t('tastingFlights.name'))}<input data-flight-name maxlength="160" required placeholder="${escapeHtml(t('tastingFlights.namePlaceholder'))}"></label>
+            <label>${escapeHtml(t('tastingFlights.date'))}<input type="date" data-flight-date required value="${localToday()}"></label>
+            <label>${escapeHtml(t('tastingFlights.notes'))}<textarea data-flight-notes maxlength="10000" rows="3"></textarea></label>
+            <div class="actions"><button class="btn" type="button" data-act="close-modal">${escapeHtml(t('common.actions.cancel'))}</button>
+            <button class="btn primary" type="button" data-act="tasting-flight-create-confirm">${escapeHtml(t('tastingFlights.create'))}</button></div>
+        </div>`,false);
+    }
+    async function createFlight() {
+        const box=document.querySelector('#modal-root');
+        const name=box?.querySelector('[data-flight-name]');
+        const date=box?.querySelector('[data-flight-date]');
+        if (!name?.reportValidity() || !date?.reportValidity() || flightCreating) return;
+        flightCreating=true;
+        try {
+            const flight=await request('/api/tasting-flights',{method:'POST',body:JSON.stringify({name:name.value,date:date.value,notes:box.querySelector('[data-flight-notes]')?.value || ''})});
+            closeModal();
+            state.page='tastings-home';
+            await refresh('collection');
+            navigate('tasting-flight',flight.id);
+        } catch(error) {toast(error.message,true);}
+        finally {flightCreating=false;}
+    }
+    const flightEntryLabel = item => `${item.bottling?.name || ''}${item.record.title ? ` · ${item.record.title}` : ''} · ${formatDate(item.record.tastedOn || '')}`;
+    function flight() {
+        flavorSession=null;
+        if (lastFlightId !== state.selected) {flightEditing=false;flightAdding=false;lastFlightId=state.selected;}
+        const current=(state.collection?.tastingFlights || []).find(item=>item.id===state.selected);
+        if (!current) {navigate('tastings-home',null,{replace:true});return;}
+        const refs=flightEntries(state.collection,current);
+        const available=allTastingReferences(state.collection).filter(item=>!flightForTasting(state.collection,item.record.id))
+            .sort((a,b)=>a.bottling.name.localeCompare(b.bottling.name));
+        const entryRow=(item,i)=>`<div class="tasting-flight-member" data-tasting-id="${escapeHtml(item.record.id)}">
+            <div class="tasting-flight-order-control"><button type="button" class="tasting-flight-drag-handle" data-flight-drag aria-label="${escapeHtml(t('tastingFlights.dragHandle'))}" title="${escapeHtml(t('tastingFlights.dragHandle'))}">
+                <svg width="17" height="19" viewBox="0 0 16 20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="10" r="1.5"/><circle cx="11" cy="10" r="1.5"/><circle cx="5" cy="17" r="1.5"/><circle cx="11" cy="17" r="1.5"/></svg>
+            </button><span class="tasting-flight-position" aria-label="${escapeHtml(t('tastingFlights.position',{position:i+1,count:refs.length}))}">${i+1}</span></div>
+            <button type="button" class="tasting-flight-member-open" data-act="tasting-flight-note-open" data-tasting-id="${escapeHtml(item.record.id)}" data-bottling-id="${escapeHtml(item.external?item.record.id:item.bottling.id)}" data-external="${item.external?'1':'0'}">
+                <strong>${escapeHtml(item.bottling.name)}</strong><small>${escapeHtml(item.record.title || formatDate(item.record.tastedOn))}</small>
+            </button>
+            <span class="tasting-flight-member-score">${tastingListGlasses(item.record) || '<span class="tasting-list-glasses" aria-hidden="true"></span>'}<strong>${tastingRating(item.record)}</strong></span>
+            <div class="tasting-flight-member-actions">
+                <button type="button" class="btn small" data-act="tasting-flight-move" data-index="${i}" data-direction="-1" ${i===0?'disabled':''} aria-label="${escapeHtml(t('tastingFlights.moveUp'))}">↑</button>
+                <button type="button" class="btn small" data-act="tasting-flight-move" data-index="${i}" data-direction="1" ${i===refs.length-1?'disabled':''} aria-label="${escapeHtml(t('tastingFlights.moveDown'))}">↓</button>
+                <button type="button" class="btn small" data-act="tasting-flight-remove-note" data-tasting-id="${escapeHtml(item.record.id)}">${escapeHtml(t('tastingFlights.detach'))}</button>
+            </div>
+        </div>`;
+        shell(`<div class="analytics-page tasting-child-page tasting-flight-page" data-reconcile="replace">
+            ${backLink('tasting-flight-back','tastingFlights.back')}
+            ${pageTitle(t('tastingFlights.detailTitle'),t('tastingFlights.detailIntro'))}
+            <section class="analytics-panel tasting-flight-summary">
+                ${flightEditing?`<div class="tasting-flight-form">
+                    <label>${escapeHtml(t('tastingFlights.name'))}<input data-flight-name maxlength="160" required value="${escapeHtml(current.name)}"></label>
+                    <label>${escapeHtml(t('tastingFlights.date'))}<input type="date" data-flight-date required value="${escapeHtml(current.date)}"></label>
+                    <label>${escapeHtml(t('tastingFlights.notes'))}<textarea data-flight-notes maxlength="10000" rows="4">${escapeHtml(current.notes)}</textarea></label>
+                    <div class="actions"><button class="btn" type="button" data-act="tasting-flight-cancel-edit">${escapeHtml(t('common.actions.cancel'))}</button>
+                    <button class="btn primary" type="button" data-act="tasting-flight-save">${escapeHtml(t('common.actions.save'))}</button></div>
+                </div>`:`<div class="tasting-panel-heading"><div><h3>${escapeHtml(current.name)}</h3><p class="muted">${escapeHtml(formatDate(current.date))}</p></div>
+                    <div class="actions"><button type="button" class="btn small" data-act="tasting-flight-edit">${editIcon}<span>${escapeHtml(t('common.actions.edit'))}</span></button>
+                        <button type="button" class="btn small danger" data-act="tasting-flight-delete">${escapeHtml(t('common.actions.delete'))}</button></div></div>
+                    ${current.notes ? `<p class="tasting-flight-comment">${escapeHtml(current.notes)}</p>` : ''}`}
+            </section>
+            <section class="analytics-panel tasting-flight-members"><div class="tasting-panel-heading"><h3>${escapeHtml(t(refs.length===1?'tastingFlights.oneEntry':'tastingFlights.entriesCount',{count:refs.length}))}</h3>
+                <button type="button" class="btn primary" data-act="tasting-flight-toggle-add">${newBottlingIcon}<span>${escapeHtml(t('tastingFlights.add'))}</span></button></div>
+                ${flightAdding?`<div class="tasting-flight-add">
+                    <div class="tasting-flight-add-existing"><label>${escapeHtml(t('tastingFlights.selectExisting'))}
+                        <select data-flight-tasting-option ${available.length?'':'disabled'}>${available.map(item=>`<option value="${escapeHtml(item.record.id)}">${escapeHtml(flightEntryLabel(item))}</option>`).join('')}</select></label>
+                        <button class="btn" type="button" data-act="tasting-flight-attach" ${available.length?'':'disabled'}>${escapeHtml(t('tastingFlights.addExisting'))}</button></div>
+                    <div class="tasting-flight-add-new"><label>${escapeHtml(t('tastings.chooseBottling'))}
+                        <select data-flight-owned-bottling>${(state.collection?.bottlings || []).map(b=>`<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`).join('')}</select></label>
+                        <button class="btn" type="button" data-act="tasting-flight-new-owned" ${(state.collection?.bottlings || []).length?'':'disabled'}>${escapeHtml(t('tastings.fromCollection'))}</button>
+                        <button class="btn" type="button" data-act="tasting-flight-new-external">${escapeHtml(t('tastings.outsideCollection'))}</button></div>
+                </div>`:''}
+                ${refs.length ? `<div class="warehouse-bottle-list tasting-flight-members-list">${refs.map(entryRow).join('')}</div>` : `<p class="hint">${escapeHtml(t('tastingFlights.noEntries'))}</p>`}
+            </section></div>`);
+    }
+    function toggleFlightEdit(editing) {flightEditing=editing;flight();}
+    function toggleFlightAdd() {flightAdding=!flightAdding;flight();}
+    async function saveFlight() {
+        const name=document.querySelector('.tasting-flight-page [data-flight-name]');
+        const date=document.querySelector('.tasting-flight-page [data-flight-date]');
+        if (!name?.reportValidity() || !date?.reportValidity()) return;
+        const notes=document.querySelector('.tasting-flight-page [data-flight-notes]')?.value || '';
+        try {
+            await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}`,{method:'PATCH',body:JSON.stringify({name:name.value,date:date.value,notes})});
+            flightEditing=false;
+            await refresh('collection');
+        } catch(error) {toast(error.message,true);}
+    }
+    async function updateFlightMembers(ids) {
+        try {
+            await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}/tastings`,{method:'PUT',body:JSON.stringify({tastingIds:ids})});
+            await refresh('collection');
+        } catch(error) {toast(error.message,true);}
+    }
+    function reorderFlightMember(sourceId,targetId,after) {
+        const record=(state.collection?.tastingFlights || []).find(x=>x.id===state.selected);
+        const reordered=record && reorderFlightIds(record.tastingIds,sourceId,targetId,after);
+        if (reordered) return updateFlightMembers(reordered);
+    }
+    function moveFlightMember(index,step) {
+        const record=(state.collection?.tastingFlights || []).find(x=>x.id===state.selected);
+        if (!record) return;
+        const ids=[...record.tastingIds],to=index+step;
+        if (!Number.isInteger(index) || to<0 || to>=ids.length) return;
+        [ids[index],ids[to]]=[ids[to],ids[index]];
+        return updateFlightMembers(ids);
+    }
+    function attachFlightMember() {
+        const id=document.querySelector('[data-flight-tasting-option]')?.value;
+        const current=(state.collection?.tastingFlights || []).find(x=>x.id===state.selected);
+        if (id && current) return updateFlightMembers([...current.tastingIds,id]);
+    }
+    function detachFlightMember(id) {
+        const current=(state.collection?.tastingFlights || []).find(x=>x.id===state.selected);
+        if (current?.tastingIds.includes(id)) return updateFlightMembers(current.tastingIds.filter(x=>x!==id));
+    }
+    async function deleteFlight() {
+        try {
+            await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}`,{method:'DELETE'});
+            closeModal();
+            state.page='tastings-home';
+            await refresh('collection');
+            navigate('tastings-home',null,{replace:true});
+            return true;
+        } catch(error) {toast(error.message,true);return false;}
+    }
     function home() {
         // Returning to an index ends any prior edit session. Reopening is always read-only.
         flavorSession = null;
@@ -273,6 +425,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             <span class="eyebrow dark">${escapeHtml(t('tastings.homeEyebrow'))}</span>
             <h2>${escapeHtml(t('tastings.homeTitle'))}<span class="heading-period">.</span></h2>
             <p class="intro">${escapeHtml(t('tastings.homeIntro'))}</p></div></header>
+            ${homeFlights()}
             <section class="analytics-panel tasting-home-recent">
                 <div class="tasting-panel-heading"><h3>${escapeHtml(t('tastings.entries'))}</h3>
                     <button type="button" class="btn primary" data-act="tastings-start-choice">${newBottlingIcon}<span>${escapeHtml(t('tastings.add'))}</span></button>
@@ -303,6 +456,8 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         </section></div>`);
     }
     function editor() {
+        // Returning from a tasting should show the compact flight list, not the expanded add form.
+        if (state.flightId) flightAdding=false;
         const external=isExternal();
         const record=external ? standalone().find(x=>x.id===state.selected) : null;
         const bottling=external ? (record?.bottling || emptyBottling()) : subject();
@@ -311,6 +466,9 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         if (!external && !bottling) { navigate('tastings-home',null,{replace:true}); return; }
         if (!draft && !existing) { navigate(external?'tastings-home':'tastings',external?null:bottling.id,{replace:true}); return; }
         const value=existing || emptyRecord();
+        const flightBack=state.flightId && (state.collection?.tastingFlights || []).some(f=>f.id===state.flightId && (draft || f.tastingIds.includes(existing?.id)));
+        const backAction=flightBack ? 'tasting-back-flight' : (external?'tastings-back-home':'tastings-back-list');
+        const backLabel=flightBack ? 'tastingFlights.backToFlight' : (external?'tastings.backHome':'tastings.backList');
         const id=existing?.id || 'new';
         if (!flavorSession || flavorSession.id !== id || flavorSession.bottlingId !== (bottling.id || id) || flavorSession.external !== external) {
             flavorSession={id,bottlingId:bottling.id || id,draft,external,editing:draft,history:createTastingHistory(value)};
@@ -318,10 +476,11 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         }
         if (!draft && !flavorSession.editing) {
             shell(`<div class="analytics-page tasting-child-page">
-                ${backLink(external?'tastings-back-home':'tastings-back-list',external?'tastings.backHome':'tastings.backList')}
+                ${backLink(backAction,backLabel)}
                 ${pageTitle(t('tastings.editorViewTitle'),t('tastings.editorViewIntro'))}
                 <section class="section tasting-editor-content tasting-readonly-content" data-flavor-detail data-tasting-readonly="true">
                     ${bottlingInfo(bottling,external,false)}
+                    ${flightHint(existing)}
                     <div class="section-head"><h3>${escapeHtml(t('tastings.editorSection'))}</h3></div>
                     ${tastingReadOnly(value)}
                 </section>
@@ -329,11 +488,12 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             return;
         }
         shell(`<div class="analytics-page tasting-child-page">
-        ${backLink(external?'tastings-back-home':'tastings-back-list',external?'tastings.backHome':'tastings.backList')}
+        ${backLink(backAction,backLabel)}
         ${pageTitle(draft?t('tastings.editorCreateTitle'):t('tastings.editorEditTitle'),
             draft?t('tastings.editorCreateIntro'):t('tastings.editorEditIntro'))}
     <section class="section tasting-editor-content" data-flavor-detail data-bottling-id="${escapeHtml(bottling?.id || record?.id || 'new')}" aria-label="${escapeHtml(t('flavor.title'))}">
         ${bottlingInfo(bottling,external,draft)}
+        ${existing ? flightHint(existing) : (flightBack ? `<div class="tasting-flight-context">${escapeHtml(t('tastingFlights.newInFlight'))}</div>` : '')}
         <div class="section-head tasting-editor-section-head"><h3>${escapeHtml(t('tastings.editorSection'))}</h3></div>
         <div class="flavor-detail-panel tasting-panel">
             <div class="tasting-record-fields analytics-panel tasting-edit-meta-panel">
@@ -379,6 +539,10 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
     async function saveDraft() {
+        // A save can outlive the click that started it. While the POST and its
+        // collection refresh are pending, another Back click would render the
+        // old list and a late save completion could navigate away unexpectedly.
+        if (draftSavePending) return draftSavePending;
         const session=flavorSession;
         if (!session?.draft) return;
         if (!commitTasting()) return;
@@ -388,15 +552,44 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         if (!node?.querySelector('[data-tasting-date]')?.checkValidity()) {
             node?.querySelector('[data-tasting-date]')?.reportValidity();return;
         }
+        let externalBottling;
         try {
-            const externalBottling=session.external?readExternalFields(node):null;
-            if (session.external && !externalBottling) return;
-            const created=await request(session.external?'/api/external-tastings':`/api/bottlings/${encodeURIComponent(session.bottlingId)}/tastings`,{
-                method:'POST',body:JSON.stringify({...session.history.value,tastedOn,title,...(session.external?{bottling:externalBottling}:{})})
-            });
-            await refresh();
-            navigate(editPage(session.external),session.external?created.id:session.bottlingId,{tastingId:session.external?null:created.id,replace:true});
-        } catch(error) { toast(error.message,true); }
+            externalBottling=session.external?readExternalFields(node):null;
+        } catch(error) { toast(error.message,true);return; }
+        if (session.external && !externalBottling) return;
+        // Disable the draft's Back and Save controls (plus editable controls)
+        // until both the request and data refresh have finished. The button
+        // state is restored on errors, so the draft remains editable.
+        const draftPage=node.closest('.tasting-child-page');
+        const controls=[...(draftPage?.querySelectorAll('button, input, textarea, select') || [])];
+        const enabled=controls.filter(control=>!control.disabled);
+        for (const control of enabled) control.disabled=true;
+        draftPage?.setAttribute('aria-busy','true');
+        const route={page:state.page,selected:state.selected,tastingId:state.tastingId,flightId:state.flightId};
+        const save=(async()=>{
+            try {
+                const flightId=state.flightId;
+                const data={...session.history.value,tastedOn,title,...(session.external?{bottling:externalBottling}:flightId?{bottlingId:session.bottlingId}:{})};
+                const response=await request(flightId ? `/api/tasting-flights/${encodeURIComponent(flightId)}/tastings` :
+                    (session.external?'/api/external-tastings':`/api/bottlings/${encodeURIComponent(session.bottlingId)}/tastings`),{
+                    method:'POST',body:JSON.stringify(data)
+                });
+                const created=flightId ? response.record : response;
+                await refresh('collection');
+                // If a header navigation occurred meanwhile, never override it.
+                if (state.page===route.page && state.selected===route.selected &&
+                    state.tastingId===route.tastingId && state.flightId===route.flightId) {
+                    navigate(editPage(session.external),session.external?created.id:session.bottlingId,{tastingId:session.external?null:created.id,flightId,replace:true});
+                }
+            } catch(error) { toast(error.message,true); }
+            finally {
+                draftPage?.removeAttribute('aria-busy');
+                for (const control of enabled) if (control.isConnected) control.disabled=false;
+            }
+        })();
+        draftSavePending=save;
+        try { return await save; }
+        finally { if (draftSavePending===save) draftSavePending=null; }
     }
     async function persistMeta() {
         const session=flavorSession;
@@ -506,14 +699,14 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             closeModal();
             // Refresh while on the overview, so the removed external URL cannot redirect.
             state.page='tastings-home';
-            await refresh();
+            await refresh('collection');
             navigate('tasting',result.bottlingId,{tastingId:result.tastingId,replace:true});
         } catch(error) {
             toast(error.message,true);
             if (confirmButton?.isConnected) confirmButton.disabled=false;
         }
     }
-    return {home,list,editor,saveDraft,persistMeta,toggleCreateChoice,commitFlavor:commitTasting,chooseRating,previewRating,chooseColor,clearFlavor,
+    return {home,list,editor,flight,startFlight,createFlight,saveFlight,deleteFlight,moveFlightMember,reorderFlightMember,attachFlightMember,detachFlightMember,toggleFlightEdit,toggleFlightAdd,saveDraft,persistMeta,toggleCreateChoice,commitFlavor:commitTasting,chooseRating,previewRating,chooseColor,clearFlavor,
         showAssignDialog,assignExternalToBottling,startEditing,finishEditing,
         startExternalEdit:()=>showExternalEdit(true),cancelExternalEdit,persistExternalDetails,
         undoFlavor:()=>stepFlavor(-1),redoFlavor:()=>stepFlavor(1)};

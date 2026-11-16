@@ -8,6 +8,8 @@ import { helpGuides } from './help-guides.js';
 export const HELP_TOPICS = Object.freeze([
     { id: 'basics', items: 4 },
     { id: 'bottlings', items: 6 },
+    { id: 'tastings', items: 8 },
+    { id: 'flights', items: 5 },
     { id: 'storage', items: 7 },
     { id: 'map', items: 3 },
     { id: 'photos', items: 3 },

@@ -2,8 +2,9 @@
 import {read,change} from '../storage/collection-store.js';
 import {uid,now} from '../domain/collection.js';
 import {fail} from '../domain/errors.js';
-import {normalizeStandaloneTasting} from '../../public/js/domain/standalone-tastings.js';
-import {normalizeTastingRecord, VALID_TASTING_FIELDS, syncTastingSummary} from '../../public/js/domain/tasting-records.js';
+import {detachTastings} from '../../shared/tasting-flights.js';
+import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
+import {normalizeTastingRecord, VALID_TASTING_FIELDS} from '../../shared/tasting-records.js';
 
 function clean(input,old) {
     try { return normalizeStandaloneTasting(input,old); }
@@ -36,6 +37,7 @@ export function remove(id) {
     return change(collection=>{
         find(collection,id);
         collection.externalTastings.splice(collection.externalTastings.findIndex(x=>x.id===id),1);
+        detachTastings(collection,[id]);
         return {ok:true};
     });
 }
@@ -56,7 +58,7 @@ export function assignToBottling(id, input) {
             createdAt:tasting.createdAt,updatedAt:tasting.updatedAt};
         if (!Array.isArray(bottling.tastings)) bottling.tastings=[];
         bottling.tastings.push(moved);
-        syncTastingSummary(bottling);
+
         bottling.updatedAt=now();
         collection.externalTastings.splice(collection.externalTastings.findIndex(x=>x.id===id),1);
         return {bottlingId:bottling.id,tastingId:id};

@@ -7,7 +7,7 @@ import { uploadPhotos } from './photos.js';
 import { uploadFiles } from './files.js';
 import { bottlingChoiceDialog, bottlingChoiceOptions, matchingBottlings } from './forms/bottling-choice.js';
 /** Coordinates forms and API calls; templates and persistence are separate modules. */
-export function createEditors({ state, selectors, bottlingForm, bottleForm, showModal, closeModal, navigate, action, refresh, getPendingImageToken = () => null, markImageAttached = () => {} }) {
+export function createEditors({ state, selectors, bottlingForm, bottleForm, showModal, closeModal, navigate, action, getPendingImageToken = () => null, markImageAttached = () => {} }) {
     const { findBottle } = selectors;
     /** The global New Bottle action can reuse an existing bottling. */
     function newBottling() {
@@ -63,7 +63,7 @@ export function createEditors({ state, selectors, bottlingForm, bottleForm, show
             const form = ev.target;
             const data = formValues(form);
             const b = form.dataset.id ? state.collection.bottlings.find(x => x.id === form.dataset.id) : null;
-            await action(async () => {
+            const result = await action(async () => {
                 let id, firstBottleId;
                 let importPhotoError = null;
                 if (b) {
@@ -111,10 +111,12 @@ export function createEditors({ state, selectors, bottlingForm, bottleForm, show
                         }
                     }
                 }
-                await refresh();
-                navigate('detail', id);
-                toast(importPhotoError ? t("imports.errors.bottlingSavedImageFailed",{error:importPhotoError}) : t("features.bottlings.saved"), Boolean(importPhotoError));
+                return { id, importPhotoError };
             });
+            if (!result.ok) return;
+            const { id, importPhotoError } = result.value;
+            navigate('detail', id);
+            toast(importPhotoError ? t("imports.errors.bottlingSavedImageFailed",{error:importPhotoError}) : t("features.bottlings.saved"), Boolean(importPhotoError));
         }
         else if (ev.target.id === 'bottle-form') {
             ev.preventDefault();
@@ -165,12 +167,14 @@ export function createEditors({ state, selectors, bottlingForm, bottleForm, show
                         toast(t('errors.files.bottleSavedUploadFailed', {error: err.message}), true);
                     }
                 }
-                closeModal();
-                toast(importPhotoError ? t('imports.errors.bottleSavedImageFailed', {error: importPhotoError}) : t("features.notifications.bottleSaved"), Boolean(importPhotoError));
-                return { bottleId };
+                return { bottleId, importPhotoError };
             });
-            if (result && !form.dataset.id && form.dataset.fromOverview === '1') {
-                navigate('detail', form.dataset.bottlingId, { highlightBottleId: result.bottleId });
+            if (!result.ok) return;
+            closeModal();
+            const { bottleId, importPhotoError } = result.value;
+            toast(importPhotoError ? t('imports.errors.bottleSavedImageFailed', {error: importPhotoError}) : t("features.notifications.bottleSaved"), Boolean(importPhotoError));
+            if (!form.dataset.id && form.dataset.fromOverview === '1') {
+                navigate('detail', form.dataset.bottlingId, { highlightBottleId: bottleId });
             }
         }
     }

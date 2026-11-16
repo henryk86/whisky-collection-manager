@@ -15,8 +15,19 @@ const documents = [
 ];
 let examined = 0;
 const failures = [];
+const currentStateDocs = new Set([
+    'ANALYSE.md', 'ANFORDERUNGEN.md', 'ARCHITEKTUR.md', 'ENTWICKLUNG.md',
+    'KARTE.md', 'LAGER.md', 'PHOTO_FREISTELLUNG.md',
+]);
 for (const file of documents) {
     const content = fs.readFileSync(file, 'utf8');
+    // Fachunterlagen beschreiben den aktuellen Stand. Historische
+    // Versionsueberschriften gehoeren ausschliesslich in den Changelog.
+    if (currentStateDocs.has(path.basename(file))) {
+        for (const heading of content.matchAll(/^#{2,6} [^\n]*\(\s*(?:ab\s+)?v\d+\.\d+\.\d+\s*\)[ \t]*$/gm)) {
+            failures.push(`${path.relative(root, file)}: outdated version heading: ${heading[0]}`);
+        }
+    }
     // Inline Markdown links and images, not source code or external destinations.
     for (const [, destination] of content.matchAll(/!?(?:\[[^\]]*\])\(([^)]+)\)/g)) {
         const raw = destination.trim().replace(/^<([^>]+)>$/, '$1').split(/\s+"/u)[0];
@@ -33,7 +44,7 @@ for (const file of documents) {
     }
 }
 if (failures.length) {
-    console.error('Invalid relative documentation links:\n' + failures.map(line => `- ${line}`).join('\n'));
+    console.error('Documentation checks failed:\n' + failures.map(line => `- ${line}`).join('\n'));
     process.exitCode = 1;
 } else {
     console.log(`${documents.length} Markdown files, ${examined} relative links: OK`);

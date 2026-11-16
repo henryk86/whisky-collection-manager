@@ -23,6 +23,11 @@ export function createPhotoViewer({ state, showModal }) {
         const ownGallery = button.closest('[data-photo-list]');
         if (ownGallery) {
             buttons = queryAll('[data-act="open-photo"]', ownGallery);
+        } else if (button.matches('[data-bottle-photo-preview]')) {
+            // The preview repeats the first sorted image, not a second gallery
+            // entry. Limit navigation to this exact physical bottle.
+            const gallery = button.closest('.bottle-entry')?.querySelector('[data-photo-list]');
+            if (gallery) buttons = queryAll('[data-act="open-photo"]', gallery);
         } else if (button.matches('.hero-photo-open')) {
             // The large cover photo belongs to a physical bottle; enable
             // gallery navigation for that bottle rather than for all bottles.

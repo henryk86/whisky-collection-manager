@@ -25,7 +25,7 @@ if (process.argv[1]?.endsWith('/verify-release-files.js')) {
         console.error('Private or unsafe files found in release ZIP:', unsafe.join(', '));
         process.exit(1);
     }
-    for (const required of ['package.json', 'package-lock.json', 'public/index.html', 'docker-compose.yml', '.github/workflows/release.yml']) {
+    for (const required of ['package.json', 'package-lock.json', 'public/index.html', 'docker-compose.yml', '.github/workflows/release.yml', 'wcm-source-manifest.json']) {
         if (!lines.includes(required)) {
             console.error(`Missing release file: ${required}`);
             process.exit(1);

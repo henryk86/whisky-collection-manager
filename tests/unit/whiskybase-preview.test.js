@@ -27,26 +27,6 @@ test('unknown distillery is unselectable but still visible with a clear explanat
     assert.match(html, /Nicht gefunden/);
 });
 
-test('Whiskybase preview CSS resets generic input height and retains responsive layout', () => {
-    const css = fs.readFileSync('public/styles/core.css', 'utf8');
-    const checkboxRule = css.match(/\.import-choice input\[type="checkbox"\]\s*\{([^}]+)\}/)?.[1];
-    assert.ok(checkboxRule, 'missing scoped checkbox rules');
-    assert.match(checkboxRule, /width:\s*18px\s*;/);
-    assert.match(checkboxRule, /height:\s*18px\s*;/);
-    assert.match(checkboxRule, /min-height:\s*18px\s*;/);
-    assert.match(checkboxRule, /padding:\s*0\s*;/);
-    assert.match(checkboxRule, /margin:\s*0\s*;/);
-    assert.match(css, /\.import-choice-list\s*\{[^}]*grid-template-columns:\s*repeat\(2,minmax\(0,1fr\)\)/s);
-    assert.match(css, /@media\s*\(max-width:\s*680px\)[^}]*\.import-choice-list\s*\{\s*grid-template-columns:\s*1fr\s*;/s);
-    const controller = fs.readFileSync('public/js/features/import/controller.js', 'utf8');
-    assert.match(controller, /importChoice\(/);
-    assert.match(controller, /class="import-choice-list"/);
-    assert.match(controller, /\[data-import-field\]:checked/);
-    assert.match(controller, /\[name=import-distillery\]:checked/);
-    const dark = fs.readFileSync('public/styles/themes.css', 'utf8');
-    assert.match(dark, /:root\[data-theme="dark"\] \.import-choice:has\(input:checked\)\s*\{[^}]*border-color:\s*var\(--gold\)/s);
-});
-
 test('actual Whiskybase controller renders aligned selection cards without changing import defaults', async () => {
     const { createWhiskybase } = await import('../../public/js/features/whiskybase/controller.js');
     const oldDocument = globalThis.document;

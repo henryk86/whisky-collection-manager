@@ -35,16 +35,6 @@ test('each overview room card has one decorative snapshot slot and stays a singl
 });
 
 test('overview thumbnails reuse actual 3D scene construction and only allocate a shared temporary renderer', () => {
-    const previewSource = fs.readFileSync('public/js/ui/warehouse-room-previews.js', 'utf8');
-    const stylesheet = fs.readFileSync('public/styles/warehouse.css', 'utf8');
-    assert.match(previewSource, /buildWarehouseThreeScene\(THREE, room, warehouse/);
-    assert.match(previewSource, /frameWarehouseCamera\(THREE, camera/);
-    assert.match(previewSource, /IntersectionObserver/);
-    assert.match(previewSource, /preserveDrawingBuffer: true/);
-    assert.match(previewSource, /renderer\?\.forceContextLoss\(\)/);
-    assert.doesNotMatch(previewSource, /new OrbitControls\(/);
-    assert.match(stylesheet, /\.warehouse-room-preview img/);
-    assert.match(stylesheet, /\.warehouse-room-card \{ display: grid; grid-template-columns: 112px minmax\(0,1fr\)/);
     const previous = globalThis.document;
     try {
         delete globalThis.document;

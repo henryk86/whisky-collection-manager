@@ -1,11 +1,10 @@
-import {validatePhotoAdjustments} from '../../public/js/features/photo-editor/adjustments.js';
+import {validateAdjustmentValues as validatePhotoAdjustments} from '../../shared/photo-adjustments.js';
 /** Validate the complete JSON document before any write or import. No filesystem access. */
 import { assert } from './errors.js';
 import { allBottles, WHISKY_TYPES } from './collection.js';
-import { normalizeTastingNotes, normalizeTastingRating } from '../../public/js/domain/tasting.js';
-import { normalizeTastingRecord } from '../../public/js/domain/tasting-records.js';
-import { normalizeStandaloneTasting } from '../../public/js/domain/standalone-tastings.js';
-import { normalizeWhiskyColor } from '../../public/js/domain/whisky-colors.js';
+import { normalizeTastingRecord } from '../../shared/tasting-records.js';
+import { normalizeStandaloneTasting } from '../../shared/standalone-tastings.js';
+import {normalizeFlightFields,FLIGHT_LIMIT,allTastingReferences} from '../../shared/tasting-flights.js';
 import { isDocumentPath } from '../storage/documents.js';
 const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
 const isString = value => typeof value === 'string';
@@ -13,11 +12,11 @@ const optionalString = value => value == null || isString(value);
 const isOptionalNumber = value => value == null || (typeof value === 'number' && Number.isFinite(value));
 const validImagePath = p => typeof p === 'string' && /^images\/[a-f0-9-]{36}\/[\w-]+\.(jpg|png|webp|gif)$/i.test(p);
 export function validate(collection) {
-    assert(isObject(collection) && collection.schemaVersion === 4, 'Ungültige oder nicht unterstützte JSON-Schemaversion');
+    assert(isObject(collection) && collection.schemaVersion === 5, 'Ungültige oder nicht unterstützte JSON-Schemaversion');
     assert(Array.isArray(collection.bottlings) && !Object.hasOwn(collection, 'bottles') && Array.isArray(collection.distilleries), 'Ungültige Sammlungsstruktur');
     assert(Number.isSafeInteger(collection.nextInventoryNumber) && collection.nextInventoryNumber > 0, 'Ungültiger Inventarnummern-Zähler');
     assert(Array.isArray(collection.reservedInventoryNumbers), 'Fehlende Liste reservierter Inventarnummern');
-    // Settings are optional so older collection.json and backup ZIPs remain importable.
+    // Current collection settings only.
     if (collection.settings !== undefined) {
         assert(isObject(collection.settings), 'Ungültige Sammlungseinstellungen');
         const year = collection.settings.establishedYear;
@@ -29,7 +28,7 @@ export function validate(collection) {
     for (const distillery of collection.distilleries) {
         assert(isObject(distillery) && isString(distillery.id) && isString(distillery.name) && distillery.name.trim(), 'Ungültige Destillerie');
         assert(optionalString(distillery.country) && optionalString(distillery.region), 'Ungültige Destillerie-Herkunft');
-        // Optional location data is additive; existing schema-v4 archives remain valid.
+        // Optional site location data.
         const hasLat = distillery.latitude != null;
         const hasLon = distillery.longitude != null;
         assert(hasLat === hasLon, 'Destillerie benötigt beide Koordinaten');
@@ -58,7 +57,7 @@ export function validate(collection) {
         if (['single_malt', 'single_grain'].includes(bottling.whiskyType)) {
             assert(ids.length <= 1, 'Single Whisky darf nur eine Destillerie enthalten');
         }
-        // Older collections may still contain legacy bottling.images before migration.
+        // Older image references are accepted within current-schema documents until image cleanup.
         if (bottling.images != null) {
             assert(isObject(bottling.images) && optionalString(bottling.images.bottle) && optionalString(bottling.images.box), 'Ungültige alte Bildreferenz');
             for (const p of [bottling.images.bottle, bottling.images.box].filter(Boolean)) {
@@ -77,7 +76,7 @@ export function validate(collection) {
                 assert(bottling[yearField] == null || bottling[yearField] === Number(bottling[field].slice(0, 4)), `${field} widerspricht ${yearField}`);
             }
         }
-        if (bottling.tastings !== undefined) {
+        {
             assert(Array.isArray(bottling.tastings), 'Ungültige Verkostungsliste');
             const tastingIds=new Set();
             for (const tasting of bottling.tastings) {
@@ -91,29 +90,11 @@ export function validate(collection) {
                 catch { assert(false,'Ungültiger Verkostungseintrag'); }
             }
         }
-        if (bottling.tastingNotes !== undefined) {
-            try { normalizeTastingNotes(bottling.tastingNotes); }
-            catch { assert(false, 'Ungültige Abfüllungs-Verkostungsnotizen'); }
-        }
-        if (bottling.rating !== undefined) {
-            try { normalizeTastingRating(bottling.rating); }
-            catch { assert(false, 'Ungültige Abfüllungsbewertung'); }
-        }
-        if (bottling.whiskyColor !== undefined) {
-            try { normalizeWhiskyColor(bottling.whiskyColor); }
-            catch { assert(false, 'Ungültige Whiskyfarbe'); }
-        }
-        if (bottling.legacyTastings !== undefined) {
-            assert(Array.isArray(bottling.legacyTastings), 'Ungültige ehemalige Flaschenbewertungen');
-            for (const entry of bottling.legacyTastings) {
-                assert(isObject(entry) && isString(entry.bottleId) && optionalString(entry.inventoryNumber), 'Ungültiger Eintrag früherer Verkostungen');
-                try { normalizeTastingNotes(entry.tastingNotes); normalizeTastingRating(entry.rating); }
-                catch { assert(false, 'Ungültiger früherer Verkostungseintrag'); }
-            }
-        }
+        assert(!['rating','tastingNotes','flavorProfile','whiskyColor','legacyTastings'].some(key =>
+            Object.hasOwn(bottling,key)), 'Verkostungsdaten gehören ausschließlich in tastings');
         bottlingIds.add(bottling.id);
     }
-    if (collection.externalTastings !== undefined) {
+    {
         assert(Array.isArray(collection.externalTastings), 'Ungültige externe Verkostungsliste');
         const ids = new Set();
         for (const record of collection.externalTastings) {
@@ -127,6 +108,27 @@ export function validate(collection) {
             const {id,createdAt,updatedAt,...editable} = record;
             try { normalizeStandaloneTasting(editable); }
             catch { assert(false, 'Ungültige externe Verkostungsdaten'); }
+        }
+    }
+    {
+        assert(Array.isArray(collection.tastingFlights), 'Ungültige Flight-Liste');
+        const flights=new Set(),assigned=new Set(),referenceCount=new Map();
+        // Count once instead of filtering all references for every flight member (was O(n²)).
+        for (const item of allTastingReferences(collection)) referenceCount.set(item.record.id,(referenceCount.get(item.record.id)||0)+1);
+        for (const flight of collection.tastingFlights) {
+            assert(isObject(flight) && isString(flight.id) && /^[a-zA-Z0-9-]{1,100}$/.test(flight.id) &&
+                !flights.has(flight.id) && isString(flight.createdAt) && !Number.isNaN(Date.parse(flight.createdAt)) &&
+                isString(flight.updatedAt) && !Number.isNaN(Date.parse(flight.updatedAt)), 'Ungültige Flight-Metadaten');
+            flights.add(flight.id);
+            assert(Object.keys(flight).every(k=>['id','name','date','notes','tastingIds','createdAt','updatedAt'].includes(k)), 'Unbekanntes Flight-Feld');
+            try { normalizeFlightFields({name:flight.name,date:flight.date,notes:flight.notes}); }
+            catch { assert(false,'Ungültiger Flight'); }
+            assert(Array.isArray(flight.tastingIds) && flight.tastingIds.length<=FLIGHT_LIMIT, 'Ungültige Flight-Reihenfolge');
+            for (const id of flight.tastingIds) {
+                assert(isString(id) && /^[a-zA-Z0-9-]{1,100}$/.test(id) && !assigned.has(id) &&
+                    referenceCount.get(id)===1, 'Flight-Verkostung fehlt oder ist mehrfach zugeordnet');
+                assigned.add(id);
+            }
         }
     }
     for (const bottle of allBottles(collection)) {

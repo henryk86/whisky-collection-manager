@@ -122,12 +122,23 @@ test('photo markup is escaped and old new-tab photo links are gone', () => {
         assert.doesNotMatch(h.html, /<script>/);
         assert.match(h.html, /&lt;script&gt;/);
     } finally { h.restore(); }
-    const detail = fs.readFileSync('public/js/views/detail.js', 'utf8');
-    assert.match(detail, /class="photo-open" data-act="open-photo"/);
-    assert.match(detail, /class="hero-photo hero-photo-open" data-act="open-photo"/);
-    assert.doesNotMatch(detail, /href="\$\{imageUrl\(photo\.path\)\}" target="_blank"/);
-    const preview = fs.readFileSync('public/js/features/import/controller.js', 'utf8');
-    assert.match(preview, /class="import-preview-photo-open" data-act="open-photo"/);
-    const events = fs.readFileSync('public/js/events.js', 'utf8');
-    assert.match(events, /'photo-next': \(\) => photoViewer\.step\(1\)/);
+});
+
+test('the large physical bottle preview opens only its own sorted photo gallery', () => {
+    const h = harness();
+    try {
+        const gallery = {querySelectorAll: () => h.buttons};
+        const bottle = {querySelector: selector => selector === '[data-photo-list]' ? gallery : null};
+        const preview = {
+            querySelector: selector => selector === 'img' ? {
+                getAttribute: key => key === 'src' ? '/images/one.png' : 'Flaschenfoto',
+            } : null,
+            closest: selector => selector === '[data-bottle-entry]' || selector === '.bottle-entry' ? bottle : null,
+            matches: selector => selector === '[data-bottle-photo-preview]',
+        };
+        h.viewer.open(preview);
+        assert.match(h.html, /1 \/ 2/);
+        h.viewer.step(1);
+        assert.equal(h.currentImage.src, '/images/two.png');
+    } finally { h.restore(); }
 });

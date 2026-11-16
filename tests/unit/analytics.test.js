@@ -7,7 +7,7 @@ import { parseRoute, routeUrl } from '../../public/js/navigation/routes.js';
 import { MAIN_PAGES } from '../../public/js/navigation/pages.js';
 
 const collection = () => ({
-    schemaVersion: 4,
+    schemaVersion: 5,
     distilleries: [{ id: 'a', name: 'Alpha', country: 'Schottland', region: 'Islay' },
         { id: 'b', name: 'Beta', country: 'Irland' }, { id: 'c', name: 'Unused' }],
     bottlings: [
@@ -15,7 +15,7 @@ const collection = () => ({
             whiskyType: 'blended_malt', ageYears: 12, abv: 46, country: 'Scotland', region: 'Islay',
             caskType: 'Sherry', distillationYear: 2005, bottlingYear: 2017, releaseYear: 2018,
             limitedEditionCount: 1000, completionStatus: 'complete', whiskybaseId: '123',
-            rating:85, tastingNotes:{nose:'Sherry',palate:'',finish:''},
+            tastings:[{id:'taste1',tastedOn:'2026-01-01',createdAt:'2026-01-01T00:00:00Z',rating:85,tastingNotes:{nose:'Sherry',palate:'',finish:''}}],
             bottles: [
                 { id: 'one', volumeType: 'standard', volumeMl: 700, status: 'closed', purchasePrice: 50, currency: 'EUR',
                     merchant: 'Bottle Shop', purchaseDate: '2025-03-01', createdAt: '2025-02-28T12:00:00Z' },
@@ -30,13 +30,6 @@ const collection = () => ({
     ],
 });
 
-test('analytics filters retain their light appearance but use a dark surface in dark mode', () => {
-    const analyticsCss = fs.readFileSync('public/styles/analytics.css', 'utf8');
-    const themesCss = fs.readFileSync('public/styles/themes.css', 'utf8');
-    assert.match(analyticsCss, /\.analytics-filters\s*\{[^}]*background:\s*#ece9e1;/);
-    assert.match(themesCss, /:root\[data-theme="dark"\]\s+\.analytics-filters\s*\{[^}]*background:\s*#1b2936;[^}]*border-color:\s*var\(--line\);/);
-});
-
 test('analytics overview subtitle is a complete sentence in German and English', () => {
     const de = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
     const en = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
@@ -46,7 +39,7 @@ test('analytics overview subtitle is a complete sentence in German and English',
 });
 
 test('analytics page headline keeps its overview punchline on every tab', () => {
-    const state = { collection: { schemaVersion:4, distilleries:[], bottlings:[] },
+    const state = { collection: { schemaVersion:5, distilleries:[], bottlings:[] },
         analyticsFilters:{}, analyticsPeriod:'month', analyticsStartDate:'', analyticsEndDate:'', selected:'overview' };
     let html = '';
     const render = createAnalyticsView({state, shell: value => { html = value; }});

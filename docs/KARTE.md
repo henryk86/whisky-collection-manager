@@ -7,7 +7,7 @@ Die Seite **Landkarte** ist über den Menübutton im Kopfbereich erreichbar. Sta
 - Für wichtige Destillerien auf **Islay**, darunter Kilchoman, Ardbeg, Lagavulin, Laphroaig, Bowmore, Bruichladdich, Caol Ila, Bunnahabhain und Ardnahoe, werden geprüfte Koordinaten mitgeliefert. Quellen: [Islay Whisky Map](https://islaywhiskys.com/visit/islay-whisky-map), [Wikivoyage Islay](https://de.wikivoyage.org/wiki/Islay). Die eingebauten Koordinaten sind nur Ausgangswerte; individuelle Werte haben Vorrang.
 - Für **alle 450 im mitgelieferten Katalog enthaltenen Destillerien** sind Kartenpositionen verfügbar. Für historische, stillgelegte und nicht exakt dokumentierte Standorte verwenden wir in vielen Fällen **ungefähre Ortskoordinaten**, keine fiktiven exakten Gebäudepositionen. Die Kartenansicht kennzeichnet diese als „Ungefähre Lage“. Neue oder selbst angelegte Destillerien erscheinen nur dann unter „Noch nicht verortet“, wenn keine Position gefunden wird; bei 0 fehlenden Standorten wird die gesamte Rubrik ausgeblendet.
 - Über „Ort festlegen“ für neue Destillerien bzw. das kleine Stift-Icon rechts neben dem Destillerienamen öffnet sich das Destillerieformular. Dort können Breitengrad und Längengrad direkt eingegeben werden. Optional findet „Standort über OpenStreetMap suchen“ einzelne Kandidaten. **Der Benutzer prüft und wählt** den richtigen Standort, anschließend speichert er die Destillerie.
-- Die Koordinaten werden optional als `distillery.latitude` und `distillery.longitude` in `collection.json` gespeichert, im vollständigen Backup erfasst und durch JSON-Import wiederhergestellt. Das bisherige `schemaVersion: 4` bleibt kompatibel.
+- Die Koordinaten werden optional als `distillery.latitude` und `distillery.longitude` in `collection.json` gespeichert, im vollständigen Backup erfasst und durch JSON-Import wiederhergestellt. Das aktuelle Datenformat ist `schemaVersion: 5`.
 - **Nach dem Speichern einer Destillerieposition** behält die Landkarte die aktuelle Zoomstufe. Wenn sich die Koordinaten tatsächlich geändert haben, wird nur der betroffene Standort neu zentriert. Änderungen an Name oder Betriebsstatus sowie gewöhnliche Datenaktualisierungen setzen weder Zoom noch Kartenausschnitt zurück; der Button „Alle Standorte anzeigen“ bleibt der bewusste Weg, alle Punkte einzupassen.
 - Beim erstmaligen Öffnen und mit „Alle Standorte anzeigen“ berechnet die Karte den Ausschnitt aus den eingeblendeten Orten. **Der Schalter „Alle Destillerien“ ändert nur die sichtbaren Marker, Legende und Statistiken und lässt Kartenmittelpunkt sowie Zoomstufe unverändert**, auch beim Ausschalten. Das bewusste Neueinpassen erfolgt ausschließlich über „Alle Standorte anzeigen“. Bei nur einem Standort wird beim erstmaligen Einpassen Zoomstufe 11 verwendet. Ohne Standorte zeigt die Karte das Ausgangsgebiet. Das Umschalten aktualisiert auch die Pagoden-Symbole für Destillerien ohne Flaschen direkt in der bestehenden Karteninstanz. Bei starkem Herauszoomen können einzelne Pagoden in einem Cluster zusammengefasst sein; durch gezieltes Auswählen der Destillerie wird ihr eigenes Symbol sichtbar.
 
@@ -20,7 +20,7 @@ Die Seite **Landkarte** ist über den Menübutton im Kopfbereich erreichbar. Sta
 - Bei Whisky aus mehreren Destillerien wird dieselbe Abfüllung **jeder beteiligten Destillerie** zugeordnet. Dies verdoppelt keine Sammlungsdaten; die Summen der Standorte können deswegen größer als der globale Flaschenbestand sein.
 - Die Liste neben bzw. unter der Karte bleibt auch dann bedienbar, wenn geografisch benachbarte Marker sich überlappen.
 
-## Landkartenlink aus der Abfüllungsdetailseite (v0.9.2)
+## Landkartenlink aus der Abfüllungsdetailseite
 
 Auf der Detailseite einer Abfüllung mit zugeordneten Destillerien gibt es **„Auf Landkarte anzeigen“** bzw. bei mehreren Destillerien **„Standorte auf Landkarte“**. Der Link öffnet `/?view=map&focusBottling=<Abfüllungs-ID>`; nach Aktualisieren der Seite bleibt die Zuordnung erhalten. Die Karte zeigt alle verorteten Destillerien der Abfüllung im gemeinsamen Ausschnitt (keinen künstlichen Mittelpunkt als Standort). Die zugehörigen Standorte sind in der rechten Seitenleiste explizit auswählbar; ein Klick fokussiert die gewählte Destillerie. Falls eine der Destillerien noch nicht verortet ist, erscheint sie dort mit **„Ort festlegen“**. Ohne zugeordnete Destillerie wird kein Kartenlink angeboten. Die bestehende Sammlung wird nicht verändert.
 
@@ -48,9 +48,9 @@ Die lokale Positionsliste liegt unter `public/js/domain/distillery-locations.js`
 
 **Legende (aktueller Stand):** Beide Statusgruppen verwenden dieselbe Reihenfolge und dieselbe Beschriftungsstruktur: **Mit Flaschen** → Aktiv / Geschlossen sowie bei aktiviertem Destilleriekatalog **Ohne Flaschen** → Aktiv / Geschlossen. Anschließend folgen die Flaschenzahl-Beispiele 1/10/100 und **Gruppiert** als goldener, runder Marker, dessen Zahl die addierten physischen Flaschen zeigt. Die Legende verwendet ein platzsparendes, responsives Flexlayout ohne freistehende Trennlinien oder ausgedehnte Leerflächen. Kreisfarbe und Rahmen entsprechen den tatsächlichen Kartenmarkern im Light- und Dark-Mode. Legendenbeispiele bleiben ohne Schatten, Glow und Filter.
 
-**Lokalisierung ab v0.15.6:** Die Statusbeschriftungen in beiden Legendenabschnitten (Aktiv/Geschlossen bzw. Active/Closed) werden dynamisch aus dem jeweiligen Sprachkatalog bezogen; dasselbe gilt fuer Hinweise auf Standorte von Abfuellungen. Ein Unit-Test und ein gezielter Chromium-Test pruefen diese Beschriftungen mit `en.json`.
+**Lokalisierung:** Die Statusbeschriftungen in beiden Legendenabschnitten (Aktiv/Geschlossen bzw. Active/Closed) werden dynamisch aus dem jeweiligen Sprachkatalog bezogen; dasselbe gilt fuer Hinweise auf Standorte von Abfuellungen. Ein Unit-Test und ein gezielter Chromium-Test pruefen diese Beschriftungen mit `en.json`.
 
-## Kacheln und Sicherheitsheader (v0.15.10)
+## Kacheln und Sicherheitsheader
 
 Die Browser-CSP erlaubt Bilder von `https://tile.openstreetmap.org`.
 `Referrer-Policy: strict-origin-when-cross-origin` ist bewusst gewaehlt:
@@ -60,7 +60,7 @@ Siehe https://operations.osmfoundation.org/policies/tiles/.
 Die visuelle Browserabnahme nach CSP-Einfuehrung ist noch offen.
 
 
-### Kartenposition nach Destillenänderungen (v0.16.15)
+### Kartenposition nach Destillenänderungen
 
 - Beim Speichern einer Namens- oder Statusänderung bleiben der aktuelle Kartenmittelpunkt und der Zoom erhalten; der Karten-Viewer wird nicht neu aufgebaut.
 - Bei geänderten Koordinaten wird ausschließlich die neue Destillenposition zentriert, ohne Zoomanpassung.

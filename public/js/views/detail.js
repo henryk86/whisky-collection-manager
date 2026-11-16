@@ -1,10 +1,10 @@
-import { latestTasting } from '../domain/tasting-records.js';
-import { displayPhotoPath } from '../domain/photo-images.js';
+import { latestTasting } from '../../../shared/tasting-records.js';
+import { displayPhotoPath } from '../../../shared/photo-images.js';
 import { t } from '../i18n/index.js';
 const bottleStatusText = status => t(({closed:'home.status.closed',open:'analytics.inventory.openedStatus',empty:'home.status.empty'})[status] || 'features.distilleries.unknownStatus');
 const FACT_KEYS = Object.freeze({'Whisky-Kategorie':'forms.bottling.whiskyCategory','Marke':'forms.bottling.brandOrProductLine','Beteiligte Destillerien':'forms.bottling.participatingDistilleries','Zusammensetzung vollständig':'detail.facts.labelCompositionComplete','Alter':'forms.bottling.ageYears','Alkoholgehalt':'forms.bottling.abv','Erscheinungsjahr':'forms.bottling.releaseYear','Nennfüllmenge laut Abfüllung':'forms.bottling.nominalVolume','Abfüller':'forms.bottling.bottler','Region':'detail.facts.labelRegion','Land':'detail.facts.labelCountry','Fasstyp':'forms.bottling.caskType','Destilliert am':'forms.bottling.distillationDate','Abgefüllt am':'forms.bottling.bottlingDate','Fassnummer':'forms.bottling.caskNumber','Limitierte Auflage':'detail.facts.labelLimitedEdition'});
 const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
-import { escapeHtml, queryAll } from '../ui/dom.js';
+import { escapeHtml } from '../ui/dom.js';
 import { editIcon, deleteIcon, locationIcon, newBottlingIcon, addActionLabel } from '../ui/action-icons.js';
 import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
 import { imageUrl, formatValue, formatDate } from '../ui/format.js';
@@ -18,7 +18,6 @@ import { bottlingDetails, hasBottlingDetail } from '../domain/bottling-details.j
 import { bottlingOriginLabel } from '../domain/bottling-origin.js';
 import { bottlingDistilleryIds } from '../domain/bottling-map-focus.js';
 import { storagePath } from './warehouse.js';
-const displayBottleMeta = entry => [entry.purchaseDate ? t('detail.meta.purchaseDate', {date:formatDate(entry.purchaseDate)}) : null, entry.purchasePrice != null && entry.purchasePrice !== '' ? `${entry.purchasePrice} ${entry.currency || 'EUR'}` : null].filter(Boolean).join(' · ');
 export function createDetailView({ state, selectors, shell, navigate, action }) {
     const { bottles, coverPhoto, distilleryNames } = selectors;
     function detail() {
@@ -38,27 +37,65 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
         const statusText = bottling.completionStatus === 'complete' ? t("detail.status.complete") : t("detail.status.incomplete");
         const description = hasBottlingDetail(bottling.description) ? bottling.description : null;
         const whiskybaseUrl = hasBottlingDetail(bottling.whiskybaseUrl) ? bottling.whiskybaseUrl : null;
-        const list = physicalBottles.map(entry => `<div class="bottle bottle-entry${state.highlightBottleId === entry.id ? ' scanned-bottle' : ''}" id="bottle-${escapeHtml(entry.id)}">
-    <div class="info">
-    <strong>${entry.inventoryNumber ? `#${escapeHtml(entry.inventoryNumber)}` : t("imports.bottles.noInventoryNumber")} <span class="badge ${entry.status}">${bottleStatusText(entry.status)}</span>${entry.volumeType === 'sample' ? '<span class="badge sample">Sample</span>' : ''}${entry.volumeMl != null ? `<span class="bottle-size">${escapeHtml(entry.volumeMl)} ml</span>` : ''}
-    </strong>${displayBottleMeta(entry) ? `<span class="bottle-meta">${escapeHtml(displayBottleMeta(entry))}</span>` : ''}${state.warehouse ? `<span class="bottle-meta">${t("detail.fields.storagePrefix")} ${state.warehouse.assignments[entry.id] ? `<button class="inline-link" data-act="warehouse-focus" data-id="${escapeHtml(state.warehouse.assignments[entry.id])}">${escapeHtml(storagePath(state.warehouse, state.warehouse.assignments[entry.id])?.label || t("detail.fields.unassigned"))}</button>` : t("detail.fields.unassigned")}</span>` : ''}<div class="bottle-photos" data-photo-list="${escapeHtml(entry.id)}">${(entry.photos || []).map(photo => `<div class="photo-tile" data-photo-tile data-photo-id="${escapeHtml(photo.id)}">
+        const list = physicalBottles.map(entry => {
+            const entryPhotos = entry.photos || [];
+            const firstPhoto = entryPhotos[0];
+            const storageShelfId = state.warehouse?.assignments[entry.id];
+            const storageName = state.warehouse
+                ? (storageShelfId ? storagePath(state.warehouse, storageShelfId)?.label || t('detail.fields.unassigned') : t('detail.fields.unassigned'))
+                : null;
+            const photoGallery = `<div class="bottle-photos" data-photo-list="${escapeHtml(entry.id)}">${(entry.photos || []).map(photo => `<div class="photo-tile" data-photo-tile data-photo-id="${escapeHtml(photo.id)}">
     <button type="button" class="photo-open" data-act="open-photo" title="${t("detail.photos.enlarge")}" aria-label="${t("detail.photos.openOverlay")}">
-    <img draggable="false" src="${imageUrl(displayPhotoPath(photo))}" alt="${t("detail.photos.bottleWithNumber",{kind:photo.source === 'whiskybase' ? t("whiskybase.images.reference") : t("detail.photos.personalPhoto"),number:entry.inventoryNumber||''})}" loading="lazy">
+    <img draggable="false" src="${imageUrl(displayPhotoPath(photo))}" alt="${escapeHtml(t("detail.photos.bottleWithNumber",{kind:photo.source === 'whiskybase' ? t("whiskybase.images.reference") : t("detail.photos.personalPhoto"),number:entry.inventoryNumber||''}))}" loading="lazy">
     </button>
     <button class="photo-edit-trigger" type="button" data-act="photo-editor-open" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" title="${t('photoEditor.title')}" aria-label="${t('photoEditor.title')}">${editIcon}</button>
     ${photo.cutout ? `<span class="photo-cutout-badge" title="${t('cutout.result')}">✦</span>` : ''}
-    <button class="photo-remove" type="button" data-act="delete-photo" data-id="${entry.id}" data-photo-id="${photo.id}" aria-label="${t("ui.confirmations.deletePhoto")}">×</button>
+    <button class="photo-remove" type="button" data-act="delete-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" aria-label="${t("ui.confirmations.deletePhoto")}">×</button>
     ${photo.source === 'whiskybase' ? `<span class="photo-source" title="${t('detail.photos.whiskybaseReferenceNotice')}">WB</span>` : ''}
     <div class="photo-controls">
     <button class="photo-move" type="button" data-act="move-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" data-dir="-1" aria-label="${t("detail.photos.moveForward")}">←</button>
     <button class="photo-drag-handle" type="button" data-photo-drag title="${t("detail.photos.reorderHint")}" aria-label="${t("detail.photos.reorderHint")}">⠿</button>
     <button class="photo-move" type="button" data-act="move-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" data-dir="1" aria-label="${t("detail.photos.moveBackward")}">→</button>
     </div>
-    </div>`).join('')}<label class="photo-add">${addActionLabel(t("detail.actions.addPhotos"))}<input type="file" accept="${photoAccept}" multiple hidden data-bottle-photos="${entry.id}">
+    </div>`).join('')}</div><div class="bottle-photo-add-actions"><label class="photo-add">${addActionLabel(t("detail.actions.addPhotos"))}<input type="file" accept="${photoAccept}" multiple hidden data-bottle-photos="${escapeHtml(entry.id)}">
     </label><label class="photo-add photo-capture">${t('cutout.takePhoto')}<input type="file" accept="image/*" capture="environment" hidden data-bottle-photos="${escapeHtml(entry.id)}"></label>
-    </div>
-    <small class="muted">${t("detail.statistics.photoCount", {count:(entry.photos || []).length})}</small>
-    <section class="bottle-documents" aria-label="${t("detail.sections.attachments")}">
+    </div>`;
+            return `<div class="bottle bottle-entry${firstPhoto ? ' has-photos' : ' without-photos'}${state.highlightBottleId === entry.id ? ' scanned-bottle' : ''}" id="bottle-${escapeHtml(entry.id)}">
+                ${firstPhoto ? `<div class="bottle-entry-visual">
+                    <button type="button" class="bottle-entry-main-photo" data-act="open-photo" data-bottle-photo-preview="${escapeHtml(entry.id)}" title="${t('detail.photos.enlarge')}" aria-label="${t('detail.photos.openOverlay')}">
+                        <img draggable="false" src="${imageUrl(displayPhotoPath(firstPhoto))}" alt="${escapeHtml(t('detail.photos.bottleWithNumber',{kind:firstPhoto.source === 'whiskybase' ? t('whiskybase.images.reference') : t('detail.photos.personalPhoto'),number:entry.inventoryNumber || ''}))}">
+                        ${firstPhoto.source === 'whiskybase' ? `<span class="bottle-main-source" title="${t('detail.photos.whiskybaseReferenceNotice')}">WB</span>` : ''}
+                        ${firstPhoto.cutout ? `<span class="bottle-main-cutout" title="${t('cutout.result')}">✦</span>` : ''}
+                    </button>
+                </div>` : ''}
+                <div class="bottle-entry-content">
+                    <div class="bottle-entry-head">
+                        <div class="bottle-entry-identity">
+                            <strong>${entry.inventoryNumber ? `#${escapeHtml(entry.inventoryNumber)}` : t('imports.bottles.noInventoryNumber')}</strong>
+                            <span class="badge ${escapeHtml(entry.status)}">${bottleStatusText(entry.status)}</span>
+                            ${entry.volumeType === 'sample' ? '<span class="badge sample">Sample</span>' : ''}
+                            ${entry.volumeMl != null ? `<span class="bottle-size">${escapeHtml(entry.volumeMl)} ml</span>` : ''}
+                        </div>
+                        <div class="actions bottle-entry-actions">
+                            <button class="btn small" data-act="warehouse-assign" data-id="${escapeHtml(entry.id)}">${t('warehouse.bottles.relocate')}</button>
+                            <button class="btn small" data-act="edit-bottle" data-id="${escapeHtml(entry.id)}">${editIcon}<span>${t('common.actions.edit')}</span></button>
+                            <button class="btn small danger" data-act="delete-bottle" data-id="${escapeHtml(entry.id)}">${deleteIcon}<span>${t('common.actions.delete')}</span></button>
+                        </div>
+                    </div>
+                    <h3 class="bottle-entry-data-title">${t('detail.sections.bottleData')}</h3>
+                    <dl class="bottle-entry-facts">
+                        ${entry.purchaseDate ? `<div><dt>${t('detail.meta.purchaseLabel')}</dt><dd>${escapeHtml(formatDate(entry.purchaseDate))}</dd></div>` : ''}
+                        ${entry.purchasePrice != null && entry.purchasePrice !== '' ? `<div><dt>${t('detail.meta.priceLabel')}</dt><dd>${escapeHtml(entry.purchasePrice)} ${escapeHtml(entry.currency || 'EUR')}</dd></div>` : ''}
+                        ${storageName != null ? `<div><dt>${t('detail.fields.storageLocation')}</dt><dd>${storageShelfId ? `<button class="inline-link" data-act="warehouse-focus" data-id="${escapeHtml(storageShelfId)}">${escapeHtml(storageName)}</button>` : escapeHtml(storageName)}</dd></div>` : ''}
+                        ${entry.volumeMl != null ? `<div><dt>${t('detail.meta.volumeLabel')}</dt><dd>${escapeHtml(entry.volumeMl)} ml</dd></div>` : ''}
+                        ${entry.merchant ? `<div><dt>${t('detail.meta.merchantLabel')}</dt><dd>${escapeHtml(entry.merchant)}</dd></div>` : ''}
+                    </dl>
+                </div>
+                <section class="bottle-entry-gallery" aria-label="${t('detail.sections.bottlePhotos', {count:entryPhotos.length})}">
+                    <h4>${t('detail.sections.bottlePhotos', {count:entryPhotos.length})}</h4>
+                    ${photoGallery}
+                </section>
+                    <section class="bottle-documents" aria-label="${t("detail.sections.attachments")}">
     <h4>${t("detail.statistics.attachmentCount", {count:(entry.files || []).length}).replace("&", "&amp;")}</h4>
     ${(entry.files || []).length ? `<ul class="document-list">${entry.files.map(file => `<li>
     <a href="/api/bottles/${encodeURIComponent(entry.id)}/files/${encodeURIComponent(file.id)}" download="${escapeHtml(file.name)}" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</a>
@@ -69,15 +106,10 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <input type="file" accept="${fileAccept}" multiple data-bottle-files="${escapeHtml(entry.id)}">
     </label>
     </section>
-    </div>
-    <div class="actions">
-    <button class="btn small" data-act="warehouse-assign" data-id="${escapeHtml(entry.id)}">${t("detail.fields.storageLocation")}</button>
-    <button class="btn small" data-act="edit-bottle" data-id="${entry.id}">${editIcon}<span>${t("common.actions.edit")}</span></button>
-    <button class="btn small danger" data-act="delete-bottle" data-id="${entry.id}">${deleteIcon}<span>${t("common.actions.delete")}</span></button>
-    </div>
-    </div>`).join('');
-        shell(`<button class="inline-link" data-act="back">${t("detail.navigation.backToCollection")}</button>
-    <div class="section" style="margin-top:18px">
+            </div>`;
+        }).join('');
+        shell(`<button data-region="detail-back" class="inline-link" data-act="back">${t("detail.navigation.backToCollection")}</button>
+    <div data-region="detail-bottling" class="section" style="margin-top:18px">
     <div class="section-head detail-page-head">
     <div>
     <div class="detail-heading-meta">${originLabel ? `<span class="card-kicker">${escapeHtml(originLabel)}</span><span class="detail-heading-separator" aria-hidden="true">·</span>` : ''}<span class="muted">${statusText}</span></div>
@@ -104,7 +136,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <a href="${escapeHtml(whiskybaseUrl)}" target="_blank" rel="noopener noreferrer">${t("detail.actions.openWhiskybase")}</a>` : ''}</div>
     </div>
     </div>
-    <section class="section tasting-summary" aria-label="${escapeHtml(t('tastings.title'))}">
+    <section data-region="detail-tastings" class="section tasting-summary" aria-label="${escapeHtml(t('tastings.title'))}">
         <div class="section-head">
             <h3>${escapeHtml(t('tastings.title'))}</h3>
             <button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t(tastingCount ? 'tastings.add' : 'tastings.first'))}</span></button>
@@ -122,36 +154,37 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                 </div>
             </div>
         </div>
-        ${bottling.legacyTastings?.length ? `<details class="panel tasting-history"><summary>${escapeHtml(t('tasting.legacyHistory'))} (${bottling.legacyTastings.length})</summary>
-            <ol class="tasting-history-list">${bottling.legacyTastings.map(entry => `<li><strong>${escapeHtml(entry.inventoryNumber || entry.bottleId)}</strong>${entry.rating == null ? '' : ` · ${entry.rating} / 100`}
-            ${['nose','palate','finish'].map(key => entry.tastingNotes?.[key] ? `<p>${escapeHtml(t(`forms.bottling.${key}`))}: ${escapeHtml(entry.tastingNotes[key])}</p>` : '').join('')}</li>`).join('')}</ol></details>` : ''}
     </section>
-    <div class="section">
+    <div data-region="detail-physical-bottles" class="section">
     <div class="section-head">
     <h3>${t("detail.statistics.bottleAndSampleCount", {count:physicalBottles.length})}</h3>
     <button class="btn primary" data-act="add-bottle">${newBottlingIcon}<span>${escapeHtml(t('detail.actions.addAnotherBottle').replace(/^\+\s*/, ''))}</span></button>
     </div>
-    <div class="panel">${list || `<p class="muted">${t("detail.empty.noPhysicalBottles")}</p>`}</div>
+    <div class="bottle-entry-list">${list || `<div class="panel"><p class="muted">${t("detail.empty.noPhysicalBottles")}</p></div>`}</div>
     </div>`);
         attachPhotoSorting(action);
-        queryAll('[data-bottle-files]').forEach(el => el.addEventListener('change', async (ev) => {
-            const selected = [...ev.target.files];
-            if (!selected.length) return;
-            await action(async () => {
-                const count = await uploadFiles(el.dataset.bottleFiles, selected);
-                toast(t("detail.notifications.filesSaved", {count}));
-            });
-        }));
-        queryAll('[data-bottle-photos]').forEach(el => el.addEventListener('change', async (ev) => {
-            const files = [...ev.target.files];
-            if (!files.length) {
-                return;
-            }
-            await action(async () => {
-                await uploadPhotos(el.dataset.bottlePhotos, files);
-                toast(t("detail.notifications.photosSaved", {count:files.length}));
-            });
-        }));
     }
+    /** Delegated from events.js. Upload inputs may survive a partial re-render,
+     * so they must never receive per-render listeners (duplicate uploads). */
+    detail.handleUploadChange = async function handleUploadChange(event) {
+        const input = event.target;
+        if (input.matches?.('input[data-bottle-files]')) {
+            const selected = [...input.files];
+            input.value = '';
+            if (!selected.length) return true;
+            const result = await action(() => uploadFiles(input.dataset.bottleFiles, selected), {scope:'collection'});
+            if (result.ok) toast(t("detail.notifications.filesSaved", {count:result.value}));
+            return result.ok;
+        }
+        if (input.matches?.('input[data-bottle-photos]')) {
+            const files = [...input.files];
+            input.value = '';
+            if (!files.length) return true;
+            const result = await action(() => uploadPhotos(input.dataset.bottlePhotos, files), {scope:'collection'});
+            if (result.ok) toast(t("detail.notifications.photosSaved", {count:files.length}));
+            return result.ok;
+        }
+        return false;
+    };
     return detail;
 }

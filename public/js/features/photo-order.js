@@ -13,12 +13,10 @@ export function reorderedPhotoIds(ids, photoId, targetId) {
 }
 
 async function savePhotoOrder(bottleId, ids, action) {
-    await action(async () => {
-        await request(`/api/bottles/${encodeURIComponent(bottleId)}/photos/order`, {
-            method: 'PUT', body: JSON.stringify({ photoIds: ids })
-        });
-        toast(t('features.notifications.photoOrderSaved'));
-    });
+    const result = await action(() => request(`/api/bottles/${encodeURIComponent(bottleId)}/photos/order`, {
+        method: 'PUT', body: JSON.stringify({ photoIds: ids })
+    }), {scope:'collection'});
+    if (result.ok) toast(t('features.notifications.photoOrderSaved'));
 }
 
 /** Accessible left/right buttons work independently of pointer support. */
@@ -38,8 +36,12 @@ export async function movePhoto(bottleId, photoId, step, action) {
  * On desktop, photos can also be dragged directly; a normal click still opens
  * the viewer. On touch, only the handle starts a drag so photos remain scrollable.
  */
+const boundPhotoLists = new WeakSet();
 export function attachPhotoSorting(action) {
     for (const list of document.querySelectorAll('[data-photo-list]')) {
+        // An unchanged section may be retained across data refreshes.
+        if (boundPhotoLists.has(list)) continue;
+        boundPhotoLists.add(list);
         const bottleId = list.dataset.photoList;
         let gesture = null;
         let saving = false;
