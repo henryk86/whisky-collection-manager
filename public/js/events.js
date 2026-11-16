@@ -10,7 +10,7 @@ import { activateHelpTopic } from './views/help.js';
 import { activateSettingsSection } from './views/settings.js';
 import { handleFlavorRange, setFlavorFromPointer } from './ui/flavor-profile.js';
 /** One delegated click handler; HTML data-act values are the UI action names. */
-export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView }) {
+export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView }) {
     const suggestNumber = async (fieldName) => {
         const result = await request('/api/suggest-number');
         const field = query(`[name=${fieldName}]`);
@@ -301,6 +301,10 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
     };
     bindFlightSorting(root, (from,to,after) => tastingsView.reorderFlightMember(from,to,after));
     root.addEventListener('click', async (event) => {
+        const mapButton = event.target.closest?.('[data-map-focus], [data-map-page], [data-map-bottling], [data-map-edit]');
+        if (state.page === 'map' && mapButton) { mapView.handleClick(mapButton); return; }
+        const overviewButton = event.target.closest?.('[data-collection-mode], [data-page-to]');
+        if (overviewButton && state.page === 'home') { home.handleClick(overviewButton); return; }
         const button = event.target.closest('[data-act]');
         if (!button || button.disabled) {
             return;
@@ -399,6 +403,10 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
     });
     root.addEventListener('change', event => {
+        if (state.page === 'map' && event.target.matches?.('#map-site-select, #map-all-distilleries')) {
+            mapView.handleChange(event.target); return;
+        }
+        if (state.page === 'home' && event.target.matches?.('#pagination-size, [id^=filter-]')) { home.handleChange(event.target); return; }
         if (event.target.matches?.('input[data-bottle-files], input[data-bottle-photos]')) {
             void detail.handleUploadChange(event); return;
         }
@@ -463,6 +471,10 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
     });
     root.addEventListener('input', event => {
+        if (state.page === 'map' && event.target.matches?.('#map-bottling-search, #map-missing-search')) {
+            mapView.handleInput(event.target); return;
+        }
+        if (state.page === 'home' && event.target.id === 'search') { home.handleInput(event.target); return; }
         if (event.target.id === 'warehouse-unassigned-wall-search') {warehouseView.setUnassignedWallSearch(event.target.value);return;}
         if (event.target.id === 'warehouse-search') {state.warehouseSearch=event.target.value;warehouseView.filterSearch();return;}
         if (event.target.id === 'bottling-choice-search') {

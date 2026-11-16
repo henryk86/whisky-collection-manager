@@ -127,7 +127,7 @@ async function action(task, { scope = 'all' } = {}) {
 }
 navigation.listen();
 bindEvents(root, {
-    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView
+    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView
 });
 // The extension can send a second import into an already open manager tab.
 // A fragment-only navigation triggers hashchange, not a page reload.

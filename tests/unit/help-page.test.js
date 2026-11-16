@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { parseRoute, routeUrl } from '../../public/js/navigation/routes.js';
 import { MAIN_PAGES } from '../../public/js/navigation/pages.js';
 import { HELP_TOPICS, helpView, activateHelpTopic } from '../../public/js/views/help.js';
+import {mapLegendHtml} from '../../public/js/views/map.js';
 
 test('help route and drawer destination work on direct navigation and reload', () => {
     assert.deepEqual(parseRoute('?view=help'), {page:'help', selected:null});
@@ -124,11 +125,10 @@ test('routine screens do not repeat long help texts or implementation filenames'
     assert.match(settings,/jsonDoesNotIncludeAttachments/);
 });
 
-test('distillery filter updates site data without recreating the map or changing its view', () => {
-    const source = fs.readFileSync('public/js/views/map.js','utf8');
-    assert.match(source, /showAllDistilleries = event\.target\.checked/);
-    assert.match(source, /refreshData\(\);\s*\}\);\s*tileMap = createTileMap/);
-    assert.doesNotMatch(source,/render\(\{ preserveView: false \}\)/);
-    assert.match(source,/tileMap\.updateSites\(sites, selectedId, showAllDistilleries\)/);
-    assert.match(source,/legend\.outerHTML = mapLegendHtml\(showAllDistilleries\)/);
+test('map legend shows empty catalog sites only when the all-distilleries filter is active', () => {
+    const omitted = mapLegendHtml(false);
+    const included = mapLegendHtml(true);
+    assert.doesNotMatch(omitted, /map-legend-empty/);
+    assert.match(included, /map-legend-empty/);
+    assert.match(included, /map-pagoda-legend/);
 });

@@ -4,6 +4,21 @@ Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 
 
 POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB Anfrageinhalt. Ungültiges JSON und Nicht-Objekte werden mit 400 abgewiesen. Fehlerantwort für bekannte Fehler: `{ "error": "Invalid path.", "errorCode": "api.errors.invalidPath" }`; der `error`-Text ist als sicherer, englischer Fallback gedacht. Der Browser übersetzt `errorCode` mittels der Sprachkataloge `public/locales/de.json` und `en.json`. Bei bestimmten dynamischen Validierungen kann zusätzlich `errorParams` (z. B. `{ "field": "abv" }`) mitgeliefert werden. Für unbekannte Fehler liefert die API ausschließlich eine neutrale englische Meldung einschließlich HTTP-Status, ohne interne Fehlermeldungen offenzulegen. Bekannte Konflikte verwenden 409, nicht gefundene Ressourcen 404. Einzelheiten und beschreibbare Felder stehen in `server/routes.js` und `server/domain/normalization.js`.
 
+### Revisionsgebundene Mutationsantworten
+
+Der Browser kann bei `POST`, `PUT`, `PATCH` und `DELETE` den optionalen Header `X-WCM-State-Delta: 1` senden. Wenn der Schreibvorgang die Sammlung oder das Lager veraendert, enthaelt die erfolgreiche JSON-Antwort statt des fachlichen Ergebnisses allein einen Umschlag:
+
+```json
+{
+  "__wcmStateDelta": 1,
+  "result": {"id": "example"},
+  "updates": [{"before":"W/\"collection-old\"","after":"W/\"collection-new\"",
+    "delta":{"kind":"collection","values":{},"arrays":{"bottlings":{"upsert":[],"remove":[]}}}}]
+}
+```
+
+`result` enthaelt unveraendert die bisherige API-Antwort. `updates[]` beschreibt ausschliesslich geaenderte Werte und ID-basierte Eintraege; die konkrete Reihenfolge einer geaenderten Liste wird bei Bedarf als `order` mitgeliefert. Fuer `warehouse` wird als Vergleichsrevision die Antwortkopfzeile `X-WCM-Store-ETag` von `GET /api/warehouse` verwendet, waehrend dessen normales HTTP-`ETag` auch die Sammlung einbezieht. Der Client uebernimmt eine Aenderung **nur bei passender Ausgangsrevision**; andernfalls laedt er die betroffene Ressource erneut. Externe API-Clients ohne diesen Header erhalten **genau das bisherige Antwortformat**. Gescheiterte Mutationen liefern keine vermeintlich erfolgreichen Zustandsdeltas.
+
 | Methode | Pfad | Ergebnis |
 | --- | --- | --- |
 | GET | `/api/collection` | Vollständige Sammlung, Schema 5, einschließlich optionaler `settings.establishedYear`; `ETag`, `If-None-Match` → HTTP 304 |
@@ -33,7 +48,7 @@ POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB
 | GET | `/api/export/zip` | AES-256-verschlüsseltes ZIP mit Sammlung, Lager, Fotos und Dokumenten; Admin-Token erforderlich |
 | POST | `/api/import/json` | Ersetzt Sammlung, erhält reservierte Nummern; Bilder und Nachweise separat |
 
-### Eigenständige Verkostungen je Abfüllung (v0.26.0)
+### Eigenständige Verkostungen je Abfüllung
 
 Eine Abfüllung kann 0–n unabhängige Verkostungen in `bottlings[].tastings[]`
 führen (`schemaVersion: 5`). Dieses Array ist Pflicht; historische
@@ -77,7 +92,7 @@ Ein `legacyTastings`-Archiv gibt es nicht mehr.
 JSON- und vollständige ZIP-Sicherungen enthalten alle `tastings[]`-Datensätze;
 CSV bleibt beim bisherigen Abfüllungs-/Flaschenexport.
 
-### Verkostungsstartseite und nicht besessene Whiskys (v0.27.2)
+### Verkostungsstartseite und nicht besessene Whiskys
 
 Die Hauptnavigation enthält **Verkostungsnotizen** (`/?view=tastings`) mit einer
 übergreifenden, nach Verkostungsdatum sortierten Liste. Eine neue Verkostung
@@ -117,7 +132,7 @@ stehen die verfügbaren Angaben **Alter, Fasstyp, Alkoholgehalt** unter dem
 Abfüllungsnamen. Unbekannte Angaben werden ausgelassen. „Profil zurücksetzen“
 speichert `flavorProfile: null`, wiederherstellbar über Rückgängig.
 
-## Tasting-Flights (v0.28.0)
+## Tasting-Flights
 
 Tasting-Flights sind optionale, nur für die Verkostungsorganisation verwendete
 Gruppen in `collection.json`. Sie verändern weder Sammlungsbestand noch
@@ -148,7 +163,7 @@ Direkte URL: `/?view=tasting-flight&flight=<id>`. Eine neue oder vorhandene
 Einzelverkostung kann beim Öffnen aus einem Flight zusätzlich `flight=<id>`
 in der URL mitführen. Bestehende URLs bleiben unverändert funktionsfähig.
 
-## Lagerraum löschen (ab v0.19.16)
+## Lagerraum löschen
 
 - `DELETE /api/warehouse/rooms/:id` löscht nur Räume ohne zugeordnete Flaschen; bei Belegung antwortet die API mit **409** und speichert keine Teillöschung.
 - `DELETE /api/warehouse/rooms/:id?unassignBottles=true` ist der ausdrücklich bestätigte Weg für belegte Räume. Er entfernt sämtliche Zuordnungen zu den Fächern dieses Raums (auch verwaiste Zuordnungen) und löscht den Raum mitsamt Möbeln und Fächern **atomar** aus `warehouse.json`.

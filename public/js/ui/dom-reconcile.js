@@ -13,6 +13,12 @@ function compatible(a, b) {
         (a.nodeType !== 1 || (a.tagName === b.tagName && keyFor(a) === keyFor(b)));
 }
 function reconcileNode(current, next) {
+    // Imperative widgets own their event and animation lifecycle. A subtree
+    // marked as an island is always remounted; the rest remains keyed/morphed.
+    if (next.getAttribute?.('data-reconcile') === 'replace') {
+        current.replaceWith(next.cloneNode(true));
+        return;
+    }
     if (current.isEqualNode(next)) return;
     if (current.nodeType !== 1) {
         if (current.nodeValue !== next.nodeValue) current.nodeValue = next.nodeValue;

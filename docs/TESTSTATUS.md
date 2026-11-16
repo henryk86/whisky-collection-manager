@@ -1,28 +1,28 @@
-# Teststatus - Whisky Collection Manager v1.2.1
+# Teststatus - Whisky Collection Manager v1.3.0
 
-**Stand:** 2026-11-16. **Status:** Vollstaendige Node-Pruefungen und Chromium-DOM-Browsersuite bestanden. Der reguläre GitHub-Actions-Browserlauf mit echter HTTP-Navigation fuer v1.2.1 ist noch offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-16. **Status:** Vollstaendige Node- und lokale Chromium-DOM-Browsersuite fuer v1.3.0 erfolgreich; GitHub-CI mit echter Seitennavigation sowie ARM64-/Mobilgeraetepruefungen noch offen. Historische Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Erfolgreich** | Version, Metadaten und Dokumentation v1.2.1 konsistent. |
-| `npm run check` | **Erfolgreich** | JavaScript-Syntax, Importgrenzen, i18n-Referenzen und Markdown-Links. |
-| `npm test` | **568/568 bestanden** | Vollstaendige Unit- und Integrationstests. |
-| `npm run test:browser` | **85 bestanden, 0 fehlgeschlagen, 1 uebersprungen** | Chromium 144 im DOM-Modus (`WHISKY_BROWSER_DOM_ONLY=true`), Playwright-Laufzeit v1.57 statt angepinnter npm-Version v1.65. Browser-History mit echter Seitennavigation wird in diesem Modus nicht geprueft. |
-| Gezielter Regressionstest fuer mehrere datierte Verkostungen | **Bestanden** | Der bisher fehlschlagende Browserfall ist gruen; die Anzahl der Listeneintraege wird nach deren Erscheinen verifiziert. |
-| Verzögerter Verkostungs-POST | **Bestanden** | Kontrollierter noch offener POST: Ruecknavigation und Speichern sind gesperrt; danach sind beide Eintraege im DOM und auf dem Server vorhanden. Der Test schlug vor dem Fix gegen v1.2.0 fehl. |
-| Verkostungs-POST mit HTTP 500 und anschliessendem Retry | **Bestanden** | Eingaben bleiben erhalten, Bedienelemente werden wieder freigegeben, erneutes Speichern erzeugt genau eine Verkostung. |
-| GitHub Actions / CI fuer v1.2.1 | **Ausstehend** | Regulare Browser-Suite mit echter Navigation und angepinnter Playwright-Version vor Merge nach main erforderlich. Der vorherige CI-Lauf fuer v1.2.0 hatte den Verkostungs-Regressionsfehler gemeldet. |
-| Docker / ARM64 / echte mobile Endgeraete | **Nicht lokal ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
+| `npm run release:check` | **Erfolgreich** | Release-Version v1.3.0 samt SHA-256-Quellmanifest konsistent. |
+| `npm run check` | **Erfolgreich** | Syntax, Imports, i18n, Markdown-Links, Widget-Listener und Quelltexttest-Budget geprueft. |
+| `npm test` | **572/572 bestanden** | Vollstaendige Node-Unit-/Integrationstests einschliesslich Mutationsdeltas und ZIP-Upgrade-Datenschutz. |
+| `npm run test:browser` | **91 bestanden, 0 fehlgeschlagen, 1 uebersprungen** | Chromium-DOM-Modus, seriell; der History-Fall benoetigt echte HTTP-Seitennavigation. |
+| GitHub Actions / CI v1.3.0 | **Ausstehend** | Vollstaendige CI-Suite mit echter Navigation auf dem genauen Commit ausfuehren, bevor nach `main` gemergt wird. |
+| Docker / ARM64 / WebGL auf Zielhardware / iOS / Android | **Nicht lokal ausgefuehrt** | Separat auf den Zielsystemen verifizieren. |
 
-## Aenderungen v1.2.1
+## Aenderungen v1.3.0
 
-- Asynchrones Anlegen einer Verkostung sperrt bis zum Ende von POST und Sammlungs-Refresh die Entwurfsbedienelemente und Ruecknavigation; doppelte Speichervorgaenge werden verhindert.
-- Bei fehlgeschlagenem Speichern bleibt der Entwurf mit seinen Eingaben erhalten. Spaete Antworten duerfen zwischenzeitliche Navigation nicht ueberschreiben.
-- Zwei neue Browser-Regressionstests fuer verzögerte/fehlgeschlagene Speichervorgaenge; im bestehenden Chronologie-Test wird auf den zweiten DOM-Eintrag gewartet.
-- Keine Aenderung an Schema 5, Bestandsdaten, Lager, Backups oder Migration.
+- B-1: Generischer DOM-Abgleich fuer alle regulaeren Seiten; zentrale Startseiten-/Kartenereignisse und getrennte Widget-Lebenszyklen bei Karte, Lager, SVG und 3D.
+- B-2: Inkrementelle, revisionsgesicherte Mutationsantworten mit GET-Fallback nach Fremdaenderungen; unveraendertes Standard-API-Verhalten.
+- B-5: Neue Integrations- und Browser-Verhaltenstests. Quelltext-Regex-Neuzugaenge durch CI-Budget verboten; vorhandene Altpruefungen nur mit gleichwertiger Abdeckung weiter abbauen.
+- B-6: Kompaktindex fuer alte Testberichte, fachliche Dokumentationsbereinigung sowie SHA-256-Manifest zur sicheren Erkennung verwaister Module beim ZIP-Upgrade.
+- Keine Aenderung an Sammlungsschema, Lagerdaten, Medien, Bestandsmigration oder Backupformat.
 
-## Offene Review-Punkte
+## Verbleibende Abnahmen und Legacy-Bestand
 
-B-1 (weitere Widget-Ansichten), B-2 (inkrementelle Mutationsantworten), B-5 (weitere Regex-Tests) und B-6 (historische Dokumentation) bleiben unveraendert offen. **Keine Merge-Freigabe ohne gruene GitHub-CI-Browsersuite fuer v1.2.1.**
+- Der Browser-History-Test wurde im verwalteten Chromium-DOM-Modus uebersprungen. Der regulare CI-Browserlauf ist daher weiterhin eine Freigabevoraussetzung.
+- Alte Quelltext-Regex-Assertions sind nicht als Verhaltenstest zu betrachten. Neue sind untersagt; verbleibende werden bei der naechsten fachlichen Aenderung mit Browser-/Domain-Abdeckung ersetzt, statt ohne gleichwertige Pruefung geloescht.
+- Freigabe nach `main` erst nach gruener CI. Separate Docker-/Pi-/Mobilgeraete-Abnahmen sind noch nicht behauptet.

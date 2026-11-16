@@ -4,6 +4,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR, DATA_FILE } from './paths.js';
 import { validate } from '../domain/validation.js';
+import { trackMutation } from '../domain/mutation-tracker.js';
 import { migrateCollectionToCurrent } from './migrations.js';
 const seedFile = new URL('../../seed/distillery.json', import.meta.url);
 export const empty = () => ({
@@ -100,7 +101,10 @@ export function change(mutator) {
     const work = queue.then(async () => {
         const collection = read();
         const result = await mutator(collection);
+        const previous = cached;
+        const beforeEtag = collectionETag();
         atomicWrite(collection);
+        trackMutation('collection', previous, collection, beforeEtag, collectionETag());
         return result;
     });
     queue = work.catch(() => {

@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import {createTastingsView} from '../../public/js/views/tastings.js';
 import {parseRoute,routeUrl} from '../../public/js/navigation/routes.js';
 import {flightForTasting,flightEntries} from '../../shared/tasting-flights.js';
@@ -38,10 +37,4 @@ test('flight UI shows the session and individual notes with stable one-flight me
     assert.match(html,/Position 1 von 1/);
     assert.equal(flightForTasting(collection,'note-1').id,'flight-1');
     assert.equal(flightEntries(collection,collection.tastingFlights[0])[0].record.id,'note-1');
-});
-
-test('mobile tasting entry title and rating receive separate rows, preserving readable titles',()=>{
-    const css=fs.readFileSync(new URL('../../public/styles/bottle-details.css',import.meta.url),'utf8');
-    assert.match(css,/@media\(max-width:540px\)\s*\{[^}]*\.tasting-entry-open\s*\{\s*grid-template-columns:minmax\(0,1fr\)/);
-    assert.match(css, /\.tasting-entry-info strong\s*\{\s*overflow-wrap:break-word; word-break:normal/);
 });

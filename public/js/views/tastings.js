@@ -331,7 +331,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
                 <button type="button" class="btn small" data-act="tasting-flight-remove-note" data-tasting-id="${escapeHtml(item.record.id)}">${escapeHtml(t('tastingFlights.detach'))}</button>
             </div>
         </div>`;
-        shell(`<div class="analytics-page tasting-child-page tasting-flight-page">
+        shell(`<div class="analytics-page tasting-child-page tasting-flight-page" data-reconcile="replace">
             ${backLink('tasting-flight-back','tastingFlights.back')}
             ${pageTitle(t('tastingFlights.detailTitle'),t('tastingFlights.detailIntro'))}
             <section class="analytics-panel tasting-flight-summary">

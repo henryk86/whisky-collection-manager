@@ -10,21 +10,14 @@ export function createShell({ root, state, applyTheme, renderModal }) {
         // especially after deleting a photo or attachment. Only actual route
         // changes require a full shell; they scroll to the top in navigation.
         const route = [state.page, state.selected, state.tastingId, state.flightId].join('::');
-        // Tasting overviews use only delegated controls; the editor and flight drag
-        // surface retain their explicit full-render lifecycle for now.
-        const liveRegions = ['detail', 'settings', 'help', 'tastings-home', 'tastings', 'external-tastings'].includes(state.page);
         const main = root.querySelector?.(':scope > main');
         if (main && displayedRoute === route) {
             const scrollY = typeof window !== 'undefined' ? window.scrollY : null;
             const next = document.createElement('template');
             next.innerHTML = content;
-            if (liveRegions && main.hasAttribute('data-live-regions')) {
-                // Only pages with delegated handlers opt in: other pages rebuild
-                // controls with view-local lifecycle hooks after each render.
-                reconcileChildren(main, next.content);
-            } else {
-                main.replaceChildren(next.content);
-            }
+            // All routes share one reconciler. Interactive widgets mark their
+            // subtree with data-reconcile="replace" to remount local handlers.
+            reconcileChildren(main, next.content);
             // Guard against scroll anchoring changing the viewport when a
             // replaced section is shorter (e.g. one fewer photo tile).
             if (scrollY != null && Math.abs(window.scrollY - scrollY) > 1) {
@@ -63,7 +56,7 @@ export function createShell({ root, state, applyTheme, renderModal }) {
           <svg class="${item.navClass || ''}" viewBox="${item.viewBox || '0 0 24 24'}" fill="${item.filled?'currentColor':'none'}" stroke="${item.filled?'none':'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${item.icon}</svg>${item.label}
         </a>`).join('')}</nav>
     </aside>
-    <main${liveRegions ? ' data-live-regions' : ''}>${content}</main>
+    <main data-live-regions>${content}</main>
     <footer class="site-footer">
     <span>${t("ui.branding.whiskyCollection")}</span>
     <span>${t('ui.shell.footer', {version: state.version ? `v${state.version}` : t('ui.status.unknownVersion')})}</span>

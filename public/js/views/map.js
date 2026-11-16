@@ -112,29 +112,7 @@ export function createMapView({ state, shell, navigate, settings }) {
             field?.focus();
             field?.setSelectionRange(field.value.length, field.value.length);
         }
-        const selectedInput = sidebar.querySelector('#map-site-select');
-        selectedInput?.addEventListener('change', () => select(selectedInput.value, true));
-        sidebar.querySelector('#map-bottling-search')?.addEventListener('input', event => {
-            search = event.target.value;
-            page = 1;
-            renderSidebar({ focusSearch: true });
-        });
-        sidebar.querySelector('#map-missing-search')?.addEventListener('input', event => {
-            missingFilter = event.target.value;
-            const panel = sidebar.querySelector('#map-missing-list');
-            if (panel) panel.innerHTML = missingRows(missing.filter(site => site.name.toLocaleLowerCase('de').includes(missingFilter.toLocaleLowerCase('de'))));
-        });
-        sidebar.querySelectorAll('[data-map-focus]').forEach(button => button.addEventListener('click', () => select(button.dataset.mapFocus, true)));
-        sidebar.querySelectorAll('[data-map-page]').forEach(button => button.addEventListener('click', () => {
-            page += button.dataset.mapPage === 'next' ? 1 : -1;
-            renderSidebar();
-        }));
-        sidebar.querySelectorAll('[data-map-bottling]').forEach(button => button.addEventListener('click', () => {
-            navigate('detail', button.dataset.mapBottling);
-        }));
-        sidebar.querySelectorAll('[data-map-edit]').forEach(button => button.addEventListener('click', () => {
-            settings.promptDistillery(button.dataset.mapEdit);
-        }));
+
     }
     function select(id, focusMap = false) {
         if (!sites.some(site => site.id === id)) return;
@@ -215,7 +193,7 @@ export function createMapView({ state, shell, navigate, settings }) {
           ${missing.length > 0 ? `<span data-map-stat="missing"><strong>${missing.length}</strong> ${t("map.filters.withoutLocation")}</span>` : ''}
           <label class="map-all-toggle" for="map-all-distilleries"><span>${t("map.actions.showAllDistilleries")}</span>
           <input id="map-all-distilleries" type="checkbox" role="switch" ${showAllDistilleries ? 'checked' : ''}></label></div>
-          <div class="map-layout">
+          <div class="map-layout" data-reconcile="replace">
             <div class="map-stage">${mapCanvasHtml()}
             ${mapLegendHtml(showAllDistilleries)}
             ${!sites.length ? `<div class="map-no-sites">${t("map.empty.noMappedDistilleries")}</div>` : ''}
@@ -224,17 +202,40 @@ export function createMapView({ state, shell, navigate, settings }) {
           </div>
           `);
         renderSidebar();
-        document.getElementById('map-all-distilleries')?.addEventListener('change', event => {
-            showAllDistilleries = event.target.checked;
-            try { localStorage.setItem(ALL_SITES_PREF, showAllDistilleries ? '1' : '0'); }
-            catch { /* Browsers without storage can still switch modes. */ }
-            refreshData();
-        });
         tileMap = createTileMap(document.getElementById('distillery-map'), sites, id => select(id), selectedId, {
             showAllDistilleries,
             focusSiteIds: relatedSites.filter(site => site.location).map(site => site.id),
             initialView,
         });
+    }
+    function handleClick(target) {
+        if (target.dataset.mapFocus) select(target.dataset.mapFocus, true);
+        else if (target.dataset.mapPage) {
+            page += target.dataset.mapPage === 'next' ? 1 : -1;
+            renderSidebar();
+        } else if (target.dataset.mapBottling) navigate('detail', target.dataset.mapBottling);
+        else if (target.dataset.mapEdit) settings.promptDistillery(target.dataset.mapEdit);
+    }
+    function handleChange(target) {
+        if (target.id === 'map-site-select') select(target.value, true);
+        else if (target.id === 'map-all-distilleries') {
+            showAllDistilleries = target.checked;
+            try { localStorage.setItem(ALL_SITES_PREF, showAllDistilleries ? '1' : '0'); }
+            catch { /* No persistent browser storage. */ }
+            refreshData();
+        }
+    }
+    function handleInput(target) {
+        if (target.id === 'map-bottling-search') {
+            search = target.value;
+            page = 1;
+            renderSidebar({focusSearch:true});
+        } else if (target.id === 'map-missing-search') {
+            missingFilter = target.value;
+            const panel = document.getElementById('map-missing-list');
+            if (panel) panel.innerHTML = missingRows(missing.filter(site =>
+                site.name.toLocaleLowerCase('de').includes(missingFilter.toLocaleLowerCase('de'))));
+        }
     }
     function centerOnUpdatedLocation(id) {
         const site = sites.find(entry => entry.id === id && entry.location);
@@ -247,5 +248,5 @@ export function createMapView({ state, shell, navigate, settings }) {
         tileMap.centerOn(site);
     }
     function destroy() { tileMap?.destroy(); tileMap = null; }
-    return { render, refreshData, destroy, centerOnUpdatedLocation };
+    return { render, refreshData, destroy, centerOnUpdatedLocation, handleClick, handleChange, handleInput };
 }

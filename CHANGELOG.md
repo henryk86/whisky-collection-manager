@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 - 2026-11-16
+
+- B-1: Einheitlicher DOM-Abgleich fuer regulaere Ansichten; normale Startseiten- und Kartenereignisse zentral delegiert. Interaktive Karten-, Lager-, SVG-, Drag- und 3D-Inseln werden mit eindeutigem Widget-Lebenszyklus aktualisiert.
+- B-2: Revisionsgepruefte, ID-basierte Mutationsdeltas fuer Sammlung und Lager; bestehende API bleibt ohne opt-in unveraendert. Der Client vermeidet nach erfolgreichen Schreibvorgaengen Komplettabrufe und laedt bei veralteter Revision sicher neu.
+- B-5: Neue Integrationstests fuer unveraenderte API-Vertraege, Cache-/Delta-Rekonstruktion und Manifest-Sicherheit; neue Quelltext-Regex-Assertions per Architekturregel untersagt. CSS-Quelltextpruefungen durch echte Chromium-Layoutpruefungen ersetzt. Der historische Bestand an Regex-Tests bleibt als kontrolliertes Abbaubudget erhalten.
+- B-6: Testhistorie als kompakter Index statt duplizierter Langberichte; aktuelle Architektur-, API-, Foto- und Upgrade-Dokumentation konsolidiert. SHA-256-Quellmanifest pro Release mit nichtdestruktivem ZIP-Upgrade-Audit; keine Bestandsdateien werden entfernt.
+- Datenhaltung, Schema 5 und Backup-/Restore-Migration unveraendert. Chromium-DOM-Suite und CI-Abnahme werden im jeweiligen Teststatus getrennt ausgewiesen.
+
 ## 1.2.1 - 2026-11-16
 
 - CI-Regression bei mehreren datierten Verkostungen: Waehrend eines noch laufenden POST-Speichervorgangs werden Ruecknavigation und erneutes Speichern gesperrt; kein veralteter Listenstand oder spaetes Zurueckspringen in den Editor.

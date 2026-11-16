@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import {writeSourceManifest,verifySourceManifest,FILENAME} from './release-manifest.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (name) => fs.readFileSync(path.join(ROOT, name), 'utf8');
@@ -52,6 +53,10 @@ export function verifyReleaseMetadata(root = ROOT, { allowReadmeMismatch = false
     if (!match || match[1] !== version || !/^- /m.test(match[3]) || /BITTE_ERGAENZEN/.test(match[3])) {
         throw new Error(`CHANGELOG.md braucht einen ausgefuellten obersten Eintrag fuer ${version}.`);
     }
+    if (compareVersions(version, '1.3.0') >= 0 && !fs.existsSync(path.join(root,FILENAME))) {
+        throw new Error(`Quellcode-Manifest ${FILENAME} fehlt im Release v${version}.`);
+    }
+    if (fs.existsSync(path.join(root,FILENAME))) verifySourceManifest(root);
     return { version, tag: `v${version}` };
 }
 
@@ -153,6 +158,7 @@ function bump(part, note) {
         `# Changelog\n\n## ${version} - ${date}\n\n- ${note.trim()}\n\n`));
     archivePreviousTestStatus(current, previousStatus);
     write('docs/TESTSTATUS.md', pendingTestStatus(version, note, date));
+    writeSourceManifest(ROOT);
     verifyReleaseMetadata();
     console.log(`Version ${current} -> ${version}. Jetzt nach develop committen und danach develop -> main mergen.`);
 }

@@ -37,15 +37,20 @@ async function openApp(page, base, options = {}) {
         }
         const response = await fetch(request.url(), {
             method: request.method(),
-            headers: request.postData() ? {
-                'Content-Type': 'application/json'
-            } : {},
+            headers: {
+                ...(request.postData() ? {'Content-Type': request.headers()['content-type'] || 'application/json'} : {}),
+                ...(request.headers()['x-wcm-state-delta'] === '1' ? {'X-WCM-State-Delta':'1'} : {}),
+                ...(request.headers()['if-none-match'] ? {'If-None-Match':request.headers()['if-none-match']} : {})
+            },
             body: request.postData() || undefined,
         });
         await route.fulfill({
             status: response.status,
             headers: {
-                'Content-Type': response.headers.get('content-type') || 'text/plain', 'Access-Control-Allow-Origin': '*'
+                'Content-Type': response.headers.get('content-type') || 'text/plain', 'Access-Control-Allow-Origin': '*',
+                'Access-Control-Expose-Headers': 'ETag, X-WCM-Store-ETag',
+                ...(response.headers.get('etag') ? {'ETag': response.headers.get('etag')} : {}),
+                ...(response.headers.get('x-wcm-store-etag') ? {'X-WCM-Store-ETag':response.headers.get('x-wcm-store-etag')} : {})
             },
             body: Buffer.from(await response.arrayBuffer()),
         });

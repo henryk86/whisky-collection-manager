@@ -27,14 +27,14 @@ Jeder Release erhaelt eine neue Version. Der Versionstyp wird vor dem Bump anhan
 
 ### Version auf develop vorbereiten
 
-Vor **jedem Merge nach `main`** die Version einmal erhoehen, da jeder Merge genau einen neuen Release erzeugt. Der Befehl aktualisiert `package.json`, `package-lock.json`, den README-Titel, den Changelog und `docs/TESTSTATUS.md`. Dabei werden die Ergebnisse der vorherigen Testpruefungen als **kompakte Zeile** nach `docs/TESTHISTORIE.md` archiviert; vollstaendige fruehere Statusdateien bleiben in der Git-Historie verfuegbar, ohne bei jedem Release erneut in die Dokumentation kopiert zu werden. Der neue Teststatus wird wahrheitsgemaess auf **noch nicht ausgefuehrt** gesetzt:
+Vor **jedem Merge nach `main`** die Version einmal erhoehen, da jeder Merge genau einen neuen Release erzeugt. Der Befehl aktualisiert `package.json`, `package-lock.json`, den README-Titel, den Changelog, `docs/TESTSTATUS.md` und das Quellcode-Pruefsummenmanifest. Dabei werden die Ergebnisse der vorherigen Testpruefungen als **kompakte Zeile** nach `docs/TESTHISTORIE.md` archiviert; vollstaendige fruehere Statusdateien bleiben in der Git-Historie verfuegbar, ohne bei jedem Release erneut in die Dokumentation kopiert zu werden. Der neue Teststatus wird wahrheitsgemaess auf **noch nicht ausgefuehrt** gesetzt:
 
 ```bash
 # Auf develop; Beispiel fuer einen Patch-Release:
 npm run release:bump -- patch "Fehlerbehebungen und Verbesserungen"
 npm run release:check
 npm run verify
-git add package.json package-lock.json README.md CHANGELOG.md docs/TESTSTATUS.md docs/TESTHISTORIE.md
+git add package.json package-lock.json README.md CHANGELOG.md docs/TESTSTATUS.md docs/TESTHISTORIE.md wcm-source-manifest.json
 git commit -m "chore(release): prepare vX.Y.Z"
 git push origin develop
 ```
@@ -47,17 +47,25 @@ Alternativ `minor` oder `major` anstelle von `patch`. `npm run release:bump` **n
 
 **Wichtig:** Wenn noch kein Release-Tag existiert, wird die Version aus `package.json` für den ersten Tag verwendet. Danach muss jeder Merge nach `main` eine neue, noch unbenutzte Version enthalten. Bestehende Release-Tags nicht überschreiben.
 
-### Upgrade aus entpackten ZIP-Dateien: verwaiste Module erkennen
+### Upgrade aus entpackten ZIP-Dateien: kontrollierter Modulabgleich
 
-Beim Ueberschreiben eines alten Quellcode-ZIPs bleiben entfernte Dateien auf der Platte zurueck. Fuer Installationen, die **nicht** ueber Docker-Images erneuert werden, gibt es deshalb einen expliziten, nicht destruktiven Abgleich. Alte und neue Release-ZIPs zuerst in **zwei getrennte Verzeichnisse** entpacken. Die dritte Angabe ist die laufende Installation:
+Jedes Quellcode-Release traegt `wcm-source-manifest.json` mit Versionsnummer und SHA-256-Pruefsummen aller auslieferbaren JavaScript-/JSON-Fachmodule unter `public/js/`, `server/`, `shared/` und `worker/`. `npm run release:bump` erzeugt das Manifest; `npm run release:check` prueft, dass es zur ausgelieferten Version und den Dateien passt. Es enthaelt weder Nutzdaten noch private Schluessel.
+
+Fuer eine bereits installierte Version **mit** Manifest das neue ZIP in ein separates Verzeichnis entpacken und vor dem Ueberschreiben ausfuehren:
+
+```bash
+node scripts/upgrade-manifest.js /pfad/neues-release /pfad/installation
+# Nach Sichtpruefung optional:
+node scripts/upgrade-manifest.js /pfad/neues-release /pfad/installation --prune
+```
+
+Ohne `--prune` bleibt alles unveraendert. Nur laut **altem** Manifest enthaltene, nun entfernte Module mit unveraendertem Hash werden bei `--prune` geloescht. Lokal modifizierte Dateien, Symlinks, Bilder, Belege, `collection.json`, `warehouse.json` und private Verzeichnisse bleiben erhalten. Fuer alte Installationen **ohne** Manifest wird weiterhin der bisherige Vergleich zweier vollstaendiger Release-Verzeichnisse unterstuetzt:
 
 ```bash
 node scripts/upgrade-audit.js /pfad/alter-release /pfad/neuer-release /pfad/installation
 ```
 
-Der Befehl gibt drei Listen aus: `removable` (verwaiste, bytegleich alte Module), `changed` (seit dem alten Release veraenderte Module) und `absent` (bereits fehlend). Ohne weitere Option werden **keine Dateien geloescht**. Nach Kontrolle kann der Aufruf mit `--prune` ausschliesslich unveraenderte, entfallene Module unter `public/js/`, `server/`, `shared/` und `worker/` entfernen. Geaenderte Dateien und Symlinks werden nicht angeruehrt. Anschliessend das neue Release in die Installation kopieren. Bei Bedarf kann der Abgleich auch nach dem Kopieren erfolgen, solange die beiden Vergleichsverzeichnisse unveraendert sind.
-
-**Wichtig:** Die Pruefung uebernimmt nicht das Upgrade selbst und ersetzt kein Backup. `collection.json`, `warehouse.json`, Fotos, Belege, Konfiguration und Deploy-Verzeichnisse werden weder verglichen noch entfernt. Auf Docker-basierten Installationen ist die Datei-Abloesung durch das neue Image bereits sichergestellt. Niemals die alten und neuen Vergleichsverzeichnisse auf denselben Pfad setzen.
+Auch dieser bestehende Befehl prueft nur harmlose Modulpfade und loescht ausschliesslich mit explizitem `--prune`. Beide Werkzeuge ersetzen weder eine Datensicherung noch das eigentliche Kopieren des Releases. Fuer Docker-/Git-Upgrades sind diese ZIP-Sonderfaelle nicht notwendig.
 
 ### Release-Ablauf
 

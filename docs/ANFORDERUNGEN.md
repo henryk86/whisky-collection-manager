@@ -1,6 +1,6 @@
 # Funktions- und Anforderungsspezifikation – Whisky Collection Manager
 
-**Produktstand:** v1.0.1 · **Stand:** 16.11.2026 · **Datenformat:** `schemaVersion: 5`
+**Produktstand:** aktuelles Schema 5 · **Stand:** 16.11.2026 · **Datenformat:** `schemaVersion: 5`
 
 Dieses Dokument beschreibt den **aktuellen Funktionsumfang und die einzuhaltenden Regeln**. Es ersetzt den früheren Entwurf vom 05.11.2026, der teilweise noch React/TypeScript, XLSX-Export und eine externen Such-API als Planung enthielt. Für tatsächlich ausgeführte Tests gilt [TESTSTATUS.md](TESTSTATUS.md), für ältere technische Entscheidungen [TESTHISTORIE.md](TESTHISTORIE.md).
 
@@ -36,7 +36,7 @@ Es gibt keine zwingende Cloud, keine externe Datenbank und keinen Build-Schritt 
 - **Design:** Responsive Desktop-/Mobilansichten, Light/Dark Theme, einheitliche Icons. Mobile Eingaben und Dialoge dürfen auch bei schmalen Bildschirmen keinen horizontalen Überlauf auslösen. Das Erscheinungsbild der Sammlung ist Massstab: Inhaltsflaechen und Karten-/Formular-Panels in Analyse, Hilfe, Lager, Karte und Einstellungen verwenden einheitliche eckige Rahmen. Kleine Bedienelemente haben eine einheitliche, minimale Abrundung (2 px); absichtlich runde Elemente (Radio-Buttons, Kartensymbole, Kreischarts) behalten ihre Form. Die linke Bereichsnavigation ist pro Seite in ihrer Breite abgestimmt; lange Hilfe-Themen wechseln auf Tablets zum mobilen Auswahlfeld.
 - **Hilfe:** Eigene, direkt aufrufbare Hilfeseite (`/?view=help`) mit Hauptnavigationseintrag in beiden Sprachen. Allgemeine Bedienhinweise, Datenhaltung und Backupgrundlagen stehen dort; auf den Arbeitsseiten verbleiben nur notwendige Eingabehinweise und sicherheitsrelevante Warnungen. Desktop: gemeinsame Seitennavigation mit Analyse und gerader goldener Aktivmarkierung ohne gerundete Flaeche; kleinere Bildschirme: Auswahlfeld. Die Anleitungen stehen unverkuerzt in nummerierten Inhaltsabschnitten.
 
-### Interaktives Geschmacksprofil je Verkostung (v0.26.0)
+### Interaktives Geschmacksprofil je Verkostung
 
 - Jede Abfüllung besitzt **0–n eigenständige Verkostungen**. Jede Verkostung besitzt optional ein Geschmacksprofil mit acht Achsen und ganzzahligen Ausprägungen zwischen 0 und 10.
 - Achsen sind sprachneutral persistiert; die Anzeige übersetzt sie für Deutsch und Englisch. Insbesondere entspricht `feinty` der deutschen Beschriftung **„Alkoholisch“**.
@@ -73,7 +73,7 @@ Dashboard mit **sechs Unterseiten und 38 Auswertungen**: Sammlungsbestand, Herku
 
 Details der Kennzahlen: [ANALYSE.md](ANALYSE.md).
 
-### Eigenständige Verkostungen (ab v0.26.0)
+### Eigenständige Verkostungen
 
 - Eine Abfüllung hat 0–n einzeln datierte und unabhängige Verkostungen.
 - Jede Verkostung enthält Datum, optionalen Titel, Farbe, acht Geschmacksachsen,

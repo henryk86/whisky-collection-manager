@@ -1,4 +1,4 @@
-# Whisky Collection Manager v1.2.1
+# Whisky Collection Manager v1.3.0
 
 Lokale Webanwendung zur Verwaltung einer Whisky-Sammlung – von der Abfüllung über einzelne physische Flaschen bis zum Lagerfach. Eine Abfüllung kann mehrere Flaschen mit eigenen Inventarnummern, Zuständen, Fotos und Belegen enthalten.
 
@@ -7,6 +7,8 @@ Die Anwendung verwendet Node.js und Browser-ES-Module **ohne Datenbank und ohne 
 ## Entwicklung und Code-Reviews
 
 Die Anwendung wurde **vollständig durch ChatGPT programmiert**. Der Projektinitiator hat die Anforderungen formuliert und Korrekturen beziehungsweise Anpassungen angefordert, jedoch selbst keinen Anwendungscode geschrieben. Der Quellcode wird **regelmäßig mit Claude Code-Reviews unterzogen**.
+
+Die technische Architektur verwendet einen gemeinsamen DOM-Abgleich und zentrale Ereignisbehandlung. Schreibvorgaenge aktualisieren den lokalen Zustand ueber revisionsgepruefte API-Aenderungen; bei konkurrierenden Aenderungen werden die betroffenen Daten neu geladen. Quellcode-ZIP-Upgrades koennen mit einem SHA-256-Dateimanifest auf entfernte Altmodule geprueft werden, ohne die Sammlung, das Lager oder Medien anzutasten. Details: [Architektur](docs/ARCHITEKTUR.md), [API](docs/API.md) und [Release-Ablauf](docs/RELEASE_WORKFLOW.md).
 
 ## Funktionen
 

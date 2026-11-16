@@ -9,6 +9,7 @@ const WEB = path.resolve(fileURLToPath(new URL('../../public/', import.meta.url)
 const SHARED = path.resolve(WEB, '../shared');
 // Only browser-safe shared modules are served. Node-only backup modules stay private.
 const SHARED_BROWSER_FILES = new Set([
+    'resource-delta.js', 'warehouse-bottle-projection.js',
     'api-error-codes.js', 'flavor-profile.js', 'whisky-colors.js', 'tasting.js',
     'tasting-subject.js', 'tasting-records.js', 'standalone-tastings.js',
     'tasting-flights.js', 'photo-images.js', 'warehouse-compartments.js',

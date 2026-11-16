@@ -4,6 +4,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { DATA_DIR } from './paths.js';
 import { fail } from '../domain/errors.js';
+import { trackMutation } from '../domain/mutation-tracker.js';
 import { FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm } from '../../shared/warehouse-compartments.js';
 
 export const WAREHOUSE_FILE = path.join(DATA_DIR, 'warehouse.json');
@@ -128,7 +129,10 @@ export function changeWarehouse(mutator) {
     const task = pending.then(async () => {
         const data = readWarehouse();
         const result = await mutator(data);
+        const previous = warehouseCache;
+        const beforeEtag = warehouseETag();
         writeWarehouse(data);
+        trackMutation('warehouse', previous, data, beforeEtag, warehouseETag());
         return result;
     });
     pending = task.catch(() => {});

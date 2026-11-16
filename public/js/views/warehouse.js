@@ -320,7 +320,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
             label:t('warehouse.rooms.storageAreas'), switchKind:'warehouse',
             desktopClass:'warehouse-tabs',
         }, `<h2 class="analytics-section-title">${t(ROOM_SECTION_KEYS[section] || ROOM_SECTION_KEYS.overview)}</h2>${content}`);
-        shell(`<div class="analytics-page warehouse-page"><header class="section-head warehouse-heading"><div class="page-heading-copy"><span class="eyebrow dark">${t("warehouse.page.eyebrow")}</span><h2>${t("warehouse.page.title")}<span class="heading-period">.</span></h2><p class="intro">${esc(t('warehouse.page.intro'))}</p></div></header>${workspace}</div>`);
+        shell(`<div class="analytics-page warehouse-page" data-reconcile="replace"><header class="section-head warehouse-heading"><div class="page-heading-copy"><span class="eyebrow dark">${t("warehouse.page.eyebrow")}</span><h2>${t("warehouse.page.title")}<span class="heading-period">.</span></h2><p class="intro">${esc(t('warehouse.page.intro'))}</p></div></header>${workspace}</div>`);
         if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
             restoreWallScroll();
 

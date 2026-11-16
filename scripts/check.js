@@ -87,8 +87,6 @@ console.log(`${fixtureReferences.size} test fixture files: references OK.`);
 // lifecycles. All other application events belong in the delegated events.js.
 // A new direct binding in a view must be reviewed and listed here deliberately.
 const allowedViewListeners = new Map([
-    ['home.js', 5],              // Overview controls, recreated with each home render.
-    ['map.js', 8],               // Sidebar replaced in renderSidebar; map controls are local.
     ['warehouse.js', 12],       // SVG pointer/keyboard interactions and transient dialogs.
     ['warehouse-room-transfer.js', 9], // Modal-local import/export controls.
 ]);
@@ -110,3 +108,17 @@ process.stdout.write(i18nCheck.stdout);
 const docCheck = spawnSync(process.execPath, ['scripts/check-docs.js'], {encoding: 'utf8'});
 if (docCheck.status !== 0) throw new Error(docCheck.stderr || docCheck.stdout);
 process.stdout.write(docCheck.stdout);
+
+// B-5: Existing source-text assertions are a shrinking legacy budget.
+// New unit tests must verify observable behaviour rather than CSS/JS spelling;
+// increasing the existing budget or creating a new source-regex suite fails CI.
+const sourceRegexBudgets = JSON.parse(fs.readFileSync('scripts/source-regex-budgets.json','utf8'));
+for (const file of files('tests/unit')) {
+    const relative = path.relative('.', file).replaceAll(path.sep, '/');
+    const source = fs.readFileSync(file,'utf8');
+    const matches = (source.match(/\bassert\.(?:match|doesNotMatch)\s*\(/g) || []).length;
+    if (source.includes('readFileSync') && (source.includes('public/') || source.includes("'../")) && matches > (sourceRegexBudgets[relative] || 0)) {
+        throw new Error(`New source-text regex assertions forbidden in ${relative}: ${matches} > ${sourceRegexBudgets[relative] || 0}. Use runtime/Chromium checks.`);
+    }
+}
+console.log('No new source-regex unit assertions (existing legacy budget only decreases).');

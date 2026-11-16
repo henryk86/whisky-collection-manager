@@ -116,6 +116,7 @@ test('release:bump updates the test status and archives old results without clai
         fs.mkdirSync(path.join(temp, 'scripts'));
         fs.mkdirSync(path.join(temp, 'docs'));
         fs.copyFileSync('scripts/release-version.js', path.join(temp, 'scripts/release-version.js'));
+        fs.copyFileSync('scripts/release-manifest.js', path.join(temp, 'scripts/release-manifest.js'));
         fs.writeFileSync(path.join(temp, 'package.json'), JSON.stringify({type: 'module', version: '0.16.11'}));
         fs.writeFileSync(path.join(temp, 'package-lock.json'), JSON.stringify({version: '0.16.11', packages: {'': {version: '0.16.11'}}}));
         fs.writeFileSync(path.join(temp, 'README.md'), '# Whisky Collection Manager v0.16.11\n');

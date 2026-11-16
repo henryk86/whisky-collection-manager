@@ -1,6 +1,6 @@
 # Architektur und Orientierung
 
-**Stand:** v1.2.1 (Shared-Module, HTTP-Cache, Schema 5 und gepruefte DOM-Regionen). Dieses Dokument beschreibt die eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
+**Stand:** Ein einheitlicher DOM-Abgleich, direkte Mutationsantworten mit Datenrevisionen, Shared-Module, HTTP-Caches und Schema 5. Dieses Dokument beschreibt die eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
 
 ## Grundprinzipien
 
@@ -50,21 +50,24 @@ Benutzeraktion
   -> Feature-Controller / Lager-Controller
   -> public/js/api.js
   -> Server-API
-  -> UI-Zustand aktualisieren / Daten erneut laden
-  -> passende View rendern
+  -> serverseitige Aenderungen mit Basis- und Zielrevision liefern
+  -> lokalen Zustand nur bei passender Basisrevision fortschreiben, sonst sicher neu laden
+  -> View mit generischem DOM-Abgleich aktualisieren
 ```
 
 ### Fehler- und DOM-Ereignislebenszyklus
 
 Der DOM-Abgleich in `public/js/ui/dom-reconcile.js` verwendet Fotokachel-IDs nur fuer Elemente mit `data-photo-tile`. Aktionsschaltflaechen (`data-act`), auch wenn sie `data-photo-id` tragen, erhalten keinen Fotokachel-Key; sonst koennen mehrere Geschwister denselben Key bekommen und sich gegenseitig verdraengen. Der Verhaltenstest `dom-reconcile-photo.test.js` prueft diesen Fall.
 
-`public/app.js` ruft Mutationen ueber `ui/action-result.js` auf und liefert ausdruecklich `{ok:true,value}` bzw. `{ok:false,error}`. Eine erfolgreiche Mutation muss die Sammlung und das Lager erneut laden koennen, bevor eine View navigiert, ein Modal schliesst oder einen Erfolg meldet. Bei API- oder Ladefehlern wird der Fehler angezeigt und die aufrufende Funktion prueft `ok` statt einem falsy API-Ergebnis zu vertrauen. Destruktive Bestaetigungen bleiben bei Fehlschlag offen; `events.js` verhindert Mehrfachausloesung waehrend laufender Bestaetigung.
+`public/app.js` fuehrt Mutationen als explizite `{ok:true,value}` bzw. `{ok:false,error}` aus. Ein gescheiterter Aufruf darf keine Erfolgsmeldung, Navigation oder Dialogschliessung ausloesen; waehrend laufender Bestaetigungen werden doppelte Aktionen verhindert.
 
-Normale DOM-Eingaben werden auf dem stabilen Root in `events.js` delegiert. `scripts/check.js` lehnt neue Direktlistener in `views/` ab, sofern sie nicht explizit geprueft und der Ausnahmeliste hinzugefuegt werden. Fuer `home.js`, `map.js` und die Lager-Views bestehen begruendete Alt-Ausnahmen mit lokalem Widget-/Modal-Lebenszyklus. `detail.js` bindet keine Upload-Listener direkt an bei Teilrendern erhaltene Elemente. Die Detailseite sowie die Einstellungen, Hilfe und Verkostungsuebersichten nutzen `ui/dom-reconcile.js` anstelle des alten `outerHTML`-Sonderabgleichs. Nur Ansichten mit delegierten Bedienelementen nehmen daran teil. Die Verkostungseditoren und Flight-Drag-Oberflaechen sowie Startseite, Karte und Lager behalten vorerst ihren lokalen Render-/Widget-Lebenszyklus; ein opt-in ohne gesonderte Browserpruefung ist nicht zulaessig.
+Alle regulaeren Views benutzen den zentralen DOM-Abgleich (`public/js/ui/dom-reconcile.js`). Er behaelt gleichartige, stabil adressierbare Elemente bei Aktualisierungen bei und verhindert damit Fokusverlust und Scrollspruenge. `events.js` delegiert die normalen Klick-, Eingabe- und Aenderungsereignisse. Startseite und Karte nutzen keine direkt am Render gebundenen Eventhandler mehr. Interaktive Karten-, 3D-, Pointer-/Drag- und kurzlebige Modal-Widgets deklarieren ihren eigenen Knoten mit `data-reconcile="replace"`: Beim Austausch wird ihr Widget-Lebenszyklus neu aufgebaut, ohne ihre alten Eventhandler an weiterverwendete Knoten zu haengen. Die verbleibenden lokalen Listener sind in `scripts/check.js` ausdruecklich begrenzt und muessen beim Refactoring erneut geprueft werden. Aktionsbuttons mit einer `data-photo-id` sind keine gleichartigen Schluessel wie Fotokacheln; das verhindert verlorene Editorbuttons.
 
 ### HTTP-Revalidierung statischer Dateien
 
-`server/http/static-files.js` setzt Dateivalidatoren (`ETag`, `Last-Modified`). Bei passenden `If-None-Match`-/`If-Modified-Since`-Bedingungen antwortet der Server mit `304 Not Modified` ohne erneute Dateiunterschiebung. Nicht versionierte statische Dateien (insbesondere die derzeitigen `/ai/vendor/`- und `/ai/models/`-URLs) verwenden `Cache-Control: no-cache` und muessen vor Wiederverwendung revalidiert werden. Fuer eindeutig hash- oder versionierte `/ai/`-Pfade ist eine immutable Langzeitablage moeglich. Die API liefert fuer `GET /api/collection` und `GET /api/warehouse` revidierte ETags und `304` auf passende `If-None-Match`-Header. Der Browser laedt nach Mutationen erneut, nutzt aber bei unveraenderten Versionen seinen JSON-Cache. Verkostungsaktionen und Fotoreihenfolge aktualisieren nur die Sammlung, ohne den unveraenderten Lager-Cache ueber HTTP anzufordern; nicht klassifizierte Mutationen laden weiterhin beide Ressourcen. Beide Stores halten validierte Kopien im Arbeitsspeicher und erkennen extern ersetzte Dateien; Restore invalidiert beide Caches.
+`server/http/static-files.js` versieht statische Dateien mit `ETag` und `Last-Modified` und beantwortet bedingte Zugriffe mit `304 Not Modified`. Nicht eindeutig hashversionierte Assets bleiben revalidierungspflichtig. Auch `GET /api/collection` und `GET /api/warehouse` liefern ETags. Beide Stores halten validierte, gegen unbeabsichtigte Aenderungen isolierte Lesecaches; Schreibvorgaenge und Restore aktualisieren diese, extern ersetzte Dateien werden erkannt.
+
+**Inkrementeller Mutationsdatenfluss (B-2):** Der Server sammelt mit `server/domain/mutation-tracker.js` alle Aenderungen eines HTTP-Schreibvorgangs in dessen asynchronem Kontext. Nur Clients, die `X-WCM-State-Delta: 1` senden, erhalten zusaetzlich zu ihrem fachlichen Ergebnis ID-basierte Aenderungen mit `before`-/`after`-Revision. Bestehende API-Clients ohne diesen Header erhalten unveraendert die bisherigen Antworten. `shared/resource-delta.js` rekonstruiert nur bekannte Felder und verifiziert Mengen und Reihenfolge. Der Browser uebernimmt diese Aenderungen ausschliesslich, wenn der letzte validierte Cache genau die erwartete `before`-Revision hat. Andernfalls wird der betroffene Cache verworfen und die vollstaendige Ressource erneut angefordert. Mutationen der Sammlung oder des Lagers aktualisieren so die jeweils betroffenen Ressourcen ohne pauschalen Komplett-GET. Die Lager-Flaschenprojektion wird nach einer Sammlungsaktualisierung aus den fachlichen Referenzen im Client neu abgeleitet, ohne `warehouse.json` zu veraendern. Bei externem Restore, Mehrprozessbetrieb oder abweichenden Revisionen geht Korrektheit vor Netzwerkeinsparung.
 
 `public/js/state.js` hält den flüchtigen Zustand (Route, Auswahl, Filter, Dialoge). Der Router in `public/js/navigation/` trennt URL/History, Seitenwechsel und Scrollverhalten. Views generieren HTML und rufen keine persistenten JSON-Schreibvorgänge auf.
 
