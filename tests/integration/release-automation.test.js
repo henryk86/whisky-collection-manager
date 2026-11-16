@@ -224,6 +224,12 @@ test('adoption cutover works even if main and develop already share the same ver
     assert.equal(result.legacyTransition,false);
     assert.equal(result.level,'patch');
     assert.equal(result.ignoredLegacyCommits,1);
+    // The main-only commit removing the automation script is not introduced
+    // by the develop-side merge; it must never be classified or counted.
+    assert.deepEqual(result.commits.map(c=>c.subject),[
+        'fix: post-cutover change',
+        'chore: introduce release automation'
+    ]);
     assert.equal(result.version,'1.4.1');
 });
 

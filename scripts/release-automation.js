@@ -106,18 +106,22 @@ export function planRelease({head='HEAD',requireMerge=true}={}) {
     // During the transition, the checked-in 1.4.0 may be newer than the
     // latest reachable tag. Never downgrade it to a 1.3.x release.
     const current=latest && compareVersions(latest.version,baseline)>0 ? latest.version : baseline;
-    // If no tags exist (one-time transition), limit to commits introduced by this main merge.
+    // Consider only commits introduced by develop (second merge parent), never
+    // main-only commits already present before the merge. --topo-order matters:
+    // multiple Git commits can share a timestamp, so date ordering alone makes
+    // the historical policy cutover index nondeterministic across machines.
     const from=latest?.anchor || parents[0];
     if(!from || !isAncestor(from,sha) || from===sha) throw new Error('Kein neuer develop-Stand seit dem letzten Release.');
-    let commits=parseGitLog(git('log','--no-merges','--format=%H%x00%s%x00%b%x00',`${from}..${sha}`));
+    let commits=parseGitLog(git('log','--topo-order','--no-merges',
+        '--format=%H%x00%s%x00%b%x00',`${parents[0]}..${parents[1]}`));
     let ignoredLegacyCommits=0;
     if(introducingAutomation) {
         // On the first main merge, the range still contains commits created
         // before Conventional Commits were required. Do NOT rewrite history or
         // silently exempt commits made after the automation was introduced.
         // The commit which first adds this script is the exact policy cutover.
-        const additions=git('log','--diff-filter=A','--reverse','--format=%H',
-            `${from}..${sha}`,'--','scripts/release-automation.js').split(/\s+/).filter(Boolean);
+        const additions=git('log','--topo-order','--diff-filter=A','--reverse','--format=%H',
+            `${parents[0]}..${parents[1]}`,'--','scripts/release-automation.js').split(/\s+/).filter(Boolean);
         if(additions.length!==1) throw new Error('Der Einfuehrungs-Commit der Release-Automatik ist nicht eindeutig ermittelbar.');
         const cutoverIndex=commits.findIndex(commit=>commit.sha===additions[0]);
         if(cutoverIndex<0) throw new Error('Der Einfuehrungs-Commit muss ein eigener Nicht-Merge-Commit sein.');
