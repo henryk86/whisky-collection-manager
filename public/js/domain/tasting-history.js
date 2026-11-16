@@ -1,5 +1,5 @@
 import { cloneFlavor } from './flavor-history.js';
-import { normalizeTastingNotes } from '../../../shared/tasting.js';
+import { normalizeTastingNotes } from './tasting.js';
 export function cloneTasting(value) {
     return {flavorProfile:cloneFlavor(value.flavorProfile), tastingNotes:normalizeTastingNotes(value.tastingNotes),
         rating:value.rating ?? null, whiskyColor:value.whiskyColor ?? null};

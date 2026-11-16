@@ -34,7 +34,7 @@ test('shared section navigation escapes all external values', () => {
 });
 
 test('analysis and help render the same workspace and preserve their own content', () => {
-    const state = {collection:{schemaVersion:5,distilleries:[],bottlings:[]},
+    const state = {collection:{schemaVersion:4,distilleries:[],bottlings:[]},
         analyticsFilters:{},analyticsPeriod:'month',selected:'overview'};
     let analysis = '';
     createAnalyticsView({state,shell:html => {analysis=html;}})();

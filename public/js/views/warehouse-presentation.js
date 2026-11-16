@@ -1,4 +1,4 @@
-import { displayedTastingRating } from '../../../shared/tasting-records.js';
+import { displayedTastingRating } from '../domain/tasting-records.js';
 /** Warehouse presentation helpers: pure HTML/SVG fragments and display labels.
  * No API writes, navigation or modal state. The controller is in warehouse.js.
  */
@@ -7,7 +7,7 @@ import { escapeHtml as esc } from '../ui/dom.js';
 import { imageUrl } from '../ui/format.js';
 import { routeUrl } from '../navigation/routes.js';
 import { t, formatNumber } from '../i18n/index.js';
-import { shelfLevels, effectiveShelfFront, visibleShelfFront, doorRangeForIndex, furnitureHeight } from '../../../shared/warehouse-compartments.js';
+import { shelfLevels, effectiveShelfFront, visibleShelfFront, doorRangeForIndex, furnitureHeight } from '../domain/warehouse-compartments.js';
 
 // Stable semantic keys, explicitly mapped from persisted domain codes.
 // Never construct a translation key from a translated display label.

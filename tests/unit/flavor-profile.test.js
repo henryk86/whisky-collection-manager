@@ -1,24 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {normalizeBottling} from '../../server/domain/normalization.js';
-import {normalizeTastingRecord} from '../../shared/tasting-records.js';
-import {FLAVOR_AXES, normalizeFlavorProfile} from '../../shared/flavor-profile.js';
+import {FLAVOR_AXES, normalizeFlavorProfile} from '../../public/js/domain/flavor-profile.js';
 import {flavorChart, flavorPolygon} from '../../public/js/ui/flavor-profile.js';
 import german from '../../public/locales/de.json' with {type:'json'};
 import english from '../../public/locales/en.json' with {type:'json'};
 
 const profile = Object.fromEntries(FLAVOR_AXES.map((key,i) => [key,i]));
-test('flavor profile is owned by a dated tasting, not by the bottling', () => {
-    const value = normalizeTastingRecord({tastedOn:'2026-11-15',flavorProfile:profile});
+test('bottling flavor profile persists all eight language-independent values, without affecting physical bottle properties', () => {
+    const value = normalizeBottling({name:'Sample',distilleryIds:[],flavorProfile:profile});
     assert.deepEqual(value.flavorProfile,profile);
-    assert.deepEqual(normalizeTastingRecord({rating:88},value).flavorProfile,profile);
-    assert.equal(normalizeTastingRecord({flavorProfile:null},value).flavorProfile,null);
-    assert.throws(()=>normalizeBottling({name:'Sample',flavorProfile:profile}));
+    assert.deepEqual(normalizeBottling({name:'Updated'},value).flavorProfile,profile);
+    assert.equal(normalizeBottling({name:'Updated',flavorProfile:null},value).flavorProfile,null);
+    assert.equal(value.bottles,undefined);
 });
 test('flavor values must be complete integer scales 0 through 10; malformed objects cannot enter collection', () => {
     for (const invalid of [{woody:5},{...profile,woody:11},{...profile,peaty:-1},{...profile,fruity:'3'},{...profile,winey:2.5},{...profile,unexpected:3},[]]) {
         assert.throws(() => normalizeFlavorProfile(invalid));
-        assert.throws(() => normalizeTastingRecord({tastedOn:'2026-11-15',flavorProfile:invalid}));
+        assert.throws(() => normalizeBottling({name:'Sample',flavorProfile:invalid}));
     }
     assert.deepEqual(normalizeFlavorProfile(Object.fromEntries(FLAVOR_AXES.map(key=>[key,10]))),Object.fromEntries(FLAVOR_AXES.map(key=>[key,10])));
 });

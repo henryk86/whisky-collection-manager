@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { furnitureBounds, furnitureOverlap, furnitureCollision, furnitureFitsRoom, moveFurnitureTowards } from '../../shared/warehouse-placement.js';
+import { furnitureBounds, furnitureOverlap, furnitureCollision, furnitureFitsRoom, moveFurnitureTowards } from '../../public/js/domain/warehouse-placement.js';
 
 const furniture = (id, x, y, extra = {}) => ({id, name:id, type:'schrank', x, y, width:1, depth:1,
     rotation:0, elevation:0, itemHeight:1.8, ...extra});

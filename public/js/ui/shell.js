@@ -1,7 +1,6 @@
 import { t } from '../i18n/index.js';
 import { newBottlingIcon, inventoryScanIcon, themeMoonIcon } from './action-icons.js';
 import { MAIN_PAGES } from '../navigation/pages.js';
-import { reconcileChildren } from './dom-reconcile.js';
 export function createShell({ root, state, applyTheme, renderModal }) {
     let displayedRoute = null;
     function shell(content) {
@@ -15,10 +14,36 @@ export function createShell({ root, state, applyTheme, renderModal }) {
             const scrollY = typeof window !== 'undefined' ? window.scrollY : null;
             const next = document.createElement('template');
             next.innerHTML = content;
-            if (main.hasAttribute('data-live-regions')) {
-                // Only pages with delegated handlers opt in: other pages rebuild
-                // controls with view-local lifecycle hooks after each render.
-                reconcileChildren(main, next.content);
+            if (state.page === 'detail' && main.children.length === next.content.children.length) {
+                // Only replace changed top-level detail sections. The cover
+                // picture and tasting section remain mounted when a physical
+                // photo/file changes, avoiding a visible image-size collapse.
+                const previous = [...main.children];
+                const incoming = [...next.content.children];
+                for (let i = 0; i < incoming.length; i++) {
+                    if (previous[i].outerHTML !== incoming[i].outerHTML) {
+                        const oldHero = previous[i].querySelector('.detail-summary-grid .hero-photo');
+                        const newHero = incoming[i].querySelector('.detail-summary-grid .hero-photo');
+                        if (oldHero && newHero && newHero.querySelector('img')) {
+                            // When the first photo changes, keep the old image
+                            // area stable until its replacement is decoded.
+                            const previousStyle = newHero.getAttribute('style');
+                            newHero.style.minHeight = `${oldHero.getBoundingClientRect().height}px`;
+                            const image = newHero.querySelector('img');
+                            const done = () => {
+                                if (previousStyle === null) newHero.removeAttribute('style');
+                                else newHero.setAttribute('style', previousStyle);
+                            };
+                            if (image.complete && image.naturalWidth) {
+                                requestAnimationFrame(done);
+                            } else {
+                                image.addEventListener('load', done, {once:true});
+                                image.addEventListener('error', done, {once:true});
+                            }
+                        }
+                        previous[i].replaceWith(incoming[i]);
+                    }
+                }
             } else {
                 main.replaceChildren(next.content);
             }
@@ -60,7 +85,7 @@ export function createShell({ root, state, applyTheme, renderModal }) {
           <svg class="${item.navClass || ''}" viewBox="${item.viewBox || '0 0 24 24'}" fill="${item.filled?'currentColor':'none'}" stroke="${item.filled?'none':'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${item.icon}</svg>${item.label}
         </a>`).join('')}</nav>
     </aside>
-    <main${state.page === 'detail' ? ' data-live-regions' : ''}>${content}</main>
+    <main>${content}</main>
     <footer class="site-footer">
     <span>${t("ui.branding.whiskyCollection")}</span>
     <span>${t('ui.shell.footer', {version: state.version ? `v${state.version}` : t('ui.status.unknownVersion')})}</span>

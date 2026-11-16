@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createTranslator, initializeLanguage, t } from '../../public/js/i18n/index.js';
 import { httpResponseError, request } from '../../public/js/api.js';
-import { apiErrorCode } from '../../shared/api-error-codes.js';
+import { apiErrorCode } from '../../public/js/i18n/api-error-codes.js';
 import { jobErrorText } from '../../public/js/i18n/job-errors.js';
 import { publicErrorResponse } from '../../server/domain/public-error-response.js';
 import { fail } from '../../server/domain/errors.js';

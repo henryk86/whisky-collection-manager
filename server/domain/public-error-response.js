@@ -1,5 +1,5 @@
 import english from '../../public/locales/en.json' with { type: 'json' };
-import { apiErrorCode } from '../../shared/api-error-codes.js';
+import { apiErrorCode } from '../../public/js/i18n/api-error-codes.js';
 
 const dynamicErrors = [
     [/^Ungültige Zahl: (.+)$/, 'api.errors.invalidNumberField', ['field']],

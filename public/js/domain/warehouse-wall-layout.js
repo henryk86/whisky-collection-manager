@@ -1,4 +1,4 @@
-import { furnitureHeight } from '../../../shared/warehouse-compartments.js';
+import { furnitureHeight } from './warehouse-compartments.js';
 import { furnitureFootprint } from './warehouse-3d-model.js';
 
 /** Flatten four facing directions into adjacent front elevations. Furniture

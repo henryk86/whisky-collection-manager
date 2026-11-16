@@ -6,7 +6,7 @@ import {toast} from '../../ui/notifications.js';
 import {PHOTO_ADJUSTMENT_GROUPS, EMPTY_PHOTO_ADJUSTMENTS,
     adjustPhotoPixels, autoPhotoAdjustments, validatePhotoAdjustments,
     resetPhotoAdjustmentGroup, whiteBalanceFromArea} from './adjustments.js';
-import {basePhotoPath, editorPhotoSourceSettings} from '../../../../shared/photo-images.js';
+import {basePhotoPath, editorPhotoSourceSettings} from '../../domain/photo-images.js';
 import {cutoutImage} from '../cutout/image.js';
 import {MIN_PREVIEW_ZOOM, MAX_PREVIEW_ZOOM, clampPreviewZoom, zoomAroundPoint, constrainPreviewPan} from './preview-zoom.js';
 import {DEFAULT_MASK_BRUSH_SIZE, paintMaskSegment, applyMaskStrokes} from './mask-brush.js';

@@ -20,7 +20,7 @@ function detailHtml(tastings=[]) {
 
 test('detail-page new tasting is above the summary card, matching another bottle',()=>{
     const html=detailHtml();
-    const section=html.match(/<section[^>]*class="section tasting-summary"[\s\S]*?<\/section>/)?.[0];
+    const section=html.match(/<section class="section tasting-summary"[\s\S]*?<\/section>/)?.[0];
     assert.ok(section);
     const heading=section.match(/<div class="section-head">[\s\S]*?<\/div>/)?.[0];
     assert.match(heading,/data-act="tastings-new"[^>]*><svg class="new-icon"/);

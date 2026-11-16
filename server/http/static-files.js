@@ -6,14 +6,6 @@ import { fileURLToPath } from 'node:url';
 import { ROOT, IMAGE_DIR } from '../storage/paths.js';
 import { fail } from '../domain/errors.js';
 const WEB = path.resolve(fileURLToPath(new URL('../../public/', import.meta.url)));
-const SHARED = path.resolve(WEB, '../shared');
-// Only browser-safe shared modules are served. Node-only backup modules stay private.
-const SHARED_BROWSER_FILES = new Set([
-    'api-error-codes.js', 'flavor-profile.js', 'whisky-colors.js', 'tasting.js',
-    'tasting-subject.js', 'tasting-records.js', 'standalone-tastings.js',
-    'tasting-flights.js', 'photo-images.js', 'warehouse-compartments.js',
-    'warehouse-placement.js', 'photo-adjustments.js'
-]);
 function decodePath(encoded) {
     try { return decodeURIComponent(encoded); }
     catch (error) {
@@ -94,11 +86,7 @@ export async function serveStatic(req, res, url) {
         if (!fs.existsSync(vendor)) throw fail('Three.js fehlt. Bitte npm ci ausführen.',503);
         return streamStatic(req, res, vendor, 'text/javascript; charset=utf-8', 'public, max-age=3600');
     }
-    if (url.pathname.startsWith('/shared/')) {
-        const name = decodePath(url.pathname.slice('/shared/'.length));
-        if (!SHARED_BROWSER_FILES.has(name)) throw fail('Datei nicht gefunden', 404);
-        file = path.join(SHARED, name);
-    } else if (url.pathname.startsWith('/images/')) {
+    if (url.pathname.startsWith('/images/')) {
         const name = decodePath(url.pathname.slice(1));
         file = path.resolve(ROOT, name);
         if (!file.startsWith(IMAGE_DIR + path.sep)) throw fail('Ungültiger Bildpfad', 403);

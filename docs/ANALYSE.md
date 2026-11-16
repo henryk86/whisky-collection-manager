@@ -15,7 +15,7 @@ Die Unterseiten werden am Desktop ueber eine **linke Seitennavigation** gewechse
 | Entwicklung & Verkostung | `timeline` | 28–34 |
 | Datenqualität | `quality` | 35–38 |
 
-Die zentrale Auswertung liegt in `public/js/domain/analytics.js` (reine Berechnungen). Die Darstellung in `public/js/views/analytics.js` wird durch `public/styles/analytics.css` gestaltet. Die bestehende Sammlung (`schemaVersion: 5`) wird nur gelesen; weder Datenmigration noch neue serverseitige Abhängigkeiten sind erforderlich.
+Die zentrale Auswertung liegt in `public/js/domain/analytics.js` (reine Berechnungen). Die Darstellung in `public/js/views/analytics.js` wird durch `public/styles/analytics.css` gestaltet. Die bestehende Sammlung (`schemaVersion: 4`) wird nur gelesen; weder Datenmigration noch neue serverseitige Abhängigkeiten sind erforderlich.
 
 ## Filter und Navigation
 
@@ -44,6 +44,6 @@ Nicht erfasste Werte werden als unbekannt gekennzeichnet oder von einem Mittelwe
 
 ## Qualitätssicherung
 
-Die Unit-Tests liegen in `tests/unit/analytics.test.js`, `tests/unit/analytics-origin.test.js` und `tests/unit/analytics-period.test.js`. Der Browser-Regressionstest liegt in `tests/browser/map-analytics.test.js`; er muss in GitHub Actions mit Playwright ausgeführt werden. Der aktuelle Ergebnisstand ist in [TESTSTATUS.md](TESTSTATUS.md) dokumentiert.
+Die Unit-Tests liegen in `tests/unit/analytics.test.js`, `tests/unit/analytics-origin.test.js` und `tests/unit/analytics-period.test.js`. Der Browser-Regressionstest liegt in `tests/browser/app.test.js`; er muss in GitHub Actions mit Playwright ausgeführt werden. Der aktuelle Ergebnisstand ist in [TESTSTATUS.md](TESTSTATUS.md) dokumentiert.
 
 **Layout ab v0.15.0:** Die Seite nutzt die volle Inhaltsbreite des gemeinsamen `main` (wie Sammlung, Einstellungen und Landkarte) ohne zusätzliche horizontale Seitenränder im `.analytics-page`-Wrapper.

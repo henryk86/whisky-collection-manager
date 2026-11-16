@@ -198,7 +198,7 @@ Der 2D-Raumplan zeigt ein nicht-interaktives Raster mit Linien im Abstand von 0,
 
 - `public/js/views/warehouse.js`: Getrennte Teilansichten für Raumpläne (Raumgeometrie und 2D/3D-Positionierung) und Regale & Fächer (Möbel- und Fachverwaltung, Flaschen-Umlagerung), gemeinsame Auswahl- und Speichervorgänge.
 - `public/js/views/warehouse-presentation.js`: reine HTML- und SVG-Darstellung einschließlich Fachlisten und Grundriss.
-- `shared/warehouse-compartments.js` und `shared/warehouse-placement.js`: gemeinsame browserunabhängige Fachhöhen-, Möbeltyp- und Kollisionsregeln für Browser und Server.
+- `public/js/domain/warehouse-compartments.js` und `warehouse-placement.js`: gemeinsame browserunabhängige Fachhöhen-, Möbeltyp- und Kollisionsregeln für Browser und Server.
 - `server/domain/warehouse-fields.js`: Normalisierung und Prüfung eingehender Fach- und Möbelwerte.
 - `server/services/warehouse.js`: atomare Anwendungsfälle für Raum-, Möbel-, Fach- und Flaschenzuordnungen.
 - `server/storage/warehouse-store.js`: Validierung und persistenter Dateiersatz.

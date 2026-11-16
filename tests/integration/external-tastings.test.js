@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {startTestServer,requestJson as api} from '../helpers/server.js';
-import {normalizeTastingSubject} from '../../shared/tasting-subject.js';
+import {normalizeTastingSubject} from '../../public/js/domain/tasting-subject.js';
 import {parseRoute,routeUrl} from '../../public/js/navigation/routes.js';
 
 const day='2026-11-15';
@@ -26,7 +26,7 @@ test('one standalone tasting is one record; it does not create an inventory or s
         assert.equal((await api(server.base,`${ownedEndpoint}/${firstId}`)).status,404);
         let data=(await api(server.base,'/api/collection')).data;
         assert.equal(data.bottlings.length,1);
-        assert.equal(data.bottlings[0].tastings[0].rating,93);
+        assert.equal(data.bottlings[0].rating,93);
         assert.equal(data.externalTastings.length,2);
         assert.equal(data.tastingBottlings,undefined);
         assert.equal(data.externalTastings[0].bottling.name,'Tasted elsewhere');
@@ -50,7 +50,7 @@ test('one standalone tasting is one record; it does not create an inventory or s
         data=(await api(server.base,'/api/collection')).data;
         assert.equal(data.externalTastings.length,1);
         assert.equal(data.externalTastings[0].id,second.data.id);
-        assert.equal(data.bottlings[0].tastings[0].rating,93,'deleting standalone must not affect collection');
+        assert.equal(data.bottlings[0].rating,93,'deleting standalone must not affect collection');
     } finally {await server.stop();}
 });
 
@@ -94,7 +94,7 @@ test('standalone tasting can be assigned once to an existing owned bottling with
         assert.equal(target.tastings[0].createdAt,created.data.createdAt);
         for (const key of ['tastedOn','title','rating','whiskyColor','flavorProfile','tastingNotes'])
             assert.deepEqual(target.tastings[0][key],created.data[key],`${key} must not change`);
-        assert.equal(target.tastings[0].rating,92);
+        assert.equal(target.rating,92);
         assert.equal(collection.bottlings.find(b=>b.id===second.id).tastings.length,0);
         assert.equal((await api(server.base,apiPath,'POST',{bottlingId:owned.id})).status,404,'no double assignment');
         assert.equal((await api(server.base,`/api/bottlings/${owned.id}/tastings/${id}`)).status,200);
@@ -113,6 +113,6 @@ test('attaching an older standalone tasting does not replace the latest owned ra
         assert.equal(assigned.status,200);
         const target=(await api(server.base,'/api/collection')).data.bottlings.find(x=>x.id===owned.id);
         assert.equal(target.tastings.length,2);
-        assert.equal(target.tastings.find(t=>t.tastedOn==='2026-11-15').rating,89,'latest by tasting date is still authoritative');
+        assert.equal(target.rating,89,'latest by tasting date is still authoritative');
     } finally {await server.stop();}
 });

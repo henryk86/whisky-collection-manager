@@ -2,7 +2,7 @@
  * scale across every furniture item. Opposing floor-plan orientations do not
  * rotate the fronts or change their displayed sizes.
  */
-import { furnitureHeight, shelfLevels, visibleShelfFront } from '../../../shared/warehouse-compartments.js';
+import { furnitureHeight, shelfLevels, visibleShelfFront } from '../domain/warehouse-compartments.js';
 import { wallFurnitureGroups } from '../domain/warehouse-wall-layout.js';
 import { renderUnassignedTray } from './warehouse-unassigned-tray.js';
 import { unassignedWallPage } from '../domain/warehouse-unassigned-tray.js';

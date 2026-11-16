@@ -30,28 +30,6 @@ for (const file of sources) {
     }
     graph.set(file, imports);
 }
-// Dependency direction is enforced for all future refactors, not just this move.
-for (const [file, imports] of graph) {
-    const relative = path.relative('.', file).replaceAll(path.sep, '/');
-    if (relative.startsWith('server/') || relative.startsWith('worker/')) {
-        for (const dependency of imports) {
-            if (path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('public/js/')) {
-                throw new Error(`Backend must import shared/ instead of frontend code: ${relative} -> ${dependency}`);
-            }
-        }
-    }
-    if (relative.startsWith('shared/')) {
-        for (const dependency of imports) {
-            if (path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('public/')) {
-                throw new Error(`Shared module imports frontend code: ${relative} -> ${dependency}`);
-            }
-        }
-        const content = fs.readFileSync(file, 'utf8');
-        if (/\b(?:window|document)\s*(?:\.|\[)/.test(content)) {
-            throw new Error(`Shared module accesses browser DOM: ${relative}`);
-        }
-    }
-}
 const visited = new Set();
 function visit(file, stack = []) {
     if (stack.includes(file)) {

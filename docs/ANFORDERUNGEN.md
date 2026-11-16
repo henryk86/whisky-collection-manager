@@ -1,6 +1,6 @@
 # Funktions- und Anforderungsspezifikation – Whisky Collection Manager
 
-**Produktstand:** v1.0.0 · **Stand:** 16.11.2026 · **Datenformat:** `schemaVersion: 5`
+**Produktstand:** v0.23.2 · **Stand:** 14.11.2026 · **Datenformat:** `schemaVersion: 4`
 
 Dieses Dokument beschreibt den **aktuellen Funktionsumfang und die einzuhaltenden Regeln**. Es ersetzt den früheren Entwurf vom 05.11.2026, der teilweise noch React/TypeScript, XLSX-Export und eine externen Such-API als Planung enthielt. Für tatsächlich ausgeführte Tests gilt [TESTSTATUS.md](TESTSTATUS.md), für ältere technische Entscheidungen [TESTHISTORIE.md](TESTHISTORIE.md).
 
@@ -14,7 +14,7 @@ Es gibt keine zwingende Cloud, keine externe Datenbank und keinen Build-Schritt 
 
 | Objekt | Struktur und wesentliche Felder | Fachregel |
 | --- | --- | --- |
-| Sammlung | `schemaVersion: 5`, `settings`, `reservedInventoryNumbers`, `distilleries[]`, `bottlings[]` | Eine zentrale, atomar gespeicherte `collection.json` |
+| Sammlung | `schemaVersion: 4`, `settings`, `reservedInventoryNumbers`, `distilleries[]`, `bottlings[]` | Eine zentrale, atomar gespeicherte `collection.json` |
 | Destillerie | `id`, `name`, optional `country`, `region`, `status`, `latitude`, `longitude` | Stammdaten und geografische Herkunft; benutzerdefinierte Positionen haben Vorrang |
 | Abfüllung | `id`, `distilleryIds[]`, `name`, `bottler`, `whiskyType`, `ageYears`, `abv`, Nenn-`volumeMl`, Fass- und Jahrgangsangaben, WB-ID / Quellenlink, `completionStatus`, `bottles[]`, `tastings[]` | Eine Abfüllung kann mehrere beteiligte Destillerien und beliebig viele physische Flaschen haben |
 | Physische Flasche | `id`, `inventoryNumber`, `volumeType`, `volumeMl`, `status`, Preise/Kaufdaten, Öffnungsdatum, `photos[]`, `files[]` | Individuelle Eigenschaften liegen **nur** an dieser konkreten Flasche |
@@ -24,7 +24,7 @@ Es gibt keine zwingende Cloud, keine externe Datenbank und keinen Build-Schritt 
 - Die Inventarnummer ist ein eindeutiger **String**, damit führende Nullen erhalten bleiben. Früher verwendete Nummern bleiben im Verlauf hinterlegt und werden bei automatischen Vorschlägen übersprungen; eine manuelle Wiedervergabe ist erlaubt, sobald die Nummer keiner aktuellen Flasche mehr gehört. Bei gleichzeitig vorhandenen Flaschen bleibt die Nummer eindeutig; ein gescannter QR-/Barcode ist genau diese Inventarnummer, kein zweites Etikettenfeld.
 - Fotos und Dokumente liegen als Dateien außerhalb der JSON und sind über relative Pfade den physischen Flaschen zugeordnet. Es gibt keine separate Ablage von Bildern auf Abfüllungsebene.
 - **Herkunftsland und Whiskyregion werden aus den Destilleriestammdaten ermittelt**, nicht mehr im Abfüllungseditor eingegeben. Historische Abfüllungsfelder bleiben ausschließlich zur Kompatibilität lesbar. Schottische Standorte heißen **Schottland**, nicht UK/GB. Uneindeutige Regionen bleiben unbekannt.
-- Die Validierung und Aktualisierung liegt in `server/domain/`, `server/services/` und `server/storage/`; Änderungen an `collection.json` sind atomar und erfolgen nach Validierung. Ein frueheres Demo-Schema wird nicht migriert: Altdateien werden archiviert und Schema 5 beginnt leer.
+- Die Validierung und Aktualisierung liegt in `server/domain/`, `server/services/` und `server/storage/`; Änderungen an `collection.json` sind atomar und erfolgen nach Validierung. Vor erforderlichen Schema-Migrationen wird gesichert.
 
 ## 3. Sammlung, Erfassung und Detailansichten
 

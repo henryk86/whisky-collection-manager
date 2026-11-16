@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { modelInput, normalizedMask, MODEL_SIZE } from '../../public/js/features/cutout/model.js';
-import { displayPhotoPath, initialPhotoAdjustmentSettings } from '../../shared/photo-images.js';
+import { displayPhotoPath, initialPhotoAdjustmentSettings } from '../../public/js/domain/photo-images.js';
 import {cutoutExportSizes} from '../../public/js/features/cutout/image.js';
 import { analyzeBottleMask, bottleCropRect, cutoutOutputSize } from '../../public/js/features/cutout/crop.js';
 

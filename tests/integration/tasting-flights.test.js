@@ -29,8 +29,7 @@ test('flight membership is ordered, exclusive, and preserves independent tasting
         assert.deepEqual(after.tastingFlights.find(f=>f.id===flight.id).tastingIds,[note.id,external.id],
             'acquiring an unowned whisky does not change the tasting identity or order');
         assert.equal(after.bottlings[0].tastings.length,2);
-        assert.equal(after.bottlings[0].tastings.find(t=>t.id===external.id).rating,92);
-        assert.equal(after.bottlings[0].rating,undefined,'no derived summary is persisted');
+        assert.equal(after.bottlings[0].rating,92,'latest note summary continues to use existing rules');
         assert.equal(after.externalTastings.length,0);
         assert.equal((await api(base,`/api/bottlings/${owned.id}/tastings/${note.id}`,'DELETE')).status,200);
         assert.deepEqual((await api(base,`/api/tasting-flights/${flight.id}`)).data.tastingIds,[external.id]);

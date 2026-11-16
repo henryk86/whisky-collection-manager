@@ -1,7 +1,7 @@
 import { read, change } from '../storage/collection-store.js';
 import { saveImage, deleteImage, validateImageData } from '../storage/photos.js';
-import {basePhotoPath} from '../../shared/photo-images.js';
-import {validateAdjustmentValues as validatePhotoAdjustments} from '../../shared/photo-adjustments.js';
+import {basePhotoPath} from '../../public/js/domain/photo-images.js';
+import {validatePhotoAdjustments} from '../../public/js/features/photo-editor/adjustments.js';
 import { saveDocument, readDocument, deleteDocument } from '../storage/documents.js';
 import { normalizeBottle } from '../domain/normalization.js';
 import { markNumber } from '../domain/inventory.js';

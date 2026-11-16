@@ -8,10 +8,10 @@ import { createTastingHistory } from '../domain/tasting-history.js';
 import { glencairnRating, syncGlencairnRating } from '../ui/glencairn-rating.js';
 import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
 import { whiskyColorSelector, whiskyColorDisplay } from '../ui/whisky-color-selector.js';
-import { parseTastingScore, emptyTastingNotes } from '../../../shared/tasting.js';
-import { sortedTastings } from '../../../shared/tasting-records.js';
-import {allTastingReferences,flightEntries,flightForTasting} from '../../../shared/tasting-flights.js';
-import { allStandaloneTastings } from '../../../shared/standalone-tastings.js';
+import { parseTastingScore, emptyTastingNotes } from '../domain/tasting.js';
+import { sortedTastings } from '../domain/tasting-records.js';
+import {allTastingReferences,flightEntries,flightForTasting} from '../domain/tasting-flights.js';
+import { allStandaloneTastings } from '../domain/standalone-tastings.js';
 import { editIcon, newBottlingIcon } from '../ui/action-icons.js';
 import { reorderFlightIds } from '../features/flight-order.js';
 

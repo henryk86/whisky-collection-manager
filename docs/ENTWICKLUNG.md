@@ -90,7 +90,7 @@ Die Zeitreihen werden in der Anzeige nach Monat/Jahr aggregiert, ihre beiden **D
 
 ## Lagerverwaltung weiterentwickeln
 
-Für Lagerfunktionen `server/storage/warehouse-store.js`, `server/domain/warehouse-fields.js`, `server/services/warehouse.js`, `public/js/views/warehouse.js`, `public/js/views/warehouse-presentation.js` und `public/styles/warehouse.css` beachten. Pure Geometriemodule in `shared/warehouse-compartments.js` und `shared/warehouse-placement.js` werden von Browser **und** Server importiert; DOM-/Netzwerkabhängigkeiten dort vermeiden. Separates Datenformat unter `data/warehouse.json`, keine neuen Lagerfelder in `collection.json` einführen. Tests: `tests/integration/warehouse.test.js`, `tests/unit/warehouse-ui.test.js`; API-/ZIP- und UI-Regressionsprüfungen durchführen. Details: [LAGER.md](LAGER.md).
+Für Lagerfunktionen `server/storage/warehouse-store.js`, `server/domain/warehouse-fields.js`, `server/services/warehouse.js`, `public/js/views/warehouse.js`, `public/js/views/warehouse-presentation.js` und `public/styles/warehouse.css` beachten. Pure Geometriemodule in `public/js/domain/warehouse-compartments.js` und `warehouse-placement.js` werden von Browser **und** Server importiert; DOM-/Netzwerkabhängigkeiten dort vermeiden. Separates Datenformat unter `data/warehouse.json`, keine neuen Lagerfelder in `collection.json` einführen. Tests: `tests/integration/warehouse.test.js`, `tests/unit/warehouse-ui.test.js`; API-/ZIP- und UI-Regressionsprüfungen durchführen. Details: [LAGER.md](LAGER.md).
 
 ### Sprach-Regressionstests
 

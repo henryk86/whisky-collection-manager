@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {EMPTY_PHOTO_ADJUSTMENTS, PHOTO_ADJUSTMENT_FIELDS, photoAdjustmentsChanged,
     validatePhotoAdjustments, adjustPhotoPixels, autoPhotoAdjustments,
     resetPhotoAdjustmentGroup, whiteBalanceFromArea} from '../../public/js/features/photo-editor/adjustments.js';
-import {basePhotoPath, displayPhotoPath, editorPhotoSourceSettings} from '../../shared/photo-images.js';
+import {basePhotoPath, displayPhotoPath, editorPhotoSourceSettings} from '../../public/js/domain/photo-images.js';
 
 test('photo corrections accept only bounded, finite, explicitly supported controls', () => {
     assert.equal(PHOTO_ADJUSTMENT_FIELDS.length, 9);

@@ -1,6 +1,6 @@
 # Technische Schulden und bewusste Grenzen
 
-**Stand:** v1.0.0. Das historische Wartungsreview v0.15.12 steht weiter unten. Aktuelle, noch nicht behobene Risiken aus dem Code-Review v0.28.6 sind hier nach Dringlichkeit dokumentiert.
+**Stand:** v0.28.9. Das historische Wartungsreview v0.15.12 steht weiter unten. Aktuelle, noch nicht behobene Risiken aus dem Code-Review v0.28.6 sind hier nach Dringlichkeit dokumentiert.
 
 ## Code-Review v0.28.6: umgesetzte und offene Befunde (Stand v0.28.9)
 
@@ -15,15 +15,14 @@
 
 **Weiterhin pruefen:** Bereits zugelassene Direktlistener und deren Lebenszyklen bei kommenden Rendering-Umbauten; Lauf der Browser-Regressionstests und reale GitHub Actions. Der spaetere Wegfall der Ausnahmeliste ist Teil von B-1.2.
 
-**In v1.0.0 umgesetzt (bewusst inkompatibles Schema-Release):**
+**Als eigene Architektur-Releases planen (keine beiläufige Migration):**
 
-- **B-4 – Shared-Module:** Wiederverwendbare Fachlogik liegt in `shared/`; Importgrenzen sind in `scripts/check.js` verankert. Der HTTP-Server erlaubt nur Browser-safe-Shared-Dateien.
-- **B-2.2/3 – Lesecaches und API-ETags:** Sammlung und Lager werden im Arbeitsspeicher gehalten; jede Ausgabe ist eine eigene Kopie. Schreibvorgaenge und Restore invalidieren Revisionen; geaenderte Dateien werden erkannt. HTTP 304 vermeidet erneute Transfers, wenn sich die Ressource nicht geaendert hat.
-- **B-3 – Schema 5 ohne Migration:** Eigene Verkostungen liegen nur noch in `bottlings[].tastings[]`; alte abgeleitete Bewertungsspalten und `legacyTastings` entfallen. Vorhandene alte Spieldaten werden beim Start archiviert und durch eine leere Sammlung plus leeres Lager ersetzt. Kein automatischer Datenimport/-transfer aus Schema 4.
-- **B-1.2 – Generischer Detailabgleich:** Die Detailseite nutzt eine wiederverwendbare DOM-Regionenabgleich-Funktion mit stabilen Schluesseln und ohne den alten `outerHTML`-Vergleich. Andere Seiten bleiben bis zur Browserabnahme beim Komplettaustausch.
-- **B-5 – Browserstruktur:** Fachsuiten statt einer einzigen grossen `app.test.js`, gemeinsamer Browser-Helper; Cache-/Schema-Integrationstests ergaenzt.
-
-**Weiterhin offen:** Die komplette Browser-Suite muss nach den groesseren DOM- und Datenmodell-Umbauten in einer geeigneten Chromium-/CI-Umgebung laufen. Die alten zahlreichen Quelltext-Regex-Tests sollen schrittweise durch Verhaltenspruefungen ersetzt werden; das ist noch **nicht** vollstaendig erledigt. Weitere Direktlistener in bestehenden Widget-Views werden bei spaeteren Teilrendern gesondert geprueft. B-6 (historische Dokubereinigung und ZIP-Upgrade-Restdateien) ist noch offen.
+- **B-1.2 / Rendering:** Ein einheitlicher, getesteter Mechanismus zur Teilerneuerung statt unterschiedlicher Sonderregeln pro Seite und `outerHTML`-Abgleich. Kein Frameworkwechsel als Voraussetzung.
+- **B-2.2/3 / Datenzugriff:** Cache im Collection-Store und konditionelle GETs fuer Sammlung und Lager mit Invalidation und Restore-Tests.
+- **B-3 / Schema 5:** Historische Tastings, abgeleitete Bewertungszusammenfassung und Backup-Kompatibilitaet kontrolliert bereinigen; vorab Fixtures realer alter Datenformen, Pre-Migrationsbackup und Ablehnung unbekannter neuer Schemas.
+- **B-4 / Shared-Modulgrenze:** DOM-freie Domainmodule von `public/js` nach `shared/`, inklusive Importregeln in `scripts/check.js`; Abhaengigkeiten des Fotoeditors entkoppeln.
+- **B-5 / Teststrategie:** Quelltext-Regex-Tests schrittweise durch echte Verhaltenspruefungen ersetzen; Browser-Suite in Fachmodule trennen und verpflichtend vor UI-Releases vollstaendig ausfuehren.
+- **B-6 / Dokumentations- und Releasepflege:** `ARCHITEKTUR.md` und `ANFORDERUNGEN.md` fachlich aktualisieren, Fachdokumente von historischen Versionsabsaetzen befreien und ZIP-Restdateien bei Upgrades absichern.
 
 ## Historischer Wartungsstand v0.15.12
 
@@ -31,7 +30,7 @@
 
 - **Server-Lagerdienst:** Eingabeprüfung, Normalisierung von Möbeln und Fachhöhen aus dem CRUD-Dienst nach `server/domain/warehouse-fields.js` ausgelagert. Der Dienst konzentriert sich auf Anwendungsfälle und Datenänderungen.
 - **Browser-Lagerseite:** Render-Helfer für 2D-Grundriss, Fächer, Formulare und Texte in `public/js/views/warehouse-presentation.js` gekapselt; `views/warehouse.js` verwaltet weiterhin den Lebenszyklus der Seite, Events und API-Aktionen.
-- **Möbeltypen:** Kanonische Typ-Liste in `shared/warehouse-compartments.js`; Eingabenormalisierung und Persistenzvalidierung verwenden dieselbe Definition. Eine verwaiste deutschsprachige Frontnamen-Tabelle wurde entfernt.
+- **Möbeltypen:** Kanonische Typ-Liste in `public/js/domain/warehouse-compartments.js`; Eingabenormalisierung und Persistenzvalidierung verwenden dieselbe Definition. Eine verwaiste deutschsprachige Frontnamen-Tabelle wurde entfernt.
 - **Dokumentation:** README als Einstieg und Übersicht, ARCHITEKTUR als aktuelle Modulreferenz, Funktions- und Betriebsdetails in den jeweiligen Fachdokumenten. Ein neuer Link-Check schützt lokale Markdown-Verweise.
 - **Tests:** Bestehende Lager-, API- und i18n-Regressionen wurden nach jedem Modulschritt erneut ausgeführt; reine Wartungsänderungen erhalten eigene Domain-Tests.
 
@@ -50,7 +49,7 @@
 
 ## Nicht Teil eines reinen Refactorings
 
-Weitere inkompatible Aenderungen an Schema 5, Lager-Schema 1, API, Inventarnummern oder Deployment-Pfaden brauchen explizite Versionsanhebung und neue Verhaltenstests. Eine automatische Migration historischer Spieldaten ist dabei ausdruecklich nicht vorgesehen. Mehr Moduldateien sind für sich allein keine bessere Architektur; eine Trennung erfolgt nur bei klar unterscheidbarer Verantwortung.
+Eine Änderung an `collection.json`-Schema 4, `warehouse.json`-Schema 1, Inventarnummern-/Kapazitätsregeln, API-Endpunkten, UI-Semantik, CSS-Layout, Authentifizierung, Backupformat oder Deployment-Pfaden wäre **funktional** und braucht ein eigenes Ticket mit Migrations-/Kompatibilitätstests. Mehr Moduldateien sind für sich allein keine bessere Architektur; eine Trennung erfolgt nur bei klar unterscheidbarer Verantwortung.
 
 ## Prüfverfahren
 

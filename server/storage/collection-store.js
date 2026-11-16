@@ -4,38 +4,12 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR, DATA_FILE } from './paths.js';
 import { validate } from '../domain/validation.js';
+import { migrateCollection } from './migrations.js';
 const seedFile = new URL('../../seed/distillery.json', import.meta.url);
 export const empty = () => ({
-    schemaVersion: 5, nextInventoryNumber: 1, reservedInventoryNumbers: [], settings: { establishedYear: null }, distilleries: JSON.parse(fs.readFileSync(seedFile, 'utf8')), bottlings: [], externalTastings: [], tastingFlights: []
+    schemaVersion: 4, nextInventoryNumber: 1, reservedInventoryNumbers: [], settings: { establishedYear: null }, distilleries: JSON.parse(fs.readFileSync(seedFile, 'utf8')), bottlings: [], tastingFlights: []
 });
-let cached = null;
-let cachedIdentity = null;
-let revision = crypto.randomUUID();
-const identity = () => {
-    const {dev, ino, size, mtimeMs, ctimeMs} = fs.statSync(DATA_FILE);
-    return `${dev}:${ino}:${size}:${mtimeMs}:${ctimeMs}`;
-};
-/** A restore or external replacement must invalidate both data and validator. */
-export function invalidateCollectionCache() {
-    cached = null;
-    cachedIdentity = null;
-    revision = crypto.randomUUID();
-}
-function loadCurrent() {
-    const current = identity();
-    if (cached === null || cachedIdentity !== current) {
-        // A foreign file replacement or restore is never silently reused.
-        cached = structuredClone(validate(JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'))));
-        cachedIdentity = current;
-        revision = crypto.randomUUID();
-    }
-}
-export function collectionETag() {
-    loadCurrent();
-    return `W/"collection-${revision}"`;
-}
 export function initialize() {
-    invalidateCollectionCache();
     for (const directory of [DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR]) {
         fs.mkdirSync(directory, {
             recursive: true
@@ -45,32 +19,24 @@ export function initialize() {
         atomicWrite(empty());
     }
     const collection = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-    // Schema 5 is a deliberate clean break: all historical demo collections
-    // are archived unchanged and replaced with an empty current collection.
-    // No tasting or other legacy record is migrated into the new data model.
-    if (collection.schemaVersion !== 5) {
-        if (!Number.isInteger(collection.schemaVersion) || collection.schemaVersion > 5)
-            throw new Error('Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben unverändert.');
-        const original = path.join(BACKUP_DIR, `pre-schema5-${Date.now()}-${crypto.randomUUID()}.json`);
-        fs.copyFileSync(DATA_FILE, original);
-        atomicWrite(empty());
-        // Old warehouse assignments refer to bottles that no longer exist.
-        // Archive and discard the demo warehouse instead of preserving dangling IDs.
-        const oldWarehouse = path.join(DATA_DIR, 'warehouse.json');
-        if (fs.existsSync(oldWarehouse)) {
-            const archivedWarehouse = path.join(BACKUP_DIR, `pre-schema5-warehouse-${Date.now()}-${crypto.randomUUID()}.json`);
-            fs.copyFileSync(oldWarehouse, archivedWarehouse);
-            fs.unlinkSync(oldWarehouse);
-        }
+    const migration = migrateCollection(collection);
+    validate(collection);
+    if (!migration.changed) {
         return;
     }
-    validate(collection);
-    loadCurrent();
+    // Preserve the exact original before rewriting any migrated collection.
+    const timestamp = Date.now();
+    fs.copyFileSync(DATA_FILE, path.join(BACKUP_DIR, `pre-migration-${timestamp}.json`));
+    if (migration.conflicts.length) {
+        const report = path.join(BACKUP_DIR, `inventory-conflicts-${timestamp}.json`);
+        fs.writeFileSync(report, JSON.stringify(migration.conflicts, null, 2) + '\n');
+        console.warn(`Inventarnummern-Migration: ${migration.conflicts.length} abweichende alte Etikettencodes. Details: ${report}`);
+    }
+    atomicWrite(collection);
 }
 /** @returns {import('../../shared/types.js').Collection} */
 export function read() {
-    loadCurrent();
-    return structuredClone(cached);
+    return validate(JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')));
 }
 export function atomicWrite(value) {
     validate(value);
@@ -83,9 +49,6 @@ export function atomicWrite(value) {
             flag: 'wx', mode: 0o600
         });
         fs.renameSync(temporaryFile, DATA_FILE);
-        cached = structuredClone(value);
-        cachedIdentity = identity();
-        revision = crypto.randomUUID();
     }
     finally {
         if (fs.existsSync(temporaryFile)) {

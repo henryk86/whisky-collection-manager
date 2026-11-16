@@ -1,0 +1,3999 @@
+import test, { before, after } from 'node:test';
+import { HELP_TOPICS } from '../../public/js/views/help.js';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { chromium } from 'playwright-core';
+import { startTestServer, requestJson } from '../helpers/server.js';
+// Some managed environments block all top-level browser URLs. The explicit DOM
+// mode renders real modules/CSS via intercepted requests; History is stubbed there.
+// Normal local/CI runs use real navigation. Neither mode tests optical recognition.
+const domOnly = process.env.WHISKY_BROWSER_DOM_ONLY === 'true';
+let browser;
+before(async () => {
+    browser = await chromium.launch({
+        executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || undefined,
+        headless: true,
+        args: process.env.CI || domOnly ? ['--no-sandbox'] : [],
+    });
+    fs.mkdirSync('test-artifacts', {
+        recursive: true
+    });
+});
+after(async () => {
+    await browser?.close();
+});
+async function openApp(page, base, options = {}) {
+    // Locale overrides apply to real Chromium navigation as well as the DOM-only harness.
+    if (domOnly || options.localeOverrides) await page.route(`${base}/**`, async (route) => {
+        const request = route.request();
+        const pathname = new URL(request.url()).pathname;
+        // The photo cutout tests register a synthetic ONNX runtime before open().
+        // In DOM-only mode this catch-all route is installed later, so it must
+        // defer to that earlier, more specific route rather than shadow it.
+        if (domOnly && pathname === '/ai/vendor/ort.wasm.min.mjs') return route.fallback();
+        if (options.localeOverrides && Object.hasOwn(options.localeOverrides, pathname)) {
+            return route.fulfill({status:200, contentType:'application/json',
+                headers:{'Access-Control-Allow-Origin':'*'},
+                body:JSON.stringify(options.localeOverrides[pathname])});
+        }
+        const response = await fetch(request.url(), {
+            method: request.method(),
+            headers: request.postData() ? {
+                'Content-Type': 'application/json'
+            } : {},
+            body: request.postData() || undefined,
+        });
+        await route.fulfill({
+            status: response.status,
+            headers: {
+                'Content-Type': response.headers.get('content-type') || 'text/plain', 'Access-Control-Allow-Origin': '*'
+            },
+            body: Buffer.from(await response.arrayBuffer()),
+        });
+    });
+    if (!domOnly) {
+        await page.goto(`${base}/${options.query || ''}`);
+        // The entry module performs async locale loading and an async API refresh.
+        // A completed navigation alone does not guarantee the app has rendered.
+        await page.locator('.site-header').waitFor({ state: 'visible' });
+        return;
+    }
+    await page.goto(`about:blank${options.query || ''}`);
+    await page.evaluate(() => {
+        window.__historyCalls = [];
+        for (const method of ['pushState', 'replaceState']) {
+            history[method] = (...args) => window.__historyCalls.push({
+                method, url: args[2]
+            });
+        }
+    });
+    const html = await (await fetch(base)).text();
+    await page.setContent(html.replace('<head>', `<head><base href="${base}/">`));
+    // In DOM-only mode the ES modules and initial API refresh are asynchronous.
+    // Wait for the actual application, not just for setContent() to finish.
+    await page.locator('.site-header').waitFor({ state: 'visible' });
+}
+async function session(callback, activeBrowser = browser) {
+    const server = await startTestServer();
+    const context = await activeBrowser.newContext({
+        viewport: {
+            width: 1366, height: 900
+        }
+    });
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    try {
+        await callback({
+            ...server, page, open: options => openApp(page, server.base, options)
+        });
+        assert.deepEqual(errors, [], 'Unexpected browser errors');
+    }
+    finally {
+        await context.close();
+        await server.stop();
+    }
+}
+async function openSettingsFromMenu(page) {
+    await page.locator('header [data-act="toggle-menu"]').click();
+    await page.locator('#site-drawer [data-act="goto-settings-menu"]').click();
+    await page.getByRole('heading', { name: 'Einstellungen & Datensicherung' }).waitFor();
+}
+// Settings now have four mutually exclusive panels. Tests must explicitly open
+// the required panel instead of interacting with controls hidden in another one.
+// Use the same desktop navigation/mobile selector as a real user.
+async function openSettingsSection(page, id) {
+    const desktop = page.locator(`.settings-page .section-nav-desktop [data-settings-section="${id}"]`);
+    if (await desktop.isVisible()) await desktop.click();
+    else await page.locator('.settings-page [data-section-switch="settings"]').selectOption(id);
+    await page.locator(`[data-settings-panel="${id}"]`).waitFor({ state: 'visible' });
+}
+async function seed(base, number = '000123') {
+    const result = await requestJson(base, '/api/bottlings', 'POST', {
+        name: 'Browser Test Blend', whiskyType: 'blended_malt', abv: 46, volumeMl: 700,
+        firstBottle: {
+            inventoryNumber: number, status: 'closed'
+        },
+    });
+    assert.equal(result.status, 201);
+    return result.data;
+}
+async function mockDecoder(page) {
+    await page.evaluate(() => {
+        Object.defineProperty(window, 'isSecureContext', {
+            configurable: true, value: true
+        });
+        if (!navigator.mediaDevices?.getUserMedia) {
+            Object.defineProperty(navigator, 'mediaDevices', {
+                configurable: true, value: {
+                    getUserMedia() {
+                    }
+                }
+            });
+        }
+        window.Html5QrcodeSupportedFormats = {
+            QR_CODE: 0, CODE_128: 1
+        };
+        window.__stopped = 0;
+        window.Html5Qrcode = class {
+            async start(camera, options, decoded) {
+                window.__decoded = decoded;
+            }
+            async stop() {
+                window.__stopped++;
+            }
+            clear() {
+            }
+        };
+    });
+}
+test('browser: bottling editor shows external import preview only after incoming data', async () => {
+    await session(async ({ page, open }) => {
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form').waitFor();
+        assert.equal(await page.locator('#bottling-form #import-panel').count(), 0);
+        assert.equal(await page.locator('#bottling-form [data-act="import-search"]').count(), 0);
+        assert.equal(await page.locator('#bottling-form a[href*="whiskybase.com"]').count(), 0);
+        await page.locator('#bottling-form [data-act="close-modal"]').click();
+        await page.evaluate(() => {
+            const payload = {
+                version: 2, source: 'external',
+                fields: {
+                    whiskybaseId: '765432', name: 'Private import example',
+                    whiskybaseUrl: 'https://www.whiskybase.com/whiskies/whisky/765432/example',
+                },
+            };
+            location.hash = '#wcm-import=' + encodeURIComponent(JSON.stringify(payload));
+        });
+        await page.locator('#import-panel .import-preview').waitFor();
+        assert.equal(await page.locator('#bottling-form #import-panel').count(), 1);
+        assert.equal(await page.locator('#import-panel [data-act="import-apply"]').count(), 1);
+        assert.equal(await page.locator('#import-panel input[data-import-field="name"]').count(), 1);
+    });
+});
+
+test('browser: Whiskybase import assigns four comma-separated distilleries to one bottling', async () => {
+    await session(async ({ page, open, base }) => {
+        await open();
+        const originalCollection = (await requestJson(base, '/api/collection')).data;
+        const expectedNames = ['Caol Ila', 'Bowmore', 'Ardbeg', 'Port Ellen'];
+        const expectedIds = expectedNames.map(name => originalCollection.distilleries.find(item => item.name === name)?.id);
+        assert.ok(expectedIds.every(Boolean), 'all four distilleries are in the catalog');
+        await page.evaluate(() => {
+            const payload = {
+                version: 2, source: 'external', distilleryName: 'Caol Ila, Bowmore, Ardbeg, Port Ellen',
+                fields: {
+                    whiskybaseId: '987654', name: 'Four-Distillery Blended Malt', whiskyType: 'blended_malt',
+                    whiskybaseUrl: 'https://www.whiskybase.com/whiskies/whisky/987654/test',
+                },
+            };
+            location.hash = '#wcm-import=' + encodeURIComponent(JSON.stringify(payload));
+        });
+        await page.locator('#import-panel input[name="import-distillery"]').first().waitFor();
+        const importOptions = page.locator('#import-panel input[name="import-distillery"]');
+        assert.equal(await importOptions.count(), 4);
+        assert.deepEqual(await importOptions.evaluateAll(inputs => inputs.map(input => input.value)), expectedIds);
+        assert.equal(await page.locator('#import-panel input[name="import-distillery"]:checked').count(), 4);
+        assert.equal(await page.locator('#import-panel input[name="import-distillery"]:disabled').count(), 0);
+        await page.locator('#import-panel [data-act="import-apply"]').click();
+        const selectedIds = await page.locator('#bottling-form input[name="distilleryIds"]:checked')
+            .evaluateAll(inputs => inputs.map(input => input.value));
+        assert.deepEqual(new Set(selectedIds), new Set(expectedIds));
+        await page.locator('#bottling-form button[type="submit"]').click();
+        await page.locator('.section-head h2').filter({ hasText: 'Four-Distillery Blended Malt' }).waitFor();
+        const saved = (await requestJson(base, '/api/collection')).data.bottlings
+            .find(item => item.name === 'Four-Distillery Blended Malt');
+        assert.ok(saved);
+        assert.deepEqual(new Set(saved.distilleryIds), new Set(expectedIds));
+    });
+});
+
+test('browser: create a bottling, read-only bottle context, edit and photo upload', async () => {
+    await session(async ({ page, open, base }) => {
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('[name="name"]').fill('UI Lifecycle');
+        await page.locator('[name="firstInventoryNumber"]').fill('000321');
+        await page.locator('#bottling-form button[type="submit"]').click();
+        await page.waitForSelector('[data-act="edit-bottling"]');
+        assert.equal(await page.locator('.section-head h2').innerText(), 'UI Lifecycle');
+        await page.locator('[data-act="edit-bottle"]').click();
+        assert.equal(await page.locator('.bottling-context-name').innerText(), 'UI Lifecycle');
+        assert.equal(await page.locator('.bottling-context input, .bottling-context select').count(), 0);
+        assert.equal(await page.locator('[name="inventoryNumber"]').count(), 1);
+        await page.locator('[name="comment"]').fill('Edited from the browser');
+        await page.locator('[name="photos"]').setInputFiles({
+            name: 'test.png', mimeType: 'image/png',
+            buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=', 'base64'),
+        });
+        await page.locator('#bottle-form button[type="submit"]').click();
+        await page.waitForSelector('.photo-tile');
+        // Photo previews must remain in this browser tab; the lightbox also
+        // supports Escape, the large cover image and backdrop dismissal.
+        await page.locator('.photo-tile [data-act="open-photo"]').click();
+        await page.waitForSelector('.photo-lightbox-image');
+        const viewerStyle = () => page.locator('.photo-lightbox-stage').evaluate(el => getComputedStyle(el).backgroundColor);
+        const viewerBefore = await viewerStyle();
+        await page.evaluate(() => {
+            document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        });
+        assert.notEqual(await viewerStyle(), viewerBefore, 'Photo viewer background must match the light/dark theme');
+        assert.equal(await page.context().pages().length, 1, 'no extra browser tab');
+        await page.keyboard.press('Escape');
+        await page.waitForSelector('.photo-lightbox-image', { state: 'detached' });
+        await page.locator('.hero-photo-open').click();
+        await page.waitForSelector('.photo-lightbox-image');
+        await page.locator('.overlay').click({ position: { x: 3, y: 3 } });
+        await page.waitForSelector('.photo-lightbox-image', { state: 'detached' });
+        const saved = await requestJson(base, '/api/collection');
+        assert.equal(saved.data.bottlings[0].bottles[0].comment, 'Edited from the browser');
+        assert.equal(saved.data.bottlings[0].bottles[0].photos.length, 1);
+        assert.equal(saved.data.bottles, undefined);
+    });
+});
+test('browser: Chrome pointer dragging reorders bottle photos without opening the viewer', async () => {
+    await session(async ({ page, open, base }) => {
+        const { bottling, bottle } = await seed(base, '000325');
+        const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+        const photos = [];
+        for (let i = 0; i < 3; i++) {
+            const saved = await requestJson(base, `/api/bottles/${bottle.id}/photos`, 'POST', { image: png });
+            assert.equal(saved.status, 201);
+            photos.push(saved.data.id);
+        }
+        await open({ query: `?bottling=${bottling.id}` });
+        const gallery = page.locator(`[data-photo-list="${bottle.id}"]`);
+        await gallery.locator('[data-photo-tile]').first().waitFor();
+        const order = () => gallery.locator('[data-photo-tile]')
+            .evaluateAll(tiles => tiles.map(tile => tile.dataset.photoId));
+        const drag = async (source, target = null) => {
+            // Mouse coordinates do not automatically scroll an offscreen gallery.
+            // The tasting section above the physical bottles can place the photos
+            // below the viewport, where raw page.mouse events never hit them.
+            await source.scrollIntoViewIfNeeded();
+            if (target) await target.scrollIntoViewIfNeeded();
+            const start = await source.boundingBox();
+            const end = target ? await target.boundingBox() : await gallery.boundingBox();
+            assert.ok(start && end);
+            const viewport = page.viewportSize();
+            const startPoint = {x: start.x + start.width / 2, y: start.y + start.height / 2};
+            // A cancelled drag can end just to the left of the gallery. Do not
+            // scroll the distant page heading into view and hide the source.
+            const endPoint = target
+                ? {x: end.x + end.width / 2, y: end.y + end.height / 2}
+                : {x: Math.max(2, end.x - 20), y: startPoint.y};
+            assert.ok([startPoint, endPoint].every(point => point.x >= 0 && point.y >= 0 &&
+                point.x < viewport.width && point.y < viewport.height),
+            'photo drag coordinates must be visible to pointer events');
+            await page.mouse.move(startPoint.x, startPoint.y);
+            await page.mouse.down();
+            await page.mouse.move(endPoint.x, endPoint.y, { steps: 8 });
+            await page.mouse.up();
+        };
+        // Dragging the handle must use the position under the pointer at release.
+        await drag(gallery.locator('[data-photo-tile]').first().locator('[data-photo-drag]'),
+            gallery.locator('[data-photo-tile]').last());
+        await page.waitForFunction(expected => {
+            const tiles = document.querySelectorAll('[data-photo-list] [data-photo-tile]');
+            return JSON.stringify([...tiles].map(t => t.dataset.photoId)) === JSON.stringify(expected);
+        }, [photos[1], photos[2], photos[0]]);
+        assert.deepEqual(await order(), [photos[1], photos[2], photos[0]]);
+
+        // Chrome starts native image dragging by default. Pointer-based thumbnail
+        // dragging must save the order without opening the photo lightbox.
+        await drag(gallery.locator('[data-photo-tile]').last().locator('.photo-open'),
+            gallery.locator('[data-photo-tile]').first());
+        await page.waitForFunction(expected => {
+            const tiles = document.querySelectorAll('[data-photo-list] [data-photo-tile]');
+            return JSON.stringify([...tiles].map(t => t.dataset.photoId)) === JSON.stringify(expected);
+        }, [photos[0], photos[1], photos[2]]);
+        assert.equal(await page.locator('.photo-lightbox-image').count(), 0);
+        assert.deepEqual((await requestJson(base, '/api/collection')).data.bottlings[0].bottles[0]
+            .photos.map(p => p.id), [photos[0], photos[1], photos[2]]);
+
+        // Cancel a drag outside the gallery: no stale target should be saved.
+        await drag(gallery.locator('[data-photo-tile]').first().locator('[data-photo-drag]'));
+        assert.deepEqual(await order(), [photos[0], photos[1], photos[2]]);
+
+        // A plain photo click still opens the lightbox after the drag.
+        await gallery.locator('.photo-open').first().click();
+        await page.locator('.photo-lightbox-image').waitFor();
+        await page.keyboard.press('Escape');
+        await page.locator('.photo-lightbox-image').waitFor({ state: 'detached' });
+    });
+});
+
+test('browser: new bottle can reuse an existing bottling or create a new one', async () => {
+    await session(async ({ page, open, base }) => {
+        const existing = await seed(base, '009100');
+        await page.setViewportSize({ width: 390, height: 844 });
+        await open();
+        await page.locator('header [data-act="new"]').click();
+        await page.waitForSelector('#new-bottle-choice-form');
+        assert.equal(await page.evaluate(() => document.body.scrollWidth <= document.body.getBoundingClientRect().width + 1), true, 'mobile picker must not overflow');
+        // Search does not silently create a second bottling or preselect a result.
+        await page.locator('#bottling-choice-search').fill('nicht vorhanden');
+        assert.equal(await page.locator('#bottling-choice-select option').count(), 1);
+        await page.locator('#bottling-choice-search').fill('Browser Test');
+        assert.equal(await page.locator('#bottling-choice-select option').count(), 2);
+        assert.equal(await page.locator('#bottling-choice-select').inputValue(), '');
+        await page.locator('#bottling-choice-select').selectOption(existing.bottling.id);
+        await page.locator('#new-bottle-choice-form button[type="submit"]').click();
+        await page.waitForSelector('#bottle-form[data-from-overview="1"]');
+        assert.equal(await page.locator('.bottling-context-name').innerText(), 'Browser Test Blend');
+        assert.equal(await page.locator('#bottle-form [name="name"]').count(), 0);
+        await page.locator('#bottle-form [name="inventoryNumber"]').fill('009101');
+        await page.locator('#bottle-form [name="status"]').selectOption('open');
+        await page.locator('#bottle-form button[type="submit"]').click();
+        await page.waitForSelector('.bottle-entry.scanned-bottle');
+        const saved = (await requestJson(base, '/api/collection')).data;
+        assert.equal(saved.bottlings.length, 1, 'same parent, no duplicate bottling');
+        assert.equal(saved.bottlings[0].bottles.length, 2);
+        assert.equal(saved.bottlings[0].bottles.find(bottle => bottle.inventoryNumber === '009101').status, 'open');
+        await page.locator('header [data-act="new"]').click();
+        await page.waitForSelector('#new-bottle-choice-form');
+        await page.locator('[data-act="new-bottling-direct"]').click();
+        await page.locator('#bottling-form [name="name"]').fill('Neues unabhängiges Produkt');
+        await page.locator('#bottling-form [name="firstInventoryNumber"]').fill('009102');
+        await page.locator('#bottling-form button[type="submit"]').click();
+        await page.waitForSelector('.section-head h2');
+        const next = (await requestJson(base, '/api/collection')).data;
+        assert.equal(next.bottlings.length, 2, 'explicitly requested a new bottling');
+        assert.ok(next.bottlings.some(bottling => bottling.name === 'Neues unabhängiges Produkt'));
+    });
+});
+
+test('browser: a decoded inventory number opens details at the top, without edit mode', async () => {
+    await session(async ({ page, base, open }) => {
+        const data = await seed(base);
+        let target;
+        for (let index = 0; index < 8; index++) {
+            const result = await requestJson(base, '/api/bottles', 'POST', {
+                bottlingId: data.bottling.id, inventoryNumber: `TEST-${index}`
+            });
+            target = result.data;
+        }
+        await open();
+        await mockDecoder(page);
+        await page.locator('[data-act="scan"]').first().click();
+        await page.waitForFunction(() => !!window.__decoded);
+        await page.evaluate(number => window.__decoded(number), target.inventoryNumber);
+        await page.waitForSelector(`#bottle-${target.id}.scanned-bottle`);
+        assert.equal(await page.locator('.overlay').count(), 0);
+        await page.waitForFunction(() => window.scrollY < 5);
+        assert.ok(await page.evaluate(() => window.__stopped >= 1));
+        assert.equal(await page.locator('.section-head h2').innerText(), 'Browser Test Blend');
+    });
+});
+test('browser: scanning into an edit form retains the bottle ID and unsaved comment', async () => {
+    await session(async ({ page, base, open }) => {
+        const data = await seed(base);
+        await open();
+        await page.locator('.whisky-card').click();
+        await page.locator('[data-act="edit-bottle"]').click();
+        await page.locator('[name="comment"]').fill('Do not lose this text');
+        await mockDecoder(page);
+        await page.locator('[data-act="scan-into-bottle"]').click();
+        await page.waitForFunction(() => !!window.__decoded);
+        await page.evaluate(() => window.__decoded('008888'));
+        await page.waitForSelector('#bottle-form');
+        assert.equal(await page.locator('[name="inventoryNumber"]').inputValue(), '008888');
+        assert.equal(await page.locator('[name="comment"]').inputValue(), 'Do not lose this text');
+        assert.equal(await page.locator('#bottle-form').getAttribute('data-id'), data.bottle.id);
+        await page.locator('#bottle-form button[type="submit"]').click();
+        await page.waitForSelector('.overlay', {
+            state: 'detached'
+        });
+        const saved = await requestJson(base, '/api/collection');
+        assert.equal(saved.data.bottlings[0].bottles.length, 1);
+        assert.equal(saved.data.bottlings[0].bottles[0].id, data.bottle.id);
+        assert.equal(saved.data.bottlings[0].bottles[0].inventoryNumber, '008888');
+    });
+});
+test('browser: the mobile header stays in one row at responsive widths', async () => {
+    await session(async ({ page, open }) => {
+        await open();
+        await page.waitForSelector('.site-header .top-actions');
+        for (const width of [320, 360, 390, 450, 600, 740, 900, 960]) {
+            await page.setViewportSize({ width, height: 844 });
+            const layout = await page.evaluate(() => {
+                const brand = document.querySelector('.site-header .brand').getBoundingClientRect();
+                const actions = document.querySelector('.site-header .top-actions').getBoundingClientRect();
+                const header = document.querySelector('.site-header').getBoundingClientRect();
+                const buttons = [...document.querySelectorAll('.site-header .top-actions > button')];
+                return {
+                    brandRight: brand.right, actionsLeft: actions.left,
+                    brandCenter: brand.top + brand.height / 2,
+                    actionsCenter: actions.top + actions.height / 2,
+                    headerHeight: header.height,
+                    buttons: buttons.map(button => ({
+                        visible: getComputedStyle(button).display !== 'none',
+                        top: button.getBoundingClientRect().top,
+                        height: button.getBoundingClientRect().height,
+                    })),
+                    overflow: document.body.scrollWidth > document.body.getBoundingClientRect().width + 1,
+                };
+            });
+            assert.equal(layout.buttons.length, 4, `All four header actions retained at ${width}px`);
+            assert.ok(layout.buttons.every(button => button.visible && button.height >= 40), `Buttons are usable at ${width}px`);
+            assert.ok(layout.brandRight + 2 <= layout.actionsLeft, `No brand/button overlap at ${width}px`);
+            assert.ok(Math.abs(layout.brandCenter - layout.actionsCenter) < 3, `Brand and actions in same row at ${width}px`);
+            assert.ok(layout.buttons.every(button => Math.abs(button.top - layout.buttons[0].top) < 1), `All actions in same row at ${width}px`);
+            assert.ok(layout.headerHeight <= (width <= 380 ? 66 : width <= 740 ? 74 : 82), `Compact mobile header at ${width}px`);
+            assert.equal(layout.overflow, false, `No horizontal overflow at ${width}px`);
+        }
+        assert.equal(await page.locator('header [data-act="scan"]').getAttribute('aria-label'), 'Inventar scannen');
+        assert.equal(await page.locator('header [data-act="new"]').getAttribute('aria-label'), 'Neue Flasche');
+        assert.equal(await page.locator('header [data-act="settings"]').count(), 0);
+        assert.equal(await page.locator('header [data-act="scan"] .scan-icon').isVisible(), true);
+        assert.equal(await page.locator('header [data-act="new"] .new-icon').isVisible(), true);
+        assert.equal(await page.locator('header [data-act="new"]').evaluate(el => el.firstElementChild.tagName), 'svg');
+    });
+});
+test('browser: persistent scrollbar track keeps centered content stationary', async t => {
+    // Playwright's default --hide-scrollbars makes a centering regression
+    // undetectable. Run this case with visible classic scrollbars instead.
+    const scrollbarBrowser = await chromium.launch({
+        executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || undefined,
+        headless: true,
+        ignoreDefaultArgs: ['--hide-scrollbars'],
+        args: process.env.CI || domOnly ? ['--no-sandbox'] : [],
+    });
+    try {
+        await session(async ({ page, open }) => {
+            await open();
+            await page.setViewportSize({ width: 1366, height: 900 });
+            await page.evaluate(() => {
+                document.querySelector('#app').style.display = 'none';
+                document.body.style.minHeight = '0';
+                const probe = document.createElement('div');
+                probe.id = 'scrollbar-layout-probe';
+                probe.style.cssText = 'width:600px;max-width:100%;margin:0 auto;height:1px';
+                document.body.appendChild(probe);
+            });
+            const measure = () => page.evaluate(() => ({
+                overflowY: getComputedStyle(document.documentElement).overflowY,
+                clientWidth: document.body.getBoundingClientRect().width,
+                left: document.querySelector('#scrollbar-layout-probe').getBoundingClientRect().left,
+                scrollHeight: document.documentElement.scrollHeight,
+                viewportHeight: window.innerHeight,
+            }));
+            const shortPage = await measure();
+            assert.equal(shortPage.overflowY, 'scroll');
+            assert.ok(shortPage.scrollHeight <= shortPage.viewportHeight);
+            await page.evaluate(() => {
+                const filler = document.createElement('div');
+                filler.id = 'scrollbar-layout-filler';
+                filler.style.height = '3000px';
+                document.body.appendChild(filler);
+            });
+            const longPage = await measure();
+            assert.ok(longPage.scrollHeight > longPage.viewportHeight);
+            // Prove the browser has a physical scrollbar before claiming a pass.
+            await page.evaluate(() => { document.documentElement.style.overflowY = 'auto'; });
+            const autoLong = await measure();
+            await page.evaluate(() => document.querySelector('#scrollbar-layout-filler').remove());
+            const autoShort = await measure();
+            if (autoLong.clientWidth === autoShort.clientWidth) {
+                t.skip('Browser uses overlay/hidden scrollbars; no measurable scrollbar width');
+                return;
+            }
+            assert.ok(autoLong.clientWidth < autoShort.clientWidth, 'Classic scrollbar reduces usable width');
+            assert.notEqual(autoLong.left, autoShort.left, 'Without reserved scrollbar track centered content must shift');
+            await page.evaluate(() => { document.documentElement.style.overflowY = ''; });
+            assert.equal((await measure()).left, shortPage.left);
+            assert.equal(shortPage.clientWidth, longPage.clientWidth, 'Permanent scrollbar track holds layout width');
+            assert.equal(shortPage.left, longPage.left, 'Permanent scrollbar track prevents centering shift');
+        }, scrollbarBrowser);
+    } finally {
+        await scrollbarBrowser.close();
+    }
+});
+test('browser: mobile and desktop share theme SVGs and keep clear logo spacing', async () => {
+    await session(async ({ page, open }) => {
+        await open();
+        const themeButton = page.locator('header [data-act="toggle-theme"]');
+        const measure = async () => page.evaluate(() => {
+            const logo = document.querySelector('.brand-emblem').getBoundingClientRect();
+            const text = document.querySelector('.brand-copy').getBoundingClientRect();
+            const brand = document.querySelector('.brand').getBoundingClientRect();
+            const actions = document.querySelector('.top-actions').getBoundingClientRect();
+            const icon = document.querySelector('header [data-act="toggle-theme"] svg');
+            return {
+                gap: text.left - logo.right,
+                brandRight: brand.right,
+                actionsLeft: actions.left,
+                overflow: document.body.scrollWidth > document.body.getBoundingClientRect().width + 1,
+                iconSize: icon.getBoundingClientRect().width,
+            };
+        });
+        const initialTheme = await page.locator('html').getAttribute('data-theme');
+        const firstSvg = await themeButton.locator('svg').evaluate(svg => svg.outerHTML);
+        await themeButton.click();
+        const secondSvg = await themeButton.locator('svg').evaluate(svg => svg.outerHTML);
+        assert.notEqual(secondSvg, firstSvg, 'Sun and moon must have distinct shapes');
+        await themeButton.click();
+        assert.equal(await page.locator('html').getAttribute('data-theme'), initialTheme);
+        for (const width of [1366, 960, 740, 450, 390, 360, 320]) {
+            await page.setViewportSize({ width, height: 844 });
+            const layout = await measure();
+            assert.ok(layout.gap >= (width <= 380 ? 7 : width <= 450 ? 9 : 8), `Logo-to-wordmark spacing at ${width}px: ${layout.gap}px`);
+            assert.ok(layout.brandRight + 1 <= layout.actionsLeft, `No overlap at ${width}px`);
+            assert.equal(layout.overflow, false, `No horizontal overflow at ${width}px`);
+            assert.equal(layout.iconSize, 19, `Identical icon size at ${width}px`);
+            assert.equal(await themeButton.locator('svg').evaluate(svg => svg.outerHTML), firstSvg, `First theme icon is identical at ${width}px`);
+            await themeButton.click();
+            assert.equal(await themeButton.locator('svg').evaluate(svg => svg.outerHTML), secondSvg, `Opposite theme icon is identical at ${width}px`);
+            await themeButton.click();
+        }
+    });
+});
+test('browser: header actions match hero; settings live only in the rightmost menu', async () => {
+    await session(async ({ page, open }) => {
+        await open();
+        await page.waitForSelector('.hero-actions');
+        for (const [action, label] of [['new', 'Neue Flasche'], ['scan', 'Inventar scannen']]) {
+            const headerButton = page.locator(`header [data-act="${action}"]`);
+            const heroButton = page.locator(`.hero-actions [data-act="${action}"]`);
+            assert.equal(await headerButton.locator('span').innerText(), label);
+            assert.equal(await heroButton.locator('span').innerText(), label);
+            assert.equal(await headerButton.getAttribute('aria-label'), label);
+            assert.equal(await heroButton.getAttribute('aria-label'), label);
+            assert.equal(await headerButton.locator('svg').evaluate(svg => svg.outerHTML), await heroButton.locator('svg').evaluate(svg => svg.outerHTML));
+        }
+        assert.equal(await page.locator('header [data-act="settings"]').count(), 0);
+        const buttons = await page.locator('.top-actions > button').evaluateAll(items => items.map(item => item.dataset.act));
+        assert.deepEqual(buttons, ['toggle-theme', 'scan', 'new', 'toggle-menu']);
+        await page.locator('#menu-button').click();
+        const settings = page.locator('#site-drawer [data-act="goto-settings-menu"]');
+        assert.equal(await settings.isVisible(), true);
+        assert.equal(await settings.locator('svg > path').count(), 1, 'settings menu uses shared gear outline');
+        assert.equal(await settings.locator('svg > circle').count(), 1, 'settings gear retains center circle');
+        await settings.click();
+        await page.getByRole('heading', { name: 'Einstellungen & Datensicherung' }).waitFor();
+        assert.equal(await page.locator('.settings-heading .eyebrow.dark').innerText(), 'DEINE SAMMLUNG VERWALTEN');
+        assert.equal(await page.locator('.settings-heading .heading-period').innerText(), '.');
+        assert.equal(await page.locator('.settings-heading [data-act="goto-home"]').count(), 1);
+        await page.setViewportSize({ width: 390, height: 844 });
+        const settingsOverflow = await page.evaluate(() => document.body.scrollWidth - document.body.getBoundingClientRect().width);
+        assert.ok(settingsOverflow <= 1, `Settings header must not overflow on mobile (${settingsOverflow}px)`);
+        assert.equal(await page.locator('#menu-button').isVisible(), true);
+        await page.locator('#menu-button').click();
+        assert.equal(await page.locator('#site-drawer [data-act="goto-settings-menu"]').isVisible(), true);
+    });
+});
+test('browser: both themes and a narrow mobile layout render without page overflow', async () => {
+    await session(async ({ page, open }) => {
+        await open();
+        await page.waitForSelector('.collection-hero');
+        await page.screenshot({
+            path: 'test-artifacts/desktop-light.png'
+        });
+        const beforeTheme = await page.locator('html').getAttribute('data-theme');
+        await page.locator('[data-act="toggle-theme"]').click();
+        assert.notEqual(await page.locator('html').getAttribute('data-theme'), beforeTheme);
+        await page.screenshot({
+            path: 'test-artifacts/desktop-dark.png'
+        });
+        const sampleHeroBackground = () => page.locator('.hero-overlay').evaluate(el => getComputedStyle(el).backgroundImage);
+        const heroBefore = await sampleHeroBackground();
+        assert.match(heroBefore, /rgba\(7, 20, 33, 0\.84\)/, 'Hero overlay must stay dark');
+        await page.locator('[data-act="toggle-theme"]').click();
+        assert.equal(await sampleHeroBackground(), heroBefore, 'Hero overlay must stay dark when the theme changes');
+        await page.setViewportSize({
+            width: 390, height: 844
+        });
+        assert.equal(await page.locator('header [data-act="settings"]').count(), 0, 'settings are menu-only');
+        assert.equal(await page.locator('#menu-button').isVisible(), true);
+        const mobileTheme = page.locator('[data-act="toggle-theme"]');
+        assert.equal(await mobileTheme.isVisible(), true, 'The mobile theme toggle must be visible');
+        const mobileThemeBefore = await page.locator('html').getAttribute('data-theme');
+        await mobileTheme.click();
+        assert.notEqual(await page.locator('html').getAttribute('data-theme'), mobileThemeBefore);
+        const heroGap = await page.evaluate(() => {
+            const buttons = document.querySelector('.hero-actions').getBoundingClientRect();
+            const footnote = document.querySelector('.hero-footnote').getBoundingClientRect();
+            return footnote.top - buttons.bottom;
+        });
+        assert.ok(heroGap >= 18, `The EST label must be separated from buttons (gap: ${heroGap}px)`);
+        await page.screenshot({
+            path: 'test-artifacts/mobile-dark.png'
+        });
+        assert.ok(await page.evaluate(() => document.body.scrollWidth <= document.body.getBoundingClientRect().width + 1));
+    });
+});
+test('browser: cards have equal heights per current grid row, but different rows can differ', async () => {
+    await session(async ({ page, base, open }) => {
+        const names = [
+            'A ' + 'Besonders langer Whiskyname mit mehreren Worten und vielen Angaben '.repeat(3).trim(),
+            'B Kurz', 'C Kurz', 'D Kurz', 'E Kurz', 'F Kurz', 'G Kurz', 'H Kurz',
+        ];
+        for (let index = 0; index < names.length; index++) {
+            const result = await requestJson(base, '/api/bottlings', 'POST', {
+                name: names[index], ageYears: 12,
+                firstBottle: { inventoryNumber: `GRID-${index}`, status: 'closed' },
+            });
+            assert.equal(result.status, 201);
+        }
+        await open();
+        await page.waitForFunction(() => document.querySelectorAll('.whisky-card').length === 8);
+        // The same eight DOM cards must reflow into 4/3/2/1 columns without changing the page size.
+        for (const [width, expectedColumns] of [[1366, 4], [900, 3], [740, 2], [390, 2], [320, 1]]) {
+            await page.setViewportSize({ width, height: 900 });
+            const layout = await page.evaluate(() => {
+                const grid = document.querySelector('.grid');
+                const columns = getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+                const rows = [];
+                for (const card of grid.querySelectorAll('.whisky-card')) {
+                    const rect = card.getBoundingClientRect();
+                    let row = rows.find(r => Math.abs(r.top - rect.top) < 1);
+                    if (!row) { row = { top: rect.top, heights: [], cards: [] }; rows.push(row); }
+                    row.heights.push(rect.height);
+                    row.cards.push(card.querySelector('h3').textContent);
+                }
+                const first = grid.querySelector('.whisky-card');
+                const title = first.querySelector('h3').getBoundingClientRect();
+                const facts = first.querySelector('.card-facts').getBoundingClientRect();
+                return { columns, rows, gap: facts.top - title.bottom };
+            });
+            assert.equal(layout.columns, expectedColumns, `Grid columns at ${width}px`);
+            assert.equal(layout.rows.flatMap(row => row.cards).length, 8);
+            for (const row of layout.rows) {
+                assert.ok(Math.max(...row.heights) - Math.min(...row.heights) < 1,
+                    `${width}px: cards in the same grid row must have equal heights: ${row.heights}`);
+            }
+            assert.ok(layout.rows[0].heights[0] > layout.rows[1].heights[0] + 10,
+                `${width}px: the first (long-title) row must not force its height onto later rows`);
+            assert.ok(layout.gap >= 0 && layout.gap < 10,
+                `${width}px: title and facts should stay close (${layout.gap}px)`);
+        }
+    });
+});
+
+test('browser: founding year and bottler fallback work in home, table and detail after reload', async () => {
+    await session(async ({ page, open, base }) => {
+        const created = await requestJson(base, '/api/bottlings', 'POST', {
+            name: 'Independent bottling', bottler: 'Signatory Vintage', distilleryIds: [],
+            firstBottle: { inventoryNumber: '009998', status: 'open' }
+        });
+        assert.equal(created.status, 201);
+        await open();
+        await page.locator('.whisky-card').waitFor();
+        assert.match(await page.locator('.whisky-card .card-kicker').textContent(), /Signatory Vintage/);
+        const stats = await page.locator('.stats').textContent();
+        assert.match(stats, /Geöffnet/);
+        assert.match(stats, /Geschlossen/);
+        assert.ok(stats.indexOf('Geschlossen') < stats.indexOf('Geöffnet'), 'Geschlossen must come first');
+        assert.doesNotMatch(stats, /Unvollständig/);
+        const footerGap = await page.evaluate(() => {
+            const pager = document.querySelector('.collection-pagination').getBoundingClientRect();
+            const footer = document.querySelector('.site-footer').getBoundingClientRect();
+            return footer.top - pager.bottom;
+        });
+        assert.ok(footerGap <= 55, `Footer must follow pagination without excessive whitespace (${footerGap}px)`);
+        await page.locator('[data-act="toggle-view"]').click();
+        assert.match(await page.locator('tbody tr').innerText(), /Signatory Vintage/);
+        await page.locator('tbody tr').click();
+        await page.locator('.detail-heading-meta').waitFor();
+        assert.match(await page.locator('.detail-heading-meta').textContent(), /Signatory Vintage/);
+        await page.locator('button[data-act="back"]').first().click();
+        await openSettingsFromMenu(page);
+        await page.locator('#established-year').fill('1992');
+        await page.locator('#collection-settings-form button[type="submit"]').click();
+        await page.getByText('Gründungsjahr gespeichert', { exact: true }).waitFor();
+        assert.equal(await page.locator('#established-year').inputValue(), '1992');
+        await page.locator('button[data-act="goto-home"]').first().click();
+        await page.locator('.hero-footnote').waitFor();
+        assert.match(await page.locator('.hero-footnote').innerText(), /COLLECTION · EST\. 1992/);
+        if (!domOnly) {
+            await page.reload();
+            await page.locator('.hero-footnote').waitFor();
+            assert.match(await page.locator('.hero-footnote').innerText(), /COLLECTION · EST\. 1992/);
+        }
+    });
+});
+
+test('browser: real back/forward navigation and direct reload', {
+    skip: domOnly ? 'Managed environment: only DOM mode available; history controller is unit-tested separately' : false
+}, async () => {
+    await session(async ({ page, base, open }) => {
+        const data = await seed(base);
+        await open();
+        await page.locator('.whisky-card').click();
+        await page.waitForURL(`**/?bottling=${data.bottling.id}`);
+        await openSettingsFromMenu(page);
+        await page.waitForURL('**/?view=settings');
+        await page.goBack();
+        await page.waitForSelector('[data-act="edit-bottling"]');
+        await page.goForward();
+        await page.waitForURL('**/?view=settings');
+        await page.getByRole('heading', { name: 'Einstellungen & Datensicherung' }).waitFor();
+        // Import/export is a separate settings panel; the legacy JSON import
+        // inside it remains in a closed <details> until the user opens it.
+        await openSettingsSection(page, 'transfer');
+        await page.locator('details:has(#import-file) > summary').click();
+        await page.locator('#import-file').waitFor({ state: 'visible' });
+        await page.goto(`${base}/?bottling=${data.bottling.id}`);
+        await page.reload();
+        await page.waitForSelector('[data-act="edit-bottling"]');
+        assert.equal(await page.locator('.section-head h2').innerText(), 'Browser Test Blend');
+    });
+});
+
+test('browser: overview and detail mark individual samples, not the bottling itself', async () => {
+    await session(async ({ page, open, base }) => {
+        const created = await seed(base);
+        const sample = await requestJson(base, '/api/bottles', 'POST', {
+            bottlingId: created.bottling.id, inventoryNumber: '000124', volumeType: 'sample', volumeMl: 30
+        });
+        assert.equal(sample.status, 201);
+        await open();
+        await page.waitForSelector('.whisky-card .badge.sample');
+        const badges = page.locator('.whisky-card .card-body > .badges');
+        assert.match(await badges.innerText(), /1 Standardflasche/);
+        assert.match(await badges.innerText(), /1 Sample/);
+        assert.doesNotMatch(await badges.innerText(), /2 Flaschen/);
+        await page.locator('[data-act="toggle-view"]').click();
+        const tableCounts = page.locator('tbody .inventory-badges');
+        assert.match(await tableCounts.innerText(), /1 Standardflasche/);
+        assert.match(await tableCounts.innerText(), /1 Sample/);
+        assert.doesNotMatch(await tableCounts.innerText(), /2 Flaschen/);
+        await page.locator('tbody tr').first().click();
+        await page.waitForSelector(`#bottle-${sample.data.id} .badge.sample`);
+        assert.equal(await page.locator(`#bottle-${created.bottle.id} .badge.sample`).count(), 0);
+        assert.match(await page.locator(`#bottle-${sample.data.id}`).innerText(), /30 ml/);
+        // The sample badge must not touch the status badge or show a border.
+        for (const theme of ['light', 'dark']) {
+            const metrics = await page.evaluate(({ id, theme }) => {
+                document.documentElement.dataset.theme = theme;
+                const info = document.getElementById(`bottle-${id}`);
+                const status = info.querySelector('.bottle-entry-identity > .badge.closed');
+                const sample = info.querySelector('.bottle-entry-identity > .badge.sample');
+                const statusRect = status.getBoundingClientRect();
+                const sampleRect = sample.getBoundingClientRect();
+                return {
+                    gap: sampleRect.left - statusRect.right,
+                    borderWidth: getComputedStyle(sample).borderTopWidth,
+                };
+            }, { id: sample.data.id, theme });
+            assert.ok(metrics.gap >= 10, `${theme}: gap must be at least 10px, got ${metrics.gap}px`);
+            assert.equal(metrics.borderWidth, '0px', `${theme}: sample badge must have no border`);
+        }
+        await page.locator(`#bottle-${sample.data.id} [data-act="edit-bottle"]`).click();
+        assert.equal(await page.locator('#bottle-form [name="volumeType"]').inputValue(), 'sample');
+        assert.equal(await page.locator('#bottle-form [name="volumeMl"]').inputValue(), '30');
+    });
+});
+
+test('browser: upload and remove invoice for one physical bottle', async () => {
+    await session(async ({ page, base, open }) => {
+        const data = await seed(base, '000931');
+        await open();
+        await page.locator('.whisky-card').click();
+        const files = page.locator(`#bottle-${data.bottle.id} input[data-bottle-files]`);
+        // Verify the actual upload response before waiting for the refreshed DOM.
+        // Otherwise a rejected upload is misreported as a generic selector timeout.
+        const uploaded = page.waitForResponse(response =>
+            response.request().method() === 'POST' &&
+            new URL(response.url()).pathname === `/api/bottles/${data.bottle.id}/files`);
+        await files.setInputFiles({
+            name: 'Rechnung.pdf', mimeType: 'application/pdf',
+            buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n')
+        });
+        const uploadResponse = await uploaded;
+        assert.equal(uploadResponse.status(), 201,
+            `attachment upload must succeed: ${await uploadResponse.text()}`);
+        await page.waitForSelector(`#bottle-${data.bottle.id} .document-list a`);
+        assert.equal(await page.locator('.document-list a').innerText(), 'Rechnung.pdf');
+        const saved = (await requestJson(base, '/api/collection')).data;
+        assert.equal(saved.bottlings[0].bottles[0].files.length, 1);
+        const link = page.locator('.document-list a');
+        assert.match(await link.getAttribute('href'), new RegExp(`/api/bottles/${data.bottle.id}/files/`));
+        await page.locator(`#bottle-${data.bottle.id} [data-act="delete-file"]`).click();
+        await page.locator('.overlay [data-act="confirm-action"]').click();
+        await page.waitForSelector('.document-list', { state: 'detached' });
+        const after = (await requestJson(base, '/api/collection')).data;
+        assert.deepEqual(after.bottlings[0].bottles[0].files, []);
+    });
+});
+
+test('browser: removing a photo or attachment does not bounce the detail page to the top', async () => {
+    await session(async ({ page, base, open }) => {
+        const { bottling, bottle } = await seed(base, '002286');
+        const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+        for (let i = 0; i < 8; i++) {
+            assert.equal((await requestJson(base, `/api/bottles/${bottle.id}/photos`, 'POST', {image:png})).status, 201);
+        }
+        await open({query:`?bottling=${bottling.id}`});
+        await page.locator('.photo-tile').first().waitFor();
+        const invoice = page.locator(`[data-bottle-files="${bottle.id}"]`);
+        const uploaded = page.waitForResponse(response => response.request().method() === 'POST' &&
+            new URL(response.url()).pathname === `/api/bottles/${bottle.id}/files`);
+        await invoice.setInputFiles({name:'receipt.pdf',mimeType:'application/pdf',
+            buffer:Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n')});
+        assert.equal((await uploaded).status(),201);
+        await page.locator('.document-list a').waitFor();
+        await page.evaluate(() => {window.__coverBefore = document.querySelector('.detail-summary-grid .hero-photo');});
+        // Keep room below the content: when a deletion shortens a page that is
+        // scrolled to its very end, the browser must clamp scrollY. That is
+        // correct behaviour, not a bounce, so the probe must not sit at the end.
+        await page.evaluate(() => {
+            const spacer = document.createElement('div');
+            spacer.id = 'scroll-room-probe';
+            spacer.style.height = '1200px';
+            document.body.append(spacer);
+        });
+
+        // Observe complete animation frames after unlocking the confirmation
+        // dialog. A scroll-to-top followed by smooth restoration must fail.
+        async function confirmAndCheck(selector, expectedSelector, expectedCount) {
+            const trigger = selector === 'photo' ? page.locator('[data-act="delete-photo"]').nth(4)
+                : selector === 'cover' ? page.locator('[data-act="delete-photo"]').first()
+                    : page.locator(selector);
+            await trigger.click();
+            await page.locator('#modal-root [data-act="confirm-action"]').waitFor();
+            const previous = await page.evaluate(() => ({
+                y: -Number.parseInt(document.body.style.top, 10),
+                cardTop: document.querySelector('.bottle-entry').getBoundingClientRect().top,
+            }));
+            assert.ok(previous.y > 100, 'the confirmation must start from a scrolled detail page');
+            await page.evaluate(() => {
+                window.__scrollSamples = [];
+                window.__stopScrollSamples = false;
+                const sample = () => {
+                    window.__scrollSamples.push({
+                        y:window.scrollY, fixed:document.body.style.position === 'fixed',
+                        cardTop:document.querySelector('.bottle-entry')?.getBoundingClientRect().top,
+                    });
+                    if (!window.__stopScrollSamples) requestAnimationFrame(sample);
+                };
+                requestAnimationFrame(sample);
+            });
+            await page.locator('#modal-root [data-act="confirm-action"]').click();
+            await page.waitForFunction(({selector,count}) => document.querySelectorAll(selector).length === count,
+                {selector:expectedSelector,count:expectedCount});
+            await page.waitForTimeout(120);
+            const samples = await page.evaluate(() => {
+                window.__stopScrollSamples = true;
+                return window.__scrollSamples.filter(sample => !sample.fixed);
+            });
+            assert.ok(samples.length, 'scroll positions must be observed after closing the dialog');
+            assert.ok(samples.every(sample => sample.y >= previous.y - 125),
+                `same-page refresh must not jump to top: ${JSON.stringify(samples)}`);
+            assert.ok(samples.every(sample => Math.abs(sample.cardTop - previous.cardTop) <= 3),
+                `visible bottle card must not move while saving: ${JSON.stringify(samples)}`);
+        }
+        await page.locator('.photo-tile').nth(4).scrollIntoViewIfNeeded();
+        await confirmAndCheck('photo', '.photo-tile', 7);
+        assert.equal(await page.evaluate(() => window.__coverBefore === document.querySelector('.detail-summary-grid .hero-photo')),
+            true, 'unchanged cover image must remain mounted');
+        // Deleting the cover must also keep the upper photo area stable while
+        // the next image is decoded, rather than shifting the entire page.
+        await page.locator('.photo-tile').first().scrollIntoViewIfNeeded();
+        await confirmAndCheck('cover', '.photo-tile', 6);
+        await page.locator('[data-act="delete-file"]').scrollIntoViewIfNeeded();
+        await confirmAndCheck('[data-act="delete-file"]', '.document-list a', 0);
+        assert.equal(await page.locator('.photo-tile').count(),6);
+    });
+});
+
+test('browser: six bottlings still use four columns on desktop', async () => {
+    await session(async ({ page, base, open }) => {
+        const collection = (await requestJson(base, '/api/collection')).data;
+        collection.bottlings = Array.from({ length: 6 }, (_, index) => ({
+            id: `six-${index + 1}`,
+            name: `Six Malt ${index + 1}`,
+            distilleryIds: [], bottles: [],
+            createdAt: '2026-11-06T08:00:00.000Z',
+        }));
+        assert.equal((await requestJson(base, '/api/import/json', 'POST', collection)).status, 200);
+        await open();
+        assert.equal(await page.locator('.whisky-card').count(), 6);
+        assert.equal(await page.locator('.grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), 4);
+        assert.equal(await page.locator('#pagination-size').inputValue(), '24');
+    });
+});
+
+test('browser: selected entries per page survive F5 in both collection modes', async () => {
+    if (domOnly) return; // Actual F5 requires navigation, not the DOM-only test harness.
+    await session(async ({ page, base, open }) => {
+        const source = await requestJson(base, '/api/collection');
+        const collection = source.data;
+        collection.bottlings = Array.from({ length: 75 }, (_, index) => ({
+            id: `persist-${index + 1}`,
+            name: `Malt ${index + 1}`,
+            distilleryIds: [], bottles: [{
+                id: `bottle-persist-${index + 1}`,
+                inventoryNumber: String(index + 1), status: 'closed',
+            }],
+            createdAt: '2026-11-06T08:00:00.000Z',
+        }));
+        assert.equal((await requestJson(base, '/api/import/json', 'POST', collection)).status, 200);
+        await open();
+        await page.locator('#pagination-size').selectOption('48');
+        assert.equal(await page.locator('.whisky-card').count(), 48);
+        assert.equal(await page.evaluate(() => localStorage.getItem('whisky-page-size')), '48');
+        await page.reload();
+        await page.locator('#pagination-size').waitFor();
+        assert.equal(await page.locator('#pagination-size').inputValue(), '48');
+        assert.equal(await page.locator('.whisky-card').count(), 48);
+        await page.locator('[data-collection-mode="bottles"]').click();
+        assert.equal(await page.locator('#pagination-size').inputValue(), '48');
+        await page.reload();
+        await page.locator('#pagination-size').waitFor();
+        assert.equal(await page.locator('#pagination-size').inputValue(), '48');
+        await page.locator('#pagination-size').selectOption('12');
+        await page.reload();
+        await page.locator('#pagination-size').waitFor();
+        assert.equal(await page.locator('#pagination-size').inputValue(), '12');
+        assert.equal(await page.locator('.whisky-card').count(), 12);
+    });
+});
+
+test('browser: 450 bottlings keep a fixed page size with only divisor-friendly grid widths', async () => {
+    await session(async ({ page, base, open }) => {
+        const source = await requestJson(base, '/api/collection');
+        const collection = source.data;
+        collection.bottlings = Array.from({ length: 450 }, (_, index) => ({
+            id: `bulk-${String(index + 1).padStart(4, '0')}`,
+            name: `Malt ${String(index + 1).padStart(4, '0')}`,
+            distilleryIds: [],
+            bottles: [],
+            createdAt: '2026-11-06T08:00:00.000Z',
+        }));
+        const result = await requestJson(base, '/api/import/json', 'POST', collection);
+        assert.equal(result.status, 200);
+        await open();
+        await page.waitForSelector('.collection-pagination');
+        await page.waitForFunction(() => document.querySelectorAll('.whisky-card').length === 24);
+        assert.equal(await page.locator('.grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), 4);
+        assert.equal(await page.locator('.whisky-card').count(), 24);
+        assert.match(await page.locator('.pagination-topline').innerText(), /Seite 1 von 19/);
+        assert.equal(await page.locator('#pagination-size').inputValue(), '24');
+
+        // 24 remains 24 even when the grid changes 2 -> 3 -> 4 columns.
+        for (const [width, columns] of [[390, 2], [820, 3], [1366, 4], [1660, 4], [360, 1]]) {
+            await page.setViewportSize({ width, height: 900 });
+            assert.equal(await page.locator('.grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), columns);
+            assert.equal(await page.locator('.whisky-card').count(), 24);
+        }
+
+        // The numbered last page and the "Letzte Seite" button both target page 19.
+        // Select the numbered button by its unique accessible name.
+        await page.locator('.pagination-pages [aria-label="Seite 19"]').click();
+        assert.equal(await page.locator('.whisky-card').count(), 18);
+        assert.equal(await page.locator('.grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), 1);
+        assert.match(await page.locator('.pagination-topline').innerText(), /433–450 von 450/);
+        if (domOnly) {
+            assert.ok(await page.evaluate(() => window.__historyCalls.some(call => call.url === '/?page=19')));
+        } else {
+            await page.waitForURL('**/?page=19');
+        }
+        await page.setViewportSize({ width: 1660, height: 900 });
+        assert.equal(await page.locator('.grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), 4);
+        await page.locator('#search').fill('Malt 044');
+        // Search leaves 10 results, not necessarily a complete row; no six-column squeeze.
+        assert.equal(await page.locator('.whisky-card').count(), 10);
+        assert.equal(await page.locator('.grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), 4);
+        await page.locator('#search').fill('Malt 0450');
+        assert.equal(await page.locator('.whisky-card').count(), 1);
+        assert.match(await page.locator('.whisky-card').innerText(), /Malt 0450/);
+        assert.equal(await page.locator('.pagination-summary').innerText(), '1–1 von 1 Abfüllungen');
+        await page.locator('#search').fill('');
+        await page.locator('[data-act="toggle-view"]').click();
+        assert.equal(await page.locator('tbody tr').count(), 24, 'table respects the same fixed 24 entries');
+        await page.locator('[data-act="toggle-view"]').click();
+        assert.equal(await page.locator('#pagination-size').inputValue(), '24');
+        await page.locator('#pagination-size').selectOption('48');
+        assert.equal(await page.locator('.whisky-card').count(), 48);
+        await page.locator('#pagination-size').selectOption('12');
+        assert.equal(await page.locator('.whisky-card').count(), 12);
+        await page.locator('#pagination-size').selectOption('24');
+        await page.locator('.pagination-pages [aria-label="Seite 19"]').click();
+        assert.match(await page.locator('.pagination-topline').innerText(), /433–450 von 450/);
+        assert.equal(await page.locator('.whisky-card').count(), 18);
+    });
+});
+
+test('browser: distillery management uses normal page scrolling and app dialogs for create and rename', async () => {
+    await session(async ({ page, base, open }) => {
+        await open();
+        await openSettingsFromMenu(page);
+        await openSettingsSection(page, 'distilleries');
+        const metrics = await page.locator('.distillery-list').evaluate(el => ({
+            maxHeight: getComputedStyle(el).maxHeight,
+            scrolling: getComputedStyle(el).overflowY,
+            rowCount: el.querySelectorAll('.distillery-row').length,
+            height: el.getBoundingClientRect().height,
+        }));
+        assert.equal(metrics.maxHeight, 'none', 'distilleries must not have a fixed height cap');
+        assert.equal(metrics.scrolling, 'visible', 'the page, not the list, should scroll');
+        assert.ok(metrics.rowCount > 100 && metrics.height > 400, 'all distilleries remain in the full-height list');
+        await page.locator('#distillery-search').fill('Ardbeg');
+        assert.equal(await page.locator('.distillery-row:visible').count(), 1);
+        assert.match(await page.locator('#distillery-count').innerText(), /1 von/);
+        await page.locator('.distillery-row:visible [data-act="rename-distillery"]').click();
+        assert.equal(await page.locator('#distillery-name').inputValue(), 'Ardbeg');
+        const labelGaps = await page.locator('#distillery-form').evaluate(form => {
+            const nameBottom = form.querySelector('#distillery-name').getBoundingClientRect().bottom;
+            const statusLabel = form.querySelector('#distillery-status').closest('label');
+            const statusBottom = form.querySelector('#distillery-status').getBoundingClientRect().bottom;
+            const coordinatesLabel = form.querySelector('#distillery-latitude').closest('label');
+            return [statusLabel.getBoundingClientRect().top - nameBottom,
+                coordinatesLabel.getBoundingClientRect().top - statusBottom];
+        });
+        assert.ok(labelGaps.every(gap => gap >= 12), `distillery labels need vertical separation: ${labelGaps}`);
+        await page.locator('#distillery-name').fill('Ardbeg Test Edition');
+        await page.locator('#distillery-form button[type="submit"]').click();
+        await page.waitForSelector('.overlay', { state: 'detached' });
+        await page.locator('#distillery-search').fill('Ardbeg Test Edition');
+        assert.equal(await page.locator('.distillery-row:visible').count(), 1);
+        const renamed = (await requestJson(base, '/api/collection')).data.distilleries;
+        assert.ok(renamed.some(d => d.name === 'Ardbeg Test Edition'));
+        await page.locator('[data-act="add-distillery"]').first().click();
+        await page.locator('#distillery-name').fill('Sample New Distillery');
+        await page.locator('#distillery-form button[type="submit"]').click();
+        await page.waitForSelector('.overlay', { state: 'detached' });
+        assert.ok((await requestJson(base, '/api/collection')).data.distilleries.some(d => d.name === 'Sample New Distillery'));
+    });
+});
+
+test('browser: adding a distillery within a bottling form restores unsaved fields and selected files', async () => {
+    await session(async ({ page, open }) => {
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form [name="name"]').fill('My unfinished bottling');
+        await page.locator('#bottling-form [name="brand"]').fill('My unfinished brand');
+        await page.locator('#bottling-form [name="firstPhotos"]').setInputFiles({
+            name: 'snapshot.png', mimeType: 'image/png',
+            buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=', 'base64'),
+        });
+        await page.locator('#bottling-form [data-act="add-distillery"]').click();
+        await page.waitForSelector('#distillery-form');
+        assert.equal(await page.locator('#bottling-form').count(), 0, 'parent form must be temporarily suspended');
+        await page.locator('#distillery-name').fill('New Distillery in Draft');
+        await page.locator('#distillery-form button[type="submit"]').click();
+        await page.waitForSelector('#bottling-form');
+        assert.equal(await page.locator('#bottling-form [name="name"]').inputValue(), 'My unfinished bottling');
+        assert.equal(await page.locator('#bottling-form [name="brand"]').inputValue(), 'My unfinished brand');
+        assert.equal(await page.locator('#bottling-form [name="firstPhotos"]').evaluate(el => el.files[0]?.name), 'snapshot.png');
+        const selection = page.locator('#bottling-form .distillery-option').filter({ hasText: 'New Distillery in Draft' });
+        assert.equal(await selection.locator('input:checked').count(), 1);
+    });
+});
+
+test('browser: existing overview photos keep a visible gap above the divider', async () => {
+    await session(async ({ page, open, base }) => {
+        const { bottle } = await seed(base, '000912');
+        await requestJson(base, `/api/bottles/${bottle.id}/photos`, 'POST', {
+            image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=',
+        });
+        await open();
+        for (const width of [1366, 390, 350]) {
+            await page.setViewportSize({ width, height: 850 });
+            const spacing = await page.locator('.card-img img:not(.image-placeholder)').evaluate(el => {
+                const image = getComputedStyle(el);
+                const card = el.closest('.card-img');
+                const rule = getComputedStyle(card, '::after');
+                return { padding: parseFloat(image.paddingBottom), ruleBottom: parseFloat(rule.bottom) };
+            });
+            // The line is 13px from the card bottom; the image padding must be
+            // greater than that to avoid any visible pixels touching the line.
+            assert.ok(spacing.padding - spacing.ruleBottom >= 8, `${width}px: photo needs >8px gap above rule`);
+        }
+    });
+});
+
+test('browser: switch between bottlings and physical bottles, filter, navigate and restore the mode', async () => {
+    await session(async ({ page, base, open }) => {
+        const created = await seed(base, '000701');
+        const added = await requestJson(base, '/api/bottles', 'POST', {
+            bottlingId: created.bottling.id, inventoryNumber: '000702',
+            volumeType: 'sample', volumeMl: 50, status: 'open',
+        });
+        assert.equal(added.status, 201);
+        const photo = await requestJson(base, `/api/bottles/${created.bottle.id}/photos`, 'POST', {
+            image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=',
+        });
+        assert.equal(photo.status, 201);
+        await open();
+        assert.equal(await page.locator('.whisky-card').count(), 1);
+        const head = page.locator('.collection-heading');
+        assert.equal(await head.locator('.collection-mode-toggle').count(), 1);
+        assert.equal(await page.locator('.collection-mode-toggle').count(), 1);
+        for (const width of [320, 390, 740, 900, 1366]) {
+            await page.setViewportSize({ width, height: 850 });
+            const layout = await head.locator('.collection-mode-toggle').evaluate((el) => {
+                const rect = el.getBoundingClientRect();
+                const stats = document.querySelector('.stats').getBoundingClientRect();
+                return { left: rect.left, right: rect.right, bottom: rect.bottom, statsTop: stats.top };
+            });
+            assert.ok(layout.left >= 0 && layout.right <= width + 1, `${width}px: toggle must fit the viewport`);
+            assert.ok(layout.bottom <= layout.statsTop, `${width}px: toggle must stay above statistics`);
+        }
+        await page.setViewportSize({ width: 1366, height: 900 });
+        await page.locator('[data-collection-mode="bottles"]').click();
+        assert.equal(await page.locator('.whisky-card').count(), 2);
+        const firstSrc = await page.locator(`.whisky-card[data-bottle-id="${created.bottle.id}"] .card-img img`).getAttribute('src');
+        const secondSrc = await page.locator(`.whisky-card[data-bottle-id="${added.data.id}"] .card-img img`).getAttribute('src');
+        assert.ok(firstSrc && !firstSrc.includes('photo-placeholder'), 'The first bottle has its own photo');
+        assert.equal(secondSrc, firstSrc, 'A bottle without its own photo uses the bottling cover');
+        assert.equal(await page.locator('[data-collection-mode="bottles"]').getAttribute('aria-pressed'), 'true');
+        assert.match(await page.locator('.grid').innerText(), /000701/);
+        assert.match(await page.locator('.grid').innerText(), /000702/);
+        if (!domOnly) {
+            assert.equal(new URL(page.url()).searchParams.get('mode'), 'bottles');
+            await page.goBack();
+            assert.equal(await page.locator('.whisky-card').count(), 1);
+            await page.goForward();
+            assert.equal(await page.locator('.whisky-card').count(), 2);
+            await page.reload();
+            await page.locator('.whisky-card').nth(1).waitFor();
+            assert.equal(await page.locator('.whisky-card').count(), 2);
+        }
+        await page.locator('#filter-status').selectOption('open');
+        assert.equal(await page.locator('.whisky-card').count(), 1);
+        assert.match(await page.locator('.whisky-card').innerText(), /000702/);
+        await page.locator('#filter-status').selectOption('all');
+        await page.locator('#search').fill('000701');
+        assert.equal(await page.locator('.whisky-card').count(), 1);
+        assert.match(await page.locator('.whisky-card').innerText(), /000701/);
+        await page.locator('#search').fill('');
+        await page.locator('[data-act="toggle-view"]').click();
+        assert.equal(await page.locator('tbody tr[data-bottle-id]').count(), 2);
+        assert.match(await page.locator('thead').innerText(), /Flasche/i);
+        await page.locator('[data-act="toggle-view"]').click();
+        await page.locator(`.whisky-card[data-bottle-id="${added.data.id}"]`).click();
+        await page.waitForSelector(`#bottle-${added.data.id}.scanned-bottle`);
+        await page.locator('[data-act="back"]').first().click();
+        assert.equal(await page.locator('.whisky-card').count(), 2);
+        assert.equal(await page.locator('[data-collection-mode="bottles"]').getAttribute('aria-pressed'), 'true');
+        await page.locator('[data-collection-mode="bottlings"]').click();
+        assert.equal(await page.locator('.whisky-card').count(), 1);
+    });
+});
+
+test('browser: overview quick filters list only used distilleries and combine standard bottles and samples', async () => {
+    await session(async ({ page, base, open }) => {
+        const catalog = (await requestJson(base, '/api/collection')).data.distilleries;
+        const first = catalog.find(item => item.name === 'Kilchoman');
+        const second = catalog.find(item => item.name === 'Aberfeldy');
+        assert.ok(first && second);
+        for (const [name, id, number] of [
+            ['Quickfilter Kilchoman', first.id, '086001'],
+            ['Quickfilter Aberfeldy', second.id, '086002'],
+        ]) {
+            const created = await requestJson(base, '/api/bottlings', 'POST', {
+                name, distilleryIds: [id], firstBottle: { inventoryNumber: number, status: 'closed' },
+            });
+            assert.equal(created.status, 201);
+            if (id === first.id) {
+                const added = await requestJson(base, '/api/bottles', 'POST', {
+                    bottlingId: created.data.bottling.id, inventoryNumber: '086003',
+                    volumeType: 'sample', status: 'open',
+                });
+                assert.equal(added.status, 201);
+            }
+        }
+        await open();
+        assert.deepEqual(await page.locator('#filter-distillery option').allTextContents(),
+            ['Alle Destillerien', 'Aberfeldy', 'Kilchoman']);
+        await page.locator('#filter-distillery').selectOption(first.id);
+        await page.locator('#filter-volume-type').selectOption('sample');
+        assert.equal(await page.locator('.whisky-card').count(), 1);
+        assert.match(await page.locator('.whisky-card').innerText(), /Quickfilter Kilchoman/);
+        await page.locator('#filter-status').selectOption('closed');
+        assert.equal(await page.locator('.whisky-card').count(), 0,
+            'the closed standard bottle must not qualify as a closed sample');
+        await page.locator('#filter-status').selectOption('open');
+        assert.equal(await page.locator('.whisky-card').count(), 1);
+        await page.locator('[data-collection-mode="bottles"]').click();
+        assert.equal(await page.locator('#filter-distillery').inputValue(), first.id);
+        assert.equal(await page.locator('#filter-volume-type').inputValue(), 'sample');
+        assert.equal(await page.locator('.whisky-card').count(), 1);
+        assert.match(await page.locator('.whisky-card').innerText(), /086003/);
+        await page.locator('#filter-volume-type').selectOption('standard');
+        assert.equal(await page.locator('.whisky-card').count(), 0);
+        await page.locator('#filter-status').selectOption('all');
+        assert.equal(await page.locator('.whisky-card').count(), 1);
+        assert.match(await page.locator('.whisky-card').innerText(), /086001/);
+        await page.locator('[data-act="toggle-view"]').click();
+        assert.equal(await page.locator('tbody tr').count(), 1);
+        await page.locator('#filter-distillery').selectOption(second.id);
+        assert.match(await page.locator('tbody').innerText(), /086002/);
+        for (const width of [320, 390, 1366]) {
+            await page.setViewportSize({ width, height: 850 });
+            const overflow = await page.evaluate(() => document.body.scrollWidth - document.body.getBoundingClientRect().width);
+            assert.ok(overflow <= 1, `${width}px: overview quick filters must not overflow`);
+            const layout = await page.locator('.toolbar').evaluate(toolbar => {
+                const controls = [...toolbar.children];
+                return controls.map(element => ({
+                    tag: element.tagName, top: element.getBoundingClientRect().top,
+                    height: element.getBoundingClientRect().height,
+                }));
+            });
+            assert.deepEqual(layout.map(item => item.tag),
+                ['INPUT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'BUTTON'],
+                'search, six quick filters (including rating), and the view switch');
+            assert.ok(layout.every(item => Math.abs(item.height - 44) <= 1),
+                `${width}px: all controls including view switch must be 44px high`);
+            if (width === 1366) {
+                assert.ok(layout[1].top > layout[0].top,
+                    'narrow desktop: search uses its own row so no filter caption is truncated');
+            }
+        }
+    });
+});
+
+
+
+test('browser: horizontal overflow check detects an 8px overflow with a reserved scrollbar track', async () => {
+    await session(async ({ page, open }) => {
+        await open();
+        await page.setViewportSize({ width: 320, height: 900 });
+        const measurement = await page.evaluate(() => {
+            // The browser may report the full viewport through clientWidth even
+            // though the real body layout ends at the scrollbar track.
+            const body = document.body;
+            const usableWidth = body.getBoundingClientRect().width;
+            const normalOverflow = body.scrollWidth - usableWidth;
+            const probe = document.createElement('div');
+            // Use an in-flow box: absolute positioning can make scrollWidth
+            // measurements differ between the root and body scroll containers.
+            probe.style.cssText = `display:block;width:${usableWidth + 8}px;height:1px;pointer-events:none`;
+            body.append(probe);
+            const withOverflow = body.scrollWidth - body.getBoundingClientRect().width;
+            const visualExcess = probe.getBoundingClientRect().right - body.getBoundingClientRect().right;
+            probe.remove();
+            return { usableWidth, normalOverflow, withOverflow, visualExcess };
+        });
+        assert.ok(measurement.usableWidth > 0 && measurement.usableWidth <= 320);
+        assert.ok(measurement.normalOverflow <= 1, `Baseline layout overflow: ${JSON.stringify(measurement)}`);
+        assert.ok(measurement.visualExcess >= 7,
+            `Probe must extend 8px beyond the usable body layout: ${JSON.stringify(measurement)}`);
+        assert.ok(measurement.withOverflow >= 7,
+            `8px overflow must be detected with a reserved scrollbar track: ${JSON.stringify(measurement)}`);
+    });
+});
+
+test('browser: map and collection use the same full-width content frame, right drawer and unified return button', async () => {
+    await session(async ({ page, open }) => {
+        await open();
+        await page.locator('.collection-hero').waitFor({ state: 'visible' });
+        for (const width of [320, 390, 740, 1024, 1366, 1660]) {
+            await page.setViewportSize({ width, height: 900 });
+            const homeFrame = await page.evaluate(() => {
+                const main = document.querySelector('main').getBoundingClientRect();
+                const hero = document.querySelector('.collection-hero').getBoundingClientRect();
+                return { left: main.left, right: main.right, width: main.width,
+                    viewportContentWidth: document.body.getBoundingClientRect().width,
+                    contentLeft: hero.left, contentRight: hero.right,
+                    overflow: document.body.scrollWidth - document.body.getBoundingClientRect().width };
+            });
+            // The root's clientWidth can still include the reserved scrollbar track
+            // while the body's layout box excludes it. Measure that actual
+            // layout box: it is what main { width: 100% } fills.
+            assert.ok(Math.abs(homeFrame.width - Math.min(homeFrame.viewportContentWidth, 1350)) <= 1,
+                `${width}px: collection main should fill usable width ${homeFrame.viewportContentWidth}, got ${homeFrame.width}`);
+            assert.ok(homeFrame.viewportContentWidth <= width && homeFrame.viewportContentWidth > 0,
+                `${width}px: browser content viewport should fit within the window`);
+            assert.ok(homeFrame.overflow <= 1, `${width}px: collection must not overflow`);
+
+            await page.locator('#menu-button').click();
+            const drawer = await page.locator('#site-drawer').evaluate(el => {
+                const rect = el.getBoundingClientRect();
+                const backdrop = document.querySelector('.site-drawer-backdrop').getBoundingClientRect();
+                return { left: rect.left, right: rect.right, width: rect.width,
+                    backdropRight: backdrop.right, layoutRight: document.body.getBoundingClientRect().right };
+            });
+            // A fixed element can end at the gutter boundary, not innerWidth.
+            // It must align with its backdrop and remain at the usable right edge.
+            assert.ok(Math.abs(drawer.right - drawer.backdropRight) <= 1,
+                `${width}px: menu drawer must align with fixed backdrop right edge: ${JSON.stringify(drawer)}`);
+            assert.ok(drawer.right >= drawer.layoutRight - 1 && drawer.right <= width + 1,
+                `${width}px: menu drawer must stay on the right, including the scrollbar gutter: ${JSON.stringify(drawer)}`);
+            assert.ok(drawer.left >= -1, `${width}px: drawer must remain inside viewport`);
+            assert.equal(await page.locator('#menu-button').getAttribute('aria-expanded'), 'true');
+            await page.locator('#site-drawer [data-act="goto-map"]').click();
+            await page.locator('.map-layout').waitFor({ state: 'visible' });
+            assert.equal(await page.locator('#site-drawer').isVisible(), false);
+
+            const mapFrame = await page.evaluate(() => {
+                const main = document.querySelector('main').getBoundingClientRect();
+                const layout = document.querySelector('.map-layout').getBoundingClientRect();
+                const map = document.querySelector('.map-stage').getBoundingClientRect();
+                const sidebar = document.querySelector('.map-sidebar').getBoundingClientRect();
+                const actualGridColumns = getComputedStyle(document.querySelector('.map-layout')).gridTemplateColumns.split(' ').length;
+                return { left: main.left, right: main.right, width: main.width,
+                    contentLeft: layout.left, contentRight: layout.right,
+                    mapRight: map.right, sidebarLeft: sidebar.left, sidebarRight: sidebar.right,
+                    mapTop: map.top, sidebarTop: sidebar.top, actualGridColumns,
+                    overflow: document.body.scrollWidth - document.body.getBoundingClientRect().width };
+            });
+            for (const field of ['left', 'right', 'width']) {
+                assert.ok(Math.abs(mapFrame[field] - homeFrame[field]) <= 1,
+                    `${width}px: map and collection ${field} differ: ${mapFrame[field]} vs ${homeFrame[field]}`);
+            }
+            assert.ok(Math.abs(mapFrame.contentLeft - homeFrame.contentLeft) <= 1,
+                `${width}px: map content must align with collection content left edge`);
+            assert.ok(Math.abs(mapFrame.contentRight - homeFrame.contentRight) <= 1,
+                `${width}px: map content must align with collection content right edge`);
+            if (width > 950) {
+                assert.equal(mapFrame.actualGridColumns, 2, `${width}px: preserve two-column map layout`);
+                assert.ok(mapFrame.mapRight + 5 < mapFrame.sidebarLeft, `${width}px: separate map and sidebar`);
+                assert.ok(Math.abs(mapFrame.mapTop - mapFrame.sidebarTop) <= 1,
+                    `${width}px: the map and info panel remain side by side`);
+                assert.ok(Math.abs(mapFrame.sidebarRight - mapFrame.contentRight) <= 1);
+            } else {
+                assert.equal(mapFrame.actualGridColumns, 1, `${width}px: stack the layout on smaller displays`);
+            }
+            assert.ok(mapFrame.overflow <= 1, `${width}px: map must not overflow`);
+            const mapBack = page.locator('main .section-head > .btn');
+            assert.equal(await mapBack.innerText(), '← Zur Sammlung');
+            assert.equal(await mapBack.getAttribute('data-act'), 'goto-home');
+            await mapBack.click();
+            await page.locator('.collection-hero').waitFor({ state: 'visible' });
+        }
+        await page.locator('#menu-button').click();
+        await page.locator('#site-drawer [data-act="goto-settings-menu"]').click();
+        await page.getByRole('heading', { name: 'Einstellungen & Datensicherung' }).waitFor();
+        const settingsBack = page.locator('main .section-head > .btn');
+        assert.equal(await settingsBack.innerText(), '← Zur Sammlung');
+        assert.equal(await settingsBack.getAttribute('data-act'), 'goto-home');
+        await settingsBack.click();
+        await page.locator('.collection-hero').waitFor({ state: 'visible' });
+    });
+});
+
+test('browser: map can toggle every catalogued distillery and show pagoda markers for empty sites', async () => {
+    await session(async ({ page, open, base }) => {
+        const catalog = (await requestJson(base, '/api/collection')).data.distilleries;
+        const kilchoman = catalog.find(site => site.name === 'Kilchoman');
+        const aberfeldy = catalog.find(site => site.name === 'Aberfeldy');
+        assert.ok(kilchoman && aberfeldy);
+        const added = await requestJson(base, '/api/bottlings', 'POST', {
+            name: 'Only Kilchoman', distilleryIds: [kilchoman.id],
+            firstBottle: { inventoryNumber: '088601', status: 'closed' },
+        });
+        assert.equal(added.status, 201);
+        await open();
+        await page.locator('[data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-map"]').click();
+        const toggle = page.getByRole('switch', { name: 'Alle Destillerien anzeigen' });
+        assert.equal(await toggle.isChecked(), false);
+        assert.equal(await page.locator('#map-site-select option').count(), 1);
+        assert.equal(await page.locator('.map-marker-pagoda').count(), 0);
+        assert.equal(await page.locator('.map-marker').count(), 1);
+        assert.equal(await page.locator('.map-zoom-level').innerText(), 'Zoom 11');
+        const originalCamera = await page.locator('.map-tiles img').first().evaluate(img => ({
+            tile: img.getAttribute('src'), left: img.style.left, top: img.style.top,
+        }));
+
+        await toggle.check();
+        assert.equal(await page.locator('#map-site-select option').count(), catalog.length);
+        // Toggling all distilleries must NOT reset zoom or recenter the map.
+        assert.equal(await page.locator('.map-zoom-level').innerText(), 'Zoom 11');
+        assert.deepEqual(await page.locator('.map-tiles img').first().evaluate(img => ({
+            tile: img.getAttribute('src'), left: img.style.left, top: img.style.top,
+        })), originalCamera, 'toggle preserves the original map position');
+        // The overview is a separate, intentional user action; only then can
+        // worldwide pagoda markers and clusters be expected in the viewport.
+        await page.getByRole('button', { name: 'Alle Standorte anzeigen' }).click();
+        // At world scale, every unstocked site can be part of a cluster.
+        // The selected empty distillery is checked for an individual pagoda below.
+        assert.equal(await page.locator('.map-legend .map-pagoda-icon').count(), 2, 'active and closed distilleries have distinct legend icons');
+        assert.ok(await page.locator('.map-marker-cluster').count() > 0, 'all-sites overview must cluster nearby distilleries');
+        assert.ok((await page.locator('.map-legend').innerText()).includes('Gruppiert'));
+        assert.match(await page.locator('.map-legend-empty').innerText(), /^Ohne Flaschen\s+Aktiv\s+Geschlossen$/);
+        const clusterLegend = page.locator('.map-legend .map-cluster-legend-icon.map-cluster-visual');
+        assert.equal(await clusterLegend.count(), 1, 'legend must reuse the actual cluster appearance');
+        assert.equal(await clusterLegend.innerText(), '6', 'legend example shows a group, not a single distillery');
+        assert.equal(await page.locator('.map-markers .map-marker-cluster.map-cluster-visual').count() > 0, true);
+        assert.equal(await clusterLegend.evaluate(el => getComputedStyle(el).backgroundColor),
+            await page.locator('.map-markers .map-marker-cluster.map-cluster-visual:not(.selected)').first()
+                .evaluate(el => getComputedStyle(el).backgroundColor),
+            'cluster and legend icon use the same cluster background');
+        const legendSections = await page.locator('.map-legend-section').evaluateAll(nodes => nodes.map(node => node.classList[1]));
+        assert.deepEqual(legendSections, ['map-legend-status', 'map-legend-empty', 'map-legend-stock', 'map-legend-clusters'],
+            'both status sections are adjacent, followed by the size scale and groups');
+        assert.equal(await page.locator('.map-legend .map-legend-status-icon').count(), 2,
+            'stocked active and closed sites have distinct legend symbols');
+        assert.equal(await page.locator('.map-legend .map-legend-status-icon.map-marker-closed').count(), 1,
+            'closed stocked marker uses the dashed closed marker class');
+        const stockLegend = page.locator('.map-legend .map-legend-stock-icon');
+        assert.equal(await stockLegend.count(), 3, 'only the three stock size samples 1, 10, 100 are shown');
+        const sampleSizes = await stockLegend.evaluateAll(nodes => nodes.map(node => Math.round(node.getBoundingClientRect().width)));
+        assert.deepEqual(sampleSizes, [21, 27, 37], 'legend samples use compact proportional diameters');
+        assert.equal(Math.round((await clusterLegend.boundingBox()).width), 27,
+            'group sample should remain compact while live groups keep their map sizes');
+        assert.deepEqual(await stockLegend.allInnerTexts(), ['1', '10', '100'],
+            'bottle counts are displayed inside their markers, as on the map');
+        // At the worldwide overview zoom, even the sole stocked distillery can
+        // be inside a cluster with unstocked sites. Do not require a separate
+        // stocked marker until we explicitly focus that distillery below.
+        for (const theme of ['light', 'dark']) {
+            await page.evaluate(value => document.documentElement.setAttribute('data-theme', value), theme);
+            const legendStyle = await clusterLegend.evaluate(el => ({
+                background: getComputedStyle(el).backgroundColor,
+                border: getComputedStyle(el).borderTopColor,
+                color: getComputedStyle(el).color,
+            }));
+            const markerStyle = await page.locator('.map-markers .map-marker-cluster:not(.selected)').first().evaluate(el => ({
+                background: getComputedStyle(el).backgroundColor,
+                border: getComputedStyle(el).borderTopColor,
+                color: getComputedStyle(el).color,
+            }));
+            assert.deepEqual(legendStyle, markerStyle, `cluster icon must match the map marker in ${theme} mode`);
+            const clusterGeometry = await clusterLegend.evaluate(el => ({
+                radius: getComputedStyle(el).borderRadius,
+                shape: getComputedStyle(el).clipPath,
+            }));
+            const liveClusterGeometry = await page.locator('.map-markers .map-marker-cluster:not(.selected)').first().evaluate(el => ({
+                radius: getComputedStyle(el).borderRadius,
+                shape: getComputedStyle(el).clipPath,
+            }));
+            assert.deepEqual(clusterGeometry, { radius: '50%', shape: 'none' }, 'cluster sample must be round');
+            assert.deepEqual(clusterGeometry, liveClusterGeometry, `round cluster appearance matches in ${theme} mode`);
+            const statusStyles = await page.locator('.map-legend-status-icon').evaluateAll(nodes => nodes.map(el => ({
+                background: getComputedStyle(el).backgroundColor,
+                border: getComputedStyle(el).borderTopColor,
+                borderStyle: getComputedStyle(el).borderTopStyle,
+            })));
+            const liveStock = await page.evaluate(() => {
+                // The only stocked map marker may be selected, so compare against
+                // an unselected live-style reference rather than selection gold.
+                const marker = document.createElement('span');
+                marker.className = 'map-marker map-stock-visual';
+                document.body.append(marker);
+                const style = getComputedStyle(marker);
+                const result = { background: style.backgroundColor, border: style.borderTopColor, borderStyle: style.borderTopStyle };
+                marker.remove();
+                return result;
+            });
+            assert.deepEqual(statusStyles[0], liveStock, `active stocked legend uses live marker style in ${theme} mode`);
+            assert.equal(statusStyles[1].borderStyle, 'dashed', `closed stocked legend shows dashed outline in ${theme} mode`);
+            assert.notEqual(statusStyles[0].background, statusStyles[1].background,
+                `closed and active stocked markers are distinguishable in ${theme} mode`);
+            for (const legendIcon of await page.locator('.map-legend .map-legend-marker, .map-legend .map-pagoda-icon').all()) {
+                const decoration = await legendIcon.evaluate(el => ({
+                    boxShadow: getComputedStyle(el).boxShadow,
+                    filter: getComputedStyle(el).filter,
+                    textShadow: getComputedStyle(el).textShadow,
+                }));
+                assert.deepEqual(decoration, { boxShadow: 'none', filter: 'none', textShadow: 'none' },
+                    `legend example has no glow or shadow in ${theme} mode`);
+            }
+        }
+        await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+        assert.ok(await page.locator('#map-site-select option').count() === catalog.length, 'all sites stay individually selectable');
+        const allZoom = Number((await page.locator('.map-zoom-level').innerText()).replace('Zoom ', ''));
+        assert.ok(allZoom < 11, 'explicitly fitting all locations should zoom out to the wider geographic area');
+        await page.locator('#map-site-select').selectOption(aberfeldy.id);
+        const emptyMarker = page.locator('.map-marker-pagoda[aria-label^="Aberfeldy:"]');
+        await emptyMarker.waitFor({ state: 'visible' });
+        assert.equal(await emptyMarker.locator('.map-pagoda-icon').count(), 1,
+            'focusing an empty distillery reveals its pagoda marker, even if the overview showed only clusters');
+        assert.match(await page.locator('.map-site-heading').innerText(), /0 Abfüllungen · 0 Flaschen/);
+        assert.equal(await page.locator('.map-empty-site').isVisible(), true);
+        assert.equal(await page.locator('#map-bottling-search').count(), 0);
+        await emptyMarker.click();
+        assert.equal(await page.locator('#map-site-select').inputValue(), aberfeldy.id);
+
+        // A focused stocked distillery must be shown as an individual marker,
+        // even if it was previously aggregated in a worldwide overview.
+        await page.locator('#map-site-select').selectOption(kilchoman.id);
+        const stockedMarker = page.locator('.map-markers .map-marker.map-stock-visual[aria-label^="Kilchoman:"]');
+        await stockedMarker.waitFor({ state: 'visible' });
+        assert.match(await stockedMarker.getAttribute('aria-label'), /1 Flaschen/);
+
+        await page.setViewportSize({ width: 390, height: 820 });
+        assert.equal(await page.getByRole('switch', { name: 'Alle Destillerien anzeigen' }).isVisible(), true);
+        const overflow = await page.evaluate(() => document.body.scrollWidth - document.body.getBoundingClientRect().width);
+        assert.ok(overflow <= 1, `mobile map layer causes overflow: ${overflow}px`);
+
+        const focusedZoom = await page.locator('.map-zoom-level').innerText();
+        await page.getByRole('switch', { name: 'Alle Destillerien anzeigen' }).uncheck();
+        assert.equal(await page.locator('#map-site-select option').count(), 1);
+        assert.equal(await page.locator('.map-marker-pagoda').count(), 0);
+        assert.equal(await page.locator('.map-marker[aria-label^="Kilchoman:"]').count(), 1);
+        assert.equal(await page.locator('.map-zoom-level').innerText(), focusedZoom,
+            'hiding the full catalog also preserves the current zoom');
+    });
+});
+
+test('browser: zoom-dependent clusters expand on click while keeping the underlying distillery records', async () => {
+    await session(async ({ page, open, base }) => {
+        const list = (await requestJson(base, '/api/collection')).data.distilleries;
+        const ardbeg = list.find(site => site.name === 'Ardbeg');
+        const lagavulin = list.find(site => site.name === 'Lagavulin');
+        assert.ok(ardbeg && lagavulin);
+        for (const [site, inventory] of [[ardbeg, '088711'], [lagavulin, '088712']]) {
+            const added = await requestJson(base, '/api/bottlings', 'POST', {
+                name: `Cluster ${site.name}`, distilleryIds: [site.id],
+                firstBottle: { inventoryNumber: inventory, status: 'closed' },
+            });
+            assert.equal(added.status, 201);
+            if (site.id === ardbeg.id) {
+                for (const inventoryNumber of ['088713', '088714']) {
+                    const extra = await requestJson(base, '/api/bottles', 'POST', {
+                        bottlingId: added.data.bottling.id, inventoryNumber, status: 'closed',
+                    });
+                    assert.equal(extra.status, 201);
+                }
+            }
+        }
+        await open();
+        await page.locator('[data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-map"]').click();
+        assert.equal(await page.locator('#map-site-select option').count(), 2);
+        const zoomOut = page.getByRole('button', { name: 'Karte verkleinern' });
+        for (let i = 0; i < 12 && await page.locator('.map-marker-cluster').count() === 0; i++) await zoomOut.click();
+        const cluster = page.locator('.map-marker-cluster');
+        await cluster.waitFor({ state: 'visible' });
+        assert.equal(await cluster.innerText(), '4', 'cluster marker sums three Ardbeg and one Lagavulin bottles');
+        assert.match(await cluster.getAttribute('aria-label'), /4 Flaschen · 2 Destillerien/);
+        const initialZoom = Number((await page.locator('.map-zoom-level').innerText()).replace('Zoom ', ''));
+        await cluster.click();
+        const nextZoom = Number((await page.locator('.map-zoom-level').innerText()).replace('Zoom ', ''));
+        assert.equal(nextZoom, Math.min(initialZoom + 2, 16), 'clicking a group zooms towards it');
+        const zoomIn = page.getByRole('button', { name: 'Karte vergrößern' });
+        for (let i = nextZoom; i < 16; i++) await zoomIn.click();
+        assert.equal(await page.locator('.map-marker-cluster').count(), 0, 'no clusters may remain at maximum zoom');
+        assert.equal(await page.locator('#map-site-select option').count(), 2);
+        await page.locator('#map-site-select').selectOption(lagavulin.id);
+        assert.match(await page.locator('.map-site-heading').innerText(), /Lagavulin/);
+        assert.equal(await page.locator('.map-marker[aria-label^="Lagavulin:"]').count(), 1,
+            'selecting a distillery must still expose its individual marker');
+    });
+});
+
+test('browser: map menu, location-based aggregation, responsive fit and detail link', async () => {
+    await session(async ({ page, open, base }) => {
+        const list = (await requestJson(base, '/api/collection')).data.distilleries;
+        const kilchoman = list.find(d => d.name === 'Kilchoman');
+        const ardbeg = list.find(d => d.name === 'Ardbeg');
+        assert.ok(kilchoman && ardbeg);
+        for (const [name, id, count] of [['Map Kilchoman A', kilchoman.id, 3], ['Map Kilchoman B', kilchoman.id, 1], ['Map Ardbeg', ardbeg.id, 1]]) {
+            const response = await requestJson(base, '/api/bottlings', 'POST', {
+                name, distilleryIds: [id],
+                ...(name === 'Map Kilchoman A' ? { ageYears: 8, abv: 46.2, distillationYear: 2012, bottlingYear: 2020 } : {}),
+                firstBottle: { inventoryNumber: String(800 + count + name.length), status: 'closed' },
+            });
+            assert.equal(response.status, 201);
+            for (let i = 1; i < count; i++) {
+                const extra = await requestJson(base, '/api/bottles', 'POST', { bottlingId: response.data.bottling.id, inventoryNumber: `${name.length}${i}99`, status: 'closed' });
+                assert.equal(extra.status, 201);
+            }
+        }
+        await page.setViewportSize({ width: 390, height: 820 });
+        await open();
+        await page.locator('[data-act="toggle-menu"]').click();
+        assert.equal(await page.locator('#site-drawer').isVisible(), true);
+        await page.locator('#site-drawer [data-act="goto-map"]').click();
+        await page.locator('.map-marker').first().waitFor({ state: 'visible' });
+        assert.equal(await page.locator('#site-drawer').isVisible(), false);
+        assert.equal(await page.locator('.map-marker').count(), 2);
+        const marker = page.locator('.map-marker[aria-label^="Kilchoman:"]');
+        assert.match(await marker.getAttribute('aria-label'), /2 Abfüllungen, 4 Flaschen/);
+        assert.match(await page.locator('.map-zoom-level').innerText(), /Zoom (?:8|9|10|11|12)/);
+        assert.equal(await page.locator('.map-attribution').isVisible(), true);
+        await page.locator('#map-site-select').selectOption(kilchoman.id);
+        assert.equal(await page.locator('.map-position-edit .action-icon').count(), 1);
+        const editRect = await page.locator('.map-site-title').evaluate(el => {
+            const name = el.querySelector('strong').getBoundingClientRect();
+            const button = el.querySelector('button').getBoundingClientRect();
+            return { nameRight: name.right, buttonLeft: button.left, nameTop: name.top, buttonTop: button.top, buttonWidth: button.width };
+        });
+        assert.ok(editRect.buttonLeft > editRect.nameRight - 1 && editRect.buttonWidth <= 36);
+        assert.ok(Math.abs(editRect.buttonTop - editRect.nameTop) < 15);
+        assert.equal(await page.locator('.map-missing').count(), 0, 'hide missing section when all map sites are located');
+        assert.doesNotMatch(await page.locator('.map-summary').innerText(), /ohne Standort/);
+        assert.doesNotMatch(await page.locator('.map-legend').innerText(), /62 px/);
+        await page.locator('.map-position-edit').click();
+        assert.equal(await page.locator('#distillery-latitude').inputValue(), '55.7869', 'catalog location must prefill edit dialog');
+        await page.locator('[data-act="close-modal"]').last().click();
+        assert.equal(await page.locator('.map-bottling-link').count(), 2);
+        const annotated = page.locator('.map-bottling-link').filter({ hasText: 'Map Kilchoman A' });
+        assert.equal(await annotated.locator('.map-bottling-facts').innerText(), '8 Jahre · 46,2 % Vol. · Dest. 2012 · Abgef. 2020');
+        assert.match(await annotated.innerText(), /3 Flaschen/);
+        assert.equal(await page.locator('.map-bottling-facts').count(), 1, 'missing metadata does not render empty placeholder');
+        await page.locator('#map-bottling-search').fill('Kilchoman B');
+        assert.equal(await page.locator('.map-bottling-link').count(), 1);
+        await page.locator('.map-bottling-link').first().click();
+        await page.locator('[data-act="edit-bottling"]').waitFor({ state: 'visible' });
+        assert.match(await page.locator('.section-head h2').first().innerText(), /Map Kilchoman B/);
+        await page.locator('[data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-map"]').click();
+        await page.locator('[data-map-control="fit"]').click();
+        assert.equal(await page.locator('.map-marker').count(), 2);
+        const overflow = await page.evaluate(() => document.body.scrollWidth - document.body.getBoundingClientRect().width);
+        assert.ok(overflow <= 1, `mobile horizontal overflow: ${overflow}px`);
+    });
+});
+
+test('browser: unknown distillery can be positioned in app and large per-site list is paginated', async () => {
+    await session(async ({ page, open, base }) => {
+        const added = await requestJson(base, '/api/distilleries', 'POST', { name: 'Private Test Destillery' });
+        assert.equal(added.status, 201);
+        for (let i = 0; i < 15; i++) {
+            const response = await requestJson(base, '/api/bottlings', 'POST', {
+                name: `Unlocated Whisky ${String(i).padStart(2, '0')}`,
+                distilleryIds: [added.data.id],
+                firstBottle: { inventoryNumber: String(90500 + i), status: 'closed' },
+            });
+            assert.equal(response.status, 201);
+        }
+        await open();
+        await page.locator('[data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-map"]').click();
+        if (!(await page.locator('.map-missing').evaluate(details => details.open))) await page.locator('.map-missing summary').click();
+        const edit = page.locator(`[data-map-edit="${added.data.id}"]`).first();
+        await edit.click();
+        await page.locator('#distillery-latitude').fill('55.7869');
+        await page.locator('#distillery-longitude').fill('-6.4308');
+        await page.locator('#distillery-form button[type="submit"]').click();
+        await page.locator('.overlay').waitFor({ state: 'detached' });
+        assert.equal((await requestJson(base, '/api/collection')).data.distilleries.find(d => d.id === added.data.id).latitude, 55.7869);
+        const marker = page.locator('.map-marker[aria-label^="Private Test Destillery:"]');
+        await marker.waitFor({ state: 'visible' });
+        await page.locator('#map-site-select').selectOption(added.data.id);
+        assert.equal(await page.locator('.map-bottling-link').count(), 12);
+        await page.locator('[data-map-page="next"]').click();
+        assert.equal(await page.locator('.map-bottling-link').count(), 3);
+        assert.match(await page.locator('.map-list-pager').innerText(), /Seite 2 von 2/);
+    });
+});
+
+
+test('browser: editing map coordinates keeps zoom and recenters only after a position change', async () => {
+    await session(async ({ page, open, base }) => {
+        const distilleries = (await requestJson(base, '/api/collection')).data.distilleries;
+        const ardbeg = distilleries.find(site => site.name === 'Ardbeg');
+        const kilchoman = distilleries.find(site => site.name === 'Kilchoman');
+        assert.ok(ardbeg && kilchoman);
+        for (const [distillery, number] of [[ardbeg, '071411'], [kilchoman, '071412']]) {
+            const created = await requestJson(base, '/api/bottlings', 'POST', {
+                name: `Map position edit ${distillery.name}`,
+                distilleryIds: [distillery.id],
+                firstBottle: { inventoryNumber: number, status: 'closed' },
+            });
+            assert.equal(created.status, 201);
+        }
+        await open();
+        await page.locator('[data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-map"]').click();
+        await page.locator('#map-site-select').selectOption(ardbeg.id);
+        await page.locator('[data-map-control="in"]').click();
+        await page.locator('[data-map-control="in"]').click();
+        const zoomBefore = await page.locator('.map-zoom-level').innerText();
+        assert.ok(Number(zoomBefore.replace('Zoom ', '')) >= 12);
+
+        await page.locator('.map-position-edit').click();
+        await page.locator('#distillery-latitude').fill('55.7101');
+        await page.locator('#distillery-longitude').fill('-6.2202');
+        await page.locator('#distillery-form button[type="submit"]').click();
+        await page.locator('.overlay').waitFor({ state: 'detached' });
+        assert.equal(await page.locator('.map-zoom-level').innerText(), zoomBefore,
+            'saving an edited location must never refit all map points');
+        assert.equal(await page.locator('#map-site-select').inputValue(), ardbeg.id);
+        const marker = page.locator('.map-marker[aria-label^="Ardbeg:"]');
+        const position = await marker.evaluate(element => {
+            const marker = element.getBoundingClientRect();
+            const view = document.querySelector('.map-viewport').getBoundingClientRect();
+            return { x: marker.left + marker.width / 2 - view.left - view.width / 2,
+                y: marker.top + marker.height / 2 - view.top - view.height / 2 };
+        });
+        assert.ok(Math.abs(position.x) < 3 && Math.abs(position.y) < 3,
+            `corrected location should be centered at the original zoom: ${JSON.stringify(position)}`);
+        assert.equal((await requestJson(base, '/api/collection')).data.distilleries
+            .find(site => site.id === ardbeg.id).latitude, 55.7101);
+
+        // A metadata-only edit must not shift the map, and must preserve zoom.
+        // Retain the same DOM node; rebuilding the viewer can lose the exact camera.
+        await page.locator('#distillery-map').evaluate(element => { element.dataset.cameraIdentity = 'keep'; });
+        await page.locator('[data-map-control="out"]').click();
+        const zoomAfterOut = await page.locator('.map-zoom-level').innerText();
+        const viewport = await page.locator('.map-viewport').boundingBox();
+        await page.mouse.move(viewport.x + viewport.width / 2 + 110, viewport.y + viewport.height / 2 + 65);
+        await page.mouse.down();
+        await page.mouse.move(viewport.x + viewport.width / 2 + 165, viewport.y + viewport.height / 2 + 90, { steps: 5 });
+        await page.mouse.up();
+        const displaced = await page.locator('.map-marker[aria-label^="Ardbeg:"]').evaluate(element => {
+            const marker = element.getBoundingClientRect();
+            const view = document.querySelector('.map-viewport').getBoundingClientRect();
+            return { x: marker.left + marker.width / 2 - view.left - view.width / 2,
+                y: marker.top + marker.height / 2 - view.top - view.height / 2 };
+        });
+        assert.ok(Math.abs(displaced.x) > 25, 'dragging should move the marker away from center');
+        await page.locator('.map-position-edit').click();
+        await page.locator('#distillery-status').selectOption('closed');
+        await page.locator('#distillery-form button[type="submit"]').click();
+        await page.locator('.overlay').waitFor({ state: 'detached' });
+        assert.equal(await page.locator('.map-zoom-level').innerText(), zoomAfterOut);
+        assert.equal(await page.locator('#distillery-map').getAttribute('data-camera-identity'), 'keep',
+            'a metadata edit should update map markers without remounting the map viewer');
+        assert.equal(await page.locator('#map-site-select').inputValue(), ardbeg.id);
+        const samePosition = await page.locator('.map-marker[aria-label^="Ardbeg:"]').evaluate(element => {
+            const marker = element.getBoundingClientRect();
+            const view = document.querySelector('.map-viewport').getBoundingClientRect();
+            return { x: marker.left + marker.width / 2 - view.left - view.width / 2,
+                y: marker.top + marker.height / 2 - view.top - view.height / 2 };
+        });
+        assert.ok(Math.abs(samePosition.x - displaced.x) < 3 && Math.abs(samePosition.y - displaced.y) < 3,
+            'a status-only edit must preserve the panned map center');
+    });
+});
+
+test('browser: OSM tiles switch theme and wheel zoom holds cursor geography', async () => {
+    await session(async ({ page, base, open }) => {
+        const catalog = (await requestJson(base, '/api/collection')).data.distilleries;
+        for (const [name, number] of [['Kilchoman', '071301'], ['Ardbeg', '071302']]) {
+            const distillery = catalog.find(site => site.name === name);
+            assert.ok(distillery, `${name} should be in the catalog`);
+            const added = await requestJson(base, '/api/bottlings', 'POST', {
+                name: `Wheel test ${name}`,
+                distilleryIds: [distillery.id],
+                firstBottle: { inventoryNumber: number, status: 'closed' },
+            });
+            assert.equal(added.status, 201);
+        }
+        await open();
+        await page.locator('[data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-map"]').click();
+        const marker = page.locator('.map-marker[aria-label^="Kilchoman:"]');
+        await marker.waitFor({ state: 'visible' });
+        const themeStyle = () => page.evaluate(() => ({
+            theme: document.documentElement.dataset.theme,
+            filter: getComputedStyle(document.querySelector('.map-tiles')).filter,
+            mapBackground: getComputedStyle(document.querySelector('.map-canvas')).backgroundColor,
+            markerFilter: getComputedStyle(document.querySelector('.map-marker')).filter,
+            controlsBg: getComputedStyle(document.querySelector('.map-controls button')).backgroundColor,
+        }));
+        const initial = await themeStyle();
+        await page.locator('[data-act="toggle-theme"]').click();
+        const toggled = await themeStyle();
+        assert.notEqual(toggled.theme, initial.theme, 'theme switch must work without leaving the map');
+        assert.notEqual(toggled.filter, initial.filter, 'OSM tiles must change appearance');
+        const darker = initial.theme === 'dark' ? initial : toggled;
+        const lighter = initial.theme === 'light' ? initial : toggled;
+        assert.match(darker.filter, /invert\(0\.91\).*brightness\(1\.02\).*contrast\(0\.96\)/,
+            'dark OSM palette must remain readable and brighter than the old map style');
+        assert.equal(lighter.filter, 'none', 'light OSM tiles must be unfiltered');
+        assert.notEqual(toggled.mapBackground, initial.mapBackground, 'map loading background must follow theme');
+        assert.notEqual(toggled.controlsBg, initial.controlsBg, 'map controls must follow theme');
+        assert.equal(toggled.markerFilter, 'none', 'markers must not be colour-inverted');
+        await page.locator('[data-act="toggle-theme"]').click();
+        assert.deepEqual(await themeStyle(), initial, 'switching back restores the original map style');
+
+        const rectCenter = async () => marker.evaluate(element => {
+            const r = element.getBoundingClientRect();
+            return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+        });
+        const initialMarker = await rectCenter();
+        const initialZoom = Number((await page.locator('.map-zoom-level').innerText()).replace('Zoom ', ''));
+        await page.mouse.move(initialMarker.x, initialMarker.y);
+        await page.mouse.wheel(0, -160);
+        await page.waitForFunction(before => document.querySelector('.map-zoom-level')?.textContent === `Zoom ${before + 1}`, initialZoom);
+        const afterIn = await rectCenter();
+        assert.ok(Math.abs(afterIn.x - initialMarker.x) < 2 && Math.abs(afterIn.y - initialMarker.y) < 2,
+            `wheel under marker moved anchored location: ${JSON.stringify({ initialMarker, afterIn })}`);
+
+        // Zooming out around a point next to the marker must scale the marker's
+        // distance to the pointer by 1/2, not use the map's screen centre.
+        const viewport = await page.locator('.map-viewport').boundingBox();
+        const pointer = {
+            x: Math.min(viewport.x + viewport.width - 12, afterIn.x + 45),
+            y: Math.min(viewport.y + viewport.height - 12, afterIn.y + 35),
+        };
+        await page.mouse.move(pointer.x, pointer.y);
+        await page.mouse.wheel(0, 160);
+        await page.waitForFunction(before => document.querySelector('.map-zoom-level')?.textContent === `Zoom ${before}`, initialZoom);
+        const afterOut = await rectCenter();
+        const expected = { x: (afterIn.x + pointer.x) / 2, y: (afterIn.y + pointer.y) / 2 };
+        assert.ok(Math.abs(afterOut.x - expected.x) < 2 && Math.abs(afterOut.y - expected.y) < 2,
+            `wheel off marker must preserve cursor position: ${JSON.stringify({ expected, afterOut })}`);
+    });
+});
+
+test('browser: analytics dashboard, six pages, filters, deep links and drill-down', async () => {
+    await session(async ({ page, open, base }) => {
+        const catalog = (await requestJson(base, '/api/collection')).data.distilleries;
+        const site = catalog.find(d => d.name === 'Kilchoman');
+        assert.ok(site);
+        const created = await requestJson(base, '/api/bottlings', 'POST', {
+            name: 'Analysis Test Whisky', distilleryIds: [site.id], country: 'Scotland',
+            ageYears: 8, abv: 46, firstBottle: { inventoryNumber: '987421', status: 'closed',
+                volumeType: 'standard', volumeMl: 700, purchasePrice: 50, currency: 'EUR', purchaseDate: '2026-07-11' },
+        });
+        assert.equal(created.status, 201);
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-analysis"]').click();
+        await page.locator('.analytics-metric').first().waitFor();
+        assert.equal(await page.locator('.analytics-section-card').count(), 6);
+        // Hovering any part of the final Top-Destillerien row must underline its link.
+        const lastTopRow = page.locator('.analytics-panel').filter({ has: page.locator('h3', { hasText: 'Top-Destillerien' }) })
+            .locator('.analytics-bar-row').last();
+        const lastTopLink = lastTopRow.locator('button.analytics-bar-label.analytics-link');
+        assert.equal(await lastTopLink.count(), 1);
+        // The full-row click target overlays the track; move the mouse to its position directly.
+        const barBox = await lastTopRow.locator('.analytics-bar-track').boundingBox();
+        assert.ok(barBox);
+        await page.mouse.move(barBox.x + barBox.width / 2, barBox.y + barBox.height / 2);
+        assert.equal(await lastTopLink.evaluate(el => getComputedStyle(el).textDecorationLine), 'underline');
+        await page.locator('[data-analytics-filter="distillery"]').selectOption(site.id);
+        assert.equal(await page.locator('[data-analytics-filter="distillery"]').inputValue(), site.id);
+        for (const section of ['inventory', 'origins', 'profile', 'finance', 'timeline', 'quality']) {
+            await page.locator(`.section-nav-item[data-section="${section}"]`).click();
+            assert.equal(await page.locator('.analytics-section-title').count(), 1);
+            assert.equal(await page.locator('[data-analytics-filter="distillery"]').inputValue(), site.id);
+        }
+        await page.locator('.section-nav-item[data-section="origins"]').click();
+        await page.locator('.analytics-bar-label[data-act="analytics-distillery"]').first().click();
+        await page.locator('.collection-heading').waitFor();
+        assert.equal(await page.locator('#filter-distillery').inputValue(), site.id);
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-analysis"]').click();
+        await page.locator('.section-nav-item[data-section="finance"]').click();
+        assert.match(await page.locator('.analytics-page').innerText(), /Dokumentierte Ausgaben/i);
+        await page.locator('[data-act="analytics-reset"]').click();
+        assert.equal(await page.locator('[data-analytics-filter="distillery"]').inputValue(), 'all');
+        if (!domOnly) {
+            await page.locator('[data-analytics-filter="country"]').selectOption('Schottland');
+            await page.reload();
+            assert.equal(await page.locator('[data-analytics-filter="country"]').inputValue(), 'Schottland');
+        }
+        // A content-rich analytics page must not leave excessive whitespace before the footer.
+        // Use a short viewport so the sticky footer cannot mask excessive content padding.
+        await page.setViewportSize({ width: 1366, height: 500 });
+        await page.locator('.section-nav-item[data-section="profile"]').click();
+        const footerGap = await page.evaluate(() => {
+            const content = document.querySelector('.analytics-page').getBoundingClientRect();
+            const footer = document.querySelector('.site-footer').getBoundingClientRect();
+            return footer.top - content.bottom;
+        });
+        assert.ok(footerGap >= 0 && footerGap <= 55,
+            `analytics footer must follow the final note with compact spacing (${footerGap}px)`);
+        const overflow = await page.evaluate(() => document.body.scrollWidth - document.body.getBoundingClientRect().width);
+        assert.ok(overflow <= 1, `analytics desktop horizontal overflow: ${overflow}px`);
+    });
+});
+
+test('browser: detail map link opens all locations of a multi-distillery bottling and remains reloadable', async () => {
+    await session(async ({ page, open, base }) => {
+        const catalog = (await requestJson(base, '/api/collection')).data.distilleries;
+        const ardbeg = catalog.find(site => site.name === 'Ardbeg');
+        const kilchoman = catalog.find(site => site.name === 'Kilchoman');
+        assert.ok(ardbeg && kilchoman);
+        const result = await requestJson(base, '/api/bottlings', 'POST', {
+            name: 'Map Focus Blend', whiskyType: 'blended_malt', distilleryIds: [ardbeg.id, kilchoman.id],
+            firstBottle: { inventoryNumber: '098401', status: 'closed' },
+        });
+        assert.equal(result.status, 201);
+        await open();
+        await page.locator(`[data-act="open"][data-id="${result.data.bottling.id}"]`).first().click();
+        await page.locator('[data-act="bottling-map"]').click();
+        assert.equal(await page.locator('.map-related-site').count(), 2);
+        assert.match(await page.locator('.map-related-bottling').innerText(), /Map Focus Blend/);
+        assert.equal(await page.locator('.map-related-site').first().getAttribute('data-map-focus') != null, true);
+        // In DOM-only mode History is intentionally stubbed and location stays
+        // about:blank; assert the recorded navigation target instead.
+        const routeUrl = domOnly
+            ? await page.evaluate(() => window.__historyCalls.at(-1)?.url || '')
+            : page.url();
+        assert.match(routeUrl, /view=map&focusBottling=/);
+        const zoom = await page.locator('.map-zoom-level').innerText();
+        assert.match(zoom, /^Zoom (?:\d+)$/);
+        await page.locator(`[data-map-focus="${kilchoman.id}"]`).click();
+        assert.equal(await page.locator('#map-site-select').inputValue(), kilchoman.id);
+        if (!domOnly) {
+            await page.reload();
+            await page.locator('.map-related-site').nth(1).waitFor();
+            assert.equal(await page.locator('.map-related-site').count(), 2);
+        }
+    });
+});
+
+test('browser: phone detail title, mobile analytics selector and period controls, and overview view switch fit their layout', async () => {
+    await session(async ({ page, open, base }) => {
+        const catalog = (await requestJson(base, '/api/collection')).data.distilleries;
+        const site = catalog.find(d => d.name === 'Kilchoman') || catalog[0];
+        assert.ok(site);
+        const created = await requestJson(base, '/api/bottlings', 'POST', {
+            name: 'Very long Waterford Ballykilcavan: Edition 1.1 release',
+            distilleryIds: [site.id],
+            firstBottle: { inventoryNumber: '987427', status: 'closed' },
+        });
+        assert.equal(created.status, 201);
+        await page.setViewportSize({ width: 390, height: 844 });
+        await open();
+        await page.locator(`.whisky-card[data-id="${created.data.bottling.id}"]`).click();
+        const detail = await page.evaluate(() => {
+            const heading = document.querySelector('.detail-page-head');
+            const title = heading.querySelector('h2').getBoundingClientRect();
+            const actions = heading.querySelector('.detail-head-actions').getBoundingClientRect();
+            const map = heading.querySelector('[data-act="bottling-map"]').getBoundingClientRect();
+            const edit = heading.querySelector('[data-act="edit-bottling"]').getBoundingClientRect();
+            const remove = heading.querySelector('[data-act="delete-bottling"]').getBoundingClientRect();
+            const parent = heading.getBoundingClientRect();
+            return { title, actions, map, edit, remove, parent };
+        });
+        assert.ok(detail.title.right <= detail.parent.right + 2, 'title must fit inside the detail header');
+        assert.ok(detail.actions.top >= detail.title.bottom, 'all action buttons belong below the title');
+        assert.ok(detail.map.bottom <= detail.edit.top, 'map button is its own first row');
+        assert.ok(Math.abs(detail.edit.top - detail.remove.top) <= 1, 'edit and delete share the same row');
+        assert.ok(detail.actions.right <= detail.parent.right + 2, 'action buttons must not overflow');
+
+        await page.locator('[data-act="back"]').first().click();
+        const toolbarHeights = await page.evaluate(() => [
+            '#search', '#filter-status', '#filter-completion', '#filter-sort',
+            '#filter-distillery', '#filter-volume-type', '[data-act="toggle-view"]',
+        ].map(selector => Math.round(document.querySelector(`.toolbar ${selector}`).getBoundingClientRect().height)));
+        assert.equal(new Set(toolbarHeights).size, 1, `all toolbar elements should match: ${toolbarHeights}`);
+        // Phone and narrow Android layouts must not force native selects/inputs
+        // beyond their flex row; the view switch keeps its own usable width.
+        for (const width of [320, 360, 390, 412, 600]) {
+            await page.setViewportSize({ width, height: 844 });
+            const tooWide = await page.evaluate(() => [...document.querySelectorAll('.toolbar input, .toolbar select')]
+                .filter(el => {
+                    const r = el.getBoundingClientRect();
+                    const parent = el.parentElement.getBoundingClientRect();
+                    return r.right > parent.right + 1 || r.left < parent.left - 1;
+                }).map(el => el.id || el.outerHTML.slice(0, 50)));
+            assert.deepEqual(tooWide, [], `overview fields should not overflow at ${width}px`);
+        }
+        await page.setViewportSize({ width: 390, height: 844 });
+
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-analysis"]').click();
+        await page.locator('[data-section-switch="analytics"]').selectOption('quality');
+        assert.equal(await page.locator('.analytics-section-title').innerText(), 'Datenqualität');
+        assert.equal(await page.locator('[data-section-switch="analytics"]').inputValue(), 'quality');
+        assert.equal(await page.locator('.section-nav-desktop').isVisible(), false,
+            'desktop navigation is hidden in the mobile layout');
+        await page.locator('[data-section-switch="analytics"]').selectOption('timeline');
+        // The date input is inset inside the 44px bordered control. Compare the
+        // visible controls, not the inner input (which is 42px by design).
+        const periodGeometry = await page.evaluate(() => [
+            document.querySelector('#analytics-period'),
+            ...document.querySelectorAll('.analytics-date-control'),
+        ].map(el => {
+            const { width, height } = el.getBoundingClientRect();
+            return [Math.round(width), Math.round(height)];
+        }));
+        assert.equal(new Set(periodGeometry.map(([, height]) => height)).size, 1,
+            `period controls should have equal heights: ${JSON.stringify(periodGeometry)}`);
+        assert.equal(new Set(periodGeometry.map(([width]) => width)).size, 1,
+            `period controls should have equal widths on phones: ${JSON.stringify(periodGeometry)}`);
+        await page.locator('#analytics-start-date').fill('2026-01-15');
+        assert.equal(await page.locator('#analytics-start-date').inputValue(), '2026-01-15');
+        await page.locator('#analytics-end-date').fill('2026-12-31');
+        assert.equal(await page.locator('#analytics-end-date').inputValue(), '2026-12-31');
+        await page.locator('#analytics-start-date').fill('');
+        assert.equal(await page.locator('#analytics-start-date').inputValue(), '');
+        for (const width of [320, 360, 390, 412, 600]) {
+            await page.setViewportSize({ width, height: 844 });
+            const tooWide = await page.evaluate(() => [...document.querySelectorAll('.analytics-period input, .analytics-period select, .analytics-filters select')]
+                .filter(el => {
+                    const r = el.getBoundingClientRect();
+                    const parent = el.parentElement.getBoundingClientRect();
+                    return r.right > parent.right + 1 || r.left < parent.left - 1;
+                }).map(el => el.id || el.outerHTML.slice(0, 50)));
+            assert.deepEqual(tooWide, [], `analysis fields should not overflow at ${width}px`);
+        }
+        await page.setViewportSize({ width: 390, height: 844 });
+        await openSettingsFromMenu(page);
+        await openSettingsSection(page, 'distilleries');
+        await page.locator('#distillery-search').fill('Ardbeg');
+        await page.locator('.distillery-row:visible [data-act="rename-distillery"]').first().click();
+        await page.locator('#distillery-form').waitFor();
+        for (const width of [320, 360, 390, 412]) {
+            await page.setViewportSize({ width, height: 844 });
+            const tooWide = await page.evaluate(() => [...document.querySelectorAll('#distillery-form input, #distillery-form select')]
+                .filter(el => {
+                    const r = el.getBoundingClientRect();
+                    const parent = el.parentElement.getBoundingClientRect();
+                    return r.right > parent.right + 1 || r.left < parent.left - 1;
+                }).map(el => el.id));
+            assert.deepEqual(tooWide, [], `distillery dialog fields should not overflow at ${width}px`);
+        }
+    });
+});
+
+test('browser: warehouse room plan mounts local Three.js and keeps the 2D plan available', async () => {
+    await session(async ({base,page,open})=>{
+        const room=await requestJson(base,'/api/warehouse/rooms','POST',{name:'3D-Raum',width:5,height:4});
+        assert.equal(room.status,201);
+        const rack=await requestJson(base,`/api/warehouse/rooms/${room.data.id}/furniture`,'POST',
+            {name:'Offenes Regal',type:'regal',x:0.3,y:0.2,width:1.7,depth:0.6,rotation:0,elevation:0,itemHeight:1.8});
+        assert.equal(rack.status,201);
+        // Only furniture with configured shelves appears in the room-wide shelf wall.
+        const shelf=await requestJson(base,`/api/warehouse/furniture/${rack.data.id}/shelves`,'POST',
+            {name:'Regalfach',capacity:6});
+        assert.equal(shelf.status,201);
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        assert.equal(await page.locator('[data-act="warehouse-plan-mode"][data-mode="3d"]').getAttribute('aria-pressed'),'true');
+        assert.equal(await page.locator('.warehouse-three-viewport').count(),1);
+        for(const corner of ['nw','ne','se','sw']){
+            await page.locator(`[data-act="warehouse-camera"][data-corner="${corner}"]`).click();
+            assert.equal(await page.locator(`[data-act="warehouse-camera"][data-corner="${corner}"]`).getAttribute('aria-pressed'),'true');
+        }
+        const eye=page.locator('.warehouse-bulk-visibility').first();
+        assert.equal(await eye.locator('svg.warehouse-eye-icon').count(),1);
+        assert.equal(await eye.getAttribute('aria-label'),'Offenes Regal ausblenden');
+        const tile=page.locator('.warehouse-bulk-item').first();
+        await tile.hover();
+        if (await page.locator('.warehouse-three-canvas').count()) {
+            await page.waitForFunction(() => document.querySelector('.warehouse-three-canvas')?.dataset.highlightedFurniture !== '');
+            assert.equal(await page.locator('.warehouse-three-canvas').getAttribute('data-highlighted-furniture'),rack.data.id);
+            await page.locator('.warehouse-bulk-head').hover();
+            assert.equal(await page.locator('.warehouse-three-canvas').getAttribute('data-highlighted-furniture'),'');
+        }
+        await eye.click();
+        assert.equal(await page.locator('.warehouse-bulk-visibility').first().getAttribute('aria-pressed'),'false');
+        assert.equal(await page.locator('.warehouse-bulk-visibility').first().getAttribute('aria-label'),'Offenes Regal einblenden');
+        assert.equal(await page.locator('.warehouse-bulk-item.is-hidden').count(),1);
+        assert.equal(await page.locator('.warehouse-camera-toolbar [data-act="warehouse-iso-clear"]').count(),0);
+        await page.locator('.warehouse-bulk-visibility').first().click();
+        assert.equal(await page.locator('.warehouse-bulk-visibility').first().getAttribute('aria-pressed'),'true');
+        assert.equal(await page.locator('.warehouse-bulk-item.is-hidden').count(),0);
+        await page.locator('#warehouse-plan-zoom').selectOption('150');
+        assert.equal(await page.locator('#warehouse-plan-zoom').inputValue(),'150');
+        await page.locator('.warehouse-bulk-open').first().click();
+        assert.equal(await page.locator('.warehouse-furniture-panel').count(),0,'room plan does not edit shelves');
+        await page.locator('[data-act="warehouse-open-shelves"]').click();
+        assert.equal(await page.locator('.warehouse-tabs [data-section="shelves"]').getAttribute('aria-current'),'page');
+        assert.equal(await page.locator('.warehouse-furniture-panel').count(),0,'editing is confined to a modal');
+        // Editing is only accessible through the furniture icon in Regale & Faecher.
+        await page.locator(`.warehouse-wall-furniture-edit[data-id="${rack.data.id}"]`).click();
+        assert.equal(await page.locator('#modal-root .warehouse-furniture-panel').count(),1,'furniture management opens in a modal');
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        await page.locator('[data-act="warehouse-plan-mode"][data-mode="2d"]').click();
+        assert.equal(await page.locator('.warehouse-floor').count(),1);
+        assert.equal(await page.locator('.warehouse-three-viewport').count(),0);
+    });
+});
+
+test('browser: room and compact furniture strip stay together; show all restores hidden items', async () => {
+    await session(async ({base,page,open}) => {
+        const roomResult=await requestJson(base,'/api/warehouse/rooms','POST',{name:'Kompakter Raum',width:10,height:6});
+        const room=roomResult.data;
+        for (let i=0;i<13;i++) {
+            const result=await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',{
+                name:`Testregal ${i+1}`,type:'regal',x:(i%5)*1.7+0.1,y:Math.floor(i/5)*1.1+0.1,
+                width:1.2,depth:.5,rotation:0,elevation:0,itemHeight:1.6,
+            });
+            assert.equal(result.status,201,`furniture ${i+1} should be created`);
+        }
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        await page.locator('#warehouse-room-select').selectOption(room.id);
+        assert.equal(await page.locator('.warehouse-plan-workspace').count(),1);
+        assert.equal(await page.locator('.warehouse-bulk-item').count(),13);
+        assert.equal(await page.locator('[data-act="warehouse-show-all"]').isDisabled(),true);
+        const desktop=await page.evaluate(()=>{
+            const stage=document.querySelector('.warehouse-plan-stage').getBoundingClientRect();
+            const aside=document.querySelector('.warehouse-bulk-panel--sidebar').getBoundingClientRect();
+            const list=document.querySelector('.warehouse-bulk-panel--sidebar .warehouse-bulk-list');
+            return {stage:{left:stage.left,right:stage.right,top:stage.top,bottom:stage.bottom},aside:{left:aside.left,top:aside.top,bottom:aside.bottom},scrollHeight:list.scrollHeight,clientHeight:list.clientHeight};
+        });
+        assert.ok(desktop.stage.right<=desktop.aside.left,`sidebar must be beside 3D scene: ${JSON.stringify(desktop)}`);
+        assert.ok(Math.abs(desktop.stage.top-desktop.aside.top)<2,`scene and controls must start at same height: ${JSON.stringify(desktop)}`);
+        assert.ok(desktop.scrollHeight>desktop.clientHeight,`long furniture list must scroll inside sidebar: ${JSON.stringify(desktop)}`);
+        const eyes=page.locator('.warehouse-bulk-visibility');
+        await eyes.nth(0).click();
+        await eyes.nth(1).click();
+        assert.equal(await page.locator('.warehouse-bulk-item.is-hidden').count(),2);
+        assert.equal(await page.locator('[data-act="warehouse-show-all"]').isEnabled(),true);
+        await page.locator('[data-act="warehouse-show-all"]').click();
+        assert.equal(await page.locator('.warehouse-bulk-item.is-hidden').count(),0);
+        assert.equal(await page.locator('[data-act="warehouse-show-all"]').isDisabled(),true);
+        assert.equal(await page.locator('.warehouse-bulk-visibility[aria-pressed="true"]').count(),13);
+        assert.equal(await page.locator('.warehouse-bulk-check:checked').count(),0,'show all must not modify bulk selection');
+        await page.setViewportSize({width:390,height:844});
+        const mobile=await page.evaluate(()=>{
+            const stage=document.querySelector('.warehouse-plan-stage').getBoundingClientRect();
+            const aside=document.querySelector('.warehouse-bulk-panel--sidebar').getBoundingClientRect();
+            const list=document.querySelector('.warehouse-bulk-panel--sidebar .warehouse-bulk-list');
+            return {stageBottom:stage.bottom,asideTop:aside.top,stripWidth:list.clientWidth,scrollWidth:list.scrollWidth,pageWidth:document.body.scrollWidth,viewportWidth:document.body.getBoundingClientRect().width};
+        });
+        assert.ok(mobile.asideTop>=mobile.stageBottom-2,`compact horizontal list must be immediately below the 3D scene: ${JSON.stringify(mobile)}`);
+        assert.ok(mobile.scrollWidth>mobile.stripWidth,`many furniture cards must scroll horizontally: ${JSON.stringify(mobile)}`);
+        assert.ok(mobile.pageWidth<=mobile.viewportWidth+2,`no horizontal page overflow: ${JSON.stringify(mobile)}`);
+    });
+});
+
+test('browser: shelf overview keeps decorative bottles inert; furniture and rack can open bottle previews', async () => {
+    await session(async ({base,page,open}) => {
+        const created = await seed(base, '098765');
+        const room = (await requestJson(base,'/api/warehouse/rooms','POST',{name:'Flaschenraum',width:4,height:4})).data;
+        const furniture = (await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',
+            {name:'Testregal',type:'regal',x:.3,y:.3,width:1,depth:.5,rotation:0,elevation:0,itemHeight:1.8})).data;
+        const shelf = (await requestJson(base,`/api/warehouse/furniture/${furniture.id}/shelves`,'POST',
+            {name:'Flaschenfach',capacity:6})).data;
+        const allocation = await requestJson(base,`/api/warehouse/bottles/${created.bottle.id}`,'PUT',{shelfId:shelf.id});
+        assert.equal(allocation.status,200);
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="shelves"]').click();
+        await page.locator('#warehouse-room-select').selectOption(room.id);
+        // Furniture modal -> bottle modal -> furniture modal must preserve context.
+        await page.locator(`.warehouse-wall-furniture-edit[data-id="${furniture.id}"]`).click();
+        const manager = page.locator('#modal-root .warehouse-furniture-manager');
+        assert.equal(await manager.locator('.warehouse-shelf').count(),1);
+        const managedBottle = manager.locator(`.warehouse-bottle-symbol[data-id="${created.bottle.id}"][data-act="warehouse-bottle-preview"]`);
+        assert.equal(await managedBottle.count(),1);
+        await managedBottle.click();
+        assert.equal(await page.locator('#modal-root .warehouse-bottle-preview').count(),1);
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        assert.equal(await manager.locator('.warehouse-shelf').count(),1,'closing bottle preview returns to furniture modal');
+
+        // Shelf editing itself is another nested modal, with a return to its parent.
+        await manager.locator('[data-act="warehouse-shelf-edit"]').click();
+        assert.equal(await page.locator('#modal-root #warehouse-form').count(),1);
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        assert.equal(await manager.locator('.warehouse-shelf').count(),1,'closing shelf edit returns to furniture modal');
+
+        // The shelf overview is read-only: clicking a bottle image never opens
+        // a bottle preview, but relocation remains available on each card.
+        await manager.locator('.warehouse-shelf-head strong').first().dblclick();
+        const shelfOverview = page.locator('#modal-root .warehouse-shelf-detail-grid');
+        assert.equal(await shelfOverview.count(),1);
+        const decorativeBottle = shelfOverview.locator('.warehouse-bottle-static');
+        assert.equal(await decorativeBottle.count(),1);
+        assert.equal(await shelfOverview.locator('[data-act="warehouse-bottle-preview"]').count(),0);
+        // Decorative images deliberately ignore pointer events; a physical
+        // click on their image area reaches the card and must stay inert.
+        const bottleBounds=await decorativeBottle.boundingBox();
+        assert.ok(bottleBounds,'decorative bottle image must be visible');
+        await page.mouse.click(bottleBounds.x+bottleBounds.width/2,bottleBounds.y+bottleBounds.height/2);
+        assert.equal(await page.locator('#modal-root .warehouse-shelf-detail-grid').count(),1);
+        assert.equal(await page.locator('#modal-root .warehouse-bottle-preview').count(),0);
+        await shelfOverview.locator(`[data-act="warehouse-assign"][data-id="${created.bottle.id}"]`).click();
+        assert.equal(await page.locator('#modal-root #warehouse-form').count(),1);
+        await page.keyboard.press('Escape');
+        assert.equal(await page.locator('#modal-root .warehouse-shelf-detail-grid').count(),1,'Escape returns to shelf overview from relocation');
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        assert.equal(await manager.locator('.warehouse-shelf').count(),1,'closing compartment overview returns to furniture modal');
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        assert.equal(await page.locator('#modal-root [role="dialog"]').count(),0);
+
+        // A click still selects for batch relocation, a double-click opens bottle details.
+        const symbol = page.locator(`.warehouse-room-wall .warehouse-bottle-symbol[data-id="${created.bottle.id}"]`);
+        await symbol.click();
+        assert.equal(await symbol.getAttribute('aria-pressed'),'true');
+        await symbol.dblclick();
+        const dialog = page.locator('#modal-root [role="dialog"]');
+        await dialog.waitFor();
+        assert.equal(await dialog.locator('.warehouse-bottle-preview').count(),1);
+        assert.match(await dialog.textContent(),/Browser Test Blend/);
+        assert.match(await dialog.textContent(),/098765/);
+        assert.match(await dialog.textContent(),/Inventarnummer/);
+        assert.match(await dialog.textContent(),/46 % Vol\./);
+        assert.match(await dialog.textContent(),/Status/);
+        assert.equal(await dialog.locator('#warehouse-form').count(),0,'preview must not open relocation form immediately');
+        const link = dialog.getByRole('link',{name:'Zu den Flaschendetails'});
+        assert.equal(await link.getAttribute('href'),`/?bottling=${created.bottling.id}`);
+        await dialog.locator('[data-act="warehouse-assign"]').click();
+        assert.equal(await page.locator('#warehouse-form').count(),1,'relocation opens as a nested modal');
+        const assign = page.locator('#warehouse-form');
+        assert.equal(await assign.locator('[data-assignment-room]').inputValue(),room.id);
+        assert.equal(await assign.locator('[data-assignment-furniture]').inputValue(),furniture.id);
+        assert.equal(await assign.locator('[data-assignment-shelf]').inputValue(),shelf.id);
+        assert.match(await assign.locator('.warehouse-assignment-current').innerText(),/Flaschenraum \/ Testregal \/ Flaschenfach/);
+        assert.equal(await page.locator('#modal-root .dialog-head h2').innerText(), 'Lagerort');
+        const editor = assign.locator('.warehouse-assignment-editor');
+        assert.equal(await editor.evaluate(element => element.open), false, 'location editor starts collapsed');
+        assert.equal(await assign.locator('.warehouse-form-actions [type="submit"]').isHidden(), true,
+            'saving is only available after opening the editor');
+        await editor.locator('summary').click();
+        assert.equal(await editor.evaluate(element => element.open), true);
+        await assign.locator('.warehouse-form-actions [type="submit"]').waitFor({state:'visible'});
+        assert.match(await assign.locator('.warehouse-assignment-feedback').innerText(),/1 von 6/);
+        // A tall real bottle photo used to inflate the CSS grid's intrinsic row
+        // beyond the fixed preview frame, silently cropping the bottom in Chrome.
+        await assign.evaluate(element => {
+            const photo = element.querySelector('.warehouse-assignment-photo');
+            const image = document.createElement('img');
+            image.alt = '';
+            image.src = 'data:image/svg+xml,' + encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="2400">'
+                + '<rect width="600" height="2400" fill="green"/>'
+                + '<rect y="2300" width="600" height="100" fill="red"/>'
+                + '</svg>');
+            photo.replaceChildren(image);
+        });
+        await assign.locator('.warehouse-assignment-photo img').evaluate(image => image.decode());
+        const checkPhotoSize = async () => {
+            const bounds = await assign.evaluate(element => {
+                const frame = element.querySelector('.warehouse-assignment-photo').getBoundingClientRect();
+                const image = element.querySelector('.warehouse-assignment-photo img').getBoundingClientRect();
+                return {frame:{x:frame.x,y:frame.y,w:frame.width,h:frame.height},
+                    image:{x:image.x,y:image.y,w:image.width,h:image.height},
+                    fit:getComputedStyle(element.querySelector('.warehouse-assignment-photo img')).objectFit};
+            });
+            assert.equal(bounds.fit,'contain');
+            assert.ok(bounds.image.x >= bounds.frame.x - 1 && bounds.image.y >= bounds.frame.y - 1
+                && bounds.image.x + bounds.image.w <= bounds.frame.x + bounds.frame.w + 1
+                && bounds.image.y + bounds.image.h <= bounds.frame.y + bounds.frame.h + 1,
+                `tall bottle photo must fit entirely in preview: ${JSON.stringify(bounds)}`);
+        };
+        await checkPhotoSize();
+        await assign.locator('[name="warehouseAssignmentMode"][value="none"]').check();
+        assert.equal(await assign.locator('[data-assignment-room]').isDisabled(),true);
+        assert.equal(await assign.locator('[data-assignment-shelf]').isDisabled(),true);
+        await assign.locator('[name="warehouseAssignmentMode"][value="shelf"]').check();
+        assert.equal(await assign.locator('[data-assignment-shelf]').isEnabled(),true);
+        await page.setViewportSize({width:390,height:844});
+        const assignmentFrame = await assign.evaluate(element => ({
+            width: element.closest('.dialog').getBoundingClientRect().width,
+            viewport: document.documentElement.clientWidth,
+            columns: getComputedStyle(element.querySelector('.warehouse-assignment-selectors')).gridTemplateColumns.split(' ').length,
+        }));
+        assert.ok(assignmentFrame.width <= assignmentFrame.viewport + 1, 'dialog must fit mobile width');
+        assert.equal(assignmentFrame.columns,1,'mobile assignment selects should stack vertically');
+        await checkPhotoSize();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').first().click();
+        assert.equal(await page.locator('#modal-root .warehouse-bottle-preview').count(),1,
+            'closing relocation restores the bottle modal');
+        await page.locator('#modal-root [data-act="open"]').click();
+        await page.locator(`#bottle-${created.bottle.id}.scanned-bottle`).waitFor();
+        assert.equal(await page.locator('#modal-root [role="dialog"]').count(),0);
+    });
+});
+
+test('browser: room plan positions furniture; shelf tab owns wall, editing and bottles', async () => {
+    await session(async ({base,page,open}) => {
+        const room=(await requestJson(base,'/api/warehouse/rooms','POST',{name:'Scrollraum',width:5,height:4})).data;
+        const furniture=(await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',
+            {name:'Klickregal',type:'regal',x:0.5,y:0.5,width:1,depth:.5,rotation:0,elevation:0,itemHeight:1.5})).data;
+        await requestJson(base,`/api/warehouse/furniture/${furniture.id}/shelves`,'POST',{name:'Testfach',capacity:2});
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        await page.locator('#warehouse-room-select').selectOption(room.id);
+        await page.locator('[data-act="warehouse-plan-mode"][data-mode="2d"]').click();
+        assert.equal(await page.locator('.warehouse-floor').count(),1);
+        assert.equal(await page.locator('.warehouse-bulk-item').count(),1);
+        assert.equal(await page.locator('.warehouse-room-wall').count(),0);
+        assert.equal(await page.locator('.warehouse-furniture-panel').count(),0);
+        assert.equal(await page.locator('.warehouse-bulk-check').count(),0,'no furniture bulk actions in room plans');
+        assert.equal(await page.locator('[data-act="warehouse-furniture-new"]').count(),0);
+        await page.locator('.warehouse-bulk-open').click();
+        assert.equal(await page.locator('.warehouse-bulk-open').getAttribute('aria-current'),'true');
+        assert.equal(await page.locator('.warehouse-plan-focus-info').count(),1,'selecting furniture in Raumpläne shows position and a usable destination');
+        assert.equal(await page.locator('.warehouse-furniture-panel').count(),0);
+        await page.locator('[data-act="warehouse-open-shelves"]').click();
+        assert.equal(await page.locator('.warehouse-tabs [data-section="shelves"]').getAttribute('aria-current'),'page');
+        assert.equal(await page.locator('.warehouse-room-wall').count(),1);
+        assert.equal(await page.locator('.warehouse-floor').count(),0);
+        assert.equal(await page.locator('[data-act="warehouse-furniture-new"]').count(),1);
+        assert.equal(await page.locator('.warehouse-furniture-panel').count(),0,'shelf wall is the only visible furniture view');
+        await page.locator('.warehouse-wall-furniture-edit').first().click();
+        assert.equal(await page.locator('#modal-root .warehouse-furniture-panel .warehouse-shelf').count(),1);
+        assert.equal(await page.locator('#modal-root .warehouse-furniture-panel .warehouse-bottle-symbol').count(),0,
+            'empty shelf has no bottle thumbnails');
+        assert.equal(await page.locator('#modal-root .warehouse-bulk-list').count(),0,
+            'individual furniture dialog must never contain a furniture picker');
+        await page.locator('#modal-root [data-act="close-modal"]').click();
+        await page.locator('[data-act="warehouse-furniture-bulk"]').click();
+        assert.equal(await page.locator('#modal-root .warehouse-furniture-panel').count(),0);
+        const item=page.locator('#modal-root .warehouse-bulk-pick').first();
+        assert.equal(await item.getAttribute('aria-pressed'),'false');
+        await item.click();
+        assert.equal(await item.getAttribute('aria-pressed'),'true');
+        assert.equal(await page.locator('#modal-root .warehouse-bulk-item.is-selected').count(),1);
+        assert.equal(await page.locator('.warehouse-bulk-delete-btn').isEnabled(),true);
+        await item.click();
+        assert.equal(await item.getAttribute('aria-pressed'),'false');
+        await page.locator('#modal-root [data-act="close-modal"]').click();
+        for (const action of ['warehouse-room-new','warehouse-room-edit','warehouse-room-delete'])
+            assert.equal(await page.locator(`.warehouse-room-toolbar [data-act="${action}"]`).count(),0);
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        for (const action of ['warehouse-room-new','warehouse-room-edit','warehouse-room-delete'])
+            assert.equal(await page.locator(`.warehouse-room-toolbar [data-act="${action}"]`).count(),1);
+        await page.locator('[data-act="warehouse-plan-mode"][data-mode="2d"]').click();
+        await page.locator('.warehouse-floor .warehouse-drag').dblclick();
+        await page.locator('#warehouse-form [name="name"]').waitFor();
+        assert.equal(await page.locator('#warehouse-form [name="name"]').inputValue(),'Klickregal');
+        assert.equal(await page.locator('.warehouse-tabs [data-section="shelves"]').getAttribute('aria-current'),'page',
+            'editing furniture from the plan opens shelf management');
+    });
+});
+
+test('browser: 3D viewport either renders WebGL canvas or clearly reports unavailable WebGL', async()=>{
+    await session(async({base,page,open})=>{
+        const room=await requestJson(base,'/api/warehouse/rooms','POST',{name:'Tiefentest',width:4,height:4});
+        const baseFurniture=await requestJson(base,`/api/warehouse/rooms/${room.data.id}/furniture`,'POST',
+            {name:'Unterschrank',type:'schrank',x:0.5,y:0.5,width:2,depth:0.6,rotation:0,elevation:0,itemHeight:1.8});
+        const upper=await requestJson(base,`/api/warehouse/rooms/${room.data.id}/furniture`,'POST',
+            {name:'Hängeregal',type:'haengeregal',x:0.5,y:0.5,width:2,depth:0.6,rotation:0,elevation:1.9,itemHeight:0.4});
+        assert.equal(baseFurniture.status,201);assert.equal(upper.status,201);
+        await open();await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        await page.locator('[data-act="warehouse-plan-mode"][data-mode="3d"]').click();
+        await page.waitForFunction(()=>!!document.querySelector('.warehouse-three-canvas')||
+            /nicht verf.gbar/.test(document.querySelector('.warehouse-three-viewport')?.textContent||''));
+        const viewport=page.locator('.warehouse-three-viewport');
+        const canvas=viewport.locator('.warehouse-three-canvas');
+        if(await canvas.count()){
+            const size=await canvas.evaluate(el=>({width:el.width,height:el.height}));
+            assert.ok(size.width>10&&size.height>10,'live WebGL canvas has real dimensions');
+        }else{
+            assert.match(await viewport.textContent(),/nicht verfügbar/);
+        }
+        const data=await requestJson(base,'/api/warehouse');
+        assert.equal(data.data.rooms[0].furniture.length,2);
+    });
+});
+
+test('browser: 2D furniture drag stops at a physical obstacle but permits non-overlapping heights', async () => {
+    await session(async ({base,page,open})=>{
+        const room=(await requestJson(base,'/api/warehouse/rooms','POST',{name:'Kollisionsraum',width:4,height:3})).data;
+        const post=async (name,x,elevation=0)=>(await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',
+            {name,type:'schrank',x,y:.2,width:.5,depth:.5,rotation:0,elevation,itemHeight:.6})).data;
+        const moving=await post('Beweglich',.2);
+        await post('Hindernis',1.2);
+        const elevated=await post('Wandregal',1.2,.6);
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        await page.locator('[data-act="warehouse-plan-mode"][data-mode="2d"]').click();
+        const plan=page.locator('.warehouse-floor');
+        await plan.waitFor();
+        assert.ok(await page.locator('.warehouse-grid-fine').count()>0);
+        const planRect=await plan.boundingBox();
+        const scale=planRect.width/4;
+        const dragFurniture=async (id, deltaMetres) => {
+            const el=page.locator(`.warehouse-drag[data-id="${id}"]`);
+            const rect=await el.boundingBox();
+            const x=rect.x+rect.width/2,y=rect.y+rect.height/2;
+            await page.mouse.move(x,y);
+            await page.mouse.down();
+            await page.mouse.move(x+deltaMetres*scale,y,{steps:1});
+            await page.mouse.up();
+            await page.waitForTimeout(120);
+        };
+        await dragFurniture(moving.id,2.4);
+        const blocked=(await requestJson(base,'/api/warehouse')).data.rooms[0].furniture.find(f=>f.id===moving.id);
+        assert.ok(blocked.x<=.71 && blocked.x>=.61,`collision stops drag near cabinet: ${blocked.x}`);
+        await page.locator('#warehouse-plan-layer').selectOption('elevated');
+        await dragFurniture(elevated.id,1.5);
+        const updated=(await requestJson(base,'/api/warehouse')).data.rooms[0].furniture.find(f=>f.id===elevated.id);
+        assert.ok(updated.x>2.5,`elevated shelf can move above floor cabinet: ${updated.x}`);
+    });
+});
+
+test('browser: overview room cards show static 3D room previews and still open the room plan', async () => {
+    await session(async ({base,page,open}) => {
+        const room = (await requestJson(base, '/api/warehouse/rooms', 'POST',
+            {name:'Raumvorschau', width:4, height:3})).data;
+        const furniture = await requestJson(base, `/api/warehouse/rooms/${room.id}/furniture`, 'POST',
+            {name:'Vorschau-Regal',type:'regal',x:0.3,y:0.6,width:1.2,depth:0.5,rotation:0,elevation:0,itemHeight:1.8});
+        assert.equal(furniture.status, 201);
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        const card = page.locator(`.warehouse-room-card[data-id="${room.id}"]`);
+        await card.waitFor();
+        const preview = card.locator('.warehouse-room-preview');
+        await preview.waitFor();
+        await page.waitForFunction(id => {
+            const node = document.querySelector(`.warehouse-room-card[data-id="${id}"] .warehouse-room-preview`);
+            return node?.dataset.previewState === 'ready' || node?.dataset.previewState === 'unavailable';
+        }, room.id);
+        if (await preview.locator('img').count()) {
+            assert.equal(await preview.locator('img').evaluate(img => img.naturalWidth === 360 && img.naturalHeight === 210), true,
+                'static image is rendered at thumbnail resolution');
+            assert.ok((await preview.locator('img').getAttribute('src')).startsWith('data:image/png;base64,'));
+        } else {
+            assert.match(await preview.textContent(), /nicht verfügbar/, 'fallback if WebGL is blocked');
+        }
+        const positions = await card.evaluate(el => {
+            const image = el.querySelector('.warehouse-room-preview').getBoundingClientRect();
+            const details = el.querySelector('.warehouse-room-card-details').getBoundingClientRect();
+            return { image: { x:image.x, width:image.width, height:image.height }, details:{ x:details.x } };
+        });
+        assert.ok(positions.image.width <= 114 && positions.image.height <= 72, 'thumbnail stays compact');
+        assert.ok(positions.details.x > positions.image.x + positions.image.width, 'text sits beside the thumbnail');
+        await card.click();
+        await page.locator('.warehouse-three-viewport').waitFor();
+    });
+});
+
+
+test('browser: eye icons independently hide and show furniture without selecting its checkbox', async () => {
+    await session(async ({base,page,open}) => {
+        const room=await requestJson(base,'/api/warehouse/rooms','POST',{name:'Sichtbarkeit',width:5,height:4});
+        assert.equal(room.status,201);
+        for(const [name,x] of [['Linkes Regal',0.4],['Rechtes Regal',2.5]]) {
+            const result=await requestJson(base,`/api/warehouse/rooms/${room.data.id}/furniture`,'POST',
+                {name,type:'regal',x,y:0.3,width:1,depth:0.5,rotation:0,elevation:0,itemHeight:1.8});
+            assert.equal(result.status,201);
+        }
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        const eyes=page.locator('.warehouse-bulk-visibility');
+        assert.equal(await eyes.count(),2);
+        assert.equal(await eyes.first().getAttribute('aria-pressed'),'true');
+        assert.equal(await eyes.last().getAttribute('aria-pressed'),'true');
+        const dims=await eyes.first().evaluate(el=>({button:el.getBoundingClientRect().width,icon:el.querySelector('svg').getBoundingClientRect().width}));
+        assert.ok(dims.button>=44 && dims.icon>=27,JSON.stringify(dims));
+        await eyes.first().click();
+        await eyes.last().click();
+        assert.equal(await page.locator('.warehouse-bulk-item.is-hidden').count(),2);
+        assert.equal(await page.locator('.warehouse-bulk-check:checked').count(),0);
+        await eyes.first().click();
+        assert.equal(await eyes.first().getAttribute('aria-pressed'),'true');
+        assert.equal(await eyes.last().getAttribute('aria-pressed'),'false');
+        assert.equal(await page.locator('.warehouse-bulk-item.is-hidden').count(),1);
+        if(await page.locator('.warehouse-three-canvas').count()) {
+            const hidden=await page.locator('.warehouse-three-canvas').getAttribute('data-hidden-furniture');
+            assert.equal(hidden,await eyes.last().getAttribute('data-id'));
+        }
+        // The visibility choice survives leaving and returning to the 3D plan.
+        await page.locator('[data-act="warehouse-plan-mode"][data-mode="2d"]').click();
+        await page.locator('[data-act="warehouse-plan-mode"][data-mode="3d"]').click();
+        assert.equal(await page.locator('.warehouse-bulk-visibility').last().getAttribute('aria-pressed'),'false');
+    });
+});
+
+test('browser: compact room tools, uniform bulk buttons and furniture wall toggles', async () => {
+    await session(async ({base,page,open}) => {
+        const room=(await requestJson(base,'/api/warehouse/rooms','POST',{name:'Whiskyzimmer',width:3,height:4})).data;
+        const created=await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',{
+            name:'Wandregal',type:'regal',x:.2,y:.2,width:1,depth:.4,rotation:0,elevation:0,itemHeight:1.8,
+            leftSidePanel:true,rightSidePanel:false,backPanel:true,
+        });
+        assert.equal(created.status,201);
+        const shelf=await requestJson(base,`/api/warehouse/furniture/${created.data.id}/shelves`,'POST',
+            {name:'Wandfach',capacity:4});
+        assert.equal(shelf.status,201);
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        await page.locator('#warehouse-room-select').selectOption(room.id);
+        const desktop=await page.evaluate(() => {
+            const el = selector => document.querySelector(selector)?.getBoundingClientRect();
+            return { roomName:el('.warehouse-room-identity h3'),metrics:el('.warehouse-room-metrics'),
+                modes:el('.warehouse-view-switch'), cameras:el('.warehouse-camera-toolbar'),
+                zoom:el('.warehouse-plan-filter') };
+        });
+        assert.equal(await page.locator('.warehouse-bulk-actions').count(),0,
+            'Raumplaene must not expose furniture bulk editing');
+        assert.ok(Math.abs(desktop.modes.top-desktop.cameras.top)<4,`camera and view switch share a row: ${JSON.stringify(desktop)}`);
+        assert.ok(Math.abs(desktop.modes.top-desktop.zoom.top)<4,`zoom and view switch share a row: ${JSON.stringify(desktop)}`);
+        assert.ok(Math.abs(desktop.roomName.top-desktop.metrics.top)<40,`room title and metrics share a header: ${JSON.stringify(desktop)}`);
+        await page.locator('.warehouse-room-summary').screenshot({path:'test-artifacts/warehouse-room-header-0147.png'});
+        await page.locator('.warehouse-tabs [data-section="shelves"]').click();
+        await page.locator('[data-act="warehouse-furniture-bulk"]').click();
+        const bulkButtons=await page.locator('#modal-root .warehouse-furniture-bulk-manager .warehouse-bulk-actions .btn')
+            .evaluateAll(buttons=>buttons.map(button=>button.getBoundingClientRect().height));
+        assert.equal(bulkButtons.length,4,'bulk controls belong in the separate furniture management modal');
+        assert.ok(bulkButtons.every(height=>Math.abs(height-bulkButtons[0])<1),
+            `bulk buttons need equal heights ${JSON.stringify(bulkButtons)}`);
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        await page.locator('.warehouse-wall-furniture-edit').click();
+        assert.equal(await page.locator('#modal-root .warehouse-furniture-panel').count(),1);
+        await page.locator('#modal-root [data-act="warehouse-furniture-edit"]').click();
+        assert.equal(await page.locator('.warehouse-wall-toggle').count(),3);
+        assert.equal(await page.locator('.warehouse-wall-toggle [name="leftSidePanel"]').isChecked(),true);
+        assert.equal(await page.locator('.warehouse-wall-toggle [name="rightSidePanel"]').isChecked(),false);
+        assert.equal(await page.locator('.warehouse-wall-toggle [name="backPanel"]').isChecked(),true);
+        await page.locator('.warehouse-wall-toggle').nth(1).click();
+        assert.equal(await page.locator('.warehouse-wall-toggle [name="rightSidePanel"]').isChecked(),true);
+        await page.locator('.warehouse-wall-options').screenshot({path:'test-artifacts/warehouse-wall-desktop-0147.png'});
+        await page.setViewportSize({width:390,height:844});
+        const mobile=await page.evaluate(() => {
+            const fieldset=document.querySelector('.warehouse-wall-options').getBoundingClientRect();
+            const cards=[...document.querySelectorAll('.warehouse-wall-toggle')].map(el=>el.getBoundingClientRect());
+            return {fieldset:{left:fieldset.left,right:fieldset.right},cards:cards.map(r=>({left:r.left,right:r.right,top:r.top,bottom:r.bottom})),width:document.body.getBoundingClientRect().width};
+        });
+        assert.ok(mobile.cards.every(r=>r.right<=mobile.width+2),`wall options should fit mobile viewport: ${JSON.stringify(mobile)}`);
+        assert.ok(mobile.cards[0].bottom<=mobile.cards[1].top,`mobile wall switches should stack: ${JSON.stringify(mobile)}`);
+        await page.locator('.warehouse-wall-options').screenshot({path:'test-artifacts/warehouse-wall-mobile-0147.png'});
+    });
+});
+
+test('browser: analysis and warehouse use the same page width as the shared main content', async () => {
+    await session(async ({page, open}) => {
+        await open();
+        for (const width of [1600, 1024, 390]) {
+            await page.setViewportSize({width, height:900});
+            for (const [destination] of [['analysis'], ['warehouse']]) {
+                await page.locator('header [data-act="toggle-menu"]').click();
+                await page.locator(`#site-drawer [data-act="goto-${destination}"]`).click();
+                const dimensions = await page.locator('.analytics-page').evaluate(element => {
+                    const main = element.closest('main');
+                    const mainStyle = getComputedStyle(main);
+                    const bounds = main.getBoundingClientRect();
+                    const contentLeft = bounds.left + parseFloat(mainStyle.paddingLeft);
+                    const contentRight = bounds.right - parseFloat(mainStyle.paddingRight);
+                    const page = element.getBoundingClientRect();
+                    return {left:page.left, right:page.right, contentLeft, contentRight};
+                });
+                assert.ok(Math.abs(dimensions.left - dimensions.contentLeft) < 1,
+                    `${destination} left edge aligns with shared main content at ${width}px`);
+                assert.ok(Math.abs(dimensions.right - dimensions.contentRight) < 1,
+                    `${destination} right edge aligns with shared main content at ${width}px`);
+            }
+        }
+    });
+});
+
+
+test('browser: translating a dynamic warehouse view does not translate room names', async () => {
+    await session(async ({page, base, open}) => {
+        const created = await requestJson(base, '/api/warehouse/rooms', 'POST',
+            {name:'Lagerverwaltung', width:4, height:3});
+        assert.equal(created.status, 201);
+        // Verify the shipped English catalog rather than a shortened test-only
+        // dictionary; wait for async language initialization before asserting.
+        await open({query:'?lang=en'});
+        await page.locator('html[lang="en"]').waitFor();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        assert.equal((await page.locator('#site-drawer [data-act="goto-analysis"]').innerText()).trim(), 'Analytics');
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.getByRole('heading', {name:'Storage management'}).waitFor();
+        assert.match(await page.locator('.warehouse-heading p').innerText(), /every bottle has its own place/);
+        assert.match(await page.locator('.warehouse-room-card-details').first().innerText(), /0 storage furniture items/);
+        assert.equal((await page.locator('.warehouse-room-card-details strong').first().innerText()).trim(),
+            'Lagerverwaltung', 'user-defined room names must remain unchanged');
+    });
+});
+
+test('browser: complete English locale renders collection controls and analytics filters', async () => {
+    await session(async ({page, open}) => {
+        await open({query:'?lang=en'});
+        await page.locator('html[lang="en"]').waitFor();
+        const view = page.locator('[data-act="toggle-view"]');
+        await view.waitFor();
+        assert.match((await view.innerText()).trim(), /Table/);
+        await view.click();
+        assert.match((await view.innerText()).trim(), /Cards/);
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-analysis"]').click();
+        await page.locator('.analytics-page').waitFor();
+        const filters = await page.locator('.analytics-filters').innerText();
+        for (const label of ['All distilleries','All countries','All bottle types','All statuses']) {
+            assert.match(filters, new RegExp(label));
+        }
+        assert.doesNotMatch(filters, /Alle Destillerien|Alle Flaschentypen|Alle Status/);
+    });
+});
+
+
+test('browser: English map legend translates active and closed for visible and empty distilleries', async () => {
+    await session(async ({page, open}) => {
+        await open({query:'?lang=en'});
+        await page.locator('html[lang="en"]').waitFor();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-map"]').click();
+        const stocked = page.locator('.map-legend-status');
+        await stocked.waitFor();
+        assert.match(await stocked.innerText(), /With bottles\s+1\s*Active\s+1\s*Closed/);
+        await page.locator('#map-all-distilleries').check();
+        const empty = page.locator('.map-legend-empty');
+        await empty.waitFor();
+        assert.match(await empty.innerText(), /Without bottles\s+Active\s+Closed/);
+        assert.doesNotMatch(await page.locator('.map-legend').innerText(), /Aktiv|Geschlossen/);
+    });
+});
+
+test('browser: adjustments followed by cutting create one corrected editable cutout', async () => {
+    await session(async ({base,page,open}) => {
+        const created = await seed(base,'CUT-EDIT');
+        const png = 'data:image/png;base64,' + fs.readFileSync(
+            new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
+        const photo = (await requestJson(base,`/api/bottles/${created.bottle.id}/photos`,'POST',{image:png})).data;
+        // Synthetic bottle silhouette isolates editor orchestration from ONNX installation.
+        // Geometry + real adjustment pipeline and server persistence still execute.
+        const fakeOrt = `export const env={wasm:{}};
+            export class Tensor {constructor(type,data,shape){this.data=data;} dispose(){}}
+            export const InferenceSession={async create(){return {
+                inputNames:['input'],outputNames:['out'],async run(){const data=new Float32Array(320*320);
+                for(let y=20;y<306;y++)for(let x=106;x<213;x++)data[y*320+x]=1;
+                return {out:{data}};}}}};`;
+        await page.route('**/ai/vendor/ort.wasm.min.mjs', route => route.fulfill({
+            status:200,contentType:'text/javascript',body:fakeOrt,
+        }));
+        await open();
+        await page.locator(`[data-act="open"][data-id="${created.bottling.id}"]`).first().click();
+        const tile = page.locator(`[data-photo-tile][data-photo-id="${photo.id}"]`);
+        const pen = tile.locator('[data-act="photo-editor-open"]');
+        const size = async element => element.evaluate(el => {
+            const box=el.getBoundingClientRect();return {width:box.width,height:box.height};
+        });
+        assert.deepEqual(await size(pen),{width:28,height:28});
+        assert.equal(await tile.locator('[data-act="cutout-open"]').count(), 0);
+        await pen.click();
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]').disabled);
+        assert.equal(await page.locator('.photo-editor-image canvas').count(),1);
+        const noOverlap = await page.evaluate(() => {
+            const button=document.querySelector('.photo-editor-group-reset').getBoundingClientRect();
+            const slider=document.querySelector('.photo-editor-slider input').getBoundingClientRect();
+            return button.bottom < slider.top;
+        });
+        assert.ok(noOverlap,'reset icon must be above the slider');
+        await page.locator('[data-photo-slider="exposure"]').evaluate(el=>{
+            el.value='.6';el.dispatchEvent(new Event('input',{bubbles:true}));
+        });
+        const frameHeightBeforeTab = await page.locator('.photo-editor-image').evaluate(el => el.getBoundingClientRect().height);
+        await page.locator('[data-photo-editor-tab="cutout"]').click();
+        assert.equal(await page.locator('.photo-editor-image').evaluate(el => el.getBoundingClientRect().height),frameHeightBeforeTab,
+            'changing editing tabs must not resize the image preview');
+        await page.locator('[data-act="photo-editor-cutout"]').click();
+        await page.waitForFunction(() => document.querySelector('[data-photo-editor-message]')?.textContent
+            ?.includes('Freistellung in der Vorschau'),null,{timeout:20000});
+        assert.equal(await page.locator('.photo-editor-image canvas').count(),1);
+        assert.equal(await page.locator('.cutout-compare').count(),0);
+        // Before/after must compare the whole original with the transparent cutout,
+        // not just disable brightness/contrast on the already cut-out result.
+        const alphaBounds = async () => page.locator('[data-photo-editor-preview]').evaluate(canvas => {
+            const {data} = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
+            let transparent = 0;
+            for (let i=3;i<data.length;i+=4) if (data[i] === 0) transparent++;
+            return {transparent,width:canvas.width,height:canvas.height};
+        });
+        const afterCutout = await alphaBounds();
+        assert.ok(afterCutout.transparent > 0,'cutout must contain a transparent background');
+        await page.locator('[data-act="photo-editor-before"]').click();
+        await page.waitForFunction(() => document.querySelector('[data-act="photo-editor-before"]')
+            ?.getAttribute('aria-pressed') === 'true');
+        assert.equal((await alphaBounds()).transparent,0,
+            'Before must show the entire opaque original, even when the cutout is already active');
+        assert.equal(await page.locator('[data-photo-editor]').count(),1,'comparison must stay in editor');
+        await page.locator('[data-act="photo-editor-before"]').click();
+        await page.waitForFunction(() => document.querySelector('[data-act="photo-editor-before"]')
+            ?.getAttribute('aria-pressed') === 'false');
+        assert.ok((await alphaBounds()).transparent > 0,'After must restore the cutout');
+        await page.locator('[data-act="photo-editor-save"]').click();
+        await page.locator('[data-photo-editor]').waitFor({state:'detached'});
+        const saved = (await requestJson(base,'/api/collection')).data
+            .bottlings.find(b=>b.id===created.bottling.id).bottles[0].photos[0];
+        assert.ok(saved.cutout?.selected);
+        assert.equal(saved.cutout.adjustment.settings.exposure,.6);
+        assert.match(await tile.locator('img').getAttribute('src'),/-edit-[\w-]+\.webp$/);
+        await pen.click();
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]').disabled);
+        assert.equal(Number(await page.locator('[data-photo-slider="exposure"]').inputValue()),.6);
+        await page.locator('[data-act="photo-editor-before"]').click();
+        await page.waitForFunction(() => document.querySelector('[data-act="photo-editor-before"]')
+            ?.getAttribute('aria-pressed') === 'true');
+        assert.equal((await alphaBounds()).transparent,0,
+            'reopening a saved cutout must still compare against the complete original');
+        await page.locator('[data-act="photo-editor-before"]').click();
+        await page.waitForFunction(() => document.querySelector('[data-act="photo-editor-before"]')
+            ?.getAttribute('aria-pressed') === 'false');
+        assert.ok((await alphaBounds()).transparent > 0);
+    });
+});
+
+test('browser: first cutout before/after compares the uncut photo without slider edits', async () => {
+    await session(async ({base,page,open}) => {
+        const created = await seed(base,'CUT-BEFORE');
+        const png = 'data:image/png;base64,' + fs.readFileSync(
+            new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
+        const photo = (await requestJson(base,`/api/bottles/${created.bottle.id}/photos`,'POST',{image:png})).data;
+        const fakeOrt = `export const env={wasm:{}};
+            export class Tensor {constructor(type,data,shape){this.data=data;} dispose(){}}
+            export const InferenceSession={async create(){return {
+                inputNames:['input'],outputNames:['out'],async run(){const data=new Float32Array(320*320);
+                for(let y=20;y<306;y++)for(let x=106;x<213;x++)data[y*320+x]=1;
+                return {out:{data}};}}}};`;
+        await page.route('**/ai/vendor/ort.wasm.min.mjs', route => route.fulfill({
+            status:200,contentType:'text/javascript',body:fakeOrt,
+        }));
+        await open();
+        await page.locator(`[data-act="open"][data-id="${created.bottling.id}"]`).first().click();
+        await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]')?.disabled);
+        assert.equal(await page.locator('[data-photo-slider="exposure"]').inputValue(),'0');
+        await page.locator('[data-photo-editor-tab="cutout"]').click();
+        await page.locator('[data-act="photo-editor-cutout"]').click();
+        await page.waitForFunction(() => document.querySelector('[data-photo-editor-message]')?.textContent
+            ?.includes('Freistellung in der Vorschau'),null,{timeout:20000});
+        const hasTransparentPixels = () => {
+            const canvas = document.querySelector('[data-photo-editor-preview]');
+            if (!canvas) return false;
+            const pixels = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+            for (let i=3;i<pixels.length;i+=4) if (pixels[i] === 0) return true;
+            return false;
+        };
+        await page.waitForFunction(hasTransparentPixels);
+        await page.locator('[data-act="photo-editor-before"]').click();
+        await page.waitForFunction(() => {
+            const canvas = document.querySelector('[data-photo-editor-preview]');
+            if (!canvas || document.querySelector('[data-act="photo-editor-before"]')?.getAttribute('aria-pressed') !== 'true') return false;
+            const pixels = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+            for (let i=3;i<pixels.length;i+=4) if (pixels[i] !== 255) return false;
+            return true;
+        });
+        assert.equal(await page.locator('[data-photo-editor]').count(),1);
+        await page.locator('[data-act="photo-editor-before"]').click();
+        await page.waitForFunction(hasTransparentPixels);
+        assert.equal(await page.locator('[data-photo-slider="exposure"]').inputValue(),'0');
+    });
+});
+
+test('browser: integrated cutout editor uses one preview on desktop and mobile', async () => {
+    await session(async ({base, page, open}) => {
+        const created = await seed(base, 'CUT-FIT');
+        const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+        const photo = (await requestJson(base, `/api/bottles/${created.bottle.id}/photos`, 'POST', {image:png})).data;
+        await requestJson(base, `/api/bottles/${created.bottle.id}/photos/${photo.id}/cutout`, 'PUT', {image:png});
+        await open();
+        await page.locator(`.whisky-card[data-id="${created.bottling.id}"]`).first().click();
+        await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+        await page.locator('[data-photo-editor-preview]').waitFor();
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]').disabled);
+        assert.equal(await page.locator('.cutout-compare').count(),0,'no second image in editor');
+        assert.equal(await page.locator('.photo-editor-image canvas').count(),1);
+        assert.equal(await page.locator('[data-act="photo-editor-cutout"]').count(),1);
+        assert.equal(await page.locator('[data-photo-editor-tab]').count(),2);
+        assert.equal(await page.locator('[data-photo-editor-panel="cutout"]').isHidden(),true);
+        await page.locator('[data-photo-editor-tab="cutout"]').click();
+        assert.equal(await page.locator('[data-photo-editor-panel="cutout"]').isVisible(),true);
+        await page.locator('[data-photo-editor-tab="adjustments"]').click();
+        assert.equal(await page.locator('[data-photo-editor-panel="adjustments"]').isVisible(),true);
+        const sample = await page.locator('[data-photo-editor-preview]').evaluate(el => getComputedStyle(el).objectFit);
+        assert.equal(sample,'contain');
+        for (const viewport of [{width:1366,height:900},{width:390,height:844},{width:320,height:568},{width:844,height:390}]) {
+            await page.setViewportSize(viewport);
+            const layout = await page.evaluate(() => {
+                const frame = document.querySelector('.photo-editor-image').getBoundingClientRect();
+                const dialog = document.querySelector('.photo-editor').getBoundingClientRect();
+                const preview = document.querySelector('.photo-editor-image canvas').getBoundingClientRect();
+                const zoom = document.querySelector('.photo-editor-zoom').getBoundingClientRect();
+                const before = document.querySelector('.photo-editor-stage-actions').getBoundingClientRect();
+                const controls = document.querySelector('.photo-editor-controls').getBoundingClientRect();
+                const help = document.querySelector('.photo-editor-help').getBoundingClientRect();
+                const actions = document.querySelector('.photo-editor-actions').getBoundingClientRect();
+                return {frame,dialog,preview,zoom,before,controls,help,actions,screen:innerWidth,screenHeight:innerHeight};
+            });
+            assert.ok(layout.frame.width>0 && layout.frame.height>0,JSON.stringify(viewport));
+            assert.ok(layout.frame.width <= layout.screen+2,JSON.stringify(layout));
+            assert.ok(layout.preview.width<=layout.frame.width+2 && layout.preview.height<=layout.frame.height+2);
+            // Preview controls must float over the image without consuming its vertical space.
+            for (const overlay of [layout.zoom,layout.before]) {
+                assert.ok(overlay.left >= layout.frame.left-1 && overlay.right <= layout.frame.right+1,JSON.stringify({viewport,overlay,frame:layout.frame}));
+                assert.ok(overlay.top >= layout.frame.top-1 && overlay.bottom <= layout.frame.bottom+1,JSON.stringify({viewport,overlay,frame:layout.frame}));
+            }
+            if (viewport.width > 710) {
+                assert.ok(Math.abs(layout.controls.height-layout.frame.height)<1,
+                    'the preview and the slider column must have identical heights');
+                assert.ok(Math.abs(layout.controls.bottom-layout.frame.bottom)<1,
+                    'preview and slider scroll area must end on the same baseline');
+                assert.ok(layout.help.top>=layout.frame.bottom && layout.actions.top>=layout.help.bottom,
+                    'status and action bar must follow both columns without overlapping them');
+                assert.ok(layout.actions.bottom<=layout.screenHeight+1,
+                    'the action bar must stay visible on normal desktop-sized viewports');
+                assert.ok(Math.abs(layout.help.left-layout.dialog.left)<3 && Math.abs(layout.help.right-layout.dialog.right)<3,
+                    'the status must span the full editor width');
+            }
+        }
+    });
+});
+
+test('browser: a saved photo cutout can be previewed, toggled and deleted without losing the original', async () => {
+    await session(async ({base, page, open}) => {
+        const created = await seed(base, 'CUT-001');
+        const bottleId = created.bottle.id;
+        const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+        const photo = (await requestJson(base, `/api/bottles/${bottleId}/photos`, 'POST', {image:png})).data;
+        const url = `/api/bottles/${bottleId}/photos/${photo.id}/cutout`;
+        const cutout = (await requestJson(base, url, 'PUT', {image:png})).data;
+        await open();
+        await page.locator(`.whisky-card[data-id="${created.bottling.id}"]`).first().click();
+        await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).waitFor();
+        assert.match(await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`).getAttribute('src'), /cutout/);
+        await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+        await page.locator('[data-photo-editor]').waitFor();
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]').disabled);
+        assert.equal(await page.locator('[data-act="photo-editor-cutout"]').count(),1,'freistellen is in the editor');
+        assert.equal(await page.locator('.photo-editor-image canvas').count(),1);
+        await page.locator('[data-photo-editor-tab="cutout"]').click();
+        await page.locator('[data-act="photo-editor-toggle-cutout"]').click();
+        assert.equal(await page.locator('[data-photo-editor]').getAttribute('data-photo-preview-source'),'original');
+        assert.equal(await page.locator('[data-act="photo-editor-toggle-cutout"]').textContent(), 'Freistellung anzeigen');
+        assert.equal(await page.locator('.photo-editor-image canvas').count(),1);
+        // Showing the original changes neither the persisted selection nor the gallery.
+        assert.equal((await requestJson(base,'/api/collection')).data.bottlings[0].bottles[0].photos[0].cutout.selected,true);
+        assert.match(await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`).getAttribute('src'),/cutout/);
+        await page.locator('[data-photo-editor-tab="adjustments"]').click();
+        await page.locator('[data-photo-slider="exposure"]').evaluate(el=>{el.value='0.6';el.dispatchEvent(new Event('input',{bubbles:true}));});
+        await page.locator('[data-photo-editor-tab="cutout"]').click();
+        await page.locator('[data-act="photo-editor-toggle-cutout"]').click();
+        assert.equal(await page.locator('[data-photo-editor]').getAttribute('data-photo-preview-source'),'cutout');
+        assert.equal(await page.locator('[data-photo-slider="exposure"]').inputValue(),'0');
+        await page.locator('[data-act="photo-editor-toggle-cutout"]').click();
+        assert.equal(await page.locator('[data-photo-slider="exposure"]').inputValue(),'0.6',
+            'unsaved adjustment values for each source must survive preview switching');
+        // Saving the selected source commits it and its edits, but never deletes the cutout.
+        await page.locator('[data-act="photo-editor-save"]').click();
+        await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img[src*="edit-"]`).waitFor();
+        const afterSaving = (await requestJson(base,'/api/collection')).data.bottlings[0].bottles[0].photos[0];
+        assert.equal(afterSaving.cutout.selected,false);
+        assert.equal(afterSaving.adjustment.settings.exposure,.6);
+        await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+        await page.locator('[data-photo-editor-tab="cutout"]').click();
+        await page.locator('[data-act="photo-editor-remove-cutout"]').click();
+        await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`).waitFor();
+        const photoAfterDelete = (await requestJson(base, '/api/collection')).data.bottlings[0].bottles[0].photos[0];
+        assert.equal(photoAfterDelete.cutout, undefined);
+        assert.equal(photoAfterDelete.path, photo.path, 'original image remains stored');
+        assert.equal(photoAfterDelete.adjustment.settings.exposure,.6, 'original edits survive cutout deletion');
+        assert.equal(await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`).getAttribute('src'),
+            `/${photoAfterDelete.adjustment.path}`);
+    });
+});
+
+test('browser: saved transparent cutout Before displays all opaque original pixels synchronously', async () => {
+    await session(async ({base,page,open}) => {
+        const {bottle,bottling} = await seed(base,'CUT-OPAQUE');
+        const opaque = 'data:image/png;base64,' + fs.readFileSync(
+            new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
+        const transparent = 'data:image/png;base64,' + fs.readFileSync(
+            new URL('../fixtures/photo-cutout-transparent.png', import.meta.url)).toString('base64');
+        const photo = (await requestJson(base,`/api/bottles/${bottle.id}/photos`,'POST',{image:opaque})).data;
+        await requestJson(base,`/api/bottles/${bottle.id}/photos/${photo.id}/cutout`,'PUT',{image:transparent});
+        await open();
+        await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
+        await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]').disabled);
+        const transparentCount = () => page.locator('[data-photo-editor-preview]').evaluate(canvas => {
+            const pixels = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+            let count = 0;
+            for (let index=3;index<pixels.length;index+=4) if (pixels[index]===0) count++;
+            return count;
+        });
+        assert.ok((await transparentCount()) > 0);
+        await page.locator('[data-act="photo-editor-before"]').click();
+        assert.equal(await page.locator('[data-act="photo-editor-before"]').getAttribute('aria-pressed'),'true');
+        assert.equal(await transparentCount(),0);
+        await page.locator('[data-act="photo-editor-before"]').click();
+        assert.ok((await transparentCount()) > 0);
+    });
+});
+
+test('browser: cutout mask brush erases at preview zoom, supports undo, and saves only the new mask', async () => {
+    await session(async ({base,page,open,dir}) => {
+        const created = await seed(base,'MASK-EDIT');
+        const originalPng = 'data:image/png;base64,' + fs.readFileSync(
+            new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
+        const photo = (await requestJson(base,`/api/bottles/${created.bottle.id}/photos`,'POST',
+            {image:originalPng})).data;
+        const url = `/api/bottles/${created.bottle.id}/photos/${photo.id}/cutout`;
+        const old = (await requestJson(base,url,'PUT',{image:originalPng})).data.cutout.path;
+        const initialOriginal = fs.readFileSync(`${dir}/${photo.path}`);
+        await open();
+        await page.locator(`.whisky-card[data-id="${created.bottling.id}"]`).first().click();
+        await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]').disabled);
+        const frameHeightBeforeMask = await page.locator('.photo-editor-image').evaluate(el => el.getBoundingClientRect().height);
+        await page.locator('[data-photo-editor-tab="cutout"]').click();
+        await page.locator('[data-photo-editor-mask-tools]').waitFor({state:'visible'});
+        assert.equal(await page.locator('.photo-editor-image').evaluate(el => el.getBoundingClientRect().height),frameHeightBeforeMask);
+        const centerAlpha = () => page.locator('[data-photo-editor-preview]').evaluate(canvas => {
+            const pixels = canvas.getContext('2d').getImageData(
+                Math.floor(canvas.width / 2),Math.floor(canvas.height / 2),1,1).data;
+            return pixels[3];
+        });
+        assert.equal(await centerAlpha(),255);
+        await page.locator('[data-act="photo-editor-zoom-in"]').click();
+        assert.match(await page.locator('[data-photo-editor-zoom-level]').textContent(),/150/);
+        await page.locator('[data-photo-brush-mode="erase"]').click();
+        const rect = await page.locator('[data-photo-editor-preview]').boundingBox();
+        const x = rect.x + rect.width / 2, y = rect.y + rect.height / 2;
+        await page.mouse.move(x,y); await page.mouse.down(); await page.mouse.up();
+        await page.waitForFunction(() => {
+            const canvas = document.querySelector('[data-photo-editor-preview]');
+            return canvas?.getContext('2d').getImageData(Math.floor(canvas.width/2),
+                Math.floor(canvas.height/2),1,1).data[3] === 0;
+        });
+        await page.locator('[data-act="photo-editor-brush-undo"]').click();
+        await page.waitForFunction(() => {
+            const canvas = document.querySelector('[data-photo-editor-preview]');
+            return canvas?.getContext('2d').getImageData(Math.floor(canvas.width/2),
+                Math.floor(canvas.height/2),1,1).data[3] === 255;
+        });
+        await page.locator('[data-photo-brush-mode="restore"]').click();
+        assert.equal(await page.locator('[data-photo-brush-mode="restore"]').getAttribute('aria-pressed'),'true');
+        await page.locator('[data-photo-brush-mode="erase"]').click();
+        await page.mouse.move(x,y); await page.mouse.down(); await page.mouse.up();
+        await page.locator('[data-photo-editor-tab="adjustments"]').click();
+        await page.locator('[data-photo-slider="exposure"]').evaluate(slider => {
+            slider.value='.6';slider.dispatchEvent(new Event('input',{bubbles:true}));
+        });
+        await page.locator('[data-act="photo-editor-save"]').click();
+        await page.locator('[data-photo-editor]').waitFor({state:'detached'});
+        const after = (await requestJson(base,'/api/collection')).data.bottlings
+            .find(item => item.id === created.bottling.id).bottles[0].photos[0];
+        assert.equal(after.path,photo.path,'retouch must not replace original');
+        assert.notEqual(after.cutout.path,old,'new cutout must persist');
+        assert.equal(after.cutout.adjustment.settings.exposure,.6);
+        assert.deepEqual(fs.readFileSync(`${dir}/${after.path}`),initialOriginal);
+        assert.ok(fs.existsSync(`${dir}/${after.cutout.path}`));
+    });
+});
+
+test('browser: isolated slightly tilted bottle fills both vertical edges of transparent 2:3 cutout', async () => {
+    await session(async ({page, open}) => {
+        await open();
+        const result = await page.evaluate(async () => {
+            const {composeCutout} = await import(new URL('js/features/cutout/image.js', document.baseURI).href);
+            const source = document.createElement('canvas');
+            source.width = 720; source.height = 1080;
+            const sc = source.getContext('2d');
+            sc.fillStyle = '#bc7623'; sc.fillRect(0, 0, source.width, source.height);
+            const img = new Image(); img.src = source.toDataURL('image/png'); await img.decode();
+            const mask = new Uint8ClampedArray(320 * 320);
+            for (let y = 28; y < 291; y++) {
+                const mid = 160 + (y - 160) * Math.tan(6 * Math.PI / 180) * 1080 / 720;
+                for (let x = Math.ceil(mid - 30); x <= mid + 30; x++) mask[y * 320 + x] = 255;
+            }
+            // High-confidence debris must be absent from the saved image, not just its crop.
+            mask[0] = 255; mask[319] = 255;
+            const cutout = new Image(); cutout.src = composeCutout(img, mask); await cutout.decode();
+            const out = document.createElement('canvas');
+            out.width = cutout.naturalWidth; out.height = cutout.naturalHeight;
+            const ctx = out.getContext('2d', {willReadFrequently:true});
+            ctx.drawImage(cutout, 0, 0);
+            const rgba = ctx.getImageData(0, 0, out.width, out.height).data;
+            const rowHasAlpha = y => {
+                for (let x = 0; x < out.width; x++) {
+                    if (rgba[(y * out.width + x) * 4 + 3] >= 8) return true;
+                }
+                return false;
+            };
+            return {width:out.width,height:out.height,top:rowHasAlpha(0),bottom:rowHasAlpha(out.height - 1),
+                topLeft:rgba[3],topRight:rgba[(out.width - 1) * 4 + 3]};
+        });
+        assert.equal(result.width * 3, result.height * 2, 'the saved PNG must be exactly 2:3');
+        assert.ok(result.top, 'the visible bottle reaches the first image row');
+        assert.ok(result.bottom, 'the visible bottle reaches the final image row');
+        assert.equal(result.topLeft, 0, 'no detached alpha at the outer top left');
+        assert.equal(result.topRight, 0, 'no detached alpha at the outer top right');
+    });
+});
+
+test('browser: cutout compositor sharpens the model feather into a narrow transparent bottle edge', async () => {
+    await session(async ({page, open}) => {
+        await open();
+        const result = await page.evaluate(async () => {
+            const {composeCutout} = await import(new URL('js/features/cutout/image.js', document.baseURI).href);
+            const original = document.createElement('canvas');
+            original.width = 640; original.height = 960;
+            const sourceContext = original.getContext('2d');
+            sourceContext.fillStyle = '#67829a';
+            sourceContext.fillRect(0, 0, original.width, original.height);
+            const photo = new Image();
+            photo.src = original.toDataURL('image/png');
+            await photo.decode();
+            const mask = new Uint8ClampedArray(320 * 320);
+            for (let y = 22; y < 298; y++) {
+                for (let x = 108; x <= 212; x++) {
+                    const distance = Math.min(x - 108, 212 - x);
+                    mask[y * 320 + x] = Math.min(255, 25 * distance);
+                }
+            }
+            const image = new Image();
+            image.src = composeCutout(photo, mask);
+            await image.decode();
+            const output = document.createElement('canvas');
+            output.width = image.naturalWidth; output.height = image.naturalHeight;
+            const context = output.getContext('2d', {willReadFrequently:true});
+            context.drawImage(image, 0, 0);
+            const rgba = context.getImageData(0, Math.floor(output.height / 2), output.width, 1).data;
+            const alphas = Array.from({length:output.width}, (_, x) => rgba[x * 4 + 3]);
+            return {
+                transition:alphas.filter(value => value > 0 && value < 255).length,
+                opaque:alphas.filter(value => value === 255).length,
+                transparent:alphas.filter(value => value === 0).length,
+                ratio:output.width * 3 === output.height * 2,
+            };
+        });
+        assert.equal(result.ratio, true, 'the PNG keeps the original 2:3 ratio');
+        assert.ok(result.transition > 0 && result.transition <= 16,
+            `the final edge needs narrow antialiasing, not a broad model feather: ${JSON.stringify(result)}`);
+        assert.ok(result.opaque > 0 && result.transparent > 0,
+            'the image has a fully opaque bottle and transparent background');
+    });
+});
+
+test('browser: photo editor previews exposure, saves reversible adjustments and restores the original', async () => {
+    await session(async ({page, open, base}) => {
+        const created = await seed(base, '002018');
+        const bottle = created.bottle;
+        const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAqCAIAAAAmpwwJAAAALUlEQVR4nO3MMQ0AMAgAsDFn2MAG/hNMwNcKaGT12/BXFpFIJBKJRCKRSHQSDaMuAWIphFaeAAAAAElFTkSuQmCC';
+        const upload = await requestJson(base, `/api/bottles/${bottle.id}/photos`, 'POST', {image:png});
+        assert.equal(upload.status,201);
+        await open();
+        await page.locator(`[data-act="open"][data-id="${created.bottling.id}"]`).first().click();
+        await page.locator(`[data-act="photo-editor-open"][data-photo-id="${upload.data.id}"]`).click();
+        const exposure = page.locator('[data-photo-slider="exposure"]');
+        await exposure.waitFor({state:'visible'});
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]').disabled);
+        const pixel = () => page.locator('[data-photo-editor-preview]').evaluate(canvas =>
+            canvas.getContext('2d').getImageData(0,0,1,1).data[0]);
+        const before = await pixel();
+        await exposure.evaluate(el => { el.value='1'; el.dispatchEvent(new Event('input',{bubbles:true})); });
+        await page.waitForFunction(previous => {
+            const canvas = document.querySelector('[data-photo-editor-preview]');
+            return canvas?.getContext('2d').getImageData(0,0,1,1).data[0] > previous;
+        },before);
+        await page.locator('[data-act="photo-editor-before"]').click();
+        await page.waitForFunction(expected => document.querySelector('[data-photo-editor-preview]')?.
+            getContext('2d').getImageData(0,0,1,1).data[0] === expected, before);
+        await page.locator('[data-act="photo-editor-before"]').click();
+        await page.locator('[data-act="photo-editor-save"]').click();
+        await page.locator('[data-photo-editor]').waitFor({state:'detached'});
+        assert.match(await page.locator('.photo-tile img').first().getAttribute('src'),/-edit-[\w-]+\.webp$/);
+        await page.locator('[data-act="photo-editor-open"]').click();
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]').disabled);
+        assert.equal(await page.locator('[data-photo-slider="exposure"]').inputValue(),'1');
+        await page.locator('[data-act="photo-editor-reset"]').click();
+        await page.locator('[data-act="photo-editor-save"]').click();
+        await page.locator('[data-photo-editor]').waitFor({state:'detached'});
+        assert.ok((await page.locator('.photo-tile img').first().getAttribute('src')).endsWith('.png'));
+        const collection = (await requestJson(base, '/api/collection')).data;
+        assert.equal(collection.bottlings.find(b => b.id === created.bottling.id)
+            .bottles[0].photos[0].adjustment,undefined);
+    });
+});
+
+
+test('browser: photo editor group resets and white-balance eyedropper select real image pixels', async () => {
+    await session(async ({page, open, base}) => {
+        const created = await seed(base, '002019');
+        const png = 'data:image/png;base64,' + fs.readFileSync(
+            new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
+        const upload = await requestJson(base, `/api/bottles/${created.bottle.id}/photos`, 'POST', {image:png});
+        assert.equal(upload.status,201);
+        await open();
+        await page.locator(`[data-act="open"][data-id="${created.bottling.id}"]`).first().click();
+        await page.locator(`[data-act="photo-editor-open"][data-photo-id="${upload.data.id}"]`).click();
+        const exposure = page.locator('[data-photo-slider="exposure"]');
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]').disabled);
+        const change = async (name, value) => page.locator(`[data-photo-slider="${name}"]`).evaluate((el,v) => {
+            el.value = String(v); el.dispatchEvent(new Event('input',{bubbles:true}));
+        },value);
+        await change('exposure', .5);
+        await change('temperature', 30);
+        await change('clarity', 12);
+        await page.locator('[data-act="photo-editor-reset-group"][data-photo-group="light"]').click();
+        assert.equal(await exposure.inputValue(),'0');
+        assert.equal(await page.locator('[data-photo-slider="temperature"]').inputValue(),'30');
+        assert.equal(await page.locator('[data-photo-slider="clarity"]').inputValue(),'12');
+        await page.locator('[data-act="photo-editor-pick-white"]').click();
+        assert.equal(await page.locator('[data-act="photo-editor-pick-white"]').getAttribute('aria-pressed'),'true');
+        const point = await page.locator('[data-photo-editor-preview]').evaluate(canvas => {
+            const rect = canvas.getBoundingClientRect();
+            const scale = Math.min(rect.width / canvas.width, rect.height / canvas.height);
+            const left = rect.left + (rect.width - canvas.width*scale)/2;
+            const top = rect.top + (rect.height - canvas.height*scale)/2;
+            return {x: left + canvas.width*scale*.35, y: top + canvas.height*scale*.35,
+                dx: canvas.width*scale*.25, dy: canvas.height*scale*.25};
+        });
+        await page.mouse.move(point.x,point.y);
+        await page.mouse.down();
+        await page.mouse.move(point.x+point.dx,point.y+point.dy,{steps:3});
+        await page.mouse.up();
+        await page.waitForFunction(() => document.querySelector('[data-act="photo-editor-pick-white"]')?.getAttribute('aria-pressed') === 'false');
+        assert.ok(Number(await page.locator('[data-photo-slider="temperature"]').inputValue()) < 0);
+        assert.equal(await page.locator('[data-photo-slider="clarity"]').inputValue(),'12');
+        await page.locator('[data-act="photo-editor-reset-group"][data-photo-group="color"]').click();
+        assert.equal(await page.locator('[data-photo-slider="temperature"]').inputValue(),'0');
+        assert.equal(await page.locator('[data-photo-slider="clarity"]').inputValue(),'12');
+        await page.locator('[data-act="photo-editor-reset-group"][data-photo-group="detail"]').click();
+        assert.equal(await page.locator('[data-photo-slider="clarity"]').inputValue(),'0');
+    });
+});
+
+test('browser: deleting an occupied room asks to unassign its bottles, with cancel preserving everything', async () => {
+    await session(async ({base,page,open}) => {
+        const bottle=await seed(base,'071615');
+        const room=(await requestJson(base,'/api/warehouse/rooms','POST',{name:'Löschtest',width:4,height:3})).data;
+        const other=(await requestJson(base,'/api/warehouse/rooms','POST',{name:'Bleibt',width:4,height:3})).data;
+        const furniture=(await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',
+            {name:'Regal',type:'regal',x:0,y:0,width:1,depth:.5})).data;
+        const shelf=(await requestJson(base,`/api/warehouse/furniture/${furniture.id}/shelves`,'POST',{name:'Fach'})).data;
+        assert.equal((await requestJson(base,`/api/warehouse/bottles/${bottle.bottle.id}`,'PUT',{shelfId:shelf.id})).status,200);
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        await page.locator('#warehouse-room-select').selectOption(room.id);
+        await page.locator('.warehouse-room-toolbar [data-act="warehouse-room-delete"]').click();
+        const dialog=page.locator('#modal-root [role="dialog"]');
+        assert.match(await dialog.textContent(),/1 Flasche/);
+        assert.equal(await dialog.locator('[data-act="warehouse-confirm-delete-unassign"]').count(),1);
+        assert.equal(await dialog.locator('[data-act="warehouse-confirm-delete"]').count(),0);
+        await dialog.getByRole('button',{name:'Abbrechen'}).click();
+        assert.equal(await dialog.count(),0);
+        const afterCancel=(await requestJson(base,'/api/warehouse')).data;
+        assert.equal(afterCancel.rooms.length,2);
+        assert.equal(afterCancel.assignments[bottle.bottle.id],shelf.id);
+        await page.locator('.warehouse-room-toolbar [data-act="warehouse-room-delete"]').click();
+        await dialog.locator('[data-act="warehouse-confirm-delete-unassign"]').click();
+        await page.locator('#modal-root [role="dialog"]').waitFor({state:'detached'});
+        const afterDelete=(await requestJson(base,'/api/warehouse')).data;
+        assert.deepEqual(afterDelete.rooms.map(entry=>entry.id),[other.id]);
+        assert.equal(afterDelete.assignments[bottle.bottle.id],undefined);
+        assert.ok(afterDelete.bottles.some(entry=>entry.id===bottle.bottle.id));
+    });
+});
+
+test('browser: showing all distilleries preserves exact map camera and viewer node', async () => {
+    await session(async ({page, open}) => {
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-map"]').click();
+        await page.locator('.map-zoom-level').waitFor();
+        await page.locator('[data-map-control="in"]').click();
+        await page.locator('[data-map-control="in"]').click();
+        await page.locator('#distillery-map').evaluate(node => { node.dataset.cameraIdentity = 'preserve'; });
+        const snapshot = () => page.locator('#distillery-map').evaluate(node => {
+            const tile = node.querySelector('.map-tiles img');
+            const viewport = node.querySelector('.map-viewport');
+            const zoom = Number(node.querySelector('.map-zoom-level').textContent.replace(/[^\d]/g, ''));
+            if (!tile || !viewport) return null;
+            const [, , x, y] = new URL(tile.src).pathname.split('/').map(segment => parseInt(segment, 10));
+            return { zoom, centerX: x * 256 - parseFloat(tile.style.left) + viewport.clientWidth / 2,
+                centerY: y * 256 - parseFloat(tile.style.top) + viewport.clientHeight / 2 };
+        });
+        const before = await snapshot();
+        assert.ok(before && Number.isFinite(before.centerX));
+        await page.locator('#map-all-distilleries').check();
+        assert.equal(await page.locator('#distillery-map').getAttribute('data-camera-identity'), 'preserve');
+        assert.deepEqual(await snapshot(), before, 'show all must preserve camera');
+        await page.locator('#map-all-distilleries').uncheck();
+        assert.deepEqual(await snapshot(), before, 'hide empty sites must preserve camera');
+    });
+});
+
+test('browser: help page is available from the menu and on direct navigation', async () => {
+    await session(async ({page, open}) => {
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-help"]').click();
+        await page.locator('.help-page').waitFor();
+        assert.equal(await page.locator('.section-nav-item[data-help-topic]').count(), HELP_TOPICS.length);
+        assert.equal(await page.locator('.section-nav-mobile select').count(), 1);
+        assert.equal(await page.locator('.help-section:not([hidden])').count(), 1);
+        await page.locator('[data-help-topic="storage"]').click();
+        assert.equal(await page.locator('.help-section:not([hidden])').count(), 1);
+        assert.match(await page.locator('#help-panel-storage').innerText(), /Regale|Fächer/);
+        await page.locator('[data-help-topic="data"]').click();
+        assert.match(await page.locator('#help-panel-data').innerText(), /data\/warehouse\.json/);
+        assert.equal(await page.locator('#site-drawer [aria-current="page"]').getAttribute('data-act'), 'goto-help');
+    });
+});
+
+
+
+test('browser: help articles use the approved right-hand analysis-style panel', async () => {
+    await session(async ({page,open}) => {
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-help"]').click();
+        for (const width of [1440,390]) {
+            await page.setViewportSize({width,height:900});
+            const layout = await page.locator('#help-panel-basics .help-content-panel').evaluate(panel => {
+                const section = panel.closest('.help-section');
+                const title = section.querySelector(':scope > .analytics-section-title');
+                const panelRect = panel.getBoundingClientRect();
+                const titleRect = title.getBoundingClientRect();
+                const style = getComputedStyle(panel);
+                return {corner:style.borderRadius, border:style.borderTopWidth,
+                    background:style.backgroundColor, titleAbove:titleRect.bottom < panelRect.top,
+                    overflows:document.documentElement.scrollWidth > window.innerWidth + 1,
+                    leftNav:getComputedStyle(document.querySelector('.section-nav-desktop')).display};
+            });
+            assert.equal(layout.corner,'0px');
+            assert.equal(layout.border,'1px');
+            assert.notEqual(layout.background,'rgba(0, 0, 0, 0)');
+            assert.equal(layout.titleAbove,true,'help heading must remain outside the panel');
+            assert.equal(layout.overflows,false,`${width}px: help panel must not overflow`);
+            assert.equal(layout.leftNav === 'none',width === 390,
+                `${width}px: only mobile uses the help section selector`);
+        }
+        await page.setViewportSize({width:1440,height:900});
+        await page.locator('.section-nav-item[data-help-topic="storage"]').click();
+        assert.equal(await page.locator('#help-panel-storage:not([hidden]) .help-content-panel').count(),1);
+        assert.equal(await page.locator('#help-panel-basics:not([hidden])').count(),0);
+    });
+});
+
+
+test('browser: straight active navigation line and shared responsive analysis/help workspace', async () => {
+    await session(async ({page,open}) => {
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-analysis"]').click();
+        const sidebar = page.locator('.section-nav-desktop');
+        assert.equal(await sidebar.isVisible(),true);
+        const marker = await page.locator('.section-nav-item.active').evaluate(item => {
+            const css = getComputedStyle(item);
+            return {width:css.borderLeftWidth,radius:css.borderRadius,color:css.borderLeftColor,
+                gold:getComputedStyle(document.documentElement).getPropertyValue('--gold').trim()};
+        });
+        assert.equal(marker.width,'3px');
+        assert.equal(marker.radius,'0px');
+        assert.equal(marker.color,'rgb(189, 152, 98)');
+        await page.locator('.section-nav-item[data-section="quality"]').click();
+        assert.equal(await page.locator('.section-nav-item.active').getAttribute('data-section'),'quality');
+        assert.equal(await page.locator('.section-nav-item.active').getAttribute('aria-current'),'page');
+        await page.setViewportSize({width:390,height:844});
+        assert.equal(await sidebar.isVisible(),false);
+        assert.equal(await page.locator('[data-section-switch="analytics"]').isVisible(),true);
+        await page.locator('[data-section-switch="analytics"]').selectOption('overview');
+        assert.equal(await page.locator('.analytics-section-title').innerText(),'Übersicht');
+        assert.equal(await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1),true);
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-help"]').click();
+        assert.equal(await page.locator('.section-nav-desktop').isVisible(),false);
+        await page.locator('[data-section-switch="help"]').selectOption('photos');
+        assert.equal(await page.locator('#help-panel-photos').isVisible(),true);
+        assert.equal(await page.locator('.help-section:not([hidden])').count(),1);
+        assert.equal(await page.evaluate(() => document.body.scrollWidth <= document.documentElement.clientWidth + 1),true);
+    });
+});
+
+test('browser: consistent section layout, readable help text and intentional filter rows at three widths', async () => {
+    await session(async ({page, open}) => {
+        await open();
+        for (const width of [390, 1040, 1440]) {
+            await page.setViewportSize({width, height:900});
+            const home = await page.evaluate(() => {
+                const hero = document.querySelector('.hero-description');
+                const range = document.createRange();
+                range.selectNodeContents(hero);
+                const lines = [...range.getClientRects()];
+                const tops = [...document.querySelector('.collection-filters').children]
+                    .map(node => Math.round(node.getBoundingClientRect().top));
+                return {text:hero.textContent, lines:lines.length,
+                    right:Math.max(...lines.map(rect => rect.right)),
+                    heroRight:document.querySelector('.collection-hero').getBoundingClientRect().right,
+                    tops, scroll:document.documentElement.scrollWidth};
+            });
+            assert.equal(home.text, 'Von der besonderen Abfüllung bis zum letzten Dram. Entdecke, erfasse und verwalte deine Whisky-Sammlung.');
+            assert.ok(home.scroll <= width, `${width}px: collection must not overflow`);
+            if (width > 740) {
+                assert.equal(home.lines, 1, `${width}px: BOTH hero sentences must share ONE line`);
+                assert.ok(home.right <= home.heroRight + 1, `${width}px: complete text must remain inside banner`);
+            }
+            if (width === 1040) {
+                assert.equal(home.tops[1], home.tops[2]);
+                assert.equal(home.tops[2], home.tops[3]);
+                assert.equal(home.tops[4], home.tops[5]);
+                assert.equal(home.tops[5], home.tops[6]);
+                assert.ok(home.tops[0] < home.tops[1] && home.tops[1] < home.tops[4],
+                    'tablet: search and two equally sized filter rows');
+            }
+            await page.locator('[data-act="toggle-menu"]').click();
+            await page.locator('[data-act="goto-help"]').click();
+            await page.locator('.help-steps').first().waitFor();
+            assert.equal(await page.locator('.help-section:not([hidden]) .help-steps > li').count(), 4);
+            const help = await page.evaluate(() => ({
+                scroll:document.documentElement.scrollWidth,
+                sidebarVisible:getComputedStyle(document.querySelector('.section-nav-desktop')).display !== 'none',
+                itemHeights:[...document.querySelectorAll('.section-nav-item')].map(item => item.getBoundingClientRect().height),
+            }));
+            assert.ok(help.scroll <= width, `${width}px: help must not overflow`);
+            if (width >= 1040) assert.ok(help.itemHeights.every(height => height <= 45),
+                `${width}px: help topic names must not wrap (heights: ${help.itemHeights.join(', ')})`);
+            else assert.equal(help.sidebarVisible, false, 'mobile: use the topic selector');
+            await page.locator('[data-act="toggle-menu"]').click();
+            await page.locator('#site-drawer [data-act="goto-home"]').click();
+            await page.locator('.collection-filters').waitFor();
+        }
+        await page.setViewportSize({width:1040,height:900});
+        await page.locator('[data-act="toggle-menu"]').click();
+        await page.locator('[data-act="goto-analysis"]').click();
+        await page.locator('.analytics-filters').waitFor();
+        const filterTops = await page.locator('.analytics-filters > *').evaluateAll(nodes =>
+            nodes.map(node => Math.round(node.getBoundingClientRect().top)));
+        assert.ok(filterTops.every(top => top === filterTops[0]),
+            'analytics: reset button must not be stranded on a separate row on tablets');
+    });
+});
+
+
+test('browser: settings and warehouse share section navigation with mobile selector and preserve unsaved settings', async () => {
+    await session(async ({page,open}) => {
+        await open();
+        await openSettingsFromMenu(page);
+        assert.equal(await page.locator('.settings-page .section-nav-item').count(), 4);
+        await page.locator('#established-year').fill('1998');
+        await page.locator('.settings-page [data-settings-section="transfer"]').click();
+        assert.equal(await page.locator('[data-settings-panel="general"]').isVisible(), false);
+        assert.equal(await page.locator('[data-settings-panel="transfer"]').isVisible(), true);
+        await page.locator('.settings-page [data-settings-section="general"]').click();
+        assert.equal(await page.locator('#established-year').inputValue(), '1998', 'unsaved year is preserved');
+        await page.setViewportSize({width:390,height:844});
+        await page.locator('[data-section-switch="settings"]').selectOption('backups');
+        assert.equal(await page.locator('[data-settings-panel="backups"]').isVisible(),true);
+        await page.locator('[data-section-switch="settings"]').selectOption('distilleries');
+        assert.equal(await page.locator('[data-settings-panel="distilleries"]').isVisible(),true);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-page').waitFor();
+        assert.equal(await page.locator('.warehouse-tabs .section-nav-item').count(),4);
+        assert.equal(await page.locator('.warehouse-tabs').isVisible(),false);
+        await page.locator('[data-section-switch="warehouse"]').selectOption('find');
+        assert.equal(await page.locator('.section-workspace-content > .analytics-section-title').innerText(),'Flaschen finden');
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),true);
+    });
+});
+
+test('browser: distilleries settings use a flat single-heading section without nested scrolling', async () => {
+    await session(async ({page, open}) => {
+        await open();
+        await openSettingsFromMenu(page);
+        await page.locator('[data-settings-section="distilleries"]').click();
+        const section = page.locator('[data-settings-panel="distilleries"]');
+        assert.equal(await section.isVisible(), true);
+        assert.equal(await section.locator('h2').count(), 1);
+        assert.equal(await section.locator('h3').count(), 0);
+        const metrics = await section.evaluate(el => {
+            const list = el.querySelector('.distillery-list');
+            const panel = el.querySelector('.panel.section');
+            return { overflow: getComputedStyle(list).overflowY,
+                listHeight: list.getBoundingClientRect().height,
+                panelBackground: getComputedStyle(panel).backgroundColor,
+                panelBorder: getComputedStyle(panel).borderTopWidth,
+                rows: list.querySelectorAll('.distillery-row').length };
+        });
+        assert.equal(metrics.overflow, 'visible');
+        assert.ok(metrics.rows > 100, 'full distillery catalog must render');
+        assert.ok(metrics.listHeight > 1000, 'list uses document height, not a fixed viewport-sized scrollbox');
+        assert.notEqual(metrics.panelBackground, 'rgba(0, 0, 0, 0)');
+        assert.equal(metrics.panelBorder, '1px');
+        // Settings inherit the same straight-edged content-surface language
+        // as the analytics panels, not the older rounded dashboard cards.
+        assert.equal(await section.locator('.panel.section').evaluate(el => getComputedStyle(el).borderTopLeftRadius), '0px');
+        await page.locator('[data-settings-section="general"]').click();
+        assert.equal(await page.locator('.settings-section:not([hidden]) .panel.section').first().evaluate(el => getComputedStyle(el).borderTopLeftRadius), '0px');
+    });
+});
+
+test('browser: home hero shows the entire original description on one line at desktop widths', async () => {
+    await session(async ({page, open}) => {
+        await open();
+        for (const width of [768, 900, 1040, 1440, 1920]) {
+            await page.setViewportSize({width, height: 920});
+            const result = await page.evaluate(() => {
+                const hero = document.querySelector('.collection-hero');
+                const copy = hero.querySelector('.hero-description');
+                const range = document.createRange();
+                range.selectNodeContents(copy);
+                const rects = [...range.getClientRects()];
+                return { text:copy.textContent, lines:rects.length,
+                    right:Math.max(...rects.map(rect => rect.right)),
+                    heroRight:hero.getBoundingClientRect().right,
+                    documentWidth:document.documentElement.scrollWidth };
+            });
+            assert.equal(result.text,
+                'Von der besonderen Abfüllung bis zum letzten Dram. Entdecke, erfasse und verwalte deine Whisky-Sammlung.');
+            assert.equal(result.lines,1,`${width}px: the COMPLETE text must be on one line`);
+            assert.ok(result.right <= result.heroRight + 1, `${width}px: text must fit hero`);
+            assert.ok(result.documentWidth <= width, `${width}px: no horizontal overflow`);
+        }
+    });
+});
+
+test('browser: unassigned staging search shares the pagination footer and retains focus while filtering', async () => {
+    await session(async ({base,page,open}) => {
+        const room = (await requestJson(base,'/api/warehouse/rooms','POST',
+            {name:'Layout-Testzimmer',width:4,height:4})).data;
+        const furniture = (await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',
+            {name:'Regal',type:'regal',x:0.2,y:0.2,width:1,depth:0.4,rotation:0,elevation:0,itemHeight:1.8})).data;
+        assert.equal((await requestJson(base,`/api/warehouse/furniture/${furniture.id}/shelves`,
+            'POST',{name:'Fach',capacity:12})).status,201);
+        await seed(base,'731001');
+        await seed(base,'731002');
+        await open();
+        await page.setViewportSize({width:1680,height:900});
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('[data-section="rooms"]').click();
+        await page.locator('#warehouse-room-select').selectOption(room.id);
+        assert.equal(await page.locator('.warehouse-room-summary').evaluate(el=>getComputedStyle(el).borderTopLeftRadius),'0px');
+        await page.locator('[data-section="shelves"]').click();
+        await page.locator('.warehouse-unassigned-toggle').click();
+        const footer = await page.locator('.warehouse-unassigned-pagination').evaluate(el => {
+            const rect = selector => el.querySelector(selector).getBoundingClientRect();
+            const summary=rect('.warehouse-unassigned-page-summary');
+            const input=rect('#warehouse-unassigned-wall-search');
+            const pager=rect('.warehouse-unassigned-page-controls');
+            return {left:[summary.left,input.left,pager.left],right:[summary.right,input.right,pager.right],top:[summary.top,input.top,pager.top]};
+        });
+        assert.ok(footer.right[0]<footer.left[1] && footer.right[1]<footer.left[2],
+            `footer order is count – search – previous page: ${JSON.stringify(footer)}`);
+        assert.ok(Math.max(...footer.top)-Math.min(...footer.top)<16, 'footer elements belong in the same row');
+        await page.locator('.warehouse-unassigned-pagination').screenshot({path:'test-artifacts/warehouse-unassigned-footer-0233.png'});
+        const input = page.locator('#warehouse-unassigned-wall-search');
+        await input.fill('731001');
+        assert.equal(await page.evaluate(() => document.activeElement?.id), 'warehouse-unassigned-wall-search');
+        assert.equal(await page.locator('.warehouse-unassigned-bottle').count(),1);
+        await input.fill('731002');
+        assert.equal(await page.evaluate(() => document.activeElement?.id), 'warehouse-unassigned-wall-search');
+        assert.equal(await page.locator('.warehouse-unassigned-bottle').count(),1);
+        await input.fill('');
+        assert.equal(await page.locator('.warehouse-unassigned-bottle').count(),2);
+        assert.equal(await page.locator('.warehouse-unassigned-page-search').count(),1);
+        await page.setViewportSize({width:390,height:844});
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true,
+            'the footer search and pager must not cause horizontal overflow on phones');
+    });
+});
+
+test('browser: settings General heading uses the same panel gap as other settings sections', async () => {
+    await session(async ({page,open}) => {
+        await open();
+        await openSettingsFromMenu(page);
+        const gap = await page.locator('[data-settings-panel="general"]').evaluate(el => {
+            const title=el.querySelector(':scope > .analytics-section-title').getBoundingClientRect();
+            const panel=el.querySelector(':scope > .panel.section').getBoundingClientRect();
+            return panel.top-title.bottom;
+        });
+        assert.ok(Math.abs(gap - 16) < 0.75, `General heading and first panel should have the same 16px spacing as other settings groups, got ${gap}px`);
+    });
+});
+
+test('browser: bottling tasting block edits eight-axis flavor, notes and five Glencairn glasses with undo/redo', async () => {
+    await session(async ({page,base,open}) => {
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        const form=page.locator('#bottling-form');
+        await form.locator('[name="name"]').fill('Flavor profile browser test');
+        assert.equal(await form.locator('[data-flavor-range]').count(),0,
+            'tasting belongs to the second detail block, not the bottling master-data form');
+        await form.locator('button[type="submit"]').click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        const section = page.locator('[data-flavor-detail]');
+        await section.waitFor({state:'visible'});
+        assert.match(await section.locator('.flavor-chart').textContent(),/Alkoholisch/);
+        await section.locator('[data-flavor-range="6"]').evaluate(input => {
+            input.value='8'; input.dispatchEvent(new Event('input',{bubbles:true}));
+            input.dispatchEvent(new Event('change',{bubbles:true}));
+        });
+        await section.locator('[data-rating-points="80"]').click();
+        assert.equal(await section.locator('[data-tasting-rating]').getAttribute('data-rating-value'),'80');
+        const note = section.locator('[data-tasting-note="nose"]');
+        await note.fill('Sherry and vanilla');
+        await note.press('Tab');
+        assert.equal(await section.locator('[data-flavor-value="6"]').textContent(),'8');
+        await page.waitForFunction(async () => {
+            const response=await fetch('/api/collection');
+            const data=await response.json();
+            const b=data.bottlings?.[0];
+            return b?.rating===80 && b?.flavorProfile?.feinty===8 && b?.tastingNotes?.nose==='Sherry and vanilla';
+        });
+        const saved=(await requestJson(base,'/api/collection')).data.bottlings[0];
+        assert.equal(saved.bottles[0].rating,undefined);
+        assert.equal(saved.bottles[0].tastingNotes,undefined);
+        await section.locator('[data-act="flavor-detail-undo"]').click();
+        assert.equal(await section.locator('[data-tasting-note="nose"]').inputValue(),'');
+        await section.locator('[data-act="flavor-detail-redo"]').click();
+        assert.equal(await section.locator('[data-tasting-note="nose"]').inputValue(),'Sherry and vanilla');
+        await page.locator('[data-act="tastings-back-list"]').click();
+        await page.locator('[data-act="tastings-back-detail"]').click();
+        await page.locator('[data-act="edit-bottling"]').click();
+        assert.equal(await page.locator('#bottling-form [data-flavor-range]').count(),0);
+    });
+});
+
+test('browser: v0.24 shelf editor saves capacity in suspended manager and switches with three-way confirmation', async () => {
+    await session(async ({page,base,open}) => {
+        const room=(await requestJson(base,'/api/warehouse/rooms','POST',{name:'Dialograum',width:4,height:4})).data;
+        const furniture=(await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',
+            {name:'Dialogregal',type:'regal',x:.2,y:.2,width:1,depth:.5,rotation:0,itemHeight:1.8})).data;
+        const shelf1=(await requestJson(base,`/api/warehouse/furniture/${furniture.id}/shelves`,'POST',{name:'Fach unten',capacity:4})).data;
+        const shelf2=(await requestJson(base,`/api/warehouse/furniture/${furniture.id}/shelves`,'POST',{name:'Fach oben',capacity:6})).data;
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="shelves"]').click();
+        await page.locator('#warehouse-room-select').selectOption(room.id);
+        await page.locator(`.warehouse-wall-furniture-edit[data-id="${furniture.id}"]`).click();
+        const manager=page.locator('#modal-root .warehouse-furniture-manager');
+        await manager.locator(`[data-act="warehouse-shelf-edit"][data-id="${shelf2.id}"]`).click();
+        await page.locator('#warehouse-form [name="capacity"]').fill('12');
+        await page.locator('#warehouse-form [data-act="warehouse-shelf-switch"]').filter({hasText:'Nächstes'}).click();
+        await page.locator('[data-choice="cancel"]').click();
+        assert.equal(await page.locator('#warehouse-form [name="capacity"]').inputValue(),'12');
+        await page.locator('#warehouse-form [data-act="warehouse-shelf-switch"]').filter({hasText:'Nächstes'}).click();
+        await page.locator('[data-choice="save"]').click();
+        await page.locator(`#warehouse-form[data-endpoint="/api/warehouse/shelves/${shelf1.id}"]`).waitFor();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        const updated=manager.locator(`.warehouse-shelf[data-shelf-id="${shelf2.id}"]`);
+        assert.match(await updated.locator('.warehouse-shelf-meta').textContent(),/12/);
+        assert.equal((await requestJson(base,'/api/warehouse')).data.rooms[0].furniture[0].shelves[1].capacity,12);
+        await manager.locator('input[data-furniture-photos]:not([capture])').setInputFiles({
+            name:'shelf.png',mimeType:'image/png',
+            buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAOfb9AcAAAAASUVORK5CYII=','base64')
+        });
+        await manager.locator('.warehouse-furniture-photo').waitFor();
+        await manager.locator('[data-act="warehouse-photo-open"]').click();
+        await page.locator('.warehouse-photo-lightbox img').waitFor();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        assert.equal(await manager.locator('.warehouse-furniture-photo').count(),1);
+    });
+});
+
+test('browser: v0.24 nested mobile modal fixes page scrolling and technical help is expandable',async()=>{
+    await session(async ({page,open})=>{
+        await page.setViewportSize({width:390,height:844});
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        assert.equal(await page.evaluate(()=>document.body.style.position),'fixed');
+        assert.equal(await page.evaluate(()=>document.documentElement.style.overflow),'hidden');
+        const scrollable=await page.locator('.dialog').evaluate(el=>({touchAction:getComputedStyle(el).touchAction,overflow:getComputedStyle(el).overflowY}));
+        assert.match(scrollable.touchAction,/pan-y/);
+        assert.match(scrollable.overflow,/auto/);
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        assert.notEqual(await page.evaluate(()=>document.body.style.position),'fixed');
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-help"]').click();
+        await page.locator('[data-section-switch="help"]').selectOption('backups');
+        const technical=page.locator('#help-panel-backups .help-technical-guides');
+        assert.ok(await technical.isVisible());
+        await technical.locator('details').first().locator('summary').click();
+        assert.match(await technical.locator('details').first().textContent(),/Backup-Administrator-Schlüssel/);
+    });
+});
+
+test('browser: v0.25.1 palette, precise Glencairn rating, undo history and compact detail layout', async () => {
+    await session(async ({page,base,open}) => {
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form [name="name"]').fill('Color and Glencairn test');
+        await page.locator('#bottling-form button[type="submit"]').click();
+        const summary=page.locator('.detail-summary-grid');
+        await page.setViewportSize({width:1440,height:900});
+        const row=await summary.evaluate(el=>{
+            const image=el.querySelector('.detail-summary-photo > .hero-photo').getBoundingClientRect();
+            const facts=el.querySelector(':scope > .panel').getBoundingClientRect();
+            return {imageHeight:image.height,factsHeight:facts.height};
+        });
+        assert.ok(Math.abs(row.imageHeight-row.factsHeight) < 1.5, `image and facts equal height: ${JSON.stringify(row)}`);
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        const section=page.locator('[data-flavor-detail]');
+        await section.waitFor({state:'visible'});
+        assert.equal(await section.locator('.whisky-color-choice').count(),12);
+        const columns=await section.locator('.flavor-sliders').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
+        assert.equal(columns,2,'two grouped slider columns beside the radar chart');
+        await section.locator('[data-act="tasting-color"][data-color-key="amber"]').click();
+        await section.screenshot({path:'test-artifacts/wcm_0251_tasting_light.png'});
+        const color=section.locator('[data-color-key="amber"] .glencairn-liquid');
+        const before=await color.evaluate(el=>getComputedStyle(el).fill);
+        await page.locator('[data-act="toggle-theme"]').click();
+        const after=await section.locator('[data-color-key="amber"] .glencairn-liquid').evaluate(el=>getComputedStyle(el).fill);
+        assert.equal(before,after,'whisky colour must not follow the light/dark theme');
+        await section.screenshot({path:'test-artifacts/wcm_0251_tasting_dark.png'});
+        const score=section.locator('[data-tasting-score]');
+        await score.fill('101');
+        await score.press('Tab');
+        assert.equal(await score.getAttribute('aria-invalid'),'true');
+        assert.equal((await requestJson(base,'/api/collection')).data.bottlings[0].rating ?? null,null,
+            'invalid scores cannot be persisted');
+        await score.fill('87,5');
+        assert.equal(await section.locator('[data-tasting-rating]').getAttribute('data-rating-value'),'87.5',
+            'the Glencairn visualization should update immediately, without waiting for blur');
+        await score.press('Tab');
+        assert.equal(await score.getAttribute('aria-invalid'),null);
+        assert.equal(await section.locator('[data-tasting-rating]').getAttribute('data-rating-value'),'87.5',
+            'the preview and persisted score must agree');
+        await page.waitForFunction(async () => {
+            const data=await (await fetch('/api/collection')).json();
+            const b=data.bottlings?.[0];
+            return b?.whiskyColor==='amber' && b?.rating===87.5;
+        });
+        assert.equal((await requestJson(base,'/api/collection')).data.bottlings[0].rating,87.5);
+        await section.locator('[data-act="flavor-detail-undo"]').click();
+        assert.equal(await section.locator('[data-tasting-score]').inputValue(),'');
+        await section.locator('[data-act="flavor-detail-redo"]').click();
+        assert.equal(await section.locator('[data-tasting-score]').inputValue(),'87,5');
+        const labels=await section.locator('.flavor-history-actions button').count();
+        assert.equal(labels,2);
+        assert.equal(await section.locator('[data-act="flavor-detail-undo"] svg').count(),1);
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+        await page.setViewportSize({width:390,height:844});
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,
+            'color selectors and rating controls must not overflow on mobile');
+    });
+});
+
+test('browser: v0.25.4 Full HD tasting layout groups colour separately from radar and compact 2x4 sliders', async () => {
+    await session(async ({page,open}) => {
+        await page.setViewportSize({width:1920,height:1080});
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form [name="name"]').fill('Full HD Geschmacksprofil');
+        await page.locator('#bottling-form button[type="submit"]').click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        const panel=page.locator('[data-flavor-detail]');
+        await panel.waitFor({state:'visible'});
+        const color=panel.locator('.tasting-color-panel');
+        const palette=color.locator('.whisky-color-grid');
+        const graph=panel.locator('.flavor-chart');
+        const sliders=panel.locator('.flavor-sliders');
+        assert.equal(await palette.locator('.whisky-color-choice').count(),12);
+        const metrics=await panel.evaluate(el=>{
+            const css=selector=>getComputedStyle(el.querySelector(selector));
+            const rect=selector=>{
+                const {x,y,width,height}=el.querySelector(selector).getBoundingClientRect();return {x,y,width,height};
+            };
+            return {outer:css('.tasting-top-row').gridTemplateColumns.split(' ').length,
+                inner:css('.flavor-editor').gridTemplateColumns.split(' ').length,
+                colorColumns:css('.whisky-color-grid').gridTemplateColumns.split(' ').length,
+                sliderColumns:css('.flavor-sliders').gridTemplateColumns.split(' ').length,
+                color:rect('.tasting-color-panel'),flavor:rect('.tasting-senses-section'),
+                chart:rect('.flavor-chart'),bars:rect('.flavor-sliders'),
+                scrollbar:document.documentElement.scrollWidth-innerWidth};
+        });
+        assert.equal(metrics.outer,2,`two sibling panels at Full HD: ${JSON.stringify(metrics)}`);
+        assert.equal(metrics.inner,2,'radar and sliders share the same flavor panel');
+        assert.equal(metrics.colorColumns,3,'palette must show 3 columns and 4 rows');
+        assert.equal(metrics.sliderColumns,2,'eight sliders must sit in two groups of four');
+        assert.ok(metrics.color.x+metrics.color.width <= metrics.flavor.x + 2);
+        assert.ok(metrics.chart.x+metrics.chart.width <= metrics.bars.x + 2);
+        assert.ok(metrics.scrollbar <= 1,'Full HD layout must not create horizontal overflow');
+        assert.equal(await sliders.locator('input[data-flavor-range]').count(),8);
+        await page.setViewportSize({width:1040,height:900});
+        assert.equal(await panel.locator('.tasting-top-row').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),1);
+        assert.equal(await panel.locator('.flavor-editor').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),2);
+        await page.setViewportSize({width:390,height:844});
+        assert.equal(await panel.locator('.flavor-editor').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),1);
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+        await color.locator('[data-color-key="amber"]').click();
+        assert.equal(await color.locator('[data-color-key="amber"]').getAttribute('aria-pressed'),'true');
+    });
+});
+
+test('browser: v0.25.4 tasting hierarchy matches analytics and gold-filled glasses preserve precise scores', async () => {
+    await session(async ({page,open}) => {
+        await page.setViewportSize({width:1440,height:900});
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form [name="name"]').fill('Tasting panel consistency');
+        await page.locator('#bottling-form button[type="submit"]').click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        const section=page.locator('[data-flavor-detail]');
+        await section.waitFor({state:'visible'});
+        const panels=section.locator('.tasting-panel .analytics-panel');
+        assert.equal(await panels.count(),5,'date/title, color, profile, notes, and rating use separate analytics-style panels');
+        assert.equal(await section.locator('.tasting-color-panel h3').textContent(),'Farbe');
+        assert.equal(await section.locator('.tasting-senses-section h3').textContent(),'Geschmacksprofil');
+        assert.equal(await section.locator('.tasting-panel > section.analytics-panel h3').first().textContent(),'Verkostungsnotizen');
+        assert.equal(await section.locator('.tasting-panel > section.analytics-panel h3').last().textContent(),'Gesamtbewertung');
+        assert.equal(await section.locator(':scope > .section-head h3').textContent(),'Eindrücke');
+        assert.equal(await section.locator('svg[aria-label*="Bewertung kann"]').count(),0);
+        const appearance=await panels.first().evaluate(el=>{
+            const style=getComputedStyle(el);
+            return {radius:style.borderTopLeftRadius,border:style.borderTopWidth,shadow:style.boxShadow,
+                background:style.backgroundColor,header:getComputedStyle(document.querySelector('.tasting-color-panel h3')).fontFamily};
+        });
+        assert.equal(appearance.radius,'0px');
+        assert.equal(appearance.border,'1px');
+        assert.equal(appearance.shadow,'none');
+        assert.ok(appearance.header.length>0);
+        const colorPanel=section.locator('.tasting-color-panel');
+        const ratingPanel=section.locator('.tasting-rating-panel');
+        assert.equal(await colorPanel.locator('.whisky-color-current, .whisky-color-footer').count(),0);
+        assert.equal(await colorPanel.locator('[data-act="tasting-color-clear"]').count(),1);
+        assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').count(),1);
+        assert.equal(await colorPanel.locator('.tasting-panel-heading [data-act="tasting-color-clear"]').isDisabled(),true);
+        assert.equal(await ratingPanel.locator('.tasting-panel-heading [data-act="tasting-rating-clear"]').isDisabled(),true);
+        const headerPositions=await section.evaluate(() => {
+            const positions = selector => {
+                const panel=document.querySelector(selector);
+                const head=panel.querySelector('.tasting-panel-heading h3').getBoundingClientRect();
+                const button=panel.querySelector('.tasting-panel-heading button').getBoundingClientRect();
+                const bounds=panel.getBoundingClientRect();
+                return {headingY:head.y,buttonY:button.y,buttonRight:button.right,panelRight:bounds.right};
+            };
+            return [positions('.tasting-color-panel'),positions('.tasting-rating-panel')];
+        });
+        for (const pos of headerPositions) {
+            assert.ok(Math.abs(pos.headingY-pos.buttonY)<24,'remove control belongs to the section heading row');
+            assert.ok(pos.panelRight-pos.buttonRight < 35,'remove control is right-aligned');
+        }
+        await colorPanel.locator('[data-color-key="butter"]').click();
+        assert.equal(await colorPanel.locator('[data-color-key="butter"]').getAttribute('aria-pressed'),'true');
+        assert.ok(await colorPanel.locator('[data-color-key="butter"]').evaluate(el=>getComputedStyle(el,'::after').content.includes('✓')));
+        assert.equal(await colorPanel.locator('[data-act="tasting-color-clear"]').isEnabled(),true);
+        await colorPanel.locator('[data-act="tasting-color-clear"]').click();
+        assert.equal(await colorPanel.locator('.is-selected').count(),0);
+        assert.equal(await colorPanel.locator('[data-act="tasting-color-clear"]').isDisabled(),true);
+        const rating=section.locator('[data-tasting-rating]');
+        assert.equal(await rating.locator('.glencairn-rating-outline').count(),5);
+        assert.equal(await rating.locator('.glencairn-rating-fill').count(),5);
+        assert.equal(await rating.locator('.glencairn-rating-fill[clip-path]').count(),5,'filled bowls are clipped to the original glass shape');
+        await rating.locator('[data-tasting-score]').fill('87,5');
+        assert.equal(await rating.locator('[data-tasting-score]').inputValue(),'87,5');
+        assert.equal(await rating.locator('[data-tasting-rating-total]').count(),0,'rating is displayed only in the editable input');
+        assert.equal(await rating.locator('[data-glass-state="full"]').count(),4);
+        assert.equal(await rating.locator('[data-glass-state="partial"]').count(),1);
+        const fifthFill = await rating.locator('[data-glass-state="partial"] [data-rating-fill]').evaluate(node => ({y:+node.getAttribute('y'),height:+node.getAttribute('height')}));
+        assert.ok(Math.abs(fifthFill.height - 94.875)<0.001,'87.5 points fill 37.5% of the fifth glass from the bottom');
+        assert.ok(Math.abs(fifthFill.y - (331 - 94.875))<0.001);
+        await rating.locator('[data-tasting-score]').press('Tab');
+        assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').isEnabled(),true);
+        await ratingPanel.locator('[data-act="tasting-rating-clear"]').click();
+        assert.equal(await rating.locator('[data-tasting-score]').inputValue(),'');
+        assert.equal(await rating.locator('[data-glass-state="empty"]').count(),5);
+        assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').isDisabled(),true);
+        await section.locator('[data-act="flavor-detail-undo"]').click();
+        assert.equal(await rating.locator('[data-tasting-score]').inputValue(),'87,5');
+        assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').isEnabled(),true);
+        await section.screenshot({path:'test-artifacts/wcm_0253_tasting_light.png'});
+        await page.locator('[data-act="toggle-theme"]').click();
+        assert.equal(await rating.locator('.glencairn-rating-fill').count(),5);
+        assert.equal(await rating.locator('[data-tasting-score]').inputValue(),'87,5');
+        await section.screenshot({path:'test-artifacts/wcm_0253_tasting_dark.png'});
+        await page.setViewportSize({width:390,height:844});
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+    });
+});
+
+test('browser: v0.26.0 multiple dated tastings, latest summary, individual editing and modal delete', async () => {
+    await session(async ({page,base,open}) => {
+        const bottling = (await requestJson(base,'/api/bottlings','POST',{
+            name:'Chronological tastings',firstBottle:{inventoryNumber:'998170'}
+        })).data.bottling;
+        await open();
+        await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
+        assert.equal(await page.locator('[data-flavor-detail]').count(),0,'no editor on master details');
+        assert.match(await page.locator('.tasting-summary').innerText(),/Noch keine Verkostung/);
+        await page.locator('[data-act="tastings-new"]').click();
+        assert.equal((await requestJson(base,'/api/collection')).data.bottlings[0].tastings.length,0,
+            'opening draft never persists it');
+        await page.locator('[data-tasting-date]').fill('2026-10-10');
+        await page.locator('[data-tasting-score]').fill('81');
+        await page.locator('[data-tasting-score]').press('Tab');
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tastings-back-list"]').click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-tasting-date]').fill('2026-11-12');
+        await page.locator('[data-tasting-title]').fill('Spätere Verkostung');
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tastings-back-list"]').click();
+        const list=page.locator('.tasting-list-row');
+        assert.equal(await list.count(),2);
+        assert.match(await list.first().innerText(),/Spätere Verkostung/);
+        await page.locator('[data-act="tastings-back-detail"]').click();
+        assert.match(await page.locator('.tasting-summary-rating').innerText(),/Nicht bewertet/,
+            'latest tasting without score must not fall back to 81');
+        await page.locator('[data-act="tastings-open"]').first().click();
+        await list.first().locator('[data-act="tastings-open"]').click();
+        assert.equal(await page.locator('[data-tasting-score]').count(),0,'saved tasting is read-only on opening');
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        await page.locator('[data-tasting-score]').fill('87,5');
+        await page.locator('[data-tasting-score]').press('Tab');
+        await page.waitForFunction(async id => {
+            const data=await(await fetch('/api/collection')).json();
+            return data.bottlings.find(b=>b.id===id)?.rating===87.5;
+        },bottling.id);
+        await page.locator('[data-act="tastings-back-list"]').click();
+        await page.locator('[data-act="tasting-delete"]').first().click();
+        assert.equal(await page.locator('[data-act="confirm-action"]').count(),1);
+        await page.getByRole('button', {name:'Abbrechen',exact:true}).click();
+        assert.equal(await page.locator('.tasting-list-row').count(),2,'cancel preserves record');
+        await page.locator('[data-act="tasting-delete"]').first().click();
+        await page.locator('[data-act="confirm-action"]').click();
+        await page.waitForFunction(() => document.querySelectorAll('.tasting-list-row').length === 1);
+        assert.equal(await page.locator('.tasting-list-row').count(),1);
+        await page.locator('[data-act="tastings-back-detail"]').click();
+        assert.match(await page.locator('.tasting-summary-rating').innerText(),/81 \/ 100/);
+        await page.setViewportSize({width:320,height:720});
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+        if (!domOnly) {
+            await page.goto(base+`/?bottling=${bottling.id}&view=tastings`);
+            await page.locator('.tasting-list-row').waitFor();
+            assert.equal(await page.locator('.tasting-list-row').count(),1,'direct route can reload');
+        }
+    });
+});
+
+test('browser: rejected tasting DELETE keeps the editing page and confirmation open', async () => {
+    await session(async ({page,base,open}) => {
+        const bottling = (await requestJson(base,'/api/bottlings','POST',{
+            name:'Tasting delete failure',firstBottle:{inventoryNumber:'998171'}
+        })).data.bottling;
+        const tasting = (await requestJson(base,`/api/bottlings/${bottling.id}/tastings`,'POST',{
+            title:'Do not remove',tastedOn:'2026-11-16'
+        })).data;
+        await open();
+        await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
+        await page.locator('[data-act="tastings-open"]').first().click();
+        await page.locator('[data-act="tasting-delete"]').first().click();
+        await page.route(`**/api/bottlings/${bottling.id}/tastings/${tasting.id}`, async route => {
+            if (route.request().method() === 'DELETE') {
+                await route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({error:'Simulated server failure'})});
+            } else {
+                await route.fallback();
+            }
+        });
+        await page.locator('[data-act="confirm-action"]').click();
+        await page.locator('.toast.error').waitFor();
+        assert.equal(await page.locator('[data-act="confirm-action"]').count(),1,
+            'failed deletion retains the confirmation for retry or cancel');
+        await page.locator('[data-act="close-modal"]').last().click();
+        assert.equal(await page.locator('[data-act="tasting-delete"]').count(),1,
+            'failed deletion must not navigate away from the tasting');
+        assert.equal((await requestJson(base,'/api/collection')).data.bottlings[0].tastings.length,1);
+    });
+});
+
+test('browser: flight groups owned and new external notes with an ordered sequence and no duplicate records',async()=>{
+    await session(async({base,page,open})=>{
+        const owned=(await requestJson(base,'/api/bottlings','POST',{name:'Islay bottling'})).data.bottling;
+        const first=(await requestJson(base,`/api/bottlings/${owned.id}/tastings`,'POST',{tastedOn:'2026-11-15',rating:86,title:'First glass'})).data;
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();
+        await page.locator('[data-act="tasting-flight-new"]').click();
+        await page.locator('#modal-root [data-flight-name]').fill('Islay comparison');
+        await page.locator('#modal-root [data-flight-notes]').fill('Peat gets stronger near the end');
+        await page.locator('#modal-root [data-act="tasting-flight-create-confirm"]').click();
+        await page.locator('.tasting-flight-page').waitFor();
+        assert.match(await page.locator('.tasting-flight-summary').innerText(),/Islay comparison/);
+        await page.locator('[data-act="tasting-flight-toggle-add"]').click();
+        await page.locator('[data-flight-tasting-option]').selectOption(first.id);
+        await page.locator('[data-act="tasting-flight-attach"]').click();
+        await page.waitForFunction(()=>document.querySelectorAll('.tasting-flight-member').length===1);
+        await page.locator('[data-act="tasting-flight-new-external"]').click();
+        await page.locator('[data-external-field="name"]').fill('A whisky outside the collection');
+        await page.locator('[data-tasting-title]').fill('Second glass');
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-tasting-readonly="true"]').waitFor();
+        assert.match(await page.locator('.tasting-flight-context').innerText(),/Position 2 von 2/);
+        await page.locator('[data-act="tasting-back-flight"]').click();
+        await page.waitForFunction(()=>document.querySelectorAll('.tasting-flight-member').length===2);
+        assert.equal(await page.locator('.tasting-flight-add').count(),0,'returning from a new note closes the add panel');
+        const before=(await requestJson(base,'/api/collection')).data;
+        assert.equal(before.bottlings.length,1);
+        assert.equal(before.externalTastings.length,1);
+        assert.equal(before.tastingFlights[0].tastingIds.length,2);
+        await page.locator('[data-act="tasting-flight-move"][data-index="1"][data-direction="-1"]').click();
+        await page.waitForFunction(id=>document.querySelector('.tasting-flight-member')?.dataset.tastingId===id, before.externalTastings[0].id);
+        const after=(await requestJson(base,'/api/collection')).data;
+        assert.deepEqual(after.tastingFlights[0].tastingIds,[before.externalTastings[0].id,first.id]);
+        assert.equal(after.externalTastings[0].title,'Second glass');
+        // The drag grip reorders notes without opening their detail view. The
+        // glass/score columns must remain aligned for differing score lengths.
+        const ratingCoordinates=await page.locator('.tasting-flight-member-score').evaluateAll(items=>items.map(item=>({
+            glasses:item.querySelector('.tasting-list-glasses').getBoundingClientRect().x,
+            score:item.querySelector('strong').getBoundingClientRect().x
+        })));
+        assert.ok(ratingCoordinates.every(item=>item.glasses===ratingCoordinates[0].glasses && item.score===ratingCoordinates[0].score));
+        const dragGrip=await page.locator('[data-flight-drag]').first().boundingBox();
+        const dropRow=await page.locator('.tasting-flight-member').last().boundingBox();
+        const origin={x:dragGrip.x+dragGrip.width/2,y:dragGrip.y+dragGrip.height/2};
+        const end={x:dropRow.x+dropRow.width/2,y:dropRow.y+dropRow.height-5};
+        await page.mouse.move(origin.x,origin.y);
+        await page.mouse.down();
+        await page.mouse.move(end.x,end.y,{steps:14});
+        await page.mouse.up();
+        await page.waitForFunction(id=>document.querySelector('.tasting-flight-member:last-child')?.dataset.tastingId===id,after.externalTastings[0].id);
+        assert.deepEqual((await requestJson(base,'/api/collection')).data.tastingFlights[0].tastingIds,[first.id,before.externalTastings[0].id]);
+        assert.equal(await page.locator('.tasting-flight-page').count(),1,'drag does not navigate into tasting details');
+        await page.screenshot({path:'test-artifacts/flight-desktop.png',fullPage:true});
+        for (const width of [390,320]) {
+            await page.setViewportSize({width,height:812});
+            const dimensions=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:window.innerWidth}));
+            assert.ok(dimensions.scroll<=dimensions.viewport+2,`flight page overflows at ${width}: ${JSON.stringify(dimensions)}`);
+            if (width===390) await page.screenshot({path:'test-artifacts/flight-mobile.png',fullPage:true});
+        }
+    });
+});
+
+test('browser: mobile owned tasting list keeps full titles and ratings readable at 390 and 320 px',async()=>{
+    await session(async({base,page,open})=>{
+        const owned=(await requestJson(base,'/api/bottlings','POST',{name:'Big Peat'})).data.bottling;
+        for (const [title,rating] of [['MixMontag',80],['',82],['',80]]) {
+            assert.equal((await requestJson(base,`/api/bottlings/${owned.id}/tastings`,'POST',{
+                tastedOn:'2026-11-15',title,rating
+            })).status,201);
+        }
+        await open({query:`?bottling=${owned.id}&view=tastings`});
+        await page.locator('.tasting-entry-row').first().waitFor();
+        for (const width of [390,320]) {
+            await page.setViewportSize({width,height:812});
+            const actual=await page.evaluate(()=>{
+                const headings=[...document.querySelectorAll('.tasting-entry-info strong')];
+                const top=headings.find(el=>el.textContent==='MixMontag');
+                return {scroll:document.documentElement.scrollWidth,viewport:window.innerWidth,
+                    titleHeight:top?.getBoundingClientRect().height || 0,
+                    fontSize:top?parseFloat(getComputedStyle(top).fontSize):0,
+                    ratings:[...document.querySelectorAll('.tasting-list-rating')].map(el=>el.textContent)};
+            });
+            assert.ok(actual.scroll<=actual.viewport+2,`horizontal page overflow at ${width}: ${JSON.stringify(actual)}`);
+            assert.ok(actual.titleHeight<=actual.fontSize*1.45,`MixMontag wraps unexpectedly at ${width}: ${JSON.stringify(actual)}`);
+            assert.deepEqual(actual.ratings.sort(),['80 / 100','80 / 100','82 / 100']);
+        }
+    });
+});
+
+test('browser: one upload selection stores exactly one photo and one file after repeated detail re-renders', async () => {
+    await session(async ({ page, base, open }) => {
+        const { bottling, bottle } = await seed(base, '004711');
+        await open({query:`?bottling=${bottling.id}`});
+        await page.locator('[data-bottle-files]').waitFor({state:'attached'});
+        // Editing the bottling only changes the page head. The bottle section
+        // (with the upload inputs) is retained by the partial shell update.
+        for (let i = 0; i < 3; i++) {
+            await page.locator('[data-act="edit-bottling"]').click();
+            await page.locator('#bottling-form').waitFor();
+            await page.locator('#bottling-form [name="name"]').fill(`Upload Probe ${i}`);
+            await page.locator('#bottling-form [type="submit"], #bottling-form button.primary').first().click();
+            await page.waitForFunction(name => document.querySelector('main h2')?.textContent.includes(name), `Upload Probe ${i}`);
+        }
+        const posts = {photos:0, files:0};
+        page.on('request', request => {
+            if (request.method() !== 'POST') return;
+            const path = new URL(request.url()).pathname;
+            if (path === `/api/bottles/${bottle.id}/photos`) posts.photos++;
+            if (path === `/api/bottles/${bottle.id}/files`) posts.files++;
+        });
+        const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=', 'base64');
+        await page.locator('[data-bottle-photos]').first().setInputFiles({name:'probe.png', mimeType:'image/png', buffer:png});
+        await page.locator('.photo-tile').first().waitFor();
+        await page.locator('[data-bottle-files]').setInputFiles({name:'probe.pdf', mimeType:'application/pdf',
+            buffer:Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n')});
+        await page.locator('.document-list a').waitFor();
+        await page.waitForTimeout(300);
+        const stored = (await requestJson(base, '/api/collection')).data.bottlings
+            .find(entry => entry.id === bottling.id).bottles.find(entry => entry.id === bottle.id);
+        assert.deepEqual(posts, {photos:1, files:1}, 'one selection must trigger exactly one upload request each');
+        assert.equal(stored.photos.length, 1);
+        assert.equal(stored.files.length, 1);
+    });
+});

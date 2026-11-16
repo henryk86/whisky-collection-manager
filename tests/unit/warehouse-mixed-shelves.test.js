@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { shelfLevels, effectiveShelfFront, totalExplicitHeightCm } from '../../shared/warehouse-compartments.js';
+import { shelfLevels, effectiveShelfFront, totalExplicitHeightCm } from '../../public/js/domain/warehouse-compartments.js';
 import { warehouse3DGeometry, furnitureFootprint } from '../../public/js/domain/warehouse-3d-model.js';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 

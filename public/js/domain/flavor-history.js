@@ -1,4 +1,4 @@
-import { FLAVOR_AXES } from '../../../shared/flavor-profile.js';
+import { FLAVOR_AXES } from './flavor-profile.js';
 
 export const cloneFlavor = value => value == null ? null : Object.fromEntries(FLAVOR_AXES.map(key => [key, value[key]]));
 export const sameFlavor = (left, right) => left === null || right === null

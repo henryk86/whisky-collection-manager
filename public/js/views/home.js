@@ -1,4 +1,4 @@
-import { displayPhotoPath } from '../../../shared/photo-images.js';
+import { displayPhotoPath } from '../domain/photo-images.js';
 import { t } from '../i18n/index.js';
 const statusText = status => t(({closed:'home.status.closed',open:'analytics.inventory.openedStatus',empty:'home.status.empty'})[status] || 'features.distilleries.unknownStatus');
 import { newBottlingIcon, inventoryScanIcon } from '../ui/action-icons.js';
@@ -11,7 +11,7 @@ import { hasBottlingDetail } from '../domain/bottling-details.js';
 import { paginate, visiblePages, PAGE_SIZE_OPTIONS, homePageUrl } from '../domain/pagination.js';
 import { savePageSizePreference } from '../domain/page-size-preference.js';
 import { availableOverviewDistilleries, collectionOverviewEntries } from '../domain/collection-overview.js';
-import { displayedTastingRating } from '../../../shared/tasting-records.js';
+import { displayedTastingRating } from '../domain/tasting-records.js';
 import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
 /**
  * The count labels represent mutually exclusive bottle types. Sample bottles

@@ -33,7 +33,7 @@ test('files: invoices and additional images belong to physical bottles, survive 
         });
         assert.equal(sibling.status, 201);
         const current = (await requestJson(ctx.base, '/api/collection')).data;
-        assert.equal(current.schemaVersion, 5);
+        assert.equal(current.schemaVersion, 4);
         assert.equal(current.bottlings[0].bottles[0].files.length, 2);
         assert.deepEqual(current.bottlings[0].bottles[1].files, []);
         assert.ok(!Object.hasOwn(current.bottlings[0], 'files'));
@@ -83,12 +83,46 @@ test('files: reject incompatible formats, forged headers, traversal, and unknown
     } finally { await ctx.stop(); }
 });
 
-test('schema 5 JSON import rejects v3 sample records without modifying the collection', async () => {
+test('migration: a v3 sample has type on each bottle after startup without losing nominal size or IDs', async () => {
     const ctx = await startTestServer();
     try {
-        const current = (await requestJson(ctx.base, '/api/collection')).data;
-        const invalid = {...current, schemaVersion:3};
-        assert.equal((await requestJson(ctx.base, '/api/import/json', 'POST', invalid)).status, 400);
-        assert.deepEqual((await requestJson(ctx.base, '/api/collection')).data, current);
+        const created = await requestJson(ctx.base, '/api/bottlings', 'POST', { name: 'Legacy sample', volumeMl: 20 });
+        const f = path.join(ctx.dir, 'data/collection.json');
+        const old = JSON.parse(fs.readFileSync(f, 'utf8'));
+        old.schemaVersion = 3;
+        old.bottlings[0].volumeType = 'sample';
+        delete old.bottlings[0].bottles[0].volumeType;
+        delete old.bottlings[0].bottles[0].volumeMl;
+        const original = JSON.stringify(old);
+        const imported = await requestJson(ctx.base, '/api/import/json', 'POST', old);
+        assert.equal(imported.status, 200, JSON.stringify(imported));
+        const updated = (await requestJson(ctx.base, '/api/collection')).data;
+        assert.equal(updated.schemaVersion, 4);
+        assert.equal(updated.bottlings[0].volumeType, undefined);
+        assert.equal(updated.bottlings[0].volumeMl, 20);
+        assert.equal(updated.bottlings[0].bottles[0].volumeType, 'sample');
+        assert.equal(updated.bottlings[0].bottles[0].volumeMl, 20);
+        assert.equal(updated.bottlings[0].bottles[0].id, created.data.bottle.id);
+        assert.deepEqual(updated.bottlings[0].bottles[0].files, []);
+        // Restore a true legacy on-disk document and verify initialize() migration
+        // without touching data files from the user's real collection.
+        fs.writeFileSync(f, original);
+        const { spawn } = await import('node:child_process');
+        const child = spawn(process.execPath, ['--input-type=module', '-e',
+            "import {initialize,read} from './server/storage/collection-store.js';initialize();console.log(JSON.stringify(read().bottlings[0].bottles[0]));"],
+            { cwd: process.cwd(), env: { ...process.env, WHISKY_DATA_DIR: ctx.dir }, stdio: ['ignore', 'pipe', 'pipe'] });
+        const migrated = await new Promise((resolve, reject) => {
+            let stdout = '', stderr = '';
+            child.stdout.on('data', x => stdout += x);
+            child.stderr.on('data', x => stderr += x);
+            child.on('close', code => code === 0 ? resolve(JSON.parse(stdout)) : reject(Error(stderr)));
+        });
+        assert.equal(migrated.volumeType, 'sample');
+        assert.equal(migrated.volumeMl, 20);
+        assert.equal(migrated.id, created.data.bottle.id);
+        const backups = fs.readdirSync(path.join(ctx.dir, 'backups'));
+        const backupName = backups.find(name => name.startsWith('pre-migration-'));
+        assert.ok(backupName);
+        assert.equal(fs.readFileSync(path.join(ctx.dir, 'backups', backupName), 'utf8'), original);
     } finally { await ctx.stop(); }
 });

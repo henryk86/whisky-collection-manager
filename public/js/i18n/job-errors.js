@@ -1,5 +1,5 @@
 import { t } from './index.js';
-import { apiErrorCode } from '../../../shared/api-error-codes.js';
+import { apiErrorCode } from './api-error-codes.js';
 
 /** Worker messages are untrusted and may be localized to any language. */
 export function jobErrorText(message) {
