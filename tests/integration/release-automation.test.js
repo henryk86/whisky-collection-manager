@@ -74,6 +74,12 @@ test('merge produces a versioned off-branch snapshot; next merge increments from
     assert.equal(JSON.parse(run(dir,'git','show','v1.5.0:package.json')).version,'1.5.0');
     assert.equal(JSON.parse(run(dir,'git','show','main:package.json')).version,'1.4.0');
     assert.match(run(dir,'git','show','v1.5.0:CHANGELOG.md'),/feat\(tasting\): add option/);
+    // The generated, tagged document must meet the same reporting contract
+    // as docs/TESTSTATUS.md on develop, even before snapshot-specific tests run.
+    const releaseStatus=run(dir,'git','show','v1.5.0:docs/TESTSTATUS.md');
+    assert.match(releaseStatus,/npm test[^\n]*\*\*Noch nicht ausgefuehrt\*\*/);
+    assert.match(releaseStatus,/npm run test:browser[^\n]*\*\*Nicht lokal ausgeführt\*\*/);
+    assert.match(releaseStatus,/TESTHISTORIE\.md/);
     run(dir,process.execPath,'scripts/release-version.js','check');
     run(dir,'git','checkout','main');
     assert.deepEqual(plan(dir),{head:mergeSha,version:'1.5.0',tag:'v1.5.0',previousTag:null,commits:[],level:'reuse',reuse:true,snapshot:tagSha});

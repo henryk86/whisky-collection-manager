@@ -202,6 +202,8 @@ export function applyAutomatedRelease(version,commits,mergeSha,previousTag) {
     write('docs/TESTSTATUS.md', `# Teststatus - Whisky Collection Manager v${version}\n\n`
         + `**Stand:** ${date}. Automatischer Release-Snapshot aus Merge ${mergeSha.slice(0,12)} (${previousTag}).\n\n`
         + `## Pruefungen\n\n`
+        + `- \`npm test\`: **Noch nicht ausgefuehrt** auf dem Release-Snapshot; die Node-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.\n`
+        + `- \`npm run test:browser\`: **Nicht lokal ausgeführt** auf dem Release-Snapshot; die Browser-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.\n`
         + `- Vor Erstellung des Tags: GitHub-CI fuer den Merge-Quellstand mit \`npm run check\`, \`npm test\` und \`npm run test:browser\`.\n`
         + `- Release-Metadaten und SHA-256-Quellmanifest werden im Snapshot separat geprueft.\n`
         + `- Docker/ARM64/AMD64 sowie ZIP-/Offline-Archive werden vom Release-Workflow vor der Veroeffentlichung geprueft.\n`
