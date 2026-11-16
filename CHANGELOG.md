@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1 - 2026-11-16
+
+- CI-Regression bei mehreren datierten Verkostungen: Waehrend eines noch laufenden POST-Speichervorgangs werden Ruecknavigation und erneutes Speichern gesperrt; kein veralteter Listenstand oder spaetes Zurueckspringen in den Editor.
+- Browser-Regressionstests pruefen explizit einen verzögerten POST, den Erhalt beider Verkostungen und die Wiederholbarkeit nach einem HTTP-500-Fehler.
+
 ## 1.2.0 - 2026-11-16
 
 - Review B-1: Generischen DOM-Abgleich fuer die Verkostungsstartseite und Verkostungslisten aktiviert, nicht fuer den Editor oder die Flight-Drag-Ansicht.

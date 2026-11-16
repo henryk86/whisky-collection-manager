@@ -3000,3 +3000,9 @@ Zusatzpruefungen: Schema-4-Upgrade mit realen Flaschenfotos, PDF-Beleg und Lager
 ## Testbericht v1.1.0
 
 - npm run release:check: Erfolgreich; npm run check: Erfolgreich; npm test: 569/569 bestanden; npm run test:browser (vollstaendige Suite): Bestanden (CI laut Anwender); GitHub Actions / v1.1.0: Gruen gemeldet (Anwender)
+
+---
+
+## Testbericht v1.2.0
+
+- npm run release:check: Erfolgreich; npm run check: Erfolgreich; npm test: 568/568 bestanden; npm run test:browser: 83 bestanden, 0 fehlgeschlagen, 1 uebersprungen; GitHub Actions / CI fuer v1.2.0: Ausstehend

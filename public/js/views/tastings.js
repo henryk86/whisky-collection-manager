@@ -119,6 +119,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
     const emptyRecord = () => ({tastedOn:localToday(),title:'',flavorProfile:null,tastingNotes:emptyTastingNotes(),rating:null,whiskyColor:null});
     const emptyBottling = () => ({name:'',distillery:'',bottler:'',ageYears:null,abv:null,releaseYear:null});
     let flavorSaveQueue = Promise.resolve();
+    let draftSavePending = null;
     function flavorNode() { return globalThis.document?.querySelector?.('[data-flavor-detail]') || null; }
     function readTastingEditor() {
         const node = flavorNode();
@@ -538,6 +539,10 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
     async function saveDraft() {
+        // A save can outlive the click that started it. While the POST and its
+        // collection refresh are pending, another Back click would render the
+        // old list and a late save completion could navigate away unexpectedly.
+        if (draftSavePending) return draftSavePending;
         const session=flavorSession;
         if (!session?.draft) return;
         if (!commitTasting()) return;
@@ -547,19 +552,44 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         if (!node?.querySelector('[data-tasting-date]')?.checkValidity()) {
             node?.querySelector('[data-tasting-date]')?.reportValidity();return;
         }
+        let externalBottling;
         try {
-            const externalBottling=session.external?readExternalFields(node):null;
-            if (session.external && !externalBottling) return;
-            const flightId=state.flightId;
-            const data={...session.history.value,tastedOn,title,...(session.external?{bottling:externalBottling}:flightId?{bottlingId:session.bottlingId}:{})};
-            const response=await request(flightId ? `/api/tasting-flights/${encodeURIComponent(flightId)}/tastings` :
-                (session.external?'/api/external-tastings':`/api/bottlings/${encodeURIComponent(session.bottlingId)}/tastings`),{
-                method:'POST',body:JSON.stringify(data)
-            });
-            const created=flightId ? response.record : response;
-            await refresh('collection');
-            navigate(editPage(session.external),session.external?created.id:session.bottlingId,{tastingId:session.external?null:created.id,flightId,replace:true});
-        } catch(error) { toast(error.message,true); }
+            externalBottling=session.external?readExternalFields(node):null;
+        } catch(error) { toast(error.message,true);return; }
+        if (session.external && !externalBottling) return;
+        // Disable the draft's Back and Save controls (plus editable controls)
+        // until both the request and data refresh have finished. The button
+        // state is restored on errors, so the draft remains editable.
+        const draftPage=node.closest('.tasting-child-page');
+        const controls=[...(draftPage?.querySelectorAll('button, input, textarea, select') || [])];
+        const enabled=controls.filter(control=>!control.disabled);
+        for (const control of enabled) control.disabled=true;
+        draftPage?.setAttribute('aria-busy','true');
+        const route={page:state.page,selected:state.selected,tastingId:state.tastingId,flightId:state.flightId};
+        const save=(async()=>{
+            try {
+                const flightId=state.flightId;
+                const data={...session.history.value,tastedOn,title,...(session.external?{bottling:externalBottling}:flightId?{bottlingId:session.bottlingId}:{})};
+                const response=await request(flightId ? `/api/tasting-flights/${encodeURIComponent(flightId)}/tastings` :
+                    (session.external?'/api/external-tastings':`/api/bottlings/${encodeURIComponent(session.bottlingId)}/tastings`),{
+                    method:'POST',body:JSON.stringify(data)
+                });
+                const created=flightId ? response.record : response;
+                await refresh('collection');
+                // If a header navigation occurred meanwhile, never override it.
+                if (state.page===route.page && state.selected===route.selected &&
+                    state.tastingId===route.tastingId && state.flightId===route.flightId) {
+                    navigate(editPage(session.external),session.external?created.id:session.bottlingId,{tastingId:session.external?null:created.id,flightId,replace:true});
+                }
+            } catch(error) { toast(error.message,true); }
+            finally {
+                draftPage?.removeAttribute('aria-busy');
+                for (const control of enabled) if (control.isConnected) control.disabled=false;
+            }
+        })();
+        draftSavePending=save;
+        try { return await save; }
+        finally { if (draftSavePending===save) draftSavePending=null; }
     }
     async function persistMeta() {
         const session=flavorSession;

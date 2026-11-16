@@ -1,6 +1,6 @@
 # Technische Schulden und bewusste Grenzen
 
-**Stand:** v1.2.0. Das historische Wartungsreview v0.15.12 steht weiter unten. Aktuelle, noch nicht behobene Risiken aus dem Code-Review v0.28.6 sind hier nach Dringlichkeit dokumentiert.
+**Stand:** v1.2.1. Das historische Wartungsreview v0.15.12 steht weiter unten. Aktuelle, noch nicht behobene Risiken aus dem Code-Review v0.28.6 sind hier nach Dringlichkeit dokumentiert.
 
 ## Code-Review v0.28.6: umgesetzte und offene Befunde (Stand v0.28.9)
 
@@ -28,6 +28,8 @@
 **B-1, B-2 und B-6 (v1.1.0 in Bearbeitung):** Der generische DOM-Abgleich wurde auf Settings und Hilfe ausgeweitet. Sammlungsbezogene Medien- und Einstellungsmutationen vermeiden jetzt die redundante Lager-Anforderung (mit Fallback auf einen vollstaendigen Erstabruf). Das neue Upgrade-Audit meldet verwaiste Quellcodedateien und entfernt mit `--prune` ausschliesslich hashidentische Altmodule, niemals Daten oder lokal geaenderten Code. Diese Schritte schliessen B-1, B-2 und B-6 **noch nicht vollstaendig** ab.
 
 **v1.2.0 – Weiterer Abbau:** Der DOM-Abgleich umfasst jetzt auch Verkostungsstart und -listen (nicht den Editor oder interaktive Flight-Sortierung). Verkostungs-Mutationen und Foto-Reihenfolge laden nur die Sammlung; die Datenpersistenz und Schema 5 bleiben unveraendert. Die alten CSS-Quelltext-Regex-Pruefungen aus `grid-layout.test.js` wurden durch bestehende/erweiterte Chromium-Laufzeitpruefungen ersetzt. Der Release-Bump archiviert kuenftig kompakte Testergebnisse statt vollstaendiger Teststatus-Duplikate. Bestehende historische Berichte bleiben als Git-/Dokumentenarchiv erhalten.
+
+**v1.2.1 / CI-Regression:** Der bislang gelegentlich instabile Browserfall fuer mehrfach datierte Verkostungen deckte ein echtes Rennen auf: Klick auf Ruecknavigation konnte vor dem Ende des asynchronen Speicherns die alte Liste anzeigen. Der Editor blockiert jetzt seine Bedienelemente bis zum Abschluss; fehlgeschlagene Speichervorgaenge geben sie wieder frei. Die neue Browserpruefung mit angehaltenem POST scheitert gegen v1.2.0 und besteht gegen die Korrektur. Die urspruengliche Listenpruefung wartet jetzt explizit auf den zweiten Eintrag.
 
 **Weiterhin offen:** Die komplette Browser-Suite muss fuer den naechsten Release in einer geeigneten Chromium-/CI-Umgebung laufen. Die alten zahlreichen Quelltext-Regex-Tests sollen schrittweise durch Verhaltenspruefungen ersetzt werden; das ist noch **nicht** vollstaendig erledigt. Weitere Direktlistener in bestehenden Widget-Views werden bei spaeteren Teilrendern gesondert geprueft. B-6 (Bereinigung bereits gewachsener historischer Fachdokumente und Verwaist-Dateien bei Bestandsinstallationen) ist noch teilweise offen.
 

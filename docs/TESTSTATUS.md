@@ -1,28 +1,28 @@
-# Teststatus - Whisky Collection Manager v1.2.0
+# Teststatus - Whisky Collection Manager v1.2.1
 
-**Stand:** 2026-11-16. **Status:** Node-Tests, Syntax-/Architektur- und Release-Pruefungen erfolgreich. Chromium-Browser-Suite im DOM-Modus **83 bestanden, 0 fehlgeschlagen, 1 uebersprungen**; regulaerer GitHub-CI-Browserlauf fuer v1.2.0 noch ausstehend. Vorherige Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-16. **Status:** Vollstaendige Node-Pruefungen und Chromium-DOM-Browsersuite bestanden. Der reguläre GitHub-Actions-Browserlauf mit echter HTTP-Navigation fuer v1.2.1 ist noch offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Erfolgreich** | Versionsmetadaten und Teststatus v1.2.0 konsistent. |
-| `npm run check` | **Erfolgreich** | 316 JavaScript-Dateien, Modulgrenzen, 1096 Uebersetzungsreferenzen, 182 Dokumentationslinks. |
-| `npm test` | **568/568 bestanden** | Vollstaendige Unit-/Integrationstests inklusive Release-Historienkomprimierung. Zwei Quelltext-Regex-Tests aus v1.1.0 wurden durch bestehende/erweiterte Browser-Laufzeitpruefungen ersetzt. |
-| `npm run test:browser` | **83 bestanden, 0 fehlgeschlagen, 1 uebersprungen** | Chromium 144 im DOM-Modus (`WHISKY_BROWSER_DOM_ONLY=true`) mit lokaler Ersatz-Playwright-Laufzeit (v1.57 statt npm-pinned v1.65). Der eine History-Test ist im DOM-Modus nicht ausfuehrbar. Kein Ersatz fuer echte HTTP-Browsernavigation in CI. |
-| Gezielte Chromium-DOM-Abnahme | **Bestanden** | Chromium 144 ueber Python-Playwright, isolierter echter Node-Testserver und Request-Weiterleitung: Computed-CSS-Raster, Identitaet der Verkostungsueberschrift beim Umschalten, Flight angelegt, 0 unnoetige Lager-GETs, keine JS-Fehler. Das ist kein Ersatz fuer die vollstaendige Suite. |
-| GitHub Actions / CI fuer v1.2.0 | **Ausstehend** | Regulaerer Lauf mit echter HTTP-Seitennavigation und angepinnter Playwright-Version vor Merge nach main erforderlich. Fuer v1.1.0 wurde ein gruener CI-Lauf vom Anwender bestaetigt. |
-| Docker / ARM64 / echte mobile Endgeraete | **Nicht lokal ausgeführt** | Auf den Zielsystemen separat pruefen. |
+| `npm run release:check` | **Erfolgreich** | Version, Metadaten und Dokumentation v1.2.1 konsistent. |
+| `npm run check` | **Erfolgreich** | JavaScript-Syntax, Importgrenzen, i18n-Referenzen und Markdown-Links. |
+| `npm test` | **568/568 bestanden** | Vollstaendige Unit- und Integrationstests. |
+| `npm run test:browser` | **85 bestanden, 0 fehlgeschlagen, 1 uebersprungen** | Chromium 144 im DOM-Modus (`WHISKY_BROWSER_DOM_ONLY=true`), Playwright-Laufzeit v1.57 statt angepinnter npm-Version v1.65. Browser-History mit echter Seitennavigation wird in diesem Modus nicht geprueft. |
+| Gezielter Regressionstest fuer mehrere datierte Verkostungen | **Bestanden** | Der bisher fehlschlagende Browserfall ist gruen; die Anzahl der Listeneintraege wird nach deren Erscheinen verifiziert. |
+| Verzögerter Verkostungs-POST | **Bestanden** | Kontrollierter noch offener POST: Ruecknavigation und Speichern sind gesperrt; danach sind beide Eintraege im DOM und auf dem Server vorhanden. Der Test schlug vor dem Fix gegen v1.2.0 fehl. |
+| Verkostungs-POST mit HTTP 500 und anschliessendem Retry | **Bestanden** | Eingaben bleiben erhalten, Bedienelemente werden wieder freigegeben, erneutes Speichern erzeugt genau eine Verkostung. |
+| GitHub Actions / CI fuer v1.2.1 | **Ausstehend** | Regulare Browser-Suite mit echter Navigation und angepinnter Playwright-Version vor Merge nach main erforderlich. Der vorherige CI-Lauf fuer v1.2.0 hatte den Verkostungs-Regressionsfehler gemeldet. |
+| Docker / ARM64 / echte mobile Endgeraete | **Nicht lokal ausgefuehrt** | Auf dem Zielsystem separat pruefen. |
 
-## Aenderungen v1.2.0
+## Aenderungen v1.2.1
 
-- B-1: Generischer DOM-Abgleich auf Verkostungsstart und -listen erweitert. Editor, Flight-Sortierung sowie Widget-Views bleiben ausgenommen, bis ihre Lebenszyklen gesondert gesichert sind.
-- B-2: Nur sammlungsbezogene Revalidierung nach Verkostungs-/Flight-Aktionen und Foto-Reihenfolge; unveraendertes Lager bleibt lokal erhalten. Weiterhin keine vollstaendige inkrementelle Mutationsergebnis-Verarbeitung.
-- B-5: Zwei CSS-Quelltext-Regex-Tests entfernt; Layoutpruefung mit `getComputedStyle()` in Chromium und neuer Browser-Regressionstest fuer DOM-Erhalt und redundante Requests.
-- B-6: Alte Release-Testergebnisse werden kuenftig als kurze Ergebniszeile archiviert, statt den kompletten Report zu duplizieren. Vorhandene historische Eintraege bleiben erhalten.
+- Asynchrones Anlegen einer Verkostung sperrt bis zum Ende von POST und Sammlungs-Refresh die Entwurfsbedienelemente und Ruecknavigation; doppelte Speichervorgaenge werden verhindert.
+- Bei fehlgeschlagenem Speichern bleibt der Entwurf mit seinen Eingaben erhalten. Spaete Antworten duerfen zwischenzeitliche Navigation nicht ueberschreiben.
+- Zwei neue Browser-Regressionstests fuer verzögerte/fehlgeschlagene Speichervorgaenge; im bestehenden Chronologie-Test wird auf den zweiten DOM-Eintrag gewartet.
+- Keine Aenderung an Schema 5, Bestandsdaten, Lager, Backups oder Migration.
 
-## Offene Punkte
+## Offene Review-Punkte
 
-B-1: Direkte Widget-Lebenszyklen von Home/Map/Lager und Tasting-Editor/Flight weiter pruefen. B-2: Mutationsantworten kontrolliert in den Clientzustand uebernehmen. B-5: Weitere alte Regex-Tests abbauen. B-6: Bereits gewachsene Fachdokumentation/Testhistorie bereinigen. Keine Schema-5- oder Bestandsdatenmigration in diesem Release.
-
-**Freigabe:** v1.2.0 erst nach vollstaendig gruenem Browser-CI-Lauf mergen; der letzte vom Anwender bestaetigte CI-Erfolg bezog sich auf v1.1.0.
+B-1 (weitere Widget-Ansichten), B-2 (inkrementelle Mutationsantworten), B-5 (weitere Regex-Tests) und B-6 (historische Dokumentation) bleiben unveraendert offen. **Keine Merge-Freigabe ohne gruene GitHub-CI-Browsersuite fuer v1.2.1.**

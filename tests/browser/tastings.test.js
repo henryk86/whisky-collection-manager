@@ -346,6 +346,7 @@ test('browser: v0.26.0 multiple dated tastings, latest summary, individual editi
         await page.locator('[data-act="tasting-create"]').click();
         await page.locator('[data-act="tastings-back-list"]').click();
         const list=page.locator('.tasting-list-row');
+        await list.nth(1).waitFor();
         assert.equal(await list.count(),2);
         assert.match(await list.first().innerText(),/Spätere Verkostung/);
         await page.locator('[data-act="tastings-back-detail"]').click();
@@ -576,5 +577,76 @@ test('browser: tasting overview preserves DOM when chooser opens, and flight cre
         assert.equal(warehouseGets.length,0,'A flight mutation must not reload the warehouse');
         const result=await requestJson(base,'/api/collection');
         assert.ok(result.data.tastingFlights.some(item=>item.name==='Scoped flight refresh'));
+    });
+});
+
+test('browser: pending tasting creation blocks back navigation and prevents stale lists', async () => {
+    await session(async ({page,base,open}) => {
+        const bottling=(await requestJson(base,'/api/bottlings','POST',{
+            name:'Delayed tasting save',firstBottle:{inventoryNumber:'995211'}
+        })).data.bottling;
+        const endpoint=`/api/bottlings/${bottling.id}/tastings`;
+        assert.equal((await requestJson(base,endpoint,'POST',{
+            tastedOn:'2026-10-10',rating:81
+        })).status,201);
+        await open();
+        await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-tasting-date]').fill('2026-11-12');
+        await page.locator('[data-tasting-title]').fill('Delayed second tasting');
+
+        let releasePost;
+        let postReceived;
+        const postStarted=new Promise(resolve=>{postReceived=resolve;});
+        await page.route(`**${endpoint}`, async route => {
+            if (route.request().method() === 'POST') {
+                postReceived();
+                await new Promise(resolve=>{releasePost=resolve;});
+            }
+            await route.fallback();
+        });
+        try {
+            await page.locator('[data-act="tasting-create"]').click();
+            await postStarted;
+            // A second click/back must not navigate while the POST is still pending.
+            assert.equal(await page.locator('[data-act="tastings-back-list"]').isDisabled(),true);
+            assert.equal(await page.locator('[data-act="tasting-create"]').isDisabled(),true);
+        } finally {
+            releasePost?.();
+        }
+        await page.locator('[data-act="tastings-back-list"]').click();
+        await page.locator('.tasting-list-row').nth(1).waitFor();
+        assert.equal(await page.locator('.tasting-list-row').count(),2);
+        assert.match(await page.locator('.tasting-list-row').first().innerText(),/Delayed second tasting/);
+        const collection=(await requestJson(base,'/api/collection')).data;
+        assert.equal(collection.bottlings.find(b=>b.id===bottling.id).tastings.length,2);
+    });
+});
+
+test('browser: failed new tasting save restores the editor and allows retry', async () => {
+    await session(async ({page,base,open}) => {
+        const bottling=(await requestJson(base,'/api/bottlings','POST',{
+            name:'Retriable tasting',firstBottle:{inventoryNumber:'995212'}
+        })).data.bottling;
+        await open();
+        await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-tasting-date]').fill('2026-11-12');
+        await page.locator('[data-tasting-title]').fill('Keep unsaved title');
+        let failed=false;
+        await page.route(`**/api/bottlings/${bottling.id}/tastings`, async route => {
+            if (!failed && route.request().method()==='POST') {
+                failed=true;
+                await route.fulfill({status:500,contentType:'application/json',body:'{"error":"temporary error"}'});
+            } else await route.fallback();
+        });
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.waitForFunction(() => document.querySelector('[data-act="tasting-create"]')?.disabled===false);
+        assert.equal(await page.locator('[data-act="tastings-back-list"]').isEnabled(),true);
+        assert.equal(await page.locator('[data-tasting-title]').inputValue(),'Keep unsaved title');
+        assert.equal((await requestJson(base,'/api/collection')).data.bottlings[0].tastings.length,0);
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tasting-edit-start"]').waitFor();
+        assert.equal((await requestJson(base,'/api/collection')).data.bottlings[0].tastings.length,1);
     });
 });

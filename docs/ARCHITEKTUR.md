@@ -1,6 +1,6 @@
 # Architektur und Orientierung
 
-**Stand:** v1.2.0 (Shared-Module, HTTP-Cache, Schema 5 und gepruefte DOM-Regionen). Dieses Dokument beschreibt die eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
+**Stand:** v1.2.1 (Shared-Module, HTTP-Cache, Schema 5 und gepruefte DOM-Regionen). Dieses Dokument beschreibt die eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
 
 ## Grundprinzipien
 
@@ -166,3 +166,7 @@ Ein nicht destruktiver Quellcode-Abgleich (`scripts/upgrade-audit.js`) erkennt
 verwaiste, nicht modifizierte Module zwischen entpacktem altem und neuem Release.
 Datenverzeichnisse werden niemals angeruehrt. Der Dateiabgleich ist ein
 zusätzlicher Upgrade-Schutz, kein Ersatz fuer Backups oder Docker-Releases.
+
+### Asynchrone Verkostungserstellung (v1.2.1)
+
+Beim Anlegen einer neuen Verkostung sperrt der Editor seine Eingaben und Ruecknavigation vom Start des POST bis zum abgeschlossenen Sammlungs-Refresh. Dadurch kann die Liste nicht vor dem Update mit altem Zustand aufgebaut werden. Doppelte POSTs durch wiederholte Speicherklicks sind abgefangen. Bei einer fehlgeschlagenen Anfrage werden die Eingaben wieder freigegeben und bleiben erhalten. Eine zwischenzeitliche anderweitige Navigation wird nach dem Abschluss nicht ueberschrieben. Die Browser-Suite prueft diese Rennen mit kuenstlich verzoegerter Antwort und einem HTTP-500-Fehler.
