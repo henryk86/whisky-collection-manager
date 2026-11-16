@@ -177,10 +177,15 @@ export function applyAutomatedRelease(version,commits,mergeSha,previousTag) {
             {cwd:ROOT,encoding:'utf8',maxBuffer:16*1024*1024}); }
         catch { return null; } // Initial transition if no previous tag exists.
     };
-    const previousStatus = releasedFile('docs/TESTSTATUS.md') || read('docs/TESTSTATUS.md');
-    const previousHistory = releasedFile('docs/TESTHISTORIE.md');
+    // At first adoption, develop can contain a newer *manually released*
+    // version than the latest reachable tag on main. Its changelog already
+    // records that history. From the first automated release onwards, always
+    // inherit release metadata from the newest snapshot tag instead.
+    const useTaggedHistory=compareVersions(previousTag.slice(1),current)>=0;
+    const previousStatus = (useTaggedHistory && releasedFile('docs/TESTSTATUS.md')) || read('docs/TESTSTATUS.md');
+    const previousHistory = useTaggedHistory ? releasedFile('docs/TESTHISTORIE.md') : null;
     if (previousHistory !== null) write('docs/TESTHISTORIE.md', previousHistory);
-    const previousChangelog = releasedFile('CHANGELOG.md') || read('CHANGELOG.md');
+    const previousChangelog = (useTaggedHistory && releasedFile('CHANGELOG.md')) || read('CHANGELOG.md');
     const pkg = JSON.parse(read('package.json'));
     pkg.version = version;
     write('package.json', JSON.stringify(pkg,null,2)+'\n');

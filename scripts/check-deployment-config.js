@@ -15,7 +15,6 @@ const noText=(text,snippet,message)=>check(!text.includes(snippet),message);
 export function verifyDeploymentConfiguration(read=name=>fs.readFileSync(path.join(ROOT,name),'utf8')) {
     const compose=read('docker-compose.yml');
     const docker=read('docker/app.Dockerfile');
-    const ruleset=JSON.parse(read('.github/rulesets/main.json'));
     const checkWorkflow=read('.github/workflows/check.yml');
     const release=read('.github/workflows/release.yml');
     const ignored=read('.dockerignore')+'\n'+read('.gitignore');
@@ -47,17 +46,20 @@ export function verifyDeploymentConfiguration(read=name=>fs.readFileSync(path.jo
     noText(docker,'EXPOSE 3100','production image must not expose the old HTTP port');
     check(!/COPY\s+\.\s+\./.test(docker),'do not copy private working-tree files into the image');
 
-    // The ruleset is structured JSON; its dynamic enforcement is GitHub CI.
-    check(ruleset.conditions.ref_name.include.includes('refs/heads/main'),'main must be protected');
-    check(ruleset.rules.some(rule=>rule.type==='required_status_checks' &&
-        rule.parameters?.required_status_checks?.some(item=>item.context==='test')),
-        'main requires the actual test status job');
+    // Free private repositories cannot rely on GitHub rulesets to prevent
+    // bypasses. A release must verify the merged PR with the GitHub API.
     requireText(checkWorkflow,'  test:','required GitHub status job must exist');
     for(const command of ['npm run check','npm test','npm run test:browser','release-automation.js plan --json', 'release-automation.js validate --range'])
         requireText(checkWorkflow,command,`PR CI must execute ${command}`);
     requireText(checkWorkflow,'test "$PR_SOURCE" = develop','only develop may merge to main');
-    check(ruleset.rules.find(rule=>rule.type==='pull_request')?.parameters?.allowed_merge_methods?.join(',')==='merge',
-        'main must require merge commits for traceable release history');
+    requireText(release,'Verify the merged develop pull request',
+        'release must independently verify approved develop-to-main PR');
+    requireText(release,'/commits/${MERGE_SHA}/pulls',
+        'release must query the PR associated with its exact merge commit');
+    requireText(release,'node scripts/verify-merged-pr.js',
+        'release must check exact PR origin and merge SHA with the API payload');
+    requireText(release,'pull-requests: read',
+        'release must request permission to query private merged PRs');
     requireText(release,'release-automation.js snapshot --output',
         'release must create versioned tagged snapshots automatically');
     requireText(release,'branches: [main]', 'release must be triggered by main');

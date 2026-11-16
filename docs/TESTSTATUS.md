@@ -1,6 +1,6 @@
 # Teststatus - Whisky Collection Manager v1.4.0
 
-**Stand:** 2026-11-16. **Status:** B-5-Umsetzung lokal mit Node- und Chromium-Verhaltenstests bestanden. Der regulaere GitHub-Actions-Browserlauf fuer **v1.4.0** und Zielsystempruefungen stehen noch aus. Fruehere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-16. **Status:** B-5-Umsetzung lokal mit Node- und Chromium-Verhaltenstests bestanden. Die GitHub-CI fuer **v1.4.0** wurde vom Projektbetreiber als bestanden bestaetigt; Zielsystempruefungen stehen noch aus. Fruehere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
@@ -12,7 +12,7 @@
 | `npm run test:browser` (Chromium DOM-Modus, 9 getrennte Fachsuiten) | **109 bestanden, 0 fehlgeschlagen, 1 uebersprungen** | Alle Fachsuiten einzeln vollstaendig abgeschlossen; die gemeinsame Ausfuehrung erreichte die lokale Zeitgrenze. Uebersprungen: echte HTTP-History-Navigation im DOM-Modus. |
 | Neue B-5-Verhaltenstests | **8/8 bestanden** | Browser-Messungen fuer Lager/3D-nahe Layouts, Verkostungen, Import, Dialoge, Branding und Bildplatzhalter. |
 | Deployment-Vertragstests | **8/8 bestanden** | Positivtest und sieben absichtlich verletzte Docker-/CI-Sicherheitsbedingungen. |
-| GitHub Actions / regulaere Browsernavigation v1.4.0 | **Ausstehend** | Der lokale DOM-Modus ersetzt keinen gruenen CI-Lauf fuer den neuen Commit. |
+| GitHub Actions / regulaere Browsernavigation v1.4.0 | **Bestanden (Nutzerbestaetigung)** | GitHub-CI fuer v1.4.0 erfolgreich; andere Commits benoetigen eigene Abnahme. |
 | Docker-Image / Raspberry Pi ARM64 / echte WebGL- und Mobilgeraete | **Nicht lokal ausgefuehrt** | Bei entsprechenden Aenderungen auf Zielsystemen separat pruefen. |
 
 ## Aenderungen v1.4.0
@@ -32,6 +32,6 @@
 
 - Die GitHub-CI fuer **v1.4.0** wurde vom Projektbetreiber als bestanden bestaetigt.
 - Die neue Release-Automatik ist noch **kein neues veroeffentlichtes Release**; der Semantic-Version-Sprung erfolgt erst beim naechsten freigegebenen Merge `develop -> main`.
-- Lokal: `npm run check`, `npm run release:check` und **536/536 Node-Tests bestanden** (einschliesslich Git-Repositories fuer Merge-/Tag-/Retry-Faelle).
-- Der regulaere Browser-CI-Lauf fuer die neuen B-6-Aenderungen steht aus; `npm ci` zum Nachinstallieren des lokalen Playwright-Pakets war in dieser Umgebung nicht erfolgreich (Zeitgrenze). Ein lokal nicht durchgefuehrter Browserlauf gilt nicht als bestanden.
+- Lokal: `npm run check`, `npm run release:check` und **540/540 Node-Tests bestanden** (einschliesslich Git-Repositories fuer Merge-/Tag-/Retry-Faelle).
+- Die erste GitHub-PR-Pruefung der B-6-Aenderungen fand eine fehlerhafte Annahme zur bereits vorhandenen Version auf `develop`. Der einmalige Uebergang wurde korrigiert, einschliesslich Git-Integrationstests fuer Version 1.4.0 auf `develop` und alte `main`-Staende. Ruleset-Abhaengigkeit entfernt; Release nur nach API-Nachweis eines echten `develop -> main`-PRs. Der regulaere Browser-CI-Lauf fuer die korrigierten B-6-Aenderungen steht aus; `npm ci` zum Nachinstallieren des lokalen Playwright-Pakets war in dieser Umgebung nicht erfolgreich (Zeitgrenze). Ein lokal nicht durchgefuehrter Browserlauf gilt nicht als bestanden.
 - Kein Docker-/Raspberry-Pi-/Hardwaretest fuer diese Entwicklungsaenderung durchgefuehrt.

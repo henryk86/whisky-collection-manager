@@ -32,3 +32,7 @@
 3. `npm run test:browser` komplett mit echter Navigation in GitHub Actions, fuer **diesen** Commit.
 4. Release-ZIP und Upgrade-Audit pruefen; Nutzdaten duerfen niemals in einem Quellcode-ZIP enthalten sein.
 5. Pi-/Docker-/Mobilgeraete-Ergebnisse im [Teststatus](TESTSTATUS.md) gesondert dokumentieren.
+
+## GitHub Free: Merge-Schutz ohne wirksame Rulesets
+
+Bei privaten Repositories im Free-Tarif verhindern Rulesets/Branch-Protection einen direkten Push nach `main` nicht. Der Release-Workflow verifiziert deshalb den GitHub-PR und den exakten Merge-Commit (Quelle `develop`, Ziel `main`) vor Tag- und Artefakterzeugung. Ein unerlaubter Push kann nicht rueckgaengig gemacht oder verhindert werden; er erzeugt aber **keinen Release**. Der Nutzer kontrolliert den Merge manuell.

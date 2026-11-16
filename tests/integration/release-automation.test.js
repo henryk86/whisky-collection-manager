@@ -105,3 +105,92 @@ test('a main fast-forward or direct push is not a permitted release trigger',t=>
     commit(dir,'fix: direct main edit');
     assert.throws(()=>plan(dir),/Command failed/);
 });
+
+/** Migration from the former per-commit versioning scheme. In real projects
+ * develop may already say 1.4.0 while main still says 1.3.3. */
+function legacyFixture(t,{tagCurrent=false}={}) {
+    const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wcm-semrel-legacy-'));
+    t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+    run(dir,'git','init','-b','main');
+    run(dir,'git','config','user.name','Release Tester');
+    run(dir,'git','config','user.email','tester@example.invalid');
+    write(dir,'package.json',JSON.stringify({type:'module',version:'1.3.3'})+'\n');
+    write(dir,'package-lock.json',JSON.stringify({version:'1.3.3',packages:{'':{version:'1.3.3'}}})+'\n');
+    write(dir,'README.md','# Whisky Collection Manager v1.3.3\n');
+    write(dir,'CHANGELOG.md','# Changelog\n\n## 1.3.3 - 2026-11-15\n\n- Historical release\n');
+    write(dir,'docs/TESTSTATUS.md','# Teststatus - Whisky Collection Manager v1.3.3\n');
+    write(dir,'docs/TESTHISTORIE.md','# Historie\n');
+    fs.mkdirSync(path.join(dir,'scripts'),{recursive:true});
+    for(const script of ['release-version.js','release-manifest.js'])
+        fs.copyFileSync(path.join('scripts',script),path.join(dir,'scripts',script));
+    run(dir,'git','add','.'); run(dir,'git','commit','-m','chore: last pre-automation main release');
+    run(dir,'git','tag','v1.3.3');
+    run(dir,'git','branch','develop');run(dir,'git','checkout','develop');
+    // This manual version update occurred BEFORE installing the new release workflow.
+    write(dir,'package.json',JSON.stringify({type:'module',version:'1.4.0'})+'\n');
+    write(dir,'package-lock.json',JSON.stringify({version:'1.4.0',packages:{'':{version:'1.4.0'}}})+'\n');
+    write(dir,'README.md','# Whisky Collection Manager v1.4.0\n');
+    write(dir,'CHANGELOG.md','# Changelog\n\n## 1.4.0 - 2026-11-16\n\n- Last manual release\n\n## 1.3.3 - 2026-11-15\n\n- Historical release\n');
+    write(dir,'docs/TESTSTATUS.md','# Teststatus - Whisky Collection Manager v1.4.0\n');
+    run(dir,'git','add','.');run(dir,'git','commit','-m','chore: complete existing release v1.4.0');
+    if(tagCurrent) run(dir,'git','tag','v1.4.0');
+    fs.copyFileSync('scripts/release-automation.js',path.join(dir,'scripts/release-automation.js'));
+    run(dir,'git','add','.');run(dir,'git','commit','-m','chore: adopt automatic release workflow');
+    return dir;
+}
+
+test('first automation merge accepts pre-existing higher develop version without a v1.4.0 tag',t=>{
+    const dir=legacyFixture(t);
+    commit(dir,'fix: repair warehouse relocation');
+    merge(dir);
+    const first=plan(dir);
+    assert.equal(first.legacyTransition,true);
+    assert.equal(first.version,'1.4.1'); // never downgrade to v1.3.4
+    snapshot(dir);
+    const changes=run(dir,'git','show','v1.4.1:CHANGELOG.md');
+    assert.match(changes,/## 1\.4\.0/); // branch history retained
+    assert.match(changes,/## 1\.3\.3/);
+    assert.equal(run(dir,'git','show','main:package.json').includes('1.3.3'),false);
+    assert.equal(JSON.parse(run(dir,'git','show','main:package.json')).version,'1.4.0');
+    run(dir,'git','checkout','develop');
+    commit(dir,'fix: second patch','second.txt');
+    merge(dir);
+    assert.equal(plan(dir).version,'1.4.2');
+});
+
+test('first automation merge with the existing v1.4.0 tag starts at v1.4.1',t=>{
+    const dir=legacyFixture(t,{tagCurrent:true});
+    commit(dir,'fix: release automation fix');
+    merge(dir);
+    assert.equal(plan(dir).version,'1.4.1');
+});
+
+test('after automation installation a manual version bump on develop is rejected',t=>{
+    const dir=fixture(t);
+    run(dir,'git','checkout','develop');
+    write(dir,'package.json',JSON.stringify({type:'module',version:'1.5.0'})+'\n');
+    run(dir,'git','add','.');run(dir,'git','commit','-m','feat: attempt manual version bump');
+    merge(dir);
+    assert.throws(()=>plan(dir),/Command failed/);
+});
+
+test('free-account release gate accepts only the matching merged same-repository PR', async()=>{
+    const {isApprovedReleaseMerge,verifyMergedPRs}=await import('../../scripts/verify-merged-pr.js');
+    const sha='a'.repeat(40),repo='owner/whisky-collection-manager';
+    const pr={merged_at:'2026-11-16T12:00:00Z',merge_commit_sha:sha,
+        base:{ref:'main',repo:{full_name:repo}},head:{ref:'develop',repo:{full_name:repo}}};
+    assert.equal(isApprovedReleaseMerge(pr,sha,repo),true);
+    assert.equal(verifyMergedPRs([pr],sha,repo),true);
+    for(const altered of [
+        {...pr,merged_at:null},
+        {...pr,merge_commit_sha:'b'.repeat(40)},
+        {...pr,base:{...pr.base,ref:'develop'}},
+        {...pr,head:{...pr.head,ref:'feature'}},
+        {...pr,head:{...pr.head,repo:{full_name:'fork/repository'}}},
+        {...pr,base:{...pr.base,repo:{full_name:'fork/repository'}}}
+    ]) {
+        assert.equal(isApprovedReleaseMerge(altered,sha,repo),false);
+        assert.throws(()=>verifyMergedPRs([altered],sha,repo),/Release blocked/);
+    }
+    assert.throws(()=>verifyMergedPRs([],sha,repo),/Release blocked/);
+});

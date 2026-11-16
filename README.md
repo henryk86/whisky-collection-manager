@@ -8,6 +8,9 @@ Die Anwendung verwendet Node.js und Browser-ES-Module **ohne Datenbank und ohne 
 
 **Release-Strategie:** Aenderungen werden als Conventional Commits auf `develop` gesammelt; ein von dir freigegebener Merge nach `main` erzeugt automatisch genau einen getaggten Release-Snapshot mit der passenden Semantic-Version, dem Changelog, ZIPs und Docker-Images. Versionserhoehungen pro Entwicklungscommit entfallen. Fuer versionierte Quellcodeinstallationen das Git-Tag verwenden, nicht die unveraenderten Versionsdateien auf `main`. Details: [Release-Ablauf](docs/RELEASE_WORKFLOW.md).
 
+**GitHub Free (privat):** Rulesets und Branch-Protection werden nicht durchgesetzt. Der Release-Workflow veroeffentlicht deshalb nur nach einem nachweislich gemergten PR von `develop` nach `main`; unerlaubte Pushes auf `main` kann er nicht verhindern.
+
+
 Die Anwendung wurde **vollständig durch ChatGPT programmiert**. Der Projektinitiator hat die Anforderungen formuliert und Korrekturen beziehungsweise Anpassungen angefordert, jedoch selbst keinen Anwendungscode geschrieben. Der Quellcode wird **regelmäßig mit Claude Code-Reviews unterzogen**.
 
 Die technische Architektur verwendet einen gemeinsamen DOM-Abgleich und zentrale Ereignisbehandlung. Schreibvorgaenge aktualisieren den lokalen Zustand ueber revisionsgepruefte API-Aenderungen; bei konkurrierenden Aenderungen werden die betroffenen Daten neu geladen. Quellcode-ZIP-Upgrades koennen mit einem SHA-256-Dateimanifest auf entfernte Altmodule geprueft werden, ohne die Sammlung, das Lager oder Medien anzutasten. Details: [Architektur](docs/ARCHITEKTUR.md), [API](docs/API.md) und [Release-Ablauf](docs/RELEASE_WORKFLOW.md).
@@ -136,15 +139,15 @@ Die Oberfläche ist auf Deutsch und Englisch lokalisiert. Die Sprachdateien lieg
 
 ## Versionierung und Release
 
-Entwicklung erfolgt auf `develop`. Ein erfolgreicher Pull Request nach `main` startet den GitHub-Release-Prozess mit Quellcode-ZIP und Docker-Image für AMD64/ARM64.
-
-Kleine Änderungen erhöhen den **Patchlevel**, größere Erweiterungen die **Minor-Version**, inkompatible Änderungen die **Major-Version**:
+Entwicklung erfolgt auf `develop`: direkte Commits und optional PRs. Jeder Commit verwendet ein Conventional-Commit-Praefix, z. B. `fix:`, `feat:`, `refactor:` oder `docs:`. Einzelne Commits erhoehen **keine** Versionsnummer. Ausschliesslich ein durch dich gemergter PR `develop -> main` startet nach den CI-Pruefungen einen versionierten GitHub Release mit Quellcode-ZIP und Docker-Image fuer AMD64/ARM64. Der hoechste Commit-Typ entscheidet einmalig ueber Patch, Minor oder Major.
 
 ```bash
-npm run release:bump -- patch "Kurze Änderungsbeschreibung"
-npm run release:check
-npm run verify
+npm run check           # Entwicklungspruefungen
+npm test                # Verhaltens- und Integrationstests
+npm run release:check   # Fertigen Release-Snapshot pruefen, kein Entwicklungs-Bump
 ```
+
+`npm run release:bump` ist nur noch ein historisches Werkzeug und darf im normalen Entwicklungsablauf nicht ausgefuehrt werden.
 
 [Release-Workflow](docs/RELEASE_WORKFLOW.md) · [Changelog](CHANGELOG.md)
 

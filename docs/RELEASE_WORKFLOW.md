@@ -4,7 +4,7 @@
 
 - **Direkte Commits auf `develop`** sind der Normalfall; spaetere PRs nach `develop` sind ebenfalls moeglich. `Checks / test` prueft beide Varianten.
 - **Kein Versionssprung pro Commit oder PR:** `package.json`, `package-lock.json`, README-Versionskopf, Teststatus und Quellmanifest werden in `develop` nicht fuer jede Aenderung aktualisiert. Dort steht die letzte eingecheckte Basisversion; die gueltige veroeffentlichte Version ist der neueste Release-Tag.
-- **Nur der Benutzer merged `develop -> main`:** `main` wird ueber einen Pull Request geschuetzt; `Create a merge commit` (kein Squash) ist erforderlich. Keine Action fuehrt automatisch einen Merge aus.
+- **Nur der Benutzer merged `develop -> main`:** fuer Releases einen PR ueber GitHub mit *Create a merge commit* (kein Squash) verwenden. Auf privaten GitHub-Free-Repositories sind Branch-Schutz und Rulesets nicht durchgesetzt: GitHub kann einen direkten Push auf `main` daher nicht verhindern. Die Release-Action verweigert jedoch ohne nachweislich gemergten `develop -> main`-PR jede Veroeffentlichung. Keine Action fuehrt automatisch einen Merge aus.
 - **Der Merge ist der einzige normale Release-Ausloeser.** `.github/workflows/release.yml` erstellt nach erneut erfolgreichen Tests einen versionierten Snapshot-Commit, dessen Parent der freigegebene Merge-Commit ist. Ausschliesslich der Tag verweist auf diesen Snapshot. Weder `main` noch `develop` erhalten Bot-Commits.
 - Das vorhandene Release-Verfahren (Draft, Quell-ZIP, Offline-ZIP, SHA-256, GHCR fuer ARM64/AMD64, Offline-Docker-Archive und `latest` erst zum Schluss) laeuft anschliessend auf dem getaggten Snapshot weiter.
 
@@ -43,7 +43,7 @@ Bei spaeteren PRs nach `develop` kann per Squash gemergt werden; der entstehende
 1. Commits mit Conventional-Commit-Betreff direkt nach `develop` pushen. Die Checks auf `develop` pruefen den neuen Push-Bereich; optionale PRs nach `develop` werden ebenfalls geprueft. Versionsdateien nicht manuell erhoehen.
 2. Wenn ausreichend Aenderungen gesammelt sind, einen PR **`develop -> main`** oeffnen. `Checks / test` prueft Unit-/Integrationstests, den Browser und **berechnet die geplante neue Version** bereits auf dem PR-Merge-Stand. Quellbranch und Zielbranch werden geprueft.
 3. **Nur du** startest den Merge ueber GitHub, als *Create a merge commit*. Die Actions haben keine Rechte, Branches zu mergen.
-4. GitHub startet auf `main` den Release-Workflow. Vor Erstellen des Tags werden alle Tests auf dem freigegebenen Merge-Quellstand erneut ausgefuehrt. Danach werden die Versionsdateien nur im Detached-HEAD-Snapshot angelegt und durch `release:check` und `check` geprueft.
+4. GitHub startet auf `main` den Release-Workflow. Zunaechst prueft er ueber die GitHub-API, ob genau dieser Commit aus einem gemergten `develop -> main`-PR stammt. Ohne diesen Nachweis werden **weder Tag noch ZIP oder Docker-Image** erstellt. Vor Erstellen des Tags werden alle Tests auf dem freigegebenen Merge-Quellstand erneut ausgefuehrt. Danach werden die Versionsdateien nur im Detached-HEAD-Snapshot angelegt und durch `release:check` und `check` geprueft.
 5. Das Git-Tag `vX.Y.Z` und ein Draft-Release werden erzeugt. Die vorhandenen ZIP-/Offline-/Docker-Jobs arbeiten mit diesem Tag. Erst nach bestandenen Artefakt- und Image-Pruefungen wird der Draft veroeffentlicht und das Docker-Tag `latest` aktualisiert.
 6. Ein abgebrochener oder erneut gestarteter Workflow auf **demselben Merge-Commit** nutzt denselben existierenden Tag und Entwurf. Kein doppeltes Bumping oder Ueberschreiben bereits veroeffentlichter Tags. Nach einem Fehler den Workflow in GitHub erneut starten, nicht manuell die Version auf `main` erhoehen.
 
@@ -51,11 +51,11 @@ Bei spaeteren PRs nach `develop` kann per Squash gemergt werden; der entstehende
 
 ## Einmalige GitHub-Einstellungen
 
-1. `main` und `develop` beibehalten; `develop` darf direkte Pushes und spaeter optional PRs entgegennehmen. `main` verlangt einen PR aus dem **gleichen Repository** mit Quellbranch `develop` und erfolgreichen Checks.
-2. Das Ruleset `main` aktivieren bzw. **eine bereits importierte Ruleset-Version aktualisieren**: `.github/rulesets/main.json` erlaubt nur die Merge-Methode `merge` (nicht `squash`). Ein Commit der JSON-Datei allein aktualisiert bestehende GitHub-Rulesets nicht! GitHub: **Settings -> Rules -> Rulesets**. Die benoetigte Pruefung bleibt `Checks / test`.
-3. Unter **Settings -> Actions -> General** erforderliche Actions und `GITHUB_TOKEN`-Schreibrechte fuer Tag/Release freigeben. Das Release-Workflow-Token braucht nur die im Workflow angegebenen Job-Rechte; **kein** Schutzregel-Bypass fuer `main`.
+1. `main` und `develop` beibehalten. Direkte Commits nach `develop` sind erlaubt. Releases ausschliesslich ueber einen GitHub-PR `develop -> main` mit *Create a merge commit* ausloesen. Vor dem Merge den erfolgreichen Status `Checks / test` kontrollieren.
+2. **Private GitHub-Free-Repositories:** Rulesets und klassische Branch-Protection werden nicht durchgesetzt. Es ist keine Ruleset-Konfiguration erforderlich und auch keine vorhanden, auf die sich der Releaseprozess verlaesst. Die Action kann einen unerlaubten Push auf `main` nicht verhindern, aber ihre Tag-/ZIP-/Docker-Veroeffentlichung blockieren, wenn kein gemergter PR aus `develop` mit identischem Merge-SHA ueber die GitHub-API nachweisbar ist.
+3. Unter **Settings -> Actions -> General** die erforderlichen Actions und Schreibrechte fuer das `GITHUB_TOKEN` sicherstellen. Der Release-Workflow nutzt `contents: write`, `pull-requests: read` und fuer GHCR `packages: write`; kein PAT und kein Branch-Bypass notwendig.
 4. Das bestehende GHCR-Repository fuer GitHub Actions und Docker-Installationen erreichbar halten. Auf dem Raspberry Pi bei privaten Images mit einem `read:packages`-Token anmelden.
-5. Fuer einen ersten Release nach der Umstellung muss das bisherige Release `v1.4.0` als Tag vorhanden sein. Die neue Automatik erkennt alte Tags direkt auf `main` und ab dann die neuen Snapshot-Tags. Wenn noch nie ein Tag angelegt wurde, verwendet sie einmalig die eingecheckte Paketversion als Ausgangspunkt und wertet nur den aktuellen Merge-Inhalt aus.
+5. **Einmaliger Umstieg:** Wenn `main` noch z. B. v1.3.3 enthaelt, `develop` aber schon die bisher manuell versionierte v1.4.0, akzeptiert die Automatik diesen Unterschied **nur beim erstmaligen Hinzufuegen** von `scripts/release-automation.js` auf `main`. Ein `v1.4.0`-Tag ist dafuer hilfreich, aber nicht zwingend erforderlich. Danach werden manuelle Versionsspruenge wieder abgelehnt. Vorhandene Changelog- und Testhistorie bleiben beim ersten Release erhalten.
 
 ## Verifikation
 

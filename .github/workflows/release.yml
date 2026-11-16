@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: read
     outputs:
       tag: ${{ steps.version.outputs.tag }}
       version: ${{ steps.version.outputs.version }}
@@ -31,6 +32,17 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Verify the merged develop pull request
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MERGE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # GitHub Free does not enforce rulesets on private repositories.
+          # Release only after a real merged PR from develop to main.
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/commits/${MERGE_SHA}/pulls" \
+            --jq '.[] | @json' | node scripts/verify-merged-pr.js
       - name: Analyze commits from the approved develop merge
         run: node scripts/release-automation.js plan --json
       - run: npm ci

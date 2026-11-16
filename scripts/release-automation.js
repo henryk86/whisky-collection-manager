@@ -49,6 +49,7 @@ export function notesForPlan(plan) {
 const gitExists=(ref)=>{try{execFileSync('git',['rev-parse','--verify',`${ref}^{commit}`],{cwd:ROOT,stdio:'ignore'});return true;}catch{return false;}};
 const isAncestor=(ancestor,head)=>{try{execFileSync('git',['merge-base','--is-ancestor',ancestor,head],{cwd:ROOT,stdio:'ignore'});return true;}catch{return false;}};
 const commitParents=(rev)=>git('rev-list','--parents','-n','1',rev).split(/\s+/).slice(1);
+const hasFileAt=(ref,name)=>{try{execFileSync('git',['cat-file','-e',`${ref}:${name}`],{cwd:ROOT,stdio:'ignore'});return true;}catch{return false;}};
 
 /** A release-snapshot tag has an off-branch commit whose sole parent is the main merge. */
 function knownReleases(head) {
@@ -73,10 +74,37 @@ export function planRelease({head='HEAD',requireMerge=true}={}) {
     }
     const baseline=JSON.parse(fs.readFileSync(path.join(ROOT,'package.json'),'utf8')).version;
     parseVersion(baseline);
-    // A develop merge must not change version fields prematurely.
+    // The first merge after installing this automation may legitimately bring
+    // the last manually maintained version from develop (e.g. 1.4.0 while
+    // main still contains 1.3.x). This is NOT a new manual bump. Allow it
+    // exactly once, when the automation script did not exist on main before
+    // this merge. All later merges must leave the checked-in version alone.
     const beforeVersion=JSON.parse(git('show',`${parents[0]}:package.json`)).version;
-    if(baseline!==beforeVersion) throw new Error('Keine manuellen Versionsspruenge auf develop: das Release wird nach dem main-Merge versioniert.');
-    const current=latest?.version||baseline;
+    const introducingAutomation=!hasFileAt(parents[0],'scripts/release-automation.js')
+        && hasFileAt(sha,'scripts/release-automation.js');
+    const legacyTransition=baseline!==beforeVersion && introducingAutomation
+        && !releases.some(release=>release.snapshot)
+        && compareVersions(baseline,beforeVersion)>0;
+    if(baseline!==beforeVersion && !legacyTransition)
+        throw new Error('Keine manuellen Versionsspruenge auf develop: das Release wird nach dem main-Merge versioniert.');
+    if(legacyTransition) {
+        // Only accept the old, fully synchronized release metadata, not an
+        // arbitrary package.json version inserted into the merge.
+        // Do not run release:check on a development checkout: its source
+        // manifest intentionally reflects the previous packaged release.
+        const lock=JSON.parse(fs.readFileSync(path.join(ROOT,'package-lock.json'),'utf8'));
+        const readme=fs.readFileSync(path.join(ROOT,'README.md'),'utf8');
+        const changelog=fs.readFileSync(path.join(ROOT,'CHANGELOG.md'),'utf8');
+        if(lock.version!==baseline || lock.packages?.['']?.version!==baseline
+            || !readme.includes(`Whisky Collection Manager v${baseline}`)
+            || !changelog.includes(`## ${baseline} -`))
+            throw new Error('Vorhandene Versionsmetadaten beim einmaligen Automatik-Umstieg sind inkonsistent.');
+    }
+    if(latest && compareVersions(baseline,latest.version)<0 && !latest.snapshot)
+        throw new Error('Entwicklungs-Version ist aelter als der letzte erreichbare Release-Tag.');
+    // During the transition, the checked-in 1.4.0 may be newer than the
+    // latest reachable tag. Never downgrade it to a 1.3.x release.
+    const current=latest && compareVersions(latest.version,baseline)>0 ? latest.version : baseline;
     // If no tags exist (one-time transition), limit to commits introduced by this main merge.
     const from=latest?.anchor || parents[0];
     if(!from || !isAncestor(from,sha) || from===sha) throw new Error('Kein neuer develop-Stand seit dem letzten Release.');
@@ -86,7 +114,7 @@ export function planRelease({head='HEAD',requireMerge=true}={}) {
     if(releases.some(release=>compareVersions(version,release.version)<=0) || gitExists(`refs/tags/${tag}`)) {
         throw new Error(`Tag ${tag} existiert bereits oder ist nicht neuer als die vorhandenen Releases.`);
     }
-    return {head:sha,version,tag,previousTag:latest?.tag||`v${current}`,level:analysis.level,commits:analysis.commits,reuse:false};
+    return {head:sha,version,tag,previousTag:latest?.tag||`v${current}`,level:analysis.level,commits:analysis.commits,reuse:false,legacyTransition};
 }
 function parseOption(args,name) {const i=args.indexOf(name);return i>=0?args[i+1]:undefined;}
 function validateRange(range) {

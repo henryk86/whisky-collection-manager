@@ -24,6 +24,8 @@ for(const [description,file,search,replacement] of [
     ['rejects a missing browser suite in PR checks','.github/workflows/check.yml','npm run test:browser','npm run test:skipped'],
     ['rejects missing offline isolation in release','.github/workflows/release.yml','--network none','--network host'],
     ['rejects unscoped GitHub upload commands','.github/workflows/release.yml','run: gh release upload "$TAG" dist/*.zip dist/*.sha256 --clobber --repo "$GITHUB_REPOSITORY"','run: gh release upload "$TAG" dist/*.zip dist/*.sha256 --clobber'],
+    ['rejects missing merged-PR API release gate','.github/workflows/release.yml','node scripts/verify-merged-pr.js','node scripts/skip-merged-pr-verification.js'],
+    ['rejects missing permission to inspect private PRs','.github/workflows/release.yml','pull-requests: read','pull-requests: none'],
     ['rejects production builds that omit AI asset preparation','docker/app.Dockerfile','node scripts/prepare-cutout-assets.js','node scripts/no-cutout-assets.js'],
 ]) {
     test(`configuration validation ${description}`,()=>{
