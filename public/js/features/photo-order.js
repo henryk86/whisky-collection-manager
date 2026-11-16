@@ -13,12 +13,10 @@ export function reorderedPhotoIds(ids, photoId, targetId) {
 }
 
 async function savePhotoOrder(bottleId, ids, action) {
-    await action(async () => {
-        await request(`/api/bottles/${encodeURIComponent(bottleId)}/photos/order`, {
-            method: 'PUT', body: JSON.stringify({ photoIds: ids })
-        });
-        toast(t('features.notifications.photoOrderSaved'));
-    });
+    const result = await action(() => request(`/api/bottles/${encodeURIComponent(bottleId)}/photos/order`, {
+        method: 'PUT', body: JSON.stringify({ photoIds: ids })
+    }));
+    if (result.ok) toast(t('features.notifications.photoOrderSaved'));
 }
 
 /** Accessible left/right buttons work independently of pointer support. */

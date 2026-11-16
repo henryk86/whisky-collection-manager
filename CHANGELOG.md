@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.28.9 - 2026-11-16
+
+- Code-Review A-3: Aktionen geben einen expliziten Erfolgs-/Fehlerstatus zurueck; fehlgeschlagene Mutationen loesen keine Navigation, kein Modal-Schliessen und keine Erfolgsmeldung mehr aus. Bestaetigungen bleiben fuer erneuten Versuch offen.
+- Code-Review A-4: Statische Dateien inklusive AI-Modell, WASM und Vendor-JavaScript erhalten `ETag` und `Last-Modified`; bedingte GETs liefern `304 Not Modified`. Unversionierte Dateien bleiben revalidierungspflichtig.
+- B-1.1: Statische Schutzregel fuer neue Direktlistener in Views mit expliziter Bestands-Ausnahmeliste.
+- CI-Regression: `teststatus.test.js` akzeptiert korrekte Browserergebnisse mit Zahlenangaben (`80 bestanden`), ohne fehlgeschlagene/laengst nicht absolvierte Browserpruefungen als bestanden auszugeben.
+- Neue Unit-/Integrationstests fuer Aktionsausgaenge und HTTP-Cache sowie Browser-Regression fuer fehlgeschlagenes Verkostungs-DELETE.
+
 ## 0.28.8 - 2026-11-16
 
 - Review-Fixes: doppelte Datei- und Foto-Uploads verhindern, Browser-Tests und Flight-Validierung korrigieren.

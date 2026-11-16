@@ -3842,6 +3842,36 @@ test('browser: v0.26.0 multiple dated tastings, latest summary, individual editi
     });
 });
 
+test('browser: rejected tasting DELETE keeps the editing page and confirmation open', async () => {
+    await session(async ({page,base,open}) => {
+        const bottling = (await requestJson(base,'/api/bottlings','POST',{
+            name:'Tasting delete failure',firstBottle:{inventoryNumber:'998171'}
+        })).data.bottling;
+        const tasting = (await requestJson(base,`/api/bottlings/${bottling.id}/tastings`,'POST',{
+            title:'Do not remove',tastedOn:'2026-11-16'
+        })).data;
+        await open();
+        await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
+        await page.locator('[data-act="tastings-open"]').first().click();
+        await page.locator('[data-act="tasting-delete"]').first().click();
+        await page.route(`**/api/bottlings/${bottling.id}/tastings/${tasting.id}`, async route => {
+            if (route.request().method() === 'DELETE') {
+                await route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({error:'Simulated server failure'})});
+            } else {
+                await route.fallback();
+            }
+        });
+        await page.locator('[data-act="confirm-action"]').click();
+        await page.locator('.toast.error').waitFor();
+        assert.equal(await page.locator('[data-act="confirm-action"]').count(),1,
+            'failed deletion retains the confirmation for retry or cancel');
+        await page.locator('[data-act="close-modal"]').last().click();
+        assert.equal(await page.locator('[data-act="tasting-delete"]').count(),1,
+            'failed deletion must not navigate away from the tasting');
+        assert.equal((await requestJson(base,'/api/collection')).data.bottlings[0].tastings.length,1);
+    });
+});
+
 test('browser: flight groups owned and new external notes with an ordered sequence and no duplicate records',async()=>{
     await session(async({base,page,open})=>{
         const owned=(await requestJson(base,'/api/bottlings','POST',{name:'Islay bottling'})).data.bottling;

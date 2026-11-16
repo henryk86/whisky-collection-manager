@@ -61,6 +61,24 @@ for (const file of sources.filter(file => file.includes(`${path.sep}tests${path.
 }
 console.log(`${fixtureReferences.size} test fixture files: references OK.`);
 
+// These view listeners are explicitly audited as local, ephemeral DOM/widget
+// lifecycles. All other application events belong in the delegated events.js.
+// A new direct binding in a view must be reviewed and listed here deliberately.
+const allowedViewListeners = new Map([
+    ['home.js', 5],              // Overview controls, recreated with each home render.
+    ['map.js', 8],               // Sidebar replaced in renderSidebar; map controls are local.
+    ['warehouse.js', 12],       // SVG pointer/keyboard interactions and transient dialogs.
+    ['warehouse-room-transfer.js', 9], // Modal-local import/export controls.
+]);
+for (const file of sources.filter(name => name.includes(`${path.sep}public${path.sep}js${path.sep}views${path.sep}`))) {
+    const view = path.relative(path.resolve('public/js/views'), file).replaceAll(path.sep, '/');
+    const listenerCount = (fs.readFileSync(file, 'utf8').match(/\.addEventListener\s*\(/g) || []).length;
+    const allowedCount = allowedViewListeners.get(view) ?? 0;
+    if (listenerCount !== allowedCount) {
+        throw new Error(`View-Event-Lifecycle: ${view} has ${listenerCount} direct listeners (approved: ${allowedCount}). Use delegated events.js or review the explicit exception.`);
+    }
+}
+
 console.log(`${sources.length} JavaScript files: syntax/imports OK, no circular imports.`);
 
 const i18nCheck = spawnSync(process.execPath, ['scripts/check-i18n.js'], {encoding: 'utf8'});

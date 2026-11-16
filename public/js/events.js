@@ -19,6 +19,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
     };
     let pendingConfirmation = null;
+    let confirmationBusy = false;
     function confirmInModal(title, message, task, buttonLabel = 'Endgültig löschen') {
         pendingConfirmation = task;
         modal.showModal(title, `<p>${escapeHtml(message)}</p>
@@ -142,8 +143,10 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'tasting-delete': button => confirmInModal(t('tastings.delete'),t('tastings.deleteConfirm'),async()=>{
             const id=button.dataset.tastingId;
             const external=state.page==='external-tasting';
-            await action(()=>request(external?`/api/external-tastings/${encodeURIComponent(id)}`:`/api/bottlings/${encodeURIComponent(state.selected)}/tastings/${encodeURIComponent(id)}`,{method:'DELETE'}));
+            const result = await action(()=>request(external?`/api/external-tastings/${encodeURIComponent(id)}`:`/api/bottlings/${encodeURIComponent(state.selected)}/tastings/${encodeURIComponent(id)}`,{method:'DELETE'}));
+            if (!result.ok) return result;
             navigate(external?'tastings-home':'tastings',external?null:state.selected,{replace:true});
+            return result;
         },t('common.actions.delete')),
         'warehouse-shelf-copy': button => warehouseView.openForm('shelf-copy', button.dataset.id),
         'warehouse-shelf-delete': button => warehouseView.askDelete('shelf', button.dataset.id),
@@ -237,15 +240,25 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'submit-code': button => resolveCode(query('[name=manualCode]').value, button.dataset.assign === '1'),
         'confirm-action': async () => {
             const task = pendingConfirmation;
-            pendingConfirmation = null;
-            modal.closeModal(true);
-            if (task) await task();
+            if (!task || confirmationBusy) return;
+            confirmationBusy = true;
+            const confirmation = state.modal;
+            try {
+                const result = await task();
+                if (result?.ok === false || result === false) return;
+                pendingConfirmation = null;
+                // A successful task may have navigated or closed this modal itself.
+                if (state.modal === confirmation) modal.closeModal(true);
+            } finally {
+                confirmationBusy = false;
+            }
         },
         'confirm-import': () => settings.confirmImport(),
-        'delete-file': button => confirmInModal(t("ui.confirmations.deleteAttachment"), t("ui.confirmations.deleteAttachmentQuestion"), () => action(async () => {
-            await request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/files/${encodeURIComponent(button.dataset.fileId)}`, { method: 'DELETE' });
-            toast(t("ui.confirmations.attachmentDeleted"));
-        })),
+        'delete-file': button => confirmInModal(t("ui.confirmations.deleteAttachment"), t("ui.confirmations.deleteAttachmentQuestion"), async () => {
+            const result = await action(() => request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/files/${encodeURIComponent(button.dataset.fileId)}`, { method: 'DELETE' }));
+            if (result.ok) toast(t("ui.confirmations.attachmentDeleted"));
+            return result;
+        }),
         'open-photo': button => photoViewer.open(button),
         'photo-editor-open': button => photoEditor.open(button),
         'photo-editor-tab': button => photoEditor.selectTab(button.dataset.photoEditorTab),
@@ -266,19 +279,24 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'photo-prev': () => photoViewer.step(-1),
         'photo-next': () => photoViewer.step(1),
         'move-photo': button => movePhoto(button.dataset.id, button.dataset.photoId, Number(button.dataset.dir), action),
-        'delete-photo': button => confirmInModal(t("ui.confirmations.deletePhoto"), t("ui.confirmations.deletePhotoQuestion"), () => action(async () => {
-            await request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/photos/${encodeURIComponent(button.dataset.photoId)}`, { method: 'DELETE' });
-            toast(t("ui.confirmations.photoDeleted"));
-        })),
-        'delete-bottle': button => confirmInModal(t("ui.confirmations.deleteBottle"), t("ui.confirmations.deleteBottleQuestion"), () => action(async () => {
-            await request(`/api/bottles/${encodeURIComponent(button.dataset.id)}`, { method: 'DELETE' });
-            toast(t("ui.confirmations.bottleDeleted"));
-        })),
-        'delete-bottling': () => confirmInModal(t("ui.confirmations.deleteBottling"), t("ui.confirmations.deleteBottlingQuestion"), () => action(async () => {
-            await request(`/api/bottlings/${encodeURIComponent(state.selected)}`, { method: 'DELETE' });
-            navigate('home', null, { replace: true });
-            toast(t("ui.confirmations.bottlingDeleted"));
-        })),
+        'delete-photo': button => confirmInModal(t("ui.confirmations.deletePhoto"), t("ui.confirmations.deletePhotoQuestion"), async () => {
+            const result = await action(() => request(`/api/bottles/${encodeURIComponent(button.dataset.id)}/photos/${encodeURIComponent(button.dataset.photoId)}`, { method: 'DELETE' }));
+            if (result.ok) toast(t("ui.confirmations.photoDeleted"));
+            return result;
+        }),
+        'delete-bottle': button => confirmInModal(t("ui.confirmations.deleteBottle"), t("ui.confirmations.deleteBottleQuestion"), async () => {
+            const result = await action(() => request(`/api/bottles/${encodeURIComponent(button.dataset.id)}`, { method: 'DELETE' }));
+            if (result.ok) toast(t("ui.confirmations.bottleDeleted"));
+            return result;
+        }),
+        'delete-bottling': () => confirmInModal(t("ui.confirmations.deleteBottling"), t("ui.confirmations.deleteBottlingQuestion"), async () => {
+            const result = await action(() => request(`/api/bottlings/${encodeURIComponent(state.selected)}`, { method: 'DELETE' }));
+            if (result.ok) {
+                navigate('home', null, { replace: true });
+                toast(t("ui.confirmations.bottlingDeleted"));
+            }
+            return result;
+        }),
         import: () => settings.importJSON(),
     };
     bindFlightSorting(root, (from,to,after) => tastingsView.reorderFlightMember(from,to,after));

@@ -407,7 +407,8 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             state.page='tastings-home';
             await refresh();
             navigate('tastings-home',null,{replace:true});
-        } catch(error) {toast(error.message,true);}
+            return true;
+        } catch(error) {toast(error.message,true);return false;}
     }
     function home() {
         // Returning to an index ends any prior edit session. Reopening is always read-only.

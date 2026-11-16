@@ -14,6 +14,7 @@ import { createPhotoEditor } from './js/features/photo-editor/controller.js';
 import { createShell } from './js/ui/shell.js';
 import { escapeHtml } from './js/ui/dom.js';
 import { toast } from './js/ui/notifications.js';
+import { runAction } from './js/ui/action-result.js';
 import { createHomeView } from './js/views/home.js';
 import { createDetailView } from './js/views/detail.js';
 import { createTastingsView } from './js/views/tastings.js';
@@ -67,7 +68,7 @@ const bottleForm = createBottleForm({
 });
 let externalImport;
 const editors = createEditors({
-    state, selectors, bottlingForm, bottleForm, ...modal, navigate, action, refresh,
+    state, selectors, bottlingForm, bottleForm, ...modal, navigate, action,
     getPendingImageToken: () => externalImport?.getPendingImageToken(),
     markImageAttached: () => externalImport?.markImageAttached()
 });
@@ -124,14 +125,7 @@ async function refresh() {
     else render();
 }
 async function action(task) {
-    try {
-        const result = await task();
-        await refresh();
-        return result;
-    }
-    catch (error) {
-        toast(error.message, true);
-    }
+    return runAction(task, refresh, error => toast(error.message, true));
 }
 navigation.listen();
 bindEvents(root, {

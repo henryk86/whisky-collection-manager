@@ -175,21 +175,17 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
             const selected = [...input.files];
             input.value = '';
             if (!selected.length) return true;
-            await action(async () => {
-                const count = await uploadFiles(input.dataset.bottleFiles, selected);
-                toast(t("detail.notifications.filesSaved", {count}));
-            });
-            return true;
+            const result = await action(() => uploadFiles(input.dataset.bottleFiles, selected));
+            if (result.ok) toast(t("detail.notifications.filesSaved", {count:result.value}));
+            return result.ok;
         }
         if (input.matches?.('input[data-bottle-photos]')) {
             const files = [...input.files];
             input.value = '';
             if (!files.length) return true;
-            await action(async () => {
-                await uploadPhotos(input.dataset.bottlePhotos, files);
-                toast(t("detail.notifications.photosSaved", {count:files.length}));
-            });
-            return true;
+            const result = await action(() => uploadPhotos(input.dataset.bottlePhotos, files));
+            if (result.ok) toast(t("detail.notifications.photosSaved", {count:files.length}));
+            return result.ok;
         }
         return false;
     };

@@ -1,6 +1,6 @@
 # Architektur und Orientierung
 
-**Stand:** v0.15.7. Dieses Dokument beschreibt die tatsächlich eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
+**Stand:** v0.28.9 (aktualisierte Fehler- und Event-Regeln; der komplette Modulbestand wird bei B-4 separat bereinigt). Dieses Dokument beschreibt die eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
 
 ## Grundprinzipien
 
@@ -53,6 +53,16 @@ Benutzeraktion
   -> UI-Zustand aktualisieren / Daten erneut laden
   -> passende View rendern
 ```
+
+### Fehler- und DOM-Ereignislebenszyklus
+
+`public/app.js` ruft Mutationen ueber `ui/action-result.js` auf und liefert ausdruecklich `{ok:true,value}` bzw. `{ok:false,error}`. Eine erfolgreiche Mutation muss die Sammlung und das Lager erneut laden koennen, bevor eine View navigiert, ein Modal schliesst oder einen Erfolg meldet. Bei API- oder Ladefehlern wird der Fehler angezeigt und die aufrufende Funktion prueft `ok` statt einem falsy API-Ergebnis zu vertrauen. Destruktive Bestaetigungen bleiben bei Fehlschlag offen; `events.js` verhindert Mehrfachausloesung waehrend laufender Bestaetigung.
+
+Normale DOM-Eingaben werden auf dem stabilen Root in `events.js` delegiert. `scripts/check.js` lehnt neue Direktlistener in `views/` ab, sofern sie nicht explizit geprueft und der Ausnahmeliste hinzugefuegt werden. Fuer `home.js`, `map.js` und die Lager-Views bestehen begruendete Alt-Ausnahmen mit lokalem Widget-/Modal-Lebenszyklus. `detail.js` bindet keine Upload-Listener direkt an bei Teilrendern erhaltene Elemente. Der bestehende `shell.js`-Teilabgleich ist kein vollstaendiger DOM-Morpher und wird erst in B-1.2 konzeptionell ersetzt.
+
+### HTTP-Revalidierung statischer Dateien
+
+`server/http/static-files.js` setzt Dateivalidatoren (`ETag`, `Last-Modified`). Bei passenden `If-None-Match`-/`If-Modified-Since`-Bedingungen antwortet der Server mit `304 Not Modified` ohne erneute Dateiunterschiebung. Nicht versionierte statische Dateien (insbesondere die derzeitigen `/ai/vendor/`- und `/ai/models/`-URLs) verwenden `Cache-Control: no-cache` und muessen vor Wiederverwendung revalidiert werden. Fuer eindeutig hash- oder versionierte `/ai/`-Pfade ist eine immutable Langzeitablage moeglich. API-Daten werden hiervon **nicht** erfasst; ihre Cache-Strategie bleibt Teil B-2.
 
 `public/js/state.js` hält den flüchtigen Zustand (Route, Auswahl, Filter, Dialoge). Der Router in `public/js/navigation/` trennt URL/History, Seitenwechsel und Scrollverhalten. Views generieren HTML und rufen keine persistenten JSON-Schreibvorgänge auf.
 

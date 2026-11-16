@@ -822,7 +822,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         if (!photo.cutout) return;
         const result = await action(() => request(`/api/bottles/${encodeURIComponent(selection.bottleId)}/photos/${encodeURIComponent(selection.photoId)}/cutout`,
             {method:'DELETE'}));
-        if (result) {generation++; closeModal(true); toast(t('cutout.removed'));}
+        if (result.ok) {generation++; closeModal(true); toast(t('cutout.removed'));}
     }
 
     async function save() {
@@ -850,18 +850,28 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
                 if (selectedChanged) await selectForSave();
                 return callback ? await callback() : {ok:true};
             });
+            const finishSave = result => {
+                if (generation !== thisGeneration || !root()) return;
+                if (!result.ok) {
+                    message.textContent = result.error.message;
+                    return;
+                }
+                generation++;
+                closeModal(true);
+                toast(t('photoEditor.saved'));
+            };
             const savingCutout = Boolean(pendingCutout || (previewCutout && maskStrokes.length));
             // Merely showing a different variant is a preview-only operation.
             // Save commits that selection; unchanged settings must never trigger a
             // regeneration or deletion of an existing edited derivative.
             if (!savingCutout && !settingsChanged) {
                 const result = selectedChanged ? await commit() : {ok:true};
-                if (result && generation === thisGeneration) {generation++; closeModal(true); toast(t('photoEditor.saved'));}
+                finishSave(result);
                 return;
             }
             if (!savingCutout && Object.values(storedSettings).every(value => value === 0)) {
                 const result = await commit(() => request(endpoint(), {method:'DELETE'}));
-                if (result && generation === thisGeneration) { generation++; closeModal(true); toast(t('photoEditor.saved')); }
+                finishSave(result);
                 return;
             }
             // Export the current RAW base (original or new transparent cutout) once.
@@ -917,11 +927,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
             const result = await commit(() => request(target, {
                 method: 'PUT', body: JSON.stringify(payload)
             }));
-            if (result && generation === thisGeneration) {
-                generation++;
-                closeModal(true);
-                toast(t('photoEditor.saved'));
-            }
+            finishSave(result);
         } catch (error) {
             if (generation === thisGeneration && root()) {
                 toast(error.message, true);

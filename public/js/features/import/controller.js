@@ -189,7 +189,7 @@ export function createExternalImport({
             });
             return true;
         });
-        if (result) {
+        if (result.ok) {
             markImageAttached();
             closeModal();
             toast(t("imports.images.savedLocally", {source: sourceName}));

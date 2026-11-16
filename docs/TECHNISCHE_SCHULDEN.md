@@ -1,16 +1,19 @@
 # Technische Schulden und bewusste Grenzen
 
-**Stand:** v0.28.8. Das historische Wartungsreview v0.15.12 steht weiter unten. Aktuelle, noch nicht behobene Risiken aus dem Code-Review v0.28.6 sind hier nach Dringlichkeit dokumentiert.
+**Stand:** v0.28.9. Das historische Wartungsreview v0.15.12 steht weiter unten. Aktuelle, noch nicht behobene Risiken aus dem Code-Review v0.28.6 sind hier nach Dringlichkeit dokumentiert.
 
-## Code-Review v0.28.6: umgesetzte und offene Befunde (Stand v0.28.8)
+## Code-Review v0.28.6: umgesetzte und offene Befunde (Stand v0.28.9)
 
 **In v0.28.8 erledigt:** A-1 (Upload-Mehrfachlistener durch delegierte Eingaben ersetzt, Browser-Regressionstest), A-2 (Browser-Testannahmen und unbewertete Flight-Eintraege korrigiert, DOM-Chromium 80 bestanden, 1 History-Test uebersprungen), B-2.1 (Flight-Referenzen per Map validiert). Die echten CI-Browserlaeufe sind noch zu bestaetigen.
 
-**Im naechsten Bugfix gesondert bearbeiten:**
+**In v0.28.9 erledigt:**
 
-- **A-3 / Fehlerbehandlung:** `action()` darf einen fehlgeschlagenen API-Aufruf nicht als Erfolg erscheinen lassen. Navigation, Modal-Schliessen und Loeschen muessen einen klaren Erfolgsstatus auswerten. Regressionstest fuer fehlgeschlagenes Loeschen einer Verkostung.
-- **A-4 / Statische Dateien:** `ETag`/`Last-Modified` und `304 Not Modified` implementieren, besonders fuer grosse AI-Dateien. Cache-Policy fuer versionierte Artefakte gesondert klaeren.
-- **B-1.1 / Event-Lebenszyklen:** Rendernahe Listener in `public/js/views/**` gezielt auditieren und delegieren oder an einen nachweislich einmaligen Lebenszyklus binden. Erst danach eine passende statische Architekturregel einfuehren. Nicht alle Canvas-/Map-Listener sind automatisch fehlerhaft.
+- **A-3 / Fehlerbehandlung:** `action()` gibt `{ok,value}` oder `{ok:false,error}` zurueck. Bestätigungsaktionen, Editorformulare, Import, Einstellungen, Fotoeditor und Uploads pruefen den Erfolg vor Folgeaktionen. Bei fehlgeschlagenem DELETE bleibt die betroffene Verkostung sichtbar und die Bestaetigung kann erneut versucht oder abgebrochen werden. Unit-Tests und ein Chromium-Regressionstest sind vorhanden (Browserausfuehrung noch offen).
+- **A-4 / Statische Dateien:** `ETag` (Dateigroesse und Aenderungszeit), `Last-Modified` und bedingte GETs (304 ohne Body) fuer statische Seiten, Medien, Vendor-Module und KI-Dateien. Nicht versionierte `/ai/`-URLs bleiben `no-cache`; ausschliesslich eindeutig versionierte/hashbasierte AI-Pfade duerfen immutable sein. HTTP-Integrationstest vorhanden.
+- **B-1.1 / Neue Direktlistener:** `scripts/check.js` schlaegt bei neu hinzugefuegten `addEventListener`-Aufrufen in Views fehl. Bereits vorhandene view-lokale Bindungen in `home.js`, `map.js`, `warehouse.js` und `warehouse-room-transfer.js` sind als begrenzte, explizite Ausnahmen erfasst. Keine pauschale Behauptung, alle Listener seien bereits delegiert.
+- **CI-Teststatus:** Der Regressionsfehler des Tests `teststatus.test.js` aus v0.28.8 ist behoben: Auch der Status `80 bestanden, 0 fehlgeschlagen, 1 uebersprungen` wird als eindeutig positives Browserresultat erkannt.
+
+**Weiterhin pruefen:** Bereits zugelassene Direktlistener und deren Lebenszyklen bei kommenden Rendering-Umbauten; Lauf der Browser-Regressionstests und reale GitHub Actions. Der spaetere Wegfall der Ausnahmeliste ist Teil von B-1.2.
 
 **Als eigene Architektur-Releases planen (keine beiläufige Migration):**
 
