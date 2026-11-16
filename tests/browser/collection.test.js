@@ -803,7 +803,13 @@ test('browser: six bottlings still use four columns on desktop', async () => {
         assert.equal((await requestJson(base, '/api/import/json', 'POST', collection)).status, 200);
         await open();
         assert.equal(await page.locator('.whisky-card').count(), 6);
-        assert.equal(await page.locator('.grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), 4);
+        const layout = await page.locator('.grid').evaluate(el => {
+            const css = getComputedStyle(el);
+            const title = getComputedStyle(el.querySelector('.card-body h3'));
+            return {display:css.display,columns:css.gridTemplateColumns.split(' ').length,
+                align:css.alignItems,autoRows:css.gridAutoRows,titleMinHeight:title.minHeight};
+        });
+        assert.deepEqual(layout, {display:'grid',columns:4,align:'stretch',autoRows:'auto',titleMinHeight:'0px'});
         assert.equal(await page.locator('#pagination-size').inputValue(), '24');
     });
 });

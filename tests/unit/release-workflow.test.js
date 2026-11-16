@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { compareVersions, nextVersion, parseVersion, updateReadmeTitle, pendingTestStatus, verifyReleaseMetadata } from '../../scripts/release-version.js';
+import { compareVersions, nextVersion, parseVersion, updateReadmeTitle, pendingTestStatus, compactTestReport, verifyReleaseMetadata } from '../../scripts/release-version.js';
 import { prohibitedReleasePath } from '../../scripts/verify-release-files.js';
 const read = file => fs.readFileSync(file, 'utf8');
 
@@ -137,6 +137,20 @@ test('release:bump updates the test status and archives old results without clai
     } finally {
         fs.rmSync(temp, {recursive: true, force: true});
     }
+});
+
+test('past test runs are archived as concise factual outcomes without copying outdated prose', () => {
+    const old = '# Teststatus - Whisky Collection Manager v1.1.0\n\n'
+        + '| Pruefung | Ergebnis | Einordnung |\n| --- | --- | --- |\n'
+        + '| `npm test` | **569/569 bestanden** | Vollstaendig. |\n'
+        + '| `npm run test:browser` (vollstaendige Suite) | **Bestanden (CI)** | Auf GitHub. |\n'
+        + '## Veralteter Abschnitt\n' + 'Alte Version '.repeat(1000);
+    const summary = compactTestReport('1.1.0', old);
+    assert.match(summary, /569\/569 bestanden/);
+    assert.match(summary, /npm run test:browser \(vollstaendige Suite\): Bestanden \(CI\)/);
+    assert.doesNotMatch(summary, /Veralteter Abschnitt|Alte Version/);
+    assert.ok(summary.length < 220, 'release snapshots should remain compact');
+    assert.match(compactTestReport('0.16.11', '341/341 bestanden'), /341\/341 bestanden/);
 });
 
 test('pending test report is truthful and retains browser visibility', () => {

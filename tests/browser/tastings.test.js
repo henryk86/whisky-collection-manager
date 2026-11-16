@@ -547,3 +547,34 @@ test('browser: one upload selection stores exactly one photo and one file after 
         assert.equal(stored.files.length, 1);
     });
 });
+
+
+test('browser: tasting overview preserves DOM when chooser opens, and flight creation avoids warehouse reload', async () => {
+    await session(async ({page,base,open}) => {
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();
+        const heading = page.locator('.tasting-home-page .analytics-page-heading');
+        await heading.waitFor();
+        await heading.evaluate(node => {window.__tastingHeading=node;});
+        await page.locator('[data-act="tastings-start-choice"]').click();
+        assert.ok(await page.locator('.tasting-create-chooser').isVisible());
+        assert.ok(await heading.evaluate(node => node===window.__tastingHeading),
+            'Opening the chooser must not replace the existing overview heading');
+        await page.locator('[data-act="tastings-start-choice"]').click();
+        assert.equal(await page.locator('.tasting-create-chooser').count(),0);
+        assert.ok(await heading.evaluate(node => node===window.__tastingHeading),
+            'Closing the chooser must retain the overview heading');
+        const warehouseGets=[];
+        page.on('request', req => {
+            if(req.method()==='GET' && new URL(req.url()).pathname==='/api/warehouse') warehouseGets.push(req.url());
+        });
+        await page.locator('[data-act="tasting-flight-new"]').click();
+        await page.locator('#modal-root [data-flight-name]').fill('Scoped flight refresh');
+        await page.locator('#modal-root [data-act="tasting-flight-create-confirm"]').click();
+        await page.locator('.tasting-flight-page').waitFor();
+        assert.equal(warehouseGets.length,0,'A flight mutation must not reload the warehouse');
+        const result=await requestJson(base,'/api/collection');
+        assert.ok(result.data.tastingFlights.some(item=>item.name==='Scoped flight refresh'));
+    });
+});

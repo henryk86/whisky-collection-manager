@@ -143,7 +143,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'tasting-delete': button => confirmInModal(t('tastings.delete'),t('tastings.deleteConfirm'),async()=>{
             const id=button.dataset.tastingId;
             const external=state.page==='external-tasting';
-            const result = await action(()=>request(external?`/api/external-tastings/${encodeURIComponent(id)}`:`/api/bottlings/${encodeURIComponent(state.selected)}/tastings/${encodeURIComponent(id)}`,{method:'DELETE'}));
+            const result = await action(()=>request(external?`/api/external-tastings/${encodeURIComponent(id)}`:`/api/bottlings/${encodeURIComponent(state.selected)}/tastings/${encodeURIComponent(id)}`,{method:'DELETE'}), {scope:'collection'});
             if (!result.ok) return result;
             navigate(external?'tastings-home':'tastings',external?null:state.selected,{replace:true});
             return result;

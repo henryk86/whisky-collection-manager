@@ -15,7 +15,7 @@ export function reorderedPhotoIds(ids, photoId, targetId) {
 async function savePhotoOrder(bottleId, ids, action) {
     const result = await action(() => request(`/api/bottles/${encodeURIComponent(bottleId)}/photos/order`, {
         method: 'PUT', body: JSON.stringify({ photoIds: ids })
-    }));
+    }), {scope:'collection'});
     if (result.ok) toast(t('features.notifications.photoOrderSaved'));
 }
 

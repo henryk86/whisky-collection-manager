@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 - 2026-11-16
+
+- Review B-1: Generischen DOM-Abgleich fuer die Verkostungsstartseite und Verkostungslisten aktiviert, nicht fuer den Editor oder die Flight-Drag-Ansicht.
+- Review B-2: Verkostungs-/Flight-Mutationen und gespeicherte Fotoreihenfolgen laden nur die Sammlung; unbeteiligte Lagerdaten werden nicht erneut abgefragt.
+- Review B-5: Zwei fragile CSS-/Quelltext-Regex-Tests durch Browser-Pruefungen berechneter Layoutregeln ersetzt; Chromium-Test fuer Verkostungs-UI und scoped Refresh ergaenzt.
+- Review B-6: Kuenftige Release-Bumps archivieren kompakte historische Testergebnisse statt den ganzen alten Teststatus zu duplizieren.
+
 ## 1.1.0 - 2026-11-16
 
 - Review B-1/B-2/B-6: DOM-Abgleich fuer Settings/Hilfe, gezielter Sammlungsrefresh und sicheres Upgrade-Audit

@@ -10,7 +10,9 @@ export function createShell({ root, state, applyTheme, renderModal }) {
         // especially after deleting a photo or attachment. Only actual route
         // changes require a full shell; they scroll to the top in navigation.
         const route = [state.page, state.selected, state.tastingId, state.flightId].join('::');
-        const liveRegions = ['detail', 'settings', 'help'].includes(state.page);
+        // Tasting overviews use only delegated controls; the editor and flight drag
+        // surface retain their explicit full-render lifecycle for now.
+        const liveRegions = ['detail', 'settings', 'help', 'tastings-home', 'tastings', 'external-tastings'].includes(state.page);
         const main = root.querySelector?.(':scope > main');
         if (main && displayedRoute === route) {
             const scrollY = typeof window !== 'undefined' ? window.scrollY : null;

@@ -2994,3 +2994,9 @@ Zusatzpruefungen: Schema-4-Upgrade mit realen Flaschenfotos, PDF-Beleg und Lager
 - Neuer Browser-Loeschregressionstest wechselt wie die UI in den Bearbeitungsmodus, bevor er die Loeschschaltflaeche verwendet; das Verhalten bei HTTP 500 wird weiterhin geprueft.
 
 **Freigaberegel:** Der Anwender hat einen gruenen CI-Browserlauf fuer v1.0.2 gemeldet. Kuenftige Releases muessen ihre eigene vollstaendige CI-Browserpruefung bestehen.
+
+---
+
+## Testbericht v1.1.0
+
+- npm run release:check: Erfolgreich; npm run check: Erfolgreich; npm test: 569/569 bestanden; npm run test:browser (vollstaendige Suite): Bestanden (CI laut Anwender); GitHub Actions / v1.1.0: Gruen gemeldet (Anwender)

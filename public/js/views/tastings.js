@@ -302,7 +302,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             const flight=await request('/api/tasting-flights',{method:'POST',body:JSON.stringify({name:name.value,date:date.value,notes:box.querySelector('[data-flight-notes]')?.value || ''})});
             closeModal();
             state.page='tastings-home';
-            await refresh();
+            await refresh('collection');
             navigate('tasting-flight',flight.id);
         } catch(error) {toast(error.message,true);}
         finally {flightCreating=false;}
@@ -369,13 +369,13 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         try {
             await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}`,{method:'PATCH',body:JSON.stringify({name:name.value,date:date.value,notes})});
             flightEditing=false;
-            await refresh();
+            await refresh('collection');
         } catch(error) {toast(error.message,true);}
     }
     async function updateFlightMembers(ids) {
         try {
             await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}/tastings`,{method:'PUT',body:JSON.stringify({tastingIds:ids})});
-            await refresh();
+            await refresh('collection');
         } catch(error) {toast(error.message,true);}
     }
     function reorderFlightMember(sourceId,targetId,after) {
@@ -405,7 +405,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}`,{method:'DELETE'});
             closeModal();
             state.page='tastings-home';
-            await refresh();
+            await refresh('collection');
             navigate('tastings-home',null,{replace:true});
             return true;
         } catch(error) {toast(error.message,true);return false;}
@@ -557,7 +557,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
                 method:'POST',body:JSON.stringify(data)
             });
             const created=flightId ? response.record : response;
-            await refresh();
+            await refresh('collection');
             navigate(editPage(session.external),session.external?created.id:session.bottlingId,{tastingId:session.external?null:created.id,flightId,replace:true});
         } catch(error) { toast(error.message,true); }
     }
@@ -669,7 +669,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             closeModal();
             // Refresh while on the overview, so the removed external URL cannot redirect.
             state.page='tastings-home';
-            await refresh();
+            await refresh('collection');
             navigate('tasting',result.bottlingId,{tastingId:result.tastingId,replace:true});
         } catch(error) {
             toast(error.message,true);

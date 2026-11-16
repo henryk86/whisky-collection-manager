@@ -107,14 +107,28 @@ Nach Durchfuehrung der Pruefungen die Ergebnisse und ihre Grenzen hier dokumenti
 `;
 }
 
+/** Preserve factual test outcomes without copying entire old release reports.
+ * Detailed report changes are already retained in Git history. */
+export function compactTestReport(version, source) {
+    const checks = ['npm run release:check', 'npm run check', 'npm test', 'npm run test:browser', 'GitHub Actions'];
+    const rows = source.split('\n').filter(line => line.startsWith('| '));
+    const statuses = rows.map(row => row.split('|').slice(1, 3).map(cell => cell.trim().replaceAll('`', '').replaceAll('**', '')))
+        .filter(([name, result]) => checks.some(check => name === check || name.startsWith(`${check} `) || name.startsWith(`${check} /`)) && result)
+        .map(([name, result]) => `${name}: ${result}`);
+    if (!statuses.length) {
+        // Older reports predate the table format. Keep the test-count evidence.
+        const count = source.match(/\b\d+\/\d+\s+bestanden\b/i)?.[0];
+        if (count) statuses.push(`Tests: ${count}`);
+    }
+    if (!statuses.length) statuses.push('kein maschinenlesbares Testergebnis im alten Status');
+    return `## Testbericht v${version}\n\n- ${statuses.join('; ')}\n`;
+}
+
 function archivePreviousTestStatus(version, source) {
-    const header = `## Testbericht v${version} (vor dem naechsten Versionswechsel)`;
+    const header = `## Testbericht v${version}`;
     const history = read('docs/TESTHISTORIE.md');
     if (history.includes(header)) return;
-    // Demote former H2 headings under the archived report's H2.
-    const report = source.replace(/^## /gm, '### ')
-        .replace(/^# Teststatus[^\n]*\n/, `${header}\n`);
-    write('docs/TESTHISTORIE.md', `${history.trimEnd()}\n\n---\n\n${report.trim()}\n`);
+    write('docs/TESTHISTORIE.md', `${history.trimEnd()}\n\n---\n\n${compactTestReport(version, source)}`);
 }
 
 function bump(part, note) {

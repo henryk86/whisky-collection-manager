@@ -27,7 +27,7 @@ Jeder Release erhaelt eine neue Version. Der Versionstyp wird vor dem Bump anhan
 
 ### Version auf develop vorbereiten
 
-Vor **jedem Merge nach `main`** die Version einmal erhoehen, da jeder Merge genau einen neuen Release erzeugt. Der Befehl aktualisiert `package.json`, `package-lock.json`, den README-Titel, den Changelog und `docs/TESTSTATUS.md`. Dabei wird der vorherige Testbericht nach `docs/TESTHISTORIE.md` archiviert. Der neue Teststatus wird wahrheitsgemaess auf **noch nicht ausgefuehrt** gesetzt:
+Vor **jedem Merge nach `main`** die Version einmal erhoehen, da jeder Merge genau einen neuen Release erzeugt. Der Befehl aktualisiert `package.json`, `package-lock.json`, den README-Titel, den Changelog und `docs/TESTSTATUS.md`. Dabei werden die Ergebnisse der vorherigen Testpruefungen als **kompakte Zeile** nach `docs/TESTHISTORIE.md` archiviert; vollstaendige fruehere Statusdateien bleiben in der Git-Historie verfuegbar, ohne bei jedem Release erneut in die Dokumentation kopiert zu werden. Der neue Teststatus wird wahrheitsgemaess auf **noch nicht ausgefuehrt** gesetzt:
 
 ```bash
 # Auf develop; Beispiel fuer einen Patch-Release:
