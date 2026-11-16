@@ -53,6 +53,8 @@ Die Breite aller Hauptseiten wird allein vom gemeinsamen `main` in `public/style
 
 `npm test` entdeckt alle `*.test.js` unter `tests/unit/` und `tests/integration/` mit Node-eigenem Test-Runner. Keine Bash-Globs, damit derselbe Aufruf auch unter Windows funktioniert. OpenSSL ist für den TLS-Integrationstest erforderlich; ohne OpenSSL wird dieser Test explizit ausgelassen.
 
+Integrationstests starten über `tests/helpers/server.js` jeweils einen eigenen kurzlebigen Node-Prozess mit eigenem Datenverzeichnis. Der Server bindet selbst einen freien Port (`listen(0)`), meldet den tatsächlich gebundenen Port per IPC und wird erst danach von seinem Test verwendet. Einen zuvor getesteten Port **nicht** freigeben und an einen neuen Prozess weiterreichen: Bei parallelen CI-Workern führt das zu Portkollisionen und unbeabsichtigten Zugriffen auf fremde Testdaten. `tests/integration/server-isolation.test.js` prüft vier gleichzeitig gestartete Server. Der Produktions-Serverstart bleibt unverändert.
+
 `npm run check` prüft JavaScript-Syntax, statische relative ES-Modulimporte, Übersetzungsschlüssel und lokale Markdown-Links. Es meldet fehlende Zieldateien, Importzyklen und nicht auflösbare Dokumentationslinks. Es ist **kein** vollständiger Linter, TypeScript-Compiler oder Security-Audit. JSDoc in `shared/types.js` dokumentiert das Datenmodell, erzwingt aber keine statische Typprüfung.
 
 Browser-Tests:

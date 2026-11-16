@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.28.7 - 2026-11-16
+
+- Race-Condition in der Testserver-Portvergabe beseitigt: Jeder isolierte Integrationstest-Server bindet selbst einen freien Port und meldet ihn erst nach erfolgreichem Start per IPC.
+- Regressionstest fuer parallele Testserver und getrennte Sammlungsdaten ergaenzt.
+
 ## 0.28.6 - 2026-11-16
 
 - Beim Loeschen von Fotos und Dateien sowie anderen Aktualisierungen derselben Seite bleibt die Scrollposition ohne Sprung oder sanftes Zurueckscrollen erhalten.

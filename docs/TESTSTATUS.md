@@ -1,23 +1,22 @@
-# Teststatus - Whisky Collection Manager v0.28.6
+# Teststatus - Whisky Collection Manager v0.28.7
 
-**Stand:** 2026-11-16. **Status:** Unit-/Integrationstests und gezielte Chromium-Pruefungen erfolgreich; vollstaendige Browser-Suite sowie reale Mobilgeraete noch offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-16. **Status:** Lokale Unit-/Integrationstests und parallele Testserver-Pruefung erfolgreich; GitHub-CI, vollstaendige Browser-Suite und Zielsystempruefungen noch offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Erfolgreich** | Release-Metadaten v0.28.6 konsistent. |
-| `npm run check` | **Erfolgreich** | JavaScript, Sprachkataloge und Dokumentationslinks. |
-| `npm test` | **557/557 bestanden** | Vollstaendige Unit-/Integrationstests. |
-| Chromium-DOM-Pruefung mit realer App | **Erfolgreich** | Acht Testfotos; Loeschen eines mittleren und des ersten Fotos sowie eines PDF-Nachweises: kein Sprung des Seiteninhalts, sofortige Scrollwiederherstellung. |
-| `npm run test:browser` (vollstaendig) | **Nicht lokal ausgeführt** | Neuer Browser-Regressionstest vorhanden, vollstaendiger Runner steht noch aus. |
-| Echte iOS-/Android-Geraete | **Nicht lokal ausgeführt** | Scroll-Lock auf Safari und anderen Mobilbrowsern separat pruefen. |
-| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Auf Zielsystem pruefen. |
+| `npm run release:check` | **Erfolgreich** | Versionsangaben v0.28.7 konsistent. |
+| `npm run check` | **Erfolgreich** | Syntax, Importgraph, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **558/558 bestanden** | Vollstaendige Unit-/Integrationstests. |
+| Tests zu `api.test.js`, `http.test.js`, `server-isolation.test.js` | **5 x 20/20 bestanden** | Wiederholte parallele Starts, HTTP-Zugriff, persistente Trennung und atomare Speicherung. |
+| `npm run test:browser` | **Nicht lokal ausgefuehrt** | Browserabhaengigkeit `playwright-core` in diesem Arbeitsverzeichnis nicht installiert. |
+| GitHub Actions | **Noch nicht ausgefuehrt** | Gemeldete CI-Race-Condition nach PR/Push erneut im CI bestaetigen. |
+| Docker-Image / ARM64-Live-Test | **Nicht lokal ausgefuehrt** | Produktionsserver wurde nicht geaendert. |
 
-## Aenderungen v0.28.6
+## Aenderungen v0.28.7
 
-- Bei Updates derselben Ansicht bleiben Header und modale Ebene bestehen. Die Abfuellungsdetailseite ersetzt nur veraenderte Abschnitte, statt das gesamte Dokument kurz zu entfernen.
-- Bestaetigungsdialoge stellen die Scrollposition sofort wieder her, ohne die globale sanfte Scrollanimation auszuloesen.
-- Bei einer neuen Titelfotografie bleibt die zuvor sichtbare Bildhoehe bis zum Laden des Ersatzfotos reserviert.
-- Foto-Sortierung wird bei wiederverwendeten Galerieelementen nur einmal angebunden.
-- Eine Browser-Regression gegen sichtbare Scrollspruenge beim Loeschen von Fotos und Nachweisen wurde ergaenzt.
+- Die Integrationstesthilfe ueberlaesst die Portwahl dem bindenden Kindprozess (`listen(0)`) und wartet auf dessen IPC-Startmeldung. Ein anderer Testprozess kann dadurch nicht mehr irrtuemlich als eigener Server erkannt werden.
+- Testserver und produktiver Serverstart bleiben getrennt: keine Aenderung an Endpunkten, JSON-Schema, Ports im Betrieb oder Sammlungsdaten.
+- Neuer Integrationstest startet vier Server parallel und prueft getrennte Ports und Sammlungen.
+- Anlass: In GitHub Actions schlug ein API-Test mit `fetch failed` fehl; ein anderer Test fand Daten aus einer parallelen Test-Session in seiner Collection.
