@@ -1,14 +1,14 @@
 # Architektur und Orientierung
 
-**Stand:** v0.28.9 (aktualisierte Fehler- und Event-Regeln; der komplette Modulbestand wird bei B-4 separat bereinigt). Dieses Dokument beschreibt die eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
+**Stand:** v1.0.0 (Shared-Module, HTTP-Cache, Schema 5 und DOM-Regionen). Dieses Dokument beschreibt die eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
 
 ## Grundprinzipien
 
 - **Eine Anwendung:** Node.js-Server mit nativen Browser-ES-Modulen; kein Bundler, Frontend-Framework und keine Datenbank.
-- **Zwei getrennte Datenmodelle:** `collection.json` (Schema 4) für die Sammlung und `warehouse.json` (Schema 1) für die physische Lageranordnung. Die Lagerzuordnung verweist mit stabilen Flaschen-/Fach-IDs auf die Sammlung.
+- **Zwei getrennte Datenmodelle:** `collection.json` (Schema 5) für die Sammlung und `warehouse.json` (Schema 1) für die physische Lageranordnung. Die Lagerzuordnung verweist mit stabilen Flaschen-/Fach-IDs auf die Sammlung.
 - **Server entscheidet über Datenänderungen:** UI-Validierung hilft beim Ausfüllen, ersetzt aber keine serverseitigen Fachregeln. Schreiben ist serialisiert, validiert und atomar pro Datei.
 - **Darstellung ist kein Datenmodell:** 2D-/3D-Geometrie und Statistikwerte werden abgeleitet; sie verändern die Quelldaten nicht.
-- **Sicherheit und Kompatibilität:** Keine Änderung an API, JSON-Schemata, Laufzeitpfaden oder vorhandenen Migrationen allein durch eine interne Umstrukturierung.
+- **Versionierte Datenformate:** Schema 5 ist ein bewusster inkompatibler Schnitt; frühere Sammlungen werden bei einem Neustart archiviert, nicht migriert.
 
 ## Repository im Überblick
 
@@ -32,10 +32,10 @@ server/
   domain/                     Validierung und fachliche Regeln
     warehouse-fields.js       Reine Lager-Eingabenormalisierung und -prüfungen
   services/                   CRUD-Anwendungsfälle und Integrationen
-  storage/                    JSON-Dateien, Medien, Migrationen
+  storage/                    JSON-Dateien, atomare Writes und Lesecaches
   http/                       Request-/Response- und Static-File-Helfer
 worker/                        Zeitgesteuerte Backup-Aufträge
-shared/                        Backup-Format, Passwort-/Modellkontrakte
+shared/                        DOM-freie Fachlogik, Validierung und Backup-Format
 (separates privates Repository)  Optionale Browser-Erweiterung, nicht im WCM-Release
 scripts/                       Qualitäts-, Release- und Setup-Skripte
 tests/                         Unit-, Integration- und Browserprüfungen
@@ -58,11 +58,11 @@ Benutzeraktion
 
 `public/app.js` ruft Mutationen ueber `ui/action-result.js` auf und liefert ausdruecklich `{ok:true,value}` bzw. `{ok:false,error}`. Eine erfolgreiche Mutation muss die Sammlung und das Lager erneut laden koennen, bevor eine View navigiert, ein Modal schliesst oder einen Erfolg meldet. Bei API- oder Ladefehlern wird der Fehler angezeigt und die aufrufende Funktion prueft `ok` statt einem falsy API-Ergebnis zu vertrauen. Destruktive Bestaetigungen bleiben bei Fehlschlag offen; `events.js` verhindert Mehrfachausloesung waehrend laufender Bestaetigung.
 
-Normale DOM-Eingaben werden auf dem stabilen Root in `events.js` delegiert. `scripts/check.js` lehnt neue Direktlistener in `views/` ab, sofern sie nicht explizit geprueft und der Ausnahmeliste hinzugefuegt werden. Fuer `home.js`, `map.js` und die Lager-Views bestehen begruendete Alt-Ausnahmen mit lokalem Widget-/Modal-Lebenszyklus. `detail.js` bindet keine Upload-Listener direkt an bei Teilrendern erhaltene Elemente. Der bestehende `shell.js`-Teilabgleich ist kein vollstaendiger DOM-Morpher und wird erst in B-1.2 konzeptionell ersetzt.
+Normale DOM-Eingaben werden auf dem stabilen Root in `events.js` delegiert. `scripts/check.js` lehnt neue Direktlistener in `views/` ab, sofern sie nicht explizit geprueft und der Ausnahmeliste hinzugefuegt werden. Fuer `home.js`, `map.js` und die Lager-Views bestehen begruendete Alt-Ausnahmen mit lokalem Widget-/Modal-Lebenszyklus. `detail.js` bindet keine Upload-Listener direkt an bei Teilrendern erhaltene Elemente. Die Detailseite nutzt `ui/dom-reconcile.js` mit stabilen `data-region`-Schluesseln anstelle des alten `outerHTML`-Sonderabgleichs. Andere Seiten ersetzen ihr Markup vorerst vollstaendig, weil einzelne Widgets weiterhin einen lokalen Lebenszyklus haben. Die Erweiterung und Browserabnahme dieser Regel bleiben offen.
 
 ### HTTP-Revalidierung statischer Dateien
 
-`server/http/static-files.js` setzt Dateivalidatoren (`ETag`, `Last-Modified`). Bei passenden `If-None-Match`-/`If-Modified-Since`-Bedingungen antwortet der Server mit `304 Not Modified` ohne erneute Dateiunterschiebung. Nicht versionierte statische Dateien (insbesondere die derzeitigen `/ai/vendor/`- und `/ai/models/`-URLs) verwenden `Cache-Control: no-cache` und muessen vor Wiederverwendung revalidiert werden. Fuer eindeutig hash- oder versionierte `/ai/`-Pfade ist eine immutable Langzeitablage moeglich. API-Daten werden hiervon **nicht** erfasst; ihre Cache-Strategie bleibt Teil B-2.
+`server/http/static-files.js` setzt Dateivalidatoren (`ETag`, `Last-Modified`). Bei passenden `If-None-Match`-/`If-Modified-Since`-Bedingungen antwortet der Server mit `304 Not Modified` ohne erneute Dateiunterschiebung. Nicht versionierte statische Dateien (insbesondere die derzeitigen `/ai/vendor/`- und `/ai/models/`-URLs) verwenden `Cache-Control: no-cache` und muessen vor Wiederverwendung revalidiert werden. Fuer eindeutig hash- oder versionierte `/ai/`-Pfade ist eine immutable Langzeitablage moeglich. Die API liefert fuer `GET /api/collection` und `GET /api/warehouse` revidierte ETags und `304` auf passende `If-None-Match`-Header. Der Browser laedt nach Mutationen erneut, nutzt aber bei unveraenderten Versionen seinen JSON-Cache. Beide Stores halten validierte Kopien im Arbeitsspeicher und erkennen extern ersetzte Dateien; Restore invalidiert beide Caches.
 
 `public/js/state.js` hält den flüchtigen Zustand (Route, Auswahl, Filter, Dialoge). Der Router in `public/js/navigation/` trennt URL/History, Seitenwechsel und Scrollverhalten. Views generieren HTML und rufen keine persistenten JSON-Schreibvorgänge auf.
 
@@ -83,13 +83,13 @@ HTTP(S)-Anfrage
 
 `server/storage/collection-store.js` besitzt die zentrale Schreibwarteschlange für die Sammlung. `server/storage/warehouse-store.js` besitzt eine **eigene** Warteschlange und Lager-Dateivalidierung. `services/warehouse.js` koordiniert Raum-, Möbel-, Fach- und Flaschenzuordnungen, die reinen Normalisierungsfunktionen sind in `domain/warehouse-fields.js`. Validierungsfehler müssen eine Transaktion vollständig verwerfen. Das garantiert Konsistenz innerhalb **eines Serverprozesses**; parallele Serverprozesse auf demselben Datenverzeichnis sind nicht vorgesehen.
 
-**Bewusste gemeinsame Fachbibliothek:** `public/js/domain/warehouse-compartments.js` und `warehouse-placement.js` enthalten **browserunabhängige** Fachhöhen-, Möbeltypen- und Kollisionsregeln. Browser und Node-Server importieren diese Module direkt, damit 2D-Drag, 3D-Modell und API dieselben Berechnungen verwenden. Trotz ihres Pfades unter `public/` enthalten sie weder DOM- noch Netzwerkzugriffe. Ein späterer Umzug in ein separates shared-Modulpaket erfordert eine entsprechende Browser-Import-/Static-File-Lösung und ist **nicht** Teil dieser kompatiblen Wartungsversion.
+**Gemeinsame Fachbibliothek:** Wiederverwendbare Domainmodule liegen unter `shared/`: Tasting-Logik, Farb-/Geschmacksprofile, Bildvalidierung und Lagerberechnungen. Browser-Module importieren dieselben ES-Module wie der Server. Der HTTP-Server liefert nur explizit erlaubte `/shared/*.js`-Module aus; Backup- und Node-only-Module bleiben privat. `scripts/check.js` verbietet Server-/Worker-Importe aus `public/js` sowie Shared-Importe aus `public/` und DOM-Zugriffe aus Shared-Modulen. Die Foto-Adjustment-Validierung ist von der Uebersetzung der Editor-Oberflaeche getrennt.
 
 ## Persistente Daten und Dateigrenzen
 
 ```text
 ${WCM_DATA_DIR}/storage/
-  data/collection.json         Sammlung, schemaVersion 4
+  data/collection.json         Sammlung, schemaVersion 5
   data/warehouse.json          Räume/Fächer/Zuordnungen, schemaVersion 1
   images/                      Fotos je physischer Flasche
   documents/                   Download-geschützte Anhänge je Flasche
@@ -98,7 +98,7 @@ ${WCM_DATA_DIR}/storage/
 
 Inventarnummern sind Strings (führende Nullen bleiben erhalten). In der Collection liegen `bottlings[].bottles[]`, in der Lagerdatei verweist `assignments[bottleId]` auf eine `shelfId`. Namen sind **keine** IDs. Die genaue Feldsemantik steht in [ANFORDERUNGEN](ANFORDERUNGEN.md), [LAGER](LAGER.md) und [API](API.md).
 
-Migrationen der Sammlung liegen in `server/storage/migrations.js`. Die Erweiterung vorhandener Daten darf Werte nicht still überschreiben. Die JSON-Datei wird nach Validierung atomar ersetzt; bei einer Migration wird das Original vorher gesichert. Fotos und Belege liegen auf dem Datenträger; eine bloße Collection-JSON-Sicherung erfasst diese **nicht**.
+Es gibt **keinen Schema-Migrationspfad**. Beim ersten Start mit einer alten Demo-Sammlung werden `collection.json` sowie die bisherige Lagerdatei getrennt in `backups/pre-schema5-…json` archiviert und nicht in Schema 5 umgewandelt. Anschliessend wird eine leere Schema-5-Sammlung angelegt; die Lagerdatei startet ebenfalls leer. Alte JSON-Importe werden abgelehnt, unbekannte neuere Schemata nicht angetastet. Die JSON-Datei wird nach Validierung atomar ersetzt. Fotos und Belege liegen auf dem Datenträger; eine reine Collection-JSON-Sicherung enthaelt sie **nicht**.
 
 ## Backup und Wiederherstellung
 
@@ -127,7 +127,7 @@ UI-Texte werden über `t(key, params)` aus `public/js/i18n/index.js` aufgelöst.
 
 ## Lokale Foto-Freistellung
 
-Die optionalen `photos[].cutout`-Daten werden zusammen mit den bestehenden physischen Flaschen in Schema 4 gespeichert. Modell-Ausführung, Originalbild-Vorschau und transparente Ausgabe liegen in `public/js/features/cutout/`; die Freistellungs-API liegt in `server/services/bottles.js` und unterliegt der normalen Persistenzvalidierung. Bilddateien bleiben in `storage/images`. Das Docker-Image stellt ONNX/WASM lokal aus `public/ai` bereit (siehe [PHOTO_FREISTELLUNG.md](PHOTO_FREISTELLUNG.md)); das Backend führt kein KI-Modell aus.
+Die optionalen `photos[].cutout`-Daten werden zusammen mit den bestehenden physischen Flaschen in Schema 5 gespeichert. Modell-Ausführung, Originalbild-Vorschau und transparente Ausgabe liegen in `public/js/features/cutout/`; die Freistellungs-API liegt in `server/services/bottles.js` und unterliegt der normalen Persistenzvalidierung. Bilddateien bleiben in `storage/images`. Das Docker-Image stellt ONNX/WASM lokal aus `public/ai` bereit (siehe [PHOTO_FREISTELLUNG.md](PHOTO_FREISTELLUNG.md)); das Backend führt kein KI-Modell aus.
 
 ## Externe Importdaten
 

@@ -30,15 +30,7 @@ export function sortedTastings(bottling) {
         b.id.localeCompare(a.id));
 }
 export function latestTasting(bottling) { return sortedTastings(bottling)[0] || null; }
-/** Legacy bottling fields are read-only projections for older clients. */
-export function syncTastingSummary(bottling) {
-    const last = latestTasting(bottling);
-    bottling.rating = last?.rating ?? null;
-    bottling.flavorProfile = last?.flavorProfile ?? null;
-    bottling.whiskyColor = last?.whiskyColor ?? null;
-    bottling.tastingNotes = last?.tastingNotes ?? emptyTastingNotes();
-}
-/** Older schema-v4 records without tastings stay readable; new records use only tastings. */
+/** The newest record is the sole rating source. No persisted summary or legacy fallback. */
 export function displayedTastingRating(bottling) {
-    return Array.isArray(bottling?.tastings) ? latestTasting(bottling)?.rating ?? null : bottling?.rating ?? null;
+    return latestTasting(bottling)?.rating ?? null;
 }

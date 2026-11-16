@@ -145,42 +145,6 @@ test('retired HTML import endpoint is unavailable', async () => {
         await ctx.stop();
     }
 });
-test('migration: old bottling images become photos of first physical bottle', async () => {
-    const ctx = await start();
-    try {
-        const created = await api(ctx.base, '/api/bottlings', 'POST', {
-            name: 'Legacy Sample'
-        });
-        const file = path.join(ctx.dir, 'data/collection.json');
-        const db = JSON.parse(fs.readFileSync(file));
-        db.bottlings[0].images = {
-            bottle: `images/${created.data.bottling.id}/bottle.jpg`, box: null
-        };
-        delete db.bottlings[0].bottles[0].photos;
-        fs.writeFileSync(file, JSON.stringify(db));
-        // Re-initialize through a separate server process, as with an application update.
-        const { initialize, read } = await import('../../server/storage/collection-store.js');
-        // The main process has a separate data directory; verify migration in a child process.
-        const migrated = await new Promise((resolve, reject) => {
-            const child = spawn(process.execPath, ['--input-type=module', '-e', `import {initialize,read} from './server/storage/collection-store.js';initialize();console.log(JSON.stringify(read().bottlings[0].bottles[0].photos));`], {
-                cwd: process.cwd(), env: {
-                    ...process.env, WHISKY_DATA_DIR: ctx.dir
-                }, stdio: ['ignore', 'pipe', 'pipe']
-            });
-            let out = '', err = '';
-            child.stdout.on('data', x => out += x);
-            child.stderr.on('data', x => err += x);
-            child.on('close', code => code === 0 ? resolve(JSON.parse(out)) : reject(Error(err)));
-        });
-        assert.equal(migrated.length, 1);
-        assert.equal(migrated[0].legacyType, 'bottle');
-        const updated = JSON.parse(fs.readFileSync(file));
-        assert.equal(updated.bottlings[0].images, undefined);
-    }
-    finally {
-        await ctx.stop();
-    }
-});
 test('blended malt: multiple constituent distilleries, brand, and CSV export', async () => {
     const ctx = await start();
     try {
@@ -228,110 +192,6 @@ test('blended malt: multiple constituent distilleries, brand, and CSV export', a
         await ctx.stop();
     }
 });
-test('migration: existing distilleryId is preserved as distilleryIds without losing photos', async () => {
-    const ctx = await start();
-    try {
-        const ds = (await api(ctx.base, '/api/collection')).data.distilleries[0];
-        const old = await api(ctx.base, '/api/bottlings', 'POST', {
-            name: 'Old Malt', distilleryId: ds.id
-        });
-        assert.equal(old.status, 201);
-        const file = path.join(ctx.dir, 'data/collection.json');
-        const db = JSON.parse(fs.readFileSync(file));
-        const b = db.bottlings.find(b => b.id === old.data.bottling.id);
-        b.distilleryId = ds.id;
-        delete b.distilleryIds;
-        fs.writeFileSync(file, JSON.stringify(db));
-        const child = spawn(process.execPath, ['--input-type=module', '-e', `import {initialize,read} from './server/storage/collection-store.js';initialize();console.log(JSON.stringify(read().bottlings[0]));`], {
-            cwd: process.cwd(), env: {
-                ...process.env, WHISKY_DATA_DIR: ctx.dir
-            }, stdio: ['ignore', 'pipe', 'pipe']
-        });
-        const output = await new Promise((resolve, reject) => {
-            let out = '', err = '';
-            child.stdout.on('data', c => out += c);
-            child.stderr.on('data', c => err += c);
-            child.on('close', code => code === 0 ? resolve(out) : reject(Error(err)));
-        });
-        const updated = JSON.parse(output);
-        assert.deepEqual(updated.distilleryIds, [ds.id]);
-        assert.equal(updated.distilleryId, undefined);
-        assert.equal(JSON.parse(fs.readFileSync(file)).bottlings[0].distilleryId, undefined);
-    }
-    finally {
-        await ctx.stop();
-    }
-});
-test('migration: legacy top-level bottles are nested, preserving IDs, photos, and inventory', async () => {
-    const ctx = await start();
-    try {
-        const created = await api(ctx.base, '/api/bottlings', 'POST', {
-            name: 'Legacy Bottling', firstBottle: {
-                inventoryNumber: '000772', status: 'open'
-            }
-        });
-        assert.equal(created.status, 201);
-        const file = path.join(ctx.dir, 'data/collection.json');
-        const db = JSON.parse(fs.readFileSync(file));
-        const bottle = db.bottlings[0].bottles[0];
-        bottle.photos.push({
-            id: 'photo-legacy', path: `images/${bottle.id}/photo-legacy.jpg`, createdAt: new Date().toISOString()
-        });
-        db.schemaVersion = 1;
-        db.bottles = [{
-                ...bottle, bottlingId: db.bottlings[0].id
-            }];
-        delete db.bottlings[0].bottles;
-        fs.writeFileSync(file, JSON.stringify(db));
-        const migrated = await new Promise((resolve, reject) => {
-            const child = spawn(process.execPath, ['--input-type=module', '-e', `import {initialize,read} from './server/storage/collection-store.js';initialize();console.log(JSON.stringify(read()));`], {
-                cwd: process.cwd(), env: {
-                    ...process.env, WHISKY_DATA_DIR: ctx.dir
-                }, stdio: ['ignore', 'pipe', 'pipe']
-            });
-            let out = '', err = '';
-            child.stdout.on('data', c => out += c);
-            child.stderr.on('data', c => err += c);
-            child.on('close', code => code === 0 ? resolve(JSON.parse(out)) : reject(Error(err)));
-        });
-        assert.equal(migrated.schemaVersion, 4);
-        assert.equal(Object.hasOwn(migrated, 'bottles'), false);
-        assert.equal(migrated.bottlings[0].bottles.length, 1);
-        assert.equal(migrated.bottlings[0].bottles[0].id, bottle.id);
-        assert.equal(migrated.bottlings[0].bottles[0].inventoryNumber, '000772');
-        assert.equal(migrated.bottlings[0].bottles[0].photos[0].path, bottle.photos[0].path);
-        assert.equal(Object.hasOwn(migrated.bottlings[0].bottles[0], 'bottlingId'), false);
-        assert.ok(fs.readdirSync(path.join(ctx.dir, 'backups')).some(name => name.startsWith('pre-migration-')));
-    }
-    finally {
-        await ctx.stop();
-    }
-});
-test('import accepts legacy collection and stores only nested bottles', async () => {
-    const ctx = await start();
-    try {
-        const original = (await api(ctx.base, '/api/collection')).data;
-        const d = original.distilleries[0];
-        const b = {
-            id: 'legacy-bottling', name: 'Legacy Import', distilleryId: d.id, createdAt: new Date().toISOString()
-        };
-        const old = {
-            ...original, schemaVersion: 1, bottlings: [b], bottles: [{
-                    id: 'legacy-bottle', bottlingId: b.id, inventoryNumber: '000900', labelCode: '', status: 'closed', photos: []
-                }], reservedInventoryNumbers: ['000900'], nextInventoryNumber: 901
-        };
-        const imported = await api(ctx.base, '/api/import/json', 'POST', old);
-        assert.equal(imported.status, 200, JSON.stringify(imported.data));
-        const after = (await api(ctx.base, '/api/collection')).data;
-        assert.equal(after.schemaVersion, 4);
-        assert.equal(Object.hasOwn(after, 'bottles'), false);
-        assert.equal(after.bottlings[0].bottles[0].id, 'legacy-bottle');
-        assert.deepEqual(after.bottlings[0].distilleryIds, [d.id]);
-    }
-    finally {
-        await ctx.stop();
-    }
-});
 test('physical bottle type: regular 700 ml and 30 ml sample under the same bottling', async () => {
     const ctx = await start();
     try {
@@ -356,7 +216,7 @@ test('physical bottle type: regular 700 ml and 30 ml sample under the same bottl
         assert.equal(changed.status, 200);
         assert.equal(changed.data.volumeMl, 50);
         const db = (await api(ctx.base, '/api/collection')).data;
-        assert.equal(db.schemaVersion, 4);
+        assert.equal(db.schemaVersion, 5);
         assert.equal(db.bottlings[0].volumeType, undefined);
         assert.deepEqual(db.bottlings[0].bottles.map(x => x.volumeType), ['standard', 'sample']);
         const csv = await fetch(ctx.base + '/api/export/csv');
@@ -391,7 +251,7 @@ test('legacy labelType is discarded on write and JSON import', async () => {
         const db = (await api(ctx.base, '/api/collection')).data;
         db.bottlings[0].bottles[0].labelType = 'qr';
         const imported = await api(ctx.base, '/api/import/json', 'POST', db);
-        assert.equal(imported.status, 200);
+        assert.equal(imported.status, 400, 'legacy import fields are no longer silently migrated');
         const after = (await api(ctx.base, '/api/collection')).data;
         assert.ok(!Object.hasOwn(after.bottlings[0].bottles[0], 'labelType'));
         const persisted = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json'), 'utf8'));
@@ -427,7 +287,7 @@ test('inventoryNumber is the only label identifier in JSON, API and CSV', async 
         assert.ok(csvText.includes('Inventarnummer'));
         assert.ok(!csvText.includes('Etikettencode'));
         const db = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json')));
-        assert.equal(db.schemaVersion, 4);
+        assert.equal(db.schemaVersion, 5);
         assert.equal(db.bottlings[0].bottles[0].inventoryNumber, '000123');
         assert.equal(db.bottlings[0].bottles[0].labelCode, undefined);
     }
@@ -435,79 +295,49 @@ test('inventoryNumber is the only label identifier in JSON, API and CSV', async 
         await ctx.stop();
     }
 });
-test('migration: legacy label-only bottle becomes an inventory number, keeping leading zeros', async () => {
+
+// No historical migration: old demo databases are archived verbatim, then reset.
+test('schema 5 starts with a new collection and retains old demo data only as a separate archive', async () => {
     const ctx = await start();
     try {
-        const created = await api(ctx.base, '/api/bottlings', 'POST', {
-            name: 'Old label'
+        const stored = path.join(ctx.dir, 'data/collection.json');
+        const original = JSON.parse(fs.readFileSync(stored, 'utf8'));
+        const warehouseFile=path.join(ctx.dir,'data/warehouse.json');
+        const obsoleteWarehouse={schemaVersion:1,rooms:[],assignments:{obsolete:'ghost-shelf'}};
+        fs.writeFileSync(warehouseFile,JSON.stringify(obsoleteWarehouse));
+        original.schemaVersion = 4;
+        original.bottlings = [{id:'obsolete',rating:75,legacyTastings:[]}];
+        fs.writeFileSync(stored, JSON.stringify(original));
+        const child = spawn(process.execPath, ['--input-type=module', '-e',
+            "import {initialize,read} from './server/storage/collection-store.js';initialize();console.log(JSON.stringify(read()));"], {
+            cwd:process.cwd(), env:{...process.env,WHISKY_DATA_DIR:ctx.dir}, stdio:['ignore','pipe','pipe']
         });
-        const file = path.join(ctx.dir, 'data/collection.json');
-        const db = JSON.parse(fs.readFileSync(file));
-        db.schemaVersion = 2;
-        db.bottlings[0].bottles[0].inventoryNumber = '';
-        db.bottlings[0].bottles[0].labelCode = '000077';
-        fs.writeFileSync(file, JSON.stringify(db));
-        const child = spawn(process.execPath, ['--input-type=module', '-e', "import {initialize,read} from './server/storage/collection-store.js';initialize();console.log(JSON.stringify(read()));"], {
-            cwd: process.cwd(), env: {
-                ...process.env, WHISKY_DATA_DIR: ctx.dir
-            }, stdio: ['ignore', 'pipe', 'pipe']
+        const reset = await new Promise((resolve,reject)=>{
+            let out='',err='';child.stdout.on('data',c=>out+=c);child.stderr.on('data',c=>err+=c);
+            child.on('close',code=>code===0?resolve(JSON.parse(out)):reject(Error(err)));
         });
-        const data = await new Promise((resolve, reject) => {
-            let stdout = '', stderr = '';
-            child.stdout.on('data', d => stdout += d);
-            child.stderr.on('data', d => stderr += d);
-            child.on('close', code => code === 0 ? resolve(JSON.parse(stdout)) : reject(Error(stderr)));
-        });
-        assert.equal(data.schemaVersion, 4);
-        assert.equal(data.bottlings[0].bottles[0].inventoryNumber, '000077');
-        assert.equal(data.bottlings[0].bottles[0].labelCode, undefined);
-        assert.ok(data.reservedInventoryNumbers.includes('000077'));
-        assert.ok(data.nextInventoryNumber >= 78);
-        assert.ok(fs.readdirSync(path.join(ctx.dir, 'backups')).some(n => n.startsWith('pre-migration-')));
-    }
-    finally {
-        await ctx.stop();
-    }
+        assert.equal(reset.schemaVersion,5);
+        assert.deepEqual(reset.bottlings,[]);
+        assert.deepEqual(reset.externalTastings,[]);
+        assert.equal(reset.tastingFlights.length,0);
+        const archives=fs.readdirSync(path.join(ctx.dir,'backups')).filter(name=>/^pre-schema5-\d/.test(name));
+        assert.equal(archives.length,1);
+        assert.deepEqual(JSON.parse(fs.readFileSync(path.join(ctx.dir,'backups',archives[0]))),original);
+        const warehouseArchives=fs.readdirSync(path.join(ctx.dir,'backups')).filter(name=>name.startsWith('pre-schema5-warehouse-'));
+        assert.equal(warehouseArchives.length,1);
+        assert.deepEqual(JSON.parse(fs.readFileSync(path.join(ctx.dir,'backups',warehouseArchives[0]))),obsoleteWarehouse);
+        assert.equal(fs.existsSync(warehouseFile),false);
+    } finally { await ctx.stop(); }
 });
-test('migration: conflicting legacy inventory and label values create an external report', async () => {
+test('JSON import rejects old schema and persisted summary fields', async () => {
     const ctx = await start();
     try {
-        await api(ctx.base, '/api/bottlings', 'POST', {
-            name: 'Old conflict', firstBottle: {
-                inventoryNumber: '000111'
-            }
-        });
-        const file = path.join(ctx.dir, 'data/collection.json');
-        const original = JSON.parse(fs.readFileSync(file));
-        original.schemaVersion = 2;
-        original.bottlings[0].bottles[0].labelCode = '000222';
-        fs.writeFileSync(file, JSON.stringify(original));
-        const child = spawn(process.execPath, ['--input-type=module', '-e', "import {initialize,read} from './server/storage/collection-store.js';initialize();console.log(JSON.stringify(read().bottlings[0].bottles[0]));"], {
-            cwd: process.cwd(), env: {
-                ...process.env, WHISKY_DATA_DIR: ctx.dir
-            }, stdio: ['ignore', 'pipe', 'pipe']
-        });
-        const result = await new Promise((resolve, reject) => {
-            let stdout = '', stderr = '';
-            child.stdout.on('data', d => stdout += d);
-            child.stderr.on('data', d => stderr += d);
-            child.on('close', code => code === 0 ? resolve({
-                bottle: JSON.parse(stdout), stderr
-            }) : reject(Error(stderr)));
-        });
-        assert.equal(result.bottle.inventoryNumber, '000111');
-        assert.equal(result.bottle.labelCode, undefined);
-        const backupDir = path.join(ctx.dir, 'backups');
-        const files = fs.readdirSync(backupDir);
-        const report = files.find(n => n.startsWith('inventory-conflicts-'));
-        assert.ok(report);
-        assert.match(result.stderr, /abweichende alte Etikettencodes/);
-        const conflicts = JSON.parse(fs.readFileSync(path.join(backupDir, report)));
-        assert.equal(conflicts[0].previousLabelCode, '000222');
-        const backup = files.find(n => n.startsWith('pre-migration-'));
-        assert.equal(JSON.parse(fs.readFileSync(path.join(backupDir, backup))).bottlings[0].bottles[0].labelCode, '000222');
-    }
-    finally {
-        await ctx.stop();
-    }
+        const current=(await api(ctx.base,'/api/collection')).data;
+        assert.equal((await api(ctx.base,'/api/import/json','POST',{...current,schemaVersion:4})).status,400);
+        const created=await api(ctx.base,'/api/bottlings','POST',{name:'New',firstBottle:{inventoryNumber:'000001'}});
+        assert.equal(created.status,201);
+        const after=(await api(ctx.base,'/api/collection')).data;
+        after.bottlings[0].rating=91;
+        assert.equal((await api(ctx.base,'/api/import/json','POST',after)).status,400);
+    } finally { await ctx.stop(); }
 });

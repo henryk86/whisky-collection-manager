@@ -1,12 +1,12 @@
 # Lokale HTTP-API
 
-Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 4`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Für die Sammlung gibt es **keinen allgemeinen Benutzerlogin**. Nur administrative Backup-Operationen verlangen einen separaten Schlüssel. Die Anwendung darf nicht ohne zusätzliche Zugriffskontrolle öffentlich erreichbar sein.
+Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 5`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Für die Sammlung gibt es **keinen allgemeinen Benutzerlogin**. Nur administrative Backup-Operationen verlangen einen separaten Schlüssel. Die Anwendung darf nicht ohne zusätzliche Zugriffskontrolle öffentlich erreichbar sein.
 
 POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB Anfrageinhalt. Ungültiges JSON und Nicht-Objekte werden mit 400 abgewiesen. Fehlerantwort für bekannte Fehler: `{ "error": "Invalid path.", "errorCode": "api.errors.invalidPath" }`; der `error`-Text ist als sicherer, englischer Fallback gedacht. Der Browser übersetzt `errorCode` mittels der Sprachkataloge `public/locales/de.json` und `en.json`. Bei bestimmten dynamischen Validierungen kann zusätzlich `errorParams` (z. B. `{ "field": "abv" }`) mitgeliefert werden. Für unbekannte Fehler liefert die API ausschließlich eine neutrale englische Meldung einschließlich HTTP-Status, ohne interne Fehlermeldungen offenzulegen. Bekannte Konflikte verwenden 409, nicht gefundene Ressourcen 404. Einzelheiten und beschreibbare Felder stehen in `server/routes.js` und `server/domain/normalization.js`.
 
 | Methode | Pfad | Ergebnis |
 | --- | --- | --- |
-| GET | `/api/collection` | Vollständige Sammlung, Schema 4, einschließlich optionaler `settings.establishedYear` |
+| GET | `/api/collection` | Vollständige Sammlung, Schema 5, einschließlich optionaler `settings.establishedYear`; `ETag`, `If-None-Match` → HTTP 304 |
 | PATCH | `/api/settings` | Gründungsjahr als `{ "establishedYear": 1992 }` speichern oder mit `null` entfernen; ganze Zahl von 1600 bis zum aktuellen Jahr |
 | GET | `/api/suggest-number` | `{ "number": "000001" }` als Vorschlag; noch nicht reserviert |
 | POST | `/api/bottlings` | Abfüllung mit erster physischer Flasche, Status 201 |
@@ -36,9 +36,8 @@ POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB
 ### Eigenständige Verkostungen je Abfüllung (v0.26.0)
 
 Eine Abfüllung kann 0–n unabhängige Verkostungen in `bottlings[].tastings[]`
-führen (weiterhin `schemaVersion: 4`). Das Array kann in älteren Sammlungen
-fehlen, ohne dass eine Datenmigration erforderlich ist. **Vorhandene
-Altbewertungen werden nicht automatisch zu Verkostungseinträgen umgewandelt.**
+führen (`schemaVersion: 5`). Dieses Array ist Pflicht; historische
+Verkostungsformate werden weder angenommen noch migriert.
 
 | Methode | Endpunkt | Funktion |
 | --- | --- | --- |
@@ -70,11 +69,10 @@ Notizfelder. Nicht freigegebene Felder und ungültige Eingaben werden abgelehnt.
 Die aktuelle Bewertung ist diejenige der Verkostung mit dem jüngsten Datum;
 bei Gleichstand entscheidet `createdAt` und danach die ID. **Eine letzte
 Verkostung ohne Bewertung bleibt unbewertet**, auch wenn ältere Bewertungen
-existieren. Die bestehenden Felder `rating`, `flavorProfile`, `whiskyColor` und
-`tastingNotes` an der Abfüllung sind bei neuen Verkostungen nur noch
-serverseitig abgeleitete Kompatibilitätswerte. Für Abfüllungen mit `tastings[]`
-sind sie über `PATCH /api/bottlings/:id` schreibgeschützt. Das vorhandene
-`legacyTastings`-Archiv bleibt unverändert und erzeugt keine neuen Einträge.
+existieren. Die Felder `rating`, `flavorProfile`, `whiskyColor` und `tastingNotes` existieren
+auf Abfüllungsebene nicht mehr. Diese Werte werden ausschließlich aus der
+jüngsten `tastings[]`-Verkostung abgeleitet, niemals redundant gespeichert.
+Ein `legacyTastings`-Archiv gibt es nicht mehr.
 
 JSON- und vollständige ZIP-Sicherungen enthalten alle `tastings[]`-Datensätze;
 CSV bleibt beim bisherigen Abfüllungs-/Flaschenexport.
@@ -89,7 +87,7 @@ Abfüllungsdetailseite und der globale App-Header bleiben unverändert.
 
 Die zweite Variante erzeugt **keine externe Abfüllung** und erlaubt keine
 Mehrfachverkostungen zu einem externen Whisky. Alle Informationen stehen in
-**einem** `externalTastings[]`-Eintrag (weiterhin `schemaVersion: 4`):
+**einem** `externalTastings[]`-Eintrag (weiterhin `schemaVersion: 5`):
 Tasting-Felder (Datum, Titel, Farbe, Profil, Nase, Geschmack, Abgang, Bewertung),
 `id`, `createdAt`, `updatedAt` und ein eingebettetes `bottling`-Objekt mit
 `name` (Pflicht), optional `distillery`, `bottler`, `ageYears`, `abv`,
@@ -123,7 +121,7 @@ speichert `flavorProfile: null`, wiederherstellbar über Rückgängig.
 
 Tasting-Flights sind optionale, nur für die Verkostungsorganisation verwendete
 Gruppen in `collection.json`. Sie verändern weder Sammlungsbestand noch
-Bewertungszusammenfassungen. Das Schema bleibt `schemaVersion: 4`.
+Bewertungszusammenfassungen. Die Daten liegen in `schemaVersion: 5`.
 
 | Methode | Endpunkt | Wirkung |
 | --- | --- | --- |
@@ -247,7 +245,7 @@ Nur Dateien, die genau dieser physischen Flasche zugeordnet sind, können über 
 
 ## Kompatibilität
 
-Inventarnummern sind Strings, nicht Zahlen. Veraltetes `labelCode` wird bei neuen API-Anfragen abgewiesen. `labelType` gehört nicht zu den beschreibbaren Feldern. Alte Sammlungen werden beim Import/Start einschließlich Schema 3 durch den Migrationspfad auf Schema 4 angehoben; neue Daten verwenden ausschließlich `inventoryNumber`.
+Inventarnummern sind Strings, nicht Zahlen. Veraltetes `labelCode` wird bei neuen API-Anfragen abgewiesen. `labelType` gehört nicht zu den beschreibbaren Feldern. Alte Sammlungen werden beim Import/Start einschließlich Schema 3 durch den Migrationspfad auf Schema 5 angehoben; neue Daten verwenden ausschließlich `inventoryNumber`.
 
 ## Kartenseite und Destilleriestandorte
 

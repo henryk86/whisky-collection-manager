@@ -7,7 +7,8 @@ import crypto from 'node:crypto';
 import { authorizeAdmin } from './backups.js';
 import { fail } from '../domain/errors.js';
 import { validate } from '../domain/validation.js';
-import { runExclusive } from '../storage/collection-store.js';
+import { runExclusive, invalidateCollectionCache } from '../storage/collection-store.js';
+import { invalidateWarehouseCache } from '../storage/warehouse-store.js';
 import { ROOT, BACKUP_DIR } from '../storage/paths.js';
 import { writeReadableZip, inspectReadableZip } from '../../shared/backup-zip.js';
 import { readBackupPassword } from '../../shared/backup-password.js';
@@ -124,6 +125,8 @@ export async function applyZip(req, id, input) {
                 moved.push(name);
             }
             finished = true;
+            invalidateCollectionCache();
+            invalidateWarehouseCache();
             fs.rmSync(dir, { recursive: true, force: true });
             return { applied: true, ...summary, safetyBackup: path.join('backups', safetyName),
                 message: 'Sicherung übernommen. Vorherige Sammlung als Sicherheits-ZIP gespeichert.' };

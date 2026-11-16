@@ -2,9 +2,9 @@
 import {read,change} from '../storage/collection-store.js';
 import {now,uid} from '../domain/collection.js';
 import {fail} from '../domain/errors.js';
-import {normalizeFlightFields,FLIGHT_LIMIT,allTastingReferences,flightEntries} from '../../public/js/domain/tasting-flights.js';
-import {normalizeTastingRecord,syncTastingSummary} from '../../public/js/domain/tasting-records.js';
-import {normalizeStandaloneTasting} from '../../public/js/domain/standalone-tastings.js';
+import {normalizeFlightFields,FLIGHT_LIMIT,allTastingReferences,flightEntries} from '../../shared/tasting-flights.js';
+import {normalizeTastingRecord} from '../../shared/tasting-records.js';
+import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
 
 const find=(collection,id)=>{
     const flight=(collection.tastingFlights || []).find(f=>f.id===id);
@@ -82,7 +82,7 @@ export function createTasting(id,body) {
         const record={...normalized,id:uid(),createdAt:timestamp,updatedAt:timestamp};
         if (owned) {
             (owned.tastings ||= []).push(record);
-            syncTastingSummary(owned);
+
             owned.updatedAt=timestamp;
         } else (collection.externalTastings ||= []).push(record);
         flight.tastingIds.push(record.id);

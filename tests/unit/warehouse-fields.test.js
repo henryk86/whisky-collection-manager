@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FURNITURE_TYPES, SHELF_FRONTS } from '../../public/js/domain/warehouse-compartments.js';
+import { FURNITURE_TYPES, SHELF_FRONTS } from '../../shared/warehouse-compartments.js';
 import { name, capacity, shelfFront, ensureShelfHeights, layout } from '../../server/domain/warehouse-fields.js';
 import { validateWarehouse } from '../../server/storage/warehouse-store.js';
 

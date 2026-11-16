@@ -44,3 +44,31 @@ export function httpResponseError(status, data) {
     if (translated && translated !== key) error.code = key;
     return error;
 }
+
+/** Local validator cache. A 304 reuses parsed JSON instead of transmitting MBs.
+ * API mutation results are never cached and an HTTP error never returns stale data. */
+const validatedResponses = new Map();
+export async function requestCachedJson(url) {
+    const previous = validatedResponses.get(url);
+    const headers = previous?.etag ? {'If-None-Match': previous.etag} : {};
+    let res;
+    try {
+        res = await fetch(url, {headers, cache: 'no-store'});
+    } catch (error) {
+        if (error?.name === 'AbortError') throw error;
+        throw new Error(t('errors.api.network'), {cause: error});
+    }
+    if (res.status === 304 && previous) return structuredClone(previous.data);
+    if (res.status === 304) {
+        // Defensive recovery if a proxy supplied 304 before any local data exists.
+        validatedResponses.delete(url);
+        return requestCachedJson(url);
+    }
+    let data;
+    try { data = await res.json(); } catch { data = null; }
+    if (!res.ok) throw httpResponseError(res.status, data);
+    const etag = res.headers.get('etag');
+    if (etag) validatedResponses.set(url, {etag, data: structuredClone(data)});
+    else validatedResponses.delete(url);
+    return data;
+}

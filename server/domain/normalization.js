@@ -2,10 +2,7 @@
 import { fail } from './errors.js';
 import { requireField } from './validation.js';
 import { WHISKY_TYPES } from './collection.js';
-import { normalizeFlavorProfile } from '../../public/js/domain/flavor-profile.js';
-import { normalizeTastingNotes, normalizeTastingRating } from '../../public/js/domain/tasting.js';
-import { normalizeWhiskyColor } from '../../public/js/domain/whisky-colors.js';
-const fields = ['name', 'distilleryIds', 'distilleryId', 'whiskyType', 'brand', 'compositionComplete', 'bottler', 'ageYears', 'releaseYear', 'distillationYear', 'bottlingYear', 'distillationDate', 'bottlingDate', 'abv', 'volumeMl', 'caskType', 'caskNumber', 'limitedEditionCount', 'country', 'region', 'whiskybaseUrl', 'whiskybaseId', 'description', 'completionStatus', 'flavorProfile', 'tastingNotes', 'rating', 'whiskyColor'];
+const fields = ['name', 'distilleryIds', 'distilleryId', 'whiskyType', 'brand', 'compositionComplete', 'bottler', 'ageYears', 'releaseYear', 'distillationYear', 'bottlingYear', 'distillationDate', 'bottlingDate', 'abv', 'volumeMl', 'caskType', 'caskNumber', 'limitedEditionCount', 'country', 'region', 'whiskybaseUrl', 'whiskybaseId', 'description', 'completionStatus'];
 const bottleFields = ['inventoryNumber', 'volumeType', 'volumeMl', 'status', 'purchaseDate', 'purchasePrice', 'currency', 'merchant', 'openedAt', 'comment'];
 function filtered(source, keys) {
     const obj = {};
@@ -68,22 +65,8 @@ export function normalizeBottling(input, old = {}) {
             value[yearField] = Number(value[dateField].slice(0, 4));
         }
     }
-    if (Object.hasOwn(input, 'flavorProfile')) {
-        try { value.flavorProfile = normalizeFlavorProfile(input.flavorProfile); }
-        catch (error) { throw fail(error.message); }
-    }
-    if (Object.hasOwn(input, 'tastingNotes')) {
-        try { value.tastingNotes = normalizeTastingNotes(input.tastingNotes); }
-        catch (error) { throw fail(error.message); }
-    }
-    if (Object.hasOwn(input, 'rating')) {
-        try { value.rating = normalizeTastingRating(input.rating); }
-        catch (error) { throw fail(error.message); }
-    }
-    if (Object.hasOwn(input, 'whiskyColor')) {
-        try { value.whiskyColor = normalizeWhiskyColor(input.whiskyColor); }
-        catch (error) { throw fail(error.message); }
-    }
+    if (['flavorProfile','tastingNotes','rating','whiskyColor','legacyTastings'].some(key => Object.hasOwn(input,key)))
+        throw fail('Verkostungsdaten dürfen nur innerhalb einer Verkostung geändert werden', 400);
     value.completionStatus = value.completionStatus === 'complete' ? 'complete' : 'incomplete';
     return value;
 }

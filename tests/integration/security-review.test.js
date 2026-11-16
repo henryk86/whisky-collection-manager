@@ -12,7 +12,7 @@ test('security: plain-text JSON import cannot overwrite collection', async () =>
         const file = path.join(context.dir, 'data', 'collection.json');
         const before = fs.readFileSync(file, 'utf8');
         const response = await fetch(context.base + '/api/import/json', {
-            method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ schemaVersion: 4, bottlings: [] }),
+            method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ schemaVersion: 5, bottlings: [] }),
         });
         assert.equal(response.status, 415);
         assert.equal(fs.readFileSync(file, 'utf8'), before);
@@ -36,7 +36,7 @@ test('security: cross-site Origin and fetch metadata cannot mutate the collectio
         ]) {
             const response = await fetch(context.base + '/api/import/json', {
                 method: 'POST', headers: { 'Content-Type': 'application/json', ...extraHeaders },
-                body: JSON.stringify({ schemaVersion: 4, bottlings: [] }),
+                body: JSON.stringify({ schemaVersion: 5, bottlings: [] }),
             });
             assert.equal(response.status, 403, JSON.stringify(extraHeaders));
             assert.equal(fs.readFileSync(file, 'utf8'), original);
@@ -216,7 +216,7 @@ test('security: disconnect during incoming JSON upload is not an internal server
             });
             request.once('close', resolve);
             // Send an incomplete body, then drop the socket while readJson is waiting.
-            request.write('{"schemaVersion":4,"bottlings":[');
+            request.write('{"schemaVersion":5,"bottlings":[');
             setTimeout(() => request.destroy(), 70);
         });
         await new Promise(resolve => setTimeout(resolve, 110));

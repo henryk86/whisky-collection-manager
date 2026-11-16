@@ -8,7 +8,7 @@ import { sectionWorkspace } from '../ui/section-navigation.js';
 import { WAREHOUSE_CAMERAS } from '../domain/warehouse-3d-model.js';
 import { mountWarehouseThree } from '../ui/warehouse-three-scene.js';
 import { mountWarehouseRoomPreviews } from '../ui/warehouse-room-previews.js';
-import { moveFurnitureTowards } from '../domain/warehouse-placement.js';
+import { moveFurnitureTowards } from '../../../shared/warehouse-placement.js';
 import { routeUrl } from '../navigation/routes.js';
 import { createFurnitureActivation } from '../ui/warehouse-furniture-activation.js';
 import { eyeIcon, eyeOffIcon, addActionLabel } from '../ui/action-icons.js';

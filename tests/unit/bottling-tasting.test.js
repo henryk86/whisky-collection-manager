@@ -1,52 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { migrateBottlingTasting } from '../../server/storage/migrations.js';
 import { normalizeBottling, normalizeBottle } from '../../server/domain/normalization.js';
 import { createTastingHistory } from '../../public/js/domain/tasting-history.js';
 import { glencairnRating } from '../../public/js/ui/glencairn-rating.js';
 import { analyzeCollection } from '../../public/js/domain/analytics.js';
-import { parseTastingScore } from '../../public/js/domain/tasting.js';
-import { WHISKY_COLORS } from '../../public/js/domain/whisky-colors.js';
+import { parseTastingScore } from '../../shared/tasting.js';
+import { WHISKY_COLORS } from '../../shared/whisky-colors.js';
 import { whiskyColorSelector } from '../../public/js/ui/whisky-color-selector.js';
 import { GLENCAIRN_INK } from '../../public/js/ui/glencairn-icon.js';
 
 const notes = nose => ({nose,palate:'',finish:''});
-test('migration moves observations to bottling and preserves all conflicting original entries', () => {
-    const collection = {bottlings:[{id:'bottling-1', name:'A', distilleryIds:[], bottles:[
-        {id:'one',inventoryNumber:'001',rating:85,tastingNotes:notes('Sherry'),status:'open'},
-        {id:'two',inventoryNumber:'002',rating:92,tastingNotes:notes('Peat'),status:'closed'}
-    ]}]};
-    assert.equal(migrateBottlingTasting(collection),true);
-    const owner = collection.bottlings[0];
-    assert.equal(owner.rating,85);
-    assert.deepEqual(owner.tastingNotes,notes('Sherry'));
-    assert.deepEqual(owner.legacyTastings.map(x=>[x.inventoryNumber,x.rating,x.tastingNotes.nose]),
-        [['001',85,'Sherry'],['002',92,'Peat']]);
-    assert.equal(owner.bottles[0].rating,undefined);
-    assert.equal(owner.bottles[1].tastingNotes,undefined);
-    assert.equal(migrateBottlingTasting(collection),false, 'migration must be idempotent');
-    assert.equal(owner.legacyTastings.length,2);
-    // New bottle cannot store tasting notes or ratings through an old API caller.
-    const newBottle = normalizeBottle({inventoryNumber:'003',status:'closed',rating:15,tastingNotes:notes('No')});
-    assert.equal(newBottle.rating,undefined);
-    assert.equal(newBottle.tastingNotes,undefined);
-});
-test('existing bottling observations win while earlier bottle observations remain archived', () => {
-    const collection = {bottlings:[{id:'owner',rating:75,tastingNotes:notes('Vanilla'),bottles:[
-        {id:'first',rating:55,tastingNotes:notes('Oak')}
-    ]}]};
-    migrateBottlingTasting(collection);
-    assert.equal(collection.bottlings[0].rating,75);
-    assert.equal(collection.bottlings[0].tastingNotes.nose,'Vanilla');
-    assert.equal(collection.bottlings[0].legacyTastings[0].rating,55);
-});
-test('shared tasting is validated on bottlings and not on bottles', () => {
-    const stored = normalizeBottling({name:'Release',distilleryIds:[],rating:87,tastingNotes:notes('Toffee')});
-    assert.equal(stored.rating,87);
-    assert.equal(stored.tastingNotes.nose,'Toffee');
-    assert.equal(normalizeBottling({name:'Release',rating:null},stored).rating,null);
-    for (const bad of [-1,101,'5',NaN]) assert.throws(()=>normalizeBottling({name:'Release',rating:bad}));
-    assert.throws(()=>normalizeBottling({name:'Release',tastingNotes:{nose:123}}));
+test('schema 5 rejects legacy tasting fields on a bottling; bottles do not store sensory data', () => {
+    for (const field of ['rating','tastingNotes','flavorProfile','whiskyColor','legacyTastings'])
+        assert.throws(() => normalizeBottling({name:'Release',[field]:field === 'rating'?87:null}));
+    const bottle = normalizeBottle({inventoryNumber:'003',rating:15,tastingNotes:notes('No')});
+    assert.equal(bottle.rating,undefined);
+    assert.equal(bottle.tastingNotes,undefined);
 });
 test('five clickable Glencairn glasses retain fractional original 0-100 ratings', () => {
     const html = glencairnRating(85);
@@ -86,17 +55,16 @@ test('undo/redo includes notes, glass ratings and flavor values and resets redo 
     assert.equal(history.canRedo,false);
     assert.equal(history.value.rating,100);
 });
-test('analytics count bottling rating once even when several bottles share the release', () => {
-    const collection = {schemaVersion:4, distilleries:[],bottlings:[{
-        id:'x',name:'Release',distilleryIds:[],rating:85,tastingNotes:notes('Oak'),
+test('analytics counts only the latest dated tasting, independent of physical bottle count', () => {
+    const collection = {schemaVersion:5,distilleries:[],bottlings:[{
+        id:'x',name:'Release',distilleryIds:[],tastings:[{id:'t1',tastedOn:'2026-10-01',rating:85,
+            tastingNotes:notes('Oak'),flavorProfile:null,whiskyColor:null,createdAt:'2026-10-01T00:00:00Z'}],
         bottles:[{id:'a',status:'closed',volumeType:'standard'}, {id:'b',status:'open',volumeType:'standard'}]
     }]};
     const result = analyzeCollection(collection);
     assert.equal(result.tasting.rating.count,1);
     assert.equal(result.tasting.rating.avg,85);
-    assert.equal(result.tasting.notes.find(n=>n.name==='Mit Notizen').count,1);
 });
-
 
 test('precise rating input accepts comma and period, preserves one decimal, rejects invalid values', () => {
     assert.equal(parseTastingScore('87,5'),87.5);
@@ -105,7 +73,7 @@ test('precise rating input accepts comma and period, preserves one decimal, reje
     assert.equal(parseTastingScore('100'),100);
     assert.equal(parseTastingScore(''),null);
     for (const bad of ['-1','100.1','87.55','word','1e2']) assert.throws(()=>parseTastingScore(bad));
-    assert.equal(normalizeBottling({name:'Release',rating:87.5}).rating,87.5);
+    assert.throws(() => normalizeBottling({name:'Release',rating:87.5}));
     assert.match(glencairnRating(87.5),/value="87,5"/);
     assert.match(glencairnRating(87.5),/--glass-fill:37.5%/);
 });
@@ -117,11 +85,7 @@ test('twelve-step whisky color scale persists as independent, validated bottling
     assert.doesNotMatch(chosen,/whisky-color-footer|whisky-color-current|tasting-color-clear/,'no repeated colour name or clear control below palette');
     assert.equal(new Set(WHISKY_COLORS.map(v=>v.key)).size,12);
     for (const color of WHISKY_COLORS) assert.match(color.hex,/^#[0-9a-f]{6}$/);
-    const stored=normalizeBottling({name:'Release',whiskyColor:'amber',rating:87.5});
-    assert.equal(stored.whiskyColor,'amber');
-    assert.equal(normalizeBottling({name:'Release'},stored).whiskyColor,'amber');
-    assert.equal(normalizeBottling({name:'Release',whiskyColor:null},stored).whiskyColor,null);
-    assert.throws(()=>normalizeBottling({name:'Release',whiskyColor:'theme-gold'}));
+    assert.throws(()=>normalizeBottling({name:'Release',whiskyColor:'amber',rating:87.5}));
     const html=whiskyColorSelector('amber');
     assert.equal((html.match(/data-color-key=/g)||[]).length,12);
     assert.match(html,/data-whisky-color="amber"/);

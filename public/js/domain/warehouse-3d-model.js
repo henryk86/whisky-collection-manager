@@ -1,4 +1,4 @@
-import { shelfLevels } from './warehouse-compartments.js';
+import { shelfLevels } from '../../../shared/warehouse-compartments.js';
 
 /** Physical furniture geometry for the Three.js scene; measurements are metres.
  * X runs west-east, Y is height above floor, Z runs north-south.

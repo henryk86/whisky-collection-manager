@@ -1,4 +1,4 @@
-import { displayPhotoPath } from './photo-images.js';
+import { displayPhotoPath } from '../../../shared/photo-images.js';
 /** Read-only selectors; always read the latest collection after a refresh. */
 export function createSelectors(state) {
     const distilleryName = id => state.collection.distilleries.find(d => d.id === id)?.name || 'Unbekannte Destillerie';
