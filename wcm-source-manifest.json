@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.5.1",
+  "version": "1.5.2",
   "files": {
     "public/js/api.js": "b1344f831bd2bc467d5e09e67cdaa25460a3dd05051820309ebd360e237e0637",
     "public/js/domain/analytics-period.js": "9ff6505e10e50447d249fc7decc253964e2f8a6973fbe3f0a8f34fe1a7b18de3",

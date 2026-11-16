@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.2 - 2026-11-16
+
+- fix(ci): correct generated release test status
+- fix(ci): implement version PR workflow and synchronization for protected main
+
 ## 1.5.1 - 2026-11-16
 
 - fix(release): synchronize versions on main and develop
