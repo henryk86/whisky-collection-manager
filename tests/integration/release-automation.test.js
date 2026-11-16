@@ -108,7 +108,7 @@ test('a main fast-forward or direct push is not a permitted release trigger',t=>
 
 /** Migration from the former per-commit versioning scheme. In real projects
  * develop may already say 1.4.0 while main still says 1.3.3. */
-function legacyFixture(t,{tagCurrent=false}={}) {
+function legacyFixture(t,{tagCurrent=false,historicalSubjects=[]}={}) {
     const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wcm-semrel-legacy-'));
     t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
     run(dir,'git','init','-b','main');
@@ -134,6 +134,7 @@ function legacyFixture(t,{tagCurrent=false}={}) {
     write(dir,'docs/TESTSTATUS.md','# Teststatus - Whisky Collection Manager v1.4.0\n');
     run(dir,'git','add','.');run(dir,'git','commit','-m','chore: complete existing release v1.4.0');
     if(tagCurrent) run(dir,'git','tag','v1.4.0');
+    for(const subject of historicalSubjects) commit(dir,subject,`legacy-${historicalSubjects.indexOf(subject)}.txt`);
     fs.copyFileSync('scripts/release-automation.js',path.join(dir,'scripts/release-automation.js'));
     run(dir,'git','add','.');run(dir,'git','commit','-m','chore: adopt automatic release workflow');
     return dir;
@@ -163,6 +164,67 @@ test('first automation merge with the existing v1.4.0 tag starts at v1.4.1',t=>{
     commit(dir,'fix: release automation fix');
     merge(dir);
     assert.equal(plan(dir).version,'1.4.1');
+});
+
+test('first merge exempts historical nonconventional commits and previously released features only',t=>{
+    const dir=legacyFixture(t,{historicalSubjects:[
+        'Refactor unit tests to remove file system dependencies and CSS assertions',
+        'feat: already part of manually versioned v1.4.0'
+    ]});
+    commit(dir,'fix(ci): correct transition handling');
+    merge(dir);
+    const preview=plan(dir);
+    assert.equal(preview.legacyTransition,true);
+    assert.equal(preview.version,'1.4.1'); // historical feat does not cause 1.5.0
+    assert.equal(preview.level,'patch');
+    assert.equal(preview.ignoredLegacyCommits,3); // manual v1.4.0 plus two historical changes
+    assert.deepEqual(preview.commits.map(c=>c.subject),[
+        'fix(ci): correct transition handling',
+        'chore: adopt automatic release workflow'
+    ]);
+    snapshot(dir);
+    assert.match(run(dir,'git','show','v1.4.1:CHANGELOG.md'),/## 1\.4\.0/);
+    assert.match(run(dir,'git','show','v1.4.1:CHANGELOG.md'),/fix\(ci\): correct transition handling/);
+    run(dir,'git','checkout','develop');
+    commit(dir,'fix(ci): another valid patch','second.txt');
+    merge(dir);
+    assert.equal(plan(dir).version,'1.4.2');
+});
+
+test('the same first merge rejects commits without a type AFTER automation adoption',t=>{
+    const dir=legacyFixture(t,{historicalSubjects:[
+        'Refactor unit tests to remove file system dependencies and CSS assertions'
+    ]});
+    commit(dir,'new commit without prefix');
+    merge(dir);
+    assert.throws(()=>plan(dir),/Command failed/);
+});
+
+test('adoption cutover works even if main and develop already share the same version',t=>{
+    const dir=fixture(t);
+    run(dir,'git','checkout','develop');
+    // Simulate main without the automation script, but keep the checked-in
+    // package version equal to develop so legacyTransition is false.
+    run(dir,'git','checkout','main');
+    run(dir,'git','rm','scripts/release-automation.js');
+    run(dir,'git','commit','-m','chore: simulate old main before automation');
+    run(dir,'git','tag','v1.4.0-old-main');
+    run(dir,'git','checkout','develop');
+    // Develop already has the automation script in this fixture. Merge history
+    // is explicitly tested by creating a fresh feature branch from old main.
+    run(dir,'git','checkout','-b','transition','main');
+    commit(dir,'Refactor unit tests without Conventional Commits');
+    fs.copyFileSync('scripts/release-automation.js',path.join(dir,'scripts/release-automation.js'));
+    run(dir,'git','add','.');
+    run(dir,'git','commit','-m','chore: introduce release automation');
+    commit(dir,'fix: post-cutover change','post.txt');
+    run(dir,'git','checkout','main');
+    run(dir,'git','merge','--no-ff','transition','-m','Merge develop into main');
+    const result=plan(dir);
+    assert.equal(result.legacyTransition,false);
+    assert.equal(result.level,'patch');
+    assert.equal(result.ignoredLegacyCommits,1);
+    assert.equal(result.version,'1.4.1');
 });
 
 test('after automation installation a manual version bump on develop is rejected',t=>{

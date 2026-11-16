@@ -37,6 +37,7 @@ export function parseGitLog(output) {
 }
 export function notesForPlan(plan) {
     const rows=[`# ${plan.tag}`, '', `Automatisch aus den Commits seit ${plan.previousTag||'dem letzten Versionsstand'} ermittelt.`, ''];
+    if(plan.ignoredLegacyCommits) rows.push(`${plan.ignoredLegacyCommits} historische Commits vor Einfuehrung der Commit-Konvention wurden nicht erneut klassifiziert.`, '');
     for(const [level,title] of Object.entries(LABELS)) {
         const subset=plan.commits.filter(c=>c.level===level);
         if(!subset.length) continue;
@@ -108,13 +109,27 @@ export function planRelease({head='HEAD',requireMerge=true}={}) {
     // If no tags exist (one-time transition), limit to commits introduced by this main merge.
     const from=latest?.anchor || parents[0];
     if(!from || !isAncestor(from,sha) || from===sha) throw new Error('Kein neuer develop-Stand seit dem letzten Release.');
-    const commits=parseGitLog(git('log','--no-merges','--format=%H%x00%s%x00%b%x00',`${from}..${sha}`));
+    let commits=parseGitLog(git('log','--no-merges','--format=%H%x00%s%x00%b%x00',`${from}..${sha}`));
+    let ignoredLegacyCommits=0;
+    if(introducingAutomation) {
+        // On the first main merge, the range still contains commits created
+        // before Conventional Commits were required. Do NOT rewrite history or
+        // silently exempt commits made after the automation was introduced.
+        // The commit which first adds this script is the exact policy cutover.
+        const additions=git('log','--diff-filter=A','--reverse','--format=%H',
+            `${from}..${sha}`,'--','scripts/release-automation.js').split(/\s+/).filter(Boolean);
+        if(additions.length!==1) throw new Error('Der Einfuehrungs-Commit der Release-Automatik ist nicht eindeutig ermittelbar.');
+        const cutoverIndex=commits.findIndex(commit=>commit.sha===additions[0]);
+        if(cutoverIndex<0) throw new Error('Der Einfuehrungs-Commit muss ein eigener Nicht-Merge-Commit sein.');
+        ignoredLegacyCommits=commits.length-cutoverIndex-1;
+        commits=commits.slice(0,cutoverIndex+1);
+    }
     const analysis=analyzeCommits(commits);
     const version=nextVersion(current,analysis.level),tag=`v${version}`;
     if(releases.some(release=>compareVersions(version,release.version)<=0) || gitExists(`refs/tags/${tag}`)) {
         throw new Error(`Tag ${tag} existiert bereits oder ist nicht neuer als die vorhandenen Releases.`);
     }
-    return {head:sha,version,tag,previousTag:latest?.tag||`v${current}`,level:analysis.level,commits:analysis.commits,reuse:false,legacyTransition};
+    return {head:sha,version,tag,previousTag:latest?.tag||`v${current}`,level:analysis.level,commits:analysis.commits,reuse:false,legacyTransition,ignoredLegacyCommits};
 }
 function parseOption(args,name) {const i=args.indexOf(name);return i>=0?args[i+1]:undefined;}
 function validateRange(range) {
@@ -132,7 +147,7 @@ function main() {
     const plan=planRelease();
     if(command==='plan') {
         if(args.includes('--json')) console.log(JSON.stringify(plan));
-        else console.log(`${plan.tag} (${plan.level}; ${plan.commits.length} Commits${plan.reuse?', Wiederholung':''})`);
+        else console.log(`${plan.tag} (${plan.level}; ${plan.commits.length} Commits${plan.ignoredLegacyCommits?`, ${plan.ignoredLegacyCommits} historische Commits ausgenommen`:''}${plan.reuse?', Wiederholung':''})`);
         return;
     }
     const dir=parseOption(args,'--output');

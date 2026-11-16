@@ -16,7 +16,7 @@
 
 ## Conventional Commits
 
-Jeder **nicht-Merge-Commit** muss folgendes Format haben:
+Jeder **neue nicht-Merge-Commit ab Einfuehrung dieser Automatik** muss folgendes Format haben:
 
 ```text
 fix(warehouse): Fachzuordnung beim Umlagern korrigieren
@@ -35,6 +35,8 @@ feat!: inkompatibles API-Format einfuehren
 | `refactor`, `test`, `docs`, `ci`, `build`, `chore`, `style` | Keine eigenstaendige Erhoehung |
 
 Bei mehreren Commits wird **einmalig die hoechste Stufe** verwendet (Major vor Minor vor Patch). Enthaelt ein freigegebener Release-Merge ausschliesslich Wartungs-, Dokumentations- oder Testcommits, erfolgt **ein Patch-Sprung**, weil jeder Merge nach `main` einen eindeutigen Release-Tag bekommen soll. Unbekannte Commit-Typen fuehren zu einem Fehler und werden nicht still als Minor eingestuft. Bei neuen Features bewusst `feat:` verwenden, bei kompatiblen Korrekturen `fix:`.
+
+**Einmaliger Umstieg bei bestehender Git-Historie:** Beim ersten PR `develop -> main`, der `scripts/release-automation.js` einfuehrt, sucht die Release-Planung den ersten Commit, der diese Datei hinzugefuegt hat. Nur dieser Commit und nachfolgende Commits muessen die neue Namenskonvention einhalten. Historische Commits davor (z. B. `Refactor unit tests ...`) werden weder abgelehnt noch erneut fuer einen Minor-/Major-Sprung ausgewertet; ihre bereits manuell veroeffentlichten Aenderungen bleiben in der Git-Historie und bisherigen Changelogs erhalten. Die Anzahl solcher Alt-Commits steht im Release-Plan. Ab dem zweiten Release werden alle neuen Commits strikt geprueft. Keine Aenderung der Git-Historie, kein Force-Push erforderlich.
 
 Bei spaeteren PRs nach `develop` kann per Squash gemergt werden; der entstehende Commit muss konventionell benannt sein. Fuer den **Release-PR `develop -> main`** dagegen ausschliesslich `Create a merge commit` verwenden, sonst kann die Herkunft der Einzelcommits nicht zuverlaessig ermittelt werden.
 
