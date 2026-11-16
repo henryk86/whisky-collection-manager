@@ -1,6 +1,5 @@
 import { read, change } from '../storage/collection-store.js';
-import { migrateCollection } from '../storage/migrations.js';
-import { validate } from '../domain/validation.js';
+import { migrateCollectionToCurrent } from '../storage/migrations.js';
 import { suggestNumber } from '../domain/inventory.js';
 export function getCollection() {
     return read();
@@ -12,16 +11,15 @@ export function getNextInventoryNumber() {
 }
 /** Explicit full replacement. Reserved inventory numbers survive imports and deletions. */
 export async function importCollection(input) {
-    const migration = migrateCollection(input);
-    validate(input);
+    const migrated = migrateCollectionToCurrent(input).collection;
     await change(collection => {
-        input.reservedInventoryNumbers = [...new Set([...input.reservedInventoryNumbers, ...collection.reservedInventoryNumbers])];
+        migrated.reservedInventoryNumbers = [...new Set([...migrated.reservedInventoryNumbers, ...collection.reservedInventoryNumbers])];
         for (const key of Object.keys(collection)) {
             delete collection[key];
         }
-        Object.assign(collection, input);
+        Object.assign(collection, migrated);
     });
     return {
-        ok: true, inventoryConflicts: migration.conflicts
+        ok: true, inventoryConflicts: []
     };
 }

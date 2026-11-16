@@ -1,6 +1,6 @@
 import { t } from './js/i18n/index.js';
 /** Composition root: create feature controllers and connect them, then load the collection. */
-import { request } from './js/api.js';
+import { request, requestCachedJson } from './js/api.js';
 import { initializeLanguage } from './js/i18n/index.js';
 import { createState } from './js/state.js';
 import { pageFromSearch, overviewModeFromSearch } from './js/domain/pagination.js';
@@ -114,8 +114,8 @@ function render() {
 }
 async function refresh() {
     const [collection, warehouse, meta] = await Promise.all([
-        request('/api/collection'),
-        request('/api/warehouse'),
+        requestCachedJson('/api/collection'),
+        requestCachedJson('/api/warehouse'),
         state.version ? Promise.resolve({ version: state.version }) : request('/api/version').catch(() => ({ version: '' }))
     ]);
     state.collection = collection;

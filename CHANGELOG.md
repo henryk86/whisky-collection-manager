@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1 - 2026-11-16
+
+- B-3: verlustfreie Schema-5-Migration aller Bestands- und Lagerdaten; ausschliesslich alte Verkostungsdaten entfallen
+
+## 1.0.0 - 2026-11-16
+
+- **Zurueckgezogen: Diese fehlerhafte Version darf nicht installiert werden; sie setzt Sammlungs- und Lagerdaten bei Schema 4 zurueck. Korrigierter Nachfolger: v1.0.1.**
+- Schema 5 ohne Altdatenmigration; gemeinsame Fachmodule, API-Cache mit ETags, DOM-Regionen und fachlich getrennte Browsertests
+
 ## 0.28.9 - 2026-11-16
 
 - Code-Review A-3: Aktionen geben einen expliziten Erfolgs-/Fehlerstatus zurueck; fehlgeschlagene Mutationen loesen keine Navigation, kein Modal-Schliessen und keine Erfolgsmeldung mehr aus. Bestaetigungen bleiben fuer erneuten Versuch offen.

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createTastingsView} from '../../public/js/views/tastings.js';
 import {parseRoute,routeUrl} from '../../public/js/navigation/routes.js';
-import {flightForTasting,flightEntries} from '../../public/js/domain/tasting-flights.js';
+import {flightForTasting,flightEntries} from '../../shared/tasting-flights.js';
 
 const tasting={id:'note-1',tastedOn:'2026-11-15',title:'A tasting',rating:85,
     tastingNotes:{nose:'',palate:'',finish:''},flavorProfile:null,whiskyColor:null};

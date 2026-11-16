@@ -2,7 +2,7 @@ import fs from 'node:fs';
 /** Legacy migrations are isolated from normal CRUD. Each step is safe to run again. */
 import { assert } from '../domain/errors.js';
 import { allBottles, now, uid } from '../domain/collection.js';
-import { hasTastingNotes, normalizeTastingNotes } from '../../public/js/domain/tasting.js';
+import { validate } from '../domain/validation.js';
 const internationalSeed = JSON.parse(fs.readFileSync(new URL('../../seed/distillery.json', import.meta.url), 'utf8'));
 
 // Convert legacy top-level bottles into the owning bottling before validation.
@@ -228,47 +228,6 @@ export function migrateDistilleryOrigins(db) {
     }
     return changed;
 }
-/** Move bottle-specific scores/notes into one bottling-wide tasting. Never discard
- * conflicting legacy observations: retain each original record with its bottle ID.
- * Re-running the migration is safe, including on partially migrated datasets.
- */
-export function migrateBottlingTasting(db) {
-    let changed = false;
-    for (const bottling of db.bottlings || []) {
-        const legacy = bottling.legacyTastings || [];
-        const known = new Set(legacy.map(entry => entry.bottleId));
-        for (const bottle of bottling.bottles || []) {
-            const notes = bottle.tastingNotes;
-            const rating = bottle.rating;
-            if (notes != null || rating != null) {
-                if (!known.has(bottle.id) && (hasTastingNotes(notes) || rating != null)) {
-                    const entry = {bottleId:bottle.id, inventoryNumber:bottle.inventoryNumber || '',
-                        tastingNotes:normalizeTastingNotes(notes), rating:rating ?? null};
-                    legacy.push(entry);
-                    known.add(bottle.id);
-                }
-                delete bottle.tastingNotes;
-                delete bottle.rating;
-                changed = true;
-            }
-        }
-        if (legacy.length) {
-            if (!Array.isArray(bottling.legacyTastings)) {
-                bottling.legacyTastings = legacy;
-                changed = true;
-            }
-            if (bottling.rating == null) {
-                const first = legacy.find(entry => entry.rating != null);
-                if (first) { bottling.rating = first.rating; changed = true; }
-            }
-            if (!hasTastingNotes(bottling.tastingNotes)) {
-                const first = legacy.find(entry => hasTastingNotes(entry.tastingNotes));
-                if (first) { bottling.tastingNotes = {...first.tastingNotes}; changed = true; }
-            }
-        }
-    }
-    return changed;
-}
 /** Mutates a parsed document only. The caller backs up and commits it after validation. */
 export function migrateCollection(collection) {
     assert(collection && typeof collection === 'object' && !Array.isArray(collection), 'Ungültige Sammlungsstruktur');
@@ -279,7 +238,6 @@ export function migrateCollection(collection) {
         migratePhotos(collection),
         migrateLabelTypes(collection),
         migrateDocumentLists(collection),
-        migrateBottlingTasting(collection),
         migrateInternationalDistilleries(collection),
         migrateDistilleryOrigins(collection),
     ];
@@ -288,4 +246,39 @@ export function migrateCollection(collection) {
     return {
         changed: changes.some(Boolean) || inventory.changed, conflicts: inventory.conflicts
     };
+}
+
+/**
+ * Upgrade historical collections without discarding inventory, distilleries,
+ * physical bottles, media references, settings or any warehouse data.
+ * Only pre-schema-5 sensory data is intentionally not carried forward.
+ * The input is never changed; validation runs before any file is replaced.
+ */
+export function migrateCollectionToCurrent(source) {
+    assert(source && typeof source === 'object' && !Array.isArray(source) &&
+        Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >= 1 && source.schemaVersion <= 5,
+    'Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben unverändert');
+    const collection = structuredClone(source);
+    if (collection.schemaVersion === 5) {
+        validate(collection);
+        return { collection, changed: false, conflicts: [] };
+    }
+    const previous = migrateCollection(collection);
+    for (const bottling of collection.bottlings) {
+        // v4 tastings, legacy bottle scores and cached sensory summaries
+        // are the ONLY intentionally discarded content during this upgrade.
+        bottling.tastings = [];
+        for (const name of ['rating', 'tastingNotes', 'flavorProfile', 'whiskyColor', 'legacyTastings']) {
+            delete bottling[name];
+        }
+        for (const bottle of bottling.bottles) {
+            delete bottle.rating;
+            delete bottle.tastingNotes;
+        }
+    }
+    collection.externalTastings = [];
+    collection.tastingFlights = [];
+    collection.schemaVersion = 5;
+    validate(collection);
+    return { collection, changed: true, conflicts: previous.conflicts };
 }

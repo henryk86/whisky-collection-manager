@@ -1,12 +1,12 @@
 /** Physical storage locations and individual bottle allocations. No collection mutations. */
 import crypto from 'node:crypto';
-import {displayPhotoPath} from '../../public/js/domain/photo-images.js';
+import {displayPhotoPath} from '../../shared/photo-images.js';
 import {createRoomExport, planRoomImport} from './room-transfer.js';
 import { read } from '../storage/collection-store.js';
 import { readWarehouse, changeWarehouse } from '../storage/warehouse-store.js';
 import { fail } from '../domain/errors.js';
 import { saveImage, deleteImage } from '../storage/photos.js';
-import { furnitureBounds, furnitureCollision, furnitureOverlap } from '../../public/js/domain/warehouse-placement.js';
+import { furnitureBounds, furnitureCollision, furnitureOverlap } from '../../shared/warehouse-placement.js';
 import { name, number, capacity, shelfFront, doorLeaves, glassFrame, doorRanges, shelfHeight, ensureShelfHeights, layout } from '../domain/warehouse-fields.js';
 
 const newId = () => crypto.randomUUID();

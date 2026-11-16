@@ -1,6 +1,6 @@
 import { t } from '../i18n/index.js';
 import { escapeHtml } from './dom.js';
-import { FLAVOR_AXES } from '../domain/flavor-profile.js';
+import { FLAVOR_AXES } from '../../../shared/flavor-profile.js';
 
 export const flavorAxisTitle = axis => t(`flavor.axis.${axis}`);
 const radius = 118, cx = 230, cy = 195;

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
-import {displayPhotoPath} from '../../public/js/domain/photo-images.js';
+import {displayPhotoPath} from '../../shared/photo-images.js';
 import {writeReadableZip, inspectReadableZip} from '../../shared/backup-zip.js';
 
 const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';

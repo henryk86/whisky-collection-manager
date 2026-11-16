@@ -6,8 +6,9 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { authorizeAdmin } from './backups.js';
 import { fail } from '../domain/errors.js';
-import { validate } from '../domain/validation.js';
-import { runExclusive } from '../storage/collection-store.js';
+import { migrateCollectionToCurrent } from '../storage/migrations.js';
+import { runExclusive, invalidateCollectionCache } from '../storage/collection-store.js';
+import { invalidateWarehouseCache } from '../storage/warehouse-store.js';
 import { ROOT, BACKUP_DIR } from '../storage/paths.js';
 import { writeReadableZip, inspectReadableZip } from '../../shared/backup-zip.js';
 import { readBackupPassword } from '../../shared/backup-password.js';
@@ -25,10 +26,16 @@ function pathFor(id) {
     if (!CONTROL) throw fail('Backup-Verwaltung nicht eingerichtet', 503);
     return path.join(CONTROL, 'imports', id);
 }
-function validatePreview(dir) {
-    let db;
-    try { db = validate(JSON.parse(fs.readFileSync(path.join(dir, 'data', 'collection.json'), 'utf8'))); }
+function validatePreview(dir, { writeMigrated = false } = {}) {
+    const filename = path.join(dir, 'data', 'collection.json');
+    let migration;
+    try { migration = migrateCollectionToCurrent(JSON.parse(fs.readFileSync(filename, 'utf8'))); }
     catch { throw fail('ZIP enthält keine gültige Whisky-Sammlung', 400); }
+    if (writeMigrated && migration.changed) {
+        // Upgrade staged backup content, never the uploaded ZIP or live data.
+        fs.writeFileSync(filename, JSON.stringify(migration.collection, null, 2) + '\n');
+    }
+    const db = migration.collection;
     return {
         bottlings: db.bottlings.length,
         bottles: db.bottlings.reduce((sum, item) => sum + item.bottles.length, 0),
@@ -107,7 +114,7 @@ export async function applyZip(req, id, input) {
                 if (fs.existsSync(source)) fs.cpSync(source, target, { recursive: true, dereference: false });
                 else fs.mkdirSync(target);
             }
-            validatePreview(fresh);
+            validatePreview(fresh, { writeMigrated: true });
             fs.mkdirSync(BACKUP_DIR, { recursive: true });
             const safetyName = `pre-restore-${id}.zip`;
             const safetyPath = path.join(BACKUP_DIR, safetyName);
@@ -124,6 +131,8 @@ export async function applyZip(req, id, input) {
                 moved.push(name);
             }
             finished = true;
+            invalidateCollectionCache();
+            invalidateWarehouseCache();
             fs.rmSync(dir, { recursive: true, force: true });
             return { applied: true, ...summary, safetyBackup: path.join('backups', safetyName),
                 message: 'Sicherung übernommen. Vorherige Sammlung als Sicherheits-ZIP gespeichert.' };

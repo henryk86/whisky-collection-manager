@@ -1,26 +1,20 @@
-# Teststatus - Whisky Collection Manager v0.28.9
+# Teststatus - Whisky Collection Manager v1.0.1
 
-**Stand:** 2026-11-16. **Status:** Unit-/Integrationstests und statische Pruefungen bestanden. Chromium-Browsertests konnten wegen fehlender npm-Abhaengigkeiten nicht gestartet werden; CI- und Zielsystempruefungen bleiben offen. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-16. **Status:** Korrigiertes Schema-Upgrade und Wiederherstellung in Node-Integrationstests geprueft; vollstaendige Browserabnahme steht aus. Fruehere Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Erfolgreich** | Release-Metadaten fuer v0.28.9 konsistent. |
-| `npm run check` | **Erfolgreich** | 301 JavaScript-Dateien einschliesslich View-Listener-Regel, Uebersetzungen und 177 relative Dokumentationslinks geprueft. |
-| `npm test` | **562/562 bestanden** | Vollstaendige Unit-/Integrationstests einschliesslich der neuen Aktions- und Cache-Tests. |
-| `npm run test:browser` | **Blockiert (nicht ausgefuehrt)** | `playwright-core` fehlt (`ERR_MODULE_NOT_FOUND`). `npm ci` konnte wegen fehlender Erreichbarkeit der npm-Registry nicht abgeschlossen werden. Der neue Verkostungs-DELETE-Regressionstest wurde daher nicht im Browser ausgefuehrt. |
-| GitHub Actions / CI | **Nicht geprueft** | Pipeline-Lauf nach dem Push erforderlich; die v0.28.8-CI-Regression in `teststatus.test.js` ist lokal behoben. |
-| Docker-Image / ARM64-Live-Test / iOS und Android | **Nicht lokal ausgefuehrt** | Zielplattformen sind hier nicht verfuegbar. |
+| `npm run release:check` | **Erfolgreich** | Versionsmetadaten v1.0.1 stimmen ueberein. |
+| `npm run check` | **Erfolgreich** | Syntax, Abhaengigkeitsgrenzen, Uebersetzungen und Dokumentationslinks. |
+| `npm test` | **559/559 bestanden** | Vollstaendige Node-Unit-/Integrationstests, einschließlich Bestandsmigration und ZIP-Restore. |
+| `npm run test:browser` | **Blockiert (kein Browserlauf)** | Der Start aller sechs Suites scheitert bereits am fehlenden Paket `playwright-core` (`ERR_MODULE_NOT_FOUND`). Keine Browser-Funktionspruefung moeglich; CI nach Push abwarten. |
+| GitHub Actions / CI | **Nicht lokal ausgefuehrt** | Release und Browsertests nach dem Push auf GitHub pruefen. |
+| Docker-Image-Build / ARM64-Live-Test / reale Mobilbrowser | **Nicht lokal ausgeführt** | Nach einem Release auf dem Zielsystem pruefen. |
 
-## Aenderungen v0.28.9
+## Aenderungen v1.0.1
 
-- A-3: Aktionen liefern ausdrueckliche Erfolgs-/Fehlerergebnisse. Mutations- und Bestaetigungsaktionen verlassen betroffene Views nicht bei API-Fehlern; Erfolgsmeldungen und Modal-Schliessen erfolgen nach erfolgreichem Aktualisieren. Browser-Regressionstest fuer HTTP 500 beim Loeschen einer Verkostung hinzugefuegt.
-- A-4: Statische Dateien erhalten ETag/Last-Modified und 304-Revalidierung. Unversionierte KI-Dateien sind nicht immutable; HTTP-Integrationstest ergaenzt.
-- B-1.1: `scripts/check.js` erkennt neue direkte View-Eventlistener; bestehende Widget- und Modal-Ausnahmen bleiben explizit erfasst.
-- CI-Teststatus: Die v0.28.8-Statusregex akzeptiert jetzt numerisch formulierte Browserergebnisse, ohne Tests mit fehlendem Browserlauf als bestanden auszugeben.
+- B-3: verlustfreie Schema-5-Migration aller Bestands- und Lagerdaten; ausschliesslich alte Verkostungsdaten entfallen
 
-## Offene Punkte
-
-- Die vollstaendige Browser-Suite muss in CI oder nach `npm ci` auf einer geeigneten lokalen Maschine ausgefuehrt werden; insbesondere der neue DELETE-Regressionstest sowie der frueher instabile Test fuer mehrfach datierte Verkostungen.
-- B-1.2 bis B-6 bleiben getrennte Architekturaufgaben; keine Datenmigration oder Umstellung des Renderers in diesem Patch.
+Zusatzpruefungen: Schema-4-Upgrade mit realen Flaschenfotos, PDF-Beleg und Lagerzuordnung, ungültige Migration ohne Dateiaenderung, Schema-3-JSON-Import mit Sample sowie altes Schema-4-ZIP-Backup mit Bild-, Dokument- und Lagerdaten.

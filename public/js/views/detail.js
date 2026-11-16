@@ -1,5 +1,5 @@
-import { latestTasting } from '../domain/tasting-records.js';
-import { displayPhotoPath } from '../domain/photo-images.js';
+import { latestTasting } from '../../../shared/tasting-records.js';
+import { displayPhotoPath } from '../../../shared/photo-images.js';
 import { t } from '../i18n/index.js';
 const bottleStatusText = status => t(({closed:'home.status.closed',open:'analytics.inventory.openedStatus',empty:'home.status.empty'})[status] || 'features.distilleries.unknownStatus');
 const FACT_KEYS = Object.freeze({'Whisky-Kategorie':'forms.bottling.whiskyCategory','Marke':'forms.bottling.brandOrProductLine','Beteiligte Destillerien':'forms.bottling.participatingDistilleries','Zusammensetzung vollständig':'detail.facts.labelCompositionComplete','Alter':'forms.bottling.ageYears','Alkoholgehalt':'forms.bottling.abv','Erscheinungsjahr':'forms.bottling.releaseYear','Nennfüllmenge laut Abfüllung':'forms.bottling.nominalVolume','Abfüller':'forms.bottling.bottler','Region':'detail.facts.labelRegion','Land':'detail.facts.labelCountry','Fasstyp':'forms.bottling.caskType','Destilliert am':'forms.bottling.distillationDate','Abgefüllt am':'forms.bottling.bottlingDate','Fassnummer':'forms.bottling.caskNumber','Limitierte Auflage':'detail.facts.labelLimitedEdition'});
@@ -108,8 +108,8 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     </section>
             </div>`;
         }).join('');
-        shell(`<button class="inline-link" data-act="back">${t("detail.navigation.backToCollection")}</button>
-    <div class="section" style="margin-top:18px">
+        shell(`<button data-region="detail-back" class="inline-link" data-act="back">${t("detail.navigation.backToCollection")}</button>
+    <div data-region="detail-bottling" class="section" style="margin-top:18px">
     <div class="section-head detail-page-head">
     <div>
     <div class="detail-heading-meta">${originLabel ? `<span class="card-kicker">${escapeHtml(originLabel)}</span><span class="detail-heading-separator" aria-hidden="true">·</span>` : ''}<span class="muted">${statusText}</span></div>
@@ -136,7 +136,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <a href="${escapeHtml(whiskybaseUrl)}" target="_blank" rel="noopener noreferrer">${t("detail.actions.openWhiskybase")}</a>` : ''}</div>
     </div>
     </div>
-    <section class="section tasting-summary" aria-label="${escapeHtml(t('tastings.title'))}">
+    <section data-region="detail-tastings" class="section tasting-summary" aria-label="${escapeHtml(t('tastings.title'))}">
         <div class="section-head">
             <h3>${escapeHtml(t('tastings.title'))}</h3>
             <button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t(tastingCount ? 'tastings.add' : 'tastings.first'))}</span></button>
@@ -154,11 +154,8 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                 </div>
             </div>
         </div>
-        ${bottling.legacyTastings?.length ? `<details class="panel tasting-history"><summary>${escapeHtml(t('tasting.legacyHistory'))} (${bottling.legacyTastings.length})</summary>
-            <ol class="tasting-history-list">${bottling.legacyTastings.map(entry => `<li><strong>${escapeHtml(entry.inventoryNumber || entry.bottleId)}</strong>${entry.rating == null ? '' : ` · ${entry.rating} / 100`}
-            ${['nose','palate','finish'].map(key => entry.tastingNotes?.[key] ? `<p>${escapeHtml(t(`forms.bottling.${key}`))}: ${escapeHtml(entry.tastingNotes[key])}</p>` : '').join('')}</li>`).join('')}</ol></details>` : ''}
     </section>
-    <div class="section">
+    <div data-region="detail-physical-bottles" class="section">
     <div class="section-head">
     <h3>${t("detail.statistics.bottleAndSampleCount", {count:physicalBottles.length})}</h3>
     <button class="btn primary" data-act="add-bottle">${newBottlingIcon}<span>${escapeHtml(t('detail.actions.addAnotherBottle').replace(/^\+\s*/, ''))}</span></button>

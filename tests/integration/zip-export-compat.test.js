@@ -11,7 +11,7 @@ test('manual ZIP exports from old releases can be imported through the new brows
     try {
         const file = path.join(dir, 'export.zip');
         fs.writeFileSync(file, zipFiles([
-            ['data/collection.json', Buffer.from('{"schemaVersion":4}')],
+            ['data/collection.json', Buffer.from('{"schemaVersion":5}')],
             ['images/bottle.jpg', Buffer.from('jpg')],
             ['documents/invoice.pdf', Buffer.from('pdf')],
         ]));

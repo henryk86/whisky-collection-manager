@@ -56,23 +56,16 @@ mit anteiliger Füllhöhe. Die Punktzahl wird ausschließlich über das editierb
 Feld mit `/ 100` dargestellt. Rückgängig/Wiederholen wird für jede geöffnete
 Verkostung separat verwaltet.
 
-## Datenmodell und Kompatibilität
+## Datenmodell (Schema 5)
 
-- Die Daten stehen in `bottlings[].tastings[]` innerhalb von `collection.json`.
-  Jeder Eintrag enthält eine unveränderliche ID und zwei Zeitstempel.
-- **Keine neue Migration:** Bisher gespeicherte Abfüllungswerte und archivierte
-  `legacyTastings` werden nicht in neue Verkostungen umgewandelt. Das bestehende
-  Archiv bleibt auf der Abfüllungsdetailseite abrufbar.
-- `schemaVersion: 4` bleibt bestehen. Ältere Sammlungen ohne `tastings[]` sind
-  gültig. Für Abfüllungen mit neuen Verkostungen werden die bisherigen
-  Abfüllungswerte (`rating`, `tastingNotes`, `whiskyColor`, `flavorProfile`) als
-  schreibgeschützte Kompatibilitätsprojektion der neuesten Verkostung gepflegt.
-- JSON-/ZIP-Exporte und Wiederherstellung enthalten alle Verkostungen.
-  Physische Flaschen, Bilder, Kaufdaten und Lagerungen bleiben unverändert.
+- Die einzige Quelle fuer eigene Verkostungen ist `bottlings[].tastings[]` innerhalb von `collection.json`. Jede Abfuellung hat ein `tastings[]`-Array, jeder Eintrag eine unveraenderliche ID und zwei Zeitstempel.
+- Die angezeigte letzte Bewertung und Notizen werden aus der juengsten Verkostung berechnet. Es gibt keine persistierten `bottling.rating`, `bottling.tastingNotes`, `bottling.whiskyColor`, `bottling.flavorProfile` und kein `legacyTastings`.
+- **Schema-Upgrade ohne Verlust des Bestands:** Alte `collection.json`-Dateien werden gesichert und auf Schema 5 migriert. Abfuellungen, Flaschen, Fotos, Belege, Inventarnummern und Lagerdaten bleiben erhalten. Ausschliesslich bisherige Verkostungen, Flights und alte sensorische Zusammenfassungen werden nicht migriert. Alte JSON-Importe koennen ebenso uebernommen werden.
+- JSON-/ZIP-Exporte enthalten die aktuellen Verkostungen. Die zu einer neuen Sammlung angelegten Fotos, physischen Flaschen und Lagerdaten werden regulaer verwaltet.
 
 ## Technische Bausteine
 
-- Daten: `public/js/domain/tasting-records.js`, `server/services/tastings.js`
+- Daten: `shared/tasting-records.js`, `server/services/tastings.js`
   und `server/domain/validation.js`.
 - UI: `public/js/views/tastings.js` und die Zusammenfassung in
   `public/js/views/detail.js`.
@@ -81,7 +74,7 @@ Verkostung separat verwaltet.
   `public/js/ui/glencairn-rating.js`.
 - Historie: `public/js/domain/tasting-history.js`, zustandsbezogen je Eintrag.
 - Tests: `tests/unit/tasting-records.test.js`,
-  `tests/integration/tastings.test.js` und `tests/browser/app.test.js`.
+  `tests/integration/tastings.test.js` und `tests/browser/tastings.test.js`.
 
 ## v0.27.2: einheitliche Verkostungsansichten
 
@@ -191,5 +184,4 @@ Einzelne Verkostungen bleiben ausschließlich unter `bottlings[].tastings[]` ode
   anhand der unveränderlichen Verkostungs-ID bestehen.
 - Entfernen eines Eintrags aus einem Flight entfernt nur die Zuordnung.
   Das Löschen eines Flights löscht niemals die einzelnen Verkostungsnotizen.
-- Das optionale `tastingFlights[]` ist auch in JSON-/ZIP-Backups enthalten;
-  bestehende Sammlungen ohne dieses Feld bleiben valide (Schema 4, keine Migration).
+- `tastingFlights[]` ist in Schema 5 Pflicht (ein leeres Array ist erlaubt) und auch in JSON-/ZIP-Backups enthalten.
