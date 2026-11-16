@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.2 - 2026-11-16
+
+- Der Umlagerdialog zeigt den bisherigen Lagerort sowie Raum-, Möbel- und Fachauswahl sofort. Die zusaetzliche Aufklappaktion „Lagerort ändern“ und die daran gekoppelte Ausblendung des Speichern-Buttons entfallen, auch bei Mehrfachzuordnung.
+- Browserregression fuer direktes Umlagern in ein anderes Fach und anschliessendes Entfernen der Zuordnung; beide Abläufe wurden zusaetzlich im Chromium-DOM-Modus gegen den echten Testserver getestet.
+- B-5: Alte CSS-Regex-Pruefung fuer Lagerort-Radiobuttons entfernt und durch Messung der berechneten Darstellung im Chromium ersetzt; Source-Regex-Budget 754 -> 751. Keine Aenderung an Datenmodell, Migration oder API.
+
 ## 1.3.1 - 2026-11-16
 
 - B-5: Redundante CSS-/Quelltext-Unit-Tests entfernt, fachliche Verhaltenspruefungen erhalten. Acht neue Chromium-Tests messen mobile/desktop Layouts, Navigation, Kartenfarben und Einstellungen zur Laufzeit.

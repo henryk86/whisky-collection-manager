@@ -19,9 +19,9 @@ test('assignment dialog separates room, furniture and shelf with current path an
     assert.match(html, /class="warehouse-assignment-current"/);
     assert.match(html, /Aktueller Lagerort/);
     assert.match(html, /<strong>Whiskyzimmer \/ Regal &lt;1&gt; \/ Fach 1<\/strong>/);
-    assert.match(html, /<details class="warehouse-assignment-editor">/);
-    assert.doesNotMatch(html, /<details class="warehouse-assignment-editor"[^>]*open/);
-    assert.match(html, /<summary>Lagerort ändern<\/summary>/);
+    assert.match(html, /<div class="warehouse-assignment-editor">/);
+    assert.doesNotMatch(html, /<details|<summary>/);
+    assert.match(html, /<fieldset class="warehouse-assignment-target"><legend>Neuer Lagerort<\/legend>/);
     assert.match(html,/data-assignment-room/);
     assert.match(html,/data-assignment-furniture/);
     assert.match(html,/data-assignment-shelf/);
@@ -53,7 +53,10 @@ test('bulk assignment form checks total capacity and preserves per-bottle select
     assert.deepEqual(bulkAssignmentPayload(['b','c'],'none','',w),{ids:['b','c'],shelfId:null});
     assert.throws(()=>bulkAssignmentPayload(['a','a'],'shelf','target',w),/zuerst Flaschen/);
     const {renderWarehouseAssignment}=await import('../../public/js/ui/warehouse-assignment.js');
-    assert.match(renderWarehouseAssignment(w,[w.bottles[0],w.bottles[1]]),/2 Flaschen ausgewählt/);
+    const html = renderWarehouseAssignment(w,[w.bottles[0],w.bottles[1]]);
+    assert.match(html,/2 Flaschen ausgewählt/);
+    assert.match(html, /<div class="warehouse-assignment-editor">/);
+    assert.doesNotMatch(html, /<details|<summary>/);
 });
 
 test('positive overcapacity has a confirmable required capacity; zero stays non-assignable', () => {

@@ -648,8 +648,6 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         }
         let data=Object.fromEntries(new FormData(form).entries());
         if (form.classList.contains('warehouse-assignment-form')) {
-            // The current location is read-only until the user explicitly opens the editor.
-            if (!form.querySelector('.warehouse-assignment-editor')?.open) return;
             try {
                 const ids = form.dataset.bottleBulk === 'true' ? selectedBottleIds() :
                     [decodeURIComponent(form.dataset.endpoint.split('/').at(-1))];

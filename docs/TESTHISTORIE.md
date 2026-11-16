@@ -145,3 +145,9 @@ Die folgenden Eintraege enthalten historische Pruefwerte bzw. den ersten dokumen
 ## Testbericht v1.3.0
 
 - npm run release:check: Erfolgreich; npm run check: Erfolgreich; npm test: 572/572 bestanden; npm run test:browser: 91 bestanden, 0 fehlgeschlagen, 1 uebersprungen; GitHub Actions / CI v1.3.0: beim lokalen Bericht noch ausstehend; anschliessend vom Betreiber als gruen bestaetigt
+
+---
+
+## Testbericht v1.3.1
+
+- npm run release:check: Bestanden; npm run check: Bestanden; npm test: 546/546 bestanden; npm run test:browser (acht Fachsuiten einzeln im Chromium-DOM-Modus): 99 bestanden, 0 fehlgeschlagen, 1 uebersprungen; GitHub Actions / regulaere Browsernavigation: Gruen (Rueckmeldung)

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.3.1",
+  "version": "1.3.2",
   "files": {
     "public/js/api.js": "b1344f831bd2bc467d5e09e67cdaa25460a3dd05051820309ebd360e237e0637",
     "public/js/domain/analytics-period.js": "9ff6505e10e50447d249fc7decc253964e2f8a6973fbe3f0a8f34fe1a7b18de3",
@@ -81,7 +81,7 @@
     "public/js/ui/section-navigation.js": "45ec7bf2d595591d3de2e968a73f6c97c5eb825be9857a77205ac25dfc9674c2",
     "public/js/ui/shell.js": "e99eb0dfbc541115e493180dd9882358095e8678fadff44ca1c6d6b53f8981d1",
     "public/js/ui/tab-navigation.js": "b3b649fdedf152181ef267e6a7cb0d18726b82ff85bb2e17da622d7b672535fd",
-    "public/js/ui/warehouse-assignment.js": "d0ff64ba073ec235453ac591c279f3b876f12473ffce0cce35029945c5b2cb08",
+    "public/js/ui/warehouse-assignment.js": "428fa6016636d2f3c3e92a51fd00f386481b2fb947e820431568c2b83e6a145d",
     "public/js/ui/warehouse-bottle-drag.js": "50b3673eed90ccaad2f52f2606c7c9d7105dbd7aacb885f183f0b3b661d7b24d",
     "public/js/ui/warehouse-furniture-activation.js": "c86e04253043deaa424c0b5318f5ee2cae6f969f917ee5ad6f18fb13f53fb73b",
     "public/js/ui/warehouse-room-previews.js": "02a139cdd7c55c3375576d7b1d01c649b1af016b7ede45d9e6e527171391a112",
@@ -101,7 +101,7 @@
     "public/js/views/warehouse-room-wall.js": "4efe6a8b347227489037e82674bd948861e23fef1cdea02dd1a26ccb89b33eab",
     "public/js/views/warehouse-shelf-details.js": "b7449686b9826db9078ae63fc0ed64c7b4b40489602f31617c9b1bc5ef0e26f1",
     "public/js/views/warehouse-unassigned-tray.js": "b7c44a2e41b5af3fe398eb3c2e362a90e8ae03e846a2f58495b488398cb41deb",
-    "public/js/views/warehouse.js": "b9e29fceb22dee48ba8e8369534328487bdcc13bbb1d069fe28162b2b9030c4a",
+    "public/js/views/warehouse.js": "3dc6c872e55e06ed315124c15956b4af23c328fa17d9f47a16e515c37204a5a7",
     "server/app.js": "d755927ee47c666731d890c32d0ca4554e194cdccbd2d75ff21b1441786c2d63",
     "server/config.js": "b85e3230e060156d08b2c829b52855fd2c0564daae9d13ac2dda300a97e094f2",
     "server/domain/collection.js": "314f777d37f64055d61998fa09ea07504403e3831a716c86f9dc276620481578",

@@ -198,13 +198,20 @@ test('browser: shelf overview keeps decorative bottles inert; furniture and rack
         assert.equal(await assign.locator('[data-assignment-shelf]').inputValue(),shelf.id);
         assert.match(await assign.locator('.warehouse-assignment-current').innerText(),/Flaschenraum \/ Testregal \/ Flaschenfach/);
         assert.equal(await page.locator('#modal-root .dialog-head h2').innerText(), 'Lagerort');
-        const editor = assign.locator('.warehouse-assignment-editor');
-        assert.equal(await editor.evaluate(element => element.open), false, 'location editor starts collapsed');
-        assert.equal(await assign.locator('.warehouse-form-actions [type="submit"]').isHidden(), true,
-            'saving is only available after opening the editor');
-        await editor.locator('summary').click();
-        assert.equal(await editor.evaluate(element => element.open), true);
+        assert.equal(await assign.locator('summary, details').count(), 0,
+            'relocation must never require a second click on Lagerort ändern');
+        assert.equal(await assign.locator('[data-assignment-room]').isVisible(), true);
+        assert.equal(await assign.locator('[data-assignment-furniture]').isVisible(), true);
+        assert.equal(await assign.locator('[data-assignment-shelf]').isVisible(), true);
         await assign.locator('.warehouse-form-actions [type="submit"]').waitFor({state:'visible'});
+        const radioStyle = await assign.locator('.warehouse-assignment-modes input[type="radio"]').first().evaluate(input => {
+            const style = getComputedStyle(input);
+            const bounds = input.getBoundingClientRect();
+            return {width:bounds.width,height:bounds.height,appearance:style.appearance};
+        });
+        assert.ok(Math.abs(radioStyle.width - 18) < 1 && Math.abs(radioStyle.height - 18) < 1,
+            `assignment radios should retain an 18px control instead of text-field dimensions: ${JSON.stringify(radioStyle)}`);
+        assert.equal(radioStyle.appearance, 'auto');
         assert.match(await assign.locator('.warehouse-assignment-feedback').innerText(),/1 von 6/);
         // A tall real bottle photo used to inflate the CSS grid's intrinsic row
         // beyond the fixed preview frame, silently cropping the bottom in Chrome.
@@ -259,6 +266,56 @@ test('browser: shelf overview keeps decorative bottles inert; furniture and rack
 });
 
 
+
+test('browser: Umlagern directly offers destination selectors and saves a different shelf', async () => {
+    await session(async ({base,page,open}) => {
+        const {bottle} = await seed(base, '098766');
+        const room = (await requestJson(base, '/api/warehouse/rooms', 'POST',
+            {name:'Umlagerraum',width:4,height:4})).data;
+        const rack = (await requestJson(base, `/api/warehouse/rooms/${room.id}/furniture`, 'POST',
+            {name:'Umlagerregal',type:'regal',x:.3,y:.3,width:1,depth:.5,rotation:0,elevation:0,itemHeight:1.8})).data;
+        const first = (await requestJson(base, `/api/warehouse/furniture/${rack.id}/shelves`, 'POST',
+            {name:'Bisheriges Fach',capacity:5})).data;
+        const target = (await requestJson(base, `/api/warehouse/furniture/${rack.id}/shelves`, 'POST',
+            {name:'Zielfach',capacity:5})).data;
+        assert.equal((await requestJson(base, `/api/warehouse/bottles/${bottle.id}`,
+            'PUT', {shelfId:first.id})).status, 200);
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="find"]').click();
+        await page.locator(`[data-act="warehouse-assign"][data-id="${bottle.id}"]`).click();
+        const form = page.locator('#modal-root #warehouse-form');
+        await form.waitFor();
+        assert.equal(await form.locator('.warehouse-assignment-current strong').innerText(),
+            'Umlagerraum / Umlagerregal / Bisheriges Fach');
+        assert.equal(await form.locator('summary, details').count(), 0);
+        for (const field of ['room','furniture','shelf']) {
+            assert.equal(await form.locator(`[data-assignment-${field}]`).isVisible(),true,
+                `${field} must be selectable immediately after Umlagern`);
+        }
+        assert.equal(await form.locator('button[type="submit"]').isVisible(),true,
+            'Speichern must be available without clicking Lagerort ändern');
+        await form.locator('[data-assignment-shelf]').selectOption(target.id);
+        await form.locator('button[type="submit"]').click();
+        await form.waitFor({state:'detached'});
+        const stored = await requestJson(base, '/api/warehouse');
+        assert.equal(stored.status,200);
+        assert.equal(stored.data.assignments[bottle.id],target.id,
+            'Umlagern must persist the chosen shelf, not the original shelf');
+        await page.locator(`[data-act="warehouse-assign"][data-id="${bottle.id}"]`).click();
+        await form.waitFor();
+        assert.match(await form.locator('.warehouse-assignment-current strong').innerText(),/Zielfach/);
+        await form.locator('[name="warehouseAssignmentMode"][value="none"]').check();
+        assert.equal(await form.locator('[data-assignment-shelf]').isDisabled(),true);
+        await form.locator('button[type="submit"]').click();
+        await form.waitFor({state:'detached'});
+        const unassigned = await requestJson(base, '/api/warehouse');
+        assert.equal(unassigned.status,200);
+        assert.equal(unassigned.data.assignments[bottle.id] ?? null, null,
+            'Ohne Lagerort should be saved without opening an extra editor');
+    });
+});
 
 test('browser: room plan positions furniture; shelf tab owns wall, editing and bottles', async () => {
     await session(async ({base,page,open}) => {

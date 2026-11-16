@@ -28,7 +28,6 @@
   "tests/unit/teststatus.test.js": 5,
   "tests/unit/warehouse-3d.test.js": 53,
   "tests/unit/warehouse-bottle-facts.test.js": 21,
-  "tests/unit/warehouse-control-markers.test.js": 3,
   "tests/unit/warehouse-new-modal-controls.test.js": 13,
   "tests/unit/warehouse-room-previews.test.js": 13,
   "tests/unit/warehouse-room-transfer-dialog.test.js": 15,

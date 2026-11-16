@@ -1,27 +1,30 @@
-# Teststatus - Whisky Collection Manager v1.3.1
+# Teststatus - Whisky Collection Manager v1.3.2
 
-**Stand:** 2026-11-16. **Status:** Node-Tests und alle acht Chromium-Browser-Fachsuiten im lokalen DOM-Modus erfolgreich. Regulare Browsernavigation in GitHub Actions und Zielsystempruefungen sind fuer diesen Stand noch offen. Fruehere Ergebnisse: [TESTHISTORIE.md](TESTHISTORIE.md).
+**Stand:** 2026-11-16. **Status:** Node-/Integrationspruefungen und gezielte Chromium-DOM-Pruefung erfolgreich. Die vollstaendige GitHub-CI-Browsersuite fuer v1.3.2 bleibt eine offene Release-Abnahme. Vorherige Pruefungen: [TESTHISTORIE.md](TESTHISTORIE.md).
 
 ## Durchgefuehrte Pruefungen
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| `npm run release:check` | **Bestanden** | Version 1.3.1, Release-Metadaten und Source-Manifest geprueft. |
-| `npm run check` | **Bestanden** | Syntax, Architektur-, Dokumentations-, Dialog- und Quelltexttest-Regeln. |
-| `npm test` | **546/546 bestanden** | Vollstaendige Node-Unit-/Integrationstests. Die niedrigere Anzahl ist Folge entfernter reiner Quelltext-/CSS-Tests, nicht ausgefallener Tests. |
-| `npm run test:browser` (acht Fachsuiten einzeln im Chromium-DOM-Modus) | **99 bestanden, 0 fehlgeschlagen, 1 uebersprungen** | Echte Browser-Runtime mit berechneten Styles, Layout und Navigation; der History-Test setzt echte Seitenaufrufe voraus. |
-| Gemeinsamer lokaler Browserlauf | **Nicht abgeschlossen** | Die Ausfuehrung aller Fachsuiten in einem lokalen Testprozess erreichte nach 29 Erfolgen die Zeitgrenze; danach wurden alle acht Fachsuiten einzeln vollstaendig erfolgreich ausgefuehrt. |
-| GitHub Actions / regulaere Browsernavigation | **Ausstehend** | CI fuer genau diese Version pruefen, einschliesslich Browser-History-Test. |
-| Docker / Raspberry Pi ARM64 / echte Mobilgeraete | **Nicht lokal ausgefuehrt** | Zielsystem- und Safari-Abnahme getrennt durchfuehren. |
+| `npm run release:check` | **Bestanden** | Version, Metadaten und SHA-256-Quellmanifest stimmen ueberein. |
+| `npm run check` | **Bestanden** | Syntax, Importe, Architektur, Uebersetzungen, Dokumentation, Dialog- und Regex-Budgetregeln. |
+| `npm test` | **545/545 bestanden** | Vollstaendige Node-Unit-/Integrationstests; ein historischer CSS-Quelltexttest wurde durch eine Chromium-Laufzeitpruefung ersetzt. |
+| `npm run test:browser` | **Nicht lokal ausgeführt** | Die Playwright-Abhaengigkeit steht in dieser Umgebung nicht zur Verfuegung; der Installationsversuch konnte nicht abgeschlossen werden. Der neue Regressionstest ist in der Suite enthalten. |
+| Chromium-DOM-Test, direktes Umlagern | **Bestanden** | Browser hat die Lagerortwahl und Speichern sofort angezeigt; PUT zum Zielfach wurde mit HTTP 200 beantwortet und die Zuordnung durch erneuten GET nachgewiesen. |
+| Chromium-DOM-Test, Lagerort entfernen | **Bestanden** | Ohne weiteres Aufklappen wurde „Ohne Lagerort“ gespeichert (HTTP 200, Zuordnung entfernt). |
+| Chromium-DOM-Stilpruefung | **Bestanden** | Native Radiobuttons werden mit berechneten 18 x 18 px und `appearance: auto` gerendert. |
+| GitHub Actions / regulaere Browsernavigation | **Ausstehend** | CI fuer genau v1.3.2 pruefen. GitHub CI fuer v1.3.1 war laut Rueckmeldung des Repository-Betreibers gruen. |
+| Docker / Raspberry Pi ARM64 / echte Mobilgeraete | **Nicht lokal ausgefuehrt** | Auf den Zielsystemen separat pruefen. |
 
-## Aenderungen v1.3.1
+## Aenderungen v1.3.2
 
-- B-5: Bestehende doppelte CSS-/Quelltextassertions in Unit-Tests reduziert; funktionale Daten- und Rendererpruefungen erhalten.
-- Acht neue Chromium-Verhaltenspruefungen fuer mobiles und Desktop-Layout, Header, Seitentitel, Formularfelder, Kartenstile und Settings-Navigation.
-- `npm run check` blockiert die erneute Einfuehrung nativer Browserdialoge und historischer Versionsueberschriften in aktuellen Fachdokumenten.
-- Das Budget der bestehenden Regex-Assertions wurde von 933 auf 754 gesenkt. Verbleibende alte Source-Assertions werden weiterhin als technische Schuld gefuehrt.
+- Nach „Umlagern“ direkt Raum, Moebel und Fach waehlen und Speichern; Anzeige des aktuellen Lagerorts bleibt erhalten. Einzel- und Mehrfachzuordnung verwenden dieselbe Komponente.
+- Die nicht mehr benoetigte verschachtelte Aktion „Lagerort ändern“ wurde entfernt, einschliesslich des vorherigen Speicher-Guards.
+- Chromium-Browserregression prueft unmittelbare Bedienelemente, Umspeichern in ein anderes Fach und „Ohne Lagerort“.
+- B-5: Ein historischer CSS-Quelltexttest wurde durch echte Browserstilpruefungen ersetzt. Das alte Regex-Budget ist jetzt 751 statt 754.
 
-## Noch offen
+## Offene Abnahmen und Review-Folgen
 
-- Die verbleibenden historischen Quelltext-/CSS-Regex-Tests, insbesondere in den Lager-/3D-Suiten, nur mit nachgewiesener gleichwertiger Laufzeitabdeckung ersetzen.
-- Die regulaere GitHub-CI-Browserabnahme und Hardwarepruefungen fuer v1.3.1 abwarten.
+- Vollstaendige Playwright-Browser-Suite in GitHub Actions fuer v1.3.2 (einschliesslich des neuen Regressionstests).
+- B-5: Historische Regex-Pruefungen fuer Lager-/3D-Implementierungsdetails weiter mit gleichwertigen Verhaltenstests ersetzen.
+- Raspberry-Pi-/Docker-/Mobilgeraete-Verhalten getrennt pruefen. Schema 5 und alle bestehenden Daten werden nicht veraendert.

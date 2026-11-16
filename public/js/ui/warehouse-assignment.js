@@ -102,8 +102,7 @@ export function renderWarehouseAssignment(warehouse, bottle) {
         <span>${safe(t('warehouse.assignment.currentLocation'))}</span>
         <strong>${safe(current?.label || t('warehouse.bottles.unassignedLabel'))}</strong>
       </div>`}
-      <details class="warehouse-assignment-editor">
-        <summary>${safe(t('warehouse.assignment.changeLocation'))}</summary>
+      <div class="warehouse-assignment-editor">
         <fieldset class="warehouse-assignment-target"><legend>${safe(t('warehouse.assignment.newLocation'))}</legend>
         <div class="warehouse-assignment-modes" role="radiogroup" aria-label="${safe(t('warehouse.assignment.modeLabel'))}">
           <label><input type="radio" name="warehouseAssignmentMode" value="shelf" checked><span>${t('warehouse.assignment.selectCompartment')}</span></label>
@@ -116,7 +115,7 @@ export function renderWarehouseAssignment(warehouse, bottle) {
         </div>
           <p class="warehouse-assignment-feedback" aria-live="polite">${safe(shelfId ? occupancyMessage(warehouse,shelfId,ids) : t('warehouse.assignment.selectHint'))}</p>
         </fieldset>
-      </details>
+      </div>
     </section>`;
 }
 
@@ -128,12 +127,7 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
     const shelf = form.querySelector('[data-assignment-shelf]');
     const feedback = form.querySelector('.warehouse-assignment-feedback');
     const choices = form.querySelector('.warehouse-assignment-selectors');
-    const editor = form.querySelector('.warehouse-assignment-editor');
-    const saveButton = form.querySelector('.warehouse-form-actions [type="submit"]');
-    if (!room || !furniture || !shelf || !feedback || !choices || !editor || !saveButton) return;
-    const syncSaveButton = () => { saveButton.hidden = !editor.open; };
-    editor.addEventListener('toggle', syncSaveButton);
-    syncSaveButton();
+    if (!room || !furniture || !shelf || !feedback || !choices) return;
     const selectedRoom = () => (warehouse.rooms || []).find(entry => entry.id === room.value);
     const selectedFurniture = () => selectedRoom()?.furniture.find(entry => entry.id === furniture.value);
     const mode = () => form.querySelector('[name="warehouseAssignmentMode"]:checked')?.value || 'shelf';

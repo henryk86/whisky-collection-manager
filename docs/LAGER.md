@@ -210,7 +210,7 @@ Die Modulgrenzen und ihr Datenfluss sind auch in [ARCHITEKTUR.md](ARCHITEKTUR.md
 ### Dialog zum Umlagern einer Flasche
 
 - Das Modal **Lagerort** zeigt die betroffene Flasche und den aktuellen Lagerort deutlich getrennt von den Bearbeitungsfeldern.
-- **Lagerort ändern** ist anfangs eingeklappt. Erst beim Öffnen werden die Eingaben und die Aktion **Speichern** sichtbar; unveränderte Lagerorte können ohne Speichern angesehen werden.
+- Nach **Umlagern** sind die Auswahl für den neuen Lagerort und **Speichern** unmittelbar sichtbar – es gibt keinen weiteren Schritt **Lagerort ändern**. Der bisherige Lagerort bleibt als Information darüber stehen.
 - Ein neuer Lagerort wird über die aufeinander aufbauenden Felder **Raum**, **Möbel** und **Fach** ausgewählt.
 - Belegte und freie Fachkapazitäten werden angezeigt; volle Fächer sind für neue Zuordnungen deaktiviert.
 - Die Option **Ohne Lagerort** hebt eine bestehende Zuordnung ausdrücklich auf.

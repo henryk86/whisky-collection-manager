@@ -296,7 +296,7 @@
 .warehouse-assignment-eyebrow { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
 .warehouse-assignment-bottle-details strong { font-size: 17px; color: var(--ink); overflow-wrap: anywhere; }
 .warehouse-assignment-bulk-list { color: var(--muted); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
-/* The existing location is the primary information. Editing is optional. */
+/* Show destination controls immediately when a relocation modal opens. */
 .warehouse-assignment-current {
     display: grid; gap: 9px; padding: 18px 20px; min-width: 0;
     border: 1px solid var(--line); border-left: 4px solid var(--gold);
@@ -304,22 +304,8 @@
 }
 .warehouse-assignment-current > span { color: var(--muted); font-size: 12px; font-weight: 700; }
 .warehouse-assignment-current > strong { color: var(--ink); font-size: 17px; line-height: 1.5; font-weight: 650; overflow-wrap: anywhere; }
-.warehouse-assignment-editor { border-top: 1px solid var(--line); padding-top: 12px; }
-.warehouse-assignment-editor > summary {
-    display: flex; gap: 12px; align-items: center; padding: 12px 14px;
-    border: 1px solid var(--line); background: var(--paper); color: var(--ink);
-    font-size: 13px; font-weight: 700; cursor: pointer; list-style: none;
-}
-.warehouse-assignment-editor > summary::-webkit-details-marker { display: none; }
-.warehouse-assignment-editor > summary::after {
-    content: ''; width: 7px; height: 7px; margin-left: auto;
-    border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
-    transform: rotate(45deg); transition: transform .15s ease;
-}
-.warehouse-assignment-editor[open] > summary::after { transform: rotate(225deg); }
-.warehouse-assignment-editor > summary:hover { border-color: var(--gold); }
-.warehouse-assignment-editor > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.warehouse-assignment-editor[open] > .warehouse-assignment-target { margin-top: 14px; }
+.warehouse-assignment-editor { min-width: 0; }
+.warehouse-assignment-target { margin-top: 14px; }
 .warehouse-assignment-form .warehouse-form-actions button[hidden] { display: none; }
 .warehouse-assignment-target { min-width: 0; border: 1px solid var(--line); border-radius: 9px; margin: 0; padding: 15px; }
 .warehouse-assignment-target legend { color: var(--ink); font-size: 14px; font-weight: 700; padding: 0 6px; }
