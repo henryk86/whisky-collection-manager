@@ -64,7 +64,10 @@ export function verifyDeploymentConfiguration(read=name=>fs.readFileSync(path.jo
         'release must create versioned tagged snapshots automatically');
     requireText(release,'branches: [main]', 'release must be triggered by main');
     requireText(release,'git checkout --detach "$tag"', 'package must use tagged snapshot');
-    noText(release,'git push origin main', 'release workflow must never push to protected main');
+    requireText(release,'node scripts/sync-release-branches.js --tag',
+        'publish must synchronize main and develop from the approved release snapshot');
+    requireText(release,'Synchronize release version on main and develop',
+        'both branches must receive release metadata before publication');
     requireText(checkWorkflow,'"$PR_SOURCE_REPO" = "$GITHUB_REPOSITORY"','PR source must be same repository');
 
     for(const command of ['npm run test:browser','git archive','verify-release-files.js',

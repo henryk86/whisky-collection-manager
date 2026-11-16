@@ -6,7 +6,7 @@ Die Anwendung verwendet Node.js und Browser-ES-Module **ohne Datenbank und ohne 
 
 ## Entwicklung und Code-Reviews
 
-**Release-Strategie:** Aenderungen werden als Conventional Commits auf `develop` gesammelt; ein von dir freigegebener Merge nach `main` erzeugt automatisch genau einen getaggten Release-Snapshot mit der passenden Semantic-Version, dem Changelog, ZIPs und Docker-Images. Versionserhoehungen pro Entwicklungscommit entfallen. Fuer versionierte Quellcodeinstallationen das Git-Tag verwenden, nicht die unveraenderten Versionsdateien auf `main`. Details: [Release-Ablauf](docs/RELEASE_WORKFLOW.md).
+**Release-Strategie:** Aenderungen werden als Conventional Commits auf `develop` gesammelt; ein von dir freigegebener Merge nach `main` erzeugt automatisch genau einen getaggten Release-Snapshot mit der passenden Semantic-Version, dem Changelog, ZIPs und Docker-Images. Versionserhoehungen pro Entwicklungscommit entfallen. Nach erfolgreichem Release werden auch die Versionsdateien auf `main` und `develop` atomar mit dem Tag abgeglichen. Damit zeigen ein Checkout beider Branches und die offiziellen Release-Artefakte dieselbe zuletzt veroeffentlichte Version; die eigentlichen Anwendungsdateien werden weiterhin aus dem Tag gebaut. Details: [Release-Ablauf](docs/RELEASE_WORKFLOW.md).
 
 ### Commit-Nachrichten (Entwicklung)
 
