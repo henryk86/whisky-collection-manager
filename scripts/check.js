@@ -139,6 +139,27 @@ for (const code of apiCodes) {
     }
 }
 console.log(`${apiCodes.size} server API error codes: German/English/fallback catalog OK.`);
+// N-7: structured backup worker diagnostics must be present in both languages.
+const backupCodes = new Set();
+for (const file of sources.filter(name => ['worker/', 'shared/backup-job-errors.js'].some(prefix =>
+    path.relative('.', name).replaceAll(path.sep, '/').startsWith(prefix)))) {
+    const content = fs.readFileSync(file, 'utf8');
+    for (const [, code] of content.matchAll(/['"](backup\.errors\.[a-zA-Z0-9]+)['"]/g)) backupCodes.add(code);
+}
+for (const code of backupCodes) {
+    if (!Object.hasOwn(deMessages, code) || !Object.hasOwn(enMessages, code)) {
+        throw new Error(`Missing backup worker error translation: ${code}`);
+    }
+}
+const {apiErrorFieldLabels} = await import('../shared/api-error-field-labels.js');
+for (const field of Object.keys(apiErrorFieldLabels)) {
+    const key = `api.fields.${field}`;
+    if (!Object.hasOwn(deMessages,key) || !Object.hasOwn(enMessages,key) || enMessages[key] !== apiErrorFieldLabels[field]) {
+        throw new Error(`Missing or inconsistent API field name: ${key}`);
+    }
+}
+console.log(`${backupCodes.size} backup worker errors and ${Object.keys(apiErrorFieldLabels).length} API field names: German/English OK.`);
+
 
 const docCheck = spawnSync(process.execPath, ['scripts/check-docs.js'], {encoding: 'utf8'});
 if (docCheck.status !== 0) throw new Error(docCheck.stderr || docCheck.stdout);

@@ -79,20 +79,20 @@ function panelOption(value, label) {
 export function layout(input, room) {
     const furniture = {
         name: name(input.name), type: types.has(input.type) ? input.type : 'sonstiges',
-        x: number(input.x ?? 0, 'Position X', 0, room.width),
-        y: number(input.y ?? 0, 'Position Y', 0, room.height),
-        width: number(input.width ?? 1, 'Breite', 0.2, 20),
-        depth: number(input.depth ?? 0.5, 'Tiefe', 0.2, 20),
+        x: number(input.x ?? 0, 'x', 0, room.width),
+        y: number(input.y ?? 0, 'y', 0, room.height),
+        width: number(input.width ?? 1, 'width', 0.2, 20),
+        depth: number(input.depth ?? 0.5, 'depth', 0.2, 20),
         rotation: rotation(input.rotation),
-        leftSidePanel: panelOption(input.leftSidePanel, 'Linke Seitenwand'),
-        rightSidePanel: panelOption(input.rightSidePanel, 'Rechte Seitenwand'),
-        backPanel: panelOption(input.backPanel, 'Rückwand'),
+        leftSidePanel: panelOption(input.leftSidePanel, 'leftSidePanel'),
+        rightSidePanel: panelOption(input.rightSidePanel, 'rightSidePanel'),
+        backPanel: panelOption(input.backPanel, 'backPanel'),
         doorLeaves: doorLeaves(input.doorLeaves),
         glassFrame: glassFrame(input.glassFrame),
         doorRanges: doorRanges(input.doorRanges, input.shelves || []),
         // Backward compatible: older warehouse.json files have no vertical coordinates.
-        elevation: number(input.elevation ?? 0, 'Unterkante über Boden', 0, 10),
-        itemHeight: number(input.itemHeight ?? (input.type === 'haengeregal' ? 0.4 : 1.8), 'Möbelhöhe', 0.1, 5),
+        elevation: number(input.elevation ?? 0, 'elevation', 0, 10),
+        itemHeight: number(input.itemHeight ?? (input.type === 'haengeregal' ? 0.4 : 1.8), 'itemHeight', 0.1, 5),
     };
     const w = furniture.rotation % 180 === 0 ? furniture.width : furniture.depth;
     const h = furniture.rotation % 180 === 0 ? furniture.depth : furniture.width;

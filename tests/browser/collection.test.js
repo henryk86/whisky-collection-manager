@@ -1211,3 +1211,68 @@ test('browser: a committed bottling is not created twice after the following war
         assert.equal(collection.bottlings.filter(b => b.name === name).length, 1);
     });
 });
+
+test('browser: concurrent bottling submits and Enter repeat create only one record', async () => {
+    await session(async ({page, open, base}) => {
+        await open();
+        let postCount = 0;
+        await page.route('**/api/bottlings', async route => {
+            if (route.request().method() !== 'POST') return route.continue();
+            postCount++;
+            await new Promise(resolve => setTimeout(resolve, 600));
+            await route.continue();
+        });
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form [name="name"]').fill('N6 concurrent bottling');
+        await page.evaluate(() => {
+            const form = document.querySelector('#bottling-form');
+            form.requestSubmit();
+            form.dispatchEvent(new Event('submit', {bubbles:true,cancelable:true}));
+        });
+        assert.equal(await page.locator('#bottling-form').getAttribute('aria-busy'), 'true');
+        assert.equal(await page.locator('#bottling-form button[type="submit"]').isDisabled(), true);
+        await page.locator('#bottling-form').waitFor({state:'detached'});
+        assert.equal(postCount, 1);
+        const collection = (await requestJson(base, '/api/collection')).data;
+        assert.equal(collection.bottlings.filter(b => b.name === 'N6 concurrent bottling').length, 1);
+    });
+});
+
+test('browser: concurrent bottle submits create once; HTTP POST failure allows another attempt', async () => {
+    await session(async ({page, open, base}) => {
+        const {bottling} = await seed(base);
+        await open({query:`?bottling=${bottling.id}`});
+        await page.locator('[data-act="add-bottle"]').first().click();
+        await page.locator('#bottle-form [name="inventoryNumber"]').fill('009201');
+        let postCount = 0;
+        await page.route('**/api/bottles', async route => {
+            if (route.request().method() !== 'POST') return route.continue();
+            postCount++;
+            if (postCount === 1) {
+                await new Promise(resolve => setTimeout(resolve, 400));
+                return route.fulfill({status:500, contentType:'application/json', body:JSON.stringify({error:'private diagnostic'})});
+            }
+            await new Promise(resolve => setTimeout(resolve, 400));
+            await route.continue();
+        });
+        await page.evaluate(() => {
+            const form = document.querySelector('#bottle-form');
+            form.requestSubmit();
+            form.dispatchEvent(new Event('submit', {bubbles:true,cancelable:true}));
+        });
+        await page.waitForFunction(() => document.querySelector('#bottle-form')?.getAttribute('aria-busy') === null);
+        assert.equal(await page.locator('#bottle-form button[type="submit"]').isEnabled(), true);
+        assert.equal(await page.locator('#bottle-form [name="inventoryNumber"]').inputValue(), '009201');
+        assert.equal(postCount, 1);
+        assert.equal((await requestJson(base, '/api/collection')).data.bottlings[0].bottles.length, 1);
+        await page.evaluate(() => {
+            const form = document.querySelector('#bottle-form');
+            form.requestSubmit();
+            form.dispatchEvent(new Event('submit', {bubbles:true,cancelable:true}));
+        });
+        await page.locator('#bottle-form').waitFor({state:'detached'});
+        assert.equal(postCount, 2);
+        const records = (await requestJson(base, '/api/collection')).data.bottlings[0].bottles;
+        assert.equal(records.filter(b => b.inventoryNumber === '009201').length, 1);
+    });
+});

@@ -12,7 +12,7 @@ function locationFromInput(input) {
     return { latitude: lat, longitude: lon };
 }
 function uniqueName(collection, value, currentId = null) {
-    const name = requireField(value, 'Destilleriename');
+    const name = requireField(value, 'distilleryName');
     const duplicate = collection.distilleries.some(entry => entry.id !== currentId && entry.name.toLowerCase() === name.toLowerCase());
     if (duplicate) {
         throw fail('Destillerie existiert bereits', 409, "api.errors.distilleryAlreadyExists");

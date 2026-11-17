@@ -9,6 +9,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { writeReadableZip, inspectReadableZip } from '../shared/backup-zip.js';
 import { readBackupPassword } from '../shared/backup-password.js';
+import { backupJobError, serializeBackupJobError } from '../shared/backup-job-errors.js';
 
 const CONTROL = path.resolve(process.env.BACKUP_CONTROL_DIR || '/backup-control');
 const LOCAL_ROOT = path.resolve(process.env.BACKUP_TARGET_ROOT || '/backup-targets');
@@ -63,7 +64,7 @@ function writeJson(name, value) {
 }
 function cleanRelative(raw) {
     if (typeof raw !== 'string' || !SAFE_PATH.test(raw) || raw.startsWith('/') || raw.endsWith('/') || raw.split('/').some(p => !p || p.startsWith('.') || p === '..')) {
-        throw Error('Ungültiger Zielpfad');
+        throw backupJobError('backup.errors.invalidTargetPath');
     }
     return raw;
 }
@@ -71,25 +72,25 @@ export function repositoryFor(profile) {
     const target = cleanRelative(profile.targetPath);
     if (profile.provider === 'local') {
         const result = path.resolve(LOCAL_ROOT, target);
-        if (!result.startsWith(LOCAL_ROOT + path.sep)) throw Error('Unzulässiges lokales Backup-Ziel');
+        if (!result.startsWith(LOCAL_ROOT + path.sep)) throw backupJobError('backup.errors.invalidLocalTarget');
         // Refuse to silently write to the SD card if a USB/NAS mount went away.
         const drive = path.join(LOCAL_ROOT, target.split('/')[0]);
         const marker = path.join(drive, '.whisky-backup-target');
         if (!fs.existsSync(marker) || !fs.lstatSync(marker).isFile()) {
-            throw Error(`Backup-Marker fehlt: ${marker}. USB/NAS-Laufwerk korrekt eingehängt?`);
+            throw backupJobError('backup.errors.mountMarkerMissing');
         }
         if (fs.existsSync(result)) {
             const actual = fs.realpathSync(result);
-            if (!actual.startsWith(fs.realpathSync(LOCAL_ROOT) + path.sep)) throw Error('Backup-Ziel liegt außerhalb des erlaubten Bereichs');
+            if (!actual.startsWith(fs.realpathSync(LOCAL_ROOT) + path.sep)) throw backupJobError('backup.errors.targetOutsideRoot');
         }
         return result;
     }
-    if (typeof profile.remote !== 'string' || !SAFE_REMOTE.test(profile.remote)) throw Error('Ungültige Rclone-Verbindung');
+    if (typeof profile.remote !== 'string' || !SAFE_REMOTE.test(profile.remote)) throw backupJobError('backup.errors.invalidRcloneRemote');
     return `rclone:${profile.remote}:${target}`;
 }
 function loadProfiles() {
     const data = readJson('profiles.json', { version: 1, profiles: [] });
-    if (data.version !== 1 || !Array.isArray(data.profiles)) throw Error('Ungültige Profile');
+    if (data.version !== 1 || !Array.isArray(data.profiles)) throw backupJobError('backup.errors.invalidProfiles');
     return data.profiles;
 }
 function jobEnv() {
@@ -105,19 +106,21 @@ export function runCommand(binary, args, { cwd, timeout = 3600000 } = {}) {
         child.stdout.on('data', capture);
         child.stderr.on('data', capture);
         const timer = setTimeout(() => child.kill('SIGKILL'), timeout);
-        child.on('error', err => { clearTimeout(timer); reject(err); });
+        child.on('error', err => { clearTimeout(timer); err.backupCommand = binary; reject(err); });
         child.on('close', (code, signal) => {
             clearTimeout(timer);
             if (code === 0) resolve(output);
-            else reject(Error(`${binary} (${code ?? signal}): ${output.trim().slice(-1800)}`));
+            else reject(backupJobError(binary === 'rclone' ? 'backup.errors.rcloneFailed' : 'backup.errors.resticFailed'));
         });
     });
 }
 const restic = (repo, args, options) => runCommand('restic', ['-r', repo, ...args], options);
 async function snapshots(repo) {
     const raw = await restic(repo, ['snapshots', '--json'], { timeout: 120000 });
-    const entries = JSON.parse(raw);
-    return (Array.isArray(entries) ? entries : []).slice(-80).reverse().map(x => ({
+    let entries;
+    try { entries = JSON.parse(raw); } catch { throw backupJobError('backup.errors.invalidResticListing'); }
+    if (!Array.isArray(entries)) throw backupJobError('backup.errors.invalidResticListing');
+    return entries.slice(-80).reverse().map(x => ({
         id: x.id, shortId: x.short_id || x.id?.slice(0, 8), time: x.time,
         paths: x.paths, hostname: x.hostname, tags: x.tags || []
     }));
@@ -139,7 +142,10 @@ async function zipFilesFor(profile, repo) {
         } catch (error) { if (error.code === 'ENOENT') entries = []; else throw error; }
     } else {
         const output = await runCommand('rclone', ['lsjson', '--files-only', repo], { timeout: 120000 });
-        entries = JSON.parse(output).filter(item => ZIP_FILE.test(item.Name) && !item.IsDir)
+        let listing;
+        try { listing = JSON.parse(output); } catch { throw backupJobError('backup.errors.invalidRcloneListing'); }
+        if (!Array.isArray(listing)) throw backupJobError('backup.errors.invalidRcloneListing');
+        entries = listing.filter(item => ZIP_FILE.test(item.Name) && !item.IsDir)
             .map(item => ({ name: item.Name, size: item.Size }));
     }
     return entries.sort((a, b) => b.name.localeCompare(a.name)).map(entry => ({
@@ -185,16 +191,16 @@ async function runZipBackup(job, profile, repo, status) {
     const folder = await ensureSourceSnapshot(job);
     const local = profile.provider === 'local';
     const filename = archiveName(job);
-    if (local && fs.existsSync(path.join(repo, 'config'))) throw Error('Ziel ist ein altes Restic-Repository. Für ZIP einen neuen Ordner wählen.');
+    if (local && fs.existsSync(path.join(repo, 'config'))) throw backupJobError('backup.errors.legacyTargetForZip');
     const tempFolder = local ? repo : path.join(CONTROL, 'zip-temp', job.id);
     fs.mkdirSync(tempFolder, { recursive: true, mode: 0o700 });
     const temporary = path.join(tempFolder, `.${filename}.part`);
     const finished = path.join(tempFolder, filename);
     try {
-        const password = readBackupPassword();
+        const password = backupPassword();
         writeReadableZip(folder, temporary, password);
         // Authenticate every AES-256 entry before publishing to the target.
-        inspectReadableZip(temporary, null, password);
+        verifyZipArchive(temporary, password);
         if (local) fs.renameSync(temporary, finished);
         else {
             fs.renameSync(temporary, finished);
@@ -211,16 +217,16 @@ async function runZipBackup(job, profile, repo, status) {
 }
 /** Legacy Restic is read-only: convert an old snapshot into the same ZIP format for preview/apply. */
 async function prepareLegacyRestore(job, repo) {
-    if (!/^(latest|[0-9a-f]{8,64})$/i.test(job.snapshotId || '')) throw Error('Ungültige Restic-Snapshot-ID');
+    if (!/^(latest|[0-9a-f]{8,64})$/i.test(job.snapshotId || '')) throw backupJobError('backup.errors.invalidSnapshotId');
     const folder = path.join(CONTROL, 'imports', job.id);
     const extracted = path.join(folder, 'preview');
     fs.mkdirSync(extracted, { recursive: true, mode: 0o700 });
     try {
         await restic(repo, ['restore', job.snapshotId, '--target', extracted], { timeout: 3600000 });
         const archive = path.join(folder, 'uploaded.zip');
-        const password = readBackupPassword();
+        const password = backupPassword();
         writeReadableZip(extracted, archive, password);
-        inspectReadableZip(archive, null, password);
+        verifyZipArchive(archive, password);
         return { message: 'Altes Restic-Backup in prüfbares ZIP umgewandelt', importId: job.id, filename: 'altes-restic-backup.zip' };
     } catch (error) {
         fs.rmSync(folder, { recursive: true, force: true });
@@ -231,14 +237,14 @@ async function prepareLegacyRestore(job, repo) {
 async function prepareZipRestore(job, profile, repo) {
     const archives = await zipFilesFor(profile, repo);
     const selected = job.snapshotId === 'latest' ? archives[0] : archives.find(item => item.id === job.snapshotId);
-    if (!selected) throw Error('Sicherungsstand nicht gefunden');
+    if (!selected) throw backupJobError('backup.errors.snapshotNotFound');
     const folder = path.join(CONTROL, 'imports', job.id);
     fs.mkdirSync(folder, { recursive: true, mode: 0o700 });
     const target = path.join(folder, 'uploaded.zip');
     try {
         if (profile.provider === 'local') {
             const source = path.join(repo, selected.filename);
-            if (!fs.lstatSync(source).isFile()) throw Error('Keine reguläre ZIP-Datei');
+            if (!fs.lstatSync(source).isFile()) throw backupJobError('backup.errors.invalidZipFile');
             fs.copyFileSync(source, target, fs.constants.COPYFILE_EXCL);
         } else {
             await runCommand('rclone', ['copyto', `${repo}/${selected.filename}`, target], { timeout: 3600000 });
@@ -254,14 +260,35 @@ async function prepareZipRestore(job, profile, repo) {
 async function ensureSourceSnapshot(job) {
     const file = process.env.BACKUP_WORKER_TOKEN_FILE || '/run/secrets/backup-worker-token';
     const token = fs.readFileSync(file, 'utf8').trim();
-    const result = await fetch(`${APP}/internal/backup/snapshot/${job.id}`, {
-        method: 'POST', headers: { 'X-Backup-Worker-Token': token, 'Content-Type': 'application/json' },
-        body: '{}', signal: AbortSignal.timeout(120000)
-    });
-    if (!result.ok) throw Error(`App konnte keinen konsistenten Stand erstellen: HTTP ${result.status} ${(await result.text()).slice(0, 300)}`);
+    let result;
+    try {
+        result = await fetch(`${APP}/internal/backup/snapshot/${job.id}`, {
+            method: 'POST', headers: { 'X-Backup-Worker-Token': token, 'Content-Type': 'application/json' },
+            body: '{}', signal: AbortSignal.timeout(120000)
+        });
+    } catch {
+        throw backupJobError('backup.errors.sourceUnavailable');
+    }
+    if (!result.ok) throw backupJobError('backup.errors.sourceSnapshotFailed', {status: String(result.status)});
     const folder = path.join(CONTROL, 'staging', job.id);
-    if (!fs.statSync(path.join(folder, 'data/collection.json')).isFile()) throw Error('Quell-Snapshot enthält keine collection.json');
+    if (!fs.existsSync(path.join(folder, 'data/collection.json')) || !fs.statSync(path.join(folder, 'data/collection.json')).isFile()) throw backupJobError('backup.errors.sourceSnapshotIncomplete');
     return folder;
+}
+function verifyZipArchive(file, password = backupPassword()) {
+    try { inspectReadableZip(file, null, password); }
+    catch (error) {
+        if (error.code) throw error;
+        throw backupJobError('backup.errors.zipVerificationFailed');
+    }
+}
+function backupPassword() {
+    try { return readBackupPassword(); }
+    catch (error) {
+        if (error.message.includes('noch nicht eingerichtet') || error.message.includes('zu kurz') || error.message.includes('nicht eingerichtet')) {
+            throw backupJobError('backup.errors.passwordNotConfigured');
+        }
+        throw error;
+    }
 }
 export async function executeJob(job, profile, status) {
     const repo = repositoryFor(profile);
@@ -287,21 +314,21 @@ export async function executeJob(job, profile, status) {
         return formatOf(profile) === 'zip' ? prepareZipRestore(job, profile, repo) : prepareLegacyRestore(job, repo);
     }
     if (job.type === 'run') {
-        if (formatOf(profile) !== 'zip') throw Error('Altes Restic-Profil: keine neuen Backups. Bitte auf ZIP umstellen.');
+        if (formatOf(profile) !== 'zip') throw backupJobError('backup.errors.legacyProfileReadOnly');
         return runZipBackup(job, profile, repo, status);
     }
     if (job.type === 'check' && formatOf(profile) === 'zip') {
         const archives = await zipFilesFor(profile, repo);
-        if (!archives.length) throw Error('Noch keine ZIP-Sicherungen vorhanden');
+        if (!archives.length) throw backupJobError('backup.errors.noZipArchives');
         for (const item of archives) {
-            if (profile.provider === 'local') inspectReadableZip(path.join(repo, item.filename), null, readBackupPassword());
+            if (profile.provider === 'local') verifyZipArchive(path.join(repo, item.filename));
             else {
                 const folder = path.join(CONTROL, 'zip-temp', job.id);
                 fs.mkdirSync(folder, { recursive: true, mode: 0o700 });
                 try {
                     const file = path.join(folder, item.filename);
                     await runCommand('rclone', ['copyto', `${repo}/${item.filename}`, file]);
-                    inspectReadableZip(file, null, readBackupPassword());
+                    verifyZipArchive(file);
                 } finally { fs.rmSync(folder, { recursive: true, force: true }); }
             }
         }
@@ -316,9 +343,9 @@ export async function executeJob(job, profile, status) {
         return { message: `${status.snapshots[profile.id].length} Sicherungsstände geladen` };
     }
     if (job.type === 'restore') {
-        if (formatOf(profile) === 'zip') throw Error('ZIP-Sicherungen über die Vorschau einspielen.');
+        if (formatOf(profile) === 'zip') throw backupJobError('backup.errors.zipRestoreViaPreview');
         const snapshotId = job.snapshotId;
-        if (!/^(latest|[0-9a-f]{8,64})$/i.test(snapshotId || '')) throw Error('Ungültige Snapshot-ID');
+        if (!/^(latest|[0-9a-f]{8,64})$/i.test(snapshotId || '')) throw backupJobError('backup.errors.invalidSnapshotId');
         const target = path.join(CONTROL, 'restores', profile.id, job.id);
         fs.mkdirSync(target, { recursive: true, mode: 0o700 });
         try {
@@ -329,12 +356,16 @@ export async function executeJob(job, profile, status) {
         }
         return { message: 'Wiederherstellung in separaten Prüf-Ordner abgeschlossen. Laufende Sammlung unverändert.', restorePath: target };
     }
-    throw Error('Unbekannter Auftrags-Typ');
+    throw backupJobError('backup.errors.unknownJobType');
 }
 const EMPTY_STATUS = { updatedAt: null, timeZone: TZ, jobs: [], snapshots: {}, remotes: [] };
 export function createWorker() {
     const status = readJson('worker-status.json', EMPTY_STATUS);
-    status.jobs = (status.jobs || []).map(job => job.state === 'running' ? { ...job, state: 'failed', error: 'Worker wurde während des Auftrags beendet' } : job);
+    status.jobs = (status.jobs || []).map(job => {
+        if (job.state !== 'running') return job;
+        const { error, ...rest } = job;
+        return { ...rest, state: 'failed', errorCode: 'backup.errors.workerInterrupted' };
+    });
     status.snapshots ||= {};
     status.remotes ||= [];
     const schedule = readJson('schedule-state.json', {});
@@ -384,11 +415,11 @@ export function createWorker() {
                 flush();
                 try {
                     const profile = loadProfiles().find(profile => profile.id === job.profileId);
-                    if (!profile) throw Error('Profil existiert nicht mehr');
+                    if (!profile) throw backupJobError('backup.errors.profileMissing');
                     const result = await executeJob(job, profile, status);
                     Object.assign(log, { state: 'success', finishedAt: new Date().toISOString(), ...result });
                 } catch (error) {
-                    Object.assign(log, { state: 'failed', finishedAt: new Date().toISOString(), error: String(error.message || error).slice(0, 1500) });
+                    Object.assign(log, { state: 'failed', finishedAt: new Date().toISOString(), ...serializeBackupJobError(error) });
                 } finally {
                     fs.unlinkSync(full);
                     flush();

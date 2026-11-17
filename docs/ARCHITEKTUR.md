@@ -119,7 +119,7 @@ Die administrativen Backup-Endpunkte verlangen einen separaten Admin-Schlüssel 
 
 ## Internationalisierung
 
-UI-Texte werden über `t(key, params)` aus `public/js/i18n/index.js` aufgelöst. Deutsch wird als Basiskatalog mitgeliefert, Englisch nach Auswahl geladen. Beide `public/locales/*.json`-Dateien verwenden identische, stabile Schlüssel; Benutzereingaben werden niemals automatisch übersetzt. Neue Texte erfordern **beide** Sprachdateien und einen Rendering-Test. API-Fehlermeldungen sind derzeit noch keine vollständig sprachneutralen Fehlercodes.
+UI-Texte werden über `t(key, params)` aus `public/js/i18n/index.js` aufgelöst. Deutsch und Englisch werden statisch mit der Anwendung gebündelt; die aktive Sprache wird beim Start ausgewählt, zusätzliche Sprachkataloge können dynamisch geladen werden. Beide `public/locales/*.json`-Dateien verwenden identische, stabile Schlüssel; Benutzereingaben werden niemals automatisch übersetzt. Neue Texte erfordern **beide** Sprachdateien und einen Rendering-Test. HTTP-API-Fehler werden mit stabilen `api.errors.*`-Codes übertragen und lokalisiert; `field`/`other` enthalten sprachneutrale Feldschlüssel. Auch Backup-Worker-Aufträge speichern für neue Fehler strukturierte `backup.errors.*`-Codes statt deutschen Freitexts. Historische Job-Statusdateien können weiterhin Freitext enthalten, der bei unbekanntem Inhalt aus Sicherheitsgründen nur als generische Fehlermeldung erscheint.
 
 ## Änderungsleitfaden
 

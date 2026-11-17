@@ -78,7 +78,7 @@ function number(value, min, max, label) {
     return value;
 }
 export function validateRelativePath(value) {
-    const text = string(value, 'Zielpfad', 180);
+    const text = string(value, 'targetPath', 180);
     if (!/^[a-zA-Z0-9 _./-]+$/.test(text) || text.startsWith('/') || text.endsWith('/') || text.includes('\\') || text.split('/').some(part => !part || part === '.' || part === '..' || part.startsWith('.'))) {
         throw fail('Zielpfad muss relativ sein und darf keine übergeordneten Verzeichnisse enthalten.', 400, "api.errors.destinationPathMustBeRelativeAndMustNotContainParentDirectories");
     }
@@ -86,24 +86,24 @@ export function validateRelativePath(value) {
 }
 export function validateProfile(input) {
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw fail('Ungültiges Backup-Profil', 400, "api.errors.invalidBackupProfile");
-    const provider = string(input.provider, 'Anbieter', 32);
+    const provider = string(input.provider, 'provider', 32);
     const format = input.format ?? 'zip';
     if (!FORMATS.has(format)) throw fail('Unbekanntes Backup-Format', 400, "api.errors.unknownBackupFormat");
     if (!PROVIDERS.has(provider)) throw fail('Unbekannter Backup-Anbieter', 400, "api.errors.unknownBackupProvider");
-    const remote = provider === 'local' ? '' : string(input.remote, 'Rclone-Verbindung', 50);
+    const remote = provider === 'local' ? '' : string(input.remote, 'remote', 50);
     if (remote && !SAFE_REMOTE.test(remote)) throw fail('Rclone-Verbindung darf nur Buchstaben, Zahlen, - und _ enthalten', 400, "api.errors.rcloneConnectionMayContainOnlyLettersDigitsAnd");
     const frequency = input.schedule?.frequency ?? 'daily';
     if (!FREQUENCIES.has(frequency)) throw fail('Unbekannter Zeitplan', 400, "api.errors.unknownSchedule");
     const schedule = {
         frequency,
-        hour: number(input.schedule?.hour ?? 2, 0, 23, 'Stunde'),
-        minute: number(input.schedule?.minute ?? 0, 0, 59, 'Minute'),
-        weekday: number(input.schedule?.weekday ?? 0, 0, 6, 'Wochentag')
+        hour: number(input.schedule?.hour ?? 2, 0, 23, 'scheduleHour'),
+        minute: number(input.schedule?.minute ?? 0, 0, 59, 'scheduleMinute'),
+        weekday: number(input.schedule?.weekday ?? 0, 0, 6, 'scheduleWeekday')
     };
     const retention = {
-        daily: number(input.retention?.daily ?? 7, 0, 366, 'Tägliche Aufbewahrung'),
-        weekly: number(input.retention?.weekly ?? 4, 0, 104, 'Wöchentliche Aufbewahrung'),
-        monthly: number(input.retention?.monthly ?? 12, 0, 120, 'Monatliche Aufbewahrung'),
+        daily: number(input.retention?.daily ?? 7, 0, 366, 'retentionDaily'),
+        weekly: number(input.retention?.weekly ?? 4, 0, 104, 'retentionWeekly'),
+        monthly: number(input.retention?.monthly ?? 12, 0, 120, 'retentionMonthly'),
     };
     if (Object.values(retention).every(value => !value)) throw fail('Mindestens eine Aufbewahrungsregel erforderlich', 400, "api.errors.atLeastOneRetentionRuleIsRequired");
     if (provider === 'local' && validateRelativePath(input.targetPath).split('/').length !== 2) {

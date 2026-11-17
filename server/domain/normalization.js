@@ -20,7 +20,7 @@ export function normalizeBottling(input, old = {}) {
     const value = {
         ...old, ...filtered(input, fields)
     };
-    value.name = requireField(value.name, 'Whiskyname');
+    value.name = requireField(value.name, 'name');
     if (Object.hasOwn(input, 'distilleryIds')) {
         if (!Array.isArray(input.distilleryIds)) {
             throw fail('Destillerien müssen eine Liste sein', 400, "api.errors.distilleriesMustBeAList");

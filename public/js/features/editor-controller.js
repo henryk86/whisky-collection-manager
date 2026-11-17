@@ -58,6 +58,26 @@ export function createEditors({ state, selectors, bottlingForm, bottleForm, show
         query('#bottle-form').dataset.id = id;
     }
     async function handleForm(ev) {
+        const form = ev.target;
+        if (form.id !== 'bottling-form' && form.id !== 'bottle-form') return;
+        ev.preventDefault();
+        // Set the lock synchronously, before the first await. Duplicated clicks,
+        // Enter presses and scripted submit events must all be ignored.
+        if (form.dataset.saving === '1') return;
+        form.dataset.saving = '1';
+        form.setAttribute('aria-busy', 'true');
+        const buttons = [...form.querySelectorAll('button[type="submit"],input[type="submit"]')];
+        const previouslyDisabled = buttons.map(button => button.disabled);
+        buttons.forEach(button => { button.disabled = true; });
+        try {
+            return await submitForm(ev);
+        } finally {
+            delete form.dataset.saving;
+            form.removeAttribute('aria-busy');
+            buttons.forEach((button, index) => { button.disabled = previouslyDisabled[index]; });
+        }
+    }
+    async function submitForm(ev) {
         if (ev.target.id === 'bottling-form') {
             ev.preventDefault();
             const form = ev.target;

@@ -1,3 +1,4 @@
+import { displayErrorParams } from '../../shared/api-error-field-labels.js';
 import { apiErrorFallbacks } from '../../shared/api-error-fallbacks.js';
 
 function englishMessage(template, params = {}) {
@@ -18,7 +19,7 @@ export function publicErrorResponse(error) {
     if (typeof code !== 'string' || !Object.hasOwn(apiErrorFallbacks, code)) return generic;
     const params = safeParams(error.params);
     return {
-        error: englishMessage(apiErrorFallbacks[code], params),
+        error: englishMessage(apiErrorFallbacks[code], displayErrorParams(params)),
         errorCode: code,
         ...(Object.keys(params).length ? {errorParams:params} : {})
     };

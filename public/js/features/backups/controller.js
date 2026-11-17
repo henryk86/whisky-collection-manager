@@ -156,7 +156,7 @@ export function createBackupController({ state, render, showModal, closeModal })
                         try { promptPreparedZip(found.importId, found.filename); }
                         catch (error) { toast(error.message, true); }
                     } else {
-                        toast(found.state === 'success' ? (found.message || t("backups.jobs.succeeded")) : jobErrorText(found.error), found.state === 'failed');
+                        toast(found.state === 'success' ? (found.message || t("backups.jobs.succeeded")) : jobErrorText(found), found.state === 'failed');
                     }
                 } else if (attempts >= 180) {
                     clearInterval(pollTimer); pollTimer = null;

@@ -1,3 +1,4 @@
+import { displayErrorParams } from '../../shared/api-error-field-labels.js';
 import { t } from './i18n/index.js';
 import { applyResourceDelta } from '../../shared/resource-delta.js';
 
@@ -42,7 +43,7 @@ export function httpResponseError(status, data) {
     const params = data?.errorParams && typeof data.errorParams === 'object' && !Array.isArray(data.errorParams)
         ? Object.fromEntries(Object.entries(data.errorParams).filter(([name, value]) =>
             /^[a-zA-Z]\w*$/.test(name) && typeof value === 'string' && value.length <= 100)) : {};
-    const translated = key && t(key, params);
+    const translated = key && t(key, displayErrorParams(params, key => t(key)));
     // Do not show untrusted or untranslated backend error strings.
     const message = translated && translated !== key ? translated : t('errors.api.generic', {status});
     const error = new Error(message);

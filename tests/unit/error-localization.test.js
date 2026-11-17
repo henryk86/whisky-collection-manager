@@ -52,7 +52,7 @@ test('server errors expose stable codes and English-only fallback, never raw Ger
     assert.deepEqual(publicErrorResponse(fail('Ungültiger Pfad', 400, 'api.errors.invalidPath')),
         { error: 'Invalid path.', errorCode: 'api.errors.invalidPath' });
     assert.deepEqual(publicErrorResponse(fail('Ungültige Zahl: abv', 400, 'api.errors.invalidNumberField', {field:'abv'})),
-        { error: 'Invalid number: abv', errorCode: 'api.errors.invalidNumberField', errorParams: { field: 'abv' } });
+        { error: 'Invalid number: ABV', errorCode: 'api.errors.invalidNumberField', errorParams: { field: 'abv' } });
     // Rewording a developer diagnostic must not change the public error identity.
     assert.deepEqual(publicErrorResponse(fail('Some entirely different diagnostic', 400, 'api.errors.invalidPath')),
         {error:'Invalid path.', errorCode:'api.errors.invalidPath'});
@@ -82,6 +82,23 @@ test('API errors use selected language and sanitized code instead of raw server 
         assert.equal(dynamic.message, 'Name is required.');
         assert.equal(jobErrorText('<img src=x onerror=alert(1)>'), t('backups.jobs.failed'));
         assert.equal(jobErrorText('Ungültiger Pfad'), 'Invalid path.');
+        assert.equal(httpResponseError(400, {errorCode:'api.errors.requiredField',errorParams:{field:'distilleryName'}}).message,
+            'Distillery name is required.');
+        assert.equal(httpResponseError(400, {errorCode:'api.errors.invalidDateField',errorParams:{field:'distillationDate'}}).message,
+            'Invalid date: Distillation date');
+        assert.equal(jobErrorText({errorCode:'backup.errors.mountMarkerMissing'}),
+            'Backup destination unavailable: USB/NAS drive is not mounted correctly (backup marker missing).');
+        assert.equal(jobErrorText({errorCode:'backup.errors.sourceSnapshotFailed',errorParams:{status:'503'}}),
+            'The application could not create a consistent backup snapshot (HTTP 503).');
+        assert.equal(jobErrorText({errorCode:'backup.errors.notInCatalog',error:'<script>secrets</script>'}), t('backups.jobs.failed'));
+        await select('de');
+        assert.equal(httpResponseError(400, {errorCode:'api.errors.requiredField',errorParams:{field:'name'}}).message,
+            'Name ist erforderlich.');
+        assert.equal(httpResponseError(400, {errorCode:'api.errors.invalidNumberField',errorParams:{field:'abv'}}).message,
+            'Ungültige Zahl: Alkoholgehalt');
+        assert.equal(jobErrorText({errorCode:'backup.errors.mountMarkerMissing'}),
+            'Backup-Ziel nicht bereit: USB-/NAS-Laufwerk ist nicht korrekt eingehängt (Backup-Marker fehlt).');
+
     } finally {
         globalThis.fetch = originalFetch;
         await select('de');

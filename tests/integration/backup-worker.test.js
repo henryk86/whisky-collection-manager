@@ -71,6 +71,7 @@ case "$1" in listremotes) echo 'dropbox:';; lsd) exit 0;; esac
         const dashboard1 = worker.getStatus();
         assert.equal(dashboard1.jobs[0].id, backupId);
         assert.equal(dashboard1.jobs[0].state, 'failed', 'old Restic profile must not create new backups');
+        assert.equal(dashboard1.jobs[0].errorCode, 'backup.errors.legacyProfileReadOnly');
         assert.equal(fs.existsSync(logfile), false, 'restic was not invoked for new backups');
         const checkId = queue('check');
         const restoreId = queue('restore', { snapshotId: 'latest' });
