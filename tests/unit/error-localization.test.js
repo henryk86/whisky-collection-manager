@@ -49,12 +49,19 @@ test('missing translations fall back to English, not German or a raw key', () =>
 test('server errors expose stable codes and English-only fallback, never raw German text', () => {
     assert.equal(apiErrorCode('Ungültiger Pfad'), 'api.errors.invalidPath');
     assert.equal(apiErrorCode('constructor'), null, 'Object.prototype properties must not be valid error codes');
-    assert.deepEqual(publicErrorResponse(fail('Ungültiger Pfad', 400)),
+    assert.deepEqual(publicErrorResponse(fail('Ungültiger Pfad', 400, 'api.errors.invalidPath')),
         { error: 'Invalid path.', errorCode: 'api.errors.invalidPath' });
-    assert.deepEqual(publicErrorResponse(fail('Ungültige Zahl: abv', 400)),
+    assert.deepEqual(publicErrorResponse(fail('Ungültige Zahl: abv', 400, 'api.errors.invalidNumberField', {field:'abv'})),
         { error: 'Invalid number: abv', errorCode: 'api.errors.invalidNumberField', errorParams: { field: 'abv' } });
+    // Rewording a developer diagnostic must not change the public error identity.
+    assert.deepEqual(publicErrorResponse(fail('Some entirely different diagnostic', 400, 'api.errors.invalidPath')),
+        {error:'Invalid path.', errorCode:'api.errors.invalidPath'});
     assert.deepEqual(publicErrorResponse(fail('Noch nicht übersetzt', 400)),
         { error: 'The request could not be completed (HTTP 400).' });
+    assert.deepEqual(publicErrorResponse(fail('Ungültiger Pfad', 400)),
+        { error: 'The request could not be completed (HTTP 400).' }, 'untyped errors must not leak or map by German text');
+    assert.deepEqual(publicErrorResponse(fail('raw', 400, 'api.errors.requiredField', {field:'abc', html:'<script>', payload:123})),
+        {error:'abc is required.', errorCode:'api.errors.requiredField', errorParams:{field:'abc', html:'<script>'}});
     assert.deepEqual(publicErrorResponse(new Error('secret token and stack details')),
         { error: 'The request could not be completed (HTTP 500).' });
 });

@@ -50,24 +50,24 @@ function isValidContent(extension, bytes) {
     return false;
 }
 function fileLocation(relativePath) {
-    assert(isDocumentPath(relativePath), 'Ungueltiger Dokumentpfad');
+    assert(isDocumentPath(relativePath), 'Ungueltiger Dokumentpfad', 400, "api.errors.invalidDocumentPath");
     const absolute = path.resolve(ROOT, relativePath);
-    assert(absolute.startsWith(DOCUMENT_DIR + path.sep), 'Ungueltiger Dokumentpfad');
+    assert(absolute.startsWith(DOCUMENT_DIR + path.sep), 'Ungueltiger Dokumentpfad', 400, "api.errors.invalidDocumentPath");
     return absolute;
 }
 /** Save by random ID rather than user supplied filename; the original name is metadata. */
 export function saveDocument(bottleId, { filename, data }) {
-    assert(typeof bottleId === 'string' && /^[\w-]{1,128}$/.test(bottleId), 'Ungueltige Flaschen-ID');
+    assert(typeof bottleId === 'string' && /^[\w-]{1,128}$/.test(bottleId), 'Ungueltige Flaschen-ID', 400, "api.errors.invalidBottleID");
     assert(typeof filename === 'string' && filename.length > 0 && filename.length <= 180
-        && !/[\\/\x00-\x1f\x7f]/.test(filename) && filename.trim() === filename, 'Ungueltiger Dateiname');
+        && !/[\\/\x00-\x1f\x7f]/.test(filename) && filename.trim() === filename, 'Ungueltiger Dateiname', 400, "api.errors.invalidFilename");
     const ext = path.extname(filename).slice(1).toLowerCase();
-    assert(Object.hasOwn(fileTypes, ext), 'Dateityp nicht unterstuetzt');
-    assert(typeof data === 'string' && data.length < MAX_DOCUMENT_BYTES * 4 / 3 + 1024, 'Datei zu gross (max. 15 MB)', 413);
+    assert(Object.hasOwn(fileTypes, ext), 'Dateityp nicht unterstuetzt', 400, "api.errors.unsupportedFileType");
+    assert(typeof data === 'string' && data.length < MAX_DOCUMENT_BYTES * 4 / 3 + 1024, 'Datei zu gross (max. 15 MB)', 413, "api.errors.fileExceeds15MB");
     const match = /^data:[^;,]*;base64,([A-Za-z0-9+/]+={0,2})$/.exec(data);
-    assert(match, 'Ungueltige Dateiuebertragung');
+    assert(match, 'Ungueltige Dateiuebertragung', 400, "api.errors.invalidFileTransfer");
     const bytes = Buffer.from(match[1], 'base64');
-    assert(bytes.length > 0 && bytes.length <= MAX_DOCUMENT_BYTES, 'Datei leer oder groesser als 15 MB', 413);
-    assert(isValidContent(ext, bytes), 'Dateiinhalt passt nicht zum Dateityp');
+    assert(bytes.length > 0 && bytes.length <= MAX_DOCUMENT_BYTES, 'Datei leer oder groesser als 15 MB', 413, "api.errors.fileIsEmptyOrExceeds15MB");
+    assert(isValidContent(ext, bytes), 'Dateiinhalt passt nicht zum Dateityp', 400, "api.errors.fileContentsDoNotMatchTheFileType");
     const documentId = crypto.randomUUID();
     const relativePath = `documents/${bottleId}/${documentId}.${ext}`;
     const target = fileLocation(relativePath);
@@ -82,7 +82,7 @@ export function saveDocument(bottleId, { filename, data }) {
 export function readDocument(relativePath) {
     const file = fileLocation(relativePath);
     if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
-        throw fail('Datei auf dem Server nicht gefunden', 404);
+        throw fail('Datei auf dem Server nicht gefunden', 404, "api.errors.fileNotFoundOnServer");
     }
     return fs.readFileSync(file);
 }

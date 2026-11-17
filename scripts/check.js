@@ -35,8 +35,8 @@ for (const [file, imports] of graph) {
     const relative = path.relative('.', file).replaceAll(path.sep, '/');
     if (relative.startsWith('server/') || relative.startsWith('worker/')) {
         for (const dependency of imports) {
-            if (path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('public/js/')) {
-                throw new Error(`Backend must import shared/ instead of frontend code: ${relative} -> ${dependency}`);
+            if (path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('public/')) {
+                throw new Error(`Backend must not import public/ assets: ${relative} -> ${dependency}`);
             }
         }
     }
@@ -119,6 +119,26 @@ console.log(`${sources.length} JavaScript files: syntax/imports OK, no circular 
 const i18nCheck = spawnSync(process.execPath, ['scripts/check-i18n.js'], {encoding: 'utf8'});
 if (i18nCheck.status !== 0) throw new Error(i18nCheck.stderr || i18nCheck.stdout);
 process.stdout.write(i18nCheck.stdout);
+
+// N-4: all server-side error identities must exist in both UI catalogs and
+// the small API-only English fallback. No locale-specific message matching.
+const deMessages = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
+const enMessages = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
+const { apiErrorFallbacks } = await import('../shared/api-error-fallbacks.js');
+const apiCodes = new Set();
+for (const [file, imports] of graph) {
+    const relative = path.relative('.', file).replaceAll(path.sep, '/');
+    if (!relative.startsWith('server/')) continue;
+    const contents = fs.readFileSync(file, 'utf8');
+    for (const [, code] of contents.matchAll(/['"](api\.errors\.[a-zA-Z0-9]+)['"]/g)) apiCodes.add(code);
+}
+for (const code of apiCodes) {
+    if (!Object.hasOwn(deMessages, code) || !Object.hasOwn(enMessages, code) ||
+        !Object.hasOwn(apiErrorFallbacks, code) || enMessages[code] !== apiErrorFallbacks[code]) {
+        throw new Error(`Missing or inconsistent API error translation: ${code}`);
+    }
+}
+console.log(`${apiCodes.size} server API error codes: German/English/fallback catalog OK.`);
 
 const docCheck = spawnSync(process.execPath, ['scripts/check-docs.js'], {encoding: 'utf8'});
 if (docCheck.status !== 0) throw new Error(docCheck.stderr || docCheck.stdout);

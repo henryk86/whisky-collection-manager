@@ -48,4 +48,17 @@ test('a failure in either request rejects the refresh instead of claiming succes
         if (url === '/api/warehouse') throw Error('warehouse unavailable');
         return collection;
     }), /warehouse unavailable/);
+    assert.equal(state.collection, collection, 'persisted collection remains visible after a different resource fails');
+    assert.deepEqual(state.warehouse, {rooms:[]}, 'failed resource keeps its prior state');
+});
+
+test('a successful warehouse resource is retained even when collection GET fails', async () => {
+    const previous = {bottlings:[]};
+    const state={collection:previous,warehouse:{rooms:[]}};
+    await assert.rejects(loadResources(state, async url => {
+        if (url === '/api/collection') throw Error('collection unavailable');
+        return warehouse;
+    }), /collection unavailable/);
+    assert.equal(state.collection, previous);
+    assert.equal(state.warehouse, warehouse);
 });

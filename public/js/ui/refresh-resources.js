@@ -12,9 +12,17 @@ export async function loadResources(state, getJson, scope = 'all') {
         ? patchedCollection ? Promise.resolve(patchedCollection) : getJson('/api/collection') : Promise.resolve(state.collection);
     const warehouse = scope !== 'collection' || !state.warehouse
         ? patchedWarehouse ? Promise.resolve(patchedWarehouse) : getJson('/api/warehouse') : Promise.resolve(state.warehouse);
-    const [nextCollection, nextWarehouse] = await Promise.all([collection, warehouse]);
-    state.collection = nextCollection;
-    state.warehouse = changed.has('collection') && !changed.has('warehouse')
-        ? synchronizeWarehouseProjection(nextWarehouse, nextCollection) : nextWarehouse;
+    // Preserve resources that loaded successfully even when a different GET
+    // fails. A committed POST may have supplied a valid collection delta:
+    // dropping it would make navigation appear to lose the saved record.
+    const [collectionResult, warehouseResult] = await Promise.allSettled([collection, warehouse]);
+    if (collectionResult.status === 'fulfilled') state.collection = collectionResult.value;
+    if (warehouseResult.status === 'fulfilled') state.warehouse = warehouseResult.value;
+    if (changed.has('collection') && !changed.has('warehouse') &&
+        collectionResult.status === 'fulfilled' && state.warehouse) {
+        state.warehouse = synchronizeWarehouseProjection(state.warehouse, state.collection);
+    }
+    if (collectionResult.status === 'rejected') throw collectionResult.reason;
+    if (warehouseResult.status === 'rejected') throw warehouseResult.reason;
     return state;
 }

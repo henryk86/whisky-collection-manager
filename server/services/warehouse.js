@@ -13,7 +13,7 @@ const newId = () => crypto.randomUUID();
 
 function roomById(data, id) {
     const room = data.rooms.find(entry => entry.id === id);
-    if (!room) throw fail('Raum nicht gefunden', 404);
+    if (!room) throw fail('Raum nicht gefunden', 404, "api.errors.roomNotFound");
     return room;
 }
 function furnishingById(data, id) {
@@ -21,21 +21,21 @@ function furnishingById(data, id) {
         const furniture = room.furniture.find(item => item.id === id);
         if (furniture) return { room, furniture };
     }
-    throw fail('Lagermöbel nicht gefunden', 404);
+    throw fail('Lagermöbel nicht gefunden', 404, "api.errors.storageFurnitureNotFound");
 }
 function shelfById(data, id) {
     for (const room of data.rooms) for (const furniture of room.furniture) {
         const shelf = furniture.shelves.find(item => item.id === id);
         if (shelf) return { room, furniture, shelf };
     }
-    throw fail('Fach nicht gefunden', 404);
+    throw fail('Fach nicht gefunden', 404, "api.errors.compartmentNotFound");
 }
 function refuseOccupied(data, shelfIds) {
     // Deleting a physical bottle only changes collection.json. Old warehouse
     // references must not permanently block a now-empty room or shelf.
     const liveIds = new Set(physicalBottles().map(bottle => bottle.id));
     for (const id of Object.keys(data.assignments)) if (!liveIds.has(id)) delete data.assignments[id];
-    if (Object.values(data.assignments).some(id => shelfIds.has(id))) throw fail('Lagerort enthält Flaschen. Bitte zuerst umlagern.', 409);
+    if (Object.values(data.assignments).some(id => shelfIds.has(id))) throw fail('Lagerort enthält Flaschen. Bitte zuerst umlagern.', 409, "api.errors.storageLocationContainsBottlesMoveThemFirst");
 }
 function physicalBottles() { return projectedWarehouseBottles(read()); }
 export function getWarehouse() {
@@ -107,12 +107,12 @@ export const bulkUpdateFurniture = input => changeWarehouse(data => {
     const changes = input?.changes;
     if (!Array.isArray(ids) || ids.length < 1 || ids.length > 200 ||
         !ids.every(id => typeof id === 'string' && id.length > 0) || new Set(ids).size !== ids.length) {
-        throw fail('Bitte 1 bis 200 unterschiedliche Lagermöbel auswählen');
+        throw fail('Bitte 1 bis 200 unterschiedliche Lagermöbel auswählen', 400, "api.errors.selectBetween1And200DifferentStorageUnits");
     }
     const allowed = new Set(['rotation', 'elevation', 'itemHeight', 'width', 'depth', 'leftSidePanel', 'rightSidePanel', 'backPanel', 'doorLeaves', 'glassFrame']);
     if (!changes || typeof changes !== 'object' || Array.isArray(changes) ||
         !Object.keys(changes).length || Object.keys(changes).some(key => !allowed.has(key))) {
-        throw fail('Keine gültigen gemeinsamen Eigenschaften angegeben');
+        throw fail('Keine gültigen gemeinsamen Eigenschaften angegeben', 400, "api.errors.noValidSharedPropertiesSpecified");
     }
     const updates = ids.map(id => {
         const {room, furniture} = furnishingById(data, id);
@@ -139,7 +139,7 @@ export const bulkDeleteFurniture = async input => {
     const ids = input?.ids;
     if (!Array.isArray(ids) || ids.length < 1 || ids.length > 200 ||
         !ids.every(id => typeof id === 'string' && id.length > 0) || new Set(ids).size !== ids.length)
-        throw fail('Bitte 1 bis 200 unterschiedliche Lagermöbel auswählen');
+        throw fail('Bitte 1 bis 200 unterschiedliche Lagermöbel auswählen', 400, "api.errors.selectBetween1And200DifferentStorageUnits");
     const targets = ids.map(id => furnishingById(data, id));
     refuseOccupied(data, new Set(targets.flatMap(({furniture}) => furniture.shelves.map(shelf => shelf.id))));
     deletedPhotos = targets.flatMap(({furniture}) => (furniture.photos || []).map(photo => photo.path));
@@ -170,7 +170,7 @@ export async function addFurniturePhoto(id, input) {
         return await changeWarehouse(data => {
             const {furniture} = furnishingById(data, id);
             furniture.photos ??= [];
-            if (furniture.photos.length >= 24) throw fail('Maximal 24 Möbelfotos erlaubt');
+            if (furniture.photos.length >= 24) throw fail('Maximal 24 Möbelfotos erlaubt', 400, "api.errors.tooManyFurniturePhotos");
             const photo = {id:photoId,path:photoPath,createdAt:new Date().toISOString()};
             furniture.photos.push(photo);
             return photo;
@@ -182,7 +182,7 @@ export const reorderFurniturePhotos = (id, input) => changeWarehouse(data => {
     const photos = furniture.photos || [];
     const ids = input?.photoIds;
     if (!Array.isArray(ids) || ids.length !== photos.length || new Set(ids).size !== ids.length ||
-        ids.some(photoId => !photos.some(photo => photo.id === photoId))) throw fail('Ungültige Möbelfoto-Reihenfolge');
+        ids.some(photoId => !photos.some(photo => photo.id === photoId))) throw fail('Ungültige Möbelfoto-Reihenfolge', 400, "api.errors.invalidFurniturePhotoOrder");
     furniture.photos = ids.map(photoId => photos.find(photo => photo.id === photoId));
     return furniture.photos;
 });
@@ -190,7 +190,7 @@ export async function deleteFurniturePhoto(id, photoId) {
     const result = await changeWarehouse(data => {
         const {furniture} = furnishingById(data, id);
         const index = (furniture.photos || []).findIndex(photo => photo.id === photoId);
-        if (index < 0) throw fail('Möbelfoto nicht gefunden',404);
+        if (index < 0) throw fail('Möbelfoto nicht gefunden', 404, "api.errors.furniturePhotoNotFound");
         return furniture.photos.splice(index,1)[0];
     });
     deleteImage(result.path);
@@ -214,7 +214,7 @@ export const updateShelf = (id, input) => changeWarehouse(data => {
     if (nextCapacity !== null) {
         const known = new Set(physicalBottles().map(b => b.id));
         const occupied = Object.entries(data.assignments).filter(([bid, sid]) => sid === id && known.has(bid)).length;
-        if (occupied > nextCapacity) throw fail('Kapazität liegt unter der aktuellen Belegung', 409);
+        if (occupied > nextCapacity) throw fail('Kapazität liegt unter der aktuellen Belegung', 409, "api.errors.capacityIsBelowCurrentOccupancy");
     }
     Object.assign(shelf, next, {capacity:nextCapacity});
     return shelf;
@@ -234,10 +234,10 @@ export const deleteShelf = id => changeWarehouse(data => {
 /** Change only the vertical order of existing shelf IDs, never assignments. */
 export const moveShelf = (id, input) => changeWarehouse(data => {
     const {furniture,shelf} = shelfById(data,id);
-    if (!['up','down'].includes(input?.direction)) throw fail('Ungültige Verschieberichtung');
+    if (!['up','down'].includes(input?.direction)) throw fail('Ungültige Verschieberichtung', 400, "api.errors.invalidMovementDirection");
     const index=furniture.shelves.indexOf(shelf);
     const next=index + (input.direction === 'up' ? 1 : -1);
-    if (next<0 || next>=furniture.shelves.length) throw fail('Fach ist bereits am Rand',409);
+    if (next<0 || next>=furniture.shelves.length) throw fail('Fach ist bereits am Rand', 409, "api.errors.compartmentIsAlreadyAtTheEdge");
     [furniture.shelves[index],furniture.shelves[next]]=[furniture.shelves[next],furniture.shelves[index]];
     return {id,position:next};
 });
@@ -249,18 +249,18 @@ function copiedName(source, siblings) {
         const candidate = `${source.slice(0, 100 - suffix.length)}${suffix}`;
         if (!names.has(candidate)) return candidate;
     }
-    throw fail('Kein freier Kopiename verfügbar', 409);
+    throw fail('Kein freier Kopiename verfügbar', 409, "api.errors.noUnusedCopyNameIsAvailable");
 }
 function ensureNoFurnitureCollision(room, item, others = room.furniture) {
     const conflict = furnitureCollision(room, item, others);
-    if (conflict) throw fail(`Lagermöbel überschneidet sich mit „${conflict.name}“ (Grundfläche und Höhenbereich)`, 409);
+    if (conflict) throw fail(`Lagermöbel überschneidet sich mit „${conflict.name}“ (Grundfläche und Höhenbereich)`, 409, "api.errors.furnitureOverlap", {name:conflict.name});
 }
 /** Find a non-overlapping, in-bounds position for the copied furniture.
  * Existing coordinates remain unchanged. Furniture may have been positioned by hand.
  */
 function copyPosition(room, template) {
     const r = furnitureBounds(template);
-    if (r.w > room.width || r.h > room.height) throw fail('Die Kopie passt nicht in den Zielraum', 409);
+    if (r.w > room.width || r.h > room.height) throw fail('Die Kopie passt nicht in den Zielraum', 409, "api.errors.theCopyDoesNotFitInTheDestinationRoom");
     const round = v => Math.round(v * 100) / 100;
     const xs = new Set([0, round(room.width - r.w), round(template.x), round(template.x + r.w + 0.1)]);
     const ys = new Set([0, round(room.height - r.h), round(template.y), round(template.y + r.h + 0.1)]);
@@ -277,12 +277,12 @@ function copyPosition(room, template) {
             return !furnitureOverlap({...template,...p}, item);
         })) return p;
     }
-    throw fail('Kein freier Platz für die Kopie. Bitte zuerst Platz im Zielraum schaffen.', 409);
+    throw fail('Kein freier Platz für die Kopie. Bitte zuerst Platz im Zielraum schaffen.', 409, "api.errors.notEnoughSpaceForTheCopyMakeRoomInTheDestinationRoomFirst");
 }
 export const copyFurniture = (id, input = {}) => changeWarehouse(data => {
     const source = furnishingById(data, id);
     const targetRoom = input.roomId === undefined ? source.room : roomById(data, input.roomId);
-    if (input.withShelves !== undefined && typeof input.withShelves !== 'boolean') throw fail('Ungültige Kopieroption');
+    if (input.withShelves !== undefined && typeof input.withShelves !== 'boolean') throw fail('Ungültige Kopieroption', 400, "api.errors.invalidCopyOption");
     const withShelves = input.withShelves !== false;
     const position = copyPosition(targetRoom, source.furniture);
     const item = {
@@ -321,19 +321,19 @@ function enforceAssignmentCapacity(data, shelf, shelfId, selectedIds, known, inc
     if (required <= shelf.capacity) return;
     if (shelf.capacity === 0 || !Number.isInteger(increaseCapacityTo) ||
         increaseCapacityTo < required || increaseCapacityTo > 10000 || required > 10000) {
-        throw fail('This shelf has insufficient free capacity', 409);
+        throw fail('This shelf has insufficient free capacity', 409, "api.errors.insufficientShelfCapacity");
     }
     shelf.capacity = required;
 }
 
 export const assignBottle = (bottleId, input) => changeWarehouse(data => {
     const known = new Set(physicalBottles().map(item => item.id));
-    if (!known.has(bottleId)) throw fail('Physische Flasche nicht gefunden', 404);
+    if (!known.has(bottleId)) throw fail('Physische Flasche nicht gefunden', 404, "api.errors.physicalBottleNotFound");
     const id = input?.shelfId;
     if (id === null || id === '' || id === undefined) {
         delete data.assignments[bottleId]; return { bottleId, shelfId: null };
     }
-    if (typeof id !== 'string') throw fail('Ungültige Fach-ID');
+    if (typeof id !== 'string') throw fail('Ungültige Fach-ID', 400, "api.errors.invalidCompartmentID");
     const { shelf } = shelfById(data, id);
     enforceAssignmentCapacity(data, shelf, id, [bottleId], known, input?.increaseCapacityTo);
     data.assignments[bottleId] = id;
@@ -349,11 +349,11 @@ export const assignBottles = input => changeWarehouse(data => {
     const ids = input?.ids;
     if (!Array.isArray(ids) || ids.length < 1 || ids.length > 500 ||
         ids.some(id => typeof id !== 'string' || !id.trim() || id.length > 120) ||
-        new Set(ids).size !== ids.length) throw fail('Select 1 to 500 different bottles');
+        new Set(ids).size !== ids.length) throw fail('Select 1 to 500 different bottles', 400, "api.errors.select1To500Bottles");
     const known = new Set(physicalBottles().map(bottle => bottle.id));
-    if (ids.some(id => !known.has(id))) throw fail('Physical bottle not found', 404);
+    if (ids.some(id => !known.has(id))) throw fail('Physical bottle not found', 404, "api.errors.physicalBottleNotFound");
     const target = input?.shelfId;
-    if (target !== null && (typeof target !== 'string' || !target.trim())) throw fail('Invalid shelf ID');
+    if (target !== null && (typeof target !== 'string' || !target.trim())) throw fail('Invalid shelf ID', 400, "api.errors.invalidShelfID");
     const shelf = target === null ? null : shelfById(data, target).shelf;
     if (shelf) enforceAssignmentCapacity(data, shelf, target, ids, known, input?.increaseCapacityTo);
     // All validation succeeded. Persist one coherent assignment update.
@@ -381,10 +381,10 @@ export const importRooms = input => changeWarehouse(data => {
         includeAssignments:input?.includeAssignments ?? true,
         conflictPolicy:input?.conflictPolicy ?? 'skip'
     });
-    if (plan.summary.blockedRooms) throw fail('Cannot replace a room containing allocated bottles',409);
+    if (plan.summary.blockedRooms) throw fail('Cannot replace a room containing allocated bottles', 409, "api.errors.roomTransferOccupiedRoom");
     for (const room of plan.toReplace) {
         const index=data.rooms.findIndex(existing=>existing.id===room.id);
-        if(index<0) throw fail('Room changed during import',409);
+        if(index<0) throw fail('Room changed during import', 409, "api.errors.roomTransferRoomChanged");
         data.rooms[index]=room;
     }
     data.rooms.push(...plan.toAdd);

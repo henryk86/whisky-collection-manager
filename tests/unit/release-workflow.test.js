@@ -6,6 +6,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { compareVersions, nextVersion, parseVersion, updateReadmeTitle, pendingTestStatus, compactTestReport, verifyReleaseMetadata } from '../../scripts/release-version.js';
 import { prohibitedReleasePath } from '../../scripts/verify-release-files.js';
+import { readSourceManifest } from '../../scripts/release-manifest.js';
 const read = file => fs.readFileSync(file, 'utf8');
 
 test('release version parser and automatic bump support patch/minor/major', () => {
@@ -20,11 +21,17 @@ test('release version parser and automatic bump support patch/minor/major', () =
     assert.throws(() => nextVersion('1.2.3', 'none'), /Verwendung/);
 });
 
-test('release files match app, lockfile, README and top changelog', () => {
-    const release = verifyReleaseMetadata();
+test('develop keeps version metadata aligned without rewriting the immutable released source manifest', () => {
     const expected = JSON.parse(read('package.json')).version;
-    assert.equal(release.version, expected);
-    assert.equal(release.tag, `v${expected}`);
+    const lock = JSON.parse(read('package-lock.json'));
+    assert.equal(lock.version, expected);
+    assert.equal(lock.packages[''].version, expected);
+    assert.ok(read('README.md').startsWith(`# Whisky Collection Manager v${expected}\n`));
+    assert.ok(read('docs/TESTSTATUS.md').startsWith(`# Teststatus - Whisky Collection Manager v${expected}\n`));
+    assert.match(read('CHANGELOG.md'), new RegExp(`^# Changelog\\s*\\n\\s*## ${expected.replaceAll('.', '\\.')} - `));
+    assert.equal(readSourceManifest('.').version, expected);
+    // Full source fingerprints are checked only on immutable release snapshots,
+    // not on develop where application files are intentionally changing.
 });
 
 test('release ZIP rejects secrets but retains source and example config', () => {

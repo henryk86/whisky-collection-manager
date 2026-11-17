@@ -1191,3 +1191,23 @@ test('browser: horizontal overflow check detects an 8px overflow with a reserved
             `8px overflow must be detected with a reserved scrollbar track: ${JSON.stringify(measurement)}`);
     });
 });
+
+test('browser: a committed bottling is not created twice after the following warehouse GET fails', async () => {
+    await session(async ({ page, open, base }) => {
+        await open();
+        const name = 'Persisted despite one refresh failure';
+        // Initial load completed; fail only the next read after POST.
+        await page.route('**/api/warehouse', async route => {
+            if (route.request().method() === 'GET') {
+                await route.fulfill({status:503, contentType:'application/json', body:JSON.stringify({error:'temporary outage'})});
+            } else await route.continue();
+        }, {times:1});
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form [name="name"]').fill(name);
+        await page.locator('#bottling-form button[type="submit"]').click();
+        await page.getByText('Gespeichert, aber die Anzeige konnte nicht aktualisiert werden.', {exact:false}).waitFor();
+        assert.equal(await page.locator('#bottling-form').count(), 0, 'the committed form must be closed');
+        const collection = (await requestJson(base, '/api/collection')).data;
+        assert.equal(collection.bottlings.filter(b => b.name === name).length, 1);
+    });
+});

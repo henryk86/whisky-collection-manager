@@ -15,7 +15,7 @@ function cleanup() {
 }
 export function stageImage(input) {
     cleanup();
-    assert(pending.size < MAX_PENDING, 'Zu viele ausstehende Bilder; bitte später erneut versuchen');
+    assert(pending.size < MAX_PENDING, 'Zu viele ausstehende Bilder; bitte später erneut versuchen', 400, "api.errors.tooManyPendingImagesPleaseTryAgainLater");
     const { bytes, mediaType } = validateImageData(input.image);
     // Legacy browser-extension uploads have no source property and originate from
     // Whiskybase. New import adapters can explicitly use null for unlabelled photos.
@@ -29,14 +29,14 @@ export function stageImage(input) {
 export function previewImage(token) {
     cleanup();
     const entry = pending.get(token);
-    if (!entry) throw fail('Vorschau abgelaufen oder Bild nicht vorhanden', 404);
+    if (!entry) throw fail('Vorschau abgelaufen oder Bild nicht vorhanden', 404, "api.errors.previewExpiredOrImageIsMissing");
     return { bytes: entry.bytes, type: entry.mediaType };
 }
 export async function attachImageToBottle(bottleId, input) {
     cleanup();
-    if (typeof input.token !== 'string' || !/^[0-9a-f-]{36}$/i.test(input.token)) throw fail('Ungültiger Bild-Token');
+    if (typeof input.token !== 'string' || !/^[0-9a-f-]{36}$/i.test(input.token)) throw fail('Ungültiger Bild-Token', 400, "api.errors.invalidImageToken");
     const entry = pending.get(input.token);
-    if (!entry) throw fail('Importiertes Bild nicht mehr verfügbar. Bitte erneut importieren.', 404);
+    if (!entry) throw fail('Importiertes Bild nicht mehr verfügbar. Bitte erneut importieren.', 404, "api.errors.importImageIsNoLongerAvailablePleaseImportItAgain");
     const photo = await addPhoto(bottleId, { image: entry.image, ...(entry.source ? { source: entry.source } : {}) });
     pending.delete(input.token);
     return photo;

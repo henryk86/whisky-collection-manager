@@ -22,8 +22,17 @@ test('failed mutation reports an explicit failure and never refreshes', async ()
     assert.equal(refreshed, false);
 });
 
-test('failed refresh is not misreported as successful completion', async () => {
+test('failed refresh retains mutation success and reports only the refresh failure', async () => {
+    const failure = new Error('Failed to reload');
+    let mutationErrorCalled = false;
+    let refreshWarning;
     const result = await runAction(async () => ({id:'saved'}),
-        async () => { throw new Error('Failed to reload'); }, () => {});
-    assert.equal(result.ok, false);
+        async () => { throw failure; },
+        () => { mutationErrorCalled = true; },
+        error => { refreshWarning = error; });
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.value, {id:'saved'});
+    assert.equal(result.refreshError, failure);
+    assert.equal(refreshWarning, failure);
+    assert.equal(mutationErrorCalled, false);
 });

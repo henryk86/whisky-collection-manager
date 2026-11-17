@@ -5,17 +5,17 @@ import {detachTastings} from '../../shared/tasting-flights.js';
 import { normalizeTastingRecord, sortedTastings } from '../../shared/tasting-records.js';
 function requireBottling(collection, id) {
     const bottling = collection.bottlings.find(b => b.id === id);
-    if (!bottling) throw fail('Abfüllung nicht gefunden',404);
+    if (!bottling) throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
     return bottling;
 }
 function requireTasting(bottling, tastingId) {
     const tasting = (bottling.tastings || []).find(entry => entry.id === tastingId);
-    if (!tasting) throw fail('Verkostung nicht gefunden',404);
+    if (!tasting) throw fail('Verkostung nicht gefunden', 404, "api.errors.tastingNotFound");
     return tasting;
 }
 function clean(input, old) {
     try { return normalizeTastingRecord(input, old); }
-    catch (error) { throw fail(error.message,400); }
+    catch (error) { throw fail(error.message, 400, "api.errors.invalidTastingData"); }
 }
 export function listTastings(id) { return sortedTastings(requireBottling(read(),id)); }
 export function getTasting(id,tastingId) { return requireTasting(requireBottling(read(),id),tastingId); }
@@ -46,7 +46,7 @@ export function deleteTasting(id,tastingId) {
     return change(collection => {
         const bottling=requireBottling(collection,id);
         const index=(bottling.tastings || []).findIndex(entry=>entry.id===tastingId);
-        if (index < 0) throw fail('Verkostung nicht gefunden',404);
+        if (index < 0) throw fail('Verkostung nicht gefunden', 404, "api.errors.tastingNotFound");
         bottling.tastings.splice(index,1);
         detachTastings(collection,[tastingId]);
 

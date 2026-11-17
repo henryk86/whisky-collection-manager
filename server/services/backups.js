@@ -33,18 +33,18 @@ function secureEqual(actual, provided) {
 }
 function assertConfigured() {
     if (!CONTROL || !secret('BACKUP_ADMIN_TOKEN')) {
-        throw fail('Backup-Verwaltung nicht eingerichtet. Siehe docs/DOCKER_BACKUP.md.', 503);
+        throw fail('Backup-Verwaltung nicht eingerichtet. Siehe docs/DOCKER_BACKUP.md.', 503, "api.errors.backupManagementIsNotConfiguredSeeDocsDOCKERBACKUPMd");
     }
 }
 export function authorizeAdmin(req) {
     assertConfigured();
     if (!secureEqual(secret('BACKUP_ADMIN_TOKEN'), req.headers['x-backup-admin-token'])) {
-        throw fail('Backup-Verwaltung gesperrt: Administrator-Schlüssel erforderlich.', 401);
+        throw fail('Backup-Verwaltung gesperrt: Administrator-Schlüssel erforderlich.', 401, "api.errors.backupManagementIsLockedAdministratorKeyRequired");
     }
 }
 export function authorizeWorker(req) {
     if (!CONTROL || !secureEqual(secret('BACKUP_WORKER_TOKEN'), req.headers['x-backup-worker-token'])) {
-        throw fail('Backup-Worker nicht autorisiert.', 403);
+        throw fail('Backup-Worker nicht autorisiert.', 403, "api.errors.backupWorkerIsNotAuthorized");
     }
 }
 function readJson(name, fallback) {
@@ -70,30 +70,30 @@ function profiles() {
     return value;
 }
 function string(value, title, max = 80) {
-    if (typeof value !== 'string' || !value.trim() || value.length > max) throw fail(`${title}: ungültiger Wert`);
+    if (typeof value !== 'string' || !value.trim() || value.length > max) throw fail(`${title}: ungültiger Wert`, 400, "api.errors.invalidField", {field:title});
     return value.trim();
 }
 function number(value, min, max, label) {
-    if (!Number.isInteger(value) || value < min || value > max) throw fail(`${label}: außerhalb des gültigen Bereichs`);
+    if (!Number.isInteger(value) || value < min || value > max) throw fail(`${label}: außerhalb des gültigen Bereichs`, 400, "api.errors.fieldOutOfRange", {field:label});
     return value;
 }
 export function validateRelativePath(value) {
     const text = string(value, 'Zielpfad', 180);
     if (!/^[a-zA-Z0-9 _./-]+$/.test(text) || text.startsWith('/') || text.endsWith('/') || text.includes('\\') || text.split('/').some(part => !part || part === '.' || part === '..' || part.startsWith('.'))) {
-        throw fail('Zielpfad muss relativ sein und darf keine übergeordneten Verzeichnisse enthalten.');
+        throw fail('Zielpfad muss relativ sein und darf keine übergeordneten Verzeichnisse enthalten.', 400, "api.errors.destinationPathMustBeRelativeAndMustNotContainParentDirectories");
     }
     return text;
 }
 export function validateProfile(input) {
-    if (!input || typeof input !== 'object' || Array.isArray(input)) throw fail('Ungültiges Backup-Profil');
+    if (!input || typeof input !== 'object' || Array.isArray(input)) throw fail('Ungültiges Backup-Profil', 400, "api.errors.invalidBackupProfile");
     const provider = string(input.provider, 'Anbieter', 32);
     const format = input.format ?? 'zip';
-    if (!FORMATS.has(format)) throw fail('Unbekanntes Backup-Format');
-    if (!PROVIDERS.has(provider)) throw fail('Unbekannter Backup-Anbieter');
+    if (!FORMATS.has(format)) throw fail('Unbekanntes Backup-Format', 400, "api.errors.unknownBackupFormat");
+    if (!PROVIDERS.has(provider)) throw fail('Unbekannter Backup-Anbieter', 400, "api.errors.unknownBackupProvider");
     const remote = provider === 'local' ? '' : string(input.remote, 'Rclone-Verbindung', 50);
-    if (remote && !SAFE_REMOTE.test(remote)) throw fail('Rclone-Verbindung darf nur Buchstaben, Zahlen, - und _ enthalten');
+    if (remote && !SAFE_REMOTE.test(remote)) throw fail('Rclone-Verbindung darf nur Buchstaben, Zahlen, - und _ enthalten', 400, "api.errors.rcloneConnectionMayContainOnlyLettersDigitsAnd");
     const frequency = input.schedule?.frequency ?? 'daily';
-    if (!FREQUENCIES.has(frequency)) throw fail('Unbekannter Zeitplan');
+    if (!FREQUENCIES.has(frequency)) throw fail('Unbekannter Zeitplan', 400, "api.errors.unknownSchedule");
     const schedule = {
         frequency,
         hour: number(input.schedule?.hour ?? 2, 0, 23, 'Stunde'),
@@ -105,9 +105,9 @@ export function validateProfile(input) {
         weekly: number(input.retention?.weekly ?? 4, 0, 104, 'Wöchentliche Aufbewahrung'),
         monthly: number(input.retention?.monthly ?? 12, 0, 120, 'Monatliche Aufbewahrung'),
     };
-    if (Object.values(retention).every(value => !value)) throw fail('Mindestens eine Aufbewahrungsregel erforderlich');
+    if (Object.values(retention).every(value => !value)) throw fail('Mindestens eine Aufbewahrungsregel erforderlich', 400, "api.errors.atLeastOneRetentionRuleIsRequired");
     if (provider === 'local' && validateRelativePath(input.targetPath).split('/').length !== 2) {
-        throw fail('Lokales Backup-Ziel muss aus Laufwerk und Ordner bestehen, z. B. usb/whisky-backups');
+        throw fail('Lokales Backup-Ziel muss aus Laufwerk und Ordner bestehen, z. B. usb/whisky-backups', 400, "api.errors.localBackupDestinationMustIncludeADriveAndFolderEGUsbWhiskyBackups");
     }
     const result = {
         name: string(input.name, 'Profilname'), provider, format, remote, targetPath: validateRelativePath(input.targetPath),
@@ -117,9 +117,9 @@ export function validateProfile(input) {
 }
 export function setZipPassword(req, input) {
     authorizeAdmin(req);
-    if (typeof input?.password !== 'string' || input.password !== input.confirm) throw fail('Passwörter stimmen nicht überein', 400);
+    if (typeof input?.password !== 'string' || input.password !== input.confirm) throw fail('Passwörter stimmen nicht überein', 400, "api.errors.passwordsDoNotMatch");
     try { saveBackupPassword(input.password, input.previous); }
-    catch (error) { throw fail(error.message, 400); }
+    catch (error) { throw fail(error.message, 400, "api.errors.invalidBackupProfile"); }
     return { passwordConfigured: true, message: 'Backup-Passwort gespeichert. Künftige ZIPs sind AES-256-geschützt.' };
 }
 export function getDashboard(req) {
@@ -153,13 +153,13 @@ function assertDistinctTarget(existing, candidate, excludeId = null) {
         ? `local:${item.targetPath.toLowerCase()}`
         : `rclone:${item.remote.toLowerCase()}:${item.targetPath.toLowerCase()}`;
     if (existing.some(p => p.id !== excludeId && key(p) === key(candidate))) {
-        throw fail('Dieses Backup-Ziel wird bereits von einem anderen Profil genutzt. Jedes Profil benötigt ein eigenes Repository.', 409);
+        throw fail('Dieses Backup-Ziel wird bereits von einem anderen Profil genutzt. Jedes Profil benötigt ein eigenes Repository.', 409, "api.errors.anotherProfileIsAlreadyUsingThisBackupDestinationEachProfileRequiresItsOwnRepository");
     }
 }
 export function createProfile(req, input) {
     authorizeAdmin(req);
     const data = profiles();
-    if (data.profiles.length >= 64) throw fail('Maximal 64 Backup-Profile möglich');
+    if (data.profiles.length >= 64) throw fail('Maximal 64 Backup-Profile möglich', 400, "api.errors.atMost64BackupProfilesAreSupported");
     const now = new Date().toISOString();
     const profile = { ...validateProfile(input), id: crypto.randomUUID(), createdAt: now, updatedAt: now };
     assertDistinctTarget(data.profiles, profile);
@@ -168,9 +168,9 @@ export function createProfile(req, input) {
     return profile;
 }
 function findProfile(data, id) {
-    if (!ID.test(id)) throw fail('Ungültige Profil-ID', 404);
+    if (!ID.test(id)) throw fail('Ungültige Profil-ID', 404, "api.errors.invalidProfileID");
     const index = data.profiles.findIndex(item => item.id === id);
-    if (index < 0) throw fail('Backup-Profil nicht gefunden', 404);
+    if (index < 0) throw fail('Backup-Profil nicht gefunden', 404, "api.errors.backupProfileNotFound");
     return index;
 }
 export function updateProfile(req, id, input) {
@@ -180,7 +180,7 @@ export function updateProfile(req, id, input) {
     const profile = { ...validateProfile(input), id, createdAt: data.profiles[index].createdAt, updatedAt: new Date().toISOString() };
     if (data.profiles[index].format !== 'zip' && profile.provider === data.profiles[index].provider &&
         profile.remote === data.profiles[index].remote && profile.targetPath === data.profiles[index].targetPath) {
-        throw fail('Altes Restic-Repository: Bitte für ZIP-Sicherungen einen neuen Zielordner auswählen. Das alte Backup bleibt erhalten.');
+        throw fail('Altes Restic-Repository: Bitte für ZIP-Sicherungen einen neuen Zielordner auswählen. Das alte Backup bleibt erhalten.', 400, "api.errors.legacyResticRepositoryChooseANewDestinationFolderForZIPBackupsTheOldBackupIsRetained");
     }
     assertDistinctTarget(data.profiles, profile, id);
     data.profiles[index] = profile;
@@ -198,15 +198,15 @@ export function deleteProfile(req, id) {
 export function queueJob(req, profileId, type, body = {}) {
     authorizeAdmin(req);
     findProfile(profiles(), profileId);
-    if (!['run', 'check', 'test', 'snapshots', 'restore', 'prepare'].includes(type)) throw fail('Unbekannter Backup-Auftrag');
+    if (!['run', 'check', 'test', 'snapshots', 'restore', 'prepare'].includes(type)) throw fail('Unbekannter Backup-Auftrag', 400, "api.errors.unknownBackupJob");
     const item = profiles().profiles.find(p => p.id === profileId);
-    if (item.format !== 'zip' && type === 'run') throw fail('Dieses Altprofil verwendet Restic. Für neue Sicherungen bitte auf ZIP umstellen.', 409);
-    if (item.format === 'zip' && type === 'restore') throw fail('ZIP-Sicherungen über die Vorschau einspielen.', 409);
+    if (item.format !== 'zip' && type === 'run') throw fail('Dieses Altprofil verwendet Restic. Für neue Sicherungen bitte auf ZIP umstellen.', 409, "api.errors.thisLegacyProfileUsesResticSwitchToZIPForNewBackups");
+    if (item.format === 'zip' && type === 'restore') throw fail('ZIP-Sicherungen über die Vorschau einspielen.', 409, "api.errors.restoreZIPBackupsThroughThePreview");
     const job = { id: crypto.randomUUID(), profileId, type, createdAt: new Date().toISOString() };
     if (type === 'restore' || type === 'prepare') {
         const isZip = item.format === 'zip';
         if (!(isZip ? body?.snapshotId === 'latest' || ZIP_FILENAME.test(body?.snapshotId || '')
-            : /^(latest|[0-9a-f]{8,64})$/i.test(body?.snapshotId || ''))) throw fail('Ungültige Sicherungs-ID');
+            : /^(latest|[0-9a-f]{8,64})$/i.test(body?.snapshotId || ''))) throw fail('Ungültige Sicherungs-ID', 400, "api.errors.invalidBackupID");
         job.snapshotId = body.snapshotId;
     }
     const dir = path.join(CONTROL, 'jobs');
@@ -221,19 +221,19 @@ export function queueJob(req, profileId, type, body = {}) {
  * Node's event loop processes no app writes while these copies are in progress. */
 export function createSourceSnapshot(req, jobId) {
     authorizeWorker(req);
-    if (!ID.test(jobId)) throw fail('Ungültige Backup-Auftrags-ID');
+    if (!ID.test(jobId)) throw fail('Ungültige Backup-Auftrags-ID', 400, "api.errors.invalidBackupJobID");
     const stagingRoot = path.join(CONTROL, 'staging');
     fs.mkdirSync(stagingRoot, { recursive: true, mode: 0o700 });
     const folder = path.join(stagingRoot, jobId);
     // Reuse an already frozen snapshot when a worker was interrupted mid-job.
     if (fs.existsSync(folder)) {
         if (fs.existsSync(path.join(folder, 'data/collection.json'))) return { jobId, created: false };
-        throw fail('Unvollständiges Backup-Staging vorhanden', 409);
+        throw fail('Unvollständiges Backup-Staging vorhanden', 409, "api.errors.incompleteBackupStagingIsPresent");
     }
     const temporary = `${folder}.tmp`;
     fs.mkdirSync(temporary, { mode: 0o700 });
     try {
-        if (!fs.existsSync(DATA_FILE)) throw fail('Sammlungsdatei fehlt', 503);
+        if (!fs.existsSync(DATA_FILE)) throw fail('Sammlungsdatei fehlt', 503, "api.errors.collectionFileIsMissing");
         for (const [from, name] of [[DATA_DIR, 'data'], [IMAGE_DIR, 'images'], [DOCUMENT_DIR, 'documents']]) {
             const dest = path.join(temporary, name);
             if (fs.existsSync(from)) {
@@ -257,22 +257,22 @@ export function downloadLocalZip(req, profileId, filename) {
     authorizeAdmin(req);
     const data = profiles();
     const profile = data.profiles[findProfile(data, profileId)];
-    if (profile.format !== 'zip' || profile.provider !== 'local') throw fail('Direkter Download ist derzeit nur für lokale ZIP-Backups verfügbar', 400);
-    if (!ZIP_FILENAME.test(filename)) throw fail('Ungültiger Archivname', 400);
+    if (profile.format !== 'zip' || profile.provider !== 'local') throw fail('Direkter Download ist derzeit nur für lokale ZIP-Backups verfügbar', 400, "api.errors.directDownloadIsCurrentlyAvailableOnlyForLocalZIPBackups");
+    if (!ZIP_FILENAME.test(filename)) throw fail('Ungültiger Archivname', 400, "api.errors.invalidArchiveName");
     const root = path.resolve(process.env.BACKUP_TARGET_ROOT || '/backup-targets');
     const repository = path.resolve(root, profile.targetPath);
-    if (!repository.startsWith(root + path.sep)) throw fail('Ungültiges Backup-Ziel', 400);
+    if (!repository.startsWith(root + path.sep)) throw fail('Ungültiges Backup-Ziel', 400, "api.errors.invalidBackupDestination");
     const marker = path.join(path.dirname(repository), '.whisky-backup-target');
-    if (!fs.existsSync(marker) || !fs.lstatSync(marker).isFile()) throw fail('USB-Backup-Ziel nicht eingebunden', 409);
+    if (!fs.existsSync(marker) || !fs.lstatSync(marker).isFile()) throw fail('USB-Backup-Ziel nicht eingebunden', 409, "api.errors.usbBackupDestinationIsNotMounted");
     try {
         const actualRepo = fs.realpathSync(repository);
-        if (!actualRepo.startsWith(fs.realpathSync(root) + path.sep)) throw fail('Backup-Ziel nicht erlaubt', 403);
+        if (!actualRepo.startsWith(fs.realpathSync(root) + path.sep)) throw fail('Backup-Ziel nicht erlaubt', 403, "api.errors.backupDestinationIsNotAllowed");
         const file = path.join(actualRepo, filename);
-        if (!fs.lstatSync(file).isFile()) throw fail('Backup-Datei nicht gefunden', 404);
+        if (!fs.lstatSync(file).isFile()) throw fail('Backup-Datei nicht gefunden', 404, "api.errors.backupFileNotFound");
         return { path: file, filename, type: 'application/zip' };
     } catch (error) {
         if (error?.status) throw error;
-        if (error.code === 'ENOENT') throw fail('Backup-Datei nicht gefunden', 404);
+        if (error.code === 'ENOENT') throw fail('Backup-Datei nicht gefunden', 404, "api.errors.backupFileNotFound");
         throw error;
     }
 }
