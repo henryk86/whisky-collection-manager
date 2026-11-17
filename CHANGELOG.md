@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.3 - 2026-11-17
+
+- docs: update README and add new images for enhanced whisky collection management visuals
+- fix: add error handling for missing backup management configuration and update localization for error messages
+- fix: enhance backup diagnostics and error handling, including structured error codes and sensitive data redaction
+- fix: ensure frontend imports are served and validate against HTTP allowlist
+- fix: enhance backup worker diagnostics and error handling
+- fix: prevent duplicate saves and use stable API error codes
+- docs: update README to streamline project description and clarify development workflow
+- docs(release): align documentation with protected main workflow
+- chore(deps-dev): bump playwright-core from 1.65.0 to 1.65.1
+
 ## 1.5.2 - 2026-11-16
 
 - fix(ci): correct generated release test status
@@ -69,7 +81,7 @@
 
 ## 1.0.1 - 2026-11-16
 
-- B-3: Schema-5-Migration erhaelt Sammlungsstammdaten und Lager; alle bisherigen Verkostungsdaten (einschliesslich aktueller Verkostungen, Flights, Bewertungen, Geschmacksprofile und Whiskyfarben) entfallen mit bewusster Freigabe, vorheriges JSON wird gesichert
+- B-3: verlustfreie Schema-5-Migration aller Bestands- und Lagerdaten; ausschliesslich alte Verkostungsdaten entfallen
 
 ## 1.0.0 - 2026-11-16
 

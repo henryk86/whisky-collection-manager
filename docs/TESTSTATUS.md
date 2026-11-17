@@ -1,6 +1,6 @@
-# Teststatus - Whisky Collection Manager v1.5.2
+# Teststatus - Whisky Collection Manager v1.5.3
 
-**Stand:** 2026-11-16. Automatischer Release-Snapshot aus Merge 18847d0334c0 (v1.5.1).
+**Stand:** 2026-11-17. Automatischer Release-Snapshot aus Merge 95a8f64d2919 (v1.5.2).
 
 ## Pruefungen
 
@@ -13,7 +13,14 @@
 
 ## Aenderungen
 
-- fix(ci): correct generated release test status
-- fix(ci): implement version PR workflow and synchronization for protected main
+- docs: update README and add new images for enhanced whisky collection management visuals
+- fix: add error handling for missing backup management configuration and update localization for error messages
+- fix: enhance backup diagnostics and error handling, including structured error codes and sensitive data redaction
+- fix: ensure frontend imports are served and validate against HTTP allowlist
+- fix: enhance backup worker diagnostics and error handling
+- fix: prevent duplicate saves and use stable API error codes
+- docs: update README to streamline project description and clarify development workflow
+- docs(release): align documentation with protected main workflow
+- chore(deps-dev): bump playwright-core from 1.65.0 to 1.65.1
 
 Fruehere CI-Resultate: [TESTHISTORIE.md](TESTHISTORIE.md).
