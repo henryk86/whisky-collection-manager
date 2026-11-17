@@ -303,6 +303,9 @@ function backupPassword() {
             error.backupPasswordCode === BACKUP_PASSWORD_FAILURE.tooShort) {
             throw backupJobError('backup.errors.passwordNotConfigured');
         }
+        if (error.backupPasswordCode === BACKUP_PASSWORD_FAILURE.controlMissing) {
+            throw backupJobError('backup.errors.controlNotConfigured');
+        }
         throw error;
     }
 }

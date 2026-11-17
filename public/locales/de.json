@@ -457,6 +457,7 @@
   "backup.errors.missingFile": "Eine für das Backup benötigte Datei oder ein Verzeichnis fehlt.",
   "backup.errors.mountMarkerMissing": "Backup-Ziel nicht bereit: USB-/NAS-Laufwerk ist nicht korrekt eingehängt (Backup-Marker fehlt).",
   "backup.errors.noZipArchives": "Es sind noch keine ZIP-Sicherungen vorhanden.",
+  "backup.errors.controlNotConfigured": "Die Backup-Verwaltung ist nicht eingerichtet. Bitte BACKUP_CONTROL_DIR und die Container-Konfiguration prüfen.",
   "backup.errors.passwordNotConfigured": "Das Backup-Passwort fehlt oder ist ungültig. Bitte in der Backup-Verwaltung festlegen.",
   "backup.errors.permissionDenied": "Kein Schreib- oder Lesezugriff auf die Backup-Dateien. Berechtigungen prüfen.",
   "backup.errors.profileMissing": "Das zugehörige Backup-Profil existiert nicht mehr.",

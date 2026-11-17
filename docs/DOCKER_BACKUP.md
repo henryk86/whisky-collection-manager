@@ -124,7 +124,11 @@ Die Backup-Oberfläche zeigt für fehlgeschlagene Aufträge einen lokalisierten
 `backup.errors.*`-Fehlercode, **keine** unbereinigte Rclone-/Restic-Ausgabe.
 Zur Ursachenanalyse sind im **Betreiberprotokoll** des gemeinsamen Docker-Service
 `app` Einträge mit Auftrags-ID, Fehlercode und einer gekürzten, bereinigten
-technischen Meldung verfügbar:
+technischen Meldung verfügbar. Bei unerwarteten Fehlern werden statt unbereinigter
+Fehlermeldungen der Fehlertyp, gegebenenfalls ein Systemcode sowie die
+Quellcodeposition (Dateiname:Zeile:Spalte) protokolliert. Eine nicht eingerichtete
+Backup-Verwaltung erhält den spezifischen Fehlercode
+`backup.errors.controlNotConfigured`. Das Protokoll kann so eingesehen werden:
 
 ```sh
 docker compose logs --tail=200 app

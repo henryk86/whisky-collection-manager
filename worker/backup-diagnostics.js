@@ -35,10 +35,30 @@ export function commandFailureDiagnostic(binary, code, signal, output) {
     return `${binary} (${exit}): ${sanitizeBackupDiagnostic(output)}`;
 }
 
+// Error messages and full stacks may contain passwords, tokens and local paths.
+// Keep only a known exception type and a source basename with line/column.
+const ERROR_TYPES = new Set(['Error', 'TypeError', 'RangeError', 'ReferenceError',
+    'SyntaxError', 'URIError', 'EvalError', 'AggregateError', 'AbortError']);
+export function unexpectedBackupDiagnostic(error) {
+    const kind = ERROR_TYPES.has(error?.name) ? error.name : 'Fehler';
+    const system = typeof error?.code === 'string' && /^[A-Z0-9_]{2,24}$/.test(error.code)
+        ? `; Systemcode ${error.code}` : '';
+    const stack = typeof error?.stack === 'string' ? error.stack.split('\n').slice(1, 12) : [];
+    let location = '';
+    for (const frame of stack) {
+        // Discard absolute directory names, user names, URLs and raw stack text.
+        const match = frame.match(/(?:^|[\/])([A-Za-z0-9_.-]+\.(?:js|mjs|cjs)):(\d{1,6}):(\d{1,5})(?:\)|$)/);
+        if (match) {
+            location = `; Position ${match[1]}:${match[2]}:${match[3]}`;
+            break;
+        }
+    }
+    return `${kind}${system}${location || '; Quellposition nicht verfügbar'}`;
+}
+
 export function logBackupJobFailure(jobId, serialized, error) {
-    const diagnostic = typeof error?.backupDiagnostic === 'string' ? sanitizeBackupDiagnostic(error.backupDiagnostic) :
-        typeof error?.code === 'string' && /^[A-Z0-9_]{2,24}$/.test(error.code) ? `Systemcode ${error.code}` :
-            'keine weiteren technischen Details';
-    // Never log exception objects or raw .message; these can contain credentials.
+    const diagnostic = typeof error?.backupDiagnostic === 'string'
+        ? sanitizeBackupDiagnostic(error.backupDiagnostic) : unexpectedBackupDiagnostic(error);
+    // Never log exception objects, raw .message or full stacks: these can contain credentials.
     console.error(`[Backup-Worker] Auftrag ${jobId} fehlgeschlagen (${serialized.errorCode}): ${diagnostic}`);
 }

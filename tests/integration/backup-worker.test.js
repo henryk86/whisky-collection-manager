@@ -204,6 +204,18 @@ test('ZIP worker reports missing and too-short passwords by their stable identif
         await worker.processQueue();
         assert.equal(worker.getStatus().jobs.find(j => j.id === short).errorCode,
             'backup.errors.passwordNotConfigured');
+        // The control directory setting is required by the password reader.
+        // A missing setting is different from a missing/short password.
+        const controlMissing = queue();
+        const configuredControl = process.env.BACKUP_CONTROL_DIR;
+        delete process.env.BACKUP_CONTROL_DIR;
+        try {
+            await worker.processQueue();
+        } finally {
+            process.env.BACKUP_CONTROL_DIR = configuredControl;
+        }
+        assert.equal(worker.getStatus().jobs.find(j => j.id === controlMissing).errorCode,
+            'backup.errors.controlNotConfigured');
         assert.ok(worker.getStatus().jobs.every(j => j.error === undefined));
     } finally {
         console.error = originalConsoleError;

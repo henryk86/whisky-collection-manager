@@ -457,6 +457,7 @@
   "backup.errors.missingFile": "A file or directory required by the backup is missing.",
   "backup.errors.mountMarkerMissing": "Backup destination unavailable: USB/NAS drive is not mounted correctly (backup marker missing).",
   "backup.errors.noZipArchives": "No ZIP backups are available yet.",
+  "backup.errors.controlNotConfigured": "Backup management is not configured. Check BACKUP_CONTROL_DIR and the container configuration.",
   "backup.errors.passwordNotConfigured": "The backup password is missing or invalid. Configure it in backup management.",
   "backup.errors.permissionDenied": "Cannot read or write backup files. Check permissions.",
   "backup.errors.profileMissing": "The associated backup profile no longer exists.",
