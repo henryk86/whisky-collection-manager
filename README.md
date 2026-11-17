@@ -14,11 +14,41 @@ Webanwendung zur lokalen Verwaltung einer Whisky-Sammlung mit einzelnen Flaschen
 
 ## Oberfläche
 
-Die Abbildungen zeigen Beispieldaten.
+Die Abbildungen zeigen Beispieldaten ohne private Sammlungsdaten. Für die Lageransichten wurde das Raumlayout eines Whiskyzimmers mit einer auf insgesamt **50 Flaschenplätze** reduzierten Demo-Kapazität verwendet.
 
-| Helles Design | Dunkles Design |
+| Sammlung – hell | Sammlung – dunkel |
 | --- | --- |
 | ![Sammlungsübersicht im hellen Design](docs/images/collection-desktop-light.png) | ![Sammlungsübersicht im dunklen Design](docs/images/collection-desktop-dark.png) |
+
+<details>
+<summary>Mobile Sammlungsansicht</summary>
+
+![Sammlungsübersicht auf einem Smartphone im Dunkelmodus](docs/images/collection-mobile-dark.png)
+
+</details>
+
+**Whiskyzimmer – 3D-Raumansicht**
+
+![3D-Modellansicht des Whiskyzimmers mit 50 Flaschenplätzen](docs/images/warehouse-plan-3d.png)
+
+<details>
+<summary>2D-Raumplan und Regalansicht anzeigen</summary>
+
+| Raumplan (2D) | Regale und Fächer |
+| --- | --- |
+| ![Whiskyzimmer mit reduziertem 2D-Raumplan](docs/images/warehouse-plan-2d.png) | ![Lagerregale und Fächer im Dunkelmodus](docs/images/warehouse-wall.png) |
+
+</details>
+
+**Weitere Ansichten**
+
+| Flaschen finden | Analysen |
+| --- | --- |
+| ![Flaschensuche mit Inventarnummern und Lagerorten](docs/images/warehouse-find.png) | ![Auswertungen der Whisky-Sammlung](docs/images/analytics-overview.png) |
+
+**Destillerie-Karte**
+
+![OpenStreetMap-Kartenausschnitt der Destilleriestandorte](docs/images/map-distilleries.png)
 
 ## Lokal starten
 
