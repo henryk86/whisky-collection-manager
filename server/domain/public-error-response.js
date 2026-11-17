@@ -1,32 +1,26 @@
-import english from '../../public/locales/en.json' with { type: 'json' };
-import { apiErrorCode } from '../../shared/api-error-codes.js';
+import { displayErrorParams } from '../../shared/api-error-field-labels.js';
+import { apiErrorFallbacks } from '../../shared/api-error-fallbacks.js';
 
-const dynamicErrors = [
-    [/^Ungültige Zahl: (.+)$/, 'api.errors.invalidNumberField', ['field']],
-    [/^Ungültiges Datum: (.+)$/, 'api.errors.invalidDateField', ['field']],
-    [/^(.+) ist erforderlich$/, 'api.errors.requiredField', ['field']],
-    [/^(.+) widerspricht (.+)$/, 'api.errors.conflictingFields', ['field', 'other']],
-    [/^(.+): ungültiger Wert$/, 'api.errors.invalidField', ['field']],
-    [/^(.+): außerhalb des gültigen Bereichs$/, 'api.errors.fieldOutOfRange', ['field']],
-];
-
-function englishMessage(key, params = {}) {
-    return english[key].replace(/\{([a-zA-Z]\w*)\}/g, (placeholder, name) =>
+function englishMessage(template, params = {}) {
+    return template.replace(/\{([a-zA-Z]\w*)\}/g, (placeholder, name) =>
         Object.hasOwn(params, name) ? params[name] : placeholder);
 }
+function safeParams(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    return Object.fromEntries(Object.entries(value).filter(([name, field]) =>
+        /^[a-zA-Z]\w*$/.test(name) && typeof field === 'string' && field.length <= 100));
+}
 
-/** Never leak unexpected errors, internal German text or untrusted details into HTTP responses. */
+/** Never infer public error identity from translated messages or expose internal detail. */
 export function publicErrorResponse(error) {
     const status = Number.isInteger(error?.status) ? error.status : 500;
-    if (!error?.status) return { error: englishMessage('errors.api.generic', {status}) };
-    const code = apiErrorCode(error.message);
-    if (code) return { error: englishMessage(code), errorCode: code };
-    for (const [pattern, candidate, names] of dynamicErrors) {
-        const match = typeof error.message === 'string' ? pattern.exec(error.message) : null;
-        if (!match) continue;
-        const params = Object.fromEntries(names.map((name, index) => [name, match[index + 1].slice(0, 100)]));
-        return { error: englishMessage(candidate, params), errorCode: candidate, errorParams: params };
-    }
-    // Legacy or dynamically generated validations without a stable code.
-    return { error: englishMessage('errors.api.generic', {status}) };
+    const generic = { error: englishMessage('The request could not be completed (HTTP {status}).', {status:String(status)}) };
+    const code = error?.code;
+    if (typeof code !== 'string' || !Object.hasOwn(apiErrorFallbacks, code)) return generic;
+    const params = safeParams(error.params);
+    return {
+        error: englishMessage(apiErrorFallbacks[code], displayErrorParams(params)),
+        errorCode: code,
+        ...(Object.keys(params).length ? {errorParams:params} : {})
+    };
 }

@@ -8,12 +8,12 @@ import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
 
 const find=(collection,id)=>{
     const flight=(collection.tastingFlights || []).find(f=>f.id===id);
-    if (!flight) throw fail('Tasting-Flight nicht gefunden',404);
+    if (!flight) throw fail('Tasting-Flight nicht gefunden', 404, "api.errors.flightNotFound");
     return flight;
 };
 const normalize=(body,old)=>{
     try {return normalizeFlightFields(body,old);}
-    catch(error){throw fail(error.message,400);}
+    catch(error){throw fail(error.message, 400, "api.errors.invalidTastingData");}
 };
 export function list() {return read().tastingFlights || [];}
 export function get(id) {return find(read(),id);}
@@ -42,17 +42,17 @@ export function remove(id) {
 function assertAvailable(collection,flight,ids) {
     if (!Array.isArray(ids) || ids.length>FLIGHT_LIMIT ||
         ids.some(id=>typeof id!=='string' || !/^[a-zA-Z0-9-]{1,100}$/.test(id)) ||
-        new Set(ids).size!==ids.length) throw fail('Ungültige Flight-Reihenfolge',400);
+        new Set(ids).size!==ids.length) throw fail('Ungültige Flight-Reihenfolge', 400, "api.errors.invalidFlightOrder");
     const refs=allTastingReferences(collection);
     for (const id of ids) {
-        if (refs.filter(item=>item.record.id===id).length!==1) throw fail('Verkostung nicht gefunden oder nicht eindeutig',400);
+        if (refs.filter(item=>item.record.id===id).length!==1) throw fail('Verkostung nicht gefunden oder nicht eindeutig', 400, "api.errors.tastingNotUniqueOrMissing");
         if ((collection.tastingFlights || []).some(other=>other.id!==flight.id && other.tastingIds.includes(id)))
-            throw fail('Verkostung gehört bereits zu einem anderen Flight',409);
+            throw fail('Verkostung gehört bereits zu einem anderen Flight', 409, "api.errors.tastingAlreadyInOtherFlight");
     }
 }
 export function setTastings(id,body) {
     if (!body || typeof body!=='object' || Array.isArray(body) ||
-        Object.keys(body).length!==1 || !Object.hasOwn(body,'tastingIds')) throw fail('Ungültige Flight-Reihenfolge',400);
+        Object.keys(body).length!==1 || !Object.hasOwn(body,'tastingIds')) throw fail('Ungültige Flight-Reihenfolge', 400, "api.errors.invalidFlightOrder");
     return change(collection=>{
         const flight=find(collection,id);
         assertAvailable(collection,flight,body.tastingIds);
@@ -63,21 +63,21 @@ export function setTastings(id,body) {
 }
 /** Create a single tasting in a flight in one atomic write (also for unowned whiskies). */
 export function createTasting(id,body) {
-    if (!body || typeof body!=='object' || Array.isArray(body)) throw fail('Ungültige Verkostungsdaten',400);
+    if (!body || typeof body!=='object' || Array.isArray(body)) throw fail('Ungültige Verkostungsdaten', 400, "api.errors.invalidTastingData");
     return change(collection=>{
         const flight=find(collection,id);
-        if (flight.tastingIds.length>=FLIGHT_LIMIT) throw fail('Flight enthält zu viele Verkostungen',400);
+        if (flight.tastingIds.length>=FLIGHT_LIMIT) throw fail('Flight enthält zu viele Verkostungen', 400, "api.errors.flightTooManyTastings");
         const {bottlingId,bottling,...data}=body;
-        if ((bottlingId == null)===(bottling == null)) throw fail('Abfüllung muss eindeutig gewählt werden',400);
+        if ((bottlingId == null)===(bottling == null)) throw fail('Abfüllung muss eindeutig gewählt werden', 400, "api.errors.bottlingSelectionRequired");
         let normalized,owned;
         try {
             if (bottlingId!=null) {
                 if (typeof bottlingId!=='string') throw new Error('Ungültige Abfüllung');
                 owned=collection.bottlings.find(b=>b.id===bottlingId);
-                if (!owned) throw fail('Abfüllung nicht gefunden',404);
+                if (!owned) throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
                 normalized=normalizeTastingRecord(data);
             } else normalized=normalizeStandaloneTasting({...data,bottling});
-        } catch(error) {if (error.status) throw error;throw fail(error.message,400);}
+        } catch(error) {if (error.status) throw error;throw fail(error.message, 400, "api.errors.invalidTastingData");}
         const timestamp=now();
         const record={...normalized,id:uid(),createdAt:timestamp,updatedAt:timestamp};
         if (owned) {

@@ -5,14 +5,14 @@ export async function readJson(request) {
     // can write data without a CORS preflight.
     const mediaType = (request.headers['content-type'] || '').split(';', 1)[0].trim().toLowerCase();
     if (mediaType !== 'application/json') {
-        throw fail('Content-Type muss application/json sein', 415);
+        throw fail('Content-Type muss application/json sein', 415, "api.errors.contentTypeMustBeApplicationJson");
     }
     const chunks = [];
     let bytes = 0;
     for await (const chunk of request) {
         bytes += chunk.length;
         if (bytes > 26 * 1024 * 1024) {
-            throw fail('Anfrage zu groß', 413);
+            throw fail('Anfrage zu groß', 413, "api.errors.requestIsTooLarge");
         }
         chunks.push(chunk);
     }
@@ -21,10 +21,10 @@ export async function readJson(request) {
         value = JSON.parse(Buffer.concat(chunks).toString('utf8'));
     }
     catch {
-        throw fail('Ungültiges JSON');
+        throw fail('Ungültiges JSON', 400, "api.errors.invalidJSON");
     }
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
-        throw fail('JSON-Anfrage muss ein Objekt sein');
+        throw fail('JSON-Anfrage muss ein Objekt sein', 400, "api.errors.jsonRequestMustBeAnObject");
     }
     return value;
 }

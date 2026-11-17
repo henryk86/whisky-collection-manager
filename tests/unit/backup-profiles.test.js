@@ -39,7 +39,7 @@ test('backup scheduler is deterministic and respects weekly/hourly/daily slots i
 test('Rclone repositories are isolated; local targets require mounted-drive marker', () => {
     assert.equal(repositoryFor(valid), 'rclone:my_dropbox:whisky/backups');
     // Marker guard: absent marker must fail rather than silently backing up to host SD card.
-    assert.throws(() => repositoryFor({ ...valid, provider: 'local', remote: '' }), /Backup-Marker/);
+    assert.throws(() => repositoryFor({ ...valid, provider: 'local', remote: '' }), error => error.backupJobCode === 'backup.errors.mountMarkerMissing');
 });
 test('backup UI escapes names and errors; never renders credentials', () => {
     const malicious = { ...valid, format: 'zip', id: 'fake', name: '<script>alert(1)</script>' };

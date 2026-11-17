@@ -8,7 +8,7 @@
 - **Zwei getrennte Datenmodelle:** `collection.json` (Schema 5) für die Sammlung und `warehouse.json` (Schema 1) für die physische Lageranordnung. Die Lagerzuordnung verweist mit stabilen Flaschen-/Fach-IDs auf die Sammlung.
 - **Server entscheidet über Datenänderungen:** UI-Validierung hilft beim Ausfüllen, ersetzt aber keine serverseitigen Fachregeln. Schreiben ist serialisiert, validiert und atomar pro Datei.
 - **Darstellung ist kein Datenmodell:** 2D-/3D-Geometrie und Statistikwerte werden abgeleitet; sie verändern die Quelldaten nicht.
-- **Versionierte Datenformate:** Schema 5 ist inkompatibel zu älteren Programmen. Beim Upgrade werden bestehende Sammlungsdaten nach Validierung übernommen; nur historische Verkostungsdaten entfallen. Ältere Programmversionen dürfen die migrierten Dateien nicht mehr öffnen.
+- **Versionierte Datenformate:** Schema 5 ist inkompatibel zu älteren Programmen. Beim Upgrade werden bestehende Sammlungsdaten nach Validierung übernommen; alle Verkostungsdaten aus Schema 1 bis 4 entfallen, auch zuletzt angelegte. Ältere Programmversionen dürfen die migrierten Dateien nicht mehr öffnen.
 
 ## Repository im Überblick
 
@@ -109,7 +109,7 @@ ${WCM_DATA_DIR}/storage/
 
 Inventarnummern sind Strings (führende Nullen bleiben erhalten). In der Collection liegen `bottlings[].bottles[]`, in der Lagerdatei verweist `assignments[bottleId]` auf eine `shelfId`. Namen sind **keine** IDs. Die genaue Feldsemantik steht in [ANFORDERUNGEN](ANFORDERUNGEN.md), [LAGER](LAGER.md) und [API](API.md).
 
-**Upgrade auf Schema 5:** Eine bestehende `collection.json` (Schema 1 bis 4) wird vor dem Schreiben im Arbeitsspeicher migriert und validiert. Die Originaldatei wird unveraendert unter `backups/pre-schema5-…json` gesichert. Abfuellungen, physische Flaschen samt IDs und Inventarnummern, Destillerien, Einstellungen, Foto- und Dateireferenzen bleiben erhalten. Ausschliesslich die bisherigen Verkostungsdaten (`tastings`, `externalTastings`, `tastingFlights`, Legacy-Bewertungen und Bewertungszusammenfassungen) werden beim Upgrade nicht uebernommen. `warehouse.json` mit Raeumen, Moebeln, Faechern und Flaschenzuordnungen bleibt **bytegenau unveraendert**. Alte JSON-Importe und ZIP-Backups werden im Import-/Restore-Pfad auf Schema 5 angehoben; neuere unbekannte Schemata und ungueltige Daten werden abgelehnt, ohne Bestandsdateien zu ueberschreiben. Fotos und Belege liegen auf dem Datentraeger; eine reine Collection-JSON-Sicherung enthaelt sie **nicht**.
+**Upgrade auf Schema 5:** Eine bestehende `collection.json` (Schema 1 bis 4) wird vor dem Schreiben im Arbeitsspeicher migriert und validiert. Die Originaldatei wird unveraendert unter `backups/pre-schema5-…json` gesichert. Abfuellungen, physische Flaschen samt IDs und Inventarnummern, Destillerien, Einstellungen, Foto- und Dateireferenzen bleiben erhalten. Saemtliche bisher gespeicherten Verkostungsdaten (`tastings`, `externalTastings`, `tastingFlights`, Bewertungen, `tastingNotes`, `flavorProfile` und `whiskyColor`) werden beim Upgrade **nicht** uebernommen, auch wenn sie unmittelbar vor dem Upgrade angelegt wurden. Dies ist eine bewusste Datenverlust-Entscheidung; es handelt sich nicht um eine verlustfreie Migration aller Daten. `warehouse.json` mit Raeumen, Moebeln, Faechern und Flaschenzuordnungen bleibt **bytegenau unveraendert**. Alte JSON-Importe und ZIP-Backups werden im Import-/Restore-Pfad auf Schema 5 angehoben; neuere unbekannte Schemata und ungueltige Daten werden abgelehnt, ohne Bestandsdateien zu ueberschreiben. Fotos und Belege liegen auf dem Datentraeger; eine reine Collection-JSON-Sicherung enthaelt sie **nicht**.
 
 ## Backup und Wiederherstellung
 
@@ -119,7 +119,7 @@ Die administrativen Backup-Endpunkte verlangen einen separaten Admin-Schlüssel 
 
 ## Internationalisierung
 
-UI-Texte werden über `t(key, params)` aus `public/js/i18n/index.js` aufgelöst. Deutsch wird als Basiskatalog mitgeliefert, Englisch nach Auswahl geladen. Beide `public/locales/*.json`-Dateien verwenden identische, stabile Schlüssel; Benutzereingaben werden niemals automatisch übersetzt. Neue Texte erfordern **beide** Sprachdateien und einen Rendering-Test. API-Fehlermeldungen sind derzeit noch keine vollständig sprachneutralen Fehlercodes.
+UI-Texte werden über `t(key, params)` aus `public/js/i18n/index.js` aufgelöst. Deutsch und Englisch werden statisch mit der Anwendung gebündelt; die aktive Sprache wird beim Start ausgewählt. Der Sprachindex wird bei der Initialisierung über `/locales/index.json` geladen; für die gewählte nichtdeutsche Sprache wird der Katalog über `fetch` angefordert. Eine Registrierung neuer Sprachen während der laufenden Sitzung oder ein Wechsel ohne Neuladen ist nicht implementiert. Die Dateien `de.json` und `en.json` verwenden identische, stabile Schlüssel; Benutzereingaben werden niemals automatisch übersetzt. Neue Texte erfordern **beide** Sprachdateien und einen Rendering-Test. HTTP-API-Fehler werden mit stabilen `api.errors.*`-Codes übertragen und lokalisiert; `field`/`other` enthalten sprachneutrale Feldschlüssel. Auch Backup-Worker-Aufträge speichern für neue Fehler strukturierte `backup.errors.*`-Codes statt deutschen Freitexts. Historische Job-Statusdateien können weiterhin Freitext enthalten, der bei unbekanntem Inhalt aus Sicherheitsgründen nur als generische Fehlermeldung erscheint.
 
 ## Änderungsleitfaden
 

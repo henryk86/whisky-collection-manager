@@ -40,7 +40,7 @@ export function createRequestHandler() {
                 return await handleApi(request, response, url);
             }
             if (request.method !== 'GET') {
-                throw fail('Methode nicht erlaubt', 405);
+                throw fail('Methode nicht erlaubt', 405, "api.errors.methodNotAllowed");
             }
             await serveStatic(request, response, url);
         }

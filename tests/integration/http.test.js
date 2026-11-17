@@ -7,7 +7,7 @@ import { startTestServer, requestJson } from '../helpers/server.js';
 test('all refactored browser entry points and styles are actually served', async () => {
     const context = await startTestServer();
     try {
-        for (const file of ['/', '/app.js', '/js/features/scanner/controller.js', '/js/features/forms/bottle.js', '/js/views/warehouse.js', '/js/views/warehouse-presentation.js', '/style.css', '/styles/themes.css', '/assets/hero-header.jpg']) {
+        for (const file of ['/', '/app.js', '/shared/api-error-field-labels.js', '/js/features/scanner/controller.js', '/js/features/forms/bottle.js', '/js/views/warehouse.js', '/js/views/warehouse-presentation.js', '/style.css', '/styles/themes.css', '/assets/hero-header.jpg']) {
             const response = await fetch(context.base + file);
             assert.equal(response.status, 200, file);
             assert.ok((await response.arrayBuffer()).byteLength > 0, file);

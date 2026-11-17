@@ -8,9 +8,9 @@ import { fail } from '../domain/errors.js';
 const WEB = path.resolve(fileURLToPath(new URL('../../public/', import.meta.url)));
 const SHARED = path.resolve(WEB, '../shared');
 // Only browser-safe shared modules are served. Node-only backup modules stay private.
-const SHARED_BROWSER_FILES = new Set([
+export const SHARED_BROWSER_FILES = new Set([
     'resource-delta.js', 'warehouse-bottle-projection.js',
-    'api-error-codes.js', 'flavor-profile.js', 'whisky-colors.js', 'tasting.js',
+    'api-error-codes.js', 'api-error-field-labels.js', 'flavor-profile.js', 'whisky-colors.js', 'tasting.js',
     'tasting-subject.js', 'tasting-records.js', 'standalone-tastings.js',
     'tasting-flights.js', 'photo-images.js', 'warehouse-compartments.js',
     'warehouse-placement.js', 'photo-adjustments.js'
@@ -18,7 +18,7 @@ const SHARED_BROWSER_FILES = new Set([
 function decodePath(encoded) {
     try { return decodeURIComponent(encoded); }
     catch (error) {
-        if (error instanceof URIError) throw fail('Ungültiger Pfad', 400);
+        if (error instanceof URIError) throw fail('Ungültiger Pfad', 400, "api.errors.invalidPath");
         throw error;
     }
 }
@@ -80,7 +80,7 @@ export async function serveStatic(req, res, url) {
     let file;
     if (url.pathname === '/vendor/html5-qrcode.min.js') {
         const vendor = path.resolve(WEB, '../node_modules/html5-qrcode/html5-qrcode.min.js');
-        if (!fs.existsSync(vendor)) throw fail('Scanner-Bibliothek fehlt. Bitte npm install ausführen.', 503);
+        if (!fs.existsSync(vendor)) throw fail('Scanner-Bibliothek fehlt. Bitte npm install ausführen.', 503, "api.errors.scannerLibraryIsMissingRunNpmInstall");
         return streamStatic(req, res, vendor, 'text/javascript; charset=utf-8', 'public, max-age=3600');
     }
     // Only these fixed Three.js ESM files are exposed from node_modules.
@@ -92,23 +92,23 @@ export async function serveStatic(req, res, url) {
     };
     if (Object.hasOwn(threeFiles, url.pathname)) {
         const vendor=path.resolve(WEB,'../node_modules/three',threeFiles[url.pathname]);
-        if (!fs.existsSync(vendor)) throw fail('Three.js fehlt. Bitte npm ci ausführen.',503);
+        if (!fs.existsSync(vendor)) throw fail('Three.js fehlt. Bitte npm ci ausführen.', 503, "api.errors.threeJsIsMissingRunNpmCi");
         return streamStatic(req, res, vendor, 'text/javascript; charset=utf-8', 'public, max-age=3600');
     }
     if (url.pathname.startsWith('/shared/')) {
         const name = decodePath(url.pathname.slice('/shared/'.length));
-        if (!SHARED_BROWSER_FILES.has(name)) throw fail('Datei nicht gefunden', 404);
+        if (!SHARED_BROWSER_FILES.has(name)) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
         file = path.join(SHARED, name);
     } else if (url.pathname.startsWith('/images/')) {
         const name = decodePath(url.pathname.slice(1));
         file = path.resolve(ROOT, name);
-        if (!file.startsWith(IMAGE_DIR + path.sep)) throw fail('Ungültiger Bildpfad', 403);
+        if (!file.startsWith(IMAGE_DIR + path.sep)) throw fail('Ungültiger Bildpfad', 403, "api.errors.invalidImagePath");
     } else {
         const name = url.pathname === '/' ? 'index.html' : decodePath(url.pathname.slice(1));
         file = path.resolve(WEB, name);
-        if (file !== WEB && !file.startsWith(WEB + path.sep)) throw fail('Ungültiger Pfad', 403);
+        if (file !== WEB && !file.startsWith(WEB + path.sep)) throw fail('Ungültiger Pfad', 403, "api.errors.invalidPath");
     }
-    if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw fail('Datei nicht gefunden', 404);
+    if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
     const ext = path.extname(file).toLowerCase();
     const types = {
         '.webmanifest': 'application/manifest+json; charset=utf-8', '.wasm': 'application/wasm', '.onnx': 'application/octet-stream', '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif', '.ico': 'image/x-icon'

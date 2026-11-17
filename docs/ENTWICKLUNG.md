@@ -100,7 +100,7 @@ Neue GUI-Beschriftungen müssen in beiden Katalogen (`public/locales/de.json`, `
 
 - `README.md` ist ein kurzer Einstieg, **kein** Sammelplatz für changelogartige Funktionsnachträge. Technische Modulgrenzen stehen in [ARCHITEKTUR.md](ARCHITEKTUR.md), Verhalten in [ANFORDERUNGEN.md](ANFORDERUNGEN.md) und den Fachdokumenten.
 - `docs/TESTSTATUS.md` beschreibt nur den aktuell geprüften Release; ältere Protokolle bleiben in `docs/TESTHISTORIE.md`.
-- Der Codecheck ruft `scripts/check-docs.js` auf. Er überprüft relative Markdown-Ziele, aber keine externen URLs oder die Semantik von Überschriften.
+- Der Codecheck ruft `scripts/check-docs.js` auf. Er überprüft relative Markdown-Ziele und erkennt historische Versionsüberschriften in aktuellen Fachdokumenten, aber keine externen URLs oder fachlichen Widersprüche. Bei Release-Prozessänderungen `AGENTS.md`, `README.md`, `docs/RELEASE_WORKFLOW.md`, `docs/TESTSTRATEGIE.md` und `docs/TECHNISCHE_SCHULDEN.md` mit dem tatsächlichen Workflow abgleichen.
 - Bewusst verbleibende technische Schulden und nicht ohne Funktionstest mögliche Umbauten stehen in [TECHNISCHE_SCHULDEN.md](TECHNISCHE_SCHULDEN.md).
 
 ## Security-Regressionen

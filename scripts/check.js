@@ -35,8 +35,8 @@ for (const [file, imports] of graph) {
     const relative = path.relative('.', file).replaceAll(path.sep, '/');
     if (relative.startsWith('server/') || relative.startsWith('worker/')) {
         for (const dependency of imports) {
-            if (path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('public/js/')) {
-                throw new Error(`Backend must import shared/ instead of frontend code: ${relative} -> ${dependency}`);
+            if (path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('public/')) {
+                throw new Error(`Backend must not import public/ assets: ${relative} -> ${dependency}`);
             }
         }
     }
@@ -68,6 +68,32 @@ function visit(file, stack = []) {
 for (const file of graph.keys()) {
     visit(file);
 }
+// Every relative import reachable from the frontend must be actually served.
+// Existence and syntax checks alone missed an N-4a shared module blocked by
+// the restrictive HTTP allowlist, causing a blank application in CI Chromium.
+const {SHARED_BROWSER_FILES} = await import('../server/http/static-files.js');
+const browserVisited = new Set();
+const browserShared = new Set();
+function verifyBrowserImports(file) {
+    if (browserVisited.has(file)) return;
+    browserVisited.add(file);
+    const relative = path.relative('.', file).replaceAll(path.sep, '/');
+    if (relative.startsWith('shared/')) {
+        const name = relative.slice('shared/'.length);
+        if (!SHARED_BROWSER_FILES.has(name)) {
+            throw new Error(`Frontend imports /shared/${name}, but static HTTP allowlist blocks it`);
+        }
+        browserShared.add(name);
+    } else if (!relative.startsWith('public/')) {
+        throw new Error(`Frontend imports an inaccessible module: ${relative}`);
+    }
+    for (const dependency of graph.get(file) || []) verifyBrowserImports(dependency);
+}
+for (const file of sources.filter(name => path.relative('.', name).replaceAll(path.sep, '/').startsWith('public/'))) {
+    verifyBrowserImports(file);
+}
+console.log(`${browserShared.size} frontend shared modules: HTTP allowlist OK.`);
+
 // Validate local assets referenced by browser tests before running Chromium.
 // In particular, an import refactor must rename the fixture on disk as well.
 const fixtureReferences = new Set();
@@ -119,6 +145,47 @@ console.log(`${sources.length} JavaScript files: syntax/imports OK, no circular 
 const i18nCheck = spawnSync(process.execPath, ['scripts/check-i18n.js'], {encoding: 'utf8'});
 if (i18nCheck.status !== 0) throw new Error(i18nCheck.stderr || i18nCheck.stdout);
 process.stdout.write(i18nCheck.stdout);
+
+// N-4: all server-side error identities must exist in both UI catalogs and
+// the small API-only English fallback. No locale-specific message matching.
+const deMessages = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
+const enMessages = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
+const { apiErrorFallbacks } = await import('../shared/api-error-fallbacks.js');
+const apiCodes = new Set();
+for (const [file, imports] of graph) {
+    const relative = path.relative('.', file).replaceAll(path.sep, '/');
+    if (!relative.startsWith('server/')) continue;
+    const contents = fs.readFileSync(file, 'utf8');
+    for (const [, code] of contents.matchAll(/['"](api\.errors\.[a-zA-Z0-9]+)['"]/g)) apiCodes.add(code);
+}
+for (const code of apiCodes) {
+    if (!Object.hasOwn(deMessages, code) || !Object.hasOwn(enMessages, code) ||
+        !Object.hasOwn(apiErrorFallbacks, code) || enMessages[code] !== apiErrorFallbacks[code]) {
+        throw new Error(`Missing or inconsistent API error translation: ${code}`);
+    }
+}
+console.log(`${apiCodes.size} server API error codes: German/English/fallback catalog OK.`);
+// N-7: structured backup worker diagnostics must be present in both languages.
+const backupCodes = new Set();
+for (const file of sources.filter(name => ['worker/', 'shared/backup-job-errors.js'].some(prefix =>
+    path.relative('.', name).replaceAll(path.sep, '/').startsWith(prefix)))) {
+    const content = fs.readFileSync(file, 'utf8');
+    for (const [, code] of content.matchAll(/['"](backup\.errors\.[a-zA-Z0-9]+)['"]/g)) backupCodes.add(code);
+}
+for (const code of backupCodes) {
+    if (!Object.hasOwn(deMessages, code) || !Object.hasOwn(enMessages, code)) {
+        throw new Error(`Missing backup worker error translation: ${code}`);
+    }
+}
+const {apiErrorFieldLabels} = await import('../shared/api-error-field-labels.js');
+for (const field of Object.keys(apiErrorFieldLabels)) {
+    const key = `api.fields.${field}`;
+    if (!Object.hasOwn(deMessages,key) || !Object.hasOwn(enMessages,key) || enMessages[key] !== apiErrorFieldLabels[field]) {
+        throw new Error(`Missing or inconsistent API field name: ${key}`);
+    }
+}
+console.log(`${backupCodes.size} backup worker errors and ${Object.keys(apiErrorFieldLabels).length} API field names: German/English OK.`);
+
 
 const docCheck = spawnSync(process.execPath, ['scripts/check-docs.js'], {encoding: 'utf8'});
 if (docCheck.status !== 0) throw new Error(docCheck.stderr || docCheck.stdout);

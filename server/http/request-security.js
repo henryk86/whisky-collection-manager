@@ -19,14 +19,14 @@ export function requireSameOriginMutation(request, url, { extensionStage = false
     if (extensionStage && origin && allowedExtensionOrigin(origin)) return;
     const fetchSite = request.headers['sec-fetch-site'];
     if (fetchSite && fetchSite !== 'same-origin' && fetchSite !== 'none') {
-        throw fail('Schreibzugriff von fremder Webseite nicht erlaubt', 403);
+        throw fail('Schreibzugriff von fremder Webseite nicht erlaubt', 403, "api.errors.writeAccessFromAnotherWebsiteIsNotAllowed");
     }
     if (origin) {
         let supplied;
-        try { supplied = new URL(origin); } catch { throw fail('Ungültiger Origin-Header', 403); }
+        try { supplied = new URL(origin); } catch { throw fail('Ungültiger Origin-Header', 403, "api.errors.invalidOriginHeader"); }
         const scheme = request.socket?.encrypted ? 'https:' : 'http:';
         if (supplied.origin !== `${scheme}//${url.host}`) {
-            throw fail('Schreibzugriff von fremder Webseite nicht erlaubt', 403);
+            throw fail('Schreibzugriff von fremder Webseite nicht erlaubt', 403, "api.errors.writeAccessFromAnotherWebsiteIsNotAllowed");
         }
     }
 }
@@ -50,7 +50,7 @@ function rejectHost(raw, hostname) {
             console.warn('Weitere abgelehnte Hosts werden nicht mehr einzeln protokolliert (Limit: 20). ALLOWED_HOSTS und CERT_DNS_NAMES/CERT_IP_ADDRESSES pruefen.');
         }
     }
-    throw fail(HOST_REJECTION_MESSAGE, 421);
+    throw fail(HOST_REJECTION_MESSAGE, 421, "api.errors.hostNotAllowedAddTheAddressToALLOWEDHOSTSOrCERTDNSNAMESCERTIPADDRESSES");
 }
 
 export function requireAllowedHost(request) {

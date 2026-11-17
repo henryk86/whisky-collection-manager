@@ -123,7 +123,11 @@ async function refresh(scope = 'all') {
     else render();
 }
 async function action(task, { scope = 'all' } = {}) {
-    return runAction(task, () => refresh(scope), error => toast(error.message, true));
+    return runAction(task, () => refresh(scope), error => toast(error.message, true), () => {
+        // Action callers may show a success toast immediately afterward. Display
+        // the refresh warning after that synchronous completion, not before it.
+        setTimeout(() => toast(t('ui.errors.savedButRefreshFailed'), true), 0);
+    });
 }
 navigation.listen();
 bindEvents(root, {

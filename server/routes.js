@@ -32,7 +32,7 @@ const routes = [
     { method: 'PATCH', path: /^\/api\/warehouse\/rooms\/([\w-]+)$/, run: ([id], body) => warehouse.updateRoom(id, body) },
     { method: 'DELETE', path: /^\/api\/warehouse\/rooms\/([\w-]+)$/, run: ([id], _body, req) => {
         const option = new URL(req.url, 'http://localhost').searchParams.get('unassignBottles');
-        if (option !== null && option !== 'true' && option !== 'false') throw fail('Ungültige Löschoption');
+        if (option !== null && option !== 'true' && option !== 'false') throw fail('Ungültige Löschoption', 400, "api.errors.invalidDeletionOption");
         return warehouse.deleteRoom(id, {unassignBottles: option === 'true'});
     } },
     { method: 'POST', path: /^\/api\/warehouse\/rooms\/([\w-]+)\/furniture$/, status: 201, run: ([id], body) => warehouse.createFurniture(id, body) },
@@ -220,5 +220,5 @@ export async function handleApi(request, response, url) {
             wantsDelta && tracked.updates.length ? {__wcmStateDelta: 1, result, updates: tracked.updates} : result,
             'application/json; charset=utf-8', cacheHeaders || {});
     }
-    throw fail('API-Endpunkt nicht gefunden', 404);
+    throw fail('API-Endpunkt nicht gefunden', 404, "api.errors.apiEndpointNotFound");
 }

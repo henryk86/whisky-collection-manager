@@ -15,15 +15,15 @@ export function deleteImage(p) {
     }
 }
 export function validateImageData(base64) {
-    assert(typeof base64 === 'string' && base64.length < 20000000, 'Bild zu groß (maximal 10 MB)');
+    assert(typeof base64 === 'string' && base64.length < 20000000, 'Bild zu groß (maximal 10 MB)', 400, "api.errors.imageExceeds10MB");
     const m = /^data:image\/(jpeg|png|webp|gif);base64,([A-Za-z0-9+/=]+)$/.exec(base64);
-    assert(m, 'Bildformat nicht unterstützt (JPEG, PNG, WebP oder GIF)');
+    assert(m, 'Bildformat nicht unterstützt (JPEG, PNG, WebP oder GIF)', 400, "api.errors.unsupportedImageFormatJPEGPNGWebPOrGIF");
     const bytes = Buffer.from(m[2], 'base64');
-    assert(bytes.length <= 10000000 && bytes.length > 0, 'Bild zu groß oder leer');
+    assert(bytes.length <= 10000000 && bytes.length > 0, 'Bild zu groß oder leer', 400, "api.errors.imageIsTooLargeOrEmpty");
     const signatures = {
         jpeg: bytes[0] === 0xff && bytes[1] === 0xd8, png: bytes.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex')), webp: bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP', gif: bytes.toString('ascii', 0, 3) === 'GIF'
     };
-    assert(signatures[m[1]], 'Bildinhalt entspricht nicht dem Dateiformat');
+    assert(signatures[m[1]], 'Bildinhalt entspricht nicht dem Dateiformat', 400, "api.errors.imageContentsDoNotMatchTheFileFormat");
     return { bytes, ext: m[1] === 'jpeg' ? 'jpg' : m[1], mediaType: `image/${m[1]}` };
 }
 export function saveImage(base64, id, kind) {

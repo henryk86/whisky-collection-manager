@@ -24,6 +24,30 @@ Der normale Check (`npm run check`) verbietet neue Quellcode-Leseassertions in `
 1. `npm run check` prueft Syntax, Modulgrenzen, Sprachdateien, Links, das Verbot neuer Quelltexttests und deklarative Deployment-Vertraege.
 2. `npm test` prueft Fachregeln, Rendering-Ausgaben, API, Persistenz, Restore, Sicherheitsreaktionen und Negativfaelle.
 3. `npm run test:browser` prueft die Anwendung und ihre CSS-Geometrie in Chromium. Im eingeschraenkten DOM-Modus ist der echte HTTP-History-Fall uebersprungen; ein solcher Lauf ist daher **keine vollstaendige CI-Freigabe**.
-4. Ohne wirksame Free-Rulesets muss der Anwender den gruennen PR-Status vor dem Merge selbst kontrollieren; die Release-Action kontrolliert die PR-Herkunft erneut. Vor jedem Merge muss die GitHub-Actions-Browser-Suite fuer den freizugebenden Merge-Quellstand gruen sein; beim Merge nach `main` prueft die Release-Pipeline den Merge erneut und versioniert erst danach den Tag-Snapshot. Nach erfolgreichen Artefakt-Tests werden beide Branches atomar mit dessen Versionsmetadaten synchronisiert; bei konkurrierenden Metadaten-Aenderungen gibt es keinen automatischen Push. Docker-/ARM64-/WebGL-Hardware pruefen, wenn die betroffenen Laufzeitkomponenten veraendert werden.
+4. Die PR-Pflicht auf dem **oeffentlichen, geschuetzten `main`** bleibt aktiv. Der Benutzer prueft den gruennen PR-Status, bevor er `develop -> main` selbst mergt; die Release-Action verifiziert die PR-Herkunft und den Merge-Commit erneut. `npm run check`, `npm test` und die vollstaendige Browser-CI pruefen den Merge-Quellstand **vor** der Tag-Erstellung; der getaggte Snapshot besteht anschliessend eigene Metadaten-/Manifestchecks und ZIP-/Offline-/Docker-Pruefungen. Die Version wird **nicht direkt** auf `main` gepusht: Nach den Artefaktchecks entsteht ein Versions-PR aus dem unveraenderlichen Tag, den der Bot nur bei erfuellten PR-Regeln mergen darf. Erst dann synchronisiert die Action `develop`. Abweichungen und Metadatenkonflikte stoppen den Vorgang, statt die Branches atomar zu ueberschreiben. Docker-/ARM64-/WebGL-Hardware pruefen, wenn die betroffenen Laufzeitkomponenten veraendert werden.
 
 Ein fehlgeschlagener Test darf nicht durch blosses Entfernen seiner Assertion behoben werden. Beim Ersatz einer Quelltextpruefung muss der Zweck in mindestens einem vorhandenen oder neu hinzugefuegten Verhaltens-/Deployment-Test wiederzufinden sein.
+
+## Laufzeit- und Betriebsabnahme (N-5)
+
+Auf einem Raspberry Pi mit dem tatsaechlich eingesetzten Datenbestand die Antwortzeiten fuer `GET /api/collection`, `GET /api/warehouse` und den bedingten GET (`If-None-Match` aus der vorherigen Antwort) messen. Auch eine Schreiboperation mit einem Test-/Backup-Datenstand pruefen; nicht blind in der produktiven Sammlung ausfuehren. Hardwaremodell, Node-Version, Datenmenge und Messwerte festhalten. Beispielbefehle direkt auf dem Pi (ausschliesslich gegen die Loopback-Adresse; `-k` ignoriert nur dort das lokale Zertifikat):
+
+```bash
+curl -ksS -o /dev/null -w 'collection GET: %{http_code} %{time_total}s\n' https://127.0.0.1:3543/api/collection
+curl -ksS -o /dev/null -w 'warehouse GET: %{http_code} %{time_total}s\n' https://127.0.0.1:3543/api/warehouse
+ETAG=$(curl -ksS -D - -o /dev/null https://127.0.0.1:3543/api/collection | sed -n 's/^[Ee][Tt][Aa][Gg]:[[:space:]]*//p' | tr -d '\r')
+curl -ksS -o /dev/null -w 'collection 304: %{http_code} %{time_total}s\n' -H "If-None-Match: $ETAG" https://127.0.0.1:3543/api/collection
+```
+
+Alle drei GET-Messungen mehrfach wiederholen; Median statt Einzelwerte ausweisen. Eine Schreiboperation nur in einem getrennten Test-Datenverzeichnis messen.
+
+Im GitHub-Repository `main` als Default, Required-Checks, PR-Schutz, kein Force-Push, `Allow auto-merge` und die Einhaltung der Versions-PR-Beschraenkung kontrollieren. Die Quellcodepruefungen belegen die Live-Einstellungen **nicht**. Mit angemeldetem GitHub CLI kann der Betreiber die Rulesets und die Branch-Protection rein lesend inspizieren:
+
+```bash
+gh api repos/henryk86/whisky-collection-manager/rulesets
+gh api repos/henryk86/whisky-collection-manager/branches/main/protection
+```
+
+Je nach verwendetem Ruleset kann die zweite Abfrage 404 liefern, obwohl die erste aktiv geschuetzte Regeln zeigt. Daher beide Ergebnisse und die GitHub-Oberflaeche gemeinsam pruefen. Weitere Freigaben bleiben beim Repository-Eigentuemer; ein Assistent fuehrt keine normalen PR-Merges aus.
+
+Ein Develop-Commit aendert den Quellcode, aber nicht den zuvor veroeffentlichten `wcm-source-manifest.json`. Erst die Release-Snapshot-Erstellung erzeugt ein neues Manifest; `release:check` prueft unveraenderliche Release-Staende und ist kein allgemeiner Develop-Check.

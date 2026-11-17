@@ -233,6 +233,9 @@ if (isCLI) {
         }
     } catch (error) {
         console.error(error.message);
+        if (process.argv[2] === 'check' && error.message === 'Source manifest differs from release files') {
+            console.error('Hinweis: Auf unveroeffentlichtem develop nach Quellcodeaenderungen erwartet. release:check ist nur fuer unveraenderte Release-Snapshots vorgesehen.');
+        }
         process.exitCode = 1;
     }
 }

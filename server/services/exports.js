@@ -34,7 +34,7 @@ export function exportZip(req) {
     authorizeAdmin(req);
     let password;
     try { password = readBackupPassword(); }
-    catch (error) { throw fail(error.message, 409); }
+    catch (error) { throw fail(error.message, 409, "api.errors.invalidBackupPassword"); }
     fs.mkdirSync(BACKUP_DIR, { recursive: true, mode: 0o700 });
     const id = crypto.randomUUID();
     const timestamp = new Date().toISOString().slice(0, 23).replace(/[:.]/g, '-');

@@ -58,7 +58,7 @@ CERT_DNS_NAMES=home-pi,home-pi.local,localhost
 CERT_IP_ADDRESSES=127.0.0.1,192.168.178.40
 ```
 
-Das Image ist `ghcr.io/henryk86/whisky-collection-manager:${IMAGE_TAG:-latest}`. Für reproduzierbare Installationen lieber einen festen Tag (z. B. `v0.15.10`) verwenden. `latest` wird erst nach erfolgreicher Veröffentlichung eines neuen Releases aktualisiert. Bei Updates auf `main` bleiben die externen Daten erhalten: `git pull --ff-only && docker compose pull && docker compose up -d --remove-orphans`. Speicherverzeichnisse nicht löschen und keine Volumes mit `down -v` entfernen.
+Das Image ist `ghcr.io/henryk86/whisky-collection-manager:${IMAGE_TAG:-latest}`. Für reproduzierbare Installationen einen festen, tatsaechlich veroeffentlichten `vMAJOR.MINOR.PATCH`-Tag statt `latest` verwenden. `latest` wird erst nach erfolgreicher Veröffentlichung eines neuen Releases aktualisiert. Bei Updates auf `main` bleiben die externen Daten erhalten: `git pull --ff-only && docker compose pull && docker compose up -d --remove-orphans`. Speicherverzeichnisse nicht löschen und keine Volumes mit `down -v` entfernen.
 
 Der Zugriff erfolgt unter `https://home-pi.local:3543` oder `https://192.168.178.40:3543`, sofern Name beziehungsweise IP im Zertifikat enthalten sind. Eigene DNS-Namen und IPs über `.env` anpassen und bei vorhandenem Zertifikat `sh deploy/setup-pi.sh --renew-cert && docker compose restart app` ausführen. Das neue öffentliche Zertifikat auf dem PC erneut importieren; den privaten Schlüssel nie kopieren.
 
@@ -117,6 +117,31 @@ nicht mehr alle Flaschen.
 Zusätzlich zu den verschlüsselten Sammlungsbackups kann ab v0.20.0 jedes GitHub-Release mit KI-Modell, npm-Cache und als ARM64-/AMD64-Containerimage separat auf dem gleichen USB-/NAS-Medium gesichert werden. Dafür die Release-Artefakte und ihre SHA-256-Dateien herunterladen und `sh deploy/save-offline-release.sh SOURCE_DIR BACKUP_TARGET_ROOT` ausführen. Die Dateien liegen danach unter `whisky-releases/vX.Y.Z/`; die geplanten Daten-ZIP-Backups werden **nicht** vergrößert. Eine automatische Übertragung in der Backup-Oberfläche ist nicht implementiert. Vollständige Anleitung: [Offline-Releases](OFFLINE_RELEASES.md).
 
 Die Anwendung enthält ab v0.24.0 zusätzlich unter **Hilfe → Datensicherung** aufklappbare Schritt-für-Schritt-Anleitungen für die zentrale Passwort-Einrichtung, USB- und NAS-Ziele, Dropbox/OneDrive/Google Drive über Rclone sowie die Wiederherstellung. Maßgeblich bleiben die technischen Konfigurationen und Sicherheitsgrenzen dieses Dokuments.
+
+### Diagnose fehlgeschlagener Backup-Aufträge
+
+Die Backup-Oberfläche zeigt für fehlgeschlagene Aufträge einen lokalisierten
+`backup.errors.*`-Fehlercode, **keine** unbereinigte Rclone-/Restic-Ausgabe.
+Zur Ursachenanalyse sind im **Betreiberprotokoll** des gemeinsamen Docker-Service
+`app` Einträge mit Auftrags-ID, Fehlercode und einer gekürzten, bereinigten
+technischen Meldung verfügbar. Bei unerwarteten Fehlern werden statt unbereinigter
+Fehlermeldungen der Fehlertyp, gegebenenfalls ein Systemcode sowie die
+Quellcodeposition (Dateiname:Zeile:Spalte) protokolliert. Eine nicht eingerichtete
+Backup-Verwaltung erhält den spezifischen Fehlercode
+`backup.errors.controlNotConfigured`. Das Protokoll kann so eingesehen werden:
+
+```sh
+docker compose logs --tail=200 app
+```
+
+So lassen sich beispielsweise `invalid_grant`/abgelaufene Rclone-Tokens oder
+fehlgeschlagene Restic-Aufrufe erkennen. Zugangsdaten, bekannte Tokenformate
+und Dateipfade werden vor der Ausgabe nach Möglichkeit ausgeblendet; wie bei
+jedem Fehlerprotokoll können externe Programme dennoch unerwartete sensible
+Informationen liefern. **Protokolle nur berechtigten Administratoren zugänglich
+machen und nicht ungeprüft weitergeben.** Diagnoseausgaben werden nicht in
+`worker-status.json` oder an den Browser übertragen. Die Verfügbarkeit älterer
+Container-Logs hängt von der Docker-Logaufbewahrung ab.
 
 ## 1. Sofort-Backup erstellen und herunterladen
 

@@ -20,7 +20,7 @@ export function migrateNestedBottles(db) {
         }
         for (const bottle of db.bottles) {
             const owner = (db.bottlings || []).find(b => b.id === bottle.bottlingId);
-            assert(owner, 'Verwaiste Flasche kann nicht migriert werden');
+            assert(owner, 'Verwaiste Flasche kann nicht migriert werden', 400, "api.errors.orphanedBottleCannotBeMigrated");
             if (owner.bottles.some(b => b.id === bottle.id)) {
                 throw new Error('Doppelte Flaschen-ID bei Migration');
             }
@@ -230,8 +230,8 @@ export function migrateDistilleryOrigins(db) {
 }
 /** Mutates a parsed document only. The caller backs up and commits it after validation. */
 export function migrateCollection(collection) {
-    assert(collection && typeof collection === 'object' && !Array.isArray(collection), 'Ungültige Sammlungsstruktur');
-    assert(Array.isArray(collection.bottlings) && Array.isArray(collection.reservedInventoryNumbers), 'Ungültige Sammlungsstruktur');
+    assert(collection && typeof collection === 'object' && !Array.isArray(collection), 'Ungültige Sammlungsstruktur', 400, "api.errors.invalidCollectionStructure");
+    assert(Array.isArray(collection.bottlings) && Array.isArray(collection.reservedInventoryNumbers), 'Ungültige Sammlungsstruktur', 400, "api.errors.invalidCollectionStructure");
     const changes = [
         migrateNestedBottles(collection),
         migrateDistilleries(collection),
@@ -256,8 +256,7 @@ export function migrateCollection(collection) {
  */
 export function migrateCollectionToCurrent(source) {
     assert(source && typeof source === 'object' && !Array.isArray(source) &&
-        Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >= 1 && source.schemaVersion <= 5,
-    'Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben unverändert');
+        Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >= 1 && source.schemaVersion <= 5, 'Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben unverändert', 400, "api.errors.unsupportedCollectionVersion");
     const collection = structuredClone(source);
     if (collection.schemaVersion === 5) {
         validate(collection);

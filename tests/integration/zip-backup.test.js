@@ -110,6 +110,8 @@ test('ZIP backup worker writes portable archives, prunes old runs and restores w
         const failed = queue('run');
         await worker.processQueue();
         assert.equal(worker.getStatus().jobs.find(j => j.id === failed).state, 'failed');
+        assert.equal(worker.getStatus().jobs.find(j => j.id === failed).errorCode, 'backup.errors.mountMarkerMissing');
+        assert.equal(Object.hasOwn(worker.getStatus().jobs.find(j => j.id === failed), 'error'), false, 'worker must not persist raw German diagnostics or paths');
     } finally {
         if (server) await new Promise(resolve => server.close(resolve));
         for (const [key, value] of Object.entries(original)) {

@@ -69,7 +69,7 @@
 
 ## 1.0.1 - 2026-11-16
 
-- B-3: verlustfreie Schema-5-Migration aller Bestands- und Lagerdaten; ausschliesslich alte Verkostungsdaten entfallen
+- B-3: Schema-5-Migration erhaelt Sammlungsstammdaten und Lager; alle bisherigen Verkostungsdaten (einschliesslich aktueller Verkostungen, Flights, Bewertungen, Geschmacksprofile und Whiskyfarben) entfallen mit bewusster Freigabe, vorheriges JSON wird gesichert
 
 ## 1.0.0 - 2026-11-16
 

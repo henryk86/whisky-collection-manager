@@ -94,7 +94,7 @@ export function renderBackupSection(state) {
       <div class="backup-job-list" role="list">${jobs.length ? jobs.map(j => `<div class="backup-job" role="listitem">
         <span class="backup-job-state ${h(j.state)}">${j.state === 'success' ? '✓' : j.state === 'failed' ? '!' : '…'}</span>
         <div><strong>${h(({run:t('backups.jobs.run'),test:t('backups.jobs.test'),check:t('backups.jobs.check'),snapshots:t('backups.jobs.snapshots'),restore:t('backups.jobs.restore'),prepare:t('backups.jobs.prepare')})[j.type] || j.type)}</strong> <span class="muted">· ${h(profiles.find(p => p.id === j.profileId)?.name || t("backups.profiles.remoteProfileLabel"))} · ${h(labelTime(j.startedAt))}</span>
-        ${j.error ? `<p class="backup-job-error">${h(jobErrorText(j.error))}</p>` : ''}${j.message ? `<p class="muted">${h(j.message)}</p>` : ''}</div></div>`).join('') : `<p class="muted">${t("backups.empty.noJobs")}</p>`}</div>
+        ${j.state === 'failed' ? `<p class="backup-job-error">${h(jobErrorText(j))}</p>` : ''}${j.message ? `<p class="muted">${h(j.message)}</p>` : ''}</div></div>`).join('') : `<p class="muted">${t("backups.empty.noJobs")}</p>`}</div>
     </section>`;
 }
 export function profileForm(profile = {}, remotes = [], targets = []) {

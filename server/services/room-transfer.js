@@ -17,7 +17,7 @@ const sourceId = room => room.transferSourceId || room.id;
 function assertIds(ids, allIds) {
     if (ids === 'all') return allIds;
     if (!Array.isArray(ids) || !ids.length || ids.length > 200 || !ids.every(item => typeof item === 'string') || new Set(ids).size !== ids.length || ids.some(item => !allIds.includes(item))) {
-        throw fail('Invalid room selection', 400);
+        throw fail('Invalid room selection', 400, "api.errors.roomTransferInvalidRoomSelection");
     }
     return ids;
 }
@@ -33,7 +33,7 @@ function exportLayout(room) {
 }
 
 export function createRoomExport(warehouse, ids, includeAssignments = false) {
-    if (typeof includeAssignments !== 'boolean') throw fail('Invalid assignment option', 400);
+    if (typeof includeAssignments !== 'boolean') throw fail('Invalid assignment option', 400, "api.errors.roomTransferInvalidAssignmentOption");
     const selected = new Set(assertIds(ids,warehouse.rooms.map(room=>room.id)));
     const rooms = warehouse.rooms.filter(room=>selected.has(room.id)).map(exportLayout);
     const shelfIds = new Set(warehouse.rooms.filter(room=>selected.has(room.id)).flatMap(room=>room.furniture.flatMap(f=>f.shelves.map(s=>s.id))));
@@ -46,10 +46,10 @@ export function createRoomExport(warehouse, ids, includeAssignments = false) {
 function validateBundle(bundle) {
     if (!bundle || typeof bundle !== 'object' || Array.isArray(bundle) || bundle.format !== FORMAT || bundle.formatVersion !== VERSION ||
         !Array.isArray(bundle.rooms) || !bundle.rooms.length || bundle.rooms.length > 200 || !Array.isArray(bundle.assignments) || bundle.assignments.length > 100000 ||
-        typeof bundle.includesAssignments !== 'boolean') throw fail('Invalid or unsupported room transfer file',400);
+        typeof bundle.includesAssignments !== 'boolean') throw fail('Invalid or unsupported room transfer file', 400, "api.errors.roomTransferInvalidFile");
     const json = JSON.stringify(bundle);
-    if (json.length > 12 * 1024 * 1024) throw fail('Room transfer file is too large',413);
-    if (bundle.rooms.reduce((sum,r)=>sum+(r.furniture?.length||0),0)>5000 || bundle.rooms.reduce((sum,r)=>sum+(r.furniture||[]).reduce((n,f)=>n+(f.shelves?.length||0),0),0)>20000) throw fail('Room transfer file exceeds the supported size',413);
+    if (json.length > 12 * 1024 * 1024) throw fail('Room transfer file is too large', 413, "api.errors.roomTransferTooLarge");
+    if (bundle.rooms.reduce((sum,r)=>sum+(r.furniture?.length||0),0)>5000 || bundle.rooms.reduce((sum,r)=>sum+(r.furniture||[]).reduce((n,f)=>n+(f.shelves?.length||0),0),0)>20000) throw fail('Room transfer file exceeds the supported size', 413, "api.errors.roomTransferTooManyItems");
     // Validation also checks unique IDs, dimensions, furniture boundaries, shelves, doors, etc.
     validateWarehouse({schemaVersion:1,rooms:bundle.rooms,assignments:{}});
     const shelves = new Set(bundle.rooms.flatMap(r=>r.furniture.flatMap(f=>f.shelves.map(s=>s.id))));
@@ -57,7 +57,7 @@ function validateBundle(bundle) {
     for (const item of bundle.assignments) {
         if (!item || typeof item !== 'object' || typeof item.bottleId !== 'string' || item.bottleId.length > 120 ||
             !shelves.has(item.shelfId) || (item.inventoryNumber != null && (typeof item.inventoryNumber !== 'string' || item.inventoryNumber.length > 120)) ||
-            seen.has(item.bottleId)) throw fail('Invalid bottle reference in room transfer file',400);
+            seen.has(item.bottleId)) throw fail('Invalid bottle reference in room transfer file', 400, "api.errors.roomTransferInvalidBottle");
         seen.add(item.bottleId);
     }
     return bundle;
@@ -66,7 +66,7 @@ function validateBundle(bundle) {
 /** Dry run and real import use this same calculation, avoiding divergent rules. */
 export function planRoomImport(warehouse, rawBundle, {includeAssignments = true, conflictPolicy = 'skip'} = {}) {
     const bundle = validateBundle(rawBundle);
-    if (typeof includeAssignments !== 'boolean' || !['skip','replace'].includes(conflictPolicy)) throw fail('Invalid room import options',400);
+    if (typeof includeAssignments !== 'boolean' || !['skip','replace'].includes(conflictPolicy)) throw fail('Invalid room import options', 400, "api.errors.roomTransferInvalidOptions");
     const existing = warehouse.rooms || [];
     const roomActions = [];
     const plannedNames = new Set(existing.map(r=>key(r.name)));

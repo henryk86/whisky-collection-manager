@@ -1,12 +1,18 @@
-/** Mutations have an explicit outcome even when an endpoint returns no JSON body.
- * Callers must inspect ok before leaving a view or dismissing a form. */
-export async function runAction(task, refresh, onError) {
+/** A persisted mutation is successful even when the subsequent view refresh fails.
+ * Callers may close their forms and must not retry a committed POST. */
+export async function runAction(task, refresh, onError, onRefreshError = () => {}) {
+    let value;
     try {
-        const value = await task();
-        await refresh();
-        return { ok: true, value };
+        value = await task();
     } catch (error) {
         onError(error);
-        return { ok: false, error };
+        return {ok:false, error};
+    }
+    try {
+        await refresh();
+        return {ok:true, value};
+    } catch (refreshError) {
+        onRefreshError(refreshError);
+        return {ok:true, value, refreshError};
     }
 }
