@@ -10,6 +10,8 @@ import { fileURLToPath } from 'node:url';
 import { writeReadableZip, inspectReadableZip } from '../shared/backup-zip.js';
 import { readBackupPassword } from '../shared/backup-password.js';
 import { backupJobError, serializeBackupJobError } from '../shared/backup-job-errors.js';
+import { BACKUP_PASSWORD_FAILURE } from '../shared/backup-password.js';
+import { commandFailureDiagnostic, logBackupJobFailure } from './backup-diagnostics.js';
 
 const CONTROL = path.resolve(process.env.BACKUP_CONTROL_DIR || '/backup-control');
 const LOCAL_ROOT = path.resolve(process.env.BACKUP_TARGET_ROOT || '/backup-targets');
@@ -102,15 +104,28 @@ export function runCommand(binary, args, { cwd, timeout = 3600000 } = {}) {
     return new Promise((resolve, reject) => {
         const child = spawn(binary, args, { cwd, env: jobEnv(), stdio: ['ignore', 'pipe', 'pipe'], shell: false });
         let output = '';
-        const capture = part => { output = (output + part.toString('utf8')).slice(-120000); };
-        child.stdout.on('data', capture);
-        child.stderr.on('data', capture);
+        let stderr = '';
+        child.stdout.on('data', part => { output = (output + part.toString('utf8')).slice(-120000); });
+        child.stderr.on('data', part => {
+            const chunk = part.toString('utf8');
+            output = (output + chunk).slice(-120000);
+            stderr = (stderr + chunk).slice(-6000);
+        });
         const timer = setTimeout(() => child.kill('SIGKILL'), timeout);
-        child.on('error', err => { clearTimeout(timer); err.backupCommand = binary; reject(err); });
+        child.on('error', err => {
+            clearTimeout(timer);
+            err.backupCommand = binary;
+            err.backupDiagnostic = commandFailureDiagnostic(binary, null, null, err.code || 'Startfehler');
+            reject(err);
+        });
         child.on('close', (code, signal) => {
             clearTimeout(timer);
             if (code === 0) resolve(output);
-            else reject(backupJobError(binary === 'rclone' ? 'backup.errors.rcloneFailed' : 'backup.errors.resticFailed'));
+            else {
+                const error = backupJobError(binary === 'rclone' ? 'backup.errors.rcloneFailed' : 'backup.errors.resticFailed');
+                error.backupDiagnostic = commandFailureDiagnostic(binary, code, signal, stderr || output.slice(-6000));
+                reject(error);
+            }
         });
     });
 }
@@ -284,7 +299,8 @@ function verifyZipArchive(file, password = backupPassword()) {
 function backupPassword() {
     try { return readBackupPassword(); }
     catch (error) {
-        if (error.message.includes('noch nicht eingerichtet') || error.message.includes('zu kurz') || error.message.includes('nicht eingerichtet')) {
+        if (error.backupPasswordCode === BACKUP_PASSWORD_FAILURE.missing ||
+            error.backupPasswordCode === BACKUP_PASSWORD_FAILURE.tooShort) {
             throw backupJobError('backup.errors.passwordNotConfigured');
         }
         throw error;
@@ -419,7 +435,9 @@ export function createWorker() {
                     const result = await executeJob(job, profile, status);
                     Object.assign(log, { state: 'success', finishedAt: new Date().toISOString(), ...result });
                 } catch (error) {
-                    Object.assign(log, { state: 'failed', finishedAt: new Date().toISOString(), ...serializeBackupJobError(error) });
+                    const diagnostic = serializeBackupJobError(error);
+                    Object.assign(log, { state: 'failed', finishedAt: new Date().toISOString(), ...diagnostic });
+                    logBackupJobFailure(job.id, diagnostic, error);
                 } finally {
                     fs.unlinkSync(full);
                     flush();

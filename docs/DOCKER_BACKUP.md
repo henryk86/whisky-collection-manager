@@ -118,6 +118,27 @@ Zusätzlich zu den verschlüsselten Sammlungsbackups kann ab v0.20.0 jedes GitHu
 
 Die Anwendung enthält ab v0.24.0 zusätzlich unter **Hilfe → Datensicherung** aufklappbare Schritt-für-Schritt-Anleitungen für die zentrale Passwort-Einrichtung, USB- und NAS-Ziele, Dropbox/OneDrive/Google Drive über Rclone sowie die Wiederherstellung. Maßgeblich bleiben die technischen Konfigurationen und Sicherheitsgrenzen dieses Dokuments.
 
+### Diagnose fehlgeschlagener Backup-Aufträge
+
+Die Backup-Oberfläche zeigt für fehlgeschlagene Aufträge einen lokalisierten
+`backup.errors.*`-Fehlercode, **keine** unbereinigte Rclone-/Restic-Ausgabe.
+Zur Ursachenanalyse sind im **Betreiberprotokoll** des gemeinsamen Docker-Service
+`app` Einträge mit Auftrags-ID, Fehlercode und einer gekürzten, bereinigten
+technischen Meldung verfügbar:
+
+```sh
+docker compose logs --tail=200 app
+```
+
+So lassen sich beispielsweise `invalid_grant`/abgelaufene Rclone-Tokens oder
+fehlgeschlagene Restic-Aufrufe erkennen. Zugangsdaten, bekannte Tokenformate
+und Dateipfade werden vor der Ausgabe nach Möglichkeit ausgeblendet; wie bei
+jedem Fehlerprotokoll können externe Programme dennoch unerwartete sensible
+Informationen liefern. **Protokolle nur berechtigten Administratoren zugänglich
+machen und nicht ungeprüft weitergeben.** Diagnoseausgaben werden nicht in
+`worker-status.json` oder an den Browser übertragen. Die Verfügbarkeit älterer
+Container-Logs hängt von der Docker-Logaufbewahrung ab.
+
 ## 1. Sofort-Backup erstellen und herunterladen
 
 1. Anwendung öffnen → **Einstellungen & Datensicherung → Datensicherung** und mit dem Backup-Admin-Schlüssel entsperren (Schlüssel liegt unter `${WCM_DATA_DIR}/secrets/backup-admin-token`).

@@ -95,3 +95,123 @@ case "$1" in listremotes) echo 'dropbox:';; lsd) exit 0;; esac
         fs.rmSync(folder, { recursive: true, force: true });
     }
 });
+
+
+test('failed Rclone and Restic jobs log bounded operator diagnostics without exposing them in status', async () => {
+    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-worker-errors-'));
+    const control = path.join(folder, 'control');
+    const bin = path.join(folder, 'bin');
+    const profiles = [
+        {id:crypto.randomUUID(), provider:'dropbox', remote:'dropbox', targetPath:'whisky', format:'zip', enabled:false},
+        {id:crypto.randomUUID(), provider:'dropbox', remote:'dropbox', targetPath:'legacy', enabled:false}
+    ];
+    create(control, 'profiles.json', JSON.stringify({version:1,profiles}));
+    create(folder, 'bin/rclone', `#!/bin/sh
+printf '%s\n' "CRITICAL: couldn't fetch token: invalid_grant: maybe token expired? password=never-log-this access_token=hidden-token path /run/secrets/rclone-secret.conf" >&2
+exit 1
+`, 0o700);
+    create(folder, 'bin/restic', `#!/bin/sh
+printf '%s\n' 'Fatal: repository unreachable; Authorization: Bearer superSecretRESTIC1234' >&2
+exit 7
+`, 0o700);
+    const originals = Object.fromEntries(['BACKUP_CONTROL_DIR','BACKUP_TARGET_ROOT','PATH'].map(k => [k,process.env[k]]));
+    const messages = [];
+    const originalConsoleError = console.error;
+    try {
+        Object.assign(process.env, {
+            BACKUP_CONTROL_DIR:control,
+            BACKUP_TARGET_ROOT:path.join(folder,'targets'),
+            PATH:`${bin}:${process.env.PATH}`
+        });
+        const {createWorker} = await import('../../worker/backup-worker.js?diagnostics');
+        console.error = (...parts) => { messages.push(parts.join(' ')); };
+        const jobs = profiles.map(profile => {
+            const id = crypto.randomUUID();
+            create(control, `jobs/${id}.json`, JSON.stringify({id,profileId:profile.id,type:'snapshots',createdAt:new Date().toISOString()}));
+            return id;
+        });
+        const worker = createWorker();
+        await worker.processQueue();
+        const status = worker.getStatus();
+        assert.equal(status.jobs.length, 2);
+        for (const [index, id] of jobs.entries()) {
+            const job = status.jobs.find(item => item.id === id);
+            assert.equal(job.state, 'failed');
+            assert.equal(job.errorCode, index === 0 ? 'backup.errors.rcloneFailed' : 'backup.errors.resticFailed');
+            assert.equal(job.error, undefined);
+            assert.equal(job.backupDiagnostic, undefined);
+            assert.ok(messages.some(message => message.includes(id) && message.includes(job.errorCode)));
+        }
+        assert.match(messages.join('\n'), /invalid_grant: maybe token expired/);
+        assert.match(messages.join('\n'), /repository unreachable/);
+        assert.doesNotMatch(messages.join('\n'), /never-log-this|hidden-token|rclone-secret\.conf|superSecretRESTIC1234/);
+        assert.doesNotMatch(fs.readFileSync(path.join(control,'worker-status.json'),'utf8'),
+            /invalid_grant|never-log-this|repository unreachable|hidden-token/);
+    } finally {
+        console.error = originalConsoleError;
+        for (const [key,value] of Object.entries(originals)) {
+            if (value === undefined) delete process.env[key];
+            else process.env[key] = value;
+        }
+        fs.rmSync(folder, {recursive:true,force:true});
+    }
+});
+
+test('ZIP worker reports missing and too-short passwords by their stable identifiers', async () => {
+    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-worker-password-'));
+    const control = path.join(folder, 'control');
+    const targets = path.join(folder, 'targets');
+    create(targets, 'usb/.whisky-backup-target', 'mounted');
+    const profile = {
+        id:crypto.randomUUID(), provider:'local', targetPath:'usb/whisky',
+        format:'zip', enabled:false
+    };
+    create(control, 'profiles.json', JSON.stringify({version:1,profiles:[profile]}));
+    const token = create(folder, 'worker-token', 'valid-test-token');
+    const originals = Object.fromEntries(
+        ['BACKUP_CONTROL_DIR','BACKUP_TARGET_ROOT','BACKUP_WORKER_TOKEN_FILE','APP_INTERNAL_URL']
+            .map(key => [key,process.env[key]])
+    );
+    let server;
+    const originalConsoleError = console.error;
+    try {
+        server = http.createServer((req, res) => {
+            const id = req.url.split('/').at(-1);
+            create(control, `staging/${id}/data/collection.json`, '{"schemaVersion":5}');
+            res.end('{}');
+        });
+        await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+        Object.assign(process.env, {
+            BACKUP_CONTROL_DIR:control,
+            BACKUP_TARGET_ROOT:targets,
+            BACKUP_WORKER_TOKEN_FILE:token,
+            APP_INTERNAL_URL:`http://127.0.0.1:${server.address().port}`
+        });
+        const {createWorker} = await import('../../worker/backup-worker.js?missing-password');
+        const worker = createWorker();
+        const queue = () => {
+            const id = crypto.randomUUID();
+            create(control, `jobs/${id}.json`, JSON.stringify({id,profileId:profile.id,type:'run'}));
+            return id;
+        };
+        console.error = () => {};
+        const missing = queue();
+        await worker.processQueue();
+        assert.equal(worker.getStatus().jobs.find(j => j.id === missing).errorCode,
+            'backup.errors.passwordNotConfigured');
+        create(control, 'backup-zip-password', 'short');
+        const short = queue();
+        await worker.processQueue();
+        assert.equal(worker.getStatus().jobs.find(j => j.id === short).errorCode,
+            'backup.errors.passwordNotConfigured');
+        assert.ok(worker.getStatus().jobs.every(j => j.error === undefined));
+    } finally {
+        console.error = originalConsoleError;
+        if (server) await new Promise(resolve => server.close(resolve));
+        for (const [key,value] of Object.entries(originals)) {
+            if (value === undefined) delete process.env[key];
+            else process.env[key] = value;
+        }
+        fs.rmSync(folder, {recursive:true,force:true});
+    }
+});
