@@ -68,6 +68,32 @@ function visit(file, stack = []) {
 for (const file of graph.keys()) {
     visit(file);
 }
+// Every relative import reachable from the frontend must be actually served.
+// Existence and syntax checks alone missed an N-4a shared module blocked by
+// the restrictive HTTP allowlist, causing a blank application in CI Chromium.
+const {SHARED_BROWSER_FILES} = await import('../server/http/static-files.js');
+const browserVisited = new Set();
+const browserShared = new Set();
+function verifyBrowserImports(file) {
+    if (browserVisited.has(file)) return;
+    browserVisited.add(file);
+    const relative = path.relative('.', file).replaceAll(path.sep, '/');
+    if (relative.startsWith('shared/')) {
+        const name = relative.slice('shared/'.length);
+        if (!SHARED_BROWSER_FILES.has(name)) {
+            throw new Error(`Frontend imports /shared/${name}, but static HTTP allowlist blocks it`);
+        }
+        browserShared.add(name);
+    } else if (!relative.startsWith('public/')) {
+        throw new Error(`Frontend imports an inaccessible module: ${relative}`);
+    }
+    for (const dependency of graph.get(file) || []) verifyBrowserImports(dependency);
+}
+for (const file of sources.filter(name => path.relative('.', name).replaceAll(path.sep, '/').startsWith('public/'))) {
+    verifyBrowserImports(file);
+}
+console.log(`${browserShared.size} frontend shared modules: HTTP allowlist OK.`);
+
 // Validate local assets referenced by browser tests before running Chromium.
 // In particular, an import refactor must rename the fixture on disk as well.
 const fixtureReferences = new Set();
