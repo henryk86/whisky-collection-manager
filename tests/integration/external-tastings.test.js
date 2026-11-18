@@ -73,7 +73,7 @@ test('standalone tasting can be assigned once to an existing owned bottling with
         const tasting={bottling:{name:'Sample before purchase',abv:55},tastedOn:'2026-10-10',title:'At a tasting',
             tastingNotes:{nose:'honey',palate:'orange',finish:'long'},flavorProfile:{woody:8,cereal:2,peaty:1,fruity:7,floral:4,winey:2,feinty:0,sulphury:0},
             whiskyColor:'butter',rating:92};
-        // The full flavor profile is stored as a normalized 8-axis object.
+        // Old 8-axis profiles remain accepted, with new aroma dimensions unassessed.
         const created=await api(server.base,'/api/external-tastings','POST',tasting);
         assert.equal(created.status,201);
         const id=created.data.id;

@@ -41,13 +41,24 @@ und gewichten mehrfache Verkostungen nicht stärker.
 | `tastingNotes` | `nose`, `palate`, `finish`, beliebige Textlängen |
 | `rating` | `null` oder 0–100 mit höchstens einer Nachkommastelle in der UI |
 | `whiskyColor` | Eine der zwölf unveränderlichen Farben oder `null` |
-| `flavorProfile` | `null` oder genau acht ganzzahlige Achsen (0–10) |
+| `flavorProfile` | `null` oder zehn Achsen (0–10; bei älteren Einträgen sind die zwei neuen Achsen `null`) |
 
-Die Profilachsen sind im JSON fest: `woody`, `cereal`, `peaty`, `fruity`,
-`floral`, `winey`, `feinty`, `sulphury`. Sie entsprechen Holzig, Getreidig,
-Torfig, Fruchtig, Floral, Weinartig, Alkoholisch und Schwefelig.
+Die Profilachsen sind im JSON fest: `woody`, `smoky`, `cereal`, `peaty`,
+`fruity`, `floral`, `medicinal`, `winey`, `feinty`, `sulphury`.
+Sie entsprechen Holzig, Rauchig, Getreidig, Torfig, Fruchtig, Blumig,
+Medizinisch, Weinartig, Alkoholisch und Schwefelig.
+Bestehende gespeicherte Profile mit den bisherigen acht Achsen bleiben gültig.
+Die zwei neuen Achsen sind darin **nicht erfasst** (`null`), nicht automatisch 0;
+sie werden im Diagramm ausgelassen und in der Auflistung mit „–“ angezeigt.
+Der Zustand bleibt auch beim Bearbeiten anderer Verkostungsfelder und bei
+Rückgängig/Wiederholen erhalten. Erst die Bedienung eines neuen Reglers
+erfasst seinen Wert (auch ausdrücklich 0).
+Die kurzzeitig eingeführte elfte Achse `fiery` (Brennend) entfällt, da
+`feinty` bereits als Alkoholisch bewertet wird. Daten aus dieser Version
+können eingelesen werden; `fiery` wird nicht mehr angezeigt und bei der
+Normalisierung verworfen.
 
-Das Radardiagramm und die acht Regler bleiben gemeinsam in einem Panel, die
+Das Radardiagramm und die zehn Regler bleiben gemeinsam in einem Panel, die
 zwölf Farben in ihrem eigenen Panel. Notizen und Punkte erscheinen darunter.
 Die gewählte Farbe ist durch goldene Hervorhebung und Häkchen kenntlich;
 Entfernen-Schaltflächen befinden sich rechts in den jeweiligen Überschriften.
@@ -94,7 +105,7 @@ externem Whisky. Diese Einträge beeinflussen den Bestand und dessen Analysen
 nicht und sind trotzdem im Backup enthalten. Es findet keine Migration statt.
 
 Auf jeder Einzelverkostungsseite kann das Geschmacksprofil mit „Profil
-zurücksetzen“ vollständig entfernt werden (`flavorProfile: null`), statt acht
+zurücksetzen“ vollständig entfernt werden (`flavorProfile: null`), statt zehn
 Nullwerte zu speichern. Die Rückgängig-/Wiederholen-Funktion bleibt erhalten.
 
 ## v0.27.3: Seitenhierarchie und Ausrichtung der Notizfelder
