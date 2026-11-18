@@ -88,7 +88,9 @@ services:
       # would otherwise hide certificate bind mounts under /run.
       - ${WCM_DATA_DIR:?Run sh deploy/setup-pi.sh first}/secrets/certs:/etc/nginx/wcm-certs:ro
       - ${WCM_DATA_DIR:?Run sh deploy/setup-pi.sh first}/secrets/letsencrypt/published:/etc/nginx/wcm-letsencrypt:ro
+    # Keep NGINX writable paths in memory, owned by the non-root proxy user.
+    # Without uid/gid, NGINX cannot create client_temp or its PID file.
     tmpfs:
-      - /var/cache/nginx:rw,nosuid,nodev,size=16m
-      - /var/run:rw,nosuid,nodev,size=1m
-      - /tmp:rw,nosuid,nodev,size=16m
+      - /var/cache/nginx:rw,nosuid,nodev,size=16m,uid=${LE_PROXY_UID:-1000},gid=${LE_PROXY_GID:-1000},mode=0700
+      - /var/run:rw,nosuid,nodev,size=1m,uid=${LE_PROXY_UID:-1000},gid=${LE_PROXY_GID:-1000},mode=0700
+      - /tmp:rw,nosuid,nodev,size=16m,uid=${LE_PROXY_UID:-1000},gid=${LE_PROXY_GID:-1000},mode=0700

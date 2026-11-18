@@ -124,7 +124,10 @@ Verzeichnisse, `600` für den privaten Schlüssel). Keine Rechte auf `777`
 ändern. Die TLS-Dateien werden im Proxy unter `/etc/nginx/wcm-letsencrypt`
 und `/etc/nginx/wcm-certs` bereitgestellt. Anders als frühere `/run`-Mounts
 werden sie nicht durch das NGINX-Laufzeit-tmpfs unter `/var/run` verdeckt
-(Alpine: `/var/run` verweist auf `/run`).
+(Alpine: `/var/run` verweist auf `/run`). Die `tmpfs`-Verzeichnisse
+`/var/cache/nginx`, `/var/run` und `/tmp` erhalten die konfigurierten
+`LE_PROXY_UID`/`LE_PROXY_GID`; andernfalls schlaegt NGINX beim Anlegen von
+`/var/cache/nginx/client_temp` mit `Permission denied` fehl.
 
 ## Inbetriebnahme
 

@@ -174,3 +174,15 @@ test('NGINX certificate mounts are not hidden by the Alpine /var/run tmpfs', () 
     assert.match(proxy, /cap_drop:\s*\n\s*- ALL/);
     assert.doesNotMatch(proxy, /cap_add:/);
 });
+
+test('non-root NGINX gets writable tmpfs directories for cache, PID and temporary files', () => {
+    const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8');
+    const proxy = compose.split('  letsencrypt-proxy:')[1];
+    assert.ok(proxy, 'letsencrypt-proxy service exists');
+    for (const [directory, size] of [['/var/cache/nginx', '16m'], ['/var/run', '1m'], ['/tmp', '16m']]) {
+        assert.ok(proxy.includes(`${directory}:rw,nosuid,nodev,size=${size},uid=${'${LE_PROXY_UID:-1000}'},gid=${'${LE_PROXY_GID:-1000}'},mode=0700`),
+            `${directory} must be writable by LE_PROXY_UID/GID`);
+    }
+    assert.match(proxy, /user: '\$\{LE_PROXY_UID:-1000\}:\$\{LE_PROXY_GID:-1000\}'/);
+    assert.match(proxy, /read_only: true/);
+});
