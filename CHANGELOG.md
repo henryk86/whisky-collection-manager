@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.2 - 2026-11-18
+
+- fix: ensure NGINX tmpfs directories are writable by non-root user
+
 ## 1.6.1 - 2026-11-18
 
 - fix: fix Let's Encrypt configuration

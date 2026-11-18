@@ -1,6 +1,6 @@
-# Teststatus - Whisky Collection Manager v1.6.1
+# Teststatus - Whisky Collection Manager v1.6.2
 
-**Stand:** 2026-11-18. Automatischer Release-Snapshot aus Merge f679b9a38377 (v1.6.0).
+**Stand:** 2026-11-18. Automatischer Release-Snapshot aus Merge 8372de1755c2 (v1.6.1).
 
 ## Pruefungen
 
@@ -13,6 +13,6 @@
 
 ## Aenderungen
 
-- fix: fix Let's Encrypt configuration
+- fix: ensure NGINX tmpfs directories are writable by non-root user
 
 Fruehere CI-Resultate: [TESTHISTORIE.md](TESTHISTORIE.md).

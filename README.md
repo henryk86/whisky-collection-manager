@@ -1,4 +1,4 @@
-# Whisky Collection Manager v1.6.1
+# Whisky Collection Manager v1.6.2
 
 Webanwendung zur lokalen Verwaltung einer Whisky-Sammlung mit einzelnen Flaschen, Verkostungen und Lagerplätzen. Die Anwendung basiert auf Node.js und Browser-ES-Modulen, benötigt keine Datenbank und keinen Frontend-Build. Sammlung und Lager werden in JSON-Dateien gespeichert.
 
