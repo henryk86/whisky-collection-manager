@@ -159,5 +159,18 @@ test('NGINX public TLS validates the internal HTTPS upstream', () => {
     assert.match(config, /proxy_pass https:\/\/app:3543;/);
     assert.match(config, /proxy_ssl_verify on;/);
     assert.match(config, /proxy_ssl_name localhost;/);
-    assert.match(config, /ssl_certificate \/run\/letsencrypt\/current\/fullchain\.pem;/);
+    assert.match(config, /ssl_certificate \/etc\/nginx\/wcm-letsencrypt\/current\/fullchain\.pem;/);
+    assert.match(config, /proxy_ssl_trusted_certificate \/etc\/nginx\/wcm-certs\/server-cert\.pem;/);
+});
+
+test('NGINX certificate mounts are not hidden by the Alpine /var/run tmpfs', () => {
+    const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8');
+    const proxy = compose.split('  letsencrypt-proxy:')[1];
+    assert.ok(proxy, 'letsencrypt-proxy service exists');
+    assert.match(proxy, /\/secrets\/letsencrypt\/published:\/etc\/nginx\/wcm-letsencrypt:ro/);
+    assert.match(proxy, /\/secrets\/certs:\/etc\/nginx\/wcm-certs:ro/);
+    assert.doesNotMatch(proxy, /\/secrets\/letsencrypt\/published:\/run\//);
+    assert.match(proxy, /user: '\$\{LE_PROXY_UID:-1000\}:\$\{LE_PROXY_GID:-1000\}'/);
+    assert.match(proxy, /cap_drop:\s*\n\s*- ALL/);
+    assert.doesNotMatch(proxy, /cap_add:/);
 });

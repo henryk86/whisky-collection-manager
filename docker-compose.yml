@@ -69,6 +69,9 @@ services:
     profiles: [letsencrypt]
     image: nginx:stable-alpine
     restart: unless-stopped
+    # Certbot publishes files as the host Pi user (0700 directories, 0600 key).
+    # Run the unprivileged proxy as that same UID/GID to read them safely.
+    user: '${LE_PROXY_UID:-1000}:${LE_PROXY_GID:-1000}'
     depends_on:
       app:
         condition: service_healthy
@@ -77,15 +80,14 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    cap_add:
-      - SETUID
-      - SETGID
     ports:
       - '${LE_HTTPS_PUBLIC_PORT:-443}:8443'
     volumes:
       - ./deploy/nginx-letsencrypt.conf:/etc/nginx/conf.d/default.conf:ro
-      - ${WCM_DATA_DIR:?Run sh deploy/setup-pi.sh first}/secrets/certs:/run/certs:ro
-      - ${WCM_DATA_DIR:?Run sh deploy/setup-pi.sh first}/secrets/letsencrypt/published:/run/letsencrypt:ro
+      # /var/run points to /run on Alpine. The writable tmpfs at /var/run
+      # would otherwise hide certificate bind mounts under /run.
+      - ${WCM_DATA_DIR:?Run sh deploy/setup-pi.sh first}/secrets/certs:/etc/nginx/wcm-certs:ro
+      - ${WCM_DATA_DIR:?Run sh deploy/setup-pi.sh first}/secrets/letsencrypt/published:/etc/nginx/wcm-letsencrypt:ro
     tmpfs:
       - /var/cache/nginx:rw,nosuid,nodev,size=16m
       - /var/run:rw,nosuid,nodev,size=1m
