@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1 - 2026-11-18
+
+- fix: fix Let's Encrypt configuration
+
 ## 1.6.0 - 2026-11-18
 
 - fix: improve custom whisky picker interaction with viewport-aware clicking and HEX value comparison
