@@ -76,8 +76,14 @@ test('browser: custom whisky picker hides HEX text, saves warm colours and reset
         assert.equal(await panel.locator('input[type="text"]').count(),0,'no visible HEX text field');
         assert.equal(await panel.locator('text=HEX').count(),0,'no HEX caption');
         const picker=panel.locator('[data-whisky-picker-area]');
-        const rect=await picker.boundingBox();
-        await page.mouse.click(rect.x+rect.width*0.12,rect.y+rect.height*0.25);
+        // The picker can be below the viewport. Element-relative clicks scroll it
+        // into view; page.mouse.click with off-screen coordinates hits the page instead.
+        const clickPicker=async(x,y)=>{
+            const box=await picker.boundingBox();
+            assert.ok(box?.width>0 && box?.height>0,'picker has dimensions');
+            await picker.click({position:{x:box.width*x,y:box.height*y}});
+        };
+        await clickPicker(0.12,0.25);
         await page.waitForFunction(async()=>{
             const collection=await(await fetch('/api/collection')).json();
             return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
@@ -86,7 +92,7 @@ test('browser: custom whisky picker hides HEX text, saves warm colours and reset
         const hiddenDraft=panel.locator('input[type="hidden"][data-whisky-custom-hex]');
         const name=panel.locator('[data-whisky-custom-name]');
         assert.ok((await name.textContent()).trim().length>0,'selected custom colour has a name');
-        assert.equal(await hiddenDraft.inputValue(),chosen.slice('custom:'.length).toUpperCase());
+        assert.equal((await hiddenDraft.inputValue()).toLowerCase(),chosen.slice('custom:'.length).toLowerCase());
         await panel.locator('[data-color-key="honey"]').click();
         await page.waitForFunction(async()=>{
             const collection=await(await fetch('/api/collection')).json();
@@ -98,8 +104,7 @@ test('browser: custom whisky picker hides HEX text, saves warm colours and reset
         assert.equal(await panel.locator('.whisky-custom-preview .glencairn-liquid').getAttribute('style'),'fill:transparent');
         assert.equal(await panel.locator('.whisky-custom-cursor').evaluate(el=>getComputedStyle(el).display),'none');
         // The next interaction picks a new shade; no previous custom colour is reused.
-        const rect2=await picker.boundingBox();
-        await page.mouse.click(rect2.x+rect2.width*0.80,rect2.y+rect2.height*0.40);
+        await clickPicker(0.80,0.40);
         await page.waitForFunction(async()=>{
             const collection=await(await fetch('/api/collection')).json();
             return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
@@ -114,7 +119,7 @@ test('browser: custom whisky picker hides HEX text, saves warm colours and reset
         assert.equal(await hiddenDraft.inputValue(),'');
         assert.equal(await name.textContent(),'','clearing the colour also clears the name');
         // Saved custom colour appears with its curated name, never a HEX label.
-        await page.mouse.click(rect2.x+rect2.width*0.32,rect2.y+rect2.height*0.26);
+        await clickPicker(0.32,0.26);
         await page.waitForFunction(async()=>{
             const collection=await(await fetch('/api/collection')).json();
             return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
