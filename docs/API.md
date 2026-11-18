@@ -77,7 +77,7 @@ Verkostungsformate werden weder angenommen noch migriert.
 
 `tastedOn` ist ein gültiges ISO-Kalenderdatum (`YYYY-MM-DD`, erforderlich),
 `title` ein optionaler String mit maximal 120 Zeichen. Alle übrigen Felder
-sind optional: Bewertung `null` oder 0–100, Farbe aus dem festen Farbkatalog,
+sind optional: Bewertung `null` oder 0–100, Farbe aus dem festen Farbkatalog oder als geprüftes `custom:#rrggbb` (warme Whiskyfarben inklusive Rot und Rosé; Grün und Blau unzulässig),
 Geschmacksprofil `null` oder zehn Achsen im Bereich 0–10 sowie die drei
 Notizfelder. Nicht freigegebene Felder und ungültige Eingaben werden abgelehnt.
 

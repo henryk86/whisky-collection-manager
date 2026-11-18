@@ -60,6 +60,74 @@ test('browser: bottling tasting block edits ten-axis flavor, notes and five Glen
 
 
 
+test('browser: custom whisky picker hides HEX text, saves warm colours and resets on presets', async()=>{
+    await session(async({page,base,open})=>{
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form [name="name"]').fill('Custom colour picker test');
+        await page.locator('#bottling-form button[type="submit"]').click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        const section=page.locator('[data-flavor-detail]');
+        const panel=section.locator('.tasting-color-panel');
+        assert.equal(await panel.locator('.whisky-color-grid .whisky-color-choice').count(),12);
+        assert.equal(await panel.locator('.whisky-custom-row').count(),1);
+        assert.equal(await panel.locator('input[type="text"]').count(),0,'no visible HEX text field');
+        assert.equal(await panel.locator('text=HEX').count(),0,'no HEX caption');
+        const picker=panel.locator('[data-whisky-picker-area]');
+        const rect=await picker.boundingBox();
+        await page.mouse.click(rect.x+rect.width*0.12,rect.y+rect.height*0.25);
+        await page.waitForFunction(async()=>{
+            const collection=await(await fetch('/api/collection')).json();
+            return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
+        });
+        const chosen=(await requestJson(base,'/api/collection')).data.bottlings[0].tastings.at(-1).whiskyColor;
+        const hiddenDraft=panel.locator('input[type="hidden"][data-whisky-custom-hex]');
+        const name=panel.locator('[data-whisky-custom-name]');
+        assert.ok((await name.textContent()).trim().length>0,'selected custom colour has a name');
+        assert.equal(await hiddenDraft.inputValue(),chosen.slice('custom:'.length).toUpperCase());
+        await panel.locator('[data-color-key="honey"]').click();
+        await page.waitForFunction(async()=>{
+            const collection=await(await fetch('/api/collection')).json();
+            return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor==='honey';
+        });
+        assert.equal(await hiddenDraft.inputValue(),'');
+        assert.equal(await name.textContent(),'','a standard colour must clear the old custom name');
+        assert.equal(await panel.locator('.whisky-custom-row').getAttribute('class'),'whisky-custom-row');
+        assert.equal(await panel.locator('.whisky-custom-preview .glencairn-liquid').getAttribute('style'),'fill:transparent');
+        assert.equal(await panel.locator('.whisky-custom-cursor').evaluate(el=>getComputedStyle(el).display),'none');
+        // The next interaction picks a new shade; no previous custom colour is reused.
+        const rect2=await picker.boundingBox();
+        await page.mouse.click(rect2.x+rect2.width*0.80,rect2.y+rect2.height*0.40);
+        await page.waitForFunction(async()=>{
+            const collection=await(await fetch('/api/collection')).json();
+            return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
+        });
+        assert.notEqual((await hiddenDraft.inputValue()).toLowerCase(),chosen.slice('custom:'.length));
+        assert.ok((await name.textContent()).trim().length>0,'newly selected shade is named');
+        await panel.locator('[data-act="tasting-color-clear"]').click();
+        await page.waitForFunction(async()=>{
+            const collection=await(await fetch('/api/collection')).json();
+            return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor===null;
+        });
+        assert.equal(await hiddenDraft.inputValue(),'');
+        assert.equal(await name.textContent(),'','clearing the colour also clears the name');
+        // Saved custom colour appears with its curated name, never a HEX label.
+        await page.mouse.click(rect2.x+rect2.width*0.32,rect2.y+rect2.height*0.26);
+        await page.waitForFunction(async()=>{
+            const collection=await(await fetch('/api/collection')).json();
+            return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
+        });
+        await page.locator('[data-act="tasting-edit-done"]').click();
+        const readonlyName=await page.locator('.tasting-readonly-color strong').textContent();
+        assert.ok(readonlyName?.length>0 && readonlyName!=='Eigene Farbe');
+        assert.doesNotMatch(readonlyName,/#/);
+        await page.setViewportSize({width:390,height:844});
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+    });
+});
+
 test('browser: v0.24 shelf editor saves capacity in suspended manager and switches with three-way confirmation', async () => {
     await session(async ({page,base,open}) => {
         const room=(await requestJson(base,'/api/warehouse/rooms','POST',{name:'Dialograum',width:4,height:4})).data;

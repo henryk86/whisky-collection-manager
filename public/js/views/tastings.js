@@ -7,7 +7,8 @@ import { flavorChart, readFlavorProfile, displayFlavorProfile } from '../ui/flav
 import { createTastingHistory } from '../domain/tasting-history.js';
 import { glencairnRating, syncGlencairnRating } from '../ui/glencairn-rating.js';
 import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
-import { whiskyColorSelector, whiskyColorDisplay } from '../ui/whisky-color-selector.js';
+import { whiskyColorSelector, whiskyColorDisplay, whiskyCustomColorName } from '../ui/whisky-color-selector.js';
+import { isAllowedWhiskyHex, normalizeWhiskyColor, whiskyPickerHex, whiskyPickerPosition } from '../../../shared/whisky-colors.js';
 import { parseTastingScore, emptyTastingNotes } from '../../../shared/tasting.js';
 import { sortedTastings } from '../../../shared/tasting-records.js';
 import {allTastingReferences,flightEntries,flightForTasting} from '../../../shared/tasting-flights.js';
@@ -228,14 +229,105 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         const selector = value == null ? '[data-act="tasting-rating-clear"]' : `[data-rating-points="${value}"]`;
         flavorNode()?.querySelector(selector)?.focus?.();
     }
+    /** Update the preview during pointer movement without saving every intermediate colour. */
+    function previewCustomColor(hex, x, y) {
+        if (!flavorSession?.editing || !isAllowedWhiskyHex(hex)) return;
+        const color=flavorNode()?.querySelector('.whisky-custom-row');
+        if (!color) return;
+        color.classList.add('is-previewing');
+        const position=x == null || y == null ? whiskyPickerPosition(hex) : {x,y};
+        const picker=color.querySelector('[data-whisky-picker-area]');
+        if (picker) {
+            picker.style.setProperty('--picker-x',`${(position.x*100).toFixed(1)}%`);
+            picker.style.setProperty('--picker-y',`${(position.y*100).toFixed(1)}%`);
+            picker.dataset.pickerX=String(position.x);
+            picker.dataset.pickerY=String(position.y);
+        }
+        const liquid=color.querySelector('.whisky-custom-preview .glencairn-liquid');
+        if (liquid) liquid.style.fill=hex;
+        const input=color.querySelector('[data-whisky-custom-hex]');
+        if (input) input.value=hex.toUpperCase();
+        const label=color.querySelector('[data-whisky-custom-name]');
+        if (label) {
+            const name=whiskyCustomColorName(hex);
+            if (label.textContent!==name) label.textContent=name;
+        }
+    }
+    function previewCustomFromPointer(event) {
+        if (!flavorSession?.editing) return;
+        const picker=event.target.closest?.('[data-whisky-picker-area]');
+        if (!picker) return;
+        const rect=picker.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const x=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));
+        const y=Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height));
+        previewCustomColor(whiskyPickerHex(x,y),x,y);
+    }
+    /** Arrow keys are a keyboard-accessible alternative to dragging the two-dimensional picker. */
+    function nudgeCustomColor(event) {
+        if (!flavorSession?.editing || !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return false;
+        const picker=event.target.closest?.('[data-whisky-picker-area]');
+        if (!picker) return false;
+        event.preventDefault();
+        const input=flavorNode()?.querySelector('[data-whisky-custom-hex]');
+        const current=isAllowedWhiskyHex(input?.value) ? input.value : whiskyPickerHex(0.65,0.48);
+        const position=whiskyPickerPosition(current);
+        const x=Number(picker.dataset.pickerX ?? position.x);
+        const y=Number(picker.dataset.pickerY ?? position.y);
+        const delta=event.shiftKey ? 0.10 : 0.02;
+        const nx=Math.max(0,Math.min(1,x+(event.key==='ArrowRight'?delta:event.key==='ArrowLeft'?-delta:0)));
+        const ny=Math.max(0,Math.min(1,y+(event.key==='ArrowDown'?delta:event.key==='ArrowUp'?-delta:0)));
+        previewCustomColor(whiskyPickerHex(nx,ny),nx,ny);
+        return true;
+    }
+    /** Validate the internal HEX draft; the same restriction is enforced during API normalization. */
+    function chooseCustomHex(raw) {
+        if (!flavorSession?.editing) return false;
+        let value;
+        try { value=normalizeWhiskyColor(`custom:${String(raw).trim()}`); }
+        catch { return false; }
+        chooseColor(value);
+        return true;
+    }
+    function commitCustomPreview() {
+        const hex=flavorNode()?.querySelector('[data-whisky-custom-hex]')?.value;
+        return hex ? chooseCustomHex(hex) : false;
+    }
+    function resetCustomPreview() { redrawTasting(); }
+    /** Discard the custom draft itself, not only its visible HEX label. */
+    function clearCustomDraft(node) {
+        const row=node.querySelector('.whisky-custom-row');
+        if (!row) return;
+        const hex=row.querySelector('[data-whisky-custom-hex]');
+        if (hex) {
+            hex.value='';
+            hex.defaultValue='';
+        }
+        const label=row.querySelector('[data-whisky-custom-name]');
+        if (label) label.textContent='';
+        const liquid=row.querySelector('.whisky-custom-preview .glencairn-liquid');
+        if (liquid) liquid.style.fill='transparent';
+        const picker=row.querySelector('[data-whisky-picker-area]');
+        if (picker) {
+            picker.style.removeProperty('--picker-x');
+            picker.style.removeProperty('--picker-y');
+            delete picker.dataset.pickerX;
+            delete picker.dataset.pickerY;
+        }
+        row.classList.remove('is-selected','is-previewing');
+    }
     function chooseColor(value) {
         if (!flavorSession?.editing) return;
-        const node = flavorNode()?.querySelector('[data-whisky-color]');
+        const node=flavorNode()?.querySelector('[data-whisky-color]');
         if (!node) return;
+        // Fixed colours (and clear) discard the previous custom HEX entirely.
+        if (!value || !value.startsWith('custom:')) clearCustomDraft(node);
         node.dataset.whiskyColor = value || '';
         commitTasting();
         redrawTasting();
-        flavorNode()?.querySelector(value ? `[data-color-key="${value}"]` : '[data-act="tasting-color-clear"]')?.focus?.();
+        const selector = value?.startsWith('custom:') ? '[data-whisky-picker-area]' :
+            (value ? `[data-color-key="${value}"]` : '[data-act="tasting-color-clear"]');
+        flavorNode()?.querySelector(selector)?.focus?.({preventScroll:true});
     }
     function clearFlavor() {
         if (!flavorSession?.editing) return;
@@ -706,7 +798,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             if (confirmButton?.isConnected) confirmButton.disabled=false;
         }
     }
-    return {home,list,editor,flight,startFlight,createFlight,saveFlight,deleteFlight,moveFlightMember,reorderFlightMember,attachFlightMember,detachFlightMember,toggleFlightEdit,toggleFlightAdd,saveDraft,persistMeta,toggleCreateChoice,commitFlavor:commitTasting,chooseRating,previewRating,chooseColor,clearFlavor,
+    return {home,list,editor,flight,startFlight,createFlight,saveFlight,deleteFlight,moveFlightMember,reorderFlightMember,attachFlightMember,detachFlightMember,toggleFlightEdit,toggleFlightAdd,saveDraft,persistMeta,toggleCreateChoice,commitFlavor:commitTasting,chooseRating,previewRating,chooseColor,chooseCustomHex,commitCustomPreview,previewCustomColor,previewCustomFromPointer,nudgeCustomColor,resetCustomPreview,clearFlavor,
         showAssignDialog,assignExternalToBottling,startEditing,finishEditing,
         startExternalEdit:()=>showExternalEdit(true),cancelExternalEdit,persistExternalDetails,
         undoFlavor:()=>stepFlavor(-1),redoFlavor:()=>stepFlavor(1)};

@@ -346,6 +346,12 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         catch (error) { toast(error.message, true); }
     });
     root.addEventListener('keydown', event => {
+        if (event.target.matches?.('[data-whisky-picker-area]') && ['Enter',' '].includes(event.key)) {
+            event.preventDefault();
+            tastingsView?.commitCustomPreview?.();
+            return;
+        }
+        if (tastingsView?.nudgeCustomColor?.(event)) return;
         if (!['Enter',' '].includes(event.key)) return;
         const bay=event.target.closest?.('.warehouse-wall-bay[data-act="warehouse-shelf-view"]');
         if (bay && bay.dataset?.capacity !== '0' && event.target === bay) {
@@ -362,14 +368,40 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         if (event.target.matches?.('[data-flavor-detail] [data-tasting-date], [data-flavor-detail] [data-tasting-title]')) void tastingsView.persistMeta();
     });
     let flavorPointer = null;
+    let customColorPointer = null;
     root.addEventListener('pointerdown', event => {
+        const picker=event.target?.closest?.('[data-whisky-picker-area]');
+        if (picker) {
+            customColorPointer=event.pointerId;
+            picker.setPointerCapture?.(event.pointerId);
+            tastingsView.previewCustomFromPointer(event);
+            return;
+        }
         const hit = event.target?.closest?.('[data-flavor-hit]');
         if (!hit) return;
         flavorPointer = event.pointerId; hit.setPointerCapture?.(event.pointerId); setFlavorFromPointer(event);
     });
-    root.addEventListener('pointermove', event => { if (flavorPointer === event.pointerId) setFlavorFromPointer(event); });
-    root.addEventListener('pointerup', event => { if (flavorPointer === event.pointerId) { flavorPointer = null; if (event.target.closest?.('[data-flavor-detail]')) tastingsView.commitFlavor(); } });
-    root.addEventListener('pointercancel', event => { if (flavorPointer === event.pointerId) flavorPointer = null; });
+    root.addEventListener('pointermove', event => {
+        if (customColorPointer === event.pointerId) tastingsView.previewCustomFromPointer(event);
+        if (flavorPointer === event.pointerId) setFlavorFromPointer(event);
+    });
+    root.addEventListener('pointerup', event => {
+        if (customColorPointer === event.pointerId) {
+            customColorPointer=null;
+            tastingsView.previewCustomFromPointer(event);
+            tastingsView?.commitCustomPreview?.();
+            return;
+        }
+        if (flavorPointer === event.pointerId) { flavorPointer = null; if (event.target.closest?.('[data-flavor-detail]')) tastingsView.commitFlavor(); }
+    });
+    root.addEventListener('pointercancel', event => {
+        if (customColorPointer === event.pointerId) { customColorPointer=null; tastingsView.resetCustomPreview(); }
+        if (flavorPointer === event.pointerId) flavorPointer = null;
+    });
+    root.addEventListener('keyup', event => {
+        if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key) && event.target.matches?.('[data-whisky-picker-area]'))
+            tastingsView.commitCustomPreview();
+    });
     root.addEventListener('submit', event => {
         if (event.target.id === 'new-bottle-choice-form') {
             event.preventDefault();

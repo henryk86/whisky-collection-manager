@@ -40,7 +40,7 @@ und gewichten mehrfache Verkostungen nicht stärker.
 | `title` | Optionaler Titel mit maximal 120 Zeichen |
 | `tastingNotes` | `nose`, `palate`, `finish`, beliebige Textlängen |
 | `rating` | `null` oder 0–100 mit höchstens einer Nachkommastelle in der UI |
-| `whiskyColor` | Eine der zwölf unveränderlichen Farben oder `null` |
+| `whiskyColor` | Eine der zwölf unveränderlichen Farben, ein geprüfter `custom:#rrggbb`-Wert aus dem stufenlosen Whisky-Farbwähler oder `null` |
 | `flavorProfile` | `null` oder zehn Achsen (0–10; bei älteren Einträgen sind die zwei neuen Achsen `null`) |
 
 Die Profilachsen sind im JSON fest: `woody`, `smoky`, `cereal`, `peaty`,
@@ -59,8 +59,18 @@ können eingelesen werden; `fiery` wird nicht mehr angezeigt und bei der
 Normalisierung verworfen.
 
 Das Radardiagramm und die zehn Regler bleiben gemeinsam in einem Panel, die
-zwölf Farben in ihrem eigenen Panel. Notizen und Punkte erscheinen darunter.
-Die gewählte Farbe ist durch goldene Hervorhebung und Häkchen kenntlich;
+zwölf festen Farben und der zusätzliche Whisky-Farbwähler in ihrem eigenen Panel. Notizen und Punkte erscheinen darunter.
+Die zwölf unveränderten Farbstufen stehen weiterhin in einem 3 × 4-Raster.
+Darunter befindet sich eine weitere Zeile mit Glencairn-Vorschau links und
+einem stufenlosen zweidimensionalen Farbwähler rechts. Für individuelle
+Farben erscheint ein aus 50 kuratierten Whisky-Farbnamen bestimmter Name
+unter dem Picker und unter dem Glencairn in der Leseansicht. Die Zuordnung
+erfolgt deterministisch über den nächstgelegenen OKLab-Farbwert, auch bei
+älteren eigenen Farben. Ein HEX-Code wird nicht angezeigt; die genaue Farbe
+bleibt unverändert intern gespeichert. Die zwölf festen Farbnamen bleiben wie bisher.
+Der Farbraum ist auf helle und dunkle whiskytypische Rosé-, Rot-, Kupfer-,
+Bernstein-, Gold-, Stroh- und Brauntöne begrenzt; Grün und Blau sind ungültig.
+Der gewählte `custom:#rrggbb`-Wert wird im JSON-/ZIP-Export erhalten;
 Entfernen-Schaltflächen befinden sich rechts in den jeweiligen Überschriften.
 Die fünf Glencairn-Gläser geben je bis zu 20 Punkte vor und zeigen Bruchteile
 mit anteiliger Füllhöhe. Die Punktzahl wird ausschließlich über das editierbare
