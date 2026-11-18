@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0 - 2026-11-18
+
+- fix: improve custom whisky picker interaction with viewport-aware clicking and HEX value comparison
+- feat: enhance whisky color management with custom HEX support and improved UI
+- feat: update flavor profile to support ten axes and enhance tasting functionality
+- feat: Add optional Let's Encrypt support with DNS-01 for public HTTPS endpoint
+
 ## 1.5.3 - 2026-11-17
 
 - docs: update README and add new images for enhanced whisky collection management visuals
