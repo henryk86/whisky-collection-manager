@@ -38,7 +38,7 @@ Es gibt keine zwingende Cloud, keine externe Datenbank und keinen Build-Schritt 
 
 ### Interaktives Geschmacksprofil je Verkostung
 
-- Jede Abfüllung besitzt **0–n eigenständige Verkostungen**. Jede Verkostung besitzt optional ein Geschmacksprofil mit acht Achsen und ganzzahligen Ausprägungen zwischen 0 und 10.
+- Jede Abfüllung besitzt **0–n eigenständige Verkostungen**. Jede Verkostung besitzt optional ein Geschmacksprofil mit zehn Achsen und ganzzahligen Ausprägungen zwischen 0 und 10.
 - Achsen sind sprachneutral persistiert; die Anzeige übersetzt sie für Deutsch und Englisch. Insbesondere entspricht `feinty` der deutschen Beschriftung **„Alkoholisch“**.
 - SVG mit Touch-/Zeigersteuerung und nativen Reglern erlaubt Bearbeitung in der Einzelverkostung; die Abfüllungsdetails zeigen nur die letzte Gesamtbewertung. Nicht erfasste Profile sind `null`, nicht acht automatisch gespeicherte Nullen.
 - Details: [GESCHMACKSPROFIL.md](GESCHMACKSPROFIL.md).
@@ -76,7 +76,7 @@ Details der Kennzahlen: [ANALYSE.md](ANALYSE.md).
 ### Eigenständige Verkostungen
 
 - Eine Abfüllung hat 0–n einzeln datierte und unabhängige Verkostungen.
-- Jede Verkostung enthält Datum, optionalen Titel, Farbe, acht Geschmacksachsen,
+- Jede Verkostung enthält Datum, optionalen Titel, Farbe, zehn Geschmacksachsen,
   Notizen (Nase, Geschmack, Abgang) und eine optionale Bewertung 0–100.
 - Die Abfüllungsdetails zeigen die Bewertung der Verkostung mit dem jüngsten Datum;
   eine unbewertete jüngste Verkostung bleibt unbewertet.

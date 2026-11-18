@@ -40,8 +40,8 @@
  * @property {string} [title] Optional tasting title.
  * @property {{nose:string,palate:string,finish:string}} tastingNotes
  * @property {number|null} rating Optional score from 0 to 100.
- * @property {Object|null} flavorProfile Eight sensory axes.
- * @property {string|null} whiskyColor One of the fixed whisky colour keys.
+ * @property {Object|null} flavorProfile Ten sensory axes (older records may have eight).
+ * @property {string|null} whiskyColor A fixed whisky colour key or custom:#rrggbb (restricted warm whisky hue).
  * @property {string} createdAt ISO timestamp.
  * @property {string} updatedAt ISO timestamp.
  *

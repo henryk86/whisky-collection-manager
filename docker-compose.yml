@@ -36,10 +36,10 @@ services:
       # Certificate SAN values also define the default HTTP Host allowlist.
       CERT_DNS_NAMES: ${CERT_DNS_NAMES:-}
       CERT_IP_ADDRESSES: ${CERT_IP_ADDRESSES:-}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-},${LE_DOMAIN:-}
       EXTENSION_IDS: ${EXTENSION_IDS:-}
     ports:
-      - '3543:3543'
+      - '${HTTPS_PUBLIC_PORT:-3543}:3543'
     volumes:
       - ${WCM_DATA_DIR:?Run sh deploy/setup-pi.sh first}/storage:/srv/whisky
       - ${WCM_DATA_DIR:?Run sh deploy/setup-pi.sh first}/backup-control:/backup-control
@@ -62,3 +62,31 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # Optional: only started with `docker compose --profile letsencrypt up -d`.
+  # The existing app HTTPS endpoint and backup-worker stay unchanged.
+  letsencrypt-proxy:
+    profiles: [letsencrypt]
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+    ports:
+      - '${LE_HTTPS_PUBLIC_PORT:-443}:8443'
+    volumes:
+      - ./deploy/nginx-letsencrypt.conf:/etc/nginx/conf.d/default.conf:ro
+      - ${WCM_DATA_DIR:?Run sh deploy/setup-pi.sh first}/secrets/certs:/run/certs:ro
+      - ${WCM_DATA_DIR:?Run sh deploy/setup-pi.sh first}/secrets/letsencrypt/published:/run/letsencrypt:ro
+    tmpfs:
+      - /var/cache/nginx:rw,nosuid,nodev,size=16m
+      - /var/run:rw,nosuid,nodev,size=1m
+      - /tmp:rw,nosuid,nodev,size=16m

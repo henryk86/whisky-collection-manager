@@ -309,6 +309,24 @@
 .whisky-color-choice.is-selected { border:2px solid var(--gold); padding:6px 1px 4px; background:color-mix(in srgb, var(--gold) 15%, var(--paper)); box-shadow:inset 0 0 0 1px var(--gold); font-weight:700; }
 .whisky-color-choice.is-selected::after { content:'✓'; position:absolute; top:5px; right:5px; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; background:var(--gold); color:#142231; font:700 13px/1 var(--sans); }
 .whisky-color-choice:hover, .whisky-color-choice:focus-visible { outline:2px solid var(--gold); outline-offset:1px; }
+/* Own row below the unchanged 3 x 4 reference colours: Glencairn preview + a 2D warm-only colour picker. */
+.whisky-custom-row { display:grid; grid-template-columns:minmax(62px,.75fr) minmax(0,2fr); align-items:center; gap:10px;
+    margin-top:10px; padding:9px 7px; border:1px solid var(--line); background:var(--paper); min-width:0; }
+.whisky-custom-row.is-selected { box-shadow:inset 0 0 0 2px var(--gold); background:color-mix(in srgb,var(--gold) 7%,var(--paper)); }
+.whisky-custom-preview { display:flex; flex-direction:column; align-items:center; gap:7px; min-width:0; text-align:center; }
+.whisky-custom-preview .glencairn-symbol { width:34px; height:56px; }
+.whisky-custom-preview strong { font:600 11px/1.3 var(--sans); overflow-wrap:anywhere; }
+.whisky-custom-controls { min-width:0; }
+.whisky-custom-name { display:block; margin-top:8px; font:600 12px/1.4 var(--sans); color:var(--ink); text-align:center; overflow-wrap:anywhere; }
+.whisky-custom-name:empty { display:none; }
+.whisky-custom-area { position:relative; height:102px; width:100%; border:1px solid var(--line); cursor:crosshair; touch-action:none;
+    background:linear-gradient(to bottom,rgba(255,247,239,.80) 0%,transparent 40%,rgba(26,12,9,.82) 100%),
+        linear-gradient(to right,#cb7593 0%,#d73745 24%,#d76a33 49%,#e0a12e 78%,#eadc6d 100%); }
+.whisky-custom-area:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.whisky-custom-cursor { position:absolute; left:var(--picker-x); top:var(--picker-y); width:14px; height:14px;
+    transform:translate(-50%,-50%); border:2px solid #fff; border-radius:50%;
+    box-shadow:0 0 0 1px #171717,0 1px 3px #171717; pointer-events:none; }
+.whisky-custom-row:not(.is-selected):not(.is-previewing) .whisky-custom-cursor { display:none; }
 /* Mobile layout: the two sensory panels stack before the chart inputs stack. */
 @media(max-width:1150px) {
     .tasting-top-row { grid-template-columns:1fr; }
@@ -483,10 +501,10 @@
 .tasting-readonly-label { font-weight:600; color:var(--ink); }
 .tasting-readonly-field strong { overflow-wrap:anywhere; }
 .tasting-readonly-note { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.5; margin:0; }
-.tasting-readonly-color { display:inline-flex; align-items:center; gap:12px; }
+.tasting-readonly-color { display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; }
 /* The recorded colour must remain visually meaningful in read-only mode. */
 .tasting-readonly-panels .tasting-color-panel { display:flex; flex-direction:column; }
-.tasting-readonly-panels .tasting-color-panel .tasting-readonly-color { min-height:175px; justify-content:center; gap:18px; }
+.tasting-readonly-panels .tasting-color-panel .tasting-readonly-color { min-height:175px; justify-content:center; gap:12px; }
 .tasting-readonly-color .glencairn-symbol { width:58px; height:96px; flex:0 0 auto; }
 .tasting-readonly-color strong { font-size:1.05rem; }
 /* Read-only radar values such as 8 / 10 are never split across lines. */

@@ -45,3 +45,36 @@ test('tasting CRUD, latest-date summary, no implicit migration and cross-bottlin
         assert.deepEqual(exported.data.bottlings[0].tastings,[]);
     } finally {await server.stop();}
 });
+
+test('legacy flavor scores survive API reads and edits; new aroma scores persist independently',async()=>{
+    const server=await startTestServer();
+    try {
+        const bottling=(await api(server.base,'/api/bottlings','POST',{name:'Historical flavors'})).data.bottling;
+        const route=`/api/bottlings/${bottling.id}/tastings`;
+        const legacy={woody:8,cereal:3,peaty:6,fruity:4,floral:2,winey:1,feinty:7,sulphury:0};
+        const created=await api(server.base,route,'POST',{tastedOn:'2026-11-17',flavorProfile:legacy});
+        assert.equal(created.status,201);
+        const id=created.data.id;
+        const stored=(await api(server.base,`${route}/${id}`)).data;
+        for (const [key,score] of Object.entries(legacy)) assert.equal(stored.flavorProfile[key],score);
+        for (const key of ['smoky','medicinal']) assert.equal(stored.flavorProfile[key],null);
+        const edit=await api(server.base,`${route}/${id}`,'PATCH',{title:'Retasted'});
+        assert.equal(edit.status,200);
+        const unchanged=(await api(server.base,`${route}/${id}`)).data.flavorProfile;
+        assert.deepEqual(unchanged,stored.flavorProfile,'editing unrelated fields must not fabricate missing aroma ratings');
+        const update=await api(server.base,`${route}/${id}`,'PATCH',{
+            flavorProfile:{...unchanged,smoky:0,medicinal:5}
+        });
+        assert.equal(update.status,200);
+        const saved=(await api(server.base,`${route}/${id}`)).data.flavorProfile;
+        assert.equal(saved.smoky,0,'explicit zero is a recorded score');
+        assert.equal(saved.medicinal,5);
+        for (const [key,score] of Object.entries(legacy)) assert.equal(saved[key],score);
+        const withOldEleventh={...saved,fiery:9};
+        const oldUpdate=await api(server.base,`${route}/${id}`,'PATCH',{flavorProfile:withOldEleventh});
+        assert.equal(oldUpdate.status,200);
+        const normalized=(await api(server.base,`${route}/${id}`)).data.flavorProfile;
+        assert.equal(Object.hasOwn(normalized,'fiery'),false,'deprecated extra dimension is not persisted');
+        assert.equal(normalized.feinty,legacy.feinty,'alcoholic dimension stays unchanged');
+    } finally {await server.stop();}
+});

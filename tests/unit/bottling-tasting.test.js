@@ -5,8 +5,12 @@ import { createTastingHistory } from '../../public/js/domain/tasting-history.js'
 import { glencairnRating } from '../../public/js/ui/glencairn-rating.js';
 import { analyzeCollection } from '../../public/js/domain/analytics.js';
 import { parseTastingScore } from '../../shared/tasting.js';
-import { WHISKY_COLORS } from '../../shared/whisky-colors.js';
-import { whiskyColorSelector } from '../../public/js/ui/whisky-color-selector.js';
+import { WHISKY_COLORS, whiskyPickerHex, whiskyPickerPosition, isAllowedWhiskyHex, normalizeWhiskyColor } from '../../shared/whisky-colors.js';
+import { whiskyColorSelector, whiskyColorDisplay, whiskyCustomColorName } from '../../public/js/ui/whisky-color-selector.js';
+import { WHISKY_COLOR_REFERENCES, whiskyColorNameKey } from '../../shared/whisky-color-names.js';
+import { createTranslator } from '../../public/js/i18n/index.js';
+import german from '../../public/locales/de.json' with { type: 'json' };
+import english from '../../public/locales/en.json' with { type: 'json' };
 import { GLENCAIRN_INK } from '../../public/js/ui/glencairn-icon.js';
 
 const notes = nose => ({nose,palate:'',finish:''});
@@ -94,6 +98,88 @@ test('twelve-step whisky color scale persists as independent, validated bottling
     history.record({...history.value,whiskyColor:'honey'});
     history.undo(); assert.equal(history.value.whiskyColor,'amber');
     history.redo(); assert.equal(history.value.whiskyColor,'honey');
+});
+
+test('custom whisky picker hides HEX from users, stores exact shades and rejects green/blue', () => {
+    const html=whiskyColorSelector('custom:#b74154');
+    assert.equal((html.match(/class="whisky-color-choice/g)||[]).length,12,'reference colours stay unchanged');
+    assert.match(html,/class="whisky-custom-row is-selected"/);
+    assert.match(html,/data-whisky-picker-area/);
+    assert.match(html,/<input type="hidden" data-whisky-custom-hex value="#b74154">/);
+    assert.doesNotMatch(html,/whisky-custom-hex-row|>HEX<|type="text" data-whisky-custom-hex/);
+    assert.match(html,/value="#b74154"/);
+    assert.match(html,/style="fill:#b74154"/);
+    assert.match(html,/data-whisky-custom-name aria-live="polite">Rubinrot<\/output>/);
+    assert.match(whiskyColorDisplay('custom:#b74154'),/>Rubinrot<\/strong>/);
+    assert.doesNotMatch(whiskyColorDisplay('custom:#b74154').match(/<strong>(.*?)<\/strong>/)?.[1] || '', /#[0-9a-f]{6}/i, 'readonly label hides hexadecimal code');
+    // Switching from a custom shade to a reference colour clears the custom field,
+    // its preview liquid and the picker marker instead of retaining a stale HEX.
+    for (const fixedSelection of ['honey',null]) {
+        const fixedHtml=whiskyColorSelector(fixedSelection);
+        assert.match(fixedHtml,/data-whisky-custom-hex[^>]*value=""/);
+        assert.match(fixedHtml,/id="custom-color-glass"/);
+        assert.match(fixedHtml,/class="glencairn-liquid"[^>]*style="fill:transparent"/);
+        assert.match(fixedHtml,/class="whisky-custom-row"/);
+        assert.doesNotMatch(fixedHtml,/class="whisky-custom-row is-selected"/);
+        assert.doesNotMatch(fixedHtml,/#b74154/);
+        assert.match(fixedHtml,/data-whisky-custom-name aria-live="polite"><\/output>/);
+    }
+    assert.equal(normalizeWhiskyColor('custom:#F4B3C1'),'custom:#f4b3c1','rose HEX is normalized');
+    for (const hex of ['#b74154','#f4b3c1','#9b2125','#eaa52e','#50392d','#f6efb6'])
+        assert.equal(normalizeWhiskyColor(`custom:${hex}`),`custom:${hex}`);
+    for (const hex of ['#00ff00','#3a8a53','#0044ff','#00ffff','#ff00ff','#555555','#ffffff','#12345g','#abc','color:red'])
+        assert.throws(()=>normalizeWhiskyColor(`custom:${hex}`),`reject ${hex}`);
+    for (let y=0;y<=10;y++) for(let x=0;x<=10;x++) {
+        const hex=whiskyPickerHex(x/10,y/10);
+        assert.equal(isAllowedWhiskyHex(hex),true,`picker colour ${hex} must be persisted`);
+        const point=whiskyPickerPosition(hex);
+        assert.ok(point.x>=0 && point.x<=1 && point.y>=0 && point.y<=1);
+    }
+    assert.equal(normalizeWhiskyColor('honey'),'honey','existing fixed keys survive');
+    const history=createTastingHistory({flavorProfile:null,tastingNotes:notes(''),rating:null,whiskyColor:'honey'});
+    history.record({...history.value,whiskyColor:'custom:#f4b3c1'});
+    assert.equal(history.value.whiskyColor,'custom:#f4b3c1');
+    history.undo(); assert.equal(history.value.whiskyColor,'honey');
+    history.redo(); assert.equal(history.value.whiskyColor,'custom:#f4b3c1');
+});
+
+test('50 curated custom-colour names use perceptual matches without changing stored HEX', () => {
+    assert.equal(WHISKY_COLOR_REFERENCES.length,50);
+    const keys=new Set(), shades=new Set();
+    const en=createTranslator(english,german,'en');
+    const de=createTranslator(german,english,'de');
+    for (const ref of WHISKY_COLOR_REFERENCES) {
+        assert.ok(!keys.has(ref.key),`duplicate key: ${ref.key}`);
+        assert.ok(!shades.has(ref.hex),`duplicate colour: ${ref.hex}`);
+        keys.add(ref.key);shades.add(ref.hex);
+        assert.equal(whiskyColorNameKey(ref.hex),ref.key,`reference ${ref.key} must name itself`);
+        const translationKey=`tasting.colorName.${ref.key}`;
+        assert.notEqual(de(translationKey),translationKey);
+        assert.notEqual(en(translationKey),translationKey);
+        assert.ok(de(translationKey).trim());
+        assert.ok(en(translationKey).trim());
+        assert.equal(normalizeWhiskyColor(`custom:${ref.hex}`),`custom:${ref.hex}`);
+    }
+    assert.equal(whiskyColorNameKey('#00ff00'),null);
+    assert.equal(whiskyColorNameKey('#0011ee'),null);
+    assert.equal(whiskyColorNameKey(''),null);
+    assert.equal(whiskyColorNameKey('#CB8154'),'copperGold');
+    assert.equal(whiskyCustomColorName('#cb8154'),'Kupfergold');
+    assert.match(whiskyColorDisplay('custom:#cb8154'),/>Kupfergold<\/strong>/);
+    assert.match(whiskyColorSelector('custom:#cb8154'),/data-whisky-custom-name[^>]*>Kupfergold<\/output>/);
+    assert.equal(whiskyColorNameKey('#cb8255'),'copperGold','nearby colour is named by perceptual proximity');
+    // Near-white pink and straw can be close in OKLab lightness, but must
+    // keep their distinct colour families at the upper picker boundary.
+    const paleRose=whiskyPickerHex(0,0);
+    assert.equal(paleRose,'#f2d4de');
+    assert.equal(whiskyColorNameKey(paleRose),'paleRose');
+    assert.equal(whiskyCustomColorName(paleRose),'Blasses Rosé');
+    assert.match(whiskyColorDisplay(`custom:${paleRose}`),/>Blasses Rosé<\/strong>/);
+    assert.equal(whiskyColorNameKey(whiskyPickerHex(0.24,0)),'paleRose');
+    assert.equal(whiskyColorNameKey(whiskyPickerHex(1,0)),'veryPaleStraw');
+    assert.equal(whiskyColorNameKey(whiskyPickerHex(0,0.05)),'paleRose');
+    assert.equal(normalizeWhiskyColor('custom:#cb8255'),'custom:#cb8255','naming must not quantize the saved colour');
+    assert.match(whiskyColorDisplay('honey'),/>Honig<\/strong>/,'fixed reference labels are unchanged');
 });
 
 test('help only expands substantial backup procedures and warehouse furniture photos stay under shelves without sort buttons', async () => {

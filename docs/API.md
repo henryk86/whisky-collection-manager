@@ -77,8 +77,8 @@ Verkostungsformate werden weder angenommen noch migriert.
 
 `tastedOn` ist ein gültiges ISO-Kalenderdatum (`YYYY-MM-DD`, erforderlich),
 `title` ein optionaler String mit maximal 120 Zeichen. Alle übrigen Felder
-sind optional: Bewertung `null` oder 0–100, Farbe aus dem festen Farbkatalog,
-Geschmacksprofil `null` oder acht Achsen im Bereich 0–10 sowie die drei
+sind optional: Bewertung `null` oder 0–100, Farbe aus dem festen Farbkatalog oder als geprüftes `custom:#rrggbb` (warme Whiskyfarben inklusive Rot und Rosé; Grün und Blau unzulässig),
+Geschmacksprofil `null` oder zehn Achsen im Bereich 0–10 sowie die drei
 Notizfelder. Nicht freigegebene Felder und ungültige Eingaben werden abgelehnt.
 
 Die aktuelle Bewertung ist diejenige der Verkostung mit dem jüngsten Datum;
@@ -301,7 +301,7 @@ Validierungsfehler liefern HTTP 400; unbekannte IDs 404, ein volles Fach oder ei
 
 ## Gemischte Lagerfächer und Mehrfachbearbeitung
 
-- `POST /api/bottlings` / `PATCH /api/bottlings/:id`: Optionales Feld `flavorProfile` mit acht benannten Werten `woody`, `cereal`, `peaty`, `fruity`, `floral`, `winey`, `feinty`, `sulphury` als ganze Zahlen 0–10 oder `null`. Es gehört zur Abfüllung, nicht zur Flasche.
+- `POST /api/bottlings` / `PATCH /api/bottlings/:id`: Ein `flavorProfile` wird auf Abfüllungsebene abgelehnt. Es gehört ausschließlich zu einer eigenen oder externen Verkostung. Dort sind zehn Achsen zulässig; die bisherigen acht Felder bleiben für ältere Clients weiterhin gültig. Die zwei neuen Achsen `smoky`, `medicinal` sind bei älteren Profilen `null` (nicht erfasst). Zwischenzeitliche elf-Achsen-Profile mit `fiery` können noch eingelesen werden; `fiery` wird beim Normalisieren verworfen.
 - Möbelfotos werden in `warehouse.json` als sortiertes `photos`-Array zugeordnet. Maximal 24 Bilder pro Möbel; vollständige ZIP-Backups umfassen das Bildverzeichnis und die Zuordnungen.
 - `POST /api/warehouse/furniture/:id/shelves` / `PATCH /api/warehouse/shelves/:id`: Fachname, `capacity`, optional `front` (`open`, `door`, `glass`, `drawer`, `null`) und `heightCm` (5–500 cm oder `null`). Ohne Angabe gelten Frontstandard und automatische Höhenverteilung.
 - `PATCH /api/warehouse/shelves/:id/move` mit `{"direction":"up"}` bzw. `{"direction":"down"}` ändert die Reihenfolge von unten nach oben; IDs und Flaschenzuordnungen bleiben erhalten.

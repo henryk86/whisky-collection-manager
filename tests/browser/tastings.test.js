@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer,requestJson} from '../helpers/server.js';
 import {domOnly,chromium,session,openSettingsFromMenu,openSettingsSection,seed,mockDecoder} from './support.js';
-test('browser: bottling tasting block edits eight-axis flavor, notes and five Glencairn glasses with undo/redo', async () => {
+test('browser: bottling tasting block edits ten-axis flavor, notes and five Glencairn glasses with undo/redo', async () => {
     await session(async ({page,base,open}) => {
         await open();
         await page.locator('[data-act="new"]').first().click();
@@ -19,8 +19,16 @@ test('browser: bottling tasting block edits eight-axis flavor, notes and five Gl
         const section = page.locator('[data-flavor-detail]');
         await section.waitFor({state:'visible'});
         assert.match(await section.locator('.flavor-chart').textContent(),/Alkoholisch/);
-        await section.locator('[data-flavor-range="6"]').evaluate(input => {
+        for (const label of ['Rauchig','Medizinisch'])
+            assert.ok((await section.locator('.flavor-chart').textContent()).includes(label));
+        assert.equal(await section.locator('[data-flavor-range]').count(),10);
+        assert.equal((await section.locator('.flavor-chart').textContent()).includes('Brennend'),false);
+        await section.locator('[data-flavor-range="8"]').evaluate(input => {
             input.value='8'; input.dispatchEvent(new Event('input',{bubbles:true}));
+            input.dispatchEvent(new Event('change',{bubbles:true}));
+        });
+        await section.locator('[name="flavor-medicinal"]').evaluate(input => {
+            input.value='4'; input.dispatchEvent(new Event('input',{bubbles:true}));
             input.dispatchEvent(new Event('change',{bubbles:true}));
         });
         await section.locator('[data-rating-points="80"]').click();
@@ -28,13 +36,13 @@ test('browser: bottling tasting block edits eight-axis flavor, notes and five Gl
         const note = section.locator('[data-tasting-note="nose"]');
         await note.fill('Sherry and vanilla');
         await note.press('Tab');
-        assert.equal(await section.locator('[data-flavor-value="6"]').textContent(),'8');
+        assert.equal(await section.locator('[data-flavor-value="8"]').textContent(),'8');
         await page.waitForFunction(async () => {
             const response=await fetch('/api/collection');
             const data=await response.json();
             const b=data.bottlings?.[0];
             const last=b?.tastings?.at(-1);
-            return last?.rating===80 && last?.flavorProfile?.feinty===8 && last?.tastingNotes?.nose==='Sherry and vanilla';
+            return last?.rating===80 && last?.flavorProfile?.feinty===8 && last?.flavorProfile?.medicinal===4 && last?.tastingNotes?.nose==='Sherry and vanilla';
         });
         const saved=(await requestJson(base,'/api/collection')).data.bottlings[0];
         assert.equal(saved.bottles[0].rating,undefined);
@@ -51,6 +59,79 @@ test('browser: bottling tasting block edits eight-axis flavor, notes and five Gl
 });
 
 
+
+test('browser: custom whisky picker hides HEX text, saves warm colours and resets on presets', async()=>{
+    await session(async({page,base,open})=>{
+        await open();
+        await page.locator('[data-act="new"]').first().click();
+        await page.locator('#bottling-form [name="name"]').fill('Custom colour picker test');
+        await page.locator('#bottling-form button[type="submit"]').click();
+        await page.locator('[data-act="tastings-new"]').click();
+        await page.locator('[data-act="tasting-create"]').click();
+        await page.locator('[data-act="tasting-edit-start"]').click();
+        const section=page.locator('[data-flavor-detail]');
+        const panel=section.locator('.tasting-color-panel');
+        assert.equal(await panel.locator('.whisky-color-grid .whisky-color-choice').count(),12);
+        assert.equal(await panel.locator('.whisky-custom-row').count(),1);
+        assert.equal(await panel.locator('input[type="text"]').count(),0,'no visible HEX text field');
+        assert.equal(await panel.locator('text=HEX').count(),0,'no HEX caption');
+        const picker=panel.locator('[data-whisky-picker-area]');
+        // The picker can be below the viewport. Element-relative clicks scroll it
+        // into view; page.mouse.click with off-screen coordinates hits the page instead.
+        const clickPicker=async(x,y)=>{
+            const box=await picker.boundingBox();
+            assert.ok(box?.width>0 && box?.height>0,'picker has dimensions');
+            await picker.click({position:{x:box.width*x,y:box.height*y}});
+        };
+        await clickPicker(0.12,0.25);
+        await page.waitForFunction(async()=>{
+            const collection=await(await fetch('/api/collection')).json();
+            return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
+        });
+        const chosen=(await requestJson(base,'/api/collection')).data.bottlings[0].tastings.at(-1).whiskyColor;
+        const hiddenDraft=panel.locator('input[type="hidden"][data-whisky-custom-hex]');
+        const name=panel.locator('[data-whisky-custom-name]');
+        assert.ok((await name.textContent()).trim().length>0,'selected custom colour has a name');
+        assert.equal((await hiddenDraft.inputValue()).toLowerCase(),chosen.slice('custom:'.length).toLowerCase());
+        await panel.locator('[data-color-key="honey"]').click();
+        await page.waitForFunction(async()=>{
+            const collection=await(await fetch('/api/collection')).json();
+            return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor==='honey';
+        });
+        assert.equal(await hiddenDraft.inputValue(),'');
+        assert.equal(await name.textContent(),'','a standard colour must clear the old custom name');
+        assert.equal(await panel.locator('.whisky-custom-row').getAttribute('class'),'whisky-custom-row');
+        assert.equal(await panel.locator('.whisky-custom-preview .glencairn-liquid').getAttribute('style'),'fill:transparent');
+        assert.equal(await panel.locator('.whisky-custom-cursor').evaluate(el=>getComputedStyle(el).display),'none');
+        // The next interaction picks a new shade; no previous custom colour is reused.
+        await clickPicker(0.80,0.40);
+        await page.waitForFunction(async()=>{
+            const collection=await(await fetch('/api/collection')).json();
+            return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
+        });
+        assert.notEqual((await hiddenDraft.inputValue()).toLowerCase(),chosen.slice('custom:'.length));
+        assert.ok((await name.textContent()).trim().length>0,'newly selected shade is named');
+        await panel.locator('[data-act="tasting-color-clear"]').click();
+        await page.waitForFunction(async()=>{
+            const collection=await(await fetch('/api/collection')).json();
+            return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor===null;
+        });
+        assert.equal(await hiddenDraft.inputValue(),'');
+        assert.equal(await name.textContent(),'','clearing the colour also clears the name');
+        // Saved custom colour appears with its curated name, never a HEX label.
+        await clickPicker(0.32,0.26);
+        await page.waitForFunction(async()=>{
+            const collection=await(await fetch('/api/collection')).json();
+            return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
+        });
+        await page.locator('[data-act="tasting-edit-done"]').click();
+        const readonlyName=await page.locator('.tasting-readonly-color strong').textContent();
+        assert.ok(readonlyName?.length>0 && readonlyName!=='Eigene Farbe');
+        assert.doesNotMatch(readonlyName,/#/);
+        await page.setViewportSize({width:390,height:844});
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+    });
+});
 
 test('browser: v0.24 shelf editor saves capacity in suspended manager and switches with three-way confirmation', async () => {
     await session(async ({page,base,open}) => {
@@ -215,11 +296,11 @@ test('browser: v0.25.4 Full HD tasting layout groups colour separately from rada
         assert.equal(metrics.outer,2,`two sibling panels at Full HD: ${JSON.stringify(metrics)}`);
         assert.equal(metrics.inner,2,'radar and sliders share the same flavor panel');
         assert.equal(metrics.colorColumns,3,'palette must show 3 columns and 4 rows');
-        assert.equal(metrics.sliderColumns,2,'eight sliders must sit in two groups of four');
+        assert.equal(metrics.sliderColumns,2,'ten sliders must remain in two columns');
         assert.ok(metrics.color.x+metrics.color.width <= metrics.flavor.x + 2);
         assert.ok(metrics.chart.x+metrics.chart.width <= metrics.bars.x + 2);
         assert.ok(metrics.scrollbar <= 1,'Full HD layout must not create horizontal overflow');
-        assert.equal(await sliders.locator('input[data-flavor-range]').count(),8);
+        assert.equal(await sliders.locator('input[data-flavor-range]').count(),10);
         await page.setViewportSize({width:1040,height:900});
         assert.equal(await panel.locator('.tasting-top-row').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),1);
         assert.equal(await panel.locator('.flavor-editor').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),2);

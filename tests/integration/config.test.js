@@ -8,7 +8,8 @@ const configUrl = new URL('../../server/config.js', import.meta.url).href;
 const expected = {
     PORT: '3100', HOST: '0.0.0.0', WHISKY_DATA_DIR: '.', HTTP_ENABLED: 'false',
     HTTPS_ENABLED: 'true', HTTPS_PORT: '3543',
-    HTTPS_CERT_FILE: 'certs/server-cert.pem', HTTPS_KEY_FILE: 'certs/server-key.pem'
+    HTTPS_CERT_FILE: 'certs/server-cert.pem', HTTPS_KEY_FILE: 'certs/server-key.pem',
+    HTTPS_PUBLIC_PORT: '3543', LE_HTTPS_PUBLIC_PORT: '443'
 };
 function values(text) {
     return Object.fromEntries(text.split(/\r?\n/).filter(line => /^\w+=/.test(line)).map(line => {
