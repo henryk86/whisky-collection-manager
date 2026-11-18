@@ -28,7 +28,12 @@ export function verifyDeploymentConfiguration(read=name=>fs.readFileSync(path.jo
     // that a particular JavaScript module uses a particular method or variable).
     requireText(compose,'services:\n  app:', 'one combined application service must exist');
     check(!/^  (?:backup-worker|api|web):/m.test(compose),'do not split the app into separate uncoordinated services');
-    requireText(compose,"'3543:3543'",'HTTPS must be published on port 3543');
+    requireText(compose,"'${HTTPS_PUBLIC_PORT:-3543}:3543'",'default HTTPS port 3543 must remain configurable');
+    requireText(compose,"'${LE_HTTPS_PUBLIC_PORT:-443}:8443'",'optional public TLS port must be configurable');
+    requireText(compose,'profiles: [letsencrypt]','optional TLS must require explicit activation');
+    const nginx=read('deploy/nginx-letsencrypt.conf');
+    requireText(nginx,'proxy_ssl_verify on','public proxy must verify the internal HTTPS certificate');
+    requireText(nginx,'proxy_ssl_name localhost','public proxy must verify the internal localhost identity');
     noText(compose,"'3100:3100'",'plaintext port must not be published');
     requireText(compose,"HTTP_ENABLED: 'false'",'plaintext HTTP must be disabled');
     requireText(compose,"HTTPS_ENABLED: 'true'",'HTTPS must be enabled');

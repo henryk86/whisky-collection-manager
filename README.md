@@ -76,7 +76,7 @@ docker compose pull
 docker compose up -d --remove-orphans
 ```
 
-Anschließend ist die Anwendung unter **`https://<IP-des-Pi>:3543`** erreichbar, sofern diese IP im Zertifikat eingetragen ist. Die Einrichtungsroutine legt das persistente Datenverzeichnis außerhalb des Repositorys an. Beim Aktualisieren des Containers bleiben diese Daten erhalten; vor Updates sollte trotzdem ein vollständiges Backup erstellt werden.
+Anschließend ist die Anwendung unter **`https://<IP-des-Pi>:3543`** erreichbar, sofern diese IP im Zertifikat eingetragen ist. Der externe HTTPS-Port ist über `HTTPS_PUBLIC_PORT` konfigurierbar (auch `443`). Optional kann über **Certbot mit DNS-01** ein öffentlich vertrauenswürdiges Zertifikat auf einem separaten HTTPS-Port bereitgestellt werden (netcup CloudDNS/Legacy, Cloudflare oder RFC 2136); die bisherige Installation bleibt Standard. [Anleitung: Let's Encrypt](docs/LETS_ENCRYPT.md). Die Einrichtungsroutine legt das persistente Datenverzeichnis außerhalb des Repositorys an. Beim Aktualisieren des Containers bleiben diese Daten erhalten; vor Updates sollte trotzdem ein vollständiges Backup erstellt werden.
 
 **Sicherheit:** Die Anwendung hat keinen allgemeinen Benutzerlogin. Sie darf nicht ungeschützt aus dem Internet erreichbar sein; ein vertrauenswürdiges Netz oder eine zusätzliche Zugriffskontrolle/VPN ist erforderlich. HTTPS ersetzt keine Anmeldung.
 
