@@ -47,6 +47,10 @@ LE_DOMAIN=whisky.example.org
 LE_EMAIL=admin@example.org
 LE_DNS_PROVIDER=netcup-clouddns
 LE_DNS_PROPAGATION_SECONDS=900
+# Linux-UID/-GID des Benutzers, unter dem Certbot ausgeführt wird.
+# Bei abweichenden IDs mit `id -u` und `id -g` ermitteln.
+LE_PROXY_UID=1000
+LE_PROXY_GID=1000
 ```
 
 **netcup CloudDNS (empfohlen für neue netcup-DNS-Zonen):** Im netcup Customer
@@ -111,6 +115,17 @@ Weder DNS-Token noch privater TLS-Schlüssel gehören in `.env`, den Git-Checkou
 oder einen Commit. Certbot legt seine persistente Zertifikatsverwaltung unter
 `${WCM_DATA_DIR}/secrets/letsencrypt/config` ab.
 
+**Proxy-Benutzerrechte:** Der zusätzliche NGINX-Container läuft ohne Root-Rechte
+mit `LE_PROXY_UID` und `LE_PROXY_GID` (Standard jeweils `1000`). Diese IDs
+müssen den Ausgaben von `id -u` und `id -g` des Benutzers entsprechen, der
+`deploy/letsencrypt.sh issue` ausführt und die Zertifikatsdateien besitzt.
+Damit bleiben die privaten Dateien auf dem Host geschützt (`700` für
+Verzeichnisse, `600` für den privaten Schlüssel). Keine Rechte auf `777`
+ändern. Die TLS-Dateien werden im Proxy unter `/etc/nginx/wcm-letsencrypt`
+und `/etc/nginx/wcm-certs` bereitgestellt. Anders als frühere `/run`-Mounts
+werden sie nicht durch das NGINX-Laufzeit-tmpfs unter `/var/run` verdeckt
+(Alpine: `/var/run` verweist auf `/run`).
+
 ## Inbetriebnahme
 
 ```bash
@@ -120,6 +135,13 @@ sh deploy/letsencrypt.sh issue     # Zertifikat über DNS-01 ausstellen
 docker compose up -d --force-recreate app
 # Zusätzlichen HTTPS-Proxy nur bei Bedarf starten:
 docker compose --profile letsencrypt up -d
+```
+
+Nach der Umstellung von einem bestehenden Proxy mit älteren `/run`-Mounts
+muss der Container neu erstellt werden (bloßes `restart` reicht nicht):
+
+```bash
+docker compose --profile letsencrypt up -d --force-recreate letsencrypt-proxy
 ```
 
 **Erreichbarkeit:**
