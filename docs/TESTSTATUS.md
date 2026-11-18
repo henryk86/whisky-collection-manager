@@ -1,6 +1,6 @@
-# Teststatus - Whisky Collection Manager v1.6.0
+# Teststatus - Whisky Collection Manager v1.6.1
 
-**Stand:** 2026-11-18. Automatischer Release-Snapshot aus Merge 61e9ab0c6fde (v1.5.3).
+**Stand:** 2026-11-18. Automatischer Release-Snapshot aus Merge f679b9a38377 (v1.6.0).
 
 ## Pruefungen
 
@@ -13,9 +13,6 @@
 
 ## Aenderungen
 
-- fix: improve custom whisky picker interaction with viewport-aware clicking and HEX value comparison
-- feat: enhance whisky color management with custom HEX support and improved UI
-- feat: update flavor profile to support ten axes and enhance tasting functionality
-- feat: Add optional Let's Encrypt support with DNS-01 for public HTTPS endpoint
+- fix: fix Let's Encrypt configuration
 
 Fruehere CI-Resultate: [TESTHISTORIE.md](TESTHISTORIE.md).
