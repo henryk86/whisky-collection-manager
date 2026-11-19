@@ -1,4 +1,4 @@
-# Teststatus Whisky Collection Manager v1.6.2
+# Teststatus - Whisky Collection Manager v1.6.2
 
 **Stand:** 2026-11-19. Geprüft wurde die Erweiterung um die optionale Anmeldung auf Basis des bereitgestellten `develop`-Snapshots v1.6.2. Der Projektstand bleibt bis zum regulären Release-Merge ohne Versionsbump.
 
