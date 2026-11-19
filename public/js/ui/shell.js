@@ -37,7 +37,7 @@ export function createShell({ root, state, applyTheme, renderModal }) {
     </span>
     <div class="brand-copy">
     <span class="brand-overline">${t("ui.branding.privateReserve")}</span>
-    <h1>${t("ui.branding.whiskyLabel")} <em>${t("ui.branding.collectionLabel")}</em>
+    <h1>${t("ui.branding.whiskyLabel")} <em>${t("ui.branding.collectionLabel")}</em> <span class="brand-manager">${t("ui.branding.managerLabel")}</span>
     </h1>
     </div>
     </div>
@@ -65,7 +65,7 @@ export function createShell({ root, state, applyTheme, renderModal }) {
     </aside>
     <main data-live-regions>${content}</main>
     <footer class="site-footer">
-    <span>${t("ui.branding.whiskyCollection")}</span>
+    <span>${t("ui.branding.whiskyCollectionManager")}</span>
     <span>${t('ui.shell.footer', {version: state.version ? `v${state.version}` : t('ui.status.unknownVersion')})}</span>
     </footer>
     <div id="modal-root">

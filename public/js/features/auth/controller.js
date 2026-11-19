@@ -2,6 +2,7 @@ import { request, clearResourceCache } from '../../api.js';
 import { escapeHtml } from '../../ui/dom.js';
 import { t } from '../../i18n/index.js';
 import { toast } from '../../ui/notifications.js';
+import { eyeIcon, eyeOffIcon } from '../../ui/action-icons.js';
 
 /** Authentication pages intentionally replace, rather than cover, the collection UI. */
 export function createAuthController({ root, state, render, refresh, applyTheme, showModal, closeModal }) {
@@ -9,12 +10,23 @@ export function createAuthController({ root, state, render, refresh, applyTheme,
     let pendingDelete = null;
     let pendingRequired = null;
     const tr = key => t(`auth.${key}`);
-    const field = (id, label, {type = 'password', autocomplete = 'off', minLength = null} = {}) =>
-        `<label class="form-field" for="${id}">${label}<input id="${id}" name="${id}" type="${type}" autocomplete="${autocomplete}"${minLength ? ` minlength="${minLength}"` : ''} required></label>`;
-    const panel = (title, body) => `<div class="auth-page"><section class="panel auth-card">
-      <div class="auth-brand"><img src="/assets/logo.svg" width="55" height="55" alt=""><span>${tr('product')}</span></div>
-      <h1>${title}</h1>${body}</section></div>`;
-    const message = text => `<p class="muted">${text}</p>`;
+    const passwordToggle = (id, hidden = true) => `<button class="auth-password-toggle" type="button" data-act="auth-toggle-password" data-target="${id}" aria-controls="${id}" aria-label="${escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" title="${escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" aria-pressed="${hidden ? 'false' : 'true'}">${hidden ? eyeIcon : eyeOffIcon}</button>`;
+    const field = (id, label, {type = 'password', autocomplete = 'off', minLength = null, value = ''} = {}) => {
+        const isPassword = type === 'password';
+        return `<label class="form-field${isPassword ? ' auth-password-field' : ''}" for="${id}">${label}${isPassword
+            ? `<div class="auth-password-input"><input id="${id}" name="${id}" type="password" autocomplete="${autocomplete}"${minLength ? ` minlength="${minLength}"` : ''}${value ? ` value="${escapeHtml(value)}"` : ''} required>${passwordToggle(id)}</div>`
+            : `<input id="${id}" name="${id}" type="${type}" autocomplete="${autocomplete}"${minLength ? ` minlength="${minLength}"` : ''}${value ? ` value="${escapeHtml(value)}"` : ''} required>`}</label>`;
+    };
+    const brand = () => `<div class="auth-brand">
+      <img class="auth-brand-logo" src="/assets/logo.svg" width="112" height="112" alt="">
+      <div class="auth-brand-copy">
+        <span class="brand-overline">${t('ui.branding.privateReserve')}</span>
+        <p class="auth-brand-title">${t('ui.branding.whiskyLabel')} <em>${t('ui.branding.collectionLabel')}</em> <span>${t('ui.branding.managerLabel')}</span></p>
+      </div>
+    </div>`;
+    const panel = (title, body) => `<div class="auth-page"><section class="panel auth-card">${brand()}<h1>${title}</h1>${body}</section></div>`;
+    const errorText = () => `<p class="auth-error" role="alert" hidden></p>`;
+    const errorMarkup = text => `<span class="auth-error-icon" aria-hidden="true">!</span><span>${escapeHtml(text)}</span>`;
     function show() {
         if (state.modal) closeModal(true);
         const mandatory = !!state.auth?.user?.mustChangePassword;
@@ -22,29 +34,35 @@ export function createAuthController({ root, state, render, refresh, applyTheme,
         if (mode === 'change') {
             const canCancel = !mandatory;
             root.innerHTML = panel(tr(mandatory ? 'firstChangeTitle' : 'changeTitle'),
-                message(tr(mandatory ? 'firstChangeDescription' : 'changeDescription')) +
-                `<form id="auth-change-form" class="auth-form">
+                `<form id="auth-change-form" class="auth-form auth-form-main">
                 ${field('currentPassword',tr('currentPassword'),{autocomplete:'current-password'})}
                 ${field('newPassword',tr('newPassword'),{autocomplete:'new-password',minLength:12})}
                 ${field('confirmPassword',tr('confirmPassword'),{autocomplete:'new-password',minLength:12})}
-                <p class="muted auth-note">${tr('passwordHint')}</p><p class="auth-error" role="alert" hidden></p>
-                <div class="actions"><button class="btn primary" type="submit">${tr('savePassword')}</button>
-                ${canCancel ? `<button class="btn" type="button" data-act="auth-cancel">${tr('cancel')}</button>` : ''}</div></form>`);
+                <p class="muted auth-note">${tr('passwordHint')}</p>${errorText()}
+                <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">${tr('savePassword')}</button>
+                ${canCancel ? `<button class="btn auth-secondary-action" type="button" data-act="auth-cancel">${tr('cancel')}</button>` : ''}</div></form>`);
         } else {
-            root.innerHTML = panel(tr('loginTitle'), message(tr('loginDescription')) +
-                `<form id="auth-login-form" class="auth-form">
+            root.innerHTML = panel(tr('loginTitle'),
+                `<form id="auth-login-form" class="auth-form auth-form-main">
                 ${field('username',tr('username'),{type:'text',autocomplete:'username'})}
                 ${field('password',tr('password'),{autocomplete:'current-password'})}
-                <p class="auth-error" role="alert" hidden></p>
-                <div class="actions"><button class="btn primary" type="submit">${tr('signIn')}</button>
-                ${!state.auth?.required ? `<button class="btn" type="button" data-act="auth-cancel">${tr('cancel')}</button>` : ''}</div></form>`);
+                ${errorText()}
+                <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">${tr('signIn')}</button>
+                ${!state.auth?.required ? `<button class="btn auth-secondary-action" type="button" data-act="auth-cancel">${tr('cancel')}</button>` : ''}</div></form>`);
         }
         applyTheme();
         root.querySelector(mandatory || mode === 'change' ? '#currentPassword' : '#username')?.focus();
     }
     function error(form, reason) {
         const output = form.querySelector('.auth-error');
-        if (output) { output.textContent = reason?.message || tr('failed'); output.hidden = false; }
+        if (!output) return;
+        let message = tr('failed');
+        if (form.id === 'auth-login-form') {
+            if (reason?.status === 401 || reason?.code === 'api.errors.invalidCredentials') message = tr('invalidCredentials');
+            else if (typeof reason?.message === 'string' && reason.message.trim()) message = reason.message;
+        } else if (typeof reason?.message === 'string' && reason.message.trim()) message = reason.message;
+        output.innerHTML = errorMarkup(message);
+        output.hidden = false;
     }
     async function init() {
         state.auth = await request('/api/auth/session');
@@ -108,7 +126,16 @@ export function createAuthController({ root, state, render, refresh, applyTheme,
         else if (act === 'auth-open-change') openChange();
         else if (act === 'auth-cancel') await resume();
         else if (act === 'auth-toggle-required') changeSetting(!state.auth.required);
-        else if (act === 'auth-confirm-required') {
+        else if (act === 'auth-toggle-password') {
+            const input = document.getElementById(button.dataset.target || '');
+            if (!input) return;
+            const hidden = input.type === 'password';
+            input.type = hidden ? 'text' : 'password';
+            button.innerHTML = hidden ? eyeOffIcon : eyeIcon;
+            button.setAttribute('aria-label', tr(hidden ? 'hidePassword' : 'showPassword'));
+            button.setAttribute('title', tr(hidden ? 'hidePassword' : 'showPassword'));
+            button.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+        } else if (act === 'auth-confirm-required') {
             if (typeof pendingRequired !== 'boolean') return;
             const value = pendingRequired; pendingRequired = null;
             const result = await request('/api/auth/config', {method:'PATCH',body:JSON.stringify({required:value})});
@@ -145,6 +172,8 @@ export function createAuthController({ root, state, render, refresh, applyTheme,
         const submit = form.querySelector('button[type="submit"]');
         if (submit?.disabled) return true;
         if (submit) submit.disabled = true;
+        const output = form.querySelector('.auth-error');
+        if (output) { output.hidden = true; output.textContent = ''; }
         (async () => {
             if (form.id === 'auth-login-form') {
                 state.auth = await request('/api/auth/login', {method:'POST',body:JSON.stringify({username:form.elements.username.value,password:form.elements.password.value})});
