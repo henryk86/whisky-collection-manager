@@ -205,3 +205,9 @@ Die folgenden Eintraege enthalten historische Pruefwerte bzw. den ersten dokumen
 ## Testbericht v1.6.1
 
 - kein maschinenlesbares Testergebnis im alten Status
+
+---
+
+## Testbericht v1.6.2
+
+- kein maschinenlesbares Testergebnis im alten Status
