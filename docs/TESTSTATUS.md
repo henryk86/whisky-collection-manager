@@ -1,4 +1,4 @@
-# Teststatus - Whisky Collection Manager v1.6.2 (Entwicklungsstand)
+# Teststatus Whisky Collection Manager v1.6.2
 
 **Stand:** 2026-11-19. Geprüft wurde die Erweiterung um die optionale Anmeldung auf Basis des bereitgestellten `develop`-Snapshots v1.6.2. Der Projektstand bleibt bis zum regulären Release-Merge ohne Versionsbump.
 
@@ -10,7 +10,7 @@
 
 ## Noch offen
 
-- `npm run test:browser`: **nicht ausgeführt**. In dieser Umgebung war `npm ci` weder aus dem Offline-Cache noch aus der npm-Registry möglich (`ENOTCACHED`/`EAI_AGAIN`). Visuelle/mobile Prüfungen einschließlich iOS Safari und Android fehlen.
+- `npm run test:browser`: **Nicht lokal ausgeführt**. In dieser Umgebung war `npm ci` weder aus dem Offline-Cache noch aus der npm-Registry möglich (`ENOTCACHED`/`EAI_AGAIN`). Visuelle/mobile Prüfungen einschließlich iOS Safari und Android fehlen.
 - Docker-Build und Startprüfung im tatsächlichen Container sowie End-to-End-Test auf dem Raspberry Pi und mit Let's Encrypt: **nicht ausgeführt**.
 - GitHub-Release-Workflow: durch diese Entwicklungsänderung nicht angestoßen; der Versionsbump bleibt dem manuell freigegebenen Release vorbehalten.
 
