@@ -7,10 +7,12 @@ import { publicErrorResponse } from './domain/public-error-response.js';
 import { allowedExtensionOrigin, requireSameOriginMutation, requireAllowedHost } from './http/request-security.js';
 import { initialize } from './storage/collection-store.js';
 import { initWarehouse } from './storage/warehouse-store.js';
+import { initializeAuth, authorizeRequest } from './services/auth.js';
 /** One shared handler for HTTP and HTTPS; neither protocol owns application state. */
 export function createRequestHandler() {
     initialize();
     initWarehouse();
+    initializeAuth();
     return async function handleRequest(request, response) {
         try {
             requireAllowedHost(request);
@@ -36,6 +38,7 @@ export function createRequestHandler() {
                 return;
             }
             requireSameOriginMutation(request, url, { extensionStage: url.pathname === '/api/import-image/stage' });
+            authorizeRequest(request, url);
             if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/internal/backup/')) {
                 return await handleApi(request, response, url);
             }

@@ -1,6 +1,7 @@
 node_modules/
 .offline/
 /data/
+**/user.json
 /images/
 /documents/
 /backups/

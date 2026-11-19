@@ -111,7 +111,7 @@ CSRF-/Host-Abwehr, HTML-Sicherheitsheader und ungueltige Pfade.
 HTML-Parameterescaping und Streamfehler. Bei neuen schreibenden Endpunkten
 `readJson()` und die gemeinsame `request-security.js`-Sperre verwenden.
 Bei neuen externen Ressourcen die CSP in `server/http/static-files.js`
-und deren Anbieterbedingungen pruefen. Die Anwendung bleibt ohne Login.
+und deren Anbieterbedingungen pruefen. Die App bietet eine optionale Loginpflicht; Details stehen in [ANMELDUNG.md](ANMELDUNG.md).
 Der Scrollbar-Browser-Test muss klassische Scrollbars sehen oder sich
 explizit ueberspringen; `--hide-scrollbars` darf nicht verwendet werden.
 

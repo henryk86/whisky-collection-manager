@@ -2,6 +2,7 @@
 
 Webanwendung zur lokalen Verwaltung einer Whisky-Sammlung mit einzelnen Flaschen, Verkostungen und Lagerplätzen. Die Anwendung basiert auf Node.js und Browser-ES-Modulen, benötigt keine Datenbank und keinen Frontend-Build. Sammlung und Lager werden in JSON-Dateien gespeichert.
 
+
 ## Funktionen
 
 - **Sammlung:** Abfüllungen und physische Flaschen, Inventarnummern, Kaufdaten, Zustände, Suche, Filter, Scanner sowie Fotos und Belege.
@@ -78,9 +79,15 @@ docker compose up -d --remove-orphans
 
 Anschließend ist die Anwendung unter **`https://<IP-des-Pi>:3543`** erreichbar, sofern diese IP im Zertifikat eingetragen ist. Der externe HTTPS-Port ist über `HTTPS_PUBLIC_PORT` konfigurierbar (auch `443`). Optional kann über **Certbot mit DNS-01** ein öffentlich vertrauenswürdiges Zertifikat auf einem separaten HTTPS-Port bereitgestellt werden (netcup CloudDNS/Legacy, Cloudflare oder RFC 2136); die bisherige Installation bleibt Standard. [Anleitung: Let's Encrypt](docs/LETS_ENCRYPT.md). Die Einrichtungsroutine legt das persistente Datenverzeichnis außerhalb des Repositorys an. Beim Aktualisieren des Containers bleiben diese Daten erhalten; vor Updates sollte trotzdem ein vollständiges Backup erstellt werden.
 
-**Sicherheit:** Die Anwendung hat keinen allgemeinen Benutzerlogin. Sie darf nicht ungeschützt aus dem Internet erreichbar sein; ein vertrauenswürdiges Netz oder eine zusätzliche Zugriffskontrolle/VPN ist erforderlich. HTTPS ersetzt keine Anmeldung.
+**Sicherheit:** Die Loginpflicht ist optional und anfangs deaktiviert. Bei öffentlich erreichbaren Installationen unbedingt Loginpflicht und HTTPS aktivieren; zusätzliche Netzabsicherung/VPN bleibt empfohlen.
 
 Einrichtung, Updates, Backup und Wiederherstellung: [Docker und Datensicherung](docs/DOCKER_BACKUP.md). Für die Wiederherstellung ohne externe Paket- oder Containerquellen: [Offline-Releases](docs/OFFLINE_RELEASES.md).
+
+## Optionale Anmeldung
+
+Die **Loginpflicht ist standardmäßig deaktiviert**. Nach Anmeldung als Administrator lässt sie sich unter **Einstellungen → Nutzerverwaltung** aktivieren. Weitere Nutzer erhalten alle Sammlungsfunktionen, aber keinen Zugriff auf die Nutzerverwaltung.
+
+Beim ersten Start wird `admin` mit einem **individuellen Startpasswort** angelegt; es steht einmalig in den Serverlogs (`docker compose logs app`). Bei der ersten Anmeldung ist ein Passwortwechsel Pflicht. Die Konten liegen in `data/user.json`, Passwörter nur als gesalzene scrypt-Hashes. Zugang, Passwortwiederherstellung und Betrieb: [Anmeldung und Nutzerverwaltung](docs/ANMELDUNG.md).
 
 ## Entwicklung und Releases
 

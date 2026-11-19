@@ -15,6 +15,8 @@ export function createState(route) {
         warehousePlanCorner: 'nw',
         warehousePlanZoom: 100,
         version: '',
+        auth: { required: false, user: null, canManageUsers: false },
+        authUsers: null,
         page: route.page,
         selected: route.selected,
         tastingId: route.tastingId || null,

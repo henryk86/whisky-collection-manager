@@ -2,6 +2,7 @@ import { t } from '../i18n/index.js';
 import { newBottlingIcon, inventoryScanIcon, themeMoonIcon } from './action-icons.js';
 import { MAIN_PAGES } from '../navigation/pages.js';
 import { reconcileChildren } from './dom-reconcile.js';
+import { escapeHtml } from './dom.js';
 export function createShell({ root, state, applyTheme, renderModal }) {
     let displayedRoute = null;
     function shell(content) {
@@ -9,7 +10,7 @@ export function createShell({ root, state, applyTheme, renderModal }) {
         // modal host. Rebuilding #app briefly sends long pages to the top,
         // especially after deleting a photo or attachment. Only actual route
         // changes require a full shell; they scroll to the top in navigation.
-        const route = [state.page, state.selected, state.tastingId, state.flightId].join('::');
+        const route = [state.page, state.selected, state.tastingId, state.flightId, state.auth?.user?.id || 'guest'].join('::');
         const main = root.querySelector?.(':scope > main');
         if (main && displayedRoute === route) {
             const scrollY = typeof window !== 'undefined' ? window.scrollY : null;
@@ -36,7 +37,7 @@ export function createShell({ root, state, applyTheme, renderModal }) {
     </span>
     <div class="brand-copy">
     <span class="brand-overline">${t("ui.branding.privateReserve")}</span>
-    <h1>${t("ui.branding.whiskyLabel")} <em>${t("ui.branding.collectionLabel")}</em>
+    <h1>${t("ui.branding.whiskyLabel")} <em>${t("ui.branding.collectionLabel")}</em> <span class="brand-manager">${t("ui.branding.managerLabel")}</span>
     </h1>
     </div>
     </div>
@@ -55,10 +56,16 @@ export function createShell({ root, state, applyTheme, renderModal }) {
         <a href="${item.url}" data-act="${item.action}" ${item.id === state.page || (item.id === 'home' && state.page === 'detail') || (item.id === 'tastings-home' && ['tastings','tasting','external-tasting','tasting-flight'].includes(state.page)) ? 'aria-current="page"' : ''}>
           <svg class="${item.navClass || ''}" viewBox="${item.viewBox || '0 0 24 24'}" fill="${item.filled?'currentColor':'none'}" stroke="${item.filled?'none':'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${item.icon}</svg>${item.label}
         </a>`).join('')}</nav>
+      <div class="auth-drawer-actions">
+        ${state.auth?.user ? `<p class="muted">${escapeHtml(state.auth.user.username)}</p>
+        <button class="btn" type="button" data-act="auth-open-change">${t('auth.changeTitle')}</button>
+        <button class="btn" type="button" data-act="auth-logout">${t('auth.signOut')}</button>` :
+        `<button class="btn" type="button" data-act="auth-open-login">${t('auth.signIn')}</button>`}
+      </div>
     </aside>
     <main data-live-regions>${content}</main>
     <footer class="site-footer">
-    <span>${t("ui.branding.whiskyCollection")}</span>
+    <span>${t("ui.branding.whiskyCollectionManager")}</span>
     <span>${t('ui.shell.footer', {version: state.version ? `v${state.version}` : t('ui.status.unknownVersion')})}</span>
     </footer>
     <div id="modal-root">
