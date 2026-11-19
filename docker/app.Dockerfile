@@ -17,6 +17,7 @@ RUN node -e 'const fs=require("node:fs"); for (const f of ["package.json","packa
     && npm cache clean --force
 COPY --chown=node:node public/ ./public/
 COPY scripts/prepare-cutout-assets.js ./scripts/prepare-cutout-assets.js
+COPY scripts/reset-admin-password.js ./scripts/reset-admin-password.js
 # Fetch and verify the small ONNX model and WASM runtime at image-build time.
 # Serving the app requires no external AI service or CDN.
 RUN node scripts/prepare-cutout-assets.js

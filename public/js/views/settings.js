@@ -4,9 +4,9 @@ import { availableLanguages, currentLanguage, t } from '../i18n/index.js';
 import { renderBackupSection } from './backups.js';
 import { backToCollectionButton } from '../ui/navigation-controls.js';
 import { sectionWorkspace } from '../ui/section-navigation.js';
-export function createSettingsView(state) {
+export function createSettingsView(state, auth = {usersSection: () => ''}) {
     function settings() {
-        const tabs = ['general','backups','transfer','distilleries'].map(id => ({id,label:t(`settings.navigation.${id}`)}));
+        const tabs = [...['general','backups','transfer','distilleries'], ...(state.auth?.canManageUsers ? ['users'] : [])].map(id => ({id,label:id === 'users' ? t('auth.users') : t(`settings.navigation.${id}`)}));
         const active = tabs.some(item => item.id === state.settingsSection) ? state.settingsSection : 'general';
         const panel = (id, content) => `<section class="settings-section" data-settings-panel="${id}"${id === active ? '' : ' hidden'}><h2 class="analytics-section-title">${t(`settings.navigation.${id}`)}</h2>${content}</section>`;
         const general = `    <div class="panel section"><h3>${t("settings.language.label")}</h3><label class="form-field" for="ui-language">${t("settings.language.choose")}<select id="ui-language" aria-label="${t("settings.language.label")}">${Object.entries(availableLanguages()).map(([code, name]) => `<option value="${escapeHtml(code)}" ${code === currentLanguage() ? 'selected' : ''}>${escapeHtml(name)}</option>`).join('')}</select></label></div>
@@ -43,7 +43,7 @@ export function createSettingsView(state) {
         const workspace = sectionWorkspace({sections:tabs,activeId:active,
             action:'settings-section',itemAttribute:'data-settings-section',
             label:t('settings.navigation.label'),switchKind:'settings',
-        }, panel('general',general)+panel('backups',backups)+panel('transfer',transfer)+panel('distilleries',distilleries));
+        }, panel('general',general)+panel('backups',backups)+panel('transfer',transfer)+panel('distilleries',distilleries)+(state.auth?.canManageUsers ? `<section class="settings-section" data-settings-panel="users"${active === 'users' ? '' : ' hidden'}><h2 class="analytics-section-title">${t('auth.users')}</h2><div id="auth-users-content">${auth.usersSection()}</div></section>` : ''));
         return `<div class="analytics-page settings-page"><header class="section-head settings-heading">
     <div class="page-heading-copy">
     <span class="eyebrow dark">${t("settings.page.eyebrow")}</span>
@@ -58,7 +58,7 @@ export function createSettingsView(state) {
 
 /** Show a settings area without replacing forms or losing unsaved field values. */
 export function activateSettingsSection(id, container) {
-    if (!['general','backups','transfer','distilleries'].includes(id) || !container) return false;
+    if (!['general','backups','transfer','distilleries','users'].includes(id) || !container || !container.querySelector(`[data-settings-panel="${id}"]`)) return false;
     for (const button of container.querySelectorAll('[data-settings-section]')) {
         const active = button.dataset.settingsSection === id;
         button.classList.toggle('active',active);

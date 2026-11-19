@@ -179,3 +179,7 @@ zusätzlicher Upgrade-Schutz, kein Ersatz fuer Backups oder Docker-Releases.
 ### Asynchrone Verkostungserstellung
 
 Beim Anlegen einer neuen Verkostung sperrt der Editor seine Eingaben und Ruecknavigation vom Start des POST bis zum abgeschlossenen Sammlungs-Refresh. Dadurch kann die Liste nicht vor dem Update mit altem Zustand aufgebaut werden. Doppelte POSTs durch wiederholte Speicherklicks sind abgefangen. Bei einer fehlgeschlagenen Anfrage werden die Eingaben wieder freigegeben und bleiben erhalten. Eine zwischenzeitliche anderweitige Navigation wird nach dem Abschluss nicht ueberschrieben. Die Browser-Suite prueft diese Rennen mit kuenstlich verzoegerter Antwort und einem HTTP-500-Fehler.
+
+### Optionales Login
+
+`server/services/auth.js` hält `data/user.json` (getrennt von `collection.json`) und eine flüchtige Session-Tabelle. Die Anfrage-Autorisierung erfolgt **zentral vor** `server/routes.js` und `server/http/static-files.js` in `server/app.js`, insbesondere für API, Bilder und Downloads. `GET /api/version` bleibt zur Zustandsprüfung offen; `/internal/backup/` verwendet weiterhin die separate Worker-Authentifizierung. Auch bei deaktivierter Loginpflicht sind Auth-Konfiguration und Nutzerverwaltung nur nach Anmeldung als Administrator zugänglich. Der Client startet mit `GET /api/auth/session` und lädt Sammlungsdaten erst nach erfolgreicher Freigabe; verpflichtende Passwortwechsel blockieren bis zu ihrem Abschluss die Fachfunktionen. Backend-Tests: `tests/integration/auth.test.js`.

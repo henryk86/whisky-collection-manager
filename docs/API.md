@@ -1,8 +1,22 @@
 # Lokale HTTP-API
 
-Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 5`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Für die Sammlung gibt es **keinen allgemeinen Benutzerlogin**. Nur administrative Backup-Operationen verlangen einen separaten Schlüssel. Die Anwendung darf nicht ohne zusätzliche Zugriffskontrolle öffentlich erreichbar sein.
+Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 5`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Die **optionale Loginpflicht** kann ein Administrator in der Nutzerverwaltung aktivieren. Dann benötigen Sammlungs-API, Bilder und Downloads eine gültige Sitzung; administrative Backup-Operationen behalten ihre separate Sicherheitsprüfung. Bei Internetzugriff sind HTTPS, Loginpflicht und vorzugsweise zusätzliche Netzabsicherung erforderlich.
 
 POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB Anfrageinhalt. Ungültiges JSON und Nicht-Objekte werden mit 400 abgewiesen. Fehlerantwort für bekannte Fehler: `{ "error": "Invalid path.", "errorCode": "api.errors.invalidPath" }`; der `error`-Text ist als sicherer, englischer Fallback gedacht. Der Browser übersetzt `errorCode` mittels der Sprachkataloge `public/locales/de.json` und `en.json`. Bei bestimmten dynamischen Validierungen kann zusätzlich `errorParams` (z. B. `{ "field": "abv" }`) mitgeliefert werden. Für unbekannte Fehler liefert die API ausschließlich eine neutrale englische Meldung einschließlich HTTP-Status, ohne interne Fehlermeldungen offenzulegen. Bekannte Konflikte verwenden 409, nicht gefundene Ressourcen 404. Einzelheiten und beschreibbare Felder stehen in `server/routes.js` und `server/domain/normalization.js`.
+
+### Anmeldung und Nutzerverwaltung
+
+- `GET /api/auth/session`: öffentlich; Status `{required, user, canManageUsers}` (ohne Passwort-Hashes)
+- `POST /api/auth/login`: JSON `{username, password}`; setzt HttpOnly-/SameSite-Cookie, Secure bei HTTPS
+- `POST /api/auth/logout`: beendet die Sitzung; kein JSON-Body erforderlich
+- `POST /api/auth/password`: angemeldet, JSON `{currentPassword, newPassword}`; erzwingt nach Erstlogin einen Passwortwechsel und rotiert das Sitzungstoken
+- `GET /api/auth/users`: Administrator; gibt nur öffentliche Nutzerinformationen zurück
+- `POST /api/auth/users`: Administrator, JSON `{username, password}`; neuer Nutzer mit Rolle `user` und verpflichtendem Passwortwechsel
+- `POST /api/auth/users/:id/reset-password`: Administrator, JSON `{password}`; widerruft Sitzungen des Nutzers
+- `DELETE /api/auth/users/:id`: Administrator; kann das eigene Administratorkonto nicht löschen
+- `PATCH /api/auth/config`: Administrator, JSON `{required: true|false}`; schaltet die Loginpflicht um
+
+Bei aktiver Loginpflicht antworten geschützte Endpunkte ohne Sitzung mit 401. Bei erzwungenem Passwortwechsel sind sie bis zur Änderung mit 403 gesperrt. `GET /api/version` bleibt für den Docker-Healthcheck öffentlich; interne Backup-Routen behalten ihre eigene Token-Authentifizierung. Weitere Einzelheiten: [Anmeldung](ANMELDUNG.md).
 
 ### Revisionsgebundene Mutationsantworten
 

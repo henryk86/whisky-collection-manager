@@ -13,7 +13,7 @@ Der WhiskyCollectionManager verwendet standardmäßig **einen Docker-Service `ap
 
 Alle neuen Backups verwenden **ein einziges passwortgeschütztes ZIP-Format mit AES-256 (WinZip AE-2)**, unabhängig davon, ob sie manuell oder per Zeitplan auf USB, NAS oder Cloud erstellt werden. Das ZIP enthält den vollständigen `data/`-Ordner mit `collection.json` und `warehouse.json`, Bilder in `images/` und Dokumente in `documents/`. Die Inhalte sind verschlüsselt, Dateinamen im ZIP jedoch sichtbar. Zum Öffnen auf Windows/macOS/Linux z. B. **7-Zip** oder ein anderes WinZip-AES-kompatibles Programm verwenden. Alte unverschlüsselte ZIP-Archive können weiterhin eingespielt werden, werden aber nicht nachträglich verschlüsselt.
 
-**Sicherheit:** Die Anwendung hat noch keinen allgemeinen Login. Nur im vertrauenswürdigen Heimnetz betreiben, keine Router-Portfreigabe und keine öffentliche Bereitstellung ohne zusätzliche Zugriffskontrolle.
+**Sicherheit:** Die Loginpflicht ist standardmäßig aus und kann von einem angemeldeten Administrator in der Nutzerverwaltung aktiviert werden. Bei Internetzugriff Loginpflicht, HTTPS und vorzugsweise zusätzliche Netzabsicherung verwenden. Siehe [Anmeldung](ANMELDUNG.md).
 
 ## Installation und Update
 

@@ -118,7 +118,7 @@ export function writeReadableZip(sourceRoot, destination, password, timestamp = 
     const files = walk(sourceRoot, ['data', 'images', 'documents']);
     files.unshift({ name: 'README.txt', contents: Buffer.from(
         `WhiskyCollectionManager - passwortgeschuetzte Sicherung (AES-256)\nErstellt: ${timestamp}\n\n` +
-        'data/collection.json: Sammlung (JSON)\ndata/warehouse.json: Lagerverwaltung (JSON, falls vorhanden)\nimages/: Bilder\ndocuments/: Dokumente\n' +
+        'data/collection.json: Sammlung (JSON)\ndata/warehouse.json: Lagerverwaltung (JSON, falls vorhanden)\ndata/user.json: Nutzer und Login-Konfiguration (Passwort-Hashes, falls vorhanden)\nimages/: Bilder\ndocuments/: Dokumente\n' +
         'Zum Oeffnen 7-Zip oder ein anderes WinZip-AES-256-kompatibles Programm verwenden.\n' +
         'Ohne das Backup-Passwort lassen sich die Dateien nicht entschluesseln.\n', 'utf8') });
     const fd = fs.openSync(destination, 'wx', 0o600);

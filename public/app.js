@@ -33,6 +33,7 @@ import { createCodeResolver } from './js/features/scanner/resolve-code.js';
 import { createScanner } from './js/features/scanner/controller.js';
 import { createWhiskybase } from './js/features/whiskybase/controller.js';
 import { bindEvents } from './js/events.js';
+import { createAuthController } from './js/features/auth/controller.js';
 await initializeLanguage();
 const root = document.querySelector('#app');
 const state = createState(parseRoute(location.search));
@@ -60,7 +61,8 @@ const detail = createDetailView({
     state, selectors, shell, navigate, action
 });
 const tastingsView = createTastingsView({state,selectors,shell,navigate,refresh,showModal:modal.showModal,closeModal:modal.closeModal});
-const settingsView = createSettingsView(state);
+const auth = createAuthController({ root, state, render, refresh, applyTheme: theme.applyTheme, showModal: modal.showModal, closeModal: modal.closeModal });
+const settingsView = createSettingsView(state, auth);
 const bottlingForm = createBottlingForm({
     state, selectors
 });
@@ -131,14 +133,17 @@ async function action(task, { scope = 'all' } = {}) {
 }
 navigation.listen();
 bindEvents(root, {
-    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView
+    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView, auth
 });
 // The extension can send a second import into an already open manager tab.
 // A fragment-only navigation triggers hashchange, not a page reload.
 window.addEventListener('hashchange', () => {
     if (state.collection) externalImport.importFromExtension();
 });
-refresh().then(externalImport.importFromExtension).catch(error => {
+window.addEventListener('wcm:auth-required', () => {
+    auth.init().then(allowed => { if (!allowed) state.collection = null; }).catch(() => {});
+});
+auth.init().then(allowed => allowed ? refresh().then(externalImport.importFromExtension) : null).catch(error => {
     root.innerHTML = `<main>
     <h2>${t("ui.errors.serverConnectionFailed")}</h2>
     <p>${escapeHtml(error.message)}</p>

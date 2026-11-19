@@ -10,7 +10,7 @@ import { activateHelpTopic } from './views/help.js';
 import { activateSettingsSection } from './views/settings.js';
 import { handleFlavorRange, setFlavorFromPointer } from './ui/flavor-profile.js';
 /** One delegated click handler; HTML data-act values are the UI action names. */
-export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView }) {
+export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView, auth }) {
     const suggestNumber = async (fieldName) => {
         const result = await request('/api/suggest-number');
         const field = query(`[name=${fieldName}]`);
@@ -51,8 +51,11 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'goto-analysis': () => navigate('analytics', 'overview'),
         'goto-warehouse': () => navigate('warehouse', 'overview'),
         'warehouse-section': button => navigate('warehouse', button.dataset.section),
-        'settings-section': button => {
-            if (activateSettingsSection(button.dataset.settingsSection,button.closest('.settings-page'))) state.settingsSection = button.dataset.settingsSection;
+        'settings-section': async button => {
+            if (activateSettingsSection(button.dataset.settingsSection,button.closest('.settings-page'))) {
+                state.settingsSection = button.dataset.settingsSection;
+                if (state.settingsSection === 'users') await auth.loadUsers();
+            }
         },
         'warehouse-plan-mode': button => {state.warehousePlanMode = ['2d','3d'].includes(button.dataset.mode) ? button.dataset.mode : '2d'; render();},
         'warehouse-camera': button => { if (['nw','ne','se','sw'].includes(button.dataset.corner)) {state.warehousePlanCorner = button.dataset.corner; render();} },
@@ -319,6 +322,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
             event.preventDefault();
         }
         try {
+            if (button.dataset.act.startsWith('auth-')) { await auth.handleAction(button); return; }
             await handlers[button.dataset.act]?.(button);
         }
         catch (error) {
@@ -403,6 +407,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
             tastingsView.commitCustomPreview();
     });
     root.addEventListener('submit', event => {
+        if (auth.handleSubmit(event)) return;
         if (event.target.id === 'new-bottle-choice-form') {
             event.preventDefault();
             try { editors.chooseExistingBottling(event.target.elements.bottlingId.value); }

@@ -5,6 +5,7 @@ import { fail } from './domain/errors.js';
 import * as collection from './services/collection.js';
 import * as warehouse from './services/warehouse.js';
 import * as settings from './services/settings.js';
+import * as auth from './services/auth.js';
 import * as bottlings from './services/bottlings.js';
 import * as tastings from './services/tastings.js';
 import * as standaloneTastings from './services/standalone-tastings.js';
@@ -24,6 +25,15 @@ import { withMutationTracking } from './domain/mutation-tracker.js';
 const version = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 const routes = [
     { method: 'GET', path: /^\/api\/version$/, run: () => ({ version }) },
+    { method: 'GET', path: /^\/api\/auth\/session$/, run: (_, _body, req) => auth.sessionInfo(req) },
+    { method: 'POST', path: /^\/api\/auth\/login$/, run: (_, body, req, res) => auth.login(req, body, res) },
+    { method: 'POST', path: /^\/api\/auth\/logout$/, skipBody: true, run: (_, _body, req, res) => auth.logout(req, res) },
+    { method: 'POST', path: /^\/api\/auth\/password$/, run: (_, body, req, res) => auth.changePassword(req, body, res) },
+    { method: 'GET', path: /^\/api\/auth\/users$/, run: (_, _body, req) => auth.listUsers(req) },
+    { method: 'POST', path: /^\/api\/auth\/users$/, status: 201, run: (_, body, req) => auth.createUser(req, body) },
+    { method: 'POST', path: /^\/api\/auth\/users\/([\w-]+)\/reset-password$/, run: ([id], body, req) => auth.resetPassword(req, id, body) },
+    { method: 'DELETE', path: /^\/api\/auth\/users\/([\w-]+)$/, run: ([id], _body, req) => auth.removeUser(req, id) },
+    { method: 'PATCH', path: /^\/api\/auth\/config$/, run: (_, body, req) => auth.setLoginRequired(req, body) },
     { method: 'GET', path: /^\/api\/warehouse$/, run: () => warehouse.getWarehouse() },
     { method: 'POST', path: /^\/api\/warehouse\/rooms\/export$/, run: (_, body) => warehouse.exportRooms(body) },
     { method: 'POST', path: /^\/api\/warehouse\/rooms\/import\/preview$/, run: (_, body) => warehouse.previewRoomImport(body) },
@@ -196,14 +206,14 @@ export async function handleApi(request, response, url) {
                 return;
             }
         }
-        const body = ['POST', 'PATCH', 'PUT'].includes(request.method) && !route.binaryUpload ? await readJson(request) : undefined;
+        const body = ['POST', 'PATCH', 'PUT'].includes(request.method) && !route.binaryUpload && !route.skipBody ? await readJson(request) : undefined;
         // Opt-in response envelope keeps the existing external API unchanged.
         // Only successfully committed store writes appear in the response.
         const wantsDelta = request.headers['x-wcm-state-delta'] === '1' &&
             ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
         const tracked = wantsDelta
-            ? await withMutationTracking(() => route.run(match.slice(1), body, request))
-            : {value: await route.run(match.slice(1), body, request), updates: []};
+            ? await withMutationTracking(() => route.run(match.slice(1), body, request, response))
+            : {value: await route.run(match.slice(1), body, request, response), updates: []};
         const result = tracked.value;
         if (route.inlineImage) {
             response.writeHead(200, { 'Content-Type': result.type, 'Content-Length': result.bytes.length,

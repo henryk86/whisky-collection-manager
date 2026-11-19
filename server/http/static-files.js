@@ -77,6 +77,10 @@ function streamStatic(req, res, file, contentType, cacheControl, securityHeaders
 }
 
 export async function serveStatic(req, res, url) {
+    // Runtime data must never become static assets, even if DATA_ROOT was misconfigured inside public/.
+    if (/^\/(?:data|documents|backups|secrets)(?:\/|$)/.test(url.pathname)) {
+        throw fail('Datei nicht gefunden', 404, 'api.errors.fileNotFound');
+    }
     let file;
     if (url.pathname === '/vendor/html5-qrcode.min.js') {
         const vendor = path.resolve(WEB, '../node_modules/html5-qrcode/html5-qrcode.min.js');

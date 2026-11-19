@@ -92,7 +92,8 @@
    square corners, thin borders and matching insets, never elevated cards. */
 .settings-section[hidden] { display: none; }
 .settings-section > .analytics-section-title { margin-top: 0; }
-.settings-section > .panel.section {
+.settings-section > .panel.section,
+.settings-section[data-settings-panel="users"] #auth-users-content > .panel.section {
     background: var(--paper);
     border: 1px solid var(--line);
     box-shadow: none;
@@ -101,7 +102,8 @@
     margin: 0 0 14px;
     min-width: 0;
 }
-.settings-section > .panel.section h3 {
+.settings-section > .panel.section h3,
+.settings-section[data-settings-panel="users"] #auth-users-content > .panel.section h3 {
     font: 500 18px/1.3 var(--serif);
     margin: 0 0 20px;
 }
@@ -125,5 +127,33 @@
     .settings-section[data-settings-panel="general"] { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 740px) {
-    .settings-section > .panel.section { padding: 15px; }
+    .settings-section > .panel.section,
+.settings-section[data-settings-panel="users"] #auth-users-content > .panel.section { padding: 15px; }
 }
+
+/* Optional login + user management; reuse the application's panels and form controls. */
+.auth-page { flex: 1; display: grid; place-items: center; padding: clamp(18px, 5vw, 64px) 16px; }
+.auth-card { width: min(100%, 470px); padding: clamp(22px, 5vw, 38px); background: var(--paper); border: 1px solid var(--line); border-radius: 4px; }
+.auth-card h1 { font: 500 clamp(26px, 5vw, 36px)/1.2 var(--serif); margin: 16px 0 8px; }
+.auth-card > .muted { margin: 0 0 20px; }
+.auth-brand { display: flex; gap: 12px; align-items: center; font-size: 12px; font-weight: 700; letter-spacing: .13em; }
+.auth-brand img { object-fit: contain; }
+.auth-form { display: grid; gap: 15px; min-width: 0; }
+.auth-form .form-field { display: grid; gap: 6px; min-width: 0; }
+.auth-form .form-field input { width: 100%; min-width: 0; }
+.auth-form .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.auth-error { margin: 0; color: var(--danger, #b54848); }
+.auth-error[hidden] { display: none; }
+.auth-note { margin: 0; font-size: 13px; }
+.auth-settings > .muted { margin-top: -10px; }
+.auth-setting-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.auth-settings .auth-user-list { margin-bottom: 20px; }
+.auth-user-row { padding: 12px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.auth-user-row > div:first-child { min-width: 140px; display: grid; gap: 3px; }
+.auth-user-row .muted { font-size: 12px; }
+.auth-subtitle { padding-top: 12px; }
+.auth-create-form { max-width: 430px; }
+@media (max-width: 600px) { .auth-user-row .actions { width: 100%; } }
+
+.auth-drawer-actions { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 15px; display: flex; gap: 8px; flex-wrap: wrap; }
+.auth-drawer-actions .muted { width: 100%; margin: 0; overflow-wrap: anywhere; }

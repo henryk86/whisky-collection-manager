@@ -27,6 +27,7 @@ export async function request(url, options = {}) {
         data = null;
     }
     if (!res.ok) {
+        if (res.status === 401 && !url.startsWith('/api/auth/')) window.dispatchEvent(new Event('wcm:auth-required'));
         throw httpResponseError(res.status, data);
     }
     if (data?.__wcmStateDelta === 1 && Array.isArray(data.updates)) {
@@ -55,6 +56,7 @@ export function httpResponseError(status, data) {
 /** Local validator cache. A 304 reuses parsed JSON instead of transmitting MBs.
  * API mutation results are never cached and an HTTP error never returns stale data. */
 const validatedResponses = new Map();
+export function clearResourceCache() { validatedResponses.clear(); pendingUpdates.length = 0; }
 const pendingUpdates = [];
 /** Apply only deltas whose starting revision matches the last validated GET.
  * If another tab or restore intervenes, discard the local cache and GET again.
@@ -112,7 +114,10 @@ export async function requestCachedJson(url) {
     }
     let data;
     try { data = await res.json(); } catch { data = null; }
-    if (!res.ok) throw httpResponseError(res.status, data);
+    if (!res.ok) {
+        if (res.status === 401) window.dispatchEvent(new Event('wcm:auth-required'));
+        throw httpResponseError(res.status, data);
+    }
     const etag = res.headers.get('etag');
     if (etag) validatedResponses.set(url, {etag, storeEtag: res.headers.get('x-wcm-store-etag') || etag, data: structuredClone(data)});
     else validatedResponses.delete(url);

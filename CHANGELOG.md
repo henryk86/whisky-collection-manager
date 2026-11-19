@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased (develop)
+
+- feat(auth): optionale Loginpflicht, Admin-Initialkonto mit Passwortwechsel, Nutzerverwaltung, scrypt-Hashes und geschützte API-/Bild-Endpunkte
+- feat(auth): Wiederherstellungsbefehl für das Administratorpasswort und zweisprachige Anmeldeoberfläche
+
 ## 1.6.2 - 2026-11-18
 
 - fix: ensure NGINX tmpfs directories are writable by non-root user
