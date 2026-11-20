@@ -377,7 +377,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
                 const viewSwitch = `<fieldset class="warehouse-view-switch" aria-label="${t("warehouse.view.planDisplay")}"><legend>${t("warehouse.view.label")}</legend><button type="button" data-act="warehouse-plan-mode" data-mode="2d" class="btn small${planMode==='2d'?' primary':''}" aria-pressed="${planMode==='2d'}">${t("warehouse.view.twoDimensional")}</button><button type="button" data-act="warehouse-plan-mode" data-mode="3d" class="btn small${planMode==='3d'?' primary':''}" aria-pressed="${planMode==='3d'}">${t("warehouse.view.threeDimensional")}</button></fieldset>`;
                 const planFilter = planMode === '2d' ? `<label class="warehouse-plan-filter">${t("warehouse.fields.level")} <select id="warehouse-plan-layer" aria-label="${t("warehouse.view.furnitureLayer")}"><option value="all" ${level==='all'?'selected':''}>${t("warehouse.selection.allFurniture")}</option><option value="floor" ${level==='floor'?'selected':''}>${t("warehouse.furniture.floorStanding")}</option><option value="elevated" ${level==='elevated'?'selected':''}>${t("warehouse.furniture.elevated")}</option></select></label>` : `<label class="warehouse-plan-filter">${t("warehouse.view.zoom")} <select id="warehouse-plan-zoom" aria-label="${t("warehouse.view.zoomDescription")}">${[100,150,200].map(z=>`<option value="${z}" ${z===zoom?'selected':''}>${z} %</option>`).join('')}</select></label>`;
                 const cornerButtons = planMode === '3d' ? `<div class="warehouse-camera-toolbar" role="group" aria-label="${t("warehouse.view.cameraAngle")}">${WAREHOUSE_CAMERAS.map(([id,label])=>`<button type="button" class="btn small${planCorner===id?' primary':''}" data-act="warehouse-camera" data-corner="${id}" aria-pressed="${planCorner===id}">${t(CAMERA_KEYS[id])}</button>`).join('')}</div>` : '';
-                const planToolbar = `<div class="warehouse-plan-tools" role="toolbar" aria-label="${t("warehouse.view.toolbar")}">${viewSwitch}${cornerButtons}${planFilter}</div>`;
+                const planToolbar = `<div class="warehouse-plan-tools" role="toolbar" aria-label="${t("warehouse.view.toolbar")}">${viewSwitch}${cornerButtons}${planFilter}${section === 'rooms' ? `<button type="button" class="btn primary" data-act="warehouse-furniture-new">${addActionLabel(t('warehouse.furniture.place'))}</button>` : ''}</div>`;
                 const plan = planMode === '3d' ? `<div class="warehouse-three-viewport" role="region" aria-label="${t("warehouse.view.interactive3d")}">${t("warehouse.view.loading3d")}</div>` : roomDiagram(room,{...data,focusFurnitureId:furniture?.id},level);
                 if (section === 'rooms') {
                     // Room plans own spatial layout only: 2D/3D positioning,
@@ -390,7 +390,8 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
                         + `<div class="warehouse-section-boundary${furniture ? ' warehouse-plan-focus' : ''}">${furniture
                             ? `<div class="warehouse-plan-focus-info"><strong>${safe(furniture.name)}</strong><span>${safe(typeName(furniture.type))} · X: ${num(furniture.x)} m · Y: ${num(furniture.y)} m · ${t('warehouse.fields.bottomElevationMeters')}: ${num(furniture.elevation ?? 0)} m</span></div>`
                             : ''}
-                           <button type="button" class="btn primary" data-act="warehouse-open-shelves">${t('warehouse.navigation.shelves')}</button></div>`;
+                           <div class="actions">${furniture ? `<button type="button" class="btn" data-act="warehouse-furniture-manage" data-id="${safe(furniture.id)}">${t('warehouse.furniture.manageShelves')}</button>` : ''}
+                           <button type="button" class="btn primary" data-act="warehouse-open-shelves">${t('warehouse.navigation.shelves')}</button></div></div>`;
                 } else {
                     const createButton = `<button type="button" class="btn primary" data-act="warehouse-furniture-new" data-id="${safe(room.id)}">${addActionLabel(t('warehouse.furniture.place'))}</button>`;
                     const manageButton = `<button type="button" class="btn" data-act="warehouse-furniture-bulk">${t('warehouse.bulk.manageAction')}</button>`;
@@ -399,8 +400,16 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
                     const inRoom = focusPlace?.room.id === room.id;
                     const findReturn = state.warehouseFindReturn
                         ? `<div class="warehouse-find-return"><button type="button" class="btn small" data-act="warehouse-return-find">${t('warehouse.find.backToResults')}</button>${inRoom ? `<span class="warehouse-find-return-label"><strong class="warehouse-find-return-badge">${t('warehouse.find.match')}</strong>${safe(t('warehouse.find.highlighted',{name:bottleLabel(focusBottle),location:focusPlace.label}))}</span>` : ''}<button type="button" class="warehouse-find-clear" data-act="warehouse-find-clear" title="${safe(t('warehouse.find.clearHighlight'))}" aria-label="${safe(t('warehouse.find.clearHighlight'))}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>` : '';
+                    // The physical wall intentionally omits furniture without shelves. Provide
+                    // a direct first-shelf action so a newly placed unit is not stranded.
+                    const withoutShelves = room.furniture.filter(item => item.shelves.length === 0);
+                    const firstShelfActions = withoutShelves.length
+                        ? `<div class="warehouse-unconfigured-furniture panel section"><strong>${t('warehouse.furniture.withoutShelves')}</strong>
+                           <div class="warehouse-unconfigured-list">${withoutShelves.map(item => `<div class="warehouse-unconfigured-item"><span>${safe(item.name)}</span><button type="button" class="btn small" data-act="warehouse-shelf-new" data-id="${safe(item.id)}">${addActionLabel(t('warehouse.shelves.addWithPlus'))}</button></div>`).join('')}</div></div>`
+                        : '';
                     content += roomSummary + findReturn
                         + `<div class="warehouse-shelves-toolbar"><h3>${t('warehouse.navigation.shelves')}</h3><div class="actions">${manageButton}${createButton}</div></div>`
+                        + firstShelfActions
                         + renderWarehouseRoomWall(room,data,selectedBottleIds(), {query:unassignedWallQuery,page:unassignedWallPageNumber,expanded:unassignedWallExpanded,focusBottleId:inRoom ? focusBottle.id : null});
                 }
             } else content += `<p class="hint">${t("warehouse.rooms.noRooms")}</p>`;
@@ -775,6 +784,11 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         if (form.querySelector('[name="withShelves"]')) data.withShelves = form.querySelector('[name="withShelves"]').checked;
         try {
             const result = await request(form.dataset.endpoint,{method:form.dataset.method,body:JSON.stringify(data)});
+            if (form.dataset.newFurniture === 'true' && result?.id) {
+                // Keep the current room-plan tab and select the newly placed unit.
+                // Its shelf manager can then be opened from the plan without routing.
+                state.warehouseFurnitureId = result.id;
+            }
             if (form.dataset.endpoint.endsWith('/copy')) {
                 const copiedFurniture = form.querySelector('[name="withShelves"]');
                 if (copiedFurniture) {

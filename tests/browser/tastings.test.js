@@ -164,6 +164,20 @@ test('browser: v0.24 shelf editor saves capacity in suspended manager and switch
             buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAOfb9AcAAAAASUVORK5CYII=','base64')
         });
         await manager.locator('.warehouse-furniture-photo').waitFor();
+        const thumbnail = await manager.locator('.warehouse-furniture-photo').evaluate(tile => {
+            const photo = tile.querySelector('.photo-open');
+            const tileStyle = tile.getBoundingClientRect(), photoStyle = photo.getBoundingClientRect();
+            return {width:tileStyle.width,height:tileStyle.height,photoHeight:photoStyle.height,
+                editButtons:tile.querySelectorAll('.photo-edit-trigger').length,
+                removeButtons:tile.querySelectorAll('.photo-remove').length,
+                moveButtons:tile.querySelectorAll('.photo-move').length};
+        });
+        assert.ok(Math.abs(thumbnail.width - 84) <= 1, 'furniture thumbnail matches bottle gallery width');
+        assert.ok(Math.abs(thumbnail.height - 122) <= 1, 'furniture thumbnail matches bottle gallery height');
+        assert.ok(Math.abs(thumbnail.photoHeight - thumbnail.height) <= 1, 'photo fills the tile without the removed arrows');
+        assert.equal(thumbnail.editButtons,0, 'no photo edit icon on furniture photos');
+        assert.equal(thumbnail.removeButtons,1, 'same overlay remove control as bottle photos');
+        assert.equal(thumbnail.moveButtons,0, 'furniture photos have no left/right reorder arrows');
         await manager.locator('[data-act="warehouse-photo-open"]').click();
         await page.locator('.warehouse-photo-lightbox img').waitFor();
         await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();

@@ -617,17 +617,15 @@
     .warehouse-wall-controls .warehouse-unassigned-grid { grid-template-columns: repeat(auto-fill,minmax(136px,1fr)); }
 }
 
-/* Furniture photos follow the existing bottle-photo UI and square panels. */
-.warehouse-furniture-photos { border-top:1px solid var(--line); margin:18px 0; padding-top:16px; }
-.warehouse-furniture-photo-list { display:flex; flex-wrap:wrap; gap:12px; margin:10px 0; }
-.warehouse-furniture-photo { width: min(180px,46%); border:1px solid var(--line); padding:6px; }
-.warehouse-furniture-photo img { display:block; width:100%; height:140px; object-fit:contain; }
-.warehouse-furniture-photo .actions { flex-wrap:nowrap; justify-content:center; gap:4px; }
+/* Furniture photos reuse the bottle thumbnail, remove and upload styles.
+   With no reorder controls, the picture fills the whole thumbnail tile. */
+.warehouse-furniture-actions { margin-top: 16px; }
+.warehouse-furniture-photos { border-top: 1px solid var(--line); margin: 18px 0 0; padding-top: 16px; }
+.warehouse-furniture-photos .warehouse-furniture-photo .photo-open { height: 100%; }
 
 .warehouse-shelf-editor-navigation { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; border-bottom:1px solid var(--line); padding:0 0 16px; margin-bottom:18px; }
 .warehouse-shelf-editor-navigation>span { font-size:13px; font-weight:650; }
 
-.warehouse-photo-open { display:block; border:0; padding:0; background:transparent; cursor:zoom-in; width:100%; }
 .warehouse-photo-lightbox img { display:block; max-width:100%; max-height:72dvh; margin:auto; object-fit:contain; }
 
 /* Physical-bottle finder: read-only locating first, relocation second. */
@@ -700,3 +698,9 @@
   .warehouse-finder-card { padding: 10px; }
   .warehouse-finder-actions .btn { padding-inline: 9px; font-size: 11px; }
 }
+
+/* A furniture unit without compartments cannot yet be drawn in the shelf wall. */
+.warehouse-unconfigured-furniture { margin: 12px 0 18px; padding: 12px 14px; }
+.warehouse-unconfigured-list { display: grid; gap: 8px; margin-top: 10px; }
+.warehouse-unconfigured-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.warehouse-unconfigured-item + .warehouse-unconfigured-item { border-top: 1px solid var(--line); padding-top: 8px; }

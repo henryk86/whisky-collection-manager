@@ -129,6 +129,22 @@ test('browser: warehouse room plan mounts local Three.js and keeps the 2D plan a
         // Editing is only accessible through the furniture icon in Regale & Faecher.
         await page.locator(`.warehouse-wall-furniture-edit[data-id="${rack.data.id}"]`).click();
         assert.equal(await page.locator('#modal-root .warehouse-furniture-panel').count(),1,'furniture management opens in a modal');
+        // Compartment and bottle actions precede the photos; both upload controls
+        // use the existing compact bottle-gallery style.
+        const managerLayout = await page.locator('#modal-root .warehouse-furniture-panel').evaluate(panel => {
+            const measure = selector => {
+                const rect = panel.querySelector(selector).getBoundingClientRect();
+                return {left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,width:rect.width,height:rect.height};
+            };
+            return {actions:measure('.warehouse-furniture-actions'),photos:measure('.warehouse-furniture-photos'),
+                upload:measure('.warehouse-furniture-photo-actions .photo-add'),
+                camera:measure('.warehouse-furniture-photo-actions .photo-capture')};
+        });
+        assert.ok(managerLayout.actions.bottom < managerLayout.photos.top, 'action buttons appear above photos');
+        assert.ok(managerLayout.upload.width <= 200, 'upload action must not fill dialog width');
+        assert.ok(managerLayout.upload.height <= 45, 'upload button has bottle-gallery compact height');
+        assert.ok(managerLayout.camera.height <= 45, 'camera button matches bottle-gallery height');
+        assert.ok(managerLayout.upload.right < managerLayout.camera.left, 'upload actions stay side by side at desktop width');
         await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
         await page.locator('.warehouse-tabs [data-section="rooms"]').click();
         await page.locator('.warehouse-tabs [data-section="rooms"]').click();
@@ -451,7 +467,7 @@ test('browser: room plan positions furniture; shelf tab owns wall, editing and b
         assert.equal(await page.locator('.warehouse-room-wall').count(),0);
         assert.equal(await page.locator('.warehouse-furniture-panel').count(),0);
         assert.equal(await page.locator('.warehouse-bulk-check').count(),0,'no furniture bulk actions in room plans');
-        assert.equal(await page.locator('[data-act="warehouse-furniture-new"]').count(),0);
+        assert.equal(await page.locator('.warehouse-plan-tools [data-act="warehouse-furniture-new"]').count(),1);
         await page.locator('.warehouse-bulk-open').click();
         assert.equal(await page.locator('.warehouse-bulk-open').getAttribute('aria-current'),'true');
         assert.equal(await page.locator('.warehouse-plan-focus-info').count(),1,'selecting furniture in Raumpläne shows position and a usable destination');
@@ -859,5 +875,36 @@ test('browser: showing all distilleries preserves exact map camera and viewer no
         assert.deepEqual(await snapshot(), before, 'show all must preserve camera');
         await page.locator('#map-all-distilleries').uncheck();
         assert.deepEqual(await snapshot(), before, 'hide empty sites must preserve camera');
+    });
+});
+
+
+test('browser: placing furniture from the 2D plan stays in room plans and permits the first compartment', async () => {
+    await session(async ({base,page,open}) => {
+        const room=(await requestJson(base,'/api/warehouse/rooms','POST',
+            {name:'Neuer Raum',width:5,height:4})).data;
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        await page.locator('#warehouse-room-select').selectOption(room.id);
+        await page.locator('[data-act="warehouse-plan-mode"][data-mode="2d"]').click();
+        await page.locator('.warehouse-plan-tools [data-act="warehouse-furniture-new"]').click();
+        const form=page.locator('#modal-root #warehouse-form');
+        await form.locator('[name="name"]').fill('Vitrine neu');
+        await form.locator('button[type="submit"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"][aria-current="page"]').waitFor();
+        assert.equal(await page.locator('.warehouse-floor').count(),1);
+        assert.equal(await page.locator('.warehouse-plan-focus-info strong').innerText(),'Vitrine neu');
+        await page.locator('.warehouse-plan-focus [data-act="warehouse-furniture-manage"]').click();
+        await page.locator('#modal-root .warehouse-furniture-manager [data-act="warehouse-shelf-new"]').click();
+        const shelfForm=page.locator('#modal-root #warehouse-form');
+        await shelfForm.locator('[name="name"]').fill('Erstes Fach');
+        await shelfForm.locator('button[type="submit"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"][aria-current="page"]').waitFor();
+        assert.equal(await page.locator('.warehouse-floor').count(),1);
+        assert.equal((await requestJson(base,'/api/warehouse')).data.rooms
+            .find(entry=>entry.id===room.id).furniture[0].shelves[0].name,'Erstes Fach');
+        // The original double-click route to Regale & Fächer is intentionally unchanged.
     });
 });
