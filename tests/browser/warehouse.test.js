@@ -7,6 +7,8 @@ import {domOnly,chromium,session,openSettingsFromMenu,openSettingsSection,seed,m
 test('browser: finder opens the exact shelf, returns to its search and keeps single-bottle relocation', async () => {
     await session(async ({base,page,open}) => {
         const {bottle} = await seed(base,'098712');
+        // Dimming can only be asserted if another physical bottle shares the shelf.
+        const {bottle:otherBottle} = await seed(base,'098713');
         const room = (await requestJson(base,'/api/warehouse/rooms','POST',
             {name:'Suchraum',width:4,height:3})).data;
         const rack = (await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',
@@ -14,6 +16,7 @@ test('browser: finder opens the exact shelf, returns to its search and keeps sin
         const shelf = (await requestJson(base,`/api/warehouse/furniture/${rack.id}/shelves`,'POST',
             {name:'Fach 2',capacity:5})).data;
         assert.equal((await requestJson(base,`/api/warehouse/bottles/${bottle.id}`,'PUT',{shelfId:shelf.id})).status,200);
+        assert.equal((await requestJson(base,`/api/warehouse/bottles/${otherBottle.id}`,'PUT',{shelfId:shelf.id})).status,200);
         await open();
         await page.locator('header [data-act="toggle-menu"]').click();
         await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
@@ -41,6 +44,12 @@ test('browser: finder opens the exact shelf, returns to its search and keeps sin
         await result.locator('[data-act="warehouse-find-location"]').click();
         assert.equal(await page.locator('.warehouse-tabs [data-section="shelves"]').getAttribute('aria-current'),'page');
         assert.equal(await page.locator(`.warehouse-wall-bottle.is-find-focus [data-id="${bottle.id}"]`).count(),1);
+        assert.equal(await page.locator(`.warehouse-wall-bottle.is-find-dimmed [data-id="${otherBottle.id}"]`).count(),1);
+        // Wait for the short fade transition before checking its computed opacity.
+        await page.waitForFunction(() => {
+            const other = document.querySelector('.warehouse-wall-bottle.is-find-dimmed');
+            return other && Number(getComputedStyle(other).opacity) < 0.9;
+        }, null, {timeout:3000});
         // The whole shelf is located by an external glow: nothing may be
         // placed over its title, bottle preview, or occupancy information.
         const focusStyle = await page.locator('.warehouse-wall-bay.is-find-focus').evaluate(bay => {
