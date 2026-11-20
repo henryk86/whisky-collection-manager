@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0 - 2026-11-20
+
+- fix: enhance warehouse finder tests with additional bottle dimming assertions
+- fix: enhance warehouse UI with improved furniture photo management and actions
+- feat: implement warehouse bottle finder with pagination and location assignment
+
 ## 1.7.0 - 2026-11-19
 
 - feat: update branding to "Whisky Collection Manager" across multiple files and enhance authentication UI

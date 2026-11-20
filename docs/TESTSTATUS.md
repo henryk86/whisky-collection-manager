@@ -1,6 +1,6 @@
-# Teststatus - Whisky Collection Manager v1.7.0
+# Teststatus - Whisky Collection Manager v1.8.0
 
-**Stand:** 2026-11-19. Automatischer Release-Snapshot aus Merge 64aafffaa98a (v1.6.2).
+**Stand:** 2026-11-20. Automatischer Release-Snapshot aus Merge 2bbe3812d95a (v1.7.0).
 
 ## Pruefungen
 
@@ -13,9 +13,8 @@
 
 ## Aenderungen
 
-- feat: update branding to "Whisky Collection Manager" across multiple files and enhance authentication UI
-- fix(docs): correct heading formatting in TESTSTATUS.md and update test assertions for changelog validation
-- fix(docs): correct title formatting in TESTSTATUS.md
-- feat(auth): implement optional login and user management features
+- fix: enhance warehouse finder tests with additional bottle dimming assertions
+- fix: enhance warehouse UI with improved furniture photo management and actions
+- feat: implement warehouse bottle finder with pagination and location assignment
 
 Fruehere CI-Resultate: [TESTHISTORIE.md](TESTHISTORIE.md).
