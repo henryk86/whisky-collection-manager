@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased (develop)
+## 1.7.0 - 2026-11-19
 
-- feat(warehouse): standortorientierte Flaschensuche mit Fundort-Markierung, Filtern und weiterhin zugänglicher Einzelumlagerung
-- feat(auth): optionale Loginpflicht, Admin-Initialkonto mit Passwortwechsel, Nutzerverwaltung, scrypt-Hashes und geschützte API-/Bild-Endpunkte
-- feat(auth): Wiederherstellungsbefehl für das Administratorpasswort und zweisprachige Anmeldeoberfläche
+- feat: update branding to "Whisky Collection Manager" across multiple files and enhance authentication UI
+- fix(docs): correct heading formatting in TESTSTATUS.md and update test assertions for changelog validation
+- fix(docs): correct title formatting in TESTSTATUS.md
+- feat(auth): implement optional login and user management features
 
 ## 1.6.2 - 2026-11-18
 

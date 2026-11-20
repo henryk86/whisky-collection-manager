@@ -1,21 +1,21 @@
-# Teststatus - Whisky Collection Manager v1.6.2
+# Teststatus - Whisky Collection Manager v1.7.0
 
-**Stand:** 2026-11-19. Geprüft wurde die Erweiterung um die optionale Anmeldung auf Basis des bereitgestellten `develop`-Snapshots v1.6.2. Der Projektstand bleibt bis zum regulären Release-Merge ohne Versionsbump.
+**Stand:** 2026-11-19. Automatischer Release-Snapshot aus Merge 64aafffaa98a (v1.6.2).
 
-## Ausgeführte Prüfungen
+## Pruefungen
 
-- `npm run check`: **erfolgreich** (Syntax, Modulgrenzen, Übersetzungen, Dokumentationslinks und Deployment-Verträge).
-- `npm test`: **594/594 bestanden** (Unit- und Integrationstests einschließlich 2 neuer Authentifizierungs-/Admin-Wiederherstellungstests).
-- `node --test tests/integration/auth.test.js`: **2/2 bestanden** (Initialbenutzer, Login an/aus, Passwortwechsel, Rechte, direkter API-/Bildzugriff, Sessionwiderruf, Recovery-Befehl).
+- `npm test`: **Noch nicht ausgefuehrt** auf dem Release-Snapshot; die Node-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.
+- `npm run test:browser`: **Nicht lokal ausgeführt** auf dem Release-Snapshot; die Browser-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.
+- Vor Erstellung des Tags: GitHub-CI fuer den Merge-Quellstand mit `npm run check`, `npm test` und `npm run test:browser`.
+- Release-Metadaten und SHA-256-Quellmanifest werden im Snapshot separat geprueft.
+- Docker/ARM64/AMD64 sowie ZIP-/Offline-Archive werden vom Release-Workflow vor der Veroeffentlichung geprueft.
+- Externe Hardware-/Pi-Pruefungen sind nicht Bestandteil dieses CI-Laufs.
 
-## Noch offen
+## Aenderungen
 
-- `npm run test:browser`: **Nicht lokal ausgeführt**. In dieser Umgebung war `npm ci` weder aus dem Offline-Cache noch aus der npm-Registry möglich (`ENOTCACHED`/`EAI_AGAIN`). Visuelle/mobile Prüfungen einschließlich iOS Safari und Android fehlen.
-- Docker-Build und Startprüfung im tatsächlichen Container sowie End-to-End-Test auf dem Raspberry Pi und mit Let's Encrypt: **nicht ausgeführt**.
-- GitHub-Release-Workflow: durch diese Entwicklungsänderung nicht angestoßen; der Versionsbump bleibt dem manuell freigegebenen Release vorbehalten.
+- feat: update branding to "Whisky Collection Manager" across multiple files and enhance authentication UI
+- fix(docs): correct heading formatting in TESTSTATUS.md and update test assertions for changelog validation
+- fix(docs): correct title formatting in TESTSTATUS.md
+- feat(auth): implement optional login and user management features
 
-## Funktionale Änderung
-
-- `feat(auth)`: Optionaler Login mit getrenntem `data/user.json`, zufälligem initialem Administratorpasswort, Pflicht zum ersten Passwortwechsel, scrypt-Hashes, HttpOnly-Cookie-Sessions, Benutzerverwaltung und Rollenbegrenzung; Recovery-CLI und dokumentierter Schutz direkter Endpunkte.
-
-Frühere Release-/CI-Prüfungen: [TESTHISTORIE.md](TESTHISTORIE.md).
+Fruehere CI-Resultate: [TESTHISTORIE.md](TESTHISTORIE.md).
