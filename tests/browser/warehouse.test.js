@@ -4,6 +4,81 @@ import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer,requestJson} from '../helpers/server.js';
 import {domOnly,chromium,session,openSettingsFromMenu,openSettingsSection,seed,mockDecoder} from './support.js';
+test('browser: finder opens the exact shelf, returns to its search and keeps single-bottle relocation', async () => {
+    await session(async ({base,page,open}) => {
+        const {bottle} = await seed(base,'098712');
+        const room = (await requestJson(base,'/api/warehouse/rooms','POST',
+            {name:'Suchraum',width:4,height:3})).data;
+        const rack = (await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',
+            {name:'Testvitrine',type:'vitrine',x:0.2,y:0.2,width:1,depth:.5,rotation:0,elevation:0,itemHeight:1.8})).data;
+        const shelf = (await requestJson(base,`/api/warehouse/furniture/${rack.id}/shelves`,'POST',
+            {name:'Fach 2',capacity:5})).data;
+        assert.equal((await requestJson(base,`/api/warehouse/bottles/${bottle.id}`,'PUT',{shelfId:shelf.id})).status,200);
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="find"]').click();
+        await page.locator('#warehouse-search').fill('098712');
+        const result = page.locator(`.warehouse-finder-card[data-bottle-id="${bottle.id}"]`);
+        await result.waitFor();
+        // An exceptionally tall bottle photo must remain entirely within the
+        // thumbnail at its original aspect ratio, not be clipped or stretched.
+        const preview = await result.locator('.warehouse-finder-photo').evaluate(async slot => {
+            const img = slot.querySelector('img');
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="400"><rect width="80" height="400" fill="#bd955d"/></svg>';
+            img.src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+            await img.decode();
+            const outer = slot.getBoundingClientRect(), inner = img.getBoundingClientRect();
+            return {outer:{left:outer.left,right:outer.right,top:outer.top,bottom:outer.bottom},
+                inner:{left:inner.left,right:inner.right,top:inner.top,bottom:inner.bottom,width:inner.width,height:inner.height}};
+        });
+        assert.ok(preview.inner.left >= preview.outer.left - 1 && preview.inner.right <= preview.outer.right + 1);
+        assert.ok(preview.inner.top >= preview.outer.top - 1 && preview.inner.bottom <= preview.outer.bottom + 1);
+        assert.ok(Math.abs(preview.inner.width / preview.inner.height - 0.2) < 0.01, 'full bottle aspect ratio is preserved');
+        assert.equal(await page.locator('.warehouse-bottle-check').count(),0);
+        await page.locator('.warehouse-finder-filter-option').nth(1).click();
+        assert.equal(await page.locator('input[name="warehouse-find-placement"][value="assigned"]').isChecked(),true);
+        await result.locator('[data-act="warehouse-find-location"]').click();
+        assert.equal(await page.locator('.warehouse-tabs [data-section="shelves"]').getAttribute('aria-current'),'page');
+        assert.equal(await page.locator(`.warehouse-wall-bottle.is-find-focus [data-id="${bottle.id}"]`).count(),1);
+        // The whole shelf is located by an external glow: nothing may be
+        // placed over its title, bottle preview, or occupancy information.
+        const focusStyle = await page.locator('.warehouse-wall-bay.is-find-focus').evaluate(bay => {
+            const preview = bay.querySelector('.warehouse-bottle-silhouettes');
+            const selected = bay.querySelector('.warehouse-wall-bottle.is-find-focus');
+            const dimmed = bay.querySelector('.warehouse-wall-bottle.is-find-dimmed');
+            return {bayShadow:getComputedStyle(bay).boxShadow,
+                previewOutline:getComputedStyle(preview).outlineStyle,
+                previewBackground:getComputedStyle(preview).backgroundColor,
+                selectedTransform:getComputedStyle(selected).transform,
+                selectedFilter:getComputedStyle(selected).filter,
+                dimmedOpacity:dimmed ? getComputedStyle(dimmed).opacity : null,
+                badgeCount:bay.querySelectorAll('.warehouse-find-bottle-badge').length};
+        });
+        assert.match(focusStyle.bayShadow, /rgba?\(/, 'located shelf has a visible external glow');
+        assert.equal(focusStyle.previewOutline,'none', 'no inner preview frame');
+        assert.notEqual(focusStyle.selectedTransform,'none', 'found bottle is additionally highlighted');
+        assert.notEqual(focusStyle.selectedFilter,'none', 'found bottle receives a visible emphasis');
+        assert.ok(focusStyle.dimmedOpacity !== null && Number(focusStyle.dimmedOpacity) < 1, 'other bottles are visually reduced');
+        assert.equal(focusStyle.badgeCount,0, 'no exclamation mark over the found bottle');
+        await page.locator('[data-act="warehouse-return-find"]').click();
+        assert.equal(await page.locator('#warehouse-search').inputValue(),'098712');
+        assert.equal(await page.locator('input[name="warehouse-find-placement"][value="assigned"]').isChecked(),true);
+        await result.locator('[data-act="warehouse-assign"]').click();
+        const form = page.locator('#modal-root #warehouse-form');
+        await form.waitFor();
+        assert.equal(await form.locator('.warehouse-assignment-current strong').innerText(),
+            'Suchraum / Testvitrine / Fach 2');
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        await result.locator('[data-act="warehouse-find-location"]').click();
+        await page.locator('[data-act="warehouse-find-clear"]').click();
+        assert.equal(await page.locator('.warehouse-tabs [data-section="shelves"]').getAttribute('aria-current'),'page');
+        assert.equal(await page.locator('.warehouse-find-return').count(),0);
+        assert.equal(await page.locator('.warehouse-wall-bay.is-find-focus').count(),0);
+        assert.equal(await page.locator('.warehouse-wall-bottle.is-find-focus, .warehouse-wall-bottle.is-find-dimmed').count(),0);
+    });
+});
+
 test('browser: warehouse room plan mounts local Three.js and keeps the 2D plan available', async () => {
     await session(async ({base,page,open})=>{
         const room=await requestJson(base,'/api/warehouse/rooms','POST',{name:'3D-Raum',width:5,height:4});

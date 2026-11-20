@@ -2,6 +2,7 @@
 
 ## Unreleased (develop)
 
+- feat(warehouse): standortorientierte Flaschensuche mit Fundort-Markierung, Filtern und weiterhin zugänglicher Einzelumlagerung
 - feat(auth): optionale Loginpflicht, Admin-Initialkonto mit Passwortwechsel, Nutzerverwaltung, scrypt-Hashes und geschützte API-/Bild-Endpunkte
 - feat(auth): Wiederherstellungsbefehl für das Administratorpasswort und zweisprachige Anmeldeoberfläche
 

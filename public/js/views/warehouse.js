@@ -19,7 +19,9 @@ import { createWarehouseRoomTransfer } from './warehouse-room-transfer.js';
 import { shelfContents } from './warehouse-shelf-details.js';
 import { renderUnassignedTrayPage } from './warehouse-unassigned-tray.js';
 import { unassignedWallPage } from '../domain/warehouse-unassigned-tray.js';
-import { FRONT_KEYS, CAMERA_KEYS, ROOM_SECTION_KEYS, typeChoices, typeName, num, capacityLabel, safe, count, field, choices, footer, bottleLabel, bottleRow, bottlePreview, roomOptions, findFurniture, roomDiagram, shelfPanel } from './warehouse-presentation.js';
+import { findWarehouseBottles } from '../domain/warehouse-finder.js';
+import { renderWarehouseFinder, renderWarehouseFinderResults } from './warehouse-finder.js';
+import { FRONT_KEYS, CAMERA_KEYS, ROOM_SECTION_KEYS, typeChoices, typeName, num, capacityLabel, safe, count, field, choices, footer, bottleLabel, bottlePreview, roomOptions, storagePath, findFurniture, roomDiagram, shelfPanel } from './warehouse-presentation.js';
 export { storagePath } from './warehouse-presentation.js';
 function attachBottlePhotos() {
     if (typeof document === 'undefined' || !document.querySelectorAll) return;
@@ -39,6 +41,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
     let unassignedWallQuery = '';
     let unassignedWallPageNumber = 1;
     let unassignedWallExpanded = false;
+    let pendingFindFocusScroll = false;
     // The page is rebuilt after each successful relocation; remember the
     // *horizontal* wall viewport independently from the document scroll.
     const wallScrollByRoom = new Map();
@@ -153,6 +156,92 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         openForm('assign-bulk');
     }
 
+    function finderResults() {
+        const result = findWarehouseBottles(w(), {
+            query:state.warehouseSearch || '', placement:state.warehouseFinderPlacement || 'all',
+            page:state.warehouseFinderPage || 1
+        });
+        state.warehouseFinderPage = result.page;
+        return result;
+    }
+    function refreshFinderResults() {
+        const host = typeof document === 'undefined' ? null : document.querySelector?.('.warehouse-finder-results');
+        if (host) host.innerHTML = renderWarehouseFinderResults(finderResults());
+    }
+    function setFinderQuery(value) {
+        state.warehouseSearch = String(value ?? '');
+        state.warehouseFinderPage = 1;
+        refreshFinderResults();
+    }
+    function setFinderPlacement(value) {
+        if (!['all','assigned','unassigned'].includes(value)) return;
+        state.warehouseFinderPlacement = value;
+        state.warehouseFinderPage = 1;
+        refreshFinderResults();
+    }
+    function stepFinderPage(delta) {
+        state.warehouseFinderPage = (state.warehouseFinderPage || 1) + delta;
+        refreshFinderResults();
+    }
+    function showBottleLocation(id) {
+        const bottle = w()?.bottles?.find(item => item.id === id);
+        const place = bottle ? storagePath(w(),w().assignments?.[id]) : null;
+        if (!place) return toast(t('warehouse.find.locationUnavailable'),true);
+        state.warehouseRoomId = place.room.id;
+        state.warehouseFurnitureId = place.furniture.id;
+        state.warehouseFindFocusBottleId = id;
+        state.warehouseFindReturn = true;
+        pendingFindFocusScroll = true;
+        navigate('warehouse','shelves');
+    }
+    function clearFindFocus() {
+        // Close the finder banner without navigating or rebuilding the shelf wall:
+        // scrolling, bottle selections and in-progress interactions stay intact.
+        state.warehouseFindReturn = false;
+        state.warehouseFindFocusBottleId = null;
+        pendingFindFocusScroll = false;
+        if (typeof document === 'undefined') return;
+        document.querySelector?.('.warehouse-find-return')?.remove();
+        document.querySelector?.('.warehouse-room-wall.has-find-focus')?.classList.remove('has-find-focus');
+        document.querySelectorAll?.('.warehouse-wall-bay.is-find-focus, .warehouse-wall-bottle.is-find-focus, .warehouse-wall-bottle.is-find-dimmed')
+            .forEach(node => node.classList.remove('is-find-focus', 'is-find-dimmed'));
+    }
+    function returnToFinder() {
+        const id = state.warehouseFindFocusBottleId;
+        state.warehouseFindReturn = false;
+        state.warehouseFindFocusBottleId = null;
+        pendingFindFocusScroll = false;
+        navigate('warehouse','find');
+        // Navigation normally moves to the page top. Return to the actual
+        // selected search result after that navigation, when it is still listed.
+        if (id && typeof requestAnimationFrame === 'function') requestAnimationFrame(() => {
+            if (state.page !== 'warehouse' || state.selected !== 'find') return;
+            const target = [...(document.querySelectorAll?.('.warehouse-finder-card') || [])]
+                .find(node => node.dataset.bottleId === id);
+            target?.scrollIntoView?.({block:'center',inline:'nearest',behavior:'instant'});
+        });
+    }
+    function scrollToFoundBottle() {
+        if (!pendingFindFocusScroll || typeof document === 'undefined') return;
+        pendingFindFocusScroll = false;
+        const id = state.warehouseFindFocusBottleId;
+        if (!id || typeof requestAnimationFrame !== 'function') return;
+        requestAnimationFrame(() => {
+            if (state.page !== 'warehouse' || state.selected !== 'shelves') return;
+            const target = [...(document.querySelectorAll?.('.warehouse-wall-bottle.is-find-focus') || [])]
+                .find(node => node.querySelector?.('.warehouse-bottle-symbol')?.dataset.id === id);
+            if (!target?.isConnected) return;
+            const scroller = target.closest?.('.warehouse-wall-scroll');
+            if (scroller?.getBoundingClientRect && target.getBoundingClientRect) {
+                const outer = scroller.getBoundingClientRect();
+                const inner = target.getBoundingClientRect();
+                scroller.scrollLeft += inner.left - outer.left - outer.width / 2 + inner.width / 2;
+                rememberWallScroll();
+            }
+            target.scrollIntoView?.({block:'center',inline:'nearest',behavior:'instant'});
+        });
+    }
+
     function selectionPanel(room, {isolate = false, compact = false, layoutOnly = false} = {}) {
         if (!room.furniture.length) return `<p class="hint">${t("warehouse.rooms.noFurniture")}</p>`;
         const selected = new Set(selectedFurniture(room));
@@ -264,6 +353,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         const data = w();
         if (!data) return shell(`<p class="hint">${t("warehouse.storage.loading")}</p>`);
         const section = state.selected || 'overview';
+        if (section === 'find') { state.warehouseFindReturn = false; state.warehouseFindFocusBottleId = null; }
         const total = data.bottles.length;
         const assigned = data.bottles.filter(b => !!data.assignments[b.id]).length;
         const overallCapacity = totalCapacity(data);
@@ -304,14 +394,19 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
                 } else {
                     const createButton = `<button type="button" class="btn primary" data-act="warehouse-furniture-new" data-id="${safe(room.id)}">${addActionLabel(t('warehouse.furniture.place'))}</button>`;
                     const manageButton = `<button type="button" class="btn" data-act="warehouse-furniture-bulk">${t('warehouse.bulk.manageAction')}</button>`;
-                    content += roomSummary
+                    const focusBottle = state.warehouseFindReturn ? data.bottles.find(b => b.id === state.warehouseFindFocusBottleId) : null;
+                    const focusPlace = focusBottle ? storagePath(data,data.assignments[focusBottle.id]) : null;
+                    const inRoom = focusPlace?.room.id === room.id;
+                    const findReturn = state.warehouseFindReturn
+                        ? `<div class="warehouse-find-return"><button type="button" class="btn small" data-act="warehouse-return-find">${t('warehouse.find.backToResults')}</button>${inRoom ? `<span class="warehouse-find-return-label"><strong class="warehouse-find-return-badge">${t('warehouse.find.match')}</strong>${safe(t('warehouse.find.highlighted',{name:bottleLabel(focusBottle),location:focusPlace.label}))}</span>` : ''}<button type="button" class="warehouse-find-clear" data-act="warehouse-find-clear" title="${safe(t('warehouse.find.clearHighlight'))}" aria-label="${safe(t('warehouse.find.clearHighlight'))}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>` : '';
+                    content += roomSummary + findReturn
                         + `<div class="warehouse-shelves-toolbar"><h3>${t('warehouse.navigation.shelves')}</h3><div class="actions">${manageButton}${createButton}</div></div>`
-                        + renderWarehouseRoomWall(room,data,selectedBottleIds(), {query:unassignedWallQuery,page:unassignedWallPageNumber,expanded:unassignedWallExpanded});
+                        + renderWarehouseRoomWall(room,data,selectedBottleIds(), {query:unassignedWallQuery,page:unassignedWallPageNumber,expanded:unassignedWallExpanded,focusBottleId:inRoom ? focusBottle.id : null});
                 }
             } else content += `<p class="hint">${t("warehouse.rooms.noRooms")}</p>`;
         } else {
-            const term = state.warehouseSearch || '';
-            content = `<div class="warehouse-search-toolbar"><input type="search" id="warehouse-search" placeholder="${t("warehouse.bottles.searchPlaceholder")}" value="${safe(term)}" aria-label="${t("warehouse.bottles.searchInventory")}"><label><input type="checkbox" id="warehouse-unassigned" ${state.warehouseUnassigned?'checked':''}> ${t("warehouse.bottles.unassignedOnly")}</label></div>${bottleSelectionTools(true)}<div class="warehouse-bottle-list">${data.bottles.filter(b=>!state.warehouseUnassigned || !data.assignments[b.id]).map(b=>bottleRow(data,b,selectedBottleIds().includes(b.id))).join('') || `<p class="hint">${t("warehouse.bottles.noResults")}</p>`}</div>`;
+            content = renderWarehouseFinder({query:state.warehouseSearch || '',
+                placement:state.warehouseFinderPlacement || 'all',results:finderResults()});
         }
         const warehouseTabs = ['overview', 'rooms', 'shelves', 'find'].map(id => [id, t(ROOM_SECTION_KEYS[id])]);
         const workspace = sectionWorkspace({
@@ -367,7 +462,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
                     if(threeTicket===currentTicket && threeViewport.isConnected) threeViewport.textContent=t('warehouse.view.threeUnavailable');
                 });
         }
-        if (section === 'find') filterSearch();
+        if (section === 'shelves') scrollToFoundBottle();
     }
     function attachFurnitureHover(withPlan) {
         // The list is re-created on render; keep hover handlers local to its lifetime.
@@ -797,7 +892,8 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         }
         render();
     }
-    function filterSearch() {const term=(document.getElementById('warehouse-search')?.value||'').trim().toLocaleLowerCase('de');for (const row of document.querySelectorAll('.warehouse-bottle-row')) row.hidden = !row.dataset.bottleSearch.includes(term);}
+    // Backwards-compatible event entry point; finder input updates without replacing itself.
+    function filterSearch() {setFinderQuery(document.getElementById('warehouse-search')?.value || '');}
     function attachDrag(){
         const svg=document.querySelector('.warehouse-floor'); if(!svg)return;
         let drag=null;
@@ -842,5 +938,5 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         });
         svg.addEventListener('pointercancel',()=>{drag=null;render();});
     }
-    return {render, openShelfDetails, openOccupiedShelfDetails, openRoomTransfer:() => roomTransfer.openTransfer(state.selected === 'rooms' ? currentRoom()?.id : undefined), update3DZoom, toggleFurnitureVisibility, showAllFurniture, openForm, openFurnitureManager, openFurnitureBulkManager, openBottlePreview, submit, switchShelf, uploadFurniturePhotos, moveFurniturePhoto, deleteFurniturePhoto, openFurniturePhoto, moveShelf, askDelete, deleteConfirmed, selectRoom, selectFurniture, filterSearch, toggleFurnitureSelection, toggleFurnitureBulkSelection, selectAllFurniture, clearFurnitureSelection, askBulkDelete, toggleBottleSelection, toggleWallBottleSelection, previewSelectedBottle, clearBottleSelection, selectAllBottles, assignSelectedBottles, setUnassignedWallSearch, stepUnassignedWallPage};
+    return {render, openShelfDetails, openOccupiedShelfDetails, openRoomTransfer:() => roomTransfer.openTransfer(state.selected === 'rooms' ? currentRoom()?.id : undefined), update3DZoom, toggleFurnitureVisibility, showAllFurniture, openForm, showBottleLocation, returnToFinder, clearFindFocus, setFinderQuery, setFinderPlacement, stepFinderPage, openFurnitureManager, openFurnitureBulkManager, openBottlePreview, submit, switchShelf, uploadFurniturePhotos, moveFurniturePhoto, deleteFurniturePhoto, openFurniturePhoto, moveShelf, askDelete, deleteConfirmed, selectRoom, selectFurniture, filterSearch, toggleFurnitureSelection, toggleFurnitureBulkSelection, selectAllFurniture, clearFurnitureSelection, askBulkDelete, toggleBottleSelection, toggleWallBottleSelection, previewSelectedBottle, clearBottleSelection, selectAllBottles, assignSelectedBottles, setUnassignedWallSearch, stepUnassignedWallPage};
 }

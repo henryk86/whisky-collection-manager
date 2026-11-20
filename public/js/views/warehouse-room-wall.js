@@ -21,6 +21,7 @@ export function wallFurniture(room) {
 export function renderWarehouseRoomWall(room, warehouse, selectedBottleIds = [], unassignedOptions = {}) {
     const groups = wallFurnitureGroups(room);
     const selected = new Set(selectedBottleIds);
+    const focusedBottleId = unassignedOptions.focusBottleId || null;
 
     const occupantsByShelf = new Map();
     for (const bottle of warehouse.bottles || []) {
@@ -54,18 +55,42 @@ export function renderWarehouseRoomWall(room, warehouse, selectedBottleIds = [],
             const bayHeight = px(level.heightCm / 100);
             const compact = bayHeight < 52;
             const tiny = bayHeight < 30;
-            const bottleHeight = Math.max(8, Math.min(72, bayHeight - (tiny ? 2 : compact ? 16 : 34)));
-            // One visible row represents the front of a physical shelf. A 50-cm
-            // bay should display roughly 4-5 bottle fronts, never all depth rows.
+            // A shelf keeps its real height. Reserve actual space for the label,
+            // the top rail, padding and the bottom shelf board before sizing
+            // photos: otherwise the bottom of a photo disappears under the rail.
+            const titleHeight = tiny ? 0 : compact ? 12 : 24;
+            const topPadding = index === 0 && !tiny ? 8 : tiny ? 1 : 3;
+            const bottleHeight = Math.max(1, Math.min(72, bayHeight - titleHeight - topPadding - 4 - 5 - 2));
+            // The elevation only shows the front of a shelf. Reserve a REAL
+            // space for the +N badge rather than positioning it over the last
+            // photographed bottle. Never resize the physical shelf to fit it.
             const bottleWidth = Math.max(10, Math.round(Math.min(bottleHeight * .6, Math.max(12,Math.min(27,widthPx / 5.6)))));
             const occupancy = shelf.capacity === 0 ? '' : shelf.capacity === null ? `${occupants.length}` : `${occupants.length} / ${shelf.capacity}`;
-            const previewSlots = Math.max(0,Math.floor((widthPx - 14) / (bottleWidth + 2)));
-            const previewCount = Math.min(5,previewSlots);
+            // 7px cabinet uprights and 4px bay padding on each side.
+            const rowWidth = Math.max(0, widthPx - 22);
+            const previewSlots = Math.max(1, Math.floor((rowWidth + 2) / (bottleWidth + 2)));
+            const maxPreview = Math.min(5,previewSlots);
+            const hasOverflow = occupants.length > maxPreview;
+            const previewCount = hasOverflow
+                // 27px for the badge and one 2px flex gap.
+                ? Math.max(1, Math.min(maxPreview, Math.floor((rowWidth - 27) / (bottleWidth + 2))))
+                : maxPreview;
             const preview = occupants.slice(0,previewCount);
+            // The shelf front only shows a handful of bottles. Make a searched
+            // bottle visible even when it is further back in this same shelf.
+            if (previewCount && focusedBottleId && occupants.some(b => b.id === focusedBottleId)
+                && !preview.some(b => b.id === focusedBottleId)) {
+                preview[preview.length - 1] = occupants.find(b => b.id === focusedBottleId);
+            }
             const hiddenCount = occupants.length - preview.length;
-            return `<div class="warehouse-shelf warehouse-wall-bay${compact ? ' warehouse-wall-bay--compact' : ''}${tiny ? ' warehouse-wall-bay--tiny' : ''}${index === 0 ? ' warehouse-wall-bay--top' : ''}${shelf.capacity === 0 ? ' warehouse-wall-bay--unavailable' : ''}" data-shelf-id="${safe(shelf.id)}" data-capacity="${shelf.capacity ?? 'unlimited'}"${shelf.capacity === 0 ? '' : ` data-act="warehouse-shelf-view" tabindex="0" role="button" aria-label="${safe(`${item.name} / ${shelf.name} — ${t('warehouse.shelves.doubleClickHint')}`)}" title="${safe(`${item.name} / ${shelf.name} · ${frontName}${occupancy ? ` · ${occupancy}` : ''} · ${t('warehouse.shelves.doubleClickHint')}`)}"`} data-front="${safe(front)}" style="--wall-bay-height:${bayHeight}px;--wall-bottle-height:${bottleHeight}px;--wall-bottle-width:${bottleWidth}px">
+            const isFocusedShelf = !!focusedBottleId && occupants.some(b => b.id === focusedBottleId);
+            return `<div class="warehouse-shelf warehouse-wall-bay${isFocusedShelf ? ' is-find-focus' : ''}${compact ? ' warehouse-wall-bay--compact' : ''}${tiny ? ' warehouse-wall-bay--tiny' : ''}${index === 0 ? ' warehouse-wall-bay--top' : ''}${shelf.capacity === 0 ? ' warehouse-wall-bay--unavailable' : ''}" data-shelf-id="${safe(shelf.id)}" data-capacity="${shelf.capacity ?? 'unlimited'}"${shelf.capacity === 0 ? '' : ` data-act="warehouse-shelf-view" tabindex="0" role="button" aria-label="${safe(`${item.name} / ${shelf.name} — ${t('warehouse.shelves.doubleClickHint')}`)}" title="${safe(`${item.name} / ${shelf.name} · ${frontName}${occupancy ? ` · ${occupancy}` : ''} · ${t('warehouse.shelves.doubleClickHint')}`)}"`} data-front="${safe(front)}" style="--wall-bay-height:${bayHeight}px;--wall-bottle-height:${bottleHeight}px;--wall-bottle-width:${bottleWidth}px">
                 <div class="warehouse-wall-bay-title"><strong>${safe(shelf.name)}</strong><span>${safe(frontName)}${occupancy ? ` · ${safe(occupancy)}` : ''}</span></div>
-                <div class="warehouse-bottle-silhouettes">${preview.map(bottle => `<span class="warehouse-wall-bottle${selected.has(bottle.id) ? ' is-selected' : ''}">${bottleSymbol(bottle, {selectable:true, selected:selected.has(bottle.id)})}</span>`).join('')}${hiddenCount ? `<span class="warehouse-shelf-overflow" aria-label="${safe(t('warehouse.shelves.moreBottles',{count:hiddenCount}))}">+${hiddenCount}</span>` : ''}${!occupants.length ? (shelf.capacity === 0 ? `<span class="warehouse-wall-no-space">${t('warehouse.wall.noSpace')}</span>` : `<span class="hint">${t('warehouse.shelves.empty')}</span>`) : ''}</div>
+                <div class="warehouse-bottle-silhouettes">${preview.map(bottle => {
+                    const isFocusedBottle = bottle.id === focusedBottleId;
+                    const dimmed = isFocusedShelf && focusedBottleId && !isFocusedBottle;
+                    return `<span class="warehouse-wall-bottle${selected.has(bottle.id) ? ' is-selected' : ''}${isFocusedBottle ? ' is-find-focus' : ''}${dimmed ? ' is-find-dimmed' : ''}">${bottleSymbol(bottle, {selectable:true, selected:selected.has(bottle.id)})}</span>`;
+                }).join('')}${hiddenCount ? `<span class="warehouse-shelf-overflow" aria-label="${safe(t('warehouse.shelves.moreBottles',{count:hiddenCount}))}">+${hiddenCount}</span>` : ''}${!occupants.length ? (shelf.capacity === 0 ? `<span class="warehouse-wall-no-space">${t('warehouse.wall.noSpace')}</span>` : `<span class="hint">${t('warehouse.shelves.empty')}</span>`) : ''}</div>
             </div>`;
         }).join('');
         return `<section class="warehouse-wall-furniture${stacked ? ' warehouse-wall-furniture--stacked' : ''}" data-furniture-id="${safe(item.id)}" style="--wall-furniture-width:${widthPx}px;--wall-furniture-height:${heightPx}px;--wall-elevation:${elevationPx}px;--wall-offset-x:${px(offset)}px">
@@ -80,7 +105,7 @@ export function renderWarehouseRoomWall(room, warehouse, selectedBottleIds = [],
         const furnitureHtml = group.items.map(entry => renderFurniture(entry, group.items.length > 1)).join('');
         return `<div class="warehouse-wall-stack${group.items.length > 1 ? ' warehouse-wall-stack--layered' : ''}${changeWall ? ' warehouse-wall-stack--new-direction' : ''}" data-facing="${group.orientation}" style="--wall-stack-width:${px(group.width)}px;--wall-stack-height:${px(group.height)}px">${furnitureHtml}</div>`;
     }).join('');
-    return `<section class="warehouse-room-wall" aria-label="${safe(t('warehouse.wall.aria',{room:room.name}))}">
+    return `<section class="warehouse-room-wall${focusedBottleId ? ' has-find-focus' : ''}" aria-label="${safe(t('warehouse.wall.aria',{room:room.name}))}">
         <div class="warehouse-wall-controls">
             <div class="warehouse-bottle-bulk-tools" aria-label="${safe(t('warehouse.bottles.bulkTools'))}">
                 <span class="warehouse-bottle-selection-count" aria-live="polite">${safe(t('warehouse.bottles.bulkSelected',{count:selected.size}))}</span>

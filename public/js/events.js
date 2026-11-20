@@ -61,7 +61,12 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'warehouse-camera': button => { if (['nw','ne','se','sw'].includes(button.dataset.corner)) {state.warehousePlanCorner = button.dataset.corner; render();} },
         'warehouse-visibility-toggle': button => warehouseView.toggleFurnitureVisibility(button.dataset.id),
         'warehouse-show-all': () => warehouseView.showAllFurniture(),
-        'warehouse-find': () => navigate('warehouse', 'find'),
+        'warehouse-find': () => {state.warehouseFinderPlacement='unassigned';state.warehouseFinderPage=1;navigate('warehouse','find');},
+        'warehouse-find-location': button => warehouseView.showBottleLocation(button.dataset.id),
+        'warehouse-return-find': () => warehouseView.returnToFinder(),
+        'warehouse-find-clear': () => warehouseView.clearFindFocus(),
+        'warehouse-find-prev': () => warehouseView.stepFinderPage(-1),
+        'warehouse-find-next': () => warehouseView.stepFinderPage(1),
         'warehouse-open-shelves': () => navigate('warehouse', 'shelves'),
         'warehouse-room-new': () => warehouseView.openForm('room'),
         'warehouse-rooms-transfer': () => warehouseView.openRoomTransfer(),
@@ -484,7 +489,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         if (event.target.id === 'warehouse-room-select') { warehouseView.selectRoom(event.target.value, state.selected === 'shelves' ? 'shelves' : 'rooms'); return; }
         if (event.target.id === 'warehouse-plan-layer') { state.warehousePlanLevel=event.target.value; render(); return; }
         if (event.target.id === 'warehouse-plan-zoom') { state.warehousePlanZoom = [100,150,200].includes(Number(event.target.value)) ? Number(event.target.value) : 100; warehouseView.update3DZoom(state.warehousePlanZoom); return; }
-        if (event.target.id === 'warehouse-unassigned') { state.warehouseUnassigned=event.target.checked; render(); return; }
+        if (event.target.name === 'warehouse-find-placement') {warehouseView.setFinderPlacement(event.target.value);return;}
         const filter = event.target.dataset.analyticsFilter;
         if (filter && ['distillery', 'country', 'volumeType', 'status'].includes(filter)) {
             state.analyticsFilters[filter] = event.target.value;
@@ -513,7 +518,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         }
         if (state.page === 'home' && event.target.id === 'search') { home.handleInput(event.target); return; }
         if (event.target.id === 'warehouse-unassigned-wall-search') {warehouseView.setUnassignedWallSearch(event.target.value);return;}
-        if (event.target.id === 'warehouse-search') {state.warehouseSearch=event.target.value;warehouseView.filterSearch();return;}
+        if (event.target.id === 'warehouse-search') {warehouseView.setFinderQuery(event.target.value);return;}
         if (event.target.id === 'bottling-choice-search') {
             editors.filterExistingBottlings(event.target.value);
         }

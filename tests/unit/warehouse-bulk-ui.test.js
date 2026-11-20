@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 
-test('physical bottle multi-selection works in the inventory list and in the full-height virtual wall', () => {
+test('physical bottle multi-selection remains in the storage wall, not in the finder', () => {
     const warehouse={rooms:[{id:'room',name:'Raum',width:5,height:4,furniture:[
         {id:'f',name:'Regal 1',type:'regal',width:1,itemHeight:2,elevation:0,shelves:[
             {id:'s',name:'Fach 1',capacity:3}]}]}],
@@ -16,14 +16,15 @@ test('physical bottle multi-selection works in the inventory list and in the ful
     globalThis.document={querySelector:()=>null,querySelectorAll:()=>[],getElementById:()=>null};
     try {
         view.render();
-        assert.equal((html.match(/class="warehouse-bottle-check"/g)||[]).length,2);
-        assert.match(html,/2 Flaschen ausgewählt/);
-        assert.match(html,/data-act="warehouse-bottles-assign-selected"/);
+        assert.doesNotMatch(html,/class="warehouse-bottle-check"/);
+        assert.doesNotMatch(html,/data-act="warehouse-bottles-assign-selected"/);
+        assert.match(html,/warehouse-finder-card/);
+        assert.match(html,/data-act="warehouse-find-location"/);
+        state.selected='shelves';
+        view.render();
         view.assignSelectedBottles();
         assert.match(dialog,/data-endpoint="\/api\/warehouse\/bottles\/bulk"/);
         assert.match(dialog,/data-bottle-bulk="true"/);
-        state.selected='shelves';
-        view.render();
         assert.match(html,/class="warehouse-room-wall"/);
         assert.equal((html.match(/class="warehouse-wall-bottle is-selected"/g)||[]).length,2);
         assert.match(html,/warehouse-bottle-bulk-tools/);
