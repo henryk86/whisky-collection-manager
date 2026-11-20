@@ -558,6 +558,9 @@
 .warehouse-wall-bay--unavailable { cursor: default; }
 .warehouse-wall-bay:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
 .warehouse-wall-bay .warehouse-bottle-silhouettes { overflow: hidden; flex-wrap: nowrap; }
+/* The picture is bottom-aligned like a bottle on a real shelf, and is scaled to
+   the actual available area instead of being cropped by a shelf board. */
+.warehouse-wall-bay .warehouse-bottle-photo { object-fit: contain; object-position: center bottom; display: block; }
 .warehouse-shelf-overflow { flex: 0 0 auto; align-self: center; font-size: 12px; font-weight: 700; color: var(--ink); background: color-mix(in srgb,var(--gold) 22%,var(--paper)); border-radius: 5px; padding: 3px 5px; white-space: nowrap; }
 .warehouse-shelf-detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 205px), 1fr)); gap: 12px; margin-top: 14px; max-height: min(66vh, 760px); overflow-y: auto; }
 .warehouse-shelf-detail-bottle { display: flex; flex-direction: column; gap: 6px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); }
@@ -579,7 +582,8 @@
 .warehouse-transfer-summary dd { margin: 2px 0 0; font-weight: 650; }
 
 .warehouse-wall-bay { position: relative; }
-.warehouse-wall-bay .warehouse-shelf-overflow { position: absolute; right: 3px; bottom: 3px; font-size: 11px; padding: 1px 3px; z-index: 2; }
+/* +N is a separate flex item after the bottle slots, NOT an overlay on a photo. */
+.warehouse-wall-bay .warehouse-shelf-overflow { position: static; flex: 0 0 27px; box-sizing: border-box; align-self: flex-end; display: inline-flex; align-items: center; justify-content: center; min-width: 0; max-width: 27px; min-height: 18px; font-size: 11px; font-weight: 700; padding: 2px; z-index: 2; border-radius: 5px; border: 1px solid var(--line); background: color-mix(in srgb,var(--paper) 83%,var(--gold)); }
 
 /* Import and export share one compact dialog; only the active panel occupies space. */
 .warehouse-transfer-tabs { display: flex; gap: 6px; flex-wrap: wrap; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
@@ -613,15 +617,90 @@
     .warehouse-wall-controls .warehouse-unassigned-grid { grid-template-columns: repeat(auto-fill,minmax(136px,1fr)); }
 }
 
-/* Furniture photos follow the existing bottle-photo UI and square panels. */
-.warehouse-furniture-photos { border-top:1px solid var(--line); margin:18px 0; padding-top:16px; }
-.warehouse-furniture-photo-list { display:flex; flex-wrap:wrap; gap:12px; margin:10px 0; }
-.warehouse-furniture-photo { width: min(180px,46%); border:1px solid var(--line); padding:6px; }
-.warehouse-furniture-photo img { display:block; width:100%; height:140px; object-fit:contain; }
-.warehouse-furniture-photo .actions { flex-wrap:nowrap; justify-content:center; gap:4px; }
+/* Furniture photos reuse the bottle thumbnail, remove and upload styles.
+   With no reorder controls, the picture fills the whole thumbnail tile. */
+.warehouse-furniture-actions { margin-top: 16px; }
+.warehouse-furniture-photos { border-top: 1px solid var(--line); margin: 18px 0 0; padding-top: 16px; }
+.warehouse-furniture-photos .warehouse-furniture-photo .photo-open { height: 100%; }
 
 .warehouse-shelf-editor-navigation { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; border-bottom:1px solid var(--line); padding:0 0 16px; margin-bottom:18px; }
 .warehouse-shelf-editor-navigation>span { font-size:13px; font-weight:650; }
 
-.warehouse-photo-open { display:block; border:0; padding:0; background:transparent; cursor:zoom-in; width:100%; }
 .warehouse-photo-lightbox img { display:block; max-width:100%; max-height:72dvh; margin:auto; object-fit:contain; }
+
+/* Physical-bottle finder: read-only locating first, relocation second. */
+.warehouse-finder { min-width: 0; }
+.warehouse-finder-search-label { display: block; font-weight: 650; font-size: 13px; margin: 0 0 6px; }
+.warehouse-finder > input[type="search"] { width: min(100%, 560px); min-height: 44px; padding: 10px 13px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 5px; }
+.warehouse-finder-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0; border: 0; margin: 14px 0 16px; min-width: 0; }
+.warehouse-finder-filter legend { font-size: 12px; color: var(--muted); margin-bottom: 7px; }
+.warehouse-finder-filter-option { cursor: pointer; display: inline-flex; }
+.warehouse-finder-filter-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.warehouse-finder-filter-option span { display: inline-flex; align-items: center; border-radius: 20px; border: 1px solid var(--line); background: var(--paper); padding: 7px 12px; font-size: 12px; font-weight: 600; color: var(--ink); }
+.warehouse-finder-filter-option input:checked + span { border-color: var(--gold); background: color-mix(in srgb,var(--gold) 16%,var(--paper)); }
+.warehouse-finder-filter-option input:focus-visible + span { outline: 2px solid var(--ink); outline-offset: 3px; }
+.warehouse-finder-summary { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.warehouse-finder-list { display: grid; gap: 8px; }
+.warehouse-finder-card { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 14px; padding: 13px; align-items: center; border: 1px solid var(--line); background: var(--paper); border-radius: 7px; min-width: 0; }
+/* The preview is an uncropped whole-photo thumbnail. Never stretch the img
+   to both box dimensions; retain its intrinsic aspect ratio and constrain it
+   to the available space instead. */
+.warehouse-finder-photo { width: 72px; height: 108px; display: flex; align-items: center; justify-content: center; background: var(--surface, transparent); border-radius: 5px; min-width: 0; }
+.warehouse-finder-photo img { display: block; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; object-position: center; flex: 0 1 auto; }
+.warehouse-finder-info { display: grid; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.warehouse-finder-info strong { font-size: 14px; color: var(--ink); }
+.warehouse-finder-meta { font-size: 12px; color: var(--muted); }
+.warehouse-finder-location { font-size: 13px; color: var(--ink); }
+.warehouse-finder-location > span { color: var(--gold); font-weight: 700; margin-right: 3px; }
+.warehouse-finder-actions { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; justify-content: flex-end; max-width: 300px; }
+.warehouse-finder-actions .btn { white-space: normal; text-align: center; }
+.warehouse-finder-empty { border: 1px dashed var(--line); border-radius: 7px; padding: 22px; background: var(--paper); }
+.warehouse-finder-pages { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 15px; }
+.warehouse-finder-pages span { font-size: 12px; color: var(--muted); }
+/* The shelf highlight is an outer glow, independent of the bottle emphasis.
+   Keep the shelf label and occupancy text unobstructed. */
+.warehouse-find-return { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 12px; margin: 12px 0; background: color-mix(in srgb,var(--gold) 18%,var(--paper)); border: 1px solid var(--gold); border-left: 5px solid var(--gold); border-radius: 7px; }
+.warehouse-find-return-label { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 7px; font-size: 13px; font-weight: 650; overflow-wrap: anywhere; }
+.warehouse-find-return-badge { padding: 3px 7px; border-radius: 4px; color: #fff; background: #092e4d; font-size: 10px; font-weight: 750; letter-spacing: .07em; white-space: nowrap; }
+.warehouse-find-clear { margin-left: auto; flex: 0 0 36px; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; padding: 0; color: var(--ink); background: transparent; border: 0; border-radius: 5px; cursor: pointer; }
+.warehouse-find-clear:hover { background: color-mix(in srgb, var(--gold) 22%, var(--paper)); }
+.warehouse-find-clear:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.warehouse-wall-bay.is-find-focus {
+  z-index: 2;
+  box-shadow: inset 0 -5px 0 #a17d4c,
+              0 0 0 3px #f4ce73,
+              0 0 17px 7px rgb(222 153 33 / .78);
+}
+.warehouse-wall-bay.is-find-focus .warehouse-wall-bottle { transition: opacity .18s ease, filter .18s ease, transform .18s ease; }
+.warehouse-wall-bay.is-find-focus .warehouse-wall-bottle.is-find-dimmed {
+  opacity: .36;
+  filter: saturate(.18) contrast(.9);
+}
+.warehouse-wall-bay.is-find-focus .warehouse-wall-bottle.is-find-focus {
+  z-index: 2;
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 10px rgb(244 206 115 / .85));
+}
+.warehouse-wall-bay.is-find-focus .warehouse-wall-bottle.is-find-focus .warehouse-bottle-symbol {
+  border-color: var(--gold);
+  background: color-mix(in srgb,var(--gold) 12%,transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .warehouse-wall-bay.is-find-focus .warehouse-wall-bottle { transition: none; }
+}
+
+@media (max-width: 850px) {
+  .warehouse-finder-card { grid-template-columns: 58px minmax(0,1fr); gap: 10px; }
+  .warehouse-finder-photo { width: 58px; height: 90px; }
+  .warehouse-finder-actions { grid-column: 2; justify-content: flex-start; max-width: none; }
+}
+@media (max-width: 420px) {
+  .warehouse-finder-card { padding: 10px; }
+  .warehouse-finder-actions .btn { padding-inline: 9px; font-size: 11px; }
+}
+
+/* A furniture unit without compartments cannot yet be drawn in the shelf wall. */
+.warehouse-unconfigured-furniture { margin: 12px 0 18px; padding: 12px 14px; }
+.warehouse-unconfigured-list { display: grid; gap: 8px; margin-top: 10px; }
+.warehouse-unconfigured-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.warehouse-unconfigured-item + .warehouse-unconfigured-item { border-top: 1px solid var(--line); padding-top: 8px; }

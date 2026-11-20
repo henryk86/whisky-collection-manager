@@ -4,6 +4,90 @@ import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer,requestJson} from '../helpers/server.js';
 import {domOnly,chromium,session,openSettingsFromMenu,openSettingsSection,seed,mockDecoder} from './support.js';
+test('browser: finder opens the exact shelf, returns to its search and keeps single-bottle relocation', async () => {
+    await session(async ({base,page,open}) => {
+        const {bottle} = await seed(base,'098712');
+        // Dimming can only be asserted if another physical bottle shares the shelf.
+        const {bottle:otherBottle} = await seed(base,'098713');
+        const room = (await requestJson(base,'/api/warehouse/rooms','POST',
+            {name:'Suchraum',width:4,height:3})).data;
+        const rack = (await requestJson(base,`/api/warehouse/rooms/${room.id}/furniture`,'POST',
+            {name:'Testvitrine',type:'vitrine',x:0.2,y:0.2,width:1,depth:.5,rotation:0,elevation:0,itemHeight:1.8})).data;
+        const shelf = (await requestJson(base,`/api/warehouse/furniture/${rack.id}/shelves`,'POST',
+            {name:'Fach 2',capacity:5})).data;
+        assert.equal((await requestJson(base,`/api/warehouse/bottles/${bottle.id}`,'PUT',{shelfId:shelf.id})).status,200);
+        assert.equal((await requestJson(base,`/api/warehouse/bottles/${otherBottle.id}`,'PUT',{shelfId:shelf.id})).status,200);
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="find"]').click();
+        await page.locator('#warehouse-search').fill('098712');
+        const result = page.locator(`.warehouse-finder-card[data-bottle-id="${bottle.id}"]`);
+        await result.waitFor();
+        // An exceptionally tall bottle photo must remain entirely within the
+        // thumbnail at its original aspect ratio, not be clipped or stretched.
+        const preview = await result.locator('.warehouse-finder-photo').evaluate(async slot => {
+            const img = slot.querySelector('img');
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="400"><rect width="80" height="400" fill="#bd955d"/></svg>';
+            img.src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+            await img.decode();
+            const outer = slot.getBoundingClientRect(), inner = img.getBoundingClientRect();
+            return {outer:{left:outer.left,right:outer.right,top:outer.top,bottom:outer.bottom},
+                inner:{left:inner.left,right:inner.right,top:inner.top,bottom:inner.bottom,width:inner.width,height:inner.height}};
+        });
+        assert.ok(preview.inner.left >= preview.outer.left - 1 && preview.inner.right <= preview.outer.right + 1);
+        assert.ok(preview.inner.top >= preview.outer.top - 1 && preview.inner.bottom <= preview.outer.bottom + 1);
+        assert.ok(Math.abs(preview.inner.width / preview.inner.height - 0.2) < 0.01, 'full bottle aspect ratio is preserved');
+        assert.equal(await page.locator('.warehouse-bottle-check').count(),0);
+        await page.locator('.warehouse-finder-filter-option').nth(1).click();
+        assert.equal(await page.locator('input[name="warehouse-find-placement"][value="assigned"]').isChecked(),true);
+        await result.locator('[data-act="warehouse-find-location"]').click();
+        assert.equal(await page.locator('.warehouse-tabs [data-section="shelves"]').getAttribute('aria-current'),'page');
+        assert.equal(await page.locator(`.warehouse-wall-bottle.is-find-focus [data-id="${bottle.id}"]`).count(),1);
+        assert.equal(await page.locator(`.warehouse-wall-bottle.is-find-dimmed [data-id="${otherBottle.id}"]`).count(),1);
+        // Wait for the short fade transition before checking its computed opacity.
+        await page.waitForFunction(() => {
+            const other = document.querySelector('.warehouse-wall-bottle.is-find-dimmed');
+            return other && Number(getComputedStyle(other).opacity) < 0.9;
+        }, null, {timeout:3000});
+        // The whole shelf is located by an external glow: nothing may be
+        // placed over its title, bottle preview, or occupancy information.
+        const focusStyle = await page.locator('.warehouse-wall-bay.is-find-focus').evaluate(bay => {
+            const preview = bay.querySelector('.warehouse-bottle-silhouettes');
+            const selected = bay.querySelector('.warehouse-wall-bottle.is-find-focus');
+            const dimmed = bay.querySelector('.warehouse-wall-bottle.is-find-dimmed');
+            return {bayShadow:getComputedStyle(bay).boxShadow,
+                previewOutline:getComputedStyle(preview).outlineStyle,
+                previewBackground:getComputedStyle(preview).backgroundColor,
+                selectedTransform:getComputedStyle(selected).transform,
+                selectedFilter:getComputedStyle(selected).filter,
+                dimmedOpacity:dimmed ? getComputedStyle(dimmed).opacity : null,
+                badgeCount:bay.querySelectorAll('.warehouse-find-bottle-badge').length};
+        });
+        assert.match(focusStyle.bayShadow, /rgba?\(/, 'located shelf has a visible external glow');
+        assert.equal(focusStyle.previewOutline,'none', 'no inner preview frame');
+        assert.notEqual(focusStyle.selectedTransform,'none', 'found bottle is additionally highlighted');
+        assert.notEqual(focusStyle.selectedFilter,'none', 'found bottle receives a visible emphasis');
+        assert.ok(focusStyle.dimmedOpacity !== null && Number(focusStyle.dimmedOpacity) < 1, 'other bottles are visually reduced');
+        assert.equal(focusStyle.badgeCount,0, 'no exclamation mark over the found bottle');
+        await page.locator('[data-act="warehouse-return-find"]').click();
+        assert.equal(await page.locator('#warehouse-search').inputValue(),'098712');
+        assert.equal(await page.locator('input[name="warehouse-find-placement"][value="assigned"]').isChecked(),true);
+        await result.locator('[data-act="warehouse-assign"]').click();
+        const form = page.locator('#modal-root #warehouse-form');
+        await form.waitFor();
+        assert.equal(await form.locator('.warehouse-assignment-current strong').innerText(),
+            'Suchraum / Testvitrine / Fach 2');
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        await result.locator('[data-act="warehouse-find-location"]').click();
+        await page.locator('[data-act="warehouse-find-clear"]').click();
+        assert.equal(await page.locator('.warehouse-tabs [data-section="shelves"]').getAttribute('aria-current'),'page');
+        assert.equal(await page.locator('.warehouse-find-return').count(),0);
+        assert.equal(await page.locator('.warehouse-wall-bay.is-find-focus').count(),0);
+        assert.equal(await page.locator('.warehouse-wall-bottle.is-find-focus, .warehouse-wall-bottle.is-find-dimmed').count(),0);
+    });
+});
+
 test('browser: warehouse room plan mounts local Three.js and keeps the 2D plan available', async () => {
     await session(async ({base,page,open})=>{
         const room=await requestJson(base,'/api/warehouse/rooms','POST',{name:'3D-Raum',width:5,height:4});
@@ -54,6 +138,22 @@ test('browser: warehouse room plan mounts local Three.js and keeps the 2D plan a
         // Editing is only accessible through the furniture icon in Regale & Faecher.
         await page.locator(`.warehouse-wall-furniture-edit[data-id="${rack.data.id}"]`).click();
         assert.equal(await page.locator('#modal-root .warehouse-furniture-panel').count(),1,'furniture management opens in a modal');
+        // Compartment and bottle actions precede the photos; both upload controls
+        // use the existing compact bottle-gallery style.
+        const managerLayout = await page.locator('#modal-root .warehouse-furniture-panel').evaluate(panel => {
+            const measure = selector => {
+                const rect = panel.querySelector(selector).getBoundingClientRect();
+                return {left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,width:rect.width,height:rect.height};
+            };
+            return {actions:measure('.warehouse-furniture-actions'),photos:measure('.warehouse-furniture-photos'),
+                upload:measure('.warehouse-furniture-photo-actions .photo-add'),
+                camera:measure('.warehouse-furniture-photo-actions .photo-capture')};
+        });
+        assert.ok(managerLayout.actions.bottom < managerLayout.photos.top, 'action buttons appear above photos');
+        assert.ok(managerLayout.upload.width <= 200, 'upload action must not fill dialog width');
+        assert.ok(managerLayout.upload.height <= 45, 'upload button has bottle-gallery compact height');
+        assert.ok(managerLayout.camera.height <= 45, 'camera button matches bottle-gallery height');
+        assert.ok(managerLayout.upload.right < managerLayout.camera.left, 'upload actions stay side by side at desktop width');
         await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
         await page.locator('.warehouse-tabs [data-section="rooms"]').click();
         await page.locator('.warehouse-tabs [data-section="rooms"]').click();
@@ -376,7 +476,7 @@ test('browser: room plan positions furniture; shelf tab owns wall, editing and b
         assert.equal(await page.locator('.warehouse-room-wall').count(),0);
         assert.equal(await page.locator('.warehouse-furniture-panel').count(),0);
         assert.equal(await page.locator('.warehouse-bulk-check').count(),0,'no furniture bulk actions in room plans');
-        assert.equal(await page.locator('[data-act="warehouse-furniture-new"]').count(),0);
+        assert.equal(await page.locator('.warehouse-plan-tools [data-act="warehouse-furniture-new"]').count(),1);
         await page.locator('.warehouse-bulk-open').click();
         assert.equal(await page.locator('.warehouse-bulk-open').getAttribute('aria-current'),'true');
         assert.equal(await page.locator('.warehouse-plan-focus-info').count(),1,'selecting furniture in Raumpläne shows position and a usable destination');
@@ -784,5 +884,36 @@ test('browser: showing all distilleries preserves exact map camera and viewer no
         assert.deepEqual(await snapshot(), before, 'show all must preserve camera');
         await page.locator('#map-all-distilleries').uncheck();
         assert.deepEqual(await snapshot(), before, 'hide empty sites must preserve camera');
+    });
+});
+
+
+test('browser: placing furniture from the 2D plan stays in room plans and permits the first compartment', async () => {
+    await session(async ({base,page,open}) => {
+        const room=(await requestJson(base,'/api/warehouse/rooms','POST',
+            {name:'Neuer Raum',width:5,height:4})).data;
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"]').click();
+        await page.locator('#warehouse-room-select').selectOption(room.id);
+        await page.locator('[data-act="warehouse-plan-mode"][data-mode="2d"]').click();
+        await page.locator('.warehouse-plan-tools [data-act="warehouse-furniture-new"]').click();
+        const form=page.locator('#modal-root #warehouse-form');
+        await form.locator('[name="name"]').fill('Vitrine neu');
+        await form.locator('button[type="submit"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"][aria-current="page"]').waitFor();
+        assert.equal(await page.locator('.warehouse-floor').count(),1);
+        assert.equal(await page.locator('.warehouse-plan-focus-info strong').innerText(),'Vitrine neu');
+        await page.locator('.warehouse-plan-focus [data-act="warehouse-furniture-manage"]').click();
+        await page.locator('#modal-root .warehouse-furniture-manager [data-act="warehouse-shelf-new"]').click();
+        const shelfForm=page.locator('#modal-root #warehouse-form');
+        await shelfForm.locator('[name="name"]').fill('Erstes Fach');
+        await shelfForm.locator('button[type="submit"]').click();
+        await page.locator('.warehouse-tabs [data-section="rooms"][aria-current="page"]').waitFor();
+        assert.equal(await page.locator('.warehouse-floor').count(),1);
+        assert.equal((await requestJson(base,'/api/warehouse')).data.rooms
+            .find(entry=>entry.id===room.id).furniture[0].shelves[0].name,'Erstes Fach');
+        // The original double-click route to Regale & Fächer is intentionally unchanged.
     });
 });
