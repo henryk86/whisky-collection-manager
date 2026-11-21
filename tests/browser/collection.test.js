@@ -1308,8 +1308,11 @@ test('browser: collection table columns are configurable and header sorting upda
         await page.locator('[data-act="toggle-view"]').click();
         assert.equal(await page.locator('thead [data-column="rating"]').count(),1);
         assert.equal(await page.locator('thead [data-column="editing"]').count(),0);
+        // Playwright scrolls the document to bring the summary into view when
+        // clicking it. Compare DOCUMENT coordinates, not viewport coordinates:
+        // the latter change on scroll even when the overlay causes no reflow.
         const tableTopBefore = await page.locator('.collection-table-wrap').evaluate(table =>
-            table.getBoundingClientRect().top);
+            table.getBoundingClientRect().top + window.scrollY);
         await page.locator('.collection-table-columns > summary').click();
         const columnMenuMetrics = await page.locator('.collection-table-columns-menu').evaluate(menu => {
             const choices = [...menu.querySelectorAll('.collection-table-column-choice')];
@@ -1323,7 +1326,8 @@ test('browser: collection table columns are configurable and header sorting upda
         });
         assert.equal(columnMenuMetrics.menuPosition,'absolute', 'the columns picker floats over the table');
         assert.equal(await page.locator('.collection-table-wrap').evaluate(table =>
-            table.getBoundingClientRect().top),tableTopBefore,'opening the picker does not push the table down');
+            table.getBoundingClientRect().top + window.scrollY),tableTopBefore,
+            'opening the picker does not push the table down');
         assert.ok(columnMenuMetrics.rowHeight <= 38, 'column options are compact rows');
         assert.ok(columnMenuMetrics.rowGap <= 5, 'column options have a small consistent gap');
         assert.ok(columnMenuMetrics.checkboxWidth <= 18 && columnMenuMetrics.checkboxHeight <= 18,
@@ -1345,13 +1349,14 @@ test('browser: collection table columns are configurable and header sorting upda
             const triggerRect=menu.closest('details').querySelector('summary').getBoundingClientRect();
             const tableRect=document.querySelector('.collection-table-wrap').getBoundingClientRect();
             return {menuTop:menuRect.top,menuBottom:menuRect.bottom,
-                tableTop:tableRect.top,triggerBottom:triggerRect.bottom};
+                tableTop:tableRect.top,tableDocumentTop:tableRect.top + window.scrollY,
+                triggerBottom:triggerRect.bottom};
         });
         assert.ok(pickerOverlay.menuTop >= pickerOverlay.triggerBottom,
             'column picker opens immediately below its trigger');
         assert.ok(pickerOverlay.menuBottom > pickerOverlay.tableTop,
             'column picker overlays the table rather than pushing it away');
-        assert.equal(pickerOverlay.tableTop,tableTopBefore,
+        assert.equal(pickerOverlay.tableDocumentTop,tableTopBefore,
             'checkbox changes also preserve the table position');
         // Reproduce the reported bug: close the picker manually after adding
         // columns, then click the last visible header. It must stay CLOSED.

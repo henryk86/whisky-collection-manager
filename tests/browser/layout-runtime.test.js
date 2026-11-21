@@ -115,10 +115,10 @@ test('browser: square content surfaces, filter controls and KPIs inherit their s
             const home=await page.evaluate(()=>({
                 card:getComputedStyle(document.querySelector('.panel.stat')).borderRadius,
                 gold:getComputedStyle(document.querySelector('.panel.stat')).borderTopWidth,
-                // A collapsed filter's own computed display is still "block" when
-                // its parent is display:none. Its measured height is then 0px,
-                // even though it is not an interactive/visible control.
-                toolbar:[...document.querySelectorAll('.toolbar input,.toolbar select,.toolbar [data-act="toggle-view"],.toolbar [data-act="toggle-collection-filters"]')]
+                // The home page contains one dedicated collection filter bar.
+                // Test only its visible direct controls, not inputs inside a
+                // collapsed nested filter group (which have a 0px client rect).
+                toolbar:[...document.querySelectorAll('.collection-filters > input,.collection-filters > select,.collection-filters > button')]
                     .filter(el=>el.getClientRects().length>0 && getComputedStyle(el).visibility!=='hidden')
                     .map(el=>({name:el.id || el.dataset.act, height:el.getBoundingClientRect().height})),
                 hiddenExtras:[...document.querySelectorAll('.collection-filter-extra select')]
