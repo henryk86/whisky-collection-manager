@@ -115,14 +115,35 @@ test('browser: square content surfaces, filter controls and KPIs inherit their s
             const home=await page.evaluate(()=>({
                 card:getComputedStyle(document.querySelector('.panel.stat')).borderRadius,
                 gold:getComputedStyle(document.querySelector('.panel.stat')).borderTopWidth,
-                toolbar:[...document.querySelectorAll('.toolbar input,.toolbar select,.toolbar [data-act="toggle-view"]')]
-                    .filter(el=>getComputedStyle(el).display!=='none').map(el=>el.getBoundingClientRect().height),
+                // The home page contains one dedicated collection filter bar.
+                // Test only its visible direct controls, not inputs inside a
+                // collapsed nested filter group (which have a 0px client rect).
+                toolbar:[...document.querySelectorAll('.collection-filters > input,.collection-filters > select,.collection-filters > button')]
+                    .filter(el=>el.getClientRects().length>0 && getComputedStyle(el).visibility!=='hidden')
+                    .map(el=>({name:el.id || el.dataset.act, height:el.getBoundingClientRect().height})),
+                hiddenExtras:[...document.querySelectorAll('.collection-filter-extra select')]
+                    .every(el=>el.getClientRects().length===0),
                 overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1,
             }));
             assert.equal(home.card,'0px');
             assert.equal(home.gold,'3px');
-            assert.ok(home.toolbar.every(value=>value>=40),`${width}: accessible filter height`);
+            assert.ok(home.toolbar.length>=4,`${width}: visible filter controls exist`);
+            assert.ok(home.toolbar.every(item=>item.height>=40),
+                `${width}: accessible filter height (${JSON.stringify(home.toolbar)})`);
+            assert.equal(home.hiddenExtras,true,`${width}: advanced filters start collapsed`);
             assert.equal(home.overflow,false,`${width}: no horizontal overflow`);
+            await page.locator('[data-act="toggle-collection-filters"]').click();
+            const expanded=await page.evaluate(()=>({
+                controls:[...document.querySelectorAll('.collection-filter-extra select,#filter-status,#filter-completion')]
+                    .filter(el=>el.getClientRects().length>0)
+                    .map(el=>({name:el.id,height:el.getBoundingClientRect().height})),
+                overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1,
+            }));
+            assert.ok(expanded.controls.length>=3,`${width}: advanced filters are visible when opened`);
+            assert.ok(expanded.controls.every(item=>item.height>=40),
+                `${width}: expanded filter height (${JSON.stringify(expanded.controls)})`);
+            assert.equal(expanded.overflow,false,`${width}: expanded filters do not overflow horizontally`);
+            await page.locator('[data-act="toggle-collection-filters"]').click();
         }
         await go(page,'goto-analysis','.analytics-page');
         const analytics=await page.locator('.analytics-metrics .panel.stat').first().evaluate(el=>({

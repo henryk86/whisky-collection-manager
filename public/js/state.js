@@ -1,4 +1,5 @@
 import { getPageSizePreference } from './domain/page-size-preference.js';
+import { getCollectionViewPreference } from './domain/collection-view-preference.js';
 
 /** UI state only. Persistent data is replaced by GET /api/collection after mutations. */
 export function createState(route) {
@@ -32,7 +33,7 @@ export function createState(route) {
         volumeType: 'all',
         rating: 'all',
         completion: 'all',
-        view: 'cards',
+        view: getCollectionViewPreference(),
         overviewMode: 'bottlings',
         sort: 'name',
         pageNumber: 1,

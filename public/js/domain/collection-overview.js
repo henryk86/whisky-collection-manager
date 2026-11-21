@@ -1,6 +1,6 @@
 /** Presentation-only entries: one row per bottling or one row per physical bottle. */
 import { bottleStatusLabels, whiskyTypeName } from './labels.js';
-import { displayedTastingRating } from '../../../shared/tasting-records.js';
+import { displayedTastingRating, latestTasting } from '../../../shared/tasting-records.js';
 
 export const OVERVIEW_MODES = Object.freeze(['bottlings', 'bottles']);
 
@@ -40,6 +40,84 @@ function matchingBottleText(bottle) {
     ];
 }
 
+/** All sort criteria use the underlying saved data, not formatted card labels. */
+export function purchasePrice(entry) {
+    const bottles = entry.bottle ? [entry.bottle] : entry.bottling.bottles || [];
+    const priced = bottles.filter(bottle => bottle.purchasePrice != null && bottle.purchasePrice !== ''
+        && Number.isFinite(Number(bottle.purchasePrice)) && Number(bottle.purchasePrice) >= 0);
+    if (!priced.length) return null;
+    // Without exchange rates, cross-currency averages would be misleading.
+    const currency = String(priced[0].currency || 'EUR').toUpperCase();
+    if (priced.some(bottle => String(bottle.currency || 'EUR').toUpperCase() !== currency)) return null;
+    return {currency, value:priced.reduce((total, bottle) => total + Number(bottle.purchasePrice), 0) / priced.length};
+}
+
+export function latestUpdate(entry) {
+    const times = [entry.bottling.updatedAt || entry.bottling.createdAt];
+    if (entry.bottle) times.push(entry.bottle.updatedAt || entry.bottle.createdAt);
+    else times.push(...(entry.bottling.bottles || []).map(bottle => bottle.updatedAt || bottle.createdAt));
+    return times.filter(value => typeof value === 'string' && value.length).sort().at(-1) || null;
+}
+
+function comparePresent(left, right, descending = false) {
+    // Blank dates, missing prices and unrated tastings always belong at the end.
+    if (left == null) return right == null ? 0 : 1;
+    if (right == null) return -1;
+    const difference = typeof left === 'number' ? left - right : String(left).localeCompare(String(right), 'de', {numeric:true});
+    return descending ? -difference : difference;
+}
+
+function asNumber(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+}
+
+const STATUS_ORDER = Object.freeze({closed:0,open:1,empty:2});
+
+function compareEntries(left, right, sort, distilleryNames) {
+    const a = left.bottling;
+    const b = right.bottling;
+    switch (sort) {
+        case 'nameDesc': return b.name.localeCompare(a.name, 'de');
+        case 'inventoryAsc': return comparePresent(left.bottle?.inventoryNumber || null, right.bottle?.inventoryNumber || null);
+        case 'inventoryDesc': return comparePresent(left.bottle?.inventoryNumber || null, right.bottle?.inventoryNumber || null, true);
+        case 'ageAsc': return comparePresent(asNumber(a.ageYears), asNumber(b.ageYears));
+        case 'abvAsc': return comparePresent(asNumber(a.abv), asNumber(b.abv));
+        case 'abvDesc': return comparePresent(asNumber(a.abv), asNumber(b.abv), true);
+        case 'yearAsc': return comparePresent(asNumber(a.releaseYear), asNumber(b.releaseYear));
+        case 'stockAsc': return comparePresent(a.bottles?.length || 0, b.bottles?.length || 0);
+        case 'stockDesc': return comparePresent(a.bottles?.length || 0, b.bottles?.length || 0, true);
+        case 'completionAsc': return comparePresent(a.completionStatus, b.completionStatus);
+        case 'completionDesc': return comparePresent(a.completionStatus, b.completionStatus, true);
+        case 'statusAsc': return comparePresent(STATUS_ORDER[left.bottle?.status] ?? null, STATUS_ORDER[right.bottle?.status] ?? null);
+        case 'statusDesc': return comparePresent(STATUS_ORDER[left.bottle?.status] ?? null, STATUS_ORDER[right.bottle?.status] ?? null, true);
+        case 'volumeTypeAsc': return comparePresent(left.bottle?.volumeType || 'standard', right.bottle?.volumeType || 'standard');
+        case 'volumeTypeDesc': return comparePresent(left.bottle?.volumeType || 'standard', right.bottle?.volumeType || 'standard', true);
+        case 'volumeMlAsc': return comparePresent(asNumber(left.bottle?.volumeMl), asNumber(right.bottle?.volumeMl));
+        case 'volumeMlDesc': return comparePresent(asNumber(left.bottle?.volumeMl), asNumber(right.bottle?.volumeMl), true);
+        case 'distillery': return String(distilleryNames(a)).localeCompare(String(distilleryNames(b)), 'de');
+        case 'distilleryDesc': return String(distilleryNames(b)).localeCompare(String(distilleryNames(a)), 'de');
+        case 'priceAsc':
+        case 'priceDesc': {
+            const x = purchasePrice(left), y = purchasePrice(right);
+            if (!x || !y) return comparePresent(x, y);
+            // Group currencies instead of silently comparing different monetary units.
+            return comparePresent(x.currency, y.currency) || comparePresent(x.value, y.value, sort === 'priceDesc');
+        }
+        case 'scoreDesc': return comparePresent(displayedTastingRating(a), displayedTastingRating(b), true);
+        case 'scoreAsc': return comparePresent(displayedTastingRating(a), displayedTastingRating(b));
+        case 'updatedDesc': return comparePresent(latestUpdate(left), latestUpdate(right), true);
+        case 'updatedAsc': return comparePresent(latestUpdate(left), latestUpdate(right));
+        case 'tastedDesc': return comparePresent(latestTasting(a)?.tastedOn, latestTasting(b)?.tastedOn, true);
+        case 'tastedAsc': return comparePresent(latestTasting(a)?.tastedOn, latestTasting(b)?.tastedOn);
+        case 'newest': return comparePresent(left.bottle?.createdAt || a.createdAt, right.bottle?.createdAt || b.createdAt, true);
+        case 'age': return comparePresent(asNumber(a.ageYears), asNumber(b.ageYears), true);
+        case 'year': return comparePresent(asNumber(a.releaseYear), asNumber(b.releaseYear), true);
+        default: return 0;
+    }
+}
+
 /** Filter before slicing, so each physical bottle counts as its own result. */
 export function collectionOverviewEntries(collection, {
     mode = 'bottlings', search = '', status = 'all', completion = 'all', sort = 'name',
@@ -71,20 +149,9 @@ export function collectionOverviewEntries(collection, {
         }
     }
     entries.sort((left, right) => {
-        const a = left.bottling;
-        const b = right.bottling;
-        if (sort === 'newest') {
-            const leftDate = left.bottle?.createdAt || a.createdAt || '';
-            const rightDate = right.bottle?.createdAt || b.createdAt || '';
-            if (leftDate !== rightDate) return rightDate.localeCompare(leftDate);
-        } else if (sort === 'age') {
-            const difference = (b.ageYears ?? -1) - (a.ageYears ?? -1);
-            if (difference) return difference;
-        } else if (sort === 'year') {
-            const difference = (b.releaseYear ?? -1) - (a.releaseYear ?? -1);
-            if (difference) return difference;
-        }
-        const names = a.name.localeCompare(b.name, 'de');
+        const difference = compareEntries(left, right, sort, distilleryNames);
+        if (difference) return difference;
+        const names = left.bottling.name.localeCompare(right.bottling.name, 'de');
         if (names) return names;
         // Sorting equal bottlings by a stable bottle identifier makes repeat views predictable.
         if (left.bottle && right.bottle) {
@@ -92,7 +159,7 @@ export function collectionOverviewEntries(collection, {
             if (inventories) return inventories;
             return left.bottle.id.localeCompare(right.bottle.id);
         }
-        return a.id.localeCompare(b.id);
+        return left.bottling.id.localeCompare(right.bottling.id);
     });
     return entries;
 }

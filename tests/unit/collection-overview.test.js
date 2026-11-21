@@ -138,21 +138,21 @@ test('physical bottle cards use their own photo, identifier, status and volume; 
         assert.match(html, /id="filter-distillery"/);
         assert.match(html, /id="filter-volume-type"/);
         assert.match(html, /<option value="sample"\s*>Samples<\/option>/);
-        const toolbar = html.match(/<div class="toolbar collection-filters">([\s\S]*?)<\/div>/)?.[1];
+        const toolbar = html.slice(html.indexOf('<div class="toolbar collection-filters"'), html.indexOf('<div class="pagination-topline"') === -1 ? html.length : html.indexOf('<div class="pagination-topline"'));
         assert.ok(toolbar, 'overview toolbar must exist');
-        assert.doesNotMatch(toolbar, /overview-quick-filters|overview-quick-field|Schnellfilter/,
-            'quick filters must not have a separate labelled row');
-        assert.equal((toolbar.match(/<select\b/g) || []).length, 6,
-            'all six filter and sort dropdowns belong directly in one toolbar');
+        assert.equal((toolbar.match(/<select id="filter-/g) || []).length, 6,
+            'all six existing selectors remain available');
+        assert.match(toolbar, /data-act="toggle-collection-filters" aria-expanded="false"/);
+        assert.match(toolbar, /id="collection-filter-extra"/);
         assert.ok(toolbar.indexOf('id="filter-sort"') < toolbar.indexOf('id="filter-distillery"'));
-        assert.ok(toolbar.indexOf('id="filter-volume-type"') < toolbar.indexOf('data-act="toggle-view"'));
+        assert.ok(toolbar.indexOf('data-act="toggle-view"') < toolbar.indexOf('id="filter-distillery"'));
         assert.match(toolbar, /<select id="filter-distillery" aria-label="Destillerie filtern">/);
         assert.match(toolbar, /<select id="filter-volume-type" aria-label="Flaschentyp filtern">/);
         assert.match(toolbar, /<select id="filter-rating" aria-label="Nach Bewertung filtern">/);
         state.view = 'table';
         view();
         assert.equal((html.match(/<tr class="clickable"/g) || []).length, 3);
-        assert.match(html, /<th>Flasche<\/th>/);
+        assert.match(html, /data-act="collection-sort-column" data-column="inventory"[^>]*>Flasche/);
         assert.match(html, /data-bottle-id="a-2"/);
         assert.match(html, /#000102/);
     } finally {
@@ -213,4 +213,131 @@ test('glencairn rating is drawn over the bottle image with five proportional fil
     assert.match(b,/overview-rating-bottle-2-0/);
     assert.doesNotMatch(b,/overview-rating-bottle-1-0/);
     assert.equal(collectionCardRating({id:'no-score',tastings:[]}), '');
+});
+
+
+test('collection filters expand in place and active chips reset a single selection', () => {
+    const collection = {settings:{},bottlings:[],distilleries:[]};
+    const state = {page:'home',collection,search:'',status:'open',completion:'all',sort:'name',
+        distillery:'all',rating:'all',volumeType:'all',view:'cards',overviewMode:'bottlings',
+        pageNumber:1,pageSize:12};
+    let html='';
+    const original = {document:globalThis.document,location:globalThis.location,history:globalThis.history};
+    const filterElement={dataset:{expanded:'false'}};
+    try {
+        globalThis.location={pathname:'/',search:''};
+        globalThis.history={replaceState(){},pushState(){}};
+        globalThis.document={querySelector:()=>filterElement};
+        const view = createHomeView({state,selectors:{allBottles:()=>[],bottles:()=>[],coverPhoto:()=>null,
+            distilleryNames:()=>[]},shell:markup=>{html=markup;}});
+        view();
+        assert.match(html,/data-expanded="false"/);
+        assert.match(html,/data-reset-collection-filter="status"/);
+        const toggle={dataset:{act:'toggle-collection-filters'},setAttribute(name,value){this[name]=value;}};
+        view.handleClick(toggle);
+        assert.equal(filterElement.dataset.expanded,'true');
+        assert.equal(toggle['aria-expanded'],'true');
+        view();
+        assert.match(html,/data-expanded="true"/);
+        view.handleClick({dataset:{resetCollectionFilter:'status'}});
+        assert.equal(state.status,'all');
+        assert.doesNotMatch(html,/data-reset-collection-filter="status"/);
+        assert.match(html,/data-expanded="true"/, 'expanded filters stay open when values change');
+    } finally {
+        for (const [key,value] of Object.entries(original)) {
+            if (value === undefined) delete globalThis[key];
+            else globalThis[key]=value;
+        }
+    }
+});
+
+test('sorting by name and distillery is locale-aware and keeps equal entries stable', () => {
+    const collection = {bottlings:[
+        {id:'one',name:'Ähren',distilleryIds:['a'],bottles:[]},
+        {id:'two',name:'Burg',distilleryIds:['b'],bottles:[]},
+        {id:'three',name:'Cask',distilleryIds:['a'],bottles:[]},
+    ]};
+    const distilleryNames = bottling => ({a:'Zweite',b:'Aberfeldy'})[bottling.distilleryIds[0]];
+    const ids = sort => collectionOverviewEntries(collection,{sort,distilleryNames}).map(e=>e.bottling.id);
+    assert.deepEqual(ids('name'),['one','two','three']);
+    assert.deepEqual(ids('nameDesc'),['three','two','one']);
+    assert.deepEqual(ids('distillery'),['two','one','three']);
+    assert.deepEqual(ids('distilleryDesc'),['one','three','two']);
+});
+
+test('price sorting uses individual bottle prices or same-currency bottling averages; missing data sorts last', () => {
+    const collection = {bottlings:[
+        {id:'a',name:'Alpha',bottles:[
+            {id:'a1',purchasePrice:10,currency:'EUR'}, {id:'a2',purchasePrice:40,currency:'EUR'}]},
+        {id:'b',name:'Beta',bottles:[{id:'b1',purchasePrice:20,currency:'EUR'}]},
+        {id:'c',name:'Gamma',bottles:[{id:'c1',purchasePrice:null,currency:'EUR'}]},
+        {id:'d',name:'Delta',bottles:[{id:'d1',purchasePrice:100,currency:'USD'}]},
+        {id:'e',name:'Epsilon',bottles:[{id:'e1',purchasePrice:3,currency:'EUR'},
+            {id:'e2',purchasePrice:4,currency:'USD'}]},
+    ]};
+    const sorted = (sort,mode='bottlings') => collectionOverviewEntries(collection,{sort,mode})
+        .map(e=>mode==='bottles'?e.bottle.id:e.bottling.id);
+    assert.deepEqual(sorted('priceAsc'),['b','a','d','e','c']);
+    assert.deepEqual(sorted('priceDesc'),['a','b','d','e','c']);
+    assert.deepEqual(sorted('priceAsc','bottles'),['e1','a1','b1','a2','e2','d1','c1']);
+});
+
+test('score and last-tasted sorting use the latest dated tasting, with null values at the end', () => {
+    const collection = {bottlings:[
+        {id:'a',name:'Alpha',tastings:[{id:'a1',tastedOn:'2024-02-01',rating:95},{id:'a2',tastedOn:'2026-08-10',rating:50}],bottles:[]},
+        {id:'b',name:'Beta',tastings:[{id:'b1',tastedOn:'2025-10-10',rating:0}],bottles:[]},
+        {id:'c',name:'Gamma',tastings:[{id:'c1',tastedOn:'2026-11-01',rating:null}],bottles:[]},
+        {id:'d',name:'Delta',tastings:[],bottles:[]},
+    ]};
+    const ids=sort=>collectionOverviewEntries(collection,{sort}).map(e=>e.bottling.id);
+    assert.deepEqual(ids('scoreDesc'),['a','b','d','c']);
+    assert.deepEqual(ids('scoreAsc'),['b','a','d','c']);
+    assert.deepEqual(ids('tastedDesc'),['c','a','b','d']);
+    assert.deepEqual(ids('tastedAsc'),['b','a','c','d']);
+});
+
+test('last updated sorting includes bottle changes and falls back to creation timestamps', () => {
+    const collection = {bottlings:[
+        {id:'a',name:'Alpha',updatedAt:'2026-01-01T00:00:00Z',bottles:[
+            {id:'a1',createdAt:'2026-01-01T00:00:00Z',updatedAt:'2026-11-15T00:00:00Z'},
+            {id:'a2',createdAt:'2026-01-01T00:00:00Z',updatedAt:'2026-02-01T00:00:00Z'}]},
+        {id:'b',name:'Beta',createdAt:'2026-04-01T00:00:00Z',bottles:[{id:'b1',createdAt:'2026-04-02T00:00:00Z'}]},
+        {id:'c',name:'Gamma',bottles:[]},
+    ]};
+    const ids=(sort,mode='bottlings')=>collectionOverviewEntries(collection,{sort,mode})
+        .map(e=>mode==='bottles'?e.bottle.id:e.bottling.id);
+    assert.deepEqual(ids('updatedDesc'),['a','b','c']);
+    assert.deepEqual(ids('updatedAsc'),['b','a','c']);
+    assert.deepEqual(ids('updatedDesc','bottles'),['a1','b1','a2']);
+    assert.deepEqual(ids('updatedAsc','bottles'),['a2','b1','a1']);
+});
+
+test('sort options include price, score, changed and tasting dates and are selectable in both modes', () => {
+    const collection = sample();
+    const original = {document:globalThis.document, location:globalThis.location, history:globalThis.history};
+    const state={collection, page:'home',overviewMode:'bottlings',view:'cards',sort:'tastedDesc',
+        search:'',status:'all',completion:'all',distillery:'all',volumeType:'all',rating:'all',pageNumber:1,pageSize:24};
+    let markup='';
+    try {
+        globalThis.document={querySelector:()=>null};
+        globalThis.location={pathname:'/',search:''};
+        globalThis.history={replaceState(){}};
+        const view=createHomeView({state,selectors:{allBottles:()=>[],bottles:()=>[],
+            coverPhoto:()=>'',distilleryNames:()=>''},shell:html=>{markup=html;}});
+        view();
+        for (const value of ['nameDesc','distillery','distilleryDesc','priceAsc','priceDesc',
+            'scoreDesc','scoreAsc','updatedDesc','updatedAsc','tastedDesc','tastedAsc']) {
+            assert.match(markup,new RegExp(`<option value="${value}"`));
+        }
+        assert.match(markup,/<option value="tastedDesc" selected>/);
+        assert.match(markup,/Ø Kaufpreis aufsteigend/);
+        state.overviewMode='bottles';
+        view();
+        assert.match(markup,/Kaufpreis aufsteigend/);
+        assert.doesNotMatch(markup,/Ø Kaufpreis aufsteigend/);
+    } finally {
+        for (const [name,value] of Object.entries(original)) {
+            if (value===undefined) delete globalThis[name]; else globalThis[name]=value;
+        }
+    }
 });

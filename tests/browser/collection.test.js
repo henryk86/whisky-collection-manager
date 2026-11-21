@@ -1130,6 +1130,7 @@ test('browser: overview quick filters list only used distilleries and combine st
             }
         }
         await open();
+        await page.locator('[data-act="toggle-collection-filters"]').click();
         assert.deepEqual(await page.locator('#filter-distillery option').allTextContents(),
             ['Alle Destillerien', 'Aberfeldy', 'Kilchoman']);
         await page.locator('#filter-distillery').selectOption(first.id);
@@ -1159,21 +1160,19 @@ test('browser: overview quick filters list only used distilleries and combine st
             await page.setViewportSize({ width, height: 850 });
             const overflow = await page.evaluate(() => document.body.scrollWidth - document.body.getBoundingClientRect().width);
             assert.ok(overflow <= 1, `${width}px: overview quick filters must not overflow`);
-            const layout = await page.locator('.toolbar').evaluate(toolbar => {
-                const controls = [...toolbar.children];
-                return controls.map(element => ({
-                    tag: element.tagName, top: element.getBoundingClientRect().top,
-                    height: element.getBoundingClientRect().height,
+            const layout = await page.locator('.collection-filters').evaluate(toolbar => {
+                const controls = [...toolbar.querySelectorAll('input#search, select, button.btn')];
+                return controls.filter(element => element.getBoundingClientRect().height > 0).map(element => ({
+                    id:element.id || element.dataset.act, top:element.getBoundingClientRect().top,
+                    height:element.getBoundingClientRect().height,
                 }));
             });
-            assert.deepEqual(layout.map(item => item.tag),
-                ['INPUT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'BUTTON'],
-                'search, six quick filters (including rating), and the view switch');
+            assert.equal(layout.length, 9, 'search, six selectors, expand and view buttons are available');
             assert.ok(layout.every(item => Math.abs(item.height - 44) <= 1),
-                `${width}px: all controls including view switch must be 44px high`);
+                `${width}px: all visible controls including More filters must be 44px high`);
             if (width === 1366) {
-                assert.ok(layout[1].top > layout[0].top,
-                    'narrow desktop: search uses its own row so no filter caption is truncated');
+                assert.equal(layout[0].top, layout[1].top, 'desktop: search and sort share the top row');
+                assert.ok(layout[2].top > layout[0].top, 'desktop: status is on the second row');
             }
         }
     });
@@ -1294,5 +1293,135 @@ test('browser: concurrent bottle submits create once; HTTP POST failure allows a
         assert.equal(postCount, 2);
         const records = (await requestJson(base, '/api/collection')).data.bottlings[0].bottles;
         assert.equal(records.filter(b => b.inventoryNumber === '009201').length, 1);
+    });
+});
+
+test('browser: cards and table preference survive a full reload in both directions', async () => {
+    if (domOnly) return; // F5 must reload the actual application, not the DOM-only harness.
+    await session(async ({base,page,open}) => {
+        await seed(base, '092310');
+        await open();
+        await page.locator('.whisky-card').waitFor();
+        assert.equal(await page.locator('.collection-table-wrap').count(), 0);
+        await page.locator('[data-act="toggle-view"]').click();
+        await page.locator('.collection-table-wrap').waitFor();
+        assert.equal(await page.evaluate(() => localStorage.getItem('whisky-collection-view')), 'table');
+        await page.reload();
+        await page.locator('.collection-table-wrap').waitFor();
+        assert.equal(await page.locator('.whisky-card').count(), 0, 'reload retains table view');
+        await page.locator('[data-act="toggle-view"]').click();
+        await page.locator('.whisky-card').waitFor();
+        assert.equal(await page.evaluate(() => localStorage.getItem('whisky-collection-view')), 'cards');
+        await page.reload();
+        await page.locator('.whisky-card').waitFor();
+        assert.equal(await page.locator('.collection-table-wrap').count(), 0, 'reload retains card view');
+    });
+});
+
+test('browser: collection table columns are configurable and header sorting updates the sort selector', async () => {
+    await session(async ({base,page,open}) => {
+        for (const [name,inventoryNumber] of [['Column Alpha','092311'],['Column Zulu','092312']]) {
+            const created = await requestJson(base,'/api/bottlings','POST',{
+                name,firstBottle:{inventoryNumber,status:'closed'},
+            });
+            assert.equal(created.status,201);
+        }
+        await open();
+        await page.locator('[data-act="toggle-view"]').click();
+        assert.equal(await page.locator('thead [data-column="rating"]').count(),1);
+        assert.equal(await page.locator('thead [data-column="editing"]').count(),0);
+        // Playwright scrolls the document to bring the summary into view when
+        // clicking it. Compare DOCUMENT coordinates, not viewport coordinates:
+        // the latter change on scroll even when the overlay causes no reflow.
+        const tableTopBefore = await page.locator('.collection-table-wrap').evaluate(table =>
+            table.getBoundingClientRect().top + window.scrollY);
+        await page.locator('.collection-table-columns > summary').click();
+        const columnMenuMetrics = await page.locator('.collection-table-columns-menu').evaluate(menu => {
+            const choices = [...menu.querySelectorAll('.collection-table-column-choice')];
+            const first = choices[0].getBoundingClientRect();
+            const second = choices[1].getBoundingClientRect();
+            const checkbox = choices[0].querySelector('input').getBoundingClientRect();
+            return {rowHeight:first.height, rowGap:second.top-first.bottom,
+                checkboxWidth:checkbox.width, checkboxHeight:checkbox.height,
+                accentColor:getComputedStyle(choices[0].querySelector('input')).accentColor,
+                menuPosition:getComputedStyle(menu).position};
+        });
+        assert.equal(columnMenuMetrics.menuPosition,'absolute', 'the columns picker floats over the table');
+        assert.equal(await page.locator('.collection-table-wrap').evaluate(table =>
+            table.getBoundingClientRect().top + window.scrollY),tableTopBefore,
+            'opening the picker does not push the table down');
+        assert.ok(columnMenuMetrics.rowHeight <= 38, 'column options are compact rows');
+        assert.ok(columnMenuMetrics.rowGap <= 5, 'column options have a small consistent gap');
+        assert.ok(columnMenuMetrics.checkboxWidth <= 18 && columnMenuMetrics.checkboxHeight <= 18,
+            'checkboxes are not enlarged by global input styles');
+        await page.locator('[data-collection-column="editing"]').focus();
+        assert.equal(await page.locator('[data-collection-column="editing"]').evaluate(input =>
+            getComputedStyle(input).outlineStyle), 'solid', 'checkbox uses the app-standard keyboard focus');
+        assert.notEqual(columnMenuMetrics.accentColor, 'auto', 'checkbox uses the app accent color');
+        await page.locator('[data-collection-column="editing"]').check();
+        assert.equal(await page.locator('thead [data-column="editing"]').count(),1);
+        await page.locator('[data-collection-column="rating"]').uncheck();
+        assert.equal(await page.locator('thead [data-column="rating"]').count(),0);
+        // The picker remains open after a checkbox change, but floats above
+        // the table without ever moving the table down.
+        await page.locator('[data-collection-column="tasted"]').check();
+        assert.equal(await page.locator('.collection-table-columns[open]').count(),1);
+        const pickerOverlay = await page.locator('.collection-table-columns-menu').evaluate(menu => {
+            const menuRect=menu.getBoundingClientRect();
+            const triggerRect=menu.closest('details').querySelector('summary').getBoundingClientRect();
+            const tableRect=document.querySelector('.collection-table-wrap').getBoundingClientRect();
+            return {menuTop:menuRect.top,menuBottom:menuRect.bottom,
+                tableTop:tableRect.top,tableDocumentTop:tableRect.top + window.scrollY,
+                triggerBottom:triggerRect.bottom};
+        });
+        assert.ok(pickerOverlay.menuTop >= pickerOverlay.triggerBottom,
+            'column picker opens immediately below its trigger');
+        assert.ok(pickerOverlay.menuBottom > pickerOverlay.tableTop,
+            'column picker overlays the table rather than pushing it away');
+        assert.equal(pickerOverlay.tableDocumentTop,tableTopBefore,
+            'checkbox changes also preserve the table position');
+        // Reproduce the reported bug: close the picker manually after adding
+        // columns, then click the last visible header. It must stay CLOSED.
+        await page.locator('.collection-table-columns > summary').click();
+        assert.equal(await page.locator('.collection-table-columns[open]').count(),0);
+        await page.locator('thead th:last-child .collection-table-sort').click();
+        assert.equal(await page.locator('#filter-sort').inputValue(),'tastedDesc');
+        assert.equal(await page.locator('.collection-table-columns[open]').count(),0,
+            'sorting the last header must not reopen the manually closed picker');
+        // Switching from last-tasted sorting to name starts with A-Z.
+        // Only another click on the SAME header reverses the direction.
+        await page.locator('thead [data-column="name"]').click();
+        assert.equal(await page.locator('#filter-sort').inputValue(),'name');
+        assert.equal(await page.locator('thead th[aria-sort="ascending"] [data-column="name"]').count(),1);
+        assert.match(await page.locator('tbody tr').first().innerText(),/Column Alpha/);
+        await page.locator('thead [data-column="name"]').click();
+        assert.equal(await page.locator('#filter-sort').inputValue(),'nameDesc');
+        assert.equal(await page.locator('thead th[aria-sort="descending"] [data-column="name"]').count(),1);
+        assert.match(await page.locator('tbody tr').first().innerText(),/Column Zulu/);
+        await page.locator('[data-collection-mode="bottles"]').click();
+        assert.equal(await page.locator('thead [data-column="rating"]').count(),1,
+            'bottle mode keeps its own default columns');
+        await page.locator('thead [data-column="inventory"]').click();
+        assert.equal(await page.locator('#filter-sort').inputValue(),'inventoryAsc');
+        await page.locator('thead [data-column="inventory"]').click();
+        assert.equal(await page.locator('#filter-sort').inputValue(),'inventoryDesc');
+        if (!domOnly) {
+            // The URL retains ?mode=bottles across F5. Verify the current
+            // bottle table first; only then switch back to bottlings to check
+            // the independently stored bottling column selection.
+            assert.match(new URL(page.url()).search, /mode=bottles/);
+            await page.reload();
+            await page.locator('.collection-table-wrap').waitFor();
+            assert.equal(await page.locator('[data-collection-mode="bottles"]').getAttribute('aria-pressed'),'true');
+            assert.equal(await page.locator('thead [data-column="inventory"]').count(),1,
+                'the selected bottle columns survive a page reload');
+            assert.equal(await page.locator('thead [data-column="rating"]').count(),1,
+                'bottle mode retains its separate rating column');
+            await page.locator('[data-collection-mode="bottlings"]').click();
+            assert.equal(await page.locator('thead [data-column="editing"]').count(),1,
+                'the selected bottling columns survive a page reload');
+            assert.equal(await page.locator('thead [data-column="rating"]').count(),0,
+                'the hidden bottling rating remains hidden');
+        }
     });
 });

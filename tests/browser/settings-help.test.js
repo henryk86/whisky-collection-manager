@@ -108,12 +108,13 @@ test('browser: consistent section layout, readable help text and intentional fil
                 const range = document.createRange();
                 range.selectNodeContents(hero);
                 const lines = [...range.getClientRects()];
-                const tops = [...document.querySelector('.collection-filters').children]
-                    .map(node => Math.round(node.getBoundingClientRect().top));
+                const top = selector => Math.round(document.querySelector(selector).getBoundingClientRect().top);
                 return {text:hero.textContent, lines:lines.length,
                     right:Math.max(...lines.map(rect => rect.right)),
                     heroRight:document.querySelector('.collection-hero').getBoundingClientRect().right,
-                    tops, scroll:document.documentElement.scrollWidth};
+                    tops:{search:top('#search'),sort:top('#filter-sort'),status:top('#filter-status'),
+                        completion:top('#filter-completion'),toggle:top('.collection-filter-toggle'),
+                        view:top('.collection-filter-view')},scroll:document.documentElement.scrollWidth};
             });
             assert.equal(home.text, 'Von der besonderen Abfüllung bis zum letzten Dram. Entdecke, erfasse und verwalte deine Whisky-Sammlung.');
             assert.ok(home.scroll <= width, `${width}px: collection must not overflow`);
@@ -122,12 +123,11 @@ test('browser: consistent section layout, readable help text and intentional fil
                 assert.ok(home.right <= home.heroRight + 1, `${width}px: complete text must remain inside banner`);
             }
             if (width === 1040) {
-                assert.equal(home.tops[1], home.tops[2]);
-                assert.equal(home.tops[2], home.tops[3]);
-                assert.equal(home.tops[4], home.tops[5]);
-                assert.equal(home.tops[5], home.tops[6]);
-                assert.ok(home.tops[0] < home.tops[1] && home.tops[1] < home.tops[4],
-                    'tablet: search and two equally sized filter rows');
+                assert.equal(home.tops.search, home.tops.sort, 'tablet: search and sort share the first row');
+                assert.equal(home.tops.status, home.tops.completion);
+                assert.equal(home.tops.completion, home.tops.toggle);
+                assert.equal(home.tops.toggle, home.tops.view);
+                assert.ok(home.tops.search < home.tops.status, 'tablet: two compact control rows');
             }
             await page.locator('[data-act="toggle-menu"]').click();
             await page.locator('[data-act="goto-help"]').click();
