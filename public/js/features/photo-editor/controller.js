@@ -33,6 +33,8 @@ const canvasFromImage = (image, maxSide) => {
 const imageDataFromCanvas = canvas => canvas.getContext('2d', {willReadFrequently: true})
     .getImageData(0, 0, canvas.width, canvas.height);
 const clonePixels = pixels => new ImageData(new Uint8ClampedArray(pixels.data), pixels.width, pixels.height);
+// Browsers may return image/png here when WebP encoding is unavailable; the API
+// accepts that safe fallback and stores the real extension from the bytes.
 const blobFromCanvas = (canvas, quality = .97) => new Promise((resolve, reject) =>
     canvas.toBlob(blob => blob ? resolve(blob) : reject(Error(t('photoEditor.error'))), 'image/webp', quality));
 const blobAsDataUrl = blob => new Promise((resolve, reject) => {

@@ -116,6 +116,14 @@ test('browser: cutout then automatic correction saves the first photo of a secon
             status:200,contentType:'text/javascript',body:fakeOrt,
         }));
         await open();
+        // Reproduce the platform's documented toBlob fallback for browsers without
+        // WebP canvas encoding (the PNG is correct, but older API validation rejected it).
+        await page.evaluate(() => {
+            const nativeToBlob = HTMLCanvasElement.prototype.toBlob;
+            HTMLCanvasElement.prototype.toBlob = function (callback, type, quality) {
+                return nativeToBlob.call(this, callback, type === 'image/webp' ? 'image/png' : type, quality);
+            };
+        });
         await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
         const secondTile = page.locator(`#bottle-${second.data.id} [data-photo-id="${secondPhoto.id}"]`);
         await secondTile.locator('[data-act="photo-editor-open"]').click();
@@ -135,6 +143,7 @@ test('browser: cutout then automatic correction saves the first photo of a secon
         assert.equal(edited.cutout?.selected,true);
         assert.equal(edited.cutout.adjustment?.settings.clarity,9);
         assert.equal(edited.cutout.adjustment.sourcePath,edited.cutout.path);
+        assert.match(edited.cutout.adjustment.path,/\.png$/, 'PNG fallback is saved instead of rejected');
         assert.equal(saved.find(item => item.id === bottle.id).photos[0].id,firstPhoto.id);
         assert.equal(saved.find(item => item.id === bottle.id).photos[0].cutout,undefined);
     });

@@ -216,6 +216,7 @@
   "api.errors.duplicateStorageID": "Duplicate storage ID.",
   "api.errors.duplicateTastingID": "Duplicate tasting ID.",
   "api.errors.editedImageMustUseWebPFormat": "Edited image must use WebP format.",
+  "api.errors.editedImageMustUseWebPOrPNGFormat": "Edited image must use WebP or PNG format.",
   "api.errors.fieldOutOfRange": "{field} is out of the valid range.",
   "api.errors.fileContentsDoNotMatchTheFileType": "File contents do not match the file type.",
   "api.errors.fileExceeds15MB": "File exceeds 15 MB.",

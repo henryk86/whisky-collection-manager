@@ -216,6 +216,7 @@
   "api.errors.duplicateStorageID": "Doppelte Lager-ID.",
   "api.errors.duplicateTastingID": "Doppelte Verkostungs-ID",
   "api.errors.editedImageMustUseWebPFormat": "Bearbeitetes Bild muss WebP sein.",
+  "api.errors.editedImageMustUseWebPOrPNGFormat": "Bearbeitetes Bild muss WebP oder PNG sein.",
   "api.errors.fieldOutOfRange": "{field} liegt außerhalb des gültigen Bereichs.",
   "api.errors.fileContentsDoNotMatchTheFileType": "Dateiinhalt passt nicht zum Dateityp.",
   "api.errors.fileExceeds15MB": "Datei zu gross (max. 15 MB)",

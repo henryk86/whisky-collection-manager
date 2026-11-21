@@ -152,7 +152,7 @@ export function validate(collection) {
             }
             const verifyAdjustment = (edit, expectedSource) => {
                 assert(isObject(edit) && validImagePath(edit.path) &&
-                    edit.path.startsWith(`images/${bottle.id}/`) && edit.path.endsWith('.webp') &&
+                    edit.path.startsWith(`images/${bottle.id}/`) && /\.(?:webp|png)$/.test(edit.path) &&
                     edit.path !== photo.path && edit.path !== photo.cutout?.path &&
                     edit.sourcePath === expectedSource, 'Ungültige Bildkorrektur', 400, "api.errors.invalidPhotoAdjustment");
                 try { validatePhotoAdjustments(edit.settings); }
