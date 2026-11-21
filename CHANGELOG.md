@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.0 - 2026-11-21
+
+- test: verify column configuration persistence across page reloads in collection table
+- fix: persist collection view and correct sorting test
+- test: improve collection table and layout tests for visibility and positioning
+- fix: fix toolbar visibility checks and enhance advanced filter functionality in tests
+- feat: enhance collection table with configurable columns and sorting
+- feat: enhance collection filters with toggle functionality and improved UI
+
 ## 1.9.0 - 2026-11-21
 
 - feat: add emptied date tracking for bottles, including validation and export support
