@@ -2,7 +2,7 @@ import { latestTasting } from '../../../shared/tasting-records.js';
 import { displayPhotoPath } from '../../../shared/photo-images.js';
 import { t } from '../i18n/index.js';
 const bottleStatusText = status => t(({closed:'home.status.closed',open:'analytics.inventory.openedStatus',empty:'home.status.empty'})[status] || 'features.distilleries.unknownStatus');
-const FACT_KEYS = Object.freeze({'Whisky-Kategorie':'forms.bottling.whiskyCategory','Marke':'forms.bottling.brandOrProductLine','Beteiligte Destillerien':'forms.bottling.participatingDistilleries','Zusammensetzung vollständig':'detail.facts.labelCompositionComplete','Alter':'forms.bottling.ageYears','Alkoholgehalt':'forms.bottling.abv','Erscheinungsjahr':'forms.bottling.releaseYear','Nennfüllmenge laut Abfüllung':'forms.bottling.nominalVolume','Abfüller':'forms.bottling.bottler','Region':'detail.facts.labelRegion','Land':'detail.facts.labelCountry','Fasstyp':'forms.bottling.caskType','Destilliert am':'forms.bottling.distillationDate','Abgefüllt am':'forms.bottling.bottlingDate','Fassnummer':'forms.bottling.caskNumber','Limitierte Auflage':'detail.facts.labelLimitedEdition'});
+const FACT_KEYS = Object.freeze({'Whisky-Kategorie':'forms.bottling.whiskyCategory','Marke':'forms.bottling.brandOrProductLine','Beteiligte Destillerien':'forms.bottling.participatingDistilleries','Zusammensetzung vollständig':'detail.facts.labelCompositionComplete','Alter':'forms.bottling.ageYears','Alkoholgehalt':'forms.bottling.abv','Erscheinungsjahr':'forms.bottling.releaseYear','Nennfüllmenge laut Abfüllung':'forms.bottling.nominalVolume','Abfüller':'forms.bottling.bottler','Region':'detail.facts.labelRegion','Land':'detail.facts.labelCountry','Fasstyp':'forms.bottling.caskType','Destilliert am':'forms.bottling.distillationDate','Abgefüllt am':'forms.bottling.bottlingDate','Fassnummer':'forms.bottling.caskNumber','Limitierte Auflage':'detail.facts.labelLimitedEdition','Whiskybase-ID':'forms.bottling.whiskybaseId'});
 const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
 import { escapeHtml } from '../ui/dom.js';
 import { editIcon, deleteIcon, locationIcon, newBottlingIcon, addActionLabel } from '../ui/action-icons.js';
@@ -84,11 +84,14 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                     </div>
                     <h3 class="bottle-entry-data-title">${t('detail.sections.bottleData')}</h3>
                     <dl class="bottle-entry-facts">
+                        <div><dt>${t('forms.bottle.type')}</dt><dd>${t(entry.volumeType === 'sample' ? 'forms.bottle.sampleBottle' : 'forms.bottle.normalBottle')}</dd></div>
                         ${entry.purchaseDate ? `<div><dt>${t('detail.meta.purchaseLabel')}</dt><dd>${escapeHtml(formatDate(entry.purchaseDate))}</dd></div>` : ''}
+                        ${entry.openedAt ? `<div><dt>${t('forms.bottle.openingDate')}</dt><dd>${escapeHtml(formatDate(entry.openedAt))}</dd></div>` : ''}
                         ${entry.purchasePrice != null && entry.purchasePrice !== '' ? `<div><dt>${t('detail.meta.priceLabel')}</dt><dd>${escapeHtml(entry.purchasePrice)} ${escapeHtml(entry.currency || 'EUR')}</dd></div>` : ''}
                         ${storageName != null ? `<div><dt>${t('detail.fields.storageLocation')}</dt><dd>${storageShelfId ? `<button class="inline-link" data-act="warehouse-focus" data-id="${escapeHtml(storageShelfId)}">${escapeHtml(storageName)}</button>` : escapeHtml(storageName)}</dd></div>` : ''}
                         ${entry.volumeMl != null ? `<div><dt>${t('detail.meta.volumeLabel')}</dt><dd>${escapeHtml(entry.volumeMl)} ml</dd></div>` : ''}
                         ${entry.merchant ? `<div><dt>${t('detail.meta.merchantLabel')}</dt><dd>${escapeHtml(entry.merchant)}</dd></div>` : ''}
+                        ${hasBottlingDetail(entry.comment) ? `<div class="bottle-entry-comment"><dt>${t('forms.bottle.personalComment')}</dt><dd>${escapeHtml(entry.comment)}</dd></div>` : ''}
                     </dl>
                 </div>
                 <section class="bottle-entry-gallery" aria-label="${t('detail.sections.bottlePhotos', {count:entryPhotos.length})}">

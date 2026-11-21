@@ -95,6 +95,51 @@ test('browser: adjustments followed by cutting create one corrected editable cut
 
 
 
+test('browser: cutout then automatic correction saves the first photo of a second physical bottle', async () => {
+    await session(async ({base,page,open}) => {
+        const {bottling,bottle} = await seed(base,'CUT-1');
+        const second = await requestJson(base,'/api/bottles','POST',{
+            bottlingId:bottling.id,inventoryNumber:'CUT-2'
+        });
+        assert.equal(second.status,201);
+        const png = 'data:image/png;base64,' + fs.readFileSync(
+            new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
+        const firstPhoto = (await requestJson(base,`/api/bottles/${bottle.id}/photos`,'POST',{image:png})).data;
+        const secondPhoto = (await requestJson(base,`/api/bottles/${second.data.id}/photos`,'POST',{image:png})).data;
+        const fakeOrt = `export const env={wasm:{}};
+            export class Tensor {constructor(type,data,shape){this.data=data;} dispose(){}}
+            export const InferenceSession={async create(){return {
+                inputNames:['input'],outputNames:['out'],async run(){const data=new Float32Array(320*320);
+                for(let y=20;y<306;y++)for(let x=106;x<213;x++)data[y*320+x]=1;
+                return {out:{data}};}}}};`;
+        await page.route('**/ai/vendor/ort.wasm.min.mjs', route => route.fulfill({
+            status:200,contentType:'text/javascript',body:fakeOrt,
+        }));
+        await open();
+        await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
+        const secondTile = page.locator(`#bottle-${second.data.id} [data-photo-id="${secondPhoto.id}"]`);
+        await secondTile.locator('[data-act="photo-editor-open"]').click();
+        await page.waitForFunction(() => !document.querySelector('[data-photo-slider="exposure"]')?.disabled);
+        await page.locator('[data-photo-editor-tab="cutout"]').click();
+        await page.locator('[data-act="photo-editor-cutout"]').click();
+        await page.waitForFunction(() => document.querySelector('[data-photo-editor-message]')?.textContent
+            ?.includes('Freistellung in der Vorschau'),null,{timeout:20000});
+        await page.locator('[data-act="photo-editor-auto"]').click();
+        await page.waitForFunction(() => Number(document.querySelector('[data-photo-slider="clarity"]')?.value) === 9);
+        await page.locator('[data-act="photo-editor-save"]').click();
+        await page.locator('[data-photo-editor]').waitFor({state:'detached',timeout:25000});
+        const saved = (await requestJson(base,'/api/collection')).data.bottlings
+            .find(item => item.id === bottling.id).bottles;
+        const edited = saved.find(item => item.id === second.data.id).photos[0];
+        assert.equal(edited.id,secondPhoto.id);
+        assert.equal(edited.cutout?.selected,true);
+        assert.equal(edited.cutout.adjustment?.settings.clarity,9);
+        assert.equal(edited.cutout.adjustment.sourcePath,edited.cutout.path);
+        assert.equal(saved.find(item => item.id === bottle.id).photos[0].id,firstPhoto.id);
+        assert.equal(saved.find(item => item.id === bottle.id).photos[0].cutout,undefined);
+    });
+});
+
 test('browser: first cutout before/after compares the uncut photo without slider edits', async () => {
     await session(async ({base,page,open}) => {
         const created = await seed(base,'CUT-BEFORE');

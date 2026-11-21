@@ -658,6 +658,8 @@
 .bottle-entry-facts dt { margin: 0; color: var(--muted); font-size: 12px; }
 .bottle-entry-facts dd { margin: 4px 0 0; font-size: 14px; font-weight: 650; overflow-wrap: anywhere; }
 .bottle-entry-facts .inline-link { font-weight: inherit; font-size: inherit; text-align: left; }
+.bottle-entry-facts > .bottle-entry-comment { grid-column: 1 / -1; }
+.bottle-entry-comment dd { white-space: pre-wrap; }
 .bottle-entry-gallery { padding-top: 16px; border-top: 1px solid var(--line); }
 .bottle-entry-gallery h4, .bottle-entry .bottle-documents h4 {
     margin: 0 0 11px;

@@ -84,12 +84,18 @@ test('browser: create a bottling, read-only bottle context, edit and photo uploa
         assert.equal(await page.locator('.bottling-context input, .bottling-context select').count(), 0);
         assert.equal(await page.locator('[name="inventoryNumber"]').count(), 1);
         await page.locator('[name="comment"]').fill('Edited from the browser');
+        await page.locator('[name="openedAt"]').fill('2026-10-18');
         await page.locator('[name="photos"]').setInputFiles({
             name: 'test.png', mimeType: 'image/png',
             buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=', 'base64'),
         });
         await page.locator('#bottle-form button[type="submit"]').click();
         await page.waitForSelector('.photo-tile');
+        const facts = await page.locator('.bottle-entry-facts').innerText();
+        assert.match(facts, /Öffnungsdatum/);
+        assert.match(facts, /18\.10\.2026/);
+        assert.match(facts, /Persönlicher Kommentar/);
+        assert.match(facts, /Edited from the browser/);
         // Photo previews must remain in this browser tab; the lightbox also
         // supports Escape, the large cover image and backdrop dismissal.
         await page.locator('.photo-tile [data-act="open-photo"]').click();
@@ -109,6 +115,7 @@ test('browser: create a bottling, read-only bottle context, edit and photo uploa
         await page.waitForSelector('.photo-lightbox-image', { state: 'detached' });
         const saved = await requestJson(base, '/api/collection');
         assert.equal(saved.data.bottlings[0].bottles[0].comment, 'Edited from the browser');
+        assert.equal(saved.data.bottlings[0].bottles[0].openedAt, '2026-10-18');
         assert.equal(saved.data.bottlings[0].bottles[0].photos.length, 1);
         assert.equal(saved.data.bottles, undefined);
     });
