@@ -24,10 +24,10 @@ test('English renders actual collection, analytics and warehouse controls, not G
         const state = {collection,overviewMode:'bottlings',view:'cards',search:'',status:'all',completion:'all',distillery:'all',volumeType:'all',sort:'name',pageNumber:1,pageSize:24};
         let home = '';
         createHomeView({state,selectors,shell:html=>{home=html}})();
-        assert.match(home,/toggle-view[^>]*>[^<]*Table</);
+        assert.match(home,/toggle-view[^>]*>[\s\S]*class="collection-filter-view-text">Table</);
         state.view='table';
         createHomeView({state,selectors,shell:html=>{home=html}})();
-        assert.match(home,/toggle-view[^>]*>[^<]*Cards</);
+        assert.match(home,/toggle-view[^>]*>[\s\S]*class="collection-filter-view-text">Cards</);
         assert.match(home,/All distilleries/);
         assert.match(home,/All statuses/);
         assert.doesNotMatch(home,/>Tabelle<|>Kacheln<|>Alle Destillerien<|>Alle Status</);

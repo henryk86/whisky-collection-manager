@@ -41,7 +41,7 @@ test('dashboard has four stats; opened and closed are independent bottle counts'
         { status: 'closed' }, { status: 'closed' }, { status: 'open' }, { status: 'empty' }
     ];
     const html = renderHome(null, [{ id: 'one', name: 'One', distilleryIds: [], bottles: [], createdAt: '2026-01-01' }], physicalBottles);
-    const stats = html.slice(html.indexOf('<div class="stats">'), html.indexOf('<div class="toolbar collection-filters">'));
+    const stats = html.slice(html.indexOf('<div class="stats">'), html.indexOf('<div class="toolbar collection-filters"'));
     assert.equal((stats.match(/class="panel stat"/g) || []).length, 4);
     assert.match(stats, /<span>Geöffnet<\/span>\s*<strong>1<\/strong>/);
     assert.match(stats, /<span>Geschlossen<\/span>\s*<strong>2<\/strong>/);
@@ -89,4 +89,15 @@ test('overview omits empty age, alcohol and year instead of showing placeholder 
     assert.doesNotMatch(abvCard, /Jahre| · 46/);
     const withZero = renderHome(null, [{ ...blank, ageYears: 0, abv: 0 }]);
     assert.match(withZero, /class="card-facts muted">0 Jahre · 0 % Vol\.<\/div>/);
+});
+
+
+test('advanced filter toggle uses the intended filter icon and a separate chevron, never a text glyph', () => {
+    const html = renderHome(null);
+    const toggle = html.match(/<button[^>]*class="btn collection-filter-toggle"[^>]*>[\s\S]*?<\/button>/)?.[0];
+    assert.ok(toggle, 'advanced filter toggle exists');
+    assert.match(toggle, /class="collection-filter-icon"/);
+    assert.match(toggle, /class="collection-filter-chevron"/);
+    assert.match(toggle, /aria-expanded="false"/);
+    assert.doesNotMatch(toggle, /⌄/);
 });

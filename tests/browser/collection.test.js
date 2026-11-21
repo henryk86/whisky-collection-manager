@@ -1130,6 +1130,7 @@ test('browser: overview quick filters list only used distilleries and combine st
             }
         }
         await open();
+        await page.locator('[data-act="toggle-collection-filters"]').click();
         assert.deepEqual(await page.locator('#filter-distillery option').allTextContents(),
             ['Alle Destillerien', 'Aberfeldy', 'Kilchoman']);
         await page.locator('#filter-distillery').selectOption(first.id);
@@ -1159,21 +1160,19 @@ test('browser: overview quick filters list only used distilleries and combine st
             await page.setViewportSize({ width, height: 850 });
             const overflow = await page.evaluate(() => document.body.scrollWidth - document.body.getBoundingClientRect().width);
             assert.ok(overflow <= 1, `${width}px: overview quick filters must not overflow`);
-            const layout = await page.locator('.toolbar').evaluate(toolbar => {
-                const controls = [...toolbar.children];
-                return controls.map(element => ({
-                    tag: element.tagName, top: element.getBoundingClientRect().top,
-                    height: element.getBoundingClientRect().height,
+            const layout = await page.locator('.collection-filters').evaluate(toolbar => {
+                const controls = [...toolbar.querySelectorAll('input#search, select, button.btn')];
+                return controls.filter(element => element.getBoundingClientRect().height > 0).map(element => ({
+                    id:element.id || element.dataset.act, top:element.getBoundingClientRect().top,
+                    height:element.getBoundingClientRect().height,
                 }));
             });
-            assert.deepEqual(layout.map(item => item.tag),
-                ['INPUT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'SELECT', 'BUTTON'],
-                'search, six quick filters (including rating), and the view switch');
+            assert.equal(layout.length, 9, 'search, six selectors, expand and view buttons are available');
             assert.ok(layout.every(item => Math.abs(item.height - 44) <= 1),
-                `${width}px: all controls including view switch must be 44px high`);
+                `${width}px: all visible controls including More filters must be 44px high`);
             if (width === 1366) {
-                assert.ok(layout[1].top > layout[0].top,
-                    'narrow desktop: search uses its own row so no filter caption is truncated');
+                assert.equal(layout[0].top, layout[1].top, 'desktop: search and sort share the top row');
+                assert.ok(layout[2].top > layout[0].top, 'desktop: status is on the second row');
             }
         }
     });

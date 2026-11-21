@@ -691,6 +691,7 @@ test('browser: phone detail title, mobile analytics selector and period controls
         assert.ok(detail.actions.right <= detail.parent.right + 2, 'action buttons must not overflow');
 
         await page.locator('[data-act="back"]').first().click();
+        await page.locator('[data-act="toggle-collection-filters"]').click();
         const toolbarHeights = await page.evaluate(() => [
             '#search', '#filter-status', '#filter-completion', '#filter-sort',
             '#filter-distillery', '#filter-volume-type', '[data-act="toggle-view"]',

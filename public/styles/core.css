@@ -1406,34 +1406,69 @@ tr.clickable:hover {
     }
 }
 
-/* Collection quick filters keep regular, intentional rows at every width.
-   The longer translated select labels need visibly more room than the global
-   toolbar defaults, otherwise options like "Alle Bewertungen" are clipped. */
+/* Collection filters: compact primary controls with collapsible advanced
+   filters. Width-dependent placement never changes the actual filter values. */
 .collection-filters {
     display: grid;
-    grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(130px, 1fr)) repeat(3, minmax(145px, 1.12fr)) auto;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(150px,190px);
+    gap: 9px;
     align-items: center;
 }
-.collection-filters input[type="search"],
+.collection-filters #search,
 .collection-filters select,
-.collection-filters [data-act="toggle-view"] {
+.collection-filters button.btn {
     box-sizing: border-box;
     width: 100%;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    line-height: normal;
+    margin: 0;
     min-width: 0;
     max-width: none;
-    flex: initial;
+    padding-block: 0;
+    font-size: 13px;
 }
-.collection-filters select { max-width: none; }
-@media(max-width:1380px) {
-    .collection-filters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .collection-filters input[type="search"] { grid-column: 1 / -1; }
+.collection-filters #search { grid-column: 1 / 4; grid-row: 1; }
+.collection-filters #filter-sort { grid-column: 4; grid-row: 1; }
+.collection-filters #filter-status { grid-column: 1; grid-row: 2; }
+.collection-filters #filter-completion { grid-column: 2; grid-row: 2; }
+.collection-filters .collection-filter-toggle { grid-column: 3; grid-row: 2; width: 100%; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.collection-filters .collection-filter-view { grid-column: 4; grid-row: 2; width: 100%; min-width: 0; white-space: nowrap; }
+.collection-filter-toggle-mobile { display: none; }
+.collection-filter-icon, .collection-filter-chevron { display: inline-block; flex: 0 0 auto; width: 17px; height: 17px; }
+.collection-filter-chevron { width: 16px; height: 16px; margin-left: 3px; transition: transform .16s ease; }
+.collection-filters[data-expanded="true"] .collection-filter-chevron { transform: rotate(180deg); }
+.collection-filter-extra { grid-column: 1 / -1; display: none; flex-wrap: wrap; gap: 9px; align-items: center; }
+.collection-filters[data-expanded="true"] .collection-filter-extra { display: flex; }
+.collection-filter-extra select { flex: 0 1 200px; }
+.collection-filter-active { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+.collection-filter-chip { display: inline-flex; gap: 8px; align-items: center; min-height: 29px; padding: 4px 9px; border: 1px solid var(--gold); border-radius: 16px; background: var(--paper); color: var(--ink); font-size: 11px; cursor: pointer; max-width: 100%; overflow-wrap: anywhere; }
+.collection-filter-chip span { font-size: 16px; line-height: 1; }
+.collection-filter-chip:hover { background: color-mix(in srgb,var(--gold) 12%,var(--paper)); }
+.collection-filter-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (max-width: 767px) {
+    .collection-filters { grid-template-columns: minmax(0,1fr) minmax(0,1fr) 44px; gap: 8px; }
+    .collection-filters #search { grid-column: 1 / -1; grid-row: 1; }
+    .collection-filters #filter-sort { grid-column: 2; grid-row: 2; }
+    .collection-filters .collection-filter-toggle { grid-column: 1; grid-row: 2; min-width: 0; width: 100%; }
+    .collection-filter-toggle-desktop { display: none; }
+    .collection-filter-toggle-mobile { display: inline; }
+    .collection-filters .collection-filter-view { grid-column: 3; grid-row: 2; width: 44px; min-width: 44px; padding: 0; }
+    .collection-filter-view-text { display: none; }
+    .collection-filters #filter-status,
+    .collection-filters #filter-completion { display: none; grid-column: 1 / -1; }
+    .collection-filters #filter-status { grid-row: 3; }
+    .collection-filters #filter-completion { grid-row: 4; }
+    .collection-filters[data-expanded="true"] #filter-status,
+    .collection-filters[data-expanded="true"] #filter-completion { display: block; }
+    .collection-filter-extra { grid-row: 5; }
+    .collection-filter-extra select { flex: 1 1 100%; }
+    .collection-filter-active { grid-row: 6; }
 }
-@media(max-width:1200px) {
-    .collection-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .collection-filters input[type="search"] { grid-column: 1 / -1; }
+@media (prefers-reduced-motion: reduce) {
+    .collection-filter-chevron { transition: none; }
 }
-@media(max-width:520px) { .collection-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media(max-width:340px) { .collection-filters { grid-template-columns: minmax(0, 1fr); } }
 
 /* iOS Safari: only the foreground dialog may pan while a modal is open. */
 .overlay { overscroll-behavior:contain; }

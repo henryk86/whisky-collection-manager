@@ -321,7 +321,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
     root.addEventListener('click', async (event) => {
         const mapButton = event.target.closest?.('[data-map-focus], [data-map-page], [data-map-bottling], [data-map-edit]');
         if (state.page === 'map' && mapButton) { mapView.handleClick(mapButton); return; }
-        const overviewButton = event.target.closest?.('[data-collection-mode], [data-page-to]');
+        const overviewButton = event.target.closest?.('[data-collection-mode], [data-page-to], [data-act="toggle-collection-filters"], [data-reset-collection-filter]');
         if (overviewButton && state.page === 'home') { home.handleClick(overviewButton); return; }
         const button = event.target.closest('[data-act]');
         if (!button || button.disabled) {

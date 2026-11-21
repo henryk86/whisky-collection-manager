@@ -76,6 +76,7 @@ export function createHomeView({ state, selectors, shell }) {
     const { allBottles, bottles, coverPhoto, distilleryNames } = selectors;
     let activeList = [];
     let activePageSize = 1;
+    let filtersExpanded = false;
     function updatePageUrl(replace = false) {
         const url = homePageUrl(state.pageNumber, state.overviewMode);
         if (location.pathname + location.search !== url) {
@@ -92,6 +93,22 @@ export function createHomeView({ state, selectors, shell }) {
     }
     function handleClick(button) {
         if (state.page !== 'home') return;
+        if (button.dataset.act === 'toggle-collection-filters') {
+            filtersExpanded = !filtersExpanded;
+            const toolbar = document.querySelector('.collection-filters');
+            if (toolbar) toolbar.dataset.expanded = String(filtersExpanded);
+            button.setAttribute('aria-expanded', String(filtersExpanded));
+            return;
+        }
+        if (button.dataset.resetCollectionFilter) {
+            const key = button.dataset.resetCollectionFilter;
+            if (!['status','completion','distillery','rating','volumeType'].includes(key)) return;
+            state[key] = 'all';
+            state.pageNumber = 1;
+            updatePageUrl(true);
+            home();
+            return;
+        }
         if (button.dataset.collectionMode) {
             if (state.overviewMode === button.dataset.collectionMode) return;
             state.overviewMode = button.dataset.collectionMode;
@@ -255,37 +272,69 @@ export function createHomeView({ state, selectors, shell }) {
     <strong>${open}</strong>
     </div>
     </div>
-    <div class="toolbar collection-filters">
-    <input type="search" id="search" aria-label="${t("home.filters.searchCollection")}" placeholder="${t("home.filters.searchPlaceholder")}" value="${escapeHtml(state.search)}">
-    <select id="filter-status" aria-label="${t("forms.bottle.status")}">
-    <option value="all">${t("home.filters.allStatuses")}</option>${Object.entries(bottleStatusLabels).map(([k, v]) => `<option value="${k}" ${state.status === k ? 'selected' : ''}>${statusText(k)}</option>`).join('')}</select>
-    <select id="filter-completion" aria-label="${t("home.filters.completeness")}">
-    <option value="all">${t("home.filters.allEntries")}</option>
-    <option value="incomplete" ${state.completion === 'incomplete' ? 'selected' : ''}>${t("detail.status.incomplete")}</option>
-    <option value="complete" ${state.completion === 'complete' ? 'selected' : ''}>${t("detail.status.complete")}</option>
+    ${(() => {
+        const distillery = distilleries.find(item => item.id === state.distillery);
+        const rating = state.rating === 'unrated' ? t('home.filters.unrated') :
+            ['1','2','3','4','5'].includes(state.rating) ? t('home.filters.ratingRange', {
+                from:state.rating === '1' ? '0' : `${(Number(state.rating)-1)*20},1`,
+                to:Number(state.rating)*20
+            }) : null;
+        const active = [
+            ['status',state.status !== 'all' ? statusText(state.status) : null,t('forms.bottle.status')],
+            ['completion',state.completion === 'complete' ? t('detail.status.complete') : state.completion === 'incomplete' ? t('detail.status.incomplete') : null,t('home.filters.completeness')],
+            ['distillery',distillery?.name,t('home.filters.filterDistillery')],
+            ['rating',rating,t('home.filters.filterRating')],
+            ['volumeType',state.volumeType === 'sample' ? t('analytics.inventory.samples') : state.volumeType === 'standard' ? t('home.inventory.standardBottles') : null,t('home.filters.filterBottleType')],
+        ].filter(([,value]) => value);
+        return `<div class="toolbar collection-filters" data-expanded="${filtersExpanded}" aria-label="${escapeHtml(t('home.filters.filters'))}">
+    <input type="search" id="search" aria-label="${t('home.filters.searchCollection')}" placeholder="${t('home.filters.searchPlaceholder')}" value="${escapeHtml(state.search)}">
+    <select id="filter-sort" aria-label="${t('home.sort.title')}">
+    ${[
+        ['name','home.sort.nameAscending'],
+        ['nameDesc','home.sort.nameDescending'],
+        ['distillery','home.sort.distilleryAscending'],
+        ['distilleryDesc','home.sort.distilleryDescending'],
+        ['priceAsc',mode === 'bottles' ? 'home.sort.priceAscending' : 'home.sort.averagePriceAscending'],
+        ['priceDesc',mode === 'bottles' ? 'home.sort.priceDescending' : 'home.sort.averagePriceDescending'],
+        ['scoreDesc','home.sort.scoreDescending'],
+        ['scoreAsc','home.sort.scoreAscending'],
+        ['updatedDesc','home.sort.updatedDescending'],
+        ['updatedAsc','home.sort.updatedAscending'],
+        ['tastedDesc','home.sort.tastedDescending'],
+        ['tastedAsc','home.sort.tastedAscending'],
+        ['newest','home.sort.newestFirst'],
+        ['age','home.sort.ageDescending'],
+        ['year','forms.bottling.releaseYear'],
+    ].map(([value,key]) => `<option value="${value}" ${state.sort === value ? 'selected' : ''}>${t(key)}</option>`).join('')}
     </select>
-    <select id="filter-sort" aria-label="${t("home.sort.title")}">
-    <option value="name">${t("home.sort.nameAscending")}</option>
-    <option value="newest" ${state.sort === 'newest' ? 'selected' : ''}>${t("home.sort.newestFirst")}</option>
-    <option value="age" ${state.sort === 'age' ? 'selected' : ''}>${t("home.sort.ageDescending")}</option>
-    <option value="year" ${state.sort === 'year' ? 'selected' : ''}>${t("forms.bottling.releaseYear")}</option>
+    <select id="filter-status" aria-label="${t('forms.bottle.status')}">
+    <option value="all">${t('home.filters.allStatuses')}</option>${Object.entries(bottleStatusLabels).map(([k]) => `<option value="${k}" ${state.status === k ? 'selected' : ''}>${statusText(k)}</option>`).join('')}</select>
+    <select id="filter-completion" aria-label="${t('home.filters.completeness')}">
+    <option value="all">${t('home.filters.allEntries')}</option>
+    <option value="incomplete" ${state.completion === 'incomplete' ? 'selected' : ''}>${t('detail.status.incomplete')}</option>
+    <option value="complete" ${state.completion === 'complete' ? 'selected' : ''}>${t('detail.status.complete')}</option>
     </select>
-    <select id="filter-distillery" aria-label="${t("home.filters.filterDistillery")}">
-    <option value="all">${t("home.filters.allDistilleries")}</option>
-    ${distilleries.map(item => `<option value="${escapeHtml(item.id)}" ${state.distillery === item.id ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}
-    </select>
-    <select id="filter-rating" aria-label="${t('home.filters.filterRating')}">
-    <option value="all" ${state.rating === 'all' ? 'selected' : ''}>${t('home.filters.allRatings')}</option>
-    ${[1,2,3,4,5].map(level=>`<option value="${level}" ${state.rating === String(level) ? 'selected' : ''}>${t('home.filters.ratingRange',{from:level===1?'0':`${(level-1)*20},1`,to:level*20})}</option>`).join('')}
-    <option value="unrated" ${state.rating === 'unrated' ? 'selected' : ''}>${t('home.filters.unrated')}</option>
-    </select>
-    <select id="filter-volume-type" aria-label="${t("home.filters.filterBottleType")}">
-    <option value="all" ${state.volumeType === 'all' ? 'selected' : ''}>${t("home.filters.allBottleTypes")}</option>
-    <option value="standard" ${state.volumeType === 'standard' ? 'selected' : ''}>${t("home.inventory.standardBottles")}</option>
-    <option value="sample" ${state.volumeType === 'sample' ? 'selected' : ''}>${t("analytics.inventory.samples")}</option>
-    </select>
-    <button class="btn small" type="button" data-act="toggle-view">${state.view === 'cards' ? `☷ ${t('home.view.table')}` : `▦ ${t('home.view.cards')}`}</button>
-    </div>${pageData.pageCount > 1 ? `<div class="pagination-topline">
+    <button type="button" class="btn collection-filter-toggle" data-act="toggle-collection-filters" aria-expanded="${filtersExpanded}" aria-controls="collection-filter-extra"><svg class="collection-filter-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg><span class="collection-filter-toggle-desktop">${t('home.filters.moreFilters')}</span><span class="collection-filter-toggle-mobile">${t('home.filters.filters')}</span><svg class="collection-filter-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button class="btn collection-filter-view" type="button" data-act="toggle-view" aria-label="${state.view === 'cards' ? t('home.view.table') : t('home.view.cards')}" title="${state.view === 'cards' ? t('home.view.table') : t('home.view.cards')}"><span aria-hidden="true">${state.view === 'cards' ? '☷' : '▦'}</span> <span class="collection-filter-view-text">${state.view === 'cards' ? t('home.view.table') : t('home.view.cards')}</span></button>
+    <div class="collection-filter-extra" id="collection-filter-extra" role="group" aria-label="${t('home.filters.moreFilters')}">
+        <select id="filter-distillery" aria-label="${t('home.filters.filterDistillery')}">
+        <option value="all">${t('home.filters.allDistilleries')}</option>
+        ${distilleries.map(item => `<option value="${escapeHtml(item.id)}" ${state.distillery === item.id ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}
+        </select>
+        <select id="filter-rating" aria-label="${t('home.filters.filterRating')}">
+        <option value="all" ${state.rating === 'all' ? 'selected' : ''}>${t('home.filters.allRatings')}</option>
+        ${[1,2,3,4,5].map(level=>`<option value="${level}" ${state.rating === String(level) ? 'selected' : ''}>${t('home.filters.ratingRange',{from:level===1?'0':`${(level-1)*20},1`,to:level*20})}</option>`).join('')}
+        <option value="unrated" ${state.rating === 'unrated' ? 'selected' : ''}>${t('home.filters.unrated')}</option>
+        </select>
+        <select id="filter-volume-type" aria-label="${t('home.filters.filterBottleType')}">
+        <option value="all" ${state.volumeType === 'all' ? 'selected' : ''}>${t('home.filters.allBottleTypes')}</option>
+        <option value="standard" ${state.volumeType === 'standard' ? 'selected' : ''}>${t('home.inventory.standardBottles')}</option>
+        <option value="sample" ${state.volumeType === 'sample' ? 'selected' : ''}>${t('analytics.inventory.samples')}</option>
+        </select>
+    </div>
+    ${active.length ? `<div class="collection-filter-active" aria-label="${t('home.filters.activeFilters')}">${active.map(([key,value,label]) => `<button type="button" class="collection-filter-chip" data-reset-collection-filter="${key}" aria-label="${escapeHtml(t('home.filters.removeFilter',{name:`${label}: ${value}`}))}">${escapeHtml(label)}: ${escapeHtml(value)} <span aria-hidden="true">×</span></button>`).join('')}</div>` : ''}
+    </div>`;
+    })()}${pageData.pageCount > 1 ? `<div class="pagination-topline">
         <span>${t("home.pagination.rangeSummary",{from:pageData.from,to:pageData.to,total:pageData.total,label})}</span>
         <div class="pagination-topactions">
             <button type="button" class="btn small" data-page-to="${Math.max(1, pageData.page - 1)}" ${pageData.page === 1 ? 'disabled' : ''} aria-label="${t("home.pagination.previousPageLabel")}">‹</button>
