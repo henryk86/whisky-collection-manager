@@ -57,6 +57,13 @@ test('every available column has two sort directions and toggles deterministical
     }
 });
 
+test('switching from last tasted to name starts A-Z, then flips to Z-A', () => {
+    const name = TABLE_COLUMNS.bottlings.find(column => column.id === 'name');
+    assert.equal(sortForColumn(name, 'tastedDesc'), 'name');
+    assert.equal(sortForColumn(name, 'name'), 'nameDesc');
+    assert.equal(sortForColumn(name, 'nameDesc'), 'name');
+});
+
 test('header sorts cover inventory, status, amount, stock, ABV, age, year and completion', () => {
     const entries = (mode,sort) => collectionOverviewEntries(collection,{mode,sort});
     assert.deepEqual(entries('bottles','inventoryAsc').map(e=>e.bottle.id),['a2','b1','a1']);

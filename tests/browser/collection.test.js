@@ -1296,6 +1296,28 @@ test('browser: concurrent bottle submits create once; HTTP POST failure allows a
     });
 });
 
+test('browser: cards and table preference survive a full reload in both directions', async () => {
+    if (domOnly) return; // F5 must reload the actual application, not the DOM-only harness.
+    await session(async ({base,page,open}) => {
+        await seed(base, '092310');
+        await open();
+        await page.locator('.whisky-card').waitFor();
+        assert.equal(await page.locator('.collection-table-wrap').count(), 0);
+        await page.locator('[data-act="toggle-view"]').click();
+        await page.locator('.collection-table-wrap').waitFor();
+        assert.equal(await page.evaluate(() => localStorage.getItem('whisky-collection-view')), 'table');
+        await page.reload();
+        await page.locator('.collection-table-wrap').waitFor();
+        assert.equal(await page.locator('.whisky-card').count(), 0, 'reload retains table view');
+        await page.locator('[data-act="toggle-view"]').click();
+        await page.locator('.whisky-card').waitFor();
+        assert.equal(await page.evaluate(() => localStorage.getItem('whisky-collection-view')), 'cards');
+        await page.reload();
+        await page.locator('.whisky-card').waitFor();
+        assert.equal(await page.locator('.collection-table-wrap').count(), 0, 'reload retains card view');
+    });
+});
+
 test('browser: collection table columns are configurable and header sorting updates the sort selector', async () => {
     await session(async ({base,page,open}) => {
         for (const [name,inventoryNumber] of [['Column Alpha','092311'],['Column Zulu','092312']]) {
@@ -1366,13 +1388,16 @@ test('browser: collection table columns are configurable and header sorting upda
         assert.equal(await page.locator('#filter-sort').inputValue(),'tastedDesc');
         assert.equal(await page.locator('.collection-table-columns[open]').count(),0,
             'sorting the last header must not reopen the manually closed picker');
+        // Switching from last-tasted sorting to name starts with A-Z.
+        // Only another click on the SAME header reverses the direction.
+        await page.locator('thead [data-column="name"]').click();
+        assert.equal(await page.locator('#filter-sort').inputValue(),'name');
+        assert.equal(await page.locator('thead th[aria-sort="ascending"] [data-column="name"]').count(),1);
+        assert.match(await page.locator('tbody tr').first().innerText(),/Column Alpha/);
         await page.locator('thead [data-column="name"]').click();
         assert.equal(await page.locator('#filter-sort').inputValue(),'nameDesc');
         assert.equal(await page.locator('thead th[aria-sort="descending"] [data-column="name"]').count(),1);
         assert.match(await page.locator('tbody tr').first().innerText(),/Column Zulu/);
-        await page.locator('thead [data-column="name"]').click();
-        assert.equal(await page.locator('#filter-sort').inputValue(),'name');
-        assert.match(await page.locator('tbody tr').first().innerText(),/Column Alpha/);
         await page.locator('[data-collection-mode="bottles"]').click();
         assert.equal(await page.locator('thead [data-column="rating"]').count(),1,
             'bottle mode keeps its own default columns');
@@ -1382,8 +1407,7 @@ test('browser: collection table columns are configurable and header sorting upda
         assert.equal(await page.locator('#filter-sort').inputValue(),'inventoryDesc');
         if (!domOnly) {
             await page.reload();
-            await page.locator('.whisky-card, .collection-table-wrap').first().waitFor();
-            await page.locator('[data-act="toggle-view"]').click();
+            await page.locator('.collection-table-wrap').waitFor();
             assert.equal(await page.locator('thead [data-column="editing"]').count(),1,
                 'the selected bottling columns survive a page reload');
             assert.equal(await page.locator('thead [data-column="rating"]').count(),0);

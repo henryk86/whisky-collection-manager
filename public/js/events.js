@@ -6,6 +6,7 @@ import { movePhoto } from './features/photo-order.js';
 import { bindFlightSorting } from './features/flight-order.js';
 import { routeUrl } from './navigation/routes.js';
 import { readAnalyticsDate } from './domain/analytics-period.js';
+import { saveCollectionViewPreference } from './domain/collection-view-preference.js';
 import { activateHelpTopic } from './views/help.js';
 import { activateSettingsSection } from './views/settings.js';
 import { handleFlavorRange, setFlavorFromPointer } from './ui/flavor-profile.js';
@@ -240,6 +241,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         },
         'toggle-view': () => {
             state.view = state.view === 'cards' ? 'table' : 'cards';
+            saveCollectionViewPreference(state.view);
             render();
         },
         'edit-bottling': () => editors.editBottling(),
