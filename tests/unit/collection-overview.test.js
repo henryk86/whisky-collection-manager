@@ -152,7 +152,7 @@ test('physical bottle cards use their own photo, identifier, status and volume; 
         state.view = 'table';
         view();
         assert.equal((html.match(/<tr class="clickable"/g) || []).length, 3);
-        assert.match(html, /<th>Flasche<\/th>/);
+        assert.match(html, /data-act="collection-sort-column" data-column="inventory"[^>]*>Flasche/);
         assert.match(html, /data-bottle-id="a-2"/);
         assert.match(html, /#000102/);
     } finally {

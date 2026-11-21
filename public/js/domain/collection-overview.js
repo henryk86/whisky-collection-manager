@@ -41,7 +41,7 @@ function matchingBottleText(bottle) {
 }
 
 /** All sort criteria use the underlying saved data, not formatted card labels. */
-function purchasePrice(entry) {
+export function purchasePrice(entry) {
     const bottles = entry.bottle ? [entry.bottle] : entry.bottling.bottles || [];
     const priced = bottles.filter(bottle => bottle.purchasePrice != null && bottle.purchasePrice !== ''
         && Number.isFinite(Number(bottle.purchasePrice)) && Number(bottle.purchasePrice) >= 0);
@@ -52,7 +52,7 @@ function purchasePrice(entry) {
     return {currency, value:priced.reduce((total, bottle) => total + Number(bottle.purchasePrice), 0) / priced.length};
 }
 
-function latestUpdate(entry) {
+export function latestUpdate(entry) {
     const times = [entry.bottling.updatedAt || entry.bottling.createdAt];
     if (entry.bottle) times.push(entry.bottle.updatedAt || entry.bottle.createdAt);
     else times.push(...(entry.bottling.bottles || []).map(bottle => bottle.updatedAt || bottle.createdAt));
@@ -67,11 +67,35 @@ function comparePresent(left, right, descending = false) {
     return descending ? -difference : difference;
 }
 
+function asNumber(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+}
+
+const STATUS_ORDER = Object.freeze({closed:0,open:1,empty:2});
+
 function compareEntries(left, right, sort, distilleryNames) {
     const a = left.bottling;
     const b = right.bottling;
     switch (sort) {
         case 'nameDesc': return b.name.localeCompare(a.name, 'de');
+        case 'inventoryAsc': return comparePresent(left.bottle?.inventoryNumber || null, right.bottle?.inventoryNumber || null);
+        case 'inventoryDesc': return comparePresent(left.bottle?.inventoryNumber || null, right.bottle?.inventoryNumber || null, true);
+        case 'ageAsc': return comparePresent(asNumber(a.ageYears), asNumber(b.ageYears));
+        case 'abvAsc': return comparePresent(asNumber(a.abv), asNumber(b.abv));
+        case 'abvDesc': return comparePresent(asNumber(a.abv), asNumber(b.abv), true);
+        case 'yearAsc': return comparePresent(asNumber(a.releaseYear), asNumber(b.releaseYear));
+        case 'stockAsc': return comparePresent(a.bottles?.length || 0, b.bottles?.length || 0);
+        case 'stockDesc': return comparePresent(a.bottles?.length || 0, b.bottles?.length || 0, true);
+        case 'completionAsc': return comparePresent(a.completionStatus, b.completionStatus);
+        case 'completionDesc': return comparePresent(a.completionStatus, b.completionStatus, true);
+        case 'statusAsc': return comparePresent(STATUS_ORDER[left.bottle?.status] ?? null, STATUS_ORDER[right.bottle?.status] ?? null);
+        case 'statusDesc': return comparePresent(STATUS_ORDER[left.bottle?.status] ?? null, STATUS_ORDER[right.bottle?.status] ?? null, true);
+        case 'volumeTypeAsc': return comparePresent(left.bottle?.volumeType || 'standard', right.bottle?.volumeType || 'standard');
+        case 'volumeTypeDesc': return comparePresent(left.bottle?.volumeType || 'standard', right.bottle?.volumeType || 'standard', true);
+        case 'volumeMlAsc': return comparePresent(asNumber(left.bottle?.volumeMl), asNumber(right.bottle?.volumeMl));
+        case 'volumeMlDesc': return comparePresent(asNumber(left.bottle?.volumeMl), asNumber(right.bottle?.volumeMl), true);
         case 'distillery': return String(distilleryNames(a)).localeCompare(String(distilleryNames(b)), 'de');
         case 'distilleryDesc': return String(distilleryNames(b)).localeCompare(String(distilleryNames(a)), 'de');
         case 'priceAsc':
@@ -88,8 +112,8 @@ function compareEntries(left, right, sort, distilleryNames) {
         case 'tastedDesc': return comparePresent(latestTasting(a)?.tastedOn, latestTasting(b)?.tastedOn, true);
         case 'tastedAsc': return comparePresent(latestTasting(a)?.tastedOn, latestTasting(b)?.tastedOn);
         case 'newest': return comparePresent(left.bottle?.createdAt || a.createdAt, right.bottle?.createdAt || b.createdAt, true);
-        case 'age': return comparePresent(a.ageYears, b.ageYears, true);
-        case 'year': return comparePresent(a.releaseYear, b.releaseYear, true);
+        case 'age': return comparePresent(asNumber(a.ageYears), asNumber(b.ageYears), true);
+        case 'year': return comparePresent(asNumber(a.releaseYear), asNumber(b.releaseYear), true);
         default: return 0;
     }
 }

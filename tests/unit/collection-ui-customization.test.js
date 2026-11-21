@@ -57,7 +57,7 @@ test('overview shows bottler only when distillery is missing, in cards and table
     assert.equal(bottlingOriginLabel({ ...b, bottler: '  ' }, () => 'wrong'), '');
     assert.match(renderHome(null, [b]), /class="card-kicker">Signatory Vintage/);
     const table = renderHome(null, [b], [], 'table');
-    assert.match(table, /<th>Destillerie \/ Abfüller<\/th>/);
+    assert.match(table, /data-act="collection-sort-column" data-column="distillery"[^>]*>Destillerie \/ Abfüller/);
     assert.match(table, /<td>Signatory Vintage<\/td>/);
     assert.match(renderHome(null, [{ ...b, bottler: '<script>alert(1)</script>' }]), /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
 });

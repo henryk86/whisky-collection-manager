@@ -21,8 +21,8 @@ test('the supplied SVG is used by header, favicon and home-screen icons', async 
         assert.equal(manifest.icons.length, 2);
         assert.equal(manifest.start_url, '/');
         const index = await (await fetch(context.base + '/')).text();
-        assert.match(index, /href="\/assets\/app-icon\.svg\?v=0\.23\.2"/);
-        assert.match(index, /href="\/assets\/favicon-32\.png\?v=0\.23\.2"/);
+        assert.match(index, /href="\/assets\/app-icon\.svg\?v=black-1"/);
+        assert.match(index, /href="\/assets\/favicon-32\.png\?v=black-1"/);
         assert.match(index, /rel="apple-touch-icon"[^>]*href="\/apple-touch-icon\.png\?v=0\.23\.0"/);
         assert.match(index, /name="apple-mobile-web-app-title" content="Whisky Collection Manager"/);
         const appleIcon = await fetch(context.base + '/apple-touch-icon.png');

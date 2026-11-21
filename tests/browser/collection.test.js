@@ -1295,3 +1295,93 @@ test('browser: concurrent bottle submits create once; HTTP POST failure allows a
         assert.equal(records.filter(b => b.inventoryNumber === '009201').length, 1);
     });
 });
+
+test('browser: collection table columns are configurable and header sorting updates the sort selector', async () => {
+    await session(async ({base,page,open}) => {
+        for (const [name,inventoryNumber] of [['Column Alpha','092311'],['Column Zulu','092312']]) {
+            const created = await requestJson(base,'/api/bottlings','POST',{
+                name,firstBottle:{inventoryNumber,status:'closed'},
+            });
+            assert.equal(created.status,201);
+        }
+        await open();
+        await page.locator('[data-act="toggle-view"]').click();
+        assert.equal(await page.locator('thead [data-column="rating"]').count(),1);
+        assert.equal(await page.locator('thead [data-column="editing"]').count(),0);
+        const tableTopBefore = await page.locator('.collection-table-wrap').evaluate(table =>
+            table.getBoundingClientRect().top);
+        await page.locator('.collection-table-columns > summary').click();
+        const columnMenuMetrics = await page.locator('.collection-table-columns-menu').evaluate(menu => {
+            const choices = [...menu.querySelectorAll('.collection-table-column-choice')];
+            const first = choices[0].getBoundingClientRect();
+            const second = choices[1].getBoundingClientRect();
+            const checkbox = choices[0].querySelector('input').getBoundingClientRect();
+            return {rowHeight:first.height, rowGap:second.top-first.bottom,
+                checkboxWidth:checkbox.width, checkboxHeight:checkbox.height,
+                accentColor:getComputedStyle(choices[0].querySelector('input')).accentColor,
+                menuPosition:getComputedStyle(menu).position};
+        });
+        assert.equal(columnMenuMetrics.menuPosition,'absolute', 'the columns picker floats over the table');
+        assert.equal(await page.locator('.collection-table-wrap').evaluate(table =>
+            table.getBoundingClientRect().top),tableTopBefore,'opening the picker does not push the table down');
+        assert.ok(columnMenuMetrics.rowHeight <= 38, 'column options are compact rows');
+        assert.ok(columnMenuMetrics.rowGap <= 5, 'column options have a small consistent gap');
+        assert.ok(columnMenuMetrics.checkboxWidth <= 18 && columnMenuMetrics.checkboxHeight <= 18,
+            'checkboxes are not enlarged by global input styles');
+        await page.locator('[data-collection-column="editing"]').focus();
+        assert.equal(await page.locator('[data-collection-column="editing"]').evaluate(input =>
+            getComputedStyle(input).outlineStyle), 'solid', 'checkbox uses the app-standard keyboard focus');
+        assert.notEqual(columnMenuMetrics.accentColor, 'auto', 'checkbox uses the app accent color');
+        await page.locator('[data-collection-column="editing"]').check();
+        assert.equal(await page.locator('thead [data-column="editing"]').count(),1);
+        await page.locator('[data-collection-column="rating"]').uncheck();
+        assert.equal(await page.locator('thead [data-column="rating"]').count(),0);
+        // The picker remains open after a checkbox change, but floats above
+        // the table without ever moving the table down.
+        await page.locator('[data-collection-column="tasted"]').check();
+        assert.equal(await page.locator('.collection-table-columns[open]').count(),1);
+        const pickerOverlay = await page.locator('.collection-table-columns-menu').evaluate(menu => {
+            const menuRect=menu.getBoundingClientRect();
+            const triggerRect=menu.closest('details').querySelector('summary').getBoundingClientRect();
+            const tableRect=document.querySelector('.collection-table-wrap').getBoundingClientRect();
+            return {menuTop:menuRect.top,menuBottom:menuRect.bottom,
+                tableTop:tableRect.top,triggerBottom:triggerRect.bottom};
+        });
+        assert.ok(pickerOverlay.menuTop >= pickerOverlay.triggerBottom,
+            'column picker opens immediately below its trigger');
+        assert.ok(pickerOverlay.menuBottom > pickerOverlay.tableTop,
+            'column picker overlays the table rather than pushing it away');
+        assert.equal(pickerOverlay.tableTop,tableTopBefore,
+            'checkbox changes also preserve the table position');
+        // Reproduce the reported bug: close the picker manually after adding
+        // columns, then click the last visible header. It must stay CLOSED.
+        await page.locator('.collection-table-columns > summary').click();
+        assert.equal(await page.locator('.collection-table-columns[open]').count(),0);
+        await page.locator('thead th:last-child .collection-table-sort').click();
+        assert.equal(await page.locator('#filter-sort').inputValue(),'tastedDesc');
+        assert.equal(await page.locator('.collection-table-columns[open]').count(),0,
+            'sorting the last header must not reopen the manually closed picker');
+        await page.locator('thead [data-column="name"]').click();
+        assert.equal(await page.locator('#filter-sort').inputValue(),'nameDesc');
+        assert.equal(await page.locator('thead th[aria-sort="descending"] [data-column="name"]').count(),1);
+        assert.match(await page.locator('tbody tr').first().innerText(),/Column Zulu/);
+        await page.locator('thead [data-column="name"]').click();
+        assert.equal(await page.locator('#filter-sort').inputValue(),'name');
+        assert.match(await page.locator('tbody tr').first().innerText(),/Column Alpha/);
+        await page.locator('[data-collection-mode="bottles"]').click();
+        assert.equal(await page.locator('thead [data-column="rating"]').count(),1,
+            'bottle mode keeps its own default columns');
+        await page.locator('thead [data-column="inventory"]').click();
+        assert.equal(await page.locator('#filter-sort').inputValue(),'inventoryAsc');
+        await page.locator('thead [data-column="inventory"]').click();
+        assert.equal(await page.locator('#filter-sort').inputValue(),'inventoryDesc');
+        if (!domOnly) {
+            await page.reload();
+            await page.locator('.whisky-card, .collection-table-wrap').first().waitFor();
+            await page.locator('[data-act="toggle-view"]').click();
+            assert.equal(await page.locator('thead [data-column="editing"]').count(),1,
+                'the selected bottling columns survive a page reload');
+            assert.equal(await page.locator('thead [data-column="rating"]').count(),0);
+        }
+    });
+});

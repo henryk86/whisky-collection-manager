@@ -321,7 +321,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
     root.addEventListener('click', async (event) => {
         const mapButton = event.target.closest?.('[data-map-focus], [data-map-page], [data-map-bottling], [data-map-edit]');
         if (state.page === 'map' && mapButton) { mapView.handleClick(mapButton); return; }
-        const overviewButton = event.target.closest?.('[data-collection-mode], [data-page-to], [data-act="toggle-collection-filters"], [data-reset-collection-filter]');
+        const overviewButton = event.target.closest?.('[data-collection-mode], [data-page-to], [data-act="toggle-collection-filters"], [data-act="collection-sort-column"], [data-act="collection-columns-default"], [data-reset-collection-filter]');
         if (overviewButton && state.page === 'home') { home.handleClick(overviewButton); return; }
         const button = event.target.closest('[data-act]');
         if (!button || button.disabled) {
@@ -458,7 +458,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         if (state.page === 'map' && event.target.matches?.('#map-site-select, #map-all-distilleries')) {
             mapView.handleChange(event.target); return;
         }
-        if (state.page === 'home' && event.target.matches?.('#pagination-size, [id^=filter-]')) { home.handleChange(event.target); return; }
+        if (state.page === 'home' && event.target.matches?.('#pagination-size, [id^=filter-], [data-collection-column]')) { home.handleChange(event.target); return; }
         if (event.target.matches?.('input[data-bottle-files], input[data-bottle-photos]')) {
             void detail.handleUploadChange(event); return;
         }

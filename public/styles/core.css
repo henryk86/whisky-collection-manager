@@ -1470,6 +1470,55 @@ tr.clickable:hover {
     .collection-filter-chevron { transition: none; }
 }
 
+
+/* Configurable collection tables: compact controls outside the horizontal
+   scroll area, and accessible click-to-sort headings inside the table. */
+.collection-table-tools { display: flex; justify-content: flex-end; margin: 4px 0 10px; }
+.collection-table-columns { position: relative; z-index: 5; font-size: 12px; }
+.collection-table-columns > summary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    height: 38px; padding: 0 13px; border: 1px solid var(--line);
+    background: var(--paper); color: var(--ink); border-radius: 4px;
+    cursor: pointer; font-weight: 650; list-style: none;
+}
+.collection-table-columns[open] > summary { margin-left: auto; }
+.collection-table-columns > summary::-webkit-details-marker { display: none; }
+.collection-table-columns > summary:hover { border-color: var(--gold); }
+.collection-table-columns > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.collection-table-columns-chevron { width: 15px; height: 15px; flex: 0 0 auto; transition: transform .16s ease; }
+.collection-table-columns[open] .collection-table-columns-chevron { transform: rotate(180deg); }
+.collection-table-columns-menu {
+    /* Anchor the picker to its trigger instead of stretching the tools row
+       and pushing the collection table down when expanded. */
+    position: absolute; inset-inline-end: 0; top: calc(100% + 5px);
+    width: min(268px,calc(100vw - 38px));
+    max-height: min(450px,65vh); overflow-y: auto; padding: 7px;
+    background: var(--paper); border: 1px solid var(--line);
+    box-shadow: 0 10px 25px rgb(0 0 0 / .13);
+    display: flex; flex-direction: column; gap: 2px; z-index: 10;
+}
+.collection-table-column-choice {
+    display: flex; flex: 0 0 auto; align-items: center; gap: 9px;
+    min-height: 32px; padding: 5px 8px; border-radius: 3px;
+    font-size: 13px; font-weight: 400; line-height: 1.3; cursor: pointer;
+}
+.collection-table-column-choice:hover { background: color-mix(in srgb,var(--gold) 10%,var(--paper)); }
+/* Match the ordinary photo-import and warehouse checkboxes: native
+   18px controls with the app's gold accent and standard keyboard focus. */
+.collection-table-column-choice input[type="checkbox"] {
+    appearance: auto; box-sizing: border-box;
+    width: 18px; height: 18px; min-width: 18px; min-height: 18px;
+    margin: 0; padding: 0; border-radius: 0;
+    accent-color: var(--gold); flex: 0 0 18px;
+}
+.collection-table-columns-reset { width: 100%; margin-top: 5px; }
+.collection-table-sort { display: inline-flex; align-items: center; justify-content: flex-start; gap: 6px; width: 100%; border: 0; padding: 0; background: transparent; color: inherit; font: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; text-align: left; white-space: nowrap; }
+.collection-table-sort:hover, .collection-table-sort.is-active { color: var(--ink); }
+.collection-table-sort:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.collection-table-sort-direction { opacity: .5; font-size: 11px; letter-spacing: 0; }
+.collection-table-sort.is-active .collection-table-sort-direction { opacity: 1; color: var(--gold); }
+@media (prefers-reduced-motion: reduce) { .collection-table-columns-chevron { transition: none; } }
+
 /* iOS Safari: only the foreground dialog may pan while a modal is open. */
 .overlay { overscroll-behavior:contain; }
 .dialog { overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y; max-height:min(94dvh,94vh); }
