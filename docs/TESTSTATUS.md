@@ -1,6 +1,6 @@
-# Teststatus - Whisky Collection Manager v1.9.0
+# Teststatus - Whisky Collection Manager v1.10.0
 
-**Stand:** 2026-11-21. Automatischer Release-Snapshot aus Merge e31017e5ab48 (v1.8.0).
+**Stand:** 2026-11-21. Automatischer Release-Snapshot aus Merge 7947b710a53b (v1.9.0).
 
 ## Pruefungen
 
@@ -13,10 +13,11 @@
 
 ## Aenderungen
 
-- feat: add emptied date tracking for bottles, including validation and export support
-- feat: enhance warehouse bottle navigation with return to bottling support and localization updates
-- feat: add photo zoom functionality with controls and localization support
-- fix: support PNG format as fallback for edited images and update error messages
-- fix: show missing bottling and bottle details
+- test: verify column configuration persistence across page reloads in collection table
+- fix: persist collection view and correct sorting test
+- test: improve collection table and layout tests for visibility and positioning
+- fix: fix toolbar visibility checks and enhance advanced filter functionality in tests
+- feat: enhance collection table with configurable columns and sorting
+- feat: enhance collection filters with toggle functionality and improved UI
 
 Fruehere CI-Resultate: [TESTHISTORIE.md](TESTHISTORIE.md).
