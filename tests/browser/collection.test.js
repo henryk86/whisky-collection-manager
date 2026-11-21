@@ -1406,11 +1406,22 @@ test('browser: collection table columns are configurable and header sorting upda
         await page.locator('thead [data-column="inventory"]').click();
         assert.equal(await page.locator('#filter-sort').inputValue(),'inventoryDesc');
         if (!domOnly) {
+            // The URL retains ?mode=bottles across F5. Verify the current
+            // bottle table first; only then switch back to bottlings to check
+            // the independently stored bottling column selection.
+            assert.match(new URL(page.url()).search, /mode=bottles/);
             await page.reload();
             await page.locator('.collection-table-wrap').waitFor();
+            assert.equal(await page.locator('[data-collection-mode="bottles"]').getAttribute('aria-pressed'),'true');
+            assert.equal(await page.locator('thead [data-column="inventory"]').count(),1,
+                'the selected bottle columns survive a page reload');
+            assert.equal(await page.locator('thead [data-column="rating"]').count(),1,
+                'bottle mode retains its separate rating column');
+            await page.locator('[data-collection-mode="bottlings"]').click();
             assert.equal(await page.locator('thead [data-column="editing"]').count(),1,
                 'the selected bottling columns survive a page reload');
-            assert.equal(await page.locator('thead [data-column="rating"]').count(),0);
+            assert.equal(await page.locator('thead [data-column="rating"]').count(),0,
+                'the hidden bottling rating remains hidden');
         }
     });
 });
