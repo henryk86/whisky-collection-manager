@@ -26,7 +26,7 @@ test('photo adjustments persist as an editable WebP derivative, preserve origina
             {image:webp,settings:{exposure:300}},
             {image:webp,settings:{shadows:'25'}},
             {image:webp,settings:{unknown:1}},
-            {image:png,settings},
+            {image:png.replace('data:image/png;', 'data:image/jpeg;'),settings},
             {image:webp,settings:{}},
             {image:webp,settings:null}
         ];

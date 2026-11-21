@@ -6,7 +6,7 @@ import {startTestServer,requestJson} from '../helpers/server.js';
 import {domOnly,chromium,session,openSettingsFromMenu,openSettingsSection,seed,mockDecoder} from './support.js';
 test('browser: finder opens the exact shelf, returns to its search and keeps single-bottle relocation', async () => {
     await session(async ({base,page,open}) => {
-        const {bottle} = await seed(base,'098712');
+        const {bottling,bottle} = await seed(base,'098712');
         // Dimming can only be asserted if another physical bottle shares the shelf.
         const {bottle:otherBottle} = await seed(base,'098713');
         const room = (await requestJson(base,'/api/warehouse/rooms','POST',
@@ -85,6 +85,21 @@ test('browser: finder opens the exact shelf, returns to its search and keeps sin
         assert.equal(await page.locator('.warehouse-find-return').count(),0);
         assert.equal(await page.locator('.warehouse-wall-bay.is-find-focus').count(),0);
         assert.equal(await page.locator('.warehouse-wall-bottle.is-find-focus, .warehouse-wall-bottle.is-find-dimmed').count(),0);
+
+        // The storage-location link on the individual bottle detail must use
+        // the identical finder focus, not just navigate to a shelf without it.
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-home"]').click();
+        await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
+        const storageLink = page.locator(`#bottle-${bottle.id} [data-act="warehouse-focus"]`);
+        assert.equal(await storageLink.getAttribute('data-bottle-id'),bottle.id);
+        await storageLink.click();
+        assert.equal(await page.locator(`.warehouse-wall-bottle.is-find-focus [data-id="${bottle.id}"]`).count(),1);
+        assert.equal(await page.locator(`.warehouse-wall-bottle.is-find-dimmed [data-id="${otherBottle.id}"]`).count(),1);
+        assert.match(await page.locator('[data-act="warehouse-return-find"]').innerText(),/Zurück zur Abfüllung/);
+        await page.locator('[data-act="warehouse-return-find"]').click();
+        assert.equal(await page.locator(`#bottle-${bottle.id}`).count(),1);
+        assert.equal(await page.locator(`[data-act="warehouse-focus"][data-bottle-id="${bottle.id}"]`).count(),1);
     });
 });
 

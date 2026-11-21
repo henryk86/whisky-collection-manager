@@ -98,6 +98,41 @@ test('finder navigation preserves query, filter and pagination when returning fr
     }
 });
 
+test('detail-page storage link highlights the same shelf and bottle and returns to its bottling', () => {
+    const state = {warehouse, page:'detail', selected:'release-8', warehouseSelectedBottleIds:[],
+        warehouseFindReturn:false, warehouseFindFocusBottleId:null,warehouseFindReturnBottlingId:null};
+    let html = '';
+    const navigation = [];
+    let view;
+    const previousDocument = globalThis.document;
+    globalThis.document = {querySelector:()=>null,querySelectorAll:()=>[],getElementById:()=>null};
+    try {
+        view = createWarehouseView({state,shell:content=>{html=content;},navigate:(page,selected,options)=>{
+            navigation.push({page,selected,options});
+            state.page=page;state.selected=selected;
+            if (page === 'warehouse') view.render();
+        },modal:{},refresh:async()=>{}});
+        view.showBottleLocation('b8',{returnToBottlingId:'release-8'});
+        assert.deepEqual(navigation.at(-1),{page:'warehouse',selected:'shelves',options:undefined});
+        assert.equal(state.warehouseRoomId,'r');
+        assert.equal(state.warehouseFurnitureId,'f');
+        assert.equal(state.warehouseFindFocusBottleId,'b8');
+        assert.match(html,/warehouse-wall-bay is-find-focus/);
+        assert.match(html,/class="warehouse-wall-bottle is-find-focus"/);
+        assert.match(html,/class="warehouse-wall-bottle is-find-dimmed"/);
+        assert.match(html,/Zurück zur Abfüllung/);
+        assert.match(html,/data-act="warehouse-find-clear"/);
+        view.returnToFinder();
+        assert.deepEqual(navigation.at(-1),{page:'detail',selected:'release-8',options:{highlightBottleId:'b8'}});
+        assert.equal(state.warehouseFindReturn,false);
+        assert.equal(state.warehouseFindFocusBottleId,null);
+        assert.equal(state.warehouseFindReturnBottlingId,null);
+    } finally {
+        if (previousDocument === undefined) delete globalThis.document;
+        else globalThis.document=previousDocument;
+    }
+});
+
 test('closing the finder banner removes both shelf and bottle highlights without navigation', () => {
     const state = {warehouse, page:'warehouse', selected:'find', warehouseSearch:'glenfarclas',
         warehouseFinderPlacement:'assigned', warehouseFinderPage:1, warehouseSelectedBottleIds:[]};

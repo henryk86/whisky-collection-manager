@@ -189,9 +189,17 @@ function finance(analytics, state) {
             t("analytics.notes.purchasesWithPricesOnly")))}`;
 }
 function timeline(analytics, state) {
-    const timelineData = analytics.timeline, rating = analytics.tasting;
+    const timelineData = analytics.timeline, rating = analytics.tasting, duration = analytics.consumption;
+    const days = value => value == null ? '–' : t('analytics.consumption.days',{count:number(value)});
     return `${periodControls(state)}${two(timeChart(t("analytics.statistics.recordedBottles"), timelineData.registeredDaily, state),
-        timeChart(t("analytics.inventory.purchasedBottles"), timelineData.boughtDaily, state))}${timeChart(t("analytics.inventory.openedBottles"), timelineData.openedDaily, state)}
+        timeChart(t("analytics.inventory.purchasedBottles"), timelineData.boughtDaily, state))}
+        ${two(timeChart(t("analytics.inventory.openedBottles"), timelineData.openedDaily, state),
+            timeChart(t("analytics.consumption.emptiedBottles"), timelineData.emptiedDaily, state))}
+        ${panel(t('analytics.consumption.title'), metricGrid([
+            metric(t('analytics.statistics.average'), days(duration.avg)),
+            metric(t('analytics.statistics.minimum'), days(duration.min)),
+            metric(t('analytics.statistics.maximum'), days(duration.max)),
+        ]), t('analytics.consumption.eligibility', {count:duration.count}))}
         ${two(panel(t("analytics.ratings.distribution"), rankBars(rating.histogram),
             t("analytics.ratings.averageSummary",{average:rating.rating.avg == null ? t("analytics.ratings.unrated") : `${number(rating.rating.avg)} / 100`,count:rating.rating.count})),
             panel(t("analytics.ratings.topBottles"), detailsTable([t("analytics.table.bottling"), t("analytics.table.rating")],
@@ -243,7 +251,13 @@ function filterControls(state, options) {
 export function createAnalyticsView({ state, shell }) {
     return function renderAnalytics() {
         const current = ANALYSIS_PAGES.find(p => p.id === state.selected) || ANALYSIS_PAGES[0];
-        const data = analyzeCollection(state.collection, state.analyticsFilters);
+        // Timeline duration metrics follow the same selected end-date window as
+        // the opened/emptied time series, while inventory filters stay global.
+        const data = analyzeCollection(state.collection, {
+            ...state.analyticsFilters,
+            consumptionStartDate:state.analyticsStartDate || '',
+            consumptionEndDate:state.analyticsEndDate || '',
+        });
         const options = analyticsFilterOptions(state.collection);
         const contents = {
             overview: () => overview(data), inventory: () => inventory(data), origins: () => provenance(data),

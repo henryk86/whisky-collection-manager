@@ -183,13 +183,14 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         state.warehouseFinderPage = (state.warehouseFinderPage || 1) + delta;
         refreshFinderResults();
     }
-    function showBottleLocation(id) {
+    function showBottleLocation(id, {returnToBottlingId = null} = {}) {
         const bottle = w()?.bottles?.find(item => item.id === id);
         const place = bottle ? storagePath(w(),w().assignments?.[id]) : null;
         if (!place) return toast(t('warehouse.find.locationUnavailable'),true);
         state.warehouseRoomId = place.room.id;
         state.warehouseFurnitureId = place.furniture.id;
         state.warehouseFindFocusBottleId = id;
+        state.warehouseFindReturnBottlingId = returnToBottlingId;
         state.warehouseFindReturn = true;
         pendingFindFocusScroll = true;
         navigate('warehouse','shelves');
@@ -199,6 +200,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         // scrolling, bottle selections and in-progress interactions stay intact.
         state.warehouseFindReturn = false;
         state.warehouseFindFocusBottleId = null;
+        state.warehouseFindReturnBottlingId = null;
         pendingFindFocusScroll = false;
         if (typeof document === 'undefined') return;
         document.querySelector?.('.warehouse-find-return')?.remove();
@@ -208,9 +210,20 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
     }
     function returnToFinder() {
         const id = state.warehouseFindFocusBottleId;
+        const bottlingId = state.warehouseFindReturnBottlingId;
         state.warehouseFindReturn = false;
         state.warehouseFindFocusBottleId = null;
+        state.warehouseFindReturnBottlingId = null;
         pendingFindFocusScroll = false;
+        if (bottlingId) {
+            navigate('detail', bottlingId, {highlightBottleId:id});
+            if (id && typeof requestAnimationFrame === 'function') requestAnimationFrame(() => {
+                if (state.page === 'detail' && state.selected === bottlingId) {
+                    document.getElementById?.(`bottle-${id}`)?.scrollIntoView?.({block:'center',behavior:'instant'});
+                }
+            });
+            return;
+        }
         navigate('warehouse','find');
         // Navigation normally moves to the page top. Return to the actual
         // selected search result after that navigation, when it is still listed.
@@ -353,7 +366,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         const data = w();
         if (!data) return shell(`<p class="hint">${t("warehouse.storage.loading")}</p>`);
         const section = state.selected || 'overview';
-        if (section === 'find') { state.warehouseFindReturn = false; state.warehouseFindFocusBottleId = null; }
+        if (section === 'find') { state.warehouseFindReturn = false; state.warehouseFindFocusBottleId = null; state.warehouseFindReturnBottlingId = null; }
         const total = data.bottles.length;
         const assigned = data.bottles.filter(b => !!data.assignments[b.id]).length;
         const overallCapacity = totalCapacity(data);
@@ -399,7 +412,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
                     const focusPlace = focusBottle ? storagePath(data,data.assignments[focusBottle.id]) : null;
                     const inRoom = focusPlace?.room.id === room.id;
                     const findReturn = state.warehouseFindReturn
-                        ? `<div class="warehouse-find-return"><button type="button" class="btn small" data-act="warehouse-return-find">${t('warehouse.find.backToResults')}</button>${inRoom ? `<span class="warehouse-find-return-label"><strong class="warehouse-find-return-badge">${t('warehouse.find.match')}</strong>${safe(t('warehouse.find.highlighted',{name:bottleLabel(focusBottle),location:focusPlace.label}))}</span>` : ''}<button type="button" class="warehouse-find-clear" data-act="warehouse-find-clear" title="${safe(t('warehouse.find.clearHighlight'))}" aria-label="${safe(t('warehouse.find.clearHighlight'))}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>` : '';
+                        ? `<div class="warehouse-find-return"><button type="button" class="btn small" data-act="warehouse-return-find">${t(state.warehouseFindReturnBottlingId ? 'warehouse.find.backToBottling' : 'warehouse.find.backToResults')}</button>${inRoom ? `<span class="warehouse-find-return-label"><strong class="warehouse-find-return-badge">${t('warehouse.find.match')}</strong>${safe(t('warehouse.find.highlighted',{name:bottleLabel(focusBottle),location:focusPlace.label}))}</span>` : ''}<button type="button" class="warehouse-find-clear" data-act="warehouse-find-clear" title="${safe(t('warehouse.find.clearHighlight'))}" aria-label="${safe(t('warehouse.find.clearHighlight'))}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>` : '';
                     // The physical wall intentionally omits furniture without shelves. Provide
                     // a direct first-shelf action so a newly placed unit is not stranded.
                     const withoutShelves = room.furniture.filter(item => item.shelves.length === 0);

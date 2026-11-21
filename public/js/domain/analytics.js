@@ -99,6 +99,16 @@ export function analyzeCollection(collection, filters = {}) {
     }
     const sortDistilleries = field => [...distilleries].sort((a, b) => b[field] - a[field] || a.name.localeCompare(b.name, 'de'));
     const status = grouped(bottles, b => statusLabels[b.status] || 'Unbekannt');
+    // Elapsed calendar days for actually empty physical bottles only; exclude
+    // incomplete and impossible dates instead of assuming today as the end date.
+    const consumptionFrom = readAnalyticsDate(filters.consumptionStartDate || '');
+    const consumptionTo = readAnalyticsDate(filters.consumptionEndDate || '');
+    const consumptionDays = bottles.filter(b => b.status === 'empty').flatMap(b => {
+        const opened = dateDay(b.openedAt), emptied = dateDay(b.emptiedAt);
+        if (!opened || !emptied || emptied < opened ||
+            (consumptionFrom && emptied < consumptionFrom) || (consumptionTo && emptied > consumptionTo)) return [];
+        return [(Date.parse(`${emptied}T00:00:00Z`) - Date.parse(`${opened}T00:00:00Z`)) / 86400000];
+    });
     const volumeTypes = grouped(bottles, b => b.volumeType === 'sample' ? 'Samples' : 'Standardflaschen');
     const knownVolumes = validNumbers(bottles, b => b.volumeMl > 0 ? b.volumeMl : null);
     const age = validNumbers(bottlings, b => b.ageYears);
@@ -191,6 +201,7 @@ export function analyzeCollection(collection, filters = {}) {
         scope: { bottlings: bottlings.length, bottles: bottles.length, distilleries: distilleries.length,
             volumeLitres: sum(knownVolumes) / 1000, knownVolumes: volumeKnown },
         inventory: { status, volumeTypes },
+        consumption: stats(consumptionDays),
         provenance: {
             byDistilleryBottles: rank(sortDistilleries('bottles')),
             byDistilleryBottlings: rank(sortDistilleries('bottlings')),
@@ -215,9 +226,11 @@ export function analyzeCollection(collection, filters = {}) {
             registered: byDate(bottleEntries, e => e.bottle.createdAt),
             bought: byDate(bottleEntries, e => e.bottle.purchaseDate),
             opened: byDate(bottleEntries, e => e.bottle.openedAt),
+            emptied: byDate(bottleEntries.filter(e => e.bottle.status === 'empty'), e => e.bottle.emptiedAt),
             registeredDaily: byDay(bottleEntries, e => e.bottle.createdAt),
             boughtDaily: byDay(bottleEntries, e => e.bottle.purchaseDate),
             openedDaily: byDay(bottleEntries, e => e.bottle.openedAt),
+            emptiedDaily: byDay(bottleEntries.filter(e => e.bottle.status === 'empty'), e => e.bottle.emptiedAt),
         },
         tasting: { rating: stats(rated), histogram: grouped(ratings, b =>
             displayedTastingRating(b) === 100 ? '100' : `${Math.floor(displayedTastingRating(b) / 10) * 10}–${Math.floor(displayedTastingRating(b) / 10) * 10 + 9}`),

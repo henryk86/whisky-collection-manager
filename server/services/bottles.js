@@ -7,6 +7,10 @@ import { normalizeBottle } from '../domain/normalization.js';
 import { markNumber } from '../domain/inventory.js';
 import { findBottle, now, uid } from '../domain/collection.js';
 import { fail } from '../domain/errors.js';
+// Canvas.toBlob('image/webp') may return a PNG on browsers without WebP encoding.
+// Image-byte signature and the 10 MB limit are still checked by validateImageData.
+const isCorrectionImage = data => typeof data === 'string' &&
+    /^data:image\/(?:webp|png);base64,/.test(data);
 function requireBottle(collection, id) {
     const result = findBottle(collection, id);
     if (!result) {
@@ -132,8 +136,7 @@ export async function savePhotoCutout(bottleId, photoId, input) {
         try { settings = validatePhotoAdjustments(input.adjustment?.settings); }
         catch { throw fail('Ungültige Bildkorrekturen', 400, "api.errors.invalidImageAdjustments"); }
         if (Object.values(settings).every(value => value === 0) ||
-            typeof input.adjustment?.image !== 'string' ||
-            !input.adjustment.image.startsWith('data:image/webp;base64,'))
+            !isCorrectionImage(input.adjustment?.image))
             throw fail('Ungültige korrigierte Freistellung', 400, "api.errors.invalidAdjustedBackgroundRemoval");
         validateImageData(input.adjustment.image);
     }
@@ -204,7 +207,7 @@ export async function removePhotoCutout(bottleId, photoId) {
     return { ok: true };
 }
 
-/** Rendered WebP is a disposable derivative; the unedited source + slider settings stay available. */
+/** Rendered WebP (or browser PNG fallback) is a disposable derivative; the unedited source + slider settings stay available. */
 export async function savePhotoAdjustments(bottleId, photoId, input) {
     const photo = requireBottle(read(), bottleId).bottle.photos?.find(item => item.id === photoId);
     if (!photo) throw fail('Foto nicht gefunden', 404, "api.errors.photoNotFound");
@@ -213,8 +216,8 @@ export async function savePhotoAdjustments(bottleId, photoId, input) {
     catch { throw fail('Ungültige Bildkorrekturen', 400, "api.errors.invalidImageAdjustments"); }
     if (Object.values(settings).every(value => value === 0))
         throw fail('Keine Bildkorrekturen gewählt', 400, "api.errors.noPhotoAdjustmentsSelected");
-    if (typeof input?.image !== 'string' || !input.image.startsWith('data:image/webp;base64,'))
-        throw fail('Bearbeitetes Bild muss WebP sein', 400, "api.errors.editedImageMustUseWebPFormat");
+    if (!isCorrectionImage(input?.image))
+        throw fail('Bearbeitetes Bild muss WebP oder PNG sein', 400, "api.errors.editedImageMustUseWebPOrPNGFormat");
     validateImageData(input.image);
     const stored = saveImage(input.image, bottleId, `photo-${photoId}-edit-${uid()}`);
     const sourcePath = basePhotoPath(photo);

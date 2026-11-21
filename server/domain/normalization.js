@@ -3,7 +3,7 @@ import { fail } from './errors.js';
 import { requireField } from './validation.js';
 import { WHISKY_TYPES } from './collection.js';
 const fields = ['name', 'distilleryIds', 'distilleryId', 'whiskyType', 'brand', 'compositionComplete', 'bottler', 'ageYears', 'releaseYear', 'distillationYear', 'bottlingYear', 'distillationDate', 'bottlingDate', 'abv', 'volumeMl', 'caskType', 'caskNumber', 'limitedEditionCount', 'country', 'region', 'whiskybaseUrl', 'whiskybaseId', 'description', 'completionStatus'];
-const bottleFields = ['inventoryNumber', 'volumeType', 'volumeMl', 'status', 'purchaseDate', 'purchasePrice', 'currency', 'merchant', 'openedAt', 'comment'];
+const bottleFields = ['inventoryNumber', 'volumeType', 'volumeMl', 'status', 'purchaseDate', 'purchasePrice', 'currency', 'merchant', 'openedAt', 'emptiedAt', 'comment'];
 function filtered(source, keys) {
     const obj = {};
     for (const k of keys) {
@@ -94,6 +94,7 @@ export function normalizeBottle(input, old = {}) {
     }
     val.inventoryNumber = String(val.inventoryNumber ?? '').trim();
     delete val.labelType;
+    if (val.emptiedAt === '') val.emptiedAt = null;
     if (val.purchasePrice === '') {
         val.purchasePrice = null;
     }

@@ -19,7 +19,7 @@ test('combined editing and cutout keeps both editable variants, backups and orig
         const originalEdit = (await requestJson(ctx.base,`${route}/adjustments`,'PUT',{image:webp,settings})).data;
         assert.equal(displayPhotoPath(originalEdit),originalEdit.adjustment.path);
         const rejected = await requestJson(ctx.base,`${route}/cutout`,'PUT',
-            {image:png,adjustment:{image:png,settings}});
+            {image:png,adjustment:{image:png.replace('data:image/png;', 'data:image/jpeg;'),settings}});
         assert.equal(rejected.status,400);
         const combined = await requestJson(ctx.base,`${route}/cutout`,'PUT',
             {image:png,adjustment:{image:webp,settings}});

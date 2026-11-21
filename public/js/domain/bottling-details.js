@@ -45,6 +45,7 @@ export function bottlingDetails(bottling, distilleryNames, distilleries = []) {
         ['Abgefüllt am', humanDate(bottling.bottlingDate, bottling.bottlingYear)],
         ['Fassnummer', bottling.caskNumber],
         ['Limitierte Auflage', bottling.limitedEditionCount],
+        ['Whiskybase-ID', bottling.whiskybaseId],
     ];
 
     return fields.filter(([, value]) => hasBottlingDetail(value));

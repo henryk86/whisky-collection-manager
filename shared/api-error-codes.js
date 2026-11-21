@@ -22,6 +22,7 @@ const codes = Object.freeze({
     "Backup-Worker nicht autorisiert.": "api.errors.backupWorkerIsNotAuthorized",
     "Backup-Ziel nicht erlaubt": "api.errors.backupDestinationIsNotAllowed",
     "Bearbeitetes Bild muss WebP sein": "api.errors.editedImageMustUseWebPFormat",
+    "Bearbeitetes Bild muss WebP oder PNG sein": "api.errors.editedImageMustUseWebPOrPNGFormat",
     "Bewertung muss zwischen 0 und 100 liegen": "api.errors.ratingMustBeBetween0And100",
     "Bild zu groß oder leer": "api.errors.imageIsTooLargeOrEmpty",
     "Bildformat nicht unterstützt (JPEG, PNG, WebP oder GIF)": "api.errors.unsupportedImageFormatJPEGPNGWebPOrGIF",

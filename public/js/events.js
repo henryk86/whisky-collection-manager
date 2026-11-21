@@ -168,6 +168,13 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'warehouse-unassigned-prev': () => warehouseView.stepUnassignedWallPage(-1),
         'warehouse-unassigned-next': () => warehouseView.stepUnassignedWallPage(1),
         'warehouse-focus': button => {
+            // A location link belongs to a physical bottle, not just a shelf.
+            // Reuse the finder focus so the exact bottle is visible and marked.
+            if (button.dataset.bottleId) {
+                warehouseView.showBottleLocation(button.dataset.bottleId, {returnToBottlingId:state.selected});
+                return;
+            }
+            // Existing shelf-only links still open the shelf without a bottle focus.
             const place = state.warehouse?.rooms.find(r => r.furniture.some(f => f.shelves.some(s => s.id === button.dataset.id)));
             if (!place) return navigate('warehouse', 'find');
             state.warehouseRoomId=place.id;
@@ -284,6 +291,9 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'photo-editor-cutout': () => photoEditor.cutout(),
         'photo-editor-toggle-cutout': () => photoEditor.toggleCutout(),
         'photo-editor-remove-cutout': () => photoEditor.removeCutout(),
+        'photo-zoom-in': () => photoViewer.zoom(1.25),
+        'photo-zoom-out': () => photoViewer.zoom(1/1.25),
+        'photo-zoom-reset': () => photoViewer.zoom(0),
         'photo-prev': () => photoViewer.step(-1),
         'photo-next': () => photoViewer.step(1),
         'move-photo': button => movePhoto(button.dataset.id, button.dataset.photoId, Number(button.dataset.dir), action),

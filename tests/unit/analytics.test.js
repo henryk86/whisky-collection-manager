@@ -162,3 +162,56 @@ test('analytics: last ranked distillery stays an interactive link', () => {
     assert.equal(links.at(-1)[1], 'Springbank');
     assert.match(links.at(-1)[0], /data-id="site-6"/);
 });
+
+
+test('analytics: consumption uses only valid completed bottle intervals, including leap days and same-day emptying', () => {
+    const c = collection();
+    c.bottlings[0].bottles.push(
+        {id:'done-a',status:'empty',openedAt:'2024-02-28',emptiedAt:'2024-03-01'}, // leap day: 2 days
+        {id:'done-b',status:'empty',openedAt:'2026-03-01',emptiedAt:'2026-03-01'}, // 0 days
+        {id:'done-c',status:'empty',openedAt:'2026-11-01',emptiedAt:'2026-11-11'}, // 10 days
+        {id:'missing-opened',status:'empty',emptiedAt:'2026-05-01'},
+        {id:'missing-emptied',status:'empty',openedAt:'2026-05-01'},
+        {id:'reversed',status:'empty',openedAt:'2026-04-04',emptiedAt:'2026-04-03'},
+        {id:'invalid-date',status:'empty',openedAt:'2026-02-29',emptiedAt:'2026-03-01'},
+        {id:'still-open',status:'open',openedAt:'2026-01-01',emptiedAt:'2026-06-01'},
+    );
+    const all = analyzeCollection(c);
+    assert.deepEqual(all.consumption, {count:3,avg:4,min:0,max:10});
+    assert.deepEqual(all.timeline.emptiedDaily.map(row => row.name),
+        ['2024-03-01','2026-03-01','2026-04-03','2026-05-01','2026-11-11']);
+    assert.equal(all.timeline.emptiedDaily.some(row => row.name === '2026-06-01'),false,
+        'dates recorded for a bottle that is not empty are not counted as emptied');
+    const closed = analyzeCollection(c,{status:'closed'});
+    assert.equal(closed.consumption.count,0);
+    assert.equal(closed.consumption.avg,null);
+    const empty = analyzeCollection(c,{status:'empty'});
+    assert.equal(empty.consumption.count,3);
+    const others = analyzeCollection(c,{distillery:'b'});
+    assert.equal(others.consumption.count,3, 'multi-distillery bottling is filtered consistently');
+    const in2026 = analyzeCollection(c,{consumptionStartDate:'2026-01-01',consumptionEndDate:'2026-12-31'});
+    assert.deepEqual(in2026.consumption,{count:2,avg:5,min:0,max:10});
+    const inMarch = analyzeCollection(c,{consumptionStartDate:'2026-03-01',consumptionEndDate:'2026-03-01'});
+    assert.deepEqual(inMarch.consumption,{count:1,avg:0,min:0,max:0}, 'date range includes both boundaries');
+});
+
+test('analytics: duration and emptying timeline are visible even without a usable pair of dates', () => {
+    const c = collection();
+    let html = '';
+    const state = {collection:c, selected:'timeline', analyticsFilters:{},
+        analyticsPeriod:'month',analyticsStartDate:'',analyticsEndDate:''};
+    createAnalyticsView({state,shell:value => {html=value;}})();
+    assert.match(html, /Verbrauchsdauer/);
+    assert.match(html, /Geleerte Flaschen/);
+    assert.match(html, /Berechnungsgrundlage: 0 leere Flaschen/);
+    c.bottlings[1].bottles[0].openedAt = '2026-01-01';
+    c.bottlings[1].bottles[0].emptiedAt = '2026-02-12';
+    createAnalyticsView({state,shell:value => {html=value;}})();
+    assert.match(html, /Berechnungsgrundlage: 1 leere Flaschen/);
+    assert.match(html, /42 Tage/);
+    assert.match(html, /2026-02/);
+    state.analyticsStartDate = '2026-03-01';
+    createAnalyticsView({state,shell:value => {html=value;}})();
+    assert.match(html, /Berechnungsgrundlage: 0 leere Flaschen/,
+        'the displayed duration follows the selected emptying-date range');
+});

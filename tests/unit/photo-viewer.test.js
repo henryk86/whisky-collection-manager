@@ -63,6 +63,9 @@ test('photo thumbnails open in the in-app modal, preserve form when nested, and 
         assert.match(h.html, /src="\/images\/two\.png"/);
         assert.match(h.html, /2 \/ 2/);
         assert.match(h.html, /data-act="photo-prev"/);
+        assert.match(h.html, /data-act="photo-zoom-in"/);
+        assert.match(h.html, /data-act="photo-zoom-out"/);
+        assert.match(h.html, /data-act="photo-zoom-reset"/);
         assert.equal(h.focus.called, true);
         assert.equal(h.viewer.isOpen(), true);
         h.viewer.step(-1);
@@ -84,6 +87,7 @@ test('single photo needs no navigation; untrusted image URLs are ignored', () =>
         h.viewer.open(h.buttons[0]);
         assert.match(h.html, /src="\/images\/only\.png"/);
         assert.doesNotMatch(h.html, /data-act="photo-next"/);
+        assert.match(h.html, /data-act="photo-zoom-in"/, 'single photos remain zoomable');
         assert.equal(h.calls[0].keepParent, false);
         h.viewer.step(1);
         assert.equal(h.currentImage.src, '');
