@@ -32,6 +32,8 @@ export function createBottleForm({ state, selectors }) {
             type: 'number', step: '0.01'
         })}${textInput(t("forms.bottle.currency"), 'currency', bottle.currency || 'EUR')}${textInput(t("forms.bottle.seller"), 'merchant', bottle.merchant)}${textInput(t("forms.bottle.openingDate"), 'openedAt', bottle.openedAt, {
             type: 'date'
+        })}${textInput(t("forms.bottle.emptyDate"), 'emptiedAt', bottle.emptiedAt, {
+            type: 'date'
         })}${areaInput(t("forms.bottle.personalComment"), 'comment', bottle.comment)}<label class="form-field full">${t("forms.bottle.additionalPhotos")}<input type="file" name="photos" accept="${photoAccept}" multiple>
     </label>
     <label class="form-field full">${t("forms.bottle.attachments")}

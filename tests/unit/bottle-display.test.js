@@ -40,6 +40,9 @@ test('bottle form renders read-only parent information and exactly one inventory
     assert.match(context, /schreibgesch\u00fctzt/);
     assert.doesNotMatch(context, /<input|<select|<textarea/);
     assert.equal((html.match(/name="inventoryNumber"/g) || []).length, 1);
+    assert.match(html, /Leerdatum<input\s+name="emptiedAt" type="date"/);
+    assert.match(bottle({...state.collection.bottlings[0].bottles[0],emptiedAt:'2026-11-20'}, 'bottling-a'),
+        /name="emptiedAt" type="date"[^>]*value="2026-11-20"/);
     assert.doesNotMatch(html, /labelCode|labelType|Etikettentyp|Etikettencode/);
 });
 test('forms escape user data instead of treating it as HTML', () => {

@@ -145,6 +145,8 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
         [t('forms.bottling.caskType'), bottling?.caskType || null],
         [t('forms.bottling.abv'), bottling?.abv == null ? null : `${formatNumber(bottling.abv)} % Vol.`],
         [t('forms.bottle.purchaseDate'), physicalBottle?.purchaseDate],
+        [t('forms.bottle.openingDate'), physicalBottle?.openedAt],
+        [t('forms.bottle.emptyDate'), physicalBottle?.emptiedAt],
         [t('forms.bottle.purchasePrice'), physicalBottle?.purchasePrice == null ? null : `${formatNumber(physicalBottle.purchasePrice)} ${physicalBottle.currency || 'EUR'}`],
         [t('forms.bottle.seller'), physicalBottle?.merchant],
         [t('forms.bottle.rating'), displayedTastingRating(bottling)],

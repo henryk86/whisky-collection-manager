@@ -87,6 +87,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                         <div><dt>${t('forms.bottle.type')}</dt><dd>${t(entry.volumeType === 'sample' ? 'forms.bottle.sampleBottle' : 'forms.bottle.normalBottle')}</dd></div>
                         ${entry.purchaseDate ? `<div><dt>${t('detail.meta.purchaseLabel')}</dt><dd>${escapeHtml(formatDate(entry.purchaseDate))}</dd></div>` : ''}
                         ${entry.openedAt ? `<div><dt>${t('forms.bottle.openingDate')}</dt><dd>${escapeHtml(formatDate(entry.openedAt))}</dd></div>` : ''}
+                        ${entry.emptiedAt ? `<div><dt>${t('forms.bottle.emptyDate')}</dt><dd>${escapeHtml(formatDate(entry.emptiedAt))}</dd></div>` : ''}
                         ${entry.purchasePrice != null && entry.purchasePrice !== '' ? `<div><dt>${t('detail.meta.priceLabel')}</dt><dd>${escapeHtml(entry.purchasePrice)} ${escapeHtml(entry.currency || 'EUR')}</dd></div>` : ''}
                         ${storageName != null ? `<div><dt>${t('detail.fields.storageLocation')}</dt><dd>${storageShelfId ? `<button class="inline-link" data-act="warehouse-focus" data-id="${escapeHtml(storageShelfId)}" data-bottle-id="${escapeHtml(entry.id)}">${escapeHtml(storageName)}</button>` : escapeHtml(storageName)}</dd></div>` : ''}
                         ${entry.volumeMl != null ? `<div><dt>${t('detail.meta.volumeLabel')}</dt><dd>${escapeHtml(entry.volumeMl)} ml</dd></div>` : ''}

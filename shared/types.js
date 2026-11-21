@@ -29,6 +29,8 @@
  * @property {BottleFile[]} [files] Invoice PDFs, supporting pictures, and other records.
  * @property {string} [comment]
  * @property {string} [purchaseDate]
+ * @property {string} [openedAt] YYYY-MM-DD opening date.
+ * @property {string|null} [emptiedAt] YYYY-MM-DD date bottle became empty; optional for legacy bottles.
  * @property {number|null} [purchasePrice]
  * @property {string} [currency]
  * @property {string} [createdAt]

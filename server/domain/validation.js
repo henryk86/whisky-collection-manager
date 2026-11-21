@@ -10,6 +10,12 @@ const isObject = value => !!value && typeof value === 'object' && !Array.isArray
 const isString = value => typeof value === 'string';
 const optionalString = value => value == null || isString(value);
 const isOptionalNumber = value => value == null || (typeof value === 'number' && Number.isFinite(value));
+const validDay = value => {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const parsed = new Date(`${value}T00:00:00Z`);
+    return Number(value.slice(0, 4)) >= 1600 && Number(value.slice(0, 4)) <= 2300 &&
+        !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+};
 const validImagePath = p => typeof p === 'string' && /^images\/[a-f0-9-]{36}\/[\w-]+\.(jpg|png|webp|gif)$/i.test(p);
 export function validate(collection) {
     assert(isObject(collection) && collection.schemaVersion === 5, 'Ungültige oder nicht unterstützte JSON-Schemaversion', 400, "api.errors.invalidOrUnsupportedJSONSchemaVersion");
@@ -134,6 +140,14 @@ export function validate(collection) {
         assert(['standard', 'sample'].includes(bottle.volumeType), 'Ungültiger Flaschentyp der physischen Flasche', 400, "api.errors.invalidPhysicalBottleType");
         assert(bottle.volumeMl == null || (isOptionalNumber(bottle.volumeMl) && bottle.volumeMl > 0 && bottle.volumeMl <= 100000), 'Ungültige Größe der physischen Flasche', 400, "api.errors.invalidPhysicalBottleSize");
         assert(optionalString(bottle.inventoryNumber), 'Ungültige Inventarnummer', 400, "api.errors.invalidInventoryNumber");
+        if (bottle.emptiedAt != null && bottle.emptiedAt !== '') {
+            assert(validDay(bottle.emptiedAt), 'Ungültiges Leerdatum', 400, 'api.errors.invalidBottleEmptyDate');
+            // A same-day opening/emptying is valid (0 days). An impossible order is not.
+            if (validDay(bottle.openedAt)) {
+                assert(bottle.emptiedAt >= bottle.openedAt, 'Leerdatum liegt vor dem Öffnungsdatum', 400,
+                    'api.errors.emptyDateBeforeOpening');
+            }
+        }
         assert(!Object.hasOwn(bottle, 'labelCode'), 'Etikettencode ist kein separates Feld mehr', 400, "api.errors.labelCodeNoLongerSeparate");
         assert(!Object.hasOwn(bottle, 'labelType'), 'Der Etikettentyp wird nicht gespeichert', 400, "api.errors.labelTypeNotStored");
         assert(bottle.photos === undefined || Array.isArray(bottle.photos), 'Ungültige Fotoliste', 400, "api.errors.invalidPhotoList");

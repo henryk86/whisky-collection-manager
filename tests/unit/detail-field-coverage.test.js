@@ -50,10 +50,11 @@ test('bottling detail displays persisted editable metadata including Whiskybase 
 test('bottle detail shows opening date, personal comment, type and all other stored bottle facts', () => {
     const html = render({bottleFields:{
         volumeType:'sample', volumeMl:50, purchaseDate:'2025-02-12',
-        openedAt:'2026-10-18', purchasePrice:9.95, currency:'GBP',
+        openedAt:'2026-10-18', emptiedAt:'2026-11-20', purchasePrice:9.95, currency:'GBP',
         merchant:'Händler Z', comment:'Meine Notiz\nZweite Zeile <script>alert(1)</script>',
     }});
     assert.match(html, /Öffnungsdatum<\/dt><dd>18\.10\.2026<\/dd>/);
+    assert.match(html, /Leerdatum<\/dt><dd>20\.11\.2026<\/dd>/);
     assert.match(html, /Persönlicher Kommentar<\/dt>/);
     assert.match(html, /Meine Notiz\nZweite Zeile &lt;script&gt;alert\(1\)&lt;\/script&gt;/);
     assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
@@ -69,6 +70,7 @@ test('bottle detail shows opening date, personal comment, type and all other sto
 test('empty optional bottle fields are omitted; standard bottle type is still explicit', () => {
     const html = render({bottleFields:{openedAt:'', comment:'  ',purchasePrice:null}});
     assert.doesNotMatch(html, /Öffnungsdatum<\/dt>/);
+    assert.doesNotMatch(html, /Leerdatum<\/dt>/);
     assert.doesNotMatch(html, /Persönlicher Kommentar<\/dt>/);
     assert.match(html, /Flaschentyp<\/dt><dd>Normale Flasche<\/dd>/);
     assert.doesNotMatch(html, /Preis<\/dt>/);
