@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.0 - 2026-11-21
+
+- feat: add emptied date tracking for bottles, including validation and export support
+- feat: enhance warehouse bottle navigation with return to bottling support and localization updates
+- feat: add photo zoom functionality with controls and localization support
+- fix: support PNG format as fallback for edited images and update error messages
+- fix: show missing bottling and bottle details
+
 ## 1.8.0 - 2026-11-20
 
 - fix: enhance warehouse finder tests with additional bottle dimming assertions
