@@ -1668,6 +1668,7 @@
   "warehouse.find.assignLocation": "Lagerort zuweisen",
   "warehouse.find.assigned": "Mit Lagerort",
   "warehouse.find.backToResults": "Zurück zu den Suchergebnissen",
+  "warehouse.find.backToBottling": "Zurück zur Abfüllung",
   "warehouse.find.clearHighlight": "Markierung aufheben",
   "warehouse.find.highlighted": "Markiert: {name} · {location}",
   "warehouse.find.locationUnavailable": "Für diese Flasche ist kein gültiger Lagerort vorhanden.",

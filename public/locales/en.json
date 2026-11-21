@@ -1668,6 +1668,7 @@
   "warehouse.find.assignLocation": "Assign location",
   "warehouse.find.assigned": "With location",
   "warehouse.find.backToResults": "Back to search results",
+  "warehouse.find.backToBottling": "Back to bottling",
   "warehouse.find.clearHighlight": "Clear highlight",
   "warehouse.find.highlighted": "Highlighted: {name} · {location}",
   "warehouse.find.locationUnavailable": "This bottle has no valid storage location.",

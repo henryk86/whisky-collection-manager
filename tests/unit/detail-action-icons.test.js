@@ -11,7 +11,7 @@ function button(html, action) {
     return found[0];
 }
 
-function detailMarkup({photos = []} = {}) {
+function detailMarkup({photos = [], warehouse = null} = {}) {
     const originalDocument = globalThis.document;
     globalThis.document = { querySelectorAll: () => [] };
     try {
@@ -19,6 +19,7 @@ function detailMarkup({photos = []} = {}) {
         createDetailView({
             state: {
                 selected: 'bottling-a',
+                warehouse,
                 collection: { bottlings: [{ id: 'bottling-a', name: 'Example Whisky', bottles: [] }] },
             },
             selectors: {
@@ -69,6 +70,18 @@ test('physical-bottle detail offers direct Umlagern while the Lagerort fact stay
     assert.ok(relocation.includes('data-id="physical-a"'));
     assert.ok(relocation.endsWith('>Umlagern</button>'));
     assert.ok(!relocation.includes('>Lagerort</button>'));
+});
+
+test('a bottle storage-location link identifies the exact physical bottle', () => {
+    const warehouse = {rooms:[{id:'room-a',name:'Whiskyzimmer',furniture:[{
+        id:'furniture-a',name:'Vitrine',shelves:[{id:'shelf-a',name:'Fach 2'}]
+    }]}], assignments:{'physical-a':'shelf-a'}};
+    const link = button(detailMarkup({warehouse}), 'warehouse-focus');
+    assert.match(link, /data-id="shelf-a"/);
+    assert.match(link, /data-bottle-id="physical-a"/);
+    assert.match(link, /Whiskyzimmer \/ Vitrine \/ Fach 2/);
+    assert.doesNotMatch(detailMarkup(), /data-act="warehouse-focus"/,
+        'a bottle without a known location must not present a location link');
 });
 
 test('the redundant photo ownership note is absent from the detail page', () => {

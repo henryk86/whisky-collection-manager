@@ -12,6 +12,7 @@ export function createState(route) {
         warehouseFinderPlacement: 'all',
         warehouseFindReturn: false,
         warehouseFindFocusBottleId: null,
+        warehouseFindReturnBottlingId: null,
         warehouseSelectedFurnitureIds: [],
         warehouseHiddenFurnitureIds: [],
         warehouseUnassigned: false,
