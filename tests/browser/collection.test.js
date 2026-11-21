@@ -106,6 +106,19 @@ test('browser: create a bottling, read-only bottle context, edit and photo uploa
             document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         });
         assert.notEqual(await viewerStyle(), viewerBefore, 'Photo viewer background must match the light/dark theme');
+        // Zoom affects only the preview: the modal stays in this tab, and
+        // closing it still restores the nested bottle form unchanged.
+        const zoomLevel = page.locator('[data-photo-zoom-level]');
+        assert.equal(await zoomLevel.innerText(), '100 %');
+        await page.locator('[data-act="photo-zoom-in"]').click();
+        assert.equal(await zoomLevel.innerText(), '125 %');
+        assert.match(await page.locator('.photo-lightbox-image').evaluate(img => img.style.transform), /scale\(1\.25\)/);
+        await page.locator('[data-act="photo-zoom-reset"]').click();
+        assert.equal(await zoomLevel.innerText(), '100 %');
+        const zoomStage = page.locator('.photo-lightbox-stage');
+        await zoomStage.hover();
+        await page.mouse.wheel(0,-150);
+        await page.waitForFunction(() => document.querySelector('[data-photo-zoom-level]')?.textContent !== '100 %');
         assert.equal(await page.context().pages().length, 1, 'no extra browser tab');
         await page.keyboard.press('Escape');
         await page.waitForSelector('.photo-lightbox-image', { state: 'detached' });

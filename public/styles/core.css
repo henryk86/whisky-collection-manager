@@ -1325,7 +1325,13 @@ tr.clickable:hover {
     align-items: center;
     justify-content: center;
     min-height: min(42vh, 280px);
+    overflow: hidden;
+    position: relative;
+    touch-action: none;
+    cursor: zoom-in;
 }
+.photo-lightbox-stage.is-zoomed { cursor: grab; }
+.photo-lightbox-stage.is-zoomed:active { cursor: grabbing; }
 .photo-lightbox-image {
     display: block;
     width: auto;
@@ -1334,7 +1340,13 @@ tr.clickable:hover {
     max-height: calc(94vh - 180px);
     object-fit: contain;
     padding: 10px;
+    transform-origin: center;
+    user-select: none;
+    pointer-events: none;
 }
+.photo-lightbox-zoom { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.photo-lightbox-zoom .btn { min-width: 34px; }
+.photo-lightbox-zoom .photo-lightbox-zoom-level { min-width: 68px; font-variant-numeric: tabular-nums; }
 .photo-lightbox-footer {
     display: flex;
     gap: 12px;
