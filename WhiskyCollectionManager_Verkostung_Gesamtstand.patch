@@ -1,0 +1,293 @@
+--- a/public/js/views/detail.js
++++ b/public/js/views/detail.js
+@@ -7,7 +7,6 @@
+ import { escapeHtml } from '../ui/dom.js';
+ import { editIcon, deleteIcon, locationIcon, newBottlingIcon, addActionLabel, closeIcon, arrowLeftIcon, arrowRightIcon, gripIcon, sparkleIcon } from '../ui/action-icons.js';
+ import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
+-import { whiskyColorDisplay } from '../ui/whisky-color-selector.js';
+ import { flavorChart } from '../ui/flavor-profile.js';
+ import { imageUrl, formatValue, formatDate } from '../ui/format.js';
+ import { bottleStatusLabels, photoAccept } from '../domain/labels.js';
+@@ -32,14 +31,12 @@
+         }
+         const latest = latestTasting(bottling);
+         const tastingCount = bottling.tastings?.length || 0;
+-        const tastingColor = latest?.whiskyColor ? whiskyColorDisplay(latest.whiskyColor) : '';
+         const tastingRadar = latest?.flavorProfile && Object.values(latest.flavorProfile).some(Number.isInteger)
+             ? flavorChart(latest.flavorProfile, {compact:true}) : '';
+         const tastingNotes = ['nose','palate','finish'].map(key => ({
+             label:t(`forms.bottling.${key}`),
+             text:typeof latest?.tastingNotes?.[key] === 'string' ? latest.tastingNotes[key].trim() : ''
+         })).filter(note => note.text);
+-        const hasTastingPreview = Boolean(tastingColor || tastingRadar || tastingNotes.length);
+         const physicalBottles = bottles(bottling.id);
+         const facts = bottlingDetails(bottling, distilleryNames, state.collection.distilleries);
+         const originLabel = bottlingOriginLabel(bottling, distilleryNames);
+@@ -150,27 +147,38 @@
+     <a href="${escapeHtml(whiskybaseUrl)}" target="_blank" rel="noopener noreferrer">${t("detail.actions.openWhiskybase")}</a>` : ''}</div>
+     </div>
+     </div>
+-    <section data-region="detail-tastings" class="section tasting-summary" aria-label="${escapeHtml(t('tastings.title'))}">
++    <section data-region="detail-tastings" class="section tasting-summary${latest ? '' : ' is-empty'}" aria-label="${escapeHtml(t('tastings.title'))}">
+         <div class="section-head">
+-            <h3>${escapeHtml(t('tastings.title'))}</h3>
+-            <button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t(tastingCount ? 'tastings.add' : 'tastings.first'))}</span></button>
++            <div class="tasting-summary-section-heading">
++                <h3>${escapeHtml(t('tastings.title'))}</h3>
++                ${latest ? '' : `<p class="hint tasting-summary-empty">${escapeHtml(t('tastings.none'))}</p>`}
++            </div>
++            <div class="actions tasting-summary-heading-actions">
++                ${latest ? '' : `<button type="button" class="btn" data-act="tastings-open">${escapeHtml(t('tastings.openAll'))}</button>`}
++                <button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t(tastingCount ? 'tastings.add' : 'tastings.first'))}</span></button>
++            </div>
+         </div>
+-        <div class="panel tasting-summary-card">
+-            <div class="tasting-summary-content${hasTastingPreview ? ' has-preview' : ''}">
+-                <div class="tasting-summary-main"><span class="muted">${escapeHtml(t('tastings.latest'))}</span>
+-                <div class="tasting-summary-score">
+-                    ${latest?.rating != null ? `<span class="tasting-summary-glasses" aria-hidden="true">${Array.from({length:5},(_,i)=>glencairnRatingSymbol({fill:Math.max(0,Math.min(100,(Number(latest.rating)-i*20)*5)),id:`detail-tasting-${i}`})).join('')}</span>` : ''}
+-                    <div class="tasting-summary-rating">${latest ? (latest.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(latest.rating)} / 100`) : escapeHtml(t('tastings.none'))}</div>
++        ${latest ? `<div class="panel tasting-summary-card">
++            <div class="tasting-summary-content">
++                <div class="tasting-summary-header">
++                    <div class="tasting-summary-main">
++                        <span class="tasting-summary-field-label">${escapeHtml(t('tastings.latest'))}</span>
++                        <span class="muted tasting-summary-meta">${escapeHtml(formatDate(latest.tastedOn))} · ${escapeHtml(t('tastings.count',{count:tastingCount}))}</span>
++                    </div>
++                    <div class="actions tasting-summary-actions">
++                        <button type="button" class="btn" data-act="tastings-open" ${tastingCount === 1 ? `data-tasting-id="${escapeHtml(latest.id)}"` : ''}>${escapeHtml(t(tastingCount === 1 ? 'tastings.openOne' : 'tastings.openAll'))}</button>
++                    </div>
+                 </div>
+-                ${latest ? `<span class="muted">${escapeHtml(formatDate(latest.tastedOn))} · ${escapeHtml(t('tastings.count',{count:tastingCount}))}</span>` : ''}</div>
+-                ${tastingColor ? `<div class="tasting-summary-color"><span class="tasting-summary-label">${escapeHtml(t('tasting.colorHeading'))}</span>${tastingColor}</div>` : ''}
+-                ${tastingRadar ? `<div class="tasting-summary-radar"><span class="tasting-summary-label">${escapeHtml(t('flavor.title'))}</span>${tastingRadar}</div>` : ''}
+-                ${tastingNotes.length ? `<div class="tasting-summary-notes"><span class="tasting-summary-label">${escapeHtml(t('tasting.notes'))}</span>${tastingNotes.map(note => `<p><strong>${escapeHtml(note.label)}:</strong> ${escapeHtml(note.text)}</p>`).join('')}</div>` : ''}
+-                <div class="actions tasting-summary-actions">
+-                    <button type="button" class="btn" data-act="tastings-open" ${tastingCount === 1 ? `data-tasting-id="${escapeHtml(latest.id)}"` : ''}>${escapeHtml(t(tastingCount === 1 ? 'tastings.openOne' : 'tastings.openAll'))}</button>
++                <div class="tasting-summary-body">
++                    <div class="tasting-summary-score">
++                        ${latest.rating != null ? `<span class="tasting-summary-glasses" aria-hidden="true">${Array.from({length:5},(_,i)=>glencairnRatingSymbol({fill:Math.max(0,Math.min(100,(Number(latest.rating)-i*20)*5)),id:`detail-tasting-${i}`})).join('')}</span>` : ''}
++                        <div class="tasting-summary-rating">${latest.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(latest.rating)} / 100`}</div>
++                    </div>
++                    ${tastingRadar ? `<div class="tasting-summary-radar">${tastingRadar}</div>` : ''}
++                    ${tastingNotes.length ? `<div class="tasting-summary-notes">${tastingNotes.map(note => `<div class="tasting-summary-note"><span class="tasting-summary-field-label">${escapeHtml(note.label)}</span><div class="tasting-summary-note-value">${escapeHtml(note.text)}</div></div>`).join('')}</div>` : ''}
+                 </div>
+             </div>
+-        </div>
++        </div>` : ''}
+     </section>
+     <div data-region="detail-physical-bottles" class="section">
+     <div class="section-head">
+--- a/public/styles/bottle-details.css
++++ b/public/styles/bottle-details.css
+@@ -376,65 +376,46 @@
+     .tasting-rating { gap:9px; }
+ }
+ 
+-/* Shared detail summary and tasting record editor. */
+-.tasting-summary-content { display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+-.tasting-summary-content > div:first-child { min-width:0; }
+-/* Last tasting: reuse the recorded color glass and radar, without editor controls. */
+-.tasting-summary-content.has-preview { display:flex; align-items:center; gap:18px 24px; flex-wrap:wrap; }
+-.tasting-summary-content.has-preview > * { min-width:0; }
+-.tasting-summary-content.has-preview .tasting-summary-main { flex:1 1 230px; }
+-.tasting-summary-color { flex:0 0 94px; text-align:center; }
+-.tasting-summary-radar { flex:0 1 290px; min-width:210px; }
+-.tasting-summary-notes { flex:1 1 180px; min-width:0; }
+-.tasting-summary-label { display:block; margin-bottom:8px; color:var(--muted); font-size:13px; font-weight:600; }
+-.tasting-summary-color .tasting-readonly-color { gap:5px; }
+-.tasting-summary-color .tasting-readonly-color .glencairn-symbol { width:43px; height:70px; }
+-.tasting-summary-color .tasting-readonly-color strong { font-size:12px; font-weight:600; line-height:1.25; }
+-.tasting-summary-radar .flavor-editor.is-preview { display:block; }
+-.tasting-summary-radar .flavor-chart { display:block; width:100%; height:auto; max-height:245px; }
+-.tasting-summary-notes p { margin:0 0 5px; line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:1; line-clamp:1; overflow-wrap:anywhere; }
+-.tasting-summary-notes p:last-child { margin-bottom:0; }
+-.tasting-summary-notes strong { font-weight:650; }
+-.tasting-summary-content.has-preview .tasting-summary-actions { flex:0 0 auto; }
+-@media (max-width:780px) {
+-    .tasting-summary-content.has-preview .tasting-summary-main { flex-basis:100%; }
+-    .tasting-summary-color { flex-basis:96px; }
+-    .tasting-summary-radar { flex:1 1 245px; }
+-    .tasting-summary-notes { flex-basis:100%; }
+-    .tasting-summary-content.has-preview .tasting-summary-actions { flex:1 1 100%; margin-left:0; }
+-}
+-@media (max-width:460px) {
+-    .tasting-summary-color { flex:0 0 100%; text-align:left; }
+-    .tasting-summary-color .tasting-readonly-color { align-items:flex-start; }
+-    .tasting-summary-radar { flex:1 1 100%; max-width:330px; margin:auto; }
+-    .tasting-summary-radar .flavor-chart { max-height:280px; }
+-}
+-.tasting-summary-actions { grid-area:actions; }
+-@media (max-width:1250px) {
+-    .tasting-summary-content.has-preview { grid-template-columns:minmax(215px,1fr) auto minmax(240px,300px); grid-template-areas:'score color radar' 'notes notes actions'; }
+-    .tasting-summary-content.has-preview:not(:has(.tasting-summary-notes)) { grid-template-areas:'score color radar' 'actions actions actions'; }
+-    .tasting-summary-content.has-preview .tasting-summary-actions { justify-self:end; }
+-}
+-@media (max-width:740px) {
+-    .tasting-summary-content.has-preview { grid-template-columns:minmax(100px,1fr) minmax(210px,2fr); grid-template-areas:'score score' 'color radar' 'notes notes' 'actions actions'; }
+-    .tasting-summary-color { justify-self:center; }
+-    .tasting-summary-radar .flavor-chart { max-height:250px; }
+-    .tasting-summary-content.has-preview .tasting-summary-actions { justify-self:stretch; }
+-}
+-@media (max-width:460px) {
+-    .tasting-summary-content.has-preview { grid-template-columns:minmax(0,1fr); grid-template-areas:'score' 'color' 'radar' 'notes' 'actions'; }
+-    .tasting-summary-color { justify-self:start; text-align:left; }
+-    .tasting-summary-color .tasting-readonly-color { align-items:flex-start; }
+-    .tasting-summary-radar { width:min(100%,330px); margin:auto; }
+-    .tasting-summary-radar .flavor-chart { max-height:280px; }
+-}
+-
+-.tasting-summary-actions { justify-content:flex-end; margin-left:auto; }
+-/* One horizontal rating: five glasses immediately before an unbroken score. */
+-.tasting-summary-score { display:flex; align-items:center; flex-wrap:wrap; column-gap:13px; row-gap:6px; margin:7px 0; }
++/* Match the neighboring bottling facts: same panel padding, left alignment,
++   muted 12px labels and bold values. No centered width cap or extra inner card. */
++.tasting-summary-content { min-width:0; }
++.tasting-summary-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px 20px; }
++.tasting-summary-main { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 16px; min-width:0; }
++.tasting-summary-field-label { display:block; color:var(--muted); font-size:12px; font-weight:400; }
++.tasting-summary-meta { font-size:13px; }
++.tasting-summary-actions { flex:0 0 auto; justify-content:flex-end; }
++.tasting-summary-body { display:flex; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:16px 28px; margin-top:12px; min-width:0; }
++.tasting-summary-score { display:flex; align-items:center; flex-wrap:wrap; gap:6px 13px; flex:0 0 auto; min-width:0; }
+ .tasting-summary-glasses { display:inline-flex; align-items:center; gap:4px; flex:0 0 auto; }
+ .tasting-summary-glasses .glencairn-symbol { display:block; width:21px; height:35px; }
+ .tasting-summary-rating { font-size:clamp(1.3rem,2.5vw,1.85rem); font-weight:750; margin:0; white-space:nowrap; font-variant-numeric:tabular-nums; }
++.tasting-summary-radar { flex:0 1 310px; min-width:230px; }
++.tasting-summary-radar .flavor-editor.is-preview { display:block; }
++.tasting-summary-radar .flavor-chart { display:block; width:100%; height:auto; max-height:230px; }
++.tasting-summary-radar .flavor-axis-text { font-size:14px; }
++.tasting-summary-notes { display:grid; gap:14px; flex:1 1 235px; min-width:0; }
++.tasting-summary-note { min-width:0; }
++.tasting-summary-note-value { font-weight:650; margin-top:4px; line-height:1.45; overflow:hidden; display:-webkit-box;
++    -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow-wrap:anywhere; white-space:pre-line; }
++/* Most bottlings have no tastings: show a quiet hint in the section header,
++   never an otherwise empty full-width panel. Keep both actions as real buttons. */
++.tasting-summary > .section-head { flex-wrap:wrap; }
++.tasting-summary-section-heading { min-width:0; }
++.tasting-summary-section-heading > h3 { margin:0; }
++.tasting-summary-empty.hint { margin:4px 0 0; }
++.tasting-summary-heading-actions { flex-wrap:wrap; justify-content:flex-end; min-width:0; }
++.tasting-summary.is-empty > .section-head { margin-bottom:0; }
++@media (max-width:780px) {
++    .tasting-summary-notes { flex-basis:100%; }
++}
++@media (max-width:540px) {
++    .tasting-summary-header { flex-wrap:wrap; }
++    .tasting-summary-main { display:block; }
++    .tasting-summary-meta { display:block; margin-top:4px; }
++    .tasting-summary-actions { margin-left:0; }
++    .tasting-summary-body { gap:14px 18px; }
++    .tasting-summary-radar { flex-basis:100%; min-width:0; max-width:310px; }
++}
+ .tasting-list-rating { flex:0 0 90px; width:90px; min-width:90px; text-align:right; white-space:nowrap; font-weight:700; font-variant-numeric:tabular-nums; }
+ .tasting-list-glasses { display:inline-flex; flex:0 0 auto; gap:2px; align-items:center; transform:translateY(-2px); }
+ .tasting-list-glasses .glencairn-symbol { width:11px; height:19px; display:block; }
+@@ -517,8 +498,6 @@
+     .tasting-record-fields { grid-template-columns:1fr; }
+     .tasting-list-rating { font-size:.9rem; flex-basis:78px; width:78px; min-width:78px; }
+     .tasting-entry-trailing .tasting-list-glasses { width:54px; min-width:54px; }
+-    .tasting-summary-content .actions { width:100%; margin-left:0; }
+-    .tasting-summary-content .actions .btn { flex:1; }
+     .warehouse-bottle-row.tasting-entry-row { flex-direction:column; }
+     .tasting-entry-open { width:100%; gap:8px; }
+     .tasting-entry-trailing { gap:7px; }
+--- a/tests/unit/tasting-layout-0277.test.js
++++ b/tests/unit/tasting-layout-0277.test.js
+@@ -17,14 +17,14 @@
+     return html;
+ }
+ 
+-test('detail-page new tasting is above the summary card, matching another bottle',()=>{
++test('detail-page empty tastings use a subdued heading hint and two buttons without a panel',()=>{
+     const html=detailHtml();
+-    const section=html.match(/<section[^>]*class="section tasting-summary"[\s\S]*?<\/section>/)?.[0];
++    const section=html.match(/<section[^>]*class="section tasting-summary is-empty"[\s\S]*?<\/section>/)?.[0];
+     assert.ok(section);
+-    const heading=section.match(/<div class="section-head">[\s\S]*?<\/div>/)?.[0];
+-    assert.match(heading,/data-act="tastings-new"[^>]*><svg class="new-icon"/);
+-    assert.ok(section.indexOf('data-act="tastings-new"') < section.indexOf('class="panel tasting-summary-card"'));
+-    assert.match(section,/class="actions tasting-summary-actions"[\s\S]*?data-act="tastings-open"/);
++    assert.match(section,/data-act="tastings-new"[^>]*><svg class="new-icon"/);
++    assert.doesNotMatch(section,/class="panel tasting-summary-card"/);
++    assert.match(section,/class="hint tasting-summary-empty">Noch keine Verkostung<\/p>/);
++    assert.match(section,/class="btn" data-act="tastings-open"[\s\S]*?data-act="tastings-new"/);
+     assert.equal((section.match(/data-act="tastings-new"/g)||[]).length,1);
+     assert.match(html, /data-act="add-bottle"><svg class="new-icon"/);
+ });
+@@ -43,7 +43,11 @@
+     const html=detailHtml();
+     assert.match(html,/data-act="tastings-open"(?=\s|>)/);
+     assert.doesNotMatch(html,/data-act="tastings-open"[^>]*data-tasting-id=/);
+-    assert.match(html,/Noch keine Verkostung/);
++    assert.match(html,/class="section tasting-summary is-empty"/);
++    assert.match(html,/<p class="hint tasting-summary-empty">Noch keine Verkostung<\/p>/);
++    assert.match(html,/<button type="button" class="btn" data-act="tastings-open">Alle Verkostungsnotizen<\/button>/);
++    assert.doesNotMatch(html,/class="panel tasting-summary-card"|class="tasting-summary-rating"/);
++    assert.equal((html.match(/data-act="tastings-open"/g)||[]).length,1);
+ });
+ 
+ test('the tasting home create action is inside the entries panel heading',()=>{
+@@ -81,7 +85,7 @@
+     assert.equal((html.match(/data-act="tasting-edit-start"/g)||[]).length,1);
+ });
+ 
+-test('latest tasting card reuses the recorded Glencairn colour and radar and truncatable notes', () => {
++test('latest tasting card reuses the radar and previews notes as other detail facts, but hides colour', () => {
+     const flavorProfile={woody:4,smoky:8,cereal:1,peaty:7,fruity:6,floral:2,medicinal:1,winey:4,feinty:0,sulphury:0};
+     const html=detailHtml([
+         {id:'previous',tastedOn:'2026-11-14',createdAt:'2026-11-14T08:00:00Z',whiskyColor:'gold',flavorProfile:null,
+@@ -90,29 +94,43 @@
+             whiskyColor:'amber',flavorProfile,tastingNotes:{nose:'Rauch & Vanille',palate:'<Frucht>',finish:'   '}}
+     ]);
+     const summary=html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+-    assert.match(summary,/class="tasting-summary-content has-preview"/);
+-    assert.match(summary,/class="tasting-summary-color"/);
+-    assert.match(summary,/class="tasting-readonly-color"/);
+-    assert.match(summary,/class="glencairn-liquid"[^>]*fill:#d17b20/);
++    assert.match(summary,/class="tasting-summary-content"/);
++    assert.doesNotMatch(summary,/tasting-summary-color|tasting-readonly-color|glencairn-liquid/);
+     assert.match(summary,/class="tasting-summary-radar"/);
+     assert.match(summary,/class="flavor-editor is-preview"/);
+     assert.equal((summary.match(/class="flavor-axis-text"/g)||[]).length,10);
+     assert.doesNotMatch(summary,/flavor-sliders|data-flavor-range/);
+-    assert.match(summary,/Rauch &amp; Vanille/);
+-    assert.match(summary,/&lt;Frucht&gt;/);
+-    assert.doesNotMatch(summary,/Old note|tasting-summary-notes[\s\S]*Abgang:/);
++    assert.match(summary,/class="tasting-summary-note"[\s\S]*class="tasting-summary-field-label">Nase<\/span>[\s\S]*class="tasting-summary-note-value">Rauch &amp; Vanille/);
++    assert.match(summary,/class="tasting-summary-field-label">Geschmack<\/span>[\s\S]*class="tasting-summary-note-value">&lt;Frucht&gt;/);
++    assert.doesNotMatch(summary,/Old note|>Abgang<\/span>/);
+     assert.match(summary,/data-act="tastings-open"/);
++});
++
++test('compact preview shares panel edges and uses normal buttons and detail-field notes', () => {
++    const html=detailHtml([{id:'compact',tastedOn:'2026-11-16',rating:80,whiskyColor:'honey',
++        flavorProfile:{woody:5},tastingNotes:{nose:'Vanille und Frucht',palate:'',finish:''}}]);
++    const section=html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
++    const header=section.indexOf('class="tasting-summary-header"');
++    const body=section.indexOf('class="tasting-summary-body"');
++    const score=section.indexOf('class="tasting-summary-score"');
++    const radar=section.indexOf('class="tasting-summary-radar"');
++    const notes=section.indexOf('class="tasting-summary-notes"');
++    assert.ok(header >= 0 && header < body && body < score && score < radar && radar < notes);
++    assert.ok(section.indexOf('class="actions tasting-summary-actions"') < body);
++    assert.match(section,/<button type="button" class="btn" data-act="tastings-open" data-tasting-id="compact">Verkostung anzeigen<\/button>/);
++    assert.match(section,/class="tasting-summary-field-label">Nase<\/span><div class="tasting-summary-note-value">Vanille und Frucht<\/div>/);
++    assert.doesNotMatch(section,/tasting-summary-color|tasting-readonly-color|>Farbe<|>Geschmacksprofil<|>Geschmacksnoten</);
+ });
+ 
+ test('latest tasting only shows preview segments with recorded content', () => {
+     const none=detailHtml([{id:'empty',tastedOn:'2026-11-15',rating:60,
+         whiskyColor:null,flavorProfile:null,tastingNotes:{nose:' ',palate:'',finish:''}}]);
+     const summary=none.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+-    assert.doesNotMatch(summary,/has-preview|tasting-summary-color|tasting-summary-radar|tasting-summary-notes/);
++    assert.doesNotMatch(summary,/tasting-summary-color|tasting-summary-radar|tasting-summary-notes/);
+     assert.match(summary,/60 \/ 100/);
+     const withColor=detailHtml([{id:'color',tastedOn:'2026-11-16',whiskyColor:'custom:#be602f',
+         flavorProfile:null,tastingNotes:{nose:'',palate:'',finish:''}}]);
+     const colorSummary=withColor.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+-    assert.match(colorSummary,/class="tasting-summary-color"/);
+-    assert.doesNotMatch(colorSummary,/tasting-summary-radar|tasting-summary-notes/);
++    assert.doesNotMatch(colorSummary,/tasting-summary-color|tasting-summary-radar|tasting-summary-notes|tasting-readonly-color/);
++    assert.match(colorSummary,/Nicht bewertet/);
+ });

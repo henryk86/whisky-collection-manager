@@ -17,14 +17,14 @@ function detailHtml(tastings=[]) {
     return html;
 }
 
-test('detail-page new tasting is above the summary card, matching another bottle',()=>{
+test('detail-page empty tastings use a subdued heading hint and two buttons without a panel',()=>{
     const html=detailHtml();
-    const section=html.match(/<section[^>]*class="section tasting-summary"[\s\S]*?<\/section>/)?.[0];
+    const section=html.match(/<section[^>]*class="section tasting-summary is-empty"[\s\S]*?<\/section>/)?.[0];
     assert.ok(section);
-    const heading=section.match(/<div class="section-head">[\s\S]*?<\/div>/)?.[0];
-    assert.match(heading,/data-act="tastings-new"[^>]*><svg class="new-icon"/);
-    assert.ok(section.indexOf('data-act="tastings-new"') < section.indexOf('class="panel tasting-summary-card"'));
-    assert.match(section,/class="actions tasting-summary-actions"[\s\S]*?data-act="tastings-open"/);
+    assert.match(section,/data-act="tastings-new"[^>]*><svg class="new-icon"/);
+    assert.doesNotMatch(section,/class="panel tasting-summary-card"/);
+    assert.match(section,/class="hint tasting-summary-empty">Noch keine Verkostung<\/p>/);
+    assert.match(section,/class="btn" data-act="tastings-open"[\s\S]*?data-act="tastings-new"/);
     assert.equal((section.match(/data-act="tastings-new"/g)||[]).length,1);
     assert.match(html, /data-act="add-bottle"><svg class="new-icon"/);
 });
@@ -43,7 +43,11 @@ test('when a bottling has no notes, the overview action does not use an invalid 
     const html=detailHtml();
     assert.match(html,/data-act="tastings-open"(?=\s|>)/);
     assert.doesNotMatch(html,/data-act="tastings-open"[^>]*data-tasting-id=/);
-    assert.match(html,/Noch keine Verkostung/);
+    assert.match(html,/class="section tasting-summary is-empty"/);
+    assert.match(html,/<p class="hint tasting-summary-empty">Noch keine Verkostung<\/p>/);
+    assert.match(html,/<button type="button" class="btn" data-act="tastings-open">Alle Verkostungsnotizen<\/button>/);
+    assert.doesNotMatch(html,/class="panel tasting-summary-card"|class="tasting-summary-rating"/);
+    assert.equal((html.match(/data-act="tastings-open"/g)||[]).length,1);
 });
 
 test('the tasting home create action is inside the entries panel heading',()=>{
@@ -81,7 +85,7 @@ test('saved tasting edit control sits inside the record data panel rather than t
     assert.equal((html.match(/data-act="tasting-edit-start"/g)||[]).length,1);
 });
 
-test('latest tasting card reuses the recorded Glencairn colour and radar and truncatable notes', () => {
+test('latest tasting card reuses the radar and previews notes as other detail facts, but hides colour', () => {
     const flavorProfile={woody:4,smoky:8,cereal:1,peaty:7,fruity:6,floral:2,medicinal:1,winey:4,feinty:0,sulphury:0};
     const html=detailHtml([
         {id:'previous',tastedOn:'2026-11-14',createdAt:'2026-11-14T08:00:00Z',whiskyColor:'gold',flavorProfile:null,
@@ -90,29 +94,43 @@ test('latest tasting card reuses the recorded Glencairn colour and radar and tru
             whiskyColor:'amber',flavorProfile,tastingNotes:{nose:'Rauch & Vanille',palate:'<Frucht>',finish:'   '}}
     ]);
     const summary=html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    assert.match(summary,/class="tasting-summary-content has-preview"/);
-    assert.match(summary,/class="tasting-summary-color"/);
-    assert.match(summary,/class="tasting-readonly-color"/);
-    assert.match(summary,/class="glencairn-liquid"[^>]*fill:#d17b20/);
+    assert.match(summary,/class="tasting-summary-content"/);
+    assert.doesNotMatch(summary,/tasting-summary-color|tasting-readonly-color|glencairn-liquid/);
     assert.match(summary,/class="tasting-summary-radar"/);
     assert.match(summary,/class="flavor-editor is-preview"/);
     assert.equal((summary.match(/class="flavor-axis-text"/g)||[]).length,10);
     assert.doesNotMatch(summary,/flavor-sliders|data-flavor-range/);
-    assert.match(summary,/Rauch &amp; Vanille/);
-    assert.match(summary,/&lt;Frucht&gt;/);
-    assert.doesNotMatch(summary,/Old note|tasting-summary-notes[\s\S]*Abgang:/);
+    assert.match(summary,/class="tasting-summary-note"[\s\S]*class="tasting-summary-field-label">Nase<\/span>[\s\S]*class="tasting-summary-note-value">Rauch &amp; Vanille/);
+    assert.match(summary,/class="tasting-summary-field-label">Geschmack<\/span>[\s\S]*class="tasting-summary-note-value">&lt;Frucht&gt;/);
+    assert.doesNotMatch(summary,/Old note|>Abgang<\/span>/);
     assert.match(summary,/data-act="tastings-open"/);
+});
+
+test('compact preview shares panel edges and uses normal buttons and detail-field notes', () => {
+    const html=detailHtml([{id:'compact',tastedOn:'2026-11-16',rating:80,whiskyColor:'honey',
+        flavorProfile:{woody:5},tastingNotes:{nose:'Vanille und Frucht',palate:'',finish:''}}]);
+    const section=html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    const header=section.indexOf('class="tasting-summary-header"');
+    const body=section.indexOf('class="tasting-summary-body"');
+    const score=section.indexOf('class="tasting-summary-score"');
+    const radar=section.indexOf('class="tasting-summary-radar"');
+    const notes=section.indexOf('class="tasting-summary-notes"');
+    assert.ok(header >= 0 && header < body && body < score && score < radar && radar < notes);
+    assert.ok(section.indexOf('class="actions tasting-summary-actions"') < body);
+    assert.match(section,/<button type="button" class="btn" data-act="tastings-open" data-tasting-id="compact">Verkostung anzeigen<\/button>/);
+    assert.match(section,/class="tasting-summary-field-label">Nase<\/span><div class="tasting-summary-note-value">Vanille und Frucht<\/div>/);
+    assert.doesNotMatch(section,/tasting-summary-color|tasting-readonly-color|>Farbe<|>Geschmacksprofil<|>Geschmacksnoten</);
 });
 
 test('latest tasting only shows preview segments with recorded content', () => {
     const none=detailHtml([{id:'empty',tastedOn:'2026-11-15',rating:60,
         whiskyColor:null,flavorProfile:null,tastingNotes:{nose:' ',palate:'',finish:''}}]);
     const summary=none.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    assert.doesNotMatch(summary,/has-preview|tasting-summary-color|tasting-summary-radar|tasting-summary-notes/);
+    assert.doesNotMatch(summary,/tasting-summary-color|tasting-summary-radar|tasting-summary-notes/);
     assert.match(summary,/60 \/ 100/);
     const withColor=detailHtml([{id:'color',tastedOn:'2026-11-16',whiskyColor:'custom:#be602f',
         flavorProfile:null,tastingNotes:{nose:'',palate:'',finish:''}}]);
     const colorSummary=withColor.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    assert.match(colorSummary,/class="tasting-summary-color"/);
-    assert.doesNotMatch(colorSummary,/tasting-summary-radar|tasting-summary-notes/);
+    assert.doesNotMatch(colorSummary,/tasting-summary-color|tasting-summary-radar|tasting-summary-notes|tasting-readonly-color/);
+    assert.match(colorSummary,/Nicht bewertet/);
 });
