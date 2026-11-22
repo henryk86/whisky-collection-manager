@@ -7,6 +7,8 @@ const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
 import { escapeHtml } from '../ui/dom.js';
 import { editIcon, deleteIcon, locationIcon, newBottlingIcon, addActionLabel, closeIcon, arrowLeftIcon, arrowRightIcon, gripIcon, sparkleIcon } from '../ui/action-icons.js';
 import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
+import { whiskyColorDisplay } from '../ui/whisky-color-selector.js';
+import { flavorChart } from '../ui/flavor-profile.js';
 import { imageUrl, formatValue, formatDate } from '../ui/format.js';
 import { bottleStatusLabels, photoAccept } from '../domain/labels.js';
 
@@ -30,6 +32,14 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
         }
         const latest = latestTasting(bottling);
         const tastingCount = bottling.tastings?.length || 0;
+        const tastingColor = latest?.whiskyColor ? whiskyColorDisplay(latest.whiskyColor) : '';
+        const tastingRadar = latest?.flavorProfile && Object.values(latest.flavorProfile).some(Number.isInteger)
+            ? flavorChart(latest.flavorProfile, {compact:true}) : '';
+        const tastingNotes = ['nose','palate','finish'].map(key => ({
+            label:t(`forms.bottling.${key}`),
+            text:typeof latest?.tastingNotes?.[key] === 'string' ? latest.tastingNotes[key].trim() : ''
+        })).filter(note => note.text);
+        const hasTastingPreview = Boolean(tastingColor || tastingRadar || tastingNotes.length);
         const physicalBottles = bottles(bottling.id);
         const facts = bottlingDetails(bottling, distilleryNames, state.collection.distilleries);
         const originLabel = bottlingOriginLabel(bottling, distilleryNames);
@@ -146,13 +156,16 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
             <button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t(tastingCount ? 'tastings.add' : 'tastings.first'))}</span></button>
         </div>
         <div class="panel tasting-summary-card">
-            <div class="tasting-summary-content">
-                <div><span class="muted">${escapeHtml(t('tastings.latest'))}</span>
+            <div class="tasting-summary-content${hasTastingPreview ? ' has-preview' : ''}">
+                <div class="tasting-summary-main"><span class="muted">${escapeHtml(t('tastings.latest'))}</span>
                 <div class="tasting-summary-score">
                     ${latest?.rating != null ? `<span class="tasting-summary-glasses" aria-hidden="true">${Array.from({length:5},(_,i)=>glencairnRatingSymbol({fill:Math.max(0,Math.min(100,(Number(latest.rating)-i*20)*5)),id:`detail-tasting-${i}`})).join('')}</span>` : ''}
                     <div class="tasting-summary-rating">${latest ? (latest.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(latest.rating)} / 100`) : escapeHtml(t('tastings.none'))}</div>
                 </div>
                 ${latest ? `<span class="muted">${escapeHtml(formatDate(latest.tastedOn))} · ${escapeHtml(t('tastings.count',{count:tastingCount}))}</span>` : ''}</div>
+                ${tastingColor ? `<div class="tasting-summary-color"><span class="tasting-summary-label">${escapeHtml(t('tasting.colorHeading'))}</span>${tastingColor}</div>` : ''}
+                ${tastingRadar ? `<div class="tasting-summary-radar"><span class="tasting-summary-label">${escapeHtml(t('flavor.title'))}</span>${tastingRadar}</div>` : ''}
+                ${tastingNotes.length ? `<div class="tasting-summary-notes"><span class="tasting-summary-label">${escapeHtml(t('tasting.notes'))}</span>${tastingNotes.map(note => `<p><strong>${escapeHtml(note.label)}:</strong> ${escapeHtml(note.text)}</p>`).join('')}</div>` : ''}
                 <div class="actions tasting-summary-actions">
                     <button type="button" class="btn" data-act="tastings-open" ${tastingCount === 1 ? `data-tasting-id="${escapeHtml(latest.id)}"` : ''}>${escapeHtml(t(tastingCount === 1 ? 'tastings.openOne' : 'tastings.openAll'))}</button>
                 </div>

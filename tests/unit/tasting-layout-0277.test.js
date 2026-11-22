@@ -80,3 +80,39 @@ test('saved tasting edit control sits inside the record data panel rather than t
     assert.doesNotMatch(html,/<div class="section-head"><h3>Eindrücke<\/h3>\s*<div class="actions">/);
     assert.equal((html.match(/data-act="tasting-edit-start"/g)||[]).length,1);
 });
+
+test('latest tasting card reuses the recorded Glencairn colour and radar and truncatable notes', () => {
+    const flavorProfile={woody:4,smoky:8,cereal:1,peaty:7,fruity:6,floral:2,medicinal:1,winey:4,feinty:0,sulphury:0};
+    const html=detailHtml([
+        {id:'previous',tastedOn:'2026-11-14',createdAt:'2026-11-14T08:00:00Z',whiskyColor:'gold',flavorProfile:null,
+            tastingNotes:{nose:'Old note',palate:'',finish:''}},
+        {id:'recent',tastedOn:'2026-11-15',createdAt:'2026-11-15T08:00:00Z',rating:80,
+            whiskyColor:'amber',flavorProfile,tastingNotes:{nose:'Rauch & Vanille',palate:'<Frucht>',finish:'   '}}
+    ]);
+    const summary=html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    assert.match(summary,/class="tasting-summary-content has-preview"/);
+    assert.match(summary,/class="tasting-summary-color"/);
+    assert.match(summary,/class="tasting-readonly-color"/);
+    assert.match(summary,/class="glencairn-liquid"[^>]*fill:#d17b20/);
+    assert.match(summary,/class="tasting-summary-radar"/);
+    assert.match(summary,/class="flavor-editor is-preview"/);
+    assert.equal((summary.match(/class="flavor-axis-text"/g)||[]).length,10);
+    assert.doesNotMatch(summary,/flavor-sliders|data-flavor-range/);
+    assert.match(summary,/Rauch &amp; Vanille/);
+    assert.match(summary,/&lt;Frucht&gt;/);
+    assert.doesNotMatch(summary,/Old note|tasting-summary-notes[\s\S]*Abgang:/);
+    assert.match(summary,/data-act="tastings-open"/);
+});
+
+test('latest tasting only shows preview segments with recorded content', () => {
+    const none=detailHtml([{id:'empty',tastedOn:'2026-11-15',rating:60,
+        whiskyColor:null,flavorProfile:null,tastingNotes:{nose:' ',palate:'',finish:''}}]);
+    const summary=none.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    assert.doesNotMatch(summary,/has-preview|tasting-summary-color|tasting-summary-radar|tasting-summary-notes/);
+    assert.match(summary,/60 \/ 100/);
+    const withColor=detailHtml([{id:'color',tastedOn:'2026-11-16',whiskyColor:'custom:#be602f',
+        flavorProfile:null,tastingNotes:{nose:'',palate:'',finish:''}}]);
+    const colorSummary=withColor.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    assert.match(colorSummary,/class="tasting-summary-color"/);
+    assert.doesNotMatch(colorSummary,/tasting-summary-radar|tasting-summary-notes/);
+});

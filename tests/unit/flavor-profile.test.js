@@ -82,3 +82,12 @@ test('obsolete eleven-axis payload is accepted but fiery is not part of the new 
     assert.equal(FLAVOR_AXES.length,10);
     assert.equal(flavorChart(normalizeFlavorProfile(eleven)).includes('Brennend'),false);
 });
+
+test('compact tasting radar uses the original ten-axis graphic without duplicating sliders', () => {
+    const preview=flavorChart(profile,{compact:true});
+    assert.match(preview,/class="flavor-editor is-preview"/);
+    assert.match(preview,/<svg class="flavor-chart"/);
+    assert.equal((preview.match(/class="flavor-axis-text"/g)||[]).length,10);
+    assert.doesNotMatch(preview,/flavor-sliders|flavor-scale|data-flavor-range/);
+    assert.equal((flavorChart(profile).match(/flavor-sliders/g)||[]).length,1);
+});
