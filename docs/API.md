@@ -1,6 +1,6 @@
 # Lokale HTTP-API
 
-Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 5`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Die **optionale Loginpflicht** kann ein Administrator in der Nutzerverwaltung aktivieren. Dann benötigen Sammlungs-API, Bilder und Downloads eine gültige Sitzung; administrative Backup-Operationen behalten ihre separate Sicherheitsprüfung. Bei Internetzugriff sind HTTPS, Loginpflicht und vorzugsweise zusätzliche Netzabsicherung erforderlich.
+Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 6`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Die **optionale Loginpflicht** kann ein Administrator in der Nutzerverwaltung aktivieren. Dann benötigen Sammlungs-API, Bilder und Downloads eine gültige Sitzung; administrative Backup-Operationen behalten ihre separate Sicherheitsprüfung. Bei Internetzugriff sind HTTPS, Loginpflicht und vorzugsweise zusätzliche Netzabsicherung erforderlich.
 
 POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB Anfrageinhalt. Ungültiges JSON und Nicht-Objekte werden mit 400 abgewiesen. Fehlerantwort für bekannte Fehler: `{ "error": "Invalid path.", "errorCode": "api.errors.invalidPath" }`; der `error`-Text ist als sicherer, englischer Fallback gedacht. Der Browser übersetzt `errorCode` mittels der Sprachkataloge `public/locales/de.json` und `en.json`. Bei bestimmten dynamischen Validierungen kann zusätzlich `errorParams` (z. B. `{ "field": "abv" }`) mitgeliefert werden. Für unbekannte Fehler liefert die API ausschließlich eine neutrale englische Meldung einschließlich HTTP-Status, ohne interne Fehlermeldungen offenzulegen. Bekannte Konflikte verwenden 409, nicht gefundene Ressourcen 404. Einzelheiten und beschreibbare Felder stehen in `server/routes.js` und `server/domain/normalization.js`.
 
@@ -35,7 +35,7 @@ Der Browser kann bei `POST`, `PUT`, `PATCH` und `DELETE` den optionalen Header `
 
 | Methode | Pfad | Ergebnis |
 | --- | --- | --- |
-| GET | `/api/collection` | Vollständige Sammlung, Schema 5, einschließlich optionaler `settings.establishedYear`; `ETag`, `If-None-Match` → HTTP 304 |
+| GET | `/api/collection` | Vollständige Sammlung, Schema 6, einschließlich optionaler `settings.establishedYear`; `ETag`, `If-None-Match` → HTTP 304 |
 | PATCH | `/api/settings` | Gründungsjahr als `{ "establishedYear": 1992 }` speichern oder mit `null` entfernen; ganze Zahl von 1600 bis zum aktuellen Jahr |
 | GET | `/api/suggest-number` | `{ "number": "000001" }` als Vorschlag; noch nicht reserviert |
 | POST | `/api/bottlings` | Abfüllung mit erster physischer Flasche, Status 201 |
@@ -65,7 +65,7 @@ Der Browser kann bei `POST`, `PUT`, `PATCH` und `DELETE` den optionalen Header `
 ### Eigenständige Verkostungen je Abfüllung
 
 Eine Abfüllung kann 0–n unabhängige Verkostungen in `bottlings[].tastings[]`
-führen (`schemaVersion: 5`). Dieses Array ist Pflicht; historische
+führen (`schemaVersion: 6`). Dieses Array ist Pflicht; historische
 Verkostungsformate werden weder angenommen noch migriert.
 
 | Methode | Endpunkt | Funktion |
@@ -116,7 +116,7 @@ Abfüllungsdetailseite und der globale App-Header bleiben unverändert.
 
 Die zweite Variante erzeugt **keine externe Abfüllung** und erlaubt keine
 Mehrfachverkostungen zu einem externen Whisky. Alle Informationen stehen in
-**einem** `externalTastings[]`-Eintrag (weiterhin `schemaVersion: 5`):
+**einem** `externalTastings[]`-Eintrag (weiterhin `schemaVersion: 6`):
 Tasting-Felder (Datum, Titel, Farbe, Profil, Nase, Geschmack, Abgang, Bewertung),
 `id`, `createdAt`, `updatedAt` und ein eingebettetes `bottling`-Objekt mit
 `name` (Pflicht), optional `distillery`, `bottler`, `ageYears`, `abv`,
@@ -150,7 +150,7 @@ speichert `flavorProfile: null`, wiederherstellbar über Rückgängig.
 
 Tasting-Flights sind optionale, nur für die Verkostungsorganisation verwendete
 Gruppen in `collection.json`. Sie verändern weder Sammlungsbestand noch
-Bewertungszusammenfassungen. Die Daten liegen in `schemaVersion: 5`.
+Bewertungszusammenfassungen. Die Daten liegen in `schemaVersion: 6`.
 
 | Methode | Endpunkt | Wirkung |
 | --- | --- | --- |
@@ -274,7 +274,7 @@ Nur Dateien, die genau dieser physischen Flasche zugeordnet sind, können über 
 
 ## Kompatibilität
 
-Inventarnummern sind Strings, nicht Zahlen. Veraltetes `labelCode` wird bei neuen API-Anfragen abgewiesen. `labelType` gehört nicht zu den beschreibbaren Feldern. Alte Sammlungen werden beim Import/Start einschließlich Schema 3 durch den Migrationspfad auf Schema 5 angehoben; neue Daten verwenden ausschließlich `inventoryNumber`.
+Inventarnummern sind Strings, nicht Zahlen. Veraltetes `labelCode` wird bei neuen API-Anfragen abgewiesen. `labelType` gehört nicht zu den beschreibbaren Feldern. Alte Sammlungen werden beim Import/Start einschließlich Schema 3 durch den Migrationspfad auf Schema 6 angehoben; neue Daten verwenden ausschließlich `inventoryNumber`.
 
 ## Kartenseite und Destilleriestandorte
 
@@ -333,3 +333,10 @@ Möbel bieten außerdem optionale Seitenwände, Rückwand, Türflügel und Glasr
 - `DELETE /api/bottles/:bottleId/photos/:photoId/cutout` – entfernt ausschließlich die Ableitung; das Original bleibt erhalten.
 
 Alle drei Endpunkte sind normale schreibende JSON-/Origin-geschützte APIs. Die bestehenden Foto-IDs und Sammlungsrouten ändern sich nicht. Das optionale Feld `photos[].cutout` wird in der Sammlung zurückgegeben und bei Backup/Restore erhalten. Einzelheiten: [PHOTO_FREISTELLUNG.md](PHOTO_FREISTELLUNG.md).
+
+### Schema-Upgrade 5 → 6
+
+Beim Laden und beim JSON-/ZIP-Import werden Collection-Dateien aus Schema 5 nach Schema 6 angehoben.
+Dabei bleiben alle Verkostungen, externen Verkostungen, Flights und bereits gespeicherten `ratingComment`-Felder erhalten.
+Das optionale Textfeld `ratingComment` darf bei eigenen und externen Verkostungen bis zu 10.000 Zeichen enthalten.
+Vor einer automatischen Migration wird eine Originalkopie unter `backups/pre-schema6-…json` abgelegt; unbekannte neuere Schemata werden weiterhin abgewiesen.

@@ -450,8 +450,14 @@ test('browser: v0.26.0 multiple dated tastings, latest summary, individual editi
         await page.locator('[data-act="tastings-back-detail"]').click();
         assert.match(await page.locator('.tasting-summary-rating').innerText(),/Nicht bewertet/,
             'latest tasting without score must not fall back to 81');
-        await page.locator('[data-act="tastings-open"]').first().click();
-        await list.first().locator('[data-act="tastings-open"]').click();
+        const latestRecord=(await requestJson(base,'/api/collection')).data.bottlings
+            .find(entry => entry.id===bottling.id).tastings.find(entry => entry.tastedOn==='2026-11-12');
+        const previewButton=page.locator('.tasting-summary-card [data-act="tastings-open"]');
+        assert.equal(await previewButton.getAttribute('data-tasting-id'),latestRecord.id,
+            'a multi-tasting preview links directly to the latest tasting');
+        await previewButton.click();
+        assert.equal(await page.locator('[data-act="tasting-edit-start"]').count(),1,
+            'the preview opens the individual tasting instead of the list');
         assert.equal(await page.locator('[data-tasting-score]').count(),0,'saved tasting is read-only on opening');
         await page.locator('[data-act="tasting-edit-start"]').click();
         await page.locator('[data-tasting-score]').fill('87,5');

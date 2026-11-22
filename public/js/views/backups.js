@@ -1,6 +1,6 @@
 import { t, tHtml, currentLanguage } from '../i18n/index.js';
 /** One place for manual, scheduled and restorative backups. All archives are ZIP. */
-import { addActionLabel } from '../ui/action-icons.js';
+import { addActionLabel, successIcon, warningIcon, moreIcon } from '../ui/action-icons.js';
 import { escapeHtml as h } from '../ui/dom.js';
 import { jobErrorText } from '../i18n/job-errors.js';
 
@@ -92,7 +92,7 @@ export function renderBackupSection(state) {
       </div>
       <h4>${t("backups.jobs.recent")}</h4>
       <div class="backup-job-list" role="list">${jobs.length ? jobs.map(j => `<div class="backup-job" role="listitem">
-        <span class="backup-job-state ${h(j.state)}">${j.state === 'success' ? '✓' : j.state === 'failed' ? '!' : '…'}</span>
+        <span class="backup-job-state ${h(j.state)}">${j.state === 'success' ? successIcon : j.state === 'failed' ? warningIcon : moreIcon}</span>
         <div><strong>${h(({run:t('backups.jobs.run'),test:t('backups.jobs.test'),check:t('backups.jobs.check'),snapshots:t('backups.jobs.snapshots'),restore:t('backups.jobs.restore'),prepare:t('backups.jobs.prepare')})[j.type] || j.type)}</strong> <span class="muted">· ${h(profiles.find(p => p.id === j.profileId)?.name || t("backups.profiles.remoteProfileLabel"))} · ${h(labelTime(j.startedAt))}</span>
         ${j.state === 'failed' ? `<p class="backup-job-error">${h(jobErrorText(j))}</p>` : ''}${j.message ? `<p class="muted">${h(j.message)}</p>` : ''}</div></div>`).join('') : `<p class="muted">${t("backups.empty.noJobs")}</p>`}</div>
     </section>`;

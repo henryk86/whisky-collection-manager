@@ -22,10 +22,10 @@ export function flavorPolygon(values) {
     return FLAVOR_AXES.flatMap((axis, index) => scorePresent(values?.[axis])
         ? [point(index, values[axis]).map(n => n.toFixed(2)).join(',')] : []).join(' ');
 }
-export function flavorChart(values, { editable = false, colorSection = null } = {}) {
+export function flavorChart(values, { editable = false, colorSection = null, compact = false } = {}) {
     if (!values && !editable) return `<p class="hint">${escapeHtml(t('flavor.notRecorded'))}</p>`;
     const scores = values || Object.fromEntries(FLAVOR_AXES.map(axis => [axis, 0]));
-    return `<div class="flavor-editor${editable ? ' is-editable' : ''}${colorSection ? ' has-color' : ''}" ${editable ? `data-flavor-editor data-flavor-set="${values ? '1' : ''}"` : ''}>
+    return `<div class="flavor-editor${editable ? ' is-editable' : ''}${colorSection ? ' has-color' : ''}${compact ? ' is-preview' : ''}" ${editable ? `data-flavor-editor data-flavor-set="${values ? '1' : ''}"` : ''}>
         ${colorSection || ''}
         <svg class="flavor-chart" viewBox="0 0 460 390" role="img" aria-label="${escapeHtml(t('flavor.chartLabel'))}">
             ${[2,4,6,8,10].map(score => `<polygon class="flavor-grid" points="${FLAVOR_AXES.map((_,i) => point(i,score).join(',')).join(' ')}"/>`).join('')}
@@ -33,9 +33,9 @@ export function flavorChart(values, { editable = false, colorSection = null } = 
             <polygon class="flavor-area" data-flavor-polygon points="${flavorPolygon(scores)}"/>
             ${editable ? `<circle class="flavor-hit-target" data-flavor-hit="1" cx="${cx}" cy="${cy}" r="${radius}"/>` : ''}
             ${FLAVOR_AXES.map((axis,i) => { const score = scores[axis]; const [x,y]=point(i,scorePresent(score) ? score : 0); return `<circle class="flavor-point" data-flavor-point="${i}" cx="${x}" cy="${y}" r="${editable ? 6 : 4}" ${scorePresent(score) ? '' : 'visibility="hidden"'}/>`; }).join('')}
-            ${FLAVOR_AXES.map((axis,i) => { const [x,y] = point(i,13.5); const side = Math.cos(angleAt(i)); const anchor = side > .3 ? 'start' : side < -.3 ? 'end' : 'middle'; return `<text class="flavor-axis-text" x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle">${escapeHtml(flavorAxisTitle(axis))}</text>`; }).join('')}
+            ${FLAVOR_AXES.map((axis,i) => { const [x,y] = point(i,compact ? 11.2 : 13.5); const side = Math.cos(angleAt(i)); const anchor = side > .3 ? 'start' : side < -.3 ? 'end' : 'middle'; return `<text class="flavor-axis-text" x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle">${escapeHtml(flavorAxisTitle(axis))}</text>`; }).join('')}
         </svg>
-        <div class="flavor-sliders">${FLAVOR_AXES.map((axis,i) => { const score = scores[axis]; const missing = !scorePresent(score); return `<label class="flavor-scale"><span>${escapeHtml(flavorAxisTitle(axis))}</span>${editable ? `<input type="range" min="0" max="10" step="1" value="${missing ? 0 : score}" name="flavor-${axis}" data-flavor-range="${i}" ${missing ? 'data-flavor-unset="1"' : ''} aria-label="${escapeHtml(flavorAxisTitle(axis))}"><output data-flavor-value="${i}">${missing ? '–' : score}</output>` : `<strong>${missing ? '–' : `${score} / 10`}</strong>`}</label>`; }).join('')}</div>
+        ${compact ? '' : `<div class="flavor-sliders">${FLAVOR_AXES.map((axis,i) => { const score = scores[axis]; const missing = !scorePresent(score); return `<label class="flavor-scale"><span>${escapeHtml(flavorAxisTitle(axis))}</span>${editable ? `<input type="range" min="0" max="10" step="1" value="${missing ? 0 : score}" name="flavor-${axis}" data-flavor-range="${i}" ${missing ? 'data-flavor-unset="1"' : ''} aria-label="${escapeHtml(flavorAxisTitle(axis))}"><output data-flavor-value="${i}">${missing ? '–' : score}</output>` : `<strong>${missing ? '–' : `${score} / 10`}</strong>`}</label>`; }).join('')}</div>`}
     </div>`;
 }
 export function readFlavorProfile(form) {

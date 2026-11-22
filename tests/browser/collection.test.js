@@ -1161,15 +1161,33 @@ test('browser: overview quick filters list only used distilleries and combine st
             const overflow = await page.evaluate(() => document.body.scrollWidth - document.body.getBoundingClientRect().width);
             assert.ok(overflow <= 1, `${width}px: overview quick filters must not overflow`);
             const layout = await page.locator('.collection-filters').evaluate(toolbar => {
-                const controls = [...toolbar.querySelectorAll('input#search, select, button.btn')];
-                return controls.filter(element => element.getBoundingClientRect().height > 0).map(element => ({
-                    id:element.id || element.dataset.act, top:element.getBoundingClientRect().top,
-                    height:element.getBoundingClientRect().height,
+                // The flavor filter is a <summary> on desktop and a modal button
+                // on mobile. Exactly one of those two controls must be visible.
+                const controls = [...toolbar.querySelectorAll(
+                    'input#search, select, button.btn, .collection-flavor-picker > summary'
+                )];
+                return controls.filter(element => element.getClientRects().length > 0).map(element => ({
+                    id: element.id || element.dataset.act ||
+                        (element.matches('.collection-flavor-trigger') ? 'collection-flavor-trigger' : ''),
+                    top: element.getBoundingClientRect().top,
+                    height: element.getBoundingClientRect().height,
                 }));
             });
-            assert.equal(layout.length, 9, 'search, six selectors, expand and view buttons are available');
+            // Assert the actual controls, not an exact total: future additions
+            // must not invalidate an otherwise accessible filter toolbar.
+            for (const id of [
+                'search', 'filter-sort', 'filter-status', 'filter-completion',
+                'toggle-collection-filters', 'toggle-view',
+                'filter-distillery', 'filter-rating', 'filter-volume-type',
+            ]) {
+                assert.equal(layout.filter(item => item.id === id).length, 1,
+                    `${width}px: ${id} is visible exactly once`);
+            }
+            assert.equal(layout.filter(item =>
+                item.id === 'collection-flavor-trigger' || item.id === 'collection-flavor-open').length, 1,
+            `${width}px: exactly one flavor filter trigger is visible`);
             assert.ok(layout.every(item => Math.abs(item.height - 44) <= 1),
-                `${width}px: all visible controls including More filters must be 44px high`);
+                `${width}px: all visible controls including More filters and flavor must be 44px high`);
             if (width === 1366) {
                 assert.equal(layout[0].top, layout[1].top, 'desktop: search and sort share the top row');
                 assert.ok(layout[2].top > layout[0].top, 'desktop: status is on the second row');

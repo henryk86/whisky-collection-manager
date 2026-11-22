@@ -14,7 +14,7 @@ import english from '../../public/locales/en.json' with { type: 'json' };
 import { GLENCAIRN_INK } from '../../public/js/ui/glencairn-icon.js';
 
 const notes = nose => ({nose,palate:'',finish:''});
-test('schema 5 rejects legacy tasting fields on a bottling; bottles do not store sensory data', () => {
+test('schema 6 rejects legacy tasting fields on a bottling; bottles do not store sensory data', () => {
     for (const field of ['rating','tastingNotes','flavorProfile','whiskyColor','legacyTastings'])
         assert.throws(() => normalizeBottling({name:'Release',[field]:field === 'rating'?87:null}));
     const bottle = normalizeBottle({inventoryNumber:'003',rating:15,tastingNotes:notes('No')});
@@ -43,24 +43,26 @@ test('five clickable Glencairn glasses retain fractional original 0-100 ratings'
     assert.match(glencairnRating(null), /placeholder="–"/);
     assert.match(glencairnRating(null), /value=""/);
 });
-test('undo/redo includes notes, glass ratings and flavor values and resets redo on new edit', () => {
+test('undo/redo includes notes, glass ratings, rating comment and flavor values and resets redo on new edit', () => {
     const initial = {flavorProfile:null,tastingNotes:notes(''),rating:null};
     const history = createTastingHistory(initial);
     history.record({flavorProfile:null,tastingNotes:notes('Oak'),rating:40});
-    history.record({flavorProfile:null,tastingNotes:notes('Oak'),rating:80});
+    history.record({flavorProfile:null,tastingNotes:notes('Oak'),rating:80,ratingComment:'Worth another try'});
     assert.equal(history.canUndo,true);
     history.undo();
     assert.equal(history.value.rating,40);
+    assert.equal(history.value.ratingComment,'');
     assert.equal(history.value.tastingNotes.nose,'Oak');
     history.redo();
     assert.equal(history.value.rating,80);
+    assert.equal(history.value.ratingComment,'Worth another try');
     history.undo();
     history.record({...history.value,rating:100});
     assert.equal(history.canRedo,false);
     assert.equal(history.value.rating,100);
 });
 test('analytics counts only the latest dated tasting, independent of physical bottle count', () => {
-    const collection = {schemaVersion:5,distilleries:[],bottlings:[{
+    const collection = {schemaVersion:6,distilleries:[],bottlings:[{
         id:'x',name:'Release',distilleryIds:[],tastings:[{id:'t1',tastedOn:'2026-10-01',rating:85,
             tastingNotes:notes('Oak'),flavorProfile:null,whiskyColor:null,createdAt:'2026-10-01T00:00:00Z'}],
         bottles:[{id:'a',status:'closed',volumeType:'standard'}, {id:'b',status:'open',volumeType:'standard'}]

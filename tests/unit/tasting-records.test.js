@@ -24,6 +24,13 @@ test('tasting metadata and rating are validated and foreign fields rejected',()=
     const good=normalizeTastingRecord({tastedOn:'2026-11-15',rating:87.5});
     assert.equal(good.rating,87.5);
     assert.equal(good.title,'');
+    assert.equal(good.ratingComment,'','old records without a comment remain valid');
+    const commented=normalizeTastingRecord({ratingComment:'Warm, aber recht kurzer Abgang.'},good);
+    assert.equal(commented.ratingComment,'Warm, aber recht kurzer Abgang.');
+    assert.equal(normalizeTastingRecord({rating:90},commented).ratingComment,commented.ratingComment);
+    assert.equal(normalizeTastingRecord({ratingComment:''},commented).ratingComment,'');
+    for (const ratingComment of [null,123,'x'.repeat(10001)])
+        assert.throws(()=>normalizeTastingRecord({ratingComment},good));
     for (const date of ['2026-02-30','today','2026-13-01',''])
         assert.throws(()=>normalizeTastingRecord({tastedOn:date}));
     for (const rating of [-1,101,'87',NaN])

@@ -2,7 +2,7 @@
 import { normalizeFlavorProfile } from './flavor-profile.js';
 import { normalizeWhiskyColor } from './whisky-colors.js';
 import { emptyTastingNotes, normalizeTastingNotes, normalizeTastingRating } from './tasting.js';
-export const VALID_TASTING_FIELDS = Object.freeze(['tastedOn','title','flavorProfile','tastingNotes','rating','whiskyColor']);
+export const VALID_TASTING_FIELDS = Object.freeze(['tastedOn','title','flavorProfile','tastingNotes','rating','ratingComment','whiskyColor']);
 export function validTastingDate(value) {
     if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
     const d = new Date(`${value}T00:00:00Z`);
@@ -13,13 +13,15 @@ export function normalizeTastingRecord(input, old = {}) {
         Object.keys(input).some(key => !VALID_TASTING_FIELDS.includes(key)))
         throw new Error('Ungültige Verkostungsdaten');
     const value = {tastedOn:null, title:'', flavorProfile:null, tastingNotes:emptyTastingNotes(),
-        rating:null, whiskyColor:null, ...old, ...input};
+        rating:null, ratingComment:'', whiskyColor:null, ...old, ...input};
     if (!validTastingDate(value.tastedOn)) throw new Error('Ungültiges Verkostungsdatum');
     if (typeof value.title !== 'string' || value.title.length > 120) throw new Error('Ungültiger Verkostungstitel');
     value.title = value.title.trim();
     value.flavorProfile = normalizeFlavorProfile(value.flavorProfile);
     value.tastingNotes = normalizeTastingNotes(value.tastingNotes);
     value.rating = normalizeTastingRating(value.rating);
+    if (typeof value.ratingComment !== 'string' || value.ratingComment.length > 10000)
+        throw new Error('Ungültiger Bewertungskommentar');
     value.whiskyColor = normalizeWhiskyColor(value.whiskyColor);
     return value;
 }

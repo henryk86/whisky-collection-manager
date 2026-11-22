@@ -4,15 +4,16 @@ import { analyzeCollection, analyticsFilterOptions } from '../domain/analytics.j
 import { escapeHtml } from '../ui/dom.js';
 import { readAnalyticsDate } from '../domain/analytics-period.js';
 import { sectionWorkspace } from '../ui/section-navigation.js';
+import { chevronRightIcon, analysisOverviewIcon, analysisInventoryIcon, analysisOriginsIcon, analysisProfileIcon, analysisFinanceIcon, analysisTimelineIcon, analysisQualityIcon } from '../ui/action-icons.js';
 
 export const ANALYSIS_PAGES = Object.freeze([
-    { id: 'overview', get title() { return t("analytics.navigation.overview"); }, get sub() { return t("analytics.summary.highlights"); }, icon: '◫' },
-    { id: 'inventory', get title() { return t("analytics.inventory.collectionStock"); }, get sub() { return t("analytics.inventory.sectionDescription"); }, icon: '▤' },
-    { id: 'origins', get title() { return t("analytics.origin.title"); }, get sub() { return t("analytics.origin.sectionDescription"); }, icon: '◎' },
-    { id: 'profile', get title() { return t("analytics.profile.title"); }, get sub() { return t("analytics.profile.sectionDescription"); }, icon: '◇' },
-    { id: 'finance', get title() { return t("analytics.finance.title"); }, get sub() { return t("analytics.finance.pricesAndRetailers"); }, icon: '€' },
-    { id: 'timeline', get title() { return t("analytics.trends.tastingSection"); }, get sub() { return t("analytics.trends.sectionDescription"); }, icon: '▥' },
-    { id: 'quality', get title() { return t("analytics.quality.title"); }, get sub() { return t("analytics.quality.sectionDescription"); }, icon: '✓' },
+    { id: 'overview', get title() { return t("analytics.navigation.overview"); }, get sub() { return t("analytics.summary.highlights"); }, icon: analysisOverviewIcon },
+    { id: 'inventory', get title() { return t("analytics.inventory.collectionStock"); }, get sub() { return t("analytics.inventory.sectionDescription"); }, icon: analysisInventoryIcon },
+    { id: 'origins', get title() { return t("analytics.origin.title"); }, get sub() { return t("analytics.origin.sectionDescription"); }, icon: analysisOriginsIcon },
+    { id: 'profile', get title() { return t("analytics.profile.title"); }, get sub() { return t("analytics.profile.sectionDescription"); }, icon: analysisProfileIcon },
+    { id: 'finance', get title() { return t("analytics.finance.title"); }, get sub() { return t("analytics.finance.pricesAndRetailers"); }, icon: analysisFinanceIcon },
+    { id: 'timeline', get title() { return t("analytics.trends.tastingSection"); }, get sub() { return t("analytics.trends.sectionDescription"); }, icon: analysisTimelineIcon },
+    { id: 'quality', get title() { return t("analytics.quality.title"); }, get sub() { return t("analytics.quality.sectionDescription"); }, icon: analysisQualityIcon },
 ]);
 const number = v => Number.isFinite(v) ? new Intl.NumberFormat(currentLanguage(), { maximumFractionDigits: 1 }).format(v) : '–';
 const money = (v, currency) => {
@@ -222,7 +223,7 @@ function quality(analytics) {
             t("analytics.notes.overlappingMissingFields")))}`;
 }
 function sectionCard(page, stat) {
-    return `<button class="analytics-section-card" type="button" data-act="analytics-section" data-section="${safe(page.id)}"><span class="analytics-section-icon">${page.icon}</span><span><strong>${safe(page.title)}</strong><small>${safe(page.sub)}</small></span><span class="analytics-section-chevron" aria-hidden="true">›</span></button>`;
+    return `<button class="analytics-section-card" type="button" data-act="analytics-section" data-section="${safe(page.id)}"><span class="analytics-section-icon">${page.icon}</span><span><strong>${safe(page.title)}</strong><small>${safe(page.sub)}</small></span><span class="analytics-section-chevron" aria-hidden="true">${chevronRightIcon}</span></button>`;
 }
 function overview(analytics) {
     const s = analytics.scope, p = analytics.provenance;

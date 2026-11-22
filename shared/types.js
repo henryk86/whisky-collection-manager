@@ -1,5 +1,5 @@
 /**
- * Documentation contracts for the JSON format (schemaVersion 5).
+ * Documentation contracts for the JSON format (schemaVersion 6).
  * These JSDoc types do not add runtime validation or a build step.
  * Runtime validation lives in server/domain/validation.js.
  * Optional metadata is intentionally omitted from minimal examples.
@@ -42,6 +42,7 @@
  * @property {string} [title] Optional tasting title.
  * @property {{nose:string,palate:string,finish:string}} tastingNotes
  * @property {number|null} rating Optional score from 0 to 100.
+ * @property {string} [ratingComment] Optional overall comment on the rating, up to 10,000 characters.
  * @property {Object|null} flavorProfile Ten sensory axes (older records may have eight).
  * @property {string|null} whiskyColor A fixed whisky colour key or custom:#rrggbb (restricted warm whisky hue).
  * @property {string} createdAt ISO timestamp.
@@ -100,7 +101,7 @@
  * @property {string} updatedAt
  *
  * @typedef {Object} Collection
- * @property {5} schemaVersion
+ * @property {6} schemaVersion
  * @property {number} nextInventoryNumber
  * @property {string[]} reservedInventoryNumbers Historical numbers skipped by automatic suggestions; may be manually reassigned once free.
  * @property {{establishedYear: number|null}} [settings] Optional collection-wide preferences; older archives omit this.

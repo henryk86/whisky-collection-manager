@@ -42,3 +42,26 @@ export function detachTastings(collection, ids) {
         }
     }
 }
+
+/** Planned members reference physical bottles, never fabricated tasting records. */
+export const FLIGHT_PHASES = Object.freeze(['planned','inProgress','completed']);
+export const PLAN_LIMIT = 6;
+export function validateFlightPlan(collection,flight) {
+    if (flight.phase === undefined && flight.planItems === undefined) return true; // legacy flights
+    if (!FLIGHT_PHASES.includes(flight.phase) || !Array.isArray(flight.planItems) ||
+        flight.planItems.length > PLAN_LIMIT) throw new Error('Invalid flight plan');
+    const seen = new Set();
+    for (const item of flight.planItems) {
+        if (!item || typeof item !== 'object' || Array.isArray(item) ||
+            Object.keys(item).some(k=>!['bottlingId','bottleId','reason'].includes(k)) ||
+            typeof item.bottlingId !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(item.bottlingId) ||
+            typeof item.bottleId !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(item.bottleId) ||
+            seen.has(item.bottlingId) || (item.reason!==undefined && !['noProfile','untried','contrast','similar','intensity','manual'].includes(item.reason))) throw new Error('Invalid planned item');
+        seen.add(item.bottlingId);
+        // Missing bottles are retained in old plans and explicitly highlighted in the UI.
+    }
+    if (flight.phase === 'planned' && flight.tastingIds?.length) throw new Error('Planning may not contain tastings');
+    // Existing records may be removed later; a completed flight must remain valid
+    // even when its last tasting is deleted. The transition itself requires a tasting.
+    return true;
+}

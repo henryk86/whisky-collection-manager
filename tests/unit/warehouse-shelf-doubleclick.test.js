@@ -5,7 +5,7 @@ import { bindEvents } from '../../public/js/events.js';
 function delegatedEvents() {
     const listeners = new Map();
     const calls = {opened:[],selected:[],bottlePreviews:[]};
-    const root = {addEventListener:(name, fn) => listeners.set(name, fn)};
+    const root = {addEventListener:(name, fn) => listeners.set(name, fn), querySelectorAll:() => []};
     const previousDocument = globalThis.document;
     globalThis.document = {addEventListener:()=>{}};
     try {

@@ -9,7 +9,7 @@ import { createWarehouseView } from '../../public/js/views/warehouse.js';
 const locale = name => JSON.parse(fs.readFileSync(new URL(`../../public/locales/${name}`, import.meta.url), 'utf8'));
 const fetchLocale = async url => ({ok:true,json:async()=>locale(url.split('/').at(-1))});
 const room = { id:'room-1', name:'Whiskyzimmer', width:4, height:3, furniture:[{id:'f1',name:'Mein Regal',type:'regal',x:0,y:0,width:1,depth:.5,rotation:0,shelves:[{id:'s1',name:'Fach 1',capacity:10}]}]};
-const collection = {schemaVersion:5,settings:{},distilleries:[{id:'d1',name:'Ardbeg',country:'Schottland'}],bottlings:[{id:'b1',name:'Custom Islay',distilleryIds:['d1'],completionStatus:'complete',bottles:[{id:'p1',status:'closed',volumeType:'standard',volumeMl:700,inventoryNumber:'000001'}]}]};
+const collection = {schemaVersion:6,settings:{},distilleries:[{id:'d1',name:'Ardbeg',country:'Schottland'}],bottlings:[{id:'b1',name:'Custom Islay',distilleryIds:['d1'],completionStatus:'complete',bottles:[{id:'p1',status:'closed',volumeType:'standard',volumeMl:700,inventoryNumber:'000001'}]}]};
 const selectors = {allBottles:()=>collection.bottlings[0].bottles,bottles:()=>collection.bottlings[0].bottles,coverPhoto:()=>null,distilleryNames:()=> 'Ardbeg'};
 
 test('English renders actual collection, analytics and warehouse controls, not German literals', async () => {

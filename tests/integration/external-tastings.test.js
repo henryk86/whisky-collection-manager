@@ -5,7 +5,7 @@ import {normalizeTastingSubject} from '../../shared/tasting-subject.js';
 import {parseRoute,routeUrl} from '../../public/js/navigation/routes.js';
 
 const day='2026-11-15';
-const valid = {bottling:{name:' Tasted elsewhere ',distillery:'Islay producer',bottler:'Private bottler',ageYears:12,abv:48.5,releaseYear:2018},tastedOn:day,rating:88};
+const valid = {bottling:{name:' Tasted elsewhere ',distillery:'Islay producer',bottler:'Private bottler',ageYears:12,abv:48.5,releaseYear:2018},tastedOn:day,rating:88,ratingComment:'A clear favorite'};
 
 test('one standalone tasting is one record; it does not create an inventory or subject object',async()=>{
     const server=await startTestServer();
@@ -23,6 +23,7 @@ test('one standalone tasting is one record; it does not create an inventory or s
         assert.notEqual(firstId,second.data.id);
         assert.equal((await api(server.base,'/api/external-tastings')).data.length,2);
         assert.equal((await api(server.base,`/api/external-tastings/${firstId}`)).data.rating,88);
+        assert.equal((await api(server.base,`/api/external-tastings/${firstId}`)).data.ratingComment,'A clear favorite');
         assert.equal((await api(server.base,`${ownedEndpoint}/${firstId}`)).status,404);
         let data=(await api(server.base,'/api/collection')).data;
         assert.equal(data.bottlings.length,1);
@@ -35,6 +36,7 @@ test('one standalone tasting is one record; it does not create an inventory or s
         });
         assert.equal(cleared.status,200);
         assert.equal(cleared.data.rating,null);
+        assert.equal(cleared.data.ratingComment,'A clear favorite','unrelated edits preserve the comment');
         assert.equal(cleared.data.bottling.name,'Corrected name');
         assert.equal(cleared.data.bottling.ageYears,12,'partial subject edit preserves details');
         for (const bad of [
@@ -96,7 +98,7 @@ test('standalone tasting can be assigned once to an existing owned bottling with
         const second=(await api(server.base,'/api/bottlings','POST',{name:'Other owned'})).data.bottling;
         const tasting={bottling:{name:'Sample before purchase',abv:55},tastedOn:'2026-10-10',title:'At a tasting',
             tastingNotes:{nose:'honey',palate:'orange',finish:'long'},flavorProfile:{woody:8,cereal:2,peaty:1,fruity:7,floral:4,winey:2,feinty:0,sulphury:0},
-            whiskyColor:'butter',rating:92};
+            whiskyColor:'butter',rating:92,ratingComment:'Balanced and complex'};
         // Old 8-axis profiles remain accepted, with new aroma dimensions unassessed.
         const created=await api(server.base,'/api/external-tastings','POST',tasting);
         assert.equal(created.status,201);
@@ -116,7 +118,7 @@ test('standalone tasting can be assigned once to an existing owned bottling with
         assert.equal(target.tastings.length,1);
         assert.equal(target.tastings[0].id,id,'preserve tasting identity');
         assert.equal(target.tastings[0].createdAt,created.data.createdAt);
-        for (const key of ['tastedOn','title','rating','whiskyColor','flavorProfile','tastingNotes'])
+        for (const key of ['tastedOn','title','rating','ratingComment','whiskyColor','flavorProfile','tastingNotes'])
             assert.deepEqual(target.tastings[0][key],created.data[key],`${key} must not change`);
         assert.equal(target.tastings[0].rating,92);
         assert.equal(collection.bottlings.find(b=>b.id===second.id).tastings.length,0);

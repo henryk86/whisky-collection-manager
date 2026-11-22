@@ -63,6 +63,7 @@ const routes = [
     { method: 'PUT', path: /^\/api\/warehouse\/bottles\/([\w-]+)$/, run: ([id], body) => warehouse.assignBottle(id, body) },
     { method: 'POST', path: /^\/api\/map\/find-distillery$/, run: (_args, body) => findDistilleryLocations(body) },
     { method: 'PATCH', path: /^\/api\/settings$/, run: (_args, body) => settings.updateSettings(body) },
+    { method: 'PUT', path: /^\/api\/settings\/saved-views$/, run: (_args, body) => settings.updateSavedViews(body) },
     { method: 'POST', path: /^\/api\/backups\/password$/, run: (_args, body, req) => backups.setZipPassword(req, body) },
     { method: 'GET', path: /^\/api\/backups$/, run: (_args, _body, req) => backups.getDashboard(req) },
     { method: 'POST', path: /^\/api\/backups\/import-zip$/, binaryUpload: true, status: 201, run: (_args, _body, req) => recovery.receiveZip(req) },

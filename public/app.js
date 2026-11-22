@@ -55,12 +55,12 @@ const shell = createShell({
     root, state, applyTheme: theme.applyTheme, renderModal: modal.renderModal
 });
 const home = createHomeView({
-    state, selectors, shell
+    state, selectors, shell, navigate, refresh, showModal:modal.showModal, closeModal:modal.closeModal, confirm:modal.confirm
 });
 const detail = createDetailView({
     state, selectors, shell, navigate, action
 });
-const tastingsView = createTastingsView({state,selectors,shell,navigate,refresh,showModal:modal.showModal,closeModal:modal.closeModal});
+const tastingsView = createTastingsView({state,selectors,shell,navigate,refresh,showModal:modal.showModal,closeModal:modal.closeModal,confirm:modal.confirm});
 const auth = createAuthController({ root, state, render, refresh, applyTheme: theme.applyTheme, showModal: modal.showModal, closeModal: modal.closeModal });
 const settingsView = createSettingsView(state, auth);
 const bottlingForm = createBottlingForm({

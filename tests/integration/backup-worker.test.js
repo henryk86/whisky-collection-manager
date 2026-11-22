@@ -22,7 +22,7 @@ printf '%s\\n' "$*" >> "$FAKE_RESTIC_LOG"
 case " $* " in
   *' snapshots --json '*) printf '[]\\n' ;;
   *' backup '*) test -f data/collection.json && test -f images/pic.png && test -f documents/bill.pdf || exit 8 ;;
-  *' restore '*) while [ "$#" -gt 0 ]; do if [ "$1" = '--target' ]; then shift; mkdir -p "$1"; echo restored > "$1/restored.txt"; mkdir -p "$1/data"; echo '{"schemaVersion":5}' > "$1/data/collection.json"; break; fi; shift; done ;;
+  *' restore '*) while [ "$#" -gt 0 ]; do if [ "$1" = '--target' ]; then shift; mkdir -p "$1"; echo restored > "$1/restored.txt"; mkdir -p "$1/data"; echo '{"schemaVersion":6}' > "$1/data/collection.json"; break; fi; shift; done ;;
 esac
 exit 0
 `, 0o700);
@@ -46,7 +46,7 @@ case "$1" in listremotes) echo 'dropbox:';; lsd) exit 0;; esac
                 res.writeHead(403); return res.end('{}');
             }
             const id = req.url.split('/').at(-1);
-            create(control, `staging/${id}/data/collection.json`, '{"schemaVersion":5}');
+            create(control, `staging/${id}/data/collection.json`, '{"schemaVersion":6}');
             create(control, `staging/${id}/images/pic.png`, 'photo');
             create(control, `staging/${id}/documents/bill.pdf`, 'invoice');
             res.setHeader('Content-Type', 'application/json'); res.end('{}');
@@ -177,7 +177,7 @@ test('ZIP worker reports missing and too-short passwords by their stable identif
     try {
         server = http.createServer((req, res) => {
             const id = req.url.split('/').at(-1);
-            create(control, `staging/${id}/data/collection.json`, '{"schemaVersion":5}');
+            create(control, `staging/${id}/data/collection.json`, '{"schemaVersion":6}');
             res.end('{}');
         });
         await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));

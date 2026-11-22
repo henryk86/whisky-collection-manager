@@ -1,14 +1,14 @@
 # Architektur und Orientierung
 
-**Stand:** Ein einheitlicher DOM-Abgleich, direkte Mutationsantworten mit Datenrevisionen, Shared-Module, HTTP-Caches und Schema 5. Dieses Dokument beschreibt die eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
+**Stand:** Ein einheitlicher DOM-Abgleich, direkte Mutationsantworten mit Datenrevisionen, Shared-Module, HTTP-Caches und Schema 6. Dieses Dokument beschreibt die eingesetzten Module und ihre Verantwortlichkeiten. Frühere Release-Entscheidungen gehören in [CHANGELOG](../CHANGELOG.md), nicht in eine zweite Versionschronik.
 
 ## Grundprinzipien
 
 - **Eine Anwendung:** Node.js-Server mit nativen Browser-ES-Modulen; kein Bundler, Frontend-Framework und keine Datenbank.
-- **Zwei getrennte Datenmodelle:** `collection.json` (Schema 5) für die Sammlung und `warehouse.json` (Schema 1) für die physische Lageranordnung. Die Lagerzuordnung verweist mit stabilen Flaschen-/Fach-IDs auf die Sammlung.
+- **Zwei getrennte Datenmodelle:** `collection.json` (Schema 6) für die Sammlung und `warehouse.json` (Schema 1) für die physische Lageranordnung. Die Lagerzuordnung verweist mit stabilen Flaschen-/Fach-IDs auf die Sammlung.
 - **Server entscheidet über Datenänderungen:** UI-Validierung hilft beim Ausfüllen, ersetzt aber keine serverseitigen Fachregeln. Schreiben ist serialisiert, validiert und atomar pro Datei.
 - **Darstellung ist kein Datenmodell:** 2D-/3D-Geometrie und Statistikwerte werden abgeleitet; sie verändern die Quelldaten nicht.
-- **Versionierte Datenformate:** Schema 5 ist inkompatibel zu älteren Programmen. Beim Upgrade werden bestehende Sammlungsdaten nach Validierung übernommen; alle Verkostungsdaten aus Schema 1 bis 4 entfallen, auch zuletzt angelegte. Ältere Programmversionen dürfen die migrierten Dateien nicht mehr öffnen.
+- **Versionierte Datenformate:** Schema 6 ist inkompatibel zu älteren Programmen. Beim Upgrade werden bestehende Sammlungsdaten nach Validierung übernommen; alle Verkostungsdaten aus Schema 1 bis 4 entfallen, auch zuletzt angelegte. Ältere Programmversionen dürfen die migrierten Dateien nicht mehr öffnen.
 
 ## Repository im Überblick
 
@@ -100,7 +100,7 @@ HTTP(S)-Anfrage
 
 ```text
 ${WCM_DATA_DIR}/storage/
-  data/collection.json         Sammlung, schemaVersion 5
+  data/collection.json         Sammlung, schemaVersion 6
   data/warehouse.json          Räume/Fächer/Zuordnungen, schemaVersion 1
   images/                      Fotos je physischer Flasche
   documents/                   Download-geschützte Anhänge je Flasche
@@ -109,7 +109,7 @@ ${WCM_DATA_DIR}/storage/
 
 Inventarnummern sind Strings (führende Nullen bleiben erhalten). In der Collection liegen `bottlings[].bottles[]`, in der Lagerdatei verweist `assignments[bottleId]` auf eine `shelfId`. Namen sind **keine** IDs. Die genaue Feldsemantik steht in [ANFORDERUNGEN](ANFORDERUNGEN.md), [LAGER](LAGER.md) und [API](API.md).
 
-**Upgrade auf Schema 5:** Eine bestehende `collection.json` (Schema 1 bis 4) wird vor dem Schreiben im Arbeitsspeicher migriert und validiert. Die Originaldatei wird unveraendert unter `backups/pre-schema5-…json` gesichert. Abfuellungen, physische Flaschen samt IDs und Inventarnummern, Destillerien, Einstellungen, Foto- und Dateireferenzen bleiben erhalten. Saemtliche bisher gespeicherten Verkostungsdaten (`tastings`, `externalTastings`, `tastingFlights`, Bewertungen, `tastingNotes`, `flavorProfile` und `whiskyColor`) werden beim Upgrade **nicht** uebernommen, auch wenn sie unmittelbar vor dem Upgrade angelegt wurden. Dies ist eine bewusste Datenverlust-Entscheidung; es handelt sich nicht um eine verlustfreie Migration aller Daten. `warehouse.json` mit Raeumen, Moebeln, Faechern und Flaschenzuordnungen bleibt **bytegenau unveraendert**. Alte JSON-Importe und ZIP-Backups werden im Import-/Restore-Pfad auf Schema 5 angehoben; neuere unbekannte Schemata und ungueltige Daten werden abgelehnt, ohne Bestandsdateien zu ueberschreiben. Fotos und Belege liegen auf dem Datentraeger; eine reine Collection-JSON-Sicherung enthaelt sie **nicht**.
+**Upgrade auf Schema 6:** Schema-5-Dateien werden verlustfrei inklusive aller Verkostungen und Bewertungskommentare auf Schema 6 angehoben. Eine bestehende `collection.json` (Schema 1 bis 4) wird vor dem Schreiben im Arbeitsspeicher migriert und validiert. Die Originaldatei wird unveraendert unter `backups/pre-schema6-…json` gesichert. Abfuellungen, physische Flaschen samt IDs und Inventarnummern, Destillerien, Einstellungen, Foto- und Dateireferenzen bleiben erhalten. Nur beim Upgrade von Schema 1 bis 4 werden bisher gespeicherte Verkostungsdaten (`tastings`, `externalTastings`, `tastingFlights`, Bewertungen, `tastingNotes`, `flavorProfile` und `whiskyColor`) **nicht** uebernommen, auch wenn sie unmittelbar vor dem Upgrade angelegt wurden. Dies ist eine bewusste Datenverlust-Entscheidung; es handelt sich nicht um eine verlustfreie Migration aller Daten. `warehouse.json` mit Raeumen, Moebeln, Faechern und Flaschenzuordnungen bleibt **bytegenau unveraendert**. Alte JSON-Importe und ZIP-Backups werden im Import-/Restore-Pfad auf Schema 6 angehoben; neuere unbekannte Schemata und ungueltige Daten werden abgelehnt, ohne Bestandsdateien zu ueberschreiben. Fotos und Belege liegen auf dem Datentraeger; eine reine Collection-JSON-Sicherung enthaelt sie **nicht**.
 
 ## Backup und Wiederherstellung
 
@@ -138,7 +138,7 @@ UI-Texte werden über `t(key, params)` aus `public/js/i18n/index.js` aufgelöst.
 
 ## Lokale Foto-Freistellung
 
-Die optionalen `photos[].cutout`-Daten werden zusammen mit den bestehenden physischen Flaschen in Schema 5 gespeichert. Modell-Ausführung, Originalbild-Vorschau und transparente Ausgabe liegen in `public/js/features/cutout/`; die Freistellungs-API liegt in `server/services/bottles.js` und unterliegt der normalen Persistenzvalidierung. Bilddateien bleiben in `storage/images`. Das Docker-Image stellt ONNX/WASM lokal aus `public/ai` bereit (siehe [PHOTO_FREISTELLUNG.md](PHOTO_FREISTELLUNG.md)); das Backend führt kein KI-Modell aus.
+Die optionalen `photos[].cutout`-Daten werden zusammen mit den bestehenden physischen Flaschen in Schema 6 gespeichert. Modell-Ausführung, Originalbild-Vorschau und transparente Ausgabe liegen in `public/js/features/cutout/`; die Freistellungs-API liegt in `server/services/bottles.js` und unterliegt der normalen Persistenzvalidierung. Bilddateien bleiben in `storage/images`. Das Docker-Image stellt ONNX/WASM lokal aus `public/ai` bereit (siehe [PHOTO_FREISTELLUNG.md](PHOTO_FREISTELLUNG.md)); das Backend führt kein KI-Modell aus.
 
 ## Externe Importdaten
 

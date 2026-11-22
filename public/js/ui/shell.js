@@ -1,5 +1,5 @@
 import { t } from '../i18n/index.js';
-import { newBottlingIcon, inventoryScanIcon, themeMoonIcon } from './action-icons.js';
+import { newBottlingIcon, inventoryScanIcon, themeMoonIcon, closeIcon } from './action-icons.js';
 import { MAIN_PAGES } from '../navigation/pages.js';
 import { reconcileChildren } from './dom-reconcile.js';
 import { escapeHtml } from './dom.js';
@@ -51,7 +51,7 @@ export function createShell({ root, state, applyTheme, renderModal }) {
     </header>
     <div class="site-drawer-backdrop" data-act="close-menu" hidden></div>
     <aside class="site-drawer" id="site-drawer" aria-label="${t("ui.navigation.sideMenu")}" hidden>
-      <div class="site-drawer-head"><h2>${t("ui.navigation.label")}</h2><button type="button" class="btn small" data-act="close-menu" aria-label="${t("ui.navigation.closeMenu")}">✕</button></div>
+      <div class="site-drawer-head"><h2>${t("ui.navigation.label")}</h2><button type="button" class="btn small" data-act="close-menu" aria-label="${t("ui.navigation.closeMenu")}">${closeIcon}</button></div>
       <nav class="site-nav" aria-label="${t("ui.navigation.primary")}">${MAIN_PAGES.map(item => `
         <a href="${item.url}" data-act="${item.action}" ${item.id === state.page || (item.id === 'home' && state.page === 'detail') || (item.id === 'tastings-home' && ['tastings','tasting','external-tasting','tasting-flight'].includes(state.page)) ? 'aria-current="page"' : ''}>
           <svg class="${item.navClass || ''}" viewBox="${item.viewBox || '0 0 24 24'}" fill="${item.filled?'currentColor':'none'}" stroke="${item.filled?'none':'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${item.icon}</svg>${item.label}

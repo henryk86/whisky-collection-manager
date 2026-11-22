@@ -4,7 +4,8 @@ import { assert } from './errors.js';
 import { allBottles, WHISKY_TYPES } from './collection.js';
 import { normalizeTastingRecord } from '../../shared/tasting-records.js';
 import { normalizeStandaloneTasting } from '../../shared/standalone-tastings.js';
-import {normalizeFlightFields,FLIGHT_LIMIT,allTastingReferences} from '../../shared/tasting-flights.js';
+import {normalizeFlightFields,FLIGHT_LIMIT,allTastingReferences,validateFlightPlan} from '../../shared/tasting-flights.js';
+import {normalizeSavedViews} from '../../shared/collection-saved-views.js';
 import { isDocumentPath } from '../storage/documents.js';
 const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
 const isString = value => typeof value === 'string';
@@ -18,13 +19,17 @@ const validDay = value => {
 };
 const validImagePath = p => typeof p === 'string' && /^images\/[a-f0-9-]{36}\/[\w-]+\.(jpg|png|webp|gif)$/i.test(p);
 export function validate(collection) {
-    assert(isObject(collection) && collection.schemaVersion === 5, 'Ungültige oder nicht unterstützte JSON-Schemaversion', 400, "api.errors.invalidOrUnsupportedJSONSchemaVersion");
+    assert(isObject(collection) && collection.schemaVersion === 6, 'Ungültige oder nicht unterstützte JSON-Schemaversion', 400, "api.errors.invalidOrUnsupportedJSONSchemaVersion");
     assert(Array.isArray(collection.bottlings) && !Object.hasOwn(collection, 'bottles') && Array.isArray(collection.distilleries), 'Ungültige Sammlungsstruktur', 400, "api.errors.invalidCollectionStructure");
     assert(Number.isSafeInteger(collection.nextInventoryNumber) && collection.nextInventoryNumber > 0, 'Ungültiger Inventarnummern-Zähler', 400, "api.errors.invalidInventoryNumberCounter");
     assert(Array.isArray(collection.reservedInventoryNumbers), 'Fehlende Liste reservierter Inventarnummern', 400, "api.errors.missingListOfReservedInventoryNumbers");
     // Current collection settings only.
     if (collection.settings !== undefined) {
         assert(isObject(collection.settings), 'Ungültige Sammlungseinstellungen', 400, "api.errors.invalidCollectionSettings");
+        if (collection.settings.savedViews !== undefined) {
+            try { normalizeSavedViews(collection.settings.savedViews); }
+            catch { assert(false,'Ungültige gespeicherte Ansichten',400,'api.errors.invalidCollectionSettings'); }
+        }
         const year = collection.settings.establishedYear;
         assert(year == null || (Number.isSafeInteger(year) && year >= 1600 && year <= new Date().getFullYear()), 'Gründungsjahr muss zwischen 1600 und dem aktuellen Jahr liegen', 400, "api.errors.foundingYearMustBeBetween1600AndTheCurrentYear");
     }
@@ -106,7 +111,7 @@ export function validate(collection) {
                 isString(record.createdAt) && !Number.isNaN(Date.parse(record.createdAt)) &&
                 isString(record.updatedAt) && !Number.isNaN(Date.parse(record.updatedAt)), 'Ungültige externe Verkostungsmetadaten', 400, "api.errors.invalidExternalTastingMetadata");
             ids.add(record.id);
-            assert(Object.keys(record).every(k=>['id','createdAt','updatedAt','bottling','tastedOn','title','flavorProfile','tastingNotes','rating','whiskyColor'].includes(k)), 'Unbekanntes externes Verkostungsfeld', 400, "api.errors.unknownExternalTastingField");
+            assert(Object.keys(record).every(k=>['id','createdAt','updatedAt','bottling','tastedOn','title','flavorProfile','tastingNotes','rating','ratingComment','whiskyColor'].includes(k)), 'Unbekanntes externes Verkostungsfeld', 400, "api.errors.unknownExternalTastingField");
             const {id,createdAt,updatedAt,...editable} = record;
             try { normalizeStandaloneTasting(editable); }
             catch { assert(false, 'Ungültige externe Verkostungsdaten', 400, "api.errors.invalidExternalTastingData"); }
@@ -122,9 +127,11 @@ export function validate(collection) {
                 !flights.has(flight.id) && isString(flight.createdAt) && !Number.isNaN(Date.parse(flight.createdAt)) &&
                 isString(flight.updatedAt) && !Number.isNaN(Date.parse(flight.updatedAt)), 'Ungültige Flight-Metadaten', 400, "api.errors.invalidFlightMetadata");
             flights.add(flight.id);
-            assert(Object.keys(flight).every(k=>['id','name','date','notes','tastingIds','createdAt','updatedAt'].includes(k)), 'Unbekanntes Flight-Feld', 400, "api.errors.unknownFlightField");
+            assert(Object.keys(flight).every(k=>['id','name','date','notes','tastingIds','createdAt','updatedAt','phase','planItems'].includes(k)), 'Unbekanntes Flight-Feld', 400, "api.errors.unknownFlightField");
             try { normalizeFlightFields({name:flight.name,date:flight.date,notes:flight.notes}); }
             catch { assert(false, 'Ungültiger Flight', 400, "api.errors.invalidFlight"); }
+            try { validateFlightPlan(collection,flight); }
+            catch { assert(false,'Ungültige Flight-Planung',400,'api.errors.invalidFlight'); }
             assert(Array.isArray(flight.tastingIds) && flight.tastingIds.length<=FLIGHT_LIMIT, 'Ungültige Flight-Reihenfolge', 400, "api.errors.invalidFlightOrder");
             for (const id of flight.tastingIds) {
                 assert(isString(id) && /^[a-zA-Z0-9-]{1,100}$/.test(id) && !assigned.has(id) &&
