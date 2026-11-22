@@ -101,7 +101,8 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             <div class="tasting-notes">${['nose','palate','finish'].map(key=>`<div class="tasting-readonly-field"><span class="tasting-readonly-label">${escapeHtml(t(`forms.bottling.${key}`))}</span><p class="tasting-readonly-note">${blank(value.tastingNotes?.[key])}</p></div>`).join('')}</div>
         </section>
         <section class="analytics-panel tasting-rating-panel"><h3>${escapeHtml(t('tasting.overallRating'))}</h3>
-            ${staticRating(value)}</section>
+            ${staticRating(value)}
+            ${value.ratingComment?.trim() ? `<div class="tasting-rating-comment"><span class="tasting-readonly-label">${escapeHtml(t('tasting.ratingComment'))}</span><p class="tasting-readonly-note">${escapeHtml(value.ratingComment)}</p></div>` : ''}</section>
     </div>`;
     const tastingListGlasses = record => {
         if (record.rating == null || !Number.isFinite(Number(record.rating))) return '';
@@ -121,7 +122,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         </button>
         ${home ? '' : `<div class="tasting-entry-actions"><button type="button" class="btn small danger" data-act="tasting-delete" data-tasting-id="${escapeHtml(record.id)}">${escapeHtml(t('common.actions.delete'))}</button></div>`}
     </div>`;
-    const emptyRecord = () => ({tastedOn:localToday(),title:'',flavorProfile:null,tastingNotes:emptyTastingNotes(),rating:null,whiskyColor:null});
+    const emptyRecord = () => ({tastedOn:localToday(),title:'',flavorProfile:null,tastingNotes:emptyTastingNotes(),rating:null,ratingComment:'',whiskyColor:null});
     const emptyBottling = () => ({name:'',distillery:'',bottler:'',ageYears:null,abv:null,releaseYear:null});
     let flavorSaveQueue = Promise.resolve();
     let draftSavePending = null;
@@ -132,6 +133,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             tastingNotes:Object.fromEntries(['nose','palate','finish'].map(key =>
                 [key,node.querySelector(`[data-tasting-note="${key}"]`)?.value || ''])),
             rating:parseTastingScore(node.querySelector('[data-tasting-score]')?.value),
+            ratingComment:node.querySelector('[data-tasting-rating-comment]')?.value || '',
             whiskyColor:node.querySelector('[data-whisky-color]')?.dataset.whiskyColor || null};
     }
     function updateTastingButtons() {
@@ -159,6 +161,8 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             const input = node.querySelector(`[data-tasting-note="${key}"]`);
             if (input) input.value = value.tastingNotes[key];
         }
+        const ratingComment = node.querySelector('[data-tasting-rating-comment]');
+        if (ratingComment) ratingComment.value = value.ratingComment;
         const rating = node.querySelector('[data-tasting-rating]');
         if (rating) rating.outerHTML = glencairnRating(value.rating);
         const color = node.querySelector('[data-whisky-color]');
@@ -772,6 +776,9 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
                     <button type="button" class="btn small" data-act="tasting-rating-clear" ${flavorSession.history.value.rating == null ? 'disabled' : ''}>${escapeHtml(t('tasting.clearRating'))}</button>
                 </div>
                 ${glencairnRating(flavorSession.history.value.rating)}
+                <label class="tasting-rating-comment tasting-rating-comment-editor">${escapeHtml(t('tasting.ratingComment'))}
+                    <textarea data-tasting-rating-comment maxlength="10000" rows="3">${escapeHtml(flavorSession.history.value.ratingComment)}</textarea>
+                </label>
             </section>
         </div>
         ${draft ? `<div class="actions tasting-create-actions"><button type="button" class="btn primary" data-act="tasting-create">${escapeHtml(t('tastings.save'))}</button></div>` : ''}

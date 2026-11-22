@@ -90,4 +90,8 @@ test('compact tasting radar uses the original ten-axis graphic without duplicati
     assert.equal((preview.match(/class="flavor-axis-text"/g)||[]).length,10);
     assert.doesNotMatch(preview,/flavor-sliders|flavor-scale|data-flavor-range/);
     assert.equal((flavorChart(profile).match(/flavor-sliders/g)||[]).length,1);
+    const labelY = html => Number(html.match(/<text class="flavor-axis-text"[^>]*y="([^"]+)"[^>]*>Holzig<\/text>/)?.[1]);
+    // Only the detail preview tightens axis labels; the full tasting radar is unchanged.
+    assert.ok(labelY(preview) > labelY(flavorChart(profile)));
+    assert.ok(labelY(preview) < 64, 'the compact top label is close to the radar ring');
 });

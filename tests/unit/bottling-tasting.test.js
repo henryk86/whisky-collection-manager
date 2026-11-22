@@ -43,17 +43,19 @@ test('five clickable Glencairn glasses retain fractional original 0-100 ratings'
     assert.match(glencairnRating(null), /placeholder="–"/);
     assert.match(glencairnRating(null), /value=""/);
 });
-test('undo/redo includes notes, glass ratings and flavor values and resets redo on new edit', () => {
+test('undo/redo includes notes, glass ratings, rating comment and flavor values and resets redo on new edit', () => {
     const initial = {flavorProfile:null,tastingNotes:notes(''),rating:null};
     const history = createTastingHistory(initial);
     history.record({flavorProfile:null,tastingNotes:notes('Oak'),rating:40});
-    history.record({flavorProfile:null,tastingNotes:notes('Oak'),rating:80});
+    history.record({flavorProfile:null,tastingNotes:notes('Oak'),rating:80,ratingComment:'Worth another try'});
     assert.equal(history.canUndo,true);
     history.undo();
     assert.equal(history.value.rating,40);
+    assert.equal(history.value.ratingComment,'');
     assert.equal(history.value.tastingNotes.nose,'Oak');
     history.redo();
     assert.equal(history.value.rating,80);
+    assert.equal(history.value.ratingComment,'Worth another try');
     history.undo();
     history.record({...history.value,rating:100});
     assert.equal(history.canRedo,false);

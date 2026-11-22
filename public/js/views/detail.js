@@ -167,12 +167,12 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                         <div class="tasting-summary-rating">${latest.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(latest.rating)} / 100`}</div>
                     </div>
                     <span class="muted tasting-summary-meta">${escapeHtml(formatDate(latest.tastedOn))} · ${escapeHtml(t('tastings.count',{count:tastingCount}))}</span>
+                    <div class="actions tasting-summary-actions">
+                        <button type="button" class="btn" data-act="tastings-open" data-tasting-id="${escapeHtml(latest.id)}">${escapeHtml(t('tastings.openOne'))}</button>
+                    </div>
                 </div>
                 ${tastingRadar ? `<div class="tasting-summary-radar">${tastingRadar}</div>` : ''}
-                ${tastingNotes.length ? `<div class="tasting-summary-notes">${tastingNotes.map(note => `<div class="tasting-summary-note"><span class="tasting-summary-field-label">${escapeHtml(note.label)}</span><div class="tasting-summary-note-value">${escapeHtml(note.text)}</div></div>`).join('')}</div>` : ''}
-                <div class="actions tasting-summary-actions">
-                    <button type="button" class="btn" data-act="tastings-open" data-tasting-id="${escapeHtml(latest.id)}">${escapeHtml(t('tastings.openOne'))}</button>
-                </div>
+                <div class="tasting-summary-notes${tastingNotes.length ? '' : ' is-empty'}"${tastingNotes.length ? '' : ' aria-hidden="true"'}>${tastingNotes.map(note => `<div class="tasting-summary-note"><span class="tasting-summary-field-label">${escapeHtml(note.label)}</span><div class="tasting-summary-note-value">${escapeHtml(note.text)}</div></div>`).join('')}</div>
             </div>
         </div>` : ''}
     </section>

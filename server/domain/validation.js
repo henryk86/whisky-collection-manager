@@ -111,7 +111,7 @@ export function validate(collection) {
                 isString(record.createdAt) && !Number.isNaN(Date.parse(record.createdAt)) &&
                 isString(record.updatedAt) && !Number.isNaN(Date.parse(record.updatedAt)), 'Ungültige externe Verkostungsmetadaten', 400, "api.errors.invalidExternalTastingMetadata");
             ids.add(record.id);
-            assert(Object.keys(record).every(k=>['id','createdAt','updatedAt','bottling','tastedOn','title','flavorProfile','tastingNotes','rating','whiskyColor'].includes(k)), 'Unbekanntes externes Verkostungsfeld', 400, "api.errors.unknownExternalTastingField");
+            assert(Object.keys(record).every(k=>['id','createdAt','updatedAt','bottling','tastedOn','title','flavorProfile','tastingNotes','rating','ratingComment','whiskyColor'].includes(k)), 'Unbekanntes externes Verkostungsfeld', 400, "api.errors.unknownExternalTastingField");
             const {id,createdAt,updatedAt,...editable} = record;
             try { normalizeStandaloneTasting(editable); }
             catch { assert(false, 'Ungültige externe Verkostungsdaten', 400, "api.errors.invalidExternalTastingData"); }

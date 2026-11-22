@@ -130,22 +130,35 @@ test('compact preview shares panel edges and uses normal buttons and detail-fiel
     const button=section.indexOf('class="actions tasting-summary-actions"');
     assert.ok(summary >= 0 && summary < heading && heading < score && score < date,
         'left summary keeps the original heading, rating, date hierarchy');
-    assert.ok(date < radar && radar < notes && notes < button,
-        'radar, optional notes and the individual tasting button follow the left summary');
+    const mainEnd=section.indexOf('class="tasting-summary-radar"');
+    assert.ok(date < button && button < mainEnd && mainEnd < notes,
+        'the tasting button follows the date inside the left summary, before radar and optional notes');
+    assert.match(section,/class="muted tasting-summary-meta"[^>]*>[^<]*<\/span>\s*<div class="actions tasting-summary-actions">/);
     assert.match(section,/<button type="button" class="btn" data-act="tastings-open" data-tasting-id="compact">Verkostung anzeigen<\/button>/);
     assert.match(section,/class="tasting-summary-field-label">Nase<\/span><div class="tasting-summary-note-value">Vanille und Frucht<\/div>/);
     assert.doesNotMatch(section,/tasting-summary-color|tasting-readonly-color|>Farbe<|>Geschmacksprofil<|>Geschmacksnoten</);
 });
 
-test('latest tasting only shows preview segments with recorded content', () => {
+test('desktop reserves the right notes column without displaying absent notes', () => {
+    const flavorProfile={woody:4,smoky:8,cereal:1,peaty:7,fruity:6,floral:2,medicinal:1,winey:4,feinty:0,sulphury:0};
+    const html=detailHtml([{id:'without-notes',tastedOn:'2026-11-15',rating:80,
+        flavorProfile,tastingNotes:{nose:' ',palate:'',finish:''}}]);
+    const section=html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    assert.match(section,/class="tasting-summary-radar"[\s\S]*?class="tasting-summary-notes is-empty" aria-hidden="true"><\/div>/);
+    assert.doesNotMatch(section,/class="tasting-summary-note"|class="tasting-summary-field-label"/);
+});
+
+test('latest tasting only shows recorded preview content, not empty note labels', () => {
     const none=detailHtml([{id:'empty',tastedOn:'2026-11-15',rating:60,
         whiskyColor:null,flavorProfile:null,tastingNotes:{nose:' ',palate:'',finish:''}}]);
     const summary=none.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    assert.doesNotMatch(summary,/tasting-summary-color|tasting-summary-radar|tasting-summary-notes/);
+    assert.doesNotMatch(summary,/tasting-summary-color|tasting-summary-radar|class="tasting-summary-note"/);
+    assert.match(summary,/class="tasting-summary-notes is-empty" aria-hidden="true"><\/div>/);
     assert.match(summary,/60 \/ 100/);
     const withColor=detailHtml([{id:'color',tastedOn:'2026-11-16',whiskyColor:'custom:#be602f',
         flavorProfile:null,tastingNotes:{nose:'',palate:'',finish:''}}]);
     const colorSummary=withColor.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    assert.doesNotMatch(colorSummary,/tasting-summary-color|tasting-summary-radar|tasting-summary-notes|tasting-readonly-color/);
+    assert.doesNotMatch(colorSummary,/tasting-summary-color|tasting-summary-radar|class="tasting-summary-note"|tasting-readonly-color/);
+    assert.match(colorSummary,/class="tasting-summary-notes is-empty" aria-hidden="true"><\/div>/);
     assert.match(colorSummary,/Nicht bewertet/);
 });

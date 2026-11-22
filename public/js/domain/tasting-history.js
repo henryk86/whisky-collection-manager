@@ -2,7 +2,7 @@ import { cloneFlavor } from './flavor-history.js';
 import { normalizeTastingNotes } from '../../../shared/tasting.js';
 export function cloneTasting(value) {
     return {flavorProfile:cloneFlavor(value.flavorProfile), tastingNotes:normalizeTastingNotes(value.tastingNotes),
-        rating:value.rating ?? null, whiskyColor:value.whiskyColor ?? null};
+        rating:value.rating ?? null, ratingComment:value.ratingComment ?? '', whiskyColor:value.whiskyColor ?? null};
 }
 /** History belongs to a single opened detail page; redo is invalidated on edit. */
 export function createTastingHistory(value) {

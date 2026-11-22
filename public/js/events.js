@@ -416,7 +416,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         if (event.target.matches?.('[data-flavor-detail] [data-tasting-score]')) tastingsView.previewRating();
     });
     root.addEventListener('change', event => {
-        if (event.target.matches?.('[data-flavor-detail] [data-flavor-range], [data-flavor-detail] [data-tasting-note], [data-flavor-detail] [data-tasting-score]')) tastingsView.commitFlavor();
+        if (event.target.matches?.('[data-flavor-detail] [data-flavor-range], [data-flavor-detail] [data-tasting-note], [data-flavor-detail] [data-tasting-score], [data-flavor-detail] [data-tasting-rating-comment]')) tastingsView.commitFlavor();
         if (event.target.matches?.('[data-flavor-detail] [data-tasting-date], [data-flavor-detail] [data-tasting-title]')) void tastingsView.persistMeta();
     });
     let flavorPointer = null;

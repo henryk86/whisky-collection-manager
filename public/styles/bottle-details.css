@@ -376,26 +376,41 @@
     .tasting-rating { gap:9px; }
 }
 
-/* Keep the original three-line rating hierarchy (title, glasses/score,
-   date/count) and the same outer panel edges as all other detail fields. */
-.tasting-summary-content { display:flex; align-items:center; flex-wrap:wrap; gap:18px 28px; min-width:0; }
-.tasting-summary-main { flex:1 1 280px; min-width:0; }
+/* Preserve the rating hierarchy and panel edges. On desktop, visible columns
+   take roughly 1 : 1 : 2 space (rating : radar : notes), with a compact rating
+   capped at 320px. Space between fills any remaining width. */
+.tasting-summary-content { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:nowrap; column-gap:clamp(12px,1.5vw,24px); row-gap:18px; }
+.tasting-summary-main { flex:1 1 310px; min-width:0; max-width:320px; }
+.tasting-summary-radar { flex:1 1 310px; min-width:0; max-width:335px; }
+.tasting-summary-notes { flex:2 1 620px; min-width:0; max-width:700px; }
 .tasting-summary-lead { display:block; font-size:clamp(1rem,1.6vw,1.25rem); line-height:1.35; }
 .tasting-summary-meta { display:block; font-size:clamp(.9rem,1.2vw,1.05rem); line-height:1.35; }
 .tasting-summary-score { display:flex; align-items:center; flex-wrap:wrap; gap:6px 13px; margin:7px 0; min-width:0; }
 .tasting-summary-glasses { display:inline-flex; align-items:center; gap:4px; flex:0 0 auto; }
 .tasting-summary-glasses .glencairn-symbol { display:block; width:25px; height:42px; }
 .tasting-summary-rating { font-size:clamp(1.5rem,2.7vw,2.2rem); font-weight:750; margin:0; white-space:nowrap; font-variant-numeric:tabular-nums; }
-.tasting-summary-radar { flex:0 1 300px; min-width:230px; }
 .tasting-summary-radar .flavor-editor.is-preview { display:block; }
 .tasting-summary-radar .flavor-chart { display:block; width:100%; height:auto; max-height:230px; }
 .tasting-summary-radar .flavor-axis-text { font-size:14px; }
-.tasting-summary-notes { display:grid; gap:14px; flex:1 1 235px; min-width:0; }
+.tasting-summary-notes { display:grid; gap:14px; }
 .tasting-summary-field-label { display:block; color:var(--muted); font-size:12px; font-weight:400; }
 .tasting-summary-note { min-width:0; }
-.tasting-summary-note-value { font-weight:650; margin-top:4px; line-height:1.45; overflow:hidden; display:-webkit-box;
+.tasting-summary-note-value { font-size:14px; font-weight:650; margin-top:4px; line-height:1.45; overflow:hidden; display:-webkit-box;
     -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow-wrap:anywhere; white-space:pre-line; }
-.tasting-summary-actions { flex:0 0 auto; justify-content:flex-end; margin-left:auto; }
+.tasting-summary-actions { justify-content:flex-start; margin-top:14px; }
+@media (min-width:901px) and (max-width:1200px) {
+    /* Keep rating and radar legible at intermediate desktop widths. */
+    .tasting-summary-glasses { gap:2px; }
+    .tasting-summary-glasses .glencairn-symbol { width:20px; height:34px; }
+    .tasting-summary-rating { font-size:clamp(1.5rem,2.4vw,2rem); }
+}
+@media(max-width:900px) {
+    .tasting-summary-content { flex-wrap:wrap; }
+    .tasting-summary-main { flex:1 1 260px; }
+    .tasting-summary-radar { flex:1 1 245px; }
+    .tasting-summary-notes { flex:1 1 200px; }
+    .tasting-summary-notes.is-empty { display:none; }
+}
 /* Most bottlings have no tastings: show a quiet hint in the section header,
    never an otherwise empty full-width panel. Keep both actions as real buttons. */
 .tasting-summary > .section-head { flex-wrap:wrap; }
@@ -404,15 +419,6 @@
 .tasting-summary-empty.hint { margin:4px 0 0; }
 .tasting-summary-heading-actions { flex-wrap:wrap; justify-content:flex-end; min-width:0; }
 .tasting-summary.is-empty > .section-head { margin-bottom:0; }
-@media (max-width:780px) {
-    .tasting-summary-notes { flex-basis:100%; }
-}
-@media (max-width:540px) {
-    .tasting-summary-main { flex-basis:100%; }
-    .tasting-summary-actions { width:100%; margin-left:0; }
-    .tasting-summary-actions .btn { flex:1 1 auto; }
-    .tasting-summary-radar { flex-basis:100%; min-width:0; max-width:310px; }
-}
 .tasting-list-rating { flex:0 0 90px; width:90px; min-width:90px; text-align:right; white-space:nowrap; font-weight:700; font-variant-numeric:tabular-nums; }
 .tasting-list-glasses { display:inline-flex; flex:0 0 auto; gap:2px; align-items:center; transform:translateY(-2px); }
 .tasting-list-glasses .glencairn-symbol { width:11px; height:19px; display:block; }
@@ -447,8 +453,8 @@
 .tasting-create-chooser { padding:16px; margin:0 0 14px; border:1px solid var(--line); background:var(--cream); display:grid; gap:14px; }
 .tasting-create-chooser > .btn { justify-self:start; }
 
-/* Like the bottling details, the return link precedes the entire page heading.
-   No separate typography or oversized arrow for tasting navigation. */
+/* Match bottling details: the back link starts at the shared main container's
+   top edge, with no extra tasting-only top padding. */
 .tasting-child-page > .tasting-back-nav { display:block; margin:0 0 18px; }
 .tasting-child-page > .analytics-page-heading { margin-top:0; }
 .tasting-back { display:inline-flex; align-items:center; gap:5px; margin:0; cursor:pointer; }
@@ -556,6 +562,9 @@
 .tasting-readonly-glasses { display:inline-flex; align-items:center; gap:6px; }
 .tasting-readonly-glasses .glencairn-symbol { width:25px; height:44px; }
 .tasting-readonly-rating > strong { font-size:1.25rem; }
+.tasting-rating-comment { display:grid; gap:7px; margin-top:18px; min-width:0; }
+.tasting-rating-comment-editor { max-width:100%; }
+.tasting-rating-comment-editor textarea { width:100%; min-height:88px; resize:vertical; }
 @media (max-width:540px) { .tasting-readonly-rating { gap:10px; } .tasting-readonly-glasses .glencairn-symbol { width:19px; height:36px; } }
 
 /* v0.28: Flights are simple optional groupings, not a second tasting editor. */
