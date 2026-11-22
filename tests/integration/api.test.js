@@ -216,7 +216,7 @@ test('physical bottle type: regular 700 ml and 30 ml sample under the same bottl
         assert.equal(changed.status, 200);
         assert.equal(changed.data.volumeMl, 50);
         const db = (await api(ctx.base, '/api/collection')).data;
-        assert.equal(db.schemaVersion, 5);
+        assert.equal(db.schemaVersion, 6);
         assert.equal(db.bottlings[0].volumeType, undefined);
         assert.deepEqual(db.bottlings[0].bottles.map(x => x.volumeType), ['standard', 'sample']);
         const csv = await fetch(ctx.base + '/api/export/csv');
@@ -287,7 +287,7 @@ test('inventoryNumber is the only label identifier in JSON, API and CSV', async 
         assert.ok(csvText.includes('Inventarnummer'));
         assert.ok(!csvText.includes('Etikettencode'));
         const db = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json')));
-        assert.equal(db.schemaVersion, 5);
+        assert.equal(db.schemaVersion, 6);
         assert.equal(db.bottlings[0].bottles[0].inventoryNumber, '000123');
         assert.equal(db.bottlings[0].bottles[0].labelCode, undefined);
     }
@@ -340,7 +340,7 @@ test('schema 4 upgrade retains bottles, inventory, photos, files, distilleries, 
             let out='',err='';child.stdout.on('data',c=>out+=c);child.stderr.on('data',c=>err+=c);
             child.on('close',code=>code===0?resolve(JSON.parse(out)):reject(Error(err)));
         });
-        assert.equal(upgraded.collection.schemaVersion,5);
+        assert.equal(upgraded.collection.schemaVersion,6);
         assert.deepEqual(upgraded.collection.distilleries,before.distilleries);
         assert.deepEqual(upgraded.collection.settings,before.settings);
         assert.deepEqual(upgraded.collection.reservedInventoryNumbers,before.reservedInventoryNumbers);
@@ -363,7 +363,7 @@ test('schema 4 upgrade retains bottles, inventory, photos, files, distilleries, 
         assert.deepEqual(fs.readFileSync(warehouseFile),warehouseBytes,'warehouse.json must be byte-for-byte unchanged');
         assert.equal(upgraded.warehouse.assignments[bottleId],shelf.id);
         assert.deepEqual(upgraded.warehouse.rooms[0].furniture[0].shelves[0].id,shelf.id);
-        const backups=fs.readdirSync(path.join(ctx.dir,'backups')).filter(n=>n.startsWith('pre-schema5-'));
+        const backups=fs.readdirSync(path.join(ctx.dir,'backups')).filter(n=>n.startsWith('pre-schema6-'));
         assert.equal(backups.length,1);
         assert.deepEqual(fs.readFileSync(path.join(ctx.dir,'backups',backups[0])),originalBytes);
         // A second launch MUST NOT create another backup or alter the migrated data.
@@ -371,6 +371,69 @@ test('schema 4 upgrade retains bottles, inventory, photos, files, distilleries, 
         assert.equal(migrateCollectionToCurrent(upgraded.collection).changed,false);
     } finally { await ctx.stop(); }
 });
+test('schema 5 to 6 preserves existing tastings, rating comments, flights, and warehouse data', async () => {
+    const ctx = await start();
+    try {
+        const created = await api(ctx.base, '/api/bottlings', 'POST', {
+            name: 'Migration with tasting', firstBottle: {inventoryNumber:'090001'}
+        });
+        assert.equal(created.status, 201);
+        const id = created.data.bottling.id;
+        const tasting = await api(ctx.base, `/api/bottlings/${id}/tastings`, 'POST', {
+            tastedOn: '2026-11-20', rating: 80, ratingComment: 'Must survive upgrade',
+            tastingNotes: {nose: 'Apple', palate:'Honey', finish:'Oak'}
+        });
+        assert.equal(tasting.status, 201);
+        const stored = path.join(ctx.dir, 'data/collection.json');
+        const warehouse = path.join(ctx.dir, 'data/warehouse.json');
+        const warehouseBefore = fs.readFileSync(warehouse);
+        const before = JSON.parse(fs.readFileSync(stored,'utf8'));
+        before.schemaVersion = 5;
+        const original = Buffer.from(JSON.stringify(before, null, 2) + '\n');
+        fs.writeFileSync(stored, original);
+        const child = spawn(process.execPath, ['--input-type=module','-e',
+            "import {initialize,read} from './server/storage/collection-store.js';initialize();console.log(JSON.stringify(read()));"], {
+            cwd: process.cwd(), env:{...process.env,WHISKY_DATA_DIR:ctx.dir}, stdio:['ignore','pipe','pipe']
+        });
+        const upgraded = await new Promise((resolve,reject) => {
+            let out='',err=''; child.stdout.on('data',c=>out+=c);child.stderr.on('data',c=>err+=c);
+            child.on('close',code=>code===0?resolve(JSON.parse(out)):reject(Error(err)));
+        });
+        assert.equal(upgraded.schemaVersion,6);
+        assert.deepEqual({...upgraded,schemaVersion:5},before,'schema 5 -> 6 must change only the schemaVersion');
+        assert.equal(upgraded.bottlings[0].tastings[0].ratingComment,'Must survive upgrade');
+        assert.deepEqual(fs.readFileSync(warehouse),warehouseBefore);
+        const backups=fs.readdirSync(path.join(ctx.dir,'backups')).filter(n=>n.startsWith('pre-schema6-'));
+        assert.equal(backups.length,1);
+        assert.deepEqual(fs.readFileSync(path.join(ctx.dir,'backups',backups[0])),original);
+        const {migrateCollectionToCurrent}=await import('../../server/storage/migrations.js');
+        assert.equal(migrateCollectionToCurrent(upgraded).changed,false);
+    } finally {await ctx.stop();}
+});
+
+test('schema 5 JSON import retains tasting commentary and upgrades to 6', async () => {
+    const ctx = await start();
+    try {
+        const created=await api(ctx.base,'/api/bottlings','POST',{name:'Imported tasting'});
+        assert.equal(created.status,201);
+        const id=created.data.bottling.id;
+        const tasting=await api(ctx.base,`/api/bottlings/${id}/tastings`,'POST',{
+            tastedOn:'2026-11-22',rating:82,ratingComment:'Ein klarer Gesamteindruck',
+            tastingNotes:{nose:'Honig',palate:'Karamell',finish:'Lang'}
+        });
+        assert.equal(tasting.status,201);
+        const current=(await api(ctx.base,'/api/collection')).data;
+        const older={...current,schemaVersion:5};
+        const imported=await api(ctx.base,'/api/import/json','POST',older);
+        assert.equal(imported.status,200);
+        const after=(await api(ctx.base,'/api/collection')).data;
+        assert.equal(after.schemaVersion,6);
+        assert.deepEqual({...after,schemaVersion:5},older,'import changes only the schema version');
+        assert.equal(after.bottlings.find(item=>item.id===id).tastings[0].ratingComment,
+            'Ein klarer Gesamteindruck');
+    } finally {await ctx.stop();}
+});
+
 test('invalid schema upgrade leaves entire collection and warehouse untouched', async () => {
     const ctx=await start();
     try {
@@ -390,10 +453,10 @@ test('invalid schema upgrade leaves entire collection and warehouse untouched', 
         assert.notEqual(code,0);
         assert.deepEqual(fs.readFileSync(stored),bytes);
         assert.deepEqual(fs.readFileSync(warehouse),warehouseBefore);
-        assert.equal(fs.readdirSync(path.join(ctx.dir,'backups')).filter(n=>n.startsWith('pre-schema5-')).length,0);
+        assert.equal(fs.readdirSync(path.join(ctx.dir,'backups')).filter(n=>n.startsWith('pre-schema6-')).length,0);
     } finally {await ctx.stop();}
 });
-test('JSON import upgrades old schema without retaining old tastings and rejects stale summary fields in schema 5', async () => {
+test('JSON import upgrades old schema without retaining old tastings and rejects stale summary fields in schema 6', async () => {
     const ctx = await start();
     try {
         const current=(await api(ctx.base,'/api/collection')).data;

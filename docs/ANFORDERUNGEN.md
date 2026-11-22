@@ -1,6 +1,6 @@
 # Funktions- und Anforderungsspezifikation – Whisky Collection Manager
 
-**Produktstand:** aktuelles Schema 5 · **Stand:** 16.11.2026 · **Datenformat:** `schemaVersion: 5`
+**Produktstand:** aktuelles Schema 6 · **Stand:** 16.11.2026 · **Datenformat:** `schemaVersion: 6`
 
 Dieses Dokument beschreibt den **aktuellen Funktionsumfang und die einzuhaltenden Regeln**. Es ersetzt den früheren Entwurf vom 05.11.2026, der teilweise noch React/TypeScript, XLSX-Export und eine externen Such-API als Planung enthielt. Für tatsächlich ausgeführte Tests gilt [TESTSTATUS.md](TESTSTATUS.md), für ältere technische Entscheidungen [TESTHISTORIE.md](TESTHISTORIE.md).
 
@@ -14,7 +14,7 @@ Es gibt keine zwingende Cloud, keine externe Datenbank und keinen Build-Schritt 
 
 | Objekt | Struktur und wesentliche Felder | Fachregel |
 | --- | --- | --- |
-| Sammlung | `schemaVersion: 5`, `settings`, `reservedInventoryNumbers`, `distilleries[]`, `bottlings[]` | Eine zentrale, atomar gespeicherte `collection.json` |
+| Sammlung | `schemaVersion: 6`, `settings`, `reservedInventoryNumbers`, `distilleries[]`, `bottlings[]` | Eine zentrale, atomar gespeicherte `collection.json` |
 | Destillerie | `id`, `name`, optional `country`, `region`, `status`, `latitude`, `longitude` | Stammdaten und geografische Herkunft; benutzerdefinierte Positionen haben Vorrang |
 | Abfüllung | `id`, `distilleryIds[]`, `name`, `bottler`, `whiskyType`, `ageYears`, `abv`, Nenn-`volumeMl`, Fass- und Jahrgangsangaben, WB-ID / Quellenlink, `completionStatus`, `bottles[]`, `tastings[]` | Eine Abfüllung kann mehrere beteiligte Destillerien und beliebig viele physische Flaschen haben |
 | Physische Flasche | `id`, `inventoryNumber`, `volumeType`, `volumeMl`, `status`, Preise/Kaufdaten, Öffnungsdatum, `photos[]`, `files[]` | Individuelle Eigenschaften liegen **nur** an dieser konkreten Flasche |

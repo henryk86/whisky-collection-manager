@@ -18,7 +18,7 @@ test('bottle emptying date is persisted, validated and exported without requirin
         assert.equal(added.data.emptiedAt,'2024-03-01');
         const bottleId = added.data.id;
         const loaded = await requestJson(ctx.base,'/api/collection');
-        assert.equal(loaded.data.schemaVersion,5);
+        assert.equal(loaded.data.schemaVersion,6);
         assert.equal(loaded.data.bottlings.find(b=>b.id===bottlingId)
             .bottles.find(b=>b.id===bottleId).emptiedAt,'2024-03-01');
         const csv = await fetch(ctx.base+'/api/export/csv');

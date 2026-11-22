@@ -33,7 +33,7 @@ test('files: invoices and additional images belong to physical bottles, survive 
         });
         assert.equal(sibling.status, 201);
         const current = (await requestJson(ctx.base, '/api/collection')).data;
-        assert.equal(current.schemaVersion, 5);
+        assert.equal(current.schemaVersion, 6);
         assert.equal(current.bottlings[0].bottles[0].files.length, 2);
         assert.deepEqual(current.bottlings[0].bottles[1].files, []);
         assert.ok(!Object.hasOwn(current.bottlings[0], 'files'));
@@ -98,7 +98,7 @@ test('schema 3 JSON import upgrades samples and preserves physical bottle detail
         const result=await requestJson(ctx.base,'/api/import/json','POST',old);
         assert.equal(result.status,200);
         const after=(await requestJson(ctx.base,'/api/collection')).data;
-        assert.equal(after.schemaVersion,5);
+        assert.equal(after.schemaVersion,6);
         assert.equal(after.bottlings[0].id,created.data.bottling.id);
         assert.equal(after.bottlings[0].bottles[0].id,created.data.bottle.id);
         assert.equal(after.bottlings[0].bottles[0].inventoryNumber,'009009');

@@ -37,7 +37,7 @@ leere Flaschen werden als nicht verfuegbar angezeigt und verhindern den Start.
    Flight abgeschlossen werden. Weitere Flight-Eintraege sind gesperrt.
 
 Bestehende Flights ohne `phase` und `planItems` sind unveraendert weiterhin
-historische Flights. Die optionalen Felder werden im bestehenden JSON-Schema 5
+historische Flights. Die optionalen Felder werden im bestehenden JSON-Schema 6
 gespeichert. Die Servervalidierung begrenzt neue Planungen auf sechs
 unterschiedliche Abfuellungen und erlaubt keine ungueltigen Statuswechsel.
 

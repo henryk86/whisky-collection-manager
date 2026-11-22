@@ -8,7 +8,7 @@ import { trackMutation } from '../domain/mutation-tracker.js';
 import { migrateCollectionToCurrent } from './migrations.js';
 const seedFile = new URL('../../seed/distillery.json', import.meta.url);
 export const empty = () => ({
-    schemaVersion: 5, nextInventoryNumber: 1, reservedInventoryNumbers: [], settings: { establishedYear: null }, distilleries: JSON.parse(fs.readFileSync(seedFile, 'utf8')), bottlings: [], externalTastings: [], tastingFlights: []
+    schemaVersion: 6, nextInventoryNumber: 1, reservedInventoryNumbers: [], settings: { establishedYear: null }, distilleries: JSON.parse(fs.readFileSync(seedFile, 'utf8')), bottlings: [], externalTastings: [], tastingFlights: []
 });
 let cached = null;
 let cachedIdentity = null;
@@ -50,7 +50,7 @@ export function initialize() {
     const migration = migrateCollectionToCurrent(original);
     if (migration.changed) {
         // No modifications until the migration is valid AND an exact copy is safe.
-        const backup = path.join(BACKUP_DIR, `pre-schema5-${Date.now()}-${crypto.randomUUID()}.json`);
+        const backup = path.join(BACKUP_DIR, `pre-schema6-${Date.now()}-${crypto.randomUUID()}.json`);
         fs.copyFileSync(DATA_FILE, backup, fs.constants.COPYFILE_EXCL);
         if (migration.conflicts.length) {
             const report = path.join(BACKUP_DIR, `inventory-conflicts-${Date.now()}-${crypto.randomUUID()}.json`);

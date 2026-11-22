@@ -61,7 +61,7 @@ test('warehouse mutations can be applied independently, without replacing rooms 
 });
 
 test('delta validation rejects malformed arrays and unsafe fields', () => {
-    const source={schemaVersion:5,bottlings:[],distilleries:[],externalTastings:[],tastingFlights:[]};
+    const source={schemaVersion:6,bottlings:[],distilleries:[],externalTastings:[],tastingFlights:[]};
     assert.throws(()=>applyResourceDelta(source,{kind:'collection',values:{__protoPollute:'evil'}}),/Invalid resource property/);
     assert.throws(()=>applyResourceDelta(source,{kind:'collection',arrays:{bottlings:{upsert:[{id:'one'}],remove:[],order:['missing']}}}),/Invalid delta entity order/);
     assert.equal(Object.hasOwn(source,'__protoPollute'),false);

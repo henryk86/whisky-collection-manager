@@ -15,7 +15,8 @@ import { parseTastingScore, emptyTastingNotes } from '../../../shared/tasting.js
 import { sortedTastings } from '../../../shared/tasting-records.js';
 import {allTastingReferences,flightEntries,flightForTasting} from '../../../shared/tasting-flights.js';
 import { allStandaloneTastings } from '../../../shared/standalone-tastings.js';
-import { editIcon, newBottlingIcon, flightPlanIcon, chevronRightIcon, arrowLeftIcon, arrowUpIcon, arrowDownIcon } from '../ui/action-icons.js';
+import { editIcon, newBottlingIcon, flightPlanIcon, chevronRightIcon, arrowUpIcon, arrowDownIcon } from '../ui/action-icons.js';
+import { backNavigation } from '../ui/back-navigation.js';
 import { reorderFlightIds } from '../features/flight-order.js';
 import {suggestFlight,flightCandidates,FLIGHT_STYLES,FLIGHT_AVAILABILITY} from '../domain/flight-planner.js';
 
@@ -40,7 +41,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         !owned && bottling?.bottler ? `${t('forms.bottling.bottler')}: ${bottling.bottler}` : '',
         !owned && bottling?.releaseYear != null && bottling.releaseYear !== '' ? `${t('forms.bottling.releaseYear')}: ${bottling.releaseYear}` : ''
     ].filter(Boolean).join(' · ');
-    const backLink = (action,label) => `<nav class="tasting-back-nav" aria-label="${escapeHtml(t(label))}"><button type="button" class="inline-link tasting-back" data-act="${action}">${arrowLeftIcon} ${escapeHtml(t(label))}</button></nav>`;
+    const backLink = (action,label) => backNavigation(action, t(label));
     const pageTitle = (title, intro, eyebrow = t('tastings.childEyebrow')) => `<header class="section-head analytics-page-heading"><div class="page-heading-copy">
         <span class="eyebrow dark">${escapeHtml(eyebrow)}</span>
         <h2>${escapeHtml(title)}<span class="heading-period">.</span></h2>
@@ -98,7 +99,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
                 ${flavorChart(value.flavorProfile,{editable:false})}</section>
         </div>
         <section class="analytics-panel"><h3>${escapeHtml(t('tasting.notes'))}</h3>
-            <div class="tasting-notes">${['nose','palate','finish'].map(key=>`<div class="tasting-readonly-field"><span class="tasting-readonly-label">${escapeHtml(t(`forms.bottling.${key}`))}</span><p class="tasting-readonly-note">${blank(value.tastingNotes?.[key])}</p></div>`).join('')}</div>
+            <div class="tasting-notes tasting-readonly-notes">${['nose','palate','finish'].map(key=>`<div class="tasting-readonly-field"><span class="tasting-readonly-label">${escapeHtml(t(`forms.bottling.${key}`))}</span><p class="tasting-readonly-note">${blank(value.tastingNotes?.[key])}</p></div>`).join('')}</div>
         </section>
         <section class="analytics-panel tasting-rating-panel"><h3>${escapeHtml(t('tasting.overallRating'))}</h3>
             ${staticRating(value)}

@@ -1,6 +1,7 @@
 import { latestTasting } from '../../../shared/tasting-records.js';
 import { displayPhotoPath } from '../../../shared/photo-images.js';
 import { t } from '../i18n/index.js';
+import { backNavigation } from '../ui/back-navigation.js';
 const bottleStatusText = status => t(({closed:'home.status.closed',open:'analytics.inventory.openedStatus',empty:'home.status.empty'})[status] || 'features.distilleries.unknownStatus');
 const FACT_KEYS = Object.freeze({'Whisky-Kategorie':'forms.bottling.whiskyCategory','Marke':'forms.bottling.brandOrProductLine','Beteiligte Destillerien':'forms.bottling.participatingDistilleries','Zusammensetzung vollständig':'detail.facts.labelCompositionComplete','Alter':'forms.bottling.ageYears','Alkoholgehalt':'forms.bottling.abv','Erscheinungsjahr':'forms.bottling.releaseYear','Nennfüllmenge laut Abfüllung':'forms.bottling.nominalVolume','Abfüller':'forms.bottling.bottler','Region':'detail.facts.labelRegion','Land':'detail.facts.labelCountry','Fasstyp':'forms.bottling.caskType','Destilliert am':'forms.bottling.distillationDate','Abgefüllt am':'forms.bottling.bottlingDate','Fassnummer':'forms.bottling.caskNumber','Limitierte Auflage':'detail.facts.labelLimitedEdition','Whiskybase-ID':'forms.bottling.whiskybaseId'});
 const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
@@ -119,7 +120,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     </section>
             </div>`;
         }).join('');
-        shell(`<button data-region="detail-back" class="inline-link" data-act="back">${t("detail.navigation.backToCollection")}</button>
+        shell(`${backNavigation("back", t("detail.navigation.backToCollection"), "detail-back")}
     <div data-region="detail-bottling" class="section" style="margin-top:18px">
     <div class="section-head detail-page-head">
     <div>

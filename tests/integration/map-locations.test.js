@@ -19,7 +19,7 @@ test('API saves editable distillery locations without changing associated bottli
         assert.equal(coords.status, 200);
         assert.equal(coords.data.latitude, 55.7869);
         const updated = (await requestJson(server.base, '/api/collection')).data;
-        assert.equal(updated.schemaVersion, 5);
+        assert.equal(updated.schemaVersion, 6);
         assert.equal(updated.bottlings.length, 1);
         assert.equal(updated.bottlings[0].distilleryIds[0], kilchoman.id);
         const stored = JSON.parse(fs.readFileSync(path.join(server.dir, 'data', 'collection.json')));

@@ -41,6 +41,7 @@ und gewichten mehrfache Verkostungen nicht stärker.
 | `tastedOn` | Pflichtdatum `YYYY-MM-DD` (beim Anlegen mit lokalem Datum vorbefüllt) |
 | `title` | Optionaler Titel mit maximal 120 Zeichen |
 | `tastingNotes` | `nose`, `palate`, `finish`, beliebige Textlängen |
+| `ratingComment` | Optionaler Freitext zum Gesamteindruck (bis zu 10.000 Zeichen) |
 | `rating` | `null` oder 0–100 mit höchstens einer Nachkommastelle in der UI |
 | `whiskyColor` | Eine der zwölf unveränderlichen Farben, ein geprüfter `custom:#rrggbb`-Wert aus dem stufenlosen Whisky-Farbwähler oder `null` |
 | `flavorProfile` | `null` oder zehn Achsen (0–10; bei älteren Einträgen sind die zwei neuen Achsen `null`) |
@@ -79,11 +80,11 @@ mit anteiliger Füllhöhe. Die Punktzahl wird ausschließlich über das editierb
 Feld mit `/ 100` dargestellt. Rückgängig/Wiederholen wird für jede geöffnete
 Verkostung separat verwaltet.
 
-## Datenmodell (Schema 5)
+## Datenmodell (Schema 6)
 
 - Die einzige Quelle fuer eigene Verkostungen ist `bottlings[].tastings[]` innerhalb von `collection.json`. Jede Abfuellung hat ein `tastings[]`-Array, jeder Eintrag eine unveraenderliche ID und zwei Zeitstempel.
 - Die angezeigte letzte Bewertung und Notizen werden aus der juengsten Verkostung berechnet. Es gibt keine persistierten `bottling.rating`, `bottling.tastingNotes`, `bottling.whiskyColor`, `bottling.flavorProfile` und kein `legacyTastings`.
-- **Schema-Upgrade ohne Verlust des Bestands:** Alte `collection.json`-Dateien werden gesichert und auf Schema 5 migriert. Abfuellungen, Flaschen, Fotos, Belege, Inventarnummern und Lagerdaten bleiben erhalten. Ausschliesslich bisherige Verkostungen, Flights und alte sensorische Zusammenfassungen werden nicht migriert. Alte JSON-Importe koennen ebenso uebernommen werden.
+- **Schema-Upgrade ohne Verlust des Bestands:** Alte `collection.json`-Dateien werden gesichert und auf Schema 6 migriert. Abfuellungen, Flaschen, Fotos, Belege, Inventarnummern und Lagerdaten bleiben erhalten. Bei Altformaten vor Schema 5 werden fruehere Verkostungen, Flights und sensorische Zusammenfassungen nicht migriert. Die Migration von Schema 5 nach Schema 6 erhaelt dagegen saemtliche Verkostungen und Bewertungskommentare. Alte JSON-Importe koennen ebenso uebernommen werden.
 - JSON-/ZIP-Exporte enthalten die aktuellen Verkostungen. Die zu einer neuen Sammlung angelegten Fotos, physischen Flaschen und Lagerdaten werden regulaer verwaltet.
 
 ## Technische Bausteine
@@ -207,7 +208,7 @@ Einzelne Verkostungen bleiben ausschließlich unter `bottlings[].tastings[]` ode
   anhand der unveränderlichen Verkostungs-ID bestehen.
 - Entfernen eines Eintrags aus einem Flight entfernt nur die Zuordnung.
   Das Löschen eines Flights löscht niemals die einzelnen Verkostungsnotizen.
-- `tastingFlights[]` ist in Schema 5 Pflicht (ein leeres Array ist erlaubt) und auch in JSON-/ZIP-Backups enthalten.
+- `tastingFlights[]` ist in Schema 6 Pflicht (ein leeres Array ist erlaubt) und auch in JSON-/ZIP-Backups enthalten.
 
 ## Sammlung: Geschmacksfilter und gespeicherte Ansichten
 

@@ -7,7 +7,7 @@ import { parseRoute, routeUrl } from '../../public/js/navigation/routes.js';
 import { MAIN_PAGES } from '../../public/js/navigation/pages.js';
 
 const collection = () => ({
-    schemaVersion: 5,
+    schemaVersion: 6,
     distilleries: [{ id: 'a', name: 'Alpha', country: 'Schottland', region: 'Islay' },
         { id: 'b', name: 'Beta', country: 'Irland' }, { id: 'c', name: 'Unused' }],
     bottlings: [
@@ -39,7 +39,7 @@ test('analytics overview subtitle is a complete sentence in German and English',
 });
 
 test('analytics page headline keeps its overview punchline on every tab', () => {
-    const state = { collection: { schemaVersion:5, distilleries:[], bottlings:[] },
+    const state = { collection: { schemaVersion:6, distilleries:[], bottlings:[] },
         analyticsFilters:{}, analyticsPeriod:'month', analyticsStartDate:'', analyticsEndDate:'', selected:'overview' };
     let html = '';
     const render = createAnalyticsView({state, shell: value => { html = value; }});

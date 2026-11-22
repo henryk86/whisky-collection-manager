@@ -15,7 +15,7 @@ Die Unterseiten werden am Desktop ueber eine **linke Seitennavigation** gewechse
 | Entwicklung & Verkostung | `timeline` | 28–34 |
 | Datenqualität | `quality` | 35–38 |
 
-Die zentrale Auswertung liegt in `public/js/domain/analytics.js` (reine Berechnungen). Die Darstellung in `public/js/views/analytics.js` wird durch `public/styles/analytics.css` gestaltet. Die bestehende Sammlung (`schemaVersion: 5`) wird nur gelesen; weder Datenmigration noch neue serverseitige Abhängigkeiten sind erforderlich.
+Die zentrale Auswertung liegt in `public/js/domain/analytics.js` (reine Berechnungen). Die Darstellung in `public/js/views/analytics.js` wird durch `public/styles/analytics.css` gestaltet. Die bestehende Sammlung (`schemaVersion: 6`) wird nur gelesen; weder Datenmigration noch neue serverseitige Abhängigkeiten sind erforderlich.
 
 ## Filter und Navigation
 

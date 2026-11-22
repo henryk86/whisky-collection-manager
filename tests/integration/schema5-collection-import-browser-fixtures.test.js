@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { startTestServer, requestJson } from '../helpers/server.js';
 
-test('schema 5 bulk-import fixtures preserve valid bottling and bottle structures', async () => {
+test('schema 6 bulk-import fixtures preserve valid bottling and bottle structures', async () => {
     const server = await startTestServer();
     try {
         for (const count of [6, 75, 450]) {

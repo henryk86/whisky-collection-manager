@@ -19,7 +19,7 @@ const validDay = value => {
 };
 const validImagePath = p => typeof p === 'string' && /^images\/[a-f0-9-]{36}\/[\w-]+\.(jpg|png|webp|gif)$/i.test(p);
 export function validate(collection) {
-    assert(isObject(collection) && collection.schemaVersion === 5, 'Ungültige oder nicht unterstützte JSON-Schemaversion', 400, "api.errors.invalidOrUnsupportedJSONSchemaVersion");
+    assert(isObject(collection) && collection.schemaVersion === 6, 'Ungültige oder nicht unterstützte JSON-Schemaversion', 400, "api.errors.invalidOrUnsupportedJSONSchemaVersion");
     assert(Array.isArray(collection.bottlings) && !Object.hasOwn(collection, 'bottles') && Array.isArray(collection.distilleries), 'Ungültige Sammlungsstruktur', 400, "api.errors.invalidCollectionStructure");
     assert(Number.isSafeInteger(collection.nextInventoryNumber) && collection.nextInventoryNumber > 0, 'Ungültiger Inventarnummern-Zähler', 400, "api.errors.invalidInventoryNumberCounter");
     assert(Array.isArray(collection.reservedInventoryNumbers), 'Fehlende Liste reservierter Inventarnummern', 400, "api.errors.missingListOfReservedInventoryNumbers");

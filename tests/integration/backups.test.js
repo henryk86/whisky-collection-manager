@@ -233,7 +233,7 @@ test('schema-4 ZIP restore upgrades collection without losing bottles, warehouse
         });
         assert.equal(apply.status,200,JSON.stringify(apply.data));
         const upgraded=(await request(ctx.base,'/api/collection')).data;
-        assert.equal(upgraded.schemaVersion,5);
+        assert.equal(upgraded.schemaVersion,6);
         assert.equal(upgraded.bottlings[0].id,created.data.bottling.id);
         assert.equal(upgraded.bottlings[0].bottles[0].id,bottleId);
         assert.equal(upgraded.bottlings[0].bottles[0].comment,'Do not discard');

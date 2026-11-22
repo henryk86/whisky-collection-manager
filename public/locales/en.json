@@ -820,7 +820,7 @@
   "detail.meta.purchaseDate": "Purchased: {date}",
   "detail.meta.purchaseLabel": "Purchased",
   "detail.meta.volumeLabel": "Volume",
-  "detail.navigation.backToCollection": "← Back to collection",
+  "detail.navigation.backToCollection": "Back to collection",
   "detail.notifications.filesSaved": "{count} file(s) saved",
   "detail.notifications.photosSaved": "{count} photo(s) saved",
   "detail.photos.bottleWithNumber": "{kind} of bottle {number}",

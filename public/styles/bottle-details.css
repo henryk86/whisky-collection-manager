@@ -453,12 +453,8 @@
 .tasting-create-chooser { padding:16px; margin:0 0 14px; border:1px solid var(--line); background:var(--cream); display:grid; gap:14px; }
 .tasting-create-chooser > .btn { justify-self:start; }
 
-/* Match bottling details: the back link starts at the shared main container's
-   top edge, with no extra tasting-only top padding. */
-.tasting-child-page > .tasting-back-nav { display:block; margin:0 0 18px; }
+/* Back navigation styling lives in core.css, shared with bottling details. */
 .tasting-child-page > .analytics-page-heading { margin-top:0; }
-.tasting-back { display:inline-flex; align-items:center; gap:5px; margin:0; cursor:pointer; }
-.tasting-back .ui-symbol {width:16px;height:16px;flex:0 0 16px;}
 .tasting-child-page > .tasting-bottling-info { margin-bottom:14px; }
 /* The owned bottling photo lives inside the first information block, not the page heading. */
 .tasting-bottling-photo-layout { display:flex; align-items:center; justify-content:space-between; gap:20px; }
@@ -534,6 +530,22 @@
 
 /* Saved tasting: static presentation until the pencil action enables editing. */
 .tasting-readonly-field { min-width:0; display:flex; flex-direction:column; gap:8px; }
+/* Dividers belong only to the saved tasting detail, never the bottling preview or editor. */
+.tasting-readonly-notes { column-gap:0; }
+.tasting-readonly-notes > .tasting-readonly-field { padding-inline:20px; }
+.tasting-readonly-notes > .tasting-readonly-field:first-child { padding-inline-start:0; }
+.tasting-readonly-notes > .tasting-readonly-field:last-child { padding-inline-end:0; }
+.tasting-readonly-notes > .tasting-readonly-field + .tasting-readonly-field { border-inline-start:1px solid var(--line); }
+@media (max-width:850px) {
+    .tasting-readonly-notes { row-gap:0; }
+    .tasting-readonly-notes > .tasting-readonly-field { padding:16px 0; }
+    .tasting-readonly-notes > .tasting-readonly-field:first-child { padding-top:0; }
+    .tasting-readonly-notes > .tasting-readonly-field:last-child { padding-bottom:0; }
+    .tasting-readonly-notes > .tasting-readonly-field + .tasting-readonly-field {
+        border-inline-start:0;
+        border-block-start:1px solid var(--line);
+    }
+}
 .tasting-readonly-label { font-weight:600; color:var(--ink); }
 .tasting-readonly-field strong { overflow-wrap:anywhere; }
 .tasting-readonly-note { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.5; margin:0; }

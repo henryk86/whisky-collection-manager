@@ -17,7 +17,14 @@ test('browser: rating comments persist through edit, read-only view and the 14px
         const comment=editor.locator('.tasting-rating-comment .tasting-readonly-note');
         await comment.waitFor();
         assert.equal(await comment.textContent(),'Sehr rund und komplex.');
+        await page.setViewportSize({width:1440,height:900});
+        const readonlyBorders=await editor.locator('.tasting-readonly-notes > .tasting-readonly-field').evaluateAll(nodes=>
+            nodes.map(node=>getComputedStyle(node).borderInlineStartWidth));
+        assert.deepEqual(readonlyBorders,['0px','1px','1px'],
+            'read-only nose, palate and finish have vertical separators');
         await editor.locator('[data-act="tasting-edit-start"]').click();
+        assert.equal(await editor.locator('.tasting-readonly-notes').count(),0,
+            'dividers do not affect the tasting editor');
         const input=editor.locator('[data-tasting-rating-comment]');
         assert.equal(await input.inputValue(),'Sehr rund und komplex.');
         await input.fill('Noch einmal probieren.');
@@ -58,24 +65,27 @@ test('browser: tasting preview balances present sections without desktop wrappin
         await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
         const summary=page.locator('.tasting-summary-content');
         await summary.waitFor();
+        const previewBorders=await summary.locator('.tasting-summary-note').evaluateAll(nodes=>
+            nodes.map(node=>getComputedStyle(node).borderTopWidth));
+        assert.deepEqual(previewBorders,['0px','0px','0px'],
+            'bottling detail preview remains without separators');
         for (const width of [1440,1200,1024,960]) {
             await page.setViewportSize({width,height:900});
             const layout=await summary.evaluate(row=>{
                 const parts=['main','radar','notes'].map(name=>{
                     const el=row.querySelector(`.tasting-summary-${name}`);
                     const r=el.getBoundingClientRect();
-                    return {name,left:r.left,right:r.right,width:r.width};
+                    return {name,left:r.left,right:r.right,top:r.top,width:r.width};
                 });
                 const parent=row.getBoundingClientRect();
                 const meta=row.querySelector('.tasting-summary-main .tasting-summary-meta').getBoundingClientRect();
                 const action=row.querySelector('.tasting-summary-main .tasting-summary-actions').getBoundingClientRect();
-                return {wrap:getComputedStyle(row).flexWrap,align:getComputedStyle(row).alignItems,parts,
-                    left:parent.left,right:parent.right,
+                return {wrap:getComputedStyle(row).flexWrap,parts,
+                    left:parent.left,right:parent.right,top:parent.top,
                     actionBelowMeta:action.top>=meta.bottom,
                     documentWidth:document.documentElement.scrollWidth};
             });
             assert.equal(layout.wrap,'nowrap',`desktop ${width}px stays on a single row`);
-            assert.equal(layout.align,'flex-start',`desktop ${width}px top-aligns all columns`);
             if (width>=1200) {
                 const [,radar,notes]=layout.parts;
                 assert.ok(notes.width >= radar.width * 1.65,
@@ -85,6 +95,8 @@ test('browser: tasting preview balances present sections without desktop wrappin
             assert.ok(layout.documentWidth<=width+2,`no page overflow at ${width}px`);
             for(let i=0;i<layout.parts.length;i++) {
                 const item=layout.parts[i];
+                assert.ok(Math.abs(item.top-layout.top)<=1,
+                    `${item.name} is top-aligned at ${width}px`);
                 assert.ok(item.width>0,`${item.name} has space at ${width}px`);
                 assert.ok(item.left>=layout.left-1 && item.right<=layout.right+1,
                     `${item.name} stays inside the panel at ${width}px`);
