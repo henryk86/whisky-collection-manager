@@ -807,7 +807,30 @@ tr.clickable:hover {
 .toast.error {
     background: #943d37;
     border-left-color: #eab3aa;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    max-width: min(370px, calc(100vw - 48px));
 }
+.toast-message { min-width: 0; overflow-wrap: anywhere; }
+.toast-close {
+    flex: 0 0 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    margin: -5px -9px -5px 0;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+.toast-close:hover { background: rgb(255 255 255 / .18); }
+.toast-close:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.toast-close svg { display: block; pointer-events: none; }
 .overlay {
     position: fixed;
     inset: 0;
