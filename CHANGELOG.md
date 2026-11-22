@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.11.0 - 2026-11-22
+
+- fix: Missing schema update, harmonized various back link implementations
+- feat(tasting): add optional rating comment field and update UI
+- feat: update tasting summary layout to improve navigation and display of latest tastings
+- refactor: remove unused whisky color display and update tasting summary layout for improved clarity
+- fix: tasting summary layout and styles for improved UI/UX
+- feat: enhance tasting summary to include compact flavor radar and color display, with responsive styles
+- test: enhance overview quick filters to include flavor filter visibility and accessibility checks
+- feat: Implement planned tasting flights with validation and persistence, added new filtering for tasting profiles
+- feat: enhance toast notifications with dismissible close button and accessibility features
+
 ## 1.10.0 - 2026-11-21
 
 - test: verify column configuration persistence across page reloads in collection table
