@@ -1,6 +1,7 @@
 import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
 import {imageUrl} from '../../ui/format.js';
+import {plusIcon, minusIcon} from '../../ui/action-icons.js';
 import {request} from '../../api.js';
 import {toast} from '../../ui/notifications.js';
 import {PHOTO_ADJUSTMENT_GROUPS, EMPTY_PHOTO_ADJUSTMENTS,
@@ -507,9 +508,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
                         <div data-photo-editor-brush-cursor class="photo-editor-brush-cursor" hidden aria-hidden="true"></div>
                         <div class="photo-editor-overlay">
                             <div class="photo-editor-zoom" role="group" aria-label="${escapeHtml(t('photoEditor.zoom'))}">
-                                <button type="button" data-act="photo-editor-zoom-out" aria-label="${escapeHtml(t('photoEditor.zoomOut'))}" title="${escapeHtml(t('photoEditor.zoomOut'))}" disabled>−</button>
+                                <button type="button" data-act="photo-editor-zoom-out" aria-label="${escapeHtml(t('photoEditor.zoomOut'))}" title="${escapeHtml(t('photoEditor.zoomOut'))}" disabled>${minusIcon}</button>
                                 <button type="button" data-act="photo-editor-zoom-reset" aria-label="${escapeHtml(t('photoEditor.zoomReset'))}" title="${escapeHtml(t('photoEditor.zoomReset'))}" disabled><span data-photo-editor-zoom-level>100 %</span></button>
-                                <button type="button" data-act="photo-editor-zoom-in" aria-label="${escapeHtml(t('photoEditor.zoomIn'))}" title="${escapeHtml(t('photoEditor.zoomIn'))}">+</button>
+                                <button type="button" data-act="photo-editor-zoom-in" aria-label="${escapeHtml(t('photoEditor.zoomIn'))}" title="${escapeHtml(t('photoEditor.zoomIn'))}">${plusIcon}</button>
                             </div>
                             <div class="photo-editor-stage-actions">
                                 <button type="button" class="btn small" data-act="photo-editor-before" data-photo-editor-ready disabled aria-pressed="false">${escapeHtml(t('photoEditor.before'))}</button>

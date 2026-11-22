@@ -53,6 +53,7 @@
 .backup-job > div { min-width: 0; overflow-wrap: anywhere; }
 .backup-job p { margin: 5px 0; }
 .backup-job-error { color: var(--danger, #d75c5c); }
+.backup-job-state .ui-symbol {width:16px;height:16px;}
 .backup-job-state.success { color: var(--success, #368e5e); }
 .backup-job-state.failed { color: var(--danger, #d75c5c); }
 .backup-form { display: grid; gap: 14px; }

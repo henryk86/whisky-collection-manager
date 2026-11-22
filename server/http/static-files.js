@@ -12,7 +12,7 @@ export const SHARED_BROWSER_FILES = new Set([
     'resource-delta.js', 'warehouse-bottle-projection.js',
     'api-error-codes.js', 'api-error-field-labels.js', 'flavor-profile.js', 'whisky-colors.js', 'whisky-color-names.js', 'tasting.js',
     'tasting-subject.js', 'tasting-records.js', 'standalone-tastings.js',
-    'tasting-flights.js', 'photo-images.js', 'warehouse-compartments.js',
+    'tasting-flights.js', 'collection-saved-views.js', 'photo-images.js', 'warehouse-compartments.js',
     'warehouse-placement.js', 'photo-adjustments.js'
 ]);
 function decodePath(encoded) {

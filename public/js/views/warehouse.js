@@ -11,7 +11,7 @@ import { mountWarehouseRoomPreviews } from '../ui/warehouse-room-previews.js';
 import { moveFurnitureTowards } from '../../../shared/warehouse-placement.js';
 import { routeUrl } from '../navigation/routes.js';
 import { createFurnitureActivation } from '../ui/warehouse-furniture-activation.js';
-import { eyeIcon, eyeOffIcon, addActionLabel } from '../ui/action-icons.js';
+import { eyeIcon, eyeOffIcon, addActionLabel, arrowLeftIcon, arrowRightIcon } from '../ui/action-icons.js';
 import { renderWarehouseAssignment, mountWarehouseAssignment, assignmentPayload, bulkAssignmentPayload, approveShelfCapacityIncrease } from '../ui/warehouse-assignment.js';
 import { mountWarehouseBottleDrag } from '../ui/warehouse-bottle-drag.js';
 import { renderWarehouseRoomWall } from './warehouse-room-wall.js';
@@ -183,7 +183,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         state.warehouseFinderPage = (state.warehouseFinderPage || 1) + delta;
         refreshFinderResults();
     }
-    function showBottleLocation(id, {returnToBottlingId = null} = {}) {
+    function showBottleLocation(id, {returnToBottlingId = null, returnToFlightId = null} = {}) {
         const bottle = w()?.bottles?.find(item => item.id === id);
         const place = bottle ? storagePath(w(),w().assignments?.[id]) : null;
         if (!place) return toast(t('warehouse.find.locationUnavailable'),true);
@@ -191,6 +191,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         state.warehouseFurnitureId = place.furniture.id;
         state.warehouseFindFocusBottleId = id;
         state.warehouseFindReturnBottlingId = returnToBottlingId;
+        state.warehouseFindReturnFlightId = returnToFlightId;
         state.warehouseFindReturn = true;
         pendingFindFocusScroll = true;
         navigate('warehouse','shelves');
@@ -201,6 +202,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         state.warehouseFindReturn = false;
         state.warehouseFindFocusBottleId = null;
         state.warehouseFindReturnBottlingId = null;
+        state.warehouseFindReturnFlightId = null;
         pendingFindFocusScroll = false;
         if (typeof document === 'undefined') return;
         document.querySelector?.('.warehouse-find-return')?.remove();
@@ -211,10 +213,13 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
     function returnToFinder() {
         const id = state.warehouseFindFocusBottleId;
         const bottlingId = state.warehouseFindReturnBottlingId;
+        const flightId = state.warehouseFindReturnFlightId;
         state.warehouseFindReturn = false;
         state.warehouseFindFocusBottleId = null;
         state.warehouseFindReturnBottlingId = null;
+        state.warehouseFindReturnFlightId = null;
         pendingFindFocusScroll = false;
+        if (flightId) {navigate('tasting-flight',flightId);return;}
         if (bottlingId) {
             navigate('detail', bottlingId, {highlightBottleId:id});
             if (id && typeof requestAnimationFrame === 'function') requestAnimationFrame(() => {
@@ -366,7 +371,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         const data = w();
         if (!data) return shell(`<p class="hint">${t("warehouse.storage.loading")}</p>`);
         const section = state.selected || 'overview';
-        if (section === 'find') { state.warehouseFindReturn = false; state.warehouseFindFocusBottleId = null; state.warehouseFindReturnBottlingId = null; }
+        if (section === 'find') { state.warehouseFindReturn = false; state.warehouseFindFocusBottleId = null; state.warehouseFindReturnBottlingId = null; state.warehouseFindReturnFlightId = null; }
         const total = data.bottles.length;
         const assigned = data.bottles.filter(b => !!data.assignments[b.id]).length;
         const overallCapacity = totalCapacity(data);
@@ -412,7 +417,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
                     const focusPlace = focusBottle ? storagePath(data,data.assignments[focusBottle.id]) : null;
                     const inRoom = focusPlace?.room.id === room.id;
                     const findReturn = state.warehouseFindReturn
-                        ? `<div class="warehouse-find-return"><button type="button" class="btn small" data-act="warehouse-return-find">${t(state.warehouseFindReturnBottlingId ? 'warehouse.find.backToBottling' : 'warehouse.find.backToResults')}</button>${inRoom ? `<span class="warehouse-find-return-label"><strong class="warehouse-find-return-badge">${t('warehouse.find.match')}</strong>${safe(t('warehouse.find.highlighted',{name:bottleLabel(focusBottle),location:focusPlace.label}))}</span>` : ''}<button type="button" class="warehouse-find-clear" data-act="warehouse-find-clear" title="${safe(t('warehouse.find.clearHighlight'))}" aria-label="${safe(t('warehouse.find.clearHighlight'))}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>` : '';
+                        ? `<div class="warehouse-find-return"><button type="button" class="btn small" data-act="warehouse-return-find">${t(state.warehouseFindReturnFlightId ? 'flightPlan.backToFlight' : state.warehouseFindReturnBottlingId ? 'warehouse.find.backToBottling' : 'warehouse.find.backToResults')}</button>${inRoom ? `<span class="warehouse-find-return-label"><strong class="warehouse-find-return-badge">${t('warehouse.find.match')}</strong>${safe(t('warehouse.find.highlighted',{name:bottleLabel(focusBottle),location:focusPlace.label}))}</span>` : ''}<button type="button" class="warehouse-find-clear" data-act="warehouse-find-clear" title="${safe(t('warehouse.find.clearHighlight'))}" aria-label="${safe(t('warehouse.find.clearHighlight'))}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>` : '';
                     // The physical wall intentionally omits furniture without shelves. Provide
                     // a direct first-shelf action so a newly placed unit is not stranded.
                     const withoutShelves = room.furniture.filter(item => item.shelves.length === 0);
@@ -614,7 +619,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
             if (item) {
                 const order = found.furniture.shelves.slice().reverse();
                 const index = order.findIndex(shelf => shelf.id === id);
-                shelfNavigation = `<nav class="warehouse-shelf-editor-navigation" aria-label="${t('warehouse.shelves.switchAria')}"><button type="button" class="btn small" data-act="warehouse-shelf-switch" data-target="${safe(order[index-1]?.id||'')}" ${index===0?'disabled':''}>← ${t('warehouse.shelves.previous')}</button><span>${t('warehouse.shelves.position',{current:index+1,total:order.length})}</span><button type="button" class="btn small" data-act="warehouse-shelf-switch" data-target="${safe(order[index+1]?.id||'')}" ${index===order.length-1?'disabled':''}>${t('warehouse.shelves.next')} →</button></nav>`;
+                shelfNavigation = `<nav class="warehouse-shelf-editor-navigation" aria-label="${t('warehouse.shelves.switchAria')}"><button type="button" class="btn small" data-act="warehouse-shelf-switch" data-target="${safe(order[index-1]?.id||'')}" ${index===0?'disabled':''}>${arrowLeftIcon}<span>${t('warehouse.shelves.previous')}</span></button><span>${t('warehouse.shelves.position',{current:index+1,total:order.length})}</span><button type="button" class="btn small" data-act="warehouse-shelf-switch" data-target="${safe(order[index+1]?.id||'')}" ${index===order.length-1?'disabled':''}><span>${t('warehouse.shelves.next')}</span>${arrowRightIcon}</button></nav>`;
             }
             title = item?t("warehouse.shelves.edit"):t("warehouse.shelves.add");
             endpoint=item?`/api/warehouse/shelves/${item.id}`:`/api/warehouse/furniture/${furnitureId}/shelves`; method=item?'PATCH':'POST';

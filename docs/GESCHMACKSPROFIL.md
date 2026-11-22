@@ -206,3 +206,24 @@ Einzelne Verkostungen bleiben ausschließlich unter `bottlings[].tastings[]` ode
 - Entfernen eines Eintrags aus einem Flight entfernt nur die Zuordnung.
   Das Löschen eines Flights löscht niemals die einzelnen Verkostungsnotizen.
 - `tastingFlights[]` ist in Schema 5 Pflicht (ein leeres Array ist erlaubt) und auch in JSON-/ZIP-Backups enthalten.
+
+## Sammlung: Geschmacksfilter und gespeicherte Ansichten
+
+Unter **Sammlung → Weitere Filter → Geschmacksprofil** koennen bis zu zehn
+Kriterien aus den bestehenden Achsen mit Minimum und Maximum von 0 bis 10
+kombiniert werden. Kriterien werden mit **UND** verknuepft. Als Quelle gilt
+die neueste Verkostung **mit erfasstem Geschmacksprofil** der Abfuellung;
+unbewertete Achsen gelten nicht als 0. Der separate Filter „Ohne
+Geschmacksprofil“ findet Abfuellungen ohne irgendeinen erfassten Datensatz.
+
+Ueber **Ansicht speichern** koennen Filter, Suchtext, Sortierung, Kachel- oder
+Tabellenmodus und die sichtbaren Tabellenspalten als Ansicht gespeichert werden.
+Die Auswahl wird dynamisch auf die jeweils aktuellen Sammlungsdaten angewendet.
+Ansichten sind umbenennbar, aktualisierbar und loeschbar. Maximal 40 Eintraege
+liegen in `collection.settings.savedViews` und werden mit der Sammlung gesichert.
+Die bestehende Browsereinstellung fuer die Tabellenspalten bleibt separat erhalten;
+eine gespeicherte Ansicht kann sie beim Oeffnen ueberschreiben.
+
+**Flight aus Auswahl planen** uebergibt die gefilterten Abfuellungen als
+Kandidatenmenge an den neuen Flight-Planer. Es werden dabei keine Verkostungen
+angelegt.

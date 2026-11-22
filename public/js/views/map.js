@@ -2,7 +2,7 @@ import { t } from '../i18n/index.js';
 import { buildDistilleryMap, markerDiameter } from '../domain/distillery-map.js';
 import { mapBottlingFacts } from '../domain/map-bottling-meta.js';
 import { escapeHtml } from '../ui/dom.js';
-import { editIcon, pagodaRoofIcon, closedDistilleryIcon } from '../ui/action-icons.js';
+import { editIcon, pagodaRoofIcon, closedDistilleryIcon, chevronLeftIcon, chevronRightIcon } from '../ui/action-icons.js';
 import { backToCollectionButton } from '../ui/navigation-controls.js';
 import { createTileMap, mapCanvasHtml } from '../features/map/tile-map.js';
 import { matchingBottlingSites } from '../domain/bottling-map-focus.js';
@@ -89,7 +89,7 @@ export function createMapView({ state, shell, navigate, settings }) {
             ${subset.length ? subset.map(entry => `<button type="button" class="map-bottling-link" data-map-bottling="${escapeHtml(entry.id)}">
               <span>${escapeHtml(entry.name)}</span>${mapBottlingFacts(entry) ? `<small class="map-bottling-facts">${escapeHtml(mapBottlingFacts(entry))}</small>` : ''}<small>${plural(entry.bottleCount, t("forms.bottle.title"), t("forms.bottle.plural"))}</small></button>`).join('') : `<p class="hint">${t("map.empty.noMatchingBottlings")}</p>`}
           </div>
-          ${totalPages > 1 ? `<div class="map-list-pager"><button type="button" data-map-page="prev" ${page === 1 ? 'disabled' : ''} aria-label="${t("map.pagination.previousBottlings")}">‹</button><span>${t("map.pagination.pageOf", {page,total:totalPages})}</span><button type="button" data-map-page="next" ${page === totalPages ? 'disabled' : ''} aria-label="${t("map.pagination.moreBottlings")}">›</button></div>` : ''}` : `<p class="hint map-empty-site">${t("map.empty.noCollectionBottlings")}</p>`}` : `<p class="hint">${t("map.empty.chooseDistillery")}</p>`}
+          ${totalPages > 1 ? `<div class="map-list-pager"><button type="button" data-map-page="prev" ${page === 1 ? 'disabled' : ''} aria-label="${t("map.pagination.previousBottlings")}">${chevronLeftIcon}</button><span>${t("map.pagination.pageOf", {page,total:totalPages})}</span><button type="button" data-map-page="next" ${page === totalPages ? 'disabled' : ''} aria-label="${t("map.pagination.moreBottlings")}">${chevronRightIcon}</button></div>` : ''}` : `<p class="hint map-empty-site">${t("map.empty.noCollectionBottlings")}</p>`}` : `<p class="hint">${t("map.empty.chooseDistillery")}</p>`}
         </div>`;
     }
     function missingHtml() {

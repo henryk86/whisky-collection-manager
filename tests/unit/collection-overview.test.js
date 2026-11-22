@@ -142,6 +142,7 @@ test('physical bottle cards use their own photo, identifier, status and volume; 
         assert.ok(toolbar, 'overview toolbar must exist');
         assert.equal((toolbar.match(/<select id="filter-/g) || []).length, 6,
             'all six existing selectors remain available');
+        assert.match(toolbar, /data-flavor-profile-status/, 'profile status lives in the flavor overlay');
         assert.match(toolbar, /data-act="toggle-collection-filters" aria-expanded="false"/);
         assert.match(toolbar, /id="collection-filter-extra"/);
         assert.ok(toolbar.indexOf('id="filter-sort"') < toolbar.indexOf('id="filter-distillery"'));

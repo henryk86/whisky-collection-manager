@@ -57,7 +57,7 @@
 .map-pagoda-icon { width: 24px; height: 24px; display: block; flex-shrink: 0; }
 .map-pagoda-legend .map-pagoda-icon { width: 20px; height: 20px; color: #a77b40; }
 .map-controls { position: absolute; left: 12px; top: 12px; display: grid; gap: 3px; }
-.map-controls button { width: 40px; height: 40px; background: #fff; color: #19364d; border: 1px solid #b5b5b5; font-size: 24px; cursor: pointer; }
+.map-controls button {display:grid;place-items:center;width:40px;height:40px;background:#fff;color:#19364d;border:1px solid #b5b5b5;cursor:pointer;}
 .map-controls button:focus-visible { outline: 3px solid var(--gold); }
 .map-zoom-level { position: absolute; right: 12px; top: 12px; padding: 6px 9px; background: #fffdf3dd; font-size: 11px; color: #1e3245; }
 .map-attribution { position: absolute; bottom: 0; right: 0; padding: 4px 7px; font-size: 10px; color: #172e39; background: #ffffffdb; }
@@ -91,7 +91,7 @@
 .map-bottling-link small { color: var(--muted); font-size: 11px; }
 .map-bottling-link .map-bottling-facts { line-height: 1.4; overflow-wrap: anywhere; }
 .map-list-pager { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-top: 12px; font-size: 12px; }
-.map-list-pager button { background: var(--paper); border: 1px solid var(--line); color: var(--ink); min-width: 36px; min-height: 32px; }
+.map-list-pager button { display:inline-grid; place-items:center; background: var(--paper); border: 1px solid var(--line); color: var(--ink); min-width: 36px; min-height: 32px; }
 .map-missing { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
 .map-missing summary { cursor: pointer; font-weight: 650; }
 .map-missing-row { display: flex; justify-content: space-between; align-items: center; gap: 9px; border-bottom: 1px solid var(--line); padding: 9px 0; font-size: 12px; }

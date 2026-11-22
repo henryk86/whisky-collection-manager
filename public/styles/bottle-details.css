@@ -134,6 +134,8 @@
 }
 .photo-tile .photo-edit-trigger { top: 3px; }
 .photo-tile .photo-edit-trigger .action-icon { width: 16px; height: 16px; flex-basis: 16px; }
+.photo-move .ui-symbol, .photo-drag-handle .ui-symbol {width:15px;height:15px;}
+.bottle-main-cutout .ui-symbol {width:12px;height:12px;}
 .photo-cutout-badge { position: absolute; right: 3px; top: 4px; font-size: 13px; color: var(--gold); pointer-events: none; }
 .photo-capture { display: inline-flex; }
 .cutout-checker { background-color: #f4f4f4; background-image: linear-gradient(45deg,#d7d7d7 25%, transparent 25%),linear-gradient(-45deg,#d7d7d7 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d7d7d7 75%),linear-gradient(-45deg,transparent 75%,#d7d7d7 75%); background-size: 22px 22px; background-position: 0 0,0 11px,11px -11px,-11px 0; }
@@ -153,7 +155,7 @@
 .photo-editor-overlay { position: absolute; inset: auto 10px 10px; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; pointer-events: none; }
 .photo-editor-overlay > * { pointer-events: auto; }
 .photo-editor-zoom { display: flex; gap: 3px; align-items: center; justify-content: center; }
-.photo-editor-zoom button { min-height: 30px; height: 30px; min-width: 32px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); font: 600 14px var(--sans); cursor: pointer; box-shadow: 0 1px 5px #0003; }
+.photo-editor-zoom button { display:inline-grid;place-items:center; min-height: 30px; height: 30px; min-width: 32px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); font: 600 14px var(--sans); cursor: pointer; box-shadow: 0 1px 5px #0003; }
 .photo-editor-zoom button[disabled] { opacity: .5; cursor: default; }
 .photo-editor-zoom button[data-act="photo-editor-zoom-reset"] { font-size: 12px; min-width: 64px; font-variant-numeric: tabular-nums; }
 .photo-editor-zoom button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
@@ -405,7 +407,8 @@
 .tasting-entry-info strong { display:block; overflow-wrap:anywhere; }
 .tasting-entry-info small:empty { display:none; }
 .tasting-entry-trailing { display:flex; align-items:center; justify-content:flex-end; gap:12px; white-space:nowrap; }
-.tasting-entry-chevron { color:var(--muted); font-size:23px; font-weight:400; line-height:1; }
+.tasting-entry-chevron {color:var(--muted); display:inline-flex; align-items:center; justify-content:center;}
+.tasting-entry-chevron .ui-symbol {width:18px;height:18px;}
 .tasting-entry-actions { display:flex; align-items:center; padding:8px 12px 8px 0; }
 .tasting-entry-actions .btn { white-space:nowrap; }
 .tasting-panel-heading { min-width:0; }
@@ -421,6 +424,7 @@
 .tasting-child-page > .tasting-back-nav { display:block; margin:0 0 18px; }
 .tasting-child-page > .analytics-page-heading { margin-top:0; }
 .tasting-back { display:inline-flex; align-items:center; gap:5px; margin:0; cursor:pointer; }
+.tasting-back .ui-symbol {width:16px;height:16px;flex:0 0 16px;}
 .tasting-child-page > .tasting-bottling-info { margin-bottom:14px; }
 /* The owned bottling photo lives inside the first information block, not the page heading. */
 .tasting-bottling-photo-layout { display:flex; align-items:center; justify-content:space-between; gap:20px; }

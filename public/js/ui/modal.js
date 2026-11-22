@@ -1,5 +1,6 @@
 import { t } from '../i18n/index.js';
 import { escapeHtml, query } from './dom.js';
+import { closeIcon } from './action-icons.js';
 /** Modal lifecycle. Dialogs opened from another dialog are nested by default.
  * Closing returns to the exact parent DOM, preserving inputs, files and scroll.
  * Explicit nested=false replaces the stack; closeModal(true) clears it on navigation. */
@@ -58,7 +59,7 @@ export function createModal({ state, onClose }) {
     <div class="dialog ${state.modal.wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${escapeHtml(state.modal.title)}">
     <div class="dialog-head">
     <h2>${escapeHtml(state.modal.title)}</h2>
-    <button class="btn small" type="button" data-act="close-modal" aria-label="${t("common.actions.close")}">✕</button>
+    <button class="btn small" type="button" data-act="close-modal" aria-label="${t("common.actions.close")}">${closeIcon}</button>
     </div>${state.modal.content}</div>
     </div>`;
         const overlay = host.querySelector('.overlay');

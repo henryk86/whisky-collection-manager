@@ -5,6 +5,8 @@
 .add-action-label { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-width:0; }
 .photo-add .add-action-label { flex-wrap:wrap; }
 .action-icon { display: block; width: 17px; height: 17px; flex: 0 0 17px; }
+.ui-symbol {display:inline-block; width:18px; height:18px; flex:0 0 18px; vertical-align:middle;}
+.btn.small .ui-symbol {width:16px;height:16px;flex-basis:16px;}
 .theme-icon { display: block; width: 19px; height: 19px; flex: 0 0 19px; }
 .btn.small .action-icon { width: 15px; height: 15px; flex-basis: 15px; }
 .theme-toggle {

@@ -51,12 +51,12 @@ test('tasting list and editor show age, cask type and ABV only when stored on an
     assert.match(html,/Alter: 12 Jahre/);
     assert.match(html,/Fasstyp: Sherry Butt/);
     assert.match(html,/Alkoholgehalt: 48,5 % Vol\./);
-    assert.match(html,/data-act="tastings-back-detail"[^>]*><span aria-hidden="true">←<\/span>/);
+    assert.match(html,/data-act="tastings-back-detail"[^>]*><svg class="ui-symbol"[^>]*aria-hidden="true"[^>]*>[^<]*<path d="m12 19-7-7 7-7M5 12h14"\/><\/svg>/);
     state.page='tasting';state.tastingId='note-1';
     view.editor();
     for(const label of ['Alter: 12 Jahre','Fasstyp: Sherry Butt','Alkoholgehalt: 48,5 % Vol.'])
         assert.ok(html.includes(label),`missing ${label} on tasting editor`);
-    assert.match(html,/data-act="tastings-back-list"[^>]*><span aria-hidden="true">←<\/span>/);
+    assert.match(html,/data-act="tastings-back-list"[^>]*><svg class="ui-symbol"[^>]*aria-hidden="true"[^>]*>[^<]*<path d="m12 19-7-7 7-7M5 12h14"\/><\/svg>/);
     delete bottling.ageYears;delete bottling.caskType;delete bottling.abv;
     view.list();
     assert.doesNotMatch(html,/Alter:|Fasstyp:|Alkoholgehalt:/);
@@ -88,7 +88,7 @@ test('tasting page headers describe the page; bottling details are in the first 
     assert.ok(subject>html.indexOf('</header>'));
     assert.ok(subject<html.indexOf('<h3>Eindrücke</h3>'));
     assert.ok(subject<html.indexOf('class="tasting-record-fields analytics-panel'));
-    assert.match(html,/data-act="tastings-back-list"[^>]*><span aria-hidden="true">←<\/span>/);
+    assert.match(html,/data-act="tastings-back-list"[^>]*><svg class="ui-symbol"[^>]*aria-hidden="true"[^>]*>[^<]*<path d="m12 19-7-7 7-7M5 12h14"\/><\/svg>/);
     state.tastingId='new';
     view.editor();
     assert.match(html,/<h2>Verkostung erfassen<span class="heading-period">\.<\/span><\/h2>/);

@@ -40,9 +40,10 @@
     border: 0;
     border-radius: 2px;
     cursor: pointer;
-    font-size: 20px;
-    line-height: 22px;
+    display:grid; place-items:center;
 }
+.photo-remove .ui-symbol {width:16px;height:16px;}
+.photo-cutout-badge .ui-symbol {width:12px;height:12px;}
 .photo-add {
     display: flex;
     align-items: center;
@@ -192,3 +193,31 @@
 @media (max-width: 380px) {
     .collection-mode-button { flex: 1 1 auto; padding-inline: 10px; font-size: 12px; }
 }
+
+/* Tasting-Flight planner: compact cards consistent with collection detail panels. */
+.flight-plan-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.flight-plan-options label, .flight-plan-add {min-width:0;}
+.flight-plan-options select {width:100%;}
+.flight-plan-preview {min-width:0;}
+.flight-plan-proposal {display:grid;gap:7px;margin:10px 0;padding-left:24px;}
+.flight-plan-proposal li {padding:7px 0;border-bottom:1px solid var(--line);}
+.flight-plan-proposal strong,.flight-plan-proposal small {display:block;}
+.flight-plan-proposal small {color:var(--muted);margin-top:4px;}
+.flight-plan-members-list {display:grid;gap:8px;list-style:decimal;padding-left:26px;}
+.flight-plan-member {padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);display:flex;align-items:center;flex-wrap:wrap;gap:9px;min-width:0;}
+.flight-plan-member-copy {flex:1 1 190px;min-width:0;display:grid;gap:4px;}
+.flight-plan-member-copy small {color:var(--muted);}
+.flight-plan-member-actions,.flight-plan-add {display:flex;align-items:center;flex-wrap:wrap;gap:7px;min-width:0;}
+.flight-plan-member-actions select,.flight-plan-add select {width:auto;min-width:140px;max-width:230px;}
+.flight-plan-members .actions {margin-top:14px;}
+@media(max-width:720px) {
+  .flight-plan-options {grid-template-columns:1fr;}
+  .flight-plan-member-actions {flex:1 1 100%;}
+  .flight-plan-member-actions select,.flight-plan-add select {flex:1;max-width:none;}
+}
+
+.flight-plan-member-photo {display:block; width:54px; height:80px; flex:0 0 54px; object-fit:contain; border:1px solid var(--line); border-radius:4px; background:var(--paper);}
+.flight-plan-member-copy .inline-link {align-self:start;text-align:left;font-size:12px;}
+
+.flight-plan-members-list {list-style:none;padding-left:0;}
+.flight-plan-number {display:inline-flex;align-items:center;justify-content:center;flex:0 0 26px;height:26px;border-radius:50%;border:1px solid var(--line);font-weight:650;font-size:12px;}

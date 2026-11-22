@@ -4,7 +4,7 @@ import { t } from '../../i18n/index.js';
  * The browser honours tile.openstreetmap.org's HTTP cache and Referer policy.
  */
 import { MAX_MAP_ZOOM, clusterMarkerDiameter, fitMapToSites, markerDiameter, project, tileSize, unproject, zoomAroundPoint, clampZoom } from '../../domain/distillery-map.js';
-import { pagodaRoofIcon, closedDistilleryIcon } from '../../ui/action-icons.js';
+import { pagodaRoofIcon, closedDistilleryIcon, plusIcon, minusIcon } from '../../ui/action-icons.js';
 import { clusterMapSites } from '../../domain/map-clusters.js';
 
 const TILE_BASE = 'https://tile.openstreetmap.org';
@@ -290,8 +290,8 @@ export function mapCanvasHtml() {
         <div class="map-movable"><div class="map-tiles" aria-hidden="true"></div><div class="map-markers"></div></div>
       </div>
       <div class="map-controls" aria-label="${t("features.map.controls")}">
-        <button type="button" data-map-control="in" aria-label="${t("features.map.zoomIn")}" title="${t("features.map.zoomInAction")}">+</button>
-        <button type="button" data-map-control="out" aria-label="${t("features.map.zoomOut")}" title="${t("features.map.zoomOutAction")}">−</button>
+        <button type="button" data-map-control="in" aria-label="${t("features.map.zoomIn")}" title="${t("features.map.zoomInAction")}">${plusIcon}</button>
+        <button type="button" data-map-control="out" aria-label="${t("features.map.zoomOut")}" title="${t("features.map.zoomOutAction")}">${minusIcon}</button>
         <button type="button" data-map-control="fit" aria-label="${t("features.map.showAllLocations")}" title="${t("features.map.showAllLocations")}">⊡</button>
       </div>
       <div class="map-zoom-level" aria-hidden="true"></div>

@@ -5,7 +5,7 @@ const bottleStatusText = status => t(({closed:'home.status.closed',open:'analyti
 const FACT_KEYS = Object.freeze({'Whisky-Kategorie':'forms.bottling.whiskyCategory','Marke':'forms.bottling.brandOrProductLine','Beteiligte Destillerien':'forms.bottling.participatingDistilleries','Zusammensetzung vollständig':'detail.facts.labelCompositionComplete','Alter':'forms.bottling.ageYears','Alkoholgehalt':'forms.bottling.abv','Erscheinungsjahr':'forms.bottling.releaseYear','Nennfüllmenge laut Abfüllung':'forms.bottling.nominalVolume','Abfüller':'forms.bottling.bottler','Region':'detail.facts.labelRegion','Land':'detail.facts.labelCountry','Fasstyp':'forms.bottling.caskType','Destilliert am':'forms.bottling.distillationDate','Abgefüllt am':'forms.bottling.bottlingDate','Fassnummer':'forms.bottling.caskNumber','Limitierte Auflage':'detail.facts.labelLimitedEdition','Whiskybase-ID':'forms.bottling.whiskybaseId'});
 const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
 import { escapeHtml } from '../ui/dom.js';
-import { editIcon, deleteIcon, locationIcon, newBottlingIcon, addActionLabel } from '../ui/action-icons.js';
+import { editIcon, deleteIcon, locationIcon, newBottlingIcon, addActionLabel, closeIcon, arrowLeftIcon, arrowRightIcon, gripIcon, sparkleIcon } from '../ui/action-icons.js';
 import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
 import { imageUrl, formatValue, formatDate } from '../ui/format.js';
 import { bottleStatusLabels, photoAccept } from '../domain/labels.js';
@@ -49,13 +49,13 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <img draggable="false" src="${imageUrl(displayPhotoPath(photo))}" alt="${escapeHtml(t("detail.photos.bottleWithNumber",{kind:photo.source === 'whiskybase' ? t("whiskybase.images.reference") : t("detail.photos.personalPhoto"),number:entry.inventoryNumber||''}))}" loading="lazy">
     </button>
     <button class="photo-edit-trigger" type="button" data-act="photo-editor-open" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" title="${t('photoEditor.title')}" aria-label="${t('photoEditor.title')}">${editIcon}</button>
-    ${photo.cutout ? `<span class="photo-cutout-badge" title="${t('cutout.result')}">✦</span>` : ''}
-    <button class="photo-remove" type="button" data-act="delete-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" aria-label="${t("ui.confirmations.deletePhoto")}">×</button>
+    ${photo.cutout ? `<span class="photo-cutout-badge" title="${t('cutout.result')}">${sparkleIcon}</span>` : ''}
+    <button class="photo-remove" type="button" data-act="delete-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" aria-label="${t("ui.confirmations.deletePhoto")}">${closeIcon}</button>
     ${photo.source === 'whiskybase' ? `<span class="photo-source" title="${t('detail.photos.whiskybaseReferenceNotice')}">WB</span>` : ''}
     <div class="photo-controls">
-    <button class="photo-move" type="button" data-act="move-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" data-dir="-1" aria-label="${t("detail.photos.moveForward")}">←</button>
-    <button class="photo-drag-handle" type="button" data-photo-drag title="${t("detail.photos.reorderHint")}" aria-label="${t("detail.photos.reorderHint")}">⠿</button>
-    <button class="photo-move" type="button" data-act="move-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" data-dir="1" aria-label="${t("detail.photos.moveBackward")}">→</button>
+    <button class="photo-move" type="button" data-act="move-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" data-dir="-1" aria-label="${t("detail.photos.moveForward")}">${arrowLeftIcon}</button>
+    <button class="photo-drag-handle" type="button" data-photo-drag title="${t("detail.photos.reorderHint")}" aria-label="${t("detail.photos.reorderHint")}">${gripIcon}</button>
+    <button class="photo-move" type="button" data-act="move-photo" data-id="${escapeHtml(entry.id)}" data-photo-id="${escapeHtml(photo.id)}" data-dir="1" aria-label="${t("detail.photos.moveBackward")}">${arrowRightIcon}</button>
     </div>
     </div>`).join('')}</div><div class="bottle-photo-add-actions"><label class="photo-add">${addActionLabel(t("detail.actions.addPhotos"))}<input type="file" accept="${photoAccept}" multiple hidden data-bottle-photos="${escapeHtml(entry.id)}">
     </label><label class="photo-add photo-capture">${t('cutout.takePhoto')}<input type="file" accept="image/*" capture="environment" hidden data-bottle-photos="${escapeHtml(entry.id)}"></label>
@@ -65,7 +65,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                     <button type="button" class="bottle-entry-main-photo" data-act="open-photo" data-bottle-photo-preview="${escapeHtml(entry.id)}" title="${t('detail.photos.enlarge')}" aria-label="${t('detail.photos.openOverlay')}">
                         <img draggable="false" src="${imageUrl(displayPhotoPath(firstPhoto))}" alt="${escapeHtml(t('detail.photos.bottleWithNumber',{kind:firstPhoto.source === 'whiskybase' ? t('whiskybase.images.reference') : t('detail.photos.personalPhoto'),number:entry.inventoryNumber || ''}))}">
                         ${firstPhoto.source === 'whiskybase' ? `<span class="bottle-main-source" title="${t('detail.photos.whiskybaseReferenceNotice')}">WB</span>` : ''}
-                        ${firstPhoto.cutout ? `<span class="bottle-main-cutout" title="${t('cutout.result')}">✦</span>` : ''}
+                        ${firstPhoto.cutout ? `<span class="bottle-main-cutout" title="${t('cutout.result')}">${sparkleIcon}</span>` : ''}
                     </button>
                 </div>` : ''}
                 <div class="bottle-entry-content">

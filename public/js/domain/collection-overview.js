@@ -1,6 +1,7 @@
 /** Presentation-only entries: one row per bottling or one row per physical bottle. */
 import { bottleStatusLabels, whiskyTypeName } from './labels.js';
-import { displayedTastingRating, latestTasting } from '../../../shared/tasting-records.js';
+import { displayedTastingRating, latestTasting, sortedTastings } from '../../../shared/tasting-records.js';
+import {normalizeFlavorCriteria} from '../../../shared/collection-saved-views.js';
 
 export const OVERVIEW_MODES = Object.freeze(['bottlings', 'bottles']);
 
@@ -118,15 +119,26 @@ function compareEntries(left, right, sort, distilleryNames) {
     }
 }
 
+/** Criteria refer to the newest tasting only; missing axes are not equivalent to zero. */
+export function matchesFlavorCriteria(bottling, criteria = [], profileMissing = false, profilePresent = false) {
+    const profile = sortedTastings(bottling).find(item => item.flavorProfile)?.flavorProfile || null;
+    if (profileMissing) return !profile;
+    if (profilePresent && !profile) return false;
+    const rules = normalizeFlavorCriteria(criteria);
+    if (!rules.length) return true;
+    return rules.every(({axis,min,max}) => typeof profile?.[axis] === 'number' &&
+        profile[axis] >= min && profile[axis] <= max);
+}
+
 /** Filter before slicing, so each physical bottle counts as its own result. */
 export function collectionOverviewEntries(collection, {
     mode = 'bottlings', search = '', status = 'all', completion = 'all', sort = 'name',
-    distillery = 'all', volumeType = 'all', rating = 'all', distilleryNames = () => '',
+    distillery = 'all', volumeType = 'all', rating = 'all', flavorCriteria = [], profileMissing = false, profilePresent = false, distilleryNames = () => '',
 } = {}) {
     const needle = String(search).trim().toLocaleLowerCase('de');
     const entries = [];
     for (const bottling of collection.bottlings) {
-        if (!matchesOverviewRating(bottling, rating)) continue;
+        if (!matchesOverviewRating(bottling, rating) || !matchesFlavorCriteria(bottling,flavorCriteria,profileMissing,profilePresent)) continue;
         const distilleryIds = Array.isArray(bottling.distilleryIds)
             ? bottling.distilleryIds : (bottling.distilleryId ? [bottling.distilleryId] : []);
         if (distillery !== 'all' && !distilleryIds.includes(distillery)) continue;

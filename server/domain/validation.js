@@ -4,7 +4,8 @@ import { assert } from './errors.js';
 import { allBottles, WHISKY_TYPES } from './collection.js';
 import { normalizeTastingRecord } from '../../shared/tasting-records.js';
 import { normalizeStandaloneTasting } from '../../shared/standalone-tastings.js';
-import {normalizeFlightFields,FLIGHT_LIMIT,allTastingReferences} from '../../shared/tasting-flights.js';
+import {normalizeFlightFields,FLIGHT_LIMIT,allTastingReferences,validateFlightPlan} from '../../shared/tasting-flights.js';
+import {normalizeSavedViews} from '../../shared/collection-saved-views.js';
 import { isDocumentPath } from '../storage/documents.js';
 const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
 const isString = value => typeof value === 'string';
@@ -25,6 +26,10 @@ export function validate(collection) {
     // Current collection settings only.
     if (collection.settings !== undefined) {
         assert(isObject(collection.settings), 'Ungültige Sammlungseinstellungen', 400, "api.errors.invalidCollectionSettings");
+        if (collection.settings.savedViews !== undefined) {
+            try { normalizeSavedViews(collection.settings.savedViews); }
+            catch { assert(false,'Ungültige gespeicherte Ansichten',400,'api.errors.invalidCollectionSettings'); }
+        }
         const year = collection.settings.establishedYear;
         assert(year == null || (Number.isSafeInteger(year) && year >= 1600 && year <= new Date().getFullYear()), 'Gründungsjahr muss zwischen 1600 und dem aktuellen Jahr liegen', 400, "api.errors.foundingYearMustBeBetween1600AndTheCurrentYear");
     }
@@ -122,9 +127,11 @@ export function validate(collection) {
                 !flights.has(flight.id) && isString(flight.createdAt) && !Number.isNaN(Date.parse(flight.createdAt)) &&
                 isString(flight.updatedAt) && !Number.isNaN(Date.parse(flight.updatedAt)), 'Ungültige Flight-Metadaten', 400, "api.errors.invalidFlightMetadata");
             flights.add(flight.id);
-            assert(Object.keys(flight).every(k=>['id','name','date','notes','tastingIds','createdAt','updatedAt'].includes(k)), 'Unbekanntes Flight-Feld', 400, "api.errors.unknownFlightField");
+            assert(Object.keys(flight).every(k=>['id','name','date','notes','tastingIds','createdAt','updatedAt','phase','planItems'].includes(k)), 'Unbekanntes Flight-Feld', 400, "api.errors.unknownFlightField");
             try { normalizeFlightFields({name:flight.name,date:flight.date,notes:flight.notes}); }
             catch { assert(false, 'Ungültiger Flight', 400, "api.errors.invalidFlight"); }
+            try { validateFlightPlan(collection,flight); }
+            catch { assert(false,'Ungültige Flight-Planung',400,'api.errors.invalidFlight'); }
             assert(Array.isArray(flight.tastingIds) && flight.tastingIds.length<=FLIGHT_LIMIT, 'Ungültige Flight-Reihenfolge', 400, "api.errors.invalidFlightOrder");
             for (const id of flight.tastingIds) {
                 assert(isString(id) && /^[a-zA-Z0-9-]{1,100}$/.test(id) && !assigned.has(id) &&

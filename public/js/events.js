@@ -106,6 +106,32 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'tasting-back-flight': () => state.flightId && navigate('tasting-flight',state.flightId),
         'tasting-open-flight': button => navigate('tasting-flight',button.dataset.flightId),
         'tasting-flight-open': button => navigate('tasting-flight',button.dataset.flightId),
+        'collection-view-save': () => home.openSaveView(),
+        'collection-view-save-confirm': () => home.saveCurrentView(),
+        'collection-view-update': () => home.updateCurrentView(),
+        'collection-view-rename': () => home.renameCurrentView(),
+        'collection-view-rename-confirm': () => home.confirmRenameView(),
+        'collection-view-delete': () => home.deleteCurrentView(),
+        'collection-flavor-open': () => home.openFlavorFilter(),
+        'collection-flavor-close': () => home.closeFlavorFilter(),
+        'collection-flavor-reset': () => home.resetFlavorDraft(),
+        'collection-flavor-apply': () => home.applyFlavorDraft(),
+        'collection-view-apply': button => home.applySavedView(button.dataset.id),
+        'collection-flavor-add': () => home.addFlavorCriterion(),
+        'collection-flavor-remove': button => home.removeFlavorCriterion(button.dataset.axis),
+        'collection-flight-plan': () => {home.planFromSelection();tastingsView.startPlannedFlight();},
+        'flight-plan-new': () => tastingsView.startPlannedFlight(),
+        'flight-plan-generate': () => tastingsView.generateFlightPlan(),
+        'flight-plan-create': () => tastingsView.createPlannedFlight(),
+        'flight-plan-add': () => tastingsView.changePlannedMember(-1,'add'),
+        'flight-plan-move': button => tastingsView.changePlannedMember(Number(button.dataset.index),'move',Number(button.dataset.step)),
+        'flight-plan-remove': button => tastingsView.changePlannedMember(Number(button.dataset.index),'remove'),
+        'flight-plan-replace': button => tastingsView.changePlannedMember(Number(button.dataset.index),'replace'),
+        'flight-plan-start': () => tastingsView.transitionPlannedFlight('inProgress'),
+        'flight-plan-finish': () => tastingsView.transitionPlannedFlight('completed'),
+        'flight-plan-record': button => navigate('tasting',button.dataset.bottlingId,{tastingId:'new',flightId:state.selected}),
+        'flight-plan-open-bottling': button => navigate('detail',button.dataset.bottlingId),
+        'flight-plan-location': button => warehouseView.showBottleLocation(button.dataset.bottleId,{returnToFlightId:state.selected}),
         'tasting-flight-new': () => tastingsView.startFlight(),
         'tasting-flight-create-confirm': () => tastingsView.createFlight(),
         'tasting-flight-edit': () => tastingsView.toggleFlightEdit(true),
@@ -321,9 +347,14 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
     };
     bindFlightSorting(root, (from,to,after) => tastingsView.reorderFlightMember(from,to,after));
     root.addEventListener('click', async (event) => {
+        // Treat the flavor and saved-view pickers like anchored menus: clicking
+        // elsewhere closes them without affecting the document layout.
+        for (const picker of root.querySelectorAll('.collection-saved-menu[open], .collection-flavor-picker[open]')) {
+            if (!picker.contains(event.target)) picker.open=false;
+        }
         const mapButton = event.target.closest?.('[data-map-focus], [data-map-page], [data-map-bottling], [data-map-edit]');
         if (state.page === 'map' && mapButton) { mapView.handleClick(mapButton); return; }
-        const overviewButton = event.target.closest?.('[data-collection-mode], [data-page-to], [data-act="toggle-collection-filters"], [data-act="collection-sort-column"], [data-act="collection-columns-default"], [data-reset-collection-filter]');
+        const overviewButton = event.target.closest?.('[data-collection-mode], [data-page-to], [data-act="toggle-collection-filters"], [data-act="collection-sort-column"], [data-act="collection-columns-default"], [data-reset-collection-filter], [data-reset-collection-flavor-axis]');
         if (overviewButton && state.page === 'home') { home.handleClick(overviewButton); return; }
         const button = event.target.closest('[data-act]');
         if (!button || button.disabled) {
@@ -460,13 +491,14 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         if (state.page === 'map' && event.target.matches?.('#map-site-select, #map-all-distilleries')) {
             mapView.handleChange(event.target); return;
         }
-        if (state.page === 'home' && event.target.matches?.('#pagination-size, [id^=filter-], [data-collection-column]')) { home.handleChange(event.target); return; }
+        if (state.page === 'home' && event.target.matches?.('#pagination-size, [id^=filter-], [data-collection-column], #collection-add-flavor-axis, [data-flavor-profile-status], [data-flavor-axis]')) { home.handleChange(event.target); return; }
         if (event.target.matches?.('input[data-bottle-files], input[data-bottle-photos]')) {
             void detail.handleUploadChange(event); return;
         }
         if (event.target.matches?.('input[data-furniture-photos]')) {
             warehouseView.uploadFurniturePhotos(event.target.dataset.furniturePhotos,[...event.target.files]); return;
         }
+        if (event.target.matches?.('[data-flight-plan-style], [data-flight-plan-count], [data-flight-plan-availability]')) { tastingsView.invalidateFlightPlan(); return; }
         if (event.target.id === 'ui-language') { chooseLanguage(event.target.value); return; }
         if (event.target.dataset.sectionSwitch === 'analytics') {
             navigate('analytics', event.target.value);
@@ -578,6 +610,10 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
                 document.querySelector(`.section-nav-desktop .section-nav-item:nth-child(${next + 1})`)?.focus();
                 return;
             }
+        }
+        if (event.key === 'Escape' && state.page === 'home' && !state.modal) {
+            const openPicker=document.querySelector('.collection-flavor-picker[open], .collection-saved-menu[open]');
+            if (openPicker) {openPicker.open=false;openPicker.querySelector('summary')?.focus();return;}
         }
         if (event.key === 'Escape' && state.modal) {
             modal.closeModal();
