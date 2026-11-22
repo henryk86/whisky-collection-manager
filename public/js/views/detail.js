@@ -160,22 +160,18 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
         </div>
         ${latest ? `<div class="panel tasting-summary-card">
             <div class="tasting-summary-content">
-                <div class="tasting-summary-header">
-                    <div class="tasting-summary-main">
-                        <span class="tasting-summary-field-label">${escapeHtml(t('tastings.latest'))}</span>
-                        <span class="muted tasting-summary-meta">${escapeHtml(formatDate(latest.tastedOn))} · ${escapeHtml(t('tastings.count',{count:tastingCount}))}</span>
-                    </div>
-                    <div class="actions tasting-summary-actions">
-                        <button type="button" class="btn" data-act="tastings-open" ${tastingCount === 1 ? `data-tasting-id="${escapeHtml(latest.id)}"` : ''}>${escapeHtml(t(tastingCount === 1 ? 'tastings.openOne' : 'tastings.openAll'))}</button>
-                    </div>
-                </div>
-                <div class="tasting-summary-body">
+                <div class="tasting-summary-main">
+                    <span class="muted tasting-summary-lead">${escapeHtml(t('tastings.latest'))}</span>
                     <div class="tasting-summary-score">
                         ${latest.rating != null ? `<span class="tasting-summary-glasses" aria-hidden="true">${Array.from({length:5},(_,i)=>glencairnRatingSymbol({fill:Math.max(0,Math.min(100,(Number(latest.rating)-i*20)*5)),id:`detail-tasting-${i}`})).join('')}</span>` : ''}
                         <div class="tasting-summary-rating">${latest.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(latest.rating)} / 100`}</div>
                     </div>
-                    ${tastingRadar ? `<div class="tasting-summary-radar">${tastingRadar}</div>` : ''}
-                    ${tastingNotes.length ? `<div class="tasting-summary-notes">${tastingNotes.map(note => `<div class="tasting-summary-note"><span class="tasting-summary-field-label">${escapeHtml(note.label)}</span><div class="tasting-summary-note-value">${escapeHtml(note.text)}</div></div>`).join('')}</div>` : ''}
+                    <span class="muted tasting-summary-meta">${escapeHtml(formatDate(latest.tastedOn))} · ${escapeHtml(t('tastings.count',{count:tastingCount}))}</span>
+                </div>
+                ${tastingRadar ? `<div class="tasting-summary-radar">${tastingRadar}</div>` : ''}
+                ${tastingNotes.length ? `<div class="tasting-summary-notes">${tastingNotes.map(note => `<div class="tasting-summary-note"><span class="tasting-summary-field-label">${escapeHtml(note.label)}</span><div class="tasting-summary-note-value">${escapeHtml(note.text)}</div></div>`).join('')}</div>` : ''}
+                <div class="actions tasting-summary-actions">
+                    <button type="button" class="btn" data-act="tastings-open" data-tasting-id="${escapeHtml(latest.id)}">${escapeHtml(t('tastings.openOne'))}</button>
                 </div>
             </div>
         </div>` : ''}

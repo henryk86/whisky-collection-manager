@@ -376,27 +376,26 @@
     .tasting-rating { gap:9px; }
 }
 
-/* Match the neighboring bottling facts: same panel padding, left alignment,
-   muted 12px labels and bold values. No centered width cap or extra inner card. */
-.tasting-summary-content { min-width:0; }
-.tasting-summary-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px 20px; }
-.tasting-summary-main { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 16px; min-width:0; }
-.tasting-summary-field-label { display:block; color:var(--muted); font-size:12px; font-weight:400; }
-.tasting-summary-meta { font-size:13px; }
-.tasting-summary-actions { flex:0 0 auto; justify-content:flex-end; }
-.tasting-summary-body { display:flex; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:16px 28px; margin-top:12px; min-width:0; }
-.tasting-summary-score { display:flex; align-items:center; flex-wrap:wrap; gap:6px 13px; flex:0 0 auto; min-width:0; }
+/* Keep the original three-line rating hierarchy (title, glasses/score,
+   date/count) and the same outer panel edges as all other detail fields. */
+.tasting-summary-content { display:flex; align-items:center; flex-wrap:wrap; gap:18px 28px; min-width:0; }
+.tasting-summary-main { flex:1 1 280px; min-width:0; }
+.tasting-summary-lead { display:block; font-size:clamp(1rem,1.6vw,1.25rem); line-height:1.35; }
+.tasting-summary-meta { display:block; font-size:clamp(.9rem,1.2vw,1.05rem); line-height:1.35; }
+.tasting-summary-score { display:flex; align-items:center; flex-wrap:wrap; gap:6px 13px; margin:7px 0; min-width:0; }
 .tasting-summary-glasses { display:inline-flex; align-items:center; gap:4px; flex:0 0 auto; }
-.tasting-summary-glasses .glencairn-symbol { display:block; width:21px; height:35px; }
-.tasting-summary-rating { font-size:clamp(1.3rem,2.5vw,1.85rem); font-weight:750; margin:0; white-space:nowrap; font-variant-numeric:tabular-nums; }
-.tasting-summary-radar { flex:0 1 310px; min-width:230px; }
+.tasting-summary-glasses .glencairn-symbol { display:block; width:25px; height:42px; }
+.tasting-summary-rating { font-size:clamp(1.5rem,2.7vw,2.2rem); font-weight:750; margin:0; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.tasting-summary-radar { flex:0 1 300px; min-width:230px; }
 .tasting-summary-radar .flavor-editor.is-preview { display:block; }
 .tasting-summary-radar .flavor-chart { display:block; width:100%; height:auto; max-height:230px; }
 .tasting-summary-radar .flavor-axis-text { font-size:14px; }
 .tasting-summary-notes { display:grid; gap:14px; flex:1 1 235px; min-width:0; }
+.tasting-summary-field-label { display:block; color:var(--muted); font-size:12px; font-weight:400; }
 .tasting-summary-note { min-width:0; }
 .tasting-summary-note-value { font-weight:650; margin-top:4px; line-height:1.45; overflow:hidden; display:-webkit-box;
     -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow-wrap:anywhere; white-space:pre-line; }
+.tasting-summary-actions { flex:0 0 auto; justify-content:flex-end; margin-left:auto; }
 /* Most bottlings have no tastings: show a quiet hint in the section header,
    never an otherwise empty full-width panel. Keep both actions as real buttons. */
 .tasting-summary > .section-head { flex-wrap:wrap; }
@@ -409,11 +408,9 @@
     .tasting-summary-notes { flex-basis:100%; }
 }
 @media (max-width:540px) {
-    .tasting-summary-header { flex-wrap:wrap; }
-    .tasting-summary-main { display:block; }
-    .tasting-summary-meta { display:block; margin-top:4px; }
-    .tasting-summary-actions { margin-left:0; }
-    .tasting-summary-body { gap:14px 18px; }
+    .tasting-summary-main { flex-basis:100%; }
+    .tasting-summary-actions { width:100%; margin-left:0; }
+    .tasting-summary-actions .btn { flex:1 1 auto; }
     .tasting-summary-radar { flex-basis:100%; min-width:0; max-width:310px; }
 }
 .tasting-list-rating { flex:0 0 90px; width:90px; min-width:90px; text-align:right; white-space:nowrap; font-weight:700; font-variant-numeric:tabular-nums; }

@@ -8,8 +8,10 @@ Notiz- und Punkte-UI aus v0.25.5 wird je Verkostung unverändert wiederverwendet
 
 - Abfüllungsdetails `/?bottling=<id>`: Kompakte Zusammenfassung. Bei 0 Einträgen
   erscheint „Noch keine Verkostung“ mit „Erste Verkostung erfassen“.
-- Bei einem Eintrag öffnet „Verkostung anzeigen“ direkt diesen Eintrag.
-  Bei mehreren Einträgen öffnet „Alle Verkostungsnotizen“ die chronologische Liste.
+- Sobald mindestens ein Eintrag existiert, öffnet „Verkostung anzeigen“ in
+  den Abfüllungsdetails immer direkt die zuletzt angezeigte Verkostung – auch
+  wenn mehrere Einträge vorhanden sind. Die chronologische Gesamtliste bleibt
+  über die Navigation der Einzelverkostung erreichbar.
 - Übersicht `/?bottling=<id>&view=tastings`: Neueste Verkostung zuerst; pro Zeile
   Datum, optionaler Titel, Bewertung und ein Löschen-Button. Löschen benötigt
   eine Bestätigung im **Anwendungsmodal** und ist abbrechbar.

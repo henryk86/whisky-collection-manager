@@ -39,6 +39,17 @@ test('detail-page latest tasting uses five fillable glencairns before its numeri
     assert.match(html,/data-act="tastings-open" data-tasting-id="note-1"/);
 });
 
+test('multiple tastings still open the exact latest record from the preview button',()=>{
+    const html=detailHtml([
+        {id:'earlier',tastedOn:'2026-11-10',rating:70},
+        {id:'newer',tastedOn:'2026-11-22',rating:80}
+    ]);
+    const section=html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    assert.match(section,/<button type="button" class="btn" data-act="tastings-open" data-tasting-id="newer">Verkostung anzeigen<\/button>/);
+    assert.match(section,/22\.11\.2026 · 2 Verkostungsnotizen/);
+    assert.doesNotMatch(section,/Alle Verkostungsnotizen/);
+});
+
 test('when a bottling has no notes, the overview action does not use an invalid tasting ID',()=>{
     const html=detailHtml();
     assert.match(html,/data-act="tastings-open"(?=\s|>)/);
@@ -110,13 +121,17 @@ test('compact preview shares panel edges and uses normal buttons and detail-fiel
     const html=detailHtml([{id:'compact',tastedOn:'2026-11-16',rating:80,whiskyColor:'honey',
         flavorProfile:{woody:5},tastingNotes:{nose:'Vanille und Frucht',palate:'',finish:''}}]);
     const section=html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    const header=section.indexOf('class="tasting-summary-header"');
-    const body=section.indexOf('class="tasting-summary-body"');
+    const summary=section.indexOf('class="tasting-summary-main"');
+    const heading=section.indexOf('class="muted tasting-summary-lead"');
     const score=section.indexOf('class="tasting-summary-score"');
+    const date=section.indexOf('class="muted tasting-summary-meta"');
     const radar=section.indexOf('class="tasting-summary-radar"');
     const notes=section.indexOf('class="tasting-summary-notes"');
-    assert.ok(header >= 0 && header < body && body < score && score < radar && radar < notes);
-    assert.ok(section.indexOf('class="actions tasting-summary-actions"') < body);
+    const button=section.indexOf('class="actions tasting-summary-actions"');
+    assert.ok(summary >= 0 && summary < heading && heading < score && score < date,
+        'left summary keeps the original heading, rating, date hierarchy');
+    assert.ok(date < radar && radar < notes && notes < button,
+        'radar, optional notes and the individual tasting button follow the left summary');
     assert.match(section,/<button type="button" class="btn" data-act="tastings-open" data-tasting-id="compact">Verkostung anzeigen<\/button>/);
     assert.match(section,/class="tasting-summary-field-label">Nase<\/span><div class="tasting-summary-note-value">Vanille und Frucht<\/div>/);
     assert.doesNotMatch(section,/tasting-summary-color|tasting-readonly-color|>Farbe<|>Geschmacksprofil<|>Geschmacksnoten</);
