@@ -11,7 +11,7 @@ import { activateHelpTopic } from './views/help.js';
 import { activateSettingsSection } from './views/settings.js';
 import { handleFlavorRange, setFlavorFromPointer } from './ui/flavor-profile.js';
 /** One delegated click handler; HTML data-act values are the UI action names. */
-export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView, auth }) {
+export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, filePreview, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView, auth }) {
     const suggestNumber = async (fieldName) => {
         const result = await request('/api/suggest-number');
         const field = query(`[name=${fieldName}]`);
@@ -302,6 +302,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
             if (result.ok) toast(t("ui.confirmations.attachmentDeleted"));
             return result;
         }),
+        'preview-file': button => filePreview.open(button),
         'open-photo': button => photoViewer.open(button),
         'photo-editor-open': button => photoEditor.open(button),
         'photo-editor-tab': button => photoEditor.selectTab(button.dataset.photoEditorTab),

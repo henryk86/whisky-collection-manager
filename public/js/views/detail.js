@@ -6,7 +6,7 @@ const bottleStatusText = status => t(({closed:'home.status.closed',open:'analyti
 const FACT_KEYS = Object.freeze({'Whisky-Kategorie':'forms.bottling.whiskyCategory','Marke':'forms.bottling.brandOrProductLine','Beteiligte Destillerien':'forms.bottling.participatingDistilleries','Zusammensetzung vollständig':'detail.facts.labelCompositionComplete','Alter':'forms.bottling.ageYears','Alkoholgehalt':'forms.bottling.abv','Erscheinungsjahr':'forms.bottling.releaseYear','Nennfüllmenge laut Abfüllung':'forms.bottling.nominalVolume','Abfüller':'forms.bottling.bottler','Region':'detail.facts.labelRegion','Land':'detail.facts.labelCountry','Fasstyp':'forms.bottling.caskType','Destilliert am':'forms.bottling.distillationDate','Abgefüllt am':'forms.bottling.bottlingDate','Fassnummer':'forms.bottling.caskNumber','Limitierte Auflage':'detail.facts.labelLimitedEdition','Whiskybase-ID':'forms.bottling.whiskybaseId'});
 const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
 import { escapeHtml } from '../ui/dom.js';
-import { editIcon, deleteIcon, locationIcon, newBottlingIcon, addActionLabel, closeIcon, arrowLeftIcon, arrowRightIcon, gripIcon, sparkleIcon } from '../ui/action-icons.js';
+import { editIcon, deleteIcon, arrowDownIcon, locationIcon, newBottlingIcon, addActionLabel, closeIcon, arrowLeftIcon, arrowRightIcon, gripIcon, sparkleIcon } from '../ui/action-icons.js';
 import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
 import { flavorChart } from '../ui/flavor-profile.js';
 import { imageUrl, formatValue, formatDate } from '../ui/format.js';
@@ -110,8 +110,9 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                     <section class="bottle-documents" aria-label="${t("detail.sections.attachments")}">
     <h4>${t("detail.statistics.attachmentCount", {count:(entry.files || []).length}).replace("&", "&amp;")}</h4>
     ${(entry.files || []).length ? `<ul class="document-list">${entry.files.map(file => `<li>
-    <a href="/api/bottles/${encodeURIComponent(entry.id)}/files/${encodeURIComponent(file.id)}" download="${escapeHtml(file.name)}" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</a>
+    <button type="button" class="inline-link document-preview-link" data-act="preview-file" data-id="${escapeHtml(entry.id)}" data-file-id="${escapeHtml(file.id)}" data-file-name="${escapeHtml(file.name)}" title="${escapeHtml(t('detail.documents.openPreview'))}">${escapeHtml(file.name)}</button>
     <span class="muted document-size">${formatFileSize(file.size)}</span>
+    <a class="btn small document-download" href="/api/bottles/${encodeURIComponent(entry.id)}/files/${encodeURIComponent(file.id)}" download="${escapeHtml(file.name)}" aria-label="${escapeHtml(t('detail.documents.downloadNamed',{name:file.name}))}">${arrowDownIcon}<span>${escapeHtml(t('detail.documents.download'))}</span></a>
     <button class="btn small danger" type="button" data-act="delete-file" data-id="${escapeHtml(entry.id)}" data-file-id="${escapeHtml(file.id)}" aria-label="${t("detail.documents.deleteNamed",{name:escapeHtml(file.name)})}">${deleteIcon}<span>${t("common.actions.delete")}</span></button>
     </li>`).join('')}</ul>` : `<p class="hint">${t("detail.empty.noAttachments")}</p>`}
     <label class="document-add">${addActionLabel(t("detail.actions.addAttachments"))}

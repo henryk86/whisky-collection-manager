@@ -9,6 +9,7 @@ import { parseRoute } from './js/navigation/routes.js';
 import { createNavigation } from './js/navigation/controller.js';
 import { createThemeController } from './js/theme/controller.js';
 import { createModal } from './js/ui/modal.js';
+import { createFilePreview } from './js/features/file-preview.js';
 import { createPhotoViewer } from './js/ui/photo-viewer.js';
 import { createPhotoEditor } from './js/features/photo-editor/controller.js';
 import { createShell } from './js/ui/shell.js';
@@ -42,9 +43,11 @@ state.overviewMode = overviewModeFromSearch(location.search);
 const selectors = createSelectors(state);
 const theme = createThemeController();
 let scanner;
+let filePreview;
 const modal = createModal({
-    state, onClose: () => scanner?.stopScan()
+    state, onClose: () => { scanner?.stopScan(); filePreview?.close(); }
 });
+filePreview = createFilePreview({modal, state});
 const photoViewer = createPhotoViewer({ state, showModal: modal.showModal });
 const photoEditor = createPhotoEditor({ state, showModal: modal.showModal, closeModal: modal.closeModal, action });
 const navigation = createNavigation({
@@ -133,7 +136,7 @@ async function action(task, { scope = 'all' } = {}) {
 }
 navigation.listen();
 bindEvents(root, {
-    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView, auth
+    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, filePreview, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView, auth
 });
 // The extension can send a second import into an already open manager tab.
 // A fragment-only navigation triggers hashchange, not a page reload.

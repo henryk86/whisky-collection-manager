@@ -12,6 +12,9 @@ test('all refactored browser entry points and styles are actually served', async
             assert.equal(response.status, 200, file);
             assert.ok((await response.arrayBuffer()).byteLength > 0, file);
         }
+        const html = await fetch(context.base + '/');
+        assert.match(html.headers.get('content-security-policy') || '', /frame-src 'self'(?:;|$)/,
+            'PDF previews use a same-origin frame without a blob exception');
         assert.equal((await fetch(context.base + '/server/config.js')).status, 404);
         assert.equal((await fetch(context.base + '/.env')).status, 404);
         assert.equal((await fetch(context.base + '/js/missing.js')).status, 404);

@@ -36,6 +36,8 @@ function htmlSecurityHeaders(html) {
             "font-src 'self' data:",
             "connect-src 'self'",
             "worker-src 'self' blob:",
+            // PDF previews use an authenticated same-origin URL, never a blob frame.
+            "frame-src 'self'",
             "frame-ancestors 'none'",
             "base-uri 'none'",
             "object-src 'none'",
