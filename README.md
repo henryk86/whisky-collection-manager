@@ -5,13 +5,21 @@ Webanwendung zur lokalen Verwaltung einer Whisky-Sammlung mit einzelnen Flaschen
 
 ## Funktionen
 
-- **Sammlung:** Abfüllungen und physische Flaschen, Inventarnummern, Kaufdaten, Zustände, Suche, Filter, Scanner sowie Fotos und Belege.
-- **Verkostungen:** Datierte Verkostungen zu Abfüllungen, unabhängige Verkostungen, Tasting-Flights, Geschmacksprofile und Bewertungen.
-- **Fotos:** Bildbearbeitung und optionale lokale KI-Freistellung von Flaschenfotos.
-- **Lager:** Räume, Möbel, Fächer, Flaschenzuordnung und Umlagerung; Raumpläne in 2D und 3D.
+- **Sammlung und Flaschen:** Abfüllungen mit mehreren Destillerien, einzelne Standard- und Sample-Flaschen, Inventarnummern, Kauf- und Lagerdaten, Kachel-/Tabellenansicht, Suche, Filter und QR-/Barcode-Scanner.
+- **Verkostungen:** Eigenständige oder einer Abfüllung zugeordnete Verkostungen, Tasting-Flights, Bewertung bis 100 Punkte mit optionalem Kommentar, Farbe, zehnteilige Geschmacksprofile sowie Notizen zu Nase, Geschmack und Abgang.
+- **Fotos und Nachweise:** Flaschenfotos mit Sortierung und Bildeditor, optionale lokale KI-Freistellung und Dateien an einzelnen physischen Flaschen; Vorschau-Modal und separate Download-Aktionen.
+- **Lager:** Räume, Möbel und Fächer, Flaschenzuordnung und Umlagerung, Flaschensuche sowie Raumpläne in 2D und 3D.
 - **Auswertungen und Karte:** Sammlungs- und Wertanalysen sowie eine Destilleriekarte auf Basis von OpenStreetMap.
-- **Datensicherung:** Verschlüsselte Backups mit konfigurierbaren Speicherzielen und Wiederherstellung.
-- **Bedienung:** Responsive Oberfläche auf Deutsch und Englisch, mit Hell-/Dunkelmodus und integrierter Hilfe.
+- **Datensicherung:** Verschlüsselte ZIP-Backups einschließlich Lager, Fotos und Dokumenten; manuelle oder geplante Sicherung mit konfigurierbaren Zielen sowie Wiederherstellung.
+- **Bedienung und Zugriff:** Responsive Oberfläche auf Deutsch und Englisch, Hell-/Dunkelmodus, integrierte Hilfe und optional aktivierbare Anmeldung mit Nutzerverwaltung.
+
+## Verkostungen
+
+Verkostungen können unabhängig erfasst, einer Abfüllung zugeordnet und zu Tasting-Flights zusammengestellt werden. Pro Abfüllung sind mehrere Verkostungen möglich, jeweils mit Bewertung (0–100 Punkte), optionalem Bewertungskommentar, Farbe, Geschmacksprofil sowie Notizen zu Nase, Geschmack und Abgang. Die Abfüllungsdetailseite zeigt die jüngste Verkostung als Vorschau.
+
+## Fotos und Flaschendokumente
+
+Flaschenfotos lassen sich sortieren und bearbeiten; optional ist eine lokale KI-Freistellung möglich. Dateien und Nachweise gehören zur **einzelnen physischen Flasche**. Ein Klick auf den Dateinamen öffnet die Vorschau, während separate Buttons den Download ermöglichen. Unterstützte Bilder, PDFs und Textdateien können im Browser angezeigt werden; andere Formate stehen zum Download bereit.
 
 ## Oberfläche
 
