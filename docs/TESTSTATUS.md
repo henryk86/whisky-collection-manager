@@ -1,16 +1,14 @@
-# Teststatus - Whisky Collection Manager v1.12.0
+# Teststatus - Whisky Collection Manager v1.12.1
 
-**Stand:** 23. November 2026. Dies ist **keine Produktionsfreigabe**; maßgeblich für einen PR ist die GitHub-CI des konkreten Commits.
+**Stand:** 2026-11-23. Automatischer Release-Snapshot aus Merge 21cd21651f8b (v1.12.0).
 
-| Prüfung | Tatsächlich ausgeführtes Ergebnis |
-|---|---|
-| `npm run check` | **Bestanden** – Syntax, Imports, Übersetzungen, Dokumentationslinks und Deploymentverträge |
-| Unit-/Integrationstests (`npm test`) | **706/706 bestanden** (vollständiger Lauf im aktuellen Prüfstand) |
-| `npm run test:visual` | **136/136 Geometrie-/Interaktionsprüfungen bestanden** mit lokalem Chromium 144; Pixelwerte im Diagnosemodus, Browserbindung für strikten Modus vorhanden |
-| `npm run test:browser` | **Lokal offen**: `playwright-core` ist in dieser Umgebung nicht verfügbar; vollständiger Browserlauf in GitHub Actions erforderlich |
-| GitHub Actions | Für diesen Änderungenstand noch nicht ausgeführt |
-| Reale Mobilgeräte, Safari, Firefox, Screenreader, WebGL-Zielhardware und Dauerbetrieb | Nicht abschließend abgenommen |
+## Pruefungen
 
-**Einordnung:** Layout-, Überlauf- und Modalinteraktionstests blockieren PRs. Pixelunterschiede werden bis zur Freigabe neuer CI-kompatibler Referenzen nur diagnostiziert. Die vollständig installierte Playwright-Browsersuite muss in der normalen GitHub-CI laufen. Ein grüner Unit-/Screenshotlauf ersetzt sie nicht.
+- `npm test`: **Noch nicht ausgefuehrt** auf dem Release-Snapshot; die Node-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.
+- `npm run test:browser`: **Nicht lokal ausgeführt** auf dem Release-Snapshot; die Browser-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.
+- Vor Erstellung des Tags: GitHub-CI fuer den Merge-Quellstand mit `npm run check`, `npm test` und `npm run test:browser`.
+- Release-Metadaten und SHA-256-Quellmanifest werden im Snapshot separat geprueft.
+- Docker/ARM64/AMD64 sowie ZIP-/Offline-Archive werden vom Release-Workflow vor der Veroeffentlichung geprueft.
+- Externe Hardware-/Pi-Pruefungen sind nicht Bestandteil dieses CI-Laufs.
 
-Testumfang und Befehle: [Teststrategie](TESTSTRATEGIE.md). Funktions- und Releaseänderungen: [Changelog](../CHANGELOG.md). Bei der nächsten relevanten Änderung diesen Status auf die tatsächlich neu ausgeführten Prüfungen aktualisieren, nicht als Testchronik fortschreiben.
+Aenderungen und fruehere Releases: [Changelog](../CHANGELOG.md).

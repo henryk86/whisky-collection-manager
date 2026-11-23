@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.12.1 - 2026-11-23
+
+- test(design-system): stabilize visual regression checks and update artifact action
+- style(javascript): enforce Google formatting and document public UI APIs
+- docs: align documentation with current implementation and enforce updates
+- fix(design-system): prevent trailing period in bottling titles
+- refactor(design-system): simplify component structure and remove unused abstractions
+- test(design-system): add final browser and visual regression safeguards
+- refactor(design-system): clean up legacy styles and migrate remaining views
+- refactor(design-system): unify content panels, detail fields and empty states
+- fix(modals): honor explicit assignment dialog width
+- refactor(design-system): unify modal controls, form fields and dialogs
+- refactor(design-system): unify page headers, section headings and navigation
+- refactor(design-system): centralize design tokens and shared layout foundations
+
 ## 1.12.0 - 2026-11-23
 
 - fix: improve modal behavior to preserve scrollbar track and prevent content shift during modal opening
