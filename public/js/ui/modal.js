@@ -1,3 +1,4 @@
+import { sectionHeader } from './section-header.js';
 import { t } from '../i18n/index.js';
 import { escapeHtml, query } from './dom.js';
 import { closeIcon } from './action-icons.js';
@@ -61,10 +62,8 @@ export function createModal({ state, onClose }) {
         if (!host || !state.modal) return;
         host.innerHTML = `<div class="overlay" data-overlay="1">
     <div class="dialog ${state.modal.wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${escapeHtml(state.modal.title)}">
-    <div class="dialog-head">
-    <h2${state.modal.headingAction ? ' class="dialog-title-with-action"' : ''}>${escapeHtml(state.modal.title)}${state.modal.headingAction || ''}</h2>
-    <button class="btn small" type="button" data-act="close-modal" aria-label="${t("common.actions.close")}">${closeIcon}</button>
-    </div>${state.modal.content}</div>
+    ${sectionHeader({layout:'dialog-head',level:2,title:state.modal.title,trailingAction:state.modal.headingAction,
+      actionsBare:true, actions:`<button class="btn small" type="button" data-act="close-modal" aria-label="${escapeHtml(t('common.actions.close'))}">${closeIcon}</button>`})}${state.modal.content}</div>
     </div>`;
         const overlay = host.querySelector('.overlay');
         overlay.addEventListener('click', ev => {

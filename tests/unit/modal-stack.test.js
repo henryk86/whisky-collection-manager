@@ -202,7 +202,7 @@ test('flight planner help opens as a child dialog and closing restores its live 
         const planner = host.firstElementChild;
         planner.form.name = 'Not yet saved flight';
         planner.form.files = ['draft-proposal'];
-        assert.match(planner.html, /dialog-title-with-action/);
+        assert.match(planner.html, /ds-heading-with-action/);
         assert.match(planner.html, /data-act="flight-plan-help"/);
         modal.showModal('So wird ein Flight geplant', '<section>Formeln</section>', true, true);
         assert.equal(state.modal.title, 'So wird ein Flight geplant');

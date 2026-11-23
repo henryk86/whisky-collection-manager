@@ -51,9 +51,9 @@ test('detail heading uses the bottler when no distillery is supplied', () => {
 
 test('detail offers a right-aligned map link with location icon for one or several assigned distilleries, but not for an unassigned bottling', () => {
     const single = renderDetail(['distillery-laphroaig']);
-    assert.match(single, /class="actions detail-head-actions"/);
+    assert.match(single, /class="actions ds-header-actions detail-head-actions"/);
     assert.match(single, /data-act="bottling-map"[^>]*><svg class="action-icon"[\s\S]*?<span>Auf Landkarte anzeigen<\/span><\/button>/);
-    assert.match(single, /<div class="section-head detail-page-head">/);
+    assert.match(single, /<header class="section-head ds-page-header detail-page-head">/);
     const multiple = renderDetail(['distillery-laphroaig', 'distillery-ardbeg']);
     assert.match(multiple, /data-act="bottling-map"[^>]*><svg class="action-icon"[\s\S]*?<span>Standorte auf Landkarte<\/span><\/button>/);
     assert.doesNotMatch(renderDetail([]), /data-act="bottling-map"/);

@@ -1,3 +1,4 @@
+import { headingTitle } from './section-header.js';
 import {escapeHtml} from './dom.js';
 
 /** The formulas below mirror public/js/domain/flight-planner.js. Keep both in sync. */
@@ -22,7 +23,7 @@ export function flightPlanningHelpHtml(t) {
     const tx = key => escapeHtml(t(`flightPlan.help.${key}`));
     const p = (key, extraClass = '') => `<p${extraClass ? ` class="${extraClass}"` : ''}>${tx(key)}</p>`;
     const formula = key => `<pre class="flight-plan-help-formula"><code>${escapeHtml(FORMULAS[key])}</code></pre>`;
-    const heading = key => `<h3>${tx(key)}</h3>`;
+    const heading = key => headingTitle({title:t(`flightPlan.help.${key}`)});
     const variable = (symbol, key) => `<div class="flight-plan-help-definition"><dt>${escapeHtml(symbol)}</dt><dd>${tx(`vars.${key}`)}</dd></div>`;
     const strategy = key => `<section class="flight-plan-help-strategy">
         <h4>${tx(`${key}.title`)}</h4>

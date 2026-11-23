@@ -1,3 +1,5 @@
+import { headingTitle } from '../ui/section-header.js';
+import { pageHeader } from '../ui/page-header.js';
 import { t, currentLanguage } from '../i18n/index.js';
 /** Analytics dashboard and six thematic pages. All datasets come from pure domain calculations. */
 import { analyzeCollection, analyticsFilterOptions } from '../domain/analytics.js';
@@ -51,13 +53,13 @@ const safe = value => escapeHtml(value);
 const empty = () => `<p class="analytics-empty">${t("analytics.empty.noMatchingData")}</p>`;
 
 function panel(title, content, note = '', extra = '') {
-    return `<section class="analytics-panel ${extra}"><h3>${safe(title)}</h3>${content}${note ? `<p class="analytics-note">${safe(note)}</p>` : ''}</section>`;
+    return `<section class="analytics-panel ${extra}">${headingTitle({title})}${content}${note ? `<p class="analytics-note">${safe(note)}</p>` : ''}</section>`;
 }
 function metric(label, value, detail = '') {
     return `<div class="panel stat analytics-metric"><span>${safe(label)}</span><strong>${safe(value)}</strong>${detail ? `<small>${safe(detail)}</small>` : ''}</div>`;
 }
 function metricGrid(cards) { return `<div class="stats analytics-metrics">${cards.join('')}</div>`; }
-function sectionHeading(text) { return `<h2 class="analytics-group-title">${safe(text)}</h2>`; }
+function sectionHeading(text) { return headingTitle({title:text,level:2,className:'analytics-group-title'}); }
 function two(...items) { return `<div class="analytics-two">${items.join('')}</div>`; }
 function rankBars(rows, { value = 'count', format = number, limit = 14, drill = false } = {}) {
     const data = rows.slice(0, limit);
@@ -265,13 +267,13 @@ export function createAnalyticsView({ state, shell }) {
             profile: () => profile(data), finance: () => finance(data, state),
             timeline: () => timeline(data, state), quality: () => quality(data),
         };
-        const content = `${filterControls(state, options)}<h2 class="analytics-section-title">${safe(current.title)}</h2>${contents[current.id]()}`;
+        const content = `${filterControls(state, options)}${headingTitle({title:current.title,level:2,className:'analytics-section-title'})}${contents[current.id]()}`;
         const workspace = sectionWorkspace({
             sections: ANALYSIS_PAGES.map(page => ({id:page.id,label:page.title})),
             activeId: current.id, action:'analytics-section', itemAttribute:'data-section',
             label:t('analytics.navigation.sections'), switchKind:'analytics',
         }, content);
-        shell(`<div class="analytics-page"><header class="section-head analytics-page-heading"><div class="page-heading-copy"><span class="eyebrow dark">${t("analytics.summary.eyebrow")}</span><h2>${t("navigation.analytics")}<span class="heading-period">.</span></h2><p class="intro">${safe(t("analytics.summary.highlights"))}</p></div></header>
+        shell(`<div class="analytics-page">${pageHeader({title:t('navigation.analytics'),eyebrow:t('analytics.summary.eyebrow'),intro:t('analytics.summary.highlights'),className:'analytics-page-heading'})}
             ${workspace}
             </div>`);
     };

@@ -1,3 +1,4 @@
+import { pageHeader } from '../ui/page-header.js';
 import { request } from '../api.js';
 import { toast } from '../ui/notifications.js';
 import { FLAVOR_AXES } from '../../../shared/flavor-profile.js';
@@ -528,18 +529,11 @@ export function createHomeView({ state, selectors, shell, navigate, refresh, sho
     </div>
     <span class="hero-footnote">COLLECTION${establishedYear ? ` · EST. ${establishedYear}` : ''}</span>
     </section>
-    <div class="section-head collection-heading">
-    <div>
-    <span class="eyebrow dark">${t("home.hero.archiveEyebrow")}</span>
-    <h2>${t("home.collection.title")}<span class="heading-period">.</span>
-    </h2>
-    <p class="intro">${t("home.hero.everyBottlingHasStory")}</p>
-    </div>
-    <div class="collection-mode-toggle" role="group" aria-label="${t("home.view.displayAs")}">
+    ${pageHeader({title:t("home.collection.title"), eyebrow:t("home.hero.archiveEyebrow"), intro:t("home.hero.everyBottlingHasStory"),
+      className:'collection-heading', copyClass:'', actions:`<div class="collection-mode-toggle" role="group" aria-label="${t("home.view.displayAs")}">
     <button type="button" class="collection-mode-button${mode === 'bottlings' ? ' active' : ''}" data-collection-mode="bottlings" aria-pressed="${mode === 'bottlings'}">${t("analytics.inventory.bottlings")} <span class="collection-mode-count">${collection.bottlings.length}</span></button>
     <button type="button" class="collection-mode-button${mode === 'bottles' ? ' active' : ''}" data-collection-mode="bottles" aria-pressed="${mode === 'bottles'}">${t("forms.bottle.plural")} <span class="collection-mode-count">${total}</span></button>
-    </div>
-    </div>
+    </div>`})}
     <div class="stats">
     <div class="panel stat">
     <span>${t("analytics.inventory.bottlings")}</span>

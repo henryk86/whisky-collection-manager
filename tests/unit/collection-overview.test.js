@@ -129,7 +129,7 @@ test('physical bottle cards use their own photo, identifier, status and volume; 
         assert.doesNotMatch(cardFor('a-1'), /bottling-cover\.jpg/);
         assert.doesNotMatch(cardFor('a-2'), /bottling-cover\.jpg/);
         assert.equal((html.match(/class="collection-mode-toggle"/g) || []).length, 1);
-        assert.match(html, /class="section-head collection-heading"[\s\S]*class="collection-mode-toggle"[\s\S]*class="stats"/);
+        assert.match(html, /class="section-head ds-page-header collection-heading"[\s\S]*class="collection-mode-toggle"[\s\S]*class="stats"/);
         assert.ok(html.indexOf('class="collection-mode-toggle"') < html.indexOf('class="stats"'));
         assert.match(html, /#000102 · 50 ml/);
         assert.match(html, /<span class="badge open">Geöffnet<\/span>/);

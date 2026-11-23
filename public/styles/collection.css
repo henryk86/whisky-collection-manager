@@ -222,18 +222,6 @@
 .flight-plan-members-list {list-style:none;padding-left:0;}
 .flight-plan-number {display:inline-flex;align-items:center;justify-content:center;flex:0 0 26px;height:26px;border-radius:50%;border:1px solid var(--line);font-weight:650;font-size:12px;}
 
-/* Preserve the exact h3 layout shared by other panels. Position the small help
-   action inside the heading without affecting its line height, margins or baseline. */
-.tasting-flight-home h3.flight-plan-heading-title,
-.dialog-head h2.dialog-title-with-action {position:relative;padding-right:26px;}
-.tasting-flight-home .flight-plan-help-button,
-.dialog-head .flight-plan-help-button {appearance:none;position:absolute;right:0;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;min-width:20px;min-height:20px;padding:0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--muted);line-height:1;cursor:pointer;}
-.tasting-flight-home .flight-plan-help-button .ui-symbol,
-.dialog-head .flight-plan-help-button .ui-symbol {display:block;width:15px;height:15px;flex:0 0 15px;}
-.tasting-flight-home .flight-plan-help-button:hover,
-.dialog-head .flight-plan-help-button:hover {background:transparent;color:var(--ink);}
-.tasting-flight-home .flight-plan-help-button:focus-visible,
-.dialog-head .flight-plan-help-button:focus-visible {outline:2px solid var(--gold);outline-offset:1px;}
 .flight-plan-conditional[hidden] {display:none;}
 .flight-plan-conditional label {display:grid;gap:7px;}
 .flight-plan-conditional select {width:100%;}

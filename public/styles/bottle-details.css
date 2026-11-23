@@ -374,8 +374,6 @@
 .tasting-glasses { gap:7px; }
 .glencairn-rating-outline { fill:var(--ink); opacity:.88; }
 .glencairn-rating-fill { fill:var(--gold); }
-.tasting-panel-heading { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin:0 0 20px; }
-.tasting-panel-heading .btn { flex-shrink:0; margin-left:auto; white-space:nowrap; }
 .flavor-detail-panel.tasting-panel .tasting-top-row > section .tasting-panel-heading h3,
 .flavor-detail-panel.tasting-panel > section .tasting-panel-heading h3 { margin:0; }
 @media(max-width:1150px) { .tasting-top-row { grid-template-columns:1fr; } }

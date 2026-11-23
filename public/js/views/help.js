@@ -1,3 +1,5 @@
+import { headingTitle } from '../ui/section-header.js';
+import { pageHeader } from '../ui/page-header.js';
 /** Contextual guidance belongs on this page, not on everyday work screens. */
 import { t } from '../i18n/index.js';
 import { escapeHtml } from '../ui/dom.js';
@@ -24,7 +26,7 @@ export function helpView(activeTopic = 'basics') {
     const title = id => escapeHtml(t(`help.${id}.title`));
     const panels = HELP_TOPICS.map(topic => `
         <section class="help-section" id="help-panel-${topic.id}" aria-labelledby="help-title-${topic.id}"${topic.id === current ? '' : ' hidden'}>
-            <h2 class="analytics-section-title" id="help-title-${topic.id}">${title(topic.id)}</h2>
+            ${headingTitle({title:t(`help.${topic.id}.title`),level:2,className:'analytics-section-title',id:`help-title-${topic.id}`})}
             <div class="help-content-panel">
                 ${topic.id === 'basics' ? `<p class="help-description muted">${escapeHtml(t('help.description'))}</p>` : ''}
                 <ol class="help-steps">${Array.from({length:topic.items}, (_, index) => `<li>${escapeHtml(t(`help.${topic.id}.${index + 1}`))}</li>`).join('')}</ol>${helpGuides(topic.id)}
@@ -36,12 +38,7 @@ export function helpView(activeTopic = 'basics') {
         label:t('help.contents'), switchKind:'help',
     }, `<div class="help-panels">${panels}</div>`);
     return `<div class="analytics-page help-page">
-        <header class="section-head help-heading">
-            <div class="page-heading-copy"><span class="eyebrow dark">${escapeHtml(t('help.eyebrow'))}</span>
-                <h2>${escapeHtml(t('navigation.help'))}<span class="heading-period">.</span></h2>
-                <p class="intro">${escapeHtml(t('help.intro'))}</p></div>
-            ${backToCollectionButton}
-        </header>
+        ${pageHeader({title:t('navigation.help'), eyebrow:t('help.eyebrow'), intro:t('help.intro'), className:'help-heading',actions:String(backToCollectionButton)})}
         ${workspace}
     </div>`;
 }

@@ -65,7 +65,7 @@ test('the tasting home create action is inside the entries panel heading',()=>{
     let html='';
     const state={page:'tastings-home',collection:{bottlings:[],externalTastings:[]}};
     createTastingsView({state,shell:content=>html=content,navigate(){},refresh(){}}).home();
-    assert.match(html,/<section class="analytics-panel tasting-home-recent">\s*<div class="tasting-panel-heading"><h3>Einträge<\/h3>\s*<button[^>]*data-act="tastings-start-choice"[^>]*><svg class="new-icon"/);
+    assert.match(html,/<section class="analytics-panel tasting-home-recent">\s*<div class="tasting-panel-heading ds-section-header"><h3>Einträge<\/h3>\s*<button[^>]*data-act="tastings-start-choice"[^>]*><svg class="new-icon"/);
     assert.doesNotMatch(html,/class="tasting-add-action"/);
 });
 

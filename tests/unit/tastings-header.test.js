@@ -29,13 +29,13 @@ test('tasting landing page uses the shared analytics page heading only', () => {
     const state={page:'tastings-home',collection:{bottlings:[],externalTastings:[]}};
     createTastingsView({state,shell:content=>html=content,navigate(){},refresh(){}}).home();
     assert.match(html, /class="analytics-page tasting-home-page"/);
-    assert.match(html, /<header class="section-head analytics-page-heading">/);
+    assert.match(html, /<header class="section-head ds-page-header analytics-page-heading">/);
     assert.match(html, /class="page-heading-copy"/);
     assert.match(html, /class="eyebrow dark">JOURNAL/);
-    assert.match(html, /class="heading-period">\.<\/span>/);
+    assert.match(html, /class="heading-period" aria-hidden="true">\.<\/span>/);
     assert.match(html, /class="intro">/);
     assert.doesNotMatch(html, /data-act="tastings-header-new"/);
-    assert.match(html,/<h2>Verkostungsnotizen<span class="heading-period">/);
+    assert.match(html,/<h2>Verkostungsnotizen<span class="heading-period" aria-hidden="true">/);
     assert.match(html,/<h3>Einträge<\/h3>/);
     assert.doesNotMatch(html,/<h3>Alle Verkostungsnotizen<\/h3>/);
 });
@@ -75,7 +75,7 @@ test('tasting page headers describe the page; bottling details are in the first 
     let html='';
     const view=createTastingsView({state,shell:content=>html=content,navigate(){},refresh(){}});
     view.list();
-    let header=html.match(/<header class="section-head analytics-page-heading">[\s\S]*?<\/header>/)?.[0];
+    let header=html.match(/<header class="section-head ds-page-header analytics-page-heading">[\s\S]*?<\/header>/)?.[0];
     assert.ok(header);
     assert.match(header,/Verkostungsübersicht/);
     assert.doesNotMatch(header,/Named bottling|tasting-title-icon|glencairn-symbol/);
@@ -83,7 +83,7 @@ test('tasting page headers describe the page; bottling details are in the first 
     assert.ok(html.indexOf('class="analytics-panel tasting-bottling-info"')<html.indexOf('class="analytics-panel tasting-list-section"'));
     state.page='tasting';state.tastingId='note-1';
     view.editor();
-    header=html.match(/<header class="section-head analytics-page-heading">[\s\S]*?<\/header>/)?.[0];
+    header=html.match(/<header class="section-head ds-page-header analytics-page-heading">[\s\S]*?<\/header>/)?.[0];
     assert.match(header,/<h2>Verkostung<span/);
     assert.doesNotMatch(header,/Named bottling|Bourbon Barrel/);
     const subject=html.indexOf('class="analytics-panel tasting-bottling-info"');
@@ -93,17 +93,17 @@ test('tasting page headers describe the page; bottling details are in the first 
     assert.match(html,/data-act="tastings-back-list"[^>]*><svg class="ui-symbol"[^>]*aria-hidden="true"[^>]*>[^<]*<path d="m12 19-7-7 7-7M5 12h14"\/><\/svg>/);
     state.tastingId='new';
     view.editor();
-    assert.match(html,/<h2>Verkostung erfassen<span class="heading-period">\.<\/span><\/h2>/);
+    assert.match(html,/<h2>Verkostung erfassen<span class="heading-period" aria-hidden="true">\.<\/span><\/h2>/);
 });
 
 test('external tasting stores editable bottling information as the first panel, not in the page heading', () => {
     let html='';
     const state={page:'external-tasting',selected:'new',collection:{bottlings:[],distilleries:[],externalTastings:[]}};
     createTastingsView({state,shell:content=>html=content,navigate(){},refresh(){}}).editor();
-    const header=html.match(/<header class="section-head analytics-page-heading">[\s\S]*?<\/header>/)?.[0];
+    const header=html.match(/<header class="section-head ds-page-header analytics-page-heading">[\s\S]*?<\/header>/)?.[0];
     assert.match(header,/Verkostung erfassen/);
     assert.doesNotMatch(header,/Name der Abfüllung|tasting-title-icon/);
-    assert.ok(html.indexOf('class="analytics-panel tasting-bottling-info"')<html.indexOf('class="section-head tasting-editor-section-head"><h3>Eindrücke</h3>'));
+    assert.ok(html.indexOf('class="analytics-panel tasting-bottling-info"')<html.indexOf('class="section-head ds-section-header tasting-editor-section-head"><h3>Eindrücke</h3>'));
     assert.match(html,/class="analytics-panel tasting-bottling-info"[\s\S]*?data-external-field="name"/);
     assert.doesNotMatch(html,/<h3>Abfüllungsangaben<\/h3>/);
     assert.doesNotMatch(html,/data-act="tasting-external-edit"/);
@@ -116,20 +116,20 @@ test('return navigation is above the entire page heading on every tasting subpag
     let html='';
     const view=createTastingsView({state,shell:s=>html=s,navigate(){},refresh(){}});
     view.list();
-    assert.match(html,/<div class="analytics-page tasting-child-page">\s*<nav class="page-back-nav"[^>]*>\s*<button[^>]*data-act="tastings-back-detail"/);
-    assert.ok(html.indexOf('<nav class="page-back-nav"')<html.indexOf('<header class="section-head analytics-page-heading"'));
-    assert.ok(html.indexOf('<header class="section-head analytics-page-heading"')<html.indexOf('<section class="analytics-panel tasting-bottling-info">'));
+    assert.match(html,/<div class="analytics-page tasting-child-page">\s*<nav class="page-back-nav ds-back-nav ds-back-nav--inline"[^>]*>\s*<button[^>]*data-act="tastings-back-detail"/);
+    assert.ok(html.indexOf('<nav class="page-back-nav ds-back-nav ds-back-nav--inline"')<html.indexOf('<header class="section-head ds-page-header analytics-page-heading"'));
+    assert.ok(html.indexOf('<header class="section-head ds-page-header analytics-page-heading"')<html.indexOf('<section class="analytics-panel tasting-bottling-info">'));
     assert.doesNotMatch(html,/<h3>Abfüllungsangaben<\/h3>/);
     state.page='tasting'; state.tastingId='taste';
     view.editor();
-    assert.match(html,/<div class="analytics-page tasting-child-page">\s*<nav class="page-back-nav"[^>]*>\s*<button[^>]*data-act="tastings-back-list"/);
-    assert.ok(html.indexOf('<nav class="page-back-nav"')<html.indexOf('<header class="section-head analytics-page-heading"'));
-    assert.ok(html.indexOf('<header class="section-head analytics-page-heading"')<html.indexOf('<section class="section tasting-editor-content'));
+    assert.match(html,/<div class="analytics-page tasting-child-page">\s*<nav class="page-back-nav ds-back-nav ds-back-nav--inline"[^>]*>\s*<button[^>]*data-act="tastings-back-list"/);
+    assert.ok(html.indexOf('<nav class="page-back-nav ds-back-nav ds-back-nav--inline"')<html.indexOf('<header class="section-head ds-page-header analytics-page-heading"'));
+    assert.ok(html.indexOf('<header class="section-head ds-page-header analytics-page-heading"')<html.indexOf('<section class="section tasting-editor-content'));
     state.page='external-tasting'; state.selected='new';
     view.editor();
-    assert.match(html,/<div class="analytics-page tasting-child-page">\s*<nav class="page-back-nav"[^>]*>\s*<button[^>]*data-act="tastings-back-home"/);
-    assert.ok(html.indexOf('<nav class="page-back-nav"')<html.indexOf('<header class="section-head analytics-page-heading"'));
-    assert.ok(html.indexOf('<header class="section-head analytics-page-heading"')<html.indexOf('data-external-field="name"'));
+    assert.match(html,/<div class="analytics-page tasting-child-page">\s*<nav class="page-back-nav ds-back-nav ds-back-nav--inline"[^>]*>\s*<button[^>]*data-act="tastings-back-home"/);
+    assert.ok(html.indexOf('<nav class="page-back-nav ds-back-nav ds-back-nav--inline"')<html.indexOf('<header class="section-head ds-page-header analytics-page-heading"'));
+    assert.ok(html.indexOf('<header class="section-head ds-page-header analytics-page-heading"')<html.indexOf('data-external-field="name"'));
 });
 
 test('tasting lists reuse Lager -> Flasche finden framed rows, not card grids',()=>{
@@ -240,7 +240,7 @@ test('owned tasting information shows the same bottling cover photo as the bottl
         state.page=page;
         state.tastingId='taste';
         if(page==='tastings') view.list(); else view.editor();
-        const header=html.match(/<header class="section-head analytics-page-heading">[\s\S]*?<\/header>/)?.[0];
+        const header=html.match(/<header class="section-head ds-page-header analytics-page-heading">[\s\S]*?<\/header>/)?.[0];
         assert.doesNotMatch(header,/<img |Photo dram/);
         const info=html.match(/<section class="analytics-panel tasting-bottling-info">[\s\S]*?<\/section>/)?.[0];
         assert.ok(info);
@@ -331,16 +331,16 @@ test('bottling details and tasting pages render identical back-button structure 
     let tastingHtml='';
     createTastingsView({state:{page:'tastings',selected:'b1',collection},
         shell:s=>tastingHtml=s,navigate(){},refresh(){}}).list();
-    const detailButton=detailHtml.match(/<nav class="page-back-nav"[^>]*>\s*<button[^>]*class="inline-link page-back"[^>]*>[\s\S]*?<\/button><\/nav>/)?.[0];
-    const tastingButton=tastingHtml.match(/<nav class="page-back-nav"[^>]*>\s*<button[^>]*class="inline-link page-back"[^>]*>[\s\S]*?<\/button><\/nav>/)?.[0];
+    const detailButton=detailHtml.match(/<nav class="page-back-nav ds-back-nav ds-back-nav--inline"[^>]*>\s*<button[^>]*class="inline-link page-back ds-back-button ds-back-button--inline"[^>]*>[\s\S]*?<\/button><\/nav>/)?.[0];
+    const tastingButton=tastingHtml.match(/<nav class="page-back-nav ds-back-nav ds-back-nav--inline"[^>]*>\s*<button[^>]*class="inline-link page-back ds-back-button ds-back-button--inline"[^>]*>[\s\S]*?<\/button><\/nav>/)?.[0];
     assert.ok(detailButton);
     assert.ok(tastingButton);
     assert.equal(detailButton.match(/<path d="([^"]+)"/)[1], tastingButton.match(/<path d="([^"]+)"/)[1]);
     assert.match(detailButton,/data-region="detail-back"/);
     assert.match(tastingButton,/data-act="tastings-back-detail"/);
-    assert.equal((detailHtml.match(/class="page-back-nav"/g)||[]).length,1);
-    assert.equal((tastingHtml.match(/class="page-back-nav"/g)||[]).length,1);
-    assert.equal(backNavigation('back','Zur Sammlung').includes('class="page-back-nav"'),true);
+    assert.equal((detailHtml.match(/class="page-back-nav ds-back-nav ds-back-nav--inline"/g)||[]).length,1);
+    assert.equal((tastingHtml.match(/class="page-back-nav ds-back-nav ds-back-nav--inline"/g)||[]).length,1);
+    assert.equal(backNavigation('back','Zur Sammlung').includes('class="page-back-nav ds-back-nav ds-back-nav--inline"'),true);
     for(const label of ['Zur Sammlung','← Zur Sammlung','⟵ Back to collection']) {
         const nav=backNavigation('back',label);
         assert.equal((nav.match(/class="ui-symbol"/g)||[]).length,1,'exactly one SVG arrow');

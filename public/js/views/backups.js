@@ -1,3 +1,4 @@
+import { headingTitle } from '../ui/section-header.js';
 import { t, tHtml, currentLanguage } from '../i18n/index.js';
 /** One place for manual, scheduled and restorative backups. All archives are ZIP. */
 import { addActionLabel, successIcon, warningIcon, moreIcon } from '../ui/action-icons.js';
@@ -25,7 +26,7 @@ export function renderBackupSection(state) {
     const dash = state.backupDashboard;
     if (!state.backupUnlocked || !dash) {
         return `<section class="panel section backup-management" id="backup-management">
-        <div class="backup-head"><div><h3>${t("backups.page.title")}</h3><p class="muted">${t("backups.page.zipWorkflowDescription")}</p></div></div>
+        <div class="backup-head"><div>${headingTitle({title:t('backups.page.title')})}<p class="muted">${t("backups.page.zipWorkflowDescription")}</p></div></div>
         ${manual(false)}
         <div class="backup-step"><h4>${t("backups.sections.automaticAndRestore")}</h4>
         <p class="muted">${t("backups.security.adminKeyRequiredForJobs")}</p>
@@ -40,7 +41,7 @@ export function renderBackupSection(state) {
     const jobs = (dash.jobs || []).slice(0, 12);
     const worker = dash.worker?.online ? `<span class="backup-status online">${t("backups.status.workerOnline")}</span>` : `<span class="backup-status offline">${t("backups.status.workerOffline")}</span>`;
     return `<section class="panel section backup-management" id="backup-management">
-      <div class="backup-head"><div><h3>${t("backups.page.title")}</h3><p class="muted">${t("backups.page.zipAndTimezone",{zone:h(dash.timeZone || 'Europe/Berlin')})}</p></div>${worker}</div>
+      <div class="backup-head"><div>${headingTitle({title:t('backups.page.title')})}<p class="muted">${t("backups.page.zipAndTimezone",{zone:h(dash.timeZone || 'Europe/Berlin')})}</p></div>${worker}</div>
       ${manual(Boolean(dash.passwordConfigured))}
       <div class="backup-step"><h4>${t("backups.password.label")}</h4>
         <p class="${dash.passwordConfigured ? 'muted' : 'warning'}">${dash.passwordConfigured ? t("backups.password.encryptionEnabled") : t("backups.password.requiredBeforeBackup")}</p>

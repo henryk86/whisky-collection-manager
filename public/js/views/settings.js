@@ -1,3 +1,5 @@
+import { headingTitle } from '../ui/section-header.js';
+import { pageHeader } from '../ui/page-header.js';
 import { addActionLabel } from '../ui/action-icons.js';
 import { escapeHtml } from '../ui/dom.js';
 import { availableLanguages, currentLanguage, t } from '../i18n/index.js';
@@ -8,10 +10,10 @@ export function createSettingsView(state, auth = {usersSection: () => ''}) {
     function settings() {
         const tabs = [...['general','backups','transfer','distilleries'], ...(state.auth?.canManageUsers ? ['users'] : [])].map(id => ({id,label:id === 'users' ? t('auth.users') : t(`settings.navigation.${id}`)}));
         const active = tabs.some(item => item.id === state.settingsSection) ? state.settingsSection : 'general';
-        const panel = (id, content) => `<section class="settings-section" data-settings-panel="${id}"${id === active ? '' : ' hidden'}><h2 class="analytics-section-title">${t(`settings.navigation.${id}`)}</h2>${content}</section>`;
-        const general = `    <div class="panel section"><h3>${t("settings.language.label")}</h3><label class="form-field" for="ui-language">${t("settings.language.choose")}<select id="ui-language" aria-label="${t("settings.language.label")}">${Object.entries(availableLanguages()).map(([code, name]) => `<option value="${escapeHtml(code)}" ${code === currentLanguage() ? 'selected' : ''}>${escapeHtml(name)}</option>`).join('')}</select></label></div>
+        const panel = (id, content) => `<section class="settings-section" data-settings-panel="${id}"${id === active ? '' : ' hidden'}>${headingTitle({title:t(`settings.navigation.${id}`),level:2,className:'analytics-section-title'})}${content}</section>`;
+        const general = `    <div class="panel section">${headingTitle({title:t('settings.language.label')})}<label class="form-field" for="ui-language">${t("settings.language.choose")}<select id="ui-language" aria-label="${t("settings.language.label")}">${Object.entries(availableLanguages()).map(([code, name]) => `<option value="${escapeHtml(code)}" ${code === currentLanguage() ? 'selected' : ''}>${escapeHtml(name)}</option>`).join('')}</select></label></div>
     <form id="collection-settings-form" class="panel section collection-settings">
-    <h3>${t("settings.collection.title")}</h3>
+    ${headingTitle({title:t('settings.collection.title')})}
     <label class="form-field" for="established-year">${t("settings.collection.foundingYearLabel")}
     <input type="number" inputmode="numeric" id="established-year" name="establishedYear" min="1600" max="${new Date().getFullYear()}" step="1" placeholder="z. B. 2018" value="${state.collection.settings?.establishedYear ?? ''}">
     </label>
@@ -20,7 +22,7 @@ export function createSettingsView(state, auth = {usersSection: () => ''}) {
 `;
         const backups = renderBackupSection(state);
         const transfer = `    <div class="panel section">
-      <h3>${t("settings.exports.additionalExports")}</h3>
+      ${headingTitle({title:t('settings.exports.additionalExports')})}
       <p class="muted">${t("settings.exports.notFullBackupWarning")}</p>
       <div class="actions"><a class="btn" href="/api/export/json" download>${t("settings.exports.downloadJson")}</a><a class="btn" href="/api/export/csv" download>${t("settings.exports.downloadCsv")}</a></div>
       <details style="margin-top:15px"><summary>${t("settings.imports.legacyJsonImport")}</summary>
@@ -43,15 +45,8 @@ export function createSettingsView(state, auth = {usersSection: () => ''}) {
         const workspace = sectionWorkspace({sections:tabs,activeId:active,
             action:'settings-section',itemAttribute:'data-settings-section',
             label:t('settings.navigation.label'),switchKind:'settings',
-        }, panel('general',general)+panel('backups',backups)+panel('transfer',transfer)+panel('distilleries',distilleries)+(state.auth?.canManageUsers ? `<section class="settings-section" data-settings-panel="users"${active === 'users' ? '' : ' hidden'}><h2 class="analytics-section-title">${t('auth.users')}</h2><div id="auth-users-content">${auth.usersSection()}</div></section>` : ''));
-        return `<div class="analytics-page settings-page"><header class="section-head settings-heading">
-    <div class="page-heading-copy">
-    <span class="eyebrow dark">${t("settings.page.eyebrow")}</span>
-    <h2>${t("settings.page.title")}<span class="heading-period">.</span></h2>
-    <p class="intro">${t("settings.page.intro")}</p>
-    </div>
-    ${backToCollectionButton}
-    </header>${workspace}</div>`;
+        }, panel('general',general)+panel('backups',backups)+panel('transfer',transfer)+panel('distilleries',distilleries)+(state.auth?.canManageUsers ? `<section class="settings-section" data-settings-panel="users"${active === 'users' ? '' : ' hidden'}>${headingTitle({title:t('auth.users'),level:2,className:'analytics-section-title'})}<div id="auth-users-content">${auth.usersSection()}</div></section>` : ''));
+        return `<div class="analytics-page settings-page">${pageHeader({title:t('settings.page.title'),eyebrow:t('settings.page.eyebrow'),intro:t('settings.page.intro'),className:'settings-heading',actions:String(backToCollectionButton)})}${workspace}</div>`;
     }
     return settings;
 }

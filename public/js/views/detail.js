@@ -1,3 +1,7 @@
+import { headingTitle } from '../ui/section-header.js';
+import { headerActions } from '../ui/header-actions.js';
+import { sectionHeader } from '../ui/section-header.js';
+import { pageHeader } from '../ui/page-header.js';
 import { latestTasting } from '../../../shared/tasting-records.js';
 import { displayPhotoPath } from '../../../shared/photo-images.js';
 import { t } from '../i18n/index.js';
@@ -90,7 +94,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                             <button class="btn small danger" data-act="delete-bottle" data-id="${escapeHtml(entry.id)}">${deleteIcon}<span>${t('common.actions.delete')}</span></button>
                         </div>
                     </div>
-                    <h3 class="bottle-entry-data-title">${t('detail.sections.bottleData')}</h3>
+                    ${headingTitle({title:t('detail.sections.bottleData'),className:'bottle-entry-data-title'})}
                     <dl class="bottle-entry-facts">
                         <div><dt>${t('forms.bottle.type')}</dt><dd>${t(entry.volumeType === 'sample' ? 'forms.bottle.sampleBottle' : 'forms.bottle.normalBottle')}</dd></div>
                         ${entry.purchaseDate ? `<div><dt>${t('detail.meta.purchaseLabel')}</dt><dd>${escapeHtml(formatDate(entry.purchaseDate))}</dd></div>` : ''}
@@ -123,43 +127,32 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
         }).join('');
         shell(`${backNavigation("back", t("detail.navigation.backToCollection"), "detail-back")}
     <div data-region="detail-bottling" class="section" style="margin-top:18px">
-    <div class="section-head detail-page-head">
-    <div>
-    <div class="detail-heading-meta">${originLabel ? `<span class="card-kicker">${escapeHtml(originLabel)}</span><span class="detail-heading-separator" aria-hidden="true">·</span>` : ''}<span class="muted">${statusText}</span></div>
-    <h2>${escapeHtml(bottling.name)}</h2>
-    </div>
-    <div class="actions detail-head-actions">
-    ${relatedDistilleries.length ? `<button class="btn" type="button" data-act="bottling-map" title="${t("detail.map.showRelatedDistilleries")}">${locationIcon}<span>${relatedDistilleries.length > 1 ? t("detail.sections.mapLocations") : t("detail.actions.showOnMap")}</span></button>` : ''}
+    ${pageHeader({title:bottling.name, period:false, className:'detail-page-head',
+      preTitle:`<div class="detail-heading-meta">${originLabel ? `<span class="card-kicker">${escapeHtml(originLabel)}</span><span class="detail-heading-separator" aria-hidden="true">·</span>` : ''}<span class="muted">${escapeHtml(statusText)}</span></div>`,
+      copyClass:'', actions:headerActions(`${relatedDistilleries.length ? `<button class="btn" type="button" data-act="bottling-map" title="${t("detail.map.showRelatedDistilleries")}">${locationIcon}<span>${relatedDistilleries.length > 1 ? t("detail.sections.mapLocations") : t("detail.actions.showOnMap")}</span></button>` : ''}
     <button class="btn" data-act="edit-bottling">${editIcon}<span>${t("common.actions.edit")}</span></button>
     <button class="btn danger" data-act="delete-bottling">${deleteIcon}<span>${t("common.actions.delete")}</span></button>
-    </div>
-    </div>
+    `, {className:'detail-head-actions'})})}
     <div class="two-col detail-summary-grid">
     <div class="detail-summary-photo">
     ${coverPhoto(bottling.id) ? `<button type="button" class="hero-photo hero-photo-open" data-act="open-photo" title="${t("detail.photos.enlargeBottle")}" aria-label="${t("detail.photos.openOverlay")}"><img src="${imageUrl(coverPhoto(bottling.id))}" alt="${t("ui.photos.bottlePhoto")}"></button>` : '<div class="hero-photo"><img class="image-placeholder" src="/assets/photo-placeholder.svg" alt="" aria-hidden="true"></div>'}
     </div>
     <div class="panel">
-    <h3>${t("detail.sections.bottlingData")}</h3>
+    ${headingTitle({title:t('detail.sections.bottlingData')})}
     ${facts.length ? `<div class="forms">${facts.map(([label, value, suffix = '']) => `<div>
     <span class="muted" style="font-size:12px">${factLabel(label)}</span>
     <div style="font-weight:650;margin-top:4px">${formatValue(value === "Ja" ? t("common.choices.yes") : value === "Nein" ? t("common.choices.no") : value)}${suffix ? ` ${suffix === "Jahre" ? t("detail.facts.yearSuffix") : suffix}` : ''}</div>
     </div>`).join('')}</div>` : (!description && !whiskybaseUrl ? `<p class="hint">${t("detail.empty.noAdditionalInformation")}</p>` : '')}${description ? `<hr class="divider">
-    <h3>${t("detail.fields.comment")}</h3>
+    ${headingTitle({title:t('detail.fields.comment')})}
     <p>${escapeHtml(description)}</p>` : ''}${whiskybaseUrl ? `<hr class="divider">
     <a href="${escapeHtml(whiskybaseUrl)}" target="_blank" rel="noopener noreferrer">${t("detail.actions.openWhiskybase")}</a>` : ''}</div>
     </div>
     </div>
     <section data-region="detail-tastings" class="section tasting-summary${latest ? '' : ' is-empty'}" aria-label="${escapeHtml(t('tastings.title'))}">
-        <div class="section-head">
-            <div class="tasting-summary-section-heading">
-                <h3>${escapeHtml(t('tastings.title'))}</h3>
-                ${latest ? '' : `<p class="hint tasting-summary-empty">${escapeHtml(t('tastings.none'))}</p>`}
-            </div>
-            <div class="actions tasting-summary-heading-actions">
-                ${latest ? '' : `<button type="button" class="btn" data-act="tastings-open">${escapeHtml(t('tastings.openAll'))}</button>`}
-                <button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t(tastingCount ? 'tastings.add' : 'tastings.first'))}</span></button>
-            </div>
-        </div>
+        ${sectionHeader({ title:t('tastings.title'), className:'tasting-summary-heading',
+            description:latest ? '' : t('tastings.none'), descriptionClass:'hint tasting-summary-empty', copyClass:'tasting-summary-section-heading',
+            actionsClass:'tasting-summary-heading-actions', actions:`${latest ? '' : `<button type="button" class="btn" data-act="tastings-open">${escapeHtml(t('tastings.openAll'))}</button>`}
+                <button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t(tastingCount ? 'tastings.add' : 'tastings.first'))}</span></button>` })}
         ${latest ? `<div class="panel tasting-summary-card">
             <div class="tasting-summary-content">
                 <div class="tasting-summary-main">
@@ -179,10 +172,8 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
         </div>` : ''}
     </section>
     <div data-region="detail-physical-bottles" class="section">
-    <div class="section-head">
-    <h3>${t("detail.statistics.bottleAndSampleCount", {count:physicalBottles.length})}</h3>
-    <button class="btn primary" data-act="add-bottle">${newBottlingIcon}<span>${escapeHtml(t('detail.actions.addAnotherBottle').replace(/^\+\s*/, ''))}</span></button>
-    </div>
+    ${sectionHeader({title:t('detail.statistics.bottleAndSampleCount', {count:physicalBottles.length}), actionsBare:true,
+      actions:`<button class="btn primary" data-act="add-bottle">${newBottlingIcon}<span>${escapeHtml(t('detail.actions.addAnotherBottle').replace(/^\+\s*/, ''))}</span></button>`})}
     <div class="bottle-entry-list">${list || `<div class="panel"><p class="muted">${t("detail.empty.noPhysicalBottles")}</p></div>`}</div>
     </div>`);
         attachPhotoSorting(action);

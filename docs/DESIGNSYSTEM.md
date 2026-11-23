@@ -1,6 +1,6 @@
 # Zentrales Designsystem – Phase 1
 
-**Quellstand:** WhiskyCollectionManager `1.12.0`, Ausgangs-ZIP `whisky-collection-manager-develop(2).zip` (SHA-256 `10f70703020bba0896c6f98ae4b140282f8e5ec7e28d94f90faae72f44f067a5`). **Status:** Phase 1 implementiert, spätere Komponenten-Migration noch nicht durchgeführt. Keine Änderung an API, Schema, Geschäftslogik oder JS-Renderer.
+**Quellstand:** WhiskyCollectionManager `1.12.0`, Ausgangs-ZIP `whisky-collection-manager-develop(2).zip` (SHA-256 `10f70703020bba0896c6f98ae4b140282f8e5ec7e28d94f90faae72f44f067a5`). **Status:** Phase 1 implementiert; Phase 2 (gemeinsame Überschriften und Navigation) ist ebenfalls implementiert, siehe [Phase-2-Architektur](DESIGNSYSTEM_PHASE2.md). Keine Änderung an API, Schema, Geschäftslogik oder JS-Renderer.
 
 ## Verbindliche Lade- und Verantwortungsreihenfolge
 
@@ -9,8 +9,9 @@
 1. `styles/tokens.css` – bestehende Theme-Farbwerte, semantische `--ds-*`-Aliasse, Typografie-, Größen-, Abstands- und Geometrietokens; Light- und Dark-Definitionen.
 2. `styles/layout.css` – niedrig spezifische gemeinsame Seitenbreite (`main`, `.header-inner`, `.ds-page-container`) und opt-in Layouthelfer.
 3. `styles/core.css` – bestehende UI-Grundelemente und weiterhin enthaltene, historisch gewachsene Fachregeln.
-4. Unveränderte Fachreihenfolge: `collection.css`, `themes.css`, `scanner.css`, `bottle-details.css`, `pagination.css`, `settings.css`, `map.css`, `analytics.css`, `warehouse.css`.
-5. `styles/surfaces.css` – bisheriger letzter Form-Override; bleibt als **Legacy-Sicherungsregel** bis zur Komponenten-Migration aktiv.
+4. `styles/headers.css` – gemeinsame Page-/SectionHeader, BackNavigation, HeaderActions und HelpIconButton (Phase 2).
+5. Unveränderte Fachreihenfolge: `collection.css`, `themes.css`, `scanner.css`, `bottle-details.css`, `pagination.css`, `settings.css`, `map.css`, `analytics.css`, `warehouse.css`.
+6. `styles/surfaces.css` – bisheriger letzter Form-Override; bleibt als **Legacy-Sicherungsregel** bis zur Komponenten-Migration aktiv.
 
 **Nicht umsortieren:** `themes.css` enthält weiterhin konkrete Dark-Komponentenregeln, `analytics.css` enthält den fachübergreifenden `section-workspace`. Da das Quell-CSS historisch über die Reihenfolge wirkt, wurde in Phase 1 bewusst **kein** `@layer` eingeführt. Neue Fach-CSS-Dateien dürfen Design-Tokens konsumieren, nicht global redefinieren. Ausnahmen werden auf der Komponentenebene dokumentiert.
 

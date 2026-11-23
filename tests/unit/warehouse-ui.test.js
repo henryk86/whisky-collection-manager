@@ -18,7 +18,7 @@ test('warehouse view renders room plan, separate bottle assignment and responsiv
     const view=createWarehouseView({state,shell:output=>{html=output;},navigate:()=>{},modal:{},refresh:async()=>{}});
     const originalDocument=globalThis.document;
     try {globalThis.document={querySelector:()=>null};view.render();
-    assert.match(html,/Regale & Fächer/);
+    assert.match(html,/Regale &amp; Fächer/);
     assert.match(html,/warehouse-shelf/);
     state.selected='rooms'; view.render();}
     finally {if(originalDocument===undefined)delete globalThis.document;else globalThis.document=originalDocument;}
@@ -42,7 +42,7 @@ test('warehouse uses the same page header and section sidebar as analytics on ev
         state.selected = id;
         view.render();
         assert.match(html, /class="analytics-page warehouse-page"/);
-        assert.match(html, /<header class="section-head warehouse-heading"><div class="page-heading-copy"><span class="eyebrow dark">DEINE FLASCHEN IM BLICK<\/span><h2>Lagerverwaltung<span class="heading-period">\.<\/span><\/h2>/);
+        assert.match(html, /<header class="section-head ds-page-header warehouse-heading"><div class="page-heading-copy"><span class="eyebrow dark">DEINE FLASCHEN IM BLICK<\/span><h2>Lagerverwaltung<span class="heading-period" aria-hidden="true">\.<\/span><\/h2>/);
         assert.match(html, /class="section-nav-desktop warehouse-tabs"/);
         assert.match(html, /data-section-switch="warehouse"/);
         const active = html.match(/<button[^>]*class="section-nav-item active"[^>]*>/g) || [];

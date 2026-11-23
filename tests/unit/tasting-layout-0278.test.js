@@ -15,7 +15,7 @@ const render = (page,tastingId)=>{
 test('add action in the owned tasting list is inside its framed panel',()=>{
     const html=render('tastings');
     assert.doesNotMatch(html,/class="tasting-add-action"/);
-    assert.match(html,/<section class="analytics-panel tasting-list-section">\s*<div class="tasting-panel-heading">[\s\S]*?data-act="tastings-new"[^>]*><svg class="new-icon"/);
+    assert.match(html,/<section class="analytics-panel tasting-list-section">\s*<div class="tasting-panel-heading ds-section-header">[\s\S]*?data-act="tastings-new"[^>]*><svg class="new-icon"/);
 });
 
 test('editor actions belong to the first form card and the section heading has no duplicate margin',async()=>{

@@ -76,8 +76,8 @@ test('browser: map and collection use the same full-width content frame, right d
                 assert.equal(mapFrame.actualGridColumns, 1, `${width}px: stack the layout on smaller displays`);
             }
             assert.ok(mapFrame.overflow <= 1, `${width}px: map must not overflow`);
-            const mapBack = page.locator('main .section-head > .btn');
-            assert.equal(await mapBack.innerText(), '← Zur Sammlung');
+            const mapBack = page.locator('main .section-head .ds-back-button--page-action');
+            assert.equal(await mapBack.innerText(), 'Zur Sammlung');
             assert.equal(await mapBack.getAttribute('data-act'), 'goto-home');
             await mapBack.click();
             await page.locator('.collection-hero').waitFor({ state: 'visible' });
@@ -85,8 +85,8 @@ test('browser: map and collection use the same full-width content frame, right d
         await page.locator('#menu-button').click();
         await page.locator('#site-drawer [data-act="goto-settings-menu"]').click();
         await page.getByRole('heading', { name: 'Einstellungen & Datensicherung' }).waitFor();
-        const settingsBack = page.locator('main .section-head > .btn');
-        assert.equal(await settingsBack.innerText(), '← Zur Sammlung');
+        const settingsBack = page.locator('main .section-head .ds-back-button--page-action');
+        assert.equal(await settingsBack.innerText(), 'Zur Sammlung');
         assert.equal(await settingsBack.getAttribute('data-act'), 'goto-home');
         await settingsBack.click();
         await page.locator('.collection-hero').waitFor({ state: 'visible' });

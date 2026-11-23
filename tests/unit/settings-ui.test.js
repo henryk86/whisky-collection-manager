@@ -28,9 +28,9 @@ test('legacy JSON import is hidden in a collapsed disclosure until the user open
     const state = { backupUnlocked: false, backupDashboard: null,
         collection: { distilleries: [] }, distillerySearch: '' };
     const view = createSettingsView(state)();
-    assert.match(view, /<header class="section-head settings-heading">/);
+    assert.match(view, /<header class="section-head ds-page-header settings-heading">/);
     assert.match(view, /<span class="eyebrow dark">DEINE SAMMLUNG VERWALTEN<\/span>/);
-    assert.match(view, /<h2>Einstellungen & Datensicherung<span class="heading-period">\.<\/span><\/h2>/);
+    assert.match(view, /<h2>Einstellungen &amp; Datensicherung<span class="heading-period" aria-hidden="true">\.<\/span><\/h2>/);
     assert.doesNotMatch(view, /<p class="intro">Die Sammlung wird lokal gespeichert/);
     assert.match(view, /data-act="goto-home"/);
     const english = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));

@@ -323,13 +323,6 @@ main {
 .collection-heading {
     margin-bottom: 23px;
 }
-.section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 14px;
-    margin: 20px 0 12px;
-}
 .detail-heading-meta {
     display: flex;
     align-items: baseline;
@@ -348,7 +341,7 @@ main {
 .detail-heading-separator {
     color: var(--muted);
 }
-.detail-page-head {
+.detail-page-head.ds-page-header {
     align-items: flex-start;
 }
 .detail-head-actions {
@@ -358,14 +351,6 @@ main {
 }
 .detail-head-actions .btn {
     white-space: nowrap;
-}
-.section-head h2 {
-    font-family: var(--serif);
-    font-size: clamp(26px,3vw,36px);
-    line-height: 1.25;
-    font-weight: 400;
-    letter-spacing: -.8px;
-    margin: 10px 0;
 }
 .heading-period {
     color: var(--gold);
@@ -776,10 +761,6 @@ tr.clickable:hover {
     font-weight: 700;
     font-size: 12px;
 }
-/* Identical position, icon, line height and spacing on bottling and all tasting subpages. */
-.page-back-nav { display:block; margin:0 0 18px; padding:8px 0 0; }
-.page-back { display:inline-flex; align-items:center; gap:6px; margin:0; line-height:1.3; cursor:pointer; }
-.page-back .ui-symbol { width:18px; height:18px; flex:0 0 18px; }
 .toast {
     position: fixed;
     bottom: 24px;
@@ -841,19 +822,6 @@ tr.clickable:hover {
 }
 .dialog.wide {
     width: min(var(--ds-dialog-max-wide),100%);
-}
-.dialog-head {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 22px;
-    padding-bottom: 17px;
-    border-bottom: 1px solid var(--line);
-}
-.dialog-head h2 {
-    font-size: 24px;
-    margin: 0;
 }
 .hint {
     font-size: 13px;
@@ -1213,15 +1181,9 @@ tr.clickable:hover {
         padding: 14px 15px calc(18px + env(safe-area-inset-bottom, 0px));
         flex-direction: column;
     }
-.section-head h2 {
-        font-size: 27px;
-    }
-    .section-head {
-        align-items: flex-start;
-    }
     /* The detail title gets the entire row on phones. Actions are below it,
        instead of squeezing long bottling names into a narrow column. */
-    .detail-page-head {
+    .detail-page-head.ds-page-header {
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
@@ -1263,9 +1225,6 @@ tr.clickable:hover {
         margin-block: 0;
         padding-block: 0;
         line-height: normal;
-    }
-    .section-head>.btn {
-        font-size: 10px;
     }
 }
 @media(max-width:450px) {
@@ -1376,10 +1335,6 @@ tr.clickable:hover {
     .photo-lightbox-image { max-height: calc(94dvh - 165px); padding: 5px; }
 }
 
-/* Help, Analytics and Storage share a full-width header; Help and Analytics use the shared section workspace. */
-.page-heading-copy { flex: 1 1 auto; min-width: 0; }
-.page-heading-copy > .intro,
-.page-heading-copy > .muted { max-width: 72ch; }
 .help-page { width: 100%; margin: 0; padding-bottom: 36px; }
 .help-heading { margin-bottom: 12px; }
 .help-description { margin: 0 0 18px; line-height: 1.6; font-size: 14px; }

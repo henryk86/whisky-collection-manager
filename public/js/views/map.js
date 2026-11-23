@@ -1,3 +1,4 @@
+import { pageHeader } from '../ui/page-header.js';
 import { t } from '../i18n/index.js';
 import { buildDistilleryMap, markerDiameter } from '../domain/distillery-map.js';
 import { mapBottlingFacts } from '../domain/map-bottling-meta.js';
@@ -183,11 +184,7 @@ export function createMapView({ state, shell, navigate, settings }) {
         tileMap?.destroy(); tileMap = null;
         syncSites();
         const bottleTotal = sites.reduce((sum, site) => sum + site.bottleCount, 0);
-        shell(`<section class="section-head map-heading"><div>
-          <span class="eyebrow dark">${t("map.page.eyebrow")}</span>
-          <h2>${t("navigation.map")}<span class="heading-period">.</span></h2>
-          <p class="intro">${t("map.page.description")}</p></div>
-          ${backToCollectionButton}</section>
+        shell(`${pageHeader({title:t('navigation.map'),eyebrow:t('map.page.eyebrow'),intro:t('map.page.description'),className:'map-heading',copyClass:'',actions:String(backToCollectionButton)})}
           <div class="map-summary"><span data-map-stat="located"><strong>${sites.length}</strong> ${t("map.statistics.mappedDistilleries")}</span>
           <span data-map-stat="bottles"><strong>${bottleTotal}</strong> ${t("map.statistics.assignedBottles")}</span>
           ${missing.length > 0 ? `<span data-map-stat="missing"><strong>${missing.length}</strong> ${t("map.filters.withoutLocation")}</span>` : ''}

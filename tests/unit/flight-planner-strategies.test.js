@@ -64,7 +64,7 @@ test('tasting overview provides an accessible help button and translated plannin
         shell:rendered=>{html=rendered;},navigate(){},refresh(){},
         showModal:(heading,body,isWide,keepParent,action)=>{title=heading;modal=body;wide=isWide;nested=keepParent;headingAction=action;},selectors:{coverPhoto:()=>null}});
     view.home();
-    assert.match(html,/class="flight-plan-help-button" data-act="flight-plan-help" aria-label="So wird ein Flight geplant"/);
+    assert.match(html,/class="ds-help-icon-button flight-plan-help-button" data-act="flight-plan-help" aria-label="So wird ein Flight geplant"/);
     assert.doesNotMatch(html,/class="btn small flight-plan-help-button"/);
     view.showFlightPlanningHelp();
     assert.equal(title,'So wird ein Flight geplant');
@@ -90,7 +90,7 @@ test('tasting overview provides an accessible help button and translated plannin
     assert.match(modal,/data-act="close-modal"/);
     view.startPlannedFlight();
     assert.equal(nested,false,'new planner starts as a top-level modal');
-    assert.match(headingAction,/class="flight-plan-help-button" data-act="flight-plan-help"/);
+    assert.match(headingAction,/class="ds-help-icon-button flight-plan-help-button" data-act="flight-plan-help"/);
     assert.match(headingAction,/aria-label="So wird ein Flight geplant"/);
     assert.match(modal,/data-flight-plan-focus-wrap hidden/);
     assert.match(modal,/data-flight-plan-unfamiliar-wrap hidden/);
