@@ -272,14 +272,6 @@
 
 /* Relocation uses the regular dialog vocabulary, but keeps the context and
    three destination controls visible without creating a second, tall panel. */
-.dialog:has(.warehouse-assignment-form) {
-    width: min(740px,100%);
-    padding: 20px 22px 18px;
-}
-.dialog:has(.warehouse-assignment-form) .dialog-head {
-    margin-bottom: 12px;
-    padding-bottom: 12px;
-}
 .warehouse-assignment-form .forms { display: block; margin: 0 0 5px; }
 .warehouse-assignment {
     display: grid;
@@ -383,7 +375,6 @@
     .warehouse-assignment-selectors .warehouse-assignment-shelf { grid-column: 1 / -1; }
 }
 @media (max-width: 570px) {
-    .dialog:has(.warehouse-assignment-form) { padding: 17px 15px; }
     .warehouse-assignment { gap: 9px; }
     .warehouse-assignment-bottle { grid-template-columns: 46px minmax(0,1fr); gap: 9px; padding: 8px; }
     .warehouse-assignment-photo { width: 46px; height: 62px; }

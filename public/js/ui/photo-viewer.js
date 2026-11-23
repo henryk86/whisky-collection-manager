@@ -67,7 +67,7 @@ export function createPhotoViewer({ state, showModal }) {
     <button type="button" class="btn small" data-act="photo-next" aria-label="${t("ui.photos.next")}">${arrowRightIcon}</button>
     </span>` : ''}
     </figcaption>
-    </figure>`, true, Boolean(state.modal));
+    </figure>`, true, Boolean(state.modal), '', 'photo');
         photoZoom.attach();
         query('.dialog .dialog-head [data-act="close-modal"]')?.focus();
     }

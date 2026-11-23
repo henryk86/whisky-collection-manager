@@ -1,4 +1,5 @@
 import { headerActions } from '../ui/header-actions.js';
+import { destructiveFooter } from '../ui/modal-layout.js';
 import { headingTitle } from '../ui/section-header.js';
 import { pageHeader } from '../ui/page-header.js';
 import { escapeHtml as esc } from '../ui/dom.js';
@@ -665,7 +666,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
             title=t('detail.fields.storageLocation'); endpoint=`/api/warehouse/bottles/${id}`;method='PUT';
             fields=renderWarehouseAssignment(data,bottle);
         }
-        modal.showModal(title,`<form id="warehouse-form" data-endpoint="${safe(endpoint)}" data-method="${method}" data-new-furniture="${kind==='furniture'&&!id?'true':'false'}" data-bulk="${kind==='furniture-bulk'}" data-bottle-bulk="${kind==='assign-bulk'}" class="warehouse-form${['assign','assign-bulk'].includes(kind)?' warehouse-assignment-form':''}">${shelfNavigation}<div class="forms">${fields}</div>${footer()}</form>`, kind === 'assign', replaceCurrent ? 'replace' : true);
+        modal.showModal(title,`<form id="warehouse-form" data-endpoint="${safe(endpoint)}" data-method="${method}" data-new-furniture="${kind==='furniture'&&!id?'true':'false'}" data-bulk="${kind==='furniture-bulk'}" data-bottle-bulk="${kind==='assign-bulk'}" class="warehouse-form${['assign','assign-bulk'].includes(kind)?' warehouse-assignment-form':''}">${shelfNavigation}<div class="forms">${fields}</div>${footer()}</form>`, kind === 'assign', replaceCurrent ? 'replace' : true, '', ['assign','assign-bulk'].includes(kind) ? 'assignment' : '');
         const formElement = document.querySelector('#warehouse-form');
         if (formElement?.tagName === 'FORM') formElement.dataset.initialValues = JSON.stringify([...new FormData(formElement).entries()]);
         if (kind === 'assign' || kind === 'assign-bulk') mountWarehouseAssignment(document.querySelector('#warehouse-form'), data, kind === 'assign-bulk' ? selectedBottleIds() : id);
@@ -874,7 +875,7 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
         const ids=selectedFurniture(room);
         if (!ids.length) return toast(t("warehouse.selection.noFurniture"),true);
         pendingDelete={ids};
-        modal.showModal(t("warehouse.bulk.deleteTitle", {count:ids.length}), `<p>${t("warehouse.bulk.deleteConfirmation", {count:ids.length})}</p><p class="hint">${ids.map(id=>room.furniture.find(f=>f.id===id)?.name).map(safe).join(', ')}</p><p>${t("warehouse.bulk.deleteOccupiedWarning")}</p><div class="actions warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button><button type="button" class="btn danger" data-act="warehouse-confirm-delete">${t("warehouse.bulk.deleteAction", {count:ids.length})}</button></div>`);
+        modal.showModal(t("warehouse.bulk.deleteTitle", {count:ids.length}), `<p>${t("warehouse.bulk.deleteConfirmation", {count:ids.length})}</p><p class="hint">${ids.map(id=>room.furniture.find(f=>f.id===id)?.name).map(safe).join(', ')}</p><p>${t("warehouse.bulk.deleteOccupiedWarning")}</p>${destructiveFooter({cancelLabel:t("common.actions.cancel"),acceptLabel:t("warehouse.bulk.deleteAction", {count:ids.length}),acceptAction:'warehouse-confirm-delete',className:'warehouse-form-actions'})}`);
     }
     function askDelete(kind,id) {
         const endpoints={room:`/api/warehouse/rooms/${id}`,furniture:`/api/warehouse/furniture/${id}`,shelf:`/api/warehouse/shelves/${id}`};
@@ -885,13 +886,13 @@ export function createWarehouseView({ state, shell, navigate, modal, refresh }) 
             const shelfIds=new Set(room.furniture.flatMap(furniture => furniture.shelves.map(shelf => shelf.id)));
             const occupied=Object.values(w().assignments || {}).filter(shelfId => shelfIds.has(shelfId)).length;
             if (occupied) {
-                modal.showModal(t('warehouse.rooms.deleteOccupiedTitle'),`<p>${tHtml('warehouse.rooms.deleteOccupiedMessage',{name:room.name,count:occupied})}</p><div class="actions warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">${t('common.actions.cancel')}</button><button type="button" class="btn danger" data-act="warehouse-confirm-delete-unassign">${t('warehouse.rooms.unassignAndDelete')}</button></div>`);
+                modal.showModal(t('warehouse.rooms.deleteOccupiedTitle'),`<p>${tHtml('warehouse.rooms.deleteOccupiedMessage',{name:room.name,count:occupied})}</p>${destructiveFooter({cancelLabel:t('common.actions.cancel'),acceptLabel:t('warehouse.rooms.unassignAndDelete'),acceptAction:'warehouse-confirm-delete-unassign',className:'warehouse-form-actions'})}`);
                 return;
             }
-            modal.showModal(t('warehouse.rooms.delete'),`<p>${tHtml('warehouse.rooms.deleteEmptyMessage',{name:room.name})}</p><div class="actions warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">${t('common.actions.cancel')}</button><button type="button" class="btn danger" data-act="warehouse-confirm-delete">${t('common.actions.remove')}</button></div>`);
+            modal.showModal(t('warehouse.rooms.delete'),`<p>${tHtml('warehouse.rooms.deleteEmptyMessage',{name:room.name})}</p>${destructiveFooter({cancelLabel:t('common.actions.cancel'),acceptLabel:t('common.actions.remove'),acceptAction:'warehouse-confirm-delete',className:'warehouse-form-actions'})}`);
             return;
         }
-        modal.showModal(t("warehouse.bottles.removeStorageLocation"),`<p>${t("warehouse.shelves.deleteOccupiedConfirmation")}</p><div class="actions warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button><button type="button" class="btn danger" data-act="warehouse-confirm-delete">${t("common.actions.remove")}</button></div>`);
+        modal.showModal(t("warehouse.bottles.removeStorageLocation"),`<p>${t("warehouse.shelves.deleteOccupiedConfirmation")}</p>${destructiveFooter({cancelLabel:t("common.actions.cancel"),acceptLabel:t("common.actions.remove"),acceptAction:'warehouse-confirm-delete',className:'warehouse-form-actions'})}`);
     }
     async function deleteConfirmed(unassignBottles = false){
         if(!pendingDelete)return;

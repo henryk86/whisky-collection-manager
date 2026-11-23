@@ -1,4 +1,5 @@
 import { escapeHtml, query, queryAll } from './ui/dom.js';
+import { destructiveFooter } from './ui/modal-layout.js';
 import { chooseLanguage, t } from './i18n/index.js';
 import { request } from './api.js';
 import { toast } from './ui/notifications.js';
@@ -23,11 +24,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
     let confirmationBusy = false;
     function confirmInModal(title, message, task, buttonLabel = 'Endgültig löschen') {
         pendingConfirmation = task;
-        modal.showModal(title, `<p>${escapeHtml(message)}</p>
-    <div class="actions" style="justify-content:flex-end;margin-top:22px">
-    <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
-    <button type="button" class="btn danger" data-act="confirm-action">${escapeHtml(buttonLabel)}</button>
-    </div>`);
+        modal.showModal(title, `<p>${escapeHtml(message)}</p>${destructiveFooter({cancelLabel:t('common.actions.cancel'),acceptLabel:buttonLabel,acceptAction:'confirm-action'})}`);
     }
     function setMenu(open) {
         const drawer = document.getElementById('site-drawer');

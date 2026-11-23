@@ -135,7 +135,7 @@
 .bottling-choice-divider::before, .bottling-choice-divider::after { content: ''; flex: 1; border-top: 1px solid var(--line); }
 @media (max-width: 520px) { .bottling-choice .actions .btn { width: 100%; } }
 
-/* One editor entry point: freistellen and corrections are available in the same dialog. */
+/* Photo editor content uses the ds-modal--editor size variant. */
 .photo-tile .photo-edit-trigger {
     position: absolute; left: 3px; z-index: 2; display: grid; place-items: center;
     box-sizing: border-box; width: 28px; height: 28px; min-width: 28px; min-height: 28px;
@@ -151,8 +151,6 @@
 .cutout-checker { background-color: #f4f4f4; background-image: linear-gradient(45deg,#d7d7d7 25%, transparent 25%),linear-gradient(-45deg,#d7d7d7 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d7d7d7 75%),linear-gradient(-45deg,transparent 75%,#d7d7d7 75%); background-size: 22px 22px; background-position: 0 0,0 11px,11px -11px,-11px 0; }
 /* Non-destructive bottle photo adjustments. The edit button leaves photo sorting untouched. */
 .photo-edit-trigger:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
-.dialog:has(.photo-editor) { width: min(1120px, 100%); padding: clamp(12px, 2vw, 28px); }
-.dialog:has(.photo-editor) .dialog-head { margin-bottom: 12px; padding-bottom: 12px; }
 .photo-editor { display: grid; gap: 10px; min-width: 0; }
 .photo-editor-layout { --photo-editor-workspace-height: min(63dvh, calc(100dvh - 224px), 610px); display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(265px, .9fr); align-items: stretch; gap: 18px; min-width: 0; }
 .photo-editor-stage { min-width: 0; }

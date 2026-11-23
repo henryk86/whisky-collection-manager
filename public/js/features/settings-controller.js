@@ -25,7 +25,7 @@ export function createSettingsController({ state, action, navigate, closeModal, 
     <p class="hint">${t("features.map.optionalCoordinatesHint")}</p>
     <button type="button" class="btn small" data-act="find-distillery-location">${t("features.map.searchOpenStreetMap")}</button>
     <div id="distillery-location-results" class="map-location-results" aria-live="polite"></div>
-    <div class="actions" style="justify-content:flex-end; margin-top:23px">
+    <div class="actions ds-modal-footer ds-modal-footer--form">
     <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
     <button type="submit" class="btn primary">${id ? t("common.actions.save") : t("features.common.create")}</button>
     </div></form>`, false, nested);
@@ -116,7 +116,7 @@ export function createSettingsController({ state, action, navigate, closeModal, 
             return toast(t("features.validation.invalidJson"), true);
         }
         showModal(t("features.import.replaceWithJson"), `<p>${t("features.import.prefix")} <strong>${t("features.import.replacesCollection")}</strong>${t("features.import.jsonExcludesAttachmentsWarning")}</p>
-    <div class="actions" style="justify-content:flex-end;margin-top:22px">
+    <div class="actions ds-modal-footer">
     <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
     <button type="button" class="btn danger" data-act="confirm-import">${t("features.import.replaceCollection")}</button>
     </div>`);

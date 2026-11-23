@@ -48,7 +48,7 @@ function field(name, label, value = '', type = 'text', options = '') {
 function choices(name, label, options, chosen = '') {
     return `<label class="form-field">${esc(label)}<select name="${name}">${options.map(([id,title]) => `<option value="${safe(id)}" ${id === chosen ? 'selected' : ''}>${esc(title)}</option>`).join('')}</select></label>`;
 }
-function footer() { return `<div class="actions warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button><button type="submit" class="btn primary">${t("common.actions.save")}</button></div>`; }
+function footer() { return `<div class="actions ds-modal-footer warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button><button type="submit" class="btn primary">${t("common.actions.save")}</button></div>`; }
 function bottleLabel(b) { return `${b.number ? '#'+b.number+' · ' : ''}${b.name}${b.volumeType==='sample'?' · Sample':''}`; }
 /** Read-only bottling facts; missing values are never synthesized. */
 function bottleListFacts(bottle) {

@@ -29,43 +29,6 @@
 :root[data-theme="dark"] .brand {
     color: #f1f4f7;
 }
-:root[data-theme="dark"] .btn {
-    background: var(--ds-color-button-bg);
-    border-color: var(--ds-color-button-border);
-    color: var(--ds-color-button-text);
-}
-:root[data-theme="dark"] .btn:hover {
-    background: var(--ds-color-button-hover-bg);
-    border-color: var(--gold);
-}
-:root[data-theme="dark"] .btn.primary {
-    background: var(--gold);
-    border-color: var(--gold);
-    color: var(--ds-color-button-primary-text);
-}
-:root[data-theme="dark"] .btn.primary:hover {
-    background: var(--ds-color-button-primary-hover);
-    border-color: var(--ds-color-button-primary-hover);
-    color: var(--ds-color-button-primary-text);
-}
-:root[data-theme="dark"] .btn.dark {
-    background: #35536e;
-    border-color: #58738a;
-    color: #fff;
-}
-:root[data-theme="dark"] .btn.danger {
-    color: var(--ds-color-button-danger-text);
-    border-color: var(--ds-color-button-danger-border);
-}
-:root[data-theme="dark"] .header-btn {
-    background: transparent;
-    color: var(--ds-color-header-action-text);
-    border-color: var(--ds-color-header-action-border);
-}
-:root[data-theme="dark"] .header-btn:hover {
-    background: var(--ds-color-header-action-hover);
-    color: #fff;
-}
 :root[data-theme="dark"] .hero-secondary {
     background: #ffffff16;
     color: #fff;
@@ -159,9 +122,6 @@
 :root[data-theme="dark"] .site-footer span:first-child {
     color: #f1e8dc;
 }
-:root[data-theme="dark"] .form-field {
-    color: #e0e9f1;
-}
 :root[data-theme="dark"] .card-img,
 :root[data-theme="dark"] .hero-photo {
     background: linear-gradient(145deg,#263849,#1a2937);
@@ -206,12 +166,8 @@
 :root[data-theme="dark"] a:hover {
     color: var(--ds-color-link-hover);
 }
-:root[data-theme="dark"] .btn,
 :root[data-theme="dark"] .photo-add {
     color: #f1f5f9;
-}
-:root[data-theme="dark"] .btn.primary {
-    color: #10263c;
 }
 :root[data-theme="dark"] .hero-actions .btn.primary {
     color: #10263c;
@@ -264,12 +220,6 @@
 }
 :root[data-theme="dark"] .toast.error {
     background: #963d38;
-}
-:root[data-theme="dark"] .overlay {
-    background: #020911dd;
-}
-:root[data-theme="dark"] .overlay:has(.photo-lightbox) {
-    background: #020911dd;
 }
 :root[data-theme="dark"] .photo-lightbox-stage {
     background: #1a2e40;

@@ -59,7 +59,7 @@ export function createBottlingForm({ state, selectors }) {
     <small class="hint">${t("forms.bottle.attachmentTypesAndLimit")}</small>
     </label>
     </div>
-    <p class="hint">${t("forms.bottle.addToExistingBottlingHint")}</p>`}<div class="actions" style="justify-content:flex-end;margin-top:23px">
+    <p class="hint">${t("forms.bottle.addToExistingBottlingHint")}</p>`}<div class="actions ds-modal-footer ds-modal-footer--form">
     <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
     <button class="btn primary" type="submit">${t("common.actions.save")}</button>
     </div>

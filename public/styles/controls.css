@@ -1,0 +1,201 @@
+/* Phase 3: common button and form ownership. Existing .btn/.form-field are
+   compatibility aliases; feature CSS may only style a domain-specific variant. */
+button, input, select, textarea { font: inherit; }
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: var(--ds-button-height);
+    border: 1px solid var(--ds-color-button-border);
+    border-radius: var(--ds-control-radius);
+    padding: var(--ds-button-padding-block) var(--ds-button-padding-inline);
+    background: var(--ds-color-button-bg);
+    color: var(--ds-color-button-text);
+    font-size: var(--ds-type-ui-sm);
+    font-weight: 700;
+    letter-spacing: .65px;
+    text-decoration: none;
+    transition: background .18s,color .18s,border-color .18s,transform .18s;
+}
+.btn:hover {
+    background: var(--ds-color-button-hover-bg);
+    text-decoration: none;
+    border-color: var(--gold);
+}
+.btn.primary {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--ds-color-button-primary-text);
+}
+.btn.primary:hover {
+    background: var(--ds-color-button-primary-hover);
+    border-color: var(--ds-color-button-primary-hover);
+}
+.btn.dark {
+    background: var(--navy);
+    color: var(--ds-color-button-dark-text);
+    border-color: var(--navy);
+}
+.btn.danger {
+    color: var(--ds-color-button-danger-text);
+    border-color: var(--ds-color-button-danger-border);
+}
+.btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+.btn.small {
+    min-height: var(--ds-button-height-sm);
+    padding: var(--ds-button-small-padding-block) var(--ds-button-small-padding-inline);
+    font-size: var(--ds-type-ui-xs);
+}
+/* Variant aliases keep the original visual language. Primary/destructive styles
+   retain their original selectors and are not globally redefined by features. */
+.btn.ds-button--text { background: transparent; border-color: transparent; padding-inline: 7px; }
+.btn.ds-button--text:hover { background: var(--ds-color-button-hover-bg); border-color: transparent; }
+.btn.ds-button--icon { width: var(--ds-button-height); min-width: var(--ds-button-height); padding: 0; line-height: 1; }
+.btn.small.ds-button--icon { width: var(--ds-button-height-sm); min-width: var(--ds-button-height-sm); }
+.btn.ds-button--icon > :is(svg,.ui-symbol,.action-icon) { flex-shrink: 0; }
+.btn.ds-button--large { min-height: var(--ds-button-height-lg); padding: var(--ds-button-lg-padding-block) var(--ds-button-lg-padding-inline); }
+.btn:is([aria-busy="true"],[data-loading="true"]) { cursor: progress; pointer-events: none; }
+.btn:is([aria-busy="true"],[data-loading="true"])::after {
+    content: ''; width: var(--ds-loading-indicator-size); height: var(--ds-loading-indicator-size); flex: 0 0 var(--ds-loading-indicator-size);
+    border: 2px solid currentColor; border-right-color: transparent;
+    border-radius: 50%; animation: ds-button-spin .75s linear infinite;
+}
+@keyframes ds-button-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .btn:is([aria-busy="true"],[data-loading="true"])::after { animation: none; } }
+.btn:focus-visible { outline: 3px solid var(--ds-color-accent); outline-offset: 3px; }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+.btn[aria-disabled="true"] { pointer-events: none; }
+.field,
+input,
+select,
+textarea {
+    border: 1px solid var(--ds-color-control-border);
+    border-radius: var(--ds-control-radius);
+    padding: var(--ds-field-padding-block) var(--ds-field-padding-inline);
+    min-height: var(--ds-control-height);
+    background: var(--ds-color-control-bg);
+    color: var(--ds-color-control-text);
+    min-width: 0;
+    font-size: var(--ds-type-ui-md);
+}
+.field:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid var(--ds-color-control-focus);
+    outline-offset: 1px;
+}
+textarea {
+    resize: vertical;
+    min-height: 94px;
+}
+.forms {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 14px;
+}
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 12px;
+    font-weight: 700;
+    color: #435465;
+}
+.form-field > :is(input:not([type="checkbox"]):not([type="radio"]):not([type="date"]), select, textarea) {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+.form-field.full {
+    grid-column: 1/-1;
+}
+input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-inline-size: 0;
+    min-height: 44px;
+    text-align: left;
+    line-height: 1.25;
+    color-scheme: inherit;
+}
+input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+    min-height: 1.2em;
+    margin: 0;
+}
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+    padding-block: 0;
+    margin-block: 0;
+}
+.form-field { color: var(--ds-color-form-label); }
+.form-field .ds-field-description { font-weight: 400; font-size: var(--ds-type-ui-sm); line-height: 1.5; color: var(--ds-color-form-help); }
+.form-field .ds-field-error { font-weight: 400; font-size: var(--ds-type-ui-sm); color: var(--ds-color-form-error); }
+.form-field :is(input,select,textarea)[aria-invalid="true"] { border-color: var(--ds-color-form-error); }
+.ds-checkbox-field { display: inline-flex; flex-direction: row; align-items: center; gap: 8px; }
+.ds-checkbox-field > input[type="checkbox"] {
+    appearance: auto; width: var(--ds-checkbox-size); height: var(--ds-checkbox-size); min-width: var(--ds-checkbox-size); min-height: var(--ds-checkbox-size);
+    margin: 0; padding: 0; flex: 0 0 var(--ds-checkbox-size); accent-color: var(--ds-color-accent);
+}
+.ds-checkbox-field > span { min-width: 0; }
+@media (max-width: 740px) {
+    .form-field > input[type="date"] {
+        display: inline-flex; height: 44px; min-height: 44px;
+        padding: 0 12px; font-size: 16px;
+    }
+}
+:root[data-theme="dark"] .btn {
+    background: var(--ds-color-button-bg);
+    border-color: var(--ds-color-button-border);
+    color: var(--ds-color-button-text);
+}
+:root[data-theme="dark"] .btn:hover {
+    background: var(--ds-color-button-hover-bg);
+    border-color: var(--gold);
+}
+:root[data-theme="dark"] .btn.primary {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--ds-color-button-primary-text);
+}
+:root[data-theme="dark"] .btn.primary:hover {
+    background: var(--ds-color-button-primary-hover);
+    border-color: var(--ds-color-button-primary-hover);
+    color: var(--ds-color-button-primary-text);
+}
+:root[data-theme="dark"] .btn.dark {
+    background: #35536e;
+    border-color: #58738a;
+    color: #fff;
+}
+:root[data-theme="dark"] .btn.danger {
+    color: var(--ds-color-button-danger-text);
+    border-color: var(--ds-color-button-danger-border);
+}
+:root[data-theme="dark"] .header-btn {
+    background: transparent;
+    color: var(--ds-color-header-action-text);
+    border-color: var(--ds-color-header-action-border);
+}
+:root[data-theme="dark"] .header-btn:hover {
+    background: var(--ds-color-header-action-hover);
+    color: #fff;
+}

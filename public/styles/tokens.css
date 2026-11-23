@@ -99,8 +99,26 @@
     --ds-control-height: 44px;
     --ds-button-height: 43px;
     --ds-button-height-sm: 34px;
+    --ds-button-height-lg: 48px;
+    --ds-button-lg-padding-block: 13px;
+    --ds-button-lg-padding-inline: 20px;
+    --ds-checkbox-size: 18px;
+    --ds-loading-indicator-size: 12px;
     --ds-dialog-max: 650px;
     --ds-dialog-max-wide: 860px;
+    --ds-dialog-max-assignment: 740px;
+    --ds-dialog-max-photo: 1100px;
+    --ds-dialog-max-editor: 1120px;
+    --ds-dialog-padding: 28px;
+    --ds-dialog-padding-mobile: 18px;
+    --ds-dialog-overlay-padding: 15px;
+    --ds-dialog-footer-gap: 10px;
+    --ds-form-label-gap: 7px;
+    --ds-form-grid-gap: 14px;
+    --ds-color-form-label: #435465;
+    --ds-color-form-error: #bb4848;
+    --ds-color-form-help: #747e82;
+    --ds-color-dialog-backdrop: #081c2dcc;
 }
 
 /* The persisted data-theme attribute remains the sole theme selector.
@@ -132,6 +150,10 @@
     --ds-color-control-bg: #111e2b;
     --ds-color-control-border: #485867;
     --ds-color-control-text: #e6edf4;
+    --ds-color-form-label: #e0e9f1;
+    --ds-color-form-error: #f2afa4;
+    --ds-color-form-help: #acbac7;
+    --ds-color-dialog-backdrop: #020911dd;
 
     color-scheme: dark;
     background: var(--ds-color-page);

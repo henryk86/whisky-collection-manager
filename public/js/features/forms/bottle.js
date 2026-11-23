@@ -41,7 +41,7 @@ export function createBottleForm({ state, selectors }) {
     <small class="hint">${t("forms.bottle.attachmentSizeLimit")}</small>
     </label>
     </div>
-    <div class="actions" style="justify-content:flex-end;margin-top:23px">
+    <div class="actions ds-modal-footer ds-modal-footer--form">
     <button type="button" class="btn" data-act="scan-into-bottle">${inventoryScanIcon}<span>${t("forms.bottle.scanLabel")}</span></button>
     <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
     <button class="btn primary" type="submit">${t("common.actions.save")}</button>

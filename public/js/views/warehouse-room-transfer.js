@@ -22,7 +22,7 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode = 'export'
                 <div class="warehouse-transfer-rooms">${rooms.map(room => `<label class="warehouse-transfer-choice"><input class="warehouse-transfer-room" type="checkbox" value="${esc(room.id)}" ${selectedRoomId === room.id ? 'checked' : ''}> ${esc(room.name)} (${room.furniture.length})</label>`).join('')}</div>
                 <label class="warehouse-transfer-choice"><input type="checkbox" id="warehouse-transfer-assignments"> ${t('warehouse.transfer.includeAssignments')}</label>
                 <p class="hint">${t('warehouse.transfer.exportNote')}</p>
-                <div class="actions warehouse-form-actions">${actions}<button type="submit" class="btn primary">${t('warehouse.transfer.download')}</button></div>
+                <div class="actions ds-modal-footer warehouse-form-actions">${actions}<button type="submit" class="btn primary">${t('warehouse.transfer.download')}</button></div>
             </form>
         </section>
         <section class="warehouse-transfer-panel" id="warehouse-transfer-panel-import" role="tabpanel" aria-labelledby="warehouse-transfer-tab-import" ${mode !== 'import' ? 'hidden' : ''}>
@@ -33,7 +33,7 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode = 'export'
                 <label class="form-field">${t('warehouse.transfer.conflicts')}<select id="warehouse-transfer-conflict-policy"><option value="skip">${t('warehouse.transfer.skipConflicts')}</option><option value="replace">${t('warehouse.transfer.replaceConflicts')}</option></select></label>
                 <p class="hint">${t('warehouse.transfer.importWarning')}</p>
                 <div id="warehouse-transfer-preview" aria-live="polite"></div>
-                <div class="actions warehouse-form-actions">${actions}<button type="submit" class="btn primary">${t('warehouse.transfer.preview')}</button><button type="button" class="btn primary" id="warehouse-transfer-apply" disabled>${t('warehouse.transfer.confirm')}</button></div>
+                <div class="actions ds-modal-footer warehouse-form-actions">${actions}<button type="submit" class="btn primary">${t('warehouse.transfer.preview')}</button><button type="button" class="btn primary" id="warehouse-transfer-apply" disabled>${t('warehouse.transfer.confirm')}</button></div>
             </form>
         </section>
     </div>`;

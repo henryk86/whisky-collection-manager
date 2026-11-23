@@ -558,7 +558,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
                 <button type="button" class="btn" data-act="close-modal">${escapeHtml(t('common.actions.cancel'))}</button>
                 <button type="button" class="btn primary" data-act="photo-editor-save" data-photo-editor-ready disabled>${escapeHtml(t('common.actions.save'))}</button>
             </div>
-        </div>`, true, Boolean(state.modal));
+        </div>`, true, Boolean(state.modal), '', 'editor');
         const host = root();
         host.addEventListener('input', event => {
             if (event.target.matches('[data-photo-brush-size]')) {

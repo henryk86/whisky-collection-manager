@@ -125,6 +125,6 @@ export function profileForm(profile = {}, remotes = [], targets = []) {
       </div></fieldset>
       <fieldset class="backup-fieldset"><legend>${t("backups.settings.retention")}</legend><div class="backup-form-grid">${[['daily',t('backups.schedule.dailyRetention')],['weekly',t('backups.schedule.weeklyRetention')],['monthly',t('backups.schedule.monthlyRetention')]].map(([k,v]) => `<label class="form-field">${v}<input name="${k}" type="number" min="0" max="${{daily:366,weekly:104,monthly:120}[k]}" required value="${p.retention[k]}"></label>`).join('')}</div></fieldset>
       <label class="backup-checkbox"><input name="enabled" type="checkbox" ${legacy ? '' : p.enabled ? 'checked' : ''}> ${t("backups.schedule.enableAutomatic")}</label>
-      <div class="actions" style="justify-content:flex-end;margin-top:18px"><button class="btn" type="button" data-act="close-modal">${t("common.actions.cancel")}</button><button class="btn primary" type="submit">${t("common.actions.save")}</button></div>
+      <div class="actions ds-modal-footer ds-modal-footer--compact"><button class="btn" type="button" data-act="close-modal">${t("common.actions.cancel")}</button><button class="btn primary" type="submit">${t("common.actions.save")}</button></div>
     </form>`;
 }

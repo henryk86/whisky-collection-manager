@@ -1,4 +1,5 @@
 import { t } from '../i18n/index.js';
+import { modalFooter } from '../ui/modal-layout.js';
 import { escapeHtml, query } from '../ui/dom.js';
 import { httpResponseError } from '../api.js';
 
@@ -31,7 +32,7 @@ export function createFilePreview({modal, state}) {
         const url = `/api/bottles/${encodeURIComponent(bottleId)}/files/${encodeURIComponent(fileId)}`;
         const preview = documentPreviewKind(name);
         modal.showModal(name, `<div class="document-preview-stage" aria-live="polite"><p class="hint">${escapeHtml(t(preview.kind === 'unsupported' ? 'detail.documents.previewUnavailable' : 'detail.documents.previewLoading'))}</p></div>
-            <div class="actions document-preview-actions"><a class="btn primary" href="${escapeHtml(url)}" download="${escapeHtml(name)}">${escapeHtml(t('detail.documents.download'))}</a></div>`, true);
+            ${modalFooter(`<a class="btn primary" href="${escapeHtml(url)}" download="${escapeHtml(name)}">${escapeHtml(t('detail.documents.download'))}</a>`,{className:'document-preview-actions'})}`, true);
         const shownModal = state.modal;
         if (preview.kind === 'unsupported') return;
         if (preview.kind === 'pdf') {

@@ -24,12 +24,6 @@ body {
     flex-direction: column;
     min-height: 100vh;
 }
-button,
-input,
-select,
-textarea {
-    font: inherit;
-}
 button {
     cursor: pointer;
 }
@@ -120,55 +114,6 @@ textarea:focus-visible,
     gap: 10px;
     align-items: center;
     flex-wrap: wrap;
-}
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    min-height: var(--ds-button-height);
-    border: 1px solid var(--ds-color-button-border);
-    border-radius: var(--ds-control-radius);
-    padding: var(--ds-button-padding-block) var(--ds-button-padding-inline);
-    background: var(--ds-color-button-bg);
-    color: var(--ds-color-button-text);
-    font-size: var(--ds-type-ui-sm);
-    font-weight: 700;
-    letter-spacing: .65px;
-    text-decoration: none;
-    transition: background .18s,color .18s,border-color .18s,transform .18s;
-}
-.btn:hover {
-    background: var(--ds-color-button-hover-bg);
-    text-decoration: none;
-    border-color: var(--gold);
-}
-.btn.primary {
-    background: var(--gold);
-    border-color: var(--gold);
-    color: var(--ds-color-button-primary-text);
-}
-.btn.primary:hover {
-    background: var(--ds-color-button-primary-hover);
-    border-color: var(--ds-color-button-primary-hover);
-}
-.btn.dark {
-    background: var(--navy);
-    color: var(--ds-color-button-dark-text);
-    border-color: var(--navy);
-}
-.btn.danger {
-    color: var(--ds-color-button-danger-text);
-    border-color: var(--ds-color-button-danger-border);
-}
-.btn:disabled {
-    opacity: .5;
-    cursor: not-allowed;
-}
-.btn.small {
-    min-height: var(--ds-button-height-sm);
-    padding: var(--ds-button-small-padding-block) var(--ds-button-small-padding-inline);
-    font-size: var(--ds-type-ui-xs);
 }
 .header-btn {
     background: transparent;
@@ -421,30 +366,6 @@ h3 {
     flex: 1;
     min-width: 200px;
 }
-.field,
-input,
-select,
-textarea {
-    border: 1px solid var(--ds-color-control-border);
-    border-radius: var(--ds-control-radius);
-    padding: var(--ds-field-padding-block) var(--ds-field-padding-inline);
-    min-height: var(--ds-control-height);
-    background: var(--ds-color-control-bg);
-    color: var(--ds-color-control-text);
-    min-width: 0;
-    font-size: var(--ds-type-ui-md);
-}
-.field:focus,
-input:focus,
-textarea:focus,
-select:focus {
-    outline: 2px solid var(--ds-color-control-focus);
-    outline-offset: 1px;
-}
-textarea {
-    resize: vertical;
-    min-height: 94px;
-}
 .toolbar select {
     max-width: 170px;
 }
@@ -615,75 +536,13 @@ textarea {
 .hero-photo .image-placeholder {
     width: min(40%, 170px);
 }
-.forms {
-    display: grid;
-    grid-template-columns: repeat(2,minmax(0,1fr));
-    gap: 14px;
-}
-.form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    min-width: 0;
-    max-width: 100%;
-    font-size: 12px;
-    font-weight: 700;
-    color: #435465;
-}
 /* Native controls have their own intrinsic size on mobile browsers.
    A label's flex/grid width must constrain the actual form control as well. */
-.form-field > :is(input:not([type="checkbox"]):not([type="radio"]):not([type="date"]), select, textarea) {
-    display: block;
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-}
-.form-field.full {
-    grid-column: 1/-1;
-}
 /* Keep native date pickers, but not iOS WebKit's implicit button sizing.
    iOS otherwise enforces content-box/min-width and can draw dates outside a form.
    Do not use display:block for temporal controls: WebKit misaligns the value. */
-input[type="date"] {
-    -webkit-appearance: none;
-    appearance: none;
-    display: inline-flex;
-    align-items: center;
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    min-inline-size: 0;
-    min-height: 44px;
-    text-align: left;
-    line-height: 1.25;
-    color-scheme: inherit;
-}
 /* Safari puts the rendered date inside an additional internal value element.
    Keep it left aligned and give empty dates a stable line height. */
-input[type="date"]::-webkit-date-and-time-value {
-    text-align: left;
-    min-height: 1.2em;
-    margin: 0;
-}
-input[type="date"]::-webkit-datetime-edit,
-input[type="date"]::-webkit-datetime-edit-fields-wrapper {
-    padding: 0;
-}
-input[type="date"]::-webkit-calendar-picker-indicator {
-    padding-block: 0;
-    margin-block: 0;
-}
-@media (max-width: 740px) {
-    .form-field > input[type="date"] {
-        display: inline-flex;
-        height: 44px;
-        min-height: 44px;
-        padding: 0 12px;
-        font-size: 16px;
-    }
-}
 
 .section {
     margin: 26px 0;
@@ -801,28 +660,6 @@ tr.clickable:hover {
 .toast-close:hover { background: rgb(255 255 255 / .18); }
 .toast-close:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .toast-close svg { display: block; pointer-events: none; }
-.overlay {
-    position: fixed;
-    inset: 0;
-    background: #081c2dcc;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 15px;
-}
-.dialog {
-    width: min(var(--ds-dialog-max),100%);
-    max-height: 94vh;
-    overflow: auto;
-    background: var(--paper);
-    padding: 28px;
-    box-shadow: 0 25px 80px #0005;
-    border-top: 5px solid var(--gold);
-}
-.dialog.wide {
-    width: min(var(--ds-dialog-max-wide),100%);
-}
 .hint {
     font-size: 13px;
     color: #747e82;
@@ -1164,9 +1001,6 @@ tr.clickable:hover {
     .form-field.full {
         grid-column: auto;
     }
-    .dialog {
-        padding: 18px;
-    }
     .dialog-head h2 {
         font-size: 21px;
     }
@@ -1276,19 +1110,8 @@ tr.clickable:hover {
 }
 
 /* The photo viewer uses a light backdrop on light theme; other dialogs stay dimmed. */
-.overlay:has(.photo-lightbox) {
-    background: rgba(246,243,237,.92);
-}
 
 /* Full-size bottle photos are displayed within the existing app modal. */
-.dialog:has(.photo-lightbox) {
-    width: min(1100px, 100%);
-    padding: 16px;
-}
-.dialog:has(.photo-lightbox) .dialog-head {
-    padding-bottom: 12px;
-    margin-bottom: 12px;
-}
 .photo-lightbox { margin: 0; }
 .photo-lightbox-stage {
     background: #f1eee7;
@@ -1331,7 +1154,6 @@ tr.clickable:hover {
 .photo-lightbox-navigation { display: flex; align-items: center; gap: 10px; }
 .photo-lightbox-count { min-width: 58px; text-align: center; font-variant-numeric: tabular-nums; }
 @media (max-width: 740px) {
-    .dialog:has(.photo-lightbox) { padding: 10px; }
     .photo-lightbox-image { max-height: calc(94dvh - 165px); padding: 5px; }
 }
 
@@ -1490,8 +1312,6 @@ tr.clickable:hover {
 @media (prefers-reduced-motion: reduce) { .collection-table-columns-chevron { transition: none; } }
 
 /* iOS Safari: only the foreground dialog may pan while a modal is open. */
-.overlay { overscroll-behavior:contain; }
-.dialog { overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y; max-height:min(94dvh,94vh); }
 
 /* Expanded help guides follow the shared squared analytics panels. */
 .help-technical-guides { border-top:1px solid var(--line); margin-top:24px; padding-top:18px; }

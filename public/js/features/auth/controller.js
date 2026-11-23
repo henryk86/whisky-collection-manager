@@ -87,7 +87,7 @@ export function createAuthController({ root, state, render, refresh, applyTheme,
     function changeSetting(required) {
         pendingRequired = required;
         showModal(tr('loginRequired'), `<p>${required ? tr('enableConfirm') : tr('disableConfirm')}</p>
-        <div class="actions" style="justify-content:flex-end"><button class="btn" type="button" data-act="close-modal">${tr('cancel')}</button>
+        <div class="actions ds-modal-footer ds-modal-footer--flush"><button class="btn" type="button" data-act="close-modal">${tr('cancel')}</button>
         <button type="button" class="btn primary" data-act="auth-confirm-required">${tr('apply')}</button></div>`);
     }
     async function loadUsers() {

@@ -189,7 +189,7 @@ export function createBackupController({ state, render, showModal, closeModal })
           <p>${t("features.backups.restoredAssets",{count:result.files,size:(result.bytes / 1048576).toFixed(1)})}</p>
           <p class="warning">${t("backups.restore.replaceIncludesAttachments")}</p>
           <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> ${t("backups.restore.confirmReplaceCollection")}</label>
-          <div class="actions" style="justify-content:flex-end;margin-top:18px">
+          <div class="actions ds-modal-footer ds-modal-footer--compact">
             <button class="btn" type="button" data-act="backup-download-prepared" data-id="${h(result.id)}">${t("backups.actions.downloadZip")}</button>
             <button class="btn" type="button" data-act="close-modal">${t("common.actions.cancel")}</button>
             <button class="btn danger" type="submit">${t("backups.actions.importBackup")}</button>
@@ -267,7 +267,7 @@ export function createBackupController({ state, render, showModal, closeModal })
         if (!profile) return;
         showModal(t("backups.profiles.delete"), `<p>${t("backups.schedule.should")} <strong>${h(profile.name)}</strong> ${t("backups.confirmation.deleteSuffix")}</p>
         <p class="warning">${t("backups.profiles.deleteDoesNotDeleteArchives")}</p>
-        <div class="actions" style="justify-content:flex-end;margin-top:20px">
+        <div class="actions ds-modal-footer ds-modal-footer--spaced">
         <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
         <button type="button" class="btn danger" data-act="backup-confirm-delete" data-id="${h(id)}">${t("backups.profiles.deleteAction")}</button></div>`);
     }
@@ -288,7 +288,7 @@ export function createBackupController({ state, render, showModal, closeModal })
         <label class="form-field">${t("backups.archives.snapshot")}
         <select name="snapshotId" required>${snapshots.length ? snapshots.map(s => `<option value="${h(s.id)}">${h(s.shortId)} · ${h(new Date(s.time).toLocaleString('de-DE'))}</option>`).join('') : `<option value="latest">${t("backups.legacy.latestSnapshot")}</option>`}</select></label>
         <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> ${t("backups.restore.confirmInspectBackup")}</label>
-        <div class="actions" style="justify-content:flex-end;margin-top:20px">
+        <div class="actions ds-modal-footer ds-modal-footer--spaced">
         <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
         <button type="submit" class="btn primary">${t("backups.restore.preparePreview")}</button></div></form>`, true);
     }
