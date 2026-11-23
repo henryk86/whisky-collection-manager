@@ -5,21 +5,14 @@ Webanwendung zur lokalen Verwaltung einer Whisky-Sammlung mit einzelnen Flaschen
 
 ## Funktionen
 
-- **Sammlung und Flaschen:** Abfüllungen mit mehreren Destillerien, einzelne Standard- und Sample-Flaschen, Inventarnummern, Kauf- und Lagerdaten, Kachel-/Tabellenansicht, Suche, Filter und QR-/Barcode-Scanner.
-- **Verkostungen:** Eigenständige oder einer Abfüllung zugeordnete Verkostungen, Tasting-Flights, Bewertung bis 100 Punkte mit optionalem Kommentar, Farbe, zehnteilige Geschmacksprofile sowie Notizen zu Nase, Geschmack und Abgang.
-- **Fotos und Nachweise:** Flaschenfotos mit Sortierung und Bildeditor, optionale lokale KI-Freistellung und Dateien an einzelnen physischen Flaschen; Vorschau-Modal und separate Download-Aktionen.
-- **Lager:** Räume, Möbel und Fächer, Flaschenzuordnung und Umlagerung, Flaschensuche sowie Raumpläne in 2D und 3D.
-- **Auswertungen und Karte:** Sammlungs- und Wertanalysen sowie eine Destilleriekarte auf Basis von OpenStreetMap.
-- **Datensicherung:** Verschlüsselte ZIP-Backups einschließlich Lager, Fotos und Dokumenten; manuelle oder geplante Sicherung mit konfigurierbaren Zielen sowie Wiederherstellung.
-- **Bedienung und Zugriff:** Responsive Oberfläche auf Deutsch und Englisch, Hell-/Dunkelmodus, integrierte Hilfe und optional aktivierbare Anmeldung mit Nutzerverwaltung.
-
-## Verkostungen
-
-Verkostungen können unabhängig erfasst, einer Abfüllung zugeordnet und zu Tasting-Flights zusammengestellt werden. Pro Abfüllung sind mehrere Verkostungen möglich, jeweils mit Bewertung (0–100 Punkte), optionalem Bewertungskommentar, Farbe, Geschmacksprofil sowie Notizen zu Nase, Geschmack und Abgang. Die Abfüllungsdetailseite zeigt die jüngste Verkostung als Vorschau.
-
-## Fotos und Flaschendokumente
-
-Flaschenfotos lassen sich sortieren und bearbeiten; optional ist eine lokale KI-Freistellung möglich. Dateien und Nachweise gehören zur **einzelnen physischen Flasche**. Ein Klick auf den Dateinamen öffnet die Vorschau, während separate Buttons den Download ermöglichen. Unterstützte Bilder, PDFs und Textdateien können im Browser angezeigt werden; andere Formate stehen zum Download bereit.
+- **Sammlung und Flaschen:** Abfüllungen, Standard- und Sample-Flaschen, Inventarnummern, Kauf- und Lagerdaten, Suche, Filter und Scanner.
+- **Verkostungen:** Unabhängig oder einer Abfüllung zugeordnet; Bewertungen mit Kommentar, Geschmacksprofile sowie Notizen zu Nase, Geschmack und Abgang.
+- **Intelligente Tasting-Flight-Planung:** Vier Strategien kombinieren Geschmacksprofile, Fassarten und Alter und optimieren die Verkostungsreihenfolge. [Planungslogik und Formeln](docs/FLIGHT_PLANUNG.md).
+- **Fotos und Nachweise:** Flaschenfotos bearbeiten und sortieren, optionale lokale KI-Freistellung; Dokumente je physischer Flasche mit Vorschau und Download.
+- **Lager:** Räume, Möbel und Fächer, Umlagerungen, Flaschensuche und Raumpläne in 2D und 3D.
+- **Analysen und Karte:** Sammlungs- und Wertauswertungen sowie eine Destilleriekarte mit OpenStreetMap.
+- **Datensicherung:** Verschlüsselte Backups mit geplanten Sicherungen, verschiedenen Speicherzielen und Wiederherstellung.
+- **Oberfläche und Zugriff:** Responsive, Deutsch/Englisch, Hell-/Dunkelmodus und optionale Anmeldung mit Nutzerverwaltung.
 
 ## Oberfläche
 
@@ -59,7 +52,9 @@ Die Abbildungen zeigen Beispieldaten ohne private Sammlungsdaten. Für die Lager
 
 ![OpenStreetMap-Kartenausschnitt der Destilleriestandorte](docs/images/map-distilleries.png)
 
-## Lokal starten
+## Installation und Betrieb
+
+### Lokal starten
 
 **Voraussetzung:** Node.js 20 oder neuer; für die erstmalige HTTPS-Zertifikatserstellung OpenSSL oder `mkcert`.
 
@@ -71,7 +66,7 @@ Der Starthelfer installiert bei Bedarf npm-Abhängigkeiten, bereitet die lokalen
 
 Details: [Lokale Entwicklung und HTTPS](docs/ENTWICKLUNG.md) · [Offline-Installation](docs/OFFLINE_RELEASES.md).
 
-## Raspberry Pi und Docker
+### Raspberry Pi und Docker
 
 **Voraussetzungen:** Raspberry Pi OS (64 Bit), Docker Engine mit Compose-Plugin, Git und OpenSSL.
 
@@ -85,15 +80,13 @@ docker compose pull
 docker compose up -d --remove-orphans
 ```
 
-Anschließend ist die Anwendung unter **`https://<IP-des-Pi>:3543`** erreichbar, sofern diese IP im Zertifikat eingetragen ist. Der externe HTTPS-Port ist über `HTTPS_PUBLIC_PORT` konfigurierbar (auch `443`). Optional kann über **Certbot mit DNS-01** ein öffentlich vertrauenswürdiges Zertifikat auf einem separaten HTTPS-Port bereitgestellt werden (netcup CloudDNS/Legacy, Cloudflare oder RFC 2136); die bisherige Installation bleibt Standard. [Anleitung: Let's Encrypt](docs/LETS_ENCRYPT.md). Die Einrichtungsroutine legt das persistente Datenverzeichnis außerhalb des Repositorys an. Beim Aktualisieren des Containers bleiben diese Daten erhalten; vor Updates sollte trotzdem ein vollständiges Backup erstellt werden.
+Anschließend ist die Anwendung unter **`https://<IP-des-Pi>:3543`** erreichbar, sofern die IP im Zertifikat eingetragen ist. Der externe HTTPS-Port lässt sich über `HTTPS_PUBLIC_PORT` ändern (auch auf `443`). Optional sind öffentlich vertrauenswürdige Zertifikate über Certbot mit DNS-01 möglich: [Let's Encrypt einrichten](docs/LETS_ENCRYPT.md).
 
-**Sicherheit:** Die Loginpflicht ist optional und anfangs deaktiviert. Bei öffentlich erreichbaren Installationen unbedingt Loginpflicht und HTTPS aktivieren; zusätzliche Netzabsicherung/VPN bleibt empfohlen.
+Sammlungsdaten werden außerhalb des Repositorys gespeichert und bleiben bei Container-Updates erhalten. Vor Updates wird trotzdem ein vollständiges Backup empfohlen. Weitere Anleitungen: [Docker, Updates und Datensicherung](docs/DOCKER_BACKUP.md) · [Offline-Releases](docs/OFFLINE_RELEASES.md).
 
-Einrichtung, Updates, Backup und Wiederherstellung: [Docker und Datensicherung](docs/DOCKER_BACKUP.md). Für die Wiederherstellung ohne externe Paket- oder Containerquellen: [Offline-Releases](docs/OFFLINE_RELEASES.md).
+### Anmeldung und Sicherheit
 
-## Optionale Anmeldung
-
-Die **Loginpflicht ist standardmäßig deaktiviert**. Nach Anmeldung als Administrator lässt sie sich unter **Einstellungen → Nutzerverwaltung** aktivieren. Weitere Nutzer erhalten alle Sammlungsfunktionen, aber keinen Zugriff auf die Nutzerverwaltung.
+Die **Loginpflicht ist standardmäßig deaktiviert**. Unter **Einstellungen → Nutzerverwaltung** kann sie durch einen Administrator aktiviert werden. Bei öffentlich erreichbaren Installationen sind Loginpflicht und HTTPS erforderlich; eine zusätzliche Netzabsicherung oder ein VPN wird empfohlen. Weitere Nutzer können die Sammlung verwalten, aber nicht die Nutzerverwaltung öffnen.
 
 Beim ersten Start wird `admin` mit einem **individuellen Startpasswort** angelegt; es steht einmalig in den Serverlogs (`docker compose logs app`). Bei der ersten Anmeldung ist ein Passwortwechsel Pflicht. Die Konten liegen in `data/user.json`, Passwörter nur als gesalzene scrypt-Hashes. Zugang, Passwortwiederherstellung und Betrieb: [Anmeldung und Nutzerverwaltung](docs/ANMELDUNG.md).
 
