@@ -1,0 +1,32 @@
+{
+  "overflow": 0,
+  "main": [
+    0,
+    75,
+    768,
+    1195.5
+  ],
+  "header": [
+    0,
+    0,
+    768,
+    75
+  ],
+  "heading": [
+    30,
+    497,
+    708,
+    78.5
+  ],
+  "panel": [
+    30,
+    587.5,
+    168.75,
+    116
+  ],
+  "grid": null,
+  "field": null,
+  "dialog": null,
+  "footer": null,
+  "scrollbar": 0
+}

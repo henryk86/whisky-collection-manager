@@ -1,0 +1,42 @@
+{
+  "description": "Explicitly approved design-system baseline. Do not rewrite in CI.",
+  "source": "corrected Phase-5 UI baseline",
+  "browser": "Chrome/144.0.7559.96",
+  "snapshotClock": "2026-11-23T12:00:00.000Z",
+  "timezone": "Europe/Berlin",
+  "locale": "de-DE",
+  "dimensions": {
+    "widths": [
+      390,
+      768,
+      1024,
+      1440
+    ],
+    "height": 1100,
+    "scale": 1
+  },
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "scenarios": [
+    "collection-empty",
+    "bottling-partial",
+    "bottling-full",
+    "tasting-readonly",
+    "analytics",
+    "settings",
+    "settings-en",
+    "help",
+    "help-en",
+    "warehouse",
+    "tasting-list",
+    "modal-new",
+    "modal-flight",
+    "modal-flight-help",
+    "modal-edit",
+    "modal-confirm",
+    "bottling-long"
+  ],
+  "note": "Arial/sans-serif fallback, animation/transition and caret suppression only during capture"
+}

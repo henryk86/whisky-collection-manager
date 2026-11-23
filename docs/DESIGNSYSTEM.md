@@ -69,3 +69,8 @@ Phase 1 muss das Erscheinungsbild der Sammlung und der Abfüllungsdetails, die C
 **Release-Regel:** Nach `AGENTS.md` erhalten Einzeländerungen auf `develop` *keine* Versionsänderung. Die Version in `package.json` bleibt daher `1.12.0`. Ein späterer Release wird ausschließlich durch den festgelegten Merge-/Tag-Workflow versioniert.
 
 Die konkreten Prüfresultate und die getrennt dokumentierten Ausgangsstand-Fehlschläge stehen im [Phase-1-Prüfbericht](DESIGNSYSTEM_PHASE1_PRUEFBERICHT.md).
+
+
+## Abschlusspruefung
+
+[Abschlussaudit und Testmatrix](DESIGNSYSTEM_ABSCHLUSSAUDIT.md) · [Visuelle Browser-Regressionen](DESIGNSYSTEM_VISUELLE_TESTS.md).

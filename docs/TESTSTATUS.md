@@ -1,5 +1,18 @@
 # Teststatus - Whisky Collection Manager v1.12.0
 
+## Aktuelle Develop-Pruefung: Designsystem-Abschluss, 2026-11-23
+
+**Grundlage:** korrigiertes Phase-5-Projekt (`1.12.0`), keine Release-Versionierung.
+
+- `npm run check`: **bestanden** (Module, Übersetzungen, Dokumentation und CI-Verträge).
+- `npm test`: **691/691 bestanden**, 0 fehlgeschlagen.
+- `npm run test:visual`: direkter Chromium/CDP-Test mit **136/136 Screenshot- und Geometrievergleichen** in vier Breiten, zwei Themes und 17 Zuständen; zusätzlicher Fokus-/Escape-/Scroll-/Modal-Stack-Smokecheck erfolgreich.
+- `npm run test:browser`: **in dieser Umgebung nicht ausführbar**. Der tatsächlich gestartete Lauf scheitert am fehlenden Paket `playwright-core`; `npm ci` konnte es wegen `EAI_AGAIN` (nicht erreichbare npm-Registry) nicht installieren. Die fehlgeschlagenen Modulladevorgänge sind **keine 16 fachlichen Browser-Testfehler**.
+- **GitHub-Actions PR-CI mit Playwright und visuellem Vergleich:** noch nicht ausgeführt. Die neuen browserbasierten Closure-Tests sind integriert, aber im lokalen Browserpaket nicht ausführbar. Desktop Firefox, Safari, Android/iOS und Screenreader bleiben offen.
+
+Detaillierte Abnahme, CI-Artefakte und Baseline-Freigabe: [Designsystem-Abschlussaudit](DESIGNSYSTEM_ABSCHLUSSAUDIT.md). Die folgenden Angaben sind der ältere Release-Snapshot und nicht das Ergebnis dieses Develop-Abschlusslaufs.
+
+
 **Stand:** 2026-11-23. Automatischer Release-Snapshot aus Merge a2d0e9267e9d (v1.11.0).
 
 ## Pruefungen

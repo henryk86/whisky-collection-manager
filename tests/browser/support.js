@@ -8,6 +8,7 @@ import { startTestServer, requestJson } from '../helpers/server.js';
 // Normal local/CI runs use real navigation. Neither mode tests optical recognition.
 export const domOnly = process.env.WHISKY_BROWSER_DOM_ONLY === 'true';
 let browser;
+let failedSessionCapture = 0;
 before(async () => {
     browser = await chromium.launch({
         executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || undefined,
@@ -92,6 +93,14 @@ export async function session(callback, activeBrowser = browser) {
             ...server, page, open: options => openApp(page, server.base, options)
         });
         assert.deepEqual(errors, [], 'Unexpected browser errors');
+    }
+    catch (error) {
+        // Screenshot is diagnostic only; never replace the original assertion.
+        // Generated exclusively from synthetic per-test fixtures, not user data.
+        const filename = `test-artifacts/browser-failure-${process.pid}-${++failedSessionCapture}.png`;
+        try { await page.screenshot({path: filename, fullPage: true, animations: 'disabled'}); }
+        catch { /* A crashed or closed page must not conceal the original error. */ }
+        throw error;
     }
     finally {
         await context.close();

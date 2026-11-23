@@ -19,6 +19,10 @@ Der normale Check (`npm run check`) verbietet neue Quellcode-Leseassertions in `
 | Daten-, Cache-, Migrations-, Restore- und Sicherheitsregeln | Fach-Unit-Tests sowie HTTP-/Datei-Integrationstests; keine Suchen nach Implementierungszeilen |
 | Release-, Docker-, HTTPS- und GitHub-Workflow-Vertraege | `scripts/check-deployment-config.js` in `npm run check`, Negativtests unter `tests/integration/deployment-contracts.test.js`; echter CI- und Image-Build bleiben separate Laufzeitpruefungen |
 
+## Zusaetzliche Designsystem-Snapshot-Abnahme
+
+In Pull Requests prueft `npm run test:visual` den kontrollierten Chromium-Zustand gegen **reviewte** PNG- und Geometriereferenzen (`tests/visual/baselines`). Screenshots und rote Pixel-Differenzbilder werden bei Abweichungen als GitHub-CI-Artefakte bereitgestellt. **Keine automatische Baseline-Aktualisierung bei Testfehlern.** Eine Referenzaktualisierung erfolgt nur lokal und explizit (`npm run visual:update`) mit PR-Sichtpruefung; die CI lehnt Aktualisierungen ab. Details: [Visuelle Tests](DESIGNSYSTEM_VISUELLE_TESTS.md) und [Abschlussaudit](DESIGNSYSTEM_ABSCHLUSSAUDIT.md). Der Screenshotlauf ergaenzt, ersetzt aber nicht die bestehenden Playwright-Browsertests.
+
 ## Verbindlicher Ablauf
 
 1. `npm run check` prueft Syntax, Modulgrenzen, Sprachdateien, Links, das Verbot neuer Quelltexttests und deklarative Deployment-Vertraege.

@@ -28,6 +28,33 @@ jobs:
       - run: npm test
       - run: npx playwright-core install --with-deps chromium
       - run: npm run test:browser
+      - name: Locate pinned Playwright Chromium for visual regression
+        if: github.event_name == 'pull_request' && !cancelled()
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME_PATH="$(node --input-type=module -e 'import { chromium } from "playwright-core"; process.stdout.write(chromium.executablePath())')"
+          test -x "$CHROME_PATH"
+          echo "WCM_VISUAL_BROWSER_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+      - name: Compare designsystem screenshots and geometry (read-only baselines)
+        if: github.event_name == 'pull_request' && !cancelled()
+        run: npm run test:visual
+      - name: Upload designsystem visual report and failure diffs
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: design-system-visual-${{ github.run_id }}
+          path: test-artifacts/designsystem-visual/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload browser regression artifacts on failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-regressions-${{ github.run_id }}
+          path: test-artifacts/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Validate directly pushed develop commits
         if: github.event_name == 'push'
         env:
