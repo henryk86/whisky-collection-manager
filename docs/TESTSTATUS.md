@@ -1,6 +1,6 @@
-# Teststatus - Whisky Collection Manager v1.11.0
+# Teststatus - Whisky Collection Manager v1.12.0
 
-**Stand:** 2026-11-22. Automatischer Release-Snapshot aus Merge 5b5198eccea6 (v1.10.0).
+**Stand:** 2026-11-23. Automatischer Release-Snapshot aus Merge a2d0e9267e9d (v1.11.0).
 
 ## Pruefungen
 
@@ -13,14 +13,11 @@
 
 ## Aenderungen
 
-- fix: Missing schema update, harmonized various back link implementations
-- feat(tasting): add optional rating comment field and update UI
-- feat: update tasting summary layout to improve navigation and display of latest tastings
-- refactor: remove unused whisky color display and update tasting summary layout for improved clarity
-- fix: tasting summary layout and styles for improved UI/UX
-- feat: enhance tasting summary to include compact flavor radar and color display, with responsive styles
-- test: enhance overview quick filters to include flavor filter visibility and accessibility checks
-- feat: Implement planned tasting flights with validation and persistence, added new filtering for tasting profiles
-- feat: enhance toast notifications with dismissible close button and accessibility features
+- fix: improve modal behavior to preserve scrollbar track and prevent content shift during modal opening
+- feat: enhance flight planning help functionality and preserve modal state
+- docs: update README to streamline features and improve clarity on installation and security
+- feat: enhance flight planning help and cask classification
+- docs: update README with enhanced features and functionality descriptions; remove outdated code review documents
+- feat: add file preview functionality for various document types with download fallback
 
 Fruehere CI-Resultate: [TESTHISTORIE.md](TESTHISTORIE.md).
