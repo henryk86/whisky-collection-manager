@@ -18,7 +18,11 @@ export function createModal({ state, onClose }) {
         body.style.position = 'fixed';
         body.style.top = `-${top}px`;
         body.style.left = '0'; body.style.right = '0'; body.style.width = '100%';
-        html.style.overflow = 'hidden'; html.style.overscrollBehavior = 'none';
+        // Keep the scrollbar track reserved while the fixed body locks page
+        // scrolling. Hiding overflow on <html> removes the track and makes
+        // centered content shift sideways on browsers with classic scrollbars.
+        html.style.overflowY = 'scroll';
+        html.style.overscrollBehavior = 'none';
     }
     function unlockBackground() {
         if (!scrollLock || typeof document === 'undefined') return;

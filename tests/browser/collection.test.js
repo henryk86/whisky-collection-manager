@@ -405,6 +405,57 @@ test('browser: persistent scrollbar track keeps centered content stationary', as
 });
 
 
+test('browser: opening a modal does not shift centered content when a classic scrollbar is present', async t => {
+    // The browser harness normally hides scrollbars. Use a visible classic
+    // scrollbar to detect the 15px viewport-width regression during modal lock.
+    const scrollbarBrowser = await chromium.launch({
+        executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || undefined,
+        headless: true,
+        ignoreDefaultArgs: ['--hide-scrollbars'],
+        args: process.env.CI || domOnly ? ['--no-sandbox'] : [],
+    });
+    try {
+        await session(async ({ page, open }) => {
+            await open();
+            await page.setViewportSize({ width: 1366, height: 900 });
+            await page.evaluate(() => {
+                const filler = document.createElement('div');
+                filler.id = 'modal-scrollbar-probe';
+                filler.style.height = '1800px';
+                document.body.append(filler);
+            });
+            const measure = () => page.evaluate(() => ({
+                width: document.documentElement.clientWidth,
+                centeredLeft: document.querySelector('.header-inner').getBoundingClientRect().left,
+                centeredWidth: document.querySelector('.header-inner').getBoundingClientRect().width,
+            }));
+            const before = await measure();
+            if (before.width === 1366) {
+                t.skip('Browser uses overlay scrollbars; no physical gutter to measure');
+                return;
+            }
+            await page.evaluate(() => window.scrollTo(0, 350));
+            const scrollTop = await page.evaluate(() => window.scrollY);
+            await page.evaluate(() => document.querySelector('header [data-act="new"]').click());
+            await page.locator('#modal-root .dialog').waitFor();
+            const opened = await measure();
+            assert.equal(opened.width, before.width, 'keep the original scrollbar track');
+            assert.ok(Math.abs(opened.centeredLeft - before.centeredLeft) < 0.5,
+                `page header must not shift on modal open: ${JSON.stringify({before,opened})}`);
+            assert.ok(Math.abs(opened.centeredWidth - before.centeredWidth) < 0.5);
+            assert.equal(await page.evaluate(() => document.documentElement.style.overflowY), 'scroll');
+            await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+            const closed = await measure();
+            assert.equal(closed.width, before.width);
+            assert.ok(Math.abs(closed.centeredLeft - before.centeredLeft) < 0.5);
+            assert.ok(Math.abs(await page.evaluate(() => window.scrollY) - scrollTop) <= 1,
+                'closing a modal must restore the original page scroll position');
+        }, scrollbarBrowser);
+    } finally {
+        await scrollbarBrowser.close();
+    }
+});
+
 test('browser: mobile and desktop share theme SVGs and keep clear logo spacing', async () => {
     await session(async ({ page, open }) => {
         await open();

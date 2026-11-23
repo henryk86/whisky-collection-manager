@@ -14,6 +14,52 @@ function fakeModalHost() {
     };
 }
 
+
+test('background scroll lock preserves the scrollbar gutter until the last nested modal closes', () => {
+    const host = fakeModalHost();
+    const previousDocument = globalThis.document;
+    const previousWindow = globalThis.window;
+    const body = {
+        style: {},
+        getAttribute(name) { return name === 'style' ? null : null; },
+        removeAttribute(name) { if (name === 'style') this.style = {}; },
+        setAttribute() {},
+    };
+    const html = {
+        style: {},
+        getAttribute(name) { return name === 'style' ? null : null; },
+        removeAttribute(name) { if (name === 'style') this.style = {}; },
+        setAttribute() {},
+    };
+    const scrollCalls = [];
+    globalThis.document = { querySelector: () => host, body, documentElement: html };
+    globalThis.window = { scrollY: 420, scrollTo: args => scrollCalls.push(args) };
+    try {
+        const state = { modal: null };
+        const modal = createModal({ state, onClose() {} });
+        modal.showModal('Parent', '<form></form>');
+        assert.equal(body.style.position, 'fixed');
+        assert.equal(body.style.top, '-420px');
+        assert.equal(html.style.overflowY, 'scroll', 'keep the classic scrollbar track');
+        assert.notEqual(html.style.overflow, 'hidden');
+        modal.showModal('Help', '<p>Help</p>');
+        modal.closeModal();
+        assert.equal(state.modal.title, 'Parent');
+        assert.equal(body.style.position, 'fixed', 'nested close must not unlock the page');
+        assert.equal(html.style.overflowY, 'scroll');
+        modal.closeModal();
+        assert.equal(state.modal, null);
+        assert.equal(body.style.position, undefined);
+        assert.equal(html.style.overflowY, undefined);
+        assert.deepEqual(scrollCalls, [{ top: 420, left: 0, behavior: 'instant' }]);
+    } finally {
+        if (previousDocument === undefined) delete globalThis.document;
+        else globalThis.document = previousDocument;
+        if (previousWindow === undefined) delete globalThis.window;
+        else globalThis.window = previousWindow;
+    }
+});
+
 test('a nested form dialog restores the exact parent DOM node and unsaved file inputs', () => {
     const host = fakeModalHost();
     const previous = globalThis.document;

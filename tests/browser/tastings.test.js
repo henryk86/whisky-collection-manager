@@ -275,7 +275,7 @@ test('browser: v0.24 nested mobile modal fixes page scrolling and technical help
         await open();
         await page.locator('[data-act="new"]').first().click();
         assert.equal(await page.evaluate(()=>document.body.style.position),'fixed');
-        assert.equal(await page.evaluate(()=>document.documentElement.style.overflow),'hidden');
+        assert.equal(await page.evaluate(()=>document.documentElement.style.overflowY),'scroll');
         const scrollable=await page.locator('.dialog').evaluate(el=>({touchAction:getComputedStyle(el).touchAction,overflow:getComputedStyle(el).overflowY}));
         assert.match(scrollable.touchAction,/pan-y/);
         assert.match(scrollable.overflow,/auto/);
