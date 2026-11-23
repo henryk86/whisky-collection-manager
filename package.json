@@ -22,6 +22,7 @@
     "cutout:verify": "node scripts/prepare-cutout-assets.js --verify",
     "offline:verify": "node scripts/offline-bundle.js verify && node scripts/prepare-cutout-assets.js --verify",
     "test:visual": "node scripts/designsystem-visual.js",
+    "test:visual:strict": "node scripts/designsystem-visual.js --strict-pixels",
     "visual:update": "node scripts/designsystem-visual.js --update",
     "format:js": "node scripts/format-js.js --write",
     "format:check": "node scripts/format-js.js",

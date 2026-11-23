@@ -7,7 +7,7 @@
 | `npm run check` | JS-Syntax, Imports, Modulgrenzen, Übersetzungen, Dokumentationslinks und Deploymentkonfiguration |
 | `npm test` | Unit- und Integrationstests für Fachregeln, Persistenz, API, Backup, Migration, Negativfälle |
 | `npm run test:browser` | Playwright/Chromium: Navigation, Formularbedienung, Modals, Fokus, responsive Geometrie, Sprachen, Scroll |
-| `npm run test:visual` | 136 freigegebene Screenshots und Geometrie-Referenzen: 17 Zustände × 4 Breiten × 2 Themes |
+| `npm run test:visual` | 136 Referenzzustände: Geometrie/Überlauf/Modalinteraktion als CI-Gate, Pixelunterschiede nur als Diagnose |
 | GitHub Actions | Vollständige PR-/Push-Prüfungen mit Screenshots und Differenzbildern als Fehlerartefakte |
 
 Ein bestandener Unit-Test ersetzt keinen Browserlauf; Screenshots ersetzen keine Interaktionsprüfung. Der eingeschränkte Modus `WHISKY_BROWSER_DOM_ONLY=true` prüft kein echtes Vorwärts-/Rückwärts-/Neuladen im HTTP-Browser. Reale Mobilgeräte, Safari/Firefox, Screenreader, WebGL/GPU und Dauerbetrieb benötigen getrennte Abnahmen.
@@ -16,7 +16,7 @@ Ein bestandener Unit-Test ersetzt keinen Browserlauf; Screenshots ersetzen keine
 
 ## Visuelle Referenzen
 
-Mit `npm run test:visual` vergleichen; Referenzen in `tests/visual/baselines/` werden in CI **nur gelesen**. Bei bewusst geänderten Layouts `npm run visual:update` lokal ausführen, Differenzen prüfen und die geänderten Referenzen explizit einchecken. Details: [Visuelle Tests](DESIGNSYSTEM_VISUELLE_TESTS.md).
+Mit `npm run test:visual` sind Geometrie und Interaktionen verpflichtend, Pixelvergleiche aktuell nicht. Die ursprünglichen Bilder wurden mit einer anderen Chromium-Version aufgenommen; die CI verwendet den gepinnten Playwright-Browser. Der Bericht weist den Versionsunterschied aus. `npm run test:visual:strict` ist erst mit freigegebenen, zur CI-Version passenden Referenzen sinnvoll. Referenzen niemals automatisch auf CI aktualisieren: Änderungen mit `npm run visual:update` lokal erstellen, prüfen und explizit committen. Details: [Visuelle Tests](DESIGNSYSTEM_VISUELLE_TESTS.md).
 
 ## Ablauf für Änderungen
 

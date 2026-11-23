@@ -5,26 +5,28 @@
  * This is a separate visual layer; functional Playwright tests remain tests/browser/.
  */
 import {spawn} from 'node:child_process';
-import {existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync} from 'node:fs';
+import {appendFileSync, existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {setTimeout as pause} from 'node:timers/promises';
 import {fileURLToPath} from 'node:url';
 import {startTestServer, requestJson} from '../tests/helpers/server.js';
 import {comparePNG} from './visual-png.js';
+import {assessCapture, browserWarning, pixelMode} from './visual-policy.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINES = path.join(ROOT, 'tests/visual/baselines');
 const ARTIFACTS = path.join(ROOT, 'test-artifacts/designsystem-visual');
 const update = process.argv.includes('--update');
+const pixels = pixelMode(process.argv.slice(2), process.env);
 if (update && process.env.CI) throw new Error('CI must never update visual baselines. Review them locally.');
+if (update && pixels === 'strict') throw new Error('Cannot combine baseline update with strict verification.');
 const widths = [390, 768, 1024, 1440];
 const themes = ['light', 'dark'];
 const date = '2026-11-20';
 const snapshotClock = '2026-11-23T12:00:00.000Z';
-// A 2% image-pixel tolerance allows browser/font rasterization differences;
-// geometry remains independently checked with a strict 2px tolerance.
-const MAX_CHANGED_PERCENT = Number(process.env.WCM_VISUAL_MAX_CHANGED_PERCENT || 2);
+// No global screenshot-area tolerance: even a small icon change must be
+// visible in the report. Strict pixel mode requires an identical browser.
 const COLOR_DELTA = 36;
 const scenarios = [
   ['collection-empty', '/', '.empty-state'],
@@ -50,6 +52,7 @@ let browser, socket, server, browserVersion;
 let seq = 0;
 const pending = new Map();
 const problems = [];
+const warnings = [];
 const results = [];
 const interactionChecks = [];
 function command(method, params = {}) {
@@ -186,17 +189,6 @@ function geometryExpression() {
     };
   })())`;
 }
-function compareGeometry(before, after) {
-  const mismatches = [];
-  if (!before || !after) return ['missing geometry'];
-  if (after.overflow > 1) mismatches.push(`horizontal overflow ${after.overflow}px`);
-  for (const key of ['main', 'header', 'heading', 'panel', 'grid', 'field', 'dialog', 'footer']) {
-    const a = before[key], b = after[key];
-    if (Boolean(a) !== Boolean(b)) mismatches.push(`${key} presence changed`);
-    else if (a && a.some((v, i) => Math.abs(v - b[i]) > 2)) mismatches.push(`${key} moved/resized: ${a} -> ${b}`);
-  }
-  return mismatches;
-}
 async function key(key, code, windowsVirtualKeyCode) {
   for (const type of ['keyDown', 'keyUp']) await command('Input.dispatchKeyEvent', {type, key, code, windowsVirtualKeyCode});
 }
@@ -267,6 +259,16 @@ try {
   mkdirSync(ARTIFACTS, {recursive: true});
   if (update) mkdirSync(BASELINES, {recursive: true});
   await boot();
+  if (!update) {
+    const manifestPath = path.join(BASELINES, 'manifest.json');
+    if (!existsSync(manifestPath)) throw new Error('Approved visual manifest is missing. Baselines must be reviewed locally.');
+    const baselineBrowser = JSON.parse(readFileSync(manifestPath, 'utf8')).browser;
+    const warning = browserWarning(browserVersion, baselineBrowser, pixels);
+    if (warning) {
+      warnings.push(warning);
+      console.warn(`VISUAL NOTICE: ${warning}`);
+    }
+  }
   if (update) {
     writeFileSync(path.join(BASELINES, 'manifest.json'), JSON.stringify({
       description: 'Explicitly approved design-system baseline. Do not rewrite in CI.',
@@ -322,17 +324,32 @@ try {
               continue;
             }
             const initial = JSON.parse(readFileSync(referenceGeometry, 'utf8'));
-            const geometryErrors = compareGeometry(initial, currentGeometry);
             const diff = comparePNG(readFileSync(reference), image);
-            const failed = diff.percent > MAX_CHANGED_PERCENT || geometryErrors.length > 0;
-            if (failed) {
-              problems.push(`${id}: changed pixels ${diff.percent}% (limit ${MAX_CHANGED_PERCENT}%), geometry: ${geometryErrors.join('; ') || 'ok'}`);
+            const assessment = assessCapture({
+              before: initial, after: currentGeometry, changed: diff.changed,
+              dimensions: diff.dimensions, mode: pixels,
+            });
+            if (assessment.blocking) {
+              const cause = assessment.geometryErrors.length ? assessment.geometryErrors.join('; ') :
+                `strict pixel difference: ${diff.percent}%`;
+              problems.push(`${id}: ${cause}`);
+            }
+            // Pixel differences are reported, never silently accepted as visual
+            // approval. Diagnostics must not mask a real geometry failure.
+            const saveDiff = assessment.blocking || assessment.pixelChanged;
+            if (saveDiff) {
               mkdirSync(actualDir, {recursive: true});
               mkdirSync(path.join(ARTIFACTS, 'diff'), {recursive: true});
               writeFileSync(path.join(actualDir, `${id}.png`), image);
               writeFileSync(path.join(ARTIFACTS, 'diff', `${id}.png`), diff.diff);
             }
-            results.push({id, percent: diff.percent, dimensions: diff.dimensions, geometryErrors, status: failed ? 'failed' : 'passed'});
+            results.push({
+              id, changedPixels: diff.changed, percent: diff.percent,
+              dimensions: diff.dimensions,
+              geometryErrors: assessment.geometryErrors,
+              pixelChanged: assessment.pixelChanged, diffSaved: saveDiff,
+              status: assessment.status,
+            });
           }
         } catch (error) {
           problems.push(`${id}: ${error.message}`); console.error('FAIL', id, error.stack);
@@ -340,7 +357,7 @@ try {
       }
     }
     try {await checkModalInteractions(name);} catch (error) {problems.push(`${name} interaction: ${error.message}`); console.error('FAIL', name, error.message);}
-    console.log(`${name}: ${results.filter(r => r.id.startsWith(`${name}__`) && r.status !== 'failed').length} screen captures checked`);
+    console.log(`${name}: ${results.filter(r => r.id.startsWith(`${name}__`) && r.status !== 'failed').length} geometry checks passed`);
   }
 } catch (error) {
   problems.push(`fatal: ${error.stack || error.message}`);
@@ -349,13 +366,27 @@ try {
   await pause(100);
   rmSync(scratch, {recursive: true, force: true});
   writeFileSync(path.join(ARTIFACTS, 'report.json'), JSON.stringify({
-    mode: update ? 'explicit-baseline-update' : 'verify',
+    mode: update ? 'explicit-baseline-update' : 'geometry-gate',
+    pixelMode: pixels,
     browser: browserVersion, baselineBrowser: existsSync(path.join(BASELINES, 'manifest.json')) ? JSON.parse(readFileSync(path.join(BASELINES, 'manifest.json'), 'utf8')).browser : 'unknown',
     snapshotClock, timezone: 'Europe/Berlin', locale: 'de-DE',
-    viewportWidths: widths, themes, maxChangedPercent: MAX_CHANGED_PERCENT,
-    interactionChecks, total: results.length, passed: results.filter(r => r.status === 'passed').length,
-    failed: problems.length, problems, results,
+    viewportWidths: widths, themes,
+    interactionChecks, total: results.length,
+    passed: results.filter(r => r.status !== 'failed').length,
+    pixelDifferences: results.filter(r => r.pixelChanged).length,
+    diffArtifacts: results.filter(r => r.diffSaved).length,
+    failed: problems.length, problems, warnings, results,
   }, null, 2) + '\n');
 }
-console.log(`Designsystem visual: ${results.length} captures, ${problems.length} issues. Report: test-artifacts/designsystem-visual/report.json`);
+if (process.env.GITHUB_STEP_SUMMARY) {
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+    `## Design-system visual checks\n\n` +
+    `- Blocking layout/interaction issues: **${problems.length}**\n` +
+    `- Captures: **${results.length}**; pixel differences (diagnostic unless strict): **${results.filter(r => r.pixelChanged).length}**\n` +
+    `- Browser: ${browserVersion || 'unavailable'}; approved references: ${existsSync(path.join(BASELINES, 'manifest.json')) ? JSON.parse(readFileSync(path.join(BASELINES, 'manifest.json'), 'utf8')).browser : 'missing'}\n` +
+    `- Reference images were not modified. See the uploaded visual artifacts for actual images, diffs and report.\n\n`);
+}
+console.log(`Designsystem visual: ${results.length} captures, ${problems.length} blocking issues, ` +
+  `${results.filter(r => r.pixelChanged).length} pixel differences (${pixels} mode), ` +
+  `${results.filter(r => r.diffSaved).length} diagnostic diffs saved. Report: test-artifacts/designsystem-visual/report.json`);
 if (problems.length) {for (const problem of problems) console.error(`FAIL ${problem}`); process.exitCode = 1;}
