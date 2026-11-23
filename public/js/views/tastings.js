@@ -380,7 +380,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         const flights=flightList();
         return `<section class="analytics-panel tasting-flight-home">
             <div class="tasting-panel-heading"><h3 class="flight-plan-heading-title">${escapeHtml(t('tastingFlights.plural'))}
-                <button type="button" class="flight-plan-help-button" data-act="flight-plan-help" aria-label="${escapeHtml(t('flightPlan.help.title'))}" title="${escapeHtml(t('flightPlan.help.title'))}">${helpCircleIcon}</button></h3>
+                ${flightPlanningHelpButton()}</h3>
                 <div class="actions"><button type="button" class="btn small" data-act="tasting-flight-new">${newBottlingIcon}<span>${escapeHtml(t('flightPlan.document'))}</span></button>
                 <button type="button" class="btn small primary" data-act="flight-plan-new">${flightPlanIcon}<span>${escapeHtml(t('flightPlan.plan'))}</span></button></div></div>
             ${flights.length ? `<div class="warehouse-bottle-list tasting-flight-list">${flights.map(item=>`<button class="tasting-flight-home-link" type="button" data-act="tasting-flight-open" data-flight-id="${escapeHtml(item.id)}">
@@ -389,7 +389,13 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         </section>`;
     }
     function showFlightPlanningHelp() {
-        showModal(t('flightPlan.help.title'), flightPlanningHelpHtml(t), true, false);
+        // Preserve the planner's live inputs, generated proposal and scroll position.
+        // From the overview this opens as a normal top-level modal.
+        showModal(t('flightPlan.help.title'), flightPlanningHelpHtml(t), true, true);
+    }
+    function flightPlanningHelpButton() {
+        const label=escapeHtml(t('flightPlan.help.title'));
+        return `<button type="button" class="flight-plan-help-button" data-act="flight-plan-help" aria-label="${label}" title="${label}">${helpCircleIcon}</button>`;
     }
     function syncFlightPlanOptions() {
         const box=globalThis.document?.querySelector?.('#modal-root');
@@ -449,7 +455,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             <div class="flight-plan-preview" aria-live="polite"></div>
             <div class="actions"><button class="btn" type="button" data-act="close-modal">${t('common.actions.cancel')}</button>
                 <button class="btn primary" type="button" data-act="flight-plan-create" disabled>${t('flightPlan.save')}</button></div>
-        </div>`,true,false);
+        </div>`,true,false,flightPlanningHelpButton());
         state.flightCandidateIds=null;
         syncFlightPlanOptions();
     }

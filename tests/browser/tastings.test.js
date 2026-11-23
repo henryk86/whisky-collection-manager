@@ -43,6 +43,46 @@ test('browser: flight help icon stays inline with its heading and never shows a 
     });
 });
 
+
+test('browser: planner help returns to the same planning modal with all draft inputs preserved', async () => {
+    await session(async ({page,open}) => {
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();
+        await page.locator('.tasting-flight-home [data-act="flight-plan-new"]').click();
+        const form=page.locator('#modal-root .flight-plan-form');
+        await form.waitFor({state:'visible'});
+        await form.locator('[data-flight-name]').fill('Draft remains unchanged');
+        await form.locator('[data-flight-notes]').fill('Notes stay on reopening');
+        await form.locator('[data-flight-plan-style]').selectOption('similar');
+        await form.locator('[data-flight-plan-focus]').selectOption('smoky');
+        await form.locator('.flight-plan-advanced summary').click();
+        await form.locator('[data-flight-plan-cask-mode]').selectOption('specific');
+        await form.locator('[data-flight-plan-cask-group]').selectOption('sherry');
+        const help=page.locator('#modal-root .dialog-head [data-act="flight-plan-help"]');
+        await help.waitFor({state:'visible'});
+        assert.equal(await help.getAttribute('aria-label'),'So wird ein Flight geplant');
+        const alignment=await help.evaluate(button=>{
+            const title=button.closest('h2').getBoundingClientRect(),rect=button.getBoundingClientRect();
+            return Math.abs(title.top+title.height/2-rect.top-rect.height/2);
+        });
+        assert.ok(alignment<=2,`help icon must be aligned with the dialog heading: ${alignment}`);
+        await help.click();
+        const explanation=page.locator('#modal-root .flight-plan-help');
+        await explanation.waitFor({state:'visible'});
+        assert.ok(await explanation.locator('.flight-plan-help-formula').count()>0);
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        await form.waitFor({state:'visible'});
+        assert.equal(await form.locator('[data-flight-name]').inputValue(),'Draft remains unchanged');
+        assert.equal(await form.locator('[data-flight-notes]').inputValue(),'Notes stay on reopening');
+        assert.equal(await form.locator('[data-flight-plan-style]').inputValue(),'similar');
+        assert.equal(await form.locator('[data-flight-plan-focus]').inputValue(),'smoky');
+        assert.equal(await form.locator('[data-flight-plan-cask-group]').inputValue(),'sherry');
+        assert.equal(await form.locator('.flight-plan-advanced').evaluate(el=>el.open),true);
+        assert.equal(await page.locator('#modal-root .dialog-head [data-act="flight-plan-help"]').count(),1);
+    });
+});
+
 test('browser: bottling tasting block edits ten-axis flavor, notes and five Glencairn glasses with undo/redo', async () => {
     await session(async ({page,base,open}) => {
         await open();

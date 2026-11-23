@@ -59,16 +59,17 @@ test('no profile data is fabricated; invalid planner settings are rejected',()=>
 });
 test('tasting overview provides an accessible help button and translated planning modal',()=>{
     const collection={bottlings:items,tastingFlights:[],externalTastings:[],distilleries:[]};
-    let html='',modal='';let title='',wide=false;
+    let html='',modal='';let title='',wide=false,nested,headingAction;
     const view=createTastingsView({state:{collection,page:'tastings-home',selected:null},
         shell:rendered=>{html=rendered;},navigate(){},refresh(){},
-        showModal:(heading,body,isWide)=>{title=heading;modal=body;wide=isWide;},selectors:{coverPhoto:()=>null}});
+        showModal:(heading,body,isWide,keepParent,action)=>{title=heading;modal=body;wide=isWide;nested=keepParent;headingAction=action;},selectors:{coverPhoto:()=>null}});
     view.home();
     assert.match(html,/class="flight-plan-help-button" data-act="flight-plan-help" aria-label="So wird ein Flight geplant"/);
     assert.doesNotMatch(html,/class="btn small flight-plan-help-button"/);
     view.showFlightPlanningHelp();
     assert.equal(title,'So wird ein Flight geplant');
     assert.equal(wide,true);
+    assert.equal(nested,true,'help must preserve an already open planning modal');
     for (const word of ['Ausgewogen','Thematisch ähnlich','Kontrastreich','Entdecken','Reihenfolge optimieren']) assert.ok(modal.includes(word),word);
     for (const formula of [
         '13*G + 4*R + 0.08*sum(N)',
@@ -88,6 +89,9 @@ test('tasting overview provides an accessible help button and translated plannin
     assert.ok(modal.length>6000,'Detailed explanations should remain available');
     assert.match(modal,/data-act="close-modal"/);
     view.startPlannedFlight();
+    assert.equal(nested,false,'new planner starts as a top-level modal');
+    assert.match(headingAction,/class="flight-plan-help-button" data-act="flight-plan-help"/);
+    assert.match(headingAction,/aria-label="So wird ein Flight geplant"/);
     assert.match(modal,/data-flight-plan-focus-wrap hidden/);
     assert.match(modal,/data-flight-plan-unfamiliar-wrap hidden/);
     assert.match(modal,/data-flight-plan-unfamiliar checked/);
