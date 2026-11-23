@@ -5,6 +5,7 @@ import { t } from '../i18n/index.js';
 import {displayPhotoPath} from '../../../shared/photo-images.js';
 import {storagePath} from './warehouse-presentation.js';
 import { escapeHtml } from '../ui/dom.js';
+import { detailField, detailGrid, actionToolbar, panel, emptyState } from '../ui/content.js';
 import { formatDate, imageUrl } from '../ui/format.js';
 import { request } from '../api.js';
 import { toast } from '../ui/notifications.js';
@@ -86,11 +87,11 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
     }).join('')}</span><strong>${tastingRating(record)}</strong></div>`;
     const tastingReadOnly = value => `<div class="flavor-detail-panel tasting-panel tasting-readonly-panels">
         <div class="tasting-record-fields analytics-panel tasting-readonly-meta-panel">
-            <div class="tasting-readonly-meta-fields">
-                <div class="tasting-readonly-field"><span class="tasting-readonly-label">${escapeHtml(t('tastings.date'))}</span><strong>${escapeHtml(formatDate(value.tastedOn || ''))}</strong></div>
-                ${value.title ? `<div class="tasting-readonly-field"><span class="tasting-readonly-label">${escapeHtml(t('tastings.nameReadonly'))}</span><strong>${escapeHtml(value.title)}</strong></div>` : ''}
-            </div>
-            <div class="actions tasting-readonly-meta-actions"><button type="button" class="btn small" data-act="tasting-edit-start">${editIcon}<span>${escapeHtml(t('common.actions.edit'))}</span></button></div>
+            ${detailGrid([
+                detailField({label:t('tastings.date'),value:formatDate(value.tastedOn || ''),variant:'readonly',className:'tasting-readonly-field',labelClass:'tasting-readonly-label'}),
+                value.title ? detailField({label:t('tastings.nameReadonly'),value:value.title,variant:'readonly',className:'tasting-readonly-field',labelClass:'tasting-readonly-label'}) : ''
+            ].join(''),{columns:2,className:'tasting-readonly-meta-fields'})}
+            ${actionToolbar(`<button type="button" class="btn small" data-act="tasting-edit-start">${editIcon}<span>${escapeHtml(t('common.actions.edit'))}</span></button>`,{className:'tasting-readonly-meta-actions'})}
         </div>
         <div class="tasting-top-row">
             <section class="analytics-panel tasting-color-panel">${headingTitle({title:t('tasting.colorHeading')})}
@@ -100,11 +101,11 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
                 ${flavorChart(value.flavorProfile,{editable:false})}</section>
         </div>
         <section class="analytics-panel">${headingTitle({title:t('tasting.notes')})}
-            <div class="tasting-notes tasting-readonly-notes">${['nose','palate','finish'].map(key=>`<div class="tasting-readonly-field"><span class="tasting-readonly-label">${escapeHtml(t(`forms.bottling.${key}`))}</span><p class="tasting-readonly-note">${blank(value.tastingNotes?.[key])}</p></div>`).join('')}</div>
+            ${detailGrid(['nose','palate','finish'].map(key=>detailField({label:t(`forms.bottling.${key}`),value:blank(value.tastingNotes?.[key]),valueHtml:true,variant:'note',className:'tasting-readonly-field',labelClass:'tasting-readonly-label',valueClass:'tasting-readonly-note'})).join(''),{columns:3,className:'tasting-notes tasting-readonly-notes'})}
         </section>
         <section class="analytics-panel tasting-rating-panel">${headingTitle({title:t('tasting.overallRating')})}
             ${staticRating(value)}
-            ${value.ratingComment?.trim() ? `<div class="tasting-rating-comment"><span class="tasting-readonly-label">${escapeHtml(t('tasting.ratingComment'))}</span><p class="tasting-readonly-note">${escapeHtml(value.ratingComment)}</p></div>` : ''}</section>
+            ${value.ratingComment?.trim() ? `${detailField({label:t('tasting.ratingComment'),value:value.ratingComment,variant:'note',className:'tasting-rating-comment',labelClass:'tasting-readonly-label',valueClass:'tasting-readonly-note'})}` : ''}</section>
     </div>`;
     const tastingListGlasses = record => {
         if (record.rating == null || !Number.isFinite(Number(record.rating))) return '';

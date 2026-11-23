@@ -8,6 +8,7 @@ import { t, currentLanguage } from '../i18n/index.js';
 const statusText = status => t(({closed:'home.status.closed',open:'analytics.inventory.openedStatus',empty:'home.status.empty'})[status] || 'features.distilleries.unknownStatus');
 import { newBottlingIcon, inventoryScanIcon, chevronDownIcon, chevronLeftIcon, chevronRightIcon, chevronsLeftIcon, chevronsRightIcon, arrowUpIcon, arrowDownIcon, arrowsUpDownIcon, closeIcon, collectionTableIcon, collectionCardsIcon, flightPlanIcon } from '../ui/action-icons.js';
 import { escapeHtml, query } from '../ui/dom.js';
+import { emptyState } from '../ui/content.js';
 import { imageUrl } from '../ui/format.js';
 import { bottleStatusLabels } from '../domain/labels.js';
 import { inventoryCountGroups } from '../domain/inventory-counts.js';
@@ -658,11 +659,10 @@ export function createHomeView({ state, selectors, shell, navigate, refresh, sho
     <thead><tr>${tableHead}</tr></thead>
     <tbody>${rows}</tbody>
     </table>
-    </div>`) : `<div class="empty-state">
-    <strong>${list.length === 0 && mode === 'bottles' && !physical.length && collection.bottlings.length ? t("home.empty.noPhysicalBottles") : collection.bottlings.length ? t("home.empty.noMatchingEntries") : t("home.empty.noBottles")}</strong>
-    <p>${mode === 'bottles' && !physical.length && collection.bottlings.length ? t("home.empty.addBottleToExistingHint") : collection.bottlings.length ? t("home.filters.changeFiltersHint") : t("home.empty.getStartedHint")}</p>
-    ${collection.bottlings.length ? '' : `<button class="btn primary" data-act="new">${t("collection.actions.newBottle")}</button>`}
-    </div>`}${pageData.total ? pagerHtml(pageData, state.pageSize, mode) : ''}`);
+    </div>`) : emptyState({variant:'collection',
+    title:list.length === 0 && mode === 'bottles' && !physical.length && collection.bottlings.length ? t("home.empty.noPhysicalBottles") : collection.bottlings.length ? t("home.empty.noMatchingEntries") : t("home.empty.noBottles"),
+    description:mode === 'bottles' && !physical.length && collection.bottlings.length ? t("home.empty.addBottleToExistingHint") : collection.bottlings.length ? t("home.filters.changeFiltersHint") : t("home.empty.getStartedHint"),
+    actions:collection.bottlings.length ? '' : `<button class="btn primary" data-act="new">${t("collection.actions.newBottle")}</button>`})}${pageData.total ? pagerHtml(pageData, state.pageSize, mode) : ''}`);
 
         // DOM reconciliation preserves form nodes to avoid scroll/focus jumps.
         // Native SELECT/INPUT properties can retain a stale user-edited value

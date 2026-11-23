@@ -155,7 +155,7 @@ test('analytics: last ranked distillery stays an interactive link', () => {
     const state = { collection: { distilleries, bottlings }, selected: 'overview', analyticsFilters: {} };
     let html = '';
     createAnalyticsView({ state, shell: value => { html = value; } })();
-    const top = html.match(/<section class="analytics-panel "><h3>Top-Destillerien<\/h3>([\s\S]*?)<\/section>/)?.[1];
+    const top = html.match(/<section class="analytics-panel" data-ds-panel="analytics"><h3>Top-Destillerien<\/h3>([\s\S]*?)<\/section>/)?.[1];
     assert.ok(top, 'the top-distilleries panel is rendered');
     const links = [...top.matchAll(/<button[^>]*class="analytics-bar-label analytics-link"[^>]*>([^<]*)<\/button>/g)];
     assert.equal(links.length, distilleries.length, 'every ranked distillery is a button, including the final one');

@@ -4,6 +4,7 @@ import { t, currentLanguage } from '../i18n/index.js';
 /** Analytics dashboard and six thematic pages. All datasets come from pure domain calculations. */
 import { analyzeCollection, analyticsFilterOptions } from '../domain/analytics.js';
 import { escapeHtml } from '../ui/dom.js';
+import { emptyState, panel as contentPanel } from '../ui/content.js';
 import { readAnalyticsDate } from '../domain/analytics-period.js';
 import { sectionWorkspace } from '../ui/section-navigation.js';
 import { chevronRightIcon, analysisOverviewIcon, analysisInventoryIcon, analysisOriginsIcon, analysisProfileIcon, analysisFinanceIcon, analysisTimelineIcon, analysisQualityIcon } from '../ui/action-icons.js';
@@ -50,10 +51,11 @@ const categoryLabel = label => CATEGORY_KEYS[label] ? t(CATEGORY_KEYS[label]) : 
 const COUNTRY_KEYS = Object.freeze({'Schottland':'countries.scotland','Vereinigtes Königreich':'countries.unitedKingdom','Deutschland':'countries.germany','Irland':'countries.ireland','Nordirland':'countries.northernIreland','USA':'countries.unitedStates','Mexiko':'countries.mexico','Schweden':'countries.sweden','Kanada':'countries.canada','Indien':'countries.india','Australien':'countries.australia','Frankreich':'countries.france','Belgien':'countries.belgium','Neuseeland':'countries.newZealand','Spanien':'countries.spain','Island':'countries.iceland','Tschechien':'countries.czechia','Südkorea':'countries.southKorea','Polen':'countries.poland','Schweiz':'countries.switzerland','Norwegen':'countries.norway','Italien':'countries.italy','Dänemark':'countries.denmark','Südafrika':'countries.southAfrica','Brasilien':'countries.brazil','Niederlande':'countries.netherlands','Finnland':'countries.finland','Wales':'countries.wales','England':'countries.england','Japan':'countries.japan','Taiwan':'countries.taiwan','China':'countries.china'});
 const countryName = name => COUNTRY_KEYS[name] ? t(COUNTRY_KEYS[name]) : categoryLabel(name);
 const safe = value => escapeHtml(value);
-const empty = () => `<p class="analytics-empty">${t("analytics.empty.noMatchingData")}</p>`;
+const empty = () => emptyState({description:t("analytics.empty.noMatchingData"),variant:"inline"});
 
 function panel(title, content, note = '', extra = '') {
-    return `<section class="analytics-panel ${extra}">${headingTitle({title})}${content}${note ? `<p class="analytics-note">${safe(note)}</p>` : ''}</section>`;
+    return contentPanel({tag:'section',variant:'analytics',className:extra,
+        content:`${headingTitle({title})}${content}${note ? `<p class="analytics-note">${safe(note)}</p>` : ''}`});
 }
 function metric(label, value, detail = '') {
     return `<div class="panel stat analytics-metric"><span>${safe(label)}</span><strong>${safe(value)}</strong>${detail ? `<small>${safe(detail)}</small>` : ''}</div>`;

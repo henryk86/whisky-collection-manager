@@ -46,7 +46,7 @@ test('detail heading uses the bottler when no distillery is supplied', () => {
     assert.match(html, /<span class="card-kicker">Signatory Vintage<\/span>/);
     assert.match(html, /<span class="detail-heading-separator" aria-hidden="true">·<\/span>/);
     assert.match(html, /<span class="muted">Unvollständig<\/span>/);
-    assert.match(html, /<span class="muted" style="font-size:12px">Abfüller<\/span>/);
+    assert.match(html, /data-ds-detail-field="fact"><span>Abfüller<\/span>/);
 });
 
 test('detail offers a right-aligned map link with location icon for one or several assigned distilleries, but not for an unassigned bottling', () => {

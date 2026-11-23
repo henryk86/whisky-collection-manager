@@ -1,4 +1,5 @@
 import { headingTitle } from '../ui/section-header.js';
+import { panel, detailField, detailGrid, emptyState, divider, actionToolbar, documentList, documentItem } from '../ui/content.js';
 import { headerActions } from '../ui/header-actions.js';
 import { sectionHeader } from '../ui/section-header.js';
 import { pageHeader } from '../ui/page-header.js';
@@ -88,24 +89,24 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                             ${entry.volumeType === 'sample' ? '<span class="badge sample">Sample</span>' : ''}
                             ${entry.volumeMl != null ? `<span class="bottle-size">${escapeHtml(entry.volumeMl)} ml</span>` : ''}
                         </div>
-                        <div class="actions bottle-entry-actions">
+                        ${actionToolbar(`
                             <button class="btn small" data-act="warehouse-assign" data-id="${escapeHtml(entry.id)}">${t('warehouse.bottles.relocate')}</button>
                             <button class="btn small" data-act="edit-bottle" data-id="${escapeHtml(entry.id)}">${editIcon}<span>${t('common.actions.edit')}</span></button>
                             <button class="btn small danger" data-act="delete-bottle" data-id="${escapeHtml(entry.id)}">${deleteIcon}<span>${t('common.actions.delete')}</span></button>
-                        </div>
+                        `, {className:'bottle-entry-actions'})}
                     </div>
                     ${headingTitle({title:t('detail.sections.bottleData'),className:'bottle-entry-data-title'})}
-                    <dl class="bottle-entry-facts">
-                        <div><dt>${t('forms.bottle.type')}</dt><dd>${t(entry.volumeType === 'sample' ? 'forms.bottle.sampleBottle' : 'forms.bottle.normalBottle')}</dd></div>
-                        ${entry.purchaseDate ? `<div><dt>${t('detail.meta.purchaseLabel')}</dt><dd>${escapeHtml(formatDate(entry.purchaseDate))}</dd></div>` : ''}
-                        ${entry.openedAt ? `<div><dt>${t('forms.bottle.openingDate')}</dt><dd>${escapeHtml(formatDate(entry.openedAt))}</dd></div>` : ''}
-                        ${entry.emptiedAt ? `<div><dt>${t('forms.bottle.emptyDate')}</dt><dd>${escapeHtml(formatDate(entry.emptiedAt))}</dd></div>` : ''}
-                        ${entry.purchasePrice != null && entry.purchasePrice !== '' ? `<div><dt>${t('detail.meta.priceLabel')}</dt><dd>${escapeHtml(entry.purchasePrice)} ${escapeHtml(entry.currency || 'EUR')}</dd></div>` : ''}
-                        ${storageName != null ? `<div><dt>${t('detail.fields.storageLocation')}</dt><dd>${storageShelfId ? `<button class="inline-link" data-act="warehouse-focus" data-id="${escapeHtml(storageShelfId)}" data-bottle-id="${escapeHtml(entry.id)}">${escapeHtml(storageName)}</button>` : escapeHtml(storageName)}</dd></div>` : ''}
-                        ${entry.volumeMl != null ? `<div><dt>${t('detail.meta.volumeLabel')}</dt><dd>${escapeHtml(entry.volumeMl)} ml</dd></div>` : ''}
-                        ${entry.merchant ? `<div><dt>${t('detail.meta.merchantLabel')}</dt><dd>${escapeHtml(entry.merchant)}</dd></div>` : ''}
-                        ${hasBottlingDetail(entry.comment) ? `<div class="bottle-entry-comment"><dt>${t('forms.bottle.personalComment')}</dt><dd>${escapeHtml(entry.comment)}</dd></div>` : ''}
-                    </dl>
+                    ${detailGrid([
+                        detailField({label:t('forms.bottle.type'),value:t(entry.volumeType === 'sample' ? 'forms.bottle.sampleBottle' : 'forms.bottle.normalBottle')}),
+                        entry.purchaseDate ? detailField({label:t('detail.meta.purchaseLabel'),value:formatDate(entry.purchaseDate)}) : '',
+                        entry.openedAt ? detailField({label:t('forms.bottle.openingDate'),value:formatDate(entry.openedAt)}) : '',
+                        entry.emptiedAt ? detailField({label:t('forms.bottle.emptyDate'),value:formatDate(entry.emptiedAt)}) : '',
+                        entry.purchasePrice != null && entry.purchasePrice !== '' ? detailField({label:t('detail.meta.priceLabel'),value:`${entry.purchasePrice} ${entry.currency || 'EUR'}`}) : '',
+                        storageName != null ? detailField({label:t('detail.fields.storageLocation'),value:storageShelfId ? `<button class="inline-link" data-act="warehouse-focus" data-id="${escapeHtml(storageShelfId)}" data-bottle-id="${escapeHtml(entry.id)}">${escapeHtml(storageName)}</button>` : storageName,valueHtml:Boolean(storageShelfId)}) : '',
+                        entry.volumeMl != null ? detailField({label:t('detail.meta.volumeLabel'),value:`${entry.volumeMl} ml`}) : '',
+                        entry.merchant ? detailField({label:t('detail.meta.merchantLabel'),value:entry.merchant}) : '',
+                        hasBottlingDetail(entry.comment) ? detailField({label:t('forms.bottle.personalComment'),value:entry.comment,className:'bottle-entry-comment'}) : ''
+                    ].join(''), {columns:3,tag:'dl',className:'bottle-entry-facts'})}
                 </div>
                 <section class="bottle-entry-gallery" aria-label="${t('detail.sections.bottlePhotos', {count:entryPhotos.length})}">
                     <h4>${t('detail.sections.bottlePhotos', {count:entryPhotos.length})}</h4>
@@ -113,12 +114,12 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                 </section>
                     <section class="bottle-documents" aria-label="${t("detail.sections.attachments")}">
     <h4>${t("detail.statistics.attachmentCount", {count:(entry.files || []).length}).replace("&", "&amp;")}</h4>
-    ${(entry.files || []).length ? `<ul class="document-list">${entry.files.map(file => `<li>
+    ${(entry.files || []).length ? documentList(entry.files.map(file => documentItem(`
     <button type="button" class="inline-link document-preview-link" data-act="preview-file" data-id="${escapeHtml(entry.id)}" data-file-id="${escapeHtml(file.id)}" data-file-name="${escapeHtml(file.name)}" title="${escapeHtml(t('detail.documents.openPreview'))}">${escapeHtml(file.name)}</button>
     <span class="muted document-size">${formatFileSize(file.size)}</span>
     <a class="btn small document-download" href="/api/bottles/${encodeURIComponent(entry.id)}/files/${encodeURIComponent(file.id)}" download="${escapeHtml(file.name)}" aria-label="${escapeHtml(t('detail.documents.downloadNamed',{name:file.name}))}">${arrowDownIcon}<span>${escapeHtml(t('detail.documents.download'))}</span></a>
     <button class="btn small danger" type="button" data-act="delete-file" data-id="${escapeHtml(entry.id)}" data-file-id="${escapeHtml(file.id)}" aria-label="${t("detail.documents.deleteNamed",{name:escapeHtml(file.name)})}">${deleteIcon}<span>${t("common.actions.delete")}</span></button>
-    </li>`).join('')}</ul>` : `<p class="hint">${t("detail.empty.noAttachments")}</p>`}
+    `))) : emptyState({description:t("detail.empty.noAttachments")})}
     <label class="document-add">${addActionLabel(t("detail.actions.addAttachments"))}
     <input type="file" accept="${fileAccept}" multiple data-bottle-files="${escapeHtml(entry.id)}">
     </label>
@@ -137,15 +138,14 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
     <div class="detail-summary-photo">
     ${coverPhoto(bottling.id) ? `<button type="button" class="hero-photo hero-photo-open" data-act="open-photo" title="${t("detail.photos.enlargeBottle")}" aria-label="${t("detail.photos.openOverlay")}"><img src="${imageUrl(coverPhoto(bottling.id))}" alt="${t("ui.photos.bottlePhoto")}"></button>` : '<div class="hero-photo"><img class="image-placeholder" src="/assets/photo-placeholder.svg" alt="" aria-hidden="true"></div>'}
     </div>
-    <div class="panel">
+    ${panel({content:`
     ${headingTitle({title:t('detail.sections.bottlingData')})}
-    ${facts.length ? `<div class="forms">${facts.map(([label, value, suffix = '']) => `<div>
-    <span class="muted" style="font-size:12px">${factLabel(label)}</span>
-    <div style="font-weight:650;margin-top:4px">${formatValue(value === "Ja" ? t("common.choices.yes") : value === "Nein" ? t("common.choices.no") : value)}${suffix ? ` ${suffix === "Jahre" ? t("detail.facts.yearSuffix") : suffix}` : ''}</div>
-    </div>`).join('')}</div>` : (!description && !whiskybaseUrl ? `<p class="hint">${t("detail.empty.noAdditionalInformation")}</p>` : '')}${description ? `<hr class="divider">
+    ${facts.length ? detailGrid(facts.map(([label, value, suffix = '']) => detailField({label:factLabel(label),
+        value:`${formatValue(value === "Ja" ? t("common.choices.yes") : value === "Nein" ? t("common.choices.no") : value)}${suffix ? ` ${escapeHtml(suffix === "Jahre" ? t("detail.facts.yearSuffix") : suffix)}` : ''}`,
+        valueHtml:true,variant:'fact'})).join(''),{columns:2,className:'forms'}) : (!description && !whiskybaseUrl ? emptyState({description:t("detail.empty.noAdditionalInformation")}) : '')}${description ? `${divider()}
     ${headingTitle({title:t('detail.fields.comment')})}
-    <p>${escapeHtml(description)}</p>` : ''}${whiskybaseUrl ? `<hr class="divider">
-    <a href="${escapeHtml(whiskybaseUrl)}" target="_blank" rel="noopener noreferrer">${t("detail.actions.openWhiskybase")}</a>` : ''}</div>
+    <p>${escapeHtml(description)}</p>` : ''}${whiskybaseUrl ? `${divider()}
+    <a href="${escapeHtml(whiskybaseUrl)}" target="_blank" rel="noopener noreferrer">${t("detail.actions.openWhiskybase")}</a>` : ''}`})}
     </div>
     </div>
     <section data-region="detail-tastings" class="section tasting-summary${latest ? '' : ' is-empty'}" aria-label="${escapeHtml(t('tastings.title'))}">
@@ -153,7 +153,7 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
             description:latest ? '' : t('tastings.none'), descriptionClass:'hint tasting-summary-empty', copyClass:'tasting-summary-section-heading',
             actionsClass:'tasting-summary-heading-actions', actions:`${latest ? '' : `<button type="button" class="btn" data-act="tastings-open">${escapeHtml(t('tastings.openAll'))}</button>`}
                 <button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t(tastingCount ? 'tastings.add' : 'tastings.first'))}</span></button>` })}
-        ${latest ? `<div class="panel tasting-summary-card">
+        ${latest ? panel({className:'tasting-summary-card',content:`
             <div class="tasting-summary-content">
                 <div class="tasting-summary-main">
                     <span class="muted tasting-summary-lead">${escapeHtml(t('tastings.latest'))}</span>
@@ -167,9 +167,9 @@ export function createDetailView({ state, selectors, shell, navigate, action }) 
                     </div>
                 </div>
                 ${tastingRadar ? `<div class="tasting-summary-radar">${tastingRadar}</div>` : ''}
-                <div class="tasting-summary-notes${tastingNotes.length ? '' : ' is-empty'}"${tastingNotes.length ? '' : ' aria-hidden="true"'}>${tastingNotes.map(note => `<div class="tasting-summary-note"><span class="tasting-summary-field-label">${escapeHtml(note.label)}</span><div class="tasting-summary-note-value">${escapeHtml(note.text)}</div></div>`).join('')}</div>
+                <div class="tasting-summary-notes${tastingNotes.length ? '' : ' is-empty'}"${tastingNotes.length ? '' : ' aria-hidden="true"'}>${tastingNotes.map(note => detailField({label:note.label,value:note.text,variant:'preview',className:'tasting-summary-note',labelClass:'tasting-summary-field-label',valueClass:'tasting-summary-note-value'})).join('')}</div>
             </div>
-        </div>` : ''}
+        `}) : ''}
     </section>
     <div data-region="detail-physical-bottles" class="section">
     ${sectionHeader({title:t('detail.statistics.bottleAndSampleCount', {count:physicalBottles.length}), actionsBare:true,
