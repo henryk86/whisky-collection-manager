@@ -24,10 +24,58 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run check
+      - name: Enforce documentation review for code changes
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.base_ref == 'develop')
+        shell: bash
+        env:
+          PUSH_BEFORE: ${{ github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          DOCS_DECLARATION: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            node scripts/check-doc-impact.js --range "$PR_BASE_SHA..HEAD"
+          elif git cat-file -e "$PUSH_BEFORE^{commit}" 2>/dev/null; then
+            node scripts/check-doc-impact.js --range "$PUSH_BEFORE..HEAD"
+          else
+            node scripts/check-doc-impact.js --range "HEAD^..HEAD"
+          fi
+      - name: Check project, Google JavaScript style and JSDoc
+        run: npm run check
       - run: npm test
       - run: npx playwright-core install --with-deps chromium
       - run: npm run test:browser
+      - name: Locate Chromium version installed by pinned Playwright
+        if: github.event_name == 'pull_request' && !cancelled()
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME_PATH="$(node --input-type=module -e 'import { chromium } from "playwright-core"; process.stdout.write(chromium.executablePath())')"
+          test -x "$CHROME_PATH"
+          echo "WCM_VISUAL_BROWSER_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+      - name: Check design-system geometry and interactions; report pixel differences
+        if: github.event_name == 'pull_request' && !cancelled()
+        env:
+          # Baselines were recorded with another Chromium build. Do not gate PRs
+          # on renderer/font rasterization until CI-matched baselines are approved.
+          WCM_VISUAL_PIXEL_MODE: diagnostic
+        run: npm run test:visual
+      - name: Upload design-system geometry report and diagnostic pixel diffs
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: design-system-visual-${{ github.run_id }}
+          path: test-artifacts/designsystem-visual/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload browser regression artifacts on failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-regressions-${{ github.run_id }}
+          path: test-artifacts/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Validate directly pushed develop commits
         if: github.event_name == 'push'
         env:

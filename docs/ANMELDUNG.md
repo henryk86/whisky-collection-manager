@@ -2,7 +2,7 @@
 
 ## Aktivierung und erster Zugang
 
-Die Loginpflicht ist bei Neuinstallationen und nach dem Upgrade zunächst **aus**. Auch ohne Login kann die Sammlung wie bisher genutzt werden. Die Nutzerverwaltung ist unabhängig davon geschützt.
+Die Loginpflicht ist standardmäßig **aus**. Auch ohne Login kann die Sammlung wie bisher genutzt werden. Die Nutzerverwaltung ist unabhängig davon geschützt.
 
 Beim ersten Start legt der Server `admin` mit einem **einmaligen, zufällig generierten Startpasswort** an und protokolliert es genau einmal. Das Passwort steht in der Serverausgabe oder unter Docker in `docker compose logs app`. Beim ersten Login muss `admin` ein neues Passwort mit mindestens 12 Zeichen wählen. Das Startpasswort wird nicht in Dateien abgelegt und kann nicht nachträglich angezeigt werden.
 
@@ -22,7 +22,7 @@ Sitzungen verwenden zufällige 256-Bit-Tokens in **HttpOnly**, **SameSite=Strict
 
 Die bestehende AES-verschlüsselte ZIP-Sicherung enthält auch `data/user.json` mit den Passwort-Hashes. Bei einer Wiederherstellung können die damaligen Nutzer und Passwörter wieder aktiv werden. Backups daher nur verschlüsselt aufbewahren. Der bestehende Backup-Worker nutzt weiterhin seine eigene Administrator-/Worker-Authentifizierung.
 
-**Whiskybase-Browsererweiterung:** Mit der separaten Extension ab **v0.16.11** funktioniert die Bildübernahme auch bei aktivierter Loginpflicht. Die Extension nutzt einen bestehenden oder neu geöffneten Collection-Manager-Tab für einen gleichursprünglichen Upload mit dessen Sitzung; Zugangsdaten und Sitzungscookie werden nicht in der Extension abgelegt. Der Benutzer muss im Manager angemeldet sein und den ersten Passwortwechsel abgeschlossen haben. Andernfalls den Manager-Tab öffnen, anmelden und den Import erneut auslösen. Die bisherige direkte Bildübertragung älterer Extensions bleibt bei erforderlicher Anmeldung ohne gültige Sitzung gesperrt. `EXTENSION_IDS` ist für den neuen Tab-basierten Upload nicht nötig.
+**Whiskybase-Browsererweiterung:** Mit der separaten Browser-Erweiterung funktioniert die Bildübernahme auch bei aktivierter Loginpflicht. Die Extension nutzt einen bestehenden oder neu geöffneten Collection-Manager-Tab für einen gleichursprünglichen Upload mit dessen Sitzung; Zugangsdaten und Sitzungscookie werden nicht in der Extension abgelegt. Der Benutzer muss im Manager angemeldet sein und den ersten Passwortwechsel abgeschlossen haben. Andernfalls den Manager-Tab öffnen, anmelden und den Import erneut auslösen. Bildübertragungen ohne gültige Sitzung sind bei aktivierter Loginpflicht gesperrt. `EXTENSION_IDS` ist für den neuen Tab-basierten Upload nicht nötig.
 
 ## Administrator-Passwort vergessen
 

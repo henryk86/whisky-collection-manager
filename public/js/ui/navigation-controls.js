@@ -1,5 +1,6 @@
-import { t } from '../i18n/index.js';
-/** Shared return action for secondary pages. */
+import {backNavigation} from './headers.js';
+import {t} from '../i18n/index.js';
+/** Compatibility adapter: the secondary-page return now uses BackNavigation. */
 export const backToCollectionButton = {
-    toString: () => `<button type="button" class="btn" data-act="goto-home">${t('common.navigation.backToCollection')}</button>`
+  toString: () => backNavigation('goto-home', t('common.navigation.backToCollection'), '', 'page-action')
 };

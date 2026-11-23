@@ -1,6 +1,6 @@
 # Offline-Releases und langfristige Wiederherstellung
 
-Seit **v0.20.0** erstellt der GitHub-Release-Workflow neben dem normalen Quellcode-ZIP und dem GHCR-Image drei zusätzliche Artefakte. Sie können **ohne Zugriff auf npm, Hugging Face oder Docker Hub** wiederhergestellt werden, wenn die Dateien vorher archiviert wurden.
+Der GitHub-Release-Workflow erstellt neben dem normalen Quellcode-ZIP und dem GHCR-Image drei zusätzliche Artefakte. Sie können **ohne Zugriff auf npm, Hugging Face oder Docker Hub** wiederhergestellt werden, wenn die Dateien vorher archiviert wurden.
 
 | Release-Artefakt | Inhalt | Verwendung |
 | --- | --- | --- |

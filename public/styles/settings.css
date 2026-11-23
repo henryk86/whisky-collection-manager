@@ -65,17 +65,17 @@
 @media (max-width: 480px) { .backup-tools .btn { flex: 1 1 auto; } }
 
 /* Guided USB-backup setup and direct ZIP downloads. */
-.backup-quickstart { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,210px),1fr)); gap: 10px; }
-.backup-quickstart > div { padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
-.backup-quickstart p { margin: 5px 0 0; font-size: 13px; }
+
+
+
 .backup-snapshot-list { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
 .backup-snapshot { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
 .backup-snapshot:last-child { border-bottom: 0; }
 .backup-form [hidden] { display: none !important; }
 
-.backup-import-box { padding: 14px; border: 1px solid var(--line); border-radius: 10px; }
-.backup-import-box h4 { margin-bottom: 8px; }
-.backup-import-box p { font-size: 13px; }
+
+
+
 
 /* One backup page: manual download, destinations, restore. */
 .backup-step { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 15px; }
@@ -175,3 +175,7 @@
 
 .auth-drawer-actions { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 15px; display: flex; gap: 8px; flex-wrap: wrap; }
 .auth-drawer-actions .muted { width: 100%; margin: 0; overflow-wrap: anywhere; }
+
+/* Legacy import actions: static spacing belongs to the view CSS, not inline HTML. */
+.settings-legacy-import { margin-top: 15px; }
+.settings-legacy-import > :is(input,button) { margin-top: var(--ds-space-3); }

@@ -1,0 +1,71 @@
+/* Designsystem M4: visual primitives used by the existing app renderers.
+   These are NOT resets: specialist views retain approved padding, columns and
+   surfaces. The collection/Abfuellungsdetails are the visual reference. */
+.panel {
+    background: var(--ds-color-surface);
+    border: 1px solid var(--ds-color-border);
+    padding: var(--ds-panel-padding);
+    box-shadow: 0 8px 24px #0f2e4410;
+}
+/* Analytics panels keep their own distinct, existing 22px geometry. */
+:where([data-ds-panel]) { min-width: 0; }
+:where([data-ds-detail-grid]) { display: grid; min-width: 0; gap: var(--ds-form-grid-gap); }
+:where([data-ds-detail-grid="2"]) { grid-template-columns: repeat(2,minmax(0,1fr)); }
+:where([data-ds-detail-grid="3"]) { grid-template-columns: repeat(3,minmax(0,1fr)); }
+:where([data-ds-detail-grid] > [data-ds-detail-field]) { min-width: 0; }
+@media (max-width: 600px) {
+    /* Existing specialist grids keep their declared viewport-specific columns. */
+    :where([data-ds-detail-grid]:not([class])) { grid-template-columns: minmax(0,1fr); }
+}
+/* Facts under the bottling summary: same 12/14px scale as bottle facts.
+   Preserve the existing 4px separation and boldness; no extra framing. */
+[data-ds-detail-field="fact"] > span:first-child {
+    color: var(--ds-color-text-subtle);
+    font-size: var(--ds-type-ui-sm);
+}
+[data-ds-detail-field="fact"] > div {
+    font-weight: 650;
+    margin-top: var(--ds-space-1);
+    overflow-wrap: anywhere;
+}
+/* Shared informational fields with the existing definition-list appearance. */
+[data-ds-detail-field="definition"] > dt {
+    margin: 0;
+    color: var(--ds-color-text-subtle);
+    font-size: var(--ds-type-ui-sm);
+}
+[data-ds-detail-field="definition"] > dd {
+    margin: var(--ds-space-1) 0 0;
+    font-size: var(--ds-type-body);
+    font-weight: 650;
+    overflow-wrap: anywhere;
+}
+/* For note labels, each view chooses a deliberate emphasis modifier: the
+   preview uses muted labels, the saved record uses a stronger label. */
+[data-ds-detail-field="preview"] > span:first-child { display: block; color: var(--ds-color-text-subtle); font-size: var(--ds-type-ui-sm); font-weight: 400; }
+[data-ds-detail-field="readonly"] > span:first-child,
+[data-ds-detail-field="note"] > span:first-child { font-weight: 600; color: var(--ds-color-text); }
+[data-ds-detail-field="note"] > p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; margin: 0; }
+/* The quiet variants do not create another framed box inside a panel. */
+:where([data-ds-empty-state="subtle"], [data-ds-empty-state="inline"]) { border: 0; background: transparent; }
+.empty-state {
+    text-align: center;
+    padding: 75px 25px;
+    background: var(--ds-color-surface);
+    border: 1px dashed #c9c0af;
+    color: #7b817f;
+}
+.empty-state strong { display: block; font: 23px var(--ds-font-display); color: var(--navy); margin-bottom: 12px; }
+.divider { border: 0; border-top: 1px solid var(--ds-color-border); margin: 24px 0; }
+[data-ds-divider="vertical"] { display: inline-block; border-inline-start: 1px solid var(--ds-color-border); align-self: stretch; }
+.actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+[data-ds-action-toolbar="end"] { justify-content: flex-end; }
+/* Receipt/document listing is reusable, but preview controls retain their
+   specialised styling in bottle-details.css. */
+.document-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.document-list li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }

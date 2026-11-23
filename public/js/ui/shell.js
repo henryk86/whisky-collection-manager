@@ -1,35 +1,35 @@
-import { t } from '../i18n/index.js';
-import { newBottlingIcon, inventoryScanIcon, themeMoonIcon, closeIcon } from './action-icons.js';
-import { MAIN_PAGES } from '../navigation/pages.js';
-import { reconcileChildren } from './dom-reconcile.js';
-import { escapeHtml } from './dom.js';
-export function createShell({ root, state, applyTheme, renderModal }) {
-    let displayedRoute = null;
-    function shell(content) {
-        // Data updates must not tear down the header, page scroll container and
-        // modal host. Rebuilding #app briefly sends long pages to the top,
-        // especially after deleting a photo or attachment. Only actual route
-        // changes require a full shell; they scroll to the top in navigation.
-        const route = [state.page, state.selected, state.tastingId, state.flightId, state.auth?.user?.id || 'guest'].join('::');
-        const main = root.querySelector?.(':scope > main');
-        if (main && displayedRoute === route) {
-            const scrollY = typeof window !== 'undefined' ? window.scrollY : null;
-            const next = document.createElement('template');
-            next.innerHTML = content;
-            // All routes share one reconciler. Interactive widgets mark their
-            // subtree with data-reconcile="replace" to remount local handlers.
-            reconcileChildren(main, next.content);
-            // Guard against scroll anchoring changing the viewport when a
-            // replaced section is shorter (e.g. one fewer photo tile).
-            if (scrollY != null && Math.abs(window.scrollY - scrollY) > 1) {
-                window.scrollTo({top: scrollY, left: 0, behavior: 'instant'});
-            }
-            applyTheme();
-            if (state.modal) renderModal();
-            return;
-        }
-        displayedRoute = route;
-        root.innerHTML = `<header class="site-header">
+import {t} from '../i18n/index.js';
+import {newBottlingIcon, inventoryScanIcon, themeMoonIcon, closeIcon} from './action-icons.js';
+import {MAIN_PAGES} from '../navigation/pages.js';
+import {reconcileChildren} from './dom-reconcile.js';
+import {escapeHtml} from './dom.js';
+export function createShell({root, state, applyTheme, renderModal}) {
+  let displayedRoute = null;
+  function shell(content) {
+    // Data updates must not tear down the header, page scroll container and
+    // modal host. Rebuilding #app briefly sends long pages to the top,
+    // especially after deleting a photo or attachment. Only actual route
+    // changes require a full shell; they scroll to the top in navigation.
+    const route = [state.page, state.selected, state.tastingId, state.flightId, state.auth?.user?.id || 'guest'].join('::');
+    const main = root.querySelector?.(':scope > main');
+    if (main && displayedRoute === route) {
+      const scrollY = typeof window !== 'undefined' ? window.scrollY : null;
+      const next = document.createElement('template');
+      next.innerHTML = content;
+      // All routes share one reconciler. Interactive widgets mark their
+      // subtree with data-reconcile="replace" to remount local handlers.
+      reconcileChildren(main, next.content);
+      // Guard against scroll anchoring changing the viewport when a
+      // replaced section is shorter (e.g. one fewer photo tile).
+      if (scrollY != null && Math.abs(window.scrollY - scrollY) > 1) {
+        window.scrollTo({top: scrollY, left: 0, behavior: 'instant'});
+      }
+      applyTheme();
+      if (state.modal) renderModal();
+      return;
+    }
+    displayedRoute = route;
+    root.innerHTML = `<header class="site-header">
     <div class="header-inner">
     <div class="brand" role="button" tabindex="0" data-act="back" aria-label="${t("ui.navigation.backToCollection")}">
     <span class="brand-emblem" aria-hidden="true">
@@ -53,8 +53,8 @@ export function createShell({ root, state, applyTheme, renderModal }) {
     <aside class="site-drawer" id="site-drawer" aria-label="${t("ui.navigation.sideMenu")}" hidden>
       <div class="site-drawer-head"><h2>${t("ui.navigation.label")}</h2><button type="button" class="btn small" data-act="close-menu" aria-label="${t("ui.navigation.closeMenu")}">${closeIcon}</button></div>
       <nav class="site-nav" aria-label="${t("ui.navigation.primary")}">${MAIN_PAGES.map(item => `
-        <a href="${item.url}" data-act="${item.action}" ${item.id === state.page || (item.id === 'home' && state.page === 'detail') || (item.id === 'tastings-home' && ['tastings','tasting','external-tasting','tasting-flight'].includes(state.page)) ? 'aria-current="page"' : ''}>
-          <svg class="${item.navClass || ''}" viewBox="${item.viewBox || '0 0 24 24'}" fill="${item.filled?'currentColor':'none'}" stroke="${item.filled?'none':'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${item.icon}</svg>${item.label}
+        <a href="${item.url}" data-act="${item.action}" ${item.id === state.page || (item.id === 'home' && state.page === 'detail') || (item.id === 'tastings-home' && ['tastings', 'tasting', 'external-tasting', 'tasting-flight'].includes(state.page)) ? 'aria-current="page"' : ''}>
+          <svg class="${item.navClass || ''}" viewBox="${item.viewBox || '0 0 24 24'}" fill="${item.filled ? 'currentColor' : 'none'}" stroke="${item.filled ? 'none' : 'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${item.icon}</svg>${item.label}
         </a>`).join('')}</nav>
       <div class="auth-drawer-actions">
         ${state.auth?.user ? `<p class="muted">${escapeHtml(state.auth.user.username)}</p>
@@ -70,10 +70,10 @@ export function createShell({ root, state, applyTheme, renderModal }) {
     </footer>
     <div id="modal-root">
     </div>`;
-        applyTheme();
-        if (state.modal) {
-            renderModal();
-        }
+    applyTheme();
+    if (state.modal) {
+      renderModal();
     }
-    return shell;
+  }
+  return shell;
 }

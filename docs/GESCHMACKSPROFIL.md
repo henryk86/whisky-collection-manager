@@ -1,232 +1,33 @@
-# Geschmacksprofil und eigenständige Verkostungen (v0.26.0)
+# Verkostungen, Geschmacksprofil und Bewertung
 
-Pro Abfüllung sind **0–n unabhängige Verkostungen** erlaubt. Eine Verkostung gehört
-zur Abfüllung, nicht zu einer physischen Flasche. Das bisherige Profil-, Farb-,
-Notiz- und Punkte-UI aus v0.25.5 wird je Verkostung unverändert wiederverwendet.
+## Zuordnung und Navigation
 
-## Aufruf und Navigation
+Eine Sammlungsabfüllung hat 0–n eigenständige, datierte Verkostungen in `bottlings[].tastings[]` (Collection-Schema 6). Die Verkostung gehört zur **Abfüllung**, nicht zu einer physischen Flasche. Eine externe, nicht besessene Whisky-Verkostung ist ein eigener Eintrag ohne verwaltete Abfüllung. Einzelverkostung und Liste unterstützen direkte URLs und Browser-History. Bestehende Einträge öffnen lesend und werden über die Bearbeiten-Aktion editierbar; neue Einträge werden explizit gespeichert.
 
-- Abfüllungsdetails `/?bottling=<id>`: Kompakte Zusammenfassung. Bei 0 Einträgen
-  erscheint „Noch keine Verkostung“ mit „Erste Verkostung erfassen“.
-- Sobald mindestens ein Eintrag existiert, öffnet „Verkostung anzeigen“ in
-  den Abfüllungsdetails immer direkt die zuletzt angezeigte Verkostung – auch
-  wenn mehrere Einträge vorhanden sind. Die chronologische Gesamtliste bleibt
-  über die Navigation der Einzelverkostung erreichbar.
-- Übersicht `/?bottling=<id>&view=tastings`: Neueste Verkostung zuerst; pro Zeile
-  Datum, optionaler Titel, Bewertung und ein Löschen-Button. Löschen benötigt
-  eine Bestätigung im **Anwendungsmodal** und ist abbrechbar.
-- Einzelverkostung `/?bottling=<id>&tasting=<tastingId>`: Datum, optionaler Titel,
-  Farbe, Geschmacksprofil, Nase, Geschmack, Abgang und Gesamtbewertung.
-  Neue Datensätze erscheinen erst, nachdem „Verkostung speichern“ geklickt wurde.
-  Bestehende Verkostungen öffnen grundsätzlich in einer reinen Leseansicht. Erst
-  über den Stift-Button „Bearbeiten“ im ersten Datenblock werden Datum, Titel, Farbe, Profil, Notizen
-  und Bewertung editierbar; „Fertig“ wechselt zurück in die Leseansicht.
-  Änderungen im Bearbeitungsmodus werden automatisch gespeichert.
-- Die Browsernavigation und direkte Aufrufe über die URL werden unterstützt.
-
-## Letzte Bewertung
-
-Maßgeblich ist das **neueste Verkostungsdatum**, nicht das Bearbeitungsdatum.
-Bei gleichem Datum entscheidet zuerst der Erstellungszeitpunkt und danach die ID.
-Die Bewertung der letzten Verkostung erscheint lesend in den Abfüllungsdetails.
-Ist die neueste Verkostung nicht bewertet, wird „Nicht bewertet“ angezeigt;
-ältere Punktzahlen werden **nicht** als Ersatz verwendet.
-Die Analysen berücksichtigen höchstens die aktuelle Bewertung *einer* Abfüllung
-und gewichten mehrfache Verkostungen nicht stärker.
+Für die **letzte Bewertung** ist das neueste Verkostungsdatum entscheidend, bei Gleichstand Erstellungszeit und ID. Ist dieser Eintrag unbewertet, bleibt die Abfüllung unbewertet, auch wenn frühere Bewertungen vorliegen. Analysen zählen nicht mehrfach pro Abfüllung.
 
 ## Eingaben
 
-| Schlüssel | Bereich |
-| --- | --- |
-| `tastedOn` | Pflichtdatum `YYYY-MM-DD` (beim Anlegen mit lokalem Datum vorbefüllt) |
-| `title` | Optionaler Titel mit maximal 120 Zeichen |
-| `tastingNotes` | `nose`, `palate`, `finish`, beliebige Textlängen |
-| `ratingComment` | Optionaler Freitext zum Gesamteindruck (bis zu 10.000 Zeichen) |
-| `rating` | `null` oder 0–100 mit höchstens einer Nachkommastelle in der UI |
-| `whiskyColor` | Eine der zwölf unveränderlichen Farben, ein geprüfter `custom:#rrggbb`-Wert aus dem stufenlosen Whisky-Farbwähler oder `null` |
-| `flavorProfile` | `null` oder zehn Achsen (0–10; bei älteren Einträgen sind die zwei neuen Achsen `null`) |
+| Feld | Vertrag |
+|---|---|
+| Datum `tastedOn` | `YYYY-MM-DD`, Pflicht |
+| Titel | optional, maximal 120 Zeichen |
+| Nase/Geschmack/Abgang | `tastingNotes.nose/palate/finish`, frei |
+| Gesamtkommentar | `ratingComment`, optional bis 10.000 Zeichen |
+| Bewertung | `null` oder 0–100; UI zeigt anteilig gefüllte Glencairn-Gläser |
+| Farbe | zwölf feste Whiskyfarben oder geprüfter `custom:#rrggbb`-Farbwert; kein Grün/Blau |
+| Profil | zehn 0–10-Achsen oder `null`; fehlende Achsen bleiben unbekannt (`null`), nicht Nullbewertung |
 
-Die Profilachsen sind im JSON fest: `woody`, `smoky`, `cereal`, `peaty`,
-`fruity`, `floral`, `medicinal`, `winey`, `feinty`, `sulphury`.
-Sie entsprechen Holzig, Rauchig, Getreidig, Torfig, Fruchtig, Blumig,
-Medizinisch, Weinartig, Alkoholisch und Schwefelig.
-Bestehende gespeicherte Profile mit den bisherigen acht Achsen bleiben gültig.
-Die zwei neuen Achsen sind darin **nicht erfasst** (`null`), nicht automatisch 0;
-sie werden im Diagramm ausgelassen und in der Auflistung mit „–“ angezeigt.
-Der Zustand bleibt auch beim Bearbeiten anderer Verkostungsfelder und bei
-Rückgängig/Wiederholen erhalten. Erst die Bedienung eines neuen Reglers
-erfasst seinen Wert (auch ausdrücklich 0).
-Die kurzzeitig eingeführte elfte Achse `fiery` (Brennend) entfällt, da
-`feinty` bereits als Alkoholisch bewertet wird. Daten aus dieser Version
-können eingelesen werden; `fiery` wird nicht mehr angezeigt und bei der
-Normalisierung verworfen.
+Die zehn Profilachsen: `woody`, `smoky`, `cereal`, `peaty`, `fruity`, `floral`, `medicinal`, `winey`, `feinty`, `sulphury`. Radarprofil und Regler sind vom eigenen Farbblock getrennt. Farbwähler und Glencairn zeigen die ausgewählte Whiskyfarbe; unbekannte Werte werden im Radar nicht erfunden. Rückgängig/Wiederholen gilt je geöffnetem Verkostungseintrag.
 
-Das Radardiagramm und die zehn Regler bleiben gemeinsam in einem Panel, die
-zwölf festen Farben und der zusätzliche Whisky-Farbwähler in ihrem eigenen Panel. Notizen und Punkte erscheinen darunter.
-Die zwölf unveränderten Farbstufen stehen weiterhin in einem 3 × 4-Raster.
-Darunter befindet sich eine weitere Zeile mit Glencairn-Vorschau links und
-einem stufenlosen zweidimensionalen Farbwähler rechts. Für individuelle
-Farben erscheint ein aus 50 kuratierten Whisky-Farbnamen bestimmter Name
-unter dem Picker und unter dem Glencairn in der Leseansicht. Die Zuordnung
-erfolgt deterministisch über den nächstgelegenen OKLab-Farbwert, auch bei
-älteren eigenen Farben. Ein HEX-Code wird nicht angezeigt; die genaue Farbe
-bleibt unverändert intern gespeichert. Die zwölf festen Farbnamen bleiben wie bisher.
-Der Farbraum ist auf helle und dunkle whiskytypische Rosé-, Rot-, Kupfer-,
-Bernstein-, Gold-, Stroh- und Brauntöne begrenzt; Grün und Blau sind ungültig.
-Der gewählte `custom:#rrggbb`-Wert wird im JSON-/ZIP-Export erhalten;
-Entfernen-Schaltflächen befinden sich rechts in den jeweiligen Überschriften.
-Die fünf Glencairn-Gläser geben je bis zu 20 Punkte vor und zeigen Bruchteile
-mit anteiliger Füllhöhe. Die Punktzahl wird ausschließlich über das editierbare
-Feld mit `/ 100` dargestellt. Rückgängig/Wiederholen wird für jede geöffnete
-Verkostung separat verwaltet.
+## Flights
 
-## Datenmodell (Schema 6)
+Eine Verkostung kann höchstens einem Flight angehören. Flights enthalten eine explizit sortierte Liste von IDs; das Löschen eines Flights löscht die individuellen Verkostungen nicht. Die Reihenfolge ist per Drag und Tastaturaktionen veränderbar. Es gibt dokumentierte und geplante Flights. [Planungslogik](FLIGHT_PLANUNG.md).
 
-- Die einzige Quelle fuer eigene Verkostungen ist `bottlings[].tastings[]` innerhalb von `collection.json`. Jede Abfuellung hat ein `tastings[]`-Array, jeder Eintrag eine unveraenderliche ID und zwei Zeitstempel.
-- Die angezeigte letzte Bewertung und Notizen werden aus der juengsten Verkostung berechnet. Es gibt keine persistierten `bottling.rating`, `bottling.tastingNotes`, `bottling.whiskyColor`, `bottling.flavorProfile` und kein `legacyTastings`.
-- **Schema-Upgrade ohne Verlust des Bestands:** Alte `collection.json`-Dateien werden gesichert und auf Schema 6 migriert. Abfuellungen, Flaschen, Fotos, Belege, Inventarnummern und Lagerdaten bleiben erhalten. Bei Altformaten vor Schema 5 werden fruehere Verkostungen, Flights und sensorische Zusammenfassungen nicht migriert. Die Migration von Schema 5 nach Schema 6 erhaelt dagegen saemtliche Verkostungen und Bewertungskommentare. Alte JSON-Importe koennen ebenso uebernommen werden.
-- JSON-/ZIP-Exporte enthalten die aktuellen Verkostungen. Die zu einer neuen Sammlung angelegten Fotos, physischen Flaschen und Lagerdaten werden regulaer verwaltet.
+## Code und Tests
 
-## Technische Bausteine
+- Fachregeln: `shared/tasting-records.js`, `server/services/tastings.js`, `server/domain/validation.js`.
+- UI: `public/js/views/tastings.js`, `public/js/ui/flavor-profile.js`, `whisky-color-selector.js`, `glencairn-rating.js`.
+- Regression: `tests/unit/tasting-records.test.js`, `tests/integration/tastings.test.js`, `tests/browser/tastings.test.js`.
 
-- Daten: `shared/tasting-records.js`, `server/services/tastings.js`
-  und `server/domain/validation.js`.
-- UI: `public/js/views/tastings.js` und die Zusammenfassung in
-  `public/js/views/detail.js`.
-- Unveränderte Controls: `public/js/ui/flavor-profile.js`,
-  `public/js/ui/whisky-color-selector.js` und
-  `public/js/ui/glencairn-rating.js`.
-- Historie: `public/js/domain/tasting-history.js`, zustandsbezogen je Eintrag.
-- Tests: `tests/unit/tasting-records.test.js`,
-  `tests/integration/tastings.test.js` und `tests/browser/tastings.test.js`.
-
-## v0.27.2: einheitliche Verkostungsansichten
-
-Die Verkostungsstartseite verwendet die gleichen Überschriftenabstände wie die
-anderen Hauptseiten. Das Glencairn-Glas dient als Menüicon; der Seitenheader
-selbst enthält kein Icon.
-Sie listet alle datierten Verkostungen gemeinsam auf. Für eine Abfüllung aus
-der Sammlung existiert eine eigene Verkostungsliste (0–n); Listen- und
-Einzelverkostungsseite zeigen die Abfüllung samt vorhandenen Angaben zu Alter,
-Fasstyp und Alkoholgehalt. Die Zurück-Navigation nutzt sichtbare
-Linkspfeile. Die eigentliche Abfüllungsdetailseite bleibt unverändert.
-
-Bei Whisky außerhalb der Sammlung ist eine Verkostung dagegen **ein einzelner
-Datensatz** (`externalTastings[]`) mit eingebetteten Abfüllungsangaben. Es gibt
-weder eine externe Abfüllungsverwaltung noch eine weitere Verkostungsliste je
-externem Whisky. Diese Einträge beeinflussen den Bestand und dessen Analysen
-nicht und sind trotzdem im Backup enthalten. Es findet keine Migration statt.
-
-Auf jeder Einzelverkostungsseite kann das Geschmacksprofil mit „Profil
-zurücksetzen“ vollständig entfernt werden (`flavorProfile: null`), statt zehn
-Nullwerte zu speichern. Die Rückgängig-/Wiederholen-Funktion bleibt erhalten.
-
-## v0.27.3: Seitenhierarchie und Ausrichtung der Notizfelder
-
-Die Verkostungsstartseite, die Übersicht einer Abfüllung und die einzelne
-Verkostung verwenden die vorhandenen Seitenheader-Klassen und Abstände ohne
-zusätzliche Symbole im Titel. Die untergeordneten Seiten tragen allgemeine
-Überschriften (z. B. „Verkostungsübersicht“, „Verkostung erfassen“ oder
-„Verkostung bearbeiten“); die konkrete Abfüllung steht mit ihren vorhandenen
-Stammdaten im **ersten Informationspanel** unterhalb des Headers. Bei externen
-Verkostungen sind die ergänzenden Abfüllungsfelder direkt dort editierbar.
-Der globale App-Header und die Abfüllungsdetailseite bleiben unverändert.
-
-Nase, Geschmack und Abgang bleiben nebeneinander, solange der verfügbare
-Bildschirmplatz dies zulässt. Jedes Feld und sein Label sind am oberen Rand
-ausgerichtet: Vergrößert man ein Textfeld, werden die benachbarten Felder
-nicht nach unten verschoben oder gestreckt. Auf schmalen Bildschirmen stehen
-die Felder weiterhin untereinander.
-
-## v0.27.4: Navigation, Listen und externe Abfüllungsangaben
-
-Der Zurück-Link (sichtbarer Pfeil links) steht auf den untergeordneten
-Verkostungsseiten als eigene Navigationszeile **direkt unterhalb des
-Seitenheaders** und vor dem Abfüllungsblock. Der erste Informationsblock
-zeigt den Abfüllungsnamen und die verfügbaren Daten **ohne weitere
-„Abfüllungsangaben“-Überschrift**. Die Überschriften der Haupt- und
-Unterseiten verwenden unterschiedliche, nicht redundante Bezeichnungen
-(Journal / Verkostungsnotizen / Einträge; Notizen / Verkostung bearbeiten / Eindrücke).
-
-Die globale Verkostungsübersicht und die Liste innerhalb einer Abfüllung
-verwenden die Rahmen-, Trennlinien- und Zeilenstruktur von
-**Lager → Flasche finden**. Datum, Bezeichnung und Bewertung sind
-sofort sichtbar; Öffnen und gegebenenfalls Löschen erfolgen über
-separate Zeilenaktionen.
-
-Für eine neue Verkostung außerhalb der Sammlung werden die zusätzlichen
-Abfüllungsangaben einmalig im ersten Formularblock erfasst. Beim erneuten
-Öffnen erscheinen diese Angaben lesend (Name, verfügbare Metadaten);
-ein Bearbeiten-Button mit dem gemeinsamen Stift-SVG schaltet ausschließlich
-diesen Block in einen Bearbeitungsmodus mit **Speichern** und **Abbrechen**.
-Abbrechen verwirft unveröffentlichte Eingaben. Die Verkostung selbst bleibt
-weiterhin eigenständig editierbar. Es wird keine externe Flasche in der
-Sammlung angelegt, und es findet keine Migration statt.
-
-Die globale App-Kopfzeile und die vorhandene Abfüllungsdetailseite bleiben
-im Quellcode unverändert.
-
-### Änderungen in v0.27.5
-
-- Die Hauptseite trägt den Namen „Verkostungsnotizen“ (englisch „Tasting notes“). Unterseiten haben Zurück-Links vor dem Seitenkopf. Verkostungseinträge sind als ganze Zeilen anklickbar und per Tastatur bedienbar.
-- Die letzte Bewertung einer Sammlungsabfüllung wird zusätzlich als fünf proportional gefüllte Glencairn-Gläser im Flaschenbild dargestellt; der Schnellfilter bietet fünf Punktbereiche und „Nicht bewertet“.
-- Eine externe Einzelverkostung kann einer bestehenden Sammlungsabfüllung zugeordnet werden. Der Server verschiebt den Datensatz atomar, erhält ID, Datum, Notizen, Farbe, Radarprofil und Punkte; die jüngste Verkostung bestimmt weiterhin die Bewertung der Abfüllung.
-
-### Darstellung in v0.27.6
-
-- Bestehende eigene und externe Verkostungen zeigen zunächst Datum, Titel, Farbe,
-  Radar, Notizen und gefüllte Bewertungs-Gläser ohne Eingabefelder. Ein Stift-Button
-  öffnet den bisherigen Editor; die Neuerfassung bleibt direkt bearbeitbar.
-- Im ersten Infoblock einer Sammlungsabfüllung führt „Zu den Abfüllungsdetails“
-  direkt zur vorhandenen Abfüllungsdetailseite. Für externe Einträge erscheint
-  dieser Button nicht.
-
-- Die Abfüllungsinformation auf den Verkostungsseiten zeigt, wenn vorhanden, dasselbe Abfüllungsfoto wie die Abfüllungsdetailseite kompakt neben Name und vorhandenen Stammdaten. Die dort verwendete Bildauswahl und Freistellung bzw. Bildbearbeitung wird unverändert übernommen. Bei Abfüllungen ohne Foto wird kein leerer Bildbereich erzeugt.
-- Die fünf Glencairn-Gläser im Flaschenbild der Sammlungsübersicht bleiben proportional gefüllt, aber ohne dunkles Badge, Hintergrund, Rand oder Panel-Schatten. Lediglich die Glassymbole haben eine leichte Schattierung zur Erkennbarkeit.
-
-## Bedienoberflaeche v0.27.8
-
-In den Abfuellungsdetails steht „Neue Verkostung“ oberhalb der Bewertungskachel auf Hoehe der Abschnittsueberschrift (wie „Weitere Flasche“). In den Verkostungslisten steht die Anlegeaktion innerhalb des jeweiligen Listenblocks. Im Bearbeitungsmodus sind Datum (schmal), Titel (breit) und Aktionsbuttons in einer Zeile im ersten Eingabeblock angeordnet, auf kleinen Displays responsiv umgebrochen. Der Abschnitt "Eindruecke" verwendet denselben Abstand zum darunterliegenden Block wie die anderen Abschnitte. Anlegeaktionen verwenden ein gemeinsames SVG-Plus. Die Glencairn-Anzeige in Sammlungsbildern ist mit etwas mehr Abstand zum rechten Bildrand ausgerichtet.
-
-
-## Tasting-Flights (v0.28.0)
-
-Unter **Verkostungsnotizen** können optionale **Tasting-Flights** angelegt werden.
-Ein Flight hält `name`, `date`, `notes` und eine sortierbare Liste `tastingIds[]`.
-Ab v0.28.1 lässt sich diese Reihenfolge direkt über einen Ziehgriff (Maus, Touch, Stift) umsortieren; der bestehende API-Endpunkt speichert die neue Reihenfolge. Die Auf-/Ab-Buttons bleiben als Tastatur-Alternative erhalten. Glencairn-Gläser und Punktwerte sind in stabilen Spalten positioniert, auch bei unterschiedlich hohen Bewertungen.
-Einzelne Verkostungen bleiben ausschließlich unter `bottlings[].tastings[]` oder
-`externalTastings[]` gespeichert. Ein Flight kopiert keine Einzelbewertungen.
-
-- Bestehende eigene oder externe Verkostungen können hinzugefügt werden, sofern
-  sie keinem anderen Flight angehören.
-- Neue Verkostungen werden direkt aus dem Flight heraus angelegt und atomar
-  zugeordnet. Der einzelne Eintrag verlinkt zurück auf den Flight samt Position.
-- Die Reihenfolge wird mit Ziehgriff oder alternativ mit Auf-/Ab-Aktionen gepflegt. Weitere Schluck- oder
-  Durchgangsprotokolle sowie eine automatische Interpretation von Reihenfolge und
-  Wertung sind bewusst nicht Bestandteil der Funktion.
-- Beim späteren Erwerb eines extern verkosteten Whiskys bleibt die Zuordnung
-  anhand der unveränderlichen Verkostungs-ID bestehen.
-- Entfernen eines Eintrags aus einem Flight entfernt nur die Zuordnung.
-  Das Löschen eines Flights löscht niemals die einzelnen Verkostungsnotizen.
-- `tastingFlights[]` ist in Schema 6 Pflicht (ein leeres Array ist erlaubt) und auch in JSON-/ZIP-Backups enthalten.
-
-## Sammlung: Geschmacksfilter und gespeicherte Ansichten
-
-Unter **Sammlung → Weitere Filter → Geschmacksprofil** koennen bis zu zehn
-Kriterien aus den bestehenden Achsen mit Minimum und Maximum von 0 bis 10
-kombiniert werden. Kriterien werden mit **UND** verknuepft. Als Quelle gilt
-die neueste Verkostung **mit erfasstem Geschmacksprofil** der Abfuellung;
-unbewertete Achsen gelten nicht als 0. Der separate Filter „Ohne
-Geschmacksprofil“ findet Abfuellungen ohne irgendeinen erfassten Datensatz.
-
-Ueber **Ansicht speichern** koennen Filter, Suchtext, Sortierung, Kachel- oder
-Tabellenmodus und die sichtbaren Tabellenspalten als Ansicht gespeichert werden.
-Die Auswahl wird dynamisch auf die jeweils aktuellen Sammlungsdaten angewendet.
-Ansichten sind umbenennbar, aktualisierbar und loeschbar. Maximal 40 Eintraege
-liegen in `collection.settings.savedViews` und werden mit der Sammlung gesichert.
-Die bestehende Browsereinstellung fuer die Tabellenspalten bleibt separat erhalten;
-eine gespeicherte Ansicht kann sie beim Oeffnen ueberschreiben.
-
-**Flight aus Auswahl planen** uebergibt die gefilterten Abfuellungen als
-Kandidatenmenge an den neuen Flight-Planer. Es werden dabei keine Verkostungen
-angelegt.
+Das aktuelle Schema ist **6**. Für das Verhalten beim Laden sehr alter Testformate siehe [Architektur](ARCHITEKTUR.md); diese Formate sind keine Voraussetzung für produktive Datenkompatibilität.

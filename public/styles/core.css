@@ -1,19 +1,7 @@
 :root {
-    --navy: #102c4b;
-    --navy-deep: #092039;
-    --blue: #173b5c;
-    --gold: #bd9862;
-    --gold-light: #e2c398;
-    --cream: #f7f5ef;
-    --paper: #fffefa;
-    --ink: #1e3245;
-    --muted: #77808a;
-    --line: #e4e1da;
-    --serif: Georgia,'Times New Roman',serif;
-    --sans: system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
-    font-family: var(--sans);
-    color: var(--ink);
-    background: var(--cream);
+    font-family: var(--ds-font-ui);
+    color: var(--ds-color-text);
+    background: var(--ds-color-page);
     font-synthesis: none;
 }
 * {
@@ -36,17 +24,11 @@ body {
     flex-direction: column;
     min-height: 100vh;
 }
-button,
-input,
-select,
-textarea {
-    font: inherit;
-}
 button {
     cursor: pointer;
 }
 a {
-    color: #285a83;
+    color: var(--ds-color-link);
     text-decoration: none;
 }
 a:hover {
@@ -62,21 +44,19 @@ textarea:focus-visible,
     outline-offset: 3px;
 }
 .site-header {
-    background: var(--navy-deep);
-    border-bottom: 1px solid #ffffff22;
-    color: #fff;
+    background: var(--ds-color-header-bg);
+    border-bottom: 1px solid var(--ds-color-header-border);
+    color: var(--ds-color-header-text);
     position: relative;
     z-index: 10;
 }
 .header-inner {
-    max-width: 1350px;
-    margin: auto;
     min-height: 93px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    padding: 15px 30px;
+    padding: var(--ds-header-padding-block) var(--ds-header-gutter);
 }
 .brand {
     display: flex;
@@ -87,18 +67,24 @@ textarea:focus-visible,
 .brand-emblem {
     width: 57px;
     height: 57px;
-    border: 1px solid #d6bc8a;
+    border: 0; /* The SVG already draws the emblem frame. */
     color: #e6d3ad;
     display: flex;
     align-items: center;
     justify-content: center;
     font: 20px var(--serif);
-    letter-spacing: -3px;
-    transform: rotate(-3deg);
+    letter-spacing: normal;
+    transform: none;
 }
 .brand-emblem span {
     color: var(--gold-light);
     padding: 0 3px;
+}
+.brand-logo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 .brand-copy {
     min-width: 0;
@@ -128,74 +114,24 @@ textarea:focus-visible,
     color: #e8d3ae;
 }
 .top-actions,
-.actions,
 .toolbar {
     display: flex;
     gap: 10px;
     align-items: center;
     flex-wrap: wrap;
 }
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    min-height: 43px;
-    border: 1px solid #d7d6d0;
-    border-radius: 2px;
-    padding: 11px 17px;
-    background: var(--paper);
-    color: var(--navy);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: .65px;
-    text-decoration: none;
-    transition: background .18s,color .18s,border-color .18s,transform .18s;
-}
-.btn:hover {
-    background: #f0ebe1;
-    text-decoration: none;
-    border-color: var(--gold);
-}
-.btn.primary {
-    background: var(--gold);
-    border-color: var(--gold);
-    color: #10263c;
-}
-.btn.primary:hover {
-    background: #d6b27b;
-    border-color: #d6b27b;
-}
-.btn.dark {
-    background: var(--navy);
-    color: white;
-    border-color: var(--navy);
-}
-.btn.danger {
-    color: #9d4338;
-    border-color: #cfb9af;
-}
-.btn:disabled {
-    opacity: .5;
-    cursor: not-allowed;
-}
-.btn.small {
-    min-height: 34px;
-    padding: 8px 12px;
-    font-size: 11px;
-}
 .header-btn {
     background: transparent;
-    color: #f2eadd;
-    border-color: #52677b;
+    color: var(--ds-color-header-action-text);
+    border-color: var(--ds-color-header-action-border);
 }
 .header-btn:hover {
-    background: #254563;
+    background: var(--ds-color-header-action-hover);
     color: white;
 }
 .site-footer {
     border-top: 1px solid var(--line);
-    max-width: 1290px;
+    max-width: var(--ds-layout-footer-max);
     margin: 10px auto 0;
     width: 100%;
     padding: 16px 28px 22px;
@@ -213,9 +149,8 @@ textarea:focus-visible,
 }
 main {
     width: 100%;
-    max-width: 1350px;
-    margin: 0 auto;
-    padding: 0 30px 20px;
+    margin-block: 0;
+    padding: 0 var(--ds-page-gutter) var(--ds-page-padding-bottom);
     flex: 1 0 auto;
 }
 .collection-hero {
@@ -338,13 +273,6 @@ main {
 .collection-heading {
     margin-bottom: 23px;
 }
-.section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 14px;
-    margin: 20px 0 12px;
-}
 .detail-heading-meta {
     display: flex;
     align-items: baseline;
@@ -363,7 +291,7 @@ main {
 .detail-heading-separator {
     color: var(--muted);
 }
-.detail-page-head {
+.detail-page-head.ds-page-header {
     align-items: flex-start;
 }
 .detail-head-actions {
@@ -373,14 +301,6 @@ main {
 }
 .detail-head-actions .btn {
     white-space: nowrap;
-}
-.section-head h2 {
-    font-family: var(--serif);
-    font-size: clamp(26px,3vw,36px);
-    line-height: 1.25;
-    font-weight: 400;
-    letter-spacing: -.8px;
-    margin: 10px 0;
 }
 .heading-period {
     color: var(--gold);
@@ -406,12 +326,6 @@ h3 {
 }
 .muted {
     color: var(--muted);
-}
-.panel {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    padding: 23px;
-    box-shadow: 0 8px 24px #0f2e4410;
 }
 .stats {
     display: grid;
@@ -451,35 +365,11 @@ h3 {
     flex: 1;
     min-width: 200px;
 }
-.field,
-input,
-select,
-textarea {
-    border: 1px solid #d8d8d2;
-    border-radius: 2px;
-    padding: 11px 12px;
-    min-height: 44px;
-    background: #fffefa;
-    color: var(--ink);
-    min-width: 0;
-    font-size: 13px;
-}
-.field:focus,
-input:focus,
-textarea:focus,
-select:focus {
-    outline: 2px solid #c7ab7b;
-    outline-offset: 1px;
-}
-textarea {
-    resize: vertical;
-    min-height: 94px;
-}
 .toolbar select {
     max-width: 170px;
 }
 .toolbar input[type=search] {
-    background: #fffefa;
+    background: var(--ds-color-control-bg);
 }
 /* All five selectors share the same toolbar row, when the viewport allows it. */
 .toolbar #filter-distillery {
@@ -645,75 +535,13 @@ textarea {
 .hero-photo .image-placeholder {
     width: min(40%, 170px);
 }
-.forms {
-    display: grid;
-    grid-template-columns: repeat(2,minmax(0,1fr));
-    gap: 14px;
-}
-.form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    min-width: 0;
-    max-width: 100%;
-    font-size: 12px;
-    font-weight: 700;
-    color: #435465;
-}
 /* Native controls have their own intrinsic size on mobile browsers.
    A label's flex/grid width must constrain the actual form control as well. */
-.form-field > :is(input:not([type="checkbox"]):not([type="radio"]):not([type="date"]), select, textarea) {
-    display: block;
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-}
-.form-field.full {
-    grid-column: 1/-1;
-}
 /* Keep native date pickers, but not iOS WebKit's implicit button sizing.
    iOS otherwise enforces content-box/min-width and can draw dates outside a form.
    Do not use display:block for temporal controls: WebKit misaligns the value. */
-input[type="date"] {
-    -webkit-appearance: none;
-    appearance: none;
-    display: inline-flex;
-    align-items: center;
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    min-inline-size: 0;
-    min-height: 44px;
-    text-align: left;
-    line-height: 1.25;
-    color-scheme: inherit;
-}
 /* Safari puts the rendered date inside an additional internal value element.
    Keep it left aligned and give empty dates a stable line height. */
-input[type="date"]::-webkit-date-and-time-value {
-    text-align: left;
-    min-height: 1.2em;
-    margin: 0;
-}
-input[type="date"]::-webkit-datetime-edit,
-input[type="date"]::-webkit-datetime-edit-fields-wrapper {
-    padding: 0;
-}
-input[type="date"]::-webkit-calendar-picker-indicator {
-    padding-block: 0;
-    margin-block: 0;
-}
-@media (max-width: 740px) {
-    .form-field > input[type="date"] {
-        display: inline-flex;
-        height: 44px;
-        min-height: 44px;
-        padding: 0 12px;
-        font-size: 16px;
-    }
-}
 
 .section {
     margin: 26px 0;
@@ -739,19 +567,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .bottle .info span {
     font-size: 12px;
     color: #7b8184;
-}
-.empty-state {
-    text-align: center;
-    padding: 75px 25px;
-    background: var(--paper);
-    border: 1px dashed #c9c0af;
-    color: #7b817f;
-}
-.empty-state strong {
-    display: block;
-    font: 23px var(--serif);
-    color: var(--navy);
-    margin-bottom: 12px;
 }
 .table-wrap {
     overflow-x: auto;
@@ -791,10 +606,6 @@ tr.clickable:hover {
     font-weight: 700;
     font-size: 12px;
 }
-/* Identical position, icon, line height and spacing on bottling and all tasting subpages. */
-.page-back-nav { display:block; margin:0 0 18px; padding:8px 0 0; }
-.page-back { display:inline-flex; align-items:center; gap:6px; margin:0; line-height:1.3; cursor:pointer; }
-.page-back .ui-symbol { width:18px; height:18px; flex:0 0 18px; }
 .toast {
     position: fixed;
     bottom: 24px;
@@ -835,41 +646,6 @@ tr.clickable:hover {
 .toast-close:hover { background: rgb(255 255 255 / .18); }
 .toast-close:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .toast-close svg { display: block; pointer-events: none; }
-.overlay {
-    position: fixed;
-    inset: 0;
-    background: #081c2dcc;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 15px;
-}
-.dialog {
-    width: min(650px,100%);
-    max-height: 94vh;
-    overflow: auto;
-    background: var(--paper);
-    padding: 28px;
-    box-shadow: 0 25px 80px #0005;
-    border-top: 5px solid var(--gold);
-}
-.dialog.wide {
-    width: min(860px,100%);
-}
-.dialog-head {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 22px;
-    padding-bottom: 17px;
-    border-bottom: 1px solid var(--line);
-}
-.dialog-head h2 {
-    font-size: 24px;
-    margin: 0;
-}
 .hint {
     font-size: 13px;
     color: #747e82;
@@ -882,16 +658,7 @@ tr.clickable:hover {
     background: #f0ece4;
     margin-top: 8px;
 }
-.scan-preview {
-    width: 100%;
-    max-height: 300px;
-    background: black;
-}
-.divider {
-    border: 0;
-    border-top: 1px solid var(--line);
-    margin: 24px 0;
-}
+
 .warning {
     padding: 15px;
     background: #faf0da;
@@ -902,41 +669,15 @@ tr.clickable:hover {
 .clickable:focus-visible {
     outline: 3px solid var(--gold);
 }
-.kbd {
-    font-family: monospace;
-    background: #e9e7df;
-    padding: 2px 4px;
-}
+
 .import-area {
     border: 1px solid var(--line);
     padding: 16px;
     margin: 11px 0;
 }
-.import-results {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    max-height: 280px;
-    overflow: auto;
-    margin: 10px 0;
-}
-.import-result {
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    text-align: left;
-    padding: 13px;
-    border: 1px solid var(--line);
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-    gap: 6px;
-    width: 100%;
-}
-.import-result:hover {
-    border-color: var(--gold);
-}
-.import-result small,
+
+
+
 .import-choice small {
     display: block;
     opacity: .75;
@@ -1097,7 +838,7 @@ tr.clickable:hover {
         font-size: 17px;
     }
     main {
-        padding: 0 14px 17px;
+        padding: 0 var(--ds-page-gutter) var(--ds-page-padding-bottom);
     }
     .collection-hero {
         margin: 15px 0 32px;
@@ -1161,11 +902,6 @@ tr.clickable:hover {
         width: 100%;
         min-width: 0;
     }
-    .toolbar select {
-        flex: 1 1 120px;
-        min-width: min(100%, 120px);
-        max-width: 100%;
-    }
     .toolbar input {
         width: 100%;
         flex-basis: 100%;
@@ -1173,6 +909,7 @@ tr.clickable:hover {
     .toolbar select {
         flex: 1;
         min-width: 110px;
+        max-width: 100%;
         font-size: 11px;
     }
     .grid {
@@ -1211,9 +948,6 @@ tr.clickable:hover {
     .form-field.full {
         grid-column: auto;
     }
-    .dialog {
-        padding: 18px;
-    }
     .dialog-head h2 {
         font-size: 21px;
     }
@@ -1228,15 +962,9 @@ tr.clickable:hover {
         padding: 14px 15px calc(18px + env(safe-area-inset-bottom, 0px));
         flex-direction: column;
     }
-.section-head h2 {
-        font-size: 27px;
-    }
-    .section-head {
-        align-items: flex-start;
-    }
     /* The detail title gets the entire row on phones. Actions are below it,
        instead of squeezing long bottling names into a narrow column. */
-    .detail-page-head {
+    .detail-page-head.ds-page-header {
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
@@ -1278,9 +1006,6 @@ tr.clickable:hover {
         margin-block: 0;
         padding-block: 0;
         line-height: normal;
-    }
-    .section-head>.btn {
-        font-size: 10px;
     }
 }
 @media(max-width:450px) {
@@ -1332,19 +1057,8 @@ tr.clickable:hover {
 }
 
 /* The photo viewer uses a light backdrop on light theme; other dialogs stay dimmed. */
-.overlay:has(.photo-lightbox) {
-    background: rgba(246,243,237,.92);
-}
 
 /* Full-size bottle photos are displayed within the existing app modal. */
-.dialog:has(.photo-lightbox) {
-    width: min(1100px, 100%);
-    padding: 16px;
-}
-.dialog:has(.photo-lightbox) .dialog-head {
-    padding-bottom: 12px;
-    margin-bottom: 12px;
-}
 .photo-lightbox { margin: 0; }
 .photo-lightbox-stage {
     background: #f1eee7;
@@ -1387,23 +1101,17 @@ tr.clickable:hover {
 .photo-lightbox-navigation { display: flex; align-items: center; gap: 10px; }
 .photo-lightbox-count { min-width: 58px; text-align: center; font-variant-numeric: tabular-nums; }
 @media (max-width: 740px) {
-    .dialog:has(.photo-lightbox) { padding: 10px; }
     .photo-lightbox-image { max-height: calc(94dvh - 165px); padding: 5px; }
 }
 
-/* Help, Analytics and Storage share a full-width header; Help and Analytics use the shared section workspace. */
-.page-heading-copy { flex: 1 1 auto; min-width: 0; }
-.page-heading-copy > .intro,
-.page-heading-copy > .muted { max-width: 72ch; }
 .help-page { width: 100%; margin: 0; padding-bottom: 36px; }
 .help-heading { margin-bottom: 12px; }
 .help-description { margin: 0 0 18px; line-height: 1.6; font-size: 14px; }
-.help-section { min-width: 0; }
+.help-section { min-width: 0; padding: 0; margin: 0; background: transparent; border: 0; box-shadow: none; }
 .help-section[hidden] { display: none; }
 .help-section h3 { margin: 0 0 14px; }
 
 /* Help reads like an analytics section, not a second set of cards. */
-.help-section { padding: 0; margin: 0; background: transparent; border: 0; box-shadow: none; }
 .help-section .analytics-section-title { margin: 0 0 18px; }
 /* Approved right-hand layout: the heading remains outside; only help content
    sits in the same flat, square-edged panel as an analytics block. */
@@ -1550,8 +1258,6 @@ tr.clickable:hover {
 @media (prefers-reduced-motion: reduce) { .collection-table-columns-chevron { transition: none; } }
 
 /* iOS Safari: only the foreground dialog may pan while a modal is open. */
-.overlay { overscroll-behavior:contain; }
-.dialog { overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y; max-height:min(94dvh,94vh); }
 
 /* Expanded help guides follow the shared squared analytics panels. */
 .help-technical-guides { border-top:1px solid var(--line); margin-top:24px; padding-top:18px; }
@@ -1691,3 +1397,6 @@ tr.clickable:hover {
     .collection-flavor-add select {flex:1 1 100%;}
     .collection-flavor-add button.btn {flex:1 1 100%;}
 }
+
+/* Import workflow: the 16px action spacing is static, not data-driven. */
+.import-preview-actions { margin-top: var(--ds-space-6); }

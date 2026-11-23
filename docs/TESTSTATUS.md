@@ -1,23 +1,16 @@
 # Teststatus - Whisky Collection Manager v1.12.0
 
-**Stand:** 2026-11-23. Automatischer Release-Snapshot aus Merge a2d0e9267e9d (v1.11.0).
+**Stand:** 23. November 2026. Dies ist **keine Produktionsfreigabe**; maßgeblich für einen PR ist die GitHub-CI des konkreten Commits.
 
-## Pruefungen
+| Prüfung | Tatsächlich ausgeführtes Ergebnis |
+|---|---|
+| `npm run check` | **Bestanden** – Syntax, Imports, Übersetzungen, Dokumentationslinks und Deploymentverträge |
+| Unit-/Integrationstests (`npm test`) | **706/706 bestanden** (vollständiger Lauf im aktuellen Prüfstand) |
+| `npm run test:visual` | **136/136 Geometrie-/Interaktionsprüfungen bestanden** mit lokalem Chromium 144; Pixelwerte im Diagnosemodus, Browserbindung für strikten Modus vorhanden |
+| `npm run test:browser` | **Lokal offen**: `playwright-core` ist in dieser Umgebung nicht verfügbar; vollständiger Browserlauf in GitHub Actions erforderlich |
+| GitHub Actions | Für diesen Änderungenstand noch nicht ausgeführt |
+| Reale Mobilgeräte, Safari, Firefox, Screenreader, WebGL-Zielhardware und Dauerbetrieb | Nicht abschließend abgenommen |
 
-- `npm test`: **Noch nicht ausgefuehrt** auf dem Release-Snapshot; die Node-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.
-- `npm run test:browser`: **Nicht lokal ausgeführt** auf dem Release-Snapshot; die Browser-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.
-- Vor Erstellung des Tags: GitHub-CI fuer den Merge-Quellstand mit `npm run check`, `npm test` und `npm run test:browser`.
-- Release-Metadaten und SHA-256-Quellmanifest werden im Snapshot separat geprueft.
-- Docker/ARM64/AMD64 sowie ZIP-/Offline-Archive werden vom Release-Workflow vor der Veroeffentlichung geprueft.
-- Externe Hardware-/Pi-Pruefungen sind nicht Bestandteil dieses CI-Laufs.
+**Einordnung:** Layout-, Überlauf- und Modalinteraktionstests blockieren PRs. Pixelunterschiede werden bis zur Freigabe neuer CI-kompatibler Referenzen nur diagnostiziert. Die vollständig installierte Playwright-Browsersuite muss in der normalen GitHub-CI laufen. Ein grüner Unit-/Screenshotlauf ersetzt sie nicht.
 
-## Aenderungen
-
-- fix: improve modal behavior to preserve scrollbar track and prevent content shift during modal opening
-- feat: enhance flight planning help functionality and preserve modal state
-- docs: update README to streamline features and improve clarity on installation and security
-- feat: enhance flight planning help and cask classification
-- docs: update README with enhanced features and functionality descriptions; remove outdated code review documents
-- feat: add file preview functionality for various document types with download fallback
-
-Fruehere CI-Resultate: [TESTHISTORIE.md](TESTHISTORIE.md).
+Testumfang und Befehle: [Teststrategie](TESTSTRATEGIE.md). Funktions- und Releaseänderungen: [Changelog](../CHANGELOG.md). Bei der nächsten relevanten Änderung diesen Status auf die tatsächlich neu ausgeführten Prüfungen aktualisieren, nicht als Testchronik fortschreiben.

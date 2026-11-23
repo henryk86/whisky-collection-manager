@@ -2,119 +2,57 @@
 
 ## Schnellstart
 
+Node.js ≥ 20. `npm start` startet den Setup-/Starthelfer; `npm run dev` startet den Node-Server im Watch-Modus. Für Browser-Tests zusätzlich Chromium installieren:
+
 ```bash
-npm start               # npm ci bei Bedarf, cutout:prepare, lokale TLS-Ersteinrichtung, Server
+npm ci
+npm run check
+npm test
+npx playwright-core install --with-deps chromium
+npm run test:browser
+npm run test:visual
 ```
 
-Der Starter liegt in `scripts/start.js`. Er vergleicht die installierten npm-Pakete mit `package-lock.json` und installiert nur fehlende oder abweichende Versionen; `scripts/prepare-cutout-assets.js` prüft die ONNX-/WASM-Dateien vor jedem Serverstart. Eine fehlende `.env` wird beim lokalen Erststart aus `.env.example` übernommen; bei fehlenden Standard-TLS-Dateien wird `scripts/setup-https.js` verwendet (benötigt `mkcert` oder OpenSSL). Individuelle Zertifikatspfade werden nie überschrieben. Ein Fehler beim Installieren oder Vorbereiten verhindert den Serverstart. `npm start` ist kein CI-Lauf und führt weder `npm run verify` noch Browser-Tests aus; diese gehören vor einen Merge.
+`npm run hooks:install` installiert optional die lokale Commit-Nachrichtenprüfung. npm-Abhängigkeiten und Modelldateien können beim erstmaligen Setup Internetzugang benötigen. Die Anwendung nutzt native Browser-ES-Module ohne Frontend-Build.
 
-Die Anwendung startet ohne Frontend-Build. `npm run dev` verwendet den Node-Watch-Modus für den Server und setzt eine vorherige Vorbereitung durch `npm start` voraus; Frontend-Änderungen durch Neuladen im Browser anzeigen. Die Standardkonfiguration aktiviert ausschließlich HTTPS auf 3543. Tests starten ihre eigenen kurzlebigen Server, Ports und Datenverzeichnisse und ändern nicht die produktive Sammlung.
+## Wo ist die Änderung richtig?
 
-## Konventionen
+- UI-Views und Ereignisse: `public/js/views/`, `public/js/events.js`; Zuständigkeiten des Designsystems in [Designsystem-Entwicklung](DESIGNSYSTEM_ENTWICKLUNG.md).
+- API und serverseitige Anwendungsfälle: `server/routes.js`, `server/services/`, `server/domain/`; JSON-Zugriff: `server/storage/`.
+- Domänenreine Logik: `shared/` und `public/js/domain/`; kein DOM in `shared/`.
+- Sprachtexte: `public/locales/de.json` und `en.json`, im Renderer `t(key)`; Benutzereingaben für HTML escapen, keine fest einkodierten deutschen GUI-Texte.
+- CSS: gemeinsame Komponenten/Tokens unter `public/styles/`, Fachstile nur für spezielle Ansichten. Den äußeren Seitenrahmen nicht pro Fachansicht redefinieren.
+- Lager: `server/services/warehouse.js`, `public/js/views/warehouse.js`, `public/js/views/warehouse-presentation.js`, `public/styles/warehouse.css`.
 
-1. Eine Datei hat eine erkennbare Verantwortung. Funktionen und lokale Variablen beschreiben fachliche Begriffe (`bottling`, `bottle`, `inventoryNumber`) statt technische Abkürzungen. `bottling` und `bottle` sind nicht austauschbar.
-2. Fachregeln gehören in `server/domain/`, Anwendungsfälle in `server/services/`, HTTP-Zuordnung in `routes.js`. Keine Dateischreibzugriffe in Routen oder Browsercode.
-3. Persistente Änderungen erfolgen über `change()`. Vor jedem Commit wird das Gesamtdokument validiert. Niemals nur im Formular validieren.
-4. Benutzertexte vor HTML-Ausgabe mit `escapeHtml()` oder der HTML-Template-Uebersetzung `tHtml()` behandeln. **Bei Umstellung von `t()` auf `tHtml()` bereits vorhandenes `escapeHtml()`/`safe()`/`h()` am uebergebenen Parameter gleichzeitig entfernen**, damit `&` nicht doppelt zu `&amp;amp;` maskiert wird. `tHtml()` ausschliesslich in HTML-Templates verwenden; fuer reine Textkontexte bleibt `t()` richtig. Sichtbare Texte im deutschen Sprachkatalog `public/locales/de.json` pflegen; Codebezeichner und technische Kommentare sind englisch. Dynamische Eigennamen (`data-i18n-ignore`) und Benutzerdaten nicht automatisch übersetzen.
-5. Abhängigkeiten über klare Parameter an Controller übergeben. Keine gegenseitigen Modulimporte als versteckte Initialisierungsreihenfolge. Keine globalen neuen Browservariablen für Fachlogik.
-6. Fachliche Fehler bekommen einen passenden HTTP-Status über `fail()`. Unerwartete Fehler werden zentral protokolliert, nicht mit Stacktrace an den Browser geliefert. UI zeigt fehlgeschlagene Aktionen sichtbar an.
-7. Kein unnötiger Framework-/Bibliothekswechsel im selben Commit wie ein Bugfix. Neue Abhängigkeiten begründen, Version und Lockfile gemeinsam aktualisieren.
+Fehlerfälle zuerst anhand der tatsächlich gerenderten Oberfläche oder API nachstellen. Automatische Tests greifen nicht auf fremde Datenverzeichnisse zu; Integrationstests starten eigene Serverprozesse mit isolierten Dateien.
 
-Vier Leerzeichen in JavaScript, UTF-8, LF-Zeilenenden, geschweifte Klammern auch bei einzeiligen Bedingungen. `.editorconfig` legt die Basis fest. Kommentare erklären insbesondere Randfälle und Entscheidungen, nicht jede offensichtliche Zuweisung.
+## Code-Stil und dokumentierte Schnittstellen
 
-## GUI-Sprache und gemeinsames Seitenlayout
+Für JavaScript gilt verbindlich der [Google JavaScript Style Guide](https://google.github.io/styleguide/jsguide.html). Das Repository behält reine JavaScript-ES-Module bei (keine Umstellung auf Java oder TypeScript). Vor jeder Abgabe:
 
-`public/locales/de.json` enthält ausschließlich **stabile, benannte Schlüssel** (z. B. `common.actions.save`, `warehouse.selection.count`) mit deutschen Texten. `public/js/i18n/index.js` importiert diesen Basiskatalog direkt, lädt zusätzliche Sprachen aus `public/locales/index.json` und bietet `t(key, params)` an. Die GUI erzeugt sichtbare Beschriftungen direkt über diese Schlüssel; es gibt **keine DOM-Textsuche, Textmusterübersetzung oder MutationObserver-Nachübersetzung** mehr.
-
-Beispiel:
-
-```js
-t('warehouse.selection.count', {selected: 2, total: 5}); // 2 von 5 ausgewählt
+```bash
+npm run format:js
+npm run format:check
+npm run check:jsdoc
+npm run check
 ```
 
-Englisch ist mit `public/locales/en.json` vollständig enthalten und in `public/locales/index.json` registriert. Weitere Sprachen mit **denselben Schlüsseln** als zusätzliche JSON-Datei ablegen und registrieren. Fehlende übersetzte Schlüssel fallen auf Deutsch zurück; vom Benutzer angegebene Bezeichnungen wie Raum-, Whisky- und Destillerienamen bleiben davon unberührt. `{count}` bzw. `{name}` sind benannte Parameter; ein begrenzter ICU-Pluralformat-Teil (`{count, plural, one {# Flasche} other {# Flaschen}}`) wird mittels `Intl.PluralRules` unterstützt. Beim Sprachwechsel über Einstellungen lädt die App neu, sodass alle dynamischen Ansichten konsistent neu aufgebaut werden.
+Neue und bearbeitete öffentliche Funktionen erhalten **saubere, typisierte JSDoc** für Bedeutung, Parameter, Rückgabewert und relevante Nebenwirkungen. Bei HTML-Renderern die Vertrauensgrenze zwischen escaped Benutzertext und vertrauenswürdigem Anwendungs-HTML benennen. Die CI verhindert undokumentierte **neue Exporte**; die bestehende, schrittweise abzubauende Altlast ist in `scripts/jsdoc-legacy-baseline.json` erfasst. Keine JSDoc-Kommentare, die lediglich den Funktionsnamen wiederholen.
 
-**Schlüsselkonvention:** Jeder Key benennt die fachliche Funktion auf Englisch, nicht die deutsche Beschriftung. Beispiele: `analytics.quality.title`, `backups.restore.confirmReplaceCollection`, `warehouse.furniture.types.cabinet`. Neue Kennungen müssen stabil und sprachneutral sein. Bei gespeicherten Möbeltypen, Frontarten und Kamerarichtungen erfolgt der Zugriff über explizite Lookup-Tabellen (`FURNITURE_TYPE_KEYS`, `FRONT_KEYS`, `CAMERA_KEYS`, `ROOM_SECTION_KEYS`); ein Übersetzungsschlüssel darf nicht durch Stringverkettung zusammengebaut werden. Methoden der Browser-History, Dateipfade und technische Konstanten sind **keine** UI-Übersetzungen. `npm run check` erkennt fehlende und automatisch erzeugt wirkende Schlüssel sowie verbotene Stringverkettungen.
+Der bereits vorhandene TypeScript-Formatter wird nur zur **Formatierung** eingesetzt und verändert keine JavaScript-Semantik. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
 
-**Verbindliche Konvention:** Keine neuen deutschen GUI-Literale in Views, Formularen oder Benachrichtigungen; neue Texte in `de.json` mit fachlichem Schlüssel ergänzen und `t()` nutzen. Benutzerinhalte weiterhin vor HTML-Injektion mit `escapeHtml()` absichern. Übersetzungen aus Dateikatalogen sind statische UI-Ressourcen und sollten keine HTML-Tags enthalten. `npm run check` prüft referenzierte Schlüssel, Schlüsselformat und die Platzhalter in zusätzlichen Sprachdateien. Für serverseitig generierte API-Fehler ist eine spätere Erweiterung mit stabilen API-Fehlercodes sinnvoll; bisherige Fehlertexte aus dem Backend bleiben unverändert und werden nicht über deutsche Satzmuster übersetzt.
+## Änderungen und Dokumentation
 
-Bei Browser-Layouttests ist die effektive Breite des Body-Layoutbereichs (`document.body.getBoundingClientRect().width`) ausschlaggebend. **Nicht** `body.clientWidth`, `innerWidth` oder `document.documentElement.clientWidth` verwenden: bei dauerhaft reservierter Scrollbar-Spur koennen diese die volle Fensterbreite melden, obwohl der Body-Layoutbereich schmaler ist. Horizontalen Ueberlauf als `document.body.scrollWidth - document.body.getBoundingClientRect().width` messen (bis 1 px Rundung tolerieren). Der Regressionstest haengt einen 8 px breiteren **in-flow**-Block an den Body; eine absolut positionierte Testflaeche kann in einzelnen Browsern die gemessene Body-Scrollbreite nicht vergroessern. Fixierte Seitenleisten gegen ihren Backdrop positionieren, nicht pauschal gegen `innerWidth`.
+**Verbindlich bei jedem Commit/PR:** Dokumentationswirkung prüfen. Betroffene aktuelle `.md`-Dateien zusammen mit dem Code aktualisieren; falls keine Anpassung nötig ist, `Docs-Impact: none - <konkreter Grund>` als Commit-Footer oder im PR-Text festhalten. GitHub Actions lehnt Codeänderungen ohne eines von beiden ab. Nur `CHANGELOG.md` enthält Änderungshistorie. [Projektregeln](../AGENTS.md).
 
-GUI-Beispielaufnahmen fuer die README liegen unter `docs/images/`. Sie duerfen
-nur mit Demo- oder Testdaten erstellt werden. Neue Screenshots sollten die
-aktuelle Oberflaeche zeigen; die Test-Screenshots unter `test-artifacts/`
-sind nur temporaere Pruefartefakte und werden nicht als dauerhafte
-README-Links verwendet. Beim 3D-Raumplan den initialen Kamera-Ausschnitt
-auch auf einem echten WebGL-Browser visuell pruefen.
-
-Die Breite aller Hauptseiten wird allein vom gemeinsamen `main` in `public/styles/core.css` bestimmt. `.analytics-page` wird sowohl bei **Analyse** als auch bei **Lager** verwendet und darf keine zusätzlichen horizontalen Innenabstände oder eigene Maximalbreite bekommen. Bei Änderungen den Browser-Test für Desktop und Mobil ausführen.
+Der statische `npm run check` prüft Dokumentationslinks und ausgewählte Inkonsistenzen; fachliche Richtigkeit muss beim Review gegen den Code geprüft werden. `docs/TESTSTATUS.md` zeigt **keine** automatisch stets aktuellen CI-Resultate; nur tatsächlich bestätigte Läufe eintragen.
 
 ## Tests
 
-`npm test` entdeckt alle `*.test.js` unter `tests/unit/` und `tests/integration/` mit Node-eigenem Test-Runner. Keine Bash-Globs, damit derselbe Aufruf auch unter Windows funktioniert. OpenSSL ist für den TLS-Integrationstest erforderlich; ohne OpenSSL wird dieser Test explizit ausgelassen.
+- `npm run check`: Syntax, Imports, Sprachdateien, Links, Deploymentregeln.
+- `npm test`: Unit- und Integrationstests (OpenSSL für einzelne TLS-Tests).
+- `npm run test:browser`: Playwright/Chromium einschließlich echter History/Reload (nicht im DOM-only-Modus).
+- `npm run test:visual`: verbindliche Geometrie-/Interaktionsprüfungen mit diagnostischen Pixel-Diffs (nicht pixel-blockierend). `npm run test:visual:strict` verlangt zuvor passende Browser-Baselines. Artefakte enthalten bei Abweichungen Screenshots und Diffs.
+- `npm run verify`: `npm run check && npm test`.
 
-Integrationstests starten über `tests/helpers/server.js` jeweils einen eigenen kurzlebigen Node-Prozess mit eigenem Datenverzeichnis. Der Server bindet selbst einen freien Port (`listen(0)`), meldet den tatsächlich gebundenen Port per IPC und wird erst danach von seinem Test verwendet. Einen zuvor getesteten Port **nicht** freigeben und an einen neuen Prozess weiterreichen: Bei parallelen CI-Workern führt das zu Portkollisionen und unbeabsichtigten Zugriffen auf fremde Testdaten. `tests/integration/server-isolation.test.js` prüft vier gleichzeitig gestartete Server. Der Produktions-Serverstart bleibt unverändert.
-
-`npm run check` prüft JavaScript-Syntax, statische relative ES-Modulimporte, Übersetzungsschlüssel und lokale Markdown-Links. Es meldet fehlende Zieldateien, Importzyklen und nicht auflösbare Dokumentationslinks. Es ist **kein** vollständiger Linter, TypeScript-Compiler oder Security-Audit. JSDoc in `shared/types.js` dokumentiert das Datenmodell, erzwingt aber keine statische Typprüfung.
-
-Browser-Tests:
-
-```bash
-npx playwright-core install chromium
-npm run test:browser
-```
-
-Ein vorhandenes Chromium kann durch `PLAYWRIGHT_EXECUTABLE_PATH` gewählt werden. Unter Linux sind ggf. Systembibliotheken für Chromium erforderlich (`npx playwright-core install --with-deps chromium`). Screenshots landen in `test-artifacts/`, nicht im Repository.
-
-Die Browser-Tests legen Abfüllungen an, bearbeiten Flaschen, laden Fotos hoch, schalten Themes um und prüfen Scan-Navigation sowie den Formular-Rückweg. Der Decoder wird kontrolliert ersetzt: getestet wird das Verhalten **nach** einer Erkennung, nicht das optische Lesen eines echten Etiketts.
-
-Für verwaltete Umgebungen, die jede Top-Level-URL im Browser blockieren, gibt es den ausdrücklichen Schalter `WHISKY_BROWSER_DOM_ONLY=true`. Nur dort werden die HTML-Seite und echte Module in einen leeren Browser-DOM geladen und History-Aufrufe durch eine Testaufzeichnung ersetzt. Der echte Back-/Forward-/Reload-Test wird in diesem Modus als ausgelassen gemeldet. Nicht mit einem normalen End-to-End-Test verwechseln; lokal und in CI ist dieser Modus standardmäßig **aus**.
-
-## Neue Funktion testen
-
-Ein Bugfix sollte zuerst einen Test bekommen, der mit dem alten Verhalten scheitert. Reine Stringsuche im Quellcode beweist keine Funktion. Für Zuordnung/Formatierung reine Funktionen testen; für persistente Regeln einen isolierten API-Server; für Formular-/DOM-Verhalten einen Browser-Test.
-
-Für neue Datenfelder Normalisierung, Laufzeitvalidierung, JSDoc, Formular, Import/Export und gegebenenfalls Migration gemeinsam betrachten. Besonders: UUIDs und Inventarnummern nicht verlieren; alte Daten sichern; Flaschen nicht aus ihrer Abfüllung herauslösen.
-
-## GitHub
-
-`.github/workflows/check.yml` ist für Syntax-/Modulprüfung, Unit-/Integrationstests und Browser-Tests eingerichtet. Der Workflow wurde in dieser Umgebung nicht auf GitHub ausgeführt. Keine `.env`, privaten Zertifikate, Sammlungsdaten oder Fotos committen. `package-lock.json` dagegen mit einchecken.
-
-
-## Analyse weiterentwickeln
-
-Neue Auswertungen gehören als reine Funktionen in `public/js/domain/analytics.js`, die zugehörige Darstellung in `public/js/views/analytics.js`, Styles in `public/styles/analytics.css`. Daten werden nicht verändert. Separate Tests (`tests/unit/analytics.test.js`) sichern Filterkombinationen, Währungstrennung und fachliche Kennzahlen. Details: [ANALYSE.md](ANALYSE.md).
-
-Die Zeitreihen werden in der Anzeige nach Monat/Jahr aggregiert, ihre beiden **Datumsgrenzen** jedoch nach tatsächlichem Tag angewandt. `analytics-period.js` prüft das Eingabeformat, `analytics.js` stellt tägliche Reihen bereit und `analytics.css` begrenzt native Datumsfelder insbesondere für schmale Viewports. Nach Änderungen an Zeitfiltern nicht nur Unit-Tests, sondern die Browser-Regression zu Von/Bis und die responsive Eingabeprüfung ausführen. Ein Test mit echter iOS-/Android-Hardware ist nicht durch Chromium-Emulation ersetzt.
-
-
-## Lagerverwaltung weiterentwickeln
-
-Für Lagerfunktionen `server/storage/warehouse-store.js`, `server/domain/warehouse-fields.js`, `server/services/warehouse.js`, `public/js/views/warehouse.js`, `public/js/views/warehouse-presentation.js` und `public/styles/warehouse.css` beachten. Pure Geometriemodule in `shared/warehouse-compartments.js` und `shared/warehouse-placement.js` werden von Browser **und** Server importiert; DOM-/Netzwerkabhängigkeiten dort vermeiden. Separates Datenformat unter `data/warehouse.json`, keine neuen Lagerfelder in `collection.json` einführen. Tests: `tests/integration/warehouse.test.js`, `tests/unit/warehouse-ui.test.js`; API-/ZIP- und UI-Regressionsprüfungen durchführen. Details: [LAGER.md](LAGER.md).
-
-### Sprach-Regressionstests
-
-Neue GUI-Beschriftungen müssen in beiden Katalogen (`public/locales/de.json`, `public/locales/en.json`) stehen und beim Rendering über `t(key, params)` aufgelöst werden. `tests/unit/i18n-render-english.test.js` prüft echtes englisches HTML aus Sammlung, Analyse, Lager und Möbelformular. Der Chromium-Test `complete English locale renders collection controls and analytics filters` prüft die reale Sprachdatei in der Oberfläche. Gespeicherte Raum-, Möbel- und Whiskynamen bleiben unverändert. Backend-Fehlermeldungen benötigen perspektivisch übersetzbare Fehlercodes.
-
-## Dokumentationspflege
-
-- `README.md` ist ein kurzer Einstieg, **kein** Sammelplatz für changelogartige Funktionsnachträge. Technische Modulgrenzen stehen in [ARCHITEKTUR.md](ARCHITEKTUR.md), Verhalten in [ANFORDERUNGEN.md](ANFORDERUNGEN.md) und den Fachdokumenten.
-- `docs/TESTSTATUS.md` beschreibt nur den aktuell geprüften Release; ältere Protokolle bleiben in `docs/TESTHISTORIE.md`.
-- Der Codecheck ruft `scripts/check-docs.js` auf. Er überprüft relative Markdown-Ziele und erkennt historische Versionsüberschriften in aktuellen Fachdokumenten, aber keine externen URLs oder fachlichen Widersprüche. Bei Release-Prozessänderungen `AGENTS.md`, `README.md`, `docs/RELEASE_WORKFLOW.md`, `docs/TESTSTRATEGIE.md` und `docs/TECHNISCHE_SCHULDEN.md` mit dem tatsächlichen Workflow abgleichen.
-- Bewusst verbleibende technische Schulden und nicht ohne Funktionstest mögliche Umbauten stehen in [TECHNISCHE_SCHULDEN.md](TECHNISCHE_SCHULDEN.md).
-
-## Security-Regressionen
-
-`tests/integration/security-review.test.js` prueft JSON-Medientypen,
-CSRF-/Host-Abwehr, HTML-Sicherheitsheader und ungueltige Pfade.
-`tests/unit/security-review.test.js` prueft CSV-Formeln, Extension-Allowlist,
-HTML-Parameterescaping und Streamfehler. Bei neuen schreibenden Endpunkten
-`readJson()` und die gemeinsame `request-security.js`-Sperre verwenden.
-Bei neuen externen Ressourcen die CSP in `server/http/static-files.js`
-und deren Anbieterbedingungen pruefen. Die App bietet eine optionale Loginpflicht; Details stehen in [ANMELDUNG.md](ANMELDUNG.md).
-Der Scrollbar-Browser-Test muss klassische Scrollbars sehen oder sich
-explizit ueberspringen; `--hide-scrollbars` darf nicht verwendet werden.
-
-## KI-Freistellung von Flaschenfotos
-
-Siehe [PHOTO_FREISTELLUNG.md](PHOTO_FREISTELLUNG.md). `public/js/features/cutout/` berechnet die Masken ausschließlich im Browser. `server/services/bottles.js` speichert lediglich geprüfte PNG-Ableitungen; eine externe KI-API gibt es nicht. Bei Änderungen an Modell-Vorverarbeitung und Maskierung Referenzbilder und die Modelldateien in einem echten Browser prüfen. Offline-Testläufe ohne Modell sind kein Nachweis korrekter KI-Ausgabe.
+Screenshotdateien für die README nur aus geeigneten Demo-Daten erstellen. Bei visuellen Änderungen 390/768/1024/1440 px, beide Themes, lange Texte und leere Zustände prüfen. Chromium-Emulation ist kein Ersatz für Safari/iOS-/Android-Hardware.

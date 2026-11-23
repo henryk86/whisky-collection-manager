@@ -1,3 +1,63 @@
+/* Photos belong to an individual physical bottle, not to the bottling. */
+.bottle-photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 13px 0 8px;
+}
+.photo-tile {
+    width: 102px;
+    height: 137px;
+    position: relative;
+    border: 1px solid var(--line);
+    background: #f1ede6;
+}
+.photo-tile .photo-open {
+    display: block;
+    width: 100%;
+    height: 107px;
+    padding: 8px; /* Keep existing bottle photos clear of the thumbnail border. */
+    background: transparent;
+    border: 0;
+    cursor: zoom-in;
+}
+.photo-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.photo-remove {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    width: 26px;
+    height: 26px;
+    background: #102b40;
+    color: white;
+    border: 0;
+    border-radius: 2px;
+    cursor: pointer;
+    display:grid; place-items:center;
+}
+.photo-remove .ui-symbol {width:16px;height:16px;}
+.photo-cutout-badge .ui-symbol {width:12px;height:12px;}
+.photo-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 102px;
+    height: 110px;
+    padding: 8px;
+    text-align: center;
+    border: 1px dashed #bda981;
+    background: #f5f1e8;
+    color: #806137;
+    font-size: 12px;
+    cursor: pointer;
+}
+.photo-add:hover {
+    background: #ebe2d0;
+}
 /* Scan result: highlight the physical bottle, without opening an editor. */
 .bottle-entry.scanned-bottle {
     border: 2px solid var(--gold);
@@ -5,10 +65,7 @@
     box-shadow: 0 0 0 4px rgba(189,152,98,.20);
     scroll-margin-block: 20px;
 }
-.bottle-meta {
-    display: block;
-    margin-top: 5px;
-}
+
 .bottling-context {
     border: 1px solid var(--line);
     border-left: 4px solid var(--gold);
@@ -67,10 +124,8 @@
 }
 
 /* Receipts and supporting documents are attached to individual bottles, not bottlings. */
-.bottle-documents { margin: 18px 0 5px; padding-top: 12px; border-top: 1px solid var(--line); }
+.bottle-documents { margin: 18px 0 5px; padding-top: 12px; border-top: 1px solid var(--ds-color-border); }
 .bottle-documents h4 { margin: 0 0 10px; color: var(--ink); font: 600 13px var(--sans); }
-.document-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
-.document-list li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
 .document-preview-link { overflow-wrap: anywhere; max-width: 100%; text-align: left; font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .document-preview-link:hover { text-decoration-thickness: 2px; }
 .document-preview-link:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
@@ -92,8 +147,6 @@
 :root[data-theme="dark"] .badge.sample.open { background: #6a4a2a; color: #ffe0ab; }
 
 /* Drag-and-drop gallery ordering (desktop mouse, touch and accessible buttons). */
-.photo-tile { height: 137px; }
-.photo-tile .photo-open { height: 107px; }
 .photo-controls { position: absolute; left: 2px; right: 2px; bottom: 2px; height: 25px; display: flex; justify-content: space-between; align-items: center; gap: 1px; }
 .photo-move, .photo-drag-handle { background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 2px; min-height: 24px; min-width: 25px; padding: 0; display: grid; place-items: center; cursor: pointer; font-size: 14px; }
 .photo-drag-handle { flex: 1; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
@@ -132,10 +185,10 @@
 .bottling-choice #bottling-choice-select { width: 100%; max-width: 100%; }
 .bottling-choice #bottling-choice-count { margin: 0; }
 .bottling-choice-divider { position: relative; display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; }
-.bottling-choice-divider::before, .bottling-choice-divider::after { content: ''; flex: 1; border-top: 1px solid var(--line); }
+.bottling-choice-divider::before, .bottling-choice-divider::after { content: ''; flex: 1; border-top: 1px solid var(--ds-color-border); }
 @media (max-width: 520px) { .bottling-choice .actions .btn { width: 100%; } }
 
-/* One editor entry point: freistellen and corrections are available in the same dialog. */
+/* Photo editor content uses the ds-modal--editor size variant. */
 .photo-tile .photo-edit-trigger {
     position: absolute; left: 3px; z-index: 2; display: grid; place-items: center;
     box-sizing: border-box; width: 28px; height: 28px; min-width: 28px; min-height: 28px;
@@ -151,8 +204,6 @@
 .cutout-checker { background-color: #f4f4f4; background-image: linear-gradient(45deg,#d7d7d7 25%, transparent 25%),linear-gradient(-45deg,#d7d7d7 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d7d7d7 75%),linear-gradient(-45deg,transparent 75%,#d7d7d7 75%); background-size: 22px 22px; background-position: 0 0,0 11px,11px -11px,-11px 0; }
 /* Non-destructive bottle photo adjustments. The edit button leaves photo sorting untouched. */
 .photo-edit-trigger:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
-.dialog:has(.photo-editor) { width: min(1120px, 100%); padding: clamp(12px, 2vw, 28px); }
-.dialog:has(.photo-editor) .dialog-head { margin-bottom: 12px; padding-bottom: 12px; }
 .photo-editor { display: grid; gap: 10px; min-width: 0; }
 .photo-editor-layout { --photo-editor-workspace-height: min(63dvh, calc(100dvh - 224px), 610px); display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(265px, .9fr); align-items: stretch; gap: 18px; min-width: 0; }
 .photo-editor-stage { min-width: 0; }
@@ -160,7 +211,7 @@
 .photo-editor-image canvas { display: block; width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: 50% 50%; will-change: transform; }
 .photo-editor-image.is-picking canvas { cursor: crosshair; touch-action: none; }
 .photo-editor-image.is-zoomed:not(.is-picking) canvas { cursor: grab; touch-action: none; }
-.photo-editor-image.is-zoomed.is-panning:not(.is-picking) canvas { cursor: grabbing; }
+
 /* Preview-only controls stay inside the image; no vertical space is taken from sliders. */
 .photo-editor-overlay { position: absolute; inset: auto 10px 10px; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; pointer-events: none; }
 .photo-editor-overlay > * { pointer-events: auto; }
@@ -213,7 +264,7 @@
 .photo-editor-slider output { font-variant-numeric: tabular-nums; color: var(--muted); }
 .photo-editor-slider input[type="range"] { width: 100%; height: 24px; min-height: 24px; padding: 0; margin: 0; border: none; accent-color: var(--gold); cursor: pointer; }
 .photo-editor-slider input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.photo-editor-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; padding: 10px 0 0; border-top: 1px solid var(--line); background: var(--paper); }
+.photo-editor-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; padding: 10px 0 0; border-top: 1px solid var(--ds-color-border); background: var(--paper); }
 .photo-editor-actions-spacer { flex: 1 1 auto; }
 @media (max-width: 710px) {
     .photo-editor-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -256,18 +307,18 @@
 .tasting-notes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; align-items:start; }
 .tasting-notes label { display:grid; grid-template-rows:auto auto; align-content:start; align-self:start; gap:7px; min-width:0; font-size:13px; }
 .tasting-notes textarea { width:100%; min-height:98px; resize:vertical; }
-.tasting-rating { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-.tasting-glasses { display:flex; gap:5px; align-items:center; }
-.tasting-glass { width:37px; height:46px; padding:2px; background:transparent; border:1px solid transparent; border-radius:0; color:var(--gold); cursor:pointer; }
+.tasting-rating { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.tasting-glasses { display:flex; gap:7px; align-items:center; }
+.tasting-glass { width:40px; height:54px; padding:3px 5px 6px; background:transparent; border:1px solid transparent; border-radius:0; color:var(--ink); cursor:pointer; }
 .tasting-glass svg { display:block; width:100%; height:100%; }
 .tasting-glass:hover, .tasting-glass:focus-visible { border-color:var(--gold); outline-offset:2px; }
 .tasting-glass:focus-visible { outline:2px solid var(--gold); }
-.tasting-glass-outline { fill:none; stroke:var(--ink); stroke-width:1.25; }
-.tasting-glass-fill { fill:var(--gold); stroke:var(--gold); stroke-width:.3; clip-path:inset(0 calc(100% - var(--glass-fill)) 0 0); }
-.tasting-glass-rim { fill:none; stroke:var(--ink); stroke-width:1.5; }
-.tasting-rating-value { font-size:13px; font-variant-numeric:tabular-nums; color:var(--muted); }
-.tasting-history-list { margin:8px 0 0; padding-left:22px; line-height:1.55; }
-.tasting-history-list li { margin:7px 0; }
+
+
+
+
+
+
 @media(max-width:850px) { .tasting-notes { grid-template-columns:1fr; } }
 
 /* v0.25.1: equal-height summary panels. The photograph remains contained, never cropped. */
@@ -298,11 +349,9 @@
 .tasting-action-btn { width:38px; height:38px; min-width:38px; display:grid; place-items:center; padding:7px; }
 .tasting-action-btn svg { width:19px; height:19px; display:block; }
 /* Glencairn shape and golden liquid fill intentionally remain unchanged. */
-.tasting-glass { width:40px; height:54px; padding:3px 5px 6px; color:var(--ink); }
 .glencairn-symbol { width:100%; height:100%; display:block; }
 .glencairn-ink { fill:var(--ink); }
 .glencairn-gold { fill:var(--gold); }
-.tasting-rating { gap:12px; }
 .tasting-score-field { display:grid; gap:5px; min-width:0; }
 .tasting-score-control { display:inline-flex; align-items:center; gap:7px; width:max-content; min-height:46px; padding:0 12px 0 6px; border:1px solid var(--line); background:var(--paper); cursor:text; }
 .tasting-score-control:focus-within { outline:2px solid var(--gold); outline-offset:2px; }
@@ -371,11 +420,8 @@
 }
 .flavor-detail-panel.tasting-panel .tasting-color-panel { min-width:0; }
 .flavor-detail-panel.tasting-panel .tasting-color-panel .whisky-color-selector { min-width:0; }
-.tasting-glasses { gap:7px; }
 .glencairn-rating-outline { fill:var(--ink); opacity:.88; }
 .glencairn-rating-fill { fill:var(--gold); }
-.tasting-panel-heading { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin:0 0 20px; }
-.tasting-panel-heading .btn { flex-shrink:0; margin-left:auto; white-space:nowrap; }
 .flavor-detail-panel.tasting-panel .tasting-top-row > section .tasting-panel-heading h3,
 .flavor-detail-panel.tasting-panel > section .tasting-panel-heading h3 { margin:0; }
 @media(max-width:1150px) { .tasting-top-row { grid-template-columns:1fr; } }
@@ -392,7 +438,7 @@
 .tasting-summary-content { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:nowrap; column-gap:clamp(12px,1.5vw,24px); row-gap:18px; }
 .tasting-summary-main { flex:1 1 310px; min-width:0; max-width:320px; }
 .tasting-summary-radar { flex:1 1 310px; min-width:0; max-width:335px; }
-.tasting-summary-notes { flex:2 1 620px; min-width:0; max-width:700px; }
+.tasting-summary-notes { flex:2 1 620px; min-width:0; max-width:700px; display:grid; gap:14px; }
 .tasting-summary-lead { display:block; font-size:clamp(1rem,1.6vw,1.25rem); line-height:1.35; }
 .tasting-summary-meta { display:block; font-size:clamp(.9rem,1.2vw,1.05rem); line-height:1.35; }
 .tasting-summary-score { display:flex; align-items:center; flex-wrap:wrap; gap:6px 13px; margin:7px 0; min-width:0; }
@@ -402,8 +448,6 @@
 .tasting-summary-radar .flavor-editor.is-preview { display:block; }
 .tasting-summary-radar .flavor-chart { display:block; width:100%; height:auto; max-height:230px; }
 .tasting-summary-radar .flavor-axis-text { font-size:14px; }
-.tasting-summary-notes { display:grid; gap:14px; }
-.tasting-summary-field-label { display:block; color:var(--muted); font-size:12px; font-weight:400; }
 .tasting-summary-note { min-width:0; }
 .tasting-summary-note-value { font-size:14px; font-weight:650; margin-top:4px; line-height:1.45; overflow:hidden; display:-webkit-box;
     -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow-wrap:anywhere; white-space:pre-line; }
@@ -455,7 +499,6 @@
 .tasting-entry-chevron .ui-symbol {width:18px;height:18px;}
 .tasting-entry-actions { display:flex; align-items:center; padding:8px 12px 8px 0; }
 .tasting-entry-actions .btn { white-space:nowrap; }
-.tasting-panel-heading { min-width:0; }
 .tasting-home-page .hint { margin:0; }
 .tasting-choose-owned { display:flex; gap:12px; align-items:end; flex-wrap:wrap; }
 .tasting-choose-owned label { flex:1 1 180px; min-width:0; display:grid; gap:7px; }
@@ -545,7 +588,7 @@
 .tasting-readonly-notes > .tasting-readonly-field { padding-inline:20px; }
 .tasting-readonly-notes > .tasting-readonly-field:first-child { padding-inline-start:0; }
 .tasting-readonly-notes > .tasting-readonly-field:last-child { padding-inline-end:0; }
-.tasting-readonly-notes > .tasting-readonly-field + .tasting-readonly-field { border-inline-start:1px solid var(--line); }
+.tasting-readonly-notes > .tasting-readonly-field + .tasting-readonly-field { border-inline-start:1px solid var(--ds-color-border); }
 @media (max-width:850px) {
     .tasting-readonly-notes { row-gap:0; }
     .tasting-readonly-notes > .tasting-readonly-field { padding:16px 0; }
@@ -553,12 +596,10 @@
     .tasting-readonly-notes > .tasting-readonly-field:last-child { padding-bottom:0; }
     .tasting-readonly-notes > .tasting-readonly-field + .tasting-readonly-field {
         border-inline-start:0;
-        border-block-start:1px solid var(--line);
+        border-block-start:1px solid var(--ds-color-border);
     }
 }
-.tasting-readonly-label { font-weight:600; color:var(--ink); }
 .tasting-readonly-field strong { overflow-wrap:anywhere; }
-.tasting-readonly-note { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.5; margin:0; }
 .tasting-readonly-color { display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; }
 /* The recorded colour must remain visually meaningful in read-only mode. */
 .tasting-readonly-panels .tasting-color-panel { display:flex; flex-direction:column; }
@@ -716,12 +757,10 @@
 }
 /* No rules or separators between individual bottle facts. */
 .bottle-entry-facts > div { min-width: 0; border: 0; padding: 0; }
-.bottle-entry-facts dt { margin: 0; color: var(--muted); font-size: 12px; }
-.bottle-entry-facts dd { margin: 4px 0 0; font-size: 14px; font-weight: 650; overflow-wrap: anywhere; }
 .bottle-entry-facts .inline-link { font-weight: inherit; font-size: inherit; text-align: left; }
 .bottle-entry-facts > .bottle-entry-comment { grid-column: 1 / -1; }
 .bottle-entry-comment dd { white-space: pre-wrap; }
-.bottle-entry-gallery { padding-top: 16px; border-top: 1px solid var(--line); }
+.bottle-entry-gallery { padding-top: 16px; border-top: 1px solid var(--ds-color-border); }
 .bottle-entry-gallery h4, .bottle-entry .bottle-documents h4 {
     margin: 0 0 11px;
     font: 400 17px/1.5 var(--serif);

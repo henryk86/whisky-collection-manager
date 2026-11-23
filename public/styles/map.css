@@ -48,8 +48,7 @@
 /* Shared shape for stocked individual distilleries. */
 .map-stock-visual { background: #173b5c; border: 3px solid #ffead1; border-radius: 50%; color: #fff; box-shadow: 0 3px 13px rgba(0,0,0,.34); }
 .map-marker:hover, .map-marker:focus-visible { background: #a7732f; z-index: 10; }
-.map-marker.selected { background: #b18446; border-color: #fff; }
-.map-marker.selected { z-index: 5; }
+.map-marker.selected { background: #b18446; border-color: #fff; z-index: 5; }
 /* Unstocked distilleries are represented by a single pagoda-roof icon. */
 .map-marker-pagoda { display: flex; align-items: center; justify-content: center; background: #f5ebd7; border: 2px solid #334b5c; color: #213a51; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
 .map-marker-pagoda:hover, .map-marker-pagoda:focus-visible { background: #f4d49b; color: #17334b; }

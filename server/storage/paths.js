@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { DATA_ROOT } from '../config.js';
+import {DATA_ROOT} from '../config.js';
 export const ROOT = DATA_ROOT;
 export const DATA_DIR = path.join(ROOT, 'data');
 export const IMAGE_DIR = path.join(ROOT, 'images');

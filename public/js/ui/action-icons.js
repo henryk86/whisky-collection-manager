@@ -1,4 +1,4 @@
-import { escapeHtml } from './dom.js';
+import {escapeHtml} from './dom.js';
 /** Shared accessible action icons: the header and hero reuse the same SVGs. */
 export const newBottlingIcon = '<svg class="new-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>';
 /** For translated add/create labels that previously carried a typed '+' glyph. */

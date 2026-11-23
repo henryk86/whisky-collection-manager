@@ -1,0 +1,169 @@
+/* Designsystem M1: values are taken from the existing v1.12.0 cascade.
+   Legacy variables remain public aliases; do not redefine them in feature CSS.
+   Data-derived whisky/chart/map colours are intentionally NOT theme tokens. */
+:root {
+    /* Existing theme contract: referenced by unchanged feature styles. */
+    --navy: #102c4b;
+    --navy-deep: #092039;
+    --blue: #173b5c;
+    --gold: #bd9862;
+    --gold-light: #e2c398;
+    --cream: #f7f5ef;
+    --paper: #fffefa;
+    --ink: #1e3245;
+    --muted: #77808a;
+    --line: #e4e1da;
+    --serif: Georgia,'Times New Roman',serif;
+    --sans: system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+
+    /* Semantic palette: uses the existing colours without changing meaning. */
+    --ds-color-page: var(--cream);
+    --ds-color-surface: var(--paper);
+    --ds-color-text: var(--ink);
+    --ds-color-text-subtle: var(--muted);
+    --ds-color-border: var(--line);
+    --ds-color-accent: var(--gold);
+    --ds-color-accent-soft: var(--gold-light);
+    --ds-color-interactive: var(--navy);
+    --ds-color-link: #285a83;
+    --ds-color-link-hover: #285a83;
+    --ds-color-header-bg: var(--navy-deep);
+    --ds-color-header-text: #fff;
+    --ds-color-header-border: #ffffff22;
+
+    /* Common controls; their actual light/dark computed values are retained. */
+    --ds-color-button-bg: var(--paper);
+    --ds-color-button-border: #d7d6d0;
+    --ds-color-button-text: var(--navy);
+    --ds-color-button-hover-bg: #f0ebe1;
+    --ds-color-button-primary-text: #10263c;
+    --ds-color-button-primary-hover: #d6b27b;
+    --ds-color-button-dark-text: white;
+    --ds-color-button-danger-text: #9d4338;
+    --ds-color-button-danger-border: #cfb9af;
+    --ds-color-control-bg: #fffefa;
+    --ds-color-control-border: #d8d8d2;
+    --ds-color-control-text: var(--ink);
+    --ds-color-control-focus: #c7ab7b;
+    --ds-color-header-action-border: #52677b;
+    --ds-color-header-action-text: #f2eadd;
+    --ds-color-header-action-hover: #254563;
+
+    /* Typography roles, not global overrides of semantic HTML headings. */
+    --ds-font-ui: var(--sans);
+    --ds-font-display: var(--serif);
+    --ds-type-ui-xs: 11px;
+    --ds-type-ui-sm: 12px;
+    --ds-type-ui-md: 13px;
+    --ds-type-body: 14px;
+    --ds-type-panel-heading: 18px;
+    --ds-type-page-heading: clamp(26px, 3vw, 36px);
+    --ds-type-page-heading-mobile: 27px;
+
+    /* Existing interval values: this is not a newly rounded spacing scale. */
+    --ds-space-1: 4px;
+    --ds-space-2: 8px;
+    --ds-space-3: 10px;
+    --ds-space-4: 12px;
+    --ds-space-5: 14px;
+    --ds-space-6: 16px;
+    --ds-space-7: 20px;
+    --ds-space-8: 22px;
+    --ds-space-9: 23px;
+    --ds-space-10: 26px;
+    --ds-space-11: 30px;
+
+    /* Layout. Footer width is intentionally smaller than app/header width. */
+    --ds-layout-max: 1350px;
+    --ds-layout-footer-max: 1290px;
+    --ds-page-gutter: 30px;
+    --ds-page-padding-bottom: 20px;
+    --ds-header-gutter: 30px;
+    --ds-header-padding-block: 15px;
+    --ds-layout-stack-gap: 26px;
+    --ds-layout-section-gap: 20px;
+
+    /* Surface / component geometry. */
+    --ds-surface-radius: 0px;
+    --ds-control-radius: 2px;
+    --surface-corner: var(--ds-surface-radius);
+    --field-corner: var(--ds-control-radius);
+    --ds-panel-padding: 23px;
+    --ds-analytics-panel-padding: 22px;
+    --ds-field-padding-block: 11px;
+    --ds-field-padding-inline: 12px;
+    --ds-button-padding-block: 11px;
+    --ds-button-padding-inline: 17px;
+    --ds-button-small-padding-block: 8px;
+    --ds-button-small-padding-inline: 12px;
+    --ds-control-height: 44px;
+    --ds-button-height: 43px;
+    --ds-button-height-sm: 34px;
+    --ds-button-height-lg: 48px;
+    --ds-button-lg-padding-block: 13px;
+    --ds-button-lg-padding-inline: 20px;
+    --ds-checkbox-size: 18px;
+    --ds-loading-indicator-size: 12px;
+    --ds-dialog-max: 650px;
+    --ds-dialog-max-wide: 860px;
+    --ds-dialog-max-assignment: 740px;
+    --ds-dialog-max-photo: 1100px;
+    --ds-dialog-max-editor: 1120px;
+    --ds-dialog-padding: 28px;
+    --ds-dialog-padding-mobile: 18px;
+    --ds-dialog-overlay-padding: 15px;
+    --ds-dialog-footer-gap: 10px;
+    --ds-form-label-gap: 7px;
+    --ds-form-grid-gap: 14px;
+    --ds-color-form-label: #435465;
+    --ds-color-form-error: #bb4848;
+    --ds-color-form-help: #747e82;
+    --ds-color-dialog-backdrop: #081c2dcc;
+}
+
+/* The persisted data-theme attribute remains the sole theme selector.
+   Keep these values together so feature CSS reads the correct palette. */
+:root[data-theme="dark"] {
+    --navy: #d7e4ef;
+    --navy-deep: #0a1724;
+    --blue: #b9d2e6;
+    --gold: #c9a46b;
+    --gold-light: #e7c991;
+    --cream: #101923;
+    --paper: #182532;
+    --ink: #e6edf4;
+    --muted: #abb8c4;
+    --line: #334454;
+
+    --ds-color-link: #dcb981;
+    --ds-color-link-hover: #f3d8aa;
+    --ds-color-header-bg: #091724;
+    --ds-color-header-border: #334251;
+    --ds-color-button-bg: #233547;
+    --ds-color-button-border: #526071;
+    --ds-color-button-text: #f1f5f9;
+    --ds-color-button-hover-bg: #314960;
+    --ds-color-button-primary-hover: #e0bb80;
+    --ds-color-button-dark-text: #fff;
+    --ds-color-button-danger-text: #f2afa4;
+    --ds-color-button-danger-border: #915d5b;
+    --ds-color-control-bg: #111e2b;
+    --ds-color-control-border: #485867;
+    --ds-color-control-text: #e6edf4;
+    --ds-color-form-label: #e0e9f1;
+    --ds-color-form-error: #f2afa4;
+    --ds-color-form-help: #acbac7;
+    --ds-color-dialog-backdrop: #020911dd;
+
+    color-scheme: dark;
+    background: var(--ds-color-page);
+}
+
+/* Existing primary mobile container threshold. More specialised 960/1020/450/380
+   header/card and 980 workspace switches stay with their owning components. */
+@media (max-width: 740px) {
+    :root {
+        --ds-page-gutter: 14px;
+        --ds-page-padding-bottom: 17px;
+    }
+}

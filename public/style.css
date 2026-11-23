@@ -1,5 +1,13 @@
-/* Cascade order is deliberate; later feature styles keep their existing overrides. */
-@import url("./styles/core.css") ;
+/* Layering without @layer (M1): tokens -> layout primitives -> legacy base ->
+   existing feature order -> final surface guard. Moving feature imports or
+   introducing native @layer requires separate visual regression approval. */
+@import url("./styles/tokens.css");
+@import url("./styles/layout.css");
+@import url("./styles/controls.css");
+@import url("./styles/content.css");
+@import url("./styles/core.css");
+@import url("./styles/headers.css");
+@import url("./styles/modals.css");
 @import url("./styles/collection.css") ;
 @import url("./styles/themes.css") ;
 @import url("./styles/scanner.css") ;

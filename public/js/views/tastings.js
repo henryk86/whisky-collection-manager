@@ -1,68 +1,66 @@
-import { t } from '../i18n/index.js';
+import {helpIconButton, sectionHeader, headingTitle, pageHeader, backNavigation} from '../ui/headers.js';
+import {t} from '../i18n/index.js';
 import {displayPhotoPath} from '../../../shared/photo-images.js';
 import {storagePath} from './warehouse-presentation.js';
-import { escapeHtml } from '../ui/dom.js';
-import { formatDate, imageUrl } from '../ui/format.js';
-import { request } from '../api.js';
-import { toast } from '../ui/notifications.js';
-import { flavorChart, readFlavorProfile, displayFlavorProfile } from '../ui/flavor-profile.js';
-import { createTastingHistory } from '../domain/tasting-history.js';
-import { glencairnRating, syncGlencairnRating } from '../ui/glencairn-rating.js';
-import { glencairnRatingSymbol } from '../ui/glencairn-icon.js';
-import { whiskyColorSelector, whiskyColorDisplay, whiskyCustomColorName } from '../ui/whisky-color-selector.js';
-import { isAllowedWhiskyHex, normalizeWhiskyColor, whiskyPickerHex, whiskyPickerPosition } from '../../../shared/whisky-colors.js';
-import { parseTastingScore, emptyTastingNotes } from '../../../shared/tasting.js';
-import { sortedTastings } from '../../../shared/tasting-records.js';
-import {allTastingReferences,flightEntries,flightForTasting} from '../../../shared/tasting-flights.js';
-import { allStandaloneTastings } from '../../../shared/standalone-tastings.js';
-import { editIcon, newBottlingIcon, flightPlanIcon, helpCircleIcon, chevronRightIcon, arrowUpIcon, arrowDownIcon } from '../ui/action-icons.js';
-import { backNavigation } from '../ui/back-navigation.js';
-import { flightPlanningHelpHtml } from '../ui/flight-planning-help.js';
-import { reorderFlightIds } from '../features/flight-order.js';
-import {suggestFlight,flightCandidates,FLIGHT_STYLES,FLIGHT_AVAILABILITY,FLIGHT_FOCUSES,CASK_GROUPS,SHERRY_SUBTYPES,CASK_MODES,AGE_MODES} from '../domain/flight-planner.js';
+import {escapeHtml} from '../ui/dom.js';
+import {detailField, detailGrid, actionToolbar, panel, emptyState} from '../ui/content.js';
+import {formatDate, imageUrl} from '../ui/format.js';
+import {request} from '../api.js';
+import {toast} from '../ui/notifications.js';
+import {flavorChart, readFlavorProfile, displayFlavorProfile} from '../ui/flavor-profile.js';
+import {createTastingHistory} from '../domain/tasting-history.js';
+import {glencairnRating, syncGlencairnRating} from '../ui/glencairn-rating.js';
+import {glencairnRatingSymbol} from '../ui/glencairn-icon.js';
+import {whiskyColorSelector, whiskyColorDisplay, whiskyCustomColorName} from '../ui/whisky-color-selector.js';
+import {isAllowedWhiskyHex, normalizeWhiskyColor, whiskyPickerHex, whiskyPickerPosition} from '../../../shared/whisky-colors.js';
+import {parseTastingScore, emptyTastingNotes} from '../../../shared/tasting.js';
+import {sortedTastings} from '../../../shared/tasting-records.js';
+import {allTastingReferences, flightEntries, flightForTasting} from '../../../shared/tasting-flights.js';
+import {allStandaloneTastings} from '../../../shared/standalone-tastings.js';
+import {editIcon, newBottlingIcon, flightPlanIcon, chevronRightIcon, arrowUpIcon, arrowDownIcon} from '../ui/action-icons.js';
+import {flightPlanningHelpHtml} from '../ui/flight-planning-help.js';
+import {reorderFlightIds} from '../features/flight-order.js';
+import {suggestFlight, flightCandidates, FLIGHT_STYLES, FLIGHT_AVAILABILITY, FLIGHT_FOCUSES, CASK_GROUPS, SHERRY_SUBTYPES, CASK_MODES, AGE_MODES} from '../domain/flight-planner.js';
 
 /** Tasting list and single-record editor; no migration of earlier bottling notes. */
-export function createTastingsView({state,selectors,shell,navigate,refresh,showModal,closeModal,confirm:confirmModal}) {
-    let flavorSession = null;
-    let createChoiceOpen = false;
-    let flightEditing = false;
-    let flightAdding = false;
-    let flightCreating = false;
-    let flightPlanDraft = null;
-    let lastFlightId = null;
-    const isExternal = () => state.page === 'external-tasting';
-    const standalone = () => allStandaloneTastings(state.collection || {});
-    const subject = () => state.collection?.bottlings?.find(b => b.id === state.selected);
-    const editPage = (external = isExternal()) => external ? 'external-tasting' : 'tasting';
-    const distilleryMeta = (bottling, owned = true) => [
-        (bottling?.distilleryIds || []).map(id => state.collection?.distilleries?.find(d => d.id === id)?.name).filter(Boolean).join(', ') || bottling?.distillery || '',
-        bottling?.ageYears != null && bottling.ageYears !== '' ? `${t('forms.bottling.ageYears')}: ${t('home.facts.years',{count:bottling.ageYears})}` : '',
-        owned && typeof bottling?.caskType === 'string' && bottling.caskType.trim() ? `${t('forms.bottling.caskType')}: ${bottling.caskType.trim()}` : '',
-        bottling?.abv != null && bottling.abv !== '' ? `${t('forms.bottling.abv')}: ${String(bottling.abv).replace('.',',')} % Vol.` : '',
-        !owned && bottling?.bottler ? `${t('forms.bottling.bottler')}: ${bottling.bottler}` : '',
-        !owned && bottling?.releaseYear != null && bottling.releaseYear !== '' ? `${t('forms.bottling.releaseYear')}: ${bottling.releaseYear}` : ''
-    ].filter(Boolean).join(' · ');
-    const backLink = (action,label) => backNavigation(action, t(label));
-    const pageTitle = (title, intro, eyebrow = t('tastings.childEyebrow')) => `<header class="section-head analytics-page-heading"><div class="page-heading-copy">
-        <span class="eyebrow dark">${escapeHtml(eyebrow)}</span>
-        <h2>${escapeHtml(title)}<span class="heading-period">.</span></h2>
-        <p class="intro">${escapeHtml(intro)}</p></div></header>`;
-    // Show exactly the same Abfuellungsfoto (cover image) as the bottling detail page.
-    const bottlingInfo = (bottling, external = false, draft = false) => {
-        const photo = external ? '' : (selectors?.coverPhoto?.(bottling.id) || '');
-        return `<section class="analytics-panel tasting-bottling-info">
+export function createTastingsView({state, selectors, shell, navigate, refresh, showModal, closeModal, confirm: confirmModal}) {
+  let flavorSession = null;
+  let createChoiceOpen = false;
+  let flightEditing = false;
+  let flightAdding = false;
+  let flightCreating = false;
+  let flightPlanDraft = null;
+  let lastFlightId = null;
+  const isExternal = () => state.page === 'external-tasting';
+  const standalone = () => allStandaloneTastings(state.collection || {});
+  const subject = () => state.collection?.bottlings?.find(b => b.id === state.selected);
+  const editPage = (external = isExternal()) => external ? 'external-tasting' : 'tasting';
+  const distilleryMeta = (bottling, owned = true) => [
+    (bottling?.distilleryIds || []).map(id => state.collection?.distilleries?.find(d => d.id === id)?.name).filter(Boolean).join(', ') || bottling?.distillery || '',
+    bottling?.ageYears != null && bottling.ageYears !== '' ? `${t('forms.bottling.ageYears')}: ${t('home.facts.years', {count: bottling.ageYears})}` : '',
+    owned && typeof bottling?.caskType === 'string' && bottling.caskType.trim() ? `${t('forms.bottling.caskType')}: ${bottling.caskType.trim()}` : '',
+    bottling?.abv != null && bottling.abv !== '' ? `${t('forms.bottling.abv')}: ${String(bottling.abv).replace('.', ',')} % Vol.` : '',
+    !owned && bottling?.bottler ? `${t('forms.bottling.bottler')}: ${bottling.bottler}` : '',
+    !owned && bottling?.releaseYear != null && bottling.releaseYear !== '' ? `${t('forms.bottling.releaseYear')}: ${bottling.releaseYear}` : ''
+  ].filter(Boolean).join(' · ');
+  const backLink = (action, label) => backNavigation(action, t(label));
+  const pageTitle = (title, intro, eyebrow = t('tastings.childEyebrow')) => pageHeader({title, intro, eyebrow, className: 'analytics-page-heading'});
+  // Show exactly the same Abfuellungsfoto (cover image) as the bottling detail page.
+  const bottlingInfo = (bottling, external = false, draft = false) => {
+    const photo = external ? '' : (selectors?.coverPhoto?.(bottling.id) || '');
+    return `<section class="analytics-panel tasting-bottling-info">
         ${external ? `${draft ? '' : `<div class="tasting-bottling-summary" data-external-read>
             <div class="tasting-bottling-summary-head"><strong>${escapeHtml(bottling.name || '')}</strong>
                 <div class="tasting-external-summary-actions"><button type="button" class="btn small" data-act="tasting-external-edit">${editIcon}<span>${escapeHtml(t('common.actions.edit'))}</span></button>
                 <button type="button" class="btn small" data-act="tasting-external-assign">${escapeHtml(t('tastings.assignToCollection'))}</button></div></div>
-            ${distilleryMeta(bottling,false) ? `<p class="muted">${escapeHtml(distilleryMeta(bottling,false))}</p>` : ''}
+            ${distilleryMeta(bottling, false) ? `<p class="muted">${escapeHtml(distilleryMeta(bottling, false))}</p>` : ''}
         </div>`}
         <div data-external-edit ${draft ? '' : 'hidden'}>
             <div class="tasting-external-fields">${externalFields(bottling)}</div>
             ${draft ? '' : `<div class="actions tasting-external-actions"><button type="button" class="btn" data-act="tasting-external-cancel">${escapeHtml(t('common.actions.cancel'))}</button>
                 <button type="button" class="btn primary" data-act="tasting-external-save">${escapeHtml(t('common.actions.save'))}</button></div>`}
         </div>` : `<div class="tasting-bottling-summary tasting-bottling-photo-layout">
-            ${photo ? `<img class="tasting-bottling-photo" src="${escapeHtml(imageUrl(photo))}" alt="${escapeHtml(t('home.image.bottleAlt',{name:bottling.name || ''}))}" loading="lazy">` : ''}
+            ${photo ? `<img class="tasting-bottling-photo" src="${escapeHtml(imageUrl(photo))}" alt="${escapeHtml(t('home.image.bottleAlt', {name: bottling.name || ''}))}" loading="lazy">` : ''}
             <div class="tasting-bottling-copy">
                 <div class="tasting-bottling-summary-head"><strong>${escapeHtml(bottling.name || '')}</strong>
                     <button type="button" class="btn small" data-act="tasting-open-bottling">${escapeHtml(t('tastings.openBottlingDetails'))}</button></div>
@@ -70,51 +68,51 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             </div>
         </div>`}
     </section>`;
-    };
-    const associatedFlight = record => record?.id ? flightForTasting(state.collection,record.id) : null;
-    const flightHint = record => {
-        const flight=associatedFlight(record);
-        if (!flight) return '';
-        const pos=flight.tastingIds.indexOf(record.id)+1;
-        return `<div class="tasting-flight-context"><button type="button" class="inline-link" data-act="tasting-open-flight" data-flight-id="${escapeHtml(flight.id)}">${escapeHtml(flight.name)} · ${escapeHtml(t('tastingFlights.position',{position:pos,count:flight.tastingIds.length}))}</button></div>`;
-    };
-    const tastingRating = record => record.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(String(record.rating))} / 100`;
-    const blank = value => value == null || String(value).trim() === '' ? '<span class="muted">&ndash;</span>' : escapeHtml(String(value));
-    const staticRating = record => `<div class="tasting-readonly-rating"><span class="tasting-readonly-glasses" aria-hidden="true">${record.rating == null ? '' : Array.from({length:5},(_,i)=>{
-        const fill=Math.max(0,Math.min(100,(Number(record.rating)-i*20)*5));
-        return glencairnRatingSymbol({fill,id:`read-rating-${i}`});
-    }).join('')}</span><strong>${tastingRating(record)}</strong></div>`;
-    const tastingReadOnly = value => `<div class="flavor-detail-panel tasting-panel tasting-readonly-panels">
+  };
+  const associatedFlight = record => record?.id ? flightForTasting(state.collection, record.id) : null;
+  const flightHint = record => {
+    const flight = associatedFlight(record);
+    if (!flight) return '';
+    const pos = flight.tastingIds.indexOf(record.id) + 1;
+    return `<div class="tasting-flight-context"><button type="button" class="inline-link" data-act="tasting-open-flight" data-flight-id="${escapeHtml(flight.id)}">${escapeHtml(flight.name)} · ${escapeHtml(t('tastingFlights.position', {position: pos, count: flight.tastingIds.length}))}</button></div>`;
+  };
+  const tastingRating = record => record.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(String(record.rating))} / 100`;
+  const blank = value => value == null || String(value).trim() === '' ? '<span class="muted">&ndash;</span>' : escapeHtml(String(value));
+  const staticRating = record => `<div class="tasting-readonly-rating"><span class="tasting-readonly-glasses" aria-hidden="true">${record.rating == null ? '' : Array.from({length: 5}, (_, i) => {
+    const fill = Math.max(0, Math.min(100, (Number(record.rating) - i * 20) * 5));
+    return glencairnRatingSymbol({fill, id: `read-rating-${i}`});
+  }).join('')}</span><strong>${tastingRating(record)}</strong></div>`;
+  const tastingReadOnly = value => `<div class="flavor-detail-panel tasting-panel tasting-readonly-panels">
         <div class="tasting-record-fields analytics-panel tasting-readonly-meta-panel">
-            <div class="tasting-readonly-meta-fields">
-                <div class="tasting-readonly-field"><span class="tasting-readonly-label">${escapeHtml(t('tastings.date'))}</span><strong>${escapeHtml(formatDate(value.tastedOn || ''))}</strong></div>
-                ${value.title ? `<div class="tasting-readonly-field"><span class="tasting-readonly-label">${escapeHtml(t('tastings.nameReadonly'))}</span><strong>${escapeHtml(value.title)}</strong></div>` : ''}
-            </div>
-            <div class="actions tasting-readonly-meta-actions"><button type="button" class="btn small" data-act="tasting-edit-start">${editIcon}<span>${escapeHtml(t('common.actions.edit'))}</span></button></div>
+            ${detailGrid([
+    detailField({label: t('tastings.date'), value: formatDate(value.tastedOn || ''), variant: 'readonly', className: 'tasting-readonly-field', labelClass: 'tasting-readonly-label'}),
+    value.title ? detailField({label: t('tastings.nameReadonly'), value: value.title, variant: 'readonly', className: 'tasting-readonly-field', labelClass: 'tasting-readonly-label'}) : ''
+  ].join(''), {columns: 2, className: 'tasting-readonly-meta-fields'})}
+            ${actionToolbar(`<button type="button" class="btn small" data-act="tasting-edit-start">${editIcon}<span>${escapeHtml(t('common.actions.edit'))}</span></button>`, {className: 'tasting-readonly-meta-actions'})}
         </div>
         <div class="tasting-top-row">
-            <section class="analytics-panel tasting-color-panel"><h3>${escapeHtml(t('tasting.colorHeading'))}</h3>
+            <section class="analytics-panel tasting-color-panel">${headingTitle({title: t('tasting.colorHeading')})}
                 ${whiskyColorDisplay(value.whiskyColor) || `<p class="hint">${escapeHtml(t('tastings.notRecorded'))}</p>`}
             </section>
-            <section class="analytics-panel tasting-senses-section"><h3>${escapeHtml(t('flavor.title'))}</h3>
-                ${flavorChart(value.flavorProfile,{editable:false})}</section>
+            <section class="analytics-panel tasting-senses-section">${headingTitle({title: t('flavor.title')})}
+                ${flavorChart(value.flavorProfile, {editable: false})}</section>
         </div>
-        <section class="analytics-panel"><h3>${escapeHtml(t('tasting.notes'))}</h3>
-            <div class="tasting-notes tasting-readonly-notes">${['nose','palate','finish'].map(key=>`<div class="tasting-readonly-field"><span class="tasting-readonly-label">${escapeHtml(t(`forms.bottling.${key}`))}</span><p class="tasting-readonly-note">${blank(value.tastingNotes?.[key])}</p></div>`).join('')}</div>
+        <section class="analytics-panel">${headingTitle({title: t('tasting.notes')})}
+            ${detailGrid(['nose', 'palate', 'finish'].map(key => detailField({label: t(`forms.bottling.${key}`), value: blank(value.tastingNotes?.[key]), valueHtml: true, variant: 'note', className: 'tasting-readonly-field', labelClass: 'tasting-readonly-label', valueClass: 'tasting-readonly-note'})).join(''), {columns: 3, className: 'tasting-notes tasting-readonly-notes'})}
         </section>
-        <section class="analytics-panel tasting-rating-panel"><h3>${escapeHtml(t('tasting.overallRating'))}</h3>
+        <section class="analytics-panel tasting-rating-panel">${headingTitle({title: t('tasting.overallRating')})}
             ${staticRating(value)}
-            ${value.ratingComment?.trim() ? `<div class="tasting-rating-comment"><span class="tasting-readonly-label">${escapeHtml(t('tasting.ratingComment'))}</span><p class="tasting-readonly-note">${escapeHtml(value.ratingComment)}</p></div>` : ''}</section>
+            ${value.ratingComment?.trim() ? `${detailField({label: t('tasting.ratingComment'), value: value.ratingComment, variant: 'note', className: 'tasting-rating-comment', labelClass: 'tasting-readonly-label', valueClass: 'tasting-readonly-note'})}` : ''}</section>
     </div>`;
-    const tastingListGlasses = record => {
-        if (record.rating == null || !Number.isFinite(Number(record.rating))) return '';
-        const safe=Math.max(0,Math.min(100,Number(record.rating)));
-        const unique=String(record.id).replace(/[^a-zA-Z0-9_-]/g,'-');
-        return `<span class="tasting-list-glasses" aria-hidden="true">${Array.from({length:5},(_,i)=>
-            glencairnRatingSymbol({fill:Math.max(0,Math.min(100,(safe-i*20)*5)),id:`tasting-list-${unique}-${i}`})).join('')}</span>`;
-    };
-    const tastingRow = ({record,b,external=false,home=false}) => `<div class="warehouse-bottle-row tasting-entry-row ${home?'tasting-home-row':'tasting-list-row'}">
-        <button type="button" class="tasting-entry-open" data-act="${home?'tastings-home-open':'tastings-open'}" ${home ? `data-external="${external?'1':'0'}" data-bottling-id="${escapeHtml(external?record.id:b.id)}"` : ''} data-tasting-id="${escapeHtml(record.id)}"
+  const tastingListGlasses = record => {
+    if (record.rating == null || !Number.isFinite(Number(record.rating))) return '';
+    const safe = Math.max(0, Math.min(100, Number(record.rating)));
+    const unique = String(record.id).replace(/[^a-zA-Z0-9_-]/g, '-');
+    return `<span class="tasting-list-glasses" aria-hidden="true">${Array.from({length: 5}, (_, i) =>
+      glencairnRatingSymbol({fill: Math.max(0, Math.min(100, (safe - i * 20) * 5)), id: `tasting-list-${unique}-${i}`})).join('')}</span>`;
+  };
+  const tastingRow = ({record, b, external = false, home = false}) => `<div class="warehouse-bottle-row tasting-entry-row ${home ? 'tasting-home-row' : 'tasting-list-row'}">
+        <button type="button" class="tasting-entry-open" data-act="${home ? 'tastings-home-open' : 'tastings-open'}" ${home ? `data-external="${external ? '1' : '0'}" data-bottling-id="${escapeHtml(external ? record.id : b.id)}"` : ''} data-tasting-id="${escapeHtml(record.id)}"
             aria-label="${escapeHtml(`${t('tastings.open')}: ${home ? b.name : (record.title || formatDate(record.tastedOn))}`)}">
             <span class="warehouse-bottle-row-info tasting-entry-info">
                 <strong>${escapeHtml(home ? b.name : (record.title || formatDate(record.tastedOn)))}</strong>
@@ -124,326 +122,329 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         </button>
         ${home ? '' : `<div class="tasting-entry-actions"><button type="button" class="btn small danger" data-act="tasting-delete" data-tasting-id="${escapeHtml(record.id)}">${escapeHtml(t('common.actions.delete'))}</button></div>`}
     </div>`;
-    const emptyRecord = () => ({tastedOn:localToday(),title:'',flavorProfile:null,tastingNotes:emptyTastingNotes(),rating:null,ratingComment:'',whiskyColor:null});
-    const emptyBottling = () => ({name:'',distillery:'',bottler:'',ageYears:null,abv:null,releaseYear:null});
-    let flavorSaveQueue = Promise.resolve();
-    let draftSavePending = null;
-    function flavorNode() { return globalThis.document?.querySelector?.('[data-flavor-detail]') || null; }
-    function readTastingEditor() {
-        const node = flavorNode();
-        return {flavorProfile:readFlavorProfile(node),
-            tastingNotes:Object.fromEntries(['nose','palate','finish'].map(key =>
-                [key,node.querySelector(`[data-tasting-note="${key}"]`)?.value || ''])),
-            rating:parseTastingScore(node.querySelector('[data-tasting-score]')?.value),
-            ratingComment:node.querySelector('[data-tasting-rating-comment]')?.value || '',
-            whiskyColor:node.querySelector('[data-whisky-color]')?.dataset.whiskyColor || null};
+  const emptyRecord = () => ({tastedOn: localToday(), title: '', flavorProfile: null, tastingNotes: emptyTastingNotes(), rating: null, ratingComment: '', whiskyColor: null});
+  const emptyBottling = () => ({name: '', distillery: '', bottler: '', ageYears: null, abv: null, releaseYear: null});
+  let flavorSaveQueue = Promise.resolve();
+  let draftSavePending = null;
+  function flavorNode() {return globalThis.document?.querySelector?.('[data-flavor-detail]') || null;}
+  function readTastingEditor() {
+    const node = flavorNode();
+    return {
+      flavorProfile: readFlavorProfile(node),
+      tastingNotes: Object.fromEntries(['nose', 'palate', 'finish'].map(key =>
+        [key, node.querySelector(`[data-tasting-note="${key}"]`)?.value || ''])),
+      rating: parseTastingScore(node.querySelector('[data-tasting-score]')?.value),
+      ratingComment: node.querySelector('[data-tasting-rating-comment]')?.value || '',
+      whiskyColor: node.querySelector('[data-whisky-color]')?.dataset.whiskyColor || null
+    };
+  }
+  function updateTastingButtons() {
+    const node = flavorNode();
+    if (!node || !flavorSession) return;
+    const undo = node.querySelector('[data-act="flavor-detail-undo"]');
+    const redo = node.querySelector('[data-act="flavor-detail-redo"]');
+    if (undo) undo.disabled = !flavorSession.history.canUndo;
+    if (redo) redo.disabled = !flavorSession.history.canRedo;
+    const missing = node.querySelector('[data-flavor-missing]');
+    if (missing) missing.hidden = Boolean(flavorSession.history.value.flavorProfile);
+    const clearRating = node.querySelector('[data-act="tasting-rating-clear"]');
+    if (clearRating) clearRating.disabled = flavorSession.history.value.rating == null;
+    const clearColor = node.querySelector('[data-act="tasting-color-clear"]');
+    const clearFlavor = node.querySelector('[data-act="tasting-flavor-clear"]');
+    if (clearFlavor) clearFlavor.disabled = !flavorSession.history.value.flavorProfile;
+    if (clearColor) clearColor.disabled = !flavorSession.history.value.whiskyColor;
+  }
+  function redrawTasting() {
+    const node = flavorNode();
+    if (!node || !flavorSession) return;
+    const value = flavorSession.history.value;
+    displayFlavorProfile(node, value.flavorProfile);
+    for (const key of ['nose', 'palate', 'finish']) {
+      const input = node.querySelector(`[data-tasting-note="${key}"]`);
+      if (input) input.value = value.tastingNotes[key];
     }
-    function updateTastingButtons() {
-        const node = flavorNode();
-        if (!node || !flavorSession) return;
-        const undo = node.querySelector('[data-act="flavor-detail-undo"]');
-        const redo = node.querySelector('[data-act="flavor-detail-redo"]');
-        if (undo) undo.disabled = !flavorSession.history.canUndo;
-        if (redo) redo.disabled = !flavorSession.history.canRedo;
-        const missing = node.querySelector('[data-flavor-missing]');
-        if (missing) missing.hidden = Boolean(flavorSession.history.value.flavorProfile);
-        const clearRating = node.querySelector('[data-act="tasting-rating-clear"]');
-        if (clearRating) clearRating.disabled = flavorSession.history.value.rating == null;
-        const clearColor = node.querySelector('[data-act="tasting-color-clear"]');
-        const clearFlavor = node.querySelector('[data-act="tasting-flavor-clear"]');
-        if (clearFlavor) clearFlavor.disabled = !flavorSession.history.value.flavorProfile;
-        if (clearColor) clearColor.disabled = !flavorSession.history.value.whiskyColor;
+    const ratingComment = node.querySelector('[data-tasting-rating-comment]');
+    if (ratingComment) ratingComment.value = value.ratingComment;
+    const rating = node.querySelector('[data-tasting-rating]');
+    if (rating) rating.outerHTML = glencairnRating(value.rating);
+    const color = node.querySelector('[data-whisky-color]');
+    if (color) color.outerHTML = whiskyColorSelector(value.whiskyColor);
+    updateTastingButtons();
+  }
+  function persistTasting() {
+    const session = flavorSession;
+    if (!session?.editing) return Promise.resolve();
+    const value = session.history.value;
+    flavorSaveQueue = flavorSaveQueue.then(async () => {
+      if (session.draft) return;
+      const updated = await request(session.external ? `/api/external-tastings/${encodeURIComponent(session.id)}` : `/api/bottlings/${encodeURIComponent(session.bottlingId)}/tastings/${encodeURIComponent(session.id)}`, {
+        method: 'PATCH', body: JSON.stringify(value)
+      });
+      if (session.external) {
+        const item = state.collection?.externalTastings?.find(t => t.id === session.id);
+        if (item) Object.assign(item, updated);
+      } else {
+        const entry = state.collection?.bottlings?.find(b => b.id === session.bottlingId);
+        const tasting = entry?.tastings?.find(t => t.id === session.id);
+        if (tasting) Object.assign(tasting, updated);
+      }
+    }).catch(error => toast(error.message, true));
+    return flavorSaveQueue;
+  }
+  function commitTasting() {
+    if (!flavorSession?.editing) return true;
+    const node = flavorNode();
+    if (!node || !flavorSession) return;
+    let value;
+    const score = node.querySelector('[data-tasting-score]');
+    try {value = readTastingEditor();}
+    catch {
+      if (score) {
+        score.setCustomValidity(t('tasting.ratingInvalid'));
+        const error = node.querySelector('#tasting-score-error');
+        if (error) error.textContent = t('tasting.ratingInvalid');
+        score.setAttribute('aria-invalid', 'true');
+      }
+      return false;
     }
-    function redrawTasting() {
-        const node = flavorNode();
-        if (!node || !flavorSession) return;
-        const value = flavorSession.history.value;
-        displayFlavorProfile(node, value.flavorProfile);
-        for (const key of ['nose','palate','finish']) {
-            const input = node.querySelector(`[data-tasting-note="${key}"]`);
-            if (input) input.value = value.tastingNotes[key];
-        }
-        const ratingComment = node.querySelector('[data-tasting-rating-comment]');
-        if (ratingComment) ratingComment.value = value.ratingComment;
-        const rating = node.querySelector('[data-tasting-rating]');
-        if (rating) rating.outerHTML = glencairnRating(value.rating);
-        const color = node.querySelector('[data-whisky-color]');
-        if (color) color.outerHTML = whiskyColorSelector(value.whiskyColor);
-        updateTastingButtons();
+    if (score) {
+      score.setCustomValidity(''); score.removeAttribute('aria-invalid');
+      const error = node.querySelector('#tasting-score-error');
+      if (error) error.textContent = '';
     }
-    function persistTasting() {
-        const session = flavorSession;
-        if (!session?.editing) return Promise.resolve();
-        const value = session.history.value;
-        flavorSaveQueue = flavorSaveQueue.then(async () => {
-            if (session.draft) return;
-            const updated = await request(session.external ? `/api/external-tastings/${encodeURIComponent(session.id)}` : `/api/bottlings/${encodeURIComponent(session.bottlingId)}/tastings/${encodeURIComponent(session.id)}`, {
-                method:'PATCH', body:JSON.stringify(value)
-            });
-            if (session.external) {
-                const item=state.collection?.externalTastings?.find(t=>t.id===session.id);
-                if (item) Object.assign(item,updated);
-            } else {
-                const entry=state.collection?.bottlings?.find(b=>b.id===session.bottlingId);
-                const tasting=entry?.tastings?.find(t=>t.id===session.id);
-                if (tasting) Object.assign(tasting,updated);
-            }
-        }).catch(error => toast(error.message, true));
-        return flavorSaveQueue;
+    if (flavorSession.history.record(value)) {
+      syncGlencairnRating(node.querySelector('[data-tasting-rating]'), value.rating);
+      // Do not replace focused form controls while a blur/change event fires.
+      // This also prevents the browser from losing a pending glass-button click.
+      updateTastingButtons();
+      void persistTasting();
     }
-    function commitTasting() {
-        if (!flavorSession?.editing) return true;
-        const node = flavorNode();
-        if (!node || !flavorSession) return;
-        let value;
-        const score = node.querySelector('[data-tasting-score]');
-        try { value = readTastingEditor(); }
-        catch {
-            if (score) {
-                score.setCustomValidity(t('tasting.ratingInvalid'));
-                const error = node.querySelector('#tasting-score-error');
-                if (error) error.textContent = t('tasting.ratingInvalid');
-                score.setAttribute('aria-invalid','true');
-            }
-            return false;
-        }
-        if (score) {
-            score.setCustomValidity(''); score.removeAttribute('aria-invalid');
-            const error = node.querySelector('#tasting-score-error');
-            if (error) error.textContent = '';
-        }
-        if (flavorSession.history.record(value)) {
-            syncGlencairnRating(node.querySelector('[data-tasting-rating]'), value.rating);
-            // Do not replace focused form controls while a blur/change event fires.
-            // This also prevents the browser from losing a pending glass-button click.
-            updateTastingButtons();
-            void persistTasting();
-        }
-        return true;
+    return true;
+  }
+  function previewRating() {
+    const widget = flavorNode()?.querySelector('[data-tasting-rating]');
+    if (!widget) return;
+    try {syncGlencairnRating(widget, parseTastingScore(widget.querySelector('[data-tasting-score]')?.value));}
+    catch { /* Leave the last valid preview intact until the input is corrected. */}
+  }
+  function chooseRating(value) {
+    if (!flavorSession?.editing) return;
+    const node = flavorNode()?.querySelector('[data-tasting-rating]');
+    if (!node) return;
+    node.dataset.ratingValue = value == null ? '' : String(value);
+    const input = node.querySelector('[data-tasting-score]');
+    if (input) input.value = value == null ? '' : String(value).replace('.', ',');
+    commitTasting();
+    redrawTasting();
+    const selector = value == null ? '[data-act="tasting-rating-clear"]' : `[data-rating-points="${value}"]`;
+    flavorNode()?.querySelector(selector)?.focus?.();
+  }
+  /** Update the preview during pointer movement without saving every intermediate colour. */
+  function previewCustomColor(hex, x, y) {
+    if (!flavorSession?.editing || !isAllowedWhiskyHex(hex)) return;
+    const color = flavorNode()?.querySelector('.whisky-custom-row');
+    if (!color) return;
+    color.classList.add('is-previewing');
+    const position = x == null || y == null ? whiskyPickerPosition(hex) : {x, y};
+    const picker = color.querySelector('[data-whisky-picker-area]');
+    if (picker) {
+      picker.style.setProperty('--picker-x', `${(position.x * 100).toFixed(1)}%`);
+      picker.style.setProperty('--picker-y', `${(position.y * 100).toFixed(1)}%`);
+      picker.dataset.pickerX = String(position.x);
+      picker.dataset.pickerY = String(position.y);
     }
-    function previewRating() {
-        const widget=flavorNode()?.querySelector('[data-tasting-rating]');
-        if (!widget) return;
-        try { syncGlencairnRating(widget,parseTastingScore(widget.querySelector('[data-tasting-score]')?.value)); }
-        catch { /* Leave the last valid preview intact until the input is corrected. */ }
+    const liquid = color.querySelector('.whisky-custom-preview .glencairn-liquid');
+    if (liquid) liquid.style.fill = hex;
+    const input = color.querySelector('[data-whisky-custom-hex]');
+    if (input) input.value = hex.toUpperCase();
+    const label = color.querySelector('[data-whisky-custom-name]');
+    if (label) {
+      const name = whiskyCustomColorName(hex);
+      if (label.textContent !== name) label.textContent = name;
     }
-    function chooseRating(value) {
-        if (!flavorSession?.editing) return;
-        const node = flavorNode()?.querySelector('[data-tasting-rating]');
-        if (!node) return;
-        node.dataset.ratingValue = value == null ? '' : String(value);
-        const input = node.querySelector('[data-tasting-score]');
-        if (input) input.value = value == null ? '' : String(value).replace('.',',');
-        commitTasting();
-        redrawTasting();
-        const selector = value == null ? '[data-act="tasting-rating-clear"]' : `[data-rating-points="${value}"]`;
-        flavorNode()?.querySelector(selector)?.focus?.();
+  }
+  function previewCustomFromPointer(event) {
+    if (!flavorSession?.editing) return;
+    const picker = event.target.closest?.('[data-whisky-picker-area]');
+    if (!picker) return;
+    const rect = picker.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+    previewCustomColor(whiskyPickerHex(x, y), x, y);
+  }
+  /** Arrow keys are a keyboard-accessible alternative to dragging the two-dimensional picker. */
+  function nudgeCustomColor(event) {
+    if (!flavorSession?.editing || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return false;
+    const picker = event.target.closest?.('[data-whisky-picker-area]');
+    if (!picker) return false;
+    event.preventDefault();
+    const input = flavorNode()?.querySelector('[data-whisky-custom-hex]');
+    const current = isAllowedWhiskyHex(input?.value) ? input.value : whiskyPickerHex(0.65, 0.48);
+    const position = whiskyPickerPosition(current);
+    const x = Number(picker.dataset.pickerX ?? position.x);
+    const y = Number(picker.dataset.pickerY ?? position.y);
+    const delta = event.shiftKey ? 0.10 : 0.02;
+    const nx = Math.max(0, Math.min(1, x + (event.key === 'ArrowRight' ? delta : event.key === 'ArrowLeft' ? -delta : 0)));
+    const ny = Math.max(0, Math.min(1, y + (event.key === 'ArrowDown' ? delta : event.key === 'ArrowUp' ? -delta : 0)));
+    previewCustomColor(whiskyPickerHex(nx, ny), nx, ny);
+    return true;
+  }
+  /** Validate the internal HEX draft; the same restriction is enforced during API normalization. */
+  function chooseCustomHex(raw) {
+    if (!flavorSession?.editing) return false;
+    let value;
+    try {value = normalizeWhiskyColor(`custom:${String(raw).trim()}`);}
+    catch {return false;}
+    chooseColor(value);
+    return true;
+  }
+  function commitCustomPreview() {
+    const hex = flavorNode()?.querySelector('[data-whisky-custom-hex]')?.value;
+    return hex ? chooseCustomHex(hex) : false;
+  }
+  function resetCustomPreview() {redrawTasting();}
+  /** Discard the custom draft itself, not only its visible HEX label. */
+  function clearCustomDraft(node) {
+    const row = node.querySelector('.whisky-custom-row');
+    if (!row) return;
+    const hex = row.querySelector('[data-whisky-custom-hex]');
+    if (hex) {
+      hex.value = '';
+      hex.defaultValue = '';
     }
-    /** Update the preview during pointer movement without saving every intermediate colour. */
-    function previewCustomColor(hex, x, y) {
-        if (!flavorSession?.editing || !isAllowedWhiskyHex(hex)) return;
-        const color=flavorNode()?.querySelector('.whisky-custom-row');
-        if (!color) return;
-        color.classList.add('is-previewing');
-        const position=x == null || y == null ? whiskyPickerPosition(hex) : {x,y};
-        const picker=color.querySelector('[data-whisky-picker-area]');
-        if (picker) {
-            picker.style.setProperty('--picker-x',`${(position.x*100).toFixed(1)}%`);
-            picker.style.setProperty('--picker-y',`${(position.y*100).toFixed(1)}%`);
-            picker.dataset.pickerX=String(position.x);
-            picker.dataset.pickerY=String(position.y);
-        }
-        const liquid=color.querySelector('.whisky-custom-preview .glencairn-liquid');
-        if (liquid) liquid.style.fill=hex;
-        const input=color.querySelector('[data-whisky-custom-hex]');
-        if (input) input.value=hex.toUpperCase();
-        const label=color.querySelector('[data-whisky-custom-name]');
-        if (label) {
-            const name=whiskyCustomColorName(hex);
-            if (label.textContent!==name) label.textContent=name;
-        }
+    const label = row.querySelector('[data-whisky-custom-name]');
+    if (label) label.textContent = '';
+    const liquid = row.querySelector('.whisky-custom-preview .glencairn-liquid');
+    if (liquid) liquid.style.fill = 'transparent';
+    const picker = row.querySelector('[data-whisky-picker-area]');
+    if (picker) {
+      picker.style.removeProperty('--picker-x');
+      picker.style.removeProperty('--picker-y');
+      delete picker.dataset.pickerX;
+      delete picker.dataset.pickerY;
     }
-    function previewCustomFromPointer(event) {
-        if (!flavorSession?.editing) return;
-        const picker=event.target.closest?.('[data-whisky-picker-area]');
-        if (!picker) return;
-        const rect=picker.getBoundingClientRect();
-        if (!rect.width || !rect.height) return;
-        const x=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));
-        const y=Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height));
-        previewCustomColor(whiskyPickerHex(x,y),x,y);
+    row.classList.remove('is-selected', 'is-previewing');
+  }
+  function chooseColor(value) {
+    if (!flavorSession?.editing) return;
+    const node = flavorNode()?.querySelector('[data-whisky-color]');
+    if (!node) return;
+    // Fixed colours (and clear) discard the previous custom HEX entirely.
+    if (!value || !value.startsWith('custom:')) clearCustomDraft(node);
+    node.dataset.whiskyColor = value || '';
+    commitTasting();
+    redrawTasting();
+    const selector = value?.startsWith('custom:') ? '[data-whisky-picker-area]' :
+      (value ? `[data-color-key="${value}"]` : '[data-act="tasting-color-clear"]');
+    flavorNode()?.querySelector(selector)?.focus?.({preventScroll: true});
+  }
+  function clearFlavor() {
+    if (!flavorSession?.editing) return;
+    if (!flavorSession || !flavorSession.history.value.flavorProfile) return;
+    if (flavorSession.history.record({...flavorSession.history.value, flavorProfile: null})) {
+      redrawTasting();
+      void persistTasting();
+      flavorNode()?.querySelector('[data-act="tasting-flavor-clear"]')?.focus?.();
     }
-    /** Arrow keys are a keyboard-accessible alternative to dragging the two-dimensional picker. */
-    function nudgeCustomColor(event) {
-        if (!flavorSession?.editing || !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return false;
-        const picker=event.target.closest?.('[data-whisky-picker-area]');
-        if (!picker) return false;
-        event.preventDefault();
-        const input=flavorNode()?.querySelector('[data-whisky-custom-hex]');
-        const current=isAllowedWhiskyHex(input?.value) ? input.value : whiskyPickerHex(0.65,0.48);
-        const position=whiskyPickerPosition(current);
-        const x=Number(picker.dataset.pickerX ?? position.x);
-        const y=Number(picker.dataset.pickerY ?? position.y);
-        const delta=event.shiftKey ? 0.10 : 0.02;
-        const nx=Math.max(0,Math.min(1,x+(event.key==='ArrowRight'?delta:event.key==='ArrowLeft'?-delta:0)));
-        const ny=Math.max(0,Math.min(1,y+(event.key==='ArrowDown'?delta:event.key==='ArrowUp'?-delta:0)));
-        previewCustomColor(whiskyPickerHex(nx,ny),nx,ny);
-        return true;
-    }
-    /** Validate the internal HEX draft; the same restriction is enforced during API normalization. */
-    function chooseCustomHex(raw) {
-        if (!flavorSession?.editing) return false;
-        let value;
-        try { value=normalizeWhiskyColor(`custom:${String(raw).trim()}`); }
-        catch { return false; }
-        chooseColor(value);
-        return true;
-    }
-    function commitCustomPreview() {
-        const hex=flavorNode()?.querySelector('[data-whisky-custom-hex]')?.value;
-        return hex ? chooseCustomHex(hex) : false;
-    }
-    function resetCustomPreview() { redrawTasting(); }
-    /** Discard the custom draft itself, not only its visible HEX label. */
-    function clearCustomDraft(node) {
-        const row=node.querySelector('.whisky-custom-row');
-        if (!row) return;
-        const hex=row.querySelector('[data-whisky-custom-hex]');
-        if (hex) {
-            hex.value='';
-            hex.defaultValue='';
-        }
-        const label=row.querySelector('[data-whisky-custom-name]');
-        if (label) label.textContent='';
-        const liquid=row.querySelector('.whisky-custom-preview .glencairn-liquid');
-        if (liquid) liquid.style.fill='transparent';
-        const picker=row.querySelector('[data-whisky-picker-area]');
-        if (picker) {
-            picker.style.removeProperty('--picker-x');
-            picker.style.removeProperty('--picker-y');
-            delete picker.dataset.pickerX;
-            delete picker.dataset.pickerY;
-        }
-        row.classList.remove('is-selected','is-previewing');
-    }
-    function chooseColor(value) {
-        if (!flavorSession?.editing) return;
-        const node=flavorNode()?.querySelector('[data-whisky-color]');
-        if (!node) return;
-        // Fixed colours (and clear) discard the previous custom HEX entirely.
-        if (!value || !value.startsWith('custom:')) clearCustomDraft(node);
-        node.dataset.whiskyColor = value || '';
-        commitTasting();
-        redrawTasting();
-        const selector = value?.startsWith('custom:') ? '[data-whisky-picker-area]' :
-            (value ? `[data-color-key="${value}"]` : '[data-act="tasting-color-clear"]');
-        flavorNode()?.querySelector(selector)?.focus?.({preventScroll:true});
-    }
-    function clearFlavor() {
-        if (!flavorSession?.editing) return;
-        if (!flavorSession || !flavorSession.history.value.flavorProfile) return;
-        if (flavorSession.history.record({...flavorSession.history.value,flavorProfile:null})) {
-            redrawTasting();
-            void persistTasting();
-            flavorNode()?.querySelector('[data-act="tasting-flavor-clear"]')?.focus?.();
-        }
-    }
-    function stepFlavor(direction) {
-        if (!flavorSession?.editing) return;
-        const changed = direction < 0 ? flavorSession.history.undo() : flavorSession.history.redo();
-        if (changed) { redrawTasting(); void persistTasting(); }
-    }
+  }
+  function stepFlavor(direction) {
+    if (!flavorSession?.editing) return;
+    const changed = direction < 0 ? flavorSession.history.undo() : flavorSession.history.redo();
+    if (changed) {redrawTasting(); void persistTasting();}
+  }
 
-    function externalFields(info = {}) {
-        const fields=[
-            ['name','tastings.externalName','text',180,true],['distillery','tastings.externalDistillery','text',140,false],
-            ['bottler','tastings.externalBottler','text',140,false],['ageYears','tastings.externalAge','number',null,false],
-            ['abv','tastings.externalAbv','number',null,false],['releaseYear','tastings.externalYear','number',null,false]
-        ];
-        return fields.map(([key,label,type,max,required])=>`<label>${escapeHtml(t(label))}
-            <input data-external-field="${key}" name="${key}" type="${type}" ${max ? `maxlength="${max}"`:''} ${required?'required':''}
-                ${type==='number' ? (key==='abv'?'min="0" max="100" step="0.1"':key==='ageYears'?'min="0" max="200" step="1"':'min="1800" max="2200" step="1"'):''}
+  function externalFields(info = {}) {
+    const fields = [
+      ['name', 'tastings.externalName', 'text', 180, true], ['distillery', 'tastings.externalDistillery', 'text', 140, false],
+      ['bottler', 'tastings.externalBottler', 'text', 140, false], ['ageYears', 'tastings.externalAge', 'number', null, false],
+      ['abv', 'tastings.externalAbv', 'number', null, false], ['releaseYear', 'tastings.externalYear', 'number', null, false]
+    ];
+    return fields.map(([key, label, type, max, required]) => `<label>${escapeHtml(t(label))}
+            <input data-external-field="${key}" name="${key}" type="${type}" ${max ? `maxlength="${max}"` : ''} ${required ? 'required' : ''}
+                ${type === 'number' ? (key === 'abv' ? 'min="0" max="100" step="0.1"' : key === 'ageYears' ? 'min="0" max="200" step="1"' : 'min="1800" max="2200" step="1"') : ''}
                 value="${escapeHtml(String(info[key] ?? ''))}"></label>`).join('');
+  }
+  function readExternalFields(node) {
+    const data = {};
+    for (const key of ['name', 'distillery', 'bottler', 'ageYears', 'abv', 'releaseYear']) {
+      const input = node.querySelector(`[data-external-field="${key}"]`);
+      if (!input?.checkValidity()) {input?.reportValidity(); return null;}
+      data[key] = ['ageYears', 'abv', 'releaseYear'].includes(key) ? (input.value === '' ? null : Number(input.value)) : input.value.trim();
     }
-    function readExternalFields(node) {
-        const data={};
-        for (const key of ['name','distillery','bottler','ageYears','abv','releaseYear']) {
-            const input=node.querySelector(`[data-external-field="${key}"]`);
-            if (!input?.checkValidity()) { input?.reportValidity(); return null; }
-            data[key]=['ageYears','abv','releaseYear'].includes(key) ? (input.value===''?null:Number(input.value)) : input.value.trim();
-        }
-        if (!data.name) { node.querySelector('[data-external-field="name"]')?.reportValidity(); return null; }
-        return data;
-    }
-    const flightList = () => [...(state.collection?.tastingFlights || [])].sort((a,b)=>b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
-    function homeFlights() {
-        const flights=flightList();
-        return `<section class="analytics-panel tasting-flight-home">
-            <div class="tasting-panel-heading"><h3 class="flight-plan-heading-title">${escapeHtml(t('tastingFlights.plural'))}
-                ${flightPlanningHelpButton()}</h3>
-                <div class="actions"><button type="button" class="btn small" data-act="tasting-flight-new">${newBottlingIcon}<span>${escapeHtml(t('flightPlan.document'))}</span></button>
-                <button type="button" class="btn small primary" data-act="flight-plan-new">${flightPlanIcon}<span>${escapeHtml(t('flightPlan.plan'))}</span></button></div></div>
-            ${flights.length ? `<div class="warehouse-bottle-list tasting-flight-list">${flights.map(item=>`<button class="tasting-flight-home-link" type="button" data-act="tasting-flight-open" data-flight-id="${escapeHtml(item.id)}">
-                <span><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(formatDate(item.date))} · ${item.phase ? escapeHtml(t(`flightPlan.phase.${item.phase}`))+' · ' : ''}${escapeHtml(t(item.phase==='planned'?'flightPlan.countSelected':item.tastingIds.length===1?'tastingFlights.oneEntry':'tastingFlights.entriesCount',{count:item.phase==='planned'?item.planItems.length:item.tastingIds.length}))}</small></span>
+    if (!data.name) {node.querySelector('[data-external-field="name"]')?.reportValidity(); return null;}
+    return data;
+  }
+  const flightList = () => [...(state.collection?.tastingFlights || [])].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  function homeFlights() {
+    const flights = flightList();
+    return `<section class="analytics-panel tasting-flight-home">
+            ${sectionHeader({
+      title: t('tastingFlights.plural'), layout: 'tasting-panel-heading',
+      titleClass: 'flight-plan-heading-title', trailingAction: flightPlanningHelpButton(),
+      actions: `<button type="button" class="btn small" data-act="tasting-flight-new">${newBottlingIcon}<span>${escapeHtml(t('flightPlan.document'))}</span></button>
+                <button type="button" class="btn small primary" data-act="flight-plan-new">${flightPlanIcon}<span>${escapeHtml(t('flightPlan.plan'))}</span></button>`
+    })}
+            ${flights.length ? `<div class="warehouse-bottle-list tasting-flight-list">${flights.map(item => `<button class="tasting-flight-home-link" type="button" data-act="tasting-flight-open" data-flight-id="${escapeHtml(item.id)}">
+                <span><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(formatDate(item.date))} · ${item.phase ? escapeHtml(t(`flightPlan.phase.${item.phase}`)) + ' · ' : ''}${escapeHtml(t(item.phase === 'planned' ? 'flightPlan.countSelected' : item.tastingIds.length === 1 ? 'tastingFlights.oneEntry' : 'tastingFlights.entriesCount', {count: item.phase === 'planned' ? item.planItems.length : item.tastingIds.length}))}</small></span>
                 <span class="tasting-entry-chevron" aria-hidden="true">${chevronRightIcon}</span></button>`).join('')}</div>` : `<p class="hint">${escapeHtml(t('tastingFlights.none'))}</p>`}
         </section>`;
-    }
-    function showFlightPlanningHelp() {
-        // Preserve the planner's live inputs, generated proposal and scroll position.
-        // From the overview this opens as a normal top-level modal.
-        showModal(t('flightPlan.help.title'), flightPlanningHelpHtml(t), true, true);
-    }
-    function flightPlanningHelpButton() {
-        const label=escapeHtml(t('flightPlan.help.title'));
-        return `<button type="button" class="flight-plan-help-button" data-act="flight-plan-help" aria-label="${label}" title="${label}">${helpCircleIcon}</button>`;
-    }
-    function syncFlightPlanOptions() {
-        const box=globalThis.document?.querySelector?.('#modal-root');
-        const style=box?.querySelector('[data-flight-plan-style]')?.value;
-        const similar=box?.querySelector('[data-flight-plan-focus-wrap]');
-        const discover=box?.querySelector('[data-flight-plan-unfamiliar-wrap]');
-        const caskMode=box?.querySelector('[data-flight-plan-cask-mode]')?.value;
-        const group=box?.querySelector('[data-flight-plan-cask-group]')?.value;
-        const ageMode=box?.querySelector('[data-flight-plan-age-mode]')?.value;
-        if (similar) similar.hidden=style!=='similar';
-        if (discover) discover.hidden=style!=='discover';
-        for (const [selector,visible] of [
-            ['[data-flight-plan-cask-group-wrap]',caskMode==='specific'],
-            ['[data-flight-plan-cask-subtype-wrap]',caskMode==='specific' && group==='sherry'],
-            ['[data-flight-plan-age-range-wrap]',ageMode==='range'],
-            ['[data-flight-plan-strict-wrap]',caskMode==='specific' || ageMode==='range']
-        ]) {const element=box?.querySelector(selector);if(element)element.hidden=!visible;}
-    }
-    function startPlannedFlight() {
-        flightPlanDraft=null;
-        const fromCollection=Array.isArray(state.flightCandidateIds);
-        const candidateText=fromCollection ? `<p class="hint">${t('flightPlan.filterSubset')}: ${state.flightCandidateIds.length}</p>` : '';
-        showModal(t('flightPlan.plan'),`<div class="tasting-flight-form flight-plan-form">
+  }
+  function showFlightPlanningHelp() {
+    // Preserve the planner's live inputs, generated proposal and scroll position.
+    // From the overview this opens as a normal top-level modal.
+    showModal(t('flightPlan.help.title'), flightPlanningHelpHtml(t), true, true);
+  }
+  function flightPlanningHelpButton() {
+    return helpIconButton({label: t('flightPlan.help.title')});
+  }
+  function syncFlightPlanOptions() {
+    const box = globalThis.document?.querySelector?.('#modal-root');
+    const style = box?.querySelector('[data-flight-plan-style]')?.value;
+    const similar = box?.querySelector('[data-flight-plan-focus-wrap]');
+    const discover = box?.querySelector('[data-flight-plan-unfamiliar-wrap]');
+    const caskMode = box?.querySelector('[data-flight-plan-cask-mode]')?.value;
+    const group = box?.querySelector('[data-flight-plan-cask-group]')?.value;
+    const ageMode = box?.querySelector('[data-flight-plan-age-mode]')?.value;
+    if (similar) similar.hidden = style !== 'similar';
+    if (discover) discover.hidden = style !== 'discover';
+    for (const [selector, visible] of [
+      ['[data-flight-plan-cask-group-wrap]', caskMode === 'specific'],
+      ['[data-flight-plan-cask-subtype-wrap]', caskMode === 'specific' && group === 'sherry'],
+      ['[data-flight-plan-age-range-wrap]', ageMode === 'range'],
+      ['[data-flight-plan-strict-wrap]', caskMode === 'specific' || ageMode === 'range']
+    ]) {const element = box?.querySelector(selector); if (element) element.hidden = !visible;}
+  }
+  function startPlannedFlight() {
+    flightPlanDraft = null;
+    const fromCollection = Array.isArray(state.flightCandidateIds);
+    const candidateText = fromCollection ? `<p class="hint">${t('flightPlan.filterSubset')}: ${state.flightCandidateIds.length}</p>` : '';
+    showModal(t('flightPlan.plan'), `<div class="tasting-flight-form flight-plan-form">
             ${candidateText}
             <label>${t('tastingFlights.name')}<input data-flight-name maxlength="160" required placeholder="${escapeHtml(t('tastingFlights.namePlaceholder'))}"></label>
             <label>${t('tastingFlights.date')}<input type="date" data-flight-date required value="${localToday()}"></label>
             <label>${t('tastingFlights.notes')}<textarea data-flight-notes maxlength="10000" rows="2"></textarea></label>
             <div class="flight-plan-options">
-                <label>${t('flightPlan.mode')}<select data-flight-plan-style>${FLIGHT_STYLES.map(id=>`<option value="${id}">${t(`flightPlan.${id}`)}</option>`).join('')}</select></label>
-                <label>${t('flightPlan.count')}<select data-flight-plan-count>${[3,4,5,6].map(n=>`<option value="${n}" ${n===5?'selected':''}>${n}</option>`).join('')}</select></label>
-                <label>${t('flightPlan.availability')}<select data-flight-plan-availability>${FLIGHT_AVAILABILITY.map(id=>`<option value="${id}">${t(`flightPlan.${id}`)}</option>`).join('')}</select></label>
+                <label>${t('flightPlan.mode')}<select data-flight-plan-style>${FLIGHT_STYLES.map(id => `<option value="${id}">${t(`flightPlan.${id}`)}</option>`).join('')}</select></label>
+                <label>${t('flightPlan.count')}<select data-flight-plan-count>${[3, 4, 5, 6].map(n => `<option value="${n}" ${n === 5 ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+                <label>${t('flightPlan.availability')}<select data-flight-plan-availability>${FLIGHT_AVAILABILITY.map(id => `<option value="${id}">${t(`flightPlan.${id}`)}</option>`).join('')}</select></label>
             </div>
             <div class="flight-plan-conditional" data-flight-plan-focus-wrap hidden><label>${escapeHtml(t('flightPlan.focus'))}
-                <select data-flight-plan-focus>${FLIGHT_FOCUSES.map(id=>`<option value="${id}">${escapeHtml(t(`flightPlan.focus.${id}`))}</option>`).join('')}</select></label></div>
+                <select data-flight-plan-focus>${FLIGHT_FOCUSES.map(id => `<option value="${id}">${escapeHtml(t(`flightPlan.focus.${id}`))}</option>`).join('')}</select></label></div>
             <div class="flight-plan-conditional" data-flight-plan-unfamiliar-wrap hidden><label class="flight-plan-toggle">
                 <input type="checkbox" data-flight-plan-unfamiliar checked><span>${escapeHtml(t('flightPlan.unfamiliar'))}</span></label></div>
             <details class="flight-plan-advanced">
                 <summary>${escapeHtml(t('flightPlan.caskAge.title'))}</summary>
                 <p class="hint">${escapeHtml(t('flightPlan.caskAge.hint'))}</p>
                 <div class="flight-plan-options flight-plan-advanced-grid">
-                    <label>${escapeHtml(t('flightPlan.caskAge.caskMode'))}<select data-flight-plan-cask-mode>${CASK_MODES.map(id=>`<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.caskMode.${id}`))}</option>`).join('')}</select></label>
-                    <label>${escapeHtml(t('flightPlan.caskAge.ageMode'))}<select data-flight-plan-age-mode>${AGE_MODES.map(id=>`<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.ageMode.${id}`))}</option>`).join('')}</select></label>
+                    <label>${escapeHtml(t('flightPlan.caskAge.caskMode'))}<select data-flight-plan-cask-mode>${CASK_MODES.map(id => `<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.caskMode.${id}`))}</option>`).join('')}</select></label>
+                    <label>${escapeHtml(t('flightPlan.caskAge.ageMode'))}<select data-flight-plan-age-mode>${AGE_MODES.map(id => `<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.ageMode.${id}`))}</option>`).join('')}</select></label>
                 </div>
                 <div class="flight-plan-options flight-plan-advanced-grid">
                     <div class="flight-plan-conditional" data-flight-plan-cask-group-wrap hidden><label>${escapeHtml(t('flightPlan.caskAge.caskGroup'))}
-                        <select data-flight-plan-cask-group>${['any',...CASK_GROUPS].map(id=>`<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.group.${id}`))}</option>`).join('')}</select></label></div>
+                        <select data-flight-plan-cask-group>${['any', ...CASK_GROUPS].map(id => `<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.group.${id}`))}</option>`).join('')}</select></label></div>
                     <div class="flight-plan-conditional" data-flight-plan-cask-subtype-wrap hidden><label>${escapeHtml(t('flightPlan.caskAge.subtype'))}
-                        <select data-flight-plan-cask-subtype>${['any',...SHERRY_SUBTYPES].map(id=>`<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.subtype.${id}`))}</option>`).join('')}</select></label></div>
+                        <select data-flight-plan-cask-subtype>${['any', ...SHERRY_SUBTYPES].map(id => `<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.subtype.${id}`))}</option>`).join('')}</select></label></div>
                     <div class="flight-plan-conditional" data-flight-plan-age-range-wrap hidden><label>${escapeHtml(t('flightPlan.caskAge.ageRange'))}
                         <span class="flight-plan-age-range"><input type="number" min="0" max="200" step="1" data-flight-plan-age-min placeholder="${escapeHtml(t('flightPlan.caskAge.ageMin'))}" aria-label="${escapeHtml(t('flightPlan.caskAge.ageMin'))}">
                             <input type="number" min="0" max="200" step="1" data-flight-plan-age-max placeholder="${escapeHtml(t('flightPlan.caskAge.ageMax'))}" aria-label="${escapeHtml(t('flightPlan.caskAge.ageMax'))}"></span></label></div>
@@ -455,374 +456,384 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             <div class="flight-plan-preview" aria-live="polite"></div>
             <div class="actions"><button class="btn" type="button" data-act="close-modal">${t('common.actions.cancel')}</button>
                 <button class="btn primary" type="button" data-act="flight-plan-create" disabled>${t('flightPlan.save')}</button></div>
-        </div>`,true,false,flightPlanningHelpButton());
-        state.flightCandidateIds=null;
-        syncFlightPlanOptions();
+        </div>`, true, false, flightPlanningHelpButton());
+    state.flightCandidateIds = null;
+    syncFlightPlanOptions();
+  }
+  function invalidateFlightPlan() {
+    syncFlightPlanOptions();
+    flightPlanDraft = null;
+    const box = globalThis.document?.querySelector?.('#modal-root');
+    const button = box?.querySelector('[data-act="flight-plan-create"]');
+    if (button) button.disabled = true;
+    const view = box?.querySelector('.flight-plan-preview');
+    if (view) view.replaceChildren();
+  }
+  function generateFlightPlan() {
+    const box = document.querySelector('#modal-root');
+    const style = box?.querySelector('[data-flight-plan-style]')?.value || 'balanced';
+    const count = Number(box?.querySelector('[data-flight-plan-count]')?.value || 5);
+    const availability = box?.querySelector('[data-flight-plan-availability]')?.value || 'open';
+    const focus = style === 'similar' ? (box?.querySelector('[data-flight-plan-focus]')?.value || 'any') : 'any';
+    const preferUnfamiliar = style === 'discover' ? Boolean(box?.querySelector('[data-flight-plan-unfamiliar]')?.checked) : false;
+    const caskMode = box?.querySelector('[data-flight-plan-cask-mode]')?.value || 'auto';
+    const caskGroup = caskMode === 'specific' ? box?.querySelector('[data-flight-plan-cask-group]')?.value || 'any' : 'any';
+    const caskSubtype = caskGroup === 'sherry' ? box?.querySelector('[data-flight-plan-cask-subtype]')?.value || 'any' : 'any';
+    const ageMode = box?.querySelector('[data-flight-plan-age-mode]')?.value || 'auto';
+    // Clear any stale cross-field error before validating a corrected range.
+    box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.('');
+    const parseAge = (selector) => {
+      const field = box?.querySelector(selector); if (!field || field.value === '') return null;
+      if (!field.reportValidity()) return undefined; return Number(field.value);
+    };
+    const ageMin = ageMode === 'range' ? parseAge('[data-flight-plan-age-min]') : null;
+    const ageMax = ageMode === 'range' ? parseAge('[data-flight-plan-age-max]') : null;
+    if (ageMin === undefined || ageMax === undefined) return;
+    if (ageMin !== null && ageMax !== null && ageMin > ageMax) {
+      box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.(t('flightPlan.caskAge.invalidRange'));
+      box?.querySelector('[data-flight-plan-age-max]')?.reportValidity?.(); return;
     }
-    function invalidateFlightPlan() {
-        syncFlightPlanOptions();
-        flightPlanDraft=null;
-        const box=globalThis.document?.querySelector?.('#modal-root');
-        const button=box?.querySelector('[data-act="flight-plan-create"]');
-        if (button) button.disabled=true;
-        const view=box?.querySelector('.flight-plan-preview');
-        if (view) view.replaceChildren();
-    }
-    function generateFlightPlan() {
-        const box=document.querySelector('#modal-root');
-        const style=box?.querySelector('[data-flight-plan-style]')?.value || 'balanced';
-        const count=Number(box?.querySelector('[data-flight-plan-count]')?.value || 5);
-        const availability=box?.querySelector('[data-flight-plan-availability]')?.value || 'open';
-        const focus=style==='similar'?(box?.querySelector('[data-flight-plan-focus]')?.value || 'any'):'any';
-        const preferUnfamiliar=style==='discover' ? Boolean(box?.querySelector('[data-flight-plan-unfamiliar]')?.checked) : false;
-        const caskMode=box?.querySelector('[data-flight-plan-cask-mode]')?.value || 'auto';
-        const caskGroup=caskMode==='specific' ? box?.querySelector('[data-flight-plan-cask-group]')?.value || 'any' : 'any';
-        const caskSubtype=caskGroup==='sherry' ? box?.querySelector('[data-flight-plan-cask-subtype]')?.value || 'any' : 'any';
-        const ageMode=box?.querySelector('[data-flight-plan-age-mode]')?.value || 'auto';
-        // Clear any stale cross-field error before validating a corrected range.
-        box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.('');
-        const parseAge=(selector)=>{const field=box?.querySelector(selector);if (!field || field.value==='') return null;
-            if (!field.reportValidity()) return undefined;return Number(field.value);};
-        const ageMin=ageMode==='range'?parseAge('[data-flight-plan-age-min]'):null;
-        const ageMax=ageMode==='range'?parseAge('[data-flight-plan-age-max]'):null;
-        if (ageMin===undefined || ageMax===undefined) return;
-        if (ageMin!==null && ageMax!==null && ageMin>ageMax) {
-            box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.(t('flightPlan.caskAge.invalidRange'));
-            box?.querySelector('[data-flight-plan-age-max]')?.reportValidity?.();return;
-        }
-        box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.('');
-        const strictMatches=Boolean(box?.querySelector('[data-flight-plan-strict]')?.checked);
-        const options={style,count,availability,focus,preferUnfamiliar,caskMode,caskGroup,caskSubtype,
-            ageMode,ageMin,ageMax,strictMatches};
-        const draft=suggestFlight(state.collection,{...options,bottlingIds:flightPlanSourceIds});
-        flightPlanDraft={items:draft,...options,sourceIds:flightPlanSourceIds};
-        const view=box?.querySelector('.flight-plan-preview');
-        if (view) view.innerHTML=draft.length ? `<p class="hint">${escapeHtml(t('flightPlan.description'))}</p><ol class="flight-plan-proposal">${draft.map(item=>{
-            const b=state.collection.bottlings.find(b=>b.id===item.bottlingId);
-            const metadata=[b?.caskType?.trim() ? `${t('forms.bottling.caskType')}: ${b.caskType.trim()}` : '',
-                b?.ageYears !== null && b?.ageYears !== undefined && b?.ageYears !== '' ?
-                    `${t('forms.bottling.ageYears')}: ${t('home.facts.years',{count:b.ageYears})}` : ''].filter(Boolean);
-            return `<li><strong>${escapeHtml(b?.name || '')}</strong><small>${escapeHtml(t(`flightPlan.reason.${item.reason}`))}</small>
-                ${metadata.length?`<small>${escapeHtml(metadata.join(' · '))}</small>`:''}</li>`;
-        }).join('')}</ol>` : `<p class="hint">${t('flightPlan.none')}</p>`;
-        const button=box?.querySelector('[data-act="flight-plan-create"]');
-        if (button) button.disabled=!draft.length;
-    }
-    // Keep the filtered collection candidates when opening the planner modal.
-    let flightPlanSourceIds=null;
-    function openPlannedFlight() {
-        flightPlanSourceIds=Array.isArray(state.flightCandidateIds)?[...state.flightCandidateIds]:null;
-        startPlannedFlight();
-    }
-    async function createPlannedFlight() {
-        const box=document.querySelector('#modal-root');
-        const name=box?.querySelector('[data-flight-name]');
-        const date=box?.querySelector('[data-flight-date]');
-        if (!name?.reportValidity() || !date?.reportValidity() || !flightPlanDraft?.items.length || flightCreating) return;
-        flightCreating=true;
-        try {
-            const result=await request('/api/tasting-flights',{method:'POST',body:JSON.stringify({name:name.value,date:date.value,
-                notes:box.querySelector('[data-flight-notes]')?.value || '',phase:'planned',planItems:flightPlanDraft.items})});
-            flightPlanDraft=null;flightPlanSourceIds=null;
-            closeModal();
-            await refresh('collection');
-            navigate('tasting-flight',result.id);
-        } catch(error) {toast(error.message,true);}
-        finally {flightCreating=false;}
-    }
-    function planMemberLabel(item) {
-        const b=state.collection?.bottlings?.find(b=>b.id===item.bottlingId);
-        const bottle=b?.bottles?.find(x=>x.id===item.bottleId);
-        return {b,bottle,label:b ? `${b.name}${bottle?.inventoryNumber ? ' · #'+bottle.inventoryNumber : ''}` : t('flightPlan.missing'),
-            unavailable:!bottle || bottle.status==='empty'};
-    }
-    function plannedFlightDetail(current) {
-        const editable=current.phase==='planned';
-        const candidates=flightCandidates(state.collection,{availability:'all'});
-        const selected=new Set(current.planItems.map(item=>item.bottlingId));
-        const choices=(excludeId='')=>candidates.filter(x=>!selected.has(x.bottling.id) || x.bottling.id===excludeId)
-            .map(x=>`<option value="${escapeHtml(x.bottle.id)}">${escapeHtml(x.bottling.name)} · #${escapeHtml(x.bottle.inventoryNumber || '–')}</option>`).join('');
-        return `<section class="analytics-panel flight-plan-members"><div class="tasting-panel-heading"><h3>${t('flightPlan.plannedMembers')} · ${current.planItems.length}</h3></div>
-            <ol class="flight-plan-members-list">${current.planItems.map((item,index)=>{
-                const {b,bottle,label,unavailable}=planMemberLabel(item);
-                const photo=displayPhotoPath(bottle?.photos?.[0]) || (b ? selectors?.coverPhoto?.(b.id) : null);
-                const place=bottle && state.warehouse ? storagePath(state.warehouse,state.warehouse.assignments?.[bottle.id]) : null;
-                return `<li class="flight-plan-member"><span class="flight-plan-number" aria-hidden="true">${index+1}</span>${photo?`<img class="flight-plan-member-photo" src="${escapeHtml(imageUrl(photo))}" loading="lazy" alt="">`:''}<div class="flight-plan-member-copy"><strong>${escapeHtml(label)}</strong>
-                    <small>${unavailable?t('flightPlan.missing'):escapeHtml(t(`flightPlan.reason.${item.reason || 'manual'}`))}${bottle ? ' · '+escapeHtml(t(bottle.status==='open'?'analytics.inventory.openedStatus':'home.status.closed')) : ''}</small>
-                    ${place?`<button type="button" class="inline-link" data-act="flight-plan-location" data-bottle-id="${escapeHtml(item.bottleId)}">${escapeHtml(place.label)}</button>`:''}</div>
+    box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.('');
+    const strictMatches = Boolean(box?.querySelector('[data-flight-plan-strict]')?.checked);
+    const options = {
+      style, count, availability, focus, preferUnfamiliar, caskMode, caskGroup, caskSubtype,
+      ageMode, ageMin, ageMax, strictMatches
+    };
+    const draft = suggestFlight(state.collection, {...options, bottlingIds: flightPlanSourceIds});
+    flightPlanDraft = {items: draft, ...options, sourceIds: flightPlanSourceIds};
+    const view = box?.querySelector('.flight-plan-preview');
+    if (view) view.innerHTML = draft.length ? `<p class="hint">${escapeHtml(t('flightPlan.description'))}</p><ol class="flight-plan-proposal">${draft.map(item => {
+      const b = state.collection.bottlings.find(b => b.id === item.bottlingId);
+      const metadata = [b?.caskType?.trim() ? `${t('forms.bottling.caskType')}: ${b.caskType.trim()}` : '',
+      b?.ageYears !== null && b?.ageYears !== undefined && b?.ageYears !== '' ?
+        `${t('forms.bottling.ageYears')}: ${t('home.facts.years', {count: b.ageYears})}` : ''].filter(Boolean);
+      return `<li><strong>${escapeHtml(b?.name || '')}</strong><small>${escapeHtml(t(`flightPlan.reason.${item.reason}`))}</small>
+                ${metadata.length ? `<small>${escapeHtml(metadata.join(' · '))}</small>` : ''}</li>`;
+    }).join('')}</ol>` : `<p class="hint">${t('flightPlan.none')}</p>`;
+    const button = box?.querySelector('[data-act="flight-plan-create"]');
+    if (button) button.disabled = !draft.length;
+  }
+  // Keep the filtered collection candidates when opening the planner modal.
+  let flightPlanSourceIds = null;
+  function openPlannedFlight() {
+    flightPlanSourceIds = Array.isArray(state.flightCandidateIds) ? [...state.flightCandidateIds] : null;
+    startPlannedFlight();
+  }
+  async function createPlannedFlight() {
+    const box = document.querySelector('#modal-root');
+    const name = box?.querySelector('[data-flight-name]');
+    const date = box?.querySelector('[data-flight-date]');
+    if (!name?.reportValidity() || !date?.reportValidity() || !flightPlanDraft?.items.length || flightCreating) return;
+    flightCreating = true;
+    try {
+      const result = await request('/api/tasting-flights', {
+        method: 'POST', body: JSON.stringify({
+          name: name.value, date: date.value,
+          notes: box.querySelector('[data-flight-notes]')?.value || '', phase: 'planned', planItems: flightPlanDraft.items
+        })
+      });
+      flightPlanDraft = null; flightPlanSourceIds = null;
+      closeModal();
+      await refresh('collection');
+      navigate('tasting-flight', result.id);
+    } catch (error) {toast(error.message, true);}
+    finally {flightCreating = false;}
+  }
+  function planMemberLabel(item) {
+    const b = state.collection?.bottlings?.find(b => b.id === item.bottlingId);
+    const bottle = b?.bottles?.find(x => x.id === item.bottleId);
+    return {
+      b, bottle, label: b ? `${b.name}${bottle?.inventoryNumber ? ' · #' + bottle.inventoryNumber : ''}` : t('flightPlan.missing'),
+      unavailable: !bottle || bottle.status === 'empty'
+    };
+  }
+  function plannedFlightDetail(current) {
+    const editable = current.phase === 'planned';
+    const candidates = flightCandidates(state.collection, {availability: 'all'});
+    const selected = new Set(current.planItems.map(item => item.bottlingId));
+    const choices = (excludeId = '') => candidates.filter(x => !selected.has(x.bottling.id) || x.bottling.id === excludeId)
+      .map(x => `<option value="${escapeHtml(x.bottle.id)}">${escapeHtml(x.bottling.name)} · #${escapeHtml(x.bottle.inventoryNumber || '–')}</option>`).join('');
+    return `<section class="analytics-panel flight-plan-members"><div class="tasting-panel-heading">${headingTitle({title: `${t('flightPlan.plannedMembers')} · ${current.planItems.length}`})}</div>
+            <ol class="flight-plan-members-list">${current.planItems.map((item, index) => {
+      const {b, bottle, label, unavailable} = planMemberLabel(item);
+      const photo = displayPhotoPath(bottle?.photos?.[0]) || (b ? selectors?.coverPhoto?.(b.id) : null);
+      const place = bottle && state.warehouse ? storagePath(state.warehouse, state.warehouse.assignments?.[bottle.id]) : null;
+      return `<li class="flight-plan-member"><span class="flight-plan-number" aria-hidden="true">${index + 1}</span>${photo ? `<img class="flight-plan-member-photo" src="${escapeHtml(imageUrl(photo))}" loading="lazy" alt="">` : ''}<div class="flight-plan-member-copy"><strong>${escapeHtml(label)}</strong>
+                    <small>${unavailable ? t('flightPlan.missing') : escapeHtml(t(`flightPlan.reason.${item.reason || 'manual'}`))}${bottle ? ' · ' + escapeHtml(t(bottle.status === 'open' ? 'analytics.inventory.openedStatus' : 'home.status.closed')) : ''}</small>
+                    ${place ? `<button type="button" class="inline-link" data-act="flight-plan-location" data-bottle-id="${escapeHtml(item.bottleId)}">${escapeHtml(place.label)}</button>` : ''}</div>
                     ${b ? `<button type="button" class="btn small" data-act="flight-plan-open-bottling" data-bottling-id="${escapeHtml(b.id)}">${t('tastings.openBottlingDetails')}</button>` : ''}
                     ${editable ? `<div class="flight-plan-member-actions">
-                        <button type="button" class="btn small" data-act="flight-plan-move" data-index="${index}" data-step="-1" ${index===0?'disabled':''} aria-label="${t('tastingFlights.moveUp')}">${arrowUpIcon}</button>
-                        <button type="button" class="btn small" data-act="flight-plan-move" data-index="${index}" data-step="1" ${index===current.planItems.length-1?'disabled':''} aria-label="${t('tastingFlights.moveDown')}">${arrowDownIcon}</button>
+                        <button type="button" class="btn small" data-act="flight-plan-move" data-index="${index}" data-step="-1" ${index === 0 ? 'disabled' : ''} aria-label="${t('tastingFlights.moveUp')}">${arrowUpIcon}</button>
+                        <button type="button" class="btn small" data-act="flight-plan-move" data-index="${index}" data-step="1" ${index === current.planItems.length - 1 ? 'disabled' : ''} aria-label="${t('tastingFlights.moveDown')}">${arrowDownIcon}</button>
                         <select data-flight-replace="${index}" aria-label="${t('flightPlan.replace')}"><option value="">${t('flightPlan.replace')}</option>${choices(item.bottlingId)}</select>
                         <button type="button" class="btn small" data-act="flight-plan-replace" data-index="${index}">${t('flightPlan.replace')}</button>
                         <button type="button" class="btn small danger" data-act="flight-plan-remove" data-index="${index}">${t('flightPlan.remove')}</button>
-                    </div>` : current.phase==='inProgress' && !unavailable ?
-                        `<button type="button" class="btn small primary" data-act="flight-plan-record" data-bottling-id="${escapeHtml(item.bottlingId)}">${t('flightPlan.addTasting')}</button>` : ''}
+                    </div>` : current.phase === 'inProgress' && !unavailable ?
+          `<button type="button" class="btn small primary" data-act="flight-plan-record" data-bottling-id="${escapeHtml(item.bottlingId)}">${t('flightPlan.addTasting')}</button>` : ''}
                 </li>`;
-            }).join('')}</ol>
-            ${editable && candidates.some(x=>!selected.has(x.bottling.id)) && current.planItems.length<6 ? `<div class="flight-plan-add"><select data-flight-manual-add aria-label="${t('flightPlan.selectBottle')}">${choices()}</select><button type="button" class="btn" data-act="flight-plan-add">${t('flightPlan.add')}</button></div>`:''}
-            ${editable ? `<div class="actions"><button type="button" class="btn primary" data-act="flight-plan-start" ${current.planItems.some(i=>planMemberLabel(i).unavailable)||!current.planItems.length?'disabled':''}>${t('flightPlan.start')}</button></div>` : ''}
+    }).join('')}</ol>
+            ${editable && candidates.some(x => !selected.has(x.bottling.id)) && current.planItems.length < 6 ? `<div class="flight-plan-add"><select data-flight-manual-add aria-label="${t('flightPlan.selectBottle')}">${choices()}</select><button type="button" class="btn" data-act="flight-plan-add">${t('flightPlan.add')}</button></div>` : ''}
+            ${editable ? `<div class="actions"><button type="button" class="btn primary" data-act="flight-plan-start" ${current.planItems.some(i => planMemberLabel(i).unavailable) || !current.planItems.length ? 'disabled' : ''}>${t('flightPlan.start')}</button></div>` : ''}
         </section>`;
-    }
-    async function updatePlan(items) {
-        const current=state.collection?.tastingFlights?.find(f=>f.id===state.selected);
-        if (current?.phase!=='planned') return;
-        try {await request(`/api/tasting-flights/${encodeURIComponent(current.id)}`,{method:'PATCH',body:JSON.stringify({planItems:items})});await refresh('collection');}
-        catch(error){toast(error.message,true);}
-    }
-    function changePlannedMember(index,action,step=0) {
-        const current=state.collection?.tastingFlights?.find(f=>f.id===state.selected);
-        if (current?.phase!=='planned') return;
-        const items=[...current.planItems];
-        if (action==='move' && index>=0 && index<items.length && index+step>=0 && index+step<items.length) {
-            [items[index],items[index+step]]=[items[index+step],items[index]];
-        } else if (action==='remove' && index>=0 && index<items.length) items.splice(index,1);
-        else if (action==='replace' || action==='add') {
-            const value=document.querySelector(action==='add'?'[data-flight-manual-add]':`[data-flight-replace="${index}"]`)?.value;
-            const selected=state.collection.bottlings.find(b=>b.bottles?.some(x=>x.id===value && x.status!=='empty'));
-            if (!selected || items.some(x=>x.bottlingId===selected.id)) return;
-            const replacement={bottlingId:selected.id,bottleId:value,reason:'manual'};
-            if (action==='add') {if (items.length>=6) return;items.push(replacement);}
-            else if (index>=0 && index<items.length) items[index]=replacement;
-        } else return;
-        return updatePlan(items);
-    }
-    async function transitionPlannedFlight(target) {
-        const current=state.collection?.tastingFlights?.find(f=>f.id===state.selected);
-        if (!current || !(await confirmModal(t(`flightPlan.phase.${target}`),
-            t(target==='inProgress'?'flightPlan.confirmStart':'flightPlan.confirmFinish'),
-            t(target==='inProgress'?'flightPlan.start':'flightPlan.finish')))) return;
-        try {await request(`/api/tasting-flights/${encodeURIComponent(current.id)}`,{method:'PATCH',body:JSON.stringify({phase:target})});await refresh('collection');}
-        catch(error){toast(error.message,true);}
-    }
-    function startFlight() {
-        showModal(t('tastingFlights.create'),`<div class="tasting-flight-form">
+  }
+  async function updatePlan(items) {
+    const current = state.collection?.tastingFlights?.find(f => f.id === state.selected);
+    if (current?.phase !== 'planned') return;
+    try {await request(`/api/tasting-flights/${encodeURIComponent(current.id)}`, {method: 'PATCH', body: JSON.stringify({planItems: items})}); await refresh('collection');}
+    catch (error) {toast(error.message, true);}
+  }
+  function changePlannedMember(index, action, step = 0) {
+    const current = state.collection?.tastingFlights?.find(f => f.id === state.selected);
+    if (current?.phase !== 'planned') return;
+    const items = [...current.planItems];
+    if (action === 'move' && index >= 0 && index < items.length && index + step >= 0 && index + step < items.length) {
+      [items[index], items[index + step]] = [items[index + step], items[index]];
+    } else if (action === 'remove' && index >= 0 && index < items.length) items.splice(index, 1);
+    else if (action === 'replace' || action === 'add') {
+      const value = document.querySelector(action === 'add' ? '[data-flight-manual-add]' : `[data-flight-replace="${index}"]`)?.value;
+      const selected = state.collection.bottlings.find(b => b.bottles?.some(x => x.id === value && x.status !== 'empty'));
+      if (!selected || items.some(x => x.bottlingId === selected.id)) return;
+      const replacement = {bottlingId: selected.id, bottleId: value, reason: 'manual'};
+      if (action === 'add') {if (items.length >= 6) return; items.push(replacement);}
+      else if (index >= 0 && index < items.length) items[index] = replacement;
+    } else return;
+    return updatePlan(items);
+  }
+  async function transitionPlannedFlight(target) {
+    const current = state.collection?.tastingFlights?.find(f => f.id === state.selected);
+    if (!current || !(await confirmModal(t(`flightPlan.phase.${target}`),
+      t(target === 'inProgress' ? 'flightPlan.confirmStart' : 'flightPlan.confirmFinish'),
+      t(target === 'inProgress' ? 'flightPlan.start' : 'flightPlan.finish')))) return;
+    try {await request(`/api/tasting-flights/${encodeURIComponent(current.id)}`, {method: 'PATCH', body: JSON.stringify({phase: target})}); await refresh('collection');}
+    catch (error) {toast(error.message, true);}
+  }
+  function startFlight() {
+    showModal(t('tastingFlights.create'), `<div class="tasting-flight-form">
             <label>${escapeHtml(t('tastingFlights.name'))}<input data-flight-name maxlength="160" required placeholder="${escapeHtml(t('tastingFlights.namePlaceholder'))}"></label>
             <label>${escapeHtml(t('tastingFlights.date'))}<input type="date" data-flight-date required value="${localToday()}"></label>
             <label>${escapeHtml(t('tastingFlights.notes'))}<textarea data-flight-notes maxlength="10000" rows="3"></textarea></label>
             <div class="actions"><button class="btn" type="button" data-act="close-modal">${escapeHtml(t('common.actions.cancel'))}</button>
             <button class="btn primary" type="button" data-act="tasting-flight-create-confirm">${escapeHtml(t('tastingFlights.create'))}</button></div>
-        </div>`,false);
-    }
-    async function createFlight() {
-        const box=document.querySelector('#modal-root');
-        const name=box?.querySelector('[data-flight-name]');
-        const date=box?.querySelector('[data-flight-date]');
-        if (!name?.reportValidity() || !date?.reportValidity() || flightCreating) return;
-        flightCreating=true;
-        try {
-            const flight=await request('/api/tasting-flights',{method:'POST',body:JSON.stringify({name:name.value,date:date.value,notes:box.querySelector('[data-flight-notes]')?.value || ''})});
-            closeModal();
-            state.page='tastings-home';
-            await refresh('collection');
-            navigate('tasting-flight',flight.id);
-        } catch(error) {toast(error.message,true);}
-        finally {flightCreating=false;}
-    }
-    const flightEntryLabel = item => `${item.bottling?.name || ''}${item.record.title ? ` · ${item.record.title}` : ''} · ${formatDate(item.record.tastedOn || '')}`;
-    function flight() {
-        flavorSession=null;
-        if (lastFlightId !== state.selected) {flightEditing=false;flightAdding=false;lastFlightId=state.selected;}
-        const current=(state.collection?.tastingFlights || []).find(item=>item.id===state.selected);
-        if (!current) {navigate('tastings-home',null,{replace:true});return;}
-        if (current.phase==='planned') {
-            shell(`<div class="analytics-page tasting-child-page tasting-flight-page" data-reconcile="replace">
-                ${backLink('tasting-flight-back','tastingFlights.back')}
-                ${pageTitle(t('flightPlan.plan'),t('flightPlan.description'))}
+        </div>`, false);
+  }
+  async function createFlight() {
+    const box = document.querySelector('#modal-root');
+    const name = box?.querySelector('[data-flight-name]');
+    const date = box?.querySelector('[data-flight-date]');
+    if (!name?.reportValidity() || !date?.reportValidity() || flightCreating) return;
+    flightCreating = true;
+    try {
+      const flight = await request('/api/tasting-flights', {method: 'POST', body: JSON.stringify({name: name.value, date: date.value, notes: box.querySelector('[data-flight-notes]')?.value || ''})});
+      closeModal();
+      state.page = 'tastings-home';
+      await refresh('collection');
+      navigate('tasting-flight', flight.id);
+    } catch (error) {toast(error.message, true);}
+    finally {flightCreating = false;}
+  }
+  const flightEntryLabel = item => `${item.bottling?.name || ''}${item.record.title ? ` · ${item.record.title}` : ''} · ${formatDate(item.record.tastedOn || '')}`;
+  function flight() {
+    flavorSession = null;
+    if (lastFlightId !== state.selected) {flightEditing = false; flightAdding = false; lastFlightId = state.selected;}
+    const current = (state.collection?.tastingFlights || []).find(item => item.id === state.selected);
+    if (!current) {navigate('tastings-home', null, {replace: true}); return;}
+    if (current.phase === 'planned') {
+      shell(`<div class="analytics-page tasting-child-page tasting-flight-page" data-reconcile="replace">
+                ${backLink('tasting-flight-back', 'tastingFlights.back')}
+                ${pageTitle(t('flightPlan.plan'), t('flightPlan.description'))}
                 <section class="analytics-panel tasting-flight-summary">
                 ${flightEditing ? `<div class="tasting-flight-form">
                     <label>${t('tastingFlights.name')}<input data-flight-name maxlength="160" required value="${escapeHtml(current.name)}"></label>
                     <label>${t('tastingFlights.date')}<input type="date" data-flight-date value="${escapeHtml(current.date)}"></label>
                     <label>${t('tastingFlights.notes')}<textarea data-flight-notes rows="3">${escapeHtml(current.notes)}</textarea></label>
                     <div class="actions"><button class="btn" type="button" data-act="tasting-flight-cancel-edit">${t('common.actions.cancel')}</button><button class="btn primary" type="button" data-act="tasting-flight-save">${t('common.actions.save')}</button></div>
-                    </div>`:`<div class="tasting-panel-heading"><div><h3>${escapeHtml(current.name)}</h3><p class="muted">${escapeHtml(formatDate(current.date))} · ${t('flightPlan.phase.planned')}</p></div><div class="actions"><button class="btn small" type="button" data-act="tasting-flight-edit">${t('common.actions.edit')}</button><button class="btn small danger" type="button" data-act="tasting-flight-delete">${t('common.actions.delete')}</button></div></div>${current.notes?`<p>${escapeHtml(current.notes)}</p>`:''}`}
+                    </div>`: `<div class="tasting-panel-heading"><div>${headingTitle({title: current.name})}<p class="muted">${escapeHtml(formatDate(current.date))} · ${t('flightPlan.phase.planned')}</p></div><div class="actions"><button class="btn small" type="button" data-act="tasting-flight-edit">${t('common.actions.edit')}</button><button class="btn small danger" type="button" data-act="tasting-flight-delete">${t('common.actions.delete')}</button></div></div>${current.notes ? `<p>${escapeHtml(current.notes)}</p>` : ''}`}
                 </section>${plannedFlightDetail(current)}</div>`);
-            return;
-        }
-        const refs=flightEntries(state.collection,current);
-        const available=allTastingReferences(state.collection).filter(item=>!flightForTasting(state.collection,item.record.id))
-            .sort((a,b)=>a.bottling.name.localeCompare(b.bottling.name));
-        const entryRow=(item,i)=>`<div class="tasting-flight-member" data-tasting-id="${escapeHtml(item.record.id)}">
+      return;
+    }
+    const refs = flightEntries(state.collection, current);
+    const available = allTastingReferences(state.collection).filter(item => !flightForTasting(state.collection, item.record.id))
+      .sort((a, b) => a.bottling.name.localeCompare(b.bottling.name));
+    const entryRow = (item, i) => `<div class="tasting-flight-member" data-tasting-id="${escapeHtml(item.record.id)}">
             <div class="tasting-flight-order-control"><button type="button" class="tasting-flight-drag-handle" data-flight-drag aria-label="${escapeHtml(t('tastingFlights.dragHandle'))}" title="${escapeHtml(t('tastingFlights.dragHandle'))}">
                 <svg width="17" height="19" viewBox="0 0 16 20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="10" r="1.5"/><circle cx="11" cy="10" r="1.5"/><circle cx="5" cy="17" r="1.5"/><circle cx="11" cy="17" r="1.5"/></svg>
-            </button><span class="tasting-flight-position" aria-label="${escapeHtml(t('tastingFlights.position',{position:i+1,count:refs.length}))}">${i+1}</span></div>
-            <button type="button" class="tasting-flight-member-open" data-act="tasting-flight-note-open" data-tasting-id="${escapeHtml(item.record.id)}" data-bottling-id="${escapeHtml(item.external?item.record.id:item.bottling.id)}" data-external="${item.external?'1':'0'}">
+            </button><span class="tasting-flight-position" aria-label="${escapeHtml(t('tastingFlights.position', {position: i + 1, count: refs.length}))}">${i + 1}</span></div>
+            <button type="button" class="tasting-flight-member-open" data-act="tasting-flight-note-open" data-tasting-id="${escapeHtml(item.record.id)}" data-bottling-id="${escapeHtml(item.external ? item.record.id : item.bottling.id)}" data-external="${item.external ? '1' : '0'}">
                 <strong>${escapeHtml(item.bottling.name)}</strong><small>${escapeHtml(item.record.title || formatDate(item.record.tastedOn))}</small>
             </button>
             <span class="tasting-flight-member-score">${tastingListGlasses(item.record) || '<span class="tasting-list-glasses" aria-hidden="true"></span>'}<strong>${tastingRating(item.record)}</strong></span>
             <div class="tasting-flight-member-actions">
-                <button type="button" class="btn small" data-act="tasting-flight-move" data-index="${i}" data-direction="-1" ${i===0?'disabled':''} aria-label="${escapeHtml(t('tastingFlights.moveUp'))}">${arrowUpIcon}</button>
-                <button type="button" class="btn small" data-act="tasting-flight-move" data-index="${i}" data-direction="1" ${i===refs.length-1?'disabled':''} aria-label="${escapeHtml(t('tastingFlights.moveDown'))}">${arrowDownIcon}</button>
+                <button type="button" class="btn small" data-act="tasting-flight-move" data-index="${i}" data-direction="-1" ${i === 0 ? 'disabled' : ''} aria-label="${escapeHtml(t('tastingFlights.moveUp'))}">${arrowUpIcon}</button>
+                <button type="button" class="btn small" data-act="tasting-flight-move" data-index="${i}" data-direction="1" ${i === refs.length - 1 ? 'disabled' : ''} aria-label="${escapeHtml(t('tastingFlights.moveDown'))}">${arrowDownIcon}</button>
                 <button type="button" class="btn small" data-act="tasting-flight-remove-note" data-tasting-id="${escapeHtml(item.record.id)}">${escapeHtml(t('tastingFlights.detach'))}</button>
             </div>
         </div>`;
-        shell(`<div class="analytics-page tasting-child-page tasting-flight-page" data-reconcile="replace">
-            ${backLink('tasting-flight-back','tastingFlights.back')}
-            ${pageTitle(t('tastingFlights.detailTitle'),t('tastingFlights.detailIntro'))}
+    shell(`<div class="analytics-page tasting-child-page tasting-flight-page" data-reconcile="replace">
+            ${backLink('tasting-flight-back', 'tastingFlights.back')}
+            ${pageTitle(t('tastingFlights.detailTitle'), t('tastingFlights.detailIntro'))}
             <section class="analytics-panel tasting-flight-summary">
-                ${flightEditing?`<div class="tasting-flight-form">
+                ${flightEditing ? `<div class="tasting-flight-form">
                     <label>${escapeHtml(t('tastingFlights.name'))}<input data-flight-name maxlength="160" required value="${escapeHtml(current.name)}"></label>
                     <label>${escapeHtml(t('tastingFlights.date'))}<input type="date" data-flight-date required value="${escapeHtml(current.date)}"></label>
                     <label>${escapeHtml(t('tastingFlights.notes'))}<textarea data-flight-notes maxlength="10000" rows="4">${escapeHtml(current.notes)}</textarea></label>
                     <div class="actions"><button class="btn" type="button" data-act="tasting-flight-cancel-edit">${escapeHtml(t('common.actions.cancel'))}</button>
                     <button class="btn primary" type="button" data-act="tasting-flight-save">${escapeHtml(t('common.actions.save'))}</button></div>
-                </div>`:`<div class="tasting-panel-heading"><div><h3>${escapeHtml(current.name)}</h3><p class="muted">${escapeHtml(formatDate(current.date))}</p></div>
+                </div>`: `<div class="tasting-panel-heading"><div>${headingTitle({title: current.name})}<p class="muted">${escapeHtml(formatDate(current.date))}</p></div>
                     <div class="actions"><button type="button" class="btn small" data-act="tasting-flight-edit">${editIcon}<span>${escapeHtml(t('common.actions.edit'))}</span></button>
                         <button type="button" class="btn small danger" data-act="tasting-flight-delete">${escapeHtml(t('common.actions.delete'))}</button></div></div>
                     ${current.notes ? `<p class="tasting-flight-comment">${escapeHtml(current.notes)}</p>` : ''}`}
             </section>
             ${current.planItems?.length ? plannedFlightDetail(current) : ''}
-            ${current.phase==='inProgress' ? `<div class="actions"><button type="button" class="btn" data-act="flight-plan-finish" ${refs.length?'':'disabled'}>${t('flightPlan.finish')}</button></div>` : ''}
-            <section class="analytics-panel tasting-flight-members"><div class="tasting-panel-heading"><h3>${escapeHtml(t(refs.length===1?'tastingFlights.oneEntry':'tastingFlights.entriesCount',{count:refs.length}))}</h3>
-                ${current.phase==='inProgress' ? '' : `<button type="button" class="btn primary" data-act="tasting-flight-toggle-add" ${current.phase==='completed'?'disabled':''}>${newBottlingIcon}<span>${escapeHtml(t('tastingFlights.add'))}</span></button>`}</div>
-                ${flightAdding && current.phase!=='inProgress'?`<div class="tasting-flight-add">
+            ${current.phase === 'inProgress' ? `<div class="actions"><button type="button" class="btn" data-act="flight-plan-finish" ${refs.length ? '' : 'disabled'}>${t('flightPlan.finish')}</button></div>` : ''}
+            <section class="analytics-panel tasting-flight-members"><div class="tasting-panel-heading">${headingTitle({title: t(refs.length === 1 ? 'tastingFlights.oneEntry' : 'tastingFlights.entriesCount', {count: refs.length})})}
+                ${current.phase === 'inProgress' ? '' : `<button type="button" class="btn primary" data-act="tasting-flight-toggle-add" ${current.phase === 'completed' ? 'disabled' : ''}>${newBottlingIcon}<span>${escapeHtml(t('tastingFlights.add'))}</span></button>`}</div>
+                ${flightAdding && current.phase !== 'inProgress' ? `<div class="tasting-flight-add">
                     <div class="tasting-flight-add-existing"><label>${escapeHtml(t('tastingFlights.selectExisting'))}
-                        <select data-flight-tasting-option ${available.length?'':'disabled'}>${available.map(item=>`<option value="${escapeHtml(item.record.id)}">${escapeHtml(flightEntryLabel(item))}</option>`).join('')}</select></label>
-                        <button class="btn" type="button" data-act="tasting-flight-attach" ${available.length?'':'disabled'}>${escapeHtml(t('tastingFlights.addExisting'))}</button></div>
+                        <select data-flight-tasting-option ${available.length ? '' : 'disabled'}>${available.map(item => `<option value="${escapeHtml(item.record.id)}">${escapeHtml(flightEntryLabel(item))}</option>`).join('')}</select></label>
+                        <button class="btn" type="button" data-act="tasting-flight-attach" ${available.length ? '' : 'disabled'}>${escapeHtml(t('tastingFlights.addExisting'))}</button></div>
                     <div class="tasting-flight-add-new"><label>${escapeHtml(t('tastings.chooseBottling'))}
-                        <select data-flight-owned-bottling>${(state.collection?.bottlings || []).map(b=>`<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`).join('')}</select></label>
-                        <button class="btn" type="button" data-act="tasting-flight-new-owned" ${(state.collection?.bottlings || []).length?'':'disabled'}>${escapeHtml(t('tastings.fromCollection'))}</button>
+                        <select data-flight-owned-bottling>${(state.collection?.bottlings || []).map(b => `<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`).join('')}</select></label>
+                        <button class="btn" type="button" data-act="tasting-flight-new-owned" ${(state.collection?.bottlings || []).length ? '' : 'disabled'}>${escapeHtml(t('tastings.fromCollection'))}</button>
                         <button class="btn" type="button" data-act="tasting-flight-new-external">${escapeHtml(t('tastings.outsideCollection'))}</button></div>
-                </div>`:''}
+                </div>`: ''}
                 ${refs.length ? `<div class="warehouse-bottle-list tasting-flight-members-list">${refs.map(entryRow).join('')}</div>` : `<p class="hint">${escapeHtml(t('tastingFlights.noEntries'))}</p>`}
             </section></div>`);
-    }
-    function toggleFlightEdit(editing) {flightEditing=editing;flight();}
-    function toggleFlightAdd() {flightAdding=!flightAdding;flight();}
-    async function saveFlight() {
-        const name=document.querySelector('.tasting-flight-page [data-flight-name]');
-        const date=document.querySelector('.tasting-flight-page [data-flight-date]');
-        if (!name?.reportValidity() || !date?.reportValidity()) return;
-        const notes=document.querySelector('.tasting-flight-page [data-flight-notes]')?.value || '';
-        try {
-            await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}`,{method:'PATCH',body:JSON.stringify({name:name.value,date:date.value,notes})});
-            flightEditing=false;
-            await refresh('collection');
-        } catch(error) {toast(error.message,true);}
-    }
-    async function updateFlightMembers(ids) {
-        try {
-            await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}/tastings`,{method:'PUT',body:JSON.stringify({tastingIds:ids})});
-            await refresh('collection');
-        } catch(error) {toast(error.message,true);}
-    }
-    function reorderFlightMember(sourceId,targetId,after) {
-        const record=(state.collection?.tastingFlights || []).find(x=>x.id===state.selected);
-        const reordered=record && reorderFlightIds(record.tastingIds,sourceId,targetId,after);
-        if (reordered) return updateFlightMembers(reordered);
-    }
-    function moveFlightMember(index,step) {
-        const record=(state.collection?.tastingFlights || []).find(x=>x.id===state.selected);
-        if (!record) return;
-        const ids=[...record.tastingIds],to=index+step;
-        if (!Number.isInteger(index) || to<0 || to>=ids.length) return;
-        [ids[index],ids[to]]=[ids[to],ids[index]];
-        return updateFlightMembers(ids);
-    }
-    function attachFlightMember() {
-        const id=document.querySelector('[data-flight-tasting-option]')?.value;
-        const current=(state.collection?.tastingFlights || []).find(x=>x.id===state.selected);
-        if (id && current) return updateFlightMembers([...current.tastingIds,id]);
-    }
-    function detachFlightMember(id) {
-        const current=(state.collection?.tastingFlights || []).find(x=>x.id===state.selected);
-        if (current?.tastingIds.includes(id)) return updateFlightMembers(current.tastingIds.filter(x=>x!==id));
-    }
-    async function deleteFlight() {
-        try {
-            await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}`,{method:'DELETE'});
-            closeModal();
-            state.page='tastings-home';
-            await refresh('collection');
-            navigate('tastings-home',null,{replace:true});
-            return true;
-        } catch(error) {toast(error.message,true);return false;}
-    }
-    function home() {
-        // Returning to an index ends any prior edit session. Reopening is always read-only.
-        flavorSession = null;
-        const owned=state.collection?.bottlings || [];
-        const entries=[
-            ...owned.flatMap(b=>sortedTastings(b).map(record=>({record,b,external:false}))),
-            ...standalone().map(record=>({record,b:record.bottling,external:true}))
-        ].sort((a,b)=>(b.record.tastedOn || '').localeCompare(a.record.tastedOn || '') ||
-            (b.record.createdAt || '').localeCompare(a.record.createdAt || '') || b.record.id.localeCompare(a.record.id));
-        shell(`<div class="analytics-page tasting-home-page">
-            <header class="section-head analytics-page-heading"><div class="page-heading-copy">
-            <span class="eyebrow dark">${escapeHtml(t('tastings.homeEyebrow'))}</span>
-            <h2>${escapeHtml(t('tastings.homeTitle'))}<span class="heading-period">.</span></h2>
-            <p class="intro">${escapeHtml(t('tastings.homeIntro'))}</p></div></header>
+  }
+  function toggleFlightEdit(editing) {flightEditing = editing; flight();}
+  function toggleFlightAdd() {flightAdding = !flightAdding; flight();}
+  async function saveFlight() {
+    const name = document.querySelector('.tasting-flight-page [data-flight-name]');
+    const date = document.querySelector('.tasting-flight-page [data-flight-date]');
+    if (!name?.reportValidity() || !date?.reportValidity()) return;
+    const notes = document.querySelector('.tasting-flight-page [data-flight-notes]')?.value || '';
+    try {
+      await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}`, {method: 'PATCH', body: JSON.stringify({name: name.value, date: date.value, notes})});
+      flightEditing = false;
+      await refresh('collection');
+    } catch (error) {toast(error.message, true);}
+  }
+  async function updateFlightMembers(ids) {
+    try {
+      await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}/tastings`, {method: 'PUT', body: JSON.stringify({tastingIds: ids})});
+      await refresh('collection');
+    } catch (error) {toast(error.message, true);}
+  }
+  function reorderFlightMember(sourceId, targetId, after) {
+    const record = (state.collection?.tastingFlights || []).find(x => x.id === state.selected);
+    const reordered = record && reorderFlightIds(record.tastingIds, sourceId, targetId, after);
+    if (reordered) return updateFlightMembers(reordered);
+  }
+  function moveFlightMember(index, step) {
+    const record = (state.collection?.tastingFlights || []).find(x => x.id === state.selected);
+    if (!record) return;
+    const ids = [...record.tastingIds], to = index + step;
+    if (!Number.isInteger(index) || to < 0 || to >= ids.length) return;
+    [ids[index], ids[to]] = [ids[to], ids[index]];
+    return updateFlightMembers(ids);
+  }
+  function attachFlightMember() {
+    const id = document.querySelector('[data-flight-tasting-option]')?.value;
+    const current = (state.collection?.tastingFlights || []).find(x => x.id === state.selected);
+    if (id && current) return updateFlightMembers([...current.tastingIds, id]);
+  }
+  function detachFlightMember(id) {
+    const current = (state.collection?.tastingFlights || []).find(x => x.id === state.selected);
+    if (current?.tastingIds.includes(id)) return updateFlightMembers(current.tastingIds.filter(x => x !== id));
+  }
+  async function deleteFlight() {
+    try {
+      await request(`/api/tasting-flights/${encodeURIComponent(state.selected)}`, {method: 'DELETE'});
+      closeModal();
+      state.page = 'tastings-home';
+      await refresh('collection');
+      navigate('tastings-home', null, {replace: true});
+      return true;
+    } catch (error) {toast(error.message, true); return false;}
+  }
+  function home() {
+    // Returning to an index ends any prior edit session. Reopening is always read-only.
+    flavorSession = null;
+    const owned = state.collection?.bottlings || [];
+    const entries = [
+      ...owned.flatMap(b => sortedTastings(b).map(record => ({record, b, external: false}))),
+      ...standalone().map(record => ({record, b: record.bottling, external: true}))
+    ].sort((a, b) => (b.record.tastedOn || '').localeCompare(a.record.tastedOn || '') ||
+      (b.record.createdAt || '').localeCompare(a.record.createdAt || '') || b.record.id.localeCompare(a.record.id));
+    shell(`<div class="analytics-page tasting-home-page">
+            ${pageHeader({title: t('tastings.homeTitle'), eyebrow: t('tastings.homeEyebrow'), intro: t('tastings.homeIntro'), className: 'analytics-page-heading'})}
             ${homeFlights()}
             <section class="analytics-panel tasting-home-recent">
-                <div class="tasting-panel-heading"><h3>${escapeHtml(t('tastings.entries'))}</h3>
-                    <button type="button" class="btn primary" data-act="tastings-start-choice">${newBottlingIcon}<span>${escapeHtml(t('tastings.add'))}</span></button>
-                </div>
-                ${createChoiceOpen?`<div class="tasting-create-chooser"><div class="tasting-choose-owned">
+                ${sectionHeader({
+      title: t('tastings.entries'), layout: 'tasting-panel-heading', actionsBare: true,
+      actions: `<button type="button" class="btn primary" data-act="tastings-start-choice">${newBottlingIcon}<span>${escapeHtml(t('tastings.add'))}</span></button>`
+    })}
+                ${createChoiceOpen ? `<div class="tasting-create-chooser"><div class="tasting-choose-owned">
                     <label>${escapeHtml(t('tastings.chooseBottling'))}<select data-owned-tasting-bottling>
-                    ${owned.map(b=>`<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`).join('')}</select></label>
-                    <button type="button" class="btn" data-act="tastings-start-owned" ${owned.length?'':'disabled'}>${escapeHtml(t('tastings.fromCollection'))}</button>
-                </div><button type="button" class="btn" data-act="tastings-start-external">${escapeHtml(t('tastings.outsideCollection'))}</button></div>`:''}
-                ${entries.length ? `<div class="warehouse-bottle-list tasting-entry-list">${entries.map(item=>tastingRow({...item,home:true})).join('')}</div>` : `<p class="hint">${escapeHtml(t('tastings.emptyHome'))}</p>`}
+                    ${owned.map(b => `<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`).join('')}</select></label>
+                    <button type="button" class="btn" data-act="tastings-start-owned" ${owned.length ? '' : 'disabled'}>${escapeHtml(t('tastings.fromCollection'))}</button>
+                </div><button type="button" class="btn" data-act="tastings-start-external">${escapeHtml(t('tastings.outsideCollection'))}</button></div>` : ''}
+                ${entries.length ? `<div class="warehouse-bottle-list tasting-entry-list">${entries.map(item => tastingRow({...item, home: true})).join('')}</div>` : `<p class="hint">${escapeHtml(t('tastings.emptyHome'))}</p>`}
             </section>
         </div>`);
-    }
-    function toggleCreateChoice() { createChoiceOpen=!createChoiceOpen; home(); }
-    function list() {
-        flavorSession = null;
-        const bottling=subject();
-        if (!bottling) { navigate('tastings-home',null,{replace:true}); return; }
-        const tastings=sortedTastings(bottling);
-        shell(`<div class="analytics-page tasting-child-page">
-        ${backLink('tastings-back-detail','tastings.backDetail')}
-        ${pageTitle(t('tastings.overviewTitle'),t('tastings.overviewIntro'))}
+  }
+  function toggleCreateChoice() {createChoiceOpen = !createChoiceOpen; home();}
+  function list() {
+    flavorSession = null;
+    const bottling = subject();
+    if (!bottling) {navigate('tastings-home', null, {replace: true}); return;}
+    const tastings = sortedTastings(bottling);
+    shell(`<div class="analytics-page tasting-child-page">
+        ${backLink('tastings-back-detail', 'tastings.backDetail')}
+        ${pageTitle(t('tastings.overviewTitle'), t('tastings.overviewIntro'))}
         ${bottlingInfo(bottling)}
         <section class="analytics-panel tasting-list-section">
-            <div class="tasting-panel-heading"><h3>${escapeHtml(t('tastings.entriesCount',{count:tastings.length}))}</h3>
-                <button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t('tastings.add'))}</span></button></div>
-            ${tastings.length ? `<div class="warehouse-bottle-list tasting-entry-list">${tastings.map(record=>tastingRow({record,b:bottling})).join('')}</div>` : `<p class="hint">${escapeHtml(t('tastings.none'))}</p>`}
+            ${sectionHeader({
+      title: t('tastings.entriesCount', {count: tastings.length}), layout: 'tasting-panel-heading', actionsBare: true,
+      actions: `<button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t('tastings.add'))}</span></button>`
+    })}
+            ${tastings.length ? `<div class="warehouse-bottle-list tasting-entry-list">${tastings.map(record => tastingRow({record, b: bottling})).join('')}</div>` : `<p class="hint">${escapeHtml(t('tastings.none'))}</p>`}
         </section></div>`);
+  }
+  function editor() {
+    // Returning from a tasting should show the compact flight list, not the expanded add form.
+    if (state.flightId) flightAdding = false;
+    const external = isExternal();
+    const record = external ? standalone().find(x => x.id === state.selected) : null;
+    const bottling = external ? (record?.bottling || emptyBottling()) : subject();
+    const draft = external ? state.selected === 'new' : state.tastingId === 'new';
+    const existing = external ? record : (draft ? null : (bottling?.tastings || []).find(x => x.id === state.tastingId));
+    if (!external && !bottling) {navigate('tastings-home', null, {replace: true}); return;}
+    if (!draft && !existing) {navigate(external ? 'tastings-home' : 'tastings', external ? null : bottling.id, {replace: true}); return;}
+    const value = existing || emptyRecord();
+    const flightBack = state.flightId && (state.collection?.tastingFlights || []).some(f => f.id === state.flightId && (draft || f.tastingIds.includes(existing?.id)));
+    const backAction = flightBack ? 'tasting-back-flight' : (external ? 'tastings-back-home' : 'tastings-back-list');
+    const backLabel = flightBack ? 'tastingFlights.backToFlight' : (external ? 'tastings.backHome' : 'tastings.backList');
+    const id = existing?.id || 'new';
+    if (!flavorSession || flavorSession.id !== id || flavorSession.bottlingId !== (bottling.id || id) || flavorSession.external !== external) {
+      flavorSession = {id, bottlingId: bottling.id || id, draft, external, editing: draft, history: createTastingHistory(value)};
+      flavorSaveQueue = Promise.resolve();
     }
-    function editor() {
-        // Returning from a tasting should show the compact flight list, not the expanded add form.
-        if (state.flightId) flightAdding=false;
-        const external=isExternal();
-        const record=external ? standalone().find(x=>x.id===state.selected) : null;
-        const bottling=external ? (record?.bottling || emptyBottling()) : subject();
-        const draft=external ? state.selected==='new' : state.tastingId==='new';
-        const existing=external ? record : (draft ? null : (bottling?.tastings || []).find(x=>x.id===state.tastingId));
-        if (!external && !bottling) { navigate('tastings-home',null,{replace:true}); return; }
-        if (!draft && !existing) { navigate(external?'tastings-home':'tastings',external?null:bottling.id,{replace:true}); return; }
-        const value=existing || emptyRecord();
-        const flightBack=state.flightId && (state.collection?.tastingFlights || []).some(f=>f.id===state.flightId && (draft || f.tastingIds.includes(existing?.id)));
-        const backAction=flightBack ? 'tasting-back-flight' : (external?'tastings-back-home':'tastings-back-list');
-        const backLabel=flightBack ? 'tastingFlights.backToFlight' : (external?'tastings.backHome':'tastings.backList');
-        const id=existing?.id || 'new';
-        if (!flavorSession || flavorSession.id !== id || flavorSession.bottlingId !== (bottling.id || id) || flavorSession.external !== external) {
-            flavorSession={id,bottlingId:bottling.id || id,draft,external,editing:draft,history:createTastingHistory(value)};
-            flavorSaveQueue=Promise.resolve();
-        }
-        if (!draft && !flavorSession.editing) {
-            shell(`<div class="analytics-page tasting-child-page">
-                ${backLink(backAction,backLabel)}
-                ${pageTitle(t('tastings.editorViewTitle'),t('tastings.editorViewIntro'))}
+    if (!draft && !flavorSession.editing) {
+      shell(`<div class="analytics-page tasting-child-page">
+                ${backLink(backAction, backLabel)}
+                ${pageTitle(t('tastings.editorViewTitle'), t('tastings.editorViewIntro'))}
                 <section class="section tasting-editor-content tasting-readonly-content" data-flavor-detail data-tasting-readonly="true">
-                    ${bottlingInfo(bottling,external,false)}
+                    ${bottlingInfo(bottling, external, false)}
                     ${flightHint(existing)}
-                    <div class="section-head"><h3>${escapeHtml(t('tastings.editorSection'))}</h3></div>
+                    ${sectionHeader({title: t('tastings.editorSection')})}
                     ${tastingReadOnly(value)}
                 </section>
             </div>`);
-            return;
-        }
-        shell(`<div class="analytics-page tasting-child-page">
-        ${backLink(backAction,backLabel)}
-        ${pageTitle(draft?t('tastings.editorCreateTitle'):t('tastings.editorEditTitle'),
-            draft?t('tastings.editorCreateIntro'):t('tastings.editorEditIntro'))}
+      return;
+    }
+    shell(`<div class="analytics-page tasting-child-page">
+        ${backLink(backAction, backLabel)}
+        ${pageTitle(draft ? t('tastings.editorCreateTitle') : t('tastings.editorEditTitle'),
+      draft ? t('tastings.editorCreateIntro') : t('tastings.editorEditIntro'))}
     <section class="section tasting-editor-content" data-flavor-detail data-bottling-id="${escapeHtml(bottling?.id || record?.id || 'new')}" aria-label="${escapeHtml(t('flavor.title'))}">
-        ${bottlingInfo(bottling,external,draft)}
+        ${bottlingInfo(bottling, external, draft)}
         ${existing ? flightHint(existing) : (flightBack ? `<div class="tasting-flight-context">${escapeHtml(t('tastingFlights.newInFlight'))}</div>` : '')}
-        <div class="section-head tasting-editor-section-head"><h3>${escapeHtml(t('tastings.editorSection'))}</h3></div>
+        ${sectionHeader({title: t('tastings.editorSection'), className: 'tasting-editor-section-head'})}
         <div class="flavor-detail-panel tasting-panel">
             <div class="tasting-record-fields analytics-panel tasting-edit-meta-panel">
                 <label>${escapeHtml(t('tastings.date'))}<input type="date" data-tasting-date required value="${escapeHtml(value.tastedOn)}"></label>
@@ -831,29 +842,33 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
                 <button type="button" class="btn small tasting-action-btn" data-act="flavor-detail-undo" title="${escapeHtml(t('flavor.undo'))}" aria-label="${escapeHtml(t('flavor.undo'))}" ${flavorSession.history.canUndo ? '' : 'disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/></svg></button>
                 <button type="button" class="btn small tasting-action-btn" data-act="flavor-detail-redo" title="${escapeHtml(t('flavor.redo'))}" aria-label="${escapeHtml(t('flavor.redo'))}" ${flavorSession.history.canRedo ? '' : 'disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h2"/></svg></button>
             </div>
-                ${draft?'':`<button type="button" class="btn small" data-act="tasting-edit-done">${escapeHtml(t('tastings.done'))}</button><button type="button" class="btn small danger" data-act="tasting-delete" data-tasting-id="${escapeHtml(value.id)}">${escapeHtml(t('common.actions.delete'))}</button>`}
+                ${draft ? '' : `<button type="button" class="btn small" data-act="tasting-edit-done">${escapeHtml(t('tastings.done'))}</button><button type="button" class="btn small danger" data-act="tasting-delete" data-tasting-id="${escapeHtml(value.id)}">${escapeHtml(t('common.actions.delete'))}</button>`}
             </div>
             </div>
             <div class="tasting-top-row">
                 <section class="analytics-panel tasting-color-panel">
-                    <div class="tasting-panel-heading"><h3>${escapeHtml(t('tasting.colorHeading'))}</h3>
-                        <button type="button" class="btn small" data-act="tasting-color-clear" ${flavorSession.history.value.whiskyColor ? '' : 'disabled'}>${escapeHtml(t('tasting.colorClear'))}</button>
-                    </div>
+                    ${sectionHeader({
+        title: t('tasting.colorHeading'), layout: 'tasting-panel-heading', actionsBare: true,
+        actions: `<button type="button" class="btn small" data-act="tasting-color-clear" ${flavorSession.history.value.whiskyColor ? '' : 'disabled'}>${escapeHtml(t('tasting.colorClear'))}</button>`
+      })}
                     ${whiskyColorSelector(flavorSession.history.value.whiskyColor)}
                 </section>
-                <section class="analytics-panel tasting-senses-section"><div class="tasting-panel-heading"><h3>${escapeHtml(t('flavor.title'))}</h3>
-                    <button type="button" class="btn small" data-act="tasting-flavor-clear" ${flavorSession.history.value.flavorProfile?'':'disabled'}>${escapeHtml(t('tastings.clearRadar'))}</button></div>
+                <section class="analytics-panel tasting-senses-section">${sectionHeader({
+        title: t('flavor.title'), layout: 'tasting-panel-heading', actionsBare: true,
+        actions: `<button type="button" class="btn small" data-act="tasting-flavor-clear" ${flavorSession.history.value.flavorProfile ? '' : 'disabled'}>${escapeHtml(t('tastings.clearRadar'))}</button>`
+      })}
                     <p class="hint" data-flavor-missing ${flavorSession.history.value.flavorProfile ? 'hidden' : ''}>${escapeHtml(t('flavor.notRecorded'))}</p>
-                    ${flavorChart(flavorSession.history.value.flavorProfile, {editable:true})}
+                    ${flavorChart(flavorSession.history.value.flavorProfile, {editable: true})}
                 </section>
             </div>
-            <section class="analytics-panel"><h3>${escapeHtml(t('tasting.notes'))}</h3>
-                <div class="tasting-notes">${['nose','palate','finish'].map(key => `<label>${escapeHtml(t(`forms.bottling.${key}`))}<textarea data-tasting-note="${key}">${escapeHtml(flavorSession.history.value.tastingNotes[key])}</textarea></label>`).join('')}</div>
+            <section class="analytics-panel">${headingTitle({title: t('tasting.notes')})}
+                <div class="tasting-notes">${['nose', 'palate', 'finish'].map(key => `<label>${escapeHtml(t(`forms.bottling.${key}`))}<textarea data-tasting-note="${key}">${escapeHtml(flavorSession.history.value.tastingNotes[key])}</textarea></label>`).join('')}</div>
             </section>
             <section class="analytics-panel tasting-rating-panel">
-                <div class="tasting-panel-heading"><h3>${escapeHtml(t('tasting.overallRating'))}</h3>
-                    <button type="button" class="btn small" data-act="tasting-rating-clear" ${flavorSession.history.value.rating == null ? 'disabled' : ''}>${escapeHtml(t('tasting.clearRating'))}</button>
-                </div>
+                ${sectionHeader({
+        title: t('tasting.overallRating'), layout: 'tasting-panel-heading', actionsBare: true,
+        actions: `<button type="button" class="btn small" data-act="tasting-rating-clear" ${flavorSession.history.value.rating == null ? 'disabled' : ''}>${escapeHtml(t('tasting.clearRating'))}</button>`
+      })}
                 ${glencairnRating(flavorSession.history.value.rating)}
                 <label class="tasting-rating-comment tasting-rating-comment-editor">${escapeHtml(t('tasting.ratingComment'))}
                     <textarea data-tasting-rating-comment maxlength="10000" rows="3">${escapeHtml(flavorSession.history.value.ratingComment)}</textarea>
@@ -864,182 +879,184 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
     </section>
 
 </div>`);
+  }
+  function localToday() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  async function saveDraft() {
+    // A save can outlive the click that started it. While the POST and its
+    // collection refresh are pending, another Back click would render the
+    // old list and a late save completion could navigate away unexpectedly.
+    if (draftSavePending) return draftSavePending;
+    const session = flavorSession;
+    if (!session?.draft) return;
+    if (!commitTasting()) return;
+    const node = flavorNode();
+    const tastedOn = node?.querySelector('[data-tasting-date]')?.value;
+    const title = node?.querySelector('[data-tasting-title]')?.value || '';
+    if (!node?.querySelector('[data-tasting-date]')?.checkValidity()) {
+      node?.querySelector('[data-tasting-date]')?.reportValidity(); return;
     }
-    function localToday() {
-        const d=new Date();
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-    async function saveDraft() {
-        // A save can outlive the click that started it. While the POST and its
-        // collection refresh are pending, another Back click would render the
-        // old list and a late save completion could navigate away unexpectedly.
-        if (draftSavePending) return draftSavePending;
-        const session=flavorSession;
-        if (!session?.draft) return;
-        if (!commitTasting()) return;
-        const node=flavorNode();
-        const tastedOn=node?.querySelector('[data-tasting-date]')?.value;
-        const title=node?.querySelector('[data-tasting-title]')?.value || '';
-        if (!node?.querySelector('[data-tasting-date]')?.checkValidity()) {
-            node?.querySelector('[data-tasting-date]')?.reportValidity();return;
+    let externalBottling;
+    try {
+      externalBottling = session.external ? readExternalFields(node) : null;
+    } catch (error) {toast(error.message, true); return;}
+    if (session.external && !externalBottling) return;
+    // Disable the draft's Back and Save controls (plus editable controls)
+    // until both the request and data refresh have finished. The button
+    // state is restored on errors, so the draft remains editable.
+    const draftPage = node.closest('.tasting-child-page');
+    const controls = [...(draftPage?.querySelectorAll('button, input, textarea, select') || [])];
+    const enabled = controls.filter(control => !control.disabled);
+    for (const control of enabled) control.disabled = true;
+    draftPage?.setAttribute('aria-busy', 'true');
+    const route = {page: state.page, selected: state.selected, tastingId: state.tastingId, flightId: state.flightId};
+    const save = (async () => {
+      try {
+        const flightId = state.flightId;
+        const data = {...session.history.value, tastedOn, title, ...(session.external ? {bottling: externalBottling} : flightId ? {bottlingId: session.bottlingId} : {})};
+        const response = await request(flightId ? `/api/tasting-flights/${encodeURIComponent(flightId)}/tastings` :
+          (session.external ? '/api/external-tastings' : `/api/bottlings/${encodeURIComponent(session.bottlingId)}/tastings`), {
+          method: 'POST', body: JSON.stringify(data)
+        });
+        const created = flightId ? response.record : response;
+        await refresh('collection');
+        // If a header navigation occurred meanwhile, never override it.
+        if (state.page === route.page && state.selected === route.selected &&
+          state.tastingId === route.tastingId && state.flightId === route.flightId) {
+          navigate(editPage(session.external), session.external ? created.id : session.bottlingId, {tastingId: session.external ? null : created.id, flightId, replace: true});
         }
-        let externalBottling;
-        try {
-            externalBottling=session.external?readExternalFields(node):null;
-        } catch(error) { toast(error.message,true);return; }
-        if (session.external && !externalBottling) return;
-        // Disable the draft's Back and Save controls (plus editable controls)
-        // until both the request and data refresh have finished. The button
-        // state is restored on errors, so the draft remains editable.
-        const draftPage=node.closest('.tasting-child-page');
-        const controls=[...(draftPage?.querySelectorAll('button, input, textarea, select') || [])];
-        const enabled=controls.filter(control=>!control.disabled);
-        for (const control of enabled) control.disabled=true;
-        draftPage?.setAttribute('aria-busy','true');
-        const route={page:state.page,selected:state.selected,tastingId:state.tastingId,flightId:state.flightId};
-        const save=(async()=>{
-            try {
-                const flightId=state.flightId;
-                const data={...session.history.value,tastedOn,title,...(session.external?{bottling:externalBottling}:flightId?{bottlingId:session.bottlingId}:{})};
-                const response=await request(flightId ? `/api/tasting-flights/${encodeURIComponent(flightId)}/tastings` :
-                    (session.external?'/api/external-tastings':`/api/bottlings/${encodeURIComponent(session.bottlingId)}/tastings`),{
-                    method:'POST',body:JSON.stringify(data)
-                });
-                const created=flightId ? response.record : response;
-                await refresh('collection');
-                // If a header navigation occurred meanwhile, never override it.
-                if (state.page===route.page && state.selected===route.selected &&
-                    state.tastingId===route.tastingId && state.flightId===route.flightId) {
-                    navigate(editPage(session.external),session.external?created.id:session.bottlingId,{tastingId:session.external?null:created.id,flightId,replace:true});
-                }
-            } catch(error) { toast(error.message,true); }
-            finally {
-                draftPage?.removeAttribute('aria-busy');
-                for (const control of enabled) if (control.isConnected) control.disabled=false;
-            }
-        })();
-        draftSavePending=save;
-        try { return await save; }
-        finally { if (draftSavePending===save) draftSavePending=null; }
+      } catch (error) {toast(error.message, true);}
+      finally {
+        draftPage?.removeAttribute('aria-busy');
+        for (const control of enabled) if (control.isConnected) control.disabled = false;
+      }
+    })();
+    draftSavePending = save;
+    try {return await save;}
+    finally {if (draftSavePending === save) draftSavePending = null;}
+  }
+  async function persistMeta() {
+    const session = flavorSession;
+    if (!session?.editing || session.draft) return;
+    const node = flavorNode();
+    const date = node?.querySelector('[data-tasting-date]');
+    if (!date?.checkValidity()) {date?.reportValidity(); return;}
+    const patch = {tastedOn: date.value, title: node.querySelector('[data-tasting-title]').value};
+    flavorSaveQueue = flavorSaveQueue.then(async () => {
+      const updated = await request(session.external ? `/api/external-tastings/${encodeURIComponent(session.id)}` : `/api/bottlings/${encodeURIComponent(session.bottlingId)}/tastings/${encodeURIComponent(session.id)}`, {method: 'PATCH', body: JSON.stringify(patch)});
+      if (session.external) {
+        const item = state.collection?.externalTastings?.find(t => t.id === session.id);
+        if (item) Object.assign(item, updated);
+      } else {
+        const b = state.collection?.bottlings?.find(b => b.id === session.bottlingId);
+        const item = b?.tastings?.find(t => t.id === session.id);
+        if (item) Object.assign(item, updated);
+      }
+    }).catch(error => toast(error.message, true));
+    await flavorSaveQueue;
+  }
+  function startEditing() {
+    if (!flavorSession || flavorSession.draft) return;
+    flavorSession.editing = true;
+    editor();
+    flavorNode()?.querySelector('[data-tasting-date]')?.focus?.();
+  }
+  async function finishEditing() {
+    if (!flavorSession?.editing || flavorSession.draft) return;
+    if (!commitTasting()) return;
+    const session = flavorSession;
+    await flavorSaveQueue;
+    if (session !== flavorSession) return;
+    session.editing = false;
+    editor();
+    flavorNode()?.querySelector('[data-act="tasting-edit-start"]')?.focus?.();
+  }
+  function showExternalEdit(editing) {
+    if (!flavorSession?.external || flavorSession.draft) return;
+    const panel = flavorNode()?.querySelector('.tasting-bottling-info');
+    const read = panel?.querySelector('[data-external-read]');
+    const form = panel?.querySelector('[data-external-edit]');
+    if (!read || !form) return;
+    read.hidden = editing;
+    form.hidden = !editing;
+    if (editing) form.querySelector('[data-external-field="name"]')?.focus?.();
+  }
+  function cancelExternalEdit() {
+    const record = standalone().find(item => item.id === flavorSession?.id);
+    const panel = flavorNode()?.querySelector('.tasting-bottling-info');
+    if (record && panel) {
+      for (const key of ['name', 'distillery', 'bottler', 'ageYears', 'abv', 'releaseYear']) {
+        const input = panel.querySelector(`[data-external-field="${key}"]`);
+        if (input) input.value = String(record.bottling?.[key] ?? '');
+      }
     }
-    async function persistMeta() {
-        const session=flavorSession;
-        if (!session?.editing || session.draft) return;
-        const node=flavorNode();
-        const date=node?.querySelector('[data-tasting-date]');
-        if (!date?.checkValidity()) { date?.reportValidity();return; }
-        const patch={tastedOn:date.value,title:node.querySelector('[data-tasting-title]').value};
-        flavorSaveQueue=flavorSaveQueue.then(async()=>{
-            const updated=await request(session.external?`/api/external-tastings/${encodeURIComponent(session.id)}`:`/api/bottlings/${encodeURIComponent(session.bottlingId)}/tastings/${encodeURIComponent(session.id)}`,{method:'PATCH',body:JSON.stringify(patch)});
-            if (session.external) {
-                const item=state.collection?.externalTastings?.find(t=>t.id===session.id);
-                if (item) Object.assign(item,updated);
-            } else {
-                const b=state.collection?.bottlings?.find(b=>b.id===session.bottlingId);
-                const item=b?.tastings?.find(t=>t.id===session.id);
-                if (item) Object.assign(item,updated);
-            }
-        }).catch(error=>toast(error.message,true));
-        await flavorSaveQueue;
+    showExternalEdit(false);
+  }
+  async function persistExternalDetails() {
+    const session = flavorSession;
+    if (!session?.external || session.draft) return;
+    const node = flavorNode();
+    const fields = readExternalFields(node);
+    if (!fields) return;
+    const panel = node?.querySelector('.tasting-bottling-info');
+    try {
+      await flavorSaveQueue;
+      const updated = await request(`/api/external-tastings/${encodeURIComponent(session.id)}`, {method: 'PATCH', body: JSON.stringify({bottling: fields})});
+      const item = state.collection?.externalTastings?.find(t => t.id === session.id);
+      if (item) Object.assign(item, updated);
+      if (panel?.isConnected) panel.outerHTML = bottlingInfo(updated.bottling, true, false);
+    } catch (error) {toast(error.message, true);}
+  }
+  function showAssignDialog() {
+    const session = flavorSession;
+    if (!session?.external || session.draft) return;
+    const owned = [...(state.collection?.bottlings || [])].sort((a, b) => a.name.localeCompare(b.name));
+    if (!owned.length) {
+      toast(t('tastings.assignNoBottlings'), true);
+      return;
     }
-    function startEditing() {
-        if (!flavorSession || flavorSession.draft) return;
-        flavorSession.editing = true;
-        editor();
-        flavorNode()?.querySelector('[data-tasting-date]')?.focus?.();
-    }
-    async function finishEditing() {
-        if (!flavorSession?.editing || flavorSession.draft) return;
-        if (!commitTasting()) return;
-        const session = flavorSession;
-        await flavorSaveQueue;
-        if (session !== flavorSession) return;
-        session.editing = false;
-        editor();
-        flavorNode()?.querySelector('[data-act="tasting-edit-start"]')?.focus?.();
-    }
-    function showExternalEdit(editing) {
-        if (!flavorSession?.external || flavorSession.draft) return;
-        const panel = flavorNode()?.querySelector('.tasting-bottling-info');
-        const read = panel?.querySelector('[data-external-read]');
-        const form = panel?.querySelector('[data-external-edit]');
-        if (!read || !form) return;
-        read.hidden = editing;
-        form.hidden = !editing;
-        if (editing) form.querySelector('[data-external-field="name"]')?.focus?.();
-    }
-    function cancelExternalEdit() {
-        const record = standalone().find(item => item.id === flavorSession?.id);
-        const panel = flavorNode()?.querySelector('.tasting-bottling-info');
-        if (record && panel) {
-            for (const key of ['name','distillery','bottler','ageYears','abv','releaseYear']) {
-                const input = panel.querySelector(`[data-external-field="${key}"]`);
-                if (input) input.value = String(record.bottling?.[key] ?? '');
-            }
-        }
-        showExternalEdit(false);
-    }
-    async function persistExternalDetails() {
-        const session = flavorSession;
-        if (!session?.external || session.draft) return;
-        const node = flavorNode();
-        const fields = readExternalFields(node);
-        if (!fields) return;
-        const panel = node?.querySelector('.tasting-bottling-info');
-        try {
-            await flavorSaveQueue;
-            const updated = await request(`/api/external-tastings/${encodeURIComponent(session.id)}`, {method:'PATCH',body:JSON.stringify({bottling:fields})});
-            const item = state.collection?.externalTastings?.find(t=>t.id===session.id);
-            if (item) Object.assign(item,updated);
-            if (panel?.isConnected) panel.outerHTML = bottlingInfo(updated.bottling,true,false);
-        } catch(error) { toast(error.message,true); }
-    }
-    function showAssignDialog() {
-        const session=flavorSession;
-        if (!session?.external || session.draft) return;
-        const owned=[...(state.collection?.bottlings || [])].sort((a,b)=>a.name.localeCompare(b.name));
-        if (!owned.length) {
-            toast(t('tastings.assignNoBottlings'),true);
-            return;
-        }
-        const options=owned.map(b=>`<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`).join('');
-        showModal(t('tastings.assignToCollection'),`<p>${escapeHtml(t('tastings.assignExplanation'))}</p>
+    const options = owned.map(b => `<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`).join('');
+    showModal(t('tastings.assignToCollection'), `<p>${escapeHtml(t('tastings.assignExplanation'))}</p>
             <label class="tasting-assign-field">${escapeHtml(t('tastings.chooseBottling'))}
                 <select data-tasting-assign-target required>${options}</select>
             </label><div class="actions tasting-assign-actions">
                 <button type="button" class="btn" data-act="close-modal">${escapeHtml(t('common.actions.cancel'))}</button>
                 <button type="button" class="btn primary" data-act="tasting-external-assign-confirm">${escapeHtml(t('tastings.assignToCollection'))}</button>
-            </div>`,false);
+            </div>`, false);
+  }
+  async function assignExternalToBottling() {
+    const session = flavorSession;
+    if (!session?.external || session.draft) return;
+    const select = document.querySelector('[data-tasting-assign-target]');
+    if (!select?.checkValidity()) {select?.reportValidity(); return;}
+    const bottlingId = select.value;
+    if (!(state.collection?.bottlings || []).some(b => b.id === bottlingId)) return;
+    // A pending notes/rating autosave must finish before the record moves.
+    if (!commitTasting()) return;
+    await flavorSaveQueue;
+    const confirmButton = document.querySelector('[data-act="tasting-external-assign-confirm"]');
+    if (confirmButton) confirmButton.disabled = true;
+    try {
+      const result = await request(`/api/external-tastings/${encodeURIComponent(session.id)}/assign`, {
+        method: 'POST', body: JSON.stringify({bottlingId})
+      });
+      closeModal();
+      // Refresh while on the overview, so the removed external URL cannot redirect.
+      state.page = 'tastings-home';
+      await refresh('collection');
+      navigate('tasting', result.bottlingId, {tastingId: result.tastingId, replace: true});
+    } catch (error) {
+      toast(error.message, true);
+      if (confirmButton?.isConnected) confirmButton.disabled = false;
     }
-    async function assignExternalToBottling() {
-        const session=flavorSession;
-        if (!session?.external || session.draft) return;
-        const select=document.querySelector('[data-tasting-assign-target]');
-        if (!select?.checkValidity()) {select?.reportValidity();return;}
-        const bottlingId=select.value;
-        if (!(state.collection?.bottlings || []).some(b=>b.id===bottlingId)) return;
-        // A pending notes/rating autosave must finish before the record moves.
-        if (!commitTasting()) return;
-        await flavorSaveQueue;
-        const confirmButton=document.querySelector('[data-act="tasting-external-assign-confirm"]');
-        if (confirmButton) confirmButton.disabled=true;
-        try {
-            const result=await request(`/api/external-tastings/${encodeURIComponent(session.id)}/assign`,{
-                method:'POST',body:JSON.stringify({bottlingId})
-            });
-            closeModal();
-            // Refresh while on the overview, so the removed external URL cannot redirect.
-            state.page='tastings-home';
-            await refresh('collection');
-            navigate('tasting',result.bottlingId,{tastingId:result.tastingId,replace:true});
-        } catch(error) {
-            toast(error.message,true);
-            if (confirmButton?.isConnected) confirmButton.disabled=false;
-        }
-    }
-    return {home,list,editor,flight,startFlight,startPlannedFlight:openPlannedFlight,showFlightPlanningHelp,
-        generateFlightPlan,invalidateFlightPlan,createPlannedFlight,changePlannedMember,transitionPlannedFlight,createFlight,saveFlight,deleteFlight,moveFlightMember,reorderFlightMember,attachFlightMember,detachFlightMember,toggleFlightEdit,toggleFlightAdd,saveDraft,persistMeta,toggleCreateChoice,commitFlavor:commitTasting,chooseRating,previewRating,chooseColor,chooseCustomHex,commitCustomPreview,previewCustomColor,previewCustomFromPointer,nudgeCustomColor,resetCustomPreview,clearFlavor,
-        showAssignDialog,assignExternalToBottling,startEditing,finishEditing,
-        startExternalEdit:()=>showExternalEdit(true),cancelExternalEdit,persistExternalDetails,
-        undoFlavor:()=>stepFlavor(-1),redoFlavor:()=>stepFlavor(1)};
+  }
+  return {
+    home, list, editor, flight, startFlight, startPlannedFlight: openPlannedFlight, showFlightPlanningHelp,
+    generateFlightPlan, invalidateFlightPlan, createPlannedFlight, changePlannedMember, transitionPlannedFlight, createFlight, saveFlight, deleteFlight, moveFlightMember, reorderFlightMember, attachFlightMember, detachFlightMember, toggleFlightEdit, toggleFlightAdd, saveDraft, persistMeta, toggleCreateChoice, commitFlavor: commitTasting, chooseRating, previewRating, chooseColor, chooseCustomHex, commitCustomPreview, previewCustomColor, previewCustomFromPointer, nudgeCustomColor, resetCustomPreview, clearFlavor,
+    showAssignDialog, assignExternalToBottling, startEditing, finishEditing,
+    startExternalEdit: () => showExternalEdit(true), cancelExternalEdit, persistExternalDetails,
+    undoFlavor: () => stepFlavor(-1), redoFlavor: () => stepFlavor(1)
+  };
 }

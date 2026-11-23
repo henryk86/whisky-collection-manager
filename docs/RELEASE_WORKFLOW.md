@@ -15,7 +15,7 @@
 1. Der GitHub-Release-Workflow validiert den gemergten `develop -> main`-PR,
    baut und prueft Anwendung, Browser-Suite, ZIP, Offline-Paket und Docker-Images.
 2. Er erzeugt einen **eigenen getaggten Snapshot** `vMAJOR.MINOR.PATCH`.
-   Darin stimmen `package.json`, Lockfile, README, Changelog, Teststatus/-historie
+   Darin stimmen `package.json`, Lockfile, README, Changelog und aktuellen Teststatus
    und Quellmanifest mit der Version ueberein. Die Tag- und Image-Versionen sind gleich.
 3. **Erst nach erfolgreichen Artefaktchecks** erstellt der Workflow von dem
    unveraenderlichen Tag den Branch `release/version-vX.Y.Z` und einen PR nach `main`.
@@ -35,8 +35,7 @@
    Release-Merge statt. Ein Versions-PR-Merge wird vom Release-Gate erkannt
    und darf **keinen** weiteren Release starten.
 
-Die historischen Versionsangaben in Fachdokumenten werden nicht pauschal
-ueberschrieben. Die aktuelle Version erscheint nach dem Release auf `main`
+Fachdokumente beschreiben ausschließlich das aktuelle Verhalten; Versionshistorie steht nur in `CHANGELOG.md`. Die aktuelle Version erscheint nach dem Release auf `main`
 und `develop`, im Tag, ZIP, Docker-Image und im App-Footer.
 
 ## Einmalige GitHub-Einstellungen
@@ -110,7 +109,7 @@ node scripts/release-automation.js plan --json  # nur beim Release-Merge
 
 ## GHCR-Image vor Veroeffentlichung pruefen
 
-Seit v0.6.42 validiert der Docker-Build die `package.json` und
+Der Docker-Build validiert die `package.json` und
 `package-lock.json` vor `npm ci` sowie die Node-Einstiegsdatei im fertigen Image.
 Nach dem Push der versionierten GHCR-Images zieht der Release-Workflow beide
 Plattformvarianten (`linux/amd64`, `linux/arm64`) und laedt die
@@ -126,9 +125,9 @@ ob das GitHub-Image, der lokale Cache oder ein Compose-Override verantwortlich
 ist. Die Datei muss aus dem betreffenden Image mit `docker run --entrypoint cat`
 oder `docker cp` gelesen werden.
 
-**Seit v0.16.9:** Die Browser-Erweiterung liegt in einem gesonderten privaten Projekt und ist nicht mehr Bestandteil des öffentlichen Release-ZIPs. Der Release-Check prüft deshalb nur `package.json` und `package-lock.json` und lehnt versehentlich beigefügte `extension/`-Dateien ab.
+**Browser-Erweiterung:** Sie liegt in einem gesonderten privaten Projekt und ist nicht mehr Bestandteil des öffentlichen Release-ZIPs. Der Release-Check prüft deshalb nur `package.json` und `package-lock.json` und lehnt versehentlich beigefügte `extension/`-Dateien ab.
 
-## Offline-Artefakte ab v0.20.0
+## Offline-Artefakte
 
 Bei jedem Release wird zusätzlich ein vollständiges Offline-Installations-ZIP (npm-Cache, ONNX/WASM, Modell und Lizenzen) gebaut, in einem frischen Verzeichnis mit `npm_config_offline=true` installiert und anhand SHA-256 versiegelt. Außerdem werden die publizierten Images als separate ARM64-/AMD64-Docker-TARs gesichert und ohne Netzwerkverbindung getestet. Das `latest`-Tag wird erst nach erfolgreichem Abschluss aller Release-Jobs befördert.
 
