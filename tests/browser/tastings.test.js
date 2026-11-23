@@ -4,6 +4,45 @@ import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer,requestJson} from '../helpers/server.js';
 import {domOnly,chromium,session,openSettingsFromMenu,openSettingsSection,seed,mockDecoder} from './support.js';
+test('browser: flight help icon stays inline with its heading and never shows a hover badge', async () => {
+    await session(async ({page,open}) => {
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();
+        const title=page.locator('.tasting-flight-home h3.flight-plan-heading-title');
+        const help=page.locator('.tasting-flight-home [data-act="flight-plan-help"]');
+        await help.waitFor({state:'visible'});
+        const aligned=await help.evaluate(button => {
+            const heading=button.closest('h3');
+            const nextPanelHeading=document.querySelector('.tasting-home-recent .tasting-panel-heading h3');
+            const a=heading.getBoundingClientRect();
+            const b=button.getBoundingClientRect();
+            const reference=nextPanelHeading.getBoundingClientRect();
+            const panel=heading.closest('.analytics-panel').getBoundingClientRect();
+            const nextPanel=nextPanelHeading.closest('.analytics-panel').getBoundingClientRect();
+            return {
+                titleMargin:getComputedStyle(heading).marginBottom,
+                expectedMargin:getComputedStyle(nextPanelHeading).marginBottom,
+                titleTop:a.top-panel.top,
+                expectedTop:reference.top-nextPanel.top,
+                distance:Math.abs((a.top+a.height/2)-(b.top+b.height/2)),
+                background:getComputedStyle(button).backgroundColor,
+                width:b.width
+            };
+        });
+        assert.equal(aligned.titleMargin,aligned.expectedMargin,'the heading must retain the normal panel title margin');
+        assert.ok(Math.abs(aligned.titleTop-aligned.expectedTop)<=1,`the heading must stay at the same position as other panel headings: ${JSON.stringify(aligned)}`);
+        assert.ok(aligned.distance<=2,`help icon must be vertically centered: ${JSON.stringify(aligned)}`);
+        assert.ok(aligned.width<=20,'the icon must not grow into a full action button');
+        assert.equal(aligned.background,'rgba(0, 0, 0, 0)');
+        await help.hover();
+        assert.equal(await help.evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)',
+            'hovering the icon must not create a round background badge');
+        await help.click();
+        assert.ok(await page.locator('.flight-plan-help-formula').count()>0,'the modal remains accessible');
+    });
+});
+
 test('browser: bottling tasting block edits ten-axis flavor, notes and five Glencairn glasses with undo/redo', async () => {
     await session(async ({page,base,open}) => {
         await open();

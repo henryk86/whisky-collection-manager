@@ -121,6 +121,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'collection-flavor-remove': button => home.removeFlavorCriterion(button.dataset.axis),
         'collection-flight-plan': () => {home.planFromSelection();tastingsView.startPlannedFlight();},
         'flight-plan-new': () => tastingsView.startPlannedFlight(),
+        'flight-plan-help': () => tastingsView.showFlightPlanningHelp(),
         'flight-plan-generate': () => tastingsView.generateFlightPlan(),
         'flight-plan-create': () => tastingsView.createPlannedFlight(),
         'flight-plan-add': () => tastingsView.changePlannedMember(-1,'add'),
@@ -499,7 +500,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         if (event.target.matches?.('input[data-furniture-photos]')) {
             warehouseView.uploadFurniturePhotos(event.target.dataset.furniturePhotos,[...event.target.files]); return;
         }
-        if (event.target.matches?.('[data-flight-plan-style], [data-flight-plan-count], [data-flight-plan-availability]')) { tastingsView.invalidateFlightPlan(); return; }
+        if (event.target.matches?.('[data-flight-plan-style], [data-flight-plan-count], [data-flight-plan-availability], [data-flight-plan-focus], [data-flight-plan-unfamiliar], [data-flight-plan-cask-mode], [data-flight-plan-cask-group], [data-flight-plan-cask-subtype], [data-flight-plan-age-mode], [data-flight-plan-age-min], [data-flight-plan-age-max], [data-flight-plan-strict]')) { tastingsView.invalidateFlightPlan(); return; }
         if (event.target.id === 'ui-language') { chooseLanguage(event.target.value); return; }
         if (event.target.dataset.sectionSwitch === 'analytics') {
             navigate('analytics', event.target.value);
