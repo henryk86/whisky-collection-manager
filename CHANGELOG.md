@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.12.0 - 2026-11-23
+
+- fix: improve modal behavior to preserve scrollbar track and prevent content shift during modal opening
+- feat: enhance flight planning help functionality and preserve modal state
+- docs: update README to streamline features and improve clarity on installation and security
+- feat: enhance flight planning help and cask classification
+- docs: update README with enhanced features and functionality descriptions; remove outdated code review documents
+- feat: add file preview functionality for various document types with download fallback
+
 ## 1.11.0 - 2026-11-22
 
 - fix: Missing schema update, harmonized various back link implementations
