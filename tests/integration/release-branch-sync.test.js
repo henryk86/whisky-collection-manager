@@ -25,7 +25,6 @@ function fixture(t,{moving=false,modifiedMetadata=false,minimalManifest=false}={
     text(dir,'README.md','# Whisky Collection Manager v1.4.0\n\nIntroduction.\n');
     text(dir,'CHANGELOG.md','# Changelog\n\n## 1.4.0 - 2026-11-16\n\n- Historical information\n');
     text(dir,'docs/TESTSTATUS.md','# Teststatus - Whisky Collection Manager v1.4.0\n');
-    text(dir,'docs/TESTHISTORIE.md','# Historical results v1.2.0\n');
     if(!minimalManifest) for(let i=0;i<20;i++) text(dir,`public/js/stable-${i}.js`,`export const stable${i} = ${i};\n`);
     sh(dir,process.execPath,'scripts/release-manifest.js','create');
     sh(dir,'git','add','.');sh(dir,'git','commit','-m','chore: baseline');

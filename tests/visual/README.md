@@ -1,6 +1,6 @@
 # Approved visual baselines
 
-The 136 `.png`/`.json` pairs are snapshots of the corrected Phase-5 UI using
+The 136 `.png`/`.json` pairs are snapshots of the current approved UI using
 17 deterministic scenarios, four viewport widths and both themes.
 `manifest.json` records capture settings and the original Chromium build.
 

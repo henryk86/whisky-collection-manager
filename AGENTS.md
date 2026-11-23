@@ -1,33 +1,31 @@
-# Projektregeln fuer Quellcodeaenderungen
+# Projektregeln für KI und Mitwirkende
 
-## Release-Versionierung
+## Arbeitsgrundlage
 
-- Einzelne Aenderungen auf `develop` erhalten **keine Versionsaenderung**. Stattdessen sind Conventional Commits Pflicht: `fix:`, `feat:`, `refactor:`, `test:`, `docs:`, `chore:` usw.; `!` oder ein `BREAKING CHANGE:`-Footer kennzeichnet inkompatible Aenderungen.
-- Direkte Commits nach `develop` sind der normale Weg; spaetere PRs sind moeglich. Die Checks validieren beide Varianten.
-- Einmal pro lokalem Git-Checkout `npm run hooks:install` ausfuehren: der repo-lokale `commit-msg`-Hook lehnt neue ungueltige Commit-Nachrichten sofort ab. Der GitHub-Check bleibt notwendig (Hooks sind optional und mit `--no-verify` umgehbar).
-- **Nur der manuell genehmigte `develop -> main`-Merge** startet den Release; als echten Merge-Commit. Ein getaggter Versions-Snapshot wird nach Tests durch einen automatisch erstellten **Version-PR** in das geschuetzte `main` eingebracht. Nur diesen PR darf der GitHub-Bot automatisch mergen. `develop` wird anschliessend ohne Force-Push synchronisiert.
-- Keine direkten Pushes der GitHub-Release-Action auf `main`, kein Admin-Bypass. Ein Version-PR-Merge darf nicht erneut einen Release ausloesen. Der Bot darf **ausschliesslich** den von ihm aus einem geprueften Release-Tag erzeugten Version-PR automatisch mergen; alle Entwicklungs- und Dependabot-PRs bleiben manuell. Die Synchronisierung nach `develop` erfolgt erst **nach** diesem Merge.
-- `main` bleibt der oeffentliche **Default-Branch** und ist durch eine wirksame PR-Pflicht geschuetzt. `develop` bleibt Integrationsbranch. Die `.github/dependabot.yml` richtet regulaere npm-/Actions-Updates auf `develop`; **Dependabot-Sicherheitsupdates gehen bei GitHub weiterhin nach `main`**. Sie duerfen nicht direkt in `main` gemergt werden: zuerst manuell in `develop` uebernehmen und dann ueber den normalen Release-PR veroeffentlichen. Eine automatische Weiterleitung von Sicherheits-PRs ist nicht implementiert.
-- `npm run release:bump` nicht mehr bei Implementierungsaufgaben ausfuehren; `release:check` dient der Pruefung fertiger Tags. Fuer konkrete Releases nur Git-Tags oder GitHub-Release-Artefakte verteilen.
+- Vor jeder Änderung den **aktuellen** Repository-Stand prüfen. Keine älteren ZIPs, Patches oder Annahmen als Ersatz verwenden.
+- Fachlogik, Datenformat, API und UI-Gestaltung nur ändern, wenn die Aufgabe es erfordert. Bei UI-Refactorings bestehendes Verhalten und beide Sprachen erhalten.
+- Nur zentral dokumentierte Designsystem-Komponenten wiederverwenden; Spezialdarstellungen (Lager 2D/3D, Glencairn, Radar, Karte, Charts, Bildeditor) bleiben fachlich eigenständig. Siehe [Designsystem](docs/DESIGNSYSTEM.md).
+- Bestätigungen ausschließlich als Anwendungsmodal, niemals per `window.alert/confirm/prompt`. Bei verschachtelten Modals Formularzustand, Fokus und Hintergrundscroll erhalten.
 
-Details: [Release-Workflow](docs/RELEASE_WORKFLOW.md).
+## Dokumentation: verpflichtende Prüfung bei jeder Änderung
 
-## Einheitliche Bestaetigungsdialoge
+1. Jede Änderung darauf prüfen, ob sie Bedienung, Datenformat, API, Konfiguration, Installation, Sicherheit, Tests oder Entwicklerabläufe betrifft.
+2. Betroffene **aktuelle** Markdown-Dokumente **im selben Commit/PR** aktualisieren; Dateien nicht mit Änderungsnotizen erweitern. Für rein historische Information ist **ausschließlich `CHANGELOG.md`** zuständig.
+3. Ist keine Dokumentationsänderung nötig, ausdrücklich begründen: Commit-Footer `Docs-Impact: none - <konkreter Grund>` oder bei PRs im PR-Text dieselbe Zeile. Der CI-Dokumentationscheck erzwingt Änderung **oder** begründete Ausnahme bei relevanten Codeänderungen.
+4. `README.md` beschreibt Funktionen und Einstieg; `docs/ARCHITEKTUR.md` Architektur, `docs/API.md` API, Fachdokumente den aktuellen Funktionsstand, `docs/TESTSTATUS.md` nur den zuletzt **nachweislich** geprüften Stand. Keine Testzahlen aus älteren Zwischenständen übernehmen.
+5. `npm run check` prüft Links, Dokumentstruktur und ausgewählte aktuelle Schema-/Versionsverträge. Automatische Prüfungen ersetzen nicht den fachlichen Abgleich mit dem Code.
+6. Historische Beispiele sind **nur hier im KI-Harness** zulässig, wenn sie eine aktuell gültige Regel verdeutlichen: Ein automatischer Punkt hinter einem nutzergegebenen Abfüllungsnamen ist unzulässig; `pageHeader({period:false})` muss wirksam sein. Eine Modal-Größenvariante muss Vorrang vor generischem `wide` haben. Solche Beispiele nicht als Fachhistorie in andere Dokumente kopieren.
 
-- Rueckfragen, Zustimmung zu Aenderungen und Warnbestaetigungen **immer** als Anwendungsmodal rendern, niemals native Browserdialoge (`window.confirm`, `window.prompt` oder `window.alert`) verwenden.
-- Wenn aus einem vorhandenen Bearbeitungsdialog eine Bestaetigung geoeffnet wird, muss die Rueckfrage verschachtelt erscheinen und beim Abbruch die urspruenglichen Formulareingaben erhalten.
-- Bei Abbruch oder Schliessen der Rueckfrage darf keine Datenaenderung erfolgen. Mausklick, Tastaturbedienung und die beiden Sprachkataloge beruecksichtigen.
+## Tests und Abnahme
 
-## Dokumentation und Tests
+- `npm run check`, `npm test` und bei UI-Arbeit `npm run test:browser` ausführen; für Geometrie/Layout zusätzlich `npm run test:visual`. Fehlende Abdeckung klar kennzeichnen; CI-Grün nicht behaupten, solange sie nicht bestätigt ist.
+- Bevor Tests angepasst werden, Verhalten gegen den erwarteten Vertrag prüfen; Assertions nicht bloß lockern, damit sie grün sind.
+- Bei visuellen Referenzänderungen Baselines **nur bewusst** mit `npm run visual:update` aktualisieren; keine automatischen Überschreibungen bei Fehlern.
+- Mobile Formulare auch bei schmalen Viewports prüfen. Chromium ist kein Ersatz für echte iOS-/Android-Geräte.
 
-- Bei jedem Release README, `docs/TESTSTATUS.md` und betroffene Fachdokumente an die **tatsächlich implementierten** Funktionen anpassen.
-- Den aktuellen Teststatus nicht mit früheren Testläufen vermischen; historische Protokolle gehören in `docs/TESTHISTORIE.md`.
-- Nicht ausgeführte Browser-, iOS-/Android- oder Docker-Prüfungen ausdrücklich als offen kennzeichnen.
-- Änderungen an mobilen Formularen zusätzlich bei schmalen Viewports prüfen; ein Chromium-Test ersetzt keine Prüfung mit iOS Safari.
+## Git, Versionierung, Release
 
-## Architektur und Dokumentationspflege
-
-- Reine Darstellung, UI-Zustand, serverseitige Anwendungsfälle, Validierung und Persistenz getrennt halten (siehe `docs/ARCHITEKTUR.md`).
-- `README.md` ist der Einstieg; Release-Nachträge in `CHANGELOG.md`, aktuelle Prüfungen in `docs/TESTSTATUS.md`, Historie in `docs/TESTHISTORIE.md`.
-- `npm run check` überprüft auch relative Dokumentationslinks. Vor einem Release alle Markdown-Dateien auf fachlich veraltete Angaben prüfen.
-- Bei einem Refactoring ohne Funktionsänderung Datenformate, API, Browser-Interaktion und Deployment unverändert lassen; Tests nach jedem Schritt ausführen.
+- Einzelne Änderungen auf `develop` ändern die Versionsnummer **nicht**. Conventional Commits verwenden (`fix:`, `feat:`, `docs:`, `refactor:`, `test:`; inkompatibel: `!`/`BREAKING CHANGE:`).
+- Pro Checkout `npm run hooks:install` installiert die optionale lokale Commit-Prüfung; GitHub prüft unabhängig davon.
+- `main` ist geschützter Standardbranch, `develop` Integrationsbranch. Der **manuell freigegebene Merge** `develop -> main` startet den Releaseprozess; nur ein vom Workflow erzeugter, geprüfter Versions-PR darf durch den Bot automatisch gemergt werden. Nie Entwicklungs-PRs automatisch mergen.
+- `npm run release:bump` nicht für Entwicklungsarbeiten ausführen. Weitere Details: [Release-Workflow](docs/RELEASE_WORKFLOW.md).

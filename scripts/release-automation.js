@@ -165,7 +165,7 @@ function main() {
         verifyReleaseMetadata();
         // Never commit to main: the only parent of the release snapshot is the approved main merge.
         git('add','--','package.json','package-lock.json','README.md','CHANGELOG.md',
-            'docs/TESTSTATUS.md','docs/TESTHISTORIE.md','wcm-source-manifest.json');
+            'docs/TESTSTATUS.md','wcm-source-manifest.json');
         git('-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com',
             'commit','-m',`WCM Release Snapshot ${plan.tag}`);
         const snapshot=git('rev-parse','HEAD');

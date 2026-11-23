@@ -13,7 +13,7 @@ import {verifyReleaseMetadata} from './release-version.js';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export const RELEASE_METADATA=[
     'package.json','package-lock.json','README.md','CHANGELOG.md',
-    'docs/TESTSTATUS.md','docs/TESTHISTORIE.md','wcm-source-manifest.json'
+    'docs/TESTSTATUS.md','wcm-source-manifest.json'
 ];
 const git=(...args)=>execFileSync('git',args,{cwd:ROOT,encoding:'utf8'}).trim();
 const gitAt=(cwd,...args)=>execFileSync('git',args,{cwd,encoding:'utf8'}).trim();

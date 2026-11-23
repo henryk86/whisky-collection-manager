@@ -17,11 +17,7 @@ Alle neuen Backups verwenden **ein einziges passwortgeschütztes ZIP-Format mit 
 
 ## Installation und Update
 
-Seit v0.16.6 basiert das Container-Image auf `node:22-bookworm-slim` statt
-`node:22-alpine`. Hintergrund: Auf einem Raspberry Pi 4 mit 64-Bit-OS
-(`aarch64`) stuerzte `node --version` im vorherigen ARM64-Image unmittelbar
-mit Signal 11 (Exit 139) ab; die Debian-Variante startete dagegen erfolgreich.
-Restic, Rclone und der SSH-Client bleiben im Container vorhanden.
+Das Containerimage basiert auf `node:22-bookworm-slim`. Restic, Rclone und SSH-Client sind enthalten. Den tatsächlichen Start auf der Zielhardware prüfen.
 
 Zum gezielten Pruefen eines neu geladenen Images:
 
@@ -62,7 +58,7 @@ Das Image ist `ghcr.io/henryk86/whisky-collection-manager:${IMAGE_TAG:-latest}`.
 
 Der Zugriff erfolgt unter `https://home-pi.local:3543` oder `https://192.168.178.40:3543`, sofern Name beziehungsweise IP im Zertifikat enthalten sind. Eigene DNS-Namen und IPs über `.env` anpassen und bei vorhandenem Zertifikat `sh deploy/setup-pi.sh --renew-cert && docker compose restart app` ausführen. Das neue öffentliche Zertifikat auf dem PC erneut importieren; den privaten Schlüssel nie kopieren.
 
-### Host-Allowlist, CSRF und Browser-Sicherheit (ab v0.15.10)
+### Host-Allowlist, CSRF und Browser-Sicherheit
 
 Der Server akzeptiert als HTTP-Host standardmaessig `localhost`, `127.0.0.1`,
 `::1` und die Werte aus `CERT_DNS_NAMES` und `CERT_IP_ADDRESSES`.
@@ -114,9 +110,9 @@ nicht mehr alle Flaschen.
 
 ### Offline-Archiv der Anwendung
 
-Zusätzlich zu den verschlüsselten Sammlungsbackups kann ab v0.20.0 jedes GitHub-Release mit KI-Modell, npm-Cache und als ARM64-/AMD64-Containerimage separat auf dem gleichen USB-/NAS-Medium gesichert werden. Dafür die Release-Artefakte und ihre SHA-256-Dateien herunterladen und `sh deploy/save-offline-release.sh SOURCE_DIR BACKUP_TARGET_ROOT` ausführen. Die Dateien liegen danach unter `whisky-releases/vX.Y.Z/`; die geplanten Daten-ZIP-Backups werden **nicht** vergrößert. Eine automatische Übertragung in der Backup-Oberfläche ist nicht implementiert. Vollständige Anleitung: [Offline-Releases](OFFLINE_RELEASES.md).
+Zusätzlich zu den verschlüsselten Sammlungsbackups kann jedes GitHub-Release mit KI-Modell, npm-Cache und als ARM64-/AMD64-Containerimage separat auf dem gleichen USB-/NAS-Medium gesichert werden. Dafür die Release-Artefakte und ihre SHA-256-Dateien herunterladen und `sh deploy/save-offline-release.sh SOURCE_DIR BACKUP_TARGET_ROOT` ausführen. Die Dateien liegen danach unter `whisky-releases/vX.Y.Z/`; die geplanten Daten-ZIP-Backups werden **nicht** vergrößert. Eine automatische Übertragung in der Backup-Oberfläche ist nicht implementiert. Vollständige Anleitung: [Offline-Releases](OFFLINE_RELEASES.md).
 
-Die Anwendung enthält ab v0.24.0 zusätzlich unter **Hilfe → Datensicherung** aufklappbare Schritt-für-Schritt-Anleitungen für die zentrale Passwort-Einrichtung, USB- und NAS-Ziele, Dropbox/OneDrive/Google Drive über Rclone sowie die Wiederherstellung. Maßgeblich bleiben die technischen Konfigurationen und Sicherheitsgrenzen dieses Dokuments.
+Die Anwendung enthält zusätzlich unter **Hilfe → Datensicherung** aufklappbare Schritt-für-Schritt-Anleitungen für die zentrale Passwort-Einrichtung, USB- und NAS-Ziele, Dropbox/OneDrive/Google Drive über Rclone sowie die Wiederherstellung. Maßgeblich bleiben die technischen Konfigurationen und Sicherheitsgrenzen dieses Dokuments.
 
 ### Diagnose fehlgeschlagener Backup-Aufträge
 
@@ -233,7 +229,7 @@ wirklich konfiguriert ist und was dieses enthaelt:
 cd ~/whisky-collection-manager
 docker compose config --images
 docker run --rm --entrypoint cat \
-  ghcr.io/henryk86/whisky-collection-manager:v0.6.41 \
+  ghcr.io/henryk86/whisky-collection-manager:${IMAGE_TAG:-latest} \
   /app/package.json
 ```
 
@@ -241,11 +237,7 @@ Die Datei muss gueltiges JSON enthalten. Zum Test einer bereits gezogenen
 Version ist auch `docker run --rm --entrypoint node IMAGE -p
 'require("/app/package.json").version'` moeglich.
 
-Ab v0.6.42 prueft der Release-Workflow die Paketdatei auch im
-tatsaechlich publizierten Image fuer AMD64 und ARM64, bevor `latest`
-umgestellt wird. Dieser Check laeuft auf GitHub und konnte hier ohne
-Docker-Engine nicht lokal ausgefuehrt werden.
-
+Der Release-Workflow validiert die Paketdatei im veröffentlichten AMD64-/ARM64-Image; ein lokaler Docker-Start bleibt eine separate Betriebsprüfung.
 
 ## Lagerverwaltung im Backup
 

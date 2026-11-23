@@ -19,7 +19,6 @@ function fixture(t) {
     write(dir,'README.md','# Whisky Collection Manager v1.4.0\n');
     write(dir,'CHANGELOG.md','# Changelog\n\n## 1.4.0 - 2026-11-16\n\n- Baseline\n');
     write(dir,'docs/TESTSTATUS.md','# Teststatus - Whisky Collection Manager v1.4.0\n\n| `npm test` | **532/532 bestanden** | x |\n');
-    write(dir,'docs/TESTHISTORIE.md','# Historie\n');
     fs.mkdirSync(path.join(dir,'scripts'),{recursive:true});
     for(const script of ['release-version.js','release-manifest.js','release-automation.js'])
         fs.copyFileSync(path.join('scripts',script),path.join(dir,'scripts',script));
@@ -79,7 +78,7 @@ test('merge produces a versioned off-branch snapshot; next merge increments from
     const releaseStatus=run(dir,'git','show','v1.5.0:docs/TESTSTATUS.md');
     assert.match(releaseStatus,/npm test[^\n]*\*\*Noch nicht ausgefuehrt\*\*/);
     assert.match(releaseStatus,/npm run test:browser[^\n]*\*\*Nicht lokal ausgeführt\*\*/);
-    assert.match(releaseStatus,/TESTHISTORIE\.md/);
+    assert.match(releaseStatus,/CHANGELOG\.md/);
     run(dir,process.execPath,'scripts/release-version.js','check');
     run(dir,'git','checkout','main');
     assert.deepEqual(plan(dir),{head:mergeSha,version:'1.5.0',tag:'v1.5.0',previousTag:null,commits:[],level:'reuse',reuse:true,snapshot:tagSha});
@@ -94,7 +93,7 @@ test('merge produces a versioned off-branch snapshot; next merge increments from
     const history=run(dir,'git','show','v1.5.1:CHANGELOG.md');
     assert.match(history,/## 1\.5\.1/);
     assert.match(history,/## 1\.5\.0/);
-    assert.match(run(dir,'git','show','v1.5.1:docs/TESTHISTORIE.md'),/Testbericht v1\.5\.0/);
+    assert.throws(()=>run(dir,'git','show','v1.5.1:docs/TESTHISTORIE.md'),/Command failed/);
 });
 
 test('nonconventional commits fail instead of silently publishing an arbitrary version',t=>{
@@ -125,7 +124,6 @@ function legacyFixture(t,{tagCurrent=false,historicalSubjects=[]}={}) {
     write(dir,'README.md','# Whisky Collection Manager v1.3.3\n');
     write(dir,'CHANGELOG.md','# Changelog\n\n## 1.3.3 - 2026-11-15\n\n- Historical release\n');
     write(dir,'docs/TESTSTATUS.md','# Teststatus - Whisky Collection Manager v1.3.3\n');
-    write(dir,'docs/TESTHISTORIE.md','# Historie\n');
     fs.mkdirSync(path.join(dir,'scripts'),{recursive:true});
     for(const script of ['release-version.js','release-manifest.js'])
         fs.copyFileSync(path.join('scripts',script),path.join(dir,'scripts',script));

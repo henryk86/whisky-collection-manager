@@ -101,7 +101,7 @@ Verkostung ohne Bewertung bleibt unbewertet**, auch wenn ältere Bewertungen
 existieren. Die Felder `rating`, `flavorProfile`, `whiskyColor` und `tastingNotes` existieren
 auf Abfüllungsebene nicht mehr. Diese Werte werden ausschließlich aus der
 jüngsten `tastings[]`-Verkostung abgeleitet, niemals redundant gespeichert.
-Ein `legacyTastings`-Archiv gibt es nicht mehr.
+Die aktuelle Sammlung enthält kein `legacyTastings`-Archiv.
 
 JSON- und vollständige ZIP-Sicherungen enthalten alle `tastings[]`-Datensätze;
 CSV bleibt beim bisherigen Abfüllungs-/Flaschenexport.
@@ -183,7 +183,7 @@ in der URL mitführen. Bestehende URLs bleiben unverändert funktionsfähig.
 - `DELETE /api/warehouse/rooms/:id?unassignBottles=true` ist der ausdrücklich bestätigte Weg für belegte Räume. Er entfernt sämtliche Zuordnungen zu den Fächern dieses Raums (auch verwaiste Zuordnungen) und löscht den Raum mitsamt Möbeln und Fächern **atomar** aus `warehouse.json`.
 - Physische Flaschen und Abfüllungen in `collection.json` sowie Fotos und Anhänge werden **nicht** gelöscht. Andere Raum- und Flaschenzuordnungen bleiben erhalten. Ungültige Werte für `unassignBottles` werden mit **400** abgewiesen.
 
-## Portabler Raumtransfer (ab v0.19.0)
+## Portabler Raumtransfer
 
 | Methode | Pfad | Funktion |
 | --- | --- | --- |
@@ -193,7 +193,7 @@ in der URL mitführen. Bestehende URLs bleiben unverändert funktionsfähig.
 
 Die JSON-Datei benutzt `format: "wcm-room-transfer"` und `formatVersion: 1`; die exportierten `rooms[]` enthalten Raumgeometrie, Möbel und Fächer, `assignments[]` optional `{ "bottleId": "...", "shelfId": "...", "inventoryNumber": "..." }`. Flaschenstammdaten und Medien gehören nicht zum Raumtransfer. Im Ziel erhalten neue Räume, Möbel und Fächer neue IDs; Zuordnungen erfolgen nur für bereits existierende, über ID oder eindeutige Inventarnummer erkannte physische Flaschen. Bestehende Flaschenzuordnungen werden nicht überschrieben. Konflikte werden standardmäßig übersprungen; `replace` ersetzt nur Räume ohne zugeordnete Flaschen, andernfalls HTTP 409 ohne Teilschreibvorgang. Die Antwort enthält Zählwerte für übernommene, fehlende, mehrdeutige, belegte und kapazitätsbedingt verworfene Flaschenzuordnungen. Die Vorschau und der Import akzeptieren maximal 200 Räume sowie Dateien bis 12 MiB.
 
-## Schreibschutz und Anfrageformat (ab v0.15.10)
+## Schreibschutz und Anfrageformat
 
 - Jeder JSON-POST/PATCH/PUT erwartet `Content-Type: application/json`
   (optionales `; charset=utf-8` erlaubt); sonst HTTP 415.
@@ -326,7 +326,7 @@ Möbel bieten außerdem optionale Seitenwände, Rückwand, Türflügel und Glasr
 
 `warehouse.json` behält `schemaVersion: 1` und ist rückwärtskompatibel. Das Collection-JSON wird nicht durch Lagerbefehle verändert.
 
-## Optionale Foto-Freistellung (v0.16.0)
+## Optionale Foto-Freistellung
 
 - `PUT /api/bottles/:bottleId/photos/:photoId/cutout` – `{ "image": "data:image/png;base64,..." }` speichert eine neue transparente Ableitung. Optional erlaubt der Request zusätzlich `{ "adjustment": { "image": "data:image/webp;base64,...", "settings": { "exposure": 0.5 } } }`, um die korrigierte Vorschau **atomar zusammen mit der Freistellung** abzulegen. Die Basismaske ist uneditiert; die aktuelle Korrektur wird nur einmal auf das freigestellte Bild angewendet. Vorhandene Korrekturen des Originalbilds werden nicht gelöscht. Der Server entscheidet über Quellpfade und Dateinamen.
 - `PATCH /api/bottles/:bottleId/photos/:photoId/cutout` – `{ "selected": true|false }` wechselt die Anzeige zwischen Freistellung und unverändertem Original.
