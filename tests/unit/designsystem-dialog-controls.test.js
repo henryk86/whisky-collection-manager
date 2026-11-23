@@ -23,7 +23,13 @@ test('button variants preserve existing semantics and expose loading/disabled/fo
 test('central modal frame provides title, named close action, inner content and explicit variants',()=>{
     const html=modalFrame({title:'Whisky & Me',content:'<form id="edit"></form>',wide:true,variant:'editor',closeLabel:'Close'});
     assert.match(html,/role="dialog" aria-modal="true" aria-labelledby="ds-modal-title"/);
-    assert.match(html,/class="dialog ds-modal wide ds-modal--wide ds-modal--editor"/);
+    assert.match(html,/class="dialog ds-modal ds-modal--editor"/);
+    assert.doesNotMatch(html,/ds-modal--wide/, 'explicit modal variant must override legacy wide size');
+    const assignment=modalFrame({title:'Lagerort',content:'<form id="warehouse-form"></form>',wide:true,variant:'assignment',closeLabel:'Close'});
+    assert.match(assignment,/class="dialog ds-modal ds-modal--assignment"/);
+    assert.doesNotMatch(assignment,/ds-modal--wide/, 'assignment stays at the documented 740px maximum');
+    const legacyWide=modalFrame({title:'Other',content:'<p></p>',wide:true,closeLabel:'Close'});
+    assert.match(legacyWide,/class="dialog ds-modal wide ds-modal--wide"/);
     assert.match(html,/id="ds-modal-title">Whisky &amp; Me/);
     assert.match(html,/class="ds-modal-body"><form id="edit"><\/form>/);
     assert.match(html,/data-act="close-modal"/);

@@ -7,7 +7,9 @@ import { closeIcon } from './action-icons.js';
  * UI HTML; untrusted text must be escaped by the call site. */
 export function modalFrame({ title, content, wide = false, variant = '', headingAction = '', closeLabel }) {
     if (!['','photo','editor','assignment'].includes(variant)) throw new RangeError('Invalid modal variant');
-    const classes = ['dialog','ds-modal',wide ? 'wide ds-modal--wide' : '',variant ? `ds-modal--${variant}` : ''].filter(Boolean).join(' ');
+    // Explicit size variants take precedence over the legacy wide flag; otherwise
+    // .dialog.wide (higher specificity) overrides their width tokens.
+    const classes = ['dialog','ds-modal',wide && !variant ? 'wide ds-modal--wide' : '',variant ? `ds-modal--${variant}` : ''].filter(Boolean).join(' ');
     return `<div class="overlay ds-modal-overlay" data-overlay="1">
     <div class="${classes}" role="dialog" aria-modal="true" aria-labelledby="ds-modal-title" aria-label="${escapeHtml(title)}" tabindex="-1">
     ${sectionHeader({layout:'dialog-head',level:2,title,titleId:'ds-modal-title',trailingAction:headingAction,
