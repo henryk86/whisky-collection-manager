@@ -8,7 +8,7 @@ import { t, currentLanguage } from '../i18n/index.js';
 const statusText = status => t(({closed:'home.status.closed',open:'analytics.inventory.openedStatus',empty:'home.status.empty'})[status] || 'features.distilleries.unknownStatus');
 import { newBottlingIcon, inventoryScanIcon, chevronDownIcon, chevronLeftIcon, chevronRightIcon, chevronsLeftIcon, chevronsRightIcon, arrowUpIcon, arrowDownIcon, arrowsUpDownIcon, closeIcon, collectionTableIcon, collectionCardsIcon, flightPlanIcon } from '../ui/action-icons.js';
 import { escapeHtml, query } from '../ui/dom.js';
-import { emptyState } from '../ui/content.js';
+import { emptyState, panel as contentPanel } from '../ui/content.js';
 import { imageUrl } from '../ui/format.js';
 import { bottleStatusLabels } from '../domain/labels.js';
 import { inventoryCountGroups } from '../domain/inventory-counts.js';
@@ -536,22 +536,12 @@ export function createHomeView({ state, selectors, shell, navigate, refresh, sho
     <button type="button" class="collection-mode-button${mode === 'bottles' ? ' active' : ''}" data-collection-mode="bottles" aria-pressed="${mode === 'bottles'}">${t("forms.bottle.plural")} <span class="collection-mode-count">${total}</span></button>
     </div>`})}
     <div class="stats">
-    <div class="panel stat">
-    <span>${t("analytics.inventory.bottlings")}</span>
-    <strong>${collection.bottlings.length}</strong>
-    </div>
-    <div class="panel stat">
-    <span>${t("home.inventory.totalStock")}</span>
-    <strong>${total}</strong>
-    </div>
-    <div class="panel stat">
-    <span>${t("home.status.closed")}</span>
-    <strong>${closed}</strong>
-    </div>
-    <div class="panel stat">
-    <span>${t("analytics.inventory.openedStatus")}</span>
-    <strong>${open}</strong>
-    </div>
+    ${[
+        [t("analytics.inventory.bottlings"), collection.bottlings.length],
+        [t("home.inventory.totalStock"), total],
+        [t("home.status.closed"), closed],
+        [t("analytics.inventory.openedStatus"), open]
+    ].map(([label,value])=>contentPanel({className:'stat',content:`<span>${label}</span><strong>${value}</strong>`})).join('')}
     </div>
     ${(() => {
         const distillery = distilleries.find(item => item.id === state.distillery);

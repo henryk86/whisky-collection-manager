@@ -106,7 +106,7 @@ textarea {
     max-width: 100%;
     font-size: 12px;
     font-weight: 700;
-    color: #435465;
+    color: var(--ds-color-form-label);
 }
 .form-field > :is(input:not([type="checkbox"]):not([type="radio"]):not([type="date"]), select, textarea) {
     display: block;
@@ -146,7 +146,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     padding-block: 0;
     margin-block: 0;
 }
-.form-field { color: var(--ds-color-form-label); }
 .form-field .ds-field-description { font-weight: 400; font-size: var(--ds-type-ui-sm); line-height: 1.5; color: var(--ds-color-form-help); }
 .form-field .ds-field-error { font-weight: 400; font-size: var(--ds-type-ui-sm); color: var(--ds-color-form-error); }
 .form-field :is(input,select,textarea)[aria-invalid="true"] { border-color: var(--ds-color-form-error); }

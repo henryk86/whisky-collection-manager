@@ -81,7 +81,7 @@ export function createExternalImport({
     <div class="import-choice-list" role="group" aria-label="${t("imports.import.selectFields")}">
     ${distilleryChoice}${fieldChoices}
     </div>
-    <div class="actions" style="margin-top:16px">
+    <div class="actions import-preview-actions">
     <button type="button" class="btn primary" data-act="import-apply">${t("imports.import.applySelectedFields")}</button>
     </div>
     </div>`;

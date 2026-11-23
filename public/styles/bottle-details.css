@@ -1,3 +1,63 @@
+/* Photos belong to an individual physical bottle, not to the bottling. */
+.bottle-photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 13px 0 8px;
+}
+.photo-tile {
+    width: 102px;
+    height: 137px;
+    position: relative;
+    border: 1px solid var(--line);
+    background: #f1ede6;
+}
+.photo-tile .photo-open {
+    display: block;
+    width: 100%;
+    height: 107px;
+    padding: 8px; /* Keep existing bottle photos clear of the thumbnail border. */
+    background: transparent;
+    border: 0;
+    cursor: zoom-in;
+}
+.photo-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.photo-remove {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    width: 26px;
+    height: 26px;
+    background: #102b40;
+    color: white;
+    border: 0;
+    border-radius: 2px;
+    cursor: pointer;
+    display:grid; place-items:center;
+}
+.photo-remove .ui-symbol {width:16px;height:16px;}
+.photo-cutout-badge .ui-symbol {width:12px;height:12px;}
+.photo-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 102px;
+    height: 110px;
+    padding: 8px;
+    text-align: center;
+    border: 1px dashed #bda981;
+    background: #f5f1e8;
+    color: #806137;
+    font-size: 12px;
+    cursor: pointer;
+}
+.photo-add:hover {
+    background: #ebe2d0;
+}
 /* Scan result: highlight the physical bottle, without opening an editor. */
 .bottle-entry.scanned-bottle {
     border: 2px solid var(--gold);
@@ -5,10 +65,7 @@
     box-shadow: 0 0 0 4px rgba(189,152,98,.20);
     scroll-margin-block: 20px;
 }
-.bottle-meta {
-    display: block;
-    margin-top: 5px;
-}
+
 .bottling-context {
     border: 1px solid var(--line);
     border-left: 4px solid var(--gold);
@@ -90,8 +147,6 @@
 :root[data-theme="dark"] .badge.sample.open { background: #6a4a2a; color: #ffe0ab; }
 
 /* Drag-and-drop gallery ordering (desktop mouse, touch and accessible buttons). */
-.photo-tile { height: 137px; }
-.photo-tile .photo-open { height: 107px; }
 .photo-controls { position: absolute; left: 2px; right: 2px; bottom: 2px; height: 25px; display: flex; justify-content: space-between; align-items: center; gap: 1px; }
 .photo-move, .photo-drag-handle { background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 2px; min-height: 24px; min-width: 25px; padding: 0; display: grid; place-items: center; cursor: pointer; font-size: 14px; }
 .photo-drag-handle { flex: 1; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
@@ -156,7 +211,7 @@
 .photo-editor-image canvas { display: block; width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: 50% 50%; will-change: transform; }
 .photo-editor-image.is-picking canvas { cursor: crosshair; touch-action: none; }
 .photo-editor-image.is-zoomed:not(.is-picking) canvas { cursor: grab; touch-action: none; }
-.photo-editor-image.is-zoomed.is-panning:not(.is-picking) canvas { cursor: grabbing; }
+
 /* Preview-only controls stay inside the image; no vertical space is taken from sliders. */
 .photo-editor-overlay { position: absolute; inset: auto 10px 10px; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; pointer-events: none; }
 .photo-editor-overlay > * { pointer-events: auto; }
@@ -252,18 +307,18 @@
 .tasting-notes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; align-items:start; }
 .tasting-notes label { display:grid; grid-template-rows:auto auto; align-content:start; align-self:start; gap:7px; min-width:0; font-size:13px; }
 .tasting-notes textarea { width:100%; min-height:98px; resize:vertical; }
-.tasting-rating { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-.tasting-glasses { display:flex; gap:5px; align-items:center; }
-.tasting-glass { width:37px; height:46px; padding:2px; background:transparent; border:1px solid transparent; border-radius:0; color:var(--gold); cursor:pointer; }
+.tasting-rating { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.tasting-glasses { display:flex; gap:7px; align-items:center; }
+.tasting-glass { width:40px; height:54px; padding:3px 5px 6px; background:transparent; border:1px solid transparent; border-radius:0; color:var(--ink); cursor:pointer; }
 .tasting-glass svg { display:block; width:100%; height:100%; }
 .tasting-glass:hover, .tasting-glass:focus-visible { border-color:var(--gold); outline-offset:2px; }
 .tasting-glass:focus-visible { outline:2px solid var(--gold); }
-.tasting-glass-outline { fill:none; stroke:var(--ink); stroke-width:1.25; }
-.tasting-glass-fill { fill:var(--gold); stroke:var(--gold); stroke-width:.3; clip-path:inset(0 calc(100% - var(--glass-fill)) 0 0); }
-.tasting-glass-rim { fill:none; stroke:var(--ink); stroke-width:1.5; }
-.tasting-rating-value { font-size:13px; font-variant-numeric:tabular-nums; color:var(--muted); }
-.tasting-history-list { margin:8px 0 0; padding-left:22px; line-height:1.55; }
-.tasting-history-list li { margin:7px 0; }
+
+
+
+
+
+
 @media(max-width:850px) { .tasting-notes { grid-template-columns:1fr; } }
 
 /* v0.25.1: equal-height summary panels. The photograph remains contained, never cropped. */
@@ -294,11 +349,9 @@
 .tasting-action-btn { width:38px; height:38px; min-width:38px; display:grid; place-items:center; padding:7px; }
 .tasting-action-btn svg { width:19px; height:19px; display:block; }
 /* Glencairn shape and golden liquid fill intentionally remain unchanged. */
-.tasting-glass { width:40px; height:54px; padding:3px 5px 6px; color:var(--ink); }
 .glencairn-symbol { width:100%; height:100%; display:block; }
 .glencairn-ink { fill:var(--ink); }
 .glencairn-gold { fill:var(--gold); }
-.tasting-rating { gap:12px; }
 .tasting-score-field { display:grid; gap:5px; min-width:0; }
 .tasting-score-control { display:inline-flex; align-items:center; gap:7px; width:max-content; min-height:46px; padding:0 12px 0 6px; border:1px solid var(--line); background:var(--paper); cursor:text; }
 .tasting-score-control:focus-within { outline:2px solid var(--gold); outline-offset:2px; }
@@ -367,7 +420,6 @@
 }
 .flavor-detail-panel.tasting-panel .tasting-color-panel { min-width:0; }
 .flavor-detail-panel.tasting-panel .tasting-color-panel .whisky-color-selector { min-width:0; }
-.tasting-glasses { gap:7px; }
 .glencairn-rating-outline { fill:var(--ink); opacity:.88; }
 .glencairn-rating-fill { fill:var(--gold); }
 .flavor-detail-panel.tasting-panel .tasting-top-row > section .tasting-panel-heading h3,
@@ -386,7 +438,7 @@
 .tasting-summary-content { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:nowrap; column-gap:clamp(12px,1.5vw,24px); row-gap:18px; }
 .tasting-summary-main { flex:1 1 310px; min-width:0; max-width:320px; }
 .tasting-summary-radar { flex:1 1 310px; min-width:0; max-width:335px; }
-.tasting-summary-notes { flex:2 1 620px; min-width:0; max-width:700px; }
+.tasting-summary-notes { flex:2 1 620px; min-width:0; max-width:700px; display:grid; gap:14px; }
 .tasting-summary-lead { display:block; font-size:clamp(1rem,1.6vw,1.25rem); line-height:1.35; }
 .tasting-summary-meta { display:block; font-size:clamp(.9rem,1.2vw,1.05rem); line-height:1.35; }
 .tasting-summary-score { display:flex; align-items:center; flex-wrap:wrap; gap:6px 13px; margin:7px 0; min-width:0; }
@@ -396,7 +448,6 @@
 .tasting-summary-radar .flavor-editor.is-preview { display:block; }
 .tasting-summary-radar .flavor-chart { display:block; width:100%; height:auto; max-height:230px; }
 .tasting-summary-radar .flavor-axis-text { font-size:14px; }
-.tasting-summary-notes { display:grid; gap:14px; }
 .tasting-summary-note { min-width:0; }
 .tasting-summary-note-value { font-size:14px; font-weight:650; margin-top:4px; line-height:1.45; overflow:hidden; display:-webkit-box;
     -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow-wrap:anywhere; white-space:pre-line; }
@@ -448,7 +499,6 @@
 .tasting-entry-chevron .ui-symbol {width:18px;height:18px;}
 .tasting-entry-actions { display:flex; align-items:center; padding:8px 12px 8px 0; }
 .tasting-entry-actions .btn { white-space:nowrap; }
-.tasting-panel-heading { min-width:0; }
 .tasting-home-page .hint { margin:0; }
 .tasting-choose-owned { display:flex; gap:12px; align-items:end; flex-wrap:wrap; }
 .tasting-choose-owned label { flex:1 1 180px; min-width:0; display:grid; gap:7px; }

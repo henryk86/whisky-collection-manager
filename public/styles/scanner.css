@@ -5,12 +5,13 @@
     min-height: 180px;
     margin: 10px auto;
     overflow: hidden;
-    background: #132536;
+    background: #091b2a;
     border: 1px solid var(--line);
 }
 .scan-reader video {
     width: 100%!important;
     max-height: 55vh;
+    max-width: 100%;
     object-fit: contain;
 }
 .scan-reader img {
@@ -35,12 +36,6 @@
 #scan-error[data-status=warning] {
     border-left-color: #bf8a32;
 }
-.scan-reader {
-    width: 100%;
-    min-height: 180px;
-    overflow: hidden;
-    background: #091b2a;
-}
-.scan-reader video {
-    max-width: 100%;
-}
+
+/* Scan modal: static layout spacing; live video remains scanner-specific. */
+.scan-manual-fields, .scan-manual-actions { margin-top: 15px; }

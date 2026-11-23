@@ -61,7 +61,7 @@
 .dialog-head h2 { font-size: 24px; margin: 0; }
 
 /* Both compact panels and normal sections render through SectionHeader. */
-.tasting-panel-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0 0 20px; }
+.tasting-panel-heading { min-width: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0 0 20px; }
 .tasting-panel-heading .btn { flex-shrink: 0; margin-left: auto; white-space: nowrap; }
 .ds-section-heading-copy { min-width: 0; }
 

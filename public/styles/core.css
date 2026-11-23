@@ -67,18 +67,24 @@ textarea:focus-visible,
 .brand-emblem {
     width: 57px;
     height: 57px;
-    border: 1px solid #d6bc8a;
+    border: 0; /* The SVG already draws the emblem frame. */
     color: #e6d3ad;
     display: flex;
     align-items: center;
     justify-content: center;
     font: 20px var(--serif);
-    letter-spacing: -3px;
-    transform: rotate(-3deg);
+    letter-spacing: normal;
+    transform: none;
 }
 .brand-emblem span {
     color: var(--gold-light);
     padding: 0 3px;
+}
+.brand-logo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 .brand-copy {
     min-width: 0;
@@ -652,11 +658,7 @@ tr.clickable:hover {
     background: #f0ece4;
     margin-top: 8px;
 }
-.scan-preview {
-    width: 100%;
-    max-height: 300px;
-    background: black;
-}
+
 .warning {
     padding: 15px;
     background: #faf0da;
@@ -667,41 +669,15 @@ tr.clickable:hover {
 .clickable:focus-visible {
     outline: 3px solid var(--gold);
 }
-.kbd {
-    font-family: monospace;
-    background: #e9e7df;
-    padding: 2px 4px;
-}
+
 .import-area {
     border: 1px solid var(--line);
     padding: 16px;
     margin: 11px 0;
 }
-.import-results {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    max-height: 280px;
-    overflow: auto;
-    margin: 10px 0;
-}
-.import-result {
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    text-align: left;
-    padding: 13px;
-    border: 1px solid var(--line);
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-    gap: 6px;
-    width: 100%;
-}
-.import-result:hover {
-    border-color: var(--gold);
-}
-.import-result small,
+
+
+
 .import-choice small {
     display: block;
     opacity: .75;
@@ -926,11 +902,6 @@ tr.clickable:hover {
         width: 100%;
         min-width: 0;
     }
-    .toolbar select {
-        flex: 1 1 120px;
-        min-width: min(100%, 120px);
-        max-width: 100%;
-    }
     .toolbar input {
         width: 100%;
         flex-basis: 100%;
@@ -938,6 +909,7 @@ tr.clickable:hover {
     .toolbar select {
         flex: 1;
         min-width: 110px;
+        max-width: 100%;
         font-size: 11px;
     }
     .grid {
@@ -1135,12 +1107,11 @@ tr.clickable:hover {
 .help-page { width: 100%; margin: 0; padding-bottom: 36px; }
 .help-heading { margin-bottom: 12px; }
 .help-description { margin: 0 0 18px; line-height: 1.6; font-size: 14px; }
-.help-section { min-width: 0; }
+.help-section { min-width: 0; padding: 0; margin: 0; background: transparent; border: 0; box-shadow: none; }
 .help-section[hidden] { display: none; }
 .help-section h3 { margin: 0 0 14px; }
 
 /* Help reads like an analytics section, not a second set of cards. */
-.help-section { padding: 0; margin: 0; background: transparent; border: 0; box-shadow: none; }
 .help-section .analytics-section-title { margin: 0 0 18px; }
 /* Approved right-hand layout: the heading remains outside; only help content
    sits in the same flat, square-edged panel as an analytics block. */
@@ -1426,3 +1397,6 @@ tr.clickable:hover {
     .collection-flavor-add select {flex:1 1 100%;}
     .collection-flavor-add button.btn {flex:1 1 100%;}
 }
+
+/* Import workflow: the 16px action spacing is static, not data-driven. */
+.import-preview-actions { margin-top: var(--ds-space-6); }

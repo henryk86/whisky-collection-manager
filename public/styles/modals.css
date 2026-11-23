@@ -9,11 +9,15 @@
     align-items: center;
     justify-content: center;
     padding: var(--ds-dialog-overlay-padding);
+    overscroll-behavior: contain;
 }
 .dialog {
     width: min(var(--ds-dialog-max),100%);
-    max-height: 94vh;
+    max-height: min(94dvh,94vh);
     overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     background: var(--paper);
     padding: var(--ds-dialog-padding);
     box-shadow: 0 25px 80px #0005;
@@ -35,8 +39,6 @@
 .ds-modal--editor .dialog-head { margin-bottom: 12px; padding-bottom: 12px; }
 .ds-modal--assignment { width: min(var(--ds-dialog-max-assignment),100%); padding: 20px 22px 18px; }
 .ds-modal--assignment .dialog-head { margin-bottom: 12px; padding-bottom: 12px; }
-.overlay { overscroll-behavior: contain; }
-.dialog { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; max-height: min(94dvh,94vh); }
 @media (max-width: 740px) {
     .dialog { padding: var(--ds-dialog-padding-mobile); }
     .ds-modal--photo { padding: 10px; }

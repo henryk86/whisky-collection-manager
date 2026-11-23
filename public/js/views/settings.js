@@ -25,10 +25,10 @@ export function createSettingsView(state, auth = {usersSection: () => ''}) {
       ${headingTitle({title:t('settings.exports.additionalExports')})}
       <p class="muted">${t("settings.exports.notFullBackupWarning")}</p>
       <div class="actions"><a class="btn" href="/api/export/json" download>${t("settings.exports.downloadJson")}</a><a class="btn" href="/api/export/csv" download>${t("settings.exports.downloadCsv")}</a></div>
-      <details style="margin-top:15px"><summary>${t("settings.imports.legacyJsonImport")}</summary>
+      <details class="settings-legacy-import"><summary>${t("settings.imports.legacyJsonImport")}</summary>
       <p class="warning">${t("settings.imports.jsonDoesNotIncludeAttachments")}</p>
-      <input type="file" id="import-file" accept="application/json,.json" style="margin-top:10px">
-      <button class="btn danger" data-act="import" style="margin-top:10px">${t("settings.imports.importJson")}</button></details>
+      <input type="file" id="import-file" accept="application/json,.json">
+      <button class="btn danger" data-act="import">${t("settings.imports.importJson")}</button></details>
     </div>
 `;
         const distilleries = `    <div class="panel section">

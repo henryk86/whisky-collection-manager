@@ -78,12 +78,12 @@ export function createScanner({ state, showModal, resolveCode }) {
     <div id="scan-reader" class="scan-reader">
     </div>
     <p id="scan-error" class="hint" role="status" aria-live="polite">${t("scanner.status.starting")}</p>
-    <div class="forms" style="margin-top:15px">${textInput(t("scanner.input.manualInventoryNumber"), 'manualCode', '', {
+    <div class="forms scan-manual-fields">${textInput(t("scanner.input.manualInventoryNumber"), 'manualCode', '', {
             full: true
         })}<label class="form-field full">${t("scanner.actions.selectCodeImage")}<input type="file" id="scan-file" accept="image/*" capture="environment">
     </label>
     </div>
-    <div class="actions" style="margin-top:15px">
+    <div class="actions scan-manual-actions">
     <button class="btn primary" data-act="submit-code" data-assign="${assign ? '1' : '0'}">${t("scanner.actions.findAndApplyCode")}</button>
     <button class="btn" data-act="close-modal">${t("common.actions.close")}</button>
     </div>`);

@@ -187,24 +187,13 @@
     background: #463a29;
     color: #f2d6a9;
 }
-:root[data-theme="dark"] .kbd {
-    background: #334453;
-    color: #e8eff5;
-}
+
 :root[data-theme="dark"] .distillery-option:hover {
     background: #293c4e;
 }
 :root[data-theme="dark"] .distillery-options {
     background: #172532;
     border-color: var(--line);
-}
-:root[data-theme="dark"] .import-result {
-    background: #1a2a38;
-    border-color: var(--line);
-    color: var(--ink);
-}
-:root[data-theme="dark"] .import-result:hover {
-    border-color: var(--gold);
 }
 :root[data-theme="dark"] .import-area,
 :root[data-theme="dark"] .import-choice {

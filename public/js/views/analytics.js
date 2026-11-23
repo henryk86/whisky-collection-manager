@@ -58,7 +58,7 @@ function panel(title, content, note = '', extra = '') {
         content:`${headingTitle({title})}${content}${note ? `<p class="analytics-note">${safe(note)}</p>` : ''}`});
 }
 function metric(label, value, detail = '') {
-    return `<div class="panel stat analytics-metric"><span>${safe(label)}</span><strong>${safe(value)}</strong>${detail ? `<small>${safe(detail)}</small>` : ''}</div>`;
+    return contentPanel({className:'stat analytics-metric',content:`<span>${safe(label)}</span><strong>${safe(value)}</strong>${detail ? `<small>${safe(detail)}</small>` : ''}`});
 }
 function metricGrid(cards) { return `<div class="stats analytics-metrics">${cards.join('')}</div>`; }
 function sectionHeading(text) { return headingTitle({title:text,level:2,className:'analytics-group-title'}); }

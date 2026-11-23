@@ -1,5 +1,6 @@
 /** Shelf details show all rows of bottles, not just the front-facing row. */
 import { t, formatNumber } from '../i18n/index.js';
+import { actionToolbar } from '../ui/content.js';
 import { bottleSymbol, bottleLabel, bottleListFacts, bottleActionButtons, safe } from './warehouse-presentation.js';
 
 const STATUS_KEYS = {closed:'home.status.closed', open:'analytics.inventory.openedStatus', empty:'home.status.empty'};
@@ -25,7 +26,7 @@ export function shelfContents(warehouse,shelfId,bottlings=[]) {
             return `<article class="warehouse-shelf-detail-bottle" data-bottle-id="${safe(b.id)}">
                 ${bottleSymbol(b,{placeholderImage:true,staticImage:true})}
                 <div class="warehouse-shelf-detail-info"><strong>${safe(b.name)}</strong><div class="warehouse-bottle-facts">${facts}${bottleListFacts(b)}</div></div>
-                <div class="actions warehouse-shelf-detail-actions">${bottleActionButtons(b)}</div>
+                ${actionToolbar(bottleActionButtons(b), { className: 'warehouse-shelf-detail-actions' })}
              </article>`;
         }).join('')}</div>` : `<p class="hint">${t('warehouse.shelves.empty')}</p>`;
         return {title:`${room.name} / ${furniture.name} / ${shelf.name}`,count:bottles.length,
