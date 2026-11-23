@@ -26,6 +26,21 @@ npm run test:visual
 
 Fehlerfälle zuerst anhand der tatsächlich gerenderten Oberfläche oder API nachstellen. Automatische Tests greifen nicht auf fremde Datenverzeichnisse zu; Integrationstests starten eigene Serverprozesse mit isolierten Dateien.
 
+## Code-Stil und dokumentierte Schnittstellen
+
+Für JavaScript gilt verbindlich der [Google JavaScript Style Guide](https://google.github.io/styleguide/jsguide.html). Das Repository behält reine JavaScript-ES-Module bei (keine Umstellung auf Java oder TypeScript). Vor jeder Abgabe:
+
+```bash
+npm run format:js
+npm run format:check
+npm run check:jsdoc
+npm run check
+```
+
+Neue und bearbeitete öffentliche Funktionen erhalten **saubere, typisierte JSDoc** für Bedeutung, Parameter, Rückgabewert und relevante Nebenwirkungen. Bei HTML-Renderern die Vertrauensgrenze zwischen escaped Benutzertext und vertrauenswürdigem Anwendungs-HTML benennen. Die CI verhindert undokumentierte **neue Exporte**; die bestehende, schrittweise abzubauende Altlast ist in `scripts/jsdoc-legacy-baseline.json` erfasst. Keine JSDoc-Kommentare, die lediglich den Funktionsnamen wiederholen.
+
+Der bereits vorhandene TypeScript-Formatter wird nur zur **Formatierung** eingesetzt und verändert keine JavaScript-Semantik. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
+
 ## Änderungen und Dokumentation
 
 **Verbindlich bei jedem Commit/PR:** Dokumentationswirkung prüfen. Betroffene aktuelle `.md`-Dateien zusammen mit dem Code aktualisieren; falls keine Anpassung nötig ist, `Docs-Impact: none - <konkreter Grund>` als Commit-Footer oder im PR-Text festhalten. GitHub Actions lehnt Codeänderungen ohne eines von beiden ab. Nur `CHANGELOG.md` enthält Änderungshistorie. [Projektregeln](../AGENTS.md).

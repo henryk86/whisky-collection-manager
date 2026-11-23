@@ -22,7 +22,10 @@
     "cutout:verify": "node scripts/prepare-cutout-assets.js --verify",
     "offline:verify": "node scripts/offline-bundle.js verify && node scripts/prepare-cutout-assets.js --verify",
     "test:visual": "node scripts/designsystem-visual.js",
-    "visual:update": "node scripts/designsystem-visual.js --update"
+    "visual:update": "node scripts/designsystem-visual.js --update",
+    "format:js": "node scripts/format-js.js --write",
+    "format:check": "node scripts/format-js.js",
+    "check:jsdoc": "node scripts/check-jsdoc.js"
   },
   "engines": {
     "node": ">=20"
@@ -33,6 +36,7 @@
     "three": "0.187.0"
   },
   "devDependencies": {
-    "playwright-core": "1.65.1"
+    "playwright-core": "1.65.1",
+    "typescript": "5.8.3"
   }
 }

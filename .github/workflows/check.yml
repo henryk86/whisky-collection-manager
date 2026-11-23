@@ -40,7 +40,8 @@ jobs:
           else
             node scripts/check-doc-impact.js --range "HEAD^..HEAD"
           fi
-      - run: npm run check
+      - name: Check project, Google JavaScript style and JSDoc
+        run: npm run check
       - run: npm test
       - run: npx playwright-core install --with-deps chromium
       - run: npm run test:browser

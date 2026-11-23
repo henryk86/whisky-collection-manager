@@ -7,6 +7,15 @@
 - Nur zentral dokumentierte Designsystem-Komponenten wiederverwenden; Spezialdarstellungen (Lager 2D/3D, Glencairn, Radar, Karte, Charts, Bildeditor) bleiben fachlich eigenständig. Siehe [Designsystem](docs/DESIGNSYSTEM.md).
 - Bestätigungen ausschließlich als Anwendungsmodal, niemals per `window.alert/confirm/prompt`. Bei verschachtelten Modals Formularzustand, Fokus und Hintergrundscroll erhalten.
 
+## JavaScript-Stil und JSDoc (verpflichtend)
+
+- Für **JavaScript** gilt der [Google JavaScript Style Guide](https://google.github.io/styleguide/jsguide.html), nicht der Java-only-Guide. Dies gilt für **jeden neuen und geänderten JavaScript-Code**, einschließlich Tests, Server, Browser und Skripten.
+- Einheitlich zwei Leerzeichen, Semikolons, einfache String-Anführungszeichen, `const`/`let`, konsistente ES-Module und klar benannte Funktionen. Keine automatische Änderung von HTML in Template-Literalen oder Fachlogik beim Formatieren.
+- Vor dem Commit `npm run format:js` ausführen; `npm run check` (einschließlich `format:check` und `check:jsdoc`) muss grün sein. Der TypeScript-Formatter deckt mechanisch prüfbare Regeln ab; nicht automatisch überprüfbare Google-Regeln müssen beim Review kontrolliert werden.
+- Neue exportierte Funktionen und Klassen brauchen **typisierte JSDoc-Verträge**: Zweck, `@param`, `@return` oder `@constructor`, und bei Bedarf `@throws`, Nebenwirkungen, Datenformat und Vertrauensgrenzen. In komplexen internen APIs ebenso; keine tautologischen Kommentare. Nicht jede triviale lokale Variable kommentieren.
+- `scripts/jsdoc-legacy-baseline.json` enthält ausschließlich vorhandene nicht dokumentierte Export-Ausnahmen. **Neue Einträge sind verboten**; bestehende Ausnahmen bei Bearbeitung schrittweise durch gute JSDoc ersetzen.
+- Für CSS/HTML/JSON die bestehenden Projektkonventionen nutzen; JavaScript-Formatierungsregeln nicht blind darauf übertragen.
+
 ## Dokumentation: verpflichtende Prüfung bei jeder Änderung
 
 1. Jede Änderung darauf prüfen, ob sie Bedienung, Datenformat, API, Konfiguration, Installation, Sicherheit, Tests oder Entwicklerabläufe betrifft.

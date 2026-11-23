@@ -459,11 +459,11 @@ Yoker|55.892|-4.38
 `;
 
 export const normalizeDistilleryName = name => String(name || '')
-    .normalize('NFKD').toLocaleLowerCase('en')
-    .replace(/[’']/g, '').replace(/[^a-z0-9]+/g, ' ')
-    .trim().replace(/^the /, '').replace(/ distillery$/, '');
+  .normalize('NFKD').toLocaleLowerCase('en')
+  .replace(/[’']/g, '').replace(/[^a-z0-9]+/g, ' ')
+  .trim().replace(/^the /, '').replace(/ distillery$/, '');
 
 export const APPROXIMATE_LOCATIONS = new Map(approximateSites.trim().split('\n').map(row => {
-    const [name, lat, lon] = row.split('|');
-    return [normalizeDistilleryName(name), Object.freeze([Number(lat), Number(lon)])];
+  const [name, lat, lon] = row.split('|');
+  return [normalizeDistilleryName(name), Object.freeze([Number(lat), Number(lon)])];
 }));

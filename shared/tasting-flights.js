@@ -3,65 +3,65 @@ import {validTastingDate} from './tasting-records.js';
 
 export const FLIGHT_LIMIT = 100;
 export function normalizeFlightFields(input, previous = {}) {
-    if (!input || typeof input !== 'object' || Array.isArray(input) ||
-        Object.keys(input).some(key=>!['name','date','notes'].includes(key)))
-        throw new Error('Ungültige Flight-Daten');
-    const value={name:'',date:'',notes:'',...previous,...input};
-    if (typeof value.name!=='string' || !value.name.trim() || value.name.length>160)
-        throw new Error('Ungültiger Flight-Name');
-    if (!validTastingDate(value.date)) throw new Error('Ungültiges Flight-Datum');
-    if (typeof value.notes!=='string' || value.notes.length>10000)
-        throw new Error('Ungültige Flight-Notiz');
-    return {name:value.name.trim(),date:value.date,notes:value.notes};
+  if (!input || typeof input !== 'object' || Array.isArray(input) ||
+    Object.keys(input).some(key => !['name', 'date', 'notes'].includes(key)))
+    throw new Error('Ungültige Flight-Daten');
+  const value = {name: '', date: '', notes: '', ...previous, ...input};
+  if (typeof value.name !== 'string' || !value.name.trim() || value.name.length > 160)
+    throw new Error('Ungültiger Flight-Name');
+  if (!validTastingDate(value.date)) throw new Error('Ungültiges Flight-Datum');
+  if (typeof value.notes !== 'string' || value.notes.length > 10000)
+    throw new Error('Ungültige Flight-Notiz');
+  return {name: value.name.trim(), date: value.date, notes: value.notes};
 }
 
 export function allTastingReferences(collection) {
-    return [
-        ...(collection.bottlings || []).flatMap(b => (b.tastings || []).map(record=>({record,bottling:b,external:false}))),
-        ...(collection.externalTastings || []).map(record=>({record,bottling:record.bottling,external:true}))
-    ];
+  return [
+    ...(collection.bottlings || []).flatMap(b => (b.tastings || []).map(record => ({record, bottling: b, external: false}))),
+    ...(collection.externalTastings || []).map(record => ({record, bottling: record.bottling, external: true}))
+  ];
 }
 
 export function flightEntries(collection, flight) {
-    const refs=allTastingReferences(collection);
-    return (flight?.tastingIds || []).map(id=>refs.find(ref=>ref.record.id===id)).filter(Boolean);
+  const refs = allTastingReferences(collection);
+  return (flight?.tastingIds || []).map(id => refs.find(ref => ref.record.id === id)).filter(Boolean);
 }
 
 export function flightForTasting(collection, tastingId) {
-    return (collection?.tastingFlights || []).find(flight=>flight.tastingIds.includes(tastingId)) || null;
+  return (collection?.tastingFlights || []).find(flight => flight.tastingIds.includes(tastingId)) || null;
 }
 
 /** Remove references after deleting a tasting/bottling, without deleting the flight. */
 export function detachTastings(collection, ids) {
-    const deleted=new Set(ids);
-    if (!deleted.size) return;
-    for (const flight of collection.tastingFlights || []) {
-        if (flight.tastingIds.some(id=>deleted.has(id))) {
-            flight.tastingIds=flight.tastingIds.filter(id=>!deleted.has(id));
-            flight.updatedAt=new Date().toISOString();
-        }
+  const deleted = new Set(ids);
+  if (!deleted.size) return;
+  for (const flight of collection.tastingFlights || []) {
+    if (flight.tastingIds.some(id => deleted.has(id))) {
+      flight.tastingIds = flight.tastingIds.filter(id => !deleted.has(id));
+      flight.updatedAt = new Date().toISOString();
     }
+  }
 }
 
 /** Planned members reference physical bottles, never fabricated tasting records. */
-export const FLIGHT_PHASES = Object.freeze(['planned','inProgress','completed']);
+export const FLIGHT_PHASES = Object.freeze(['planned', 'inProgress', 'completed']);
 export const PLAN_LIMIT = 6;
-export function validateFlightPlan(collection,flight) {
-    if (flight.phase === undefined && flight.planItems === undefined) return true; // legacy flights
-    if (!FLIGHT_PHASES.includes(flight.phase) || !Array.isArray(flight.planItems) ||
-        flight.planItems.length > PLAN_LIMIT) throw new Error('Invalid flight plan');
-    const seen = new Set();
-    for (const item of flight.planItems) {
-        if (!item || typeof item !== 'object' || Array.isArray(item) ||
-            Object.keys(item).some(k=>!['bottlingId','bottleId','reason'].includes(k)) ||
-            typeof item.bottlingId !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(item.bottlingId) ||
-            typeof item.bottleId !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(item.bottleId) ||
-            seen.has(item.bottlingId) || (item.reason!==undefined && !['noProfile','untried','contrast','similar','intensity','manual'].includes(item.reason))) throw new Error('Invalid planned item');
-        seen.add(item.bottlingId);
-        // Missing bottles are retained in old plans and explicitly highlighted in the UI.
-    }
-    if (flight.phase === 'planned' && flight.tastingIds?.length) throw new Error('Planning may not contain tastings');
-    // Existing records may be removed later; a completed flight must remain valid
-    // even when its last tasting is deleted. The transition itself requires a tasting.
-    return true;
+export function validateFlightPlan(collection, flight) {
+  if (flight.phase === undefined && flight.planItems === undefined) return true; // legacy flights
+  if (!FLIGHT_PHASES.includes(flight.phase) || !Array.isArray(flight.planItems) ||
+    flight.planItems.length > PLAN_LIMIT) throw new Error('Invalid flight plan');
+  const seen = new Set();
+  for (const item of flight.planItems) {
+    if (!item || typeof item !== 'object' || Array.isArray(item) ||
+      Object.keys(item).some(k => !['bottlingId', 'bottleId', 'reason'].includes(k)) ||
+      typeof item.bottlingId !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(item.bottlingId) ||
+      typeof item.bottleId !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(item.bottleId) ||
+      seen.has(item.bottlingId) || (item.reason !== undefined && !['noProfile', 'untried', 'contrast', 'similar', 'intensity', 'manual'].includes(item.reason))) throw new Error('Invalid planned item');
+    seen.add(item.bottlingId);
+    // Missing bottles are retained in old plans and explicitly highlighted in the UI.
+  }
+  if (flight.phase === 'planned' && flight.tastingIds?.length) throw new Error('Planning may not contain tastings');
+  // Existing records may be removed later; a completed flight must remain valid
+  // even when its last tasting is deleted. The transition itself requires a tasting.
+  return true;
 }

@@ -1,40 +1,40 @@
-import { t } from './js/i18n/index.js';
+import {t} from './js/i18n/index.js';
 /** Composition root: create feature controllers and connect them, then load the collection. */
-import { request, requestCachedJson } from './js/api.js';
-import { initializeLanguage } from './js/i18n/index.js';
-import { createState } from './js/state.js';
-import { pageFromSearch, overviewModeFromSearch } from './js/domain/pagination.js';
-import { createSelectors } from './js/domain/selectors.js';
-import { parseRoute } from './js/navigation/routes.js';
-import { createNavigation } from './js/navigation/controller.js';
-import { createThemeController } from './js/theme/controller.js';
-import { createModal } from './js/ui/modal.js';
-import { createFilePreview } from './js/features/file-preview.js';
-import { createPhotoViewer } from './js/ui/photo-viewer.js';
-import { createPhotoEditor } from './js/features/photo-editor/controller.js';
-import { createShell } from './js/ui/shell.js';
-import { escapeHtml } from './js/ui/dom.js';
-import { toast } from './js/ui/notifications.js';
-import { runAction } from './js/ui/action-result.js';
-import { loadResources } from './js/ui/refresh-resources.js';
-import { createHomeView } from './js/views/home.js';
-import { createDetailView } from './js/views/detail.js';
-import { createTastingsView } from './js/views/tastings.js';
-import { createSettingsView } from './js/views/settings.js';
-import { helpView } from './js/views/help.js';
-import { createMapView } from './js/views/map.js';
-import { createAnalyticsView } from './js/views/analytics.js';
-import { createWarehouseView } from './js/views/warehouse.js';
-import { createBottlingForm } from './js/features/forms/bottling.js';
-import { createBottleForm } from './js/features/forms/bottle.js';
-import { createEditors } from './js/features/editor-controller.js';
-import { createSettingsController } from './js/features/settings-controller.js';
-import { createBackupController } from './js/features/backups/controller.js';
-import { createCodeResolver } from './js/features/scanner/resolve-code.js';
-import { createScanner } from './js/features/scanner/controller.js';
-import { createWhiskybase } from './js/features/whiskybase/controller.js';
-import { bindEvents } from './js/events.js';
-import { createAuthController } from './js/features/auth/controller.js';
+import {request, requestCachedJson} from './js/api.js';
+import {initializeLanguage} from './js/i18n/index.js';
+import {createState} from './js/state.js';
+import {pageFromSearch, overviewModeFromSearch} from './js/domain/pagination.js';
+import {createSelectors} from './js/domain/selectors.js';
+import {parseRoute} from './js/navigation/routes.js';
+import {createNavigation} from './js/navigation/controller.js';
+import {createThemeController} from './js/theme/controller.js';
+import {createModal} from './js/ui/modal.js';
+import {createFilePreview} from './js/features/file-preview.js';
+import {createPhotoViewer} from './js/ui/photo-viewer.js';
+import {createPhotoEditor} from './js/features/photo-editor/controller.js';
+import {createShell} from './js/ui/shell.js';
+import {escapeHtml} from './js/ui/dom.js';
+import {toast} from './js/ui/notifications.js';
+import {runAction} from './js/ui/action-result.js';
+import {loadResources} from './js/ui/refresh-resources.js';
+import {createHomeView} from './js/views/home.js';
+import {createDetailView} from './js/views/detail.js';
+import {createTastingsView} from './js/views/tastings.js';
+import {createSettingsView} from './js/views/settings.js';
+import {helpView} from './js/views/help.js';
+import {createMapView} from './js/views/map.js';
+import {createAnalyticsView} from './js/views/analytics.js';
+import {createWarehouseView} from './js/views/warehouse.js';
+import {createBottlingForm} from './js/features/forms/bottling.js';
+import {createBottleForm} from './js/features/forms/bottle.js';
+import {createEditors} from './js/features/editor-controller.js';
+import {createSettingsController} from './js/features/settings-controller.js';
+import {createBackupController} from './js/features/backups/controller.js';
+import {createCodeResolver} from './js/features/scanner/resolve-code.js';
+import {createScanner} from './js/features/scanner/controller.js';
+import {createWhiskybase} from './js/features/whiskybase/controller.js';
+import {bindEvents} from './js/events.js';
+import {createAuthController} from './js/features/auth/controller.js';
 await initializeLanguage();
 const root = document.querySelector('#app');
 const state = createState(parseRoute(location.search));
@@ -45,112 +45,112 @@ const theme = createThemeController();
 let scanner;
 let filePreview;
 const modal = createModal({
-    state, onClose: () => { scanner?.stopScan(); filePreview?.close(); }
+  state, onClose: () => {scanner?.stopScan(); filePreview?.close();}
 });
 filePreview = createFilePreview({modal, state});
-const photoViewer = createPhotoViewer({ state, showModal: modal.showModal });
-const photoEditor = createPhotoEditor({ state, showModal: modal.showModal, closeModal: modal.closeModal, action });
+const photoViewer = createPhotoViewer({state, showModal: modal.showModal});
+const photoEditor = createPhotoEditor({state, showModal: modal.showModal, closeModal: modal.closeModal, action});
 const navigation = createNavigation({
-    state, render, closeModal: modal.closeModal
+  state, render, closeModal: modal.closeModal
 });
-const { navigate } = navigation;
+const {navigate} = navigation;
 const shell = createShell({
-    root, state, applyTheme: theme.applyTheme, renderModal: modal.renderModal
+  root, state, applyTheme: theme.applyTheme, renderModal: modal.renderModal
 });
 const home = createHomeView({
-    state, selectors, shell, navigate, refresh, showModal:modal.showModal, closeModal:modal.closeModal, confirm:modal.confirm
+  state, selectors, shell, navigate, refresh, showModal: modal.showModal, closeModal: modal.closeModal, confirm: modal.confirm
 });
 const detail = createDetailView({
-    state, selectors, shell, navigate, action
+  state, selectors, shell, navigate, action
 });
-const tastingsView = createTastingsView({state,selectors,shell,navigate,refresh,showModal:modal.showModal,closeModal:modal.closeModal,confirm:modal.confirm});
-const auth = createAuthController({ root, state, render, refresh, applyTheme: theme.applyTheme, showModal: modal.showModal, closeModal: modal.closeModal });
+const tastingsView = createTastingsView({state, selectors, shell, navigate, refresh, showModal: modal.showModal, closeModal: modal.closeModal, confirm: modal.confirm});
+const auth = createAuthController({root, state, render, refresh, applyTheme: theme.applyTheme, showModal: modal.showModal, closeModal: modal.closeModal});
 const settingsView = createSettingsView(state, auth);
 const bottlingForm = createBottlingForm({
-    state, selectors
+  state, selectors
 });
 const bottleForm = createBottleForm({
-    state, selectors
+  state, selectors
 });
 let externalImport;
 const editors = createEditors({
-    state, selectors, bottlingForm, bottleForm, ...modal, navigate, action,
-    getPendingImageToken: () => externalImport?.getPendingImageToken(),
-    markImageAttached: () => externalImport?.markImageAttached()
+  state, selectors, bottlingForm, bottleForm, ...modal, navigate, action,
+  getPendingImageToken: () => externalImport?.getPendingImageToken(),
+  markImageAttached: () => externalImport?.markImageAttached()
 });
-const backup = createBackupController({ state, render, showModal: modal.showModal, closeModal: modal.closeModal });
+const backup = createBackupController({state, render, showModal: modal.showModal, closeModal: modal.closeModal});
 const settings = createSettingsController({
-    state, action, navigate, ...modal,
-    onDistilleryLocationChanged: id => {
-        if (state.page === 'map') mapView.centerOnUpdatedLocation(id);
-    }
+  state, action, navigate, ...modal,
+  onDistilleryLocationChanged: id => {
+    if (state.page === 'map') mapView.centerOnUpdatedLocation(id);
+  }
 });
-const mapView = createMapView({ state, shell, navigate, settings });
-const analyticsView = createAnalyticsView({ state, shell });
+const mapView = createMapView({state, shell, navigate, settings});
+const analyticsView = createAnalyticsView({state, shell});
 const warehouseView = createWarehouseView({state, shell, navigate, modal, refresh});
 const resolveCode = createCodeResolver({
-    state, navigate, toast, ...modal
+  state, navigate, toast, ...modal
 });
 scanner = createScanner({
-    state, showModal: modal.showModal, resolveCode
+  state, showModal: modal.showModal, resolveCode
 });
 externalImport = createWhiskybase({
-    state, navigate, showModal: modal.showModal, closeModal: modal.closeModal, action, ...editors
+  state, navigate, showModal: modal.showModal, closeModal: modal.closeModal, action, ...editors
 });
 function render() {
-    if (!state.collection) {
-        return;
-    }
-    if (state.page === 'map') return mapView.render();
-    mapView.destroy();
-    if (state.page === 'analytics') return analyticsView();
-    if (state.page === 'help') return shell(helpView());
-    if (state.page === 'warehouse') return warehouseView.render();
-    if (state.page === 'tastings-home') return tastingsView.home();
-    if (state.page === 'tasting-flight') return tastingsView.flight();
-    if (['tastings','external-tastings'].includes(state.page)) return tastingsView.list();
-    if (['tasting','external-tasting'].includes(state.page)) return tastingsView.editor();
-    if (state.page === 'detail') {
-        return detail();
-    }
-    if (state.page === 'settings') {
-        return shell(settingsView());
-    }
-    home();
+  if (!state.collection) {
+    return;
+  }
+  if (state.page === 'map') return mapView.render();
+  mapView.destroy();
+  if (state.page === 'analytics') return analyticsView();
+  if (state.page === 'help') return shell(helpView());
+  if (state.page === 'warehouse') return warehouseView.render();
+  if (state.page === 'tastings-home') return tastingsView.home();
+  if (state.page === 'tasting-flight') return tastingsView.flight();
+  if (['tastings', 'external-tastings'].includes(state.page)) return tastingsView.list();
+  if (['tasting', 'external-tasting'].includes(state.page)) return tastingsView.editor();
+  if (state.page === 'detail') {
+    return detail();
+  }
+  if (state.page === 'settings') {
+    return shell(settingsView());
+  }
+  home();
 }
 async function refresh(scope = 'all') {
-    const [_, meta] = await Promise.all([
-        loadResources(state, requestCachedJson, scope),
-        state.version ? Promise.resolve({ version: state.version }) : request('/api/version').catch(() => ({ version: '' }))
-    ]);
-    state.version = meta.version;
-    if (state.page === 'map') mapView.refreshData();
-    else render();
+  const [_, meta] = await Promise.all([
+    loadResources(state, requestCachedJson, scope),
+    state.version ? Promise.resolve({version: state.version}) : request('/api/version').catch(() => ({version: ''}))
+  ]);
+  state.version = meta.version;
+  if (state.page === 'map') mapView.refreshData();
+  else render();
 }
-async function action(task, { scope = 'all' } = {}) {
-    return runAction(task, () => refresh(scope), error => toast(error.message, true), () => {
-        // Action callers may show a success toast immediately afterward. Display
-        // the refresh warning after that synchronous completion, not before it.
-        setTimeout(() => toast(t('ui.errors.savedButRefreshFailed'), true), 0);
-    });
+async function action(task, {scope = 'all'} = {}) {
+  return runAction(task, () => refresh(scope), error => toast(error.message, true), () => {
+    // Action callers may show a success toast immediately afterward. Display
+    // the refresh warning after that synchronous completion, not before it.
+    setTimeout(() => toast(t('ui.errors.savedButRefreshFailed'), true), 0);
+  });
 }
 navigation.listen();
 bindEvents(root, {
-    state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, filePreview, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView, auth
+  state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, filePreview, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView, auth
 });
 // The extension can send a second import into an already open manager tab.
 // A fragment-only navigation triggers hashchange, not a page reload.
 window.addEventListener('hashchange', () => {
-    if (state.collection) externalImport.importFromExtension();
+  if (state.collection) externalImport.importFromExtension();
 });
 window.addEventListener('wcm:auth-required', () => {
-    auth.init().then(allowed => { if (!allowed) state.collection = null; }).catch(() => {});
+  auth.init().then(allowed => {if (!allowed) state.collection = null;}).catch(() => {});
 });
 auth.init().then(allowed => allowed ? refresh().then(externalImport.importFromExtension) : null).catch(error => {
-    root.innerHTML = `<main>
+  root.innerHTML = `<main>
     <h2>${t("ui.errors.serverConnectionFailed")}</h2>
     <p>${escapeHtml(error.message)}</p>
     <button class="btn" id="retry-connection">${t("ui.errors.retry")}</button>
     </main>`;
-    document.querySelector('#retry-connection').addEventListener('click', () => location.reload());
+  document.querySelector('#retry-connection').addEventListener('click', () => location.reload());
 });
