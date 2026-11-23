@@ -11,7 +11,7 @@ import { activateHelpTopic } from './views/help.js';
 import { activateSettingsSection } from './views/settings.js';
 import { handleFlavorRange, setFlavorFromPointer } from './ui/flavor-profile.js';
 /** One delegated click handler; HTML data-act values are the UI action names. */
-export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView, auth }) {
+export function bindEvents(root, { state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, filePreview, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView, auth }) {
     const suggestNumber = async (fieldName) => {
         const result = await request('/api/suggest-number');
         const field = query(`[name=${fieldName}]`);
@@ -121,6 +121,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         'collection-flavor-remove': button => home.removeFlavorCriterion(button.dataset.axis),
         'collection-flight-plan': () => {home.planFromSelection();tastingsView.startPlannedFlight();},
         'flight-plan-new': () => tastingsView.startPlannedFlight(),
+        'flight-plan-help': () => tastingsView.showFlightPlanningHelp(),
         'flight-plan-generate': () => tastingsView.generateFlightPlan(),
         'flight-plan-create': () => tastingsView.createPlannedFlight(),
         'flight-plan-add': () => tastingsView.changePlannedMember(-1,'add'),
@@ -302,6 +303,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
             if (result.ok) toast(t("ui.confirmations.attachmentDeleted"));
             return result;
         }),
+        'preview-file': button => filePreview.open(button),
         'open-photo': button => photoViewer.open(button),
         'photo-editor-open': button => photoEditor.open(button),
         'photo-editor-tab': button => photoEditor.selectTab(button.dataset.photoEditorTab),
@@ -498,7 +500,7 @@ export function bindEvents(root, { state, render, action, navigate, editors, set
         if (event.target.matches?.('input[data-furniture-photos]')) {
             warehouseView.uploadFurniturePhotos(event.target.dataset.furniturePhotos,[...event.target.files]); return;
         }
-        if (event.target.matches?.('[data-flight-plan-style], [data-flight-plan-count], [data-flight-plan-availability]')) { tastingsView.invalidateFlightPlan(); return; }
+        if (event.target.matches?.('[data-flight-plan-style], [data-flight-plan-count], [data-flight-plan-availability], [data-flight-plan-focus], [data-flight-plan-unfamiliar], [data-flight-plan-cask-mode], [data-flight-plan-cask-group], [data-flight-plan-cask-subtype], [data-flight-plan-age-mode], [data-flight-plan-age-min], [data-flight-plan-age-max], [data-flight-plan-strict]')) { tastingsView.invalidateFlightPlan(); return; }
         if (event.target.id === 'ui-language') { chooseLanguage(event.target.value); return; }
         if (event.target.dataset.sectionSwitch === 'analytics') {
             navigate('analytics', event.target.value);

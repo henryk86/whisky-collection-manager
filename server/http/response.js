@@ -5,10 +5,10 @@ export function send(res, status, data, type = 'application/json; charset=utf-8'
     });
     res.end(type.startsWith('application/json') ? JSON.stringify(data) : data);
 }
-export function attachment(response, { filename, type, bytes }) {
+export function attachment(response, { filename, type, bytes }, { inline = false } = {}) {
     // HTTP response headers must stay ASCII; the RFC 5987 name preserves umlauts.
     const fallback = filename.replace(/[^\x20-\x7e]/g, '_').replace(/[\\";\r\n]/g, '_');
-    const disposition = `attachment; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
+    const disposition = `${inline ? 'inline' : 'attachment'}; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
     response.writeHead(200, {
         'Content-Type': type,
         'Content-Disposition': disposition,

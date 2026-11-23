@@ -18,7 +18,11 @@ export function createModal({ state, onClose }) {
         body.style.position = 'fixed';
         body.style.top = `-${top}px`;
         body.style.left = '0'; body.style.right = '0'; body.style.width = '100%';
-        html.style.overflow = 'hidden'; html.style.overscrollBehavior = 'none';
+        // Keep the scrollbar track reserved while the fixed body locks page
+        // scrolling. Hiding overflow on <html> removes the track and makes
+        // centered content shift sideways on browsers with classic scrollbars.
+        html.style.overflowY = 'scroll';
+        html.style.overscrollBehavior = 'none';
     }
     function unlockBackground() {
         if (!scrollLock || typeof document === 'undefined') return;
@@ -32,7 +36,7 @@ export function createModal({ state, onClose }) {
             window.scrollTo({top, left: 0, behavior: 'instant'});
         }
     }
-    function showModal(title, content, wide = false, nested = true) {
+    function showModal(title, content, wide = false, nested = true, headingAction = '') {
         // Replacing a confirmation must cancel its awaiting caller.
         if (pendingChoice) { const callback = pendingChoice; pendingChoice = null; callback('cancel'); }
         if (pendingConfirmation) {
@@ -49,7 +53,7 @@ export function createModal({ state, onClose }) {
             suspended.length = 0;
         }
         lockBackground();
-        state.modal = { title, content, wide };
+        state.modal = { title, content, wide, headingAction };
         renderModal();
     }
     function renderModal() {
@@ -58,7 +62,7 @@ export function createModal({ state, onClose }) {
         host.innerHTML = `<div class="overlay" data-overlay="1">
     <div class="dialog ${state.modal.wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${escapeHtml(state.modal.title)}">
     <div class="dialog-head">
-    <h2>${escapeHtml(state.modal.title)}</h2>
+    <h2${state.modal.headingAction ? ' class="dialog-title-with-action"' : ''}>${escapeHtml(state.modal.title)}${state.modal.headingAction || ''}</h2>
     <button class="btn small" type="button" data-act="close-modal" aria-label="${t("common.actions.close")}">${closeIcon}</button>
     </div>${state.modal.content}</div>
     </div>`;

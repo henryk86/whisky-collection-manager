@@ -221,3 +221,52 @@
 
 .flight-plan-members-list {list-style:none;padding-left:0;}
 .flight-plan-number {display:inline-flex;align-items:center;justify-content:center;flex:0 0 26px;height:26px;border-radius:50%;border:1px solid var(--line);font-weight:650;font-size:12px;}
+
+/* Preserve the exact h3 layout shared by other panels. Position the small help
+   action inside the heading without affecting its line height, margins or baseline. */
+.tasting-flight-home h3.flight-plan-heading-title,
+.dialog-head h2.dialog-title-with-action {position:relative;padding-right:26px;}
+.tasting-flight-home .flight-plan-help-button,
+.dialog-head .flight-plan-help-button {appearance:none;position:absolute;right:0;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;min-width:20px;min-height:20px;padding:0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--muted);line-height:1;cursor:pointer;}
+.tasting-flight-home .flight-plan-help-button .ui-symbol,
+.dialog-head .flight-plan-help-button .ui-symbol {display:block;width:15px;height:15px;flex:0 0 15px;}
+.tasting-flight-home .flight-plan-help-button:hover,
+.dialog-head .flight-plan-help-button:hover {background:transparent;color:var(--ink);}
+.tasting-flight-home .flight-plan-help-button:focus-visible,
+.dialog-head .flight-plan-help-button:focus-visible {outline:2px solid var(--gold);outline-offset:1px;}
+.flight-plan-conditional[hidden] {display:none;}
+.flight-plan-conditional label {display:grid;gap:7px;}
+.flight-plan-conditional select {width:100%;}
+.flight-plan-conditional .flight-plan-toggle {display:flex;align-items:center;gap:10px;}
+.flight-plan-conditional .flight-plan-toggle input {width:auto;flex:none;}
+/* Long technical reference: section breaks, readable equations and natural scrolling. */
+.flight-plan-help {display:grid;gap:16px;min-width:0;line-height:1.55;}
+.flight-plan-help p {margin:7px 0 0;}
+.flight-plan-help-intro {margin:0 !important;}
+.flight-plan-help-section {min-width:0;padding-top:15px;border-top:1px solid var(--line);}
+.flight-plan-help h3 {margin:0 0 8px;font:600 18px var(--sans);color:var(--ink);}
+.flight-plan-help h4 {margin:14px 0 3px;font:700 14px var(--sans);color:var(--ink);}
+.flight-plan-help-strategy {margin-top:15px;}
+.flight-plan-help-strategy + .flight-plan-help-strategy {border-top:1px solid var(--line);padding-top:12px;}
+.flight-plan-help-strategy h4 {margin-top:0;}
+.flight-plan-help-definitions {display:grid;gap:0;margin:10px 0 0;}
+.flight-plan-help-definition {display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;border-bottom:1px solid var(--line);padding:7px 0;}
+.flight-plan-help-definition dt {font:700 13px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);}
+.flight-plan-help-definition dd {margin:0;font-size:13px;}
+.flight-plan-help-steps {display:grid;gap:10px;margin:12px 0 0;padding-left:24px;}
+.flight-plan-help-formula {max-width:100%;min-width:0;margin:9px 0;padding:12px 14px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--cream);border-left:2px solid var(--gold);font:13px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);}
+.flight-plan-help-formula code {font:inherit;white-space:inherit;overflow-wrap:inherit;}
+.flight-plan-help-caption,.flight-plan-help-example {font-size:13px;color:var(--muted);}
+.flight-plan-help .actions {justify-content:flex-end;margin-top:4px;}
+@media(max-width:520px) {.flight-plan-help-formula {padding:10px;font-size:12px;}}
+
+/* Additional optional planner criteria use the existing form vocabulary. */
+.flight-plan-advanced {border-top:1px solid var(--line);padding:12px 0 4px;margin-top:12px;}
+.flight-plan-advanced summary {font-weight:650;color:var(--ink);cursor:pointer;}
+.flight-plan-advanced summary:focus-visible {outline:2px solid var(--gold);outline-offset:3px;}
+.flight-plan-advanced > .hint {margin:10px 0 12px;}
+.flight-plan-advanced-grid {grid-template-columns:repeat(2,minmax(0,1fr));margin:10px 0;}
+.flight-plan-age-range {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.flight-plan-age-range input {min-width:0;width:100%;}
+.flight-plan-advanced .flight-plan-conditional[hidden] {display:none;}
+@media(max-width:600px) {.flight-plan-advanced-grid {grid-template-columns:1fr;}}

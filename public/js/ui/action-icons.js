@@ -46,6 +46,7 @@ export const closeIcon = uiSymbol('<path d="M18 6 6 18M6 6l12 12"/>');
 export const collectionTableIcon = uiSymbol('<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 10h18M3 15h18M10 4v16"/>');
 export const collectionCardsIcon = uiSymbol('<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/>');
 /** Three tasting glasses make the planning action identifiable on both pages. */
+export const helpCircleIcon = uiSymbol('<circle cx="12" cy="12" r="9"/><path d="M9.3 9a2.8 2.8 0 1 1 4.9 1.9c-.9.9-2.2 1.2-2.2 3.1M12 17h.01"/>');
 export const flightPlanIcon = uiSymbol('<path d="M2 5h6L7 18H3L2 5Zm7-2h6l-1 15h-4L9 3Zm7 2h6l-1 13h-4L16 5Z"/><path d="M3 11h4m3-1h4m3 1h4"/>');
 export const plusIcon = uiSymbol('<path d="M12 5v14M5 12h14"/>');
 export const minusIcon = uiSymbol('<path d="M5 12h14"/>');

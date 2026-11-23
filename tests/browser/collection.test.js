@@ -405,6 +405,57 @@ test('browser: persistent scrollbar track keeps centered content stationary', as
 });
 
 
+test('browser: opening a modal does not shift centered content when a classic scrollbar is present', async t => {
+    // The browser harness normally hides scrollbars. Use a visible classic
+    // scrollbar to detect the 15px viewport-width regression during modal lock.
+    const scrollbarBrowser = await chromium.launch({
+        executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || undefined,
+        headless: true,
+        ignoreDefaultArgs: ['--hide-scrollbars'],
+        args: process.env.CI || domOnly ? ['--no-sandbox'] : [],
+    });
+    try {
+        await session(async ({ page, open }) => {
+            await open();
+            await page.setViewportSize({ width: 1366, height: 900 });
+            await page.evaluate(() => {
+                const filler = document.createElement('div');
+                filler.id = 'modal-scrollbar-probe';
+                filler.style.height = '1800px';
+                document.body.append(filler);
+            });
+            const measure = () => page.evaluate(() => ({
+                width: document.documentElement.clientWidth,
+                centeredLeft: document.querySelector('.header-inner').getBoundingClientRect().left,
+                centeredWidth: document.querySelector('.header-inner').getBoundingClientRect().width,
+            }));
+            const before = await measure();
+            if (before.width === 1366) {
+                t.skip('Browser uses overlay scrollbars; no physical gutter to measure');
+                return;
+            }
+            await page.evaluate(() => window.scrollTo(0, 350));
+            const scrollTop = await page.evaluate(() => window.scrollY);
+            await page.evaluate(() => document.querySelector('header [data-act="new"]').click());
+            await page.locator('#modal-root .dialog').waitFor();
+            const opened = await measure();
+            assert.equal(opened.width, before.width, 'keep the original scrollbar track');
+            assert.ok(Math.abs(opened.centeredLeft - before.centeredLeft) < 0.5,
+                `page header must not shift on modal open: ${JSON.stringify({before,opened})}`);
+            assert.ok(Math.abs(opened.centeredWidth - before.centeredWidth) < 0.5);
+            assert.equal(await page.evaluate(() => document.documentElement.style.overflowY), 'scroll');
+            await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+            const closed = await measure();
+            assert.equal(closed.width, before.width);
+            assert.ok(Math.abs(closed.centeredLeft - before.centeredLeft) < 0.5);
+            assert.ok(Math.abs(await page.evaluate(() => window.scrollY) - scrollTop) <= 1,
+                'closing a modal must restore the original page scroll position');
+        }, scrollbarBrowser);
+    } finally {
+        await scrollbarBrowser.close();
+    }
+});
+
 test('browser: mobile and desktop share theme SVGs and keep clear logo spacing', async () => {
     await session(async ({ page, open }) => {
         await open();
@@ -713,12 +764,21 @@ test('browser: upload and remove invoice for one physical bottle', async () => {
         const uploadResponse = await uploaded;
         assert.equal(uploadResponse.status(), 201,
             `attachment upload must succeed: ${await uploadResponse.text()}`);
-        await page.waitForSelector(`#bottle-${data.bottle.id} .document-list a`);
-        assert.equal(await page.locator('.document-list a').innerText(), 'Rechnung.pdf');
+        await page.waitForSelector(`#bottle-${data.bottle.id} .document-preview-link`);
+        assert.equal(await page.locator('.document-preview-link').innerText(), 'Rechnung.pdf');
         const saved = (await requestJson(base, '/api/collection')).data;
         assert.equal(saved.bottlings[0].bottles[0].files.length, 1);
-        const link = page.locator('.document-list a');
-        assert.match(await link.getAttribute('href'), new RegExp(`/api/bottles/${data.bottle.id}/files/`));
+        const download = page.locator('.document-download');
+        assert.match(await download.getAttribute('href'), new RegExp(`/api/bottles/${data.bottle.id}/files/`));
+        assert.equal(await download.getAttribute('download'), 'Rechnung.pdf');
+        await page.locator(`#bottle-${data.bottle.id} [data-act="preview-file"]`).click();
+        await page.locator('#modal-root .document-preview-pdf').waitFor();
+        const iframe = page.locator('#modal-root .document-preview-pdf');
+        assert.match(await iframe.getAttribute('src'), new RegExp(`^/api/bottles/${data.bottle.id}/files/[\\w-]+/preview$`));
+        assert.equal(await iframe.getAttribute('sandbox'), null,
+            'Chrome PDF viewer must not be blocked by iframe sandbox restrictions');
+        assert.equal(await page.locator('#modal-root .document-preview-actions a[download="Rechnung.pdf"]').count(), 1);
+        await page.locator('#modal-root [data-act="close-modal"]').click();
         await page.locator(`#bottle-${data.bottle.id} [data-act="delete-file"]`).click();
         await page.locator('.overlay [data-act="confirm-action"]').click();
         await page.waitForSelector('.document-list', { state: 'detached' });
@@ -728,6 +788,40 @@ test('browser: upload and remove invoice for one physical bottle', async () => {
 });
 
 
+
+test('browser: attachments preview images and safe plaintext, with download fallback for office files', async () => {
+    await session(async ({ page, base, open }) => {
+        const {bottling,bottle} = await seed(base, '000936');
+        const uploads = [
+            {name:'proof.png', mime:'image/png', bytes:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=', 'base64')},
+            {name:'memo.txt', mime:'text/plain', bytes:Buffer.from('<script>alert("not HTML")</script>\nOriginal receipt')},
+            {name:'letter.docx', mime:'application/vnd.openxmlformats-officedocument.wordprocessingml.document', bytes:Buffer.from('504b030400000000', 'hex')}
+        ];
+        for (const file of uploads) {
+            const res = await requestJson(base, `/api/bottles/${bottle.id}/files`, 'POST', {
+                filename:file.name, data:`data:${file.mime};base64,${file.bytes.toString('base64')}`
+            });
+            assert.equal(res.status, 201, file.name);
+        }
+        await open({query:`?bottling=${bottling.id}`});
+        const openPreview = name => page.locator(`#bottle-${bottle.id} [data-act="preview-file"]`).filter({hasText:name}).click();
+        await openPreview('proof.png');
+        await page.locator('#modal-root .document-preview-image').waitFor();
+        assert.match(await page.locator('#modal-root .document-preview-image').getAttribute('src'), /^blob:/);
+        assert.equal(await page.locator('#modal-root .document-preview-actions [download="proof.png"]').count(), 1);
+        await page.locator('#modal-root [data-act="close-modal"]').click();
+        await openPreview('memo.txt');
+        await page.locator('#modal-root .document-preview-text').waitFor();
+        assert.match(await page.locator('#modal-root .document-preview-text').innerText(), /Original receipt/);
+        assert.equal(await page.locator('#modal-root .document-preview-text script').count(), 0,
+            'Untrusted text must not become executable HTML');
+        await page.locator('#modal-root [data-act="close-modal"]').click();
+        await openPreview('letter.docx');
+        assert.match(await page.locator('#modal-root .document-preview-stage').innerText(), /keine Vorschau verfügbar/);
+        assert.equal(await page.locator('#modal-root .document-preview-actions [download="letter.docx"]').count(), 1);
+        await page.locator('#modal-root [data-act="close-modal"]').click();
+    });
+});
 
 test('browser: removing a photo or attachment does not bounce the detail page to the top', async () => {
     await session(async ({ page, base, open }) => {

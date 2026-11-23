@@ -4,6 +4,85 @@ import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer,requestJson} from '../helpers/server.js';
 import {domOnly,chromium,session,openSettingsFromMenu,openSettingsSection,seed,mockDecoder} from './support.js';
+test('browser: flight help icon stays inline with its heading and never shows a hover badge', async () => {
+    await session(async ({page,open}) => {
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();
+        const title=page.locator('.tasting-flight-home h3.flight-plan-heading-title');
+        const help=page.locator('.tasting-flight-home [data-act="flight-plan-help"]');
+        await help.waitFor({state:'visible'});
+        const aligned=await help.evaluate(button => {
+            const heading=button.closest('h3');
+            const nextPanelHeading=document.querySelector('.tasting-home-recent .tasting-panel-heading h3');
+            const a=heading.getBoundingClientRect();
+            const b=button.getBoundingClientRect();
+            const reference=nextPanelHeading.getBoundingClientRect();
+            const panel=heading.closest('.analytics-panel').getBoundingClientRect();
+            const nextPanel=nextPanelHeading.closest('.analytics-panel').getBoundingClientRect();
+            return {
+                titleMargin:getComputedStyle(heading).marginBottom,
+                expectedMargin:getComputedStyle(nextPanelHeading).marginBottom,
+                titleTop:a.top-panel.top,
+                expectedTop:reference.top-nextPanel.top,
+                distance:Math.abs((a.top+a.height/2)-(b.top+b.height/2)),
+                background:getComputedStyle(button).backgroundColor,
+                width:b.width
+            };
+        });
+        assert.equal(aligned.titleMargin,aligned.expectedMargin,'the heading must retain the normal panel title margin');
+        assert.ok(Math.abs(aligned.titleTop-aligned.expectedTop)<=1,`the heading must stay at the same position as other panel headings: ${JSON.stringify(aligned)}`);
+        assert.ok(aligned.distance<=2,`help icon must be vertically centered: ${JSON.stringify(aligned)}`);
+        assert.ok(aligned.width<=20,'the icon must not grow into a full action button');
+        assert.equal(aligned.background,'rgba(0, 0, 0, 0)');
+        await help.hover();
+        assert.equal(await help.evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)',
+            'hovering the icon must not create a round background badge');
+        await help.click();
+        assert.ok(await page.locator('.flight-plan-help-formula').count()>0,'the modal remains accessible');
+    });
+});
+
+
+test('browser: planner help returns to the same planning modal with all draft inputs preserved', async () => {
+    await session(async ({page,open}) => {
+        await open();
+        await page.locator('header [data-act="toggle-menu"]').click();
+        await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();
+        await page.locator('.tasting-flight-home [data-act="flight-plan-new"]').click();
+        const form=page.locator('#modal-root .flight-plan-form');
+        await form.waitFor({state:'visible'});
+        await form.locator('[data-flight-name]').fill('Draft remains unchanged');
+        await form.locator('[data-flight-notes]').fill('Notes stay on reopening');
+        await form.locator('[data-flight-plan-style]').selectOption('similar');
+        await form.locator('[data-flight-plan-focus]').selectOption('smoky');
+        await form.locator('.flight-plan-advanced summary').click();
+        await form.locator('[data-flight-plan-cask-mode]').selectOption('specific');
+        await form.locator('[data-flight-plan-cask-group]').selectOption('sherry');
+        const help=page.locator('#modal-root .dialog-head [data-act="flight-plan-help"]');
+        await help.waitFor({state:'visible'});
+        assert.equal(await help.getAttribute('aria-label'),'So wird ein Flight geplant');
+        const alignment=await help.evaluate(button=>{
+            const title=button.closest('h2').getBoundingClientRect(),rect=button.getBoundingClientRect();
+            return Math.abs(title.top+title.height/2-rect.top-rect.height/2);
+        });
+        assert.ok(alignment<=2,`help icon must be aligned with the dialog heading: ${alignment}`);
+        await help.click();
+        const explanation=page.locator('#modal-root .flight-plan-help');
+        await explanation.waitFor({state:'visible'});
+        assert.ok(await explanation.locator('.flight-plan-help-formula').count()>0);
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        await form.waitFor({state:'visible'});
+        assert.equal(await form.locator('[data-flight-name]').inputValue(),'Draft remains unchanged');
+        assert.equal(await form.locator('[data-flight-notes]').inputValue(),'Notes stay on reopening');
+        assert.equal(await form.locator('[data-flight-plan-style]').inputValue(),'similar');
+        assert.equal(await form.locator('[data-flight-plan-focus]').inputValue(),'smoky');
+        assert.equal(await form.locator('[data-flight-plan-cask-group]').inputValue(),'sherry');
+        assert.equal(await form.locator('.flight-plan-advanced').evaluate(el=>el.open),true);
+        assert.equal(await page.locator('#modal-root .dialog-head [data-act="flight-plan-help"]').count(),1);
+    });
+});
+
 test('browser: bottling tasting block edits ten-axis flavor, notes and five Glencairn glasses with undo/redo', async () => {
     await session(async ({page,base,open}) => {
         await open();
@@ -196,7 +275,7 @@ test('browser: v0.24 nested mobile modal fixes page scrolling and technical help
         await open();
         await page.locator('[data-act="new"]').first().click();
         assert.equal(await page.evaluate(()=>document.body.style.position),'fixed');
-        assert.equal(await page.evaluate(()=>document.documentElement.style.overflow),'hidden');
+        assert.equal(await page.evaluate(()=>document.documentElement.style.overflowY),'scroll');
         const scrollable=await page.locator('.dialog').evaluate(el=>({touchAction:getComputedStyle(el).touchAction,overflow:getComputedStyle(el).overflowY}));
         assert.match(scrollable.touchAction,/pan-y/);
         assert.match(scrollable.overflow,/auto/);

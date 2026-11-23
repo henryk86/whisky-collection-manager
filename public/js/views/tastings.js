@@ -15,10 +15,11 @@ import { parseTastingScore, emptyTastingNotes } from '../../../shared/tasting.js
 import { sortedTastings } from '../../../shared/tasting-records.js';
 import {allTastingReferences,flightEntries,flightForTasting} from '../../../shared/tasting-flights.js';
 import { allStandaloneTastings } from '../../../shared/standalone-tastings.js';
-import { editIcon, newBottlingIcon, flightPlanIcon, chevronRightIcon, arrowUpIcon, arrowDownIcon } from '../ui/action-icons.js';
+import { editIcon, newBottlingIcon, flightPlanIcon, helpCircleIcon, chevronRightIcon, arrowUpIcon, arrowDownIcon } from '../ui/action-icons.js';
 import { backNavigation } from '../ui/back-navigation.js';
+import { flightPlanningHelpHtml } from '../ui/flight-planning-help.js';
 import { reorderFlightIds } from '../features/flight-order.js';
-import {suggestFlight,flightCandidates,FLIGHT_STYLES,FLIGHT_AVAILABILITY} from '../domain/flight-planner.js';
+import {suggestFlight,flightCandidates,FLIGHT_STYLES,FLIGHT_AVAILABILITY,FLIGHT_FOCUSES,CASK_GROUPS,SHERRY_SUBTYPES,CASK_MODES,AGE_MODES} from '../domain/flight-planner.js';
 
 /** Tasting list and single-record editor; no migration of earlier bottling notes. */
 export function createTastingsView({state,selectors,shell,navigate,refresh,showModal,closeModal,confirm:confirmModal}) {
@@ -378,13 +379,40 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
     function homeFlights() {
         const flights=flightList();
         return `<section class="analytics-panel tasting-flight-home">
-            <div class="tasting-panel-heading"><h3>${escapeHtml(t('tastingFlights.plural'))}</h3>
+            <div class="tasting-panel-heading"><h3 class="flight-plan-heading-title">${escapeHtml(t('tastingFlights.plural'))}
+                ${flightPlanningHelpButton()}</h3>
                 <div class="actions"><button type="button" class="btn small" data-act="tasting-flight-new">${newBottlingIcon}<span>${escapeHtml(t('flightPlan.document'))}</span></button>
                 <button type="button" class="btn small primary" data-act="flight-plan-new">${flightPlanIcon}<span>${escapeHtml(t('flightPlan.plan'))}</span></button></div></div>
             ${flights.length ? `<div class="warehouse-bottle-list tasting-flight-list">${flights.map(item=>`<button class="tasting-flight-home-link" type="button" data-act="tasting-flight-open" data-flight-id="${escapeHtml(item.id)}">
                 <span><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(formatDate(item.date))} · ${item.phase ? escapeHtml(t(`flightPlan.phase.${item.phase}`))+' · ' : ''}${escapeHtml(t(item.phase==='planned'?'flightPlan.countSelected':item.tastingIds.length===1?'tastingFlights.oneEntry':'tastingFlights.entriesCount',{count:item.phase==='planned'?item.planItems.length:item.tastingIds.length}))}</small></span>
                 <span class="tasting-entry-chevron" aria-hidden="true">${chevronRightIcon}</span></button>`).join('')}</div>` : `<p class="hint">${escapeHtml(t('tastingFlights.none'))}</p>`}
         </section>`;
+    }
+    function showFlightPlanningHelp() {
+        // Preserve the planner's live inputs, generated proposal and scroll position.
+        // From the overview this opens as a normal top-level modal.
+        showModal(t('flightPlan.help.title'), flightPlanningHelpHtml(t), true, true);
+    }
+    function flightPlanningHelpButton() {
+        const label=escapeHtml(t('flightPlan.help.title'));
+        return `<button type="button" class="flight-plan-help-button" data-act="flight-plan-help" aria-label="${label}" title="${label}">${helpCircleIcon}</button>`;
+    }
+    function syncFlightPlanOptions() {
+        const box=globalThis.document?.querySelector?.('#modal-root');
+        const style=box?.querySelector('[data-flight-plan-style]')?.value;
+        const similar=box?.querySelector('[data-flight-plan-focus-wrap]');
+        const discover=box?.querySelector('[data-flight-plan-unfamiliar-wrap]');
+        const caskMode=box?.querySelector('[data-flight-plan-cask-mode]')?.value;
+        const group=box?.querySelector('[data-flight-plan-cask-group]')?.value;
+        const ageMode=box?.querySelector('[data-flight-plan-age-mode]')?.value;
+        if (similar) similar.hidden=style!=='similar';
+        if (discover) discover.hidden=style!=='discover';
+        for (const [selector,visible] of [
+            ['[data-flight-plan-cask-group-wrap]',caskMode==='specific'],
+            ['[data-flight-plan-cask-subtype-wrap]',caskMode==='specific' && group==='sherry'],
+            ['[data-flight-plan-age-range-wrap]',ageMode==='range'],
+            ['[data-flight-plan-strict-wrap]',caskMode==='specific' || ageMode==='range']
+        ]) {const element=box?.querySelector(selector);if(element)element.hidden=!visible;}
     }
     function startPlannedFlight() {
         flightPlanDraft=null;
@@ -400,14 +428,39 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
                 <label>${t('flightPlan.count')}<select data-flight-plan-count>${[3,4,5,6].map(n=>`<option value="${n}" ${n===5?'selected':''}>${n}</option>`).join('')}</select></label>
                 <label>${t('flightPlan.availability')}<select data-flight-plan-availability>${FLIGHT_AVAILABILITY.map(id=>`<option value="${id}">${t(`flightPlan.${id}`)}</option>`).join('')}</select></label>
             </div>
+            <div class="flight-plan-conditional" data-flight-plan-focus-wrap hidden><label>${escapeHtml(t('flightPlan.focus'))}
+                <select data-flight-plan-focus>${FLIGHT_FOCUSES.map(id=>`<option value="${id}">${escapeHtml(t(`flightPlan.focus.${id}`))}</option>`).join('')}</select></label></div>
+            <div class="flight-plan-conditional" data-flight-plan-unfamiliar-wrap hidden><label class="flight-plan-toggle">
+                <input type="checkbox" data-flight-plan-unfamiliar checked><span>${escapeHtml(t('flightPlan.unfamiliar'))}</span></label></div>
+            <details class="flight-plan-advanced">
+                <summary>${escapeHtml(t('flightPlan.caskAge.title'))}</summary>
+                <p class="hint">${escapeHtml(t('flightPlan.caskAge.hint'))}</p>
+                <div class="flight-plan-options flight-plan-advanced-grid">
+                    <label>${escapeHtml(t('flightPlan.caskAge.caskMode'))}<select data-flight-plan-cask-mode>${CASK_MODES.map(id=>`<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.caskMode.${id}`))}</option>`).join('')}</select></label>
+                    <label>${escapeHtml(t('flightPlan.caskAge.ageMode'))}<select data-flight-plan-age-mode>${AGE_MODES.map(id=>`<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.ageMode.${id}`))}</option>`).join('')}</select></label>
+                </div>
+                <div class="flight-plan-options flight-plan-advanced-grid">
+                    <div class="flight-plan-conditional" data-flight-plan-cask-group-wrap hidden><label>${escapeHtml(t('flightPlan.caskAge.caskGroup'))}
+                        <select data-flight-plan-cask-group>${['any',...CASK_GROUPS].map(id=>`<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.group.${id}`))}</option>`).join('')}</select></label></div>
+                    <div class="flight-plan-conditional" data-flight-plan-cask-subtype-wrap hidden><label>${escapeHtml(t('flightPlan.caskAge.subtype'))}
+                        <select data-flight-plan-cask-subtype>${['any',...SHERRY_SUBTYPES].map(id=>`<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.subtype.${id}`))}</option>`).join('')}</select></label></div>
+                    <div class="flight-plan-conditional" data-flight-plan-age-range-wrap hidden><label>${escapeHtml(t('flightPlan.caskAge.ageRange'))}
+                        <span class="flight-plan-age-range"><input type="number" min="0" max="200" step="1" data-flight-plan-age-min placeholder="${escapeHtml(t('flightPlan.caskAge.ageMin'))}" aria-label="${escapeHtml(t('flightPlan.caskAge.ageMin'))}">
+                            <input type="number" min="0" max="200" step="1" data-flight-plan-age-max placeholder="${escapeHtml(t('flightPlan.caskAge.ageMax'))}" aria-label="${escapeHtml(t('flightPlan.caskAge.ageMax'))}"></span></label></div>
+                </div>
+                <div class="flight-plan-conditional" data-flight-plan-strict-wrap hidden><label class="flight-plan-toggle">
+                    <input type="checkbox" data-flight-plan-strict><span>${escapeHtml(t('flightPlan.caskAge.strict'))}</span></label></div>
+            </details>
             <div class="actions"><button type="button" class="btn" data-act="flight-plan-generate">${t('flightPlan.suggest')}</button></div>
             <div class="flight-plan-preview" aria-live="polite"></div>
             <div class="actions"><button class="btn" type="button" data-act="close-modal">${t('common.actions.cancel')}</button>
                 <button class="btn primary" type="button" data-act="flight-plan-create" disabled>${t('flightPlan.save')}</button></div>
-        </div>`,true,false);
+        </div>`,true,false,flightPlanningHelpButton());
         state.flightCandidateIds=null;
+        syncFlightPlanOptions();
     }
     function invalidateFlightPlan() {
+        syncFlightPlanOptions();
         flightPlanDraft=null;
         const box=globalThis.document?.querySelector?.('#modal-root');
         const button=box?.querySelector('[data-act="flight-plan-create"]');
@@ -420,12 +473,37 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
         const style=box?.querySelector('[data-flight-plan-style]')?.value || 'balanced';
         const count=Number(box?.querySelector('[data-flight-plan-count]')?.value || 5);
         const availability=box?.querySelector('[data-flight-plan-availability]')?.value || 'open';
-        const draft=suggestFlight(state.collection,{style,count,availability,bottlingIds:flightPlanDraft?.sourceIds ?? flightPlanSourceIds});
-        flightPlanDraft={items:draft,style,availability,sourceIds:flightPlanSourceIds};
+        const focus=style==='similar'?(box?.querySelector('[data-flight-plan-focus]')?.value || 'any'):'any';
+        const preferUnfamiliar=style==='discover' ? Boolean(box?.querySelector('[data-flight-plan-unfamiliar]')?.checked) : false;
+        const caskMode=box?.querySelector('[data-flight-plan-cask-mode]')?.value || 'auto';
+        const caskGroup=caskMode==='specific' ? box?.querySelector('[data-flight-plan-cask-group]')?.value || 'any' : 'any';
+        const caskSubtype=caskGroup==='sherry' ? box?.querySelector('[data-flight-plan-cask-subtype]')?.value || 'any' : 'any';
+        const ageMode=box?.querySelector('[data-flight-plan-age-mode]')?.value || 'auto';
+        // Clear any stale cross-field error before validating a corrected range.
+        box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.('');
+        const parseAge=(selector)=>{const field=box?.querySelector(selector);if (!field || field.value==='') return null;
+            if (!field.reportValidity()) return undefined;return Number(field.value);};
+        const ageMin=ageMode==='range'?parseAge('[data-flight-plan-age-min]'):null;
+        const ageMax=ageMode==='range'?parseAge('[data-flight-plan-age-max]'):null;
+        if (ageMin===undefined || ageMax===undefined) return;
+        if (ageMin!==null && ageMax!==null && ageMin>ageMax) {
+            box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.(t('flightPlan.caskAge.invalidRange'));
+            box?.querySelector('[data-flight-plan-age-max]')?.reportValidity?.();return;
+        }
+        box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.('');
+        const strictMatches=Boolean(box?.querySelector('[data-flight-plan-strict]')?.checked);
+        const options={style,count,availability,focus,preferUnfamiliar,caskMode,caskGroup,caskSubtype,
+            ageMode,ageMin,ageMax,strictMatches};
+        const draft=suggestFlight(state.collection,{...options,bottlingIds:flightPlanSourceIds});
+        flightPlanDraft={items:draft,...options,sourceIds:flightPlanSourceIds};
         const view=box?.querySelector('.flight-plan-preview');
         if (view) view.innerHTML=draft.length ? `<p class="hint">${escapeHtml(t('flightPlan.description'))}</p><ol class="flight-plan-proposal">${draft.map(item=>{
             const b=state.collection.bottlings.find(b=>b.id===item.bottlingId);
-            return `<li><strong>${escapeHtml(b?.name || '')}</strong><small>${escapeHtml(t(`flightPlan.reason.${item.reason}`))}</small></li>`;
+            const metadata=[b?.caskType?.trim() ? `${t('forms.bottling.caskType')}: ${b.caskType.trim()}` : '',
+                b?.ageYears !== null && b?.ageYears !== undefined && b?.ageYears !== '' ?
+                    `${t('forms.bottling.ageYears')}: ${t('home.facts.years',{count:b.ageYears})}` : ''].filter(Boolean);
+            return `<li><strong>${escapeHtml(b?.name || '')}</strong><small>${escapeHtml(t(`flightPlan.reason.${item.reason}`))}</small>
+                ${metadata.length?`<small>${escapeHtml(metadata.join(' · '))}</small>`:''}</li>`;
         }).join('')}</ol>` : `<p class="hint">${t('flightPlan.none')}</p>`;
         const button=box?.querySelector('[data-act="flight-plan-create"]');
         if (button) button.disabled=!draft.length;
@@ -959,7 +1037,7 @@ export function createTastingsView({state,selectors,shell,navigate,refresh,showM
             if (confirmButton?.isConnected) confirmButton.disabled=false;
         }
     }
-    return {home,list,editor,flight,startFlight,startPlannedFlight:openPlannedFlight,
+    return {home,list,editor,flight,startFlight,startPlannedFlight:openPlannedFlight,showFlightPlanningHelp,
         generateFlightPlan,invalidateFlightPlan,createPlannedFlight,changePlannedMember,transitionPlannedFlight,createFlight,saveFlight,deleteFlight,moveFlightMember,reorderFlightMember,attachFlightMember,detachFlightMember,toggleFlightEdit,toggleFlightAdd,saveDraft,persistMeta,toggleCreateChoice,commitFlavor:commitTasting,chooseRating,previewRating,chooseColor,chooseCustomHex,commitCustomPreview,previewCustomColor,previewCustomFromPointer,nudgeCustomColor,resetCustomPreview,clearFlavor,
         showAssignDialog,assignExternalToBottling,startEditing,finishEditing,
         startExternalEdit:()=>showExternalEdit(true),cancelExternalEdit,persistExternalDetails,

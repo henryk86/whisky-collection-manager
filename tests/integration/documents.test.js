@@ -43,6 +43,17 @@ test('files: invoices and additional images belong to physical bottles, survive 
         assert.match(downloaded.headers.get('content-disposition'), /filename\*=UTF-8''Rechnung-/);
         assert.equal(downloaded.headers.get('content-type'), 'application/octet-stream');
         assert.deepEqual(Buffer.from(await downloaded.arrayBuffer()), pdf);
+        const preview = await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${receipt.data.id}/preview`);
+        assert.equal(preview.status, 200);
+        assert.equal(preview.headers.get('content-type'), 'application/pdf');
+        assert.match(preview.headers.get('content-disposition') || '', /^inline; /);
+        assert.equal(preview.headers.get('x-content-type-options'), 'nosniff');
+        assert.equal(preview.headers.get('cache-control'), 'no-store');
+        assert.deepEqual(Buffer.from(await preview.arrayBuffer()), pdf);
+        assert.equal((await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${photoEvidence.data.id}/preview`)).status, 415,
+            'non-PDF attachments must never render inline');
+        assert.equal((await fetch(`${ctx.base}/api/bottles/${sibling.data.id}/files/${receipt.data.id}/preview`)).status, 404,
+            'PDF preview must enforce attachment ownership');
         assert.equal((await fetch(`${ctx.base}/api/bottles/${sibling.data.id}/files/${receipt.data.id}`)).status, 404);
         assert.equal((await fetch(`${ctx.base}/${receipt.data.path}`)).status, 404, 'documents must not be served by the static file handler');
         const zip = await fetch(`${ctx.base}/api/export/zip`, { headers: { 'X-Backup-Admin-Token': 'a'.repeat(64) } });

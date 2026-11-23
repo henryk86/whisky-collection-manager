@@ -158,6 +158,10 @@ const routes = [
         method: 'POST', path: /^\/api\/bottles\/([\w-]+)\/files$/, status: 201, run: ([id], body) => bottles.addFile(id, body)
     },
     {
+        method: 'GET', path: /^\/api\/bottles\/([\w-]+)\/files\/([\w-]+)\/preview$/, inlinePdf: true,
+        run: ([id, fileId]) => bottles.previewPdf(id, fileId)
+    },
+    {
         method: 'GET', path: /^\/api\/bottles\/([\w-]+)\/files\/([\w-]+)$/, download: true, run: ([id, fileId]) => bottles.downloadFile(id, fileId)
     },
     {
@@ -220,6 +224,9 @@ export async function handleApi(request, response, url) {
             response.writeHead(200, { 'Content-Type': result.type, 'Content-Length': result.bytes.length,
                 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store' });
             return response.end(result.bytes);
+        }
+        if (route.inlinePdf) {
+            return attachment(response, result, {inline: true});
         }
         if (route.download) {
             return attachment(response, result);

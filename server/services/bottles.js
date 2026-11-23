@@ -304,6 +304,15 @@ export function downloadFile(bottleId, fileId) {
         bytes: readDocument(entry.path)
     };
 }
+/** Render PDFs from the authenticated attachment store via a same-origin URL.
+ * This avoids framing blob: URLs, which may be denied by a stricter CSP. */
+export function previewPdf(bottleId, fileId) {
+    const file = downloadFile(bottleId, fileId);
+    if (!/\.pdf$/i.test(file.filename) || !file.bytes.subarray(0, 5).equals(Buffer.from('%PDF-'))) {
+        throw fail('PDF-Vorschau nicht verfügbar', 415, 'api.errors.fileNotFound');
+    }
+    return {...file, type: 'application/pdf'};
+}
 export async function removeFile(bottleId, fileId) {
     const removed = await change(collection => {
         const { bottle } = requireBottle(collection, bottleId);
