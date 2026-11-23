@@ -7,7 +7,7 @@
 | Bereich | Gemeinsame Renderer | CSS-Verantwortung |
 |---|---|---|
 | Farben, Schrift, Abstände, Radien, Layoutbreiten | CSS Custom Properties in `styles/tokens.css` | `tokens.css`, `layout.css` |
-| PageHeader / SectionHeader / BackNavigation / HeaderActions / HelpIconButton | `ui/page-header.js`, `ui/section-header.js`, `ui/back-navigation.js`, `ui/header-actions.js`, `ui/help-icon-button.js` | `headers.css` |
+| PageHeader / SectionHeader / BackNavigation / HeaderActions / HelpIconButton | `ui/headers.js` (seit der anschließenden Vereinfachung) | `headers.css` |
 | Buttonvarianten / Formulare | `ui/buttons.js`, `ui/fields.js` | `controls.css` |
 | Modals / Footer / Fokus-Stack | `ui/modal-layout.js`, `ui/modal.js` | `modals.css` |
 | Panel/Card, DetailField, DetailGrid, EmptyState, Divider, ActionToolbar, DocumentList | `ui/content.js` | `content.css` |

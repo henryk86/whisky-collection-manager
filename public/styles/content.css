@@ -1,8 +1,7 @@
 /* Designsystem M4: visual primitives used by the existing app renderers.
    These are NOT resets: specialist views retain approved padding, columns and
    surfaces. The collection/Abfuellungsdetails are the visual reference. */
-.panel,
-[data-ds-panel="standard"] {
+.panel {
     background: var(--ds-color-surface);
     border: 1px solid var(--ds-color-border);
     padding: var(--ds-panel-padding);
@@ -57,9 +56,9 @@
     color: #7b817f;
 }
 .empty-state strong { display: block; font: 23px var(--ds-font-display); color: var(--navy); margin-bottom: 12px; }
-.divider, [data-ds-divider="horizontal"] { border: 0; border-top: 1px solid var(--ds-color-border); margin: 24px 0; }
+.divider { border: 0; border-top: 1px solid var(--ds-color-border); margin: 24px 0; }
 [data-ds-divider="vertical"] { display: inline-block; border-inline-start: 1px solid var(--ds-color-border); align-self: stretch; }
-.actions, [data-ds-action-toolbar="inline"], [data-ds-action-toolbar="end"] {
+.actions {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -68,5 +67,5 @@
 [data-ds-action-toolbar="end"] { justify-content: flex-end; }
 /* Receipt/document listing is reusable, but preview controls retain their
    specialised styling in bottle-details.css. */
-.document-list, [data-ds-document-list] { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
-.document-list li, [data-ds-document-list] li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.document-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.document-list li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }

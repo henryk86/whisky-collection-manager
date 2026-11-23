@@ -1,5 +1,4 @@
-import { headingTitle } from '../ui/section-header.js';
-import { pageHeader } from '../ui/page-header.js';
+import { headingTitle, pageHeader } from '../ui/headers.js';
 import { t, currentLanguage } from '../i18n/index.js';
 /** Analytics dashboard and six thematic pages. All datasets come from pure domain calculations. */
 import { analyzeCollection, analyticsFilterOptions } from '../domain/analytics.js';

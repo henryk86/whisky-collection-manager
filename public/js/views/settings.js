@@ -1,5 +1,4 @@
-import { headingTitle } from '../ui/section-header.js';
-import { pageHeader } from '../ui/page-header.js';
+import { headingTitle, pageHeader } from '../ui/headers.js';
 import { addActionLabel } from '../ui/action-icons.js';
 import { escapeHtml } from '../ui/dom.js';
 import { availableLanguages, currentLanguage, t } from '../i18n/index.js';

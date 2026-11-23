@@ -1,11 +1,9 @@
+import { sectionHeader, helpIconButton } from '../../public/js/ui/headers.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { session, seed } from './support.js';
 import { requestJson } from '../helpers/server.js';
 import { actionButton } from '../../public/js/ui/buttons.js';
-import { sectionHeader } from '../../public/js/ui/section-header.js';
-import { helpIconButton } from '../../public/js/ui/help-icon-button.js';
-
 const widths = [390, 768, 1024, 1440];
 const themes = ['light', 'dark'];
 

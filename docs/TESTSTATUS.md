@@ -1,6 +1,19 @@
 # Teststatus - Whisky Collection Manager v1.12.0
 
-## Aktuelle Develop-Pruefung: Designsystem-Abschluss, 2026-11-23
+## Aktuelle Develop-Pruefung: Designsystem-Vereinfachung, 2026-11-23
+
+**Basis:** exakt `WCM_Designsystem_Abschluss_Projekt.zip` (v1.12.0).
+
+- `npm run check`: **bestanden** (einschliesslich aktualisierter Dokumentationslinks).
+- `npm test`: **691/691 bestanden**.
+- `npm run test:visual`: **136/136 bestanden**, keine optischen oder gemessenen Geometrieabweichungen gegen die unveraenderten Referenzen.
+- `npm run test:browser`: **nicht lokal durchgefuehrt** (hier fehlt weiterhin `playwright-core`); auf CI offen.
+- Keine Schema-, API-, Persistenz- oder Geschaeftslogikaenderungen; keine Versionsaenderung.
+- Vereinfachte Modulstruktur und reduzierte Schnittstellen: [Designsystem-Entwicklung](DESIGNSYSTEM_ENTWICKLUNG.md).
+
+---
+
+## Vorherige Develop-Pruefung: Designsystem-Abschluss, 2026-11-23
 
 **Grundlage:** korrigiertes Phase-5-Projekt (`1.12.0`), keine Release-Versionierung.
 

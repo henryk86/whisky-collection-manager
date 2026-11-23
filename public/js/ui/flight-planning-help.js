@@ -1,4 +1,4 @@
-import { headingTitle } from './section-header.js';
+import { headingTitle } from './headers.js';
 import {escapeHtml} from './dom.js';
 
 /** The formulas below mirror public/js/domain/flight-planner.js. Keep both in sync. */

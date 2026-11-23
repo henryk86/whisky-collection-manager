@@ -1,4 +1,4 @@
-import { headingTitle } from '../ui/section-header.js';
+import { headingTitle } from '../ui/headers.js';
 import { t, tHtml, currentLanguage } from '../i18n/index.js';
 /** One place for manual, scheduled and restorative backups. All archives are ZIP. */
 import { addActionLabel, successIcon, warningIcon, moreIcon } from '../ui/action-icons.js';

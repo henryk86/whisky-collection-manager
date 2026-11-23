@@ -1,5 +1,5 @@
+import { sectionHeader } from './headers.js';
 import { escapeHtml } from './dom.js';
-import { sectionHeader } from './section-header.js';
 import { actionButton } from './buttons.js';
 import { closeIcon } from './action-icons.js';
 

@@ -1,6 +1,4 @@
-import { helpIconButton } from '../ui/help-icon-button.js';
-import { sectionHeader, headingTitle } from '../ui/section-header.js';
-import { pageHeader } from '../ui/page-header.js';
+import { helpIconButton, sectionHeader, headingTitle, pageHeader, backNavigation } from '../ui/headers.js';
 import { t } from '../i18n/index.js';
 import {displayPhotoPath} from '../../../shared/photo-images.js';
 import {storagePath} from './warehouse-presentation.js';
@@ -20,7 +18,6 @@ import { sortedTastings } from '../../../shared/tasting-records.js';
 import {allTastingReferences,flightEntries,flightForTasting} from '../../../shared/tasting-flights.js';
 import { allStandaloneTastings } from '../../../shared/standalone-tastings.js';
 import { editIcon, newBottlingIcon, flightPlanIcon, chevronRightIcon, arrowUpIcon, arrowDownIcon } from '../ui/action-icons.js';
-import { backNavigation } from '../ui/back-navigation.js';
 import { flightPlanningHelpHtml } from '../ui/flight-planning-help.js';
 import { reorderFlightIds } from '../features/flight-order.js';
 import {suggestFlight,flightCandidates,FLIGHT_STYLES,FLIGHT_AVAILABILITY,FLIGHT_FOCUSES,CASK_GROUPS,SHERRY_SUBTYPES,CASK_MODES,AGE_MODES} from '../domain/flight-planner.js';

@@ -2,18 +2,20 @@
 
 **Ausgangsbasis:** Das ausschließlich für Phase 2 verwendete Phase-1-Projekt-ZIP `WCM_Phase1_Projekt.zip`; Version `1.12.0` (keine Release-Anhebung für Einzeländerungen auf `develop` gemäß `AGENTS.md`). **Umfang:** ausschließlich HTML-Renderer, CSS-Kaskade und UI-Übersetzungslabels sowie Regressionstests; keine Änderungen an API, Datenmodell, Speicherung oder Geschäftslogik.
 
+**Hinweis (nach der Designsystem-Vereinfachung):** Die fünf damaligen Header-Module liegen nun gemeinsam in `public/js/ui/headers.js`. Aktuelle Beispiele: [Designsystem-Entwicklung](DESIGNSYSTEM_ENTWICKLUNG.md).
+
 ## Verantwortung und Einbindung
 
 `public/style.css` lädt **Tokens → Layout → Core → Headers → Fachstyles → Surfaces**. `public/styles/headers.css` ist alleiniger Eigentümer gemeinsamer Header-, Zurück- und Hilfeicon-Geometrie. Fachstyles dürfen nur klar begründete, lokal begrenzte Varianten definieren (beispielsweise die mobilen Aktionsspalten in den Abfüllungsdetails). Sie dürfen keine allgemeinen Selektoren wie `.section-head`, `.ds-back-button` oder `.ds-help-icon-button` neu definieren.
 
 | Komponente / Modul | DOM-Vertrag und Zuständigkeit | Schnittstelle |
 |---|---|---|
-| `PageHeader` – `public/js/ui/page-header.js` | Ein `<header class="section-head ds-page-header ...">`, eine `h2`, optionale Eyebrow/Intro/Metainformation und Aktions-Slot. Nutzt die bestehenden Seitentitelmaße. | `pageHeader({title, eyebrow?, intro?, className?, preTitle?, actions?, copyClass?, period?})` |
-| `SectionHeader` – `public/js/ui/section-header.js` | Gemeinsame Abschnittsstruktur mit `h3` oder `h2`; Varianten `section-head`, `tasting-panel-heading`, `dialog-head`. Liefert `ds-section-header`, unterstützt optionale Beschreibung und Aktionsbereich. | `sectionHeader({title, level?, layout?, className?, titleClass?, titleId?, description?, descriptionClass?, copyClass?, actions?, actionsClass?, actionsBare?, trailingAction?})` |
+| `PageHeader` – `public/js/ui/headers.js` | Ein `<header class="section-head ds-page-header ...">`, eine `h2`, optionale Eyebrow/Intro/Metainformation und Aktions-Slot. Nutzt die bestehenden Seitentitelmaße. | `pageHeader({title, eyebrow?, intro?, className?, preTitle?, actions?, copyClass?})` |
+| `SectionHeader` – `public/js/ui/headers.js` | Gemeinsame Abschnittsstruktur mit `h3` oder `h2`; Varianten `section-head`, `tasting-panel-heading`, `dialog-head`. Liefert `ds-section-header`, unterstützt optionale Beschreibung und Aktionsbereich. | `sectionHeader({title, level?, layout?, className?, titleClass?, titleId?, description?, descriptionClass?, copyClass?, actions?, actionsClass?, actionsBare?, trailingAction?})` |
 | `headingTitle` – gleiches Modul | Einheitliche, HTML-escapte `h2`/`h3` für Überschriften **ohne** äußeren Aktionscontainer; `ds-heading-with-action` nur mit integrierter Aktion. | `headingTitle({title, level?, className?, id?, period?, trailingAction?})` |
-| `BackNavigation` – `public/js/ui/back-navigation.js` | Eine `nav`, ein semantischer `button`, **genau ein** SVG-Pfeil aus `action-icons.js`, ausschließlich Text in `span`. Behält bestehende Inline- und Buttonvarianten bei. | `backNavigation(action, label, region = '', variant = 'inline')` mit `variant='inline'` oder `'page-action'` |
-| `HeaderActions` – `public/js/ui/header-actions.js` | Wrapper `.actions.ds-header-actions` um bereits von der Ansicht bereitgestellte Buttons; kein eigenes Dispatching. | `headerActions(content, {className?})` |
-| `HelpIconButton` – `public/js/ui/help-icon-button.js` | Genau ein SVG-Hilfeicon und ein Button mit `aria-label`, `title`, `data-act`; states `hover`, `focus-visible`, `disabled` über `headers.css`. | `helpIconButton({label, action?, disabled?})` |
+| `BackNavigation` – `public/js/ui/headers.js` | Eine `nav`, ein semantischer `button`, **genau ein** SVG-Pfeil aus `action-icons.js`, ausschließlich Text in `span`. Behält bestehende Inline- und Buttonvarianten bei. | `backNavigation(action, label, region = '', variant = 'inline')` mit `variant='inline'` oder `'page-action'` |
+| `HeaderActions` – `public/js/ui/headers.js` | Wrapper `.actions.ds-header-actions` um bereits von der Ansicht bereitgestellte Buttons; kein eigenes Dispatching. | `headerActions(content, {className?})` |
+| `HelpIconButton` – `public/js/ui/headers.js` | Genau ein SVG-Hilfeicon und ein Button mit `aria-label`, `title`, `data-act`; states `hover`, `focus-visible`, `disabled` über `headers.css`. | `helpIconButton({label, action?, disabled?})` |
 
 **Daten-/HTML-Grenze:** `title`, `label`, `eyebrow`, `intro`, Klassenbezeichnungen und IDs werden HTML-escaped. Slots `preTitle`, `actions` und `trailingAction` sind **ausschließlich vertrauenswürdiges, zuvor gerendertes Anwendung-HTML**; niemals Rohwerte aus Benutzer- oder Sammlungsdaten unescaped übergeben. Vorhandene `data-act`-Verträge bleiben verantwortlich in den Views, nicht in den Designkomponenten.
 

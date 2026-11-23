@@ -1,10 +1,6 @@
+import { pageHeader, sectionHeader, headingTitle, headerActions, backNavigation, helpIconButton } from '../../public/js/ui/headers.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {pageHeader} from '../../public/js/ui/page-header.js';
-import {sectionHeader, headingTitle} from '../../public/js/ui/section-header.js';
-import {headerActions} from '../../public/js/ui/header-actions.js';
-import {backNavigation} from '../../public/js/ui/back-navigation.js';
-import {helpIconButton} from '../../public/js/ui/help-icon-button.js';
 import de from '../../public/locales/de.json' with {type:'json'};
 import en from '../../public/locales/en.json' with {type:'json'};
 

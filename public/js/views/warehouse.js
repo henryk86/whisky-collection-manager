@@ -1,7 +1,5 @@
-import { headerActions } from '../ui/header-actions.js';
+import { headerActions, headingTitle, pageHeader } from '../ui/headers.js';
 import { destructiveFooter } from '../ui/modal-layout.js';
-import { headingTitle } from '../ui/section-header.js';
-import { pageHeader } from '../ui/page-header.js';
 import { escapeHtml as esc } from '../ui/dom.js';
 import { t, tHtml } from '../i18n/index.js';
 import { roomCapacity, totalCapacity } from '../domain/warehouse-capacity.js';

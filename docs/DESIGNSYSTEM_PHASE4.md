@@ -2,6 +2,8 @@
 
 **Ausgangsbasis:** ausschließlich `WCM_Phase3_CI_Fix_Projekt.zip` (Phase 3 einschließlich des Lager-Umlagerungsmodal-Hotfixes). **Projektversion:** weiterhin 1.12.0 gemäß `AGENTS.md` (kein Versionsbump auf `develop`). Keine Änderungen an API, Speicherformat, Geschäftslogik, externen Abhängigkeiten oder Frontend-Framework.
 
+**Aktuelle Verwendung und reduzierte Schnittstellen:** [Designsystem-Entwicklung](DESIGNSYSTEM_ENTWICKLUNG.md). Diese Phase-4-Dokumentation ist eine historische Migrationsbeschreibung.
+
 ## Gestaltungsgrundsatz
 
 Die **Sammlung** und **Abfüllungsdetails** bilden die visuelle Referenz. Gleichartige Inhalte teilen sich Rendering- und Stylinggrundlagen, aber nicht automatisch jede fachliche Geometrie. Insbesondere Verkostungsradare, Glencairn-Farb-/Bewertungssymbole, Fotoansichten, Lagerregale und analytische Grafiken bleiben in ihren bestehenden Fachstyles. Eine Standard-Panel-Komponente darf nicht als weiterer sichtbarer Kasten in ein bereits gerahmtes Panel eingesetzt werden.
@@ -18,13 +20,13 @@ Die **Sammlung** und **Abfüllungsdetails** bilden die visuelle Referenz. Gleich
 
 | Komponente | Interface | Varianten / Verantwortung |
 |---|---|---|
-| `panel({content,title,variant,tag,className})` | Sichere Überschrift, bereits sicher gerendertes `content` | `standard` (bestehende `.panel`), `analytics` (bestehende `.analytics-panel`), `plain` (ohne Rahmen); `div`/`section`/`article`. Keine zweite Rahmenebene. |
-| `detailField({label,value,valueHtml,variant,className,extra,labelClass,valueClass})` | Text standardmäßig HTML-escaped; `valueHtml=true` **nur** für bereits sicheres App-Markup | `definition` (`dt`/`dd`), `fact`, `readonly`, `note`, `preview`. Optionale Zusatzinfo `extra`. |
+| `panel({content,variant,tag,className})` | Bereits sicher gerendertes `content`, Überschrift ist Teil des Slots | `standard` (bestehende `.panel`), `analytics` (bestehende `.analytics-panel`), `plain` (ohne Rahmen); `div`/`section`/`article`. Keine zweite Rahmenebene. |
+| `detailField({label,value,valueHtml,variant,className,labelClass,valueClass})` | Text standardmäßig HTML-escaped; `valueHtml=true` **nur** für bereits sicheres App-Markup | `definition` (`dt`/`dd`), `fact`, `readonly`, `note`, `preview`. Keine eigene `extra`-Zusatzzeile. |
 | `detailGrid(content,{columns,tag,className})` | Gemeinsamer Rastermarker `data-ds-detail-grid=2\|3`; `div` oder `dl` | 2- und 3-spaltige Grundeinstellung ohne starre Mindestbreite. Fachliche Klassen/Media Queries haben Vorrang. Unklassifizierte neue Grids brechen bei ≤600px einspaltig um. |
 | `emptyState({title,description,actions,variant,className})` | Titel/Beschreibung escaped; Aktionen als bereits gerendertes App-Markup | `collection` als eigenständiger Einführungszustand, `subtle` als dezenter Hinweis im Panel, `inline` für Analyse-ohne-Daten. |
 | `divider({orientation,className})` | `<hr>` oder dekorativer `<span aria-hidden>` | `horizontal`/`vertical`; Randfarbe über `--ds-color-border`. |
-| `actionToolbar(content,{className,variant,tag})` | Keine Änderung vorhandener `data-act`-Delegation; `div`/`nav` | `inline`, `filters`, `end`; vorhandene `.actions`/`.toolbar`-Kompatibilität. |
-| `documentItem(content,{className})` / `documentList(items,{className})` | `<li>` und eine übergeordnete `<ul>` | Gemeinsam für Dateinamen, Größen, Vorschau-/Download-/Löschaktionen; keine Änderung der Dateiverwaltung oder Endpunkte. |
+| `actionToolbar(content,{className,variant})` | Keine Änderung vorhandener `data-act`-Delegation; `div` | `inline`, `filters`, `end`; vorhandene `.actions`/`.toolbar`-Kompatibilität. |
+| `documentItem(content)` / `documentList(items)` | `<li>` und eine übergeordnete `<ul>` | Gemeinsam für Dateinamen, Größen, Vorschau-/Download-/Löschaktionen; keine Änderung der Dateiverwaltung oder Endpunkte. |
 
 **Sicherheit und Semantik:** Werte werden per `escapeHtml` ausgegeben. Nur anwendungsintern kontrollierte HTML-Blöcke werden über `content`, `actions` oder `valueHtml` übergeben. `definition` verwendet `dt`/`dd` innerhalb eines `dl`; gespeicherte Notizen werden nicht fälschlich in Definitionslisten gezwungen. `data-ds-*` kennzeichnet den Komponentenvertrag; frühere Fachklassen bleiben dort erhalten, wo sich darauf Layout oder Browseraktionen stützen.
 

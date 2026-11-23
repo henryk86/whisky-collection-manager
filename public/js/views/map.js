@@ -1,4 +1,4 @@
-import { pageHeader } from '../ui/page-header.js';
+import { pageHeader } from '../ui/headers.js';
 import { t } from '../i18n/index.js';
 import { buildDistilleryMap, markerDiameter } from '../domain/distillery-map.js';
 import { mapBottlingFacts } from '../domain/map-bottling-meta.js';

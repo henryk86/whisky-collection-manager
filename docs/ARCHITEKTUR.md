@@ -121,6 +121,8 @@ Die administrativen Backup-Endpunkte verlangen einen separaten Admin-Schlüssel 
 
 UI-Texte werden über `t(key, params)` aus `public/js/i18n/index.js` aufgelöst. Deutsch und Englisch werden statisch mit der Anwendung gebündelt; die aktive Sprache wird beim Start ausgewählt. Der Sprachindex wird bei der Initialisierung über `/locales/index.json` geladen; für die gewählte nichtdeutsche Sprache wird der Katalog über `fetch` angefordert. Eine Registrierung neuer Sprachen während der laufenden Sitzung oder ein Wechsel ohne Neuladen ist nicht implementiert. Die Dateien `de.json` und `en.json` verwenden identische, stabile Schlüssel; Benutzereingaben werden niemals automatisch übersetzt. Neue Texte erfordern **beide** Sprachdateien und einen Rendering-Test. HTTP-API-Fehler werden mit stabilen `api.errors.*`-Codes übertragen und lokalisiert; `field`/`other` enthalten sprachneutrale Feldschlüssel. Auch Backup-Worker-Aufträge speichern für neue Fehler strukturierte `backup.errors.*`-Codes statt deutschen Freitexts. Historische Job-Statusdateien können weiterhin Freitext enthalten, der bei unbekanntem Inhalt aus Sicherheitsgründen nur als generische Fehlermeldung erscheint.
 
+Für neue UI-Arbeit: [Designsystem-Entwicklung](DESIGNSYSTEM_ENTWICKLUNG.md) zeigt die zentralen Einstiegsdateien und konkrete Anwendungsbeispiele.
+
 ## Änderungsleitfaden
 
 | Änderung | Zuerst ansehen | Tests |

@@ -1,5 +1,4 @@
-import { headingTitle } from '../ui/section-header.js';
-import { pageHeader } from '../ui/page-header.js';
+import { headingTitle, pageHeader } from '../ui/headers.js';
 /** Contextual guidance belongs on this page, not on everyday work screens. */
 import { t } from '../i18n/index.js';
 import { escapeHtml } from '../ui/dom.js';

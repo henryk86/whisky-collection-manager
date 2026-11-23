@@ -29,10 +29,10 @@
  * standard secondary button with an additional, identically drawn SVG arrow. */
 .ds-back-nav--inline { display: block; margin: 0 0 18px; padding: var(--ds-space-2) 0 0; }
 .ds-back-button--inline { display: inline-flex; align-items: center; gap: 6px; margin: 0; line-height: 1.3; cursor: pointer; }
-.ds-back-button--inline .ui-symbol { width: 18px; height: 18px; flex: 0 0 18px; }
+.ds-back-button--inline .ui-symbol,
+.ds-back-button--page-action .ui-symbol { width: 18px; height: 18px; flex: 0 0 18px; }
 .ds-back-nav--page-action { display: inline-flex; flex: 0 0 auto; }
 .ds-back-button--page-action { white-space: nowrap; }
-.ds-back-button--page-action .ui-symbol { width: 18px; height: 18px; flex: 0 0 18px; }
 .ds-back-button--inline:hover { color: var(--ds-color-link-hover); text-decoration: underline; }
 .ds-back-button--inline:disabled { opacity: .5; pointer-events: none; }
 

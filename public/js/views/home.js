@@ -1,4 +1,4 @@
-import { pageHeader } from '../ui/page-header.js';
+import { pageHeader } from '../ui/headers.js';
 import { request } from '../api.js';
 import { toast } from '../ui/notifications.js';
 import { FLAVOR_AXES } from '../../../shared/flavor-profile.js';

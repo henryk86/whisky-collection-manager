@@ -1,8 +1,8 @@
+import { backNavigation } from '../../public/js/ui/headers.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createShell } from '../../public/js/ui/shell.js';
 import { createTastingsView } from '../../public/js/views/tastings.js';
-import { backNavigation } from '../../public/js/ui/back-navigation.js';
 import { createDetailView } from '../../public/js/views/detail.js';
 import { createSelectors } from '../../public/js/domain/selectors.js';
 

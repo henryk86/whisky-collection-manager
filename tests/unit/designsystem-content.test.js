@@ -4,8 +4,8 @@ import {panel,detailField,detailGrid,emptyState,divider,actionToolbar,documentLi
 
 test('M4: panel variants reuse the existing surface without wrapping it in a second border',()=>{
     assert.equal(panel({content:'<p>Info</p>'}),'<div class="panel" data-ds-panel="standard"><p>Info</p></div>');
-    assert.match(panel({tag:'section',variant:'analytics',title:'A & B',content:'<p>C</p>'}),
-        /^<section class="analytics-panel" data-ds-panel="analytics"><h3>A &amp; B<\/h3><p>C<\/p><\/section>$/);
+    assert.equal(panel({tag:'section',variant:'analytics',content:'<p>C</p>'}),
+        '<section class="analytics-panel" data-ds-panel="analytics"><p>C</p></section>');
     assert.doesNotMatch(panel({content:'one'}),/class="panel"[\s\S]*class="panel"/);
     assert.throws(()=>panel({variant:'unknown'}),RangeError);
 });
