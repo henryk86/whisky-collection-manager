@@ -2,10 +2,6 @@
    panels and workspaces have straight edges; interactive form controls use a
    small, consistent radius. Deliberately round semantics (radio controls,
    status dots, map pins, donut charts) are NOT card surfaces. */
-:root {
-    --surface-corner: 0px;
-    --field-corner: 2px;
-}
 
 /* A single surface geometry across collection, analytics, help, settings and
    warehouse avoids the mixed square/rounded blocks from older feature CSS. */

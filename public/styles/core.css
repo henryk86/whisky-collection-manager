@@ -1,19 +1,7 @@
 :root {
-    --navy: #102c4b;
-    --navy-deep: #092039;
-    --blue: #173b5c;
-    --gold: #bd9862;
-    --gold-light: #e2c398;
-    --cream: #f7f5ef;
-    --paper: #fffefa;
-    --ink: #1e3245;
-    --muted: #77808a;
-    --line: #e4e1da;
-    --serif: Georgia,'Times New Roman',serif;
-    --sans: system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
-    font-family: var(--sans);
-    color: var(--ink);
-    background: var(--cream);
+    font-family: var(--ds-font-ui);
+    color: var(--ds-color-text);
+    background: var(--ds-color-page);
     font-synthesis: none;
 }
 * {
@@ -46,7 +34,7 @@ button {
     cursor: pointer;
 }
 a {
-    color: #285a83;
+    color: var(--ds-color-link);
     text-decoration: none;
 }
 a:hover {
@@ -62,21 +50,19 @@ textarea:focus-visible,
     outline-offset: 3px;
 }
 .site-header {
-    background: var(--navy-deep);
-    border-bottom: 1px solid #ffffff22;
-    color: #fff;
+    background: var(--ds-color-header-bg);
+    border-bottom: 1px solid var(--ds-color-header-border);
+    color: var(--ds-color-header-text);
     position: relative;
     z-index: 10;
 }
 .header-inner {
-    max-width: 1350px;
-    margin: auto;
     min-height: 93px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    padding: 15px 30px;
+    padding: var(--ds-header-padding-block) var(--ds-header-gutter);
 }
 .brand {
     display: flex;
@@ -140,62 +126,62 @@ textarea:focus-visible,
     align-items: center;
     justify-content: center;
     gap: 7px;
-    min-height: 43px;
-    border: 1px solid #d7d6d0;
-    border-radius: 2px;
-    padding: 11px 17px;
-    background: var(--paper);
-    color: var(--navy);
-    font-size: 12px;
+    min-height: var(--ds-button-height);
+    border: 1px solid var(--ds-color-button-border);
+    border-radius: var(--ds-control-radius);
+    padding: var(--ds-button-padding-block) var(--ds-button-padding-inline);
+    background: var(--ds-color-button-bg);
+    color: var(--ds-color-button-text);
+    font-size: var(--ds-type-ui-sm);
     font-weight: 700;
     letter-spacing: .65px;
     text-decoration: none;
     transition: background .18s,color .18s,border-color .18s,transform .18s;
 }
 .btn:hover {
-    background: #f0ebe1;
+    background: var(--ds-color-button-hover-bg);
     text-decoration: none;
     border-color: var(--gold);
 }
 .btn.primary {
     background: var(--gold);
     border-color: var(--gold);
-    color: #10263c;
+    color: var(--ds-color-button-primary-text);
 }
 .btn.primary:hover {
-    background: #d6b27b;
-    border-color: #d6b27b;
+    background: var(--ds-color-button-primary-hover);
+    border-color: var(--ds-color-button-primary-hover);
 }
 .btn.dark {
     background: var(--navy);
-    color: white;
+    color: var(--ds-color-button-dark-text);
     border-color: var(--navy);
 }
 .btn.danger {
-    color: #9d4338;
-    border-color: #cfb9af;
+    color: var(--ds-color-button-danger-text);
+    border-color: var(--ds-color-button-danger-border);
 }
 .btn:disabled {
     opacity: .5;
     cursor: not-allowed;
 }
 .btn.small {
-    min-height: 34px;
-    padding: 8px 12px;
-    font-size: 11px;
+    min-height: var(--ds-button-height-sm);
+    padding: var(--ds-button-small-padding-block) var(--ds-button-small-padding-inline);
+    font-size: var(--ds-type-ui-xs);
 }
 .header-btn {
     background: transparent;
-    color: #f2eadd;
-    border-color: #52677b;
+    color: var(--ds-color-header-action-text);
+    border-color: var(--ds-color-header-action-border);
 }
 .header-btn:hover {
-    background: #254563;
+    background: var(--ds-color-header-action-hover);
     color: white;
 }
 .site-footer {
     border-top: 1px solid var(--line);
-    max-width: 1290px;
+    max-width: var(--ds-layout-footer-max);
     margin: 10px auto 0;
     width: 100%;
     padding: 16px 28px 22px;
@@ -213,9 +199,8 @@ textarea:focus-visible,
 }
 main {
     width: 100%;
-    max-width: 1350px;
-    margin: 0 auto;
-    padding: 0 30px 20px;
+    margin-block: 0;
+    padding: 0 var(--ds-page-gutter) var(--ds-page-padding-bottom);
     flex: 1 0 auto;
 }
 .collection-hero {
@@ -408,9 +393,9 @@ h3 {
     color: var(--muted);
 }
 .panel {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    padding: 23px;
+    background: var(--ds-color-surface);
+    border: 1px solid var(--ds-color-border);
+    padding: var(--ds-panel-padding);
     box-shadow: 0 8px 24px #0f2e4410;
 }
 .stats {
@@ -455,20 +440,20 @@ h3 {
 input,
 select,
 textarea {
-    border: 1px solid #d8d8d2;
-    border-radius: 2px;
-    padding: 11px 12px;
-    min-height: 44px;
-    background: #fffefa;
-    color: var(--ink);
+    border: 1px solid var(--ds-color-control-border);
+    border-radius: var(--ds-control-radius);
+    padding: var(--ds-field-padding-block) var(--ds-field-padding-inline);
+    min-height: var(--ds-control-height);
+    background: var(--ds-color-control-bg);
+    color: var(--ds-color-control-text);
     min-width: 0;
-    font-size: 13px;
+    font-size: var(--ds-type-ui-md);
 }
 .field:focus,
 input:focus,
 textarea:focus,
 select:focus {
-    outline: 2px solid #c7ab7b;
+    outline: 2px solid var(--ds-color-control-focus);
     outline-offset: 1px;
 }
 textarea {
@@ -479,7 +464,7 @@ textarea {
     max-width: 170px;
 }
 .toolbar input[type=search] {
-    background: #fffefa;
+    background: var(--ds-color-control-bg);
 }
 /* All five selectors share the same toolbar row, when the viewport allows it. */
 .toolbar #filter-distillery {
@@ -846,7 +831,7 @@ tr.clickable:hover {
     padding: 15px;
 }
 .dialog {
-    width: min(650px,100%);
+    width: min(var(--ds-dialog-max),100%);
     max-height: 94vh;
     overflow: auto;
     background: var(--paper);
@@ -855,7 +840,7 @@ tr.clickable:hover {
     border-top: 5px solid var(--gold);
 }
 .dialog.wide {
-    width: min(860px,100%);
+    width: min(var(--ds-dialog-max-wide),100%);
 }
 .dialog-head {
     display: flex;
@@ -1097,7 +1082,7 @@ tr.clickable:hover {
         font-size: 17px;
     }
     main {
-        padding: 0 14px 17px;
+        padding: 0 var(--ds-page-gutter) var(--ds-page-padding-bottom);
     }
     .collection-hero {
         margin: 15px 0 32px;
