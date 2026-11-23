@@ -37,9 +37,9 @@ export function sectionHeader({ title, actions = '', trailingAction = '', classN
  * `preTitle` and `actions` are trusted application-owned HTML (never raw data).
  * Existing section-head and per-page classes remain for compatible geometry. */
 export function pageHeader({ title, eyebrow = '', intro = '', className = '', preTitle = '',
-                             actions = '', copyClass = 'page-heading-copy' } = {}) {
+                             actions = '', copyClass = 'page-heading-copy', period = true } = {}) {
     const classes = `section-head ds-page-header${className ? ` ${escapeHtml(className)}` : ''}`;
-    return `<header class="${classes}"><div${copyClass ? ` class="${escapeHtml(copyClass)}"` : ''}>${eyebrow ? `<span class="eyebrow dark">${escapeHtml(eyebrow)}</span>` : ''}${preTitle}${headingTitle({title,level:2,period:true})}${intro ? `<p class="intro">${escapeHtml(intro)}</p>` : ''}</div>${actions}</header>`;
+    return `<header class="${classes}"><div${copyClass ? ` class="${escapeHtml(copyClass)}"` : ''}>${eyebrow ? `<span class="eyebrow dark">${escapeHtml(eyebrow)}</span>` : ''}${preTitle}${headingTitle({title,level:2,period})}${intro ? `<p class="intro">${escapeHtml(intro)}</p>` : ''}</div>${actions}</header>`;
 }
 
 /** One navigation renderer with existing inline and page-action visual variants.

@@ -35,6 +35,12 @@ test('detail headline uses the overview card kicker for distillery, and a muted 
     assert.match(html, /<span class="detail-heading-separator" aria-hidden="true">·<\/span><span class="muted">Unvollständig<\/span>/);
 });
 
+test('bottling title is unchanged by shared decorative page heading punctuation', () => {
+    const html = renderDetail(['distillery-laphroaig']);
+    assert.match(html, /<h2>Laphroaig WILLEM 14-year-old<\/h2>/);
+    assert.doesNotMatch(html, /<h2>Laphroaig WILLEM 14-year-old<span class="heading-period"/);
+});
+
 test('detail headline without distillery shows status only, no separator', () => {
     const html = renderDetail([]);
     assert.match(html, /<div class="detail-heading-meta"><span class="muted">Unvollständig<\/span><\/div>/);

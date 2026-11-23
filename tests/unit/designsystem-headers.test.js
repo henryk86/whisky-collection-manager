@@ -14,6 +14,13 @@ test('page header escapes text, retains one semantic title and trusted action sl
     assert.equal((html.match(/<h2\b/g) || []).length,1);
 });
 
+test('page header respects disabled decorative punctuation for data-derived bottling names', () => {
+    const html = pageHeader({title:'Browser Test Blend',period:false,className:'detail-page-head'});
+    assert.match(html, /<h2>Browser Test Blend<\/h2>/);
+    assert.doesNotMatch(html, /heading-period/);
+    assert.match(pageHeader({title:'Sammlung'}), /<h2>Sammlung<span class="heading-period" aria-hidden="true">\.<\/span><\/h2>/);
+});
+
 test('section heading keeps actions separate and help inside the heading without injecting inline style', () => {
     const help=helpIconButton({label:'Show help',action:'flight-plan-help'});
     const html=sectionHeader({title:'Planning',layout:'tasting-panel-heading',titleClass:'flight-plan-heading-title',trailingAction:help,actions:'<button disabled>Next</button>'});
