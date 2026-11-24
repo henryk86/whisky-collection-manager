@@ -1,11 +1,18 @@
 import {fail} from '../domain/errors.js';
-/** Accept a JSON object, not arrays/primitives, with a hard upper size limit. */
+/**
+ * Accept a JSON object, not arrays/primitives, with a hard upper size limit.
+ */
 export async function readJson(request) {
   // JSON is never accepted as text/plain: otherwise a cross-site HTML form
   // can write data without a CORS preflight.
-  const mediaType = (request.headers['content-type'] || '').split(';', 1)[0].trim().toLowerCase();
+  const mediaType = (request.headers['content-type'] || '').split(';', 1)[0]
+    .trim().toLowerCase();
   if (mediaType !== 'application/json') {
-    throw fail('Content-Type muss application/json sein', 415, "api.errors.contentTypeMustBeApplicationJson");
+    throw fail(
+      'Content-Type muss application/json sein',
+      415,
+      "api.errors.contentTypeMustBeApplicationJson"
+    );
   }
   const chunks = [];
   let bytes = 0;
@@ -24,7 +31,11 @@ export async function readJson(request) {
     throw fail('Ungültiges JSON', 400, "api.errors.invalidJSON");
   }
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw fail('JSON-Anfrage muss ein Objekt sein', 400, "api.errors.jsonRequestMustBeAnObject");
+    throw fail(
+      'JSON-Anfrage muss ein Objekt sein',
+      400,
+      "api.errors.jsonRequestMustBeAnObject"
+    );
   }
   return value;
 }

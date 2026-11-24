@@ -1,5 +1,6 @@
 /** Resolve single- vs. double-click before the plan is re-rendered.
- * A first click cannot rebuild the SVG/canvas or the browser loses the second click.
+ * A first click cannot rebuild the SVG/canvas or the browser loses the second
+ * click.
  */
 export function createFurnitureActivation(onSelect, onEdit, delay = 330) {
   let pending = null;

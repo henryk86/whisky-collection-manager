@@ -11,10 +11,22 @@ export function formValues(form) {
     }
   }
   if (form.id === 'bottling-form') {
-    data.distilleryIds = queryAll('input[name=distilleryIds]:checked', form).map(x => x.value);
+    data.distilleryIds = queryAll('input[name=distilleryIds]:checked', form)
+      .map(x => x.value);
     data.compositionComplete = data.compositionComplete === 'true';
   }
-  for (const key of ['ageYears', 'releaseYear', 'distillationYear', 'bottlingYear', 'abv', 'volumeMl', 'firstVolumeMl', 'limitedEditionCount', 'purchasePrice', 'rating']) {
+  for (const key of [
+    'ageYears',
+    'releaseYear',
+    'distillationYear',
+    'bottlingYear',
+    'abv',
+    'volumeMl',
+    'firstVolumeMl',
+    'limitedEditionCount',
+    'purchasePrice',
+    'rating',
+  ]) {
     if (data[key] != null) {
       data[key] = Number(data[key]);
     }

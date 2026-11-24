@@ -1,9 +1,15 @@
 import fs from 'node:fs';
-/** Legacy migrations are isolated from normal CRUD. Each step is safe to run again. */
+/**
+ * Legacy migrations are isolated from normal CRUD. Each step is safe to run
+ * again.
+ */
 import {assert} from '../domain/errors.js';
 import {allBottles, now, uid} from '../domain/collection.js';
 import {validate} from '../domain/validation.js';
-const internationalSeed = JSON.parse(fs.readFileSync(new URL('../../seed/distillery.json', import.meta.url), 'utf8'));
+const internationalSeed = JSON.parse(fs.readFileSync(
+  new URL('../../seed/distillery.json', import.meta.url),
+  'utf8'
+));
 
 // Convert legacy top-level bottles into the owning bottling before validation.
 export function migrateNestedBottles(db) {
@@ -20,7 +26,12 @@ export function migrateNestedBottles(db) {
     }
     for (const bottle of db.bottles) {
       const owner = (db.bottlings || []).find(b => b.id === bottle.bottlingId);
-      assert(owner, 'Verwaiste Flasche kann nicht migriert werden', 400, "api.errors.orphanedBottleCannotBeMigrated");
+      assert(
+        owner,
+        'Verwaiste Flasche kann nicht migriert werden',
+        400,
+        "api.errors.orphanedBottleCannotBeMigrated"
+      );
       if (owner.bottles.some(b => b.id === bottle.id)) {
         throw new Error('Doppelte Flaschen-ID bei Migration');
       }
@@ -44,9 +55,11 @@ export function migrateNestedBottles(db) {
   }
   return changed;
 }
-// From v0.5.9 onward the printed/scanned inventory number is the only identifier.
+// From v0.5.9 onward the printed/scanned inventory number is the only
+// identifier.
 // Conflicting legacy fields are logged in an external migration report, never
 // silently used as an additional identification field.
+
 export function migrateInventoryNumbers(db) {
   let changed = false;
   const conflicts = [];
@@ -61,25 +74,29 @@ export function migrateInventoryNumbers(db) {
         else if (previous && label && previous !== label) {
           conflicts.push({
             bottlingId: bottling.id, bottleId: bottle.id,
-            inventoryNumber: previous, previousLabelCode: label
+            inventoryNumber: previous, previousLabelCode: label,
           });
         }
         delete bottle.labelCode;
         changed = true;
       }
-      if (bottle.inventoryNumber != null && String(bottle.inventoryNumber) !== String(bottle.inventoryNumber).trim()) {
+      if (bottle.inventoryNumber != null &&
+        String(bottle.inventoryNumber) !== String(bottle.inventoryNumber)
+          .trim()) {
         bottle.inventoryNumber = String(bottle.inventoryNumber).trim();
         changed = true;
       }
       const number = String(bottle.inventoryNumber || '');
-      // Previously a label-only code wasn't necessarily reserved as an inventory number.
+      // Previously a label-only code wasn't necessarily reserved as an
+      // inventory number.
       if (number && !db.reservedInventoryNumbers.includes(number)) {
         db.reservedInventoryNumbers.push(number);
         changed = true;
       }
       if (/^\d+$/.test(number)) {
         const asNumber = Number(number);
-        if (Number.isSafeInteger(asNumber) && asNumber >= db.nextInventoryNumber) {
+        if (Number.isSafeInteger(asNumber) && asNumber >=
+          db.nextInventoryNumber) {
           db.nextInventoryNumber = asNumber + 1;
           changed = true;
         }
@@ -91,9 +108,10 @@ export function migrateInventoryNumbers(db) {
     changed = true;
   }
   return {
-    changed, conflicts
+    changed, conflicts,
   };
 }
+
 export function migrateLabelTypes(db) {
   let changed = false;
   for (const bottle of allBottles(db)) {
@@ -104,6 +122,7 @@ export function migrateLabelTypes(db) {
   }
   return changed;
 }
+
 export function migrateDistilleries(db) {
   let changed = false;
   for (const b of db.bottlings || []) {
@@ -118,6 +137,7 @@ export function migrateDistilleries(db) {
   }
   return changed;
 }
+
 export function migratePhotos(db) {
   let changed = false;
   for (const bottle of allBottles(db)) {
@@ -138,7 +158,7 @@ export function migratePhotos(db) {
       const file = bottling.images[kind];
       if (file && !first.photos.some(p => p.path === file)) {
         first.photos.push({
-          id: uid(), path: file, createdAt: now(), legacyType: kind
+          id: uid(), path: file, createdAt: now(), legacyType: kind,
         });
       }
     }
@@ -147,6 +167,7 @@ export function migratePhotos(db) {
   }
   return changed;
 }
+
 /** Move the former bottling-wide sample type to individual physical bottles.
  * Keep bottling.volumeMl as the nominal size published by the producer;
  * each bottle additionally receives its own actual size when known.
@@ -176,7 +197,10 @@ export function migrateBottleTypes(db) {
   }
   return changed;
 }
-/** Existing collections can gain the optional document list without data loss. */
+
+/**
+ * Existing collections can gain the optional document list without data loss.
+ */
 export function migrateDocumentLists(db) {
   let changed = false;
   for (const bottle of allBottles(db)) {
@@ -187,14 +211,17 @@ export function migrateDocumentLists(db) {
   }
   return changed;
 }
+
 /** Add newly published international sites without overwriting user changes. */
 export function migrateInternationalDistilleries(db) {
   if (!Array.isArray(db.distilleries)) return false;
-  const currentNames = new Set(db.distilleries.map(d => d.name.trim().toLocaleLowerCase('en')));
+  const currentNames = new Set(db.distilleries.map(d => d.name.trim()
+    .toLocaleLowerCase('en')));
   const currentIds = new Set(db.distilleries.map(d => d.id));
   let changed = false;
   for (const entry of internationalSeed.filter(d => d.country)) {
-    if (currentNames.has(entry.name.trim().toLocaleLowerCase('en')) || currentIds.has(entry.id)) continue;
+    if (currentNames.has(entry.name.trim().toLocaleLowerCase('en')) ||
+      currentIds.has(entry.id)) continue;
     db.distilleries.push({...entry});
     currentNames.add(entry.name.trim().toLocaleLowerCase('en'));
     currentIds.add(entry.id);
@@ -202,20 +229,25 @@ export function migrateInternationalDistilleries(db) {
   }
   return changed;
 }
+
 /** Fill missing origin metadata from the published distillery catalogue.
  * Never change user-set status, coordinates or explicit geographic fields.
  * Country/region belong to distilleries, not to individual bottlings.
  */
 export function migrateDistilleryOrigins(db) {
   if (!Array.isArray(db.distilleries)) return false;
-  const catalog = new Map(internationalSeed.map(d => [d.name.trim().toLocaleLowerCase('en'), d]));
+  const catalog = new Map(internationalSeed.map(d => [d.name.trim()
+    .toLocaleLowerCase('en'), d]));
   let changed = false;
   for (const site of db.distilleries) {
     const known = catalog.get(site.name.trim().toLocaleLowerCase('en'));
     if (!known) continue;
     // Historic generic UK codes conceal the Scottish origin of a known site.
-    // Do not reinterpret UK for unknown sites, Wales, England or Northern Ireland.
-    if (known.country === 'Schottland' && /^(?:UK|GB|United Kingdom|Vereinigtes Königreich)$/i.test(site.country?.trim() || '')) {
+    // Do not reinterpret UK for unknown sites, Wales, England or Northern
+    // Ireland.
+    if (known.country === 'Schottland' &&
+      /^(?:UK|GB|United Kingdom|Vereinigtes Königreich)$/i
+        .test(site.country?.trim() || '')) {
       site.country = 'Schottland';
       changed = true;
     }
@@ -228,10 +260,26 @@ export function migrateDistilleryOrigins(db) {
   }
   return changed;
 }
-/** Mutates a parsed document only. The caller backs up and commits it after validation. */
+
+/**
+ * Mutates a parsed document only. The caller backs up and commits it after
+ * validation.
+ */
 export function migrateCollection(collection) {
-  assert(collection && typeof collection === 'object' && !Array.isArray(collection), 'Ungültige Sammlungsstruktur', 400, "api.errors.invalidCollectionStructure");
-  assert(Array.isArray(collection.bottlings) && Array.isArray(collection.reservedInventoryNumbers), 'Ungültige Sammlungsstruktur', 400, "api.errors.invalidCollectionStructure");
+  assert(
+    collection && typeof collection === 'object' &&
+    !Array.isArray(collection),
+    'Ungültige Sammlungsstruktur',
+    400,
+    "api.errors.invalidCollectionStructure"
+  );
+  assert(
+    Array.isArray(collection.bottlings) &&
+    Array.isArray(collection.reservedInventoryNumbers),
+    'Ungültige Sammlungsstruktur',
+    400,
+    "api.errors.invalidCollectionStructure"
+  );
   const changes = [
     migrateNestedBottles(collection),
     migrateDistilleries(collection),
@@ -244,7 +292,8 @@ export function migrateCollection(collection) {
   const inventory = migrateInventoryNumbers(collection);
   changes.push(migrateBottleTypes(collection));
   return {
-    changed: changes.some(Boolean) || inventory.changed, conflicts: inventory.conflicts
+    changed: changes.some(Boolean) || inventory.changed,
+    conflicts: inventory.conflicts,
   };
 }
 
@@ -256,15 +305,22 @@ export function migrateCollection(collection) {
  * The input is never changed; validation runs before any file is replaced.
  */
 export function migrateCollectionToCurrent(source) {
-  assert(source && typeof source === 'object' && !Array.isArray(source) &&
-    Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >= 1 && source.schemaVersion <= 6, 'Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben unverändert', 400, "api.errors.unsupportedCollectionVersion");
+  assert(
+    source && typeof source === 'object' && !Array.isArray(source) &&
+    Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >=
+    1 && source.schemaVersion <= 6,
+    'Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben unverändert',
+    400,
+    "api.errors.unsupportedCollectionVersion"
+  );
   const collection = structuredClone(source);
   if (collection.schemaVersion === 6) {
     validate(collection);
     return {collection, changed: false, conflicts: []};
   }
   if (collection.schemaVersion === 5) {
-    // v5 -> v6 adds the optional ratingComment field. Preserve all tasting data,
+    // v5 -> v6 adds the optional ratingComment field. Preserve all tasting
+    // data,
     // including comments already written by transitional v5 installations.
     collection.schemaVersion = 6;
     validate(collection);
@@ -275,7 +331,13 @@ export function migrateCollectionToCurrent(source) {
     // v4 tastings, legacy bottle scores and cached sensory summaries
     // are the ONLY intentionally discarded content during this upgrade.
     bottling.tastings = [];
-    for (const name of ['rating', 'tastingNotes', 'flavorProfile', 'whiskyColor', 'legacyTastings']) {
+    for (const name of [
+      'rating',
+      'tastingNotes',
+      'flavorProfile',
+      'whiskyColor',
+      'legacyTastings',
+    ]) {
       delete bottling[name];
     }
     for (const bottle of bottling.bottles) {

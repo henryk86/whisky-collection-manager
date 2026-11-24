@@ -5,7 +5,8 @@ import {minusIcon, plusIcon, arrowLeftIcon, arrowRightIcon} from './action-icons
 
 /**
  * A photo lightbox inside the application's existing modal system.
- * The source comes from an already rendered local <img>; do not accept arbitrary
+ * The source comes from an already rendered local <img>; do not accept
+ * arbitrary
  * URLs or open new tabs. Nested mode preserves unsaved editor form DOM nodes.
  */
 export function createPhotoViewer({state, showModal}) {
@@ -35,8 +36,9 @@ export function createPhotoViewer({state, showModal}) {
       // The large cover photo belongs to a physical bottle; enable
       // gallery navigation for that bottle rather than for all bottles.
       const cover = photoFrom(button);
-      const matchingThumb = cover && queryAll('.bottle-photos [data-act="open-photo"]')
-        .find(candidate => photoFrom(candidate)?.src === cover.src);
+      const matchingThumb = cover &&
+        queryAll('.bottle-photos [data-act="open-photo"]')
+          .find(candidate => photoFrom(candidate)?.src === cover.src);
       const gallery = matchingThumb?.closest('[data-photo-list]');
       if (gallery) buttons = queryAll('[data-act="open-photo"]', gallery);
     }
@@ -44,7 +46,8 @@ export function createPhotoViewer({state, showModal}) {
     const selection = buttons.map(photoFrom).filter(Boolean);
     if (!selection.length) return;
     const clicked = photoFrom(button);
-    const selectedIndex = selection.findIndex(photo => photo.src === clicked?.src);
+    const selectedIndex = selection.findIndex(photo => photo.src ===
+      clicked?.src);
     photos = selection;
     active = selectedIndex < 0 ? 0 : selectedIndex;
     const photo = photos[active];
@@ -63,7 +66,8 @@ export function createPhotoViewer({state, showModal}) {
     </span>
     ${multiple ? `<span class="photo-lightbox-navigation">
     <button type="button" class="btn small" data-act="photo-prev" aria-label="${t("ui.photos.previous")}">${arrowLeftIcon}</button>
-    <span class="photo-lightbox-count" aria-live="polite">${active + 1} / ${photos.length}</span>
+    <span class="photo-lightbox-count" aria-live="polite">${active +
+        1} / ${photos.length}</span>
     <button type="button" class="btn small" data-act="photo-next" aria-label="${t("ui.photos.next")}">${arrowRightIcon}</button>
     </span>` : ''}
     </figcaption>
@@ -78,7 +82,8 @@ export function createPhotoViewer({state, showModal}) {
 
   function step(direction) {
     if (!isOpen() || photos.length < 2) return;
-    active = (active + (direction < 0 ? -1 : 1) + photos.length) % photos.length;
+    active = (active + (direction < 0 ? -1 : 1) + photos.length) %
+      photos.length;
     const photo = photos[active];
     const image = query('.photo-lightbox-image');
     const caption = query('.photo-lightbox-caption');

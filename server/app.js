@@ -8,7 +8,10 @@ import {allowedExtensionOrigin, requireSameOriginMutation, requireAllowedHost} f
 import {initialize} from './storage/collection-store.js';
 import {initWarehouse} from './storage/warehouse-store.js';
 import {initializeAuth, authorizeRequest} from './services/auth.js';
-/** One shared handler for HTTP and HTTPS; neither protocol owns application state. */
+/**
+ * One shared handler for HTTP and HTTPS; neither protocol owns application
+ * state.
+ */
 export function createRequestHandler() {
   initialize();
   initWarehouse();
@@ -16,7 +19,8 @@ export function createRequestHandler() {
   return async function handleRequest(request, response) {
     try {
       requireAllowedHost(request);
-      const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+      const url = new URL(request.url, `http://${request.headers.host ||
+        'localhost'}`);
       // The local image staging endpoint may be called directly by the
       // Chrome/Edge extension origins (optionally restricted by EXTENSION_IDS).
       // By default any syntactically valid extension ID is permitted for
@@ -33,13 +37,19 @@ export function createRequestHandler() {
         response.setHeader('Access-Control-Allow-Private-Network', 'true');
       }
       if (request.method === 'OPTIONS') {
-        response.writeHead(url.pathname === '/api/import-image/stage' && isExtension ? 204 : 405);
+        response.writeHead(url.pathname === '/api/import-image/stage' &&
+          isExtension ? 204 : 405);
         response.end();
         return;
       }
-      requireSameOriginMutation(request, url, {extensionStage: url.pathname === '/api/import-image/stage'});
+      requireSameOriginMutation(
+        request,
+        url,
+        {extensionStage: url.pathname === '/api/import-image/stage'}
+      );
       authorizeRequest(request, url);
-      if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/internal/backup/')) {
+      if (url.pathname.startsWith('/api/') || url.pathname
+        .startsWith('/internal/backup/')) {
         return await handleApi(request, response, url);
       }
       if (request.method !== 'GET') {
@@ -50,10 +60,13 @@ export function createRequestHandler() {
     catch (error) {
       // Closing a download (navigation, mobile connectivity, etc.) is not
       // a server failure. Keep genuine read/stream errors visible in logs.
-      const connectionClosed = ['ERR_STREAM_PREMATURE_CLOSE', 'ECONNRESET', 'EPIPE', 'ABORT_ERR'].includes(error.code);
+      const connectionClosed =
+        ['ERR_STREAM_PREMATURE_CLOSE', 'ECONNRESET', 'EPIPE', 'ABORT_ERR']
+          .includes(error.code);
       // A client that closes mid-upload cannot receive an error response.
       // Do not treat that normal disconnect as an internal server failure.
-      const abortedUpload = connectionClosed && !request.complete && (request.aborted || request.destroyed);
+      const abortedUpload = connectionClosed && !request.complete &&
+        (request.aborted || request.destroyed);
       if (connectionClosed && (response.headersSent || abortedUpload)) {
         response.destroy();
         return;
@@ -70,6 +83,7 @@ export function createRequestHandler() {
     }
   };
 }
+
 export function createServer() {
   return http.createServer(createRequestHandler());
 }

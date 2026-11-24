@@ -8,10 +8,11 @@ export async function withMutationTracking(task) {
   const value = await storage.run(updates, task);
   return {value, updates};
 }
+
 export function trackMutation(kind, previous, current, previousEtag, nextEtag) {
   const updates = storage.getStore();
   if (updates) updates.push({
     before: previousEtag, after: nextEtag,
-    delta: resourceDelta(kind, previous, current)
+    delta: resourceDelta(kind, previous, current),
   });
 }

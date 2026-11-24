@@ -10,7 +10,8 @@ export function furnitureBounds(furniture) {
     w: Number(swapped ? furniture.depth : furniture.width),
     h: Number(swapped ? furniture.width : furniture.depth),
     z: Number(furniture.elevation ?? 0),
-    d: Number(furniture.itemHeight ?? (furniture.type === 'haengeregal' ? 0.4 : 1.8))
+    d: Number(furniture.itemHeight ?? (furniture.type === 'haengeregal' ?
+      0.4 : 1.8)),
   };
 }
 
@@ -24,12 +25,14 @@ export function furnitureOverlap(first, second) {
 }
 
 export function furnitureCollision(room, candidate, otherFurniture = room.furniture || []) {
-  return otherFurniture.find(other => (candidate.id === undefined || other.id !== candidate.id) && furnitureOverlap(candidate, other)) ?? null;
+  return otherFurniture.find(other => (candidate.id === undefined ||
+    other.id !== candidate.id) && furnitureOverlap(candidate, other)) ?? null;
 }
 
 export function furnitureFitsRoom(room, item) {
   const b = furnitureBounds(item);
-  return b.x >= 0 && b.y >= 0 && b.x + b.w <= room.width + EPSILON && b.y + b.h <= room.height + EPSILON;
+  return b.x >= 0 && b.y >= 0 && b.x + b.w <= room.width + EPSILON && b.y +
+    b.h <= room.height + EPSILON;
 }
 
 /** Continuous collision-constrained movement in the 2D editor. Small steps
@@ -42,7 +45,8 @@ export function moveFurnitureTowards(room, item, fromX, fromY, toX, toY) {
   let x = fromX, y = fromY;
   const canPlace = (nextX, nextY) => {
     const candidate = {...item, x: nextX, y: nextY};
-    return furnitureFitsRoom(room, candidate) && !furnitureCollision(room, candidate);
+    return furnitureFitsRoom(room, candidate) &&
+      !furnitureCollision(room, candidate);
   };
   for (let i = 1; i <= steps; i++) {
     // Use actual progress for each axis, not the starting position, so
@@ -56,6 +60,8 @@ export function moveFurnitureTowards(room, item, fromX, fromY, toX, toY) {
     // When one axis was blocked, don't accumulate offset past its obstacle.
     // Remaining steps can continue sliding along the unobstructed axis.
   }
-  const roundedX = Math.round(x * 100) / 100, roundedY = Math.round(y * 100) / 100;
-  return canPlace(roundedX, roundedY) ? {x: roundedX, y: roundedY} : {x: fromX, y: fromY};
+  const roundedX = Math.round(x * 100) / 100, roundedY = Math.round(y *
+    100) / 100;
+  return canPlace(roundedX, roundedY) ? {x: roundedX, y: roundedY} :
+    {x: fromX, y: fromY};
 }

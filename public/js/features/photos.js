@@ -4,7 +4,8 @@ export async function imageData(file) {
   if (file.size > 10000000) {
     throw Error(t('features.validation.photoTooLarge'));
   }
-  if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+  if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    .includes(file.type)) {
     throw Error(t('features.validation.photoUnsupported'));
   }
   return new Promise((resolve, reject) => {
@@ -14,12 +15,13 @@ export async function imageData(file) {
     r.readAsDataURL(file);
   });
 }
+
 export async function uploadPhotos(bottleId, files) {
   for (const file of files) {
     await request(`/api/bottles/${bottleId}/photos`, {
       method: 'POST', body: JSON.stringify({
-        image: await imageData(file)
-      })
+        image: await imageData(file),
+      }),
     });
   }
 }

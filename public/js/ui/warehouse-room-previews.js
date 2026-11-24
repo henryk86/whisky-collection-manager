@@ -12,7 +12,8 @@ const snapshots = new WeakMap();
  * No OrbitControls, pointer handlers or permanent WebGL canvases are created.
  */
 export function mountWarehouseRoomPreviews({rooms, warehouse}) {
-  if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return {dispose() {} };
+  if (typeof document === 'undefined' ||
+    typeof document.querySelectorAll !== 'function') return {dispose() {} };
   const previews = [...document.querySelectorAll('.warehouse-room-preview[data-preview-room-id]')];
   if (!previews.length) return {dispose() {} };
 
@@ -22,7 +23,8 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
   let rendering = false;
   let observer;
   let themeObserver;
-  const theme = () => document.documentElement?.dataset?.theme === 'dark' ? 'dark' : 'light';
+  const theme = () => document.documentElement?.dataset?.theme === 'dark' ?
+    'dark' : 'light';
 
   function showImage(node, url) {
     if (disposed || !node.isConnected) return;
@@ -36,11 +38,13 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
     img.src = url;
     node.dataset.previewState = 'ready';
   }
+
   function unavailable(node) {
     if (disposed || !node.isConnected) return;
     node.textContent = t('warehouse.preview.unavailable');
     node.dataset.previewState = 'unavailable';
   }
+
   function enqueue(node) {
     if (disposed || !node.isConnected) return;
     const room = roomById.get(node.dataset.previewRoomId);
@@ -54,6 +58,7 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
     queue.add(node);
     if (!rendering) void flush();
   }
+
   async function flush() {
     if (rendering || disposed || queue.size === 0) return;
     rendering = true;
@@ -64,7 +69,7 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
       const canvas = document.createElement('canvas');
       renderer = new THREE.WebGLRenderer({
         canvas, antialias: true, preserveDrawingBuffer: true,
-        powerPreference: 'low-power'
+        powerPreference: 'low-power',
       });
       renderer.setPixelRatio(1);
       renderer.setSize(PREVIEW_WIDTH, PREVIEW_HEIGHT, false);
@@ -82,7 +87,12 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
         }
         let model;
         try {
-          model = buildWarehouseThreeScene(THREE, room, warehouse, {theme: activeTheme});
+          model = buildWarehouseThreeScene(
+            THREE,
+            room,
+            warehouse,
+            {theme: activeTheme}
+          );
           const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
           frameWarehouseCamera(THREE, camera, model.roomWidth, model.roomDepth,
             model.maxHeight, 'nw', PREVIEW_WIDTH / PREVIEW_HEIGHT);
@@ -131,7 +141,10 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
         else enqueue(node);
       }
     });
-    themeObserver.observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+    themeObserver.observe(
+      document.documentElement,
+      {attributes: true, attributeFilter: ['data-theme']}
+    );
   }
   return {
     dispose() {

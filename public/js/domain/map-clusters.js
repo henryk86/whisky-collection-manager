@@ -1,7 +1,8 @@
 import {MAX_MAP_ZOOM, markerDiameter, project} from './distillery-map.js';
 
 // Cluster geographic locations in *world* pixels. Unlike a viewport grid, this
-// keeps groups stable when the map is dragged or resized at the same zoom level.
+// keeps groups stable when the map is dragged or resized at the same zoom
+// level.
 // No data is aggregated or modified in the collection itself.
 export const CLUSTER_DISTANCE_PX = 58;
 
@@ -17,7 +18,8 @@ export function clusterMapSites(sites, zoom, {pinnedId = null} = {}) {
     if (site.id !== pinnedId) {
       for (const group of groups) {
         if (group.pinned) continue;
-        const distanceSquared = (group.x - point.x) ** 2 + (group.y - point.y) ** 2;
+        const distanceSquared = (group.x - point.x) ** 2 + (group.y -
+          point.y) ** 2;
         if (distanceSquared < nearestSquared) {
           nearestSquared = distanceSquared;
           closest = group;
@@ -27,7 +29,7 @@ export function clusterMapSites(sites, zoom, {pinnedId = null} = {}) {
     if (!closest) {
       groups.push({
         x: point.x, y: point.y, sites: [site], bottleCount: site.bottleCount,
-        bottlingCount: site.bottlingCount, pinned: site.id === pinnedId
+        bottlingCount: site.bottlingCount, pinned: site.id === pinnedId,
       });
     } else {
       const length = closest.sites.length;
@@ -48,7 +50,8 @@ export function clusterMapSites(sites, zoom, {pinnedId = null} = {}) {
 // a small visual connector. This changes neither coordinates nor bottle data.
 function spreadOverlappingSites(groups) {
   const visited = new Set();
-  const ordered = [...groups].sort((a, b) => String(a.sites[0].id).localeCompare(String(b.sites[0].id)));
+  const ordered = [...groups].sort((a, b) => String(a.sites[0].id)
+    .localeCompare(String(b.sites[0].id)));
   const diameter = group => Math.max(35, markerDiameter(group.bottleCount));
   for (const start of ordered) {
     if (visited.has(start)) continue;
@@ -61,18 +64,25 @@ function spreadOverlappingSites(groups) {
       for (const other of ordered) {
         if (visited.has(other)) continue;
         const minDistance = (diameter(current) + diameter(other)) / 2 + 8;
-        if (Math.hypot(current.x - other.x, current.y - other.y) >= minDistance) continue;
+        if (Math.hypot(current.x - other.x, current.y - other.y) >=
+          minDistance) continue;
         visited.add(other);
         pending.push(other);
       }
     }
     if (component.length < 2) continue;
-    component.sort((a, b) => String(a.sites[0].id).localeCompare(String(b.sites[0].id)));
-    const anchorX = component.reduce((total, group) => total + group.x, 0) / component.length;
-    const anchorY = component.reduce((total, group) => total + group.y, 0) / component.length;
+    component.sort((a, b) => String(a.sites[0].id)
+      .localeCompare(String(b.sites[0].id)));
+    const anchorX = component.reduce((total, group) => total + group.x, 0) /
+      component.length;
+    const anchorY = component.reduce((total, group) => total + group.y, 0) /
+      component.length;
     const maxDiameter = Math.max(...component.map(diameter));
     // Distribute markers on a circle with enough separation for touch.
-    const radius = Math.max(38, (maxDiameter + 10) / (2 * Math.sin(Math.PI / component.length)));
+    const radius = Math.max(
+      38,
+      (maxDiameter + 10) / (2 * Math.sin(Math.PI / component.length))
+    );
     component.forEach((group, index) => {
       group.anchorX = group.x;
       group.anchorY = group.y;

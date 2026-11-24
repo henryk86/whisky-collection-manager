@@ -17,7 +17,7 @@ export function createCodeResolver({state, navigate, toast, closeModal, renderMo
         return;
       }
       navigate('detail', match.bottling.id, {
-        highlightBottleId: found.id
+        highlightBottleId: found.id,
       });
       return;
     }

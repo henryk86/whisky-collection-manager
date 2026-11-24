@@ -26,14 +26,15 @@ function mockImport({openEditor}) {
     replaceState(...args) {
       calls.push(['history', args[2]]);
       location.hash = '';
-    }
+    },
   };
   globalThis.document = {
     querySelector: () => null,
     createElement: () => ({remove() {}, className: '', textContent: ''}),
-    body: {append(el) {calls.push(['toast', el.textContent]);} }
+    body: {append(el) {calls.push(['toast', el.textContent]);} },
   };
-  globalThis.setTimeout = () => {}; // prevent nonessential toast timers in this unit test
+  globalThis.setTimeout =
+    () => {}; // prevent nonessential toast timers in this unit test
   const state = {
     collection: {bottlings: [], distilleries: []},
     modal: openEditor ? {title: 'Abfüllung bearbeiten'} : null,
@@ -48,9 +49,15 @@ function mockImport({openEditor}) {
   return {
     calls, controller,
     restore() {
-      if (oldLocation === undefined) delete globalThis.location; else globalThis.location = oldLocation;
-      if (oldHistory === undefined) delete globalThis.history; else globalThis.history = oldHistory;
-      if (oldDocument === undefined) delete globalThis.document; else globalThis.document = oldDocument;
+      if (oldLocation ===
+        undefined) delete globalThis.location; else globalThis.location =
+          oldLocation;
+      if (oldHistory ===
+        undefined) delete globalThis.history; else globalThis.history =
+          oldHistory;
+      if (oldDocument ===
+        undefined) delete globalThis.document; else globalThis.document =
+          oldDocument;
       globalThis.setTimeout = oldSetTimeout;
     },
   };
@@ -64,47 +71,70 @@ test('incoming hash import is processed in an already open manager tab', () => {
     assert.ok(calls.some(call => call[0] === 'navigate' && call[1] === 'home'));
     assert.ok(calls.some(call => call[0] === 'createBottling'));
     assert.ok(!calls.some(call => call[0] === 'showModal'));
-    assert.ok(!calls.some(call => call[0] === 'toast'), 'the import should not throw');
+    assert.ok(
+      !calls.some(call => call[0] === 'toast'),
+      'the import should not throw'
+    );
   } finally {restore();}
 });
 
-test('incoming hash import does not discard an already open form without confirmation', () => {
-  const {calls, controller, restore} = mockImport({openEditor: true});
-  try {
-    controller.importFromExtension();
-    assert.deepEqual(calls[0], ['history', '/?bottling=local-bottling']);
-    const confirmation = calls.find(call => call[0] === 'showModal');
-    assert.ok(confirmation, 'requires the in-app confirmation modal');
-    assert.equal(confirmation[1], 'Externe Importdaten bereit');
-    assert.match(confirmation[2], /ungespeicherte Eingaben/);
-    assert.match(confirmation[2], /data-act="import-continue"/);
-    assert.equal(confirmation[4], true, 'keep the existing dialog nested underneath');
-    assert.ok(!calls.some(call => call[0] === 'navigate'));
-    assert.ok(!calls.some(call => call[0] === 'createBottling'));
+test(
+  'incoming hash import does not discard an already open form without confirmation',
+  () => {
+    const {calls, controller, restore} = mockImport({openEditor: true});
+    try {
+      controller.importFromExtension();
+      assert.deepEqual(calls[0], ['history', '/?bottling=local-bottling']);
+      const confirmation = calls.find(call => call[0] === 'showModal');
+      assert.ok(confirmation, 'requires the in-app confirmation modal');
+      assert.equal(confirmation[1], 'Externe Importdaten bereit');
+      assert.match(confirmation[2], /ungespeicherte Eingaben/);
+      assert.match(confirmation[2], /data-act="import-continue"/);
+      assert.equal(
+        confirmation[4],
+        true,
+        'keep the existing dialog nested underneath'
+      );
+      assert.ok(!calls.some(call => call[0] === 'navigate'));
+      assert.ok(!calls.some(call => call[0] === 'createBottling'));
 
-    controller.confirmPendingImport();
-    assert.ok(calls.some(call => call[0] === 'closeModal' && call[1] === true));
-    assert.ok(calls.some(call => call[0] === 'navigate' && call[1] === 'home'));
-    assert.ok(calls.some(call => call[0] === 'createBottling'));
-    assert.ok(!calls.some(call => call[0] === 'toast'), 'the confirmed import should not throw');
-  } finally {restore();}
-});
+      controller.confirmPendingImport();
+      assert.ok(calls.some(call => call[0] === 'closeModal' &&
+        call[1] === true));
+      assert.ok(calls.some(call => call[0] === 'navigate' && call[1] ===
+        'home'));
+      assert.ok(calls.some(call => call[0] === 'createBottling'));
+      assert.ok(
+        !calls.some(call => call[0] === 'toast'),
+        'the confirmed import should not throw'
+      );
+    } finally {restore();}
+  }
+);
 
-test('a valid no-image import remains valid when preview validates it again', async () => {
-  const {validateExtensionPayload} = await import('../../public/js/features/whiskybase/payload.js');
-  const once = validateExtensionPayload(payload);
-  assert.equal(once.imageToken, null);
-  const twice = validateExtensionPayload(once);
-  assert.equal(twice.fields.whiskybaseId, '54321');
-  assert.equal(twice.imageToken, null);
-  assert.throws(() => validateExtensionPayload({...payload, imageToken: '../bad-token'}), /Bild-Token/);
-});
+test(
+  'a valid no-image import remains valid when preview validates it again',
+  async () => {
+    const {validateExtensionPayload} =
+      await import('../../public/js/features/whiskybase/payload.js');
+    const once = validateExtensionPayload(payload);
+    assert.equal(once.imageToken, null);
+    const twice = validateExtensionPayload(once);
+    assert.equal(twice.fields.whiskybaseId, '54321');
+    assert.equal(twice.imageToken, null);
+    assert.throws(
+      () => validateExtensionPayload({...payload, imageToken: '../bad-token'}),
+      /Bild-Token/
+    );
+  }
+);
 
 
 test('old import fragment is ignored without changing the active form', () => {
   const {calls, controller, restore} = mockImport({openEditor: true});
   try {
-    location.hash = '#whiskybase-import=' + encodeURIComponent(JSON.stringify(payload));
+    location.hash = '#whiskybase-import=' +
+      encodeURIComponent(JSON.stringify(payload));
     controller.importFromExtension();
     assert.equal(calls.length, 0);
   } finally {restore();}

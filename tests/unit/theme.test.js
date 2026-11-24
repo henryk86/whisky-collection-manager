@@ -5,7 +5,7 @@ test('theme defaults to system preference', () => {
   assert.equal(getThemePreference({
     getItem() {
       return null;
-    }
+    },
   }), 'system');
   assert.equal(effectiveTheme('system', true), 'dark');
   assert.equal(effectiveTheme('system', false), 'light');
@@ -20,11 +20,11 @@ test('toggle flips light/dark and ignores invalid stored data', () => {
   assert.equal(getThemePreference({
     getItem() {
       return 'unexpected';
-    }
+    },
   }), 'system');
   assert.equal(getThemePreference({
     getItem() {
       throw Error('blocked');
-    }
+    },
   }), 'system');
 });

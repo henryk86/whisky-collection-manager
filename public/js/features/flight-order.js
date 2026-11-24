@@ -1,4 +1,6 @@
-/** Reorder a flight only when the drop changes its sequence. No record copies. */
+/**
+ * Reorder a flight only when the drop changes its sequence. No record copies.
+ */
 export function reorderFlightIds(ids, sourceId, targetId, after = false) {
   if (!Array.isArray(ids) || sourceId === targetId) return null;
   const source = ids.indexOf(sourceId);
@@ -12,7 +14,8 @@ export function reorderFlightIds(ids, sourceId, targetId, after = false) {
 }
 
 /** Pointer-based dragging works for mouse, touch and pen without native HTML drag ghosts.
- * Only the grip initiates sorting; tapping a whisky still opens its tasting note.
+ * Only the grip initiates sorting; tapping a whisky still opens its tasting
+ * note.
  */
 export function bindFlightSorting(root, onReorder) {
   let drag = null;
@@ -21,16 +24,19 @@ export function bindFlightSorting(root, onReorder) {
       row.classList.remove('is-dragging', 'is-drop-before', 'is-drop-after');
     }
   };
+
   const rowUnderPointer = (x, y, list) => {
     const row = document.elementFromPoint(x, y)?.closest?.('.tasting-flight-member');
     return row?.parentElement === list ? row : null;
   };
+
   const destination = (x, y, list) => {
     const row = rowUnderPointer(x, y, list);
     if (!row) return null;
     const bounds = row.getBoundingClientRect();
     return {row, after: y >= bounds.top + bounds.height / 2};
   };
+
   function release() {
     if (!drag) return;
     const {handle, pointerId, list} = drag;
@@ -43,29 +49,51 @@ export function bindFlightSorting(root, onReorder) {
     const handle = event.target.closest?.('[data-flight-drag]');
     const row = handle?.closest('.tasting-flight-member');
     const list = row?.parentElement;
-    if (!list?.matches('.tasting-flight-members-list') || !row.dataset.tastingId) return;
-    drag = {handle, list, row, pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false};
+    if (!list?.matches('.tasting-flight-members-list') || !row.dataset
+      .tastingId) return;
+    drag = {
+      handle,
+      list,
+      row,
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      moved: false,
+    };
     handle.setPointerCapture?.(event.pointerId);
   });
   root.addEventListener('pointermove', event => {
     if (!drag || drag.pointerId !== event.pointerId) return;
-    if (!drag.moved && (event.clientX - drag.x) ** 2 + (event.clientY - drag.y) ** 2 < 64) return;
+    if (!drag.moved && (event.clientX - drag.x) ** 2 + (event.clientY -
+      drag.y) ** 2 < 64) return;
     drag.moved = true;
     event.preventDefault();
     clearTargets(drag.list);
     drag.row.classList.add('is-dragging');
     const target = destination(event.clientX, event.clientY, drag.list);
     if (target && target.row !== drag.row)
-      target.row.classList.add(target.after ? 'is-drop-after' : 'is-drop-before');
+      target.row.classList.add(target.after ? 'is-drop-after' :
+        'is-drop-before');
   });
   root.addEventListener('pointerup', event => {
     if (!drag || drag.pointerId !== event.pointerId) return;
     const {row, list, moved} = drag;
-    const target = moved ? destination(event.clientX, event.clientY, list) : null;
+    const target = moved ?
+      destination(event.clientX, event.clientY, list) : null;
     if (moved) event.preventDefault();
     release();
-    if (target && target.row !== row) void onReorder(row.dataset.tastingId, target.row.dataset.tastingId, target.after);
+    if (target && target.row !== row) void onReorder(
+      row.dataset.tastingId,
+      target.row.dataset.tastingId,
+      target.after
+    );
   });
-  root.addEventListener('pointercancel', event => {if (drag?.pointerId === event.pointerId) release();});
-  root.addEventListener('lostpointercapture', event => {if (drag?.pointerId === event.pointerId) release();});
+  root.addEventListener(
+    'pointercancel',
+    event => {if (drag?.pointerId === event.pointerId) release();}
+  );
+  root.addEventListener(
+    'lostpointercapture',
+    event => {if (drag?.pointerId === event.pointerId) release();}
+  );
 }

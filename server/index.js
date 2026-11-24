@@ -14,25 +14,36 @@ export function startServers() {
       throw new Error('HTTPS-Zertifikat fehlt. Bitte npm run https:setup -- --ip <LAPTOP-IP> ausfuehren.');
     }
     tlsOptions = {
-      key: fs.readFileSync(HTTPS_KEY_FILE), cert: fs.readFileSync(HTTPS_CERT_FILE)
+      key: fs.readFileSync(HTTPS_KEY_FILE),
+      cert: fs.readFileSync(HTTPS_CERT_FILE),
     };
   }
-  console.log(`Erlaubte Hosts: ${[...ALLOWED_HOSTS].sort().join(', ')} (zusaetzliche Adressen: ALLOWED_HOSTS)`);
+  console.log(`Erlaubte Hosts: ${[...ALLOWED_HOSTS].sort()
+    .join(', ')} (zusaetzliche Adressen: ALLOWED_HOSTS)`);
   const handler = createRequestHandler();
   const servers = [];
   if (HTTPS_ENABLED) {
     const secure = https.createServer(tlsOptions, handler);
-    secure.listen(HTTPS_PORT, HOST, () => console.log(`Whisky Collection Manager HTTPS: https://localhost:${HTTPS_PORT} (LAN: https://<LAPTOP-IP>:${HTTPS_PORT})`));
+    secure.listen(
+      HTTPS_PORT,
+      HOST,
+      () => console.log(`Whisky Collection Manager HTTPS: https://localhost:${HTTPS_PORT} (LAN: https://<LAPTOP-IP>:${HTTPS_PORT})`)
+    );
     servers.push(secure);
   }
   if (HTTP_ENABLED) {
     const plain = http.createServer(handler);
-    plain.listen(PORT, HOST, () => console.log(`Whisky Collection Manager HTTP: http://localhost:${PORT} (LAN: http://<LAPTOP-IP>:${PORT})`));
+    plain.listen(
+      PORT,
+      HOST,
+      () => console.log(`Whisky Collection Manager HTTP: http://localhost:${PORT} (LAN: http://<LAPTOP-IP>:${PORT})`)
+    );
     servers.push(plain);
   }
   return servers;
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path.resolve(process.argv[1]) ===
+  fileURLToPath(import.meta.url)) {
   try {
     startServers();
   }

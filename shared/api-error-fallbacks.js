@@ -254,5 +254,5 @@ export const apiErrorFallbacks = Object.freeze({
   "api.errors.zipCouldNotBeVerified": "ZIP could not be verified.",
   "api.errors.zipDoesNotContainAValidWhiskyCollection": "ZIP does not contain a valid whisky collection.",
   "api.errors.zipUploadIsTooLarge": "ZIP upload is too large.",
-  "api.errors.zipVerificationFailed": "ZIP verification failed."
+  "api.errors.zipVerificationFailed": "ZIP verification failed.",
 });

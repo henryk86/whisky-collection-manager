@@ -6,10 +6,25 @@
  */
 export function inventoryCountGroups(bottles) {
   const categories = [
-    {type: 'standard', status: 'closed', singular: 'Standardflasche', plural: 'Standardflaschen'},
-    {type: 'standard', status: 'open', singular: 'offene Standardflasche', plural: 'offene Standardflaschen'},
+    {
+      type: 'standard',
+      status: 'closed',
+      singular: 'Standardflasche',
+      plural: 'Standardflaschen',
+    },
+    {
+      type: 'standard',
+      status: 'open',
+      singular: 'offene Standardflasche',
+      plural: 'offene Standardflaschen',
+    },
     {type: 'sample', status: 'closed', singular: 'Sample', plural: 'Samples'},
-    {type: 'sample', status: 'open', singular: 'offenes Sample', plural: 'offene Samples'},
+    {
+      type: 'sample',
+      status: 'open',
+      singular: 'offenes Sample',
+      plural: 'offene Samples',
+    },
   ];
   return categories.flatMap(group => {
     const count = bottles.filter(bottle =>
@@ -18,7 +33,7 @@ export function inventoryCountGroups(bottles) {
     ).length;
     return count ? [{
       type: group.type, status: group.status, count,
-      label: `${count} ${count === 1 ? group.singular : group.plural}`
+      label: `${count} ${count === 1 ? group.singular : group.plural}`,
     }] : [];
   });
 }

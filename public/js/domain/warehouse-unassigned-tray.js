@@ -3,13 +3,18 @@
  */
 export const UNASSIGNED_WALL_PAGE_SIZE = 24;
 
-export function unassignedWallPage(warehouse, {query = '', page = 1, pageSize = UNASSIGNED_WALL_PAGE_SIZE} = {}) {
-  const all = (warehouse?.bottles || []).filter(bottle => !warehouse?.assignments?.[bottle.id]);
+export function unassignedWallPage(
+  warehouse,
+  {query = '', page = 1, pageSize = UNASSIGNED_WALL_PAGE_SIZE} = {}
+) {
+  const all = (warehouse?.bottles || []).filter(bottle =>
+    !warehouse?.assignments?.[bottle.id]);
   const term = String(query).trim().toLocaleLowerCase('de');
   const filtered = term ? all.filter(bottle =>
     [bottle.name, bottle.number, bottle.id].some(value =>
       String(value ?? '').toLocaleLowerCase('de').includes(term))) : all;
-  const size = Number.isSafeInteger(pageSize) && pageSize > 0 ? Math.min(pageSize, 100) : UNASSIGNED_WALL_PAGE_SIZE;
+  const size = Number.isSafeInteger(pageSize) && pageSize > 0 ?
+    Math.min(pageSize, 100) : UNASSIGNED_WALL_PAGE_SIZE;
   const pages = Math.max(1, Math.ceil(filtered.length / size));
   const requested = Number.isSafeInteger(page) ? page : 1;
   const currentPage = Math.min(Math.max(1, requested), pages);

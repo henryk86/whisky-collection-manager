@@ -3,13 +3,23 @@ import {modalFooter} from '../ui/modal-layout.js';
 import {escapeHtml, query} from '../ui/dom.js';
 import {httpResponseError} from '../api.js';
 
-/** Browsers can preview these file types without uploading data to an external service. */
+/**
+ * Browsers can preview these file types without uploading data to an external
+ * service.
+ */
 export function documentPreviewKind(name) {
   const ext = String(name || '').split('.').pop()?.toLowerCase();
   if (ext === 'pdf') return {kind: 'pdf', type: 'application/pdf'};
-  const images = {jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif'};
+  const images = {
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+    gif: 'image/gif',
+  };
   if (Object.hasOwn(images, ext)) return {kind: 'image', type: images[ext]};
-  if (['txt', 'csv', 'eml'].includes(ext)) return {kind: 'text', type: 'text/plain'};
+  if (['txt', 'csv', 'eml']
+    .includes(ext)) return {kind: 'text', type: 'text/plain'};
   return {kind: 'unsupported', type: null};
 }
 
@@ -23,6 +33,7 @@ export function createFilePreview({modal, state}) {
     if (blobUrl) URL.revokeObjectURL(blobUrl);
     blobUrl = null;
   }
+
   async function open(button) {
     close();
     const token = sequence;
@@ -31,12 +42,20 @@ export function createFilePreview({modal, state}) {
     const name = button.dataset.fileName;
     const url = `/api/bottles/${encodeURIComponent(bottleId)}/files/${encodeURIComponent(fileId)}`;
     const preview = documentPreviewKind(name);
-    modal.showModal(name, `<div class="document-preview-stage" aria-live="polite"><p class="hint">${escapeHtml(t(preview.kind === 'unsupported' ? 'detail.documents.previewUnavailable' : 'detail.documents.previewLoading'))}</p></div>
-            ${modalFooter(`<a class="btn primary" href="${escapeHtml(url)}" download="${escapeHtml(name)}">${escapeHtml(t('detail.documents.download'))}</a>`, {className: 'document-preview-actions'})}`, true);
+    modal.showModal(
+      name,
+      `<div class="document-preview-stage" aria-live="polite"><p class="hint">${escapeHtml(t(preview.kind === 'unsupported' ? 'detail.documents.previewUnavailable' : 'detail.documents.previewLoading'))}</p></div>
+            ${modalFooter(
+        `<a class="btn primary" href="${escapeHtml(url)}" download="${escapeHtml(name)}">${escapeHtml(t('detail.documents.download'))}</a>`,
+        {className: 'document-preview-actions'}
+      )}`,
+      true
+    );
     const shownModal = state.modal;
     if (preview.kind === 'unsupported') return;
     if (preview.kind === 'pdf') {
-      // A same-origin PDF endpoint works even when the active CSP does not allow blob: frames.
+      // A same-origin PDF endpoint works even when the active CSP does not
+      // allow blob: frames.
       const stage = query('#modal-root .document-preview-stage');
       if (!stage || state.modal !== shownModal) return;
       const frame = document.createElement('iframe');
@@ -51,7 +70,8 @@ export function createFilePreview({modal, state}) {
     try {
       const response = await fetch(url, {credentials: 'same-origin', cache: 'no-store'});
       if (!response.ok) {
-        if (response.status === 401) window.dispatchEvent(new Event('wcm:auth-required'));
+        if (response.status ===
+          401) window.dispatchEvent(new Event('wcm:auth-required'));
         let data = null;
         if (response.headers.get('content-type')?.includes('json')) {
           try {data = await response.json();} catch { /* A missing body is handled below. */}

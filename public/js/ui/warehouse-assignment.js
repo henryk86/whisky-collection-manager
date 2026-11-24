@@ -1,4 +1,7 @@
-/** Guided room -> furniture -> shelf assignment. The API still receives only shelfId. */
+/**
+ * Guided room -> furniture -> shelf assignment. The API still receives only
+ * shelfId.
+ */
 import {t} from '../i18n/index.js';
 import {escapeHtml} from './dom.js';
 import {imageUrl} from './format.js';
@@ -13,23 +16,31 @@ export function assignmentLocation(warehouse, shelfId) {
 /** Required total capacity after moving all selected bottles to this shelf.
  * Live bottles only: stale assignment references must not consume space. */
 export function shelfCapacityIncrease(warehouse, shelf, bottleIds) {
-  if (!shelf || shelf.capacity === null || shelf.capacity === undefined) return null;
+  if (!shelf || shelf.capacity === null || shelf.capacity ===
+    undefined) return null;
   const ids = Array.isArray(bottleIds) ? bottleIds : [bottleIds];
   const chosen = new Set(ids);
   const known = new Set((warehouse?.bottles || []).map(bottle => bottle.id));
-  const others = Object.entries(warehouse?.assignments || {}).filter(([id, target]) =>
-    target === shelf.id && known.has(id) && !chosen.has(id)).length;
+  const others = Object.entries(warehouse?.assignments || {})
+    .filter(([id, target]) =>
+      target === shelf.id && known.has(id) && !chosen.has(id)).length;
   const required = others + chosen.size;
-  return required > shelf.capacity ? {current: shelf.capacity, required, blocked: shelf.capacity === 0 || required > 10000} : null;
+  return required > shelf.capacity ? {
+    current: shelf.capacity,
+    required,
+    blocked: shelf.capacity === 0 || required > 10000,
+  } : null;
 }
 
 export function assignmentShelfInfo(warehouse, shelf, bottleId) {
   const ids = Array.isArray(bottleId) ? bottleId : [bottleId];
   const selected = new Set(ids);
   const occupied = count(warehouse, shelf.id);
-  const alreadyHere = ids.filter(id => warehouse.assignments?.[id] === shelf.id).length;
+  const alreadyHere = ids.filter(id => warehouse.assignments?.[id] ===
+    shelf.id).length;
   const freeNeeded = ids.length - alreadyHere;
-  const full = shelf.capacity !== null && shelf.capacity !== undefined && occupied + freeNeeded > shelf.capacity;
+  const full = shelf.capacity !== null && shelf.capacity !== undefined &&
+    occupied + freeNeeded > shelf.capacity;
   return {occupied, full, capacity: shelf.capacity};
 }
 
@@ -48,42 +59,65 @@ export async function approveShelfCapacityIncrease(warehouse, shelfId, bottleIds
 }
 
 function option(value, label, {selected = false, disabled = false} = {}) {
-  return `<option value="${safe(value)}"${selected ? ' selected' : ''}${disabled ? ' disabled' : ''}>${safe(label)}</option>`;
+  return `<option value="${safe(value)}"${selected ? ' selected' :
+    ''}${disabled ? ' disabled' : ''}>${safe(label)}</option>`;
 }
+
 function roomOptions(warehouse, selected) {
   return option('', t('warehouse.assignment.chooseRoom'))
-    + (warehouse.rooms || []).map(room => option(room.id, room.name, {selected: room.id === selected})).join('');
+    + (warehouse.rooms || []).map(room =>
+      option(room.id, room.name, {selected: room.id === selected})).join('');
 }
+
 function furnitureOptions(room, selected) {
   return option('', t('warehouse.assignment.chooseFurniture'))
-    + (room?.furniture || []).map(furniture => option(furniture.id, furniture.name, {selected: furniture.id === selected})).join('');
+    + (room?.furniture || []).map(furniture => option(
+      furniture.id,
+      furniture.name,
+      {selected: furniture.id === selected}
+    )).join('');
 }
+
 function shelfOptions(warehouse, furniture, bottleId, selected) {
   return option('', t('warehouse.assignment.chooseShelf'))
     + (furniture?.shelves || []).map(shelf => {
       const info = assignmentShelfInfo(warehouse, shelf, bottleId);
       const detail = shelf.capacity === null
         ? t('warehouse.assignment.occupiedUnlimited', {count: info.occupied})
-        : t('warehouse.assignment.occupiedLimited', {count: info.occupied, capacity: shelf.capacity});
-      return option(shelf.id, `${shelf.name} · ${detail}`, {selected: shelf.id === selected, disabled: shelf.capacity === 0});
+        : t(
+          'warehouse.assignment.occupiedLimited',
+          {count: info.occupied, capacity: shelf.capacity}
+        );
+      return option(
+        shelf.id,
+        `${shelf.name} · ${detail}`,
+        {selected: shelf.id === selected, disabled: shelf.capacity === 0}
+      );
     }).join('');
 }
+
 function occupancyMessage(warehouse, shelfId, bottleId) {
   const place = assignmentLocation(warehouse, shelfId);
   if (!place) return t('warehouse.assignment.selectHint');
   const info = assignmentShelfInfo(warehouse, place.shelf, bottleId);
   return place.shelf.capacity === null
     ? t('warehouse.assignment.occupiedUnlimited', {count: info.occupied})
-    : t('warehouse.assignment.occupiedLimited', {count: info.occupied, capacity: place.shelf.capacity});
+    : t(
+      'warehouse.assignment.occupiedLimited',
+      {count: info.occupied, capacity: place.shelf.capacity}
+    );
 }
 
-/** The same destination controls work for a single bottle and a checked group. */
+/**
+ * The same destination controls work for a single bottle and a checked group.
+ */
 export function renderWarehouseAssignment(warehouse, bottle) {
   const isBulk = Array.isArray(bottle);
   const bottles = isBulk ? bottle : [bottle];
   const ids = bottles.map(item => item.id);
   const initialShelf = isBulk ? null : warehouse.assignments?.[bottle.id];
-  const current = initialShelf ? assignmentLocation(warehouse, initialShelf) : null;
+  const current = initialShelf ?
+    assignmentLocation(warehouse, initialShelf) : null;
   const roomId = current?.room.id || '';
   const furnitureId = current?.furniture.id || '';
   const shelfId = current?.shelf.id || '';
@@ -94,13 +128,16 @@ export function renderWarehouseAssignment(warehouse, bottle) {
       <div class="warehouse-assignment-bottle">
         <div class="warehouse-assignment-photo">${photo}</div>
         <div class="warehouse-assignment-bottle-details"><span class="warehouse-assignment-eyebrow">${t('warehouse.assignment.bottleLabel')}</span>
-          <strong>${isBulk ? safe(t('warehouse.bottles.bulkSelected', {count: bottles.length})) : safe(bottleLabel(bottle))}</strong>
+          <strong>${isBulk ?
+      safe(t('warehouse.bottles.bulkSelected', {count: bottles.length})) :
+      safe(bottleLabel(bottle))}</strong>
           ${isBulk ? `<span class="warehouse-assignment-bulk-list">${safe(bottles.slice(0, 5).map(bottleLabel).join(' · '))}${bottles.length > 5 ? ' …' : ''}</span>` : ''}
         </div>
       </div>
       ${isBulk ? '' : `<div class="warehouse-assignment-current" aria-label="${safe(t('warehouse.assignment.currentLocation'))}">
         <span>${safe(t('warehouse.assignment.currentLocation'))}</span>
-        <strong>${safe(current?.label || t('warehouse.bottles.unassignedLabel'))}</strong>
+        <strong>${safe(current?.label ||
+        t('warehouse.bottles.unassignedLabel'))}</strong>
       </div>`}
       <div class="warehouse-assignment-editor">
         <fieldset class="warehouse-assignment-target"><legend>${safe(t('warehouse.assignment.newLocation'))}</legend>
@@ -119,7 +156,9 @@ export function renderWarehouseAssignment(warehouse, bottle) {
     </section>`;
 }
 
-/** Mount only on the assignment dialog; unrelated warehouse forms are untouched. */
+/**
+ * Mount only on the assignment dialog; unrelated warehouse forms are untouched.
+ */
 export function mountWarehouseAssignment(form, warehouse, bottleId) {
   if (!form) return;
   const room = form.querySelector('[data-assignment-room]');
@@ -128,21 +167,32 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
   const feedback = form.querySelector('.warehouse-assignment-feedback');
   const choices = form.querySelector('.warehouse-assignment-selectors');
   if (!room || !furniture || !shelf || !feedback || !choices) return;
-  const selectedRoom = () => (warehouse.rooms || []).find(entry => entry.id === room.value);
-  const selectedFurniture = () => selectedRoom()?.furniture.find(entry => entry.id === furniture.value);
+  const selectedRoom = () => (warehouse.rooms || []).find(entry =>
+    entry.id === room.value);
+
+  const selectedFurniture = () => selectedRoom()?.furniture.find(entry =>
+    entry.id === furniture.value);
+
   const mode = () => form.querySelector('[name="warehouseAssignmentMode"]:checked')?.value || 'shelf';
+
   const updateFeedback = () => {
     const id = mode() === 'none' ? null : shelf.value;
     const place = id ? assignmentLocation(warehouse, id) : null;
     if (!place) {
-      feedback.textContent = t(mode() === 'none' ? 'warehouse.assignment.withoutLocationHint' : 'warehouse.assignment.selectHint');
+      feedback.textContent = t(mode() === 'none' ?
+        'warehouse.assignment.withoutLocationHint' :
+        'warehouse.assignment.selectHint');
       return;
     }
     const need = shelfCapacityIncrease(warehouse, place.shelf, bottleId);
     feedback.textContent = need && !need.blocked
-      ? `${occupancyMessage(warehouse, id, bottleId)} · ${t('warehouse.assignment.increaseCapacityNotice', {required: need.required})}`
+      ? `${occupancyMessage(warehouse, id, bottleId)} · ${t(
+        'warehouse.assignment.increaseCapacityNotice',
+        {required: need.required}
+      )}`
       : occupancyMessage(warehouse, id, bottleId);
   };
+
   const updateMode = () => {
     const off = mode() === 'none';
     choices.classList.toggle('is-disabled', off);

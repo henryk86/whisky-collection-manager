@@ -1,17 +1,21 @@
 /** Small, dependency-free keyed DOM reconciliation for explicitly opted-in page regions.
- * Unlike string outerHTML comparisons, this preserves unchanged images, focus and
+ * Unlike string outerHTML comparisons, this preserves unchanged images, focus
+ * and
  * event-bound controls while updating only changed nodes. No direct event binding. */
 // Only photo *tiles* are keyed by photo ID. Their edit, delete and move
 // controls share the same data-photo-id but must never be reconciled as
 // interchangeable siblings (the old key discarded edit buttons on refresh).
 const keyFor = node => node.nodeType === 1
   ? (node.getAttribute('data-region') || node.id ||
-    (node.hasAttribute('data-photo-tile') ? `photo:${node.getAttribute('data-photo-id')}` : null))
+    (node.hasAttribute('data-photo-tile') ?
+      `photo:${node.getAttribute('data-photo-id')}` : null))
   : null;
+
 function compatible(a, b) {
   return a?.nodeType === b?.nodeType &&
     (a.nodeType !== 1 || (a.tagName === b.tagName && keyFor(a) === keyFor(b)));
 }
+
 function reconcileNode(current, next) {
   // Imperative widgets own their event and animation lifecycle. A subtree
   // marked as an island is always remounted; the rest remains keyed/morphed.
@@ -21,11 +25,13 @@ function reconcileNode(current, next) {
   }
   if (current.isEqualNode(next)) return;
   if (current.nodeType !== 1) {
-    if (current.nodeValue !== next.nodeValue) current.nodeValue = next.nodeValue;
+    if (current.nodeValue !== next.nodeValue) current.nodeValue =
+      next.nodeValue;
     return;
   }
   // Preserve image layout during a source transition until the new image loads.
-  const changingImage = current.tagName === 'IMG' && current.getAttribute('src') !== next.getAttribute('src');
+  const changingImage = current.tagName === 'IMG' &&
+    current.getAttribute('src') !== next.getAttribute('src');
   const container = changingImage ? current.parentElement : null;
   const priorHeight = container?.getBoundingClientRect().height || 0;
   const priorMinHeight = container?.style.minHeight || '';
@@ -38,13 +44,16 @@ function reconcileNode(current, next) {
     else {current.addEventListener('load', done, {once: true}); current.addEventListener('error', done, {once: true});}
   }
   // Do not reset text currently entered into a focused control.
-  if (current === document.activeElement && ['INPUT', 'TEXTAREA'].includes(current.tagName)) return;
+  if (current === document.activeElement && ['INPUT', 'TEXTAREA']
+    .includes(current.tagName)) return;
   reconcileChildren(current, next);
 }
+
 /** Reorder keyed items by stable IDs, and patch unkeyed nodes by position. */
 export function reconcileChildren(current, next) {
   const desired = [...next.childNodes];
-  const keyed = new Map([...current.childNodes].filter(node => keyFor(node)).map(node => [keyFor(node), node]));
+  const keyed = new Map([...current.childNodes].filter(node => keyFor(node))
+    .map(node => [keyFor(node), node]));
   let cursor = current.firstChild;
   for (const incoming of desired) {
     const key = keyFor(incoming);

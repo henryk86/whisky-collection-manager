@@ -14,11 +14,13 @@ if (args.includes('--help')) {
   process.exit(0);
 }
 const envPath = path.join(root, '.env');
-let env = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : 'PORT=3100\nHOST=0.0.0.0\nWHISKY_DATA_DIR=.\n';
+let env = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') :
+  'PORT=3100\nHOST=0.0.0.0\nWHISKY_DATA_DIR=.\n';
 // Keep the configured HTTPS port when certificates are regenerated.
 const portMatch = env.match(/^\s*(?:export\s+)?HTTPS_PORT\s*=\s*(.*?)\s*$/m);
 let portValue = portMatch ? portMatch[1].trim() : '3543';
-if ((portValue.startsWith('"') && portValue.endsWith('"')) || (portValue.startsWith("'") && portValue.endsWith("'"))) {
+if ((portValue.startsWith('"') && portValue.endsWith('"')) ||
+  (portValue.startsWith("'") && portValue.endsWith("'"))) {
   portValue = portValue.slice(1, -1);
 }
 else {
@@ -40,7 +42,8 @@ for (let i = 0; i < args.length; i++) {
   }
   else if (args[i] === '--hostname') {
     const name = args[++i];
-    if (!name || name.length > 253 || !/^(?=.{1,253}$)[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/i.test(name)) {
+    if (!name || name.length > 253 ||
+      !/^(?=.{1,253}$)[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/i.test(name)) {
       throw Error('Ungueltiger Hostname.');
     }
     names.push(name);
@@ -50,7 +53,8 @@ for (let i = 0; i < args.length; i++) {
   }
 }
 if (ips.length === 1) {
-  const found = Object.values(os.networkInterfaces()).flat().filter(x => x && !x.internal && x.family === 'IPv4').map(x => x.address);
+  const found = Object.values(os.networkInterfaces()).flat().filter(x =>
+    x && !x.internal && x.family === 'IPv4').map(x => x.address);
   if (found.length === 1) {
     ips.push(found[0]);
     console.log(`Erkannte LAN-IP: ${found[0]}`);
@@ -59,29 +63,54 @@ if (ips.length === 1) {
     console.warn('Mehrere oder keine LAN-IPs erkannt. Bitte --ip <Laptop-IP> angeben, damit das Zertifikat auf dem Smartphone funktioniert.');
   }
 }
-const sans = [...new Set([...names.map(x => 'DNS:' + x), ...ips.map(x => 'IP:' + x)])];
+const sans = [...new Set([...names.map(x => 'DNS:' + x), ...ips.map(x =>
+  'IP:' + x)])];
 fs.mkdirSync(certDir, {
-  recursive: true
+  recursive: true,
 });
 function command(binary, argv) {
   return spawnSync(binary, argv, {
-    stdio: 'inherit'
+    stdio: 'inherit',
   });
 }
 let generatedBy = 'openssl';
 const mkcert = spawnSync('mkcert', ['-version'], {
-  stdio: 'ignore'
+  stdio: 'ignore',
 });
 if (!mkcert.error && mkcert.status === 0) {
   generatedBy = 'mkcert';
-  // Requires mkcert -install on the development PC; deliberately not run automatically.
-  const result = command('mkcert', ['-cert-file', cert, '-key-file', key, ...names, ...ips]);
+  // Requires mkcert -install on the development PC; deliberately not run
+  // automatically.
+  const result = command(
+    'mkcert',
+    ['-cert-file', cert, '-key-file', key, ...names, ...ips]
+  );
   if (result.error || result.status !== 0) {
     throw Error('mkcert-Zertifikat konnte nicht erstellt werden.');
   }
 }
 else {
-  const result = command('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-sha256', '-nodes', '-days', '825', '-keyout', key, '-out', cert, '-subj', '/CN=Whisky Collection Manager', '-addext', `subjectAltName=${sans.join(',')}`]);
+  const result = command(
+    'openssl',
+    [
+      'req',
+      '-x509',
+      '-newkey',
+      'rsa:2048',
+      '-sha256',
+      '-nodes',
+      '-days',
+      '825',
+      '-keyout',
+      key,
+      '-out',
+      cert,
+      '-subj',
+      '/CN=Whisky Collection Manager',
+      '-addext',
+      `subjectAltName=${sans.join(',')}`,
+    ]
+  );
   if (result.error || result.status !== 0) {
     throw Error('OpenSSL fehlgeschlagen. Installiere OpenSSL oder mkcert.');
   }
@@ -94,9 +123,11 @@ catch {
 function setEnv(k, v) {
   const line = `${k}=${v}`;
   const re = new RegExp(`^\\s*(?:export\\s+)?${k}\\s*=.*$`, 'm');
-  env = re.test(env) ? env.replace(re, line) : env.trimEnd() + '\n' + line + '\n';
+  env = re.test(env) ? env.replace(re, line) : env.trimEnd() + '\n' +
+    line + '\n';
 }
-// Keep the TLS certificate's actual SANs in sync with the default Host allowlist.
+// Keep the TLS certificate's actual SANs in sync with the default Host
+// allowlist.
 setEnv('CERT_DNS_NAMES', [...new Set(names)].join(','));
 setEnv('CERT_IP_ADDRESSES', [...new Set(ips)].join(','));
 setEnv('HTTPS_ENABLED', 'true');

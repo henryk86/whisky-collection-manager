@@ -1,84 +1,127 @@
 import {escapeHtml} from './dom.js';
 
 const safe = value => escapeHtml(String(value ?? ''));
+
 const classes = (...items) => items.filter(Boolean).join(' ');
+
 const assertVariant = (value, allowed, kind) => {
   if (!allowed.includes(value)) throw new RangeError(`Invalid ${kind} variant`);
 };
+
 /**
- * Renders a visual surface without adding nested panel wrappers.
- * @param {!Object=} options Panel content and style variant.
+ * Renders a shared visual surface with its requested semantic tag.
+ *
+ * @param {!Object=} options Trusted panel content and styling.
  * @param {string=} options.content Trusted application-rendered HTML.
  * @param {string=} options.variant Standard, analytics or plain.
- * @param {string=} options.tag Div, section or article semantic element.
+ * @param {string=} options.tag Semantic element: div, section or article.
+ * @param {string=} options.className Additional escaped CSS classes.
  * @return {string} Panel markup.
- * @throws {RangeError} For an unsupported variant or heading level.
+ * @throws {RangeError} If tag or style variant is unsupported.
  */
 export function panel({content = '', variant = 'standard', tag = 'div', className = ''} = {}) {
   assertVariant(variant, ['standard', 'analytics', 'plain'], 'panel');
   assertVariant(tag, ['div', 'section', 'article'], 'panel tag');
-  const baseClass = variant === 'analytics' ? 'analytics-panel' : variant === 'plain' ? '' : 'panel';
+  const baseClass = variant === 'analytics' ? 'analytics-panel' :
+    variant === 'plain' ? '' : 'panel';
   return `<${tag} class="${safe(classes(baseClass, className))}" data-ds-panel="${variant}">${content}</${tag}>`;
 }
+
 /**
- * Renders a labeled value using the correct semantic element pair.
- * @param {!Object=} options Field content and presentation variant.
- * @param {string} options.label Escaped field caption.
- * @param {*=} options.value Field value (escaped unless valueHtml).
- * @param {boolean=} options.valueHtml Set only for trusted UI-generated markup.
+ * Renders a labeled detail value with an appropriate semantic element.
+ *
+ * @param {!Object=} options Detail field data and formatting.
+ * @param {string} options.label HTML-escaped label.
+ * @param {*=} options.value Field value, escaped by default.
+ * @param {boolean=} options.valueHtml Trust the value as application-generated
+ *     HTML.
  * @param {string=} options.variant Definition, fact, readonly, note or preview.
- * @return {string} Detail-field HTML.
- * @throws {RangeError} For an unsupported variant or heading level.
+ * @param {string=} options.className Additional outer CSS classes.
+ * @param {string=} options.labelClass Additional label CSS classes.
+ * @param {string=} options.valueClass Additional value CSS classes.
+ * @return {string} Detail-field markup.
+ * @throws {RangeError} If the field variant is unsupported.
  */
-export function detailField({label, value = '', valueHtml = false, variant = 'definition',
-  className = '', labelClass = '', valueClass = ''} = {}) {
-  assertVariant(variant, ['definition', 'fact', 'readonly', 'note', 'preview'], 'detail field');
+export function detailField({
+  label,
+  value = '',
+  valueHtml = false,
+  variant = 'definition',
+  className = '',
+  labelClass = '',
+  valueClass = ''
+} = {}) {
+  assertVariant(
+    variant,
+    ['definition', 'fact', 'readonly', 'note', 'preview'],
+    'detail field'
+  );
   const definition = variant === 'definition';
   const labelTag = definition ? 'dt' : 'span';
-  const valueTag = definition ? 'dd' : variant === 'readonly' ? 'strong' : variant === 'note' ? 'p' : 'div';
+  const valueTag = definition ? 'dd' : variant === 'readonly' ? 'strong' :
+    variant === 'note' ? 'p' : 'div';
   const valueContent = valueHtml ? String(value) : safe(value);
-  return `<div${className ? ` class="${safe(className)}"` : ''} data-ds-detail-field="${variant}">` +
-    `<${labelTag}${labelClass ? ` class="${safe(labelClass)}"` : ''}>${safe(label)}</${labelTag}>` +
-    `<${valueTag}${valueClass ? ` class="${safe(valueClass)}"` : ''}>${valueContent}</${valueTag}>` +
+  return `<div${className ? ` class="${safe(className)}"` :
+    ''} data-ds-detail-field="${variant}">` +
+    `<${labelTag}${labelClass ? ` class="${safe(labelClass)}"` :
+      ''}>${safe(label)}</${labelTag}>` +
+    `<${valueTag}${valueClass ? ` class="${safe(valueClass)}"` :
+      ''}>${valueContent}</${valueTag}>` +
     `</div>`;
 }
+
 /**
- * Groups detail fields in a responsive two- or three-column layout.
- * @param {string} content Trusted field markup.
+ * Groups detail fields in a responsive two- or three-column grid.
+ *
+ * @param {string} content Trusted application-generated field HTML.
  * @param {!Object=} options Grid layout and semantic wrapper.
- * @param {number=} options.columns Two or three columns.
+ * @param {number=} options.columns Two or three desktop columns.
  * @param {string=} options.tag Div or definition list (dl).
- * @return {string} Responsive detail-grid HTML.
- * @throws {RangeError} For an unsupported variant or heading level.
+ * @param {string=} options.className Additional grid CSS class.
+ * @return {string} Grid wrapper HTML.
+ * @throws {RangeError} If the columns or wrapper tag are unsupported.
  */
 export function detailGrid(content, {columns = 3, tag = 'div', className = ''} = {}) {
   assertVariant(columns, [2, 3], 'detail grid');
   assertVariant(tag, ['div', 'dl'], 'detail grid tag');
-  return `<${tag}${className ? ` class="${safe(className)}"` : ''} data-ds-detail-grid="${columns}">${content}</${tag}>`;
+  return `<${tag}${className ? ` class="${safe(className)}"` :
+    ''} data-ds-detail-grid="${columns}">${content}</${tag}>`;
 }
+
 /**
- * Distinguishes a missing optional value from an empty collection.
- * @param {!Object=} options Empty-state text, actions and variant.
- * @param {string=} options.title Escaped heading or short message.
+ * Renders a missing-data explanation without inventing values.
+ *
+ * @param {!Object=} options Message, trusted actions and style.
+ * @param {string=} options.title Escaped title.
  * @param {string=} options.description Escaped explanatory text.
- * @param {string=} options.actions Trusted UI-generated HTML.
+ * @param {string=} options.actions Trusted application-generated action HTML.
  * @param {string=} options.variant Collection, subtle or inline.
- * @return {string} Empty-state HTML.
- * @throws {RangeError} For an unsupported variant or heading level.
+ * @param {string=} options.className Additional CSS class.
+ * @return {string} Empty-state markup.
+ * @throws {RangeError} If the variant is unsupported.
  */
-export function emptyState({title = '', description = '', actions = '', variant = 'subtle', className = ''} = {}) {
+export function emptyState({
+  title = '',
+  description = '',
+  actions = '',
+  variant = 'subtle',
+  className = ''
+} = {}) {
   assertVariant(variant, ['collection', 'subtle', 'inline'], 'empty state');
   if (variant === 'inline') return `<p class="${safe(classes('analytics-empty', className))}" data-ds-empty-state="inline">${safe(description || title)}</p>`;
   if (variant === 'subtle') return `<p class="${safe(classes('hint', className))}" data-ds-empty-state="subtle">${safe(description || title)}</p>`;
   return `<div class="${safe(classes('empty-state', className))}" data-ds-empty-state="collection">` +
     `<strong>${safe(title)}</strong><p>${safe(description)}</p>${actions}</div>`;
 }
+
 /**
- * Renders a shared separator without adding content-specific borders.
- * @param {!Object=} options Orientation and optional class.
+ * Renders an accessible visual separator without view-specific borders.
+ *
+ * @param {!Object=} options Separator orientation and CSS class.
  * @param {string=} options.orientation Horizontal or vertical.
- * @return {string} Divider HTML.
- * @throws {RangeError} For an unsupported variant or heading level.
+ * @param {string=} options.className Additional separator CSS class.
+ * @return {string} HTML separator.
+ * @throws {RangeError} If the orientation is unsupported.
  */
 export function divider({orientation = 'horizontal', className = ''} = {}) {
   assertVariant(orientation, ['horizontal', 'vertical'], 'divider');
@@ -86,31 +129,38 @@ export function divider({orientation = 'horizontal', className = ''} = {}) {
     ? `<hr class="${safe(classes('divider', className))}" data-ds-divider="horizontal">`
     : `<span class="${safe(className)}" data-ds-divider="vertical" aria-hidden="true"></span>`;
 }
+
 /**
- * Groups trusted action elements, preserving delegated event handling.
- * @param {string} content Application-rendered action markup.
- * @param {!Object=} options Toolbar style and optional class.
+ * Groups trusted action markup while preserving delegated events.
+ *
+ * @param {string} content Trusted application-generated action HTML.
+ * @param {!Object=} options Toolbar style and extra class.
  * @param {string=} options.variant Inline, filters or end.
+ * @param {string=} options.className Additional CSS class.
  * @return {string} Toolbar HTML.
- * @throws {RangeError} For an unsupported variant or heading level.
+ * @throws {RangeError} If the toolbar variant is unsupported.
  */
 export function actionToolbar(content, {className = '', variant = 'inline'} = {}) {
   assertVariant(variant, ['inline', 'filters', 'end'], 'action toolbar');
   const baseClass = variant === 'filters' ? 'toolbar' : 'actions';
   return `<div class="${safe(classes(baseClass, className))}" data-ds-action-toolbar="${variant}">${content}</div>`;
 }
+
 /**
  * Wraps trusted document-entry markup in a list item.
- * @param {string} content Application-rendered document content.
- * @return {string} List item HTML.
+ *
+ * @param {string} content Trusted application-generated document HTML.
+ * @return {string} List-item HTML.
  */
 export function documentItem(content) {
   return `<li>${content}</li>`;
 }
+
 /**
- * Renders a shared document list from trusted item markup.
- * @param {!Array<string>} items HTML list items, not untrusted user input.
- * @return {string} List HTML.
+ * Renders the document list from trusted list-item HTML.
+ *
+ * @param {!Array<string>} items Complete, application-generated list items.
+ * @return {string} Document-list HTML.
  */
 export function documentList(items) {
   return `<ul class="document-list" data-ds-document-list>${items.join('')}</ul>`;

@@ -14,50 +14,86 @@ import {writeReadableZip, inspectReadableZip} from '../../shared/backup-zip.js';
 import {readBackupPassword} from '../../shared/backup-password.js';
 
 const ID = /^[0-9a-f]{8}-[0-9a-f-]{20,50}$/i;
-const LIMIT = 2 * 1024 * 1024 * 1024; // streamed to disk, not buffered in memory
-const CONTROL = process.env.BACKUP_CONTROL_DIR ? path.resolve(process.env.BACKUP_CONTROL_DIR) : null;
+const LIMIT = 2 * 1024 * 1024 *
+  1024; // streamed to disk, not buffered in memory
+const CONTROL = process.env.BACKUP_CONTROL_DIR ? path.resolve(process.env
+  .BACKUP_CONTROL_DIR) : null;
 const FOLDERS = ['data', 'images', 'documents'];
 function suppliedPassword(req) {
   try {return decodeURIComponent(req.headers['x-backup-zip-password'] || '');}
-  catch {throw fail('Ungültige Passwort-Zeichenkodierung', 400, "api.errors.invalidPasswordEncoding");}
+  catch {
+    throw fail(
+      'Ungültige Passwort-Zeichenkodierung',
+      400,
+      "api.errors.invalidPasswordEncoding"
+    );
+  }
 }
+
 function pathFor(id) {
-  if (!ID.test(id)) throw fail('Ungültige Wiederherstellungs-ID', 400, "api.errors.invalidRestoreID");
-  if (!CONTROL) throw fail('Backup-Verwaltung nicht eingerichtet', 503, "api.errors.backupManagementIsNotConfigured");
+  if (!ID.test(id)) throw fail(
+    'Ungültige Wiederherstellungs-ID',
+    400,
+    "api.errors.invalidRestoreID"
+  );
+  if (!CONTROL) throw fail(
+    'Backup-Verwaltung nicht eingerichtet',
+    503,
+    "api.errors.backupManagementIsNotConfigured"
+  );
   return path.join(CONTROL, 'imports', id);
 }
+
 function validatePreview(dir, {writeMigrated = false} = {}) {
   const filename = path.join(dir, 'data', 'collection.json');
   let migration;
   try {migration = migrateCollectionToCurrent(JSON.parse(fs.readFileSync(filename, 'utf8')));}
-  catch {throw fail('ZIP enthält keine gültige Whisky-Sammlung', 400, "api.errors.zipDoesNotContainAValidWhiskyCollection");}
+  catch {
+    throw fail(
+      'ZIP enthält keine gültige Whisky-Sammlung',
+      400,
+      "api.errors.zipDoesNotContainAValidWhiskyCollection"
+    );
+  }
   if (writeMigrated && migration.changed) {
     // Upgrade staged backup content, never the uploaded ZIP or live data.
-    fs.writeFileSync(filename, JSON.stringify(migration.collection, null, 2) + '\n');
+    fs.writeFileSync(
+      filename,
+      JSON.stringify(migration.collection, null, 2) + '\n'
+    );
   }
   const db = migration.collection;
   return {
     bottlings: db.bottlings.length,
     bottles: db.bottlings.reduce((sum, item) => sum + item.bottles.length, 0),
-    distilleries: db.distilleries.length
+    distilleries: db.distilleries.length,
   };
 }
+
 function removeOldImports() {
   const base = path.join(CONTROL, 'imports');
   try {
     for (const entry of fs.readdirSync(base, {withFileTypes: true})) {
       if (!entry.isDirectory() || !ID.test(entry.name)) continue;
       const folder = path.join(base, entry.name);
-      if (Date.now() - fs.statSync(folder).mtimeMs > 24 * 3600000) fs.rmSync(folder, {recursive: true, force: true});
+      if (Date.now() - fs.statSync(folder).mtimeMs > 24 *
+        3600000) fs.rmSync(folder, {recursive: true, force: true});
     }
   } catch { /* no old imports */}
 }
+
 export async function receiveZip(req) {
   authorizeAdmin(req);
-  if (!['application/zip', 'application/octet-stream'].includes((req.headers['content-type'] || '').split(';')[0].trim())) {
-    throw fail('Bitte eine ZIP-Datei auswählen', 415, "api.errors.pleaseSelectAZIPFile");
+  if (!['application/zip', 'application/octet-stream']
+    .includes((req.headers['content-type'] || '').split(';')[0].trim())) {
+    throw fail(
+      'Bitte eine ZIP-Datei auswählen',
+      415,
+      "api.errors.pleaseSelectAZIPFile"
+    );
   }
-  if (Number(req.headers['content-length'] || 0) > LIMIT) throw fail('ZIP-Upload ist zu groß', 413, "api.errors.zipUploadIsTooLarge");
+  if (Number(req.headers['content-length'] || 0) >
+    LIMIT) throw fail('ZIP-Upload ist zu groß', 413, "api.errors.zipUploadIsTooLarge");
   removeOldImports();
   const id = crypto.randomUUID();
   const dir = pathFor(id);
@@ -70,7 +106,8 @@ export async function receiveZip(req) {
       bytes += chunk.length;
       if (bytes > LIMIT) throw fail('ZIP-Upload ist zu groß', 413, "api.errors.zipUploadIsTooLarge");
       let written = 0;
-      while (written < chunk.length) written += fs.writeSync(fd, chunk, written, chunk.length - written);
+      while (written < chunk.length) written +=
+        fs.writeSync(fd, chunk, written, chunk.length - written);
     }
   } catch (error) {
     fs.closeSync(fd);
@@ -79,27 +116,54 @@ export async function receiveZip(req) {
   }
   fs.closeSync(fd);
   try {
-    const zip = inspectReadableZip(archive, path.join(dir, 'preview'), suppliedPassword(req));
+    const zip = inspectReadableZip(
+      archive,
+      path.join(dir, 'preview'),
+      suppliedPassword(req)
+    );
     const summary = validatePreview(path.join(dir, 'preview'));
     return {
       id, ...summary, files: zip.files, bytes: zip.bytes,
-      message: 'ZIP geprüft. Die laufende Sammlung wurde noch nicht verändert.'
+      message: 'ZIP geprüft. Die laufende Sammlung wurde noch nicht verändert.',
     };
   } catch (error) {
     fs.rmSync(dir, {recursive: true, force: true});
     if (error.status) throw error;
-    throw fail(`ZIP konnte nicht geprüft werden: ${error.message}`, 400, "api.errors.zipCouldNotBeVerified");
+    throw fail(
+      `ZIP konnte nicht geprüft werden: ${error.message}`,
+      400,
+      "api.errors.zipCouldNotBeVerified"
+    );
   }
 }
+
 export async function applyZip(req, id, input) {
   authorizeAdmin(req);
-  if (input?.acknowledge !== true) throw fail('Wiederherstellung muss ausdrücklich bestätigt werden', 400, "api.errors.restoreMustBeExplicitlyConfirmed");
+  if (input?.acknowledge !== true) throw fail(
+    'Wiederherstellung muss ausdrücklich bestätigt werden',
+    400,
+    "api.errors.restoreMustBeExplicitlyConfirmed"
+  );
   const dir = pathFor(id);
   const preview = path.join(dir, 'preview');
-  if (!fs.existsSync(path.join(dir, 'uploaded.zip'))) throw fail('Hochgeladene Sicherung nicht gefunden', 404, "api.errors.uploadedBackupNotFound");
+  if (!fs.existsSync(path.join(dir, 'uploaded.zip'))) throw fail(
+    'Hochgeladene Sicherung nicht gefunden',
+    404,
+    "api.errors.uploadedBackupNotFound"
+  );
   const archive = path.join(dir, 'uploaded.zip');
-  // Revalidate before the destructive operation, including the central ZIP CRCs.
-  try {inspectReadableZip(archive, null, input?.password || '');} catch (error) {throw fail(`ZIP-Prüfung fehlgeschlagen: ${error.message}`, 400, "api.errors.zipVerificationFailed");}
+  // Revalidate before the destructive operation, including the central ZIP
+  // CRCs.
+  try {
+    inspectReadableZip(archive, null, input?.password ||
+      '');
+  } catch (error) {
+    throw fail(
+      `ZIP-Prüfung fehlgeschlagen: ${error.message}`,
+      400,
+      "api.errors.zipVerificationFailed"
+    );
+  }
   const summary = validatePreview(preview);
   return runExclusive(() => {
     const fresh = path.join(ROOT, `.restore-new-${id}`);
@@ -137,8 +201,10 @@ export async function applyZip(req, id, input) {
       invalidateWarehouseCache();
       fs.rmSync(dir, {recursive: true, force: true});
       return {
-        applied: true, ...summary, safetyBackup: path.join('backups', safetyName),
-        message: 'Sicherung übernommen. Vorherige Sammlung als Sicherheits-ZIP gespeichert.'
+        applied: true,
+        ...summary,
+        safetyBackup: path.join('backups', safetyName),
+        message: 'Sicherung übernommen. Vorherige Sammlung als Sicherheits-ZIP gespeichert.',
       };
     } catch (error) {
       // Roll back even if only part of the three directories was swapped.
@@ -152,40 +218,69 @@ export async function applyZip(req, id, input) {
     } finally {
       if (finished) fs.rmSync(parked, {recursive: true, force: true});
       fs.rmSync(fresh, {recursive: true, force: true});
-      if (!finished && fs.existsSync(parked) && fs.readdirSync(parked).length === 0) fs.rmSync(parked, {recursive: true, force: true});
+      if (!finished && fs.existsSync(parked) && fs.readdirSync(parked)
+        .length === 0) fs.rmSync(parked, {recursive: true, force: true});
     }
   });
 }
 
-/** Preview a previously uploaded ZIP or a saved archive prepared by the worker. */
+/**
+ * Preview a previously uploaded ZIP or a saved archive prepared by the worker.
+ */
 export function previewZip(req, id) {
   authorizeAdmin(req);
   const dir = pathFor(id);
   const archive = path.join(dir, 'uploaded.zip');
   const preview = path.join(dir, 'preview');
-  if (!fs.existsSync(archive) || !fs.existsSync(preview)) throw fail('Sicherung nicht gefunden', 404, "api.errors.backupNotFound");
+  if (!fs.existsSync(archive) ||
+    !fs.existsSync(preview)) throw fail('Sicherung nicht gefunden', 404, "api.errors.backupNotFound");
   const result = inspectReadableZip(archive, null, suppliedPassword(req));
   return {id, ...result, ...validatePreview(preview)};
 }
 
-/** Explicit password check after a worker has staged a saved archive; no passwords in job JSON. */
+/**
+ * Explicit password check after a worker has staged a saved archive; no
+ * passwords in job JSON.
+ */
 export function unlockPreparedZip(req, id, input) {
   authorizeAdmin(req);
   const dir = pathFor(id);
   const archive = path.join(dir, 'uploaded.zip');
-  if (!fs.existsSync(archive)) throw fail('Vorbereitete Sicherung nicht gefunden', 404, "api.errors.preparedBackupNotFound");
+  if (!fs.existsSync(archive)) throw fail(
+    'Vorbereitete Sicherung nicht gefunden',
+    404,
+    "api.errors.preparedBackupNotFound"
+  );
   const preview = path.join(dir, 'preview');
   fs.rmSync(preview, {recursive: true, force: true});
   try {
     const zip = inspectReadableZip(archive, preview, input?.password || '');
     return {id, ...zip, ...validatePreview(preview)};
-  } catch (error) {throw fail(`ZIP konnte nicht geprüft werden: ${error.message}`, 400, "api.errors.zipCouldNotBeVerified");}
+  } catch (error) {
+    throw fail(
+      `ZIP konnte nicht geprüft werden: ${error.message}`,
+      400,
+      "api.errors.zipCouldNotBeVerified"
+    );
+  }
 }
-/** Allows an existing Restic snapshot, converted by the worker, to be saved as a portable ZIP. */
+
+/**
+ * Allows an existing Restic snapshot, converted by the worker, to be saved as a
+ * portable ZIP.
+ */
 export function downloadPreparedZip(req, id) {
   authorizeAdmin(req);
   const dir = pathFor(id);
   const filename = path.join(dir, 'uploaded.zip');
-  if (!fs.existsSync(filename) || !fs.lstatSync(filename).isFile()) throw fail('Vorbereitete Sicherung nicht gefunden', 404, "api.errors.preparedBackupNotFound");
-  return {path: filename, filename: 'whisky-backup-wiederherstellung.zip', type: 'application/zip'};
+  if (!fs.existsSync(filename) || !fs.lstatSync(filename).isFile()) throw fail(
+    'Vorbereitete Sicherung nicht gefunden',
+    404,
+    "api.errors.preparedBackupNotFound"
+  );
+  return {
+    path: filename,
+    filename: 'whisky-backup-wiederherstellung.zip',
+    type: 'application/zip',
+  };
 }

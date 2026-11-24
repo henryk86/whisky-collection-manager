@@ -10,13 +10,18 @@ export const WHISKY_COLORS = Object.freeze([
 
 const CUSTOM_PREFIX = 'custom:';
 const CUSTOM_HEX = /^#[0-9a-f]{6}$/i;
-const clamp = value => Math.max(0, Math.min(1, Number.isFinite(Number(value)) ? Number(value) : 0));
+const clamp = value => Math.max(
+  0,
+  Math.min(1, Number.isFinite(Number(value)) ? Number(value) : 0)
+);
 
 function hexToHsl(hex) {
   const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
-  const max = Math.max(r, g, b), min = Math.min(r, g, b), difference = max - min;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), difference =
+    max - min;
   const lightness = (max + min) / 2;
-  const saturation = difference === 0 ? 0 : difference / (1 - Math.abs(2 * lightness - 1));
+  const saturation = difference === 0 ? 0 : difference / (1 - Math.abs(2 *
+    lightness - 1));
   let hue = 0;
   if (difference !== 0) {
     if (max === r) hue = ((g - b) / difference) % 6;
@@ -27,12 +32,16 @@ function hexToHsl(hex) {
   return {hue, saturation, lightness};
 }
 
-/** Validate real HEX shades in the warm whisky range, including red and rose. */
+/**
+ * Validate real HEX shades in the warm whisky range, including red and rose.
+ */
 export function isAllowedWhiskyHex(hex) {
   if (typeof hex !== 'string' || !CUSTOM_HEX.test(hex)) return false;
   const {hue, saturation, lightness} = hexToHsl(hex);
-  // No green, blue, grey or neon-magenta. Pale straw, dark brown, red and rose remain possible.
-  return (hue >= 338 || hue <= 60) && saturation >= 0.20 && lightness >= 0.15 && lightness <= 0.94;
+  // No green, blue, grey or neon-magenta. Pale straw, dark brown, red and rose
+  // remain possible.
+  return (hue >= 338 || hue <= 60) && saturation >= 0.20 && lightness >=
+    0.15 && lightness <= 0.94;
 }
 
 function hslToHex(h, s, l) {
@@ -45,7 +54,10 @@ function hslToHex(h, s, l) {
   return `#${channel(0)}${channel(8)}${channel(4)}`;
 }
 
-/** Position in the constrained 2D picker -> actual 24-bit RGB colour, not a palette index. */
+/**
+ * Position in the constrained 2D picker -> actual 24-bit RGB colour, not a
+ * palette index.
+ */
 export function whiskyPickerHex(x, y) {
   const h = (340 + 78 * clamp(x)) % 360;
   const depth = clamp(y);
@@ -56,15 +68,21 @@ export function whiskyPickerHex(x, y) {
 export function whiskyPickerPosition(hex) {
   const {hue, lightness} = hexToHsl(hex);
   const unwrapped = hue < 338 ? hue + 360 : hue;
-  return {x: clamp((unwrapped - 340) / 78), y: clamp((0.89 - lightness) / 0.67)};
+  return {
+    x: clamp((unwrapped - 340) / 78), y: clamp((0.89 -
+      lightness) / 0.67),
+  };
 }
 
-/** Saved data: existing fixed colour keys or a validated custom:#rrggbb value. */
+/**
+ * Saved data: existing fixed colour keys or a validated custom:#rrggbb value.
+ */
 export function normalizeWhiskyColor(value) {
   if (value == null || value === '') return null;
   if (typeof value !== 'string') throw new Error('Ungültige Whiskyfarbe');
   if (WHISKY_COLORS.some(color => color.key === value)) return value;
-  if (value.startsWith(CUSTOM_PREFIX) && isAllowedWhiskyHex(value.slice(CUSTOM_PREFIX.length)))
+  if (value.startsWith(CUSTOM_PREFIX) &&
+    isAllowedWhiskyHex(value.slice(CUSTOM_PREFIX.length)))
     return `${CUSTOM_PREFIX}${value.slice(CUSTOM_PREFIX.length).toLowerCase()}`;
   throw new Error('Ungültige Whiskyfarbe');
 }

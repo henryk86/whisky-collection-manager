@@ -33,13 +33,14 @@ Für JavaScript gilt verbindlich der [Google JavaScript Style Guide](https://goo
 ```bash
 npm run format:js
 npm run format:check
+npm run check:line-width
 npm run check:jsdoc
 npm run check
 ```
 
-Neue und bearbeitete öffentliche Funktionen erhalten **saubere, typisierte JSDoc** für Bedeutung, Parameter, Rückgabewert und relevante Nebenwirkungen. Bei HTML-Renderern die Vertrauensgrenze zwischen escaped Benutzertext und vertrauenswürdigem Anwendungs-HTML benennen. Die CI verhindert undokumentierte **neue Exporte**; die bestehende, schrittweise abzubauende Altlast ist in `scripts/jsdoc-legacy-baseline.json` erfasst. Keine JSDoc-Kommentare, die lediglich den Funktionsnamen wiederholen.
+Neue und bearbeitete öffentliche Funktionen erhalten **saubere, typisierte JSDoc**: aussagekräftige Zusammenfassung, jeden Parameter mit Typ und korrektem Namen, `@return` bei tatsächlichem Ergebnis sowie zutreffende Ausnahmen und Nebenwirkungen. Funktionen und Methoden werden durch eine Leerzeile getrennt. JavaScript-Zeilen sollen 80 Zeichen nicht überschreiten (offizielle Ausnahmen beachten). Bei HTML-Renderern die Vertrauensgrenze zwischen escaped Benutzertext und vertrauenswürdigem Anwendungs-HTML benennen. Die CI verhindert neue **und geänderte** undokumentierte Exporte anhand eines unveränderlichen Signaturvergleichs. Für unveränderte Alt-Exporte sind die erlaubten Signaturen in `scripts/jsdoc-legacy-baseline.json` und `scripts/jsdoc-legacy-signatures.json` erfasst. Unveränderte lange Altzeilen sind in `scripts/style-width-legacy.json` erfasst; neue oder geänderte Verstöße werden abgewiesen. Keine JSDoc-Kommentare, die lediglich den Funktionsnamen wiederholen.
 
-Der bereits vorhandene TypeScript-Formatter wird nur zur **Formatierung** eingesetzt und verändert keine JavaScript-Semantik. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
+Der bereits vorhandene TypeScript-Formatter wird zusammen mit syntaxbewussten Umbruch- und Leerzeilenregeln nur zur **Formatierung** eingesetzt. HTML-Templates, RegExps und lange Literale dürfen nicht blind aufgeteilt werden. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
 
 ## Änderungen und Dokumentation
 

@@ -10,12 +10,14 @@ export function getThemePreference(storage) {
     return 'system';
   }
 }
+
 export function effectiveTheme(preference, systemDark = false) {
   if (preference === 'light' || preference === 'dark') {
     return preference;
   }
   return systemDark ? 'dark' : 'light';
 }
+
 export function nextTheme(active) {
   return active === 'dark' ? 'light' : 'dark';
 }

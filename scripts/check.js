@@ -1,20 +1,32 @@
-/** Dependency-free syntax and module-boundary checks for the whole repository. */
+/**
+ * Dependency-free syntax and module-boundary checks for the whole repository.
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 function files(directory) {
   return fs.readdirSync(directory, {
-    withFileTypes: true
+    withFileTypes: true,
   }).flatMap(entry => {
     const file = path.join(directory, entry.name);
-    return entry.isDirectory() ? files(file) : file.endsWith('.js') ? [path.resolve(file)] : [];
+    return entry.isDirectory() ? files(file) : file.endsWith('.js') ?
+      [path.resolve(file)] : [];
   });
 }
-const sources = ['public', 'server', 'worker', 'docker', 'scripts', 'extension', 'tests', 'shared'].filter(fs.existsSync).flatMap(files);
+const sources = [
+  'public',
+  'server',
+  'worker',
+  'docker',
+  'scripts',
+  'extension',
+  'tests',
+  'shared',
+].filter(fs.existsSync).flatMap(files);
 const graph = new Map();
 for (const file of sources) {
   const result = spawnSync(process.execPath, ['--check', file], {
-    encoding: 'utf8'
+    encoding: 'utf8',
   });
   if (result.status !== 0) {
     throw new Error(result.stderr || `Syntax check failed: ${file}`);
@@ -30,19 +42,22 @@ for (const file of sources) {
   }
   graph.set(file, imports);
 }
-// Dependency direction is enforced for all future refactors, not just this move.
+// Dependency direction is enforced for all future refactors, not just this
+// move.
 for (const [file, imports] of graph) {
   const relative = path.relative('.', file).replaceAll(path.sep, '/');
   if (relative.startsWith('server/') || relative.startsWith('worker/')) {
     for (const dependency of imports) {
-      if (path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('public/')) {
+      if (path.relative('.', dependency).replaceAll(path.sep, '/')
+        .startsWith('public/')) {
         throw new Error(`Backend must not import public/ assets: ${relative} -> ${dependency}`);
       }
     }
   }
   if (relative.startsWith('shared/')) {
     for (const dependency of imports) {
-      if (path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('public/')) {
+      if (path.relative('.', dependency).replaceAll(path.sep, '/')
+        .startsWith('public/')) {
         throw new Error(`Shared module imports frontend code: ${relative} -> ${dependency}`);
       }
     }
@@ -55,7 +70,8 @@ for (const [file, imports] of graph) {
 const visited = new Set();
 function visit(file, stack = []) {
   if (stack.includes(file)) {
-    throw new Error(`Circular imports: ${[...stack, file].map(name => path.relative('.', name)).join(' -> ')}`);
+    throw new Error(`Circular imports: ${[...stack, file].map(name =>
+      path.relative('.', name)).join(' -> ')}`);
   }
   if (visited.has(file)) {
     return;
@@ -87,9 +103,11 @@ function verifyBrowserImports(file) {
   } else if (!relative.startsWith('public/')) {
     throw new Error(`Frontend imports an inaccessible module: ${relative}`);
   }
-  for (const dependency of graph.get(file) || []) verifyBrowserImports(dependency);
+  for (const dependency of graph.get(file) ||
+    []) verifyBrowserImports(dependency);
 }
-for (const file of sources.filter(name => path.relative('.', name).replaceAll(path.sep, '/').startsWith('public/'))) {
+for (const file of sources.filter(name => path.relative('.', name)
+  .replaceAll(path.sep, '/').startsWith('public/'))) {
   verifyBrowserImports(file);
 }
 console.log(`${browserShared.size} frontend shared modules: HTTP allowlist OK.`);
@@ -97,7 +115,8 @@ console.log(`${browserShared.size} frontend shared modules: HTTP allowlist OK.`)
 // Validate local assets referenced by browser tests before running Chromium.
 // In particular, an import refactor must rename the fixture on disk as well.
 const fixtureReferences = new Set();
-for (const file of sources.filter(file => file.includes(`${path.sep}tests${path.sep}`))) {
+for (const file of sources.filter(file =>
+  file.includes(`${path.sep}tests${path.sep}`))) {
   const source = fs.readFileSync(file, 'utf8');
   for (const match of source.matchAll(/new URL\(\s*['"](\.\.\/fixtures\/[^'"]+)['"]\s*,\s*import\.meta\.url\s*\)/g)) {
     const fixture = path.resolve(path.dirname(file), match[1]);
@@ -116,9 +135,14 @@ const allowedViewListeners = new Map([
   ['warehouse.js', 12],       // SVG pointer/keyboard interactions and transient dialogs.
   ['warehouse-room-transfer.js', 9], // Modal-local import/export controls.
 ]);
-for (const file of sources.filter(name => name.includes(`${path.sep}public${path.sep}js${path.sep}views${path.sep}`))) {
-  const view = path.relative(path.resolve('public/js/views'), file).replaceAll(path.sep, '/');
-  const listenerCount = (fs.readFileSync(file, 'utf8').match(/\.addEventListener\s*\(/g) || []).length;
+for (const file of sources.filter(name =>
+  name.includes(`${path.sep}public${path.sep}js${path.sep}views${path.sep}`))) {
+  const view = path.relative(path.resolve('public/js/views'), file)
+    .replaceAll(path.sep,
+      '/'
+    );
+  const listenerCount = (fs.readFileSync(file, 'utf8')
+    .match(/\.addEventListener\s*\(/g) || []).length;
   const allowedCount = allowedViewListeners.get(view) ?? 0;
   if (listenerCount !== allowedCount) {
     throw new Error(`View-Event-Lifecycle: ${view} has ${listenerCount} direct listeners (approved: ${allowedCount}). Use delegated events.js or review the explicit exception.`);
@@ -127,7 +151,8 @@ for (const file of sources.filter(name => name.includes(`${path.sep}public${path
 
 // Architectural rule: user confirmation must be an application modal, not a
 // native prompt that bypasses our accessibility and nested-dialog lifecycle.
-for (const file of sources.filter(name => name.includes(`${path.sep}public${path.sep}`))) {
+for (const file of sources.filter(name =>
+  name.includes(`${path.sep}public${path.sep}`))) {
   const source = fs.readFileSync(file, 'utf8');
   const relative = path.relative('.', file).replaceAll(path.sep, '/');
   // The modal controller intentionally exports its own `confirm()` method.
@@ -143,7 +168,8 @@ for (const file of sources.filter(name => name.includes(`${path.sep}public${path
 console.log(`${sources.length} JavaScript files: syntax/imports OK, no circular imports.`);
 
 const i18nCheck = spawnSync(process.execPath, ['scripts/check-i18n.js'], {encoding: 'utf8'});
-if (i18nCheck.status !== 0) throw new Error(i18nCheck.stderr || i18nCheck.stdout);
+if (i18nCheck.status !== 0) throw new Error(i18nCheck.stderr ||
+  i18nCheck.stdout);
 process.stdout.write(i18nCheck.stdout);
 
 // N-4: all server-side error identities must exist in both UI catalogs and
@@ -160,15 +186,17 @@ for (const [file, imports] of graph) {
 }
 for (const code of apiCodes) {
   if (!Object.hasOwn(deMessages, code) || !Object.hasOwn(enMessages, code) ||
-    !Object.hasOwn(apiErrorFallbacks, code) || enMessages[code] !== apiErrorFallbacks[code]) {
+    !Object.hasOwn(apiErrorFallbacks, code) || enMessages[code] !==
+    apiErrorFallbacks[code]) {
     throw new Error(`Missing or inconsistent API error translation: ${code}`);
   }
 }
 console.log(`${apiCodes.size} server API error codes: German/English/fallback catalog OK.`);
 // N-7: structured backup worker diagnostics must be present in both languages.
 const backupCodes = new Set();
-for (const file of sources.filter(name => ['worker/', 'shared/backup-job-errors.js'].some(prefix =>
-  path.relative('.', name).replaceAll(path.sep, '/').startsWith(prefix)))) {
+for (const file of sources.filter(name =>
+  ['worker/', 'shared/backup-job-errors.js'].some(prefix =>
+    path.relative('.', name).replaceAll(path.sep, '/').startsWith(prefix)))) {
   const content = fs.readFileSync(file, 'utf8');
   for (const [, code] of content.matchAll(/['"](backup\.errors\.[a-zA-Z0-9]+)['"]/g)) backupCodes.add(code);
 }
@@ -177,10 +205,12 @@ for (const code of backupCodes) {
     throw new Error(`Missing backup worker error translation: ${code}`);
   }
 }
-const {apiErrorFieldLabels} = await import('../shared/api-error-field-labels.js');
+const {apiErrorFieldLabels} =
+  await import('../shared/api-error-field-labels.js');
 for (const field of Object.keys(apiErrorFieldLabels)) {
   const key = `api.fields.${field}`;
-  if (!Object.hasOwn(deMessages, key) || !Object.hasOwn(enMessages, key) || enMessages[key] !== apiErrorFieldLabels[field]) {
+  if (!Object.hasOwn(deMessages, key) || !Object.hasOwn(enMessages, key) ||
+    enMessages[key] !== apiErrorFieldLabels[field]) {
     throw new Error(`Missing or inconsistent API field name: ${key}`);
   }
 }
@@ -191,10 +221,12 @@ const docCheck = spawnSync(process.execPath, ['scripts/check-docs.js'], {encodin
 if (docCheck.status !== 0) throw new Error(docCheck.stderr || docCheck.stdout);
 process.stdout.write(docCheck.stdout);
 
-// B-5: Application-source-content tests are forbidden in *all* unit and integration
+// B-5: Application-source-content tests are forbidden in *all* unit and
+// integration
 // suites. Test observable output/behaviour instead; configuration/security
 // contracts belong in the dedicated deployment checker invoked below.
-for (const file of sources.filter(name => name.includes(`${path.sep}tests${path.sep}`))) {
+for (const file of sources.filter(name =>
+  name.includes(`${path.sep}tests${path.sep}`))) {
   if (!/(?:unit|integration)/.test(path.relative('tests', file))) continue;
   const relative = path.relative('.', file).replaceAll(path.sep, '/');
   const source = fs.readFileSync(file, 'utf8');
@@ -204,16 +236,22 @@ for (const file of sources.filter(name => name.includes(`${path.sep}tests${path.
     throw new Error(`B-5: Source-code text test forbidden in ${relative}. Use behavioural tests.`);
   }
 }
-const deployCheck = spawnSync(process.execPath, ['scripts/check-deployment-config.js'], {encoding: 'utf8'});
-if (deployCheck.status !== 0) throw new Error(deployCheck.stderr || deployCheck.stdout);
+const deployCheck = spawnSync(
+  process.execPath,
+  ['scripts/check-deployment-config.js'],
+  {encoding: 'utf8'}
+);
+if (deployCheck.status !== 0) throw new Error(deployCheck.stderr ||
+  deployCheck.stdout);
 process.stdout.write(deployCheck.stdout);
 console.log('B-5: No application-source-text unit/integration assertions.');
 
 // Repository-wide Google JavaScript formatting and public API JSDoc contracts.
 // Both are checked in CI via npm run check; no automatic formatting in CI.
-for (const script of ['format-js.js', 'check-jsdoc.js']) {
+for (const script of ['format-js.js', 'check-line-width.js',
+  'check-jsdoc.js']) {
   const validation = spawnSync(process.execPath, [`scripts/${script}`], {
-    encoding: 'utf8'
+    encoding: 'utf8',
   });
   if (validation.status !== 0) {
     throw new Error(validation.stderr || validation.stdout ||

@@ -26,7 +26,8 @@
     "visual:update": "node scripts/designsystem-visual.js --update",
     "format:js": "node scripts/format-js.js --write",
     "format:check": "node scripts/format-js.js",
-    "check:jsdoc": "node scripts/check-jsdoc.js"
+    "check:jsdoc": "node scripts/check-jsdoc.js",
+    "check:line-width": "node scripts/check-line-width.js"
   },
   "engines": {
     "node": ">=20"

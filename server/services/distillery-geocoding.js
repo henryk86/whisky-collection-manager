@@ -15,13 +15,21 @@ const DEFAULT_URL = 'https://nominatim.openstreetmap.org/search';
 export async function findDistilleryLocations(input, {now = Date.now, fetchImpl = fetch} = {}) {
   const name = typeof input?.name === 'string' ? input.name.trim() : '';
   if (name.length < 2 || name.length > 150 || /[\x00-\x1f]/.test(name)) {
-    throw fail('Bitte einen gültigen Destillerienamen eingeben', 400, "api.errors.pleaseEnterAValidDistilleryName");
+    throw fail(
+      'Bitte einen gültigen Destillerienamen eingeben',
+      400,
+      "api.errors.pleaseEnterAValidDistilleryName"
+    );
   }
   const key = name.toLocaleLowerCase('de');
   const cached = cache.get(key);
   if (cached && now() - cached.at < CACHE_MS) return cached.matches;
   if (now() - lastLookup < MIN_INTERVAL_MS) {
-    throw fail('Bitte vor der nächsten Standortsuche kurz warten', 429, "api.errors.pleaseWaitBeforeSearchingForALocationAgain");
+    throw fail(
+      'Bitte vor der nächsten Standortsuche kurz warten',
+      429,
+      "api.errors.pleaseWaitBeforeSearchingForALocationAgain"
+    );
   }
   lastLookup = now();
   const endpoint = process.env.OSM_GEOCODING_URL || DEFAULT_URL;
@@ -34,7 +42,11 @@ export async function findDistilleryLocations(input, {now = Date.now, fetchImpl 
     url.searchParams.set('limit', '5');
     url.searchParams.set('addressdetails', '0');
   } catch {
-    throw fail('Ungültiger OSM-Geocoding-Endpunkt', 503, "api.errors.invalidOSMGeocodingEndpoint");
+    throw fail(
+      'Ungültiger OSM-Geocoding-Endpunkt',
+      503,
+      "api.errors.invalidOSMGeocodingEndpoint"
+    );
   }
   let raw;
   try {
@@ -49,13 +61,22 @@ export async function findDistilleryLocations(input, {now = Date.now, fetchImpl 
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     raw = await response.json();
   } catch {
-    throw fail('Die OpenStreetMap-Standortsuche ist derzeit nicht erreichbar. Koordinaten können manuell eingetragen werden.', 503, "api.errors.openstreetmapLocationSearchIsCurrentlyUnavailableYouCanEnterCoordinatesManually");
+    throw fail(
+      'Die OpenStreetMap-Standortsuche ist derzeit nicht erreichbar. Koordinaten können manuell eingetragen werden.',
+      503,
+      "api.errors.openstreetmapLocationSearchIsCurrentlyUnavailableYouCanEnterCoordinatesManually"
+    );
   }
-  if (!Array.isArray(raw)) throw fail('Ungültige Antwort der Standortsuche', 503, "api.errors.invalidResponseFromLocationSearch");
+  if (!Array.isArray(raw)) throw fail(
+    'Ungültige Antwort der Standortsuche',
+    503,
+    "api.errors.invalidResponseFromLocationSearch"
+  );
   const matches = raw.slice(0, 5).map(item => ({
     name: String(item.display_name || '').slice(0, 250),
     latitude: Number(item.lat), longitude: Number(item.lon),
-  })).filter(item => item.name && Number.isFinite(item.latitude) && Math.abs(item.latitude) <= 90 &&
+  })).filter(item => item.name && Number.isFinite(item.latitude) &&
+    Math.abs(item.latitude) <= 90 &&
     Number.isFinite(item.longitude) && Math.abs(item.longitude) <= 180);
   cache.set(key, {at: now(), matches});
   if (cache.size > 500) cache.delete(cache.keys().next().value);

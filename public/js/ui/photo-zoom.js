@@ -1,12 +1,17 @@
 /** Display-only image magnification: never changes the stored picture. */
 export const PHOTO_ZOOM_MIN = 1;
 export const PHOTO_ZOOM_MAX = 6;
-export const clampPhotoZoom = zoom => Math.max(PHOTO_ZOOM_MIN, Math.min(PHOTO_ZOOM_MAX, zoom));
+export const clampPhotoZoom = zoom =>
+  Math.max(PHOTO_ZOOM_MIN, Math.min(PHOTO_ZOOM_MAX, zoom));
 
 export function constrainPhotoPan(view, stage, image) {
   const maxX = Math.max(0, (image.width * view.zoom - stage.width) / 2);
   const maxY = Math.max(0, (image.height * view.zoom - stage.height) / 2);
-  return {...view, x: Math.max(-maxX, Math.min(maxX, view.x)), y: Math.max(-maxY, Math.min(maxY, view.y))};
+  return {
+    ...view,
+    x: Math.max(-maxX, Math.min(maxX, view.x)),
+    y: Math.max(-maxY, Math.min(maxY, view.y)),
+  };
 }
 
 export function zoomPhotoAt(view, requestedZoom, point, stage, image) {
@@ -15,7 +20,8 @@ export function zoomPhotoAt(view, requestedZoom, point, stage, image) {
   return constrainPhotoPan({
     zoom,
     x: point.x - stage.width / 2 - (point.x - stage.width / 2 - view.x) * ratio,
-    y: point.y - stage.height / 2 - (point.y - stage.height / 2 - view.y) * ratio,
+    y: point.y - stage.height / 2 - (point.y - stage.height / 2 -
+      view.y) * ratio,
   }, stage, image);
 }
 
@@ -32,11 +38,13 @@ export function createPhotoZoom() {
       image: {width: image?.offsetWidth || 1, height: image?.offsetHeight || 1},
     };
   }
+
   function render() {
     if (!stage?.isConnected || !image) return;
     const {stage: area, image: picture} = dimensions();
     view = constrainPhotoPan(view, area, picture);
-    image.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
+    image.style.transform =
+      `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
     stage.classList.toggle('is-zoomed', view.zoom > PHOTO_ZOOM_MIN);
     const controls = stage.closest('.photo-lightbox')?.querySelector('.photo-lightbox-zoom');
     if (!controls) return;
@@ -49,28 +57,40 @@ export function createPhotoZoom() {
     if (plus) plus.disabled = view.zoom >= PHOTO_ZOOM_MAX;
     if (reset) reset.disabled = view.zoom <= PHOTO_ZOOM_MIN;
   }
+
   function pointOf(event) {
     const rect = stage.getBoundingClientRect();
     return {x: event.clientX - rect.left, y: event.clientY - rect.top};
   }
+
   function zoomTo(next, point) {
     if (!stage?.isConnected || !image) return;
     const {stage: area, image: picture} = dimensions();
-    view = zoomPhotoAt(view, next, point || {x: area.width / 2, y: area.height / 2}, area, picture);
+    view = zoomPhotoAt(
+      view,
+      next,
+      point || {x: area.width / 2, y: area.height / 2},
+      area,
+      picture
+    );
     render();
   }
+
   function zoom(direction) {
     if (direction === 0) zoomTo(1);
     else zoomTo(view.zoom * direction);
   }
+
   function reset() {
     view = {zoom: 1, x: 0, y: 0};
     pointers.clear();
     lastPinchDistance = null;
     render();
   }
+
   function attach() {
-    stage = typeof document === 'undefined' ? null : document.querySelector('.photo-lightbox-stage');
+    stage = typeof document === 'undefined' ? null :
+      document.querySelector('.photo-lightbox-stage');
     image = stage?.querySelector('.photo-lightbox-image') || null;
     if (!stage || !image) return;
     reset();
@@ -101,7 +121,15 @@ export function createPhotoZoom() {
         lastPinchDistance = Math.max(distance, 1);
       } else if (view.zoom > 1) {
         const {stage: area, image: picture} = dimensions();
-        view = constrainPhotoPan({...view, x: view.x + event.clientX - previous.x, y: view.y + event.clientY - previous.y}, area, picture);
+        view = constrainPhotoPan(
+          {
+            ...view,
+            x: view.x + event.clientX - previous.x,
+            y: view.y + event.clientY - previous.y,
+          },
+          area,
+          picture
+        );
         render();
       }
     });

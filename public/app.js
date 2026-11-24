@@ -1,5 +1,8 @@
 import {t} from './js/i18n/index.js';
-/** Composition root: create feature controllers and connect them, then load the collection. */
+/**
+ * Composition root: create feature controllers and connect them, then load the
+ * collection.
+ */
 import {request, requestCachedJson} from './js/api.js';
 import {initializeLanguage} from './js/i18n/index.js';
 import {createState} from './js/state.js';
@@ -45,57 +48,86 @@ const theme = createThemeController();
 let scanner;
 let filePreview;
 const modal = createModal({
-  state, onClose: () => {scanner?.stopScan(); filePreview?.close();}
+  state, onClose: () => {scanner?.stopScan(); filePreview?.close();},
 });
 filePreview = createFilePreview({modal, state});
 const photoViewer = createPhotoViewer({state, showModal: modal.showModal});
 const photoEditor = createPhotoEditor({state, showModal: modal.showModal, closeModal: modal.closeModal, action});
 const navigation = createNavigation({
-  state, render, closeModal: modal.closeModal
+  state, render, closeModal: modal.closeModal,
 });
 const {navigate} = navigation;
 const shell = createShell({
-  root, state, applyTheme: theme.applyTheme, renderModal: modal.renderModal
+  root, state, applyTheme: theme.applyTheme, renderModal: modal.renderModal,
 });
 const home = createHomeView({
-  state, selectors, shell, navigate, refresh, showModal: modal.showModal, closeModal: modal.closeModal, confirm: modal.confirm
+  state,
+  selectors,
+  shell,
+  navigate,
+  refresh,
+  showModal: modal.showModal,
+  closeModal: modal.closeModal,
+  confirm: modal.confirm,
 });
 const detail = createDetailView({
-  state, selectors, shell, navigate, action
+  state, selectors, shell, navigate, action,
 });
-const tastingsView = createTastingsView({state, selectors, shell, navigate, refresh, showModal: modal.showModal, closeModal: modal.closeModal, confirm: modal.confirm});
-const auth = createAuthController({root, state, render, refresh, applyTheme: theme.applyTheme, showModal: modal.showModal, closeModal: modal.closeModal});
+const tastingsView = createTastingsView({
+  state,
+  selectors,
+  shell,
+  navigate,
+  refresh,
+  showModal: modal.showModal,
+  closeModal: modal.closeModal,
+  confirm: modal.confirm,
+});
+const auth = createAuthController({
+  root,
+  state,
+  render,
+  refresh,
+  applyTheme: theme.applyTheme,
+  showModal: modal.showModal,
+  closeModal: modal.closeModal,
+});
 const settingsView = createSettingsView(state, auth);
 const bottlingForm = createBottlingForm({
-  state, selectors
+  state, selectors,
 });
 const bottleForm = createBottleForm({
-  state, selectors
+  state, selectors,
 });
 let externalImport;
 const editors = createEditors({
   state, selectors, bottlingForm, bottleForm, ...modal, navigate, action,
   getPendingImageToken: () => externalImport?.getPendingImageToken(),
-  markImageAttached: () => externalImport?.markImageAttached()
+  markImageAttached: () => externalImport?.markImageAttached(),
 });
 const backup = createBackupController({state, render, showModal: modal.showModal, closeModal: modal.closeModal});
 const settings = createSettingsController({
   state, action, navigate, ...modal,
   onDistilleryLocationChanged: id => {
     if (state.page === 'map') mapView.centerOnUpdatedLocation(id);
-  }
+  },
 });
 const mapView = createMapView({state, shell, navigate, settings});
 const analyticsView = createAnalyticsView({state, shell});
 const warehouseView = createWarehouseView({state, shell, navigate, modal, refresh});
 const resolveCode = createCodeResolver({
-  state, navigate, toast, ...modal
+  state, navigate, toast, ...modal,
 });
 scanner = createScanner({
-  state, showModal: modal.showModal, resolveCode
+  state, showModal: modal.showModal, resolveCode,
 });
 externalImport = createWhiskybase({
-  state, navigate, showModal: modal.showModal, closeModal: modal.closeModal, action, ...editors
+  state,
+  navigate,
+  showModal: modal.showModal,
+  closeModal: modal.closeModal,
+  action,
+  ...editors,
 });
 function render() {
   if (!state.collection) {
@@ -108,8 +140,10 @@ function render() {
   if (state.page === 'warehouse') return warehouseView.render();
   if (state.page === 'tastings-home') return tastingsView.home();
   if (state.page === 'tasting-flight') return tastingsView.flight();
-  if (['tastings', 'external-tastings'].includes(state.page)) return tastingsView.list();
-  if (['tasting', 'external-tasting'].includes(state.page)) return tastingsView.editor();
+  if (['tastings', 'external-tastings']
+    .includes(state.page)) return tastingsView.list();
+  if (['tasting', 'external-tasting']
+    .includes(state.page)) return tastingsView.editor();
   if (state.page === 'detail') {
     return detail();
   }
@@ -118,25 +152,53 @@ function render() {
   }
   home();
 }
+
 async function refresh(scope = 'all') {
   const [_, meta] = await Promise.all([
     loadResources(state, requestCachedJson, scope),
-    state.version ? Promise.resolve({version: state.version}) : request('/api/version').catch(() => ({version: ''}))
+    state.version ? Promise.resolve({version: state.version}) :
+      request('/api/version').catch(() => ({version: ''})),
   ]);
   state.version = meta.version;
   if (state.page === 'map') mapView.refreshData();
   else render();
 }
+
 async function action(task, {scope = 'all'} = {}) {
-  return runAction(task, () => refresh(scope), error => toast(error.message, true), () => {
-    // Action callers may show a success toast immediately afterward. Display
-    // the refresh warning after that synchronous completion, not before it.
-    setTimeout(() => toast(t('ui.errors.savedButRefreshFailed'), true), 0);
-  });
+  return runAction(
+    task,
+    () => refresh(scope),
+    error => toast(error.message, true),
+    () => {
+      // Action callers may show a success toast immediately afterward. Display
+      // the refresh warning after that synchronous completion, not before it.
+      setTimeout(() => toast(t('ui.errors.savedButRefreshFailed'), true), 0);
+    }
+  );
 }
 navigation.listen();
 bindEvents(root, {
-  state, render, action, navigate, editors, settings, backup, scanner, externalImport, modal, photoViewer, photoEditor, filePreview, theme, resolveCode, warehouseView, detail, tastingsView, home, mapView, auth
+  state,
+  render,
+  action,
+  navigate,
+  editors,
+  settings,
+  backup,
+  scanner,
+  externalImport,
+  modal,
+  photoViewer,
+  photoEditor,
+  filePreview,
+  theme,
+  resolveCode,
+  warehouseView,
+  detail,
+  tastingsView,
+  home,
+  mapView,
+  auth,
 });
 // The extension can send a second import into an already open manager tab.
 // A fragment-only navigation triggers hashchange, not a page reload.
@@ -144,13 +206,17 @@ window.addEventListener('hashchange', () => {
   if (state.collection) externalImport.importFromExtension();
 });
 window.addEventListener('wcm:auth-required', () => {
-  auth.init().then(allowed => {if (!allowed) state.collection = null;}).catch(() => {});
+  auth.init().then(allowed => {if (!allowed) state.collection = null;})
+    .catch(() => {});
 });
-auth.init().then(allowed => allowed ? refresh().then(externalImport.importFromExtension) : null).catch(error => {
-  root.innerHTML = `<main>
+auth.init().then(allowed => allowed ? refresh()
+  .then(externalImport.importFromExtension) : null).catch(error => {
+    root.innerHTML = `<main>
     <h2>${t("ui.errors.serverConnectionFailed")}</h2>
     <p>${escapeHtml(error.message)}</p>
     <button class="btn" id="retry-connection">${t("ui.errors.retry")}</button>
     </main>`;
-  document.querySelector('#retry-connection').addEventListener('click', () => location.reload());
-});
+    document.querySelector('#retry-connection').addEventListener('click',
+      () => location.reload()
+    );
+  });

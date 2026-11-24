@@ -1,14 +1,17 @@
 # Teststatus - Whisky Collection Manager v1.12.1
 
-**Stand:** 2026-11-23. Automatischer Release-Snapshot aus Merge 21cd21651f8b (v1.12.0).
+**Stand:** 24. November 2026. Entwicklungsstand; keine Produktionsfreigabe. Die CI des jeweiligen Pull Requests ist für die Abnahme maßgeblich.
 
-## Pruefungen
+| Prüfung | Ergebnis auf diesem Quellstand |
+|---|---|
+| `npm run check` | **Bestanden**: Syntax, Imports, Dokumentation, Deployment, JavaScript-Formatierung, Zeilenlängen und JSDoc |
+| Unit- und Integrationstests (getrennte Läufe) | **545/545 und 174/174 bestanden**; der einzelne `npm test`-Gesamtlauf wurde durch ein Ausführungslimit abgebrochen |
+| `npm run test:browser` | **Lokal nicht ausgeführt**: `playwright-core` in der Testumgebung nicht installiert; GitHub-CI erforderlich |
+| `npm run test:visual` | **Nicht erneut ausgeführt** auf diesem Release-basierten Entwicklungsstand; Browser-CI erforderlich |
+| Reale Mobilgeräte, Firefox/Safari, Screenreader und Dauerbetrieb | **Nicht abgenommen** |
 
-- `npm test`: **Noch nicht ausgefuehrt** auf dem Release-Snapshot; die Node-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.
-- `npm run test:browser`: **Nicht lokal ausgeführt** auf dem Release-Snapshot; die Browser-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.
-- Vor Erstellung des Tags: GitHub-CI fuer den Merge-Quellstand mit `npm run check`, `npm test` und `npm run test:browser`.
-- Release-Metadaten und SHA-256-Quellmanifest werden im Snapshot separat geprueft.
-- Docker/ARM64/AMD64 sowie ZIP-/Offline-Archive werden vom Release-Workflow vor der Veroeffentlichung geprueft.
-- Externe Hardware-/Pi-Pruefungen sind nicht Bestandteil dieses CI-Laufs.
+Die Stilprüfung hält noch **3.443 unveränderte Zeilen über 80 Zeichen** und **507 unveränderte Exporte ohne vollständige JSDoc** als fingerprint-gebundene Alt-Ausnahmen fest. Neue oder geänderte Verstöße werden abgewiesen.
 
-Aenderungen und fruehere Releases: [Changelog](../CHANGELOG.md).
+Das `wcm-source-manifest.json` dokumentiert den veröffentlichten Quellstand und wird bei Änderungen auf `develop` nicht überschrieben. `npm run release:check` dient der Prüfung unveränderter Release-Snapshots, nicht des weiterentwickelten Branches.
+
+Testverfahren: [Teststrategie](TESTSTRATEGIE.md). Versionshistorie: [Changelog](../CHANGELOG.md).

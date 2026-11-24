@@ -2,7 +2,9 @@ import {t} from '../i18n/index.js';
 import {request} from '../api.js';
 import {toast} from '../ui/notifications.js';
 
-/** Photo order is the array order in collection.json, not a separate position. */
+/**
+ * Photo order is the array order in collection.json, not a separate position.
+ */
 export function reorderedPhotoIds(ids, photoId, targetId) {
   const from = ids.indexOf(photoId);
   const to = ids.indexOf(targetId);
@@ -13,9 +15,15 @@ export function reorderedPhotoIds(ids, photoId, targetId) {
 }
 
 async function savePhotoOrder(bottleId, ids, action) {
-  const result = await action(() => request(`/api/bottles/${encodeURIComponent(bottleId)}/photos/order`, {
-    method: 'PUT', body: JSON.stringify({photoIds: ids})
-  }), {scope: 'collection'});
+  const result = await action(
+    () => request(
+      `/api/bottles/${encodeURIComponent(bottleId)}/photos/order`,
+      {
+        method: 'PUT', body: JSON.stringify({photoIds: ids}),
+      }
+    ),
+    {scope: 'collection'}
+  );
   if (result.ok) toast(t('features.notifications.photoOrderSaved'));
 }
 
@@ -23,7 +31,8 @@ async function savePhotoOrder(bottleId, ids, action) {
 export async function movePhoto(bottleId, photoId, step, action) {
   const list = document.querySelector(`[data-photo-list="${CSS.escape(bottleId)}"]`);
   if (!list) return;
-  const ids = [...list.querySelectorAll('[data-photo-tile]')].map(tile => tile.dataset.photoId);
+  const ids = [...list.querySelectorAll('[data-photo-tile]')].map(tile =>
+    tile.dataset.photoId);
   const from = ids.indexOf(photoId);
   const order = reorderedPhotoIds(ids, photoId, ids[from + step]);
   if (order) await savePhotoOrder(bottleId, order, action);
@@ -34,7 +43,8 @@ export async function movePhoto(bottleId, photoId, step, action) {
  * from mobile Safari. Pointer capture gives mouse, touch and pen the same
  * deterministic target: the tile physically under the pointer on release.
  * On desktop, photos can also be dragged directly; a normal click still opens
- * the viewer. On touch, only the handle starts a drag so photos remain scrollable.
+ * the viewer. On touch, only the handle starts a drag so photos remain
+ * scrollable.
  */
 const boundPhotoLists = new WeakSet();
 export function attachPhotoSorting(action) {
@@ -47,21 +57,27 @@ export function attachPhotoSorting(action) {
     let saving = false;
     let suppressClick = false;
     const tiles = () => [...list.querySelectorAll('[data-photo-tile]')];
+
     const tileAt = (x, y) => {
       const tile = document.elementFromPoint(x, y)?.closest('[data-photo-tile]');
       return tile?.closest('[data-photo-list]') === list ? tile : null;
     };
+
     const showTarget = target => {
-      for (const tile of tiles()) tile.classList.toggle('photo-drop-target', tile === target);
+      for (const tile of tiles()) tile.classList
+        .toggle('photo-drop-target', tile === target);
     };
+
     const clear = () => {
       const active = gesture;
       gesture = null;
-      for (const tile of tiles()) tile.classList.remove('photo-dragging', 'photo-drop-target');
+      for (const tile of tiles()) tile.classList
+        .remove('photo-dragging', 'photo-drop-target');
       if (active?.source.hasPointerCapture?.(active.pointerId)) {
         active.source.releasePointerCapture(active.pointerId);
       }
     };
+
     const commit = async (photoId, target) => {
       const ids = tiles().map(tile => tile.dataset.photoId);
       const order = reorderedPhotoIds(ids, photoId, target?.dataset.photoId);
@@ -76,13 +92,14 @@ export function attachPhotoSorting(action) {
     list.addEventListener('pointerdown', event => {
       if (!event.isPrimary || event.button !== 0 || gesture || saving) return;
       const handle = event.target.closest('[data-photo-drag]');
-      const photo = event.pointerType === 'mouse' ? event.target.closest('.photo-open') : null;
+      const photo = event.pointerType === 'mouse' ? event.target
+        .closest('.photo-open') : null;
       const source = handle || photo;
       const tile = source?.closest('[data-photo-tile]');
       if (!tile || tile.closest('[data-photo-list]') !== list) return;
       gesture = {
         pointerId: event.pointerId, photoId: tile.dataset.photoId,
-        startX: event.clientX, startY: event.clientY, moved: false, source
+        startX: event.clientX, startY: event.clientY, moved: false, source,
       };
       source.setPointerCapture(event.pointerId);
       if (handle) event.preventDefault();
@@ -94,7 +111,8 @@ export function attachPhotoSorting(action) {
       const dy = event.clientY - active.startY;
       if (!active.moved && dx * dx + dy * dy > 36) {
         active.moved = true;
-        active.source.closest('[data-photo-tile]').classList.add('photo-dragging');
+        active.source.closest('[data-photo-tile]').classList
+          .add('photo-dragging');
       }
       if (!active.moved) return;
       event.preventDefault();

@@ -1,6 +1,8 @@
 import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
 
-export const cloneFlavor = value => value == null ? null : Object.fromEntries(FLAVOR_AXES.map(key => [key, value[key]]));
+export const cloneFlavor = value => value == null ? null :
+  Object.fromEntries(FLAVOR_AXES.map(key => [key, value[key]]));
+
 export const sameFlavor = (left, right) => left === null || right === null
   ? left === right : FLAVOR_AXES.every(axis => left[axis] === right[axis]);
 
@@ -20,6 +22,9 @@ export function createFlavorHistory(initial) {
       return true;
     },
     undo() {if (cursor === 0) return false; cursor--; return true;},
-    redo() {if (cursor >= entries.length - 1) return false; cursor++; return true;},
+    redo() {
+      if (cursor >= entries.length -
+        1) return false; cursor++; return true;
+    },
   };
 }
