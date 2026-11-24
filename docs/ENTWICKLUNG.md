@@ -42,6 +42,17 @@ Jede benannte Funktion, auch interne Funktionen, benannte Arrow-Funktionen, Klas
 
 Der bereits vorhandene TypeScript-Formatter wird zusammen mit syntaxbewussten Umbruch- und Leerzeilenregeln nur zur **Formatierung** eingesetzt. HTML-Templates, RegExps und lange Literale dürfen nicht blind aufgeteilt werden. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
 
+## CSS-Formatierung
+
+CSS wird einheitlich gemäß dem CSS-Teil des [Google HTML/CSS Style Guide](https://google.github.io/styleguide/htmlcssguide.html) formatiert: zwei Leerzeichen, eine Deklaration je Zeile, getrennte Selektoren in Listen und Leerzeilen zwischen Regeln. Neue oder veränderte CSS-Dateien vor dem Commit formatieren:
+
+```bash
+npm run format:css
+npm run format:css:check
+```
+
+`npm run check` erzwingt die Formatierung auch in CI. Der Formatter verändert keine Selektoren, Werte oder Deklarations- und Importreihenfolgen. Für Änderungen am tatsächlichen Layout zusätzlich `npm run test:visual` ausführen; Formatierung allein darf keine UI-Änderung verursachen.
+
 ## Änderungen und Dokumentation
 
 **Verbindlich bei jedem Commit/PR:** Dokumentationswirkung prüfen. Betroffene aktuelle `.md`-Dateien zusammen mit dem Code aktualisieren; falls keine Anpassung nötig ist, `Docs-Impact: none - <konkreter Grund>` als Commit-Footer oder im PR-Text festhalten. GitHub Actions lehnt Codeänderungen ohne eines von beiden ab. Nur `CHANGELOG.md` enthält Änderungshistorie. [Projektregeln](../AGENTS.md).

@@ -1,47 +1,112 @@
 /* Phase 3: modal host owns backdrop, frame, sizes, body and footer.
    Classes are selected by the modal controller (never inferred from content). */
 .overlay {
-    position: fixed;
-    inset: 0;
-    background: var(--ds-color-dialog-backdrop);
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--ds-dialog-overlay-padding);
-    overscroll-behavior: contain;
+  position: fixed;
+  inset: 0;
+  background: var(--ds-color-dialog-backdrop);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ds-dialog-overlay-padding);
+  overscroll-behavior: contain;
 }
+
 .dialog {
-    width: min(var(--ds-dialog-max),100%);
-    max-height: min(94dvh,94vh);
-    overflow: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-    background: var(--paper);
-    padding: var(--ds-dialog-padding);
-    box-shadow: 0 25px 80px #0005;
-    border-top: 5px solid var(--gold);
+  width: min(var(--ds-dialog-max),100%);
+  max-height: min(94dvh,94vh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  background: var(--paper);
+  padding: var(--ds-dialog-padding);
+  box-shadow: 0 25px 80px #0005;
+  border-top: 5px solid var(--gold);
 }
+
 .dialog.wide {
-    width: min(var(--ds-dialog-max-wide),100%);
+  width: min(var(--ds-dialog-max-wide),100%);
 }
-.ds-modal { min-width: 0; }
-.ds-modal-body { min-width: 0; }
-.ds-modal-footer { display: flex; justify-content: flex-end; gap: var(--ds-dialog-footer-gap); flex-wrap: wrap; margin-top: 22px; }
-.ds-modal-footer--form { margin-top: 23px; }
-.ds-modal-footer--compact { margin-top: 18px; }
-.ds-modal-footer--spaced { margin-top: 20px; }
-.ds-modal-footer--flush { margin-top: 0; }
-.ds-modal--photo { width: min(var(--ds-dialog-max-photo),100%); padding: 16px; }
-.ds-modal--photo .dialog-head { padding-bottom: 12px; margin-bottom: 12px; }
-.ds-modal--editor { width: min(var(--ds-dialog-max-editor),100%); padding: clamp(12px, 2vw, 28px); }
-.ds-modal--editor .dialog-head { margin-bottom: 12px; padding-bottom: 12px; }
-.ds-modal--assignment { width: min(var(--ds-dialog-max-assignment),100%); padding: 20px 22px 18px; }
-.ds-modal--assignment .dialog-head { margin-bottom: 12px; padding-bottom: 12px; }
+
+.ds-modal {
+  min-width: 0;
+}
+
+.ds-modal-body {
+  min-width: 0;
+}
+
+.ds-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ds-dialog-footer-gap);
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.ds-modal-footer--form {
+  margin-top: 23px;
+}
+
+.ds-modal-footer--compact {
+  margin-top: 18px;
+}
+
+.ds-modal-footer--spaced {
+  margin-top: 20px;
+}
+
+.ds-modal-footer--flush {
+  margin-top: 0;
+}
+
+.ds-modal--photo {
+  width: min(var(--ds-dialog-max-photo),100%);
+  padding: 16px;
+}
+
+.ds-modal--photo .dialog-head {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.ds-modal--editor {
+  width: min(var(--ds-dialog-max-editor),100%);
+  padding: clamp(12px, 2vw, 28px);
+}
+
+.ds-modal--editor .dialog-head {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+}
+
+.ds-modal--assignment {
+  width: min(var(--ds-dialog-max-assignment),100%);
+  padding: 20px 22px 18px;
+}
+
+.ds-modal--assignment .dialog-head {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+}
+
 @media (max-width: 740px) {
-    .dialog { padding: var(--ds-dialog-padding-mobile); }
-    .ds-modal--photo { padding: 10px; }
+  .dialog {
+    padding: var(--ds-dialog-padding-mobile);
+  }
+
+  .ds-modal--photo {
+    padding: 10px;
+  }
 }
-@media (max-width: 570px) { .ds-modal--assignment { padding: 17px 15px; } }
-:root[data-theme="dark"] .overlay { background: var(--ds-color-dialog-backdrop); }
+
+@media (max-width: 570px) {
+  .ds-modal--assignment {
+    padding: 17px 15px;
+  }
+}
+
+:root[data-theme="dark"] .overlay {
+  background: var(--ds-color-dialog-backdrop);
+}

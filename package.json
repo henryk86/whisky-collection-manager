@@ -27,7 +27,9 @@
     "format:js": "node scripts/format-js.js --write",
     "format:check": "node scripts/format-js.js",
     "check:jsdoc": "node scripts/check-jsdoc.js && node scripts/check-jsdoc-complete.js",
-    "check:line-width": "node scripts/check-line-width.js"
+    "check:line-width": "node scripts/check-line-width.js",
+    "format:css": "node scripts/format-css.js --write",
+    "format:css:check": "node scripts/format-css.js"
   },
   "engines": {
     "node": ">=20"

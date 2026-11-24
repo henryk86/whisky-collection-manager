@@ -2,7 +2,6 @@
    panels and workspaces have straight edges; interactive form controls use a
    small, consistent radius. Deliberately round semantics (radio controls,
    status dots, map pins, donut charts) are NOT card surfaces. */
-
 /* A single surface geometry across collection, analytics, help, settings and
    warehouse avoids the mixed square/rounded blocks from older feature CSS. */
 .panel,
@@ -37,7 +36,7 @@
 .warehouse-bottle-preview-photo,
 .map-sidebar,
 .map-canvas {
-    border-radius: var(--surface-corner);
+  border-radius: var(--surface-corner);
 }
 
 /* Form elements stay recognizably interactive while still fitting the same
@@ -53,5 +52,5 @@
 .warehouse-bulk-pick,
 .warehouse-bulk-visibility,
 .site-nav a {
-    border-radius: var(--field-corner);
+  border-radius: var(--field-corner);
 }

@@ -1,182 +1,490 @@
 /* Multi-distillery selection for blends and vattings. */
 .distillery-options {
-    max-height: 190px;
-    overflow-y: auto;
-    border: 1px solid var(--line);
-    background: var(--paper);
-    padding: 8px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(210px,1fr));
-    gap: 2px 9px;
-}
-.distillery-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 8px;
-    font-size: 12px;
-    font-weight: 400;
-    cursor: pointer;
-}
-.distillery-option:hover {
-    background: #f0ebdf;
-}
-.distillery-option[hidden] {
-    display: none;
-}
-.distillery-option input {
-    min-height: auto;
-    flex-shrink: 0;
-    accent-color: var(--navy);
-}
-.distillery-filter {
-    width: 100%;
-}
-@media(max-width:740px) {
-    .distillery-options {
-        grid-template-columns: 1fr;
-        max-height: 230px;
-    }
+  max-height: 190px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(210px,1fr));
+  gap: 2px 9px;
 }
 
-/* Samples are properties of physical bottles; surface them on cards and rows. */
+.distillery-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.distillery-option:hover {
+  background: #f0ebdf;
+}
+
+.distillery-option[hidden] {
+  display: none;
+}
+
+.distillery-option input {
+  min-height: auto;
+  flex-shrink: 0;
+  accent-color: var(--navy);
+}
+
+.distillery-filter {
+  width: 100%;
+}
+
+@media (max-width:740px) {
+  .distillery-options {
+    grid-template-columns: 1fr;
+    max-height: 230px;
+  }
+}
+
+/* Samples are properties of physical bottles; surface them on cards and
+   rows. */
 /* Match the status badge's borderless appearance in both themes. */
-.badge.sample { background: #f1dfb4; color: #5e431c; border: 0; }
-:root[data-theme="dark"] .badge.sample { background: #4b3a25; color: #f0d9a6; }
+.badge.sample {
+  background: #f1dfb4;
+  color: #5e431c;
+  border: 0;
+}
+
+:root[data-theme="dark"] .badge.sample {
+  background: #4b3a25;
+  color: #f0d9a6;
+}
+
 /* On a physical bottle, status and sample badges are inline siblings. */
-.bottle-entry .info > strong > .badge.sample { margin-left: 12px; }
-.bottle-size { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 9px; }
+.bottle-entry .info > strong > .badge.sample {
+  margin-left: 12px;
+}
+
+.bottle-size {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 9px;
+}
 
 /* In table view, Standardflaschen and Samples are exclusive groups. */
 .inventory-badges {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
 }
 
 /* Position the mode selector beside the collection heading, where the
    static "N Abfüllungen" label used to be. It stays above the statistics. */
-.collection-heading > :first-child { min-width: 0; }
+.collection-heading > :first-child {
+  min-width: 0;
+}
+
 .collection-heading .collection-mode-toggle {
-    display: flex;
-    align-items: center;
-    flex: 0 0 auto;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 7px;
-    margin: 0;
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+  margin: 0;
 }
+
 .collection-mode-button {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    gap: 9px;
-    min-height: 42px;
-    padding: 9px 15px;
-    border: 1px solid var(--line);
-    border-radius: 2px;
-    background: var(--paper);
-    color: var(--ink);
-    font-size: 13px;
-    font-weight: 650;
-    cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 9px 15px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
 }
-.collection-mode-button:hover { border-color: var(--gold); }
+
+.collection-mode-button:hover {
+  border-color: var(--gold);
+}
+
 .collection-mode-button.active {
-    background: var(--navy-deep);
-    border-color: var(--navy-deep);
-    color: #fff;
+  background: var(--navy-deep);
+  border-color: var(--navy-deep);
+  color: #fff;
 }
-.collection-mode-button:focus-visible, tr.clickable:focus-visible {
-    outline: 3px solid var(--gold);
-    outline-offset: 3px;
+
+.collection-mode-button:focus-visible,
+tr.clickable:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
 }
+
 .collection-mode-count {
-    font-size: 11px;
-    opacity: .82;
-    font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  opacity: .82;
+  font-variant-numeric: tabular-nums;
 }
+
 .card-bottle-meta {
-    font-size: 12px;
-    font-weight: 650;
-    color: var(--ink);
-    line-height: 1.4;
-    margin: 1px 0 5px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--ink);
+  line-height: 1.4;
+  margin: 1px 0 5px;
 }
+
 /* At narrow widths the selector takes a new flex row *within the heading*;
    never fall back to the old slot below the statistics. */
 @media (max-width: 740px) {
-    .collection-heading { flex-wrap: wrap; gap: 12px; }
-    .collection-heading .collection-mode-toggle {
-        width: 100%;
-        justify-content: flex-start;
-    }
+  .collection-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .collection-heading .collection-mode-toggle {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
+
 @media (max-width: 380px) {
-    .collection-mode-button { flex: 1 1 auto; padding-inline: 10px; font-size: 12px; }
+  .collection-mode-button {
+    flex: 1 1 auto;
+    padding-inline: 10px;
+    font-size: 12px;
+  }
 }
 
-/* Tasting-Flight planner: compact cards consistent with collection detail panels. */
-.flight-plan-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
-.flight-plan-options label, .flight-plan-add {min-width:0;}
-.flight-plan-options select {width:100%;}
-.flight-plan-preview {min-width:0;}
-.flight-plan-proposal {display:grid;gap:7px;margin:10px 0;padding-left:24px;}
-.flight-plan-proposal li {padding:7px 0;border-bottom:1px solid var(--line);}
-.flight-plan-proposal strong,.flight-plan-proposal small {display:block;}
-.flight-plan-proposal small {color:var(--muted);margin-top:4px;}
-.flight-plan-members-list {display:grid;gap:8px;list-style:none;padding-left:0;}
-.flight-plan-member {padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);display:flex;align-items:center;flex-wrap:wrap;gap:9px;min-width:0;}
-.flight-plan-member-copy {flex:1 1 190px;min-width:0;display:grid;gap:4px;}
-.flight-plan-member-copy small {color:var(--muted);}
-.flight-plan-member-actions,.flight-plan-add {display:flex;align-items:center;flex-wrap:wrap;gap:7px;min-width:0;}
-.flight-plan-member-actions select,.flight-plan-add select {width:auto;min-width:140px;max-width:230px;}
-.flight-plan-members .actions {margin-top:14px;}
-@media(max-width:720px) {
-  .flight-plan-options {grid-template-columns:1fr;}
-  .flight-plan-member-actions {flex:1 1 100%;}
-  .flight-plan-member-actions select,.flight-plan-add select {flex:1;max-width:none;}
+/* Tasting-Flight planner: compact cards consistent with collection detail
+   panels. */
+.flight-plan-options {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 12px;
 }
 
-.flight-plan-member-photo {display:block; width:54px; height:80px; flex:0 0 54px; object-fit:contain; border:1px solid var(--line); border-radius:4px; background:var(--paper);}
-.flight-plan-member-copy .inline-link {align-self:start;text-align:left;font-size:12px;}
+.flight-plan-options label,
+.flight-plan-add {
+  min-width: 0;
+}
 
-.flight-plan-number {display:inline-flex;align-items:center;justify-content:center;flex:0 0 26px;height:26px;border-radius:50%;border:1px solid var(--line);font-weight:650;font-size:12px;}
+.flight-plan-options select {
+  width: 100%;
+}
 
-.flight-plan-conditional[hidden] {display:none;}
-.flight-plan-conditional label {display:grid;gap:7px;}
-.flight-plan-conditional select {width:100%;}
-.flight-plan-conditional .flight-plan-toggle {display:flex;align-items:center;gap:10px;}
-.flight-plan-conditional .flight-plan-toggle input {width:auto;flex:none;}
-/* Long technical reference: section breaks, readable equations and natural scrolling. */
-.flight-plan-help {display:grid;gap:16px;min-width:0;line-height:1.55;}
-.flight-plan-help p {margin:7px 0 0;}
-.flight-plan-help-intro {margin:0 !important;}
-.flight-plan-help-section {min-width:0;padding-top:15px;border-top:1px solid var(--line);}
-.flight-plan-help h3 {margin:0 0 8px;font:600 18px var(--sans);color:var(--ink);}
-.flight-plan-help h4 {margin:14px 0 3px;font:700 14px var(--sans);color:var(--ink);}
-.flight-plan-help-strategy {margin-top:15px;}
-.flight-plan-help-strategy + .flight-plan-help-strategy {border-top:1px solid var(--line);padding-top:12px;}
-.flight-plan-help-strategy h4 {margin-top:0;}
-.flight-plan-help-definitions {display:grid;gap:0;margin:10px 0 0;}
-.flight-plan-help-definition {display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;border-bottom:1px solid var(--line);padding:7px 0;}
-.flight-plan-help-definition dt {font:700 13px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);}
-.flight-plan-help-definition dd {margin:0;font-size:13px;}
-.flight-plan-help-steps {display:grid;gap:10px;margin:12px 0 0;padding-left:24px;}
-.flight-plan-help-formula {max-width:100%;min-width:0;margin:9px 0;padding:12px 14px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--cream);border-left:2px solid var(--gold);font:13px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);}
-.flight-plan-help-formula code {font:inherit;white-space:inherit;overflow-wrap:inherit;}
-.flight-plan-help-caption,.flight-plan-help-example {font-size:13px;color:var(--muted);}
-.flight-plan-help .actions {justify-content:flex-end;margin-top:4px;}
-@media(max-width:520px) {.flight-plan-help-formula {padding:10px;font-size:12px;}}
+.flight-plan-preview {
+  min-width: 0;
+}
+
+.flight-plan-proposal {
+  display: grid;
+  gap: 7px;
+  margin: 10px 0;
+  padding-left: 24px;
+}
+
+.flight-plan-proposal li {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.flight-plan-proposal strong,
+.flight-plan-proposal small {
+  display: block;
+}
+
+.flight-plan-proposal small {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.flight-plan-members-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  padding-left: 0;
+}
+
+.flight-plan-member {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  min-width: 0;
+}
+
+.flight-plan-member-copy {
+  flex: 1 1 190px;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.flight-plan-member-copy small {
+  color: var(--muted);
+}
+
+.flight-plan-member-actions,
+.flight-plan-add {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+}
+
+.flight-plan-member-actions select,
+.flight-plan-add select {
+  width: auto;
+  min-width: 140px;
+  max-width: 230px;
+}
+
+.flight-plan-members .actions {
+  margin-top: 14px;
+}
+
+@media (max-width:720px) {
+  .flight-plan-options {
+    grid-template-columns: 1fr;
+  }
+
+  .flight-plan-member-actions {
+    flex: 1 1 100%;
+  }
+
+  .flight-plan-member-actions select,
+  .flight-plan-add select {
+    flex: 1;
+    max-width: none;
+  }
+}
+
+.flight-plan-member-photo {
+  display: block;
+  width: 54px;
+  height: 80px;
+  flex: 0 0 54px;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+}
+
+.flight-plan-member-copy .inline-link {
+  align-self: start;
+  text-align: left;
+  font-size: 12px;
+}
+
+.flight-plan-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  font-weight: 650;
+  font-size: 12px;
+}
+
+.flight-plan-conditional[hidden] {
+  display: none;
+}
+
+.flight-plan-conditional label {
+  display: grid;
+  gap: 7px;
+}
+
+.flight-plan-conditional select {
+  width: 100%;
+}
+
+.flight-plan-conditional .flight-plan-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flight-plan-conditional .flight-plan-toggle input {
+  width: auto;
+  flex: none;
+}
+
+/* Long technical reference: section breaks, readable equations and natural
+   scrolling. */
+.flight-plan-help {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  line-height: 1.55;
+}
+
+.flight-plan-help p {
+  margin: 7px 0 0;
+}
+
+.flight-plan-help-intro {
+  margin: 0 !important;
+}
+
+.flight-plan-help-section {
+  min-width: 0;
+  padding-top: 15px;
+  border-top: 1px solid var(--line);
+}
+
+.flight-plan-help h3 {
+  margin: 0 0 8px;
+  font: 600 18px var(--sans);
+  color: var(--ink);
+}
+
+.flight-plan-help h4 {
+  margin: 14px 0 3px;
+  font: 700 14px var(--sans);
+  color: var(--ink);
+}
+
+.flight-plan-help-strategy {
+  margin-top: 15px;
+}
+
+.flight-plan-help-strategy + .flight-plan-help-strategy {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.flight-plan-help-strategy h4 {
+  margin-top: 0;
+}
+
+.flight-plan-help-definitions {
+  display: grid;
+  gap: 0;
+  margin: 10px 0 0;
+}
+
+.flight-plan-help-definition {
+  display: grid;
+  grid-template-columns: 72px minmax(0,1fr);
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding: 7px 0;
+}
+
+.flight-plan-help-definition dt {
+  font: 700 13px ui-monospace,SFMono-Regular,Consolas,monospace;
+  color: var(--ink);
+}
+
+.flight-plan-help-definition dd {
+  margin: 0;
+  font-size: 13px;
+}
+
+.flight-plan-help-steps {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding-left: 24px;
+}
+
+.flight-plan-help-formula {
+  max-width: 100%;
+  min-width: 0;
+  margin: 9px 0;
+  padding: 12px 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--cream);
+  border-left: 2px solid var(--gold);
+  font: 13px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;
+  color: var(--ink);
+}
+
+.flight-plan-help-formula code {
+  font: inherit;
+  white-space: inherit;
+  overflow-wrap: inherit;
+}
+
+.flight-plan-help-caption,
+.flight-plan-help-example {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.flight-plan-help .actions {
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+@media (max-width:520px) {
+  .flight-plan-help-formula {
+    padding: 10px;
+    font-size: 12px;
+  }
+}
 
 /* Additional optional planner criteria use the existing form vocabulary. */
-.flight-plan-advanced {border-top:1px solid var(--line);padding:12px 0 4px;margin-top:12px;}
-.flight-plan-advanced summary {font-weight:650;color:var(--ink);cursor:pointer;}
-.flight-plan-advanced summary:focus-visible {outline:2px solid var(--gold);outline-offset:3px;}
-.flight-plan-advanced > .hint {margin:10px 0 12px;}
-.flight-plan-advanced-grid {grid-template-columns:repeat(2,minmax(0,1fr));margin:10px 0;}
-.flight-plan-age-range {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
-.flight-plan-age-range input {min-width:0;width:100%;}
-.flight-plan-advanced .flight-plan-conditional[hidden] {display:none;}
-@media(max-width:600px) {.flight-plan-advanced-grid {grid-template-columns:1fr;}}
+.flight-plan-advanced {
+  border-top: 1px solid var(--line);
+  padding: 12px 0 4px;
+  margin-top: 12px;
+}
+
+.flight-plan-advanced summary {
+  font-weight: 650;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.flight-plan-advanced summary:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.flight-plan-advanced > .hint {
+  margin: 10px 0 12px;
+}
+
+.flight-plan-advanced-grid {
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  margin: 10px 0;
+}
+
+.flight-plan-age-range {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 10px;
+}
+
+.flight-plan-age-range input {
+  min-width: 0;
+  width: 100%;
+}
+
+.flight-plan-advanced .flight-plan-conditional[hidden] {
+  display: none;
+}
+
+@media (max-width:600px) {
+  .flight-plan-advanced-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -265,7 +265,7 @@ console.log('B-5: No application-source-text unit/integration assertions.');
 
 // Repository-wide Google JavaScript formatting and public API JSDoc contracts.
 // Both are checked in CI via npm run check; no automatic formatting in CI.
-for (const script of ['format-js.js', 'check-line-width.js',
+for (const script of ['format-js.js', 'format-css.js', 'check-line-width.js',
   'check-jsdoc.js', 'check-jsdoc-complete.js']) {
   const validation = spawnSync(process.execPath, [`scripts/${script}`], {
     encoding: 'utf8',
