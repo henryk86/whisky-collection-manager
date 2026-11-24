@@ -11,6 +11,14 @@ import {createTastingsView} from '../../public/js/views/tastings.js';
 import {importChoice} from '../../public/js/features/import/choice-template.js';
 import {roomTransferMarkup} from '../../public/js/views/warehouse-room-transfer.js';
 
+/**
+ * Updates the DOM elements managed by fixture.
+ *
+ * @param {*} page Page or view being rendered or selected.
+ * @param {*} html HTML markup to render or inspect.
+ * @param {string=} width Width in pixels.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function fixture(page, html, width = '850px') {
   await page.evaluate(({html, width}) => {
     document.querySelector('#b5-contract-fixture')?.remove();
@@ -24,6 +32,10 @@ async function fixture(page, html, width = '850px') {
   return page.locator('#b5-contract-fixture');
 }
 
+/**
+ * Derives the simple warehouse result from the supplied values.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function simpleWarehouse() {
   const room = {
     id: 'b5-room', name: 'Browser-Regale', width: 5, height: 4, furniture: [
@@ -63,6 +75,10 @@ function simpleWarehouse() {
   return {room, warehouse};
 }
 
+/**
+ * Derives the tasting form result from the supplied values.
+ * @return {string} Resulting text.
+ */
 function tastingForm() {
   let html = '';
   const state = {
@@ -73,10 +89,24 @@ function tastingForm() {
     },
   };
   createTastingsView({
-    state, shell: markup => {
+    state,
+    /**
+     * Updates the shell state for its caller.
+     *
+     * @param {*} markup HTML markup for the selected content.
+     */
+    shell: markup => {
       html =
         markup;
-    }, navigate() {}, refresh() {},
+    },
+    /**
+     * Updates the navigate state for its caller.
+     */
+    navigate() {},
+    /**
+     * Performs the refresh lifecycle action.
+     */
+    refresh() {},
   }).editor();
   return html;
 }
@@ -93,6 +123,13 @@ test(
       );
       const actual = await page.locator('#b5-contract-fixture')
         .evaluate(root => {
+          /**
+           * Locates the DOM elements used by find.
+           *
+           * @param {function(...*): *} selector Selector input for this
+           * operation.
+           * @return {*} Matching DOM element, if present.
+           */
           const find = selector => root.querySelector(selector);
           const wall = find('.warehouse-wall-scroll');
           const cabinet = find('[data-furniture-id="b5-cabinet"]');

@@ -4,6 +4,10 @@ import {renderWarehouseRoomWall} from '../../public/js/views/warehouse-room-wall
 import {shelfContents} from '../../public/js/views/warehouse-shelf-details.js';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 
+/**
+ * Transforms the entries used by warehouse.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function warehouse() {
   const room = {
     id: 'r', name: 'Room', width: 4, height: 4, furniture: [{
@@ -75,15 +79,43 @@ test(
     };
     const previous = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () =>
-        null, querySelectorAll: () => [],
+        null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
+      querySelectorAll: () => [],
     };
     try {
       const view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         */
         shell: () => {},
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
-        modal: {showModal: (title, content) => forms.push({title, content})},
+        modal: {
+          /**
+           * Renders modal in the current view.
+           *
+           * @param {*} title Title displayed or stored by this operation.
+           * @param {*} content Content to render, store or examine.
+           * @return {number} Calculated numeric value.
+           */
+          showModal: (title, content) => forms.push({title, content}),
+        },
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       assert.equal(view.openFurnitureManager('f'), true);
@@ -118,15 +150,46 @@ test(
     let html = ''; const dialogs = [];
     const previous = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () =>
-        null, querySelectorAll: () => [],
+        null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
+      querySelectorAll: () => [],
     };
     try {
       const view = createWarehouseView({
         state,
+        /**
+         * Derives the shell result from the supplied values.
+         *
+         * @param {*} output Output resource or accumulated result.
+         * @return {*} Result computed from the supplied inputs.
+         */
         shell: output => html = output,
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
-        modal: {showModal: (title, content) => dialogs.push(content)},
+        modal: {
+          /**
+           * Renders modal in the current view.
+           *
+           * @param {*} title Title displayed or stored by this operation.
+           * @param {*} content Content to render, store or examine.
+           * @return {number} Calculated numeric value.
+           */
+          showModal: (title, content) => dialogs.push(content),
+        },
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.render();
@@ -258,15 +321,43 @@ test(
     const dialogs = [];
     const previous = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () =>
-        null, querySelectorAll: () => [],
+        null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
+      querySelectorAll: () => [],
     };
     try {
       const view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         */
         shell: () => {},
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
-        modal: {showModal: (title, html) => dialogs.push({title, html})},
+        modal: {
+          /**
+           * Renders modal in the current view.
+           *
+           * @param {*} title Title displayed or stored by this operation.
+           * @param {*} html HTML markup to render or inspect.
+           * @return {number} Calculated numeric value.
+           */
+          showModal: (title, html) => dialogs.push({title, html}),
+        },
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.previewSelectedBottle();

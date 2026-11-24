@@ -12,14 +12,25 @@ import {verifyOfflineBundle} from './offline-bundle.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+/**
+ * Retrieves json from the available state.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ * @return {*} Computed value, or null when the input has no match.
+ */
 function readJson(file) {
   try {return JSON.parse(fs.readFileSync(file, 'utf8'));}
   catch {return null;}
 }
 
-/** Use npm's installed lockfile to detect stale or partial installations.
- * Unlike blindly running npm ci at every start, this works offline after
- * the initial install and does not delete node_modules unnecessarily.
+/**
+ * Use npm's installed lockfile to detect stale or partial installations.
+ * Unlike blindly running npm ci at every start, this works offline after the
+ * initial install and does not delete node_modules unnecessarily.
+ *
+ * @param {*} root Root element or directory.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {boolean} Whether the condition is satisfied.
  */
 export function needsNpmCi(root, {production = false} = {}) {
   const wanted = readJson(path.join(root, 'package-lock.json'));
@@ -34,6 +45,12 @@ export function needsNpmCi(root, {production = false} = {}) {
   return false;
 }
 
+/**
+ * Retrieves env file from the available state.
+ *
+ * @param {*} root Root node or directory for the operation.
+ * @return {*} Combined text from the input values.
+ */
 function readEnvFile(root) {
   const result = {};
   const file = path.join(root, '.env');
@@ -53,8 +70,22 @@ function readEnvFile(root) {
   return result;
 }
 
+/**
+ * Checks whether locally configured TLS certificates are usable.
+ *
+ * @param {*} root Root element or directory.
+ * @param {*=} env Env used by this operation.
+ * @return {(string)} Value, or false when the operation cannot proceed.
+ */
 export function localTlsStatus(root, env = process.env) {
   const fileEnv = readEnvFile(root);
+  /**
+   * Derives the setting result from the supplied values.
+   *
+   * @param {*} key Key used to select or group values.
+   * @param {*} fallback Value used when the requested data is unavailable.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const setting = (key, fallback) => env[key] ?? fileEnv[key] ?? fallback;
   const enabled = String(setting('HTTPS_ENABLED', 'true')).toLowerCase();
   if (enabled === 'false' || enabled === '0') return 'disabled';
@@ -62,6 +93,12 @@ export function localTlsStatus(root, env = process.env) {
     '1') return 'configured'; // Server validates bad values.
   const key = setting('HTTPS_KEY_FILE', 'certs/server-key.pem');
   const cert = setting('HTTPS_CERT_FILE', 'certs/server-cert.pem');
+  /**
+   * Checks whether ready applies.
+   *
+   * @param {*} file File resource to read, write or inspect.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   const isReady = file => {
     const location = path.resolve(root, file);
     try {return fs.statSync(location).size > 0;}
@@ -74,6 +111,12 @@ export function localTlsStatus(root, env = process.env) {
   return 'missing';
 }
 
+/**
+ * Derives the npm command result from the supplied values.
+ *
+ * @param {*} env Value used by this operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function npmCommand(env) {
   // npm supplies npm_execpath to npm run scripts. This avoids spawning
   // npm.cmd through a shell on Windows (Node 22 disallows that by default).
@@ -82,6 +125,13 @@ function npmCommand(env) {
   return [process.platform === 'win32' ? 'npm.cmd' : 'npm', []];
 }
 
+/**
+ * Validates the default execute state and rejects invalid inputs.
+ *
+ * @param {*} command Value used by this operation.
+ * @param {*} args Arguments forwarded to the operation.
+ * @param {!Object} options Options controlling the operation.
+ */
 function defaultExecute(command, args, {root, env}) {
   const result = spawnSync(
     command,
@@ -100,6 +150,8 @@ function defaultExecute(command, args, {root, env}) {
 /**
  * Exposed for deterministic tests without installing packages or downloading
  * models.
+ *
+ * @param {!Object=} options Optional configuration for the operation.
  */
 export function prepareStartup({root = ROOT, env = process.env, execute = defaultExecute} = {}) {
   const production = env.NODE_ENV === 'production';
@@ -162,6 +214,12 @@ export function prepareStartup({root = ROOT, env = process.env, execute = defaul
   }
 }
 
+/**
+ * Starts the configured server process using the selected runtime.
+ *
+ * @param {!Object=} options Optional configuration for the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function launchServer({root = ROOT, env = process.env} = {}) {
   const server = spawn(
     process.execPath,

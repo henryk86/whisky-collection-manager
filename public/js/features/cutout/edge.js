@@ -8,6 +8,12 @@ import {t} from '../../i18n/index.js';
 export const EDGE_ALPHA_LOW = 110;
 export const EDGE_ALPHA_HIGH = 190;
 
+/**
+ * Refines alpha transitions around an extracted bottle silhouette.
+ *
+ * @param {*} rgba Rgba used by this operation.
+ * @return {*} Calculated numeric result.
+ */
 export function sharpenCutoutAlpha(rgba) {
   if (!rgba || rgba.length % 4 !==
     0) throw new Error(t('errors.images.invalidRgba'));

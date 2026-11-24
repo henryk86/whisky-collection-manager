@@ -6,10 +6,23 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {ROOT, IMAGE_DIR} from './paths.js';
 import {assert} from '../domain/errors.js';
+/**
+ * Resolves an image's storage location under the configured photo root.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {string} kind Resource kind selecting the relevant schema.
+ * @param {*} ext Ext used by this operation.
+ * @return {string} Resulting text.
+ */
 export function imagePath(id, kind, ext) {
   return `images/${id}/${kind}.${ext}`;
 }
 
+/**
+ * Clears image for photos.
+ *
+ * @param {*} p P used by this operation.
+ */
 export function deleteImage(p) {
   if (p) {
     const file = path.join(ROOT, p);
@@ -19,6 +32,12 @@ export function deleteImage(p) {
   }
 }
 
+/**
+ * Validates image data for photos.
+ *
+ * @param {*} base64 Base64 used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function validateImageData(base64) {
   assert(
     typeof base64 === 'string' && base64.length < 20000000,
@@ -60,6 +79,14 @@ export function validateImageData(base64) {
   };
 }
 
+/**
+ * Updates image for photos.
+ *
+ * @param {*} base64 Base64 used by this operation.
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {string} kind Resource kind selecting the relevant schema.
+ * @return {string} Resulting text.
+ */
 export function saveImage(base64, id, kind) {
   const {bytes, ext} = validateImageData(base64);
   const dir = path.join(IMAGE_DIR, id);

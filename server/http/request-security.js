@@ -4,6 +4,13 @@ import {ALLOWED_HOSTS} from '../config.js';
 /** Chrome/Edge extension origins are limited to the image-staging API. */
 const EXTENSION_ORIGIN = /^chrome-extension:\/\/([a-p]{32})$/;
 
+/**
+ * Checks whether an extension origin is allowed for the request.
+ *
+ * @param {*} origin Origin used by this operation.
+ * @param {*=} configuredIds Configured ids used by this operation.
+ * @return {*} Value, or false when the operation cannot proceed.
+ */
 export function allowedExtensionOrigin(origin, configuredIds = process.env
   .EXTENSION_IDS || '') {
   const match = EXTENSION_ORIGIN.exec(origin);
@@ -12,7 +19,13 @@ export function allowedExtensionOrigin(origin, configuredIds = process.env
   return allowed.length === 0 || allowed.includes(match[1]);
 }
 
-/** Reject cross-origin mutations even when the request is CORS-simple. */
+/**
+ * Reject cross-origin mutations even when the request is CORS-simple.
+ *
+ * @param {!Object} request Incoming request.
+ * @param {string} url URL of the requested resource.
+ * @param {!Object=} options3 Destructured options for this operation.
+ */
 export function requireSameOriginMutation(request, url, {extensionStage = false} = {}) {
   const method = request.method;
   if (!url.pathname.startsWith('/api/') || method === 'GET' || method ===
@@ -51,6 +64,12 @@ let warnedHostLimit = false;
 const HOST_REJECTION_MESSAGE =
   'Nicht erlaubter Host. Adresse in ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_IP_ADDRESSES eintragen.';
 
+/**
+ * Transforms the reject host text with the required substitutions.
+ *
+ * @param {*} raw Value used by this operation.
+ * @param {*} hostname Value used by this operation.
+ */
 function rejectHost(raw, hostname) {
   // Log once per rejected hostname, with a hard limit to prevent noisy requests
   // from flooding logs or growing an unbounded diagnostic cache.
@@ -76,6 +95,11 @@ function rejectHost(raw, hostname) {
   );
 }
 
+/**
+ * Rejects requests sent to disallowed host headers.
+ *
+ * @param {!Object} request Incoming request.
+ */
 export function requireAllowedHost(request) {
   const raw = request.headers.host || '';
   if (!/^(?:\[[a-f0-9:.]+\]|[a-z0-9.-]+)(?::\d{1,5})?$/i.test(raw)) {

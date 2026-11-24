@@ -6,6 +6,14 @@ import {unassignedWallPage} from '../domain/warehouse-unassigned-tray.js';
 import {t} from '../i18n/index.js';
 import {bottleLabel, bottleListFacts, bottleSymbol, safe} from './warehouse-presentation.js';
 
+/**
+ * Renders unassigned tray page for warehouse unassigned tray.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {!Array<*>=} selectedIds Selected ids used by this operation.
+ * @param {!Object=} options3 Destructured options for this operation.
+ * @return {string} Resulting text.
+ */
 export function renderUnassignedTrayPage(warehouse, selectedIds = [], {query = '', page = 1} = {}) {
   const data = unassignedWallPage(warehouse, {query, page});
   const selected = new Set(selectedIds);
@@ -41,6 +49,14 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [], {query = '
     </div>`;
 }
 
+/**
+ * Renders unassigned tray for warehouse unassigned tray.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {!Array<*>=} selectedIds Selected ids used by this operation.
+ * @param {!Object=} options Optional configuration for the operation.
+ * @return {string} Resulting text.
+ */
 export function renderUnassignedTray(warehouse, selectedIds = [], options = {}) {
   const total = unassignedWallPage(warehouse).total;
   const label = safe(t('warehouse.wall.unassignedTitle', {count: total}));

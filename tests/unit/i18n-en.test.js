@@ -3,6 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createTranslator, initializeLanguage, currentLanguage, t} from '../../public/js/i18n/index.js';
 
+/**
+ * Reads read data from the local filesystem.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ * @return {*} Parsed JSON value.
+ */
 const read = (file) => JSON.parse(fs.readFileSync(
   new URL(`../../public/locales/${file}`, import.meta.url),
   'utf8'
@@ -11,6 +17,12 @@ const german = read('de.json');
 const english = read('en.json');
 const registry = read('index.json');
 
+/**
+ * Orders the parameters records using the configured comparison.
+ *
+ * @param {*} message Message to display or use for diagnostics.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const parameters = (message) => [
   ...[...message.matchAll(/\{([a-zA-Z]\w*)\}/gu)].map(([, name]) => name),
   ...[...message.matchAll(/\{([a-zA-Z]\w*),\s*plural,/gu)]
@@ -82,11 +94,24 @@ test(
     const previousLocation = globalThis.location;
     globalThis.location = {search: '?lang=en'};
     try {
+      /**
+       * Derives the load result from the supplied values.
+       *
+       * @param {*} url URL of the resource being processed.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const load = async (url) => {
         const file = url === '/locales/index.json' ? 'index.json' : url ===
           '/locales/en.json' ? 'en.json' : null;
         if (!file) return {ok: false};
-        return {ok: true, json: async () => read(file)};
+        return {
+          ok: true,
+          /**
+           * Derives the json result from the supplied values.
+           * @return {!Promise<*>} Promise for the asynchronous operation.
+           */
+          json: async () => read(file),
+        };
       };
       assert.equal(await initializeLanguage(load), 'en');
       assert.equal(currentLanguage(), 'en');

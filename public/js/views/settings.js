@@ -5,7 +5,24 @@ import {availableLanguages, currentLanguage, t} from '../i18n/index.js';
 import {renderBackupSection} from './backups.js';
 import {backToCollectionButton} from '../ui/navigation-controls.js';
 import {sectionWorkspace} from '../ui/section-navigation.js';
-export function createSettingsView(state, auth = {usersSection: () => ''}) {
+/**
+ * Creates settings view for settings.
+ *
+ * @param {!Object} state Current application state.
+ * @param {!Object=} auth Auth used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
+export function createSettingsView(state, auth = {
+  /**
+   * Derives the users section result from the supplied values.
+   * @return {string} Resulting text.
+   */
+  usersSection: () => '',
+}) {
+  /**
+   * Selects and transforms the settings records.
+   * @return {string} Resulting text.
+   */
   function settings() {
     const tabs = [
       ...['general', 'backups', 'transfer', 'distilleries'],
@@ -16,6 +33,13 @@ export function createSettingsView(state, auth = {usersSection: () => ''}) {
     }));
     const active = tabs.some(item => item.id === state.settingsSection) ?
       state.settingsSection : 'general';
+    /**
+     * Builds the localized panel text for the current language.
+     *
+     * @param {*} id Identifier of the affected record.
+     * @param {*} content Content to render, store or examine.
+     * @return {string} Resulting text.
+     */
     const panel = (id, content) =>
       `<section class="settings-section" data-settings-panel="${id}"${id ===
         active ? '' : ' hidden'}>${headingTitle({
@@ -86,6 +110,10 @@ export function createSettingsView(state, auth = {usersSection: () => ''}) {
 
 /**
  * Show a settings area without replacing forms or losing unsaved field values.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} container Container used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
  */
 export function activateSettingsSection(id, container) {
   if (!['general', 'backups', 'transfer', 'distilleries', 'users']

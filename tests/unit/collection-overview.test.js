@@ -4,6 +4,10 @@ import {availableOverviewDistilleries, collectionOverviewEntries} from '../../pu
 import {homePageUrl, overviewModeFromSearch, paginate} from '../../public/js/domain/pagination.js';
 import {createHomeView} from '../../public/js/views/home.js';
 
+/**
+ * Derives the sample result from the supplied values.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const sample = () => ({
   bottlings: [
     {
@@ -48,7 +52,13 @@ const sample = () => ({
     },
   ],
 });
-const selectors = {distilleryNames: () => 'Keine Destillerie angegeben'};
+const selectors = {
+  /**
+   * Derives the distillery names result from the supplied values.
+   * @return {string} Resulting text.
+   */
+  distilleryNames: () => 'Keine Destillerie angegeben',
+};
 
 test(
   'bottling mode remains one entry per bottling, bottle mode uses individual physical bottles',
@@ -293,7 +303,12 @@ test(
       history: globalThis.history,
       location: globalThis.location,
     };
-    const field = {addEventListener() {} };
+    const field = {
+      /**
+       * Updates the add event listener state for its caller.
+       */
+      addEventListener() {},
+    };
     let html = '';
     const state = {
       collection,
@@ -310,26 +325,66 @@ test(
     };
     try {
       globalThis.document = {
+        /**
+         * Derives the query selector result from the supplied values.
+         * @return {!Object} Result computed from the supplied inputs.
+         */
         querySelector: () =>
-          field, querySelectorAll: () => [],
+          field,
+        /**
+         * Derives the query selector all result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
+        querySelectorAll: () => [],
       };
       globalThis.history =
-        {replaceState() {throw new Error('No history change expected');} };
+      {
+        /**
+         * Reports the replace state error condition.
+         */
+        replaceState() {throw new Error('No history change expected');},
+      };
       globalThis.location = {pathname: '/', search: '?mode=bottles'};
       const view = createHomeView({
         state, selectors: {
+          /**
+           * Derives the all bottles result from the supplied values.
+           * @return {!Array<*>} Resulting entries in their output order.
+           */
           allBottles: () => collection.bottlings.flatMap(b => b.bottles),
+          /**
+           * Derives the bottles result from the supplied values.
+           *
+           * @param {*} id Identifier of the affected record.
+           * @return {!Array<*>} Resulting entries in their output order.
+           */
           bottles: id => collection.bottlings.find(b => b.id ===
             id)?.bottles || [],
+          /**
+           * Derives the cover photo result from the supplied values.
+           * @return {string} Resulting text.
+           */
           coverPhoto: () => 'bottling-cover.jpg',
           distilleryNames: selectors.distilleryNames,
-        }, shell(value) {html = value;},
+        },
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} value Value to process.
+         */
+        shell(value) {html = value;},
       });
       view();
       assert.equal((html.match(/<article\b/g) || []).length, 3);
       assert.equal((html.match(/data-bottle-id=/g) || []).length, 3);
       assert.match(html, /data-bottle-id="a-1"[\s\S]*?one\.jpg/);
       assert.match(html, /data-bottle-id="a-2"[\s\S]*?two\.jpg/);
+      /**
+       * Derives the card for result from the supplied values.
+       *
+       * @param {*} id Identifier of the affected record.
+       * @return {string} Resulting text.
+       */
       const cardFor = id => (html.match(/<article\b[\s\S]*?<\/article>/g) || [])
         .find(card => card.includes(`data-bottle-id="${id}"`));
       assert.match(cardFor('a-1'), /src="\/one\.jpg"/);
@@ -546,19 +601,64 @@ test(
     const filterElement = {dataset: {expanded: 'false'}};
     try {
       globalThis.location = {pathname: '/', search: ''};
-      globalThis.history = {replaceState() {}, pushState() {} };
-      globalThis.document = {querySelector: () => filterElement};
+      globalThis.history = {
+        /**
+         * Updates the replace state state for its caller.
+         */
+        replaceState() {},
+        /**
+         * Updates the push state state for its caller.
+         */
+        pushState() {},
+      };
+      globalThis.document = {
+        /**
+         * Derives the query selector result from the supplied values.
+         * @return {!Object} Result computed from the supplied inputs.
+         */
+        querySelector: () => filterElement,
+      };
       const view = createHomeView({
         state, selectors: {
-          allBottles: () => [], bottles: () => [], coverPhoto: () => null,
+          /**
+           * Derives the all bottles result from the supplied values.
+           * @return {!Array<*>} Resulting entries in their output order.
+           */
+          allBottles: () => [],
+          /**
+           * Derives the bottles result from the supplied values.
+           * @return {!Array<*>} Resulting entries in their output order.
+           */
+          bottles: () => [],
+          /**
+           * Derives the cover photo result from the supplied values.
+           * @return {*} Result computed from the supplied inputs.
+           */
+          coverPhoto: () => null,
+          /**
+           * Derives the distillery names result from the supplied values.
+           * @return {!Array<*>} Resulting entries in their output order.
+           */
           distilleryNames: () => [],
-        }, shell: markup => {html = markup;},
+        },
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} markup HTML markup for the selected content.
+         */
+        shell: markup => {html = markup;},
       });
       view();
       assert.match(html, /data-expanded="false"/);
       assert.match(html, /data-reset-collection-filter="status"/);
       const toggle = {
         dataset: {act: 'toggle-collection-filters'},
+        /**
+         * Updates attribute in the current state.
+         *
+         * @param {*} name Environment variable or setting name.
+         * @param {*} value Value to process.
+         */
         setAttribute(name, value) {this[name] = value;},
       };
       view.handleClick(toggle);
@@ -593,9 +693,21 @@ test(
         {id: 'three', name: 'Cask', distilleryIds: ['a'], bottles: []},
       ],
     };
+    /**
+     * Derives the distillery names result from the supplied values.
+     *
+     * @param {*} bottling Bottling record being inspected or updated.
+     * @return {*} Result computed from the supplied inputs.
+     */
     const distilleryNames = bottling =>
       ({a: 'Zweite', b: 'Aberfeldy'})[bottling.distilleryIds[0]];
 
+    /**
+     * Transforms the entries used by ids.
+     *
+     * @param {*} sort Sort direction or ordering rule.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     const ids = sort => collectionOverviewEntries(collection, {sort, distilleryNames}).map(e => e.bottling.id);
     assert.deepEqual(ids('name'), ['one', 'two', 'three']);
     assert.deepEqual(ids('nameDesc'), ['three', 'two', 'one']);
@@ -640,6 +752,13 @@ test(
         },
       ],
     };
+    /**
+     * Transforms the entries used by sorted.
+     *
+     * @param {*} sort Sort direction or ordering rule.
+     * @param {string=} mode Selected mode controlling the operation.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     const sorted = (sort, mode = 'bottlings') =>
       collectionOverviewEntries(collection, {sort, mode})
         .map(e => mode === 'bottles' ? e.bottle.id : e.bottling.id);
@@ -681,6 +800,12 @@ test(
         {id: 'd', name: 'Delta', tastings: [], bottles: []},
       ],
     };
+    /**
+     * Transforms the entries used by ids.
+     *
+     * @param {*} sort Sort direction or ordering rule.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     const ids = sort => collectionOverviewEntries(collection, {sort}).map(e =>
       e.bottling.id);
     assert.deepEqual(ids('scoreDesc'), ['a', 'b', 'd', 'c']);
@@ -717,6 +842,13 @@ test(
         {id: 'c', name: 'Gamma', bottles: []},
       ],
     };
+    /**
+     * Transforms the entries used by ids.
+     *
+     * @param {*} sort Sort direction or ordering rule.
+     * @param {string=} mode Selected mode controlling the operation.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     const ids = (sort, mode = 'bottlings') =>
       collectionOverviewEntries(collection, {sort, mode})
         .map(e => mode === 'bottles' ? e.bottle.id : e.bottling.id);
@@ -753,14 +885,49 @@ test(
     };
     let markup = '';
     try {
-      globalThis.document = {querySelector: () => null};
+      globalThis.document = {
+        /**
+         * Derives the query selector result from the supplied values.
+         * @return {*} Result computed from the supplied inputs.
+         */
+        querySelector: () => null,
+      };
       globalThis.location = {pathname: '/', search: ''};
-      globalThis.history = {replaceState() {} };
+      globalThis.history = {
+        /**
+         * Updates the replace state state for its caller.
+         */
+        replaceState() {},
+      };
       const view = createHomeView({
         state, selectors: {
-          allBottles: () => [], bottles: () => [],
-          coverPhoto: () => '', distilleryNames: () => '',
-        }, shell: html => {markup = html;},
+          /**
+           * Derives the all bottles result from the supplied values.
+           * @return {!Array<*>} Resulting entries in their output order.
+           */
+          allBottles: () => [],
+          /**
+           * Derives the bottles result from the supplied values.
+           * @return {!Array<*>} Resulting entries in their output order.
+           */
+          bottles: () => [],
+          /**
+           * Derives the cover photo result from the supplied values.
+           * @return {string} Resulting text.
+           */
+          coverPhoto: () => '',
+          /**
+           * Derives the distillery names result from the supplied values.
+           * @return {string} Resulting text.
+           */
+          distilleryNames: () => '',
+        },
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} html HTML markup to render or inspect.
+         */
+        shell: html => {markup = html;},
       });
       view();
       for (const value of [

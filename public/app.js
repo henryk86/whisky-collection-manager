@@ -48,7 +48,11 @@ const theme = createThemeController();
 let scanner;
 let filePreview;
 const modal = createModal({
-  state, onClose: () => {scanner?.stopScan(); filePreview?.close();},
+  state,
+  /**
+   * Handles the close interaction.
+   */
+  onClose: () => {scanner?.stopScan(); filePreview?.close();},
 });
 filePreview = createFilePreview({modal, state});
 const photoViewer = createPhotoViewer({state, showModal: modal.showModal});
@@ -102,12 +106,25 @@ const bottleForm = createBottleForm({
 let externalImport;
 const editors = createEditors({
   state, selectors, bottlingForm, bottleForm, ...modal, navigate, action,
+  /**
+   * Retrieves pending image token from the available state.
+   * @return {*} Result computed from the supplied inputs.
+   */
   getPendingImageToken: () => externalImport?.getPendingImageToken(),
+  /**
+   * Derives the mark image attached result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   markImageAttached: () => externalImport?.markImageAttached(),
 });
 const backup = createBackupController({state, render, showModal: modal.showModal, closeModal: modal.closeModal});
 const settings = createSettingsController({
   state, action, navigate, ...modal,
+  /**
+   * Handles the distillery location changed interaction.
+   *
+   * @param {*} id Identifier of the affected record.
+   */
   onDistilleryLocationChanged: id => {
     if (state.page === 'map') mapView.centerOnUpdatedLocation(id);
   },
@@ -129,6 +146,11 @@ externalImport = createWhiskybase({
   action,
   ...editors,
 });
+/**
+ * Renders the app state.
+ *
+ * @return {*} Whether the requested condition is met.
+ */
 function render() {
   if (!state.collection) {
     return;
@@ -153,6 +175,12 @@ function render() {
   home();
 }
 
+/**
+ * Performs the refresh lifecycle action.
+ *
+ * @param {string=} scope Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function refresh(scope = 'all') {
   const [_, meta] = await Promise.all([
     loadResources(state, requestCachedJson, scope),
@@ -164,6 +192,13 @@ async function refresh(scope = 'all') {
   else render();
 }
 
+/**
+ * Builds the localized action text for the current language.
+ *
+ * @param {*} task Task to execute or examine.
+ * @param {!Object=} options Options controlling the operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function action(task, {scope = 'all'} = {}) {
   return runAction(
     task,

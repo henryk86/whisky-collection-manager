@@ -36,6 +36,12 @@ test(
         .id}"]`).first().click();
       const tile = page.locator(`[data-photo-tile][data-photo-id="${photo.id}"]`);
       const pen = tile.locator('[data-act="photo-editor-open"]');
+      /**
+       * Derives the size result from the supplied values.
+       *
+       * @param {*} element DOM element involved in the operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const size = async element => element.evaluate(el => {
         const box = el.getBoundingClientRect(); return {width: box.width, height: box.height};
       });
@@ -77,6 +83,10 @@ test(
       // Before/after must compare the whole original with the transparent
       // cutout,
       // not just disable brightness/contrast on the already cut-out result.
+      /**
+       * Derives the alpha bounds result from the supplied values.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const alphaBounds = async () =>
         page.locator('[data-photo-editor-preview]').evaluate(canvas => {
           const {data} = canvas.getContext('2d').getImageData(0,
@@ -283,6 +293,10 @@ test(
         null,
         {timeout: 20000}
       );
+      /**
+       * Checks whether transparent pixels applies.
+       * @return {boolean} Whether the operation matched or succeeded.
+       */
       const hasTransparentPixels = () => {
         const canvas = document.querySelector('[data-photo-editor-preview]');
         if (!canvas) return false;
@@ -607,6 +621,10 @@ test(
       await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
       await page.waitForFunction(() =>
         !document.querySelector('[data-photo-slider="exposure"]').disabled);
+      /**
+       * Derives the transparent count result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       const transparentCount = () =>
         page.locator('[data-photo-editor-preview]').evaluate(canvas => {
           const pixels = canvas.getContext('2d').getImageData(0,
@@ -669,6 +687,10 @@ test(
           el.getBoundingClientRect().height),
         frameHeightBeforeMask
       );
+      /**
+       * Calculates the center alpha numeric value.
+       * @return {*} Calculated numeric result.
+       */
       const centerAlpha = () => page.locator('[data-photo-editor-preview]')
         .evaluate(canvas => {
           const pixels = canvas.getContext('2d').getImageData(
@@ -772,6 +794,12 @@ test(
         const ctx = out.getContext('2d', {willReadFrequently: true});
         ctx.drawImage(cutout, 0, 0);
         const rgba = ctx.getImageData(0, 0, out.width, out.height).data;
+        /**
+         * Derives the row has alpha result from the supplied values.
+         *
+         * @param {*} y Vertical coordinate.
+         * @return {boolean} Whether the operation matched or succeeded.
+         */
         const rowHasAlpha = y => {
           for (let x = 0; x < out.width; x++) {
             if (rgba[(y * out.width + x) * 4 + 3] >= 8) return true;
@@ -891,6 +919,10 @@ test(
       await exposure.waitFor({state: 'visible'});
       await page.waitForFunction(() =>
         !document.querySelector('[data-photo-slider="exposure"]').disabled);
+      /**
+       * Derives the pixel result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       const pixel = () => page.locator('[data-photo-editor-preview]')
         .evaluate(canvas =>
           canvas.getContext('2d').getImageData(0, 0, 1, 1).data[0]);
@@ -961,6 +993,13 @@ test(
       const exposure = page.locator('[data-photo-slider="exposure"]');
       await page.waitForFunction(() =>
         !document.querySelector('[data-photo-slider="exposure"]').disabled);
+      /**
+       * Derives the change result from the supplied values.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @param {*} value Value to process.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const change = async (name, value) =>
         page.locator(`[data-photo-slider="${name}"]`).evaluate((el, v) => {
           el.value = String(v); el.dispatchEvent(new Event('input', {bubbles: true}));

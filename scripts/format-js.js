@@ -34,7 +34,9 @@ const options = {
 
 /**
  * Applies source-formatting edits until the output becomes idempotent.
- * @param {string} file Absolute source path used for language-service context.
+ *
+ * @param {string} file Absolute source path used for language-service
+ * context.
  * @param {string} original Original JavaScript text.
  * @return {string} Mechanically formatted source with a final newline.
  */
@@ -51,11 +53,37 @@ function format(file, original) {
     seen.add(wrapped);
     source = wrapped;
     const host = {
+      /**
+       * Retrieves script file names from the available state.
+       * @return {!Array<string>} Resulting entries in their output order.
+       */
       getScriptFileNames: () => [file],
+      /**
+       * Retrieves script version from the available state.
+       * @return {string} Resulting text.
+       */
       getScriptVersion: () => '0',
+      /**
+       * Retrieves script snapshot from the available state.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getScriptSnapshot: () => ts.ScriptSnapshot.fromString(source),
+      /**
+       * Retrieves compilation settings from the available state.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       getCompilationSettings: () => ({allowJs: true, checkJs: false}),
+      /**
+       * Retrieves current directory from the available state.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getCurrentDirectory: () => process.cwd(),
+      /**
+       * Retrieves default lib file name from the available state.
+       *
+       * @param {*} settings Configuration settings to apply.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getDefaultLibFileName: settings => ts.getDefaultLibFilePath(settings),
       fileExists: ts.sys.fileExists,
       readFile: ts.sys.readFile,

@@ -7,12 +7,31 @@ import {shelfLevels} from '../../../shared/warehouse-compartments.js';
 export const WAREHOUSE_CAMERAS = Object.freeze([
   ['nw', 'Nordwest'], ['ne', 'Nordost'], ['se', 'Südost'], ['sw', 'Südwest'],
 ]);
+/**
+ * Derives the rotate result from the supplied values.
+ *
+ * @param {*} item Current item under consideration.
+ * @return {number} Calculated numeric value.
+ */
 const rotate = item => ((Number(item.rotation) || 0) % 360 + 360) % 360;
 
+/**
+ * Computes the room-space footprint of a furniture item.
+ *
+ * @param {*} item Warehouse item or record being evaluated.
+ * @return {!Object} Structured result for the caller.
+ */
 export const furnitureFootprint = item => rotate(item) % 180 === 0
   ? {width: Number(item.width), depth: Number(item.depth)}
   : {width: Number(item.depth), depth: Number(item.width)};
 
+/**
+ * Selects the camera position and target for a furniture view.
+ *
+ * @param {*} item Warehouse item or record being evaluated.
+ * @param {string=} previous Previous used by this operation.
+ * @return {*} Entries transformed for the consuming code.
+ */
 export function cameraForFurniture(item, previous = 'nw') {
   const faces = {
     0: ['sw', 'se'], 90: ['nw', 'sw'],
@@ -22,14 +41,32 @@ export function cameraForFurniture(item, previous = 'nw') {
   return faces[0];
 }
 
+/**
+ * Computes the camera-facing direction for the 3D scene.
+ *
+ * @param {*} corner Corner of the furniture footprint.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export const cameraDirection = corner => ({
   nw: [-1, -1], ne: [1, -1], se: [1, 1], sw: [-1, 1],
 })[corner] || [-1, -1];
 
+/**
+ * Calculates the limit numeric value.
+ *
+ * @param {*} x Horizontal coordinate.
+ * @param {*} min Minimum accepted value.
+ * @param {*} max Maximum accepted value.
+ * @return {number} Calculated numeric value.
+ */
 const limit = (x, min, max) => Math.max(min, Math.min(max, x));
 
-/** World-space direction of the furniture's physical front (0=south, 90=west).
+/**
+ * World-space direction of the furniture's physical front (0=south, 90=west).
  * The footprint is axis-aligned, but front elements must rotate with it.
+ *
+ * @param {*} item Warehouse item or record being evaluated.
+ * @return {!Object} Structured result for the caller.
  */
 export function furnitureFront(item) {
   const angle = rotate(item) * Math.PI / 180;
@@ -41,9 +78,14 @@ export function furnitureFront(item) {
 }
 
 
-/** Resolve a hit in the 3D model to the actual stored compartment.
- * Shelf heights may differ; free clearance above the last shelf is not a bay.
- * A small tolerance includes the physical top/bottom board edges.
+/**
+ * Resolve a hit in the 3D model to the actual stored compartment. Shelf
+ * heights may differ; free clearance above the last shelf is not a bay. A
+ * small tolerance includes the physical top/bottom board edges.
+ *
+ * @param {*} furniture Furniture configuration including its dimensions.
+ * @param {number} height Height in pixels.
+ * @return {*} Computed value, or null when the input has no match.
  */
 export function shelfIdAtHeight(furniture, height) {
   if (!furniture) return null;
@@ -56,8 +98,15 @@ export function shelfIdAtHeight(furniture, height) {
   return level.shelf.capacity === 0 ? null : level.shelf.id;
 }
 
-/** Convert known warehouse furniture types into actual solid physical pieces.
- * All primitives occupy physical space: WebGL's depth buffer handles occlusion.
+/**
+ * Convert known warehouse furniture types into actual solid physical pieces.
+ * All primitives occupy physical space: WebGL's depth buffer handles
+ * occlusion.
+ *
+ * @param {*} room Room model containing dimensions and furniture.
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {null=} isolatedId Isolated id used by this operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
   const objects = [];
@@ -91,13 +140,34 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
       parts: [],
       shelfCount: shelves.length,
     };
+    /**
+     * Appends entries to the box result collection.
+     *
+     * @param {*} px Horizontal position in pixels.
+     * @param {*} py Vertical position in pixels.
+     * @param {*} pz Depth position in pixels.
+     * @param {*} w Width or value used by the calculation.
+     * @param {*} h Value used by this operation.
+     * @param {*} d Value used by this operation.
+     * @param {*} style Visual style or rendering properties.
+     * @param {string=} role Value used by this operation.
+     */
     const box = (px, py, pz, w, h, d, style, role = '') => {
       result.parts.push({center: [px, py, pz], size: [w, h, d], style, role});
     };
 
+    /**
+     * Derives the board result from the supplied values.
+     *
+     * @param {*} level Value used by this operation.
+          * @return {*} Result of this expression.
+*/
     const board = level =>
       box(x, level, z, width, t, depth, 'board', 'shelf-board');
 
+    /**
+     * Updates the frame state for its caller.
+     */
     const frame = () => {
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
         box(
@@ -115,6 +185,17 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
     const top = base + height;
     const {normal: [frontX, frontZ], tangent: [sideX, sideZ]} =
       furnitureFront(item);
+    /**
+     * Calculates the front plane numeric value.
+     *
+     * @param {*} offset Value used by this operation.
+     * @param {*} py Vertical position in pixels.
+     * @param {*} faceWidth Value used by this operation.
+     * @param {*} faceHeight Value used by this operation.
+     * @param {*} thickness Value used by this operation.
+     * @param {*} style Visual style or rendering properties.
+     * @param {*} role Value used by this operation.
+     */
     const frontPlane = (offset, py, faceWidth, faceHeight, thickness, style, role) => {
       const out = Number(item.width);
       const d = Number(item.depth);
@@ -140,6 +221,15 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
       const boardLevels = [base, ...levels.map(level => level.top)];
       for (const level of boardLevels) board(Math.min(top - t / 2, level +
         t / 2));
+      /**
+       * Creates front for warehouse 3d model.
+       *
+       * @param {*} front Front-facing side of the shelf or room.
+       * @param {*} bottom Lower boundary of the geometry.
+       * @param {*} upper Upper boundary of the geometry.
+       * @param {*} leavesOverride Leaves override used by this operation.
+       * @param {*} frameOverride Frame override used by this operation.
+       */
       const makeFront = (front, bottom, upper, leavesOverride, frameOverride) => {
         const span = upper - bottom;
         const panelH = Math.max(0.015, span - t * 1.3);

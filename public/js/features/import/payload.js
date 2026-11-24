@@ -24,8 +24,12 @@ const COMMON_IMPORT_FIELDS = Object.freeze([
 ]);
 
 /**
- * Normalize an untrusted extension payload after the source has checked its own
- * identity.
+ * Normalize an untrusted extension payload after the source has checked its
+ * own identity.
+ *
+ * @param {!Object} data Input data for the operation.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function normalizeImportPayload(data, {referenceId, extraFields = []} = {}) {
   if (!data || data.version !== 2 || data.source !== 'external' ||

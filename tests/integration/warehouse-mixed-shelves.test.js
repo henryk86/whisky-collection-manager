@@ -29,6 +29,12 @@ test(
         'POST',
         furnitureInput
       )).data;
+      /**
+       * Derives the add result from the supplied values.
+       *
+       * @param {*} body Body content to validate or process.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const add = body => api(
         ctx.base,
         `/api/warehouse/furniture/${furniture.id}/shelves`,

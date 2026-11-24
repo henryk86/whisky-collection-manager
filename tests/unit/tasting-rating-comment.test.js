@@ -13,6 +13,13 @@ const record = {
   tastingNotes: {nose: 'Vanille', palate: 'Frucht', finish: 'Lang'},
 };
 
+/**
+ * Renders the tasting rating comment.test state.
+ *
+ * @param {*} page Page used by this operation.
+ * @param {boolean=} existing Existing used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 function render(page, existing = true) {
   let markup = '';
   const state = {
@@ -30,8 +37,23 @@ function render(page, existing = true) {
     },
   };
   const view = createTastingsView({
-    state, shell: html => markup =
-      html, navigate() {}, refresh() {},
+    state,
+    /**
+     * Derives the shell result from the supplied values.
+     *
+     * @param {*} html HTML markup to render or inspect.
+     * @return {*} Result computed from the supplied inputs.
+     */
+    shell: html => markup =
+      html,
+    /**
+     * Updates the navigate state for its caller.
+     */
+    navigate() {},
+    /**
+     * Performs the refresh lifecycle action.
+     */
+    refresh() {},
   });
   view.editor();
   return {markup, view};
@@ -84,8 +106,23 @@ test(
       },
     };
     createTastingsView({
-      state, shell: value => html =
-        value, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} value Value to process.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: value => html =
+        value,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     }).editor();
     assert.doesNotMatch(html, /class="tasting-rating-comment"/);
   }

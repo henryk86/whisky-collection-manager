@@ -12,6 +12,13 @@ const MIN_INTERVAL_MS = 1200;
 const CACHE_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_URL = 'https://nominatim.openstreetmap.org/search';
 
+/**
+ * Retrieves distillery locations for distillery geocoding.
+ *
+ * @param {*} input Input to process.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export async function findDistilleryLocations(input, {now = Date.now, fetchImpl = fetch} = {}) {
   const name = typeof input?.name === 'string' ? input.name.trim() : '';
   if (name.length < 2 || name.length > 150 || /[\x00-\x1f]/.test(name)) {

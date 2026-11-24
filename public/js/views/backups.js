@@ -18,11 +18,29 @@ export const providerOptions = {
   webdav: 'WebDAV',
   other: 'Andere Rclone-Verbindung',
 };
+/**
+ * Formats of for presentation.
+ *
+ * @param {*} p Point or data value used in the calculation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const formatOf = p => p.format === 'zip' ? 'zip' : 'legacy';
 
+/**
+ * Formats time for presentation.
+ *
+ * @param {*} value Value to process.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const labelTime = value => value ? new Date(value)
   .toLocaleString(currentLanguage()) : t("backups.status.notYet");
 
+/**
+ * Builds the localized schedule text text for the current language.
+ *
+ * @param {*} p Point or data value used in the calculation.
+ * @return {*} Value returned by the delegated operation.
+ */
 const scheduleText = p => {
   const s = p.schedule || {};
   const time = `${String(s.hour ?? 0).padStart(2, '0')}:${String(s.minute ??
@@ -49,12 +67,24 @@ const scheduleText = p => {
   return t("backups.schedule.dailyText", {time});
 };
 
+/**
+ * Builds the localized manual text for the current language.
+ *
+ * @param {*} unlocked Value used by this operation.
+ * @return {string} Resulting text.
+ */
 const manual = unlocked =>
   `<div class="backup-step"><h4>${t("backups.sections.downloadDirectly")}</h4>
   <p class="muted">${t("backups.export.encryptedZipDescription")}</p>
   ${unlocked ? `<button type="button" class="btn primary" data-act="backup-manual-download">${t("backups.export.downloadProtected")}</button>` : `<p class="hint">${t("backups.security.managementRequiredForDownload")}</p>`}
   <p class="hint">${t("backups.password.safeStorageAdvice")}</p></div>`;
 
+/**
+ * Renders backup section for backups.
+ *
+ * @param {!Object} state Current application state.
+ * @return {string} Resulting text.
+ */
 export function renderBackupSection(state) {
   const dash = state.backupDashboard;
   if (!state.backupUnlocked || !dash) {
@@ -187,6 +217,14 @@ export function renderBackupSection(state) {
     </section>`;
 }
 
+/**
+ * Renders the configured backup profile form.
+ *
+ * @param {!Object=} profile Profile data used for the comparison.
+ * @param {!Array<*>=} remotes Remotes used by this operation.
+ * @param {!Array<*>=} targets Targets used by this operation.
+ * @return {string} Resulting text.
+ */
 export function profileForm(profile = {}, remotes = [], targets = []) {
   const legacy = Boolean(profile.id && profile.format !== 'zip');
   const p = {

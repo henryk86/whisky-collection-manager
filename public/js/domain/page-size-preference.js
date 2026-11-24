@@ -3,13 +3,24 @@ import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS} from './pagination.js';
 /** Per-browser display preference; never store it in collection.json. */
 export const PAGE_SIZE_STORAGE_KEY = 'whisky-page-size';
 
+/**
+ * Derives the supported page size result from the supplied values.
+ *
+ * @param {*} value Value to process.
+ * @return {number} Calculated numeric value.
+ */
 function supportedPageSize(value) {
   const number = Number(value);
   return String(number) === String(value) &&
     PAGE_SIZE_OPTIONS.includes(number) ? number : null;
 }
 
-/** Recover safely when storage is unavailable or contains an obsolete value. */
+/**
+ * Recover safely when storage is unavailable or contains an obsolete value.
+ *
+ * @param {*} storage Storage adapter used to load or save preferences.
+ * @return {number} Calculated numeric result.
+ */
 export function getPageSizePreference(storage) {
   try {
     const source = storage === undefined ? globalThis.localStorage : storage;
@@ -20,7 +31,13 @@ export function getPageSizePreference(storage) {
   }
 }
 
-/** Persist only values that can also be selected in the UI. */
+/**
+ * Persist only values that can also be selected in the UI.
+ *
+ * @param {*} value Input value to process.
+ * @param {*} storage Storage adapter used to load or save preferences.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function savePageSizePreference(value, storage) {
   const size = supportedPageSize(value);
   if (size === null) return false;

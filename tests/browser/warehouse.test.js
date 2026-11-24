@@ -377,6 +377,14 @@ test(
       const managerLayout =
         await page.locator('#modal-root .warehouse-furniture-panel')
           .evaluate(panel => {
+            /**
+             * Locates the DOM elements used by measure.
+             *
+             * @param {function(...*): *} selector Selector input for this
+             * operation.
+             * @return {!Object} Structured result assembled from the input
+             *     data.
+             */
             const measure = selector => {
               const rect = panel.querySelector(selector)
                 .getBoundingClientRect();
@@ -838,6 +846,9 @@ test(
       });
       await assign.locator('.warehouse-assignment-photo img')
         .evaluate(image => image.decode());
+      /**
+       * Validates photo size for warehouse.test.
+       */
       const checkPhotoSize = async () => {
         const bounds = await assign.evaluate(element => {
           const frame = element.querySelector('.warehouse-assignment-photo')
@@ -1285,6 +1296,14 @@ test(
         'POST',
         {name: 'Kollisionsraum', width: 4, height: 3}
       )).data;
+      /**
+       * Coordinates asynchronous work for post.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @param {*} x Horizontal coordinate.
+       * @param {number=} elevation Value used by this operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const post = async (name, x, elevation = 0) => (await requestJson(
         base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -1315,6 +1334,13 @@ test(
       assert.ok(await page.locator('.warehouse-grid-fine').count() > 0);
       const planRect = await plan.boundingBox();
       const scale = planRect.width / 4;
+      /**
+       * Coordinates asynchronous work for drag furniture.
+       *
+       * @param {*} id Identifier of the affected record.
+       * @param {*} deltaMetres Value used by this operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const dragFurniture = async (id, deltaMetres) => {
         const el = page.locator(`.warehouse-drag[data-id="${id}"]`);
         const rect = await el.boundingBox();
@@ -1548,6 +1574,13 @@ test(
       await page.locator('.warehouse-tabs [data-section="rooms"]').click();
       await page.locator('#warehouse-room-select').selectOption(room.id);
       const desktop = await page.evaluate(() => {
+        /**
+         * Locates the DOM elements used by el.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {*} Matching DOM element, if present.
+         */
         const el = selector =>
           document.querySelector(selector)?.getBoundingClientRect();
         return {
@@ -1880,6 +1913,10 @@ test(
         node.dataset
           .cameraIdentity = 'preserve';
       });
+      /**
+       * Updates the DOM elements managed by snapshot.
+       * @return {*} Computed value, or null when the input has no match.
+       */
       const snapshot = () => page.locator('#distillery-map').evaluate(node => {
         const tile = node.querySelector('.map-tiles img');
         const viewport = node.querySelector('.map-viewport');

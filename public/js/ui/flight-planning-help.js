@@ -22,20 +22,64 @@ const FORMULAS = Object.freeze({
   order: 'C(start) = 2*(I(first) - min(I(all)))\nC(total) = C(start) + sum(C(previous, next)) -> minimize',
 });
 
+/**
+ * Renders the explanatory content used by the flight planner.
+ *
+ * @param {*} t T used by this operation.
+ * @return {string} Resulting text.
+ */
 export function flightPlanningHelpHtml(t) {
+  /**
+   * Builds the localized tx text for the current language.
+   *
+   * @param {*} key Key used to select or group values.
+   * @return {string} Resulting text.
+   */
   const tx = key => escapeHtml(t(`flightPlan.help.${key}`));
 
+  /**
+   * Produces the p text used by the caller.
+   *
+   * @param {*} key Key used to select or group values.
+   * @param {string=} extraClass Value used by this operation.
+   * @return {string} Resulting text.
+   */
   const p = (key, extraClass = '') => `<p${extraClass ?
     ` class="${extraClass}"` : ''}>${tx(key)}</p>`;
 
+  /**
+   * Produces the formula text used by the caller.
+   *
+   * @param {*} key Key used to select or group values.
+   * @return {string} Resulting text.
+   */
   const formula = key =>
     `<pre class="flight-plan-help-formula"><code>${escapeHtml(FORMULAS[key])}</code></pre>`;
 
+  /**
+   * Builds the localized heading text for the current language.
+   *
+   * @param {*} key Key used to select or group values.
+   * @return {string} Resulting text.
+   */
   const heading = key => headingTitle({title: t(`flightPlan.help.${key}`)});
 
+  /**
+   * Produces the variable text used by the caller.
+   *
+   * @param {*} symbol Value used by this operation.
+   * @param {*} key Key used to select or group values.
+   * @return {string} Resulting text.
+   */
   const variable = (symbol, key) =>
     `<div class="flight-plan-help-definition"><dt>${escapeHtml(symbol)}</dt><dd>${tx(`vars.${key}`)}</dd></div>`;
 
+  /**
+   * Produces the strategy text used by the caller.
+   *
+   * @param {*} key Key used to select or group values.
+   * @return {string} Resulting text.
+   */
   const strategy = key => `<section class="flight-plan-help-strategy">
         <h4>${tx(`${key}.title`)}</h4>
         ${p(`${key}.text`)}${formula(key)}${p(`${key}.details`, 'flight-plan-help-caption')}

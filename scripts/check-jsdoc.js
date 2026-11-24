@@ -1,31 +1,34 @@
 /**
  * @fileoverview Validates public JavaScript contracts against Google JSDoc.
  *
- * Existing undocumented exports are grandfathered by an immutable signature
- * inventory. Editing one of those APIs requires actual typed documentation;
- * renaming or introducing an export cannot reuse an old exemption.
+ * Exported functions and classes need typed JSDoc without legacy exemptions.
+ * Named internal functions and methods are checked by
+ * check-jsdoc-complete.js, including functions without prior comments.
  */
-import {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import ts from 'typescript';
 import {listJavaScriptFiles} from './javascript-files.js';
 
-const baselinePath = 'scripts/jsdoc-legacy-baseline.json';
-const signaturePath = 'scripts/jsdoc-legacy-signatures.json';
 const isMain = process.argv[1] && path.resolve(process.argv[1]) ===
   fileURLToPath(import.meta.url);
 
 /**
- * Determines whether a function returns a meaningful value.
- * Nested callbacks and local function declarations have separate contracts.
+ * Determines whether a function returns a meaningful value. Nested callbacks
+ * and local function declarations have separate contracts.
+ *
  * @param {!ts.Node} func Function declaration or expression.
  * @return {boolean} Whether the return contract needs a type.
  */
 function returnsValue(func) {
   if (ts.isArrowFunction(func) && !ts.isBlock(func.body)) return true;
   let result = false;
+  /**
+   * Derives the visit result from the supplied values.
+   *
+   * @param {*} node Node to inspect or update.
+   */
   function visit(node) {
     if (node !== func && ts.isFunctionLike(node)) return;
     if (ts.isReturnStatement(node) && node.expression) result = true;
@@ -38,6 +41,7 @@ function returnsValue(func) {
 /**
  * Verifies the presence of a meaningful summary and typed function tags.
  * Destructured parameters count once; their dotted property tags are optional.
+ *
  * @param {!ts.Node} owner Statement holding the JSDoc comment.
  * @param {!ts.Node} func Function/class described by the comment.
  * @return {boolean} Whether the public API has a complete typed contract.
@@ -70,20 +74,26 @@ function hasTypedJSDoc(owner, func) {
 
 /**
  * Inspects all direct exported functions and classes in one ES module.
+ *
  * @param {string} file Relative file path used in stable export identifiers.
  * @param {string} source JavaScript module source.
- * @return {!Array<{key: string, signature: string, documented: boolean}>}
- *     Exported API symbols, function signatures and documentation status.
+ * @return {!Array<{key: string, documented: boolean}>} Exported APIs and
+ *     their documentation status.
  */
 export function inspectExports(file, source) {
   const syntax = ts.createSourceFile(file, source, ts.ScriptTarget.Latest,
     true, ts.ScriptKind.JS);
   const entries = [];
+  /**
+   * Updates the add state for its caller.
+   *
+   * @param {*} name Environment variable or setting name.
+   * @param {*} statement Value used by this operation.
+   * @param {*} func Value used by this operation.
+   */
   function add(name, statement, func) {
     const key = `${file}#${name}`;
-    const signature = createHash('sha256').update(statement.getText(syntax))
-      .digest('hex');
-    entries.push({key, signature, documented: hasTypedJSDoc(statement, func)});
+    entries.push({key, documented: hasTypedJSDoc(statement, func)});
   }
   for (const statement of syntax.statements) {
     if (!statement.modifiers?.some(mod =>
@@ -105,6 +115,7 @@ export function inspectExports(file, source) {
 
 /**
  * Lists exported APIs without complete typed documentation.
+ *
  * @param {string} file Relative JavaScript filename.
  * @param {string} source ES module contents.
  * @return {!Array<string>} Stable undocumented export identifiers.
@@ -115,47 +126,31 @@ export function undocumentedExports(file, source) {
 }
 
 /**
- * Checks untyped exports against the original grandfathered API signatures.
+ * Checks all first-party public functions for typed JSDoc contracts.
+ *
  * @param {string=} directory Repository root, defaulting to cwd.
- * @param {string=} exceptions Path to the immutable baseline identifiers.
- * @param {string=} signatures Path to the original source fingerprints.
- * @return {{checked: number, legacy: number, added: !Array<string>,
- *     changed: !Array<string>}} Counts and undocumented new or edited APIs.
+ * @return {{checked: number, incomplete: !Array<string>}} Source count and
+ *     exported APIs missing a complete documentation contract.
  */
-export function checkJSDoc(directory = process.cwd(),
-  exceptions = baselinePath, signatures = signaturePath) {
-  const allowed = new Set(JSON.parse(fs.readFileSync(
-    path.resolve(directory, exceptions), 'utf8')));
-  const signaturesOnDisk = JSON.parse(fs.readFileSync(
-    path.resolve(directory, signatures), 'utf8'));
+export function checkJSDoc(directory = process.cwd()) {
   const files = listJavaScriptFiles(directory,
     ['public', 'server', 'shared', 'scripts', 'worker', 'docker',
       'extension']).map(file => path.join(directory, file));
-  const missing = files.flatMap(file => inspectExports(
+  const incomplete = files.flatMap(file => undocumentedExports(
     path.relative(directory, file).replaceAll(path.sep, '/'),
-    fs.readFileSync(file, 'utf8')).filter(entry => !entry.documented));
-  return {
-    checked: files.length,
-    legacy: missing.length,
-    added: missing.filter(entry => !allowed.has(entry.key))
-      .map(entry => entry.key),
-    changed: missing.filter(entry => allowed.has(entry.key) &&
-      signaturesOnDisk[entry.key] !== entry.signature).map(entry => entry.key),
-  };
+    fs.readFileSync(file, 'utf8')));
+  return {checked: files.length, incomplete};
 }
 
 if (isMain) {
   const result = checkJSDoc();
-  if (result.added.length || result.changed.length) {
-    for (const key of result.added) {
-      console.error(`Missing typed JSDoc on new export: ${key}`);
-    }
-    for (const key of result.changed) {
-      console.error(`Modified legacy API requires typed JSDoc: ${key}`);
+  if (result.incomplete.length) {
+    for (const key of result.incomplete) {
+      console.error(`Missing typed JSDoc on exported API: ${key}`);
     }
     process.exitCode = 1;
   } else {
-    console.log(`JSDoc OK: ${result.checked} sources, ` +
-      `${result.legacy} untouched legacy exemptions.`);
+    console.log(`JSDoc exports OK: ${result.checked} sources; ` +
+      'no legacy exemptions.');
   }
 }

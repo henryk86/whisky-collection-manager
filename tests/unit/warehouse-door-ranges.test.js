@@ -62,8 +62,17 @@ test(
   () => {
     let html = '', form = ''; const previous = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () =>
-        null, querySelectorAll: () => [],
+        null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
+      querySelectorAll: () => [],
     };
     try {
       const view = createWarehouseView({
@@ -73,9 +82,31 @@ test(
           warehouseRoomId: 'r',
           warehouseFurnitureId: 'f',
         },
+        /**
+         * Derives the shell result from the supplied values.
+         *
+         * @param {*} value Value to process.
+         * @return {*} Result computed from the supplied inputs.
+         */
         shell: value => html = value,
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
-        modal: {showModal: (_title, body) => form = body},
+        modal: {
+          /**
+           * Renders modal in the current view.
+           *
+           * @param {*} _title Value used by this operation.
+           * @param {*} body Body content to validate or process.
+           * @return {*} Result computed from the supplied inputs.
+           */
+          showModal: (_title, body) => form = body,
+        },
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.render();

@@ -2,6 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mountWarehouseBottleDrag, shelfDropStatus} from '../../public/js/ui/warehouse-bottle-drag.js';
 
+/**
+ * Derives the fixture result from the supplied values.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function fixture() {
   const warehouse = {
     rooms: [{
@@ -39,21 +43,60 @@ test(
   }
 );
 
+/**
+ * Selects and transforms the fake dom records.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function fakeDom() {
   const listeners = new Map();
+  /**
+   * Derives the class list result from the supplied values.
+   * @return {!Object} Structured result assembled from the input data.
+   */
   const classList = () => {
     const entries = new Set();
     return {
+      /**
+       * Derives the add result from the supplied values.
+       *
+       * @param {*} key Key used to select or group values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       add: key => entries.add(key),
+      /**
+       * Derives the remove result from the supplied values.
+       *
+       * @param {*} key Key used to select or group values.
+       * @return {boolean} Whether the operation matched or succeeded.
+       */
       remove: key => entries.delete(key),
+      /**
+       * Derives the contains result from the supplied values.
+       *
+       * @param {*} key Key used to select or group values.
+       * @return {boolean} Whether the operation matched or succeeded.
+       */
       contains: key => entries.has(key),
     };
   };
   const button = {
     dataset: {id: 'b1'},
     classList: classList(),
+    /**
+     * Updates pointer capture in the current state.
+     */
     setPointerCapture: () => {},
+    /**
+     * Updates the release pointer capture state for its caller.
+     */
     releasePointerCapture: () => {},
+    /**
+     * Performs the closest lifecycle action.
+     *
+     * @param {function(...*): *} selector Selector used to obtain matching
+     *     values.
+     * @return {!Object} Result computed from the supplied inputs.
+     */
     closest: selector => selector === '.warehouse-bottle-symbol' ?
       button : null,
   };
@@ -63,6 +106,13 @@ function fakeDom() {
       {
         dataset: {shelfId: id},
         classList: classList(),
+        /**
+         * Performs the closest lifecycle action.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {!Object} Result computed from the supplied inputs.
+         */
         closest(selector) {
           return selector === '.warehouse-shelf' ?
             this : null;
@@ -72,16 +122,47 @@ function fakeDom() {
   const panel = {
     classList: classList(),
     ownerDocument: {
+      /**
+       * Derives the element from point result from the supplied values.
+       *
+       * @param {*} x Horizontal coordinate.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       elementFromPoint(x) {
         return x < 75 ? shelves.source :
           x < 175 ? shelves.destination : x < 275 ? shelves.full :
             shelves.disabled;
       },
     },
+    /**
+     * Derives the query selector all result from the supplied values.
+     *
+     * @param {function(...*): *} selector Selector used to obtain matching
+     *     values.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     querySelectorAll: selector => selector === '.warehouse-shelf' ?
       Object.values(shelves) : [],
+    /**
+     * Derives the contains result from the supplied values.
+     *
+     * @param {*} node Node to inspect or update.
+     * @return {boolean} Whether the operation matched or succeeded.
+     */
     contains: node => node === button || Object.values(shelves).includes(node),
+    /**
+     * Updates the add event listener state for its caller.
+     *
+     * @param {*} name Environment variable or setting name.
+     * @param {*} listener Value used by this operation.
+     */
     addEventListener(name, listener) {if (!listeners.has(name)) listeners.set(name, []); listeners.get(name).push(listener);},
+    /**
+     * Removes or resets event listener.
+     *
+     * @param {*} name Environment variable or setting name.
+     * @param {*} listener Value used by this operation.
+     */
     removeEventListener(name, listener) {
       listeners.set(
         name,
@@ -89,6 +170,14 @@ function fakeDom() {
       );
     },
   };
+  /**
+   * Derives the fire result from the supplied values.
+   *
+   * @param {*} type Type or category used to select behavior.
+   * @param {*} x Horizontal coordinate.
+   * @param {!Object=} options Options controlling the operation.
+   * @return {!Object} Result computed from the supplied inputs.
+   */
   const fire = (type, x, {target = button, pointerId = 1} = {}) => {
     const event = {
       target,
@@ -99,8 +188,17 @@ function fakeDom() {
       clientY: 10,
       prevented: false,
       stopped: false,
+      /**
+       * Updates the prevent default state for its caller.
+       */
       preventDefault() {this.prevented = true;},
+      /**
+       * Performs the stop propagation lifecycle action.
+       */
       stopPropagation() {this.stopped = true;},
+      /**
+       * Performs the stop immediate propagation lifecycle action.
+       */
       stopImmediatePropagation() {this.stopped = true;},
     };
     for (const fn of listeners.get(type) || []) fn(event);
@@ -117,7 +215,20 @@ test(
     const calls = [];
     const cleanup = mountWarehouseBottleDrag(
       dom.panel,
-      {getWarehouse: () => warehouse, onDrop: (...args) => calls.push(args)}
+      {
+        /**
+         * Retrieves warehouse from the available state.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
+        getWarehouse: () => warehouse,
+        /**
+         * Handles the drop interaction.
+         *
+         * @param {!Array<*>} args Arguments forwarded to the operation.
+         * @return {number} Calculated numeric value.
+         */
+        onDrop: (...args) => calls.push(args),
+      }
     );
     dom.fire('pointerdown', 20);
     dom.fire('pointerup', 20);
@@ -162,8 +273,24 @@ test(
     const dom = fakeDom();
     const calls = [], rejected = [];
     const cleanup = mountWarehouseBottleDrag(dom.panel, {
+      /**
+       * Retrieves warehouse from the available state.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       getWarehouse: () => w,
+      /**
+       * Handles the drop interaction.
+       *
+       * @param {!Array<*>} args Arguments forwarded to the operation.
+       * @return {number} Calculated numeric value.
+       */
       onDrop: (...args) => calls.push(args),
+      /**
+       * Handles the invalid drop interaction.
+       *
+       * @param {*} reason Value used by this operation.
+       * @return {number} Calculated numeric value.
+       */
       onInvalidDrop: reason => rejected.push(reason),
     });
     dom.fire('pointerdown', 20);
@@ -202,6 +329,10 @@ test(
     const scroll = {
       scrollLeft: 0,
       scrollTop: 0,
+      /**
+       * Retrieves bounding client rect from the available state.
+       * @return {!Object} Structured result assembled from the input data.
+       */
       getBoundingClientRect() {return {left: 0, right: 140, top: 0, bottom: 100};},
     };
     dom.panel.querySelector = selector => selector ===
@@ -209,7 +340,20 @@ test(
     const calls = [];
     const cleanup = mountWarehouseBottleDrag(
       dom.panel,
-      {getWarehouse: () => warehouse, onDrop: (...args) => calls.push(args)}
+      {
+        /**
+         * Retrieves warehouse from the available state.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
+        getWarehouse: () => warehouse,
+        /**
+         * Handles the drop interaction.
+         *
+         * @param {!Array<*>} args Arguments forwarded to the operation.
+         * @return {number} Calculated numeric value.
+         */
+        onDrop: (...args) => calls.push(args),
+      }
     );
     dom.fire('pointerdown', 20);
     dom.fire('pointermove', 120);
@@ -248,8 +392,24 @@ test(
     delete w.assignments.b3;
     const dom = fakeDom(), calls = [];
     const cleanup = mountWarehouseBottleDrag(dom.panel, {
+      /**
+       * Retrieves warehouse from the available state.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       getWarehouse: () => w,
+      /**
+       * Retrieves dragged ids from the available state.
+       *
+       * @param {*} id Identifier of the affected record.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       getDraggedIds: id => id === 'b1' ? ['b1', 'b2'] : [id],
+      /**
+       * Handles the drop interaction.
+       *
+       * @param {!Array<*>} args Arguments forwarded to the operation.
+       * @return {number} Calculated numeric value.
+       */
       onDrop: (...args) => calls.push(args),
     });
     dom.fire('pointerdown', 20);

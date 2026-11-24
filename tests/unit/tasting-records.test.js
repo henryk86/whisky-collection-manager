@@ -2,6 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {analyzeCollection} from '../../public/js/domain/analytics.js';
 import {normalizeTastingRecord, latestTasting, sortedTastings, displayedTastingRating} from '../../shared/tasting-records.js';
+/**
+ * Derives the tasting result from the supplied values.
+ *
+ * @param {*} id Identifier of the affected record.
+ * @param {*} tastedOn Value used by this operation.
+ * @param {*} rating Value used by this operation.
+ * @param {string=} createdAt Value used by this operation.
+ * @return {!Object} Result computed from the supplied inputs.
+ */
 const tasting = (id, tastedOn, rating, createdAt = '2026-11-01T08:00:00.000Z') => ({
   id,
   tastedOn,

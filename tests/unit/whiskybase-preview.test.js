@@ -61,19 +61,57 @@ test(
     const oldDocument = globalThis.document;
     let panel = null;
     const fields = {
+      /**
+       * Updates the insert before state for its caller.
+       *
+       * @param {*} element DOM element involved in the operation.
+       */
       insertBefore: element => {panel = element;},
+      /**
+       * Updates the prepend state for its caller.
+       *
+       * @param {*} element DOM element involved in the operation.
+       */
       prepend: element => {panel = element;},
     };
     const form = {
       elements: {name: {value: ''}, abv: {value: '43'}, bottler: {value: ''}},
       dataset: {},
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: selector =>
         ({'.forms': fields, '#import-panel': panel}[selector] ?? null),
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll: () => [],
     };
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelector: selector => selector === '#bottling-form' ? form : null,
-      createElement: () => ({innerHTML: '', setAttribute: () => {}}),
+      /**
+       * Constructs element from the supplied data.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
+      createElement: () => ({
+        innerHTML: '',
+        /**
+         * Updates attribute in the current state.
+         */
+        setAttribute: () => {},
+      }),
     };
     try {
       const controller = createWhiskybase({

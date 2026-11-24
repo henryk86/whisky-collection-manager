@@ -11,9 +11,22 @@ import {fail} from '../domain/errors.js';
 // encoding.
 // Image-byte signature and the 10 MB limit are still checked by
 // validateImageData.
+/**
+ * Checks whether correction image applies.
+ *
+ * @param {*} data Input data to process.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const isCorrectionImage = data => typeof data === 'string' &&
   /^data:image\/(?:webp|png);base64,/.test(data);
 
+/**
+ * Enforces the bottle precondition.
+ *
+ * @param {*} collection Collection data to process.
+ * @param {*} id Identifier of the affected record.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function requireBottle(collection, id) {
   const result = findBottle(collection, id);
   if (!result) {
@@ -22,6 +35,12 @@ function requireBottle(collection, id) {
   return result;
 }
 
+/**
+ * Creates bottle for bottles.
+ *
+ * @param {*} input Input to process.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export function createBottle(input) {
   return change(collection => {
     const bottling = collection.bottlings.find(entry => entry.id ===
@@ -47,6 +66,13 @@ export function createBottle(input) {
   });
 }
 
+/**
+ * Updates bottle for bottles.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} input Input to process.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export function updateBottle(id, input) {
   return change(collection => {
     const {bottle} = requireBottle(collection, id);
@@ -61,6 +87,12 @@ export function updateBottle(id, input) {
   });
 }
 
+/**
+ * Clears bottle for bottles.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export function deleteBottle(id) {
   return change(collection => {
     const {bottling, bottle} = requireBottle(collection, id);
@@ -75,6 +107,13 @@ export function deleteBottle(id) {
   });
 }
 
+/**
+ * Adds an uploaded photo to the specified physical bottle.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} input Input to process.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function addPhoto(id, input) {
   requireBottle(read(), id);
   const photoId = uid();
@@ -99,7 +138,13 @@ export async function addPhoto(id, input) {
   }
 }
 
-/** Reorder only existing photos; IDs and file paths cannot be changed here. */
+/**
+ * Reorder only existing photos; IDs and file paths cannot be changed here.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {*} input Input to process.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export async function reorderPhotos(bottleId, input) {
   if (!Array.isArray(input.photoIds) || input.photoIds.some(id =>
     typeof id !== 'string')) {
@@ -125,6 +170,13 @@ export async function reorderPhotos(bottleId, input) {
   });
 }
 
+/**
+ * Clears photo for bottles.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {string} photoId Identifier of the photo.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function removePhoto(bottleId, photoId) {
   const removed = await change(collection => {
     const {bottle} = requireBottle(collection, bottleId);
@@ -146,8 +198,15 @@ export async function removePhoto(bottleId, photoId) {
   };
 }
 
-/** The original photo never changes. Each saved cutout has a unique filename so
- * a rejected collection transaction cannot damage the previous result. */
+/**
+ * The original photo never changes. Each saved cutout has a unique filename so
+ * a rejected collection transaction cannot damage the previous result.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {string} photoId Identifier of the photo.
+ * @param {*} input Input to process.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export async function savePhotoCutout(bottleId, photoId, input) {
   const photo = requireBottle(read(), bottleId).bottle.photos?.find(item =>
     item.id === photoId);
@@ -222,7 +281,14 @@ export async function savePhotoCutout(bottleId, photoId, input) {
   }
 }
 
-/** Selecting the original does not delete the computed cutout. */
+/**
+ * Selecting the original does not delete the computed cutout.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {string} photoId Identifier of the photo.
+ * @param {*} input Input to process.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export function selectPhotoCutout(bottleId, photoId, input) {
   if (typeof input?.selected !==
     'boolean') throw fail('Ungültige Bildauswahl', 400, "api.errors.invalidImageSelection");
@@ -241,6 +307,13 @@ export function selectPhotoCutout(bottleId, photoId, input) {
   });
 }
 
+/**
+ * Clears photo cutout for bottles.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {string} photoId Identifier of the photo.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function removePhotoCutout(bottleId, photoId) {
   const old = await change(collection => {
     const {bottle} = requireBottle(collection, bottleId);
@@ -269,6 +342,11 @@ export async function removePhotoCutout(bottleId, photoId) {
 /**
  * Rendered WebP (or browser PNG fallback) is a disposable derivative; the
  * unedited source + slider settings stay available.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {string} photoId Identifier of the photo.
+ * @param {*} input Input to process.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
  */
 export async function savePhotoAdjustments(bottleId, photoId, input) {
   const photo = requireBottle(read(), bottleId).bottle.photos?.find(item =>
@@ -336,7 +414,13 @@ export async function savePhotoAdjustments(bottleId, photoId, input) {
   }
 }
 
-/** Reset edits without touching the source photo or existing cutout. */
+/**
+ * Reset edits without touching the source photo or existing cutout.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {string} photoId Identifier of the photo.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function removePhotoAdjustments(bottleId, photoId) {
   const old = await change(collection => {
     const {bottle} = requireBottle(collection, bottleId);
@@ -362,7 +446,13 @@ export async function removePhotoAdjustments(bottleId, photoId) {
   return {ok: true};
 }
 
-/** Attach a receipt, photo, or document to one concrete physical bottle. */
+/**
+ * Attach a receipt, photo, or document to one concrete physical bottle.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {*} input Input to process.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function addFile(bottleId, input) {
   requireBottle(read(), bottleId);
   const file = saveDocument(bottleId, input);
@@ -381,7 +471,13 @@ export async function addFile(bottleId, input) {
   }
 }
 
-/** Only an attachment referenced by the requested bottle can be downloaded. */
+/**
+ * Only an attachment referenced by the requested bottle can be downloaded.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {*} fileId File id used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function downloadFile(bottleId, fileId) {
   const {bottle} = requireBottle(read(), bottleId);
   const entry = (bottle.files || []).find(file => file.id === fileId);
@@ -393,8 +489,14 @@ export function downloadFile(bottleId, fileId) {
   };
 }
 
-/** Render PDFs from the authenticated attachment store via a same-origin URL.
- * This avoids framing blob: URLs, which may be denied by a stricter CSP. */
+/**
+ * Render PDFs from the authenticated attachment store via a same-origin URL.
+ * This avoids framing blob: URLs, which may be denied by a stricter CSP.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {*} fileId File id used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function previewPdf(bottleId, fileId) {
   const file = downloadFile(bottleId, fileId);
   if (!/\.pdf$/i.test(file.filename) || !file.bytes.subarray(0, 5)
@@ -404,6 +506,13 @@ export function previewPdf(bottleId, fileId) {
   return {...file, type: 'application/pdf'};
 }
 
+/**
+ * Clears file for bottles.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {*} fileId File id used by this operation.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function removeFile(bottleId, fileId) {
   const removed = await change(collection => {
     const {bottle} = requireBottle(collection, bottleId);

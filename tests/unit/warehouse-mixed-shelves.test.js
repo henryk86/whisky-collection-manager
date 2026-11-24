@@ -64,6 +64,12 @@ test(
     for (const [i, rotation] of [0, 90, 180, 270].entries()) {
       const item = {...base, rotation};
       const model = warehouse3DGeometry({...room, furniture: [item]}, warehouse).objects[0];
+      /**
+       * Filters records according to the groups selection rules.
+       *
+       * @param {*} role Value used by this operation.
+       * @return {*} Entries that meet the selection criteria.
+       */
       const groups = role => model.parts.filter(part => part.role === role);
       assert.equal(groups('body').length, 0, 'no opaque body behind open bays');
       assert.equal(groups('post').length, 4);
@@ -120,15 +126,46 @@ test(
     };
     const doc = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () =>
-        null, querySelectorAll: () => [],
+        null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
+      querySelectorAll: () => [],
     };
     try {
       const view = createWarehouseView({
         state,
+        /**
+         * Derives the shell result from the supplied values.
+         *
+         * @param {*} output Output resource or accumulated result.
+         * @return {*} Result computed from the supplied inputs.
+         */
         shell: output => html = output,
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
-        modal: {showModal: (_name, content) => form = content},
+        modal: {
+          /**
+           * Renders modal in the current view.
+           *
+           * @param {*} _name Value used by this operation.
+           * @param {*} content Content to render, store or examine.
+           * @return {*} Result computed from the supplied inputs.
+           */
+          showModal: (_name, content) => form = content,
+        },
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.render();
@@ -231,15 +268,43 @@ test(
     };
     let form = ''; const doc = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () =>
-        null, querySelectorAll: () => [],
+        null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
+      querySelectorAll: () => [],
     };
     try {
       const view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         */
         shell: () => {},
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
-        modal: {showModal: (_title, content) => form = content},
+        modal: {
+          /**
+           * Renders modal in the current view.
+           *
+           * @param {*} _title Value used by this operation.
+           * @param {*} content Content to render, store or examine.
+           * @return {*} Result computed from the supplied inputs.
+           */
+          showModal: (_title, content) => form = content,
+        },
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.openForm('furniture', 'c');

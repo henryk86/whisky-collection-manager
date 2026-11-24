@@ -6,6 +6,15 @@ import path from 'node:path';
 import http from 'node:http';
 import crypto from 'node:crypto';
 
+/**
+ * Writes create data to the local filesystem.
+ *
+ * @param {*} dir Directory containing the affected files.
+ * @param {*} relative Relative path or position to resolve.
+ * @param {*} text Text to process.
+ * @param {number=} mode Selected mode controlling the operation.
+ * @return {*} Combined text from the input values.
+ */
 const create = (dir, relative, text, mode = 0o600) => {
   const file = path.join(dir, relative); fs.mkdirSync(path.dirname(file), {recursive: true});
   fs.writeFileSync(file, text, {mode}); return file;
@@ -99,6 +108,13 @@ case "$1" in listremotes) echo 'dropbox:';; lsd) exit 0;; esac
       const {createWorker} =
         await import('../../worker/backup-worker.js?integration');
       const worker = createWorker();
+      /**
+       * Serializes queue data to JSON.
+       *
+       * @param {*} type Type or category used to select behavior.
+       * @param {!Object=} extra Additional context or configuration.
+       * @return {*} Serialized JSON text.
+       */
       const queue = (type, extra = {}) => {
         const id = crypto.randomUUID();
         create(
@@ -328,6 +344,10 @@ test(
       const {createWorker} =
         await import('../../worker/backup-worker.js?missing-password');
       const worker = createWorker();
+      /**
+       * Serializes queue data to JSON.
+       * @return {*} Serialized JSON text.
+       */
       const queue = () => {
         const id = crypto.randomUUID();
         create(

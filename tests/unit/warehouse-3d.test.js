@@ -49,6 +49,10 @@ const room = {
   ],
 };
 const warehouse = {rooms: [room], bottles: [{id: 'b1'}], assignments: {b1: 's2'}};
+/**
+ * Derives the model result from the supplied values.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const model = () => warehouse3DGeometry(room, warehouse);
 
 test(
@@ -125,6 +129,12 @@ test(
   'cabinet, drawers, vitrine, and box get different physical construction',
   () => {
     const base = room.furniture[0];
+    /**
+     * Derives the mk result from the supplied values.
+     *
+     * @param {*} type Type or category used to select behavior.
+     * @return {*} Result computed from the supplied inputs.
+     */
     const mk = type => warehouse3DGeometry(
       {...room, furniture: [{...base, type, shelves: [{id: 'x'}, {id: 'y'}]}]},
       warehouse
@@ -156,13 +166,31 @@ test(
       warehousePlanMode: '2d',
     };
     const old = globalThis.document;
-    globalThis.document = {querySelector: () => null};
+    globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      querySelector: () => null,
+    };
     try {
       const view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} value Value to process.
+         */
         shell: value => {html = value;},
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
         modal: {},
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.render(); assert.match(html, /class="warehouse-floor"/);
@@ -261,15 +289,46 @@ test(
     const before = JSON.stringify(warehouse);
     const previous = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () =>
-        null, querySelectorAll: () => [],
+        null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
+      querySelectorAll: () => [],
     };
     try {
       const view = createWarehouseView({
         state,
+        /**
+         * Derives the shell result from the supplied values.
+         *
+         * @param {*} output Output resource or accumulated result.
+         * @return {*} Result computed from the supplied inputs.
+         */
         shell: output => html = output,
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
-        modal: {showModal: (_title, content) => form = content},
+        modal: {
+          /**
+           * Renders modal in the current view.
+           *
+           * @param {*} _title Value used by this operation.
+           * @param {*} content Content to render, store or examine.
+           * @return {*} Result computed from the supplied inputs.
+           */
+          showModal: (_title, content) => form = content,
+        },
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.render();
@@ -379,11 +438,44 @@ test(
       globalThis.window;
     let html = '', scrolls = 0, navigations = 0, replaced = '';
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       querySelector: selector => selector === '.warehouse-furniture-panel' ?
-        {scrollIntoView: options => {assert.equal(options.block, 'start'); assert.equal(options.behavior, 'instant'); scrolls++;}} : null,
+        {
+          /**
+           * Updates the scroll into view state for its caller.
+           *
+           * @param {*} options Options controlling the operation.
+           */
+          scrollIntoView: options => {
+            assert.equal(options.block, 'start');
+            assert.equal(options.behavior, 'instant');
+            scrolls++;
+          },
+        } : null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll: () => [],
     };
-    globalThis.window = {history: {replaceState: (_state, _title, url) => {replaced = url;}}};
+    globalThis.window = {
+      history: {
+        /**
+         * Updates the replace state state for its caller.
+         *
+         * @param {*} _state Value used by this operation.
+         * @param {string} _title Value used by this operation.
+         * @param {*} url URL of the resource being processed.
+         */
+        replaceState: (_state, _title, url) => {replaced = url;},
+      },
+    };
     const state = {
       warehouse,
       selected: 'rooms',
@@ -393,9 +485,21 @@ test(
     try {
       const view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} value Value to process.
+         */
         shell: value => {html = value;},
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {navigations++;},
         modal: {},
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.selectFurniture('rack');
@@ -428,16 +532,37 @@ test(
     let html = '';
     const original = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () =>
-        null, querySelectorAll: () => [],
+        null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
+      querySelectorAll: () => [],
     };
     try {
       const state = {warehouse, selected: 'rooms', warehouseRoomId: room.id};
       const view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} markup HTML markup for the selected content.
+         */
         shell: markup => {html = markup;},
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
         modal: {},
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.render();
@@ -501,8 +626,17 @@ test(
     let html = '';
     const original = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () =>
-        null, querySelectorAll: () => [],
+        null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
+      querySelectorAll: () => [],
     };
     try {
       const state = {
@@ -513,9 +647,21 @@ test(
       };
       const view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} markup HTML markup for the selected content.
+         */
         shell: markup => {html = markup;},
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
         modal: {},
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.render();
@@ -566,13 +712,46 @@ test(
     const changes = [];
     const btns = room.furniture.map(furniture => ({
       dataset: {id: furniture.id},
+      /**
+       * Updates attribute in the current state.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @param {*} value Value to process.
+       */
       setAttribute(name, value) {changes.push([this.dataset.id, name, value]);},
-      closest() {return {classList: {toggle(name, hidden) {changes.push([furniture.id, name, hidden]);} }};},
+      /**
+       * Performs the closest lifecycle action.
+       * @return {!Object} Structured result assembled from the input data.
+       */
+      closest() {
+        return {
+          classList: {
+            /**
+             * Updates the toggle state for its caller.
+             *
+             * @param {*} name Environment variable or setting name.
+             * @param {*} hidden Value used by this operation.
+             */
+            toggle(name, hidden) {changes.push([furniture.id, name, hidden]);},
+          },
+        };
+      },
     }));
     const all = {disabled: true};
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       querySelector: selector => selector === '.warehouse-show-all' ?
         all : null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll: () => btns,
     };
     try {
@@ -585,9 +764,19 @@ test(
       };
       const view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         */
         shell: () => {},
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
         modal: {},
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       assert.equal(view.showAllFurniture(), 2);
@@ -627,41 +816,122 @@ test(
     const {buildWarehouseThreeScene} =
       await import('../../public/js/ui/warehouse-three-scene.js');
     class Node {
+      /**
+       * Initializes the instance and its state.
+       */
       constructor() {
         this.children = []; this.position =
-          {set() {} }; this.userData = {}; this.visible = true;
+        {
+          /**
+           * Updates the set state for its caller.
+           */
+          set() {},
+        }; this.userData = {}; this.visible = true;
       }
 
+      /**
+       * Updates the add state for its caller.
+       *
+       * @param {*} child Value used by this operation.
+       */
       add(child) {
         this.children
           .push(child);
-      } traverse(fn) {fn(this); for (const child of this.children) child.traverse(fn);}
+      }
+
+      /**
+       * Updates the traverse state for its caller.
+       *
+       * @param {*} fn Function called during this operation.
+       */
+      traverse(fn) {
+        fn(this);
+        for (const child of this.children) child.traverse(fn);
+      }
     }
     class Color {
+      /**
+       * Initializes the instance and its state.
+       *
+       * @param {*} value Value to process.
+       */
       constructor(value) {
         this.value =
           value;
-      } setHex(value) {this.value = value; return this;} lerp() {return this;}
+      }
+
+      /**
+       * Updates hex in the current state.
+       *
+       * @param {*} value Value to process.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      setHex(value) {this.value = value; return this;}
+
+      /**
+       * Derives the lerp result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      lerp() {return this;}
     }
-    class Geometry {dispose() {} }
+    class Geometry {
+      /**
+       * Performs the dispose lifecycle action.
+       */
+      dispose() {}
+    }
     class Material {
+      /**
+       * Initializes the instance and its state.
+       *
+       * @param {!Object=} options Options controlling the operation.
+       */
       constructor(options = {}) {
         Object.assign(this, options); this.color =
           new Color(options.color);
       }
 
+      /**
+       * Derives the clone result from the supplied values.
+       * @return {*} New instance constructed from the inputs.
+       */
       clone() {
         return new Material({
           color: this.color
             .value, opacity: this.opacity,
         });
-      } dispose() {}
+      }
+
+      /**
+       * Performs the dispose lifecycle action.
+       */
+      dispose() {}
     }
-    class Mesh extends Node {constructor(geo, material) {super(); this.geometry = geo; this.material = material;} }
+    class Mesh extends Node {
+      /**
+       * Initializes the instance and its state.
+       *
+       * @param {*} geo Value used by this operation.
+       * @param {*} material Value used by this operation.
+       */
+      constructor(geo, material) {
+        super(); this.geometry =
+          geo; this.material = material;
+      }
+    }
     class Grid extends Node {
+      /**
+       * Initializes the instance and its state.
+       */
       constructor() {
         super(); this.material =
-          {color: new Color(0), dispose() {} };
+        {
+          color: new Color(0),
+          /**
+           * Performs the dispose lifecycle action.
+           */
+          dispose() {},
+        };
       }
     }
     const THREE = {
@@ -683,6 +953,12 @@ test(
       warehouse,
       {hiddenIds: ['cabinet', 'rack']}
     );
+    /**
+     * Filters records according to the meshes selection rules.
+     *
+     * @param {*} id Identifier of the affected record.
+     * @return {*} Entries that meet the selection criteria.
+     */
     const meshes = id => scene.selectables.filter(mesh => mesh.userData
       .furnitureId === id);
     assert.ok(meshes('cabinet').length > 0 && meshes('rack').length > 0 &&
@@ -831,9 +1107,30 @@ test(
     const modals = []; const navigation = [];
     const view = createWarehouseView({
       state,
+      /**
+       * Updates the shell state for its caller.
+       */
       shell: () => {},
+      /**
+       * Derives the navigate result from the supplied values.
+       *
+       * @param {!Array<*>} args Arguments forwarded to the operation.
+       * @return {number} Calculated numeric value.
+       */
       navigate: (...args) => navigation.push(args),
-      modal: {showModal: (...args) => modals.push(args)},
+      modal: {
+        /**
+         * Renders modal in the current view.
+         *
+         * @param {!Array<*>} args Arguments forwarded to the operation.
+         * @return {number} Calculated numeric value.
+         */
+        showModal: (...args) => modals.push(args),
+      },
+      /**
+       * Performs the refresh lifecycle action.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       refresh: async () => {},
     });
     assert.equal(view.openOccupiedShelfDetails('empty'), false);

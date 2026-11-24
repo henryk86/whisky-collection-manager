@@ -6,11 +6,24 @@ for (let i = 0; i < 256; i++) {
   let n = i; for (let j = 0; j < 8; j++) n =
     n & 1 ? 0xedb88320 ^ (n >>> 1) : n >>> 1; crcTable[i] = n >>> 0;
 }
+/**
+ * Derives the crc32 result from the supplied values.
+ *
+ * @param {*} data Input data to process.
+ * @return {number} Calculated numeric value.
+ */
 function crc32(data) {
   let crc = 0xffffffff; for (const byte of data) crc =
     crcTable[(crc ^ byte) & 255] ^ (crc >>> 8); return (crc ^ 0xffffffff) >>> 0;
 }
 
+/**
+ * Derives the chunk result from the supplied values.
+ *
+ * @param {*} type Type or category used to select behavior.
+ * @param {*} data Input data to process.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function chunk(type, data) {
   const header = Buffer.from(type, 'ascii'); const length =
     Buffer.alloc(4); length.writeUInt32BE(data.length);
@@ -18,6 +31,12 @@ function chunk(type, data) {
   return Buffer.concat([length, header, data, check]);
 }
 
+/**
+ * Parses png for visual png.
+ *
+ * @param {*} bytes Bytes used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function decodePNG(bytes) {
   if (!bytes.subarray(0, 8)
     .equals(sig)) throw new Error('Not a PNG screenshot');
@@ -67,6 +86,14 @@ export function decodePNG(bytes) {
   return {width, height, channels, pixels: output};
 }
 
+/**
+ * Serializes rgb for visual png.
+ *
+ * @param {number} width Width in pixels.
+ * @param {number} height Height in pixels.
+ * @param {*} rgb Rgb used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function encodeRGB(width, height, rgb) {
   const header = Buffer.alloc(13); header.writeUInt32BE(width); header.writeUInt32BE(height, 4); header[8] = 8; header[9] = 2;
   const rows = Buffer.allocUnsafe((width * 3 + 1) * height);
@@ -83,6 +110,14 @@ export function encodeRGB(width, height, rgb) {
   ]);
 }
 
+/**
+ * Compares PNG dimensions and changed pixels for screenshot diagnosis.
+ *
+ * @param {*} beforeBytes Before bytes used by this operation.
+ * @param {*} afterBytes After bytes used by this operation.
+ * @param {number=} delta Validated changes to apply to the resource.
+ * @return {!Object} Structured result for the caller.
+ */
 export function comparePNG(beforeBytes, afterBytes, delta = 36) {
   const a = decodePNG(beforeBytes), b = decodePNG(afterBytes);
   const width = Math.max(a.width, b.width), height =

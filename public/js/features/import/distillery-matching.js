@@ -1,10 +1,18 @@
-/** Imported data can list multiple distilleries in a single field. */
+/**
+ * Imported data can list multiple distilleries in a single field.
+ *
+ * @param {*} raw Raw used by this operation.
+ * @return {!Array<*>} Resulting list of values.
+ */
 export function splitDistilleryNames(raw) {
   if (typeof raw !== 'string') return [];
   const names = [];
   const seen = new Set();
   let buffer = '';
   let parentheses = 0;
+  /**
+   * Transforms the push name text with the required substitutions.
+   */
   const pushName = () => {
     const name = buffer.normalize('NFKC').replace(/\s+/gu, ' ').trim();
     buffer = '';
@@ -31,6 +39,11 @@ export function splitDistilleryNames(raw) {
 /**
  * Return one choice per name; unmatched distilleries remain visible, not
  * silently discarded.
+ *
+ * @param {*} raw Raw used by this operation.
+ * @param {!Array<*>=} knownDistilleries Known distilleries used by this
+ * operation.
+ * @return {!Array<!Object>} Resulting list of values.
  */
 export function matchImportedDistilleries(raw, knownDistilleries = []) {
   const known = new Map(knownDistilleries.map(distillery => [

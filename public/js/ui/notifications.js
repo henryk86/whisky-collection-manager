@@ -1,6 +1,12 @@
 import {query} from './dom.js';
 import {t} from '../i18n/index.js';
 
+/**
+ * Shows a transient status notification in the application shell.
+ *
+ * @param {*} message Message used by this operation.
+ * @param {boolean=} error Error being handled.
+ */
 export function toast(message, error = false) {
   query('.toast')?.remove();
   const el = document.createElement('div');

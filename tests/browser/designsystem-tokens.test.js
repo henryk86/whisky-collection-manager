@@ -17,6 +17,12 @@ test(
           }, theme);
           const result = await page.evaluate(() => {
             const root = getComputedStyle(document.documentElement);
+            /**
+             * Normalizes the token text for subsequent processing.
+             *
+             * @param {*} name Environment variable or setting name.
+             * @return {string} Resulting text.
+             */
             const token = name => root.getPropertyValue(name).trim();
             const main = document.querySelector('main');
             const header = document.querySelector('.header-inner');

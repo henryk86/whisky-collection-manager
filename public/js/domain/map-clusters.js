@@ -6,6 +6,14 @@ import {MAX_MAP_ZOOM, markerDiameter, project} from './distillery-map.js';
 // No data is aggregated or modified in the collection itself.
 export const CLUSTER_DISTANCE_PX = 58;
 
+/**
+ * Groups nearby map sites into markers at the current map scale.
+ *
+ * @param {*} sites Geographic sites to include in the map.
+ * @param {*} zoom Map scale used for projection.
+ * @param {!Object=} options3 Destructured options for this operation.
+ * @return {!Array<!Object>} Resulting list of values.
+ */
 export function clusterMapSites(sites, zoom, {pinnedId = null} = {}) {
   const groups = [];
   // The last zoom level is a detail view: never aggregate distinct sites.
@@ -48,10 +56,21 @@ export function clusterMapSites(sites, zoom, {pinnedId = null} = {}) {
 // must remain independently selectable. Arrange only truly overlapping
 // markers around their projected locations and preserve the real anchor for
 // a small visual connector. This changes neither coordinates nor bottle data.
+/**
+ * Orders the spread overlapping sites records using the configured comparison.
+ *
+ * @param {*} groups Value used by this operation.
+ */
 function spreadOverlappingSites(groups) {
   const visited = new Set();
   const ordered = [...groups].sort((a, b) => String(a.sites[0].id)
     .localeCompare(String(b.sites[0].id)));
+  /**
+   * Calculates the diameter numeric value.
+   *
+   * @param {*} group Value used by this operation.
+   * @return {number} Calculated numeric value.
+   */
   const diameter = group => Math.max(35, markerDiameter(group.bottleCount));
   for (const start of ordered) {
     if (visited.has(start)) continue;

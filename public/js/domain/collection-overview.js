@@ -10,6 +10,9 @@ export const OVERVIEW_MODES = Object.freeze(['bottlings', 'bottles']);
 
 /**
  * Offer only known distilleries referenced by at least one recorded bottling.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @return {*} Entries that meet the selection criteria.
  */
 export function availableOverviewDistilleries(collection) {
   const usedIds = new Set((collection.bottlings || []).flatMap(bottling =>
@@ -21,12 +24,25 @@ export function availableOverviewDistilleries(collection) {
     .sort((left, right) => left.name.localeCompare(right.name, 'de'));
 }
 
+/**
+ * Checks whether matching bottle type applies.
+ *
+ * @param {*} bottle Physical bottle record under consideration.
+ * @param {*} volumeType Value used by this operation.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function isMatchingBottleType(bottle, volumeType) {
   return volumeType === 'all' || (bottle.volumeType || 'standard') ===
     volumeType;
 }
 
-/** One rating range per Glencairn; the newest tasting is the sole source. */
+/**
+ * One rating range per Glencairn; the newest tasting is the sole source.
+ *
+ * @param {!Object} bottling Bottling record being processed.
+ * @param {string=} filter Filter used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function matchesOverviewRating(bottling, filter = 'all') {
   if (filter === 'all') return true;
   const score = displayedTastingRating(bottling);
@@ -37,6 +53,13 @@ export function matchesOverviewRating(bottling, filter = 'all') {
   return Math.max(1, Math.ceil(Number(score) / 20)) === bucket;
 }
 
+/**
+ * Derives the matching bottling text result from the supplied values.
+ *
+ * @param {*} bottling Bottling record being inspected or updated.
+ * @param {*} distilleryNames Value used by this operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function matchingBottlingText(bottling, distilleryNames) {
   return [
     bottling.name,
@@ -47,6 +70,12 @@ function matchingBottlingText(bottling, distilleryNames) {
   ];
 }
 
+/**
+ * Derives the matching bottle text result from the supplied values.
+ *
+ * @param {*} bottle Physical bottle record under consideration.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function matchingBottleText(bottle) {
   return [
     bottle.inventoryNumber,
@@ -60,6 +89,9 @@ function matchingBottleText(bottle) {
 
 /**
  * All sort criteria use the underlying saved data, not formatted card labels.
+ *
+ * @param {*} entry Entry to include in the calculation.
+ * @return {?Object} Computed value, or null when the input has no match.
  */
 export function purchasePrice(entry) {
   const bottles = entry.bottle ? [entry.bottle] : entry.bottling.bottles || [];
@@ -79,6 +111,12 @@ export function purchasePrice(entry) {
   };
 }
 
+/**
+ * Finds the most recent timestamp across the collection entries.
+ *
+ * @param {*} entry Entry to include in the calculation.
+ * @return {*} Entries that meet the selection criteria.
+ */
 export function latestUpdate(entry) {
   const times = [entry.bottling.updatedAt || entry.bottling.createdAt];
   if (entry.bottle) times.push(entry.bottle.updatedAt || entry.bottle
@@ -89,6 +127,14 @@ export function latestUpdate(entry) {
     .sort().at(-1) || null;
 }
 
+/**
+ * Orders or compares present values.
+ *
+ * @param {*} left Left-hand operand or entry.
+ * @param {*} right Right-hand operand or entry.
+ * @param {boolean=} descending Value used by this operation.
+ * @return {number} Calculated numeric value.
+ */
 function comparePresent(left, right, descending = false) {
   // Blank dates, missing prices and unrated tastings always belong at the end.
   if (left == null) return right == null ? 0 : 1;
@@ -98,6 +144,12 @@ function comparePresent(left, right, descending = false) {
   return descending ? -difference : difference;
 }
 
+/**
+ * Converts the input into number.
+ *
+ * @param {*} value Value to process.
+ * @return {number} Calculated numeric value.
+ */
 function asNumber(value) {
   if (value === null || value === undefined || value === '') return null;
   const number = Number(value);
@@ -106,6 +158,15 @@ function asNumber(value) {
 
 const STATUS_ORDER = Object.freeze({closed: 0, open: 1, empty: 2});
 
+/**
+ * Orders or compares entries values.
+ *
+ * @param {*} left Left-hand operand or entry.
+ * @param {*} right Right-hand operand or entry.
+ * @param {*} sort Sort direction or ordering rule.
+ * @param {*} distilleryNames Value used by this operation.
+ * @return {*} Value returned by the delegated operation.
+ */
 function compareEntries(left, right, sort, distilleryNames) {
   const a = left.bottling;
   const b = right.bottling;
@@ -200,8 +261,14 @@ function compareEntries(left, right, sort, distilleryNames) {
 }
 
 /**
- * Criteria refer to the newest tasting only; missing axes are not equivalent to
- * zero.
+ * Criteria refer to the newest tasting only; missing axes are not equivalent
+ * to zero.
+ *
+ * @param {!Object} bottling Bottling record being processed.
+ * @param {!Array<*>=} criteria Criteria used by this operation.
+ * @param {boolean=} profileMissing Profile missing used by this operation.
+ * @param {boolean=} profilePresent Profile present used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
  */
 export function matchesFlavorCriteria(bottling, criteria = [], profileMissing = false, profilePresent = false) {
   const profile = sortedTastings(bottling).find(item =>
@@ -215,7 +282,13 @@ export function matchesFlavorCriteria(bottling, criteria = [], profileMissing = 
     profile[axis] >= min && profile[axis] <= max);
 }
 
-/** Filter before slicing, so each physical bottle counts as its own result. */
+/**
+ * Filter before slicing, so each physical bottle counts as its own result.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {!Array<!Object>} Resulting list of values.
+ */
 export function collectionOverviewEntries(collection, {
   mode = 'bottlings',
   search = '',

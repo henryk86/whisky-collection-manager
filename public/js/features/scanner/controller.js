@@ -2,9 +2,20 @@ import {t} from '../../i18n/index.js';
 import {query} from '../../ui/dom.js';
 import {textInput} from '../../ui/fields.js';
 import {supportedFormats, cameraConfig} from './config.js';
-/** Camera lifecycle only. Inventory lookup lives in resolve-code.js. */
+/**
+ * Camera lifecycle only. Inventory lookup lives in resolve-code.js.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createScanner({state, showModal, resolveCode}) {
   let scannerSequence = 0;
+  /**
+   * Updates element attributes used by scan status.
+   *
+   * @param {*} message Message to display or use for diagnostics.
+   * @param {string=} kind Value used by this operation.
+   */
   function scanStatus(message, kind = 'info') {
     const element = query('#scan-error');
     if (element) {
@@ -13,6 +24,12 @@ export function createScanner({state, showModal, resolveCode}) {
     }
   }
 
+  /**
+   * Builds the localized scan error text for the current language.
+   *
+   * @param {*} err Error to handle or propagate.
+   * @return {*} Value returned by the delegated operation.
+   */
   function scanError(err) {
     const name = err?.name || '';
     if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
@@ -28,6 +45,11 @@ export function createScanner({state, showModal, resolveCode}) {
       t("scanner.errors.unknownScannerError");
   }
   let scannerLibraryPromise = null;
+  /**
+   * Loads scanner library for controller.
+   *
+   * @return {*} Created DOM element.
+   */
   function loadScannerLibrary() {
     if (window.Html5Qrcode) {
       return Promise.resolve(window.Html5Qrcode);
@@ -51,6 +73,10 @@ export function createScanner({state, showModal, resolveCode}) {
     return scannerLibraryPromise;
   }
 
+  /**
+   * Performs the stop scan lifecycle action.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function stopScan() {
     scannerSequence++;
     const scanner = state.scanner;
@@ -73,6 +99,12 @@ export function createScanner({state, showModal, resolveCode}) {
     }
   }
 
+  /**
+   * Builds the localized scan code text for the current language.
+   *
+   * @param {boolean=} assign Value used by this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function scanCode(assign = false) {
     const previousModal = assign ? state.modal : null;
     const previousValues = assign && query('#bottle-form') ?
@@ -126,6 +158,13 @@ export function createScanner({state, showModal, resolveCode}) {
       };
       state.scanner = scanner;
       let handled = false;
+      /**
+       * Builds the localized decoded text for the current language.
+       *
+       * @param {*} value Value to process.
+       * @param {*} result Result from the preceding operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const decoded = async (value, result) => {
         if (handled || state.scanner !== scanner) {
           return;
@@ -177,6 +216,12 @@ export function createScanner({state, showModal, resolveCode}) {
     }
   }
 
+  /**
+   * Builds the localized scan image text for the current language.
+   *
+   * @param {*} file File resource to read, write or inspect.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function scanImage(file) {
     if (!file) {
       return;

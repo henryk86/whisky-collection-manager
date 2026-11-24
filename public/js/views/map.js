@@ -10,19 +10,50 @@ import {matchingBottlingSites} from '../domain/bottling-map-focus.js';
 
 const PAGE_LIMIT = 12;
 const ALL_SITES_PREF = 'wcm-map-all-distilleries';
+/**
+ * Retrieves all sites preference from the available state.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const readAllSitesPreference = () => {
   try {return localStorage.getItem(ALL_SITES_PREF) === '1';}
   catch {return false;}
 };
 
+/**
+ * Produces the plural text used by the caller.
+ *
+ * @param {*} count Number of requested or available entries.
+ * @param {*} one Value used by this operation.
+ * @param {*} many Value used by this operation.
+ * @return {string} Resulting text.
+ */
 const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
 
-/** A compact legend explains the marker styles without duplicating the map's
- * interactive marker dimensions. Relative stock sizes stay distinguishable. */
+/**
+ * A compact legend explains the marker styles without duplicating the map's
+ * interactive marker dimensions. Relative stock sizes stay distinguishable.
+ *
+ * @param {number} count Number of items to process.
+ * @return {number} Calculated numeric result.
+ */
 export const legendMarkerDiameter = count =>
   Math.max(21, Math.round(markerDiameter(count) * 0.62));
 const LEGEND_CLUSTER_DIAMETER = 27;
+/**
+ * Renders the legend for distillery-map marker types.
+ *
+ * @param {boolean=} showAllDistilleries Show all distilleries used by this
+ * operation.
+ * @return {string} Resulting text.
+ */
 export function mapLegendHtml(showAllDistilleries = false) {
+  /**
+   * Produces the stock example text used by the caller.
+   *
+   * @param {*} count Number of requested or available entries.
+   * @param {string=} extraClass Value used by this operation.
+   * @return {string} Resulting text.
+   */
   const stockExample = (count, extraClass = '') =>
     `<span class="map-stock-visual map-legend-marker ${extraClass}" style="--legend-diameter:${legendMarkerDiameter(count)}px" aria-hidden="true">${count}</span>`;
   const samples = [1, 10, 100].map(count =>
@@ -52,6 +83,9 @@ export function mapLegendHtml(showAllDistilleries = false) {
 /**
  * One logical site per distillery; nearby map markers cluster at small zoom
  * levels.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function createMapView({state, shell, navigate, settings}) {
   let tileMap = null;
@@ -66,6 +100,10 @@ export function createMapView({state, shell, navigate, settings}) {
   let relatedSites = [];
   let priorFocusId = null;
 
+  /**
+   * Transforms the entries used by related sites html.
+   * @return {string} Resulting text.
+   */
   function relatedSitesHtml() {
     if (!relatedBottling) return '';
     const entries = relatedSites.map(site => site.location
@@ -81,6 +119,10 @@ export function createMapView({state, shell, navigate, settings}) {
         </div>`;
   }
 
+  /**
+   * Selects and transforms the sidebar html records.
+   * @return {string} Resulting text.
+   */
   function sidebarHtml() {
     const selected = sites.find(site => site.id === selectedId) || null;
     const filtered = selected ? selected.bottlings.filter(entry =>
@@ -142,6 +184,10 @@ export function createMapView({state, shell, navigate, settings}) {
         </div>`;
   }
 
+  /**
+   * Filters records according to the missing html selection rules.
+   * @return {string} Resulting text.
+   */
   function missingHtml() {
     const filtered = missing.filter(site => site.name
       .toLocaleLowerCase('de').includes(missingFilter.toLocaleLowerCase('de')));
@@ -153,11 +199,22 @@ export function createMapView({state, shell, navigate, settings}) {
         </details>`;
   }
 
+  /**
+   * Transforms the entries used by missing rows.
+   *
+   * @param {*} items Entries to process.
+   * @return {string} Resulting text.
+   */
   function missingRows(items) {
     return items.length ? items.slice(0, 18).map(site =>
       `<div class="map-missing-row"><span>${escapeHtml(site.name)}</span><button type="button" class="btn small" data-map-edit="${escapeHtml(site.id)}">${t("map.actions.setLocation")}</button></div>`).join('') + (items.length > 18 ? `<p class="hint">${t("map.search.moreResults", {count: items.length - 18})}</p>` : '') : `<p class="hint">${t("map.empty.noMatchingDistilleries")}</p>`;
   }
 
+  /**
+   * Renders sidebar in the current view.
+   *
+   * @param {!Object=} options Options controlling the operation.
+   */
   function renderSidebar({focusSearch = false} = {}) {
     const sidebar = document.getElementById('map-sidebar');
     if (!sidebar) return;
@@ -171,6 +228,12 @@ export function createMapView({state, shell, navigate, settings}) {
 
   }
 
+  /**
+   * Derives the select result from the supplied values.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {boolean=} focusMap Value used by this operation.
+   */
   function select(id, focusMap = false) {
     if (!sites.some(site => site.id === id)) return;
     selectedId = id;
@@ -181,6 +244,9 @@ export function createMapView({state, shell, navigate, settings}) {
     else tileMap?.select(id);
   }
 
+  /**
+   * Updates the sync sites state for its caller.
+   */
   function syncSites() {
     const mapData = buildDistilleryMap(
       state.collection,
@@ -204,6 +270,9 @@ export function createMapView({state, shell, navigate, settings}) {
     }
   }
 
+  /**
+   * Performs the refresh data lifecycle action.
+   */
   function refreshData() {
     // A saved distillery edit must not tear down the interactive map:
     // keeping the existing viewer preserves its exact camera, drag state,
@@ -253,6 +322,11 @@ export function createMapView({state, shell, navigate, settings}) {
     }
   }
 
+  /**
+   * Renders the map state.
+   *
+   * @param {!Object=} options Optional configuration for the operation.
+   */
   function render({preserveView = true} = {}) {
     const initialView = preserveView ? tileMap?.getView() : null;
     tileMap?.destroy(); tileMap = null;
@@ -296,6 +370,11 @@ export function createMapView({state, shell, navigate, settings}) {
     );
   }
 
+  /**
+   * Handles the click interaction.
+   *
+   * @param {*} target Target of the operation.
+   */
   function handleClick(target) {
     if (target.dataset.mapFocus) select(target.dataset.mapFocus, true);
     else if (target.dataset.mapPage) {
@@ -307,6 +386,11 @@ export function createMapView({state, shell, navigate, settings}) {
       .mapEdit) settings.promptDistillery(target.dataset.mapEdit);
   }
 
+  /**
+   * Handles the change interaction.
+   *
+   * @param {*} target Target of the operation.
+   */
   function handleChange(target) {
     if (target.id === 'map-site-select') select(target.value, true);
     else if (target.id === 'map-all-distilleries') {
@@ -320,6 +404,11 @@ export function createMapView({state, shell, navigate, settings}) {
     }
   }
 
+  /**
+   * Handles the input interaction.
+   *
+   * @param {*} target Target of the operation.
+   */
   function handleInput(target) {
     if (target.id === 'map-bottling-search') {
       search = target.value;
@@ -334,6 +423,11 @@ export function createMapView({state, shell, navigate, settings}) {
     }
   }
 
+  /**
+   * Derives the center on updated location result from the supplied values.
+   *
+   * @param {*} id Identifier of the affected record.
+   */
   function centerOnUpdatedLocation(id) {
     const site = sites.find(entry => entry.id === id && entry.location);
     if (!site || !tileMap) return;
@@ -345,6 +439,9 @@ export function createMapView({state, shell, navigate, settings}) {
     tileMap.centerOn(site);
   }
 
+  /**
+   * Performs the destroy lifecycle action.
+   */
   function destroy() {tileMap?.destroy(); tileMap = null;}
   return {
     render,

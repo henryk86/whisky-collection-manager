@@ -4,6 +4,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
+/**
+ * Derives the files result from the supplied values.
+ *
+ * @param {*} directory Directory containing the requested data.
+ * @return {*} Combined text from the input values.
+ */
 function files(directory) {
   return fs.readdirSync(directory, {
     withFileTypes: true,
@@ -68,6 +74,12 @@ for (const [file, imports] of graph) {
   }
 }
 const visited = new Set();
+/**
+ * Transforms the entries used by visit.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ * @param {!Array<*>=} stack Value used by this operation.
+ */
 function visit(file, stack = []) {
   if (stack.includes(file)) {
     throw new Error(`Circular imports: ${[...stack, file].map(name =>
@@ -90,6 +102,11 @@ for (const file of graph.keys()) {
 const {SHARED_BROWSER_FILES} = await import('../server/http/static-files.js');
 const browserVisited = new Set();
 const browserShared = new Set();
+/**
+ * Validates the verify browser imports state and rejects invalid inputs.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ */
 function verifyBrowserImports(file) {
   if (browserVisited.has(file)) return;
   browserVisited.add(file);
@@ -249,7 +266,7 @@ console.log('B-5: No application-source-text unit/integration assertions.');
 // Repository-wide Google JavaScript formatting and public API JSDoc contracts.
 // Both are checked in CI via npm run check; no automatic formatting in CI.
 for (const script of ['format-js.js', 'check-line-width.js',
-  'check-jsdoc.js']) {
+  'check-jsdoc.js', 'check-jsdoc-complete.js']) {
   const validation = spawnSync(process.execPath, [`scripts/${script}`], {
     encoding: 'utf8',
   });

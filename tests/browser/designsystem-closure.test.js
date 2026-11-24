@@ -7,6 +7,10 @@ import {actionButton} from '../../public/js/ui/buttons.js';
 const widths = [390, 768, 1024, 1440];
 const themes = ['light', 'dark'];
 
+/**
+ * Locates the DOM elements used by viewport metrics.
+ * @return {!Object} Matching DOM element, if present.
+ */
 const viewportMetrics = () => ({
   viewport: innerWidth,
   overflow: Math.max(0, document.documentElement.scrollWidth - innerWidth),

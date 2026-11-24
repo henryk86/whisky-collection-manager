@@ -1,8 +1,15 @@
 import {takeMutationUpdates, takeUpdatedResource} from '../api.js';
 import {synchronizeWarehouseProjection} from '../../../shared/warehouse-bottle-projection.js';
-/** Refresh only resources known to be affected by a mutation.
- * Unknown/mixed mutations deliberately use both endpoints. The cache module
- * retains revalidation semantics for every resource actually requested. */
+/**
+ * Refresh only resources known to be affected by a mutation. Unknown/mixed
+ * mutations deliberately use both endpoints. The cache module retains
+ * revalidation semantics for every resource actually requested.
+ *
+ * @param {!Object} state Current application state.
+ * @param {*} getJson Get json used by this operation.
+ * @param {string=} scope Resource domain affected by the operation.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export async function loadResources(state, getJson, scope = 'all') {
   if (!['all', 'collection', 'warehouse']
     .includes(scope)) throw new Error(`Unknown refresh scope: ${scope}`);

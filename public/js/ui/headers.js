@@ -12,7 +12,7 @@ import {arrowLeftIcon, helpCircleIcon} from './action-icons.js';
  * Renders a shared action container, leaving event delegation untouched.
  *
  * @param {string} content Trusted application-generated button markup.
- * @param {{className: string}=} options Optional additional CSS class.
+ * @param {{className: string}=} options2 Optional additional CSS class.
  * @return {string} HTML, or an empty string when no actions are supplied.
  */
 export function headerActions(content, {className = ''} = {}) {
@@ -25,14 +25,6 @@ export function headerActions(content, {className = ''} = {}) {
  * Renders an escaped heading and optional trusted action markup.
  *
  * @param {!Object} options Heading text, level and presentation settings.
- * @param {string} options.title Title text (always HTML-escaped).
- * @param {number=} options.level Heading level, restricted to 2 or 3.
- * @param {string=} options.className Optional escaped CSS classes.
- * @param {string=} options.id Optional escaped HTML identifier.
- * @param {string=} options.trailingAction Trusted application HTML appended to
- *     the title.
- * @param {boolean=} options.period Whether to show a decorative punctuation
- *     mark.
  * @return {string} Heading HTML.
  * @throws {RangeError} If the heading level is unsupported.
  */
@@ -58,19 +50,6 @@ export function headingTitle({
  * Renders a section heading with an optional description and actions.
  *
  * @param {!Object=} options Heading and layout configuration.
- * @param {string} options.title Escaped heading text.
- * @param {string=} options.actions Trusted action-button HTML.
- * @param {string=} options.trailingAction Trusted trailing heading action.
- * @param {string=} options.className Additional outer CSS classes.
- * @param {string=} options.titleClass Additional heading CSS classes.
- * @param {string=} options.titleId Optional HTML identifier for the heading.
- * @param {number=} options.level Heading level, 2 or 3.
- * @param {string=} options.layout One of the supported section/modal layouts.
- * @param {string=} options.description Escaped explanatory text.
- * @param {string=} options.descriptionClass Description styling class.
- * @param {string=} options.copyClass Optional title/description wrapper class.
- * @param {string=} options.actionsClass CSS class of the actions wrapper.
- * @param {boolean=} options.actionsBare Whether actions bypass their wrapper.
  * @return {string} Section heading HTML.
  * @throws {RangeError} If the layout or heading level is unsupported.
  */
@@ -104,16 +83,8 @@ export function sectionHeader({
 /**
  * Renders the shared page heading without changing persisted names.
  *
- * @param {!Object=} options Page heading and optional application-owned markup.
- * @param {string} options.title User or page title, HTML-escaped.
- * @param {string=} options.eyebrow Short escaped overline.
- * @param {string=} options.intro Optional escaped introductory copy.
- * @param {string=} options.className Extra header CSS classes.
- * @param {string=} options.preTitle Trusted application HTML before the title.
- * @param {string=} options.actions Trusted application action markup.
- * @param {string=} options.copyClass Title container CSS class.
- * @param {boolean=} options.period Add a decorative period only to page titles;
- *     use false for names of saved bottlings.
+ * @param {!Object=} options Page heading and optional application-owned
+ * markup.
  * @return {string} Accessible page-header HTML.
  */
 export function pageHeader({
@@ -140,7 +111,8 @@ export function pageHeader({
  * Renders the shared back button with a single accessible arrow.
  *
  * @param {string} action Delegated data-act identifier.
- * @param {string} label Escaped translated label; old arrow glyphs are removed.
+ * @param {string} label Escaped translated label; old arrow glyphs are
+ * removed.
  * @param {string=} region Optional data-region attribute.
  * @param {string=} variant Inline or page-action placement.
  * @return {string} Accessible navigation HTML.
@@ -162,9 +134,6 @@ export function backNavigation(action, label, region = '', variant = 'inline') {
  * Renders an accessible help button without changing heading height.
  *
  * @param {!Object=} options Help action configuration.
- * @param {string} options.label Translated accessible name, HTML-escaped.
- * @param {string=} options.action Delegated data-act identifier.
- * @param {boolean=} options.disabled Disable keyboard and pointer interaction.
  * @return {string} Help-button HTML.
  */
 export function helpIconButton({label, action = 'flight-plan-help', disabled = false} = {}) {

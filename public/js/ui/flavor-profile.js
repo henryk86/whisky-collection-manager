@@ -2,25 +2,62 @@ import {t} from '../i18n/index.js';
 import {escapeHtml} from './dom.js';
 import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
 
+/**
+ * Resolves the localized label for a flavour-profile axis.
+ *
+ * @param {*} axis Axis used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export const flavorAxisTitle = axis => t(`flavor.axis.${axis}`);
 const radius = 118, cx = 230, cy = 195;
 const step = 2 * Math.PI / FLAVOR_AXES.length;
+/**
+ * Derives the angle at result from the supplied values.
+ *
+ * @param {*} index Zero-based index of the selected entry.
+ * @return {number} Calculated numeric value.
+ */
 const angleAt = index => -Math.PI / 2 + index * step;
 
+/**
+ * Derives the point result from the supplied values.
+ *
+ * @param {*} index Zero-based index of the selected entry.
+ * @param {*} value Value to process.
+ * @return {!Array<number>} Resulting entries in their output order.
+ */
 const point = (index, value) => {
   const angle = angleAt(index);
   return [cx + Math.cos(angle) * (value / 10) * radius,
   cy + Math.sin(angle) * (value / 10) * radius];
 };
 
+/**
+ * Calculates present from the inputs.
+ *
+ * @param {*} value Value to process.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const scorePresent = value => Number.isInteger(value) && value >= 0 &&
   value <= 10;
 
+/**
+ * Locates the DOM elements used by scores from editor.
+ *
+ * @param {*} section Value used by this operation.
+ * @return {!Object} Array of values selected for the caller.
+ */
 const scoresFromEditor = section => Object.fromEntries(FLAVOR_AXES.map(axis => {
   const input = section.querySelector(`[name="flavor-${axis}"]`);
   return [axis, input.dataset?.flavorUnset ? null : Number(input.value)];
 }));
 
+/**
+ * Calculates radar-chart polygon points from flavour scores.
+ *
+ * @param {!Array<*>} values Values to aggregate or compare.
+ * @return {string} Resulting text.
+ */
 export function flavorPolygon(values) {
   // Omit unassessed points from older tastings instead of silently plotting
   // them at zero.
@@ -29,6 +66,13 @@ export function flavorPolygon(values) {
     .join(' ');
 }
 
+/**
+ * Renders the radar chart for a tasting's flavour profile.
+ *
+ * @param {!Array<*>} values Values to aggregate or compare.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {string} Resulting text.
+ */
 export function flavorChart(values, {editable = false, colorSection = null, compact = false} = {}) {
   if (!values && !editable) return `<p class="hint">${escapeHtml(t('flavor.notRecorded'))}</p>`;
   const scores = values || Object.fromEntries(FLAVOR_AXES.map(axis =>
@@ -67,12 +111,24 @@ export function flavorChart(values, {editable = false, colorSection = null, comp
     </div>`;
 }
 
+/**
+ * Parses flavor profile for flavor profile.
+ *
+ * @param {*} form Form used by this operation.
+ * @return {?Object} Computed value, or null when the input has no match.
+ */
 export function readFlavorProfile(form) {
   const section = form?.querySelector('[data-flavor-editor]');
   if (!section || !section.dataset.flavorSet) return null;
   return scoresFromEditor(section);
 }
 
+/**
+ * Handles flavor range for flavor profile.
+ *
+ * @param {!Event} event Event that triggered the handler.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function handleFlavorRange(event) {
   const range = event.target.closest?.('[data-flavor-range]');
   if (!range) return false;
@@ -97,8 +153,11 @@ export function handleFlavorRange(event) {
 }
 
 /**
- * Accessible native sliders are the input controls. SVG rays are optional touch
- * targets.
+ * Accessible native sliders are the input controls. SVG rays are optional
+ * touch targets.
+ *
+ * @param {!PointerEvent} event Event that triggered the handler.
+ * @return {boolean} Whether the condition is satisfied.
  */
 export function setFlavorFromPointer(event) {
   const hit = event.target.closest?.('[data-flavor-hit]');
@@ -124,6 +183,9 @@ export function setFlavorFromPointer(event) {
 /**
  * Keep the SVG, native sliders and accessibility labels in sync after
  * undo/redo.
+ *
+ * @param {*} container Container used by this operation.
+ * @param {!Array<*>} values Values to aggregate or compare.
  */
 export function displayFlavorProfile(container, values) {
   if (!container) return;

@@ -68,6 +68,12 @@ test(
     try {
       // Raw http.request guarantees that the Host header is not silently
       // replaced by fetch/undici with the URL authority.
+      /**
+       * Derives the status with host result from the supplied values.
+       *
+       * @param {*} host Network host or host configuration.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const statusWithHost = host => new Promise((resolve, reject) => {
         http.get(
           context.base + '/api/collection',
@@ -149,6 +155,12 @@ test(
     const warnings = [];
     context.child.stderr.on('data', chunk => warnings.push(String(chunk)));
     try {
+      /**
+       * Derives the request with host result from the supplied values.
+       *
+       * @param {*} host Network host or host configuration.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const requestWithHost = host => new Promise((resolve, reject) => {
         http.get(
           context.base + '/api/version',
@@ -255,6 +267,12 @@ test(
     const warnings = [];
     context.child.stderr.on('data', chunk => warnings.push(String(chunk)));
     try {
+      /**
+       * Derives the status with host result from the supplied values.
+       *
+       * @param {*} host Network host or host configuration.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const statusWithHost = host => new Promise((resolve, reject) => {
         http.get(
           context.base + '/api/version',

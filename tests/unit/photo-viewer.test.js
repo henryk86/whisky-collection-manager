@@ -3,15 +3,53 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createPhotoViewer} from '../../public/js/ui/photo-viewer.js';
 
+/**
+ * Derives the thumbnail result from the supplied values.
+ *
+ * @param {*} src Value used by this operation.
+ * @param {*} alt Value used by this operation.
+ * @param {*} gallery Value used by this operation.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function thumbnail(src, alt, gallery) {
-  const image = {getAttribute: key => ({src, alt})[key] || null};
+  const image = {
+    /**
+     * Retrieves attribute from the available state.
+     *
+     * @param {*} key Key used to select or group values.
+     * @return {*} Result computed from the supplied inputs.
+     */
+    getAttribute: key => ({src, alt})[key] || null,
+  };
   return {
+    /**
+     * Derives the query selector result from the supplied values.
+     *
+     * @param {*} key Key used to select or group values.
+     * @return {!Object} Result computed from the supplied inputs.
+     */
     querySelector: key => key === 'img' ? image : null,
+    /**
+     * Performs the closest lifecycle action.
+     *
+     * @param {*} key Key used to select or group values.
+     * @return {*} Result computed from the supplied inputs.
+     */
     closest: key => key === '[data-photo-list]' ? gallery : null,
+    /**
+     * Derives the matches result from the supplied values.
+     * @return {boolean} Whether the operation matched or succeeded.
+     */
     matches: () => false,
   };
 }
 
+/**
+ * Transforms the entries used by harness.
+ *
+ * @param {!Object=} options Options controlling the operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function harness({
   nested = false,
   enableHero = false,
@@ -19,15 +57,34 @@ function harness({
 } = {}) {
   let opened = false;
   let html = '';
-  const gallery = {querySelectorAll: () => buttons};
+  const gallery = {
+    /**
+     * Derives the query selector all result from the supplied values.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
+    querySelectorAll: () => buttons,
+  };
   const buttons = images.map((name, index) =>
     thumbnail(name, `Foto ${index + 1}`, gallery));
   const currentImage = {src: '', alt: ''};
   const caption = {textContent: ''};
   const counter = {textContent: ''};
-  const focus = {called: false, focus() {this.called = true;} };
+  const focus = {
+    called: false,
+    /**
+     * Updates the focus state for its caller.
+     */
+    focus() {this.called = true;},
+  };
   const original = globalThis.document;
   globalThis.document = {
+    /**
+     * Derives the query selector result from the supplied values.
+     *
+     * @param {function(...*): *} selector Selector used to obtain matching
+     *     values.
+     * @return {*} Computed value, or null when the input has no match.
+     */
     querySelector(selector) {
       if (selector === '.dialog .dialog-head [data-act="close-modal"]') return focus;
       if (selector === '.photo-lightbox') return opened ? {} : null;
@@ -36,6 +93,13 @@ function harness({
       if (selector === '.photo-lightbox-count') return counter;
       return null;
     },
+    /**
+     * Derives the query selector all result from the supplied values.
+     *
+     * @param {function(...*): *} selector Selector used to obtain matching
+     *     values.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     querySelectorAll(selector) {
       return enableHero && selector ===
         '.bottle-photos [data-act="open-photo"]' ? buttons : [];
@@ -44,6 +108,14 @@ function harness({
   const calls = [];
   const viewer = createPhotoViewer({
     state: {modal: nested ? {title: 'Bearbeiten'} : null},
+    /**
+     * Renders modal in the current view.
+     *
+     * @param {*} title Title displayed or stored by this operation.
+     * @param {*} content Content to render, store or examine.
+     * @param {*} wide Value used by this operation.
+     * @param {*} keepParent Value used by this operation.
+     */
     showModal(title, content, wide, keepParent) {
       calls.push({title, content, wide, keepParent});
       opened = true;
@@ -52,8 +124,18 @@ function harness({
   });
   return {
     viewer, buttons, calls, focus, currentImage, caption, counter,
+    /**
+     * Reads the html property from the current state.
+     * @return {string} Resulting text.
+     */
     get html() {return html;},
+    /**
+     * Performs the close lifecycle action.
+     */
     close() {opened = false;},
+    /**
+     * Updates the restore state for its caller.
+     */
     restore() {globalThis.document = original;},
   };
 }
@@ -134,11 +216,35 @@ test(
     const h = harness({enableHero: true});
     try {
       const hero = {
+        /**
+         * Derives the query selector result from the supplied values.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {!Object} Structured result assembled from the input data.
+         */
         querySelector: selector => selector === 'img' ? {
+          /**
+           * Retrieves attribute from the available state.
+           *
+           * @param {*} attr Value used by this operation.
+           * @return {*} Result computed from the supplied inputs.
+           */
           getAttribute: attr => attr === 'src' ? '/images/two.png' :
             'Flaschenfoto',
         } : null,
+        /**
+         * Performs the closest lifecycle action.
+         * @return {*} Result computed from the supplied inputs.
+         */
         closest: () => null,
+        /**
+         * Derives the matches result from the supplied values.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {boolean} Whether the operation matched or succeeded.
+         */
         matches: selector => selector === '.hero-photo-open',
       };
       h.viewer.open(hero);
@@ -158,6 +264,12 @@ test('photo markup is escaped and old new-tab photo links are gone', () => {
   const h = harness({images: ['/images/test.png']});
   try {
     h.buttons[0].querySelector = () => ({
+      /**
+       * Retrieves attribute from the available state.
+       *
+       * @param {*} key Key used to select or group values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getAttribute: key => key ===
         'src' ? '/images/test.png' : '"<script>alert(1)</script>',
     });
@@ -172,18 +284,58 @@ test(
   () => {
     const h = harness();
     try {
-      const gallery = {querySelectorAll: () => h.buttons};
+      const gallery = {
+        /**
+         * Derives the query selector all result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
+        querySelectorAll: () => h.buttons,
+      };
       const bottle = {
+        /**
+         * Derives the query selector result from the supplied values.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
         querySelector: selector => selector ===
           '[data-photo-list]' ? gallery : null,
       };
       const preview = {
+        /**
+         * Derives the query selector result from the supplied values.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {!Object} Structured result assembled from the input data.
+         */
         querySelector: selector => selector === 'img' ? {
+          /**
+           * Retrieves attribute from the available state.
+           *
+           * @param {*} key Key used to select or group values.
+           * @return {*} Result computed from the supplied inputs.
+           */
           getAttribute: key => key === 'src' ? '/images/one.png' :
             'Flaschenfoto',
         } : null,
+        /**
+         * Performs the closest lifecycle action.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
         closest: selector => selector === '[data-bottle-entry]' ||
           selector === '.bottle-entry' ? bottle : null,
+        /**
+         * Derives the matches result from the supplied values.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {boolean} Whether the operation matched or succeeded.
+         */
         matches: selector => selector === '[data-bottle-photo-preview]',
       };
       h.viewer.open(preview);

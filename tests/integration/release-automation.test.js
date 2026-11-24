@@ -6,14 +6,35 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {classifyCommit, analyzeCommits, parseGitLog, notesForPlan} from '../../scripts/release-automation.js';
 
+/**
+ * Normalizes the run text for subsequent processing.
+ *
+ * @param {*} cwd Current working directory for path resolution.
+ * @param {*} cmd Value used by this operation.
+ * @param {!Array<*>} args Arguments forwarded to the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const run = (cwd, cmd, ...args) =>
   execFileSync(cmd, args, {cwd, encoding: 'utf8'}).trim();
 
+/**
+ * Writes write data to the local filesystem.
+ *
+ * @param {*} dir Directory containing the affected files.
+ * @param {*} name Environment variable or setting name.
+ * @param {*} data Input data to process.
+ */
 const write = (dir, name, data) => {
   const file =
     path.join(dir, name); fs.mkdirSync(path.dirname(file), {recursive: true}); fs.writeFileSync(file, data);
 };
 
+/**
+ * Serializes fixture data to JSON.
+ *
+ * @param {*} t Temporary or input value for the calculation.
+ * @return {*} Serialized JSON text.
+ */
 function fixture(t) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-semrel-'));
   t.after(() => fs.rmSync(dir, {recursive: true, force: true}));
@@ -53,12 +74,24 @@ function fixture(t) {
   return dir;
 }
 
+/**
+ * Performs the commit lifecycle action.
+ *
+ * @param {*} dir Directory containing the affected files.
+ * @param {*} text Text to process.
+ * @param {string=} file File resource to read, write or inspect.
+ */
 function commit(dir, text, file = 'feature.txt') {
   write(dir, file, `${Math.random().toString(36).slice(2)}\n`);
   run(dir, 'git', 'add', '--', file);
   run(dir, 'git', 'commit', '-m', text);
 }
 
+/**
+ * Updates the merge state for its caller.
+ *
+ * @param {*} dir Directory containing the affected files.
+ */
 function merge(dir) {
   run(dir, 'git', 'checkout', 'main'); run(
     dir,
@@ -71,6 +104,12 @@ function merge(dir) {
   );
 }
 
+/**
+ * Parses plan data from JSON input.
+ *
+ * @param {*} dir Directory containing the affected files.
+ * @return {*} Parsed JSON value.
+ */
 function plan(dir) {
   return JSON.parse(run(
     dir,
@@ -81,6 +120,12 @@ function plan(dir) {
   ));
 }
 
+/**
+ * Derives the snapshot result from the supplied values.
+ *
+ * @param {*} dir Directory containing the affected files.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function snapshot(dir) {
   const out =
     path.join(dir, '..', `${path.basename(dir)}-notes`); fs.mkdirSync(out, {recursive: true}); return {
@@ -251,8 +296,14 @@ test(
   }
 );
 
-/** Migration from the former per-commit versioning scheme. In real projects
- * develop may already say 1.4.0 while main still says 1.3.3. */
+/**
+ * Migration from the former per-commit versioning scheme. In real projects
+ * develop may already say 1.4.0 while main still says 1.3.3.
+ *
+ * @param {*} t T used by this operation.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {*} Serialized JSON text.
+ */
 function legacyFixture(t, {tagCurrent = false, historicalSubjects = []} = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-semrel-legacy-'));
   t.after(() => fs.rmSync(dir, {recursive: true, force: true}));

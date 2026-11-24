@@ -20,14 +20,23 @@ const COLOR_LABEL_KEYS = Object.freeze({
 });
 
 /**
- * The original twelve shades remain unchanged. The additional picker stores its
- * HEX value internally.
+ * The original twelve shades remain unchanged. The additional picker stores
+ * its HEX value internally.
+ *
+ * @param {*} hex Hex used by this operation.
+ * @return {*} Result computed from the supplied inputs.
  */
 export function whiskyCustomColorName(hex) {
   const key = whiskyColorNameKey(hex);
   return key ? t(`tasting.colorName.${key}`) : '';
 }
 
+/**
+ * Renders the selectable whisky-colour samples and selected glass.
+ *
+ * @param {*} selected Selected used by this operation.
+ * @return {string} Resulting text.
+ */
 export function whiskyColorSelector(selected) {
   const custom = isCustomWhiskyColor(selected);
   // Only an active custom colour may populate the preview and internal draft.
@@ -65,7 +74,12 @@ export function whiskyColorSelector(selected) {
     </div>`;
 }
 
-/** Non-interactive display of the recorded colour for a saved tasting. */
+/**
+ * Non-interactive display of the recorded colour for a saved tasting.
+ *
+ * @param {*} selected Selected used by this operation.
+ * @return {string} Resulting text.
+ */
 export function whiskyColorDisplay(selected) {
   const color = resolveWhiskyColor(selected);
   if (!color) return '';

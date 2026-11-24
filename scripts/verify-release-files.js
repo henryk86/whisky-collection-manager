@@ -2,6 +2,12 @@
 /** Verify the names of files inside a release archive (stdin: unzip -Z1). */
 import fs from 'node:fs';
 
+/**
+ * Checks a source path against the release exclusion rules.
+ *
+ * @param {string} name Name of the item.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function prohibitedReleasePath(name) {
   const path = name.replaceAll('\\', '/').replace(/^\.\//, '');
   if (!path || path.includes('..') || path.startsWith('/') || /[\x00-\x1f]/

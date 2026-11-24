@@ -6,21 +6,52 @@ import {normalizeFlightFields, FLIGHT_LIMIT, allTastingReferences, flightEntries
 import {normalizeTastingRecord} from '../../shared/tasting-records.js';
 import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
 
+/**
+ * Validates the find state and rejects invalid inputs.
+ *
+ * @param {*} collection Collection data to process.
+ * @param {*} id Identifier of the affected record.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const find = (collection, id) => {
   const flight = (collection.tastingFlights || []).find(f => f.id === id);
   if (!flight) throw fail('Tasting-Flight nicht gefunden', 404, "api.errors.flightNotFound");
   return flight;
 };
 
+/**
+ * Validates the normalize state and rejects invalid inputs.
+ *
+ * @param {*} body Body content to validate or process.
+ * @param {*} old Value used by this operation.
+ * @return {*} Value returned by the delegated operation.
+ */
 const normalize = (body, old) => {
   try {return normalizeFlightFields(body, old);}
   catch (error) {throw fail(error.message, 400, "api.errors.invalidTastingData");}
 };
 
+/**
+ * Lists saved tasting flights for the requesting user.
+ *
+ * @return {!Array<!TastingFlight>} Resulting list of values.
+ */
 export function list() {return read().tastingFlights || [];}
 
+/**
+ * Retrieves the tasting flights state.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @return {*} Value returned by the delegated operation.
+ */
 export function get(id) {return find(read(), id);}
 
+/**
+ * Creates the tasting flights state.
+ *
+ * @param {*} body Request or response body.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export function create(body) {
   return change(collection => {
     const when = now();
@@ -58,6 +89,13 @@ export function create(body) {
   });
 }
 
+/**
+ * Updates the tasting flights state.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} body Request or response body.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export function update(id, body) {
   return change(collection => {
     const flight = find(collection, id);
@@ -103,6 +141,12 @@ export function update(id, body) {
   });
 }
 
+/**
+ * Clears the tasting flights state.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export function remove(id) {
   return change(collection => {
     const flight = find(collection, id);
@@ -114,6 +158,13 @@ export function remove(id) {
   });
 }
 
+/**
+ * Validates available for tasting flights.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {*} flight Flight used by this operation.
+ * @param {!Array<*>} ids Identifiers in their current order.
+ */
 function assertAvailable(collection, flight, ids) {
   if (!Array.isArray(ids) || ids.length > FLIGHT_LIMIT ||
     ids.some(id => typeof id !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/
@@ -140,6 +191,13 @@ function assertAvailable(collection, flight, ids) {
   }
 }
 
+/**
+ * Updates the ordered tasting references belonging to a flight.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} body Request or response body.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export function setTastings(id, body) {
   if (!body || typeof body !== 'object' || Array.isArray(body) ||
     Object.keys(body).length !== 1 ||
@@ -180,6 +238,10 @@ export function setTastings(id, body) {
 /**
  * Create a single tasting in a flight in one atomic write (also for unowned
  * whiskies).
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} body Request or response body.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 export function createTasting(id, body) {
   if (!body || typeof body !== 'object' ||

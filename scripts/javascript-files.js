@@ -22,6 +22,12 @@ const ignored = new Set(['node_modules', '.git', 'vendor',
  */
 export function listJavaScriptFiles(directory = process.cwd(),
   roots = JAVASCRIPT_ROOTS) {
+  /**
+   * Derives the walk result from the supplied values.
+   *
+   * @param {*} relative Relative path or position to resolve.
+   * @return {*} Array of values selected for the caller.
+   */
   function walk(relative) {
     const absolute = path.join(directory, relative);
     if (!fs.existsSync(absolute)) return [];

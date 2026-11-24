@@ -3,6 +3,12 @@ import {MODEL_SIZE, segment} from './model.js';
 import {analyzeBottleMask, cutoutOutputSize, tightenedCrop, visibleAlphaRows} from './crop.js';
 import {sharpenCutoutAlpha} from './edge.js';
 
+/**
+ * Retrieves image from the available state.
+ *
+ * @param {*} url URL of the resource being processed.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function loadImage(url) {
   const image = new Image();
   image.decoding = 'async';
@@ -18,6 +24,13 @@ async function loadImage(url) {
   return image;
 }
 
+/**
+ * Derives the canvas result from the supplied values.
+ *
+ * @param {*} width Width in pixels.
+ * @param {*} height Height in pixels.
+ * @return {*} Created DOM element.
+ */
 function canvas(width, height) {
   const result = document.createElement('canvas');
   result.width = width;
@@ -25,8 +38,13 @@ function canvas(width, height) {
   return result;
 }
 
-/** Keep native crop resolution whenever feasible. Limit canvas memory/bytes
- * for huge camera sources and only step down if the PNG exceeds upload limits. */
+/**
+ * Keep native crop resolution whenever feasible. Limit canvas memory/bytes for
+ * huge camera sources and only step down if the PNG exceeds upload limits.
+ *
+ * @param {*} cropHeight Crop height used by this operation.
+ * @return {!Array<number>} Resulting list of values.
+ */
 export function cutoutExportSizes(cropHeight) {
   const native = Math.max(1, Math.min(4096, Math.ceil(cropHeight)));
   return [native, 3200, 2800, 2400, 2000, 1600, 1280, 1024, 800]
@@ -37,6 +55,10 @@ export function cutoutExportSizes(cropHeight) {
 /**
  * Composite a precomputed segmentation mask; keeps inference separate from
  * image geometry.
+ *
+ * @param {*} image Image used by this operation.
+ * @param {*} rawMask Raw mask used by this operation.
+ * @return {string} Resulting text.
  */
 export function composeCutout(image, rawMask) {
   const geometry = analyzeBottleMask(
@@ -55,6 +77,13 @@ export function composeCutout(image, rawMask) {
   }
   maskContext.putImageData(pixels, 0, 0);
 
+  /**
+   * Renders the image state.
+   *
+   * @param {*} crop Crop used by this operation.
+   * @param {number} size Size of the input or target.
+   * @return {!HTMLCanvasElement} Result computed from the supplied inputs.
+   */
   function render(crop, size) {
     const result = canvas(size.width, size.height);
     const context = result.getContext('2d', {willReadFrequently: true});
@@ -122,6 +151,11 @@ export function composeCutout(image, rawMask) {
 /**
  * Segment locally in the browser, then composite without changing the original
  * photo.
+ *
+ * @param {string} url URL of the requested resource.
+ * @param {Function=} onProgress On progress used by this operation.
+ * @param {!Object=} options3 Destructured options for this operation.
+ * @return {!Promise<string>} Promise fulfilled when the operation completes.
  */
 export async function cutoutImage(url, onProgress = () => {}, {segmentationUrl} = {}) {
   onProgress('loading');

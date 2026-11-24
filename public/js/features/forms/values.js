@@ -1,4 +1,10 @@
 import {queryAll} from '../../ui/dom.js';
+/**
+ * Reads and normalizes current form-control values for saving.
+ *
+ * @param {*} form Form used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function formValues(form) {
   const data = Object.fromEntries(new FormData(form).entries());
   for (const [k, v] of Object.entries(data)) {

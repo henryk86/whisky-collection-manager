@@ -164,6 +164,10 @@ test(
       // supports Escape, the large cover image and backdrop dismissal.
       await page.locator('.photo-tile [data-act="open-photo"]').click();
       await page.waitForSelector('.photo-lightbox-image');
+      /**
+       * Derives the viewer style result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       const viewerStyle = () => page.locator('.photo-lightbox-stage')
         .evaluate(el => getComputedStyle(el).backgroundColor);
       const viewerBefore = await viewerStyle();
@@ -239,9 +243,20 @@ test(
       await open({query: `?bottling=${bottling.id}`});
       const gallery = page.locator(`[data-photo-list="${bottle.id}"]`);
       await gallery.locator('[data-photo-tile]').first().waitFor();
+      /**
+       * Transforms the entries used by order.
+       * @return {*} Entries transformed for the consuming code.
+       */
       const order = () => gallery.locator('[data-photo-tile]')
         .evaluateAll(tiles => tiles.map(tile => tile.dataset.photoId));
 
+      /**
+       * Calculates the drag numeric value.
+       *
+       * @param {*} source Input source to inspect.
+       * @param {*=} target Target of the operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const drag = async (source, target = null) => {
         // Mouse coordinates do not automatically scroll an offscreen gallery.
         // The tasting section above the physical bottles can place the photos
@@ -595,6 +610,10 @@ test(
             'width:600px;max-width:100%;margin:0 auto;height:1px';
           document.body.appendChild(probe);
         });
+        /**
+         * Locates the DOM elements used by measure.
+         * @return {*} Matching DOM element, if present.
+         */
         const measure = () => page.evaluate(() => ({
           overflowY: getComputedStyle(document.documentElement).overflowY,
           clientWidth: document.body.getBoundingClientRect().width,
@@ -680,6 +699,10 @@ test(
           filler.style.height = '1800px';
           document.body.append(filler);
         });
+        /**
+         * Locates the DOM elements used by measure.
+         * @return {*} Matching DOM element, if present.
+         */
         const measure = () => page.evaluate(() => ({
           width: document.documentElement.clientWidth,
           centeredLeft: document.querySelector('.header-inner')
@@ -731,6 +754,10 @@ test(
     await session(async ({page, open}) => {
       await open();
       const themeButton = page.locator('header [data-act="toggle-theme"]');
+      /**
+       * Locates the DOM elements used by measure.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const measure = async () => page.evaluate(() => {
         const logo = document.querySelector('.brand-emblem')
           .getBoundingClientRect();
@@ -890,6 +917,10 @@ test(
       await page.screenshot({
         path: 'test-artifacts/desktop-dark.png',
       });
+      /**
+       * Derives the sample hero background result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       const sampleHeroBackground = () => page.locator('.hero-overlay')
         .evaluate(el => getComputedStyle(el).backgroundImage);
       const heroBefore = await sampleHeroBackground();
@@ -1295,6 +1326,12 @@ test(
         assert.equal(res.status, 201, file.name);
       }
       await open({query: `?bottling=${bottling.id}`});
+      /**
+       * Performs the open preview lifecycle action.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @return {*} Entries that meet the selection criteria.
+       */
       const openPreview = name =>
         page.locator(`#bottle-${bottle.id} [data-act="preview-file"]`)
           .filter({hasText: name}).click();
@@ -1381,6 +1418,15 @@ test(
 
       // Observe complete animation frames after unlocking the confirmation
       // dialog. A scroll-to-top followed by smooth restoration must fail.
+      /**
+       * Locates the DOM elements used by confirm and check.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @param {*} expectedSelector Value used by this operation.
+       * @param {*} expectedCount Value used by this operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       async function confirmAndCheck(selector, expectedSelector, expectedCount) {
         const trigger = selector === 'photo' ?
           page.locator('[data-act="delete-photo"]').nth(4)
@@ -1401,6 +1447,9 @@ test(
         await page.evaluate(() => {
           window.__scrollSamples = [];
           window.__stopScrollSamples = false;
+          /**
+           * Locates the DOM elements used by sample.
+           */
           const sample = () => {
             window.__scrollSamples.push({
               y: window.scrollY,

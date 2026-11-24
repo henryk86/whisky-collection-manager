@@ -9,11 +9,21 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import {spawn, execFileSync} from 'node:child_process';
 
+/**
+ * Writes write data to the local filesystem.
+ *
+ * @param {*} p Point or data value used in the calculation.
+ * @param {*} content Content to render, store or examine.
+ */
 const write = (p, content) => {
   fs.mkdirSync(path.dirname(p), {recursive: true});
   fs.writeFileSync(p, content, {mode: 0o600});
 };
 
+/**
+ * Coordinates asynchronous work for free port.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const freePort = async () => {
   const server = net.createServer();
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -22,6 +32,14 @@ const freePort = async () => {
   return port;
 };
 
+/**
+ * Parses tls get data from JSON input.
+ *
+ * @param {*} port Value used by this operation.
+ * @param {*} ca Value used by this operation.
+ * @param {*} url URL of the resource being processed.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const tlsGet = (port, ca, url) => new Promise((resolve, reject) => {
   const req = https.get(
     `https://127.0.0.1:${port}${url}`,

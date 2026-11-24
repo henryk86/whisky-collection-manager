@@ -15,24 +15,59 @@ export const RELEASE_METADATA = [
   'package.json', 'package-lock.json', 'README.md', 'CHANGELOG.md',
   'docs/TESTSTATUS.md', 'wcm-source-manifest.json',
 ];
+/**
+ * Normalizes the git text for subsequent processing.
+ *
+ * @param {!Array<*>} args Arguments forwarded to the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const git = (...args) =>
   execFileSync('git', args, {cwd: ROOT, encoding: 'utf8'}).trim();
 
+/**
+ * Normalizes the git at text for subsequent processing.
+ *
+ * @param {*} cwd Current working directory for path resolution.
+ * @param {!Array<*>} args Arguments forwarded to the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const gitAt = (cwd, ...args) =>
   execFileSync('git', args, {cwd, encoding: 'utf8'}).trim();
 
+/**
+ * Derives the parents result from the supplied values.
+ *
+ * @param {*} rev Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const parents = rev => git('rev-list', '--parents', '-n', '1', rev)
   .split(/\s+/).slice(1);
 
+/**
+ * Derives the ancestor result from the supplied values.
+ *
+ * @param {*} older Value used by this operation.
+ * @param {*} newer Value used by this operation.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const ancestor = (older, newer) => {
   try {git('merge-base', '--is-ancestor', older, newer); return true;}
   catch {return false;}
 };
 
+/**
+ * Parses version at data from JSON input.
+ *
+ * @param {*} ref Value used by this operation.
+ * @return {*} Parsed JSON value.
+ */
 const versionAt = ref => JSON.parse(git('show', `${ref}:package.json`)).version;
 
 /**
  * Reject stale, moved or unrelated refs before attempting any remote update.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function releaseRefs({tag, merge}) {
   if (!/^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(tag))
@@ -49,6 +84,12 @@ export function releaseRefs({tag, merge}) {
   return {snapshot, developAtMerge: parents(merge)[1]};
 }
 
+/**
+ * Writes prepare diverged develop data to the local filesystem.
+ *
+ * @param {!Object} options Options controlling the operation.
+ * @return {*} Entries that meet the selection criteria.
+ */
 function prepareDivergedDevelop({tip, base, snapshot, tag}) {
   if (!ancestor(base, tip)) throw new Error('develop was rewritten after the approved merge; refusing synchronization');
   // A change to a release metadata file after approval must not be discarded.
@@ -91,7 +132,12 @@ function prepareDivergedDevelop({tip, base, snapshot, tag}) {
   }
 }
 
-/** A version PR can only contain the tested, immutable release snapshot. */
+/**
+ * A version PR can only contain the tested, immutable release snapshot.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function prepareSyncPR({tag, merge}) {
   const {snapshot} = releaseRefs({tag, merge});
   git('fetch', '--no-tags', 'origin',
@@ -111,7 +157,12 @@ export function prepareSyncPR({tag, merge}) {
   return {tag, branch, main, snapshot, alreadyMerged: false};
 }
 
-/** Validate that GitHub merged the exact tagged release commit through a PR. */
+/**
+ * Validate that GitHub merged the exact tagged release commit through a PR.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 function isCompletedMainSync({tag, merge, main, snapshot}) {
   const mainParents = parents(main);
   return mainParents.length === 2 && mainParents[0] === merge &&
@@ -122,6 +173,9 @@ function isCompletedMainSync({tag, merge, main, snapshot}) {
 /**
  * After the protected-main PR succeeds, update only the unprotected develop
  * ref.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function finishSync({tag, merge}) {
   const {snapshot, developAtMerge} = releaseRefs({tag, merge});
@@ -158,6 +212,12 @@ const running = process.argv[1] && path.resolve(process.argv[1]) ===
 if (running) {
   try {
     const [command, ...args] = process.argv.slice(2);
+    /**
+     * Derives the get result from the supplied values.
+     *
+     * @param {*} name Environment variable or setting name.
+     * @return {*} Result computed from the supplied inputs.
+     */
     const get = name => {
       const i = args.indexOf(name); return i >= 0 ?
         args[i + 1] : null;

@@ -1,9 +1,28 @@
 import {escapeHtml} from './dom.js';
 
+/**
+ * Derives the safe result from the supplied values.
+ *
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
 const safe = value => escapeHtml(String(value ?? ''));
 
+/**
+ * Filters records according to the classes selection rules.
+ *
+ * @param {!Array<*>} items Entries to process.
+ * @return {string} Resulting text.
+ */
 const classes = (...items) => items.filter(Boolean).join(' ');
 
+/**
+ * Enforces the variant precondition.
+ *
+ * @param {*} value Value to process.
+ * @param {*} allowed Value used by this operation.
+ * @param {*} kind Value used by this operation.
+ */
 const assertVariant = (value, allowed, kind) => {
   if (!allowed.includes(value)) throw new RangeError(`Invalid ${kind} variant`);
 };
@@ -12,10 +31,6 @@ const assertVariant = (value, allowed, kind) => {
  * Renders a shared visual surface with its requested semantic tag.
  *
  * @param {!Object=} options Trusted panel content and styling.
- * @param {string=} options.content Trusted application-rendered HTML.
- * @param {string=} options.variant Standard, analytics or plain.
- * @param {string=} options.tag Semantic element: div, section or article.
- * @param {string=} options.className Additional escaped CSS classes.
  * @return {string} Panel markup.
  * @throws {RangeError} If tag or style variant is unsupported.
  */
@@ -31,14 +46,6 @@ export function panel({content = '', variant = 'standard', tag = 'div', classNam
  * Renders a labeled detail value with an appropriate semantic element.
  *
  * @param {!Object=} options Detail field data and formatting.
- * @param {string} options.label HTML-escaped label.
- * @param {*=} options.value Field value, escaped by default.
- * @param {boolean=} options.valueHtml Trust the value as application-generated
- *     HTML.
- * @param {string=} options.variant Definition, fact, readonly, note or preview.
- * @param {string=} options.className Additional outer CSS classes.
- * @param {string=} options.labelClass Additional label CSS classes.
- * @param {string=} options.valueClass Additional value CSS classes.
  * @return {string} Detail-field markup.
  * @throws {RangeError} If the field variant is unsupported.
  */
@@ -74,10 +81,7 @@ export function detailField({
  * Groups detail fields in a responsive two- or three-column grid.
  *
  * @param {string} content Trusted application-generated field HTML.
- * @param {!Object=} options Grid layout and semantic wrapper.
- * @param {number=} options.columns Two or three desktop columns.
- * @param {string=} options.tag Div or definition list (dl).
- * @param {string=} options.className Additional grid CSS class.
+ * @param {!Object=} options2 Grid layout and semantic wrapper.
  * @return {string} Grid wrapper HTML.
  * @throws {RangeError} If the columns or wrapper tag are unsupported.
  */
@@ -92,11 +96,6 @@ export function detailGrid(content, {columns = 3, tag = 'div', className = ''} =
  * Renders a missing-data explanation without inventing values.
  *
  * @param {!Object=} options Message, trusted actions and style.
- * @param {string=} options.title Escaped title.
- * @param {string=} options.description Escaped explanatory text.
- * @param {string=} options.actions Trusted application-generated action HTML.
- * @param {string=} options.variant Collection, subtle or inline.
- * @param {string=} options.className Additional CSS class.
  * @return {string} Empty-state markup.
  * @throws {RangeError} If the variant is unsupported.
  */
@@ -118,8 +117,6 @@ export function emptyState({
  * Renders an accessible visual separator without view-specific borders.
  *
  * @param {!Object=} options Separator orientation and CSS class.
- * @param {string=} options.orientation Horizontal or vertical.
- * @param {string=} options.className Additional separator CSS class.
  * @return {string} HTML separator.
  * @throws {RangeError} If the orientation is unsupported.
  */
@@ -134,9 +131,7 @@ export function divider({orientation = 'horizontal', className = ''} = {}) {
  * Groups trusted action markup while preserving delegated events.
  *
  * @param {string} content Trusted application-generated action HTML.
- * @param {!Object=} options Toolbar style and extra class.
- * @param {string=} options.variant Inline, filters or end.
- * @param {string=} options.className Additional CSS class.
+ * @param {!Object=} options2 Toolbar style and extra class.
  * @return {string} Toolbar HTML.
  * @throws {RangeError} If the toolbar variant is unsupported.
  */

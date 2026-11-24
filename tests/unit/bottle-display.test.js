@@ -5,6 +5,10 @@ import {createSelectors} from '../../public/js/domain/selectors.js';
 import {createBottleForm} from '../../public/js/features/forms/bottle.js';
 import {createBottlingForm} from '../../public/js/features/forms/bottling.js';
 import {collectionFixture} from '../helpers/fixtures.js';
+/**
+ * Derives the forms result from the supplied values.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function forms() {
   const state = {
     collection: collectionFixture(),

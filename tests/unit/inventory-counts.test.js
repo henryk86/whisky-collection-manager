@@ -2,6 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {inventoryCountGroups} from '../../public/js/domain/inventory-counts.js';
 
+/**
+ * Transforms the entries used by labels.
+ *
+ * @param {*} bottles Value used by this operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const labels = bottles => inventoryCountGroups(bottles).map(group =>
   group.label);
 test('all four disjoint groups exactly match the requested wording', () => {

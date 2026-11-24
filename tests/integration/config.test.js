@@ -17,6 +17,12 @@ const expected = {
   HTTPS_PUBLIC_PORT: '3543',
   LE_HTTPS_PUBLIC_PORT: '443',
 };
+/**
+ * Selects and transforms the values records.
+ *
+ * @param {*} text Text to process.
+ * @return {!Object} Array of values selected for the caller.
+ */
 function values(text) {
   return Object.fromEntries(text.split(/\r?\n/).filter(line => /^\w+=/
     .test(line)).map(line => {
@@ -25,6 +31,13 @@ function values(text) {
     }));
 }
 
+/**
+ * Parses run config data from JSON input.
+ *
+ * @param {*} cwd Current working directory for path resolution.
+ * @param {!Object=} overrides Value used by this operation.
+ * @return {*} Parsed JSON value.
+ */
 function runConfig(cwd, overrides = {}) {
   const env = {
     ...process.env,

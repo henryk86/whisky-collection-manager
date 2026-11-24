@@ -16,6 +16,10 @@ const room = {
     shelves: [{id: 's', name: 'Shelf A', capacity: 1}],
   }],
 };
+/**
+ * Derives the warehouse result from the supplied values.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const warehouse = () => ({
   rooms: [structuredClone(room)],
   assignments: {src: 's'},

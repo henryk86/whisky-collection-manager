@@ -11,9 +11,22 @@ import {fileURLToPath} from 'node:url';
 // Restrict cleanup to actual application modules. Data, media, deployment,
 // config, vendor assets and third-party files are never candidates.
 export const SOURCE_ROOTS = ['public/js', 'server', 'shared', 'worker'];
+/**
+ * Reads hash file data from the local filesystem.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const hashFile = file => crypto.createHash('sha256')
   .update(fs.readFileSync(file)).digest('hex');
 
+/**
+ * Validates the contained file state and rejects invalid inputs.
+ *
+ * @param {*} root Root node or directory for the operation.
+ * @param {*} relative Relative path or position to resolve.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function containedFile(root, relative) {
   const full = path.resolve(root, relative);
   if (!full.startsWith(path.resolve(root) +
@@ -21,8 +34,20 @@ function containedFile(root, relative) {
   return full;
 }
 
+/**
+ * Derives the source files result from the supplied values.
+ *
+ * @param {*} directory Directory containing the requested data.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function sourceFiles(directory) {
   const found = new Set();
+  /**
+   * Derives the walk result from the supplied values.
+   *
+   * @param {*} folder Value used by this operation.
+   * @param {*} prefix Value used by this operation.
+   */
   function walk(folder, prefix) {
     if (!fs.existsSync(folder)) return;
     for (const entry of fs.readdirSync(folder, {withFileTypes: true})) {
@@ -37,6 +62,13 @@ function sourceFiles(directory) {
   return found;
 }
 
+/**
+ * Validates the safe installed file state and rejects invalid inputs.
+ *
+ * @param {*} root Root node or directory for the operation.
+ * @param {*} relative Relative path or position to resolve.
+ * @return {*} Computed value, or null when the input has no match.
+ */
 function safeInstalledFile(root, relative) {
   let next = path.resolve(root);
   for (const part of relative.split('/')) {
@@ -51,6 +83,14 @@ function safeInstalledFile(root, relative) {
   return fs.statSync(next).isFile() ? next : null;
 }
 
+/**
+ * Audits dependencies and deployment inputs for an upgrade.
+ *
+ * @param {*} previousRoot Previous root used by this operation.
+ * @param {*} nextRoot Next root used by this operation.
+ * @param {*} installedRoot Installed root used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function auditUpgrade(previousRoot, nextRoot, installedRoot) {
   const previous = sourceFiles(previousRoot);
   const next = sourceFiles(nextRoot);
@@ -68,6 +108,14 @@ export function auditUpgrade(previousRoot, nextRoot, installedRoot) {
   return {removable, changed, absent};
 }
 
+/**
+ * Identifies obsolete files safe to remove during upgrade.
+ *
+ * @param {*} previousRoot Previous root used by this operation.
+ * @param {*} nextRoot Next root used by this operation.
+ * @param {*} installedRoot Installed root used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function pruneObsolete(previousRoot, nextRoot, installedRoot) {
   const report = auditUpgrade(previousRoot, nextRoot, installedRoot);
   // Recheck each file against the old release immediately before deleting it.

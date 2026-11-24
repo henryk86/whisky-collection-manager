@@ -58,8 +58,23 @@ test(
       },
     };
     const view = createTastingsView({
-      state, shell: value => html =
-        value, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} value Value to process.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: value => html =
+        value,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     });
     view.flight();
     assert.equal((html.match(/data-flight-drag/g) || []).length, 3);

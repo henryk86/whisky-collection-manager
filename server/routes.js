@@ -28,88 +28,217 @@ import {withMutationTracking} from './domain/mutation-tracker.js';
 // collections).
 const version = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 const routes = [
-  {method: 'GET', path: /^\/api\/version$/, run: () => ({version})},
+  {
+    method: 'GET', path: /^\/api\/version$/,
+    /**
+     * Derives the run result from the supplied values.
+     * @return {!Object} Result computed from the supplied inputs.
+     */
+    run: () => ({version}),
+  },
   {
     method: 'GET',
     path: /^\/api\/auth\/session$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: (_, _body, req) => auth.sessionInfo(req),
   },
   {
     method: 'POST',
     path: /^\/api\/auth\/login$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @param {*} req Incoming request to authorize.
+     * @param {*} res Response object to update.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body, req, res) => auth.login(req, body, res),
   },
   {
     method: 'POST',
     path: /^\/api\/auth\/logout$/,
     skipBody: true,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @param {*} res Response object to update.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: (_, _body, req, res) => auth.logout(req, res),
   },
   {
     method: 'POST',
     path: /^\/api\/auth\/password$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @param {*} req Incoming request to authorize.
+     * @param {*} res Response object to update.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body, req, res) => auth.changePassword(req, body, res),
   },
   {
     method: 'GET',
     path: /^\/api\/auth\/users$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: (_, _body, req) => auth.listUsers(req),
   },
   {
     method: 'POST',
     path: /^\/api\/auth\/users$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @param {*} req Incoming request to authorize.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body, req) => auth.createUser(req, body),
   },
   {
     method: 'POST',
     path: /^\/api\/auth\/users\/([\w-]+)\/reset-password$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @param {*} req Incoming request to authorize.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body, req) => auth.resetPassword(req, id, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/auth\/users\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], _body, req) => auth.removeUser(req, id),
   },
   {
     method: 'PATCH',
     path: /^\/api\/auth\/config$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @param {*} req Incoming request to authorize.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body, req) => auth.setLoginRequired(req, body),
   },
   {
     method: 'GET',
     path: /^\/api\/warehouse$/,
+    /**
+     * Derives the run result from the supplied values.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: () => warehouse.getWarehouse(),
   },
   {
     method: 'POST',
     path: /^\/api\/warehouse\/rooms\/export$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: (_, body) => warehouse.exportRooms(body),
   },
   {
     method: 'POST',
     path: /^\/api\/warehouse\/rooms\/import\/preview$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: (_, body) => warehouse.previewRoomImport(body),
   },
   {
     method: 'POST',
     path: /^\/api\/warehouse\/rooms\/import$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body) => warehouse.importRooms(body),
   },
   {
     method: 'POST',
     path: /^\/api\/warehouse\/rooms$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body) => warehouse.createRoom(body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/warehouse\/rooms\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => warehouse.updateRoom(id, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/warehouse\/rooms\/([\w-]+)$/,
+    /**
+     * Validates the run state and rejects invalid inputs.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], _body, req) => {
       const option = new URL(req.url, 'http://localhost').searchParams
         .get('unassignBottles');
@@ -126,110 +255,256 @@ const routes = [
     method: 'POST',
     path: /^\/api\/warehouse\/rooms\/([\w-]+)\/furniture$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => warehouse.createFurniture(id, body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/warehouse\/furniture\/bulk$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body) => warehouse.bulkUpdateFurniture(body),
   },
   {
     method: 'POST',
     path: /^\/api\/warehouse\/furniture\/bulk\/delete$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body) => warehouse.bulkDeleteFurniture(body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/warehouse\/furniture\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => warehouse.updateFurniture(id, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/warehouse\/furniture\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id]) => warehouse.deleteFurniture(id),
   },
   {
     method: 'POST',
     path: /^\/api\/warehouse\/furniture\/([\w-]+)\/photos$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => warehouse.addFurniturePhoto(id, body),
   },
   {
     method: 'PUT',
     path: /^\/api\/warehouse\/furniture\/([\w-]+)\/photos\/order$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => warehouse.reorderFurniturePhotos(id, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/warehouse\/furniture\/([\w-]+)\/photos\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id, photoId]) => warehouse.deleteFurniturePhoto(id, photoId),
   },
   {
     method: 'POST',
     path: /^\/api\/warehouse\/furniture\/([\w-]+)\/copy$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => warehouse.copyFurniture(id, body),
   },
   {
     method: 'POST',
     path: /^\/api\/warehouse\/furniture\/([\w-]+)\/shelves$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => warehouse.createShelf(id, body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/warehouse\/shelves\/([\w-]+)\/move$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => warehouse.moveShelf(id, body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/warehouse\/shelves\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => warehouse.updateShelf(id, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/warehouse\/shelves\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id]) => warehouse.deleteShelf(id),
   },
   {
     method: 'POST',
     path: /^\/api\/warehouse\/shelves\/([\w-]+)\/copy$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => warehouse.copyShelf(id, body),
   },
   {
     method: 'POST',
     path: /^\/api\/warehouse\/bottles\/bulk$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body) => warehouse.assignBottles(body),
   },
   {
     method: 'PUT',
     path: /^\/api\/warehouse\/bottles\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => warehouse.assignBottle(id, body),
   },
   {
     method: 'POST',
     path: /^\/api\/map\/find-distillery$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _args Value used by this operation.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_args, body) => findDistilleryLocations(body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/settings$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _args Value used by this operation.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_args, body) => settings.updateSettings(body),
   },
   {
     method: 'PUT',
     path: /^\/api\/settings\/saved-views$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _args Value used by this operation.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_args, body) => settings.updateSavedViews(body),
   },
   {
     method: 'POST',
     path: /^\/api\/backups\/password$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _args Value used by this operation.
+     * @param {*} body Body content to validate or process.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: (_args, body, req) => backups.setZipPassword(req, body),
   },
   {
     method: 'GET',
     path: /^\/api\/backups$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _args Value used by this operation.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: (_args, _body, req) => backups.getDashboard(req),
   },
   {
@@ -237,61 +512,149 @@ const routes = [
     path: /^\/api\/backups\/import-zip$/,
     binaryUpload: true,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _args Value used by this operation.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_args, _body, req) => recovery.receiveZip(req),
   },
   {
     method: 'POST',
     path: /^\/api\/backups\/import-zip\/([\w-]+)\/unlock$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id], body, req) => recovery.unlockPreparedZip(req, id, body),
   },
   {
     method: 'GET',
     path: /^\/api\/backups\/import-zip\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id], _body, req) => recovery.previewZip(req, id),
   },
   {
     method: 'GET',
     path: /^\/api\/backups\/import-zip\/([\w-]+)\/download$/,
     downloadFile: true,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id], _body, req) => recovery.downloadPreparedZip(req, id),
   },
   {
     method: 'POST',
     path: /^\/api\/backups\/import-zip\/([\w-]+)\/apply$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @param {*} req Incoming request to authorize.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body, req) => recovery.applyZip(req, id, body),
   },
   {
     method: 'POST',
     path: /^\/api\/backups$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _args Value used by this operation.
+     * @param {*} body Body content to validate or process.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: (_args, body, req) => backups.createProfile(req, body),
   },
   {
     method: 'PUT',
     path: /^\/api\/backups\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id], body, req) => backups.updateProfile(req, id, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/backups\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id], _body, req) => backups.deleteProfile(req, id),
   },
   {
     method: 'POST',
     path: /^\/api\/backups\/([\w-]+)\/(run|check|test|snapshots|restore|prepare)$/,
     status: 202,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id, type], body, req) => backups.queueJob(req, id, type, body),
   },
   {
     method: 'GET',
     path: /^\/api\/backups\/([\w-]+)\/files\/(whisky-backup-[\w-]+\.zip)$/,
     downloadFile: true,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id, filename], _body, req) =>
       backups.downloadLocalZip(req, id, filename),
   },
   {
     method: 'POST',
     path: /^\/internal\/backup\/snapshot\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id], _body, req) => backups.createSourceSnapshot(req, id),
   },
 
@@ -299,256 +662,560 @@ const routes = [
     method: 'POST',
     path: /^\/api\/import-image\/stage$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: (_, body) => stagedImages.stageImage(body),
   },
   {
     method: 'GET',
     path: /^\/api\/import-image\/stage\/([\w-]+)$/,
     inlineImage: true,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([token]) => stagedImages.previewImage(token),
   },
   {
     method: 'POST',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/from-stage$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => stagedImages.attachImageToBottle(id, body),
   },
   {
     method: 'GET',
     path: /^\/api\/collection$/,
+    /**
+     * Derives the run result from the supplied values.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: () => collection.getCollection(),
   },
   {
     method: 'GET',
     path: /^\/api\/suggest-number$/,
+    /**
+     * Derives the run result from the supplied values.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: () => collection.getNextInventoryNumber(),
   },
   {
     method: 'POST',
     path: /^\/api\/bottlings$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body) => bottlings.createBottling(body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/bottlings\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => bottlings.updateBottling(id, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/bottlings\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id]) => bottlings.deleteBottling(id),
   },
   {
     method: 'GET',
     path: /^\/api\/tasting-flights$/,
+    /**
+     * Derives the run result from the supplied values.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     run: () => tastingFlights.list(),
   },
   {
     method: 'POST',
     path: /^\/api\/tasting-flights$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _args Value used by this operation.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_args, body) => tastingFlights.create(body),
   },
   {
     method: 'GET',
     path: /^\/api\/tasting-flights\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id]) => tastingFlights.get(id),
   },
   {
     method: 'PATCH',
     path: /^\/api\/tasting-flights\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => tastingFlights.update(id, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/tasting-flights\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id]) => tastingFlights.remove(id),
   },
   {
     method: 'PUT',
     path: /^\/api\/tasting-flights\/([\w-]+)\/tastings$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => tastingFlights.setTastings(id, body),
   },
   {
     method: 'POST',
     path: /^\/api\/tasting-flights\/([\w-]+)\/tastings$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => tastingFlights.createTasting(id, body),
   },
   {
     method: 'GET',
     path: /^\/api\/external-tastings$/,
+    /**
+     * Derives the run result from the supplied values.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     run: () => standaloneTastings.list(),
   },
   {
     method: 'GET',
     path: /^\/api\/external-tastings\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id]) => standaloneTastings.get(id),
   },
   {
     method: 'POST',
     path: /^\/api\/external-tastings$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _a Value used by this operation.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_a, body) => standaloneTastings.create(body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/external-tastings\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => standaloneTastings.update(id, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/external-tastings\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id]) => standaloneTastings.remove(id),
   },
   {
     method: 'POST',
     path: /^\/api\/external-tastings\/([\w-]+)\/assign$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => standaloneTastings.assignToBottling(id, body),
   },
   {
     method: 'GET',
     path: /^\/api\/bottlings\/([\w-]+)\/tastings$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     run: ([id]) => tastings.listTastings(id),
   },
   {
     method: 'GET',
     path: /^\/api\/bottlings\/([\w-]+)\/tastings\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id, tastingId]) => tastings.getTasting(id, tastingId),
   },
   {
     method: 'POST',
     path: /^\/api\/bottlings\/([\w-]+)\/tastings$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => tastings.createTasting(id, body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/bottlings\/([\w-]+)\/tastings\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id, tastingId], body) => tastings.updateTasting(id, tastingId, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/bottlings\/([\w-]+)\/tastings\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id, tastingId]) => tastings.deleteTasting(id, tastingId),
   },
   {
     method: 'POST',
     path: /^\/api\/bottles$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body) => bottles.createBottle(body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/bottles\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => bottles.updateBottle(id, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/bottles\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id]) => bottles.deleteBottle(id),
   },
   {
     method: 'POST',
     path: /^\/api\/bottles\/([\w-]+)\/photos$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => bottles.addPhoto(id, body),
   },
   {
     method: 'PUT',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/order$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => bottles.reorderPhotos(id, body),
   },
   {
     method: 'PUT',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/cutout$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id, photoId], body) => bottles.savePhotoCutout(id, photoId, body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/cutout$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id, photoId], body) => bottles.selectPhotoCutout(id, photoId, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/cutout$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id, photoId]) => bottles.removePhotoCutout(id, photoId),
   },
   {
     method: 'PUT',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/adjustments$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id, photoId], body) =>
       bottles.savePhotoAdjustments(id, photoId, body),
   },
   {
     method: 'DELETE',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/adjustments$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id, photoId]) => bottles.removePhotoAdjustments(id, photoId),
   },
   {
     method: 'DELETE',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id, photoId]) => bottles.removePhoto(id, photoId),
   },
   {
     method: 'POST',
     path: /^\/api\/bottles\/([\w-]+)\/files$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => bottles.addFile(id, body),
   },
   {
     method: 'GET',
     path: /^\/api\/bottles\/([\w-]+)\/files\/([\w-]+)\/preview$/,
     inlinePdf: true,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id, fileId]) => bottles.previewPdf(id, fileId),
   },
   {
     method: 'GET',
     path: /^\/api\/bottles\/([\w-]+)\/files\/([\w-]+)$/,
     download: true,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: ([id, fileId]) => bottles.downloadFile(id, fileId),
   },
   {
     method: 'DELETE',
     path: /^\/api\/bottles\/([\w-]+)\/files\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id, fileId]) => bottles.removeFile(id, fileId),
   },
   {
     method: 'POST',
     path: /^\/api\/distilleries$/,
     status: 201,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body) => distilleries.createDistillery(body),
   },
   {
     method: 'PATCH',
     path: /^\/api\/distilleries\/([\w-]+)$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {!Array<*>} items Entries to process.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: ([id], body) => distilleries.updateDistillery(id, body),
   },
   {
     method: 'POST',
     path: /^\/api\/import\/json$/,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _ Unused route parameter retained for the callback signature.
+     * @param {*} body Body content to validate or process.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     run: (_, body) => collection.importCollection(body),
   },
   {
     method: 'GET',
     path: /^\/api\/export\/json$/,
     download: true,
+    /**
+     * Derives the run result from the supplied values.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: () => exports.exportJson(),
   },
   {
     method: 'GET',
     path: /^\/api\/export\/csv$/,
     download: true,
+    /**
+     * Derives the run result from the supplied values.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: () => exports.exportCsv(),
   },
   {
     method: 'GET',
     path: /^\/api\/export\/zip$/,
     downloadFile: true,
+    /**
+     * Derives the run result from the supplied values.
+     *
+     * @param {*} _args Value used by this operation.
+     * @param {*} _body Value used by this operation.
+     * @param {*} req Incoming request to authorize.
+     * @return {*} Result computed from the supplied inputs.
+     */
     run: (_args, _body, req) => exports.exportZip(req),
   },
 ];
+/**
+ * Handles api for routes.
+ *
+ * @param {!Object} request Incoming request.
+ * @param {!Object} response Outgoing response.
+ * @param {string} url URL of the requested resource.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export async function handleApi(request, response, url) {
   for (const route of routes) {
     if (route.method !== request.method) {

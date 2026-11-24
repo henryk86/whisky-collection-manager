@@ -4,6 +4,13 @@ import {collectionOverviewEntries, matchesFlavorCriteria} from '../../public/js/
 import {normalizeFlavorCriteria, normalizeSavedViews} from '../../shared/collection-saved-views.js';
 import {suggestFlight, flightCandidates} from '../../public/js/domain/flight-planner.js';
 
+/**
+ * Derives the profile result from the supplied values.
+ *
+ * @param {*} smoky Value used by this operation.
+ * @param {*} fruity Value used by this operation.
+ * @return {!Object} Result computed from the supplied inputs.
+ */
 const profile = (smoky, fruity) => ({
   woody: 2,
   smoky,

@@ -35,14 +35,36 @@ const ROOM_SECTION_KEYS = Object.freeze({
   find: 'warehouse.navigation.findBottles',
 });
 const TYPES = Object.keys(FURNITURE_TYPE_KEYS);
+/**
+ * Transforms the entries used by type choices.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const typeChoices = () => TYPES.map(type =>
   [type, t(FURNITURE_TYPE_KEYS[type])]);
 
+/**
+ * Derives the type name result from the supplied values.
+ *
+ * @param {*} type Type or category used to select behavior.
+ * @return {*} Whether the requested condition is met.
+ */
 const typeName = type => TYPES.includes(type) ?
   t(FURNITURE_TYPE_KEYS[type]) : type;
 
+/**
+ * Derives the num result from the supplied values.
+ *
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
 const num = value => formatNumber(Number(value), {maximumFractionDigits: 2});
 
+/**
+ * Builds the localized capacity label text for the current language.
+ *
+ * @param {*} s Source value to transform.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const capacityLabel = s => s.shelves === 0 ?
   t('warehouse.capacity.noShelves') : s.unlimited === 0 ?
     t('warehouse.capacity.defined', {count: s.defined}) : s.defined === 0 ?
@@ -51,11 +73,31 @@ const capacityLabel = s => s.shelves === 0 ?
         {count: s.unlimited, places: s.defined}
       );
 
+/**
+ * Derives the safe result from the supplied values.
+ *
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
 const safe = value => esc(String(value ?? ''));
 
+/**
+ * Filters records according to the count selection rules.
+ *
+ * @param {*} w Width or value used by the calculation.
+ * @param {*} shelfId Value used by this operation.
+ * @return {number} Calculated numeric value.
+ */
 const count = (w, shelfId) => Object.values(w.assignments).filter(id =>
   id === shelfId).length;
 
+/**
+ * Finds the room and shelf path for a stored bottle.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {*} shelfId Shelf id used by this operation.
+ * @return {?Object} Computed value, or null when the input has no match.
+ */
 export function storagePath(warehouse, shelfId) {
   for (const room of warehouse?.rooms ||
     []) for (const furniture of room.furniture) for (const shelf of furniture.shelves) {
@@ -69,22 +111,56 @@ export function storagePath(warehouse, shelfId) {
   return null;
 }
 
+/**
+ * Produces the field text used by the caller.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @param {*} label Label shown to the user.
+ * @param {string=} value Value to process.
+ * @param {string=} type Type or category used to select behavior.
+ * @param {string=} options Options controlling the operation.
+ * @return {string} Resulting text.
+ */
 function field(name, label, value = '', type = 'text', options = '') {
   return `<label class="form-field">${esc(label)}<input name="${name}" type="${type}" ${options} value="${safe(value)}" required></label>`;
 }
 
+/**
+ * Transforms the entries used by choices.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @param {*} label Label shown to the user.
+ * @param {*} options Options controlling the operation.
+ * @param {string=} chosen Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function choices(name, label, options, chosen = '') {
   return `<label class="form-field">${esc(label)}<select name="${name}">${options.map(([id, title]) => `<option value="${safe(id)}" ${id === chosen ? 'selected' : ''}>${esc(title)}</option>`).join('')}</select></label>`;
 }
 
+/**
+ * Builds the localized footer text for the current language.
+ * @return {string} Resulting text.
+ */
 function footer() {return `<div class="actions ds-modal-footer warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button><button type="submit" class="btn primary">${t("common.actions.save")}</button></div>`;}
 
+/**
+ * Produces the bottle label text used by the caller.
+ *
+ * @param {*} b Second entry or operand in the calculation.
+ * @return {string} Resulting text.
+ */
 function bottleLabel(b) {
   return `${b.number ? '#' + b.number + ' · ' :
     ''}${b.name}${b.volumeType === 'sample' ? ' · Sample' : ''}`;
 }
 
-/** Read-only bottling facts; missing values are never synthesized. */
+/**
+ * Read-only bottling facts; missing values are never synthesized.
+ *
+ * @param {!Object} bottle Physical bottle record being processed.
+ * @return {string} Resulting text.
+ */
 function bottleListFacts(bottle) {
   const facts = [
     [
@@ -107,6 +183,14 @@ function bottleListFacts(bottle) {
     `<span class="warehouse-bottle-fact"><span class="warehouse-bottle-fact-label">${safe(t(key))}:</span> ${safe(value)}</span>`).join('');
 }
 
+/**
+ * Filters records according to the bottle row selection rules.
+ *
+ * @param {*} w Width or value used by the calculation.
+ * @param {*} bottle Physical bottle record under consideration.
+ * @param {boolean=} selected Currently selected item or identifier.
+ * @return {string} Resulting text.
+ */
 function bottleRow(w, bottle, selected = false) {
   const place = storagePath(w, w.assignments[bottle.id]);
   const facts = bottleListFacts(bottle);
@@ -121,11 +205,25 @@ function bottleRow(w, bottle, selected = false) {
   return `<div class="warehouse-bottle-row" data-bottle-search="${safe(searchable)}"><label class="warehouse-bottle-row-select"><input type="checkbox" class="warehouse-bottle-check" data-id="${safe(bottle.id)}" aria-label="${safe(t('warehouse.bottles.bulkSelectOne', {name: bottle.name}))}" ${selected ? 'checked' : ''}></label><div class="warehouse-bottle-row-info"><strong>${safe(bottleLabel(bottle))}</strong><small>${place ? safe(place.label) : t("detail.fields.unassigned")}</small>${facts ? `<div class="warehouse-bottle-facts">${facts}</div>` : ''}</div><button class="btn small" type="button" data-act="warehouse-assign" data-id="${safe(bottle.id)}">${place ? t("warehouse.bottles.relocate") : t("warehouse.bottles.assignAction")}</button></div>`;
 }
 
+/**
+ * Derives the room options result from the supplied values.
+ *
+ * @param {*} w Width or value used by the calculation.
+ * @param {*} roomId Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function roomOptions(w, roomId) {
   return w.rooms.find(room => room.id ===
     roomId);
 }
 
+/**
+ * Selects furniture matching the input.
+ *
+ * @param {*} w Width or value used by the calculation.
+ * @param {*} furnitureId Value used by this operation.
+ * @return {!Object} Computed value, or null when the input has no match.
+ */
 function findFurniture(w, furnitureId) {
   for (const room of w.rooms) {
     const furniture = room.furniture.find(f =>
@@ -134,6 +232,14 @@ function findFurniture(w, furnitureId) {
   return null;
 }
 
+/**
+ * Selects and transforms the room diagram records.
+ *
+ * @param {*} room Warehouse room being inspected or modified.
+ * @param {*} w Width or value used by the calculation.
+ * @param {string=} layer Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function roomDiagram(room, w, layer = 'all') {
   // SVG coordinates are metres scaled to the viewBox. Drawing remains useful
   // without JavaScript drag.
@@ -143,6 +249,13 @@ function roomDiagram(room, w, layer = 'all') {
   // 10 cm subdivisions, 50 cm guide lines and emphasized full metres.
   // Integer decimetres avoid floating-point errors at 0.1 m boundaries.
   const gridLines = [];
+  /**
+   * Constructs grid from the supplied data.
+   *
+   * @param {*} metres Value used by this operation.
+   * @param {*} scale Value used by this operation.
+   * @param {*} vertical Value used by this operation.
+   */
   const makeGrid = (metres, scale, vertical) => {
     const divisions = Math.floor(metres * 10 + 1e-8);
     for (let index = 1; index < divisions; index++) {
@@ -174,6 +287,13 @@ function roomDiagram(room, w, layer = 'all') {
   return `<div class="warehouse-map-wrap"><svg class="warehouse-floor" viewBox="0 0 ${vbW} ${vbH}" data-room-id="${safe(room.id)}" aria-label="${safe(t("warehouse.view.roomPlanAria", {name: room.name}))}"><rect class="warehouse-boundary" x="1" y="1" width="${vbW - 2}" height="${vbH - 2}" rx="2"/>${grid}${shapes}<text class="warehouse-room-hint" x="10" y="${vbH - 9}">${t("warehouse.view.twoDimensionalInstructions")}</text></svg></div>`;
 }
 
+/**
+ * Builds the localized bottle symbol text for the current language.
+ *
+ * @param {*} b Second entry or operand in the calculation.
+ * @param {!Object=} options Options controlling the operation.
+ * @return {string} Resulting text.
+ */
 function bottleSymbol(
   b,
   {
@@ -206,8 +326,14 @@ function bottleSymbol(
   return `<button type="button" class="warehouse-bottle-symbol${showPlaceholder ? ' has-photo' : ''}" data-act="${action}" data-id="${safe(b.id)}" ${selectable ? `aria-pressed="${selected}" data-select-label="${safe(selectLabel)}" data-deselect-label="${safe(deselectLabel)}"` : ''} title="${safe(accessible)}" aria-label="${safe(accessible)}">${content}</button>`;
 }
 
-/** Reused actions for the shelf cards and an unassigned bottle preview.
- * The detail link retains the physical-bottle highlight on the destination page. */
+/**
+ * Reused actions for the shelf cards and an unassigned bottle preview. The
+ * detail link retains the physical-bottle highlight on the destination page.
+ *
+ * @param {!Object} bottle Physical bottle record being processed.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {string} Resulting text.
+ */
 function bottleActionButtons(bottle, {detailLabelKey = 'warehouse.bottles.goToDetails'} = {}) {
   const detailsLink = bottle.bottlingId
     ? `<a class="btn primary" href="${safe(routeUrl('detail', bottle.bottlingId))}" data-act="open" data-id="${safe(bottle.bottlingId)}" data-bottle-id="${safe(bottle.id)}">${t(detailLabelKey)}</a>`
@@ -217,6 +343,12 @@ function bottleActionButtons(bottle, {detailLabelKey = 'warehouse.bottles.goToDe
 
 /**
  * Read-only summary for an unassigned bottle (a compartment has none to show).
+ *
+ * @param {*} w W used by this operation.
+ * @param {!Object} bottle Physical bottle record being processed.
+ * @param {!Object} bottling Bottling record being processed.
+ * @param {*} physicalBottle Physical bottle used by this operation.
+ * @return {string} Resulting text.
  */
 function bottlePreview(w, bottle, bottling, physicalBottle) {
   const statusKey = {
@@ -286,6 +418,15 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
     </div>`;
 }
 
+/**
+ * Selects and transforms the shelf panel records.
+ *
+ * @param {*} w Width or value used by the calculation.
+ * @param {*} room Warehouse room being inspected or modified.
+ * @param {*} furniture Warehouse furniture record being modified.
+ * @param {!Object=} options Options controlling the operation.
+ * @return {string} Resulting text.
+ */
 function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
   const levels = shelfLevels(furniture);
   const shelves = levels.slice().reverse().map(level => {

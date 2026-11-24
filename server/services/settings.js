@@ -5,6 +5,12 @@ import {change} from '../storage/collection-store.js';
 import {assert} from '../domain/errors.js';
 import {normalizeSavedViews} from '../../shared/collection-saved-views.js';
 
+/**
+ * Updates settings for settings.
+ *
+ * @param {*} input Input to process.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function updateSettings(input) {
   assert(
     input !== null && typeof input === 'object' && !Array.isArray(input) &&
@@ -30,6 +36,10 @@ export async function updateSettings(input) {
 /**
  * Saved collection views live in collection.json; validated and backed up with
  * it.
+ *
+ * @param {*} input Input to process.
+ * @return {!Promise<(undefined|!Object)>} Promise fulfilled when the
+ * operation completes.
  */
 export async function updateSavedViews(input) {
   assert(

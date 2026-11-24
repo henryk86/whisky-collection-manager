@@ -8,10 +8,25 @@ import {escapeHtml as esc} from '../ui/dom.js';
 const FORM_EXPORT = 'warehouse-room-export-form';
 const FORM_IMPORT = 'warehouse-room-import-form';
 
+/**
+ * Renders the warehouse-room transfer interface.
+ *
+ * @param {*} rooms Rooms used by this operation.
+ * @param {*} selectedRoomId Selected room id used by this operation.
+ * @param {string=} initialMode Initial mode used by this operation.
+ * @return {string} Resulting text.
+ */
 export function roomTransferMarkup(rooms, selectedRoomId, initialMode = 'export') {
   const exportAvailable = rooms.length > 0;
   const mode = exportAvailable && initialMode !== 'import' ? 'export' :
     'import';
+  /**
+   * Produces the tab text used by the caller.
+   *
+   * @param {*} name Environment variable or setting name.
+   * @param {*} label Label shown to the user.
+   * @return {string} Resulting text.
+   */
   const tab = (name, label) =>
     `<button type="button" class="btn warehouse-transfer-tab${mode ===
       name ? ' active' :
@@ -47,7 +62,18 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode = 'export'
     </div>`;
 }
 
+/**
+ * Creates warehouse room transfer for warehouse room transfer.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createWarehouseRoomTransfer({modal, request, getWarehouse, refresh, toast}) {
+  /**
+   * Controls transfer for warehouse room transfer.
+   *
+   * @param {*} selectedRoomId Selected room id used by this operation.
+   */
   function openTransfer(selectedRoomId) {
     const rooms = getWarehouse()?.rooms || [];
     modal.showModal(
@@ -61,6 +87,11 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse, refre
     const importForm = host.querySelector(`#${FORM_IMPORT}`);
     let importedFile = null;
     const tabs = [...host.querySelectorAll('[data-transfer-tab]')];
+    /**
+     * Updates the DOM elements managed by switch tab.
+     *
+     * @param {*} next Next candidate state or entry.
+     */
     const switchTab = next => {
       if (next === 'export' && !rooms.length) return;
       for (const tab of tabs) {
@@ -89,6 +120,10 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse, refre
     });
     const all = exportForm.querySelector('#warehouse-transfer-all');
     const choices = [...exportForm.querySelectorAll('.warehouse-transfer-room')];
+    /**
+     * Updates choices in the current state.
+          * @return {*} Result of this expression.
+*/
     const updateChoices = () => choices.forEach(input => {
       input.disabled =
         all.checked; input.checked = all.checked || input.checked;
@@ -129,6 +164,9 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse, refre
     });
     const preview = importForm.querySelector('#warehouse-transfer-preview');
     const apply = importForm.querySelector('#warehouse-transfer-apply');
+    /**
+     * Updates the invalidate state for its caller.
+     */
     const invalidate = () => {apply.disabled = true; preview.textContent = '';};
     importForm.querySelector('#warehouse-transfer-file')
       .addEventListener('change',
@@ -142,6 +180,10 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse, refre
       .addEventListener('change',
         invalidate
       );
+    /**
+     * Locates the DOM elements used by options.
+     * @return {!Object} Matching DOM element, if present.
+     */
     const options = () => ({
       includeAssignments: importForm.querySelector('#warehouse-transfer-import-assignments').checked,
       conflictPolicy: importForm.querySelector('#warehouse-transfer-conflict-policy').value,

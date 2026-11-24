@@ -2,6 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {session, seed} from './support.js';
 
+/**
+ * Coordinates asynchronous work for go tastings.
+ *
+ * @param {*} page Page or view being rendered or selected.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function goTastings(page) {
   await page.locator('header [data-act="toggle-menu"]').click();
   await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();

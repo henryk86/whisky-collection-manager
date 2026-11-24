@@ -3,6 +3,10 @@ import {escapeHtml} from '../../ui/dom.js';
 
 /**
  * Find existing bottlings without changing their data or creating duplicates.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {string=} value Input value to process.
+ * @return {*} Entries that meet the selection criteria.
  */
 export function matchingBottlings(collection, value = '') {
   const distilleries = new Map((collection.distilleries || []).map(item =>
@@ -28,6 +32,13 @@ export function matchingBottlings(collection, value = '') {
     ) || left.id.localeCompare(right.id));
 }
 
+/**
+ * Builds selectable bottling choices from the current collection.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {string=} search Search used by this operation.
+ * @return {string} Resulting text.
+ */
 export function bottlingChoiceOptions(collection, search = '') {
   const matches = matchingBottlings(collection, search);
   const placeholder = `<option value="">${matches.length ?
@@ -44,6 +55,12 @@ export function bottlingChoiceOptions(collection, search = '') {
   }).join('');
 }
 
+/**
+ * Renders the dialog for selecting an existing bottling.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @return {string} Resulting text.
+ */
 export function bottlingChoiceDialog(collection) {
   const count = (collection.bottlings || []).length;
   if (!count) return '';

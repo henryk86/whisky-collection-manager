@@ -6,9 +6,22 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {readSourceManifest, verifySourceManifest} from './release-manifest.js';
+/**
+ * Reads hash data from the local filesystem.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const hash = file => crypto.createHash('sha256')
   .update(fs.readFileSync(file)).digest('hex');
 
+/**
+ * Validates the safe path state and rejects invalid inputs.
+ *
+ * @param {*} root Root node or directory for the operation.
+ * @param {*} filename File path or name to process.
+ * @return {*} Computed value, or null when the input has no match.
+ */
 function safePath(root, filename) {
   let current = fs.realpathSync(root);
   for (const part of filename.split('/')) {
@@ -21,6 +34,14 @@ function safePath(root, filename) {
   return fs.statSync(current).isFile() ? current : null;
 }
 
+/**
+ * Compares current files with a prior release manifest for upgrades.
+ *
+ * @param {*} newRelease New release used by this operation.
+ * @param {*} installation Installation used by this operation.
+ * @param {boolean=} prune Prune used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function inspectManifestUpgrade(newRelease, installation, prune = false) {
   const newer = verifySourceManifest(newRelease);
   const earlier = readSourceManifest(installation);

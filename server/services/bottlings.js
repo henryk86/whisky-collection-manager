@@ -4,6 +4,12 @@ import {markNumber} from '../domain/inventory.js';
 import {now, uid} from '../domain/collection.js';
 import {fail} from '../domain/errors.js';
 import {detachTastings} from '../../shared/tasting-flights.js';
+/**
+ * Validates distilleries against its constraints.
+ *
+ * @param {*} collection Collection data to process.
+ * @param {*} bottling Bottling record being inspected or updated.
+ */
 function checkDistilleries(collection, bottling) {
   const knownIds = new Set(collection.distilleries.map(distillery =>
     distillery.id));
@@ -12,7 +18,12 @@ function checkDistilleries(collection, bottling) {
   }
 }
 
-/** Create a bottling and its first physical bottle in one transaction. */
+/**
+ * Create a bottling and its first physical bottle in one transaction.
+ *
+ * @param {*} input Input to process.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export function createBottling(input) {
   return change(collection => {
     const timestamp = now();
@@ -46,6 +57,14 @@ export function createBottling(input) {
   });
 }
 
+/**
+ * Updates bottling for bottlings.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} input Input to process.
+ * @return {!Promise<!Bottling>} Promise fulfilled when the operation
+ * completes.
+ */
 export function updateBottling(id, input) {
   return change(collection => {
     const bottling = collection.bottlings.find(entry => entry.id === id);
@@ -73,6 +92,12 @@ export function updateBottling(id, input) {
   });
 }
 
+/**
+ * Clears bottling for bottlings.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export function deleteBottling(id) {
   return change(collection => {
     const index = collection.bottlings.findIndex(entry => entry.id === id);

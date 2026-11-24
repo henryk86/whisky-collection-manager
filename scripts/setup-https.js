@@ -68,6 +68,13 @@ const sans = [...new Set([...names.map(x => 'DNS:' + x), ...ips.map(x =>
 fs.mkdirSync(certDir, {
   recursive: true,
 });
+/**
+ * Derives the command result from the supplied values.
+ *
+ * @param {*} binary Binary data supplied to the operation.
+ * @param {*} argv Value used by this operation.
+ * @return {*} Value returned by the delegated operation.
+ */
 function command(binary, argv) {
   return spawnSync(binary, argv, {
     stdio: 'inherit',
@@ -120,6 +127,12 @@ try {
 }
 catch {
 }
+/**
+ * Updates env in the current state.
+ *
+ * @param {*} k Value used by this operation.
+ * @param {*} v Value to evaluate.
+ */
 function setEnv(k, v) {
   const line = `${k}=${v}`;
   const re = new RegExp(`^\\s*(?:export\\s+)?${k}\\s*=.*$`, 'm');

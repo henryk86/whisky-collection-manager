@@ -22,9 +22,22 @@ const MANIFEST_FILES = [
   'public/ai/licenses/Apache-2.0.txt',
   'public/ai/licenses/ONNX-Runtime-Web-NOTICE.txt',
 ];
+/**
+ * Tests input text against the valid sha pattern.
+ *
+ * @param {*} value Value to process.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const validSha = value => typeof value === 'string' && /^[0-9a-f]{64}$/
   .test(value);
 
+/**
+ * Validates the safe path state and rejects invalid inputs.
+ *
+ * @param {*} root Root node or directory for the operation.
+ * @param {*} relative Relative path or position to resolve.
+ * @return {*} Combined text from the input values.
+ */
 function safePath(root, relative) {
   if (typeof relative !== 'string' || !relative || path.posix
     .isAbsolute(relative)
@@ -44,6 +57,12 @@ function safePath(root, relative) {
   return target;
 }
 
+/**
+ * Derives the hash file result from the supplied values.
+ *
+ * @param {*} filename File path or name to process.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function hashFile(filename) {
   const hash = crypto.createHash('sha256');
   const fd = fs.openSync(filename, 'r');
@@ -58,6 +77,13 @@ function hashFile(filename) {
   return hash.digest('hex');
 }
 
+/**
+ * Orders the all files records using the configured comparison.
+ *
+ * @param {*} root Root node or directory for the operation.
+ * @param {*} relative Relative path or position to resolve.
+ * @return {*} Array of values selected for the caller.
+ */
 function allFiles(root, relative) {
   const directory = safePath(root, relative);
   if (!fs.existsSync(directory)) throw new Error(`Missing offline npm cache: ${relative}`);
@@ -72,6 +98,12 @@ function allFiles(root, relative) {
   });
 }
 
+/**
+ * Packages a release for offline installation with integrity metadata.
+ *
+ * @param {*=} root Root element or directory.
+ * @return {!Object} Structured result for the caller.
+ */
 export function sealOfflineBundle(root = ROOT) {
   const cachePath = path.join(root, '.offline', 'npm-cache');
   if (!fs.existsSync(cachePath)) throw new Error('Offline npm cache missing.');
@@ -99,6 +131,12 @@ export function sealOfflineBundle(root = ROOT) {
   return manifest;
 }
 
+/**
+ * Validates offline bundle for offline bundle.
+ *
+ * @param {*=} root Root element or directory.
+ * @return {*} Parsed JSON value.
+ */
 export function verifyOfflineBundle(root = ROOT) {
   const name = path.join(root, OFFLINE_MANIFEST);
   if (!fs.existsSync(name)) throw new Error('Offline bundle manifest missing.');

@@ -10,16 +10,46 @@ import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
 import {normalizeFlightFields, FLIGHT_LIMIT, allTastingReferences, validateFlightPlan} from '../../shared/tasting-flights.js';
 import {normalizeSavedViews} from '../../shared/collection-saved-views.js';
 import {isDocumentPath} from '../storage/documents.js';
+/**
+ * Checks whether object applies.
+ *
+ * @param {*} value Value to process.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const isObject = value => !!value && typeof value === 'object' &&
   !Array.isArray(value);
 
+/**
+ * Checks whether string applies.
+ *
+ * @param {*} value Value to process.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const isString = value => typeof value === 'string';
 
+/**
+ * Derives the optional string result from the supplied values.
+ *
+ * @param {*} value Value to process.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const optionalString = value => value == null || isString(value);
 
+/**
+ * Checks whether optional number applies.
+ *
+ * @param {*} value Value to process.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const isOptionalNumber = value => value == null || (typeof value ===
   'number' && Number.isFinite(value));
 
+/**
+ * Derives the valid day numeric value from its input.
+ *
+ * @param {*} value Value to process.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const validDay = value => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/
     .test(value)) return false;
@@ -30,9 +60,21 @@ const validDay = value => {
       .slice(0, 10) === value;
 };
 
+/**
+ * Tests input text against the valid image path pattern.
+ *
+ * @param {*} p Point or data value used in the calculation.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const validImagePath = p => typeof p === 'string' &&
   /^images\/[a-f0-9-]{36}\/[\w-]+\.(jpg|png|webp|gif)$/i.test(p);
 
+/**
+ * Validates the validation state.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @return {*} Entries that meet the selection criteria.
+ */
 export function validate(collection) {
   assert(
     isObject(collection) && collection.schemaVersion === 6,
@@ -574,6 +616,12 @@ export function validate(collection) {
         );
         photoPaths.add(cutout.path);
       }
+      /**
+       * Validates adjustment for validation.
+       *
+       * @param {*} edit Edit used by this operation.
+       * @param {*} expectedSource Expected source used by this operation.
+       */
       const verifyAdjustment = (edit, expectedSource) => {
         assert(
           isObject(edit) && validImagePath(edit.path) &&
@@ -711,6 +759,13 @@ export function validate(collection) {
   return collection;
 }
 
+/**
+ * Rejects a request when a required field is missing or invalid.
+ *
+ * @param {*} value Input value to process.
+ * @param {string} name Name of the item.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function requireField(value, name) {
   assert(
     isString(value) && value.trim(),

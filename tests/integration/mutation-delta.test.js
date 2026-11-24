@@ -3,6 +3,16 @@ import assert from 'node:assert/strict';
 import {startTestServer} from '../helpers/server.js';
 import {applyResourceDelta} from '../../shared/resource-delta.js';
 
+/**
+ * Serializes json data to JSON.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @param {*} path Path to the target resource.
+ * @param {string=} method Value used by this operation.
+ * @param {*} data Input data to process.
+ * @param {!Object=} headers Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const json = async (base, path, method = 'GET', data, headers = {}) => {
   const response = await fetch(base + path, {
     method,

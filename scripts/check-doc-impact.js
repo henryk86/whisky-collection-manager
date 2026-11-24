@@ -11,6 +11,12 @@ if (!range || !/^[\w^~.\-/]+\.\.[\w^~.\-/]+$/.test(range)) {
   console.error('Usage: node scripts/check-doc-impact.js --range BASE..HEAD');
   process.exit(2);
 }
+/**
+ * Derives the git result from the supplied values.
+ *
+ * @param {*} args Arguments forwarded to the operation.
+ * @return {*} Combined text from the input values.
+ */
 function git(args) {
   const result = spawnSync('git', args, {encoding: 'utf8'});
   if (result.status !== 0) {

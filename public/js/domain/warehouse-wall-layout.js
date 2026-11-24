@@ -7,14 +7,40 @@ import {furnitureFootprint} from './warehouse-3d-model.js';
  * a wide wall cabinet over several narrow lower cabinets.
  */
 const natural = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+/**
+ * Derives the finite numeric value from its input.
+ *
+ * @param {*} value Value to process.
+ * @param {number=} fallback Value used when the requested data is unavailable.
+ * @return {number} Calculated numeric value.
+ */
 const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ?
   Number(value) : fallback;
 
+/**
+ * Derives the angle result from the supplied values.
+ *
+ * @param {*} furniture Warehouse furniture record being modified.
+ * @return {number} Calculated numeric value.
+ */
 const angle = furniture => ((finite(furniture.rotation) % 360) + 360) % 360;
 
+/**
+ * Calculates the overlap numeric value.
+ *
+ * @param {*} a First entry or operand in the calculation.
+ * @param {*} b Second entry or operand in the calculation.
+ * @return {number} Calculated numeric value.
+ */
 const overlap = (a, b) => Math.max(0, Math.min(a[1], b[1]) -
   Math.max(a[0], b[0]));
 
+/**
+ * Calculates the position numeric value.
+ *
+ * @param {*} furniture Warehouse furniture record being modified.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function position(furniture) {
   const orientation = angle(furniture);
   const x = finite(furniture.x);
@@ -38,10 +64,24 @@ function position(furniture) {
   };
 }
 
+/**
+ * Derives the vertically separate result from the supplied values.
+ *
+ * @param {*} a First entry or operand in the calculation.
+ * @param {*} b Second entry or operand in the calculation.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function verticallySeparate(a, b) {
   return a.top <= b.bottom + .015 || b.top <= a.bottom + .015;
 }
 
+/**
+ * Calculates the same footprint numeric value.
+ *
+ * @param {*} a First entry or operand in the calculation.
+ * @param {*} b Second entry or operand in the calculation.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function sameFootprint(a, b) {
   if (!a.hasPosition || !b.hasPosition || a.orientation !==
     b.orientation) return false;
@@ -54,13 +94,24 @@ function sameFootprint(a, b) {
   return x >= .6 * minWidth && y >= .6 * minDepth;
 }
 
+/**
+ * Checks whether stack applies.
+ *
+ * @param {*} a First entry or operand in the calculation.
+ * @param {*} b Second entry or operand in the calculation.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function shouldStack(a, b) {
   return sameFootprint(a, b) &&
     verticallySeparate(a, b);
 }
 
-/** Geometry groups in display order; items contain their front-projection left
+/**
+ * Geometry groups in display order; items contain their front-projection left
  * and physical bottom/top. No mutation of warehouse furniture or assignments.
+ *
+ * @param {*} room Room model containing dimensions and furniture.
+ * @return {!Array<!Object>} Resulting list of values.
  */
 export function wallFurnitureGroups(room) {
   const entries = (room?.furniture || []).filter(furniture =>

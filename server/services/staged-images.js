@@ -11,11 +11,20 @@ import {addPhoto} from './bottles.js';
 const pending = new Map();
 const MAX_PENDING = 8;
 const TTL = 15 * 60 * 1000;
+/**
+ * Updates the cleanup state for its caller.
+ */
 function cleanup() {
   for (const [token, entry] of pending) if (Date.now() >
     entry.expires) pending.delete(token);
 }
 
+/**
+ * Stages an uploaded image for validation and later confirmation.
+ *
+ * @param {*} input Input to process.
+ * @return {!Object} Structured result for the caller.
+ */
 export function stageImage(input) {
   cleanup();
   assert(
@@ -39,6 +48,12 @@ export function stageImage(input) {
   return {token, expiresInSeconds: TTL / 1000};
 }
 
+/**
+ * Returns a preview of an image awaiting confirmation.
+ *
+ * @param {*} token Token used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function previewImage(token) {
   cleanup();
   const entry = pending.get(token);
@@ -50,6 +65,13 @@ export function previewImage(token) {
   return {bytes: entry.bytes, type: entry.mediaType};
 }
 
+/**
+ * Registers image to bottle for staged images.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {*} input Input to process.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function attachImageToBottle(bottleId, input) {
   cleanup();
   if (typeof input.token !== 'string' || !/^[0-9a-f-]{36}$/i

@@ -17,6 +17,12 @@ const PALETTE = {
 
 /**
  * Create a new real 3D scene. No SVG, painter sorting or custom depth masks.
+ *
+ * @param {*} THREE Three used by this operation.
+ * @param {*} room Room model containing dimensions and furniture.
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {!Object=} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   const theme = options.theme === 'dark' ? 'dark' : 'light';
@@ -29,6 +35,12 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
     warehouse3DGeometry(room, warehouse, options.isolatedId);
   const selectables = [];
   const materials = new Map();
+  /**
+   * Derives the material result from the supplied values.
+   *
+   * @param {*} style Visual style or rendering properties.
+   * @return {*} Result computed from the supplied inputs.
+   */
   function material(style) {
     if (!materials.has(style)) materials.set(
       style,
@@ -47,6 +59,12 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   const highlightMaterials = new Map();
   const byFurniture = new Map();
   const hiddenFurniture = new Set(options.hiddenIds || []);
+  /**
+   * Derives the highlighted material result from the supplied values.
+   *
+   * @param {*} style Visual style or rendering properties.
+   * @return {*} Result computed from the supplied inputs.
+   */
   function highlightedMaterial(style) {
     if (!highlightMaterials.has(style)) {
       const mat = material(style).clone();
@@ -57,9 +75,21 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
     return highlightMaterials.get(style);
   }
   let highlightedId = null;
+  /**
+   * Updates highlighted furniture in the current state.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @return {*} Result computed from the supplied inputs.
+   */
   function setHighlightedFurniture(id) {
     const next = byFurniture.has(id) && !hiddenFurniture.has(id) ? id : null;
     if (highlightedId === next) return highlightedId;
+    /**
+     * Updates the apply state for its caller.
+     *
+     * @param {*} owner Value used by this operation.
+     * @param {*} active Value used by this operation.
+     */
     function apply(owner, active) {
       for (const mesh of byFurniture.get(owner) || []) {
         const style = mesh.userData.style;
@@ -74,6 +104,12 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
     return highlightedId;
   }
 
+  /**
+   * Updates the piece state for its caller.
+   *
+   * @param {*} part Value used by this operation.
+   * @param {*} owner Value used by this operation.
+   */
   function piece(part, owner) {
     const geo = new THREE.BoxGeometry(...part.size);
     const mesh = new THREE.Mesh(geo, material(part.style));
@@ -90,6 +126,13 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
     byFurniture.get(owner).push(mesh);
   }
   for (const item of objects) for (const part of item.parts) piece(part, item.id);
+  /**
+   * Updates furniture visible in the current state.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {*} visible Value used by this operation.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   function setFurnitureVisible(id, visible) {
     if (!byFurniture.has(id)) return false;
     if (!visible && highlightedId === id) setHighlightedFurniture(null);
@@ -114,6 +157,11 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   // GridHelper lines extend outside rectangular rooms; the actual floor remains
   // bounded.
   all.add(grid);
+  /**
+   * Updates theme in the current state.
+   *
+   * @param {*} next Next candidate state or entry.
+   */
   const setTheme = next => {
     const palette = PALETTE[next === 'dark' ? 'dark' : 'light'];
     scene.background.setHex(palette.background);
@@ -130,6 +178,9 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
     grid.material.color.setHex(palette.edge);
   };
 
+  /**
+   * Performs the dispose lifecycle action.
+   */
   const dispose = () => {
     all.traverse(obj => {if (obj.geometry) obj.geometry.dispose();});
     for (const mat of materials.values()) mat.dispose();
@@ -151,8 +202,14 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   };
 }
 
-/** Orthographic framing with a small, predictable margin. The dominant
+/**
+ * Orthographic framing with a small, predictable margin. The dominant
  * projected dimension uses about 92% of the available viewport at 100% zoom.
+ *
+ * @param {*} projectedWidth Projected width used by this operation.
+ * @param {*} projectedHeight Projected height used by this operation.
+ * @param {*} aspect Aspect used by this operation.
+ * @return {number} Calculated numeric result.
  */
 export function warehouseCameraHalfHeight(projectedWidth, projectedHeight, aspect) {
   const dominant = Math.max(projectedHeight, projectedWidth /
@@ -162,6 +219,16 @@ export function warehouseCameraHalfHeight(projectedWidth, projectedHeight, aspec
 
 /**
  * Fit projected room bounds to the orthographic frustum, independent of zoom.
+ *
+ * @param {*} THREE Three used by this operation.
+ * @param {*} camera Camera used by this operation.
+ * @param {*} roomWidth Room width used by this operation.
+ * @param {*} roomDepth Room depth used by this operation.
+ * @param {*} maxHeight Max height used by this operation.
+ * @param {*} corner Corner of the furniture footprint.
+ * @param {*} aspect Aspect used by this operation.
+ * @param {number=} zoom Map scale used for projection.
+ * @return {*} Structured result assembled from the input data.
  */
 export function frameWarehouseCamera(
   THREE,
@@ -189,6 +256,12 @@ export function frameWarehouseCamera(
     projected.push(new THREE.Vector3(x, y, z)
       .applyMatrix4(camera.matrixWorldInverse));
   }
+  /**
+   * Transforms the entries used by range.
+   *
+   * @param {*} axis Value used by this operation.
+   * @return {number} Calculated numeric value.
+   */
   const range = (axis) => Math.max(...projected.map(p => p[axis])) -
     Math.min(...projected.map(p => p[axis]));
   const halfH = warehouseCameraHalfHeight(range('x'), range('y'), aspect);
@@ -201,7 +274,13 @@ export function frameWarehouseCamera(
 }
 
 /**
- * Mount only when the 3D tab is visible. All imports load from local npm files.
+ * Mount only when the 3D tab is visible. All imports load from local npm
+ * files.
+ *
+ * @param {*} viewport Viewport used by this operation.
+ * @param {!Object} options2 Destructured options for this operation.
+ * @return {!Promise<(!Object)>} Promise fulfilled when the operation
+ * completes.
  */
 export async function mountWarehouseThree(
   viewport,
@@ -215,12 +294,40 @@ export async function mountWarehouseThree(
     onOpenShelf = () => {}
   }
 ) {
-  if (!viewport || !viewport.isConnected) return {dispose() {}, setZoom() {return false;}, setHighlightedFurniture() {} };
+  if (!viewport || !viewport.isConnected) return {
+    /**
+     * Performs the dispose lifecycle action.
+     */
+    dispose() {},
+    /**
+     * Updates zoom in the current state.
+     * @return {boolean} Whether the operation matched or succeeded.
+     */
+    setZoom() {return false;},
+    /**
+     * Updates highlighted furniture in the current state.
+     */
+    setHighlightedFurniture() {},
+  };
   const [THREE, {OrbitControls}] = await Promise.all([
     import('/vendor/three.module.js'),
     import('/vendor/three/addons/controls/OrbitControls.js'),
   ]);
-  if (!viewport.isConnected) return {dispose() {}, setZoom() {return false;}, setHighlightedFurniture() {} };
+  if (!viewport.isConnected) return {
+    /**
+     * Performs the dispose lifecycle action.
+     */
+    dispose() {},
+    /**
+     * Updates zoom in the current state.
+     * @return {boolean} Whether the operation matched or succeeded.
+     */
+    setZoom() {return false;},
+    /**
+     * Updates highlighted furniture in the current state.
+     */
+    setHighlightedFurniture() {},
+  };
   const canvas = document.createElement('canvas');
   canvas.className = 'warehouse-three-canvas';
   canvas.setAttribute('aria-label', 'Dreidimensionaler Raumplan');
@@ -231,8 +338,18 @@ export async function mountWarehouseThree(
   catch (error) {
     viewport.textContent =
       t('warehouse.view.webglUnavailable'); return {
+        /**
+         * Performs the dispose lifecycle action.
+         */
         dispose() {},
+        /**
+         * Updates zoom in the current state.
+         * @return {boolean} Whether the operation matched or succeeded.
+         */
         setZoom() {return false;},
+        /**
+         * Updates highlighted furniture in the current state.
+         */
         setHighlightedFurniture() {},
       };
   }
@@ -247,11 +364,17 @@ export async function mountWarehouseThree(
   controls.enableRotate = true;
   controls.minPolarAngle = 0.15; controls.maxPolarAngle = Math.PI * 0.48;
   let cameraZoom = Number(zoom) || 100;
+  /**
+   * Updates the render state for its caller.
+   */
   function render() {
     cameraZoom = camera.zoom *
       100; renderer.render(model.scene, camera);
   }
 
+  /**
+   * Calculates the resize numeric value.
+   */
   function resize() {
     const width = Math.max(1, viewport.clientWidth), height =
       Math.max(1, viewport.clientHeight);
@@ -285,8 +408,18 @@ export async function mountWarehouseThree(
   );
   const furnitureById = new Map((room.furniture || []).map(item =>
     [item.id, item]));
+  /**
+   * Updates the pointer down state for its caller.
+   *
+   * @param {*} e Value used by this operation.
+   */
   function pointerDown(e) {down = {x: e.clientX, y: e.clientY};}
 
+  /**
+   * Filters records according to the pointer up selection rules.
+   *
+   * @param {*} e Value used by this operation.
+   */
   function pointerUp(e) {
     if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) >
       7) {down = null; return;}
@@ -325,6 +458,9 @@ export async function mountWarehouseThree(
   );
   // The renderer must be disposed on every tab switch and DOM removal.
   const handle = {
+    /**
+     * Performs the dispose lifecycle action.
+     */
     dispose() {
       if (disposed) return; disposed =
         true; activation.cancel(); removalObserver?.disconnect(); themeObserver?.disconnect(); observer?.disconnect(); if (!observer) window.removeEventListener('resize', resize);
@@ -332,6 +468,13 @@ export async function mountWarehouseThree(
       canvas.removeEventListener('pointerdown', pointerDown); canvas.removeEventListener('pointerup', pointerUp);
       model.dispose(); renderer.dispose(); renderer.forceContextLoss(); canvas.remove();
     },
+    /**
+     * Updates furniture visible in the current state.
+     *
+     * @param {*} id Identifier of the affected record.
+     * @param {*} visible Value used by this operation.
+     * @return {boolean} Whether the operation matched or succeeded.
+     */
     setFurnitureVisible(id, visible) {
       if (disposed || !model.setFurnitureVisible(id, visible)) return false;
       canvas.dataset.hiddenFurniture = (room.furniture || []).filter(item =>
@@ -342,12 +485,23 @@ export async function mountWarehouseThree(
       render();
       return true;
     },
+    /**
+     * Updates highlighted furniture in the current state.
+     *
+     * @param {*} id Identifier of the affected record.
+     */
     setHighlightedFurniture(id) {
       if (disposed) return;
       const highlighted = model.setHighlightedFurniture(id);
       canvas.dataset.highlightedFurniture = highlighted || '';
       render();
     },
+    /**
+     * Updates zoom in the current state.
+     *
+     * @param {*} value Value to process.
+     * @return {boolean} Whether the operation matched or succeeded.
+     */
     setZoom(value) {
       const next = Number(value); if (![100, 150, 200]
         .includes(next)) return false;

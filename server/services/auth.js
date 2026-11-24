@@ -20,13 +20,30 @@ const attempts = new Map();
 let current = null;
 let fileIdentity = null;
 let queue = Promise.resolve();
+/**
+ * Derives the auth error result from the supplied values.
+ *
+ * @param {*} key Key used to select or group values.
+ * @param {*} status Status value determining the next action.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const authError = (key, status) => fail(key, status, `api.errors.${key}`);
 
+/**
+ * Produces the identity text used by the caller.
+ * @return {string} Resulting text.
+ */
 const identity = () => {
   const stat = fs.statSync(FILE);
   return `${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeMs}:${stat.ctimeMs}`;
 };
 
+/**
+ * Validates store against its constraints.
+ *
+ * @param {*} value Value to process.
+ * @return {*} Entries transformed for the consuming code.
+ */
 function validateStore(value) {
   if (!value || value.schemaVersion !== 1 || typeof value.loginRequired !==
     'boolean' ||
@@ -46,6 +63,10 @@ function validateStore(value) {
   return value;
 }
 
+/**
+ * Reads store data from the local filesystem.
+ * @return {*} Parsed JSON value.
+ */
 function store() {
   if (!fs.existsSync(FILE)) throw Error('user.json fehlt; Anmeldung wird aus Sicherheitsgruenden nicht deaktiviert.');
   const signature = identity();
@@ -59,6 +80,11 @@ function store() {
   return current;
 }
 
+/**
+ * Writes save data to the local filesystem.
+ *
+ * @param {*} value Value to process.
+ */
 function save(value) {
   validateStore(value);
   const temporary = `${FILE}.${process.pid}.${crypto.randomUUID()}.tmp`;
@@ -74,12 +100,23 @@ function save(value) {
   } finally {fs.rmSync(temporary, {force: true});}
 }
 
+/**
+ * Derives the serialize result from the supplied values.
+ *
+ * @param {*} task Task to execute or examine.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 function serialize(task) {
   const job = queue.then(task);
   queue = job.catch(() => {});
   return job;
 }
 
+/**
+ * Tests input text against the password check pattern.
+ *
+ * @param {*} password Password or secret supplied by the caller.
+ */
 function passwordCheck(password) {
   if (typeof password !== 'string' || password.length < 12 ||
     Buffer.byteLength(password, 'utf8') > 256 ||
@@ -87,11 +124,23 @@ function passwordCheck(password) {
       .test(password)) throw authError('invalidPassword', 400);
 }
 
+/**
+ * Tests input text against the username check pattern.
+ *
+ * @param {*} username Value used by this operation.
+ */
 function usernameCheck(username) {
   if (typeof username !== 'string' || !/^[a-z0-9._-]{3,32}$/
     .test(username)) throw authError('invalidUsername', 400);
 }
 
+/**
+ * Coordinates asynchronous work for hash password.
+ *
+ * @param {*} password Password or secret supplied by the caller.
+ * @param {*=} salt Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function hashPassword(password, salt = crypto.randomBytes(16)
   .toString('hex')) {
   passwordCheck(password);
@@ -101,6 +150,13 @@ async function hashPassword(password, salt = crypto.randomBytes(16)
   };
 }
 
+/**
+ * Derives the hash password sync result from the supplied values.
+ *
+ * @param {*} password Password or secret supplied by the caller.
+ * @param {*=} salt Value used by this operation.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function hashPasswordSync(password, salt = crypto.randomBytes(16)
   .toString('hex')) {
   passwordCheck(password);
@@ -115,18 +171,35 @@ function hashPasswordSync(password, salt = crypto.randomBytes(16)
   };
 }
 
+/**
+ * Normalizes the session token text for subsequent processing.
+ *
+ * @param {*} request Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function sessionToken(request) {
   const cookies = String(request.headers.cookie || '').split(';');
   const entry = cookies.find(cookie => cookie.trim().startsWith(`${COOKIE}=`));
   return entry?.trim().slice(COOKIE.length + 1) || '';
 }
 
+/**
+ * Produces the cookie headers text used by the caller.
+ *
+ * @param {*} request Value used by this operation.
+ * @param {string=} token Token submitted for validation.
+ * @param {number=} maxAge Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function cookieHeaders(request, token = '', maxAge = 0) {
   // TLS is provided by the app even when behind its optional TLS reverse proxy.
   const secure = request.socket?.encrypted ? '; Secure' : '';
   return `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict${secure}; Max-Age=${maxAge}`;
 }
 
+/**
+ * Updates the prune state for its caller.
+ */
 function prune() {
   const now = Date.now();
   for (const [token, record] of sessions) if (record.expires <= now ||
@@ -135,6 +208,9 @@ function prune() {
     now) attempts.delete(key);
 }
 
+/**
+ * Initializes the authentication state and any initial admin account.
+ */
 export function initializeAuth() {
   fs.mkdirSync(DATA_DIR, {recursive: true});
   if (!fs.existsSync(FILE)) {
@@ -162,6 +238,12 @@ export function initializeAuth() {
   store();
 }
 
+/**
+ * Resolves the authenticated user from an active session.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @return {*} Computed value, or null when the input has no match.
+ */
 export function sessionUser(req) {
   const token = sessionToken(req);
   if (!/^[a-f0-9]{64}$/.test(token)) return null;
@@ -174,6 +256,12 @@ export function sessionUser(req) {
   return user;
 }
 
+/**
+ * Returns the safe public representation of a user record.
+ *
+ * @param {*} user User record being authenticated or modified.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function publicUser(user) {
   return user && {
     id: user.id,
@@ -183,6 +271,12 @@ export function publicUser(user) {
   };
 }
 
+/**
+ * Returns the current session's authentication details.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @return {!Object} Structured result for the caller.
+ */
 export function sessionInfo(req) {
   const data = store();
   const user = sessionUser(req);
@@ -193,6 +287,14 @@ export function sessionInfo(req) {
   };
 }
 
+/**
+ * Enforces the user precondition.
+ *
+ * @param {*} req Incoming request to authorize.
+ * @param {boolean=} admin Value used by this operation.
+ * @param {boolean=} allowChange Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function requireUser(req, admin = false, allowChange = false) {
   const user = sessionUser(req);
   if (!user) throw authError('loginRequired', 401);
@@ -202,6 +304,12 @@ function requireUser(req, admin = false, allowChange = false) {
   return user;
 }
 
+/**
+ * Enforces the authentication and permission rules for a request.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {string} url URL of the requested resource.
+ */
 export function authorizeRequest(req, url) {
   const pathname = url.pathname;
   if (pathname.startsWith('/internal/backup/')) return; // Separate worker-token authorization.
@@ -221,6 +329,14 @@ export function authorizeRequest(req, url) {
   // does not fetch collection data until /api/auth/session has authorized it.
 }
 
+/**
+ * Authenticates supplied credentials and creates a user session.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {*} body Request or response body.
+ * @param {!Object} response Outgoing response.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function login(req, body, response) {
   const username = typeof body?.username === 'string' ? body.username
     .toLowerCase().trim() : '';
@@ -277,6 +393,12 @@ export async function login(req, body, response) {
 }
 // A constant valid scrypt value. No separate KDF for invalid usernames.
 const hashDummy = {salt: '00000000000000000000000000000000', passwordHash: '0'.repeat(128)};
+/**
+ * Derives the session info with user result from the supplied values.
+ *
+ * @param {*} user Value used by this operation.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function sessionInfoWithUser(user) {
   return {
     required: store().loginRequired,
@@ -285,17 +407,37 @@ function sessionInfoWithUser(user) {
   };
 }
 
+/**
+ * Ends the current user session and removes its cookie.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {!Object} response Outgoing response.
+ * @return {!Object} Structured result for the caller.
+ */
 export function logout(req, response) {
   sessions.delete(sessionToken(req));
   response.setHeader('Set-Cookie', cookieHeaders(req));
   return {required: store().loginRequired, user: null, canManageUsers: false};
 }
 
+/**
+ * Updates the invalidate user state for its caller.
+ *
+ * @param {*} id Identifier of the affected record.
+ */
 function invalidateUser(id) {
   for (const [token, session] of sessions) if (session.id ===
     id) sessions.delete(token);
 }
 
+/**
+ * Updates a user's password after validating the request.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {*} body Request or response body.
+ * @param {!Object} response Outgoing response.
+ * @return {!Promise<void>} Promise fulfilled when the operation completes.
+ */
 export async function changePassword(req, body, response) {
   return serialize(async () => {
     const user = requireUser(req, false, true);
@@ -334,6 +476,12 @@ export async function changePassword(req, body, response) {
   });
 }
 
+/**
+ * Lists user accounts visible to an authorized administrator.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @return {!Object} Structured result for the caller.
+ */
 export function listUsers(req) {
   requireUser(req, true);
   return {
@@ -342,6 +490,13 @@ export function listUsers(req) {
   };
 }
 
+/**
+ * Creates user for auth.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {*} body Request or response body.
+ * @return {!Promise<void>} Promise fulfilled when the operation completes.
+ */
 export async function createUser(req, body) {
   return serialize(async () => {
     requireUser(req, true);
@@ -366,6 +521,14 @@ export async function createUser(req, body) {
   });
 }
 
+/**
+ * Clears password for auth.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} body Request or response body.
+ * @return {!Promise<void>} Promise fulfilled when the operation completes.
+ */
 export async function resetPassword(req, id, body) {
   return serialize(async () => {
     const admin = requireUser(req, true);
@@ -384,6 +547,13 @@ export async function resetPassword(req, id, body) {
   });
 }
 
+/**
+ * Clears user for auth.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {string} id Identifier used to select the relevant record.
+ * @return {!Promise<void>} Promise fulfilled when the operation completes.
+ */
 export function removeUser(req, id) {
   return serialize(() => {
     const admin = requireUser(req, true);
@@ -399,6 +569,13 @@ export function removeUser(req, id) {
   });
 }
 
+/**
+ * Changes the optional-login requirement in server settings.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {*} body Request or response body.
+ * @return {!Promise<void>} Promise fulfilled when the operation completes.
+ */
 export function setLoginRequired(req, body) {
   return serialize(() => {
     requireUser(req, true);
@@ -414,6 +591,8 @@ export function setLoginRequired(req, body) {
 /**
  * Operator-only recovery (execute locally on the server, never exposed over
  * HTTP).
+ *
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 export async function resetAdminPassword() {
   const data = structuredClone(store());

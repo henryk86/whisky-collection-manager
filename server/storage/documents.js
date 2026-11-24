@@ -18,6 +18,13 @@ const fileTypes = {
 };
 export const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024;
 
+/**
+ * Checks whether document path applies in documents.
+ *
+ * @param {*} value Input value to process.
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function isDocumentPath(value, bottleId) {
   if (typeof value !== 'string' ||
     !/^documents\/[\w-]+\/[a-f0-9-]{36}\.[a-z0-9]+$/i.test(value)) {
@@ -29,6 +36,13 @@ export function isDocumentPath(value, bottleId) {
   return Object.hasOwn(fileTypes, path.extname(value).slice(1).toLowerCase());
 }
 
+/**
+ * Checks whether valid content applies in documents.
+ *
+ * @param {*} extension Extension used by this operation.
+ * @param {*} bytes Bytes used by this operation.
+ * @return {*} Whether the required condition is satisfied.
+ */
 function isValidContent(extension, bytes) {
   if (extension === 'pdf') return bytes.subarray(0, 5).toString('ascii') ===
     '%PDF-';
@@ -58,6 +72,12 @@ function isValidContent(extension, bytes) {
   return false;
 }
 
+/**
+ * Derives the file location result from the supplied values.
+ *
+ * @param {*} relativePath Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function fileLocation(relativePath) {
   assert(
     isDocumentPath(relativePath),
@@ -78,6 +98,10 @@ function fileLocation(relativePath) {
 /**
  * Save by random ID rather than user supplied filename; the original name is
  * metadata.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {!Object} options2 Destructured options for this operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function saveDocument(bottleId, {filename, data}) {
   assert(
@@ -144,6 +168,12 @@ export function saveDocument(bottleId, {filename, data}) {
   };
 }
 
+/**
+ * Parses document for documents.
+ *
+ * @param {*} relativePath Relative path used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function readDocument(relativePath) {
   const file = fileLocation(relativePath);
   if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
@@ -156,6 +186,11 @@ export function readDocument(relativePath) {
   return fs.readFileSync(file);
 }
 
+/**
+ * Clears document for documents.
+ *
+ * @param {*} relativePath Relative path used by this operation.
+ */
 export function deleteDocument(relativePath) {
   const file = fileLocation(relativePath);
   if (fs.existsSync(file)) {

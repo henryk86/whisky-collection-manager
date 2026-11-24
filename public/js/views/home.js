@@ -5,6 +5,12 @@ import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
 import {normalizeFlavorCriteria} from '../../../shared/collection-saved-views.js';
 import {displayPhotoPath} from '../../../shared/photo-images.js';
 import {t, currentLanguage} from '../i18n/index.js';
+/**
+ * Derives the status text result from the supplied values.
+ *
+ * @param {*} status Status value determining the next action.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const statusText = status => t(({
   closed: 'home.status.closed',
   open: 'analytics.inventory.openedStatus',
@@ -27,6 +33,9 @@ import {glencairnRatingSymbol} from '../ui/glencairn-icon.js';
 /**
  * The count labels represent mutually exclusive bottle types. Sample bottles
  * are not displayed again in the Standardflaschen count.
+ *
+ * @param {*} physicalBottles Physical bottles used by this operation.
+ * @return {string} Resulting text.
  */
 function inventoryBadges(physicalBottles) {
   return inventoryCountGroups(physicalBottles)
@@ -43,11 +52,23 @@ function inventoryBadges(physicalBottles) {
     .join('');
 }
 
-/** Only supplied details are shown on cards and in the overview table. */
+/**
+ * Only supplied details are shown on cards and in the overview table.
+ *
+ * @param {*} value Input value to process.
+ * @param {string=} suffix Suffix used by this operation.
+ * @return {string} Resulting text.
+ */
 function overviewField(value, suffix = '') {
   return hasBottlingDetail(value) ? `${escapeHtml(value)}${suffix}` : '';
 }
 
+/**
+ * Filters records according to the overview facts selection rules.
+ *
+ * @param {*} bottling Bottling record being inspected or updated.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function overviewFacts(bottling) {
   return [
     hasBottlingDetail(bottling.ageYears) ?
@@ -59,6 +80,12 @@ function overviewFacts(bottling) {
 /**
  * Render a single table cell. The same field definitions power both table
  * modes.
+ *
+ * @param {*} columnId Column id used by this operation.
+ * @param {*} entry Entry to include in the calculation.
+ * @param {*} allBottlingBottles All bottling bottles used by this operation.
+ * @param {*} distilleryNames Distillery names used by this operation.
+ * @return {string} Resulting text.
  */
 function collectionTableCell(columnId, entry, allBottlingBottles, distilleryNames) {
   const {bottling, bottle} = entry;
@@ -119,7 +146,13 @@ function collectionTableCell(columnId, entry, allBottlingBottles, distilleryName
   return `<td>${value}</td>`;
 }
 
-/** Compact, non-interactive rating shown inside the photo frame. */
+/**
+ * Compact, non-interactive rating shown inside the photo frame.
+ *
+ * @param {!Object} bottling Bottling record being processed.
+ * @param {null=} photoId Identifier of the photo.
+ * @return {string} Resulting text.
+ */
 export function collectionCardRating(bottling, photoId = null) {
   const score = displayedTastingRating(bottling);
   if (score == null || !Number.isFinite(Number(score))) return '';
@@ -138,12 +171,26 @@ export function collectionCardRating(bottling, photoId = null) {
 /**
  * Render only the necessary page controls; page content is loaded from local
  * JSON.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @param {*} selectedSize Selected size used by this operation.
+ * @param {string=} mode Requested display mode or configuration variant.
+ * @return {string} Resulting text.
  */
 function pagerHtml({page, pageCount, total, from, to}, selectedSize, mode = 'bottlings') {
   const label = mode === 'bottles' ? t("forms.bottle.plural") :
     t("analytics.inventory.bottlings");
   const pageSizeLabel = mode === 'bottles' ?
     t("home.pagination.bottlesPerPage") : t("home.pagination.bottlingsPerPage");
+  /**
+   * Produces the button text used by the caller.
+   *
+   * @param {*} target Target of the operation.
+   * @param {*} label Label shown to the user.
+   * @param {*} title Title displayed or stored by this operation.
+   * @param {boolean=} disabled Value used by this operation.
+   * @return {string} Resulting text.
+   */
   const button = (target, label, title, disabled = false) =>
     `<button type="button" class="btn small pagination-button" data-page-to="${target}" aria-label="${title}" ${disabled ? 'disabled' : ''}>${label}</button>`;
   const pages = visiblePages(page, pageCount).map(number => number === '…'
@@ -189,6 +236,9 @@ function pagerHtml({page, pageCount, total, from, to}, selectedSize, mode = 'bot
 /**
  * Collection overview uses delegated root events; render does not bind
  * listeners.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function createHomeView({
   state,
@@ -204,10 +254,19 @@ export function createHomeView({
   let activeList = [];
   let activePageSize = 1;
   let filtersExpanded = false;
+  /**
+   * Derives the saved views result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const savedViews = () => state.collection?.settings?.savedViews || [];
   let flavorDraft = null;
   let columnPickerOpen = false;
   const columnSelection = loadTableColumns();
+  /**
+   * Updates page url in the current state.
+   *
+   * @param {boolean=} replace Value used by this operation.
+   */
   function updatePageUrl(replace = false) {
     const url = homePageUrl(state.pageNumber, state.overviewMode);
     if (location.pathname + location.search !== url) {
@@ -219,6 +278,11 @@ export function createHomeView({
     }
   }
 
+  /**
+   * Updates page in the current state.
+   *
+   * @param {*} target Target of the operation.
+   */
   function changePage(target) {
     const next = paginate(activeList, target, activePageSize).page;
     if (next === state.pageNumber) return;
@@ -228,6 +292,10 @@ export function createHomeView({
     document.querySelector('.collection-heading')?.scrollIntoView({block: 'start', behavior: 'auto'});
   }
 
+  /**
+   * Derives the capture view result from the supplied values.
+   * @return {!Array<*>} Resulting entries in their output order.
+   */
   function captureView() {
     return {
       filters: {
@@ -251,6 +319,12 @@ export function createHomeView({
     };
   }
 
+  /**
+   * Persists views to its backing store.
+   *
+   * @param {*} views Value used by this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function storeViews(views) {
     try {
       await request(
@@ -262,6 +336,9 @@ export function createHomeView({
     } catch (error) {toast(error.message, true);}
   }
 
+  /**
+   * Performs the open save view lifecycle action.
+   */
   function openSaveView() {
     showModal(
       t('collection.saved.saveTitle'),
@@ -273,6 +350,10 @@ export function createHomeView({
     );
   }
 
+  /**
+   * Persists current view to its backing store.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function saveCurrentView() {
     const field = document.querySelector('[data-view-name]');
     if (!field?.reportValidity() || !field.value.trim()) return;
@@ -287,6 +368,10 @@ export function createHomeView({
     await storeViews(views);
   }
 
+  /**
+   * Updates current view in the current state.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function updateCurrentView() {
     const id = state.activeSavedViewId;
     if (!savedViews().some(view => view.id === id)) return;
@@ -294,6 +379,9 @@ export function createHomeView({
       {...view, ...captureView()} : view));
   }
 
+  /**
+   * Builds the localized rename current view text for the current language.
+   */
   function renameCurrentView() {
     const item = savedViews().find(view => view.id === state.activeSavedViewId);
     if (!item) return;
@@ -307,6 +395,10 @@ export function createHomeView({
     );
   }
 
+  /**
+   * Locates the DOM elements used by confirm rename view.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function confirmRenameView() {
     const name = document.querySelector('[data-view-name]');
     if (!name?.reportValidity() || !name.value.trim()) return;
@@ -317,6 +409,10 @@ export function createHomeView({
       {...view, name: name.value.trim()} : view));
   }
 
+  /**
+   * Removes or resets current view.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function deleteCurrentView() {
     const id = state.activeSavedViewId;
     const item = savedViews().find(view => view.id === id);
@@ -329,6 +425,11 @@ export function createHomeView({
     await storeViews(savedViews().filter(view => view.id !== id));
   }
 
+  /**
+   * Updates saved view in the current state.
+   *
+   * @param {*} id Identifier of the affected record.
+   */
   function applySavedView(id) {
     if (!id) {resetStandardView(); return;}
     const item = savedViews().find(view => view.id === id);
@@ -349,17 +450,28 @@ export function createHomeView({
     home();
   }
 
+  /**
+   * Transforms the entries used by plan from selection.
+   */
   function planFromSelection() {
     state.flightCandidateIds = [...new Set(activeList.map(item =>
       item.bottling.id))];
     navigate('tastings-home');
   }
 
+  /**
+   * Derives the profile status result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   function profileStatus() {
     return state.profileMissing ? 'without' : state.profilePresent ?
       'with' : 'all';
   }
 
+  /**
+   * Derives the new flavor draft result from the supplied values.
+   * @return {!Array<*>} Resulting entries in their output order.
+   */
   function newFlavorDraft() {
     return {
       status: profileStatus(),
@@ -367,6 +479,10 @@ export function createHomeView({
     };
   }
 
+  /**
+   * Selects and transforms the flavor editor content records.
+   * @return {string} Resulting text.
+   */
   function flavorEditorContent() {
     const draft = flavorDraft || newFlavorDraft();
     const available = FLAVOR_AXES.filter(axis => !draft.criteria
@@ -376,6 +492,12 @@ export function createHomeView({
       ['with', 'collection.flavor.with'],
       ['without', 'collection.flavor.without'],
     ];
+    /**
+     * Calculates options from the inputs.
+     *
+     * @param {*} selected Currently selected item or identifier.
+     * @return {string} Resulting text.
+     */
     const scoreOptions = (selected) => Array.from(
       {length: 11},
       (_, i) => `<option value="${i}" ${selected === i ? 'selected' :
@@ -402,10 +524,19 @@ export function createHomeView({
             <button type="button" class="btn primary" data-act="collection-flavor-apply">${escapeHtml(t('collection.flavor.apply'))}</button></div>`;
   }
 
+  /**
+   * Produces the flavor editor html text used by the caller.
+   * @return {string} Resulting text.
+   */
   function flavorEditorHtml() {
     return `<div class="collection-flavor-editor" data-collection-flavor-editor>${flavorEditorContent()}</div>`;
   }
 
+  /**
+   * Updates the DOM elements managed by redraw flavor editor.
+   *
+   * @param {*=} focusSelector Value used by this operation.
+   */
   function redrawFlavorEditor(focusSelector = null) {
     const editor = document.querySelector('[data-collection-flavor-editor]');
     if (!editor) return;
@@ -416,11 +547,17 @@ export function createHomeView({
     if (focusSelector) editor.querySelector(focusSelector)?.focus();
   }
 
+  /**
+   * Performs the open flavor filter lifecycle action.
+   */
   function openFlavorFilter() {
     flavorDraft = newFlavorDraft();
     showModal(t('collection.flavor.title'), flavorEditorHtml(), false);
   }
 
+  /**
+   * Locates the DOM elements used by add flavor criterion.
+   */
   function addFlavorCriterion() {
     const axis = document.querySelector('[data-collection-flavor-editor] #collection-add-flavor-axis')?.value;
     if (!flavorDraft || !FLAVOR_AXES.includes(axis) || flavorDraft.criteria
@@ -431,6 +568,11 @@ export function createHomeView({
       axis + '"]');
   }
 
+  /**
+   * Removes or resets flavor criterion.
+   *
+   * @param {*} axis Value used by this operation.
+   */
   function removeFlavorCriterion(axis) {
     if (!flavorDraft) return;
     flavorDraft.criteria = flavorDraft.criteria.filter(item =>
@@ -438,6 +580,11 @@ export function createHomeView({
     redrawFlavorEditor('#collection-add-flavor-axis');
   }
 
+  /**
+   * Updates flavor criterion in the current state.
+   *
+   * @param {*} input Input element or value to inspect.
+   */
   function changeFlavorCriterion(input) {
     if (!flavorDraft) return;
     const axis = input.dataset.flavorAxis;
@@ -451,17 +598,28 @@ export function createHomeView({
     redrawFlavorEditor(`[data-flavor-axis="${axis}"][data-flavor-part="${part}"]`);
   }
 
+  /**
+   * Updates flavor status in the current state.
+   *
+   * @param {*} value Value to process.
+   */
   function changeFlavorStatus(value) {
     if (!flavorDraft || !['all', 'with', 'without'].includes(value)) return;
     flavorDraft.status = value;
     redrawFlavorEditor(`[data-flavor-profile-status][value="${value}"]`);
   }
 
+  /**
+   * Removes or resets flavor draft.
+   */
   function resetFlavorDraft() {
     flavorDraft = {status: 'all', criteria: []};
     redrawFlavorEditor('[data-flavor-profile-status][value="all"]');
   }
 
+  /**
+   * Updates flavor draft in the current state.
+   */
   function applyFlavorDraft() {
     if (!flavorDraft) return;
     state.profileMissing = flavorDraft.status === 'without';
@@ -474,6 +632,9 @@ export function createHomeView({
     home();
   }
 
+  /**
+   * Removes or resets standard view.
+   */
   function resetStandardView() {
     for (const field of ['status', 'completion', 'distillery', 'rating', 'volumeType']) state[field] = 'all';
     state.search = ''; state.sort = 'name'; state.flavorCriteria = [];
@@ -482,6 +643,10 @@ export function createHomeView({
     home();
   }
 
+  /**
+   * Serializes active view changed data to JSON.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   function activeViewChanged() {
     const saved = savedViews().find(item => item.id ===
       state.activeSavedViewId);
@@ -495,6 +660,10 @@ export function createHomeView({
       JSON.stringify(current.display) !== JSON.stringify(saved.display);
   }
 
+  /**
+   * Transforms the entries used by saved views menu html.
+   * @return {string} Resulting text.
+   */
   function savedViewsMenuHtml() {
     const current = savedViews().find(item => item.id ===
       state.activeSavedViewId);
@@ -516,6 +685,11 @@ export function createHomeView({
         </details>`;
   }
 
+  /**
+   * Handles click for home.
+   *
+   * @param {*} button Button used by this operation.
+   */
   function handleClick(button) {
     if (state.page !== 'home') return;
     if (button.dataset.act === 'toggle-collection-filters') {
@@ -583,6 +757,11 @@ export function createHomeView({
     } else if (button.dataset.pageTo) changePage(Number(button.dataset.pageTo));
   }
 
+  /**
+   * Handles change for home.
+   *
+   * @param {*} input Input to process.
+   */
   function handleChange(input) {
     if (state.page !== 'home') return;
     if (input.dataset?.collectionColumn) {
@@ -628,6 +807,11 @@ export function createHomeView({
     if (input.id === 'pagination-size') document.querySelector('.collection-heading')?.scrollIntoView({block: 'start', behavior: 'auto'});
   }
 
+  /**
+   * Handles the input interaction.
+   *
+   * @param {*} input Input element or value to inspect.
+   */
   function handleInput(input) {
     if (state.page !== 'home' || input.id !== 'search') return;
     state.search = input.value;
@@ -639,6 +823,9 @@ export function createHomeView({
     if (node) {node.focus(); node.setSelectionRange(cursor, cursor);}
   }
 
+  /**
+   * Selects and transforms the home records.
+   */
   function home() {
     const collection = state.collection;
     const physical = allBottles();

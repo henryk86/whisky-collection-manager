@@ -1,7 +1,11 @@
-/** Geographic origin is a property of the producing distilleries, never of a bottler.
- * Distilleries are the single source of truth; old bottling fields are read
- * only
- * as a compatibility fallback if NO referenced distillery supplies metadata.
+/**
+ * Geographic origin is a property of the producing distilleries, never of a
+ * bottler. Distilleries are the single source of truth; old bottling fields
+ * are read only as a compatibility fallback if NO referenced distillery
+ * supplies metadata.
+ *
+ * @param {*} value Input value to process.
+ * @return {string} Resulting text.
  */
 const text = value => typeof value === 'string' ? value.trim() : '';
 const countryNames = Object.freeze({
@@ -44,17 +48,36 @@ const countryNames = Object.freeze({
   'taiwan': 'Taiwan',
   'china': 'China',
 });
+/**
+ * Formats a country identifier into its display label.
+ *
+ * @param {*} value Input value to process.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function countryLabel(value) {
   const name = text(value);
   return countryNames[name.toLocaleLowerCase('en')] || name;
 }
 
+/**
+ * Collects the distillery IDs attributed to a bottling.
+ *
+ * @param {!Object} bottling Bottling record being processed.
+ * @return {!Array<*>} Resulting list of values.
+ */
 export function bottlingDistilleryIds(bottling) {
   return [...new Set(Array.isArray(bottling.distilleryIds) ?
     bottling.distilleryIds : bottling.distilleryId ?
       [bottling.distilleryId] : [])];
 }
 
+/**
+ * Resolves geographic origins for all contributing distilleries.
+ *
+ * @param {!Object} bottling Bottling record being processed.
+ * @param {!Array<*>=} distilleries Distilleries used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function bottlingOrigins(bottling, distilleries = []) {
   const lookup = distilleries instanceof Map ? distilleries :
     new Map(distilleries.map(d => [d.id, d]));
@@ -79,6 +102,13 @@ export function bottlingOrigins(bottling, distilleries = []) {
   return {countries: [...countries], regions: [...regions]};
 }
 
+/**
+ * Lists the distinct country names associated with a bottling.
+ *
+ * @param {!Object} bottling Bottling record being processed.
+ * @param {*} distilleries Distilleries used by this operation.
+ * @return {!Array<*>} Resulting list of values.
+ */
 export function bottlingCountryNames(bottling, distilleries) {
   return bottlingOrigins(bottling, distilleries).countries;
 }

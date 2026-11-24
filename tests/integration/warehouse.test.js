@@ -621,6 +621,13 @@ test(
         'POST',
         {name: 'Bulkroom', width: 4, height: 4}
       )).data;
+      /**
+       * Coordinates asynchronous work for add.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @param {*} x Horizontal coordinate.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const add = async (name, x) => (await api(
         ctx.base,
         `/api/warehouse/rooms/${r.id}/furniture`,
@@ -760,6 +767,13 @@ test(
         'POST',
         {name: 'Wall room', width: 6, height: 5}
       )).data;
+      /**
+       * Coordinates asynchronous work for create.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @param {*} x Horizontal coordinate.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const create = async (name, x) => (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -882,6 +896,13 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
+      /**
+       * Derives the create result from the supplied values.
+       *
+       * @param {*} route Value used by this operation.
+       * @param {*} body Body content to validate or process.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const create = (route, body) => api(ctx.base, route, 'POST', body);
       const a = (await create(
         '/api/warehouse/rooms',

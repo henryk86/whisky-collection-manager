@@ -5,12 +5,26 @@ import os from 'node:os';
 import path from 'node:path';
 import {auditUpgrade, pruneObsolete} from '../../scripts/upgrade-audit.js';
 
+/**
+ * Writes with releases data to the local filesystem.
+ *
+ * @param {*} fn Function called during this operation.
+ * @return {*} Structured result assembled from the input data.
+ */
 function withReleases(fn) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-upgrade-audit-'));
   const previous = path.join(root, 'previous');
   const next = path.join(root, 'next');
   const installed = path.join(root, 'installed');
   for (const dir of [previous, next, installed]) fs.mkdirSync(dir);
+  /**
+   * Writes put data to the local filesystem.
+   *
+   * @param {*} dir Directory containing the affected files.
+   * @param {*} name Environment variable or setting name.
+   * @param {*} content Content to render, store or examine.
+   * @return {*} Combined text from the input values.
+   */
   const put = (dir, name, content) => {
     const file = path.join(dir, name);
     fs.mkdirSync(path.dirname(file), {recursive: true});

@@ -11,6 +11,15 @@ const FEATHER_ALPHA = 8;
 // extreme/ambiguous masks.
 const MAX_AUTO_ROTATION = 20 * Math.PI / 180;
 
+/**
+ * Validates mask against its constraints.
+ *
+ * @param {*} mask Value used by this operation.
+ * @param {*} maskWidth Value used by this operation.
+ * @param {*} maskHeight Value used by this operation.
+ * @param {*} sourceWidth Value used by this operation.
+ * @param {*} sourceHeight Value used by this operation.
+ */
 function validateMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight) {
   if (!mask || mask.length !== maskWidth * maskHeight ||
     !Number.isInteger(maskWidth) || !Number.isInteger(maskHeight)
@@ -21,11 +30,18 @@ function validateMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight) {
 }
 
 /**
- * Fit the centre of the OUTER silhouette at successive image rows. Transparent
- * glass can have large holes in the AI mask; pixel-moment PCA then follows the
- * opaque label/liquid instead of the physical bottle's vertical centreline.
- * Each row has equal influence, regardless of how many opaque pixels it
- * contains.
+ * Estimates the bottle tilt from the horizontal centres of silhouette rows.
+ * Transparent glass may leave holes in the segmentation mask. Fitting the
+ * outer silhouette instead of pixel moments avoids bias from opaque labels and
+ * liquid. Each accepted row contributes equally to the fit.
+ *
+ * @param {!Int32Array} labels Component ID for every mask pixel.
+ * @param {number} id Connected-component ID of the selected bottle.
+ * @param {number} maskWidth Segmentation-mask width in pixels.
+ * @param {number} maskHeight Segmentation-mask height in pixels.
+ * @param {number} scaleX Horizontal mask-to-photo scale.
+ * @param {number} scaleY Vertical mask-to-photo scale.
+ * @return {?number} Rotation in radians, or null for an unreliable contour.
  */
 function silhouetteAngle(labels, id, maskWidth, maskHeight, scaleX, scaleY) {
   const left = new Int32Array(maskHeight).fill(maskWidth);
@@ -78,8 +94,18 @@ function silhouetteAngle(labels, id, maskWidth, maskHeight, scaleX, scaleY) {
 }
 
 /**
- * The model input is square, but rotation must be measured in undistorted PHOTO
- * pixels.
+ * The model input is square, but rotation must be measured in undistorted
+ * PHOTO pixels.
+ *
+ * @param {!Uint8ClampedArray} mask Pixel values of the segmentation mask.
+ * @param {number} maskWidth Width of the segmentation mask in pixels.
+ * @param {number} maskHeight Height of the segmentation mask in pixels.
+ * @param {number} sourceWidth Width of the source image in pixels.
+ * @param {number} sourceHeight Height of the source image in pixels.
+ * @return {{mask: !Uint8ClampedArray, crop: !Object, rotation: number,
+ *     center: !Object, verticallyTight: boolean, objectWidth: number}}
+ *     Isolated mask, crop rectangle in photo pixels, and rotation in radians.
+ * @throws {Error} If the mask is invalid or no bottle component is found.
  */
 export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight) {
   validateMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight);
@@ -230,13 +256,26 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth, sour
   };
 }
 
-/** Compatibility helper for callers that only need the output crop. */
+/**
+ * Compatibility helper for callers that only need the output crop.
+ *
+ * @param {!Uint8ClampedArray} mask Pixel values of the segmentation mask.
+ * @param {number} maskWidth Width of the segmentation mask in pixels.
+ * @param {number} maskHeight Height of the segmentation mask in pixels.
+ * @param {number} sourceWidth Width of the source image in pixels.
+ * @param {number} sourceHeight Height of the source image in pixels.
+ * @return {!Object} Structured result for the caller.
+ */
 export function bottleCropRect(mask, maskWidth, maskHeight, sourceWidth, sourceHeight) {
   return analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight).crop;
 }
 
 /**
  * Output dimensions preserve an exact 2:3 ratio (without needless upscaling).
+ *
+ * @param {*} crop Crop used by this operation.
+ * @param {number} maxSide Max side used by this operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function cutoutOutputSize(crop, maxSide) {
   if (!(crop?.height > 0) || !(maxSide >
@@ -252,6 +291,12 @@ export function cutoutOutputSize(crop, maxSide) {
 /**
  * Visible vertical bounds of a rasterized alpha mask; both endpoints are
  * inclusive.
+ *
+ * @param {*} rgba Rgba used by this operation.
+ * @param {number} width Width in pixels.
+ * @param {number} height Height in pixels.
+ * @param {number=} minAlpha Minimum alpha value considered visible.
+ * @return {?Object} Calculated numeric result.
  */
 export function visibleAlphaRows(rgba, width, height, minAlpha = FEATHER_ALPHA) {
   if (!rgba || rgba.length !== width * height *
@@ -271,6 +316,12 @@ export function visibleAlphaRows(rgba, width, height, minAlpha = FEATHER_ALPHA) 
 /**
  * Reframe a rendered mask, never clip its sides simply to remove a vertical
  * margin.
+ *
+ * @param {*} crop Crop used by this operation.
+ * @param {number} size Size of the input or target.
+ * @param {boolean} visible Visible used by this operation.
+ * @param {*} objectWidth Object width used by this operation.
+ * @return {*} Structured result assembled from the input data.
  */
 export function tightenedCrop(crop, size, visible, objectWidth) {
   if (!visible || (visible.top === 0 && visible.bottom === size.height -

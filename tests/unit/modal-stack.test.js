@@ -2,14 +2,42 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createModal} from '../../public/js/ui/modal.js';
 
+/**
+ * Derives the fake modal host result from the supplied values.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function fakeModalHost() {
   let overlay = null;
   return {
+    /**
+     * Reads the first element child property from the current state.
+     * @return {*} Result computed from the supplied inputs.
+     */
     get firstElementChild() {return overlay;},
+    /**
+     * Assigns the inner html property in the current state.
+     *
+     * @param {*} text Text to process.
+     */
     set innerHTML(text) {
-      overlay = text ? {html: text, form: {name: '', files: []}, addEventListener() {} } : null;
+      overlay = text ? {
+        html: text, form: {name: '', files: []},
+        /**
+         * Updates the add event listener state for its caller.
+         */
+        addEventListener() {},
+      } : null;
     },
+    /**
+     * Derives the query selector result from the supplied values.
+     * @return {*} Result computed from the supplied inputs.
+     */
     querySelector() {return overlay;},
+    /**
+     * Updates the replace children state for its caller.
+     *
+     * @param {*} element DOM element involved in the operation.
+     */
     replaceChildren(element) {overlay = element;},
   };
 }
@@ -23,28 +51,73 @@ test(
     const previousWindow = globalThis.window;
     const body = {
       style: {},
+      /**
+       * Retrieves attribute from the available state.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getAttribute(name) {return name === 'style' ? null : null;},
+      /**
+       * Removes or resets attribute.
+       *
+       * @param {*} name Environment variable or setting name.
+       */
       removeAttribute(name) {if (name === 'style') this.style = {};},
+      /**
+       * Updates attribute in the current state.
+       */
       setAttribute() {},
     };
     const html = {
       style: {},
+      /**
+       * Retrieves attribute from the available state.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getAttribute(name) {return name === 'style' ? null : null;},
+      /**
+       * Removes or resets attribute.
+       *
+       * @param {*} name Environment variable or setting name.
+       */
       removeAttribute(name) {if (name === 'style') this.style = {};},
+      /**
+       * Updates attribute in the current state.
+       */
       setAttribute() {},
     };
     const scrollCalls = [];
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       querySelector: () =>
         host, body, documentElement: html,
     };
     globalThis.window = {
-      scrollY: 420, scrollTo: args =>
+      scrollY: 420,
+      /**
+       * Derives the scroll to result from the supplied values.
+       *
+       * @param {*} args Arguments forwarded to the operation.
+       * @return {number} Calculated numeric value.
+       */
+      scrollTo: args =>
         scrollCalls.push(args),
     };
     try {
       const state = {modal: null};
-      const modal = createModal({state, onClose() {} });
+      const modal = createModal({
+        state,
+        /**
+         * Handles the close interaction.
+         */
+        onClose() {},
+      });
       modal.showModal('Parent', '<form></form>');
       assert.equal(body.style.position, 'fixed');
       assert.equal(body.style.top, '-420px');
@@ -82,10 +155,22 @@ test(
   () => {
     const host = fakeModalHost();
     const previous = globalThis.document;
-    globalThis.document = {querySelector: () => host};
+    globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
+      querySelector: () => host,
+    };
     try {
       const state = {modal: null};
-      const modal = createModal({state, onClose() {} });
+      const modal = createModal({
+        state,
+        /**
+         * Handles the close interaction.
+         */
+        onClose() {},
+      });
       modal.showModal('Abfüllung', '<form id="bottling-form"></form>', true);
       const original = host.firstElementChild;
       original.form.name = 'Unsaved whisky';
@@ -112,10 +197,22 @@ test(
 test('closing all dialogs discards nested parents during navigation', () => {
   const host = fakeModalHost();
   const previous = globalThis.document;
-  globalThis.document = {querySelector: () => host};
+  globalThis.document = {
+    /**
+     * Derives the query selector result from the supplied values.
+     * @return {!Object} Result computed from the supplied inputs.
+     */
+    querySelector: () => host,
+  };
   try {
     const state = {modal: null};
-    const modal = createModal({state, onClose() {} });
+    const modal = createModal({
+      state,
+      /**
+       * Handles the close interaction.
+       */
+      onClose() {},
+    });
     modal.showModal('Parent', '<p>Parent</p>');
     modal.showModal('Child', '<p>Child</p>', false, true);
     modal.closeModal(true);
@@ -132,10 +229,22 @@ test(
   async () => {
     const host = fakeModalHost();
     const oldDocument = globalThis.document;
-    globalThis.document = {querySelector: () => host};
+    globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
+      querySelector: () => host,
+    };
     try {
       const state = {modal: null};
-      const modal = createModal({state, onClose() {} });
+      const modal = createModal({
+        state,
+        /**
+         * Handles the close interaction.
+         */
+        onClose() {},
+      });
       modal.showModal('Assign bottles', '<form id="warehouse-form"></form>');
       const original = host.firstElementChild;
       original.form.name = 'Selected destination';
@@ -168,10 +277,22 @@ test(
   async () => {
     const host = fakeModalHost();
     const oldDocument = globalThis.document;
-    globalThis.document = {querySelector: () => host};
+    globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
+      querySelector: () => host,
+    };
     try {
       const state = {modal: null};
-      const modal = createModal({state, onClose() {} });
+      const modal = createModal({
+        state,
+        /**
+         * Handles the close interaction.
+         */
+        onClose() {},
+      });
       modal.showModal('Assignment', '<form id="warehouse-form"></form>');
       const answer = modal.confirm('Full', 'More places?', 'Increase');
       modal.closeModal();
@@ -194,10 +315,22 @@ test(
   () => {
     const host = fakeModalHost();
     const previous = globalThis.document;
-    globalThis.document = {querySelector: () => host};
+    globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
+      querySelector: () => host,
+    };
     try {
       const state = {modal: null};
-      const modal = createModal({state, onClose() {} });
+      const modal = createModal({
+        state,
+        /**
+         * Handles the close interaction.
+         */
+        onClose() {},
+      });
       modal.showModal('Furniture', '<div id="furniture-manager"></div>', true);
       const furniture = host.firstElementChild;
       furniture.form.name = 'Furniture not saved';
@@ -227,10 +360,22 @@ test(
 test('explicit replacement can discard older modal history', () => {
   const host = fakeModalHost();
   const previous = globalThis.document;
-  globalThis.document = {querySelector: () => host};
+  globalThis.document = {
+    /**
+     * Derives the query selector result from the supplied values.
+     * @return {!Object} Result computed from the supplied inputs.
+     */
+    querySelector: () => host,
+  };
   try {
     const state = {modal: null};
-    const modal = createModal({state, onClose() {} });
+    const modal = createModal({
+      state,
+      /**
+       * Handles the close interaction.
+       */
+      onClose() {},
+    });
     modal.showModal('Furniture', '<div></div>');
     modal.showModal('Shelf', '<div></div>');
     modal.showModal('Standalone', '<div></div>', false, false);
@@ -253,10 +398,22 @@ test(
     host.querySelector = selector => selector === '.overlay' ?
       host.firstElementChild : null;
     const previous = globalThis.document;
-    globalThis.document = {querySelector: () => host};
+    globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
+      querySelector: () => host,
+    };
     try {
       const state = {modal: null};
-      const modal = createModal({state, onClose() {} });
+      const modal = createModal({
+        state,
+        /**
+         * Handles the close interaction.
+         */
+        onClose() {},
+      });
       const plannerHelpButton =
         '<button type="button" data-act="flight-plan-help">?</button>';
       modal.showModal(
@@ -306,16 +463,40 @@ test(
     host.querySelector = selector => selector === '.overlay' ?
       host.firstElementChild : null;
     const previous = globalThis.document;
-    globalThis.document = {querySelector: () => host};
+    globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
+      querySelector: () => host,
+    };
     try {
       const state = {
         modal: null,
         collection: {bottlings: [], tastingFlights: []},
         flightCandidateIds: null,
       };
-      const modal = createModal({state, onClose() {} });
+      const modal = createModal({
+        state,
+        /**
+         * Handles the close interaction.
+         */
+        onClose() {},
+      });
       const view = createTastingsView({
-        state, selectors: {}, shell() {}, navigate() {}, refresh() {},
+        state, selectors: {},
+        /**
+         * Updates the shell state for its caller.
+         */
+        shell() {},
+        /**
+         * Updates the navigate state for its caller.
+         */
+        navigate() {},
+        /**
+         * Performs the refresh lifecycle action.
+         */
+        refresh() {},
         showModal: modal.showModal, closeModal: modal.closeModal,
       });
       view.startPlannedFlight();

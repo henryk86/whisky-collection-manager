@@ -16,6 +16,12 @@ export const VIEW_FILTER_KEYS = Object.freeze([
 export const VIEW_DISPLAY_KEYS =
   Object.freeze(['sort', 'view', 'mode', 'columns']);
 
+/**
+ * Normalizes flavor criteria for collection saved views.
+ *
+ * @param {!Array<*>=} criteria Criteria used by this operation.
+ * @return {!Array<!Object>} Resulting list of values.
+ */
 export function normalizeFlavorCriteria(criteria = []) {
   if (!Array.isArray(criteria) || criteria.length >
     FLAVOR_CRITERIA_LIMIT) throw new Error('Invalid flavor criteria');
@@ -32,6 +38,12 @@ export function normalizeFlavorCriteria(criteria = []) {
   });
 }
 
+/**
+ * Normalizes saved views for collection saved views.
+ *
+ * @param {*} input Input to process.
+ * @return {!Array<!Object>} Resulting list of values.
+ */
 export function normalizeSavedViews(input) {
   if (!Array.isArray(input) || input.length >
     VIEW_LIMIT) throw new Error('Invalid saved views');

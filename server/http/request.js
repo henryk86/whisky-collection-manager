@@ -1,6 +1,9 @@
 import {fail} from '../domain/errors.js';
 /**
  * Accept a JSON object, not arrays/primitives, with a hard upper size limit.
+ *
+ * @param {!Object} request Incoming request.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
  */
 export async function readJson(request) {
   // JSON is never accepted as text/plain: otherwise a cross-site HTML form

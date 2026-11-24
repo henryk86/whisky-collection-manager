@@ -20,13 +20,33 @@ const FAMILIES = Object.freeze({
   smoke: ['smoky', 'peaty', 'medicinal'], fruit: ['fruity', 'floral'],
   malt: ['woody', 'cereal'], wine: ['winey'], other: ['feinty', 'sulphury'],
 });
+/**
+ * Checks whether rated applies.
+ *
+ * @param {*} value Value to process.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const isRated = value => Number.isFinite(value) && value >= 0 && value <= 10;
 
+/**
+ * Orders or compares items values.
+ *
+ * @param {*} a First entry or operand in the calculation.
+ * @param {*} b Second entry or operand in the calculation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const compareItems = (a, b) => a.bottling.name.localeCompare(b.bottling
   .name, 'de') ||
   a.bottling.id.localeCompare(b.bottling.id) || a.bottle.id
     .localeCompare(b.bottle.id);
 
+/**
+ * Selects candidate whiskies and their tasting context for a flight.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {*} Array of values selected for the caller.
+ */
 export function flightCandidates(collection, {availability = 'open', bottlingIds = null} = {}) {
   const whitelist = Array.isArray(bottlingIds) ? new Set(bottlingIds) : null;
   return (collection.bottlings || []).flatMap(bottling => {
@@ -63,6 +83,13 @@ export function flightCandidates(collection, {availability = 'open', bottlingIds
   }).sort(compareItems);
 }
 
+/**
+ * Filters records according to the profile distance selection rules.
+ *
+ * @param {*} a First entry or operand in the calculation.
+ * @param {*} b Second entry or operand in the calculation.
+ * @return {number} Calculated numeric value.
+ */
 function profileDistance(a, b) {
   const axes = FLAVOR_AXES.filter(axis => isRated(a.profile?.[axis]) &&
     isRated(b.profile?.[axis]));
@@ -74,12 +101,25 @@ function profileDistance(a, b) {
   ) / axes.length;
 }
 
+/**
+ * Derives the intensity result from the supplied values.
+ *
+ * @param {*} item Current item under consideration.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function intensity(item) {
   return (Number(item.bottling.abv) || 40) / 12 + item.intensity +
     (Number(item.profile?.smoky) || 0) / 4 +
     (Number(item.profile?.peaty) || 0) / 4;
 }
 
+/**
+ * Calculates the novelty numeric value.
+ *
+ * @param {*} item Current item under consideration.
+ * @param {*} today Value used by this operation.
+ * @return {number} Calculated numeric value.
+ */
 function novelty(item, today) {
   const date = Date.parse(item.lastTasted);
   return (item.lastTasted ? 0 : 30) + (item.assessed.length ? 0 : 4) +
@@ -88,6 +128,12 @@ function novelty(item, today) {
       Math.min(10, Math.max(0, (today - date) / 86400000 / 30)) : 0);
 }
 
+/**
+ * Derives the repeated distilleries result from the supplied values.
+ *
+ * @param {*} items Entries to process.
+ * @return {number} Calculated numeric value.
+ */
 function repeatedDistilleries(items) {
   const ids = new Set(); let repeated = 0;
   for (const item of items) {
@@ -99,11 +145,24 @@ function repeatedDistilleries(items) {
   return repeated;
 }
 
+/**
+ * Orders the intensity gaps records using the configured comparison.
+ *
+ * @param {*} items Entries to process.
+ * @return {*} Entries ordered by the comparison rule.
+ */
 function intensityGaps(items) {
   const levels = items.map(intensity).sort((a, b) => a - b);
   return levels.slice(1).map((level, i) => level - levels[i]);
 }
 
+/**
+ * Calculates the transition cost numeric value.
+ *
+ * @param {*} a First entry or operand in the calculation.
+ * @param {*} b Second entry or operand in the calculation.
+ * @return {number} Calculated numeric value.
+ */
 function transitionCost(a, b) {
   const jump = intensity(b) - intensity(a);
   const difference = profileDistance(a, b);
@@ -118,6 +177,9 @@ function transitionCost(a, b) {
 
 /**
  * Exact sequence search for at most six selected bottles (<=720 permutations).
+ *
+ * @param {!Array<*>} items Items used by this operation.
+ * @return {!Array<*>} Resulting list of values.
  */
 export function orderFlightItems(items) {
   if (items.length > 6) throw new RangeError('Flight order supports at most six bottles');
@@ -125,6 +187,13 @@ export function orderFlightItems(items) {
   const ordered = [...items].sort(compareItems);
   const mildest = Math.min(...ordered.map(intensity));
   let best = null, bestCost = Infinity, bestTie = '';
+  /**
+   * Transforms the entries used by search.
+   *
+   * @param {*} path Path to the target resource.
+   * @param {*} remaining Value used by this operation.
+   * @param {*} cost Value used by this operation.
+   */
   const search = (path, remaining, cost) => {
     if (cost > bestCost + 1e-8) return;
     if (!remaining.length) {
@@ -153,6 +222,11 @@ export function orderFlightItems(items) {
 /**
  * Score whole sets; multiple starting points and swaps avoid a single greedy
  * seed.
+ *
+ * @param {*} candidates Candidates used by this operation.
+ * @param {number} count Number of items to process.
+ * @param {!Object} options3 Destructured options for this operation.
+ * @return {!Array<*>} Resulting list of values.
  */
 function selectFlight(
   candidates,
@@ -161,6 +235,13 @@ function selectFlight(
     caskMode, caskGroup, caskSubtype, ageMode, ageMin, ageMax}
 ) {
   const distanceCache = new Map();
+  /**
+   * Orders the dist records using the configured comparison.
+   *
+   * @param {*} a First entry or operand in the calculation.
+   * @param {*} b Second entry or operand in the calculation.
+   * @return {*} Entries ordered by the comparison rule.
+   */
   const dist = (a, b) => {
     const key = [a.bottling.id, b.bottling.id].sort().join('|');
     if (!distanceCache.has(key)) distanceCache.set(key, profileDistance(a, b));
@@ -176,6 +257,13 @@ function selectFlight(
     if (bucket) triedAges.add(bucket);
   }
   const caskCache = new Map(), ageCache = new Map();
+  /**
+   * Orders the pair facts records using the configured comparison.
+   *
+   * @param {*} a First entry or operand in the calculation.
+   * @param {*} b Second entry or operand in the calculation.
+   * @return {!Object} Structured result assembled from the input data.
+   */
   const pairFacts = (a, b) => {
     const key = [a.bottling.id, b.bottling.id].sort().join('|');
     if (!caskCache.has(key)) caskCache.set(key, caskDistance(a.cask, b.cask));
@@ -185,6 +273,13 @@ function selectFlight(
   // The known parts of 65/25/10 are renormalized; unavailable values do not
   // masquerade as zero distance. Profile-data penalties stay independent.
 
+  /**
+   * Filters records according to the signed pair distance selection rules.
+   *
+   * @param {*} facts Value used by this operation.
+   * @param {*} defaultDirection Value used by this operation.
+   * @return {number} Calculated numeric value.
+   */
   const signedPairDistance = (facts, defaultDirection) => {
     const measured = [
       [
@@ -212,6 +307,13 @@ function selectFlight(
     ) / weight : 0;
   };
 
+  /**
+   * Derives the pair spread result from the supplied values.
+   *
+   * @param {*} items Entries to process.
+   * @param {*} key Key used to select or group values.
+   * @return {!Array<*>} Resulting entries in their output order.
+   */
   const pairSpread = (items, key) => {
     const values = [];
     for (let i = 0; i < items.length; i++)for (let j = i + 1; j <
@@ -222,6 +324,12 @@ function selectFlight(
     return values;
   };
 
+  /**
+   * Aggregates input values for the preference score calculation.
+   *
+   * @param {*} items Entries to process.
+   * @return {number} Calculated numeric value.
+   */
   const preferenceScore = items => {
     let result = 0;
     if (caskMode === 'specific' && caskGroup !== 'any') result += items.reduce(
@@ -253,8 +361,20 @@ function selectFlight(
   };
   const noveltyCache = new Map(candidates.map(item =>
     [item, novelty(item, today)]));
+  /**
+   * Derives the novelty score result from the supplied values.
+   *
+   * @param {*} item Current item under consideration.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const noveltyScore = item => noveltyCache.get(item);
   const unfamiliarityCache = new Map();
+  /**
+   * Selects and transforms the unfamiliarity records.
+   *
+   * @param {*} item Current item under consideration.
+   * @return {*} Entries that meet the selection criteria.
+   */
   const unfamiliarity = item => {
     if (unfamiliarityCache.has(item)) return unfamiliarityCache.get(item);
     if (!item.assessed.length) return 0;
@@ -266,6 +386,12 @@ function selectFlight(
     return result;
   };
 
+  /**
+   * Selects and transforms the score records.
+   *
+   * @param {*} items Entries to process.
+   * @return {*} Entries that meet the selection criteria.
+   */
   const score = items => {
     const profiled = items.filter(item => item.assessed.length >= 2);
     let total = -2 * repeatedDistilleries(items);
@@ -319,6 +445,13 @@ function selectFlight(
       (ageMode === 'auto' ? novelAges.size * 3 : 0) + preferences;
   };
 
+  /**
+   * Derives the rank result from the supplied values.
+   *
+   * @param {*} a First entry or operand in the calculation.
+   * @param {*} b Second entry or operand in the calculation.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const rank = (a, b) => score([b]) - score([a]) || compareItems(a, b);
   // Include representatives of every aroma family even when their individual
   // rank is low.
@@ -395,8 +528,12 @@ function selectFlight(
 }
 
 /**
- * Stable physical references and evidence-based reasons; never infer unrecorded
- * flavors.
+ * Stable physical references and evidence-based reasons; never infer
+ * unrecorded flavors.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {!Array<!Object>} Resulting list of values.
  */
 export function suggestFlight(
   collection,

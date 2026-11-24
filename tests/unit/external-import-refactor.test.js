@@ -19,11 +19,32 @@ test(
     const form = {
       dataset: {},
       elements: {name: {value: ''}, abv: {value: ''}},
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector(selector) {
         return selector === '.forms' ?
-          {prepend(element) {panel = element;} } : selector ===
+          {
+            /**
+             * Updates the prepend state for its caller.
+             *
+             * @param {*} element DOM element involved in the operation.
+             */
+            prepend(element) {panel = element;},
+          } : selector ===
             '#import-panel' ? panel : null;
       },
+      /**
+       * Derives the query selector all result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll(selector) {
         return selector ===
           'input[name=distilleryIds]:checked' ? [] : selector ===
@@ -33,16 +54,47 @@ test(
     };
     const calls = [];
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector(selector) {
         return selector === '#bottling-form' ? form :
           selector === '#import-panel' ? panel : null;
       },
+      /**
+       * Constructs element from the supplied data.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       createElement() {
         return {
+          /**
+           * Updates attribute in the current state.
+           */
           setAttribute() {},
+          /**
+           * Updates the remove state for its caller.
+           */
           remove() {},
+          /**
+           * Derives the query selector result from the supplied values.
+           * @return {?*} Result or null when no value is available.
+           */
           querySelector() {return null;},
+          /**
+           * Updates the insert adjacent html state for its caller.
+           */
           insertAdjacentHTML() {},
+          /**
+           * Derives the query selector all result from the supplied values.
+           *
+           * @param {function(...*): *} selector Selector input for this
+           * operation.
+           * @return {!Array<*>} Resulting entries in their output order.
+           */
           querySelectorAll(selector) {
             if (selector === '[data-import-field]:checked') return choices;
             if (selector ===
@@ -51,13 +103,30 @@ test(
           },
         };
       },
-      body: {append(el) {calls.push(el.textContent);} },
+      body: {
+        /**
+         * Updates the append state for its caller.
+         *
+         * @param {*} el Value used by this operation.
+         */
+        append(el) {calls.push(el.textContent);},
+      },
     };
     globalThis.setTimeout = () => 0;
     try {
       const controller = createExternalImport({
         state, sourceName: 'Local Catalog',
+        /**
+         * Validates payload against its constraints.
+         *
+         * @param {*} data Input data to process.
+         * @return {*} Result computed from the supplied inputs.
+         */
         validatePayload: data => data,
+        /**
+         * Selects existing bottling matching the input.
+         * @return {*} Result computed from the supplied inputs.
+         */
         findExistingBottling: () => null,
       });
       controller.previewImport({
@@ -92,9 +161,30 @@ test(
         selected: 'bottling-1',
         collection: {bottlings: [{id: 'bottling-1', name: 'Test'}]},
       },
-      selectors: {findBottle: () => null},
+      selectors: {
+        /**
+         * Selects bottle matching the input.
+         * @return {*} Result computed from the supplied inputs.
+         */
+        findBottle: () => null,
+      },
+      /**
+       * Derives the bottle form result from the supplied values.
+       * @return {string} Resulting text.
+       */
       bottleForm: () => '<form id="bottle-form"></form>',
+      /**
+       * Renders modal in the current view.
+       *
+       * @param {*} title Title displayed or stored by this operation.
+       * @param {*} html HTML markup to render or inspect.
+       * @return {number} Calculated numeric value.
+       */
       showModal: (title, html) => modals.push({title, html}),
+      /**
+       * Retrieves pending image token from the available state.
+       * @return {string} Resulting text.
+       */
       getPendingImageToken: () => 'valid-pending-token',
     });
     editor.newBottle(true);

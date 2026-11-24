@@ -11,6 +11,12 @@ const payload = {
   },
 };
 
+/**
+ * Serializes mock import data to JSON.
+ *
+ * @param {!Object} options Options controlling the operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function mockImport({openEditor}) {
   const oldLocation = globalThis.location;
   const oldHistory = globalThis.history;
@@ -23,15 +29,40 @@ function mockImport({openEditor}) {
   };
   globalThis.location = location;
   globalThis.history = {
+    /**
+     * Updates the replace state state for its caller.
+     *
+     * @param {*} args Arguments forwarded to the operation.
+     */
     replaceState(...args) {
       calls.push(['history', args[2]]);
       location.hash = '';
     },
   };
   globalThis.document = {
+    /**
+     * Derives the query selector result from the supplied values.
+     * @return {*} Result computed from the supplied inputs.
+     */
     querySelector: () => null,
-    createElement: () => ({remove() {}, className: '', textContent: ''}),
-    body: {append(el) {calls.push(['toast', el.textContent]);} },
+    /**
+     * Constructs element from the supplied data.
+     * @return {!Object} Result computed from the supplied inputs.
+     */
+    createElement: () => ({
+      /**
+       * Updates the remove state for its caller.
+       */
+      remove() {}, className: '', textContent: '',
+    }),
+    body: {
+      /**
+       * Updates the append state for its caller.
+       *
+       * @param {*} el Value used by this operation.
+       */
+      append(el) {calls.push(['toast', el.textContent]);},
+    },
   };
   globalThis.setTimeout =
     () => {}; // prevent nonessential toast timers in this unit test
@@ -41,13 +72,37 @@ function mockImport({openEditor}) {
   };
   const controller = createWhiskybase({
     state,
+    /**
+     * Derives the navigate result from the supplied values.
+     *
+     * @param {!Array<*>} args Arguments forwarded to the operation.
+     * @return {number} Calculated numeric value.
+     */
     navigate: (...args) => calls.push(['navigate', ...args]),
+    /**
+     * Renders modal in the current view.
+     *
+     * @param {!Array<*>} args Arguments forwarded to the operation.
+     * @return {number} Calculated numeric value.
+     */
     showModal: (...args) => calls.push(['showModal', ...args]),
+    /**
+     * Performs the close modal lifecycle action.
+     *
+     * @param {!Array<*>} args Arguments forwarded to the operation.
+     */
     closeModal: (...args) => {calls.push(['closeModal', ...args]); state.modal = null;},
+    /**
+     * Constructs bottling from the supplied data.
+     * @return {number} Calculated numeric value.
+     */
     createBottling: () => calls.push(['createBottling']),
   });
   return {
     calls, controller,
+    /**
+     * Updates the restore state for its caller.
+     */
     restore() {
       if (oldLocation ===
         undefined) delete globalThis.location; else globalThis.location =

@@ -6,6 +6,10 @@ import path from 'node:path';
 import net from 'node:net';
 import https from 'node:https';
 import {spawn, spawnSync} from 'node:child_process';
+/**
+ * Coordinates asynchronous work for free port.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function freePort() {
   const server = net.createServer();
   await new Promise(r => server.listen(0, '127.0.0.1', r));
@@ -14,6 +18,13 @@ async function freePort() {
   return port;
 }
 
+/**
+ * Retrieves https from the available state.
+ *
+ * @param {*} port Value used by this operation.
+ * @param {*} rejectUnauthorized Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function getHttps(port, rejectUnauthorized) {
   return await new Promise((resolve, reject) => {
     https.get({

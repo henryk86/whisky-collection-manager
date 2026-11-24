@@ -1,7 +1,13 @@
-/** Pointer-based bottle relocation inside a rack or across the room-wide virtual shelf wall.
- * Reuses the existing server assignment endpoint; no local warehouse mutations.
- * Pointer Events cover mouse, pen and touch while click/keyboard still open
- * details.
+/**
+ * Pointer-based bottle relocation inside a rack or across the room-wide
+ * virtual shelf wall. Reuses the existing server assignment endpoint; no local
+ * warehouse mutations. Pointer Events cover mouse, pen and touch while
+ * click/keyboard still open details.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {*} targetShelfId Target shelf id used by this operation.
+ * @return {(string)} Entries that meet the selection criteria.
  */
 export function shelfDropStatus(warehouse, bottleId, targetShelfId) {
   const selected = Array.isArray(bottleId) ? bottleId : [bottleId];
@@ -26,6 +32,13 @@ export function shelfDropStatus(warehouse, bottleId, targetShelfId) {
   return 'valid';
 }
 
+/**
+ * Registers the drag interaction for placing bottles in warehouse shelves.
+ *
+ * @param {*} panel Panel used by this operation.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalidDrop, getDraggedIds} = {}) {
   if (!panel?.addEventListener || typeof getWarehouse !== 'function' ||
     typeof onDrop !== 'function') return () => {};
@@ -37,6 +50,9 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
   let scrollTimer = null;
   let scrollDirection = 0;
 
+  /**
+   * Removes or resets targets.
+   */
   function clearTargets() {
     for (const node of panel.querySelectorAll('.warehouse-shelf')) {
       node.classList.remove(
@@ -47,6 +63,9 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
     }
   }
 
+  /**
+   * Updates the end state for its caller.
+   */
   function end() {
     clearInterval(scrollTimer);
     scrollTimer = null;
@@ -64,11 +83,24 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
     clearTargets();
   }
 
+  /**
+   * Derives the destination at result from the supplied values.
+   *
+   * @param {*} x Horizontal coordinate.
+   * @param {*} y Vertical coordinate.
+   * @return {*} Result computed from the supplied inputs.
+   */
   function destinationAt(x, y) {
     const node = panel.ownerDocument?.elementFromPoint?.(x, y)?.closest?.('.warehouse-shelf');
     return node && panel.contains(node) ? node : null;
   }
 
+  /**
+   * Updates element attributes used by mark destination.
+   *
+   * @param {*} x Horizontal coordinate.
+   * @param {*} y Vertical coordinate.
+   */
   function markDestination(x, y) {
     clearTargets();
     const target = destinationAt(x, y);
@@ -82,6 +114,12 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
         'warehouse-drop-capacity' : 'warehouse-drop-blocked');
   }
 
+  /**
+   * Controls wall for warehouse bottle drag.
+   *
+   * @param {number} x Horizontal coordinate in the current coordinate system.
+   * @param {number} y Vertical coordinate in the current coordinate system.
+   */
   function scrollWall(x, y) {
     const viewport = panel.querySelector?.('.warehouse-wall-scroll');
     let directionX = 0;
@@ -98,6 +136,9 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
     scrollTimer = null;
     scrollDirection = directionX;
     if (!directionX) return;
+    /**
+     * Derives the tick result from the supplied values.
+     */
     const tick = () => {
       if (!active?.moved) return;
       viewport.scrollLeft += directionX * 22;
@@ -107,6 +148,11 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
     scrollTimer = setInterval(tick, 50);
   }
 
+  /**
+   * Updates element attributes used by down.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   const down = event => {
     if (busy || active || !event.isPrimary || event.button !== 0) return;
     const button = event.target.closest?.('.warehouse-bottle-symbol');
@@ -124,6 +170,11 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
     try {button.setPointerCapture?.(event.pointerId);} catch { /* pointer capture may not be available */}
   };
 
+  /**
+   * Calculates the move numeric value.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   const move = event => {
     if (!active || event.pointerId !== active.pointerId) return;
     if (!active.moved && Math.hypot(event.clientX -
@@ -155,6 +206,11 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
     scrollWall(event.clientX, event.clientY);
   };
 
+  /**
+   * Updates element attributes used by up.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   const up = event => {
     if (!active || event.pointerId !== active.pointerId) return;
     const {bottleId, bottleIds, moved} = active;
@@ -181,8 +237,17 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
       }).finally(() => {busy = false;});
   };
 
+  /**
+   * Performs the cancel lifecycle action.
+      * @return {*} Result of this expression.
+*/
   const cancel = () => end();
 
+  /**
+   * Updates element attributes used by click.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   const click = event => {
     const button = event.target.closest?.('.warehouse-bottle-symbol');
     if (button && button.dataset.id === suppressClickFor) {

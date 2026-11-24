@@ -10,16 +10,42 @@ import path from 'node:path';
 import {writeSourceManifest, verifySourceManifest, FILENAME} from './release-manifest.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/**
+ * Reads read data from the local filesystem.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @return {*} Combined text from the input values.
+ */
 const read = (name) => fs.readFileSync(path.join(ROOT, name), 'utf8');
 
+/**
+ * Writes write data to the local filesystem.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @param {*} value Value to process.
+ * @return {*} Combined text from the input values.
+ */
 const write = (name, value) => fs.writeFileSync(path.join(ROOT, name), value);
 
+/**
+ * Parses version for release version.
+ *
+ * @param {*} value Input value to process.
+ * @return {!Array<number>} Resulting list of values.
+ */
 export function parseVersion(value) {
   const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(value || '');
   if (!match) throw new Error(`Ungueltige Release-Version: ${value} (erwartet X.Y.Z ohne Suffix)`);
   return match.slice(1).map(Number);
 }
 
+/**
+ * Compares semantic version components in release order.
+ *
+ * @param {*} left Left used by this operation.
+ * @param {*} right Right used by this operation.
+ * @return {number} Calculated numeric result.
+ */
 export function compareVersions(left, right) {
   const a = parseVersion(left);
   const b = parseVersion(right);
@@ -29,6 +55,13 @@ export function compareVersions(left, right) {
   return 0;
 }
 
+/**
+ * Calculates the next semantic version for the chosen release level.
+ *
+ * @param {*} current Current resource data to update.
+ * @param {*} part Part used by this operation.
+ * @return {string} Resulting text.
+ */
 export function nextVersion(current, part) {
   const [major, minor, patch] = parseVersion(current);
   if (part === 'major') return `${major + 1}.0.0`;
@@ -37,7 +70,20 @@ export function nextVersion(current, part) {
   throw new Error('Verwendung: npm run release:bump -- patch|minor|major "Changelog-Eintrag"');
 }
 
+/**
+ * Validates release metadata for release version.
+ *
+ * @param {*=} root Root element or directory.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function verifyReleaseMetadata(root = ROOT, {allowReadmeMismatch = false} = {}) {
+  /**
+   * Reads content data from the local filesystem.
+   *
+   * @param {*} name Environment variable or setting name.
+   * @return {*} Combined text from the input values.
+   */
   const content = name => fs.readFileSync(path.join(root, name), 'utf8');
   const pkg = JSON.parse(content('package.json'));
   const version = pkg.version;
@@ -68,6 +114,11 @@ export function verifyReleaseMetadata(root = ROOT, {allowReadmeMismatch = false}
   return {version, tag: `v${version}`};
 }
 
+/**
+ * Validates fresh version against its constraints.
+ *
+ * @param {*} version Value used by this operation.
+ */
 function validateFreshVersion(version) {
   const output = execFileSync(
     'git',
@@ -81,6 +132,13 @@ function validateFreshVersion(version) {
   }
 }
 
+/**
+ * Updates readme title for release version.
+ *
+ * @param {*} source Source used by this operation.
+ * @param {*} version Version used by this operation.
+ * @return {*} Text assembled for the caller.
+ */
 export function updateReadmeTitle(source, version) {
   const heading = `# Whisky Collection Manager v${version}`;
   if (/^# [^\n]*(?:Whisky Collection Manager|Whisky-Collection-Manager)[^\n]*$/im.test(source)) {
@@ -94,6 +152,9 @@ export function updateReadmeTitle(source, version) {
   return `${heading}\n\n${source}`;
 }
 
+/**
+ * Updates the sync readme state for its caller.
+ */
 function syncReadme() {
   const {version} = verifyReleaseMetadata(ROOT, {allowReadmeMismatch: true});
   const before = read('README.md');
@@ -106,6 +167,11 @@ function syncReadme() {
 /**
  * A version bump starts a new test cycle. Never inherit passed checks from an
  * old release.
+ *
+ * @param {*} version Version used by this operation.
+ * @param {*} note Note used by this operation.
+ * @param {*} date Date value to process.
+ * @return {string} Resulting text.
  */
 export function pendingTestStatus(version, note, date) {
   parseVersion(version);
@@ -127,6 +193,12 @@ Nach Durchfuehrung der Pruefungen die Ergebnisse und ihre Grenzen hier dokumenti
 `;
 }
 
+/**
+ * Parses bump data from JSON input.
+ *
+ * @param {*} part Value used by this operation.
+ * @param {*} note Value used by this operation.
+ */
 function bump(part, note) {
   if (!note?.trim() || note.length > 500 || /[\r\n]/.test(note)) {
     throw new Error('Ein kurzer, einzeiliger Changelog-Eintrag ist erforderlich.');
@@ -155,6 +227,11 @@ function bump(part, note) {
 /**
  * Create the versioned release snapshot; a later verified step synchronizes
  * both branches.
+ *
+ * @param {*} version Version used by this operation.
+ * @param {*} commits Commits used by this operation.
+ * @param {*} mergeSha Merge sha used by this operation.
+ * @param {*} previousTag Previous tag used by this operation.
  */
 export function applyAutomatedRelease(version, commits, mergeSha, previousTag) {
   parseVersion(version);
@@ -165,6 +242,12 @@ export function applyAutomatedRelease(version, commits, mergeSha, previousTag) {
   // the changelog from the previous tag, not stale development metadata.
   if (!/^v\d+\.\d+\.\d+$/
     .test(previousTag)) throw new Error('Invalid previous release tag');
+  /**
+   * Derives the released file result from the supplied values.
+   *
+   * @param {*} name Environment variable or setting name.
+   * @return {*} Computed value, or null when the input has no match.
+   */
   const releasedFile = name => {
     try {
       return execFileSync('git', ['show', `${previousTag}:${name}`],

@@ -6,8 +6,17 @@ import {toast} from '../ui/notifications.js';
 /**
  * Settings workflows use app dialogs instead of blocking browser
  * prompt/confirm.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function createSettingsController({state, action, navigate, closeModal, showModal, onDistilleryLocationChanged}) {
+  /**
+   * Transforms the entries used by prompt distillery.
+   *
+   * @param {*=} id Identifier of the affected record.
+      * @return {*} Result of this expression.
+*/
   function promptDistillery(id = null) {
     const current = id ? state.collection.distilleries.find(entry =>
       entry.id === id) : null;
@@ -51,6 +60,12 @@ export function createSettingsController({state, action, navigate, closeModal, s
     query('#distillery-name')?.focus();
   }
 
+  /**
+   * Updates distillery for settings controller.
+   *
+   * @param {!KeyboardEvent} event Event that triggered the handler.
+   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   */
   async function saveDistillery(event) {
     event.preventDefault();
     const form = event.target;
@@ -118,6 +133,11 @@ export function createSettingsController({state, action, navigate, closeModal, s
       t("features.notifications.distilleryCreated"));
   }
 
+  /**
+   * Retrieves distillery location for settings controller.
+   *
+   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   */
   async function findDistilleryLocation() {
     const name = query('#distillery-name')?.value.trim();
     if (!name) return toast(t("features.validation.distilleryNameRequiredForSearch"), true);
@@ -146,6 +166,11 @@ export function createSettingsController({state, action, navigate, closeModal, s
     }
   }
 
+  /**
+   * Updates distillery location in the current state.
+   *
+   * @param {*} button Button control involved in the interaction.
+   */
   function applyDistilleryLocation(button) {
     const output = query('#distillery-location-results');
     const item = output?._candidates?.[Number(button.dataset.index)];
@@ -155,6 +180,10 @@ export function createSettingsController({state, action, navigate, closeModal, s
     output.innerHTML = `<p class="hint">${t("features.map.coordinatesReadyToSave")}</p>`;
   }
 
+  /**
+   * Parses import json data from JSON input.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function importJSON() {
     const file = query('#import-file')?.files?.[0];
     if (!file) return toast(t("features.validation.selectJsonFile"), true);
@@ -173,6 +202,10 @@ export function createSettingsController({state, action, navigate, closeModal, s
     );
   }
 
+  /**
+   * Parses confirm import data from JSON input.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function confirmImport() {
     const file = query('#import-file')?.files?.[0];
     if (!file) return toast(t("features.validation.selectJsonFile"), true);
@@ -199,6 +232,12 @@ export function createSettingsController({state, action, navigate, closeModal, s
     }
   }
 
+  /**
+   * Updates collection settings for settings controller.
+   *
+   * @param {!Event} event Event that triggered the handler.
+   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   */
   async function saveCollectionSettings(event) {
     event.preventDefault();
     const field = event.target.elements.namedItem('establishedYear');

@@ -2,9 +2,24 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {startTestServer, requestJson as api} from '../helpers/server.js';
 
+/**
+ * Coordinates asynchronous work for create.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @param {*} name Environment variable or setting name.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const create = async (base, name) =>
   (await api(base, '/api/warehouse/rooms', 'POST', {name, width: 5, height: 4})).data;
 
+/**
+ * Coordinates asynchronous work for furniture.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @param {*} room Warehouse room being inspected or modified.
+ * @param {*} name Environment variable or setting name.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const furniture = async (base, room, name) => (await api(
   base,
   `/api/warehouse/rooms/${room.id}/furniture`,
@@ -12,6 +27,15 @@ const furniture = async (base, room, name) => (await api(
   {name, type: 'regal', x: 0, y: 0, width: 1, depth: .5, rotation: 0}
 )).data;
 
+/**
+ * Coordinates asynchronous work for shelf.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @param {*} model Value used by this operation.
+ * @param {*} name Environment variable or setting name.
+ * @param {number=} capacity Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const shelf = async (base, model, name, capacity = 3) => (await api(
   base,
   `/api/warehouse/furniture/${model.id}/shelves`,
@@ -19,6 +43,13 @@ const shelf = async (base, model, name, capacity = 3) => (await api(
   {name, capacity}
 )).data;
 
+/**
+ * Coordinates asynchronous work for bottle.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @param {*} number Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const bottle = async (base, number) => (await api(
   base,
   '/api/bottlings',
@@ -29,6 +60,14 @@ const bottle = async (base, number) => (await api(
   }
 )).data.bottle;
 
+/**
+ * Derives the export rooms result from the supplied values.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @param {*} roomIds Value used by this operation.
+ * @param {*} includeAssignments Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const exportRooms = (base, roomIds, includeAssignments) => api(
   base,
   '/api/warehouse/rooms/export',
@@ -36,6 +75,14 @@ const exportRooms = (base, roomIds, includeAssignments) => api(
   {roomIds, includeAssignments}
 );
 
+/**
+ * Derives the preview result from the supplied values.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @param {*} document Value used by this operation.
+ * @param {!Object=} opts Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const preview = (base, document, opts = {}) => api(
   base,
   '/api/warehouse/rooms/import/preview',
@@ -43,6 +90,14 @@ const preview = (base, document, opts = {}) => api(
   {document, ...opts}
 );
 
+/**
+ * Derives the apply result from the supplied values.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @param {*} document Value used by this operation.
+ * @param {!Object=} opts Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const apply = (base, document, opts = {}) =>
   api(base, '/api/warehouse/rooms/import', 'POST', {document, ...opts});
 

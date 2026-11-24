@@ -35,10 +35,27 @@ test(
     const state = {page: 'tastings-home', selected: null, collection};
     const view = createTastingsView({
       state,
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} value Value to process.
+       */
       shell: value => {html = value;},
+      /**
+       * Updates the navigate state for its caller.
+       */
       navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
       refresh() {},
-      selectors: {coverPhoto: () => null},
+      selectors: {
+        /**
+         * Derives the cover photo result from the supplied values.
+         * @return {*} Result computed from the supplied inputs.
+         */
+        coverPhoto: () => null,
+      },
     });
     view.home();
     assert.match(
@@ -87,13 +104,35 @@ test(
     };
     let html = '';
     const selectors = {
+      /**
+       * Derives the all bottles result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       allBottles: () => collection.bottlings.flatMap(b => b.bottles),
+      /**
+       * Derives the bottles result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       bottles: () => collection.bottlings[0].bottles,
+      /**
+       * Derives the cover photo result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       coverPhoto: () => null,
+      /**
+       * Derives the distillery names result from the supplied values.
+       * @return {string} Resulting text.
+       */
       distilleryNames: () => '',
     };
     const home = createHomeView({
-      state, selectors, shell: value => {
+      state, selectors,
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} value Value to process.
+       */
+      shell: value => {
         html =
           value;
       },

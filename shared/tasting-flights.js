@@ -5,6 +5,13 @@
 import {validTastingDate} from './tasting-records.js';
 
 export const FLIGHT_LIMIT = 100;
+/**
+ * Normalizes flight fields for tasting flights.
+ *
+ * @param {*} input Input to process.
+ * @param {!Object=} previous Previous used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function normalizeFlightFields(input, previous = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input) ||
     Object.keys(input).some(key => !['name', 'date', 'notes'].includes(key)))
@@ -19,6 +26,12 @@ export function normalizeFlightFields(input, previous = {}) {
   return {name: value.name.trim(), date: value.date, notes: value.notes};
 }
 
+/**
+ * Collects referenced tasting IDs across the saved flights.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @return {!Array<*>} Resulting list of values.
+ */
 export function allTastingReferences(collection) {
   return [
     ...(collection.bottlings || []).flatMap(b => (b.tastings || [])
@@ -28,12 +41,26 @@ export function allTastingReferences(collection) {
   ];
 }
 
+/**
+ * Resolves a flight's referenced tasting records in display order.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {*} flight Flight used by this operation.
+ * @return {*} Entries that meet the selection criteria.
+ */
 export function flightEntries(collection, flight) {
   const refs = allTastingReferences(collection);
   return (flight?.tastingIds || []).map(id => refs.find(ref => ref.record
     .id === id)).filter(Boolean);
 }
 
+/**
+ * Finds the flight containing a given tasting ID.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {*} tastingId Tasting id used by this operation.
+ * @return {*} Whether the requested condition is met.
+ */
 export function flightForTasting(collection, tastingId) {
   return (collection?.tastingFlights || []).find(flight => flight.tastingIds
     .includes(tastingId)) || null;
@@ -42,6 +69,9 @@ export function flightForTasting(collection, tastingId) {
 /**
  * Remove references after deleting a tasting/bottling, without deleting the
  * flight.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {!Array<*>} ids Identifiers in their current order.
  */
 export function detachTastings(collection, ids) {
   const deleted = new Set(ids);
@@ -60,6 +90,13 @@ export function detachTastings(collection, ids) {
 export const FLIGHT_PHASES =
   Object.freeze(['planned', 'inProgress', 'completed']);
 export const PLAN_LIMIT = 6;
+/**
+ * Validates flight plan for tasting flights.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {*} flight Flight used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function validateFlightPlan(collection, flight) {
   if (flight.phase === undefined && flight.planItems ===
     undefined) return true; // legacy flights

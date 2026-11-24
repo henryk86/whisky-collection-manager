@@ -9,6 +9,13 @@ import {fileURLToPath} from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta
   .url)), '../..');
 
+/**
+ * Writes fixture data to the local filesystem.
+ *
+ * @param {*} t Temporary or input value for the calculation.
+ * @param {string=} provider Value used by this operation.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function fixture(t, provider = 'cloudflare') {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-dns01-'));
   t.after(() => fs.rmSync(temp, {recursive: true, force: true}));
@@ -71,6 +78,13 @@ fi
     'LE_DNS_PROVIDER',
     'LE_DNS_PROPAGATION_SECONDS',
   ]) delete env[key];
+  /**
+   * Derives the run result from the supplied values.
+   *
+   * @param {*} action Operation or action callback to invoke.
+   * @param {!Object=} overrides Value used by this operation.
+   * @return {*} Combined text from the input values.
+   */
   function run(action, overrides = {}) {
     return spawnSync(
       'sh',

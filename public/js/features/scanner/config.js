@@ -15,6 +15,12 @@ export const scannerFormatNames = [
   'DATA_MATRIX',
   'CODABAR',
 ];
+/**
+ * Returns barcode formats supported by the scanner configuration.
+ *
+ * @param {!Object=} supported Supported used by this operation.
+ * @return {!Array<*>} Resulting list of values.
+ */
 export function supportedFormats(supported = {}) {
   const formats = scannerFormatNames.map(name => supported[name])
     .filter(Number.isInteger);
@@ -24,9 +30,22 @@ export function supportedFormats(supported = {}) {
   return formats;
 }
 
+/**
+ * Builds camera constraints for the selected scanner mode.
+ *
+ * @return {!Object} Structured result for the caller.
+ */
 export function cameraConfig() {
   return {
-    fps: 12, qrbox: (width, height) => {
+    fps: 12,
+    /**
+     * Calculates the qrbox numeric value.
+     *
+     * @param {*} width Width in pixels.
+     * @param {*} height Height in pixels.
+     * @return {!Object} Structured result assembled from the input data.
+     */
+    qrbox: (width, height) => {
       const side = Math.floor(Math.min(width * .92, height * .85));
       return {
         width: side, height: Math.floor(side * .65),

@@ -11,10 +11,21 @@ export const BACKUP_PASSWORD_FAILURE = Object.freeze({
   tooShort: 'BACKUP_PASSWORD_TOO_SHORT',
   controlMissing: 'BACKUP_CONTROL_NOT_CONFIGURED',
 });
+/**
+ * Derives the password error result from the supplied values.
+ *
+ * @param {*} code Code used to identify a specific outcome.
+ * @param {*} message Message to display or use for diagnostics.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function passwordError(code, message) {
   return Object.assign(new Error(message), {backupPasswordCode: code});
 }
 
+/**
+ * Validates the password path state and rejects invalid inputs.
+ * @return {*} Combined text from the input values.
+ */
 function passwordPath() {
   const control = process.env.BACKUP_CONTROL_DIR;
   if (!control) throw passwordError(
@@ -24,6 +35,11 @@ function passwordPath() {
   return path.join(path.resolve(control), 'backup-zip-password');
 }
 
+/**
+ * Parses backup password for backup password.
+ *
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function readBackupPassword() {
   try {
     const value = fs.readFileSync(passwordPath(), 'utf8').replace(/\r?\n$/, '');
@@ -41,6 +57,11 @@ export function readBackupPassword() {
   }
 }
 
+/**
+ * Checks whether backup password applies in backup password.
+ *
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function hasBackupPassword() {
   try {readBackupPassword(); return true;}
   catch (error) {
@@ -50,6 +71,12 @@ export function hasBackupPassword() {
   }
 }
 
+/**
+ * Updates backup password for backup password.
+ *
+ * @param {*} password Secret supplied for authentication or encryption.
+ * @param {string=} previous Previous used by this operation.
+ */
 export function saveBackupPassword(password, previous = '') {
   if (typeof password !== 'string' || password.length < 14 ||
     password.length > 256 || !password.trim()) {

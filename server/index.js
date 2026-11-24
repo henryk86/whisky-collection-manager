@@ -7,6 +7,11 @@ import {fileURLToPath} from 'node:url';
 import {createRequestHandler} from './app.js';
 import {PORT, HOST, HTTPS_ENABLED, HTTP_ENABLED, HTTPS_PORT, HTTPS_CERT_FILE, HTTPS_KEY_FILE, ALLOWED_HOSTS} from './config.js';
 export {createServer} from './app.js';
+/**
+ * Initializes and starts the configured HTTP and HTTPS listeners.
+ *
+ * @return {!Array<*>} Resulting list of values.
+ */
 export function startServers() {
   let tlsOptions;
   if (HTTPS_ENABLED) {

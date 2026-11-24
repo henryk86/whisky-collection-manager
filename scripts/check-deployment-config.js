@@ -10,14 +10,42 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/**
+ * Validates the check state and rejects invalid inputs.
+ *
+ * @param {*} value Value to process.
+ * @param {*} message Message to display or use for diagnostics.
+ */
 const check = (value, message) => {if (!value) throw new Error(`Deployment contract: ${message}`);};
 
+/**
+ * Enforces the text precondition.
+ *
+ * @param {*} text Text to process.
+ * @param {*} snippet Value used by this operation.
+ * @param {*} message Message to display or use for diagnostics.
+  * @return {*} Result of this expression.
+*/
 const requireText = (text, snippet, message) =>
   check(text.includes(snippet), message);
 
+/**
+ * Derives the no text result from the supplied values.
+ *
+ * @param {*} text Text to process.
+ * @param {*} snippet Value used by this operation.
+ * @param {*} message Message to display or use for diagnostics.
+  * @return {*} Result of this expression.
+*/
 const noText = (text, snippet, message) =>
   check(!text.includes(snippet), message);
 
+/**
+ * Validates deployment configuration for check deployment config.
+ *
+ * @param {Function=} read Read used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function verifyDeploymentConfiguration(read = name =>
   fs.readFileSync(path.join(ROOT, name), 'utf8')) {
   const compose = read('docker-compose.yml');

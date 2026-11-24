@@ -15,6 +15,15 @@ const axes = {
   feinty: 0,
   sulphury: 0,
 };
+/**
+ * Derives the entry result from the supplied values.
+ *
+ * @param {*} id Identifier of the affected record.
+ * @param {!Object=} values Values to process.
+ * @param {string=} tastedOn Value used by this operation.
+ * @param {number=} abv Value used by this operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const entry = (id, values = {}, tastedOn = '2026-08-01', abv = 46) => ({
   id,
   name: id,
@@ -34,6 +43,13 @@ const items = [
   entry('other', {sulphury: 8}),
 ];
 const base = {bottlings: items};
+/**
+ * Transforms the entries used by ids.
+ *
+ * @param {*} style Visual style or rendering properties.
+ * @param {!Object=} opts Value used by this operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const ids = (style, opts = {}) => suggestFlight(
   base,
   {style, count: 3, today: Date.parse('2026-11-23'), ...opts}
@@ -43,6 +59,12 @@ test(
   'balanced suggests distinct aroma families rather than only the best documented bottles',
   () => {
     const selected = ids('balanced', {count: 5});
+    /**
+     * Derives the family result from the supplied values.
+     *
+     * @param {*} id Identifier of the affected record.
+     * @return {*} Result computed from the supplied inputs.
+     */
     const family = id => id.startsWith('smoke') ? 'smoke' :
       id.startsWith('fruit') ? 'fruit' : id;
     assert.equal(selected.length, 5);
@@ -158,15 +180,41 @@ test(
       false, nested, headingAction;
     const view = createTastingsView({
       state: {collection, page: 'tastings-home', selected: null},
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} rendered Value used by this operation.
+       */
       shell: rendered => {html = rendered;},
+      /**
+       * Updates the navigate state for its caller.
+       */
       navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
       refresh() {},
+      /**
+       * Renders modal in the current view.
+       *
+       * @param {*} heading Value used by this operation.
+       * @param {*} body Body content to validate or process.
+       * @param {*} isWide Value used by this operation.
+       * @param {*} keepParent Value used by this operation.
+       * @param {*} action Operation or action callback to invoke.
+       */
       showModal: (heading, body, isWide, keepParent, action) => {
         title =
           heading; modal = body; wide = isWide; nested =
             keepParent; headingAction = action;
       },
-      selectors: {coverPhoto: () => null},
+      selectors: {
+        /**
+         * Derives the cover photo result from the supplied values.
+         * @return {*} Result computed from the supplied inputs.
+         */
+        coverPhoto: () => null,
+      },
     });
     view.home();
     assert.match(

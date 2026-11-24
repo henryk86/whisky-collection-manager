@@ -1,4 +1,12 @@
-/** Consistent JSON responses and downloadable files. */
+/**
+ * Consistent JSON responses and downloadable files.
+ *
+ * @param {!Object} res Outgoing HTTP response.
+ * @param {*} status HTTP or entity status used for validation.
+ * @param {!Object} data Input data for the operation.
+ * @param {string=} type Type used by this operation.
+ * @param {!Object=} extraHeaders Extra headers used by this operation.
+ */
 export function send(
   res,
   status,
@@ -15,6 +23,13 @@ export function send(
   res.end(type.startsWith('application/json') ? JSON.stringify(data) : data);
 }
 
+/**
+ * Sets download headers for a response attachment.
+ *
+ * @param {!Object} response Outgoing response.
+ * @param {!Object} options2 Destructured options for this operation.
+ * @param {!Object=} options3 Destructured options for this operation.
+ */
 export function attachment(response, {filename, type, bytes}, {inline = false} = {}) {
   // HTTP response headers must stay ASCII; the RFC 5987 name preserves umlauts.
   const fallback = filename.replace(/[^\x20-\x7e]/g, '_')
@@ -31,7 +46,12 @@ export function attachment(response, {filename, type, bytes}, {inline = false} =
   response.end(bytes);
 }
 
-/** Stream large backups without reading the whole archive into Pi memory. */
+/**
+ * Stream large backups without reading the whole archive into Pi memory.
+ *
+ * @param {!Object} response Outgoing response.
+ * @param {!Object} options2 Destructured options for this operation.
+ */
 export async function fileAttachment(response, {filename, type, path: file, cleanup = false}) {
   const fs = await import('node:fs');
   const {pipeline} = await import('node:stream/promises');

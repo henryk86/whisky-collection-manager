@@ -4,6 +4,12 @@ import {unassignedWallPage, UNASSIGNED_WALL_PAGE_SIZE} from '../../public/js/dom
 import {renderUnassignedTray, renderUnassignedTrayPage} from '../../public/js/views/warehouse-unassigned-tray.js';
 import {renderWarehouseRoomWall} from '../../public/js/views/warehouse-room-wall.js';
 
+/**
+ * Derives the inventory result from the supplied values.
+ *
+ * @param {*} count Number of requested or available entries.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const inventory = count => ({
   bottles: Array.from({length: count}, (_, i) => ({
     id: `b${i}`,

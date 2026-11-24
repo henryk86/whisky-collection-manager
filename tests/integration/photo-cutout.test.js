@@ -7,6 +7,12 @@ import {writeReadableZip, inspectReadableZip} from '../../shared/backup-zip.js';
 const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
 const zipPassword = 'SicheresTestpasswort-2026-mindestens-14!';
 
+/**
+ * Coordinates asynchronous work for fixture.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function fixture(base) {
   const bottle = (await requestJson(base, '/api/bottlings', 'POST', {name: 'Cutout Test'})).data.bottle;
   const photo = (await requestJson(

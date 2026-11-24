@@ -151,6 +151,13 @@ export const DEFAULT_TABLE_COLUMNS = Object.freeze({
 });
 export const TABLE_COLUMNS_STORAGE_KEY = 'whisky-collection-table-columns-v1';
 
+/**
+ * Normalizes table columns for collection table columns.
+ *
+ * @param {*} mode Requested display mode or configuration variant.
+ * @param {*} value Input value to process.
+ * @return {*} Array of values selected for the caller.
+ */
 export function normalizeTableColumns(mode, value) {
   const options = TABLE_COLUMNS[mode];
   if (!options) return [];
@@ -161,6 +168,12 @@ export function normalizeTableColumns(mode, value) {
   return allowed.length ? allowed : [...DEFAULT_TABLE_COLUMNS[mode]];
 }
 
+/**
+ * Loads table columns for collection table columns.
+ *
+ * @param {*} storage Storage adapter used to load or save preferences.
+ * @return {!Object} Structured result for the caller.
+ */
 export function loadTableColumns(storage) {
   try {
     const source = storage === undefined ? globalThis.localStorage : storage;
@@ -177,6 +190,13 @@ export function loadTableColumns(storage) {
   }
 }
 
+/**
+ * Updates table columns for collection table columns.
+ *
+ * @param {*} preferences Preferences to read, normalize or persist.
+ * @param {*} storage Storage adapter used to load or save preferences.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function saveTableColumns(preferences, storage) {
   try {
     const target = storage === undefined ? globalThis.localStorage : storage;
@@ -192,6 +212,10 @@ export function saveTableColumns(preferences, storage) {
 /**
  * Clicking an already sorted header reverses it, otherwise use its useful
  * default.
+ *
+ * @param {*} column Column definition used for layout and sorting.
+ * @param {*} currentSort Current sorting key and direction.
+ * @return {*} Result computed from the supplied inputs.
  */
 export function sortForColumn(column, currentSort) {
   if (!column) return currentSort;

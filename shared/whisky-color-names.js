@@ -64,8 +64,12 @@ export const WHISKY_COLOR_REFERENCES = Object.freeze([
   ['rosewood', '#a96569'],
 ].map(([key, hex]) => Object.freeze({key, hex})));
 
-/** sRGB -> OKLab. Perceptual distance is much more useful for naming
- * adjacent warm shades than raw RGB or hue distances.
+/**
+ * sRGB -> OKLab. Perceptual distance is much more useful for naming adjacent
+ * warm shades than raw RGB or hue distances.
+ *
+ * @param {*} hex Hex used by this operation.
+ * @return {!Array<number>} Resulting list of values.
  */
 function oklab(hex) {
   const rgb = [1, 3, 5].map(i => {
@@ -91,6 +95,14 @@ const references = WHISKY_COLOR_REFERENCES.map(({key, hex}) => {
 // matches even though their hue differs greatly. Weight the hue separation
 // more strongly, while still comparing lightness and chroma continuously.
 const HUE_WEIGHT = 8;
+/**
+ * Calculates the naming distance numeric value.
+ *
+ * @param {*} lab Value used by this operation.
+ * @param {*} chroma Value used by this operation.
+ * @param {*} reference Reference value to compare against.
+ * @return {number} Calculated numeric value.
+ */
 function namingDistance(lab, chroma, reference) {
   const lightnessDifference = lab[0] - reference.lab[0];
   const chromaDifference = chroma - reference.chroma;
@@ -105,6 +117,9 @@ function namingDistance(lab, chroma, reference) {
 /**
  * Stable, locale-independent name key. The original HEX is never rounded or
  * changed.
+ *
+ * @param {*} hex Hex used by this operation.
+ * @return {?string} Resulting text.
  */
 export function whiskyColorNameKey(hex) {
   if (!isAllowedWhiskyHex(hex)) return null;

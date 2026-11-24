@@ -128,13 +128,36 @@ test(
 test(
   'selecting help topics synchronizes sidebar, selector and visible panel without navigating',
   () => {
+    /**
+     * Constructs button from the supplied data.
+     *
+     * @param {*} topic Value used by this operation.
+     * @return {!Object} Result computed from the supplied inputs.
+     */
     const makeButton = topic => ({
       dataset: {helpTopic: topic.id}, attrs: {},
       classList: {
         active: topic.id === 'basics',
+        /**
+         * Updates the toggle state for its caller.
+         *
+         * @param {*} name Environment variable or setting name.
+         * @param {*} active Value used by this operation.
+         */
         toggle(name, active) {if (name === 'active') this.active = active;},
       },
+      /**
+       * Updates attribute in the current state.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @param {*} value Value to process.
+       */
       setAttribute(name, value) {this.attrs[name] = value;},
+      /**
+       * Removes or resets attribute.
+       *
+       * @param {*} name Environment variable or setting name.
+       */
       removeAttribute(name) {delete this.attrs[name];},
     });
     const buttons = HELP_TOPICS.map(makeButton);
@@ -142,10 +165,22 @@ test(
       ({id: `help-panel-${topic.id}`, hidden: topic.id !== 'basics'}));
     const selector = {value: 'basics'};
     const container = {
+      /**
+       * Derives the query selector all result from the supplied values.
+       *
+       * @param {*} query Search query or filter conditions.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll(query) {
         return query === '.help-section' ? panels :
           buttons;
       },
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {*} query Search query or filter conditions.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       querySelector(query) {
         return query === '[data-section-switch="help"]' ?
           selector : null;

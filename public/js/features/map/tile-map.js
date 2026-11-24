@@ -8,6 +8,16 @@ import {pagodaRoofIcon, closedDistilleryIcon, plusIcon, minusIcon} from '../../u
 import {clusterMapSites} from '../../domain/map-clusters.js';
 
 const TILE_BASE = 'https://tile.openstreetmap.org';
+/**
+ * Creates tile map for tile map.
+ *
+ * @param {!Element} element Element to process.
+ * @param {*} initialSites Initial sites used by this operation.
+ * @param {Function} onSelect On select used by this operation.
+ * @param {null=} selectedId Selected id used by this operation.
+ * @param {!Object=} options5 Destructured options for this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createTileMap(
   element,
   initialSites,
@@ -27,8 +37,15 @@ export function createTileMap(
   const pointers = new Map();
   let drag = null, pinch = null, lastDrag = 0;
 
+  /**
+   * Derives the dimensions result from the supplied values.
+   * @return {!Object} Structured result assembled from the input data.
+   */
   function dimensions() {return {width: viewport.clientWidth, height: viewport.clientHeight};}
 
+  /**
+   * Updates the tile map state.
+   */
   function update() {
     if (destroyed) return;
     const {width, height} = dimensions();
@@ -146,6 +163,9 @@ export function createTileMap(
     if (info) info.textContent = `Zoom ${zoom}`;
   }
 
+  /**
+   * Updates the fit state for its caller.
+   */
   function fit() {
     center = fitMapToSites(
       sites,
@@ -158,6 +178,11 @@ export function createTileMap(
     update();
   }
 
+  /**
+   * Filters records according to the fit sites selection rules.
+   *
+   * @param {*} ids Identifiers in their current order.
+   */
   function fitSites(ids) {
     const idSet = new Set(ids);
     const matches = sites.filter(site => idSet.has(site.id) && site.location);
@@ -174,6 +199,12 @@ export function createTileMap(
     update();
   }
 
+  /**
+   * Calculates the pan by numeric value.
+   *
+   * @param {*} dx Horizontal position difference.
+   * @param {*} dy Vertical position difference.
+   */
   function panBy(dx, dy) {
     const point = project(center.lat, center.lon, zoom);
     center = unproject(point.x - dx, point.y - dy, zoom);
@@ -183,6 +214,12 @@ export function createTileMap(
     update();
   }
 
+  /**
+   * Updates zoom in the current state.
+   *
+   * @param {*} next Next candidate state or entry.
+   * @param {*} anchor Value used by this operation.
+   */
   function setZoom(next, anchor) {
     const {width, height} = dimensions();
     const view = zoomAroundPoint(
@@ -202,6 +239,11 @@ export function createTileMap(
     update();
   }
 
+  /**
+   * Derives the center on result from the supplied values.
+   *
+   * @param {*} site Value used by this operation.
+   */
   function centerOn(site) {
     if (!site?.location) return;
     center = {lat: site.location.lat, lon: site.location.lon};
@@ -211,12 +253,22 @@ export function createTileMap(
     update();
   }
 
+  /**
+   * Calculates the focus numeric value.
+   *
+   * @param {*} site Value used by this operation.
+   */
   function focus(site) {
     if (!site?.location) return;
     zoom = Math.max(zoom, 10);
     centerOn(site);
   }
 
+  /**
+   * Calculates the down numeric value.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   const down = event => {
     if (event.target.closest('button,a')) return;
     pointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
@@ -230,6 +282,11 @@ export function createTileMap(
     }
   };
 
+  /**
+   * Calculates the move numeric value.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   const move = event => {
     if (!pointers.has(event.pointerId)) return;
     pointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
@@ -255,6 +312,11 @@ export function createTileMap(
     }
   };
 
+  /**
+   * Derives the up result from the supplied values.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   const up = event => {
     if (!pointers.has(event.pointerId)) return;
     pointers.delete(event.pointerId);
@@ -268,6 +330,11 @@ export function createTileMap(
     if (pointers.size < 2) pinch = null;
   };
 
+  /**
+   * Derives the wheel result from the supplied values.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   const wheel = event => {
     if (!event.deltaY) return;
     const rect = viewport.getBoundingClientRect();
@@ -278,6 +345,11 @@ export function createTileMap(
     setZoom(zoom + (event.deltaY < 0 ? 1 : -1), {x, y});
   };
 
+  /**
+   * Derives the keyboard result from the supplied values.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   const keyboard = event => {
     if (event.target !== viewport) return;
     if (event.key === '+' || event.key ===
@@ -299,6 +371,11 @@ export function createTileMap(
   viewport.addEventListener('pointercancel', up);
   viewport.addEventListener('wheel', wheel, {passive: false});
   viewport.addEventListener('keydown', keyboard);
+  /**
+   * Handles the zoom interaction.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   const handleZoom = event => {
     const action = event.target.closest('[data-map-control]')?.dataset
       .mapControl;
@@ -327,6 +404,14 @@ export function createTileMap(
   }
   return {
     focus, centerOn, fitSites,
+    /**
+     * Updates sites in the current state.
+     *
+     * @param {*} nextSites Value used by this operation.
+     * @param {*} nextSelectedId Value used by this operation.
+     * @param {*=} nextShowAllDistilleries Next show all distilleries input for
+     * this operation.
+     */
     updateSites(
       nextSites,
       nextSelectedId,
@@ -340,12 +425,24 @@ export function createTileMap(
       showingAllDistilleries = nextShowAllDistilleries;
       update();
     },
+    /**
+     * Retrieves view from the available state.
+     * @return {!Object} Result computed from the supplied inputs.
+     */
     getView() {
       return center ?
         {lat: center.lat, lon: center.lon, zoom} : null;
     },
+    /**
+     * Updates the select state for its caller.
+     *
+     * @param {*} id Identifier of the affected record.
+     */
     select(id) {selectedId = id; update();},
     fit,
+    /**
+     * Performs the destroy lifecycle action.
+     */
     destroy() {
       destroyed = true;
       resize.disconnect();
@@ -360,8 +457,12 @@ export function createTileMap(
   };
 }
 
-/** Accessible map structure and OSM attribution; all tile requests happen in
- * createTileMap while the map page is actually visible. */
+/**
+ * Accessible map structure and OSM attribution; all tile requests happen in
+ * createTileMap while the map page is actually visible.
+ *
+ * @return {string} Resulting text.
+ */
 export function mapCanvasHtml() {
   return `<div class="map-canvas" id="distillery-map">
       <div class="map-viewport" tabindex="0" role="application" aria-label="${t("features.map.keyboardInstructions")}">

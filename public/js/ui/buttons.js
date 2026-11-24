@@ -4,20 +4,7 @@ import {escapeHtml} from './dom.js';
  * Renders a shared button with escaped text and delegated actions.
  *
  * @param {!Object=} options Button configuration; never pass user HTML to
- *     slots.
- * @param {string=} options.label Text or accessible icon-button name.
- * @param {string=} options.action Delegated data-act identifier.
- * @param {string=} options.variant Primary, secondary, destructive, text or
- *     icon.
- * @param {string=} options.size Default, small or large.
- * @param {string=} options.type Button, submit or reset.
- * @param {string=} options.icon Trusted application-generated SVG markup.
- * @param {boolean=} options.iconOnly Hide visual text and keep an ARIA name.
- * @param {boolean=} options.disabled Disable the button.
- * @param {boolean=} options.loading Disable it and advertise aria-busy.
- * @param {string=} options.className Additional escaped CSS classes.
- * @param {string=} options.attributes Trusted static attributes; never user
- *     input.
+ * slots.
  * @return {string} HTML button markup.
  * @throws {RangeError} If a variant, size or button type is unsupported.
  */

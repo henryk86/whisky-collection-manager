@@ -20,6 +20,12 @@ const settings = {
   sharpen: 11,
 };
 
+/**
+ * Coordinates asynchronous work for fixture.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function fixture(base) {
   const bottle = (await requestJson(base, '/api/bottlings', 'POST', {name: 'Photo Editor Test'})).data.bottle;
   const photo = (await requestJson(

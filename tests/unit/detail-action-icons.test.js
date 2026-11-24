@@ -5,15 +5,34 @@ import {createDetailView} from '../../public/js/views/detail.js';
 import {createBottleForm} from '../../public/js/features/forms/bottle.js';
 import {inventoryScanIcon, editIcon, deleteIcon} from '../../public/js/ui/action-icons.js';
 
+/**
+ * Tests input text against the button pattern.
+ *
+ * @param {*} html HTML markup to render or inspect.
+ * @param {*} action Operation or action callback to invoke.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function button(html, action) {
   const found = html.match(new RegExp(String.raw`<button\b[^>]*data-act="${action}"[^>]*>[\s\S]*?<\/button>`));
   assert.ok(found, `${action} button is missing`);
   return found[0];
 }
 
+/**
+ * Validates the detail markup state and rejects invalid inputs.
+ *
+ * @param {!Object=} options Options controlling the operation.
+ * @return {string} Resulting text.
+ */
 function detailMarkup({photos = [], warehouse = null} = {}) {
   const originalDocument = globalThis.document;
-  globalThis.document = {querySelectorAll: () => []};
+  globalThis.document = {
+    /**
+     * Derives the query selector all result from the supplied values.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
+    querySelectorAll: () => [],
+  };
   try {
     let html = '';
     createDetailView({
@@ -23,15 +42,41 @@ function detailMarkup({photos = [], warehouse = null} = {}) {
         collection: {bottlings: [{id: 'bottling-a', name: 'Example Whisky', bottles: []}]},
       },
       selectors: {
+        /**
+         * Derives the bottles result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
         bottles: () => [{
           id: 'physical-a', inventoryNumber: '001', status: 'closed',
           photos, files: [{id: 'file-a', name: 'Beleg.pdf', size: 1234}],
         }],
+        /**
+         * Derives the cover photo result from the supplied values.
+         * @return {string} Resulting text.
+         */
         coverPhoto: () => '',
+        /**
+         * Derives the distillery names result from the supplied values.
+         * @return {string} Resulting text.
+         */
         distilleryNames: () => '',
       },
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} markup HTML markup for the selected content.
+       */
       shell: markup => {html = markup;},
+      /**
+       * Reports the navigate error condition.
+       */
       navigate: () => {throw Error('Unexpected navigation');},
+      /**
+       * Derives the action result from the supplied values.
+       *
+       * @param {*} fn Function called during this operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       action: async fn => fn(),
     })();
     return html;
@@ -47,7 +92,13 @@ test(
     const owner = {id: 'bottling-a', name: 'Example Whisky'};
     const form = createBottleForm({
       state: {collection: {bottlings: [owner]}},
-      selectors: {distilleryNames: () => ''},
+      selectors: {
+        /**
+         * Derives the distillery names result from the supplied values.
+         * @return {string} Resulting text.
+         */
+        distilleryNames: () => '',
+      },
     })({id: 'physical-a'}, owner.id);
     const scan = button(form, 'scan-into-bottle');
     assert.ok(scan.includes(inventoryScanIcon));

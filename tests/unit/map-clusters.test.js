@@ -2,6 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {clusterMapSites} from '../../public/js/domain/map-clusters.js';
 
+/**
+ * Derives the distillery result from the supplied values.
+ *
+ * @param {*} id Identifier of the affected record.
+ * @param {*} lat Value used by this operation.
+ * @param {*} lon Value used by this operation.
+ * @param {number=} bottleCount Value used by this operation.
+ * @param {number=} bottlingCount Value used by this operation.
+ * @return {!Object} Result computed from the supplied inputs.
+ */
 const distillery = (id, lat, lon, bottleCount = 0, bottlingCount = 0) => ({
   id, name: id, location: {lat, lon}, bottleCount, bottlingCount,
 });

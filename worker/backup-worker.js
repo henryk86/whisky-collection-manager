@@ -42,6 +42,12 @@ const timeFormatter = new Intl.DateTimeFormat('en-CA', {
   hourCycle: 'h23',
 });
 
+/**
+ * Formats the worker's current time in its configured time zone.
+ *
+ * @param {!Date=} now Current time used by the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function localClock(now = new Date()) {
   const parts = Object.fromEntries(timeFormatter.formatToParts(now)
     .map(part => [part.type, part.value]));
@@ -53,6 +59,13 @@ export function localClock(now = new Date()) {
   };
 }
 
+/**
+ * Determines which backup schedule slot is currently due.
+ *
+ * @param {*} profile Profile data used for the comparison.
+ * @param {!Date=} now Current time used by the operation.
+ * @return {?string} Resulting text.
+ */
 export function dueSlot(profile, now = new Date()) {
   if (!profile.enabled || profile.format !==
     'zip') return null; // No more automatic Restic backups
@@ -70,11 +83,24 @@ export function dueSlot(profile, now = new Date()) {
   return time.date;
 }
 
+/**
+ * Retrieves json from the available state.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @param {*} fallback Value used when the requested data is unavailable.
+ * @return {*} Parsed JSON value.
+ */
 function readJson(name, fallback) {
   try {return JSON.parse(fs.readFileSync(path.join(CONTROL, name), 'utf8'));}
   catch (error) {if (error.code === 'ENOENT') return fallback; throw error;}
 }
 
+/**
+ * Persists json to its backing store.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @param {*} value Value to process.
+ */
 function writeJson(name, value) {
   fs.mkdirSync(CONTROL, {recursive: true, mode: 0o700});
   const to = path.join(CONTROL, name);
@@ -89,6 +115,12 @@ function writeJson(name, value) {
   } finally {if (fs.existsSync(temp)) fs.unlinkSync(temp);}
 }
 
+/**
+ * Normalizes relative for consistent processing.
+ *
+ * @param {*} raw Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function cleanRelative(raw) {
   if (typeof raw !== 'string' || !SAFE_PATH.test(raw) ||
     raw.startsWith('/') || raw.endsWith('/') || raw.split('/').some(p =>
@@ -98,6 +130,12 @@ function cleanRelative(raw) {
   return raw;
 }
 
+/**
+ * Resolves the configured backup repository path.
+ *
+ * @param {*} profile Profile data used for the comparison.
+ * @return {*} Combined text from the input values.
+ */
 export function repositoryFor(profile) {
   const target = cleanRelative(profile.targetPath);
   if (profile.provider === 'local') {
@@ -122,6 +160,10 @@ export function repositoryFor(profile) {
   return `rclone:${profile.remote}:${target}`;
 }
 
+/**
+ * Retrieves profiles from the available state.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function loadProfiles() {
   const data = readJson('profiles.json', {version: 1, profiles: []});
   if (data.version !== 1 ||
@@ -129,6 +171,10 @@ function loadProfiles() {
   return data.profiles;
 }
 
+/**
+ * Derives the job env result from the supplied values.
+ * @return {*} Structured result assembled from the input data.
+ */
 function jobEnv() {
   const password = process.env.RESTIC_PASSWORD_FILE ||
     '/run/secrets/restic-password';
@@ -141,6 +187,14 @@ function jobEnv() {
   };
 }
 
+/**
+ * Executes a backup command and captures its result.
+ *
+ * @param {*} binary Binary used by this operation.
+ * @param {*} args Args used by this operation.
+ * @param {!Object=} options3 Destructured options for this operation.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export function runCommand(binary, args, {cwd, timeout = 3600000} = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(
@@ -189,9 +243,23 @@ export function runCommand(binary, args, {cwd, timeout = 3600000} = {}) {
   });
 }
 
+/**
+ * Derives the restic result from the supplied values.
+ *
+ * @param {*} repo Repository used for the check.
+ * @param {*} args Arguments forwarded to the operation.
+ * @param {*} options Options controlling the operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const restic = (repo, args, options) =>
   runCommand('restic', ['-r', repo, ...args], options);
 
+/**
+ * Parses snapshots data from JSON input.
+ *
+ * @param {*} repo Repository used for the check.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function snapshots(repo) {
   const raw = await restic(repo, ['snapshots', '--json'], {timeout: 120000});
   let entries;
@@ -203,17 +271,36 @@ async function snapshots(repo) {
   }));
 }
 
+/**
+ * Formats of for presentation.
+ *
+ * @param {*} profile Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function formatOf(profile) {
   // Existing profiles have no format field and must keep their Restic
   // repositories.
   return profile.format === 'zip' ? 'zip' : 'restic';
 }
 
+/**
+ * Converts date information for the archive name operation.
+ *
+ * @param {*} job Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function archiveName(job) {
   const timestamp = new Date().toISOString().slice(0, 23).replace(/[:.]/g, '-');
   return `whisky-backup-${timestamp}-${job.id.slice(0, 8)}.zip`;
 }
 
+/**
+ * Parses zip files for data from JSON input.
+ *
+ * @param {*} profile Value used by this operation.
+ * @param {*} repo Repository used for the check.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function zipFilesFor(profile, repo) {
   let entries;
   if (profile.provider === 'local') {
@@ -259,6 +346,12 @@ async function zipFilesFor(profile, repo) {
   }));
 }
 
+/**
+ * Calculates the week bucket numeric value.
+ *
+ * @param {*} time Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function weekBucket(time) {
   const d = new Date(time);
   d.setUTCHours(0, 0, 0, 0);
@@ -268,6 +361,13 @@ function weekBucket(time) {
     Date.UTC(d.getUTCFullYear(), 0, 1)) / 86400000) + 1) / 7)}`;
 }
 
+/**
+ * Retrieves zip retention for backup worker.
+ *
+ * @param {!Array<*>} items Items used by this operation.
+ * @param {*} retention Retention used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function selectZipRetention(items, retention) {
   const keep = new Set(items.length ? [items[0].id] : []);
   for (const [rule, keyOf] of [
@@ -286,6 +386,14 @@ export function selectZipRetention(items, retention) {
   return keep;
 }
 
+/**
+ * Filters records according to the zip prune selection rules.
+ *
+ * @param {*} profile Value used by this operation.
+ * @param {*} repo Repository used for the check.
+ * @param {*} items Entries to process.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function zipPrune(profile, repo, items) {
   const keep = selectZipRetention(items, profile.retention);
   for (const item of items) {
@@ -301,6 +409,15 @@ async function zipPrune(profile, repo, items) {
   return items.filter(item => keep.has(item.id));
 }
 
+/**
+ * Validates the run zip backup state and rejects invalid inputs.
+ *
+ * @param {*} job Value used by this operation.
+ * @param {*} profile Value used by this operation.
+ * @param {*} repo Repository used for the check.
+ * @param {*} status Status value determining the next action.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function runZipBackup(job, profile, repo, status) {
   const folder = await ensureSourceSnapshot(job);
   const local = profile.provider === 'local';
@@ -340,6 +457,10 @@ async function runZipBackup(job, profile, repo, status) {
 /**
  * Legacy Restic is read-only: convert an old snapshot into the same ZIP format
  * for preview/apply.
+ *
+ * @param {*} job Job used by this operation.
+ * @param {*} repo Repo used by this operation.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 async function prepareLegacyRestore(job, repo) {
   if (!/^(latest|[0-9a-f]{8,64})$/i.test(job.snapshotId ||
@@ -371,6 +492,11 @@ async function prepareLegacyRestore(job, repo) {
 /**
  * Prepare a selected saved ZIP for the same preview/confirmation used by
  * browser uploads.
+ *
+ * @param {*} job Job used by this operation.
+ * @param {*} profile Profile data used for the comparison.
+ * @param {*} repo Repo used by this operation.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 async function prepareZipRestore(job, profile, repo) {
   const archives = await zipFilesFor(profile, repo);
@@ -406,6 +532,12 @@ async function prepareZipRestore(job, profile, repo) {
   }
 }
 
+/**
+ * Enforces the source snapshot precondition.
+ *
+ * @param {*} job Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function ensureSourceSnapshot(job) {
   const file = process.env.BACKUP_WORKER_TOKEN_FILE ||
     '/run/secrets/backup-worker-token';
@@ -432,6 +564,12 @@ async function ensureSourceSnapshot(job) {
   return folder;
 }
 
+/**
+ * Validates the verify zip archive state and rejects invalid inputs.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ * @param {*=} password Password or secret supplied by the caller.
+ */
 function verifyZipArchive(file, password = backupPassword()) {
   try {inspectReadableZip(file, null, password);}
   catch (error) {
@@ -440,6 +578,10 @@ function verifyZipArchive(file, password = backupPassword()) {
   }
 }
 
+/**
+ * Validates the backup password state and rejects invalid inputs.
+ * @return {*} Value returned by the delegated operation.
+ */
 function backupPassword() {
   try {return readBackupPassword();}
   catch (error) {
@@ -454,6 +596,15 @@ function backupPassword() {
   }
 }
 
+/**
+ * Executes a queued backup job and records its completion state.
+ *
+ * @param {*} job Job used by this operation.
+ * @param {*} profile Profile data used for the comparison.
+ * @param {*} status HTTP or entity status used for validation.
+ * @return {!Promise<(!Object)>} Promise fulfilled when the operation
+ * completes.
+ */
 export async function executeJob(job, profile, status) {
   const repo = repositoryFor(profile);
   if (job.type === 'test') {
@@ -546,6 +697,11 @@ export async function executeJob(job, profile, status) {
   throw backupJobError('backup.errors.unknownJobType');
 }
 const EMPTY_STATUS = {updatedAt: null, timeZone: TZ, jobs: [], snapshots: {}, remotes: []};
+/**
+ * Creates worker for backup worker.
+ *
+ * @return {!Object} Structured result for the caller.
+ */
 export function createWorker() {
   const status = readJson('worker-status.json', EMPTY_STATUS);
   status.jobs = (status.jobs || []).map(job => {
@@ -557,6 +713,9 @@ export function createWorker() {
   status.remotes ||= [];
   const schedule = readJson('schedule-state.json', {});
   let busy = false;
+  /**
+   * Converts date information for the flush operation.
+   */
   function flush() {
     status.updatedAt = new Date().toISOString();
     status.timeZone = TZ;
@@ -564,6 +723,10 @@ export function createWorker() {
     writeJson('worker-status.json', status);
   }
 
+  /**
+   * Retrieves remotes from the available state.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function loadRemotes() {
     try {
       const result = await runCommand('rclone', ['listremotes'], {timeout: 15000});
@@ -572,6 +735,9 @@ export function createWorker() {
     } catch {status.remotes = [];}
   }
 
+  /**
+   * Writes schedule due data to the local filesystem.
+   */
   function scheduleDue() {
     for (const profile of loadProfiles()) {
       const slot = dueSlot(profile);
@@ -591,6 +757,9 @@ export function createWorker() {
     }
   }
 
+  /**
+   * Handles queue for backup worker.
+   */
   async function processQueue() {
     if (busy) return;
     busy = true;
@@ -646,6 +815,10 @@ export function createWorker() {
     } finally {busy = false; flush();}
   }
 
+  /**
+   * Performs the start lifecycle action.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function start() {
     await loadRemotes();
     flush();
@@ -660,7 +833,14 @@ export function createWorker() {
     );
     console.log(`Backup-Worker gestartet (Zeitzone: ${TZ})`);
   }
-  return {start, processQueue, getStatus: () => status};
+  return {
+    start, processQueue,
+    /**
+     * Retrieves status from the available state.
+     * @return {*} Result computed from the supplied inputs.
+     */
+    getStatus: () => status,
+  };
 }
 if (process.argv[1] && path.resolve(process.argv[1]) ===
   fileURLToPath(import.meta.url)) {

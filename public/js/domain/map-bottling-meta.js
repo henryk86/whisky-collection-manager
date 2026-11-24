@@ -3,6 +3,9 @@ import {hasBottlingDetail} from './bottling-details.js';
 /**
  * Compact, labelled facts for distinguishing similarly named bottlings on the
  * map.
+ *
+ * @param {!Object} bottling Bottling record being processed.
+ * @return {string} Resulting text.
  */
 export function mapBottlingFacts(bottling) {
   const facts = [];

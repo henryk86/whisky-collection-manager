@@ -3,9 +3,22 @@
  */
 export const WAREHOUSE_FINDER_PAGE_SIZE = 24;
 
+/**
+ * Normalizes the normalize text for subsequent processing.
+ *
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
 const normalize = value => String(value ?? '').normalize('NFKC')
   .toLocaleLowerCase().trim();
 
+/**
+ * Retrieves warehouse bottles for warehouse finder.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function findWarehouseBottles(
   warehouse,
   {

@@ -5,10 +5,29 @@ import {
   PAGE_SIZE_STORAGE_KEY, getPageSizePreference, savePageSizePreference,
 } from '../../public/js/domain/page-size-preference.js';
 
+/**
+ * Builds a lookup map for the fake storage data.
+ *
+ * @param {!Object=} initial Value used by this operation.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function fakeStorage(initial = {}) {
   const data = new Map(Object.entries(initial));
   return {
+    /**
+     * Retrieves item from the available state.
+     *
+     * @param {*} key Key used to select or group values.
+     * @return {*} Result computed from the supplied inputs.
+     */
     getItem: key => data.has(key) ? data.get(key) : null,
+    /**
+     * Updates item in the current state.
+     *
+     * @param {*} key Key used to select or group values.
+     * @param {*} value Value to process.
+     * @return {!Map<*, *>} Result computed from the supplied inputs.
+     */
     setItem: (key, value) => data.set(key, value),
   };
 }
@@ -37,7 +56,13 @@ test(
   'browser storage failures leave the UI usable with its default size',
   () => {
     const storage = {
+      /**
+       * Retrieves item from the available state.
+       */
       getItem() {throw new Error('Storage denied');},
+      /**
+       * Updates item in the current state.
+       */
       setItem() {throw new Error('Storage denied');},
     };
     assert.equal(getPageSizePreference(storage), 24);

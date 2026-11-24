@@ -10,6 +10,12 @@ const statusKeys = {
   empty: 'home.status.empty',
 };
 
+/**
+ * Renders warehouse finder results for warehouse finder.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {string} Resulting text.
+ */
 export function renderWarehouseFinderResults({items, total, page, pages}) {
   const count = `<div class="warehouse-finder-summary" aria-live="polite">${safe(total ? t('warehouse.find.matches', {count: total}) : t('warehouse.find.noMatches'))}</div>`;
   const cards = items.map(({bottle, place}) => {
@@ -51,6 +57,12 @@ export function renderWarehouseFinderResults({items, total, page, pages}) {
   return `${count}<div class="warehouse-finder-list">${cards}</div>${pagination}`;
 }
 
+/**
+ * Renders warehouse finder for warehouse finder.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {string} Resulting text.
+ */
 export function renderWarehouseFinder({query, placement, results}) {
   const filters = [
     ['all', 'warehouse.find.all'],

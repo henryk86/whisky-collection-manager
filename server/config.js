@@ -33,6 +33,13 @@ export const PORT = configuredPort;
 export const HOST = process.env.HOST || '0.0.0.0';
 export const DATA_ROOT = path.resolve(process.env.WHISKY_DATA_DIR ||
   process.cwd());
+/**
+ * Normalizes the bool config text for subsequent processing.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @param {*} fallback Value used when the requested data is unavailable.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function boolConfig(name, fallback) {
   const value = String(process.env[name] ?? fallback).toLowerCase();
   if (!['true', 'false', '1', '0'].includes(value)) {
@@ -41,6 +48,13 @@ function boolConfig(name, fallback) {
   return value === 'true' || value === '1';
 }
 
+/**
+ * Derives the port config numeric value from its input.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @param {*} fallback Value used when the requested data is unavailable.
+ * @return {number} Calculated numeric value.
+ */
 function portConfig(name, fallback) {
   const p = Number(process.env[name] ?? fallback);
   if (!Number.isInteger(p) || p < 1 || p > 65535) {

@@ -156,6 +156,12 @@ test(
       (flavorChart(profile).match(/flavor-sliders/g) || []).length,
       1
     );
+    /**
+     * Formats y for presentation.
+     *
+     * @param {*} html HTML markup to render or inspect.
+     * @return {number} Calculated numeric value.
+     */
     const labelY = html =>
       Number(html.match(/<text class="flavor-axis-text"[^>]*y="([^"]+)"[^>]*>Holzig<\/text>/)?.[1]);
     // Only the detail preview tightens axis labels; the full tasting radar is

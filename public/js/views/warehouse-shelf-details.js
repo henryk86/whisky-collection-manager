@@ -9,8 +9,15 @@ const STATUS_KEYS = {
   empty: 'home.status.empty',
 };
 
-/** Use the already loaded collection for bottling ABV; warehouse assignments
- * intentionally do not duplicate bottling data in their storage schema. */
+/**
+ * Use the already loaded collection for bottling ABV; warehouse assignments
+ * intentionally do not duplicate bottling data in their storage schema.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {*} shelfId Shelf id used by this operation.
+ * @param {!Array<*>=} bottlings Bottlings used by this operation.
+ * @return {?Object} Computed value, or null when the input has no match.
+ */
 export function shelfContents(warehouse, shelfId, bottlings = []) {
   const bottlingById = new Map((bottlings || []).map(bottling =>
     [bottling.id, bottling]));

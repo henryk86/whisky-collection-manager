@@ -5,6 +5,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
+/**
+ * Derives the collect result from the supplied values.
+ *
+ * @param {*} directory Directory containing the requested data.
+ * @return {*} Combined text from the input values.
+ */
 function collect(directory) {
   return fs.readdirSync(directory, {
     withFileTypes: true,

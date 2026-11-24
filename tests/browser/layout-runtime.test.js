@@ -5,6 +5,14 @@ import {requestJson} from '../helpers/server.js';
 
 const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
 
+/**
+ * Coordinates asynchronous work for go.
+ *
+ * @param {*} page Page or view being rendered or selected.
+ * @param {*} action Operation or action callback to invoke.
+ * @param {function(...*): *} selector Selector used to obtain matching values.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function go(page, action, selector) {
   if (!(await page.locator('#site-drawer').isVisible())) {
     await page.locator('header [data-act="toggle-menu"]').click();
@@ -314,6 +322,10 @@ test(
       );
       assert.equal(upload.status, 201);
       await open();
+      /**
+       * Updates the DOM elements managed by hero.
+       * @return {*} Matching DOM element, if present.
+       */
       const hero = () => page.locator('.collection-hero').evaluate(el => ({
         color: getComputedStyle(el).color,
         overlay: getComputedStyle(el.querySelector('.hero-overlay'))
@@ -349,7 +361,17 @@ test(
     await session(async ({page, open}) => {
       await open();
       await go(page, 'goto-map', '.map-canvas');
+      /**
+       * Locates the DOM elements used by metrics.
+       * @return {*} Structured result assembled from the input data.
+       */
       const metrics = () => page.locator('.map-canvas').evaluate(canvas => {
+        /**
+         * Derives the css result from the supplied values.
+         *
+         * @param {*} el Value used by this operation.
+         * @return {*} Result computed from the supplied inputs.
+         */
         const css = el => getComputedStyle(el);
         const legend = canvas.closest('main').querySelector('.map-legend');
         const cluster = legend?.querySelector('.map-cluster-visual');

@@ -11,10 +11,22 @@ const example = {
   tastings: [],
 };
 
+/**
+ * Derives the detail html result from the supplied values.
+ *
+ * @param {!Array<*>=} tastings Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function detailHtml(tastings = []) {
   let html = '';
   const oldDocument = globalThis.document;
-  globalThis.document = {querySelectorAll: () => []};
+  globalThis.document = {
+    /**
+     * Derives the query selector all result from the supplied values.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
+    querySelectorAll: () => [],
+  };
   try {
     const state = {
       page: 'detail',
@@ -24,11 +36,39 @@ function detailHtml(tastings = []) {
     createDetailView({
       state,
       selectors: {
-        bottles: () => [], coverPhoto: () =>
-          '', distilleryNames: () => [],
+        /**
+         * Derives the bottles result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
+        bottles: () => [],
+        /**
+         * Derives the cover photo result from the supplied values.
+         * @return {string} Resulting text.
+         */
+        coverPhoto: () =>
+          '',
+        /**
+         * Derives the distillery names result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
+        distilleryNames: () => [],
       },
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} content Content to render, store or examine.
+       */
       shell: content => {html = content;},
+      /**
+       * Updates the navigate state for its caller.
+       */
       navigate() {},
+      /**
+       * Derives the action result from the supplied values.
+       *
+       * @param {*} fn Function called during this operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       action: async fn => fn(),
     })();
   } finally {globalThis.document = oldDocument;}
@@ -128,8 +168,23 @@ test(
       collection: {bottlings: [], externalTastings: []},
     };
     createTastingsView({
-      state, shell: content => html =
-        content, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} content Content to render, store or examine.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: content => html =
+        content,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     }).home();
     assert.match(
       html,
@@ -157,12 +212,30 @@ test(
       selected: b.id,
       collection: {bottlings: [b], distilleries: [], externalTastings: []},
     };
-    const selectors = {coverPhoto: () => '/photos/cover.png'};
+    const selectors = {
+      /**
+       * Derives the cover photo result from the supplied values.
+       * @return {string} Resulting text.
+       */
+      coverPhoto: () => '/photos/cover.png',
+    };
     createTastingsView({
       state,
       selectors,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} content Content to render, store or examine.
+       * @return {*} Result computed from the supplied inputs.
+       */
       shell: content => html = content,
+      /**
+       * Updates the navigate state for its caller.
+       */
       navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
       refresh() {},
     }).list();
     const info = html.match(/<div class="tasting-bottling-summary tasting-bottling-photo-layout">[\s\S]*?<\/section>/)?.[0];
@@ -191,8 +264,23 @@ test(
       collection: {bottlings: [b], distilleries: [], externalTastings: []},
     };
     createTastingsView({
-      state, shell: content => html =
-        content, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} content Content to render, store or examine.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: content => html =
+        content,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     }).editor();
     const start = html.indexOf('class="tasting-record-fields analytics-panel tasting-readonly-meta-panel"');
     const end = html.indexOf('class="tasting-top-row"', start);

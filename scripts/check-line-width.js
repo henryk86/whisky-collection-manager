@@ -17,6 +17,7 @@ const isMain = process.argv[1] && path.resolve(process.argv[1]) ===
 
 /**
  * Computes a stable fingerprint for one overlong source line.
+ *
  * @param {string} line Literal source line without its newline.
  * @return {string} SHA-256 digest of the original line.
  */
@@ -26,6 +27,7 @@ function digest(line) {
 
 /**
  * Returns overlong lines not covered by an unchanged source baseline.
+ *
  * @param {string} source JavaScript source text.
  * @param {!Object<string, number>=} allowed Original long-line hash counts.
  * @param {number=} limit Character limit per line.
@@ -48,6 +50,7 @@ export function widthViolations(source, allowed = {}, limit = 80) {
 
 /**
  * Checks all JavaScript lines against the immutable legacy inventory.
+ *
  * @param {string=} directory Repository root.
  * @param {string=} baseline Filename containing original line hashes.
  * @return {{checked: number, exceptions: number,

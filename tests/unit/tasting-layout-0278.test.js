@@ -4,6 +4,13 @@ import {createTastingsView} from '../../public/js/views/tastings.js';
 import {addActionLabel, newBottlingIcon} from '../../public/js/ui/action-icons.js';
 
 const bottling = {id: 'b1', name: 'Sample', tastings: [], distillery: 'Demo'};
+/**
+ * Derives the render result from the supplied values.
+ *
+ * @param {*} page Page or view being rendered or selected.
+ * @param {*} tastingId Value used by this operation.
+ * @return {string} Resulting text.
+ */
 const render = (page, tastingId) => {
   let html = '';
   const state = {
@@ -13,10 +20,24 @@ const render = (page, tastingId) => {
     collection: {bottlings: [bottling], externalTastings: [], distilleries: []},
   };
   const view = createTastingsView({
-    state, shell: value => {
+    state,
+    /**
+     * Updates the shell state for its caller.
+     *
+     * @param {*} value Value to process.
+     */
+    shell: value => {
       html =
         value;
-    }, navigate() {}, refresh() {},
+    },
+    /**
+     * Updates the navigate state for its caller.
+     */
+    navigate() {},
+    /**
+     * Performs the refresh lifecycle action.
+     */
+    refresh() {},
   });
   view[page === 'tastings' ? 'list' : 'editor']();
   return html;

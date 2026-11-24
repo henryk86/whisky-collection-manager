@@ -7,14 +7,34 @@ import {escapeHtml} from './dom.js';
 import {imageUrl} from './format.js';
 import {bottleLabel, count, storagePath} from '../views/warehouse-presentation.js';
 
+/**
+ * Derives the safe result from the supplied values.
+ *
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
 const safe = value => escapeHtml(String(value ?? ''));
 
+/**
+ * Resolves the current shelf location of a physical bottle.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {*} shelfId Shelf id used by this operation.
+ * @return {?Object} Value returned by the delegated operation.
+ */
 export function assignmentLocation(warehouse, shelfId) {
   return storagePath(warehouse, shelfId);
 }
 
-/** Required total capacity after moving all selected bottles to this shelf.
- * Live bottles only: stale assignment references must not consume space. */
+/**
+ * Required total capacity after moving all selected bottles to this shelf.
+ * Live bottles only: stale assignment references must not consume space.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {*} shelf Shelf used by this operation.
+ * @param {*} bottleIds Bottle ids used by this operation.
+ * @return {?Object} Computed value, or null when the input has no match.
+ */
 export function shelfCapacityIncrease(warehouse, shelf, bottleIds) {
   if (!shelf || shelf.capacity === null || shelf.capacity ===
     undefined) return null;
@@ -32,6 +52,14 @@ export function shelfCapacityIncrease(warehouse, shelf, bottleIds) {
   } : null;
 }
 
+/**
+ * Looks up the destination shelf's capacity and location details.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {*} shelf Shelf used by this operation.
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @return {!Object} Structured result for the caller.
+ */
 export function assignmentShelfInfo(warehouse, shelf, bottleId) {
   const ids = Array.isArray(bottleId) ? bottleId : [bottleId];
   const selected = new Set(ids);
@@ -44,9 +72,17 @@ export function assignmentShelfInfo(warehouse, shelf, bottleId) {
   return {occupied, full, capacity: shelf.capacity};
 }
 
-/** Confirmation is mandatory before raising a shelf's positive capacity.
- * A numeric ceiling in the request prevents a concurrent change from raising
- * capacity beyond the number explicitly accepted by the user. */
+/**
+ * Confirmation is mandatory before raising a shelf's positive capacity. A
+ * numeric ceiling in the request prevents a concurrent change from raising
+ * capacity beyond the number explicitly accepted by the user.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {*} shelfId Shelf id used by this operation.
+ * @param {*} bottleIds Bottle ids used by this operation.
+ * @param {*} confirmAction Confirm action used by this operation.
+ * @return {!Promise<?Object>} Promise fulfilled when the operation completes.
+ */
 export async function approveShelfCapacityIncrease(warehouse, shelfId, bottleIds, confirmAction) {
   if (!shelfId) return {};
   const shelf = assignmentLocation(warehouse, shelfId)?.shelf;
@@ -58,17 +94,39 @@ export async function approveShelfCapacityIncrease(warehouse, shelfId, bottleIds
   return {increaseCapacityTo: needed.required};
 }
 
+/**
+ * Produces the option text used by the caller.
+ *
+ * @param {*} value Value to process.
+ * @param {*} label Label shown to the user.
+ * @param {!Object=} options Options controlling the operation.
+ * @return {string} Resulting text.
+ */
 function option(value, label, {selected = false, disabled = false} = {}) {
   return `<option value="${safe(value)}"${selected ? ' selected' :
     ''}${disabled ? ' disabled' : ''}>${safe(label)}</option>`;
 }
 
+/**
+ * Transforms the entries used by room options.
+ *
+ * @param {*} warehouse Value used by this operation.
+ * @param {*} selected Currently selected item or identifier.
+ * @return {string} Resulting text.
+ */
 function roomOptions(warehouse, selected) {
   return option('', t('warehouse.assignment.chooseRoom'))
     + (warehouse.rooms || []).map(room =>
       option(room.id, room.name, {selected: room.id === selected})).join('');
 }
 
+/**
+ * Transforms the entries used by furniture options.
+ *
+ * @param {*} room Warehouse room being inspected or modified.
+ * @param {*} selected Currently selected item or identifier.
+ * @return {string} Resulting text.
+ */
 function furnitureOptions(room, selected) {
   return option('', t('warehouse.assignment.chooseFurniture'))
     + (room?.furniture || []).map(furniture => option(
@@ -78,6 +136,15 @@ function furnitureOptions(room, selected) {
     )).join('');
 }
 
+/**
+ * Transforms the entries used by shelf options.
+ *
+ * @param {*} warehouse Value used by this operation.
+ * @param {*} furniture Warehouse furniture record being modified.
+ * @param {*} bottleId Value used by this operation.
+ * @param {*} selected Currently selected item or identifier.
+ * @return {string} Resulting text.
+ */
 function shelfOptions(warehouse, furniture, bottleId, selected) {
   return option('', t('warehouse.assignment.chooseShelf'))
     + (furniture?.shelves || []).map(shelf => {
@@ -96,6 +163,14 @@ function shelfOptions(warehouse, furniture, bottleId, selected) {
     }).join('');
 }
 
+/**
+ * Builds the localized occupancy message text for the current language.
+ *
+ * @param {*} warehouse Value used by this operation.
+ * @param {*} shelfId Value used by this operation.
+ * @param {*} bottleId Value used by this operation.
+ * @return {*} Value returned by the delegated operation.
+ */
 function occupancyMessage(warehouse, shelfId, bottleId) {
   const place = assignmentLocation(warehouse, shelfId);
   if (!place) return t('warehouse.assignment.selectHint');
@@ -110,6 +185,10 @@ function occupancyMessage(warehouse, shelfId, bottleId) {
 
 /**
  * The same destination controls work for a single bottle and a checked group.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {!Object} bottle Physical bottle record being processed.
+ * @return {string} Resulting text.
  */
 export function renderWarehouseAssignment(warehouse, bottle) {
   const isBulk = Array.isArray(bottle);
@@ -157,7 +236,12 @@ export function renderWarehouseAssignment(warehouse, bottle) {
 }
 
 /**
- * Mount only on the assignment dialog; unrelated warehouse forms are untouched.
+ * Mount only on the assignment dialog; unrelated warehouse forms are
+ * untouched.
+ *
+ * @param {*} form Form used by this operation.
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {string} bottleId Identifier of the physical bottle.
  */
 export function mountWarehouseAssignment(form, warehouse, bottleId) {
   if (!form) return;
@@ -167,14 +251,29 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
   const feedback = form.querySelector('.warehouse-assignment-feedback');
   const choices = form.querySelector('.warehouse-assignment-selectors');
   if (!room || !furniture || !shelf || !feedback || !choices) return;
+  /**
+   * Derives the selected room result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const selectedRoom = () => (warehouse.rooms || []).find(entry =>
     entry.id === room.value);
 
+  /**
+   * Derives the selected furniture result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const selectedFurniture = () => selectedRoom()?.furniture.find(entry =>
     entry.id === furniture.value);
 
+  /**
+   * Locates the DOM elements used by mode.
+   * @return {*} Matching DOM element, if present.
+   */
   const mode = () => form.querySelector('[name="warehouseAssignmentMode"]:checked')?.value || 'shelf';
 
+  /**
+   * Updates feedback in the current state.
+   */
   const updateFeedback = () => {
     const id = mode() === 'none' ? null : shelf.value;
     const place = id ? assignmentLocation(warehouse, id) : null;
@@ -193,6 +292,9 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
       : occupancyMessage(warehouse, id, bottleId);
   };
 
+  /**
+   * Updates mode in the current state.
+   */
   const updateMode = () => {
     const off = mode() === 'none';
     choices.classList.toggle('is-disabled', off);
@@ -217,6 +319,14 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
   updateMode();
 }
 
+/**
+ * Builds a single-bottle shelf assignment request.
+ *
+ * @param {*} mode Requested display mode or configuration variant.
+ * @param {*} shelfId Shelf id used by this operation.
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @return {!Object} Structured result for the caller.
+ */
 export function assignmentPayload(mode, shelfId, warehouse) {
   if (mode === 'none') return {shelfId: null};
   if (mode !== 'shelf' || !shelfId || !assignmentLocation(warehouse, shelfId)) {
@@ -225,6 +335,15 @@ export function assignmentPayload(mode, shelfId, warehouse) {
   return {shelfId};
 }
 
+/**
+ * Builds a batch shelf-assignment request from selected bottles.
+ *
+ * @param {!Array<*>} ids Identifiers in their current order.
+ * @param {*} mode Requested display mode or configuration variant.
+ * @param {*} shelfId Shelf id used by this operation.
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @return {!Object} Structured result for the caller.
+ */
 export function bulkAssignmentPayload(ids, mode, shelfId, warehouse) {
   const valid = new Set((warehouse?.bottles || []).map(item => item.id));
   if (!Array.isArray(ids) || !ids.length || ids.length > 500 ||

@@ -1,6 +1,13 @@
 /** Embedded, non-inventory whisky details for one standalone tasting. */
 export const TASTING_SUBJECT_FIELDS =
   Object.freeze(['name', 'distillery', 'bottler', 'ageYears', 'abv', 'releaseYear']);
+/**
+ * Normalizes tasting subject for tasting subject.
+ *
+ * @param {*} input Input to process.
+ * @param {!Object=} previous Previous used by this operation.
+ * @return {*} Whether the requested condition is met.
+ */
 export function normalizeTastingSubject(input, previous = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input) ||
     Object.keys(input).some(key =>

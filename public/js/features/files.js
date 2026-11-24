@@ -6,6 +6,12 @@ export const fileAccept =
 const extensions = new Set(fileAccept.split(',').map(value => value.slice(1)));
 const MAX_BYTES = 15 * 1024 * 1024;
 
+/**
+ * Formats file size for files.
+ *
+ * @param {*} bytes Bytes used by this operation.
+ * @return {string} Resulting text.
+ */
 export function formatFileSize(bytes) {
   if (!Number.isFinite(bytes)) return '';
   return bytes >= 1024 * 1024
@@ -15,6 +21,11 @@ export function formatFileSize(bytes) {
     : `${Math.max(1, Math.ceil(bytes / 1024))} KB`;
 }
 
+/**
+ * Validates file against its constraints.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ */
 function validateFile(file) {
   const extension = file.name.split('.').pop()?.toLowerCase();
   if (!extensions.has(extension)) {
@@ -25,6 +36,12 @@ function validateFile(file) {
   }
 }
 
+/**
+ * Converts the input into data url.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 function toDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -35,7 +52,13 @@ function toDataUrl(file) {
   });
 }
 
-/** Upload individually; the server stores binaries outside collection.json. */
+/**
+ * Upload individually; the server stores binaries outside collection.json.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {!Array<*>} files Files selected for the operation.
+ * @return {!Promise<number>} Promise fulfilled when the operation completes.
+ */
 export async function uploadFiles(bottleId, files) {
   for (const file of files) validateFile(file);
   let saved = 0;

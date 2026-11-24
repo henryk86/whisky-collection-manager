@@ -1,5 +1,10 @@
-/** Keep the active tab visible when a horizontally scrollable section navigation is redrawn.
- * Adjust only the tab strip scroll position; leave the document's vertical scroll unchanged. */
+/**
+ * Keep the active tab visible when a horizontally scrollable section
+ * navigation is redrawn. Adjust only the tab strip scroll position; leave the
+ * document's vertical scroll unchanged.
+ *
+ * @param {*} nav Nav used by this operation.
+ */
 export function revealActiveTab(nav) {
   const active = nav?.querySelector?.('.analytics-tab.active');
   if (!active || typeof nav.getBoundingClientRect !== 'function' ||

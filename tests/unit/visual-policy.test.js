@@ -8,6 +8,12 @@ const baseline = {
   grid: null, field: null, dialog: null, footer: null,
 };
 
+/**
+ * Derives the capture result from the supplied values.
+ *
+ * @param {!Object=} overrides Value used by this operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function capture(overrides = {}) {
   return {
     before: baseline, after: baseline, dimensions: [390, 1100, 390, 1100],

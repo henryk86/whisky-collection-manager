@@ -16,8 +16,23 @@ test(
       },
     };
     createTastingsView({
-      state, shell: markup => html =
-        markup, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} markup HTML markup for the selected content.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: markup => html =
+        markup,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     }).editor();
     const start = html.indexOf('class="tasting-record-fields analytics-panel tasting-edit-meta-panel"');
     const end = html.indexOf('class="tasting-top-row"', start);

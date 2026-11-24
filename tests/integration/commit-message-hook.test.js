@@ -6,9 +6,25 @@ import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {validateMessage} from '../../scripts/validate-commit-message.js';
 
+/**
+ * Derives the run result from the supplied values.
+ *
+ * @param {*} dir Directory containing the affected files.
+ * @param {*} cmd Value used by this operation.
+ * @param {*} args Arguments forwarded to the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const run = (dir, cmd, args) =>
   spawnSync(cmd, args, {cwd: dir, encoding: 'utf8'});
 
+/**
+ * Normalizes the success text for subsequent processing.
+ *
+ * @param {*} dir Directory containing the affected files.
+ * @param {*} cmd Value used by this operation.
+ * @param {!Array<*>} args Arguments forwarded to the operation.
+ * @return {*} Combined text from the input values.
+ */
 const success = (dir, cmd, ...args) => {
   const result = run(dir, cmd, args);
   assert.equal(
@@ -19,6 +35,12 @@ const success = (dir, cmd, ...args) => {
   return result.stdout.trim();
 };
 
+/**
+ * Writes fixture data to the local filesystem.
+ *
+ * @param {*} t Temporary or input value for the calculation.
+ * @return {*} Combined text from the input values.
+ */
 function fixture(t) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-hooks-'));
   t.after(() => fs.rmSync(dir, {recursive: true, force: true}));

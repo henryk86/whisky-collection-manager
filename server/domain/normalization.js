@@ -44,6 +44,13 @@ const bottleFields = [
   'emptiedAt',
   'comment',
 ];
+/**
+ * Derives the filtered result from the supplied values.
+ *
+ * @param {*} source Input source to inspect.
+ * @param {*} keys Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function filtered(source, keys) {
   const obj = {};
   for (const k of keys) {
@@ -54,6 +61,13 @@ function filtered(source, keys) {
   return obj;
 }
 
+/**
+ * Normalizes bottling for normalization.
+ *
+ * @param {*} input Input to process.
+ * @param {!Object=} old Old used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function normalizeBottling(input, old = {}) {
   if (Object.hasOwn(input, 'volumeType')) {
     throw fail(
@@ -157,6 +171,13 @@ export function normalizeBottling(input, old = {}) {
   return value;
 }
 
+/**
+ * Normalizes bottle for normalization.
+ *
+ * @param {*} input Input to process.
+ * @param {!Object=} old Old used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function normalizeBottle(input, old = {}) {
   if (Object.hasOwn(input, 'labelCode')) {
     throw fail(

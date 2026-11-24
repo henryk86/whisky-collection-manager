@@ -1,7 +1,12 @@
 import {escapeHtml} from './dom.js';
 
-/** Existing field APIs are kept. Labels, names and values are escaped;
- * description/error nodes use stable ids for accessible control associations. */
+/**
+ * Existing field APIs are kept. Labels, names and values are escaped;
+ * description/error nodes use stable ids for accessible control associations.
+ *
+ * @param {*} value Input value to process.
+ * @return {string} Resulting text.
+ */
 const e = value => escapeHtml(String(value ?? ''));
 
 /**
@@ -72,7 +77,8 @@ export const textInput = (label, name, value = '', options = {}) => wrapper(
  *
  * @param {string} label HTML-escaped control label.
  * @param {string} name Form input name.
- * @param {!Array<!Array<(string|number)>>} options Value/caption option pairs.
+ * @param {!Array<!Array<(string|number)>>} options Value/caption option
+ * pairs.
  * @param {string=} value Initially selected option value.
  * @param {!Object=} config Validation, hint and layout settings.
  * @return {string} Labeled select HTML.

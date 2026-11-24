@@ -8,6 +8,7 @@ import ts from 'typescript';
 
 /**
  * Returns the zero-based offset of the start of the current line.
+ *
  * @param {string} text JavaScript source.
  * @param {number} offset Source offset.
  * @return {number} Start of the containing line.
@@ -18,6 +19,7 @@ function lineStart(text, offset) {
 
 /**
  * Returns the length of a line containing a source position.
+ *
  * @param {string} text JavaScript source.
  * @param {number} offset Source offset.
  * @return {number} Line length before the newline.
@@ -29,6 +31,7 @@ function lineLength(text, offset) {
 
 /**
  * Returns the indentation of the line where a construct begins.
+ *
  * @param {string} text JavaScript source.
  * @param {number} offset Source offset.
  * @return {number} Number of leading spaces.
@@ -39,6 +42,7 @@ function indentation(text, offset) {
 
 /**
  * Collects safe line-break edits at separators in long expressions.
+ *
  * @param {string} filename Source file name for parser context.
  * @param {string} text Original JavaScript source.
  * @param {number=} limit Maximum preferred line length.
@@ -50,12 +54,27 @@ export function wrapLongStructures(filename, text, limit = 80) {
   const edits = [];
   const occupied = new Set();
 
+  /**
+   * Derives the insert result from the supplied values.
+   *
+   * @param {*} offset Value used by this operation.
+   * @param {*} replacement Value used by this operation.
+   */
   function insert(offset, replacement) {
     if (occupied.has(offset)) return;
     occupied.add(offset);
     edits.push({offset, replacement});
   }
 
+  /**
+   * Tests input text against the wrap list pattern.
+   *
+   * @param {*} node Node to inspect or update.
+   * @param {*} elements Value used by this operation.
+   * @param {*} open Value used by this operation.
+   * @param {*} close Value used by this operation.
+   * @param {*} extraIndent Value used by this operation.
+   */
   function wrapList(node, elements, open, close, extraIndent) {
     if (elements.length < 2) return;
     const start = node.getStart(file);
@@ -129,6 +148,11 @@ export function wrapLongStructures(filename, text, limit = 80) {
     }
   }
 
+  /**
+   * Traverses the style layout structure.
+   *
+   * @param {!Element} node DOM or syntax node to process.
+   */
   function visit(node) {
     // Visit children before parents; offsets are always from original source.
     ts.forEachChild(node, visit);
@@ -153,7 +177,13 @@ export function wrapLongStructures(filename, text, limit = 80) {
       const openPosition = text.lastIndexOf('(', params[0].getStart(file));
       const closePosition = text.indexOf(')', params.at(-1).end);
       if (openPosition < node.getStart(file) || closePosition < 0) return;
-      const fake = {getStart: () => openPosition, end: closePosition + 1};
+      const fake = {
+        /**
+         * Retrieves start from the available state.
+         * @return {number} Calculated numeric value.
+         */
+        getStart: () => openPosition, end: closePosition + 1,
+      };
       wrapList(fake, params, '(', ')', 4);
     }
   }
@@ -176,6 +206,7 @@ export function wrapLongStructures(filename, text, limit = 80) {
 /**
  * Inserts a blank line between adjacent top-level functions, arrow-function
  * declarations and class methods, keeping the next function's JSDoc attached.
+ *
  * @param {string} filename Source file name for parser context.
  * @param {string} text JavaScript source.
  * @return {string} Source with consistent function separation.
@@ -184,6 +215,12 @@ export function separateFunctions(filename, text) {
   const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest,
     true, ts.ScriptKind.JS);
   const edits = [];
+  /**
+   * Checks whether function applies.
+   *
+   * @param {*} node Node to inspect or update.
+   * @return {*} Whether the requested condition is met.
+   */
   function isFunction(node) {
     return ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) ||
       ts.isConstructorDeclaration(node) || ts.isGetAccessorDeclaration(node) ||
@@ -194,6 +231,11 @@ export function separateFunctions(filename, text) {
             ts.isFunctionExpression(declaration.initializer))));
   }
 
+  /**
+   * Tests input text against the examine pattern.
+   *
+   * @param {*} nodes Value used by this operation.
+   */
   function examine(nodes) {
     for (let i = 1; i < nodes.length; i++) {
       const left = nodes[i - 1];
@@ -213,6 +255,11 @@ export function separateFunctions(filename, text) {
     }
   }
 
+  /**
+   * Updates the visit state for its caller.
+   *
+   * @param {*} node Node to inspect or update.
+   */
   function visit(node) {
     if (ts.isSourceFile(node) || ts.isBlock(node)) examine([...node
       .statements]);
@@ -231,6 +278,7 @@ export function separateFunctions(filename, text) {
 /**
  * Wraps long JavaScript expressions at parser-confirmed operator boundaries.
  * The function never splits a token or changes a literal's contents.
+ *
  * @param {string} filename Source file name for parser diagnostics.
  * @param {string} text JavaScript source.
  * @param {number=} limit Preferred line width.
@@ -247,6 +295,12 @@ export function wrapLongExpressions(filename, text, limit = 80) {
     starts.push(offset);
     offset += line.length + 1;
   }
+  /**
+   * Tests input text against the offer pattern.
+   *
+   * @param {*} position Value used by this operation.
+   * @param {number=} priority Value used by this operation.
+   */
   function offer(position, priority = 1) {
     if (position <= 0 || position >= text.length) return;
     const start = lineStart(text, position);
@@ -261,6 +315,11 @@ export function wrapLongExpressions(filename, text, limit = 80) {
     candidates.get(start).push({position, relative, priority});
   }
 
+  /**
+   * Traverses the style layout structure.
+   *
+   * @param {*} node DOM or syntax node to process.
+   */
   function visit(node) {
     ts.forEachChild(node, visit);
     if (ts.isBinaryExpression(node)) {
@@ -316,8 +375,9 @@ export function wrapLongExpressions(filename, text, limit = 80) {
 }
 
 /**
- * Formats overlong standalone comments without touching string literals.
- * JSDoc tags retain their type expressions, even if those are indivisible.
+ * Formats overlong standalone comments without touching string literals. JSDoc
+ * tags retain their type expressions, even if those are indivisible.
+ *
  * @param {string} filename JavaScript source filename.
  * @param {string} source Original JavaScript source.
  * @param {number=} limit Preferred line width.
@@ -327,6 +387,11 @@ export function wrapStandaloneComments(filename, source, limit = 80) {
   const parsed = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest,
     true, ts.ScriptKind.JS);
   const literalRanges = [];
+  /**
+   * Updates the gather state for its caller.
+   *
+   * @param {*} node Node to inspect or update.
+   */
   function gather(node) {
     if (ts.isTemplateLiteralToken(node) || ts.isStringLiteral(node) ||
       ts.isRegularExpressionLiteral(node)) {
@@ -335,10 +400,23 @@ export function wrapStandaloneComments(filename, source, limit = 80) {
     ts.forEachChild(node, gather);
   }
   gather(parsed);
+  /**
+   * Derives the inside literal result from the supplied values.
+   *
+   * @param {*} pos Value used by this operation.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   function insideLiteral(pos) {
     return literalRanges.some(([start, end]) => start <= pos && pos < end);
   }
 
+  /**
+   * Derives the words result from the supplied values.
+   *
+   * @param {*} text Text to process.
+   * @param {*} prefix Value used by this operation.
+   * @return {!Array<string>} Resulting entries in their output order.
+   */
   function words(text, prefix) {
     const max = limit - prefix.length;
     const segments = [];
@@ -435,6 +513,7 @@ export function wrapStandaloneComments(filename, source, limit = 80) {
 /**
  * Adds Google's recommended trailing comma to multiline array/object literals.
  * Rest-binding patterns and elided array entries are deliberately excluded.
+ *
  * @param {string} filename Source file name for syntax analysis.
  * @param {string} source JavaScript source.
  * @return {string} Source with safe trailing commas in multiline literals.
@@ -443,6 +522,11 @@ export function insertTrailingCommas(filename, source) {
   const parsed = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest,
     true, ts.ScriptKind.JS);
   const insertions = [];
+  /**
+   * Tests input text against the visit pattern.
+   *
+   * @param {*} node Node to inspect or update.
+   */
   function visit(node) {
     ts.forEachChild(node, visit);
     const object = ts.isObjectLiteralExpression(node);

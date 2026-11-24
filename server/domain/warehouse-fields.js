@@ -6,6 +6,12 @@ import {fail} from './errors.js';
 import {FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm} from '../../shared/warehouse-compartments.js';
 
 const types = new Set(FURNITURE_TYPES);
+/**
+ * Validates a nonempty furniture or room name.
+ *
+ * @param {*} value Input value to process.
+ * @return {string} Resulting text.
+ */
 export function name(value) {
   if (typeof value !== 'string' || !value.trim() || value.trim().length >
     100) throw fail(
@@ -16,6 +22,15 @@ export function name(value) {
   return value.trim();
 }
 
+/**
+ * Validates a finite numeric warehouse field against bounds.
+ *
+ * @param {*} value Input value to process.
+ * @param {*} field Field used by this operation.
+ * @param {*} min Minimum permitted value.
+ * @param {*} max Maximum permitted value.
+ * @return {number} Calculated numeric result.
+ */
 export function number(value, field, min, max) {
   const n = Number(value);
   if (!Number.isFinite(n) || n < min || n > max) throw fail(
@@ -27,6 +42,12 @@ export function number(value, field, min, max) {
   return Math.round(n * 100) / 100;
 }
 
+/**
+ * Validates the rotation state and rejects invalid inputs.
+ *
+ * @param {*} value Value to process.
+ * @return {number} Calculated numeric value.
+ */
 function rotation(value) {
   const n = Number(value ?? 0);
   if (![0, 90, 180, 270].includes(n)) throw fail(
@@ -37,6 +58,12 @@ function rotation(value) {
   return n;
 }
 
+/**
+ * Validates a shelf's physical bottle capacity.
+ *
+ * @param {*} value Input value to process.
+ * @return {?number} Calculated numeric result.
+ */
 export function capacity(value) {
   if (value === null || value === '' || value === undefined) return null;
   const n = Number(value);
@@ -48,12 +75,24 @@ export function capacity(value) {
   return n;
 }
 
+/**
+ * Validates the front-edge configuration of a shelf.
+ *
+ * @param {*} value Input value to process.
+ * @return {*} Computed value, or null when the input has no match.
+ */
 export function shelfFront(value) {
   if (value === '' || value === null || value === undefined) return null;
   if (!SHELF_FRONTS.includes(value)) throw fail('Ungültige Fachfront', 400, "api.errors.invalidCompartmentFront");
   return value;
 }
 
+/**
+ * Validates the number and geometry of door leaves.
+ *
+ * @param {*} value Input value to process.
+ * @return {*} Computed value, or null when the input has no match.
+ */
 export function doorLeaves(value) {
   if (value === undefined || value === null || value === '') return null;
   if (value !== 1 && value !== 2) throw fail(
@@ -64,6 +103,12 @@ export function doorLeaves(value) {
   return value;
 }
 
+/**
+ * Validates a glass-door frame specification.
+ *
+ * @param {*} value Input value to process.
+ * @return {?boolean} Computed value, or null when the input has no match.
+ */
 export function glassFrame(value) {
   if (value === undefined || value === null || value === '') return null;
   if (typeof value !== 'boolean') throw fail(
@@ -74,6 +119,13 @@ export function glassFrame(value) {
   return value;
 }
 
+/**
+ * Validates shelf ranges covered by furniture doors.
+ *
+ * @param {*} value Input value to process.
+ * @param {*} shelves Shelves used by this operation.
+ * @return {!Array<!Object>} Resulting list of values.
+ */
 export function doorRanges(value, shelves) {
   if (value == null) return [];
   if (!Array.isArray(value) || value.length > 100) throw fail(
@@ -109,11 +161,24 @@ export function doorRanges(value, shelves) {
   });
 }
 
+/**
+ * Validates the available height for a storage shelf.
+ *
+ * @param {*} value Input value to process.
+ * @return {?number} Calculated numeric result.
+ */
 export function shelfHeight(value) {
   if (value === '' || value === null || value === undefined) return null;
   return number(value, 'Fachhöhe in cm', 5, 500);
 }
 
+/**
+ * Verifies all configured shelf heights fit the furniture.
+ *
+ * @param {*} furniture Furniture configuration including its dimensions.
+ * @param {*=} shelves Shelves used by this operation.
+ * @param {number=} height Height in pixels.
+ */
 export function ensureShelfHeights(
   furniture,
   shelves = furniture.shelves,
@@ -137,6 +202,13 @@ export function ensureShelfHeights(
     );
 }
 
+/**
+ * Validates the panel option state and rejects invalid inputs.
+ *
+ * @param {*} value Value to process.
+ * @param {*} label Label shown to the user.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function panelOption(value, label) {
   if (value === undefined) return false;
   if (typeof value !== 'boolean') throw fail(
@@ -148,6 +220,13 @@ function panelOption(value, label) {
   return value;
 }
 
+/**
+ * Validates the structure and dimensions of a warehouse layout.
+ *
+ * @param {*} input Input to process.
+ * @param {*} room Room model containing dimensions and furniture.
+ * @return {!Object} Structured result for the caller.
+ */
 export function layout(input, room) {
   const furniture = {
     name: name(input.name),

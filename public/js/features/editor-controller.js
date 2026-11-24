@@ -9,6 +9,9 @@ import {bottlingChoiceDialog, bottlingChoiceOptions, matchingBottlings} from './
 /**
  * Coordinates forms and API calls; templates and persistence are separate
  * modules.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function createEditors({
   state,
@@ -23,7 +26,11 @@ export function createEditors({
   markImageAttached = () => {}
 }) {
   const {findBottle} = selectors;
-  /** The global New Bottle action can reuse an existing bottling. */
+  /**
+ * The global New Bottle action can reuse an existing bottling.
+ *
+ * @return {void} Value returned by the delegated operation.
+ */
   function newBottling() {
     if (!(state.collection.bottlings || []).length) return createBottling();
     showModal(
@@ -33,10 +40,18 @@ export function createEditors({
     );
   }
 
+  /**
+   * Constructs bottling from the supplied data.
+   */
   function createBottling() {
     showModal(t("collection.actions.newBottling"), bottlingForm(), true);
   }
 
+  /**
+   * Selects existing bottlings matching the input.
+   *
+   * @param {*} term Value used by this operation.
+   */
   function filterExistingBottlings(term) {
     const select = query('#bottling-choice-select');
     if (!select) return;
@@ -49,17 +64,32 @@ export function createEditors({
       t("features.bottlings.searchResults", {count: matches.length});
   }
 
+  /**
+   * Builds the localized choose existing bottling text for the current
+   * language.
+   *
+   * @param {*} id Identifier of the affected record.
+   */
   function chooseExistingBottling(id) {
     const bottling = state.collection.bottlings.find(item => item.id === id);
     if (!bottling) throw Error(t('features.bottlings.selectExisting'));
     showNewBottleEditor(bottling, {fromOverview: true});
   }
 
+  /**
+   * Builds the localized edit bottling text for the current language.
+   */
   function editBottling() {
     const b = state.collection.bottlings.find(x => x.id === state.selected);
     showModal(t("features.bottlings.edit"), bottlingForm(b), true);
   }
 
+  /**
+   * Renders new bottle editor in the current view.
+   *
+   * @param {*} bottling Bottling record being inspected or updated.
+   * @param {!Object=} options Options controlling the operation.
+   */
   function showNewBottleEditor(bottling, {fromImport = false, fromOverview = false} = {}) {
     const token = fromImport ? getPendingImageToken() : null;
     let form = bottleForm({}, bottling.id);
@@ -76,6 +106,11 @@ export function createEditors({
     );
   }
 
+  /**
+   * Builds the localized new bottle text for the current language.
+   *
+   * @param {boolean=} fromImport Value used by this operation.
+   */
   function newBottle(fromImport = false) {
     const bottling = state.collection.bottlings.find(item => item.id ===
       state.selected);
@@ -83,6 +118,12 @@ export function createEditors({
     showNewBottleEditor(bottling, {fromImport});
   }
 
+  /**
+   * Builds the localized edit bottle text for the current language.
+   *
+   * @param {*} id Identifier of the affected record.
+      * @return {*} Result of this expression.
+*/
   function editBottle(id) {
     const found = findBottle(id);
     if (!found) {
@@ -97,6 +138,12 @@ export function createEditors({
     query('#bottle-form').dataset.id = id;
   }
 
+  /**
+   * Handles form for editor controller.
+   *
+   * @param {*} ev Ev used by this operation.
+   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   */
   async function handleForm(ev) {
     const form = ev.target;
     if (form.id !== 'bottling-form' && form.id !== 'bottle-form') return;
@@ -121,6 +168,12 @@ export function createEditors({
     }
   }
 
+  /**
+   * Performs the submit form lifecycle action.
+   *
+   * @param {*} ev Value used by this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function submitForm(ev) {
     if (ev.target.id === 'bottling-form') {
       ev.preventDefault();

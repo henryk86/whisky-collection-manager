@@ -4,6 +4,9 @@ import {normalizeImportPayload} from '../import/payload.js';
 /**
  * Validate only the provider identity and link; common fields use the generic
  * importer.
+ *
+ * @param {!Object} data Input data for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function validateExtensionPayload(data) {
   const id = data?.fields?.whiskybaseId;

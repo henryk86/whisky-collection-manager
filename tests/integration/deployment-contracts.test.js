@@ -7,6 +7,12 @@ import {verifyDeploymentConfiguration} from '../../scripts/check-deployment-conf
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta
   .url)), '../..');
+/**
+ * Reads load data from the local filesystem.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @return {*} Combined text from the input values.
+ */
 const load = name => fs.readFileSync(path.join(ROOT, name), 'utf8');
 
 /** Verify that dangerous configuration mutations fail the checker. The checker

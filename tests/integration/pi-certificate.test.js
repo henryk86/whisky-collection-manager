@@ -9,6 +9,13 @@ import {X509Certificate} from 'node:crypto';
 const script = fs.readFileSync('deploy/setup-pi.sh');
 const template = fs.readFileSync('deploy/.env.example', 'utf8');
 
+/**
+ * Creates project for pi certificate.test.
+ *
+ * @param {null=} envContent Env content used by this operation.
+ * @param {null=} legacyEnv Legacy env used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 const createProject = (envContent = null, legacyEnv = null) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-pi-cert-'));
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-pi-home-'));
@@ -18,6 +25,13 @@ const createProject = (envContent = null, legacyEnv = null) => {
   fs.writeFileSync(path.join(deploy, '.env.example'), template);
   if (envContent !== null) fs.writeFileSync(path.join(root, '.env'), envContent);
   if (legacyEnv !== null) fs.writeFileSync(path.join(deploy, '.env'), legacyEnv);
+  /**
+   * Derives the run result from the supplied values.
+   *
+   * @param {!Array<*>=} args Arguments forwarded to the operation.
+   * @param {!Object=} overrides Value used by this operation.
+   * @return {*} Combined text from the input values.
+   */
   const run = (args = [], overrides = {}) => execFileSync(
     'sh',
     [path.join(deploy, 'setup-pi.sh'), ...args],
@@ -36,6 +50,9 @@ const createProject = (envContent = null, legacyEnv = null) => {
     dataDir,
     run,
     cert,
+    /**
+     * Updates the cleanup state for its caller.
+     */
     cleanup: () => {fs.rmSync(root, {recursive: true, force: true}); fs.rmSync(home, {recursive: true, force: true});},
   };
 };
@@ -44,6 +61,14 @@ const createProject = (envContent = null, legacyEnv = null) => {
 // 0
 // (e.g. on GitHub Actions Ubuntu). Check the certificate through Node's stable
 // X509Certificate API instead of relying on an OpenSSL CLI exit status.
+/**
+ * Reads certificate has data from the local filesystem.
+ *
+ * @param {*} certificate Value used by this operation.
+ * @param {*} flag Value used by this operation.
+ * @param {*} name Environment variable or setting name.
+ * @param {boolean=} match Value used by this operation.
+ */
 const certificateHas = (certificate, flag, name, match = true) => {
   const x509 = new X509Certificate(fs.readFileSync(certificate));
   let actual;

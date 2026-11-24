@@ -6,8 +6,11 @@ import {request} from '../../api.js';
 import {importChoice} from './choice-template.js';
 import {matchImportedDistilleries} from './distillery-matching.js';
 /**
- * Source-independent import workflow. The provider validates and identifies its
- * own records.
+ * Source-independent import workflow. The provider validates and identifies
+ * its own records.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function createExternalImport({
   state, navigate, showModal, closeModal, action, createBottling, editBottling,
@@ -38,6 +41,11 @@ export function createExternalImport({
   };
   let importDetails = null;
   let pendingExtensionImport = null;
+  /**
+   * Updates the import message state for its caller.
+   *
+   * @param {*} message Message to display or use for diagnostics.
+   */
   function importMessage(message) {
     const panel = query('#import-panel');
     if (panel) {
@@ -50,7 +58,12 @@ export function createExternalImport({
     }
   }
 
-  /** The editor has no import UI until an external payload is received. */
+  /**
+ * The editor has no import UI until an external payload is received.
+ *
+ * @param {*} form Form used by this operation.
+ * @return {*} Computed value, or null when the input has no match.
+ */
   function ensurePreviewPanel(form) {
     const previous = query('#import-panel', form);
     if (previous) return previous;
@@ -67,6 +80,11 @@ export function createExternalImport({
     return panel;
   }
 
+  /**
+   * Selects and transforms the preview import records.
+   *
+   * @param {*} data Input data to process.
+   */
   function previewImport(data) {
     importDetails = validatePayload(data);
     const form = query('#bottling-form');
@@ -114,6 +132,9 @@ export function createExternalImport({
     </div>`;
   }
 
+  /**
+   * Builds the localized import from extension text for the current language.
+   */
   function importFromExtension() {
     const prefix = '#wcm-import=';
     if (!location.hash.startsWith(prefix)) {
@@ -139,6 +160,9 @@ export function createExternalImport({
     processExtensionImport(raw);
   }
 
+  /**
+   * Derives the confirm pending import result from the supplied values.
+   */
   function confirmPendingImport() {
     if (pendingExtensionImport == null) return;
     const raw = pendingExtensionImport;
@@ -147,6 +171,11 @@ export function createExternalImport({
     processExtensionImport(raw);
   }
 
+  /**
+   * Handles extension import for controller.
+   *
+   * @param {*} raw Raw used by this operation.
+   */
   function processExtensionImport(raw) {
     try {
       if (raw.length > 12000) {
@@ -182,6 +211,9 @@ export function createExternalImport({
     }
   }
 
+  /**
+   * Updates import in the current state.
+   */
   function applyImport() {
     const form = query('#bottling-form');
     if (!form || !importDetails) {
@@ -201,22 +233,37 @@ export function createExternalImport({
     toast(t("imports.import.dataApplied"));
   }
 
+  /**
+   * Updates the edit existing state for its caller.
+   */
   function editExisting() {
     const incoming = importDetails;
     editBottling();
     previewImport(incoming);
   }
 
+  /**
+   * Retrieves pending image token from the available state.
+   * @return {*} Computed value, or null when the input has no match.
+   */
   function getPendingImageToken() {
     if (!importDetails?.imageToken) return null;
     const choice = query('#import-image');
     return choice && !choice.checked ? null : importDetails.imageToken;
   }
 
+  /**
+   * Updates the mark image attached state for its caller.
+   */
   function markImageAttached() {
     if (importDetails) importDetails.imageToken = null;
   }
 
+  /**
+   * Registers to existing bottle for controller.
+   *
+   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   */
   async function attachToExistingBottle() {
     const id = query('#import-existing-photo-bottle')?.value;
     const token = getPendingImageToken();

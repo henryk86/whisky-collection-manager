@@ -17,12 +17,29 @@ import {DEFAULT_MASK_BRUSH_SIZE, paintMaskSegment, applyMaskStrokes} from './mas
 const MAX_PREVIEW_SIDE = 1050;
 const MAX_EXPORT_SIDE = 4096;
 const MAX_IMAGE_BYTES = 9_400_000; // Allow room for JSON/base64 request overhead.
+/**
+ * Locates the DOM elements used by root.
+ * @return {*} Matching DOM element, if present.
+ */
 const root = () => document.querySelector('[data-photo-editor]');
 const resetIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.7 6.5"/><path d="M3 4v7h7"/></svg>';
 const pipetteIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(43 12 12)"><rect x="9.5" y="1.5" width="5" height="5" rx="2.4"/><path d="M9 6.5h6v2.5H9z"/><path d="M10 9v8l2 5 2-5V9"/><path d="M11 13h2"/></g></svg>';
+/**
+ * Derives the form value result from the supplied values.
+ *
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
 const formValue = value => Number(value)
   .toLocaleString('de-DE', {maximumFractionDigits: 2});
 
+/**
+ * Builds the localized canvas from image text for the current language.
+ *
+ * @param {*} image Value used by this operation.
+ * @param {*} maxSide Value used by this operation.
+ * @return {*} Calculated numeric result.
+ */
 const canvasFromImage = (image, maxSide) => {
   const scale = Math.min(1, maxSide /
     Math.max(image.naturalWidth, image.naturalHeight));
@@ -37,10 +54,22 @@ const canvasFromImage = (image, maxSide) => {
   return canvas;
 };
 
+/**
+ * Derives the image data from canvas result from the supplied values.
+ *
+ * @param {*} canvas Canvas used by the rendering operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const imageDataFromCanvas = canvas =>
   canvas.getContext('2d', {willReadFrequently: true})
     .getImageData(0, 0, canvas.width, canvas.height);
 
+/**
+ * Derives the clone pixels result from the supplied values.
+ *
+ * @param {*} pixels Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const clonePixels = pixels => new ImageData(
   new Uint8ClampedArray(pixels.data),
   pixels.width,
@@ -49,6 +78,13 @@ const clonePixels = pixels => new ImageData(
 // Browsers may return image/png here when WebP encoding is unavailable; the API
 // accepts that safe fallback and stores the real extension from the bytes.
 
+/**
+ * Builds the localized blob from canvas text for the current language.
+ *
+ * @param {*} canvas Canvas used by the rendering operation.
+ * @param {number=} quality Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const blobFromCanvas = (canvas, quality = .97) =>
   new Promise((resolve, reject) =>
     canvas.toBlob(
@@ -57,6 +93,12 @@ const blobFromCanvas = (canvas, quality = .97) =>
       quality
     ));
 
+/**
+ * Builds the localized blob as data url text for the current language.
+ *
+ * @param {*} blob Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const blobAsDataUrl = blob => new Promise((resolve, reject) => {
   const reader = new FileReader();
   reader.onload = () => resolve(reader.result);
@@ -67,6 +109,9 @@ const blobAsDataUrl = blob => new Promise((resolve, reject) => {
 /**
  * All edits are previewed against the original unedited source, never
  * cumulatively.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function createPhotoEditor({state, showModal, closeModal, action}) {
   let selection = null;
@@ -107,25 +152,49 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   const panPointers = new Map();
   let panStart = null;
   let pinchStart = null;
+  /**
+   * Selects photo matching the input.
+   *
+   * @param {*} bottleId Value used by this operation.
+   * @param {*} photoId Value used by this operation.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const findPhoto = (bottleId, photoId) => state.collection?.bottlings
     .flatMap(bottling => bottling.bottles || [])
     .find(bottle => bottle.id === bottleId)?.photos?.find(photo =>
       photo.id === photoId);
 
+  /**
+   * Produces the endpoint text used by the caller.
+   * @return {string} Resulting text.
+   */
   const endpoint = () =>
     `/api/bottles/${encodeURIComponent(selection.bottleId)}/photos/${encodeURIComponent(selection.photoId)}/adjustments`;
 
+  /**
+   * Builds the localized slider html text for the current language.
+   *
+   * @param {!Object} options Options controlling the operation.
+   * @return {string} Resulting text.
+   */
   const sliderHtml = ({key, min, max, step}) =>
     `<label class="photo-editor-slider">
         <span>${escapeHtml(t(`photoEditor.${key}`))} <output data-photo-output="${key}">0</output></span>
         <input type="range" data-photo-slider="${key}" min="${min}" max="${max}" step="${step}" value="0" disabled>
     </label>`;
 
+  /**
+   * Locates the DOM elements used by viewport size.
+   * @return {!Object} Structured result assembled from the input data.
+   */
   function viewportSize() {
     const canvas = root()?.querySelector('[data-photo-editor-preview]');
     return {width: canvas?.clientWidth || 1, height: canvas?.clientHeight || 1};
   }
 
+  /**
+   * Updates viewport for controller.
+   */
   function updateViewport() {
     const host = root();
     if (!host) return;
@@ -147,6 +216,12 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     );
   }
 
+  /**
+   * Derives the zoom result from the supplied values.
+   *
+   * @param {*} direction Direction used for traversal or movement.
+   * @param {*=} pointer Value used by this operation.
+   */
   function zoom(direction, pointer = null) {
     if (!root() || !sourceData || busy) return;
     const size = viewportSize();
@@ -159,6 +234,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     updateViewport();
   }
 
+  /**
+   * Registers viewport for controller.
+   *
+   * @param {*} canvas Canvas used by this operation.
+   */
   function attachViewport(canvas) {
     const stage = canvas.closest('.photo-editor-image');
     stage.addEventListener('wheel', event => {
@@ -225,6 +305,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         updateViewport();
       }
     });
+    /**
+     * Derives the release result from the supplied values.
+     *
+     * @param {!Event} event Event that triggered this operation.
+     */
     const release = event => {
       if (!panPointers.delete(event.pointerId)) return;
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
@@ -239,12 +324,20 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     canvas.addEventListener('pointercancel', release);
   }
 
+  /**
+   * Removes or resets viewport.
+   */
   function resetViewport() {
     viewport = {zoom: 1, x: 0, y: 0};
     panPointers.clear(); panStart = null; pinchStart = null;
     if (root()) updateViewport();
   }
 
+  /**
+   * Selects tab matching the input.
+   *
+   * @param {*} tab Value used by this operation.
+   */
   function selectTab(tab) {
     if (tab !== 'adjustments' && tab !== 'cutout') return;
     activeTab = tab;
@@ -253,6 +346,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     syncSliders();
   }
 
+  /**
+   * Updates the DOM elements managed by sync sliders.
+   */
   function syncSliders() {
     const host = root();
     if (!host) return;
@@ -320,6 +416,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     }
   }
 
+  /**
+   * Performs the stop picking lifecycle action.
+   */
   function stopPicking() {
     whitePicking = false;
     pickStart = null;
@@ -335,6 +434,12 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   // The CSS canvas box can be larger than its rendered image (object-fit:
   // contain).
   // Translate pointer positions through the actual rendered image rectangle.
+  /**
+   * Calculates the image geometry numeric value.
+   *
+   * @param {*} canvas Canvas used by the rendering operation.
+   * @return {!Object} Structured result assembled from the input data.
+   */
   function imageGeometry(canvas) {
     const rect = canvas.getBoundingClientRect();
     const scale = Math.min(
@@ -348,6 +453,14 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     };
   }
 
+  /**
+   * Calculates the image point numeric value.
+   *
+   * @param {*} canvas Canvas used by the rendering operation.
+   * @param {!Event} event Event that triggered this operation.
+   * @param {boolean=} clampToImage Value used by this operation.
+   * @return {!Object} Computed value, or null when the input has no match.
+   */
   function imagePoint(canvas, event, clampToImage = false) {
     const frame = imageGeometry(canvas);
     const x = (event.clientX - frame.left) / frame.scale;
@@ -360,6 +473,13 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     };
   }
 
+  /**
+   * Locates the DOM elements used by mark selection.
+   *
+   * @param {*} canvas Canvas used by the rendering operation.
+   * @param {*} start Value used by this operation.
+   * @param {*} end Value used by this operation.
+   */
   function markSelection(canvas, start, end) {
     const host = root();
     if (!host) return;
@@ -378,6 +498,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     overlay.removeAttribute('hidden');
   }
 
+  /**
+   * Registers white picker for controller.
+   *
+   * @param {*} canvas Canvas used by this operation.
+   */
   function attachWhitePicker(canvas) {
     canvas.addEventListener('pointerdown', event => {
       if (!whitePicking || !sourceData || busy || !event.isPrimary ||
@@ -435,6 +560,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     });
   }
 
+  /**
+   * Performs the stop brush lifecycle action.
+   */
   function stopBrush() {
     brushMode = null;
     activeBrush = null;
@@ -443,6 +571,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     );
   }
 
+  /**
+   * Performs the refresh mask preview lifecycle action.
+   */
   function refreshMaskPreview() {
     if (!maskBaseData) return;
     sourceData = applyMaskStrokes(maskBaseData, maskStrokes);
@@ -451,6 +582,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     syncSliders();
   }
 
+  /**
+   * Updates the DOM elements managed by toggle brush.
+   *
+   * @param {*} mode Selected mode controlling the operation.
+   */
   function toggleBrush(mode) {
     if (!['erase', 'restore'].includes(mode) || busy || !maskBaseData ||
       !root()) return;
@@ -469,12 +605,22 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       : t('photoEditor.hint');
   }
 
+  /**
+   * Performs the undo brush lifecycle action.
+   */
   function undoBrush() {
     if (busy || activeBrush || !maskStrokes.length) return;
     maskStrokes.pop();
     refreshMaskPreview();
   }
 
+  /**
+   * Derives the brush point result from the supplied values.
+   *
+   * @param {*} canvas Canvas used by the rendering operation.
+   * @param {!Event} event Event that triggered this operation.
+   * @return {!Object} Result computed from the supplied inputs.
+   */
   function brushPoint(canvas, event) {
     const point = imagePoint(canvas, event);
     return point ? {
@@ -483,6 +629,12 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     } : null;
   }
 
+  /**
+   * Updates brush cursor in the current state.
+   *
+   * @param {*} canvas Canvas used by the rendering operation.
+   * @param {!Event} event Event that triggered this operation.
+   */
   function updateBrushCursor(canvas, event) {
     const cursor = root()?.querySelector('[data-photo-editor-brush-cursor]');
     if (!cursor || !brushMode || !maskBaseData) return;
@@ -501,6 +653,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     cursor.hidden = false;
   }
 
+  /**
+   * Registers mask brush for controller.
+   *
+   * @param {*} canvas Canvas used by this operation.
+   */
   function attachMaskBrush(canvas) {
     canvas.addEventListener('pointerdown', event => {
       if (!brushMode || busy || !maskBaseData || !sourceData ||
@@ -555,6 +712,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       );
       schedulePreview();
     });
+    /**
+     * Derives the release result from the supplied values.
+     *
+     * @param {!Event} event Event that triggered this operation.
+     */
     const release = event => {
       if (!activeBrush || activeBrush.pointerId !== event.pointerId) return;
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
@@ -574,6 +736,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     });
   }
 
+  /**
+   * Locates the DOM elements used by paint preview.
+   */
   function paintPreview() {
     const host = root();
     if (!host || !sourceData) return;
@@ -596,6 +761,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       );
   }
 
+  /**
+   * Updates the schedule preview state for its caller.
+   */
   function schedulePreview() {
     const thisGeneration = generation;
     if (renderId) cancelAnimationFrame(renderId);
@@ -605,12 +773,21 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     });
   }
 
+  /**
+   * Renders preview now in the current view.
+   */
   function showPreviewNow() {
     if (renderId) cancelAnimationFrame(renderId);
     renderId = 0;
     paintPreview();
   }
 
+  /**
+   * Retrieves source image from the available state.
+   *
+   * @param {*} path Path to the target resource.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function loadSourceImage(path) {
     const loaded = new Image();
     loaded.decoding = 'async';
@@ -624,6 +801,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     return loaded;
   }
 
+  /**
+   * Controls the controller state.
+   *
+   * @param {*} button Button used by this operation.
+   */
   async function open(button) {
     const bottleId = button?.dataset.id;
     const photoId = button?.dataset.photoId;
@@ -817,6 +999,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     }
   }
 
+  /**
+   * Updates values in the current state.
+   *
+   * @param {*} next Next candidate state or entry.
+   */
   function setValues(next) {
     if (!root() || busy || !sourceData) return;
     values = validatePhotoAdjustments(next);
@@ -827,13 +1014,24 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     schedulePreview();
   }
 
+  /**
+   * Updates the reset state for its caller.
+   */
   function reset() {setValues(EMPTY_PHOTO_ADJUSTMENTS);}
 
+  /**
+   * Removes or resets group.
+   *
+   * @param {*} groupKey Value used by this operation.
+   */
   function resetGroup(groupKey) {
     if (!PHOTO_ADJUSTMENT_GROUPS.some(group => group.key === groupKey)) return;
     setValues(resetPhotoAdjustmentGroup(values, groupKey));
   }
 
+  /**
+   * Updates the DOM elements managed by toggle white picker.
+   */
   function toggleWhitePicker() {
     if (!root() || busy || !sourceData) return;
     if (whitePicking) stopPicking();
@@ -848,8 +1046,14 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       whitePicking ? t('photoEditor.pickWhiteHint') : t('photoEditor.hint');
   }
 
+  /**
+   * Updates the auto state for its caller.
+   */
   function auto() {if (sourceData) setValues(autoPhotoAdjustments(sourceData));}
 
+  /**
+   * Prepares the controller state.
+   */
   async function before() {
     if (!root() || !sourceData || busy) return;
     if (showingBefore) {
@@ -901,6 +1105,10 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   // model sees the current corrections; the transparent output does NOT bake
   // them.
   // This prevents double correction when adjusting a cutout later.
+  /**
+   * Updates the DOM elements managed by cutout.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function cutout() {
     if (busy || !selection || !sourceData || !root()) return;
     const photo = findPhoto(selection.bottleId, selection.photoId);
@@ -970,6 +1178,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     }
   }
 
+  /**
+   * Controls cutout for controller.
+   */
   function toggleCutout() {
     const photo = selection && findPhoto(selection.bottleId, selection.photoId);
     if (!photo?.cutout || busy || pendingCutout || !root()) return;
@@ -997,6 +1208,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     syncSliders();
   }
 
+  /**
+   * Clears cutout for controller.
+   */
   async function removeCutout() {
     const photo = selection && findPhoto(selection.bottleId, selection.photoId);
     if (!photo || busy || !root()) return;
@@ -1043,6 +1257,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     if (result.ok) {generation++; closeModal(true); toast(t('cutout.removed'));}
   }
 
+  /**
+   * Updates the controller state.
+   */
   async function save() {
     if (busy || !sourceData || !image || !selection || !root()) return;
     busy = true;
@@ -1061,10 +1278,20 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       const selectedChanged = Boolean(photo?.cutout) && previewCutout !==
         photo.cutout.selected;
       const cutoutEndpoint = endpoint().replace(/\/adjustments$/, '/cutout');
+      /**
+       * Selects for save matching the input.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const selectForSave = () => request(cutoutEndpoint, {
         method: 'PATCH', body: JSON.stringify({selected: previewCutout}),
       });
 
+      /**
+       * Performs the commit lifecycle action.
+       *
+       * @param {function(...*): *} callback Callback invoked by the operation.
+       * @return {*} Result computed from the supplied inputs.
+       */
       const commit = callback => action(async () => {
         // The API selects the image separately from its adjustments;
         // synchronize
@@ -1073,6 +1300,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         return callback ? await callback() : {ok: true};
       });
 
+      /**
+       * Builds the localized finish save text for the current language.
+       *
+       * @param {*} result Result from the preceding operation.
+       */
       const finishSave = result => {
         if (generation !== thisGeneration || !root()) return;
         if (!result.ok) {

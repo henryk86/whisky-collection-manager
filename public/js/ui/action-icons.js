@@ -4,6 +4,9 @@ export const newBottlingIcon =
   '<svg class="new-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>';
 /**
  * For translated add/create labels that previously carried a typed '+' glyph.
+ *
+ * @param {*} label Label shown to the user.
+ * @return {string} Resulting text.
  */
 export const addActionLabel = label =>
   `<span class="add-action-label">${newBottlingIcon}<span>${escapeHtml(String(label).replace(/^\+\s*/, ''))}</span></span>`;
@@ -50,11 +53,23 @@ export const pagodaRoofIcon =
 export const closedDistilleryIcon =
   '<svg class="map-pagoda-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 3h4l1 3h-6l1-3Z"/><path d="M12 6c-2.3 4-5 6.5-9 7 2.2 1.2 4 .5 5-.2h8c1 .7 2.8 1.4 5 .2-4-.5-6.7-3-9-7Z"/><path d="M7 14v6h10v-6M5 21h14"/><path d="M3 3l18 18" stroke-width="2.5"/></svg>';
 
-/** Reusable vector controls: no font-dependent arrow or chevron glyphs. */
+/**
+ * Reusable vector controls: no font-dependent arrow or chevron glyphs.
+ *
+ * @param {string} path Path to the resource.
+ * @param {string=} extraClass Extra class used by this operation.
+ * @return {string} Resulting text.
+ */
 const uiSymbol = (path, extraClass = '') =>
   `<svg class="ui-symbol${extraClass ? ` ${extraClass}` :
     ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${path}</svg>`;
 
+/**
+ * Renders the downward-chevron icon markup for action controls.
+ *
+ * @param {string=} extraClass Extra class used by this operation.
+ * @return {string} Resulting text.
+ */
 export const chevronDownIcon = (extraClass = '') =>
   uiSymbol('<path d="m6 9 6 6 6-6"/>', extraClass);
 export const chevronRightIcon = uiSymbol('<path d="m9 6 6 6-6 6"/>');

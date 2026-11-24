@@ -7,16 +7,38 @@ import {request, httpResponseError} from '../../api.js';
 import {jobErrorText} from '../../i18n/job-errors.js';
 import {toast} from '../../ui/notifications.js';
 import {profileForm} from '../../views/backups.js';
+/**
+ * Creates backup controller for controller.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createBackupController({state, render, showModal, closeModal}) {
   let token = '';
   let restorePassword = '';
   let pollTimer = null;
+  /**
+   * Derives the get result from the supplied values.
+   *
+   * @param {*} url URL of the resource being processed.
+   * @param {!Object=} options Options controlling the operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   const get = (url, options = {}) => request(url, {
     ...options, headers: {...options.headers, 'X-Backup-Admin-Token': token},
   });
 
+  /**
+   * Updates the redraw state for its caller.
+   */
   function redraw() {if (state.page === 'settings' && !state.modal) render();}
 
+  /**
+   * Performs the refresh lifecycle action.
+   *
+   * @param {boolean=} quiet Value used by this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function refresh(quiet = false) {
     if (!token) return;
     try {
@@ -34,6 +56,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
     }
   }
 
+  /**
+   * Coordinates asynchronous work for unlock.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function unlock(event) {
     event.preventDefault();
     const entered = event.target.elements.token.value;
@@ -52,6 +80,9 @@ export function createBackupController({state, render, showModal, closeModal}) {
     }
   }
 
+  /**
+   * Updates the lock state for its caller.
+   */
   function lock() {
     token = '';
     restorePassword = '';
@@ -62,6 +93,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
     redraw();
   }
 
+  /**
+   * Locates the DOM elements used by edit.
+   *
+   * @param {*} id Identifier of the affected record.
+      * @return {*} Result of this expression.
+*/
   function edit(id) {
     const profile = state.backupDashboard?.profiles.find(p => p.id === id);
     if (id && !profile) return toast(t("backups.profiles.notFound"), true);
@@ -77,6 +114,11 @@ export function createBackupController({state, render, showModal, closeModal}) {
     toggleFields(document.querySelector('#backup-profile-form'));
   }
 
+  /**
+   * Derives the toggle fields result from the supplied values.
+   *
+   * @param {*} form Value used by this operation.
+   */
   function toggleFields(form) {
     if (!form) return;
     const local = form.elements.provider.value === 'local';
@@ -87,9 +129,20 @@ export function createBackupController({state, render, showModal, closeModal}) {
     }
   }
 
+  /**
+   * Updates the controller state.
+   *
+   * @param {!KeyboardEvent} event Event that triggered the handler.
+   */
   async function save(event) {
     event.preventDefault();
     const form = event.target;
+    /**
+     * Derives the el result from the supplied values.
+     *
+     * @param {*} name Environment variable or setting name.
+     * @return {*} Result computed from the supplied inputs.
+     */
     const el = name => form.elements[name];
     const id = form.dataset.id;
     const input = {
@@ -126,6 +179,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
     } catch (err) {toast(err.message, true); button.disabled = false;}
   }
 
+  /**
+   * Updates password in the current state.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function setPassword(event) {
     event.preventDefault();
     const form = event.target;
@@ -145,6 +204,11 @@ export function createBackupController({state, render, showModal, closeModal}) {
     } catch (error) {toast(error.message, true); button.disabled = false;}
   }
 
+  /**
+   * Loads manual for controller.
+   *
+   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   */
   async function downloadManual() {
     if (!token) return toast(t("backups.security.openManagementFirst"), true);
     try {
@@ -168,6 +232,14 @@ export function createBackupController({state, render, showModal, closeModal}) {
     } catch (error) {toast(error.message, true);}
   }
 
+  /**
+   * Serializes job data to JSON.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {*} type Type or category used to select behavior.
+   * @param {!Object=} body Body content to validate or process.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function job(id, type, body = {}) {
     try {
       const queued = await get(
@@ -182,6 +254,11 @@ export function createBackupController({state, render, showModal, closeModal}) {
     } catch (err) {toast(err.message, true);}
   }
 
+  /**
+   * Builds the localized watch job text for the current language.
+   *
+   * @param {*} id Identifier of the affected record.
+   */
   function watchJob(id) {
     if (pollTimer) clearInterval(pollTimer);
     let attempts = 0, pending = false;
@@ -212,6 +289,13 @@ export function createBackupController({state, render, showModal, closeModal}) {
     }, 2000);
   }
 
+  /**
+   * Loads the controller state.
+   *
+   * @param {string} id Identifier used to select the relevant record.
+   * @param {string} filename File name used to locate the resource.
+   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   */
   async function download(id, filename) {
     if (!token) return toast(t("backups.security.unlockFirst"), true);
     const response = await fetch(
@@ -233,6 +317,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
     } finally {setTimeout(() => URL.revokeObjectURL(url), 60000);}
   }
 
+  /**
+   * Renders zip preview for controller.
+   *
+   * @param {*} result Result to process.
+   * @param {string} filename File name used to locate the resource.
+   */
   function showZipPreview(result, filename) {
     showModal(
       t("backups.actions.validateAndRestoreZip"),
@@ -255,6 +345,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
     );
   }
 
+  /**
+   * Builds the localized prompt prepared zip text for the current language.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {*} filename File path or name to process.
+   */
   function promptPreparedZip(id, filename) {
     showModal(
       t("backups.password.zipEnter"),
@@ -268,6 +364,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
     );
   }
 
+  /**
+   * Locates the DOM elements used by unlock prepared.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function unlockPrepared(event) {
     event.preventDefault();
     const form = event.target;
@@ -287,6 +389,11 @@ export function createBackupController({state, render, showModal, closeModal}) {
     } catch (error) {toast(error.message, true); button.disabled = false;}
   }
 
+  /**
+   * Loads prepared for controller.
+   *
+   * @param {string} id Identifier used to select the relevant record.
+   */
   async function downloadPrepared(id) {
     if (!token) return;
     const response = await fetch(
@@ -308,6 +415,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
     } finally {setTimeout(() => URL.revokeObjectURL(url), 60000);}
   }
 
+  /**
+   * Locates the DOM elements used by upload zip.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function uploadZip(event) {
     event.preventDefault();
     if (!token) return toast(t("backups.security.unlockFirst"), true);
@@ -335,6 +448,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
     finally {button.disabled = false;}
   }
 
+  /**
+   * Updates zip in the current state.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function applyZip(event) {
     event.preventDefault();
     const form = event.target;
@@ -355,6 +474,11 @@ export function createBackupController({state, render, showModal, closeModal}) {
     } catch (error) {toast(error.message, true); button.disabled = false;}
   }
 
+  /**
+   * Builds the localized remove text for the current language.
+   *
+   * @param {*} id Identifier of the affected record.
+   */
   function remove(id) {
     const profile = state.backupDashboard?.profiles.find(p => p.id === id);
     if (!profile) return;
@@ -368,6 +492,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
     );
   }
 
+  /**
+   * Builds the localized confirm delete text for the current language.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function confirmDelete(id) {
     try {
       await get(`/api/backups/${encodeURIComponent(id)}`, {method: 'DELETE'});
@@ -375,6 +505,11 @@ export function createBackupController({state, render, showModal, closeModal}) {
     } catch (err) {toast(err.message, true);}
   }
 
+  /**
+   * Transforms the entries used by restore.
+   *
+   * @param {*} id Identifier of the affected record.
+   */
   function restore(id) {
     const profile = state.backupDashboard?.profiles.find(p => p.id === id);
     if (!profile) return;
@@ -401,6 +536,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
     );
   }
 
+  /**
+   * Performs the submit restore lifecycle action.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function submitRestore(event) {
     event.preventDefault();
     const form = event.target;

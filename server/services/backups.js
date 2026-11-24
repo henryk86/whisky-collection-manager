@@ -28,6 +28,13 @@ const PROFILE_FILE = 'profiles.json';
 const STATUS_FILE = 'worker-status.json';
 const SAFE_REMOTE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,49}$/;
 
+/**
+ * Reads a backup secret from a mounted file or an environment variable.
+ *
+ * @param {string} name Environment variable or setting name.
+ * @return {string} Trimmed secret, or an empty string if a secret file
+ *     cannot be read or no value is configured.
+ */
 function secret(name) {
   const file = process.env[`${name}_FILE`];
   if (file) {
@@ -37,6 +44,13 @@ function secret(name) {
   return String(process.env[name] || '').trim();
 }
 
+/**
+ * Compares access tokens using SHA-256 and a timing-safe digest comparison.
+ *
+ * @param {string} actual Expected credential stored by the service.
+ * @param {*} provided Untrusted token supplied by the requester.
+ * @return {boolean} True only for a matching token of sufficient length.
+ */
 function secureEqual(actual, provided) {
   if (!actual || actual.length < 24 || !provided || typeof provided !==
     'string') return false;
@@ -45,6 +59,10 @@ function secureEqual(actual, provided) {
   return crypto.timingSafeEqual(expected, received);
 }
 
+/**
+ * Rejects backup operations unless the control directory and admin token exist.
+ * @throws {Error} If backup administration is not configured.
+ */
 function assertConfigured() {
   if (!CONTROL || !secret('BACKUP_ADMIN_TOKEN')) {
     throw fail(
@@ -55,6 +73,11 @@ function assertConfigured() {
   }
 }
 
+/**
+ * Ensures the caller is authorized for administrator backup actions.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ */
 export function authorizeAdmin(req) {
   assertConfigured();
   if (!secureEqual(
@@ -69,6 +92,11 @@ export function authorizeAdmin(req) {
   }
 }
 
+/**
+ * Ensures the background worker can perform its backup action.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ */
 export function authorizeWorker(req) {
   if (!CONTROL || !secureEqual(
     secret('BACKUP_WORKER_TOKEN'),
@@ -82,6 +110,13 @@ export function authorizeWorker(req) {
   }
 }
 
+/**
+ * Retrieves json from the available state.
+ *
+ * @param {string} name Environment variable or setting name.
+ * @param {*} fallback Value used when the requested data is unavailable.
+ * @return {*} Parsed JSON value.
+ */
 function readJson(name, fallback) {
   if (!CONTROL) return fallback;
   try {return JSON.parse(fs.readFileSync(path.join(CONTROL, name), 'utf8'));}
@@ -91,6 +126,12 @@ function readJson(name, fallback) {
   }
 }
 
+/**
+ * Writes atomic json data to the local filesystem.
+ *
+ * @param {string} name Environment variable or setting name.
+ * @param {*} value Value to process.
+ */
 function atomicJson(name, value) {
   fs.mkdirSync(CONTROL, {recursive: true, mode: 0o700});
   const destination = path.join(CONTROL, name);
@@ -105,6 +146,10 @@ function atomicJson(name, value) {
   } finally {if (fs.existsSync(temp)) fs.unlinkSync(temp);}
 }
 
+/**
+ * Validates the profiles state and rejects invalid inputs.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function profiles() {
   const value = readJson(PROFILE_FILE, {version: 1, profiles: []});
   if (value.version !== 1 ||
@@ -112,6 +157,14 @@ function profiles() {
   return value;
 }
 
+/**
+ * Normalizes the string text for subsequent processing.
+ *
+ * @param {*} value Value to process.
+ * @param {*} title Title displayed or stored by this operation.
+ * @param {number=} max Maximum accepted value.
+ * @return {string} Resulting text.
+ */
 function string(value, title, max = 80) {
   if (typeof value !== 'string' || !value.trim() || value.length >
     max) throw fail(
@@ -123,6 +176,15 @@ function string(value, title, max = 80) {
   return value.trim();
 }
 
+/**
+ * Derives the number numeric value from its input.
+ *
+ * @param {*} value Value to process.
+ * @param {*} min Minimum accepted value.
+ * @param {*} max Maximum accepted value.
+ * @param {*} label Label shown to the user.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function number(value, min, max, label) {
   if (!Number.isInteger(value) || value < min || value > max) throw fail(
     `${label}: außerhalb des gültigen Bereichs`,
@@ -133,6 +195,12 @@ function number(value, min, max, label) {
   return value;
 }
 
+/**
+ * Validates relative path for backups.
+ *
+ * @param {*} value Input value to process.
+ * @return {string} Resulting text.
+ */
 export function validateRelativePath(value) {
   const text = string(value, 'targetPath', 180);
   if (!/^[a-zA-Z0-9 _./-]+$/.test(text) || text.startsWith('/') ||
@@ -148,6 +216,12 @@ export function validateRelativePath(value) {
   return text;
 }
 
+/**
+ * Validates profile for backups.
+ *
+ * @param {*} input Input to process.
+ * @return {!Object} Structured result for the caller.
+ */
 export function validateProfile(input) {
   if (!input || typeof input !== 'object' ||
     Array.isArray(input)) throw fail(
@@ -208,6 +282,13 @@ export function validateProfile(input) {
   return result;
 }
 
+/**
+ * Updates the password used to encrypt new backup archives.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {*} input Input to process.
+ * @return {!Object} Structured result for the caller.
+ */
 export function setZipPassword(req, input) {
   authorizeAdmin(req);
   if (typeof input?.password !== 'string' || input.password !==
@@ -224,6 +305,12 @@ export function setZipPassword(req, input) {
   };
 }
 
+/**
+ * Retrieves dashboard for backups.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @return {!Object} Structured result for the caller.
+ */
 export function getDashboard(req) {
   authorizeAdmin(req);
   const status = readJson(
@@ -262,7 +349,20 @@ export function getDashboard(req) {
   };
 }
 
+/**
+ * Enforces the distinct target precondition.
+ *
+ * @param {*} existing Value used by this operation.
+ * @param {*} candidate Value used by this operation.
+ * @param {*=} excludeId Value used by this operation.
+ */
 function assertDistinctTarget(existing, candidate, excludeId = null) {
+  /**
+   * Normalizes the key text for subsequent processing.
+   *
+   * @param {*} item Current item under consideration.
+   * @return {string} Resulting text.
+   */
   const key = item => item.provider === 'local'
     ? `local:${item.targetPath.toLowerCase()}`
     : `rclone:${item.remote.toLowerCase()}:${item.targetPath.toLowerCase()}`;
@@ -275,6 +375,13 @@ function assertDistinctTarget(existing, candidate, excludeId = null) {
   }
 }
 
+/**
+ * Creates profile for backups.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {*} input Input to process.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createProfile(req, input) {
   authorizeAdmin(req);
   const data = profiles();
@@ -296,6 +403,13 @@ export function createProfile(req, input) {
   return profile;
 }
 
+/**
+ * Selects profile matching the input.
+ *
+ * @param {*} data Input data to process.
+ * @param {*} id Identifier of the affected record.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function findProfile(data, id) {
   if (!ID.test(id)) throw fail('Ungültige Profil-ID', 404, "api.errors.invalidProfileID");
   const index = data.profiles.findIndex(item => item.id === id);
@@ -307,6 +421,14 @@ function findProfile(data, id) {
   return index;
 }
 
+/**
+ * Updates profile for backups.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} input Input to process.
+ * @return {!Object} Structured result for the caller.
+ */
 export function updateProfile(req, id, input) {
   authorizeAdmin(req);
   const data = profiles();
@@ -333,6 +455,13 @@ export function updateProfile(req, id, input) {
   return profile;
 }
 
+/**
+ * Clears profile for backups.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {string} id Identifier used to select the relevant record.
+ * @return {!Object} Structured result for the caller.
+ */
 export function deleteProfile(req, id) {
   authorizeAdmin(req);
   const data = profiles();
@@ -343,6 +472,15 @@ export function deleteProfile(req, id) {
   return {deleted: true, repositoryDeleted: false};
 }
 
+/**
+ * Schedules a backup job using the configured backup profile.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {*} profileId Profile id used by this operation.
+ * @param {*} type Type used by this operation.
+ * @param {!Object=} body Request or response body.
+ * @return {!Object} Structured result for the caller.
+ */
 export function queueJob(req, profileId, type, body = {}) {
   authorizeAdmin(req);
   findProfile(profiles(), profileId);
@@ -381,8 +519,15 @@ export function queueJob(req, profileId, type, body = {}) {
   return {...job, queued: true};
 }
 
-/** Only the worker can request a synchronous, consistent source snapshot.
- * Node's event loop processes no app writes while these copies are in progress. */
+/**
+ * Only the worker can request a synchronous, consistent source snapshot.
+ * Node's event loop processes no app writes while these copies are in
+ * progress.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {*} jobId Job id used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createSourceSnapshot(req, jobId) {
   authorizeWorker(req);
   if (!ID.test(jobId)) throw fail(
@@ -427,6 +572,11 @@ export function createSourceSnapshot(req, jobId) {
 /**
  * Download ZIP archives only from marked local targets; never accept a client
  * path.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {*} profileId Profile id used by this operation.
+ * @param {string} filename File name used to locate the resource.
+ * @return {!Object} Structured result for the caller.
  */
 export function downloadLocalZip(req, profileId, filename) {
   authorizeAdmin(req);

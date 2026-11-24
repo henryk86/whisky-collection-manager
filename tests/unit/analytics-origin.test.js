@@ -9,6 +9,15 @@ const sites = [
   {id: 'lag', name: 'Lagavulin', country: 'Scotland', region: 'Islay'},
   {id: 'other', name: 'Other Site', country: 'Germany', region: 'Bayern'},
 ];
+/**
+ * Derives the entry result from the supplied values.
+ *
+ * @param {*} id Identifier of the affected record.
+ * @param {*} distilleryIds Value used by this operation.
+ * @param {*} bottler Value used by this operation.
+ * @param {string=} country Value used by this operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const entry = (id, distilleryIds, bottler, country = '') => ({
   id, name: id, distilleryIds, bottler, country,
   bottles: [{id: id + '-b', status: 'closed', volumeType: 'standard', volumeMl: 700}],
@@ -102,6 +111,12 @@ test(
     const bottlingForm =
       createBottlingForm({
         state, selectors: {
+          /**
+           * Derives the distillery ids result from the supplied values.
+           *
+           * @param {*} b Second entry or operand in the calculation.
+           * @return {*} Result computed from the supplied inputs.
+           */
           distilleryIds: b =>
             b.distilleryIds || [],
         },

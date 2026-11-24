@@ -4,16 +4,24 @@ import {createPhotoZoom} from './photo-zoom.js';
 import {minusIcon, plusIcon, arrowLeftIcon, arrowRightIcon} from './action-icons.js';
 
 /**
- * A photo lightbox inside the application's existing modal system.
- * The source comes from an already rendered local <img>; do not accept
- * arbitrary
- * URLs or open new tabs. Nested mode preserves unsaved editor form DOM nodes.
+ * A photo lightbox inside the application's existing modal system. The source
+ * comes from an already rendered local <img>; do not accept arbitrary URLs or
+ * open new tabs. Nested mode preserves unsaved editor form DOM nodes.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function createPhotoViewer({state, showModal}) {
   let photos = [];
   let active = 0;
   const photoZoom = createPhotoZoom();
 
+  /**
+   * Locates the DOM elements used by photo from.
+   *
+   * @param {*} button Button control involved in the interaction.
+   * @return {!Object} Computed value, or null when the input has no match.
+   */
   function photoFrom(button) {
     const img = button?.querySelector('img');
     const src = img?.getAttribute('src');
@@ -21,6 +29,11 @@ export function createPhotoViewer({state, showModal}) {
     return {src, alt: img.getAttribute('alt') || t("ui.photos.bottlePhoto")};
   }
 
+  /**
+   * Controls the photo viewer state.
+   *
+   * @param {*} button Button used by this operation.
+   */
   function open(button) {
     if (!button) return;
     let buttons = [button];
@@ -76,10 +89,19 @@ export function createPhotoViewer({state, showModal}) {
     query('.dialog .dialog-head [data-act="close-modal"]')?.focus();
   }
 
+  /**
+   * Checks whether open applies.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   function isOpen() {
     return Boolean(query('.photo-lightbox'));
   }
 
+  /**
+   * Derives the step result from the supplied values.
+   *
+   * @param {*} direction Direction used for traversal or movement.
+   */
   function step(direction) {
     if (!isOpen() || photos.length < 2) return;
     active = (active + (direction < 0 ? -1 : 1) + photos.length) %

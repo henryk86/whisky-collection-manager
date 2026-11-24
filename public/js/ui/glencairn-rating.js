@@ -5,6 +5,9 @@ import {glencairnRatingSymbol} from './glencairn-icon.js';
 /**
  * Five Glencairn silhouettes with bottom-up gold liquid fill and precise 0-100
  * manual entry.
+ *
+ * @param {*} rating Rating used by this operation.
+ * @return {string} Resulting text.
  */
 export function glencairnRating(rating) {
   const safe = rating == null ? null :
@@ -29,6 +32,9 @@ export function glencairnRating(rating) {
 
 /**
  * Preview fractional glass fills without replacing the focused numeric input.
+ *
+ * @param {!Element} node DOM or syntax node to process.
+ * @param {*} value Input value to process.
  */
 export function syncGlencairnRating(node, value) {
   if (!node) return;

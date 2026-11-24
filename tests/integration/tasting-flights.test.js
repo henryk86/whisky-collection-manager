@@ -3,6 +3,13 @@ import assert from 'node:assert/strict';
 import {startTestServer, requestJson as api} from '../helpers/server.js';
 
 const day = '2026-11-15';
+/**
+ * Constructs flight from the supplied data.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @param {string=} name Environment variable or setting name.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const createFlight = (base, name = 'Flight') =>
   api(base, '/api/tasting-flights', 'POST', {name, date: day, notes: ''});
 

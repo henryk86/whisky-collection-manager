@@ -6,6 +6,16 @@ export const DEFAULT_MASK_BRUSH_SIZE = 4;
 /**
  * A stroke position/radius is relative to the smaller image side, not the
  * screen zoom.
+ *
+ * @param {*} current Current resource data to update.
+ * @param {*} reference Reference used by this operation.
+ * @param {number} width Width in pixels.
+ * @param {number} height Height in pixels.
+ * @param {*} from From used by this operation.
+ * @param {*} to To used by this operation.
+ * @param {*} sizePercent Size percent used by this operation.
+ * @param {*} mode Requested display mode or configuration variant.
+ * @return {*} Whether the requested condition is met.
  */
 export function paintMaskSegment(current, reference, width, height, from, to, sizePercent, mode) {
   if (!MASK_BRUSH_MODES.includes(mode)) throw new RangeError(t('errors.photoEditor.invalidBrushMode'));
@@ -45,6 +55,10 @@ export function paintMaskSegment(current, reference, width, height, from, to, si
 /**
  * Rebuild at any resolution. A restore stroke cannot resurrect pixels removed
  * by the AI mask.
+ *
+ * @param {*} imageData Image data used by this operation.
+ * @param {*} strokes Strokes used by this operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function applyMaskStrokes(imageData, strokes) {
   const output = new Uint8ClampedArray(imageData.data);

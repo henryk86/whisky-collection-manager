@@ -1,8 +1,19 @@
 import {t} from '../../i18n/index.js';
 import {query as select} from '../../ui/dom.js';
 import {lookupInventoryNumber} from '../../domain/selectors.js';
-/** A scan navigates or fills the inventory field. It never opens an editor. */
+/**
+ * A scan navigates or fills the inventory field. It never opens an editor.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {Function} Result computed from the supplied inputs.
+ */
 export function createCodeResolver({state, navigate, toast, closeModal, renderModal, query = select}) {
+  /**
+   * Retrieves code for resolve code.
+   *
+   * @param {*} value Input value to process.
+   * @param {boolean=} assign Assign used by this operation.
+   */
   async function resolveCode(value, assign = false) {
     value = value.trim();
     if (!value) {

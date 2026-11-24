@@ -68,12 +68,52 @@ test(
     const calls = [];
     const editors = createEditors({
       state,
-      selectors: {findBottle: () => null},
+      selectors: {
+        /**
+         * Selects bottle matching the input.
+         * @return {*} Result computed from the supplied inputs.
+         */
+        findBottle: () => null,
+      },
+      /**
+       * Derives the bottling form result from the supplied values.
+       * @return {string} Resulting text.
+       */
       bottlingForm: () => '<form id="bottling-form"></form>',
+      /**
+       * Produces the bottle form text used by the caller.
+       *
+       * @param {*} _ Unused route parameter retained for the callback
+       *     signature.
+       * @param {*} id Identifier of the affected record.
+       * @return {string} Resulting text.
+       */
       bottleForm: (_, id) =>
         `<form id="bottle-form" data-bottling-id="${id}"></form>`,
+      /**
+       * Renders modal in the current view.
+       *
+       * @param {*} title Title displayed or stored by this operation.
+       * @param {*} body Body content to validate or process.
+       * @return {number} Calculated numeric value.
+       */
       showModal: (title, body) => calls.push({title, body}),
-      closeModal() {}, navigate() {}, action() {}, refresh() {},
+      /**
+       * Performs the close modal lifecycle action.
+       */
+      closeModal() {},
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Updates the action state for its caller.
+       */
+      action() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     });
     editors.newBottling();
     assert.match(calls.at(-1).body, /new-bottle-choice-form/);

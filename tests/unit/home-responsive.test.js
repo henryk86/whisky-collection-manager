@@ -3,6 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHomeView} from '../../public/js/views/home.js';
 
+/**
+ * Constructs bottlings from the supplied data.
+ *
+ * @param {*} count Number of requested or available entries.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const createBottlings = count => Array.from({length: count}, (_, index) => ({
   id: `b-${index + 1}`,
   name: `Whisky ${String(index + 1).padStart(4, '0')}`,
@@ -23,17 +29,39 @@ test(
     let markup = '';
     const historyCalls = [];
     const dummy = {
+      /**
+       * Updates the add event listener state for its caller.
+       */
       addEventListener: () => {},
+      /**
+       * Updates the focus state for its caller.
+       */
       focus: () => {},
+      /**
+       * Updates selection range in the current state.
+       */
       setSelectionRange: () => {},
     };
     try {
       globalThis.document = {
+        /**
+         * Derives the query selector result from the supplied values.
+         * @return {!Object} Result computed from the supplied inputs.
+         */
         querySelector() {return dummy;},
+        /**
+         * Derives the query selector all result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
         querySelectorAll() {return [];},
       };
       globalThis.location = {pathname: '/', search: '?page=18'};
       globalThis.history = {
+        /**
+         * Updates the replace state state for its caller.
+         *
+         * @param {*} args Arguments forwarded to the operation.
+         */
         replaceState(...args) {historyCalls.push(args[2]);},
       };
       const state = {
@@ -48,13 +76,35 @@ test(
         view: 'cards',
       };
       const selectors = {
+        /**
+         * Derives the all bottles result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
         allBottles: () => [],
+        /**
+         * Derives the bottles result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
         bottles: () => [],
+        /**
+         * Derives the cover photo result from the supplied values.
+         * @return {string} Resulting text.
+         */
         coverPhoto: () => '',
+        /**
+         * Derives the distillery names result from the supplied values.
+         * @return {string} Resulting text.
+         */
         distilleryNames: () => '',
       };
       const view = createHomeView({
-        state, selectors, shell(html) {
+        state, selectors,
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} html HTML markup to render or inspect.
+         */
+        shell(html) {
           markup =
             html;
         },

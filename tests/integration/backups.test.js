@@ -17,6 +17,16 @@ const validProfile = {
   schedule: {frequency: 'daily', hour: 3, minute: 15, weekday: 1},
   retention: {daily: 7, weekly: 4, monthly: 12},
 };
+/**
+ * Serializes request data to JSON.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @param {*} endpoint Value used by this operation.
+ * @param {string=} method Value used by this operation.
+ * @param {*} body Body content to validate or process.
+ * @param {string=} auth Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function request(base, endpoint, method = 'GET', body, auth = token) {
   const response = await fetch(base + endpoint, {
     method,
@@ -29,6 +39,12 @@ async function request(base, endpoint, method = 'GET', body, auth = token) {
   return {status: response.status, data: await response.json()};
 }
 
+/**
+ * Transforms the entries used by fixture.
+ *
+ * @param {!Object=} options Options controlling the operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function fixture({withTargets = false} = {}) {
   const control = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-backup-test-'));
   const env = Object.fromEntries([
@@ -50,6 +66,10 @@ async function fixture({withTargets = false} = {}) {
   return {
     ...server,
     control,
+    /**
+     * Performs the stop lifecycle action.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     stop: async () => {await server.stop(); fs.rmSync(control, {recursive: true, force: true});},
   };
 }

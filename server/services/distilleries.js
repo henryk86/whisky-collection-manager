@@ -2,6 +2,12 @@ import {change} from '../storage/collection-store.js';
 import {requireField} from '../domain/validation.js';
 import {uid} from '../domain/collection.js';
 import {fail} from '../domain/errors.js';
+/**
+ * Derives the location from input numeric value from its input.
+ *
+ * @param {*} input Input element or value to inspect.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function locationFromInput(input) {
   const lat = input.latitude, lon = input.longitude;
   if (lat == null && lon == null) return {latitude: null, longitude: null};
@@ -18,6 +24,14 @@ function locationFromInput(input) {
   return {latitude: lat, longitude: lon};
 }
 
+/**
+ * Normalizes the unique name text for subsequent processing.
+ *
+ * @param {*} collection Collection data to process.
+ * @param {*} value Value to process.
+ * @param {*=} currentId Value used by this operation.
+ * @return {*} Whether the requested condition is met.
+ */
 function uniqueName(collection, value, currentId = null) {
   const name = requireField(value, 'distilleryName');
   const duplicate = collection.distilleries.some(entry => entry.id !==
@@ -32,6 +46,12 @@ function uniqueName(collection, value, currentId = null) {
   return name;
 }
 
+/**
+ * Validates the valid status state and rejects invalid inputs.
+ *
+ * @param {*} value Value to process.
+ * @return {*} Whether the requested condition is met.
+ */
 function validStatus(value) {
   if (!['active', 'closed', 'reopened', 'unknown'].includes(value)) throw fail(
     'Ungültiger Destilleriestatus',
@@ -41,6 +61,13 @@ function validStatus(value) {
   return value;
 }
 
+/**
+ * Creates distillery for distilleries.
+ *
+ * @param {*} input Input to process.
+ * @return {!Promise<(!Object)>} Promise fulfilled when the operation
+ * completes.
+ */
 export function createDistillery(input) {
   return change(collection => {
     const distillery = {
@@ -54,6 +81,14 @@ export function createDistillery(input) {
   });
 }
 
+/**
+ * Updates distillery for distilleries.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} input Input to process.
+ * @return {!Promise<!Distillery>} Promise fulfilled when the operation
+ * completes.
+ */
 export function updateDistillery(id, input) {
   return change(collection => {
     const distillery = collection.distilleries.find(entry => entry.id === id);

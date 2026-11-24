@@ -4,6 +4,9 @@ import {escapeHtml} from '../../ui/dom.js';
 /**
  * One accessible, clickable import option; checkbox and its text stay in the
  * same grid row.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {string} Resulting text.
  */
 export function importChoice({
   field,

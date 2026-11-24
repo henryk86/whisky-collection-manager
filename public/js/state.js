@@ -4,6 +4,9 @@ import {getCollectionViewPreference} from './domain/collection-view-preference.j
 /**
  * UI state only. Persistent data is replaced by GET /api/collection after
  * mutations.
+ *
+ * @param {*} route Route used by this operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function createState(route) {
   return {

@@ -4,6 +4,16 @@ import {bottlingOriginLabel} from '../../public/js/domain/bottling-origin.js';
 import {createHomeView} from '../../public/js/views/home.js';
 import {createSettingsView} from '../../public/js/views/settings.js';
 
+/**
+ * Renders home for collection ui customization.test.
+ *
+ * @param {*} establishedYear Established year used by this operation.
+ * @param {!Array<*>=} bottlings Bottlings used by this operation.
+ * @param {!Array<*>=} physicalBottles Physical bottles used by this
+ * operation.
+ * @param {string=} view View used by this operation.
+ * @return {undefined} Structured result assembled from the input data.
+ */
 function renderHome(establishedYear, bottlings = [], physicalBottles = [], view = 'cards') {
   const former = {
     document: globalThis.document,
@@ -12,14 +22,33 @@ function renderHome(establishedYear, bottlings = [], physicalBottles = [], view 
   };
   let html;
   try {
-    const field = {addEventListener() {} };
+    const field = {
+      /**
+       * Updates the add event listener state for its caller.
+       */
+      addEventListener() {},
+    };
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       querySelector: () =>
-        field, querySelectorAll: () => [],
+        field,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
+      querySelectorAll: () => [],
     };
     globalThis.location = {pathname: '/', search: ''};
     globalThis.history =
-      {replaceState() {throw new Error('No history change expected');} };
+    {
+      /**
+       * Reports the replace state error condition.
+       */
+      replaceState() {throw new Error('No history change expected');},
+    };
     const state = {
       collection: {bottlings, settings: {establishedYear}},
       pageNumber: 1,
@@ -31,13 +60,39 @@ function renderHome(establishedYear, bottlings = [], physicalBottles = [], view 
       view,
     };
     const selectors = {
+      /**
+       * Derives the all bottles result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       allBottles: () => physicalBottles,
+      /**
+       * Derives the bottles result from the supplied values.
+       *
+       * @param {*} bottleId Value used by this operation.
+       * @return {*} Result computed from the supplied inputs.
+       */
       bottles: bottleId => bottlings.find(b => b.id ===
         bottleId)?.bottles || [],
+      /**
+       * Derives the cover photo result from the supplied values.
+       * @return {string} Resulting text.
+       */
       coverPhoto: () => '',
+      /**
+       * Derives the distillery names result from the supplied values.
+       * @return {string} Resulting text.
+       */
       distilleryNames: () => 'Talisker',
     };
-    createHomeView({state, selectors, shell: content => {html = content;}})();
+    createHomeView({
+      state, selectors,
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} content Content to render, store or examine.
+       */
+      shell: content => {html = content;},
+    })();
     return html;
   } finally {
     for (const [name, value] of Object.entries(former)) {

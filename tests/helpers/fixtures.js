@@ -1,3 +1,8 @@
+/**
+ * Creates a reusable collection fixture for automated tests.
+ *
+ * @return {!Object} Structured result for the caller.
+ */
 export function collectionFixture() {
   return {
     schemaVersion: 6,

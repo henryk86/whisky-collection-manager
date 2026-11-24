@@ -3,6 +3,13 @@
  */
 export const UNASSIGNED_WALL_PAGE_SIZE = 24;
 
+/**
+ * Paginates unassigned bottles for the selected room wall.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function unassignedWallPage(
   warehouse,
   {query = '', page = 1, pageSize = UNASSIGNED_WALL_PAGE_SIZE} = {}

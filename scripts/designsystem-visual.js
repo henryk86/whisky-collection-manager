@@ -60,6 +60,13 @@ const problems = [];
 const warnings = [];
 const results = [];
 const interactionChecks = [];
+/**
+ * Serializes command data to JSON.
+ *
+ * @param {*} method Value used by this operation.
+ * @param {!Object=} params Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 function command(method, params = {}) {
   const id = ++seq;
   return new Promise((resolve, reject) => {
@@ -70,7 +77,17 @@ function command(method, params = {}) {
     pending.set(
       id,
       {
+        /**
+         * Updates the resolve state for its caller.
+         *
+         * @param {*} v Value to evaluate.
+         */
         resolve: v => {clearTimeout(timer); resolve(v);},
+        /**
+         * Updates the reject state for its caller.
+         *
+         * @param {*} e Value used by this operation.
+         */
         reject: e => {clearTimeout(timer); reject(e);},
       }
     );
@@ -78,6 +95,12 @@ function command(method, params = {}) {
   });
 }
 
+/**
+ * Validates the evaluate state and rejects invalid inputs.
+ *
+ * @param {*} expression Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function evaluate(expression) {
   const out = await command(
     'Runtime.evaluate',
@@ -87,6 +110,14 @@ async function evaluate(expression) {
   return out.result?.value;
 }
 
+/**
+ * Validates the until state and rejects invalid inputs.
+ *
+ * @param {*} expression Value used by this operation.
+ * @param {*} label Label shown to the user.
+ * @param {number=} tries Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function until(expression, label, tries = 80) {
   for (let i = 0; i < tries; i++) {
     if (await evaluate(`Boolean(${expression})`)) return;
@@ -95,6 +126,12 @@ async function until(expression, label, tries = 80) {
   throw new Error(`Page did not render: ${label}`);
 }
 
+/**
+ * Requests intercept data from the configured remote endpoint.
+ *
+ * @param {!Object} options Options controlling the operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function intercept({requestId, request}) {
   try {
     const response = await fetch(request.url, {
@@ -133,6 +170,10 @@ async function intercept({requestId, request}) {
   }
 }
 
+/**
+ * Validates the absolute chromium state and rejects invalid inputs.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function absoluteChromium() {
   const value = process.env.WCM_VISUAL_BROWSER_PATH || process.env
     .PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/chromium';
@@ -140,6 +181,10 @@ function absoluteChromium() {
   return value;
 }
 const scratch = mkdtempSync(path.join(tmpdir(), 'wcm-visual-'));
+/**
+ * Parses boot data from JSON input.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function boot() {
   server = await startTestServer();
   browser = spawn(absoluteChromium(), [
@@ -195,6 +240,14 @@ async function boot() {
   await command('Fetch.enable', {patterns: [{urlPattern: `${server.base}/*`}]});
 }
 
+/**
+ * Renders the designsystem visual state.
+ *
+ * @param {*} route Route used by this operation.
+ * @param {Function} selector Selector used by this operation.
+ * @param {Function} action Mutation or UI action callback.
+ * @param {*} scenarioName Scenario name used by this operation.
+ */
 async function render(route, selector, action, scenarioName) {
   // The project DOM-only browser harness uses the same intercepted HTTP assets.
   // This allows capture when top-level localhost navigation is blocked.
@@ -244,6 +297,10 @@ async function render(route, selector, action, scenarioName) {
   })()`);
 }
 
+/**
+ * Locates the DOM elements used by geometry expression.
+ * @return {string} Resulting text.
+ */
 function geometryExpression() {
   return `JSON.stringify((()=>{
     const rect = el => {
@@ -265,6 +322,15 @@ function geometryExpression() {
   })())`;
 }
 
+/**
+ * Coordinates asynchronous work for key.
+ *
+ * @param {*} key Key used to select or group values.
+ * @param {*} code Code used to identify a specific outcome.
+ * @param {*} windowsVirtualKeyCode Windows virtual key code input for this
+ * operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function key(key, code, windowsVirtualKeyCode) {
   for (const type of ['keyDown', 'keyUp']) await command(
     'Input.dispatchKeyEvent',
@@ -272,6 +338,11 @@ async function key(key, code, windowsVirtualKeyCode) {
   );
 }
 
+/**
+ * Validates modal interactions for designsystem visual.
+ *
+ * @param {string} name Name of the item.
+ */
 async function checkModalInteractions(name) {
   if (!name.startsWith('modal-')) return;
   const focus = await evaluate(`Boolean(document.activeElement?.closest?.('#modal-root .dialog'))`);
@@ -315,6 +386,10 @@ async function checkModalInteractions(name) {
   }
 }
 
+/**
+ * Validates the seed fixtures state and rejects invalid inputs.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function seedFixtures() {
   const partial = await requestJson(server.base, '/api/bottlings', 'POST', {
     name: 'Designsystem Partially Filled',

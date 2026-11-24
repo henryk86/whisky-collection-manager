@@ -28,6 +28,12 @@ export const SHARED_BROWSER_FILES = new Set([
   'warehouse-placement.js',
   'photo-adjustments.js',
 ]);
+/**
+ * Parses path from its input.
+ *
+ * @param {*} encoded Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function decodePath(encoded) {
   try {return decodeURIComponent(encoded);}
   catch (error) {
@@ -40,6 +46,9 @@ function decodePath(encoded) {
 /**
  * Hash the actual inline theme bootstrap and import map; no unsafe-inline
  * scripts.
+ *
+ * @param {*} html Html used by this operation.
+ * @return {!Object} Structured result for the caller.
  */
 function htmlSecurityHeaders(html) {
   const hashes = [...html.matchAll(/<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)]
@@ -65,8 +74,19 @@ function htmlSecurityHeaders(html) {
   };
 }
 
-/** Metadata validation prevents re-sending large local AI models and WASM files.
- * Unversioned paths still require revalidation; never mark them immutable. */
+/**
+ * Metadata validation prevents re-sending large local AI models and WASM
+ * files. Unversioned paths still require revalidation; never mark them
+ * immutable.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {!Object} res Outgoing HTTP response.
+ * @param {*} file Source file or file name being processed.
+ * @param {*} contentType Content type used by this operation.
+ * @param {*} cacheControl Cache control used by this operation.
+ * @param {!Object=} securityHeaders Security headers used by this operation.
+ * @return {*} Whether the requested condition is met.
+ */
 function streamStatic(req, res, file, contentType, cacheControl, securityHeaders = {}) {
   const stat = fs.statSync(file);
   const etag = `W/"${stat.size.toString(16)}-${Math.trunc(stat.mtimeMs)
@@ -100,6 +120,14 @@ function streamStatic(req, res, file, contentType, cacheControl, securityHeaders
   return pipeline(fs.createReadStream(file), res);
 }
 
+/**
+ * Serves permitted public files using safe paths and response headers.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {!Object} res Outgoing HTTP response.
+ * @param {string} url URL of the requested resource.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export async function serveStatic(req, res, url) {
   // Runtime data must never become static assets, even if DATA_ROOT was
   // misconfigured inside public/.

@@ -15,6 +15,15 @@ const profile = {
   feinty: 0,
   sulphury: 0,
 };
+/**
+ * Derives the bottle result from the supplied values.
+ *
+ * @param {*} id Identifier of the affected record.
+ * @param {*} caskType Value used by this operation.
+ * @param {*} ageYears Value used by this operation.
+ * @param {string=} tastedOn Value used by this operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const bottle = (id, caskType, ageYears, tastedOn = '2026-11-01') => ({
   id, name: id, caskType, ageYears, abv: 46,
   distilleryIds: [id], bottles: [{id: `p-${id}`, status: 'open'}],
@@ -32,6 +41,13 @@ const sample = {
     bottle('rum', 'Rum Finish', 6),
   ],
 };
+/**
+ * Transforms the entries used by plan.
+ *
+ * @param {*} collection Collection data to process.
+ * @param {*} options Options controlling the operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const plan = (collection, options) => suggestFlight(
   collection,
   {count: 3, style: 'similar', today: Date.parse('2026-11-23'), ...options}

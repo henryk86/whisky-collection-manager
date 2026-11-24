@@ -7,6 +7,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const catalog = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
+/**
+ * Derives the walk result from the supplied values.
+ *
+ * @param {*} directory Directory containing the requested data.
+ * @return {*} Combined text from the input values.
+ */
 const walk = directory => fs.readdirSync(directory, {withFileTypes: true})
   .flatMap(entry => {
     const file = path.join(directory, entry.name);
@@ -60,6 +66,12 @@ for (const code of Object.keys(registry)) {
     if (typeof value !== 'string' || !value.trim()) {
       throw new Error(`Invalid translated text in ${code}: ${key}`);
     }
+    /**
+     * Orders the params records using the configured comparison.
+     *
+     * @param {*} message Message to display or use for diagnostics.
+     * @return {string} Resulting text.
+     */
     const params = message => [
       ...[...message.matchAll(/\{([a-zA-Z]\w*)\}/gu)].map(match => match[1]),
       ...[...message.matchAll(/\{([a-zA-Z]\w*),\s*plural,/gu)].map(match =>

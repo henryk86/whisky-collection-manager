@@ -2,10 +2,26 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {toast} from '../../public/js/ui/notifications.js';
 
+/**
+ * Locates the DOM elements used by fake document.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function fakeDocument() {
   const body = {
     children: [],
+    /**
+     * Updates the append state for its caller.
+     *
+     * @param {*} node Node to inspect or update.
+     */
     append(node) {this.children.push(node); node.parent = this;},
+    /**
+     * Derives the query selector result from the supplied values.
+     *
+     * @param {function(...*): *} selector Selector used to obtain matching
+     *     values.
+     * @return {*} Whether the requested condition is met.
+     */
     querySelector(selector) {
       return selector === '.toast'
         ? this.children.find(node => node.className?.split(' ')
@@ -13,15 +29,41 @@ function fakeDocument() {
         : null;
     },
   };
+  /**
+   * Constructs element from the supplied data.
+   *
+   * @param {*} tagName Value used by this operation.
+   * @return {!Array<*>} Resulting entries in their output order.
+   */
   function createElement(tagName) {
     return {
       tagName: tagName.toUpperCase(),
       attributes: {},
       children: [],
       listeners: {},
+      /**
+       * Updates attribute in the current state.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @param {*} value Value to process.
+       */
       setAttribute(name, value) {this.attributes[name] = String(value);},
+      /**
+       * Updates the append state for its caller.
+       *
+       * @param {*} node Node to inspect or update.
+       */
       append(node) {this.children.push(node); node.parent = this;},
+      /**
+       * Updates the add event listener state for its caller.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @param {function(...*): *} callback Callback invoked by the operation.
+       */
       addEventListener(name, callback) {this.listeners[name] = callback;},
+      /**
+       * Updates the remove state for its caller.
+       */
       remove() {
         if (this.parent) this.parent.children.splice(this.parent.children
           .indexOf(this), 1);
@@ -32,6 +74,13 @@ function fakeDocument() {
   return {
     body,
     createElement,
+    /**
+     * Locates the DOM elements used by query selector.
+     *
+     * @param {function(...*): *} selector Selector used to obtain matching
+     *     values.
+     * @return {*} Matching DOM element, if present.
+     */
     querySelector: selector => body.querySelector(selector),
   };
 }

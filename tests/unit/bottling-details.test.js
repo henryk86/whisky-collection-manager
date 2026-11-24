@@ -2,8 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {bottlingDetails} from '../../public/js/domain/bottling-details.js';
 
+/**
+ * Derives the distillery names result from the supplied values.
+ * @return {string} Resulting text.
+ */
 const distilleryNames = () => 'Bowmore, Port Ellen';
 
+/**
+ * Transforms the entries used by by label.
+ *
+ * @param {*} fields Value used by this operation.
+ * @return {!Object} Entries transformed for the consuming code.
+ */
 const byLabel = fields =>
   Object.fromEntries(fields.map(([label, value, suffix = '']) =>
     [label, `${value}${suffix ? ` ${suffix}` : ''}`]));

@@ -3,6 +3,12 @@
  * but may be reassigned once free.
  */
 import {allBottles} from './collection.js';
+/**
+ * Finds an available inventory number without reusing reserved numbers.
+ *
+ * @param {*} db Db used by this operation.
+ * @return {string} Resulting text.
+ */
 export function suggestNumber(db) {
   const used = new Set([
     ...db.reservedInventoryNumbers,
@@ -15,6 +21,12 @@ export function suggestNumber(db) {
   return String(n).padStart(6, '0');
 }
 
+/**
+ * Reserves an inventory number when assigning it to a bottle.
+ *
+ * @param {*} db Db used by this operation.
+ * @param {*} value Input value to process.
+ */
 export function markNumber(db, value) {
   if (!value) {
     return;

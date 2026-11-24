@@ -2,6 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {startTestServer, requestJson as api} from '../helpers/server.js';
 import {latestTasting} from '../../shared/tasting-records.js';
+/**
+ * Derives the notes result from the supplied values.
+ *
+ * @param {*} nose Value used by this operation.
+ * @return {!Object} Result computed from the supplied inputs.
+ */
 const notes = nose => ({nose, palate: '', finish: ''});
 test(
   'tasting CRUD, latest-date summary, no implicit migration and cross-bottling isolation',

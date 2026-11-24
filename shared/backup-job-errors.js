@@ -1,5 +1,12 @@
-/** Stable worker-to-UI diagnostics. Never serialize the original exception text,
- * command output, local paths, credentials or a stack trace into job status. */
+/**
+ * Stable worker-to-UI diagnostics. Never serialize the original exception
+ * text, command output, local paths, credentials or a stack trace into job
+ * status.
+ *
+ * @param {string} code Stable identifier used for error handling.
+ * @param {!Object=} params Named values used when formatting the message.
+ * @return {!Error} Result computed from the supplied inputs.
+ */
 export function backupJobError(code, params = {}) {
   const error = new Error(code);
   error.backupJobCode = code;
@@ -7,6 +14,12 @@ export function backupJobError(code, params = {}) {
   return error;
 }
 
+/**
+ * Serializes backup job error for backup job errors.
+ *
+ * @param {*} error Error being handled.
+ * @return {!Object} Structured result for the caller.
+ */
 export function serializeBackupJobError(error) {
   if (typeof error?.backupJobCode === 'string' &&
     /^backup\.errors\.[a-zA-Z0-9]+$/.test(error.backupJobCode)) {

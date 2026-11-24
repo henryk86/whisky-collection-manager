@@ -266,6 +266,13 @@ test(
       // The picker can be below the viewport. Element-relative clicks scroll it
       // into view; page.mouse.click with off-screen coordinates hits the page
       // instead.
+      /**
+       * Coordinates asynchronous work for click picker.
+       *
+       * @param {*} x Horizontal coordinate.
+       * @param {*} y Vertical coordinate.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const clickPicker = async (x, y) => {
         const box = await picker.boundingBox();
         assert.ok(box?.width > 0 && box?.height > 0, 'picker has dimensions');
@@ -680,8 +687,22 @@ test(
       const sliders = panel.locator('.flavor-sliders');
       assert.equal(await palette.locator('.whisky-color-choice').count(), 12);
       const metrics = await panel.evaluate(el => {
+        /**
+         * Locates the DOM elements used by css.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {*} Matching DOM element, if present.
+         */
         const css = selector => getComputedStyle(el.querySelector(selector));
 
+        /**
+         * Locates the DOM elements used by rect.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {!Object} Structured result assembled from the input data.
+         */
         const rect = selector => {
           const {x, y, width, height} = el.querySelector(selector)
             .getBoundingClientRect(); return {x, y, width, height};
@@ -848,6 +869,13 @@ test(
         true
       );
       const headerPositions = await section.evaluate(() => {
+        /**
+         * Locates the DOM elements used by positions.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {!Object} Structured result assembled from the input data.
+         */
         const positions = selector => {
           const panel = document.querySelector(selector);
           const head = panel.querySelector('.tasting-panel-heading h3')

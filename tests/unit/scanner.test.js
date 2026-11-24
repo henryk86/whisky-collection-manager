@@ -5,6 +5,12 @@ import {createScanner} from '../../public/js/features/scanner/controller.js';
 import {createCodeResolver} from '../../public/js/features/scanner/resolve-code.js';
 import {lookupInventoryNumber} from '../../public/js/domain/selectors.js';
 import {collectionFixture} from '../helpers/fixtures.js';
+/**
+ * Derives the resolver context result from the supplied values.
+ *
+ * @param {!Object=} extra Additional context or configuration.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function resolverContext(extra = {}) {
   const calls = [];
   const state = {
@@ -12,9 +18,29 @@ function resolverContext(extra = {}) {
   };
   const resolve = createCodeResolver({
     state,
+    /**
+     * Derives the navigate result from the supplied values.
+     *
+     * @param {!Array<*>} args Arguments forwarded to the operation.
+     * @return {number} Calculated numeric value.
+     */
     navigate: (...args) => calls.push(['navigate', ...args]),
+    /**
+     * Derives the toast result from the supplied values.
+     *
+     * @param {!Array<*>} args Arguments forwarded to the operation.
+     * @return {number} Calculated numeric value.
+     */
     toast: (...args) => calls.push(['toast', ...args]),
+    /**
+     * Performs the close modal lifecycle action.
+     * @return {number} Calculated numeric value.
+     */
     closeModal: () => calls.push(['close']),
+    /**
+     * Renders modal in the current view.
+     * @return {number} Calculated numeric value.
+     */
     renderModal: () => calls.push(['modal']),
     ...extra,
   });
@@ -99,6 +125,10 @@ test(
       },
     };
     const {state, resolve, calls} = resolverContext({
+      /**
+       * Derives the query result from the supplied values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       query: () => form,
     });
     state.scanReturn = {
@@ -122,14 +152,30 @@ test(
     const state = {
       scanner: {
         engine: {
+          /**
+           * Performs the stop lifecycle action.
+           * @return {!Promise<*>} Promise for the asynchronous operation.
+           */
           stop: async () => calls.push('stop'),
+          /**
+           * Derives the clear result from the supplied values.
+           * @return {!Promise<*>} Promise for the asynchronous operation.
+           */
           clear: async () => calls.push('clear'),
         },
       },
     };
     const scanner = createScanner({
-      state, showModal() {
-      }, resolveCode() {
+      state,
+      /**
+       * Renders modal in the current view.
+       */
+      showModal() {
+      },
+      /**
+       * Updates the resolve code state for its caller.
+       */
+      resolveCode() {
       },
     });
     await scanner.stopScan();

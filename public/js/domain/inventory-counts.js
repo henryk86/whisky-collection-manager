@@ -1,8 +1,11 @@
 /**
- * Mutually exclusive inventory labels for the collection overview.
- * Closed is the implicit/default state: 'Standardflasche' or 'Sample'.
- * Open bottles are called out explicitly; empty bottles are not displayed.
- * Each physical bottle contributes to exactly one group.
+ * Mutually exclusive inventory labels for the collection overview. Closed is
+ * the implicit/default state: 'Standardflasche' or 'Sample'. Open bottles are
+ * called out explicitly; empty bottles are not displayed. Each physical bottle
+ * contributes to exactly one group.
+ *
+ * @param {!Array<*>} bottles Physical bottle records to include.
+ * @return {!Array<!Object>} Resulting list of values.
  */
 export function inventoryCountGroups(bottles) {
   const categories = [

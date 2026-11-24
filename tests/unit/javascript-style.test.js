@@ -5,7 +5,8 @@ import {mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {widthViolations} from '../../scripts/check-line-width.js';
-import {checkJSDoc, inspectExports, undocumentedExports} from '../../scripts/check-jsdoc.js';
+import {checkJSDoc, undocumentedExports} from '../../scripts/check-jsdoc.js';
+import {jsdocViolations} from '../../scripts/check-jsdoc-complete.js';
 import {
   separateFunctions, wrapLongStructures,
   insertTrailingCommas
@@ -111,31 +112,98 @@ test(
 
 
 test(
-  'JavaScript style: edited legacy exports cannot reuse an old exemption',
+  'JavaScript style: every export needs full JSDoc, without exceptions',
   () => {
     const directory = mkdtempSync(path.join(tmpdir(), 'wcm-jsdoc-contract-'));
     try {
       mkdirSync(path.join(directory, 'public'), {recursive: true});
-      mkdirSync(path.join(directory, 'scripts'));
-      const source = 'export const count = () => 1;\n';
-      const file = 'public/sample.js';
-      const [entry] = inspectExports(file, source);
-      writeFileSync(path.join(directory, file), source);
-      writeFileSync(path.join(directory, 'scripts/legacy.json'),
-        JSON.stringify([entry.key]));
-      writeFileSync(path.join(directory, 'scripts/signatures.json'),
-        JSON.stringify({[entry.key]: entry.signature}));
-      assert.deepEqual(checkJSDoc(directory, 'scripts/legacy.json',
-        'scripts/signatures.json').changed, []);
-      writeFileSync(path.join(directory, file),
-        'export const count = () => 2;\n');
-      assert.deepEqual(checkJSDoc(directory, 'scripts/legacy.json',
-        'scripts/signatures.json').changed, [entry.key]);
+      const filename = path.join(directory, 'public/sample.js');
+      writeFileSync(filename, 'export const count = () => 1;\n');
+      assert.deepEqual(checkJSDoc(directory).incomplete,
+        ['public/sample.js#count']);
+      writeFileSync(filename, `/**
+ * Returns the current count.
+ * @return {number} Current count.
+ */
+export const count = () => 1;
+`);
+      assert.deepEqual(checkJSDoc(directory).incomplete, []);
     } finally {
       rmSync(directory, {recursive: true, force: true});
     }
   }
 );
+
+test(
+  'JavaScript style: internal six-argument functions need complete tags',
+  () => {
+    const incomplete = `/** Computes the silhouette from the mask. */
+function silhouetteAngle(labels, id, width, height, scaleX, scaleY) {
+  return null;
+}`;
+    const issues = jsdocViolations('mask.js', incomplete);
+    assert.ok(issues.some(issue => issue.includes('expected 6 @param')));
+    assert.ok(issues.some(issue => issue.includes('typed @return')));
+  }
+);
+
+test('JavaScript style: internal declarations require JSDoc', () => {
+  const source = 'function secret(name) { return name; }';
+  assert.ok(jsdocViolations('backups.js', source)
+    .some(issue => issue.includes('missing JSDoc')));
+});
+
+test('JavaScript style: named arrows and methods require JSDoc', () => {
+  const source = `const checkToken = token => token.length > 0;
+class Example {
+  check(value) { return Boolean(value); }
+}
+const handlers = {onClose: () => false};`;
+  const issues = jsdocViolations('sample.js', source);
+  assert.equal(issues.filter(issue => issue.includes('missing JSDoc')).length,
+    3);
+});
+
+test('JavaScript style: anonymous inline callbacks need no JSDoc', () => {
+  const source = 'const result = [1, 2].map(value => value * 2);';
+  assert.deepEqual(jsdocViolations('sample.js', source), []);
+});
+
+test('JavaScript style: full internal JSDoc is valid', () => {
+  const complete = `/**
+ * Estimates the tilt of a selected connected component.
+ * @param {!Int32Array} labels Segmentation labels by pixel.
+ * @param {number} id Connected-component identifier.
+ * @param {number} width Segmentation width in pixels.
+ * @param {number} height Segmentation height in pixels.
+ * @param {number} scaleX Horizontal scale from mask to photo.
+ * @param {number} scaleY Vertical scale from mask to photo.
+ * @return {?number} Rotation in radians or null on invalid contour.
+ */
+function silhouetteAngle(labels, id, width, height, scaleX, scaleY) {
+  return null;
+}`;
+  assert.deepEqual(jsdocViolations('mask.js', complete), []);
+});
+
+test('JavaScript style: documented local arrows also need complete JSDoc',
+  () => {
+    const source = `/** Sorts photo IDs for persistence. */
+const reorder = (ids, photoId) => ids.slice();`;
+    assert.ok(jsdocViolations('photo-order.js', source)
+      .some(issue => issue.includes('expected 2 @param')));
+  });
+
+test('JavaScript style: @returns is rejected for Google-style @return',
+  () => {
+    const source = `/**
+ * Returns the number of active sessions.
+ * @returns {number} Session count.
+ */
+function count() { return 1; }`;
+    assert.ok(jsdocViolations('sessions.js', source)
+      .some(issue => issue.includes('not @returns')));
+  });
 
 test(
   'JavaScript style: splits long object entries without altering strings',

@@ -3,6 +3,12 @@ import {panel, detailField, detailGrid, emptyState, divider, actionToolbar, docu
 import {latestTasting} from '../../../shared/tasting-records.js';
 import {displayPhotoPath} from '../../../shared/photo-images.js';
 import {t} from '../i18n/index.js';
+/**
+ * Derives the bottle status text result from the supplied values.
+ *
+ * @param {*} status Status value determining the next action.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const bottleStatusText = status => t(({
   closed: 'home.status.closed',
   open: 'analytics.inventory.openedStatus',
@@ -27,6 +33,12 @@ const FACT_KEYS = Object.freeze({
   'Limitierte Auflage': 'detail.facts.labelLimitedEdition',
   'Whiskybase-ID': 'forms.bottling.whiskybaseId',
 });
+/**
+ * Derives the fact label result from the supplied values.
+ *
+ * @param {*} label Label shown to the user.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
 import {escapeHtml} from '../ui/dom.js';
 import {editIcon, deleteIcon, arrowDownIcon, locationIcon, newBottlingIcon, addActionLabel, closeIcon, arrowLeftIcon, arrowRightIcon, gripIcon, sparkleIcon} from '../ui/action-icons.js';
@@ -43,8 +55,17 @@ import {bottlingDetails, hasBottlingDetail} from '../domain/bottling-details.js'
 import {bottlingOriginLabel} from '../domain/bottling-origin.js';
 import {bottlingDistilleryIds} from '../domain/bottling-map-focus.js';
 import {storagePath} from './warehouse.js';
+/**
+ * Creates detail view for detail.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createDetailView({state, selectors, shell, navigate, action}) {
   const {bottles, coverPhoto, distilleryNames} = selectors;
+  /**
+   * Selects and transforms the detail records.
+   */
   function detail() {
     const bottling = state.collection.bottlings.find(entry => entry.id ===
       state.selected);
@@ -343,8 +364,15 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
     </div>`);
     attachPhotoSorting(action);
   }
-  /** Delegated from events.js. Upload inputs may survive a partial re-render,
-   * so they must never receive per-render listeners (duplicate uploads). */
+  /**
+   * Handles a file or photo upload from the delegated change event.
+   *
+   * Upload inputs can survive a partial rerender, so the handler must not
+   * attach per-render listeners that would upload the same files twice.
+   *
+   * @param {!Event} event Change event from the upload input.
+   * @return {!Promise<boolean>} Whether the event was handled successfully.
+   */
   detail.handleUploadChange = async function handleUploadChange(event) {
     const input = event.target;
     if (input.matches?.('input[data-bottle-files]')) {

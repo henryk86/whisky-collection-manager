@@ -24,6 +24,13 @@ before(async () => {
 after(async () => {
   await browser?.close();
 });
+/**
+ * Controls app for support.
+ *
+ * @param {*} page Page used by this operation.
+ * @param {*} base Base used by this operation.
+ * @param {!Object=} options Optional configuration for the operation.
+ */
 async function openApp(page, base, options = {}) {
   // Locale overrides apply to real Chromium navigation as well as the DOM-only
   // harness.
@@ -103,6 +110,12 @@ async function openApp(page, base, options = {}) {
   await page.locator('.site-header').waitFor({state: 'visible'});
 }
 
+/**
+ * Creates an isolated browser session for a functional scenario.
+ *
+ * @param {Function} callback Callback invoked by this operation.
+ * @param {*=} activeBrowser Active browser used by this operation.
+ */
 export async function session(callback, activeBrowser = browser) {
   const server = await startTestServer();
   const context = await activeBrowser.newContext({
@@ -115,7 +128,14 @@ export async function session(callback, activeBrowser = browser) {
   page.on('pageerror', error => errors.push(error.message));
   try {
     await callback({
-      ...server, page, open: options => openApp(page, server.base, options),
+      ...server, page,
+      /**
+       * Performs the open lifecycle action.
+       *
+       * @param {*} options Options controlling the operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
+      open: options => openApp(page, server.base, options),
     });
     assert.deepEqual(errors, [], 'Unexpected browser errors');
   }
@@ -133,6 +153,11 @@ export async function session(callback, activeBrowser = browser) {
   }
 }
 
+/**
+ * Controls settings from menu for support.
+ *
+ * @param {*} page Page used by this operation.
+ */
 export async function openSettingsFromMenu(page) {
   await page.locator('header [data-act="toggle-menu"]').click();
   await page.locator('#site-drawer [data-act="goto-settings-menu"]').click();
@@ -144,6 +169,12 @@ export async function openSettingsFromMenu(page) {
 // one.
 // Use the same desktop navigation/mobile selector as a real user.
 
+/**
+ * Controls settings section for support.
+ *
+ * @param {*} page Page used by this operation.
+ * @param {string} id Identifier used to select the relevant record.
+ */
 export async function openSettingsSection(page, id) {
   const desktop = page.locator(`.settings-page .section-nav-desktop [data-settings-section="${id}"]`);
   if (await desktop.isVisible()) await desktop.click();
@@ -153,6 +184,13 @@ export async function openSettingsSection(page, id) {
     .waitFor({state: 'visible'});
 }
 
+/**
+ * Initializes a test collection and its warehouse fixtures.
+ *
+ * @param {*} base Base used by this operation.
+ * @param {string=} number Number used by this operation.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export async function seed(base, number = '000123') {
   const result = await requestJson(base, '/api/bottlings', 'POST', {
     name: 'Browser Test Blend',
@@ -167,6 +205,11 @@ export async function seed(base, number = '000123') {
   return result.data;
 }
 
+/**
+ * Installs a deterministic barcode decoder for browser tests.
+ *
+ * @param {*} page Page used by this operation.
+ */
 export async function mockDecoder(page) {
   await page.evaluate(() => {
     Object.defineProperty(window, 'isSecureContext', {
@@ -175,6 +218,9 @@ export async function mockDecoder(page) {
     if (!navigator.mediaDevices?.getUserMedia) {
       Object.defineProperty(navigator, 'mediaDevices', {
         configurable: true, value: {
+          /**
+           * Retrieves user media from the available state.
+           */
           getUserMedia() {
           },
         },
@@ -185,14 +231,29 @@ export async function mockDecoder(page) {
     };
     window.__stopped = 0;
     window.Html5Qrcode = class {
+      /**
+       * Performs the start lifecycle action.
+       *
+       * @param {*} camera Value used by this operation.
+       * @param {*} options Options controlling the operation.
+       * @param {*} decoded Value used by this operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       async start(camera, options, decoded) {
         window.__decoded = decoded;
       }
 
+      /**
+       * Performs the stop lifecycle action.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       async stop() {
         window.__stopped++;
       }
 
+      /**
+       * Updates the clear state for its caller.
+       */
       clear() {
       }
     };

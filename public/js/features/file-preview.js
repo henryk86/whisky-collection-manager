@@ -6,6 +6,9 @@ import {httpResponseError} from '../api.js';
 /**
  * Browsers can preview these file types without uploading data to an external
  * service.
+ *
+ * @param {string} name Name of the item.
+ * @return {!Object} Structured result for the caller.
  */
 export function documentPreviewKind(name) {
   const ext = String(name || '').split('.').pop()?.toLowerCase();
@@ -23,17 +26,30 @@ export function documentPreviewKind(name) {
   return {kind: 'unsupported', type: null};
 }
 
-/** Preview binary attachments from the existing authenticated download endpoint.
- * Object URLs are revoked when the application closes the modal. */
+/**
+ * Preview binary attachments from the existing authenticated download
+ * endpoint. Object URLs are revoked when the application closes the modal.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createFilePreview({modal, state}) {
   let blobUrl = null;
   let sequence = 0;
+  /**
+   * Performs the close lifecycle action.
+   */
   function close() {
     sequence++;
     if (blobUrl) URL.revokeObjectURL(blobUrl);
     blobUrl = null;
   }
 
+  /**
+   * Controls the file preview state.
+   *
+   * @param {*} button Button used by this operation.
+   */
   async function open(button) {
     close();
     const token = sequence;

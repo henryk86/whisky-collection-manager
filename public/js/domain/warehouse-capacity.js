@@ -1,6 +1,11 @@
-/** Capacity is expressed in physical bottle slots, never litres or floor area.
+/**
+ * Capacity is expressed in physical bottle slots, never litres or floor area.
  * Shelves without a configured maximum are tracked separately: their total
  * physical capacity cannot be inferred from the data.
+ *
+ * @param {*} room Room model containing dimensions and furniture.
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @return {!Object} Structured result for the caller.
  */
 export function roomCapacity(room, warehouse) {
   const shelves = (room?.furniture || []).flatMap(furniture =>
@@ -24,6 +29,12 @@ export function roomCapacity(room, warehouse) {
   };
 }
 
+/**
+ * Counts the bottle positions available in a warehouse layout.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @return {*} Combined value obtained from the entries.
+ */
 export function totalCapacity(warehouse) {
   return (warehouse?.rooms || []).reduce((total, room) => {
     const value = roomCapacity(room, warehouse);
@@ -35,6 +46,12 @@ export function totalCapacity(warehouse) {
   }, {occupied: 0, defined: 0, unlimited: 0, shelves: 0});
 }
 
+/**
+ * Formats a shelf or furniture capacity for the interface.
+ *
+ * @param {*} summary Summary used by this operation.
+ * @return {string} Resulting text.
+ */
 export function capacityLabel(summary) {
   if (summary.shelves === 0) return 'Noch keine Fächer';
   if (summary.unlimited === 0) return `${summary.defined} Plätze`;

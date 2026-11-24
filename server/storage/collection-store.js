@@ -15,7 +15,7 @@ const seedFile = new URL('../../seed/distillery.json', import.meta.url);
  * Creates the initial schema-6 collection with curated distilleries.
  *
  * @return {import('../../shared/types.js').Collection} New collection state;
- *     the seed catalog is loaded from disk.
+ * the seed catalog is loaded from disk.
  */
 export const empty = () => ({
   schemaVersion: 6,
@@ -33,6 +33,10 @@ export const empty = () => ({
 let cached = null;
 let cachedIdentity = null;
 let revision = crypto.randomUUID();
+/**
+ * Produces the identity text used by the caller.
+ * @return {string} Resulting text.
+ */
 const identity = () => {
   const {dev, ino, size, mtimeMs, ctimeMs} = fs.statSync(DATA_FILE);
   return `${dev}:${ino}:${size}:${mtimeMs}:${ctimeMs}`;
@@ -40,7 +44,6 @@ const identity = () => {
 
 /**
  * Invalidates cached collection data after a restore or file replacement.
- *
  * The next read revalidates the on-disk collection and refreshes its ETag.
  */
 export function invalidateCollectionCache() {
@@ -49,6 +52,9 @@ export function invalidateCollectionCache() {
   revision = crypto.randomUUID();
 }
 
+/**
+ * Retrieves current from the available state.
+ */
 function loadCurrent() {
   const current = identity();
   if (cached === null || cachedIdentity !== current) {
@@ -71,7 +77,6 @@ export function collectionETag() {
 
 /**
  * Initializes storage and validates or migrates the collection file.
- *
  * Creates required directories and a pre-migration backup when necessary.
  * Throws if validation or a safe backup fails.
  */
@@ -125,11 +130,11 @@ export function read() {
 
 /**
  * Validates and atomically replaces the persisted collection file.
+ * Writes via a temporary file and rename; refreshes cache and revision only on
+ * success.
  *
- * Writes via a temporary file and rename; refreshes cache and revision only
- * on success.
- *
- * @param {import('../../shared/types.js').Collection} value Complete new state.
+ * @param {import('../../shared/types.js').Collection} value Complete new
+ * state.
  * @throws {Error} If validation or the atomic file write fails.
  */
 export function atomicWrite(value) {

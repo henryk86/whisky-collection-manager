@@ -8,7 +8,13 @@ test(
   () => {
     const form = createBottlingForm({
       state: {collection: {distilleries: []}},
-      selectors: {distilleryIds: () => []},
+      selectors: {
+        /**
+         * Derives the distillery ids result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
+        distilleryIds: () => [],
+      },
     });
     for (const bottling of [{}, {id: 'existing', name: 'Example whisky'}]) {
       const html = form(bottling);

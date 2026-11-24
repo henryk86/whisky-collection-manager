@@ -9,7 +9,12 @@ const MEAN = [0.485, 0.456, 0.406];
 const STD = [0.229, 0.224, 0.225];
 let inferenceSession;
 
-/** NCHW float32, RGB in [0,1], ImageNet normalization used by U2Netp. */
+/**
+ * NCHW float32, RGB in [0,1], ImageNet normalization used by U2Netp.
+ *
+ * @param {*} imageData Image data used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function modelInput(imageData) {
   if (!imageData || imageData.width !== MODEL_SIZE || imageData.height !==
     MODEL_SIZE)
@@ -25,7 +30,12 @@ export function modelInput(imageData) {
   return data;
 }
 
-/** U2Netp output d0 is normalized like rembg and interpreted as alpha. */
+/**
+ * U2Netp output d0 is normalized like rembg and interpreted as alpha.
+ *
+ * @param {*} raw Raw used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function normalizedMask(raw) {
   if (!raw || raw.length <
     PIXELS) throw new Error(t('errors.cutout.invalidModelMask'));
@@ -43,6 +53,10 @@ export function normalizedMask(raw) {
   return mask;
 }
 
+/**
+ * Validates the session state and rejects invalid inputs.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function session() {
   if (!inferenceSession) {
     inferenceSession = (async () => {
@@ -66,6 +80,12 @@ async function session() {
   return inferenceSession;
 }
 
+/**
+ * Runs bottle segmentation and normalizes the resulting mask.
+ *
+ * @param {*} imageData Image data used by this operation.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function segment(imageData) {
   const {ort, engine} = await session();
   const inputName = engine.inputNames[0];

@@ -25,9 +25,15 @@ import {findWarehouseBottles} from '../domain/warehouse-finder.js';
 import {renderWarehouseFinder, renderWarehouseFinderResults} from './warehouse-finder.js';
 import {FRONT_KEYS, CAMERA_KEYS, ROOM_SECTION_KEYS, typeChoices, typeName, num, capacityLabel, safe, count, field, choices, footer, bottleLabel, bottlePreview, roomOptions, storagePath, findFurniture, roomDiagram, shelfPanel} from './warehouse-presentation.js';
 export {storagePath} from './warehouse-presentation.js';
+/**
+ * Registers bottle photos behavior.
+ */
 function attachBottlePhotos() {
   if (typeof document === 'undefined' || !document.querySelectorAll) return;
   document.querySelectorAll('.warehouse-bottle-photo').forEach(img => {
+    /**
+     * Renders if loaded in the current view.
+     */
     const showIfLoaded = () => {
       if (img.naturalWidth >
         0) img.parentElement?.classList.add('has-photo');
@@ -37,6 +43,12 @@ function attachBottlePhotos() {
   });
 }
 
+/**
+ * Creates warehouse view for warehouse.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createWarehouseView({state, shell, navigate, modal, refresh}) {
   let pendingDelete = null;
   let threeHandle = null;
@@ -50,6 +62,9 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
   // The page is rebuilt after each successful relocation; remember the
   // *horizontal* wall viewport independently from the document scroll.
   const wallScrollByRoom = new Map();
+  /**
+   * Derives the remember wall scroll numeric value from its input.
+   */
   function rememberWallScroll() {
     const viewport = typeof document === 'undefined' ? null :
       document.querySelector?.('.warehouse-wall-scroll');
@@ -58,6 +73,9 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     }
   }
 
+  /**
+   * Updates element attributes used by restore wall scroll.
+   */
   function restoreWallScroll() {
     const viewport = typeof document === 'undefined' ? null :
       document.querySelector?.('.warehouse-wall-scroll');
@@ -73,20 +91,50 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
       });
   }
 
+  /**
+   * Derives the w result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const w = () => state.warehouse;
   const roomTransfer = createWarehouseRoomTransfer({modal, request, getWarehouse: w, refresh, toast});
+  /**
+   * Derives the current room result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const currentRoom = () => roomOptions(w(), state.warehouseRoomId) || w()
     .rooms[0];
 
+  /**
+   * Derives the current furniture result from the supplied values.
+   *
+   * @param {*} room Warehouse room being inspected or modified.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const currentFurniture = room => room?.furniture.find(f => f.id ===
     state.warehouseFurnitureId);
 
+  /**
+   * Filters records according to the selected furniture selection rules.
+   *
+   * @param {*} room Warehouse room being inspected or modified.
+   * @return {*} Entries that meet the selection criteria.
+   */
   const selectedFurniture = room => (state.warehouseSelectedFurnitureIds ||
     []).filter(id => room?.furniture.some(f => f.id === id));
 
+  /**
+   * Filters records according to the selected bottle ids selection rules.
+   * @return {*} Entries that meet the selection criteria.
+   */
   const selectedBottleIds = () => (state.warehouseSelectedBottleIds || [])
     .filter(id => w()?.bottles?.some(b => b.id === id));
 
+  /**
+   * Builds the localized bottle selection tools text for the current language.
+   *
+   * @param {boolean=} withAll Value used by this operation.
+   * @return {string} Resulting text.
+   */
   const bottleSelectionTools = (withAll = false) => {
     const total = selectedBottleIds().length;
     return `<div class="warehouse-bottle-bulk-tools" aria-label="${safe(t('warehouse.bottles.bulkTools'))}">
@@ -97,6 +145,9 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
         </div>`;
   };
 
+  /**
+   * Builds the localized sync bottle selection text for the current language.
+   */
   function syncBottleSelection() {
     const selected = new Set(selectedBottleIds());
     document.querySelectorAll('.warehouse-bottle-check').forEach(input => {
@@ -127,6 +178,12 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     });
   }
 
+  /**
+   * Derives the toggle bottle selection result from the supplied values.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {*} checked Value used by this operation.
+   */
   function toggleBottleSelection(id, checked) {
     if (!w()?.bottles?.some(bottle => bottle.id === id)) return;
     const ids = new Set(selectedBottleIds());
@@ -135,6 +192,9 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     syncBottleSelection();
   }
 
+  /**
+   * Performs the refresh unassigned tray lifecycle action.
+   */
   function refreshUnassignedTray() {
     const results = typeof document === 'undefined' ? null :
       document.querySelector?.('.warehouse-unassigned-results');
@@ -164,12 +224,22 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     syncBottleSelection();
   }
 
+  /**
+   * Updates unassigned wall search in the current state.
+   *
+   * @param {*} query Search query or filter conditions.
+   */
   function setUnassignedWallSearch(query) {
     unassignedWallQuery = String(query ?? '');
     unassignedWallPageNumber = 1;
     refreshUnassignedTray();
   }
 
+  /**
+   * Calculates the step unassigned wall page numeric value.
+   *
+   * @param {*} delta Value used by this operation.
+   */
   function stepUnassignedWallPage(delta) {
     const data = unassignedWallPage(
       w(),
@@ -180,10 +250,18 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     refreshUnassignedTray();
   }
 
+  /**
+   * Updates the toggle wall bottle selection state for its caller.
+   *
+   * @param {*} id Identifier of the affected record.
+   */
   function toggleWallBottleSelection(id) {
     toggleBottleSelection(id, !selectedBottleIds().includes(id));
   }
 
+  /**
+   * Derives the preview selected bottle result from the supplied values.
+   */
   function previewSelectedBottle() {
     if (selectedBottleIds().length !== 1) return;
     const id = selectedBottleIds()[0];
@@ -191,23 +269,37 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     openBottlePreview(id);
   }
 
+  /**
+   * Removes or resets bottle selection.
+   */
   function clearBottleSelection() {
     state.warehouseSelectedBottleIds = [];
     syncBottleSelection();
   }
 
+  /**
+   * Selects all bottles matching the input.
+   */
   function selectAllBottles() {
     state.warehouseSelectedBottleIds = [...new Set([...selectedBottleIds(),
     ...[...document.querySelectorAll('.warehouse-bottle-row:not([hidden]) .warehouse-bottle-check')].map(input => input.dataset.id)])];
     syncBottleSelection();
   }
 
+  /**
+   * Builds the localized assign selected bottles text for the current language.
+      * @return {*} Result of this expression.
+*/
   function assignSelectedBottles() {
     if (!selectedBottleIds()
       .length) return toast(t('warehouse.bottles.bulkNothingSelected'), true);
     openForm('assign-bulk');
   }
 
+  /**
+   * Derives the finder results result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   function finderResults() {
     const result = findWarehouseBottles(w(), {
       query: state.warehouseSearch || '',
@@ -218,18 +310,31 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     return result;
   }
 
+  /**
+   * Performs the refresh finder results lifecycle action.
+   */
   function refreshFinderResults() {
     const host = typeof document === 'undefined' ? null :
       document.querySelector?.('.warehouse-finder-results');
     if (host) host.innerHTML = renderWarehouseFinderResults(finderResults());
   }
 
+  /**
+   * Updates finder query in the current state.
+   *
+   * @param {*} value Value to process.
+   */
   function setFinderQuery(value) {
     state.warehouseSearch = String(value ?? '');
     state.warehouseFinderPage = 1;
     refreshFinderResults();
   }
 
+  /**
+   * Updates finder placement in the current state.
+   *
+   * @param {*} value Value to process.
+   */
   function setFinderPlacement(value) {
     if (!['all', 'assigned', 'unassigned'].includes(value)) return;
     state.warehouseFinderPlacement = value;
@@ -237,11 +342,23 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     refreshFinderResults();
   }
 
+  /**
+   * Updates the step finder page state for its caller.
+   *
+   * @param {*} delta Value used by this operation.
+   */
   function stepFinderPage(delta) {
     state.warehouseFinderPage = (state.warehouseFinderPage || 1) + delta;
     refreshFinderResults();
   }
 
+  /**
+   * Renders bottle location in the current view.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {!Object=} options Options controlling the operation.
+      * @return {*} Result of this expression.
+*/
   function showBottleLocation(id, {returnToBottlingId = null, returnToFlightId = null} = {}) {
     const bottle = w()?.bottles?.find(item => item.id === id);
     const place = bottle ? storagePath(w(), w().assignments?.[id]) : null;
@@ -256,6 +373,9 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     navigate('warehouse', 'shelves');
   }
 
+  /**
+   * Removes or resets find focus.
+   */
   function clearFindFocus() {
     // Close the finder banner without navigating or rebuilding the shelf wall:
     // scrolling, bottle selections and in-progress interactions stay intact.
@@ -272,6 +392,9 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
         .remove('is-find-focus', 'is-find-dimmed'));
   }
 
+  /**
+   * Updates element attributes used by return to finder.
+   */
   function returnToFinder() {
     const id = state.warehouseFindFocusBottleId;
     const bottlingId = state.warehouseFindReturnBottlingId;
@@ -304,6 +427,9 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
       });
   }
 
+  /**
+   * Controls to found bottle for warehouse.
+   */
   function scrollToFoundBottle() {
     if (!pendingFindFocusScroll || typeof document === 'undefined') return;
     pendingFindFocusScroll = false;
@@ -326,6 +452,13 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     });
   }
 
+  /**
+   * Aggregates input values for the selection panel calculation.
+   *
+   * @param {*} room Warehouse room being inspected or modified.
+   * @param {!Object=} options Options controlling the operation.
+   * @return {string} Resulting text.
+   */
   function selectionPanel(room, {isolate = false, compact = false, layoutOnly = false} = {}) {
     if (!room.furniture.length) return `<p class="hint">${t("warehouse.rooms.noFurniture")}</p>`;
     const selected = new Set(selectedFurniture(room));
@@ -378,6 +511,12 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
         </section>`;
   }
 
+  /**
+   * Updates furniture visibility in the current state.
+   *
+   * @param {*} furniture Warehouse furniture record being modified.
+   * @param {*} visible Value used by this operation.
+   */
   function setFurnitureVisibility(furniture, visible) {
     for (const button of document.querySelectorAll('.warehouse-bulk-visibility')) {
       if (button.dataset.id !== furniture.id) continue;
@@ -400,12 +539,23 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     threeHandle?.setFurnitureVisible?.(furniture.id, visible);
   }
 
+  /**
+   * Updates show all button in the current state.
+   *
+   * @param {*} room Warehouse room being inspected or modified.
+   */
   function updateShowAllButton(room) {
     const button = document.querySelector?.('.warehouse-show-all');
     if (button) button.disabled = !room.furniture.some(item =>
       (state.warehouseHiddenFurnitureIds || []).includes(item.id));
   }
 
+  /**
+   * Derives the toggle furniture visibility result from the supplied values.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   function toggleFurnitureVisibility(id) {
     const room = currentRoom();
     const furniture = room?.furniture.find(item => item.id === id);
@@ -419,6 +569,10 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     return visible;
   }
 
+  /**
+   * Renders all furniture in the current view.
+   * @return {*} Entries that meet the selection criteria.
+   */
   function showAllFurniture() {
     const room = currentRoom();
     if (!room) return 0;
@@ -433,6 +587,11 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     return hiddenHere.length;
   }
 
+  /**
+   * Updates the DOM elements managed by sync bulk controls.
+   *
+   * @param {*=} room Warehouse room being inspected or modified.
+   */
   function syncBulkControls(room = currentRoom()) {
     const count = selectedFurniture(room).length;
     const label = document.querySelector('.warehouse-bulk-count');
@@ -462,6 +621,12 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     });
   }
 
+  /**
+   * Derives the toggle furniture selection result from the supplied values.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {*} checked Value used by this operation.
+   */
   function toggleFurnitureSelection(id, checked) {
     const room = currentRoom();
     if (!room?.furniture.some(item => item.id === id)) return;
@@ -471,6 +636,11 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     syncBulkControls(room);
   }
 
+  /**
+   * Updates the toggle furniture bulk selection state for its caller.
+   *
+   * @param {*} id Identifier of the affected record.
+   */
   function toggleFurnitureBulkSelection(id) {
     toggleFurnitureSelection(
       id,
@@ -478,6 +648,9 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     );
   }
 
+  /**
+   * Selects all furniture matching the input.
+   */
   function selectAllFurniture() {
     const room = currentRoom();
     if (!room) return;
@@ -485,11 +658,19 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     syncBulkControls(room);
   }
 
+  /**
+   * Removes or resets furniture selection.
+   */
   function clearFurnitureSelection() {
     state.warehouseSelectedFurnitureIds = [];
     syncBulkControls();
   }
 
+  /**
+   * Renders the warehouse state.
+   *
+   * @return {*} Structured result assembled from the input data.
+   */
   function render() {
     rememberWallScroll();
     unmountBottleDrag?.();
@@ -694,8 +875,19 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
       if (panel) unmountBottleDrag = mountWarehouseBottleDrag(panel, {
         getWarehouse: w,
         onDrop: relocateBottle,
+        /**
+         * Retrieves dragged ids from the available state.
+         *
+         * @param {*} bottleId Value used by this operation.
+         * @return {*} Whether the requested condition is met.
+         */
         getDraggedIds: bottleId => selectedBottleIds().includes(bottleId) ?
           selectedBottleIds() : [bottleId],
+        /**
+         * Handles the invalid drop interaction.
+         *
+         * @param {*} reason Value used by this operation.
+         */
         onInvalidDrop: reason => {
           if (reason === 'full') toast(t('warehouse.shelves.dragFull'), true);
         },
@@ -749,6 +941,11 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     if (section === 'shelves') scrollToFoundBottle();
   }
 
+  /**
+   * Registers furniture hover for warehouse.
+   *
+   * @param {*} withPlan With plan used by this operation.
+   */
   function attachFurnitureHover(withPlan) {
     // The list is re-created on render; keep hover handlers local to its
     // lifetime.
@@ -756,6 +953,11 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     // WebGL rebuild.
     const list = document.querySelector('.warehouse-bulk-list');
     if (!list?.querySelectorAll) return;
+    /**
+     * Updates element attributes used by highlight.
+     *
+     * @param {*} id Identifier of the affected record.
+     */
     function highlight(id) {
       if (withPlan) {
         threeHandle?.setHighlightedFurniture?.(id);
@@ -776,9 +978,28 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     }
   }
 
+  /**
+   * Derives the update3dzoom result from the supplied values.
+   *
+   * @param {*} value Value to process.
+   * @return {*} Result computed from the supplied inputs.
+   */
   function update3DZoom(value) {return threeHandle?.setZoom(value) ?? false;}
 
+  /**
+   * Builds the localized door range row text for the current language.
+   *
+   * @param {!Object=} range Value used by this operation.
+   * @param {number=} count Number of requested or available entries.
+   * @return {string} Resulting text.
+   */
   function doorRangeRow(range = {}, count = 0) {
+    /**
+     * Builds the localized opts text for the current language.
+     *
+     * @param {*} chosen Value used by this operation.
+     * @return {string} Resulting text.
+     */
     const opts = (chosen) => Array.from(
       {length: count},
       (_, i) => `<option value="${i + 1}" ${chosen === i + 1 ?
@@ -798,9 +1019,12 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
   }
 
   /**
-   * The single-furniture dialog deliberately has no navigation or bulk
-   * selection.
-   */
+ * The single-furniture dialog deliberately has no navigation or bulk
+ * selection.
+ *
+ * @param {string=} id Identifier used to select the relevant record.
+ * @return {boolean} Whether the condition is satisfied.
+ */
   function openFurnitureManager(id = state.warehouseFurnitureId) {
     const data = w();
     const found = id ? findFurniture(data, id) : null;
@@ -816,7 +1040,11 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     return true;
   }
 
-  /** Batch changes are a separate workflow, never part of the shelf editor. */
+  /**
+ * Batch changes are a separate workflow, never part of the shelf editor.
+ *
+ * @return {boolean} Whether the condition is satisfied.
+ */
   function openFurnitureBulkManager() {
     const room = currentRoom();
     if (!room) return false;
@@ -828,6 +1056,12 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     return true;
   }
 
+  /**
+   * Performs the open shelf details lifecycle action.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @return {*} Whether the required condition is satisfied.
+   */
   function openShelfDetails(id) {
     const contents = shelfContents(w(), id, state.collection?.bottlings);
     if (!contents) return toast(t('warehouse.shelves.notFound'), true);
@@ -837,15 +1071,26 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     return true;
   }
 
-  /** In the 3D room plan, only occupied bays open the existing shelf modal.
-   * In particular, this must neither navigate nor open furniture editing.
-   */
+  /**
+ * In the 3D room plan, only occupied bays open the existing shelf modal. In
+ * particular, this must neither navigate nor open furniture editing.
+ *
+ * @param {string} id Identifier used to select the relevant record.
+ * @return {(boolean|void)} Result of the open occupied shelf details
+ * operation.
+ */
   function openOccupiedShelfDetails(id) {
     const contents = shelfContents(w(), id, state.collection?.bottlings);
     if (!contents || contents.unavailable || contents.count === 0) return false;
     return openShelfDetails(id);
   }
 
+  /**
+   * Performs the open bottle preview lifecycle action.
+   *
+   * @param {*} id Identifier of the affected record.
+      * @return {*} Result of this expression.
+*/
   function openBottlePreview(id) {
     const bottle = w()?.bottles.find(entry => entry.id === id);
     if (!bottle) return toast(t('features.errors.bottleNotFound'), true);
@@ -859,6 +1104,14 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     );
   }
 
+  /**
+   * Controls form for warehouse.
+   *
+   * @param {string} kind Resource kind selecting the relevant schema.
+   * @param {string} id Identifier used to select the relevant record.
+   * @param {!Object=} options3 Destructured options for this operation.
+   * @return {void} Structured result assembled from the input data.
+   */
   function openForm(kind, id, {replaceCurrent = false} = {}) {
     const data = w();
     let endpoint = '', method = 'POST', title = '', fields =
@@ -980,9 +1233,23 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
       if (!ids.length) return toast(t("warehouse.validation.selectFurnitureFirst"), true);
       title = t("warehouse.bulk.editTitle", {count: ids.length});
       endpoint = '/api/warehouse/furniture/bulk'; method = 'PATCH';
+      /**
+       * Produces the bulk field text used by the caller.
+       *
+       * @param {*} control Value used by this operation.
+       * @return {string} Resulting text.
+       */
       const bulkField = (control) =>
         `<div class="warehouse-bulk-field">${control}</div>`;
 
+      /**
+       * Builds the localized optional number text for the current language.
+       *
+       * @param {*} key Key used to select or group values.
+       * @param {*} label Label shown to the user.
+       * @param {*} constraints Value used by this operation.
+       * @return {string} Resulting text.
+       */
       const optionalNumber = (key, label, constraints) =>
         `<label class="form-field">${safe(label)}<input type="number" name="${key}" placeholder="${t("warehouse.fields.unchanged")}" ${constraints}></label>`;
       fields = `<p class="hint warehouse-copy-hint">${t(
@@ -1195,6 +1462,12 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     });
   }
 
+  /**
+   * Locates the DOM elements used by switch shelf.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function switchShelf(id) {
     if (!id) return;
     const form = document.querySelector('#warehouse-form[data-endpoint^="/api/warehouse/shelves/"]');
@@ -1210,7 +1483,12 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
       ]);
       if (answer === 'cancel') return;
       if (answer === 'save') {
-        if (!(await submit({preventDefault() {}, target: form}))) return;
+        if (!(await submit({
+          /**
+           * Updates the prevent default state for its caller.
+           */
+          preventDefault() {}, target: form,
+        }))) return;
         openForm('shelf', id); // previous form is already closed by submit
         return;
       }
@@ -1218,6 +1496,9 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     openForm('shelf', id, {replaceCurrent: true});
   }
 
+  /**
+   * Performs the refresh furniture modal lifecycle action.
+   */
   function refreshFurnitureModal() {
     const manager = document.querySelector('#modal-root .warehouse-furniture-manager');
     if (!manager) return;
@@ -1227,6 +1508,13 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     attachBottlePhotos();
   }
 
+  /**
+   * Serializes upload furniture photos data to JSON.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {*} files Value used by this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function uploadFurniturePhotos(id, files) {
     if (!files.length) return;
     try {
@@ -1240,6 +1528,14 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     } catch (error) {toast(error.message, true); await refresh(); refreshFurnitureModal();}
   }
 
+  /**
+   * Serializes move furniture photo data to JSON.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {*} photoId Value used by this operation.
+   * @param {*} direction Direction used for traversal or movement.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function moveFurniturePhoto(id, photoId, direction) {
     const found = findFurniture(w(), id); if (!found) return;
     const order = (found.furniture.photos || []).map(photo => photo.id);
@@ -1257,6 +1553,12 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     } catch (error) {toast(error.message, true);}
   }
 
+  /**
+   * Performs the open furniture photo lifecycle action.
+   *
+   * @param {*} path Path to the target resource.
+   * @param {*} title Title displayed or stored by this operation.
+   */
   function openFurniturePhoto(path, title) {
     if (!/^images\/[\w-]+\/furniture-[\w-]+\.(?:jpg|png|webp|gif)$/
       .test(path)) return;
@@ -1267,6 +1569,13 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     );
   }
 
+  /**
+   * Removes or resets furniture photo.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {*} photoId Value used by this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function deleteFurniturePhoto(id, photoId) {
     if (!await modal.confirm(
       t('warehouse.photos.remove'),
@@ -1282,6 +1591,14 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     } catch (error) {toast(error.message, true);}
   }
 
+  /**
+   * Builds the localized approve capacity increase text for the current
+   * language.
+   *
+   * @param {*} ids Identifiers in their current order.
+   * @param {*} shelfId Value used by this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   const approveCapacityIncrease = (ids, shelfId) =>
     approveShelfCapacityIncrease(
       w(),
@@ -1294,6 +1611,12 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
       )
     );
 
+  /**
+   * Performs the submit lifecycle action.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function submit(event) {
     event.preventDefault();
     const form = event.target;
@@ -1427,6 +1750,13 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     catch (err) {toast(err.message, true);}
   }
 
+  /**
+   * Serializes relocate bottle data to JSON.
+   *
+   * @param {*} bottleId Value used by this operation.
+   * @param {*} shelfId Value used by this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function relocateBottle(bottleId, shelfId) {
     const ids = Array.isArray(bottleId) ? bottleId : [bottleId];
     let approval;
@@ -1465,6 +1795,13 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     }
   }
 
+  /**
+   * Serializes move shelf data to JSON.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {*} direction Direction used for traversal or movement.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function moveShelf(id, direction) {
     try {
       await request(
@@ -1475,6 +1812,10 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     } catch (error) {toast(error.message, true);}
   }
 
+  /**
+   * Transforms the entries used by ask bulk delete.
+      * @return {*} Result of this expression.
+*/
   function askBulkDelete() {
     const room = currentRoom();
     const ids = selectedFurniture(room);
@@ -1491,6 +1832,12 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     );
   }
 
+  /**
+   * Selects and transforms the ask delete records.
+   *
+   * @param {*} kind Value used by this operation.
+   * @param {*} id Identifier of the affected record.
+   */
   function askDelete(kind, id) {
     const endpoints = {
       room: `/api/warehouse/rooms/${id}`,
@@ -1542,6 +1889,11 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     );
   }
 
+  /**
+   * Clears confirmed for warehouse.
+   *
+   * @param {boolean=} unassignBottles Unassign bottles used by this operation.
+   */
   async function deleteConfirmed(unassignBottles = false) {
     if (!pendingDelete) return;
     const target = pendingDelete;
@@ -1566,8 +1918,19 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     } catch (err) {toast(err.message, true);}
   }
 
+  /**
+   * Selects room matching the input.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {string=} section Value used by this operation.
+   */
   function selectRoom(id, section = 'rooms') {state.warehouseSelectedFurnitureIds = []; state.warehouseRoomId = id; state.warehouseFurnitureId = null; navigate('warehouse', section);}
 
+  /**
+   * Derives the edit furniture from plan result from the supplied values.
+   *
+   * @param {*} id Identifier of the affected record.
+   */
   function editFurnitureFromPlan(id) {
     const found = findFurniture(w(), id);
     if (!found) return;
@@ -1577,6 +1940,11 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     openForm('furniture', id);
   }
 
+  /**
+   * Retrieves furniture for warehouse.
+   *
+   * @param {string} id Identifier used to select the relevant record.
+   */
   function selectFurniture(id) {
     const found = findFurniture(w(), id);
     if (!found) return;
@@ -1601,8 +1969,14 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
   // Backwards-compatible event entry point; finder input updates without
   // replacing itself.
 
+  /**
+   * Selects search matching the input.
+   */
   function filterSearch() {setFinderQuery(document.getElementById('warehouse-search')?.value || '');}
 
+  /**
+   * Registers drag for warehouse.
+   */
   function attachDrag() {
     const svg = document.querySelector('.warehouse-floor'); if (!svg) return;
     let drag = null;
@@ -1693,6 +2067,10 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     render,
     openShelfDetails,
     openOccupiedShelfDetails,
+    /**
+     * Performs the open room transfer lifecycle action.
+     * @return {*} Result computed from the supplied inputs.
+     */
     openRoomTransfer: () => roomTransfer.openTransfer(state.selected ===
       'rooms' ? currentRoom()?.id : undefined),
     update3DZoom,

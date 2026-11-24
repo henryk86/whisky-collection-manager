@@ -2,6 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {paintMaskSegment, applyMaskStrokes} from '../../public/js/features/photo-editor/mask-brush.js';
 
+/**
+ * Derives the fixture result from the supplied values.
+ *
+ * @param {number=} width Width in pixels.
+ * @param {number=} height Height in pixels.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function fixture(width = 80, height = 80) {
   const data = new Uint8ClampedArray(width * height * 4);
   for (let i = 0; i < data.length; i += 4) {
@@ -10,6 +17,15 @@ function fixture(width = 80, height = 80) {
   return {data, width, height};
 }
 
+/**
+ * Derives the alpha result from the supplied values.
+ *
+ * @param {*} pixels Value used by this operation.
+ * @param {*} w Width or value used by the calculation.
+ * @param {*} x Horizontal coordinate.
+ * @param {*} y Vertical coordinate.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const alpha = (pixels, w, x, y) => pixels[(y * w + x) * 4 + 3];
 test('eraser removes only alpha and never touches RGB', () => {
   const source = fixture(), current = new Uint8ClampedArray(source.data);

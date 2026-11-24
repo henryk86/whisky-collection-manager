@@ -1,5 +1,11 @@
 /**
  * Reorder a flight only when the drop changes its sequence. No record copies.
+ *
+ * @param {!Array<*>} ids Identifiers in their current order.
+ * @param {*} sourceId Source id used by this operation.
+ * @param {string} targetId Identifier of the destination photo.
+ * @param {boolean=} after Resource data after the mutation.
+ * @return {?Array<*>} Resulting list of values.
  */
 export function reorderFlightIds(ids, sourceId, targetId, after = false) {
   if (!Array.isArray(ids) || sourceId === targetId) return null;
@@ -13,23 +19,48 @@ export function reorderFlightIds(ids, sourceId, targetId, after = false) {
   return reordered.every((id, index) => id === ids[index]) ? null : reordered;
 }
 
-/** Pointer-based dragging works for mouse, touch and pen without native HTML drag ghosts.
- * Only the grip initiates sorting; tapping a whisky still opens its tasting
- * note.
+/**
+ * Pointer-based dragging works for mouse, touch and pen without native HTML
+ * drag ghosts. Only the grip initiates sorting; tapping a whisky still opens
+ * its tasting note.
+ *
+ * @param {!Element} root Root element or directory.
+ * @param {Function} onReorder On reorder used by this operation.
  */
 export function bindFlightSorting(root, onReorder) {
   let drag = null;
+  /**
+   * Removes or resets targets.
+   *
+   * @param {*} list Collection of entries to process.
+   */
   const clearTargets = list => {
     for (const row of list.querySelectorAll('.tasting-flight-member')) {
       row.classList.remove('is-dragging', 'is-drop-before', 'is-drop-after');
     }
   };
 
+  /**
+   * Derives the row under pointer result from the supplied values.
+   *
+   * @param {*} x Horizontal coordinate.
+   * @param {*} y Vertical coordinate.
+   * @param {*} list Collection of entries to process.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const rowUnderPointer = (x, y, list) => {
     const row = document.elementFromPoint(x, y)?.closest?.('.tasting-flight-member');
     return row?.parentElement === list ? row : null;
   };
 
+  /**
+   * Derives the destination result from the supplied values.
+   *
+   * @param {*} x Horizontal coordinate.
+   * @param {*} y Vertical coordinate.
+   * @param {*} list Collection of entries to process.
+   * @return {!Object} Computed value, or null when the input has no match.
+   */
   const destination = (x, y, list) => {
     const row = rowUnderPointer(x, y, list);
     if (!row) return null;
@@ -37,6 +68,9 @@ export function bindFlightSorting(root, onReorder) {
     return {row, after: y >= bounds.top + bounds.height / 2};
   };
 
+  /**
+   * Derives the release result from the supplied values.
+   */
   function release() {
     if (!drag) return;
     const {handle, pointerId, list} = drag;

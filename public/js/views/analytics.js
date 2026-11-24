@@ -14,51 +14,120 @@ import {chevronRightIcon, analysisOverviewIcon, analysisInventoryIcon, analysisO
 export const ANALYSIS_PAGES = Object.freeze([
   {
     id: 'overview',
+    /**
+     * Reads the title property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get title() {return t("analytics.navigation.overview");},
+    /**
+     * Reads the sub property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get sub() {return t("analytics.summary.highlights");},
     icon: analysisOverviewIcon,
   },
   {
     id: 'inventory',
+    /**
+     * Reads the title property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get title() {return t("analytics.inventory.collectionStock");},
+    /**
+     * Reads the sub property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get sub() {return t("analytics.inventory.sectionDescription");},
     icon: analysisInventoryIcon,
   },
   {
     id: 'origins',
+    /**
+     * Reads the title property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get title() {return t("analytics.origin.title");},
+    /**
+     * Reads the sub property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get sub() {return t("analytics.origin.sectionDescription");},
     icon: analysisOriginsIcon,
   },
   {
     id: 'profile',
+    /**
+     * Reads the title property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get title() {return t("analytics.profile.title");},
+    /**
+     * Reads the sub property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get sub() {return t("analytics.profile.sectionDescription");},
     icon: analysisProfileIcon,
   },
   {
     id: 'finance',
+    /**
+     * Reads the title property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get title() {return t("analytics.finance.title");},
+    /**
+     * Reads the sub property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get sub() {return t("analytics.finance.pricesAndRetailers");},
     icon: analysisFinanceIcon,
   },
   {
     id: 'timeline',
+    /**
+     * Reads the title property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get title() {return t("analytics.trends.tastingSection");},
+    /**
+     * Reads the sub property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get sub() {return t("analytics.trends.sectionDescription");},
     icon: analysisTimelineIcon,
   },
   {
     id: 'quality',
+    /**
+     * Reads the title property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get title() {return t("analytics.quality.title");},
+    /**
+     * Reads the sub property from the current state.
+     * @return {*} Value returned by the delegated operation.
+     */
     get sub() {return t("analytics.quality.sectionDescription");},
     icon: analysisQualityIcon,
   },
 ]);
+/**
+ * Derives the number numeric value from its input.
+ *
+ * @param {*} v Value to evaluate.
+ * @return {string} Resulting text.
+ */
 const number = v => Number.isFinite(v) ?
   new Intl.NumberFormat(currentLanguage(), {maximumFractionDigits: 1})
     .format(v) : '–';
 
+/**
+ * Builds the localized money text for the current language.
+ *
+ * @param {*} v Value to evaluate.
+ * @param {*} currency Value used by this operation.
+ * @return {*} New instance constructed from the inputs.
+ */
 const money = (v, currency) => {
   if (!Number.isFinite(v)) return '–';
   if (currency === 'UNBEKANNT' || !/^[A-Z]{3}$/
@@ -114,6 +183,12 @@ const CATEGORY_KEYS = Object.freeze({
   'Kaufdatum': 'analytics.quality.missingPurchaseDate',
   'Bewertung': 'analytics.quality.missingRating',
 });
+/**
+ * Derives the category label result from the supplied values.
+ *
+ * @param {*} label Label shown to the user.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const categoryLabel = label => CATEGORY_KEYS[label] ?
   t(CATEGORY_KEYS[label]) : label;
 const COUNTRY_KEYS = Object.freeze({
@@ -150,13 +225,38 @@ const COUNTRY_KEYS = Object.freeze({
   'Taiwan': 'countries.taiwan',
   'China': 'countries.china',
 });
+/**
+ * Derives the country name result from the supplied values.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const countryName = name => COUNTRY_KEYS[name] ? t(COUNTRY_KEYS[name]) :
   categoryLabel(name);
 
+/**
+ * Derives the safe result from the supplied values.
+ *
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
 const safe = value => escapeHtml(value);
 
+/**
+ * Builds the localized empty text for the current language.
+ * @return {string} Resulting text.
+ */
 const empty = () => emptyState({description: t("analytics.empty.noMatchingData"), variant: "inline"});
 
+/**
+ * Derives the panel result from the supplied values.
+ *
+ * @param {*} title Title displayed or stored by this operation.
+ * @param {*} content Content to render, store or examine.
+ * @param {string=} note Value used by this operation.
+ * @param {string=} extra Additional context or configuration.
+ * @return {string} Resulting text.
+ */
 function panel(title, content, note = '', extra = '') {
   return contentPanel({
     tag: 'section', variant: 'analytics', className: extra,
@@ -165,6 +265,14 @@ function panel(title, content, note = '', extra = '') {
   });
 }
 
+/**
+ * Derives the metric result from the supplied values.
+ *
+ * @param {*} label Label shown to the user.
+ * @param {*} value Value to process.
+ * @param {string=} detail Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function metric(label, value, detail = '') {
   return contentPanel({
     className: 'stat analytics-metric',
@@ -172,12 +280,37 @@ function metric(label, value, detail = '') {
   });
 }
 
+/**
+ * Produces the metric grid text used by the caller.
+ *
+ * @param {*} cards Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function metricGrid(cards) {return `<div class="stats analytics-metrics">${cards.join('')}</div>`;}
 
+/**
+ * Derives the section heading result from the supplied values.
+ *
+ * @param {*} text Text to process.
+ * @return {string} Resulting text.
+ */
 function sectionHeading(text) {return headingTitle({title: text, level: 2, className: 'analytics-group-title'});}
 
+/**
+ * Produces the two text used by the caller.
+ *
+ * @param {!Array<*>} items Entries to process.
+ * @return {string} Resulting text.
+ */
 function two(...items) {return `<div class="analytics-two">${items.join('')}</div>`;}
 
+/**
+ * Transforms the entries used by rank bars.
+ *
+ * @param {*} rows Input records to process.
+ * @param {!Object=} options Options controlling the operation.
+ * @return {string} Resulting text.
+ */
 function rankBars(rows, {value = 'count', format = number, limit = 14, drill = false} = {}) {
   const data = rows.slice(0, limit);
   if (!data.length) return empty();
@@ -194,6 +327,13 @@ function rankBars(rows, {value = 'count', format = number, limit = 14, drill = f
     `<p class="analytics-note">${t("analytics.rankings.topEntries", {limit, total: rows.length})}</p>` : ''}`;
 }
 
+/**
+ * Selects and transforms the composition records.
+ *
+ * @param {*} rows Input records to process.
+ * @param {!Object=} options Options controlling the operation.
+ * @return {string} Resulting text.
+ */
 function composition(rows, {drill = null} = {}) {
   if (!rows.length || rows.every(row => !row.count)) return empty();
   const valid = rows.filter(r => r.count > 0);
@@ -229,19 +369,47 @@ function composition(rows, {drill = null} = {}) {
   return `<div class="analytics-composition"><div class="analytics-donut" role="img" aria-label="${safe(valid.map(row => `${row.name}: ${row.count}`).join(', '))}" style="background:conic-gradient(${slices.join(',')})"><span>${number(total)}</span></div><div class="analytics-pie-legend">${legend}</div></div>`;
 }
 
+/**
+ * Transforms the entries used by details table.
+ *
+ * @param {*} headings Value used by this operation.
+ * @param {*} rows Input records to process.
+ * @return {string} Resulting text.
+ */
 function detailsTable(headings, rows) {
   if (!rows.length) return empty();
   return `<div class="analytics-table-wrap"><table class="analytics-table"><thead><tr>${headings.map(h => `<th>${safe(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(cells => `<tr>${cells.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 
+/**
+ * Produces the bottling link text used by the caller.
+ *
+ * @param {*} item Current item under consideration.
+ * @param {string=} extra Additional context or configuration.
+ * @return {string} Resulting text.
+ */
 function bottlingLink(item, extra = '') {
   return `<button type="button" class="analytics-link" data-act="open" data-id="${safe(item.id)}"${item.bottleId ? ` data-bottle-id="${safe(item.bottleId)}"` : ''}>${safe(item.name)}</button>${extra}`;
 }
 
+/**
+ * Produces the distillery link text used by the caller.
+ *
+ * @param {*} item Current item under consideration.
+ * @return {string} Resulting text.
+ */
 function distilleryLink(item) {
   return `<button type="button" class="analytics-link" data-act="analytics-distillery" data-id="${safe(item.id)}">${safe(item.name)}</button>`;
 }
 
+/**
+ * Orders the period rows records using the configured comparison.
+ *
+ * @param {*} rows Input records to process.
+ * @param {string=} field Field definition or input value to handle.
+ * @param {string=} currency Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function periodRows(rows, field = 'count', currency = '') {
   return rankBars(
     [...rows].sort((a, b) => a.name.localeCompare(b.name, 'de')),
@@ -253,6 +421,15 @@ function periodRows(rows, field = 'count', currency = '') {
   );
 }
 
+/**
+ * Orders the time chart records using the configured comparison.
+ *
+ * @param {*} title Title displayed or stored by this operation.
+ * @param {*} rows Input records to process.
+ * @param {*} state Current application state.
+ * @param {!Object=} options Options controlling the operation.
+ * @return {string} Resulting text.
+ */
 function timeChart(title, rows, state, {field = 'count', currency = ''} = {}) {
   const period = state.analyticsPeriod || 'month';
   const start = state.analyticsStartDate || '';
@@ -274,6 +451,13 @@ function timeChart(title, rows, state, {field = 'count', currency = ''} = {}) {
   );
 }
 
+/**
+ * Builds the localized date boundary text for the current language.
+ *
+ * @param {*} boundary Value used by this operation.
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
 function dateBoundary(boundary, value) {
   const caption = boundary === 'start' ? t("analytics.filters.from") :
     t("analytics.filters.until");
@@ -283,6 +467,12 @@ function dateBoundary(boundary, value) {
         </span></label>`;
 }
 
+/**
+ * Builds the localized period controls text for the current language.
+ *
+ * @param {*} state Current application state.
+ * @return {string} Resulting text.
+ */
 function periodControls(state) {
   const selected = state.analyticsPeriod || 'month';
   return `<div class="analytics-period" aria-label="${t("analytics.trends.granularity")}"><label>${t("analytics.filters.dateRange")} <select id="analytics-period"><option value="month" ${selected === 'month' ? 'selected' : ''}>${t("analytics.trends.monthly")}</option><option value="year" ${selected === 'year' ? ' selected' : ''}>${t("analytics.trends.yearly")}</option></select></label>
@@ -290,6 +480,12 @@ function periodControls(state) {
     '')}${dateBoundary('end', state.analyticsEndDate || '')}</div>`;
 }
 
+/**
+ * Builds the localized inventory text for the current language.
+ *
+ * @param {*} analytics Calculated analytics data for this view.
+ * @return {string} Resulting text.
+ */
 function inventory(analytics) {
   const {scope, inventory: inv} = analytics;
   return `${metricGrid([
@@ -335,6 +531,12 @@ function inventory(analytics) {
   )}`;
 }
 
+/**
+ * Transforms the entries used by provenance.
+ *
+ * @param {*} analytics Calculated analytics data for this view.
+ * @return {string} Resulting text.
+ */
 function provenance(analytics) {
   const d = analytics.provenance;
   return `${two(
@@ -367,8 +569,20 @@ function provenance(analytics) {
     ))}`;
 }
 
+/**
+ * Orders the profile records using the configured comparison.
+ *
+ * @param {*} analytics Calculated analytics data for this view.
+ * @return {string} Resulting text.
+ */
 function profile(analytics) {
   const d = analytics.profile;
+  /**
+   * Orders or compares years values.
+   *
+   * @param {*} rows Input records to process.
+   * @return {!Array<*>} Resulting entries in their output order.
+   */
   const sortYears = rows => [...rows].sort((a, b) => a.name
     .localeCompare(b.name, 'de'));
   return `${two(
@@ -448,6 +662,13 @@ function profile(analytics) {
     )}`;
 }
 
+/**
+ * Selects and transforms the finance records.
+ *
+ * @param {*} analytics Calculated analytics data for this view.
+ * @param {*} state Current application state.
+ * @return {string} Resulting text.
+ */
 function finance(analytics, state) {
   const {finance: d, scope} = analytics;
   const byCurrency = d.prices.length ? d.prices : [];
@@ -486,7 +707,14 @@ function finance(analytics, state) {
       rankBars(
         d.byDistillery.filter(row => row.currency === currency),
         {
-          value: 'total', format: v =>
+          value: 'total',
+          /**
+           * Derives the format result from the supplied values.
+           *
+           * @param {*} v Value to evaluate.
+           * @return {*} Result computed from the supplied inputs.
+           */
+          format: v =>
             money(v, currency), limit: 20, drill: true,
         }
       ),
@@ -530,9 +758,22 @@ function finance(analytics, state) {
   )}`;
 }
 
+/**
+ * Transforms the entries used by timeline.
+ *
+ * @param {*} analytics Calculated analytics data for this view.
+ * @param {*} state Current application state.
+ * @return {string} Resulting text.
+ */
 function timeline(analytics, state) {
   const timelineData = analytics.timeline, rating =
     analytics.tasting, duration = analytics.consumption;
+  /**
+   * Builds the localized days text for the current language.
+   *
+   * @param {*} value Value to process.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const days = value => value == null ? '–' :
     t('analytics.consumption.days', {count: number(value)});
   return `${periodControls(state)}${two(
@@ -601,8 +842,20 @@ function timeline(analytics, state) {
   )}`;
 }
 
+/**
+ * Transforms the entries used by quality.
+ *
+ * @param {*} analytics Calculated analytics data for this view.
+ * @return {string} Resulting text.
+ */
 function quality(analytics) {
   const d = analytics.quality;
+  /**
+   * Transforms the entries used by rows.
+   *
+   * @param {*} entries Value used by this operation.
+   * @return {string} Resulting text.
+   */
   const rows = entries => detailsTable(
     [
       t("analytics.table.missingField"),
@@ -638,10 +891,23 @@ function quality(analytics) {
   )}`;
 }
 
+/**
+ * Produces the section card text used by the caller.
+ *
+ * @param {*} page Page or view being rendered or selected.
+ * @param {*} stat Value used by this operation.
+ * @return {string} Resulting text.
+ */
 function sectionCard(page, stat) {
   return `<button class="analytics-section-card" type="button" data-act="analytics-section" data-section="${safe(page.id)}"><span class="analytics-section-icon">${page.icon}</span><span><strong>${safe(page.title)}</strong><small>${safe(page.sub)}</small></span><span class="analytics-section-chevron" aria-hidden="true">${chevronRightIcon}</span></button>`;
 }
 
+/**
+ * Transforms the entries used by overview.
+ *
+ * @param {*} analytics Calculated analytics data for this view.
+ * @return {string} Resulting text.
+ */
 function overview(analytics) {
   const s = analytics.scope, p = analytics.provenance;
   const best = analytics.finance.prices.map(row =>
@@ -696,8 +962,24 @@ function overview(analytics) {
         ${sectionHeading(t("analytics.sections.all"))}<div class="analytics-section-grid">${ANALYSIS_PAGES.slice(1).map(page => sectionCard(page)).join('')}</div>`;
 }
 
+/**
+ * Organizes controls for analytics.
+ *
+ * @param {!Object} state Current application state.
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {string} Resulting text.
+ */
 function filterControls(state, options) {
   const filters = state.analyticsFilters || {};
+  /**
+   * Transforms the entries used by select.
+   *
+   * @param {*} name Environment variable or setting name.
+   * @param {*} caption Value used by this operation.
+   * @param {*} options Options controlling the operation.
+   * @param {*} selected Currently selected item or identifier.
+   * @return {string} Resulting text.
+   */
   const select = (name, caption, options, selected) =>
     `<select data-analytics-filter="${name}" aria-label="${safe(caption)}">${options.map(([value, label]) => `<option value="${safe(value)}"${value === selected ? ' selected' : ''}>${safe(label)}</option>`).join('')}</select>`;
   return `<div class="analytics-filters" aria-label="${t("analytics.filters.title")}">
@@ -743,43 +1025,89 @@ function filterControls(state, options) {
         <button class="btn small" type="button" data-act="analytics-reset">${t("analytics.filters.reset")}</button></div>`;
 }
 
+/**
+ * Creates analytics view for analytics.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createAnalyticsView({state, shell}) {
-  return function renderAnalytics() {
-    const current = ANALYSIS_PAGES.find(p => p.id === state.selected) ||
-      ANALYSIS_PAGES[0];
-    // Timeline duration metrics follow the same selected end-date window as
-    // the opened/emptied time series, while inventory filters stay global.
-    const data = analyzeCollection(state.collection, {
-      ...state.analyticsFilters,
-      consumptionStartDate: state.analyticsStartDate || '',
-      consumptionEndDate: state.analyticsEndDate || '',
-    });
-    const options = analyticsFilterOptions(state.collection);
-    const contents = {
-      overview: () => overview(data),
-      inventory: () => inventory(data),
-      origins: () => provenance(data),
-      profile: () => profile(data),
-      finance: () => finance(data, state),
-      timeline: () => timeline(data, state),
-      quality: () => quality(data),
-    };
-    const content = `${filterControls(state, options)}${headingTitle({title: current.title, level: 2, className: 'analytics-section-title'})}${contents[current.id]()}`;
-    const workspace = sectionWorkspace({
-      sections: ANALYSIS_PAGES.map(page => ({id: page.id, label: page.title})),
-      activeId: current.id,
-      action: 'analytics-section',
-      itemAttribute: 'data-section',
-      label: t('analytics.navigation.sections'),
-      switchKind: 'analytics',
-    }, content);
-    shell(`<div class="analytics-page">${pageHeader({
-      title: t('navigation.analytics'),
-      eyebrow: t('analytics.summary.eyebrow'),
-      intro: t('analytics.summary.highlights'),
-      className: 'analytics-page-heading',
-    })}
+  return (
+    /**
+     * Renders the selected analytics page using the current state and filters.
+     *
+     * @return {string} HTML for the active analytics view.
+     */
+    function renderAnalytics() {
+      const current = ANALYSIS_PAGES.find(p => p.id === state.selected) ||
+        ANALYSIS_PAGES[0];
+      // Timeline duration metrics follow the same selected end-date window as
+      // the opened/emptied time series, while inventory filters stay global.
+      const data = analyzeCollection(state.collection, {
+        ...state.analyticsFilters,
+        consumptionStartDate: state.analyticsStartDate || '',
+        consumptionEndDate: state.analyticsEndDate || '',
+      });
+      const options = analyticsFilterOptions(state.collection);
+      const contents = {
+        /**
+         * Derives the overview result from the supplied values.
+         * @return {string} Resulting text.
+         */
+        overview: () => overview(data),
+        /**
+         * Derives the inventory result from the supplied values.
+         * @return {string} Resulting text.
+         */
+        inventory: () => inventory(data),
+        /**
+         * Derives the origins result from the supplied values.
+         * @return {string} Resulting text.
+         */
+        origins: () => provenance(data),
+        /**
+         * Derives the profile result from the supplied values.
+         * @return {string} Resulting text.
+         */
+        profile: () => profile(data),
+        /**
+         * Derives the finance result from the supplied values.
+         * @return {string} Resulting text.
+         */
+        finance: () => finance(data, state),
+        /**
+         * Derives the timeline result from the supplied values.
+         * @return {string} Resulting text.
+         */
+        timeline: () => timeline(data, state),
+        /**
+         * Derives the quality result from the supplied values.
+         * @return {string} Resulting text.
+         */
+        quality: () => quality(data),
+      };
+      const content = `${filterControls(state, options)}${headingTitle({
+        title: current.title,
+        level: 2,
+        className: 'analytics-section-title',
+      })}${contents[current.id]()}`;
+      const workspace = sectionWorkspace({
+        sections: ANALYSIS_PAGES.map(page =>
+          ({id: page.id, label: page.title})),
+        activeId: current.id,
+        action: 'analytics-section',
+        itemAttribute: 'data-section',
+        label: t('analytics.navigation.sections'),
+        switchKind: 'analytics',
+      }, content);
+      shell(`<div class="analytics-page">${pageHeader({
+        title: t('navigation.analytics'),
+        eyebrow: t('analytics.summary.eyebrow'),
+        intro: t('analytics.summary.highlights'),
+        className: 'analytics-page-heading',
+      })}
             ${workspace}
             </div>`);
-  };
+    }
+  );
 }

@@ -17,6 +17,12 @@ export const HELP_GUIDES = Object.freeze({
     'restore',
   ],
 });
+/**
+ * Builds the localized help sections for the current screen.
+ *
+ * @param {*} topic Topic used by this operation.
+ * @return {string} Resulting text.
+ */
 export function helpGuides(topic) {
   const guides = HELP_GUIDES[topic] || [];
   if (!guides.length) return '';

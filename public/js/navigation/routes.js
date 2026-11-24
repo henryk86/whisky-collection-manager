@@ -1,6 +1,12 @@
 import {t} from '../i18n/index.js';
 // Minimal client-side router. Query-based routes also work on direct reloads
 // because the local Node server already serves / for all query strings.
+/**
+ * Parses route for routes.
+ *
+ * @param {*} search Search used by this operation.
+ * @return {(!Object)} Structured result assembled from the input data.
+ */
 export function parseRoute(search) {
   const params = new URLSearchParams(search);
   const flightId = params.get('flight');
@@ -61,6 +67,12 @@ export function parseRoute(search) {
   }
   if (params.get('view') === 'warehouse') {
     const section = params.get('section');
+    /**
+     * Tests input text against the id pattern.
+     *
+     * @param {*} value Value to process.
+     * @return {*} Result computed from the supplied inputs.
+     */
     const id = value => value && /^[a-zA-Z0-9-]{1,100}$/.test(value) ?
       value : null;
     return {
@@ -90,6 +102,14 @@ export function parseRoute(search) {
   };
 }
 
+/**
+ * Builds the browser URL for an application route and its state.
+ *
+ * @param {*} page Page used by this operation.
+ * @param {*} selected Selected used by this operation.
+ * @param {!Object=} filters Filters restricting the input records.
+ * @return {string} Resulting text.
+ */
 export function routeUrl(page, selected, filters = {}) {
   if (['detail', 'tasting', 'tastings'].includes(page)) {
     if (!selected || !/^[a-zA-Z0-9-]{1,100}$/.test(selected)) {

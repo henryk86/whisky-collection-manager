@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {buildDistilleryMap, locationFor, markerDiameter, fitMapToSites, project, unproject, zoomAroundPoint} from '../../public/js/domain/distillery-map.js';
 
+/**
+ * Derives the fixture result from the supplied values.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function fixture() {
   return {
     distilleries: [
@@ -269,6 +273,17 @@ test(
         y: 220,
       },
     ];
+    /**
+     * Derives the beneath result from the supplied values.
+     *
+     * @param {*} center Value used by this operation.
+     * @param {*} zoom Value used by this operation.
+     * @param {*} width Width in pixels.
+     * @param {*} height Height in pixels.
+     * @param {*} x Horizontal coordinate.
+     * @param {*} y Vertical coordinate.
+     * @return {*} Value returned by the delegated operation.
+     */
     function beneath(center, zoom, width, height, x, y) {
       const middle = project(center.lat, center.lon, zoom);
       return unproject(middle.x + x - width / 2, middle.y + y - height /

@@ -54,6 +54,12 @@ test(
   }
 );
 
+/**
+ * Derives the sample mask result from the supplied values.
+ *
+ * @param {*} rect Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function sampleMask(rect) {
   const mask = new Uint8ClampedArray(size);
   for (let y = rect.top; y < rect.bottom; y++) for (let x = rect.left; x <
@@ -176,6 +182,13 @@ test(
     assert.ok(result.verticallyTight);
     const cx = result.center.x;
     const cy = result.center.y;
+    /**
+     * Derives the rotate x result from the supplied values.
+     *
+     * @param {*} x Horizontal coordinate.
+     * @param {*} y Vertical coordinate.
+     * @return {number} Calculated numeric value.
+     */
     const rotateX = (x, y) => cx + (x - cx) * Math.cos(result.rotation)
       - (y - cy) * Math.sin(result.rotation);
     const topCenterX = 160 * scaleX + (28 - 160) * physicalSlope * scaleY;

@@ -4,8 +4,18 @@ import {homePageUrl, pageFromSearch, overviewModeFromSearch} from '../domain/pag
 /**
  * History changes navigate to the page top; a scanned bottle is highlighted,
  * not focused.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function createNavigation({state, render, closeModal, browser = window}) {
+  /**
+   * Controls the controller state.
+   *
+   * @param {*} page Page used by this operation.
+   * @param {null=} selected Selected used by this operation.
+   * @param {!Object=} options3 Destructured options for this operation.
+   */
   function navigate(
     page,
     selected = null,
@@ -46,6 +56,9 @@ export function createNavigation({state, render, closeModal, browser = window}) 
     browser.scrollTo({top: 0, left: 0, behavior: 'instant'});
   }
 
+  /**
+   * Updates the restore route state for its caller.
+   */
   function restoreRoute() {
     if (state.modal) {
       closeModal(true);
@@ -68,6 +81,9 @@ export function createNavigation({state, render, closeModal, browser = window}) 
     render();
   }
 
+  /**
+   * Installs event listeners for listen interactions.
+   */
   function listen() {
     browser.addEventListener('popstate', restoreRoute);
   }

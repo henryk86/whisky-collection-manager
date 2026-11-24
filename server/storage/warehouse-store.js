@@ -14,21 +14,43 @@ export const WAREHOUSE_FILE = path.join(DATA_DIR, 'warehouse.json');
  * Creates an empty warehouse independently of collection storage.
  *
  * @return {{schemaVersion: number, rooms: !Array<!Object>,
- *     assignments: !Object}} New warehouse state.
+ *     assignments: !Object}} Empty warehouse data.
  */
 export const emptyWarehouse = () =>
   ({schemaVersion: 1, rooms: [], assignments: {}});
 
+/**
+ * Normalizes the valid text text for subsequent processing.
+ *
+ * @param {*} value Value to process.
+ * @param {number=} max Maximum accepted value.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function validText(value, max = 100) {
   return typeof value === 'string' && value.trim().length > 0 &&
     value.trim().length <= max;
 }
 
+/**
+ * Derives the valid number numeric value from its input.
+ *
+ * @param {*} value Value to process.
+ * @param {*} min Minimum accepted value.
+ * @param {*} max Maximum accepted value.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function validNumber(value, min, max) {
   return typeof value === 'number' && Number.isFinite(value) && value >=
     min && value <= max;
 }
 
+/**
+ * Validates warehouse rooms, furniture, shelf IDs and assignments.
+ *
+ * @param {!Object} data Warehouse document to validate.
+ * @return {!Object} The original warehouse document on success.
+ * @throws {HttpError} If the document violates warehouse constraints.
+ */
 export function validateWarehouse(data) {
   if (!data || data.schemaVersion !== 1 || !Array.isArray(data.rooms) ||
     !data.assignments || typeof data.assignments !== 'object' ||
@@ -159,17 +181,27 @@ export function validateWarehouse(data) {
 let warehouseCache = null;
 let warehouseIdentity = null;
 let warehouseRevision = crypto.randomUUID();
+/**
+ * Produces the identity text used by the caller.
+ * @return {string} Resulting text.
+ */
 function identity() {
   const {dev, ino, size, mtimeMs, ctimeMs} = fs.statSync(WAREHOUSE_FILE);
   return `${dev}:${ino}:${size}:${mtimeMs}:${ctimeMs}`;
 }
 
+/**
+ * Invalidates cached warehouse state after a committed mutation.
+ */
 export function invalidateWarehouseCache() {
   warehouseCache = null;
   warehouseIdentity = null;
   warehouseRevision = crypto.randomUUID();
 }
 
+/**
+ * Retrieves warehouse from the available state.
+ */
 function loadWarehouse() {
   const current = identity();
   if (warehouseCache === null || warehouseIdentity !== current) {
@@ -192,7 +224,6 @@ export function warehouseETag() {
 
 /**
  * Initializes warehouse storage without overwriting existing rooms.
- *
  * Creates an empty file only when the file does not already exist.
  */
 export function initWarehouse() {
@@ -204,13 +235,19 @@ export function initWarehouse() {
 /**
  * Returns a deep copy of the current warehouse model.
  *
- * @return {!Object} Validated warehouse data, including rooms and assignments.
+ * @return {!Object} Validated warehouse data, including rooms and
+ * assignments.
  */
 export function readWarehouse() {
   initWarehouse();
   return structuredClone(warehouseCache);
 }
 
+/**
+ * Persists warehouse to its backing store.
+ *
+ * @param {*} data Input data to process.
+ */
 function writeWarehouse(data) {
   validateWarehouse(data);
   fs.mkdirSync(DATA_DIR, {recursive: true});

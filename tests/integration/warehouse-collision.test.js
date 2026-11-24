@@ -4,6 +4,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {startTestServer, requestJson as api} from '../helpers/server.js';
 
+/**
+ * Derives the furniture result from the supplied values.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @param {*} x Horizontal coordinate.
+ * @param {*} y Vertical coordinate.
+ * @param {!Object=} extra Additional context or configuration.
+ * @return {!Object} Result computed from the supplied inputs.
+ */
 const furniture = (name, x, y, extra = {}) => ({
   name,
   type: 'schrank',
@@ -28,6 +37,12 @@ test(
         'POST',
         {name: 'Room', width: 5, height: 4}
       )).data;
+      /**
+       * Derives the post result from the supplied values.
+       *
+       * @param {*} input Input element or value to inspect.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const post = input => api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -106,6 +121,12 @@ test(
         'POST',
         {name: 'Room', width: 6, height: 4}
       )).data;
+      /**
+       * Coordinates asynchronous work for post.
+       *
+       * @param {*} x Horizontal coordinate.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const post = async x => (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,

@@ -3,9 +3,21 @@ import assert from 'node:assert/strict';
 import {createDetailView} from '../../public/js/views/detail.js';
 import {bottlingDetails} from '../../public/js/domain/bottling-details.js';
 
+/**
+ * Renders the detail field coverage.test state.
+ *
+ * @param {!Object=} options Optional configuration for the operation.
+ * @return {string} Resulting text.
+ */
 function render({bottlingFields = {}, bottleFields = {}} = {}) {
   const previousDocument = globalThis.document;
-  globalThis.document = {querySelectorAll: () => []};
+  globalThis.document = {
+    /**
+     * Derives the query selector all result from the supplied values.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
+    querySelectorAll: () => [],
+  };
   try {
     let html = '';
     const bottling = {
@@ -22,12 +34,38 @@ function render({bottlingFields = {}, bottleFields = {}} = {}) {
         collection: {bottlings: [bottling], distilleries: []},
       },
       selectors: {
+        /**
+         * Derives the bottles result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
         bottles: () => [bottle],
+        /**
+         * Derives the cover photo result from the supplied values.
+         * @return {string} Resulting text.
+         */
         coverPhoto: () => '',
+        /**
+         * Derives the distillery names result from the supplied values.
+         * @return {string} Resulting text.
+         */
         distilleryNames: () => '',
       },
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} value Value to process.
+       */
       shell: value => {html = value;},
+      /**
+       * Reports the navigate error condition.
+       */
       navigate: () => {throw new Error('Unexpected navigation');},
+      /**
+       * Derives the action result from the supplied values.
+       *
+       * @param {function(...*): *} handler Handler called for the event.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       action: async handler => handler(),
     })();
     return html;

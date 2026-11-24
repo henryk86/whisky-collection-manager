@@ -6,12 +6,24 @@ import {createTastingsView} from '../../public/js/views/tastings.js';
 import {createDetailView} from '../../public/js/views/detail.js';
 import {createSelectors} from '../../public/js/domain/selectors.js';
 
+/**
+ * Derives the header for result from the supplied values.
+ *
+ * @param {*} page Page or view being rendered or selected.
+ * @return {string} Resulting text.
+ */
 function headerFor(page) {
   const root = {innerHTML: ''};
   createShell({
     root,
     state: {page, version: '0.27.1', modal: null},
+    /**
+     * Updates theme in the current state.
+     */
     applyTheme() {},
+    /**
+     * Renders modal in the current view.
+     */
     renderModal() {},
   })('');
   return root.innerHTML.match(/<header class="site-header">[\s\S]*?<\/header>/)?.[0];
@@ -49,8 +61,23 @@ test('tasting landing page uses the shared analytics page heading only', () => {
   let html = '';
   const state = {page: 'tastings-home', collection: {bottlings: [], externalTastings: []}};
   createTastingsView({
-    state, shell: content => html =
-      content, navigate() {}, refresh() {},
+    state,
+    /**
+     * Derives the shell result from the supplied values.
+     *
+     * @param {*} content Content to render, store or examine.
+     * @return {*} Result computed from the supplied inputs.
+     */
+    shell: content => html =
+      content,
+    /**
+     * Updates the navigate state for its caller.
+     */
+    navigate() {},
+    /**
+     * Performs the refresh lifecycle action.
+     */
+    refresh() {},
   }).home();
   assert.match(html, /class="analytics-page tasting-home-page"/);
   assert.match(
@@ -99,8 +126,23 @@ test(
     };
     let html = '';
     const view = createTastingsView({
-      state, shell: content => html =
-        content, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} content Content to render, store or examine.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: content => html =
+        content,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     });
     view.list();
     assert.match(html, /Whisky with details/);
@@ -155,8 +197,23 @@ test(
     };
     let html = '';
     const view = createTastingsView({
-      state, shell: content => html =
-        content, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} content Content to render, store or examine.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: content => html =
+        content,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     });
     view.list();
     let header = html.match(/<header class="section-head ds-page-header analytics-page-heading">[\s\S]*?<\/header>/)?.[0];
@@ -202,8 +259,23 @@ test(
       collection: {bottlings: [], distilleries: [], externalTastings: []},
     };
     createTastingsView({
-      state, shell: content => html =
-        content, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} content Content to render, store or examine.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: content => html =
+        content,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     }).editor();
     const header = html.match(/<header class="section-head ds-page-header analytics-page-heading">[\s\S]*?<\/header>/)?.[0];
     assert.match(header, /Verkostung erfassen/);
@@ -240,8 +312,23 @@ test(
     };
     let html = '';
     const view = createTastingsView({
-      state, shell: s => html =
-        s, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} s Source value to transform.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: s => html =
+        s,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     });
     view.list();
     assert.match(
@@ -291,8 +378,23 @@ test(
     };
     let html = '';
     const view = createTastingsView({
-      state, shell: s => html =
-        s, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} s Source value to transform.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: s => html =
+        s,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     });
     view.home();
     assert.match(html, /class="warehouse-bottle-list tasting-entry-list"/);
@@ -352,8 +454,23 @@ test(
     };
     let html = '';
     const view = createTastingsView({
-      state, shell: s => html =
-        s, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} s Source value to transform.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: s => html =
+        s,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     });
     view.editor();
     const summary = html.match(/<section class="analytics-panel tasting-bottling-info">[\s\S]*?<\/section>/)?.[0];
@@ -394,13 +511,40 @@ test(
       selected: 'external-1',
       collection: {bottlings: [], externalTastings: [saved]},
     };
-    const view = createTastingsView({state, shell() {}, navigate() {}, refresh() {} });
+    const view = createTastingsView({
+      state,
+      /**
+       * Updates the shell state for its caller.
+       */
+      shell() {},
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
+    });
     view.editor();
     const read = {hidden: false}, name =
-      {value: 'Old whisky', focus() {this.focused = true;} }, distillery =
+    {
+      value: 'Old whisky',
+      /**
+       * Updates the focus state for its caller.
+       */
+      focus() {this.focused = true;},
+    }, distillery =
         {value: 'Original'}, age = {value: '8'};
     const form = {
       hidden: true,
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       querySelector(selector) {
         return selector ===
           '[data-external-field="name"]' ? name : null;
@@ -408,6 +552,13 @@ test(
     };
     const inputs = {name, distillery, ageYears: age};
     const panel = {
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector(selector) {
         if (selector === '[data-external-read]') return read;
         if (selector === '[data-external-edit]') return form;
@@ -416,9 +567,22 @@ test(
     };
     const original = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {!Object} Structured result assembled from the input data.
+       */
       querySelector(selector) {
         return selector ===
           '[data-flavor-detail]' ? {
+          /**
+           * Derives the query selector result from the supplied values.
+           *
+           * @param {*} sel Value used by this operation.
+           * @return {!Object} Result computed from the supplied inputs.
+           */
           querySelector(sel) {
             return sel ===
               '.tasting-bottling-info' ? panel : null;
@@ -463,8 +627,33 @@ test(
       },
     };
     const view = createTastingsView({
-      state, shell: content => html = content, navigate() {}, refresh() {},
-      showModal(_title, content) {dialog = content;}, closeModal() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} content Content to render, store or examine.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: content => html = content,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
+      /**
+       * Renders modal in the current view.
+       *
+       * @param {*} _title Value used by this operation.
+       * @param {*} content Content to render, store or examine.
+       */
+      showModal(_title, content) {dialog = content;},
+      /**
+       * Performs the close modal lifecycle action.
+       */
+      closeModal() {},
     });
     view.editor();
     assert.match(html, /data-act="tasting-external-assign"/);
@@ -506,8 +695,20 @@ test(
     const view = createTastingsView({
       state,
       selectors: createSelectors(state),
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} markup HTML markup for the selected content.
+       * @return {*} Result computed from the supplied inputs.
+       */
       shell: markup => html = markup,
+      /**
+       * Updates the navigate state for its caller.
+       */
       navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
       refresh() {},
     });
     for (const page of ['tastings', 'tasting']) {
@@ -575,8 +776,23 @@ test(
       collection: {bottlings: [b], externalTastings: []},
     };
     const view = createTastingsView({
-      state, shell: markup => html =
-        markup, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} markup HTML markup for the selected content.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: markup => html =
+        markup,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     });
     view.editor();
     assert.match(html, /data-tasting-readonly="true"/);
@@ -632,8 +848,23 @@ test(
       collection: {bottlings: [], externalTastings: [external]},
     };
     const view = createTastingsView({
-      state, shell: markup => html =
-        markup, navigate() {}, refresh() {},
+      state,
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} markup HTML markup for the selected content.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: markup => html =
+        markup,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     });
     view.editor();
     assert.match(html, /data-tasting-readonly="true"/);
@@ -669,11 +900,46 @@ test(
     const originalDocument = globalThis.document;
     let detailHtml = '';
     try {
-      globalThis.document = {querySelectorAll: () => []};
+      globalThis.document = {
+        /**
+         * Derives the query selector all result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
+        querySelectorAll: () => [],
+      };
       createDetailView({
         state: {collection, selected: 'b1'}, selectors: {
-          bottles: () => [], coverPhoto: () => null, distilleryNames: () => '',
-        }, shell: s => detailHtml = s, navigate() {}, action() {},
+          /**
+           * Derives the bottles result from the supplied values.
+           * @return {!Array<*>} Resulting entries in their output order.
+           */
+          bottles: () => [],
+          /**
+           * Derives the cover photo result from the supplied values.
+           * @return {*} Result computed from the supplied inputs.
+           */
+          coverPhoto: () => null,
+          /**
+           * Derives the distillery names result from the supplied values.
+           * @return {string} Resulting text.
+           */
+          distilleryNames: () => '',
+        },
+        /**
+         * Derives the shell result from the supplied values.
+         *
+         * @param {*} s Source value to transform.
+         * @return {*} Result computed from the supplied inputs.
+         */
+        shell: s => detailHtml = s,
+        /**
+         * Updates the navigate state for its caller.
+         */
+        navigate() {},
+        /**
+         * Updates the action state for its caller.
+         */
+        action() {},
       })();
     } finally {
       if (originalDocument === undefined) delete globalThis.document;
@@ -682,7 +948,21 @@ test(
     let tastingHtml = '';
     createTastingsView({
       state: {page: 'tastings', selected: 'b1', collection},
-      shell: s => tastingHtml = s, navigate() {}, refresh() {},
+      /**
+       * Derives the shell result from the supplied values.
+       *
+       * @param {*} s Source value to transform.
+       * @return {*} Result computed from the supplied inputs.
+       */
+      shell: s => tastingHtml = s,
+      /**
+       * Updates the navigate state for its caller.
+       */
+      navigate() {},
+      /**
+       * Performs the refresh lifecycle action.
+       */
+      refresh() {},
     }).list();
     const detailButton =
       detailHtml.match(/<nav class="page-back-nav ds-back-nav ds-back-nav--inline"[^>]*>\s*<button[^>]*class="inline-link page-back ds-back-button ds-back-button--inline"[^>]*>[\s\S]*?<\/button><\/nav>/)?.[0];

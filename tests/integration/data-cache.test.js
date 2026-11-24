@@ -4,6 +4,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
 
+/**
+ * Requests get data from the configured remote endpoint.
+ *
+ * @param {*} base Base value or reference for the calculation.
+ * @param {*} endpoint Value used by this operation.
+ * @param {*} etag Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function get(base, endpoint, etag) {
   return fetch(base + endpoint, {headers: etag ? {'If-None-Match': etag} : {}});
 }

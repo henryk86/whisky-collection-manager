@@ -1,6 +1,11 @@
-/** Operator-only diagnostics. Never write command output into job status or API
+/**
+ * Operator-only diagnostics. Never write command output into job status or API
  * responses. Redact common credentials, URLs and filesystem paths before
- * sending a bounded single-line entry to the container's stderr log. */
+ * sending a bounded single-line entry to the container's stderr log.
+ *
+ * @param {*} raw Raw used by this operation.
+ * @return {string} Resulting text.
+ */
 export function sanitizeBackupDiagnostic(raw) {
   if (typeof raw !== 'string' ||
     !raw.trim()) return 'keine weiteren technischen Details';
@@ -46,6 +51,12 @@ export function sanitizeBackupDiagnostic(raw) {
 
 /**
  * The error's diagnostic stays in memory. serializeBackupJobError ignores it.
+ *
+ * @param {*} binary Binary used by this operation.
+ * @param {string} code Stable identifier used for error handling.
+ * @param {*} signal Signal used by this operation.
+ * @param {*} output Output used by this operation.
+ * @return {string} Resulting text.
  */
 export function commandFailureDiagnostic(binary, code, signal, output) {
   const exit = signal ? `Signal ${String(signal).replace(/[^A-Z0-9]/g, '')}` :
@@ -66,6 +77,12 @@ const ERROR_TYPES = new Set([
   'AggregateError',
   'AbortError',
 ]);
+/**
+ * Classifies unexpected worker failures for backup diagnostics.
+ *
+ * @param {*} error Error being handled.
+ * @return {string} Resulting text.
+ */
 export function unexpectedBackupDiagnostic(error) {
   const kind = ERROR_TYPES.has(error?.name) ? error.name : 'Fehler';
   const system = typeof error?.code === 'string' && /^[A-Z0-9_]{2,24}$/
@@ -85,6 +102,13 @@ export function unexpectedBackupDiagnostic(error) {
   return `${kind}${system}${location || '; Quellposition nicht verfügbar'}`;
 }
 
+/**
+ * Logs backup-job failures without leaking sensitive information.
+ *
+ * @param {*} jobId Job id used by this operation.
+ * @param {*} serialized Serialized used by this operation.
+ * @param {*} error Error being handled.
+ */
 export function logBackupJobFailure(jobId, serialized, error) {
   const diagnostic = typeof error?.backupDiagnostic === 'string'
     ? sanitizeBackupDiagnostic(error.backupDiagnostic) :

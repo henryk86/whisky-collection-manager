@@ -6,12 +6,24 @@ import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 const script = fileURLToPath(new URL('../../scripts/check-doc-impact.js', import.meta.url));
+/**
+ * Derives the git result from the supplied values.
+ *
+ * @param {*} cwd Current working directory for path resolution.
+ * @param {*} args Arguments forwarded to the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function git(cwd, args) {
   const result = spawnSync('git', args, {cwd, encoding: 'utf8'});
   assert.equal(result.status, 0, result.stderr);
   return result.stdout;
 }
 
+/**
+ * Writes fixture data to the local filesystem.
+ *
+ * @param {*} action Operation or action callback to invoke.
+ */
 function fixture(action) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-doc-impact-'));
   try {
@@ -33,6 +45,13 @@ function fixture(action) {
   }
 }
 
+/**
+ * Derives the check result from the supplied values.
+ *
+ * @param {*} cwd Current working directory for path resolution.
+ * @param {!Object=} options Options controlling the operation.
+ * @return {*} Value returned by the delegated operation.
+ */
 function check(cwd, {env = {}} = {}) {
   return spawnSync(
     process.execPath,

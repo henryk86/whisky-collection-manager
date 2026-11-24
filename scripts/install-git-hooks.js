@@ -6,6 +6,12 @@ import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/**
+ * Normalizes the git text for subsequent processing.
+ *
+ * @param {!Array<*>} args Arguments forwarded to the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function git(...args) {
   const result = spawnSync('git', args, {cwd: root, encoding: 'utf8'});
   if (result.error || (result.status !== 0 && !(args[0] === 'config' &&

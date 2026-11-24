@@ -1,27 +1,70 @@
 import {displayedTastingRating, latestTasting} from '../../../shared/tasting-records.js';
 /**
- * Pure analytics over the current schema-v5 collection. No storage writes, no
+ * Pure analytics over the current schema-6 collection. No storage writes, no
  * inferred market values.
  */
 import {whiskyTypeName} from './labels.js';
 import {bottlingOrigins, bottlingDistilleryIds} from './distillery-origin.js';
 import {readAnalyticsDate} from './analytics-period.js';
 
+/**
+ * Tests whether a value is a finite JavaScript number.
+ *
+ * @param {*} v Value to inspect.
+ * @return {boolean} True only for finite numbers.
+ */
 const isNumber = v => typeof v === 'number' && Number.isFinite(v);
 
+/**
+ * Extracts trimmed text, treating non-strings and whitespace as empty.
+ *
+ * @param {*} v Candidate value.
+ * @return {string} Trimmed text or an empty string.
+ */
 const text = v => typeof v === 'string' && v.trim() ? v.trim() : '';
 
+/**
+ * Accepts safe integer years within the supported reporting range.
+ *
+ * @param {*} v Candidate year.
+ * @return {?number} Year from 1600 to 2300, or null.
+ */
 const usableYear = v => Number.isSafeInteger(v) && v >= 1600 && v <= 2300 ?
   v : null;
 
+/**
+ * Tests input text against the year of pattern.
+ *
+ * @param {*} v Value to evaluate.
+ * @param {*} explicit Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const yearOf = (v, explicit) => usableYear(explicit) ??
   (/^\d{4}-\d{2}-\d{2}$/.test(v || '') ?
     usableYear(Number(v.slice(0, 4))) : null);
 
+/**
+ * Normalizes a bottling's currency code for analytics grouping.
+ *
+ * @param {!Object} b Bottling record with an optional currency code.
+ * @return {string} Uppercase code or UNBEKANNT when absent.
+ */
 const currencyOf = b => text(b.currency).toUpperCase() || 'UNBEKANNT';
 const idsOf = bottlingDistilleryIds;
+/**
+ * Derives the amount result from the supplied values.
+ *
+ * @param {*} v Value to evaluate.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const amount = v => isNumber(v) && v >= 0 ? v : null;
 
+/**
+ * Tests input text against the date month pattern.
+ *
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
 const dateMonth = value => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}(?:-\d{2})?(?:T.*)?$/
     .test(value)) return null;
@@ -29,15 +72,48 @@ const dateMonth = value => {
   return month >= 1 && month <= 12 ? value.slice(0, 7) : null;
 };
 
+/**
+ * Derives the date day result from the supplied values.
+ *
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
 const dateDay = value => readAnalyticsDate(typeof value === 'string' ?
   value.slice(0, 10) : '');
 
+/**
+ * Aggregates input values for the sum calculation.
+ *
+ * @param {*} values Values to process.
+ * @return {*} Combined value obtained from the entries.
+ */
 const sum = values => values.reduce((a, b) => a + b, 0);
 
+/**
+ * Derives the avg result from the supplied values.
+ *
+ * @param {*} values Values to process.
+ * @return {number} Calculated numeric value.
+ */
 const avg = values => values.length ? sum(values) / values.length : null;
 
+/**
+ * Selects and transforms the valid numbers records.
+ *
+ * @param {*} rows Input records to process.
+ * @param {function(...*): *} getter Function selecting a value from a record.
+ * @return {*} Entries that meet the selection criteria.
+ */
 const validNumbers = (rows, getter) => rows.map(getter).filter(isNumber);
 
+/**
+ * Orders the grouped records using the configured comparison.
+ *
+ * @param {*} rows Input records to process.
+ * @param {*} key Key used to select or group values.
+ * @param {!Object=} options Options controlling the operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const grouped = (rows, key, {unknown = 'Unbekannt'} = {}) => {
   const counts = new Map();
   rows.forEach(row => {
@@ -48,8 +124,21 @@ const grouped = (rows, key, {unknown = 'Unbekannt'} = {}) => {
     b.count - a.count || a.name.localeCompare(b.name, 'de'));
 };
 
+/**
+ * Derives the rank result from the supplied values.
+ *
+ * @param {*} rows Input records to process.
+ * @param {number=} limit Maximum number of entries to include.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const rank = (rows, limit = 10) => rows.slice(0, limit);
 
+/**
+ * Calculates the stats numeric value.
+ *
+ * @param {*} values Values to process.
+ * @return {!Object} Calculated numeric result.
+ */
 const stats = values => ({
   count: values.length,
   avg: avg(values),
@@ -57,12 +146,26 @@ const stats = values => ({
   max: values.length ? Math.max(...values) : null,
 });
 
+/**
+ * Filters records according to the by date selection rules.
+ *
+ * @param {*} rows Input records to process.
+ * @param {*} dateSelector Value used by this operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const byDate = (rows, dateSelector) => grouped(
   rows.filter(row => dateMonth(dateSelector(row))),
   row => dateMonth(dateSelector(row))
 )
   .sort((a, b) => a.name.localeCompare(b.name));
 
+/**
+ * Filters records according to the by day selection rules.
+ *
+ * @param {*} rows Input records to process.
+ * @param {*} dateSelector Value used by this operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const byDay = (rows, dateSelector) => grouped(
   rows.filter(row => dateDay(dateSelector(row))),
   row => dateDay(dateSelector(row))
@@ -73,6 +176,10 @@ const statusLabels = {closed: 'Geschlossen', open: 'Geöffnet', empty: 'Leer'};
 /**
  * Returns matching bottlings AND actual matching physical bottles. Bottle
  * filters must match the same bottle.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {!Object=} filters Filters restricting the input records.
+ * @return {!Object} Structured result for the caller.
  */
 export function filterAnalyticsCollection(collection, filters = {}) {
   const distillery = filters.distillery || 'all';
@@ -103,6 +210,12 @@ export function filterAnalyticsCollection(collection, filters = {}) {
   };
 }
 
+/**
+ * Collects the available distillery, country and bottle filters.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @return {!Object} Structured result for the caller.
+ */
 export function analyticsFilterOptions(collection) {
   const used = new Set((collection.bottlings || []).flatMap(idsOf));
   const lookup = new Map((collection.distilleries || []).map(d => [d.id, d]));
@@ -117,6 +230,14 @@ export function analyticsFilterOptions(collection) {
   };
 }
 
+/**
+ * Calculates inventory, acquisition and tasting statistics from matching
+ * records.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @param {!Object=} filters Filters restricting the input records.
+ * @return {!Object} Structured result for the caller.
+ */
 export function analyzeCollection(collection, filters = {}) {
   const {bottlings, bottleEntries, bottles} =
     filterAnalyticsCollection(collection, filters);
@@ -124,6 +245,12 @@ export function analyzeCollection(collection, filters = {}) {
     [d.id, d.name]));
   const distilleryLookup = new Map((collection.distilleries || []).map(d =>
     [d.id, d]));
+  /**
+   * Derives the origin for result from the supplied values.
+   *
+   * @param {*} b Second entry or operand in the calculation.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const originFor = b => bottlingOrigins(b, distilleryLookup);
   const distilleryCounts = new Map();
   const bottlingPhysicalCounts = new Map();
@@ -162,6 +289,12 @@ export function analyzeCollection(collection, filters = {}) {
     for (const id of idsOf(bottling)) distilleryCounts.get(id)?.ratings
       .push(displayedTastingRating(bottling));
   }
+  /**
+   * Orders or compares distilleries values.
+   *
+   * @param {*} field Field definition or input value to handle.
+   * @return {!Array<*>} Resulting entries in their output order.
+   */
   const sortDistilleries = field => [...distilleries].sort((a, b) =>
     b[field] - a[field] || a.name.localeCompare(b.name, 'de'));
   const status = grouped(bottles, b => statusLabels[b.status] || 'Unbekannt');
@@ -327,6 +460,12 @@ export function analyzeCollection(collection, filters = {}) {
   const originalVsExternal = grouped(bottlings, b => {
     const bottler = text(b.bottler);
     if (!bottler) return 'Nicht angegeben';
+    /**
+     * Transforms the normalized text with the required substitutions.
+     *
+     * @param {*} name Environment variable or setting name.
+     * @return {string} Resulting text.
+     */
     const normalized = name => text(name).normalize('NFKC')
       .toLocaleLowerCase('de').replace(/\s+/g,
         ' '

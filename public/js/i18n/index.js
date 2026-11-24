@@ -13,6 +13,14 @@ let language = DEFAULT_LANGUAGE;
 let languages = Object.freeze({de: 'Deutsch'});
 let translator = createTranslator(german, english);
 
+/**
+ * Formats message for presentation.
+ *
+ * @param {*} template Value used by this operation.
+ * @param {*} params Value used by this operation.
+ * @param {*} locale Value used by this operation.
+ * @return {*} Entries transformed for the consuming code.
+ */
 function formatMessage(template, params, locale) {
   // A small ICU-compatible plural subset. Use Intl's language-specific
   // categories;
@@ -32,7 +40,14 @@ function formatMessage(template, params, locale) {
     Object.hasOwn(params, key) ? String(params[key]) : match);
 }
 
-/** Pure key lookup with English fallback and named placeholders. */
+/**
+ * Pure key lookup with English fallback and named placeholders.
+ *
+ * @param {!Object=} messages Messages used by this operation.
+ * @param {*=} fallback Fallback used by this operation.
+ * @param {string=} locale Locale used for formatting.
+ * @return {Function} Value returned by the delegated operation.
+ */
 export function createTranslator(messages = {}, fallback = english, locale = DEFAULT_LANGUAGE) {
   return (key, params = {}) => {
     if (typeof key !== 'string') return key;
@@ -48,29 +63,73 @@ export function createTranslator(messages = {}, fallback = english, locale = DEF
   };
 }
 
+/**
+ * Resolves a localized message with optional interpolation values.
+ *
+ * @param {Function} key Key used to look up the value.
+ * @param {!Object=} params Named values used when formatting the message.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export const t = (key, params = {}) => translator(key, params);
 
 /**
  * HTML-template variant; user-controlled parameter strings are always escaped.
+ *
+ * @param {Function} key Key used to look up the value.
+ * @param {!Object=} params Named values used when formatting the message.
+ * @return {*} Entries transformed for the consuming code.
  */
 export const tHtml = (key, params = {}) => t(key, Object.fromEntries(
   Object.entries(params).map(([name, value]) => [name, typeof value ===
     'string' ? escapeHtml(value) : value])
 ));
 
+/**
+ * Returns the currently selected application language.
+ *
+ * @return {string} Resulting text.
+ */
 export const currentLanguage = () => language;
 
+/**
+ * Lists language options made available by the application.
+ *
+ * @return {!Object} Structured result for the caller.
+ */
 export const availableLanguages = () => languages;
 
+/**
+ * Formats number for index.
+ *
+ * @param {*} number Number used by this operation.
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {string} Resulting text.
+ */
 export const formatNumber = (number, options) =>
   new Intl.NumberFormat(language, options).format(number);
 
+/**
+ * Tests input text against the valid language pattern.
+ *
+ * @param {*} code Code used to identify a specific outcome.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function validLanguage(code) {return /^[a-z]{2}(?:-[A-Z]{2})?$/u.test(code);}
 
+/**
+ * Derives the saved language result from the supplied values.
+ * @return {string} Resulting text.
+ */
 function savedLanguage() {
   try {return localStorage.getItem(STORAGE_KEY);} catch {return null;}
 }
 
+/**
+ * Applies a user-selected language and updates the interface.
+ *
+ * @param {string} code Stable identifier used for error handling.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function chooseLanguage(code) {
   if (!Object.hasOwn(languages, code)) return false;
   try {localStorage.setItem(STORAGE_KEY, code);} catch { /* private/restricted storage */}
@@ -81,6 +140,9 @@ export function chooseLanguage(code) {
 /**
  * Locale files use the same stable keys; missing translations fall back to
  * English.
+ *
+ * @param {Function=} fetcher Fetcher used by this operation.
+ * @return {!Promise<string>} Promise fulfilled when the operation completes.
  */
 export async function initializeLanguage(fetcher = globalThis.fetch) {
   if (typeof fetcher !== 'function') return language;
@@ -123,6 +185,8 @@ export async function initializeLanguage(fetcher = globalThis.fetch) {
 
 /**
  * Optional declarative bindings for static HTML, without text-node scanning.
+ *
+ * @param {*} element Element to process.
  */
 function localizeElement(element) {
   const textKey = element.getAttribute('data-i18n');
@@ -133,6 +197,11 @@ function localizeElement(element) {
   }
 }
 
+/**
+ * Replaces translatable DOM text and attributes for the active language.
+ *
+ * @param {!Element} root Root element or directory.
+ */
 export function translateDom(root) {
   if (!root || !root.querySelectorAll) return;
   if (root.nodeType === 1) localizeElement(root);

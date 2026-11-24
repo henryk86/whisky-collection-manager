@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createNavigation} from '../../public/js/navigation/controller.js';
+/**
+ * Prepares the navigation.test state.
+ *
+ * @return {!Object} Structured result for the caller.
+ */
 function setup() {
   const calls = [];
   const state = {
@@ -11,7 +16,19 @@ function setup() {
       pathname: '/', search: '',
     },
     history: {},
+    /**
+     * Derives the scroll to result from the supplied values.
+     *
+     * @param {!Array<*>} args Arguments forwarded to the operation.
+     * @return {number} Calculated numeric value.
+     */
     scrollTo: (...args) => calls.push(['scroll', ...args]),
+    /**
+     * Updates the add event listener state for its caller.
+     *
+     * @param {*} event Event that triggered this operation.
+     * @param {function(...*): *} callback Callback invoked by the operation.
+     */
     addEventListener: (event, callback) => {
       browser[event] = callback;
     },
@@ -26,7 +43,16 @@ function setup() {
     };
   }
   const controller = createNavigation({
-    state, browser, render: () => calls.push(['render']), closeModal: () => {
+    state, browser,
+    /**
+     * Derives the render result from the supplied values.
+     * @return {number} Calculated numeric value.
+     */
+    render: () => calls.push(['render']),
+    /**
+     * Performs the close modal lifecycle action.
+     */
+    closeModal: () => {
       state.modal = null;
       calls.push(['close']);
     },

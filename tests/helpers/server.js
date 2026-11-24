@@ -7,6 +7,8 @@ import path from 'node:path';
 /**
  * Every integration test uses an isolated temporary collection and a separate
  * process.
+ *
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 export async function startTestServer() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-test-'));
@@ -39,6 +41,10 @@ export async function startTestServer() {
   let diagnostics = '';
   child.stderr.on('data', chunk => {diagnostics += chunk;});
 
+  /**
+   * Performs the stop lifecycle action.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function stop() {
     if (child.exitCode === null && child.signalCode === null) {
       const exited = once(child, 'exit');
@@ -56,6 +62,9 @@ export async function startTestServer() {
         () => finish(new Error(`Test server did not become ready: ${diagnostics}`)),
         20000
       );
+      /**
+       * Updates the cleanup state for its caller.
+       */
       function cleanup() {
         clearTimeout(timeout);
         child.off('message', onMessage);
@@ -63,12 +72,23 @@ export async function startTestServer() {
         child.off('exit', onExit);
       }
 
+      /**
+       * Updates the finish state for its caller.
+       *
+       * @param {*} error Error to handle or propagate.
+       * @param {*} value Value to process.
+       */
       function finish(error, value) {
         cleanup();
         if (error) reject(error);
         else resolve(value);
       }
 
+      /**
+       * Handles the message interaction.
+       *
+       * @param {*} message Message to display or use for diagnostics.
+       */
       function onMessage(message) {
         if (message?.type !== 'test-server-ready') return;
         if (!Number.isInteger(message.port) || message.port < 1 ||
@@ -79,8 +99,19 @@ export async function startTestServer() {
         finish(null, message.port);
       }
 
+      /**
+       * Handles the error interaction.
+       *
+       * @param {*} error Error to handle or propagate.
+       */
       function onError(error) {finish(error);}
 
+      /**
+       * Handles the exit interaction.
+       *
+       * @param {*} code Code used to identify a specific outcome.
+       * @param {*} signal Value used by this operation.
+       */
       function onExit(code, signal) {
         finish(new Error(`Test server exited before listening (${code ??
           signal}): ${diagnostics}`));
@@ -97,6 +128,15 @@ export async function startTestServer() {
   }
 }
 
+/**
+ * Loads json for server.
+ *
+ * @param {*} base Base used by this operation.
+ * @param {string} url URL of the requested resource.
+ * @param {string=} method HTTP method for the operation.
+ * @param {!Object} data Input data for the operation.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function requestJson(base, url, method = 'GET', data) {
   const response = await fetch(base + url, {
     method,

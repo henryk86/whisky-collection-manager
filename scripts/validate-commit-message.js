@@ -9,11 +9,21 @@ import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {classifyCommit} from './release-automation.js';
 
+/**
+ * Validates message for validate commit message.
+ *
+ * @param {*} contents Contents used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function validateMessage(contents) {
   const [subject = '', ...body] = contents.replace(/\r\n/g, '\n').split('\n');
   return classifyCommit(subject, body.join('\n'));
 }
 
+/**
+ * Normalizes the active merge text for subsequent processing.
+ * @return {*} Value, or false when the operation cannot proceed.
+ */
 function activeMerge() {
   try {
     // Git produces its own merge message; merge commits are not release
@@ -30,6 +40,9 @@ function activeMerge() {
   } catch {return false;}
 }
 
+/**
+ * Runs the entry point and coordinates its operations.
+ */
 function main() {
   const file = process.argv[2];
   if (!file) throw new Error('Usage: validate-commit-message.js COMMIT_MSG_FILE');

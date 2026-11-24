@@ -1,8 +1,13 @@
 import {t} from './index.js';
 import {apiErrorCode} from '../../../shared/api-error-codes.js';
 
-/** New jobs use stable keys; legacy status files remain readable without rendering
- * their untrusted diagnostic text. */
+/**
+ * New jobs use stable keys; legacy status files remain readable without
+ * rendering their untrusted diagnostic text.
+ *
+ * @param {*} job Job used by this operation.
+ * @return {*} Entries that meet the selection criteria.
+ */
 export function jobErrorText(job) {
   if (job && typeof job === 'object') {
     const code = job.errorCode;

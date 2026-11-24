@@ -11,6 +11,11 @@ import {fail} from '../domain/errors.js';
 const statusCodes = {
   closed: 'Geschlossen', open: 'Geöffnet', empty: 'Leer',
 };
+/**
+ * Serializes the collection for JSON download.
+ *
+ * @return {!Object} Structured result for the caller.
+ */
 export function exportJson() {
   return {
     filename: 'collection.json',
@@ -19,6 +24,11 @@ export function exportJson() {
   };
 }
 
+/**
+ * Serializes selected collection records as a CSV download.
+ *
+ * @return {!Object} Structured result for the caller.
+ */
 export function exportCsv() {
   const db = read();
   const ds = new Map(db.distilleries.map(d => [d.id, d.name]));
@@ -96,6 +106,9 @@ export function exportCsv() {
 /**
  * The manual download uses exactly the same readable ZIP builder as the
  * scheduler.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @return {!Object} Structured result for the caller.
  */
 export function exportZip(req) {
   authorizeAdmin(req);

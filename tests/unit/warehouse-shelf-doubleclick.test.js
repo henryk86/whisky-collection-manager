@@ -2,20 +2,49 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {bindEvents} from '../../public/js/events.js';
 
+/**
+ * Builds a lookup map for the delegated events data.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function delegatedEvents() {
   const listeners = new Map();
   const calls = {opened: [], selected: [], bottlePreviews: []};
   const root = {
+    /**
+     * Derives the add event listener result from the supplied values.
+     *
+     * @param {*} name Environment variable or setting name.
+     * @param {*} fn Function called during this operation.
+     * @return {!Map<*, *>} Result computed from the supplied inputs.
+     */
     addEventListener: (name, fn) => listeners.set(name, fn),
+    /**
+     * Derives the query selector all result from the supplied values.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     querySelectorAll: () => [],
   };
   const previousDocument = globalThis.document;
-  globalThis.document = {addEventListener: () => {}};
+  globalThis.document = {
+    /**
+     * Updates the add event listener state for its caller.
+     */
+    addEventListener: () => {},
+  };
   try {
     bindEvents(root, {
       state: {},
+      /**
+       * Updates the render state for its caller.
+       */
       render: () => {},
+      /**
+       * Updates the action state for its caller.
+       */
       action: () => {},
+      /**
+       * Updates the navigate state for its caller.
+       */
       navigate: () => {},
       editors: {},
       settings: {},
@@ -26,10 +55,32 @@ function delegatedEvents() {
       photoViewer: {},
       photoEditor: {},
       theme: {},
+      /**
+       * Updates the resolve code state for its caller.
+       */
       resolveCode: () => {},
       warehouseView: {
+        /**
+         * Performs the open shelf details lifecycle action.
+         *
+         * @param {*} id Identifier of the affected record.
+         * @return {number} Calculated numeric value.
+         */
         openShelfDetails: id => calls.opened.push(id),
+        /**
+         * Performs the open bottle preview lifecycle action.
+         *
+         * @param {*} id Identifier of the affected record.
+         * @return {number} Calculated numeric value.
+         */
         openBottlePreview: id => calls.bottlePreviews.push(id),
+        /**
+         * Derives the toggle wall bottle selection result from the supplied
+         * values.
+         *
+         * @param {*} id Identifier of the affected record.
+         * @return {number} Calculated numeric value.
+         */
         toggleWallBottleSelection: id => calls.selected.push(id),
       },
     });
@@ -40,7 +91,22 @@ function delegatedEvents() {
   const bay = {
     dataset: {act: 'warehouse-shelf-view', shelfId: 'rack-2-shelf-3'},
     tagName: 'DIV', disabled: false,
-    classList: {contains: name => name === 'warehouse-wall-bay'},
+    classList: {
+      /**
+       * Derives the contains result from the supplied values.
+       *
+       * @param {*} name Environment variable or setting name.
+       * @return {boolean} Whether the operation matched or succeeded.
+       */
+      contains: name => name === 'warehouse-wall-bay',
+    },
+    /**
+     * Performs the closest lifecycle action.
+     *
+     * @param {function(...*): *} selector Selector used to obtain matching
+     *     values.
+     * @return {!Object} Computed value, or null when the input has no match.
+     */
     closest(selector) {
       if (selector === '[data-act]') return this;
       if (selector.includes('.warehouse-wall-bay')) return this;
@@ -50,6 +116,13 @@ function delegatedEvents() {
   const bottle = {
     dataset: {act: 'warehouse-bottle-select', id: 'bottle-1'},
     tagName: 'BUTTON', disabled: false,
+    /**
+     * Performs the closest lifecycle action.
+     *
+     * @param {function(...*): *} selector Selector used to obtain matching
+     *     values.
+     * @return {!Object} Computed value, or null when the input has no match.
+     */
     closest(selector) {
       if (selector === '[data-act]' || selector ===
         'button, a, input, select, textarea' ||
@@ -60,6 +133,13 @@ function delegatedEvents() {
   };
   const managerShelf = {
     dataset: {shelfId: 'rack-1-shelf-7'}, tagName: 'DIV',
+    /**
+     * Performs the closest lifecycle action.
+     *
+     * @param {function(...*): *} selector Selector used to obtain matching
+     *     values.
+     * @return {!Object} Computed value, or null when the input has no match.
+     */
     closest(selector) {
       if (selector.includes('.warehouse-furniture-manager')) return this;
       return null;
@@ -68,6 +148,13 @@ function delegatedEvents() {
   const managerBottle = {
     dataset: {act: 'warehouse-bottle-preview', id: 'bottle-2'},
     tagName: 'BUTTON', disabled: false,
+    /**
+     * Performs the closest lifecycle action.
+     *
+     * @param {function(...*): *} selector Selector used to obtain matching
+     *     values.
+     * @return {!Object} Computed value, or null when the input has no match.
+     */
     closest(selector) {
       if (selector === '[data-act]' || selector ===
         'button, a, input, select, textarea') return this;
@@ -120,7 +207,13 @@ test('keyboard Enter and Space still open a focused compartment', () => {
   const {listeners, calls, bay} = delegatedEvents();
   for (const key of ['Enter', ' ']) {
     let prevented = false;
-    listeners.get('keydown')({key, target: bay, preventDefault: () => {prevented = true;}});
+    listeners.get('keydown')({
+      key, target: bay,
+      /**
+       * Updates the prevent default state for its caller.
+       */
+      preventDefault: () => {prevented = true;},
+    });
     assert.equal(prevented, true);
   }
   assert.deepEqual(calls.opened, ['rack-2-shelf-3', 'rack-2-shelf-3']);
@@ -140,11 +233,20 @@ test(
     const blocked = {
       ...bay,
       dataset: {shelfId: 'blocked', capacity: '0'},
-      classList: {contains: () => false},
+      classList: {
+        /**
+         * Derives the contains result from the supplied values.
+         * @return {boolean} Whether the operation matched or succeeded.
+         */
+        contains: () => false,
+      },
     };
     listeners.get('keydown')({
       key: 'Enter',
       target: blocked,
+      /**
+       * Reports the prevent default error condition.
+       */
       preventDefault: () => {throw new Error('must not focus');},
     });
     assert.deepEqual(calls.opened, []);

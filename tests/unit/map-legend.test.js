@@ -67,8 +67,18 @@ test(
   'map legend translates active and closed distillery statuses in English for stocked and empty sites',
   async () => {
     const originalLocation = globalThis.location;
+    /**
+     * Retrieves locale from the available state.
+     *
+     * @param {*} url URL of the resource being processed.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
     const fetchLocale = async url => ({
       ok: true,
+      /**
+       * Reads json data from the local filesystem.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       json: async () => JSON.parse(fs.readFileSync(
         new URL(`../../public${url}`, import.meta.url),
         'utf8'

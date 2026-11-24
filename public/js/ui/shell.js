@@ -3,8 +3,19 @@ import {newBottlingIcon, inventoryScanIcon, themeMoonIcon, closeIcon} from './ac
 import {MAIN_PAGES} from '../navigation/pages.js';
 import {reconcileChildren} from './dom-reconcile.js';
 import {escapeHtml} from './dom.js';
+/**
+ * Creates shell for shell.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {Function} Entries transformed for the consuming code.
+ */
 export function createShell({root, state, applyTheme, renderModal}) {
   let displayedRoute = null;
+  /**
+   * Transforms the entries used by shell.
+   *
+   * @param {*} content Content to render, store or examine.
+   */
   function shell(content) {
     // Data updates must not tear down the header, page scroll container and
     // modal host. Rebuilding #app briefly sends long pages to the top,

@@ -12,6 +12,12 @@ const internationalSeed = JSON.parse(fs.readFileSync(
 ));
 
 // Convert legacy top-level bottles into the owning bottling before validation.
+/**
+ * Moves legacy physical bottles into their parent bottlings.
+ *
+ * @param {*} db Db used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function migrateNestedBottles(db) {
   let changed = false;
   if (db.schemaVersion === 1) {
@@ -60,6 +66,12 @@ export function migrateNestedBottles(db) {
 // Conflicting legacy fields are logged in an external migration report, never
 // silently used as an additional identification field.
 
+/**
+ * Normalizes inventory numbering from earlier collection schemas.
+ *
+ * @param {*} db Db used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function migrateInventoryNumbers(db) {
   let changed = false;
   const conflicts = [];
@@ -112,6 +124,12 @@ export function migrateInventoryNumbers(db) {
   };
 }
 
+/**
+ * Upgrades legacy bottle-category labels to current values.
+ *
+ * @param {*} db Db used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function migrateLabelTypes(db) {
   let changed = false;
   for (const bottle of allBottles(db)) {
@@ -123,6 +141,12 @@ export function migrateLabelTypes(db) {
   return changed;
 }
 
+/**
+ * Updates legacy distillery references to the current record structure.
+ *
+ * @param {*} db Db used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function migrateDistilleries(db) {
   let changed = false;
   for (const b of db.bottlings || []) {
@@ -138,6 +162,12 @@ export function migrateDistilleries(db) {
   return changed;
 }
 
+/**
+ * Normalizes stored photo metadata when upgrading older collections.
+ *
+ * @param {*} db Db used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function migratePhotos(db) {
   let changed = false;
   for (const bottle of allBottles(db)) {
@@ -168,9 +198,13 @@ export function migratePhotos(db) {
   return changed;
 }
 
-/** Move the former bottling-wide sample type to individual physical bottles.
- * Keep bottling.volumeMl as the nominal size published by the producer;
- * each bottle additionally receives its own actual size when known.
+/**
+ * Move the former bottling-wide sample type to individual physical bottles.
+ * Keep bottling.volumeMl as the nominal size published by the producer; each
+ * bottle additionally receives its own actual size when known.
+ *
+ * @param {*} db Db used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
  */
 export function migrateBottleTypes(db) {
   let changed = false;
@@ -200,6 +234,9 @@ export function migrateBottleTypes(db) {
 
 /**
  * Existing collections can gain the optional document list without data loss.
+ *
+ * @param {*} db Db used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
  */
 export function migrateDocumentLists(db) {
   let changed = false;
@@ -212,7 +249,12 @@ export function migrateDocumentLists(db) {
   return changed;
 }
 
-/** Add newly published international sites without overwriting user changes. */
+/**
+ * Add newly published international sites without overwriting user changes.
+ *
+ * @param {*} db Db used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function migrateInternationalDistilleries(db) {
   if (!Array.isArray(db.distilleries)) return false;
   const currentNames = new Set(db.distilleries.map(d => d.name.trim()
@@ -230,9 +272,13 @@ export function migrateInternationalDistilleries(db) {
   return changed;
 }
 
-/** Fill missing origin metadata from the published distillery catalogue.
- * Never change user-set status, coordinates or explicit geographic fields.
+/**
+ * Fill missing origin metadata from the published distillery catalogue. Never
+ * change user-set status, coordinates or explicit geographic fields.
  * Country/region belong to distilleries, not to individual bottlings.
+ *
+ * @param {*} db Db used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
  */
 export function migrateDistilleryOrigins(db) {
   if (!Array.isArray(db.distilleries)) return false;
@@ -264,6 +310,9 @@ export function migrateDistilleryOrigins(db) {
 /**
  * Mutates a parsed document only. The caller backs up and commits it after
  * validation.
+ *
+ * @param {!Object} collection Collection data being processed.
+ * @return {!Object} Structured result for the caller.
  */
 export function migrateCollection(collection) {
   assert(
@@ -299,10 +348,13 @@ export function migrateCollection(collection) {
 
 /**
  * Upgrade historical collections without discarding inventory, distilleries,
- * physical bottles, media references, settings or any warehouse data.
- * Only pre-schema-5 sensory data is intentionally not carried forward.
- * Schema 5 is upgraded losslessly to schema 6.
- * The input is never changed; validation runs before any file is replaced.
+ * physical bottles, media references, settings or any warehouse data. Only
+ * pre-schema-5 sensory data is intentionally not carried forward. Schema 5 is
+ * upgraded losslessly to schema 6. The input is never changed; validation runs
+ * before any file is replaced.
+ *
+ * @param {*} source Source used by this operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function migrateCollectionToCurrent(source) {
   assert(

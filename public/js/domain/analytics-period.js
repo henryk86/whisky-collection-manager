@@ -1,4 +1,9 @@
-/** Read and validate a calendar date without timezone conversions. */
+/**
+ * Read and validate a calendar date without timezone conversions.
+ *
+ * @param {*} value Input value to process.
+ * @return {string} Resulting text.
+ */
 export function readAnalyticsDate(value) {
   if (typeof value !== 'string' || !/^(\d{4})-(\d{2})-(\d{2})$/
     .test(value)) return '';

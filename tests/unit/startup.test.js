@@ -11,6 +11,13 @@ const packages = {
   'node_modules/playwright-core': {version: '1.65.0', dev: true},
 };
 
+/**
+ * Writes fixture data to the local filesystem.
+ *
+ * @param {*} t Temporary or input value for the calculation.
+ * @param {!Object=} options Options controlling the operation.
+ * @return {*} Serialized JSON text.
+ */
 function fixture(t, {installed = true, certificate = true} = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-autostart-'));
   t.after(() => fs.rmSync(root, {recursive: true, force: true}));
@@ -28,6 +35,12 @@ function fixture(t, {installed = true, certificate = true} = {}) {
   return root;
 }
 
+/**
+ * Writes install data to the local filesystem.
+ *
+ * @param {*} root Root node or directory for the operation.
+ * @param {!Object=} options Options controlling the operation.
+ */
 function install(root, {dev = true} = {}) {
   const installed = {};
   for (const [name, entry] of Object.entries(packages)) {
@@ -54,6 +67,13 @@ test(
     prepareStartup({
       root,
       env: {HTTPS_ENABLED: 'true'},
+      /**
+       * Derives the execute result from the supplied values.
+       *
+       * @param {*} binary Binary data supplied to the operation.
+       * @param {*} args Arguments forwarded to the operation.
+       * @return {number} Calculated numeric value.
+       */
       execute: (binary, args) => calls.push([binary, ...args]),
     });
     assert.equal(needsNpmCi(root), false);
@@ -72,6 +92,12 @@ test(
     prepareStartup({
       root,
       env: {npm_execpath: '/nonexistent/npm-cli.js', HTTPS_ENABLED: 'true'},
+      /**
+       * Updates the execute state for its caller.
+       *
+       * @param {*} binary Binary data supplied to the operation.
+       * @param {*} args Arguments forwarded to the operation.
+       */
       execute: (binary, args) => {
         calls.push([binary, ...args]);
         if (args.includes('ci')) install(root);
@@ -122,7 +148,14 @@ test(
     );
     const calls = [];
     prepareStartup({
-      root, env: {}, execute: (binary, args) => {
+      root, env: {},
+      /**
+       * Writes execute data to the local filesystem.
+       *
+       * @param {*} binary Binary data supplied to the operation.
+       * @param {*} args Arguments forwarded to the operation.
+       */
+      execute: (binary, args) => {
         calls.push(args[0]);
         if (args[0] === 'scripts/setup-https.js') {
           fs.mkdirSync(path.join(root, 'certs'), {recursive: true});
@@ -149,7 +182,14 @@ test(
     const root = fixture(t, {certificate: false});
     let setupCount = 0;
     prepareStartup({
-      root, env: {HTTPS_ENABLED: 'false'}, execute: (_binary, args) => {
+      root, env: {HTTPS_ENABLED: 'false'},
+      /**
+       * Updates the execute state for its caller.
+       *
+       * @param {*} _binary Value used by this operation.
+       * @param {*} args Arguments forwarded to the operation.
+       */
+      execute: (_binary, args) => {
         if (args[0] === 'scripts/setup-https.js') setupCount++;
       },
     });
@@ -162,7 +202,13 @@ test(
     );
     assert.equal(localTlsStatus(root), 'custom-missing');
     assert.throws(
-      () => prepareStartup({root, env: {}, execute: () => {}}),
+      () => prepareStartup({
+        root, env: {},
+        /**
+         * Updates the execute state for its caller.
+         */
+        execute: () => {},
+      }),
       /Configured HTTPS certificate/
     );
   }
@@ -173,12 +219,24 @@ test(
   t => {
     const root = fixture(t, {installed: false});
     assert.throws(
-      () => prepareStartup({root, env: {}, execute: () => {throw new Error('offline');}}),
+      () => prepareStartup({
+        root, env: {},
+        /**
+         * Reports the execute error condition.
+         */
+        execute: () => {throw new Error('offline');},
+      }),
       /offline/
     );
     install(root);
     assert.throws(
-      () => prepareStartup({root, env: {}, execute: () => {throw new Error('bad asset');}}),
+      () => prepareStartup({
+        root, env: {},
+        /**
+         * Reports the execute error condition.
+         */
+        execute: () => {throw new Error('bad asset');},
+      }),
       /bad asset/
     );
   }

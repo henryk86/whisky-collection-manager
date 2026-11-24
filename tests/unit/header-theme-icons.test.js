@@ -20,7 +20,13 @@ test(
     createShell({
       root,
       state: {version: '0.8.5', modal: null},
+      /**
+       * Updates theme in the current state.
+       */
       applyTheme() {},
+      /**
+       * Renders modal in the current view.
+       */
       renderModal() {},
     })('');
     assert.ok(root.innerHTML.includes(`data-act="toggle-theme"`));
@@ -41,20 +47,54 @@ test(
     const button = {
       innerHTML: '',
       title: '',
+      /**
+       * Updates attribute in the current state.
+       *
+       * @param {*} key Key used to select or group values.
+       * @param {*} value Value to process.
+       */
       setAttribute: (key, value) => {attributes[key] = value;},
     };
     const root = {dataset: {}, style: {}};
     try {
       globalThis.window = {
+        /**
+         * Derives the match media result from the supplied values.
+         * @return {!Object} Result computed from the supplied inputs.
+         */
         matchMedia: () =>
-          ({matches: false, addEventListener() {} }),
+        ({
+          matches: false,
+          /**
+           * Updates the add event listener state for its caller.
+           */
+          addEventListener() {},
+        }),
       };
       globalThis.localStorage = {
+        /**
+         * Retrieves item from the available state.
+         *
+         * @param {string} key Key used to select or group values.
+         * @return {string} Resulting text.
+         */
         getItem: key => saved.get(key) ?? null,
+        /**
+         * Updates item in the current state.
+         *
+         * @param {string} key Key used to select or group values.
+         * @param {string} value Value to process.
+         * @return {!Map<*, *>} Result computed from the supplied inputs.
+         */
         setItem: (key, value) => saved.set(key, value),
       };
       globalThis.document = {
-        documentElement: root, querySelector: () =>
+        documentElement: root,
+        /**
+         * Derives the query selector result from the supplied values.
+         * @return {!Object} Result computed from the supplied inputs.
+         */
+        querySelector: () =>
           button,
       };
       const theme = createThemeController();

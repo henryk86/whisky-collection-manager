@@ -34,15 +34,47 @@ test(
     let html = '', dialog = '';
     const view = createWarehouseView({
       state,
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} source Input source to inspect.
+       */
       shell: source => {html = source;},
+      /**
+       * Updates the navigate state for its caller.
+       */
       navigate: () => {},
-      modal: {showModal: (_title, content) => {dialog = content;}},
+      modal: {
+        /**
+         * Renders modal in the current view.
+         *
+         * @param {*} _title Value used by this operation.
+         * @param {*} content Content to render, store or examine.
+         */
+        showModal: (_title, content) => {dialog = content;},
+      },
+      /**
+       * Performs the refresh lifecycle action.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       refresh: async () => {},
     });
     const oldDocument = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () => null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll: () => [],
+      /**
+       * Retrieves element by id from the available state.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getElementById: () => null,
     };
     try {
@@ -86,9 +118,30 @@ test(
         selectLabel: 'Select bottle',
         deselectLabel: 'Remove bottle',
       },
+      /**
+       * Updates attribute in the current state.
+       *
+       * @param {*} key Key used to select or group values.
+       * @param {*} value Value to process.
+       * @return {!Map<*, *>} Result computed from the supplied inputs.
+       */
       setAttribute: (key, value) => attributes.set(key, value),
+      /**
+       * Performs the closest lifecycle action.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {!Object} Structured result assembled from the input data.
+       */
       closest: selector => selector === '.warehouse-wall-bottle' ? {
         classList: {
+          /**
+           * Derives the toggle result from the supplied values.
+           *
+           * @param {*} name Environment variable or setting name.
+           * @param {*} enabled Value used by this operation.
+           * @return {*} Result computed from the supplied inputs.
+           */
           toggle: (name, enabled) => enabled ? marked.add(name) :
             marked.delete(name),
         },
@@ -100,6 +153,13 @@ test(
     const label = {textContent: ''};
     const original = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector all result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelectorAll: selector => ({
         '.warehouse-bottle-check': [],
         '.warehouse-wall-bottle .warehouse-bottle-symbol': [button],

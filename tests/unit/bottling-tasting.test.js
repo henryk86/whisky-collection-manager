@@ -13,6 +13,12 @@ import german from '../../public/locales/de.json' with {type: 'json'};
 import english from '../../public/locales/en.json' with {type: 'json'};
 import {GLENCAIRN_INK} from '../../public/js/ui/glencairn-icon.js';
 
+/**
+ * Derives the notes result from the supplied values.
+ *
+ * @param {*} nose Value used by this operation.
+ * @return {!Object} Result computed from the supplied inputs.
+ */
 const notes = nose => ({nose, palate: '', finish: ''});
 test(
   'schema 6 rejects legacy tasting fields on a bottling; bottles do not store sensory data',

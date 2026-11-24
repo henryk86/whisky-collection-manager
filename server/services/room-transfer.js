@@ -8,6 +8,10 @@ import {fail} from '../domain/errors.js';
 
 const FORMAT = 'wcm-room-transfer';
 const VERSION = 1;
+/**
+ * Derives the id result from the supplied values.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const id = () => crypto.randomUUID();
 const furnitureKeys = [
   'name',
@@ -26,13 +30,39 @@ const furnitureKeys = [
   'glassFrame',
 ];
 const shelfKeys = ['name', 'capacity', 'front', 'heightCm', 'doorLeaves', 'glassFrame'];
+/**
+ * Selects and transforms the pick records.
+ *
+ * @param {*} source Input source to inspect.
+ * @param {*} keys Value used by this operation.
+ * @return {!Object} Entries that meet the selection criteria.
+ */
 const pick = (source, keys) => Object.fromEntries(keys.filter(key =>
   Object.hasOwn(source, key)).map(key => [key, source[key]]));
 
+/**
+ * Normalizes the key text for subsequent processing.
+ *
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
 const key = value => String(value || '').trim().toLocaleLowerCase('de');
 
+/**
+ * Derives the source id result from the supplied values.
+ *
+ * @param {*} room Warehouse room being inspected or modified.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const sourceId = room => room.transferSourceId || room.id;
 
+/**
+ * Enforces the ids precondition.
+ *
+ * @param {*} ids Identifiers in their current order.
+ * @param {*} allIds Value used by this operation.
+ * @return {*} Whether the requested condition is met.
+ */
 function assertIds(ids, allIds) {
   if (ids === 'all') return allIds;
   if (!Array.isArray(ids) || !ids.length || ids.length > 200 ||
@@ -47,7 +77,12 @@ function assertIds(ids, allIds) {
   return ids;
 }
 
-/** Store portable properties only, not server-side collection metadata. */
+/**
+ * Store portable properties only, not server-side collection metadata.
+ *
+ * @param {*} room Room model containing dimensions and furniture.
+ * @return {!Object} Structured result for the caller.
+ */
 function exportLayout(room) {
   return {
     id: sourceId(room), name: room.name, width: room.width, height: room.height,
@@ -60,6 +95,15 @@ function exportLayout(room) {
   };
 }
 
+/**
+ * Creates room export for room transfer.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {!Array<*>} ids Identifiers in their current order.
+ * @param {boolean=} includeAssignments Include assignments used by this
+ * operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createRoomExport(warehouse, ids, includeAssignments = false) {
   if (typeof includeAssignments !== 'boolean') throw fail(
     'Invalid assignment option',
@@ -93,6 +137,12 @@ export function createRoomExport(warehouse, ids, includeAssignments = false) {
   };
 }
 
+/**
+ * Validates bundle for room transfer.
+ *
+ * @param {*} bundle Bundle used by this operation.
+ * @return {*} Entries transformed for the consuming code.
+ */
 function validateBundle(bundle) {
   if (!bundle || typeof bundle !== 'object' || Array.isArray(bundle) ||
     bundle.format !== FORMAT || bundle.formatVersion !== VERSION ||
@@ -144,6 +194,11 @@ function validateBundle(bundle) {
 
 /**
  * Dry run and real import use this same calculation, avoiding divergent rules.
+ *
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {*} rawBundle Raw bundle used by this operation.
+ * @param {!Object=} options3 Destructured options for this operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function planRoomImport(
   warehouse,
@@ -178,6 +233,10 @@ export function planRoomImport(
       match.furniture.some(f => f.shelves.some(s => s.id === shelfId)))) {
       blockedRooms++; roomActions.push({name: source.name, action: 'blocked'}); continue;
     }
+    /**
+     * Constructs id from the supplied data.
+     * @return {*} Result computed from the supplied inputs.
+     */
     const makeId = () => {
       let fresh; do {
         fresh =

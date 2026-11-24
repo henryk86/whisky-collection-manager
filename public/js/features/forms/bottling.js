@@ -4,8 +4,20 @@ import {escapeHtml} from '../../ui/dom.js';
 import {textInput, selectInput, areaInput} from '../../ui/fields.js';
 import {bottleStatusLabels, whiskyTypeLabels, photoAccept} from '../../domain/labels.js';
 import {fileAccept} from '../files.js';
+/**
+ * Creates bottling form for bottling.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {Function} Structured result assembled from the input data.
+ */
 export function createBottlingForm({state, selectors}) {
   const {distilleryIds} = selectors;
+  /**
+   * Orders the distillery picker records using the configured comparison.
+   *
+   * @param {*} bottling Bottling record being inspected or updated.
+   * @return {string} Resulting text.
+   */
   function distilleryPicker(bottling) {
     const selected = new Set(distilleryIds(bottling));
     const options = state.collection.distilleries.slice().sort((a, z) =>
@@ -22,6 +34,12 @@ export function createBottlingForm({state, selectors}) {
     </div>`;
   }
 
+  /**
+   * Transforms the entries used by bottling form.
+   *
+   * @param {!Object=} bottling Bottling record being inspected or updated.
+   * @return {string} Resulting text.
+   */
   function bottlingForm(bottling = {}) {
     return `<form id="bottling-form" data-id="${escapeHtml(bottling.id || '')}">
     <div class="forms">${textInput(

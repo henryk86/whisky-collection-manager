@@ -10,6 +10,12 @@ import {fileURLToPath} from 'node:url';
 import {compareVersions, nextVersion, parseVersion, applyAutomatedRelease, verifyReleaseMetadata} from './release-version.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/**
+ * Normalizes the git text for subsequent processing.
+ *
+ * @param {!Array<*>} args Arguments forwarded to the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const git = (...args) =>
   execFileSync('git', args, {cwd: ROOT, encoding: 'utf8'}).trim();
 const TYPES = new Set([
@@ -32,6 +38,13 @@ const LABELS = {
   none: 'Wartung und Dokumentation',
 };
 
+/**
+ * Classifies a conventional commit by its required release impact.
+ *
+ * @param {*} subject Subject used by this operation.
+ * @param {string=} body Request or response body.
+ * @return {!Object} Structured result for the caller.
+ */
 export function classifyCommit(subject, body = '') {
   const match = /^([a-z]+)(?:\(([a-z\d._/-]+)\))?(!)?: (\S.+|\S)$/
     .exec(subject.trim());
@@ -46,6 +59,12 @@ export function classifyCommit(subject, body = '') {
   return {type, scope: scope || '', description, subject, level};
 }
 
+/**
+ * Aggregates commit classifications for the release proposal.
+ *
+ * @param {*} commits Commits used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function analyzeCommits(commits) {
   if (!commits.length) throw new Error('Seit dem letzten Release sind keine neuen Commits vorhanden.');
   const parsed = commits.map(commit =>
@@ -55,6 +74,12 @@ export function analyzeCommits(commits) {
   return {level, commits: parsed};
 }
 
+/**
+ * Parses git log for release automation.
+ *
+ * @param {*} output Output used by this operation.
+ * @return {!Array<!Object>} Resulting list of values.
+ */
 export function parseGitLog(output) {
   const parts = output.split('\0');
   const commits = [];
@@ -66,6 +91,12 @@ export function parseGitLog(output) {
   return commits;
 }
 
+/**
+ * Builds release notes from the approved release plan.
+ *
+ * @param {*} plan Plan used by this operation.
+ * @return {string} Resulting text.
+ */
 export function notesForPlan(plan) {
   const rows = [
     `# ${plan.tag}`,
@@ -89,6 +120,12 @@ export function notesForPlan(plan) {
   return rows.join('\n').trimEnd() + '\n';
 }
 
+/**
+ * Derives the git exists result from the supplied values.
+ *
+ * @param {*} ref Value used by this operation.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const gitExists = (ref) => {
   try {
     execFileSync(
@@ -99,6 +136,13 @@ const gitExists = (ref) => {
   } catch {return false;}
 };
 
+/**
+ * Checks whether ancestor applies.
+ *
+ * @param {*} ancestor Value used by this operation.
+ * @param {*} head Value used by this operation.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const isAncestor = (ancestor, head) => {
   try {
     execFileSync(
@@ -109,9 +153,22 @@ const isAncestor = (ancestor, head) => {
   } catch {return false;}
 };
 
+/**
+ * Performs the commit parents lifecycle action.
+ *
+ * @param {*} rev Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const commitParents = (rev) => git('rev-list', '--parents', '-n', '1', rev)
   .split(/\s+/).slice(1);
 
+/**
+ * Checks whether file at applies.
+ *
+ * @param {*} ref Value used by this operation.
+ * @param {*} name Environment variable or setting name.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const hasFileAt = (ref, name) => {
   try {
     execFileSync(
@@ -123,8 +180,11 @@ const hasFileAt = (ref, name) => {
 };
 
 /**
- * A release-snapshot tag has an off-branch commit whose sole parent is the main
- * merge.
+ * A release-snapshot tag has an off-branch commit whose sole parent is the
+ * main merge.
+ *
+ * @param {*} head Head used by this operation.
+ * @return {*} Entries that meet the selection criteria.
  */
 function knownReleases(head) {
   const refs = git('tag', '--list', 'v*').split(/\s+/).filter(x =>
@@ -140,6 +200,12 @@ function knownReleases(head) {
   }).sort((a, b) => compareVersions(b.version, a.version));
 }
 
+/**
+ * Computes the next release version and required operations.
+ *
+ * @param {!Object=} options Optional configuration for the operation.
+ * @return {(!Object)} Structured result assembled from the input data.
+ */
 export function planRelease({head = 'HEAD', requireMerge = true} = {}) {
   const sha = git('rev-parse', head);
   const parents = commitParents(sha);
@@ -247,11 +313,23 @@ export function planRelease({head = 'HEAD', requireMerge = true} = {}) {
   };
 }
 
+/**
+ * Parses option from its input.
+ *
+ * @param {*} args Arguments forwarded to the operation.
+ * @param {*} name Environment variable or setting name.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function parseOption(args, name) {
   const i = args.indexOf(name); return i >=
     0 ? args[i + 1] : undefined;
 }
 
+/**
+ * Validates range against its constraints.
+ *
+ * @param {*} range Value used by this operation.
+ */
 function validateRange(range) {
   if (!range || !/^[a-zA-Z0-9_./~^{}-]+\.\.[a-zA-Z0-9_./~^{}-]+$/.test(range))
     throw new Error('Commit-Validierung erfordert --range BASE..HEAD');
@@ -260,6 +338,9 @@ function validateRange(range) {
   console.log(`${commits.length} Conventional Commits: OK`);
 }
 
+/**
+ * Runs the release automation entry point.
+ */
 function main() {
   const [, , command, ...args] = process.argv;
   if (command === 'validate') {validateRange(parseOption(args, '--range')); return;}

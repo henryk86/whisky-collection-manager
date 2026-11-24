@@ -1,5 +1,11 @@
 import {t} from '../i18n/index.js';
 import {request} from '../api.js';
+/**
+ * Reads image dimensions or pixel data for photo processing.
+ *
+ * @param {*} file Source file or file name being processed.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export async function imageData(file) {
   if (file.size > 10000000) {
     throw Error(t('features.validation.photoTooLarge'));
@@ -16,6 +22,12 @@ export async function imageData(file) {
   });
 }
 
+/**
+ * Uploads selected images and updates the relevant bottle state.
+ *
+ * @param {string} bottleId Identifier of the physical bottle.
+ * @param {!Array<*>} files Files selected for the operation.
+ */
 export async function uploadPhotos(bottleId, files) {
   for (const file of files) {
     await request(`/api/bottles/${bottleId}/photos`, {

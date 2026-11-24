@@ -91,17 +91,53 @@ test(
     const attributes = new Map();
     const original = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       querySelector: selector => selector === '.warehouse-unassigned-toggle'
-        ? {addEventListener: (name, handler) => {assert.equal(name, 'click'); onClick = handler;}}
+        ? {
+          /**
+           * Updates the add event listener state for its caller.
+           *
+           * @param {*} name Environment variable or setting name.
+           * @param {function(...*): *} handler Handler input for this
+           * operation.
+           */
+          addEventListener: (name, handler) => {
+            assert.equal(name, 'click');
+            onClick = handler;
+          },
+        }
         : selector === '.warehouse-unassigned-tray--embedded' ? tray : null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll: () => [],
+      /**
+       * Retrieves element by id from the available state.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getElementById: () => null,
     };
     try {
       const view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} markup HTML markup for the selected content.
+         */
         shell: markup => {html = markup;},
         modal: {},
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.render();
@@ -109,6 +145,13 @@ test(
       assert.equal(typeof onClick, 'function');
       onClick({
         currentTarget: {
+          /**
+           * Updates attribute in the current state.
+           *
+           * @param {*} name Environment variable or setting name.
+           * @param {*} value Value to process.
+           * @return {!Map<*, *>} Result computed from the supplied inputs.
+           */
           setAttribute: (name, value) =>
             attributes.set(name, value),
         },
@@ -126,6 +169,13 @@ test(
       );
       onClick({
         currentTarget: {
+          /**
+           * Updates attribute in the current state.
+           *
+           * @param {*} name Environment variable or setting name.
+           * @param {*} value Value to process.
+           * @return {!Map<*, *>} Result computed from the supplied inputs.
+           */
           setAttribute: (name, value) =>
             attributes.set(name, value),
         },

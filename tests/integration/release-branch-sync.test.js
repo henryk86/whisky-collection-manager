@@ -5,19 +5,45 @@ import os from 'node:os';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 
+/**
+ * Normalizes the sh text for subsequent processing.
+ *
+ * @param {*} cwd Current working directory for path resolution.
+ * @param {!Array<*>} args Arguments forwarded to the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const sh = (cwd, ...args) =>
   execFileSync(args[0], args.slice(1), {cwd, encoding: 'utf8'}).trim();
 
+/**
+ * Writes text data to the local filesystem.
+ *
+ * @param {*} dir Directory containing the affected files.
+ * @param {*} name Environment variable or setting name.
+ * @param {*} value Value to process.
+ */
 const text = (dir, name, value) => {
   const f =
     path.join(dir, name); fs.mkdirSync(path.dirname(f), {recursive: true}); fs.writeFileSync(f, value);
 };
 
+/**
+ * Updates the config state for its caller.
+ *
+ * @param {*} dir Directory containing the affected files.
+ */
 const config = (dir) => {
   sh(dir, 'git', 'config', 'user.name', 'Release Test');
   sh(dir, 'git', 'config', 'user.email', 'release@example.invalid');
 };
 
+/**
+ * Reads fixture data from the local filesystem.
+ *
+ * @param {*} t Temporary or input value for the calculation.
+ * @param {!Object=} options Options controlling the operation.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function fixture(
   t,
   {moving = false, modifiedMetadata = false, minimalManifest = false} = {}
@@ -133,6 +159,12 @@ function fixture(
   return {dir, remote, merge, snapshot};
 }
 
+/**
+ * Parses prepare data from JSON input.
+ *
+ * @param {!Object} options Options controlling the operation.
+ * @return {*} Parsed JSON value.
+ */
 function prepare({dir, merge}) {
   return JSON.parse(sh(
     dir,
@@ -146,6 +178,12 @@ function prepare({dir, merge}) {
   ));
 }
 
+/**
+ * Derives the merge version pr result from the supplied values.
+ *
+ * @param {*} state Current application state.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function mergeVersionPR(state) {
   const {dir} = state;
   const pr = prepare(state);
@@ -160,6 +198,12 @@ function mergeVersionPR(state) {
   return pr;
 }
 
+/**
+ * Parses finish data from JSON input.
+ *
+ * @param {!Object} options Options controlling the operation.
+ * @return {*} Parsed JSON value.
+ */
 function finish({dir, merge}) {
   return JSON.parse(sh(
     dir,
@@ -173,9 +217,24 @@ function finish({dir, merge}) {
   ));
 }
 
+/**
+ * Derives the get result from the supplied values.
+ *
+ * @param {*} dir Directory containing the affected files.
+ * @param {*} branch Value used by this operation.
+ * @param {*} name Environment variable or setting name.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const get = (dir, branch, name) =>
   sh(dir, 'git', 'show', `refs/remotes/origin/${branch}:${name}`);
 
+/**
+ * Derives the remote ref result from the supplied values.
+ *
+ * @param {*} dir Directory containing the affected files.
+ * @param {*} branch Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const remoteRef = (dir, branch) =>
   sh(dir, 'git', 'ls-remote', 'origin', `refs/heads/${branch}`).split(/\s+/)[0];
 
@@ -363,6 +422,12 @@ test(
   t => {
     const state = fixture(t), {dir, merge, snapshot} = state;
     prepare(state);
+    /**
+     * Normalizes the check text for subsequent processing.
+     *
+     * @param {*} env Value used by this operation.
+     * @return {*} Result computed from the supplied inputs.
+     */
     const check = env => execFileSync(
       process.execPath,
       ['scripts/verify-version-pr.js'],

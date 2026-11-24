@@ -4,17 +4,32 @@ import {createShell} from '../../public/js/ui/shell.js';
 import {createHomeView} from '../../public/js/views/home.js';
 import {newBottlingIcon, inventoryScanIcon, settingsIcon, settingsIconPaths} from '../../public/js/ui/action-icons.js';
 
+/**
+ * Renders shell in the current view.
+ * @return {string} Resulting text.
+ */
 function renderShell() {
   const root = {innerHTML: ''};
   createShell({
     root,
     state: {version: '0.6.50', modal: null},
+    /**
+     * Updates theme in the current state.
+     */
     applyTheme() {},
+    /**
+     * Renders modal in the current view.
+     */
     renderModal() {},
   })('<section></section>');
   return root.innerHTML;
 }
 
+/**
+ * Renders home for action consistency.test.
+ *
+ * @return {string} Resulting text.
+ */
 function renderHome() {
   const previous = {
     document: globalThis.document,
@@ -24,11 +39,29 @@ function renderHome() {
   let html = '';
   try {
     globalThis.document = {
-      querySelector: () => ({addEventListener() {} }),
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
+      querySelector: () => ({
+        /**
+         * Updates the add event listener state for its caller.
+         */
+        addEventListener() {},
+      }),
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll: () => [],
     };
     globalThis.location = {pathname: '/', search: ''};
-    globalThis.history = {replaceState() {} };
+    globalThis.history = {
+      /**
+       * Updates the replace state state for its caller.
+       */
+      replaceState() {},
+    };
     const state = {
       collection: {bottlings: [], settings: {}},
       pageNumber: 1,
@@ -40,12 +73,36 @@ function renderHome() {
       view: 'cards',
     };
     const selectors = {
+      /**
+       * Derives the all bottles result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       allBottles: () => [],
+      /**
+       * Derives the bottles result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       bottles: () => [],
+      /**
+       * Derives the cover photo result from the supplied values.
+       * @return {string} Resulting text.
+       */
       coverPhoto: () => '',
+      /**
+       * Derives the distillery names result from the supplied values.
+       * @return {string} Resulting text.
+       */
       distilleryNames: () => '',
     };
-    createHomeView({state, selectors, shell: content => {html = content;}})();
+    createHomeView({
+      state, selectors,
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} content Content to render, store or examine.
+       */
+      shell: content => {html = content;},
+    })();
     return html;
   } finally {
     for (const [key, value] of Object.entries(previous)) {
@@ -54,6 +111,13 @@ function renderHome() {
   }
 }
 
+/**
+ * Tests input text against the button pattern.
+ *
+ * @param {*} html HTML markup to render or inspect.
+ * @param {*} action Operation or action callback to invoke.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function button(html, action) {
   const re = new RegExp(String.raw`<button\b[^>]*data-act="${action}"[^>]*>[\s\S]*?</button>`);
   const match = html.match(re);

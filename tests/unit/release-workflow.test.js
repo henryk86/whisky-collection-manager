@@ -7,6 +7,12 @@ import {execFileSync} from 'node:child_process';
 import {compareVersions, nextVersion, parseVersion, updateReadmeTitle, pendingTestStatus, verifyReleaseMetadata} from '../../scripts/release-version.js';
 import {prohibitedReleasePath} from '../../scripts/verify-release-files.js';
 import {readSourceManifest} from '../../scripts/release-manifest.js';
+/**
+ * Reads read data from the local filesystem.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const read = file => fs.readFileSync(file, 'utf8');
 
 test(

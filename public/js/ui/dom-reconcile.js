@@ -1,7 +1,12 @@
-/** Small, dependency-free keyed DOM reconciliation for explicitly opted-in page regions.
- * Unlike string outerHTML comparisons, this preserves unchanged images, focus
- * and
- * event-bound controls while updating only changed nodes. No direct event binding. */
+/**
+ * Small, dependency-free keyed DOM reconciliation for explicitly opted-in page
+ * regions. Unlike string outerHTML comparisons, this preserves unchanged
+ * images, focus and event-bound controls while updating only changed nodes. No
+ * direct event binding.
+ *
+ * @param {!Element} node DOM or syntax node to process.
+ * @return {*} Result computed from the supplied inputs.
+ */
 // Only photo *tiles* are keyed by photo ID. Their edit, delete and move
 // controls share the same data-photo-id but must never be reconciled as
 // interchangeable siblings (the old key discarded edit buttons on refresh).
@@ -11,11 +16,24 @@ const keyFor = node => node.nodeType === 1
       `photo:${node.getAttribute('data-photo-id')}` : null))
   : null;
 
+/**
+ * Derives the compatible result from the supplied values.
+ *
+ * @param {*} a First entry or operand in the calculation.
+ * @param {*} b Second entry or operand in the calculation.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function compatible(a, b) {
   return a?.nodeType === b?.nodeType &&
     (a.nodeType !== 1 || (a.tagName === b.tagName && keyFor(a) === keyFor(b)));
 }
 
+/**
+ * Installs event listeners for reconcile node interactions.
+ *
+ * @param {*} current Value used by this operation.
+ * @param {*} next Next candidate state or entry.
+ */
 function reconcileNode(current, next) {
   // Imperative widgets own their event and animation lifecycle. A subtree
   // marked as an island is always remounted; the rest remains keyed/morphed.
@@ -39,6 +57,9 @@ function reconcileNode(current, next) {
   for (const attr of [...current.attributes]) if (!next.hasAttribute(attr.name)) current.removeAttribute(attr.name);
   for (const attr of [...next.attributes]) if (current.getAttribute(attr.name) !== attr.value) current.setAttribute(attr.name, attr.value);
   if (changingImage && container && priorHeight) {
+    /**
+     * Updates the done state for its caller.
+     */
     const done = () => {container.style.minHeight = priorMinHeight;};
     if (current.complete && current.naturalWidth) requestAnimationFrame(done);
     else {current.addEventListener('load', done, {once: true}); current.addEventListener('error', done, {once: true});}
@@ -49,7 +70,12 @@ function reconcileNode(current, next) {
   reconcileChildren(current, next);
 }
 
-/** Reorder keyed items by stable IDs, and patch unkeyed nodes by position. */
+/**
+ * Reorder keyed items by stable IDs, and patch unkeyed nodes by position.
+ *
+ * @param {*} current Current resource data to update.
+ * @param {*} next Next used by this operation.
+ */
 export function reconcileChildren(current, next) {
   const desired = [...next.childNodes];
   const keyed = new Map([...current.childNodes].filter(node => keyFor(node))

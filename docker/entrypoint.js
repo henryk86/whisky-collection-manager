@@ -10,6 +10,11 @@ const children = new Map();
 let shuttingDown = false;
 let exitCode = 0;
 
+/**
+ * Performs the stop lifecycle action.
+ *
+ * @param {string=} signal Value used by this operation.
+ */
 function stop(signal = 'SIGTERM') {
   if (shuttingDown) return;
   shuttingDown = true;
@@ -30,6 +35,13 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
   process.on(signal, () => stop(signal));
 }
 
+/**
+ * Derives the launch result from the supplied values.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @param {*} script Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function launch(name, script) {
   const child = spawn(
     process.execPath,
@@ -54,6 +66,10 @@ function launch(name, script) {
   return child;
 }
 
+/**
+ * Reads https ready data from the local filesystem.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 function httpsReady() {
   const ca = fs.readFileSync(process.env.HTTPS_CERT_FILE ||
     '/run/certs/server-cert.pem');
@@ -75,6 +91,10 @@ function httpsReady() {
   });
 }
 
+/**
+ * Runs the entry point and coordinates its operations.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function main() {
   launch('app', 'server/index.js');
   for (let attempt = 0; attempt < 60 && !shuttingDown; attempt++) {

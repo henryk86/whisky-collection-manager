@@ -2,9 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createDetailView} from '../../public/js/views/detail.js';
 
+/**
+ * Renders detail for detail heading.test.
+ *
+ * @param {*} distilleryIds Distillery ids used by this operation.
+ * @param {*} bottler Bottler used by this operation.
+ * @return {string} Resulting text.
+ */
 function renderDetail(distilleryIds, bottler) {
   const originalDocument = globalThis.document;
-  globalThis.document = {querySelectorAll: () => []};
+  globalThis.document = {
+    /**
+     * Derives the query selector all result from the supplied values.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
+    querySelectorAll: () => [],
+  };
   try {
     let html = '';
     const bottling = {
@@ -15,12 +28,38 @@ function renderDetail(distilleryIds, bottler) {
     const detail = createDetailView({
       state: {selected: 'b1', collection: {bottlings: [bottling]}},
       selectors: {
+        /**
+         * Derives the bottles result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
         bottles: () => [],
+        /**
+         * Derives the cover photo result from the supplied values.
+         * @return {string} Resulting text.
+         */
         coverPhoto: () => '',
+        /**
+         * Derives the distillery names result from the supplied values.
+         * @return {string} Resulting text.
+         */
         distilleryNames: () => 'Laphroaig',
       },
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} output Output resource or accumulated result.
+       */
       shell: output => {html = output;},
+      /**
+       * Reports the navigate error condition.
+       */
       navigate: () => {throw new Error('Unexpected navigation');},
+      /**
+       * Derives the action result from the supplied values.
+       *
+       * @param {function(...*): *} handler Handler called for the event.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       action: async handler => handler(),
     });
     detail();

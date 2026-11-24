@@ -5,18 +5,42 @@ import {toast} from '../../ui/notifications.js';
 import {eyeIcon, eyeOffIcon} from '../../ui/action-icons.js';
 
 /**
- * Authentication pages intentionally replace, rather than cover, the collection
- * UI.
+ * Authentication pages intentionally replace, rather than cover, the
+ * collection UI.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function createAuthController({root, state, render, refresh, applyTheme, showModal, closeModal}) {
   let mode = 'login';
   let pendingDelete = null;
   let pendingRequired = null;
+  /**
+   * Builds the localized tr text for the current language.
+   *
+   * @param {*} key Key used to select or group values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const tr = key => t(`auth.${key}`);
 
+  /**
+   * Produces the password toggle text used by the caller.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {boolean=} hidden Value used by this operation.
+   * @return {string} Resulting text.
+   */
   const passwordToggle = (id, hidden = true) =>
     `<button class="auth-password-toggle" type="button" data-act="auth-toggle-password" data-target="${id}" aria-controls="${id}" aria-label="${escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" title="${escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" aria-pressed="${hidden ? 'false' : 'true'}">${hidden ? eyeIcon : eyeOffIcon}</button>`;
 
+  /**
+   * Produces the field text used by the caller.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @param {*} label Label shown to the user.
+   * @param {!Object=} options Options controlling the operation.
+   * @return {string} Resulting text.
+   */
   const field = (
     id,
     label,
@@ -29,6 +53,10 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
         : `<input id="${id}" name="${id}" type="${type}" autocomplete="${autocomplete}"${minLength ? ` minlength="${minLength}"` : ''}${value ? ` value="${escapeHtml(value)}"` : ''} required>`}</label>`;
   };
 
+  /**
+   * Builds the localized brand text for the current language.
+   * @return {string} Resulting text.
+   */
   const brand = () => `<div class="auth-brand">
       <img class="auth-brand-logo" src="/assets/logo.svg" width="112" height="112" alt="">
       <div class="auth-brand-copy">
@@ -37,14 +65,34 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
       </div>
     </div>`;
 
+  /**
+   * Produces the panel text used by the caller.
+   *
+   * @param {*} title Title displayed or stored by this operation.
+   * @param {*} body Body content to validate or process.
+   * @return {string} Resulting text.
+   */
   const panel = (title, body) =>
     `<div class="auth-page"><section class="panel auth-card">${brand()}<h1>${title}</h1>${body}</section></div>`;
 
+  /**
+   * Derives the error text result from the supplied values.
+   * @return {string} Resulting text.
+   */
   const errorText = () => `<p class="auth-error" role="alert" hidden></p>`;
 
+  /**
+   * Produces the error markup text used by the caller.
+   *
+   * @param {*} text Text to process.
+   * @return {string} Resulting text.
+   */
   const errorMarkup = text =>
     `<span class="auth-error-icon" aria-hidden="true">!</span><span>${escapeHtml(text)}</span>`;
 
+  /**
+   * Renders the controller state.
+   */
   function show() {
     if (state.modal) closeModal(true);
     const mandatory = !!state.auth?.user?.mustChangePassword;
@@ -95,6 +143,12 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
       '#username')?.focus();
   }
 
+  /**
+   * Updates the DOM elements managed by error.
+   *
+   * @param {*} form Value used by this operation.
+   * @param {*} reason Value used by this operation.
+   */
   function error(form, reason) {
     const output = form.querySelector('.auth-error');
     if (!output) return;
@@ -110,6 +164,10 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     output.hidden = false;
   }
 
+  /**
+   * Coordinates asynchronous work for init.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function init() {
     state.auth = await request('/api/auth/session');
     if (state.auth.user?.mustChangePassword) {
@@ -123,10 +181,20 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     return true;
   }
 
+  /**
+   * Performs the open login lifecycle action.
+   */
   function openLogin() {mode = 'login'; show();}
 
+  /**
+   * Performs the open change lifecycle action.
+   */
   function openChange() {mode = 'change'; show();}
 
+  /**
+   * Coordinates asynchronous work for resume.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function resume() {
     clearResourceCache();
     if (state.auth?.required && !state.auth?.user) {
@@ -137,6 +205,10 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     await refresh();
   }
 
+  /**
+   * Coordinates asynchronous work for logout.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function logout() {
     state.auth = await request('/api/auth/logout', {method: 'POST'});
     state.authUsers = null;
@@ -144,6 +216,11 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     await resume();
   }
 
+  /**
+   * Updates setting in the current state.
+   *
+   * @param {*} required Value used by this operation.
+   */
   function changeSetting(required) {
     pendingRequired = required;
     showModal(
@@ -154,6 +231,10 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     );
   }
 
+  /**
+   * Retrieves users from the available state.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function loadUsers() {
     if (!state.auth?.canManageUsers) return;
     const result = await request('/api/auth/users');
@@ -164,6 +245,10 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     else render();
   }
 
+  /**
+   * Transforms the entries used by users section.
+   * @return {string} Resulting text.
+   */
   function usersSection() {
     if (!state.auth?.canManageUsers) return '';
     const users = state.authUsers || [];
@@ -196,6 +281,11 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
         </div>`;
   }
 
+  /**
+   * Handles action for controller.
+   *
+   * @param {*} button Button used by this operation.
+   */
   async function handleAction(button) {
     const act = button.dataset.act;
     if (act === 'auth-open-login') openLogin();
@@ -263,6 +353,12 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     }
   }
 
+  /**
+   * Handles submit for controller.
+   *
+   * @param {!KeyboardEvent} event Event that triggered the handler.
+   * @return {boolean} Whether the condition is satisfied.
+   */
   function handleSubmit(event) {
     const form = event.target;
     if (![

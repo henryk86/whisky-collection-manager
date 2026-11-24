@@ -2,6 +2,10 @@ import {escapeHtml} from './dom.js';
 
 /**
  * Shared desktop sidebar and mobile selector for multi-section content pages.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @param {*} content Content used by this operation.
+ * @return {string} Resulting text.
  */
 export function sectionWorkspace(
   {

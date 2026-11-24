@@ -45,7 +45,15 @@ test(
       analyticsFilters: {}, analyticsPeriod: 'month', selected: 'overview',
     };
     let analysis = '';
-    createAnalyticsView({state, shell: html => {analysis = html;}})();
+    createAnalyticsView({
+      state,
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} html HTML markup to render or inspect.
+       */
+      shell: html => {analysis = html;},
+    })();
     const help = helpView();
     for (const html of [analysis, help]) {
       assert.match(html, /class="section-workspace"/);

@@ -196,4 +196,10 @@ const codes = Object.freeze({
   "Überlappende Türbereiche": "api.errors.overlappingDoorAreas",
   "Nicht erlaubter Host. Adresse in ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_IP_ADDRESSES eintragen.": "api.errors.hostNotAllowedAddTheAddressToALLOWEDHOSTSOrCERTDNSNAMESCERTIPADDRESSES",
 });
+/**
+ * Creates an application error identifier from a known error category.
+ *
+ * @param {*} message Message used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function apiErrorCode(message) {return Object.hasOwn(codes, message) ? codes[message] : null;}

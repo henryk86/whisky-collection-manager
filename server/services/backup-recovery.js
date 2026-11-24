@@ -19,6 +19,12 @@ const LIMIT = 2 * 1024 * 1024 *
 const CONTROL = process.env.BACKUP_CONTROL_DIR ? path.resolve(process.env
   .BACKUP_CONTROL_DIR) : null;
 const FOLDERS = ['data', 'images', 'documents'];
+/**
+ * Validates the supplied password state and rejects invalid inputs.
+ *
+ * @param {*} req Incoming request to authorize.
+ * @return {string} Resulting text.
+ */
 function suppliedPassword(req) {
   try {return decodeURIComponent(req.headers['x-backup-zip-password'] || '');}
   catch {
@@ -30,6 +36,12 @@ function suppliedPassword(req) {
   }
 }
 
+/**
+ * Tests input text against the path for pattern.
+ *
+ * @param {*} id Identifier of the affected record.
+ * @return {*} Combined text from the input values.
+ */
 function pathFor(id) {
   if (!ID.test(id)) throw fail(
     'Ungültige Wiederherstellungs-ID',
@@ -44,6 +56,13 @@ function pathFor(id) {
   return path.join(CONTROL, 'imports', id);
 }
 
+/**
+ * Validates preview for backup recovery.
+ *
+ * @param {*} dir Dir used by this operation.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 function validatePreview(dir, {writeMigrated = false} = {}) {
   const filename = path.join(dir, 'data', 'collection.json');
   let migration;
@@ -70,6 +89,9 @@ function validatePreview(dir, {writeMigrated = false} = {}) {
   };
 }
 
+/**
+ * Removes or resets old imports.
+ */
 function removeOldImports() {
   const base = path.join(CONTROL, 'imports');
   try {
@@ -82,6 +104,12 @@ function removeOldImports() {
   } catch { /* no old imports */}
 }
 
+/**
+ * Validates and stages an incoming backup ZIP for restoration.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function receiveZip(req) {
   authorizeAdmin(req);
   if (!['application/zip', 'application/octet-stream']
@@ -137,6 +165,14 @@ export async function receiveZip(req) {
   }
 }
 
+/**
+ * Restores validated backup contents into application storage.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} input Input to process.
+ * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ */
 export async function applyZip(req, id, input) {
   authorizeAdmin(req);
   if (input?.acknowledge !== true) throw fail(
@@ -226,6 +262,10 @@ export async function applyZip(req, id, input) {
 
 /**
  * Preview a previously uploaded ZIP or a saved archive prepared by the worker.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {string} id Identifier used to select the relevant record.
+ * @return {!Object} Structured result for the caller.
  */
 export function previewZip(req, id) {
   authorizeAdmin(req);
@@ -241,6 +281,11 @@ export function previewZip(req, id) {
 /**
  * Explicit password check after a worker has staged a saved archive; no
  * passwords in job JSON.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {string} id Identifier used to select the relevant record.
+ * @param {*} input Input to process.
+ * @return {!Object} Structured result for the caller.
  */
 export function unlockPreparedZip(req, id, input) {
   authorizeAdmin(req);
@@ -266,8 +311,12 @@ export function unlockPreparedZip(req, id, input) {
 }
 
 /**
- * Allows an existing Restic snapshot, converted by the worker, to be saved as a
- * portable ZIP.
+ * Allows an existing Restic snapshot, converted by the worker, to be saved as
+ * a portable ZIP.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @param {string} id Identifier used to select the relevant record.
+ * @return {!Object} Structured result for the caller.
  */
 export function downloadPreparedZip(req, id) {
   authorizeAdmin(req);

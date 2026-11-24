@@ -11,14 +11,36 @@ import {bottleSymbol, num, safe} from './warehouse-presentation.js';
 
 /** Same number of screen pixels for every real-world metre in both axes. */
 export const WALL_PIXELS_PER_METRE = 230;
+/**
+ * Calculates the px numeric value.
+ *
+ * @param {*} metres Value used by this operation.
+ * @return {number} Calculated numeric value.
+ */
 const px = metres => Math.round(metres * WALL_PIXELS_PER_METRE * 100) / 100;
 
-/** Physical order by wall orientation and projected room position. */
+/**
+ * Physical order by wall orientation and projected room position.
+ *
+ * @param {*} room Room model containing dimensions and furniture.
+ * @return {!Array<*>} Resulting list of values.
+ */
 export function wallFurniture(room) {
   return wallFurnitureGroups(room).flatMap(group => group.items.map(item =>
     item.furniture));
 }
 
+/**
+ * Renders warehouse room wall for warehouse room wall.
+ *
+ * @param {*} room Room model containing dimensions and furniture.
+ * @param {!Object} warehouse Warehouse model being processed.
+ * @param {!Array<*>=} selectedBottleIds Selected bottle ids used by this
+ * operation.
+ * @param {!Object=} unassignedOptions Unassigned options used by this
+ * operation.
+ * @return {string} Resulting text.
+ */
 export function renderWarehouseRoomWall(room, warehouse, selectedBottleIds = [], unassignedOptions = {}) {
   const groups = wallFurnitureGroups(room);
   const selected = new Set(selectedBottleIds);
@@ -31,6 +53,13 @@ export function renderWarehouseRoomWall(room, warehouse, selectedBottleIds = [],
     if (!occupantsByShelf.has(shelfId)) occupantsByShelf.set(shelfId, []);
     occupantsByShelf.get(shelfId).push(bottle);
   }
+  /**
+   * Renders furniture for warehouse room wall.
+   *
+   * @param {!Object} options Optional configuration for the operation.
+   * @param {*} stacked Stacked used by this operation.
+   * @return {string} Resulting text.
+   */
   const renderFurniture = ({furniture: item, offset}, stacked) => {
     const levels = shelfLevels(item);
     const height = furnitureHeight(item);

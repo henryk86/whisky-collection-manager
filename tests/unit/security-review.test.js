@@ -63,7 +63,16 @@ test(
     fs.default.createReadStream = () => Readable.from((async function*() {
       throw new Error('Simulated file removed during read');
     })());
-    const response = new Writable({write(_chunk, _encoding, callback) {callback();} });
+    const response = new Writable({
+      /**
+       * Updates the write state for its caller.
+       *
+       * @param {*} _chunk Value used by this operation.
+       * @param {*} _encoding Value used by this operation.
+       * @param {function(...*): *} callback Callback invoked by the operation.
+       */
+      write(_chunk, _encoding, callback) {callback();},
+    });
     response.writeHead = () => response;
     try {
       await assert.rejects(

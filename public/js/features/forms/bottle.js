@@ -4,8 +4,21 @@ import {inventoryScanIcon} from '../../ui/action-icons.js';
 import {textInput, selectInput, areaInput} from '../../ui/fields.js';
 import {bottleStatusLabels, whiskyTypeName, photoAccept} from '../../domain/labels.js';
 import {fileAccept} from '../files.js';
+/**
+ * Creates bottle form for bottle.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {Function} Structured result assembled from the input data.
+ */
 export function createBottleForm({state, selectors}) {
   const {distilleryNames} = selectors;
+  /**
+   * Selects and transforms the bottle form records.
+   *
+   * @param {!Object=} bottle Physical bottle record under consideration.
+   * @param {*} bottlingId Value used by this operation.
+   * @return {string} Resulting text.
+   */
   function bottleForm(bottle = {}, bottlingId) {
     const owner = state.collection.bottlings.find(entry => entry.id ===
       bottlingId);

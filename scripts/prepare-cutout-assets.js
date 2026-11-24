@@ -34,6 +34,13 @@ const targets = [
   })),
 ];
 
+/**
+ * Derives the valid result from the supplied values.
+ *
+ * @param {*} bytes Value used by this operation.
+ * @param {*} entry Entry currently being processed.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function valid(bytes, entry) {
   if (entry.bytes != null && bytes.length !== entry.bytes) return false;
   if (entry.minimumBytes && bytes.length < entry.minimumBytes) return false;
@@ -45,6 +52,11 @@ function valid(bytes, entry) {
   return true;
 }
 
+/**
+ * Loads the prepare cutout assets state.
+ *
+ * @param {*} entry Entry to include in the calculation.
+ */
 async function download(entry) {
   const target = path.join(root, 'public', entry.name);
   if (fs.existsSync(target) && valid(fs.readFileSync(target), entry)) return;

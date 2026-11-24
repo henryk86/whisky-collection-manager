@@ -8,8 +8,21 @@ import {sourceManifest, writeSourceManifest, readSourceManifest, verifySourceMan
 import {inspectManifestUpgrade} from '../../scripts/upgrade-manifest.js';
 import {verifyReleaseMetadata} from '../../scripts/release-version.js';
 
+/**
+ * Derives the hash result from the supplied values.
+ *
+ * @param {*} value Value to process.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 
+/**
+ * Writes fixture data to the local filesystem.
+ *
+ * @param {*} root Root node or directory for the operation.
+ * @param {*} version Value used by this operation.
+ * @param {*} modules Value used by this operation.
+ */
 function fixture(root, version, modules) {
   fs.mkdirSync(root, {recursive: true});
   fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({version}));

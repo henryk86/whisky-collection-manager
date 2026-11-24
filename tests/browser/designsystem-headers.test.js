@@ -2,12 +2,24 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {session, seed} from './support.js';
 
+/**
+ * Coordinates asynchronous work for go.
+ *
+ * @param {*} page Page or view being rendered or selected.
+ * @param {*} action Operation or action callback to invoke.
+ * @param {function(...*): *} selector Selector used to obtain matching values.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function go(page, action, selector) {
   await page.locator('header [data-act="toggle-menu"]').click();
   await page.locator(`#site-drawer [data-act="${action}"]`).click();
   await page.locator(selector).waitFor({state: 'visible'});
 }
 
+/**
+ * Updates the DOM elements managed by measured.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 const measured = () => {
   const head = document.querySelector('.ds-page-header');
   const title = head.querySelector('h2');

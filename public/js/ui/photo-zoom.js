@@ -1,9 +1,23 @@
 /** Display-only image magnification: never changes the stored picture. */
 export const PHOTO_ZOOM_MIN = 1;
 export const PHOTO_ZOOM_MAX = 6;
+/**
+ * Limits photo-viewer zoom to its configured bounds.
+ *
+ * @param {*} zoom Map scale used for projection.
+ * @return {number} Calculated numeric result.
+ */
 export const clampPhotoZoom = zoom =>
   Math.max(PHOTO_ZOOM_MIN, Math.min(PHOTO_ZOOM_MAX, zoom));
 
+/**
+ * Keeps the zoomed photo within its allowable pan area.
+ *
+ * @param {*} view View used by this operation.
+ * @param {*} stage Stage used by this operation.
+ * @param {*} image Image used by this operation.
+ * @return {*} Structured result assembled from the input data.
+ */
 export function constrainPhotoPan(view, stage, image) {
   const maxX = Math.max(0, (image.width * view.zoom - stage.width) / 2);
   const maxY = Math.max(0, (image.height * view.zoom - stage.height) / 2);
@@ -14,6 +28,16 @@ export function constrainPhotoPan(view, stage, image) {
   };
 }
 
+/**
+ * Changes photo zoom around a fixed interaction point.
+ *
+ * @param {*} view View used by this operation.
+ * @param {*} requestedZoom New zoom level requested by the user.
+ * @param {*} point Point used by this operation.
+ * @param {*} stage Stage used by this operation.
+ * @param {*} image Image used by this operation.
+ * @return {*} Value returned by the delegated operation.
+ */
 export function zoomPhotoAt(view, requestedZoom, point, stage, image) {
   const zoom = clampPhotoZoom(requestedZoom);
   const ratio = zoom / view.zoom;
@@ -25,6 +49,11 @@ export function zoomPhotoAt(view, requestedZoom, point, stage, image) {
   }, stage, image);
 }
 
+/**
+ * Creates photo zoom for photo zoom.
+ *
+ * @return {!Object} Structured result for the caller.
+ */
 export function createPhotoZoom() {
   let stage = null;
   let image = null;
@@ -32,6 +61,10 @@ export function createPhotoZoom() {
   const pointers = new Map();
   let lastPinchDistance = null;
 
+  /**
+   * Derives the dimensions result from the supplied values.
+   * @return {!Object} Structured result assembled from the input data.
+   */
   function dimensions() {
     return {
       stage: {width: stage?.clientWidth || 1, height: stage?.clientHeight || 1},
@@ -39,6 +72,9 @@ export function createPhotoZoom() {
     };
   }
 
+  /**
+   * Updates the DOM elements managed by render.
+   */
   function render() {
     if (!stage?.isConnected || !image) return;
     const {stage: area, image: picture} = dimensions();
@@ -58,11 +94,23 @@ export function createPhotoZoom() {
     if (reset) reset.disabled = view.zoom <= PHOTO_ZOOM_MIN;
   }
 
+  /**
+   * Derives the point of result from the supplied values.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   * @return {!Object} Structured result assembled from the input data.
+   */
   function pointOf(event) {
     const rect = stage.getBoundingClientRect();
     return {x: event.clientX - rect.left, y: event.clientY - rect.top};
   }
 
+  /**
+   * Derives the zoom to result from the supplied values.
+   *
+   * @param {*} next Next candidate state or entry.
+   * @param {*} point Value used by this operation.
+   */
   function zoomTo(next, point) {
     if (!stage?.isConnected || !image) return;
     const {stage: area, image: picture} = dimensions();
@@ -76,11 +124,19 @@ export function createPhotoZoom() {
     render();
   }
 
+  /**
+   * Updates the zoom state for its caller.
+   *
+   * @param {*} direction Direction used for traversal or movement.
+   */
   function zoom(direction) {
     if (direction === 0) zoomTo(1);
     else zoomTo(view.zoom * direction);
   }
 
+  /**
+   * Updates the reset state for its caller.
+   */
   function reset() {
     view = {zoom: 1, x: 0, y: 0};
     pointers.clear();
@@ -88,6 +144,9 @@ export function createPhotoZoom() {
     render();
   }
 
+  /**
+   * Registers the photo zoom state.
+   */
   function attach() {
     stage = typeof document === 'undefined' ? null :
       document.querySelector('.photo-lightbox-stage');
@@ -133,6 +192,11 @@ export function createPhotoZoom() {
         render();
       }
     });
+    /**
+     * Updates the end pointer state for its caller.
+     *
+     * @param {!Event} event Event that triggered this operation.
+     */
     const endPointer = event => {
       pointers.delete(event.pointerId);
       lastPinchDistance = null;

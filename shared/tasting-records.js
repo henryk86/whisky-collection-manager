@@ -14,6 +14,12 @@ export const VALID_TASTING_FIELDS = Object.freeze([
   'ratingComment',
   'whiskyColor',
 ]);
+/**
+ * Checks that a tasting date is a valid calendar day.
+ *
+ * @param {*} value Input value to process.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function validTastingDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/
     .test(value)) return false;
@@ -21,6 +27,13 @@ export function validTastingDate(value) {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
 }
 
+/**
+ * Normalizes tasting record for tasting records.
+ *
+ * @param {*} input Input to process.
+ * @param {!Object=} old Old used by this operation.
+ * @return {*} Whether the requested condition is met.
+ */
 export function normalizeTastingRecord(input, old = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input) ||
     Object.keys(input).some(key => !VALID_TASTING_FIELDS.includes(key)))
@@ -50,6 +63,12 @@ export function normalizeTastingRecord(input, old = {}) {
   return value;
 }
 
+/**
+ * Sorts tastings consistently for display and history navigation.
+ *
+ * @param {!Object} bottling Bottling record being processed.
+ * @return {!Array<*>} Resulting list of values.
+ */
 export function sortedTastings(bottling) {
   return [...(bottling?.tastings || [])].sort((a, b) =>
     (b.tastedOn || '').localeCompare(a.tastedOn || '') ||
@@ -57,11 +76,20 @@ export function sortedTastings(bottling) {
     b.id.localeCompare(a.id));
 }
 
+/**
+ * Finds the most recently recorded tasting for a bottling.
+ *
+ * @param {!Object} bottling Bottling record being processed.
+ * @return {*} Value returned by the delegated operation.
+ */
 export function latestTasting(bottling) {return sortedTastings(bottling)[0] || null;}
 
 /**
  * The newest record is the sole rating source. No persisted summary or legacy
  * fallback.
+ *
+ * @param {!Object} bottling Bottling record being processed.
+ * @return {*} Value returned by the delegated operation.
  */
 export function displayedTastingRating(bottling) {
   return latestTasting(bottling)?.rating ?? null;

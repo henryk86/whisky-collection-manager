@@ -25,6 +25,9 @@ import {suggestFlight, flightCandidates, FLIGHT_STYLES, FLIGHT_AVAILABILITY, FLI
 /**
  * Tasting list and single-record editor; no migration of earlier bottling
  * notes.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function createTastingsView({
   state,
@@ -43,16 +46,41 @@ export function createTastingsView({
   let flightCreating = false;
   let flightPlanDraft = null;
   let lastFlightId = null;
+  /**
+   * Checks whether external applies.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   const isExternal = () => state.page === 'external-tasting';
 
+  /**
+   * Derives the standalone result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const standalone = () => allStandaloneTastings(state.collection || {});
 
+  /**
+   * Derives the subject result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const subject = () => state.collection?.bottlings?.find(b => b.id ===
     state.selected);
 
+  /**
+   * Derives the edit page result from the supplied values.
+   *
+   * @param {boolean=} external Value used by this operation.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const editPage = (external = isExternal()) => external ?
     'external-tasting' : 'tasting';
 
+  /**
+   * Selects and transforms the distillery meta records.
+   *
+   * @param {*} bottling Bottling record being inspected or updated.
+   * @param {boolean=} owned Value used by this operation.
+   * @return {string} Resulting text.
+   */
   const distilleryMeta = (bottling, owned = true) => [
     (bottling?.distilleryIds || []).map(id =>
       state.collection?.distilleries?.find(d => d.id === id)?.name)
@@ -71,13 +99,36 @@ export function createTastingsView({
       `${t('forms.bottling.releaseYear')}: ${bottling.releaseYear}` : '',
   ].filter(Boolean).join(' · ');
 
+  /**
+   * Derives the back link result from the supplied values.
+   *
+   * @param {*} action Operation or action callback to invoke.
+   * @param {*} label Label shown to the user.
+   * @return {string} Resulting text.
+   */
   const backLink = (action, label) => backNavigation(action, t(label));
 
+  /**
+   * Derives the page title result from the supplied values.
+   *
+   * @param {*} title Title displayed or stored by this operation.
+   * @param {*} intro Value used by this operation.
+   * @param {*=} eyebrow Value used by this operation.
+   * @return {string} Resulting text.
+   */
   const pageTitle = (title, intro, eyebrow = t('tastings.childEyebrow')) =>
     pageHeader({title, intro, eyebrow, className: 'analytics-page-heading'});
   // Show exactly the same Abfuellungsfoto (cover image) as the bottling detail
   // page.
 
+  /**
+   * Builds the localized bottling info text for the current language.
+   *
+   * @param {*} bottling Bottling record being inspected or updated.
+   * @param {boolean=} external Value used by this operation.
+   * @param {boolean=} draft Value used by this operation.
+   * @return {string} Resulting text.
+   */
   const bottlingInfo = (bottling, external = false, draft = false) => {
     const photo = external ? '' : (selectors?.coverPhoto?.(bottling.id) || '');
     return `<section class="analytics-panel tasting-bottling-info">
@@ -106,9 +157,21 @@ export function createTastingsView({
     </section>`;
   };
 
+  /**
+   * Derives the associated flight result from the supplied values.
+   *
+   * @param {*} record Record to validate or persist.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const associatedFlight = record => record?.id ?
     flightForTasting(state.collection, record.id) : null;
 
+  /**
+   * Produces the flight hint text used by the caller.
+   *
+   * @param {*} record Record to validate or persist.
+   * @return {string} Resulting text.
+   */
   const flightHint = record => {
     const flight = associatedFlight(record);
     if (!flight) return '';
@@ -119,13 +182,31 @@ export function createTastingsView({
     ))}</button></div>`;
   };
 
+  /**
+   * Builds the localized tasting rating text for the current language.
+   *
+   * @param {*} record Record to validate or persist.
+   * @return {string} Resulting text.
+   */
   const tastingRating = record => record.rating == null ?
     escapeHtml(t('tasting.unrated')) :
     `${escapeHtml(String(record.rating))} / 100`;
 
+  /**
+   * Normalizes the blank text for subsequent processing.
+   *
+   * @param {*} value Value to process.
+   * @return {string} Resulting text.
+   */
   const blank = value => value == null || String(value).trim() === '' ?
     '<span class="muted">&ndash;</span>' : escapeHtml(String(value));
 
+  /**
+   * Calculates the static rating numeric value.
+   *
+   * @param {*} record Record to validate or persist.
+   * @return {string} Resulting text.
+   */
   const staticRating = record =>
     `<div class="tasting-readonly-rating"><span class="tasting-readonly-glasses" aria-hidden="true">${record.rating == null ? '' : Array.from(
       {length: 5},
@@ -136,6 +217,12 @@ export function createTastingsView({
       }
     ).join('')}</span><strong>${tastingRating(record)}</strong></div>`;
 
+  /**
+   * Transforms the entries used by tasting read only.
+   *
+   * @param {*} value Value to process.
+   * @return {string} Resulting text.
+   */
   const tastingReadOnly = value =>
     `<div class="flavor-detail-panel tasting-panel tasting-readonly-panels">
         <div class="tasting-record-fields analytics-panel tasting-readonly-meta-panel">
@@ -194,6 +281,12 @@ export function createTastingsView({
     })}` : ''}</section>
     </div>`;
 
+  /**
+   * Calculates the tasting list glasses numeric value.
+   *
+   * @param {*} record Record to validate or persist.
+   * @return {string} Resulting text.
+   */
   const tastingListGlasses = record => {
     if (record.rating == null ||
       !Number.isFinite(Number(record.rating))) return '';
@@ -209,6 +302,12 @@ export function createTastingsView({
     ).join('')}</span>`;
   };
 
+  /**
+   * Builds the localized tasting row text for the current language.
+   *
+   * @param {!Object} options Options controlling the operation.
+   * @return {string} Resulting text.
+   */
   const tastingRow = ({record, b, external = false, home = false}) =>
     `<div class="warehouse-bottle-row tasting-entry-row ${home ?
       'tasting-home-row' : 'tasting-list-row'}">
@@ -232,6 +331,10 @@ export function createTastingsView({
         ${home ? '' : `<div class="tasting-entry-actions"><button type="button" class="btn small danger" data-act="tasting-delete" data-tasting-id="${escapeHtml(record.id)}">${escapeHtml(t('common.actions.delete'))}</button></div>`}
     </div>`;
 
+  /**
+   * Derives the empty record result from the supplied values.
+   * @return {!Object} Result computed from the supplied inputs.
+   */
   const emptyRecord = () => ({
     tastedOn: localToday(),
     title: '',
@@ -242,6 +345,10 @@ export function createTastingsView({
     whiskyColor: null,
   });
 
+  /**
+   * Derives the empty bottling result from the supplied values.
+   * @return {!Object} Result computed from the supplied inputs.
+   */
   const emptyBottling = () => ({
     name: '',
     distillery: '',
@@ -252,8 +359,16 @@ export function createTastingsView({
   });
   let flavorSaveQueue = Promise.resolve();
   let draftSavePending = null;
+  /**
+   * Derives the flavor node result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
   function flavorNode() {return globalThis.document?.querySelector?.('[data-flavor-detail]') || null;}
 
+  /**
+   * Retrieves tasting editor from the available state.
+   * @return {!Object} Structured result assembled from the input data.
+   */
   function readTastingEditor() {
     const node = flavorNode();
     return {
@@ -270,6 +385,9 @@ export function createTastingsView({
     };
   }
 
+  /**
+   * Updates tasting buttons for tastings.
+   */
   function updateTastingButtons() {
     const node = flavorNode();
     if (!node || !flavorSession) return;
@@ -291,6 +409,9 @@ export function createTastingsView({
       .whiskyColor;
   }
 
+  /**
+   * Locates the DOM elements used by redraw tasting.
+   */
   function redrawTasting() {
     const node = flavorNode();
     if (!node || !flavorSession) return;
@@ -309,6 +430,11 @@ export function createTastingsView({
     updateTastingButtons();
   }
 
+  /**
+   * Updates tasting for tastings.
+   *
+   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   */
   function persistTasting() {
     const session = flavorSession;
     if (!session?.editing) return Promise.resolve();
@@ -337,6 +463,10 @@ export function createTastingsView({
     return flavorSaveQueue;
   }
 
+  /**
+   * Performs the commit tasting lifecycle action.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   function commitTasting() {
     if (!flavorSession?.editing) return true;
     const node = flavorNode();
@@ -372,6 +502,9 @@ export function createTastingsView({
     return true;
   }
 
+  /**
+   * Locates the DOM elements used by preview rating.
+   */
   function previewRating() {
     const widget = flavorNode()?.querySelector('[data-tasting-rating]');
     if (!widget) return;
@@ -384,6 +517,11 @@ export function createTastingsView({
     catch { /* Leave the last valid preview intact until the input is corrected. */}
   }
 
+  /**
+   * Locates the DOM elements used by choose rating.
+   *
+   * @param {*} value Value to process.
+   */
   function chooseRating(value) {
     if (!flavorSession?.editing) return;
     const node = flavorNode()?.querySelector('[data-tasting-rating]');
@@ -400,9 +538,13 @@ export function createTastingsView({
   }
 
   /**
-   * Update the preview during pointer movement without saving every
-   * intermediate colour.
-   */
+ * Update the preview during pointer movement without saving every intermediate
+ * colour.
+ *
+ * @param {*} hex Hex used by this operation.
+ * @param {number} x Horizontal coordinate in the current coordinate system.
+ * @param {number} y Vertical coordinate in the current coordinate system.
+ */
   function previewCustomColor(hex, x, y) {
     if (!flavorSession?.editing || !isAllowedWhiskyHex(hex)) return;
     const color = flavorNode()?.querySelector('.whisky-custom-row');
@@ -434,6 +576,11 @@ export function createTastingsView({
     }
   }
 
+  /**
+   * Calculates the preview custom from pointer numeric value.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   function previewCustomFromPointer(event) {
     if (!flavorSession?.editing) return;
     const picker = event.target.closest?.('[data-whisky-picker-area]');
@@ -448,9 +595,12 @@ export function createTastingsView({
   }
 
   /**
-   * Arrow keys are a keyboard-accessible alternative to dragging the
-   * two-dimensional picker.
-   */
+ * Arrow keys are a keyboard-accessible alternative to dragging the
+ * two-dimensional picker.
+ *
+ * @param {!KeyboardEvent} event Event that triggered the handler.
+ * @return {boolean} Whether the condition is satisfied.
+ */
   function nudgeCustomColor(event) {
     if (!flavorSession?.editing ||
       !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
@@ -486,9 +636,12 @@ export function createTastingsView({
   }
 
   /**
-   * Validate the internal HEX draft; the same restriction is enforced during
-   * API normalization.
-   */
+ * Validate the internal HEX draft; the same restriction is enforced during API
+ * normalization.
+ *
+ * @param {*} raw Raw used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
   function chooseCustomHex(raw) {
     if (!flavorSession?.editing) return false;
     let value;
@@ -498,14 +651,25 @@ export function createTastingsView({
     return true;
   }
 
+  /**
+   * Performs the commit custom preview lifecycle action.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   function commitCustomPreview() {
     const hex = flavorNode()?.querySelector('[data-whisky-custom-hex]')?.value;
     return hex ? chooseCustomHex(hex) : false;
   }
 
+  /**
+   * Removes or resets custom preview.
+   */
   function resetCustomPreview() {redrawTasting();}
 
-  /** Discard the custom draft itself, not only its visible HEX label. */
+  /**
+ * Discard the custom draft itself, not only its visible HEX label.
+ *
+ * @param {!Element} node DOM or syntax node to process.
+ */
   function clearCustomDraft(node) {
     const row = node.querySelector('.whisky-custom-row');
     if (!row) return;
@@ -528,6 +692,11 @@ export function createTastingsView({
     row.classList.remove('is-selected', 'is-previewing');
   }
 
+  /**
+   * Locates the DOM elements used by choose color.
+   *
+   * @param {*} value Value to process.
+   */
   function chooseColor(value) {
     if (!flavorSession?.editing) return;
     const node = flavorNode()?.querySelector('[data-whisky-color]');
@@ -544,6 +713,9 @@ export function createTastingsView({
     flavorNode()?.querySelector(selector)?.focus?.({preventScroll: true});
   }
 
+  /**
+   * Removes or resets flavor.
+   */
   function clearFlavor() {
     if (!flavorSession?.editing) return;
     if (!flavorSession || !flavorSession.history.value.flavorProfile) return;
@@ -557,6 +729,11 @@ export function createTastingsView({
     }
   }
 
+  /**
+   * Derives the step flavor result from the supplied values.
+   *
+   * @param {*} direction Direction used for traversal or movement.
+   */
   function stepFlavor(direction) {
     if (!flavorSession?.editing) return;
     const changed = direction < 0 ? flavorSession.history.undo() :
@@ -564,6 +741,12 @@ export function createTastingsView({
     if (changed) {redrawTasting(); void persistTasting();}
   }
 
+  /**
+   * Transforms the entries used by external fields.
+   *
+   * @param {!Object=} info Value used by this operation.
+   * @return {string} Resulting text.
+   */
   function externalFields(info = {}) {
     const fields = [
       ['name', 'tastings.externalName', 'text', 180, true],
@@ -583,6 +766,12 @@ export function createTastingsView({
       .join('');
   }
 
+  /**
+   * Retrieves external fields from the available state.
+   *
+   * @param {*} node Node to inspect or update.
+   * @return {*} Computed value, or null when the input has no match.
+   */
   function readExternalFields(node) {
     const data = {};
     for (const key of ['name', 'distillery', 'bottler', 'ageYears', 'abv', 'releaseYear']) {
@@ -595,10 +784,18 @@ export function createTastingsView({
     return data;
   }
 
+  /**
+   * Orders the flight list records using the configured comparison.
+   * @return {!Array<*>} Resulting entries in their output order.
+   */
   const flightList = () => [...(state.collection?.tastingFlights || [])]
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt
       .localeCompare(a.createdAt));
 
+  /**
+   * Transforms the entries used by home flights.
+   * @return {string} Resulting text.
+   */
   function homeFlights() {
     const flights = flightList();
     return `<section class="analytics-panel tasting-flight-home">
@@ -625,6 +822,9 @@ export function createTastingsView({
         </section>`;
   }
 
+  /**
+   * Renders flight planning help in the current view.
+   */
   function showFlightPlanningHelp() {
     // Preserve the planner's live inputs, generated proposal and scroll
     // position.
@@ -637,10 +837,18 @@ export function createTastingsView({
     );
   }
 
+  /**
+   * Builds the localized flight planning help button text for the current
+   * language.
+   * @return {string} Resulting text.
+   */
   function flightPlanningHelpButton() {
     return helpIconButton({label: t('flightPlan.help.title')});
   }
 
+  /**
+   * Updates the DOM elements managed by sync flight plan options.
+   */
   function syncFlightPlanOptions() {
     const box = globalThis.document?.querySelector?.('#modal-root');
     const style = box?.querySelector('[data-flight-plan-style]')?.value;
@@ -665,6 +873,9 @@ export function createTastingsView({
     ]) {const element = box?.querySelector(selector); if (element) element.hidden = !visible;}
   }
 
+  /**
+   * Performs the start planned flight lifecycle action.
+   */
   function startPlannedFlight() {
     flightPlanDraft = null;
     const fromCollection = Array.isArray(state.flightCandidateIds);
@@ -719,6 +930,9 @@ export function createTastingsView({
     syncFlightPlanOptions();
   }
 
+  /**
+   * Updates the DOM elements managed by invalidate flight plan.
+   */
   function invalidateFlightPlan() {
     syncFlightPlanOptions();
     flightPlanDraft = null;
@@ -729,6 +943,9 @@ export function createTastingsView({
     if (view) view.replaceChildren();
   }
 
+  /**
+   * Updates the DOM elements managed by generate flight plan.
+   */
   function generateFlightPlan() {
     const box = document.querySelector('#modal-root');
     const style = box?.querySelector('[data-flight-plan-style]')?.value ||
@@ -750,6 +967,13 @@ export function createTastingsView({
     const ageMode = box?.querySelector('[data-flight-plan-age-mode]')?.value || 'auto';
     // Clear any stale cross-field error before validating a corrected range.
     box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.('');
+    /**
+     * Parses age from its input.
+     *
+     * @param {function(...*): *} selector Selector used to obtain matching
+     *     values.
+     * @return {number} Calculated numeric value.
+     */
     const parseAge = (selector) => {
       const field = box?.querySelector(selector); if (!field ||
         field.value === '') return null;
@@ -808,12 +1032,18 @@ export function createTastingsView({
   }
   // Keep the filtered collection candidates when opening the planner modal.
   let flightPlanSourceIds = null;
+  /**
+   * Performs the open planned flight lifecycle action.
+   */
   function openPlannedFlight() {
     flightPlanSourceIds = Array.isArray(state.flightCandidateIds) ?
       [...state.flightCandidateIds] : null;
     startPlannedFlight();
   }
 
+  /**
+   * Creates planned flight for tastings.
+   */
   async function createPlannedFlight() {
     const box = document.querySelector('#modal-root');
     const name = box?.querySelector('[data-flight-name]');
@@ -839,6 +1069,12 @@ export function createTastingsView({
     finally {flightCreating = false;}
   }
 
+  /**
+   * Builds the localized plan member label text for the current language.
+   *
+   * @param {*} item Current item under consideration.
+   * @return {!Object} Structured result assembled from the input data.
+   */
   function planMemberLabel(item) {
     const b = state.collection?.bottlings?.find(b => b.id === item.bottlingId);
     const bottle = b?.bottles?.find(x => x.id === item.bottleId);
@@ -851,10 +1087,22 @@ export function createTastingsView({
     };
   }
 
+  /**
+   * Selects and transforms the planned flight detail records.
+   *
+   * @param {*} current Value used by this operation.
+   * @return {string} Resulting text.
+   */
   function plannedFlightDetail(current) {
     const editable = current.phase === 'planned';
     const candidates = flightCandidates(state.collection, {availability: 'all'});
     const selected = new Set(current.planItems.map(item => item.bottlingId));
+    /**
+     * Selects and transforms the choices records.
+     *
+     * @param {string=} excludeId Value used by this operation.
+     * @return {*} Entries that meet the selection criteria.
+     */
     const choices = (excludeId = '') => candidates.filter(x =>
       !selected.has(x.bottling.id) || x.bottling.id === excludeId)
       .map(x => `<option value="${escapeHtml(x.bottle
@@ -899,6 +1147,12 @@ export function createTastingsView({
         </section>`;
   }
 
+  /**
+   * Updates plan in the current state.
+   *
+   * @param {*} items Entries to process.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function updatePlan(items) {
     const current = state.collection?.tastingFlights?.find(f => f.id ===
       state.selected);
@@ -912,6 +1166,14 @@ export function createTastingsView({
     catch (error) {toast(error.message, true);}
   }
 
+  /**
+   * Updates planned member in the current state.
+   *
+   * @param {*} index Zero-based index of the selected entry.
+   * @param {*} action Operation or action callback to invoke.
+   * @param {number=} step Relative movement or step size.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   function changePlannedMember(index, action, step = 0) {
     const current = state.collection?.tastingFlights?.find(f => f.id ===
       state.selected);
@@ -939,6 +1201,12 @@ export function createTastingsView({
     return updatePlan(items);
   }
 
+  /**
+   * Serializes transition planned flight data to JSON.
+   *
+   * @param {*} target Target of the operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function transitionPlannedFlight(target) {
     const current = state.collection?.tastingFlights?.find(f => f.id ===
       state.selected);
@@ -956,6 +1224,9 @@ export function createTastingsView({
     catch (error) {toast(error.message, true);}
   }
 
+  /**
+   * Performs the start flight lifecycle action.
+   */
   function startFlight() {
     showModal(t('tastingFlights.create'), `<div class="tasting-flight-form">
             <label>${escapeHtml(t('tastingFlights.name'))}<input data-flight-name maxlength="160" required placeholder="${escapeHtml(t('tastingFlights.namePlaceholder'))}"></label>
@@ -966,6 +1237,9 @@ export function createTastingsView({
         </div>`, false);
   }
 
+  /**
+   * Creates flight for tastings.
+   */
   async function createFlight() {
     const box = document.querySelector('#modal-root');
     const name = box?.querySelector('[data-flight-name]');
@@ -993,10 +1267,19 @@ export function createTastingsView({
     finally {flightCreating = false;}
   }
 
+  /**
+   * Produces the flight entry label text used by the caller.
+   *
+   * @param {*} item Current item under consideration.
+   * @return {string} Resulting text.
+   */
   const flightEntryLabel = item => `${item.bottling?.name ||
     ''}${item.record.title ? ` · ${item.record.title}` :
       ''} · ${formatDate(item.record.tastedOn || '')}`;
 
+  /**
+   * Selects and transforms the flight records.
+   */
   function flight() {
     flavorSession = null;
     if (lastFlightId !== state.selected) {
@@ -1025,6 +1308,13 @@ export function createTastingsView({
     const available = allTastingReferences(state.collection).filter(item =>
       !flightForTasting(state.collection, item.record.id))
       .sort((a, b) => a.bottling.name.localeCompare(b.bottling.name));
+    /**
+     * Builds the localized entry row text for the current language.
+     *
+     * @param {*} item Current item under consideration.
+     * @param {*} i Position in the iteration.
+     * @return {string} Resulting text.
+     */
     const entryRow = (item, i) =>
       `<div class="tasting-flight-member" data-tasting-id="${escapeHtml(item.record.id)}">
             <div class="tasting-flight-order-control"><button type="button" class="tasting-flight-drag-handle" data-flight-drag aria-label="${escapeHtml(t('tastingFlights.dragHandle'))}" title="${escapeHtml(t('tastingFlights.dragHandle'))}">
@@ -1092,10 +1382,22 @@ export function createTastingsView({
             </section></div>`);
   }
 
+  /**
+   * Updates the toggle flight edit state for its caller.
+   *
+   * @param {*} editing Value used by this operation.
+   */
   function toggleFlightEdit(editing) {flightEditing = editing; flight();}
 
+  /**
+   * Updates the toggle flight add state for its caller.
+   */
   function toggleFlightAdd() {flightAdding = !flightAdding; flight();}
 
+  /**
+   * Persists flight to its backing store.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function saveFlight() {
     const name = document.querySelector('.tasting-flight-page [data-flight-name]');
     const date = document.querySelector('.tasting-flight-page [data-flight-date]');
@@ -1114,6 +1416,12 @@ export function createTastingsView({
     } catch (error) {toast(error.message, true);}
   }
 
+  /**
+   * Updates flight members in the current state.
+   *
+   * @param {*} ids Identifiers in their current order.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function updateFlightMembers(ids) {
     try {
       await request(
@@ -1124,6 +1432,14 @@ export function createTastingsView({
     } catch (error) {toast(error.message, true);}
   }
 
+  /**
+   * Derives the reorder flight member result from the supplied values.
+   *
+   * @param {*} sourceId Value used by this operation.
+   * @param {*} targetId Value used by this operation.
+   * @param {*} after Value used by this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   function reorderFlightMember(sourceId, targetId, after) {
     const record = (state.collection?.tastingFlights || []).find(x =>
       x.id === state.selected);
@@ -1132,6 +1448,13 @@ export function createTastingsView({
     if (reordered) return updateFlightMembers(reordered);
   }
 
+  /**
+   * Derives the move flight member numeric value from its input.
+   *
+   * @param {*} index Zero-based index of the selected entry.
+   * @param {*} step Relative movement or step size.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   function moveFlightMember(index, step) {
     const record = (state.collection?.tastingFlights || []).find(x =>
       x.id === state.selected);
@@ -1142,6 +1465,10 @@ export function createTastingsView({
     return updateFlightMembers(ids);
   }
 
+  /**
+   * Registers flight member behavior.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   function attachFlightMember() {
     const id = document.querySelector('[data-flight-tasting-option]')?.value;
     const current = (state.collection?.tastingFlights || []).find(x =>
@@ -1149,6 +1476,12 @@ export function createTastingsView({
     if (id && current) return updateFlightMembers([...current.tastingIds, id]);
   }
 
+  /**
+   * Filters records according to the detach flight member selection rules.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   function detachFlightMember(id) {
     const current = (state.collection?.tastingFlights || []).find(x =>
       x.id === state.selected);
@@ -1157,6 +1490,10 @@ export function createTastingsView({
         .filter(x => x !== id));
   }
 
+  /**
+   * Removes or resets flight.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function deleteFlight() {
     try {
       await request(
@@ -1171,6 +1508,9 @@ export function createTastingsView({
     } catch (error) {toast(error.message, true); return false;}
   }
 
+  /**
+   * Orders the home records using the configured comparison.
+   */
   function home() {
     // Returning to an index ends any prior edit session. Reopening is always
     // read-only.
@@ -1213,8 +1553,14 @@ export function createTastingsView({
         </div>`);
   }
 
+  /**
+   * Updates the toggle create choice state for its caller.
+   */
   function toggleCreateChoice() {createChoiceOpen = !createChoiceOpen; home();}
 
+  /**
+   * Transforms the entries used by list.
+   */
   function list() {
     flavorSession = null;
     const bottling = subject();
@@ -1236,6 +1582,9 @@ export function createTastingsView({
         </section></div>`);
   }
 
+  /**
+   * Transforms the entries used by editor.
+   */
   function editor() {
     // Returning from a tasting should show the compact flight list, not the
     // expanded add form.
@@ -1369,12 +1718,21 @@ export function createTastingsView({
 </div>`);
   }
 
+  /**
+   * Converts date information for the local today operation.
+   * @return {string} Resulting text.
+   */
   function localToday() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1)
       .padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
+  /**
+   * Updates draft for tastings.
+   *
+   * @return {!Promise<*>} Promise fulfilled when the operation completes.
+   */
   async function saveDraft() {
     // A save can outlive the click that started it. While the POST and its
     // collection refresh are pending, another Back click would render the
@@ -1453,6 +1811,9 @@ export function createTastingsView({
     finally {if (draftSavePending === save) draftSavePending = null;}
   }
 
+  /**
+   * Updates meta for tastings.
+   */
   async function persistMeta() {
     const session = flavorSession;
     if (!session?.editing || session.draft) return;
@@ -1484,6 +1845,9 @@ export function createTastingsView({
     await flavorSaveQueue;
   }
 
+  /**
+   * Performs the start editing lifecycle action.
+   */
   function startEditing() {
     if (!flavorSession || flavorSession.draft) return;
     flavorSession.editing = true;
@@ -1491,6 +1855,10 @@ export function createTastingsView({
     flavorNode()?.querySelector('[data-tasting-date]')?.focus?.();
   }
 
+  /**
+   * Locates the DOM elements used by finish editing.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function finishEditing() {
     if (!flavorSession?.editing || flavorSession.draft) return;
     if (!commitTasting()) return;
@@ -1502,6 +1870,11 @@ export function createTastingsView({
     flavorNode()?.querySelector('[data-act="tasting-edit-start"]')?.focus?.();
   }
 
+  /**
+   * Renders external edit in the current view.
+   *
+   * @param {*} editing Value used by this operation.
+   */
   function showExternalEdit(editing) {
     if (!flavorSession?.external || flavorSession.draft) return;
     const panel = flavorNode()?.querySelector('.tasting-bottling-info');
@@ -1513,6 +1886,9 @@ export function createTastingsView({
     if (editing) form.querySelector('[data-external-field="name"]')?.focus?.();
   }
 
+  /**
+   * Performs the cancel external edit lifecycle action.
+   */
   function cancelExternalEdit() {
     const record = standalone().find(item => item.id === flavorSession?.id);
     const panel = flavorNode()?.querySelector('.tasting-bottling-info');
@@ -1525,6 +1901,9 @@ export function createTastingsView({
     showExternalEdit(false);
   }
 
+  /**
+   * Updates external details for tastings.
+   */
   async function persistExternalDetails() {
     const session = flavorSession;
     if (!session?.external || session.draft) return;
@@ -1546,6 +1925,9 @@ export function createTastingsView({
     } catch (error) {toast(error.message, true);}
   }
 
+  /**
+   * Renders assign dialog for tastings.
+   */
   function showAssignDialog() {
     const session = flavorSession;
     if (!session?.external || session.draft) return;
@@ -1571,6 +1953,10 @@ export function createTastingsView({
     );
   }
 
+  /**
+   * Locates the DOM elements used by assign external to bottling.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function assignExternalToBottling() {
     const session = flavorSession;
     if (!session?.external || session.draft) return;
@@ -1647,10 +2033,22 @@ export function createTastingsView({
     assignExternalToBottling,
     startEditing,
     finishEditing,
+    /**
+     * Performs the start external edit lifecycle action.
+          * @return {*} Result of this expression.
+*/
     startExternalEdit: () => showExternalEdit(true),
     cancelExternalEdit,
     persistExternalDetails,
+    /**
+     * Performs the undo flavor lifecycle action.
+          * @return {*} Result of this expression.
+*/
     undoFlavor: () => stepFlavor(-1),
+    /**
+     * Performs the redo flavor lifecycle action.
+          * @return {*} Result of this expression.
+*/
     redoFlavor: () => stepFlavor(1),
   };
 }

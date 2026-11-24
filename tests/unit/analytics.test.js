@@ -6,6 +6,10 @@ import {createAnalyticsView, ANALYSIS_PAGES} from '../../public/js/views/analyti
 import {parseRoute, routeUrl} from '../../public/js/navigation/routes.js';
 import {MAIN_PAGES} from '../../public/js/navigation/pages.js';
 
+/**
+ * Derives the collection result from the supplied values.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 const collection = () => ({
   schemaVersion: 6,
   distilleries: [
@@ -121,7 +125,13 @@ test(
     };
     let html = '';
     const render = createAnalyticsView({
-      state, shell: value => {
+      state,
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} value Value to process.
+       */
+      shell: value => {
         html =
           value;
       },
@@ -282,7 +292,16 @@ test(
       assert.equal(route.selected, p.id);
       assert.deepEqual(route.filters, state.analyticsFilters);
       state.selected = p.id;
-      createAnalyticsView({state, shell: html => visited.set(p.id, html)})();
+      createAnalyticsView({
+        state,
+        /**
+         * Derives the shell result from the supplied values.
+         *
+         * @param {*} html HTML markup to render or inspect.
+         * @return {!Map<*, *>} Result computed from the supplied inputs.
+         */
+        shell: html => visited.set(p.id, html),
+      })();
     }
     const all = [...visited.values()].join('\n');
     assert.doesNotMatch(all, /<(?:h[1-6]|span)[^>]*>\s*\d{1,2}\s*·/);
@@ -313,7 +332,15 @@ test('analytics: date range applies to actual days, not entire months', () => {
     analyticsEndDate: '2025-04-30',
   };
   let html = '';
-  createAnalyticsView({state, shell: output => {html = output;}})();
+  createAnalyticsView({
+    state,
+    /**
+     * Updates the shell state for its caller.
+     *
+     * @param {*} output Output resource or accumulated result.
+     */
+    shell: output => {html = output;},
+  })();
   const registered = html.split('<h3>Erfasste Flaschen</h3>')[1]?.split('</section>')[0] || '';
   assert.match(
     registered,
@@ -351,7 +378,15 @@ test('analytics: last ranked distillery stays an interactive link', () => {
     analyticsFilters: {},
   };
   let html = '';
-  createAnalyticsView({state, shell: value => {html = value;}})();
+  createAnalyticsView({
+    state,
+    /**
+     * Updates the shell state for its caller.
+     *
+     * @param {*} value Value to process.
+     */
+    shell: value => {html = value;},
+  })();
   const top = html.match(/<section class="analytics-panel" data-ds-panel="analytics"><h3>Top-Destillerien<\/h3>([\s\S]*?)<\/section>/)?.[1];
   assert.ok(top, 'the top-distilleries panel is rendered');
   const links = [...top.matchAll(/<button[^>]*class="analytics-bar-label analytics-link"[^>]*>([^<]*)<\/button>/g)];
@@ -455,18 +490,42 @@ test(
       collection: c, selected: 'timeline', analyticsFilters: {},
       analyticsPeriod: 'month', analyticsStartDate: '', analyticsEndDate: '',
     };
-    createAnalyticsView({state, shell: value => {html = value;}})();
+    createAnalyticsView({
+      state,
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} value Value to process.
+       */
+      shell: value => {html = value;},
+    })();
     assert.match(html, /Verbrauchsdauer/);
     assert.match(html, /Geleerte Flaschen/);
     assert.match(html, /Berechnungsgrundlage: 0 leere Flaschen/);
     c.bottlings[1].bottles[0].openedAt = '2026-01-01';
     c.bottlings[1].bottles[0].emptiedAt = '2026-02-12';
-    createAnalyticsView({state, shell: value => {html = value;}})();
+    createAnalyticsView({
+      state,
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} value Value to process.
+       */
+      shell: value => {html = value;},
+    })();
     assert.match(html, /Berechnungsgrundlage: 1 leere Flaschen/);
     assert.match(html, /42 Tage/);
     assert.match(html, /2026-02/);
     state.analyticsStartDate = '2026-03-01';
-    createAnalyticsView({state, shell: value => {html = value;}})();
+    createAnalyticsView({
+      state,
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} value Value to process.
+       */
+      shell: value => {html = value;},
+    })();
     assert.match(html, /Berechnungsgrundlage: 0 leere Flaschen/,
       'the displayed duration follows the selected emptying-date range');
   }

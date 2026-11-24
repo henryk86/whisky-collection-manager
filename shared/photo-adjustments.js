@@ -12,6 +12,12 @@ export const ADJUSTMENT_LIMITS = Object.freeze({
   clarity: [-100, 100],
   sharpen: [0, 100],
 });
+/**
+ * Validates adjustment values for photo adjustments.
+ *
+ * @param {*} value Input value to process.
+ * @return {!Object} Structured result for the caller.
+ */
 export function validateAdjustmentValues(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value) ||
     Object.keys(value).some(key => !Object.hasOwn(ADJUSTMENT_LIMITS, key))) {

@@ -7,10 +7,26 @@ import {
 import {collectionOverviewEntries} from '../../public/js/domain/collection-overview.js';
 import {createHomeView} from '../../public/js/views/home.js';
 
+/**
+ * Constructs store from the supplied data.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 const makeStore = () => {
   const items = new Map();
   return {
+    /**
+     * Retrieves item from the available state.
+     *
+     * @param {*} key Key used to select or group values.
+     * @return {*} Result computed from the supplied inputs.
+     */
     getItem(key) {return items.get(key) ?? null;},
+    /**
+     * Updates item in the current state.
+     *
+     * @param {*} key Key used to select or group values.
+     * @param {*} value Value to process.
+     */
     setItem(key, value) {items.set(key, String(value));},
   };
 };
@@ -71,11 +87,36 @@ const collection = {
   ],
 };
 const selectors = {
+  /**
+   * Derives the all bottles result from the supplied values.
+   * @return {!Array<*>} Resulting entries in their output order.
+   */
   allBottles: () => collection.bottlings.flatMap(item => item.bottles),
+  /**
+   * Derives the bottles result from the supplied values.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @return {!Array<*>} Resulting entries in their output order.
+   */
   bottles: id => collection.bottlings.find(item => item.id === id).bottles,
-  coverPhoto: () => null, distilleryNames: () => '',
+  /**
+   * Derives the cover photo result from the supplied values.
+   * @return {*} Result computed from the supplied inputs.
+   */
+  coverPhoto: () => null,
+  /**
+   * Derives the distillery names result from the supplied values.
+   * @return {string} Resulting text.
+   */
+  distilleryNames: () => '',
 };
 
+/**
+ * Derives the extract header result from the supplied values.
+ *
+ * @param {*} html HTML markup to render or inspect.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const extractHeader = html =>
   html.match(/<thead><tr>([\s\S]*?)<\/tr><\/thead>/)?.[1] || '';
 
@@ -142,6 +183,13 @@ test('switching from last tasted to name starts A-Z, then flips to Z-A', () => {
 test(
   'header sorts cover inventory, status, amount, stock, ABV, age, year and completion',
   () => {
+    /**
+     * Derives the entries result from the supplied values.
+     *
+     * @param {*} mode Selected mode controlling the operation.
+     * @param {*} sort Sort direction or ordering rule.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     const entries = (mode, sort) =>
       collectionOverviewEntries(collection, {mode, sort});
     assert.deepEqual(
@@ -216,21 +264,53 @@ test(
     try {
       globalThis.localStorage = storage;
       globalThis.location = {pathname: '/', search: ''};
-      globalThis.history = {replaceState() {}, pushState() {} };
+      globalThis.history = {
+        /**
+         * Updates the replace state state for its caller.
+         */
+        replaceState() {},
+        /**
+         * Updates the push state state for its caller.
+         */
+        pushState() {},
+      };
       let currentPicker;
       globalThis.document = {
+        /**
+         * Derives the query selector result from the supplied values.
+         *
+         * @param {function(...*): *} selector Selector input for this
+         * operation.
+         * @return {*} Result computed from the supplied inputs.
+         */
         querySelector: selector => selector === '.collection-table-columns' ?
           currentPicker : null,
+        /**
+         * Derives the query selector all result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
         querySelectorAll: () => [],
       };
       const view = createHomeView({
-        state, selectors, shell: markup => {
+        state, selectors,
+        /**
+         * Tests input text against the shell pattern.
+         *
+         * @param {*} markup HTML markup for the selected content.
+         */
+        shell: markup => {
           html = markup;
           // Simulate native details toggling when the user clicks the
           // dropdown summary, rather than changing its view state directly.
           currentPicker = {
             open: /class="collection-table-columns" open/.test(markup),
             isConnected: true,
+            /**
+             * Updates the add event listener state for its caller.
+             *
+             * @param {*} event Event that triggered this operation.
+             * @param {*} fn Function called during this operation.
+             */
             addEventListener: (event, fn) => {
               if (event ===
                 'toggle') currentPicker.onToggle = fn;

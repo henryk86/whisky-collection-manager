@@ -5,6 +5,11 @@ import {applyResourceDelta} from '../../shared/resource-delta.js';
 /**
  * All frontend HTTP requests use this helper for consistent localized
  * response/error handling.
+ *
+ * @param {string} url URL of the requested resource.
+ * @param {!RequestInit=} options Fetch options; JSON mutations request a delta.
+ * @return {!Promise<*>} Parsed JSON payload, text, or a mutation result.
+ * @throws {Error} Localized network or HTTP error; aborts are propagated.
  */
 export async function request(url, options = {}) {
   let res;
@@ -46,6 +51,10 @@ export async function request(url, options = {}) {
 /**
  * Also used by backup uploads/downloads that cannot use the JSON request
  * helper.
+ *
+ * @param {number} status HTTP or entity status used for validation.
+ * @param {!Object} data Input data for the operation.
+ * @return {!Error} Entries that meet the selection criteria.
  */
 export function httpResponseError(status, data) {
   const key = typeof data?.errorCode === 'string' &&
@@ -70,11 +79,18 @@ export function httpResponseError(status, data) {
 /** Local validator cache. A 304 reuses parsed JSON instead of transmitting MBs.
  * API mutation results are never cached and an HTTP error never returns stale data. */
 const validatedResponses = new Map();
+/**
+ * Clears resource cache for api.
+ */
 export function clearResourceCache() {validatedResponses.clear(); pendingUpdates.length = 0;}
 const pendingUpdates = [];
-/** Apply only deltas whose starting revision matches the last validated GET.
- * If another tab or restore intervenes, discard the local cache and GET again.
- * Never apply an unverified patch to the application state. */
+/**
+ * Apply only deltas whose starting revision matches the last validated GET. If
+ * another tab or restore intervenes, discard the local cache and GET again.
+ * Never apply an unverified patch to the application state.
+ *
+ * @return {!Set<string>} Domains whose cached resource was updated safely.
+ */
 export function takeMutationUpdates() {
   const updates = pendingUpdates.splice(0);
   const applied = new Set();
@@ -107,14 +123,26 @@ export function takeMutationUpdates() {
   return applied;
 }
 
-/** A validated cached resource can be reused immediately following its mutation.
- * Normal refreshes still revalidate with HTTP on the next request. */
+/**
+ * A validated cached resource can be reused immediately following its
+ * mutation. Normal refreshes still revalidate with HTTP on the next request.
+ *
+ * @param {string} kind Resource kind selecting the relevant schema.
+ * @param {*} applied Applied used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function takeUpdatedResource(kind, applied) {
   const url = kind === 'collection' ? '/api/collection' : '/api/warehouse';
   return applied.has(kind) && validatedResponses.has(url)
     ? structuredClone(validatedResponses.get(url).data) : null;
 }
 
+/**
+ * Loads cached json for api.
+ *
+ * @param {string} url URL of the requested resource.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
 export async function requestCachedJson(url) {
   const previous = validatedResponses.get(url);
   const headers = previous?.etag ? {'If-None-Match': previous.etag} : {};

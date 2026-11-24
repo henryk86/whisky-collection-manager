@@ -875,6 +875,10 @@ test(
       await page.locator('#site-drawer [data-act="goto-map"]').click();
       const marker = page.locator('.map-marker[aria-label^="Kilchoman:"]');
       await marker.waitFor({state: 'visible'});
+      /**
+       * Locates the DOM elements used by theme style.
+       * @return {*} Matching DOM element, if present.
+       */
       const themeStyle = () => page.evaluate(() => ({
         theme: document.documentElement.dataset.theme,
         filter: getComputedStyle(document.querySelector('.map-tiles')).filter,
@@ -930,6 +934,10 @@ test(
         'switching back restores the original map style'
       );
 
+      /**
+       * Derives the rect center result from the supplied values.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const rectCenter = async () => marker.evaluate(element => {
         const r = element.getBoundingClientRect();
         return {x: r.left + r.width / 2, y: r.top + r.height / 2};

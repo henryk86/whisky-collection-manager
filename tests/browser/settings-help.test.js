@@ -193,6 +193,13 @@ test(
           const range = document.createRange();
           range.selectNodeContents(hero);
           const lines = [...range.getClientRects()];
+          /**
+           * Locates the DOM elements used by top.
+           *
+           * @param {function(...*): *} selector Selector input for this
+           * operation.
+           * @return {number} Calculated numeric value.
+           */
           const top = selector => Math.round(document.querySelector(selector)
             .getBoundingClientRect().top);
           return {
@@ -497,6 +504,13 @@ test(
       await page.locator('.warehouse-unassigned-toggle').click();
       const footer = await page.locator('.warehouse-unassigned-pagination')
         .evaluate(el => {
+          /**
+           * Locates the DOM elements used by rect.
+           *
+           * @param {function(...*): *} selector Selector input for this
+           * operation.
+           * @return {*} Matching DOM element, if present.
+           */
           const rect = selector => el.querySelector(selector)
             .getBoundingClientRect();
           const summary = rect('.warehouse-unassigned-page-summary');

@@ -459,6 +459,12 @@ Yardheads|55.975|-3.17
 Yoker|55.892|-4.38
 `;
 
+/**
+ * Normalizes distillery name for distillery locations.
+ *
+ * @param {string} name Name of the item.
+ * @return {string} Resulting text.
+ */
 export const normalizeDistilleryName = name => String(name || '')
   .normalize('NFKD').toLocaleLowerCase('en')
   .replace(/[’']/g, '').replace(/[^a-z0-9]+/g, ' ')

@@ -2,6 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {assignmentLocation, assignmentShelfInfo, assignmentPayload, renderWarehouseAssignment, shelfCapacityIncrease, approveShelfCapacityIncrease} from '../../public/js/ui/warehouse-assignment.js';
 
+/**
+ * Derives the fixture result from the supplied values.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function fixture() {
   const shelf = {id: 's1', name: 'Fach 1', capacity: 1};
   const full = {id: 's2', name: 'Voll', capacity: 0};
@@ -170,6 +174,12 @@ test(
     const {warehouse} = fixture();
     warehouse.bottles.push({id: 'b2', name: 'B'});
     let question = '';
+    /**
+     * Derives the accept result from the supplied values.
+     *
+     * @param {*} message Message to display or use for diagnostics.
+     * @return {boolean} Whether the operation matched or succeeded.
+     */
     const accept = message => {question = message; return true;};
     assert.deepEqual(
       await approveShelfCapacityIncrease(

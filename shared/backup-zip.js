@@ -17,6 +17,13 @@ const TABLE = Array.from({length: 256}, (_, start) => {
     1)) : (value >>> 1);
   return value >>> 0;
 });
+/**
+ * Derives the crc32 result from the supplied values.
+ *
+ * @param {*} buffer Value used by this operation.
+ * @param {number=} previous Value used by this operation.
+ * @return {number} Calculated numeric value.
+ */
 function crc32(buffer, previous = 0xffffffff) {
   let value = previous;
   for (const byte of buffer) value = TABLE[(value ^ byte) & 255] ^
@@ -24,12 +31,24 @@ function crc32(buffer, previous = 0xffffffff) {
   return value >>> 0;
 }
 
+/**
+ * Updates the write state for its caller.
+ *
+ * @param {*} fd Value used by this operation.
+ * @param {*} buffer Value used by this operation.
+ */
 function write(fd, buffer) {
   let position = 0;
   while (position < buffer.length) position +=
     fs.writeSync(fd, buffer, position, buffer.length - position);
 }
 
+/**
+ * Updates the file content state for its caller.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ * @param {function(...*): *} callback Callback invoked by the operation.
+ */
 function fileContent(file, callback) {
   const fd = fs.openSync(file, 'r');
   try {
@@ -40,6 +59,12 @@ function fileContent(file, callback) {
   } finally {fs.closeSync(fd);}
 }
 
+/**
+ * Tests input text against the safe name pattern.
+ *
+ * @param {*} name Environment variable or setting name.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function safeName(name) {
   return typeof name === 'string' && name.length <= 1024 &&
     !name.includes('\\') && !name.includes('\0') &&
@@ -48,8 +73,20 @@ function safeName(name) {
     (name === 'README.txt' || /^(data|images|documents)\/.+/.test(name));
 }
 
+/**
+ * Orders the walk records using the configured comparison.
+ *
+ * @param {*} root Root node or directory for the operation.
+ * @param {*} relative Relative path or position to resolve.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function walk(root, relative) {
   const files = [];
+  /**
+   * Validates the visit state and rejects invalid inputs.
+   *
+   * @param {*} name Environment variable or setting name.
+   */
   const visit = (name) => {
     const absolute = path.join(root, name);
     for (const entry of fs.readdirSync(absolute, {withFileTypes: true})) {
@@ -67,6 +104,12 @@ function walk(root, relative) {
   return files.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/**
+ * Validates the required password state and rejects invalid inputs.
+ *
+ * @param {*} password Password or secret supplied by the caller.
+ * @return {string} Resulting text.
+ */
 function requiredPassword(password) {
   if (typeof password !== 'string' || password.length < 14) {
     throw Error('ZIP-Passwort fehlt oder ist zu kurz. In der Backup-Verwaltung mindestens 14 Zeichen festlegen.');
@@ -74,6 +117,13 @@ function requiredPassword(password) {
   return password;
 }
 
+/**
+ * Calculates the aes numeric value.
+ *
+ * @param {*} password Password or secret supplied by the caller.
+ * @param {*} salt Value used by this operation.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function aes(password, salt) {
   const keys = crypto.pbkdf2Sync(Buffer.from(password, 'utf8'), salt, 1000, 66, 'sha1');
   const cipher = crypto.createCipheriv('aes-256-ecb', keys.subarray(0, 32), null);
@@ -82,6 +132,12 @@ function aes(password, salt) {
   const verifier = keys.subarray(64, 66);
   const counter = Buffer.alloc(16);
   let unused = Buffer.alloc(0);
+  /**
+   * Calculates the xor numeric value.
+   *
+   * @param {*} data Input data to process.
+   * @return {*} Calculated numeric result.
+   */
   const xor = data => {
     const output = Buffer.allocUnsafe(data.length);
     let index = 0;
@@ -114,6 +170,12 @@ function aes(password, salt) {
   return {verifier, mac, xor};
 }
 
+/**
+ * Validates the aes extra state and rejects invalid inputs.
+ *
+ * @param {*} extra Additional context or configuration.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function aesExtra(extra) {
   let offset = 0;
   while (offset + 4 <= extra.length) {
@@ -134,7 +196,15 @@ function aesExtra(extra) {
   return false;
 }
 
-/** Requires a password. No plaintext ZIP can be produced by this writer. */
+/**
+ * Requires a password. No plaintext ZIP can be produced by this writer.
+ *
+ * @param {*} sourceRoot Source root used by this operation.
+ * @param {*} destination Destination used by this operation.
+ * @param {*} password Secret supplied for authentication or encryption.
+ * @param {string=} timestamp Timestamp used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function writeReadableZip(sourceRoot, destination, password, timestamp = new Date().toISOString()) {
   requiredPassword(password);
   const files = walk(sourceRoot, ['data', 'images', 'documents']);
@@ -176,6 +246,11 @@ export function writeReadableZip(sourceRoot, destination, password, timestamp = 
       write(fd, header); write(fd, name); write(fd, AES_EXTRA);
       const salt = crypto.randomBytes(16), context = aes(password, salt);
       write(fd, salt); write(fd, context.verifier);
+      /**
+       * Updates the encrypt state for its caller.
+       *
+       * @param {*} data Input data to process.
+       */
       const encrypt = data => {
         const ciphertext = context.xor(data);
         context.mac.update(ciphertext);
@@ -222,6 +297,14 @@ export function writeReadableZip(sourceRoot, destination, password, timestamp = 
   } finally {fs.closeSync(fd);}
 }
 
+/**
+ * Retrieves at from the available state.
+ *
+ * @param {*} fd Value used by this operation.
+ * @param {*} length Value used by this operation.
+ * @param {*} offset Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function readAt(fd, length, offset) {
   const buffer = Buffer.alloc(length);
   if (fs.readSync(fd, buffer, 0, length, offset) !==
@@ -232,6 +315,11 @@ function readAt(fd, length, offset) {
 /**
  * Authenticates all AES-256 entries before accepting a backup. Supports old
  * plain ZIPs for restore.
+ *
+ * @param {*} archive Archive used by this operation.
+ * @param {null=} extractTo Extract to used by this operation.
+ * @param {string=} password Secret supplied for authentication or encryption.
+ * @return {!Object} Structured result for the caller.
  */
 export function inspectReadableZip(archive, extractTo = null, password = '') {
   const fd = fs.openSync(archive, 'r');

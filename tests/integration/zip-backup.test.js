@@ -8,6 +8,14 @@ import crypto from 'node:crypto';
 import {writeReadableZip, inspectReadableZip} from '../../shared/backup-zip.js';
 
 const zipPass = 'SicheresTestpasswort-2026-mindestens-14!';
+/**
+ * Writes create data to the local filesystem.
+ *
+ * @param {*} dir Directory containing the affected files.
+ * @param {*} relative Relative path or position to resolve.
+ * @param {*} text Text to process.
+ * @return {*} Combined text from the input values.
+ */
 const create = (dir, relative, text) => {
   const full = path.join(dir, relative);
   fs.mkdirSync(path.dirname(full), {recursive: true});
@@ -142,6 +150,13 @@ test(
       const {createWorker} =
         await import('../../worker/backup-worker.js?zip-integration');
       const worker = createWorker();
+      /**
+       * Serializes queue data to JSON.
+       *
+       * @param {*} type Type or category used to select behavior.
+       * @param {!Object=} extras Value used by this operation.
+       * @return {*} Serialized JSON text.
+       */
       const queue = (type, extras = {}) => {
         const id = crypto.randomUUID();
         create(

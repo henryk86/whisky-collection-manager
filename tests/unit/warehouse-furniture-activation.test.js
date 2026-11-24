@@ -2,6 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createFurnitureActivation} from '../../public/js/ui/warehouse-furniture-activation.js';
 
+/**
+ * Derives the pause result from the supplied values.
+ *
+ * @param {*} duration Duration used by the operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const pause = duration => new Promise(resolve => setTimeout(resolve, duration));
 
 test(

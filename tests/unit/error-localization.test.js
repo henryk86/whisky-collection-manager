@@ -18,14 +18,31 @@ const catalogs = Object.fromEntries(['de', 'en', 'index'].map(language =>
       'utf8'
     )),
   ]));
+/**
+ * Transforms the loader text with the required substitutions.
+ *
+ * @param {*} url URL of the resource being processed.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const loader = async url => {
   const language = url.split('/').pop().replace('.json', '');
   return {
-    ok: Boolean(catalogs[language]), json: async () =>
+    ok: Boolean(catalogs[language]),
+    /**
+     * Derives the json result from the supplied values.
+     * @return {!Promise<*>} Promise for the asynchronous operation.
+     */
+    json: async () =>
       catalogs[language],
   };
 };
 
+/**
+ * Coordinates asynchronous work for select.
+ *
+ * @param {*} code Code used to identify a specific outcome.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const select = async code => {
   const old = globalThis.location;
   globalThis.location = {search: `?lang=${code}`};

@@ -165,18 +165,45 @@ test(
     let view;
     const originalDocument = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () => null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll: () => [],
+      /**
+       * Retrieves element by id from the available state.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getElementById: () => null,
     };
     try {
       view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} content Content to render, store or examine.
+         */
         shell: content => {html = content;},
+        /**
+         * Updates the navigate state for its caller.
+         *
+         * @param {*} page Page or view being rendered or selected.
+         * @param {*} selected Currently selected item or identifier.
+         */
         navigate: (page, selected) => {
           state.page = page; state.selected = selected; view.render();
         },
         modal: {},
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.showBottleLocation('b8');
@@ -218,20 +245,48 @@ test(
     let view;
     const previousDocument = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () => null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll: () => [],
+      /**
+       * Retrieves element by id from the available state.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getElementById: () => null,
     };
     try {
       view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} content Content to render, store or examine.
+         */
         shell: content => {html = content;},
+        /**
+         * Updates the navigate state for its caller.
+         *
+         * @param {*} page Page or view being rendered or selected.
+         * @param {*} selected Currently selected item or identifier.
+         * @param {*} options Options controlling the operation.
+         */
         navigate: (page, selected, options) => {
           navigation.push({page, selected, options});
           state.page = page; state.selected = selected;
           if (page === 'warehouse') view.render();
         },
         modal: {},
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.showBottleLocation('b8', {returnToBottlingId: 'release-8'});
@@ -281,18 +336,73 @@ test(
     let html = '';
     let view;
     const removedClasses = [];
-    const banner = {remove() {this.removed = true;} };
-    const wall = {classList: {remove(...names) {removedClasses.push(['wall', ...names]);} }};
-    const bay = {classList: {remove(...names) {removedClasses.push(['bay', ...names]);} }};
-    const focused = {classList: {remove(...names) {removedClasses.push(['bottle', ...names]);} }};
-    const dimmed = {classList: {remove(...names) {removedClasses.push(['dimmed', ...names]);} }};
+    const banner = {
+      /**
+       * Updates the remove state for its caller.
+       */
+      remove() {this.removed = true;},
+    };
+    const wall = {
+      classList: {
+        /**
+         * Updates the remove state for its caller.
+         *
+         * @param {!Array<*>} names Value used by this operation.
+         */
+        remove(...names) {removedClasses.push(['wall', ...names]);},
+      },
+    };
+    const bay = {
+      classList: {
+        /**
+         * Updates the remove state for its caller.
+         *
+         * @param {!Array<*>} names Value used by this operation.
+         */
+        remove(...names) {removedClasses.push(['bay', ...names]);},
+      },
+    };
+    const focused = {
+      classList: {
+        /**
+         * Updates the remove state for its caller.
+         *
+         * @param {!Array<*>} names Value used by this operation.
+         */
+        remove(...names) {removedClasses.push(['bottle', ...names]);},
+      },
+    };
+    const dimmed = {
+      classList: {
+        /**
+         * Updates the remove state for its caller.
+         *
+         * @param {!Array<*>} names Value used by this operation.
+         */
+        remove(...names) {removedClasses.push(['dimmed', ...names]);},
+      },
+    };
     const originalDocument = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelector(selector) {
         if (selector === '.warehouse-find-return') return banner;
         if (selector === '.warehouse-room-wall.has-find-focus') return wall;
         return null;
       },
+      /**
+       * Derives the query selector all result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll(selector) {
         if (selector.includes('.warehouse-wall-bay.is-find-focus')) return [bay, focused, dimmed];
         return [];
@@ -300,12 +410,29 @@ test(
     };
     try {
       view = createWarehouseView({
-        state, shell: content => {html = content;},
+        state,
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} content Content to render, store or examine.
+         */
+        shell: content => {html = content;},
+        /**
+         * Updates the navigate state for its caller.
+         *
+         * @param {*} page Page or view being rendered or selected.
+         * @param {*} selected Currently selected item or identifier.
+         */
         navigate: (page, selected) => {
           state.page = page; state.selected =
             selected; view.render();
         },
-        modal: {}, refresh: async () => {},
+        modal: {},
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
+        refresh: async () => {},
       });
       view.showBottleLocation('b1');
       assert.equal(state.selected, 'shelves');

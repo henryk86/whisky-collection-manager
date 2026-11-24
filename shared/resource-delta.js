@@ -12,8 +12,23 @@ const FIELDS = Object.freeze({
   },
   warehouse: {values: ['schemaVersion', 'assignments'], arrays: ['rooms']},
 });
+/**
+ * Serializes identical data to JSON.
+ *
+ * @param {*} a First entry or operand in the calculation.
+ * @param {*} b Second entry or operand in the calculation.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 const identical = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
+/**
+ * Builds a resource delta from before and after revision states.
+ *
+ * @param {string} kind Resource kind selecting the relevant schema.
+ * @param {*} before Resource data before the mutation.
+ * @param {*} after Resource data after the mutation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function resourceDelta(kind, before, after) {
   const spec = FIELDS[kind];
   if (!spec) throw new Error(`Unknown resource: ${kind}`);
@@ -42,6 +57,13 @@ export function resourceDelta(kind, before, after) {
   return {kind, values, arrays};
 }
 
+/**
+ * Applies a verified resource delta to cached resource state.
+ *
+ * @param {*} current Current resource data to update.
+ * @param {*} delta Validated changes to apply to the resource.
+ * @return {*} Entries transformed for the consuming code.
+ */
 export function applyResourceDelta(current, delta) {
   const spec = FIELDS[delta?.kind];
   if (!spec || !current || typeof current !==

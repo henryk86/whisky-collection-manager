@@ -4,14 +4,33 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {prepareSyncPR} from './sync-release-branches.js';
+/**
+ * Normalizes the gh text for subsequent processing.
+ *
+ * @param {!Array<*>} args Arguments forwarded to the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const gh = (...args) => execFileSync(
   'gh',
   args,
   {encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']}
 ).trim();
 
+/**
+ * Derives the sleep result from the supplied values.
+ *
+ * @param {*} ms Value used by this operation.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+/**
+ * Validates version pr for merge version pr.
+ *
+ * @param {*} pr Pr used by this operation.
+ * @param {*} branch Branch used by this operation.
+ * @param {*} snapshot Snapshot used by this operation.
+ */
 export function assertVersionPR(pr, branch, snapshot) {
   if (pr?.baseRefName !== 'main' || pr.headRefName !== branch ||
     pr.headRefOid !== snapshot ||
@@ -19,6 +38,13 @@ export function assertVersionPR(pr, branch, snapshot) {
     throw new Error('Existing version PR does not match the approved release snapshot');
 }
 
+/**
+ * Verifies and merges the workflow-generated version pull request.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Promise<(!Object)>} Promise fulfilled when the operation
+ * completes.
+ */
 export async function mergeVersionPR({tag, merge, repo = process.env
   .GITHUB_REPOSITORY}) {
   if (!repo || !/^[\w.-]+\/[\w.-]+$/

@@ -1,11 +1,24 @@
 import {displayErrorParams} from '../../shared/api-error-field-labels.js';
 import {apiErrorFallbacks} from '../../shared/api-error-fallbacks.js';
 
+/**
+ * Transforms the english message text with the required substitutions.
+ *
+ * @param {*} template Value used by this operation.
+ * @param {!Object=} params Value used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 function englishMessage(template, params = {}) {
   return template.replace(/\{([a-zA-Z]\w*)\}/g, (placeholder, name) =>
     Object.hasOwn(params, name) ? params[name] : placeholder);
 }
 
+/**
+ * Filters records according to the safe params selection rules.
+ *
+ * @param {*} value Value to process.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function safeParams(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
   return Object.fromEntries(Object.entries(value).filter(([name, field]) =>
@@ -14,8 +27,11 @@ function safeParams(value) {
 }
 
 /**
- * Never infer public error identity from translated messages or expose internal
- * detail.
+ * Never infer public error identity from translated messages or expose
+ * internal detail.
+ *
+ * @param {*} error Error being handled.
+ * @return {!Object} Structured result for the caller.
  */
 export function publicErrorResponse(error) {
   const status = Number.isInteger(error?.status) ? error.status : 500;

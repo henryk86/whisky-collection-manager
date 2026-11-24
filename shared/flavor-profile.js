@@ -25,6 +25,12 @@ export const FLAVOR_AXES = Object.freeze([
   'sulphury',
 ]);
 
+/**
+ * Normalizes flavor profile for flavor profile.
+ *
+ * @param {*} value Input value to process.
+ * @return {?Object} Computed value, or null when the input has no match.
+ */
 export function normalizeFlavorProfile(value) {
   if (value === null) return null;
   const keys = value && typeof value === 'object' && !Array.isArray(value) ?

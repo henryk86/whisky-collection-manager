@@ -9,18 +9,54 @@ test(
     const prior = globalThis.document;
     let overlay;
     const host = {
+      /**
+       * Reads the first element child property from the current state.
+       * @return {*} Result computed from the supplied inputs.
+       */
       get firstElementChild() {return overlay;},
+      /**
+       * Assigns the inner html property in the current state.
+       *
+       * @param {*} html HTML markup to render or inspect.
+       */
       set innerHTML(html) {
         overlay = html ?
-          {html, addEventListener() {} } : null;
+          {
+            html,
+            /**
+             * Updates the add event listener state for its caller.
+             */
+            addEventListener() {},
+          } : null;
       },
+      /**
+       * Updates the replace children state for its caller.
+       *
+       * @param {*} element DOM element involved in the operation.
+       */
       replaceChildren(element) {overlay = element;},
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector() {return overlay;},
     };
-    globalThis.document = {querySelector() {return host;} };
+    globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
+      querySelector() {return host;},
+    };
     try {
       const state = {modal: null}; const modal =
-        createModal({state, onClose() {} });
+        createModal({
+          state,
+          /**
+           * Handles the close interaction.
+           */
+          onClose() {},
+        });
       modal.showModal('Parent', '<p>Parent</p>');
       const parent = host.firstElementChild;
       modal.showModal('First', '<p>First</p>');

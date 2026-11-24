@@ -10,17 +10,40 @@ test(
   () => {
     const sliders = axes.map(axis => ({value: 0, name: axis}));
     const editor = {
-      dataset: {flavorSet: '1'}, querySelector(query) {
+      dataset: {flavorSet: '1'},
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {*} query Search query or filter conditions.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
+      querySelector(query) {
         const axis = query.match(/name="flavor-([^"]+)"/)?.[1];
         return sliders.find(s => s.name === axis) || null;
       },
     };
     const container = {
-      matches: () => false, querySelector(query) {
+      /**
+       * Derives the matches result from the supplied values.
+       * @return {boolean} Whether the operation matched or succeeded.
+       */
+      matches: () => false,
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {*} query Search query or filter conditions.
+       * @return {!Object} Computed value, or null when the input has no match.
+       */
+      querySelector(query) {
         if (query === '[data-flavor-editor]') return editor;
         const index = query.match(/data-flavor-range="(\d+)"/)?.[1];
         if (index !== undefined) return sliders[Number(index)];
-        if (query === '[data-flavor-polygon]') return {setAttribute() {} };
+        if (query === '[data-flavor-polygon]') return {
+          /**
+           * Updates attribute in the current state.
+           */
+          setAttribute() {},
+        };
         return null;
       },
     };
@@ -52,13 +75,31 @@ test(
       sulphury: 0,
     };
     const scores = {...previous, smoky: null, medicinal: null};
-    const markers = axes.map(() => ({setAttribute() {} }));
+    const markers = axes.map(() => ({
+      /**
+       * Updates attribute in the current state.
+       */
+      setAttribute() {},
+    }));
     const outputs = axes.map(() => ({textContent: ''}));
     const editor = {
-      dataset: {flavorSet: '1'}, querySelector(selector) {
+      dataset: {flavorSet: '1'},
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector input for this
+       * operation.
+       * @return {*} Computed value, or null when the input has no match.
+       */
+      querySelector(selector) {
         const axis = selector.match(/name="flavor-([^"]+)"/)?.[1];
         if (axis) return sliders.find(slider => slider.name === axis);
-        if (selector === '[data-flavor-polygon]') return {setAttribute() {} };
+        if (selector === '[data-flavor-polygon]') return {
+          /**
+           * Updates attribute in the current state.
+           */
+          setAttribute() {},
+        };
         const point = selector.match(/data-flavor-point="(\d+)"/)?.[1];
         if (point !== undefined) return markers[Number(point)];
         const output = selector.match(/data-flavor-value="(\d+)"/)?.[1];
@@ -70,13 +111,32 @@ test(
       name: axis,
       value: '0',
       dataset: {},
+      /**
+       * Performs the closest lifecycle action.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       closest(selector) {
         return selector === '[data-flavor-range]' ? this :
           editor;
       },
     }));
     const container = {
-      matches: () => false, querySelector(selector) {
+      /**
+       * Derives the matches result from the supplied values.
+       * @return {boolean} Whether the operation matched or succeeded.
+       */
+      matches: () => false,
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector input for this
+       * operation.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
+      querySelector(selector) {
         if (selector === '[data-flavor-editor]') return editor;
         const index = selector.match(/data-flavor-range="(\d+)"/)?.[1];
         return index !== undefined ? sliders[Number(index)] : null;

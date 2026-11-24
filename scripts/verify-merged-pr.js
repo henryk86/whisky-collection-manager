@@ -6,6 +6,14 @@
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 
+/**
+ * Checks whether approved release merge applies in verify merged pr.
+ *
+ * @param {*} pr Pr used by this operation.
+ * @param {*} sha Sha used by this operation.
+ * @param {*} repo Repo used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function isApprovedReleaseMerge(pr, sha, repo) {
   return /^[a-f0-9]{40}$/.test(sha || '') && typeof repo === 'string' &&
     repo.includes('/')
@@ -15,6 +23,14 @@ export function isApprovedReleaseMerge(pr, sha, repo) {
     && pr.base?.repo?.full_name === repo && pr.head?.repo?.full_name === repo;
 }
 
+/**
+ * Validates merged p rs for verify merged pr.
+ *
+ * @param {*} prs Prs used by this operation.
+ * @param {*} sha Sha used by this operation.
+ * @param {*} repo Repo used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function verifyMergedPRs(prs, sha, repo) {
   if (!Array.isArray(prs) || !prs.some(pr =>
     isApprovedReleaseMerge(pr, sha, repo)))
@@ -22,6 +38,14 @@ export function verifyMergedPRs(prs, sha, repo) {
   return true;
 }
 
+/**
+ * Checks whether a merged pull request is the authorized version PR.
+ *
+ * @param {*} pr Pr used by this operation.
+ * @param {*} sha Sha used by this operation.
+ * @param {*} repo Repo used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function approvedVersionMerge(pr, sha, repo) {
   return /^[a-f0-9]{40}$/.test(sha || '') && pr?.merged_at != null
     && pr.merge_commit_sha === sha && pr.base?.ref === 'main'
@@ -32,6 +56,14 @@ export function approvedVersionMerge(pr, sha, repo) {
       .slice('release/version-'.length)}`;
 }
 
+/**
+ * Validates main merge for verify merged pr.
+ *
+ * @param {*} prs Prs used by this operation.
+ * @param {*} sha Sha used by this operation.
+ * @param {*} repo Repo used by this operation.
+ * @return {(string)} Whether the requested condition is met.
+ */
 export function verifyMainMerge(prs, sha, repo) {
   if (!Array.isArray(prs)) throw new Error('Invalid PR response');
   if (prs.some(pr => isApprovedReleaseMerge(pr, sha, repo))) return 'release';
@@ -39,6 +71,9 @@ export function verifyMainMerge(prs, sha, repo) {
   throw new Error('Main push denied: neither a develop release merge nor an approved version PR.');
 }
 
+/**
+ * Runs the verify merged pr entry point.
+ */
 async function main() {
   const sha = process.env.MERGE_SHA, repo = process.env.GITHUB_REPOSITORY;
   const chunks = [];
@@ -53,6 +88,12 @@ async function main() {
     // Verify the GitHub API's PR origin against the real Git ancestry and tag.
     const pr = prs.find(p => approvedVersionMerge(p, sha, repo));
     const {execFileSync} = await import('node:child_process');
+    /**
+     * Normalizes the git text for subsequent processing.
+     *
+     * @param {!Array<*>} args Arguments forwarded to the operation.
+     * @return {*} Result computed from the supplied inputs.
+     */
     const git = (...args) =>
       execFileSync('git', args, {encoding: 'utf8'}).trim();
     const tag = pr.head.ref.slice('release/version-'.length);

@@ -5,6 +5,11 @@ import {wallFurnitureGroups} from '../../public/js/domain/warehouse-wall-layout.
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 import {shelfDropStatus} from '../../public/js/ui/warehouse-bottle-drag.js';
 
+/**
+ * Creates warehouse for warehouse room wall.test.
+ *
+ * @return {!Object} Structured result for the caller.
+ */
 function createWarehouse() {
   const room = {
     id: 'room', name: 'Room & <one>', width: 6, height: 4, furniture: [
@@ -111,15 +116,36 @@ test(
     let html = '';
     const oldDocument = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: () =>
-        null, querySelectorAll: () => [],
+        null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
+      querySelectorAll: () => [],
     };
     try {
       createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} output Output resource or accumulated result.
+         */
         shell: output => {html = output;},
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
         modal: {},
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       }).render();
     } finally {
@@ -150,6 +176,12 @@ test('an empty room receives a translated wall-state message', () => {
 test(
   'room wall follows physical projection by direction instead of furniture names',
   () => {
+    /**
+     * Derives the shelf result from the supplied values.
+     *
+     * @param {*} id Identifier of the affected record.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     const shelf = id => [{id, name: id, capacity: 1}];
     const room = {
       name: 'Sorting', furniture: [
@@ -316,6 +348,16 @@ test(
 test(
   'overlapping but same-height furniture and units on opposite walls never stack',
   () => {
+    /**
+     * Derives the item result from the supplied values.
+     *
+     * @param {*} id Identifier of the affected record.
+     * @param {*} x Horizontal coordinate.
+     * @param {*} y Vertical coordinate.
+     * @param {*} elevation Value used by this operation.
+     * @param {number=} rotation Value used by this operation.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     const item = (id, x, y, elevation, rotation = 0) => ({
       id,
       name: id,
@@ -515,6 +557,12 @@ test(
 test(
   'a single wide upper unit spans two adjacent lower cabinets in ONE physical elevation',
   () => {
+    /**
+     * Derives the shelf result from the supplied values.
+     *
+     * @param {*} id Identifier of the affected record.
+     * @return {!Array<*>} Resulting entries in their output order.
+     */
     const shelf = id => [{id: `s-${id}`, name: id, capacity: 5}];
     const room = {
       id: 'span-room', name: 'Span test', furniture: [
@@ -622,13 +670,27 @@ test(
     let viewport = null;
     const oldDocument = globalThis.document;
     globalThis.document = {
+      /**
+       * Derives the query selector result from the supplied values.
+       *
+       * @param {function(...*): *} selector Selector used to obtain matching
+       *     values.
+       * @return {*} Result computed from the supplied inputs.
+       */
       querySelector: selector => selector === '.warehouse-wall-scroll' ?
         viewport : null,
+      /**
+       * Derives the query selector all result from the supplied values.
+       * @return {!Array<*>} Resulting entries in their output order.
+       */
       querySelectorAll: () => [],
     };
     try {
       const view = createWarehouseView({
         state,
+        /**
+         * Updates the shell state for its caller.
+         */
         shell: () => {
           viewport = {
             dataset: {roomId: state.warehouseRoomId},
@@ -636,8 +698,15 @@ test(
             isConnected: true,
           };
         },
+        /**
+         * Updates the navigate state for its caller.
+         */
         navigate: () => {},
         modal: {},
+        /**
+         * Performs the refresh lifecycle action.
+         * @return {!Promise<*>} Promise for the asynchronous operation.
+         */
         refresh: async () => {},
       });
       view.render();

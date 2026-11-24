@@ -5,8 +5,20 @@
  */
 import {execFileSync} from 'node:child_process';
 import {releaseRefs, RELEASE_METADATA} from './sync-release-branches.js';
+/**
+ * Normalizes the git text for subsequent processing.
+ *
+ * @param {!Array<*>} args Arguments forwarded to the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 const git = (...args) => execFileSync('git', args, {encoding: 'utf8'}).trim();
 
+/**
+ * Validates version pr for verify version pr.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function verifyVersionPR({branch, head, base, author}) {
   const match = /^release\/version-(v\d+\.\d+\.\d+)$/.exec(branch || '');
   if (!match || !['github-actions[bot]', process.env

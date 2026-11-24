@@ -3,8 +3,14 @@ import {escapeHtml, query} from './dom.js';
 import {actionButton} from './buttons.js';
 import {modalFrame, modalFooter} from './modal-layout.js';
 
-/** Single modal host; nested dialogs suspend their parent DOM (including FileList,
- * field values, scroll and event listeners), and only the top layer is active. */
+/**
+ * Single modal host; nested dialogs suspend their parent DOM (including
+ * FileList, field values, scroll and event listeners), and only the top layer
+ * is active.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createModal({state, onClose}) {
   const suspended = [];
   let pendingConfirmation = null;
@@ -12,6 +18,11 @@ export function createModal({state, onClose}) {
   let scrollLock = null;
   let originFocus = null;
   let pageSiblings = [];
+  /**
+   * Selects and transforms the lock background records.
+   *
+   * @param {*} host Network host or host configuration.
+   */
   function lockBackground(host) {
     if (scrollLock || typeof document === 'undefined') return;
     const body = document.body, html = document.documentElement;
@@ -35,6 +46,9 @@ export function createModal({state, onClose}) {
     for (const {element} of pageSiblings) element.inert = true;
   }
 
+  /**
+   * Updates element attributes used by unlock background.
+   */
   function unlockBackground() {
     if (!scrollLock || typeof document === 'undefined') return;
     const {top, bodyCss, htmlCss} = scrollLock;
@@ -51,11 +65,22 @@ export function createModal({state, onClose}) {
       window.scrollTo({top, left: 0, behavior: 'instant'});
   }
 
+  /**
+   * Updates the focus element state for its caller.
+   *
+   * @param {*} element DOM element involved in the operation.
+   */
   function focusElement(element) {
     if (element?.isConnected !== false && typeof element?.focus === 'function')
       element.focus({preventScroll: true});
   }
 
+  /**
+   * Filters records according to the focusable selection rules.
+   *
+   * @param {*} dialog Value used by this operation.
+   * @return {!Array<*>} Resulting entries in their output order.
+   */
   function focusable(dialog) {
     if (!dialog?.querySelectorAll) return [];
     return [...dialog.querySelectorAll('a[href],button:not(:disabled),input:not([type="hidden"]):not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])')]
@@ -66,6 +91,11 @@ export function createModal({state, onClose}) {
           .visibility !== 'hidden');
   }
 
+  /**
+   * Derives the focus first result from the supplied values.
+   *
+   * @param {*} dialog Value used by this operation.
+   */
   function focusFirst(dialog) {
     if (!dialog) return;
     const controls = focusable(dialog);
@@ -75,6 +105,11 @@ export function createModal({state, onClose}) {
     focusElement(auto || field || controls[0] || dialog);
   }
 
+  /**
+   * Derives the trap keys result from the supplied values.
+   *
+   * @param {!Event} event Event that triggered this operation.
+   */
   function trapKeys(event) {
     if (event.key === 'Escape') {
       event.preventDefault(); event.stopPropagation(); closeModal(); return;
@@ -91,6 +126,16 @@ export function createModal({state, onClose}) {
       1)) {event.preventDefault(); focusElement(controls[0]);}
   }
 
+  /**
+   * Renders modal for modal.
+   *
+   * @param {string} title Title shown to the user.
+   * @param {*} content Content used by this operation.
+   * @param {boolean=} wide Wide used by this operation.
+   * @param {boolean=} nested Nested used by this operation.
+   * @param {string=} headingAction Heading action used by this operation.
+   * @param {string=} variant Variant used by this operation.
+   */
   function showModal(
     title,
     content,
@@ -126,6 +171,9 @@ export function createModal({state, onClose}) {
     renderModal();
   }
 
+  /**
+   * Renders modal in the current view.
+   */
   function renderModal() {
     const host = query('#modal-root');
     if (!host || !state.modal) return;
@@ -145,6 +193,11 @@ export function createModal({state, onClose}) {
     focusFirst(host.querySelector('.dialog'));
   }
 
+  /**
+   * Controls modal for modal.
+   *
+   * @param {boolean=} all All used by this operation.
+   */
   function closeModal(all = false) {
     if (pendingChoice) {
       const callback = pendingChoice; pendingChoice =
@@ -173,8 +226,16 @@ export function createModal({state, onClose}) {
     originFocus = null;
   }
 
-  /** Confirmation and choice dialogs never invoke window.confirm/alert/prompt.
-   * Their actions use the same central footer and button contracts as forms. */
+  /**
+ * Confirmation and choice dialogs never invoke window.confirm/alert/prompt.
+ * Their actions use the same central footer and button contracts as forms.
+ *
+ * @param {string} title Title shown to the user.
+ * @param {*} message Message used by this operation.
+ * @param {*} acceptLabel Accept label used by this operation.
+ * @param {*=} cancelLabel Cancel label used by this operation.
+ * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ */
   function confirm(title, message, acceptLabel, cancelLabel = t('common.actions.cancel')) {
     return new Promise(resolve => {
       const buttons = actionButton({label: cancelLabel, action: 'close-modal'}) +
@@ -194,12 +255,24 @@ export function createModal({state, onClose}) {
     });
   }
 
+  /**
+   * Derives the accept confirmation result from the supplied values.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   function acceptConfirmation() {
     if (!pendingConfirmation) return false;
     const resolve = pendingConfirmation; pendingConfirmation = null;
     closeModal(); resolve(true); return true;
   }
 
+  /**
+   * Transforms the entries used by choose.
+   *
+   * @param {*} title Title displayed or stored by this operation.
+   * @param {*} message Message to display or use for diagnostics.
+   * @param {*} options Options controlling the operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   function choose(title, message, options) {
     return new Promise(resolve => {
       const buttons = options.map(({id, label, primary}) => actionButton({
@@ -219,6 +292,12 @@ export function createModal({state, onClose}) {
     });
   }
 
+  /**
+   * Derives the accept choice result from the supplied values.
+   *
+   * @param {*} choice Value used by this operation.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   function acceptChoice(choice) {
     if (!pendingChoice || !['save', 'discard', 'cancel']
       .includes(choice)) return false;
@@ -226,6 +305,11 @@ export function createModal({state, onClose}) {
     closeModal(); resolve(choice); return true;
   }
 
+  /**
+   * Updates content in the current state.
+   *
+   * @param {*} content Content to render, store or examine.
+   */
   function updateContent(content) {
     if (!state.modal) return;
     state.modal.content = content;

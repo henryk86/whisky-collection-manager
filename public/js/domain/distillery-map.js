@@ -14,6 +14,14 @@ export const ISLAY_LOCATIONS = Object.freeze({
   'laggan bay': [55.6825, -6.2564],
 });
 
+/**
+ * Resolves a distillery's coordinates, preferring explicitly saved data.
+ *
+ * @param {!Object} distillery Distillery with optional saved coordinates.
+ * @return {?{lat: number, lon: number, source: string,
+ *     approximate: (boolean|undefined)}} Coordinates and provenance,
+ *     or null when no location is known.
+ */
 export function locationFor(distillery) {
   if (Number.isFinite(distillery.latitude) &&
     Number.isFinite(distillery.longitude)) {
@@ -31,9 +39,17 @@ export function locationFor(distillery) {
   } : null;
 }
 
-/** Count the actual physical bottles, not the number of bottling records.
- * For multi-distillery blends, a bottling and its bottles are associated with
- * each named contributor, never with a guessed midpoint.
+/**
+ * Count the actual physical bottles, not the number of bottling records. For
+ * multi-distillery blends, a bottling and its bottles are associated with each
+ * named contributor, never with a guessed midpoint.
+ *
+ * @param {import('../../../shared/types.js').Collection} collection
+ *     Collection with distillery and physical-bottle records.
+ * @param {{includeAllDistilleries: boolean}=} options Include distilleries
+ *     without bottles when preparing a complete map.
+ * @return {!Object} Distilleries grouped with physical bottle counts
+ *     and geographic coordinates.
  */
 export function buildDistilleryMap(collection, {includeAllDistilleries = false} = {}) {
   const byId = new Map((collection.distilleries || []).map(distillery =>
@@ -97,15 +113,25 @@ export function buildDistilleryMap(collection, {includeAllDistilleries = false} 
   };
 }
 
-/** Logarithmic visual scale, capped so a 100+ bottle site stays tappable without
- * covering half an island. 1 -> 31px, 10 -> 43px, 100 -> 59px. */
+/**
+ * Logarithmic visual scale, capped so a 100+ bottle site stays tappable
+ * without covering half an island. 1 -> 31px, 10 -> 43px, 100 -> 59px.
+ *
+ * @param {*} bottleCount Number of physical bottles represented.
+ * @return {number} Calculated numeric result.
+ */
 export function markerDiameter(bottleCount) {
   return Math.round(Math.min(62, 26 + 5 * Math.log2(1 +
     Math.max(0, bottleCount))));
 }
 
-/** Cluster size uses the same bottle scale plus a distinguishable outer ring.
- * Shared by the interactive map and its exact-size legend examples. */
+/**
+ * Cluster size uses the same bottle scale plus a distinguishable outer ring.
+ * Shared by the interactive map and its exact-size legend examples.
+ *
+ * @param {*} bottleCount Number of physical bottles represented.
+ * @return {number} Calculated numeric result.
+ */
 export function clusterMarkerDiameter(bottleCount) {
   return Math.max(38, Math.min(66, markerDiameter(bottleCount) + 7));
 }
@@ -114,9 +140,23 @@ export function clusterMarkerDiameter(bottleCount) {
 export const tileSize = 256;
 const maxLat = 85.05112878;
 export const MAX_MAP_ZOOM = 16;
+/**
+ * Restricts map zoom to the supported minimum and maximum.
+ *
+ * @param {*} z Requested zoom level.
+ * @return {number} Calculated numeric result.
+ */
 export const clampZoom = z =>
   Math.max(2, Math.min(MAX_MAP_ZOOM, Math.round(z)));
 
+/**
+ * Converts geographic coordinates into map positions at a given zoom.
+ *
+ * @param {*} lat Latitude in decimal degrees.
+ * @param {*} lon Longitude in decimal degrees.
+ * @param {*} zoom Map scale used for projection.
+ * @return {!Object} Structured result for the caller.
+ */
 export function project(lat, lon, zoom) {
   const scale = tileSize * 2 ** zoom;
   const latitude = Math.max(-maxLat, Math.min(maxLat, lat)) * Math.PI / 180;
@@ -127,6 +167,14 @@ export function project(lat, lon, zoom) {
   };
 }
 
+/**
+ * Converts map positions into geographic coordinates at a given zoom.
+ *
+ * @param {number} x Horizontal coordinate in the current coordinate system.
+ * @param {number} y Vertical coordinate in the current coordinate system.
+ * @param {*} zoom Map scale used for projection.
+ * @return {!Object} Structured result for the caller.
+ */
 export function unproject(x, y, zoom) {
   const scale = tileSize * 2 ** zoom;
   return {
@@ -135,9 +183,19 @@ export function unproject(x, y, zoom) {
   };
 }
 
-/** Zooms around a pixel inside the map viewport, keeping the geographic
- * position beneath that pixel stationary. With no pointer, use the centre.
- * All coordinates are relative to the viewport, not to the event target.
+/**
+ * Zooms around a pixel inside the map viewport, keeping the geographic
+ * position beneath that pixel stationary. With no pointer, use the centre. All
+ * coordinates are relative to the viewport, not to the event target.
+ *
+ * @param {*} center Current map centre coordinates.
+ * @param {*} currentZoom Zoom level before the interaction.
+ * @param {*} requestedZoom New zoom level requested by the user.
+ * @param {number} width Width in pixels.
+ * @param {number} height Height in pixels.
+ * @param {number=} x Horizontal coordinate in the current coordinate system.
+ * @param {number=} y Vertical coordinate in the current coordinate system.
+ * @return {*} Structured result assembled from the input data.
  */
 export function zoomAroundPoint(
   center,
@@ -158,6 +216,14 @@ export function zoomAroundPoint(
   return {...nextCenter, zoom: nextZoom};
 }
 
+/**
+ * Selects a map centre and zoom that encompass the supplied sites.
+ *
+ * @param {*} sites Geographic sites to include in the map.
+ * @param {number} width Width in pixels.
+ * @param {number} height Height in pixels.
+ * @return {!Object} Structured result for the caller.
+ */
 export function fitMapToSites(sites, width, height) {
   const points = sites.filter(site => site.location).map(site => site.location);
   if (!points.length) return {lat: 55.78, lon: -6.27, zoom: 6};

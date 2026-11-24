@@ -32,6 +32,15 @@ test(
       const [ready] = await once(child, 'message');
       assert.equal(ready.type, 'test-server-ready', output);
       const base = `http://127.0.0.1:${ready.port}`;
+      /**
+       * Serializes call data to JSON.
+       *
+       * @param {*} url URL of the resource being processed.
+       * @param {string=} method Value used by this operation.
+       * @param {*} body Body content to validate or process.
+       * @param {string=} cookie Value used by this operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const call = async (url, method = 'GET', body, cookie = '') => {
         const response = await fetch(base + url, {
           method, headers: {

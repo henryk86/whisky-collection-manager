@@ -21,8 +21,10 @@ export function pixelMode(args = [], env = {}) {
 
 /**
  * Checks that a strict pixel comparison has an identical browser renderer.
+ *
  * @param {string} browser Version reported by the running browser.
- * @param {string} baselineBrowser Version recorded with the approved snapshots.
+ * @param {string} baselineBrowser Version recorded with the approved
+ * snapshots.
  * @param {'diagnostic'|'strict'} mode Effective pixel policy.
  * @return {string|null} Non-blocking version warning in diagnostic mode.
  */
@@ -38,6 +40,7 @@ export function browserWarning(browser, baselineBrowser, mode) {
 
 /**
  * Compares the recorded rectangles and detects horizontal overflow.
+ *
  * @param {?Object<string, *>} before Approved reference geometry.
  * @param {?Object<string, *>} after Current browser geometry.
  * @return {!Array<string>} Blocking geometry failures.
@@ -62,14 +65,13 @@ export function compareGeometry(before, after) {
 }
 
 /**
- * Separates blocking geometry defects from diagnostic image differences.
- * In strict mode, even one pixel past the per-pixel colour delta is blocking;
+ * Separates blocking geometry defects from diagnostic image differences. In
+ * strict mode, even one pixel past the per-pixel colour delta is blocking;
  * there is deliberately no global screenshot-area tolerance.
- * @param {{before: !Object<string, *>, after: !Object<string, *>,
- * changed: number, dimensions: !Array<number>, mode: string}} capture Capture
- * metrics.
+ *
+ * @param {*} capture Capture metrics.
  * @return {{geometryErrors: !Array<string>, pixelChanged: boolean,
- *   blocking: boolean, status: string}} Capture assessment.
+ *     blocking: boolean, status: string}} Capture assessment.
  */
 export function assessCapture(capture) {
   const geometryErrors = compareGeometry(capture.before, capture.after);

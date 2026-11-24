@@ -19,10 +19,21 @@ export const HELP_TOPICS = Object.freeze([
   {id: 'data', items: 4},
 ]);
 
-/** Help and Analytics share the same sidebar / mobile-selector layout. */
+/**
+ * Help and Analytics share the same sidebar / mobile-selector layout.
+ *
+ * @param {string=} activeTopic Active topic used by this operation.
+ * @return {string} Resulting text.
+ */
 export function helpView(activeTopic = 'basics') {
   const current = HELP_TOPICS.some(topic => topic.id === activeTopic) ?
     activeTopic : 'basics';
+  /**
+   * Builds the localized title text for the current language.
+   *
+   * @param {*} id Identifier of the affected record.
+   * @return {string} Resulting text.
+   */
   const title = id => escapeHtml(t(`help.${id}.title`));
   const panels = HELP_TOPICS.map(topic => `
         <section class="help-section" id="help-panel-${topic.id}" aria-labelledby="help-title-${topic.id}"${topic.id === current ? '' : ' hidden'}>
@@ -60,7 +71,13 @@ export function helpView(activeTopic = 'basics') {
     </div>`;
 }
 
-/** Switch the visible help topic without losing the current page or scroll. */
+/**
+ * Switch the visible help topic without losing the current page or scroll.
+ *
+ * @param {*} topicId Topic id used by this operation.
+ * @param {*} container Container used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function activateHelpTopic(topicId, container) {
   if (!HELP_TOPICS.some(topic => topic.id === topicId) ||
     !container) return false;

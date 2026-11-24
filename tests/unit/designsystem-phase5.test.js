@@ -14,25 +14,72 @@ test(
     };
     let html = '';
     try {
-      const placeholder = {addEventListener() {}, focus() {} };
+      const placeholder = {
+        /**
+         * Updates the add event listener state for its caller.
+         */
+        addEventListener() {},
+        /**
+         * Updates the focus state for its caller.
+         */
+        focus() {},
+      };
       globalThis.document = {
+        /**
+         * Derives the query selector result from the supplied values.
+         * @return {!Object} Result computed from the supplied inputs.
+         */
         querySelector: () =>
-          placeholder, querySelectorAll: () => [],
+          placeholder,
+        /**
+         * Derives the query selector all result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
+        querySelectorAll: () => [],
       };
       globalThis.location = {pathname: '/', search: ''};
-      globalThis.history = {replaceState() {} };
+      globalThis.history = {
+        /**
+         * Updates the replace state state for its caller.
+         */
+        replaceState() {},
+      };
       const state = {
         collection: {bottlings: [], distilleries: [], settings: {}},
         page: 'home', pageNumber: 1, pageSize: 24, search: '', status: 'all',
         completion: 'all', sort: 'name', view: 'cards',
       };
       const selectors = {
+        /**
+         * Derives the all bottles result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
         allBottles: () => [],
+        /**
+         * Derives the bottles result from the supplied values.
+         * @return {!Array<*>} Resulting entries in their output order.
+         */
         bottles: () => [],
+        /**
+         * Derives the cover photo result from the supplied values.
+         * @return {string} Resulting text.
+         */
         coverPhoto: () => '',
+        /**
+         * Derives the distillery names result from the supplied values.
+         * @return {string} Resulting text.
+         */
         distilleryNames: () => '',
       };
-      createHomeView({state, selectors, shell: markup => {html = markup;}})();
+      createHomeView({
+        state, selectors,
+        /**
+         * Updates the shell state for its caller.
+         *
+         * @param {*} markup HTML markup for the selected content.
+         */
+        shell: markup => {html = markup;},
+      })();
       assert.equal(
         (html.match(/class="panel stat" data-ds-panel="standard"/g) ||
           []).length,
@@ -62,7 +109,15 @@ test(
       collection: {schemaVersion: 6, bottlings: [], distilleries: []},
       selected: 'overview', analyticsFilters: {}, analyticsPeriod: 'month',
     };
-    createAnalyticsView({state, shell: markup => {html = markup;}})();
+    createAnalyticsView({
+      state,
+      /**
+       * Updates the shell state for its caller.
+       *
+       * @param {*} markup HTML markup for the selected content.
+       */
+      shell: markup => {html = markup;},
+    })();
     assert.match(
       html,
       /class="panel stat analytics-metric" data-ds-panel="standard"/

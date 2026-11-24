@@ -7,6 +7,13 @@ import {startTestServer, requestJson} from '../helpers/server.js';
 
 const pdf = Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n');
 const image = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
+/**
+ * Produces the data url text used by the caller.
+ *
+ * @param {*} bytes Value used by this operation.
+ * @param {*} mime Value used by this operation.
+ * @return {string} Resulting text.
+ */
 const dataUrl = (bytes, mime) =>
   `data:${mime};base64,${bytes.toString('base64')}`;
 

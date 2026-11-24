@@ -14,12 +14,25 @@ const assets = [
   'public/ai/licenses/Apache-2.0.txt',
   'public/ai/licenses/ONNX-Runtime-Web-NOTICE.txt',
 ];
+/**
+ * Writes write data to the local filesystem.
+ *
+ * @param {*} root Root node or directory for the operation.
+ * @param {*} name Environment variable or setting name.
+ * @param {*} content Content to render, store or examine.
+ */
 function write(root, name, content) {
   const target = path.join(root, name);
   fs.mkdirSync(path.dirname(target), {recursive: true});
   fs.writeFileSync(target, content);
 }
 
+/**
+ * Serializes fixture data to JSON.
+ *
+ * @param {*} t Temporary or input value for the calculation.
+ * @return {*} Serialized JSON text.
+ */
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-offline-test-'));
   t.after(() => fs.rmSync(root, {recursive: true, force: true}));
@@ -123,7 +136,14 @@ test(
     sealOfflineBundle(root);
     const calls = [];
     prepareStartup({
-      root, env: {HTTPS_ENABLED: 'false'}, execute: (binary, args) => {
+      root, env: {HTTPS_ENABLED: 'false'},
+      /**
+       * Serializes execute data to JSON.
+       *
+       * @param {*} binary Binary data supplied to the operation.
+       * @param {*} args Arguments forwarded to the operation.
+       */
+      execute: (binary, args) => {
         calls.push([binary, ...args]);
         if (args.includes('ci')) {
           assert.ok(args.includes('--offline'));
@@ -168,7 +188,13 @@ test(
     const root = fixture(t);
     let called = false;
     assert.throws(
-      () => prepareStartup({root, env: {HTTPS_ENABLED: 'false'}, execute: () => {called = true;}}),
+      () => prepareStartup({
+        root, env: {HTTPS_ENABLED: 'false'},
+        /**
+         * Updates the execute state for its caller.
+         */
+        execute: () => {called = true;},
+      }),
       /manifest missing/
     );
     assert.equal(called, false);

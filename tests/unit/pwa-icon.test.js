@@ -2,6 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
+/**
+ * Reads png size data from the local filesystem.
+ *
+ * @param {*} path Path to the target resource.
+ * @return {!Object} Structured result assembled from the input data.
+ */
 function pngSize(path) {
   const png = fs.readFileSync(path);
   assert.equal(

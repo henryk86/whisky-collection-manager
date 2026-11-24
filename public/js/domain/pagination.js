@@ -10,6 +10,9 @@ export const GRID_COLUMN_OPTIONS = Object.freeze([1, 2, 3, 4]);
 /**
  * Prevent an invalid URL or old page number from making the collection look
  * empty.
+ *
+ * @param {string=} search Search used by this operation.
+ * @return {number} Calculated numeric result.
  */
 export function pageFromSearch(search = '') {
   const raw = new URLSearchParams(search).get('page');
@@ -17,6 +20,12 @@ export function pageFromSearch(search = '') {
   return Number(raw);
 }
 
+/**
+ * Decodes the overview display mode from URL search parameters.
+ *
+ * @param {string=} search Search used by this operation.
+ * @return {(string)} New instance constructed from the inputs.
+ */
 export function overviewModeFromSearch(search = '') {
   return new URLSearchParams(search).get('mode') === 'bottles' ? 'bottles' :
     'bottlings';
@@ -25,6 +34,10 @@ export function overviewModeFromSearch(search = '') {
 /**
  * The bottle view has its own shareable URL; old bottling URLs remain
  * unchanged.
+ *
+ * @param {*} page Page used by this operation.
+ * @param {string=} mode Requested display mode or configuration variant.
+ * @return {string} Resulting text.
  */
 export function homePageUrl(page, mode = 'bottlings') {
   const params = new URLSearchParams();
@@ -33,7 +46,14 @@ export function homePageUrl(page, mode = 'bottlings') {
   return params.size ? `/?${params}` : '/';
 }
 
-/** Slice after filtering and sorting, never before. */
+/**
+ * Slice after filtering and sorting, never before.
+ *
+ * @param {!Array<*>} items Items used by this operation.
+ * @param {number=} requestedPage Requested page used by this operation.
+ * @param {number=} requestedSize Requested size used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function paginate(items, requestedPage = 1, requestedSize = DEFAULT_PAGE_SIZE) {
   const pageSize = Number.isSafeInteger(Number(requestedSize)) &&
     Number(requestedSize) >= 1 && Number(requestedSize) <= 240 ?
@@ -56,7 +76,12 @@ export function paginate(items, requestedPage = 1, requestedSize = DEFAULT_PAGE_
 }
 
 /**
- * Short, predictable page-number list for both desktop and small phone screens.
+ * Short, predictable page-number list for both desktop and small phone
+ * screens.
+ *
+ * @param {*} current Current resource data to update.
+ * @param {*} totalPages Total pages used by this operation.
+ * @return {!Array<*>} Resulting list of values.
  */
 export function visiblePages(current, totalPages) {
   if (totalPages <= 7) return Array.from({length: totalPages}, (_, index) =>

@@ -32,9 +32,22 @@ export const PHOTO_ADJUSTMENT_FIELDS =
 export const EMPTY_PHOTO_ADJUSTMENTS =
   Object.freeze(Object.fromEntries(PHOTO_ADJUSTMENT_FIELDS.map(({key}) =>
     [key, 0])));
+/**
+ * Calculates the clip numeric value.
+ *
+ * @param {*} value Value to process.
+ * @param {number=} min Minimum accepted value.
+ * @param {number=} max Maximum accepted value.
+ * @return {number} Calculated numeric value.
+ */
 const clip = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
 
-/** Reject unknown keys and non-finite numeric values at the server boundary. */
+/**
+ * Reject unknown keys and non-finite numeric values at the server boundary.
+ *
+ * @param {*} value Input value to process.
+ * @return {!Object} Structured result for the caller.
+ */
 export function validatePhotoAdjustments(value) {
   try {return validateAdjustmentValues(value);}
   catch (error) {
@@ -44,10 +57,22 @@ export function validatePhotoAdjustments(value) {
   }
 }
 
+/**
+ * Checks whether photo edits differ from the saved adjustments.
+ *
+ * @param {*} value Input value to process.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export const photoAdjustmentsChanged = value =>
   PHOTO_ADJUSTMENT_FIELDS.some(({key}) => Number(value?.[key] || 0) !== 0);
 
-/** Reset only one editor group; all other adjustments remain untouched. */
+/**
+ * Reset only one editor group; all other adjustments remain untouched.
+ *
+ * @param {*} current Current resource data to update.
+ * @param {*} groupKey Group key used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function resetPhotoAdjustmentGroup(current, groupKey) {
   const group = PHOTO_ADJUSTMENT_GROUPS.find(entry => entry.key === groupKey);
   if (!group) throw new RangeError(t('errors.photoEditor.invalidGroup'));
@@ -58,11 +83,14 @@ export function resetPhotoAdjustmentGroup(current, groupKey) {
 
 /**
  * Derive a neutral white balance from a user-selected rectangle in ORIGINAL
- * image pixels.
- * Existing non-WB adjustments are taken into account; original pixels are never
- * changed.
- * Transparent, nearly black and clipped pixels cannot provide reliable color
- * information.
+ * image pixels. Existing non-WB adjustments are taken into account; original
+ * pixels are never changed. Transparent, nearly black and clipped pixels
+ * cannot provide reliable color information.
+ *
+ * @param {*} source Source used by this operation.
+ * @param {*} area Area used by this operation.
+ * @param {!Object=} current Current resource data to update.
+ * @return {!Object} Structured result for the caller.
  */
 export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTMENTS) {
   const settings = validatePhotoAdjustments(current);
@@ -114,6 +142,12 @@ export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTM
 /**
  * Separable alpha-aware box blur of luminance for local contrast / unsharp
  * masking.
+ *
+ * @param {!Object} data Input data for the operation.
+ * @param {number} width Width in pixels.
+ * @param {number} height Height in pixels.
+ * @param {*} radius Radius used by this operation.
+ * @return {!Object} Structured result for the caller.
  */
 function blurLuma(data, width, height, radius) {
   const count = width * height;
@@ -150,7 +184,12 @@ function blurLuma(data, width, height, radius) {
 }
 
 /**
- * Pure image processing, independent of Canvas/DOM. Preserves every alpha byte.
+ * Pure image processing, independent of Canvas/DOM. Preserves every alpha
+ * byte.
+ *
+ * @param {*} source Source used by this operation.
+ * @param {!Array<*>} values Values to aggregate or compare.
+ * @return {!Object} Structured result for the caller.
  */
 export function adjustPhotoPixels(source, values) {
   const settings = validatePhotoAdjustments(values);
@@ -210,7 +249,12 @@ export function adjustPhotoPixels(source, values) {
   return {width, height, data: result};
 }
 
-/** Conservative automatic correction from opaque image samples only. */
+/**
+ * Conservative automatic correction from opaque image samples only.
+ *
+ * @param {*} source Source used by this operation.
+ * @return {(!Object)} Structured result assembled from the input data.
+ */
 export function autoPhotoAdjustments(source) {
   const {data} = source;
   if (!data?.length) return {...EMPTY_PHOTO_ADJUSTMENTS};
