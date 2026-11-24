@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.12.3 - 2026-11-24
+
+- fix: standardize test status messages in release generator
+
 ## 1.12.2 - 2026-11-24
 
 - refactor: remove documentation impact checks and update related guidelines
