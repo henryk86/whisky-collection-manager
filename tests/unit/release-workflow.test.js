@@ -179,7 +179,7 @@ test(
         status,
         /^# Teststatus - Whisky Collection Manager v0\.16\.12\n/
       );
-      assert.match(status, /npm test[^\n]*Noch nicht ausgefuehrt/);
+      assert.match(status, /npm test[^\n]*Noch nicht ausgeführt/);
       assert.doesNotMatch(status, /341\/341 bestanden/);
       assert.match(
         fs.readFileSync(path.join(temp, 'CHANGELOG.md'), 'utf8'),
@@ -203,7 +203,7 @@ test(
 test('pending test report is truthful and retains browser visibility', () => {
   const doc = pendingTestStatus('0.16.13', 'Kleinere Korrektur', '2026-11-13');
   assert.match(doc, /v0\.16\.13/);
-  assert.match(doc, /npm test[^\n]*Noch nicht ausgefuehrt/);
+  assert.match(doc, /npm test[^\n]*Noch nicht ausgeführt/);
   assert.match(doc, /npm run test:browser[^\n]*Nicht lokal ausgeführt/);
   assert.match(doc, /CHANGELOG\.md/);
   assert.doesNotMatch(doc, /TESTHISTORIE/);

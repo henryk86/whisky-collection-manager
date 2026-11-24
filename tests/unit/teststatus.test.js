@@ -16,7 +16,13 @@ test(
       new RegExp(`^# Teststatus .+ v${pkg.version.replace(/\./g, '\\.')}\\n`)
     );
     assert.match(doc, /npm run check/);
-    assert.match(doc, /\d+\/\d+ bestanden|nicht ausgeführt|unterbrochen/i);
+    // A status for another command cannot satisfy the npm test contract.
+    const status = doc.match(/`npm test`(?: *\| *|: *)\*\*([^*\n]+)\*\*/);
+    assert.ok(status, 'npm test must have its own reported result');
+    assert.match(
+      status[1],
+      /^(?:\d+\/\d+ bestanden|Noch nicht ausgeführt|unterbrochen)$/i
+    );
     assert.match(doc, /CI|Browser/i);
     assert.doesNotMatch(doc, /TESTHISTORIE|^## Nachtrag v/m);
   }

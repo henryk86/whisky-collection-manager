@@ -223,7 +223,7 @@ test(
     // as docs/TESTSTATUS.md on develop, even before snapshot-specific tests
     // run.
     const releaseStatus = run(dir, 'git', 'show', 'v1.5.0:docs/TESTSTATUS.md');
-    assert.match(releaseStatus, /npm test[^\n]*\*\*Noch nicht ausgefuehrt\*\*/);
+    assert.match(releaseStatus, /npm test[^\n]*\*\*Noch nicht ausgeführt\*\*/);
     assert.match(
       releaseStatus,
       /npm run test:browser[^\n]*\*\*Nicht lokal ausgeführt\*\*/

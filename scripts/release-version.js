@@ -9,6 +9,9 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {writeSourceManifest, verifySourceManifest, FILENAME} from './release-manifest.js';
 
+const PENDING_STATUS = 'Noch nicht ausgeführt';
+const LOCAL_PENDING_STATUS = 'Nicht lokal ausgeführt';
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /**
  * Reads read data from the local filesystem.
@@ -183,11 +186,16 @@ export function pendingTestStatus(version, note, date) {
 
 | Pruefung | Ergebnis | Einordnung |
 | --- | --- | --- |
-| \`npm run release:check\` | **Noch nicht ausgefuehrt** | Nach dem Versionswechsel ausfuehren. |
-| \`npm run check\` | **Noch nicht ausgefuehrt** | Syntax, Uebersetzungen und Dokumentationslinks. |
-| \`npm test\` | **Noch nicht ausgefuehrt** | Unit- und Integrationstests; Ergebnis erst nach dem Testlauf eintragen. |
-| \`npm run test:browser\` | **Nicht lokal ausgeführt** | Browserpruefungen separat dokumentieren. |
-| Docker-Image-Build / ARM64-Live-Test | **Nicht lokal ausgeführt** | Nach einem Release auf dem Zielsystem pruefen. |
+| \`npm run release:check\` | **${PENDING_STATUS}** | \
+Nach dem Versionswechsel ausfuehren. |
+| \`npm run check\` | **${PENDING_STATUS}** | \
+Syntax, Uebersetzungen und Dokumentationslinks. |
+| \`npm test\` | **${PENDING_STATUS}** | \
+Unit- und Integrationstests; Ergebnis erst nach dem Testlauf eintragen. |
+| \`npm run test:browser\` | **${LOCAL_PENDING_STATUS}** | \
+Browserpruefungen separat dokumentieren. |
+| Docker-Image-Build / ARM64-Live-Test | **${LOCAL_PENDING_STATUS}** | \
+Nach einem Release auf dem Zielsystem pruefen. |
 
 Nach Durchfuehrung der Pruefungen die Ergebnisse und ihre Grenzen hier dokumentieren. Aenderungen stehen ausschliesslich im Changelog.
 `;
@@ -280,8 +288,14 @@ export function applyAutomatedRelease(version, commits, mergeSha, previousTag) {
     `# Teststatus - Whisky Collection Manager v${version}\n\n`
     + `**Stand:** ${date}. Automatischer Release-Snapshot aus Merge ${mergeSha.slice(0, 12)} (${previousTag}).\n\n`
     + `## Pruefungen\n\n`
-    + `- \`npm test\`: **Noch nicht ausgefuehrt** auf dem Release-Snapshot; die Node-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.\n`
-    + `- \`npm run test:browser\`: **Nicht lokal ausgeführt** auf dem Release-Snapshot; die Browser-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.\n`
+    + `- \`npm test\`: **${PENDING_STATUS}**`
+    + ` auf dem Release-Snapshot; `
+    + `die Node-CI des Merge-Quellstands war vor Erstellung `
+    + `des Tags erfolgreich.\n`
+    + `- \`npm run test:browser\`: **${LOCAL_PENDING_STATUS}**`
+    + ` auf dem Release-Snapshot; `
+    + `die Browser-CI des Merge-Quellstands war vor Erstellung `
+    + `des Tags erfolgreich.\n`
     + `- Vor Erstellung des Tags: GitHub-CI fuer den Merge-Quellstand mit \`npm run check\`, \`npm test\` und \`npm run test:browser\`.\n`
     + `- Release-Metadaten und SHA-256-Quellmanifest werden im Snapshot separat geprueft.\n`
     + `- Docker/ARM64/AMD64 sowie ZIP-/Offline-Archive werden vom Release-Workflow vor der Veroeffentlichung geprueft.\n`
