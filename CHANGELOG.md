@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.12.2 - 2026-11-24
+
+- refactor: remove documentation impact checks and update related guidelines
+- style(css): format stylesheets and enforce formatting in CI
+- docs(jsdoc): document named functions and enforce complete contracts
+- style(javascript): rebase Google formatting and JSDoc checks onto develop
+
 ## 1.12.1 - 2026-11-23
 
 - test(design-system): stabilize visual regression checks and update artifact action
