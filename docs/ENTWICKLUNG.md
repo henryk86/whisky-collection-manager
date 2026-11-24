@@ -55,7 +55,7 @@ npm run format:css:check
 
 ## Änderungen und Dokumentation
 
-**Verbindlich bei jedem Commit/PR:** Dokumentationswirkung prüfen. Betroffene aktuelle `.md`-Dateien zusammen mit dem Code aktualisieren; falls keine Anpassung nötig ist, `Docs-Impact: none - <konkreter Grund>` als Commit-Footer oder im PR-Text festhalten. GitHub Actions lehnt Codeänderungen ohne eines von beiden ab. Nur `CHANGELOG.md` enthält Änderungshistorie. [Projektregeln](../AGENTS.md).
+Bei einem PR die Gesamtheit aller enthaltenen Commits auf Dokumentationsbedarf prüfen und nur tatsächlich betroffene aktuelle `.md`-Dateien aktualisieren. Eine gesonderte Änderung pro Commit oder Patch ist nicht nötig. Ist keine Dokumentation betroffen, muss das weder im Commit noch im PR begründet werden. **Die PR-Beschreibung ist optional und darf leer bleiben**; GitHub Actions prüft ihren Inhalt nicht. Nur `CHANGELOG.md` enthält Änderungshistorie. [Projektregeln](../AGENTS.md).
 
 Der statische `npm run check` prüft Dokumentationslinks und ausgewählte Inkonsistenzen; fachliche Richtigkeit muss beim Review gegen den Code geprüft werden. `docs/TESTSTATUS.md` zeigt **keine** automatisch stets aktuellen CI-Resultate; nur tatsächlich bestätigte Läufe eintragen.
 

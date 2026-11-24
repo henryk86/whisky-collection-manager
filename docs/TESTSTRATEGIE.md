@@ -23,7 +23,7 @@ Mit `npm run test:visual` sind Geometrie und Interaktionen verpflichtend, Pixelv
 1. Auswirkung auf Daten, GUI, API, Deployment und Dokumentation bewerten.
 2. Tests für das zu ändernde Verhalten ergänzen; Fehler gegen den unveränderten Ausgangsstand nachvollziehen.
 3. `npm run check` und `npm test`; bei UI zusätzlich Browser- und visuelle Regression.
-4. Dokumentation zeitgleich aktualisieren oder eine begründete Nichtbetroffenheit im Commit/PR deklarieren. Der CI-Check [`scripts/check-doc-impact.js`](../scripts/check-doc-impact.js) überwacht diesen Schritt.
-5. Fehlende Prüfungen und Risiken im PR benennen; CI-Ergebnisse nicht mit manueller Hardwarefreigabe verwechseln.
+4. Im gesamten PR nur tatsächlich betroffene Dokumentation aktualisieren; eine Begründung bei Nichtbetroffenheit ist nicht erforderlich.
+5. Fehlende Prüfungen und Risiken bei Bedarf im Review oder in den Testunterlagen festhalten. Die PR-Beschreibung darf leer bleiben; CI-Ergebnisse nicht mit manueller Hardwarefreigabe verwechseln.
 
 Für Laufzeitmessungen auf dem Raspberry Pi getrennte Testdaten und wiederholte GET-/ETag-Anfragen benutzen; Schreibtests niemals unbeabsichtigt gegen erhaltenswerte Daten ausführen.

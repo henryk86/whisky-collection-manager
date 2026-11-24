@@ -101,7 +101,7 @@ npm test               # Unit- und Integrationstests
 npm run test:browser   # Browser-Tests mit Playwright/Chromium
 ```
 
-Die CI führt die relevanten Prüfungen aus. Bei jeder Codeänderung muss die Dokumentationswirkung bewertet werden; Betroffenes wird im selben Commit aktualisiert oder eine begründete Ausnahme angegeben. Bei jeder Codeänderung muss die Dokumentationswirkung bewertet werden; Betroffenes wird im selben Commit aktualisiert oder eine begründete Ausnahme angegeben. Der Release-Prozess und die Versionssynchronisierung sind in [Release-Workflow](docs/RELEASE_WORKFLOW.md) dokumentiert; Testergebnisse stehen in [Teststatus](docs/TESTSTATUS.md), Änderungen im [Changelog](CHANGELOG.md).
+Die CI führt die relevanten Prüfungen aus. Nur tatsächlich betroffene aktuelle Dokumentation wird im gesamten PR angepasst; einzelne Commits benötigen keine eigene Dokumentation oder Begründung. Die PR-Beschreibung darf leer bleiben und wird nicht von CI geprüft. Der Release-Prozess und die Versionssynchronisierung sind in [Release-Workflow](docs/RELEASE_WORKFLOW.md) dokumentiert; Testergebnisse stehen in [Teststatus](docs/TESTSTATUS.md), Änderungen im [Changelog](CHANGELOG.md).
 
 ## Weitere Dokumentation
 

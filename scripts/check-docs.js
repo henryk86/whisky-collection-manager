@@ -14,7 +14,6 @@ const documents = [
   ...fs.readdirSync(path.join(root, 'docs')).filter(name =>
     name.endsWith('.md')).map(name => path.join(root, 'docs', name)),
   path.join(root, 'tests/visual/README.md'),
-  path.join(root, '.github/pull_request_template.md'),
 ];
 let examined = 0;
 const failures = [];

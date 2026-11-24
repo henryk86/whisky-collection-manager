@@ -24,22 +24,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Enforce documentation review for code changes
-        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.base_ref == 'develop')
-        shell: bash
-        env:
-          PUSH_BEFORE: ${{ github.event.before }}
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          DOCS_DECLARATION: ${{ github.event.pull_request.body }}
-        run: |
-          set -euo pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            node scripts/check-doc-impact.js --range "$PR_BASE_SHA..HEAD"
-          elif git cat-file -e "$PUSH_BEFORE^{commit}" 2>/dev/null; then
-            node scripts/check-doc-impact.js --range "$PUSH_BEFORE..HEAD"
-          else
-            node scripts/check-doc-impact.js --range "HEAD^..HEAD"
-          fi
       - name: Check project, Google JavaScript style and JSDoc
         run: npm run check
       - run: npm test

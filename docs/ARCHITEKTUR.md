@@ -43,4 +43,4 @@ Optionale Anmeldung mit Administrator-/Nutzerrollen und Passwörtern als scrypt-
 1. Datenformate: `shared/types.js`, `server/domain/validation.js`, Normalisierung, Export/Import und ggf. Migration gemeinsam prüfen.
 2. Neue API: Routen, Services, Fehlercodes, deutsche/englische Übersetzungen und Integrations-/Browsertests abstimmen.
 3. Neue UI: bestehende Renderer aus [Designsystem](DESIGNSYSTEM.md) nutzen; fachspezifische Geometrie lokal lassen.
-4. Dokumentation des **aktuellen** Vertrags im selben Commit/PR aktualisieren oder begründet als nicht betroffen markieren (siehe [Entwicklung](ENTWICKLUNG.md)).
+4. Dokumentation des **aktuellen** Vertrags bei tatsächlicher Betroffenheit im gesamten PR aktualisieren; einzelne Commits benötigen keine eigene Dokumentationsänderung (siehe [Entwicklung](ENTWICKLUNG.md)).
