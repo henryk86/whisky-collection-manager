@@ -12,27 +12,45 @@ import {verifyOfflineBundle} from './offline-bundle.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+/**
+ * Retrieves json from the available state.
+ *
+ * @param {*} file File resource to read, write or inspect.
+ * @return {*} Computed value, or null when the input has no match.
+ */
 function readJson(file) {
   try {return JSON.parse(fs.readFileSync(file, 'utf8'));}
   catch {return null;}
 }
 
-/** Use npm's installed lockfile to detect stale or partial installations.
- * Unlike blindly running npm ci at every start, this works offline after
- * the initial install and does not delete node_modules unnecessarily.
+/**
+ * Use npm's installed lockfile to detect stale or partial installations.
+ * Unlike blindly running npm ci at every start, this works offline after the
+ * initial install and does not delete node_modules unnecessarily.
+ *
+ * @param {*} root Root element or directory.
+ * @param {!Object=} options2 Destructured options for this operation.
+ * @return {boolean} Whether the condition is satisfied.
  */
 export function needsNpmCi(root, {production = false} = {}) {
   const wanted = readJson(path.join(root, 'package-lock.json'));
   const installed = readJson(path.join(root, 'node_modules', '.package-lock.json'));
   if (!wanted?.packages || !installed?.packages) return true;
   for (const [name, entry] of Object.entries(wanted.packages)) {
-    if (!name.startsWith('node_modules/') || (production && entry.dev)) continue;
+    if (!name.startsWith('node_modules/') || (production &&
+      entry.dev)) continue;
     if (installed.packages[name]?.version !== entry.version) return true;
     if (!fs.existsSync(path.join(root, name, 'package.json'))) return true;
   }
   return false;
 }
 
+/**
+ * Retrieves env file from the available state.
+ *
+ * @param {*} root Root node or directory for the operation.
+ * @return {*} Combined text from the input values.
+ */
 function readEnvFile(root) {
   const result = {};
   const file = path.join(root, '.env');
@@ -41,7 +59,8 @@ function readEnvFile(root) {
     const match = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
     if (!match) continue;
     let value = match[2].trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    if ((value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     } else {
       value = value.replace(/\s+#.*$/, '').trim();
@@ -51,14 +70,35 @@ function readEnvFile(root) {
   return result;
 }
 
+/**
+ * Checks whether locally configured TLS certificates are usable.
+ *
+ * @param {*} root Root element or directory.
+ * @param {*=} env Env used by this operation.
+ * @return {(string)} Value, or false when the operation cannot proceed.
+ */
 export function localTlsStatus(root, env = process.env) {
   const fileEnv = readEnvFile(root);
+  /**
+   * Derives the setting result from the supplied values.
+   *
+   * @param {*} key Key used to select or group values.
+   * @param {*} fallback Value used when the requested data is unavailable.
+   * @return {*} Result computed from the supplied inputs.
+   */
   const setting = (key, fallback) => env[key] ?? fileEnv[key] ?? fallback;
   const enabled = String(setting('HTTPS_ENABLED', 'true')).toLowerCase();
   if (enabled === 'false' || enabled === '0') return 'disabled';
-  if (enabled !== 'true' && enabled !== '1') return 'configured'; // Server validates bad values.
+  if (enabled !== 'true' && enabled !==
+    '1') return 'configured'; // Server validates bad values.
   const key = setting('HTTPS_KEY_FILE', 'certs/server-key.pem');
   const cert = setting('HTTPS_CERT_FILE', 'certs/server-cert.pem');
+  /**
+   * Checks whether ready applies.
+   *
+   * @param {*} file File resource to read, write or inspect.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   const isReady = file => {
     const location = path.resolve(root, file);
     try {return fs.statSync(location).size > 0;}
@@ -66,10 +106,17 @@ export function localTlsStatus(root, env = process.env) {
   };
   if (isReady(key) && isReady(cert)) return 'ready';
   // Never overwrite an operator-managed certificate or an externally set path.
-  if (key !== 'certs/server-key.pem' || cert !== 'certs/server-cert.pem') return 'custom-missing';
+  if (key !== 'certs/server-key.pem' || cert !==
+    'certs/server-cert.pem') return 'custom-missing';
   return 'missing';
 }
 
+/**
+ * Derives the npm command result from the supplied values.
+ *
+ * @param {*} env Value used by this operation.
+ * @return {!Array<*>} Resulting entries in their output order.
+ */
 function npmCommand(env) {
   // npm supplies npm_execpath to npm run scripts. This avoids spawning
   // npm.cmd through a shell on Windows (Node 22 disallows that by default).
@@ -78,13 +125,34 @@ function npmCommand(env) {
   return [process.platform === 'win32' ? 'npm.cmd' : 'npm', []];
 }
 
+/**
+ * Validates the default execute state and rejects invalid inputs.
+ *
+ * @param {*} command Value used by this operation.
+ * @param {*} args Arguments forwarded to the operation.
+ * @param {!Object} options Options controlling the operation.
+ */
 function defaultExecute(command, args, {root, env}) {
-  const result = spawnSync(command, args, {cwd: root, env, stdio: 'inherit', shell: process.platform === 'win32' && command.endsWith('.cmd')});
+  const result = spawnSync(
+    command,
+    args,
+    {
+      cwd: root,
+      env,
+      stdio: 'inherit',
+      shell: process.platform === 'win32' && command.endsWith('.cmd'),
+    }
+  );
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${path.basename(command)} ${args.join(' ')} failed (${result.status ?? result.signal}).`);
 }
 
-/** Exposed for deterministic tests without installing packages or downloading models. */
+/**
+ * Exposed for deterministic tests without installing packages or downloading
+ * models.
+ *
+ * @param {!Object=} options Optional configuration for the operation.
+ */
 export function prepareStartup({root = ROOT, env = process.env, execute = defaultExecute} = {}) {
   const production = env.NODE_ENV === 'production';
   const offline = fs.existsSync(path.join(root, '.offline')); // Fail closed if an offline bundle is incomplete.
@@ -95,11 +163,21 @@ export function prepareStartup({root = ROOT, env = process.env, execute = defaul
     // npm mutates its cache indexes even in offline mode. Always work on a
     // disposable copy so the signed offline archive stays verifiable on
     // subsequent starts, reinstalls and migrations.
-    const offlineCache = offline ? fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-offline-npm-')) : null;
+    const offlineCache = offline ?
+      fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-offline-npm-')) : null;
     try {
-      if (offlineCache) fs.cpSync(path.join(root, '.offline', 'npm-cache'), offlineCache, {recursive: true});
-      execute(binary, [...prefix, 'ci', ...(production ? ['--omit=dev'] : []),
-      ...(offlineCache ? ['--offline', '--ignore-scripts', '--cache', offlineCache] : [])], {root, env});
+      if (offlineCache) fs.cpSync(
+        path.join(root, '.offline', 'npm-cache'),
+        offlineCache,
+        {recursive: true}
+      );
+      execute(
+        binary,
+        [...prefix, 'ci', ...(production ? ['--omit=dev'] : []),
+        ...(offlineCache ?
+          ['--offline', '--ignore-scripts', '--cache', offlineCache] : [])],
+        {root, env}
+      );
     } finally {
       if (offlineCache) fs.rmSync(offlineCache, {recursive: true, force: true});
     }
@@ -109,10 +187,18 @@ export function prepareStartup({root = ROOT, env = process.env, execute = defaul
   }
 
   console.log('[Start] Checking local bottle cutout assets...');
-  execute(process.execPath, ['scripts/prepare-cutout-assets.js', ...(offline ? ['--verify'] : [])], {root, env});
+  execute(
+    process.execPath,
+    ['scripts/prepare-cutout-assets.js', ...(offline ? ['--verify'] : [])],
+    {root, env}
+  );
 
   if (!fs.existsSync(path.join(root, '.env')) && !production) {
-    fs.copyFileSync(path.join(root, '.env.example'), path.join(root, '.env'), fs.constants.COPYFILE_EXCL);
+    fs.copyFileSync(
+      path.join(root, '.env.example'),
+      path.join(root, '.env'),
+      fs.constants.COPYFILE_EXCL
+    );
     console.log('[Start] Created .env from .env.example.');
   }
   const tls = localTlsStatus(root, env);
@@ -128,17 +214,34 @@ export function prepareStartup({root = ROOT, env = process.env, execute = defaul
   }
 }
 
+/**
+ * Starts the configured server process using the selected runtime.
+ *
+ * @param {!Object=} options Optional configuration for the operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function launchServer({root = ROOT, env = process.env} = {}) {
-  const server = spawn(process.execPath, ['server/index.js'], {cwd: root, env, stdio: 'inherit'});
+  const server = spawn(
+    process.execPath,
+    ['server/index.js'],
+    {cwd: root, env, stdio: 'inherit'}
+  );
   for (const signal of ['SIGINT', 'SIGTERM']) {
     process.on(signal, () => server.kill(signal));
   }
-  server.on('error', error => {console.error(`[Start] Server failed: ${error.message}`); process.exitCode = 1;});
-  server.on('exit', (code, signal) => {process.exitCode = code ?? (signal ? 1 : 0);});
+  server.on(
+    'error',
+    error => {console.error(`[Start] Server failed: ${error.message}`); process.exitCode = 1;}
+  );
+  server.on(
+    'exit',
+    (code, signal) => {process.exitCode = code ?? (signal ? 1 : 0);}
+  );
   return server;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path.resolve(process.argv[1]) ===
+  fileURLToPath(import.meta.url)) {
   try {
     prepareStartup();
     launchServer();

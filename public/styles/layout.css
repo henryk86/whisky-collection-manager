@@ -1,28 +1,31 @@
 /* Designsystem M1: shared page-frame contract, loaded before legacy core.css.
    :where() keeps the foundation overridable by existing feature selectors. */
 :where(main, .header-inner, .ds-page-container) {
-    max-width: var(--ds-layout-max);
-    margin-inline: auto;
+  max-width: var(--ds-layout-max);
+  margin-inline: auto;
 }
 
 /* Opt-in primitives for new views: no existing view markup is changed in M1. */
 .ds-page-container {
-    width: 100%;
-    padding-inline: var(--ds-page-gutter);
+  width: 100%;
+  padding-inline: var(--ds-page-gutter);
 }
+
 .ds-page-stack {
-    display: grid;
-    gap: var(--ds-layout-stack-gap);
-    min-width: 0;
+  display: grid;
+  gap: var(--ds-layout-stack-gap);
+  min-width: 0;
 }
+
 .ds-section-stack {
-    display: grid;
-    gap: var(--ds-layout-section-gap);
-    min-width: 0;
+  display: grid;
+  gap: var(--ds-layout-section-gap);
+  min-width: 0;
 }
+
 .ds-inline-actions {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--ds-space-3);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ds-space-3);
 }

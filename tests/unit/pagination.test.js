@@ -15,43 +15,56 @@ const bottlings = Array.from({length: 450}, (_, index) => ({
   name: `Whisky ${String(index + 1).padStart(4, '0')}`,
 }));
 
-test('450 bottlings fill 19 pages at a fixed size of 24, regardless of layout', () => {
-  assert.equal(DEFAULT_PAGE_SIZE, 24);
-  assert.deepEqual(PAGE_SIZE_OPTIONS, [12, 24, 48, 96]);
-  const first = paginate(bottlings, 1);
-  assert.equal(first.pageCount, 19);
-  assert.equal(first.items.length, 24);
-  assert.deepEqual([first.from, first.to], [1, 24]);
-  assert.equal(first.items[0].id, 'bottling-0001');
-  const last = paginate(bottlings, 19);
-  assert.equal(last.items.length, 18);
-  assert.deepEqual([last.from, last.to], [433, 450]);
-  assert.equal(last.items.at(-1).id, 'bottling-0450');
-});
+test(
+  '450 bottlings fill 19 pages at a fixed size of 24, regardless of layout',
+  () => {
+    assert.equal(DEFAULT_PAGE_SIZE, 24);
+    assert.deepEqual(PAGE_SIZE_OPTIONS, [12, 24, 48, 96]);
+    const first = paginate(bottlings, 1);
+    assert.equal(first.pageCount, 19);
+    assert.equal(first.items.length, 24);
+    assert.deepEqual([first.from, first.to], [1, 24]);
+    assert.equal(first.items[0].id, 'bottling-0001');
+    const last = paginate(bottlings, 19);
+    assert.equal(last.items.length, 18);
+    assert.deepEqual([last.from, last.to], [433, 450]);
+    assert.equal(last.items.at(-1).id, 'bottling-0450');
+  }
+);
 
-test('every supported responsive column count exactly divides every offered page size', () => {
-  assert.deepEqual(GRID_COLUMN_OPTIONS, [1, 2, 3, 4]);
-  for (const size of PAGE_SIZE_OPTIONS) {
-    assert.equal(paginate(bottlings, 1, size).items.length, size);
-    for (const columns of GRID_COLUMN_OPTIONS) {
-      assert.equal(size % columns, 0, `${size} entries in ${columns} columns`);
+test(
+  'every supported responsive column count exactly divides every offered page size',
+  () => {
+    assert.deepEqual(GRID_COLUMN_OPTIONS, [1, 2, 3, 4]);
+    for (const size of PAGE_SIZE_OPTIONS) {
+      assert.equal(paginate(bottlings, 1, size).items.length, size);
+      for (const columns of GRID_COLUMN_OPTIONS) {
+        assert.equal(
+          size % columns,
+          0,
+          `${size} entries in ${columns} columns`
+        );
+      }
     }
-  }
-  assert.ok(!GRID_COLUMN_OPTIONS.includes(5));
-  assert.ok(!GRID_COLUMN_OPTIONS.includes(6));
+    assert.ok(!GRID_COLUMN_OPTIONS.includes(5));
+    assert.ok(!GRID_COLUMN_OPTIONS.includes(6));
 
-});
-
-test('page size stays exactly selected instead of being multiplied by responsive columns', () => {
-  for (const size of PAGE_SIZE_OPTIONS) {
-    const page = paginate(bottlings, 2, size);
-    assert.equal(page.items.length, size);
-    assert.equal(page.from, size + 1);
-    assert.equal(page.to, size * 2);
-    assert.equal(page.pageCount, Math.ceil(450 / size));
   }
-  assert.equal(paginate(bottlings, 1, 24).pageCount, 19);
-});
+);
+
+test(
+  'page size stays exactly selected instead of being multiplied by responsive columns',
+  () => {
+    for (const size of PAGE_SIZE_OPTIONS) {
+      const page = paginate(bottlings, 2, size);
+      assert.equal(page.items.length, size);
+      assert.equal(page.from, size + 1);
+      assert.equal(page.to, size * 2);
+      assert.equal(page.pageCount, Math.ceil(450 / size));
+    }
+    assert.equal(paginate(bottlings, 1, 24).pageCount, 19);
+  }
+);
 
 test('pagination slices after filtering and sorting, not before', () => {
   const matching = bottlings.filter(item => item.name.endsWith('5'));
@@ -73,15 +86,18 @@ test('invalid, empty and out-of-range page values are clamped', () => {
   assert.equal(paginate(bottlings, 3, 999).pageSize, 24);
 });
 
-test('page URLs preserve page selection and safely reject malformed query strings', () => {
-  assert.equal(homePageUrl(1), '/');
-  assert.equal(homePageUrl(19), '/?page=19');
-  assert.equal(pageFromSearch('?page=19'), 19);
-  assert.equal(pageFromSearch('?page=0003'), 1);
-  assert.equal(pageFromSearch('?page=-3'), 1);
-  assert.equal(pageFromSearch('?page=1234567'), 1);
-  assert.equal(pageFromSearch(''), 1);
-});
+test(
+  'page URLs preserve page selection and safely reject malformed query strings',
+  () => {
+    assert.equal(homePageUrl(1), '/');
+    assert.equal(homePageUrl(19), '/?page=19');
+    assert.equal(pageFromSearch('?page=19'), 19);
+    assert.equal(pageFromSearch('?page=0003'), 1);
+    assert.equal(pageFromSearch('?page=-3'), 1);
+    assert.equal(pageFromSearch('?page=1234567'), 1);
+    assert.equal(pageFromSearch(''), 1);
+  }
+);
 
 test('visible page navigation stays compact for a large collection', () => {
   assert.deepEqual(visiblePages(1, 19), [1, 2, 3, 4, '…', 19]);

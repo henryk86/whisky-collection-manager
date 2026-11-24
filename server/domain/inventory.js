@@ -1,19 +1,40 @@
-/** Preserve leading zeroes. Historical numbers remain skipped by auto-suggest, but may be reassigned once free. */
+/**
+ * Preserve leading zeroes. Historical numbers remain skipped by auto-suggest,
+ * but may be reassigned once free.
+ */
 import {allBottles} from './collection.js';
+/**
+ * Finds an available inventory number without reusing reserved numbers.
+ *
+ * @param {*} db Db used by this operation.
+ * @return {string} Resulting text.
+ */
 export function suggestNumber(db) {
-  const used = new Set([...db.reservedInventoryNumbers, ...allBottles(db).map(b => b.inventoryNumber).filter(Boolean)]);
+  const used = new Set([
+    ...db.reservedInventoryNumbers,
+    ...allBottles(db).map(b => b.inventoryNumber).filter(Boolean),
+  ]);
   let n = db.nextInventoryNumber;
   while (used.has(String(n).padStart(6, '0'))) {
     n++;
   }
   return String(n).padStart(6, '0');
 }
+
+/**
+ * Reserves an inventory number when assigning it to a bottle.
+ *
+ * @param {*} db Db used by this operation.
+ * @param {*} value Input value to process.
+ */
 export function markNumber(db, value) {
   if (!value) {
     return;
   }
-  // History is used for new-number suggestions, not as a permanent assignment ban.
-  // The collection-wide validator still prevents two current bottles sharing a number.
+  // History is used for new-number suggestions, not as a permanent assignment
+  // ban.
+  // The collection-wide validator still prevents two current bottles sharing a
+  // number.
   if (!db.reservedInventoryNumbers.includes(value)) {
     db.reservedInventoryNumbers.push(value);
   }

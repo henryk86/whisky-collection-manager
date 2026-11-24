@@ -1,4 +1,7 @@
-/** Stable mappings for legacy backend validation messages. Server responses only expose English text and a locale-independent code. */
+/**
+ * Stable mappings for legacy backend validation messages. Server responses only
+ * expose English text and a locale-independent code.
+ */
 const codes = Object.freeze({
   "Invalid room selection": "api.errors.roomTransferInvalidRoomSelection",
   "Invalid assignment option": "api.errors.roomTransferInvalidAssignmentOption",
@@ -191,6 +194,12 @@ const codes = Object.freeze({
   "Zu viele ausstehende Bilder; bitte später erneut versuchen": "api.errors.tooManyPendingImagesPleaseTryAgainLater",
   "Zuerst alle zugeordneten Flaschen löschen": "api.errors.deleteAllAssignedBottlesFirst",
   "Überlappende Türbereiche": "api.errors.overlappingDoorAreas",
-  "Nicht erlaubter Host. Adresse in ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_IP_ADDRESSES eintragen.": "api.errors.hostNotAllowedAddTheAddressToALLOWEDHOSTSOrCERTDNSNAMESCERTIPADDRESSES"
+  "Nicht erlaubter Host. Adresse in ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_IP_ADDRESSES eintragen.": "api.errors.hostNotAllowedAddTheAddressToALLOWEDHOSTSOrCERTDNSNAMESCERTIPADDRESSES",
 });
+/**
+ * Creates an application error identifier from a known error category.
+ *
+ * @param {*} message Message used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function apiErrorCode(message) {return Object.hasOwn(codes, message) ? codes[message] : null;}

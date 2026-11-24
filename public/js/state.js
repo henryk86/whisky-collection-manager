@@ -1,7 +1,13 @@
 import {getPageSizePreference} from './domain/page-size-preference.js';
 import {getCollectionViewPreference} from './domain/collection-view-preference.js';
 
-/** UI state only. Persistent data is replaced by GET /api/collection after mutations. */
+/**
+ * UI state only. Persistent data is replaced by GET /api/collection after
+ * mutations.
+ *
+ * @param {*} route Route used by this operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createState(route) {
   return {
     collection: null,
@@ -44,7 +50,8 @@ export function createState(route) {
     sort: 'name',
     pageNumber: 1,
     pageSize: getPageSizePreference(),
-    analyticsFilters: route.filters || {distillery: 'all', country: 'all', status: 'all', volumeType: 'all'},
+    analyticsFilters: route.filters ||
+      {distillery: 'all', country: 'all', status: 'all', volumeType: 'all'},
     analyticsPeriod: 'month',
     analyticsStartDate: '',
     analyticsEndDate: '',

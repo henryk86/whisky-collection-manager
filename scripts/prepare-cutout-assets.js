@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Download pinned, locally hosted AI runtime assets during installation/image build.
- * These files are deliberately not fetched from the user's browser or a CDN at runtime.
+ * These files are deliberately not fetched from the user's browser or a CDN at
+ * runtime.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,7 +20,11 @@ const targets = [
     bytes: 4574861,
     sha256: '309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8',
   },
-  ...['ort.wasm.min.mjs', 'ort-wasm-simd-threaded.mjs', 'ort-wasm-simd-threaded.wasm'].map(name => ({
+  ...[
+    'ort.wasm.min.mjs',
+    'ort-wasm-simd-threaded.mjs',
+    'ort-wasm-simd-threaded.wasm',
+  ].map(name => ({
     name: `ai/vendor/${name}`,
     urls: [
       `https://cdn.jsdelivr.net/npm/onnxruntime-web@${runtime}/dist/${name}`,
@@ -29,15 +34,29 @@ const targets = [
   })),
 ];
 
+/**
+ * Derives the valid result from the supplied values.
+ *
+ * @param {*} bytes Value used by this operation.
+ * @param {*} entry Entry currently being processed.
+ * @return {boolean} Whether the operation matched or succeeded.
+ */
 function valid(bytes, entry) {
   if (entry.bytes != null && bytes.length !== entry.bytes) return false;
   if (entry.minimumBytes && bytes.length < entry.minimumBytes) return false;
-  if (entry.sha256 && crypto.createHash('sha256').update(bytes).digest('hex') !== entry.sha256) return false;
-  if (entry.name.endsWith('.wasm') && bytes.toString('hex', 0, 4) !== '0061736d') return false;
+  if (entry.sha256 && crypto.createHash('sha256').update(bytes)
+    .digest('hex') !== entry.sha256) return false;
+  if (entry.name.endsWith('.wasm') && bytes.toString('hex', 0, 4) !==
+    '0061736d') return false;
   if (entry.name.endsWith('.onnx') && bytes.length < 1000000) return false;
   return true;
 }
 
+/**
+ * Loads the prepare cutout assets state.
+ *
+ * @param {*} entry Entry to include in the calculation.
+ */
 async function download(entry) {
   const target = path.join(root, 'public', entry.name);
   if (fs.existsSync(target) && valid(fs.readFileSync(target), entry)) return;
@@ -58,7 +77,8 @@ async function download(entry) {
       console.warn(`${entry.name}: Downloadversuch fehlgeschlagen (${error.message})`);
     }
   }
-  if (!content) throw new Error(`${entry.name}: ${lastError?.message || 'Keine Quelle erreichbar'}`);
+  if (!content) throw new Error(`${entry.name}: ${lastError?.message ||
+    'Keine Quelle erreichbar'}`);
   const temp = `${target}.tmp-${process.pid}`;
   try {fs.writeFileSync(temp, content, {mode: 0o644}); fs.renameSync(temp, target);}
   finally {fs.rmSync(temp, {force: true});}

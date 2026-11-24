@@ -1,88 +1,232 @@
 /* Phase 2: central ownership of page/section headers, heading actions,
- * back navigation and help buttons. Loaded after base controls and before
- * feature styles. Theme colours and measurements come from Phase 1 tokens. */
+   * back navigation and help buttons. Loaded after base controls and before
+   * feature styles. Theme colours and measurements come from Phase 1 tokens. */
 .section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--ds-space-5);
-    margin: var(--ds-space-7) 0 var(--ds-space-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ds-space-5);
+  margin: var(--ds-space-7) 0 var(--ds-space-4);
 }
+
 .section-head h2 {
-    font-family: var(--ds-font-display);
-    font-size: var(--ds-type-page-heading);
-    line-height: 1.25;
-    font-weight: 400;
-    letter-spacing: -.8px;
-    margin: var(--ds-space-3) 0;
+  font-family: var(--ds-font-display);
+  font-size: var(--ds-type-page-heading);
+  line-height: 1.25;
+  font-weight: 400;
+  letter-spacing: -.8px;
+  margin: var(--ds-space-3) 0;
 }
-.ds-page-header .page-heading-copy { flex: 1 1 auto; min-width: 0; }
+
+.ds-page-header .page-heading-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .ds-page-header .page-heading-copy > .intro,
-.ds-page-header .page-heading-copy > .muted { max-width: 72ch; }
-.ds-header-actions { min-width: 0; }
+.ds-page-header .page-heading-copy > .muted {
+  max-width: 72ch;
+}
+
+.ds-header-actions {
+  min-width: 0;
+}
+
 .ds-header-actions .btn:focus-visible,
-.ds-back-button:focus-visible { outline: 2px solid var(--ds-color-accent); outline-offset: 2px; }
+.ds-back-button:focus-visible {
+  outline: 2px solid var(--ds-color-accent);
+  outline-offset: 2px;
+}
+
 .ds-header-actions .btn:disabled,
-.ds-back-button:disabled { opacity: .5; cursor: not-allowed; }
+.ds-back-button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
 
 /* Variants: inline uses the existing text link geometry; page-action is a
- * standard secondary button with an additional, identically drawn SVG arrow. */
-.ds-back-nav--inline { display: block; margin: 0 0 18px; padding: var(--ds-space-2) 0 0; }
-.ds-back-button--inline { display: inline-flex; align-items: center; gap: 6px; margin: 0; line-height: 1.3; cursor: pointer; }
+   * standard secondary button with an additional, identically drawn SVG arrow. */
+.ds-back-nav--inline {
+  display: block;
+  margin: 0 0 18px;
+  padding: var(--ds-space-2) 0 0;
+}
+
+.ds-back-button--inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
 .ds-back-button--inline .ui-symbol,
-.ds-back-button--page-action .ui-symbol { width: 18px; height: 18px; flex: 0 0 18px; }
-.ds-back-nav--page-action { display: inline-flex; flex: 0 0 auto; }
-.ds-back-button--page-action { white-space: nowrap; }
-.ds-back-button--inline:hover { color: var(--ds-color-link-hover); text-decoration: underline; }
-.ds-back-button--inline:disabled { opacity: .5; pointer-events: none; }
+.ds-back-button--page-action .ui-symbol {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.ds-back-nav--page-action {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.ds-back-button--page-action {
+  white-space: nowrap;
+}
+
+.ds-back-button--inline:hover {
+  color: var(--ds-color-link-hover);
+  text-decoration: underline;
+}
+
+.ds-back-button--inline:disabled {
+  opacity: .5;
+  pointer-events: none;
+}
 
 /* The title owns its normal line box. The help button is absolute and cannot
- * increase font metrics, top position or margin. Apply to h2 and h3 equally. */
-.ds-heading-with-action { position: relative; padding-right: 26px; }
-.ds-help-icon-button {
-    appearance: none; position: absolute; right: 0; top: 50%;
-    transform: translateY(-50%); display: inline-flex; align-items: center;
-    justify-content: center; width: 20px; height: 20px; min-width: 20px;
-    min-height: 20px; padding: 0; margin: 0; border: 0; border-radius: 0;
-    background: transparent; box-shadow: none; color: var(--muted);
-    line-height: 1; cursor: pointer;
+   * increase font metrics, top position or margin. Apply to h2 and h3 equally. */
+.ds-heading-with-action {
+  position: relative;
+  padding-right: 26px;
 }
-.ds-help-icon-button .ui-symbol { display: block; width: 15px; height: 15px; flex: 0 0 15px; }
-.ds-help-icon-button:hover { background: transparent; color: var(--ink); }
-.ds-help-icon-button:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
-.ds-help-icon-button:disabled { opacity: .5; cursor: not-allowed; }
+
+.ds-help-icon-button {
+  appearance: none;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ds-help-icon-button .ui-symbol {
+  display: block;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+}
+
+.ds-help-icon-button:hover {
+  background: transparent;
+  color: var(--ink);
+}
+
+.ds-help-icon-button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+.ds-help-icon-button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
 
 /* Existing modal heading geometry, also used by the central SectionHeader. */
 .dialog-head {
-    display: flex; justify-content: space-between; gap: 12px;
-    align-items: center; margin-bottom: 22px;
-    padding-bottom: 17px; border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 22px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid var(--line);
 }
-.dialog-head h2 { font-size: 24px; margin: 0; }
+
+.dialog-head h2 {
+  font-size: 24px;
+  margin: 0;
+}
 
 /* Both compact panels and normal sections render through SectionHeader. */
-.tasting-panel-heading { min-width: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0 0 20px; }
-.tasting-panel-heading .btn { flex-shrink: 0; margin-left: auto; white-space: nowrap; }
-.ds-section-heading-copy { min-width: 0; }
+.tasting-panel-heading {
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+
+.tasting-panel-heading .btn {
+  flex-shrink: 0;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.ds-section-heading-copy {
+  min-width: 0;
+}
 
 @media (max-width: 740px) {
-    .section-head { align-items: flex-start; }
-    .section-head h2 { font-size: var(--ds-type-page-heading-mobile); }
-    .dialog-head h2 { font-size: 21px; }
-    .section-head > .btn { font-size: 10px; } /* Legacy direct action. */
-    .ds-page-header > .ds-back-nav--page-action .btn { font-size: 10px; }
-    /* Retain the original compact return-button slot so its label does not
-       force page titles/eyebrows into an extra line on narrow phones. */
-    .ds-back-nav--page-action { width: 99px; max-width: 100%; }
-    .ds-back-button--page-action {
-        width: 100%; min-width: 0; white-space: normal;
-        position: relative; padding-inline: 19px 7px; gap: 0;
-        letter-spacing: .2px;
-    }
-    .ds-back-button--page-action .ui-symbol {
-        position: absolute; left: 5px; top: 50%; transform: translateY(-50%);
-        width: 13px; height: 13px;
-    }
-    .ds-back-button--page-action span { min-width: 0; overflow-wrap: normal; }
+  .section-head {
+    align-items: flex-start;
+  }
 
+  .section-head h2 {
+    font-size: var(--ds-type-page-heading-mobile);
+  }
+
+  .dialog-head h2 {
+    font-size: 21px;
+  }
+
+  .section-head > .btn {
+    font-size: 10px;
+  }
+
+  /* Legacy direct action. */
+  .ds-page-header > .ds-back-nav--page-action .btn {
+    font-size: 10px;
+  }
+
+  /* Retain the original compact return-button slot so its label does not
+     force page titles/eyebrows into an extra line on narrow phones. */
+  .ds-back-nav--page-action {
+    width: 99px;
+    max-width: 100%;
+  }
+
+  .ds-back-button--page-action {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+    position: relative;
+    padding-inline: 19px 7px;
+    gap: 0;
+    letter-spacing: .2px;
+  }
+
+  .ds-back-button--page-action .ui-symbol {
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 13px;
+    height: 13px;
+  }
+
+  .ds-back-button--page-action span {
+    min-width: 0;
+    overflow-wrap: normal;
+  }
 }

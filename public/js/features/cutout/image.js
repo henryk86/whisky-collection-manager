@@ -3,17 +3,34 @@ import {MODEL_SIZE, segment} from './model.js';
 import {analyzeBottleMask, cutoutOutputSize, tightenedCrop, visibleAlphaRows} from './crop.js';
 import {sharpenCutoutAlpha} from './edge.js';
 
+/**
+ * Retrieves image from the available state.
+ *
+ * @param {*} url URL of the resource being processed.
+ * @return {!Promise<*>} Promise for the asynchronous operation.
+ */
 async function loadImage(url) {
   const image = new Image();
   image.decoding = 'async';
   image.crossOrigin = 'anonymous';
   image.src = url;
   if (typeof image.decode === 'function') await image.decode();
-  else await new Promise((resolve, reject) => {image.onload = resolve; image.onerror = reject;});
-  if (!image.naturalWidth || !image.naturalHeight) throw new Error(t('errors.images.openFailed'));
+  else await new Promise((resolve, reject) => {
+    image.onload =
+      resolve; image.onerror = reject;
+  });
+  if (!image.naturalWidth ||
+    !image.naturalHeight) throw new Error(t('errors.images.openFailed'));
   return image;
 }
 
+/**
+ * Derives the canvas result from the supplied values.
+ *
+ * @param {*} width Width in pixels.
+ * @param {*} height Height in pixels.
+ * @return {*} Created DOM element.
+ */
 function canvas(width, height) {
   const result = document.createElement('canvas');
   result.width = width;
@@ -21,17 +38,36 @@ function canvas(width, height) {
   return result;
 }
 
-/** Keep native crop resolution whenever feasible. Limit canvas memory/bytes
- * for huge camera sources and only step down if the PNG exceeds upload limits. */
+/**
+ * Keep native crop resolution whenever feasible. Limit canvas memory/bytes for
+ * huge camera sources and only step down if the PNG exceeds upload limits.
+ *
+ * @param {*} cropHeight Crop height used by this operation.
+ * @return {!Array<number>} Resulting list of values.
+ */
 export function cutoutExportSizes(cropHeight) {
   const native = Math.max(1, Math.min(4096, Math.ceil(cropHeight)));
   return [native, 3200, 2800, 2400, 2000, 1600, 1280, 1024, 800]
-    .filter((size, index, all) => size > 0 && size <= native && all.indexOf(size) === index);
+    .filter((size, index, all) => size > 0 && size <= native &&
+      all.indexOf(size) === index);
 }
 
-/** Composite a precomputed segmentation mask; keeps inference separate from image geometry. */
+/**
+ * Composite a precomputed segmentation mask; keeps inference separate from
+ * image geometry.
+ *
+ * @param {*} image Image used by this operation.
+ * @param {*} rawMask Raw mask used by this operation.
+ * @return {string} Resulting text.
+ */
 export function composeCutout(image, rawMask) {
-  const geometry = analyzeBottleMask(rawMask, MODEL_SIZE, MODEL_SIZE, image.naturalWidth, image.naturalHeight);
+  const geometry = analyzeBottleMask(
+    rawMask,
+    MODEL_SIZE,
+    MODEL_SIZE,
+    image.naturalWidth,
+    image.naturalHeight
+  );
   const sourceMask = canvas(MODEL_SIZE, MODEL_SIZE);
   const maskContext = sourceMask.getContext('2d');
   const pixels = maskContext.createImageData(MODEL_SIZE, MODEL_SIZE);
@@ -41,23 +77,38 @@ export function composeCutout(image, rawMask) {
   }
   maskContext.putImageData(pixels, 0, 0);
 
+  /**
+   * Renders the image state.
+   *
+   * @param {*} crop Crop used by this operation.
+   * @param {number} size Size of the input or target.
+   * @return {!HTMLCanvasElement} Result computed from the supplied inputs.
+   */
   function render(crop, size) {
     const result = canvas(size.width, size.height);
     const context = result.getContext('2d', {willReadFrequently: true});
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = 'high';
     const scale = size.height / crop.height;
-    // Both the photograph and its segmentation mask use precisely the same transform.
+    // Both the photograph and its segmentation mask use precisely the same
+    // transform.
     context.setTransform(scale, 0, 0, scale, -crop.x * scale, -crop.y * scale);
     context.translate(geometry.center.x, geometry.center.y);
     context.rotate(geometry.rotation);
     context.translate(-geometry.center.x, -geometry.center.y);
     context.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
     context.globalCompositeOperation = 'destination-in';
-    context.drawImage(sourceMask, 0, 0, image.naturalWidth, image.naturalHeight);
+    context.drawImage(
+      sourceMask,
+      0,
+      0,
+      image.naturalWidth,
+      image.naturalHeight
+    );
     context.globalCompositeOperation = 'source-over';
     context.resetTransform();
-    // The segmentation model produces a wide semi-transparent halo at glass edges.
+    // The segmentation model produces a wide semi-transparent halo at glass
+    // edges.
     // Refine the final-resolution alpha after resampling, but retain a narrow
     // antialias transition so rounded bottle edges do not become pixelated.
     const frame = context.getImageData(0, 0, size.width, size.height);
@@ -72,13 +123,18 @@ export function composeCutout(image, rawMask) {
     let crop = geometry.crop;
     let size = cutoutOutputSize(crop, maxSide);
     let output = render(crop, size);
-    // Model-pixel boundaries and canvas interpolation can leave a blank output row.
-    // Check the actual alpha pixels and remove that row without changing the 2:3 ratio.
+    // Model-pixel boundaries and canvas interpolation can leave a blank output
+    // row.
+    // Check the actual alpha pixels and remove that row without changing the
+    // 2:3 ratio.
     if (geometry.verticallyTight) {
       for (let pass = 0; pass < 2; pass++) {
         const context = output.getContext('2d', {willReadFrequently: true});
-        const visible = visibleAlphaRows(context.getImageData(0, 0, size.width, size.height).data,
-          size.width, size.height);
+        const visible = visibleAlphaRows(
+          context.getImageData(0, 0, size.width, size.height).data,
+          size.width,
+          size.height
+        );
         const next = tightenedCrop(crop, size, visible, geometry.objectWidth);
         if (next === crop) break;
         crop = next;
@@ -92,7 +148,15 @@ export function composeCutout(image, rawMask) {
   throw new Error(t('errors.cutout.resultTooLarge'));
 }
 
-/** Segment locally in the browser, then composite without changing the original photo. */
+/**
+ * Segment locally in the browser, then composite without changing the original
+ * photo.
+ *
+ * @param {string} url URL of the requested resource.
+ * @param {Function=} onProgress On progress used by this operation.
+ * @param {!Object=} options3 Destructured options for this operation.
+ * @return {!Promise<string>} Promise fulfilled when the operation completes.
+ */
 export async function cutoutImage(url, onProgress = () => {}, {segmentationUrl} = {}) {
   onProgress('loading');
   const image = await loadImage(url);
@@ -100,7 +164,8 @@ export async function cutoutImage(url, onProgress = () => {}, {segmentationUrl} 
   const inputContext = input.getContext('2d', {willReadFrequently: true});
   // Segmentation sees the currently corrected colors; compositing uses the
   // untouched original, so slider corrections are applied once after cutting.
-  const segmentationImage = segmentationUrl ? await loadImage(segmentationUrl) : image;
+  const segmentationImage = segmentationUrl ?
+    await loadImage(segmentationUrl) : image;
   inputContext.drawImage(segmentationImage, 0, 0, MODEL_SIZE, MODEL_SIZE);
   onProgress('segmenting');
   const mask = await segment(inputContext.getImageData(0, 0, MODEL_SIZE, MODEL_SIZE));

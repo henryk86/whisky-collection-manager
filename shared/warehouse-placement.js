@@ -3,6 +3,12 @@
  */
 const EPSILON = 0.00001;
 
+/**
+ * Computes the occupied rectangle of a furniture item.
+ *
+ * @param {*} furniture Furniture configuration including its dimensions.
+ * @return {!Object} Structured result for the caller.
+ */
 export function furnitureBounds(furniture) {
   const swapped = Number(furniture.rotation ?? 0) % 180 !== 0;
   return {
@@ -10,10 +16,18 @@ export function furnitureBounds(furniture) {
     w: Number(swapped ? furniture.depth : furniture.width),
     h: Number(swapped ? furniture.width : furniture.depth),
     z: Number(furniture.elevation ?? 0),
-    d: Number(furniture.itemHeight ?? (furniture.type === 'haengeregal' ? 0.4 : 1.8))
+    d: Number(furniture.itemHeight ?? (furniture.type === 'haengeregal' ?
+      0.4 : 1.8)),
   };
 }
 
+/**
+ * Tests whether two furniture footprints overlap.
+ *
+ * @param {*} first First used by this operation.
+ * @param {*} second Second used by this operation.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function furnitureOverlap(first, second) {
   const a = furnitureBounds(first), b = furnitureBounds(second);
   // Touching faces are valid. The XY rectangles AND vertical height intervals
@@ -23,26 +37,60 @@ export function furnitureOverlap(first, second) {
     a.z < b.z + b.d - EPSILON && b.z < a.z + a.d - EPSILON;
 }
 
+/**
+ * Checks furniture placement against other items and the room.
+ *
+ * @param {*} room Room model containing dimensions and furniture.
+ * @param {*} candidate Candidate used by this operation.
+ * @param {*=} otherFurniture Other furniture used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function furnitureCollision(room, candidate, otherFurniture = room.furniture || []) {
-  return otherFurniture.find(other => (candidate.id === undefined || other.id !== candidate.id) && furnitureOverlap(candidate, other)) ?? null;
+  return otherFurniture.find(other => (candidate.id === undefined ||
+    other.id !== candidate.id) && furnitureOverlap(candidate, other)) ?? null;
 }
 
+/**
+ * Checks whether a furniture footprint fits within room bounds.
+ *
+ * @param {*} room Room model containing dimensions and furniture.
+ * @param {*} item Warehouse item or record being evaluated.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function furnitureFitsRoom(room, item) {
   const b = furnitureBounds(item);
-  return b.x >= 0 && b.y >= 0 && b.x + b.w <= room.width + EPSILON && b.y + b.h <= room.height + EPSILON;
+  return b.x >= 0 && b.y >= 0 && b.x + b.w <= room.width + EPSILON && b.y +
+    b.h <= room.height + EPSILON;
 }
 
-/** Continuous collision-constrained movement in the 2D editor. Small steps
+/**
+ * Continuous collision-constrained movement in the 2D editor. Small steps
  * prevent skipping across a blocking object when the pointer moves quickly.
  * Trying each axis independently lets furniture slide along a wall or cabinet.
+ *
+ * @param {*} room Room model containing dimensions and furniture.
+ * @param {*} item Warehouse item or record being evaluated.
+ * @param {*} fromX From x used by this operation.
+ * @param {*} fromY From y used by this operation.
+ * @param {*} toX To x used by this operation.
+ * @param {*} toY To y used by this operation.
+ * @return {!Object} Structured result for the caller.
  */
 export function moveFurnitureTowards(room, item, fromX, fromY, toX, toY) {
   const dx = toX - fromX, dy = toY - fromY;
   const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 0.04));
   let x = fromX, y = fromY;
+  /**
+   * Checks whether place applies.
+   *
+   * @param {*} nextX Value used by this operation.
+   * @param {*} nextY Value used by this operation.
+   * @return {boolean} Whether the operation matched or succeeded.
+   */
   const canPlace = (nextX, nextY) => {
     const candidate = {...item, x: nextX, y: nextY};
-    return furnitureFitsRoom(room, candidate) && !furnitureCollision(room, candidate);
+    return furnitureFitsRoom(room, candidate) &&
+      !furnitureCollision(room, candidate);
   };
   for (let i = 1; i <= steps; i++) {
     // Use actual progress for each axis, not the starting position, so
@@ -56,6 +104,8 @@ export function moveFurnitureTowards(room, item, fromX, fromY, toX, toY) {
     // When one axis was blocked, don't accumulate offset past its obstacle.
     // Remaining steps can continue sliding along the unobstructed axis.
   }
-  const roundedX = Math.round(x * 100) / 100, roundedY = Math.round(y * 100) / 100;
-  return canPlace(roundedX, roundedY) ? {x: roundedX, y: roundedY} : {x: fromX, y: fromY};
+  const roundedX = Math.round(x * 100) / 100, roundedY = Math.round(y *
+    100) / 100;
+  return canPlace(roundedX, roundedY) ? {x: roundedX, y: roundedY} :
+    {x: fromX, y: fromY};
 }

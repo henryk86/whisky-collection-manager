@@ -33,17 +33,29 @@ Für JavaScript gilt verbindlich der [Google JavaScript Style Guide](https://goo
 ```bash
 npm run format:js
 npm run format:check
+npm run check:line-width
 npm run check:jsdoc
 npm run check
 ```
 
-Neue und bearbeitete öffentliche Funktionen erhalten **saubere, typisierte JSDoc** für Bedeutung, Parameter, Rückgabewert und relevante Nebenwirkungen. Bei HTML-Renderern die Vertrauensgrenze zwischen escaped Benutzertext und vertrauenswürdigem Anwendungs-HTML benennen. Die CI verhindert undokumentierte **neue Exporte**; die bestehende, schrittweise abzubauende Altlast ist in `scripts/jsdoc-legacy-baseline.json` erfasst. Keine JSDoc-Kommentare, die lediglich den Funktionsnamen wiederholen.
+Jede benannte Funktion, auch interne Funktionen, benannte Arrow-Funktionen, Klassenmethoden, Accessors und benannte Objekthandler, benötigt **vollständige, typisierte JSDoc** ohne Alt-Ausnahmen. In sämtlichen JavaScript-Dateien gelten dieselben Regeln: aussagekräftiger Zweck, jeder Parameter mit korrektem Namen, Typ und Erklärung, `@return` bei einem Rückgabewert, bei Bedarf `@throws`, Nebenwirkungen und Vertrauensgrenzen. Dies gilt auch für Server- und Testcode. Anonyme Inline-Callbacks ohne eigene Schnittstelle benötigen keine separaten JSDoc-Blöcke. Keine erfundenen Typen oder Kommentare, die nur den Namen wiederholen. `check:jsdoc` prüft **sämtliche JavaScript-Dateien** auf fehlende oder unvollständige JSDoc-Verträge für alle benannten Funktionen sowie die öffentlichen Exportverträge. Funktionen und Methoden werden durch Leerzeilen getrennt. Neue oder veränderte JavaScript-Zeilen überschreiten 80 Zeichen nicht (mit den offiziellen Ausnahmen). Unveränderte Altzeilen sind in `scripts/style-width-legacy.json` erfasst und müssen bei Bearbeitung bereinigt werden.
 
-Der bereits vorhandene TypeScript-Formatter wird nur zur **Formatierung** eingesetzt und verändert keine JavaScript-Semantik. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
+Der bereits vorhandene TypeScript-Formatter wird zusammen mit syntaxbewussten Umbruch- und Leerzeilenregeln nur zur **Formatierung** eingesetzt. HTML-Templates, RegExps und lange Literale dürfen nicht blind aufgeteilt werden. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
+
+## CSS-Formatierung
+
+CSS wird einheitlich gemäß dem CSS-Teil des [Google HTML/CSS Style Guide](https://google.github.io/styleguide/htmlcssguide.html) formatiert: zwei Leerzeichen, eine Deklaration je Zeile, getrennte Selektoren in Listen und Leerzeilen zwischen Regeln. Neue oder veränderte CSS-Dateien vor dem Commit formatieren:
+
+```bash
+npm run format:css
+npm run format:css:check
+```
+
+`npm run check` erzwingt die Formatierung auch in CI. Der Formatter verändert keine Selektoren, Werte oder Deklarations- und Importreihenfolgen. Für Änderungen am tatsächlichen Layout zusätzlich `npm run test:visual` ausführen; Formatierung allein darf keine UI-Änderung verursachen.
 
 ## Änderungen und Dokumentation
 
-**Verbindlich bei jedem Commit/PR:** Dokumentationswirkung prüfen. Betroffene aktuelle `.md`-Dateien zusammen mit dem Code aktualisieren; falls keine Anpassung nötig ist, `Docs-Impact: none - <konkreter Grund>` als Commit-Footer oder im PR-Text festhalten. GitHub Actions lehnt Codeänderungen ohne eines von beiden ab. Nur `CHANGELOG.md` enthält Änderungshistorie. [Projektregeln](../AGENTS.md).
+Bei einem PR die Gesamtheit aller enthaltenen Commits auf Dokumentationsbedarf prüfen und nur tatsächlich betroffene aktuelle `.md`-Dateien aktualisieren. Eine gesonderte Änderung pro Commit oder Patch ist nicht nötig. Ist keine Dokumentation betroffen, muss das weder im Commit noch im PR begründet werden. **Die PR-Beschreibung ist optional und darf leer bleiben**; GitHub Actions prüft ihren Inhalt nicht. Nur `CHANGELOG.md` enthält Änderungshistorie. [Projektregeln](../AGENTS.md).
 
 Der statische `npm run check` prüft Dokumentationslinks und ausgewählte Inkonsistenzen; fachliche Richtigkeit muss beim Review gegen den Code geprüft werden. `docs/TESTSTATUS.md` zeigt **keine** automatisch stets aktuellen CI-Resultate; nur tatsächlich bestätigte Läufe eintragen.
 

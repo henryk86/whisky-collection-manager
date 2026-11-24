@@ -1,15 +1,29 @@
 /** Per-browser preference for how the collection overview is displayed. */
 export const COLLECTION_VIEW_STORAGE_KEY = 'whisky-collection-view';
 
+/**
+ * Retrieves collection view preference for collection view preference.
+ *
+ * @param {*} storage Storage adapter used to load or save preferences.
+ * @return {(string)} Text assembled for the caller.
+ */
 export function getCollectionViewPreference(storage) {
   try {
     const source = storage === undefined ? globalThis.localStorage : storage;
-    return source?.getItem(COLLECTION_VIEW_STORAGE_KEY) === 'table' ? 'table' : 'cards';
+    return source?.getItem(COLLECTION_VIEW_STORAGE_KEY) === 'table' ?
+      'table' : 'cards';
   } catch {
     return 'cards';
   }
 }
 
+/**
+ * Updates collection view preference for collection view preference.
+ *
+ * @param {*} view View used by this operation.
+ * @param {*} storage Storage adapter used to load or save preferences.
+ * @return {boolean} Whether the condition is satisfied.
+ */
 export function saveCollectionViewPreference(view, storage) {
   if (view !== 'cards' && view !== 'table') return false;
   try {

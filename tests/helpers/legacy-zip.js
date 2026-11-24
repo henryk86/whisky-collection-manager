@@ -1,14 +1,25 @@
-/** Minimal uncompressed ZIP writer. Used only for local collection backups. */
+/**
+ * Minimal uncompressed ZIP writer. Used only for local collection backups.
+ *
+ * @param {!Array<*>} files Files selected for the operation.
+ * @return {*} Structured result assembled from the input data.
+ */
 export function zipFiles(files) {
   // ZIP format STORE without third-party dependencies
   const crcTable = Array.from({
-    length: 256
+    length: 256,
   }, (_, n) => {
     for (let i = 0; i < 8; i++) {
       n = n & 1 ? 0xedb88320 ^ (n >>> 1) : n >>> 1;
     }
     return n >>> 0;
   });
+  /**
+   * Derives the crc32 result from the supplied values.
+   *
+   * @param {*} buf Value used by this operation.
+   * @return {number} Calculated numeric value.
+   */
   const crc32 = buf => {
     let c = 0xffffffff;
     for (const x of buf) {

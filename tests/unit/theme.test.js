@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import {getThemePreference, effectiveTheme, nextTheme} from '../../public/js/theme/preference.js';
 test('theme defaults to system preference', () => {
   assert.equal(getThemePreference({
+    /**
+     * Retrieves item from the available state.
+     * @return {?*} Result or null when no value is available.
+     */
     getItem() {
       return null;
-    }
+    },
   }), 'system');
   assert.equal(effectiveTheme('system', true), 'dark');
   assert.equal(effectiveTheme('system', false), 'light');
@@ -18,13 +22,20 @@ test('toggle flips light/dark and ignores invalid stored data', () => {
   assert.equal(nextTheme('dark'), 'light');
   assert.equal(nextTheme('light'), 'dark');
   assert.equal(getThemePreference({
+    /**
+     * Retrieves item from the available state.
+     * @return {string} Resulting text.
+     */
     getItem() {
       return 'unexpected';
-    }
+    },
   }), 'system');
   assert.equal(getThemePreference({
+    /**
+     * Retrieves item from the available state.
+     */
     getItem() {
       throw Error('blocked');
-    }
+    },
   }), 'system');
 });

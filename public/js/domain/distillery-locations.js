@@ -1,5 +1,6 @@
 /**
- * Local reference locations for international whisky distilleries. The entries in
+ * Local reference locations for international whisky distilleries. The entries
+ * in
  * this supplementary directory are intentionally APPROXIMATE: where a surveyed
  * site position was unavailable, the locality of the distillery is used.
  * They must not be presented as surveyed GPS coordinates. Positions explicitly
@@ -458,12 +459,22 @@ Yardheads|55.975|-3.17
 Yoker|55.892|-4.38
 `;
 
+/**
+ * Normalizes distillery name for distillery locations.
+ *
+ * @param {string} name Name of the item.
+ * @return {string} Resulting text.
+ */
 export const normalizeDistilleryName = name => String(name || '')
   .normalize('NFKD').toLocaleLowerCase('en')
   .replace(/[’']/g, '').replace(/[^a-z0-9]+/g, ' ')
   .trim().replace(/^the /, '').replace(/ distillery$/, '');
 
-export const APPROXIMATE_LOCATIONS = new Map(approximateSites.trim().split('\n').map(row => {
-  const [name, lat, lon] = row.split('|');
-  return [normalizeDistilleryName(name), Object.freeze([Number(lat), Number(lon)])];
-}));
+export const APPROXIMATE_LOCATIONS = new Map(approximateSites.trim()
+  .split('\n').map(row => {
+    const [name, lat, lon] = row.split('|');
+    return [
+      normalizeDistilleryName(name),
+      Object.freeze([Number(lat), Number(lon)]),
+    ];
+  }));

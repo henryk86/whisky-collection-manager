@@ -2,9 +2,20 @@ import {t} from '../../i18n/index.js';
 import {query} from '../../ui/dom.js';
 import {textInput} from '../../ui/fields.js';
 import {supportedFormats, cameraConfig} from './config.js';
-/** Camera lifecycle only. Inventory lookup lives in resolve-code.js. */
+/**
+ * Camera lifecycle only. Inventory lookup lives in resolve-code.js.
+ *
+ * @param {!Object} options Optional configuration for the operation.
+ * @return {!Object} Structured result for the caller.
+ */
 export function createScanner({state, showModal, resolveCode}) {
   let scannerSequence = 0;
+  /**
+   * Updates element attributes used by scan status.
+   *
+   * @param {*} message Message to display or use for diagnostics.
+   * @param {string=} kind Value used by this operation.
+   */
   function scanStatus(message, kind = 'info') {
     const element = query('#scan-error');
     if (element) {
@@ -12,6 +23,13 @@ export function createScanner({state, showModal, resolveCode}) {
       element.dataset.status = kind;
     }
   }
+
+  /**
+   * Builds the localized scan error text for the current language.
+   *
+   * @param {*} err Error to handle or propagate.
+   * @return {*} Value returned by the delegated operation.
+   */
   function scanError(err) {
     const name = err?.name || '';
     if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
@@ -23,9 +41,15 @@ export function createScanner({state, showModal, resolveCode}) {
     if (name === 'NotReadableError' || name === 'TrackStartError') {
       return t("scanner.camera.inUse");
     }
-    return err?.message || String(err) || t("scanner.errors.unknownScannerError");
+    return err?.message || String(err) ||
+      t("scanner.errors.unknownScannerError");
   }
   let scannerLibraryPromise = null;
+  /**
+   * Loads scanner library for controller.
+   *
+   * @return {*} Created DOM element.
+   */
   function loadScannerLibrary() {
     if (window.Html5Qrcode) {
       return Promise.resolve(window.Html5Qrcode);
@@ -35,8 +59,11 @@ export function createScanner({state, showModal, resolveCode}) {
         const script = document.createElement('script');
         script.src = '/vendor/html5-qrcode.min.js';
         script.async = true;
-        script.onload = () => window.Html5Qrcode ? resolve(window.Html5Qrcode) : reject(Error('Scanner-Bibliothek konnte nicht geladen werden'));
-        script.onerror = () => reject(Error(t('scanner.errors.libraryMissing')));
+        script.onload = () => window.Html5Qrcode ?
+          resolve(window.Html5Qrcode) :
+          reject(Error('Scanner-Bibliothek konnte nicht geladen werden'));
+        script.onerror = () =>
+          reject(Error(t('scanner.errors.libraryMissing')));
         document.head.append(script);
       }).catch(err => {
         scannerLibraryPromise = null;
@@ -45,6 +72,11 @@ export function createScanner({state, showModal, resolveCode}) {
     }
     return scannerLibraryPromise;
   }
+
+  /**
+   * Performs the stop scan lifecycle action.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function stopScan() {
     scannerSequence++;
     const scanner = state.scanner;
@@ -66,27 +98,43 @@ export function createScanner({state, showModal, resolveCode}) {
       }
     }
   }
+
+  /**
+   * Builds the localized scan code text for the current language.
+   *
+   * @param {boolean=} assign Value used by this operation.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function scanCode(assign = false) {
     const previousModal = assign ? state.modal : null;
-    const previousValues = assign && query('#bottle-form') ? Object.fromEntries(new FormData(query('#bottle-form')).entries()) : null;
+    const previousValues = assign && query('#bottle-form') ?
+      Object.fromEntries(new FormData(query('#bottle-form')).entries()) : null;
     state.scanReturn = assign ? {
-      modal: previousModal, values: previousValues
+      modal: previousModal, values: previousValues,
     } : null;
     await stopScan();
     const sequence = scannerSequence;
-    showModal(t("forms.bottle.scanLabel"), `<p class="hint">${t("scanner.camera.supportedCodeTypes")}</p>
+    showModal(
+      t("forms.bottle.scanLabel"),
+      `<p class="hint">${t("scanner.camera.supportedCodeTypes")}</p>
     <div id="scan-reader" class="scan-reader">
     </div>
     <p id="scan-error" class="hint" role="status" aria-live="polite">${t("scanner.status.starting")}</p>
-    <div class="forms scan-manual-fields">${textInput(t("scanner.input.manualInventoryNumber"), 'manualCode', '', {
-      full: true
-    })}<label class="form-field full">${t("scanner.actions.selectCodeImage")}<input type="file" id="scan-file" accept="image/*" capture="environment">
+    <div class="forms scan-manual-fields">${textInput(
+        t("scanner.input.manualInventoryNumber"),
+        'manualCode',
+        '',
+        {
+          full: true,
+        }
+      )}<label class="form-field full">${t("scanner.actions.selectCodeImage")}<input type="file" id="scan-file" accept="image/*" capture="environment">
     </label>
     </div>
     <div class="actions scan-manual-actions">
     <button class="btn primary" data-act="submit-code" data-assign="${assign ? '1' : '0'}">${t("scanner.actions.findAndApplyCode")}</button>
     <button class="btn" data-act="close-modal">${t("common.actions.close")}</button>
-    </div>`);
+    </div>`
+    );
     if (!window.isSecureContext) {
       scanStatus(t("scanner.camera.requiresHttps"), 'error');
       return;
@@ -101,20 +149,30 @@ export function createScanner({state, showModal, resolveCode}) {
         return;
       }
       const engine = new Html5Qrcode('scan-reader', {
-        formatsToSupport: supportedFormats(window.Html5QrcodeSupportedFormats), useBarCodeDetectorIfSupported: false, verbose: false
+        formatsToSupport: supportedFormats(window.Html5QrcodeSupportedFormats),
+        useBarCodeDetectorIfSupported: false,
+        verbose: false,
       }, false);
       const scanner = {
-        engine, timer: null
+        engine, timer: null,
       };
       state.scanner = scanner;
       let handled = false;
+      /**
+       * Builds the localized decoded text for the current language.
+       *
+       * @param {*} value Value to process.
+       * @param {*} result Result from the preceding operation.
+       * @return {!Promise<*>} Promise for the asynchronous operation.
+       */
       const decoded = async (value, result) => {
         if (handled || state.scanner !== scanner) {
           return;
         }
         handled = true;
         const code = String(value ?? '').trim();
-        const format = result?.result?.format?.formatName || t("scanner.input.barcodeOrQr");
+        const format = result?.result?.format?.formatName ||
+          t("scanner.input.barcodeOrQr");
         scanStatus(`Erkannt (${format}): ${code}`, 'success');
         const field = query('[name=manualCode]');
         if (field) {
@@ -131,7 +189,7 @@ export function createScanner({state, showModal, resolveCode}) {
         }
       };
       await engine.start({
-        facingMode: 'environment'
+        facingMode: 'environment',
       }, cameraConfig(), decoded, () => {
       });
       if (sequence !== scannerSequence || state.scanner !== scanner) {
@@ -150,10 +208,20 @@ export function createScanner({state, showModal, resolveCode}) {
       if (sequence !== scannerSequence) {
         return;
       }
-      scanStatus(t('scanner.errors.unavailable', {error: scanError(err)}), 'error');
+      scanStatus(
+        t('scanner.errors.unavailable', {error: scanError(err)}),
+        'error'
+      );
       stopScan();
     }
   }
+
+  /**
+   * Builds the localized scan image text for the current language.
+   *
+   * @param {*} file File resource to read, write or inspect.
+   * @return {!Promise<*>} Promise for the asynchronous operation.
+   */
   async function scanImage(file) {
     if (!file) {
       return;
@@ -167,10 +235,11 @@ export function createScanner({state, showModal, resolveCode}) {
       await stopScan();
       scanStatus(t("scanner.status.analyzingImage"));
       const engine = new Html5Qrcode('scan-reader', {
-        formatsToSupport: supportedFormats(window.Html5QrcodeSupportedFormats), useBarCodeDetectorIfSupported: false
+        formatsToSupport: supportedFormats(window.Html5QrcodeSupportedFormats),
+        useBarCodeDetectorIfSupported: false,
       }, false);
       state.scanner = {
-        engine
+        engine,
       };
       const value = await engine.scanFile(file, true);
       const field = query('[name=manualCode]');
@@ -182,10 +251,13 @@ export function createScanner({state, showModal, resolveCode}) {
       await resolveCode(value, assign);
     }
     catch (err) {
-      scanStatus('Bild konnte nicht gelesen werden: ' + scanError(err), 'error');
+      scanStatus(
+        'Bild konnte nicht gelesen werden: ' + scanError(err),
+        'error'
+      );
     }
   }
   return {
-    scanCode, scanImage, stopScan
+    scanCode, scanImage, stopScan,
   };
 }

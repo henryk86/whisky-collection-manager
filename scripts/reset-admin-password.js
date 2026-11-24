@@ -1,5 +1,8 @@
 #!/usr/bin/env node
-/** Operator-only password recovery; requires write access to the persistent data directory. */
+/**
+ * Operator-only password recovery; requires write access to the persistent data
+ * directory.
+ */
 import {resetAdminPassword} from '../server/services/auth.js';
 try {
   const result = await resetAdminPassword();

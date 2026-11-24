@@ -19,12 +19,24 @@ const COLOR_LABEL_KEYS = Object.freeze({
   chocolate: 'tasting.color.chocolate',
 });
 
-/** The original twelve shades remain unchanged. The additional picker stores its HEX value internally. */
+/**
+ * The original twelve shades remain unchanged. The additional picker stores
+ * its HEX value internally.
+ *
+ * @param {*} hex Hex used by this operation.
+ * @return {*} Result computed from the supplied inputs.
+ */
 export function whiskyCustomColorName(hex) {
   const key = whiskyColorNameKey(hex);
   return key ? t(`tasting.colorName.${key}`) : '';
 }
 
+/**
+ * Renders the selectable whisky-colour samples and selected glass.
+ *
+ * @param {*} selected Selected used by this operation.
+ * @return {string} Resulting text.
+ */
 export function whiskyColorSelector(selected) {
   const custom = isCustomWhiskyColor(selected);
   // Only an active custom colour may populate the preview and internal draft.
@@ -33,19 +45,26 @@ export function whiskyColorSelector(selected) {
   const {x, y} = custom ? whiskyPickerPosition(hex) : {x: 0.65, y: 0.48};
   return `<div class="whisky-color-selector" data-whisky-color="${escapeHtml(selected || '')}">
         <div class="whisky-color-grid" role="group" aria-label="${escapeHtml(t('tasting.color'))}">
-            ${WHISKY_COLORS.map((item, i) => `<button class="whisky-color-choice${selected === item.key ? ' is-selected' : ''}" type="button" data-act="tasting-color" data-color-key="${item.key}" aria-pressed="${selected === item.key}" title="${escapeHtml(t(COLOR_LABEL_KEYS[item.key]))}">
+            ${WHISKY_COLORS.map((item, i) =>
+    `<button class="whisky-color-choice${selected === item.key ?
+      ' is-selected' : ''}" type="button" data-act="tasting-color" data-color-key="${item.key}" aria-pressed="${selected === item.key}" title="${escapeHtml(t(COLOR_LABEL_KEYS[item.key]))}">
                 ${glencairnSymbol({liquidColor: item.hex, id: `color-glass-${i}`})}
                 <span>${escapeHtml(t(COLOR_LABEL_KEYS[item.key]))}</span></button>`).join('')}
         </div>
-        <div class="whisky-custom-row${custom ? ' is-selected' : ''}" role="group" aria-label="${escapeHtml(t('tasting.colorCustom'))}">
+        <div class="whisky-custom-row${custom ? ' is-selected' :
+      ''}" role="group" aria-label="${escapeHtml(t('tasting.colorCustom'))}">
             <div class="whisky-custom-preview">
-                ${glencairnSymbol({liquidColor: hex || 'transparent', id: 'custom-color-glass'})}
+                ${glencairnSymbol({
+        liquidColor: hex ||
+          'transparent', id: 'custom-color-glass',
+      })}
                 <strong>${escapeHtml(t('tasting.colorCustom'))}</strong>
             </div>
             <div class="whisky-custom-controls">
                 <div class="whisky-custom-area" data-whisky-picker-area tabindex="0" role="button"
                     aria-label="${escapeHtml(t('tasting.colorCustomPicker'))}" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"
-                    style="--picker-x:${(x * 100).toFixed(1)}%;--picker-y:${(y * 100).toFixed(1)}%">
+                    style="--picker-x:${(x * 100)
+      .toFixed(1)}%;--picker-y:${(y * 100).toFixed(1)}%">
                     <span class="whisky-custom-cursor" aria-hidden="true"></span>
                 </div>
                 <output class="whisky-custom-name" data-whisky-custom-name aria-live="polite">${escapeHtml(whiskyCustomColorName(hex))}</output>
@@ -55,10 +74,16 @@ export function whiskyColorSelector(selected) {
     </div>`;
 }
 
-/** Non-interactive display of the recorded colour for a saved tasting. */
+/**
+ * Non-interactive display of the recorded colour for a saved tasting.
+ *
+ * @param {*} selected Selected used by this operation.
+ * @return {string} Resulting text.
+ */
 export function whiskyColorDisplay(selected) {
   const color = resolveWhiskyColor(selected);
   if (!color) return '';
-  const label = isCustomWhiskyColor(selected) ? whiskyCustomColorName(color.hex) : t(COLOR_LABEL_KEYS[color.key]);
+  const label = isCustomWhiskyColor(selected) ?
+    whiskyCustomColorName(color.hex) : t(COLOR_LABEL_KEYS[color.key]);
   return `<div class="tasting-readonly-color">${glencairnSymbol({liquidColor: color.hex, id: 'readonly-whisky-color'})}<strong>${escapeHtml(label)}</strong></div>`;
 }

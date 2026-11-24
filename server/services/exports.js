@@ -9,27 +9,107 @@ import {readBackupPassword} from '../../shared/backup-password.js';
 import {authorizeAdmin} from './backups.js';
 import {fail} from '../domain/errors.js';
 const statusCodes = {
-  closed: 'Geschlossen', open: 'Geöffnet', empty: 'Leer'
+  closed: 'Geschlossen', open: 'Geöffnet', empty: 'Leer',
 };
+/**
+ * Serializes the collection for JSON download.
+ *
+ * @return {!Object} Structured result for the caller.
+ */
 export function exportJson() {
   return {
-    filename: 'collection.json', type: 'application/json; charset=utf-8', bytes: fs.readFileSync(DATA_FILE)
+    filename: 'collection.json',
+    type: 'application/json; charset=utf-8',
+    bytes: fs.readFileSync(DATA_FILE),
   };
 }
+
+/**
+ * Serializes selected collection records as a CSV download.
+ *
+ * @return {!Object} Structured result for the caller.
+ */
 export function exportCsv() {
   const db = read();
   const ds = new Map(db.distilleries.map(d => [d.id, d.name]));
-  const rows = [['Inventarnummer', 'Status', 'Destillerien', 'Whisky-Kategorie', 'Marke', 'Abfüller', 'Zusammensetzung vollständig', 'Whiskyname', 'Alter', 'Erscheinungsjahr', 'Destillationsdatum', 'Abfülldatum', 'Alkohol %', 'Flaschentyp', 'Größe ml', 'Kaufdatum', 'Kaufpreis', 'Währung', 'Händler', 'Kommentar', 'Whiskybase', 'Flaschenfotos (Pfade)', 'Dateianhaenge (Pfade)', 'Öffnungsdatum', 'Leerdatum']];
+  const rows = [[
+    'Inventarnummer',
+    'Status',
+    'Destillerien',
+    'Whisky-Kategorie',
+    'Marke',
+    'Abfüller',
+    'Zusammensetzung vollständig',
+    'Whiskyname',
+    'Alter',
+    'Erscheinungsjahr',
+    'Destillationsdatum',
+    'Abfülldatum',
+    'Alkohol %',
+    'Flaschentyp',
+    'Größe ml',
+    'Kaufdatum',
+    'Kaufpreis',
+    'Währung',
+    'Händler',
+    'Kommentar',
+    'Whiskybase',
+    'Flaschenfotos (Pfade)',
+    'Dateianhaenge (Pfade)',
+    'Öffnungsdatum',
+    'Leerdatum',
+  ]];
   for (const b of db.bottlings) {
     for (const bottle of b.bottles) {
-      rows.push([bottle.inventoryNumber, statusCodes[bottle.status], (b.distilleryIds || [b.distilleryId].filter(Boolean)).map(id => ds.get(id) || id).join(' | '), b.whiskyType, b.brand, b.bottler, b.compositionComplete, b.name, b.ageYears, b.releaseYear, b.distillationDate || b.distillationYear, b.bottlingDate || b.bottlingYear, b.abv, bottle.volumeType === 'sample' ? 'Sample' : 'Normal', bottle.volumeMl ?? (bottle.volumeType === 'sample' ? null : b.volumeMl), bottle.purchaseDate, bottle.purchasePrice, bottle.currency, bottle.merchant, bottle.comment, b.whiskybaseUrl, (bottle.photos || []).flatMap(p => [p.path, p.cutout?.path, p.adjustment?.path, p.cutout?.adjustment?.path].filter(Boolean)).join(' | '), (bottle.files || []).map(f => f.path).join(' | '), bottle.openedAt, bottle.emptiedAt]);
+      rows.push([
+        bottle.inventoryNumber,
+        statusCodes[bottle.status],
+        (b.distilleryIds || [b.distilleryId].filter(Boolean)).map(id =>
+          ds.get(id) || id).join(' | '),
+        b.whiskyType,
+        b.brand,
+        b.bottler,
+        b.compositionComplete,
+        b.name,
+        b.ageYears,
+        b.releaseYear,
+        b.distillationDate || b.distillationYear,
+        b.bottlingDate || b.bottlingYear,
+        b.abv,
+        bottle.volumeType === 'sample' ? 'Sample' : 'Normal',
+        bottle.volumeMl ?? (bottle.volumeType === 'sample' ? null : b.volumeMl),
+        bottle.purchaseDate,
+        bottle.purchasePrice,
+        bottle.currency,
+        bottle.merchant,
+        bottle.comment,
+        b.whiskybaseUrl,
+        (bottle.photos || []).flatMap(p => [
+          p.path,
+          p.cutout?.path,
+          p.adjustment?.path,
+          p.cutout?.adjustment?.path,
+        ].filter(Boolean)).join(' | '),
+        (bottle.files || []).map(f => f.path).join(' | '),
+        bottle.openedAt,
+        bottle.emptiedAt,
+      ]);
     }
   }
   return {
-    filename: 'whisky-sammlung.csv', type: 'text/csv; charset=utf-8', bytes: csv(rows)
+    filename: 'whisky-sammlung.csv',
+    type: 'text/csv; charset=utf-8',
+    bytes: csv(rows),
   };
 }
-/** The manual download uses exactly the same readable ZIP builder as the scheduler. */
+
+/**
+ * The manual download uses exactly the same readable ZIP builder as the
+ * scheduler.
+ *
+ * @param {!Object} req Incoming HTTP request.
+ * @return {!Object} Structured result for the caller.
+ */
 export function exportZip(req) {
   authorizeAdmin(req);
   let password;

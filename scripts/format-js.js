@@ -8,12 +8,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
+import {listJavaScriptFiles} from './javascript-files.js';
+import {
+  insertTrailingCommas, separateFunctions, wrapLongExpressions,
+  wrapLongStructures, wrapStandaloneComments
+} from './style-layout.js';
 
-const roots = [
-  'public', 'server', 'shared', 'scripts', 'tests', 'worker', 'docker',
-  'extension',
-];
-const ignored = new Set(['node_modules', '.git', 'vendor', 'test-artifacts']);
 const write = process.argv.includes('--write');
 const options = {
   ...ts.getDefaultFormatCodeSettings(),
@@ -33,40 +33,57 @@ const options = {
 };
 
 /**
- * Discovers JavaScript files while excluding dependencies and generated output.
- * @param {string} directory Relative source directory.
- * @return {!Array<string>} JavaScript source paths.
- */
-function list(directory) {
-  if (!fs.existsSync(directory)) return [];
-  return fs.readdirSync(directory, {withFileTypes: true}).flatMap(entry => {
-    if (ignored.has(entry.name)) return [];
-    const location = path.join(directory, entry.name);
-    if (entry.isDirectory()) return list(location);
-    return entry.isFile() && location.endsWith('.js') ? [location] : [];
-  });
-}
-
-/**
  * Applies source-formatting edits until the output becomes idempotent.
- * @param {string} file Absolute source path used for language-service context.
+ *
+ * @param {string} file Absolute source path used for language-service
+ * context.
  * @param {string} original Original JavaScript text.
  * @return {string} Mechanically formatted source with a final newline.
  */
 function format(file, original) {
   let source = original.replace(/\r\n/g, '\n');
   const seen = new Set();
-  for (let pass = 0; pass < 8; pass++) {
-    if (seen.has(source)) {
+  for (let pass = 0; pass < 16; pass++) {
+    const wrapped = insertTrailingCommas(file,
+      separateFunctions(file, wrapStandaloneComments(file,
+        wrapLongExpressions(file, wrapLongStructures(file, source)))));
+    if (seen.has(wrapped)) {
       throw new Error(`Non-converging formatter for ${file}`);
     }
-    seen.add(source);
+    seen.add(wrapped);
+    source = wrapped;
     const host = {
+      /**
+       * Retrieves script file names from the available state.
+       * @return {!Array<string>} Resulting entries in their output order.
+       */
       getScriptFileNames: () => [file],
+      /**
+       * Retrieves script version from the available state.
+       * @return {string} Resulting text.
+       */
       getScriptVersion: () => '0',
+      /**
+       * Retrieves script snapshot from the available state.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getScriptSnapshot: () => ts.ScriptSnapshot.fromString(source),
+      /**
+       * Retrieves compilation settings from the available state.
+       * @return {!Object} Result computed from the supplied inputs.
+       */
       getCompilationSettings: () => ({allowJs: true, checkJs: false}),
+      /**
+       * Retrieves current directory from the available state.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getCurrentDirectory: () => process.cwd(),
+      /**
+       * Retrieves default lib file name from the available state.
+       *
+       * @param {*} settings Configuration settings to apply.
+       * @return {*} Result computed from the supplied inputs.
+       */
       getDefaultLibFileName: settings => ts.getDefaultLibFilePath(settings),
       fileExists: ts.sys.fileExists,
       readFile: ts.sys.readFile,
@@ -75,7 +92,10 @@ function format(file, original) {
     const languageService = ts.createLanguageService(host);
     let formatted = source;
     try {
-      const edits = languageService.getFormattingEditsForDocument(file, options);
+      const edits = languageService.getFormattingEditsForDocument(
+        file,
+        options
+      );
       for (const edit of edits.sort((a, b) => b.span.start - a.span.start)) {
         const {start, length} = edit.span;
         formatted = formatted.slice(0, start) + edit.newText +
@@ -85,13 +105,16 @@ function format(file, original) {
       languageService.dispose();
     }
     formatted = formatted.replace(/\n*$/, '\n');
-    if (formatted === source) return formatted;
+    if (formatted === source &&
+      separateFunctions(file, wrapStandaloneComments(file,
+        wrapLongExpressions(file, wrapLongStructures(file, formatted)))) ===
+      formatted) return formatted;
     source = formatted;
   }
   throw new Error(`Formatter did not stabilize for ${file}`);
 }
 
-const files = roots.flatMap(list).sort();
+const files = listJavaScriptFiles();
 const invalid = [];
 for (const file of files) {
   const source = fs.readFileSync(file, 'utf8');
@@ -101,7 +124,8 @@ for (const file of files) {
   if (write) fs.writeFileSync(file, formatted);
 }
 if (invalid.length) {
-  console.log(`${write ? 'Formatted' : 'Needs formatting'}: ${invalid.length}/${files.length} JavaScript files`);
+  console.log(`${write ? 'Formatted' : 'Needs formatting'}: ${invalid
+    .length}/${files.length} JavaScript files`);
   for (const file of invalid.slice(0, 30)) console.log(`  ${file}`);
   if (invalid.length > 30) console.log(`  ... and ${invalid.length - 30} more`);
   if (!write) {
