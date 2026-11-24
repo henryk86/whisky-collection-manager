@@ -1,17 +1,14 @@
-# Teststatus - Whisky Collection Manager v1.12.1
+# Teststatus - Whisky Collection Manager v1.12.2
 
-**Stand:** 24. November 2026. Entwicklungsstand; keine Produktionsfreigabe. Die CI des jeweiligen Pull Requests ist für die Abnahme maßgeblich.
+**Stand:** 2026-11-24. Automatischer Release-Snapshot aus Merge b1fef71c9342 (v1.12.1).
 
-| Prüfung | Ergebnis auf diesem Quellstand |
-|---|---|
-| `npm run check` | **Bestanden**: Syntax, Imports, Dokumentation, Deployment, JavaScript-/CSS-Formatierung, Zeilenlängen und JSDoc |
-| Unit- und Integrationstests (getrennte Läufe) | **556/556 und 174/174 bestanden** (Integrationstests in fünf getrennten Gruppen ausgeführt) |
-| `npm run test:browser` | **Lokal nicht ausgeführt**: `playwright-core` in der Testumgebung nicht installiert; GitHub-CI erforderlich |
-| `npm run test:visual` | **136/136 Geometrie- und Interaktionszustände bestanden** (Chromium 144); 62 rein diagnostische Pixeldifferenzen auch im unveränderten Ausgangsstand vorhanden |
-| Reale Mobilgeräte, Firefox/Safari, Screenreader und Dauerbetrieb | **Nicht abgenommen** |
+## Pruefungen
 
-Der CSS-Formatter prüft alle 18 CSS-Dateien und erhält die Regeln, Deklarationen und Importreihenfolge. Die Stilprüfung hält noch **3.443 unveränderte Zeilen über 80 Zeichen** als fingerprint-gebundene Alt-Ausnahmen fest. JSDoc ist für **alle benannten Funktionen** einschließlich interner Funktionen, Arrow-Funktionen, Klassenmethoden und Objekthandler verpflichtend. Die statische Prüfung umfasst 396 JavaScript-Dateien und meldet keine fehlenden Verträge. Anonyme Inline-Callbacks sind ausgenommen. Wo der Parametertyp nicht zuverlässig aus der Implementierung ableitbar ist, bleibt der Wildcard-Typ `*`; die fachliche Präzision dieser Typen und Beschreibungen muss zusätzlich im Review geprüft werden.
+- `npm test`: **Noch nicht ausgefuehrt** auf dem Release-Snapshot; die Node-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.
+- `npm run test:browser`: **Nicht lokal ausgeführt** auf dem Release-Snapshot; die Browser-CI des Merge-Quellstands war vor Erstellung des Tags erfolgreich.
+- Vor Erstellung des Tags: GitHub-CI fuer den Merge-Quellstand mit `npm run check`, `npm test` und `npm run test:browser`.
+- Release-Metadaten und SHA-256-Quellmanifest werden im Snapshot separat geprueft.
+- Docker/ARM64/AMD64 sowie ZIP-/Offline-Archive werden vom Release-Workflow vor der Veroeffentlichung geprueft.
+- Externe Hardware-/Pi-Pruefungen sind nicht Bestandteil dieses CI-Laufs.
 
-Das `wcm-source-manifest.json` dokumentiert den veröffentlichten Quellstand und wird bei Änderungen auf `develop` nicht überschrieben. `npm run release:check` dient der Prüfung unveränderter Release-Snapshots, nicht des weiterentwickelten Branches.
-
-Testverfahren: [Teststrategie](TESTSTRATEGIE.md). Versionshistorie: [Changelog](../CHANGELOG.md).
+Aenderungen und fruehere Releases: [Changelog](../CHANGELOG.md).
