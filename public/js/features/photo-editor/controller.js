@@ -22,7 +22,7 @@ import {DEFAULT_MASK_BRUSH_SIZE, paintMaskSegment, applyMaskStrokes}
   from './mask-brush.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/controller.html', import.meta.url));
+const renderTemplate = await loadTemplates('photo-editor/controller.html');
 
 
 const MAX_PREVIEW_SIDE = 1050;

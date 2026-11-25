@@ -47,7 +47,9 @@ Alle Textdateien verwenden plattformübergreifend LF. `.gitattributes` erzwingt 
 
 ## HTML-Template-Formatierung
 
-Externe HTML-Templates werden mit `npm run format:html` formatiert und mit
+Externe HTML-Templates liegen zentral und fachlich gruppiert unter
+`public/templates/`. Module laden sie mit einem relativen Namen wie
+`loadTemplates('warehouse/warehouse.html')`. Sie werden mit `npm run format:html` formatiert und mit
 `npm run format:html:check` geprüft. Die Formatierung bewahrt Inline-Text,
 Attributwerte, Platzhalter und whitespace-sensitive Elemente. Sie wird auch
 in `npm run check` geprüft. Neue dynamische HTML-Strings sind unzulässig;

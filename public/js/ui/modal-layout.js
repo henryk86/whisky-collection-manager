@@ -5,7 +5,7 @@ import {actionButton} from './buttons.js';
 import {closeIcon} from './action-icons.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/modal-layout.html', import.meta.url));
+const renderTemplate = await loadTemplates('dialogs/modal-layout.html');
 
 
 /**

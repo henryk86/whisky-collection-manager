@@ -5,7 +5,7 @@ import {textInput} from '../../ui/fields.js';
 import {supportedFormats, cameraConfig} from './config.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/controller.html', import.meta.url));
+const renderTemplate = await loadTemplates('scanner/controller.html');
 
 /**
  * Camera lifecycle only. Inventory lookup lives in resolve-code.js.

@@ -15,7 +15,7 @@ import {createTileMap, mapCanvasHtml} from '../features/map/tile-map.js';
 import {matchingBottlingSites} from '../domain/bottling-map-focus.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/map.html', import.meta.url));
+const renderTemplate = await loadTemplates('map/map.html');
 
 
 const PAGE_LIMIT = 12;

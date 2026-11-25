@@ -14,7 +14,7 @@ import {loadTemplates} from '../ui/templates.js';
 import {createProfileViewModel, providerOptions}
   from '../features/backups/profile-model.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/backups.html', import.meta.url));
+const renderTemplate = await loadTemplates('backups/backups.html');
 
 
 /**

@@ -5,7 +5,7 @@ import {minusIcon, plusIcon, arrowLeftIcon, arrowRightIcon}
   from './action-icons.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/photo-viewer.html', import.meta.url));
+const renderTemplate = await loadTemplates('dialogs/photo-viewer.html');
 
 
 /**

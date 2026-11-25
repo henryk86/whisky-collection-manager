@@ -4,7 +4,7 @@ import {escapeHtml} from './dom.js';
 import {glencairnRatingSymbol} from './glencairn-icon.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/glencairn-rating.html', import.meta.url));
+const renderTemplate = await loadTemplates('components/glencairn-rating.html');
 
 
 /**

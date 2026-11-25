@@ -4,7 +4,7 @@ import {escapeHtml} from './dom.js';
 import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/flavor-profile.html', import.meta.url));
+const renderTemplate = await loadTemplates('components/flavor-profile.html');
 
 
 /**

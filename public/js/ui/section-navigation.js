@@ -2,7 +2,7 @@ import {composeMarkup} from './render-plan.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/section-navigation.html', import.meta.url));
+const renderTemplate = await loadTemplates('components/section-navigation.html');
 
 
 /**

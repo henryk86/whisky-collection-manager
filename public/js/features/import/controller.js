@@ -9,7 +9,7 @@ import {importChoice} from './choice-template.js';
 import {matchImportedDistilleries} from './distillery-matching.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/controller.html', import.meta.url));
+const renderTemplate = await loadTemplates('import/controller.html');
 
 /**
  * Source-independent import workflow. The provider validates and identifies

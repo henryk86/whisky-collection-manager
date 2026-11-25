@@ -1,7 +1,7 @@
 /** @fileoverview Formats external HTML templates without rewriting bindings. */
-import {readFileSync, readdirSync, writeFileSync} from 'node:fs';
-import {join} from 'node:path';
+import {readFileSync, writeFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
+import {listTemplateFiles} from './template-files.js';
 
 const block = 'article|aside|div|fieldset|form|h[1-6]|header|footer|' +
   'legend|li|main|nav|ol|p|section|table|tbody|td|th|thead|tr|ul';
@@ -55,24 +55,11 @@ export function formatTemplateFile(source) {
 }
 
 /**
- * Finds template files in the frontend tree.
- * @param {string} directory Current directory.
- * @return {!Array<string>} External template file paths.
- */
-function templateFiles(directory) {
-  return readdirSync(directory, {withFileTypes: true}).flatMap(entry => {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) return templateFiles(path);
-    return directory.endsWith('templates') && entry.name.endsWith('.html') ? [path] : [];
-  });
-}
-
-/**
  * Writes formatted templates or reports violations for CI.
  * @param {boolean} write Whether to update the files.
  */
 function main(write) {
-  const files = templateFiles('public/js');
+  const files = listTemplateFiles();
   const changed = [];
   for (const file of files) {
     const source = readFileSync(file, 'utf8');

@@ -42,7 +42,7 @@ import {
 } from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/warehouse.html', import.meta.url));
+const renderTemplate = await loadTemplates('warehouse/warehouse.html');
 
 export {storagePath} from './warehouse-presentation.js';
 /**

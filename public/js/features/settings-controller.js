@@ -8,7 +8,7 @@ import {request} from '../api.js';
 import {toast} from '../ui/notifications.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/settings-controller.html', import.meta.url));
+const renderTemplate = await loadTemplates('settings/settings-controller.html');
 
 /**
  * Settings workflows use app dialogs instead of blocking browser

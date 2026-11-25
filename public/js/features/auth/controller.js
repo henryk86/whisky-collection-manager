@@ -8,7 +8,7 @@ import {toast} from '../../ui/notifications.js';
 import {eyeIcon, eyeOffIcon} from '../../ui/action-icons.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/controller.html', import.meta.url));
+const renderTemplate = await loadTemplates('auth/controller.html');
 
 
 /**

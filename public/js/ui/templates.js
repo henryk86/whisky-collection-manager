@@ -51,7 +51,7 @@ export function createPlanRenderer(fragments) {
 /**
  * Reads an HTML resource via HTTP in the browser or from disk in Node tests.
  *
- * @param {!URL} url External template location relative to its module.
+ * @param {!URL} url Resolved external template location.
  * @return {!Promise<string>} File contents.
  */
 async function readTemplateFile(url) {
@@ -65,12 +65,26 @@ async function readTemplateFile(url) {
 }
 
 /**
+ * Resolves a repository-relative template name against the shared root.
+ * @param {string} name Path below public/templates, using forward slashes.
+ * @return {!URL} Template URL for HTTP and local Node execution.
+ * @throws {Error} If the name is not a relative HTML template path.
+ */
+export function resolveTemplateURL(name) {
+  if (typeof name !== 'string' || !/^(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.html$/.test(name)) {
+    throw new Error(`Invalid template path: ${name}`);
+  }
+  return new URL(`../../templates/${name}`, import.meta.url);
+}
+
+/**
  * Loads each template resource once and returns its synchronous renderer.
  *
- * @param {!URL} url External HTML file to load.
+ * @param {string} name Path below public/templates.
  * @return {!Promise<Function>} Renderer for the loaded fragments.
  */
-export async function loadTemplates(url) {
+export async function loadTemplates(name) {
+  const url = resolveTemplateURL(name);
   if (!cache.has(url.href)) {
     cache.set(url.href, readTemplateFile(url).then(parseTemplates).then(url.protocol === 'file:' ? createTemplateRenderer : createPlanRenderer));
   }

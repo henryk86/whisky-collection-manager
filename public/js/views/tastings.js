@@ -49,7 +49,7 @@ import {
 } from '../domain/flight-planner.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/tastings.html', import.meta.url));
+const renderTemplate = await loadTemplates('tastings/tastings.html');
 
 
 /**

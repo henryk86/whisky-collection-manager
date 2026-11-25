@@ -9,7 +9,7 @@ import {backToCollectionButton} from '../ui/navigation-controls.js';
 import {sectionWorkspace} from '../ui/section-navigation.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/settings.html', import.meta.url));
+const renderTemplate = await loadTemplates('settings/settings.html');
 
 /**
  * Creates settings view for settings.

@@ -9,7 +9,7 @@ import {t} from '../i18n/index.js';
 import {escapeHtml as esc} from '../ui/dom.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/warehouse-room-transfer.html', import.meta.url));
+const renderTemplate = await loadTemplates('warehouse/warehouse-room-transfer.html');
 
 
 const FORM_EXPORT = 'warehouse-room-export-form';

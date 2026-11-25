@@ -25,6 +25,13 @@ test(
         assert.equal(response.status, 200, file);
         assert.ok((await response.arrayBuffer()).byteLength > 0, file);
       }
+      for (const file of ['/templates/app.html', '/templates/backups/backups.html', '/templates/icons/action-icons.html', '/templates/warehouse/warehouse.html']) {
+        const response = await fetch(context.base + file);
+        assert.equal(response.status, 200, file);
+        assert.match(response.headers.get('content-type') || '', /^text\/html(?:;|$)/i);
+        assert.match(await response.text(), /<!-- wcm-template:/);
+      }
+      assert.equal((await fetch(context.base + '/js/views/templates/backups.html')).status, 404);
       const html = await fetch(context.base + '/');
       assert.match(
         html.headers.get('content-security-policy') || '',

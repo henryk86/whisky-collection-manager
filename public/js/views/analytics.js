@@ -18,7 +18,7 @@ import {
 } from '../ui/action-icons.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/analytics.html', import.meta.url));
+const renderTemplate = await loadTemplates('analytics/analytics.html');
 
 
 export const ANALYSIS_PAGES = Object.freeze([

@@ -42,7 +42,7 @@ import {bindEvents} from './js/events.js';
 import {createAuthController} from './js/features/auth/controller.js';
 import {loadTemplates} from './js/ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/app.html', import.meta.url));
+const renderTemplate = await loadTemplates('app.html');
 
 await initializeLanguage();
 const root = document.querySelector('#app');

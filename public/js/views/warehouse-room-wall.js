@@ -12,7 +12,7 @@ import {t} from '../i18n/index.js';
 import {bottleSymbol, num, safe} from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/warehouse-room-wall.html', import.meta.url));
+const renderTemplate = await loadTemplates('warehouse/warehouse-room-wall.html');
 
 
 /** Same number of screen pixels for every real-world metre in both axes. */

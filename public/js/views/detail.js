@@ -12,7 +12,7 @@ import {displayPhotoPath} from '../../../shared/photo-images.js';
 import {t} from '../i18n/index.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/detail.html', import.meta.url));
+const renderTemplate = await loadTemplates('detail/detail.html');
 
 /**
  * Derives the bottle status text result from the supplied values.

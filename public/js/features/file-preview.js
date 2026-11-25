@@ -4,7 +4,7 @@ import {escapeHtml, query} from '../ui/dom.js';
 import {httpResponseError} from '../api.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/file-preview.html', import.meta.url));
+const renderTemplate = await loadTemplates('dialogs/file-preview.html');
 
 
 /**

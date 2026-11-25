@@ -3,7 +3,7 @@ import {t} from '../i18n/index.js';
 import {escapeHtml} from '../ui/dom.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/help-guides.html', import.meta.url));
+const renderTemplate = await loadTemplates('help/help-guides.html');
 
 
 // Only multi-step backup procedures warrant disclosure panels. Short guidance

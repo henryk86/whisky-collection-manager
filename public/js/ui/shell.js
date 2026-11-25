@@ -9,7 +9,7 @@ import {reconcileChildren} from './dom-reconcile.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/shell.html', import.meta.url));
+const renderTemplate = await loadTemplates('components/shell.html');
 
 /**
  * Creates shell for shell.

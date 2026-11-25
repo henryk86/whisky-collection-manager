@@ -14,7 +14,7 @@ import {pagodaRoofIcon, closedDistilleryIcon, plusIcon, minusIcon}
 import {clusterMapSites} from '../../domain/map-clusters.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/tile-map.html', import.meta.url));
+const renderTemplate = await loadTemplates('map/tile-map.html');
 
 
 const TILE_BASE = 'https://tile.openstreetmap.org';

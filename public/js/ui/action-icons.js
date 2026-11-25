@@ -1,7 +1,7 @@
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/action-icons.html', import.meta.url));
+const renderTemplate = await loadTemplates('icons/action-icons.html');
 
 /** Shared accessible action icons: the header and hero reuse the same SVGs. */
 export const newBottlingIcon = renderTemplate('newIcon');

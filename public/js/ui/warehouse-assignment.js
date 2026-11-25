@@ -11,7 +11,7 @@ import {bottleLabel, count, storagePath}
   from '../views/warehouse-presentation.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/warehouse-assignment.html', import.meta.url));
+const renderTemplate = await loadTemplates('warehouse/warehouse-assignment.html');
 
 
 /**

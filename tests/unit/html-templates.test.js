@@ -34,10 +34,17 @@ test('template parsing accepts LF, CRLF and CR line endings', () => {
 });
 
 test('external template loader reuses the loaded resource', async () => {
-  const url = new URL('../../public/js/views/templates/backups.html', import.meta.url);
-  const first = await loadTemplates(url);
-  assert.equal(first, await loadTemplates(url));
+  const name = 'backups/backups.html';
+  const first = await loadTemplates(name);
+  assert.equal(first, await loadTemplates(name));
   assert.match(first('remoteOption', {value: 'my_remote'}), /my_remote/);
+});
+
+test('template loader rejects paths outside the central template tree', async () => {
+  for (const name of ['../index.html', '/app.html', 'https://example.com/app.html', 'backups/../app.html', 'backups%2fbackups.html', 'backups\\backups.html']) {
+    await assert.rejects(loadTemplates(name), /Invalid template path/);
+  }
+  await assert.rejects(loadTemplates('missing.html'), {code: 'ENOENT'});
 });
 
 test('backup profile defaults fill missing nested settings', () => {

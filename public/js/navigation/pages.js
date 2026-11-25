@@ -3,7 +3,7 @@ import {settingsIconPaths} from '../ui/action-icons.js';
 import {GLENCAIRN_INK} from '../ui/glencairn-icon.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/pages.html', import.meta.url));
+const renderTemplate = await loadTemplates('icons/pages.html');
 
 /**
  * Main destinations in one place so future pages (e.g. analytics) need only one

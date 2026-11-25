@@ -12,7 +12,7 @@ import {displayPhotoPath} from '../../../shared/photo-images.js';
 import {t, currentLanguage} from '../i18n/index.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/home.html', import.meta.url));
+const renderTemplate = await loadTemplates('collection/home.html');
 
 /**
  * Derives the status text result from the supplied values.

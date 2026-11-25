@@ -8,7 +8,7 @@ import {chevronDownIcon} from './action-icons.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/flight-cask-options.html', import.meta.url));
+const renderTemplate = await loadTemplates('tastings/flight-cask-options.html');
 
 
 /**

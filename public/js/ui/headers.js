@@ -9,7 +9,7 @@ import {escapeHtml} from './dom.js';
 import {arrowLeftIcon, helpCircleIcon} from './action-icons.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/headers.html', import.meta.url));
+const renderTemplate = await loadTemplates('components/headers.html');
 
 
 /**

@@ -2,7 +2,7 @@ import {composeMarkup} from './render-plan.js';
 
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/glencairn-icon.html', import.meta.url));
+const renderTemplate = await loadTemplates('icons/glencairn-icon.html');
 /**
  * Vector contours traced from the user-provided Glencairn icon, including its
  * internal shine.

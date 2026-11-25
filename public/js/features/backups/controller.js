@@ -11,7 +11,7 @@ import {toast} from '../../ui/notifications.js';
 import {profileForm} from '../../views/backups.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/controller.html', import.meta.url));
+const renderTemplate = await loadTemplates('backups/controller.html');
 
 /**
  * Creates backup controller for controller.

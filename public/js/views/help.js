@@ -8,7 +8,7 @@ import {sectionWorkspace} from '../ui/section-navigation.js';
 import {helpGuides} from './help-guides.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/help.html', import.meta.url));
+const renderTemplate = await loadTemplates('help/help.html');
 
 
 export const HELP_TOPICS = Object.freeze([

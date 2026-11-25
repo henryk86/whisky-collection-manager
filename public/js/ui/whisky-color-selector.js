@@ -10,7 +10,7 @@ import {t} from '../i18n/index.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/whisky-color-selector.html', import.meta.url));
+const renderTemplate = await loadTemplates('components/whisky-color-selector.html');
 
 
 const COLOR_LABEL_KEYS = Object.freeze({

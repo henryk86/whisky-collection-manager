@@ -14,7 +14,7 @@ import {activateSettingsSection} from './views/settings.js';
 import {handleFlavorRange, setFlavorFromPointer} from './ui/flavor-profile.js';
 import {loadTemplates} from './ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/events.html', import.meta.url));
+const renderTemplate = await loadTemplates('dialogs/events.html');
 
 /**
  * One delegated click handler; HTML data-act values are the UI action names.

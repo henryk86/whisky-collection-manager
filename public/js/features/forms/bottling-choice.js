@@ -4,7 +4,7 @@ import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/bottling-choice.html', import.meta.url));
+const renderTemplate = await loadTemplates('forms/bottling-choice.html');
 
 
 /**

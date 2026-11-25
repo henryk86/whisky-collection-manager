@@ -17,7 +17,7 @@ const walk = directory => fs.readdirSync(directory, {withFileTypes: true}).flatM
   const file = path.join(directory, entry.name);
   return entry.isDirectory() ? walk(file) : (/\.(?:js|html)$/.test(file)) ? [file] : [];
 });
-const files = walk('public/js').concat('public/app.js', 'public/templates/app.html');
+const files = walk('public/js').concat(walk('public/templates'), 'public/app.js');
 const keys = new Set();
 for (const file of files) {
   if (file.includes(`${path.sep}i18n${path.sep}`)) continue;

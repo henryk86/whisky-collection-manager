@@ -1,7 +1,7 @@
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/buttons.html', import.meta.url));
+const renderTemplate = await loadTemplates('components/buttons.html');
 
 
 /**

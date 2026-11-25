@@ -2,7 +2,7 @@ import {composeMarkup} from './render-plan.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/fields.html', import.meta.url));
+const renderTemplate = await loadTemplates('components/fields.html');
 
 
 /**

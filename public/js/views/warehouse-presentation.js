@@ -15,7 +15,7 @@ import {
 } from '../../../shared/warehouse-compartments.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/warehouse-presentation.html', import.meta.url));
+const renderTemplate = await loadTemplates('warehouse/warehouse-presentation.html');
 
 
 // Stable semantic keys, explicitly mapped from persisted domain codes.

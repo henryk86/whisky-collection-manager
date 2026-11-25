@@ -9,7 +9,7 @@ import {bottleStatusLabels, whiskyTypeLabels, photoAccept}
 import {fileAccept} from '../files.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/bottling.html', import.meta.url));
+const renderTemplate = await loadTemplates('forms/bottling.html');
 
 /**
  * Creates bottling form for bottling.

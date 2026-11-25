@@ -8,7 +8,7 @@ import {
 } from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/warehouse-shelf-details.html', import.meta.url));
+const renderTemplate = await loadTemplates('warehouse/warehouse-shelf-details.html');
 
 
 const STATUS_KEYS = {

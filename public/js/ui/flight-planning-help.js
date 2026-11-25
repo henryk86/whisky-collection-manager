@@ -5,7 +5,7 @@ import {escapeHtml} from './dom.js';
 import {CASK_GROUPS} from '../domain/flight-casks.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/flight-planning-help.html', import.meta.url));
+const renderTemplate = await loadTemplates('tastings/flight-planning-help.html');
 
 
 /**

@@ -9,7 +9,7 @@ import {bottleStatusLabels, whiskyTypeName, photoAccept}
 import {fileAccept} from '../files.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(new URL('./templates/bottle.html', import.meta.url));
+const renderTemplate = await loadTemplates('forms/bottle.html');
 
 /**
  * Creates bottle form for bottle.
