@@ -1,3 +1,4 @@
+import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 /**
  * Backup admin key is intentionally held in memory only, never in localStorage.
@@ -338,7 +339,10 @@ export function createBackupController({state, render, showModal, closeModal}) {
           <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> ${t("backups.restore.confirmReplaceCollection")}</label>
           <div class="actions ds-modal-footer ds-modal-footer--compact">
             <button class="btn" type="button" data-act="backup-download-prepared" data-id="${h(result.id)}">${t("backups.actions.downloadZip")}</button>
-            <button class="btn" type="button" data-act="close-modal">${t("common.actions.cancel")}</button>
+            ${actionButton({
+          label: t("common.actions.cancel"),
+          action: 'close-modal',
+        })}
             <button class="btn danger" type="submit">${t("backups.actions.importBackup")}</button>
           </div></form>`,
       true
@@ -358,7 +362,10 @@ export function createBackupController({state, render, showModal, closeModal}) {
           <p>${t("backups.restore.savedArchive")} <strong>${h(filename ||
         '')}</strong> ${t("backups.restore.openForPreview")}</p>
           <label class="form-field">${t("backups.password.archiveLabel")}<input type="password" name="password" autocomplete="off" placeholder="${t("backups.password.optionalForLegacy")}"></label>
-          <div class="actions"><button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
+          <div class="actions">${actionButton({
+          label: t("common.actions.cancel"),
+          action: 'close-modal',
+        })}
           <button type="submit" class="btn primary">${t("backups.actions.validateZip")}</button></div></form>`,
       true
     );
@@ -487,7 +494,10 @@ export function createBackupController({state, render, showModal, closeModal}) {
       `<p>${t("backups.schedule.should")} <strong>${h(profile.name)}</strong> ${t("backups.confirmation.deleteSuffix")}</p>
         <p class="warning">${t("backups.profiles.deleteDoesNotDeleteArchives")}</p>
         <div class="actions ds-modal-footer ds-modal-footer--spaced">
-        <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
+        ${actionButton({
+        label: t("common.actions.cancel"),
+        action: 'close-modal',
+      })}
         <button type="button" class="btn danger" data-act="backup-confirm-delete" data-id="${h(id)}">${t("backups.profiles.deleteAction")}</button></div>`
     );
   }
@@ -530,7 +540,10 @@ export function createBackupController({state, render, showModal, closeModal}) {
         `<option value="latest">${t("backups.legacy.latestSnapshot")}</option>`}</select></label>
         <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> ${t("backups.restore.confirmInspectBackup")}</label>
         <div class="actions ds-modal-footer ds-modal-footer--spaced">
-        <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
+        ${actionButton({
+          label: t("common.actions.cancel"),
+          action: 'close-modal',
+        })}
         <button type="submit" class="btn primary">${t("backups.restore.preparePreview")}</button></div></form>`,
       true
     );

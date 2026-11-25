@@ -1,3 +1,4 @@
+import {actionButton} from './buttons.js';
 import {t} from '../i18n/index.js';
 import {newBottlingIcon, inventoryScanIcon, themeMoonIcon, closeIcon} from './action-icons.js';
 import {MAIN_PAGES} from '../navigation/pages.js';
@@ -83,9 +84,12 @@ export function createShell({root, state, applyTheme, renderModal}) {
       <div class="auth-drawer-actions">
         ${state.auth?.user ? `<p class="muted">${escapeHtml(state.auth.user
             .username)}</p>
-        <button class="btn" type="button" data-act="auth-open-change">${t('auth.changeTitle')}</button>
-        <button class="btn" type="button" data-act="auth-logout">${t('auth.signOut')}</button>` :
-        `<button class="btn" type="button" data-act="auth-open-login">${t('auth.signIn')}</button>`}
+        ${actionButton({
+              label: t('auth.changeTitle'),
+              action: 'auth-open-change',
+            })}
+        ${actionButton({label: t('auth.signOut'), action: 'auth-logout'})}` :
+        `${actionButton({label: t('auth.signIn'), action: 'auth-open-login'})}`}
       </div>
     </aside>
     <main data-live-regions>${content}</main>

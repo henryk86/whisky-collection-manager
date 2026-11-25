@@ -1,3 +1,4 @@
+import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 import {addActionLabel} from '../../ui/action-icons.js';
 import {escapeHtml} from '../../ui/dom.js';
@@ -74,7 +75,11 @@ export function createBottlingForm({state, selectors}) {
         ['true', t('forms.bottling.compositionKnown')],
       ],
       String(bottling.compositionComplete === true)
-    )}<div class="form-field">${t("forms.bottling.newDistillery")}<button type="button" class="btn" data-act="add-distillery">${addActionLabel(t("forms.common.createButton"))}</button>
+    )}<div class="form-field">${t("forms.bottling.newDistillery")}
+    ${actionButton({
+      trustedContent: addActionLabel(t("forms.common.createButton")),
+      action: 'add-distillery',
+    })}
     </div>${textInput(t("forms.bottling.bottler"), 'bottler', bottling.bottler)}${textInput(
       t("forms.bottling.ageYears"),
       'ageYears',
@@ -171,7 +176,10 @@ export function createBottlingForm({state, selectors}) {
       }
     )}<div class="form-field">
     <span>${t("forms.bottle.autoInventoryNumber")}</span>
-    <button type="button" class="btn" data-act="suggest-first">${t("forms.bottle.suggestInventoryNumber")}</button>
+    ${actionButton({
+      label: t("forms.bottle.suggestInventoryNumber"),
+      action: 'suggest-first',
+    })}
     </div>${selectInput(
       t("forms.bottle.initialType"),
       'firstVolumeType',
@@ -205,7 +213,7 @@ export function createBottlingForm({state, selectors}) {
     </label>
     </div>
     <p class="hint">${t("forms.bottle.addToExistingBottlingHint")}</p>`}<div class="actions ds-modal-footer ds-modal-footer--form">
-    <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
+    ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
     <button class="btn primary" type="submit">${t("common.actions.save")}</button>
     </div>
     </form>`;

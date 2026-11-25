@@ -1,3 +1,4 @@
+import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 import {query} from '../../ui/dom.js';
 import {textInput} from '../../ui/fields.js';
@@ -132,7 +133,7 @@ export function createScanner({state, showModal, resolveCode}) {
     </div>
     <div class="actions scan-manual-actions">
     <button class="btn primary" data-act="submit-code" data-assign="${assign ? '1' : '0'}">${t("scanner.actions.findAndApplyCode")}</button>
-    <button class="btn" data-act="close-modal">${t("common.actions.close")}</button>
+    ${actionButton({label: t("common.actions.close"), action: 'close-modal'})}
     </div>`
     );
     if (!window.isSecureContext) {

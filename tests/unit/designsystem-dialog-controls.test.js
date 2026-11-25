@@ -43,6 +43,44 @@ test(
   }
 );
 
+
+test(
+  'shared buttons render app-owned icon labels without double-escaping',
+  () => {
+    const iconLabel = '<span class="add-action-label">' +
+      '<svg aria-hidden="true"></svg>' +
+      '<span>A &amp; B</span></span>';
+    const markup = actionButton({
+      trustedContent: iconLabel,
+      action: 'add-distillery',
+      variant: 'primary',
+    });
+    assert.match(markup, /data-act="add-distillery"/);
+    assert.match(markup, /class="add-action-label"/);
+    assert.equal((markup.match(/<svg/g) || []).length, 1);
+    assert.match(markup, /A &amp; B/);
+    assert.doesNotMatch(markup, /&amp;amp;/);
+    const withData = actionButton({
+      label: 'Open',
+      action: 'tastings-open',
+      data: {'tasting-id': 'A&B"<>'},
+      ariaLabel: 'Show <tasting>',
+      title: 'Open & view',
+    });
+    assert.match(withData, /data-tasting-id="A&amp;B&quot;&lt;&gt;"/);
+    assert.match(withData, /aria-label="Show &lt;tasting&gt;"/);
+    assert.match(withData, /title="Open &amp; view"/);
+    assert.throws(
+      () => actionButton({data: {'foo\" onmouseover': 'bad'}}),
+      RangeError
+    );
+    assert.match(
+      actionButton({label: '<script>alert(1)</script>'}),
+      /&lt;script&gt;alert\(1\)&lt;\/script&gt;/
+    );
+  }
+);
+
 test(
   'central modal frame provides title, named close action, inner content and explicit variants',
   () => {

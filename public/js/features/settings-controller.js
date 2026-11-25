@@ -1,3 +1,4 @@
+import {actionButton} from '../ui/buttons.js';
 import {t} from '../i18n/index.js';
 import {locationFor} from '../domain/distillery-map.js';
 import {escapeHtml, query} from '../ui/dom.js';
@@ -47,10 +48,14 @@ export function createSettingsController({state, action, navigate, closeModal, s
       <input id="distillery-longitude" name="longitude" type="number" step="any" min="-180" max="180" placeholder="${t("features.map.longitudeExample")}" value="${current?.longitude ?? coordinates?.lon ?? ''}"></label>
     </div>
     <p class="hint">${t("features.map.optionalCoordinatesHint")}</p>
-    <button type="button" class="btn small" data-act="find-distillery-location">${t("features.map.searchOpenStreetMap")}</button>
+    ${actionButton({
+          label: t("features.map.searchOpenStreetMap"),
+          action: 'find-distillery-location',
+          size: 'small',
+        })}
     <div id="distillery-location-results" class="map-location-results" aria-live="polite"></div>
     <div class="actions ds-modal-footer ds-modal-footer--form">
-    <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
+    ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
     <button type="submit" class="btn primary">${id ?
         t("common.actions.save") : t("features.common.create")}</button>
     </div></form>`,
@@ -196,8 +201,12 @@ export function createSettingsController({state, action, navigate, closeModal, s
       t("features.import.replaceWithJson"),
       `<p>${t("features.import.prefix")} <strong>${t("features.import.replacesCollection")}</strong>${t("features.import.jsonExcludesAttachmentsWarning")}</p>
     <div class="actions ds-modal-footer">
-    <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
-    <button type="button" class="btn danger" data-act="confirm-import">${t("features.import.replaceCollection")}</button>
+    ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
+    ${actionButton({
+        label: t("features.import.replaceCollection"),
+        action: 'confirm-import',
+        variant: 'destructive',
+      })}
     </div>`
     );
   }

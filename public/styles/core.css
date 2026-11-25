@@ -473,6 +473,7 @@ h3 {
 /* Keep four desktop columns even on the final/filtered page.
    Only the viewport breakpoints determine the column count. */
 .whisky-card {
+  border-radius: var(--ds-surface-radius);
   background: var(--paper);
   border: 1px solid #e3dfd5;
   cursor: pointer;

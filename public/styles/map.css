@@ -52,6 +52,7 @@
 }
 
 .site-nav a {
+  border-radius: var(--ds-control-radius);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -914,4 +915,10 @@
    side-menu icons. */
 .site-nav svg.nav-glencairn {
   transform: scale(1.14);
+}
+
+/* This feature owns its surfaces; only the radius is a shared token. */
+.map-sidebar,
+.map-canvas {
+  border-radius: var(--ds-surface-radius);
 }

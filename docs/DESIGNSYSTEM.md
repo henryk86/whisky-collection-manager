@@ -20,6 +20,8 @@ Die Anwendung verwendet bestehende Farben und Typografie; das Designsystem verei
 
 - Bestehende `--ds-*`-Tokens für gemeinsame Farben, Flächen, Rahmen, Typografie, Abstände, Radien und Maße nutzen. Die weiterhin vorhandenen `--navy`, `--gold`, `--paper`, `--ink` usw. sind kompatible Bestandsvariablen.
 - Hauptseite/Seitengutter werden durch das gemeinsame Layout gesteuert (max. 1350 px; mobile Umbrüche u. a. bei 740 px). CSS Custom Properties sind **nicht** direkt in `@media`-Bedingungen einsetzbar.
+- Standardaktionen über `actionButton()` aus `ui/buttons.js` erzeugen; dieser Renderer besitzt Größen, Varianten, Delegation, Icons und die sichere HTML-Attributausgabe. Fachliche Spezialsteuerelemente (z. B. Fotogalerie, 3D-Lager) dürfen ihre eigene DOM-Struktur behalten.
+- Oberflächenradien werden über `--ds-surface-radius` gesteuert; die zugehörigen Selektoren gehören in die CSS-Datei der jeweiligen Fachansicht statt in eine global nachgeladene Liste.
 - Fach-CSS darf gemeinsame globale `.btn`, `.panel`, `.form-field` und Header-Basiselemente nicht neu definieren. Lokale, begründete Varianten mit eng begrenzten Selektoren sind möglich.
 - Titel aus **Benutzerdaten** nicht dekorativ verändern: Abfüllungsnamen verwenden `pageHeader({ title: name, period: false })`. Pfeilsymbole gehören zum Renderer, nicht zum Übersetzungstext.
 - Hilfeicons dürfen Zeilenhöhe und Überschriftenabstände nicht verändern. Bei Modals Größenvarianten explizit wählen; eine explizite Variante hat Vorrang vor generischem `wide`.

@@ -1,5 +1,5 @@
 /* Layering without @layer (M1): tokens -> layout primitives -> legacy base ->
-   existing feature order -> final surface guard. Moving feature imports or
+   existing feature order -> feature-owned surfaces. Moving feature imports or
    introducing native @layer requires separate visual regression approval. */
 @import url("./styles/tokens.css");
 @import url("./styles/layout.css");
@@ -17,4 +17,3 @@
 @import url("./styles/map.css");
 @import url("./styles/analytics.css");
 @import url("./styles/warehouse.css");
-@import url("./styles/surfaces.css");

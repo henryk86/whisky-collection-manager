@@ -89,7 +89,7 @@ test(
     );
     assert.match(
       section,
-      /class="btn" data-act="tastings-open"[\s\S]*?data-act="tastings-new"/
+      /<button[^>]*data-act="tastings-open"[\s\S]*?tastings-new"/
     );
     assert.equal((section.match(/data-act="tastings-new"/g) || []).length, 1);
     assert.match(html, /data-act="add-bottle"><svg class="new-icon"/);
@@ -129,7 +129,7 @@ test(
       .split('</section>')[0];
     assert.match(
       section,
-      /<button type="button" class="btn" data-act="tastings-open" data-tasting-id="newer">Verkostung anzeigen<\/button>/
+      /data-act="tastings-open" data-tasting-id="newer"/
     );
     assert.match(section, /22\.11\.2026 · 2 Verkostungsnotizen/);
     assert.doesNotMatch(section, /Alle Verkostungsnotizen/);
@@ -149,7 +149,7 @@ test(
     );
     assert.match(
       html,
-      /<button type="button" class="btn" data-act="tastings-open">Alle Verkostungsnotizen<\/button>/
+      /<button[^>]*data-act="tastings-open"[^>]*>Alle Verkostungsnotizen/
     );
     assert.doesNotMatch(
       html,
@@ -390,7 +390,7 @@ test(
     );
     assert.match(
       section,
-      /<button type="button" class="btn" data-act="tastings-open" data-tasting-id="compact">Verkostung anzeigen<\/button>/
+      /data-act="tastings-open" data-tasting-id="compact"/
     );
     assert.match(
       section,

@@ -1,3 +1,4 @@
+import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
 import {imageUrl} from '../../ui/format.js';
@@ -912,7 +913,10 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
                 <button type="button" class="btn" data-act="photo-editor-auto" data-photo-editor-ready disabled>${escapeHtml(t('photoEditor.auto'))}</button>
                 <button type="button" class="btn" data-act="photo-editor-reset" data-photo-editor-ready disabled>${escapeHtml(t('photoEditor.reset'))}</button>
                 <span class="photo-editor-actions-spacer"></span>
-                <button type="button" class="btn" data-act="close-modal">${escapeHtml(t('common.actions.cancel'))}</button>
+                ${actionButton({
+          label: t('common.actions.cancel'),
+          action: 'close-modal',
+        })}
                 <button type="button" class="btn primary" data-act="photo-editor-save" data-photo-editor-ready disabled>${escapeHtml(t('common.actions.save'))}</button>
             </div>
         </div>`,

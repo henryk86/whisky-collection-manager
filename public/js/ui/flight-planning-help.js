@@ -1,3 +1,4 @@
+import {actionButton} from './buttons.js';
 import {headingTitle} from './headers.js';
 import {escapeHtml} from './dom.js';
 
@@ -127,6 +128,10 @@ export function flightPlanningHelpHtml(t) {
         <section class="flight-plan-help-section">
             ${heading('limits.title')}${p('limits')}${p('limitationsDetails')}
         </section>
-        <div class="actions"><button type="button" class="btn primary" data-act="close-modal">${escapeHtml(t('common.actions.close'))}</button></div>
+        <div class="actions">${actionButton({
+        label: t('common.actions.close'),
+        action: 'close-modal',
+        variant: 'primary',
+      })}</div>
     </div>`;
 }

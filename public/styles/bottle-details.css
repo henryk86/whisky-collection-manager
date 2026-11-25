@@ -3056,3 +3056,8 @@
     gap: 14px 10px;
   }
 }
+
+/* The heading offset belongs to the bottling view, not inline markup. */
+.detail-bottling-section {
+  margin-top: 18px;
+}

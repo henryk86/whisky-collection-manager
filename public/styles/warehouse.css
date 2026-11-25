@@ -678,6 +678,7 @@
 
 .warehouse-bulk-open,
 .warehouse-bulk-pick {
+  border-radius: var(--ds-control-radius);
   display: grid;
   gap: 3px;
   flex: 1 1 0;
@@ -717,6 +718,7 @@
 }
 
 .warehouse-bulk-visibility {
+  border-radius: var(--ds-control-radius);
   flex: 0 0 44px;
   display: flex;
   align-items: center;
@@ -1047,6 +1049,7 @@
 }
 
 .warehouse-plan-tools .warehouse-view-switch {
+  border-radius: var(--ds-control-radius);
   display: inline-flex;
   width: auto;
   align-items: center;
@@ -1097,6 +1100,7 @@
 }
 
 .warehouse-plan-tools .warehouse-plan-filter select {
+  border-radius: var(--ds-control-radius);
   min-height: 32px;
   height: 32px;
   min-width: 80px;
@@ -3006,4 +3010,30 @@
 
 .warehouse-door-ranges {
   grid-column: 1/-1;
+}
+
+/* This feature owns its surfaces; only the radius is a shared token. */
+.warehouse-room-card,
+.warehouse-room-summary,
+.warehouse-room-preview,
+.warehouse-map-wrap,
+.warehouse-bottle-list,
+.warehouse-three-viewport,
+.warehouse-bulk-panel,
+.warehouse-bulk-item,
+.warehouse-bulk-field,
+.warehouse-wall-options,
+.warehouse-wall-toggle,
+.warehouse-assignment-target,
+.warehouse-section-boundary,
+.warehouse-wall-scroll,
+.warehouse-room-wall-empty,
+.warehouse-bottle-bulk-tools,
+.warehouse-unassigned-tray,
+.warehouse-unassigned-bottle.warehouse-wall-bottle,
+.warehouse-shelf-detail-bottle,
+.warehouse-transfer-rooms,
+.warehouse-wall-controls,
+.warehouse-bottle-preview-photo {
+  border-radius: var(--ds-surface-radius);
 }

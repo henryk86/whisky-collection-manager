@@ -1,3 +1,4 @@
+import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
 
@@ -77,6 +78,9 @@ export function bottlingChoiceDialog(collection) {
     <div class="actions"><button class="btn primary" type="submit">${t("forms.bottle.addToBottling")}</button></div>
     </form>
     <div class="bottling-choice-divider"><span>${t("forms.common.or")}</span></div>
-    <button type="button" class="btn" data-act="new-bottling-direct">${t("collection.actions.newBottling")}</button>
+    ${actionButton({
+    label: t("collection.actions.newBottling"),
+    action: 'new-bottling-direct',
+  })}
     </div>`;
 }

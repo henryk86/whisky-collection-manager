@@ -653,3 +653,10 @@
 .settings-legacy-import > :is(input,button) {
   margin-top: var(--ds-space-3);
 }
+
+/* This feature owns its surfaces; only the radius is a shared token. */
+.settings-page .backup-profile,
+.settings-page .backup-step,
+.settings-page .backup-fieldset {
+  border-radius: var(--ds-surface-radius);
+}

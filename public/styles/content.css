@@ -2,6 +2,7 @@
    These are NOT resets: specialist views retain approved padding, columns and
    surfaces. The collection/Abfuellungsdetails are the visual reference. */
 .panel {
+  border-radius: var(--ds-surface-radius);
   background: var(--ds-color-surface);
   border: 1px solid var(--ds-color-border);
   padding: var(--ds-panel-padding);
