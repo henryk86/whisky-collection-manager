@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.12.4 - 2026-11-25
+
+- fix(ci): implement dynamic visual regression comparison and PR approval
+- fix: correct dark mode contrast for filters and Whiskybase badges
+- refactor: consolidate similar design system colors
+- refactor: centralize UI colors and feature palettes
+- refactor: consolidate UI buttons and remove cross-feature CSS dependencies
+
 ## 1.12.3 - 2026-11-24
 
 - fix: standardize test status messages in release generator
