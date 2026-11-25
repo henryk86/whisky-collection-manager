@@ -6,8 +6,7 @@ import {loadResources} from '../../public/js/ui/refresh-resources.js';
 import {runAction} from '../../public/js/ui/action-result.js';
 
 test(
-  'N-3: an accepted POST remains successful when the next warehouse refresh \
-fails',
+  'N-3: an accepted POST remains successful when the next warehouse refresh fails',
   async () => {
     const server = await startTestServer();
     try {
@@ -26,8 +25,7 @@ fails',
         }),
         () => loadResources(state, async url => {
           if (url === '/api/warehouse') {
-            const failure =
-              new Error('The request could not be completed (HTTP 503)');
+            const failure = new Error('The request could not be completed (HTTP 503)');
             failure.status = 503;
             throw failure;
           }
@@ -41,10 +39,7 @@ fails',
       assert.equal(result.ok, true);
       assert.equal(result.refreshError, refreshWarning);
       assert.equal(result.refreshError.status, 503);
-      assert.equal(
-        state.collection.bottlings.filter(item => item.name === name).length,
-        1
-      );
+      assert.equal(state.collection.bottlings.filter(item => item.name === name).length, 1);
       const actual = (await requestJson(server.base, '/api/collection')).data;
       assert.equal(
         actual.bottlings.filter(item => item.name === name).length,

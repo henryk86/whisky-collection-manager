@@ -14,8 +14,7 @@ import {pagodaRoofIcon, closedDistilleryIcon, plusIcon, minusIcon}
 import {clusterMapSites} from '../../domain/map-clusters.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/tile-map.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/tile-map.html', import.meta.url));
 
 
 const TILE_BASE = 'https://tile.openstreetmap.org';
@@ -40,8 +39,7 @@ export function createTileMap(
   const tiles = element.querySelector('.map-tiles');
   const markers = element.querySelector('.map-markers');
   const viewport = element.querySelector('.map-viewport');
-  if (!layer || !tiles || !markers ||
-    !viewport) throw new Error(t("features.map.containerMissing"));
+  if (!layer || !tiles || !markers || !viewport) throw new Error(t("features.map.containerMissing"));
   let sites = initialSites;
   let showingAllDistilleries = showAllDistilleries;
   let center, zoom, viewChanged = false, destroyed = false, pinnedId = null;
@@ -78,8 +76,7 @@ export function createTileMap(
     // Only actually visible tiles, not other zoom levels or a wider map.
     for (let x = minX; x <= maxX; x++) for (let y = minY; y <= maxY; y++) {
       const image = document.createElement('img');
-      image.src = `${TILE_BASE}/${zoom}/${((x % world) + world) %
-        world}/${y}.png`;
+      image.src = `${TILE_BASE}/${zoom}/${((x % world) + world) % world}/${y}.png`;
       image.alt = '';
       image.draggable = false;
       image.decoding = 'async';
@@ -101,16 +98,11 @@ export function createTileMap(
       if (group.sites.length > 1) {
         const count = group.sites.length;
         const diameter = clusterMarkerDiameter(group.bottleCount);
-        marker.className =
-          `map-marker map-marker-cluster map-cluster-visual${selected ?
-            ' selected' : ''}`;
+        marker.className = `map-marker map-marker-cluster map-cluster-visual${selected ? ' selected' : ''}`;
         marker.style.width = `${diameter}px`;
         marker.style.height = `${diameter}px`;
         marker.textContent = String(group.bottleCount);
-        marker.title = t(
-          "map.marker.clusterTitle",
-          {bottles: group.bottleCount, distilleries: count}
-        );
+        marker.title = t("map.marker.clusterTitle", {bottles: group.bottleCount, distilleries: count});
         marker.setAttribute('aria-label', marker.title);
         marker.addEventListener('click', event => {
           if (Date.now() - lastDrag < 260) {event.preventDefault(); return;}
@@ -130,9 +122,7 @@ export function createTileMap(
         const isPagoda = showingAllDistilleries && site.bottleCount === 0;
         const isClosed = site.status === 'closed';
         const diameter = isPagoda ? 35 : markerDiameter(site.bottleCount);
-        marker.className = `map-marker${isPagoda ? ' map-marker-pagoda' :
-          ' map-stock-visual'}${isClosed ? ' map-marker-closed' :
-            ''}${selected ? ' selected' : ''}`;
+        marker.className = `map-marker${isPagoda ? ' map-marker-pagoda' : ' map-stock-visual'}${isClosed ? ' map-marker-closed' : ''}${selected ? ' selected' : ''}`;
         marker.style.width = `${diameter}px`;
         marker.style.height = `${diameter}px`;
         marker.title = t(
@@ -143,20 +133,16 @@ export function createTileMap(
             bottles: site.bottleCount,
             status: site.status === 'closed' ? t('home.status.closed') :
               site.status === 'reopened' ? t('features.status.reopened') :
-                site.status === 'active' ? t('map.status.active') :
-                  t('features.distilleries.unknownStatus'),
-            approximate: location.approximate ?
-              t('features.map.approximateLocation') : '',
+                site.status === 'active' ? t('map.status.active') : t('features.distilleries.unknownStatus'),
+            approximate: location.approximate ? t('features.map.approximateLocation') : '',
           }
         );
         marker.setAttribute('aria-label', marker.title);
-        if (isPagoda) replaceContent(marker, isClosed ? closedDistilleryIcon :
-          pagodaRoofIcon);
+        if (isPagoda) replaceContent(marker, isClosed ? closedDistilleryIcon : pagodaRoofIcon);
         else marker.textContent = String(site.bottleCount);
         marker.addEventListener('click', event => {
           if (Date.now() - lastDrag < 260) {event.preventDefault(); return;}
-          event.stopPropagation(); selectedId =
-            site.id; update(); onSelect(site.id);
+          event.stopPropagation(); selectedId = site.id; update(); onSelect(site.id);
         });
       }
       if (group.anchorX !== undefined && group.anchorY !== undefined) {
@@ -168,8 +154,7 @@ export function createTileMap(
         stem.style.left = `${anchorX}px`;
         stem.style.top = `${anchorY}px`;
         stem.style.width = `${distance}px`;
-        stem.style.transform = `rotate(${Math.atan2(y - anchorY, x -
-          anchorX)}rad)`;
+        stem.style.transform = `rotate(${Math.atan2(y - anchorY, x - anchorX)}rad)`;
         markerFragment.append(stem);
       }
       markerFragment.append(marker);
@@ -183,11 +168,7 @@ export function createTileMap(
    * Updates the fit state for its caller.
    */
   function fit() {
-    center = fitMapToSites(
-      sites,
-      dimensions().width || 680,
-      dimensions().height || 420
-    );
+    center = fitMapToSites(sites, dimensions().width || 680, dimensions().height || 420);
     zoom = center.zoom;
     viewChanged = false;
     pinnedId = null;
@@ -203,11 +184,7 @@ export function createTileMap(
     const idSet = new Set(ids);
     const matches = sites.filter(site => idSet.has(site.id) && site.location);
     if (!matches.length) return;
-    const fitted = fitMapToSites(
-      matches,
-      dimensions().width || 680,
-      dimensions().height || 420
-    );
+    const fitted = fitMapToSites(matches, dimensions().width || 680, dimensions().height || 420);
     center = {lat: fitted.lat, lon: fitted.lon};
     zoom = fitted.zoom;
     pinnedId = matches.length === 1 ? matches[0].id : null;
@@ -238,15 +215,7 @@ export function createTileMap(
    */
   function setZoom(next, anchor) {
     const {width, height} = dimensions();
-    const view = zoomAroundPoint(
-      center,
-      zoom,
-      next,
-      width,
-      height,
-      anchor?.x,
-      anchor?.y
-    );
+    const view = zoomAroundPoint(center, zoom, next, width, height, anchor?.x, anchor?.y);
     if (view.zoom === zoom) return;
     center = {lat: view.lat, lon: view.lon};
     zoom = view.zoom;
@@ -289,8 +258,7 @@ export function createTileMap(
     if (event.target.closest('button,a')) return;
     pointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
     viewport.setPointerCapture?.(event.pointerId);
-    if (pointers.size === 1) drag =
-      {x: event.clientX, y: event.clientY, moved: false};
+    if (pointers.size === 1) drag = {x: event.clientX, y: event.clientY, moved: false};
     if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
       pinch = {distance: Math.hypot(a.x - b.x, a.y - b.y), zoom};
@@ -308,8 +276,7 @@ export function createTileMap(
     pointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
     if (pointers.size === 2 && pinch) {
       const [a, b] = [...pointers.values()];
-      const ratio = Math.hypot(a.x - b.x, a.y - b.y) /
-        Math.max(1, pinch.distance);
+      const ratio = Math.hypot(a.x - b.x, a.y - b.y) / Math.max(1, pinch.distance);
       const change = ratio >= 1.35 ? 1 : ratio <= .75 ? -1 : 0;
       if (change) {
         const rect = viewport.getBoundingClientRect();
@@ -368,8 +335,7 @@ export function createTileMap(
    */
   const keyboard = event => {
     if (event.target !== viewport) return;
-    if (event.key === '+' || event.key ===
-      '=') {event.preventDefault(); setZoom(zoom + 1);}
+    if (event.key === '+' || event.key === '=') {event.preventDefault(); setZoom(zoom + 1);}
     else if (event.key === '-') {event.preventDefault(); setZoom(zoom - 1);}
     else if (event.key.startsWith('Arrow')) {
       const offsets = {
@@ -393,22 +359,19 @@ export function createTileMap(
    * @param {!Event} event Event that triggered this operation.
    */
   const handleZoom = event => {
-    const action = event.target.closest('[data-map-control]')?.dataset
-      .mapControl;
+    const action = event.target.closest('[data-map-control]')?.dataset.mapControl;
     if (action === 'in') setZoom(zoom + 1);
     else if (action === 'out') setZoom(zoom - 1);
     else if (action === 'fit') fit();
   };
   element.addEventListener('click', handleZoom);
   const resize = new ResizeObserver(() => {
-    if (!destroyed) viewChanged ?
-      update() : fit();
+    if (!destroyed) viewChanged ? update() : fit();
   });
   resize.observe(viewport);
   // Collection refreshes rebuild the map DOM. Reuse the prior camera instead
   // of fitting all distilleries again, even if the map was not manually moved.
-  const restored = initialView && Number.isFinite(initialView.lat)
-    && Number.isFinite(initialView.lon) && Number.isFinite(initialView.zoom);
+  const restored = initialView && Number.isFinite(initialView.lat) && Number.isFinite(initialView.lon) && Number.isFinite(initialView.zoom);
   if (restored) {
     center = {lat: initialView.lat, lon: initialView.lon};
     zoom = clampZoom(initialView.zoom);
@@ -446,8 +409,7 @@ export function createTileMap(
      * @return {!Object} Result computed from the supplied inputs.
      */
     getView() {
-      return center ?
-        {lat: center.lat, lon: center.lon, zoom} : null;
+      return center ? {lat: center.lat, lon: center.lon, zoom} : null;
     },
     /**
      * Updates the select state for its caller.

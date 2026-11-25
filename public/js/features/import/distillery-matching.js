@@ -25,8 +25,7 @@ export function splitDistilleryNames(raw) {
   for (const char of raw) {
     if (char === '(') parentheses++;
     if (char === ')') parentheses = Math.max(0, parentheses - 1);
-    if (parentheses === 0 && (char === ',' || char === ';' || char ===
-      '\n' || char === '\r')) {
+    if (parentheses === 0 && (char === ',' || char === ';' || char === '\n' || char === '\r')) {
       pushName();
     } else {
       buffer += char;
@@ -47,8 +46,7 @@ export function splitDistilleryNames(raw) {
  */
 export function matchImportedDistilleries(raw, knownDistilleries = []) {
   const known = new Map(knownDistilleries.map(distillery => [
-    String(distillery.name).normalize('NFKC').replace(/\s+/gu, ' ').trim()
-      .toLocaleLowerCase('de'),
+    String(distillery.name).normalize('NFKC').replace(/\s+/gu, ' ').trim().toLocaleLowerCase('de'),
     distillery.id,
   ]));
   return splitDistilleryNames(raw).map(name => ({

@@ -33,24 +33,18 @@ export const FLAVOR_AXES = Object.freeze([
  */
 export function normalizeFlavorProfile(value) {
   if (value === null) return null;
-  const keys = value && typeof value === 'object' && !Array.isArray(value) ?
-    Object.keys(value) : [];
+  const keys = value && typeof value === 'object' && !Array.isArray(value) ? Object.keys(value) : [];
   // A short-lived eleven-axis version also stored `fiery`. Read such records
   // without
   // breaking older backups, but do not offer or persist this overlapping
   // category.
   const hasFormerFiery = Object.hasOwn(value ?? {}, 'fiery');
-  const validShape = keys.length === LEGACY_FLAVOR_AXES.length ||
-    keys.length === FLAVOR_AXES.length || (keys.length ===
-      FLAVOR_AXES.length + 1 && hasFormerFiery);
-  if (!validShape || !LEGACY_FLAVOR_AXES.every(axis =>
-    Object.hasOwn(value, axis)) ||
+  const validShape = keys.length === LEGACY_FLAVOR_AXES.length || keys.length === FLAVOR_AXES.length || (keys.length === FLAVOR_AXES.length + 1 && hasFormerFiery);
+  if (!validShape || !LEGACY_FLAVOR_AXES.every(axis => Object.hasOwn(value, axis)) ||
     keys.some(key => !FLAVOR_AXES.includes(key) && key !== 'fiery') ||
     (hasFormerFiery && value.fiery !== null &&
-      !(typeof value.fiery === 'number' && Number.isInteger(value.fiery) &&
-        value.fiery >= 0 && value.fiery <= 10))) {
-    throw new Error(
-      'Geschmacksprofil muss acht bisherige oder alle zehn Achsen enthalten');
+      !(typeof value.fiery === 'number' && Number.isInteger(value.fiery) && value.fiery >= 0 && value.fiery <= 10))) {
+    throw new Error('Geschmacksprofil muss acht bisherige oder alle zehn Achsen enthalten');
   }
   const result = {};
   for (const axis of FLAVOR_AXES) {
@@ -59,12 +53,10 @@ export function normalizeFlavorProfile(value) {
     const score = Object.hasOwn(value, axis) ? value[axis] : null;
     if (score === null && NEW_FLAVOR_AXES.includes(axis)) {
       result[axis] = null;
-    } else if (typeof score === 'number' && Number.isInteger(score) &&
-      score >= 0 && score <= 10) {
+    } else if (typeof score === 'number' && Number.isInteger(score) && score >= 0 && score <= 10) {
       result[axis] = score;
     } else {
-      throw new Error(
-        'Geschmacksprofil: Werte müssen ganze Zahlen von 0 bis 10 sein');
+      throw new Error('Geschmacksprofil: Werte müssen ganze Zahlen von 0 bis 10 sein');
     }
   }
   return result;

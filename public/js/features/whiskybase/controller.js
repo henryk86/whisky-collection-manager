@@ -25,8 +25,6 @@ export function createWhiskybase({state, ...dependencies}) {
      * @param {*} incoming Value used by this operation.
      * @return {*} Result computed from the supplied inputs.
      */
-    findExistingBottling: (collection, incoming) => collection.bottlings.find(
-      bottling => bottling.whiskybaseId === incoming.fields.whiskybaseId
-    ),
+    findExistingBottling: (collection, incoming) => collection.bottlings.find(bottling => bottling.whiskybaseId === incoming.fields.whiskybaseId),
   });
 }

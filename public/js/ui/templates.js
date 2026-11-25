@@ -14,9 +14,7 @@ export function parseTemplates(source) {
   const fragments = new Map();
   const start = /<!-- wcm-template:([\w-]+) -->\n/;
   const end = /\n<!-- \/wcm-template -->/;
-  const pattern = new RegExp(
-    start.source + '([\\s\\S]*?)' + end.source, 'g'
-  );
+  const pattern = new RegExp(start.source + '([\\s\\S]*?)' + end.source, 'g');
   for (const [, name, markup] of source.matchAll(pattern)) {
     if (fragments.has(name)) throw new Error(`Duplicate template: ${name}`);
     fragments.set(name, markup);
@@ -74,9 +72,7 @@ async function readTemplateFile(url) {
  */
 export async function loadTemplates(url) {
   if (!cache.has(url.href)) {
-    cache.set(url.href, readTemplateFile(url).then(parseTemplates)
-      .then(url.protocol === 'file:' ? createTemplateRenderer :
-        createPlanRenderer));
+    cache.set(url.href, readTemplateFile(url).then(parseTemplates).then(url.protocol === 'file:' ? createTemplateRenderer : createPlanRenderer));
   }
   return cache.get(url.href);
 }

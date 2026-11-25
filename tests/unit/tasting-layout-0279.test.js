@@ -23,8 +23,7 @@ test(
        * @param {*} markup HTML markup for the selected content.
        * @return {*} Result computed from the supplied inputs.
        */
-      shell: markup => html =
-        markup,
+      shell: markup => html = markup,
       /**
        * Updates the navigate state for its caller.
        */
@@ -34,15 +33,12 @@ test(
        */
       refresh() {},
     }).editor();
-    const start = html.indexOf(
-      'class="tasting-record-fields analytics-panel tasting-edit-meta-panel"');
+    const start = html.indexOf('class="tasting-record-fields analytics-panel tasting-edit-meta-panel"');
     const end = html.indexOf('class="tasting-top-row"', start);
     assert.ok(start > -1 && end > start);
     const panel = html.slice(start, end);
-    assert.ok(panel.indexOf('data-tasting-date') <
-      panel.indexOf('data-tasting-title'));
-    assert.ok(panel.indexOf('data-tasting-title') <
-      panel.indexOf('class="actions tasting-editor-actions"'));
+    assert.ok(panel.indexOf('data-tasting-date') < panel.indexOf('data-tasting-title'));
+    assert.ok(panel.indexOf('data-tasting-title') < panel.indexOf('class="actions tasting-editor-actions"'));
     assert.match(panel, /data-act="flavor-detail-undo"/);
     assert.match(panel, /data-act="flavor-detail-redo"/);
   }

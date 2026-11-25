@@ -11,8 +11,7 @@ import {
 } from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/warehouse-unassigned-tray.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/warehouse-unassigned-tray.html', import.meta.url));
 
 
 /**
@@ -34,34 +33,20 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [],
       checked: checked ? ' is-selected' : '',
       safe: safe(bottle.id),
       bottleSymbol: bottleSymbol(bottle, {selectable: true, selected: checked}),
-      safe2: safe(bottleLabel(
-        bottle)),
+      safe2: safe(bottleLabel(bottle)),
       safe3: safe(bottleLabel(bottle)),
-      warehouseUnassignedFacts: facts ?
-        renderTemplate('warehouseUnassignedFacts', {
-          facts: facts,
-        }) : '',
+      warehouseUnassignedFacts: facts ? renderTemplate('warehouseUnassignedFacts', {facts: facts, }) : '',
     });
   }));
-  const empty = data.total === 0 ? 'warehouse.wall.unassignedEmpty' :
-    'warehouse.wall.unassignedNoMatches';
+  const empty = data.total === 0 ? 'warehouse.wall.unassignedEmpty' : 'warehouse.wall.unassignedNoMatches';
   return renderTemplate('warehouseUnassignedResults', {
-    cards: cards ||
-      renderTemplate('hint', {
-        t: t(empty),
-      }),
-    unassignedShown: t(
-      'warehouse.wall.unassignedShown',
-      {shown: data.filtered, total: data.total}
-    ),
+    cards: cards || renderTemplate('hint', {t: t(empty), }),
+    unassignedShown: t('warehouse.wall.unassignedShown', {shown: data.filtered, total: data.total}),
     safe: safe(query),
     safe2: safe(t('warehouse.wall.unassignedSearchPlaceholder')),
     safe3: safe(t('warehouse.wall.unassignedSearch')),
     disabled: data.page === 1 ? 'disabled' : '',
-    pageOf: t(
-      'home.pagination.pageOf',
-      {page: data.page, total: data.pages}
-    ),
+    pageOf: t('home.pagination.pageOf', {page: data.page, total: data.pages}),
     disabled2: data.page === data.pages ? 'disabled' : '',
   });
 }
@@ -79,9 +64,7 @@ export function renderUnassignedTray(warehouse, selectedIds = [],
   const total = unassignedWallPage(warehouse).total;
   const label = safe(t('warehouse.wall.unassignedTitle', {count: total}));
   const content = renderTemplate('warehouseUnassignedContent', {
-    unassignedTrayPage: renderUnassignedTrayPage(
-      warehouse, selectedIds, options
-    ),
+    unassignedTrayPage: renderUnassignedTrayPage(warehouse, selectedIds, options),
   });
   // Inside a room wall, the staging tray shares the selection toolbar's
   // single header. Keep a standalone native disclosure for other callers.
@@ -92,8 +75,7 @@ export function renderUnassignedTray(warehouse, selectedIds = [],
       content: content,
     });
   return renderTemplate('warehouseUnassignedTray', {
-    expanded: options.expanded ?
-      'open' : '',
+    expanded: options.expanded ? 'open' : '',
     label: label,
     label2: label,
     content: content,

@@ -9,8 +9,7 @@ import {reconcileChildren} from './dom-reconcile.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/shell.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/shell.html', import.meta.url));
 
 /**
  * Creates shell for shell.
@@ -62,24 +61,17 @@ export function createShell({root, state, applyTheme, renderModal}) {
       mAINPAGES: composeMarkup(MAIN_PAGES.map(item => renderTemplate('a', {
         url: item.url,
         action: item.action,
-        id: item.id ===
-          state.page || (item.id === 'home' && state.page === 'detail') ||
-          (item.id === 'tastings-home' &&
-            ['tastings', 'tasting', 'external-tasting', 'tasting-flight']
-              .includes(state.page)) ? 'aria-current="page"' : '',
+        id: item.id === state.page || (item.id === 'home' && state.page === 'detail') ||
+          (item.id === 'tastings-home' && ['tastings', 'tasting', 'external-tasting', 'tasting-flight'].includes(state.page)) ? 'aria-current="page"' : '',
         navClass: item.navClass || '',
-        viewBox: item.viewBox ||
-          '0 0 24 24',
-        filled: item.filled ? 'currentColor' :
-          'none',
-        filled2: item.filled ? 'none' :
-          'currentColor',
+        viewBox: item.viewBox || '0 0 24 24',
+        filled: item.filled ? 'currentColor' : 'none',
+        filled2: item.filled ? 'none' : 'currentColor',
         icon: item.icon,
         label: item.label,
       }))),
       muted: state.auth?.user ? renderTemplate('muted', {
-        username: state.auth.user
-          .username,
+        username: state.auth.user.username,
         authOpenChangeButton: actionButton({
           label: t('auth.changeTitle'),
           action: 'auth-open-change',
@@ -91,13 +83,7 @@ export function createShell({root, state, applyTheme, renderModal}) {
       }) :
         actionButton({label: t('auth.signIn'), action: 'auth-open-login'}),
       content: content,
-      footer: t(
-        'ui.shell.footer',
-        {
-          version: state.version ? `v${state.version}` :
-            t('ui.status.unknownVersion'),
-        }
-      ),
+      footer: t('ui.shell.footer', {version: state.version ? `v${state.version}` : t('ui.status.unknownVersion'), }),
     }));
     applyTheme();
     if (state.modal) {

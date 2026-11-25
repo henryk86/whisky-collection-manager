@@ -3,8 +3,7 @@ import assert from 'node:assert/strict';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 
 test(
-  'physical bottle multi-selection remains in the storage wall, not in the \
-finder',
+  'physical bottle multi-selection remains in the storage wall, not in the finder',
   () => {
     const warehouse = {
       rooms: [{
@@ -16,8 +15,7 @@ finder',
             width: 1,
             itemHeight: 2,
             elevation: 0,
-            shelves: [
-              {id: 's', name: 'Fach 1', capacity: 3}],
+            shelves: [{id: 's', name: 'Fach 1', capacity: 3}],
           }],
       }],
       bottles: [{id: 'b1', name: 'Whisky 1'}, {id: 'b2', name: 'Whisky 2'}],
@@ -90,10 +88,7 @@ finder',
       assert.match(dialog, /data-endpoint="\/api\/warehouse\/bottles\/bulk"/);
       assert.match(dialog, /data-bottle-bulk="true"/);
       assert.match(html, /class="warehouse-room-wall"/);
-      assert.equal(
-        (html.match(/class="warehouse-wall-bottle is-selected"/g) || []).length,
-        2
-      );
+      assert.equal((html.match(/class="warehouse-wall-bottle is-selected"/g) || []).length, 2);
       assert.match(html, /warehouse-bottle-bulk-tools/);
     } finally {
       if (oldDocument === undefined) delete globalThis.document;
@@ -103,8 +98,7 @@ finder',
 );
 
 test(
-  'wall bottle selection toggles a pressed, highlighted bottle without \
-checkboxes',
+  'wall bottle selection toggles a pressed, highlighted bottle without checkboxes',
   () => {
     const warehouse = {
       rooms: [],
@@ -144,8 +138,7 @@ checkboxes',
            * @param {*} enabled Value used by this operation.
            * @return {*} Result computed from the supplied inputs.
            */
-          toggle: (name, enabled) => enabled ? marked.add(name) :
-            marked.delete(name),
+          toggle: (name, enabled) => enabled ? marked.add(name) : marked.delete(name),
         },
       } : null,
     };
@@ -167,8 +160,7 @@ checkboxes',
         '.warehouse-wall-bottle .warehouse-bottle-symbol': [button],
         '.warehouse-bottles-preview-selected': [preview],
         '.warehouse-bottle-selection-count': [label],
-        '.warehouse-bottles-select-clear,.warehouse-bottles-assign-selected':
-          [clear, assign],
+        '.warehouse-bottles-select-clear,.warehouse-bottles-assign-selected': [clear, assign],
       }[selector] || []),
     };
     try {

@@ -12,8 +12,7 @@ export function createSelectors(state) {
    * @param {*} id Identifier of the affected record.
    * @return {*} Result computed from the supplied inputs.
    */
-  const distilleryName = id => state.collection.distilleries.find(d =>
-    d.id === id)?.name || 'Unbekannte Destillerie';
+  const distilleryName = id => state.collection.distilleries.find(d => d.id === id)?.name || 'Unbekannte Destillerie';
 
   /**
    * Derives the distillery ids result from the supplied values.
@@ -21,8 +20,7 @@ export function createSelectors(state) {
    * @param {*} b Second entry or operand in the calculation.
    * @return {*} Result computed from the supplied inputs.
    */
-  const distilleryIds = b => Array.isArray(b.distilleryIds) ?
-    b.distilleryIds : (b.distilleryId ? [b.distilleryId] : []);
+  const distilleryIds = b => Array.isArray(b.distilleryIds) ? b.distilleryIds : (b.distilleryId ? [b.distilleryId] : []);
 
   /**
    * Transforms the entries used by distillery names.
@@ -30,8 +28,7 @@ export function createSelectors(state) {
    * @param {*} b Second entry or operand in the calculation.
    * @return {*} Entries transformed for the consuming code.
    */
-  const distilleryNames = b => distilleryIds(b).map(distilleryName)
-    .join(', ') || 'Keine Destillerie angegeben';
+  const distilleryNames = b => distilleryIds(b).map(distilleryName).join(', ') || 'Keine Destillerie angegeben';
 
   /**
    * Derives the bottles result from the supplied values.
@@ -39,15 +36,13 @@ export function createSelectors(state) {
    * @param {*} id Identifier of the affected record.
    * @return {*} Result computed from the supplied inputs.
    */
-  const bottles = id => state.collection.bottlings.find(b => b.id ===
-    id)?.bottles || [];
+  const bottles = id => state.collection.bottlings.find(b => b.id === id)?.bottles || [];
 
   /**
    * Derives the all bottles result from the supplied values.
    * @return {*} Result computed from the supplied inputs.
    */
-  const allBottles = () => state.collection.bottlings.flatMap(b =>
-    b.bottles || []);
+  const allBottles = () => state.collection.bottlings.flatMap(b => b.bottles || []);
 
   /**
    * Selects bottle matching the input.
@@ -73,8 +68,7 @@ export function createSelectors(state) {
    * @param {*} id Identifier of the affected record.
    * @return {*} Result computed from the supplied inputs.
    */
-  const coverPhoto = id => displayPhotoPath(bottles(id).flatMap(b =>
-    b.photos || [])[0]);
+  const coverPhoto = id => displayPhotoPath(bottles(id).flatMap(b => b.photos || [])[0]);
   return {
     distilleryName,
     distilleryIds,
@@ -99,8 +93,7 @@ export function lookupInventoryNumber(collection, value) {
     return null;
   }
   for (const bottling of collection.bottlings) {
-    const bottle = (bottling.bottles || []).find(entry =>
-      entry.inventoryNumber === number);
+    const bottle = (bottling.bottles || []).find(entry => entry.inventoryNumber === number);
     if (bottle) {
       return {
         bottling, bottle,

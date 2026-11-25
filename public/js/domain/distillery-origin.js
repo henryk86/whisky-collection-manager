@@ -67,8 +67,7 @@ export function countryLabel(value) {
  */
 export function bottlingDistilleryIds(bottling) {
   return [...new Set(Array.isArray(bottling.distilleryIds) ?
-    bottling.distilleryIds : bottling.distilleryId ?
-      [bottling.distilleryId] : [])];
+    bottling.distilleryIds : bottling.distilleryId ? [bottling.distilleryId] : [])];
 }
 
 /**
@@ -79,8 +78,7 @@ export function bottlingDistilleryIds(bottling) {
  * @return {!Object} Structured result for the caller.
  */
 export function bottlingOrigins(bottling, distilleries = []) {
-  const lookup = distilleries instanceof Map ? distilleries :
-    new Map(distilleries.map(d => [d.id, d]));
+  const lookup = distilleries instanceof Map ? distilleries : new Map(distilleries.map(d => [d.id, d]));
   const countries = new Set(), regions = new Set();
   const ids = bottlingDistilleryIds(bottling);
   for (const id of ids) {
@@ -96,8 +94,7 @@ export function bottlingOrigins(bottling, distilleries = []) {
   // override it.
   if (!countries.size) {
     if (text(bottling.country)) countries.add(countryLabel(bottling.country));
-    if (!regions.size &&
-      text(bottling.region)) regions.add(text(bottling.region));
+    if (!regions.size && text(bottling.region)) regions.add(text(bottling.region));
   }
   return {countries: [...countries], regions: [...regions]};
 }

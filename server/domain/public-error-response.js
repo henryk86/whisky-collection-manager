@@ -22,8 +22,7 @@ function englishMessage(template, params = {}) {
 function safeParams(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
   return Object.fromEntries(Object.entries(value).filter(([name, field]) =>
-    /^[a-zA-Z]\w*$/.test(name) && typeof field === 'string' &&
-    field.length <= 100));
+    /^[a-zA-Z]\w*$/.test(name) && typeof field === 'string' && field.length <= 100));
 }
 
 /**
@@ -36,14 +35,10 @@ function safeParams(value) {
 export function publicErrorResponse(error) {
   const status = Number.isInteger(error?.status) ? error.status : 500;
   const generic = {
-    error: englishMessage(
-      'The request could not be completed (HTTP {status}).',
-      {status: String(status)}
-    ),
+    error: englishMessage('The request could not be completed (HTTP {status}).', {status: String(status)}),
   };
   const code = error?.code;
-  if (typeof code !== 'string' ||
-    !Object.hasOwn(apiErrorFallbacks, code)) return generic;
+  if (typeof code !== 'string' || !Object.hasOwn(apiErrorFallbacks, code)) return generic;
   const params = safeParams(error.params);
   return {
     error: englishMessage(apiErrorFallbacks[code], displayErrorParams(params)),

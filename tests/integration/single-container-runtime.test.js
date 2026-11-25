@@ -61,12 +61,10 @@ const tlsGet = (port, ca, url) => new Promise((resolve, reject) => {
 });
 
 test(
-  'one container process supervises app + worker; verified TLS loopback, \
-real backup queue, no HTTP listener',
+  'one container process supervises app + worker; verified TLS loopback, real backup queue, no HTTP listener',
   {timeout: 35000},
   async () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(),
-      'whisky-single-container-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-single-container-'));
     const port = await freePort();
     const httpPort = await freePort();
     const cert = path.join(dir, 'server-cert.pem');
@@ -130,16 +128,10 @@ exit 0
       write(adminFile, 'a'.repeat(64));
       write(workerFile, token);
       write(passwordFile, 'c'.repeat(64));
-      write(
-        path.join(control, 'backup-zip-password'),
-        'SicheresTestpasswort-2026-mindestens-14!'
-      );
+      write(path.join(control, 'backup-zip-password'), 'SicheresTestpasswort-2026-mindestens-14!');
       write(configFile, '');
       write(path.join(targets, 'usb/.whisky-backup-target'), 'mounted');
-      write(
-        path.join(control, 'profiles.json'),
-        JSON.stringify({version: 1, profiles: [profile]})
-      );
+      write(path.join(control, 'profiles.json'), JSON.stringify({version: 1, profiles: [profile]}));
       write(
         path.join(control, 'jobs', `${jobId}.json`),
         JSON.stringify({
@@ -192,63 +184,38 @@ exit 0
         const statusFile = path.join(control, 'worker-status.json');
         if (fs.existsSync(statusFile)) {
           const status = JSON.parse(fs.readFileSync(statusFile));
-          if (status.jobs.some(job => job.id === jobId && job.state ===
-            'success')) {
+          if (status.jobs.some(job => job.id === jobId && job.state === 'success')) {
             finished = true; break;
           }
-          if (status.jobs.some(job => job.id === jobId && job.state ===
-            'failed')) {
-            assert.fail(`Backup job failed: ${JSON.stringify(status.jobs
-            )} ${output}`);
+          if (status.jobs.some(job => job.id === jobId && job.state === 'failed')) {
+            assert.fail(`Backup job failed: ${JSON.stringify(status.jobs)} ${output}`);
           }
         }
         await new Promise(resolve => setTimeout(resolve, 100));
       }
-      assert.equal(
-        finished,
-        true,
-        `worker never completed end-to-end HTTPS snapshot: ${output}`
-      );
+      assert.equal(finished, true, `worker never completed end-to-end HTTPS snapshot: ${output}`);
       const res = await tlsGet(port, fs.readFileSync(cert), '/api/collection');
       assert.equal(res.code, 200);
       assert.ok(res.data);
       const {inspectReadableZip} = await import('../../shared/backup-zip.js');
       const target = path.join(targets, 'usb/whisky');
-      const zipFiles = fs.readdirSync(target).filter(name =>
-        name.endsWith('.zip'));
+      const zipFiles = fs.readdirSync(target).filter(name => name.endsWith('.zip'));
       assert.equal(zipFiles.length, 1, 'single ZIP backup generated');
-      assert.ok(inspectReadableZip(
-        path.join(target, zipFiles[0]),
-        null,
-        'SicheresTestpasswort-2026-mindestens-14!'
-      ).files >= 2);
-      assert.equal(
-        fs.existsSync(logfile),
-        false,
-        'new backups must not invoke Restic'
-      );
+      assert.ok(inspectReadableZip(path.join(target, zipFiles[0]), null, 'SicheresTestpasswort-2026-mindestens-14!').files >= 2);
+      assert.equal(fs.existsSync(logfile), false, 'new backups must not invoke Restic');
       assert.equal(fs.existsSync(path.join(control, 'staging', jobId)), false);
       const httpConnects = await new Promise(resolve => {
-        const req = http.get(
-          `http://127.0.0.1:${httpPort}/api/collection`,
-          {timeout: 750}
-        );
+        const req = http.get(`http://127.0.0.1:${httpPort}/api/collection`, {timeout: 750});
         req.on('response', res => {res.resume(); resolve(true);});
         req.on('timeout', () => req.destroy());
         req.on('error', () => resolve(false));
       });
-      assert.equal(
-        httpConnects,
-        false,
-        'HTTP_ENABLED=false must not open HTTP listener'
-      );
+      assert.equal(httpConnects, false, 'HTTP_ENABLED=false must not open HTTP listener');
     } finally {
       if (processRunner && processRunner.exitCode === null) {
-        const exited = new Promise(resolve =>
-          processRunner.once('exit', resolve));
+        const exited = new Promise(resolve => processRunner.once('exit', resolve));
         processRunner.kill('SIGTERM');
-        await Promise.race([exited, new Promise(resolve =>
-          setTimeout(resolve, 2500))]);
+        await Promise.race([exited, new Promise(resolve => setTimeout(resolve, 2500))]);
         if (processRunner.exitCode === null) processRunner.kill('SIGKILL');
       }
       fs.rmSync(dir, {recursive: true, force: true});

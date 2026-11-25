@@ -10,8 +10,7 @@ import path from 'node:path';
 import ts from 'typescript';
 import {listJavaScriptFiles} from './javascript-files.js';
 import {
-  insertTrailingCommas, separateFunctions, wrapLongExpressions,
-  wrapLongStructures, wrapStandaloneComments
+  insertTrailingCommas, separateFunctions
 } from './style-layout.js';
 
 const write = process.argv.includes('--write');
@@ -44,9 +43,7 @@ function format(file, original) {
   let source = original.replace(/\r\n/g, '\n');
   const seen = new Set();
   for (let pass = 0; pass < 16; pass++) {
-    const wrapped = insertTrailingCommas(file,
-      separateFunctions(file, wrapStandaloneComments(file,
-        wrapLongExpressions(file, wrapLongStructures(file, source)))));
+    const wrapped = insertTrailingCommas(file, separateFunctions(file, source));
     if (seen.has(wrapped)) {
       throw new Error(`Non-converging formatter for ${file}`);
     }
@@ -91,52 +88,19 @@ function format(file, original) {
     };
     const languageService = ts.createLanguageService(host);
     let formatted = source;
-    const templateBoundaries = new Set();
-    const parsed = ts.createSourceFile(file, source, ts.ScriptTarget.Latest,
-      true, ts.ScriptKind.JS);
-    /**
-     * Records interpolation boundaries where whitespace is not literal HTML.
-     *
-     * @param {!ts.Node} node Syntax node to inspect.
-     */
-    function collectTemplateBoundaries(node) {
-      if (ts.isTemplateExpression(node)) {
-        templateBoundaries.add(node.head.end);
-        for (const span of node.templateSpans) {
-          templateBoundaries.add(span.literal.getStart(parsed));
-          if (span.literal.kind === ts.SyntaxKind.TemplateMiddle) {
-            templateBoundaries.add(span.literal.end);
-          }
-        }
-      }
-      ts.forEachChild(node, collectTemplateBoundaries);
-    }
-    collectTemplateBoundaries(parsed);
     try {
-      const edits = languageService.getFormattingEditsForDocument(
-        file,
-        options
-      );
+      const edits = languageService.getFormattingEditsForDocument(file, options);
       for (const edit of edits.sort((a, b) => b.span.start - a.span.start)) {
         const {start, length} = edit.span;
-        // TypeScript removes deliberate newlines at interpolation boundaries.
-        // Keep these breaks so long HTML expressions stay within 80 columns.
-        if (length && !edit.newText.includes('\n') &&
-          source.slice(start, start + length).includes('\n') &&
-          /^\s*$/.test(source.slice(start, start + length)) &&
-          (templateBoundaries.has(start) ||
-            templateBoundaries.has(start + length))) continue;
-        formatted = formatted.slice(0, start) + edit.newText +
-          formatted.slice(start + length);
+        formatted = formatted.slice(0, start) + edit.newText + formatted.slice(start + length);
       }
     } finally {
       languageService.dispose();
     }
     formatted = formatted.replace(/\n*$/, '\n');
-    if (formatted === source &&
-      separateFunctions(file, wrapStandaloneComments(file,
-        wrapLongExpressions(file, wrapLongStructures(file, formatted)))) ===
-      formatted) return formatted;
+    if (formatted === source && insertTrailingCommas(file, separateFunctions(file, formatted)) === formatted) {
+      return formatted;
+    }
     source = formatted;
   }
   throw new Error(`Formatter did not stabilize for ${file}`);
@@ -152,8 +116,7 @@ for (const file of files) {
   if (write) fs.writeFileSync(file, formatted);
 }
 if (invalid.length) {
-  console.log(`${write ? 'Formatted' : 'Needs formatting'}: ${invalid
-    .length}/${files.length} JavaScript files`);
+  console.log(`${write ? 'Formatted' : 'Needs formatting'}: ${invalid.length}/${files.length} JavaScript files`);
   for (const file of invalid.slice(0, 30)) console.log(`  ${file}`);
   if (invalid.length > 30) console.log(`  ... and ${invalid.length - 30} more`);
   if (!write) {

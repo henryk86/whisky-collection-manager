@@ -108,10 +108,8 @@ function namingDistance(lab, chroma, reference) {
   const chromaDifference = chroma - reference.chroma;
   const chromaDot = lab[1] * reference.lab[1] + lab[2] * reference.lab[2];
   // 2 * C1 * C2 * (1 - cos(delta hue)), without angular discontinuities.
-  const hueDifferenceSquared = Math.max(0, 2 * (chroma * reference.chroma -
-    chromaDot));
-  return lightnessDifference ** 2 + chromaDifference ** 2 + HUE_WEIGHT *
-    hueDifferenceSquared;
+  const hueDifferenceSquared = Math.max(0, 2 * (chroma * reference.chroma - chromaDot));
+  return lightnessDifference ** 2 + chromaDifference ** 2 + HUE_WEIGHT * hueDifferenceSquared;
 }
 
 /**

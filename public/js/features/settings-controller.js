@@ -8,8 +8,7 @@ import {request} from '../api.js';
 import {toast} from '../ui/notifications.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/settings-controller.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/settings-controller.html', import.meta.url));
 
 /**
  * Settings workflows use app dialogs instead of blocking browser
@@ -27,19 +26,15 @@ export function createSettingsController({state, action, navigate, closeModal,
       * @return {*} Result of this expression.
 */
   function promptDistillery(id = null) {
-    const current = id ? state.collection.distilleries.find(entry =>
-      entry.id === id) : null;
-    if (id && !current) return toast(t("features.errors.distilleryNotFound"),
-      true);
+    const current = id ? state.collection.distilleries.find(entry => entry.id === id) : null;
+    if (id && !current) return toast(t("features.errors.distilleryNotFound"), true);
     const nested = Boolean(query('#bottling-form') && state.modal);
     const coordinates = current ? locationFor(current) : null;
     showModal(
-      id ? t("features.distilleries.edit") :
-        t("forms.bottling.newDistillery"),
+      id ? t("features.distilleries.edit") : t("forms.bottling.newDistillery"),
       renderTemplate('distilleryForm', {
         id: id || '',
-        name: current?.name ||
-          '',
+        name: current?.name || '',
         content: composeMarkup([
           ["active", t("map.status.active")],
           ["closed", t("home.status.closed")],
@@ -48,8 +43,7 @@ export function createSettingsController({state, action, navigate, closeModal,
         ].map(([value, label]) =>
           renderTemplate('promptDistilleryOption', {
             value: value,
-            selected: (current?.status || "unknown") ===
-              value ? "selected" : "",
+            selected: (current?.status || "unknown") === value ? "selected" : "",
             label: label,
           }))),
         latitude: current?.latitude ?? coordinates?.lat ?? '',
@@ -63,8 +57,7 @@ export function createSettingsController({state, action, navigate, closeModal,
           label: t("common.actions.cancel"),
           action: 'close-modal',
         }),
-        id2: id ?
-          t("common.actions.save") : t("features.common.create"),
+        id2: id ? t("common.actions.save") : t("features.common.create"),
       }),
       false,
       nested
@@ -83,33 +76,24 @@ export function createSettingsController({state, action, navigate, closeModal,
     const form = event.target;
     const name = form.querySelector('[name="name"]').value.trim();
     const id = form.dataset.id;
-    const previousDistillery = id ? state.collection.distilleries
-      .find(entry => entry.id === id) : null;
-    const previousLocation = previousDistillery ?
-      locationFor(previousDistillery) : null;
+    const previousDistillery = id ? state.collection.distilleries.find(entry => entry.id === id) : null;
+    const previousLocation = previousDistillery ? locationFor(previousDistillery) : null;
     const status = form.elements.namedItem('status').value;
-    if (!name) return toast(t("features.validation.distilleryNameRequired"),
-      true);
-    const rawLat = form.elements.namedItem('latitude').value.trim()
-      .replace(',', '.');
-    const rawLon = form.elements.namedItem('longitude').value.trim()
-      .replace(',', '.');
-    if ((rawLat === '') !== (rawLon ===
-      '')) return toast(t("features.validation.coordinatesBothOrNone"), true);
+    if (!name) return toast(t("features.validation.distilleryNameRequired"), true);
+    const rawLat = form.elements.namedItem('latitude').value.trim().replace(',', '.');
+    const rawLon = form.elements.namedItem('longitude').value.trim().replace(',', '.');
+    if ((rawLat === '') !== (rawLon === '')) return toast(t("features.validation.coordinatesBothOrNone"), true);
     const latitude = rawLat === '' ? null : Number(rawLat);
     const longitude = rawLon === '' ? null : Number(rawLon);
-    if ((rawLat && !Number.isFinite(latitude)) || (rawLon &&
-      !Number.isFinite(longitude)) ||
-      (latitude !== null && Math.abs(latitude) > 90) || (longitude !==
-        null && Math.abs(longitude) > 180)) {
+    if ((rawLat && !Number.isFinite(latitude)) || (rawLon && !Number.isFinite(longitude)) ||
+      (latitude !== null && Math.abs(latitude) > 90) || (longitude !== null && Math.abs(longitude) > 180)) {
       return toast(t("features.validation.invalidCoordinates"), true);
     }
     const submit = form.querySelector('[type="submit"]');
     if (submit.disabled) return;
     submit.disabled = true;
     const saved = await action(async () => request(
-      id ? `/api/distilleries/${encodeURIComponent(id)}` :
-        '/api/distilleries',
+      id ? `/api/distilleries/${encodeURIComponent(id)}` : '/api/distilleries',
       {
         method: id ? 'PATCH' : 'POST',
         body: JSON.stringify({name, status, latitude, longitude}),
@@ -118,9 +102,7 @@ export function createSettingsController({state, action, navigate, closeModal,
     if (!saved.ok) {submit.disabled = false; return;}
     closeModal();
     const updatedLocation = locationFor(saved.value);
-    if (updatedLocation && (!previousLocation || previousLocation.lat !==
-      updatedLocation.lat
-      || previousLocation.lon !== updatedLocation.lon)) {
+    if (updatedLocation && (!previousLocation || previousLocation.lat !== updatedLocation.lat || previousLocation.lon !== updatedLocation.lon)) {
       onDistilleryLocationChanged?.(saved.value.id);
     }
     // Creating a new distillery from an open bottling form must preserve all
@@ -128,26 +110,19 @@ export function createSettingsController({state, action, navigate, closeModal,
     const parentForm = query('#bottling-form');
     if (!id && parentForm) {
       const options = parentForm.querySelector('.distillery-options');
-      if (options && ![...options.querySelectorAll(
-        'input[name="distilleryIds"]')].some(input => input.value ===
-          saved.value.id)) {
+      if (options && ![...options.querySelectorAll('input[name="distilleryIds"]')].some(input => input.value === saved.value.id)) {
         const label = document.createElement('label');
         label.className = 'distillery-option';
         replaceContent(label, renderTemplate('saveDistilleryInput', {
           id: saved.value.id,
           name: saved.value.name,
         }));
-        const matching = [...options.querySelectorAll('.distillery-option')]
-          .find(option =>
-            option.querySelector('span').textContent
-              .localeCompare(saved.value.name,
-                'de'
-              ) > 0);
+        const matching = [...options.querySelectorAll('.distillery-option')].find(option =>
+          option.querySelector('span').textContent.localeCompare(saved.value.name, 'de') > 0);
         options.insertBefore(label, matching || null);
       }
     }
-    toast(id ? t("features.notifications.distillerySaved") :
-      t("features.notifications.distilleryCreated"));
+    toast(id ? t("features.notifications.distillerySaved") : t("features.notifications.distilleryCreated"));
   }
 
   /**
@@ -157,18 +132,14 @@ export function createSettingsController({state, action, navigate, closeModal,
    */
   async function findDistilleryLocation() {
     const name = query('#distillery-name')?.value.trim();
-    if (!name) return toast(t(
-      "features.validation.distilleryNameRequiredForSearch"), true);
+    if (!name) return toast(t("features.validation.distilleryNameRequiredForSearch"), true);
     const output = query('#distillery-location-results');
     const button = query('[data-act="find-distillery-location"]');
     if (!output || !button) return;
     button.disabled = true;
     replaceContent(output, renderTemplate('hint'));
     try {
-      const matches = await request(
-        '/api/map/find-distillery',
-        {method: 'POST', body: JSON.stringify({name})}
-      );
+      const matches = await request('/api/map/find-distillery', {method: 'POST', body: JSON.stringify({name})});
       replaceContent(output, matches.length ?
         renderTemplate('hint2', {
           matches: composeMarkup(matches.map((candidate, index) =>
@@ -177,10 +148,8 @@ export function createSettingsController({state, action, navigate, closeModal,
               {
                 index: index,
                 name: candidate.name,
-                toFixed: candidate.latitude
-                  .toFixed(5),
-                toFixed2: candidate.longitude
-                  .toFixed(5),
+                toFixed: candidate.latitude.toFixed(5),
+                toFixed2: candidate.longitude.toFixed(5),
               }
             ))),
         }) :
@@ -253,13 +222,7 @@ export function createSettingsController({state, action, navigate, closeModal,
     closeModal(true);
     navigate('home', null, {replace: true});
     if (result.value?.inventoryConflicts?.length) {
-      toast(
-        t(
-          "features.import.inventoryConflicts",
-          {count: result.value.inventoryConflicts.length}
-        ),
-        true
-      );
+      toast(t("features.import.inventoryConflicts", {count: result.value.inventoryConflicts.length}), true);
     } else {
       toast(t("features.notifications.jsonImported"));
     }
@@ -276,9 +239,7 @@ export function createSettingsController({state, action, navigate, closeModal,
     const field = event.target.elements.namedItem('establishedYear');
     const raw = String(field.value).trim();
     const year = raw === '' ? null : Number(raw);
-    if (raw !== '' && (!/^\d{4}$/.test(raw) ||
-      !Number.isSafeInteger(year) || year < 1600 || year > new Date()
-        .getFullYear())) {
+    if (raw !== '' && (!/^\d{4}$/.test(raw) || !Number.isSafeInteger(year) || year < 1600 || year > new Date().getFullYear())) {
       return toast(t("features.validation.invalidFoundingYear"), true);
     }
     const button = event.target.querySelector('[type="submit"]');
@@ -288,8 +249,7 @@ export function createSettingsController({state, action, navigate, closeModal,
       method: 'PATCH', body: JSON.stringify({establishedYear: year}),
     }), {scope: 'collection'});
     if (!saved.ok) {button.disabled = false; return;}
-    toast(year === null ? t("features.notifications.foundingYearRemoved") :
-      t("features.notifications.foundingYearSaved"));
+    toast(year === null ? t("features.notifications.foundingYearRemoved") : t("features.notifications.foundingYearSaved"));
   }
   return {
     promptDistillery,

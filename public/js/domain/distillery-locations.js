@@ -15,8 +15,7 @@
  * positions from manually saved coordinates.
  */
 const approximateSites = `
-// International distilleries: locality-level estimates, not surveyed GPS \
-positions.
+// International distilleries: locality-level estimates, not surveyed GPS positions.
 Great Northern Distillery|54.0|-6.4
 Pearse Lyons|53.34|-6.28
 Dublin Liberties Distillery|53.34|-6.28
@@ -466,16 +465,10 @@ Yoker|55.892|-4.38
  * @param {string} name Name of the item.
  * @return {string} Resulting text.
  */
-export const normalizeDistilleryName = name => String(name || '')
-  .normalize('NFKD').toLocaleLowerCase('en')
-  .replace(/[’']/g, '').replace(/[^a-z0-9]+/g, ' ')
+export const normalizeDistilleryName = name => String(name || '').normalize('NFKD').toLocaleLowerCase('en').replace(/[’']/g, '').replace(/[^a-z0-9]+/g, ' ')
   .trim().replace(/^the /, '').replace(/ distillery$/, '');
 
-export const APPROXIMATE_LOCATIONS = new Map(approximateSites.trim()
-  .split('\n').map(row => {
-    const [name, lat, lon] = row.split('|');
-    return [
-      normalizeDistilleryName(name),
-      Object.freeze([Number(lat), Number(lon)]),
-    ];
-  }));
+export const APPROXIMATE_LOCATIONS = new Map(approximateSites.trim().split('\n').map(row => {
+  const [name, lat, lon] = row.split('|');
+  return [normalizeDistilleryName(name), Object.freeze([Number(lat), Number(lon)]),];
+}));

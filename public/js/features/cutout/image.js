@@ -17,11 +17,9 @@ async function loadImage(url) {
   image.src = url;
   if (typeof image.decode === 'function') await image.decode();
   else await new Promise((resolve, reject) => {
-    image.onload =
-      resolve; image.onerror = reject;
+    image.onload = resolve; image.onerror = reject;
   });
-  if (!image.naturalWidth ||
-    !image.naturalHeight) throw new Error(t('errors.images.openFailed'));
+  if (!image.naturalWidth || !image.naturalHeight) throw new Error(t('errors.images.openFailed'));
   return image;
 }
 
@@ -48,9 +46,7 @@ function canvas(width, height) {
  */
 export function cutoutExportSizes(cropHeight) {
   const native = Math.max(1, Math.min(4096, Math.ceil(cropHeight)));
-  return [native, 3200, 2800, 2400, 2000, 1600, 1280, 1024, 800]
-    .filter((size, index, all) => size > 0 && size <= native &&
-      all.indexOf(size) === index);
+  return [native, 3200, 2800, 2400, 2000, 1600, 1280, 1024, 800].filter((size, index, all) => size > 0 && size <= native && all.indexOf(size) === index);
 }
 
 /**
@@ -62,13 +58,7 @@ export function cutoutExportSizes(cropHeight) {
  * @return {string} Resulting text.
  */
 export function composeCutout(image, rawMask) {
-  const geometry = analyzeBottleMask(
-    rawMask,
-    MODEL_SIZE,
-    MODEL_SIZE,
-    image.naturalWidth,
-    image.naturalHeight
-  );
+  const geometry = analyzeBottleMask(rawMask, MODEL_SIZE, MODEL_SIZE, image.naturalWidth, image.naturalHeight);
   const sourceMask = canvas(MODEL_SIZE, MODEL_SIZE);
   const maskContext = sourceMask.getContext('2d');
   const pixels = maskContext.createImageData(MODEL_SIZE, MODEL_SIZE);
@@ -99,13 +89,7 @@ export function composeCutout(image, rawMask) {
     context.translate(-geometry.center.x, -geometry.center.y);
     context.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
     context.globalCompositeOperation = 'destination-in';
-    context.drawImage(
-      sourceMask,
-      0,
-      0,
-      image.naturalWidth,
-      image.naturalHeight
-    );
+    context.drawImage(sourceMask, 0, 0, image.naturalWidth, image.naturalHeight);
     context.globalCompositeOperation = 'source-over';
     context.resetTransform();
     // The segmentation model produces a wide semi-transparent halo at glass
@@ -131,11 +115,7 @@ export function composeCutout(image, rawMask) {
     if (geometry.verticallyTight) {
       for (let pass = 0; pass < 2; pass++) {
         const context = output.getContext('2d', {willReadFrequently: true});
-        const visible = visibleAlphaRows(
-          context.getImageData(0, 0, size.width, size.height).data,
-          size.width,
-          size.height
-        );
+        const visible = visibleAlphaRows(context.getImageData(0, 0, size.width, size.height).data, size.width, size.height);
         const next = tightenedCrop(crop, size, visible, geometry.objectWidth);
         if (next === crop) break;
         crop = next;
@@ -166,12 +146,10 @@ export async function cutoutImage(url, onProgress = () => {},
   const inputContext = input.getContext('2d', {willReadFrequently: true});
   // Segmentation sees the currently corrected colors; compositing uses the
   // untouched original, so slider corrections are applied once after cutting.
-  const segmentationImage = segmentationUrl ?
-    await loadImage(segmentationUrl) : image;
+  const segmentationImage = segmentationUrl ? await loadImage(segmentationUrl) : image;
   inputContext.drawImage(segmentationImage, 0, 0, MODEL_SIZE, MODEL_SIZE);
   onProgress('segmenting');
-  const mask = await segment(inputContext.getImageData(0, 0, MODEL_SIZE,
-    MODEL_SIZE));
+  const mask = await segment(inputContext.getImageData(0, 0, MODEL_SIZE, MODEL_SIZE));
   onProgress('compositing');
   return composeCutout(image, mask);
 }

@@ -42,8 +42,7 @@ import {bindEvents} from './js/events.js';
 import {createAuthController} from './js/features/auth/controller.js';
 import {loadTemplates} from './js/ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/app.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/app.html', import.meta.url));
 
 await initializeLanguage();
 const root = document.querySelector('#app');
@@ -178,10 +177,8 @@ function render() {
   if (state.page === 'warehouse') return warehouseView.render();
   if (state.page === 'tastings-home') return tastingsView.home();
   if (state.page === 'tasting-flight') return tastingsView.flight();
-  if (['tastings', 'external-tastings']
-    .includes(state.page)) return tastingsView.list();
-  if (['tasting', 'external-tasting']
-    .includes(state.page)) return tastingsView.editor();
+  if (['tastings', 'external-tastings'].includes(state.page)) return tastingsView.list();
+  if (['tasting', 'external-tasting'].includes(state.page)) return tastingsView.editor();
   if (state.page === 'detail') {
     return detail();
   }
@@ -200,8 +197,7 @@ function render() {
 async function refresh(scope = 'all') {
   const [_, meta] = await Promise.all([
     loadResources(state, requestCachedJson, scope),
-    state.version ? Promise.resolve({version: state.version}) :
-      request('/api/version').catch(() => ({version: ''})),
+    state.version ? Promise.resolve({version: state.version}) : request('/api/version').catch(() => ({version: ''})),
   ]);
   state.version = meta.version;
   if (state.page === 'map') mapView.refreshData();
@@ -260,12 +256,7 @@ window.addEventListener('wcm:auth-required', () => {
   auth.init().then(allowed => {if (!allowed) state.collection = null;})
     .catch(() => {});
 });
-auth.init().then(allowed => allowed ? refresh()
-  .then(externalImport.importFromExtension) : null).catch(error => {
-    replaceContent(root, renderTemplate('main', {
-      message: error.message,
-    }));
-    document.querySelector('#retry-connection').addEventListener('click',
-      () => location.reload()
-    );
-  });
+auth.init().then(allowed => allowed ? refresh().then(externalImport.importFromExtension) : null).catch(error => {
+  replaceContent(root, renderTemplate('main', {message: error.message, }));
+  document.querySelector('#retry-connection').addEventListener('click', () => location.reload());
+});

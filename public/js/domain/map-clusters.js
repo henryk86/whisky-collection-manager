@@ -26,8 +26,7 @@ export function clusterMapSites(sites, zoom, {pinnedId = null} = {}) {
     if (site.id !== pinnedId) {
       for (const group of groups) {
         if (group.pinned) continue;
-        const distanceSquared = (group.x - point.x) ** 2 + (group.y -
-          point.y) ** 2;
+        const distanceSquared = (group.x - point.x) ** 2 + (group.y - point.y) ** 2;
         if (distanceSquared < nearestSquared) {
           nearestSquared = distanceSquared;
           closest = group;
@@ -63,8 +62,7 @@ export function clusterMapSites(sites, zoom, {pinnedId = null} = {}) {
  */
 function spreadOverlappingSites(groups) {
   const visited = new Set();
-  const ordered = [...groups].sort((a, b) => String(a.sites[0].id)
-    .localeCompare(String(b.sites[0].id)));
+  const ordered = [...groups].sort((a, b) => String(a.sites[0].id).localeCompare(String(b.sites[0].id)));
   /**
    * Calculates the diameter numeric value.
    *
@@ -83,25 +81,18 @@ function spreadOverlappingSites(groups) {
       for (const other of ordered) {
         if (visited.has(other)) continue;
         const minDistance = (diameter(current) + diameter(other)) / 2 + 8;
-        if (Math.hypot(current.x - other.x, current.y - other.y) >=
-          minDistance) continue;
+        if (Math.hypot(current.x - other.x, current.y - other.y) >= minDistance) continue;
         visited.add(other);
         pending.push(other);
       }
     }
     if (component.length < 2) continue;
-    component.sort((a, b) => String(a.sites[0].id)
-      .localeCompare(String(b.sites[0].id)));
-    const anchorX = component.reduce((total, group) => total + group.x, 0) /
-      component.length;
-    const anchorY = component.reduce((total, group) => total + group.y, 0) /
-      component.length;
+    component.sort((a, b) => String(a.sites[0].id).localeCompare(String(b.sites[0].id)));
+    const anchorX = component.reduce((total, group) => total + group.x, 0) / component.length;
+    const anchorY = component.reduce((total, group) => total + group.y, 0) / component.length;
     const maxDiameter = Math.max(...component.map(diameter));
     // Distribute markers on a circle with enough separation for touch.
-    const radius = Math.max(
-      38,
-      (maxDiameter + 10) / (2 * Math.sin(Math.PI / component.length))
-    );
+    const radius = Math.max(38, (maxDiameter + 10) / (2 * Math.sin(Math.PI / component.length)));
     component.forEach((group, index) => {
       group.anchorX = group.x;
       group.anchorY = group.y;

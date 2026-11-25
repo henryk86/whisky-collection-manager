@@ -5,8 +5,7 @@
  * @param {*} photo Photo used by this operation.
  * @return {*} Result computed from the supplied inputs.
  */
-export const basePhotoPath = photo => photo?.cutout?.selected &&
-  photo.cutout.path ? photo.cutout.path : photo?.path || '';
+export const basePhotoPath = photo => photo?.cutout?.selected && photo.cutout.path ? photo.cutout.path : photo?.path || '';
 
 /**
  * Selects the photo's effective adjustment state for rendering.
@@ -28,8 +27,7 @@ export const activePhotoAdjustment = photo => {
  * @param {*} photo Photo used by this operation.
  * @return {*} Result computed from the supplied inputs.
  */
-export const displayPhotoPath = photo =>
-  activePhotoAdjustment(photo)?.path || basePhotoPath(photo);
+export const displayPhotoPath = photo => activePhotoAdjustment(photo)?.path || basePhotoPath(photo);
 
 /**
  * Keep edits visible when switching to a legacy cutout missing its own
@@ -41,8 +39,7 @@ export const displayPhotoPath = photo =>
  */
 export const initialPhotoAdjustmentSettings = photo =>
   activePhotoAdjustment(photo)?.settings ||
-  (photo?.cutout?.selected && photo.adjustment?.sourcePath === photo.path ?
-    photo.adjustment.settings : null);
+  (photo?.cutout?.selected && photo.adjustment?.sourcePath === photo.path ? photo.adjustment.settings : null);
 
 /**
  * The photo editor must also accept freshly uploaded images: absent adjustment
@@ -52,15 +49,12 @@ export const initialPhotoAdjustmentSettings = photo =>
  * @return {!Object} Structured result for the caller.
  */
 export const editorPhotoSourceSettings = photo => {
-  const original = photo?.adjustment?.sourcePath && photo.adjustment
-    .sourcePath === photo.path
-    ? photo.adjustment.settings : null;
+  const original = photo?.adjustment?.sourcePath && photo.adjustment.sourcePath === photo.path ? photo.adjustment.settings : null;
   const cutoutPath = photo?.cutout?.path;
   const cutout = cutoutPath
     ? (photo.cutout.adjustment?.sourcePath === cutoutPath
       ? photo.cutout.adjustment.settings
-      : (photo.adjustment?.sourcePath === cutoutPath ? photo.adjustment
-        .settings : null))
+      : (photo.adjustment?.sourcePath === cutoutPath ? photo.adjustment.settings : null))
     : null;
   return {original, cutout: cutout || original};
 };

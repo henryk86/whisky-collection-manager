@@ -23,16 +23,9 @@ test(
   }
 );
 test(
-  'routing: detail URL is stable across repeated navigation (no extra \
-history entry needed)',
+  'routing: detail URL is stable across repeated navigation (no extra history entry needed)',
   () => {
     const url = routeUrl('detail', 'abc-123');
-    assert.equal(
-      url,
-      routeUrl(
-        parseRoute(new URL(url, 'http://localhost').search).page,
-        'abc-123'
-      )
-    );
+    assert.equal(url, routeUrl(parseRoute(new URL(url, 'http://localhost').search).page, 'abc-123'));
   }
 );

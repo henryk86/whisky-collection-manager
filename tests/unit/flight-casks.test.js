@@ -31,8 +31,7 @@ const profile = {
 const bottle = (id, caskType, ageYears, tastedOn = '2026-11-01') => ({
   id, name: id, caskType, ageYears, abv: 46,
   distilleryIds: [id], bottles: [{id: `p-${id}`, status: 'open'}],
-  tastings: tastedOn ? [{id: `t-${id}`, tastedOn, flavorProfile: {...profile}},
-  ] : [],
+  tastings: tastedOn ? [{id: `t-${id}`, tastedOn, flavorProfile: {...profile}},] : [],
 });
 const sample = {
   bottlings: [
@@ -53,11 +52,7 @@ const sample = {
  * @param {*} options Options controlling the operation.
  * @return {!Array<*>} Resulting entries in their output order.
  */
-const plan = (collection, options) => suggestFlight(
-  collection,
-  {count: 3, style: 'similar', today: Date.parse('2026-11-23'), ...options}
-)
-  .map(item => item.bottlingId);
+const plan = (collection, options) => suggestFlight(collection, {count: 3, style: 'similar', today: Date.parse('2026-11-23'), ...options}).map(item => item.bottlingId);
 
 test(
   'cask descriptions retain categories, features and independent phases',
@@ -68,17 +63,11 @@ test(
       group: 'sherry', phase: 'finish',
       weight: 0.5, features: {style: ['oloroso']},
     });
-    assert.deepEqual(classifyCask('Pedro Ximénez PX').profiles[0].features,
-      {style: ['px']});
-    assert.ok(caskMatches(classifyCask('Olorosso'),
-      {sherry: {style: ['oloroso']}}));
-    assert.deepEqual(classifyCask('Sauternes and Port wine').groups,
-      {wine: 1, port: 1});
+    assert.deepEqual(classifyCask('Pedro Ximénez PX').profiles[0].features, {style: ['px']});
+    assert.ok(caskMatches(classifyCask('Olorosso'), {sherry: {style: ['oloroso']}}));
+    assert.deepEqual(classifyCask('Sauternes and Port wine').groups, {wine: 1, port: 1});
     assert.deepEqual(classifyCask('Mizunara Rum Finish').groups, {rum: 0.5});
-    assert.deepEqual(
-      classifyCask('refill oak cask'),
-      {groups: {}, profiles: []}
-    );
+    assert.deepEqual(classifyCask('refill oak cask'), {groups: {}, profiles: []});
     assert.deepEqual(classifyCask(''), {groups: {}, profiles: []});
   }
 );
@@ -157,23 +146,14 @@ test('all declared cask groups and dimensions have recognized examples', () => {
   for (const [group, {input, ...dimensions}] of Object.entries(examples)) {
     const result = classifyCask(input);
     assert.ok(caskMatches(result, {[group]: {}}), input);
-    assert.deepEqual(
-      Object.keys(result.groups),
-      group === 'unknown' ? [] : [group]
-    );
-    assert.deepEqual(
-      Object.keys(dimensions),
-      Object.keys(CASK_DIMENSIONS[group])
-    );
+    assert.deepEqual(Object.keys(result.groups), group === 'unknown' ? [] : [group]);
+    assert.deepEqual(Object.keys(dimensions), Object.keys(CASK_DIMENSIONS[group]));
     for (const [dimension, values] of Object.entries(dimensions)) {
       assert.deepEqual(Object.keys(values), CASK_DIMENSIONS[group][dimension]);
       for (const [value, text] of Object.entries(values)) {
         const classified = classifyCask(text);
         assert.deepEqual(Object.keys(classified.groups), [group], text);
-        assert.ok(
-          caskMatches(classified, {[group]: {[dimension]: [value]}}),
-          text
-        );
+        assert.ok(caskMatches(classified, {[group]: {[dimension]: [value]}}), text);
       }
     }
   }
@@ -191,39 +171,18 @@ test('cask matching uses OR between groups and values, AND per cask', () => {
   for (const text of ['Ruby Port', 'Port Cask', 'Bordeaux', 'Wine Cask',
     'White wine cask and sweet wine cask', 'Red wine, sweet wine', 'Rum'])
     assert.equal(caskMatches(classifyCask(text), selection), false, text);
-  assert.ok(caskMatches(
-    classifyCask('Bordeaux'),
-    {wine: {designation: ['bordeaux']}}
-  ));
-  assert.equal(
-    caskMatches(classifyCask('Bordeaux'), {wine: {color: ['redWine']}}),
-    false
-  );
+  assert.ok(caskMatches(classifyCask('Bordeaux'), {wine: {designation: ['bordeaux']}}));
+  assert.equal(caskMatches(classifyCask('Bordeaux'), {wine: {color: ['redWine']}}), false);
   assert.ok(caskMatches(classifyCask('Madeira Cask'), {madeira: {}}));
-  assert.equal(
-    caskMatches(classifyCask('Madeira Cask'), {madeira: {style: ['bual']}}),
-    false
-  );
-  assert.equal(
-    caskMatches(classifyCask('Sherry Wine Cask'), {wine: {}}),
-    false
-  );
+  assert.equal(caskMatches(classifyCask('Madeira Cask'), {madeira: {style: ['bual']}}), false);
+  assert.equal(caskMatches(classifyCask('Sherry Wine Cask'), {wine: {}}), false);
   assert.equal(caskMatches(classifyCask('Tawny Port Wine'), {wine: {}}), false);
   assert.equal(
-    caskMatches(
-      classifyCask('ginning airport supporter'),
-      {otherSpirit: {}, port: {}, beer: {}}
-    ),
+    caskMatches(classifyCask('ginning airport supporter'), {otherSpirit: {}, port: {}, beer: {}}),
     false
   );
   assert.ok(caskMatches(classifyCask('American white oak'), {unknown: {}}));
-  assert.equal(
-    caskMatches(
-      classifyCask('American white oak'),
-      {bourbon: {}, virginOak: {}, other: {}}
-    ),
-    false
-  );
+  assert.equal(caskMatches(classifyCask('American white oak'), {bourbon: {}, virginOak: {}, other: {}}), false);
   assert.ok(caskMatches(classifyCask('anything'), {}));
   assert.equal(validCaskFilters({rum: {style: ['tawny']}}), false);
   assert.equal(validCaskFilters({wine: {color: ['sauternes']}}), false);
@@ -240,21 +199,14 @@ test('specific maturation and finish must belong to the matching cask', () => {
   assert.equal(caskMatches(mixed, {bourbon: {}}, 'finish'), false);
   const withoutPunctuation = classifyCask('Bourbon cask finished in PX');
   assert.deepEqual(withoutPunctuation.groups, {bourbon: 1, sherry: 0.5});
-  assert.equal(
-    caskMatches(withoutPunctuation, {bourbon: {}}, 'maturation'),
-    true
-  );
+  assert.equal(caskMatches(withoutPunctuation, {bourbon: {}}, 'maturation'), true);
   const sameGroup = classifyCask('Oloroso maturation / PX finish');
-  assert.equal(
-    caskMatches(sameGroup, {sherry: {style: ['oloroso']}}, 'finish'),
-    false
-  );
+  assert.equal(caskMatches(sameGroup, {sherry: {style: ['oloroso']}}, 'finish'), false);
   assert.ok(caskMatches(sameGroup, {sherry: {style: ['px']}}, 'finish'));
   const numbered = classifyCask('21 Oloroso Sherry Butts');
   assert.equal(numbered.profiles[0].phase, 'unknown');
   assert.ok(caskMatches(numbered, {sherry: {}}, 'maturation'));
-  assert.ok(caskMatches(numbered,
-    {sherry: {style: ['oloroso']}}, 'maturation'));
+  assert.ok(caskMatches(numbered, {sherry: {style: ['oloroso']}}, 'maturation'));
   assert.equal(caskMatches(numbered, {sherry: {}}, 'finish'), false);
   assert.ok(caskMatches(classifyCask('Rum Cask'), {rum: {}}, 'maturation'));
   const unspecified = classifyCask('Sherry Cask');
@@ -262,8 +214,7 @@ test('specific maturation and finish must belong to the matching cask', () => {
   assert.ok(caskMatches(unspecified, {sherry: {}}, 'maturation'));
   assert.equal(caskMatches(unspecified, {sherry: {}}, 'finish'), false);
   assert.equal(caskMatches(unspecified, {port: {}}, 'maturation'), false);
-  assert.equal(caskMatches(unspecified,
-    {sherry: {style: ['px']}}, 'maturation'), false);
+  assert.equal(caskMatches(unspecified, {sherry: {style: ['px']}}, 'maturation'), false);
   assert.ok(caskMatches(classifyCask('Sauternes Finish'), {}, 'finish'));
 });
 
@@ -274,53 +225,24 @@ test(
     assert.equal(caskCoverage([multi]), 1);
     assert.equal(caskCoverage([classifyCask('Rum Finish')]), 0.5);
     assert.equal(caskCoverage([classifyCask('Unknown')]), 0);
-    assert.equal(
-      caskCoverage([classifyCask('Sauternes'), classifyCask('White Wine')]),
-      1
-    );
+    assert.equal(caskCoverage([classifyCask('Sauternes'), classifyCask('White Wine')]), 1);
     assert.equal(caskCoverage([multi], new Set(['bourbon'])), 0.75);
-    assert.equal(
-      caskDistance(classifyCask('Ruby Port'), classifyCask('Tawny Port')),
-      0.25
-    );
-    assert.ok(caskDistance(classifyCask('Colheita Port'),
-      classifyCask('Tawny Port')) < 0.25);
-    assert.equal(
-      caskDistance(
-        classifyCask('Bual Madeira'),
-        classifyCask('Sercial Madeira')
-      ),
-      0.25
-    );
-    assert.equal(
-      caskDistance(classifyCask('Sauternes'), classifyCask('White Wine')),
-      0
-    );
-    assert.equal(
-      caskDistance(classifyCask('Bual Madeira'), classifyCask('Rum')),
-      1
-    );
+    assert.equal(caskDistance(classifyCask('Ruby Port'), classifyCask('Tawny Port')), 0.25);
+    assert.ok(caskDistance(classifyCask('Colheita Port'), classifyCask('Tawny Port')) < 0.25);
+    assert.equal(caskDistance(classifyCask('Bual Madeira'), classifyCask('Sercial Madeira')), 0.25);
+    assert.equal(caskDistance(classifyCask('Sauternes'), classifyCask('White Wine')), 0);
+    assert.equal(caskDistance(classifyCask('Bual Madeira'), classifyCask('Rum')), 1);
   }
 );
 
 test(
-  'sherry subtype differences are smaller than Bourbon versus Sherry; \
-unknowns are not a fake zero',
+  'sherry subtype differences are smaller than Bourbon versus Sherry; unknowns are not a fake zero',
   () => {
-    assert.equal(
-      caskDistance(classifyCask('PX'), classifyCask('Oloroso')),
-      0.25
-    );
+    assert.equal(caskDistance(classifyCask('PX'), classifyCask('Oloroso')), 0.25);
     assert.equal(caskDistance(classifyCask('PX'), classifyCask('PX')), 0);
-    assert.equal(
-      caskDistance(classifyCask('Bourbon'), classifyCask('Sherry')),
-      1
-    );
+    assert.equal(caskDistance(classifyCask('Bourbon'), classifyCask('Sherry')), 1);
     assert.equal(caskDistance(classifyCask(''), classifyCask('Bourbon')), null);
-    assert.ok(caskDistance(
-      classifyCask('Bourbon / Oloroso Finish'),
-      classifyCask('Bourbon')
-    ) < 1);
+    assert.ok(caskDistance(classifyCask('Bourbon / Oloroso Finish'), classifyCask('Bourbon')) < 1);
   }
 );
 test(
@@ -338,15 +260,11 @@ test(
   }
 );
 test(
-  'similar defaults to comparable cask/age groups and explicit preferences \
-affect selection',
+  'similar defaults to comparable cask/age groups and explicit preferences affect selection',
   () => {
     assert.deepEqual(plan(sample, {}), ['bourbonA', 'bourbonB', 'bourbonC']);
     assert.deepEqual(
-      new Set(plan(
-        sample,
-        {caskMode: 'specific', caskFilters: {sherry: {style: ['px']}}}
-      )),
+      new Set(plan(sample, {caskMode: 'specific', caskFilters: {sherry: {style: ['px']}}})),
       new Set(['pxA', 'pxB', 'sherry'])
     );
     assert.deepEqual(
@@ -361,28 +279,20 @@ affect selection',
       new Set(['pxA', 'pxB'])
     );
     assert.deepEqual(
-      new Set(plan(
-        sample,
-        {ageMode: 'range', ageMin: 27, ageMax: 31, strictMatches: true}
-      )),
+      new Set(plan(sample, {ageMode: 'range', ageMin: 27, ageMax: 31, strictMatches: true})),
       new Set(['pxA', 'pxB'])
     );
     assert.deepEqual(
       new Set(plan(sample, {caskMode: 'variety', ageMode: 'variety'})),
       new Set(['pxA', 'wine', 'rum'])
     );
-    assert.ok(caskMatches(classifyCask('Pedro Ximenez'),
-      {sherry: {style: ['px']}}));
+    assert.ok(caskMatches(classifyCask('Pedro Ximenez'), {sherry: {style: ['px']}}));
   }
 );
 test(
-  'unavailable or unknown cask and age facts are neutral unless strict \
-constraints are active',
+  'unavailable or unknown cask and age facts are neutral unless strict constraints are active',
   () => {
-    const source = {
-      bottlings: [bottle('unknown', 'oak finish', null),
-      bottle('bourbon', 'bourbon', 10)],
-    };
+    const source = {bottlings: [bottle('unknown', 'oak finish', null), bottle('bourbon', 'bourbon', 10)], };
     assert.equal(plan(source, {count: 2}).length, 2);
     assert.deepEqual(
       plan(
@@ -396,17 +306,8 @@ constraints are active',
       ),
       []
     );
-    assert.deepEqual(
-      plan(
-        source,
-        {count: 2, ageMode: 'range', ageMin: 12, strictMatches: true}
-      ),
-      []
-    );
-    assert.deepEqual(
-      flightCandidates(source).find(item => item.bottling.id === 'unknown').age,
-      null
-    );
+    assert.deepEqual(plan(source, {count: 2, ageMode: 'range', ageMin: 12, strictMatches: true}), []);
+    assert.deepEqual(flightCandidates(source).find(item => item.bottling.id === 'unknown').age, null);
     assert.throws(() => plan(source, {caskMode: 'broken'}));
     assert.throws(() => plan(source, {
       ageMode: 'range', ageMin: 19,
@@ -415,13 +316,10 @@ constraints are active',
   }
 );
 test(
-  'balanced includes known cask families and discover can prefer families \
-not yet tasted',
+  'balanced includes known cask families and discover can prefer families not yet tasted',
   () => {
     const balanced = plan(sample, {style: 'balanced', count: 4});
-    const categories = balanced.map(id =>
-      Object.keys(classifyCask(sample.bottlings.find(b => b.id === id)
-        .caskType).groups)[0]);
+    const categories = balanced.map(id => Object.keys(classifyCask(sample.bottlings.find(b => b.id === id).caskType).groups)[0]);
     assert.equal(new Set(categories).size, 4);
     const collection = {
       bottlings: [
@@ -430,10 +328,7 @@ not yet tasted',
         bottle('newRum', 'Rum', 12, ''),
       ],
     };
-    const selected = plan(
-      collection,
-      {style: 'discover', count: 1, preferUnfamiliar: false}
-    );
+    const selected = plan(collection, {style: 'discover', count: 1, preferUnfamiliar: false});
     assert.deepEqual(selected, ['newRum']);
   }
 );
@@ -475,15 +370,10 @@ test(
         port: {style: ['tawny']},
       }, count: 6, strictMatches: true,
     };
-    assert.deepEqual(
-      new Set(plan(data, criteria)),
-      new Set(['sauternes', 'port'])
-    );
+    assert.deepEqual(new Set(plan(data, criteria)), new Set(['sauternes', 'port']));
     assert.equal(plan(data, {...criteria, strictMatches: false}).length, 6);
-    assert.deepEqual(new Set(plan(data, {...criteria, caskFilters: {rum: {}}})),
-      new Set(['rum']));
-    assert.throws(() => plan(data,
-      {...criteria, caskFilters: {rum: {style: ['px']}}}));
+    assert.deepEqual(new Set(plan(data, {...criteria, caskFilters: {rum: {}}})), new Set(['rum']));
+    assert.throws(() => plan(data, {...criteria, caskFilters: {rum: {style: ['px']}}}));
     assert.throws(() => plan(data, {...criteria, caskPhase: 'bogus'}));
   }
 );
@@ -506,26 +396,17 @@ test(
   () => {
     assert.deepEqual(classifyCask('Colheita Madeira').groups, {madeira: 1});
     assert.deepEqual(classifyCask('Non-fortified wine').groups, {wine: 1});
-    assert.ok(caskMatches(classifyCask('Port Colheita'),
-      {port: {style: ['tawny']}}));
-    assert.ok(caskMatches(classifyCask('Weißweinfässer'),
-      {wine: {color: ['whiteWine']}}));
+    assert.ok(caskMatches(classifyCask('Port Colheita'), {port: {style: ['tawny']}}));
+    assert.ok(caskMatches(classifyCask('Weißweinfässer'), {wine: {color: ['whiteWine']}}));
     assert.ok(caskMatches(classifyCask('Rumfass'), {rum: {}}));
-    assert.ok(caskMatches(classifyCask('Verdelho Madeira'),
-      {madeira: {style: ['verdelho']}}));
-    assert.equal(
-      caskMatches(classifyCask('Verdelho Wine'), {madeira: {}}),
-      false
-    );
+    assert.ok(caskMatches(classifyCask('Verdelho Madeira'), {madeira: {style: ['verdelho']}}));
+    assert.equal(caskMatches(classifyCask('Verdelho Wine'), {madeira: {}}), false);
   }
 );
 
 test('soft cask preferences reward only the requested maturation phase', () => {
   const data = {
-    bottlings: [
-      bottle('old', 'Oloroso maturation', 12, '2026-04-01'),
-      bottle('finish', 'Oloroso Finish', 12),
-    ],
+    bottlings: [bottle('old', 'Oloroso maturation', 12, '2026-04-01'), bottle('finish', 'Oloroso Finish', 12),],
   };
   const criteria = {
     style: 'discover', count: 1, caskMode: 'specific',
@@ -556,8 +437,7 @@ test('leading maturation phase extends across coordinated casks only', () => {
       [['bourbon', 'maturation', 1], ['sherry', 'unknown', 1]]],
   ]) {
     const result = classifyCask(text);
-    assert.deepEqual(result.profiles.map(p => [p.group, p.phase, p.weight]),
-      expected, text);
+    assert.deepEqual(result.profiles.map(p => [p.group, p.phase, p.weight]), expected, text);
   }
 });
 
@@ -581,10 +461,8 @@ test('adjacent wine modifiers combine on the same cask', () => {
     assert.equal(result.profiles.length, 1, text);
     assert.ok(caskMatches(result, selection), text);
   }
-  assert.ok(caskMatches(classifyCask('Sparkling White Wine'),
-    {wine: {color: ['whiteWine'], style: ['sparklingWine']}}));
-  assert.equal(caskMatches(classifyCask('Red Wine and Sweet Wine'),
-    selection), false);
+  assert.ok(caskMatches(classifyCask('Sparkling White Wine'), {wine: {color: ['whiteWine'], style: ['sparklingWine']}}));
+  assert.equal(caskMatches(classifyCask('Red Wine and Sweet Wine'), selection), false);
   assert.equal(caskMatches(classifyCask('Tawny Port Wine'), selection), false);
 });
 
@@ -602,8 +480,7 @@ test('maturation includes unspecified casks but excludes finishes', () => {
     caskMode: 'specific', caskPhase: 'maturation',
     caskFilters: {sherry: {}}, count: 4, strictMatches: true,
   };
-  assert.deepEqual(new Set(plan(data, criteria)),
-    new Set(['plain', 'numbered', 'aged']));
+  assert.deepEqual(new Set(plan(data, criteria)), new Set(['plain', 'numbered', 'aged']));
   assert.deepEqual(plan(data, {
     ...criteria,
     caskFilters: {sherry: {style: ['oloroso']}},

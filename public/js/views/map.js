@@ -15,8 +15,7 @@ import {createTileMap, mapCanvasHtml} from '../features/map/tile-map.js';
 import {matchingBottlingSites} from '../domain/bottling-map-focus.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/map.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/map.html', import.meta.url));
 
 
 const PAGE_LIMIT = 12;
@@ -47,8 +46,7 @@ const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
  * @param {number} count Number of items to process.
  * @return {number} Calculated numeric result.
  */
-export const legendMarkerDiameter = count =>
-  Math.max(21, Math.round(markerDiameter(count) * 0.62));
+export const legendMarkerDiameter = count => Math.max(21, Math.round(markerDiameter(count) * 0.62));
 const LEGEND_CLUSTER_DIAMETER = 27;
 /**
  * Renders the legend for distillery-map marker types.
@@ -73,8 +71,7 @@ export function mapLegendHtml(showAllDistilleries = false) {
     });
   const samples = composeMarkup([1, 10, 100].map(count =>
     renderTemplate('mapLegendItem', {
-      plural: plural(count,
-        t("forms.bottle.title"), t("forms.bottle.plural")),
+      plural: plural(count, t("forms.bottle.title"), t("forms.bottle.plural")),
       stockExample: stockExample(count, 'map-legend-stock-icon'),
     })));
   const emptySites = showAllDistilleries ?
@@ -83,10 +80,8 @@ export function mapLegendHtml(showAllDistilleries = false) {
       closedDistilleryIcon: closedDistilleryIcon,
     }) : '';
   return renderTemplate('mapLegend', {
-    stockExample: stockExample(1,
-      'map-legend-status-icon'),
-    stockExample2: stockExample(1,
-      'map-marker-closed map-legend-status-icon'),
+    stockExample: stockExample(1, 'map-legend-status-icon'),
+    stockExample2: stockExample(1, 'map-marker-closed map-legend-status-icon'),
     emptySites: emptySites,
     samples: samples,
     lEGENDCLUSTERDIAMETER: LEGEND_CLUSTER_DIAMETER,
@@ -129,14 +124,8 @@ export function createMapView({state, shell, navigate, settings}) {
         id: site.id,
       })));
     return renderTemplate('mapRelatedBottling', {
-      locationsFor: t(
-        "map.bottling.locationsFor",
-        {name: escapeHtml(relatedBottling.name)}
-      ),
-      mapRelatedSites: entries ? renderTemplate('mapRelatedSites', {
-        entries: entries,
-      }) :
-        renderTemplate('hint'),
+      locationsFor: t("map.bottling.locationsFor", {name: escapeHtml(relatedBottling.name)}),
+      mapRelatedSites: entries ? renderTemplate('mapRelatedSites', {entries: entries, }) : renderTemplate('hint'),
     });
   }
 
@@ -151,75 +140,43 @@ export function createMapView({state, shell, navigate, settings}) {
     return renderTemplate('sidebarHtml', {
       relatedSitesHtml: relatedSitesHtml(),
       length: sites.length ? '' : 'disabled',
-      option: sites.length && !selectedId ?
-        renderTemplate('sidebarHtmlOption') : '',
+      option: sites.length && !selectedId ? renderTemplate('sidebarHtmlOption') : '',
       length2: sites.length ? composeMarkup(sites.map(site =>
         renderTemplate('sidebarHtmlOption2', {
           id: site.id,
-          selected: site.id === selectedId ?
-            'selected' :
-            '',
+          selected: site.id === selectedId ? 'selected' : '',
           name: site.name,
-          bottleCount: site.bottleCount ? plural(
-            site.bottleCount,
-            t("forms.bottle.title"),
-            t("forms.bottle.plural")
-          ) : t("map.filters.withoutBottlesLowercase"),
+          bottleCount: site.bottleCount ? plural(site.bottleCount, t("forms.bottle.title"), t("forms.bottle.plural")) : t("map.filters.withoutBottlesLowercase"),
         }))) : renderTemplate('sidebarHtmlOption3'),
       mapSiteHeading: selected ?
         renderTemplate('mapSiteHeading', {
           name: selected.name,
           id: selected.id,
-          correctLocationFor: t(
-            "map.actions.correctLocationFor",
-            {name: escapeHtml(selected.name)}
-          ),
+          correctLocationFor: t("map.actions.correctLocationFor", {name: escapeHtml(selected.name)}),
           editIcon: editIcon,
-          plural: plural(
-            selected.bottlingCount,
-            t("forms.bottling.title"),
-            t("analytics.inventory.bottlings")
-          ),
-          plural2: plural(
-            selected.bottleCount,
-            t("forms.bottle.title"),
-            t("forms.bottle.plural")
-          ),
+          plural: plural(selected.bottlingCount, t("forms.bottling.title"), t("analytics.inventory.bottlings")),
+          plural2: plural(selected.bottleCount, t("forms.bottle.title"), t("forms.bottle.plural")),
           status: selected.status === 'closed' ? t("home.status.closed") :
             selected.status === 'reopened' ? t("map.status.reopened") :
-              selected.status === 'active' ? t("map.status.active") :
-                t("features.distilleries.unknownStatus"),
-          approximate: selected.location
-            ?.approximate ? t("features.map.approximateLocation") :
-            '',
+              selected.status === 'active' ? t("map.status.active") : t("features.distilleries.unknownStatus"),
+          approximate: selected.location?.approximate ? t("features.map.approximateLocation") : '',
           formField: selected.bottlingCount ?
             renderTemplate('formField', {
               search: search,
-              bottlingsAtSite: t(
-                "map.bottling.bottlingsAtSite",
-                {name: escapeHtml(selected.name)}
-              ),
+              bottlingsAtSite: t("map.bottling.bottlingsAtSite", {name: escapeHtml(selected.name)}),
               length: subset.length ? composeMarkup(subset.map(entry =>
                 renderTemplate('mapBottlingLink', {
                   id: entry.id,
                   name: entry.name,
-                  mapBottlingFacts: mapBottlingFacts(entry) ?
-                    renderTemplate('mapBottlingFacts', {
-                      mapBottlingFacts: mapBottlingFacts(entry),
-                    }) : '',
-                  plural: plural(
-                    entry.bottleCount,
-                    t("forms.bottle.title"),
-                    t("forms.bottle.plural")
-                  ),
+                  mapBottlingFacts: mapBottlingFacts(entry) ? renderTemplate('mapBottlingFacts', {mapBottlingFacts: mapBottlingFacts(entry), }) : '',
+                  plural: plural(entry.bottleCount, t("forms.bottle.title"), t("forms.bottle.plural")),
                 }))) :
                 renderTemplate('hint2'),
               mapListPager: totalPages > 1 ?
                 renderTemplate('mapListPager', {
                   disabled: page === 1 ? 'disabled' : '',
                   chevronLeftIcon: chevronLeftIcon,
-                  pageOf: t("map.pag\
-ination.pageOf", {page, total: totalPages}),
+                  pageOf: t("map.pagination.pageOf", {page, total: totalPages}),
                   disabled2: page === totalPages ? 'disabled' : '',
                   chevronRightIcon: chevronRightIcon,
                 }) : '',
@@ -233,16 +190,11 @@ ination.pageOf", {page, total: totalPages}),
    * @return {string} Resulting text.
    */
   function missingHtml() {
-    const filtered = missing.filter(site => site.name
-      .toLocaleLowerCase('de').includes(missingFilter.toLocaleLowerCase('de')));
+    const filtered = missing.filter(site => site.name.toLocaleLowerCase('de').includes(missingFilter.toLocaleLowerCase('de')));
     return renderTemplate('mapMissing', {
       content: !sites.length ? 'open' : '',
-      unmappedCount: t("map.statistics.unmappedCount", {count: missing.length}
-      ),
-      formField: missing.length > 6 ?
-        renderTemplate('formField2', {
-          missingFilter: missingFilter,
-        }) : '',
+      unmappedCount: t("map.statistics.unmappedCount", {count: missing.length}),
+      formField: missing.length > 6 ? renderTemplate('formField2', {missingFilter: missingFilter, }) : '',
       missingRows: missingRows(filtered),
     });
   }
@@ -260,10 +212,7 @@ ination.pageOf", {page, total: totalPages}),
           name: site.name,
           id: site.id,
         }))),
-      (items.length > 18 ? renderTemplate('hint5', {
-        moreResults: t("map.search\
-.moreResults", {count: items.length - 18}),
-      }) : '')
+      (items.length > 18 ? renderTemplate('hint5', {moreResults: t("map.search.moreResults", {count: items.length - 18}), }) : '')
     ) : renderTemplate('hint6');
   }
 
@@ -275,8 +224,7 @@ ination.pageOf", {page, total: totalPages}),
   function renderSidebar({focusSearch = false} = {}) {
     const sidebar = document.getElementById('map-sidebar');
     if (!sidebar) return;
-    replaceContent(sidebar, composeMarkup(sidebarHtml(), (missing.length > 0 ?
-      missingHtml() : '')));
+    replaceContent(sidebar, composeMarkup(sidebarHtml(), (missing.length > 0 ? missingHtml() : '')));
     if (focusSearch) {
       const field = document.getElementById('map-bottling-search');
       field?.focus();
@@ -305,25 +253,18 @@ ination.pageOf", {page, total: totalPages}),
    * Updates the sync sites state for its caller.
    */
   function syncSites() {
-    const mapData = buildDistilleryMap(
-      state.collection,
-      {includeAllDistilleries: showAllDistilleries}
-    );
+    const mapData = buildDistilleryMap(state.collection, {includeAllDistilleries: showAllDistilleries});
     sites = mapData.located;
     missing = mapData.missing;
-    relatedBottling = state.selected ? state.collection.bottlings
-      .find(entry => entry.id === state.selected) || null : null;
-    relatedSites = relatedBottling ?
-      matchingBottlingSites(relatedBottling, sites, missing) : [];
+    relatedBottling = state.selected ? state.collection.bottlings.find(entry => entry.id === state.selected) || null : null;
+    relatedSites = relatedBottling ? matchingBottlingSites(relatedBottling, sites, missing) : [];
     if (priorFocusId !== relatedBottling?.id) {
       selectedId = relatedSites.find(site => site.location)?.id || null;
       priorFocusId = relatedBottling?.id || null;
     }
     if (!sites.some(site => site.id === selectedId)) {
-      selectedId = relatedBottling ? (relatedSites.find(site =>
-        site.location)?.id || null)
-        : (sites.find(site => site.bottleCount > 0)?.id ||
-          sites[0]?.id || null);
+      selectedId = relatedBottling ? (relatedSites.find(site => site.location)?.id || null)
+        : (sites.find(site => site.bottleCount > 0)?.id || sites[0]?.id || null);
     }
   }
 
@@ -353,13 +294,10 @@ ination.pageOf", {page, total: totalPages}),
       document.querySelector('.map-stage')?.append(notice);
     }
     const summary = document.querySelector('.map-summary');
-    const locatedCount =
-      summary?.querySelector('[data-map-stat="located"] strong');
-    const bottleCount = summary?.querySelector(
-      '[data-map-stat="bottles"] strong');
+    const locatedCount = summary?.querySelector('[data-map-stat="located"] strong');
+    const bottleCount = summary?.querySelector('[data-map-stat="bottles"] strong');
     if (locatedCount) locatedCount.textContent = String(sites.length);
-    if (bottleCount) bottleCount.textContent =
-      String(sites.reduce((sum, site) => sum + site.bottleCount, 0));
+    if (bottleCount) bottleCount.textContent = String(sites.reduce((sum, site) => sum + site.bottleCount, 0));
     let missingCount = summary?.querySelector('[data-map-stat="missing"]');
     if (!missing.length) missingCount?.remove();
     else {
@@ -367,14 +305,8 @@ ination.pageOf", {page, total: totalPages}),
         missingCount = document.createElement('span');
         missingCount.dataset.mapStat = 'missing';
         const total = document.createElement('strong');
-        missingCount.append(
-          total,
-          document.createTextNode(` ${t("map.filters.withoutLocation")}`)
-        );
-        summary.insertBefore(
-          missingCount,
-          summary.querySelector('.map-all-toggle')
-        );
+        missingCount.append(total, document.createTextNode(` ${t("map.filters.withoutLocation")}`));
+        summary.insertBefore(missingCount, summary.querySelector('.map-all-toggle'));
       }
       missingCount.querySelector('strong').textContent = String(missing.length);
     }
@@ -401,15 +333,11 @@ ination.pageOf", {page, total: totalPages}),
       }),
       length: sites.length,
       bottleTotal: bottleTotal,
-      span: missing.length > 0 ?
-        renderTemplate('renderSpan', {
-          length: missing.length,
-        }) : '',
+      span: missing.length > 0 ? renderTemplate('renderSpan', {length: missing.length, }) : '',
       checked: showAllDistilleries ? 'checked' : '',
       mapCanvasHtml: mapCanvasHtml(),
       mapLegendHtml: mapLegendHtml(showAllDistilleries),
-      mapNoSites: !sites.length ?
-        renderTemplate('mapNoSites') : '',
+      mapNoSites: !sites.length ? renderTemplate('mapNoSites') : '',
     }));
     renderSidebar();
     tileMap = createTileMap(
@@ -419,8 +347,7 @@ ination.pageOf", {page, total: totalPages}),
       selectedId,
       {
         showAllDistilleries,
-        focusSiteIds: relatedSites.filter(site => site.location).map(site =>
-          site.id),
+        focusSiteIds: relatedSites.filter(site => site.location).map(site => site.id),
         initialView,
       }
     );
@@ -436,10 +363,8 @@ ination.pageOf", {page, total: totalPages}),
     else if (target.dataset.mapPage) {
       page += target.dataset.mapPage === 'next' ? 1 : -1;
       renderSidebar();
-    } else if (target.dataset.mapBottling) navigate('detail', target.dataset
-      .mapBottling);
-    else if (target.dataset
-      .mapEdit) settings.promptDistillery(target.dataset.mapEdit);
+    } else if (target.dataset.mapBottling) navigate('detail', target.dataset.mapBottling);
+    else if (target.dataset.mapEdit) settings.promptDistillery(target.dataset.mapEdit);
   }
 
   /**
@@ -452,8 +377,7 @@ ination.pageOf", {page, total: totalPages}),
     else if (target.id === 'map-all-distilleries') {
       showAllDistilleries = target.checked;
       try {
-        localStorage.setItem(ALL_SITES_PREF, showAllDistilleries ?
-          '1' : '0');
+        localStorage.setItem(ALL_SITES_PREF, showAllDistilleries ? '1' : '0');
       }
       catch { /* No persistent browser storage. */}
       refreshData();
@@ -473,9 +397,7 @@ ination.pageOf", {page, total: totalPages}),
     } else if (target.id === 'map-missing-search') {
       missingFilter = target.value;
       const panel = document.getElementById('map-missing-list');
-      if (panel) replaceContent(panel, missingRows(missing.filter(site =>
-        site.name.toLocaleLowerCase('de')
-          .includes(missingFilter.toLocaleLowerCase('de')))));
+      if (panel) replaceContent(panel, missingRows(missing.filter(site => site.name.toLocaleLowerCase('de').includes(missingFilter.toLocaleLowerCase('de')))));
     }
   }
 

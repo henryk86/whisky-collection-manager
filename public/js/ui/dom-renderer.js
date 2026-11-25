@@ -3,8 +3,7 @@ import {RenderPlan, SLOT, slotValue} from './render-plan.js';
 
 const templates = new WeakMap();
 const marker = /wcm-slot-(\d+)-end/g;
-const tagName = new RegExp(
-  '^(?:a|article|button|dd|div|dl|dt|h2|h3|p|section|span|strong)$');
+const tagName = new RegExp('^(?:a|article|button|dd|div|dl|dt|h2|h3|p|section|span|strong)$');
 const attributeName = /^[a-zA-Z_:][\w:.-]*$/;
 const htmlNamespace = 'http://www.w3.org/1999/xhtml';
 const xlinkNamespace = 'http://www.w3.org/1999/xlink';
@@ -17,8 +16,7 @@ const entities = {'amp': '&', 'lt': '<', 'gt': '>', 'quot': '"', '#39': "'"};
  * @return {string} Literal DOM text.
  */
 function unescapeText(value) {
-  return String(value).replace(/&(amp|lt|gt|quot|#39);/g,
-    (_, name) => entities[name]);
+  return String(value).replace(/&(amp|lt|gt|quot|#39);/g, (_, name) => entities[name]);
 }
 
 /**
@@ -27,8 +25,7 @@ function unescapeText(value) {
  * @return {string} Validated name.
  */
 function checkedAttribute(name) {
-  if (!attributeName.test(name) || /^on/i.test(name) ||
-    name.toLowerCase() === 'srcdoc') {
+  if (!attributeName.test(name) || /^on/i.test(name) || name.toLowerCase() === 'srcdoc') {
     throw new Error(`Invalid template attribute: ${name}`);
   }
   return name;
@@ -45,8 +42,7 @@ function bindAttributes(element, value) {
   while (remaining) {
     const match = remaining.match(pattern);
     if (!match) throw new Error('Invalid template attribute list');
-    element.setAttribute(checkedAttribute(match[1]),
-      unescapeText(match[2] ?? match[3] ?? match[4] ?? ''));
+    element.setAttribute(checkedAttribute(match[1]), unescapeText(match[2] ?? match[3] ?? match[4] ?? ''));
     remaining = remaining.slice(match[0].length).trim();
   }
 }
@@ -132,8 +128,7 @@ function textValue(plan, slot) {
 function cloneStatic(doc, context, source) {
   if (!templates.has(doc)) templates.set(doc, new Map());
   const cache = templates.get(doc);
-  const key = `${context?.namespaceURI || htmlNamespace}:${context?.localName ||
-    'template'}:${source}`;
+  const key = `${context?.namespaceURI || htmlNamespace}:${context?.localName || 'template'}:${source}`;
   if (!cache.has(key)) {
     let fragment;
     if (context) {
@@ -157,8 +152,7 @@ function cloneStatic(doc, context, source) {
  * @param {string} value Literal bound value.
  */
 function setAttribute(element, name, value) {
-  const namespace = name.startsWith('xlink:') ? xlinkNamespace :
-    name.startsWith('xml:') ? xmlNamespace : null;
+  const namespace = name.startsWith('xlink:') ? xlinkNamespace : name.startsWith('xml:') ? xmlNamespace : null;
   if (namespace) element.setAttributeNS(namespace, name, value);
   else element.setAttribute(name, value);
 }
@@ -180,15 +174,13 @@ function bind(root, plan, slots, boundAttributes, doc, context) {
       if (bound) {
         const {name, value} = boundAttributes[Number(bound[1])];
         root.removeAttribute(attr.name);
-        setAttribute(root, name, value.replace(marker, (_, index) =>
-          textValue(plan, slots[Number(index)])));
+        setAttribute(root, name, value.replace(marker, (_, index) => textValue(plan, slots[Number(index)])));
       } else if (dynamic) {
         const {mode, key} = slots[Number(dynamic[1])];
         root.removeAttribute(attr.name);
         bindAttributes(root, slotValue(plan, mode, key));
       } else {
-        const value = attr.value.replace(marker, (_, index) =>
-          textValue(plan, slots[Number(index)]));
+        const value = attr.value.replace(marker, (_, index) => textValue(plan, slots[Number(index)]));
         if (value !== attr.value) setAttribute(root, attr.name, value);
       }
     }
@@ -198,16 +190,13 @@ function bind(root, plan, slots, boundAttributes, doc, context) {
     if (match) {
       const slot = slots[Number(match[1])];
       const value = slotValue(plan, slot.mode, slot.key);
-      const fragment = slot.mode === 'raw' ?
-        materialize(value, doc, context) :
-        doc.createTextNode(String(value ?? ''));
+      const fragment = slot.mode === 'raw' ? materialize(value, doc, context) : doc.createTextNode(String(value ?? ''));
       root.replaceWith(fragment);
       return;
     }
   } else if (root.nodeType === 3) {
     // Raw-text elements such as textarea retain comment markers as text.
-    root.data = root.data.replace(/<!--wcm-slot-(\d+)-end-->/g,
-      (_, index) => textValue(plan, slots[Number(index)]));
+    root.data = root.data.replace(/<!--wcm-slot-(\d+)-end-->/g, (_, index) => textValue(plan, slots[Number(index)]));
   }
   for (const child of [...root.childNodes]) {
     bind(child, plan, slots, boundAttributes, doc, context);
@@ -228,8 +217,7 @@ export function materialize(value, doc, context = null) {
   }
   if (value.parts) {
     const group = doc.createDocumentFragment();
-    for (const part of value.parts) group.append(materialize(part, doc,
-      context));
+    for (const part of value.parts) group.append(materialize(part, doc, context));
     return group;
   }
   const {markup, slots, boundAttributes} = prepare(value);
@@ -270,6 +258,5 @@ export function appendContent(host, value) {
  * @param {*} value Render plan or native node.
  */
 export function replaceElement(element, value) {
-  element.replaceWith(materialize(value, element.ownerDocument,
-    element.parentElement));
+  element.replaceWith(materialize(value, element.ownerDocument, element.parentElement));
 }

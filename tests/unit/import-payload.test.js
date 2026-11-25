@@ -37,18 +37,9 @@ test(
         whiskybaseUrl: 'https://whiskybase.com/whiskies/whisky/15/example',
       },
     };
-    assert.equal(
-      Object.hasOwn(
-        normalizeImportPayload(raw, {referenceId: 'EX-15'}).fields,
-        'whiskybaseId'
-      ),
-      false
-    );
+    assert.equal(Object.hasOwn(normalizeImportPayload(raw, {referenceId: 'EX-15'}).fields, 'whiskybaseId'), false);
     assert.equal(validateExtensionPayload(raw).fields.whiskybaseId, '15');
-    assert.equal(
-      validateExtensionPayload(raw).fields.whiskybaseUrl,
-      raw.fields.whiskybaseUrl
-    );
+    assert.equal(validateExtensionPayload(raw).fields.whiskybaseUrl, raw.fields.whiskybaseUrl);
     assert.throws(() => validateExtensionPayload({
       ...raw,
       fields: {...raw.fields, whiskybaseUrl: 'https://evil.invalid/'},
@@ -57,34 +48,18 @@ test(
 );
 
 test(
-  'generic payload rejects missing names, unsafe image tokens and malformed \
-schemas',
+  'generic payload rejects missing names, unsafe image tokens and malformed schemas',
   () => {
     const raw = {version: 2, source: 'external', fields: {name: 'Example'}};
     assert.throws(
-      () => normalizeImportPayload(
-        {...raw, imageToken: '../../../bad'},
-        {referenceId: 'EXT-1'}
-      ),
+      () => normalizeImportPayload({...raw, imageToken: '../../../bad'}, {referenceId: 'EXT-1'}),
       /Bild-Token/
     );
     assert.throws(
-      () => normalizeImportPayload(
-        {...raw, fields: {name: '  '}},
-        {referenceId: 'EXT-1'}
-      ),
+      () => normalizeImportPayload({...raw, fields: {name: '  '}}, {referenceId: 'EXT-1'}),
       /Whiskyname/
     );
-    assert.throws(
-      () => normalizeImportPayload({...raw, fields: []}, {
-        referenceId:
-          'EXT-1',
-      }),
-      /Importdaten/
-    );
-    assert.throws(
-      () => normalizeImportPayload(raw, {referenceId: ''}),
-      /Importdaten/
-    );
+    assert.throws(() => normalizeImportPayload({...raw, fields: []}, {referenceId: 'EXT-1', }), /Importdaten/);
+    assert.throws(() => normalizeImportPayload(raw, {referenceId: ''}), /Importdaten/);
   }
 );

@@ -20,8 +20,7 @@ const viewportMetrics = () => ({
 
 // Additional contract across real page markup, not a regex on CSS source.
 test(
-  'browser: closure headers, detail grids and empty states remain aligned \
-in four sizes and both themes',
+  'browser: closure headers, detail grids and empty states remain aligned in four sizes and both themes',
   async () => {
     await session(async ({page, open, base}) => {
       const {bottling} = await seed(base, '009911');
@@ -42,25 +41,11 @@ in four sizes and both themes',
               theme
             );
             const geometry = await page.evaluate(viewportMetrics);
-            assert.ok(
-              geometry.main > 0 && geometry.main <= width + 1,
-              `${query}/${width}/${theme}: main width`
-            );
-            assert.ok(
-              geometry.header > 0,
-              `${query}/${width}/${theme}: header rendered`
-            );
-            assert.ok(
-              geometry.overflow <= 1,
-              `${query}/${width}/${theme}: horizontal overflow`
-            );
-            const repeated =
-              await page.locator('[data-ds-panel="standard"] .panel').count();
-            assert.equal(
-              repeated,
-              0,
-              `${query}: shared panels must not contain duplicate panel borders`
-            );
+            assert.ok(geometry.main > 0 && geometry.main <= width + 1, `${query}/${width}/${theme}: main width`);
+            assert.ok(geometry.header > 0, `${query}/${width}/${theme}: header rendered`);
+            assert.ok(geometry.overflow <= 1, `${query}/${width}/${theme}: horizontal overflow`);
+            const repeated = await page.locator('[data-ds-panel="standard"] .panel').count();
+            assert.equal(repeated, 0, `${query}: shared panels must not contain duplicate panel borders`);
           }
         }
       }
@@ -103,11 +88,7 @@ test(
             svg: icon.querySelectorAll('svg').length,
           };
         }, html);
-        assert.equal(
-          data.height,
-          data.without,
-          `${width}: help icon must not change line box`
-        );
+        assert.equal(data.height, data.without, `${width}: help icon must not change line box`);
         assert.ok(data.height > 0 && parseFloat(data.lineHeight) > 0);
         assert.equal(data.label, 'Hilfe');
         assert.equal(data.svg, 1);
@@ -117,23 +98,20 @@ test(
 );
 
 test(
-  'browser: closure button variants and invalid form states remain keyboard \
-accessible',
+  'browser: closure button variants and invalid form states remain keyboard accessible',
   async () => {
     await session(async ({page, open}) => {
       await open();
-      const examples = ['primary', 'secondary', 'destructive', 'text', 'icon']
-        .map(variant =>
-          actionButton({
-            label: variant,
-            variant,
-            iconOnly: variant === 'icon',
-            disabled: variant === 'destructive',
-            loading: variant === 'primary',
-          })).join('');
+      const examples = ['primary', 'secondary', 'destructive', 'text', 'icon'].map(variant =>
+        actionButton({
+          label: variant,
+          variant,
+          iconOnly: variant === 'icon',
+          disabled: variant === 'destructive',
+          loading: variant === 'primary',
+        })).join('');
       const styles = await page.evaluate(html => {
-        const host = document.createElement('div'); host.innerHTML =
-          html; document.querySelector('main').append(host);
+        const host = document.createElement('div'); host.innerHTML = html; document.querySelector('main').append(host);
         const buttons = [...host.querySelectorAll('button')].map(button => ({
           width: button.getBoundingClientRect().width,
           disabled: button.disabled, busy: button.getAttribute('aria-busy'),
@@ -148,26 +126,11 @@ accessible',
       await page.locator('header [data-act="new"]').click();
       const form = page.locator('#bottling-form');
       await form.waitFor({state: 'visible'});
-      assert.equal(
-        await form.locator('[name="name"]').evaluate(field => field.required),
-        true
-      );
-      assert.equal(
-        await form.evaluate(el => el.checkValidity()),
-        false,
-        'required name invalid'
-      );
+      assert.equal(await form.locator('[name="name"]').evaluate(field => field.required), true);
+      assert.equal(await form.evaluate(el => el.checkValidity()), false, 'required name invalid');
       await form.locator('button[type="submit"]').click();
-      assert.equal(
-        await form.count(),
-        1,
-        'invalid submission keeps the form open'
-      );
-      assert.equal(
-        await form.locator('[name="name"]').evaluate(el => el.validity
-          .valueMissing),
-        true
-      );
+      assert.equal(await form.count(), 1, 'invalid submission keeps the form open');
+      assert.equal(await form.locator('[name="name"]').evaluate(el => el.validity.valueMissing), true);
       await page.keyboard.press('Escape');
       assert.equal(await page.locator('#modal-root .dialog').count(), 0);
     });
@@ -175,14 +138,12 @@ accessible',
 );
 
 test(
-  'browser: closure repeated modal cycles restore focus, scroll and \
-scrollbar geometry',
+  'browser: closure repeated modal cycles restore focus, scroll and scrollbar geometry',
   async () => {
     await session(async ({page, open}) => {
       await open();
       await page.evaluate(() => {
-        document.querySelector('main').style
-          .minHeight = '1900px'; window.scrollTo(0, 490);
+        document.querySelector('main').style.minHeight = '1900px'; window.scrollTo(0, 490);
       });
       const initial = await page.evaluate(() => ({
         scroll: scrollY,
@@ -194,22 +155,14 @@ scrollbar geometry',
         // Do not scroll the background by clicking an offscreen trigger through
         // Playwright.
         await page.evaluate(() => {
-          const button =
-            document.querySelector('header [data-act="new"]');
+          const button = document.querySelector('header [data-act="new"]');
           button.focus({preventScroll: true}); button.click();
         });
         await page.locator('#modal-root .ds-modal').waitFor({state: 'visible'});
-        assert.equal(
-          await page.evaluate(() => document.querySelector('main').inert),
-          true
-        );
+        assert.equal(await page.evaluate(() => document.querySelector('main').inert), true);
         await page.locator('#modal-root .ds-modal-close').focus();
         await page.keyboard.press('Tab');
-        assert.equal(
-          await page.evaluate(() => Boolean(document.activeElement
-            .closest('#modal-root'))),
-          true
-        );
+        assert.equal(await page.evaluate(() => Boolean(document.activeElement.closest('#modal-root'))), true);
         const locked = await page.evaluate(() => ({
           left: document.querySelector('main').getBoundingClientRect().left,
           width: document.querySelector('main').getBoundingClientRect().width,
@@ -222,10 +175,7 @@ scrollbar geometry',
           scroll: scrollY, inert: document.querySelector('main').inert,
           focus: document.activeElement.matches('header [data-act="new"]'),
         }));
-        assert.ok(
-          Math.abs(restored.scroll - initial.scroll) <= 1,
-          `cycle ${cycle}: background scroll restored`
-        );
+        assert.ok(Math.abs(restored.scroll - initial.scroll) <= 1, `cycle ${cycle}: background scroll restored`);
         assert.equal(restored.inert, false); assert.equal(restored.focus, true);
       }
     });
@@ -233,14 +183,11 @@ scrollbar geometry',
 );
 
 test(
-  'browser: closure long titles, missing values and languages do not \
-overflow mobile viewport',
+  'browser: closure long titles, missing values and languages do not overflow mobile viewport',
   async () => {
     await session(async ({page, open, base}) => {
       const response = await requestJson(base, '/api/bottlings', 'POST', {
-        name: 'A deliberately exceptionally long whisky bottling title with \
-additional marketing descriptors and a few words beyond what a phone can \
-show on a single line',
+        name: 'A deliberately exceptionally long whisky bottling title with additional marketing descriptors and a few words beyond what a phone can show on a single line',
         description: 'Beschreibung und ergänzende Notizen. '.repeat(25),
         firstBottle: {inventoryNumber: '009912', status: 'closed'},
       });
@@ -260,10 +207,7 @@ show on a single line',
         assert.equal((await nav.innerText()).trim(), expected);
         assert.equal(await nav.locator('svg').count(), 1);
         assert.equal((await nav.innerText()).includes('←'), false);
-        assert.ok(
-          (await page.evaluate(viewportMetrics)).overflow <= 1,
-          `${language}: no overflow`
-        );
+        assert.ok((await page.evaluate(viewportMetrics)).overflow <= 1, `${language}: no overflow`);
       }
     });
   }

@@ -35,7 +35,6 @@ test('CSS colour check finds colour keywords but ignores comments', () => {
 test('CSS colour check finds missing design tokens across stylesheets', () => {
   assert.deepEqual(missingDesignTokens([
     ':root { --ds-color-surface: #fff; }',
-    '.panel { background: var(--ds-color-surface); ' +
-    'color: var(--ds-color-missing); }',
+    '.panel { background: var(--ds-color-surface); ' + 'color: var(--ds-color-missing); }',
   ]), ['--ds-color-missing']);
 });

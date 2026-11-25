@@ -23,10 +23,7 @@ function fakeDocument() {
      * @return {*} Whether the requested condition is met.
      */
     querySelector(selector) {
-      return selector === '.toast'
-        ? this.children.find(node => node.className?.split(' ')
-          .includes('toast')) || null
-        : null;
+      return selector === '.toast' ? this.children.find(node => node.className?.split(' ').includes('toast')) || null : null;
     },
   };
   /**
@@ -65,8 +62,7 @@ function fakeDocument() {
        * Updates the remove state for its caller.
        */
       remove() {
-        if (this.parent) this.parent.children.splice(this.parent.children
-          .indexOf(this), 1);
+        if (this.parent) this.parent.children.splice(this.parent.children.indexOf(this), 1);
         this.parent = null;
       },
     };
@@ -86,8 +82,7 @@ function fakeDocument() {
 }
 
 test(
-  'error toast is dismissible by an accessible close button and still \
-auto-expires',
+  'error toast is dismissible by an accessible close button and still auto-expires',
   () => {
     const oldDocument = globalThis.document;
     const oldSetTimeout = globalThis.setTimeout;
@@ -113,29 +108,18 @@ auto-expires',
       assert.match(close.innerHTML, /<svg/);
       assert.equal(scheduled[0].delay, 4600);
       close.listeners.click();
-      assert.equal(
-        doc.body.children.length,
-        0,
-        'close removes the notification immediately'
-      );
+      assert.equal(doc.body.children.length, 0, 'close removes the notification immediately');
       scheduled[0].callback();
-      assert.equal(
-        doc.body.children.length,
-        0,
-        'automatic cleanup is harmless after manual close'
-      );
+      assert.equal(doc.body.children.length, 0, 'automatic cleanup is harmless after manual close');
     } finally {
-      if (oldDocument ===
-        undefined) delete globalThis.document; else globalThis.document =
-          oldDocument;
+      if (oldDocument === undefined) delete globalThis.document; else globalThis.document = oldDocument;
       globalThis.setTimeout = oldSetTimeout;
     }
   }
 );
 
 test(
-  'success toast remains unchanged and a second toast replaces the previous \
-notification',
+  'success toast remains unchanged and a second toast replaces the previous notification',
   () => {
     const oldDocument = globalThis.document;
     const oldSetTimeout = globalThis.setTimeout;
@@ -148,16 +132,10 @@ notification',
       assert.equal(doc.body.children.length, 1);
       const note = doc.body.children[0];
       assert.equal(note.className, 'toast');
-      assert.equal(
-        note.children.length,
-        0,
-        'no extra close control on success toasts'
-      );
+      assert.equal(note.children.length, 0, 'no extra close control on success toasts');
       assert.equal(note.textContent, 'Gespeichert');
     } finally {
-      if (oldDocument ===
-        undefined) delete globalThis.document; else globalThis.document =
-          oldDocument;
+      if (oldDocument === undefined) delete globalThis.document; else globalThis.document = oldDocument;
       globalThis.setTimeout = oldSetTimeout;
     }
   }

@@ -76,8 +76,7 @@ function render({bottlingFields = {}, bottleFields = {}} = {}) {
 }
 
 test(
-  'bottling detail displays persisted editable metadata including \
-Whiskybase ID',
+  'bottling detail displays persisted editable metadata including Whiskybase ID',
   () => {
     const html = render({
       bottlingFields: {
@@ -121,8 +120,7 @@ Whiskybase ID',
 );
 
 test(
-  'bottle detail shows opening date, personal comment, type and all other \
-stored bottle facts',
+  'bottle detail shows opening date, personal comment, type and all other stored bottle facts',
   () => {
     const html = render({
       bottleFields: {
@@ -140,16 +138,10 @@ stored bottle facts',
     assert.match(html, /Öffnungsdatum<\/dt><dd>18\.10\.2026<\/dd>/);
     assert.match(html, /Leerdatum<\/dt><dd>20\.11\.2026<\/dd>/);
     assert.match(html, /Persönlicher Kommentar<\/dt>/);
-    assert.match(
-      html,
-      /Meine Notiz\nZweite Zeile &lt;script&gt;alert\(1\)&lt;\/script&gt;/
-    );
+    assert.match(html, /Meine Notiz\nZweite Zeile &lt;script&gt;alert\(1\)&lt;\/script&gt;/);
     assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
     assert.match(html, /Flaschentyp<\/dt><dd>Sample \/ Probeflasche<\/dd>/);
-    assert.match(
-      html,
-      /Kauf<\/dt><dd>12\.2\.2025<\/dd>|Kauf<\/dt><dd>12\.02\.2025<\/dd>/
-    );
+    assert.match(html, /Kauf<\/dt><dd>12\.2\.2025<\/dd>|Kauf<\/dt><dd>12\.02\.2025<\/dd>/);
     assert.match(html, /Preis<\/dt><dd>9\.95 GBP<\/dd>/);
     assert.match(html, /Händler<\/dt><dd>Händler Z<\/dd>/);
     assert.match(html, /Füllmenge<\/dt><dd>50 ml<\/dd>/);
@@ -159,8 +151,7 @@ stored bottle facts',
 );
 
 test(
-  'empty optional bottle fields are omitted; standard bottle type is still \
-explicit',
+  'empty optional bottle fields are omitted; standard bottle type is still explicit',
   () => {
     const html = render({
       bottleFields: {
@@ -173,10 +164,6 @@ explicit',
     assert.doesNotMatch(html, /Persönlicher Kommentar<\/dt>/);
     assert.match(html, /Flaschentyp<\/dt><dd>Normale Flasche<\/dd>/);
     assert.doesNotMatch(html, /Preis<\/dt>/);
-    assert.equal(
-      bottlingDetails({whiskybaseId: '   ', distilleryIds: []}, () =>
-        '', []).length,
-      0
-    );
+    assert.equal(bottlingDetails({whiskybaseId: '   ', distilleryIds: []}, () => '', []).length, 0);
   }
 );

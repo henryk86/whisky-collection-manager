@@ -5,8 +5,7 @@ import {textInput} from '../../ui/fields.js';
 import {supportedFormats, cameraConfig} from './config.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/controller.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/controller.html', import.meta.url));
 
 /**
  * Camera lifecycle only. Inventory lookup lives in resolve-code.js.
@@ -47,8 +46,7 @@ export function createScanner({state, showModal, resolveCode}) {
     if (name === 'NotReadableError' || name === 'TrackStartError') {
       return t("scanner.camera.inUse");
     }
-    return err?.message || String(err) ||
-      t("scanner.errors.unknownScannerError");
+    return err?.message || String(err) || t("scanner.errors.unknownScannerError");
   }
   let scannerLibraryPromise = null;
   /**
@@ -65,11 +63,8 @@ export function createScanner({state, showModal, resolveCode}) {
         const script = document.createElement('script');
         script.src = '/vendor/html5-qrcode.min.js';
         script.async = true;
-        script.onload = () => window.Html5Qrcode ?
-          resolve(window.Html5Qrcode) :
-          reject(Error('Scanner-Bibliothek konnte nicht geladen werden'));
-        script.onerror = () =>
-          reject(Error(t('scanner.errors.libraryMissing')));
+        script.onload = () => window.Html5Qrcode ? resolve(window.Html5Qrcode) : reject(Error('Scanner-Bibliothek konnte nicht geladen werden'));
+        script.onerror = () => reject(Error(t('scanner.errors.libraryMissing')));
         document.head.append(script);
       }).catch(err => {
         scannerLibraryPromise = null;
@@ -113,8 +108,7 @@ export function createScanner({state, showModal, resolveCode}) {
    */
   async function scanCode(assign = false) {
     const previousModal = assign ? state.modal : null;
-    const previousValues = assign && query('#bottle-form') ?
-      Object.fromEntries(new FormData(query('#bottle-form')).entries()) : null;
+    const previousValues = assign && query('#bottle-form') ? Object.fromEntries(new FormData(query('#bottle-form')).entries()) : null;
     state.scanReturn = assign ? {
       modal: previousModal, values: previousValues,
     } : null;
@@ -123,16 +117,8 @@ export function createScanner({state, showModal, resolveCode}) {
     showModal(
       t("forms.bottle.scanLabel"),
       renderTemplate('hint', {
-        manualCodeField: textInput(
-          t("scanner.input.manualInventoryNumber"),
-          'manualCode',
-          '',
-          {
-            full: true,
-          }
-        ),
-        assign: assign ?
-          '1' : '0',
+        manualCodeField: textInput(t("scanner.input.manualInventoryNumber"), 'manualCode', '', {full: true, }),
+        assign: assign ? '1' : '0',
         closeModalButton: actionButton({
           label: t("common.actions.close"),
           action: 'close-modal',
@@ -175,8 +161,7 @@ export function createScanner({state, showModal, resolveCode}) {
         }
         handled = true;
         const code = String(value ?? '').trim();
-        const format = result?.result?.format?.formatName ||
-          t("scanner.input.barcodeOrQr");
+        const format = result?.result?.format?.formatName || t("scanner.input.barcodeOrQr");
         scanStatus(`Erkannt (${format}): ${code}`, 'success');
         const field = query('[name=manualCode]');
         if (field) {
@@ -212,10 +197,7 @@ export function createScanner({state, showModal, resolveCode}) {
       if (sequence !== scannerSequence) {
         return;
       }
-      scanStatus(
-        t('scanner.errors.unavailable', {error: scanError(err)}),
-        'error'
-      );
+      scanStatus(t('scanner.errors.unavailable', {error: scanError(err)}), 'error');
       stopScan();
     }
   }
@@ -242,9 +224,7 @@ export function createScanner({state, showModal, resolveCode}) {
         formatsToSupport: supportedFormats(window.Html5QrcodeSupportedFormats),
         useBarCodeDetectorIfSupported: false,
       }, false);
-      state.scanner = {
-        engine,
-      };
+      state.scanner = {engine, };
       const value = await engine.scanFile(file, true);
       const field = query('[name=manualCode]');
       if (field) {
@@ -255,10 +235,7 @@ export function createScanner({state, showModal, resolveCode}) {
       await resolveCode(value, assign);
     }
     catch (err) {
-      scanStatus(
-        'Bild konnte nicht gelesen werden: ' + scanError(err),
-        'error'
-      );
+      scanStatus('Bild konnte nicht gelesen werden: ' + scanError(err), 'error');
     }
   }
   return {

@@ -5,8 +5,7 @@ import {helpView} from '../../public/js/views/help.js';
 import {createAnalyticsView} from '../../public/js/views/analytics.js';
 
 test(
-  'common section sidebar has a straight gold active marker, no rounded \
-pill, and a mobile selector',
+  'common section sidebar has a straight gold active marker, no rounded pill, and a mobile selector',
   () => {
     const config = {
       sections: [{id: 'intro', label: 'Einführung'}, {

@@ -33,11 +33,8 @@ export function send(
 export function attachment(response, {filename, type, bytes},
   {inline = false} = {}) {
   // HTTP response headers must stay ASCII; the RFC 5987 name preserves umlauts.
-  const fallback = filename.replace(/[^\x20-\x7e]/g, '_')
-    .replace(/[\\";\r\n]/g, '_');
-  const disposition = `${inline ? 'inline' :
-    'attachment'}; filename="${fallback}"; filename*=UTF-8''${
-encodeURIComponent(filename)}`;
+  const fallback = filename.replace(/[^\x20-\x7e]/g, '_').replace(/[\\";\r\n]/g, '_');
+  const disposition = `${inline ? 'inline' : 'attachment'}; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
   response.writeHead(200, {
     'Content-Type': type,
     'Content-Disposition': disposition,
@@ -59,13 +56,10 @@ export async function fileAttachment(response, {filename, type, path: file,
   const fs = await import('node:fs');
   const {pipeline} = await import('node:stream/promises');
   const size = fs.statSync(file).size;
-  const fallback = filename.replace(/[^\x20-\x7e]/g, '_')
-    .replace(/[\\";\r\n]/g, '_');
+  const fallback = filename.replace(/[^\x20-\x7e]/g, '_').replace(/[\\";\r\n]/g, '_');
   response.writeHead(200, {
     'Content-Type': type,
-    'Content-Disposition':
-      `attachment; filename="${fallback}"; filename*=UTF-8''${
-encodeURIComponent(filename)}`,
+    'Content-Disposition': `attachment; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
     'Content-Length': size,
     'X-Content-Type-Options': 'nosniff',
     'Cache-Control': 'no-store',

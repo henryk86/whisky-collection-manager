@@ -164,8 +164,7 @@ export function normalizeTableColumns(mode, value) {
   if (!options) return [];
   if (!Array.isArray(value)) return [...DEFAULT_TABLE_COLUMNS[mode]];
   const selected = new Set(value.filter(id => typeof id === 'string'));
-  const allowed = options.map(column => column.id).filter(id =>
-    selected.has(id));
+  const allowed = options.map(column => column.id).filter(id => selected.has(id));
   return allowed.length ? allowed : [...DEFAULT_TABLE_COLUMNS[mode]];
 }
 
@@ -178,8 +177,7 @@ export function normalizeTableColumns(mode, value) {
 export function loadTableColumns(storage) {
   try {
     const source = storage === undefined ? globalThis.localStorage : storage;
-    const value = JSON.parse(source?.getItem(TABLE_COLUMNS_STORAGE_KEY) ||
-      '{}');
+    const value = JSON.parse(source?.getItem(TABLE_COLUMNS_STORAGE_KEY) || '{}');
     return {
       bottlings: normalizeTableColumns('bottlings', value?.bottlings),
       bottles: normalizeTableColumns('bottles', value?.bottles),

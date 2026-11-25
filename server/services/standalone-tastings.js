@@ -17,8 +17,7 @@ import {normalizeTastingRecord, VALID_TASTING_FIELDS}
 function clean(input, old) {
   try {return normalizeStandaloneTasting(input, old);}
   catch (error) {
-    throw fail(error.message, 400, "api.errors.invalidTastingData"
-    );
+    throw fail(error.message, 400, "api.errors.invalidTastingData");
   }
 }
 
@@ -31,8 +30,7 @@ function clean(input, old) {
  */
 function find(collection, id) {
   const record = (collection.externalTastings || []).find(x => x.id === id);
-  if (!record) throw fail('Verkostung nicht gefunden', 404,
-    "api.errors.tastingNotFound");
+  if (!record) throw fail('Verkostung nicht gefunden', 404, "api.errors.tastingNotFound");
   return record;
 }
 
@@ -94,10 +92,7 @@ export function update(id, input) {
 export function remove(id) {
   return change(collection => {
     find(collection, id);
-    collection.externalTastings.splice(
-      collection.externalTastings.findIndex(x => x.id === id),
-      1
-    );
+    collection.externalTastings.splice(collection.externalTastings.findIndex(x => x.id === id), 1);
     detachTastings(collection, [id]);
     return {ok: true};
   });
@@ -113,27 +108,14 @@ export function remove(id) {
  * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 export function assignToBottling(id, input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input) ||
-    Object.keys(input).length !== 1 || typeof input.bottlingId !==
-    'string' || !input.bottlingId.trim())
-    throw fail(
-      'Ungültige Abfüllungszuordnung',
-      400,
-      "api.errors.invalidBottlingAssignment"
-    );
+  if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length !== 1 || typeof input.bottlingId !== 'string' || !input.bottlingId.trim())
+    throw fail('Ungültige Abfüllungszuordnung', 400, "api.errors.invalidBottlingAssignment");
   return change(collection => {
     const tasting = find(collection, id);
-    const bottling = (collection.bottlings || []).find(b => b.id ===
-      input.bottlingId);
-    if (!bottling) throw fail('Abfüllung nicht gefunden', 404,
-      "api.errors.bottlingNotFound");
-    if ((bottling.tastings || []).some(item => item.id === id)) throw fail(
-      'Verkostung bereits zugeordnet',
-      409,
-      "api.errors.tastingAlreadyAssigned"
-    );
-    const fields = Object.fromEntries(VALID_TASTING_FIELDS.map(key =>
-      [key, tasting[key]]));
+    const bottling = (collection.bottlings || []).find(b => b.id === input.bottlingId);
+    if (!bottling) throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
+    if ((bottling.tastings || []).some(item => item.id === id)) throw fail('Verkostung bereits zugeordnet', 409, "api.errors.tastingAlreadyAssigned");
+    const fields = Object.fromEntries(VALID_TASTING_FIELDS.map(key => [key, tasting[key]]));
     const moved = {
       ...normalizeTastingRecord(fields), id: tasting.id,
       createdAt: tasting.createdAt, updatedAt: tasting.updatedAt,
@@ -142,10 +124,7 @@ export function assignToBottling(id, input) {
     bottling.tastings.push(moved);
 
     bottling.updatedAt = now();
-    collection.externalTastings.splice(
-      collection.externalTastings.findIndex(x => x.id === id),
-      1
-    );
+    collection.externalTastings.splice(collection.externalTastings.findIndex(x => x.id === id), 1);
     return {bottlingId: bottling.id, tastingId: id};
   });
 }

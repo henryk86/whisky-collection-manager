@@ -8,8 +8,7 @@ import {inventoryCountGroups} from '../../public/js/domain/inventory-counts.js';
  * @param {*} bottles Value used by this operation.
  * @return {!Array<*>} Resulting entries in their output order.
  */
-const labels = bottles => inventoryCountGroups(bottles).map(group =>
-  group.label);
+const labels = bottles => inventoryCountGroups(bottles).map(group => group.label);
 test('all four disjoint groups exactly match the requested wording', () => {
   assert.deepEqual(
     labels([
@@ -33,10 +32,7 @@ test('closed is default and empty is not mentioned', () => {
     ['1 Standardflasche']
   );
   assert.deepEqual(
-    labels([
-      {volumeType: 'sample', status: 'empty'},
-      {volumeType: 'standard', status: 'empty'},
-    ]),
+    labels([{volumeType: 'sample', status: 'empty'}, {volumeType: 'standard', status: 'empty'},]),
     []
   );
   assert.deepEqual(labels([]), []);

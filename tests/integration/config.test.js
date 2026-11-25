@@ -24,11 +24,10 @@ const expected = {
  * @return {!Object} Array of values selected for the caller.
  */
 function values(text) {
-  return Object.fromEntries(text.split(/\r?\n/).filter(line => /^\w+=/
-    .test(line)).map(line => {
-      const i = line.indexOf('=');
-      return [line.slice(0, i), line.slice(i + 1)];
-    }));
+  return Object.fromEntries(text.split(/\r?\n/).filter(line => /^\w+=/.test(line)).map(line => {
+    const i = line.indexOf('=');
+    return [line.slice(0, i), line.slice(i + 1)];
+  }));
 }
 
 /**
@@ -39,15 +38,11 @@ function values(text) {
  * @return {*} Parsed JSON value.
  */
 function runConfig(cwd, overrides = {}) {
-  const env = {
-    ...process.env,
-  };
+  const env = {...process.env, };
   for (const key of Object.keys(expected)) {
     delete env[key];
   }
-  const script = `import * as c from ${JSON.stringify(configUrl
-  )};console.log(JSON.stringify({HTTP_ENABLED:c.HTTP_ENABLED,\
-HTTPS_ENABLED:c.HTTPS_ENABLED,HTTPS_PORT:c.HTTPS_PORT,PORT:c.PORT}));`;
+  const script = `import * as c from ${JSON.stringify(configUrl)};console.log(JSON.stringify({HTTP_ENABLED:c.HTTP_ENABLED,HTTPS_ENABLED:c.HTTPS_ENABLED,HTTPS_PORT:c.HTTPS_PORT,PORT:c.PORT}));`;
   const result = spawnSync(
     process.execPath,
     ['--input-type=module', '-e', script],
@@ -63,8 +58,7 @@ HTTPS_ENABLED:c.HTTPS_ENABLED,HTTPS_PORT:c.HTTPS_PORT,PORT:c.PORT}));`;
 test(
   'distributed env template defaults to HTTPS on 3543 with HTTP disabled',
   () => {
-    const template = fs.readFileSync(new URL('../../.env.example', import.meta
-      .url), 'utf8');
+    const template = fs.readFileSync(new URL('../../.env.example', import.meta.url), 'utf8');
     assert.deepEqual(values(template), expected);
   }
 );
@@ -82,15 +76,11 @@ test('server defaults without env match HTTPS-only configuration', () => {
   }
 });
 test(
-  'env template loads correctly and explicit environment variables take \
-precedence',
+  'env template loads correctly and explicit environment variables take precedence',
   () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-config-'));
     try {
-      fs.copyFileSync(
-        new URL('../../.env.example', import.meta.url),
-        path.join(dir, '.env')
-      );
+      fs.copyFileSync(new URL('../../.env.example', import.meta.url), path.join(dir, '.env'));
       assert.deepEqual(runConfig(dir), {
         HTTP_ENABLED: false, HTTPS_ENABLED: true, HTTPS_PORT: 3543, PORT: 3100,
       });

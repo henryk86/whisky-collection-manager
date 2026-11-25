@@ -8,8 +8,7 @@ import {sectionWorkspace} from '../ui/section-navigation.js';
 import {helpGuides} from './help-guides.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/help.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/help.html', import.meta.url));
 
 
 export const HELP_TOPICS = Object.freeze([
@@ -36,23 +35,17 @@ export function helpView(activeTopic = 'basics') {
   const panels = composeMarkup(topics.map(topic => renderTemplate(
     'helpSection',
     {
-      id: topic
-        .id,
+      id: topic.id,
       id2: topic.id,
-      id3: topic.id ===
-        current ? '' : ' hidden',
+      id3: topic.id === current ? '' : ' hidden',
       headingTitle: headingTitle({
         title: topic.label,
         level: 2,
         className: 'analytics-section-title',
         id: `help-title-${topic.id}`,
       }),
-      helpDescription: topic.id === 'basics' ?
-        renderTemplate('helpDescription', {
-          description: t('help.description'),
-        }) : '',
-      from: composeMarkup(topic.entries.map(entry =>
-        renderTemplate('li', {t: entry}))),
+      helpDescription: topic.id === 'basics' ? renderTemplate('helpDescription', {description: t('help.description'), }) : '',
+      from: composeMarkup(topic.entries.map(entry => renderTemplate('li', {t: entry}))),
       helpGuides: helpGuides(topic.id),
     }
   )));
@@ -60,9 +53,7 @@ export function helpView(activeTopic = 'basics') {
     sections: topics,
     activeId: current, action: 'help-tab', itemAttribute: 'data-help-topic',
     label: t('help.contents'), switchKind: 'help',
-  }, renderTemplate('helpPanels', {
-    panels: panels,
-  }));
+  }, renderTemplate('helpPanels', {panels: panels, }));
   return renderTemplate('analyticsPage', {
     pageHeader: pageHeader({
       title: t('navigation.help'),
@@ -83,10 +74,8 @@ export function helpView(activeTopic = 'basics') {
  * @return {boolean} Whether the condition is satisfied.
  */
 export function activateHelpTopic(topicId, container) {
-  if (!HELP_TOPICS.some(topic => topic.id === topicId) ||
-    !container) return false;
-  for (const button of container.querySelectorAll(
-    '.section-nav-item[data-help-topic]')) {
+  if (!HELP_TOPICS.some(topic => topic.id === topicId) || !container) return false;
+  for (const button of container.querySelectorAll('.section-nav-item[data-help-topic]')) {
     const active = button.dataset.helpTopic === topicId;
     button.classList.toggle('active', active);
     if (active) button.setAttribute('aria-current', 'page');
@@ -94,7 +83,6 @@ export function activateHelpTopic(topicId, container) {
   }
   const selector = container.querySelector('[data-section-switch="help"]');
   if (selector) selector.value = topicId;
-  for (const panel of container.querySelectorAll('.help-section')) panel
-    .hidden = panel.id !== `help-panel-${topicId}`;
+  for (const panel of container.querySelectorAll('.help-section')) panel.hidden = panel.id !== `help-panel-${topicId}`;
   return true;
 }

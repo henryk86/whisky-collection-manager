@@ -15,8 +15,7 @@ const bottle = {
 };
 
 test(
-  'warehouse inventory rows show age, release year and cask type next to \
-the correct bottle',
+  'warehouse inventory rows show age, release year and cask type next to the correct bottle',
   () => {
     const facts = bottleListFacts(bottle);
     assert.match(facts, /Alter:/);
@@ -32,28 +31,18 @@ the correct bottle',
 );
 
 test(
-  'missing facts remain absent, and label text is escaped in the inventory \
-and tray',
+  'missing facts remain absent, and label text is escaped in the inventory and tray',
   () => {
     assert.equal(bottleListFacts({name: 'unknown'}), '');
     assert.doesNotMatch(
       bottleRow({assignments: {}, rooms: []}, {id: 'b2', name: 'No facts'}),
       /warehouse-bottle-facts/
     );
-    assert.match(
-      bottleListFacts({...bottle, caskType: '<script>'}),
-      /&lt;script&gt;/
-    );
+    assert.match(bottleListFacts({...bottle, caskType: '<script>'}), /&lt;script&gt;/);
     const warehouse = {bottles: [bottle], assignments: {}};
     const html = renderUnassignedTray(warehouse);
-    assert.match(
-      html,
-      /<details class="warehouse-unassigned-tray"\s+aria-label=/
-    );
-    assert.doesNotMatch(
-      html,
-      /<details class="warehouse-unassigned-tray" open/
-    );
+    assert.match(html, /<details class="warehouse-unassigned-tray"\s+aria-label=/);
+    assert.doesNotMatch(html, /<details class="warehouse-unassigned-tray" open/);
     assert.match(html, /<summary class="warehouse-unassigned-summary"/);
     assert.match(html, /Erscheinungsjahr:.*2012/);
     assert.match(
@@ -67,8 +56,7 @@ and tray',
 test(
   'storage wall remembers an opened staging tray when the view re-renders',
   async () => {
-    const {createWarehouseView} =
-      await import('../../public/js/views/warehouse.js');
+    const {createWarehouseView} = await import('../../public/js/views/warehouse.js');
     const furniture = {
       id: 'f',
       name: 'Shelf',
@@ -166,14 +154,8 @@ test(
       assert.equal(attributes.get('aria-expanded'), 'true');
       assert.equal(tray.hidden, false);
       view.render();
-      assert.match(
-        html,
-        /class="warehouse-unassigned-toggle"[^>]*aria-expanded="true"/
-      );
-      assert.doesNotMatch(
-        html,
-        /id="warehouse-wall-unassigned-content"[^>]*hidden/
-      );
+      assert.match(html, /class="warehouse-unassigned-toggle"[^>]*aria-expanded="true"/);
+      assert.doesNotMatch(html, /id="warehouse-wall-unassigned-content"[^>]*hidden/);
       onClick({
         currentTarget: {
           /**

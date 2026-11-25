@@ -24,5 +24,4 @@ export const query = (sel, from = document) => from.querySelector(sel);
  * @param {!Document=} from From used by this operation.
  * @return {!Array<*>} Resulting list of values.
  */
-export const queryAll = (sel, from = document) =>
-  [...from.querySelectorAll(sel)];
+export const queryAll = (sel, from = document) => [...from.querySelectorAll(sel)];

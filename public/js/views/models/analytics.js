@@ -8,8 +8,7 @@ import {analyzeCollection, analyticsFilterOptions}
  * @return {!Object} Prepared presentation data.
  */
 export function createAnalyticsViewModel(state, pages) {
-  const current = pages.find(p => p.id === state.selected) ||
-    pages[0];
+  const current = pages.find(p => p.id === state.selected) || pages[0];
   // Timeline duration metrics follow the same selected end-date window as
   // the opened/emptied time series, while inventory filters stay global.
   const data = analyzeCollection(state.collection, {

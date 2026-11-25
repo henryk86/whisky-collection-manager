@@ -22,10 +22,7 @@ const packages = {
 function fixture(t, {installed = true, certificate = true} = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-autostart-'));
   t.after(() => fs.rmSync(root, {recursive: true, force: true}));
-  fs.writeFileSync(
-    path.join(root, 'package-lock.json'),
-    JSON.stringify({packages})
-  );
+  fs.writeFileSync(path.join(root, 'package-lock.json'), JSON.stringify({packages}));
   fs.writeFileSync(path.join(root, '.env.example'), 'HTTPS_ENABLED=true\n');
   if (installed) install(root);
   if (certificate) {
@@ -47,22 +44,15 @@ function install(root, {dev = true} = {}) {
   for (const [name, entry] of Object.entries(packages)) {
     if (!name.startsWith('node_modules/') || (!dev && entry.dev)) continue;
     fs.mkdirSync(path.join(root, name), {recursive: true});
-    fs.writeFileSync(
-      path.join(root, name, 'package.json'),
-      JSON.stringify({version: entry.version})
-    );
+    fs.writeFileSync(path.join(root, name, 'package.json'), JSON.stringify({version: entry.version}));
     installed[name] = entry;
   }
   fs.mkdirSync(path.join(root, 'node_modules'), {recursive: true});
-  fs.writeFileSync(
-    path.join(root, 'node_modules/.package-lock.json'),
-    JSON.stringify({packages: installed})
-  );
+  fs.writeFileSync(path.join(root, 'node_modules/.package-lock.json'), JSON.stringify({packages: installed}));
 }
 
 test(
-  'npm start skips npm ci when the installation matches the lockfile, but \
-always verifies local cutout assets',
+  'npm start skips npm ci when the installation matches the lockfile, but always verifies local cutout assets',
   t => {
     const root = fixture(t);
     const calls = [];
@@ -79,16 +69,12 @@ always verifies local cutout assets',
       execute: (binary, args) => calls.push([binary, ...args]),
     });
     assert.equal(needsNpmCi(root), false);
-    assert.deepEqual(
-      calls,
-      [[process.execPath, 'scripts/prepare-cutout-assets.js']]
-    );
+    assert.deepEqual(calls, [[process.execPath, 'scripts/prepare-cutout-assets.js']]);
   }
 );
 
 test(
-  'npm start installs missing dependencies using npm ci before preparing \
-cutout',
+  'npm start installs missing dependencies using npm ci before preparing cutout',
   t => {
     const root = fixture(t, {installed: false});
     const calls = [];
@@ -108,16 +94,12 @@ cutout',
     });
     assert.equal(calls.length, 2);
     assert.ok(calls[0].includes('ci'));
-    assert.deepEqual(
-      calls[1],
-      [process.execPath, 'scripts/prepare-cutout-assets.js']
-    );
+    assert.deepEqual(calls[1], [process.execPath, 'scripts/prepare-cutout-assets.js']);
   }
 );
 
 test(
-  'npm start detects mismatched dependency versions and incomplete \
-node_modules',
+  'npm start detects mismatched dependency versions and incomplete node_modules',
   t => {
     const root = fixture(t);
     assert.equal(needsNpmCi(root), false);
@@ -128,10 +110,7 @@ node_modules',
       path.join(root, 'node_modules/.package-lock.json'),
       JSON.stringify({
         packages: {
-          ...packages, 'node_modules/three': {
-            version:
-              '0.1.0',
-          },
+          ...packages, 'node_modules/three': {version: '0.1.0', },
         },
       })
     );
@@ -140,8 +119,7 @@ node_modules',
 );
 
 test(
-  'production npm start does not require devDependencies after npm ci \
---omit=dev',
+  'production npm start does not require devDependencies after npm ci --omit=dev',
   t => {
     const root = fixture(t);
     install(root, {dev: false});
@@ -151,14 +129,10 @@ test(
 );
 
 test(
-  'npm start provisions missing local HTTPS once without replacing an \
-existing .env',
+  'npm start provisions missing local HTTPS once without replacing an existing .env',
   t => {
     const root = fixture(t, {certificate: false});
-    fs.writeFileSync(
-      path.join(root, '.env'),
-      'HTTPS_ENABLED=true\nALLOWED_HOSTS=myserver.local\n'
-    );
+    fs.writeFileSync(path.join(root, '.env'), 'HTTPS_ENABLED=true\nALLOWED_HOSTS=myserver.local\n');
     const calls = [];
     prepareStartup({
       root, env: {},
@@ -177,21 +151,14 @@ existing .env',
         }
       },
     });
-    assert.deepEqual(
-      calls,
-      ['scripts/prepare-cutout-assets.js', 'scripts/setup-https.js']
-    );
-    assert.match(
-      fs.readFileSync(path.join(root, '.env'), 'utf8'),
-      /ALLOWED_HOSTS=myserver.local/
-    );
+    assert.deepEqual(calls, ['scripts/prepare-cutout-assets.js', 'scripts/setup-https.js']);
+    assert.match(fs.readFileSync(path.join(root, '.env'), 'utf8'), /ALLOWED_HOSTS=myserver.local/);
     assert.equal(localTlsStatus(root), 'ready');
   }
 );
 
 test(
-  'npm start creates .env only on first local startup; explicit HTTP and \
-custom certificates are respected',
+  'npm start creates .env only on first local startup; explicit HTTP and custom certificates are respected',
   t => {
     const root = fixture(t, {certificate: false});
     let setupCount = 0;
@@ -210,10 +177,7 @@ custom certificates are respected',
     assert.equal(setupCount, 0);
     assert.equal(localTlsStatus(root, {HTTPS_ENABLED: 'false'}), 'disabled');
     assert.ok(fs.existsSync(path.join(root, '.env')));
-    fs.writeFileSync(
-      path.join(root, '.env'),
-      'HTTPS_CERT_FILE=custom/my-cert.pem\n'
-    );
+    fs.writeFileSync(path.join(root, '.env'), 'HTTPS_CERT_FILE=custom/my-cert.pem\n');
     assert.equal(localTlsStatus(root), 'custom-missing');
     assert.throws(
       () => prepareStartup({

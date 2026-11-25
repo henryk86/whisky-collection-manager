@@ -24,8 +24,7 @@ export const ISLAY_LOCATIONS = Object.freeze({
  *     or null when no location is known.
  */
 export function locationFor(distillery) {
-  if (Number.isFinite(distillery.latitude) &&
-    Number.isFinite(distillery.longitude)) {
+  if (Number.isFinite(distillery.latitude) && Number.isFinite(distillery.longitude)) {
     return {
       lat: distillery.latitude, lon: distillery.longitude,
       source: 'saved',
@@ -57,8 +56,7 @@ export function locationFor(distillery) {
  */
 export function buildDistilleryMap(collection, {includeAllDistilleries =
   false} = {}) {
-  const byId = new Map((collection.distilleries || []).map(distillery =>
-    [distillery.id, distillery]));
+  const byId = new Map((collection.distilleries || []).map(distillery => [distillery.id, distillery]));
   const groups = new Map();
   // The optional second layer includes distilleries without any bottling.
   if (includeAllDistilleries) {
@@ -76,8 +74,7 @@ export function buildDistilleryMap(collection, {includeAllDistilleries =
   }
   for (const bottling of collection.bottlings || []) {
     const ids = Array.isArray(bottling.distilleryIds) ?
-      bottling.distilleryIds : (bottling.distilleryId ?
-        [bottling.distilleryId] : []);
+      bottling.distilleryIds : (bottling.distilleryId ? [bottling.distilleryId] : []);
     for (const id of new Set(ids)) {
       const distillery = byId.get(id);
       if (!distillery) continue;
@@ -94,8 +91,7 @@ export function buildDistilleryMap(collection, {includeAllDistilleries =
         };
         groups.set(id, site);
       }
-      const physicalBottles = Array.isArray(bottling.bottles) ?
-        bottling.bottles : [];
+      const physicalBottles = Array.isArray(bottling.bottles) ? bottling.bottles : [];
       site.bottlings.push({
         id: bottling.id,
         name: bottling.name,
@@ -110,8 +106,7 @@ export function buildDistilleryMap(collection, {includeAllDistilleries =
       site.bottleCount += physicalBottles.length;
     }
   }
-  const sorted = [...groups.values()].sort((a, b) => a.name
-    .localeCompare(b.name, 'de'));
+  const sorted = [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, 'de'));
   return {
     located: sorted.filter(site => site.location),
     missing: sorted.filter(site => !site.location),
@@ -126,8 +121,7 @@ export function buildDistilleryMap(collection, {includeAllDistilleries =
  * @return {number} Calculated numeric result.
  */
 export function markerDiameter(bottleCount) {
-  return Math.round(Math.min(62, 26 + 5 * Math.log2(1 +
-    Math.max(0, bottleCount))));
+  return Math.round(Math.min(62, 26 + 5 * Math.log2(1 + Math.max(0, bottleCount))));
 }
 
 /**
@@ -151,8 +145,7 @@ export const MAX_MAP_ZOOM = 16;
  * @param {*} z Requested zoom level.
  * @return {number} Calculated numeric result.
  */
-export const clampZoom = z =>
-  Math.max(2, Math.min(MAX_MAP_ZOOM, Math.round(z)));
+export const clampZoom = z => Math.max(2, Math.min(MAX_MAP_ZOOM, Math.round(z)));
 
 /**
  * Converts geographic coordinates into map positions at a given zoom.
@@ -167,8 +160,7 @@ export function project(lat, lon, zoom) {
   const latitude = Math.max(-maxLat, Math.min(maxLat, lat)) * Math.PI / 180;
   return {
     x: (lon + 180) / 360 * scale,
-    y: (1 - Math.log(Math.tan(latitude) + 1 / Math.cos(latitude)) /
-      Math.PI) / 2 * scale,
+    y: (1 - Math.log(Math.tan(latitude) + 1 / Math.cos(latitude)) / Math.PI) / 2 * scale,
   };
 }
 
@@ -233,18 +225,14 @@ export function fitMapToSites(sites, width, height) {
   const points = sites.filter(site => site.location).map(site => site.location);
   if (!points.length) return {lat: 55.78, lon: -6.27, zoom: 6};
   if (points.length === 1) return {
-    lat: points[0].lat, lon: points[0]
-      .lon, zoom: 11,
+    lat: points[0].lat, lon: points[0].lon, zoom: 11,
   };
   const pad = Math.max(28, Math.min(75, Math.min(width, height) * .12));
   for (let zoom = 12; zoom >= 2; zoom--) {
     const projected = points.map(point => project(point.lat, point.lon, zoom));
-    const xs = projected.map(point => point.x), ys = projected.map(point =>
-      point.y);
-    const minX = Math.min(...xs), maxX = Math.max(...xs), minY =
-      Math.min(...ys), maxY = Math.max(...ys);
-    if ((maxX - minX <= Math.max(1, width - 2 * pad) && maxY - minY <=
-      Math.max(1, height - 2 * pad)) || zoom === 2) {
+    const xs = projected.map(point => point.x), ys = projected.map(point => point.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    if ((maxX - minX <= Math.max(1, width - 2 * pad) && maxY - minY <= Math.max(1, height - 2 * pad)) || zoom === 2) {
       const center = unproject((maxX + minX) / 2, (maxY + minY) / 2, zoom);
       return {...center, zoom};
     }

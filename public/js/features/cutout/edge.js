@@ -16,8 +16,7 @@ export const EDGE_ALPHA_HIGH = 190;
  * @return {*} Calculated numeric result.
  */
 export function sharpenCutoutAlpha(rgba) {
-  if (!rgba || rgba.length % 4 !==
-    0) throw new Error(t('errors.images.invalidRgba'));
+  if (!rgba || rgba.length % 4 !== 0) throw new Error(t('errors.images.invalidRgba'));
   for (let index = 3; index < rgba.length; index += 4) {
     const alpha = rgba[index];
     if (alpha <= EDGE_ALPHA_LOW) {

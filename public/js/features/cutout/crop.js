@@ -21,12 +21,10 @@ const MAX_AUTO_ROTATION = 20 * Math.PI / 180;
  * @param {*} sourceHeight Value used by this operation.
  */
 function validateMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight) {
-  if (!mask || mask.length !== maskWidth * maskHeight ||
-    !Number.isInteger(maskWidth) || !Number.isInteger(maskHeight)
+  if (!mask || mask.length !== maskWidth * maskHeight || !Number.isInteger(maskWidth) || !Number.isInteger(maskHeight)
     || maskWidth < 1 || maskHeight < 1 || !Number.isFinite(sourceWidth) ||
     !Number.isFinite(sourceHeight)
-    || sourceWidth <= 0 || sourceHeight <=
-    0) throw new Error(t('errors.cutout.invalidMask'));
+    || sourceWidth <= 0 || sourceHeight <= 0) throw new Error(t('errors.cutout.invalidMask'));
 }
 
 /**
@@ -57,16 +55,14 @@ function silhouetteAngle(labels, id, maskWidth, maskHeight, scaleX, scaleY) {
     if (x < minX) minX = x;
     if (x > maxX) maxX = x;
   }
-  if (last - first < 20 || (last - first + 1) * scaleY < (maxX - minX + 1) *
-    scaleX * 1.35)
+  if (last - first < 20 || (last - first + 1) * scaleY < (maxX - minX + 1) * scaleX * 1.35)
     return null;
 
   // Bottle caps and rounded feet produce unstable widths in the first/last
   // rows.
   const trim = Math.floor((last - first + 1) * .08);
   let widestRow = 0;
-  for (let y = first; y <= last; y++) widestRow =
-    Math.max(widestRow, right[y] - left[y]);
+  for (let y = first; y <= last; y++) widestRow = Math.max(widestRow, right[y] - left[y]);
   const minimumWidth = Math.max(2, widestRow * .35);
   let count = 0, sumY = 0, sumX = 0, sumYY = 0, sumXY = 0;
   const rows = [];
@@ -84,10 +80,7 @@ function silhouetteAngle(labels, id, maskWidth, maskHeight, scaleX, scaleY) {
   if (variance <= 0) return null;
   const slope = (sumXY / count - meanY * meanX) / variance;
   const intercept = meanX - slope * meanY;
-  const meanError = rows.reduce(
-    (sum, [y, x]) => sum + Math.abs(x - (intercept + slope * y)),
-    0
-  ) / count;
+  const meanError = rows.reduce((sum, [y, x]) => sum + Math.abs(x - (intercept + slope * y)), 0) / count;
   // Large deviations indicate a fragmented, irregular, or non-bottle contour.
   if (meanError > (maxX - minX + 1) * scaleX * .13) return null;
   return Math.atan(slope);
@@ -128,8 +121,7 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
       const x = index % maskWidth, y = Math.floor(index / maskWidth);
       const photoX = (x + .5) * scaleX, photoY = (y + .5) * scaleY;
       sumX += photoX; sumY += photoY;
-      sumXX += photoX * photoX; sumYY += photoY * photoY; sumXY +=
-        photoX * photoY;
+      sumXX += photoX * photoX; sumYY += photoY * photoY; sumXY += photoX * photoY;
       for (let dy = -1; dy <= 1; dy++) {
         const ny = y + dy;
         if (ny < 0 || ny >= maskHeight) continue;
@@ -152,10 +144,7 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
       xy: sumXY / back - cx * cy,
     });
   }
-  const largest = components.reduce(
-    (winner, item) => !winner || item.area > winner.area ? item : winner,
-    null
-  );
+  const largest = components.reduce((winner, item) => !winner || item.area > winner.area ? item : winner, null);
   if (!largest || largest.area < Math.max(4, Math.floor(mask.length / 10000)))
     throw new Error(t('errors.cutout.noBottle'));
 
@@ -163,14 +152,10 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
   // artifact.
   // If the photographed bottle is off-centre, fall back to the largest
   // component.
-  const centered = components.filter(item => item.area >= largest.area * .2
-    && Math.abs(item.cx / sourceWidth - .5) <= .27
+  const centered = components.filter(item => item.area >= largest.area * .2 && Math.abs(item.cx / sourceWidth - .5) <= .27
     && Math.abs(item.cy / sourceHeight - .5) <= .3);
   const selected = centered.length
-    ? centered.reduce(
-      (winner, item) => !winner || item.area > winner.area ? item : winner,
-      null
-    )
+    ? centered.reduce((winner, item) => !winner || item.area > winner.area ? item : winner, null)
     : largest;
 
   const isolatedMask = new Uint8ClampedArray(mask.length);
@@ -189,8 +174,7 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
         const nx = x + dx;
         if (nx < 0 || nx >= maskWidth) continue;
         const neighbor = ny * maskWidth + nx;
-        if (!labels[neighbor] && mask[neighbor] >=
-          FEATHER_ALPHA) isolatedMask[neighbor] = mask[neighbor];
+        if (!labels[neighbor] && mask[neighbor] >= FEATHER_ALPHA) isolatedMask[neighbor] = mask[neighbor];
       }
     }
   }
@@ -199,25 +183,13 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
   // moments
   // remain a fallback for incomplete outlines. Neither rotates near-square
   // objects.
-  const principalAngle = .5 * Math.atan2(2 * selected.xy, selected.yy -
-    selected.xx);
-  const anisotropy = Math.hypot(selected.yy - selected.xx, 2 * selected.xy)
-    / Math.max(1, selected.xx + selected.yy);
+  const principalAngle = .5 * Math.atan2(2 * selected.xy, selected.yy - selected.xx);
+  const anisotropy = Math.hypot(selected.yy - selected.xx, 2 * selected.xy) / Math.max(1, selected.xx + selected.yy);
   const elongated = anisotropy > .2 && selected.yy > selected.xx * 1.15;
-  const contourAngle = elongated
-    ? silhouetteAngle(
-      labels,
-      selected.id,
-      maskWidth,
-      maskHeight,
-      scaleX,
-      scaleY
-    ) : null;
-  const rotation = contourAngle !== null && Math.abs(contourAngle) <=
-    MAX_AUTO_ROTATION
+  const contourAngle = elongated ? silhouetteAngle(labels, selected.id, maskWidth, maskHeight, scaleX, scaleY) : null;
+  const rotation = contourAngle !== null && Math.abs(contourAngle) <= MAX_AUTO_ROTATION
     ? contourAngle
-    : elongated && Math.abs(principalAngle) <= MAX_AUTO_ROTATION ?
-      principalAngle : 0;
+    : elongated && Math.abs(principalAngle) <= MAX_AUTO_ROTATION ? principalAngle : 0;
   const cos = Math.cos(rotation), sin = Math.sin(rotation);
   const halfX = (Math.abs(cos) * scaleX + Math.abs(sin) * scaleY) / 2;
   const halfY = (Math.abs(sin) * scaleX + Math.abs(cos) * scaleY) / 2;
@@ -235,10 +207,7 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
   }
   const objectWidth = right - left;
   const objectHeight = bottom - top;
-  const width = Math.max(
-    objectWidth,
-    objectHeight * CUTOUT_WIDTH_RATIO / CUTOUT_HEIGHT_RATIO
-  );
+  const width = Math.max(objectWidth, objectHeight * CUTOUT_WIDTH_RATIO / CUTOUT_HEIGHT_RATIO);
   const height = width * CUTOUT_HEIGHT_RATIO / CUTOUT_WIDTH_RATIO;
   const crop = {
     x: (left + right - width) / 2,
@@ -251,8 +220,7 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
     crop,
     rotation,
     center: {x: selected.cx, y: selected.cy},
-    verticallyTight: objectWidth <= objectHeight * CUTOUT_WIDTH_RATIO /
-      CUTOUT_HEIGHT_RATIO + 1e-6,
+    verticallyTight: objectWidth <= objectHeight * CUTOUT_WIDTH_RATIO / CUTOUT_HEIGHT_RATIO + 1e-6,
     objectWidth,
   };
 }
@@ -269,8 +237,7 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
  */
 export function bottleCropRect(mask, maskWidth, maskHeight, sourceWidth,
   sourceHeight) {
-  return analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
-    sourceHeight).crop;
+  return analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight).crop;
 }
 
 /**
@@ -281,13 +248,8 @@ export function bottleCropRect(mask, maskWidth, maskHeight, sourceWidth,
  * @return {!Object} Structured result for the caller.
  */
 export function cutoutOutputSize(crop, maxSide) {
-  if (!(crop?.height > 0) || !(maxSide >
-    0)) throw new Error(t('errors.images.invalidCrop'));
-  const width = Math.max(
-    2,
-    Math.floor(Math.min(crop.height, maxSide) / CUTOUT_HEIGHT_RATIO) *
-    CUTOUT_WIDTH_RATIO
-  );
+  if (!(crop?.height > 0) || !(maxSide > 0)) throw new Error(t('errors.images.invalidCrop'));
+  const width = Math.max(2, Math.floor(Math.min(crop.height, maxSide) / CUTOUT_HEIGHT_RATIO) * CUTOUT_WIDTH_RATIO);
   return {width, height: width * CUTOUT_HEIGHT_RATIO / CUTOUT_WIDTH_RATIO};
 }
 
@@ -303,8 +265,7 @@ export function cutoutOutputSize(crop, maxSide) {
  */
 export function visibleAlphaRows(rgba, width, height, minAlpha = FEATHER_ALPHA
 ) {
-  if (!rgba || rgba.length !== width * height *
-    4) throw new Error(t('errors.images.invalidData'));
+  if (!rgba || rgba.length !== width * height * 4) throw new Error(t('errors.images.invalidData'));
   let first = height, last = -1;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -328,8 +289,7 @@ export function visibleAlphaRows(rgba, width, height, minAlpha = FEATHER_ALPHA
  * @return {*} Structured result assembled from the input data.
  */
 export function tightenedCrop(crop, size, visible, objectWidth) {
-  if (!visible || (visible.top === 0 && visible.bottom === size.height -
-    1)) return crop;
+  if (!visible || (visible.top === 0 && visible.bottom === size.height - 1)) return crop;
   const scale = crop.height / size.height;
   const height = (visible.bottom - visible.top + 1) * scale;
   const width = height * CUTOUT_WIDTH_RATIO / CUTOUT_HEIGHT_RATIO;

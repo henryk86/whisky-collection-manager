@@ -28,9 +28,7 @@ export function createCodeResolver({state, navigate, toast, closeModal,
         toast(t("scanner.validation.inventoryNumberAlreadyAssigned"), true);
         return;
       }
-      navigate('detail', match.bottling.id, {
-        highlightBottleId: found.id,
-      });
+      navigate('detail', match.bottling.id, {highlightBottleId: found.id, });
       return;
     }
     if (assign && state.scanReturn) {

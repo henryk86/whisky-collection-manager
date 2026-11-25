@@ -28,8 +28,7 @@ import {GLENCAIRN_INK} from '../../public/js/ui/glencairn-icon.js';
  */
 const notes = nose => ({nose, palate: '', finish: ''});
 test(
-  'schema 6 rejects legacy tasting fields on a bottling; bottles do not \
-store sensory data',
+  'schema 6 rejects legacy tasting fields on a bottling; bottles do not store sensory data',
   () => {
     for (const field of [
       'rating',
@@ -40,8 +39,7 @@ store sensory data',
     ])
       assert.throws(() =>
         normalizeBottling({
-          name: 'Release', [field]: field === 'rating' ?
-            87 : null,
+          name: 'Release', [field]: field === 'rating' ? 87 : null,
         }));
     const bottle = normalizeBottle({
       inventoryNumber: '003', rating: 15,
@@ -59,24 +57,14 @@ test(
     assert.equal((html.match(/class="tasting-glass"/g) || []).length, 5);
     assert.match(html, /data-tasting-score/);
     assert.match(html, /value="85"/);
-    assert.match(html,
-      /--glass-fill:25%/
-    ); // the fifth GLASS is filled to 25% of its liquid height
+    assert.match(html, /--glass-fill:25%/); // the fifth GLASS is filled to 25% of its liquid height
     assert.match(html, /role="group"/);
     assert.match(html, /clip-path="url\(#rating-glass-4\)"/);
-    assert.match(
-      GLENCAIRN_INK,
-      /M215,97/,
-      'original Glencairn shines inside the bowl'
-    );
+    assert.match(GLENCAIRN_INK, /M215,97/, 'original Glencairn shines inside the bowl');
     assert.match(html, /class="glencairn-rating-outline"/);
     assert.match(html, /class="glencairn-rating-fill"/);
     assert.match(html, /data-rating-fill[^>]*y="267.75"[^>]*height="63.25"/);
-    assert.doesNotMatch(
-      html,
-      /class="glencairn-gold"/,
-      'rating uses its dedicated gold liquid fill'
-    );
+    assert.doesNotMatch(html, /class="glencairn-gold"/, 'rating uses its dedicated gold liquid fill');
     assert.match(html, /class="tasting-score-control"/);
     assert.match(html, /<span id="tasting-score-suffix">\/ 100<\/span>/);
     assert.doesNotMatch(
@@ -91,8 +79,7 @@ test(
   }
 );
 test(
-  'undo/redo includes notes, glass ratings, rating comment and flavor \
-values and resets redo on new edit',
+  'undo/redo includes notes, glass ratings, rating comment and flavor values and resets redo on new edit',
   () => {
     const initial = {
       flavorProfile: null, tastingNotes: notes(''),
@@ -124,8 +111,7 @@ values and resets redo on new edit',
   }
 );
 test(
-  'analytics counts only the latest dated tasting, independent of physical \
-bottle count',
+  'analytics counts only the latest dated tasting, independent of physical bottle count',
   () => {
     const collection = {
       schemaVersion: 6, distilleries: [], bottlings: [{
@@ -151,24 +137,21 @@ bottle count',
 );
 
 test(
-  'precise rating input accepts comma and period, preserves one decimal, \
-rejects invalid values',
+  'precise rating input accepts comma and period, preserves one decimal, rejects invalid values',
   () => {
     assert.equal(parseTastingScore('87,5'), 87.5);
     assert.equal(parseTastingScore('87.5'), 87.5);
     assert.equal(parseTastingScore('0'), 0);
     assert.equal(parseTastingScore('100'), 100);
     assert.equal(parseTastingScore(''), null);
-    for (const bad of ['-1', '100.1', '87.55', 'word', '1e2']) assert.throws((
-    ) => parseTastingScore(bad));
+    for (const bad of ['-1', '100.1', '87.55', 'word', '1e2']) assert.throws(() => parseTastingScore(bad));
     assert.throws(() => normalizeBottling({name: 'Release', rating: 87.5}));
     assert.match(glencairnRating(87.5), /value="87,5"/);
     assert.match(glencairnRating(87.5), /--glass-fill:37.5%/);
   }
 );
 test(
-  'twelve-step whisky color scale persists as independent, validated \
-bottling attribute and joins undo history',
+  'twelve-step whisky color scale persists as independent, validated bottling attribute and joins undo history',
   () => {
     assert.equal(WHISKY_COLORS.length, 12);
     const chosen = whiskyColorSelector('butter');
@@ -180,11 +163,9 @@ bottling attribute and joins undo history',
       'no repeated colour name or clear control below palette'
     );
     assert.equal(new Set(WHISKY_COLORS.map(v => v.key)).size, 12);
-    for (const color of WHISKY_COLORS) assert.match(color.hex,
-      /^#[0-9a-f]{6}$/);
+    for (const color of WHISKY_COLORS) assert.match(color.hex, /^#[0-9a-f]{6}$/);
     assert.throws(() => normalizeBottling({
-      name: 'Release', whiskyColor:
-        'amber', rating: 87.5,
+      name: 'Release', whiskyColor: 'amber', rating: 87.5,
     }));
     const html = whiskyColorSelector('amber');
     assert.equal((html.match(/data-color-key=/g) || []).length, 12);
@@ -203,35 +184,20 @@ bottling attribute and joins undo history',
 );
 
 test(
-  'custom whisky picker hides HEX from users, stores exact shades and \
-rejects green/blue',
+  'custom whisky picker hides HEX from users, stores exact shades and rejects green/blue',
   () => {
     const html = whiskyColorSelector('custom:#b74154');
-    assert.equal(
-      (html.match(/class="whisky-color-choice/g) || []).length,
-      12,
-      'reference colours stay unchanged'
-    );
+    assert.equal((html.match(/class="whisky-color-choice/g) || []).length, 12, 'reference colours stay unchanged');
     assert.match(html, /class="whisky-custom-row is-selected"/);
     assert.match(html, /data-whisky-picker-area/);
-    assert.match(
-      html,
-      /<input type="hidden" data-whisky-custom-hex value="#b74154">/
-    );
-    assert.doesNotMatch(
-      html,
-      /whisky-custom-hex-row|>HEX<|type="text" data-whisky-custom-hex/
-    );
+    assert.match(html, /<input type="hidden" data-whisky-custom-hex value="#b74154">/);
+    assert.doesNotMatch(html, /whisky-custom-hex-row|>HEX<|type="text" data-whisky-custom-hex/);
     assert.match(html, /value="#b74154"/);
     assert.match(html, /style="fill:#b74154"/);
-    assert.match(
-      html,
-      /data-whisky-custom-name aria-live="polite">Rubinrot<\/output>/
-    );
+    assert.match(html, /data-whisky-custom-name aria-live="polite">Rubinrot<\/output>/);
     assert.match(whiskyColorDisplay('custom:#b74154'), />Rubinrot<\/strong>/);
     assert.doesNotMatch(
-      whiskyColorDisplay('custom:#b74154')
-        .match(/<strong>(.*?)<\/strong>/)?.[1] || '',
+      whiskyColorDisplay('custom:#b74154').match(/<strong>(.*?)<\/strong>/)?.[1] || '',
       /#[0-9a-f]{6}/i,
       'readonly label hides hexadecimal code'
     );
@@ -243,23 +209,13 @@ rejects green/blue',
       const fixedHtml = whiskyColorSelector(fixedSelection);
       assert.match(fixedHtml, /data-whisky-custom-hex[^>]*value=""/);
       assert.match(fixedHtml, /id="custom-color-glass"/);
-      assert.match(
-        fixedHtml,
-        /class="glencairn-liquid"[^>]*style="fill:transparent"/
-      );
+      assert.match(fixedHtml, /class="glencairn-liquid"[^>]*style="fill:transparent"/);
       assert.match(fixedHtml, /class="whisky-custom-row"/);
       assert.doesNotMatch(fixedHtml, /class="whisky-custom-row is-selected"/);
       assert.doesNotMatch(fixedHtml, /#b74154/);
-      assert.match(
-        fixedHtml,
-        /data-whisky-custom-name aria-live="polite"><\/output>/
-      );
+      assert.match(fixedHtml, /data-whisky-custom-name aria-live="polite"><\/output>/);
     }
-    assert.equal(
-      normalizeWhiskyColor('custom:#F4B3C1'),
-      'custom:#f4b3c1',
-      'rose HEX is normalized'
-    );
+    assert.equal(normalizeWhiskyColor('custom:#F4B3C1'), 'custom:#f4b3c1', 'rose HEX is normalized');
     for (const hex of ['#b74154', '#f4b3c1', '#9b2125', '#eaa52e', '#50392d',
       '#f6efb6'])
       assert.equal(normalizeWhiskyColor(`custom:${hex}`), `custom:${hex}`);
@@ -275,25 +231,14 @@ rejects green/blue',
       '#abc',
       'color:red',
     ])
-      assert.throws(
-        () => normalizeWhiskyColor(`custom:${hex}`),
-        `reject ${hex}`
-      );
+      assert.throws(() => normalizeWhiskyColor(`custom:${hex}`), `reject ${hex}`);
     for (let y = 0; y <= 10; y++) for (let x = 0; x <= 10; x++) {
       const hex = whiskyPickerHex(x / 10, y / 10);
-      assert.equal(
-        isAllowedWhiskyHex(hex),
-        true,
-        `picker colour ${hex} must be persisted`
-      );
+      assert.equal(isAllowedWhiskyHex(hex), true, `picker colour ${hex} must be persisted`);
       const point = whiskyPickerPosition(hex);
       assert.ok(point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1);
     }
-    assert.equal(
-      normalizeWhiskyColor('honey'),
-      'honey',
-      'existing fixed keys survive'
-    );
+    assert.equal(normalizeWhiskyColor('honey'), 'honey', 'existing fixed keys survive');
     const history = createTastingHistory({
       flavorProfile: null,
       tastingNotes: notes(''),
@@ -308,8 +253,7 @@ rejects green/blue',
 );
 
 test(
-  '50 curated custom-colour names use perceptual matches without changing \
-stored HEX',
+  '50 curated custom-colour names use perceptual matches without changing stored HEX',
   () => {
     assert.equal(WHISKY_COLOR_REFERENCES.length, 50);
     const keys = new Set(), shades = new Set();
@@ -319,20 +263,13 @@ stored HEX',
       assert.ok(!keys.has(ref.key), `duplicate key: ${ref.key}`);
       assert.ok(!shades.has(ref.hex), `duplicate colour: ${ref.hex}`);
       keys.add(ref.key); shades.add(ref.hex);
-      assert.equal(
-        whiskyColorNameKey(ref.hex),
-        ref.key,
-        `reference ${ref.key} must name itself`
-      );
+      assert.equal(whiskyColorNameKey(ref.hex), ref.key, `reference ${ref.key} must name itself`);
       const translationKey = `tasting.colorName.${ref.key}`;
       assert.notEqual(de(translationKey), translationKey);
       assert.notEqual(en(translationKey), translationKey);
       assert.ok(de(translationKey).trim());
       assert.ok(en(translationKey).trim());
-      assert.equal(
-        normalizeWhiskyColor(`custom:${ref.hex}`),
-        `custom:${ref.hex}`
-      );
+      assert.equal(normalizeWhiskyColor(`custom:${ref.hex}`), `custom:${ref.hex}`);
     }
     assert.equal(whiskyColorNameKey('#00ff00'), null);
     assert.equal(whiskyColorNameKey('#0011ee'), null);
@@ -340,25 +277,15 @@ stored HEX',
     assert.equal(whiskyColorNameKey('#CB8154'), 'copperGold');
     assert.equal(whiskyCustomColorName('#cb8154'), 'Kupfergold');
     assert.match(whiskyColorDisplay('custom:#cb8154'), />Kupfergold<\/strong>/);
-    assert.match(
-      whiskyColorSelector('custom:#cb8154'),
-      /data-whisky-custom-name[^>]*>Kupfergold<\/output>/
-    );
-    assert.equal(
-      whiskyColorNameKey('#cb8255'),
-      'copperGold',
-      'nearby colour is named by perceptual proximity'
-    );
+    assert.match(whiskyColorSelector('custom:#cb8154'), /data-whisky-custom-name[^>]*>Kupfergold<\/output>/);
+    assert.equal(whiskyColorNameKey('#cb8255'), 'copperGold', 'nearby colour is named by perceptual proximity');
     // Near-white pink and straw can be close in OKLab lightness, but must
     // keep their distinct colour families at the upper picker boundary.
     const paleRose = whiskyPickerHex(0, 0);
     assert.equal(paleRose, '#f2d4de');
     assert.equal(whiskyColorNameKey(paleRose), 'paleRose');
     assert.equal(whiskyCustomColorName(paleRose), 'Blasses Rosé');
-    assert.match(
-      whiskyColorDisplay(`custom:${paleRose}`),
-      />Blasses Rosé<\/strong>/
-    );
+    assert.match(whiskyColorDisplay(`custom:${paleRose}`), />Blasses Rosé<\/strong>/);
     assert.equal(whiskyColorNameKey(whiskyPickerHex(0.24, 0)), 'paleRose');
     assert.equal(whiskyColorNameKey(whiskyPickerHex(1, 0)), 'veryPaleStraw');
     assert.equal(whiskyColorNameKey(whiskyPickerHex(0, 0.05)), 'paleRose');
@@ -367,17 +294,12 @@ stored HEX',
       'custom:#cb8255',
       'naming must not quantize the saved colour'
     );
-    assert.match(
-      whiskyColorDisplay('honey'),
-      />Honig<\/strong>/,
-      'fixed reference labels are unchanged'
-    );
+    assert.match(whiskyColorDisplay('honey'), />Honig<\/strong>/, 'fixed reference labels are unchanged');
   }
 );
 
 test(
-  'help only expands substantial backup procedures and warehouse furniture \
-photos stay under shelves without sort buttons',
+  'help only expands substantial backup procedures and warehouse furniture photos stay under shelves without sort buttons',
   async () => {
     const {HELP_GUIDES} = await import('../../public/js/views/help-guides.js');
     assert.deepEqual(Object.keys(HELP_GUIDES), ['backups']);

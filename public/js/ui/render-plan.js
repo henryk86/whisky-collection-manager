@@ -38,8 +38,7 @@ export class RenderPlan {
  * @return {(RenderPlan|string)} Sequence, or empty/serialized text.
  */
 export function composeMarkup(...parts) {
-  const items = parts.flat(Infinity).filter(item => item != null &&
-    item !== '');
+  const items = parts.flat(Infinity).filter(item => item != null && item !== '');
   if (items.every(item => !(item instanceof RenderPlan))) {
     return items.join('');
   }
@@ -69,8 +68,7 @@ export function slotValue(plan, mode, key) {
  */
 function compactTemplate(source) {
   return source.replace(/<\/?(?:[^>"']|"[^"]*"|'[^']*')+>/g, tag =>
-    tag.replace(/"[^"]*"|'[^']*'|\s+/g, part =>
-      /^\s/.test(part) ? ' ' : part))
+    tag.replace(/"[^"]*"|'[^']*'|\s+/g, part => /^\s/.test(part) ? ' ' : part))
     .replace(/>\n[ \t]*</g, '><');
 }
 

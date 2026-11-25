@@ -7,8 +7,7 @@ import {zipFiles} from '../helpers/legacy-zip.js';
 import {inspectReadableZip} from '../../shared/backup-zip.js';
 
 test(
-  'manual ZIP exports from old releases can be imported through the new \
-browser restore',
+  'manual ZIP exports from old releases can be imported through the new browser restore',
   () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-export-compat-'));
     try {
@@ -20,10 +19,7 @@ browser restore',
       ]));
       const extracted = path.join(dir, 'extracted');
       assert.equal(inspectReadableZip(file, extracted).files, 3);
-      assert.equal(
-        fs.readFileSync(path.join(extracted, 'images/bottle.jpg'), 'utf8'),
-        'jpg'
-      );
+      assert.equal(fs.readFileSync(path.join(extracted, 'images/bottle.jpg'), 'utf8'), 'jpg');
     } finally {fs.rmSync(dir, {recursive: true, force: true});}
   }
 );

@@ -18,8 +18,7 @@ test(
       title: '" onmouseover="alert(1)',
       body: '<img src=x>',
       icon: '<svg></svg>',
-    }), '<p title="&quot; onmouseover=&quot;alert(1)">&lt;img src=x&gt;' +
-    '<svg></svg></p>');
+    }), '<p title="&quot; onmouseover=&quot;alert(1)">&lt;img src=x&gt;' + '<svg></svg></p>');
     assert.throws(() => render('missing'), /Unknown template/);
     assert.throws(() => render('example', {}), /Missing slot/);
     assert.throws(() => parseTemplates(source + source), /Duplicate template/);
@@ -30,14 +29,12 @@ test(
 test('template parsing accepts LF, CRLF and CR line endings', () => {
   const expected = parseTemplates(source);
   for (const newline of ['\r\n', '\r']) {
-    assert.deepEqual(parseTemplates(source.replaceAll('\n', newline)),
-      expected);
+    assert.deepEqual(parseTemplates(source.replaceAll('\n', newline)), expected);
   }
 });
 
 test('external template loader reuses the loaded resource', async () => {
-  const url = new URL('../../public/js/views/templates/backups.html',
-    import.meta.url);
+  const url = new URL('../../public/js/views/templates/backups.html', import.meta.url);
   const first = await loadTemplates(url);
   assert.equal(first, await loadTemplates(url));
   assert.match(first('remoteOption', {value: 'my_remote'}), /my_remote/);

@@ -11,8 +11,7 @@ import {detachTastings} from '../../shared/tasting-flights.js';
  * @param {*} bottling Bottling record being inspected or updated.
  */
 function checkDistilleries(collection, bottling) {
-  const knownIds = new Set(collection.distilleries.map(distillery =>
-    distillery.id));
+  const knownIds = new Set(collection.distilleries.map(distillery => distillery.id));
   if (bottling.distilleryIds.some(id => !knownIds.has(id))) {
     throw fail('Unbekannte Destillerie', 400, "api.errors.unknownDistillery");
   }
@@ -44,8 +43,7 @@ export function createBottling(input) {
       createdAt: timestamp,
       updatedAt: timestamp,
     };
-    if (bottle.volumeType === 'standard' && bottle.volumeMl == null &&
-      bottling.volumeMl != null) {
+    if (bottle.volumeType === 'standard' && bottle.volumeMl == null && bottling.volumeMl != null) {
       bottle.volumeMl = bottling.volumeMl;
     }
     markNumber(collection, bottle.inventoryNumber);
@@ -69,8 +67,7 @@ export function updateBottling(id, input) {
   return change(collection => {
     const bottling = collection.bottlings.find(entry => entry.id === id);
     if (!bottling) {
-      throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound"
-      );
+      throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
     }
     if ([
       'rating',
@@ -80,16 +77,13 @@ export function updateBottling(id, input) {
       'legacyTastings',
     ].some(key => Object.hasOwn(input, key)))
       throw fail(
-        'Verkostungsdaten dürfen nur innerhalb einer Verkostung geändert \
-werden',
+        'Verkostungsdaten dürfen nur innerhalb einer Verkostung geändert werden',
         400,
         "api.errors.tastingDataRequiresTasting"
       );
     const updated = normalizeBottling(input, bottling);
     checkDistilleries(collection, updated);
-    Object.assign(bottling, updated, {
-      updatedAt: now(),
-    });
+    Object.assign(bottling, updated, {updatedAt: now(), });
     return bottling;
   });
 }
@@ -104,23 +98,13 @@ export function deleteBottling(id) {
   return change(collection => {
     const index = collection.bottlings.findIndex(entry => entry.id === id);
     if (index < 0) {
-      throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound"
-      );
+      throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
     }
     if (collection.bottlings[index].bottles.length) {
-      throw fail(
-        'Zuerst alle zugeordneten Flaschen löschen',
-        409,
-        "api.errors.deleteAllAssignedBottlesFirst"
-      );
+      throw fail('Zuerst alle zugeordneten Flaschen löschen', 409, "api.errors.deleteAllAssignedBottlesFirst");
     }
-    detachTastings(
-      collection,
-      (collection.bottlings[index].tastings || []).map(t => t.id)
-    );
+    detachTastings(collection, (collection.bottlings[index].tastings || []).map(t => t.id));
     collection.bottlings.splice(index, 1);
-    return {
-      ok: true,
-    };
+    return {ok: true, };
   });
 }

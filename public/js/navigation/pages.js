@@ -3,8 +3,7 @@ import {settingsIconPaths} from '../ui/action-icons.js';
 import {GLENCAIRN_INK} from '../ui/glencairn-icon.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/pages.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/pages.html', import.meta.url));
 
 /**
  * Main destinations in one place so future pages (e.g. analytics) need only one
@@ -31,9 +30,7 @@ export const MAIN_PAGES = Object.freeze([
     get label() {return t('tastings.homeTitle');},
     url: '/?view=tastings',
     action: 'goto-tastings-home',
-    icon: renderTemplate('iconPath2', {
-      gLENCAIRNINK: GLENCAIRN_INK,
-    }),
+    icon: renderTemplate('iconPath2', {gLENCAIRNINK: GLENCAIRN_INK, }),
     viewBox: '130 50 220 355',
     filled: true,
     navClass: 'nav-glencairn',

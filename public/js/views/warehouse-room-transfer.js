@@ -9,8 +9,7 @@ import {t} from '../i18n/index.js';
 import {escapeHtml as esc} from '../ui/dom.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/warehouse-room-transfer.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/warehouse-room-transfer.html', import.meta.url));
 
 
 const FORM_EXPORT = 'warehouse-room-export-form';
@@ -27,8 +26,7 @@ const FORM_IMPORT = 'warehouse-room-import-form';
 export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
   'export') {
   const exportAvailable = rooms.length > 0;
-  const mode = exportAvailable && initialMode !== 'import' ? 'export' :
-    'import';
+  const mode = exportAvailable && initialMode !== 'import' ? 'export' : 'import';
   /**
    * Produces the tab text used by the caller.
    *
@@ -38,17 +36,13 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
    */
   const tab = (name, label) =>
     renderTemplate('warehouseTransferTabButton', {
-      mode: mode ===
-        name ? ' active' :
-        '',
+      mode: mode === name ? ' active' : '',
       name: name,
-      mode2: mode
-        === name,
+      mode2: mode === name,
       name2: name,
       mode3: mode === name ? 0 : -1,
       name3: name,
-      disabled: name ===
-        'export' && !exportAvailable ? 'disabled' : '',
+      disabled: name === 'export' && !exportAvailable ? 'disabled' : '',
       label: label,
     });
   const actions = actionButton({
@@ -60,16 +54,13 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
     tab2: tab('import', t('warehouse.transfer.importAction')),
     hidden: mode !== 'export' ? 'hidden' : '',
     fORMEXPORT: FORM_EXPORT,
-    selectedRoomId: selectedRoomId ? '' : 'checke\
-d',
+    selectedRoomId: selectedRoomId ? '' : 'checked',
     rooms: composeMarkup(rooms.map(room =>
       renderTemplate('warehouseTransferChoice', {
         id: room.id,
-        checked: selectedRoomId ===
-          room.id ? 'checked' : '',
+        checked: selectedRoomId === room.id ? 'checked' : '',
         name: room.name,
-        length: room.furniture
-          .length,
+        length: room.furniture.length,
       }))),
     actions: actions,
     hidden2: mode !== 'import' ? 'hidden' : '',
@@ -93,11 +84,7 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
    */
   function openTransfer(selectedRoomId) {
     const rooms = getWarehouse()?.rooms || [];
-    modal.showModal(
-      t('warehouse.transfer.title'),
-      roomTransferMarkup(rooms, selectedRoomId),
-      true
-    );
+    modal.showModal(t('warehouse.transfer.title'), roomTransferMarkup(rooms, selectedRoomId), true);
     const host = document.getElementById('warehouse-room-transfer');
     if (!host) return;
     const exportForm = host.querySelector(`#${FORM_EXPORT}`);
@@ -116,44 +103,37 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
         tab.classList.toggle('active', active);
         tab.setAttribute('aria-selected', String(active));
         tab.tabIndex = active ? 0 : -1;
-        host.querySelector(`#warehouse-transfer-panel-${tab.dataset
-          .transferTab}`).hidden = !active;
+        host.querySelector(`#warehouse-transfer-panel-${tab.dataset.transferTab}`).hidden = !active;
       }
     };
     tabs.forEach(tab => {
       tab.addEventListener('click', () => switchTab(tab.dataset.transferTab));
       tab.addEventListener('keydown', event => {
-        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End']
-          .includes(event.key)) return;
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
         event.preventDefault();
         const names = rooms.length ? ['export', 'import'] : ['import'];
         const index = names.indexOf(tab.dataset.transferTab);
         const next = event.key === 'Home' ? names[0] : event.key === 'End' ?
-          names.at(-1) : names[(index + (event.key === 'ArrowRight' ? 1 :
-            -1) + names.length) % names.length];
+          names.at(-1) : names[(index + (event.key === 'ArrowRight' ? 1 : -1) + names.length) % names.length];
         switchTab(next);
         host.querySelector(`[data-transfer-tab="${next}"]`)?.focus();
       });
     });
     const all = exportForm.querySelector('#warehouse-transfer-all');
-    const choices = [...exportForm.querySelectorAll('.warehouse-transfer-room'),
-    ];
+    const choices = [...exportForm.querySelectorAll('.warehouse-transfer-room'),];
     /**
      * Updates choices in the current state.
           * @return {*} Result of this expression.
 */
     const updateChoices = () => choices.forEach(input => {
-      input.disabled =
-        all.checked; input.checked = all.checked || input.checked;
+      input.disabled = all.checked; input.checked = all.checked || input.checked;
     });
     all.addEventListener('change', updateChoices);
     updateChoices();
     exportForm.addEventListener('submit', async event => {
       event.preventDefault(); event.stopPropagation();
-      const ids = all.checked ? 'all' : choices.filter(input =>
-        input.checked).map(input => input.value);
-      if (Array.isArray(ids) &&
-        !ids.length) return toast(t('warehouse.transfer.selectRoom'), true);
+      const ids = all.checked ? 'all' : choices.filter(input => input.checked).map(input => input.value);
+      if (Array.isArray(ids) && !ids.length) return toast(t('warehouse.transfer.selectRoom'), true);
       const submit = exportForm.querySelector('[type="submit"]');
       submit.disabled = true;
       try {
@@ -163,26 +143,19 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
             method: 'POST',
             body: JSON.stringify({
               roomIds: ids,
-              includeAssignments: exportForm.querySelector(
-                '#warehouse-transfer-assignments').checked,
+              includeAssignments: exportForm.querySelector('#warehouse-transfer-assignments').checked,
             }),
           }
         );
-        const bytes = new Blob(
-          [JSON.stringify(bundle, null, 2) + '\n'],
-          {type: 'application/json'}
-        );
+        const bytes = new Blob([JSON.stringify(bundle, null, 2) + '\n'], {type: 'application/json'});
         const url = URL.createObjectURL(bytes);
         try {
-          const link = document.createElement('a'); link.href =
-            url; link.download = `wcm-rooms-${new Date().toISOString()
-              .slice(0, 10)}.json`;
+          const link = document.createElement('a'); link.href = url; link.download = `wcm-rooms-${new Date().toISOString().slice(0, 10)}.json`;
           document.body.appendChild(link); link.click(); link.remove();
         } finally {setTimeout(() => URL.revokeObjectURL(url), 1000);}
         modal.closeModal();
       } catch (error) {toast(error.message, true);} finally {
-        submit.disabled =
-          false;
+        submit.disabled = false;
       }
     });
     const preview = importForm.querySelector('#warehouse-transfer-preview');
@@ -191,35 +164,24 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
      * Updates the invalidate state for its caller.
      */
     const invalidate = () => {apply.disabled = true; preview.textContent = '';};
-    importForm.querySelector('#warehouse-transfer-file')
-      .addEventListener('change',
-        () => {importedFile = null; invalidate();}
-      );
-    importForm.querySelector('#warehouse-transfer-import-assignments')
-      .addEventListener('change',
-        invalidate
-      );
-    importForm.querySelector('#warehouse-transfer-conflict-policy')
-      .addEventListener('change',
-        invalidate
-      );
+    importForm.querySelector('#warehouse-transfer-file').addEventListener('change',
+      () => {importedFile = null; invalidate();}
+    );
+    importForm.querySelector('#warehouse-transfer-import-assignments').addEventListener('change', invalidate);
+    importForm.querySelector('#warehouse-transfer-conflict-policy').addEventListener('change', invalidate);
     /**
      * Locates the DOM elements used by options.
      * @return {!Object} Matching DOM element, if present.
      */
     const options = () => ({
-      includeAssignments: importForm.querySelector(
-        '#warehouse-transfer-import-assignments').checked,
-      conflictPolicy: importForm.querySelector(
-        '#warehouse-transfer-conflict-policy').value,
+      includeAssignments: importForm.querySelector('#warehouse-transfer-import-assignments').checked,
+      conflictPolicy: importForm.querySelector('#warehouse-transfer-conflict-policy').value,
     });
     importForm.addEventListener('submit', async event => {
       event.preventDefault(); event.stopPropagation(); invalidate();
-      const file = importForm.querySelector('#warehouse-transfer-file')
-        .files[0];
+      const file = importForm.querySelector('#warehouse-transfer-file').files[0];
       if (!file) return toast(t('warehouse.transfer.selectFile'), true);
-      if (file.size > 12 * 1024 *
-        1024) return toast(t('warehouse.transfer.tooLarge'), true);
+      if (file.size > 12 * 1024 * 1024) return toast(t('warehouse.transfer.tooLarge'), true);
       const submit = importForm.querySelector('[type="submit"]');
       submit.disabled = true;
       try {
@@ -247,20 +209,13 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
           entries: composeMarkup(entries.map(([
             field, label]) => renderTemplate('openTransferDiv', {
               t: t(label),
-              summary: summary[
-                field] ?? 0,
+              summary: summary[field] ?? 0,
             }))),
-          hint: summary
-            .blockedRooms ? renderTemplate('hint') : '',
+          hint: summary.blockedRooms ? renderTemplate('hint') : '',
         }));
-        apply.disabled = !!summary.blockedRooms || (!summary.createdRooms &&
-          !summary.replacedRooms);
+        apply.disabled = !!summary.blockedRooms || (!summary.createdRooms && !summary.replacedRooms);
       } catch (error) {
-        importedFile = null; toast(
-          error instanceof SyntaxError ?
-            t('warehouse.transfer.invalidJson') : error.message,
-          true
-        );
+        importedFile = null; toast(error instanceof SyntaxError ? t('warehouse.transfer.invalidJson') : error.message, true);
       } finally {submit.disabled = false;}
     });
     apply.addEventListener('click', async () => {

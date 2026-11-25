@@ -54,11 +54,9 @@ async function savePhotoOrder(bottleId, ids, action) {
  * @return {!Promise<void>} Completion of the move, if one is possible.
  */
 export async function movePhoto(bottleId, photoId, step, action) {
-  const list = document.querySelector(`[data-photo-list="${CSS.escape(bottleId
-  )}"]`);
+  const list = document.querySelector(`[data-photo-list="${CSS.escape(bottleId)}"]`);
   if (!list) return;
-  const ids = [...list.querySelectorAll('[data-photo-tile]')].map(tile =>
-    tile.dataset.photoId);
+  const ids = [...list.querySelectorAll('[data-photo-tile]')].map(tile => tile.dataset.photoId);
   const from = ids.indexOf(photoId);
   const order = reorderedPhotoIds(ids, photoId, ids[from + step]);
   if (order) await savePhotoOrder(bottleId, order, action);
@@ -100,8 +98,7 @@ export function attachPhotoSorting(action) {
      * @return {?Element} Target tile or null when outside the list.
      */
     const tileAt = (x, y) => {
-      const tile = document.elementFromPoint(x, y)?.closest('[data-photo-tile]'
-      );
+      const tile = document.elementFromPoint(x, y)?.closest('[data-photo-tile]');
       return tile?.closest('[data-photo-list]') === list ? tile : null;
     };
 
@@ -111,8 +108,7 @@ export function attachPhotoSorting(action) {
      * @param {?Element} target Tile under the pointer, if any.
      */
     const showTarget = target => {
-      for (const tile of tiles()) tile.classList
-        .toggle('photo-drop-target', tile === target);
+      for (const tile of tiles()) tile.classList.toggle('photo-drop-target', tile === target);
     };
 
     /**
@@ -121,8 +117,7 @@ export function attachPhotoSorting(action) {
     const clear = () => {
       const active = gesture;
       gesture = null;
-      for (const tile of tiles()) tile.classList
-        .remove('photo-dragging', 'photo-drop-target');
+      for (const tile of tiles()) tile.classList.remove('photo-dragging', 'photo-drop-target');
       if (active?.source.hasPointerCapture?.(active.pointerId)) {
         active.source.releasePointerCapture(active.pointerId);
       }
@@ -149,8 +144,7 @@ export function attachPhotoSorting(action) {
     list.addEventListener('pointerdown', event => {
       if (!event.isPrimary || event.button !== 0 || gesture || saving) return;
       const handle = event.target.closest('[data-photo-drag]');
-      const photo = event.pointerType === 'mouse' ? event.target
-        .closest('.photo-open') : null;
+      const photo = event.pointerType === 'mouse' ? event.target.closest('.photo-open') : null;
       const source = handle || photo;
       const tile = source?.closest('[data-photo-tile]');
       if (!tile || tile.closest('[data-photo-list]') !== list) return;
@@ -168,8 +162,7 @@ export function attachPhotoSorting(action) {
       const dy = event.clientY - active.startY;
       if (!active.moved && dx * dx + dy * dy > 36) {
         active.moved = true;
-        active.source.closest('[data-photo-tile]').classList
-          .add('photo-dragging');
+        active.source.closest('[data-photo-tile]').classList.add('photo-dragging');
       }
       if (!active.moved) return;
       event.preventDefault();

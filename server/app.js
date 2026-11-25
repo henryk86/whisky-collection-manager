@@ -30,8 +30,7 @@ export function createRequestHandler() {
     async function handleRequest(request, response) {
       try {
         requireAllowedHost(request);
-        const url = new URL(request.url, `http://${request.headers.host ||
-          'localhost'}`);
+        const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
         // The local image staging endpoint may be called directly by the
         // Chrome/Edge extension origins (optionally restricted by
         // EXTENSION_IDS).
@@ -49,40 +48,27 @@ export function createRequestHandler() {
           response.setHeader('Access-Control-Allow-Private-Network', 'true');
         }
         if (request.method === 'OPTIONS') {
-          response.writeHead(url.pathname === '/api/import-image/stage' &&
-            isExtension ? 204 : 405);
+          response.writeHead(url.pathname === '/api/import-image/stage' && isExtension ? 204 : 405);
           response.end();
           return;
         }
-        requireSameOriginMutation(
-          request,
-          url,
-          {extensionStage: url.pathname === '/api/import-image/stage'}
-        );
+        requireSameOriginMutation(request, url, {extensionStage: url.pathname === '/api/import-image/stage'});
         authorizeRequest(request, url);
-        if (url.pathname.startsWith('/api/') || url.pathname
-          .startsWith('/internal/backup/')) {
+        if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/internal/backup/')) {
           return await handleApi(request, response, url);
         }
         if (request.method !== 'GET') {
-          throw fail(
-            'Methode nicht erlaubt',
-            405,
-            'api.errors.methodNotAllowed'
-          );
+          throw fail('Methode nicht erlaubt', 405, 'api.errors.methodNotAllowed');
         }
         await serveStatic(request, response, url);
       }
       catch (error) {
         // Closing a download (navigation, mobile connectivity, etc.) is not
         // a server failure. Keep genuine read/stream errors visible in logs.
-        const connectionClosed =
-          ['ERR_STREAM_PREMATURE_CLOSE', 'ECONNRESET', 'EPIPE', 'ABORT_ERR']
-            .includes(error.code);
+        const connectionClosed = ['ERR_STREAM_PREMATURE_CLOSE', 'ECONNRESET', 'EPIPE', 'ABORT_ERR'].includes(error.code);
         // A client that closes mid-upload cannot receive an error response.
         // Do not treat that normal disconnect as an internal server failure.
-        const abortedUpload = connectionClosed && !request.complete &&
-          (request.aborted || request.destroyed);
+        const abortedUpload = connectionClosed && !request.complete && (request.aborted || request.destroyed);
         if (connectionClosed && (response.headersSent || abortedUpload)) {
           response.destroy();
           return;

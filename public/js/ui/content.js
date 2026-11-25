@@ -2,8 +2,7 @@ import {composeMarkup} from './render-plan.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/content.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/content.html', import.meta.url));
 
 
 /**
@@ -44,12 +43,10 @@ export function panel({content = '', variant = 'standard', tag = 'div',
   className = ''} = {}) {
   assertVariant(variant, ['standard', 'analytics', 'plain'], 'panel');
   assertVariant(tag, ['div', 'section', 'article'], 'panel tag');
-  const baseClass = variant === 'analytics' ? 'analytics-panel' :
-    variant === 'plain' ? '' : 'panel';
+  const baseClass = variant === 'analytics' ? 'analytics-panel' : variant === 'plain' ? '' : 'panel';
   return renderTemplate('panel', {
     tag: tag,
-    safe: safe(classes(baseClass,
-      className)),
+    safe: safe(classes(baseClass, className)),
     variant: variant,
     content: content,
     tag2: tag,
@@ -72,15 +69,10 @@ export function detailField({
   labelClass = '',
   valueClass = ''
 } = {}) {
-  assertVariant(
-    variant,
-    ['definition', 'fact', 'readonly', 'note', 'preview'],
-    'detail field'
-  );
+  assertVariant(variant, ['definition', 'fact', 'readonly', 'note', 'preview'], 'detail field');
   const definition = variant === 'definition';
   const labelTag = definition ? 'dt' : 'span';
-  const valueTag = definition ? 'dd' : variant === 'readonly' ? 'strong' :
-    variant === 'note' ? 'p' : 'div';
+  const valueTag = definition ? 'dd' : variant === 'readonly' ? 'strong' : variant === 'note' ? 'p' : 'div';
   const valueContent = valueHtml ? value : safe(value);
   return renderTemplate('detailFieldDiv', {
     className: className ? ` class="${safe(className)}"` : '',
@@ -116,8 +108,7 @@ export function detailGrid(content, {columns = 3, tag = 'div', className =
   assertVariant(tag, ['div', 'dl'], 'detail grid tag');
   return renderTemplate('detailGrid', {
     tag: tag,
-    className: className ? ` class="${safe(className)}"` :
-      '',
+    className: className ? ` class="${safe(className)}"` : '',
     columns: columns,
     content: content,
     tag2: tag,
@@ -140,16 +131,12 @@ export function emptyState({
 } = {}) {
   assertVariant(variant, ['collection', 'subtle', 'inline'], 'empty state');
   if (variant === 'inline') return renderTemplate('emptyStateP', {
-    safe: safe(classes('analytics-empty',
-      className)),
-    safe2: safe(description ||
-      title),
+    safe: safe(classes('analytics-empty', className)),
+    safe2: safe(description || title),
   });
   if (variant === 'subtle') return renderTemplate('emptyStateP2', {
-    safe: safe(classes('hint',
-      className)),
-    safe2: safe(description ||
-      title),
+    safe: safe(classes('hint', className)),
+    safe2: safe(description || title),
   });
   return renderTemplate('emptyStateDiv', {
     safe: safe(classes('empty-state', className)),
@@ -169,14 +156,8 @@ export function emptyState({
 export function divider({orientation = 'horizontal', className = ''} = {}) {
   assertVariant(orientation, ['horizontal', 'vertical'], 'divider');
   return orientation === 'horizontal'
-    ? renderTemplate('hr', {
-      safe: safe(classes('divider',
-        className)),
-    })
-    : renderTemplate('dividerSpan', {
-      safe: safe(className
-      ),
-    });
+    ? renderTemplate('hr', {safe: safe(classes('divider', className)), })
+    : renderTemplate('dividerSpan', {safe: safe(className), });
 }
 
 /**
@@ -192,8 +173,7 @@ export function actionToolbar(content, {className = '', variant = 'inline'} =
   assertVariant(variant, ['inline', 'filters', 'end'], 'action toolbar');
   const baseClass = variant === 'filters' ? 'toolbar' : 'actions';
   return renderTemplate('actionToolbarDiv', {
-    safe: safe(classes(baseClass,
-      className)),
+    safe: safe(classes(baseClass, className)),
     variant: variant,
     content: content,
   });
@@ -206,9 +186,7 @@ export function actionToolbar(content, {className = '', variant = 'inline'} =
  * @return {string} List-item HTML.
  */
 export function documentItem(content) {
-  return renderTemplate('li', {
-    content: content,
-  });
+  return renderTemplate('li', {content: content, });
 }
 
 /**
@@ -218,7 +196,5 @@ export function documentItem(content) {
  * @return {string} Document-list HTML.
  */
 export function documentList(items) {
-  return renderTemplate('documentList', {
-    items: composeMarkup(items),
-  });
+  return renderTemplate('documentList', {items: composeMarkup(items), });
 }

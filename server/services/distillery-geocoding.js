@@ -5,8 +5,7 @@
  */
 import {fail} from '../domain/errors.js';
 import fs from 'node:fs';
-const appVersion = JSON.parse(fs.readFileSync(new URL('../../package.json',
-  import.meta.url), 'utf8')).version;
+const appVersion = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
 const cache = new Map();
 let lastLookup = 0;
 const MIN_INTERVAL_MS = 1200;
@@ -24,11 +23,7 @@ export async function findDistilleryLocations(input, {now = Date.now,
   fetchImpl = fetch} = {}) {
   const name = typeof input?.name === 'string' ? input.name.trim() : '';
   if (name.length < 2 || name.length > 150 || /[\x00-\x1f]/.test(name)) {
-    throw fail(
-      'Bitte einen gültigen Destillerienamen eingeben',
-      400,
-      "api.errors.pleaseEnterAValidDistilleryName"
-    );
+    throw fail('Bitte einen gültigen Destillerienamen eingeben', 400, "api.errors.pleaseEnterAValidDistilleryName");
   }
   const key = name.toLocaleLowerCase('de');
   const cached = cache.get(key);
@@ -51,20 +46,14 @@ export async function findDistilleryLocations(input, {now = Date.now,
     url.searchParams.set('limit', '5');
     url.searchParams.set('addressdetails', '0');
   } catch {
-    throw fail(
-      'Ungültiger OSM-Geocoding-Endpunkt',
-      503,
-      "api.errors.invalidOSMGeocodingEndpoint"
-    );
+    throw fail('Ungültiger OSM-Geocoding-Endpunkt', 503, "api.errors.invalidOSMGeocodingEndpoint");
   }
   let raw;
   try {
     const response = await fetchImpl(url, {
       signal: AbortSignal.timeout(8000),
       headers: {
-        'User-Agent':
-          `WhiskyCollectionManager/${appVersion} (+https://github.com/henryk\
-86/whisky-collection-manager)`,
+        'User-Agent': `WhiskyCollectionManager/${appVersion} (+https://github.com/henryk86/whisky-collection-manager)`,
         'Accept': 'application/json',
         'Accept-Language': 'en',
       },
@@ -73,24 +62,16 @@ export async function findDistilleryLocations(input, {now = Date.now,
     raw = await response.json();
   } catch {
     throw fail(
-      'Die OpenStreetMap-Standortsuche ist derzeit nicht erreichbar. \
-Koordinaten können manuell eingetragen werden.',
+      'Die OpenStreetMap-Standortsuche ist derzeit nicht erreichbar. Koordinaten können manuell eingetragen werden.',
       503,
-      "api.errors.openstreetmapLocationSearchIsCurrentlyUnavailableYouCanEnt\
-erCoordinatesManually"
+      "api.errors.openstreetmapLocationSearchIsCurrentlyUnavailableYouCanEnterCoordinatesManually"
     );
   }
-  if (!Array.isArray(raw)) throw fail(
-    'Ungültige Antwort der Standortsuche',
-    503,
-    "api.errors.invalidResponseFromLocationSearch"
-  );
+  if (!Array.isArray(raw)) throw fail('Ungültige Antwort der Standortsuche', 503, "api.errors.invalidResponseFromLocationSearch");
   const matches = raw.slice(0, 5).map(item => ({
     name: String(item.display_name || '').slice(0, 250),
     latitude: Number(item.lat), longitude: Number(item.lon),
-  })).filter(item => item.name && Number.isFinite(item.latitude) &&
-    Math.abs(item.latitude) <= 90 &&
-    Number.isFinite(item.longitude) && Math.abs(item.longitude) <= 180);
+  })).filter(item => item.name && Number.isFinite(item.latitude) && Math.abs(item.latitude) <= 90 && Number.isFinite(item.longitude) && Math.abs(item.longitude) <= 180);
   cache.set(key, {at: now(), matches});
   if (cache.size > 500) cache.delete(cache.keys().next().value);
   return matches;

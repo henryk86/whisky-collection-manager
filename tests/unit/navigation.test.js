@@ -65,9 +65,7 @@ test(
   'scan navigation scrolls to the page top and preserves bottle highlighting',
   () => {
     const context = setup();
-    context.navigate('detail', 'bottling-a', {
-      highlightBottleId: 'bottle-a',
-    });
+    context.navigate('detail', 'bottling-a', {highlightBottleId: 'bottle-a', });
     assert.equal(context.state.highlightBottleId, 'bottle-a');
     assert.deepEqual(
       context.calls,
@@ -103,8 +101,7 @@ test(
 );
 
 test(
-  'navigation retains bottle overview across detail visits and restores \
-mode and page with back/forward',
+  'navigation retains bottle overview across detail visits and restores mode and page with back/forward',
   () => {
     const context = setup();
     context.state.overviewMode = 'bottles';

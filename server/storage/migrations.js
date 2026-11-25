@@ -6,10 +6,7 @@ import fs from 'node:fs';
 import {assert} from '../domain/errors.js';
 import {allBottles, now, uid} from '../domain/collection.js';
 import {validate} from '../domain/validation.js';
-const internationalSeed = JSON.parse(fs.readFileSync(
-  new URL('../../seed/distillery.json', import.meta.url),
-  'utf8'
-));
+const internationalSeed = JSON.parse(fs.readFileSync(new URL('../../seed/distillery.json', import.meta.url), 'utf8'));
 
 // Convert legacy top-level bottles into the owning bottling before validation.
 /**
@@ -32,12 +29,7 @@ export function migrateNestedBottles(db) {
     }
     for (const bottle of db.bottles) {
       const owner = (db.bottlings || []).find(b => b.id === bottle.bottlingId);
-      assert(
-        owner,
-        'Verwaiste Flasche kann nicht migriert werden',
-        400,
-        "api.errors.orphanedBottleCannotBeMigrated"
-      );
+      assert(owner, 'Verwaiste Flasche kann nicht migriert werden', 400, "api.errors.orphanedBottleCannotBeMigrated");
       if (owner.bottles.some(b => b.id === bottle.id)) {
         throw new Error('Doppelte Flaschen-ID bei Migration');
       }
@@ -92,9 +84,7 @@ export function migrateInventoryNumbers(db) {
         delete bottle.labelCode;
         changed = true;
       }
-      if (bottle.inventoryNumber != null &&
-        String(bottle.inventoryNumber) !== String(bottle.inventoryNumber)
-          .trim()) {
+      if (bottle.inventoryNumber != null && String(bottle.inventoryNumber) !== String(bottle.inventoryNumber).trim()) {
         bottle.inventoryNumber = String(bottle.inventoryNumber).trim();
         changed = true;
       }
@@ -107,8 +97,7 @@ export function migrateInventoryNumbers(db) {
       }
       if (/^\d+$/.test(number)) {
         const asNumber = Number(number);
-        if (Number.isSafeInteger(asNumber) && asNumber >=
-          db.nextInventoryNumber) {
+        if (Number.isSafeInteger(asNumber) && asNumber >= db.nextInventoryNumber) {
           db.nextInventoryNumber = asNumber + 1;
           changed = true;
         }
@@ -257,13 +246,11 @@ export function migrateDocumentLists(db) {
  */
 export function migrateInternationalDistilleries(db) {
   if (!Array.isArray(db.distilleries)) return false;
-  const currentNames = new Set(db.distilleries.map(d => d.name.trim()
-    .toLocaleLowerCase('en')));
+  const currentNames = new Set(db.distilleries.map(d => d.name.trim().toLocaleLowerCase('en')));
   const currentIds = new Set(db.distilleries.map(d => d.id));
   let changed = false;
   for (const entry of internationalSeed.filter(d => d.country)) {
-    if (currentNames.has(entry.name.trim().toLocaleLowerCase('en')) ||
-      currentIds.has(entry.id)) continue;
+    if (currentNames.has(entry.name.trim().toLocaleLowerCase('en')) || currentIds.has(entry.id)) continue;
     db.distilleries.push({...entry});
     currentNames.add(entry.name.trim().toLocaleLowerCase('en'));
     currentIds.add(entry.id);
@@ -282,8 +269,7 @@ export function migrateInternationalDistilleries(db) {
  */
 export function migrateDistilleryOrigins(db) {
   if (!Array.isArray(db.distilleries)) return false;
-  const catalog = new Map(internationalSeed.map(d => [d.name.trim()
-    .toLocaleLowerCase('en'), d]));
+  const catalog = new Map(internationalSeed.map(d => [d.name.trim().toLocaleLowerCase('en'), d]));
   let changed = false;
   for (const site of db.distilleries) {
     const known = catalog.get(site.name.trim().toLocaleLowerCase('en'));
@@ -292,8 +278,7 @@ export function migrateDistilleryOrigins(db) {
     // Do not reinterpret UK for unknown sites, Wales, England or Northern
     // Ireland.
     if (known.country === 'Schottland' &&
-      /^(?:UK|GB|United Kingdom|Vereinigtes Königreich)$/i
-        .test(site.country?.trim() || '')) {
+      /^(?:UK|GB|United Kingdom|Vereinigtes Königreich)$/i.test(site.country?.trim() || '')) {
       site.country = 'Schottland';
       changed = true;
     }
@@ -316,15 +301,13 @@ export function migrateDistilleryOrigins(db) {
  */
 export function migrateCollection(collection) {
   assert(
-    collection && typeof collection === 'object' &&
-    !Array.isArray(collection),
+    collection && typeof collection === 'object' && !Array.isArray(collection),
     'Ungültige Sammlungsstruktur',
     400,
     "api.errors.invalidCollectionStructure"
   );
   assert(
-    Array.isArray(collection.bottlings) &&
-    Array.isArray(collection.reservedInventoryNumbers),
+    Array.isArray(collection.bottlings) && Array.isArray(collection.reservedInventoryNumbers),
     'Ungültige Sammlungsstruktur',
     400,
     "api.errors.invalidCollectionStructure"
@@ -358,11 +341,8 @@ export function migrateCollection(collection) {
  */
 export function migrateCollectionToCurrent(source) {
   assert(
-    source && typeof source === 'object' && !Array.isArray(source) &&
-    Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >=
-    1 && source.schemaVersion <= 6,
-    'Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben \
-unverändert',
+    source && typeof source === 'object' && !Array.isArray(source) && Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >= 1 && source.schemaVersion <= 6,
+    'Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben unverändert',
     400,
     "api.errors.unsupportedCollectionVersion"
   );

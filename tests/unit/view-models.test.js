@@ -14,10 +14,7 @@ test('view models filter and paginate without mutating their inputs', () => {
   assert.equal(result.currentPage, 1);
   assert.deepEqual(result.subset, [{name: 'Alpha'}]);
   const state = {
-    collection: {
-      distilleries: [{name: 'Zulu'},
-      {name: 'Alpha'}],
-    }, distillerySearch: ' alpha ',
+    collection: {distilleries: [{name: 'Zulu'}, {name: 'Alpha'}], }, distillerySearch: ' alpha ',
   };
   const before = structuredClone(state);
   const model = createSettingsViewModel(state);
@@ -40,8 +37,7 @@ test('backup view model groups snapshots and limits recent jobs', () => {
 });
 
 test('HTML formatter is idempotent and preserves inline and raw text', () => {
-  const source = '<!-- wcm-template:example -->\r\n' +
-    '<div><p>Hello <strong>{{text:name}}</strong> !</p></div>\r\n' +
+  const source = '<!-- wcm-template:example -->\r\n' + '<div><p>Hello <strong>{{text:name}}</strong> !</p></div>\r\n' +
     '<textarea>  unchanged\n text </textarea>\r\n' +
     '<!-- /wcm-template -->\r\n';
   const formatted = formatTemplateFile(source);

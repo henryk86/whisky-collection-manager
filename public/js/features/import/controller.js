@@ -9,8 +9,7 @@ import {importChoice} from './choice-template.js';
 import {matchImportedDistilleries} from './distillery-matching.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/controller.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/controller.html', import.meta.url));
 
 /**
  * Source-independent import workflow. The provider validates and identifies
@@ -23,11 +22,9 @@ export function createExternalImport({
   state, navigate, showModal, closeModal, action, createBottling, editBottling,
   validatePayload, findExistingBottling, sourceName, extraFieldLabels = {},
 }) {
-  if (typeof validatePayload !== 'function' ||
-    typeof findExistingBottling !== 'function' ||
+  if (typeof validatePayload !== 'function' || typeof findExistingBottling !== 'function' ||
     typeof sourceName !== 'string' || !sourceName.trim()) {
-    throw new TypeError(
-      'An import source requires payload validation and duplicate matching');
+    throw new TypeError('An import source requires payload validation and duplicate matching');
   }
   const safeSourceName = escapeHtml(sourceName);
   const IMPORT_FIELD_LABELS = {
@@ -59,10 +56,7 @@ export function createExternalImport({
     if (panel) {
       const oldStatus = query('#import-status', panel);
       if (oldStatus) oldStatus.textContent = message;
-      else appendContent(panel, renderTemplate('importStatus', {
-        message: message,
-      })
-      );
+      else appendContent(panel, renderTemplate('importStatus', {message: message, }));
     }
   }
 
@@ -82,8 +76,7 @@ export function createExternalImport({
     panel.className = 'form-field full import-area';
     panel.setAttribute('aria-live', 'polite');
     const category = form.elements.whiskyType?.closest?.('.form-field');
-    if (category && category.parentElement ===
-      fields) fields.insertBefore(panel, category);
+    if (category && category.parentElement === fields) fields.insertBefore(panel, category);
     else fields.prepend(panel);
     return panel;
   }
@@ -101,55 +94,35 @@ export function createExternalImport({
     if (!panel) {
       return;
     }
-    const distilleries = matchImportedDistilleries(
-      importDetails.distilleryName,
-      state.collection.distilleries
-    );
-    const selectedDistilleries =
-      new Set(queryAll('input[name=distilleryIds]:checked', form)
-        .map(input => input.value));
-    const values = Object.entries(importDetails.fields).filter(([k, v]) =>
-      v !== null && v !== undefined && v !== '');
+    const distilleries = matchImportedDistilleries(importDetails.distilleryName, state.collection.distilleries);
+    const selectedDistilleries = new Set(queryAll('input[name=distilleryIds]:checked', form).map(input => input.value));
+    const values = Object.entries(importDetails.fields).filter(([k, v]) => v !== null && v !== undefined && v !== '');
     const distilleryChoice = composeMarkup(distilleries.map(distillery =>
       importChoice({
         label: t("imports.fields.distillery"),
         value: distillery.name,
         distillery: true,
         distilleryId: distillery.id,
-        checked: Boolean(distillery.id &&
-          !selectedDistilleries.has(distillery.id)),
+        checked: Boolean(distillery.id && !selectedDistilleries.has(distillery.id)),
         disabled: !distillery.id,
       })));
     const fieldChoices = composeMarkup(values.map(([key, value]) => {
       const old = form.elements[key]?.value;
       return importChoice({
         field: key, label: IMPORT_FIELD_LABELS[key] || key,
-        value: key === 'whiskyType' ? (whiskyTypeLabels[value] ||
-          value) : value,
+        value: key === 'whiskyType' ? (whiskyTypeLabels[value] || value) : value,
         currentValue: old, checked: !old,
       });
     }));
     replaceContent(panel, renderTemplate('panel', {
-      title: t("imports.preview.title", {
-        id: escapeHtml(importDetails.referenceId),
-      }),
+      title: t("imports.preview.title", {id: escapeHtml(importDetails.referenceId), }),
       openPhoto: importDetails.imageToken ?
         renderTemplate('openPhoto', {
-          openOverlay: t(
-            "imports.images.openOverlay", {source: safeSourceName}
-          ),
+          openOverlay: t("imports.images.openOverlay", {source: safeSourceName}),
           imageToken: importDetails.imageToken,
-          reference: t(
-            "imp\
-orts.images.reference",
-            {source: safeSourceName}
-          ),
-          hint: form.dataset.id ?
-            renderTemplate('hint') : renderTemplate('importImage'),
-          referenceNotOwnership: t(
-            "imports.images.referenceNotOwnership",
-            {source: safeSourceName}
-          ),
+          reference: t("imports.images.reference", {source: safeSourceName}),
+          hint: form.dataset.id ? renderTemplate('hint') : renderTemplate('importImage'),
+          referenceNotOwnership: t("imports.images.referenceNotOwnership", {source: safeSourceName}),
         }) : '',
       distilleryChoice: distilleryChoice,
       fieldChoices: fieldChoices,
@@ -172,10 +145,7 @@ orts.images.reference",
       showModal(
         t("imports.import.ready"),
         renderTemplate('importFromExtensionP', {
-          unsavedDialogNotice: t(
-            "imports.import.unsavedDialogNotice",
-            {source: safeSourceName}
-          ),
+          unsavedDialogNotice: t("imports.import.unsavedDialogNotice", {source: safeSourceName}),
         }),
         false,
         true
@@ -209,40 +179,25 @@ orts.images.reference",
       const data = validatePayload(JSON.parse(decodeURIComponent(raw)));
       const existing = findExistingBottling(state.collection, data);
       if (existing) {
-        navigate('detail', existing.id, {
-          replace: true,
-        });
+        navigate('detail', existing.id, {replace: true, });
         showModal(t("imports.import.alreadyExists"), renderTemplate('panel2', {
-          existingBottlingPrefix: t(
-            "imports.import.existingBottlingPrefix",
-            {source: safeSourceName}
-          ),
+          existingBottlingPrefix: t("imports.import.existingBottlingPrefix", {source: safeSourceName}),
           name: existing.name,
-          importExistingPhoto: data
-            .imageToken ? renderTemplate('importExistingPhoto', {
-              preparedLocally: t(
-                "imports.images.preparedLocally", {source: safeSourceName}
-              ),
-              formField: (
-                existing.bottles || []).length ? renderTemplate('formField', {
-                  bottles: composeMarkup(existing.bottles
-                    .map(b => renderTemplate('processExtensionImportOption', {
-                      id: b.id,
-                      inventoryNumber: b.inventoryNumber ||
-                        t("imports.bottles.noInventoryNumber"),
-                      volumeType: b.volumeType === 'sample' ?
-                        t("imports.bottles.sample") : t("imports.bottles.sta\
-ndard"),
-                    }))),
-                }) : '',
+          importExistingPhoto: data.imageToken ? renderTemplate('importExistingPhoto', {
+            preparedLocally: t("imports.images.preparedLocally", {source: safeSourceName}),
+            formField: (existing.bottles || []).length ? renderTemplate('formField', {
+              bottles: composeMarkup(existing.bottles.map(b => renderTemplate('processExtensionImportOption', {
+                id: b.id,
+                inventoryNumber: b.inventoryNumber || t("imports.bottles.noInventoryNumber"),
+                volumeType: b.volumeType === 'sample' ? t("imports.bottles.sample") : t("imports.bottles.standard"),
+              }))),
             }) : '',
+          }) : '',
         }), true);
         importDetails = data;
       }
       else {
-        navigate('home', null, {
-          replace: true,
-        });
+        navigate('home', null, {replace: true, });
         createBottling();
         previewImport(data);
       }
@@ -260,15 +215,13 @@ ndard"),
     if (!form || !importDetails) {
       return;
     }
-    for (const checkbox of queryAll('[data-import-field]:checked',
-      query('#import-panel'))) {
+    for (const checkbox of queryAll('[data-import-field]:checked', query('#import-panel'))) {
       const k = checkbox.dataset.importField;
       if (form.elements[k] && importDetails.fields[k] != null) {
         form.elements[k].value = importDetails.fields[k];
       }
     }
-    const selectedIds = new Set(queryAll('[name=import-distillery]:checked',
-      query('#import-panel')).map(input => input.value));
+    const selectedIds = new Set(queryAll('[name=import-distillery]:checked', query('#import-panel')).map(input => input.value));
     for (const choice of queryAll('input[name=distilleryIds]', form)) {
       if (selectedIds.has(choice.value)) choice.checked = true;
     }
@@ -311,8 +264,7 @@ ndard"),
     const id = query('#import-existing-photo-bottle')?.value;
     const token = getPendingImageToken();
     if (!id || !token) return toast(t("imports.validation.selectBottle"), true);
-    const found = state.collection.bottlings.some(b => (b.bottles || [])
-      .some(p => p.id === id));
+    const found = state.collection.bottlings.some(b => (b.bottles || []).some(p => p.id === id));
     if (!found) return toast(t("features.errors.bottleNotFound"), true);
     const result = await action(async () => {
       await request(

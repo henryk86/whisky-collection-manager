@@ -18,8 +18,7 @@ export function normalizeTastingNotes(notes) {
   if (notes == null) return emptyTastingNotes();
   if (!notes || typeof notes !== 'object' || Array.isArray(notes) ||
     Object.keys(notes).some(key => !NOTE_FIELDS.includes(key)) ||
-    NOTE_FIELDS.some(key => notes[key] != null && typeof notes[key] !==
-      'string'))
+    NOTE_FIELDS.some(key => notes[key] != null && typeof notes[key] !== 'string'))
     throw new Error('Ungültige Verkostungsnotizen');
   return Object.fromEntries(NOTE_FIELDS.map(key => [key, notes[key] || '']));
 }
@@ -30,8 +29,7 @@ export function normalizeTastingNotes(notes) {
  * @param {?Object} notes Optional normalized note fields.
  * @return {boolean} Whether any note is present.
  */
-export const hasTastingNotes = notes => NOTE_FIELDS.some(key =>
-  typeof notes?.[key] === 'string' && notes[key].trim());
+export const hasTastingNotes = notes => NOTE_FIELDS.some(key => typeof notes?.[key] === 'string' && notes[key].trim());
 
 /**
  * Validates a tasting score without rounding the stored value.
@@ -42,8 +40,7 @@ export const hasTastingNotes = notes => NOTE_FIELDS.some(key =>
  */
 export function normalizeTastingRating(value) {
   if (value == null || value === '') return null;
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 ||
-    value > 100)
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100)
     throw new Error('Bewertung muss zwischen 0 und 100 liegen');
   return value;
 }
@@ -58,8 +55,7 @@ export function normalizeTastingRating(value) {
 export function parseTastingScore(input) {
   const value = String(input ?? '').trim();
   if (!value) return null;
-  if (!/^(?:\d{1,3})(?:[.,]\d)?$/
-    .test(value)) throw new Error('Ungültige Punktebewertung');
+  if (!/^(?:\d{1,3})(?:[.,]\d)?$/.test(value)) throw new Error('Ungültige Punktebewertung');
   const score = Number(value.replace(',', '.'));
   if (score < 0 || score > 100) throw new Error('Ungültige Punktebewertung');
   return score;

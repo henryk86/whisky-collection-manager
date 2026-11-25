@@ -9,8 +9,7 @@ import {escapeHtml} from './dom.js';
 import {arrowLeftIcon, helpCircleIcon} from './action-icons.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/headers.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/headers.html', import.meta.url));
 
 
 /**
@@ -23,8 +22,7 @@ const renderTemplate = await loadTemplates(
 export function headerActions(content, {className = ''} = {}) {
   if (!content) return '';
   return renderTemplate('actions', {
-    className: className ?
-      ` ${escapeHtml(className)}` : '',
+    className: className ? ` ${escapeHtml(className)}` : '',
     content: content,
   });
 }
@@ -44,20 +42,14 @@ export function headingTitle({
   trailingAction = '',
   period = false
 }) {
-  if (![2, 3].includes(level)) throw new RangeError(
-    'Heading level must be 2 or 3');
-  const classes = `${className}${trailingAction ? `${className ? ' ' :
-    ''}ds-heading-with-action` : ''}`;
+  if (![2, 3].includes(level)) throw new RangeError('Heading level must be 2 or 3');
+  const classes = `${className}${trailingAction ? `${className ? ' ' : ''}ds-heading-with-action` : ''}`;
   return renderTemplate('h', {
     level: `h${level}`,
-    classes: classes ? ` class="${escapeHtml(classes)}"` :
-      '',
-    id: id ? ` id="${escapeHtml(id)}"` :
-      '',
+    classes: classes ? ` class="${escapeHtml(classes)}"` : '',
+    id: id ? ` id="${escapeHtml(id)}"` : '',
     title: String(title),
-    headingPeriod: period ?
-      renderTemplate('headingPeriod') :
-      '',
+    headingPeriod: period ? renderTemplate('headingPeriod') : '',
     trailingAction: trailingAction || '',
     level2: `h${level}`,
   });
@@ -85,16 +77,13 @@ export function sectionHeader({
   actionsClass = '',
   actionsBare = false
 } = {}) {
-  if (!['section-head', 'tasting-panel-heading', 'dialog-head']
-    .includes(layout)) throw new RangeError('Invalid section header layout');
+  if (!['section-head', 'tasting-panel-heading', 'dialog-head'].includes(layout)) throw new RangeError('Invalid section header layout');
   const heading = headingTitle({
     title, level, className: titleClass,
     id: titleId, trailingAction,
   });
   const copy = description || copyClass ? renderTemplate('copyDiv', {
-    copyClass: copyClass ?
-      escapeHtml(copyClass) :
-      'ds-section-heading-copy',
+    copyClass: copyClass ? escapeHtml(copyClass) : 'ds-section-heading-copy',
     heading: heading,
     p: description ?
       renderTemplate('copyP', {
@@ -104,11 +93,9 @@ export function sectionHeader({
   }) : heading;
   return renderTemplate('sectionHeaderDiv', {
     layout: layout,
-    className: className ?
-      ` ${escapeHtml(className)}` : '',
+    className: className ? ` ${escapeHtml(className)}` : '',
     copy: copy,
-    actionsBare: actionsBare ? actions :
-      headerActions(actions, {className: actionsClass}),
+    actionsBare: actionsBare ? actions : headerActions(actions, {className: actionsClass}),
   });
 }
 
@@ -129,24 +116,14 @@ export function pageHeader({
   copyClass = 'page-heading-copy',
   period = true
 } = {}) {
-  const classes = `section-head ds-page-header${className ?
-    ` ${escapeHtml(className)}` : ''}`;
+  const classes = `section-head ds-page-header${className ? ` ${escapeHtml(className)}` : ''}`;
   return renderTemplate('header', {
     classes: classes,
-    copyClass: copyClass ?
-      ` class="${escapeHtml(copyClass)}"` : '',
-    eyebrow: eyebrow ?
-      renderTemplate('eyebrow', {
-        eyebrow: eyebrow,
-      }) :
-      '',
+    copyClass: copyClass ? ` class="${escapeHtml(copyClass)}"` : '',
+    eyebrow: eyebrow ? renderTemplate('eyebrow', {eyebrow: eyebrow, }) : '',
     preTitle: preTitle,
     headingTitle: headingTitle({title, level: 2, period}),
-    intro: intro ?
-      renderTemplate('intro', {
-        intro: intro,
-      }) :
-      '',
+    intro: intro ? renderTemplate('intro', {intro: intro, }) : '',
     actions: actions,
   });
 }
@@ -163,11 +140,9 @@ export function pageHeader({
  * @throws {RangeError} If the navigation variant is unsupported.
  */
 export function backNavigation(action, label, region = '', variant = 'inline') {
-  if (!['inline', 'page-action']
-    .includes(variant)) throw new RangeError('Invalid back-navigation variant');
+  if (!['inline', 'page-action'].includes(variant)) throw new RangeError('Invalid back-navigation variant');
   const text = escapeHtml(String(label).replace(/^\s*(?:(?:←|⟵|⬅)\s*)+/u, ''));
-  const attr = `data-act="${escapeHtml(action)}"${region ?
-    ` data-region="${escapeHtml(region)}"` : ''}`;
+  const attr = `data-act="${escapeHtml(action)}"${region ? ` data-region="${escapeHtml(region)}"` : ''}`;
   if (variant === 'page-action') {
     return renderTemplate('dsBackNav', {
       text: text,

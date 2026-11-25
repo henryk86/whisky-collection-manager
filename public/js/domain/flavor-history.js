@@ -6,8 +6,7 @@ import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
  * @param {*} value Input value to process.
  * @return {?Object} Entries transformed for the consuming code.
  */
-export const cloneFlavor = value => value == null ? null :
-  Object.fromEntries(FLAVOR_AXES.map(key => [key, value[key]]));
+export const cloneFlavor = value => value == null ? null : Object.fromEntries(FLAVOR_AXES.map(key => [key, value[key]]));
 
 /**
  * Compares flavour profiles for equivalent values.
@@ -16,8 +15,7 @@ export const cloneFlavor = value => value == null ? null :
  * @param {*} right Right used by this operation.
  * @return {boolean} Whether the condition is satisfied.
  */
-export const sameFlavor = (left, right) => left === null || right === null
-  ? left === right : FLAVOR_AXES.every(axis => left[axis] === right[axis]);
+export const sameFlavor = (left, right) => left === null || right === null ? left === right : FLAVOR_AXES.every(axis => left[axis] === right[axis]);
 
 /**
  * A single-page undo/redo stack; redo is discarded when a new edit is made.
@@ -67,8 +65,7 @@ export function createFlavorHistory(initial) {
      * @return {boolean} Whether the operation matched or succeeded.
      */
     redo() {
-      if (cursor >= entries.length -
-        1) return false; cursor++; return true;
+      if (cursor >= entries.length - 1) return false; cursor++; return true;
     },
   };
 }

@@ -22,19 +22,13 @@ test('each category, phase and dimension has a label in both languages', () => {
         `dimension.${dimension}`,
         ...values.map(value => `subtype.${value}`),
       ])]);
-    for (const key of [...keys, ...CASK_PHASES.map(phase =>
-      `phase.${phase}`)]) {
+    for (const key of [...keys, ...CASK_PHASES.map(phase => `phase.${phase}`)]) {
       assert.ok(messages[`flightPlan.caskAge.${key}`], `${language}: ${key}`);
     }
     const t = createTranslator(messages, {}, language);
     const html = flightCaskOptionsHtml(t);
-    assert.equal(t('flightPlan.caskAge.group.wine'),
-      language === 'de' ? 'Wein' : 'Wine');
-    assert.equal(
-      (html.match(/data-flight-plan-cask-subtype-wrap="wine"/g) || [])
-        .length,
-      1
-    );
+    assert.equal(t('flightPlan.caskAge.group.wine'), language === 'de' ? 'Wein' : 'Wine');
+    assert.equal((html.match(/data-flight-plan-cask-subtype-wrap="wine"/g) || []).length, 1);
     assert.doesNotMatch(html, /flightPlan\.caskAge\./);
     assert.match(html, /name="flight-cask-group-rum"/);
     assert.doesNotMatch(html, /name="flight-cask-feature-rum-/);
@@ -93,8 +87,7 @@ test('only selected groups contribute their chosen refinements', () => {
      * @return {!Array<!Object>} Matching simulated elements.
      */
     querySelectorAll(selector) {
-      return selector === '[name^="flight-cask-"]' ?
-        [...inputs.values()] : details;
+      return selector === '[name^="flight-cask-"]' ? [...inputs.values()] : details;
     },
   };
   assert.deepEqual(readFlightCaskFilters(root), {

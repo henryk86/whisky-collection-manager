@@ -11,8 +11,7 @@ import {fileURLToPath} from 'node:url';
 import ts from 'typescript';
 import {listJavaScriptFiles} from './javascript-files.js';
 
-const isMain = process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url);
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 /**
  * Checks whether a function body returns an expression of its own.
@@ -48,8 +47,7 @@ function returnsValue(fn) {
  * @return {!Array<string>} Violations with source-line locations.
  */
 export function jsdocViolations(filename, source) {
-  const file = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest,
-    true, ts.ScriptKind.JS);
+  const file = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   const issues = [];
   /**
    * Selects and transforms the inspect records.
@@ -68,27 +66,22 @@ export function jsdocViolations(filename, source) {
     const tags = ts.getJSDocTags(owner);
     if (tags.some(tag => ['typedef', 'type', 'enum', 'fileoverview',
       'template'].includes(tag.tagName.text))) return;
-    const description = docs.map(doc => typeof doc.comment === 'string' ?
-      doc.comment.trim() : '').find(Boolean);
+    const description = docs.map(doc => typeof doc.comment === 'string' ? doc.comment.trim() : '').find(Boolean);
     if (!description || description.length < 12) {
       issues.push(`${prefix}: missing meaningful JSDoc description`);
     }
     const params = fn.parameters ?? [];
-    const documented = tags.filter(tag => tag.tagName.text === 'param' &&
-      tag.name && !tag.name.getText(file).includes('.'));
+    const documented = tags.filter(tag => tag.tagName.text === 'param' && tag.name && !tag.name.getText(file).includes('.'));
     if (documented.length !== params.length) {
-      issues.push(`${prefix}: expected ${params.length} @param tags, ` +
-        `found ${documented.length}`);
+      issues.push(`${prefix}: expected ${params.length} @param tags, ` + `found ${documented.length}`);
     }
     const seen = new Set();
     for (const [index, param] of params.entries()) {
       const named = ts.isIdentifier(param.name);
       const name = named ? param.name.text : null;
-      const tag = (name ? documented.find(tag => tag.name.getText(file) ===
-        name) : documented[index]);
+      const tag = (name ? documented.find(tag => tag.name.getText(file) === name) : documented[index]);
       if (!tag) {
-        issues.push(`${prefix}: undocumented parameter ` +
-          (name ?? `#${index + 1}`));
+        issues.push(`${prefix}: undocumented parameter ` + (name ?? `#${index + 1}`));
         continue;
       }
       if (seen.has(tag.name.getText(file))) {
@@ -96,27 +89,23 @@ export function jsdocViolations(filename, source) {
       }
       seen.add(tag.name.getText(file));
       if (!tag.typeExpression?.type) {
-        issues.push(`${prefix}: @param ${tag.name.getText(file)} ` +
-          'has no valid type');
+        issues.push(`${prefix}: @param ${tag.name.getText(file)} ` + 'has no valid type');
       }
       if (typeof tag.comment !== 'string' || !tag.comment.trim()) {
-        issues.push(`${prefix}: @param ${tag.name.getText(file)} ` +
-          'has no explanation');
+        issues.push(`${prefix}: @param ${tag.name.getText(file)} ` + 'has no explanation');
       }
     }
     if (tags.some(tag => tag.tagName.text === 'returns')) {
       issues.push(`${prefix}: use Google JSDoc @return, not @returns`);
     }
     const result = tags.filter(tag => tag.tagName.text === 'return');
-    if (returnsValue(fn) && (result.length !== 1 ||
-      !result[0].typeExpression?.type)) {
+    if (returnsValue(fn) && (result.length !== 1 || !result[0].typeExpression?.type)) {
       issues.push(`${prefix}: non-void function requires typed @return`);
     }
     if (result.length > 1) {
       issues.push(`${prefix}: duplicate @return`);
     }
-    if (result.length && (typeof result[0].comment !== 'string' ||
-      !result[0].comment.trim())) {
+    if (result.length && (typeof result[0].comment !== 'string' || !result[0].comment.trim())) {
       issues.push(`${prefix}: @return has no explanation`);
     }
   }
@@ -127,28 +116,22 @@ export function jsdocViolations(filename, source) {
    * @param {*} node Node to inspect or update.
    */
   function visit(node) {
-    if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) ||
-      ts.isConstructorDeclaration(node) ||
+    if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) || ts.isConstructorDeclaration(node) ||
       ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node)) {
       inspect(node, node);
     } else if (ts.isVariableDeclaration(node) && node.initializer &&
-      (ts.isArrowFunction(node.initializer) ||
-        ts.isFunctionExpression(node.initializer))) {
+      (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
       inspect(node.parent.parent, node.initializer);
     } else if (ts.isPropertyAssignment(node) && node.initializer &&
-      (ts.isArrowFunction(node.initializer) ||
-        ts.isFunctionExpression(node.initializer))) {
+      (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
       inspect(node, node.initializer);
     } else if (ts.isPropertyDeclaration(node) && node.initializer &&
-      (ts.isArrowFunction(node.initializer) ||
-        ts.isFunctionExpression(node.initializer))) {
+      (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
       inspect(node, node.initializer);
-    } else if (ts.isFunctionExpression(node) && node.name &&
-      !ts.isVariableDeclaration(node.parent) &&
+    } else if (ts.isFunctionExpression(node) && node.name && !ts.isVariableDeclaration(node.parent) &&
       !ts.isPropertyAssignment(node.parent)) {
       const assignment = node.parent;
-      if (ts.isBinaryExpression(assignment) &&
-        assignment.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+      if (ts.isBinaryExpression(assignment) && assignment.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
         ts.isExpressionStatement(assignment.parent)) {
         inspect(assignment.parent, node);
       } else {
@@ -171,8 +154,7 @@ export function checkCompleteJSDoc(directory = process.cwd()) {
   const files = listJavaScriptFiles(directory);
   return {
     checked: files.length,
-    issues: files.flatMap(name => jsdocViolations(name,
-      fs.readFileSync(path.resolve(directory, name), 'utf8'))),
+    issues: files.flatMap(name => jsdocViolations(name, fs.readFileSync(path.resolve(directory, name), 'utf8'))),
   };
 }
 
@@ -180,8 +162,7 @@ if (isMain) {
   const result = checkCompleteJSDoc();
   if (result.issues.length) {
     for (const issue of result.issues.slice(0, 80)) console.error(issue);
-    if (result.issues.length > 80) console.error(
-      `... and ${result.issues.length - 80} further JSDoc violations`);
+    if (result.issues.length > 80) console.error(`... and ${result.issues.length - 80} further JSDoc violations`);
     process.exitCode = 1;
   } else {
     console.log(`JSDoc completeness OK: ${result.checked} JS files.`);

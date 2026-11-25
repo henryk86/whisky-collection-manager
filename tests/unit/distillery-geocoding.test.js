@@ -45,10 +45,8 @@ test(
     assert.equal(one.length, 1);
     assert.equal(one[0].latitude, 55.7869);
     assert.equal(calls.length, 1);
-    assert.ok(calls[0].url.toString()
-      .includes('Unique+Test+Kilchoman+distillery'));
-    assert.ok(calls[0].options.headers['User-Agent']
-      .includes('WhiskyCollectionManager'));
+    assert.ok(calls[0].url.toString().includes('Unique+Test+Kilchoman+distillery'));
+    assert.ok(calls[0].options.headers['User-Agent'].includes('WhiskyCollectionManager'));
     const cached = await findDistilleryLocations(
       {name: 'unique test kilchoman'},
       {

@@ -82,11 +82,7 @@ export function normalizeBottling(input, old = {}) {
   value.name = requireField(value.name, 'name');
   if (Object.hasOwn(input, 'distilleryIds')) {
     if (!Array.isArray(input.distilleryIds)) {
-      throw fail(
-        'Destillerien müssen eine Liste sein',
-        400,
-        "api.errors.distilleriesMustBeAList"
-      );
+      throw fail('Destillerien müssen eine Liste sein', 400, "api.errors.distilleriesMustBeAList");
     }
     value.distilleryIds = input.distilleryIds;
   }
@@ -101,11 +97,7 @@ export function normalizeBottling(input, old = {}) {
     value.whiskyType = null;
   }
   if (value.whiskyType != null && !WHISKY_TYPES.includes(value.whiskyType)) {
-    throw fail(
-      'Ungültige Whisky-Kategorie',
-      400,
-      "api.errors.invalidWhiskyCategory"
-    );
+    throw fail('Ungültige Whisky-Kategorie', 400, "api.errors.invalidWhiskyCategory");
   }
   if (value.brand === '') {
     value.brand = null;
@@ -114,14 +106,9 @@ export function normalizeBottling(input, old = {}) {
     value.compositionComplete = false;
   }
   if (typeof value.compositionComplete !== 'boolean') {
-    throw fail(
-      'Ungültiger Zusammensetzungsstatus',
-      400,
-      "api.errors.invalidCompositionStatus"
-    );
+    throw fail('Ungültiger Zusammensetzungsstatus', 400, "api.errors.invalidCompositionStatus");
   }
-  if (['single_malt', 'single_grain'].includes(value.whiskyType) &&
-    value.distilleryIds.length > 1) {
+  if (['single_malt', 'single_grain'].includes(value.whiskyType) && value.distilleryIds.length > 1) {
     throw fail(
       'Für Single Whisky darf maximal eine Destillerie gewählt werden',
       400,
@@ -166,8 +153,7 @@ export function normalizeBottling(input, old = {}) {
       400,
       "api.errors.tastingDataRequiresTasting"
     );
-  value.completionStatus = value.completionStatus === 'complete' ?
-    'complete' : 'incomplete';
+  value.completionStatus = value.completionStatus === 'complete' ? 'complete' : 'incomplete';
   return value;
 }
 
@@ -181,11 +167,9 @@ export function normalizeBottling(input, old = {}) {
 export function normalizeBottle(input, old = {}) {
   if (Object.hasOwn(input, 'labelCode')) {
     throw fail(
-      'Nur Inventarnummer verwenden; separates Feld Etikettencode wurde \
-entfernt. Bitte Anwendung aktualisieren.',
+      'Nur Inventarnummer verwenden; separates Feld Etikettencode wurde entfernt. Bitte Anwendung aktualisieren.',
       400,
-      "api.errors.useInventoryNumberOnlyTheSeparateLabelCodeFieldHasBeenRemo\
-vedPleaseUpdateTheApplication"
+      "api.errors.useInventoryNumberOnlyTheSeparateLabelCodeFieldHasBeenRemovedPleaseUpdateTheApplication"
     );
   }
   const val = {
@@ -195,22 +179,15 @@ vedPleaseUpdateTheApplication"
   // callers.
   delete val.rating;
   delete val.tastingNotes;
-  val.status = ['closed', 'open', 'empty'].includes(val.status) ?
-    val.status : 'closed';
-  if (val.volumeType != null && !['sample', 'standard']
-    .includes(val.volumeType)) {
+  val.status = ['closed', 'open', 'empty'].includes(val.status) ? val.status : 'closed';
+  if (val.volumeType != null && !['sample', 'standard'].includes(val.volumeType)) {
     throw fail('Ungültiger Flaschentyp', 400, "api.errors.invalidBottleType");
   }
   val.volumeType = val.volumeType || 'standard';
   if (val.volumeMl === '' || val.volumeMl === undefined) val.volumeMl = null;
   if (val.volumeMl != null) {
-    if (!Number.isFinite(Number(val.volumeMl)) || Number(val.volumeMl) <=
-      0 || Number(val.volumeMl) > 100000) {
-      throw fail(
-        'Ungültige Flaschengröße (ml)',
-        400,
-        "api.errors.invalidBottleSizeMl"
-      );
+    if (!Number.isFinite(Number(val.volumeMl)) || Number(val.volumeMl) <= 0 || Number(val.volumeMl) > 100000) {
+      throw fail('Ungültige Flaschengröße (ml)', 400, "api.errors.invalidBottleSizeMl");
     }
     val.volumeMl = Number(val.volumeMl);
   }
@@ -220,9 +197,7 @@ vedPleaseUpdateTheApplication"
   if (val.purchasePrice === '') {
     val.purchasePrice = null;
   }
-  if (val.purchasePrice != null &&
-    (!Number.isFinite(Number(val.purchasePrice)) ||
-      Number(val.purchasePrice) < 0)) {
+  if (val.purchasePrice != null && (!Number.isFinite(Number(val.purchasePrice)) || Number(val.purchasePrice) < 0)) {
     throw fail('Ungültiger Kaufpreis', 400, "api.errors.invalidPurchasePrice");
   }
   return val;

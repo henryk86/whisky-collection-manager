@@ -64,8 +64,7 @@ export function exportCsv() {
       rows.push([
         bottle.inventoryNumber,
         statusCodes[bottle.status],
-        (b.distilleryIds || [b.distilleryId].filter(Boolean)).map(id =>
-          ds.get(id) || id).join(' | '),
+        (b.distilleryIds || [b.distilleryId].filter(Boolean)).map(id => ds.get(id) || id).join(' | '),
         b.whiskyType,
         b.brand,
         b.bottler,
@@ -115,8 +114,7 @@ export function exportZip(req) {
   let password;
   try {password = readBackupPassword();}
   catch (error) {
-    throw fail(error.message, 409,
-      "api.errors.invalidBackupPassword");
+    throw fail(error.message, 409, "api.errors.invalidBackupPassword");
   }
   fs.mkdirSync(BACKUP_DIR, {recursive: true, mode: 0o700});
   const id = crypto.randomUUID();

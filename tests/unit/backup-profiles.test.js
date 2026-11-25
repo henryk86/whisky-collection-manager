@@ -23,18 +23,9 @@ test(
   () => {
     assert.deepEqual(validateProfile(valid).schedule, valid.schedule);
     assert.equal(validateProfile(valid).format, 'zip');
-    assert.throws(
-      () => validateProfile({...valid, format: 'restic'}),
-      /Format/
-    );
-    assert.throws(
-      () => validateProfile({...valid, format: 'unknown'}),
-      /Format/
-    );
-    assert.equal(
-      validateProfile({...valid, provider: 'local', remote: 'ignored'}).remote,
-      ''
-    );
+    assert.throws(() => validateProfile({...valid, format: 'restic'}), /Format/);
+    assert.throws(() => validateProfile({...valid, format: 'unknown'}), /Format/);
+    assert.equal(validateProfile({...valid, provider: 'local', remote: 'ignored'}).remote, '');
     for (const targetPath of [
       '../etc',
       '/root',
@@ -48,14 +39,8 @@ test(
     ]) {
       assert.throws(() => validateRelativePath(targetPath), targetPath);
     }
-    assert.throws(
-      () => validateProfile({...valid, remote: 'my:other'}),
-      /Rclone/
-    );
-    assert.throws(
-      () => validateProfile({...valid, provider: 'unknown'}),
-      /Anbieter/
-    );
+    assert.throws(() => validateProfile({...valid, remote: 'my:other'}), /Rclone/);
+    assert.throws(() => validateProfile({...valid, provider: 'unknown'}), /Anbieter/);
     assert.throws(
       () => validateProfile({
         ...valid, schedule: {
@@ -77,60 +62,32 @@ test(
   }
 );
 test(
-  'backup scheduler is deterministic and respects weekly/hourly/daily slots \
-in Berlin time',
+  'backup scheduler is deterministic and respects weekly/hourly/daily slots in Berlin time',
   () => {
-    const at0210 = new Date('2026-11-07T01:10:00.000Z'
-    ); // Saturday, Berlin 02:10
+    const at0210 = new Date('2026-11-07T01:10:00.000Z'); // Saturday, Berlin 02:10
     const sat = {
       enabled: true,
       format: 'zip',
       schedule: {frequency: 'daily', hour: 2, minute: 0, weekday: 6},
     };
     assert.equal(dueSlot(sat, at0210), '2026-11-07');
+    assert.equal(dueSlot({...sat, schedule: {...sat.schedule, hour: 3}}, at0210), null);
     assert.equal(
-      dueSlot({...sat, schedule: {...sat.schedule, hour: 3}}, at0210),
-      null
-    );
-    assert.equal(
-      dueSlot(
-        {...sat, schedule: {...sat.schedule, frequency: 'weekly', weekday: 6}},
-        at0210
-      ),
+      dueSlot({...sat, schedule: {...sat.schedule, frequency: 'weekly', weekday: 6}}, at0210),
       '2026-11-07'
     );
+    assert.equal(dueSlot({...sat, schedule: {...sat.schedule, frequency: 'weekly', weekday: 1}}, at0210), null);
     assert.equal(
-      dueSlot(
-        {...sat, schedule: {...sat.schedule, frequency: 'weekly', weekday: 1}},
-        at0210
-      ),
-      null
-    );
-    assert.equal(
-      dueSlot(
-        {...sat, schedule: {...sat.schedule, frequency: 'hourly', minute: 10}},
-        at0210
-      ),
+      dueSlot({...sat, schedule: {...sat.schedule, frequency: 'hourly', minute: 10}}, at0210),
       '2026-11-07T02'
     );
-    assert.equal(
-      dueSlot(
-        {...sat, schedule: {...sat.schedule, frequency: 'hourly', minute: 11}},
-        at0210
-      ),
-      null
-    );
+    assert.equal(dueSlot({...sat, schedule: {...sat.schedule, frequency: 'hourly', minute: 11}}, at0210), null);
     assert.equal(dueSlot({...sat, enabled: false}, at0210), null);
-    assert.equal(
-      dueSlot({...sat, format: undefined}, at0210),
-      null,
-      'legacy Restic schedule disabled'
-    );
+    assert.equal(dueSlot({...sat, format: undefined}, at0210), null, 'legacy Restic schedule disabled');
   }
 );
 test(
-  'Rclone repositories are isolated; local targets require mounted-drive \
-marker',
+  'Rclone repositories are isolated; local targets require mounted-drive marker',
   () => {
     assert.equal(repositoryFor(valid), 'rclone:my_dropbox:whisky/backups');
     // Marker guard: absent marker must fail rather than silently backing up to
@@ -168,27 +125,16 @@ test('backup UI escapes names and errors; never renders credentials', () => {
   assert.match(html, /data-act="backup-run"/);
   assert.match(html, /data-act="backup-restore"/);
   assert.match(profileForm(malicious, ['dropbox']), /id="backup-profile-form"/);
-  assert.match(
-    profileForm({}, [], [{name: 'usb', label: 'USB-Stick'}]),
-    /AES-256-Passwortschutz/
-  );
-  assert.match(
-    profileForm({}, [], [{name: 'usb', label: 'USB-Stick'}]),
-    /usb\/whisky-zip/
-  );
-  assert.match(
-    renderBackupSection({backupUnlocked: false, backupDashboard: null}),
-    /backup-admin-key/
-  );
+  assert.match(profileForm({}, [], [{name: 'usb', label: 'USB-Stick'}]), /AES-256-Passwortschutz/);
+  assert.match(profileForm({}, [], [{name: 'usb', label: 'USB-Stick'}]), /usb\/whisky-zip/);
+  assert.match(renderBackupSection({backupUnlocked: false, backupDashboard: null}), /backup-admin-key/);
 });
 
 test(
-  'one backup screen provides direct ZIP, scheduled profiles and full \
-restore without a duplicate download',
+  'one backup screen provides direct ZIP, scheduled profiles and full restore without a duplicate download',
   () => {
     const locked = renderBackupSection({
-      backupUnlocked: false, backupDashboard:
-        null,
+      backupUnlocked: false, backupDashboard: null,
     });
     const unlocked = renderBackupSection({
       backupUnlocked: true, backupDashboard: {
@@ -215,8 +161,7 @@ restore without a duplicate download',
 );
 
 test(
-  'version footer is derived from server metadata and ZIP exports require \
-unlock',
+  'version footer is derived from server metadata and ZIP exports require unlock',
   () => {
     const unlockedNoPassword = renderBackupSection({
       backupUnlocked: true, backupDashboard: {
@@ -229,10 +174,7 @@ unlock',
         passwordConfigured: false,
       },
     });
-    assert.doesNotMatch(
-      unlockedNoPassword,
-      /data-act="backup-manual-download"/
-    );
+    assert.doesNotMatch(unlockedNoPassword, /data-act="backup-manual-download"/);
     assert.match(unlockedNoPassword, /Backup-Passwort festlegen/);
   }
 );

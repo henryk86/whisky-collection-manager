@@ -19,14 +19,12 @@ function stop(signal = 'SIGTERM') {
   if (shuttingDown) return;
   shuttingDown = true;
   for (const child of children.values()) {
-    if (child.exitCode === null && child.signalCode ===
-      null) child.kill(signal);
+    if (child.exitCode === null && child.signalCode === null) child.kill(signal);
   }
   // Keep the supervisor alive until both children have ended; allow a hard
   // shutdown if either of them ignores SIGTERM.
   const force = setTimeout(() => {
-    for (const child of children.values()) if (child.exitCode === null &&
-      child.signalCode === null) child.kill('SIGKILL');
+    for (const child of children.values()) if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
   }, 8000);
   force.unref();
 }
@@ -43,11 +41,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
  * @return {*} Result computed from the supplied inputs.
  */
 function launch(name, script) {
-  const child = spawn(
-    process.execPath,
-    [script],
-    {cwd: process.cwd(), env: process.env, stdio: 'inherit'}
-  );
+  const child = spawn(process.execPath, [script], {cwd: process.cwd(), env: process.env, stdio: 'inherit'});
   children.set(name, child);
   child.on('error', error => {
     console.error(`${name}: Prozess konnte nicht gestartet werden:`, error);
@@ -71,14 +65,9 @@ function launch(name, script) {
  * @return {!Promise<*>} Promise for the asynchronous operation.
  */
 function httpsReady() {
-  const ca = fs.readFileSync(process.env.HTTPS_CERT_FILE ||
-    '/run/certs/server-cert.pem');
-  const url = new URL(
-    '/api/version',
-    process.env.APP_INTERNAL_URL || 'https://127.0.0.1:3543'
-  );
-  if (url.protocol !== 'https:' || !['127.0.0.1', 'localhost']
-    .includes(url.hostname)) {
+  const ca = fs.readFileSync(process.env.HTTPS_CERT_FILE || '/run/certs/server-cert.pem');
+  const url = new URL('/api/version', process.env.APP_INTERNAL_URL || 'https://127.0.0.1:3543');
+  if (url.protocol !== 'https:' || !['127.0.0.1', 'localhost'].includes(url.hostname)) {
     throw Error('APP_INTERNAL_URL muss eine HTTPS-Loopback-Adresse sein.');
   }
   return new Promise(resolve => {

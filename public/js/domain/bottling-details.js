@@ -11,8 +11,7 @@ import {bottlingOrigins} from './distillery-origin.js';
 export function hasBottlingDetail(value) {
   if (value == null) return false;
   if (typeof value === 'number') return Number.isFinite(value);
-  if (typeof value === 'string') return value.trim().length > 0 &&
-    value.trim() !== '–' && value.trim() !== '-';
+  if (typeof value === 'string') return value.trim().length > 0 && value.trim() !== '–' && value.trim() !== '-';
   return false;
 }
 

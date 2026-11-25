@@ -35,30 +35,22 @@ test(
 );
 
 test(
-  'develop keeps version metadata aligned without rewriting the immutable \
-released source manifest',
+  'develop keeps version metadata aligned without rewriting the immutable released source manifest',
   () => {
     const expected = JSON.parse(read('package.json')).version;
     const lock = JSON.parse(read('package-lock.json'));
     assert.equal(lock.version, expected);
     assert.equal(lock.packages[''].version, expected);
-    assert.ok(read('README.md')
-      .startsWith(`# Whisky Collection Manager v${expected}\n`));
-    assert.ok(read('docs/TESTSTATUS.md')
-      .startsWith(`# Teststatus - Whisky Collection Manager v${expected}\n`));
+    assert.ok(read('README.md').startsWith(`# Whisky Collection Manager v${expected}\n`));
+    assert.ok(read('docs/TESTSTATUS.md').startsWith(`# Teststatus - Whisky Collection Manager v${expected}\n`));
     const changelog = read('CHANGELOG.md');
     assert.match(changelog, /^# Changelog\s*\n/);
     // develop may list upcoming work before the latest released entry.
     // Release snapshots are still validated strictly by
     // verifyReleaseMetadata().
-    const sections = [...changelog.matchAll(/^## (.+)$/gm)]
-      .map(([, heading]) => heading);
-    const latestRelease = sections[0] === 'Unreleased (develop)' ?
-      sections[1] : sections[0];
-    assert.match(
-      latestRelease ?? '',
-      new RegExp(`^${expected.replaceAll('.', '\\.')} - \\d{4}-\\d{2}-\\d{2}$`)
-    );
+    const sections = [...changelog.matchAll(/^## (.+)$/gm)].map(([, heading]) => heading);
+    const latestRelease = sections[0] === 'Unreleased (develop)' ? sections[1] : sections[0];
+    assert.match(latestRelease ?? '', new RegExp(`^${expected.replaceAll('.', '\\.')} - \\d{4}-\\d{2}-\\d{2}$`));
     assert.equal(readSourceManifest('.').version, expected);
     // Full source fingerprints are checked only on immutable release snapshots,
     // not on develop where application files are intentionally changing.
@@ -111,59 +103,33 @@ test(
       updateReadmeTitle('# Project overview\n\nText', version),
       '# Whisky Collection Manager v0.8.8\n\nText'
     );
-    assert.equal(
-      updateReadmeTitle('Text only', version),
-      '# Whisky Collection Manager v0.8.8\n\nText only'
-    );
-    assert.equal(
-      (updateReadmeTitle('# Other title\n', version).match(/^# /gm) ||
-        []).length,
-      1
-    );
+    assert.equal(updateReadmeTitle('Text only', version), '# Whisky Collection Manager v0.8.8\n\nText only');
+    assert.equal((updateReadmeTitle('# Other title\n', version).match(/^# /gm) || []).length, 1);
   }
 );
 
 
 test(
-  'release:bump resets current test status and records history only in \
-changelog',
+  'release:bump resets current test status and records history only in changelog',
   () => {
     const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-release-bump-'));
     try {
       fs.mkdirSync(path.join(temp, 'scripts'));
       fs.mkdirSync(path.join(temp, 'docs'));
-      fs.copyFileSync(
-        'scripts/release-version.js',
-        path.join(temp, 'scripts/release-version.js')
-      );
-      fs.copyFileSync(
-        'scripts/release-manifest.js',
-        path.join(temp, 'scripts/release-manifest.js')
-      );
-      fs.writeFileSync(
-        path.join(temp, 'package.json'),
-        JSON.stringify({type: 'module', version: '0.16.11'})
-      );
+      fs.copyFileSync('scripts/release-version.js', path.join(temp, 'scripts/release-version.js'));
+      fs.copyFileSync('scripts/release-manifest.js', path.join(temp, 'scripts/release-manifest.js'));
+      fs.writeFileSync(path.join(temp, 'package.json'), JSON.stringify({type: 'module', version: '0.16.11'}));
       fs.writeFileSync(
         path.join(temp, 'package-lock.json'),
         JSON.stringify({
-          version: '0.16.11', packages: {
-            '': {version: '0.16.11'},
-          },
+          version: '0.16.11', packages: {'': {version: '0.16.11'}, },
         })
       );
-      fs.writeFileSync(
-        path.join(temp, 'README.md'),
-        '# Whisky Collection Manager v0.16.11\n'
-      );
-      fs.writeFileSync(
-        path.join(temp, 'CHANGELOG.md'),
-        '# Changelog\n\n## 0.16.11 - 2026-11-12\n\n- Previous fix\n'
-      );
+      fs.writeFileSync(path.join(temp, 'README.md'), '# Whisky Collection Manager v0.16.11\n');
+      fs.writeFileSync(path.join(temp, 'CHANGELOG.md'), '# Changelog\n\n## 0.16.11 - 2026-11-12\n\n- Previous fix\n');
       fs.writeFileSync(
         path.join(temp, 'docs/TESTSTATUS.md'),
-        '# Teststatus - Whisky Collection Manager v0.16.11\n\n## \
-Durchgefuehrte Pruefungen\n\n- 341/341 bestanden\n'
+        '# Teststatus - Whisky Collection Manager v0.16.11\n\n## Durchgefuehrte Pruefungen\n\n- 341/341 bestanden\n'
       );
       execFileSync(
         process.execPath,
@@ -175,36 +141,15 @@ Durchgefuehrte Pruefungen\n\n- 341/341 bestanden\n'
         ],
         {cwd: temp}
       );
-      execFileSync(
-        process.execPath,
-        [path.join(temp, 'scripts/release-version.js'), 'check'],
-        {cwd: temp}
-      );
-      assert.equal(
-        JSON.parse(fs.readFileSync(path.join(temp, 'package.json'), 'utf8'))
-          .version,
-        '0.16.12'
-      );
-      const status = fs.readFileSync(path.join(temp, 'docs/TESTSTATUS.md'),
-        'utf8');
-      assert.match(
-        status,
-        /^# Teststatus - Whisky Collection Manager v0\.16\.12\n/
-      );
+      execFileSync(process.execPath, [path.join(temp, 'scripts/release-version.js'), 'check'], {cwd: temp});
+      assert.equal(JSON.parse(fs.readFileSync(path.join(temp, 'package.json'), 'utf8')).version, '0.16.12');
+      const status = fs.readFileSync(path.join(temp, 'docs/TESTSTATUS.md'), 'utf8');
+      assert.match(status, /^# Teststatus - Whisky Collection Manager v0\.16\.12\n/);
       assert.match(status, /npm test[^\n]*Noch nicht ausgeführt/);
       assert.doesNotMatch(status, /341\/341 bestanden/);
-      assert.match(
-        fs.readFileSync(path.join(temp, 'CHANGELOG.md'), 'utf8'),
-        /## 0\.16\.11/
-      );
-      assert.equal(
-        fs.existsSync(path.join(temp, 'docs/TESTHISTORIE.md')),
-        false
-      );
-      fs.writeFileSync(
-        path.join(temp, 'docs/TESTSTATUS.md'),
-        '# Teststatus - Whisky Collection Manager v0.16.11\n'
-      );
+      assert.match(fs.readFileSync(path.join(temp, 'CHANGELOG.md'), 'utf8'), /## 0\.16\.11/);
+      assert.equal(fs.existsSync(path.join(temp, 'docs/TESTHISTORIE.md')), false);
+      fs.writeFileSync(path.join(temp, 'docs/TESTSTATUS.md'), '# Teststatus - Whisky Collection Manager v0.16.11\n');
       assert.throws(() => verifyReleaseMetadata(temp), /docs\/TESTSTATUS\.md/);
     } finally {
       fs.rmSync(temp, {recursive: true, force: true});

@@ -2,8 +2,7 @@ import {composeMarkup} from './render-plan.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/fields.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/fields.html', import.meta.url));
 
 
 /**
@@ -23,14 +22,8 @@ const e = value => escapeHtml(String(value ?? ''));
  * @return {string} Trusted HTML attributes.
  */
 function props(name, options = {}) {
-  const messages = [
-    options.description ? `ds-${e(name)}-hint` : '',
-    options.error ? `ds-${e(name)}-error` : '',
-  ].filter(Boolean);
-  return `name="${e(name)}"${options.required ? ' required' :
-    ''}${options.disabled ? ' disabled' : ''}${options.error ?
-      ' aria-invalid="true"' : ''}${messages.length ?
-        ` aria-describedby="${messages.join(' ')}"` : ''}`;
+  const messages = [options.description ? `ds-${e(name)}-hint` : '', options.error ? `ds-${e(name)}-error` : '',].filter(Boolean);
+  return `name="${e(name)}"${options.required ? ' required' : ''}${options.disabled ? ' disabled' : ''}${options.error ? ' aria-invalid="true"' : ''}${messages.length ? ` aria-describedby="${messages.join(' ')}"` : ''}`;
 }
 
 /**
@@ -44,12 +37,10 @@ function help(name, options = {}) {
   return composeMarkup(options.description ?
     renderTemplate('dsFieldDescription', {
       name: e(name),
-      description: e(options
-        .description),
+      description: e(options.description),
     }) : '', options.error ?
     renderTemplate('dsFieldError', {
-      name: e(
-        name),
+      name: e(name),
       error: e(options.error),
     }) : '');
 }
@@ -65,8 +56,7 @@ function help(name, options = {}) {
  */
 function wrapper(label, name, control, options = {}) {
   return renderTemplate('formField', {
-    full: options.full ? ' full' :
-      '',
+    full: options.full ? ' full' : '',
     label: e(label),
     control: control,
     help: help(name, options),
@@ -87,13 +77,10 @@ export const textInput = (label, name, value = '', options = {}) => wrapper(
   name,
   renderTemplate('textInputInput', {
     props: props(name, options),
-    type: e(options.type ||
-      'text'),
-    step: options.step != null ? ` step="${e(options.step)}"` :
-      '',
+    type: e(options.type || 'text'),
+    step: options.step != null ? ` step="${e(options.step)}"` : '',
     value: e(value),
-    placeholder: options.placeholder ?
-      ` placeholder="${e(options.placeholder)}"` : '',
+    placeholder: options.placeholder ? ` placeholder="${e(options.placeholder)}"` : '',
   }),
   options
 );
@@ -118,8 +105,7 @@ export const selectInput =
       options: composeMarkup(options.map(([v, t]) =>
         renderTemplate('selectInputOption', {
           v: e(v),
-          selected: String(v) === String(value ?? '') ?
-            ' selected' : '',
+          selected: String(v) === String(value ?? '') ? ' selected' : '',
           t: e(t),
         }))),
     }),
@@ -156,11 +142,9 @@ export const areaInput = (label, name, value = '', options = {}) => wrapper(
  */
 export const checkboxInput = (label, name, checked = false, options = {}) =>
   renderTemplate('formField2', {
-    full: options.full ? ' full' :
-      '',
+    full: options.full ? ' full' : '',
     props: props(name, options),
-    checked: checked ?
-      ' checked' : '',
+    checked: checked ? ' checked' : '',
     label: e(label),
     help: help(name, options),
   });

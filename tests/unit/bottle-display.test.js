@@ -10,9 +10,7 @@ import {collectionFixture} from '../helpers/fixtures.js';
  * @return {!Object} Structured result assembled from the input data.
  */
 function forms() {
-  const state = {
-    collection: collectionFixture(),
-  };
+  const state = {collection: collectionFixture(), };
   const selectors = createSelectors(state);
   return {
     state, bottle: createBottleForm({
@@ -24,24 +22,18 @@ function forms() {
 }
 test('bottle metadata puts separators only between actual values', () => {
   assert.equal(bottleMeta({}), '');
-  assert.equal(bottleMeta({
-    inventoryNumber: '000123',
-  }), '');
-  assert.equal(bottleMeta({
-    purchasePrice: 0,
-  }), '0 EUR');
+  assert.equal(bottleMeta({inventoryNumber: '000123', }), '');
+  assert.equal(bottleMeta({purchasePrice: 0, }), '0 EUR');
   assert.equal(bottleMeta({
     purchaseDate: '2026-11-05', purchasePrice: 45,
   }, value => value), 'Kauf: 2026-11-05 \u00b7 45 EUR');
 });
 test(
-  'bottle form renders read-only parent information and exactly one \
-inventory input',
+  'bottle form renders read-only parent information and exactly one inventory input',
   () => {
     const {state, bottle} = forms();
     const html = bottle(state.collection.bottlings[0].bottles[0], 'bottling-a');
-    const context = html.slice(html.indexOf('<section'),
-      html.indexOf('</section>'));
+    const context = html.slice(html.indexOf('<section'), html.indexOf('</section>'));
     assert.match(context, /Test Blend/);
     assert.match(context, /Test Distillery/);
     assert.match(context, /Example Bottler/);
@@ -50,10 +42,7 @@ inventory input',
     assert.equal((html.match(/name="inventoryNumber"/g) || []).length, 1);
     assert.match(html, /Leerdatum<input\s+name="emptiedAt" type="date"/);
     assert.match(
-      bottle(
-        {...state.collection.bottlings[0].bottles[0], emptiedAt: '2026-11-20'},
-        'bottling-a'
-      ),
+      bottle({...state.collection.bottlings[0].bottles[0], emptiedAt: '2026-11-20'}, 'bottling-a'),
       /name="emptiedAt" type="date"[^>]*value="2026-11-20"/
     );
     assert.doesNotMatch(html, /labelCode|labelType|Etikettentyp|Etikettencode/);

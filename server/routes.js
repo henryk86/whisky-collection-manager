@@ -26,8 +26,7 @@ import {warehouseETag} from './storage/warehouse-store.js';
 import {withMutationTracking} from './domain/mutation-tracker.js';
 // Parameters match existing IDs (UUIDs as well as IDs from imported
 // collections).
-const version = JSON.parse(fs.readFileSync(new URL('../package.json',
-  import.meta.url), 'utf8')).version;
+const version = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 const routes = [
   {
     method: 'GET', path: /^\/api\/version$/,
@@ -241,14 +240,8 @@ const routes = [
      * @return {!Promise<*>} Promise for the asynchronous operation.
      */
     run: ([id], _body, req) => {
-      const option = new URL(req.url, 'http://localhost').searchParams
-        .get('unassignBottles');
-      if (option !== null && option !== 'true' && option !==
-        'false') throw fail(
-          'Ungültige Löschoption',
-          400,
-          "api.errors.invalidDeletionOption"
-        );
+      const option = new URL(req.url, 'http://localhost').searchParams.get('unassignBottles');
+      if (option !== null && option !== 'true' && option !== 'false') throw fail('Ungültige Löschoption', 400, "api.errors.invalidDeletionOption");
       return warehouse.deleteRoom(id, {unassignBottles: option === 'true'});
     },
   },
@@ -618,10 +611,7 @@ const routes = [
   },
   {
     method: 'POST',
-    path: new RegExp(
-      '^\\/api\\/backups\\/([\\w-]+)\\/(run|check' +
-      '|test|snapshots|restore|prepare)$'
-    ),
+    path: new RegExp('^\\/api\\/backups\\/([\\w-]+)\\/(run|check' + '|test|snapshots|restore|prepare)$'),
     status: 202,
     /**
      * Derives the run result from the supplied values.
@@ -1232,37 +1222,30 @@ export async function handleApi(request, response, url) {
     // The warehouse response also contains projected collection bottles.
     // Both revisions must enter its validator to avoid stale bottle labels.
     let cacheHeaders = null;
-    if (request.method === 'GET' && (url.pathname === '/api/collection' ||
-      url.pathname === '/api/warehouse')) {
+    if (request.method === 'GET' && (url.pathname === '/api/collection' || url.pathname === '/api/warehouse')) {
       const etag = url.pathname === '/api/collection' ? collectionETag()
-        : `W/"${collectionETag().slice(3, -1)}:${warehouseETag()
-          .slice(3, -1)}"`;
+        : `W/"${collectionETag().slice(3, -1)}:${warehouseETag().slice(3, -1)}"`;
       cacheHeaders = {
         'Cache-Control': 'private, no-cache',
         ETag: etag,
         Vary: 'Accept-Encoding',
-        ...(url.pathname === '/api/warehouse' ?
-          {'X-WCM-Store-ETag': warehouseETag()} : {}),
+        ...(url.pathname === '/api/warehouse' ? {'X-WCM-Store-ETag': warehouseETag()} : {}),
       };
       const conditional = request.headers['if-none-match'];
       if (typeof conditional === 'string' &&
-        (conditional.trim() === '*' || conditional.split(',').some(token =>
-          token.trim() === etag))) {
+        (conditional.trim() === '*' || conditional.split(',').some(token => token.trim() === etag))) {
         response.writeHead(304, cacheHeaders);
         response.end();
         return;
       }
     }
-    const body = ['POST', 'PATCH', 'PUT'].includes(request.method) &&
-      !route.binaryUpload && !route.skipBody ? await readJson(request) :
+    const body = ['POST', 'PATCH', 'PUT'].includes(request.method) && !route.binaryUpload && !route.skipBody ? await readJson(request) :
       undefined;
     // Opt-in response envelope keeps the existing external API unchanged.
     // Only successfully committed store writes appear in the response.
-    const wantsDelta = request.headers['x-wcm-state-delta'] === '1' &&
-      ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
+    const wantsDelta = request.headers['x-wcm-state-delta'] === '1' && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
     const tracked = wantsDelta
-      ? await withMutationTracking(() =>
-        route.run(match.slice(1), body, request, response))
+      ? await withMutationTracking(() => route.run(match.slice(1), body, request, response))
       : {
         value: await route.run(match.slice(1), body, request, response),
         updates: [],
@@ -1285,13 +1268,8 @@ export async function handleApi(request, response, url) {
       return await fileAttachment(response, result);
     }
     return send(response, route.status || 200,
-      wantsDelta && tracked.updates.length ?
-        {__wcmStateDelta: 1, result, updates: tracked.updates} : result,
+      wantsDelta && tracked.updates.length ? {__wcmStateDelta: 1, result, updates: tracked.updates} : result,
       'application/json; charset=utf-8', cacheHeaders || {});
   }
-  throw fail(
-    'API-Endpunkt nicht gefunden',
-    404,
-    "api.errors.apiEndpointNotFound"
-  );
+  throw fail('API-Endpunkt nicht gefunden', 404, "api.errors.apiEndpointNotFound");
 }

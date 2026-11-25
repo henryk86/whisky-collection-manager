@@ -12,8 +12,7 @@ import {displayPhotoPath} from '../../../shared/photo-images.js';
 import {t} from '../i18n/index.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/detail.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/detail.html', import.meta.url));
 
 /**
  * Derives the bottle status text result from the supplied values.
@@ -88,8 +87,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
     const {bottling, latest, tastingCount, tastingNotes, physicalBottles,
       facts, originLabel, relatedDistilleries, statusText, description,
       whiskybaseUrl} = model;
-    const tastingRadar = latest?.flavorProfile &&
-      Object.values(latest.flavorProfile).some(Number.isInteger)
+    const tastingRadar = latest?.flavorProfile && Object.values(latest.flavorProfile).some(Number.isInteger)
       ? flavorChart(latest.flavorProfile, {compact: true}) : '';
     const list = composeMarkup(physicalBottles.map(entry => {
       const entryPhotos = entry.photos || [];
@@ -97,8 +95,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
       const storageShelfId = state.warehouse?.assignments[entry.id];
       const storageName = state.warehouse
         ? (storageShelfId ?
-          storagePath(state.warehouse, storageShelfId)?.label ||
-          t('detail.fields.unassigned') : t('detail.fields.unassigned'))
+          storagePath(state.warehouse, storageShelfId)?.label || t('detail.fields.unassigned') : t('detail.fields.unassigned'))
         : null;
       const photoGallery =
         renderTemplate('bottlePhotos', {
@@ -106,31 +103,22 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
           photos: composeMarkup((entry.photos || []).map(photo =>
             renderTemplate('photoTile', {
               id: photo.id,
-              imageUrl: imageUrl(displayPhotoPath(photo)
-              ),
+              imageUrl: imageUrl(displayPhotoPath(photo)),
               bottleWithNumber: t(
                 "detail.photos.bottleWithNumber",
                 {
-                  kind: photo.source === 'whiskybase' ?
-                    t("whiskybase.images.reference") :
-                    t("detail.photos.personalPhoto"),
+                  kind: photo.source === 'whiskybase' ? t("whiskybase.images.reference") : t("detail.photos.personalPhoto"),
                   number: entry.inventoryNumber || '',
                 }
               ),
               id2: entry.id,
               id3: photo.id,
               editIcon: editIcon,
-              photoCutoutBadge: photo.cutout ? renderTemplate(
-                'photoCutoutBadge',
-                {
-                  sparkleIcon: sparkleIcon,
-                }
-              ) : '',
+              photoCutoutBadge: photo.cutout ? renderTemplate('photoCutoutBadge', {sparkleIcon: sparkleIcon, }) : '',
               id4: entry.id,
               id5: photo.id,
               closeIcon: closeIcon,
-              photoSource: photo.source === 'whiskybase' ?
-                renderTemplate('photoSource') : '',
+              photoSource: photo.source === 'whiskybase' ? renderTemplate('photoSource') : '',
               id6: entry.id,
               id7: photo.id,
               arrowLeftIcon: arrowLeftIcon,
@@ -145,43 +133,27 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
           id3: entry.id,
         });
       return renderTemplate('bottle', {
-        firstPhoto: firstPhoto ? ' has-photos' :
-          ' without-photos',
-        highlightBottleId: state.highlightBottleId === entry.id ?
-          ' scanned-bottle' : '',
+        firstPhoto: firstPhoto ? ' has-photos' : ' without-photos',
+        highlightBottleId: state.highlightBottleId === entry.id ? ' scanned-bottle' : '',
         id: entry.id,
         openPhoto: firstPhoto ? renderTemplate('openPhoto', {
           id: entry.id,
-          imageUrl: imageUrl(
-            displayPhotoPath(firstPhoto)),
+          imageUrl: imageUrl(displayPhotoPath(firstPhoto)),
           bottleWithNumber: t(
             'detail.photos.bottleWithNumber',
             {
-              kind: firstPhoto.source === 'whiskybase' ?
-                t('whiskybase.images.reference') :
-                t('detail.photos.personalPhoto'),
+              kind: firstPhoto.source === 'whiskybase' ? t('whiskybase.images.reference') : t('detail.photos.personalPhoto'),
               number: entry.inventoryNumber || '',
             }
           ),
-          bottleMainSource: firstPhoto.source === 'whiskybase' ?
-            renderTemplate('bottleMainSource') : '',
-          bottleMainCutout: firstPhoto.cutout ?
-            renderTemplate('bottleMainCutout', {
-              sparkleIcon: sparkleIcon,
-            }) : '',
+          bottleMainSource: firstPhoto.source === 'whiskybase' ? renderTemplate('bottleMainSource') : '',
+          bottleMainCutout: firstPhoto.cutout ? renderTemplate('bottleMainCutout', {sparkleIcon: sparkleIcon, }) : '',
         }) : '',
-        inventoryNumber: entry.inventoryNumber ?
-          `#${escapeHtml(entry.inventoryNumber)}` :
-          t('imports.bottles.noInventoryNumber'),
+        inventoryNumber: entry.inventoryNumber ? `#${escapeHtml(entry.inventoryNumber)}` : t('imports.bottles.noInventoryNumber'),
         status: entry.status,
         bottleStatusText: bottleStatusText(entry.status),
-        badge: entry.volumeType === 'sample' ?
-          renderTemplate('badge') : '',
-        bottleSize: entry.volumeMl != null ?
-          renderTemplate('bottleSize', {
-            volumeMl: entry.volumeMl,
-          }) :
-          '',
+        badge: entry.volumeType === 'sample' ? renderTemplate('badge') : '',
+        bottleSize: entry.volumeMl != null ? renderTemplate('bottleSize', {volumeMl: entry.volumeMl, }) : '',
         actionToolbar: actionToolbar(
           composeMarkup(
             "\n                            ",
@@ -221,8 +193,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
         detailGrid: detailGrid(composeMarkup([
           detailField({
             label: t('forms.bottle.type'),
-            value: t(entry.volumeType === 'sample' ?
-              'forms.bottle.sampleBottle' : 'forms.bottle.normalBottle'),
+            value: t(entry.volumeType === 'sample' ? 'forms.bottle.sampleBottle' : 'forms.bottle.normalBottle'),
           }),
           entry.purchaseDate ? detailField({
             label: t('detail.meta.purchaseLabel'),
@@ -267,85 +238,55 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
             className: 'bottle-entry-comment',
           }) : '',
         ]), {columns: 3, tag: 'dl', className: 'bottle-entry-facts'}),
-        bottlePhotos: t(
-          'detail.sections.bottlePhotos',
-          {count: entryPhotos.length}
-        ),
-        bottlePhotos2: t(
-          'detail.sections.bottlePhotos',
-          {count: entryPhotos.length}
-        ),
+        bottlePhotos: t('detail.sections.bottlePhotos', {count: entryPhotos.length}),
+        bottlePhotos2: t('detail.sections.bottlePhotos', {count: entryPhotos.length}),
         photoGallery: photoGallery,
-        replace: t(
-          "detail.statistics.attachmentCount",
-          {count: (entry.files || []).length}
-        ).replace("&",
-          "&amp;"
-        ),
-        length: (entry.files || []).length ? documentList(entry.files
-          .map(file =>
-            documentItem(renderTemplate('previewFile', {
-              id: entry.id,
-              id2: file.id,
-              name: file.name,
-              openPreview: t('detail.documents.openPreview'),
-              name2: file.name,
-              formatFileSize: formatFileSize(file.size),
-              encodeURIComponent: encodeURIComponent(entry.id),
-              encodeURIComponent2: encodeURIComponent(file.id),
-              name3: file.name,
-              downloadNamed: t(
-                'detail.documents.downloadNamed', {name: file.name}
-              ),
-              arrowDownIcon: arrowDownIcon,
-              download: t('detail.documents.download'),
-              deleteFileButton: actionButton({
-                label: t('common.actions.delete'),
-                action: 'delete-file',
-                variant: 'destructive',
-                size: 'small',
-                data: {id: entry.id, 'file-id': file.id},
-                ariaLabel: t(
-                  'detail.documents.deleteNamed',
-                  {
-                    name: file.name,
-                  }
-                ),
-                icon: deleteIcon,
-                wrapLabel: true,
-              }),
-            })))) : emptyState({description: t("detail.empty.noAttachments")}),
-        addActionLabel: addActionLabel(t(
-          "detail.actions.addAttachments")),
+        replace: t("detail.statistics.attachmentCount", {count: (entry.files || []).length}).replace("&", "&amp;"),
+        length: (entry.files || []).length ? documentList(entry.files.map(file =>
+          documentItem(renderTemplate('previewFile', {
+            id: entry.id,
+            id2: file.id,
+            name: file.name,
+            openPreview: t('detail.documents.openPreview'),
+            name2: file.name,
+            formatFileSize: formatFileSize(file.size),
+            encodeURIComponent: encodeURIComponent(entry.id),
+            encodeURIComponent2: encodeURIComponent(file.id),
+            name3: file.name,
+            downloadNamed: t('detail.documents.downloadNamed', {name: file.name}),
+            arrowDownIcon: arrowDownIcon,
+            download: t('detail.documents.download'),
+            deleteFileButton: actionButton({
+              label: t('common.actions.delete'),
+              action: 'delete-file',
+              variant: 'destructive',
+              size: 'small',
+              data: {id: entry.id, 'file-id': file.id},
+              ariaLabel: t('detail.documents.deleteNamed', {name: file.name, }),
+              icon: deleteIcon,
+              wrapLabel: true,
+            }),
+          })))) : emptyState({description: t("detail.empty.noAttachments")}),
+        addActionLabel: addActionLabel(t("detail.actions.addAttachments")),
         fileAccept: fileAccept,
         id2: entry.id,
       });
     }));
     shell(renderTemplate('detail', {
-      backNavigation: backNavigation(
-        "back",
-        t("detail.navigation.backToCollection"),
-        "detail-back"
-      ),
+      backNavigation: backNavigation("back", t("detail.navigation.backToCollection"), "detail-back"),
       pageHeader: pageHeader({
         title: bottling.name,
         period: false,
         className: 'detail-page-head',
         preTitle: renderTemplate('detailHeadingMeta', {
-          cardKicker: originLabel ?
-            renderTemplate('cardKicker', {
-              originLabel: originLabel,
-            }) :
-            '',
+          cardKicker: originLabel ? renderTemplate('cardKicker', {originLabel: originLabel, }) : '',
           statusText: statusText,
         }),
         copyClass: '',
         actions: headerActions(
           composeMarkup(relatedDistilleries.length ?
             actionButton({
-              label: relatedDistilleries.length > 1 ?
-                t('detail.sections.mapLocations') :
-                t('detail.actions.showOnMap'),
+              label: relatedDistilleries.length > 1 ? t('detail.sections.mapLocations') : t('detail.actions.showOnMap'),
               action: 'bottling-map',
               title: t('detail.map.showRelatedDistilleries'),
               icon: locationIcon,
@@ -366,9 +307,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
         ),
       }),
       openPhoto: coverPhoto(bottling.id) ?
-        renderTemplate('openPhoto2', {
-          imageUrl: imageUrl(coverPhoto(bottling.id)),
-        }) : renderTemplate('heroPhoto'),
+        renderTemplate('openPhoto2', {imageUrl: imageUrl(coverPhoto(bottling.id)), }) : renderTemplate('heroPhoto'),
       panel: panel({
         content: composeMarkup(
           "\n    ",
@@ -378,16 +317,11 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
             composeMarkup(facts.map(([label, value, suffix = '']) =>
               detailField({
                 label: factLabel(label),
-                value: `${formatValue(value === "Ja" ? t("common.choices.yes") :
-                  value === "Nein" ? t("common.choices.no") :
-                    value)}${suffix ? ` ${escapeHtml(suffix === "Jahre" ?
-                      t("detail.facts.yearSuffix") : suffix)}` : ''}`,
+                value: `${formatValue(value === "Ja" ? t("common.choices.yes") : value === "Nein" ? t("common.choices.no") : value)}${suffix ? ` ${escapeHtml(suffix === "Jahre" ? t("detail.facts.yearSuffix") : suffix)}` : ''}`,
                 valueHtml: true, variant: 'fact',
               }))),
             {columns: 2, className: 'forms'}
-          ) : (!description && !whiskybaseUrl ?
-            emptyState({description: t("detail.empty.noAdditionalInformation")}
-            ) : ''),
+          ) : (!description && !whiskybaseUrl ? emptyState({description: t("detail.empty.noAdditionalInformation")}) : ''),
           description ? renderTemplate('content', {
             divider: divider(),
             headingTitle: headingTitle({title: t('detail.fields.comment')}),
@@ -400,8 +334,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
         ),
       }),
       latest: latest ? '' : ' is-empty',
-      title: t('tas\
-tings.title'),
+      title: t('tastings.title'),
       sectionHeader: sectionHeader({
         title: t('tastings.title'),
         className: 'tasting-summary-heading',
@@ -426,41 +359,28 @@ tings.title'),
         content: renderTemplate(
           'tastingSummaryContent',
           {
-            latest: t(
-              'tastings.latest'),
+            latest: t('tastings.latest'),
             tastingSummaryGlasses: latest.rating != null ?
               renderTemplate('tastingSummaryGlasses', {
-                from: composeMarkup(Array
-                  .from(
-                    {length: 5},
-                    (_, i) => glencairnRatingSymbol({
-                      fill: Math.max(
-                        0,
-                        Math.min(100, (Number(latest.rating) - i * 20) * 5)
-                      ),
-                      id: `detail-tasting-${i}`,
-                    })
-                  )),
+                from: composeMarkup(Array.from(
+                  {length: 5},
+                  (_, i) => glencairnRatingSymbol({
+                    fill: Math.max(0, Math.min(100, (Number(latest.rating) - i * 20) * 5)),
+                    id: `detail-tasting-${i}`,
+                  })
+                )),
               }) : '',
-            rating: latest.rating ==
-              null ? escapeHtml(t('tasting.unrated')) :
-              `${escapeHtml(latest.rating)} / 100`,
+            rating: latest.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(latest.rating)} / 100`,
             formatDate: formatDate(latest.tastedOn),
-            count: t(
-              'tastings.count', {count: tastingCount}),
+            count: t('tastings.count', {count: tastingCount}),
             tastingsOpenButton: actionButton({
               label: t('tastings.openOne'),
               action: 'tastings-open',
               data: {'tasting-id': latest.id},
             }),
-            tastingSummaryRadar: tastingRadar ?
-              renderTemplate('tastingSummaryRadar', {
-                tastingRadar: tastingRadar,
-              }) : '',
-            length: tastingNotes.length ?
-              '' : ' is-empty',
-            length2: tastingNotes.length ? '' :
-              ' aria-hidden="true"',
+            tastingSummaryRadar: tastingRadar ? renderTemplate('tastingSummaryRadar', {tastingRadar: tastingRadar, }) : '',
+            length: tastingNotes.length ? '' : ' is-empty',
+            length2: tastingNotes.length ? '' : ' aria-hidden="true"',
             tastingNotes: composeMarkup(tastingNotes.map(note => detailField({
               label: note.label,
               value: note.text,
@@ -473,22 +393,17 @@ tings.title'),
         ),
       }) : '',
       sectionHeader2: sectionHeader({
-        title: t(
-          'detail.statistics.bottleAndSampleCount',
-          {count: physicalBottles.length}
-        ),
+        title: t('detail.statistics.bottleAndSampleCount', {count: physicalBottles.length}),
         actionsBare: true,
         actions: actionButton({
-          label: t('detail.actions.addAnotherBottle')
-            .replace(/^\+\s*/, ''),
+          label: t('detail.actions.addAnotherBottle').replace(/^\+\s*/, ''),
           action: 'add-bottle',
           variant: 'primary',
           icon: newBottlingIcon,
           wrapLabel: true,
         }),
       }),
-      list: list ||
-        renderTemplate('panel'),
+      list: list || renderTemplate('panel'),
     }));
     attachPhotoSorting(action);
   }
@@ -507,24 +422,16 @@ tings.title'),
       const selected = [...input.files];
       input.value = '';
       if (!selected.length) return true;
-      const result = await action(
-        () => uploadFiles(input.dataset.bottleFiles, selected),
-        {scope: 'collection'}
-      );
-      if (result.ok) toast(t("detail.notifications.filesSaved",
-        {count: result.value}));
+      const result = await action(() => uploadFiles(input.dataset.bottleFiles, selected), {scope: 'collection'});
+      if (result.ok) toast(t("detail.notifications.filesSaved", {count: result.value}));
       return result.ok;
     }
     if (input.matches?.('input[data-bottle-photos]')) {
       const files = [...input.files];
       input.value = '';
       if (!files.length) return true;
-      const result = await action(
-        () => uploadPhotos(input.dataset.bottlePhotos, files),
-        {scope: 'collection'}
-      );
-      if (result.ok) toast(t("detail.notifications.photosSaved",
-        {count: files.length}));
+      const result = await action(() => uploadPhotos(input.dataset.bottlePhotos, files), {scope: 'collection'});
+      if (result.ok) toast(t("detail.notifications.photosSaved", {count: files.length}));
       return result.ok;
     }
     return false;

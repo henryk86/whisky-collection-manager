@@ -5,8 +5,7 @@ import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
 
 test(
-  'API saves editable distillery locations without changing associated \
-bottlings or collection schema',
+  'API saves editable distillery locations without changing associated bottlings or collection schema',
   async () => {
     const server = await startTestServer();
     try {
@@ -30,23 +29,14 @@ bottlings or collection schema',
       assert.equal(updated.schemaVersion, 6);
       assert.equal(updated.bottlings.length, 1);
       assert.equal(updated.bottlings[0].distilleryIds[0], kilchoman.id);
-      const stored = JSON.parse(fs.readFileSync(path.join(server.dir, 'data',
-        'collection.json')));
-      assert.equal(
-        stored.distilleries.find(d => d.id === kilchoman.id).longitude,
-        -6.4308
-      );
+      const stored = JSON.parse(fs.readFileSync(path.join(server.dir, 'data', 'collection.json')));
+      assert.equal(stored.distilleries.find(d => d.id === kilchoman.id).longitude, -6.4308);
       for (const invalid of [
         {latitude: 92, longitude: 0},
         {latitude: '55', longitude: '-6'},
         {latitude: 54, longitude: null},
       ]) {
-        const response = await requestJson(
-          server.base,
-          `/api/distilleries/${kilchoman.id}`,
-          'PATCH',
-          {name: kilchoman.name, ...invalid}
-        );
+        const response = await requestJson(server.base, `/api/distilleries/${kilchoman.id}`, 'PATCH', {name: kilchoman.name, ...invalid});
         assert.equal(response.status, 400);
       }
       const cleared = await requestJson(
@@ -65,12 +55,7 @@ bottlings or collection schema',
       );
       assert.equal(created.status, 201);
       assert.equal(created.data.longitude, 7.17);
-      const existing = await requestJson(
-        server.base,
-        '/api/distilleries',
-        'POST',
-        {name: 'No Coordinate Distillery'}
-      );
+      const existing = await requestJson(server.base, '/api/distilleries', 'POST', {name: 'No Coordinate Distillery'});
       assert.equal(existing.status, 201);
       assert.equal(existing.data.latitude, null);
     } finally {await server.stop();}

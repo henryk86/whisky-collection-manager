@@ -4,8 +4,7 @@ import {escapeHtml} from './dom.js';
 import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/flavor-profile.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/flavor-profile.html', import.meta.url));
 
 
 /**
@@ -34,8 +33,7 @@ const angleAt = index => -Math.PI / 2 + index * step;
  */
 const point = (index, value) => {
   const angle = angleAt(index);
-  return [cx + Math.cos(angle) * (value / 10) * radius,
-  cy + Math.sin(angle) * (value / 10) * radius];
+  return [cx + Math.cos(angle) * (value / 10) * radius, cy + Math.sin(angle) * (value / 10) * radius];
 };
 
 /**
@@ -44,8 +42,7 @@ const point = (index, value) => {
  * @param {*} value Value to process.
  * @return {boolean} Whether the operation matched or succeeded.
  */
-const scorePresent = value => Number.isInteger(value) && value >= 0 &&
-  value <= 10;
+const scorePresent = value => Number.isInteger(value) && value >= 0 && value <= 10;
 
 /**
  * Locates the DOM elements used by scores from editor.
@@ -67,8 +64,7 @@ const scoresFromEditor = section => Object.fromEntries(FLAVOR_AXES.map(axis => {
 export function flavorPolygon(values) {
   // Omit unassessed points from older tastings instead of silently plotting
   // them at zero.
-  return FLAVOR_AXES.flatMap((axis, index) => scorePresent(values?.[axis])
-    ? [point(index, values[axis]).map(n => n.toFixed(2)).join(',')] : [])
+  return FLAVOR_AXES.flatMap((axis, index) => scorePresent(values?.[axis]) ? [point(index, values[axis]).map(n => n.toFixed(2)).join(',')] : [])
     .join(' ');
 }
 
@@ -81,30 +77,19 @@ export function flavorPolygon(values) {
  */
 export function flavorChart(values, {editable = false, colorSection = null,
   compact = false} = {}) {
-  if (!values && !editable) return renderTemplate('hint', {
-    notRecorded: t(
-      'flavor.notRecorded'),
-  });
-  const scores = values || Object.fromEntries(FLAVOR_AXES.map(axis =>
-    [axis, 0]));
+  if (!values && !editable) return renderTemplate('hint', {notRecorded: t('flavor.notRecorded'), });
+  const scores = values || Object.fromEntries(FLAVOR_AXES.map(axis => [axis, 0]));
   return renderTemplate('flavorEditor', {
-    editable: editable ? ' is-editable' :
-      '',
+    editable: editable ? ' is-editable' : '',
     colorSection: colorSection ? ' has-color' : '',
-    compact: compact ? ' is-preview' :
-      '',
-    editable2: editable ? `data-flavor-editor data-flavor-set="${values ?
-      '1' : ''}"` : '',
+    compact: compact ? ' is-preview' : '',
+    editable2: editable ? `data-flavor-editor data-flavor-set="${values ? '1' : ''}"` : '',
     colorSection2: colorSection || '',
     chartLabel: t('flavor.chartLabel'),
     content: composeMarkup([2, 4, 6, 8, 10].map(score =>
-      renderTemplate('flavorGrid', {
-        fLAVORAXES: FLAVOR_AXES.map((_, i) =>
-          point(i, score).join(',')).join(' '),
-      }))),
+      renderTemplate('flavorGrid', {fLAVORAXES: FLAVOR_AXES.map((_, i) => point(i, score).join(',')).join(' '), }))),
     fLAVORAXES: composeMarkup(FLAVOR_AXES.map((axis, i) => {
-      const [x, y] =
-        point(i, 10);
+      const [x, y] = point(i, 10);
       return renderTemplate('flavorGrid2', {
         cx: cx,
         cy: cy,
@@ -120,24 +105,17 @@ export function flavorChart(values, {editable = false, colorSection = null,
         radius: radius,
       }) : '',
     fLAVORAXES2: composeMarkup(FLAVOR_AXES.map((axis, i) => {
-      const score =
-        scores[axis]; const [x, y] = point(i, scorePresent(score) ?
-          score : 0);
+      const score = scores[axis]; const [x, y] = point(i, scorePresent(score) ? score : 0);
       return renderTemplate('flavorPoint', {
         i: i,
         x: x,
         y: y,
         editable: editable ? 6 : 4,
-        scorePresent: scorePresent(score) ? '' : 'vi\
-sibility="hidden"',
+        scorePresent: scorePresent(score) ? '' : 'visibility="hidden"',
       });
     })),
     fLAVORAXES3: composeMarkup(FLAVOR_AXES.map((axis, i) => {
-      const [x, y] =
-        point(i, compact ? 11.2 : 13.5); const side =
-          Math.cos(angleAt(i)); const anchor = side > .3 ? 'start' :
-            side < -.3 ? 'end' :
-              'middle';
+      const [x, y] = point(i, compact ? 11.2 : 13.5); const side = Math.cos(angleAt(i)); const anchor = side > .3 ? 'start' : side < -.3 ? 'end' : 'middle';
       return renderTemplate('flavorAxisText', {
         x: x,
         y: y,
@@ -149,25 +127,19 @@ sibility="hidden"',
       renderTemplate('flavorSliders', {
         fLAVORAXES: composeMarkup(FLAVOR_AXES.map((axis,
           i) => {
-          const score = scores[axis]; const missing = !scorePresent(
-            score); return renderTemplate('flavorScale', {
-              flavorAxisTitle: flavorAxisTitle(axis),
-              input: editable ?
-                renderTemplate('flavorChartInput', {
-                  missing: missing ?
-                    0 : score,
-                  axis: axis,
-                  i: i,
-                  missing2: missing ? 'data-flavor-unset="1"' :
-                    '',
-                  flavorAxisTitle: flavorAxisTitle(axis),
-                  i2: i,
-                  missing3: missing ? '–' : score,
-                }) : renderTemplate('strong', {
-                  missing: missing ? '–' :
-                    `${score} / 10`,
-                }),
-            });
+          const score = scores[axis]; const missing = !scorePresent(score); return renderTemplate('flavorScale', {
+            flavorAxisTitle: flavorAxisTitle(axis),
+            input: editable ?
+              renderTemplate('flavorChartInput', {
+                missing: missing ? 0 : score,
+                axis: axis,
+                i: i,
+                missing2: missing ? 'data-flavor-unset="1"' : '',
+                flavorAxisTitle: flavorAxisTitle(axis),
+                i2: i,
+                missing3: missing ? '–' : score,
+              }) : renderTemplate('strong', {missing: missing ? '–' : `${score} / 10`, }),
+          });
         })),
       }),
   });
@@ -199,9 +171,7 @@ export function handleFlavorRange(event) {
   if (range.dataset) delete range.dataset.flavorUnset;
   container.dataset.flavorSet = '1';
   const values = scoresFromEditor(container);
-  container.querySelector('[data-flavor-polygon]').setAttribute('points',
-    flavorPolygon(values)
-  );
+  container.querySelector('[data-flavor-polygon]').setAttribute('points', flavorPolygon(values));
   FLAVOR_AXES.forEach((axis, i) => {
     const present = scorePresent(values[axis]);
     const [x, y] = point(i, present ? values[axis] : 0);
@@ -225,20 +195,15 @@ export function setFlavorFromPointer(event) {
   const hit = event.target.closest?.('[data-flavor-hit]');
   if (!hit) return false;
   const svg = hit.ownerSVGElement;
-  const pointInSvg = svg.createSVGPoint(); pointInSvg.x =
-    event.clientX; pointInSvg.y = event.clientY;
+  const pointInSvg = svg.createSVGPoint(); pointInSvg.x = event.clientX; pointInSvg.y = event.clientY;
   const matrix = svg.getScreenCTM(); if (!matrix) return false;
   const pos = pointInSvg.matrixTransform(matrix.inverse());
   const rawAngle = Math.atan2(pos.y - cy, pos.x - cx);
-  const index = ((Math.round((rawAngle + Math.PI / 2) / step) %
-    FLAVOR_AXES.length) + FLAVOR_AXES.length) % FLAVOR_AXES.length;
+  const index = ((Math.round((rawAngle + Math.PI / 2) / step) % FLAVOR_AXES.length) + FLAVOR_AXES.length) % FLAVOR_AXES.length;
   const angle = angleAt(index);
-  const projected = (pos.x - cx) * Math.cos(angle) + (pos.y - cy) *
-    Math.sin(angle);
-  const slider = hit.closest('[data-flavor-editor]')
-    .querySelector(`[data-flavor-range="${index}"]`);
-  slider.value = String(Math.max(0, Math.min(10, Math.round(projected /
-    radius * 10))));
+  const projected = (pos.x - cx) * Math.cos(angle) + (pos.y - cy) * Math.sin(angle);
+  const slider = hit.closest('[data-flavor-editor]').querySelector(`[data-flavor-range="${index}"]`);
+  slider.value = String(Math.max(0, Math.min(10, Math.round(projected / radius * 10))));
   handleFlavorRange({target: slider}); return true;
 }
 
@@ -251,10 +216,8 @@ export function setFlavorFromPointer(event) {
  */
 export function displayFlavorProfile(container, values) {
   if (!container) return;
-  const scores = values || Object.fromEntries(FLAVOR_AXES.map(axis =>
-    [axis, 0]));
-  const sliders = FLAVOR_AXES.map((axis, i) =>
-    container.querySelector(`[data-flavor-range="${i}"]`));
+  const scores = values || Object.fromEntries(FLAVOR_AXES.map(axis => [axis, 0]));
+  const sliders = FLAVOR_AXES.map((axis, i) => container.querySelector(`[data-flavor-range="${i}"]`));
   sliders.forEach((slider, i) => {
     if (!slider) return;
     const score = scores[FLAVOR_AXES[i]];
@@ -267,11 +230,9 @@ export function displayFlavorProfile(container, values) {
   // Update the drawing without marking unassessed axes as explicitly zero.
   // handleFlavorRange clears only the slider it receives, so update via a
   // previously recorded axis.
-  const recordedIndex = scores && FLAVOR_AXES.findIndex(axis =>
-    scorePresent(scores[axis]));
+  const recordedIndex = scores && FLAVOR_AXES.findIndex(axis => scorePresent(scores[axis]));
   const recorded = sliders[recordedIndex < 0 ? 0 : recordedIndex];
   if (recorded) handleFlavorRange({target: recorded});
-  const editor = container.matches?.('[data-flavor-editor]') ? container :
-    container.querySelector('[data-flavor-editor]');
+  const editor = container.matches?.('[data-flavor-editor]') ? container : container.querySelector('[data-flavor-editor]');
   if (editor) editor.dataset.flavorSet = values ? '1' : '';
 }

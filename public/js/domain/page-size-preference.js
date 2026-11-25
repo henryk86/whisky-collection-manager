@@ -11,8 +11,7 @@ export const PAGE_SIZE_STORAGE_KEY = 'whisky-page-size';
  */
 function supportedPageSize(value) {
   const number = Number(value);
-  return String(number) === String(value) &&
-    PAGE_SIZE_OPTIONS.includes(number) ? number : null;
+  return String(number) === String(value) && PAGE_SIZE_OPTIONS.includes(number) ? number : null;
 }
 
 /**
@@ -24,8 +23,7 @@ function supportedPageSize(value) {
 export function getPageSizePreference(storage) {
   try {
     const source = storage === undefined ? globalThis.localStorage : storage;
-    return supportedPageSize(source?.getItem(PAGE_SIZE_STORAGE_KEY)) ??
-      DEFAULT_PAGE_SIZE;
+    return supportedPageSize(source?.getItem(PAGE_SIZE_STORAGE_KEY)) ?? DEFAULT_PAGE_SIZE;
   } catch {
     return DEFAULT_PAGE_SIZE;
   }

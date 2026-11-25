@@ -124,8 +124,7 @@ function delegatedEvents() {
      * @return {!Object} Computed value, or null when the input has no match.
      */
     closest(selector) {
-      if (selector === '[data-act]' || selector ===
-        'button, a, input, select, textarea' ||
+      if (selector === '[data-act]' || selector === 'button, a, input, select, textarea' ||
         selector.startsWith('.warehouse-room-wall .warehouse-bottle-symbol'))
         return this;
       if (selector.includes('.warehouse-wall-bay')) return bay;
@@ -157,8 +156,7 @@ function delegatedEvents() {
      * @return {!Object} Computed value, or null when the input has no match.
      */
     closest(selector) {
-      if (selector === '[data-act]' || selector ===
-        'button, a, input, select, textarea') return this;
+      if (selector === '[data-act]' || selector === 'button, a, input, select, textarea') return this;
       if (selector.includes('.warehouse-furniture-manager'))
         return managerShelf;
       return null;
@@ -168,8 +166,7 @@ function delegatedEvents() {
 }
 
 test(
-  'clicking a compartment never opens the modal; double-click opens it \
-exactly once',
+  'clicking a compartment never opens the modal; double-click opens it exactly once',
   async () => {
     const {listeners, calls, bay} = delegatedEvents();
     await listeners.get('click')({target: bay});
@@ -193,8 +190,7 @@ test(
 );
 
 test(
-  'furniture modal opens a bottle preview on click and a shelf overview on \
-compartment double-click',
+  'furniture modal opens a bottle preview on click and a shelf overview on compartment double-click',
   async () => {
     const {listeners, calls, managerShelf, managerBottle} = delegatedEvents();
     await listeners.get('click')({target: managerBottle});
@@ -224,8 +220,7 @@ test('keyboard Enter and Space still open a focused compartment', () => {
 });
 
 test(
-  'zero-capacity shelf ignores double-click and keyboard despite inherited \
-shelf styling',
+  'zero-capacity shelf ignores double-click and keyboard despite inherited shelf styling',
   () => {
     const {listeners, calls, bay, managerShelf} = delegatedEvents();
     bay.dataset.capacity = '0';

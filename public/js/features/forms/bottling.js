@@ -9,8 +9,7 @@ import {bottleStatusLabels, whiskyTypeLabels, photoAccept}
 import {fileAccept} from '../files.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/bottling.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/bottling.html', import.meta.url));
 
 /**
  * Creates bottling form for bottling.
@@ -28,17 +27,14 @@ export function createBottlingForm({state, selectors}) {
    */
   function distilleryPicker(bottling) {
     const selected = new Set(distilleryIds(bottling));
-    const options = state.collection.distilleries.slice().sort((a, z) =>
-      a.name.localeCompare(z.name, 'de'));
+    const options = state.collection.distilleries.slice().sort((a, z) => a.name.localeCompare(z.name, 'de'));
     return renderTemplate('formField', {
       options: composeMarkup(options.map(distillery =>
         renderTemplate('distilleryOption', {
-          id: distillery
-            .id,
+          id: distillery.id,
           checked: selected.has(distillery.id) ? 'checked' : '',
           name: distillery.name,
-          status: distillery.status === 'closed' ?
-            ` · ${t('home.status.closed').toLowerCase()}` : '',
+          status: distillery.status === 'closed' ? ` · ${t('home.status.closed').toLowerCase()}` : '',
         }))),
     });
   }
@@ -93,43 +89,14 @@ export function createBottlingForm({state, selectors}) {
         trustedContent: addActionLabel(t("forms.common.createButton")),
         action: 'add-distillery',
       }),
-      bottlerField: textInput(t("forms.bottling.bottler"), 'bottler',
-        bottling.bottler),
-      ageYearsField: textInput(
-        t("forms.bottling.ageYears"),
-        'ageYears',
-        bottling.ageYears,
-        {
-          type: 'number',
-        }
-      ),
+      bottlerField: textInput(t("forms.bottling.bottler"), 'bottler', bottling.bottler),
+      ageYearsField: textInput(t("forms.bottling.ageYears"), 'ageYears', bottling.ageYears, {type: 'number', }),
       abvField: textInput(t("forms.bottling.abv"), 'abv', bottling.abv, {
         type: 'number', step: '0.01',
       }),
-      volumeMlField: textInput(
-        t("forms.bottling.nominalVolume"),
-        'volumeMl',
-        bottling.volumeMl,
-        {
-          type: 'number',
-        }
-      ),
-      releaseYearField: textInput(
-        t("forms.bottling.releaseYear"),
-        'releaseYear',
-        bottling.releaseYear,
-        {
-          type: 'number',
-        }
-      ),
-      distillationDateField: textInput(
-        t("forms.bottling.distillationDate"),
-        'distillationDate',
-        bottling.distillationDate,
-        {
-          type: 'date',
-        }
-      ),
+      volumeMlField: textInput(t("forms.bottling.nominalVolume"), 'volumeMl', bottling.volumeMl, {type: 'number', }),
+      releaseYearField: textInput(t("forms.bottling.releaseYear"), 'releaseYear', bottling.releaseYear, {type: 'number', }),
+      distillationDateField: textInput(t("forms.bottling.distillationDate"), 'distillationDate', bottling.distillationDate, {type: 'date', }),
       distillationYearField: textInput(
         t("forms.bottling.distillationYear"),
         'distillationYear',
@@ -138,29 +105,10 @@ export function createBottlingForm({state, selectors}) {
           type: 'number',
         }
       ),
-      bottlingDateField: textInput(
-        t("forms.bottling.bottlingDate"),
-        'bottlingDate',
-        bottling.bottlingDate,
-        {
-          type: 'date',
-        }
-      ),
-      bottlingYearField: textInput(
-        t("forms.bottling.bottlingYear"),
-        'bottlingYear',
-        bottling.bottlingYear,
-        {
-          type: 'number',
-        }
-      ),
-      caskTypeField: textInput(t("forms.bottling.caskType"), 'caskType',
-        bottling.caskType),
-      caskNumberField: textInput(
-        t("forms.bottling.caskNumber"),
-        'caskNumber',
-        bottling.caskNumber
-      ),
+      bottlingDateField: textInput(t("forms.bottling.bottlingDate"), 'bottlingDate', bottling.bottlingDate, {type: 'date', }),
+      bottlingYearField: textInput(t("forms.bottling.bottlingYear"), 'bottlingYear', bottling.bottlingYear, {type: 'number', }),
+      caskTypeField: textInput(t("forms.bottling.caskType"), 'caskType', bottling.caskType),
+      caskNumberField: textInput(t("forms.bottling.caskNumber"), 'caskNumber', bottling.caskNumber),
       limitedEditionCountField: textInput(
         t("forms.bottling.limitedBottleCount"),
         'limitedEditionCount',
@@ -177,11 +125,7 @@ export function createBottlingForm({state, selectors}) {
           type: 'url', full: true,
         }
       ),
-      whiskybaseIdField: textInput(
-        t("forms.bottling.whiskybaseId"),
-        'whiskybaseId',
-        bottling.whiskybaseId
-      ),
+      whiskybaseIdField: textInput(t("forms.bottling.whiskybaseId"), 'whiskybaseId', bottling.whiskybaseId),
       completionStatusField: selectInput(
         t("forms.bottle.editStatus"),
         'completionStatus',
@@ -191,11 +135,7 @@ export function createBottlingForm({state, selectors}) {
         ],
         bottling.completionStatus || 'incomplete'
       ),
-      descriptionField: areaInput(
-        t("forms.bottling.comment"),
-        'description',
-        bottling.description
-      ),
+      descriptionField: areaInput(t("forms.bottling.comment"), 'description', bottling.description),
       id2: bottling.id ? '' : renderTemplate('divider', {
         firstInventoryNumberField: textInput(
           t("forms.bottle.inventoryNumberOptional"),
@@ -218,12 +158,7 @@ export function createBottlingForm({state, selectors}) {
           ],
           'standard'
         ),
-        firstVolumeMlField: textInput(
-          t("forms.bottle.initialSize"),
-          'firstVolumeMl',
-          '',
-          {type: 'number'}
-        ),
+        firstVolumeMlField: textInput(t("forms.bottle.initialSize"), 'firstVolumeMl', '', {type: 'number'}),
         firstStatusField: selectInput(
           t("forms.bottle.status"),
           'firstStatus',

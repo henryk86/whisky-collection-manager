@@ -17,8 +17,7 @@ export function formValues(form) {
     }
   }
   if (form.id === 'bottling-form') {
-    data.distilleryIds = queryAll('input[name=distilleryIds]:checked', form)
-      .map(x => x.value);
+    data.distilleryIds = queryAll('input[name=distilleryIds]:checked', form).map(x => x.value);
     data.compositionComplete = data.compositionComplete === 'true';
   }
   for (const key of [

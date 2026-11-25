@@ -9,8 +9,7 @@ import {validateWarehouse} from '../../server/storage/warehouse-store.js';
 const room = {id: 'room-1', name: 'Test', width: 4, height: 3, furniture: []};
 
 test(
-  'shared furniture type definitions remain compatible with server \
-validation and normalization',
+  'shared furniture type definitions remain compatible with server validation and normalization',
   () => {
     assert.deepEqual(
       FURNITURE_TYPES,
@@ -38,16 +37,12 @@ validation and normalization',
         assignments: {},
       }));
     }
-    assert.equal(
-      layout({name: 'Sonstiges', type: 'unknown'}, room).type,
-      'sonstiges'
-    );
+    assert.equal(layout({name: 'Sonstiges', type: 'unknown'}, room).type, 'sonstiges');
   }
 );
 
 test(
-  'extracted warehouse field validation retains null capacity, zero \
-capacity, labels and bounds',
+  'extracted warehouse field validation retains null capacity, zero capacity, labels and bounds',
   () => {
     assert.equal(capacity(''), null);
     assert.equal(capacity(0), 0);
@@ -58,10 +53,7 @@ capacity, labels and bounds',
     assert.throws(() => shelfFront('unsupported'), /Fachfront/);
     assert.equal(name('  Regal  '), 'Regal');
     assert.throws(() => name('  '), /Name/);
-    assert.throws(
-      () => layout({name: 'Grenze', x: 3.8, width: 1}, room),
-      /Raumgrenzen/
-    );
+    assert.throws(() => layout({name: 'Grenze', x: 3.8, width: 1}, room), /Raumgrenzen/);
   }
 );
 
@@ -76,8 +68,7 @@ test(
     assert.doesNotThrow(() => ensureShelfHeights(furniture));
     assert.throws(
       () => ensureShelfHeights({
-        ...furniture, shelves: [{heightCm: 180},
-        {heightCm: null}],
+        ...furniture, shelves: [{heightCm: 180}, {heightCm: null}],
       }),
       /5 cm/
     );

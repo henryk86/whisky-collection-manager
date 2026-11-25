@@ -4,8 +4,7 @@ import {escapeHtml} from './dom.js';
 import {glencairnRatingSymbol} from './glencairn-icon.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/glencairn-rating.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/glencairn-rating.html', import.meta.url));
 
 
 /**
@@ -16,16 +15,13 @@ const renderTemplate = await loadTemplates(
  * @return {string} Resulting text.
  */
 export function glencairnRating(rating) {
-  const safe = rating == null ? null :
-    Math.max(0, Math.min(100, Number(rating)));
+  const safe = rating == null ? null : Math.max(0, Math.min(100, Number(rating)));
   const inputValue = safe == null ? '' : String(safe).replace('.', ',');
   return renderTemplate('tastingRating', {
     safe: safe ?? '',
-    rating: t(
-      'tasting.rating'),
+    rating: t('tasting.rating'),
     from: composeMarkup(Array.from({length: 5}, (_, i) => {
-      const fill = safe == null ? 0 : Math.max(0, Math.min(100, (safe - i *
-        20) * 5));
+      const fill = safe == null ? 0 : Math.max(0, Math.min(100, (safe - i * 20) * 5));
       const selected = safe != null && safe > i * 20;
       const state = fill === 100 ? 'full' : fill > 0 ? 'partial' : 'empty';
       const points = (i + 1) * 20;
@@ -33,8 +29,7 @@ export function glencairnRating(rating) {
         state: state,
         points: points,
         selected: selected,
-        ratingGlass: t('tasting.ra\
-tingGlass', {count: i + 1}),
+        ratingGlass: t('tasting.ratingGlass', {count: i + 1}),
         points2: points,
         fill: fill,
         glencairnRatingSymbol: glencairnRatingSymbol({
@@ -59,8 +54,7 @@ export function syncGlencairnRating(node, value) {
   const safe = value == null ? null : Math.max(0, Math.min(100, Number(value)));
   node.dataset.ratingValue = safe == null ? '' : String(safe);
   node.querySelectorAll('[data-rating-points]').forEach((button, i) => {
-    const fill = safe == null ? 0 : Math.max(0, Math.min(100, (safe - i *
-      20) * 5));
+    const fill = safe == null ? 0 : Math.max(0, Math.min(100, (safe - i * 20) * 5));
     const rect = button.querySelector('[data-rating-fill]');
     if (rect) {
       const height = 253 * fill / 100;
@@ -68,8 +62,7 @@ export function syncGlencairnRating(node, value) {
       rect.setAttribute('height', String(height));
     }
     button.style.setProperty('--glass-fill', `${fill}%`);
-    button.dataset.glassState = fill === 100 ? 'full' : fill > 0 ?
-      'partial' : 'empty';
+    button.dataset.glassState = fill === 100 ? 'full' : fill > 0 ? 'partial' : 'empty';
     button.setAttribute('aria-pressed', String(safe != null && safe > i * 20));
   });
 }

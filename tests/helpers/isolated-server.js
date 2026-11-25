@@ -15,8 +15,7 @@ server.on('error', error => {
 server.listen(0, '127.0.0.1', () => {
   const address = server.address();
   if (!address || typeof address === 'string' || !process.send) {
-    console.error(
-      'Isolated test server requires an IPC channel and a TCP port.');
+    console.error('Isolated test server requires an IPC channel and a TCP port.');
     server.close();
     process.exitCode = 1;
     return;

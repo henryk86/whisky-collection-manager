@@ -14,12 +14,7 @@ const types = new Set(FURNITURE_TYPES);
  * @return {string} Resulting text.
  */
 export function name(value) {
-  if (typeof value !== 'string' || !value.trim() || value.trim().length >
-    100) throw fail(
-      'Name muss zwischen 1 und 100 Zeichen enthalten',
-      400,
-      "api.errors.nameMustContainBetween1And100Characters"
-    );
+  if (typeof value !== 'string' || !value.trim() || value.trim().length > 100) throw fail('Name muss zwischen 1 und 100 Zeichen enthalten', 400, "api.errors.nameMustContainBetween1And100Characters");
   return value.trim();
 }
 
@@ -34,12 +29,7 @@ export function name(value) {
  */
 export function number(value, field, min, max) {
   const n = Number(value);
-  if (!Number.isFinite(n) || n < min || n > max) throw fail(
-    `${field}: ungültiger Wert`,
-    400,
-    "api.errors.invalidField",
-    {field}
-  );
+  if (!Number.isFinite(n) || n < min || n > max) throw fail(`${field}: ungültiger Wert`, 400, "api.errors.invalidField", {field});
   return Math.round(n * 100) / 100;
 }
 
@@ -51,11 +41,7 @@ export function number(value, field, min, max) {
  */
 function rotation(value) {
   const n = Number(value ?? 0);
-  if (![0, 90, 180, 270].includes(n)) throw fail(
-    'Drehung nur 0, 90, 180 oder 270 Grad',
-    400,
-    "api.errors.rotationMustBe090180Or270Degrees"
-  );
+  if (![0, 90, 180, 270].includes(n)) throw fail('Drehung nur 0, 90, 180 oder 270 Grad', 400, "api.errors.rotationMustBe090180Or270Degrees");
   return n;
 }
 
@@ -84,8 +70,7 @@ export function capacity(value) {
  */
 export function shelfFront(value) {
   if (value === '' || value === null || value === undefined) return null;
-  if (!SHELF_FRONTS.includes(value)) throw fail('Ungültige Fachfront', 400,
-    "api.errors.invalidCompartmentFront");
+  if (!SHELF_FRONTS.includes(value)) throw fail('Ungültige Fachfront', 400, "api.errors.invalidCompartmentFront");
   return value;
 }
 
@@ -97,11 +82,7 @@ export function shelfFront(value) {
  */
 export function doorLeaves(value) {
   if (value === undefined || value === null || value === '') return null;
-  if (value !== 1 && value !== 2) throw fail(
-    'Türflügel: nur 1 oder 2 erlaubt',
-    400,
-    "api.errors.doorLeafCountMustBe1Or2"
-  );
+  if (value !== 1 && value !== 2) throw fail('Türflügel: nur 1 oder 2 erlaubt', 400, "api.errors.doorLeafCountMustBe1Or2");
   return value;
 }
 
@@ -113,11 +94,7 @@ export function doorLeaves(value) {
  */
 export function glassFrame(value) {
   if (value === undefined || value === null || value === '') return null;
-  if (typeof value !== 'boolean') throw fail(
-    'Glasrahmen: ungültiger Wert',
-    400,
-    "api.errors.invalidGlassFrameValue"
-  );
+  if (typeof value !== 'boolean') throw fail('Glasrahmen: ungültiger Wert', 400, "api.errors.invalidGlassFrameValue");
   return value;
 }
 
@@ -130,15 +107,10 @@ export function glassFrame(value) {
  */
 export function doorRanges(value, shelves) {
   if (value == null) return [];
-  if (!Array.isArray(value) || value.length > 100) throw fail(
-    'Türbereiche: ungültige Liste',
-    400,
-    "api.errors.invalidListOfDoorAreas"
-  );
+  if (!Array.isArray(value) || value.length > 100) throw fail('Türbereiche: ungültige Liste', 400, "api.errors.invalidListOfDoorAreas");
   const covered = new Set();
   return value.map(range => {
-    if (!range || typeof range !== 'object' ||
-      !Number.isInteger(range.from) || !Number.isInteger(range.to) ||
+    if (!range || typeof range !== 'object' || !Number.isInteger(range.from) || !Number.isInteger(range.to) ||
       range.from < 1 || range.to > shelves.length || range.from > range.to ||
       !['door', 'glass'].includes(range.front)) throw fail(
         'Türbereich: Fachnummern oder Front ungültig',
@@ -146,11 +118,7 @@ export function doorRanges(value, shelves) {
         "api.errors.doorAreaHasInvalidCompartmentNumbersOrFront"
       );
     for (let i = range.from; i <= range.to; i++) {
-      if (covered.has(i)) throw fail(
-        'Türbereiche dürfen sich nicht überlappen',
-        400,
-        "api.errors.doorAreasMustNotOverlap"
-      );
+      if (covered.has(i)) throw fail('Türbereiche dürfen sich nicht überlappen', 400, "api.errors.doorAreasMustNotOverlap");
       covered.add(i);
     }
     return {
@@ -184,15 +152,10 @@ export function shelfHeight(value) {
 export function ensureShelfHeights(
   furniture,
   shelves = furniture.shelves,
-  height = furniture.itemHeight ?? (furniture.type === 'haengeregal' ?
-    0.4 : 1.8)
+  height = furniture.itemHeight ?? (furniture.type === 'haengeregal' ? 0.4 : 1.8)
 ) {
   const used = totalExplicitHeightCm(shelves);
-  if (used > height * 100 + 0.001) throw fail(
-    'Fachhöhen überschreiten die Möbelhöhe',
-    409,
-    "api.errors.compartmentHeightsExceedTheFurnitureHeight"
-  );
+  if (used > height * 100 + 0.001) throw fail('Fachhöhen überschreiten die Möbelhöhe', 409, "api.errors.compartmentHeightsExceedTheFurnitureHeight");
   // Preserve legacy all-automatic layouts. In a partly specified layout, an
   // automatic bay must have at least 5 cm left to be a usable compartment.
   const automatic = shelves.filter(shelf => shelf.heightCm == null).length;
@@ -213,12 +176,7 @@ export function ensureShelfHeights(
  */
 function panelOption(value, label) {
   if (value === undefined) return false;
-  if (typeof value !== 'boolean') throw fail(
-    `${label}: ungültiger Wert`,
-    400,
-    "api.errors.invalidField",
-    {field: label}
-  );
+  if (typeof value !== 'boolean') throw fail(`${label}: ungültiger Wert`, 400, "api.errors.invalidField", {field: label});
   return value;
 }
 
@@ -247,20 +205,14 @@ export function layout(input, room) {
     // Backward compatible: older warehouse.json files have no vertical
     // coordinates.
     elevation: number(input.elevation ?? 0, 'elevation', 0, 10),
-    itemHeight: number(
-      input.itemHeight ?? (input.type === 'haengeregal' ? 0.4 : 1.8),
-      'itemHeight',
-      0.1,
-      5
-    ),
+    itemHeight: number(input.itemHeight ?? (input.type === 'haengeregal' ? 0.4 : 1.8), 'itemHeight', 0.1, 5),
   };
   const w = furniture.rotation % 180 === 0 ? furniture.width : furniture.depth;
   const h = furniture.rotation % 180 === 0 ? furniture.depth : furniture.width;
-  if (furniture.x + w > room.width + 0.00001 || furniture.y + h >
-    room.height + 0.00001) throw fail(
-      'Lagermöbel liegt außerhalb der Raumgrenzen',
-      400,
-      "api.errors.storageFurnitureLiesOutsideTheRoomBoundaries"
-    );
+  if (furniture.x + w > room.width + 0.00001 || furniture.y + h > room.height + 0.00001) throw fail(
+    'Lagermöbel liegt außerhalb der Raumgrenzen',
+    400,
+    "api.errors.storageFurnitureLiesOutsideTheRoomBoundaries"
+  );
   return furniture;
 }

@@ -25,21 +25,11 @@ const collection = {
 };
 
 test(
-  'chooser searches existing bottlings by name, distillery and bottler \
-without mutating them',
+  'chooser searches existing bottlings by name, distillery and bottler without mutating them',
   () => {
-    assert.deepEqual(
-      matchingBottlings(collection, 'islay').map(entry => entry.id),
-      ['whisky-a']
-    );
-    assert.deepEqual(
-      matchingBottlings(collection, 'lagavulin').map(entry => entry.id),
-      ['whisky-a']
-    );
-    assert.deepEqual(
-      matchingBottlings(collection, 'OTHER bottler').map(entry => entry.id),
-      ['whisky-b']
-    );
+    assert.deepEqual(matchingBottlings(collection, 'islay').map(entry => entry.id), ['whisky-a']);
+    assert.deepEqual(matchingBottlings(collection, 'lagavulin').map(entry => entry.id), ['whisky-a']);
+    assert.deepEqual(matchingBottlings(collection, 'OTHER bottler').map(entry => entry.id), ['whisky-b']);
     assert.equal(matchingBottlings(collection, 'absent').length, 0);
     const html = bottlingChoiceDialog(collection);
     assert.match(html, /id="new-bottle-choice-form"/);
@@ -47,10 +37,7 @@ without mutating them',
     assert.match(html, /name="bottlingId" required/);
     assert.match(html, /option value=""/); // no implicit parent selection
     assert.match(html, /value="whisky-a"/);
-    assert.doesNotMatch(
-      bottlingChoiceOptions(collection, 'unmatched'),
-      /value="whisky-a"/
-    );
+    assert.doesNotMatch(bottlingChoiceOptions(collection, 'unmatched'), /value="whisky-a"/);
     assert.equal(collection.bottlings.length, 2);
     assert.equal(collection.bottlings[0].bottles.length, 1);
   }
@@ -70,8 +57,7 @@ test('chooser escapes untrusted whisky names and identifiers', () => {
 });
 
 test(
-  'global action chooses reuse or new bottling; detail action still adds to \
-selected bottling',
+  'global action chooses reuse or new bottling; detail action still adds to selected bottling',
   () => {
     const state = {collection, selected: 'whisky-a'};
     const calls = [];
@@ -136,10 +122,7 @@ selected bottling',
     editors.chooseExistingBottling('whisky-a');
     assert.match(calls.at(-1).body, /data-from-overview="1"/);
     assert.match(calls.at(-1).body, /data-bottling-id="whisky-a"/);
-    assert.throws(
-      () => editors.chooseExistingBottling('missing'),
-      /vorhandene Abfüllung/
-    );
+    assert.throws(() => editors.chooseExistingBottling('missing'), /vorhandene Abfüllung/);
     editors.createBottling();
     assert.match(calls.at(-1).body, /id="bottling-form"/);
     editors.newBottle();

@@ -29,11 +29,9 @@ function render(page, existing = true) {
     collection: {
       distilleries: [],
       bottlings: [{
-        id: 'b1', name: 'Example', tastings: existing ?
-          [record] : [],
+        id: 'b1', name: 'Example', tastings: existing ? [record] : [],
       }],
-      externalTastings: existing ?
-        [{...record, bottling: {name: 'External whisky'}}] : [],
+      externalTastings: existing ? [{...record, bottling: {name: 'External whisky'}}] : [],
     },
   };
   const view = createTastingsView({
@@ -44,8 +42,7 @@ function render(page, existing = true) {
      * @param {*} html HTML markup to render or inspect.
      * @return {*} Result computed from the supplied inputs.
      */
-    shell: html => markup =
-      html,
+    shell: html => markup = html,
     /**
      * Updates the navigate state for its caller.
      */
@@ -60,44 +57,31 @@ function render(page, existing = true) {
 }
 
 test(
-  'saved owned and external tasting show the rating comment next to the \
-rating, safely escaped',
+  'saved owned and external tasting show the rating comment next to the rating, safely escaped',
   () => {
     for (const page of ['tasting', 'external-tasting']) {
       const html = render(page).markup;
-      const section = html.split('class="analytics-panel tasting-rating-panel"'
-      )[1];
+      const section = html.split('class="analytics-panel tasting-rating-panel"')[1];
       assert.match(section, /Gesamtbewertung/);
       assert.match(section, /class="tasting-rating-comment"/);
       assert.match(section, /Kommentar zur Bewertung/);
       assert.match(section, /Sehr rund\nMit &lt;Charakter&gt; &amp; Struktur/);
-      assert.doesNotMatch(
-        section,
-        /data-tasting-rating-comment/,
-        'saved tasting begins read-only'
-      );
+      assert.doesNotMatch(section, /data-tasting-rating-comment/, 'saved tasting begins read-only');
     }
   }
 );
 
 test(
-  'rating comment is optional, is edited below the glasses and does not \
-become a sensory note',
+  'rating comment is optional, is edited below the glasses and does not become a sensory note',
   () => {
     const draft = render('tasting', false).markup;
     assert.match(
       draft,
-      new RegExp(
-        'tasting-rating-panel[\\s\\S]*?data-tasting' +
-        '-rating-comment maxlength="10000" rows="3"'
-      )
+      new RegExp('tasting-rating-panel[\\s\\S]*?data-tasting' + '-rating-comment maxlength="10000" rows="3"')
     );
     assert.match(
       draft,
-      new RegExp(
-        '<textarea data-tasting-rating-comment maxl' +
-        'ength="10000" rows="3"><\\/textarea>'
-      )
+      new RegExp('<textarea data-tasting-rating-comment maxl' + 'ength="10000" rows="3"><\\/textarea>')
     );
     assert.match(draft, /data-tasting-note="nose"/);
     assert.equal((draft.match(/data-tasting-note="/g) || []).length, 3);
@@ -122,8 +106,7 @@ become a sensory note',
        * @param {*} value Value to process.
        * @return {*} Result computed from the supplied inputs.
        */
-      shell: value => html =
-        value,
+      shell: value => html = value,
       /**
        * Updates the navigate state for its caller.
        */

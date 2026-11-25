@@ -5,8 +5,7 @@ import {actionButton} from './buttons.js';
 import {closeIcon} from './action-icons.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/modal-layout.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/modal-layout.html', import.meta.url));
 
 
 /**
@@ -18,8 +17,7 @@ const renderTemplate = await loadTemplates(
  */
 export function modalFrame({title, content, wide = false, variant = '',
   headingAction = '', closeLabel}) {
-  if (!['', 'photo', 'editor', 'assignment']
-    .includes(variant)) throw new RangeError('Invalid modal variant');
+  if (!['', 'photo', 'editor', 'assignment'].includes(variant)) throw new RangeError('Invalid modal variant');
   // Explicit size variants take precedence over the legacy wide flag; otherwise
   // .dialog.wide (higher specificity) overrides their width tokens.
   const classes = [
@@ -60,8 +58,7 @@ export function modalFrame({title, content, wide = false, variant = '',
  */
 export function modalFooter(actions, {className = ''} = {}) {
   return renderTemplate('actions', {
-    className: className ?
-      ` ${escapeHtml(className)}` : '',
+    className: className ? ` ${escapeHtml(className)}` : '',
     actions: actions,
   });
 }

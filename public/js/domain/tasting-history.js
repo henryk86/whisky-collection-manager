@@ -62,8 +62,7 @@ export function createTastingHistory(value) {
      * @return {boolean} Whether the operation matched or succeeded.
      */
     redo() {
-      if (index >= entries.length -
-        1) return false; index++; return true;
+      if (index >= entries.length - 1) return false; index++; return true;
     },
   };
 }

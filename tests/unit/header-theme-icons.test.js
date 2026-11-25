@@ -5,8 +5,7 @@ import {createThemeController} from '../../public/js/theme/controller.js';
 import {createShell} from '../../public/js/ui/shell.js';
 
 test(
-  'theme toggle uses shared, device-independent SVGs rather than \
-platform-specific characters',
+  'theme toggle uses shared, device-independent SVGs rather than platform-specific characters',
   () => {
     for (const icon of [themeMoonIcon, themeSunIcon]) {
       assert.match(icon, /^<svg class="theme-icon" /);
@@ -36,8 +35,7 @@ platform-specific characters',
 );
 
 test(
-  'theme controller changes only the shared SVG, preserving button labels \
-on every device',
+  'theme controller changes only the shared SVG, preserving button labels on every device',
   () => {
     const original = {
       window: globalThis.window,
@@ -113,8 +111,7 @@ on every device',
       assert.equal(root.dataset.theme, 'light');
     } finally {
       for (const [key, value] of Object.entries(original)) {
-        if (value === undefined) delete globalThis[key]; else globalThis[key] =
-          value;
+        if (value === undefined) delete globalThis[key]; else globalThis[key] = value;
       }
     }
   }

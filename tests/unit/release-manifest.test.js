@@ -38,8 +38,7 @@ function fixture(root, version, modules) {
 }
 
 test(
-  'release manifest fingerprints actual source tree independently of \
-process working directory',
+  'release manifest fingerprints actual source tree independently of process working directory',
   () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-manifest-root-'));
     try {
@@ -68,8 +67,7 @@ process working directory',
 );
 
 test(
-  'ZIP upgrade audit preserves user data, modified modules, and symlinks; \
-removes only unchanged obsolete sources',
+  'ZIP upgrade audit preserves user data, modified modules, and symlinks; removes only unchanged obsolete sources',
   () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-upgrade-audit-'));
     const old = path.join(root, 'old');
@@ -84,52 +82,23 @@ removes only unchanged obsolete sources',
         'data/collection.json': 'precious records',
         'data/warehouse.json': 'precious inventory',
       });
-      fixture(
-        next,
-        '1.1.0',
-        {'server/stable.js': 'same', 'public/js/new.js': 'new'}
-      );
-      fs.writeFileSync(
-        path.join(old, 'server/customized.js'),
-        'locally customized'
-      );
+      fixture(next, '1.1.0', {'server/stable.js': 'same', 'public/js/new.js': 'new'});
+      fs.writeFileSync(path.join(old, 'server/customized.js'), 'locally customized');
       fs.unlinkSync(path.join(old, 'shared/symlink.js'));
-      fs.symlinkSync(
-        path.join(old, 'data/collection.json'),
-        path.join(old, 'shared/symlink.js')
-      );
+      fs.symlinkSync(path.join(old, 'data/collection.json'), path.join(old, 'shared/symlink.js'));
       fs.unlinkSync(path.join(old, 'public/js/missing.js'));
       const audit = inspectManifestUpgrade(next, old);
       assert.deepEqual(audit.removable, ['public/js/obsolete.js']);
       assert.deepEqual(audit.modified, ['server/customized.js']);
-      assert.deepEqual(
-        audit.missing,
-        ['public/js/missing.js', 'shared/symlink.js']
-      );
-      assert.ok(
-        fs.existsSync(path.join(old, 'public/js/obsolete.js')),
-        'dry-run must not delete code'
-      );
+      assert.deepEqual(audit.missing, ['public/js/missing.js', 'shared/symlink.js']);
+      assert.ok(fs.existsSync(path.join(old, 'public/js/obsolete.js')), 'dry-run must not delete code');
       const prune = inspectManifestUpgrade(next, old, true);
       assert.deepEqual(prune.removed, ['public/js/obsolete.js']);
-      assert.equal(
-        fs.existsSync(path.join(old, 'public/js/obsolete.js')),
-        false
-      );
-      assert.equal(
-        fs.readFileSync(path.join(old, 'data/collection.json'), 'utf8'),
-        'precious records'
-      );
-      assert.equal(
-        fs.readFileSync(path.join(old, 'data/warehouse.json'), 'utf8'),
-        'precious inventory'
-      );
-      assert.equal(
-        fs.readFileSync(path.join(old, 'server/customized.js'), 'utf8'),
-        'locally customized'
-      );
-      assert.ok(fs.lstatSync(path.join(old, 'shared/symlink.js'))
-        .isSymbolicLink());
+      assert.equal(fs.existsSync(path.join(old, 'public/js/obsolete.js')), false);
+      assert.equal(fs.readFileSync(path.join(old, 'data/collection.json'), 'utf8'), 'precious records');
+      assert.equal(fs.readFileSync(path.join(old, 'data/warehouse.json'), 'utf8'), 'precious inventory');
+      assert.equal(fs.readFileSync(path.join(old, 'server/customized.js'), 'utf8'), 'locally customized');
+      assert.ok(fs.lstatSync(path.join(old, 'shared/symlink.js')).isSymbolicLink());
     } finally {fs.rmSync(root, {recursive: true, force: true});}
   }
 );
@@ -149,10 +118,7 @@ test(
         fs.writeFileSync(
           path.join(root, 'wcm-source-manifest.json'),
           JSON.stringify({
-            schema: 1, version: '1.0.0', files: {
-              [item]: hash(
-                'bad'),
-            },
+            schema: 1, version: '1.0.0', files: {[item]: hash('bad'), },
           })
         );
         assert.throws(() => readSourceManifest(root), /Unsafe/);
@@ -160,10 +126,7 @@ test(
       fs.writeFileSync(
         path.join(root, 'wcm-source-manifest.json'),
         JSON.stringify({
-          schema: 1, version: '1.0.0', files: {
-            'server/legit.js':
-              'invalid',
-          },
+          schema: 1, version: '1.0.0', files: {'server/legit.js': 'invalid', },
         })
       );
       assert.throws(() => readSourceManifest(root), /Unsafe/);
@@ -174,27 +137,17 @@ test(
 test(
   'release metadata requires a verified source manifest for modern releases',
   () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-release-verified-')
-    );
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-release-verified-'));
     try {
       fixture(root, '1.3.0', {'server/service.js': 'original'});
       fs.writeFileSync(
         path.join(root, 'package-lock.json'),
         JSON.stringify({version: '1.3.0', packages: {'': {version: '1.3.0'}}})
       );
-      fs.writeFileSync(
-        path.join(root, 'README.md'),
-        '# Whisky Collection Manager v1.3.0\n'
-      );
-      fs.writeFileSync(
-        path.join(root, 'CHANGELOG.md'),
-        '# Changelog\n\n## 1.3.0 - 2026-11-16\n\n- Fixes\n'
-      );
+      fs.writeFileSync(path.join(root, 'README.md'), '# Whisky Collection Manager v1.3.0\n');
+      fs.writeFileSync(path.join(root, 'CHANGELOG.md'), '# Changelog\n\n## 1.3.0 - 2026-11-16\n\n- Fixes\n');
       fs.mkdirSync(path.join(root, 'docs'));
-      fs.writeFileSync(
-        path.join(root, 'docs/TESTSTATUS.md'),
-        '# Teststatus - Whisky Collection Manager v1.3.0\n'
-      );
+      fs.writeFileSync(path.join(root, 'docs/TESTSTATUS.md'), '# Teststatus - Whisky Collection Manager v1.3.0\n');
       assert.equal(verifyReleaseMetadata(root).version, '1.3.0');
       fs.unlinkSync(path.join(root, 'wcm-source-manifest.json'));
       assert.throws(() => verifyReleaseMetadata(root), /Manifest/);

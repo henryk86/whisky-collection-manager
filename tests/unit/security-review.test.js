@@ -31,8 +31,7 @@ test(
   () => {
     const first = `chrome-extension://${'a'.repeat(32)}`;
     const other = `chrome-extension://${'b'.repeat(32)}`;
-    assert.equal(allowedExtensionOrigin(first, ''),
-      true); // backwards compatible
+    assert.equal(allowedExtensionOrigin(first, ''), true); // backwards compatible
     assert.equal(allowedExtensionOrigin(first, 'a'.repeat(32)), true);
     assert.equal(allowedExtensionOrigin(other, 'a'.repeat(32)), false);
     assert.equal(allowedExtensionOrigin('https://evil.example', ''), false);
@@ -42,10 +41,7 @@ test(
 test(
   'tHtml escapes parameter strings, t remains plaintext for non-HTML contexts',
   () => {
-    const actual = tHtml(
-      'warehouse.shelves.doorAcross',
-      {from: '<img onerror=alert(1)>', to: 3}
-    );
+    const actual = tHtml('warehouse.shelves.doorAcross', {from: '<img onerror=alert(1)>', to: 3});
     assert.ok(!actual.includes('<img'));
     assert.ok(actual.includes('&lt;img'));
     const lookup = createTranslator({demo: 'Hello {name}'});

@@ -6,8 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {verifyDeploymentConfiguration}
   from '../../scripts/check-deployment-config.js';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta
-  .url)), '../..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 /**
  * Reads load data from the local filesystem.
  *
@@ -20,8 +19,7 @@ const load = name => fs.readFileSync(path.join(ROOT, name), 'utf8');
  * itself runs from `npm run check` in every PR; no source-line regex assertion
  * is made about the application implementation. */
 test(
-  'configuration validation accepts the deployed HTTPS, CI and offline \
-contract',
+  'configuration validation accepts the deployed HTTPS, CI and offline contract',
   () => {
     assert.deepEqual(verifyDeploymentConfiguration(load), {
       service: 'app', statusJob: 'test', browserCheck: true, offlineCheck: true,
@@ -63,8 +61,7 @@ for (const [description, file, search, replacement] of [
   [
     'rejects unscoped GitHub upload commands',
     '.github/workflows/release.yml',
-    'run: gh release upload "$TAG" dist/*.zip dist/*.sha256 --clobber \
---repo "$GITHUB_REPOSITORY"',
+    'run: gh release upload "$TAG" dist/*.zip dist/*.sha256 --clobber --repo "$GITHUB_REPOSITORY"',
     'run: gh release upload "$TAG" dist/*.zip dist/*.sha256 --clobber',
   ],
   [
@@ -106,13 +103,9 @@ for (const [description, file, search, replacement] of [
 ]) {
   test(`configuration validation ${description}`, () => {
     const original = load(file);
-    assert.ok(
-      original.includes(search),
-      `test fixture prerequisite: ${description}`
-    );
+    assert.ok(original.includes(search), `test fixture prerequisite: ${description}`);
     assert.throws(
-      () => verifyDeploymentConfiguration(name => name === file ?
-        original.replace(search, replacement) : load(name)),
+      () => verifyDeploymentConfiguration(name => name === file ? original.replace(search, replacement) : load(name)),
       /Deployment contract:/
     );
   });

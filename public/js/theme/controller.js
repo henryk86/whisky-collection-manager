@@ -20,8 +20,7 @@ export function createThemeController() {
     const button = document.querySelector('[data-act=toggle-theme]');
     if (button) {
       replaceContent(button, active === 'dark' ? themeSunIcon : themeMoonIcon);
-      button.title = active === 'dark' ? t("ui.theme.enableLight") :
-        t("ui.theme.enableDark");
+      button.title = active === 'dark' ? t("ui.theme.enableLight") : t("ui.theme.enableDark");
       button.setAttribute('aria-label', button.title);
       button.setAttribute('aria-pressed', String(active === 'dark'));
     }
@@ -31,8 +30,7 @@ export function createThemeController() {
    * Updates the toggle theme state for its caller.
    */
   function toggleTheme() {
-    themePreference = nextTheme(effectiveTheme(themePreference,
-      themeMedia.matches));
+    themePreference = nextTheme(effectiveTheme(themePreference, themeMedia.matches));
     try {
       localStorage.setItem('whisky-theme', themePreference);
     }

@@ -14,8 +14,7 @@ import {validateMessage} from '../../scripts/validate-commit-message.js';
  * @param {*} args Arguments forwarded to the operation.
  * @return {*} Result computed from the supplied inputs.
  */
-const run = (dir, cmd, args) =>
-  spawnSync(cmd, args, {cwd: dir, encoding: 'utf8'});
+const run = (dir, cmd, args) => spawnSync(cmd, args, {cwd: dir, encoding: 'utf8'});
 
 /**
  * Normalizes the success text for subsequent processing.
@@ -27,11 +26,7 @@ const run = (dir, cmd, args) =>
  */
 const success = (dir, cmd, ...args) => {
   const result = run(dir, cmd, args);
-  assert.equal(
-    result.status,
-    0,
-    `Failed ${cmd} ${args.join(' ')}: ${result.stderr}\n${result.stdout}`
-  );
+  assert.equal(result.status, 0, `Failed ${cmd} ${args.join(' ')}: ${result.stderr}\n${result.stdout}`);
   return result.stdout.trim();
 };
 
@@ -56,16 +51,10 @@ function fixture(t) {
     'install-git-hooks.js',
   ]) {
     fs.mkdirSync(path.join(dir, 'scripts'), {recursive: true});
-    fs.copyFileSync(
-      path.join('scripts', name),
-      path.join(dir, 'scripts', name)
-    );
+    fs.copyFileSync(path.join('scripts', name), path.join(dir, 'scripts', name));
   }
   fs.mkdirSync(path.join(dir, '.githooks'));
-  fs.copyFileSync(
-    '.githooks/commit-msg',
-    path.join(dir, '.githooks/commit-msg')
-  );
+  fs.copyFileSync('.githooks/commit-msg', path.join(dir, '.githooks/commit-msg'));
   fs.chmodSync(path.join(dir, '.githooks/commit-msg'), 0o755);
   return dir;
 }
@@ -73,19 +62,9 @@ function fixture(t) {
 test(
   'commit-msg parser shares the release Conventional Commits validator',
   () => {
-    assert.equal(
-      validateMessage('fix(warehouse): Fach korrigieren\n').level,
-      'patch'
-    );
-    assert.equal(
-      validateMessage(
-        'docs!: neue Konfiguration\n\nBREAKING CHANGE: alt entfernt\n').level,
-      'major'
-    );
-    assert.throws(
-      () => validateMessage('Korrigiere Lager\n'),
-      /Conventional-Commit/
-    );
+    assert.equal(validateMessage('fix(warehouse): Fach korrigieren\n').level, 'patch');
+    assert.equal(validateMessage('docs!: neue Konfiguration\n\nBREAKING CHANGE: alt entfernt\n').level, 'major');
+    assert.throws(() => validateMessage('Korrigiere Lager\n'), /Conventional-Commit/);
     assert.throws(() => validateMessage('fix: \n'), /Conventional-Commit/);
   }
 );
@@ -95,45 +74,24 @@ test(
   t => {
     const dir = fixture(t);
     success(dir, process.execPath, 'scripts/install-git-hooks.js');
-    assert.equal(
-      success(dir, 'git', 'config', '--local', '--get', 'core.hooksPath'),
-      '.githooks'
-    );
+    assert.equal(success(dir, 'git', 'config', '--local', '--get', 'core.hooksPath'), '.githooks');
     fs.writeFileSync(path.join(dir, 'change.txt'), 'updated\n');
     success(dir, 'git', 'add', '.');
     const bad = run(dir, 'git', ['commit', '-m',
       'Refactor unit tests without prefix']);
     assert.notEqual(bad.status, 0);
     assert.match(bad.stderr, /Commit abgelehnt/);
-    assert.notEqual(
-      run(dir, 'git', ['rev-parse', '--verify', 'HEAD']).status,
-      0
-    );
+    assert.notEqual(run(dir, 'git', ['rev-parse', '--verify', 'HEAD']).status, 0);
     success(dir, 'git', 'commit', '-m', 'refactor(tests): tests verbessern');
-    assert.equal(
-      success(dir, 'git', 'log', '-1', '--format=%s'),
-      'refactor(tests): tests verbessern'
-    );
+    assert.equal(success(dir, 'git', 'log', '-1', '--format=%s'), 'refactor(tests): tests verbessern');
     fs.writeFileSync(path.join(dir, 'change.txt'), 'updated again\n');
     success(dir, 'git', 'add', '.');
     const alsoBad = run(dir, 'git', ['commit', '-m', 'Update tests']);
     assert.notEqual(alsoBad.status, 0);
     // The local hook is not a security boundary: CI must still reject bypassed
     // commits.
-    success(
-      dir,
-      'git',
-      '-c',
-      'core.hooksPath=/dev/null',
-      'commit',
-      '-m',
-      'Update tests'
-    );
-    const ci = run(
-      dir,
-      process.execPath,
-      ['scripts/release-automation.js', 'validate', '--range', 'HEAD^..HEAD']
-    );
+    success(dir, 'git', '-c', 'core.hooksPath=/dev/null', 'commit', '-m', 'Update tests');
+    const ci = run(dir, process.execPath, ['scripts/release-automation.js', 'validate', '--range', 'HEAD^..HEAD']);
     assert.notEqual(ci.status, 0);
     assert.match(ci.stderr, /Conventional-Commit/);
   }
@@ -146,14 +104,10 @@ test(
     success(dir, process.execPath, 'scripts/install-git-hooks.js');
     success(dir, process.execPath, 'scripts/install-git-hooks.js');
     success(dir, 'git', 'config', '--local', 'core.hooksPath', '.existing');
-    const refused = run(dir, process.execPath, ['scripts/install-git-hooks.js']
-    );
+    const refused = run(dir, process.execPath, ['scripts/install-git-hooks.js']);
     assert.notEqual(refused.status, 0);
     assert.match(refused.stderr, /anderer core.hooksPath/);
-    assert.equal(
-      success(dir, 'git', 'config', '--local', '--get', 'core.hooksPath'),
-      '.existing'
-    );
+    assert.equal(success(dir, 'git', 'config', '--local', '--get', 'core.hooksPath'), '.existing');
   }
 );
 
@@ -172,41 +126,23 @@ test(
     success(dir, 'git', 'checkout', 'develop');
     fs.writeFileSync(path.join(dir, 'develop.txt'), 'develop\n');
     success(dir, 'git', 'add', '.');
-    const fake = run(dir, 'git', ['commit', '-m', 'Merge feature into develop']
-    );
+    const fake = run(dir, 'git', ['commit', '-m', 'Merge feature into develop']);
     assert.notEqual(fake.status, 0);
     success(dir, 'git', 'commit', '-m', 'fix: develop cleanup');
-    success(
-      dir,
-      'git',
-      'merge',
-      '--no-ff',
-      'feature',
-      '-m',
-      'Merge feature into develop'
-    );
-    assert.equal(
-      success(dir, 'git', 'log', '-1', '--format=%s'),
-      'Merge feature into develop'
-    );
+    success(dir, 'git', 'merge', '--no-ff', 'feature', '-m', 'Merge feature into develop');
+    assert.equal(success(dir, 'git', 'log', '-1', '--format=%s'), 'Merge feature into develop');
   }
 );
 
 test(
-  'hook installer does not silently replace a preexisting default \
-commit-msg hook',
+  'hook installer does not silently replace a preexisting default commit-msg hook',
   t => {
     const dir = fixture(t);
-    const pathToHook = success(dir, 'git', 'rev-parse', '--git-path',
-      'hooks/commit-msg');
+    const pathToHook = success(dir, 'git', 'rev-parse', '--git-path', 'hooks/commit-msg');
     fs.writeFileSync(path.resolve(dir, pathToHook), '#!/bin/sh\nexit 0\n');
-    const refused = run(dir, process.execPath, ['scripts/install-git-hooks.js']
-    );
+    const refused = run(dir, process.execPath, ['scripts/install-git-hooks.js']);
     assert.notEqual(refused.status, 0);
     assert.match(refused.stderr, /vorhandener commit-msg-Hook/);
-    assert.equal(
-      run(dir, 'git', ['config', '--local', '--get', 'core.hooksPath']).status,
-      1
-    );
+    assert.equal(run(dir, 'git', ['config', '--local', '--get', 'core.hooksPath']).status, 1);
   }
 );

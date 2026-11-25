@@ -30,12 +30,9 @@ async function getHttps(port, rejectUnauthorized) {
     }).on('error', reject);
   });
 }
-const openssl = spawnSync('openssl', ['version'], {
-  stdio: 'ignore',
-});
+const openssl = spawnSync('openssl', ['version'], {stdio: 'ignore', });
 test(
-  'TLS server serves collection, rejects untrusted cert by default, and \
-disables HTTP',
+  'TLS server serves collection, rejects untrusted cert by default, and disables HTTP',
   {
     skip: openssl.error ? 'OpenSSL fehlt' : false,
   },
@@ -95,19 +92,14 @@ disables HTTP',
       await Promise.all(listeners.map(server => once(server, 'listening')));
       assert.equal(servers.length, 1, 'only one server may be started');
       assert.equal(listen.mock.callCount(), 1, 'HTTP must not bind a socket');
-      assert.deepEqual(listen.mock.calls[0].arguments.slice(0, 2), [
-        3543, '127.0.0.1',
-      ]);
+      assert.deepEqual(listen.mock.calls[0].arguments.slice(0, 2), [3543, '127.0.0.1',]);
       assert.ok(servers[0] instanceof https.Server);
       assert.equal(listeners[0], servers[0]);
       const tlsPort = servers[0].address().port;
       const result = await getHttps(tlsPort, false);
       assert.equal(result.status, 200);
       assert.ok(Array.isArray(JSON.parse(result.body).bottlings));
-      await assert.rejects(
-        () => getHttps(tlsPort, true),
-        /certificate|self.signed/i
-      );
+      await assert.rejects(() => getHttps(tlsPort, true), /certificate|self.signed/i);
     }
     finally {
       await Promise.all(listeners.map(server => new Promise(resolve => {

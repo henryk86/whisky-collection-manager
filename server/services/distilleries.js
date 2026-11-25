@@ -11,9 +11,7 @@ import {fail} from '../domain/errors.js';
 function locationFromInput(input) {
   const lat = input.latitude, lon = input.longitude;
   if (lat == null && lon == null) return {latitude: null, longitude: null};
-  if (typeof lat !== 'number' || !Number.isFinite(lat) || lat < -90 ||
-    lat > 90 ||
-    typeof lon !== 'number' || !Number.isFinite(lon) || lon < -180 ||
+  if (typeof lat !== 'number' || !Number.isFinite(lat) || lat < -90 || lat > 90 || typeof lon !== 'number' || !Number.isFinite(lon) || lon < -180 ||
     lon > 180) {
     throw fail(
       'Breitengrad und Längengrad müssen gültige Zahlen sein',
@@ -34,14 +32,9 @@ function locationFromInput(input) {
  */
 function uniqueName(collection, value, currentId = null) {
   const name = requireField(value, 'distilleryName');
-  const duplicate = collection.distilleries.some(entry => entry.id !==
-    currentId && entry.name.toLowerCase() === name.toLowerCase());
+  const duplicate = collection.distilleries.some(entry => entry.id !== currentId && entry.name.toLowerCase() === name.toLowerCase());
   if (duplicate) {
-    throw fail(
-      'Destillerie existiert bereits',
-      409,
-      "api.errors.distilleryAlreadyExists"
-    );
+    throw fail('Destillerie existiert bereits', 409, "api.errors.distilleryAlreadyExists");
   }
   return name;
 }
@@ -53,11 +46,7 @@ function uniqueName(collection, value, currentId = null) {
  * @return {*} Whether the requested condition is met.
  */
 function validStatus(value) {
-  if (!['active', 'closed', 'reopened', 'unknown'].includes(value)) throw fail(
-    'Ungültiger Destilleriestatus',
-    400,
-    "api.errors.invalidDistilleryStatus"
-  );
+  if (!['active', 'closed', 'reopened', 'unknown'].includes(value)) throw fail('Ungültiger Destilleriestatus', 400, "api.errors.invalidDistilleryStatus");
   return value;
 }
 
@@ -93,15 +82,10 @@ export function updateDistillery(id, input) {
   return change(collection => {
     const distillery = collection.distilleries.find(entry => entry.id === id);
     if (!distillery) {
-      throw fail(
-        'Destillerie nicht gefunden',
-        404,
-        "api.errors.distilleryNotFound"
-      );
+      throw fail('Destillerie nicht gefunden', 404, "api.errors.distilleryNotFound");
     }
     distillery.name = uniqueName(collection, input.name, id);
-    if (Object.hasOwn(input, 'status')) distillery.status =
-      validStatus(input.status);
+    if (Object.hasOwn(input, 'status')) distillery.status = validStatus(input.status);
     if (Object.hasOwn(input, 'latitude') || Object.hasOwn(input, 'longitude')) {
       Object.assign(distillery, locationFromInput(input));
     }

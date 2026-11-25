@@ -9,12 +9,10 @@ import {createExternalImport}
  * selectors.
  */
 test(
-  'generic import preview applies fields and matches distilleries without \
-provider coupling',
+  'generic import preview applies fields and matches distilleries without provider coupling',
   () => {
     const previous = {
-      document: globalThis.document, setTimeout: globalThis
-        .setTimeout,
+      document: globalThis.document, setTimeout: globalThis.setTimeout,
     };
     const state = {
       collection: {
@@ -25,10 +23,7 @@ provider coupling',
       },
     };
     let panel = null;
-    const choices = [
-      {dataset: {importField: 'name'}},
-      {dataset: {importField: 'abv'}},
-    ];
+    const choices = [{dataset: {importField: 'name'}}, {dataset: {importField: 'abv'}},];
     const form = {
       dataset: {},
       elements: {name: {value: ''}, abv: {value: ''}},
@@ -48,8 +43,7 @@ provider coupling',
              * @param {*} element DOM element involved in the operation.
              */
             prepend(element) {panel = element;},
-          } : selector ===
-            '#import-panel' ? panel : null;
+          } : selector === '#import-panel' ? panel : null;
       },
       /**
        * Derives the query selector all result from the supplied values.
@@ -59,10 +53,7 @@ provider coupling',
        * @return {!Array<*>} Resulting entries in their output order.
        */
       querySelectorAll(selector) {
-        return selector ===
-          'input[name=distilleryIds]:checked' ? [] : selector ===
-            'input[name=distilleryIds]' ?
-          [{value: 'local-d', checked: false}] : [];
+        return selector === 'input[name=distilleryIds]:checked' ? [] : selector === 'input[name=distilleryIds]' ? [{value: 'local-d', checked: false}] : [];
       },
     };
     const calls = [];
@@ -75,8 +66,7 @@ provider coupling',
        * @return {*} Result computed from the supplied inputs.
        */
       querySelector(selector) {
-        return selector === '#bottling-form' ? form :
-          selector === '#import-panel' ? panel : null;
+        return selector === '#bottling-form' ? form : selector === '#import-panel' ? panel : null;
       },
       /**
        * Constructs element from the supplied data.
@@ -110,8 +100,7 @@ provider coupling',
            */
           querySelectorAll(selector) {
             if (selector === '[data-import-field]:checked') return choices;
-            if (selector ===
-              '[name=import-distillery]:checked') return [{value: 'local-d'}];
+            if (selector === '[name=import-distillery]:checked') return [{value: 'local-d'}];
             return [];
           },
         };
@@ -164,11 +153,9 @@ provider coupling',
 );
 
 test(
-  'new physical bottle uses a source-independent photo opt-in only for \
-pending imports',
+  'new physical bottle uses a source-independent photo opt-in only for pending imports',
   async () => {
-    const {createEditors} =
-      await import('../../public/js/features/editor-controller.js');
+    const {createEditors} = await import('../../public/js/features/editor-controller.js');
     const modals = [];
     const editor = createEditors({
       state: {

@@ -6,8 +6,7 @@ import {actionButton} from './buttons.js';
 import {modalFrame, modalFooter} from './modal-layout.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/modal.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/modal.html', import.meta.url));
 
 
 /**
@@ -48,9 +47,7 @@ export function createModal({state, onClose}) {
     html.style.overflowY = 'scroll';
     html.style.overscrollBehavior = 'none';
     // Keep application content out of the keyboard and accessibility tree.
-    pageSiblings = [...(host?.parentElement?.children || [])]
-      .filter(element => element !== host)
-      .map(element => ({element, wasInert: element.inert}));
+    pageSiblings = [...(host?.parentElement?.children || [])].filter(element => element !== host).map(element => ({element, wasInert: element.inert}));
     for (const {element} of pageSiblings) element.inert = true;
   }
 
@@ -64,12 +61,8 @@ export function createModal({state, onClose}) {
     scrollLock = null;
     for (const {element, wasInert} of pageSiblings) element.inert = wasInert;
     pageSiblings = [];
-    if (bodyCss === null) document.body
-      .removeAttribute('style'); else document.body
-        .setAttribute('style', bodyCss);
-    if (htmlCss === null) document.documentElement
-      .removeAttribute('style'); else document.documentElement
-        .setAttribute('style', htmlCss);
+    if (bodyCss === null) document.body.removeAttribute('style'); else document.body.setAttribute('style', bodyCss);
+    if (htmlCss === null) document.documentElement.removeAttribute('style'); else document.documentElement.setAttribute('style', htmlCss);
     if (typeof window !== 'undefined' && typeof window.scrollTo === 'function')
       window.scrollTo({top, left: 0, behavior: 'instant'});
   }
@@ -95,14 +88,9 @@ export function createModal({state, onClose}) {
   function focusable(dialog) {
     if (!dialog?.querySelectorAll) return [];
     return [...dialog.querySelectorAll(
-      'a[href],button:not(:disabled),input:not([type="hidden"]):not(:disable\
-d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
-1"])')]
-      .filter(element => !element.inert && element.getClientRects?.()
-        .length !== 0 &&
-        element.getAttribute('aria-hidden') !== 'true' &&
-        element.closest('[hidden]') === null && getComputedStyle(element)
-          .visibility !== 'hidden');
+      'a[href],button:not(:disabled),input:not([type="hidden"]):not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])')]
+      .filter(element => !element.inert && element.getClientRects?.().length !== 0 && element.getAttribute('aria-hidden') !== 'true' &&
+        element.closest('[hidden]') === null && getComputedStyle(element).visibility !== 'hidden');
   }
 
   /**
@@ -115,8 +103,7 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
     if (!dialog) return;
     const controls = focusable(dialog);
     const auto = controls.find(element => element.hasAttribute('autofocus'));
-    const field = controls.find(element =>
-      element.matches('input,select,textarea'));
+    const field = controls.find(element => element.matches('input,select,textarea'));
     focusElement(auto || field || controls[0] || dialog);
   }
 
@@ -139,10 +126,8 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
     }
     const active = document.activeElement;
     const i = controls.indexOf(active);
-    if (event.shiftKey && (i <=
-      0)) {event.preventDefault(); focusElement(controls.at(-1));}
-    else if (!event.shiftKey && (i < 0 || i === controls.length -
-      1)) {event.preventDefault(); focusElement(controls[0]);}
+    if (event.shiftKey && (i <= 0)) {event.preventDefault(); focusElement(controls.at(-1));}
+    else if (!event.shiftKey && (i < 0 || i === controls.length - 1)) {event.preventDefault(); focusElement(controls[0]);}
   }
 
   /**
@@ -167,16 +152,13 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
     variant = ''
   ) {
     if (pendingChoice) {
-      const callback = pendingChoice; pendingChoice =
-        null; callback('cancel');
+      const callback = pendingChoice; pendingChoice = null; callback('cancel');
     }
     if (pendingConfirmation) {
-      const resolve =
-        pendingConfirmation; pendingConfirmation = null; resolve(false);
+      const resolve = pendingConfirmation; pendingConfirmation = null; resolve(false);
     }
     const host = query('#modal-root');
-    if (!state.modal && typeof document !== 'undefined') originFocus =
-      document.activeElement;
+    if (!state.modal && typeof document !== 'undefined') originFocus = document.activeElement;
     if (nested === 'replace') {
       // Swap sibling forms without pushing another history entry.
     } else if (nested && state.modal && host?.firstElementChild) {
@@ -204,8 +186,7 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
     // Refreshes of the background view must never reset an open edit form.
     if (host.firstElementChild?.__dsModalState === state.modal) return;
     replaceContent(host, modalFrame({
-      ...state.modal, closeLabel:
-        t('common.actions.close'),
+      ...state.modal, closeLabel: t('common.actions.close'),
     }));
     const overlay = host.querySelector('.overlay');
     if (!overlay) return;
@@ -214,12 +195,10 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
     // Dismiss only when the primary pointer starts and ends on the backdrop.
     let backdropPressed = false;
     overlay.addEventListener('pointerdown', event => {
-      backdropPressed = event.isPrimary && event.button === 0 &&
-        event.target === overlay;
+      backdropPressed = event.isPrimary && event.button === 0 && event.target === overlay;
     }, true);
     overlay.addEventListener('pointerup', event => {
-      backdropPressed = backdropPressed && event.isPrimary &&
-        event.target === overlay;
+      backdropPressed = backdropPressed && event.isPrimary && event.target === overlay;
     }, true);
     overlay.addEventListener('pointercancel', () => {
       backdropPressed = false;
@@ -244,12 +223,10 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
    */
   function closeModal(all = false) {
     if (pendingChoice) {
-      const callback = pendingChoice; pendingChoice =
-        null; callback('cancel');
+      const callback = pendingChoice; pendingChoice = null; callback('cancel');
     }
     if (pendingConfirmation) {
-      const resolve =
-        pendingConfirmation; pendingConfirmation = null; resolve(false);
+      const resolve = pendingConfirmation; pendingConfirmation = null; resolve(false);
     }
     onClose();
     const host = query('#modal-root');
@@ -284,8 +261,7 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
     t('common.actions.cancel')) {
     return new Promise(resolve => {
       const buttons = composeMarkup(
-        actionButton({label: cancelLabel, action: 'close-modal'}
-        ),
+        actionButton({label: cancelLabel, action: 'close-modal'}),
         actionButton({
           label: acceptLabel,
           action: 'modal-confirm-accept',
@@ -302,8 +278,7 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
         Boolean(state.modal)
       );
       pendingConfirmation = resolve;
-      focusElement(query(
-        '#modal-root .ds-modal-footer [data-act="close-modal"]'));
+      focusElement(query('#modal-root .ds-modal-footer [data-act="close-modal"]'));
     });
   }
 
@@ -360,8 +335,7 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
    * @return {boolean} True when the pending choice was resolved.
    */
   function acceptChoice(choice) {
-    if (!pendingChoice || !['save', 'discard', 'cancel']
-      .includes(choice)) return false;
+    if (!pendingChoice || !['save', 'discard', 'cancel'].includes(choice)) return false;
     const resolve = pendingChoice; pendingChoice = null;
     closeModal(); resolve(choice); return true;
   }

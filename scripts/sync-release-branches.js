@@ -22,8 +22,7 @@ export const RELEASE_METADATA = [
  * @param {!Array<*>} args Arguments forwarded to the operation.
  * @return {*} Result computed from the supplied inputs.
  */
-const git = (...args) =>
-  execFileSync('git', args, {cwd: ROOT, encoding: 'utf8'}).trim();
+const git = (...args) => execFileSync('git', args, {cwd: ROOT, encoding: 'utf8'}).trim();
 
 /**
  * Normalizes the git at text for subsequent processing.
@@ -32,8 +31,7 @@ const git = (...args) =>
  * @param {!Array<*>} args Arguments forwarded to the operation.
  * @return {*} Result computed from the supplied inputs.
  */
-const gitAt = (cwd, ...args) =>
-  execFileSync('git', args, {cwd, encoding: 'utf8'}).trim();
+const gitAt = (cwd, ...args) => execFileSync('git', args, {cwd, encoding: 'utf8'}).trim();
 
 /**
  * Derives the parents result from the supplied values.
@@ -41,8 +39,7 @@ const gitAt = (cwd, ...args) =>
  * @param {*} rev Value used by this operation.
  * @return {*} Result computed from the supplied inputs.
  */
-const parents = rev => git('rev-list', '--parents', '-n', '1', rev)
-  .split(/\s+/).slice(1);
+const parents = rev => git('rev-list', '--parents', '-n', '1', rev).split(/\s+/).slice(1);
 
 /**
  * Derives the ancestor result from the supplied values.
@@ -73,17 +70,13 @@ const versionAt = ref => JSON.parse(git('show', `${ref}:package.json`)).version;
 export function releaseRefs({tag, merge}) {
   if (!/^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(tag))
     throw new Error(`Invalid release tag: ${tag}`);
-  if (!/^[a-f0-9]{40}$/.test(merge)) throw new Error(
-    'Invalid approved merge SHA');
+  if (!/^[a-f0-9]{40}$/.test(merge)) throw new Error('Invalid approved merge SHA');
   const snapshot = git('rev-parse', `${tag}^{commit}`);
   if (parents(snapshot).length !== 1 || parents(snapshot)[0] !== merge ||
     git('log', '-1', '--format=%s', snapshot) !== `WCM Release Snapshot ${tag}`)
-    throw new Error(
-      'Tag does not reference the approved versioned release snapshot');
-  if (versionAt(snapshot) !==
-    tag.slice(1)) throw new Error('Tag and application version differ');
-  if (parents(merge).length !==
-    2) throw new Error('Release origin must be a two-parent merge');
+    throw new Error('Tag does not reference the approved versioned release snapshot');
+  if (versionAt(snapshot) !== tag.slice(1)) throw new Error('Tag and application version differ');
+  if (parents(merge).length !== 2) throw new Error('Release origin must be a two-parent merge');
   return {snapshot, developAtMerge: parents(merge)[1]};
 }
 
@@ -94,15 +87,10 @@ export function releaseRefs({tag, merge}) {
  * @return {*} Entries that meet the selection criteria.
  */
 function prepareDivergedDevelop({tip, base, snapshot, tag}) {
-  if (!ancestor(base, tip)) throw new Error(
-    'develop was rewritten after the approved merge; refusing synchronization');
+  if (!ancestor(base, tip)) throw new Error('develop was rewritten after the approved merge; refusing synchronization');
   // A change to a release metadata file after approval must not be discarded.
-  const changed = git('diff', '--name-only', `${base}..${tip}`, '--',
-    ...RELEASE_METADATA)
-    .split('\n').filter(Boolean);
-  if (changed.length) throw new Error(
-    `develop changed release metadata since the merge: ${changed.join(
-      ', ')}. Manual resolution required.`);
+  const changed = git('diff', '--name-only', `${base}..${tip}`, '--', ...RELEASE_METADATA).split('\n').filter(Boolean);
+  if (changed.length) throw new Error(`develop changed release metadata since the merge: ${changed.join(', ')}. Manual resolution required.`);
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-release-branch-'));
   let attached = false;
   try {
@@ -110,10 +98,7 @@ function prepareDivergedDevelop({tip, base, snapshot, tag}) {
     attached = true;
     for (const file of RELEASE_METADATA) {
       fs.mkdirSync(path.dirname(path.join(temp, file)), {recursive: true});
-      fs.writeFileSync(
-        path.join(temp, file),
-        execFileSync('git', ['show', `${snapshot}:${file}`], {cwd: ROOT})
-      );
+      fs.writeFileSync(path.join(temp, file), execFileSync('git', ['show', `${snapshot}:${file}`], {cwd: ROOT}));
     }
     // New application code on develop must receive a matching, freshly
     // computed source manifest rather than the snapshot's old hashes.
@@ -155,14 +140,10 @@ export function prepareSyncPR({tag, merge}) {
   if (main !== merge) {
     if (isCompletedMainSync({tag, merge, main, snapshot}))
       return {tag, branch, main, snapshot, alreadyMerged: true};
-    throw new Error(
-      'main changed after the approved develop merge; refusing version PR.');
+    throw new Error('main changed after the approved develop merge; refusing version PR.');
   }
-  const remote = git('ls-remote', '--heads', 'origin', `refs/heads/${branch}`)
-    .split(/\s+/)[0];
-  if (remote && remote !==
-    snapshot) throw new Error(
-      'Version PR branch exists but points at another commit');
+  const remote = git('ls-remote', '--heads', 'origin', `refs/heads/${branch}`).split(/\s+/)[0];
+  if (remote && remote !== snapshot) throw new Error('Version PR branch exists but points at another commit');
   if (!remote) git('push', 'origin', `${snapshot}:refs/heads/${branch}`);
   return {tag, branch, main, snapshot, alreadyMerged: false};
 }
@@ -175,8 +156,7 @@ export function prepareSyncPR({tag, merge}) {
  */
 function isCompletedMainSync({tag, merge, main, snapshot}) {
   const mainParents = parents(main);
-  return mainParents.length === 2 && mainParents[0] === merge &&
-    mainParents[1] === snapshot
+  return mainParents.length === 2 && mainParents[0] === merge && mainParents[1] === snapshot
     && versionAt(main) === tag.slice(1);
 }
 
@@ -195,42 +175,33 @@ export function finishSync({tag, merge}) {
   const main = git('rev-parse', 'refs/remotes/origin/main');
   const develop = git('rev-parse', 'refs/remotes/origin/develop');
   if (!isCompletedMainSync({tag, merge, main, snapshot}))
-    throw new Error(
-      'Protected main does not contain the approved version PR merge; \
-refusing develop sync.');
+    throw new Error('Protected main does not contain the approved version PR merge; refusing develop sync.');
   let target;
   if (ancestor(develop, main)) target = main;
   else if (ancestor(main, develop)) {
     if (versionAt(develop) !== tag.slice(1))
-      throw new Error(
-        'develop includes main release but reports a different version');
+      throw new Error('develop includes main release but reports a different version');
     target = develop;
   } else {
-    const subjects = git('log', '--format=%s', `${developAtMerge}..${develop}`)
-      .split('\n');
-    const already = subjects.includes(
-      `chore(release): synchronize ${tag} on develop`);
+    const subjects = git('log', '--format=%s', `${developAtMerge}..${develop}`).split('\n');
+    const already = subjects.includes(`chore(release): synchronize ${tag} on develop`);
     if (already && versionAt(develop) === tag.slice(1)) target = develop;
     else target = prepareDivergedDevelop({
       tip: develop, base: developAtMerge,
       snapshot, tag,
     });
   }
-  if (target !== develop && !ancestor(target, main) &&
-    !ancestor(main, target)) {
+  if (target !== develop && !ancestor(target, main) && !ancestor(main, target)) {
     try {git('merge-tree', '--write-tree', main, target);}
     catch {
-      throw new Error(
-        'develop synchronization would conflict with the next main merge. \
-Resolve manually.');
+      throw new Error('develop synchronization would conflict with the next main merge. Resolve manually.');
     }
   }
   if (target !== develop) git('push', 'origin', `${target}:refs/heads/develop`);
   return {tag, main, develop: target, unchanged: target === develop};
 }
 
-const running = process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url);
+const running = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (running) {
   try {
     const [command, ...args] = process.argv.slice(2);
@@ -241,16 +212,12 @@ if (running) {
      * @return {*} Result computed from the supplied inputs.
      */
     const get = name => {
-      const i = args.indexOf(name); return i >= 0 ?
-        args[i + 1] : null;
+      const i = args.indexOf(name); return i >= 0 ? args[i + 1] : null;
     };
     const tag = get('--tag'), merge = get('--merge');
     if (!['prepare', 'finish'].includes(command) || !tag || !merge)
-      throw new Error(
-        'Usage: sync-release-branches.js prepare|finish --tag vX.Y.Z \
---merge 40_HEX_SHA');
-    const result = command === 'prepare' ? prepareSyncPR({tag, merge}) :
-      finishSync({tag, merge});
+      throw new Error('Usage: sync-release-branches.js prepare|finish --tag vX.Y.Z --merge 40_HEX_SHA');
+    const result = command === 'prepare' ? prepareSyncPR({tag, merge}) : finishSync({tag, merge});
     console.log(JSON.stringify(result));
   } catch (error) {console.error(error.message); process.exitCode = 1;}
 }

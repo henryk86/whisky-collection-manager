@@ -27,8 +27,7 @@ const tasting = (id, tastedOn, rating, createdAt = '2026-11-01T08:00:00.000Z'
   updatedAt: createdAt,
 });
 test(
-  '0-n tastings are chronologically sorted; a scoreless latest tasting does \
-not reveal older scores',
+  '0-n tastings are chronologically sorted; a scoreless latest tasting does not reveal older scores',
   () => {
     const b = {
       tastings: [
@@ -38,10 +37,7 @@ not reveal older scores',
       ],
     };
     assert.equal(latestTasting(b).id, 'latest');
-    assert.deepEqual(
-      sortedTastings(b).map(t => t.id),
-      ['latest', 'middle', 'old']
-    );
+    assert.deepEqual(sortedTastings(b).map(t => t.id), ['latest', 'middle', 'old']);
     assert.equal(displayedTastingRating(b), null);
     assert.equal(b.rating, undefined);
     b.tastings.splice(1);
@@ -52,8 +48,7 @@ not reveal older scores',
   }
 );
 test(
-  'same-day tastings sort by creation timestamp and then id, independent of \
-update timestamp',
+  'same-day tastings sort by creation timestamp and then id, independent of update timestamp',
   () => {
     const b = {
       tastings: [
@@ -72,31 +67,17 @@ test(
     const good = normalizeTastingRecord({tastedOn: '2026-11-15', rating: 87.5});
     assert.equal(good.rating, 87.5);
     assert.equal(good.title, '');
-    assert.equal(
-      good.ratingComment,
-      '',
-      'old records without a comment remain valid'
-    );
-    const commented = normalizeTastingRecord(
-      {ratingComment: 'Warm, aber recht kurzer Abgang.'},
-      good
-    );
+    assert.equal(good.ratingComment, '', 'old records without a comment remain valid');
+    const commented = normalizeTastingRecord({ratingComment: 'Warm, aber recht kurzer Abgang.'}, good);
     assert.equal(commented.ratingComment, 'Warm, aber recht kurzer Abgang.');
-    assert.equal(
-      normalizeTastingRecord({rating: 90}, commented).ratingComment,
-      commented.ratingComment
-    );
-    assert.equal(
-      normalizeTastingRecord({ratingComment: ''}, commented).ratingComment,
-      ''
-    );
+    assert.equal(normalizeTastingRecord({rating: 90}, commented).ratingComment, commented.ratingComment);
+    assert.equal(normalizeTastingRecord({ratingComment: ''}, commented).ratingComment, '');
     for (const ratingComment of [null, 123, 'x'.repeat(10001)])
       assert.throws(() => normalizeTastingRecord({ratingComment}, good));
     for (const date of ['2026-02-30', 'today', '2026-13-01', ''])
       assert.throws(() => normalizeTastingRecord({tastedOn: date}));
     for (const rating of [-1, 101, '87', NaN])
-      assert.throws(() =>
-        normalizeTastingRecord({tastedOn: '2026-11-15', rating}));
+      assert.throws(() => normalizeTastingRecord({tastedOn: '2026-11-15', rating}));
     assert.throws(() => normalizeTastingRecord({
       tastedOn: '2026-11-15',
       id: 'injected',
@@ -109,34 +90,25 @@ test(
 );
 
 test(
-  'analytics counts only the latest tasting per bottling and never an older \
-rated record',
+  'analytics counts only the latest tasting per bottling and never an older rated record',
   () => {
     const b = {
       id: 'release-1',
       name: 'Example',
       distilleryIds: [],
       bottles: [],
-      tastings: [
-        tasting('one', '2026-01-01', 95), tasting('two', '2026-10-01', null),
-      ],
+      tastings: [tasting('one', '2026-01-01', 95), tasting('two', '2026-10-01', null),],
     };
     const collection = {distilleries: [], bottlings: [b]};
     let report = analyzeCollection(collection);
     assert.equal(report.tasting.rating.count, 0);
-    assert.equal(
-      report.quality.missingPurchase.find(x => x.name === 'Bewertung').count,
-      1
-    );
+    assert.equal(report.quality.missingPurchase.find(x => x.name === 'Bewertung').count, 1);
     b.tastings[1].rating = 81;
     report = analyzeCollection(collection);
     assert.equal(report.tasting.rating.count, 1);
     assert.equal(report.tasting.rating.avg, 81);
     assert.equal(report.tasting.bestRated[0].rating, 81);
     assert.deepEqual(report.tasting.histogram, [{name: '80–89', count: 1}]);
-    assert.equal(
-      report.quality.missingPurchase.find(x => x.name === 'Bewertung').count,
-      0
-    );
+    assert.equal(report.quality.missingPurchase.find(x => x.name === 'Bewertung').count, 0);
   }
 );

@@ -22,8 +22,7 @@ export const VALID_TASTING_FIELDS = Object.freeze([
  * @return {boolean} Whether the condition is satisfied.
  */
 export function validTastingDate(value) {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/
-    .test(value)) return false;
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const d = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
 }
@@ -50,16 +49,13 @@ export function normalizeTastingRecord(input, old = {}) {
     ...old,
     ...input,
   };
-  if (!validTastingDate(value.tastedOn)) throw new Error(
-    'Ungültiges Verkostungsdatum');
-  if (typeof value.title !== 'string' || value.title.length >
-    120) throw new Error('Ungültiger Verkostungstitel');
+  if (!validTastingDate(value.tastedOn)) throw new Error('Ungültiges Verkostungsdatum');
+  if (typeof value.title !== 'string' || value.title.length > 120) throw new Error('Ungültiger Verkostungstitel');
   value.title = value.title.trim();
   value.flavorProfile = normalizeFlavorProfile(value.flavorProfile);
   value.tastingNotes = normalizeTastingNotes(value.tastingNotes);
   value.rating = normalizeTastingRating(value.rating);
-  if (typeof value.ratingComment !== 'string' || value.ratingComment
-    .length > 10000)
+  if (typeof value.ratingComment !== 'string' || value.ratingComment.length > 10000)
     throw new Error('Ungültiger Bewertungskommentar');
   value.whiskyColor = normalizeWhiskyColor(value.whiskyColor);
   return value;
@@ -73,8 +69,7 @@ export function normalizeTastingRecord(input, old = {}) {
  */
 export function sortedTastings(bottling) {
   return [...(bottling?.tastings || [])].sort((a, b) =>
-    (b.tastedOn || '').localeCompare(a.tastedOn || '') ||
-    (b.createdAt || '').localeCompare(a.createdAt || '') ||
+    (b.tastedOn || '').localeCompare(a.tastedOn || '') || (b.createdAt || '').localeCompare(a.createdAt || '') ||
     b.id.localeCompare(a.id));
 }
 
@@ -85,8 +80,7 @@ export function sortedTastings(bottling) {
  * @return {*} Value returned by the delegated operation.
  */
 export function latestTasting(bottling) {
-  return sortedTastings(bottling)[0] ||
-    null;
+  return sortedTastings(bottling)[0] || null;
 }
 
 /**

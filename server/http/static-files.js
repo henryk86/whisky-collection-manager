@@ -5,8 +5,7 @@ import {pipeline} from 'node:stream/promises';
 import {fileURLToPath} from 'node:url';
 import {ROOT, IMAGE_DIR} from '../storage/paths.js';
 import {fail} from '../domain/errors.js';
-const WEB = path.resolve(fileURLToPath(new URL('../../public/',
-  import.meta.url)));
+const WEB = path.resolve(fileURLToPath(new URL('../../public/', import.meta.url)));
 const SHARED = path.resolve(WEB, '../shared');
 // Only browser-safe shared modules are served. Node-only backup modules stay
 // private.
@@ -38,8 +37,7 @@ export const SHARED_BROWSER_FILES = new Set([
 function decodePath(encoded) {
   try {return decodeURIComponent(encoded);}
   catch (error) {
-    if (error instanceof
-      URIError) throw fail('Ungültiger Pfad', 400, "api.errors.invalidPath");
+    if (error instanceof URIError) throw fail('Ungültiger Pfad', 400, "api.errors.invalidPath");
     throw error;
   }
 }
@@ -54,10 +52,7 @@ function decodePath(encoded) {
 function htmlSecurityHeaders(html) {
   // HTML parsing normalizes CRLF and CR before CSP checks inline scripts.
   const normalized = html.replace(/\r\n?/g, '\n');
-  const hashes = [...normalized.matchAll(
-    /<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)]
-    .map(([, body]) => `'sha256-${crypto.createHash('sha256').update(body)
-      .digest('base64')}'`);
+  const hashes = [...normalized.matchAll(/<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)].map(([, body]) => `'sha256-${crypto.createHash('sha256').update(body).digest('base64')}'`);
   return {
     'Content-Security-Policy': [
       "default-src 'self'",
@@ -94,8 +89,7 @@ function htmlSecurityHeaders(html) {
 function streamStatic(req, res, file, contentType, cacheControl,
   securityHeaders = {}) {
   const stat = fs.statSync(file);
-  const etag = `W/"${stat.size.toString(16)}-${Math.trunc(stat.mtimeMs)
-    .toString(16)}"`;
+  const etag = `W/"${stat.size.toString(16)}-${Math.trunc(stat.mtimeMs).toString(16)}"`;
   const lastModified = stat.mtime.toUTCString();
   const headers = {
     'Content-Type': contentType,
@@ -108,14 +102,10 @@ function streamStatic(req, res, file, contentType, cacheControl,
   const ifNoneMatch = req.headers?.['if-none-match'];
   // If-None-Match takes precedence over If-Modified-Since, even on a miss.
   const etagMatches = typeof ifNoneMatch === 'string' &&
-    (ifNoneMatch.trim() === '*' || ifNoneMatch.split(',').some(value =>
-      value.trim().replace(/^W\//, '') === etag.replace(/^W\//, '')));
+    (ifNoneMatch.trim() === '*' || ifNoneMatch.split(',').some(value => value.trim().replace(/^W\//, '') === etag.replace(/^W\//, '')));
   const ifModifiedSince = req.headers?.['if-modified-since'];
-  const since = typeof ifModifiedSince === 'string' ?
-    Date.parse(ifModifiedSince) : NaN;
-  const modifiedSinceMatches = ifNoneMatch === undefined &&
-    Number.isFinite(since) &&
-    Math.floor(stat.mtimeMs / 1000) * 1000 <= since;
+  const since = typeof ifModifiedSince === 'string' ? Date.parse(ifModifiedSince) : NaN;
+  const modifiedSinceMatches = ifNoneMatch === undefined && Number.isFinite(since) && Math.floor(stat.mtimeMs / 1000) * 1000 <= since;
   if (etagMatches || modifiedSinceMatches) {
     res.writeHead(304, headers);
     res.end();
@@ -141,66 +131,40 @@ export async function serveStatic(req, res, url) {
   }
   let file;
   if (url.pathname === '/vendor/html5-qrcode.min.js') {
-    const vendor = path.resolve(WEB,
-      '../node_modules/html5-qrcode/html5-qrcode.min.js');
+    const vendor = path.resolve(WEB, '../node_modules/html5-qrcode/html5-qrcode.min.js');
     if (!fs.existsSync(vendor)) throw fail(
       'Scanner-Bibliothek fehlt. Bitte npm install ausführen.',
       503,
       "api.errors.scannerLibraryIsMissingRunNpmInstall"
     );
-    return streamStatic(
-      req,
-      res,
-      vendor,
-      'text/javascript; charset=utf-8',
-      'public, max-age=3600'
-    );
+    return streamStatic(req, res, vendor, 'text/javascript; charset=utf-8', 'public, max-age=3600');
   }
   // Only these fixed Three.js ESM files are exposed from node_modules.
   // No CDN dependency and no arbitrary access to installed packages.
   const threeFiles = {
     '/vendor/three.module.js': 'build/three.module.js',
     '/vendor/three.core.js': 'build/three.core.js',
-    '/vendor/three/addons/controls/OrbitControls.js':
-      'examples/jsm/controls/OrbitControls.js',
+    '/vendor/three/addons/controls/OrbitControls.js': 'examples/jsm/controls/OrbitControls.js',
   };
   if (Object.hasOwn(threeFiles, url.pathname)) {
-    const vendor = path.resolve(WEB, '../node_modules/three',
-      threeFiles[url.pathname]);
-    if (!fs.existsSync(vendor)) throw fail(
-      'Three.js fehlt. Bitte npm ci ausführen.',
-      503,
-      "api.errors.threeJsIsMissingRunNpmCi"
-    );
-    return streamStatic(
-      req,
-      res,
-      vendor,
-      'text/javascript; charset=utf-8',
-      'public, max-age=3600'
-    );
+    const vendor = path.resolve(WEB, '../node_modules/three', threeFiles[url.pathname]);
+    if (!fs.existsSync(vendor)) throw fail('Three.js fehlt. Bitte npm ci ausführen.', 503, "api.errors.threeJsIsMissingRunNpmCi");
+    return streamStatic(req, res, vendor, 'text/javascript; charset=utf-8', 'public, max-age=3600');
   }
   if (url.pathname.startsWith('/shared/')) {
     const name = decodePath(url.pathname.slice('/shared/'.length));
-    if (!SHARED_BROWSER_FILES.has(name)) throw fail('Datei nicht gefunden',
-      404, "api.errors.fileNotFound");
+    if (!SHARED_BROWSER_FILES.has(name)) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
     file = path.join(SHARED, name);
   } else if (url.pathname.startsWith('/images/')) {
     const name = decodePath(url.pathname.slice(1));
     file = path.resolve(ROOT, name);
-    if (!file.startsWith(IMAGE_DIR +
-      path.sep)) throw fail('Ungültiger Bildpfad', 403,
-        "api.errors.invalidImagePath");
+    if (!file.startsWith(IMAGE_DIR + path.sep)) throw fail('Ungültiger Bildpfad', 403, "api.errors.invalidImagePath");
   } else {
-    const name = url.pathname === '/' ? 'index.html' :
-      decodePath(url.pathname.slice(1));
+    const name = url.pathname === '/' ? 'index.html' : decodePath(url.pathname.slice(1));
     file = path.resolve(WEB, name);
-    if (file !== WEB && !file.startsWith(WEB +
-      path.sep)) throw fail('Ungültiger Pfad', 403, "api.errors.invalidPath");
+    if (file !== WEB && !file.startsWith(WEB + path.sep)) throw fail('Ungültiger Pfad', 403, "api.errors.invalidPath");
   }
-  if (!fs.existsSync(file) || !fs.statSync(file)
-    .isFile()) throw fail('Datei nicht gefunden', 404,
-      "api.errors.fileNotFound");
+  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
   const ext = path.extname(file).toLowerCase();
   const types = {
     '.webmanifest': 'application/manifest+json; charset=utf-8',
@@ -221,10 +185,8 @@ export async function serveStatic(req, res, url) {
   // Paths such as /ai/vendor/ort.wasm.min.mjs and /ai/models/u2netp.onnx
   // have no version/hash in the URL. They MUST revalidate before reuse.
   const versionedAi = url.pathname.startsWith('/ai/') &&
-    /(?:^|\/)(?:v?\d+\.\d+\.\d+|[a-f0-9]{16,})(?:\/|[-.])/i
-      .test(url.pathname.slice(4));
-  const cacheControl = versionedAi ? 'public, max-age=31536000, immutable' :
-    'no-cache';
+    /(?:^|\/)(?:v?\d+\.\d+\.\d+|[a-f0-9]{16,})(?:\/|[-.])/i.test(url.pathname.slice(4));
+  const cacheControl = versionedAi ? 'public, max-age=31536000, immutable' : 'no-cache';
   return streamStatic(
     req,
     res,

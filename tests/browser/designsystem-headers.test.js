@@ -45,8 +45,7 @@ const measured = () => {
 };
 
 test(
-  'browser: shared page headers have computed geometry and exactly one \
-arrow in both themes at four widths',
+  'browser: shared page headers have computed geometry and exactly one arrow in both themes at four widths',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -55,9 +54,7 @@ arrow in both themes at four widths',
         for (const theme of ['light', 'dark']) {
           await page.evaluate(
             theme => {
-              document.documentElement.dataset.theme =
-                theme; document.documentElement.style.colorScheme =
-                  theme;
+              document.documentElement.dataset.theme = theme; document.documentElement.style.colorScheme = theme;
             },
             theme
           );
@@ -81,19 +78,14 @@ arrow in both themes at four widths',
             if (!baseline) baseline = value;
             else assert.ok(
               Math.abs(value.topGap - baseline.topGap) <= 1,
-              `${context}: global header-to-heading spacing ${value
-                .topGap} vs ${baseline.topGap}`
+              `${context}: global header-to-heading spacing ${value.topGap} vs ${baseline.topGap}`
             );
             if (value.arrowCount) {
               assert.equal(value.arrowCount, 1, `${context}: one SVG`);
               assert.equal(value.hasGlyph, false, `${context}: no text arrow`);
             }
             const parent = page.locator(selector);
-            assert.equal(
-              await parent.locator('h2').count(),
-              1,
-              `${context}: one title`
-            );
+            assert.equal(await parent.locator('h2').count(), 1, `${context}: one title`);
           }
         }
       }
@@ -102,49 +94,36 @@ arrow in both themes at four widths',
 );
 
 test(
-  'browser: back navigation preserves exact inline spacing and DOM action \
-across detail and tasting pages',
+  'browser: back navigation preserves exact inline spacing and DOM action across detail and tasting pages',
   async () => {
     await session(async ({page, open, base}) => {
       const {bottling} = await seed(base, '008044');
       await open({query: `?bottling=${bottling.id}`});
       for (const width of [390, 768, 1024, 1440]) {
         await page.setViewportSize({width, height: 900});
-        const value = await page.locator('.ds-back-nav--inline')
-          .evaluate(nav => {
-            const button = nav.querySelector('button');
-            const icon = button.querySelector('svg').getBoundingClientRect();
-            const text = button.querySelector('span').getBoundingClientRect();
-            const navRect = nav.getBoundingClientRect();
-            return {
-              paddingTop: parseFloat(getComputedStyle(nav).paddingTop),
-              marginBottom: parseFloat(getComputedStyle(nav).marginBottom),
-              gap: text.left - icon.right,
-              iconSize: icon.width,
-              iconCenter: icon.top + icon.height / 2,
-              textCenter: text.top + text.height / 2,
-              navWidth: navRect.width,
-              overflow: document.documentElement.scrollWidth -
-                window.innerWidth,
-            };
-          });
+        const value = await page.locator('.ds-back-nav--inline').evaluate(nav => {
+          const button = nav.querySelector('button');
+          const icon = button.querySelector('svg').getBoundingClientRect();
+          const text = button.querySelector('span').getBoundingClientRect();
+          const navRect = nav.getBoundingClientRect();
+          return {
+            paddingTop: parseFloat(getComputedStyle(nav).paddingTop),
+            marginBottom: parseFloat(getComputedStyle(nav).marginBottom),
+            gap: text.left - icon.right,
+            iconSize: icon.width,
+            iconCenter: icon.top + icon.height / 2,
+            textCenter: text.top + text.height / 2,
+            navWidth: navRect.width,
+            overflow: document.documentElement.scrollWidth - window.innerWidth,
+          };
+        });
         assert.equal(value.paddingTop, 8);
         assert.equal(value.marginBottom, 18);
-        assert.ok(
-          Math.abs(value.gap - 6) <= .5,
-          `inline icon/text gap at ${width}`
-        );
+        assert.ok(Math.abs(value.gap - 6) <= .5, `inline icon/text gap at ${width}`);
         assert.equal(value.iconSize, 18);
-        assert.ok(
-          Math.abs(value.iconCenter - value.textCenter) <= 2,
-          `inline vertical alignment at ${width}`
-        );
+        assert.ok(Math.abs(value.iconCenter - value.textCenter) <= 2, `inline vertical alignment at ${width}`);
         assert.ok(value.overflow <= 1);
-        assert.equal(
-          await page.locator('.ds-back-nav--inline [data-act="back"] svg')
-            .count(),
-          1
-        );
+        assert.equal(await page.locator('.ds-back-nav--inline [data-act="back"] svg').count(), 1);
       }
       await page.locator('.ds-back-nav--inline [data-act="back"]').click();
       await page.locator('.collection-heading').waitFor({state: 'visible'});
@@ -153,66 +132,51 @@ across detail and tasting pages',
 );
 
 test(
-  'browser: help icon keeps heading size and baseline while nested flight \
-modal retains its inputs',
+  'browser: help icon keeps heading size and baseline while nested flight modal retains its inputs',
   async () => {
     await session(async ({page, open}) => {
       await open();
       await go(page, 'goto-tastings-home', '.tasting-flight-home');
       for (const width of [390, 1440]) {
         await page.setViewportSize({width, height: 900});
-        const metrics = await page.locator(
-          '.tasting-flight-home .ds-help-icon-button').evaluate(button => {
-            const title = button.closest('h3');
-            const rect = title.getBoundingClientRect();
-            const a = button.getBoundingClientRect();
-            const style = getComputedStyle(title);
-            return {
-              sameCenter: Math.abs(rect.top + rect.height / 2 - a.top -
-                a.height / 2),
-              height: rect.height,
-              marginBottom: style.marginBottom,
-              textLine: parseFloat(style.lineHeight),
-              buttonSize: a.width,
-              paddingRight: parseFloat(style.paddingRight),
-            };
-          });
+        const metrics = await page.locator('.tasting-flight-home .ds-help-icon-button').evaluate(button => {
+          const title = button.closest('h3');
+          const rect = title.getBoundingClientRect();
+          const a = button.getBoundingClientRect();
+          const style = getComputedStyle(title);
+          return {
+            sameCenter: Math.abs(rect.top + rect.height / 2 - a.top - a.height / 2),
+            height: rect.height,
+            marginBottom: style.marginBottom,
+            textLine: parseFloat(style.lineHeight),
+            buttonSize: a.width,
+            paddingRight: parseFloat(style.paddingRight),
+          };
+        });
         assert.ok(metrics.sameCenter <= 2);
         assert.ok(metrics.buttonSize <= 20);
         assert.equal(metrics.paddingRight, 26);
-        assert.ok(
-          metrics.height <= metrics.textLine + 1,
-          `${width}: help does not increase title line box`
-        );
+        assert.ok(metrics.height <= metrics.textLine + 1, `${width}: help does not increase title line box`);
       }
-      await page.locator('.tasting-flight-home [data-act="flight-plan-new"]')
-        .click();
-      await page.locator('#modal-root [data-flight-name]')
-        .fill('Unchanged plan');
+      await page.locator('.tasting-flight-home [data-act="flight-plan-new"]').click();
+      await page.locator('#modal-root [data-flight-name]').fill('Unchanged plan');
       const modal = page.locator('#modal-root .dialog-head');
       const align = await modal.evaluate(head => {
         const title = head.querySelector('h2').getBoundingClientRect();
-        const help = head.querySelector('.ds-help-icon-button')
-          .getBoundingClientRect();
-        return Math.abs(title.top + title.height / 2 - help.top -
-          help.height / 2);
+        const help = head.querySelector('.ds-help-icon-button').getBoundingClientRect();
+        return Math.abs(title.top + title.height / 2 - help.top - help.height / 2);
       });
       assert.ok(align <= 2);
       await modal.locator('.ds-help-icon-button').click();
       await page.locator('#modal-root .flight-plan-help').waitFor();
-      await page.locator('#modal-root .dialog-head [data-act="close-modal"]')
-        .click();
-      assert.equal(
-        await page.locator('#modal-root [data-flight-name]').inputValue(),
-        'Unchanged plan'
-      );
+      await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+      assert.equal(await page.locator('#modal-root [data-flight-name]').inputValue(), 'Unchanged plan');
     });
   }
 );
 
 test(
-  'browser: German and English back-navigation labels never contain text \
-arrows',
+  'browser: German and English back-navigation labels never contain text arrows',
   async () => {
     await session(async ({page, open}) => {
       for (const [lang, label] of [['de', 'Zur Sammlung'], ['en',
@@ -222,11 +186,7 @@ arrows',
         const button = page.locator('.settings-heading .ds-back-button');
         assert.equal((await button.innerText()).trim(), label);
         assert.equal(await button.locator('svg').count(), 1);
-        assert.equal(
-          await button.getAttribute('aria-label'),
-          null,
-          'accessible name is supplied by labelled text'
-        );
+        assert.equal(await button.getAttribute('aria-label'), null, 'accessible name is supplied by labelled text');
         const nav = page.locator('.settings-heading .ds-back-nav');
         assert.equal(await nav.getAttribute('aria-label'), label);
       }

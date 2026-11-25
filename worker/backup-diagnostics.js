@@ -7,27 +7,18 @@
  * @return {string} Resulting text.
  */
 export function sanitizeBackupDiagnostic(raw) {
-  if (typeof raw !== 'string' ||
-    !raw.trim()) return 'keine weiteren technischen Details';
-  const clean = raw
-    .replace(/\x1b\[[0-9;]*[A-Za-z]/g, '')
-    .replace(/[\x00-\x1f\x7f]+/g, ' ')
-    .replace(/([a-z][a-z0-9+.-]*:\/\/)[^\s/@:]+:[^\s/@]*@/gi,
-      '$1[Zugangsdaten]@'
-    )
+  if (typeof raw !== 'string' || !raw.trim()) return 'keine weiteren technischen Details';
+  const clean = raw.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').replace(/[\x00-\x1f\x7f]+/g, ' ').replace(/([a-z][a-z0-9+.-]*:\/\/)[^\s/@:]+:[^\s/@]*@/gi,
+    '$1[Zugangsdaten]@'
+  )
     .replace(
-      new RegExp(
-        '([?&](?:access_token|refresh_token|passwor' +
-        'd|secret|key|signature|code)=)[^\\s&#]+',
-        'gi'
-      ),
+      new RegExp('([?&](?:access_token|refresh_token|passwor' + 'd|secret|key|signature|code)=)[^\\s&#]+', 'gi'),
       '$1[geschuetzt]'
     )
     .replace(/\b(Bearer|Basic)\s+[a-z0-9+/_.~=-]{8,}/gi, '$1 [geschuetzt]')
     .replace(
       new RegExp(
-        '\\b(password|passwd|access[_-]?token|refre' +
-        'sh[_-]?token|client[_-]?secret|api[_-]?key' +
+        '\\b(password|passwd|access[_-]?token|refre' + 'sh[_-]?token|client[_-]?secret|api[_-]?key' +
         '|authorization|secret|credential|credentia' +
         'ls|key)["\']?\\s*[:=]\\s*(?:"[^"]*"|\'[^\'' +
         ']*\'|[^\\s,;]+)',
@@ -57,8 +48,7 @@ export function sanitizeBackupDiagnostic(raw) {
     'BACKUP_WORKER_TOKEN',
   ]) {
     const value = process.env[key];
-    if (typeof value === 'string' && value.length >= 6) redacted =
-      redacted.replaceAll(value, '[geschuetzt]');
+    if (typeof value === 'string' && value.length >= 6) redacted = redacted.replaceAll(value, '[geschuetzt]');
   }
   return redacted.slice(-700) || 'keine weiteren technischen Details';
 }
@@ -99,17 +89,12 @@ const ERROR_TYPES = new Set([
  */
 export function unexpectedBackupDiagnostic(error) {
   const kind = ERROR_TYPES.has(error?.name) ? error.name : 'Fehler';
-  const system = typeof error?.code === 'string' && /^[A-Z0-9_]{2,24}$/
-    .test(error.code)
-    ? `; Systemcode ${error.code}` : '';
-  const stack = typeof error?.stack === 'string' ? error.stack.split('\n')
-    .slice(1, 12) : [];
+  const system = typeof error?.code === 'string' && /^[A-Z0-9_]{2,24}$/.test(error.code) ? `; Systemcode ${error.code}` : '';
+  const stack = typeof error?.stack === 'string' ? error.stack.split('\n').slice(1, 12) : [];
   let location = '';
   for (const frame of stack) {
     // Discard absolute directory names, user names, URLs and raw stack text.
-    const match = frame.match(
-      /(?:^|[\/])([A-Za-z0-9_.-]+\.(?:js|mjs|cjs)):(\d{1,6}):(\d{1,5})(?:\)|$)/
-    );
+    const match = frame.match(/(?:^|[\/])([A-Za-z0-9_.-]+\.(?:js|mjs|cjs)):(\d{1,6}):(\d{1,5})(?:\)|$)/);
     if (match) {
       location = `; Position ${match[1]}:${match[2]}:${match[3]}`;
       break;
@@ -131,6 +116,5 @@ export function logBackupJobFailure(jobId, serialized, error) {
     unexpectedBackupDiagnostic(error);
   // Never log exception objects, raw .message or full stacks: these can contain
   // credentials.
-  console.error(`[Backup-Worker] Auftrag ${jobId} fehlgeschlagen (${serialized
-    .errorCode}): ${diagnostic}`);
+  console.error(`[Backup-Worker] Auftrag ${jobId} fehlgeschlagen (${serialized.errorCode}): ${diagnostic}`);
 }

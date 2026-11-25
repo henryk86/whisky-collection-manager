@@ -22,8 +22,7 @@ export function projectedWarehouseBottles(collection) {
       releaseYear: bottling.releaseYear ?? null,
       caskType: bottling.caskType || null,
       volumeMl: bottle.volumeMl ?? bottling.volumeMl ?? null,
-      photoPath: displayPhotoPath(bottle.photos?.find(entry =>
-        typeof entry?.path === 'string' && entry.path)) || null,
+      photoPath: displayPhotoPath(bottle.photos?.find(entry => typeof entry?.path === 'string' && entry.path)) || null,
     })));
 }
 
@@ -41,9 +40,7 @@ export function synchronizeWarehouseProjection(warehouse, collection) {
   const known = new Set(bottles.map(b => b.id));
   return {
     ...warehouse, bottles,
-    assignments: Object.fromEntries(Object.entries(warehouse.assignments ||
-      {}).filter(([id]) => known.has(id))),
-    staleAssignments: Object.keys(warehouse.assignments || {}).filter(id =>
-      !known.has(id)).length,
+    assignments: Object.fromEntries(Object.entries(warehouse.assignments || {}).filter(([id]) => known.has(id))),
+    staleAssignments: Object.keys(warehouse.assignments || {}).filter(id => !known.has(id)).length,
   };
 }

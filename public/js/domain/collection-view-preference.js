@@ -10,8 +10,7 @@ export const COLLECTION_VIEW_STORAGE_KEY = 'whisky-collection-view';
 export function getCollectionViewPreference(storage) {
   try {
     const source = storage === undefined ? globalThis.localStorage : storage;
-    return source?.getItem(COLLECTION_VIEW_STORAGE_KEY) === 'table' ?
-      'table' : 'cards';
+    return source?.getItem(COLLECTION_VIEW_STORAGE_KEY) === 'table' ? 'table' : 'cards';
   } catch {
     return 'cards';
   }

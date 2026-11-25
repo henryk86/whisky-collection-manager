@@ -7,8 +7,7 @@ export const PHOTO_ZOOM_MAX = 6;
  * @param {*} zoom Map scale used for projection.
  * @return {number} Calculated numeric result.
  */
-export const clampPhotoZoom = zoom =>
-  Math.max(PHOTO_ZOOM_MIN, Math.min(PHOTO_ZOOM_MAX, zoom));
+export const clampPhotoZoom = zoom => Math.max(PHOTO_ZOOM_MIN, Math.min(PHOTO_ZOOM_MAX, zoom));
 
 /**
  * Keeps the zoomed photo within its allowable pan area.
@@ -44,8 +43,7 @@ export function zoomPhotoAt(view, requestedZoom, point, stage, image) {
   return constrainPhotoPan({
     zoom,
     x: point.x - stage.width / 2 - (point.x - stage.width / 2 - view.x) * ratio,
-    y: point.y - stage.height / 2 - (point.y - stage.height / 2 -
-      view.y) * ratio,
+    y: point.y - stage.height / 2 - (point.y - stage.height / 2 - view.y) * ratio,
   }, stage, image);
 }
 
@@ -79,11 +77,9 @@ export function createPhotoZoom() {
     if (!stage?.isConnected || !image) return;
     const {stage: area, image: picture} = dimensions();
     view = constrainPhotoPan(view, area, picture);
-    image.style.transform =
-      `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
+    image.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
     stage.classList.toggle('is-zoomed', view.zoom > PHOTO_ZOOM_MIN);
-    const controls = stage.closest('.photo-lightbox')?.querySelector(
-      '.photo-lightbox-zoom');
+    const controls = stage.closest('.photo-lightbox')?.querySelector('.photo-lightbox-zoom');
     if (!controls) return;
     const value = controls.querySelector('[data-photo-zoom-level]');
     if (value) value.textContent = `${Math.round(view.zoom * 100)} %`;
@@ -115,13 +111,7 @@ export function createPhotoZoom() {
   function zoomTo(next, point) {
     if (!stage?.isConnected || !image) return;
     const {stage: area, image: picture} = dimensions();
-    view = zoomPhotoAt(
-      view,
-      next,
-      point || {x: area.width / 2, y: area.height / 2},
-      area,
-      picture
-    );
+    view = zoomPhotoAt(view, next, point || {x: area.width / 2, y: area.height / 2}, area, picture);
     render();
   }
 
@@ -149,8 +139,7 @@ export function createPhotoZoom() {
    * Registers the photo zoom state.
    */
   function attach() {
-    stage = typeof document === 'undefined' ? null :
-      document.querySelector('.photo-lightbox-stage');
+    stage = typeof document === 'undefined' ? null : document.querySelector('.photo-lightbox-stage');
     image = stage?.querySelector('.photo-lightbox-image') || null;
     if (!stage || !image) return;
     reset();
@@ -176,8 +165,7 @@ export function createPhotoZoom() {
       if (pointers.size === 2) {
         const [a, b] = [...pointers.values()];
         const distance = Math.hypot(a.x - b.x, a.y - b.y);
-        if (lastPinchDistance) zoomTo(view.zoom * distance / lastPinchDistance,
-          pointOf({clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2}));
+        if (lastPinchDistance) zoomTo(view.zoom * distance / lastPinchDistance, pointOf({clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2}));
         lastPinchDistance = Math.max(distance, 1);
       } else if (view.zoom > 1) {
         const {stage: area, image: picture} = dimensions();

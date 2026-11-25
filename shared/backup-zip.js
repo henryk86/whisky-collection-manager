@@ -14,8 +14,7 @@ const AES_EXTRA = Buffer.from([0x01, 0x99, 0x07, 0x00, 0x02, 0x00, 0x41, 0x45,
   0x03, 0x00, 0x00]);
 const TABLE = Array.from({length: 256}, (_, start) => {
   let value = start;
-  for (let i = 0; i < 8; i++) value = (value & 1) ? (0xedb88320 ^ (value >>>
-    1)) : (value >>> 1);
+  for (let i = 0; i < 8; i++) value = (value & 1) ? (0xedb88320 ^ (value >>> 1)) : (value >>> 1);
   return value >>> 0;
 });
 /**
@@ -27,8 +26,7 @@ const TABLE = Array.from({length: 256}, (_, start) => {
  */
 function crc32(buffer, previous = 0xffffffff) {
   let value = previous;
-  for (const byte of buffer) value = TABLE[(value ^ byte) & 255] ^
-    (value >>> 8);
+  for (const byte of buffer) value = TABLE[(value ^ byte) & 255] ^ (value >>> 8);
   return value >>> 0;
 }
 
@@ -40,8 +38,7 @@ function crc32(buffer, previous = 0xffffffff) {
  */
 function write(fd, buffer) {
   let position = 0;
-  while (position < buffer.length) position +=
-    fs.writeSync(fd, buffer, position, buffer.length - position);
+  while (position < buffer.length) position += fs.writeSync(fd, buffer, position, buffer.length - position);
 }
 
 /**
@@ -55,8 +52,7 @@ function fileContent(file, callback) {
   try {
     const buffer = Buffer.allocUnsafe(BLOCK);
     let count;
-    while ((count = fs.readSync(fd, buffer, 0, BLOCK, null)) >
-      0) callback(buffer.subarray(0, count));
+    while ((count = fs.readSync(fd, buffer, 0, BLOCK, null)) > 0) callback(buffer.subarray(0, count));
   } finally {fs.closeSync(fd);}
 }
 
@@ -67,8 +63,7 @@ function fileContent(file, callback) {
  * @return {boolean} Whether the operation matched or succeeded.
  */
 function safeName(name) {
-  return typeof name === 'string' && name.length <= 1024 &&
-    !name.includes('\\') && !name.includes('\0') &&
+  return typeof name === 'string' && name.length <= 1024 && !name.includes('\\') && !name.includes('\0') &&
     !name.startsWith('/') && !name.endsWith('/') &&
     name.split('/').every(part => part && part !== '.' && part !== '..') &&
     (name === 'README.txt' || /^(data|images|documents)\/.+/.test(name));
@@ -91,24 +86,18 @@ function walk(root, relative) {
   const visit = (name) => {
     const absolute = path.join(root, name);
     for (const entry of fs.readdirSync(absolute, {withFileTypes: true})) {
-      if (entry.isSymbolicLink()) throw Error(
-        'Sicherungsquelle enthält einen symbolischen Link. Sicherung \
-abgebrochen.');
+      if (entry.isSymbolicLink()) throw Error('Sicherungsquelle enthält einen symbolischen Link. Sicherung abgebrochen.');
       const child = `${name}/${entry.name}`;
-      if (!safeName(child)) throw Error('Ungültiger Dateiname in der Sicherung'
-      );
+      if (!safeName(child)) throw Error('Ungültiger Dateiname in der Sicherung');
       if (entry.isDirectory()) visit(child);
       else if (entry.isFile()) files.push({
-        name: child, source: path.join(root,
-          child),
+        name: child, source: path.join(root, child),
       });
       else throw Error('Unbekannter Dateityp in der Sicherung');
     }
   };
-  for (const folder of relative) if (fs.existsSync(path.join(root,
-    folder))) visit(folder);
-  if (!files.some(f => f.name ===
-    'data/collection.json')) throw Error('Sammlung fehlt in Sicherungsquelle');
+  for (const folder of relative) if (fs.existsSync(path.join(root, folder))) visit(folder);
+  if (!files.some(f => f.name === 'data/collection.json')) throw Error('Sammlung fehlt in Sicherungsquelle');
   return files.sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -120,9 +109,7 @@ abgebrochen.');
  */
 function requiredPassword(password) {
   if (typeof password !== 'string' || password.length < 14) {
-    throw Error(
-      'ZIP-Passwort fehlt oder ist zu kurz. In der Backup-Verwaltung \
-mindestens 14 Zeichen festlegen.');
+    throw Error('ZIP-Passwort fehlt oder ist zu kurz. In der Backup-Verwaltung mindestens 14 Zeichen festlegen.');
   }
   return password;
 }
@@ -135,10 +122,8 @@ mindestens 14 Zeichen festlegen.');
  * @return {!Object} Structured result assembled from the input data.
  */
 function aes(password, salt) {
-  const keys = crypto.pbkdf2Sync(Buffer.from(password, 'utf8'), salt, 1000, 66,
-    'sha1');
-  const cipher = crypto.createCipheriv('aes-256-ecb', keys.subarray(0, 32),
-    null);
+  const keys = crypto.pbkdf2Sync(Buffer.from(password, 'utf8'), salt, 1000, 66, 'sha1');
+  const cipher = crypto.createCipheriv('aes-256-ecb', keys.subarray(0, 32), null);
   cipher.setAutoPadding(false);
   const mac = crypto.createHmac('sha1', keys.subarray(32, 64));
   const verifier = keys.subarray(64, 66);
@@ -166,15 +151,13 @@ function aes(password, salt) {
       for (let b = 0; b < count; b++) {
         // WinZip AES uses a little-endian counter starting at 1.
         for (let i = 0; i < 16; i++) {
-          counter[i]++; if (counter[i] !==
-            0) break;
+          counter[i]++; if (counter[i] !== 0) break;
         }
         counter.copy(counters, b * 16);
       }
       const stream = cipher.update(counters);
       const needed = data.length - index;
-      for (let j = 0; j < needed; j++) output[index + j] = data[index + j] ^
-        stream[j];
+      for (let j = 0; j < needed; j++) output[index + j] = data[index + j] ^ stream[j];
       unused = stream.subarray(needed);
     }
     return output;
@@ -191,16 +174,11 @@ function aes(password, salt) {
 function aesExtra(extra) {
   let offset = 0;
   while (offset + 4 <= extra.length) {
-    const key = extra.readUInt16LE(offset), size =
-      extra.readUInt16LE(offset + 2);
-    if (offset + 4 + size >
-      extra.length) throw Error('Ungültiges ZIP-Zusatzfeld');
+    const key = extra.readUInt16LE(offset), size = extra.readUInt16LE(offset + 2);
+    if (offset + 4 + size > extra.length) throw Error('Ungültiges ZIP-Zusatzfeld');
     if (key === 0x9901) {
       const field = extra.subarray(offset + 4, offset + 4 + size);
-      if (size !== 7 || field.readUInt16LE(0) !== 2 ||
-        field.toString('ascii', 2, 4) !== 'AE' ||
-        field[4] !== 3 || field.readUInt16LE(5) !==
-        0) throw Error('Nicht unterstützte ZIP-Verschlüsselung');
+      if (size !== 7 || field.readUInt16LE(0) !== 2 || field.toString('ascii', 2, 4) !== 'AE' || field[4] !== 3 || field.readUInt16LE(5) !== 0) throw Error('Nicht unterstützte ZIP-Verschlüsselung');
       return true;
     }
     offset += 4 + size;
@@ -223,16 +201,10 @@ export function writeReadableZip(sourceRoot, destination, password, timestamp =
   const files = walk(sourceRoot, ['data', 'images', 'documents']);
   files.unshift({
     name: 'README.txt', contents: Buffer.from(
-      `WhiskyCollectionManager - passwortgeschuetzte Sicherung \
-(AES-256)\nErstellt: ${timestamp}\n\n` +
-      'data/collection.json: Sammlung (JSON)\ndata/warehouse.json: \
-Lagerverwaltung (JSON, falls vorhanden)\ndata/user.json: Nutzer und \
-Login-Konfiguration (Passwort-Hashes, falls vorhanden)\nimages/: \
-Bilder\ndocuments/: Dokumente\n' +
-      'Zum Oeffnen 7-Zip oder ein anderes WinZip-AES-256-kompatibles \
-Programm verwenden.\n' +
-      'Ohne das Backup-Passwort lassen sich die Dateien nicht \
-entschluesseln.\n',
+      `WhiskyCollectionManager - passwortgeschuetzte Sicherung (AES-256)\nErstellt: ${timestamp}\n\n` +
+      'data/collection.json: Sammlung (JSON)\ndata/warehouse.json: Lagerverwaltung (JSON, falls vorhanden)\ndata/user.json: Nutzer und Login-Konfiguration (Passwort-Hashes, falls vorhanden)\nimages/: Bilder\ndocuments/: Dokumente\n' +
+      'Zum Oeffnen 7-Zip oder ein anderes WinZip-AES-256-kompatibles Programm verwenden.\n' +
+      'Ohne das Backup-Passwort lassen sich die Dateien nicht entschluesseln.\n',
       'utf8'
     ),
   });
@@ -243,16 +215,12 @@ entschluesseln.\n',
     for (const entry of files) {
       const name = Buffer.from(entry.name, 'utf8');
       if (name.length > 65535) throw Error('Dateiname zu lang');
-      const stat = entry.source ? fs.lstatSync(entry.source) :
-        {size: entry.contents.length};
-      if (entry.source &&
-        !stat.isFile()) throw Error('Backup-Quelle hat sich verändert');
+      const stat = entry.source ? fs.lstatSync(entry.source) : {size: entry.contents.length};
+      if (entry.source && !stat.isFile()) throw Error('Backup-Quelle hat sich verändert');
       const size = stat.size, encryptedSize = size + OVERHEAD;
       const localSize = 30 + name.length + AES_EXTRA.length;
       if (encryptedSize > MAX32 || offset + encryptedSize + localSize > MAX32) {
-        throw Error(
-          'ZIP-Backup größer als 4 GiB. Das aktuelle ZIP32-Format \
-unterstützt diese Größe nicht.');
+        throw Error('ZIP-Backup größer als 4 GiB. Das aktuelle ZIP32-Format unterstützt diese Größe nicht.');
       }
       const header = Buffer.alloc(30);
       header.writeUInt32LE(0x04034b50, 0);
@@ -296,8 +264,7 @@ unterstützt diese Größe nicht.');
       offset += localSize + encryptedSize;
     }
     const directorySize = central.reduce((sum, item) => sum + item.length, 0);
-    if (files.length > 65535 || offset + directorySize + 22 >
-      MAX32) throw Error('ZIP-Archiv zu groß');
+    if (files.length > 65535 || offset + directorySize + 22 > MAX32) throw Error('ZIP-Archiv zu groß');
     for (const chunk of central) write(fd, chunk);
     const end = Buffer.alloc(22);
     end.writeUInt32LE(0x06054b50, 0);
@@ -328,8 +295,7 @@ unterstützt diese Größe nicht.');
  */
 function readAt(fd, length, offset) {
   const buffer = Buffer.alloc(length);
-  if (fs.readSync(fd, buffer, 0, length, offset) !==
-    length) throw Error('Unvollständiges ZIP-Archiv');
+  if (fs.readSync(fd, buffer, 0, length, offset) !== length) throw Error('Unvollständiges ZIP-Archiv');
   return buffer;
 }
 
@@ -350,76 +316,52 @@ export function inspectReadableZip(archive, extractTo = null, password = '') {
     const fileSize = fs.fstatSync(fd).size;
     if (fileSize < 22) throw Error('Unvollständiges ZIP');
     const end = readAt(fd, 22, fileSize - 22);
-    if (end.readUInt32LE(0) !== 0x06054b50 || end.readUInt16LE(20) !==
-      0) throw Error('ZIP-Ende fehlt');
+    if (end.readUInt32LE(0) !== 0x06054b50 || end.readUInt16LE(20) !== 0) throw Error('ZIP-Ende fehlt');
     const count = end.readUInt16LE(10);
-    const centralSize = end.readUInt32LE(12), centralOffset =
-      end.readUInt32LE(16);
-    if (count > 20000 || centralOffset + centralSize !== fileSize -
-      22) throw Error('ZIP-Verzeichnis ungültig');
+    const centralSize = end.readUInt32LE(12), centralOffset = end.readUInt32LE(16);
+    if (count > 20000 || centralOffset + centralSize !== fileSize - 22) throw Error('ZIP-Verzeichnis ungültig');
     let offset = centralOffset, totalSize = 0;
     for (let i = 0; i < count; i++) {
       const head = readAt(fd, 46, offset);
-      if (head.readUInt32LE(0) !==
-        0x02014b50) throw Error('ZIP-Eintrag ungültig');
+      if (head.readUInt32LE(0) !== 0x02014b50) throw Error('ZIP-Eintrag ungültig');
       const flags = head.readUInt16LE(8), method = head.readUInt16LE(10);
       const isAes = flags === 0x0801 && method === 99;
-      if (!isAes && (![0, 0x0800].includes(flags) || method !==
-        0)) throw Error(
-          'Nicht unterstützte ZIP-Verschlüsselung oder Kompression');
-      const length = head.readUInt16LE(28), extraLen =
-        head.readUInt16LE(30), comment = head.readUInt16LE(32);
+      if (!isAes && (![0, 0x0800].includes(flags) || method !== 0)) throw Error('Nicht unterstützte ZIP-Verschlüsselung oder Kompression');
+      const length = head.readUInt16LE(28), extraLen = head.readUInt16LE(30), comment = head.readUInt16LE(32);
       const name = readAt(fd, length, offset + 46).toString('utf8');
       const extra = readAt(fd, extraLen, offset + 46 + length);
-      if (isAes !== aesExtra(extra)) throw Error(
-        'ZIP-AES-Feld fehlt oder ist ungültig');
-      const size = head.readUInt32LE(24), compressed =
-        head.readUInt32LE(20), crc = head.readUInt32LE(16);
-      if (!safeName(name) ||
-        seen.has(name)) throw Error('Unsicherer oder doppelter ZIP-Dateiname');
-      if (isAes && (compressed !== size + OVERHEAD || crc !==
-        0)) throw Error('ZIP-AES-Größe ungültig');
+      if (isAes !== aesExtra(extra)) throw Error('ZIP-AES-Feld fehlt oder ist ungültig');
+      const size = head.readUInt32LE(24), compressed = head.readUInt32LE(20), crc = head.readUInt32LE(16);
+      if (!safeName(name) || seen.has(name)) throw Error('Unsicherer oder doppelter ZIP-Dateiname');
+      if (isAes && (compressed !== size + OVERHEAD || crc !== 0)) throw Error('ZIP-AES-Größe ungültig');
       if (!isAes && compressed !== size) throw Error('ZIP-Größe ungültig');
       seen.add(name);
       totalSize += size;
-      if (totalSize > 16 * 1024 * 1024 *
-        1024) throw Error('ZIP zu groß für die Prüfung');
+      if (totalSize > 16 * 1024 * 1024 * 1024) throw Error('ZIP zu groß für die Prüfung');
       const localOffset = head.readUInt32LE(42);
-      if (localOffset + 30 + length + extraLen + compressed >
-        centralOffset) throw Error('ZIP-Datenbereich ungültig');
+      if (localOffset + 30 + length + extraLen + compressed > centralOffset) throw Error('ZIP-Datenbereich ungültig');
       const local = readAt(fd, 30, localOffset);
-      if (local.readUInt32LE(0) !== 0x04034b50 || local.readUInt16LE(6) !==
-        flags ||
-        local.readUInt16LE(8) !== method || local.readUInt16LE(26) !== length ||
-        local.readUInt32LE(14) !== crc || local.readUInt32LE(18) !==
-        compressed ||
-        local.readUInt32LE(22) !== size || local.readUInt16LE(28) !==
-        extraLen) throw Error('ZIP-Kopf stimmt nicht überein');
+      if (local.readUInt32LE(0) !== 0x04034b50 || local.readUInt16LE(6) !== flags || local.readUInt16LE(8) !== method || local.readUInt16LE(26) !== length ||
+        local.readUInt32LE(14) !== crc || local.readUInt32LE(18) !== compressed ||
+        local.readUInt32LE(22) !== size || local.readUInt16LE(28) !== extraLen) throw Error('ZIP-Kopf stimmt nicht überein');
       const localName = readAt(fd, length, localOffset + 30).toString('utf8');
       const localExtra = readAt(fd, extraLen, localOffset + 30 + length);
-      if (localName !== name || isAes !==
-        aesExtra(localExtra)) throw Error(
-          'ZIP-Dateiname oder AES-Feld ungültig');
+      if (localName !== name || isAes !== aesExtra(localExtra)) throw Error('ZIP-Dateiname oder AES-Feld ungültig');
       const start = localOffset + 30 + length + extraLen;
       entries.push({name, size, crc, start, isAes});
       encrypted ||= isAes;
       offset += 46 + length + extraLen + comment;
     }
-    if (offset !== centralOffset + centralSize ||
-      !seen.has('data/collection.json')) throw Error(
-        'ZIP-Verzeichnis unvollständig');
+    if (offset !== centralOffset + centralSize || !seen.has('data/collection.json')) throw Error('ZIP-Verzeichnis unvollständig');
     if (extractTo) fs.mkdirSync(extractTo, {recursive: true, mode: 0o700});
     for (const entry of entries) {
-      let current = 0xffffffff, remaining = entry.size, position =
-        entry.start, context;
+      let current = 0xffffffff, remaining = entry.size, position = entry.start, context;
       if (entry.isAes) {
-        if (!password) throw Error(
-          'ZIP ist mit AES-256 geschützt. Bitte das Backup-Passwort eingeben.');
+        if (!password) throw Error('ZIP ist mit AES-256 geschützt. Bitte das Backup-Passwort eingeben.');
         const salt = readAt(fd, 16, position);
         const verifier = readAt(fd, 2, position + 16);
         context = aes(password, salt);
-        if (!crypto.timingSafeEqual(verifier, context.verifier)) throw Error(
-          'Backup-Passwort falsch.');
+        if (!crypto.timingSafeEqual(verifier, context.verifier)) throw Error('Backup-Passwort falsch.');
         position += 18;
       }
       const destination = extractTo && path.join(extractTo, entry.name);
@@ -432,24 +374,19 @@ export function inspectReadableZip(archive, extractTo = null, password = '') {
         while (remaining) {
           const bytes = Math.min(BLOCK, remaining);
           const chunk = readAt(fd, bytes, position);
-          const plain = entry.isAes ? (context.mac.update(chunk),
-            context.xor(chunk)) : chunk;
+          const plain = entry.isAes ? (context.mac.update(chunk), context.xor(chunk)) : chunk;
           if (!entry.isAes) current = crc32(plain, current);
           if (out !== undefined) write(out, plain);
           position += bytes; remaining -= bytes;
         }
       } finally {if (out !== undefined) fs.closeSync(out);}
       if (entry.isAes) {
-        const expected = readAt(fd, 10, position), actual = context.mac
-          .digest().subarray(0, 10);
-        if (!crypto.timingSafeEqual(actual, expected)) throw Error(
-          `ZIP-Authentifizierung fehlgeschlagen: ${entry.name}`);
-      } else if (((current ^ 0xffffffff) >>> 0) !==
-        entry.crc) throw Error(`ZIP-Prüfsumme ungültig: ${entry.name}`);
+        const expected = readAt(fd, 10, position), actual = context.mac.digest().subarray(0, 10);
+        if (!crypto.timingSafeEqual(actual, expected)) throw Error(`ZIP-Authentifizierung fehlgeschlagen: ${entry.name}`);
+      } else if (((current ^ 0xffffffff) >>> 0) !== entry.crc) throw Error(`ZIP-Prüfsumme ungültig: ${entry.name}`);
     }
     if (extractTo) {
-      JSON.parse(fs.readFileSync(path.join(extractTo, 'data/collection.json'),
-        'utf8'));
+      JSON.parse(fs.readFileSync(path.join(extractTo, 'data/collection.json'), 'utf8'));
       extracted = true;
     }
     return {files: entries.length, bytes: fileSize, encrypted};

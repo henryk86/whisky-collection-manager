@@ -6,14 +6,8 @@ test(
   'photo order moves forward and backward without changing the original list',
   () => {
     const ids = ['first', 'second', 'third', 'fourth'];
-    assert.deepEqual(
-      reorderedPhotoIds(ids, 'first', 'third'),
-      ['second', 'third', 'first', 'fourth']
-    );
-    assert.deepEqual(
-      reorderedPhotoIds(ids, 'fourth', 'second'),
-      ['first', 'fourth', 'second', 'third']
-    );
+    assert.deepEqual(reorderedPhotoIds(ids, 'first', 'third'), ['second', 'third', 'first', 'fourth']);
+    assert.deepEqual(reorderedPhotoIds(ids, 'fourth', 'second'), ['first', 'fourth', 'second', 'third']);
     assert.deepEqual(ids, ['first', 'second', 'third', 'fourth']);
   }
 );

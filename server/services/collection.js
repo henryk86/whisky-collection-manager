@@ -16,9 +16,7 @@ export function getCollection() {
  * @return {!Object} Structured result for the caller.
  */
 export function getNextInventoryNumber() {
-  return {
-    number: suggestNumber(read()),
-  };
+  return {number: suggestNumber(read()), };
 }
 
 /**
@@ -31,10 +29,7 @@ export function getNextInventoryNumber() {
 export async function importCollection(input) {
   const migrated = migrateCollectionToCurrent(input).collection;
   await change(collection => {
-    migrated.reservedInventoryNumbers = [...new Set([
-      ...migrated.reservedInventoryNumbers,
-      ...collection.reservedInventoryNumbers,
-    ])];
+    migrated.reservedInventoryNumbers = [...new Set([...migrated.reservedInventoryNumbers, ...collection.reservedInventoryNumbers,])];
     for (const key of Object.keys(collection)) {
       delete collection[key];
     }

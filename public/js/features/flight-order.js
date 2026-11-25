@@ -49,8 +49,7 @@ export function bindFlightSorting(root, onReorder) {
    * @return {*} Result computed from the supplied inputs.
    */
   const rowUnderPointer = (x, y, list) => {
-    const row = document.elementFromPoint(x,
-      y)?.closest?.('.tasting-flight-member');
+    const row = document.elementFromPoint(x, y)?.closest?.('.tasting-flight-member');
     return row?.parentElement === list ? row : null;
   };
 
@@ -77,16 +76,14 @@ export function bindFlightSorting(root, onReorder) {
     const {handle, pointerId, list} = drag;
     clearTargets(list);
     drag = null;
-    if (handle.hasPointerCapture?.(pointerId)) handle.releasePointerCapture(
-      pointerId);
+    if (handle.hasPointerCapture?.(pointerId)) handle.releasePointerCapture(pointerId);
   }
   root.addEventListener('pointerdown', event => {
     if (!event.isPrimary || event.button !== 0 || drag) return;
     const handle = event.target.closest?.('[data-flight-drag]');
     const row = handle?.closest('.tasting-flight-member');
     const list = row?.parentElement;
-    if (!list?.matches('.tasting-flight-members-list') || !row.dataset
-      .tastingId) return;
+    if (!list?.matches('.tasting-flight-members-list') || !row.dataset.tastingId) return;
     drag = {
       handle,
       list,
@@ -100,29 +97,22 @@ export function bindFlightSorting(root, onReorder) {
   });
   root.addEventListener('pointermove', event => {
     if (!drag || drag.pointerId !== event.pointerId) return;
-    if (!drag.moved && (event.clientX - drag.x) ** 2 + (event.clientY -
-      drag.y) ** 2 < 64) return;
+    if (!drag.moved && (event.clientX - drag.x) ** 2 + (event.clientY - drag.y) ** 2 < 64) return;
     drag.moved = true;
     event.preventDefault();
     clearTargets(drag.list);
     drag.row.classList.add('is-dragging');
     const target = destination(event.clientX, event.clientY, drag.list);
     if (target && target.row !== drag.row)
-      target.row.classList.add(target.after ? 'is-drop-after' :
-        'is-drop-before');
+      target.row.classList.add(target.after ? 'is-drop-after' : 'is-drop-before');
   });
   root.addEventListener('pointerup', event => {
     if (!drag || drag.pointerId !== event.pointerId) return;
     const {row, list, moved} = drag;
-    const target = moved ?
-      destination(event.clientX, event.clientY, list) : null;
+    const target = moved ? destination(event.clientX, event.clientY, list) : null;
     if (moved) event.preventDefault();
     release();
-    if (target && target.row !== row) void onReorder(
-      row.dataset.tastingId,
-      target.row.dataset.tastingId,
-      target.after
-    );
+    if (target && target.row !== row) void onReorder(row.dataset.tastingId, target.row.dataset.tastingId, target.after);
   });
   root.addEventListener(
     'pointercancel',

@@ -18,8 +18,7 @@ import {
 } from '../ui/action-icons.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/analytics.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/analytics.html', import.meta.url));
 
 
 export const ANALYSIS_PAGES = Object.freeze([
@@ -128,9 +127,7 @@ export const ANALYSIS_PAGES = Object.freeze([
  * @param {*} v Value to evaluate.
  * @return {string} Resulting text.
  */
-const number = v => Number.isFinite(v) ?
-  new Intl.NumberFormat(currentLanguage(), {maximumFractionDigits: 1})
-    .format(v) : '–';
+const number = v => Number.isFinite(v) ? new Intl.NumberFormat(currentLanguage(), {maximumFractionDigits: 1}).format(v) : '–';
 
 /**
  * Builds the localized money text for the current language.
@@ -141,14 +138,9 @@ const number = v => Number.isFinite(v) ?
  */
 const money = (v, currency) => {
   if (!Number.isFinite(v)) return '–';
-  if (currency === 'UNBEKANNT' || !/^[A-Z]{3}$/
-    .test(currency)) return t("analytics.finance.unknownCurrency",
-      {amount: number(v)});
+  if (currency === 'UNBEKANNT' || !/^[A-Z]{3}$/.test(currency)) return t("analytics.finance.unknownCurrency", {amount: number(v)});
   try {
-    return new Intl.NumberFormat(
-      currentLanguage(),
-      {style: 'currency', currency, maximumFractionDigits: 2}
-    ).format(v);
+    return new Intl.NumberFormat(currentLanguage(), {style: 'currency', currency, maximumFractionDigits: 2}).format(v);
   }
   catch {return `${number(v)} ${currency}`;}
 };
@@ -201,8 +193,7 @@ const CATEGORY_KEYS = Object.freeze({
  * @param {*} label Label shown to the user.
  * @return {*} Result computed from the supplied inputs.
  */
-const categoryLabel = label => CATEGORY_KEYS[label] ?
-  t(CATEGORY_KEYS[label]) : label;
+const categoryLabel = label => CATEGORY_KEYS[label] ? t(CATEGORY_KEYS[label]) : label;
 const COUNTRY_KEYS = Object.freeze({
   'Schottland': 'countries.scotland',
   'Vereinigtes Königreich': 'countries.unitedKingdom',
@@ -243,8 +234,7 @@ const COUNTRY_KEYS = Object.freeze({
  * @param {*} name Environment variable or setting name.
  * @return {*} Result computed from the supplied inputs.
  */
-const countryName = name => COUNTRY_KEYS[name] ? t(COUNTRY_KEYS[name]) :
-  categoryLabel(name);
+const countryName = name => COUNTRY_KEYS[name] ? t(COUNTRY_KEYS[name]) : categoryLabel(name);
 
 /**
  * Derives the safe result from the supplied values.
@@ -259,8 +249,7 @@ const safe = value => escapeHtml(value);
  * @return {string} Resulting text.
  */
 const empty = () => emptyState({
-  description: t("analytics.empty.noMatchingData"
-  ), variant: "inline",
+  description: t("analytics.empty.noMatchingData"), variant: "inline",
 });
 
 /**
@@ -275,10 +264,7 @@ const empty = () => emptyState({
 function panel(title, content, note = '', extra = '') {
   return contentPanel({
     tag: 'section', variant: 'analytics', className: extra,
-    content: composeMarkup(headingTitle({title}), content, note ?
-      renderTemplate('analyticsNote', {
-        safe: safe(note),
-      }) : ''),
+    content: composeMarkup(headingTitle({title}), content, note ? renderTemplate('analyticsNote', {safe: safe(note), }) : ''),
   });
 }
 
@@ -295,11 +281,8 @@ function metric(label, value, detail = '') {
     className: 'stat analytics-metric',
     content: renderTemplate('contentSpan', {
       safe: safe(label),
-      safe2: safe(
-        value),
-      small: detail ? renderTemplate('small', {
-        safe: safe(detail),
-      }) : '',
+      safe2: safe(value),
+      small: detail ? renderTemplate('small', {safe: safe(detail), }) : '',
     }),
   });
 }
@@ -311,9 +294,7 @@ function metric(label, value, detail = '') {
  * @return {string} Resulting text.
  */
 function metricGrid(cards) {
-  return renderTemplate('stats', {
-    cards: composeMarkup(cards),
-  });
+  return renderTemplate('stats', {cards: composeMarkup(cards), });
 }
 
 /**
@@ -336,9 +317,7 @@ function sectionHeading(text) {
  * @return {string} Resulting text.
  */
 function two(...items) {
-  return renderTemplate('analyticsTwo', {
-    items: composeMarkup(items),
-  });
+  return renderTemplate('analyticsTwo', {items: composeMarkup(items), });
 }
 
 /**
@@ -358,16 +337,12 @@ function rankBars(rows, {value = 'count', format = number, limit = 14,
       const width = Math.max(0, (Number(row[value]) || 0) / max * 100);
       const label = safe(categoryLabel(row.name));
       const title = safe(format(row[value], row.currency));
-      const opener = drill && row.id !== undefined && row.id !== null &&
-        String(row.id).trim() ?
+      const opener = drill && row.id !== undefined && row.id !== null && String(row.id).trim() ?
         renderTemplate('analyticsDistillery', {
           safe: safe(row.id),
-          collectionByName: t("analyt\
-ics.filters.collectionByName", {name: label}),
+          collectionByName: t("analytics.filters.collectionByName", {name: label}),
           label: label,
-        }) : renderTemplate('analyticsBarLabel', {
-          label: label,
-        });
+        }) : renderTemplate('analyticsBarLabel', {label: label, });
       return renderTemplate('analyticsBarRow', {
         opener: opener,
         toFixed: width.toFixed(2),
@@ -409,35 +384,26 @@ function composition(rows, {drill = null} = {}) {
   const slices = valid.map((row, i) => {
     const from = angle;
     angle += row.count / total * 100;
-    return `${colors[i %
-      colors.length]} ${from.toFixed(2)}% ${angle.toFixed(2)}%`;
+    return `${colors[i % colors.length]} ${from.toFixed(2)}% ${angle.toFixed(2)}%`;
   });
   const legend = composeMarkup(valid.map((row, i) => {
     const label = safe(row.displayName ?? categoryLabel(row.name));
     const count = `${number(row.count)} (${number(row.count / total * 100)} %)`;
-    const action = drill && (drill.kind === 'country' ||
-      Object.hasOwn(drill, row.name)) ?
-      ` data-act="analytics-drill-filter" data-kind="${safe(drill.kind
-      )}" data-value="${safe(drill.kind === 'country' ? row.name : drill[row
-        .name])}"` : '';
+    const action = drill && (drill.kind === 'country' || Object.hasOwn(drill, row.name)) ?
+      ` data-act="analytics-drill-filter" data-kind="${safe(drill.kind)}" data-value="${safe(drill.kind === 'country' ? row.name : drill[row.name])}"` : '';
     return renderTemplate('legend', {
       action: action ? 'button' : 'div',
       buttonType: action ? ' type="button"' : '',
-      action2: action ? ' analytics-link' :
-        '',
+      action2: action ? ' analytics-link' : '',
       action3: action,
-      colors: colors[i %
-        colors.length
-      ],
+      colors: colors[i % colors.length],
       label: label,
       count: count,
-      action4: action ?
-        'button' : 'div',
+      action4: action ? 'button' : 'div',
     });
   }));
   return renderTemplate('analyticsComposition', {
-    safe: safe(valid.map(row => `${row.name}: ${row.count}`)
-      .join(', ')),
+    safe: safe(valid.map(row => `${row.name}: ${row.count}`).join(', ')),
     slices: slices.join(','),
     number: number(total),
     legend: legend,
@@ -454,14 +420,8 @@ function composition(rows, {drill = null} = {}) {
 function detailsTable(headings, rows) {
   if (!rows.length) return empty();
   return renderTemplate('analyticsTableWrap', {
-    headings: composeMarkup(headings.map(h => renderTemplate('th', {
-      safe: safe(h),
-    }))),
-    rows: composeMarkup(rows.map(cells => renderTemplate('tr', {
-      cells: composeMarkup(cells.map(cell => renderTemplate('td', {
-        cell: cell,
-      }))),
-    }))),
+    headings: composeMarkup(headings.map(h => renderTemplate('th', {safe: safe(h), }))),
+    rows: composeMarkup(rows.map(cells => renderTemplate('tr', {cells: composeMarkup(cells.map(cell => renderTemplate('td', {cell: cell, }))), }))),
   });
 }
 
@@ -475,9 +435,7 @@ function detailsTable(headings, rows) {
 function bottlingLink(item, extra = '') {
   return renderTemplate('open', {
     safe: safe(item.id),
-    bottleId: item.bottleId ?
-      ` data-bottle-id="${safe(item.bottleId)}"` :
-      '',
+    bottleId: item.bottleId ? ` data-bottle-id="${safe(item.bottleId)}"` : '',
     safe2: safe(item.name),
     extra: extra,
   });
@@ -535,13 +493,11 @@ function timeChart(title, rows, state, {field = 'count', currency = ''} = {}) {
     const key = period === 'year' ? row.name.slice(0, 4) : row.name.slice(0, 7);
     aggregate.set(key, (aggregate.get(key) || 0) + (row[field] || 0));
   });
-  const data = [...aggregate].sort(([a], [b]) => a.localeCompare(b))
-    .map(([name, value]) => ({name, count: value}));
+  const data = [...aggregate].sort(([a], [b]) => a.localeCompare(b)).map(([name, value]) => ({name, count: value}));
   return panel(
     title,
     data.length ? periodRows(data, 'count', currency) : empty(),
-    !rows.length ? t("analytics.notes.validDatesOnly") :
-      t("analytics.notes.dateRequiredForTimeline")
+    !rows.length ? t("analytics.notes.validDatesOnly") : t("analytics.notes.dateRequiredForTimeline")
   );
 }
 
@@ -553,16 +509,13 @@ function timeChart(title, rows, state, {field = 'count', currency = ''} = {}) {
  * @return {string} Resulting text.
  */
 function dateBoundary(boundary, value) {
-  const caption = boundary === 'start' ? t("analytics.filters.from") :
-    t("analytics.filters.until");
+  const caption = boundary === 'start' ? t("analytics.filters.from") : t("analytics.filters.until");
   return renderTemplate('analyticsDateBoundary', {
     caption: caption,
     boundary: boundary,
     boundary2: boundary,
-    dateAccessibleName: t("analytics.filters.dateAccessibleName",
-      {label: caption}),
-    readAnalyticsDate: readAnalyticsDate(
-      value),
+    dateAccessibleName: t("analytics.filters.dateAccessibleName", {label: caption}),
+    readAnalyticsDate: readAnalyticsDate(value),
   });
 }
 
@@ -575,12 +528,9 @@ function dateBoundary(boundary, value) {
 function periodControls(state) {
   const selected = state.analyticsPeriod || 'month';
   return renderTemplate('analyticsPeriod', {
-    selected: selected ===
-      'month' ? 'selected' : '',
-    selected2: selected === 'year' ? ' selected' :
-      '',
-    dateBoundary: dateBoundary('start', state.analyticsStartDate ||
-      ''),
+    selected: selected === 'month' ? 'selected' : '',
+    selected2: selected === 'year' ? ' selected' : '',
+    dateBoundary: dateBoundary('start', state.analyticsStartDate || ''),
     dateBoundary2: dateBoundary('end', state.analyticsEndDate || ''),
   });
 }
@@ -600,10 +550,7 @@ function inventory(analytics) {
     metric(
       t("analytics.inventory.nominalVolume"),
       `${number(scope.volumeLitres)} l`,
-      t(
-        "analytics.inventory.volumeKnown",
-        {known: scope.knownVolumes, total: scope.bottles}
-      )
+      t("analytics.inventory.volumeKnown", {known: scope.knownVolumes, total: scope.bottles})
     ),
   ]), two(
     panel(
@@ -658,11 +605,7 @@ function provenance(analytics) {
   ), two(
     panel(
       t("analytics.origin.countries"),
-      composition(
-        d.byCountry.map(row =>
-          ({...row, displayName: countryName(row.name)})),
-        {drill: {kind: 'country'}}
-      ),
+      composition(d.byCountry.map(row => ({...row, displayName: countryName(row.name)})), {drill: {kind: 'country'}}),
       t("analytics.notes.originAttribution")
     ),
     panel(t("analytics.origin.whiskyRegions"), rankBars(d.byRegion)),
@@ -688,33 +631,22 @@ function profile(analytics) {
    * @param {*} rows Input records to process.
    * @return {!Array<*>} Resulting entries in their output order.
    */
-  const sortYears = rows => [...rows].sort((a, b) => a.name
-    .localeCompare(b.name, 'de'));
+  const sortYears = rows => [...rows].sort((a, b) => a.name.localeCompare(b.name, 'de'));
   return composeMarkup(
     two(
-      panel(
-        t("analytics.age.distribution"),
-        rankBars(d.ageClasses),
-        t("analytics.notes.nasAndMissingAge")
-      ),
+      panel(t("analytics.age.distribution"), rankBars(d.ageClasses), t("analytics.notes.nasAndMissingAge")),
       panel(
         t("analytics.age.title"),
         metricGrid([
           metric(
             t("analytics.statistics.average"),
-            d.age.avg == null ? '–' :
-              t("analytics.age.years", {count: number(d.age.avg)})
+            d.age.avg == null ? '–' : t("analytics.age.years", {count: number(d.age.avg)})
           ),
           metric(
             t("analytics.age.youngest"),
-            d.age.min == null ? '–' :
-              t("analytics.age.years", {count: number(d.age.min)})
+            d.age.min == null ? '–' : t("analytics.age.years", {count: number(d.age.min)})
           ),
-          metric(
-            t("analytics.age.oldest"),
-            d.age.max == null ? '–' :
-              t("analytics.age.years", {count: number(d.age.max)})
-          ),
+          metric(t("analytics.age.oldest"), d.age.max == null ? '–' : t("analytics.age.years", {count: number(d.age.max)})),
         ]),
         t("analytics.statistics.ageSampleCount", {count: d.age.count})
       )
@@ -725,18 +657,9 @@ function profile(analytics) {
       panel(
         t("analytics.strength.title"),
         metricGrid([
-          metric(
-            t("analytics.statistics.average"),
-            d.abv.avg == null ? '–' : `${number(d.abv.avg)} %`
-          ),
-          metric(
-            t("analytics.statistics.minimum"),
-            d.abv.min == null ? '–' : `${number(d.abv.min)} %`
-          ),
-          metric(
-            t("analytics.statistics.maximum"),
-            d.abv.max == null ? '–' : `${number(d.abv.max)} %`
-          ),
+          metric(t("analytics.statistics.average"), d.abv.avg == null ? '–' : `${number(d.abv.avg)} %`),
+          metric(t("analytics.statistics.minimum"), d.abv.min == null ? '–' : `${number(d.abv.min)} %`),
+          metric(t("analytics.statistics.maximum"), d.abv.max == null ? '–' : `${number(d.abv.max)} %`),
         ]),
         t("analytics.statistics.abvSampleCount", {count: d.abv.count})
       )
@@ -756,17 +679,12 @@ function profile(analytics) {
     ),
     "\n    ",
     two(
-      panel(
-        t("analytics.casks.types"),
-        rankBars(d.casks),
-        t("analytics.notes.caskFieldsUnmodified")
-      ),
+      panel(t("analytics.casks.types"), rankBars(d.casks), t("analytics.notes.caskFieldsUnmodified")),
       panel(
         t("analytics.production.limitedEditions"),
         detailsTable(
           [t("analytics.table.bottling"), t("analytics.table.edition")],
-          d.edition.slice(0, 25).map(item =>
-            [bottlingLink(item), safe(number(item.value))])
+          d.edition.slice(0, 25).map(item => [bottlingLink(item), safe(number(item.value))])
         ),
         t("analytics.notes.limitedEditionEligibility")
       )
@@ -787,52 +705,37 @@ function finance(analytics, state) {
   const main = byCurrency.length ? composeMarkup(byCurrency.map(p => panel(
     t("analytics.finance.expensesByCurrency", {currency: p.currency}),
     metricGrid([
-      metric(
-        t("analytics.finance.recordedExpenses"),
-        money(p.total, p.currency)
-      ),
+      metric(t("analytics.finance.recordedExpenses"), money(p.total, p.currency)),
       metric(t("analytics.statistics.average"), money(p.avg, p.currency)),
-      metric(
-        t("analytics.finance.cheapestPurchase"),
-        money(p.min, p.currency)
-      ),
-      metric(
-        t("analytics.finance.mostExpensivePurchase"),
-        money(p.max, p.currency)
-      ),
+      metric(t("analytics.finance.cheapestPurchase"), money(p.min, p.currency)),
+      metric(t("analytics.finance.mostExpensivePurchase"), money(p.max, p.currency)),
       metric(
         t("analytics.finance.pricePerLiter"),
         money(p.litrePrice, p.currency),
         t("analytics.finance.priceAndVolumeCount", {count: p.withVolumeCount})
       ),
     ]),
-    t(
-      "analytics.statistics.documentedPriceCount",
-      {count: p.count, total: scope.bottles}
-    )
-  ))) : panel(t("analytics.finance.expensesPricesAndUnitPrices"),
-    empty());
-  const byPrices = d.mostExpensive.map(item =>
-    [bottlingLink(item), safe(money(item.price, item.currency))]);
-  const costPages = [...new Set(d.byDistillery.map(row => row.currency))]
-    .map(currency => panel(
-      t("analytics.finance.purchaseCostsByDistillery", {currency}),
-      rankBars(
-        d.byDistillery.filter(row => row.currency === currency),
-        {
-          value: 'total',
-          /**
-           * Derives the format result from the supplied values.
-           *
-           * @param {*} v Value to evaluate.
-           * @return {*} Result computed from the supplied inputs.
-           */
-          format: v =>
-            money(v, currency), limit: 20, drill: true,
-        }
-      ),
-      t("analytics.notes.multiDistilleryCosts")
-    ));
+    t("analytics.statistics.documentedPriceCount", {count: p.count, total: scope.bottles})
+  ))) : panel(t("analytics.finance.expensesPricesAndUnitPrices"), empty());
+  const byPrices = d.mostExpensive.map(item => [bottlingLink(item), safe(money(item.price, item.currency))]);
+  const costPages = [...new Set(d.byDistillery.map(row => row.currency))].map(currency => panel(
+    t("analytics.finance.purchaseCostsByDistillery", {currency}),
+    rankBars(
+      d.byDistillery.filter(row => row.currency === currency),
+      {
+        value: 'total',
+        /**
+         * Derives the format result from the supplied values.
+         *
+         * @param {*} v Value to evaluate.
+         * @return {*} Result computed from the supplied inputs.
+         */
+        format: v =>
+          money(v, currency), limit: 20, drill: true,
+      }
+    ),
+    t("analytics.notes.multiDistilleryCosts")
+  ));
   const merchants = d.merchants.map(row => [
     safe(categoryLabel(row.name)),
     safe(row.currency),
@@ -853,10 +756,7 @@ function finance(analytics, state) {
     two: two(
       panel(
         t("analytics.finance.mostExpensiveBottlesByCurrency"),
-        detailsTable(
-          [t("analytics.table.bottle"), t("analytics.table.price")],
-          byPrices
-        ),
+        detailsTable([t("analytics.table.bottle"), t("analytics.table.price")], byPrices),
         t("analytics.notes.priceCurrencyComparison")
       ),
       panel(
@@ -884,42 +784,24 @@ function finance(analytics, state) {
  * @return {string} Resulting text.
  */
 function timeline(analytics, state) {
-  const timelineData = analytics.timeline, rating =
-    analytics.tasting, duration = analytics.consumption;
+  const timelineData = analytics.timeline, rating = analytics.tasting, duration = analytics.consumption;
   /**
    * Builds the localized days text for the current language.
    *
    * @param {*} value Value to process.
    * @return {*} Result computed from the supplied inputs.
    */
-  const days = value => value == null ? '–' :
-    t('analytics.consumption.days', {count: number(value)});
+  const days = value => value == null ? '–' : t('analytics.consumption.days', {count: number(value)});
   return composeMarkup(
     periodControls(state),
     two(
-      timeChart(
-        t("analytics.statistics.recordedBottles"),
-        timelineData.registeredDaily,
-        state
-      ),
-      timeChart(
-        t("analytics.inventory.purchasedBottles"),
-        timelineData.boughtDaily,
-        state
-      )
+      timeChart(t("analytics.statistics.recordedBottles"), timelineData.registeredDaily, state),
+      timeChart(t("analytics.inventory.purchasedBottles"), timelineData.boughtDaily, state)
     ),
     "\n        ",
     two(
-      timeChart(
-        t("analytics.inventory.openedBottles"),
-        timelineData.openedDaily,
-        state
-      ),
-      timeChart(
-        t("analytics.consumption.emptiedBottles"),
-        timelineData.emptiedDaily,
-        state
-      )
+      timeChart(t("analytics.inventory.openedBottles"), timelineData.openedDaily, state),
+      timeChart(t("analytics.consumption.emptiedBottles"), timelineData.emptiedDaily, state)
     ),
     "\n        ",
     panel(
@@ -939,9 +821,7 @@ function timeline(analytics, state) {
         t(
           "analytics.ratings.averageSummary",
           {
-            average: rating.rating.avg == null ?
-              t("analytics.ratings.unrated") : `${number(rating.rating
-                .avg)} / 100`,
+            average: rating.rating.avg == null ? t("analytics.ratings.unrated") : `${number(rating.rating.avg)} / 100`,
             count: rating.rating.count,
           }
         )
@@ -950,8 +830,7 @@ function timeline(analytics, state) {
         t("analytics.ratings.topBottles"),
         detailsTable(
           [t("analytics.table.bottling"), t("analytics.table.rating")],
-          rating.bestRated.map(item =>
-            [bottlingLink(item), `${number(item.rating)} / 100`])
+          rating.bestRated.map(item => [bottlingLink(item), `${number(item.rating)} / 100`])
         )
       )
     ),
@@ -962,11 +841,7 @@ function timeline(analytics, state) {
         rankBars(rating.byDistillery, {value: 'avg', drill: true}),
         t("analytics.notes.distilleryAverageRating")
       ),
-      panel(
-        t("analytics.tasting.notes"),
-        composition(rating.notes),
-        t("analytics.notes.tastingNoteCoverage")
-      )
+      panel(t("analytics.tasting.notes"), composition(rating.notes), t("analytics.notes.tastingNoteCoverage"))
     )
   );
 }
@@ -996,11 +871,8 @@ function quality(analytics) {
       safe(number(row.count)),
       row.count && row.ids?.length
         ? renderTemplate('open2', {
-          safe: safe(typeof row.ids[0] === 'string' ? row.ids[0] : row.ids[0]
-            .id),
-          content: typeof row.ids[0] === 'object' ?
-            ` data-bottle-id="${safe(row.ids[0].bottleId)}"` :
-            '',
+          safe: safe(typeof row.ids[0] === 'string' ? row.ids[0] : row.ids[0].id),
+          content: typeof row.ids[0] === 'object' ? ` data-bottle-id="${safe(row.ids[0].bottleId)}"` : '',
         }) : '–',
     ])
   );
@@ -1010,10 +882,7 @@ function quality(analytics) {
       composition(d.completion),
       t("analytics.notes.completenessSource")
     ),
-    panel(
-      t("analytics.quality.whiskybaseReference"),
-      composition(d.whiskybase)
-    )
+    panel(t("analytics.quality.whiskybaseReference"), composition(d.whiskybase))
   ), "\n        ", two(
     panel(
       t("analytics.quality.missingBottlingFields"),
@@ -1050,36 +919,27 @@ function sectionCard(page, stat) {
  */
 function overview(analytics) {
   const s = analytics.scope, p = analytics.provenance;
-  const best = analytics.finance.prices.map(row =>
-    `${money(row.total, row.currency)}`).join(' · ') ||
+  const best = analytics.finance.prices.map(row => `${money(row.total, row.currency)}`).join(' · ') ||
     t("analytics.finance.noPrices");
   return renderTemplate('overview', {
     metricGrid: metricGrid([
       metric(t("analytics.inventory.bottlings"), number(s.bottlings)),
       metric(t("forms.bottle.plural"), number(s.bottles)),
       metric(t("backups.summary.distilleriesLabel"), number(s.distilleries)),
-      metric(
-        t("analytics.inventory.nominalVolume"),
-        `${number(s.volumeLitres)} l`
-      ),
+      metric(t("analytics.inventory.nominalVolume"), `${number(s.volumeLitres)} l`),
       metric(
         t("analytics.inventory.openedStatus"),
-        number(analytics.inventory.status.find(v => v.name ===
-          'Geöffnet')?.count || 0)
+        number(analytics.inventory.status.find(v => v.name === 'Geöffnet')?.count || 0)
       ),
       metric(
         t("analytics.inventory.samples"),
-        number(analytics.inventory.volumeTypes.find(v => v.name ===
-          'Samples')?.count || 0)
+        number(analytics.inventory.volumeTypes.find(v => v.name === 'Samples')?.count || 0)
       ),
     ]),
     two: two(
       panel(
         t("analytics.rankings.topDistilleries"),
-        rankBars(
-          p.byDistilleryBottles.slice(0, 8),
-          {value: 'bottles', drill: true}
-        )
+        rankBars(p.byDistilleryBottles.slice(0, 8), {value: 'bottles', drill: true})
       ),
       panel(
         t("forms.bottle.status"),
@@ -1096,16 +956,10 @@ function overview(analytics) {
         )
       )
     ),
-    safe: safe(
-      best),
-    priceCoverage: t(
-      "analytics.statistics.priceCoverage",
-      {priced: analytics.finance.priceCoverage, total: s.bottles}
-    ),
-    sectionHeading: sectionHeading(t("analytics.sections.all")
-    ),
-    aNALYSISPAGES: composeMarkup(ANALYSIS_PAGES.slice(1).map(
-      page => sectionCard(page))),
+    safe: safe(best),
+    priceCoverage: t("analytics.statistics.priceCoverage", {priced: analytics.finance.priceCoverage, total: s.bottles}),
+    sectionHeading: sectionHeading(t("analytics.sections.all")),
+    aNALYSISPAGES: composeMarkup(ANALYSIS_PAGES.slice(1).map(page => sectionCard(page))),
   });
 }
 
@@ -1130,16 +984,13 @@ function filterControls(state, options) {
   const select = (name, caption, options, selected) =>
     renderTemplate('select', {
       name: name,
-      safe: safe(caption
-      ),
+      safe: safe(caption),
       options: composeMarkup(options.map(([value, label]) => renderTemplate(
         'selectOption',
         {
-          safe: safe(
-            value),
+          safe: safe(value),
           selected: value === selected ? ' selected' : '',
-          safe2: safe(
-            label),
+          safe2: safe(label),
         }
       ))),
     });
@@ -1205,8 +1056,7 @@ export function createAnalyticsView({state, shell}) {
      * @return {string} HTML for the active analytics view.
      */
     function renderAnalytics() {
-      const {current, data, options} =
-        createAnalyticsViewModel(state, ANALYSIS_PAGES);
+      const {current, data, options} = createAnalyticsViewModel(state, ANALYSIS_PAGES);
       const contents = {
         /**
          * Derives the overview result from the supplied values.
@@ -1254,8 +1104,7 @@ export function createAnalyticsView({state, shell}) {
         contents[current.id]()
       );
       const workspace = sectionWorkspace({
-        sections: ANALYSIS_PAGES.map(page =>
-          ({id: page.id, label: page.title})),
+        sections: ANALYSIS_PAGES.map(page => ({id: page.id, label: page.title})),
         activeId: current.id,
         action: 'analytics-section',
         itemAttribute: 'data-section',

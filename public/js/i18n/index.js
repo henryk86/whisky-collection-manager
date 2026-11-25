@@ -7,8 +7,7 @@ import {escapeHtml} from '../ui/dom.js';
 
 const DEFAULT_LANGUAGE = 'de';
 const STORAGE_KEY = 'whisky-language';
-const PRESENTATION_ATTRIBUTES =
-  ['aria-label', 'aria-description', 'title', 'placeholder', 'alt'];
+const PRESENTATION_ATTRIBUTES = ['aria-label', 'aria-description', 'title', 'placeholder', 'alt'];
 let language = DEFAULT_LANGUAGE;
 let languages = Object.freeze({de: 'Deutsch'});
 let translator = createTranslator(german, english);
@@ -30,24 +29,17 @@ function formatMessage(template, params, locale) {
   // nested HTML and script content are never parsed or evaluated here.
   const plural =
     new RegExp(
-      '\\{([a-zA-Z]\\w*),\\s*plural,\\s*((?:(?:ze' +
-      'ro|one|two|few|many|other)\\s*\\{[^{}]*\\}' +
-      '\\s*)+)\\}',
+      '\\{([a-zA-Z]\\w*),\\s*plural,\\s*((?:(?:ze' + 'ro|one|two|few|many|other)\\s*\\{[^{}]*\\}' + '\\s*)+)\\}',
       'gu'
     );
   const result = template.replace(plural, (_, key, choices) => {
     const value = Number(params[key]);
     if (!Number.isFinite(value)) return '';
-    const forms = Object.fromEntries([...choices.matchAll(
-      /(zero|one|two|few|many|other)\s*\{([^{}]*)\}/gu)]
-      .map(([, name, message]) => [name, message]));
+    const forms = Object.fromEntries([...choices.matchAll(/(zero|one|two|few|many|other)\s*\{([^{}]*)\}/gu)].map(([, name, message]) => [name, message]));
     const category = new Intl.PluralRules(locale).select(value);
-    return (forms[category] ?? forms.other ?? '').replace(/#/gu,
-      new Intl.NumberFormat(locale).format(value)
-    );
+    return (forms[category] ?? forms.other ?? '').replace(/#/gu, new Intl.NumberFormat(locale).format(value));
   });
-  return result.replace(/\{([a-zA-Z]\w*)\}/gu, (match, key) =>
-    Object.hasOwn(params, key) ? String(params[key]) : match);
+  return result.replace(/\{([a-zA-Z]\w*)\}/gu, (match, key) => Object.hasOwn(params, key) ? String(params[key]) : match);
 }
 
 /**
@@ -64,15 +56,10 @@ export function createTranslator(messages = {}, fallback = english,
   locale = DEFAULT_LANGUAGE) {
   return (key, params = {}) => {
     if (typeof key !== 'string') return key;
-    const message = Object.hasOwn(messages, key) && typeof messages[key] ===
-      'string' && messages[key].trim()
+    const message = Object.hasOwn(messages, key) && typeof messages[key] === 'string' && messages[key].trim()
       ? messages[key] : fallback[key];
     if (typeof message !== 'string') return key;
-    return formatMessage(
-      message,
-      params && typeof params === 'object' ? params : {},
-      locale
-    );
+    return formatMessage(message, params && typeof params === 'object' ? params : {}, locale);
   };
 }
 
@@ -94,8 +81,7 @@ export const t = (key, params = {}) => translator(key, params);
  * @return {string} Translated markup with escaped string values.
  */
 export const tHtml = (key, params = {}) => t(key, Object.fromEntries(
-  Object.entries(params).map(([name, value]) => [name, typeof value ===
-    'string' ? escapeHtml(value) : value])
+  Object.entries(params).map(([name, value]) => [name, typeof value === 'string' ? escapeHtml(value) : value])
 ));
 
 /**
@@ -119,8 +105,7 @@ export const availableLanguages = () => languages;
  * @param {!Object=} options Intl.NumberFormat options.
  * @return {string} Locale-specific number representation.
  */
-export const formatNumber = (number, options) =>
-  new Intl.NumberFormat(language, options).format(number);
+export const formatNumber = (number, options) => new Intl.NumberFormat(language, options).format(number);
 
 /**
  * Checks the supported language registry key syntax: a two-letter language with
@@ -169,17 +154,13 @@ export async function initializeLanguage(fetcher = globalThis.fetch) {
     const response = await fetcher('/locales/index.json');
     if (response.ok) {
       const candidates = await response.json();
-      if (candidates && typeof candidates === 'object' &&
-        !Array.isArray(candidates)) {
-        const entries = Object.entries(candidates).filter(([id, name]) =>
-          validLanguage(id) && typeof name === 'string');
-        languages = Object.freeze(Object.fromEntries([['de', 'Deutsch'],
-        ...entries]));
+      if (candidates && typeof candidates === 'object' && !Array.isArray(candidates)) {
+        const entries = Object.entries(candidates).filter(([id, name]) => validLanguage(id) && typeof name === 'string');
+        languages = Object.freeze(Object.fromEntries([['de', 'Deutsch'], ...entries]));
       }
     }
   } catch { /* German is bundled with the application */}
-  const fromQuery = typeof location !== 'undefined' ?
-    new URLSearchParams(location.search).get('lang') : null;
+  const fromQuery = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('lang') : null;
   const requested = fromQuery || savedLanguage() || DEFAULT_LANGUAGE;
   language = Object.hasOwn(languages, requested) ? requested : DEFAULT_LANGUAGE;
   let messages = language === 'en' ? english : german;
@@ -188,8 +169,7 @@ export async function initializeLanguage(fetcher = globalThis.fetch) {
       const response = await fetcher(`/locales/${language}.json`);
       if (!response.ok) throw new Error('Language file unavailable');
       const catalog = await response.json();
-      if (!catalog || typeof catalog !== 'object' ||
-        Array.isArray(catalog)) throw new Error('Invalid language file');
+      if (!catalog || typeof catalog !== 'object' || Array.isArray(catalog)) throw new Error('Invalid language file');
       messages = catalog;
     } catch {language = 'en'; messages = english;}
   }
@@ -228,8 +208,7 @@ export function translateDom(root) {
   if (!root || !root.querySelectorAll) return;
   if (root.nodeType === 1) localizeElement(root);
   for (const element of root.querySelectorAll(
-    '[data-i18n], [data-i18n-aria-label], [data-i18n-aria-description], \
-[data-i18n-title], [data-i18n-placeholder], [data-i18n-alt]')) {
+    '[data-i18n], [data-i18n-aria-label], [data-i18n-aria-description], [data-i18n-title], [data-i18n-placeholder], [data-i18n-alt]')) {
     localizeElement(element);
   }
 }

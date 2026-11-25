@@ -22,31 +22,26 @@ import {DEFAULT_MASK_BRUSH_SIZE, paintMaskSegment, applyMaskStrokes}
   from './mask-brush.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/controller.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/controller.html', import.meta.url));
 
 
 const MAX_PREVIEW_SIDE = 1050;
 const MAX_EXPORT_SIDE = 4096;
-const MAX_IMAGE_BYTES =
-  9_400_000; // Allow room for JSON/base64 request overhead.
+const MAX_IMAGE_BYTES = 9_400_000; // Allow room for JSON/base64 request overhead.
 /**
  * Locates the DOM elements used by root.
  * @return {*} Matching DOM element, if present.
  */
 const root = () => document.querySelector('[data-photo-editor]');
-const resetIcon =
-  renderTemplate('resetIconSvg');
-const pipetteIcon =
-  renderTemplate('pipetteIconSvg');
+const resetIcon = renderTemplate('resetIconSvg');
+const pipetteIcon = renderTemplate('pipetteIconSvg');
 /**
  * Derives the form value result from the supplied values.
  *
  * @param {*} value Value to process.
  * @return {string} Resulting text.
  */
-const formValue = value => Number(value)
-  .toLocaleString('de-DE', {maximumFractionDigits: 2});
+const formValue = value => Number(value).toLocaleString('de-DE', {maximumFractionDigits: 2});
 
 /**
  * Builds the localized canvas from image text for the current language.
@@ -56,8 +51,7 @@ const formValue = value => Number(value)
  * @return {*} Calculated numeric result.
  */
 const canvasFromImage = (image, maxSide) => {
-  const scale = Math.min(1, maxSide /
-    Math.max(image.naturalWidth, image.naturalHeight));
+  const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
   canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
@@ -76,8 +70,7 @@ const canvasFromImage = (image, maxSide) => {
  * @return {*} Result computed from the supplied inputs.
  */
 const imageDataFromCanvas = canvas =>
-  canvas.getContext('2d', {willReadFrequently: true})
-    .getImageData(0, 0, canvas.width, canvas.height);
+  canvas.getContext('2d', {willReadFrequently: true}).getImageData(0, 0, canvas.width, canvas.height);
 
 /**
  * Derives the clone pixels result from the supplied values.
@@ -85,11 +78,7 @@ const imageDataFromCanvas = canvas =>
  * @param {*} pixels Value used by this operation.
  * @return {*} Result computed from the supplied inputs.
  */
-const clonePixels = pixels => new ImageData(
-  new Uint8ClampedArray(pixels.data),
-  pixels.width,
-  pixels.height
-);
+const clonePixels = pixels => new ImageData(new Uint8ClampedArray(pixels.data), pixels.width, pixels.height);
 // Browsers may return image/png here when WebP encoding is unavailable; the API
 // accepts that safe fallback and stores the real extension from the bytes.
 
@@ -102,11 +91,7 @@ const clonePixels = pixels => new ImageData(
  */
 const blobFromCanvas = (canvas, quality = .97) =>
   new Promise((resolve, reject) =>
-    canvas.toBlob(
-      blob => blob ? resolve(blob) : reject(Error(t('photoEditor.error'))),
-      'image/webp',
-      quality
-    ));
+    canvas.toBlob(blob => blob ? resolve(blob) : reject(Error(t('photoEditor.error'))), 'image/webp', quality));
 
 /**
  * Builds the localized blob as data url text for the current language.
@@ -133,10 +118,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   let image = null;
   let sourceData = null;
   let pendingCutout = null;
-  let maskBaseData =
-    null; // The unmodified transparent base for undo and restore.
-  let maskStrokes =
-    []; // Normalized to image coordinates, independent of preview zoom.
+  let maskBaseData = null; // The unmodified transparent base for undo and restore.
+  let maskStrokes = []; // Normalized to image coordinates, independent of preview zoom.
   let brushMode = null;
   let brushSize = DEFAULT_MASK_BRUSH_SIZE;
   let activeBrush = null;
@@ -155,8 +138,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   };
   let cutoutMaskStrokes = [];
   let showingBefore = false;
-  let originalPreviewData =
-    null; // Before/after for a cutout always shows the complete original.
+  let originalPreviewData = null; // Before/after for a cutout always shows the complete original.
   let sourceImages = {
     original: null,
     cutout: null,
@@ -179,18 +161,15 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
    * @param {*} photoId Value used by this operation.
    * @return {*} Result computed from the supplied inputs.
    */
-  const findPhoto = (bottleId, photoId) => state.collection?.bottlings
-    .flatMap(bottling => bottling.bottles || [])
-    .find(bottle => bottle.id === bottleId)?.photos?.find(photo =>
-      photo.id === photoId);
+  const findPhoto = (bottleId, photoId) => state.collection?.bottlings.flatMap(bottling => bottling.bottles || []).find(bottle => bottle.id === bottleId)?.photos?.find(photo =>
+    photo.id === photoId);
 
   /**
    * Produces the endpoint text used by the caller.
    * @return {string} Resulting text.
    */
   const endpoint = () =>
-    `/api/bottles/${encodeURIComponent(selection.bottleId
-    )}/photos/${encodeURIComponent(selection.photoId)}/adjustments`;
+    `/api/bottles/${encodeURIComponent(selection.bottleId)}/photos/${encodeURIComponent(selection.photoId)}/adjustments`;
 
   /**
    * Builds the localized slider html text for the current language.
@@ -226,19 +205,12 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     const canvas = host.querySelector('[data-photo-editor-preview]');
     if (!canvas) return;
     viewport = constrainPreviewPan(viewport, viewportSize());
-    canvas.style.transform =
-      `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`;
-    host.querySelector('[data-photo-editor-zoom-level]').textContent =
-      `${Math.round(viewport.zoom * 100)} %`;
-    host.querySelector('[data-act="photo-editor-zoom-out"]').disabled =
-      viewport.zoom <= MIN_PREVIEW_ZOOM;
-    host.querySelector('[data-act="photo-editor-zoom-in"]').disabled =
-      viewport.zoom >= MAX_PREVIEW_ZOOM;
-    host.querySelector('[data-act="photo-editor-zoom-reset"]').disabled =
-      viewport.zoom === MIN_PREVIEW_ZOOM;
-    host.querySelector('.photo-editor-image').classList.toggle('is-zoomed',
-      viewport.zoom > MIN_PREVIEW_ZOOM
-    );
+    canvas.style.transform = `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`;
+    host.querySelector('[data-photo-editor-zoom-level]').textContent = `${Math.round(viewport.zoom * 100)} %`;
+    host.querySelector('[data-act="photo-editor-zoom-out"]').disabled = viewport.zoom <= MIN_PREVIEW_ZOOM;
+    host.querySelector('[data-act="photo-editor-zoom-in"]').disabled = viewport.zoom >= MAX_PREVIEW_ZOOM;
+    host.querySelector('[data-act="photo-editor-zoom-reset"]').disabled = viewport.zoom === MIN_PREVIEW_ZOOM;
+    host.querySelector('.photo-editor-image').classList.toggle('is-zoomed', viewport.zoom > MIN_PREVIEW_ZOOM);
   }
 
   /**
@@ -272,17 +244,13 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       // Canvas coordinates must be relative to its untransformed layout box.
       const stageRect = stage.getBoundingClientRect();
       const point = {
-        x: event.clientX - stageRect.left - stage.clientLeft -
-          parseFloat(getComputedStyle(stage).paddingLeft || 0),
-        y: event.clientY - stageRect.top - stage.clientTop -
-          parseFloat(getComputedStyle(stage).paddingTop || 0),
+        x: event.clientX - stageRect.left - stage.clientLeft - parseFloat(getComputedStyle(stage).paddingLeft || 0),
+        y: event.clientY - stageRect.top - stage.clientTop - parseFloat(getComputedStyle(stage).paddingTop || 0),
       };
       zoom(event.deltaY < 0 ? 1.15 : 1 / 1.15, point);
     }, {passive: false});
     canvas.addEventListener('pointerdown', event => {
-      if (whitePicking || brushMode || busy || !sourceData ||
-        viewport.zoom === 1 || !event.isPrimary && event.pointerType !==
-        'touch') return;
+      if (whitePicking || brushMode || busy || !sourceData || viewport.zoom === 1 || !event.isPrimary && event.pointerType !== 'touch') return;
       if (event.pointerType === 'mouse' && event.button !== 0) return;
       event.preventDefault();
       panPointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
@@ -295,8 +263,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       } else if (panPointers.size === 2) {
         const [a, b] = [...panPointers.values()];
         pinchStart = {
-          distance: Math.hypot(b.x - a.x, b.y -
-            a.y), zoom: viewport.zoom,
+          distance: Math.hypot(b.x - a.x, b.y - a.y), zoom: viewport.zoom,
         };
         panStart = null;
       }
@@ -308,16 +275,13 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         const [a, b] = [...panPointers.values()];
         const stageRect = stage.getBoundingClientRect();
         const point = {
-          x: (a.x + b.x) / 2 - stageRect.left - stage.clientLeft -
-            parseFloat(getComputedStyle(stage).paddingLeft || 0),
-          y: (a.y + b.y) / 2 - stageRect.top - stage.clientTop -
-            parseFloat(getComputedStyle(stage).paddingTop || 0),
+          x: (a.x + b.x) / 2 - stageRect.left - stage.clientLeft - parseFloat(getComputedStyle(stage).paddingLeft || 0),
+          y: (a.y + b.y) / 2 - stageRect.top - stage.clientTop - parseFloat(getComputedStyle(stage).paddingTop || 0),
         };
         // Finger distance is proportional to preview magnification.
         viewport = zoomAroundPoint(
           viewport,
-          viewport.zoom * (Math.hypot(b.x - a.x, b.y - a.y) /
-            Math.max(1, pinchStart.lastDistance || pinchStart.distance)),
+          viewport.zoom * (Math.hypot(b.x - a.x, b.y - a.y) / Math.max(1, pinchStart.lastDistance || pinchStart.distance)),
           point,
           viewportSize()
         );
@@ -339,8 +303,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
      */
     const release = event => {
       if (!panPointers.delete(event.pointerId)) return;
-      if (canvas.hasPointerCapture?.(event.pointerId)) canvas
-        .releasePointerCapture(event.pointerId);
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       pinchStart = null;
       panStart = null;
       if (panPointers.size === 1) {
@@ -390,27 +353,21 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     for (const input of host.querySelectorAll('[data-photo-slider]')) {
       const value = values[input.dataset.photoSlider];
       input.value = String(value);
-      host.querySelector(`[data-photo-output="${input.dataset
-        .photoSlider}"]`).textContent = formValue(value);
+      host.querySelector(`[data-photo-output="${input.dataset.photoSlider}"]`).textContent = formValue(value);
       input.disabled = busy || !sourceData;
     }
     for (const button of host.querySelectorAll('[data-photo-editor-ready]'))
       button.disabled = busy || !sourceData;
-    const generateButton =
-      host.querySelector('[data-act="photo-editor-cutout"]');
+    const generateButton = host.querySelector('[data-act="photo-editor-cutout"]');
     if (generateButton) generateButton.disabled = busy || !sourceData;
-    for (const button of host.querySelectorAll(
-      '[data-photo-editor-existing-cutout]')) {
+    for (const button of host.querySelectorAll('[data-photo-editor-existing-cutout]')) {
       button.disabled = busy || Boolean(pendingCutout) || !sourceData;
-      button.textContent = previewCutout ? t('cutout.showOriginal') :
-        t('cutout.showCutout');
+      button.textContent = previewCutout ? t('cutout.showOriginal') : t('cutout.showCutout');
     }
     host.dataset.photoPreviewSource = previewCutout ? 'cutout' : 'original';
-    const undoCutout = host.querySelector(
-      '[data-act="photo-editor-remove-cutout"]');
+    const undoCutout = host.querySelector('[data-act="photo-editor-remove-cutout"]');
     if (undoCutout) {
-      const photo = selection &&
-        findPhoto(selection.bottleId, selection.photoId);
+      const photo = selection && findPhoto(selection.bottleId, selection.photoId);
       undoCutout.hidden = !pendingCutout && !photo?.cutout;
       undoCutout.disabled = busy;
     }
@@ -419,33 +376,22 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     const maskTools = host.querySelector('[data-photo-editor-mask-tools]');
     if (maskTools) {
       maskTools.hidden = !maskBaseData;
-      for (const button of maskTools.querySelectorAll('[data-photo-brush-mode]'
-      )) {
-        button.setAttribute(
-          'aria-pressed',
-          String(brushMode === button.dataset.photoBrushMode)
-        );
+      for (const button of maskTools.querySelectorAll('[data-photo-brush-mode]')) {
+        button.setAttribute('aria-pressed', String(brushMode === button.dataset.photoBrushMode));
         button.disabled = busy;
       }
-      const undo = maskTools.querySelector(
-        '[data-act="photo-editor-brush-undo"]');
+      const undo = maskTools.querySelector('[data-act="photo-editor-brush-undo"]');
       if (undo) undo.disabled = busy || !maskStrokes.length;
       const size = maskTools.querySelector('[data-photo-brush-size]');
       if (size) {size.disabled = busy; size.value = String(brushSize);}
-      maskTools.querySelector('[data-photo-brush-size-value]').textContent =
-        `${brushSize} %`;
+      maskTools.querySelector('[data-photo-brush-size-value]').textContent = `${brushSize} %`;
     }
-    host.querySelector('.photo-editor-image')?.classList.toggle('is-brushing',
-      Boolean(brushMode)
-    );
-    host.querySelector('.photo-editor-image')?.classList.toggle('is-picking',
-      whitePicking
-    );
+    host.querySelector('.photo-editor-image')?.classList.toggle('is-brushing', Boolean(brushMode));
+    host.querySelector('.photo-editor-image')?.classList.toggle('is-picking', whitePicking);
     const before = host.querySelector('[data-act="photo-editor-before"]');
     if (before) {
       before.setAttribute('aria-pressed', String(showingBefore));
-      before.textContent = showingBefore ? t('photoEditor.after') :
-        t('photoEditor.before');
+      before.textContent = showingBefore ? t('photoEditor.after') : t('photoEditor.before');
     }
   }
 
@@ -457,10 +403,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     pickStart = null;
     const host = root();
     if (host) {
-      host.querySelector('[data-photo-editor-selection]')?.setAttribute(
-        'hidden',
-        ''
-      );
+      host.querySelector('[data-photo-editor-selection]')?.setAttribute('hidden', '');
       host.querySelector('.photo-editor-image')?.classList.remove('is-picking');
     }
   }
@@ -476,10 +419,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
    */
   function imageGeometry(canvas) {
     const rect = canvas.getBoundingClientRect();
-    const scale = Math.min(
-      rect.width / sourceData.width,
-      rect.height / sourceData.height
-    );
+    const scale = Math.min(rect.width / sourceData.width, rect.height / sourceData.height);
     return {
       left: rect.left + (rect.width - sourceData.width * scale) / 2,
       top: rect.top + (rect.height - sourceData.height * scale) / 2,
@@ -499,8 +439,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     const frame = imageGeometry(canvas);
     const x = (event.clientX - frame.left) / frame.scale;
     const y = (event.clientY - frame.top) / frame.scale;
-    if (!clampToImage && (x < 0 || y < 0 || x > sourceData.width || y >
-      sourceData.height)) return null;
+    if (!clampToImage && (x < 0 || y < 0 || x > sourceData.width || y > sourceData.height)) return null;
     return {
       x: Math.max(0, Math.min(sourceData.width, x)),
       y: Math.max(0, Math.min(sourceData.height, y)),
@@ -518,17 +457,12 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     const host = root();
     if (!host) return;
     const overlay = host.querySelector('[data-photo-editor-selection]');
-    const parent = host.querySelector('.photo-editor-image')
-      .getBoundingClientRect();
+    const parent = host.querySelector('.photo-editor-image').getBoundingClientRect();
     const frame = imageGeometry(canvas);
-    overlay.style.left = `${frame.left - parent.left +
-      Math.min(start.x, end.x) * frame.scale}px`;
-    overlay.style.top = `${frame.top - parent.top +
-      Math.min(start.y, end.y) * frame.scale}px`;
-    overlay.style.width = `${Math.max(2, Math.abs(end.x - start.x) *
-      frame.scale)}px`;
-    overlay.style.height = `${Math.max(2, Math.abs(end.y - start.y) *
-      frame.scale)}px`;
+    overlay.style.left = `${frame.left - parent.left + Math.min(start.x, end.x) * frame.scale}px`;
+    overlay.style.top = `${frame.top - parent.top + Math.min(start.y, end.y) * frame.scale}px`;
+    overlay.style.width = `${Math.max(2, Math.abs(end.x - start.x) * frame.scale)}px`;
+    overlay.style.height = `${Math.max(2, Math.abs(end.y - start.y) * frame.scale)}px`;
     overlay.removeAttribute('hidden');
   }
 
@@ -539,8 +473,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
    */
   function attachWhitePicker(canvas) {
     canvas.addEventListener('pointerdown', event => {
-      if (!whitePicking || !sourceData || busy || !event.isPrimary ||
-        event.button !== 0) return;
+      if (!whitePicking || !sourceData || busy || !event.isPrimary || event.button !== 0) return;
       const point = imagePoint(canvas, event);
       if (!point) return;
       event.preventDefault();
@@ -555,43 +488,32 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     canvas.addEventListener('pointercancel', event => {
       if (pickStart?.pointerId === event.pointerId) {
         pickStart = null;
-        root()?.querySelector('[data-photo-editor-selection]')?.setAttribute(
-          'hidden',
-          ''
-        );
+        root()?.querySelector('[data-photo-editor-selection]')?.setAttribute('hidden', '');
       }
     });
     canvas.addEventListener('pointerup', event => {
-      if (!pickStart || pickStart.pointerId !== event.pointerId ||
-        !root() || !sourceData) return;
+      if (!pickStart || pickStart.pointerId !== event.pointerId || !root() || !sourceData) return;
       event.preventDefault();
       const start = pickStart.point;
       const end = imagePoint(canvas, event, true);
       pickStart = null;
-      if (canvas.hasPointerCapture?.(event.pointerId)) canvas
-        .releasePointerCapture(event.pointerId);
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       let x0 = Math.min(start.x, end.x), x1 = Math.max(start.x, end.x);
       let y0 = Math.min(start.y, end.y), y1 = Math.max(start.y, end.y);
       // A single tap/click samples a small neighborhood, not a noisy lone
       // pixel.
       if (x1 - x0 < 3 && y1 - y0 < 3) {
-        const radius = Math.max(
-          3,
-          Math.round(Math.min(sourceData.width, sourceData.height) * .012)
-        );
+        const radius = Math.max(3, Math.round(Math.min(sourceData.width, sourceData.height) * .012));
         x0 = start.x - radius; x1 = start.x + radius;
         y0 = start.y - radius; y1 = start.y + radius;
       }
       stopPicking();
       try {
-        setValues(whiteBalanceFromArea(sourceData,
-          {x: x0, y: y0, width: x1 - x0, height: y1 - y0}, values));
-        if (root()) root().querySelector('[data-photo-editor-message]')
-          .textContent = t('photoEditor.pickedWhite');
+        setValues(whiteBalanceFromArea(sourceData, {x: x0, y: y0, width: x1 - x0, height: y1 - y0}, values));
+        if (root()) root().querySelector('[data-photo-editor-message]').textContent = t('photoEditor.pickedWhite');
       } catch (_) {
         syncSliders();
-        if (root()) root().querySelector('[data-photo-editor-message]')
-          .textContent = t('photoEditor.pickWhiteError');
+        if (root()) root().querySelector('[data-photo-editor-message]').textContent = t('photoEditor.pickWhiteError');
       }
     });
   }
@@ -602,10 +524,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   function stopBrush() {
     brushMode = null;
     activeBrush = null;
-    root()?.querySelector('[data-photo-editor-brush-cursor]')?.setAttribute(
-      'hidden',
-      ''
-    );
+    root()?.querySelector('[data-photo-editor-brush-cursor]')?.setAttribute('hidden', '');
   }
 
   /**
@@ -625,8 +544,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
    * @param {*} mode Selected mode controlling the operation.
    */
   function toggleBrush(mode) {
-    if (!['erase', 'restore'].includes(mode) || busy || !maskBaseData ||
-      !root()) return;
+    if (!['erase', 'restore'].includes(mode) || busy || !maskBaseData || !root()) return;
     stopPicking();
     if (brushMode === mode) stopBrush();
     else {
@@ -636,10 +554,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       activeBrush = null;
     }
     syncSliders();
-    root().querySelector('[data-photo-editor-message]').textContent = brushMode
-      ? t(brushMode === 'erase' ? 'photoEditor.eraseHint' :
-        'photoEditor.restoreHint')
-      : t('photoEditor.hint');
+    root().querySelector('[data-photo-editor-message]').textContent = brushMode ? t(brushMode === 'erase' ? 'photoEditor.eraseHint' : 'photoEditor.restoreHint') : t('photoEditor.hint');
   }
 
   /**
@@ -661,8 +576,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   function brushPoint(canvas, event) {
     const point = imagePoint(canvas, event);
     return point ? {
-      x: point.x / sourceData.width, y: point.y /
-        sourceData.height,
+      x: point.x / sourceData.width, y: point.y / sourceData.height,
     } : null;
   }
 
@@ -678,14 +592,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     const point = imagePoint(canvas, event);
     if (!point) {cursor.hidden = true; return;}
     const frame = imageGeometry(canvas);
-    const stageRect = canvas.closest('.photo-editor-image')
-      .getBoundingClientRect();
-    const diameter = Math.min(sourceData.width, sourceData.height) *
-      brushSize / 100 * frame.scale;
+    const stageRect = canvas.closest('.photo-editor-image').getBoundingClientRect();
+    const diameter = Math.min(sourceData.width, sourceData.height) * brushSize / 100 * frame.scale;
     cursor.style.width = `${diameter}px`;
     cursor.style.height = `${diameter}px`;
-    cursor.style.left = `${frame.left - stageRect.left + point.x *
-      frame.scale}px`;
+    cursor.style.left = `${frame.left - stageRect.left + point.x * frame.scale}px`;
     cursor.style.top = `${frame.top - stageRect.top + point.y * frame.scale}px`;
     cursor.hidden = false;
   }
@@ -697,8 +608,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
    */
   function attachMaskBrush(canvas) {
     canvas.addEventListener('pointerdown', event => {
-      if (!brushMode || busy || !maskBaseData || !sourceData ||
-        (event.pointerType === 'mouse' && event.button !== 0) ||
+      if (!brushMode || busy || !maskBaseData || !sourceData || (event.pointerType === 'mouse' && event.button !== 0) ||
         !event.isPrimary) return;
       const point = brushPoint(canvas, event);
       if (!point) return;
@@ -727,15 +637,13 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     canvas.addEventListener('pointermove', event => {
       if (!brushMode) return;
       updateBrushCursor(canvas, event);
-      if (!activeBrush || activeBrush.pointerId !== event.pointerId ||
-        busy) return;
+      if (!activeBrush || activeBrush.pointerId !== event.pointerId || busy) return;
       const current = brushPoint(canvas, event);
       if (!current) return;
       const stroke = activeBrush.stroke;
       const previous = stroke.points[stroke.points.length - 1];
       // Avoid very dense pointer samples on high refresh-rate mice.
-      if (Math.hypot(current.x - previous.x, current.y - previous.y) <
-        .0005) return;
+      if (Math.hypot(current.x - previous.x, current.y - previous.y) < .0005) return;
       stroke.points.push(current);
       paintMaskSegment(
         sourceData.data,
@@ -756,8 +664,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
      */
     const release = event => {
       if (!activeBrush || activeBrush.pointerId !== event.pointerId) return;
-      if (canvas.hasPointerCapture?.(event.pointerId)) canvas
-        .releasePointerCapture(event.pointerId);
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       if (event.type === 'pointercancel') {
         maskStrokes.pop();
         refreshMaskPreview();
@@ -768,10 +675,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     canvas.addEventListener('pointerup', release);
     canvas.addEventListener('pointercancel', release);
     canvas.addEventListener('pointerleave', () => {
-      root()?.querySelector('[data-photo-editor-brush-cursor]')?.setAttribute(
-        'hidden',
-        ''
-      );
+      root()?.querySelector('[data-photo-editor-brush-cursor]')?.setAttribute('hidden', '');
     });
   }
 
@@ -793,12 +697,10 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       canvas.width = adjusted.width;
       canvas.height = adjusted.height;
     }
-    canvas.getContext('2d', {willReadFrequently: true})
-      .putImageData(new ImageData(adjusted.data, adjusted.width,
-        adjusted.height),
-        0,
-        0
-      );
+    canvas.getContext('2d', {willReadFrequently: true}).putImageData(new ImageData(adjusted.data, adjusted.width, adjusted.height),
+      0,
+      0
+    );
   }
 
   /**
@@ -835,8 +737,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     loaded.src = imageUrl(path);
     if (typeof loaded.decode === 'function') await loaded.decode();
     else await new Promise((resolve, reject) => {
-      loaded.onload =
-        resolve; loaded.onerror = reject;
+      loaded.onload = resolve; loaded.onerror = reject;
     });
     return loaded;
   }
@@ -854,13 +755,10 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     const sourcePath = basePhotoPath(photo);
     selection = {bottleId, photoId, sourcePath};
     previewCutout = Boolean(photo.cutout?.selected);
-    const {original: originalSettings, cutout: cutoutSettings} =
-      editorPhotoSourceSettings(photo);
+    const {original: originalSettings, cutout: cutoutSettings} = editorPhotoSourceSettings(photo);
     sourceValues = {
-      original: validatePhotoAdjustments(originalSettings ||
-        EMPTY_PHOTO_ADJUSTMENTS),
-      cutout: validatePhotoAdjustments(cutoutSettings ||
-        EMPTY_PHOTO_ADJUSTMENTS),
+      original: validatePhotoAdjustments(originalSettings || EMPTY_PHOTO_ADJUSTMENTS),
+      cutout: validatePhotoAdjustments(cutoutSettings || EMPTY_PHOTO_ADJUSTMENTS),
     };
     savedSourceValues = {
       original: {...sourceValues.original}, cutout: {...sourceValues.cutout},
@@ -873,8 +771,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     sourcePixels = {original: null, cutout: null};
     image = null;
     pendingCutout = null;
-    maskBaseData = null; maskStrokes = []; brushMode = null; brushSize =
-      DEFAULT_MASK_BRUSH_SIZE; activeBrush = null;
+    maskBaseData = null; maskStrokes = []; brushMode = null; brushSize = DEFAULT_MASK_BRUSH_SIZE; activeBrush = null;
     busy = false;
     whitePicking = false;
     pickStart = null;
@@ -905,44 +802,31 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         pHOTOADJUSTMENTGROUPS: composeMarkup(
           PHOTO_ADJUSTMENT_GROUPS.map(group =>
             renderTemplate('photoEditorGroup', {
-              t: t(
-                `photoEditor.${group.key}`),
+              t: t(`photoEditor.${group.key}`),
               t2: t(`photoEditor.${group.key}`),
-              photoEditorPickWhite: group.key ===
-                'color' ?
+              photoEditorPickWhite: group.key === 'color' ?
                 renderTemplate('photoEditorPickWhite', {
-                  pickWhite: t('photoEditor.pickWhit\
-e'),
+                  pickWhite: t('photoEditor.pickWhite'),
                   pickWhite2: t('photoEditor.pickWhite'),
                   pipetteIcon: pipetteIcon,
                 }) : '',
               key: group.key,
-              resetGroup: t(
-                'photoEditor.resetGroup',
-                {group: t(`photoEditor.${group.key}`)}
-              ),
-              resetGroup2: t(
-                'photoEditor.resetGroup',
-                {group: t(`photoEditor.${group.key}`)}
-              ),
+              resetGroup: t('photoEditor.resetGroup', {group: t(`photoEditor.${group.key}`)}),
+              resetGroup2: t('photoEditor.resetGroup', {group: t(`photoEditor.${group.key}`)}),
               resetIcon: resetIcon,
               sliders: composeMarkup(group.sliders.map(sliderHtml)),
             }))),
         t: t(photo.cutout ? 'photoEditor.recutout' : 'cutout.title'),
         photoEditorToggleCutout: photo.cutout ?
           renderTemplate('photoEditorToggleCutout', {
-            selected: photo.cutout
-              .selected ? t('cutout.showOriginal') :
-              t('cutout.showCutout'),
+            selected: photo.cutout.selected ? t('cutout.showOriginal') : t('cutout.showCutout'),
           }) : '',
         remove: t('cutout.remove'),
         maskTools: t('photoEditor.maskTools'),
         erase: t('photoEditor.erase'),
         restore: t('photoEditor.restore'),
-        brushUndo: t('photoEditor.brus\
-hUndo'),
-        brushSize: t(
-          'photoEditor.brushSize'),
+        brushUndo: t('photoEditor.brushUndo'),
+        brushSize: t('photoEditor.brushSize'),
         dEFAULTMASKBRUSHSIZE: DEFAULT_MASK_BRUSH_SIZE,
         dEFAULTMASKBRUSHSIZE2: DEFAULT_MASK_BRUSH_SIZE,
         loading: t('photoEditor.loading'),
@@ -977,13 +861,9 @@ hUndo'),
     });
     host.addEventListener('keydown', event => {
       const tab = event.target.closest('[data-photo-editor-tab]');
-      if (tab && ['ArrowLeft', 'ArrowRight', 'Home', 'End']
-        .includes(event.key)) {
+      if (tab && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
         event.preventDefault();
-        const next = event.key === 'Home' ? 'adjustments' : event.key ===
-          'End' ? 'cutout' :
-          (tab.dataset.photoEditorTab === 'adjustments' ? 'cutout' :
-            'adjustments');
+        const next = event.key === 'Home' ? 'adjustments' : event.key === 'End' ? 'cutout' : (tab.dataset.photoEditorTab === 'adjustments' ? 'cutout' : 'adjustments');
         selectTab(next);
         host.querySelector(`[data-photo-editor-tab="${next}"]`)?.focus();
         return;
@@ -993,8 +873,7 @@ hUndo'),
         stopPicking();
         stopBrush();
         syncSliders();
-        host.querySelector('[data-photo-editor-message]').textContent =
-          t('photoEditor.hint');
+        host.querySelector('[data-photo-editor-message]').textContent = t('photoEditor.hint');
       }
     });
     attachWhitePicker(host.querySelector('[data-photo-editor-preview]'));
@@ -1005,17 +884,13 @@ hUndo'),
       // preview operation and must be immediate once the editor is ready.
       const [originalImage, cutoutImage] = await Promise.all([
         loadSourceImage(photo.path),
-        photo.cutout?.path ? loadSourceImage(photo.cutout.path) :
-          Promise.resolve(null),
+        photo.cutout?.path ? loadSourceImage(photo.cutout.path) : Promise.resolve(null),
       ]);
       if (currentGeneration !== generation || !root()) return;
       sourceImages = {original: originalImage, cutout: cutoutImage};
       sourcePixels = {
-        original: imageDataFromCanvas(canvasFromImage(originalImage,
-          MAX_PREVIEW_SIDE)),
-        cutout: cutoutImage ?
-          imageDataFromCanvas(canvasFromImage(cutoutImage, MAX_PREVIEW_SIDE)) :
-          null,
+        original: imageDataFromCanvas(canvasFromImage(originalImage, MAX_PREVIEW_SIDE)),
+        cutout: cutoutImage ? imageDataFromCanvas(canvasFromImage(cutoutImage, MAX_PREVIEW_SIDE)) : null,
       };
       originalPreviewData = sourcePixels.original;
       const sourceKey = previewCutout ? 'cutout' : 'original';
@@ -1026,15 +901,13 @@ hUndo'),
       preview.width = sourceData.width;
       preview.height = sourceData.height;
       showPreviewNow();
-      root().querySelector('[data-photo-editor-message]').textContent =
-        t('photoEditor.hint');
+      root().querySelector('[data-photo-editor-message]').textContent = t('photoEditor.hint');
       syncSliders();
       resetViewport();
 
     } catch (error) {
       if (currentGeneration !== generation || !root()) return;
-      root().querySelector('[data-photo-editor-message]').textContent =
-        t('photoEditor.error');
+      root().querySelector('[data-photo-editor-message]').textContent = t('photoEditor.error');
       toast(error.message, true);
     }
   }
@@ -1105,8 +978,7 @@ hUndo'),
     stopPicking();
     stopBrush();
     if (previewCutout && !originalPreviewData) {
-      const photo = selection &&
-        findPhoto(selection.bottleId, selection.photoId);
+      const photo = selection && findPhoto(selection.bottleId, selection.photoId);
       if (!photo) return;
       const thisGeneration = generation;
       busy = true;
@@ -1118,12 +990,10 @@ hUndo'),
         original.src = imageUrl(photo.path);
         if (typeof original.decode === 'function') await original.decode();
         else await new Promise((resolve, reject) => {
-          original.onload =
-            resolve; original.onerror = reject;
+          original.onload = resolve; original.onerror = reject;
         });
         if (generation !== thisGeneration || !root()) return;
-        originalPreviewData =
-          imageDataFromCanvas(canvasFromImage(original, MAX_PREVIEW_SIDE));
+        originalPreviewData = imageDataFromCanvas(canvasFromImage(original, MAX_PREVIEW_SIDE));
       } catch (error) {
         if (generation === thisGeneration && root()) toast(error.message, true);
         return;
@@ -1168,19 +1038,15 @@ hUndo'),
         original.src = originalUrl;
         await original.decode();
         const sourceCanvas = canvasFromImage(original, MAX_PREVIEW_SIDE);
-        const corrected =
-          adjustPhotoPixels(imageDataFromCanvas(sourceCanvas), values);
-        sourceCanvas.getContext('2d')
-          .putImageData(new ImageData(corrected.data, corrected.width,
-            corrected.height),
-            0,
-            0
-          );
+        const corrected = adjustPhotoPixels(imageDataFromCanvas(sourceCanvas), values);
+        sourceCanvas.getContext('2d').putImageData(new ImageData(corrected.data, corrected.width, corrected.height),
+          0,
+          0
+        );
         segmentationUrl = sourceCanvas.toDataURL('image/png');
       }
       const cutoutData = await cutoutImage(originalUrl, phase => {
-        if (generation === thisGeneration && root()) message.textContent =
-          t(`cutout.${phase}`);
+        if (generation === thisGeneration && root()) message.textContent = t(`cutout.${phase}`);
       }, {segmentationUrl});
       if (generation !== thisGeneration || !root()) return;
       const cutoutImageElement = new Image();
@@ -1230,22 +1096,18 @@ hUndo'),
     if (!sourceImages[key] || !sourcePixels[key]) return;
     stopPicking();
     stopBrush();
-    if (previewCutout) cutoutMaskStrokes = maskStrokes.map(stroke =>
-      ({...stroke}));
+    if (previewCutout) cutoutMaskStrokes = maskStrokes.map(stroke => ({...stroke}));
     sourceValues[previewCutout ? 'cutout' : 'original'] = {...values};
     image = sourceImages[key];
     maskBaseData = next ? clonePixels(sourcePixels.cutout) : null;
     maskStrokes = next ? cutoutMaskStrokes.map(stroke => ({...stroke})) : [];
-    sourceData = next && maskStrokes.length
-      ? applyMaskStrokes(maskBaseData, maskStrokes) :
-      clonePixels(sourcePixels[key]);
+    sourceData = next && maskStrokes.length ? applyMaskStrokes(maskBaseData, maskStrokes) : clonePixels(sourcePixels[key]);
     previewCutout = next;
     values = {...sourceValues[key]};
     showingBefore = false;
     resetViewport();
     showPreviewNow();
-    root().querySelector('[data-photo-editor-message]').textContent =
-      t('photoEditor.hint');
+    root().querySelector('[data-photo-editor-message]').textContent = t('photoEditor.hint');
     syncSliders();
   }
 
@@ -1275,11 +1137,9 @@ hUndo'),
         pendingCutout = null;
         previewCutout = false;
         values = {...sourceValues.original};
-        maskBaseData = null; maskStrokes = []; cutoutMaskStrokes =
-          []; stopBrush();
+        maskBaseData = null; maskStrokes = []; cutoutMaskStrokes = []; stopBrush();
         showingBefore = false;
-        root().querySelector('[data-photo-editor-message]').textContent =
-          t('cutout.removed');
+        root().querySelector('[data-photo-editor-message]').textContent = t('cutout.removed');
         resetViewport();
         schedulePreview();
       } catch (error) {
@@ -1292,8 +1152,7 @@ hUndo'),
     }
     if (!photo.cutout) return;
     const result = await action(() => request(
-      `/api/bottles/${encodeURIComponent(selection.bottleId
-      )}/photos/${encodeURIComponent(selection.photoId)}/cutout`,
+      `/api/bottles/${encodeURIComponent(selection.bottleId)}/photos/${encodeURIComponent(selection.photoId)}/cutout`,
       {method: 'DELETE'}
     ));
     if (result.ok) {generation++; closeModal(true); toast(t('cutout.removed'));}
@@ -1315,10 +1174,8 @@ hUndo'),
       const photo = findPhoto(selection.bottleId, selection.photoId);
       const sourceKey = previewCutout ? 'cutout' : 'original';
       const savedSettings = savedSourceValues[sourceKey];
-      const settingsChanged = Object.keys(storedSettings).some(key =>
-        storedSettings[key] !== savedSettings[key]);
-      const selectedChanged = Boolean(photo?.cutout) && previewCutout !==
-        photo.cutout.selected;
+      const settingsChanged = Object.keys(storedSettings).some(key => storedSettings[key] !== savedSettings[key]);
+      const selectedChanged = Boolean(photo?.cutout) && previewCutout !== photo.cutout.selected;
       const cutoutEndpoint = endpoint().replace(/\/adjustments$/, '/cutout');
       /**
        * Selects for save matching the input.
@@ -1357,8 +1214,7 @@ hUndo'),
         closeModal(true);
         toast(t('photoEditor.saved'));
       };
-      const savingCutout = Boolean(pendingCutout || (previewCutout &&
-        maskStrokes.length));
+      const savingCutout = Boolean(pendingCutout || (previewCutout && maskStrokes.length));
       // Merely showing a different variant is a preview-only operation.
       // Save commits that selection; unchanged settings must never trigger a
       // regeneration or deletion of an existing edited derivative.
@@ -1367,10 +1223,8 @@ hUndo'),
         finishSave(result);
         return;
       }
-      if (!savingCutout && Object.values(storedSettings).every(value =>
-        value === 0)) {
-        const result = await commit(() =>
-          request(endpoint(), {method: 'DELETE'}));
+      if (!savingCutout && Object.values(storedSettings).every(value => value === 0)) {
+        const result = await commit(() => request(endpoint(), {method: 'DELETE'}));
         finishSave(result);
         return;
       }
@@ -1381,43 +1235,26 @@ hUndo'),
       let cutoutDataUrl = pendingCutout;
       if (maskStrokes.length) {
         cutoutCanvas = canvasFromImage(image, MAX_EXPORT_SIDE);
-        const masked = applyMaskStrokes(imageDataFromCanvas(cutoutCanvas),
-          maskStrokes);
-        cutoutCanvas.getContext('2d')
-          .putImageData(new ImageData(masked.data, masked.width, masked.height),
-            0,
-            0
-          );
+        const masked = applyMaskStrokes(imageDataFromCanvas(cutoutCanvas), maskStrokes);
+        cutoutCanvas.getContext('2d').putImageData(new ImageData(masked.data, masked.width, masked.height), 0, 0);
         cutoutDataUrl = cutoutCanvas.toDataURL('image/png');
         // Keep the PNG within the cutout endpoint's upload limit.
-        while (cutoutDataUrl.length > 13000000 &&
-          Math.max(cutoutCanvas.width, cutoutCanvas.height) > 800) {
+        while (cutoutDataUrl.length > 13000000 && Math.max(cutoutCanvas.width, cutoutCanvas.height) > 800) {
           const smaller = document.createElement('canvas');
           smaller.width = Math.round(cutoutCanvas.width * .8);
           smaller.height = Math.round(cutoutCanvas.height * .8);
-          smaller.getContext('2d').drawImage(cutoutCanvas,
-            0,
-            0,
-            smaller.width,
-            smaller.height
-          );
+          smaller.getContext('2d').drawImage(cutoutCanvas, 0, 0, smaller.width, smaller.height);
           cutoutCanvas = smaller;
           cutoutDataUrl = cutoutCanvas.toDataURL('image/png');
         }
-        if (cutoutDataUrl.length >
-          13000000) throw Error(t('photoEditor.tooLarge'));
+        if (cutoutDataUrl.length > 13000000) throw Error(t('photoEditor.tooLarge'));
       }
       let imageDataUrl;
       if (hasEdits) {
         let canvas = cutoutCanvas || canvasFromImage(image, MAX_EXPORT_SIDE);
         const source = imageDataFromCanvas(canvas);
         const adjusted = adjustPhotoPixels(source, storedSettings);
-        canvas.getContext('2d')
-          .putImageData(new ImageData(adjusted.data, adjusted.width,
-            adjusted.height),
-            0,
-            0
-          );
+        canvas.getContext('2d').putImageData(new ImageData(adjusted.data, adjusted.width, adjusted.height), 0, 0);
         let blob = await blobFromCanvas(canvas);
         // Preserve pixels: try modestly stronger compression before ever
         // reducing the actual export dimensions for the 10 MB upload limit.
@@ -1425,17 +1262,11 @@ hUndo'),
           if (blob.size <= MAX_IMAGE_BYTES) break;
           blob = await blobFromCanvas(canvas, quality);
         }
-        while (blob.size > MAX_IMAGE_BYTES &&
-          Math.max(canvas.width, canvas.height) > 800) {
+        while (blob.size > MAX_IMAGE_BYTES && Math.max(canvas.width, canvas.height) > 800) {
           const smaller = document.createElement('canvas');
           smaller.width = Math.round(canvas.width * .8);
           smaller.height = Math.round(canvas.height * .8);
-          smaller.getContext('2d').drawImage(canvas,
-            0,
-            0,
-            smaller.width,
-            smaller.height
-          );
+          smaller.getContext('2d').drawImage(canvas, 0, 0, smaller.width, smaller.height);
           canvas = smaller;
           blob = await blobFromCanvas(canvas, .9);
         }
@@ -1446,12 +1277,10 @@ hUndo'),
       const payload = savingCutout
         ? {
           image: cutoutDataUrl,
-          ...(hasEdits ?
-            {adjustment: {image: imageDataUrl, settings: storedSettings}} : {}),
+          ...(hasEdits ? {adjustment: {image: imageDataUrl, settings: storedSettings}} : {}),
         }
         : {image: imageDataUrl, settings: storedSettings};
-      const target = savingCutout ? endpoint()
-        .replace(/\/adjustments$/, '/cutout') : endpoint();
+      const target = savingCutout ? endpoint().replace(/\/adjustments$/, '/cutout') : endpoint();
       const result = await commit(() => request(target, {
         method: 'PUT', body: JSON.stringify(payload),
       }));

@@ -10,8 +10,7 @@ import {t} from '../i18n/index.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/whisky-color-selector.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/whisky-color-selector.html', import.meta.url));
 
 
 const COLOR_LABEL_KEYS = Object.freeze({
@@ -55,36 +54,27 @@ export function whiskyColorSelector(selected) {
   const {x, y} = custom ? whiskyPickerPosition(hex) : {x: 0.65, y: 0.48};
   return renderTemplate('whiskyColorSelector', {
     selected: selected || '',
-    color: t(
-      'tasting.color'),
+    color: t('tasting.color'),
     wHISKYCOLORS: composeMarkup(WHISKY_COLORS.map((item, i) =>
       renderTemplate('whiskyColorChoice', {
-        selected: selected === item.key ?
-          ' is-selected' :
-          '',
-        key: item
-          .key,
-        selected2: selected ===
-          item.key,
-        t: t(
-          COLOR_LABEL_KEYS[item.key]),
+        selected: selected === item.key ? ' is-selected' : '',
+        key: item.key,
+        selected2: selected === item.key,
+        t: t(COLOR_LABEL_KEYS[item.key]),
         glencairnSymbol: glencairnSymbol({
           liquidColor: item.hex,
           id: `color-glass-${i}`,
         }),
         t2: t(COLOR_LABEL_KEYS[item.key]),
       }))),
-    custom: custom ? ' is-selected' :
-      '',
+    custom: custom ? ' is-selected' : '',
     colorCustom: t('tasting.colorCustom'),
     glencairnSymbol: glencairnSymbol({
-      liquidColor: hex ||
-        'transparent', id: 'custom-color-glass',
+      liquidColor: hex || 'transparent', id: 'custom-color-glass',
     }),
     colorCustom2: t('tasting.colorCustom'),
     colorCustomPicker: t('tasting.colorCustomPicker'),
-    toFixed: (x * 100)
-      .toFixed(1),
+    toFixed: (x * 100).toFixed(1),
     toFixed2: (y * 100).toFixed(1),
     whiskyCustomColorName: whiskyCustomColorName(hex),
     hex: hex,
@@ -100,12 +90,10 @@ export function whiskyColorSelector(selected) {
 export function whiskyColorDisplay(selected) {
   const color = resolveWhiskyColor(selected);
   if (!color) return '';
-  const label = isCustomWhiskyColor(selected) ?
-    whiskyCustomColorName(color.hex) : t(COLOR_LABEL_KEYS[color.key]);
+  const label = isCustomWhiskyColor(selected) ? whiskyCustomColorName(color.hex) : t(COLOR_LABEL_KEYS[color.key]);
   return renderTemplate('tastingReadonlyColor', {
     glencairnSymbol: glencairnSymbol({
-      liquidColor:
-        color.hex, id: 'readonly-whisky-color',
+      liquidColor: color.hex, id: 'readonly-whisky-color',
     }),
     label: label,
   });

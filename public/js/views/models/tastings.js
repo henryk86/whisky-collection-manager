@@ -10,12 +10,9 @@ import {allStandaloneTastings}
 export function createTastingIndexViewModel(state) {
   const owned = state.collection?.bottlings || [];
   const entries = [
-    ...owned.flatMap(b => sortedTastings(b).map(record =>
-      ({record, b, external: false}))),
-    ...allStandaloneTastings(state.collection || {}).map(record =>
-      ({record, b: record.bottling, external: true})),
-  ].sort((a, b) => (b.record.tastedOn || '').localeCompare(a.record
-    .tastedOn || '') ||
+    ...owned.flatMap(b => sortedTastings(b).map(record => ({record, b, external: false}))),
+    ...allStandaloneTastings(state.collection || {}).map(record => ({record, b: record.bottling, external: true})),
+  ].sort((a, b) => (b.record.tastedOn || '').localeCompare(a.record.tastedOn || '') ||
     (b.record.createdAt || '').localeCompare(a.record.createdAt || '') ||
     b.record.id.localeCompare(a.record.id));
   return {owned, entries};

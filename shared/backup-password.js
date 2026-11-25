@@ -28,10 +28,7 @@ function passwordError(code, message) {
  */
 function passwordPath() {
   const control = process.env.BACKUP_CONTROL_DIR;
-  if (!control) throw passwordError(
-    BACKUP_PASSWORD_FAILURE.controlMissing,
-    'Backup-Verwaltung nicht eingerichtet'
-  );
+  if (!control) throw passwordError(BACKUP_PASSWORD_FAILURE.controlMissing, 'Backup-Verwaltung nicht eingerichtet');
   return path.join(path.resolve(control), 'backup-zip-password');
 }
 
@@ -43,16 +40,12 @@ function passwordPath() {
 export function readBackupPassword() {
   try {
     const value = fs.readFileSync(passwordPath(), 'utf8').replace(/\r?\n$/, '');
-    if (value.length < 14) throw passwordError(
-      BACKUP_PASSWORD_FAILURE.tooShort,
-      'Gespeichertes Backup-Passwort ist zu kurz'
-    );
+    if (value.length < 14) throw passwordError(BACKUP_PASSWORD_FAILURE.tooShort, 'Gespeichertes Backup-Passwort ist zu kurz');
     return value;
   } catch (error) {
     if (error.code === 'ENOENT') throw passwordError(
       BACKUP_PASSWORD_FAILURE.missing,
-      'Backup-Passwort noch nicht eingerichtet. Bitte in der \
-Backup-Verwaltung festlegen.'
+      'Backup-Passwort noch nicht eingerichtet. Bitte in der Backup-Verwaltung festlegen.'
     );
     throw error;
   }
@@ -66,8 +59,7 @@ Backup-Verwaltung festlegen.'
 export function hasBackupPassword() {
   try {readBackupPassword(); return true;}
   catch (error) {
-    if (error.backupPasswordCode ===
-      BACKUP_PASSWORD_FAILURE.missing) return false;
+    if (error.backupPasswordCode === BACKUP_PASSWORD_FAILURE.missing) return false;
     throw error;
   }
 }
@@ -79,15 +71,13 @@ export function hasBackupPassword() {
  * @param {string=} previous Previous used by this operation.
  */
 export function saveBackupPassword(password, previous = '') {
-  if (typeof password !== 'string' || password.length < 14 ||
-    password.length > 256 || !password.trim()) {
+  if (typeof password !== 'string' || password.length < 14 || password.length > 256 || !password.trim()) {
     throw Error('Backup-Passwort muss zwischen 14 und 256 Zeichen lang sein.');
   }
   if (hasBackupPassword()) {
     const old = Buffer.from(readBackupPassword());
     const supplied = Buffer.from(typeof previous === 'string' ? previous : '');
-    if (old.length !== supplied.length ||
-      !crypto.timingSafeEqual(old, supplied)) {
+    if (old.length !== supplied.length || !crypto.timingSafeEqual(old, supplied)) {
       throw Error('Bisheriges Backup-Passwort ist falsch.');
     }
   }

@@ -13,8 +13,7 @@ import {normalizeTastingRecord, sortedTastings}
  */
 function requireBottling(collection, id) {
   const bottling = collection.bottlings.find(b => b.id === id);
-  if (!bottling) throw fail('Abfüllung nicht gefunden', 404,
-    "api.errors.bottlingNotFound");
+  if (!bottling) throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
   return bottling;
 }
 
@@ -26,10 +25,8 @@ function requireBottling(collection, id) {
  * @return {*} Result computed from the supplied inputs.
  */
 function requireTasting(bottling, tastingId) {
-  const tasting = (bottling.tastings || []).find(entry => entry.id ===
-    tastingId);
-  if (!tasting) throw fail('Verkostung nicht gefunden', 404,
-    "api.errors.tastingNotFound");
+  const tasting = (bottling.tastings || []).find(entry => entry.id === tastingId);
+  if (!tasting) throw fail('Verkostung nicht gefunden', 404, "api.errors.tastingNotFound");
   return tasting;
 }
 
@@ -43,8 +40,7 @@ function requireTasting(bottling, tastingId) {
 function clean(input, old) {
   try {return normalizeTastingRecord(input, old);}
   catch (error) {
-    throw fail(error.message, 400, "api.errors.invalidTastingData"
-    );
+    throw fail(error.message, 400, "api.errors.invalidTastingData");
   }
 }
 
@@ -55,8 +51,7 @@ function clean(input, old) {
  * @return {!Array<*>} Resulting list of values.
  */
 export function listTastings(id) {
-  return sortedTastings(requireBottling(read(),
-    id));
+  return sortedTastings(requireBottling(read(), id));
 }
 
 /**
@@ -67,8 +62,7 @@ export function listTastings(id) {
  * @return {*} Value returned by the delegated operation.
  */
 export function getTasting(id, tastingId) {
-  return requireTasting(
-    requireBottling(read(), id), tastingId);
+  return requireTasting(requireBottling(read(), id), tastingId);
 }
 
 /**
@@ -124,10 +118,8 @@ export function updateTasting(id, tastingId, input) {
 export function deleteTasting(id, tastingId) {
   return change(collection => {
     const bottling = requireBottling(collection, id);
-    const index = (bottling.tastings || []).findIndex(entry => entry.id ===
-      tastingId);
-    if (index < 0) throw fail('Verkostung nicht gefunden', 404,
-      "api.errors.tastingNotFound");
+    const index = (bottling.tastings || []).findIndex(entry => entry.id === tastingId);
+    if (index < 0) throw fail('Verkostung nicht gefunden', 404, "api.errors.tastingNotFound");
     bottling.tastings.splice(index, 1);
     detachTastings(collection, [tastingId]);
 

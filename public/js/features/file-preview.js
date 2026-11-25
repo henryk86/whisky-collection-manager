@@ -4,8 +4,7 @@ import {escapeHtml, query} from '../ui/dom.js';
 import {httpResponseError} from '../api.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/file-preview.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/file-preview.html', import.meta.url));
 
 
 /**
@@ -26,8 +25,7 @@ export function documentPreviewKind(name) {
     gif: 'image/gif',
   };
   if (Object.hasOwn(images, ext)) return {kind: 'image', type: images[ext]};
-  if (['txt', 'csv', 'eml']
-    .includes(ext)) return {kind: 'text', type: 'text/plain'};
+  if (['txt', 'csv', 'eml'].includes(ext)) return {kind: 'text', type: 'text/plain'};
   return {kind: 'unsupported', type: null};
 }
 
@@ -61,20 +59,17 @@ export function createFilePreview({modal, state}) {
     const bottleId = button.dataset.id;
     const fileId = button.dataset.fileId;
     const name = button.dataset.fileName;
-    const url = `/api/bottles/${encodeURIComponent(bottleId
-    )}/files/${encodeURIComponent(fileId)}`;
+    const url = `/api/bottles/${encodeURIComponent(bottleId)}/files/${encodeURIComponent(fileId)}`;
     const preview = documentPreviewKind(name);
     modal.showModal(
       name,
       renderTemplate('documentPreviewStage', {
-        t: t(preview.kind === 'unsupported' ? 'detail.documen\
-ts.previewUnavailable' : 'detail.documents.previewLoading'),
+        t: t(preview.kind === 'unsupported' ? 'detail.documents.previewUnavailable' : 'detail.documents.previewLoading'),
         modalFooter: modalFooter(
           renderTemplate('primaryButton', {
             url: url,
             name: name,
-            download: t(
-              'detail.documents.download'),
+            download: t('detail.documents.download'),
           }),
           {className: 'document-preview-actions'}
         ),
@@ -103,8 +98,7 @@ ts.previewUnavailable' : 'detail.documents.previewLoading'),
         cache: 'no-store',
       });
       if (!response.ok) {
-        if (response.status ===
-          401) window.dispatchEvent(new Event('wcm:auth-required'));
+        if (response.status === 401) window.dispatchEvent(new Event('wcm:auth-required'));
         let data = null;
         if (response.headers.get('content-type')?.includes('json')) {
           try {

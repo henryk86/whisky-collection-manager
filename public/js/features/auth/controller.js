@@ -8,8 +8,7 @@ import {toast} from '../../ui/notifications.js';
 import {eyeIcon, eyeOffIcon} from '../../ui/action-icons.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/controller.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/controller.html', import.meta.url));
 
 
 /**
@@ -64,8 +63,7 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   ) => {
     const isPassword = type === 'password';
     return renderTemplate('formField', {
-      isPassword: isPassword ? ' auth-password-field' :
-        '',
+      isPassword: isPassword ? ' auth-password-field' : '',
       id: id,
       label: label,
       authPasswordInput: isPassword
@@ -73,10 +71,8 @@ export function createAuthController({root, state, render, refresh, applyTheme,
           id: id,
           id2: id,
           autocomplete: autocomplete,
-          minLength: minLength ? ` \
-minlength="${minLength}"` : '',
-          value: value ? ` value="${escapeHtml(value)}"` :
-            '',
+          minLength: minLength ? ` minlength="${minLength}"` : '',
+          value: value ? ` value="${escapeHtml(value)}"` : '',
           passwordToggle: passwordToggle(id),
         })
         : renderTemplate('fieldInput', {
@@ -84,10 +80,8 @@ minlength="${minLength}"` : '',
           id2: id,
           type: type,
           autocomplete: autocomplete,
-          minLength: minLength ? ` minlength="${minLength}"` :
-            '',
-          value: value ? ` value="${escapeHtml(value)}"` :
-            '',
+          minLength: minLength ? ` minlength="${minLength}"` : '',
+          value: value ? ` value="${escapeHtml(value)}"` : '',
         }),
     });
   };
@@ -107,8 +101,7 @@ minlength="${minLength}"` : '',
    */
   const panel = (title, body) =>
     renderTemplate('authPage', {
-      brand: brand(
-      ),
+      brand: brand(),
       title: title,
       body: body,
     });
@@ -125,10 +118,7 @@ minlength="${minLength}"` : '',
    * @param {*} text Text to process.
    * @return {string} Resulting text.
    */
-  const errorMarkup = text =>
-    renderTemplate('authErrorIcon', {
-      text: text,
-    });
+  const errorMarkup = text => renderTemplate('authErrorIcon', {text: text, });
 
   /**
    * Renders the controller state.
@@ -144,23 +134,10 @@ minlength="${minLength}"` : '',
         panel(
           tr(mandatory ? 'firstChangeTitle' : 'changeTitle'),
           renderTemplate('authChangeForm', {
-            field: field(
-              'currentPassword',
-              tr('currentPassword'),
-              {autocomplete: 'current-password'}
-            ),
-            field2: field(
-              'newPassword',
-              tr('newPassword'),
-              {autocomplete: 'new-password', minLength: 12}
-            ),
-            field3: field(
-              'confirmPassword',
-              tr('confirmPassword'),
-              {autocomplete: 'new-password', minLength: 12}
-            ),
-            passwordHint: tr('passwordHint'
-            ),
+            field: field('currentPassword', tr('currentPassword'), {autocomplete: 'current-password'}),
+            field2: field('newPassword', tr('newPassword'), {autocomplete: 'new-password', minLength: 12}),
+            field3: field('confirmPassword', tr('confirmPassword'), {autocomplete: 'new-password', minLength: 12}),
+            passwordHint: tr('passwordHint'),
             errorText: errorText(),
             savePassword: tr('savePassword'),
             canCancel: canCancel ?
@@ -175,16 +152,8 @@ minlength="${minLength}"` : '',
     } else {
       replaceContent(root, panel(tr('loginTitle'),
         renderTemplate('authLoginForm', {
-          field: field(
-            'username',
-            tr('username'),
-            {type: 'text', autocomplete: 'username'}
-          ),
-          field2: field(
-            'password',
-            tr('password'),
-            {autocomplete: 'current-password'}
-          ),
+          field: field('username', tr('username'), {type: 'text', autocomplete: 'username'}),
+          field2: field('password', tr('password'), {autocomplete: 'current-password'}),
           errorText: errorText(),
           signIn: tr('signIn'),
           content: !state.auth?.required ?
@@ -196,8 +165,7 @@ minlength="${minLength}"` : '',
         })));
     }
     applyTheme();
-    root.querySelector(mandatory || mode === 'change' ? '#currentPassword' :
-      '#username')?.focus();
+    root.querySelector(mandatory || mode === 'change' ? '#currentPassword' : '#username')?.focus();
   }
 
   /**
@@ -211,12 +179,9 @@ minlength="${minLength}"` : '',
     if (!output) return;
     let message = tr('failed');
     if (form.id === 'auth-login-form') {
-      if (reason?.status === 401 || reason?.code ===
-        'api.errors.invalidCredentials') message = tr('invalidCredentials');
-      else if (typeof reason?.message === 'string' && reason.message
-        .trim()) message = reason.message;
-    } else if (typeof reason?.message === 'string' && reason.message
-      .trim()) message = reason.message;
+      if (reason?.status === 401 || reason?.code === 'api.errors.invalidCredentials') message = tr('invalidCredentials');
+      else if (typeof reason?.message === 'string' && reason.message.trim()) message = reason.message;
+    } else if (typeof reason?.message === 'string' && reason.message.trim()) message = reason.message;
     replaceContent(output, errorMarkup(message));
     output.hidden = false;
   }
@@ -228,12 +193,10 @@ minlength="${minLength}"` : '',
   async function init() {
     state.auth = await request('/api/auth/session');
     if (state.auth.user?.mustChangePassword) {
-      mode =
-        'change'; show(); return false;
+      mode = 'change'; show(); return false;
     }
     if (state.auth.required && !state.auth.user) {
-      mode =
-        'login'; show(); return false;
+      mode = 'login'; show(); return false;
     }
     return true;
   }
@@ -255,8 +218,7 @@ minlength="${minLength}"` : '',
   async function resume() {
     clearResourceCache();
     if (state.auth?.required && !state.auth?.user) {
-      mode =
-        'login'; state.collection = null; show(); return;
+      mode = 'login'; state.collection = null; show(); return;
     }
     if (state.auth?.user?.mustChangePassword) {mode = 'change'; show(); return;}
     await refresh();
@@ -320,10 +282,8 @@ minlength="${minLength}"` : '',
     const users = state.authUsers || [];
     return renderTemplate('panel', {
       loginRequired: tr('loginRequired'),
-      loginSettingDescription: tr(
-        'loginSettingDescription'),
-      required: state.auth.required ?
-        tr('enabled') : tr('disabled'),
+      loginSettingDescription: tr('loginSettingDescription'),
+      required: state.auth.required ? tr('enabled') : tr('disabled'),
       authToggleRequiredButton: actionButton({
         label: state.auth.required ? tr('disable') : tr('enable'),
         action: 'auth-toggle-required',
@@ -332,35 +292,21 @@ minlength="${minLength}"` : '',
       users2: composeMarkup(users.map(user =>
         renderTemplate('authUserRow', {
           username: user.username,
-          role: user.role === 'admin' ?
-            tr('administrator') : tr('standardUser'),
-          mustChangePassword: user
-            .mustChangePassword ? ' · ' + tr('changePending') :
-            '',
+          role: user.role === 'admin' ? tr('administrator') : tr('standardUser'),
+          mustChangePassword: user.mustChangePassword ? ' · ' + tr('changePending') : '',
           authResetUser: user.id !== state.auth.user.id ?
             renderTemplate('authResetUser', {
               id: user.id,
-              resetPassword: tr('resetPassw\
-ord'),
+              resetPassword: tr('resetPassword'),
               id2: user.id,
               delete: tr('delete'),
             }) : '',
         }))),
       createUser: tr('createUser'),
-      field: field(
-        'username',
-        tr('username'),
-        {type: 'text', autocomplete: 'off'}
-      ),
-      field2: field(
-        'password',
-        tr('temporaryPassword'),
-        {autocomplete: 'new-password', minLength: 12}
-      ),
-      newUserHint: tr('newUserHint'
-      ),
-      createUser2: tr('createUser'
-      ),
+      field: field('username', tr('username'), {type: 'text', autocomplete: 'off'}),
+      field2: field('password', tr('temporaryPassword'), {autocomplete: 'new-password', minLength: 12}),
+      newUserHint: tr('newUserHint'),
+      createUser2: tr('createUser'),
     });
   }
 
@@ -375,30 +321,20 @@ ord'),
     else if (act === 'auth-logout') await logout();
     else if (act === 'auth-open-change') openChange();
     else if (act === 'auth-cancel') await resume();
-    else if (act === 'auth-toggle-required') changeSetting(!state.auth
-      .required);
+    else if (act === 'auth-toggle-required') changeSetting(!state.auth.required);
     else if (act === 'auth-toggle-password') {
       const input = document.getElementById(button.dataset.target || '');
       if (!input) return;
       const hidden = input.type === 'password';
       input.type = hidden ? 'text' : 'password';
       replaceContent(button, hidden ? eyeOffIcon : eyeIcon);
-      button.setAttribute(
-        'aria-label',
-        tr(hidden ? 'hidePassword' : 'showPassword')
-      );
-      button.setAttribute(
-        'title',
-        tr(hidden ? 'hidePassword' : 'showPassword')
-      );
+      button.setAttribute('aria-label', tr(hidden ? 'hidePassword' : 'showPassword'));
+      button.setAttribute('title', tr(hidden ? 'hidePassword' : 'showPassword'));
       button.setAttribute('aria-pressed', hidden ? 'true' : 'false');
     } else if (act === 'auth-confirm-required') {
       if (typeof pendingRequired !== 'boolean') return;
       const value = pendingRequired; pendingRequired = null;
-      const result = await request(
-        '/api/auth/config',
-        {method: 'PATCH', body: JSON.stringify({required: value})}
-      );
+      const result = await request('/api/auth/config', {method: 'PATCH', body: JSON.stringify({required: value})});
       state.auth.required = result.required;
       closeModal();
       await loadUsers();
@@ -408,18 +344,13 @@ ord'),
       showModal(tr('resetPassword'), renderTemplate('handleActionP', {
         username: user.username,
         id: user.id,
-        field: field(
-          'password',
-          tr('temporaryPassword'),
-          {autocomplete: 'new-password', minLength: 12}
-        ),
+        field: field('password', tr('temporaryPassword'), {autocomplete: 'new-password', minLength: 12}),
         newUserHint: tr('newUserHint'),
         closeModalButton: actionButton({
           label: tr('cancel'),
           action: 'close-modal',
         }),
-        apply: tr('apply'
-        ),
+        apply: tr('apply'),
       }));
     } else if (act === 'auth-delete-user') {
       const user = state.authUsers?.find(u => u.id === button.dataset.id);
@@ -444,10 +375,7 @@ ord'),
     } else if (act === 'auth-confirm-delete') {
       if (!pendingDelete) return;
       const id = pendingDelete; pendingDelete = null;
-      await request(
-        `/api/auth/users/${encodeURIComponent(id)}`,
-        {method: 'DELETE'}
-      );
+      await request(`/api/auth/users/${encodeURIComponent(id)}`, {method: 'DELETE'});
       closeModal(); await loadUsers();
     }
   }
@@ -487,8 +415,7 @@ ord'),
         form.elements.password.value = '';
         await resume();
       } else if (form.id === 'auth-change-form') {
-        if (form.elements.newPassword.value !== form.elements
-          .confirmPassword.value) throw Error(tr('passwordMismatch'));
+        if (form.elements.newPassword.value !== form.elements.confirmPassword.value) throw Error(tr('passwordMismatch'));
         state.auth = await request(
           '/api/auth/password',
           {
@@ -515,8 +442,7 @@ ord'),
         await loadUsers(); toast(tr('userCreated'));
       } else if (form.id === 'auth-reset-form') {
         await request(
-          `/api/auth/users/${encodeURIComponent(form.dataset
-            .userId)}/reset-password`,
+          `/api/auth/users/${encodeURIComponent(form.dataset.userId)}/reset-password`,
           {
             method: 'POST',
             body: JSON.stringify({password: form.elements.password.value}),
@@ -525,8 +451,7 @@ ord'),
         closeModal(); await loadUsers(); toast(tr('passwordReset'));
       }
     })().catch(reason => {
-      if (form.id === 'auth-login-form' || form.id ===
-        'auth-change-form') error(form, reason);
+      if (form.id === 'auth-login-form' || form.id === 'auth-change-form') error(form, reason);
       else toast(reason.message, true);
     }).finally(() => {if (submit.isConnected) submit.disabled = false;});
     return true;

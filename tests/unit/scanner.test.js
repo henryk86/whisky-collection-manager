@@ -92,10 +92,7 @@ test(
 );
 test('inventory number lookup preserves leading zeroes', () => {
   assert.equal(lookupInventoryNumber(collectionFixture(), '123'), null);
-  assert.equal(
-    lookupInventoryNumber(collectionFixture(), '000123').bottle.id,
-    'bottle-a'
-  );
+  assert.equal(lookupInventoryNumber(collectionFixture(), '000123').bottle.id, 'bottle-a');
 });
 test(
   'unknown code only reports the result and never opens an editor',
@@ -119,11 +116,7 @@ test(
   async () => {
     const form = {
       elements: {
-        inventoryNumber: {
-          value: '',
-        }, comment: {
-          value: '',
-        },
+        inventoryNumber: {value: '', }, comment: {value: '', },
       },
     };
     const {state, resolve, calls} = resolverContext({
@@ -134,11 +127,7 @@ test(
       query: () => form,
     });
     state.scanReturn = {
-      modal: {
-        title: 'Edit',
-      }, values: {
-        comment: 'Unsaved',
-      },
+      modal: {title: 'Edit', }, values: {comment: 'Unsaved', },
     };
     await resolve('009999', true);
     assert.equal(form.elements.inventoryNumber.value, '009999');

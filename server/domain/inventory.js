@@ -10,10 +10,7 @@ import {allBottles} from './collection.js';
  * @return {string} Resulting text.
  */
 export function suggestNumber(db) {
-  const used = new Set([
-    ...db.reservedInventoryNumbers,
-    ...allBottles(db).map(b => b.inventoryNumber).filter(Boolean),
-  ]);
+  const used = new Set([...db.reservedInventoryNumbers, ...allBottles(db).map(b => b.inventoryNumber).filter(Boolean),]);
   let n = db.nextInventoryNumber;
   while (used.has(String(n).padStart(6, '0'))) {
     n++;

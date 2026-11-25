@@ -79,8 +79,7 @@ test(
           context.base + '/api/collection',
           {headers: {Host: host}},
           response => {
-            response.resume(); response.on('end', () =>
-              resolve(response.statusCode));
+            response.resume(); response.on('end', () => resolve(response.statusCode));
           }
         ).on('error', reject);
       });
@@ -93,33 +92,22 @@ test(
 );
 
 test(
-  'security: served HTML has CSP, referrer and framing protections with \
-valid inline hashes',
+  'security: served HTML has CSP, referrer and framing protections with valid inline hashes',
   async () => {
     const context = await startTestServer();
     try {
       const response = await fetch(context.base + '/');
       assert.equal(response.status, 200);
       assert.equal(response.headers.get('x-frame-options'), 'DENY');
-      assert.equal(
-        response.headers.get('referrer-policy'),
-        'strict-origin-when-cross-origin'
-      );
+      assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
       const csp = response.headers.get('content-security-policy');
       assert.match(csp, /frame-ancestors 'none'/);
       assert.match(csp, /script-src 'self'/);
       assert.ok(!csp.includes("script-src 'self' 'unsafe-inline'"));
-      assert.ok(
-        csp.includes("'wasm-unsafe-eval'"),
-        'ONNX WebAssembly is permitted'
-      );
-      assert.ok(
-        !csp.includes("'unsafe-eval'"),
-        'unrestricted code evaluation remains forbidden'
-      );
+      assert.ok(csp.includes("'wasm-unsafe-eval'"), 'ONNX WebAssembly is permitted');
+      assert.ok(!csp.includes("'unsafe-eval'"), 'unrestricted code evaluation remains forbidden');
       const html = await response.text();
-      const inlines = [...html.matchAll(
-        /<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)];
+      const inlines = [...html.matchAll(/<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)];
       assert.equal(inlines.length, 2);
       for (const [, body] of inlines) {
         const hash = crypto.createHash('sha256').update(body).digest('base64');
@@ -130,8 +118,7 @@ valid inline hashes',
 );
 
 test(
-  'security: malformed percent-encoded paths are client errors, not server \
-crashes',
+  'security: malformed percent-encoded paths are client errors, not server crashes',
   async () => {
     const context = await startTestServer();
     try {
@@ -142,10 +129,7 @@ crashes',
       assert.match((await response.json()).error, /Invalid path/);
       assert.equal((await fetch(context.base + '/images/%E0')).status, 400);
       assert.equal((await fetch(context.base + '/api/version')).status, 200);
-      assert.ok(
-        !errors.some(message => /URIError|stacktrace/i.test(message)),
-        errors.join('')
-      );
+      assert.ok(!errors.some(message => /URIError|stacktrace/i.test(message)), errors.join(''));
 
     } finally {await context.stop();}
   }
@@ -171,10 +155,7 @@ test(
           response => {
             let body = '';
             response.on('data', chunk => body += chunk);
-            response.on(
-              'end',
-              () => resolve({status: response.statusCode, body})
-            );
+            response.on('end', () => resolve({status: response.statusCode, body}));
           }
         ).on('error', reject);
       });
@@ -182,20 +163,15 @@ test(
         const result = await requestWithHost('attacker.example');
         assert.equal(result.status, 421);
         assert.match(JSON.parse(result.body).error, /ALLOWED_HOSTS/);
-        assert.ok(
-          !result.body.includes('attacker.example'),
-          'rejected value must not be reflected to client'
-        );
+        assert.ok(!result.body.includes('attacker.example'), 'rejected value must not be reflected to client');
       }
       assert.equal((await requestWithHost('localhost:3543')).status, 200);
       // stderr is streamed from a separate process; allow the last event to
       // arrive.
-      for (let i = 0; i < 20 && !warnings.join('')
-        .includes('Abgelehnter HTTP-Host:'); i++) {
+      for (let i = 0; i < 20 && !warnings.join('').includes('Abgelehnter HTTP-Host:'); i++) {
         await new Promise(resolve => setTimeout(resolve, 10));
       }
-      const matches = warnings.join('')
-        .match(/Abgelehnter HTTP-Host: attacker\.example/g) || [];
+      const matches = warnings.join('').match(/Abgelehnter HTTP-Host: attacker\.example/g) || [];
       assert.equal(matches.length, 1, warnings.join(''));
       assert.match(warnings.join(''), /ALLOWED_HOSTS/);
     } finally {await context.stop();}
@@ -203,8 +179,7 @@ test(
 );
 
 test(
-  'security: aborted static downloads do not log expected broken-pipe stack \
-traces',
+  'security: aborted static downloads do not log expected broken-pipe stack traces',
   async () => {
     const context = await startTestServer();
     const errors = [];
@@ -223,26 +198,21 @@ traces',
             response.once('data', () => response.destroy());
             response.once('close', resolve);
             response.on('error', error => {
-              if (!['ECONNRESET', 'ERR_STREAM_PREMATURE_CLOSE']
-                .includes(error.code)) reject(error);
+              if (!['ECONNRESET', 'ERR_STREAM_PREMATURE_CLOSE'].includes(error.code)) reject(error);
             });
           }
         );
         req.on('error', reject);
       });
       await new Promise(resolve => setTimeout(resolve, 100));
-      assert.doesNotMatch(
-        errors.join(''),
-        /ERR_STREAM_PREMATURE_CLOSE|Premature close|ECONNRESET|EPIPE/
-      );
+      assert.doesNotMatch(errors.join(''), /ERR_STREAM_PREMATURE_CLOSE|Premature close|ECONNRESET|EPIPE/);
       assert.equal((await fetch(context.base + '/api/version')).status, 200);
     } finally {await context.stop();}
   }
 );
 
 test(
-  'security: HTTPS Origin over an HTTP upstream is rejected without proxy \
-trust',
+  'security: HTTPS Origin over an HTTP upstream is rejected without proxy trust',
   async () => {
     const context = await startTestServer();
     try {
@@ -257,10 +227,8 @@ trust',
         body: JSON.stringify({name: 'Not written'}),
       });
       assert.equal(response.status, 403);
-      const collection = await (await fetch(context.base +
-        '/api/collection')).json();
-      assert.ok(!collection.bottlings.some(item => item.name ===
-        'Not written'));
+      const collection = await (await fetch(context.base + '/api/collection')).json();
+      assert.ok(!collection.bottlings.some(item => item.name === 'Not written'));
     } finally {await context.stop();}
   }
 );
@@ -293,20 +261,13 @@ test(
       }
       assert.equal(await statusWithHost('untrusted-23.example'), 421);
       // Collect any last stderr event from the child before checking the log.
-      for (let i = 0; i < 30 && !warnings.join('')
-        .includes('Weitere abgelehnte Hosts'); i++) {
+      for (let i = 0; i < 30 && !warnings.join('').includes('Weitere abgelehnte Hosts'); i++) {
         await new Promise(resolve => setTimeout(resolve, 10));
       }
       const output = warnings.join('');
+      assert.equal((output.match(/Abgelehnter HTTP-Host:/g) || []).length, 20, output);
       assert.equal(
-        (output.match(/Abgelehnter HTTP-Host:/g) || []).length,
-        20,
-        output
-      );
-      assert.equal(
-        (output.match(
-          /Weitere abgelehnte Hosts werden nicht mehr einzeln protokolliert/g
-        ) || []).length,
+        (output.match(/Weitere abgelehnte Hosts werden nicht mehr einzeln protokolliert/g) || []).length,
         1,
         output
       );
@@ -317,8 +278,7 @@ test(
 );
 
 test(
-  'security: disconnect during incoming JSON upload is not an internal \
-server error',
+  'security: disconnect during incoming JSON upload is not an internal server error',
   async () => {
     const context = await startTestServer();
     const stderr = [];
@@ -346,16 +306,9 @@ server error',
       await new Promise(resolve => setTimeout(resolve, 110));
       assert.doesNotMatch(
         stderr.join(''),
-        new RegExp(
-          'Interner Serverfehler|Error: aborted|ECONN' +
-          'RESET|ERR_STREAM_PREMATURE_CLOSE|EPIPE'
-        )
+        new RegExp('Interner Serverfehler|Error: aborted|ECONN' + 'RESET|ERR_STREAM_PREMATURE_CLOSE|EPIPE')
       );
-      assert.equal(
-        fs.readFileSync(file, 'utf8'),
-        before,
-        'aborted import must not write partial data'
-      );
+      assert.equal(fs.readFileSync(file, 'utf8'), before, 'aborted import must not write partial data');
       assert.equal((await fetch(context.base + '/api/version')).status, 200);
     } finally {await context.stop();}
   }

@@ -27,8 +27,7 @@ export function pageFromSearch(search = '') {
  * @return {(string)} New instance constructed from the inputs.
  */
 export function overviewModeFromSearch(search = '') {
-  return new URLSearchParams(search).get('mode') === 'bottles' ? 'bottles' :
-    'bottlings';
+  return new URLSearchParams(search).get('mode') === 'bottles' ? 'bottles' : 'bottlings';
 }
 
 /**
@@ -56,13 +55,11 @@ export function homePageUrl(page, mode = 'bottlings') {
  */
 export function paginate(items, requestedPage = 1, requestedSize =
   DEFAULT_PAGE_SIZE) {
-  const pageSize = Number.isSafeInteger(Number(requestedSize)) &&
-    Number(requestedSize) >= 1 && Number(requestedSize) <= 240 ?
+  const pageSize = Number.isSafeInteger(Number(requestedSize)) && Number(requestedSize) >= 1 && Number(requestedSize) <= 240 ?
     Number(requestedSize) : DEFAULT_PAGE_SIZE;
   const total = items.length;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
-  const numericPage = Number.isSafeInteger(Number(requestedPage)) ?
-    Number(requestedPage) : 1;
+  const numericPage = Number.isSafeInteger(Number(requestedPage)) ? Number(requestedPage) : 1;
   const page = Math.max(1, Math.min(pageCount, numericPage));
   const start = (page - 1) * pageSize;
   return {
@@ -85,14 +82,11 @@ export function paginate(items, requestedPage = 1, requestedSize =
  * @return {!Array<*>} Resulting list of values.
  */
 export function visiblePages(current, totalPages) {
-  if (totalPages <= 7) return Array.from({length: totalPages}, (_, index) =>
-    index + 1);
+  if (totalPages <= 7) return Array.from({length: totalPages}, (_, index) => index + 1);
   const pages = new Set([1, totalPages, current - 1, current, current + 1]);
   if (current < 4) for (const n of [2, 3, 4]) pages.add(n);
-  if (current > totalPages - 3) for (const n of [totalPages -
-    3, totalPages - 2, totalPages - 1]) pages.add(n);
-  const ordered = [...pages].filter(n => n > 0 && n <= totalPages)
-    .sort((a, b) => a - b);
+  if (current > totalPages - 3) for (const n of [totalPages - 3, totalPages - 2, totalPages - 1]) pages.add(n);
+  const ordered = [...pages].filter(n => n > 0 && n <= totalPages).sort((a, b) => a - b);
   return ordered.flatMap((number, index) => {
     if (!index || number - ordered[index - 1] === 1) return [number];
     return ['…', number];

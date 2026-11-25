@@ -11,8 +11,7 @@ import {toast} from '../../ui/notifications.js';
 import {profileForm} from '../../views/backups.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/controller.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/controller.html', import.meta.url));
 
 /**
  * Creates backup controller for controller.
@@ -55,12 +54,9 @@ export function createBackupController({state, render, showModal, closeModal}) {
       redraw();
       if (!quiet) toast(t("backups.status.refreshed"));
     } catch (err) {
-      if (err.code ===
-        'api.errors.backupManagementIsLockedAdministratorKeyRequired' ||
-        err.status === 401) lock();
+      if (err.code === 'api.errors.backupManagementIsLockedAdministratorKeyRequired' || err.status === 401) lock();
       else {
-        state.backupError =
-          err.message; if (!quiet) toast(err.message, true);
+        state.backupError = err.message; if (!quiet) toast(err.message, true);
       }
     }
   }
@@ -113,11 +109,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
     if (id && !profile) return toast(t("backups.profiles.notFound"), true);
     showModal(
       profile ? t("backups.profiles.edit") : t("backups.profiles.add"),
-      profileForm(
-        profile,
-        state.backupDashboard?.remotes || [],
-        state.backupDashboard?.targets || []
-      ),
+      profileForm(profile, state.backupDashboard?.remotes || [], state.backupDashboard?.targets || []),
       true
     );
     toggleFields(document.querySelector('#backup-profile-form'));
@@ -131,12 +123,10 @@ export function createBackupController({state, render, showModal, closeModal}) {
   function toggleFields(form) {
     if (!form) return;
     const local = form.elements.provider.value === 'local';
-    for (const row of form.querySelectorAll(
-      '[data-backup-local], [data-backup-cloud]')) {
+    for (const row of form.querySelectorAll('[data-backup-local], [data-backup-cloud]')) {
       const display = row.hasAttribute('data-backup-local') ? local : !local;
       row.hidden = !display;
-      for (const control of row.querySelectorAll('input, select')) control
-        .disabled = !display;
+      for (const control of row.querySelectorAll('input, select')) control.disabled = !display;
     }
   }
 
@@ -159,8 +149,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
     const input = {
       name: el('name').value.trim(), provider: el('provider').value,
       remote: el('provider').value === 'local' ? '' : el('remote').value.trim(),
-      targetPath: el('provider').value === 'local' ? el('localTargetPath')
-        .value : el('cloudTargetPath').value.trim(),
+      targetPath: el('provider').value === 'local' ? el('localTargetPath').value : el('cloudTargetPath').value.trim(),
       enabled: el('enabled').checked,
       schedule: {
         frequency: el('frequency').value,
@@ -201,8 +190,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
     const form = event.target;
     const password = form.elements.password.value;
     const confirm = form.elements.confirm.value;
-    if (password !== confirm) return toast(t("backups.password.mismatch"),
-      true);
+    if (password !== confirm) return toast(t("backups.password.mismatch"), true);
     const button = form.querySelector('[type="submit"]');
     button.disabled = true;
     try {
@@ -232,14 +220,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
         throw httpResponseError(response.status, body);
       }
       const disposition = response.headers.get('content-disposition') || '';
-      const name = disposition.match(/filename="?([^";]+)"?/i)?.[1] ||
-        'whisky-backup.zip';
+      const name = disposition.match(/filename="?([^";]+)"?/i)?.[1] || 'whisky-backup.zip';
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       try {
         const link = document.createElement('a');
-        link.href = url; link.download = name; document.body
-          .append(link); link.click(); link.remove();
+        link.href = url; link.download = name; document.body.append(link); link.click(); link.remove();
       } finally {setTimeout(() => URL.revokeObjectURL(url), 60000);}
     } catch (error) {toast(error.message, true);}
   }
@@ -288,8 +274,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
             catch (error) {toast(error.message, true);}
           } else {
             toast(
-              found.state === 'success' ? (found.message ||
-                t("backups.jobs.succeeded")) : jobErrorText(found),
+              found.state === 'success' ? (found.message || t("backups.jobs.succeeded")) : jobErrorText(found),
               found.state === 'failed'
             );
           }
@@ -311,8 +296,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
   async function download(id, filename) {
     if (!token) return toast(t("backups.security.unlockFirst"), true);
     const response = await fetch(
-      `/api/backups/${encodeURIComponent(id)}/files/${encodeURIComponent(
-        filename)}`,
+      `/api/backups/${encodeURIComponent(id)}/files/${encodeURIComponent(filename)}`,
       {
         headers: {'X-Backup-Admin-Token': token}, cache: 'no-store',
       }
@@ -341,16 +325,11 @@ export function createBackupController({state, render, showModal, closeModal}) {
       t("backups.actions.validateAndRestoreZip"),
       renderTemplate('backupApplyZipForm', {
         id: result.id,
-        filename: filename ||
-          t("backups.page.backupTitle"),
+        filename: filename || t("backups.page.backupTitle"),
         bottlings: result.bottlings,
-        bottles: result
-          .bottles,
+        bottles: result.bottles,
         distilleries: result.distilleries,
-        restoredAssets: t(
-          "features.backups.restoredAssets",
-          {count: result.files, size: (result.bytes / 1048576).toFixed(1)}
-        ),
+        restoredAssets: t("features.backups.restoredAssets", {count: result.files, size: (result.bytes / 1048576).toFixed(1)}),
         id2: result.id,
         closeModalButton: actionButton({
           label: t("common.actions.cancel"),
@@ -373,8 +352,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
       renderTemplate('backupUnlockZipForm', {
         id: id,
         filename: filename || 'Sicherung.zip',
-        filename2: filename ||
-          '',
+        filename2: filename || '',
         closeModalButton: actionButton({
           label: t("common.actions.cancel"),
           action: 'close-modal',
@@ -398,8 +376,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
     button.disabled = true;
     try {
       const result = await get(
-        `/api/backups/import-zip/${encodeURIComponent(form.dataset
-          .id)}/unlock`,
+        `/api/backups/import-zip/${encodeURIComponent(form.dataset.id)}/unlock`,
         {
           method: 'POST', body: JSON.stringify({password}),
         }
@@ -422,15 +399,11 @@ export function createBackupController({state, render, showModal, closeModal}) {
         headers: {'X-Backup-Admin-Token': token}, cache: 'no-store',
       }
     );
-    if (!response.ok) throw httpResponseError(
-      response.status,
-      await response.json().catch(() => ({}))
-    );
+    if (!response.ok) throw httpResponseError(response.status, await response.json().catch(() => ({})));
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
     try {
-      const a = document.createElement('a'); a.href = url; a.download =
-        'whisky-backup-wiederherstellung.zip';
+      const a = document.createElement('a'); a.href = url; a.download = 'whisky-backup-wiederherstellung.zip';
       document.body.append(a); a.click(); a.remove();
     } finally {setTimeout(() => URL.revokeObjectURL(url), 60000);}
   }
@@ -455,8 +428,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
         headers: {
           'Content-Type': 'application/zip',
           'X-Backup-Admin-Token': token,
-          'X-Backup-Zip-Password': encodeURIComponent(form.elements
-            .password.value),
+          'X-Backup-Zip-Password': encodeURIComponent(form.elements.password.value),
         },
         body: file,
       });
@@ -482,8 +454,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
     button.disabled = true;
     try {
       await get(
-        `/api/backups/import-zip/${encodeURIComponent(form.dataset
-          .id)}/apply`,
+        `/api/backups/import-zip/${encodeURIComponent(form.dataset.id)}/apply`,
         {
           method: 'POST',
           body: JSON.stringify({acknowledge: true, password: restorePassword}),
@@ -544,16 +515,13 @@ export function createBackupController({state, render, showModal, closeModal}) {
       renderTemplate('backupRestoreForm', {
         id: id,
         name: profile.name,
-        zip: zip ?
-          t("backups.restore.validationBeforeOverwrite") :
-          t("backups.legacy.resticConvertExplanation"),
+        zip: zip ? t("backups.restore.validationBeforeOverwrite") : t("backups.legacy.resticConvertExplanation"),
         length: snapshots.length ?
           composeMarkup(snapshots.map(s =>
             renderTemplate('restoreOption', {
               id: s.id,
               shortId: s.shortId,
-              toLocaleString: new Date(s.time)
-                .toLocaleString('de-DE'),
+              toLocaleString: new Date(s.time).toLocaleString('de-DE'),
             }))) :
           renderTemplate('restoreOption2'),
         closeModalButton: actionButton({

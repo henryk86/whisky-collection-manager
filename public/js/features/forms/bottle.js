@@ -9,8 +9,7 @@ import {bottleStatusLabels, whiskyTypeName, photoAccept}
 import {fileAccept} from '../files.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/bottle.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/bottle.html', import.meta.url));
 
 /**
  * Creates bottle form for bottle.
@@ -30,8 +29,7 @@ export function createBottleForm({state, selectors}) {
    */
   function bottleForm(bottle = {}, bottlingId,
     {fromOverview = false, importPhoto = false} = {}) {
-    const owner = state.collection.bottlings.find(entry => entry.id ===
-      bottlingId);
+    const owner = state.collection.bottlings.find(entry => entry.id === bottlingId);
     if (!owner) {
       throw Error(t('features.errors.parentBottlingNotFound'));
     }
@@ -41,8 +39,7 @@ export function createBottleForm({state, selectors}) {
       [t('forms.bottling.bottler'), owner.bottler],
       [
         t('forms.bottling.ageYears'),
-        owner.ageYears == null ? '' :
-          t('home.facts.years', {count: owner.ageYears}),
+        owner.ageYears == null ? '' : t('home.facts.years', {count: owner.ageYears}),
       ],
       [t('forms.bottling.abv'), owner.abv == null ? '' : `${owner.abv} % Vol.`],
       [
@@ -63,8 +60,7 @@ export function createBottleForm({state, selectors}) {
     return renderTemplate('bottleForm', {
       fromOverview: fromOverview ? ' data-from-overview="1"' : '',
       photoOption: importPhoto ? renderTemplate('importPhoto') : '',
-      id: bottle.id ||
-        '',
+      id: bottle.id || '',
       bottlingId: bottlingId,
       context: context,
       inventoryNumberField: textInput(
@@ -111,14 +107,7 @@ export function createBottleForm({state, selectors}) {
         ]),
         bottle.status || 'closed'
       ),
-      purchaseDateField: textInput(
-        t("forms.bottle.purchaseDate"),
-        'purchaseDate',
-        bottle.purchaseDate,
-        {
-          type: 'date',
-        }
-      ),
+      purchaseDateField: textInput(t("forms.bottle.purchaseDate"), 'purchaseDate', bottle.purchaseDate, {type: 'date', }),
       purchasePriceField: textInput(
         t("forms.bottle.purchasePrice"),
         'purchasePrice',
@@ -127,34 +116,11 @@ export function createBottleForm({state, selectors}) {
           type: 'number', step: '0.01',
         }
       ),
-      currencyField: textInput(
-        t("forms.bottle.currency"),
-        'currency',
-        bottle.currency || 'EUR'
-      ),
-      merchantField: textInput(t("forms.bottle.seller"), 'merchant',
-        bottle.merchant),
-      openedAtField: textInput(
-        t("forms.bottle.openingDate"),
-        'openedAt',
-        bottle.openedAt,
-        {
-          type: 'date',
-        }
-      ),
-      emptiedAtField: textInput(
-        t("forms.bottle.emptyDate"),
-        'emptiedAt',
-        bottle.emptiedAt,
-        {
-          type: 'date',
-        }
-      ),
-      commentField: areaInput(
-        t("forms.bottle.personalComment"),
-        'comment',
-        bottle.comment
-      ),
+      currencyField: textInput(t("forms.bottle.currency"), 'currency', bottle.currency || 'EUR'),
+      merchantField: textInput(t("forms.bottle.seller"), 'merchant', bottle.merchant),
+      openedAtField: textInput(t("forms.bottle.openingDate"), 'openedAt', bottle.openedAt, {type: 'date', }),
+      emptiedAtField: textInput(t("forms.bottle.emptyDate"), 'emptiedAt', bottle.emptiedAt, {type: 'date', }),
+      commentField: areaInput(t("forms.bottle.personalComment"), 'comment', bottle.comment),
       photoAccept: photoAccept,
       fileAccept: fileAccept,
       inventoryScanIcon: inventoryScanIcon,

@@ -5,8 +5,7 @@ import {escapeHtml} from './dom.js';
 import {CASK_GROUPS} from '../domain/flight-casks.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/flight-planning-help.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/flight-planning-help.html', import.meta.url));
 
 
 /**
@@ -21,38 +20,27 @@ const FORMULAS = Object.freeze({
     'K = sum_g(min(1, sum_i(w_i(g)/max(1, sum_h(w_i(h))))))',
   age: 'dA = min(abs(ageA-ageB)/15, 1) (only if both ages are known)',
   combined:
-    'wG=0.65, wF=0.25, wA=0.10\nDsigned = 10 * sum(wi * direction(i) * di) \
-/ sum(wi for known dimensions)\ndirection(i): Similar=-1, Contrast=+1; \
-explicit preferences override F/A',
-  preferences: 'Pref = 9*matchingCaskGroup + 4*matchingCaskDetails + ' +
-    '3*agesInPreferredRange\n' +
+    'wG=0.65, wF=0.25, wA=0.10\nDsigned = 10 * sum(wi * direction(i) * di) / sum(wi for known dimensions)\ndirection(i): Similar=-1, Contrast=+1; explicit preferences override F/A',
+  preferences: 'Pref = 9*matchingCaskGroup + 4*matchingCaskDetails + ' + '3*agesInPreferredRange\n' +
     '(group and detail matches require the selected phase)\n' +
     '(phase only: +9 for matching phase; no extra detail bonus)\n' +
     'For Balanced/Discover: +4*sum(dF) if varied, -4*sum(dF) if similar;\n' +
     '+2*sum(dA) if varied, -2*sum(dA) if similar',
-  intensity:
-    'I(A) = (ABV or 40) / 12 + mean(assessed axes) + smoky / 4 + peaty / 4',
+  intensity: 'I(A) = (ABV or 40) / 12 + mean(assessed axes) + smoky / 4 + peaty / 4',
   novelty:
-    'N(A) = (never tasted ? 30 : 0) + (no profile ? 4 : 0) + (open ? 3 : \
-0)\n       + min(10, max(0, days since last tasting / 30))',
-  unfamiliar:
-    'U(A) = min(d(A,H)) for H in tasting history; 0 if no comparison exists',
+    'N(A) = (never tasted ? 30 : 0) + (no profile ? 4 : 0) + (open ? 3 : 0)\n       + min(10, max(0, days since last tasting / 30))',
+  unfamiliar: 'U(A) = min(d(A,H)) for H in tasting history; 0 if no comparison exists',
   balanced: 'S = -2*V + 13*G + 4*R + 0.08*sum(N) - P - 1.5*L - 1.5*M\n' +
     '  + (cask auto ? 4*K + 4*J : 0) + (age auto ? 2*Q : 0) + Pref\n' +
     'P = (comparable pairs exist ? 1.2*abs(Davg - 3) : 4)',
   similar:
-    'S = -2*V + 8*R + 3.2*sum(Dsigned) - 14*M + F + Pref\nF = (no focus ? 0 \
-: sum(rated focus ? 1.9*focusValue : -12))',
-  contrast:
-    'S = -2*V + 8*R + 2.5*sum(Dsigned) + 3*G - 14*M - 3*max(0, L-3) + Pref',
+    'S = -2*V + 8*R + 3.2*sum(Dsigned) - 14*M + F + Pref\nF = (no focus ? 0 : sum(rated focus ? 1.9*focusValue : -12))',
+  contrast: 'S = -2*V + 8*R + 2.5*sum(Dsigned) + 3*G - 14*M - 3*max(0, L-3) + Pref',
   discover: 'S = -2*V + sum(N + (prefer unfamiliar ? 2*U : 0)) + 2*G\n' +
     '  + (cask auto ? 5*Knew + 4*Jnew : 0) + (age auto ? 3*Qnew : 0) + Pref',
   transition:
-    'delta = I(B) - I(A)\nC(A,B) = 0.35*abs(delta) + 1.8*max(0, delta-3)\n  \
-     + 2.8*max(0, -delta) + 0.55*(profileDistance(A,B) or 0)\n       + \
-0.65*(dF(A,B) or 0) + 0.025*min(abs(ageA-ageB),15) if ages known',
-  order: 'C(start) = 2*(I(first) - min(I(all)))\nC(total) = C(start) + \
-sum(C(previous, next)) -> minimize',
+    'delta = I(B) - I(A)\nC(A,B) = 0.35*abs(delta) + 1.8*max(0, delta-3)\n       + 2.8*max(0, -delta) + 0.55*(profileDistance(A,B) or 0)\n       + 0.65*(dF(A,B) or 0) + 0.025*min(abs(ageA-ageB),15) if ages known',
+  order: 'C(start) = 2*(I(first) - min(I(all)))\nC(total) = C(start) + sum(C(previous, next)) -> minimize',
 });
 
 /**
@@ -78,8 +66,7 @@ export function flightPlanningHelpHtml(t) {
    * @return {string} Resulting text.
    */
   const p = (key, extraClass = '') => renderTemplate('p', {
-    extraClass: extraClass ?
-      ` class="${extraClass}"` : '',
+    extraClass: extraClass ? ` class="${extraClass}"` : '',
     tx: tx(key),
   });
 
@@ -89,11 +76,7 @@ export function flightPlanningHelpHtml(t) {
    * @param {*} key Key used to select or group values.
    * @return {string} Resulting text.
    */
-  const formula = key =>
-    renderTemplate('flightPlanHelpFormula', {
-      fORMULAS: FORMULAS[
-        key],
-    });
+  const formula = key => renderTemplate('flightPlanHelpFormula', {fORMULAS: FORMULAS[key], });
 
   /**
    * Builds the localized heading text for the current language.
@@ -126,8 +109,7 @@ export function flightPlanningHelpHtml(t) {
     tx: tx(`${key}.title`),
     p: p(`${key}.text`),
     formula: formula(key),
-    p2: p(`${key}.details`,
-      'flight-plan-help-caption'),
+    p2: p(`${key}.details`, 'flight-plan-help-caption'),
   });
   return renderTemplate('flightPlanHelp', {
     p: p('intro', 'flight-plan-help-intro'),
@@ -138,22 +120,17 @@ export function flightPlanningHelpHtml(t) {
     heading2: heading('basics.title'),
     tx: tx('basics.distance'),
     formula: formula('distance'),
-    p5: p(
-      'basics.distanceDetails'),
-    p6: p('basics.example',
-      'flight-plan-help-example'),
+    p5: p('basics.distanceDetails'),
+    p6: p('basics.example', 'flight-plan-help-example'),
     tx2: tx('basics.intensity'),
     formula2: formula('intensity'),
-    p7: p(
-      'basics.intensityDetails'),
+    p7: p('basics.intensityDetails'),
     tx3: tx('basics.novelty'),
     formula3: formula('novelty'),
-    p8: p(
-      'basics.noveltyDetails'),
+    p8: p('basics.noveltyDetails'),
     tx4: tx('basics.unfamiliar'),
     formula4: formula('unfamiliar'),
-    p9: p(
-      'basics.unfamiliarDetails'),
+    p9: p('basics.unfamiliarDetails'),
     tx5: tx('basics.variables'),
     content: composeMarkup([
       ['S', 'score'], ['V', 'repeats'], ['G', 'families'], ['R', 'profiled'],
@@ -163,15 +140,13 @@ export function flightPlanningHelpHtml(t) {
     heading3: heading('caskAge.title'),
     p10: p('caskAge.classification'),
     tx6: tx('caskAge.groups'),
-    cASKGROUPS: CASK_GROUPS.map(group =>
-      escapeHtml(t(`flightPlan.caskAge.group.${group}`))).join(' · '),
+    cASKGROUPS: CASK_GROUPS.map(group => escapeHtml(t(`flightPlan.caskAge.group.${group}`))).join(' · '),
     p11: p('caskAge.selection'),
     p12: p('caskAge.examples'),
     p13: p('caskAge.coverage'),
     tx7: tx('caskAge.distance'),
     formula5: formula('cask'),
-    formula6: formula(
-      'age'),
+    formula6: formula('age'),
     tx8: tx('caskAge.combined'),
     formula7: formula('combined'),
     tx9: tx('caskAge.preferences'),
@@ -179,17 +154,13 @@ export function flightPlanningHelpHtml(t) {
     p14: p('caskAge.missing', 'flight-plan-help-caption'),
     heading4: heading('strategies.title'),
     p15: p('strategies.intro'),
-    content2: composeMarkup(['balanced', 'similar', 'contrast', 'discover']
-      .map(strategy)),
+    content2: composeMarkup(['balanced', 'similar', 'contrast', 'discover'].map(strategy)),
     heading5: heading('search.title'),
     content3: composeMarkup(['shortlist', 'seeds',
-      'improve'].map(key => renderTemplate('li', {
-        tx: tx(`search.${key}`),
-      }))),
+      'improve'].map(key => renderTemplate('li', {tx: tx(`search.${key}`), }))),
     heading6: heading('sequence'),
     p16: p('sequenceIntro'),
-    formula9: formula('transition'
-    ),
+    formula9: formula('transition'),
     formula10: formula('order'),
     p17: p('sequenceDetails'),
     heading7: heading('limits.title'),

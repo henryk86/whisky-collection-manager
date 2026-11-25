@@ -6,6 +6,5 @@ import {t} from '../i18n/index.js';
  * @return {*} Rendered back navigation.
  */
 export function backToCollectionButton() {
-  return backNavigation('goto-home', t('common.navigation.backToCollection'),
-    '', 'page-action');
+  return backNavigation('goto-home', t('common.navigation.backToCollection'), '', 'page-action');
 }

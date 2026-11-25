@@ -7,17 +7,13 @@ test('browser: native template bindings preserve text, SVG and table rows',
     await session(async ({page, open, base}) => {
       await open();
       const result = await page.evaluate(async url => {
-        const {RenderPlan, composeMarkup} = await import(
-          `${url}/js/ui/render-plan.js`);
+        const {RenderPlan, composeMarkup} = await import(`${url}/js/ui/render-plan.js`);
         const {materialize} = await import(`${url}/js/ui/dom-renderer.js`);
         const input = '<img src=x onerror=alert(1)> & "';
-        const row = new RenderPlan('<tr><td>{{text:value}}</td></tr>',
-          {value: input});
-        const path = new RenderPlan('<path d="{{text:path}}"/>',
-          {path: 'M 0 0 L 2 2'});
+        const row = new RenderPlan('<tr><td>{{text:value}}</td></tr>', {value: input});
+        const path = new RenderPlan('<path d="{{text:path}}"/>', {path: 'M 0 0 L 2 2'});
         const plan = new RenderPlan(
-          '<section><table><tbody>{{raw:rows}}</tbody></table>' +
-          '<svg viewBox="{{text:box}}">{{raw:path}}</svg>' +
+          '<section><table><tbody>{{raw:rows}}</tbody></table>' + '<svg viewBox="{{text:box}}">{{raw:path}}</svg>' +
           '<input title="{{text:value}}" {{raw:attributes}}>' +
           '<textarea>{{text:value}}</textarea></section>',
           {

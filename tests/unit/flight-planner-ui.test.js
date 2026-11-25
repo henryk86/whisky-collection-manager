@@ -10,8 +10,7 @@ const base = {
     name: 'Islay Malt',
     abv: 46,
     bottles: [{
-      id: 'x1', inventoryNumber: '10', status: 'open', volumeType:
-        'standard',
+      id: 'x1', inventoryNumber: '10', status: 'open', volumeType: 'standard',
     }],
     tastings: [],
     completionStatus: 'complete',
@@ -30,8 +29,7 @@ const plan = {
   updatedAt: '2026-11-22T01:00:00Z',
 };
 test(
-  'planned and historic flights render separately without creating fake \
-tasting notes',
+  'planned and historic flights render separately without creating fake tasting notes',
   () => {
     const collection = structuredClone(base);
     collection.tastingFlights = [plan];
@@ -62,10 +60,7 @@ tasting notes',
       },
     });
     view.home();
-    assert.match(
-      html,
-      /data-act="flight-plan-new"[^>]*><svg class="ui-symbol"/
-    );
+    assert.match(html, /data-act="flight-plan-new"[^>]*><svg class="ui-symbol"/);
     assert.match(html, /Next tasting/);
     state.page = 'tasting-flight'; state.selected = 'plan-a'; view.flight();
     assert.match(html, /data-act="flight-plan-start"/);
@@ -86,8 +81,7 @@ tasting notes',
   }
 );
 test(
-  'collection view integrates flavor overlay, saved views header and \
-contextual flight action',
+  'collection view integrates flavor overlay, saved views header and contextual flight action',
   () => {
     const collection = structuredClone(base);
     const state = {
@@ -138,8 +132,7 @@ contextual flight action',
        * @param {*} value Value to process.
        */
       shell: value => {
-        html =
-          value;
+        html = value;
       },
     });
     home();
@@ -152,9 +145,7 @@ contextual flight action',
     assert.match(
       html,
       new RegExp(
-        'data-flavor-axis="smoky" data-flavor-part=' +
-        '"min"[^>]*>[\\s\\S]*?<option value="6" sel' +
-        'ected>'
+        'data-flavor-axis="smoky" data-flavor-part=' + '"min"[^>]*>[\\s\\S]*?<option value="6" sel' + 'ected>'
       )
     );
     assert.match(html, /data-act="collection-flavor-add"/);
@@ -165,15 +156,10 @@ contextual flight action',
     assert.match(html, /data-act="collection-view-save"/);
     assert.match(html, /data-act="collection-view-apply"/);
     assert.doesNotMatch(html, /collection-saved-controls/);
-    assert.match(
-      html,
-      /data-act="collection-flight-plan"[^>]*><svg class="ui-symbol"/
-    );
+    assert.match(html, /data-act="collection-flight-plan"[^>]*><svg class="ui-symbol"/);
     assert.match(html, /<div class="collection-results-heading">/);
-    assert.ok(html.indexOf('data-act="collection-flight-plan"') >
-      html.indexOf('class="collection-results-heading"'));
-    assert.ok(html.indexOf('data-act="collection-flight-plan"') <
-      html.indexOf('class="empty-state"'));
+    assert.ok(html.indexOf('data-act="collection-flight-plan"') > html.indexOf('class="collection-results-heading"'));
+    assert.ok(html.indexOf('data-act="collection-flight-plan"') < html.indexOf('class="empty-state"'));
   }
 );
 

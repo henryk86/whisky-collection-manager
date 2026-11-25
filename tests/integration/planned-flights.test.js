@@ -39,45 +39,16 @@ test(
       assert.equal(fresh.data.phase, 'planned');
       assert.deepEqual(fresh.data.tastingIds, []);
       assert.equal(
-        (await api(
-          base,
-          `/api/tasting-flights/${id}/tastings`,
-          'POST',
-          {bottlingId: bottling.id, tastedOn: date}
-        )).status,
+        (await api(base, `/api/tasting-flights/${id}/tastings`, 'POST', {bottlingId: bottling.id, tastedOn: date})).status,
         400
       );
       assert.equal(
-        (await api(
-          base,
-          `/api/tasting-flights/${id}`,
-          'PATCH',
-          {planItems: [body.planItems[0], body.planItems[0]]}
-        )).status,
+        (await api(base, `/api/tasting-flights/${id}`, 'PATCH', {planItems: [body.planItems[0], body.planItems[0]]})).status,
         400
       );
-      assert.equal(
-        (await api(base, '/api/collection')).data.bottlings[0].tastings.length,
-        0
-      );
-      assert.equal(
-        (await api(
-          base,
-          `/api/tasting-flights/${id}`,
-          'PATCH',
-          {phase: 'completed'}
-        )).status,
-        400
-      );
-      assert.equal(
-        (await api(
-          base,
-          `/api/tasting-flights/${id}`,
-          'PATCH',
-          {phase: 'inProgress'}
-        )).status,
-        200
-      );
+      assert.equal((await api(base, '/api/collection')).data.bottlings[0].tastings.length, 0);
+      assert.equal((await api(base, `/api/tasting-flights/${id}`, 'PATCH', {phase: 'completed'})).status, 400);
+      assert.equal((await api(base, `/api/tasting-flights/${id}`, 'PATCH', {phase: 'inProgress'})).status, 200);
       assert.equal(
         (await api(
           base,
@@ -90,12 +61,7 @@ test(
         400,
         'planned flights reject a tasting of a different bottling'
       );
-      const note = await api(
-        base,
-        `/api/tasting-flights/${id}/tastings`,
-        'POST',
-        {bottlingId: bottling.id, tastedOn: date, rating: 85}
-      );
+      const note = await api(base, `/api/tasting-flights/${id}/tastings`, 'POST', {bottlingId: bottling.id, tastedOn: date, rating: 85});
       assert.equal(note.status, 201, JSON.stringify(note.data));
       assert.equal(
         (await api(
@@ -109,60 +75,30 @@ test(
         400,
         'planned member can only be recorded once'
       );
+      assert.equal((await api(base, `/api/tasting-flights/${id}`, 'PATCH', {phase: 'completed'})).status, 200);
       assert.equal(
-        (await api(
-          base,
-          `/api/tasting-flights/${id}`,
-          'PATCH',
-          {phase: 'completed'}
-        )).status,
-        200
-      );
-      assert.equal(
-        (await api(
-          base,
-          `/api/tasting-flights/${id}/tastings`,
-          'POST',
-          {bottlingId: bottling.id, tastedOn: date}
-        )).status,
+        (await api(base, `/api/tasting-flights/${id}/tastings`, 'POST', {bottlingId: bottling.id, tastedOn: date})).status,
         400
       );
       const persisted = (await api(base, '/api/collection')).data;
-      assert.equal(
-        persisted.tastingFlights[0].planItems[0].bottleId,
-        bottle.id
-      );
-      assert.deepEqual(
-        persisted.tastingFlights[0].tastingIds,
-        [note.data.record.id]
-      );
-      assert.equal(
-        persisted.bottlings.find(b => b.id === bottling.id).tastings.length,
-        1
-      );
+      assert.equal(persisted.tastingFlights[0].planItems[0].bottleId, bottle.id);
+      assert.deepEqual(persisted.tastingFlights[0].tastingIds, [note.data.record.id]);
+      assert.equal(persisted.bottlings.find(b => b.id === bottling.id).tastings.length, 1);
       // Deleting a real tasting later must not invalidate the saved historical
       // plan.
       assert.equal(
-        (await api(
-          base,
-          `/api/bottlings/${bottling.id}/tastings/${note.data.record.id}`,
-          'DELETE'
-        )).status,
+        (await api(base, `/api/bottlings/${bottling.id}/tastings/${note.data.record.id}`, 'DELETE')).status,
         200
       );
       const afterDelete = (await api(base, '/api/collection')).data;
       assert.equal(afterDelete.tastingFlights[0].phase, 'completed');
       assert.deepEqual(afterDelete.tastingFlights[0].tastingIds, []);
-      assert.equal(
-        afterDelete.tastingFlights[0].planItems[0].bottleId,
-        bottle.id
-      );
+      assert.equal(afterDelete.tastingFlights[0].planItems[0].bottleId, bottle.id);
     } finally {await server.stop();}
   }
 );
 test(
-  'saved collection views persist through collection API and reject unsafe \
-payloads atomically',
+  'saved collection views persist through collection API and reject unsafe payloads atomically',
   async () => {
     const server = await startTestServer();
     try {
@@ -185,20 +121,12 @@ payloads atomically',
           view: 'table',
           mode: 'bottlings',
           columns: {
-            bottlings: ['name', 'rating'], bottles: ['name',
-              'inventory'],
+            bottlings: ['name', 'rating'], bottles: ['name', 'inventory'],
           },
         },
       };
-      assert.equal(
-        (await api(base, '/api/settings/saved-views', 'PUT',
-          {views: [view]})).status,
-        200
-      );
-      assert.deepEqual(
-        (await api(base, '/api/collection')).data.settings.savedViews,
-        [view]
-      );
+      assert.equal((await api(base, '/api/settings/saved-views', 'PUT', {views: [view]})).status, 200);
+      assert.deepEqual((await api(base, '/api/collection')).data.settings.savedViews, [view]);
       assert.equal(
         (await api(
           base,
@@ -217,19 +145,9 @@ payloads atomically',
         )).status,
         400
       );
-      assert.deepEqual(
-        (await api(base, '/api/collection')).data.settings.savedViews,
-        [view]
-      );
-      assert.equal(
-        (await api(base, '/api/settings', 'PATCH', {establishedYear: 2015}))
-          .status,
-        200
-      );
-      assert.deepEqual(
-        (await api(base, '/api/collection')).data.settings.savedViews,
-        [view]
-      );
+      assert.deepEqual((await api(base, '/api/collection')).data.settings.savedViews, [view]);
+      assert.equal((await api(base, '/api/settings', 'PATCH', {establishedYear: 2015})).status, 200);
+      assert.deepEqual((await api(base, '/api/collection')).data.settings.savedViews, [view]);
     } finally {await server.stop();}
   }
 );

@@ -16,8 +16,7 @@ export async function request(url, options = {}) {
   try {
     res = await fetch(url, {
       ...options, headers: {
-        ...(['POST', 'PUT', 'PATCH', 'DELETE'].includes((options.method ||
-          'GET').toUpperCase()) ? {'X-WCM-State-Delta': '1'} : {}),
+        ...(['POST', 'PUT', 'PATCH', 'DELETE'].includes((options.method || 'GET').toUpperCase()) ? {'X-WCM-State-Delta': '1'} : {}),
         ...(options.body ? {'Content-Type': 'application/json'} : {}),
         ...options.headers,
       },
@@ -37,9 +36,7 @@ export async function request(url, options = {}) {
     data = null;
   }
   if (!res.ok) {
-    if (res.status === 401 &&
-      !url.startsWith('/api/auth/')) window.dispatchEvent(new Event(
-        'wcm:auth-required'));
+    if (res.status === 401 && !url.startsWith('/api/auth/')) window.dispatchEvent(new Event('wcm:auth-required'));
     throw httpResponseError(res.status, data);
   }
   if (data?.__wcmStateDelta === 1 && Array.isArray(data.updates)) {
@@ -58,19 +55,13 @@ export async function request(url, options = {}) {
  * @return {!Error} Entries that meet the selection criteria.
  */
 export function httpResponseError(status, data) {
-  const key = typeof data?.errorCode === 'string' &&
-    /^api\.errors\.[a-zA-Z0-9]+$/.test(data.errorCode)
-    ? data.errorCode : null;
-  const params = data?.errorParams && typeof data.errorParams ===
-    'object' && !Array.isArray(data.errorParams)
-    ? Object.fromEntries(Object.entries(data.errorParams)
-      .filter(([name, value]) =>
-        /^[a-zA-Z]\w*$/.test(name) && typeof value === 'string' &&
-        value.length <= 100)) : {};
+  const key = typeof data?.errorCode === 'string' && /^api\.errors\.[a-zA-Z0-9]+$/.test(data.errorCode) ? data.errorCode : null;
+  const params = data?.errorParams && typeof data.errorParams === 'object' && !Array.isArray(data.errorParams)
+    ? Object.fromEntries(Object.entries(data.errorParams).filter(([name, value]) =>
+      /^[a-zA-Z]\w*$/.test(name) && typeof value === 'string' && value.length <= 100)) : {};
   const translated = key && t(key, displayErrorParams(params, key => t(key)));
   // Do not show untrusted or untranslated backend error strings.
-  const message = translated && translated !== key ? translated :
-    t('errors.api.generic', {status});
+  const message = translated && translated !== key ? translated : t('errors.api.generic', {status});
   const error = new Error(message);
   error.status = status;
   if (translated && translated !== key) error.code = key;
@@ -102,8 +93,7 @@ export function takeMutationUpdates() {
   const applied = new Set();
   for (const update of updates) {
     const kind = update?.delta?.kind;
-    const url = kind === 'collection' ? '/api/collection' : kind ===
-      'warehouse' ? '/api/warehouse' : null;
+    const url = kind === 'collection' ? '/api/collection' : kind === 'warehouse' ? '/api/warehouse' : null;
     if (!url) continue;
     const cache = validatedResponses.get(url);
     const baseline = kind === 'warehouse' ? cache?.storeEtag : cache?.etag;
@@ -139,8 +129,7 @@ export function takeMutationUpdates() {
  */
 export function takeUpdatedResource(kind, applied) {
   const url = kind === 'collection' ? '/api/collection' : '/api/warehouse';
-  return applied.has(kind) && validatedResponses.has(url)
-    ? structuredClone(validatedResponses.get(url).data) : null;
+  return applied.has(kind) && validatedResponses.has(url) ? structuredClone(validatedResponses.get(url).data) : null;
 }
 
 /**
@@ -168,8 +157,7 @@ export async function requestCachedJson(url) {
   let data;
   try {data = await res.json();} catch {data = null;}
   if (!res.ok) {
-    if (res.status === 401) window.dispatchEvent(new Event('wcm:auth-required')
-    );
+    if (res.status === 401) window.dispatchEvent(new Event('wcm:auth-required'));
     throw httpResponseError(res.status, data);
   }
   const etag = res.headers.get('etag');

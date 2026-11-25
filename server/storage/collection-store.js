@@ -22,9 +22,7 @@ export const empty = () => ({
   schemaVersion: 6,
   nextInventoryNumber: 1,
   reservedInventoryNumbers: [],
-  settings: {
-    establishedYear: null,
-  },
+  settings: {establishedYear: null, },
   distilleries: JSON.parse(fs.readFileSync(seedFile, 'utf8')),
   bottlings: [],
   externalTastings: [],
@@ -60,8 +58,7 @@ function loadCurrent() {
   const current = identity();
   if (cached === null || cachedIdentity !== current) {
     // A foreign file replacement or restore is never silently reused.
-    cached = structuredClone(validate(JSON.parse(fs.readFileSync(DATA_FILE,
-      'utf8'))));
+    cached = structuredClone(validate(JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'))));
     cachedIdentity = current;
     revision = crypto.randomUUID();
   }
@@ -85,9 +82,7 @@ export function collectionETag() {
 export function initialize() {
   invalidateCollectionCache();
   for (const directory of [DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR]) {
-    fs.mkdirSync(directory, {
-      recursive: true,
-    });
+    fs.mkdirSync(directory, {recursive: true, });
   }
   if (!fs.existsSync(DATA_FILE)) {
     atomicWrite(empty());
@@ -96,22 +91,12 @@ export function initialize() {
   const migration = migrateCollectionToCurrent(original);
   if (migration.changed) {
     // No modifications until the migration is valid AND an exact copy is safe.
-    const backup = path.join(
-      BACKUP_DIR,
-      `pre-schema6-${Date.now()}-${crypto.randomUUID()}.json`
-    );
+    const backup = path.join(BACKUP_DIR, `pre-schema6-${Date.now()}-${crypto.randomUUID()}.json`);
     fs.copyFileSync(DATA_FILE, backup, fs.constants.COPYFILE_EXCL);
     if (migration.conflicts.length) {
-      const report = path.join(
-        BACKUP_DIR,
-        `inventory-conflicts-${Date.now()}-${crypto.randomUUID()}.json`
-      );
-      fs.writeFileSync(
-        report,
-        JSON.stringify(migration.conflicts, null, 2) + '\n'
-      );
-      console.warn(`Inventarnummern-Migration: ${migration.conflicts
-        .length} Konflikte. Bericht: ${report}`);
+      const report = path.join(BACKUP_DIR, `inventory-conflicts-${Date.now()}-${crypto.randomUUID()}.json`);
+      fs.writeFileSync(report, JSON.stringify(migration.conflicts, null, 2) + '\n');
+      console.warn(`Inventarnummern-Migration: ${migration.conflicts.length} Konflikte. Bericht: ${report}`);
     }
     // warehouse.json, including rooms, furniture and bottle assignments,
     // is NEVER touched by a collection schema upgrade.
@@ -141,11 +126,8 @@ export function read() {
  */
 export function atomicWrite(value) {
   validate(value);
-  fs.mkdirSync(DATA_DIR, {
-    recursive: true,
-  });
-  const temporaryFile = `${DATA_FILE}.${process.pid}.${crypto.randomUUID(
-  )}.tmp`;
+  fs.mkdirSync(DATA_DIR, {recursive: true, });
+  const temporaryFile = `${DATA_FILE}.${process.pid}.${crypto.randomUUID()}.tmp`;
   try {
     fs.writeFileSync(temporaryFile, JSON.stringify(value, null, 2) + '\n', {
       flag: 'wx', mode: 0o600,
@@ -179,13 +161,7 @@ export function change(mutator) {
     const previous = cached;
     const beforeEtag = collectionETag();
     atomicWrite(collection);
-    trackMutation(
-      'collection',
-      previous,
-      collection,
-      beforeEtag,
-      collectionETag()
-    );
+    trackMutation('collection', previous, collection, beforeEtag, collectionETag());
     return result;
   });
   queue = work.catch(() => {

@@ -32,65 +32,35 @@ test(
   'country is sourced from destilleries, not inconsistent bottling fields',
   () => {
     const b = entry('single', ['ard'], 'Distillery Bottling', 'USA');
-    assert.deepEqual(
-      bottlingOrigins(b, sites),
-      {countries: ['Schottland'], regions: ['Islay']}
-    );
-    assert.equal(countryLabel('UK'), 'Vereinigtes Königreich'
-    ); // UK cannot mean Scotland by itself
-    const detail = Object.fromEntries(bottlingDetails(b, () =>
-      'Ardbeg', sites).map(([k, v]) => [k, v]));
+    assert.deepEqual(bottlingOrigins(b, sites), {countries: ['Schottland'], regions: ['Islay']});
+    assert.equal(countryLabel('UK'), 'Vereinigtes Königreich'); // UK cannot mean Scotland by itself
+    const detail = Object.fromEntries(bottlingDetails(b, () => 'Ardbeg', sites).map(([k, v]) => [k, v]));
     assert.equal(detail.Land, 'Schottland');
     assert.equal(detail.Region, 'Islay');
   }
 );
 
 test(
-  'a blend has unique origin countries and regions, even with two \
-distilleries on Islay',
+  'a blend has unique origin countries and regions, even with two distilleries on Islay',
   () => {
-    const b = entry(
-      'blend',
-      ['ard', 'lag', 'other'],
-      'Independent Bottler',
-      'France'
-    );
+    const b = entry('blend', ['ard', 'lag', 'other'], 'Independent Bottler', 'France');
     assert.deepEqual(
       bottlingOrigins(b, sites),
       {countries: ['Schottland', 'Deutschland'], regions: ['Islay', 'Bayern']}
     );
     const c = {distilleries: sites, bottlings: [b]};
     const analysis = analyzeCollection(c);
-    assert.equal(
-      analysis.provenance.byCountry.reduce((sum, row) => sum + row.count, 0),
-      2
-    );
-    assert.equal(
-      analysis.provenance.byRegion.reduce((sum, row) => sum + row.count, 0),
-      2
-    );
-    assert.deepEqual(
-      analyticsFilterOptions(c).countries,
-      ['Deutschland', 'Schottland']
-    );
-    assert.equal(
-      filterAnalyticsCollection(c, {country: 'Schottland'}).bottles.length,
-      1
-    );
-    assert.equal(
-      filterAnalyticsCollection(c, {country: 'Deutschland'}).bottles.length,
-      1
-    );
-    assert.equal(
-      filterAnalyticsCollection(c, {country: 'USA'}).bottles.length,
-      0
-    );
+    assert.equal(analysis.provenance.byCountry.reduce((sum, row) => sum + row.count, 0), 2);
+    assert.equal(analysis.provenance.byRegion.reduce((sum, row) => sum + row.count, 0), 2);
+    assert.deepEqual(analyticsFilterOptions(c).countries, ['Deutschland', 'Schottland']);
+    assert.equal(filterAnalyticsCollection(c, {country: 'Schottland'}).bottles.length, 1);
+    assert.equal(filterAnalyticsCollection(c, {country: 'Deutschland'}).bottles.length, 1);
+    assert.equal(filterAnalyticsCollection(c, {country: 'USA'}).bottles.length, 0);
   }
 );
 
 test(
-  'Distillery Bottling counts as original bottling (case and whitespace \
-insensitive)',
+  'Distillery Bottling counts as original bottling (case and whitespace insensitive)',
   () => {
     const c = {
       distilleries: sites, bottlings: [
@@ -102,20 +72,15 @@ insensitive)',
     };
     const result = analyzeCollection(c).provenance.byBottler;
     assert.equal(result.find(row => row.name === 'Originalabfüllung').count, 2);
-    assert.equal(
-      result.find(row => row.name === 'Andere / nicht eindeutig').count,
-      1
-    );
+    assert.equal(result.find(row => row.name === 'Andere / nicht eindeutig').count, 1);
     assert.equal(result.find(row => row.name === 'Nicht angegeben').count, 1);
   }
 );
 
 test(
-  'bottling form omits origin explanations; help page explains distillery \
-sourcing',
+  'bottling form omits origin explanations; help page explains distillery sourcing',
   async () => {
-    const {createBottlingForm} =
-      await import('../../public/js/features/forms/bottling.js');
+    const {createBottlingForm} = await import('../../public/js/features/forms/bottling.js');
     const state = {collection: {distilleries: sites}};
     const bottlingForm =
       createBottlingForm({
@@ -134,9 +99,6 @@ sourcing',
     assert.doesNotMatch(html, /name="(?:country|region)"/);
     assert.doesNotMatch(html, /Herkunftsland und Whiskyregion werden anhand/);
     const {helpView} = await import('../../public/js/views/help.js');
-    assert.match(
-      helpView(),
-      /Die Herkunft wird aus zugeordneten Destillerien abgeleitet/
-    );
+    assert.match(helpView(), /Die Herkunft wird aus zugeordneten Destillerien abgeleitet/);
   }
 );

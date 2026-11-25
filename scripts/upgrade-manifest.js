@@ -12,8 +12,7 @@ import {readSourceManifest, verifySourceManifest} from './release-manifest.js';
  * @param {*} file File resource to read, write or inspect.
  * @return {*} Result computed from the supplied inputs.
  */
-const hash = file => crypto.createHash('sha256')
-  .update(fs.readFileSync(file)).digest('hex');
+const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 
 /**
  * Validates the safe path state and rejects invalid inputs.
@@ -46,9 +45,7 @@ export function inspectManifestUpgrade(newRelease, installation,
   prune = false) {
   const newer = verifySourceManifest(newRelease);
   const earlier = readSourceManifest(installation);
-  if (earlier.version ===
-    newer.version) throw new Error(
-      'Old and new manifests have the same version');
+  if (earlier.version === newer.version) throw new Error('Old and new manifests have the same version');
   const report = {removable: [], modified: [], missing: [], removed: []};
   for (const [name, oldHash] of Object.entries(earlier.files)) {
     if (Object.hasOwn(newer.files, name)) continue;
@@ -66,21 +63,16 @@ export function inspectManifestUpgrade(newRelease, installation,
   }
   return report;
 }
-const isCli = process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url);
+const isCli = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isCli) {
   const [newRelease, installation, flag] = process.argv.slice(2);
   try {
     if (!newRelease || !installation || (flag && flag !== '--prune'))
-      throw new Error(
-        'Usage: node scripts/upgrade-manifest.js <new-release-dir> \
-<installed-dir> [--prune]');
+      throw new Error('Usage: node scripts/upgrade-manifest.js <new-release-dir> <installed-dir> [--prune]');
     if (fs.realpathSync(newRelease) === fs.realpathSync(installation))
       throw new Error('Source and installation must differ');
-    const report = inspectManifestUpgrade(newRelease, installation, flag ===
-      '--prune');
+    const report = inspectManifestUpgrade(newRelease, installation, flag === '--prune');
     console.log(JSON.stringify(report, null, 2));
-    if (report.modified.length) console.warn(
-      'Locally edited source modules have been preserved.');
+    if (report.modified.length) console.warn('Locally edited source modules have been preserved.');
   } catch (error) {console.error(error.message); process.exitCode = 1;}
 }

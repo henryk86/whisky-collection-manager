@@ -7,8 +7,7 @@ import {FLAVOR_AXES} from '../../shared/flavor-profile.js';
 
 const axes = FLAVOR_AXES;
 test(
-  'clear radar restores true null state, not a recorded all-zero profile; \
-undo works',
+  'clear radar restores true null state, not a recorded all-zero profile; undo works',
   () => {
     const sliders = axes.map(axis => ({value: 0, name: axis}));
     const editor = {
@@ -51,8 +50,7 @@ undo works',
     };
     const value = Object.fromEntries(axes.map((axis, index) => [axis, index]));
     const history = createTastingHistory({
-      flavorProfile: value, tastingNotes:
-        {nose: '', palate: '', finish: ''},
+      flavorProfile: value, tastingNotes: {nose: '', palate: '', finish: ''},
     });
     history.record({...history.value, flavorProfile: null});
     displayFlavorProfile(container, history.value.flavorProfile);
@@ -67,8 +65,7 @@ undo works',
 );
 
 test(
-  'editing a legacy tasting does not convert unassessed aromas into zero, \
-including undo',
+  'editing a legacy tasting does not convert unassessed aromas into zero, including undo',
   () => {
     const previous = {
       woody: 8,
@@ -125,8 +122,7 @@ including undo',
        * @return {!Object} Result computed from the supplied inputs.
        */
       closest(selector) {
-        return selector === '[data-flavor-range]' ? this :
-          editor;
+        return selector === '[data-flavor-range]' ? this : editor;
       },
     }));
     const container = {
@@ -149,26 +145,16 @@ including undo',
       },
     };
     displayFlavorProfile(container, scores);
-    assert.deepEqual(
-      readFlavorProfile(container),
-      Object.fromEntries(axes.map(axis => [axis, scores[axis]]))
-    );
+    assert.deepEqual(readFlavorProfile(container), Object.fromEntries(axes.map(axis => [axis, scores[axis]])));
     for (const axis of ['smoky', 'medicinal'])
-      assert.equal(
-        sliders.find(slider => slider.name === axis).dataset.flavorUnset,
-        '1'
-      );
+      assert.equal(sliders.find(slider => slider.name === axis).dataset.flavorUnset, '1');
     const smoky = sliders.find(slider => slider.name === 'smoky');
     smoky.value = '0';
     assert.equal(handleFlavorRange({target: smoky}), true);
     assert.equal(readFlavorProfile(container).smoky, 0);
     assert.equal(readFlavorProfile(container).medicinal, null);
     displayFlavorProfile(container, scores);
-    assert.equal(
-      readFlavorProfile(container).smoky,
-      null,
-      'undo restores missing aroma'
-    );
+    assert.equal(readFlavorProfile(container).smoky, null, 'undo restores missing aroma');
     assert.equal(outputs[axes.indexOf('smoky')].textContent, '–');
   }
 );

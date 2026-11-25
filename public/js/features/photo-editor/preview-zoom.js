@@ -10,8 +10,7 @@ export const MAX_PREVIEW_ZOOM = 6;
  * @param {*} value Input value to process.
  * @return {number} Calculated numeric result.
  */
-export const clampPreviewZoom = value =>
-  Math.max(MIN_PREVIEW_ZOOM, Math.min(MAX_PREVIEW_ZOOM, value));
+export const clampPreviewZoom = value => Math.max(MIN_PREVIEW_ZOOM, Math.min(MAX_PREVIEW_ZOOM, value));
 
 /**
  * Adjusts zoom while keeping the chosen image point stationary.
@@ -25,10 +24,8 @@ export const clampPreviewZoom = value =>
 export function zoomAroundPoint({zoom, x, y}, requestedZoom, point, size) {
   const nextZoom = clampPreviewZoom(requestedZoom);
   const ratio = nextZoom / zoom;
-  const nextX = point.x - size.width / 2 - (point.x - size.width / 2 -
-    x) * ratio;
-  const nextY = point.y - size.height / 2 - (point.y - size.height / 2 -
-    y) * ratio;
+  const nextX = point.x - size.width / 2 - (point.x - size.width / 2 - x) * ratio;
+  const nextY = point.y - size.height / 2 - (point.y - size.height / 2 - y) * ratio;
   return constrainPreviewPan({zoom: nextZoom, x: nextX, y: nextY}, size);
 }
 

@@ -29,8 +29,7 @@ const collection = {
 };
 
 test(
-  'flight routes support direct navigation and back links without impacting \
-ordinary tasting URLs',
+  'flight routes support direct navigation and back links without impacting ordinary tasting URLs',
   () => {
     assert.deepEqual(
       parseRoute(routeUrl('tasting-flight', 'flight-1').split('?')[1]),
@@ -42,24 +41,17 @@ ordinary tasting URLs',
     });
     assert.equal(parseRoute(url.split('?')[1]).flightId, 'flight-1');
     assert.equal(
-      parseRoute(routeUrl('external-tasting', 'new', {flightId: 'flight-1'})
-        .split('?')[1]).flightId,
+      parseRoute(routeUrl('external-tasting', 'new', {flightId: 'flight-1'}).split('?')[1]).flightId,
       'flight-1'
     );
-    assert.equal(
-      parseRoute(routeUrl('tasting', 'b-1', {tastingId: 'note-1'})
-        .split('?')[1]).flightId,
-      undefined
-    );
+    assert.equal(parseRoute(routeUrl('tasting', 'b-1', {tastingId: 'note-1'}).split('?')[1]).flightId, undefined);
   }
 );
 
 test(
-  'flight UI shows the session and individual notes with stable one-flight \
-membership links',
+  'flight UI shows the session and individual notes with stable one-flight membership links',
   () => {
-    let html = ''; const state =
-      {collection, page: 'tastings-home', selected: null};
+    let html = ''; const state = {collection, page: 'tastings-home', selected: null};
     const view = createTastingsView({
       state,
       /**
@@ -68,8 +60,7 @@ membership links',
        * @param {*} value Value to process.
        * @return {*} Result computed from the supplied inputs.
        */
-      shell: value => html =
-        value,
+      shell: value => html = value,
       /**
        * Updates the navigate state for its caller.
        */
@@ -91,14 +82,10 @@ membership links',
     assert.match(html, /data-act="tasting-flight-move"/);
     assert.match(html, /data-act="tasting-flight-note-open"/);
     assert.match(html, /peat and smoke/);
-    state.page = 'tasting'; state.selected = 'b-1'; state.tastingId =
-      'note-1'; view.editor();
+    state.page = 'tasting'; state.selected = 'b-1'; state.tastingId = 'note-1'; view.editor();
     assert.match(html, /data-act="tasting-open-flight"/);
     assert.match(html, /Position 1 von 1/);
     assert.equal(flightForTasting(collection, 'note-1').id, 'flight-1');
-    assert.equal(
-      flightEntries(collection, collection.tastingFlights[0])[0].record.id,
-      'note-1'
-    );
+    assert.equal(flightEntries(collection, collection.tastingFlights[0])[0].record.id, 'note-1');
   }
 );

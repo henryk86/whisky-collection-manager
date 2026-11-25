@@ -20,9 +20,7 @@ function themeVariables(dark) {
   const result = new Map();
   for (const filename of PALETTES) {
     const source = fs.readFileSync(path.join(STYLES, filename), 'utf8');
-    const [light, overrides = ''] = source.split(
-      ':root[data-theme="dark"]'
-    );
+    const [light, overrides = ''] = source.split(':root[data-theme="dark"]');
     const parts = dark ? [light, overrides] : [light];
     for (const part of parts) {
       for (const match of part.matchAll(/(--[\w-]+):\s*([^;]+);/g)) {
@@ -79,12 +77,9 @@ test('shared palette aliases resolve without cycles in both themes', () => {
 test('contrast and interaction colours keep distinct dark-theme roles', () => {
   const light = themeVariables(false);
   const dark = themeVariables(true);
-  assert.equal(resolvedValue('--ds-color-link', light),
-    resolvedValue('--ds-color-link-hover', light));
-  assert.notEqual(resolvedValue('--ds-color-link', dark),
-    resolvedValue('--ds-color-link-hover', dark));
-  assert.notEqual(resolvedValue('--ds-color-control-bg', dark),
-    resolvedValue('--ds-color-surface', dark));
+  assert.equal(resolvedValue('--ds-color-link', light), resolvedValue('--ds-color-link-hover', light));
+  assert.notEqual(resolvedValue('--ds-color-link', dark), resolvedValue('--ds-color-link-hover', dark));
+  assert.notEqual(resolvedValue('--ds-color-control-bg', dark), resolvedValue('--ds-color-surface', dark));
   assert.notEqual(resolvedValue('--ds-color-hero-background-2', light),
     resolvedValue('--ds-color-hero-background-3', light));
 });
@@ -97,14 +92,10 @@ test('contrast and interaction colours keep distinct dark-theme roles', () => {
  */
 function relativeLuminance(hex) {
   assert.match(hex, /^#(?:[\da-f]{3}|[\da-f]{6})$/i);
-  const fullHex = hex.length === 4 ?
-    `#${[...hex.slice(1)].map(char => char + char).join('')}` : hex;
-  const channels = [1, 3, 5].map(offset =>
-    parseInt(fullHex.slice(offset, offset + 2), 16) / 255);
-  const linear = channels.map(value => value <= 0.04045 ?
-    value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
-  return linear[0] * 0.2126 + linear[1] * 0.7152 +
-    linear[2] * 0.0722;
+  const fullHex = hex.length === 4 ? `#${[...hex.slice(1)].map(char => char + char).join('')}` : hex;
+  const channels = [1, 3, 5].map(offset => parseInt(fullHex.slice(offset, offset + 2), 16) / 255);
+  const linear = channels.map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+  return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
 }
 
 /**
@@ -115,10 +106,8 @@ function relativeLuminance(hex) {
  * @return {number} WCAG contrast ratio.
  */
 function contrastRatio(foreground, background) {
-  const high = Math.max(relativeLuminance(foreground),
-    relativeLuminance(background));
-  const low = Math.min(relativeLuminance(foreground),
-    relativeLuminance(background));
+  const high = Math.max(relativeLuminance(foreground), relativeLuminance(background));
+  const low = Math.min(relativeLuminance(foreground), relativeLuminance(background));
   return (high + 0.05) / (low + 0.05);
 }
 
@@ -136,8 +125,7 @@ test('text on inverted navy surfaces is readable in both themes', () => {
     for (const token of foregroundTokens) {
       const foreground = resolvedValue(token, values);
       assert.ok(contrastRatio(foreground, background) >= 4.5,
-        `${token} needs readable text on ${background} in ` +
-        `${dark ? 'dark' : 'light'} mode: ${foreground}`);
+        `${token} needs readable text on ${background} in ` + `${dark ? 'dark' : 'light'} mode: ${foreground}`);
     }
   }
 });

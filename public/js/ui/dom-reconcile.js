@@ -12,8 +12,7 @@
 // interchangeable siblings (the old key discarded edit buttons on refresh).
 const keyFor = node => node.nodeType === 1
   ? (node.getAttribute('data-region') || node.id ||
-    (node.hasAttribute('data-photo-tile') ?
-      `photo:${node.getAttribute('data-photo-id')}` : null))
+    (node.hasAttribute('data-photo-tile') ? `photo:${node.getAttribute('data-photo-id')}` : null))
   : null;
 
 /**
@@ -24,8 +23,7 @@ const keyFor = node => node.nodeType === 1
  * @return {boolean} Whether the operation matched or succeeded.
  */
 function compatible(a, b) {
-  return a?.nodeType === b?.nodeType &&
-    (a.nodeType !== 1 || (a.tagName === b.tagName && keyFor(a) === keyFor(b)));
+  return a?.nodeType === b?.nodeType && (a.nodeType !== 1 || (a.tagName === b.tagName && keyFor(a) === keyFor(b)));
 }
 
 /**
@@ -43,21 +41,18 @@ function reconcileNode(current, next) {
   }
   if (current.isEqualNode(next)) return;
   if (current.nodeType !== 1) {
-    if (current.nodeValue !== next.nodeValue) current.nodeValue =
-      next.nodeValue;
+    if (current.nodeValue !== next.nodeValue) current.nodeValue = next.nodeValue;
     return;
   }
   // Preserve image layout during a source transition until the new image loads.
-  const changingImage = current.tagName === 'IMG' &&
-    current.getAttribute('src') !== next.getAttribute('src');
+  const changingImage = current.tagName === 'IMG' && current.getAttribute('src') !== next.getAttribute('src');
   const container = changingImage ? current.parentElement : null;
   const priorHeight = container?.getBoundingClientRect().height || 0;
   const priorMinHeight = container?.style.minHeight || '';
   if (container && priorHeight) container.style.minHeight = `${priorHeight}px`;
   for (const attr of [...current.attributes]) if (!next.hasAttribute(attr.name)
   ) current.removeAttribute(attr.name);
-  for (const attr of [...next.attributes]) if (current.getAttribute(attr.name
-  ) !== attr.value) current.setAttribute(attr.name, attr.value);
+  for (const attr of [...next.attributes]) if (current.getAttribute(attr.name) !== attr.value) current.setAttribute(attr.name, attr.value);
   if (changingImage && container && priorHeight) {
     /**
      * Updates the done state for its caller.
@@ -70,8 +65,7 @@ function reconcileNode(current, next) {
     }
   }
   // Do not reset text currently entered into a focused control.
-  if (current === document.activeElement && ['INPUT', 'TEXTAREA']
-    .includes(current.tagName)) return;
+  if (current === document.activeElement && ['INPUT', 'TEXTAREA'].includes(current.tagName)) return;
   reconcileChildren(current, next);
 }
 
@@ -83,8 +77,7 @@ function reconcileNode(current, next) {
  */
 export function reconcileChildren(current, next) {
   const desired = [...next.childNodes];
-  const keyed = new Map([...current.childNodes].filter(node => keyFor(node))
-    .map(node => [keyFor(node), node]));
+  const keyed = new Map([...current.childNodes].filter(node => keyFor(node)).map(node => [keyFor(node), node]));
   let cursor = current.firstChild;
   for (const incoming of desired) {
     const key = keyFor(incoming);

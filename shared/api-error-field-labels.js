@@ -45,10 +45,8 @@ export function displayErrorParams(
   translate = key => apiErrorFieldLabels[key.slice('api.fields.'.length)]
 ) {
   return Object.fromEntries(Object.entries(params).map(([name, value]) => {
-    if ((name === 'field' || name === 'other') &&
-      Object.hasOwn(apiErrorFieldLabels, value)) {
-      return [name, translate(`api.fields.${value}`) ||
-        apiErrorFieldLabels[value]];
+    if ((name === 'field' || name === 'other') && Object.hasOwn(apiErrorFieldLabels, value)) {
+      return [name, translate(`api.fields.${value}`) || apiErrorFieldLabels[value]];
     }
     return [name, value];
   }));

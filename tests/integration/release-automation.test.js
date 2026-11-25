@@ -15,8 +15,7 @@ import {classifyCommit, analyzeCommits, parseGitLog, notesForPlan}
  * @param {!Array<*>} args Arguments forwarded to the operation.
  * @return {*} Result computed from the supplied inputs.
  */
-const run = (cwd, cmd, ...args) =>
-  execFileSync(cmd, args, {cwd, encoding: 'utf8'}).trim();
+const run = (cwd, cmd, ...args) => execFileSync(cmd, args, {cwd, encoding: 'utf8'}).trim();
 
 /**
  * Writes write data to the local filesystem.
@@ -26,8 +25,7 @@ const run = (cwd, cmd, ...args) =>
  * @param {*} data Input data to process.
  */
 const write = (dir, name, data) => {
-  const file =
-    path.join(dir, name); fs.mkdirSync(path.dirname(file), {recursive: true});
+  const file = path.join(dir, name); fs.mkdirSync(path.dirname(file), {recursive: true});
   fs.writeFileSync(file, data);
 };
 
@@ -43,38 +41,20 @@ function fixture(t) {
   run(dir, 'git', 'init', '-b', 'main');
   run(dir, 'git', 'config', 'user.name', 'Release Tester');
   run(dir, 'git', 'config', 'user.email', 'tester@example.invalid');
-  write(
-    dir,
-    'package.json',
-    JSON.stringify({type: 'module', version: '1.4.0'}) + '\n'
-  );
-  write(
-    dir,
-    'package-lock.json',
-    JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) +
-    '\n'
-  );
+  write(dir, 'package.json', JSON.stringify({type: 'module', version: '1.4.0'}) + '\n');
+  write(dir, 'package-lock.json', JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) + '\n');
   write(dir, 'README.md', '# Whisky Collection Manager v1.4.0\n');
-  write(
-    dir,
-    'CHANGELOG.md',
-    '# Changelog\n\n## 1.4.0 - 2026-11-16\n\n- Baseline\n'
-  );
+  write(dir, 'CHANGELOG.md', '# Changelog\n\n## 1.4.0 - 2026-11-16\n\n- Baseline\n');
   write(
     dir,
     'docs/TESTSTATUS.md',
-    '# Teststatus - Whisky Collection Manager v1.4.0\n\n| `npm test` | \
-**532/532 bestanden** | x |\n'
+    '# Teststatus - Whisky Collection Manager v1.4.0\n\n| `npm test` | **532/532 bestanden** | x |\n'
   );
   fs.mkdirSync(path.join(dir, 'scripts'), {recursive: true});
   for (const script of ['release-version.js', 'release-manifest.js',
     'release-automation.js'])
-    fs.copyFileSync(
-      path.join('scripts', script),
-      path.join(dir, 'scripts', script)
-    );
-  run(dir, 'git', 'add', '.'); run(dir, 'git', 'commit', '-m',
-    'chore: start release test fixture');
+    fs.copyFileSync(path.join('scripts', script), path.join(dir, 'scripts', script));
+  run(dir, 'git', 'add', '.'); run(dir, 'git', 'commit', '-m', 'chore: start release test fixture');
   run(dir, 'git', 'tag', 'v1.4.0');
   run(dir, 'git', 'branch', 'develop');
   return dir;
@@ -99,15 +79,7 @@ function commit(dir, text, file = 'feature.txt') {
  * @param {*} dir Directory containing the affected files.
  */
 function merge(dir) {
-  run(dir, 'git', 'checkout', 'main'); run(
-    dir,
-    'git',
-    'merge',
-    '--no-ff',
-    'develop',
-    '-m',
-    'Merge develop into main'
-  );
+  run(dir, 'git', 'checkout', 'main'); run(dir, 'git', 'merge', '--no-ff', 'develop', '-m', 'Merge develop into main');
 }
 
 /**
@@ -117,13 +89,7 @@ function merge(dir) {
  * @return {*} Parsed JSON value.
  */
 function plan(dir) {
-  return JSON.parse(run(
-    dir,
-    process.execPath,
-    'scripts/release-automation.js',
-    'plan',
-    '--json'
-  ));
+  return JSON.parse(run(dir, process.execPath, 'scripts/release-automation.js', 'plan', '--json'));
 }
 
 /**
@@ -133,54 +99,26 @@ function plan(dir) {
  * @return {!Object} Structured result assembled from the input data.
  */
 function snapshot(dir) {
-  const out =
-    path.join(dir, '..', `${path.basename(dir)}-notes`); fs.mkdirSync(out,
-      {recursive: true}); return {
-        out,
-        result: run(
-          dir,
-          process.execPath,
-          'scripts/release-automation.js',
-          'snapshot',
-          '--output',
-          out
-        ),
-      };
+  const out = path.join(dir, '..', `${path.basename(dir)}-notes`); fs.mkdirSync(out, {recursive: true}); return {
+    out,
+    result: run(dir, process.execPath, 'scripts/release-automation.js', 'snapshot', '--output', out),
+  };
 }
 
 test(
-  'Conventional Commits decide major > minor > patch; maintenance alone is \
-one patch',
+  'Conventional Commits decide major > minor > patch; maintenance alone is one patch',
   () => {
-    assert.equal(
-      classifyCommit('fix(warehouse): Umlagern korrigieren').level,
-      'patch'
-    );
+    assert.equal(classifyCommit('fix(warehouse): Umlagern korrigieren').level, 'patch');
     assert.equal(classifyCommit('feat: tasting flights').level, 'minor');
     assert.equal(classifyCommit('feat!: incompatible API').level, 'major');
+    assert.equal(classifyCommit('refactor(api): optimize storage').level, 'none');
+    assert.equal(classifyCommit('docs: improve handbook', 'BREAKING CHANGE: config changed').level, 'major');
     assert.equal(
-      classifyCommit('refactor(api): optimize storage').level,
-      'none'
-    );
-    assert.equal(
-      classifyCommit(
-        'docs: improve handbook',
-        'BREAKING CHANGE: config changed'
-      ).level,
-      'major'
-    );
-    assert.equal(
-      analyzeCommits([
-        {subject: 'docs: handbook', sha: '1'},
-        {subject: 'test: coverage', sha: '2'},
-      ]).level,
+      analyzeCommits([{subject: 'docs: handbook', sha: '1'}, {subject: 'test: coverage', sha: '2'},]).level,
       'patch'
     );
     assert.equal(
-      analyzeCommits([
-        {subject: 'fix: bug', sha: '1'},
-        {subject: 'feat: new page', sha: '2'},
-      ]).level,
+      analyzeCommits([{subject: 'fix: bug', sha: '1'}, {subject: 'feat: new page', sha: '2'},]).level,
       'minor'
     );
     assert.throws(() => classifyCommit('Update code'), /Conventional-Commit/);
@@ -190,15 +128,13 @@ one patch',
       {sha: 'def', subject: 'feat: y', body: ''},
     ]);
     assert.match(notesForPlan({
-      tag: 'v1.5.0', previousTag: 'v1.4.0', commits: [
-        {...classifyCommit('feat(ui): new page'), sha: 'abcdef01234'}],
+      tag: 'v1.5.0', previousTag: 'v1.4.0', commits: [{...classifyCommit('feat(ui): new page'), sha: 'abcdef01234'}],
     }), /feat\(ui\): new page/);
   }
 );
 
 test(
-  'merge produces a versioned off-branch snapshot; next merge increments \
-from tag, retry reuses it',
+  'merge produces a versioned off-branch snapshot; next merge increments from tag, retry reuses it',
   t => {
     const dir = fixture(t);
     run(dir, 'git', 'checkout', 'develop');
@@ -216,27 +152,15 @@ from tag, retry reuses it',
     assert.equal(run(dir, 'git', 'rev-parse', 'v1.5.0^'), mergeSha);
     assert.equal(run(dir, 'git', 'rev-parse', 'main'), mergeSha);
     assert.equal(run(dir, 'git', 'rev-parse', 'develop') !== mergeSha, true);
-    assert.equal(
-      JSON.parse(run(dir, 'git', 'show', 'v1.5.0:package.json')).version,
-      '1.5.0'
-    );
-    assert.equal(
-      JSON.parse(run(dir, 'git', 'show', 'main:package.json')).version,
-      '1.4.0'
-    );
-    assert.match(
-      run(dir, 'git', 'show', 'v1.5.0:CHANGELOG.md'),
-      /feat\(tasting\): add option/
-    );
+    assert.equal(JSON.parse(run(dir, 'git', 'show', 'v1.5.0:package.json')).version, '1.5.0');
+    assert.equal(JSON.parse(run(dir, 'git', 'show', 'main:package.json')).version, '1.4.0');
+    assert.match(run(dir, 'git', 'show', 'v1.5.0:CHANGELOG.md'), /feat\(tasting\): add option/);
     // The generated, tagged document must meet the same reporting contract
     // as docs/TESTSTATUS.md on develop, even before snapshot-specific tests
     // run.
     const releaseStatus = run(dir, 'git', 'show', 'v1.5.0:docs/TESTSTATUS.md');
     assert.match(releaseStatus, /npm test[^\n]*\*\*Noch nicht ausgeführt\*\*/);
-    assert.match(
-      releaseStatus,
-      /npm run test:browser[^\n]*\*\*Nicht lokal ausgeführt\*\*/
-    );
+    assert.match(releaseStatus, /npm run test:browser[^\n]*\*\*Nicht lokal ausgeführt\*\*/);
     assert.match(releaseStatus, /CHANGELOG\.md/);
     run(dir, process.execPath, 'scripts/release-version.js', 'check');
     run(dir, 'git', 'checkout', 'main');
@@ -260,36 +184,22 @@ from tag, retry reuses it',
     merge(dir);
     assert.equal(plan(dir).version, '1.5.1');
     snapshot(dir);
-    assert.equal(
-      run(dir, 'git', 'rev-parse', 'v1.5.1^'),
-      run(dir, 'git', 'rev-parse', 'main')
-    );
+    assert.equal(run(dir, 'git', 'rev-parse', 'v1.5.1^'), run(dir, 'git', 'rev-parse', 'main'));
     const history = run(dir, 'git', 'show', 'v1.5.1:CHANGELOG.md');
     assert.match(history, /## 1\.5\.1/);
     assert.match(history, /## 1\.5\.0/);
-    assert.throws(
-      () => run(dir, 'git', 'show', 'v1.5.1:docs/TESTHISTORIE.md'),
-      /Command failed/
-    );
+    assert.throws(() => run(dir, 'git', 'show', 'v1.5.1:docs/TESTHISTORIE.md'), /Command failed/);
   }
 );
 
 test(
-  'nonconventional commits fail instead of silently publishing an arbitrary \
-version',
+  'nonconventional commits fail instead of silently publishing an arbitrary version',
   t => {
     const dir = fixture(t);
     run(dir, 'git', 'checkout', 'develop');
     commit(dir, 'plain commit message');
     assert.throws(
-      () => run(
-        dir,
-        process.execPath,
-        'scripts/release-automation.js',
-        'validate',
-        '--range',
-        'main..develop'
-      ),
+      () => run(dir, process.execPath, 'scripts/release-automation.js', 'validate', '--range', 'main..develop'),
       /Command failed/
     );
     merge(dir);
@@ -320,95 +230,38 @@ function legacyFixture(t, {tagCurrent = false, historicalSubjects = []} = {}) {
   run(dir, 'git', 'init', '-b', 'main');
   run(dir, 'git', 'config', 'user.name', 'Release Tester');
   run(dir, 'git', 'config', 'user.email', 'tester@example.invalid');
-  write(
-    dir,
-    'package.json',
-    JSON.stringify({type: 'module', version: '1.3.3'}) + '\n'
-  );
-  write(
-    dir,
-    'package-lock.json',
-    JSON.stringify({version: '1.3.3', packages: {'': {version: '1.3.3'}}}) +
-    '\n'
-  );
+  write(dir, 'package.json', JSON.stringify({type: 'module', version: '1.3.3'}) + '\n');
+  write(dir, 'package-lock.json', JSON.stringify({version: '1.3.3', packages: {'': {version: '1.3.3'}}}) + '\n');
   write(dir, 'README.md', '# Whisky Collection Manager v1.3.3\n');
-  write(
-    dir,
-    'CHANGELOG.md',
-    '# Changelog\n\n## 1.3.3 - 2026-11-15\n\n- Historical release\n'
-  );
-  write(
-    dir,
-    'docs/TESTSTATUS.md',
-    '# Teststatus - Whisky Collection Manager v1.3.3\n'
-  );
+  write(dir, 'CHANGELOG.md', '# Changelog\n\n## 1.3.3 - 2026-11-15\n\n- Historical release\n');
+  write(dir, 'docs/TESTSTATUS.md', '# Teststatus - Whisky Collection Manager v1.3.3\n');
   fs.mkdirSync(path.join(dir, 'scripts'), {recursive: true});
   for (const script of ['release-version.js', 'release-manifest.js'])
-    fs.copyFileSync(
-      path.join('scripts', script),
-      path.join(dir, 'scripts', script)
-    );
-  run(dir, 'git', 'add', '.'); run(
-    dir,
-    'git',
-    'commit',
-    '-m',
-    'chore: last pre-automation main release'
-  );
+    fs.copyFileSync(path.join('scripts', script), path.join(dir, 'scripts', script));
+  run(dir, 'git', 'add', '.'); run(dir, 'git', 'commit', '-m', 'chore: last pre-automation main release');
   run(dir, 'git', 'tag', 'v1.3.3');
   run(dir, 'git', 'branch', 'develop'); run(dir, 'git', 'checkout', 'develop');
   // This manual version update occurred BEFORE installing the new release
   // workflow.
-  write(
-    dir,
-    'package.json',
-    JSON.stringify({type: 'module', version: '1.4.0'}) + '\n'
-  );
-  write(
-    dir,
-    'package-lock.json',
-    JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) +
-    '\n'
-  );
+  write(dir, 'package.json', JSON.stringify({type: 'module', version: '1.4.0'}) + '\n');
+  write(dir, 'package-lock.json', JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) + '\n');
   write(dir, 'README.md', '# Whisky Collection Manager v1.4.0\n');
   write(
     dir,
     'CHANGELOG.md',
-    '# Changelog\n\n## 1.4.0 - 2026-11-16\n\n- Last manual release\n\n## \
-1.3.3 - 2026-11-15\n\n- Historical release\n'
+    '# Changelog\n\n## 1.4.0 - 2026-11-16\n\n- Last manual release\n\n## 1.3.3 - 2026-11-15\n\n- Historical release\n'
   );
-  write(
-    dir,
-    'docs/TESTSTATUS.md',
-    '# Teststatus - Whisky Collection Manager v1.4.0\n'
-  );
-  run(dir, 'git', 'add', '.'); run(
-    dir,
-    'git',
-    'commit',
-    '-m',
-    'chore: complete existing release v1.4.0'
-  );
+  write(dir, 'docs/TESTSTATUS.md', '# Teststatus - Whisky Collection Manager v1.4.0\n');
+  run(dir, 'git', 'add', '.'); run(dir, 'git', 'commit', '-m', 'chore: complete existing release v1.4.0');
   if (tagCurrent) run(dir, 'git', 'tag', 'v1.4.0');
-  for (const subject of historicalSubjects) commit(dir, subject,
-    `legacy-${historicalSubjects.indexOf(subject)}.txt`);
-  fs.copyFileSync(
-    'scripts/release-automation.js',
-    path.join(dir, 'scripts/release-automation.js')
-  );
-  run(dir, 'git', 'add', '.'); run(
-    dir,
-    'git',
-    'commit',
-    '-m',
-    'chore: adopt automatic release workflow'
-  );
+  for (const subject of historicalSubjects) commit(dir, subject, `legacy-${historicalSubjects.indexOf(subject)}.txt`);
+  fs.copyFileSync('scripts/release-automation.js', path.join(dir, 'scripts/release-automation.js'));
+  run(dir, 'git', 'add', '.'); run(dir, 'git', 'commit', '-m', 'chore: adopt automatic release workflow');
   return dir;
 }
 
 test(
-  'first automation merge accepts pre-existing higher develop version \
-without a v1.4.0 tag',
+  'first automation merge accepts pre-existing higher develop version without a v1.4.0 tag',
   t => {
     const dir = legacyFixture(t);
     commit(dir, 'fix: repair warehouse relocation');
@@ -420,14 +273,8 @@ without a v1.4.0 tag',
     const changes = run(dir, 'git', 'show', 'v1.4.1:CHANGELOG.md');
     assert.match(changes, /## 1\.4\.0/); // branch history retained
     assert.match(changes, /## 1\.3\.3/);
-    assert.equal(
-      run(dir, 'git', 'show', 'main:package.json').includes('1.3.3'),
-      false
-    );
-    assert.equal(
-      JSON.parse(run(dir, 'git', 'show', 'main:package.json')).version,
-      '1.4.0'
-    );
+    assert.equal(run(dir, 'git', 'show', 'main:package.json').includes('1.3.3'), false);
+    assert.equal(JSON.parse(run(dir, 'git', 'show', 'main:package.json')).version, '1.4.0');
     run(dir, 'git', 'checkout', 'develop');
     commit(dir, 'fix: second patch', 'second.txt');
     merge(dir);
@@ -446,13 +293,11 @@ test(
 );
 
 test(
-  'first merge exempts historical nonconventional commits and previously \
-released features only',
+  'first merge exempts historical nonconventional commits and previously released features only',
   t => {
     const dir = legacyFixture(t, {
       historicalSubjects: [
-        'Refactor unit tests to remove file system dependencies and CSS \
-assertions',
+        'Refactor unit tests to remove file system dependencies and CSS assertions',
         'feat: already part of manually versioned v1.4.0',
       ],
     });
@@ -460,21 +305,16 @@ assertions',
     merge(dir);
     const preview = plan(dir);
     assert.equal(preview.legacyTransition, true);
-    assert.equal(preview.version,
-      '1.4.1'); // historical feat does not cause 1.5.0
+    assert.equal(preview.version, '1.4.1'); // historical feat does not cause 1.5.0
     assert.equal(preview.level, 'patch');
-    assert.equal(preview.ignoredLegacyCommits,
-      3); // manual v1.4.0 plus two historical changes
+    assert.equal(preview.ignoredLegacyCommits, 3); // manual v1.4.0 plus two historical changes
     assert.deepEqual(preview.commits.map(c => c.subject), [
       'fix(ci): correct transition handling',
       'chore: adopt automatic release workflow',
     ]);
     snapshot(dir);
     assert.match(run(dir, 'git', 'show', 'v1.4.1:CHANGELOG.md'), /## 1\.4\.0/);
-    assert.match(
-      run(dir, 'git', 'show', 'v1.4.1:CHANGELOG.md'),
-      /fix\(ci\): correct transition handling/
-    );
+    assert.match(run(dir, 'git', 'show', 'v1.4.1:CHANGELOG.md'), /fix\(ci\): correct transition handling/);
     run(dir, 'git', 'checkout', 'develop');
     commit(dir, 'fix(ci): another valid patch', 'second.txt');
     merge(dir);
@@ -483,14 +323,10 @@ assertions',
 );
 
 test(
-  'the same first merge rejects commits without a type AFTER automation \
-adoption',
+  'the same first merge rejects commits without a type AFTER automation adoption',
   t => {
     const dir = legacyFixture(t, {
-      historicalSubjects: [
-        'Refactor unit tests to remove file system dependencies and CSS \
-assertions',
-      ],
+      historicalSubjects: ['Refactor unit tests to remove file system dependencies and CSS assertions',],
     });
     commit(dir, 'new commit without prefix');
     merge(dir);
@@ -499,8 +335,7 @@ assertions',
 );
 
 test(
-  'adoption cutover works even if main and develop already share the same \
-version',
+  'adoption cutover works even if main and develop already share the same version',
   t => {
     const dir = fixture(t);
     run(dir, 'git', 'checkout', 'develop');
@@ -508,36 +343,19 @@ version',
     // package version equal to develop so legacyTransition is false.
     run(dir, 'git', 'checkout', 'main');
     run(dir, 'git', 'rm', 'scripts/release-automation.js');
-    run(
-      dir,
-      'git',
-      'commit',
-      '-m',
-      'chore: simulate old main before automation'
-    );
+    run(dir, 'git', 'commit', '-m', 'chore: simulate old main before automation');
     run(dir, 'git', 'tag', 'v1.4.0-old-main');
     run(dir, 'git', 'checkout', 'develop');
     // Develop already has the automation script in this fixture. Merge history
     // is explicitly tested by creating a fresh feature branch from old main.
     run(dir, 'git', 'checkout', '-b', 'transition', 'main');
     commit(dir, 'Refactor unit tests without Conventional Commits');
-    fs.copyFileSync(
-      'scripts/release-automation.js',
-      path.join(dir, 'scripts/release-automation.js')
-    );
+    fs.copyFileSync('scripts/release-automation.js', path.join(dir, 'scripts/release-automation.js'));
     run(dir, 'git', 'add', '.');
     run(dir, 'git', 'commit', '-m', 'chore: introduce release automation');
     commit(dir, 'fix: post-cutover change', 'post.txt');
     run(dir, 'git', 'checkout', 'main');
-    run(
-      dir,
-      'git',
-      'merge',
-      '--no-ff',
-      'transition',
-      '-m',
-      'Merge develop into main'
-    );
+    run(dir, 'git', 'merge', '--no-ff', 'transition', '-m', 'Merge develop into main');
     const result = plan(dir);
     assert.equal(result.legacyTransition, false);
     assert.equal(result.level, 'patch');
@@ -557,24 +375,17 @@ test(
   t => {
     const dir = fixture(t);
     run(dir, 'git', 'checkout', 'develop');
-    write(
-      dir,
-      'package.json',
-      JSON.stringify({type: 'module', version: '1.5.0'}) + '\n'
-    );
-    run(dir, 'git', 'add', '.'); run(dir, 'git', 'commit', '-m',
-      'feat: attempt manual version bump');
+    write(dir, 'package.json', JSON.stringify({type: 'module', version: '1.5.0'}) + '\n');
+    run(dir, 'git', 'add', '.'); run(dir, 'git', 'commit', '-m', 'feat: attempt manual version bump');
     merge(dir);
     assert.throws(() => plan(dir), /Command failed/);
   }
 );
 
 test(
-  'free-account release gate accepts only the matching merged \
-same-repository PR',
+  'free-account release gate accepts only the matching merged same-repository PR',
   async () => {
-    const {isApprovedReleaseMerge, verifyMergedPRs} =
-      await import('../../scripts/verify-merged-pr.js');
+    const {isApprovedReleaseMerge, verifyMergedPRs} = await import('../../scripts/verify-merged-pr.js');
     const sha = 'a'.repeat(40), repo = 'owner/whisky-collection-manager';
     const pr = {
       merged_at: '2026-11-16T12:00:00Z',
@@ -593,18 +404,14 @@ same-repository PR',
       {...pr, base: {...pr.base, repo: {full_name: 'fork/repository'}}},
     ]) {
       assert.equal(isApprovedReleaseMerge(altered, sha, repo), false);
-      assert.throws(
-        () => verifyMergedPRs([altered], sha, repo),
-        /Release blocked/
-      );
+      assert.throws(() => verifyMergedPRs([altered], sha, repo), /Release blocked/);
     }
     assert.throws(() => verifyMergedPRs([], sha, repo), /Release blocked/);
   }
 );
 
 test(
-  'main release gate recognizes approved version PRs without starting a \
-second release',
+  'main release gate recognizes approved version PRs without starting a second release',
   async () => {
     const {verifyMainMerge} = await import('../../scripts/verify-merged-pr.js');
     const sha = 'a'.repeat(40), repo = 'owner/repo';
@@ -622,16 +429,8 @@ second release',
       head: {ref: 'develop', repo: {full_name: repo}},
     };
     assert.equal(verifyMainMerge([release], sha, repo), 'release');
-    assert.throws(() => verifyMainMerge(
-      [{...version, head: {...version.head, ref: 'dependabot/npm'}}],
-      sha,
-      repo
-    ));
-    assert.throws(() => verifyMainMerge(
-      [{...version, user: {login: 'malicious-user'}}],
-      sha,
-      repo
-    ));
+    assert.throws(() => verifyMainMerge([{...version, head: {...version.head, ref: 'dependabot/npm'}}], sha, repo));
+    assert.throws(() => verifyMainMerge([{...version, user: {login: 'malicious-user'}}], sha, repo));
   }
 );
 
@@ -647,14 +446,8 @@ test(
       headRefOid: 'abc',
     };
     assert.doesNotThrow(() => assertVersionPR(pr, pr.headRefName, 'abc'));
-    assert.throws(() => assertVersionPR({...pr, headRefOid: 'def'},
-      pr.headRefName, 'abc'));
-    assert.throws(() => assertVersionPR({...pr, baseRefName: 'develop'},
-      pr.headRefName, 'abc'));
-    assert.throws(() => assertVersionPR(
-      {...pr, headRefName: 'dependabot/npm'},
-      pr.headRefName,
-      'abc'
-    ));
+    assert.throws(() => assertVersionPR({...pr, headRefOid: 'def'}, pr.headRefName, 'abc'));
+    assert.throws(() => assertVersionPR({...pr, baseRefName: 'develop'}, pr.headRefName, 'abc'));
+    assert.throws(() => assertVersionPR({...pr, headRefName: 'dependabot/npm'}, pr.headRefName, 'abc'));
   }
 );

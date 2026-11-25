@@ -14,8 +14,7 @@ import {activateSettingsSection} from './views/settings.js';
 import {handleFlavorRange, setFlavorFromPointer} from './ui/flavor-profile.js';
 import {loadTemplates} from './ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/events.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/events.html', import.meta.url));
 
 /**
  * One delegated click handler; HTML data-act values are the UI action names.
@@ -142,10 +141,7 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {boolean} Whether the operation matched or succeeded.
      */
-    'help-tab': button => activateHelpTopic(
-      button.dataset.helpTopic,
-      button.closest('.help-page')
-    ),
+    'help-tab': button => activateHelpTopic(button.dataset.helpTopic, button.closest('.help-page')),
     /**
      * Handles the bottling map interaction.
      * @return {*} Result computed from the supplied inputs.
@@ -167,8 +163,7 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'warehouse-section': button => navigate('warehouse', button.dataset
-      .section),
+    'warehouse-section': button => navigate('warehouse', button.dataset.section),
     /**
      * Handles the settings section interaction.
      *
@@ -176,10 +171,7 @@ export function bindEvents(
      * @return {!Promise<*>} Promise for the asynchronous operation.
      */
     'settings-section': async button => {
-      if (activateSettingsSection(
-        button.dataset.settingsSection,
-        button.closest('.settings-page')
-      )) {
+      if (activateSettingsSection(button.dataset.settingsSection, button.closest('.settings-page'))) {
         state.settingsSection = button.dataset.settingsSection;
         if (state.settingsSection === 'users') await auth.loadUsers();
       }
@@ -190,9 +182,7 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      */
     'warehouse-plan-mode': button => {
-      state.warehousePlanMode = ['2d', '3d']
-        .includes(button.dataset.mode) ? button.dataset.mode :
-        '2d'; render();
+      state.warehousePlanMode = ['2d', '3d'].includes(button.dataset.mode) ? button.dataset.mode : '2d'; render();
     },
     /**
      * Handles the warehouse camera interaction.
@@ -200,10 +190,8 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      */
     'warehouse-camera': button => {
-      if (['nw', 'ne', 'se', 'sw']
-        .includes(button.dataset.corner)) {
-        state.warehousePlanCorner =
-          button.dataset.corner; render();
+      if (['nw', 'ne', 'se', 'sw'].includes(button.dataset.corner)) {
+        state.warehousePlanCorner = button.dataset.corner; render();
       }
     },
     /**
@@ -223,9 +211,7 @@ export function bindEvents(
      * Handles the warehouse find interaction.
      */
     'warehouse-find': () => {
-      state.warehouseFinderPlacement =
-        'unassigned'; state.warehouseFinderPage =
-          1; navigate('warehouse', 'find');
+      state.warehouseFinderPlacement = 'unassigned'; state.warehouseFinderPage = 1; navigate('warehouse', 'find');
     },
     /**
      * Handles the warehouse find location interaction.
@@ -387,24 +373,21 @@ export function bindEvents(
      * @return {*} Result computed from the supplied inputs.
      */
     'warehouse-shelf-view': button =>
-      warehouseView.openShelfDetails(button.dataset.shelfId ||
-        button.dataset.id),
+      warehouseView.openShelfDetails(button.dataset.shelfId || button.dataset.id),
     /**
      * Handles the warehouse shelf up interaction.
      *
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'warehouse-shelf-up': button => warehouseView.moveShelf(button.dataset
-      .id, 'up'),
+    'warehouse-shelf-up': button => warehouseView.moveShelf(button.dataset.id, 'up'),
     /**
      * Handles the warehouse shelf down interaction.
      *
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'warehouse-shelf-down': button => warehouseView.moveShelf(button.dataset
-      .id, 'down'),
+    'warehouse-shelf-down': button => warehouseView.moveShelf(button.dataset.id, 'down'),
     /**
      * Handles the warehouse shelf edit interaction.
      *
@@ -427,31 +410,21 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'warehouse-photo-move': button => warehouseView.moveFurniturePhoto(
-      button.dataset.id,
-      button.dataset.photoId,
-      button.dataset.direction
-    ),
+    'warehouse-photo-move': button => warehouseView.moveFurniturePhoto(button.dataset.id, button.dataset.photoId, button.dataset.direction),
     /**
      * Handles the warehouse photo delete interaction.
      *
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'warehouse-photo-delete': button => warehouseView.deleteFurniturePhoto(
-      button.dataset.id,
-      button.dataset.photoId
-    ),
+    'warehouse-photo-delete': button => warehouseView.deleteFurniturePhoto(button.dataset.id, button.dataset.photoId),
     /**
      * Handles the warehouse photo open interaction.
      *
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'warehouse-photo-open': button => warehouseView.openFurniturePhoto(
-      button.dataset.path,
-      button.dataset.title
-    ),
+    'warehouse-photo-open': button => warehouseView.openFurniturePhoto(button.dataset.path, button.dataset.title),
     /**
      * Handles the flavor detail undo interaction.
      * @return {*} Result computed from the supplied inputs.
@@ -486,8 +459,7 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'tasting-color': button => tastingsView.chooseColor(button.dataset
-      .colorKey),
+    'tasting-color': button => tastingsView.chooseColor(button.dataset.colorKey),
     /**
      * Handles the tasting color clear interaction.
      * @return {*} Result computed from the supplied inputs.
@@ -502,8 +474,7 @@ export function bindEvents(
      * Handles the tasting back flight interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'tasting-back-flight': () => state.flightId &&
-      navigate('tasting-flight', state.flightId),
+    'tasting-back-flight': () => state.flightId && navigate('tasting-flight', state.flightId),
     /**
      * Handles the tasting open flight interaction.
      *
@@ -632,31 +603,21 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'flight-plan-move': button => tastingsView.changePlannedMember(
-      Number(button.dataset.index),
-      'move',
-      Number(button.dataset.step)
-    ),
+    'flight-plan-move': button => tastingsView.changePlannedMember(Number(button.dataset.index), 'move', Number(button.dataset.step)),
     /**
      * Handles the flight plan remove interaction.
      *
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'flight-plan-remove': button => tastingsView.changePlannedMember(
-      Number(button.dataset.index),
-      'remove'
-    ),
+    'flight-plan-remove': button => tastingsView.changePlannedMember(Number(button.dataset.index), 'remove'),
     /**
      * Handles the flight plan replace interaction.
      *
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'flight-plan-replace': button => tastingsView.changePlannedMember(
-      Number(button.dataset.index),
-      'replace'
-    ),
+    'flight-plan-replace': button => tastingsView.changePlannedMember(Number(button.dataset.index), 'replace'),
     /**
      * Handles the flight plan start interaction.
      * @return {*} Result computed from the supplied inputs.
@@ -675,29 +636,21 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'flight-plan-record': button => navigate(
-      'tasting',
-      button.dataset.bottlingId,
-      {tastingId: 'new', flightId: state.selected}
-    ),
+    'flight-plan-record': button => navigate('tasting', button.dataset.bottlingId, {tastingId: 'new', flightId: state.selected}),
     /**
      * Handles the flight plan open bottling interaction.
      *
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'flight-plan-open-bottling': button => navigate('detail', button.dataset
-      .bottlingId),
+    'flight-plan-open-bottling': button => navigate('detail', button.dataset.bottlingId),
     /**
      * Handles the flight plan location interaction.
      *
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'flight-plan-location': button => warehouseView.showBottleLocation(
-      button.dataset.bottleId,
-      {returnToFlightId: state.selected}
-    ),
+    'flight-plan-location': button => warehouseView.showBottleLocation(button.dataset.bottleId, {returnToFlightId: state.selected}),
     /**
      * Handles the tasting flight new interaction.
      * @return {*} Result computed from the supplied inputs.
@@ -757,10 +710,7 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'tasting-flight-move': button => tastingsView.moveFlightMember(
-      Number(button.dataset.index),
-      Number(button.dataset.direction)
-    ),
+    'tasting-flight-move': button => tastingsView.moveFlightMember(Number(button.dataset.index), Number(button.dataset.direction)),
     /**
      * Handles the tasting flight note open interaction.
      *
@@ -768,27 +718,14 @@ export function bindEvents(
      * @return {*} Result computed from the supplied inputs.
      */
     'tasting-flight-note-open': button => button.dataset.external === '1'
-      ? navigate(
-        'external-tasting',
-        button.dataset.bottlingId,
-        {flightId: state.selected}
-      )
-      : navigate(
-        'tasting',
-        button.dataset.bottlingId,
-        {tastingId: button.dataset.tastingId, flightId: state.selected}
-      ),
+      ? navigate('external-tasting', button.dataset.bottlingId, {flightId: state.selected})
+      : navigate('tasting', button.dataset.bottlingId, {tastingId: button.dataset.tastingId, flightId: state.selected}),
     /**
      * Handles the tasting flight new owned interaction.
      */
     'tasting-flight-new-owned': () => {
       const id = document.querySelector('[data-flight-owned-bottling]')?.value;
-      if (id && state.collection.bottlings.some(b => b.id ===
-        id)) navigate(
-          'tasting',
-          id,
-          {tastingId: 'new', flightId: state.selected}
-        );
+      if (id && state.collection.bottlings.some(b => b.id === id)) navigate('tasting', id, {tastingId: 'new', flightId: state.selected});
     },
     /**
      * Handles the tasting flight new external interaction.
@@ -818,11 +755,7 @@ export function bindEvents(
      * @return {*} Result computed from the supplied inputs.
      */
     'tastings-open': button => button.dataset.tastingId
-      ? navigate(
-        'tasting',
-        state.selected,
-        {tastingId: button.dataset.tastingId}
-      )
+      ? navigate('tasting', state.selected, {tastingId: button.dataset.tastingId})
       : navigate('tastings', state.selected),
     /**
      * Handles the tastings new interaction.
@@ -840,8 +773,7 @@ export function bindEvents(
      */
     'tastings-start-owned': () => {
       const id = document.querySelector('[data-owned-tasting-bottling]')?.value;
-      if (id && state.collection.bottlings.some(b => b.id ===
-        id)) navigate('tasting', id, {tastingId: 'new'});
+      if (id && state.collection.bottlings.some(b => b.id === id)) navigate('tasting', id, {tastingId: 'new'});
     },
     /**
      * Handles the tastings start external interaction.
@@ -856,11 +788,7 @@ export function bindEvents(
      */
     'tastings-home-open': button => button.dataset.external === '1'
       ? navigate('external-tasting', button.dataset.bottlingId)
-      : navigate(
-        'tasting',
-        button.dataset.bottlingId,
-        {tastingId: button.dataset.tastingId}
-      ),
+      : navigate('tasting', button.dataset.bottlingId, {tastingId: button.dataset.tastingId}),
     /**
      * Handles the tasting create interaction.
      * @return {*} Result computed from the supplied inputs.
@@ -922,18 +850,13 @@ export function bindEvents(
         const result = await action(
           () => request(
             external ? `/api/external-tastings/${encodeURIComponent(id)}` :
-              `/api/bottlings/${encodeURIComponent(state.selected
-              )}/tastings/${encodeURIComponent(id)}`,
+              `/api/bottlings/${encodeURIComponent(state.selected)}/tastings/${encodeURIComponent(id)}`,
             {method: 'DELETE'}
           ),
           {scope: 'collection'}
         );
         if (!result.ok) return result;
-        navigate(
-          external ? 'tastings-home' : 'tastings',
-          external ? null : state.selected,
-          {replace: true}
-        );
+        navigate(external ? 'tastings-home' : 'tastings', external ? null : state.selected, {replace: true});
         return result;
       },
       t('common.actions.delete')
@@ -1021,19 +944,14 @@ export function bindEvents(
       // A location link belongs to a physical bottle, not just a shelf.
       // Reuse the finder focus so the exact bottle is visible and marked.
       if (button.dataset.bottleId) {
-        warehouseView.showBottleLocation(
-          button.dataset.bottleId,
-          {returnToBottlingId: state.selected}
-        );
+        warehouseView.showBottleLocation(button.dataset.bottleId, {returnToBottlingId: state.selected});
         return;
       }
       // Existing shelf-only links still open the shelf without a bottle focus.
-      const place = state.warehouse?.rooms.find(r => r.furniture.some(f =>
-        f.shelves.some(s => s.id === button.dataset.id)));
+      const place = state.warehouse?.rooms.find(r => r.furniture.some(f => f.shelves.some(s => s.id === button.dataset.id)));
       if (!place) return navigate('warehouse', 'find');
       state.warehouseRoomId = place.id;
-      state.warehouseFurnitureId = place.furniture.find(f => f.shelves
-        .some(s => s.id === button.dataset.id)).id;
+      state.warehouseFurnitureId = place.furniture.find(f => f.shelves.some(s => s.id === button.dataset.id)).id;
       navigate('warehouse', 'shelves');
     },
     /**
@@ -1053,21 +971,14 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'analytics-section': button => navigate('analytics', button.dataset
-      .section),
+    'analytics-section': button => navigate('analytics', button.dataset.section),
     /**
      * Handles the analytics reset interaction.
      */
     'analytics-reset': () => {
-      state.analyticsFilters =
-        {distillery: 'all', country: 'all', volumeType: 'all', status: 'all'};
-      state.analyticsPeriod = 'month'; state.analyticsStartDate =
-        ''; state.analyticsEndDate = '';
-      history.replaceState(
-        {whiskyRoute: true},
-        '',
-        routeUrl('analytics', state.selected)
-      );
+      state.analyticsFilters = {distillery: 'all', country: 'all', volumeType: 'all', status: 'all'};
+      state.analyticsPeriod = 'month'; state.analyticsStartDate = ''; state.analyticsEndDate = '';
+      history.replaceState({whiskyRoute: true}, '', routeUrl('analytics', state.selected));
       render();
     },
     /**
@@ -1076,8 +987,7 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      */
     'analytics-distillery': button => {
-      state.distillery = button.dataset.id; state.pageNumber =
-        1; navigate('home');
+      state.distillery = button.dataset.id; state.pageNumber = 1; navigate('home');
     },
     /**
      * Handles the analytics drill filter interaction.
@@ -1087,18 +997,11 @@ export function bindEvents(
     'analytics-drill-filter': button => {
       if (button.dataset.kind === 'country') {
         state.analyticsFilters.country = button.dataset.value;
-        history.replaceState(
-          {whiskyRoute: true},
-          '',
-          routeUrl('analytics', state.selected, state.analyticsFilters)
-        );
+        history.replaceState({whiskyRoute: true}, '', routeUrl('analytics', state.selected, state.analyticsFilters));
         render(); return;
       }
-      if (button.dataset.kind === 'status' && ['closed', 'open', 'empty']
-        .includes(button.dataset.value)) state.status = button.dataset.value;
-      else if (button.dataset.kind === 'volumeType' &&
-        ['standard', 'sample'].includes(button.dataset
-          .value)) state.volumeType = button.dataset.value;
+      if (button.dataset.kind === 'status' && ['closed', 'open', 'empty'].includes(button.dataset.value)) state.status = button.dataset.value;
+      else if (button.dataset.kind === 'volumeType' && ['standard', 'sample'].includes(button.dataset.value)) state.volumeType = button.dataset.value;
       state.pageNumber = 1; navigate('home');
     },
     /**
@@ -1195,11 +1098,7 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'backup-prepare': button => backup.job(
-      button.dataset.id,
-      'prepare',
-      {snapshotId: button.dataset.file}
-    ),
+    'backup-prepare': button => backup.job(button.dataset.id, 'prepare', {snapshotId: button.dataset.file}),
     /**
      * Handles the backup download prepared interaction.
      *
@@ -1214,8 +1113,7 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'backup-download': button => backup.download(button.dataset
-      .id, button.dataset.file),
+    'backup-download': button => backup.download(button.dataset.id, button.dataset.file),
     /**
      * Handles the backup delete interaction.
      *
@@ -1290,8 +1188,7 @@ export function bindEvents(
       navigate('detail', button.dataset.id, {highlightBottleId: bottleId});
       // In bottle mode show the chosen physical bottle, not only its parent
       // bottling.
-      if (bottleId) document.getElementById(`bottle-${bottleId}`)
-        ?.scrollIntoView({block: 'center', behavior: 'auto'});
+      if (bottleId) document.getElementById(`bottle-${bottleId}`)?.scrollIntoView({block: 'center', behavior: 'auto'});
     },
     /**
      * Handles the toggle view interaction.
@@ -1363,10 +1260,7 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'submit-code': button => resolveCode(
-      query('[name=manualCode]').value,
-      button.dataset.assign === '1'
-    ),
+    'submit-code': button => resolveCode(query('[name=manualCode]').value, button.dataset.assign === '1'),
     /**
      * Handles the confirm action interaction.
      * @return {!Promise<*>} Promise for the asynchronous operation.
@@ -1403,8 +1297,7 @@ export function bindEvents(
       async () => {
         const result = await action(
           () => request(
-            `/api/bottles/${encodeURIComponent(button.dataset
-              .id)}/files/${encodeURIComponent(button.dataset.fileId)}`,
+            `/api/bottles/${encodeURIComponent(button.dataset.id)}/files/${encodeURIComponent(button.dataset.fileId)}`,
             {method: 'DELETE'}
           ),
           {scope: 'collection'}
@@ -1440,8 +1333,7 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {*} Result computed from the supplied inputs.
      */
-    'photo-editor-tab': button => photoEditor.selectTab(button.dataset
-      .photoEditorTab),
+    'photo-editor-tab': button => photoEditor.selectTab(button.dataset.photoEditorTab),
     /**
      * Handles the photo editor before interaction.
      * @return {*} Result computed from the supplied inputs.
@@ -1549,12 +1441,7 @@ export function bindEvents(
      * @param {*} button Button control involved in the interaction.
      * @return {!Promise<*>} Promise for the asynchronous operation.
      */
-    'move-photo': button => movePhoto(
-      button.dataset.id,
-      button.dataset.photoId,
-      Number(button.dataset.dir),
-      action
-    ),
+    'move-photo': button => movePhoto(button.dataset.id, button.dataset.photoId, Number(button.dataset.dir), action),
     /**
      * Handles the delete photo interaction.
      *
@@ -1567,8 +1454,7 @@ export function bindEvents(
       async () => {
         const result = await action(
           () => request(
-            `/api/bottles/${encodeURIComponent(button.dataset
-              .id)}/photos/${encodeURIComponent(button.dataset.photoId)}`,
+            `/api/bottles/${encodeURIComponent(button.dataset.id)}/photos/${encodeURIComponent(button.dataset.photoId)}`,
             {method: 'DELETE'}
           ),
           {scope: 'collection'}
@@ -1587,10 +1473,7 @@ export function bindEvents(
       t("ui.confirmations.deleteBottle"),
       t("ui.confirmations.deleteBottleQuestion"),
       async () => {
-        const result = await action(() => request(
-          `/api/bottles/${encodeURIComponent(button.dataset.id)}`,
-          {method: 'DELETE'}
-        ));
+        const result = await action(() => request(`/api/bottles/${encodeURIComponent(button.dataset.id)}`, {method: 'DELETE'}));
         if (result.ok) toast(t("ui.confirmations.bottleDeleted"));
         return result;
       }
@@ -1603,10 +1486,7 @@ export function bindEvents(
       t("ui.confirmations.deleteBottling"),
       t("ui.confirmations.deleteBottlingQuestion"),
       async () => {
-        const result = await action(() => request(
-          `/api/bottlings/${encodeURIComponent(state.selected)}`,
-          {method: 'DELETE'}
-        ));
+        const result = await action(() => request(`/api/bottlings/${encodeURIComponent(state.selected)}`, {method: 'DELETE'}));
         if (result.ok) {
           navigate('home', null, {replace: true});
           toast(t("ui.confirmations.bottlingDeleted"));
@@ -1620,31 +1500,18 @@ export function bindEvents(
      */
     import: () => settings.importJSON(),
   };
-  bindFlightSorting(
-    root,
-    (from, to, after) => tastingsView.reorderFlightMember(from, to, after)
-  );
+  bindFlightSorting(root, (from, to, after) => tastingsView.reorderFlightMember(from, to, after));
   root.addEventListener('click', async (event) => {
     // Treat the flavor and saved-view pickers like anchored menus: clicking
     // elsewhere closes them without affecting the document layout.
-    for (const picker of root.querySelectorAll(
-      '.collection-saved-menu[open], .collection-flavor-picker[open]')) {
+    for (const picker of root.querySelectorAll('.collection-saved-menu[open], .collection-flavor-picker[open]')) {
       if (!picker.contains(event.target)) picker.open = false;
     }
-    const mapButton = event.target
-      .closest?.(
-        '[data-map-focus], [data-map-page], [data-map-bottling], \
-[data-map-edit]');
-    if (state.page === 'map' &&
-      mapButton) {mapView.handleClick(mapButton); return;}
-    const overviewButton = event.target
-      .closest?.(
-        '[data-collection-mode], [data-page-to], [data-act="toggle-collectio\
-n-filters"], [data-act="collection-sort-column"], [data-act="collection-colu\
-mns-default"], [data-reset-collection-filter], [data-reset-collection-flavor\
--axis]');
-    if (overviewButton && state.page ===
-      'home') {home.handleClick(overviewButton); return;}
+    const mapButton = event.target.closest?.('[data-map-focus], [data-map-page], [data-map-bottling], [data-map-edit]');
+    if (state.page === 'map' && mapButton) {mapView.handleClick(mapButton); return;}
+    const overviewButton = event.target.closest?.(
+      '[data-collection-mode], [data-page-to], [data-act="toggle-collection-filters"], [data-act="collection-sort-column"], [data-act="collection-columns-default"], [data-reset-collection-filter], [data-reset-collection-flavor-axis]');
+    if (overviewButton && state.page === 'home') {home.handleClick(overviewButton); return;}
     const button = event.target.closest('[data-act]');
     if (!button || button.disabled) {
       return;
@@ -1653,16 +1520,13 @@ mns-default"], [data-reset-collection-filter], [data-reset-collection-flavor\
     // the single click available for bottle selection and drag gestures.
     // Flaschen im Moebelmanager besitzen einen eigenen Einzel-Detail-Button;
     // nur Doppelklick auf die Fachflaeche oeffnet den Fachinhalt.
-    if (button.dataset.act === 'warehouse-shelf-view' &&
-      button.classList?.contains('warehouse-wall-bay')) return;
+    if (button.dataset.act === 'warehouse-shelf-view' && button.classList?.contains('warehouse-wall-bay')) return;
     if (button.tagName === 'A') {
-      if (event.metaKey || event.ctrlKey || event.shiftKey ||
-        event.altKey) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       event.preventDefault();
     }
     try {
-      if (button.dataset.act
-        .startsWith('auth-')) {await auth.handleAction(button); return;}
+      if (button.dataset.act.startsWith('auth-')) {await auth.handleAction(button); return;}
       await handlers[button.dataset.act]?.(button);
     }
     catch (error) {
@@ -1673,19 +1537,14 @@ mns-default"], [data-reset-collection-filter], [data-reset-collection-flavor\
     // A bottle in the room-wide rack opens its own details on double-click.
     // Single clicks still toggle bulk selection; the surrounding bay must
     // never interpret this as a compartment double-click.
-    const bottle = event.target
-      .closest?.(
-        '.warehouse-room-wall .warehouse-bottle-symbol[data-act="warehouse-b\
-ottle-select"]');
+    const bottle = event.target.closest?.('.warehouse-room-wall .warehouse-bottle-symbol[data-act="warehouse-bottle-select"]');
     if (bottle?.dataset?.id) {
       try {warehouseView.openBottlePreview(bottle.dataset.id);}
       catch (error) {toast(error.message, true);}
       return;
     }
-    const shelf = event.target
-      .closest?.(
-        '.warehouse-wall-bay[data-shelf-id], .warehouse-furniture-manager \
-.warehouse-shelf[data-shelf-id]');
+    const shelf = event.target.closest?.(
+      '.warehouse-wall-bay[data-shelf-id], .warehouse-furniture-manager .warehouse-shelf[data-shelf-id]');
     if (!shelf || shelf.dataset?.capacity === '0') return;
     // A bottle is independently selectable and draggable. Double-clicks
     // on bottle symbols or explicit buttons must not also open the shelf.
@@ -1696,16 +1555,14 @@ ottle-select"]');
     catch (error) {toast(error.message, true);}
   });
   root.addEventListener('keydown', event => {
-    if (event.target.matches?.('[data-whisky-picker-area]') &&
-      ['Enter', ' '].includes(event.key)) {
+    if (event.target.matches?.('[data-whisky-picker-area]') && ['Enter', ' '].includes(event.key)) {
       event.preventDefault();
       tastingsView?.commitCustomPreview?.();
       return;
     }
     if (tastingsView?.nudgeCustomColor?.(event)) return;
     if (!['Enter', ' '].includes(event.key)) return;
-    const bay = event.target
-      .closest?.('.warehouse-wall-bay[data-act="warehouse-shelf-view"]');
+    const bay = event.target.closest?.('.warehouse-wall-bay[data-act="warehouse-shelf-view"]');
     if (bay && bay.dataset?.capacity !== '0' && event.target === bay) {
       event.preventDefault();
       warehouseView.openShelfDetails(bay.dataset.shelfId);
@@ -1718,13 +1575,8 @@ ottle-select"]');
   });
   root.addEventListener('change', event => {
     if (event.target.matches?.(
-      '[data-flavor-detail] [data-flavor-range], [data-flavor-detail] \
-[data-tasting-note], [data-flavor-detail] [data-tasting-score], \
-[data-flavor-detail] [data-tasting-rating-comment]')) tastingsView
-        .commitFlavor();
-    if (event.target.matches?.(
-      '[data-flavor-detail] [data-tasting-date], [data-flavor-detail] \
-[data-tasting-title]')) void tastingsView.persistMeta();
+      '[data-flavor-detail] [data-flavor-range], [data-flavor-detail] [data-tasting-note], [data-flavor-detail] [data-tasting-score], [data-flavor-detail] [data-tasting-rating-comment]')) tastingsView.commitFlavor();
+    if (event.target.matches?.('[data-flavor-detail] [data-tasting-date], [data-flavor-detail] [data-tasting-title]')) void tastingsView.persistMeta();
   });
   let flavorPointer = null;
   let customColorPointer = null;
@@ -1742,8 +1594,7 @@ ottle-select"]');
     setFlavorFromPointer(event);
   });
   root.addEventListener('pointermove', event => {
-    if (customColorPointer ===
-      event.pointerId) tastingsView.previewCustomFromPointer(event);
+    if (customColorPointer === event.pointerId) tastingsView.previewCustomFromPointer(event);
     if (flavorPointer === event.pointerId) setFlavorFromPointer(event);
   });
   root.addEventListener('pointerup', event => {
@@ -1754,22 +1605,17 @@ ottle-select"]');
       return;
     }
     if (flavorPointer === event.pointerId) {
-      flavorPointer =
-        null; if (event.target
-          .closest?.('[data-flavor-detail]')) tastingsView.commitFlavor();
+      flavorPointer = null; if (event.target.closest?.('[data-flavor-detail]')) tastingsView.commitFlavor();
     }
   });
   root.addEventListener('pointercancel', event => {
     if (customColorPointer === event.pointerId) {
-      customColorPointer =
-        null; tastingsView.resetCustomPreview();
+      customColorPointer = null; tastingsView.resetCustomPreview();
     }
     if (flavorPointer === event.pointerId) flavorPointer = null;
   });
   root.addEventListener('keyup', event => {
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
-      .includes(event.key) && event.target
-        .matches?.('[data-whisky-picker-area]'))
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) && event.target.matches?.('[data-whisky-picker-area]'))
       tastingsView.commitCustomPreview();
   });
   root.addEventListener('submit', event => {
@@ -1777,8 +1623,7 @@ ottle-select"]');
     if (event.target.id === 'new-bottle-choice-form') {
       event.preventDefault();
       try {
-        editors.chooseExistingBottling(event.target.elements.bottlingId
-          .value);
+        editors.chooseExistingBottling(event.target.elements.bottlingId.value);
       }
       catch (error) {toast(error.message, true);}
       return;
@@ -1801,8 +1646,7 @@ ottle-select"]');
     } else if (event.target.id === 'backup-restore-form') {
       backup.submitRestore(event).catch(error => toast(error.message, true));
     } else if (event.target.id === 'collection-settings-form') {
-      settings.saveCollectionSettings(event).catch(error =>
-        toast(error.message, true));
+      settings.saveCollectionSettings(event).catch(error => toast(error.message, true));
     } else if (event.target.id === 'distillery-form') {
       settings.saveDistillery(event).catch(error => toast(error.message, true));
     } else {
@@ -1810,24 +1654,16 @@ ottle-select"]');
     }
   });
   root.addEventListener('change', event => {
-    if (state.page === 'map' && event.target
-      .matches?.('#map-site-select, #map-all-distilleries')) {
+    if (state.page === 'map' && event.target.matches?.('#map-site-select, #map-all-distilleries')) {
       mapView.handleChange(event.target); return;
     }
-    if (state.page === 'home' && event.target
-      .matches?.(
-        '#pagination-size, [id^=filter-], [data-collection-column], \
-#collection-add-flavor-axis, [data-flavor-profile-status], \
-[data-flavor-axis]')) {home.handleChange(event.target); return;}
-    if (event.target.matches?.(
-      'input[data-bottle-files], input[data-bottle-photos]')) {
+    if (state.page === 'home' && event.target.matches?.(
+      '#pagination-size, [id^=filter-], [data-collection-column], #collection-add-flavor-axis, [data-flavor-profile-status], [data-flavor-axis]')) {home.handleChange(event.target); return;}
+    if (event.target.matches?.('input[data-bottle-files], input[data-bottle-photos]')) {
       void detail.handleUploadChange(event); return;
     }
     if (event.target.matches?.('input[data-furniture-photos]')) {
-      warehouseView.uploadFurniturePhotos(
-        event.target.dataset.furniturePhotos,
-        [...event.target.files]
-      ); return;
+      warehouseView.uploadFurniturePhotos(event.target.dataset.furniturePhotos, [...event.target.files]); return;
     }
     if (event.target.matches?.([
       '[data-flight-plan-style]', '[data-flight-plan-count]',
@@ -1840,8 +1676,7 @@ ottle-select"]');
       tastingsView.invalidateFlightPlan(); return;
     }
     if (event.target.id === 'ui-language') {
-      chooseLanguage(event.target
-        .value); return;
+      chooseLanguage(event.target.value); return;
     }
     if (event.target.dataset.sectionSwitch === 'analytics') {
       navigate('analytics', event.target.value);
@@ -1852,109 +1687,76 @@ ottle-select"]');
       return;
     }
     if (event.target.dataset.sectionSwitch === 'settings') {
-      if (activateSettingsSection(
-        event.target.value,
-        event.target.closest('.settings-page')
-      )) state.settingsSection = event.target.value;
+      if (activateSettingsSection(event.target.value, event.target.closest('.settings-page'))) state.settingsSection = event.target.value;
       return;
     }
     if (event.target.dataset.sectionSwitch === 'help') {
       activateHelpTopic(event.target.value, event.target.closest('.help-page'));
       return;
     }
-    if (event.target.name === 'type' && event.target
-      .closest?.('#warehouse-form')?.dataset.newFurniture === 'true') {
+    if (event.target.name === 'type' && event.target.closest?.('#warehouse-form')?.dataset.newFurniture === 'true') {
       const form = event.target.closest('#warehouse-form');
       const bottom = form.querySelector('[name="elevation"]');
       const height = form.querySelector('[name="itemHeight"]');
       if (bottom && height) {
-        if (event.target.value === 'haengeregal' && Number(bottom.value) ===
-          0 && Number(height.value) === 1.8) {
+        if (event.target.value === 'haengeregal' && Number(bottom.value) === 0 && Number(height.value) === 1.8) {
           bottom.value = '1.9'; height.value = '0.4';
-        } else if (event.target.value !== 'haengeregal' &&
-          Number(bottom.value) === 1.9 && Number(height.value) === 0.4) {
+        } else if (event.target.value !== 'haengeregal' && Number(bottom.value) === 1.9 && Number(height.value) === 0.4) {
           bottom.value = '0'; height.value = '1.8';
         }
       }
       return;
     }
     if (event.target.matches('.warehouse-bottle-check')) {
-      warehouseView.toggleBottleSelection(
-        event.target.dataset.id,
-        event.target.checked
-      ); return;
+      warehouseView.toggleBottleSelection(event.target.dataset.id, event.target.checked); return;
     }
     if (event.target.id === 'warehouse-room-select') {
-      warehouseView.selectRoom(
-        event.target.value,
-        state.selected === 'shelves' ? 'shelves' : 'rooms'
-      ); return;
+      warehouseView.selectRoom(event.target.value, state.selected === 'shelves' ? 'shelves' : 'rooms'); return;
     }
-    if (event.target.id ===
-      'warehouse-plan-layer') {
-      state.warehousePlanLevel = event.target
-        .value; render(); return;
+    if (event.target.id === 'warehouse-plan-layer') {
+      state.warehousePlanLevel = event.target.value; render(); return;
     }
-    if (event.target.id ===
-      'warehouse-plan-zoom') {
-      state.warehousePlanZoom = [100, 150, 200]
-        .includes(Number(event.target.value)) ? Number(event.target
-          .value) : 100; warehouseView.update3DZoom(state.warehousePlanZoom);
+    if (event.target.id === 'warehouse-plan-zoom') {
+      state.warehousePlanZoom = [100, 150, 200].includes(Number(event.target.value)) ? Number(event.target.value) : 100; warehouseView.update3DZoom(state.warehousePlanZoom);
       return;
     }
-    if (event.target.name ===
-      'warehouse-find-placement') {
-      warehouseView.setFinderPlacement(event
-        .target.value); return;
+    if (event.target.name === 'warehouse-find-placement') {
+      warehouseView.setFinderPlacement(event.target.value); return;
     }
     const filter = event.target.dataset.analyticsFilter;
-    if (filter && ['distillery', 'country', 'volumeType', 'status']
-      .includes(filter)) {
+    if (filter && ['distillery', 'country', 'volumeType', 'status'].includes(filter)) {
       state.analyticsFilters[filter] = event.target.value;
-      history.replaceState(
-        {whiskyRoute: true},
-        '',
-        routeUrl('analytics', state.selected, state.analyticsFilters)
-      );
+      history.replaceState({whiskyRoute: true}, '', routeUrl('analytics', state.selected, state.analyticsFilters));
       render();
       return;
     }
     if (event.target.id === 'analytics-period') {
-      state.analyticsPeriod =
-        event.target.value === 'year' ? 'year' : 'month'; render(); return;
+      state.analyticsPeriod = event.target.value === 'year' ? 'year' : 'month'; render(); return;
     }
     if (event.target.dataset.analyticsBoundary) {
       const boundary = event.target.dataset.analyticsBoundary;
       if (boundary === 'start' || boundary === 'end') {
-        const key = boundary === 'start' ? 'analyticsStartDate' :
-          'analyticsEndDate';
+        const key = boundary === 'start' ? 'analyticsStartDate' : 'analyticsEndDate';
         state[key] = readAnalyticsDate(event.target.value);
         render();
         return;
       }
     }
-    if (event.target.matches('#backup-profile-form [name=provider]')) backup
-      .toggleFields(event.target.form);
+    if (event.target.matches('#backup-profile-form [name=provider]')) backup.toggleFields(event.target.form);
     if (event.target.id === 'scan-file') {
       scanner.scanImage(event.target.files?.[0]);
     }
   });
   root.addEventListener('input', event => {
-    if (state.page === 'map' && event.target
-      .matches?.('#map-bottling-search, #map-missing-search')) {
+    if (state.page === 'map' && event.target.matches?.('#map-bottling-search, #map-missing-search')) {
       mapView.handleInput(event.target); return;
     }
-    if (state.page === 'home' && event.target.id ===
-      'search') {home.handleInput(event.target); return;}
-    if (event.target.id ===
-      'warehouse-unassigned-wall-search') {
-      warehouseView
-        .setUnassignedWallSearch(event.target.value); return;
+    if (state.page === 'home' && event.target.id === 'search') {home.handleInput(event.target); return;}
+    if (event.target.id === 'warehouse-unassigned-wall-search') {
+      warehouseView.setUnassignedWallSearch(event.target.value); return;
     }
-    if (event.target.id ===
-      'warehouse-search') {
-      warehouseView.setFinderQuery(event.target
-        .value); return;
+    if (event.target.id === 'warehouse-search') {
+      warehouseView.setFinderQuery(event.target.value); return;
     }
     if (event.target.id === 'bottling-choice-search') {
       editors.filterExistingBottlings(event.target.value);
@@ -1967,8 +1769,7 @@ ottle-select"]');
       let count = 0;
       const rows = queryAll('.distillery-row', list);
       for (const row of rows) {
-        const match = row.querySelector('strong').textContent
-          .toLocaleLowerCase('de').includes(term);
+        const match = row.querySelector('strong').textContent.toLocaleLowerCase('de').includes(term);
         row.hidden = !match;
         if (match) count++;
       }
@@ -1983,8 +1784,7 @@ ottle-select"]');
       const panel = event.target.parentElement;
       queryAll('.distillery-option', panel).forEach(label => {
         const checked = label.querySelector('input').checked;
-        label.hidden = !checked && !label.textContent
-          .toLocaleLowerCase('de').includes(term);
+        label.hidden = !checked && !label.textContent.toLocaleLowerCase('de').includes(term);
       });
     }
   });
@@ -1992,37 +1792,29 @@ ottle-select"]');
     // Sidebar buttons are native buttons: Tab and Enter/Space work without
     // special handling. ArrowUp/Down and Home/End offer fast navigation.
     if (event.target.matches?.('.section-nav-desktop .section-nav-item')) {
-      const items = [...event.target.closest('.section-nav-desktop')
-        .querySelectorAll('.section-nav-item')];
+      const items = [...event.target.closest('.section-nav-desktop').querySelectorAll('.section-nav-item')];
       const current = items.indexOf(event.target);
       let next = current;
       if (event.key === 'ArrowDown') next = (current + 1) % items.length;
-      else if (event.key === 'ArrowUp') next = (current - 1 +
-        items.length) % items.length;
+      else if (event.key === 'ArrowUp') next = (current - 1 + items.length) % items.length;
       else if (event.key === 'Home') next = 0;
       else if (event.key === 'End') next = items.length - 1;
       if (next !== current) {
         event.preventDefault();
         items[next].click();
-        document.querySelector(
-          `.section-nav-desktop .section-nav-item:nth-child(${next +
-          1})`)?.focus();
+        document.querySelector(`.section-nav-desktop .section-nav-item:nth-child(${next + 1})`)?.focus();
         return;
       }
     }
     if (event.key === 'Escape' && state.page === 'home' && !state.modal) {
-      const openPicker =
-        document.querySelector(
-          '.collection-flavor-picker[open], .collection-saved-menu[open]');
+      const openPicker = document.querySelector('.collection-flavor-picker[open], .collection-saved-menu[open]');
       if (openPicker) {
-        openPicker.open =
-          false; openPicker.querySelector('summary')?.focus(); return;
+        openPicker.open = false; openPicker.querySelector('summary')?.focus(); return;
       }
     }
     if (event.key === 'Escape' && state.modal) {
       modal.closeModal();
-    } else if (event.key === 'Escape' &&
-      document.getElementById('site-drawer')?.hidden === false) {
+    } else if (event.key === 'Escape' && document.getElementById('site-drawer')?.hidden === false) {
       setMenu(false);
     }
     if (photoViewer.isOpen() && event.key === 'ArrowLeft') {
@@ -2033,9 +1825,7 @@ ottle-select"]');
       photoViewer.step(1);
     }
     // Non-button cards/brand elements also support keyboard activation.
-    if (['Enter', ' '].includes(event.key) && event.target
-      .matches(
-        '.whisky-card, .brand, tr.clickable[data-act], .warehouse-iso-object')
+    if (['Enter', ' '].includes(event.key) && event.target.matches('.whisky-card, .brand, tr.clickable[data-act], .warehouse-iso-object')
     ) {
       event.preventDefault();
       event.target.click();

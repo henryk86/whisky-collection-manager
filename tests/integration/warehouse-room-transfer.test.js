@@ -39,12 +39,7 @@ const furniture = async (base, room, name) => (await api(
  * @param {number=} capacity Value used by this operation.
  * @return {!Promise<*>} Promise for the asynchronous operation.
  */
-const shelf = async (base, model, name, capacity = 3) => (await api(
-  base,
-  `/api/warehouse/furniture/${model.id}/shelves`,
-  'POST',
-  {name, capacity}
-)).data;
+const shelf = async (base, model, name, capacity = 3) => (await api(base, `/api/warehouse/furniture/${model.id}/shelves`, 'POST', {name, capacity})).data;
 
 /**
  * Coordinates asynchronous work for bottle.
@@ -71,12 +66,7 @@ const bottle = async (base, number) => (await api(
  * @param {*} includeAssignments Value used by this operation.
  * @return {!Promise<*>} Promise for the asynchronous operation.
  */
-const exportRooms = (base, roomIds, includeAssignments) => api(
-  base,
-  '/api/warehouse/rooms/export',
-  'POST',
-  {roomIds, includeAssignments}
-);
+const exportRooms = (base, roomIds, includeAssignments) => api(base, '/api/warehouse/rooms/export', 'POST', {roomIds, includeAssignments});
 
 /**
  * Derives the preview result from the supplied values.
@@ -86,12 +76,7 @@ const exportRooms = (base, roomIds, includeAssignments) => api(
  * @param {!Object=} opts Value used by this operation.
  * @return {!Promise<*>} Promise for the asynchronous operation.
  */
-const preview = (base, document, opts = {}) => api(
-  base,
-  '/api/warehouse/rooms/import/preview',
-  'POST',
-  {document, ...opts}
-);
+const preview = (base, document, opts = {}) => api(base, '/api/warehouse/rooms/import/preview', 'POST', {document, ...opts});
 
 /**
  * Derives the apply result from the supplied values.
@@ -101,15 +86,12 @@ const preview = (base, document, opts = {}) => api(
  * @param {!Object=} opts Value used by this operation.
  * @return {!Promise<*>} Promise for the asynchronous operation.
  */
-const apply = (base, document, opts = {}) =>
-  api(base, '/api/warehouse/rooms/import', 'POST', {document, ...opts});
+const apply = (base, document, opts = {}) => api(base, '/api/warehouse/rooms/import', 'POST', {document, ...opts});
 
 test(
-  'export of selected/multiple/all rooms can be imported with or without \
-matching bottle allocations across instances',
+  'export of selected/multiple/all rooms can be imported with or without matching bottle allocations across instances',
   async () => {
-    const source = await startTestServer(), destination =
-      await startTestServer();
+    const source = await startTestServer(), destination = await startTestServer();
     try {
       const room1 = await create(source.base, 'Original room');
       const room2 = await create(source.base, 'Spare room');
@@ -117,12 +99,7 @@ matching bottle allocations across instances',
       const cabinet = await furniture(source.base, room1, 'Regal mit Fächern');
       const bay = await shelf(source.base, cabinet, 'Fach 1', 2);
       const originalBottle = await bottle(source.base, 'TRANSFER-4711');
-      await api(
-        source.base,
-        `/api/warehouse/bottles/${originalBottle.id}`,
-        'PUT',
-        {shelfId: bay.id}
-      );
+      await api(source.base, `/api/warehouse/bottles/${originalBottle.id}`, 'PUT', {shelfId: bay.id});
       const receiverBottle = await bottle(destination.base, 'TRANSFER-4711');
       assert.notEqual(originalBottle.id, receiverBottle.id);
       const single = (await exportRooms(source.base, [room1.id], false)).data;
@@ -130,12 +107,8 @@ matching bottle allocations across instances',
       assert.equal(single.rooms.length, 1);
       assert.equal(single.assignments.length, 0);
       assert.equal(single.includesAssignments, false);
-      const several = (await exportRooms(source.base, [room1.id, room2.id],
-        true)).data;
-      assert.deepEqual(
-        several.rooms.map(r => r.name),
-        ['Original room', 'Spare room']
-      );
+      const several = (await exportRooms(source.base, [room1.id, room2.id], true)).data;
+      assert.deepEqual(several.rooms.map(r => r.name), ['Original room', 'Spare room']);
       assert.equal(several.assignments.length, 1);
       assert.equal(several.assignments[0].inventoryNumber, 'TRANSFER-4711');
       assert.equal(several.assignments[0].bottleId, originalBottle.id);
@@ -144,11 +117,7 @@ matching bottle allocations across instances',
       const dry = (await preview(destination.base, several)).data;
       assert.equal(dry.createdRooms, 2);
       assert.equal(dry.assigned, 1);
-      assert.equal(
-        (await api(destination.base, '/api/warehouse')).data.rooms.length,
-        0,
-        'preview never commits'
-      );
+      assert.equal((await api(destination.base, '/api/warehouse')).data.rooms.length, 0, 'preview never commits');
       const result = await apply(destination.base, several);
       assert.equal(result.status, 200);
       assert.equal(result.data.createdRooms, 2);
@@ -158,43 +127,20 @@ matching bottle allocations across instances',
       assert.notEqual(target.rooms[0].id, room1.id);
       assert.notEqual(target.rooms[0].furniture[0].id, cabinet.id);
       assert.notEqual(target.rooms[0].furniture[0].shelves[0].id, bay.id);
-      assert.equal(
-        target.assignments[receiverBottle.id],
-        target.rooms[0].furniture[0].shelves[0].id
-      );
+      assert.equal(target.assignments[receiverBottle.id], target.rooms[0].furniture[0].shelves[0].id);
       const repeat = (await apply(destination.base, several)).data;
       assert.equal(repeat.createdRooms, 0);
       assert.equal(repeat.skippedRooms, 2);
-      assert.equal(
-        (await api(destination.base, '/api/warehouse')).data.rooms.length,
-        2
-      );
-      const extra = (await apply(destination.base, all, {
-        includeAssignments:
-          false,
-      })).data;
+      assert.equal((await api(destination.base, '/api/warehouse')).data.rooms.length, 2);
+      const extra = (await apply(destination.base, all, {includeAssignments: false, })).data;
       assert.equal(extra.createdRooms, 1);
       assert.equal(extra.assigned, 0);
-      assert.equal(
-        (await api(destination.base, '/api/warehouse')).data.rooms.length,
-        3
-      );
+      assert.equal((await api(destination.base, '/api/warehouse')).data.rooms.length, 3);
       // An existing occupied room cannot be replaced even when explicitly
       // requested.
-      assert.equal(
-        (await preview(destination.base, several, {conflictPolicy: 'replace'}))
-          .data.blockedRooms,
-        1
-      );
-      assert.equal(
-        (await apply(destination.base, several, {conflictPolicy: 'replace'}))
-          .status,
-        409
-      );
-      assert.equal(
-        (await api(destination.base, '/api/warehouse')).data.rooms.length,
-        3
-      );
+      assert.equal((await preview(destination.base, several, {conflictPolicy: 'replace'})).data.blockedRooms, 1);
+      assert.equal((await apply(destination.base, several, {conflictPolicy: 'replace'})).status, 409);
+      assert.equal((await api(destination.base, '/api/warehouse')).data.rooms.length, 3);
     } finally {await source.stop(); await destination.stop();}
   }
 );
@@ -211,17 +157,10 @@ test(
       assert.equal((await preview(ctx.base, corrupt)).status, 400);
       assert.equal((await apply(ctx.base, corrupt)).status, 400);
       const unknown = structuredClone(valid);
-      unknown.assignments =
-        [{bottleId: 'b', shelfId: 'invalid', inventoryNumber: 'foo'}];
+      unknown.assignments = [{bottleId: 'b', shelfId: 'invalid', inventoryNumber: 'foo'}];
       assert.equal((await apply(ctx.base, unknown)).status, 400);
-      assert.equal(
-        (await api(ctx.base, '/api/warehouse')).data.rooms.length,
-        1
-      );
-      assert.equal(
-        (await exportRooms(ctx.base, ['unknown'], false)).status,
-        400
-      );
+      assert.equal((await api(ctx.base, '/api/warehouse')).data.rooms.length, 1);
+      assert.equal((await exportRooms(ctx.base, ['unknown'], false)).status, 400);
     } finally {await ctx.stop();}
   }
 );

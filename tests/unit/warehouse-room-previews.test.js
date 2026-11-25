@@ -27,8 +27,7 @@ const rooms = [
 ];
 
 test(
-  'each overview room card has one decorative snapshot slot and stays a \
-single clickable card',
+  'each overview room card has one decorative snapshot slot and stays a single clickable card',
   () => {
     const previous = globalThis.document;
     let html = '';
@@ -67,26 +66,14 @@ single clickable card',
         refresh: async () => {},
       });
       view.render();
-      assert.equal(
-        (html.match(/class="warehouse-room-card"/g) || []).length,
-        2
-      );
-      assert.equal(
-        (html.match(/class="warehouse-room-preview"/g) || []).length,
-        2
-      );
-      assert.equal(
-        (html.match(/class="warehouse-room-card-details"/g) || []).length,
-        2
-      );
+      assert.equal((html.match(/class="warehouse-room-card"/g) || []).length, 2);
+      assert.equal((html.match(/class="warehouse-room-preview"/g) || []).length, 2);
+      assert.equal((html.match(/class="warehouse-room-card-details"/g) || []).length, 2);
       assert.match(html, /data-preview-room-id="raum-a" aria-hidden="true"/);
       assert.match(html, /data-preview-room-id="raum-b" aria-hidden="true"/);
       assert.match(html, /data-act="warehouse-select-room" data-id="raum-a"/);
       assert.match(html, /data-act="warehouse-select-room" data-id="raum-b"/);
-      assert.doesNotMatch(
-        html,
-        /warehouse-three-canvas|warehouse-three-viewport/
-      );
+      assert.doesNotMatch(html, /warehouse-three-canvas|warehouse-three-viewport/);
     } finally {
       if (previous === undefined) delete globalThis.document;
       else globalThis.document = previous;
@@ -95,14 +82,12 @@ single clickable card',
 );
 
 test(
-  'overview thumbnails reuse actual 3D scene construction and only allocate \
-a shared temporary renderer',
+  'overview thumbnails reuse actual 3D scene construction and only allocate a shared temporary renderer',
   () => {
     const previous = globalThis.document;
     try {
       delete globalThis.document;
-      assert.doesNotThrow(() =>
-        mountWarehouseRoomPreviews({rooms, warehouse: {rooms}}).dispose());
+      assert.doesNotThrow(() => mountWarehouseRoomPreviews({rooms, warehouse: {rooms}}).dispose());
     } finally {
       if (previous !== undefined) globalThis.document = previous;
     }

@@ -32,8 +32,7 @@ test(
 );
 
 test(
-  'failed refresh retains mutation success and reports only the refresh \
-failure',
+  'failed refresh retains mutation success and reports only the refresh failure',
   async () => {
     const failure = new Error('Failed to reload');
     let mutationErrorCalled = false;

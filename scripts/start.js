@@ -34,12 +34,10 @@ function readJson(file) {
  */
 export function needsNpmCi(root, {production = false} = {}) {
   const wanted = readJson(path.join(root, 'package-lock.json'));
-  const installed = readJson(path.join(root, 'node_modules',
-    '.package-lock.json'));
+  const installed = readJson(path.join(root, 'node_modules', '.package-lock.json'));
   if (!wanted?.packages || !installed?.packages) return true;
   for (const [name, entry] of Object.entries(wanted.packages)) {
-    if (!name.startsWith('node_modules/') || (production &&
-      entry.dev)) continue;
+    if (!name.startsWith('node_modules/') || (production && entry.dev)) continue;
     if (installed.packages[name]?.version !== entry.version) return true;
     if (!fs.existsSync(path.join(root, name, 'package.json'))) return true;
   }
@@ -57,12 +55,10 @@ function readEnvFile(root) {
   const file = path.join(root, '.env');
   if (!fs.existsSync(file)) return result;
   for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
-    const match = line.match(
-      /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
+    const match = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
     if (!match) continue;
     let value = match[2].trim();
-    if ((value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))) {
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     } else {
       value = value.replace(/\s+#.*$/, '').trim();
@@ -91,8 +87,7 @@ export function localTlsStatus(root, env = process.env) {
   const setting = (key, fallback) => env[key] ?? fileEnv[key] ?? fallback;
   const enabled = String(setting('HTTPS_ENABLED', 'true')).toLowerCase();
   if (enabled === 'false' || enabled === '0') return 'disabled';
-  if (enabled !== 'true' && enabled !==
-    '1') return 'configured'; // Server validates bad values.
+  if (enabled !== 'true' && enabled !== '1') return 'configured'; // Server validates bad values.
   const key = setting('HTTPS_KEY_FILE', 'certs/server-key.pem');
   const cert = setting('HTTPS_CERT_FILE', 'certs/server-cert.pem');
   /**
@@ -108,8 +103,7 @@ export function localTlsStatus(root, env = process.env) {
   };
   if (isReady(key) && isReady(cert)) return 'ready';
   // Never overwrite an operator-managed certificate or an externally set path.
-  if (key !== 'certs/server-key.pem' || cert !==
-    'certs/server-cert.pem') return 'custom-missing';
+  if (key !== 'certs/server-key.pem' || cert !== 'certs/server-cert.pem') return 'custom-missing';
   return 'missing';
 }
 
@@ -146,8 +140,7 @@ function defaultExecute(command, args, {root, env}) {
     }
   );
   if (result.error) throw result.error;
-  if (result.status !== 0) throw new Error(`${path.basename(command)} ${args
-    .join(' ')} failed (${result.status ?? result.signal}).`);
+  if (result.status !== 0) throw new Error(`${path.basename(command)} ${args.join(' ')} failed (${result.status ?? result.signal}).`);
 }
 
 /**
@@ -159,8 +152,7 @@ function defaultExecute(command, args, {root, env}) {
 export function prepareStartup({root = ROOT, env = process.env,
   execute = defaultExecute} = {}) {
   const production = env.NODE_ENV === 'production';
-  const offline = fs.existsSync(path.join(root,
-    '.offline')); // Fail closed if an offline bundle is incomplete.
+  const offline = fs.existsSync(path.join(root, '.offline')); // Fail closed if an offline bundle is incomplete.
   if (offline) verifyOfflineBundle(root);
   if (needsNpmCi(root, {production})) {
     console.log('[Start] Installing missing/stale npm dependencies...');
@@ -168,59 +160,41 @@ export function prepareStartup({root = ROOT, env = process.env,
     // npm mutates its cache indexes even in offline mode. Always work on a
     // disposable copy so the signed offline archive stays verifiable on
     // subsequent starts, reinstalls and migrations.
-    const offlineCache = offline ?
-      fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-offline-npm-')) : null;
+    const offlineCache = offline ? fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-offline-npm-')) : null;
     try {
-      if (offlineCache) fs.cpSync(
-        path.join(root, '.offline', 'npm-cache'),
-        offlineCache,
-        {recursive: true}
-      );
+      if (offlineCache) fs.cpSync(path.join(root, '.offline', 'npm-cache'), offlineCache, {recursive: true});
       execute(
         binary,
         [...prefix, 'ci', ...(production ? ['--omit=dev'] : []),
-        ...(offlineCache ?
-          ['--offline', '--ignore-scripts', '--cache', offlineCache] : [])],
+        ...(offlineCache ? ['--offline', '--ignore-scripts', '--cache', offlineCache] : [])],
         {root, env}
       );
     } finally {
       if (offlineCache) fs.rmSync(offlineCache, {recursive: true, force: true});
     }
     if (needsNpmCi(root, {production})) {
-      throw new Error(
-        'npm ci did not install all dependencies. Check package-lock.json \
-and node_modules.');
+      throw new Error('npm ci did not install all dependencies. Check package-lock.json and node_modules.');
     }
   }
 
   console.log('[Start] Checking local bottle cutout assets...');
-  execute(
-    process.execPath,
-    ['scripts/prepare-cutout-assets.js', ...(offline ? ['--verify'] : [])],
-    {root, env}
-  );
+  execute(process.execPath, ['scripts/prepare-cutout-assets.js', ...(offline ? ['--verify'] : [])], {root, env});
 
   if (!fs.existsSync(path.join(root, '.env')) && !production) {
-    fs.copyFileSync(
-      path.join(root, '.env.example'),
-      path.join(root, '.env'),
-      fs.constants.COPYFILE_EXCL
-    );
+    fs.copyFileSync(path.join(root, '.env.example'), path.join(root, '.env'), fs.constants.COPYFILE_EXCL);
     console.log('[Start] Created .env from .env.example.');
   }
   const tls = localTlsStatus(root, env);
   if (tls === 'custom-missing') {
     throw new Error(
-      'Configured HTTPS certificate/key missing. Supply the configured \
-files or update HTTPS_CERT_FILE and HTTPS_KEY_FILE.');
+      'Configured HTTPS certificate/key missing. Supply the configured files or update HTTPS_CERT_FILE and HTTPS_KEY_FILE.');
   }
   if (tls === 'missing') {
     console.log('[Start] Creating initial local HTTPS certificate...');
     execute(process.execPath, ['scripts/setup-https.js'], {root, env});
     if (localTlsStatus(root, env) !== 'ready') {
       throw new Error(
-        'HTTPS setup did not create usable certificate and key files. \
-Install mkcert or OpenSSL, then rerun npm start.');
+        'HTTPS setup did not create usable certificate and key files. Install mkcert or OpenSSL, then rerun npm start.');
     }
   }
 }
@@ -232,11 +206,7 @@ Install mkcert or OpenSSL, then rerun npm start.');
  * @return {*} Result computed from the supplied inputs.
  */
 export function launchServer({root = ROOT, env = process.env} = {}) {
-  const server = spawn(
-    process.execPath,
-    ['server/index.js'],
-    {cwd: root, env, stdio: 'inherit'}
-  );
+  const server = spawn(process.execPath, ['server/index.js'], {cwd: root, env, stdio: 'inherit'});
   for (const signal of ['SIGINT', 'SIGTERM']) {
     process.on(signal, () => server.kill(signal));
   }
@@ -254,8 +224,7 @@ export function launchServer({root = ROOT, env = process.env} = {}) {
   return server;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     prepareStartup();
     launchServer();

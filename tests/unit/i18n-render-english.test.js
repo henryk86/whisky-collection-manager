@@ -13,10 +13,7 @@ import {createWarehouseView} from '../../public/js/views/warehouse.js';
  * @param {*} name Environment variable or setting name.
  * @return {*} Parsed JSON value.
  */
-const locale = name => JSON.parse(fs.readFileSync(
-  new URL(`../../public/locales/${name}`, import.meta.url),
-  'utf8'
-));
+const locale = name => JSON.parse(fs.readFileSync(new URL(`../../public/locales/${name}`, import.meta.url), 'utf8'));
 
 /**
  * Retrieves locale from the available state.
@@ -92,8 +89,7 @@ const selectors = {
 };
 
 test(
-  'English renders actual collection, analytics and warehouse controls, not \
-German literals',
+  'English renders actual collection, analytics and warehouse controls, not German literals',
   async () => {
     const previous = {
       location: globalThis.location,
@@ -158,10 +154,7 @@ German literals',
          */
         shell: html => {home = html;},
       })();
-      assert.match(
-        home,
-        /toggle-view[^>]*>[\s\S]*class="collection-filter-view-text">Table</
-      );
+      assert.match(home, /toggle-view[^>]*>[\s\S]*class="collection-filter-view-text">Table</);
       state.view = 'table';
       createHomeView({
         state, selectors,
@@ -172,16 +165,10 @@ German literals',
          */
         shell: html => {home = html;},
       })();
-      assert.match(
-        home,
-        /toggle-view[^>]*>[\s\S]*class="collection-filter-view-text">Cards</
-      );
+      assert.match(home, /toggle-view[^>]*>[\s\S]*class="collection-filter-view-text">Cards</);
       assert.match(home, /All distilleries/);
       assert.match(home, /All statuses/);
-      assert.doesNotMatch(
-        home,
-        />Tabelle<|>Kacheln<|>Alle Destillerien<|>Alle Status</
-      );
+      assert.doesNotMatch(home, />Tabelle<|>Kacheln<|>Alle Destillerien<|>Alle Status</);
       assert.match(home, /Custom Islay/);
       let analytics = '';
       createAnalyticsView({
@@ -199,10 +186,7 @@ German literals',
         'All bottle types',
         'All statuses',
       ]) assert.match(analytics, new RegExp(label));
-      assert.doesNotMatch(
-        analytics,
-        /Alle Destillerien|Alle L\u00e4nder|Alle Flaschentypen|Alle Status/
-      );
+      assert.doesNotMatch(analytics, /Alle Destillerien|Alle L\u00e4nder|Alle Flaschentypen|Alle Status/);
       let warehouse = '';
       const warehouseState = {
         warehouse: {rooms: [room], bottles: [], assignments: {}},
@@ -263,13 +247,9 @@ German literals',
       );
       for (const label of ['Left side panel', 'Right side panel', 'Back panel',
         'Door leaves']) assert.match(furnitureForm, new RegExp(label));
-      assert.doesNotMatch(
-        furnitureForm,
-        /Linke Seitenwand|Rechte Seitenwand|R\u00fcckwand|T\u00fcrfl\u00fcgel/
-      );
+      assert.doesNotMatch(furnitureForm, /Linke Seitenwand|Rechte Seitenwand|R\u00fcckwand|T\u00fcrfl\u00fcgel/);
     } finally {
-      for (const [name, value] of Object.entries(previous)) if (value ===
-        undefined) delete globalThis[name]; else globalThis[name] = value;
+      for (const [name, value] of Object.entries(previous)) if (value === undefined) delete globalThis[name]; else globalThis[name] = value;
       await initializeLanguage(async url => url.endsWith('index.json') ?
         {
           ok: true,

@@ -118,8 +118,7 @@ const selectors = {
  * @param {*} html HTML markup to render or inspect.
  * @return {*} Result computed from the supplied inputs.
  */
-const extractHeader = html =>
-  html.match(/<thead><tr>([\s\S]*?)<\/tr><\/thead>/)?.[1] || '';
+const extractHeader = html => html.match(/<thead><tr>([\s\S]*?)<\/tr><\/thead>/)?.[1] || '';
 
 // These preferences must not modify collection.json or leak across overview
 // modes.
@@ -134,44 +133,25 @@ test(
     assert.ok(!defaults.bottlings.includes('editing'));
     assert.ok(defaults.bottles.includes('rating'));
     assert.equal(
-      saveTableColumns(
-        {bottlings: ['rating', 'editing', 'nonsense'], bottles: ['inventory']},
-        storage
-      ),
+      saveTableColumns({bottlings: ['rating', 'editing', 'nonsense'], bottles: ['inventory']}, storage),
       true
     );
-    assert.deepEqual(
-      loadTableColumns(storage),
-      {bottlings: ['editing', 'rating'], bottles: ['inventory']}
-    );
+    assert.deepEqual(loadTableColumns(storage), {bottlings: ['editing', 'rating'], bottles: ['inventory']});
     storage.setItem(TABLE_COLUMNS_STORAGE_KEY, '{broken');
-    assert.deepEqual(
-      loadTableColumns(storage).bottlings,
-      DEFAULT_TABLE_COLUMNS.bottlings
-    );
-    assert.deepEqual(
-      normalizeTableColumns('bottlings', []),
-      DEFAULT_TABLE_COLUMNS.bottlings
-    );
+    assert.deepEqual(loadTableColumns(storage).bottlings, DEFAULT_TABLE_COLUMNS.bottlings);
+    assert.deepEqual(normalizeTableColumns('bottlings', []), DEFAULT_TABLE_COLUMNS.bottlings);
   }
 );
 
 test(
-  'every available column has two sort directions and toggles \
-deterministically',
+  'every available column has two sort directions and toggles deterministically',
   () => {
     for (const mode of ['bottles', 'bottlings']) for (
       const column of TABLE_COLUMNS[mode]) {
-      assert.ok(
-        column.asc && column.desc && column.asc !== column.desc,
-        `${mode}/${column.id}`
-      );
+      assert.ok(column.asc && column.desc && column.asc !== column.desc, `${mode}/${column.id}`);
       const first = sortForColumn(column, 'name');
       assert.ok([column.asc, column.desc].includes(first));
-      assert.equal(
-        sortForColumn(column, first),
-        first === column.asc ? column.desc : column.asc
-      );
+      assert.equal(sortForColumn(column, first), first === column.asc ? column.desc : column.asc);
     }
   }
 );
@@ -184,8 +164,7 @@ test('switching from last tasted to name starts A-Z, then flips to Z-A', () => {
 });
 
 test(
-  'header sorts cover inventory, status, amount, stock, ABV, age, year and \
-completion',
+  'header sorts cover inventory, status, amount, stock, ABV, age, year and completion',
   () => {
     /**
      * Derives the entries result from the supplied values.
@@ -194,54 +173,22 @@ completion',
      * @param {*} sort Sort direction or ordering rule.
      * @return {!Array<*>} Resulting entries in their output order.
      */
-    const entries = (mode, sort) =>
-      collectionOverviewEntries(collection, {mode, sort});
-    assert.deepEqual(
-      entries('bottles', 'inventoryAsc').map(e => e.bottle.id),
-      ['a2', 'b1', 'a1']
-    );
-    assert.deepEqual(
-      entries('bottles', 'inventoryDesc').map(e => e.bottle.id),
-      ['a1', 'b1', 'a2']
-    );
-    assert.deepEqual(
-      entries('bottles', 'volumeMlAsc').map(e => e.bottle.id),
-      ['a2', 'b1', 'a1']
-    );
-    assert.deepEqual(
-      entries('bottles', 'statusAsc').map(e => e.bottle.id),
-      ['a1', 'a2', 'b1']
-    );
-    assert.deepEqual(
-      entries('bottlings', 'abvDesc').map(e => e.bottling.id),
-      ['b', 'a']
-    );
-    assert.deepEqual(
-      entries('bottlings', 'ageAsc').map(e => e.bottling.id),
-      ['a', 'b']
-    );
-    assert.deepEqual(
-      entries('bottlings', 'yearAsc').map(e => e.bottling.id),
-      ['b', 'a']
-    );
-    assert.deepEqual(
-      entries('bottlings', 'stockAsc').map(e => e.bottling.id),
-      ['b', 'a']
-    );
-    assert.deepEqual(
-      entries('bottlings', 'completionAsc').map(e => e.bottling.id),
-      ['a', 'b']
-    );
-    assert.deepEqual(
-      entries('bottlings', 'scoreDesc').map(e => e.bottling.id),
-      ['b', 'a']
-    );
+    const entries = (mode, sort) => collectionOverviewEntries(collection, {mode, sort});
+    assert.deepEqual(entries('bottles', 'inventoryAsc').map(e => e.bottle.id), ['a2', 'b1', 'a1']);
+    assert.deepEqual(entries('bottles', 'inventoryDesc').map(e => e.bottle.id), ['a1', 'b1', 'a2']);
+    assert.deepEqual(entries('bottles', 'volumeMlAsc').map(e => e.bottle.id), ['a2', 'b1', 'a1']);
+    assert.deepEqual(entries('bottles', 'statusAsc').map(e => e.bottle.id), ['a1', 'a2', 'b1']);
+    assert.deepEqual(entries('bottlings', 'abvDesc').map(e => e.bottling.id), ['b', 'a']);
+    assert.deepEqual(entries('bottlings', 'ageAsc').map(e => e.bottling.id), ['a', 'b']);
+    assert.deepEqual(entries('bottlings', 'yearAsc').map(e => e.bottling.id), ['b', 'a']);
+    assert.deepEqual(entries('bottlings', 'stockAsc').map(e => e.bottling.id), ['b', 'a']);
+    assert.deepEqual(entries('bottlings', 'completionAsc').map(e => e.bottling.id), ['a', 'b']);
+    assert.deepEqual(entries('bottlings', 'scoreDesc').map(e => e.bottling.id), ['b', 'a']);
   }
 );
 
 test(
-  'table columns can be enabled and removed and header sorting synchronizes \
-the dropdown',
+  'table columns can be enabled and removed and header sorting synchronizes the dropdown',
   () => {
     const original = {
       document: globalThis.document,
@@ -288,8 +235,7 @@ the dropdown',
          * operation.
          * @return {*} Result computed from the supplied inputs.
          */
-        querySelector: selector => selector === '.collection-table-columns' ?
-          currentPicker : null,
+        querySelector: selector => selector === '.collection-table-columns' ? currentPicker : null,
         /**
          * Derives the query selector all result from the supplied values.
          * @return {!Array<*>} Resulting entries in their output order.
@@ -317,8 +263,7 @@ the dropdown',
              * @param {*} fn Function called during this operation.
              */
             addEventListener: (event, fn) => {
-              if (event ===
-                'toggle') currentPicker.onToggle = fn;
+              if (event === 'toggle') currentPicker.onToggle = fn;
             },
           };
         },
@@ -333,18 +278,14 @@ the dropdown',
       view.handleChange(editing);
       assert.match(extractHeader(html), /data-column="editing"/);
       assert.match(html, /class="collection-table-columns" open/);
-      assert.deepEqual(
-        loadTableColumns(storage).bottlings.includes('editing'),
-        true
-      );
+      assert.deepEqual(loadTableColumns(storage).bottlings.includes('editing'), true);
       // Closing the native <details> summary must persist across renders;
       // previously the next table update reopened it unexpectedly.
       currentPicker.open = false;
       currentPicker.onToggle();
       view();
       assert.doesNotMatch(html, /class="collection-table-columns" open/,
-        'the manually closed column picker remains closed on a subsequent \
-render');
+        'the manually closed column picker remains closed on a subsequent render');
       view.handleClick({
         dataset: {
           act: 'collection-sort-column',
@@ -355,10 +296,7 @@ render');
         'sorting a header closes the picker after editing columns');
       assert.equal(state.sort, 'age');
       assert.match(html, /<option value="age" selected>/);
-      assert.match(
-        extractHeader(html),
-        /aria-sort="descending"[^>]*>\s*<button[^>]*data-column="age"/
-      );
+      assert.match(extractHeader(html), /aria-sort="descending"[^>]*>\s*<button[^>]*data-column="age"/);
       view.handleClick({
         dataset: {
           act: 'collection-sort-column',
@@ -387,13 +325,9 @@ render');
       });
       assert.equal(state.sort, 'inventoryDesc');
       view.handleClick({dataset: {act: 'collection-columns-default'}});
-      assert.deepEqual(
-        loadTableColumns(storage).bottles,
-        DEFAULT_TABLE_COLUMNS.bottles
-      );
+      assert.deepEqual(loadTableColumns(storage).bottles, DEFAULT_TABLE_COLUMNS.bottles);
     } finally {
-      for (const [name, value] of Object.entries(original)) if (value ===
-        undefined) delete globalThis[name]; else globalThis[name] = value;
+      for (const [name, value] of Object.entries(original)) if (value === undefined) delete globalThis[name]; else globalThis[name] = value;
     }
   }
 );

@@ -14,6 +14,5 @@ export const whiskyTypeLabels = {
  * @param {*} b Second value to compare.
  * @return {*} Result computed from the supplied inputs.
  */
-export const whiskyTypeName = b => whiskyTypeLabels[b.whiskyType] ||
-  'Nicht angegeben';
+export const whiskyTypeName = b => whiskyTypeLabels[b.whiskyType] || 'Nicht angegeben';
 export const photoAccept = 'image/jpeg,image/png,image/webp,image/gif';

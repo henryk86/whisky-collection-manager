@@ -15,8 +15,7 @@ const distilleryNames = () => 'Bowmore, Port Ellen';
  * @return {!Object} Entries transformed for the consuming code.
  */
 const byLabel = fields =>
-  Object.fromEntries(fields.map(([label, value, suffix = '']) =>
-    [label, `${value}${suffix ? ` ${suffix}` : ''}`]));
+  Object.fromEntries(fields.map(([label, value, suffix = '']) => [label, `${value}${suffix ? ` ${suffix}` : ''}`]));
 
 test(
   'details exclude absent labels, placeholder values, and unknown composition',

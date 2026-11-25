@@ -36,11 +36,7 @@ export function createEditors({
  */
   function newBottling() {
     if (!(state.collection.bottlings || []).length) return createBottling();
-    showModal(
-      t("features.bottles.new"),
-      bottlingChoiceDialog(state.collection),
-      true
-    );
+    showModal(t("features.bottles.new"), bottlingChoiceDialog(state.collection), true);
   }
 
   /**
@@ -63,8 +59,7 @@ export function createEditors({
     replaceContent(select, bottlingChoiceOptions(state.collection, term));
     if (matches.some(item => item.id === previous)) select.value = previous;
     const counter = query('#bottling-choice-count');
-    if (counter) counter.textContent =
-      t("features.bottlings.searchResults", {count: matches.length});
+    if (counter) counter.textContent = t("features.bottlings.searchResults", {count: matches.length});
   }
 
   /**
@@ -109,8 +104,7 @@ export function createEditors({
    * @param {boolean=} fromImport Value used by this operation.
    */
   function newBottle(fromImport = false) {
-    const bottling = state.collection.bottlings.find(item => item.id ===
-      state.selected);
+    const bottling = state.collection.bottlings.find(item => item.id === state.selected);
     if (!bottling) throw Error(t('features.bottlings.selectFirst'));
     showNewBottleEditor(bottling, {fromImport});
   }
@@ -127,11 +121,7 @@ export function createEditors({
       return toast(t("features.errors.bottleNotFound"), true);
     }
     const {bottle: b, bottling} = found;
-    showModal(
-      `Flasche ${b.inventoryNumber || ''} bearbeiten`,
-      bottleForm(b, bottling.id),
-      true
-    );
+    showModal(`Flasche ${b.inventoryNumber || ''} bearbeiten`, bottleForm(b, bottling.id), true);
     query('#bottle-form').dataset.id = id;
   }
 
@@ -150,8 +140,7 @@ export function createEditors({
     if (form.dataset.saving === '1') return;
     form.dataset.saving = '1';
     form.setAttribute('aria-busy', 'true');
-    const buttons = [...form.querySelectorAll(
-      'button[type="submit"],input[type="submit"]')];
+    const buttons = [...form.querySelectorAll('button[type="submit"],input[type="submit"]')];
     const previouslyDisabled = buttons.map(button => button.disabled);
     buttons.forEach(button => {button.disabled = true;});
     try {
@@ -160,8 +149,7 @@ export function createEditors({
       delete form.dataset.saving;
       form.removeAttribute('aria-busy');
       buttons.forEach((button, index) => {
-        button.disabled =
-          previouslyDisabled[index];
+        button.disabled = previouslyDisabled[index];
       });
     }
   }
@@ -177,8 +165,7 @@ export function createEditors({
       ev.preventDefault();
       const form = ev.target;
       const data = formValues(form);
-      const b = form.dataset.id ? state.collection.bottlings.find(x =>
-        x.id === form.dataset.id) : null;
+      const b = form.dataset.id ? state.collection.bottlings.find(x => x.id === form.dataset.id) : null;
       const result = await action(async () => {
         let id, firstBottleId;
         let importPhotoError = null;
@@ -206,21 +193,13 @@ export function createEditors({
               await uploadPhotos(firstBottleId, files);
             }
             catch (err) {
-              toast(
-                t(
-                  "features.bottlings.photoUploadFailed",
-                  {error: err.message}
-                ),
-                true
-              );
+              toast(t("features.bottlings.photoUploadFailed", {error: err.message}), true);
             }
           }
-          if (getPendingImageToken() &&
-            form.querySelector('#import-image:checked')) {
+          if (getPendingImageToken() && form.querySelector('#import-image:checked')) {
             try {
               await request(
-                `/api/bottles/${encodeURIComponent(firstBottleId
-                )}/photos/from-stage`,
+                `/api/bottles/${encodeURIComponent(firstBottleId)}/photos/from-stage`,
                 {
                   method: 'POST',
                   body: JSON.stringify({token: getPendingImageToken()}),
@@ -237,13 +216,7 @@ export function createEditors({
               await uploadFiles(firstBottleId, documents);
             }
             catch (err) {
-              toast(
-                t(
-                  'errors.files.bottlingSavedUploadFailed',
-                  {error: err.message}
-                ),
-                true
-              );
+              toast(t('errors.files.bottlingSavedUploadFailed', {error: err.message}), true);
             }
           }
         }
@@ -253,10 +226,7 @@ export function createEditors({
       const {id, importPhotoError} = result.value;
       navigate('detail', id);
       toast(
-        importPhotoError ? t(
-          "imports.errors.bottlingSavedImageFailed",
-          {error: importPhotoError}
-        ) : t("features.bottlings.saved"),
+        importPhotoError ? t("imports.errors.bottlingSavedImageFailed", {error: importPhotoError}) : t("features.bottlings.saved"),
         Boolean(importPhotoError)
       );
     }
@@ -287,14 +257,10 @@ export function createEditors({
             await uploadPhotos(bottleId, files);
           }
           catch (err) {
-            toast(
-              t('errors.files.bottleSavedPhotoFailed', {error: err.message}),
-              true
-            );
+            toast(t('errors.files.bottleSavedPhotoFailed', {error: err.message}), true);
           }
         }
-        if (form.elements.importReferencePhoto?.checked &&
-          getPendingImageToken()) {
+        if (form.elements.importReferencePhoto?.checked && getPendingImageToken()) {
           try {
             await request(
               `/api/bottles/${encodeURIComponent(bottleId)}/photos/from-stage`,
@@ -314,10 +280,7 @@ export function createEditors({
             await uploadFiles(bottleId, documents);
           }
           catch (err) {
-            toast(
-              t('errors.files.bottleSavedUploadFailed', {error: err.message}),
-              true
-            );
+            toast(t('errors.files.bottleSavedUploadFailed', {error: err.message}), true);
           }
         }
         return {bottleId, importPhotoError};
@@ -327,18 +290,11 @@ export function createEditors({
       const {bottleId, importPhotoError} = result.value;
       toast(
         importPhotoError ?
-          t(
-            'imports.errors.bottleSavedImageFailed',
-            {error: importPhotoError}
-          ) : t("features.notifications.bottleSaved"),
+          t('imports.errors.bottleSavedImageFailed', {error: importPhotoError}) : t("features.notifications.bottleSaved"),
         Boolean(importPhotoError)
       );
       if (!form.dataset.id && form.dataset.fromOverview === '1') {
-        navigate(
-          'detail',
-          form.dataset.bottlingId,
-          {highlightBottleId: bottleId}
-        );
+        navigate('detail', form.dataset.bottlingId, {highlightBottleId: bottleId});
       }
     }
   }

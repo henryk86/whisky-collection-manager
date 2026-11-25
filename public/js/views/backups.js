@@ -14,8 +14,7 @@ import {loadTemplates} from '../ui/templates.js';
 import {createProfileViewModel, providerOptions}
   from '../features/backups/profile-model.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/backups.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/backups.html', import.meta.url));
 
 
 /**
@@ -24,8 +23,7 @@ const renderTemplate = await loadTemplates(
  * @param {*} value Value to process.
  * @return {*} Result computed from the supplied inputs.
  */
-const labelTime = value => value ? new Date(value)
-  .toLocaleString(currentLanguage()) : t("backups.status.notYet");
+const labelTime = value => value ? new Date(value).toLocaleString(currentLanguage()) : t("backups.status.notYet");
 
 /**
  * Builds the localized schedule text text for the current language.
@@ -35,12 +33,8 @@ const labelTime = value => value ? new Date(value)
  */
 const scheduleText = p => {
   const s = p.schedule || {};
-  const time = `${String(s.hour ?? 0).padStart(2, '0')}:${String(s.minute ??
-    0).padStart(2, '0')}`;
-  if (s.frequency === 'hourly') return t(
-    'backups.schedule.hourlyText',
-    {minute: String(s.minute ?? 0).padStart(2, '0')}
-  );
+  const time = `${String(s.hour ?? 0).padStart(2, '0')}:${String(s.minute ?? 0).padStart(2, '0')}`;
+  if (s.frequency === 'hourly') return t('backups.schedule.hourlyText', {minute: String(s.minute ?? 0).padStart(2, '0')});
   if (s.frequency === 'weekly') return t(
     'backups.schedule.weeklyText',
     {
@@ -67,8 +61,7 @@ const scheduleText = p => {
  */
 const manual = unlocked =>
   renderTemplate('backupStep', {
-    backupManualDownload: unlocked ?
-      renderTemplate('backupManualDownload') : renderTemplate('hint'),
+    backupManualDownload: unlocked ? renderTemplate('backupManualDownload') : renderTemplate('hint'),
   });
 
 /**
@@ -81,79 +74,44 @@ export function renderBackupSection(state) {
   const dash = state.backupDashboard;
   if (!state.backupUnlocked || !dash) {
     return renderTemplate('backupManagement', {
-      headingTitle: headingTitle({
-        title:
-          t('backups.page.title'),
-      }),
+      headingTitle: headingTitle({title: t('backups.page.title'), }),
       manual: manual(false),
       content: 'deploy/secrets/backup-admin-token',
-      warning: state.backupError ?
-        renderTemplate('warning', {
-          backupError: state.backupError,
-        }) :
-        '',
+      warning: state.backupError ? renderTemplate('warning', {backupError: state.backupError, }) : '',
     });
   }
-  const {profiles, targets, jobs, profileRows} =
-    createBackupDashboardViewModel(dash);
-  const worker = dash.worker?.online ?
-    renderTemplate('backupStatus') : renderTemplate('backupStatus2');
+  const {profiles, targets, jobs, profileRows} = createBackupDashboardViewModel(dash);
+  const worker = dash.worker?.online ? renderTemplate('backupStatus') : renderTemplate('backupStatus2');
   return renderTemplate('backupManagement2', {
-    headingTitle: headingTitle({
-      title:
-        t('backups.page.title'),
-    }),
-    zipAndTimezone: t(
-      "backups.page.zipAndTimezone",
-      {zone: h(dash.timeZone || 'Europe/Berlin')}
-    ),
+    headingTitle: headingTitle({title: t('backups.page.title'), }),
+    zipAndTimezone: t("backups.page.zipAndTimezone", {zone: h(dash.timeZone || 'Europe/Berlin')}),
     worker: worker,
     manual: manual(Boolean(dash.passwordConfigured)),
-    passwordConfigured: dash.passwordConfigured ? 'muted' :
-      'warning',
-    passwordConfigured2: dash.passwordConfigured ?
-      t("backups.password.encryptionEnabled") :
-      t("backups.password.requiredBeforeBackup"),
-    formField: dash.passwordConfigured ?
-      renderTemplate('formField') : '',
-    passwordConfigured3: dash.passwordConfigured ?
-      t("backups.password.new") :
-      t("backups.password.label"
-      ),
-    warning: dash.passwordConfigured ?
-      renderTemplate('warning2') : '',
-    passwordConfigured4: dash
-      .passwordConfigured ? t("backups.password.change") :
-      t("backups.password.configure"),
-    length: targets.length ? t(
-      "backups.targets.preparedLocalTargets",
-      {targets: targets.map(item => item.label).join(', ')}
-    ) : renderTemplate('renderBackupSection'),
-    addActionLabel: addActionLabel(t("backups.targets.configur\
-e")),
-    warning2: !dash.worker?.online ?
-      renderTemplate('warning3') : '',
+    passwordConfigured: dash.passwordConfigured ? 'muted' : 'warning',
+    passwordConfigured2: dash.passwordConfigured ? t("backups.password.encryptionEnabled") : t("backups.password.requiredBeforeBackup"),
+    formField: dash.passwordConfigured ? renderTemplate('formField') : '',
+    passwordConfigured3: dash.passwordConfigured ? t("backups.password.new") : t("backups.password.label"),
+    warning: dash.passwordConfigured ? renderTemplate('warning2') : '',
+    passwordConfigured4: dash.passwordConfigured ? t("backups.password.change") : t("backups.password.configure"),
+    length: targets.length ? t("backups.targets.preparedLocalTargets", {targets: targets.map(item => item.label).join(', ')}) : renderTemplate('renderBackupSection'),
+    addActionLabel: addActionLabel(t("backups.targets.configure")),
+    warning2: !dash.worker?.online ? renderTemplate('warning3') : '',
     length2: profiles.length ?
       composeMarkup(profileRows.map(({profile: p, legacy, snapshots, last}) => {
         return renderTemplate('backupProfile', {
           name: p.name,
-          legacy: legacy ? '' :
-            p.enabled ? 'online' : '',
+          legacy: legacy ? '' : p.enabled ? 'online' : '',
           legacy2: legacy ?
-            t("backups.legacy.resticProfile") : p.enabled ?
-              t("backups.schedule.enabled") :
-              t("backups.schedule.manual"),
+            t("backups.legacy.resticProfile") : p.enabled ? t("backups.schedule.enabled") : t("backups.schedule.manual"),
           content: ({
             local: t('backups.providers.local'),
             other: t('backups.providers.other'),
           })[p.provider] || providerOptions[p.provider] ||
             p.provider,
-          provider: p.provider === 'local' ? p.targetPath :
-            `${p.remote}:${p.targetPath}`,
+          provider: p.provider === 'local' ? p.targetPath : `${p.remote}:${p.targetPath}`,
           warning: legacy ?
             renderTemplate('warning4') : renderTemplate('muted', {
-              enabled: p.enabled ? scheduleText(
-                p) : t("backups.schedule.notConfigured"),
+              enabled: p.enabled ? scheduleText(p) : t("backups.schedule.notConfigured"),
               retentionSummary: t(
                 "backups.schedule.retentionSummary",
                 {
@@ -166,23 +124,12 @@ e")),
           lastJob: tHtml(
             "backups.jobs.lastJob",
             {
-              summary: last ?
-                `${labelTime(last.startedAt)} (${last.state})` :
-                t("backups.jobs.none"),
+              summary: last ? `${labelTime(last.startedAt)} (${last.state})` : t("backups.jobs.none"),
             }
           ),
-          legacy3: legacy ? '' :
-            renderTemplate('backupRun', {
-              id: p.id,
-            }),
+          legacy3: legacy ? '' : renderTemplate('backupRun', {id: p.id, }),
           id: p.id,
-          backupRestore: legacy ?
-            renderTemplate('backupRestore', {
-              id: p.id,
-            }) :
-            renderTemplate('backupRestore2', {
-              id: p.id,
-            }),
+          backupRestore: legacy ? renderTemplate('backupRestore', {id: p.id, }) : renderTemplate('backupRestore2', {id: p.id, }),
           id2: p.id,
           id3: p.id,
           id4: p.id,
@@ -192,9 +139,7 @@ e")),
               snapshots: composeMarkup(snapshots.map(s =>
                 renderTemplate('backupSnapshot', {
                   labelTime: labelTime(s.time),
-                  size: s
-                    .size ? ` · ${h((s.size / 1048576).toFixed(1))} MiB` :
-                    '',
+                  size: s.size ? ` · ${h((s.size / 1048576).toFixed(1))} MiB` : '',
                   backupDownload: !legacy && p.provider === 'local' ?
                     renderTemplate('backupDownload', {
                       id: p.id,
@@ -209,9 +154,7 @@ e")),
     length3: jobs.length ? composeMarkup(jobs.map(j =>
       renderTemplate('backupJob', {
         state: j.state,
-        state2: j.state ===
-          'success' ? successIcon : j.state === 'failed' ? warningIcon :
-          moreIcon,
+        state2: j.state === 'success' ? successIcon : j.state === 'failed' ? warningIcon : moreIcon,
         content: ({
           run: t('backups.jobs.run'),
           test: t('backups.jobs.test'),
@@ -220,20 +163,10 @@ e")),
           restore: t('backups.jobs.restore'),
           prepare: t('backups.jobs.prepare'),
         })[j.type] || j.type,
-        name: profiles
-          .find(p => p.id === j.profileId)?.name ||
-          t("backups.profiles.remoteProfileLabel"),
-        labelTime: labelTime(
-          j.startedAt),
-        backupJobError: j.state === 'failed' ?
-          renderTemplate('backupJobError', {
-            jobErrorText: jobErrorText(j),
-          }) :
-          '',
-        muted: j.message ? renderTemplate('muted4', {
-          message: j.message,
-        }) :
-          '',
+        name: profiles.find(p => p.id === j.profileId)?.name || t("backups.profiles.remoteProfileLabel"),
+        labelTime: labelTime(j.startedAt),
+        backupJobError: j.state === 'failed' ? renderTemplate('backupJobError', {jobErrorText: jobErrorText(j), }) : '',
+        muted: j.message ? renderTemplate('muted4', {message: j.message, }) : '',
       }))) :
       renderTemplate('muted5'),
   });
@@ -275,8 +208,7 @@ export function profileForm(profile = {}, remotes = [], targets = []) {
     providerOptions: renderOptions(model.providers, model.provider),
     targetOptions: renderOptions(model.targets, model.targetPath),
     remote: model.remote,
-    remoteOptions: composeMarkup(model.remotes.map(value =>
-      renderTemplate('remoteOption', {value}))),
+    remoteOptions: composeMarkup(model.remotes.map(value => renderTemplate('remoteOption', {value}))),
     cloudTargetPath: model.cloudTargetPath,
     frequencyOptions: renderOptions(model.frequencies, schedule.frequency),
     hour: schedule.hour,

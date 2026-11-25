@@ -64,8 +64,7 @@ function harness({
      */
     querySelectorAll: () => buttons,
   };
-  const buttons = images.map((name, index) =>
-    thumbnail(name, `Foto ${index + 1}`, gallery));
+  const buttons = images.map((name, index) => thumbnail(name, `Foto ${index + 1}`, gallery));
   const currentImage = {src: '', alt: ''};
   const caption = {textContent: ''};
   const counter = {textContent: ''};
@@ -102,8 +101,7 @@ function harness({
      * @return {!Array<*>} Resulting entries in their output order.
      */
     querySelectorAll(selector) {
-      return enableHero && selector ===
-        '.bottle-photos [data-act="open-photo"]' ? buttons : [];
+      return enableHero && selector === '.bottle-photos [data-act="open-photo"]' ? buttons : [];
     },
   };
   const calls = [];
@@ -142,8 +140,7 @@ function harness({
 }
 
 test(
-  'photo thumbnails open in the in-app modal, preserve form when nested, \
-and navigate within one bottle',
+  'photo thumbnails open in the in-app modal, preserve form when nested, and navigate within one bottle',
   () => {
     const h = harness({nested: true});
     try {
@@ -151,11 +148,7 @@ and navigate within one bottle',
       assert.equal(h.calls.length, 1);
       assert.equal(h.calls[0].title, 'Flaschenfoto');
       assert.equal(h.calls[0].wide, true);
-      assert.equal(
-        h.calls[0].keepParent,
-        true,
-        'existing editor must remain in the modal stack'
-      );
+      assert.equal(h.calls[0].keepParent, true, 'existing editor must remain in the modal stack');
       assert.match(h.html, /src="\/images\/two\.png"/);
       assert.match(h.html, /2 \/ 2/);
       assert.match(h.html, /data-act="photo-prev"/);
@@ -169,19 +162,11 @@ and navigate within one bottle',
       assert.equal(h.currentImage.alt, 'Foto 1');
       assert.equal(h.counter.textContent, '1 / 2');
       h.viewer.step(-1);
-      assert.equal(
-        h.currentImage.src,
-        '/images/two.png',
-        'previous wraps to last photo'
-      );
+      assert.equal(h.currentImage.src, '/images/two.png', 'previous wraps to last photo');
       h.close();
       assert.equal(h.viewer.isOpen(), false);
       h.viewer.step(1);
-      assert.equal(
-        h.currentImage.src,
-        '/images/two.png',
-        'closed view must not change'
-      );
+      assert.equal(h.currentImage.src, '/images/two.png', 'closed view must not change');
     } finally {h.restore();}
   }
 );
@@ -194,11 +179,7 @@ test(
       h.viewer.open(h.buttons[0]);
       assert.match(h.html, /src="\/images\/only\.png"/);
       assert.doesNotMatch(h.html, /data-act="photo-next"/);
-      assert.match(
-        h.html,
-        /data-act="photo-zoom-in"/,
-        'single photos remain zoomable'
-      );
+      assert.match(h.html, /data-act="photo-zoom-in"/, 'single photos remain zoomable');
       assert.equal(h.calls[0].keepParent, false);
       h.viewer.step(1);
       assert.equal(h.currentImage.src, '');
@@ -232,8 +213,7 @@ test(
            * @param {*} attr Value used by this operation.
            * @return {*} Result computed from the supplied inputs.
            */
-          getAttribute: attr => attr === 'src' ? '/images/two.png' :
-            'Flaschenfoto',
+          getAttribute: attr => attr === 'src' ? '/images/two.png' : 'Flaschenfoto',
         } : null,
         /**
          * Performs the closest lifecycle action.
@@ -254,11 +234,7 @@ test(
       assert.match(h.html, /src="\/images\/two\.png"/);
       assert.match(h.html, /2 \/ 2/);
       h.viewer.step(1);
-      assert.equal(
-        h.currentImage.src,
-        '/images/one.png',
-        'cover viewer continues within same bottle gallery'
-      );
+      assert.equal(h.currentImage.src, '/images/one.png', 'cover viewer continues within same bottle gallery');
     } finally {h.restore();}
   }
 );
@@ -272,8 +248,7 @@ test('photo markup is escaped and old new-tab photo links are gone', () => {
        * @param {*} key Key used to select or group values.
        * @return {*} Result computed from the supplied inputs.
        */
-      getAttribute: key => key ===
-        'src' ? '/images/test.png' : '"<script>alert(1)</script>',
+      getAttribute: key => key === 'src' ? '/images/test.png' : '"<script>alert(1)</script>',
     });
     h.viewer.open(h.buttons[0]);
     assert.doesNotMatch(h.html, /<script>/);
@@ -301,8 +276,7 @@ test(
          * operation.
          * @return {!Array<*>} Resulting entries in their output order.
          */
-        querySelector: selector => selector ===
-          '[data-photo-list]' ? gallery : null,
+        querySelector: selector => selector === '[data-photo-list]' ? gallery : null,
       };
       const preview = {
         /**
@@ -319,8 +293,7 @@ test(
            * @param {*} key Key used to select or group values.
            * @return {*} Result computed from the supplied inputs.
            */
-          getAttribute: key => key === 'src' ? '/images/one.png' :
-            'Flaschenfoto',
+          getAttribute: key => key === 'src' ? '/images/one.png' : 'Flaschenfoto',
         } : null,
         /**
          * Performs the closest lifecycle action.
@@ -329,8 +302,7 @@ test(
          * operation.
          * @return {!Array<*>} Resulting entries in their output order.
          */
-        closest: selector => selector === '[data-bottle-entry]' ||
-          selector === '.bottle-entry' ? bottle : null,
+        closest: selector => selector === '[data-bottle-entry]' || selector === '.bottle-entry' ? bottle : null,
         /**
          * Derives the matches result from the supplied values.
          *

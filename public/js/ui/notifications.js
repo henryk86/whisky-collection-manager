@@ -3,8 +3,7 @@ import {query} from './dom.js';
 import {t} from '../i18n/index.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/notifications.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/notifications.html', import.meta.url));
 
 
 /**

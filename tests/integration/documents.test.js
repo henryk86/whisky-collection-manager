@@ -5,8 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
 
-const pdf = Buffer.
-  from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n');
+const pdf = Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n');
 const image = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
 /**
  * Produces the data url text used by the caller.
@@ -15,12 +14,10 @@ const image = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
  * @param {*} mime Value used by this operation.
  * @return {string} Resulting text.
  */
-const dataUrl = (bytes, mime) =>
-  `data:${mime};base64,${bytes.toString('base64')}`;
+const dataUrl = (bytes, mime) => `data:${mime};base64,${bytes.toString('base64')}`;
 
 test(
-  'files: invoices and additional images belong to physical bottles, \
-survive export and download securely',
+  'files: invoices and additional images belong to physical bottles, survive export and download securely',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -43,15 +40,9 @@ survive export and download securely',
         }
       );
       assert.equal(receipt.status, 201, JSON.stringify(receipt.data));
-      assert.match(
-        receipt.data.path,
-        new RegExp(`^documents/${bottle.id}/[0-9a-f-]+\\.pdf$`)
-      );
+      assert.match(receipt.data.path, new RegExp(`^documents/${bottle.id}/[0-9a-f-]+\\.pdf$`));
       assert.equal(receipt.data.name, 'Rechnung-Österreich.pdf');
-      assert.equal(
-        receipt.data.sha256,
-        crypto.createHash('sha256').update(pdf).digest('hex')
-      );
+      assert.equal(receipt.data.sha256, crypto.createHash('sha256').update(pdf).digest('hex'));
       const photoEvidence = await requestJson(
         ctx.base,
         `/api/bottles/${bottle.id}/files`,
@@ -73,105 +64,56 @@ survive export and download securely',
       assert.deepEqual(current.bottlings[0].bottles[1].files, []);
       assert.ok(!Object.hasOwn(current.bottlings[0], 'files'));
       assert.equal(current.bottlings[0].bottles[0].volumeType, 'sample');
-      const downloaded =
-        await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${receipt.data
-          .id}`);
+      const downloaded = await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${receipt.data.id}`);
       assert.equal(downloaded.status, 200);
-      assert.match(
-        downloaded.headers.get('content-disposition'),
-        /filename\*=UTF-8''Rechnung-/
-      );
-      assert.equal(
-        downloaded.headers.get('content-type'),
-        'application/octet-stream'
-      );
+      assert.match(downloaded.headers.get('content-disposition'), /filename\*=UTF-8''Rechnung-/);
+      assert.equal(downloaded.headers.get('content-type'), 'application/octet-stream');
       assert.deepEqual(Buffer.from(await downloaded.arrayBuffer()), pdf);
-      const preview = await fetch(`${ctx.base}/api/bottles/${bottle
-        .id}/files/${receipt.data.id}/preview`);
+      const preview = await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${receipt.data.id}/preview`);
       assert.equal(preview.status, 200);
       assert.equal(preview.headers.get('content-type'), 'application/pdf');
-      assert.match(
-        preview.headers.get('content-disposition') || '',
-        /^inline; /
-      );
+      assert.match(preview.headers.get('content-disposition') || '', /^inline; /);
       assert.equal(preview.headers.get('x-content-type-options'), 'nosniff');
       assert.equal(preview.headers.get('cache-control'), 'no-store');
       assert.deepEqual(Buffer.from(await preview.arrayBuffer()), pdf);
       assert.equal(
-        (await fetch(`${ctx.base}/api/bottles/${bottle
-          .id}/files/${photoEvidence.data.id}/preview`)).status,
+        (await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${photoEvidence.data.id}/preview`)).status,
         415,
         'non-PDF attachments must never render inline'
       );
       assert.equal(
-        (await fetch(`${ctx.base}/api/bottles/${sibling.data
-          .id}/files/${receipt.data.id}/preview`)).status,
+        (await fetch(`${ctx.base}/api/bottles/${sibling.data.id}/files/${receipt.data.id}/preview`)).status,
         404,
         'PDF preview must enforce attachment ownership'
       );
-      assert.equal(
-        (await fetch(`${ctx.base}/api/bottles/${sibling.data
-          .id}/files/${receipt.data.id}`)).status,
-        404
-      );
+      assert.equal((await fetch(`${ctx.base}/api/bottles/${sibling.data.id}/files/${receipt.data.id}`)).status, 404);
       assert.equal(
         (await fetch(`${ctx.base}/${receipt.data.path}`)).status,
         404,
         'documents must not be served by the static file handler'
       );
-      const zip = await fetch(
-        `${ctx.base}/api/export/zip`,
-        {headers: {'X-Backup-Admin-Token': 'a'.repeat(64)}}
-      );
+      const zip = await fetch(`${ctx.base}/api/export/zip`, {headers: {'X-Backup-Admin-Token': 'a'.repeat(64)}});
       assert.equal(zip.status, 200);
       const bytes = Buffer.from(await zip.arrayBuffer());
-      assert.ok(
-        bytes.includes(Buffer.from(receipt.data.path)),
-        'ZIP must contain receipt path'
-      );
-      assert.ok(
-        bytes.includes(Buffer.from(photoEvidence.data.path)),
-        'ZIP must contain evidence photo path'
-      );
-      assert.equal(
-        bytes.includes(pdf),
-        false,
-        'ZIP must hide original receipt content'
-      );
+      assert.ok(bytes.includes(Buffer.from(receipt.data.path)), 'ZIP must contain receipt path');
+      assert.ok(bytes.includes(Buffer.from(photoEvidence.data.path)), 'ZIP must contain evidence photo path');
+      assert.equal(bytes.includes(pdf), false, 'ZIP must hide original receipt content');
       assert.ok(fs.existsSync(path.join(ctx.dir, receipt.data.path)));
-      const remove = await requestJson(
-        ctx.base,
-        `/api/bottles/${bottle.id}/files/${receipt.data.id}`,
-        'DELETE'
-      );
+      const remove = await requestJson(ctx.base, `/api/bottles/${bottle.id}/files/${receipt.data.id}`, 'DELETE');
       assert.equal(remove.status, 200);
       assert.equal(fs.existsSync(path.join(ctx.dir, receipt.data.path)), false);
-      assert.equal(
-        (await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${receipt.data
-          .id}`)).status,
-        404
-      );
-      assert.equal(
-        (await requestJson(ctx.base, '/api/collection')).data.bottlings[0]
-          .bottles[0].files.length,
-        1
-      );
+      assert.equal((await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${receipt.data.id}`)).status, 404);
+      assert.equal((await requestJson(ctx.base, '/api/collection')).data.bottlings[0].bottles[0].files.length, 1);
     } finally {await ctx.stop();}
   }
 );
 
 test(
-  'files: reject incompatible formats, forged headers, traversal, and \
-unknown bottle IDs',
+  'files: reject incompatible formats, forged headers, traversal, and unknown bottle IDs',
   async () => {
     const ctx = await startTestServer();
     try {
-      const created = await requestJson(
-        ctx.base,
-        '/api/bottlings',
-        'POST',
-        {name: 'Secure uploads'}
-      );
+      const created = await requestJson(ctx.base, '/api/bottlings', 'POST', {name: 'Secure uploads'});
       const id = created.data.bottle.id;
       const cases = [
         {filename: '../foo.pdf', data: dataUrl(pdf, 'application/pdf')},
@@ -185,12 +127,8 @@ unknown bottle IDs',
         },
       ];
       for (const item of cases) {
-        const response =
-          await requestJson(ctx.base, `/api/bottles/${id}/files`, 'POST', item);
-        assert.ok(
-          [400, 413].includes(response.status),
-          `${item.filename}: ${JSON.stringify(response)}`
-        );
+        const response = await requestJson(ctx.base, `/api/bottles/${id}/files`, 'POST', item);
+        assert.ok([400, 413].includes(response.status), `${item.filename}: ${JSON.stringify(response)}`);
       }
       const invalid = await requestJson(
         ctx.base,
@@ -199,11 +137,7 @@ unknown bottle IDs',
         {filename: 'invoice.pdf', data: dataUrl(pdf, 'application/pdf')}
       );
       assert.equal(invalid.status, 404);
-      assert.equal(
-        (await requestJson(ctx.base, '/api/collection')).data.bottlings[0]
-          .bottles[0].files.length,
-        0
-      );
+      assert.equal((await requestJson(ctx.base, '/api/collection')).data.bottlings[0].bottles[0].files.length, 0);
     } finally {await ctx.stop();}
   }
 );
@@ -226,8 +160,7 @@ test(
       // A former bottling-wide sample marker must migrate to a bottle marker.
       old.bottlings[0].volumeType = 'sample';
       delete old.bottlings[0].bottles[0].volumeType;
-      const result = await requestJson(ctx.base, '/api/import/json', 'POST',
-        old);
+      const result = await requestJson(ctx.base, '/api/import/json', 'POST', old);
       assert.equal(result.status, 200);
       const after = (await requestJson(ctx.base, '/api/collection')).data;
       assert.equal(after.schemaVersion, 6);

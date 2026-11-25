@@ -8,8 +8,7 @@ import {chevronDownIcon} from './action-icons.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/flight-cask-options.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/flight-cask-options.html', import.meta.url));
 
 
 /**
@@ -26,8 +25,7 @@ const groupField = group => `flight-cask-group-${group}`;
  * @param {string} value Feature identifier.
  * @return {string} Stable form field name.
  */
-const featureField = (group, dimension, value) =>
-  `flight-cask-feature-${group}-${dimension}-${value}`;
+const featureField = (group, dimension, value) => `flight-cask-feature-${group}-${dimension}-${value}`;
 
 /**
  * Renders optional category-scoped criteria using shared form fields.
@@ -43,36 +41,29 @@ export function flightCaskOptionsHtml(t) {
    * @return {string} Display label.
    */
   const groupLabel = group => t(`${prefix}group.${group}`);
-  const groups = composeMarkup(CASK_GROUPS.map(group => checkboxInput(
-    groupLabel(group),
-    groupField(group)
-  )));
-  const details = composeMarkup(CASK_GROUPS.filter(group =>
-    Object.keys(CASK_DIMENSIONS[group]).length).map(group => {
-      const dimensions =
-        composeMarkup(Object.entries(CASK_DIMENSIONS[group]).map(
-          ([dimension, values]) => {
-            const title = escapeHtml(t(`${prefix}dimension.${dimension}`));
-            const fields = composeMarkup(values.map(value => checkboxInput(
-              t(`${prefix}subtype.${value}`),
-              featureField(group, dimension, value)
-            )));
-            return renderTemplate('flightPlanCaskDimension', {
-              title: title,
-              title2: title,
-              fields: fields,
-            });
-          }));
-      const title = escapeHtml(groupLabel(group));
-      const all = escapeHtml(t(`${prefix}allTypes`));
-      return renderTemplate('flightPlanCaskRefinement', {
-        group: group,
-        title: title,
-        all: all,
-        chevronDownIcon: chevronDownIcon('flight-plan-cask-chevron'),
-        dimensions: dimensions,
-      });
-    }));
+  const groups = composeMarkup(CASK_GROUPS.map(group => checkboxInput(groupLabel(group), groupField(group))));
+  const details = composeMarkup(CASK_GROUPS.filter(group => Object.keys(CASK_DIMENSIONS[group]).length).map(group => {
+    const dimensions =
+      composeMarkup(Object.entries(CASK_DIMENSIONS[group]).map(
+        ([dimension, values]) => {
+          const title = escapeHtml(t(`${prefix}dimension.${dimension}`));
+          const fields = composeMarkup(values.map(value => checkboxInput(t(`${prefix}subtype.${value}`), featureField(group, dimension, value))));
+          return renderTemplate('flightPlanCaskDimension', {
+            title: title,
+            title2: title,
+            fields: fields,
+          });
+        }));
+    const title = escapeHtml(groupLabel(group));
+    const all = escapeHtml(t(`${prefix}allTypes`));
+    return renderTemplate('flightPlanCaskRefinement', {
+      group: group,
+      title: title,
+      all: all,
+      chevronDownIcon: chevronDownIcon('flight-plan-cask-chevron'),
+      dimensions: dimensions,
+    });
+  }));
   const label = escapeHtml(t(`${prefix}caskGroup`));
   const hint = escapeHtml(t(`${prefix}groupHint`));
   const phaseLabel = escapeHtml(t(`${prefix}phase`));
@@ -93,15 +84,12 @@ export function flightCaskOptionsHtml(t) {
     reset: reset,
     hint: hint,
     groups: groups,
-    t: t(
-      `${prefix}refine`),
+    t: t(`${prefix}refine`),
     details: details,
     phaseLabel: phaseLabel,
     phases: phases,
-    t2: t(
-      `${prefix}selection`),
-    t3: t(
-      `${prefix}allGroups`),
+    t2: t(`${prefix}selection`),
+    t3: t(`${prefix}allGroups`),
   });
 }
 
@@ -139,8 +127,7 @@ export function syncFlightCaskOptions(root, specific, t) {
   const wrapper = root?.querySelector('[data-flight-plan-cask-group-wrap]');
   if (wrapper) wrapper.hidden = !specific;
   const selected = readFlightCaskFilters(root);
-  const details = root?.querySelectorAll(
-    '[data-flight-plan-cask-subtype-wrap]');
+  const details = root?.querySelectorAll('[data-flight-plan-cask-subtype-wrap]');
   let hasDetails = false;
   for (const detail of details || []) {
     const group = detail.dataset.flightPlanCaskSubtypeWrap;
@@ -150,9 +137,7 @@ export function syncFlightCaskOptions(root, specific, t) {
     hasDetails ||= visible;
     const count = Object.values(selected[group] || {}).flat().length;
     const counter = detail.querySelector?.('[data-flight-plan-cask-count]');
-    if (counter) counter.textContent = count ?
-      t('flightPlan.caskAge.selectedCount', {count}) :
-      t('flightPlan.caskAge.allTypes');
+    if (counter) counter.textContent = count ? t('flightPlan.caskAge.selectedCount', {count}) : t('flightPlan.caskAge.allTypes');
   }
   const detailGroup = root?.querySelector('[data-flight-plan-cask-details]');
   if (detailGroup) detailGroup.hidden = !hasDetails;
@@ -160,12 +145,10 @@ export function syncFlightCaskOptions(root, specific, t) {
   if (summary) {
     const labels = Object.entries(selected).map(([group, dimensions]) => {
       const label = t(`flightPlan.caskAge.group.${group}`);
-      const values = Object.values(dimensions).flat().map(value =>
-        t(`flightPlan.caskAge.subtype.${value}`));
+      const values = Object.values(dimensions).flat().map(value => t(`flightPlan.caskAge.subtype.${value}`));
       return values.length ? `${label} (${values.join(', ')})` : label;
     });
-    summary.textContent = labels.join(' · ') ||
-      t('flightPlan.caskAge.allGroups');
+    summary.textContent = labels.join(' · ') || t('flightPlan.caskAge.allGroups');
   }
 }
 

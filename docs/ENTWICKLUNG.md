@@ -33,14 +33,13 @@ Für JavaScript gilt verbindlich der [Google JavaScript Style Guide](https://goo
 ```bash
 npm run format:js
 npm run format:check
-npm run check:line-width
 npm run check:jsdoc
 npm run check
 ```
 
-Jede benannte Funktion, auch interne Funktionen, benannte Arrow-Funktionen, Klassenmethoden, Accessors und benannte Objekthandler, benötigt **vollständige, typisierte JSDoc** ohne Alt-Ausnahmen. In sämtlichen JavaScript-Dateien gelten dieselben Regeln: aussagekräftiger Zweck, jeder Parameter mit korrektem Namen, Typ und Erklärung, `@return` bei einem Rückgabewert, bei Bedarf `@throws`, Nebenwirkungen und Vertrauensgrenzen. Dies gilt auch für Server- und Testcode. Anonyme Inline-Callbacks ohne eigene Schnittstelle benötigen keine separaten JSDoc-Blöcke. Keine erfundenen Typen oder Kommentare, die nur den Namen wiederholen. `check:jsdoc` prüft **sämtliche JavaScript-Dateien** auf fehlende oder unvollständige JSDoc-Verträge für alle benannten Funktionen sowie die öffentlichen Exportverträge. Funktionen und Methoden werden durch Leerzeilen getrennt. Alle JavaScript-Zeilen unterliegen dem 80-Zeichen-Limit ohne Altzeilenausnahmen. Der Formatter erhält bewusst gesetzte Umbrüche an Template-Interpolationen.
+Jede benannte Funktion, auch interne Funktionen, benannte Arrow-Funktionen, Klassenmethoden, Accessors und benannte Objekthandler, benötigt **vollständige, typisierte JSDoc** ohne Alt-Ausnahmen. In sämtlichen JavaScript-Dateien gelten dieselben Regeln: aussagekräftiger Zweck, jeder Parameter mit korrektem Namen, Typ und Erklärung, `@return` bei einem Rückgabewert, bei Bedarf `@throws`, Nebenwirkungen und Vertrauensgrenzen. Dies gilt auch für Server- und Testcode. Anonyme Inline-Callbacks ohne eigene Schnittstelle benötigen keine separaten JSDoc-Blöcke. Keine erfundenen Typen oder Kommentare, die nur den Namen wiederholen. `check:jsdoc` prüft **sämtliche JavaScript-Dateien** auf fehlende oder unvollständige JSDoc-Verträge für alle benannten Funktionen sowie die öffentlichen Exportverträge. Funktionen und Methoden werden durch Leerzeilen getrennt. Es gibt kein verbindliches Zeichenlimit für JavaScript-Zeilen. Lesbarkeit hat Vorrang; lange Ausdrücke bei Bedarf fachlich sinnvoll gliedern. Strings, Übersetzungsschlüssel, URLs, Selektoren, RegExps und Template-Literale niemals zur Einhaltung einer Zeilenlänge durch Zeilenfortsetzungen zerreißen.
 
-Der bereits vorhandene TypeScript-Formatter wird zusammen mit syntaxbewussten Umbruch- und Leerzeilenregeln nur zur **Formatierung** eingesetzt. HTML-Templates, RegExps und lange Literale dürfen nicht blind aufgeteilt werden. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
+Der bereits vorhandene TypeScript-Formatter wird zusammen mit syntaxbewussten Abstandsregeln nur zur **Formatierung** eingesetzt. Der Formatter erzwingt keine Zeilenlänge und teilt keine Literale auf. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
 
 ## Zeilenenden
 

@@ -9,8 +9,7 @@ import {backToCollectionButton} from '../ui/navigation-controls.js';
 import {sectionWorkspace} from '../ui/section-navigation.js';
 import {loadTemplates} from '../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/settings.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/settings.html', import.meta.url));
 
 /**
  * Creates settings view for settings.
@@ -43,8 +42,7 @@ export function createSettingsView(state, auth = {
     const panel = (id, content) =>
       renderTemplate('settingsSection', {
         id: id,
-        id2: id ===
-          active ? '' : ' hidden',
+        id2: id === active ? '' : ' hidden',
         headingTitle: headingTitle({
           title: t(`settings.navigation.${id}`),
           level: 2,
@@ -53,11 +51,7 @@ export function createSettingsView(state, auth = {
         content: content,
       });
     const general = renderTemplate('panel', {
-      headingTitle: headingTitle({
-        title:
-          t('settings.language.label'),
-      }
-      ),
+      headingTitle: headingTitle({title: t('settings.language.label'), }),
       entries: composeMarkup(languages.map(({code, name, selected}) =>
         renderTemplate('generalOption', {
           code, selected: selected ? 'selected' : '', name,
@@ -68,9 +62,7 @@ export function createSettingsView(state, auth = {
     });
     const backups = renderBackupSection(state);
     const transfer = renderTemplate('panel2', {
-      headingTitle: headingTitle({
-        title: t('settings.exports.additionalExports'),
-      }),
+      headingTitle: headingTitle({title: t('settings.exports.additionalExports'), }),
       importButton: actionButton({
         label: t("settings.imports.importJson"),
         action: 'import',
@@ -106,15 +98,13 @@ export function createSettingsView(state, auth = {
         panel('distilleries', distilleryPanel),
         (state.auth?.canManageUsers ?
           renderTemplate('settingsSection2', {
-            active: active
-              === 'users' ? '' : ' hidden',
+            active: active === 'users' ? '' : ' hidden',
             headingTitle: headingTitle({
               title: t('auth.users'),
               level: 2,
               className: 'analytics-section-title',
             }),
-            usersSection: auth.usersSection(
-            ),
+            usersSection: auth.usersSection(),
           }) : '')
       )
     );
@@ -140,8 +130,7 @@ export function createSettingsView(state, auth = {
  * @return {boolean} Whether the condition is satisfied.
  */
 export function activateSettingsSection(id, container) {
-  if (!['general', 'backups', 'transfer', 'distilleries', 'users']
-    .includes(id) || !container ||
+  if (!['general', 'backups', 'transfer', 'distilleries', 'users'].includes(id) || !container ||
     !container.querySelector(`[data-settings-panel="${id}"]`)) return false;
   for (const button of container.querySelectorAll('[data-settings-section]')) {
     const active = button.dataset.settingsSection === id;

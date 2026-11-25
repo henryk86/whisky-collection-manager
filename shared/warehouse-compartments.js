@@ -20,8 +20,7 @@ export const SHELF_FRONTS = Object.freeze(['open', 'door', 'glass', 'drawer']);
  * @return {*} Structured result assembled from the input data.
  */
 export function defaultShelfFront(type) {
-  return {schrank: 'door', vitrine: 'glass', kommode: 'drawer', kiste: 'door'}[
-    type] ?? 'open';
+  return {schrank: 'door', vitrine: 'glass', kommode: 'drawer', kiste: 'door'}[type] ?? 'open';
 }
 
 /**
@@ -43,8 +42,7 @@ export function effectiveShelfFront(shelf, furnitureType) {
  * @return {*} Result computed from the supplied inputs.
  */
 export function doorRangeForIndex(item, index) {
-  return (item.doorRanges || []).find(range => index + 1 >= range.from &&
-    index + 1 <= range.to) || null;
+  return (item.doorRanges || []).find(range => index + 1 >= range.from && index + 1 <= range.to) || null;
 }
 
 /**
@@ -55,8 +53,7 @@ export function doorRangeForIndex(item, index) {
  * @return {*} Value returned by the delegated operation.
  */
 export function visibleShelfFront(item, index) {
-  return doorRangeForIndex(item, index)?.front ??
-    effectiveShelfFront(item.shelves[index], item.type);
+  return doorRangeForIndex(item, index)?.front ?? effectiveShelfFront(item.shelves[index], item.type);
 }
 
 /**
@@ -76,11 +73,7 @@ export function furnitureHeight(item) {
  * @return {*} Combined value obtained from the entries.
  */
 export function totalExplicitHeightCm(shelves) {
-  return shelves.reduce(
-    (sum, shelf) => sum + (shelf.heightCm == null ? 0 :
-      Number(shelf.heightCm)),
-    0
-  );
+  return shelves.reduce((sum, shelf) => sum + (shelf.heightCm == null ? 0 : Number(shelf.heightCm)), 0);
 }
 
 /**
@@ -101,8 +94,7 @@ export function shelfLevels(item) {
   const autoCount = shelves.filter(s => s.heightCm == null).length;
   let bottom = base;
   return shelves.map((shelf, index) => {
-    const cm = shelf.heightCm == null ? remaining / Math.max(1, autoCount) :
-      Number(shelf.heightCm);
+    const cm = shelf.heightCm == null ? remaining / Math.max(1, autoCount) : Number(shelf.heightCm);
     const top = bottom + cm / 100;
     const entry = {
       shelf,

@@ -45,8 +45,7 @@ function fakeForm(id) {
      * @return {!Array<*>} Resulting entries in their output order.
      */
     querySelectorAll(selector) {
-      return selector.includes('submit') ?
-        [button] : [];
+      return selector.includes('submit') ? [button] : [];
     },
     /**
      * Derives the query selector result from the supplied values.
@@ -144,8 +143,7 @@ for (const id of ['bottling-form', 'bottle-form']) {
            * @return {!Array<*>} Resulting entries in their output order.
            */
           entries() {
-            return [['name', 'Saved once'], ['inventoryNumber', '000004']]
-            [Symbol.iterator]();
+            return [['name', 'Saved once'], ['inventoryNumber', '000004']][Symbol.iterator]();
           }
         };
       let posts = 0, failNext = false;
@@ -153,11 +151,9 @@ for (const id of ['bottling-form', 'bottle-form']) {
         posts++;
         await delay(35);
         if (failNext) {
-          failNext =
-            false; return Response.json({error: 'private'}, {status: 500});
+          failNext = false; return Response.json({error: 'private'}, {status: 500});
         }
-        return Response.json(id === 'bottling-form' ?
-          {bottling: {id: 'created'}, bottle: {id: 'first'}} : {id: 'created'});
+        return Response.json(id === 'bottling-form' ? {bottling: {id: 'created'}, bottle: {id: 'first'}} : {id: 'created'});
       };
       try {
         const editor = editors();

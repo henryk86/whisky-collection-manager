@@ -17,8 +17,7 @@ export const SOURCE_ROOTS = ['public/js', 'server', 'shared', 'worker'];
  * @param {*} file File resource to read, write or inspect.
  * @return {*} Result computed from the supplied inputs.
  */
-const hashFile = file => crypto.createHash('sha256')
-  .update(fs.readFileSync(file)).digest('hex');
+const hashFile = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 
 /**
  * Validates the contained file state and rejects invalid inputs.
@@ -29,8 +28,7 @@ const hashFile = file => crypto.createHash('sha256')
  */
 function containedFile(root, relative) {
   const full = path.resolve(root, relative);
-  if (!full.startsWith(path.resolve(root) +
-    path.sep)) throw new Error(`Unsafe path: ${relative}`);
+  if (!full.startsWith(path.resolve(root) + path.sep)) throw new Error(`Unsafe path: ${relative}`);
   return full;
 }
 
@@ -122,36 +120,26 @@ export function pruneObsolete(previousRoot, nextRoot, installedRoot) {
   for (const relative of report.removable) {
     const old = safeInstalledFile(previousRoot, relative);
     const installed = safeInstalledFile(installedRoot, relative);
-    if (old && installed && hashFile(old) ===
-      hashFile(installed)) fs.unlinkSync(installed);
+    if (old && installed && hashFile(old) === hashFile(installed)) fs.unlinkSync(installed);
   }
   return report;
 }
-const isCLI = process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url);
+const isCLI = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isCLI) {
   const [previousRoot, nextRoot, installedRoot, flag] = process.argv.slice(2);
-  if (!previousRoot || !nextRoot || !installedRoot || (flag && flag !==
-    '--prune')) {
+  if (!previousRoot || !nextRoot || !installedRoot || (flag && flag !== '--prune')) {
     console.error(
-      'Usage: node scripts/upgrade-audit.js <previous-release-dir> \
-<new-release-dir> <installation-dir> [--prune]');
+      'Usage: node scripts/upgrade-audit.js <previous-release-dir> <new-release-dir> <installation-dir> [--prune]');
     process.exitCode = 2;
   } else {
     try {
       for (const dir of [previousRoot, nextRoot, installedRoot]) {
-        if (!fs.statSync(dir)
-          .isDirectory()) throw new Error(`Not a directory: ${dir}`);
+        if (!fs.statSync(dir).isDirectory()) throw new Error(`Not a directory: ${dir}`);
       }
-      const roots = [previousRoot, nextRoot, installedRoot].map(dir =>
-        fs.realpathSync(dir));
-      if (new Set(roots).size !==
-        3) throw new Error(
-          'Old release, new release and installation must be separate \
-directories.');
+      const roots = [previousRoot, nextRoot, installedRoot].map(dir => fs.realpathSync(dir));
+      if (new Set(roots).size !== 3) throw new Error('Old release, new release and installation must be separate directories.');
       for (const dir of [previousRoot, nextRoot]) {
-        if (!fs.existsSync(path.join(dir, 'package.json')) ||
-          !fs.existsSync(path.join(dir, 'public/js'))) {
+        if (!fs.existsSync(path.join(dir, 'package.json')) || !fs.existsSync(path.join(dir, 'public/js'))) {
           throw new Error(`Not an unpacked WCM release: ${dir}`);
         }
       }
@@ -160,16 +148,12 @@ directories.');
         : auditUpgrade(previousRoot, nextRoot, installedRoot);
       console.log(JSON.stringify(
         {
-          ...report, deleted: flag === '--prune' ? report.removable
-            .length : 0,
+          ...report, deleted: flag === '--prune' ? report.removable.length : 0,
         },
         null,
         2
       ));
-      if (report.changed
-        .length) console.warn(
-          'Modified or symlinked files were left untouched. Review them \
-manually.');
+      if (report.changed.length) console.warn('Modified or symlinked files were left untouched. Review them manually.');
     } catch (error) {
       console.error(error.message);
       process.exitCode = 1;

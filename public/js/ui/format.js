@@ -22,5 +22,4 @@ export const formatValue = n => n == null || n === '' ? '–' : escapeHtml(n);
  * @param {*} val Val used by this operation.
  * @return {string} Resulting text.
  */
-export const formatDate = val => val ? new Date(val)
-  .toLocaleDateString(currentLanguage()) : '–';
+export const formatDate = val => val ? new Date(val).toLocaleDateString(currentLanguage()) : '–';

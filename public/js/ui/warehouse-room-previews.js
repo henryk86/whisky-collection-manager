@@ -17,15 +17,13 @@ const snapshots = new WeakMap();
  * @return {!Object} Structured result for the caller.
  */
 export function mountWarehouseRoomPreviews({rooms, warehouse}) {
-  if (typeof document === 'undefined' ||
-    typeof document.querySelectorAll !== 'function') return {
-      /**
-       * Performs the dispose lifecycle action.
-       */
-      dispose() {},
-    };
-  const previews = [...document.querySelectorAll(
-    '.warehouse-room-preview[data-preview-room-id]')];
+  if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return {
+    /**
+     * Performs the dispose lifecycle action.
+     */
+    dispose() {},
+  };
+  const previews = [...document.querySelectorAll('.warehouse-room-preview[data-preview-room-id]')];
   if (!previews.length) return {
     /**
      * Performs the dispose lifecycle action.
@@ -43,8 +41,7 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
    * Derives the theme result from the supplied values.
    * @return {*} Result computed from the supplied inputs.
    */
-  const theme = () => document.documentElement?.dataset?.theme === 'dark' ?
-    'dark' : 'light';
+  const theme = () => document.documentElement?.dataset?.theme === 'dark' ? 'dark' : 'light';
 
   /**
    * Renders image in the current view.
@@ -57,8 +54,7 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
     let img = node.querySelector('img');
     if (!img) {
       img = document.createElement('img');
-      img.alt =
-        ''; // The parent card already contains the room's accessible name.
+      img.alt = ''; // The parent card already contains the room's accessible name.
       img.decoding = 'async';
       node.replaceChildren(img);
     }
@@ -128,12 +124,7 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
         }
         let model;
         try {
-          model = buildWarehouseThreeScene(
-            THREE,
-            room,
-            warehouse,
-            {theme: activeTheme}
-          );
+          model = buildWarehouseThreeScene(THREE, room, warehouse, {theme: activeTheme});
           const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
           frameWarehouseCamera(THREE, camera, model.roomWidth, model.roomDepth,
             model.maxHeight, 'nw', PREVIEW_WIDTH / PREVIEW_HEIGHT);
@@ -182,10 +173,7 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
         else enqueue(node);
       }
     });
-    themeObserver.observe(
-      document.documentElement,
-      {attributes: true, attributeFilter: ['data-theme']}
-    );
+    themeObserver.observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
   }
   return {
     /**

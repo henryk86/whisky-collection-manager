@@ -6,8 +6,7 @@
  */
 function wineModifier(modifier, compound) {
   const adjectives = 'red|white|rose|sweet|dessert|sparkling';
-  return new RegExp(`\\b(?:(?:${modifier})(?=\\s+(?:(?:${adjectives})` +
-    `\\s+)*wine\\b)|${compound.source})\\b`, 'g');
+  return new RegExp(`\\b(?:(?:${modifier})(?=\\s+(?:(?:${adjectives})` + `\\s+)*wine\\b)|${compound.source})\\b`, 'g');
 }
 
 /**
@@ -39,9 +38,7 @@ const DEFINITIONS = {
       style: {
         ruby: {pattern: /\bruby(?:\s+port(?:wein)?)?\b/g},
         tawny: {pattern: /\btawny(?:\s+port(?:wein)?)?\b/g},
-        whitePort: {
-          pattern: /\b(?:white\s+port(?:wein)?|weisser\s+portwein)\b/g,
-        },
+        whitePort: {pattern: /\b(?:white\s+port(?:wein)?|weisser\s+portwein)\b/g, },
         rosePort: {pattern: /\b(?:rose\s+port(?:wein)?|pink\s+port)\b/g},
         vintagePort: {
           pattern: /\bvintage\s+port(?:wein)?\b/g,
@@ -78,23 +75,13 @@ const DEFINITIONS = {
     pattern: /\b(?:wine|wein(?:fass(?:er)?|barrique)?)\b/g,
     dimensions: {
       color: {
-        redWine: {
-          pattern: wineModifier('red', /rotwein(?:fass(?:er)?|barrique)?/),
-        },
-        whiteWine: {
-          pattern: wineModifier('white', /weisswein(?:fass(?:er)?|barrique)?/),
-        },
-        roseWine: {
-          pattern: wineModifier('rose', /rosewein(?:fass(?:er)?|barrique)?/),
-        },
+        redWine: {pattern: wineModifier('red', /rotwein(?:fass(?:er)?|barrique)?/), },
+        whiteWine: {pattern: wineModifier('white', /weisswein(?:fass(?:er)?|barrique)?/), },
+        roseWine: {pattern: wineModifier('rose', /rosewein(?:fass(?:er)?|barrique)?/), },
       },
       style: {
-        sweetWine: {
-          pattern: wineModifier('sweet|dessert', /susswein(?:fass(?:er)?)?/),
-        },
-        sparklingWine: {
-          pattern: wineModifier('sparkling', /schaumwein(?:fass(?:er)?)?|sekt/),
-        },
+        sweetWine: {pattern: wineModifier('sweet|dessert', /susswein(?:fass(?:er)?)?/), },
+        sparklingWine: {pattern: wineModifier('sparkling', /schaumwein(?:fass(?:er)?)?|sekt/), },
       },
       designation: {
         bordeaux: {pattern: /\bbordeaux\b/g},
@@ -127,10 +114,7 @@ const DEFINITIONS = {
     },
   },
   fortifiedWine: {
-    pattern: new RegExp([
-      /(?<!non[- ])\bfortified\s+wine\b/,
-      /\b(?:aufgespritzter|verstarkter)\s+wein\b/,
-    ].map(pattern => pattern.source).join('|'), 'g'),
+    pattern: new RegExp([/(?<!non[- ])\bfortified\s+wine\b/, /\b(?:aufgespritzter|verstarkter)\s+wein\b/,].map(pattern => pattern.source).join('|'), 'g'),
     dimensions: {
       style: {
         marsala: {pattern: /\bmarsala(?:\s+wine)?\b/g},
@@ -182,9 +166,7 @@ const DEFINITIONS = {
       },
     },
   },
-  virginOak: {
-    pattern: /\b(?:(?:virgin|new|unused) oak|(?:neue|unbelegte) eiche)\b/g,
-  },
+  virginOak: {pattern: /\b(?:(?:virgin|new|unused) oak|(?:neue|unbelegte) eiche)\b/g, },
   other: {pattern: /\b(?:cider|sake|mead|met|apfelwein|obstwein)\b/g},
   unknown: {},
 };
@@ -192,13 +174,11 @@ const DEFINITIONS = {
 export const CASK_GROUPS = Object.freeze(Object.keys(DEFINITIONS));
 export const CASK_DIMENSIONS = Object.freeze(Object.fromEntries(
   Object.entries(DEFINITIONS).map(([group, definition]) => [group,
-    Object.freeze(Object.fromEntries(Object.entries(definition.dimensions || {})
-      .map(([dimension, values]) =>
-        [dimension, Object.freeze(Object.keys(values))])))])
+    Object.freeze(Object.fromEntries(Object.entries(definition.dimensions || {}).map(([dimension, values]) =>
+      [dimension, Object.freeze(Object.keys(values))])))])
 ));
 export const CASK_PHASES = Object.freeze(['any', 'maturation', 'finish']);
-export const CASK_MODES =
-  Object.freeze(['auto', 'similar', 'variety', 'specific']);
+export const CASK_MODES = Object.freeze(['auto', 'similar', 'variety', 'specific']);
 export const AGE_MODES = Object.freeze(['auto', 'similar', 'variety', 'range']);
 
 /**
@@ -206,9 +186,7 @@ export const AGE_MODES = Object.freeze(['auto', 'similar', 'variety', 'range']);
  * @param {*} text Free-text cask description.
  * @return {string} Searchable description.
  */
-const normalize = text => String(text || '').normalize('NFKD')
-  .replace(/[\u0300-\u036f]/g, '').replace(/ß/g, 'ss')
-  .replace(/\s+/g, ' ').toLowerCase();
+const normalize = text => String(text || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/ß/g, 'ss').replace(/\s+/g, ' ').toLowerCase();
 
 /**
  * Retains the strongest known weight instead of counting duplicate mentions.
@@ -242,12 +220,10 @@ function mentions(clause) {
       });
     }
   }
-  result.sort((a, b) => Number(Boolean(b.value)) - Number(Boolean(a.value)) ||
-    (b.end - b.start) - (a.end - a.start));
+  result.sort((a, b) => Number(Boolean(b.value)) - Number(Boolean(a.value)) || (b.end - b.start) - (a.end - a.start));
   const selected = [];
   for (const item of result) {
-    if (selected.some(other => item.start < other.end && item.end >
-      other.start))
+    if (selected.some(other => item.start < other.end && item.end > other.start))
       continue;
     selected.push(item);
   }
@@ -256,14 +232,11 @@ function mentions(clause) {
   // separate casks, even when their own match does not overlap.
   return selected.filter(item => item.value || !selected.some(other =>
     item.group === 'otherWhisky' && other.end <= item.start &&
-    /\b(?:finish(?:ed|ing)?|matured|aged)\s*$/.test(
-      clause.slice(other.end, item.start)) &&
+    /\b(?:finish(?:ed|ing)?|matured|aged)\s*$/.test(clause.slice(other.end, item.start)) &&
     /^\s*$/.test(clause.slice(item.end)))).filter(item =>
       item.value || !selected.some(other =>
-        other.group !== item.group && other.end <= item.start &&
-        /^\s*$/.test(clause.slice(other.end, item.start)) &&
-        (item.group === 'wine' || item.group === 'otherWhisky' ||
-          item.group === 'brandy'))).sort((a, b) => a.start - b.start);
+        other.group !== item.group && other.end <= item.start && /^\s*$/.test(clause.slice(other.end, item.start)) &&
+        (item.group === 'wine' || item.group === 'otherWhisky' || item.group === 'brandy'))).sort((a, b) => a.start - b.start);
 }
 
 /**
@@ -278,8 +251,7 @@ function caskSegments(clause) {
   for (const item of found) {
     const previous = current.at(-1);
     if (previous && (item.group !== previous.group ||
-      /\b(?:casks?|barrels?|butts?|hogsheads?|barriques?|fass|fasser)\b/
-        .test(clause.slice(previous.end, item.start)))) {
+      /\b(?:casks?|barrels?|butts?|hogsheads?|barriques?|fass|fasser)\b/.test(clause.slice(previous.end, item.start)))) {
       segments.push({
         text: clause.slice(start, item.start), items: current, start,
       });
@@ -310,8 +282,7 @@ export function classifyCask(text) {
   ].map(pattern => pattern.source).join('|') + ')');
   const clauses = normalize(text).split(separator);
   const finish = /\b(?:finish(?:ed|ing)?|nachreifung|nachgereift)\b/;
-  const maturation =
-    /\b(?:matur(?:ed|ation)|aged|(?:voll|haupt)?reifung|gereift)\b/;
+  const maturation = /\b(?:matur(?:ed|ation)|aged|(?:voll|haupt)?reifung|gereift)\b/;
   // Only a leading phase can govern subsequent coordinated casks. A
   // sequential or otherwise ambiguous separator ends that scope.
   let sharedPhase = 'unknown';
@@ -321,12 +292,10 @@ export function classifyCask(text) {
       sharedPhase = 'unknown';
     }
     for (const segment of caskSegments(clause)) {
-      const explicit = finish.test(segment.text) ? 'finish' :
-        maturation.test(segment.text) ? 'maturation' : 'unknown';
+      const explicit = finish.test(segment.text) ? 'finish' : maturation.test(segment.text) ? 'maturation' : 'unknown';
       const prefix = clause.slice(segment.start, segment.items[0].start);
       if (explicit !== 'unknown') {
-        sharedPhase = finish.test(prefix) || maturation.test(prefix) ?
-          explicit : 'unknown';
+        sharedPhase = finish.test(prefix) || maturation.test(prefix) ? explicit : 'unknown';
       }
       const phase = explicit === 'unknown' ? sharedPhase : explicit;
       const weight = phase === 'finish' ? 0.5 : 1;
@@ -335,15 +304,12 @@ export function classifyCask(text) {
         if (!item.value) continue;
         (features[item.dimension] ||= new Set()).add(item.value);
         for (const [dimension, values] of Object.entries(item.implies || {})) {
-          for (const value of values) (features[dimension] ||= new Set())
-            .add(value);
+          for (const value of values) (features[dimension] ||= new Set()).add(value);
         }
       }
       add(groups, group, weight);
       profiles.push({
-        group, phase, weight, features: Object.fromEntries(
-          Object.entries(features).map(([key, values]) =>
-            [key, [...values]])),
+        group, phase, weight, features: Object.fromEntries(Object.entries(features).map(([key, values]) => [key, [...values]])),
       });
     }
   }
@@ -399,13 +365,11 @@ export function caskComparison(a, b) {
   for (const group of Object.keys(a.groups)) {
     if (!b.groups[group]) continue;
     for (const dimension of Object.keys(CASK_DIMENSIONS[group] || {})) {
-      const distance = jaccard(featureWeights(a, group, dimension),
-        featureWeights(b, group, dimension));
+      const distance = jaccard(featureWeights(a, group, dimension), featureWeights(b, group, dimension));
       if (distance !== null) details.push(distance);
     }
   }
-  const detail = details.length ? (1 - family) * 0.25 *
-    details.reduce((sum, value) => sum + value, 0) / details.length : null;
+  const detail = details.length ? (1 - family) * 0.25 * details.reduce((sum, value) => sum + value, 0) / details.length : null;
   return {distance: family + (detail ?? 0), detail};
 }
 
@@ -430,8 +394,7 @@ export function caskCoverage(profiles, excluded = new Set()) {
   const coverage = {};
   for (const profile of profiles) {
     const weights = Object.entries(profile.groups);
-    const total = Math.max(1, weights.reduce((sum, [, weight]) => sum +
-      weight, 0));
+    const total = Math.max(1, weights.reduce((sum, [, weight]) => sum + weight, 0));
     for (const [group, weight] of weights) {
       if (excluded.has(group)) continue;
       coverage[group] = Math.min(1, (coverage[group] || 0) + weight / total);
@@ -446,15 +409,11 @@ export function caskCoverage(profiles, excluded = new Set()) {
  * @return {boolean} Whether the selection is valid.
  */
 export function validCaskFilters(filters) {
-  return filters !== null && typeof filters === 'object' &&
-    !Array.isArray(filters) && Object.entries(filters)
-      .every(([group, dimensions]) =>
-        CASK_GROUPS.includes(group) && dimensions !== null &&
-        typeof dimensions === 'object' && !Array.isArray(dimensions) &&
-        Object.entries(dimensions).every(([dimension, values]) =>
-          Array.isArray(values) && values.length > 0 && values.every(value =>
-            Object.hasOwn(CASK_DIMENSIONS[group], dimension) &&
-            CASK_DIMENSIONS[group][dimension].includes(value))));
+  return filters !== null && typeof filters === 'object' && !Array.isArray(filters) && Object.entries(filters).every(([group, dimensions]) =>
+    CASK_GROUPS.includes(group) && dimensions !== null && typeof dimensions === 'object' && !Array.isArray(dimensions) &&
+    Object.entries(dimensions).every(([dimension, values]) =>
+      Array.isArray(values) && values.length > 0 && values.every(value =>
+        Object.hasOwn(CASK_DIMENSIONS[group], dimension) && CASK_DIMENSIONS[group][dimension].includes(value))));
 }
 
 /**
@@ -469,12 +428,10 @@ export function validCaskFilters(filters) {
 export function caskMatches(profile, filters, phase = 'any') {
   const groups = Object.keys(filters);
   if (!groups.length && phase === 'any') return true;
-  if (groups.includes('unknown') && phase === 'any' &&
-    !Object.keys(profile.groups).length) return true;
+  if (groups.includes('unknown') && phase === 'any' && !Object.keys(profile.groups).length) return true;
   return profile.profiles.some(entry =>
     (!groups.length || Object.hasOwn(filters, entry.group)) &&
-    (phase === 'any' || entry.phase === phase ||
-      (phase === 'maturation' && entry.phase === 'unknown')) &&
+    (phase === 'any' || entry.phase === phase || (phase === 'maturation' && entry.phase === 'unknown')) &&
     Object.entries(filters[entry.group] || {}).every(([dimension, values]) =>
       values.some(value => entry.features[dimension]?.includes(value))));
 }
@@ -498,8 +455,7 @@ export function readAge(value) {
  * @param {*} b Second value to compare.
  * @return {?number} Calculated numeric result.
  */
-export const ageDistance = (a, b) => a === null || b === null ? null :
-  Math.min(Math.abs(a - b) / 15, 1);
+export const ageDistance = (a, b) => a === null || b === null ? null : Math.min(Math.abs(a - b) / 15, 1);
 
 /**
  * Groups a whisky age into the flight-planning age bands.
@@ -507,8 +463,7 @@ export const ageDistance = (a, b) => a === null || b === null ? null :
  * @param {*} age Age in years, or a value to validate.
  * @return {?string} Resulting text.
  */
-export const ageClass = age => age === null ? null : age <= 5 ? '0-5' :
-  age <= 10 ? '6-10' : age <= 15 ? '11-15' : age <= 20 ? '16-20' : '21+';
+export const ageClass = age => age === null ? null : age <= 5 ? '0-5' : age <= 10 ? '6-10' : age <= 15 ? '11-15' : age <= 20 ? '16-20' : '21+';
 
 /**
  * Checks whether a whisky age falls within the chosen bounds.
@@ -518,5 +473,4 @@ export const ageClass = age => age === null ? null : age <= 5 ? '0-5' :
  * @param {*} max Maximum permitted value.
  * @return {boolean} Whether the condition is satisfied.
  */
-export const ageMatches = (age, min, max) => age !== null && (min ===
-  null || age >= min) && (max === null || age <= max);
+export const ageMatches = (age, min, max) => age !== null && (min === null || age >= min) && (max === null || age <= max);

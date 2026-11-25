@@ -18,31 +18,19 @@ const furnitureInput = {
 };
 
 test(
-  'mixed cupboard supports independent wood, open and glass fronts, heights \
-in cm and bottom-to-top reordering',
+  'mixed cupboard supports independent wood, open and glass fronts, heights in cm and bottom-to-top reordering',
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST',
-        roomInput)).data;
-      const furniture = (await api(
-        ctx.base,
-        `/api/warehouse/rooms/${room.id}/furniture`,
-        'POST',
-        furnitureInput
-      )).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', roomInput)).data;
+      const furniture = (await api(ctx.base, `/api/warehouse/rooms/${room.id}/furniture`, 'POST', furnitureInput)).data;
       /**
        * Derives the add result from the supplied values.
        *
        * @param {*} body Body content to validate or process.
        * @return {!Promise<*>} Promise for the asynchronous operation.
        */
-      const add = body => api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}/shelves`,
-        'POST',
-        body
-      );
+      const add = body => api(ctx.base, `/api/warehouse/furniture/${furniture.id}/shelves`, 'POST', body);
       const lower = await add({
         name: 'Unten mit Holztür', capacity: 5,
         front: 'door', heightCm: 60,
@@ -67,21 +55,16 @@ in cm and bottom-to-top reordering',
       assert.equal(framed.status, 200);
       assert.equal(framed.data.doorLeaves, 2);
       assert.equal(framed.data.glassFrame, true);
-      const invalidLeaves =
-        await add({name: 'Ungültige Tür', front: 'door', doorLeaves: 3});
+      const invalidLeaves = await add({name: 'Ungültige Tür', front: 'door', doorLeaves: 3});
       assert.equal(invalidLeaves.status, 400);
       const invalidFrame =
         await add({
-          name: 'Ungültiger Rahmen', front: 'glass', glassFrame:
-            'true',
+          name: 'Ungültiger Rahmen', front: 'glass', glassFrame: 'true',
         });
       assert.equal(invalidFrame.status, 400);
       const info = (await api(ctx.base, '/api/warehouse')).data;
       const shelves = info.rooms[0].furniture[0].shelves;
-      assert.deepEqual(
-        shelves.map(s => [s.front, s.heightCm]),
-        [['door', 60], ['open', 80], ['glass', 60]]
-      );
+      assert.deepEqual(shelves.map(s => [s.front, s.heightCm]), [['door', 60], ['open', 80], ['glass', 60]]);
       const file = path.join(ctx.dir, 'data/warehouse.json');
       const persisted = fs.readFileSync(file);
       const tooTall = await api(
@@ -91,40 +74,17 @@ in cm and bottom-to-top reordering',
         {name: 'Extra', front: 'open', heightCm: 10}
       );
       assert.equal(tooTall.status, 409);
-      assert.deepEqual(
-        fs.readFileSync(file),
-        persisted,
-        'failed write must not affect persisted warehouse'
-      );
-      const badFront = await add({name: 'Unsicher', front: 'javascript:danger'}
-      );
+      assert.deepEqual(fs.readFileSync(file), persisted, 'failed write must not affect persisted warehouse');
+      const badFront = await add({name: 'Unsicher', front: 'javascript:danger'});
       assert.equal(badFront.status, 400);
       assert.deepEqual(fs.readFileSync(file), persisted);
-      const tooShortBulk = await api(
-        ctx.base,
-        '/api/warehouse/furniture/bulk',
-        'PATCH',
-        {ids: [furniture.id], changes: {itemHeight: 1}}
-      );
+      const tooShortBulk = await api(ctx.base, '/api/warehouse/furniture/bulk', 'PATCH', {ids: [furniture.id], changes: {itemHeight: 1}});
       assert.equal(tooShortBulk.status, 409);
-      assert.deepEqual(
-        fs.readFileSync(file),
-        persisted,
-        'bulk height change cannot squeeze fixed shelves'
-      );
-      const moved = await api(
-        ctx.base,
-        `/api/warehouse/shelves/${lower.data.id}/move`,
-        'PATCH',
-        {direction: 'up'}
-      );
+      assert.deepEqual(fs.readFileSync(file), persisted, 'bulk height change cannot squeeze fixed shelves');
+      const moved = await api(ctx.base, `/api/warehouse/shelves/${lower.data.id}/move`, 'PATCH', {direction: 'up'});
       assert.equal(moved.status, 200);
-      let current = (await api(ctx.base, '/api/warehouse')).data.rooms[0]
-        .furniture[0].shelves;
-      assert.deepEqual(
-        current.map(s => s.name),
-        ['Mitte offen', 'Unten mit Holztür', 'Oben Glas']
-      );
+      let current = (await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture[0].shelves;
+      assert.deepEqual(current.map(s => s.name), ['Mitte offen', 'Unten mit Holztür', 'Oben Glas']);
       const updated = await api(
         ctx.base,
         `/api/warehouse/shelves/${upper.data.id}`,
@@ -140,30 +100,15 @@ in cm and bottom-to-top reordering',
       assert.equal(updated.status, 200);
       assert.equal(updated.data.heightCm, 50);
       assert.equal(updated.data.doorLeaves, 1);
-      const heightRaised = await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}`,
-        'PATCH',
-        {...furniture, itemHeight: 2.5}
-      );
+      const heightRaised = await api(ctx.base, `/api/warehouse/furniture/${furniture.id}`, 'PATCH', {...furniture, itemHeight: 2.5});
       assert.equal(heightRaised.status, 200);
-      const copied = await api(
-        ctx.base,
-        `/api/warehouse/shelves/${upper.data.id}/copy`,
-        'POST',
-        {name: 'Noch ein Fach'}
-      );
+      const copied = await api(ctx.base, `/api/warehouse/shelves/${upper.data.id}/copy`, 'POST', {name: 'Noch ein Fach'});
       assert.equal(copied.status, 201);
       assert.equal(copied.data.front, 'door');
       assert.equal(copied.data.heightCm, 50);
       assert.equal(copied.data.doorLeaves, 1);
       assert.equal(copied.data.glassFrame, false);
-      const copyFurniture = await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}/copy`,
-        'POST',
-        {withShelves: true}
-      );
+      const copyFurniture = await api(ctx.base, `/api/warehouse/furniture/${furniture.id}/copy`, 'POST', {withShelves: true});
       assert.equal(copyFurniture.status, 201);
       assert.deepEqual(
         copyFurniture.data.shelves.map(s => [s.front, s.heightCm]),
@@ -171,23 +116,9 @@ in cm and bottom-to-top reordering',
           ['open', 80], ['door', 60], ['door', 50], ['door', 50],
         ]
       );
-      const oldHeight = await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}`,
-        'PATCH',
-        {...furniture, itemHeight: 1.5}
-      );
-      assert.equal(
-        oldHeight.status,
-        409,
-        'cannot shrink below explicit compartment heights'
-      );
-      const repaired = await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}`,
-        'PATCH',
-        {...furniture, itemHeight: 2.5}
-      );
+      const oldHeight = await api(ctx.base, `/api/warehouse/furniture/${furniture.id}`, 'PATCH', {...furniture, itemHeight: 1.5});
+      assert.equal(oldHeight.status, 409, 'cannot shrink below explicit compartment heights');
+      const repaired = await api(ctx.base, `/api/warehouse/furniture/${furniture.id}`, 'PATCH', {...furniture, itemHeight: 2.5});
       assert.equal(repaired.status, 200);
       const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
       assert.equal(stored.rooms[0].furniture[0].shelves.length, 4);
@@ -196,19 +127,12 @@ in cm and bottom-to-top reordering',
 );
 
 test(
-  'legacy warehouse shelf data stays readable without front/heightCm and \
-automatically uses furniture defaults',
+  'legacy warehouse shelf data stays readable without front/heightCm and automatically uses furniture defaults',
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST',
-        roomInput)).data;
-      const furniture = (await api(
-        ctx.base,
-        `/api/warehouse/rooms/${room.id}/furniture`,
-        'POST',
-        furnitureInput
-      )).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', roomInput)).data;
+      const furniture = (await api(ctx.base, `/api/warehouse/rooms/${room.id}/furniture`, 'POST', furnitureInput)).data;
       const shelf = (await api(
         ctx.base,
         `/api/warehouse/furniture/${furniture.id}/shelves`,
@@ -222,10 +146,7 @@ automatically uses furniture defaults',
       fs.writeFileSync(file, JSON.stringify(raw));
       const result = await api(ctx.base, '/api/warehouse');
       assert.equal(result.status, 200);
-      assert.equal(
-        result.data.rooms[0].furniture[0].shelves[0].front,
-        undefined
-      );
+      assert.equal(result.data.rooms[0].furniture[0].shelves[0].front, undefined);
       const edit = await api(
         ctx.base,
         `/api/warehouse/shelves/${shelf.id}`,
@@ -240,19 +161,12 @@ automatically uses furniture defaults',
 );
 
 test(
-  'mixed height validation reserves at least 5 cm for automatically sized \
-shelves',
+  'mixed height validation reserves at least 5 cm for automatically sized shelves',
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST',
-        roomInput)).data;
-      const furniture = (await api(
-        ctx.base,
-        `/api/warehouse/rooms/${room.id}/furniture`,
-        'POST',
-        {...furnitureInput, itemHeight: 1}
-      )).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', roomInput)).data;
+      const furniture = (await api(ctx.base, `/api/warehouse/rooms/${room.id}/furniture`, 'POST', {...furnitureInput, itemHeight: 1})).data;
       const auto = await api(
         ctx.base,
         `/api/warehouse/furniture/${furniture.id}/shelves`,
@@ -275,22 +189,17 @@ shelves',
       );
       assert.equal(valid.status, 201);
       const saved = (await api(ctx.base, '/api/warehouse')).data;
-      assert.deepEqual(
-        saved.rooms[0].furniture[0].shelves.map(s => s.heightCm),
-        [null, 95]
-      );
+      assert.deepEqual(saved.rooms[0].furniture[0].shelves.map(s => s.heightCm), [null, 95]);
     } finally {await ctx.stop();}
   }
 );
 
 test(
-  'furniture door defaults persist, copy and bulk update without destroying \
-shelf overrides',
+  'furniture door defaults persist, copy and bulk update without destroying shelf overrides',
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST',
-        roomInput)).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', roomInput)).data;
       const furniture = (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -319,32 +228,16 @@ shelf overrides',
         {ids: [furniture.id], changes: {doorLeaves: 1, glassFrame: false}}
       );
       assert.equal(changed.status, 200);
-      const data = (await api(ctx.base, '/api/warehouse')).data.rooms[0]
-        .furniture[0];
+      const data = (await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture[0];
       assert.equal(data.doorLeaves, 1);
       assert.equal(data.glassFrame, false);
       assert.equal(data.shelves[0].glassFrame, null);
-      const copied = (await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}/copy`,
-        'POST',
-        {name: 'Kopie', withShelves: true}
-      )).data;
+      const copied = (await api(ctx.base, `/api/warehouse/furniture/${furniture.id}/copy`, 'POST', {name: 'Kopie', withShelves: true})).data;
       assert.equal(copied.glassFrame, false);
       assert.equal(copied.doorLeaves, 1);
-      const invalid = await api(
-        ctx.base,
-        '/api/warehouse/furniture/bulk',
-        'PATCH',
-        {ids: [furniture.id], changes: {glassFrame: 'true'}}
-      );
+      const invalid = await api(ctx.base, '/api/warehouse/furniture/bulk', 'PATCH', {ids: [furniture.id], changes: {glassFrame: 'true'}});
       assert.equal(invalid.status, 400);
-      const invalidLeaves = await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}`,
-        'PATCH',
-        {...data, doorLeaves: 3}
-      );
+      const invalidLeaves = await api(ctx.base, `/api/warehouse/furniture/${furniture.id}`, 'PATCH', {...data, doorLeaves: 3});
       assert.equal(invalidLeaves.status, 400);
     } finally {await ctx.stop();}
   }

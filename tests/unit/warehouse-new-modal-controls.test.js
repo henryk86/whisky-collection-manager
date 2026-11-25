@@ -4,8 +4,7 @@ import fs from 'node:fs';
 import {createModal} from '../../public/js/ui/modal.js';
 import {helpView} from '../../public/js/views/help.js';
 test(
-  'modal supports choice and replaces current sibling while preserving the \
-original stack',
+  'modal supports choice and replaces current sibling while preserving the original stack',
   async () => {
     const prior = globalThis.document;
     let overlay;
@@ -81,8 +80,7 @@ original stack',
   }
 );
 test(
-  'help retains existing short guidance and includes technical accordion \
-guides in the same content panel',
+  'help retains existing short guidance and includes technical accordion guides in the same content panel',
   () => {
     const html = helpView('backups');
     assert.match(html, /help-content-panel/);

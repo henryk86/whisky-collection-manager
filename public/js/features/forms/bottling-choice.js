@@ -4,8 +4,7 @@ import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
 import {loadTemplates} from '../../ui/templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/bottling-choice.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/bottling-choice.html', import.meta.url));
 
 
 /**
@@ -16,13 +15,10 @@ const renderTemplate = await loadTemplates(
  * @return {*} Entries that meet the selection criteria.
  */
 export function matchingBottlings(collection, value = '') {
-  const distilleries = new Map((collection.distilleries || []).map(item =>
-    [item.id, item.name]));
-  const tokens = String(value).trim().toLocaleLowerCase('de').split(/\s+/)
-    .filter(Boolean);
+  const distilleries = new Map((collection.distilleries || []).map(item => [item.id, item.name]));
+  const tokens = String(value).trim().toLocaleLowerCase('de').split(/\s+/).filter(Boolean);
   return (collection.bottlings || []).filter(bottling => {
-    const ids = bottling.distilleryIds || (bottling.distilleryId ?
-      [bottling.distilleryId] : []);
+    const ids = bottling.distilleryIds || (bottling.distilleryId ? [bottling.distilleryId] : []);
     const terms = [
       bottling.name,
       bottling.brand,
@@ -31,12 +27,7 @@ export function matchingBottlings(collection, value = '') {
     ]
       .filter(Boolean).join(' ').toLocaleLowerCase('de');
     return tokens.every(token => terms.includes(token));
-  }).sort((left, right) => left.name
-    .localeCompare(
-      right.name,
-      'de',
-      {numeric: true}
-    ) || left.id.localeCompare(right.id));
+  }).sort((left, right) => left.name.localeCompare(right.name, 'de', {numeric: true}) || left.id.localeCompare(right.id));
 }
 
 /**
@@ -49,21 +40,14 @@ export function matchingBottlings(collection, value = '') {
 export function bottlingChoiceOptions(collection, search = '') {
   const matches = matchingBottlings(collection, search);
   const placeholder = renderTemplate('placeholderOption', {
-    length: matches.length ?
-      t("forms.bottling.selectPlaceholder") :
-      t("forms.bottling.noMatchingBottling"),
+    length: matches.length ? t("forms.bottling.selectPlaceholder") : t("forms.bottling.noMatchingBottling"),
   });
   return composeMarkup(placeholder, composeMarkup(matches.map(bottling => {
     const quantity = (bottling.bottles || []).length;
-    const details = [
-      bottling.bottler,
-      `${quantity} ${quantity === 1 ? t("forms.bottle.title") :
-        t("forms.bottle.plural")}`,
-    ].filter(Boolean).join(' · ');
+    const details = [bottling.bottler, `${quantity} ${quantity === 1 ? t("forms.bottle.title") : t("forms.bottle.plural")}`,].filter(Boolean).join(' · ');
     return renderTemplate('bottlingChoiceOptionsOption', {
       id: bottling.id,
-      name: bottling
-        .name,
+      name: bottling.name,
       details: details ? ` · ${escapeHtml(details)}` : '',
     });
   })));
@@ -80,8 +64,7 @@ export function bottlingChoiceDialog(collection) {
   if (!count) return '';
   return renderTemplate('bottlingChoice', {
     bottlingChoiceOptions: bottlingChoiceOptions(collection),
-    availableCount: t(
-      "forms.bottling.availableCount", {count}),
+    availableCount: t("forms.bottling.availableCount", {count}),
     newBottlingDirectButton: actionButton({
       label: t("collection.actions.newBottling"),
       action: 'new-bottling-direct',

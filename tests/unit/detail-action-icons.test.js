@@ -14,8 +14,7 @@ import {inventoryScanIcon, editIcon, deleteIcon}
  * @return {*} Result computed from the supplied inputs.
  */
 function button(html, action) {
-  const found = html.match(new RegExp(String
-    .raw`<button\b[^>]*data-act="${action}"[^>]*>[\s\S]*?<\/button>`));
+  const found = html.match(new RegExp(String.raw`<button\b[^>]*data-act="${action}"[^>]*>[\s\S]*?<\/button>`));
   assert.ok(found, `${action} button is missing`);
   return found[0];
 }
@@ -115,32 +114,21 @@ test(
 );
 
 test(
-  'the bottling and individual-bottle buttons show edit and delete SVGs \
-before labels',
+  'the bottling and individual-bottle buttons show edit and delete SVGs before labels',
   () => {
     const html = detailMarkup();
     for (const action of ['edit-bottling', 'edit-bottle']) {
-      assert.ok(
-        button(html, action).includes(`${editIcon}<span>Bearbeiten</span>`),
-        action
-      );
+      assert.ok(button(html, action).includes(`${editIcon}<span>Bearbeiten</span>`), action);
     }
     for (const action of ['delete-bottling', 'delete-bottle', 'delete-file']) {
-      assert.ok(
-        button(html, action).includes(`${deleteIcon}<span>Löschen</span>`),
-        action
-      );
+      assert.ok(button(html, action).includes(`${deleteIcon}<span>Löschen</span>`), action);
     }
-    assert.match(
-      button(html, 'delete-file'),
-      /aria-label="Datei Beleg\.pdf löschen"/
-    );
+    assert.match(button(html, 'delete-file'), /aria-label="Datei Beleg\.pdf löschen"/);
   }
 );
 
 test(
-  'physical-bottle detail offers direct Umlagern while the Lagerort fact \
-stays labelled',
+  'physical-bottle detail offers direct Umlagern while the Lagerort fact stays labelled',
   () => {
     const html = detailMarkup();
     const relocation = button(html, 'warehouse-assign');
@@ -174,24 +162,16 @@ test(
 test(
   'the redundant photo ownership note is absent from the detail page',
   () => {
-    assert.doesNotMatch(
-      detailMarkup(),
-      /Fotos gehören jeweils einer physischen Flasche/
-    );
+    assert.doesNotMatch(detailMarkup(), /Fotos gehören jeweils einer physischen Flasche/);
   }
 );
 
 test(
-  'photo editor uses only the shared pencil icon, with an accessible \
-tooltip like the cutout button',
+  'photo editor uses only the shared pencil icon, with an accessible tooltip like the cutout button',
   () => {
     const html = detailMarkup({photos: [{id: 'photo-a', path: 'bottle.webp'}]});
     const edit = button(html, 'photo-editor-open');
-    assert.doesNotMatch(
-      html,
-      /data-act="cutout-open"/,
-      'no redundant second gallery button'
-    );
+    assert.doesNotMatch(html, /data-act="cutout-open"/, 'no redundant second gallery button');
     assert.ok(edit.includes(editIcon), 'the existing pencil icon is reused');
     assert.match(edit, /title="Flaschenbild bearbeiten"/);
     assert.match(edit, /aria-label="Flaschenbild bearbeiten"/);
@@ -200,8 +180,7 @@ tooltip like the cutout button',
 );
 
 test(
-  'physical bottle layout uses the first sorted photo as a large preview \
-and preserves every gallery action',
+  'physical bottle layout uses the first sorted photo as a large preview and preserves every gallery action',
   () => {
     const html = detailMarkup({
       photos: [
@@ -218,9 +197,7 @@ and preserves every gallery action',
     assert.match(
       card,
       new RegExp(
-        'class="bottle-entry-main-photo" data-act="' +
-        'open-photo" data-bottle-photo-preview="phy' +
-        'sical-a"'
+        'class="bottle-entry-main-photo" data-act="' + 'open-photo" data-bottle-photo-preview="phy' + 'sical-a"'
       )
     );
     assert.match(card, /class="bottle-entry-visual"/);
@@ -238,41 +215,29 @@ and preserves every gallery action',
     assert.match(card, /<h4>Fotos \(2\)<\/h4>/);
     assert.match(card, /class="bottle-photo-add-actions"/);
     assert.match(card, /class="bottle-documents"/);
-    assert.ok(card.indexOf('bottle-entry-visual') <
-      card.indexOf('bottle-entry-content'));
-    assert.ok(card.indexOf('bottle-entry-content') <
-      card.indexOf('bottle-entry-gallery'));
-    assert.ok(card.indexOf('bottle-entry-gallery') <
-      card.indexOf('bottle-documents'));
-    assert.ok(card.indexOf('bottle-entry-visual') <
-      card.indexOf('data-photo-list="physical-a"'));
+    assert.ok(card.indexOf('bottle-entry-visual') < card.indexOf('bottle-entry-content'));
+    assert.ok(card.indexOf('bottle-entry-content') < card.indexOf('bottle-entry-gallery'));
+    assert.ok(card.indexOf('bottle-entry-gallery') < card.indexOf('bottle-documents'));
+    assert.ok(card.indexOf('bottle-entry-visual') < card.indexOf('data-photo-list="physical-a"'));
     assert.equal((card.match(/data-photo-list="physical-a"/g) || []).length, 1);
     assert.equal((card.match(/data-photo-tile/g) || []).length, 2);
     assert.equal((card.match(/data-act="photo-editor-open"/g) || []).length, 2);
     assert.equal((card.match(/data-act="delete-photo"/g) || []).length, 2);
     assert.equal((card.match(/data-photo-drag/g) || []).length, 2);
     assert.equal((card.match(/data-act="move-photo"/g) || []).length, 4);
-    assert.equal(
-      (card.match(/data-bottle-photos="physical-a"/g) || []).length,
-      2
-    );
-    assert.equal(
-      (card.match(/data-bottle-files="physical-a"/g) || []).length,
-      1
-    );
+    assert.equal((card.match(/data-bottle-photos="physical-a"/g) || []).length, 2);
+    assert.equal((card.match(/data-bottle-files="physical-a"/g) || []).length, 1);
     assert.match(card, /bottle-main-source/);
     assert.match(card, /bottle-main-cutout/);
     assert.ok(
-      card.indexOf('bottle-first.webp') <
-      card.indexOf('data-photo-list="physical-a"'),
+      card.indexOf('bottle-first.webp') < card.indexOf('data-photo-list="physical-a"'),
       'first sorted photo is in preview'
     );
   }
 );
 
 test(
-  'without an image the physical bottle card expands and still offers \
-uploads and documents',
+  'without an image the physical bottle card expands and still offers uploads and documents',
   () => {
     const html = detailMarkup();
     assert.match(html, /bottle-entry without-photos/);

@@ -22,8 +22,7 @@ export const scannerFormatNames = [
  * @return {!Array<*>} Resulting list of values.
  */
 export function supportedFormats(supported = {}) {
-  const formats = scannerFormatNames.map(name => supported[name])
-    .filter(Number.isInteger);
+  const formats = scannerFormatNames.map(name => supported[name]).filter(Number.isInteger);
   if (!formats.length) {
     throw Error(t('errors.scanner.formatsUnavailable'));
   }

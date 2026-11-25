@@ -3,22 +3,15 @@ import assert from 'node:assert/strict';
 import {roomTransferMarkup}
   from '../../public/js/views/warehouse-room-transfer.js';
 
-const rooms = [
-  {id: 'r1', name: 'Room 1', furniture: [{id: 'f1'}]},
-  {id: 'r2', name: 'Room 2', furniture: []},
-];
+const rooms = [{id: 'r1', name: 'Room 1', furniture: [{id: 'f1'}]}, {id: 'r2', name: 'Room 2', furniture: []},];
 
 test(
-  'one room transfer dialog contains two mutually exclusive tabs and \
-preserves both forms',
+  'one room transfer dialog contains two mutually exclusive tabs and preserves both forms',
   () => {
     const html = roomTransferMarkup(rooms, 'r2');
     assert.match(html, /role="tablist"/);
     assert.equal((html.match(/role="tab"/g) || []).length, 2);
-    assert.match(
-      html,
-      /id="warehouse-transfer-tab-export" aria-selected="true"/
-    );
+    assert.match(html, /id="warehouse-transfer-tab-export" aria-selected="true"/);
     assert.match(html, /id="warehouse-transfer-panel-import"[^>]+hidden/);
     assert.match(html, /id="warehouse-transfer-panel-export"[^>]*>/);
     assert.match(html, /id="warehouse-room-export-form"/);
@@ -37,10 +30,7 @@ test(
   () => {
     const html = roomTransferMarkup([]);
     assert.match(html, /id="warehouse-transfer-tab-export"[^>]*disabled/);
-    assert.match(
-      html,
-      /id="warehouse-transfer-tab-import" aria-selected="true"/
-    );
+    assert.match(html, /id="warehouse-transfer-tab-import" aria-selected="true"/);
     assert.match(html, /id="warehouse-transfer-panel-export"[^>]+hidden/);
     assert.match(html, /id="warehouse-transfer-panel-import"[^>]*>/);
   }

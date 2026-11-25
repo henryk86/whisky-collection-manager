@@ -1,8 +1,7 @@
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
-const renderTemplate = await loadTemplates(
-  new URL('./templates/buttons.html', import.meta.url));
+const renderTemplate = await loadTemplates(new URL('./templates/buttons.html', import.meta.url));
 
 
 /**
@@ -39,12 +38,9 @@ export function actionButton({
     text: 'ds-button--text',
     icon: 'ds-button--icon',
   };
-  if (!Object.hasOwn(variants, variant)) throw new RangeError(
-    'Invalid button variant');
-  if (!['default', 'small', 'large']
-    .includes(size)) throw new RangeError('Invalid button size');
-  if (!['button', 'submit', 'reset']
-    .includes(type)) throw new RangeError('Invalid button type');
+  if (!Object.hasOwn(variants, variant)) throw new RangeError('Invalid button variant');
+  if (!['default', 'small', 'large'].includes(size)) throw new RangeError('Invalid button size');
+  if (!['button', 'submit', 'reset'].includes(type)) throw new RangeError('Invalid button type');
   const safe = escapeHtml(String(label));
   const classes = [
     'btn',
@@ -65,27 +61,14 @@ export function actionButton({
   return renderTemplate('actionButtonButton', {
     classes: classes,
     type: type,
-    action: action ?
-      ` data-act="${escapeHtml(action)}"` : '',
-    ariaLabel: ariaLabel || iconOnly ?
-      ` aria-label="${escapeHtml(String(ariaLabel || label))}"` :
-      '',
-    disabled: disabled || loading ? ' disabled' :
-      '',
+    action: action ? ` data-act="${escapeHtml(action)}"` : '',
+    ariaLabel: ariaLabel || iconOnly ? ` aria-label="${escapeHtml(String(ariaLabel || label))}"` : '',
+    disabled: disabled || loading ? ' disabled' : '',
     loading: loading ? ' aria-busy="true"' : '',
     dataAttributes: dataAttributes,
-    title: title ?
-      ` title="${escapeHtml(String(title))}"` : '',
-    attributes: attributes ?
-      ` ${attributes}` : '',
+    title: title ? ` title="${escapeHtml(String(title))}"` : '',
+    attributes: attributes ? ` ${attributes}` : '',
     trustedContent: trustedContent || icon,
-    trustedContent2: trustedContent ?
-      '' : iconOnly ? '' : wrapLabel ? renderTemplate(
-        'actionButtonSpan',
-        {
-          safe: safe,
-        }
-      ) :
-        safe,
+    trustedContent2: trustedContent ? '' : iconOnly ? '' : wrapLabel ? renderTemplate('actionButtonSpan', {safe: safe, }) : safe,
   });
 }

@@ -1,9 +1,7 @@
 import {t} from '../i18n/index.js';
 import {request} from '../api.js';
 
-export const fileAccept =
-  '.pdf,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif,.txt,.csv,.eml,.docx,.xlsx,\
-.odt,.ods';
+export const fileAccept = '.pdf,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif,.txt,.csv,.eml,.docx,.xlsx,.odt,.ods';
 const extensions = new Set(fileAccept.split(',').map(value => value.slice(1)));
 const MAX_BYTES = 15 * 1024 * 1024;
 
@@ -16,9 +14,7 @@ const MAX_BYTES = 15 * 1024 * 1024;
 export function formatFileSize(bytes) {
   if (!Number.isFinite(bytes)) return '';
   return bytes >= 1024 * 1024
-    ? `${(bytes / (1024 * 1024)).toLocaleString('de-DE',
-      {maximumFractionDigits: 1}
-    )} MB`
+    ? `${(bytes / (1024 * 1024)).toLocaleString('de-DE', {maximumFractionDigits: 1})} MB`
     : `${Math.max(1, Math.ceil(bytes / 1024))} KB`;
 }
 
@@ -47,8 +43,7 @@ function toDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = () =>
-      reject(Error(t('errors.files.readFailed', {name: file.name})));
+    reader.onerror = () => reject(Error(t('errors.files.readFailed', {name: file.name})));
     reader.readAsDataURL(file);
   });
 }
@@ -67,16 +62,12 @@ export async function uploadFiles(bottleId, files) {
     try {
       await request(`/api/bottles/${encodeURIComponent(bottleId)}/files`, {
         method: 'POST',
-        body: JSON.stringify({filename: file.name, data: await toDataUrl(file)}
-        ),
+        body: JSON.stringify({filename: file.name, data: await toDataUrl(file)}),
       });
       saved++;
     }
     catch (error) {
-      throw Error(t(
-        'errors.files.partiallySaved',
-        {saved, total: files.length, error: error.message}
-      ));
+      throw Error(t('errors.files.partiallySaved', {saved, total: files.length, error: error.message}));
     }
   }
   return saved;

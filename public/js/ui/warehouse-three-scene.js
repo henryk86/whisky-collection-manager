@@ -32,8 +32,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   scene.background = new THREE.Color(c.background);
   const all = new THREE.Group();
   scene.add(all);
-  const {objects, roomWidth, roomDepth, maxHeight} =
-    warehouse3DGeometry(room, warehouse, options.isolatedId);
+  const {objects, roomWidth, roomDepth, maxHeight} = warehouse3DGeometry(room, warehouse, options.isolatedId);
   const selectables = [];
   const materials = new Map();
   /**
@@ -55,11 +54,9 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
     return materials.get(style);
   }
   const edgeMaterial = new THREE.LineBasicMaterial({
-    color: c.edge, transparent:
-      true, opacity: 0.8,
+    color: c.edge, transparent: true, opacity: 0.8,
   });
-  const highlightEdgeMaterial =
-    new THREE.LineBasicMaterial({color: 0xffca58, transparent: false});
+  const highlightEdgeMaterial = new THREE.LineBasicMaterial({color: 0xffca58, transparent: false});
   const highlightMaterials = new Map();
   const byFurniture = new Map();
   const hiddenFurniture = new Set(options.hiddenIds || []);
@@ -98,8 +95,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
       for (const mesh of byFurniture.get(owner) || []) {
         const style = mesh.userData.style;
         mesh.material = active ? highlightedMaterial(style) : material(style);
-        mesh.children[0].material = active ? highlightEdgeMaterial :
-          edgeMaterial;
+        mesh.children[0].material = active ? highlightEdgeMaterial : edgeMaterial;
       }
     }
     if (highlightedId) apply(highlightedId, false);
@@ -122,16 +118,14 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
     mesh.visible = !hiddenFurniture.has(owner);
     mesh.userData.role = part.role;
     mesh.userData.style = part.style;
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo),
-      edgeMaterial);
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMaterial);
     mesh.add(edges);
     all.add(mesh);
     selectables.push(mesh);
     if (!byFurniture.has(owner)) byFurniture.set(owner, []);
     byFurniture.get(owner).push(mesh);
   }
-  for (const item of objects) for (const part of item.parts) piece(part,
-    item.id);
+  for (const item of objects) for (const part of item.parts) piece(part, item.id);
   /**
    * Updates furniture visible in the current state.
    *
@@ -146,10 +140,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
     for (const mesh of byFurniture.get(id)) mesh.visible = visible;
     return true;
   }
-  const floor = new THREE.Mesh(
-    new THREE.BoxGeometry(roomWidth, 0.035, roomDepth),
-    new THREE.MeshBasicMaterial({color: c.floor})
-  );
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(roomWidth, 0.035, roomDepth), new THREE.MeshBasicMaterial({color: c.floor}));
   floor.position.set(roomWidth / 2, -0.045, roomDepth / 2);
   all.add(floor);
   const grid = new THREE.GridHelper(
@@ -171,14 +162,10 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   const setTheme = next => {
     const palette = PALETTE[next === 'dark' ? 'dark' : 'light'];
     scene.background.setHex(palette.background);
-    for (const [style, mat] of materials) mat.color.setHex(palette[style] ||
-      palette.board);
+    for (const [style, mat] of materials) mat.color.setHex(palette[style] || palette.board);
     edgeMaterial.color.setHex(palette.edge);
     for (const [style, mat] of highlightMaterials) {
-      mat.color.setHex(palette[style] || palette.board)
-        .lerp(new THREE.Color(0xffcb58),
-          0.55
-        );
+      mat.color.setHex(palette[style] || palette.board).lerp(new THREE.Color(0xffcb58), 0.55);
     }
     floor.material.color.setHex(palette.floor);
     grid.material.color.setHex(palette.edge);
@@ -219,8 +206,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
  */
 export function warehouseCameraHalfHeight(projectedWidth, projectedHeight,
   aspect) {
-  const dominant = Math.max(projectedHeight, projectedWidth /
-    Math.max(aspect, 0.2));
+  const dominant = Math.max(projectedHeight, projectedWidth / Math.max(aspect, 0.2));
   return dominant * 0.535 + 0.035;
 }
 
@@ -250,19 +236,14 @@ export function frameWarehouseCamera(
   const [sx, sz] = cameraDirection(corner);
   const centre = new THREE.Vector3(roomWidth / 2, maxHeight / 2, roomDepth / 2);
   const distance = Math.max(roomWidth, roomDepth, maxHeight) * 2.2 + 4;
-  camera.position.set(
-    centre.x + sx * distance,
-    centre.y + distance * 0.85,
-    centre.z + sz * distance
-  );
+  camera.position.set(centre.x + sx * distance, centre.y + distance * 0.85, centre.z + sz * distance);
   camera.up.set(0, 1, 0);
   camera.lookAt(centre);
   camera.updateMatrixWorld();
   const projected = [];
   for (const x of [0, roomWidth]) for (const y of [-0.1, maxHeight]) for (
     const z of [0, roomDepth]) {
-    projected.push(new THREE.Vector3(x, y, z)
-      .applyMatrix4(camera.matrixWorldInverse));
+    projected.push(new THREE.Vector3(x, y, z).applyMatrix4(camera.matrixWorldInverse));
   }
   /**
    * Transforms the entries used by range.
@@ -270,8 +251,7 @@ export function frameWarehouseCamera(
    * @param {*} axis Value used by this operation.
    * @return {number} Calculated numeric value.
    */
-  const range = (axis) => Math.max(...projected.map(p => p[axis])) -
-    Math.min(...projected.map(p => p[axis]));
+  const range = (axis) => Math.max(...projected.map(p => p[axis])) - Math.min(...projected.map(p => p[axis]));
   const halfH = warehouseCameraHalfHeight(range('x'), range('y'), aspect);
   camera.left = -halfH * aspect; camera.right = halfH * aspect;
   camera.top = halfH; camera.bottom = -halfH;
@@ -317,10 +297,7 @@ export async function mountWarehouseThree(
      */
     setHighlightedFurniture() {},
   };
-  const [THREE, {OrbitControls}] = await Promise.all([
-    import('/vendor/three.module.js'),
-    import('/vendor/three/addons/controls/OrbitControls.js'),
-  ]);
+  const [THREE, {OrbitControls}] = await Promise.all([import('/vendor/three.module.js'), import('/vendor/three/addons/controls/OrbitControls.js'),]);
   if (!viewport.isConnected) return {
     /**
      * Performs the dispose lifecycle action.
@@ -349,22 +326,21 @@ export async function mountWarehouseThree(
     });
   }
   catch (error) {
-    viewport.textContent =
-      t('warehouse.view.webglUnavailable'); return {
-        /**
-         * Performs the dispose lifecycle action.
-         */
-        dispose() {},
-        /**
-         * Updates zoom in the current state.
-         * @return {boolean} Whether the operation matched or succeeded.
-         */
-        setZoom() {return false;},
-        /**
-         * Updates highlighted furniture in the current state.
-         */
-        setHighlightedFurniture() {},
-      };
+    viewport.textContent = t('warehouse.view.webglUnavailable'); return {
+      /**
+       * Performs the dispose lifecycle action.
+       */
+      dispose() {},
+      /**
+       * Updates zoom in the current state.
+       * @return {boolean} Whether the operation matched or succeeded.
+       */
+      setZoom() {return false;},
+      /**
+       * Updates highlighted furniture in the current state.
+       */
+      setHighlightedFurniture() {},
+    };
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   const theme = document.documentElement.dataset.theme;
@@ -384,16 +360,14 @@ export async function mountWarehouseThree(
    * Updates the render state for its caller.
    */
   function render() {
-    cameraZoom = camera.zoom *
-      100; renderer.render(model.scene, camera);
+    cameraZoom = camera.zoom * 100; renderer.render(model.scene, camera);
   }
 
   /**
    * Calculates the resize numeric value.
    */
   function resize() {
-    const width = Math.max(1, viewport.clientWidth), height =
-      Math.max(1, viewport.clientHeight);
+    const width = Math.max(1, viewport.clientWidth), height = Math.max(1, viewport.clientHeight);
     renderer.setSize(width, height, false);
     const target = frameWarehouseCamera(
       THREE,
@@ -409,8 +383,7 @@ export async function mountWarehouseThree(
     controls.update(); render();
   }
   controls.addEventListener('change', render);
-  const observer = typeof ResizeObserver === 'undefined' ? null :
-    new ResizeObserver(resize);
+  const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
   observer?.observe(viewport);
   if (!observer) window.addEventListener('resize', resize);
   resize();
@@ -422,8 +395,7 @@ export async function mountWarehouseThree(
       if (shelfId) onOpenShelf(shelfId);
     }
   );
-  const furnitureById = new Map((room.furniture || []).map(item =>
-    [item.id, item]));
+  const furnitureById = new Map((room.furniture || []).map(item => [item.id, item]));
   /**
    * Updates the pointer down state for its caller.
    *
@@ -437,8 +409,7 @@ export async function mountWarehouseThree(
    * @param {*} e Value used by this operation.
    */
   function pointerUp(e) {
-    if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) >
-      7) {down = null; return;}
+    if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 7) {down = null; return;}
     down = null;
     const rect = canvas.getBoundingClientRect();
     const mouse = new THREE.Vector2(
@@ -446,14 +417,10 @@ export async function mountWarehouseThree(
       -((e.clientY - rect.top) / rect.height) * 2 + 1
     );
     ray.setFromCamera(mouse, camera);
-    const hit = ray.intersectObjects(
-      model.selectables.filter(mesh => mesh.visible),
-      false
-    )[0];
+    const hit = ray.intersectObjects(model.selectables.filter(mesh => mesh.visible), false)[0];
     const furnitureId = hit?.object?.userData?.furnitureId;
     if (furnitureId) {
-      const shelfId = shelfIdAtHeight(furnitureById.get(furnitureId),
-        hit.point.y);
+      const shelfId = shelfIdAtHeight(furnitureById.get(furnitureId), hit.point.y);
       // Selection stays furniture-wide; only a double-click into the
       // same physical bay can open that bay's occupied contents.
       activation.activate(furnitureId, shelfId);
@@ -469,18 +436,14 @@ export async function mountWarehouseThree(
     new MutationObserver(() => {
       model.setTheme(document.documentElement.dataset.theme); render();
     });
-  themeObserver?.observe(
-    document.documentElement,
-    {attributes: true, attributeFilter: ['data-theme']}
-  );
+  themeObserver?.observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
   // The renderer must be disposed on every tab switch and DOM removal.
   const handle = {
     /**
      * Performs the dispose lifecycle action.
      */
     dispose() {
-      if (disposed) return; disposed =
-        true; activation.cancel(); removalObserver?.disconnect();
+      if (disposed) return; disposed = true; activation.cancel(); removalObserver?.disconnect();
       themeObserver?.disconnect(); observer?.disconnect();
       if (!observer) window.removeEventListener('resize', resize);
       controls.removeEventListener('change', render); controls.dispose();
@@ -499,10 +462,8 @@ export async function mountWarehouseThree(
     setFurnitureVisible(id, visible) {
       if (disposed || !model.setFurnitureVisible(id, visible)) return false;
       canvas.dataset.hiddenFurniture = (room.furniture || []).filter(item =>
-        !model.selectables.some(mesh => mesh.userData.furnitureId ===
-          item.id && mesh.visible)).map(item => item.id).join(',');
-      if (!visible && canvas.dataset.highlightedFurniture ===
-        id) canvas.dataset.highlightedFurniture = '';
+        !model.selectables.some(mesh => mesh.userData.furnitureId === item.id && mesh.visible)).map(item => item.id).join(',');
+      if (!visible && canvas.dataset.highlightedFurniture === id) canvas.dataset.highlightedFurniture = '';
       render();
       return true;
     },
@@ -524,12 +485,10 @@ export async function mountWarehouseThree(
      * @return {boolean} Whether the operation matched or succeeded.
      */
     setZoom(value) {
-      const next = Number(value); if (![100, 150, 200]
-        .includes(next)) return false;
+      const next = Number(value); if (![100, 150, 200].includes(next)) return false;
       // Camera frustum stays fixed; zoom changes scene scale without stretching
       // the canvas.
-      camera.zoom = next / 100; cameraZoom =
-        next; camera.updateProjectionMatrix(); controls.update(); render();
+      camera.zoom = next / 100; cameraZoom = next; camera.updateProjectionMatrix(); controls.update(); render();
       return true;
     },
   };

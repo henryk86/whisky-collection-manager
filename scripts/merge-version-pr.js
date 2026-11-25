@@ -10,11 +10,7 @@ import {prepareSyncPR} from './sync-release-branches.js';
  * @param {!Array<*>} args Arguments forwarded to the operation.
  * @return {*} Result computed from the supplied inputs.
  */
-const gh = (...args) => execFileSync(
-  'gh',
-  args,
-  {encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']}
-).trim();
+const gh = (...args) => execFileSync('gh', args, {encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']}).trim();
 
 /**
  * Derives the sleep result from the supplied values.
@@ -32,11 +28,9 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
  * @param {*} snapshot Snapshot used by this operation.
  */
 export function assertVersionPR(pr, branch, snapshot) {
-  if (pr?.baseRefName !== 'main' || pr.headRefName !== branch ||
-    pr.headRefOid !== snapshot ||
+  if (pr?.baseRefName !== 'main' || pr.headRefName !== branch || pr.headRefOid !== snapshot ||
     !['OPEN', 'MERGED'].includes(pr.state))
-    throw new Error(
-      'Existing version PR does not match the approved release snapshot');
+    throw new Error('Existing version PR does not match the approved release snapshot');
 }
 
 /**
@@ -46,25 +40,14 @@ export function assertVersionPR(pr, branch, snapshot) {
  * @return {!Promise<(!Object)>} Promise fulfilled when the operation
  * completes.
  */
-export async function mergeVersionPR({tag, merge, repo = process.env
-  .GITHUB_REPOSITORY}) {
-  if (!repo || !/^[\w.-]+\/[\w.-]+$/
-    .test(repo)) throw new Error('GITHUB_REPOSITORY must be set');
-  if (!process.env.GH_TOKEN) throw new Error(
-    'GH_TOKEN required for protected main PR');
+export async function mergeVersionPR({tag, merge, repo = process.env.GITHUB_REPOSITORY}) {
+  if (!repo || !/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('GITHUB_REPOSITORY must be set');
+  if (!process.env.GH_TOKEN) throw new Error('GH_TOKEN required for protected main PR');
   const {branch, snapshot, alreadyMerged} = prepareSyncPR({tag, merge});
   if (alreadyMerged) return {tag, branch, alreadyMerged: true};
   let pr;
   try {
-    pr = JSON.parse(gh(
-      'pr',
-      'view',
-      branch,
-      '--repo',
-      repo,
-      '--json',
-      'number,state,baseRefName,headRefName,headRefOid'
-    ));
+    pr = JSON.parse(gh('pr', 'view', branch, '--repo', repo, '--json', 'number,state,baseRefName,headRefName,headRefOid'));
   }
   catch {
     gh(
@@ -79,18 +62,9 @@ export async function mergeVersionPR({tag, merge, repo = process.env
       '--title',
       `chore(release): synchronize ${tag}`,
       '--body',
-      `Automated metadata-only synchronization from the verified tag ${tag}.\
- No application code changes.`
+      `Automated metadata-only synchronization from the verified tag ${tag}. No application code changes.`
     );
-    pr = JSON.parse(gh(
-      'pr',
-      'view',
-      branch,
-      '--repo',
-      repo,
-      '--json',
-      'number,state,baseRefName,headRefName,headRefOid'
-    ));
+    pr = JSON.parse(gh('pr', 'view', branch, '--repo', repo, '--json', 'number,state,baseRefName,headRefName,headRefOid'));
   }
   assertVersionPR(pr, branch, snapshot);
   if (pr.state === 'MERGED') return {tag, branch, alreadyMerged: true};
@@ -101,27 +75,14 @@ export async function mergeVersionPR({tag, merge, repo = process.env
     gh('pr', 'merge', String(pr.number), '--repo', repo, '--auto', '--merge');
   }
   for (let attempt = 0; attempt < 90; attempt++) {
-    const state = JSON.parse(gh(
-      'pr',
-      'view',
-      String(pr.number),
-      '--repo',
-      repo,
-      '--json',
-      'state,mergedAt'
-    ));
-    if (state.state === 'MERGED' &&
-      state.mergedAt) return {tag, branch, merged: true};
-    if (state.state === 'CLOSED') throw new Error(
-      'Version PR was closed without merging');
+    const state = JSON.parse(gh('pr', 'view', String(pr.number), '--repo', repo, '--json', 'state,mergedAt'));
+    if (state.state === 'MERGED' && state.mergedAt) return {tag, branch, merged: true};
+    if (state.state === 'CLOSED') throw new Error('Version PR was closed without merging');
     await sleep(10000);
   }
   throw new Error(
-    'Version PR not yet merged after 15 minutes. Check required status \
-checks and re-run the failed publish job.');
+    'Version PR not yet merged after 15 minutes. Check required status checks and re-run the failed publish job.');
 }
-const main = process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url);
-if (main) mergeVersionPR({tag: process.argv[2], merge: process.argv[3]})
-  .then(data => console.log(JSON.stringify(data)))
+const main = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (main) mergeVersionPR({tag: process.argv[2], merge: process.argv[3]}).then(data => console.log(JSON.stringify(data)))
   .catch(error => {console.error(error.message); process.exitCode = 1;});

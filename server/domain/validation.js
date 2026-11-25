@@ -20,8 +20,7 @@ import {isDocumentPath} from '../storage/documents.js';
  * @param {*} value Value to process.
  * @return {boolean} Whether the operation matched or succeeded.
  */
-const isObject = value => !!value && typeof value === 'object' &&
-  !Array.isArray(value);
+const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
 
 /**
  * Checks whether string applies.
@@ -45,8 +44,7 @@ const optionalString = value => value == null || isString(value);
  * @param {*} value Value to process.
  * @return {boolean} Whether the operation matched or succeeded.
  */
-const isOptionalNumber = value => value == null || (typeof value ===
-  'number' && Number.isFinite(value));
+const isOptionalNumber = value => value == null || (typeof value === 'number' && Number.isFinite(value));
 
 /**
  * Derives the valid day numeric value from its input.
@@ -55,13 +53,9 @@ const isOptionalNumber = value => value == null || (typeof value ===
  * @return {boolean} Whether the operation matched or succeeded.
  */
 const validDay = value => {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/
-    .test(value)) return false;
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const parsed = new Date(`${value}T00:00:00Z`);
-  return Number(value.slice(0, 4)) >= 1600 &&
-    Number(value.slice(0, 4)) <= 2300 &&
-    !Number.isNaN(parsed.getTime()) && parsed.toISOString()
-      .slice(0, 10) === value;
+  return Number(value.slice(0, 4)) >= 1600 && Number(value.slice(0, 4)) <= 2300 && !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 };
 
 /**
@@ -70,8 +64,7 @@ const validDay = value => {
  * @param {*} p Point or data value used in the calculation.
  * @return {boolean} Whether the operation matched or succeeded.
  */
-const validImagePath = p => typeof p === 'string' &&
-  /^images\/[a-f0-9-]{36}\/[\w-]+\.(jpg|png|webp|gif)$/i.test(p);
+const validImagePath = p => typeof p === 'string' && /^images\/[a-f0-9-]{36}\/[\w-]+\.(jpg|png|webp|gif)$/i.test(p);
 
 /**
  * Validates the validation state.
@@ -87,16 +80,14 @@ export function validate(collection) {
     "api.errors.invalidOrUnsupportedJSONSchemaVersion"
   );
   assert(
-    Array.isArray(collection.bottlings) &&
-    !Object.hasOwn(collection, 'bottles') &&
+    Array.isArray(collection.bottlings) && !Object.hasOwn(collection, 'bottles') &&
     Array.isArray(collection.distilleries),
     'Ungültige Sammlungsstruktur',
     400,
     "api.errors.invalidCollectionStructure"
   );
   assert(
-    Number.isSafeInteger(collection.nextInventoryNumber) &&
-    collection.nextInventoryNumber > 0,
+    Number.isSafeInteger(collection.nextInventoryNumber) && collection.nextInventoryNumber > 0,
     'Ungültiger Inventarnummern-Zähler',
     400,
     "api.errors.invalidInventoryNumberCounter"
@@ -118,30 +109,22 @@ export function validate(collection) {
     if (collection.settings.savedViews !== undefined) {
       try {normalizeSavedViews(collection.settings.savedViews);}
       catch {
-        assert(
-          false,
-          'Ungültige gespeicherte Ansichten',
-          400,
-          'api.errors.invalidCollectionSettings'
-        );
+        assert(false, 'Ungültige gespeicherte Ansichten', 400, 'api.errors.invalidCollectionSettings');
       }
     }
     const year = collection.settings.establishedYear;
     assert(
-      year == null || (Number.isSafeInteger(year) && year >= 1600 &&
-        year <= new Date().getFullYear()),
+      year == null || (Number.isSafeInteger(year) && year >= 1600 && year <= new Date().getFullYear()),
       'Gründungsjahr muss zwischen 1600 und dem aktuellen Jahr liegen',
       400,
       "api.errors.foundingYearMustBeBetween1600AndTheCurrentYear"
     );
   }
-  const distilleryIds = new Set(), bottlingIds = new Set(), bottleIds =
-    new Set(), inventoryNumbers = new Set(), documentPaths = new Set();
+  const distilleryIds = new Set(), bottlingIds = new Set(), bottleIds = new Set(), inventoryNumbers = new Set(), documentPaths = new Set();
   const distilleryNames = new Set();
   for (const distillery of collection.distilleries) {
     assert(
-      isObject(distillery) && isString(distillery.id) &&
-      isString(distillery.name) && distillery.name.trim(),
+      isObject(distillery) && isString(distillery.id) && isString(distillery.name) && distillery.name.trim(),
       'Ungültige Destillerie',
       400,
       "api.errors.invalidDistillery"
@@ -163,28 +146,19 @@ export function validate(collection) {
     );
     if (hasLat) {
       assert(
-        typeof distillery.latitude === 'number' &&
-        Number.isFinite(distillery.latitude) && distillery.latitude >=
-        -90 && distillery.latitude <= 90,
+        typeof distillery.latitude === 'number' && Number.isFinite(distillery.latitude) && distillery.latitude >= -90 && distillery.latitude <= 90,
         'Ungültiger Breitengrad der Destillerie',
         400,
         "api.errors.invalidDistilleryLatitude"
       );
       assert(
-        typeof distillery.longitude === 'number' &&
-        Number.isFinite(distillery.longitude) && distillery.longitude >=
-        -180 && distillery.longitude <= 180,
+        typeof distillery.longitude === 'number' && Number.isFinite(distillery.longitude) && distillery.longitude >= -180 && distillery.longitude <= 180,
         'Ungültiger Längengrad der Destillerie',
         400,
         "api.errors.invalidDistilleryLongitude"
       );
     }
-    assert(
-      !distilleryIds.has(distillery.id),
-      'Doppelte Destillerie-ID',
-      400,
-      "api.errors.duplicateDistilleryID"
-    );
+    assert(!distilleryIds.has(distillery.id), 'Doppelte Destillerie-ID', 400, "api.errors.duplicateDistilleryID");
     assert(
       !distilleryNames.has(distillery.name.trim().toLowerCase()),
       'Doppelter Destilleriename',
@@ -196,18 +170,12 @@ export function validate(collection) {
   }
   for (const bottling of collection.bottlings) {
     assert(
-      isObject(bottling) && isString(bottling.id) &&
-      isString(bottling.name) && bottling.name.trim(),
+      isObject(bottling) && isString(bottling.id) && isString(bottling.name) && bottling.name.trim(),
       'Ungültige Abfüllung',
       400,
       "api.errors.invalidBottling"
     );
-    assert(
-      !bottlingIds.has(bottling.id),
-      'Doppelte Abfüllungs-ID',
-      400,
-      "api.errors.duplicateBottlingID"
-    );
+    assert(!bottlingIds.has(bottling.id), 'Doppelte Abfüllungs-ID', 400, "api.errors.duplicateBottlingID");
     assert(
       Array.isArray(bottling.bottles),
       'Flaschenliste der Abfüllung fehlt',
@@ -218,8 +186,7 @@ export function validate(collection) {
       (bottling.distilleryId ? [bottling.distilleryId] : []) :
       bottling.distilleryIds;
     assert(
-      Array.isArray(ids) && ids.every(x => isString(x) &&
-        distilleryIds.has(x)),
+      Array.isArray(ids) && ids.every(x => isString(x) && distilleryIds.has(x)),
       'Abfüllung referenziert unbekannte Destillerie',
       400,
       "api.errors.bottlingReferencesAnUnknownDistillery"
@@ -231,18 +198,12 @@ export function validate(collection) {
       "api.errors.duplicateDistilleryWithinABottling"
     );
     assert(
-      bottling.whiskyType == null ||
-      WHISKY_TYPES.includes(bottling.whiskyType),
+      bottling.whiskyType == null || WHISKY_TYPES.includes(bottling.whiskyType),
       'Ungültige Whisky-Kategorie',
       400,
       "api.errors.invalidWhiskyCategory"
     );
-    assert(
-      optionalString(bottling.brand),
-      'Ungültige Marke',
-      400,
-      "api.errors.invalidBrand"
-    );
+    assert(optionalString(bottling.brand), 'Ungültige Marke', 400, "api.errors.invalidBrand");
     assert(
       !Object.hasOwn(bottling, 'volumeType'),
       'Flaschentyp gehört zur physischen Flasche',
@@ -250,8 +211,7 @@ export function validate(collection) {
       "api.errors.bottleTypeOnPhysicalBottle"
     );
     assert(
-      bottling.compositionComplete == null ||
-      typeof bottling.compositionComplete === 'boolean',
+      bottling.compositionComplete == null || typeof bottling.compositionComplete === 'boolean',
       'Ungültiger Zusammensetzungsstatus',
       400,
       "api.errors.invalidCompositionStatus"
@@ -268,20 +228,13 @@ export function validate(collection) {
     // image cleanup.
     if (bottling.images != null) {
       assert(
-        isObject(bottling.images) && optionalString(bottling.images
-          .bottle) && optionalString(bottling.images.box),
+        isObject(bottling.images) && optionalString(bottling.images.bottle) && optionalString(bottling.images.box),
         'Ungültige alte Bildreferenz',
         400,
         "api.errors.invalidLegacyImageReference"
       );
-      for (const p of [bottling.images.bottle, bottling.images.box]
-        .filter(Boolean)) {
-        assert(
-          validImagePath(p),
-          'Ungültiger alter Bildpfad',
-          400,
-          "api.errors.invalidLegacyImagePath"
-        );
+      for (const p of [bottling.images.bottle, bottling.images.box].filter(Boolean)) {
+        assert(validImagePath(p), 'Ungültiger alter Bildpfad', 400, "api.errors.invalidLegacyImagePath");
       }
     }
     for (const field of [
@@ -304,8 +257,7 @@ export function validate(collection) {
     for (const field of ['distillationDate', 'bottlingDate']) {
       if (bottling[field] != null) {
         assert(
-          isString(bottling[field]) && /^\d{4}-\d{2}-\d{2}$/
-            .test(bottling[field]),
+          isString(bottling[field]) && /^\d{4}-\d{2}-\d{2}$/.test(bottling[field]),
           `Ungültiges Datum: ${field}`,
           400,
           "api.errors.invalidDateField",
@@ -313,18 +265,15 @@ export function validate(collection) {
         );
         const parsedDate = new Date(bottling[field] + 'T00:00:00Z');
         assert(
-          !Number.isNaN(parsedDate.getTime()) && parsedDate.toISOString()
-            .slice(0, 10) === bottling[field],
+          !Number.isNaN(parsedDate.getTime()) && parsedDate.toISOString().slice(0, 10) === bottling[field],
           `Ungültiges Datum: ${field}`,
           400,
           "api.errors.invalidDateField",
           {field}
         );
-        const yearField = field === 'distillationDate' ?
-          'distillationYear' : 'bottlingYear';
+        const yearField = field === 'distillationDate' ? 'distillationYear' : 'bottlingYear';
         assert(
-          bottling[yearField] == null || bottling[yearField] ===
-          Number(bottling[field].slice(0, 4)),
+          bottling[yearField] == null || bottling[yearField] === Number(bottling[field].slice(0, 4)),
           `${field} widerspricht ${yearField}`,
           400,
           "api.errors.conflictingFields",
@@ -333,17 +282,11 @@ export function validate(collection) {
       }
     }
     {
-      assert(
-        Array.isArray(bottling.tastings),
-        'Ungültige Verkostungsliste',
-        400,
-        "api.errors.invalidTastingList"
-      );
+      assert(Array.isArray(bottling.tastings), 'Ungültige Verkostungsliste', 400, "api.errors.invalidTastingList");
       const tastingIds = new Set();
       for (const tasting of bottling.tastings) {
         assert(
-          isObject(tasting) && isString(tasting.id) &&
-          /^[a-zA-Z0-9-]{1,100}$/.test(tasting.id) &&
+          isObject(tasting) && isString(tasting.id) && /^[a-zA-Z0-9-]{1,100}$/.test(tasting.id) &&
           isString(tasting.createdAt) &&
           !Number.isNaN(Date.parse(tasting.createdAt)) &&
           isString(tasting.updatedAt) &&
@@ -352,22 +295,12 @@ export function validate(collection) {
           400,
           "api.errors.invalidTastingMetadata"
         );
-        assert(
-          !tastingIds.has(tasting.id),
-          'Doppelte Verkostungs-ID',
-          400,
-          "api.errors.duplicateTastingID"
-        );
+        assert(!tastingIds.has(tasting.id), 'Doppelte Verkostungs-ID', 400, "api.errors.duplicateTastingID");
         tastingIds.add(tasting.id);
         const {id, createdAt, updatedAt, ...editable} = tasting;
         try {normalizeTastingRecord(editable);}
         catch {
-          assert(
-            false,
-            'Ungültiger Verkostungseintrag',
-            400,
-            "api.errors.invalidTastingEntry"
-          );
+          assert(false, 'Ungültiger Verkostungseintrag', 400, "api.errors.invalidTastingEntry");
         }
       }
     }
@@ -396,9 +329,7 @@ export function validate(collection) {
     const ids = new Set();
     for (const record of collection.externalTastings) {
       assert(
-        isObject(record) && isString(record.id) && /^[a-zA-Z0-9-]{1,100}$/
-          .test(record.id) &&
-        !ids.has(record.id) &&
+        isObject(record) && isString(record.id) && /^[a-zA-Z0-9-]{1,100}$/.test(record.id) && !ids.has(record.id) &&
         isString(record.createdAt) &&
         !Number.isNaN(Date.parse(record.createdAt)) &&
         isString(record.updatedAt) &&
@@ -429,34 +360,19 @@ export function validate(collection) {
       const {id, createdAt, updatedAt, ...editable} = record;
       try {normalizeStandaloneTasting(editable);}
       catch {
-        assert(
-          false,
-          'Ungültige externe Verkostungsdaten',
-          400,
-          "api.errors.invalidExternalTastingData"
-        );
+        assert(false, 'Ungültige externe Verkostungsdaten', 400, "api.errors.invalidExternalTastingData");
       }
     }
   }
   {
-    assert(
-      Array.isArray(collection.tastingFlights),
-      'Ungültige Flight-Liste',
-      400,
-      "api.errors.invalidFlightList"
-    );
+    assert(Array.isArray(collection.tastingFlights), 'Ungültige Flight-Liste', 400, "api.errors.invalidFlightList");
     const flights = new Set(), assigned = new Set(), referenceCount = new Map();
     // Count once instead of filtering all references for every flight member
     // (was O(n²)).
-    for (const item of allTastingReferences(collection)) referenceCount.set(
-      item.record.id,
-      (referenceCount.get(item.record.id) || 0) + 1
-    );
+    for (const item of allTastingReferences(collection)) referenceCount.set(item.record.id, (referenceCount.get(item.record.id) || 0) + 1);
     for (const flight of collection.tastingFlights) {
       assert(
-        isObject(flight) && isString(flight.id) && /^[a-zA-Z0-9-]{1,100}$/
-          .test(flight.id) &&
-        !flights.has(flight.id) && isString(flight.createdAt) &&
+        isObject(flight) && isString(flight.id) && /^[a-zA-Z0-9-]{1,100}$/.test(flight.id) && !flights.has(flight.id) && isString(flight.createdAt) &&
         !Number.isNaN(Date.parse(flight.createdAt)) &&
         isString(flight.updatedAt) &&
         !Number.isNaN(Date.parse(flight.updatedAt)),
@@ -488,30 +404,21 @@ export function validate(collection) {
         });
       }
       catch {
-        assert(false, 'Ungültiger Flight', 400, "api.errors.invalidFlight"
-        );
+        assert(false, 'Ungültiger Flight', 400, "api.errors.invalidFlight");
       }
       try {validateFlightPlan(collection, flight);}
       catch {
-        assert(
-          false,
-          'Ungültige Flight-Planung',
-          400,
-          'api.errors.invalidFlight'
-        );
+        assert(false, 'Ungültige Flight-Planung', 400, 'api.errors.invalidFlight');
       }
       assert(
-        Array.isArray(flight.tastingIds) && flight.tastingIds.length <=
-        FLIGHT_LIMIT,
+        Array.isArray(flight.tastingIds) && flight.tastingIds.length <= FLIGHT_LIMIT,
         'Ungültige Flight-Reihenfolge',
         400,
         "api.errors.invalidFlightOrder"
       );
       for (const id of flight.tastingIds) {
         assert(
-          isString(id) && /^[a-zA-Z0-9-]{1,100}$/.test(id) &&
-          !assigned.has(id) &&
-          referenceCount.get(id) === 1,
+          isString(id) && /^[a-zA-Z0-9-]{1,100}$/.test(id) && !assigned.has(id) && referenceCount.get(id) === 1,
           'Flight-Verkostung fehlt oder ist mehrfach zugeordnet',
           400,
           "api.errors.flightTastingMissingOrDuplicate"
@@ -522,18 +429,12 @@ export function validate(collection) {
   }
   for (const bottle of allBottles(collection)) {
     assert(
-      isObject(bottle) && isString(bottle.id) &&
-      !Object.hasOwn(bottle, 'bottlingId'),
+      isObject(bottle) && isString(bottle.id) && !Object.hasOwn(bottle, 'bottlingId'),
       'Ungültige verschachtelte Flasche',
       400,
       "api.errors.invalidNestedBottle"
     );
-    assert(
-      !bottleIds.has(bottle.id),
-      'Doppelte Flaschen-ID',
-      400,
-      "api.errors.duplicateBottleID"
-    );
+    assert(!bottleIds.has(bottle.id), 'Doppelte Flaschen-ID', 400, "api.errors.duplicateBottleID");
     assert(
       ['closed', 'open', 'empty'].includes(bottle.status),
       'Ungültiger Flaschenstatus',
@@ -547,8 +448,7 @@ export function validate(collection) {
       "api.errors.invalidPhysicalBottleType"
     );
     assert(
-      bottle.volumeMl == null || (isOptionalNumber(bottle.volumeMl) &&
-        bottle.volumeMl > 0 && bottle.volumeMl <= 100000),
+      bottle.volumeMl == null || (isOptionalNumber(bottle.volumeMl) && bottle.volumeMl > 0 && bottle.volumeMl <= 100000),
       'Ungültige Größe der physischen Flasche',
       400,
       "api.errors.invalidPhysicalBottleSize"
@@ -560,12 +460,7 @@ export function validate(collection) {
       "api.errors.invalidInventoryNumber"
     );
     if (bottle.emptiedAt != null && bottle.emptiedAt !== '') {
-      assert(
-        validDay(bottle.emptiedAt),
-        'Ungültiges Leerdatum',
-        400,
-        'api.errors.invalidBottleEmptyDate'
-      );
+      assert(validDay(bottle.emptiedAt), 'Ungültiges Leerdatum', 400, 'api.errors.invalidBottleEmptyDate');
       // A same-day opening/emptying is valid (0 days). An impossible order is
       // not.
       if (validDay(bottle.openedAt)) {
@@ -612,20 +507,14 @@ export function validate(collection) {
       if (photo.cutout !== undefined) {
         const cutout = photo.cutout;
         assert(
-          isObject(cutout) && validImagePath(cutout.path) &&
-          cutout.path.startsWith(`images/${bottle.id}/`) &&
+          isObject(cutout) && validImagePath(cutout.path) && cutout.path.startsWith(`images/${bottle.id}/`) &&
           cutout.path.endsWith('.png') && cutout.path !== photo.path &&
           cutout.model === 'u2netp-v1' && typeof cutout.selected === 'boolean',
           'Ungültige Freistellung',
           400,
           "api.errors.invalidCutout"
         );
-        assert(
-          !photoPaths.has(cutout.path),
-          'Doppelte Freistellung',
-          400,
-          "api.errors.duplicateBackgroundRemoval"
-        );
+        assert(!photoPaths.has(cutout.path), 'Doppelte Freistellung', 400, "api.errors.duplicateBackgroundRemoval");
         photoPaths.add(cutout.path);
       }
       /**
@@ -636,9 +525,7 @@ export function validate(collection) {
        */
       const verifyAdjustment = (edit, expectedSource) => {
         assert(
-          isObject(edit) && validImagePath(edit.path) &&
-          edit.path.startsWith(`images/${bottle.id}/`) && /\.(?:webp|png)$/
-            .test(edit.path) &&
+          isObject(edit) && validImagePath(edit.path) && edit.path.startsWith(`images/${bottle.id}/`) && /\.(?:webp|png)$/.test(edit.path) &&
           edit.path !== photo.path && edit.path !== photo.cutout?.path &&
           edit.sourcePath === expectedSource,
           'Ungültige Bildkorrektur',
@@ -647,27 +534,16 @@ export function validate(collection) {
         );
         try {validatePhotoAdjustments(edit.settings);}
         catch {
-          assert(
-            false,
-            'Ungültige Bildkorrekturwerte',
-            400,
-            "api.errors.invalidImageAdjustmentValues"
-          );
+          assert(false, 'Ungültige Bildkorrekturwerte', 400, "api.errors.invalidImageAdjustmentValues");
         }
-        assert(
-          !photoPaths.has(edit.path),
-          'Doppelte Bildkorrektur',
-          400,
-          "api.errors.duplicateImageAdjustment"
-        );
+        assert(!photoPaths.has(edit.path), 'Doppelte Bildkorrektur', 400, "api.errors.duplicateImageAdjustment");
         photoPaths.add(edit.path);
       };
       if (photo.adjustment !== undefined) {
         // Old v0.17.x datasets could reference either base; new edits
         // on selected cutouts are stored within cutout.adjustment.
         assert(
-          photo.adjustment.sourcePath === photo.path ||
-          photo.adjustment.sourcePath === photo.cutout?.path,
+          photo.adjustment.sourcePath === photo.path || photo.adjustment.sourcePath === photo.cutout?.path,
           'Ungültige Bildquelle',
           400,
           "api.errors.invalidImageSource"
@@ -694,16 +570,13 @@ export function validate(collection) {
     const fileIds = new Set();
     for (const file of bottle.files || []) {
       assert(
-        isObject(file) && isString(file.id) && /^[a-f0-9-]{36}$/i
-          .test(file.id)
-        && isDocumentPath(file.path, bottle.id),
+        isObject(file) && isString(file.id) && /^[a-f0-9-]{36}$/i.test(file.id) && isDocumentPath(file.path, bottle.id),
         'Ungueltiger Dateianhang',
         400,
         "api.errors.invalidFileAttachment"
       );
       assert(
-        isString(file.name) && file.name.length > 0 && file.name.length <= 180
-        && !/[\\/\x00-\x1f\x7f]/.test(file.name),
+        isString(file.name) && file.name.length > 0 && file.name.length <= 180 && !/[\\/\x00-\x1f\x7f]/.test(file.name),
         'Ungueltiger Anhangname',
         400,
         "api.errors.invalidAttachmentName"
@@ -727,8 +600,7 @@ export function validate(collection) {
         "api.errors.invalidFileChecksum"
       );
       assert(
-        isString(file.uploadedAt) &&
-        !Number.isNaN(Date.parse(file.uploadedAt)),
+        isString(file.uploadedAt) && !Number.isNaN(Date.parse(file.uploadedAt)),
         'Ungueltiges Upload-Datum',
         400,
         "api.errors.invalidUploadDate"
@@ -754,8 +626,7 @@ export function validate(collection) {
     bottleIds.add(bottle.id);
   }
   assert(
-    new Set(collection.reservedInventoryNumbers).size ===
-    collection.reservedInventoryNumbers.length,
+    new Set(collection.reservedInventoryNumbers).size === collection.reservedInventoryNumbers.length,
     'Doppelte reservierte Inventarnummern',
     400,
     "api.errors.duplicateReservedInventoryNumbers"

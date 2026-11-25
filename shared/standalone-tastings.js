@@ -15,17 +15,10 @@ const ALLOWED = new Set(['bottling', ...VALID_TASTING_FIELDS]);
  * @return {*} Structured result assembled from the input data.
  */
 export function normalizeStandaloneTasting(input, previous = {}) {
-  if (!input || typeof input !== 'object' || Array.isArray(input) ||
-    Object.keys(input).some(key =>
-      !ALLOWED.has(key))) throw new Error('Ungültige externe Verkostung');
-  const bottling = normalizeTastingSubject(
-    input.bottling ?? previous.bottling ?? {},
-    previous.bottling ?? {}
-  );
-  const tastingInput = Object.fromEntries(Object.entries(input)
-    .filter(([key]) => key !== 'bottling'));
-  const {id, createdAt, updatedAt, bottling: previousBottling,
-    ...previousTasting} = previous;
+  if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(key => !ALLOWED.has(key))) throw new Error('Ungültige externe Verkostung');
+  const bottling = normalizeTastingSubject(input.bottling ?? previous.bottling ?? {}, previous.bottling ?? {});
+  const tastingInput = Object.fromEntries(Object.entries(input).filter(([key]) => key !== 'bottling'));
+  const {id, createdAt, updatedAt, bottling: previousBottling, ...previousTasting} = previous;
   return {bottling, ...normalizeTastingRecord(tastingInput, previousTasting)};
 }
 
