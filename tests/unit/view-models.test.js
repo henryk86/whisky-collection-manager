@@ -84,3 +84,72 @@ test('tasting editor view model resolves saved records, missing routes and draft
   assert.equal(createTastingEditorViewModel({...state, tastingId: 'new'}).draft, true);
   assert.deepEqual(createTastingEditorViewModel({...state, selected: 'missing'}).redirect, {page: 'tastings-home', selected: null});
 });
+
+test('warehouse geometry and shelf contents preserve source records and physical occupancy', async () => {
+  const {createRoomDiagramModel, createShelfContentsModel} = await import('../../public/js/views/models/warehouse-details.js');
+  const {createWarehouseSelectionModel} = await import('../../public/js/views/models/warehouse.js');
+  const room = {id: 'r', name: 'Room', width: 3, height: 2, furniture: [{id: 'f', name: 'Cabinet', width: 1, depth: 0.5, x: 1, y: 0.5, rotation: 0, shelves: [{id: 's', name: 'Shelf', capacity: 4}]}]};
+  const warehouse = {rooms: [room], bottles: [{id: 'a', name: 'Beta', number: 10, bottlingId: 'b'}, {id: 'c', name: 'Alpha', number: 2, bottlingId: 'b'}], assignments: {a: 's', c: 's'}};
+  const before = structuredClone(warehouse);
+  const geometry = createRoomDiagramModel(room, warehouse);
+  assert.equal(geometry.vbH, 400);
+  assert.equal(geometry.shapes[0].width, 198);
+  assert.equal(geometry.shapes[0].assigned, 2);
+  const contents = createShelfContentsModel(warehouse, 's', [{id: 'b', abv: 46}]);
+  assert.equal(contents.title, 'Room / Cabinet / Shelf');
+  assert.deepEqual(contents.rows.map(row => [row.bottle.id, row.abv]), [['c', 46], ['a', 46]]);
+  const selection = createWarehouseSelectionModel(warehouse, {warehouseSelectedFurnitureIds: ['f'], warehouseHiddenFurnitureIds: ['f']}, room);
+  assert.equal(selection.selectedCount, 1);
+  assert.equal(selection.hasHidden, true);
+  assert.equal(selection.items[0].occupied, 2);
+  assert.deepEqual(warehouse, before);
+});
+
+test('photo drafts keep editable values independent of saved settings and other sessions', async () => {
+  const {createPhotoEditorSession, createPhotoDraft, createPhotoControlsModel} = await import('../../public/js/features/photo-editor/view-model.js');
+  const photo = {path: 'photos/example.png'};
+  const original = structuredClone(photo);
+  const session = Object.assign(createPhotoEditorSession(), createPhotoDraft(photo, 'b', 'p'));
+  const second = createPhotoEditorSession();
+  session.values.brightness = 17;
+  session.maskStrokes.push({x: 1});
+  assert.notEqual(session.values.brightness, session.savedSourceValues.original.brightness);
+  assert.deepEqual(second.maskStrokes, []);
+  assert.equal(createPhotoControlsModel(session, photo).hasSavedCutout, false);
+  assert.deepEqual(photo, original);
+});
+
+test('collection row and rating models resolve inventory price, latest tasting and glass fills', async () => {
+  const {createCollectionTableModel, createCollectionRatingModel} = await import('../../public/js/views/models/home.js');
+  const bottling = {id: 'b', tastings: [{id: 't', tastedOn: '2026-11-12', rating: 87.5}], bottles: [{id: 'p', purchasePrice: 60, currency: 'EUR', updatedAt: '2026-11-13'}]};
+  const before = structuredClone(bottling);
+  const table = createCollectionTableModel({bottling}, bottling.bottles, 'Origin');
+  assert.deepEqual(table.price, {currency: 'EUR', value: 60});
+  assert.equal(table.updated, '2026-11-13');
+  assert.equal(table.tasted, '2026-11-12');
+  assert.deepEqual(createCollectionRatingModel(bottling), {score: 87.5, fills: [100, 100, 100, 100, 37.5]});
+  assert.deepEqual(bottling, before);
+});
+
+test('composition and finance models prepare percentages and currency-specific data', async () => {
+  const {createCompositionViewModel, createFinanceViewModel} = await import('../../public/js/views/models/analytics.js');
+  const rows = [{name: 'a', count: 1}, {name: 'b', count: 3}, {name: 'zero', count: 0}];
+  const {total, segments} = createCompositionViewModel(rows);
+  assert.equal(total, 4);
+  assert.deepEqual(segments.map(({from, to, percent}) => [from, to, percent]), [[0, 25, 25], [25, 100, 75]]);
+  const finance = {prices: [{currency: 'EUR'}, {currency: 'USD'}], byDistillery: [{currency: 'EUR', total: 5}, {currency: 'USD', total: 8}], costMonthly: [{currency: 'USD', total: 8}]};
+  const before = structuredClone(finance);
+  const model = createFinanceViewModel(finance);
+  assert.deepEqual(model.distilleries[0].rows, [finance.byDistillery[0]]);
+  assert.deepEqual(model.timelines[0].rows, []);
+  assert.deepEqual(model.timelines[1].rows, finance.costMonthly);
+  assert.deepEqual(finance, before);
+});
+
+test('missing map sites are filtered and limited without mutating the source list', async () => {
+  const {createMapMissingModel} = await import('../../public/js/views/models/map.js');
+  const missing = Array.from({length: 20}, (_, i) => ({name: `Distillery ${i}`}));
+  assert.equal(createMapMissingModel(missing, 'DISTILLERY').items.length, 18);
+  assert.equal(createMapMissingModel(missing, 'DISTILLERY').more, 2);
+  assert.equal(missing.length, 20);
+});

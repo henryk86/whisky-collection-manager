@@ -1,3 +1,4 @@
+import {createFinanceViewModel, sortAnalyticsPeriods} from './models/analytics.js';
 import {periodControls} from './analytics-controls.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {t} from '../i18n/index.js';
@@ -97,13 +98,6 @@ export function provenance(analytics) {
  */
 export function profile(analytics) {
   const d = analytics.profile;
-  /**
-   * Orders or compares years values.
-   *
-   * @param {*} rows Input records to process.
-   * @return {!Array<*>} Resulting entries in their output order.
-   */
-  const sortYears = rows => [...rows].sort((a, b) => a.name.localeCompare(b.name, 'de'));
   return composeMarkup(
     two(
       panel(t("analytics.age.distribution"), rankBars(d.ageClasses), t("analytics.notes.nasAndMissingAge")),
@@ -140,12 +134,12 @@ export function profile(analytics) {
     two(
       panel(
         t("analytics.production.distillationYears"),
-        rankBars(sortYears(d.distillationYears), {limit: 40}),
+        rankBars(sortAnalyticsPeriods(d.distillationYears), {limit: 40}),
         t("analytics.notes.distinctBottlingCount")
       ),
       panel(
         t("analytics.production.bottlingYears"),
-        rankBars(sortYears(d.bottlingYears), {limit: 40}),
+        rankBars(sortAnalyticsPeriods(d.bottlingYears), {limit: 40}),
         t("analytics.notes.releaseYearNotBottlingYear")
       )
     ),
@@ -173,7 +167,7 @@ export function profile(analytics) {
  */
 export function finance(analytics, state) {
   const {finance: d, scope} = analytics;
-  const byCurrency = d.prices.length ? d.prices : [];
+  const {byCurrency, distilleries, timelines} = createFinanceViewModel(d);
   const main = byCurrency.length ? composeMarkup(byCurrency.map(p => panel(
     t("analytics.finance.expensesByCurrency", {currency: p.currency}),
     metricGrid([
@@ -190,10 +184,10 @@ export function finance(analytics, state) {
     t("analytics.statistics.documentedPriceCount", {count: p.count, total: scope.bottles})
   ))) : panel(t("analytics.finance.expensesPricesAndUnitPrices"), empty());
   const byPrices = d.mostExpensive.map(item => [bottlingLink(item), safe(money(item.price, item.currency))]);
-  const costPages = [...new Set(d.byDistillery.map(row => row.currency))].map(currency => panel(
+  const costPages = distilleries.map(({currency, rows}) => panel(
     t("analytics.finance.purchaseCostsByDistillery", {currency}),
     rankBars(
-      d.byDistillery.filter(row => row.currency === currency),
+      rows,
       {
         value: 'total',
         /**
@@ -214,11 +208,11 @@ export function finance(analytics, state) {
     safe(number(row.count)),
     safe(money(row.total, row.currency)),
   ]);
-  const priceCharts = byCurrency.map(p => timeChart(
-    t("analytics.finance.purchaseCostsOverTime", {currency: p.currency}),
-    d.costMonthly.filter(row => row.currency === p.currency),
+  const priceCharts = timelines.map(({currency, rows}) => timeChart(
+    t("analytics.finance.purchaseCostsOverTime", {currency}),
+    rows,
     state,
-    {field: 'total', currency: p.currency}
+    {field: 'total', currency}
   ));
   return renderTemplate('analyticsIntro', {
     main: main,

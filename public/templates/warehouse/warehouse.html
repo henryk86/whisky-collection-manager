@@ -1,24 +1,3 @@
-<!-- wcm-template:warehouseBottlesSelectAll -->
-<button type="button" class="btn small" data-act="warehouse-bottles-select-all">{{t:warehouse.selection.selectAll}}</button>
-<!-- /wcm-template -->
-
-<!-- wcm-template:warehouseBottleBulkTools -->
-<div class="warehouse-bottle-bulk-tools" aria-label="{{attr:ariaLabel}}">
-  <span class="warehouse-bottle-selection-count" aria-live="polite">{{content:bulkSelected}}</span>
-  {{content:warehouseBottlesSelectAll}}
-  <button
-    type="button"
-    class="btn small warehouse-bottles-select-clear"
-    data-act="warehouse-bottles-select-clear"
-    {{attrs:disabledAttributes}}>{{t:warehouse.selection.clear}}</button>
-  <button
-    type="button"
-    class="btn small primary warehouse-bottles-assign-selected"
-    data-act="warehouse-bottles-assign-selected"
-    {{attrs:assignDisabled}}>{{t:warehouse.bottles.bulkAssignAction}}</button>
-</div>
-<!-- /wcm-template -->
-
 <!-- wcm-template:hint -->
 <p class="hint">{{t:warehouse.rooms.noFurniture}}</p>
 <!-- /wcm-template -->

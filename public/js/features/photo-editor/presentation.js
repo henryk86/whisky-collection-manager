@@ -86,3 +86,70 @@ export function renderPhotoEditor(photo) {
     save: t('common.actions.save'),
   });
 }
+
+/**
+ * Derives the form value result from the supplied values.
+ *
+ * @param {*} value Value to process.
+ * @return {string} Resulting text.
+ */
+const formValue = value => Number(value).toLocaleString('de-DE', {maximumFractionDigits: 2});
+
+
+/**
+ * Applies prepared control values and availability to the mounted dialog.
+ * @param {?Element} host Editor dialog root.
+ * @param {!Object} model Prepared editor control state.
+ */
+export function syncPhotoEditorControls(host, model) {
+  if (!host) return;
+  for (const tab of host.querySelectorAll('[data-photo-editor-tab]')) {
+    const selected = tab.dataset.photoEditorTab === model.activeTab;
+    tab.setAttribute('aria-selected', String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+  }
+  for (const panel of host.querySelectorAll('[data-photo-editor-panel]'))
+    panel.hidden = panel.dataset.photoEditorPanel !== model.activeTab;
+  for (const input of host.querySelectorAll('[data-photo-slider]')) {
+    const value = model.values[input.dataset.photoSlider];
+    input.value = String(value);
+    host.querySelector(`[data-photo-output="${input.dataset.photoSlider}"]`).textContent = formValue(value);
+    input.disabled = model.busy || !model.sourceData;
+  }
+  for (const button of host.querySelectorAll('[data-photo-editor-ready]'))
+    button.disabled = model.busy || !model.sourceData;
+  const generateButton = host.querySelector('[data-act="photo-editor-cutout"]');
+  if (generateButton) generateButton.disabled = model.busy || !model.sourceData;
+  for (const button of host.querySelectorAll('[data-photo-editor-existing-cutout]')) {
+    button.disabled = model.busy || Boolean(model.pendingCutout) || !model.sourceData;
+    button.textContent = model.previewCutout ? t('cutout.showOriginal') : t('cutout.showCutout');
+  }
+  host.dataset.photoPreviewSource = model.previewCutout ? 'cutout' : 'original';
+  const undoCutout = host.querySelector('[data-act="photo-editor-remove-cutout"]');
+  if (undoCutout) {
+    undoCutout.hidden = !model.pendingCutout && !model.hasSavedCutout;
+    undoCutout.disabled = model.busy;
+  }
+  const picker = host.querySelector('[data-act="photo-editor-pick-white"]');
+  if (picker) picker.setAttribute('aria-pressed', String(model.whitePicking));
+  const maskTools = host.querySelector('[data-photo-editor-mask-tools]');
+  if (maskTools) {
+    maskTools.hidden = !model.maskBaseData;
+    for (const button of maskTools.querySelectorAll('[data-photo-brush-mode]')) {
+      button.setAttribute('aria-pressed', String(model.brushMode === button.dataset.photoBrushMode));
+      button.disabled = model.busy;
+    }
+    const undo = maskTools.querySelector('[data-act="photo-editor-brush-undo"]');
+    if (undo) undo.disabled = model.busy || !model.maskStrokes.length;
+    const size = maskTools.querySelector('[data-photo-brush-size]');
+    if (size) {size.disabled = model.busy; size.value = String(model.brushSize);}
+    maskTools.querySelector('[data-photo-brush-size-value]').textContent = `${model.brushSize} %`;
+  }
+  host.querySelector('.photo-editor-image')?.classList.toggle('is-brushing', Boolean(model.brushMode));
+  host.querySelector('.photo-editor-image')?.classList.toggle('is-picking', model.whitePicking);
+  const before = host.querySelector('[data-act="photo-editor-before"]');
+  if (before) {
+    before.setAttribute('aria-pressed', String(model.showingBefore));
+    before.textContent = model.showingBefore ? t('photoEditor.after') : t('photoEditor.before');
+  }
+}

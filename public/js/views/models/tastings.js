@@ -108,3 +108,12 @@ export function createTastingEditorViewModel(state) {
     backLabel: flightBack ? 'tastingFlights.backToFlight' : (external ? 'tastings.backHome' : 'tastings.backList'),
   };
 }
+
+/**
+ * Prepares the records for a single bottling's tasting list.
+ * @param {!Object} bottling Current bottling.
+ * @return {!Object} Bottling and chronologically sorted tastings.
+ */
+export function createTastingListViewModel(bottling) {
+  return {bottling, tastings: sortedTastings(bottling)};
+}

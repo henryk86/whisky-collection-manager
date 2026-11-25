@@ -45,7 +45,7 @@ export function createHomeView({
   closeModal,
   confirm: confirmModal
 }) {
-  const {bottles, coverPhoto, distilleryNames} = selectors;
+  const {bottles, coverPhoto} = selectors;
   let activeList = [];
   let activePageSize = 1;
   let filtersExpanded = false;
@@ -267,15 +267,14 @@ export function createHomeView({
         incompleteBadge: bottling.completionStatus === 'incomplete' ? renderTemplate('badge5') : '',
       });
     }));
-    const rows = composeMarkup(visibleList.map(({bottling, bottle, physicalBottles, bottleAccessibleName}) => {
-      const entry = {bottling, bottle};
+    const rows = composeMarkup(visibleList.map(({bottling, bottle, table, bottleAccessibleName}) => {
       const attrs = {
         class: 'clickable', tabindex: '0', 'data-act': 'open', 'data-id': bottling.id,
         'data-bottle-id': bottle?.id,
         'aria-label': bottleAccessibleName,
       };
       const cells = composeMarkup(selectedColumns.map(column =>
-        collectionTableCell(column.id, entry, physicalBottles, distilleryNames)));
+        collectionTableCell(column.id, table)));
       return renderTemplate('tr', {
         attrs: attrs,
         cells: cells,

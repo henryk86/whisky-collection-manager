@@ -57,3 +57,44 @@ export function aggregateAnalyticsPeriods(rows, state, field) {
   const data = [...aggregate].sort(([a], [b]) => a.localeCompare(b)).map(([name, value]) => ({name, count: value}));
   return data;
 }
+
+/**
+ * Computes positive chart segments and cumulative percentage boundaries.
+ * @param {!Array<!Object>} rows Category totals.
+ * @return {!Object} Chart total and ordered segments.
+ */
+export function createCompositionViewModel(rows) {
+  const valid = rows.filter(row => row.count > 0);
+  const total = valid.reduce((sum, row) => sum + row.count, 0);
+  let boundary = 0;
+  const segments = valid.map(row => {
+    const from = boundary;
+    const percent = row.count / total * 100;
+    boundary += percent;
+    return {row, from, to: boundary, percent};
+  });
+  return {total, segments};
+}
+
+/**
+ * Groups financial rankings and timeline entries by their actual currencies.
+ * @param {!Object} finance Calculated finance statistics.
+ * @return {!Object} Currency-specific rows for rankings and timelines.
+ */
+export function createFinanceViewModel(finance) {
+  const byCurrency = finance.prices;
+  return {
+    byCurrency,
+    distilleries: [...new Set(finance.byDistillery.map(row => row.currency))].map(currency => ({currency, rows: finance.byDistillery.filter(row => row.currency === currency)})),
+    timelines: byCurrency.map(price => ({currency: price.currency, rows: finance.costMonthly.filter(row => row.currency === price.currency)})),
+  };
+}
+
+/**
+ * Orders year and period labels without mutating analytics records.
+ * @param {!Array<!Object>} rows Named period totals.
+ * @return {!Array<!Object>} Chronologically ordered records.
+ */
+export function sortAnalyticsPeriods(rows) {
+  return [...rows].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+}

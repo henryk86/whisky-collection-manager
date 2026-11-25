@@ -58,10 +58,17 @@ Attributnamen und Werten. `{{tag:name}}` ist für validierte strukturelle
 Tag-Varianten vorgesehen. Dynamische Daten werden nicht als HTML geparst.
 Browser und Node erzeugen dieselben RenderPläne. Die Anwendung montiert ausschließlich native DOM-Knoten. UI-Assertions materialisieren RenderPläne mit dem produktiven Renderer in Chromium; historische Text-Assertions verwenden nur eine testinterne Vergleichsdarstellung, deren DOM gegen das native Ergebnis geprüft wird. Neue DOM-Tests prüfen Elemente, Attribute und Textinhalte direkt. Bindungen erhalten fachliche Namen.
 
-Die Hauptansichten bereiten Auswahldaten und abgeleitete Werte in
-`public/js/views/models/` auf. Fachlogik verbleibt in den Domänenmodulen;
-`profile-model.js` bereitet den Backup-Profildialog vor. Views montieren
-Templates und koordinieren Ereignisse und Zustandsänderungen.
+Die Hauptansichten bereiten Auswahldaten, Filterergebnisse, Geometrie und
+abgeleitete Kennzahlen in `public/js/views/models/` auf. ViewModels verändern
+keine Quelldaten und erzeugen keine DOM-Knoten. Wiederverwendbare Fachlogik
+verbleibt in den Domänenmodulen; `profile-model.js` bereitet den
+Backup-Profildialog vor. Views formatieren und binden die vorbereiteten Werte.
+Controller koordinieren Navigation, Ereignisse, API-Aufrufe und den Lebenszyklus
+zustandsbehafteter Komponenten. Lagerverwaltung trennt Auswahl, Rauminteraktion,
+WebGL-Szenen, Inspektionsdialoge und Speicheränderungen. Der Fotoeditor trennt
+Entwurf, Vorschau, Werkzeuge, Bildquellen, Export und Speicherung innerhalb
+seiner lokalen Sitzung. Modulgrenzen folgen fachlichen Verantwortlichkeiten,
+nicht starren Datei- oder Funktionslängen.
 
 `npm run format:html` formatiert die externen Templates mit LF-Zeilenenden.
 `npm run check` prüft die Formatierung, HTML-freie JavaScript-Literale,

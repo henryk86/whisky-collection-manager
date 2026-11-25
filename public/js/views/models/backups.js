@@ -13,5 +13,7 @@ export function createBackupDashboardViewModel(dash) {
     snapshots: (dash.snapshots?.[profile.id] || []).slice(0, 15),
     last: jobs.find(j => j.profileId === profile.id && j.type === 'run'),
   }));
-  return {profiles, targets, jobs, profileRows};
+  const byId = new Map(profiles.map(profile => [profile.id, profile]));
+  const jobRows = jobs.map(job => ({job, profileName: byId.get(job.profileId)?.name}));
+  return {profiles, targets, jobs, profileRows, jobRows};
 }

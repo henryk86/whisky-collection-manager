@@ -1,7 +1,7 @@
 import {createTastingEditorController} from './tasting-editor-controller.js';
 import {createTastingFlightController} from './tasting-flight-controller.js';
 import {createTastingPresentation} from './tasting-presentation.js';
-import {createTastingIndexViewModel} from './models/tastings.js';
+import {createTastingIndexViewModel, createTastingListViewModel} from './models/tastings.js';
 import {composeMarkup} from '../ui/render-plan.js';
 
 import {actionButton} from '../ui/buttons.js';
@@ -9,7 +9,6 @@ import {actionButton} from '../ui/buttons.js';
 import {sectionHeader, pageHeader} from '../ui/headers.js';
 import {t} from '../i18n/index.js';
 
-import {sortedTastings} from '../../../shared/tasting-records.js';
 
 import {newBottlingIcon} from '../ui/action-icons.js';
 
@@ -111,7 +110,7 @@ export function createTastingsView({
     resetEditor();
     const bottling = subject();
     if (!bottling) {navigate('tastings-home', null, {replace: true}); return;}
-    const tastings = sortedTastings(bottling);
+    const {tastings} = createTastingListViewModel(bottling);
     shell(renderTemplate('analyticsPage4', {
       backLink: backLink('tastings-back-detail', 'tastings.backDetail'),
       pageTitle: pageTitle(t('tastings.overviewTitle'), t('tastings.overviewIntro')),

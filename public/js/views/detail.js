@@ -66,7 +66,6 @@ import {uploadPhotos} from '../features/photos.js';
 import {uploadFiles, fileAccept, formatFileSize} from '../features/files.js';
 import {toast} from '../ui/notifications.js';
 import {attachPhotoSorting} from '../features/photo-order.js';
-import {storagePath} from './warehouse.js';
 /**
  * Creates detail view for detail.
  *
@@ -74,7 +73,6 @@ import {storagePath} from './warehouse.js';
  * @return {!Object} Structured result for the caller.
  */
 export function createDetailView({state, selectors, shell, navigate, action}) {
-  const {bottles, coverPhoto, distilleryNames} = selectors;
   /**
    * Selects and transforms the detail records.
    */
@@ -84,19 +82,10 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
       navigate('home', null, {replace: true});
       return;
     }
-    const {bottling, latest, tastingCount, tastingNotes, physicalBottles,
-      facts, originLabel, relatedDistilleries, statusText, description,
-      whiskybaseUrl} = model;
-    const tastingRadar = latest?.flavorProfile && Object.values(latest.flavorProfile).some(Number.isInteger)
-      ? flavorChart(latest.flavorProfile, {compact: true}) : '';
-    const list = composeMarkup(physicalBottles.map(entry => {
-      const entryPhotos = entry.photos || [];
-      const firstPhoto = entryPhotos[0];
-      const storageShelfId = state.warehouse?.assignments[entry.id];
-      const storageName = state.warehouse
-        ? (storageShelfId ?
-          storagePath(state.warehouse, storageShelfId)?.label || t('detail.fields.unassigned') : t('detail.fields.unassigned'))
-        : null;
+    const {bottling, latest, tastingCount, tastingNotes, physicalBottles, bottleRows, ratingFills, radar, cover,
+      facts, originLabel, relatedDistilleries, statusText, description, whiskybaseUrl} = model;
+    const tastingRadar = radar ? flavorChart(radar, {compact: true}) : '';
+    const list = composeMarkup(bottleRows.map(({entry, entryPhotos, firstPhoto, storageShelfId, storageName, highlighted}) => {
       const photoGallery =
         renderTemplate('bottlePhotos', {
           id: entry.id,
@@ -134,7 +123,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
         });
       return renderTemplate('bottle', {
         firstPhoto: firstPhoto ? ' has-photos' : ' without-photos',
-        highlightBottleId: state.highlightBottleId === entry.id ? ' scanned-bottle' : '',
+        highlightBottleId: highlighted ? ' scanned-bottle' : '',
         id: entry.id,
         openPhoto: firstPhoto ? renderTemplate('openPhoto', {
           id: entry.id,
@@ -306,8 +295,8 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
           {className: 'detail-head-actions'}
         ),
       }),
-      openPhoto: coverPhoto(bottling.id) ?
-        renderTemplate('openPhoto2', {imageUrl: imageUrl(coverPhoto(bottling.id)), }) : renderTemplate('heroPhoto'),
+      openPhoto: cover ?
+        renderTemplate('openPhoto2', {imageUrl: imageUrl(cover), }) : renderTemplate('heroPhoto'),
       panel: panel({
         content: composeMarkup(
           "\n    ",
@@ -362,10 +351,9 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
             latest: t('tastings.latest'),
             tastingSummaryGlasses: latest.rating != null ?
               renderTemplate('tastingSummaryGlasses', {
-                from: composeMarkup(Array.from(
-                  {length: 5},
-                  (_, i) => glencairnRatingSymbol({
-                    fill: Math.max(0, Math.min(100, (Number(latest.rating) - i * 20) * 5)),
+                from: composeMarkup(ratingFills.map(
+                  (fill, i) => glencairnRatingSymbol({
+                    fill,
                     id: `detail-tasting-${i}`,
                   })
                 )),

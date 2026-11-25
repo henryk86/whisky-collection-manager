@@ -18,6 +18,8 @@
 
 - HTML-/SVG-Templates ausschließlich in `public/templates/` fachlich gruppieren; keine HTML-Dateien in `public/js/` oder dezentralen Template-Verzeichnissen. `public/index.html` bleibt der Einstiegspunkt. Externe UI-Templates mit `npm run format:html` formatieren. Die CI prüft die Formatierung, vollständige Slot-Bindungen und HTML-freie JavaScript-Literale. Views kombinieren RenderPläne und verwenden native DOM-Bindungen, keine dynamischen HTML-String-Zuweisungen. Benenne Slots fachlich; verwende skalare Text-/Attributbindungen, RenderPlan-Inhalte und strukturierte Attributobjekte statt zusammengesetzter Attributstrings. Node und Browser erzeugen denselben RenderPlan. UI-Assertions prüfen den produktiven DOM-Renderer in Chromium. Historische Markup-Assertions dürfen ausschließlich im Testadapter eine DOM-geprüfte Vergleichsdarstellung verwenden. Keine umgebungsabhängige Rendering-Implementierung oder Serialisierung in der Anwendung.
 
+- ViewModels bereiten Filter, Sortierung, fachliche Kennzahlen und Geometrie ohne DOM- oder Zustandsmutation auf. Views binden und formatieren diese Daten; Controller steuern Navigation, Seiteneffekte und Komponentenlebenszyklen. Module nach fachlicher Verantwortung trennen, nicht nach starren Längengrenzen.
+
 ## Dokumentation bei Änderungen
 
 1. Jede Änderung darauf prüfen, ob sie Bedienung, Datenformat, API, Konfiguration, Installation, Sicherheit, Tests oder Entwicklerabläufe betrifft.

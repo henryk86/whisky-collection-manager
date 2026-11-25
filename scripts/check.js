@@ -141,8 +141,10 @@ console.log(`${fixtureReferences.size} test fixture files: references OK.`);
 // lifecycles. All other application events belong in the delegated events.js.
 // A new direct binding in a view must be reviewed and listed here deliberately.
 const allowedViewListeners = new Map([
-  ['warehouse.js',
-    11],       // SVG pointer/keyboard interactions and transient dialogs.
+  ['warehouse.js', 1], // Photo loading for the mounted workspace.
+  ['warehouse-scene-controller.js', 4], // Local hover and focus for the mounted furniture list.
+  ['warehouse-plan-drag.js', 5], // Pointer and keyboard events on the mounted floor plan.
+  ['warehouse-bottle-selection-controller.js', 1], // Local disclosure state of the current tray.
   ['warehouse-form-controller.js', 1], // Dialog-local door-range controls.
   ['warehouse-room-transfer.js', 9], // Modal-local import/export controls.
 ]);

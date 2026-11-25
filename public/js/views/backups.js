@@ -80,7 +80,7 @@ export function renderBackupSection(state) {
       warning: state.backupError ? renderTemplate('warning', {backupError: state.backupError, }) : '',
     });
   }
-  const {profiles, targets, jobs, profileRows} = createBackupDashboardViewModel(dash);
+  const {profiles, targets, jobRows, profileRows} = createBackupDashboardViewModel(dash);
   const worker = dash.worker?.online ? renderTemplate('backupStatus') : renderTemplate('backupStatus2');
   return renderTemplate('backupManagement2', {
     headingTitle: headingTitle({title: t('backups.page.title'), }),
@@ -151,7 +151,7 @@ export function renderBackupSection(state) {
             }) : renderTemplate('muted2'),
         });
       })) : renderTemplate('muted3'),
-    jobList: jobs.length ? composeMarkup(jobs.map(j =>
+    jobList: jobRows.length ? composeMarkup(jobRows.map(({job: j, profileName}) =>
       renderTemplate('backupJob', {
         state: j.state,
         statusIcon: j.state === 'success' ? successIcon : j.state === 'failed' ? warningIcon : moreIcon,
@@ -163,7 +163,7 @@ export function renderBackupSection(state) {
           restore: t('backups.jobs.restore'),
           prepare: t('backups.jobs.prepare'),
         })[j.type] || j.type,
-        name: profiles.find(p => p.id === j.profileId)?.name || t("backups.profiles.remoteProfileLabel"),
+        name: profileName || t("backups.profiles.remoteProfileLabel"),
         labelTime: labelTime(j.startedAt),
         backupJobError: j.state === 'failed' ? renderTemplate('backupJobError', {jobErrorText: jobErrorText(j), }) : '',
         muted: j.message ? renderTemplate('muted4', {message: j.message, }) : '',

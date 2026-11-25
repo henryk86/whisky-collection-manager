@@ -1,7 +1,7 @@
 import {storagePath} from '../domain/warehouse-storage-path.js';
 export {storagePath} from '../domain/warehouse-storage-path.js';
 import {composeMarkup} from '../ui/render-plan.js';
-import {displayedTastingRating} from '../../../shared/tasting-records.js';
+import {createRoomDiagramModel, createShelfPanelModel, warehouseBottleLabel, createBottlePreviewFacts} from './models/warehouse-details.js';
 /** Warehouse presentation helpers: pure HTML/SVG fragments and display labels.
  * No API writes, navigation or modal state. The controller is in warehouse.js.
  */
@@ -11,10 +11,6 @@ import {escapeHtml as esc} from '../ui/dom.js';
 import {imageUrl} from '../ui/format.js';
 import {routeUrl} from '../navigation/routes.js';
 import {t, formatNumber} from '../i18n/index.js';
-import {
-  shelfLevels, effectiveShelfFront, visibleShelfFront, doorRangeForIndex,
-  furnitureHeight
-} from '../../../shared/warehouse-compartments.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('warehouse/warehouse-presentation.html');
@@ -153,7 +149,7 @@ function footer() {
  * @return {string} Resulting text.
  */
 function bottleLabel(b) {
-  return `${b.number ? '#' + b.number + ' · ' : ''}${b.name}${b.volumeType === 'sample' ? ' · Sample' : ''}`;
+  return warehouseBottleLabel(b);
 }
 
 /**
@@ -250,68 +246,24 @@ function findFurniture(w, furnitureId) {
  * @return {string} Resulting text.
  */
 function roomDiagram(room, w, layer = 'all') {
-  // SVG coordinates are metres scaled to the viewBox. Drawing remains useful
-  // without JavaScript drag.
-  const vbW = 600, vbH = Math.max(220, Math.round(600 * room.height / room.width));
-  const sx = vbW / room.width, sy = vbH / room.height;
-  // 10 cm subdivisions, 50 cm guide lines and emphasized full metres.
-  // Integer decimetres avoid floating-point errors at 0.1 m boundaries.
-  const gridLines = [];
-  /**
-   * Constructs grid from the supplied data.
-   *
-   * @param {*} metres Value used by this operation.
-   * @param {*} scale Value used by this operation.
-   * @param {*} vertical Value used by this operation.
-   */
-  const makeGrid = (metres, scale, vertical) => {
-    const divisions = Math.floor(metres * 10 + 1e-8);
-    for (let index = 1; index < divisions; index++) {
-      const position = (index / 10) * scale;
-      const level = index % 10 === 0 ? 'major' : index % 5 === 0 ? 'minor' : 'fine';
-      gridLines.push(vertical
-        ? renderTemplate('warehouseGrid', {
-          level: level,
-          position: position,
-          endX: position,
-          vbH: vbH,
-        })
-        : renderTemplate('warehouseGrid2', {
-          level: level,
-          position: position,
-          vbW: vbW,
-          endY: position,
-        }));
-    }
-  };
-  makeGrid(room.width, sx, true);
-  makeGrid(room.height, sy, false);
-  const grid = renderTemplate('warehousePlanGrid', {gridLines: composeMarkup(gridLines), });
-  const items = room.furniture.filter(f => layer === 'all' || (layer === 'floor' ? (f.elevation ?? 0) === 0 : (f.elevation ?? 0) > 0))
-    .slice().sort((a, b) => (a.elevation ?? 0) - (b.elevation ?? 0));
-  const shapes = composeMarkup(items.map((f, i) => {
-    const fw = (f.rotation % 180 === 0 ? f.width : f.depth) * sx;
-    const fh = (f.rotation % 180 === 0 ? f.depth : f.width) * sy;
-    const x = f.x * sx, y = f.y * sy;
-    const assigned = f.shelves.reduce((s, shelf) => s + count(w, shelf.id), 0);
-    return renderTemplate('warehouseDrag', {
-      elevation: (f.elevation ?? 0) > 0 ? 'warehouse-elevated' : 'warehouse-floor-level',
-      focusFurnitureId: w.focusFurnitureId === f.id ? 'warehouse-selected' : '',
+  const {vbW, vbH, gridLines, shapes: geometry} = createRoomDiagramModel(room, w, layer);
+  const grid = renderTemplate('warehousePlanGrid', {
+    gridLines: composeMarkup(gridLines.map(({vertical, level, position}) => vertical
+      ? renderTemplate('warehouseGrid', {level, position, endX: position, vbH})
+      : renderTemplate('warehouseGrid2', {level, position, vbW, endY: position}))),
+  });
+  const shapes = composeMarkup(geometry.map(({furniture: f, elevated, focused, x, y, width, height, nameX, nameY, detailsY, assigned}) =>
+    renderTemplate('warehouseDrag', {
+      elevation: elevated ? 'warehouse-elevated' : 'warehouse-floor-level',
+      focusFurnitureId: focused ? 'warehouse-selected' : '',
       id: safe(f.id),
-      ariaLabel: safe(t("warehouse.view.furnitureKeyboardHint", {name: f.name})),
-      x: x + 1,
-      y: y + 1,
-      max: Math.max(2, fw - 2),
-      height: Math.max(2, fh - 2),
-      nameX: x + fw / 2,
-      nameY: y + fh / 2 - 4,
+      ariaLabel: safe(t('warehouse.view.furnitureKeyboardHint', {name: f.name})),
+      x, y, max: width, height, nameX, nameY,
       furnitureName: safe(f.name.slice(0, 19)),
-      detailsX: x + fw / 2,
-      detailsY: y + fh / 2 + 13,
-      elevationLabel: (f.elevation ?? 0) > 0 ? `${t("warehouse.view.fromElevation", {height: num(f.elevation)})} · ` : '',
-      abbreviatedBottleCount: t("warehouse.view.abbreviatedBottleCount", {count: assigned}),
-    });
-  }));
+      detailsX: nameX, detailsY,
+      elevationLabel: elevated ? `${t('warehouse.view.fromElevation', {height: num(f.elevation)})} · ` : '',
+      abbreviatedBottleCount: t('warehouse.view.abbreviatedBottleCount', {count: assigned}),
+    })));
   return renderTemplate('warehouseMapWrap', {
     vbW: vbW,
     vbH: vbH,
@@ -408,50 +360,7 @@ function bottleActionButtons(bottle, {detailLabelKey =
  * @return {string} Resulting text.
  */
 function bottlePreview(w, bottle, bottling, physicalBottle) {
-  const statusKey = {
-    closed: 'home.status.closed',
-    open: 'analytics.inventory.openedStatus',
-    empty: 'home.status.empty',
-  }[bottle.status];
-  const fields = [
-    [
-      t('forms.bottle.inventoryNumber'),
-      bottle.number || t('imports.bottles.noInventoryNumber'),
-    ],
-    [t('forms.bottle.statusLabel'), statusKey ? t(statusKey) : null],
-    [
-      t('forms.bottle.type'),
-      t(bottle.volumeType === 'sample' ? 'forms.bottle.sampleBottle' : 'forms.bottle.normalBottle'),
-    ],
-    [
-      t('warehouse.bottles.volume'),
-      bottle.volumeMl == null ? null : `${formatNumber(bottle.volumeMl)} ml`,
-    ],
-    [
-      t('detail.fields.storageLocation'),
-      storagePath(w, w.assignments[bottle.id])?.label || t('detail.fields.unassigned'),
-    ],
-    [
-      t('forms.bottling.ageYears'),
-      bottling?.ageYears == null ? null : t('home.facts.years', {count: bottling.ageYears}),
-    ],
-    [t('forms.bottling.releaseYear'), bottling?.releaseYear ?? null],
-    [t('forms.bottling.caskType'), bottling?.caskType || null],
-    [
-      t('forms.bottling.abv'),
-      bottling?.abv == null ? null : `${formatNumber(bottling.abv)} % Vol.`,
-    ],
-    [t('forms.bottle.purchaseDate'), physicalBottle?.purchaseDate],
-    [t('forms.bottle.openingDate'), physicalBottle?.openedAt],
-    [t('forms.bottle.emptyDate'), physicalBottle?.emptiedAt],
-    [
-      t('forms.bottle.purchasePrice'),
-      physicalBottle?.purchasePrice == null ? null :
-        `${formatNumber(physicalBottle.purchasePrice)} ${physicalBottle.currency || 'EUR'}`,
-    ],
-    [t('forms.bottle.seller'), physicalBottle?.merchant],
-    [t('forms.bottle.rating'), displayedTastingRating(bottling)],
-  ].filter(([, value]) => value !== null && value !== undefined && value !== '');
+  const fields = createBottlePreviewFacts(w, bottle, bottling, physicalBottle);
   const photo = bottle.photoPath
     ? renderTemplate('img', {
       src: safe(imageUrl(bottle.photoPath)),
@@ -482,46 +391,40 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
  * @return {string} Resulting text.
  */
 function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
-  const levels = shelfLevels(furniture);
-  const shelves = composeMarkup(levels.slice().reverse().map(level => {
-    const shelf = level.shelf;
-    const i = level.index;
-    const occupants = w.bottles.filter(b => w.assignments[b.id] === shelf.id);
-    const range = doorRangeForIndex(furniture, i);
-    const front = t(FRONT_KEYS[visibleShelfFront(furniture, i)]);
-    const height = level.heightCm;
-    const doorLabel = ['door', 'glass'].includes(range?.front || level.front) ? ` · ${(range?.doorLeaves ?? shelf.doorLeaves ?? furniture.doorLeaves ?? ((range?.front || level.front) === 'glass' ? 1 : 2)) === 1 ? t("warehouse.doors.singleLeaf") :
-      t("warehouse.doors.doubleLeaf")}${(range?.front || level.front) === 'glass' ? ((range?.glassFrame ?? shelf.glassFrame ?? furniture.glassFrame) ? ` · ${t('warehouse.walls.withFrame').replace(/^./, ch => ch.toLowerCase())}` : ` · ${t('warehouse.walls.withoutFrame').replace(/^./, ch => ch.toLowerCase())}`) : ''}${range ? ` · ${t("warehouse.shelves.doorAcross", {from: range.from, to: range.to})}` : ''}` : '';
+  const {rows, height: furnitureHeight, topSpace} = createShelfPanelModel(w, furniture);
+  const shelves = composeMarkup(rows.map(({shelf, front, height, range, doorFront, doorLeaves, framed, occupied, occupants, overflow, canMoveUp, canMoveDown}) => {
+    const doorLabel = ['door', 'glass'].includes(doorFront) ? [
+      t(doorLeaves === 1 ? 'warehouse.doors.singleLeaf' : 'warehouse.doors.doubleLeaf'),
+      doorFront === 'glass' ? t(framed ? 'warehouse.walls.withFrame' : 'warehouse.walls.withoutFrame').replace(/^./, ch => ch.toLowerCase()) : '',
+      range ? t('warehouse.shelves.doorAcross', {from: range.from, to: range.to}) : '',
+    ].filter(Boolean).map(label => ` · ${label}`).join('') : '';
     return renderTemplate('warehouseShelf', {
       shelfId: safe(shelf.id),
       capacity: shelf.capacity ?? 'unlimited',
       name: safe(shelf.name),
-      front: safe(front),
+      front: safe(t(FRONT_KEYS[front])),
       doorLabel: doorLabel,
       num: num(height),
       heightCm: shelf.heightCm == null ? ` ${t('warehouse.shelves.automaticHeight')}` : '',
-      occupancyLabel: shelf.capacity === 0 ? '' : ` · ${occupants.length}${shelf.capacity === null ? '' : ` / ${shelf.capacity}`} ${t("forms.bottle.plural")}`,
+      occupancyLabel: shelf.capacity === 0 ? '' : ` · ${occupied}${shelf.capacity === null ? '' : ` / ${shelf.capacity}`} ${t("forms.bottle.plural")}`,
       id: safe(shelf.id),
-      disabledAttributes: i === furniture.shelves.length - 1 ? {"disabled": true} : {},
+      disabledAttributes: canMoveUp ? {} : {"disabled": true},
       arrowUpIcon: arrowUpIcon,
       moveDownShelfId: safe(shelf.id),
-      moveUpDisabled: i === 0 ? {"disabled": true} : {},
+      moveUpDisabled: canMoveDown ? {} : {"disabled": true},
       arrowDownIcon: arrowDownIcon,
       copyShelfId: safe(shelf.id),
       editShelfId: safe(shelf.id),
       deleteShelfId: safe(shelf.id),
-      occupants: composeMarkup(occupants.slice(0, 6).map(b => bottleSymbol(b))),
-      warehouseShelfView: occupants.length > 6 ?
+      occupants: composeMarkup(occupants.map(b => bottleSymbol(b))),
+      warehouseShelfView: overflow ?
         renderTemplate('warehouseShelfView', {
           id: safe(shelf.id),
-          length: occupants.length - 6,
+          length: overflow,
         }) : '',
-      hint: !occupants.length && shelf.capacity !== 0 ? renderTemplate('hint') : '',
+      hint: !occupied && shelf.capacity !== 0 ? renderTemplate('hint') : '',
     });
   }));
-  const height = furnitureHeight(furniture);
-  const used = levels.reduce((sum, entry) => sum + entry.height, 0);
-  const topSpace = Math.max(0, Math.round((height - used) * 100));
   return renderTemplate('panel', {
     name: safe(furniture.name),
     furnitureType: safe(typeName(furniture.type)),
@@ -532,7 +435,7 @@ function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
         depth: num(furniture.depth),
         rotation: furniture.rotation,
         elevation: num(furniture.elevation ?? 0),
-        height: num(height),
+        height: num(furnitureHeight),
         shelves: furniture.shelves.length,
       }
     ),

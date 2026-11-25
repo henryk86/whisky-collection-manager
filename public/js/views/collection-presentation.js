@@ -3,21 +3,15 @@ import {t, currentLanguage} from '../i18n/index.js';
 import {chevronLeftIcon, chevronRightIcon, chevronsLeftIcon, chevronsRightIcon} from '../ui/action-icons.js';
 import {escapeHtml} from '../ui/dom.js';
 import {inventoryCountGroups} from '../domain/inventory-counts.js';
-import {bottlingOriginLabel} from '../domain/bottling-origin.js';
 import {hasBottlingDetail} from '../domain/bottling-details.js';
 import {visiblePages, PAGE_SIZE_OPTIONS} from '../domain/pagination.js';
-import {
-  purchasePrice, latestUpdate
-} from '../domain/collection-overview.js';
-import {displayedTastingRating, latestTasting}
-  from '../../../shared/tasting-records.js';
 import {glencairnRatingSymbol} from '../ui/glencairn-icon.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('collection/home.html');
 
 export {statusText} from './models/home.js';
-import {statusText} from './models/home.js';
+import {statusText, createCollectionRatingModel} from './models/home.js';
 
 /**
  * The count labels represent mutually exclusive bottle types. Sample bottles
@@ -71,28 +65,23 @@ export function overviewFacts(bottling) {
  * modes.
  *
  * @param {*} columnId Column id used by this operation.
- * @param {*} entry Entry to include in the calculation.
- * @param {*} allBottlingBottles All bottling bottles used by this operation.
- * @param {*} distilleryNames Distillery names used by this operation.
- * @return {string} Resulting text.
+ * @param {!Object} model Prepared inventory row.
+ * @return {!Object} Table cell render plan.
  */
-export function collectionTableCell(columnId, entry, allBottlingBottles,
-  distilleryNames) {
-  const {bottling, bottle} = entry;
-  const displayedBottles = bottle ? [bottle] : allBottlingBottles;
+export function collectionTableCell(columnId, model) {
+  const {bottling, bottle, displayedBottles, origin, score, price, updated, tasted} = model;
   let value = '';
   switch (columnId) {
     case 'name': value = renderTemplate('strong', {name: bottling.name, }); break;
     case 'inventory': value = bottle?.inventoryNumber ? `#${escapeHtml(bottle.inventoryNumber)}` : t('imports.bottles.noInventoryNumber'); break;
-    case 'distillery': value = escapeHtml(bottlingOriginLabel(bottling, distilleryNames)); break;
+    case 'distillery': value = escapeHtml(origin); break;
     case 'age': value = overviewField(bottling.ageYears); break;
     case 'abv': value = overviewField(bottling.abv, ' %'); break;
     case 'year': value = overviewField(bottling.releaseYear); break;
     case 'stock': value = renderTemplate('inventoryBadges', {inventoryBadges: inventoryBadges(displayedBottles), }); break;
     case 'editing': value = bottling.completionStatus === 'complete' ? t('detail.status.complete') : t('detail.status.incomplete'); break;
     case 'rating': {
-      const score = displayedTastingRating(bottling);
-      value = score == null || !Number.isFinite(Number(score)) ? '–' :
+      value = score == null ? '–' :
         escapeHtml(t(
           'home.table.scoreValue',
           {
@@ -109,7 +98,6 @@ export function collectionTableCell(columnId, entry, allBottlingBottles,
     case 'type': value = bottle ? t(bottle.volumeType === 'sample' ? 'imports.bottles.sample' : 'imports.bottles.standard') : ''; break;
     case 'size': value = bottle?.volumeMl != null ? `${escapeHtml(bottle.volumeMl)} ml` : ''; break;
     case 'price': {
-      const price = purchasePrice(entry);
       value = price ? new Intl.NumberFormat(
         currentLanguage() === 'de' ? 'de-DE' : 'en-US',
         {style: 'currency', currency: price.currency}
@@ -118,7 +106,7 @@ export function collectionTableCell(columnId, entry, allBottlingBottles,
     }
     case 'updated':
     case 'tasted': {
-      const date = columnId === 'updated' ? latestUpdate(entry) : latestTasting(bottling)?.tastedOn;
+      const date = columnId === 'updated' ? updated : tasted;
       value = date && Number.isFinite(new Date(date).getTime()) ?
         escapeHtml(new Date(date).toLocaleDateString(currentLanguage())) : '–';
       break;
@@ -135,14 +123,11 @@ export function collectionTableCell(columnId, entry, allBottlingBottles,
  * @return {string} Resulting text.
  */
 export function collectionCardRating(bottling, photoId = null) {
-  const score = displayedTastingRating(bottling);
-  if (score == null || !Number.isFinite(Number(score))) return '';
-  const safe = Math.min(100, Math.max(0, Number(score)));
+  const model = createCollectionRatingModel(bottling);
+  if (!model) return '';
+  const {score: safe, fills} = model;
   const unique = String(photoId || bottling.id || 'bottling').replace(/[^a-zA-Z0-9_-]/g, '-');
-  const glasses = composeMarkup(Array.from({length: 5}, (_, i) => {
-    const fill = Math.max(0, Math.min(100, (safe - i * 20) * 5));
-    return glencairnRatingSymbol({fill, id: `overview-rating-${unique}-${i}`});
-  }));
+  const glasses = composeMarkup(fills.map((fill, i) => glencairnRatingSymbol({fill, id: `overview-rating-${unique}-${i}`})));
   return renderTemplate('collectionCardRating', {
     ratingScore: t('home.filters.ratingScore', {score: String(safe).replace('.', ','), }),
     title: t('home.filters.ratingScore', {score: String(safe).replace('.', ','), }),

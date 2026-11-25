@@ -1,10 +1,9 @@
-import {createMapSidebarViewModel} from './models/map.js';
+import {createMapSidebarViewModel, createMapMissingModel, createMapDataModel} from './models/map.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {replaceContent, replaceElement} from '../ui/dom-renderer.js';
 import {pageHeader} from '../ui/headers.js';
 import {t} from '../i18n/index.js';
-import {buildDistilleryMap, markerDiameter} from '../domain/distillery-map.js';
-import {mapBottlingFacts} from '../domain/map-bottling-meta.js';
+import {markerDiameter} from '../domain/distillery-map.js';
 import {escapeHtml} from '../ui/dom.js';
 import {
   editIcon, pagodaRoofIcon, closedDistilleryIcon, chevronLeftIcon,
@@ -12,7 +11,6 @@ import {
 } from '../ui/action-icons.js';
 import {backToCollectionButton} from '../ui/navigation-controls.js';
 import {createTileMap, mapCanvasHtml} from '../features/map/tile-map.js';
-import {matchingBottlingSites} from '../domain/bottling-map-focus.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('map/map.html');
@@ -103,6 +101,7 @@ export function createMapView({state, shell, navigate, settings}) {
   let missingFilter = '';
   let sites = [];
   let missing = [];
+  let bottleTotal = 0;
   let showAllDistilleries = readAllSitesPreference();
   let relatedBottling = null;
   let relatedSites = [];
@@ -134,7 +133,7 @@ export function createMapView({state, shell, navigate, settings}) {
    * @return {string} Resulting text.
    */
   function sidebarHtml() {
-    const {selected, filtered, totalPages, currentPage, subset} =
+    const {selected, totalPages, currentPage, entries} =
       createMapSidebarViewModel(sites, selectedId, search, page, PAGE_LIMIT);
     page = currentPage;
     return renderTemplate('sidebarHtml', {
@@ -164,11 +163,11 @@ export function createMapView({state, shell, navigate, settings}) {
             renderTemplate('formField', {
               search: search,
               bottlingsAtSite: t("map.bottling.bottlingsAtSite", {name: escapeHtml(selected.name)}),
-              length: subset.length ? composeMarkup(subset.map(entry =>
+              length: entries.length ? composeMarkup(entries.map(({entry, facts}) =>
                 renderTemplate('mapBottlingLink', {
                   id: entry.id,
                   name: entry.name,
-                  mapBottlingFacts: mapBottlingFacts(entry) ? renderTemplate('mapBottlingFacts', {mapBottlingFacts: mapBottlingFacts(entry), }) : '',
+                  mapBottlingFacts: facts ? renderTemplate('mapBottlingFacts', {mapBottlingFacts: facts, }) : '',
                   plural: plural(entry.bottleCount, t("forms.bottle.title"), t("forms.bottle.plural")),
                 }))) :
                 renderTemplate('hint2'),
@@ -190,12 +189,12 @@ export function createMapView({state, shell, navigate, settings}) {
    * @return {string} Resulting text.
    */
   function missingHtml() {
-    const filtered = missing.filter(site => site.name.toLocaleLowerCase('de').includes(missingFilter.toLocaleLowerCase('de')));
+    const model = createMapMissingModel(missing, missingFilter);
     return renderTemplate('mapMissing', {
       openAttributes: !sites.length ? {"open": true} : {},
       unmappedCount: t("map.statistics.unmappedCount", {count: missing.length}),
       formField: missing.length > 6 ? renderTemplate('formField2', {missingFilter: missingFilter, }) : '',
-      missingRows: missingRows(filtered),
+      missingRows: missingRows(model),
     });
   }
 
@@ -205,14 +204,14 @@ export function createMapView({state, shell, navigate, settings}) {
    * @param {*} items Entries to process.
    * @return {string} Resulting text.
    */
-  function missingRows(items) {
+  function missingRows({items, more}) {
     return items.length ? composeMarkup(
-      composeMarkup(items.slice(0, 18).map(site =>
+      composeMarkup(items.map(site =>
         renderTemplate('mapMissingRow', {
           name: site.name,
           id: site.id,
         }))),
-      (items.length > 18 ? renderTemplate('hint5', {moreResults: t("map.search.moreResults", {count: items.length - 18}), }) : '')
+      (more > 0 ? renderTemplate('hint5', {moreResults: t("map.search.moreResults", {count: more}), }) : '')
     ) : renderTemplate('hint6');
   }
 
@@ -253,19 +252,7 @@ export function createMapView({state, shell, navigate, settings}) {
    * Updates the sync sites state for its caller.
    */
   function syncSites() {
-    const mapData = buildDistilleryMap(state.collection, {includeAllDistilleries: showAllDistilleries});
-    sites = mapData.located;
-    missing = mapData.missing;
-    relatedBottling = state.selected ? state.collection.bottlings.find(entry => entry.id === state.selected) || null : null;
-    relatedSites = relatedBottling ? matchingBottlingSites(relatedBottling, sites, missing) : [];
-    if (priorFocusId !== relatedBottling?.id) {
-      selectedId = relatedSites.find(site => site.location)?.id || null;
-      priorFocusId = relatedBottling?.id || null;
-    }
-    if (!sites.some(site => site.id === selectedId)) {
-      selectedId = relatedBottling ? (relatedSites.find(site => site.location)?.id || null)
-        : (sites.find(site => site.bottleCount > 0)?.id || sites[0]?.id || null);
-    }
+    ({sites, missing, relatedBottling, relatedSites, selectedId, priorFocusId, bottleTotal} = createMapDataModel(state, showAllDistilleries, selectedId, priorFocusId));
   }
 
   /**
@@ -297,7 +284,7 @@ export function createMapView({state, shell, navigate, settings}) {
     const locatedCount = summary?.querySelector('[data-map-stat="located"] strong');
     const bottleCount = summary?.querySelector('[data-map-stat="bottles"] strong');
     if (locatedCount) locatedCount.textContent = String(sites.length);
-    if (bottleCount) bottleCount.textContent = String(sites.reduce((sum, site) => sum + site.bottleCount, 0));
+    if (bottleCount) bottleCount.textContent = String(bottleTotal);
     let missingCount = summary?.querySelector('[data-map-stat="missing"]');
     if (!missing.length) missingCount?.remove();
     else {
@@ -321,7 +308,6 @@ export function createMapView({state, shell, navigate, settings}) {
     const initialView = preserveView ? tileMap?.getView() : null;
     tileMap?.destroy(); tileMap = null;
     syncSites();
-    const bottleTotal = sites.reduce((sum, site) => sum + site.bottleCount, 0);
     shell(renderTemplate('render', {
       pageHeader: pageHeader({
         title: t('navigation.map'),
@@ -397,7 +383,7 @@ export function createMapView({state, shell, navigate, settings}) {
     } else if (target.id === 'map-missing-search') {
       missingFilter = target.value;
       const panel = document.getElementById('map-missing-list');
-      if (panel) replaceContent(panel, missingRows(missing.filter(site => site.name.toLocaleLowerCase('de').includes(missingFilter.toLocaleLowerCase('de')))));
+      if (panel) replaceContent(panel, missingRows(createMapMissingModel(missing, missingFilter)));
     }
   }
 

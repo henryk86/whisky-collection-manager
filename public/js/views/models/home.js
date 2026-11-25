@@ -1,10 +1,11 @@
+import {displayedTastingRating, latestTasting} from '../../../../shared/tasting-records.js';
 import {escapeHtml} from '../../ui/dom.js';
 import {bottlingOriginLabel} from '../../domain/bottling-origin.js';
 import {hasBottlingDetail} from '../../domain/bottling-details.js';
 import {displayPhotoPath} from '../../../../shared/photo-images.js';
 import {t} from '../../i18n/index.js';
 import {paginate} from '../../domain/pagination.js';
-import {availableOverviewDistilleries, collectionOverviewEntries}
+import {availableOverviewDistilleries, collectionOverviewEntries, purchasePrice, latestUpdate}
   from '../../domain/collection-overview.js';
 import {TABLE_COLUMNS} from '../../domain/collection-table-columns.js';
 
@@ -68,10 +69,11 @@ export function createCollectionEntryModels(entries, selectors) {
       bottle.inventoryNumber ? `#${escapeHtml(bottle.inventoryNumber)}` : t('imports.bottles.noInventoryNumber'),
       bottle.volumeMl != null ? `${escapeHtml(bottle.volumeMl)} ml` : '',
     ].filter(Boolean).join(' · ') : '';
+    const physicalBottles = bottle ? [bottle] : bottles(bottling.id);
+    const origin = bottlingOriginLabel(bottling, distilleryNames);
     return {
-      bottling, bottle,
-      physicalBottles: bottle ? [bottle] : bottles(bottling.id),
-      origin: bottlingOriginLabel(bottling, distilleryNames),
+      bottling, bottle, physicalBottles, origin,
+      table: createCollectionTableModel({bottling, bottle}, physicalBottles, origin),
       age, abv,
       facts: [age, abv ? escapeHtml(abv) : ''].filter(Boolean).join(' · '),
       bottleInfo, bottleAccessibleName,
@@ -144,4 +146,32 @@ export function createActiveCollectionFilters(state, distilleries) {
       t('collection.flavor.title'),
     ],
   ].filter(([, value]) => value);
+}
+
+/**
+ * Computes table values once per inventory entry instead of once per cell.
+ * @param {!Object} entry Bottling and optional physical bottle.
+ * @param {!Array<!Object>} displayedBottles Inventory represented by the row.
+ * @param {string} origin Resolved distillery and origin label.
+ * @return {!Object} Prepared table facts and source records.
+ */
+export function createCollectionTableModel(entry, displayedBottles, origin) {
+  const {bottling, bottle} = entry;
+  const score = displayedTastingRating(bottling);
+  return {
+    bottling, bottle, displayedBottles, origin, score: score != null && Number.isFinite(Number(score)) ? Number(score) : null,
+    price: purchasePrice(entry), updated: latestUpdate(entry), tasted: latestTasting(bottling)?.tastedOn,
+  };
+}
+
+/**
+ * Calculates the five rating glass fills from a tasting score.
+ * @param {!Object} bottling Bottling with tasting records.
+ * @return {?Object} Clamped score and fill percentages, or null if unrated.
+ */
+export function createCollectionRatingModel(bottling) {
+  const score = displayedTastingRating(bottling);
+  if (score == null || !Number.isFinite(Number(score))) return null;
+  const value = Math.min(100, Math.max(0, Number(score)));
+  return {score: value, fills: Array.from({length: 5}, (_, i) => Math.max(0, Math.min(100, (value - i * 20) * 5)))};
 }

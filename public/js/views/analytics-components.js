@@ -1,4 +1,4 @@
-import {createRankBarViewModel, aggregateAnalyticsPeriods} from './models/analytics.js';
+import {createRankBarViewModel, aggregateAnalyticsPeriods, createCompositionViewModel, sortAnalyticsPeriods} from './models/analytics.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {headingTitle} from '../ui/headers.js';
 import {t, currentLanguage} from '../i18n/index.js';
@@ -256,10 +256,8 @@ export function rankBars(rows, {value = 'count', format = number, limit = 14,
  * @return {string} Resulting text.
  */
 export function composition(rows, {drill = null} = {}) {
-  if (!rows.length || rows.every(row => !row.count)) return empty();
-  const valid = rows.filter(r => r.count > 0);
-  const total = valid.reduce((acc, r) => acc + r.count, 0);
-  let angle = 0;
+  const {total, segments} = createCompositionViewModel(rows);
+  if (!segments.length) return empty();
   const colors = [
     '#ba9258',
     '#3e789b',
@@ -270,14 +268,10 @@ export function composition(rows, {drill = null} = {}) {
     '#b29f77',
     '#a4777e',
   ];
-  const slices = valid.map((row, i) => {
-    const from = angle;
-    angle += row.count / total * 100;
-    return `${colors[i % colors.length]} ${from.toFixed(2)}% ${angle.toFixed(2)}%`;
-  });
-  const legend = composeMarkup(valid.map((row, i) => {
+  const slices = segments.map(({from, to}, i) => `${colors[i % colors.length]} ${from.toFixed(2)}% ${to.toFixed(2)}%`);
+  const legend = composeMarkup(segments.map(({row, percent}, i) => {
     const label = safe(row.displayName ?? categoryLabel(row.name));
-    const count = `${number(row.count)} (${number(row.count / total * 100)} %)`;
+    const count = `${number(row.count)} (${number(percent)} %)`;
     const action = drill && (drill.kind === 'country' || Object.hasOwn(drill, row.name)) ?
       {'data-act': 'analytics-drill-filter', 'data-kind': drill.kind, 'data-value': drill.kind === 'country' ? row.name : drill[row.name]} : null;
     return renderTemplate('legend', {
@@ -292,7 +286,7 @@ export function composition(rows, {drill = null} = {}) {
     });
   }));
   return renderTemplate('analyticsComposition', {
-    ariaLabel: safe(valid.map(row => `${row.name}: ${row.count}`).join(', ')),
+    ariaLabel: safe(segments.map(({row}) => `${row.name}: ${row.count}`).join(', ')),
     slices: slices.join(','),
     number: number(total),
     legend: legend,
@@ -353,7 +347,7 @@ export function distilleryLink(item) {
  */
 function periodRows(rows, field = 'count', currency = '') {
   return rankBars(
-    [...rows].sort((a, b) => a.name.localeCompare(b.name, 'de')),
+    sortAnalyticsPeriods(rows),
     {
       value: field,
       limit: 60,
