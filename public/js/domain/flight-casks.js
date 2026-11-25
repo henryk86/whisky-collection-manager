@@ -1,4 +1,16 @@
 /**
+ * Matches a wine modifier independently of other adjacent wine modifiers.
+ * @param {string} modifier English adjective alternatives.
+ * @param {!RegExp} compound Equivalent German compound or standalone term.
+ * @return {!RegExp} Non-overlapping feature matcher.
+ */
+function wineModifier(modifier, compound) {
+  const adjectives = 'red|white|rose|sweet|dessert|sparkling';
+  return new RegExp(`\\b(?:(?:${modifier})(?=\\s+(?:(?:${adjectives})` +
+    `\\s+)*wine\\b)|${compound.source})\\b`, 'g');
+}
+
+/**
  * Declarative vocabulary for interpreting free-text cask descriptions.
  * Dimensions are scoped to one identified cask; stored text is never changed.
  * The first matching definition owns overlapping generic text (e.g. Port Wine).
@@ -67,21 +79,21 @@ const DEFINITIONS = {
     dimensions: {
       color: {
         redWine: {
-          pattern: /\b(?:red\s+wine|rotwein(?:fass(?:er)?|barrique)?)\b/g,
+          pattern: wineModifier('red', /rotwein(?:fass(?:er)?|barrique)?/),
         },
         whiteWine: {
-          pattern: /\b(?:white\s+wine|weisswein(?:fass(?:er)?|barrique)?)\b/g,
+          pattern: wineModifier('white', /weisswein(?:fass(?:er)?|barrique)?/),
         },
         roseWine: {
-          pattern: /\b(?:rose\s+wine|rosewein(?:fass(?:er)?|barrique)?)\b/g,
+          pattern: wineModifier('rose', /rosewein(?:fass(?:er)?|barrique)?/),
         },
       },
       style: {
         sweetWine: {
-          pattern: /\b(?:(?:sweet|dessert) wine|susswein(?:fass(?:er)?)?)\b/g,
+          pattern: wineModifier('sweet|dessert', /susswein(?:fass(?:er)?)?/),
         },
         sparklingWine: {
-          pattern: /\b(?:sparkling wine|schaumwein(?:fass(?:er)?)?|sekt)\b/g,
+          pattern: wineModifier('sparkling', /schaumwein(?:fass(?:er)?)?|sekt/),
         },
       },
       designation: {
@@ -239,13 +251,19 @@ function mentions(clause) {
       continue;
     selected.push(item);
   }
+  // A trailing product noun after a maturation verb is not a cask.
   // Generic beverage words immediately following a specific family are not
   // separate casks, even when their own match does not overlap.
   return selected.filter(item => item.value || !selected.some(other =>
-    other.group !== item.group && other.end <= item.start &&
-    /^\s*$/.test(clause.slice(other.end, item.start)) &&
-    (item.group === 'wine' || item.group === 'otherWhisky' ||
-      item.group === 'brandy'))).sort((a, b) => a.start - b.start);
+    item.group === 'otherWhisky' && other.end <= item.start &&
+    /\b(?:finish(?:ed|ing)?|matured|aged)\s*$/.test(
+      clause.slice(other.end, item.start)) &&
+    /^\s*$/.test(clause.slice(item.end)))).filter(item =>
+      item.value || !selected.some(other =>
+        other.group !== item.group && other.end <= item.start &&
+        /^\s*$/.test(clause.slice(other.end, item.start)) &&
+        (item.group === 'wine' || item.group === 'otherWhisky' ||
+          item.group === 'brandy'))).sort((a, b) => a.start - b.start);
 }
 
 /**
@@ -262,14 +280,16 @@ function caskSegments(clause) {
     if (previous && (item.group !== previous.group ||
       /\b(?:casks?|barrels?|butts?|hogsheads?|barriques?|fass|fasser)\b/
         .test(clause.slice(previous.end, item.start)))) {
-      segments.push({text: clause.slice(start, item.start), items: current});
+      segments.push({
+        text: clause.slice(start, item.start), items: current, start,
+      });
       current = [];
       start = item.start;
     }
     current.push(item);
   }
   if (current.length) {
-    segments.push({text: clause.slice(start), items: current});
+    segments.push({text: clause.slice(start), items: current, start});
   }
   return segments;
 }
@@ -283,18 +303,32 @@ function caskSegments(clause) {
  */
 export function classifyCask(text) {
   const groups = {}, profiles = [];
-  const separator = new RegExp([
+  const separator = new RegExp('(' + [
     /[,;/+&]/,
     /\b(?:and|und|then|danach|anschliessend|followed by|with|mit)\b/,
     /(?=\b(?:finish(?:ed|ing)?|nachgereift|nachreifung) (?:in|im|auf)\b)/,
-  ].map(pattern => pattern.source).join('|'));
+  ].map(pattern => pattern.source).join('|') + ')');
   const clauses = normalize(text).split(separator);
-  for (const clause of clauses) {
+  const finish = /\b(?:finish(?:ed|ing)?|nachreifung|nachgereift)\b/;
+  const maturation =
+    /\b(?:matur(?:ed|ation)|aged|(?:voll|haupt)?reifung|gereift)\b/;
+  // Only a leading phase can govern subsequent coordinated casks. A
+  // sequential or otherwise ambiguous separator ends that scope.
+  let sharedPhase = 'unknown';
+  for (let i = 0; i < clauses.length; i += 2) {
+    const clause = clauses[i];
+    if (i && !/^(?:,|&|and|und)$/.test(clauses[i - 1])) {
+      sharedPhase = 'unknown';
+    }
     for (const segment of caskSegments(clause)) {
-      const phase = /\b(?:finish(?:ed|ing)?|nachreifung|nachgereift)\b/
-        .test(segment.text) ? 'finish' :
-        /\b(?:matur(?:ed|ation)|aged|(?:voll|haupt)?reifung|gereift)\b/
-          .test(segment.text) ? 'maturation' : 'unknown';
+      const explicit = finish.test(segment.text) ? 'finish' :
+        maturation.test(segment.text) ? 'maturation' : 'unknown';
+      const prefix = clause.slice(segment.start, segment.items[0].start);
+      if (explicit !== 'unknown') {
+        sharedPhase = finish.test(prefix) || maturation.test(prefix) ?
+          explicit : 'unknown';
+      }
+      const phase = explicit === 'unknown' ? sharedPhase : explicit;
       const weight = phase === 'finish' ? 0.5 : 1;
       const group = segment.items[0].group, features = {};
       for (const item of segment.items) {
@@ -425,10 +459,11 @@ export function validCaskFilters(filters) {
 
 /**
  * Categories and values within a dimension are OR; different dimensions and
- * phase must match the very same cask entry. Unknown is not a known family.
+ * phase must match the very same cask entry. Unspecified phases qualify
+ * for maturation but never for finish. Unknown is not a known family.
  * @param {!Object} profile Classified cask description.
  * @param {!Object} filters Selected categories and feature constraints.
- * @param {string=} phase Optional explicitly known maturation phase.
+ * @param {string=} phase Optional maturation phase preference.
  * @return {boolean} Whether the selected constraints match.
  */
 export function caskMatches(profile, filters, phase = 'any') {
@@ -438,7 +473,8 @@ export function caskMatches(profile, filters, phase = 'any') {
     !Object.keys(profile.groups).length) return true;
   return profile.profiles.some(entry =>
     (!groups.length || Object.hasOwn(filters, entry.group)) &&
-    (phase === 'any' || entry.phase === phase) &&
+    (phase === 'any' || entry.phase === phase ||
+      (phase === 'maturation' && entry.phase === 'unknown')) &&
     Object.entries(filters[entry.group] || {}).every(([dimension, values]) =>
       values.some(value => entry.features[dimension]?.includes(value))));
 }

@@ -167,3 +167,80 @@ test(
       html.indexOf('class="empty-state"'));
   }
 );
+
+
+test('planner distinguishes unavailable sherry casks from cask mismatches',
+  () => {
+    const collection = structuredClone(base);
+    const bottling = collection.bottlings[0];
+    bottling.name = 'Numbered Oloroso';
+    bottling.caskType = '21 Oloroso Sherry Butts';
+    bottling.bottles[0].status = 'closed';
+    const state = {collection, flightCandidateIds: null};
+    const preview = {innerHTML: ''};
+    const save = {disabled: true};
+    const availability = {value: 'open'};
+    const inputs = new Map([
+      ['[data-flight-plan-availability]', availability],
+      ['[data-flight-plan-cask-mode]', {value: 'specific'}],
+      ['[name="flight-cask-group-sherry"]', {checked: true}],
+      ['[data-flight-plan-cask-phase]', {value: 'maturation'}],
+      ['[name="flight-plan-strict"]', {checked: true}],
+      ['.flight-plan-preview', preview],
+      ['[data-act="flight-plan-create"]', save],
+    ]);
+    const root = {
+      /**
+       * Retrieves an actual planner input by its selector.
+       * @param {string} selector Selector used by the view.
+       * @return {?Object} Simulated input or output node.
+       */
+      querySelector(selector) {return inputs.get(selector) || null;},
+      /**
+       * No refinement panels are mounted in this test.
+       * @return {!Array} Empty list of panels.
+       */
+      querySelectorAll() {return [];},
+    };
+    const previousDocument = globalThis.document;
+    globalThis.document = {
+      /**
+       * Returns the planner modal root.
+       * @return {!Object} Simulated planner dialog.
+       */
+      querySelector() {return root;},
+    };
+    try {
+      const view = createTastingsView({state,
+        /** Displays the planner without requiring a browser. */
+        showModal() {},
+      });
+      view.startPlannedFlight();
+      view.generateFlightPlan();
+      assert.match(preview.innerHTML, /Keine passenden Flaschen/);
+      assert.match(preview.innerHTML, /0 von 0 verfügbaren/);
+      assert.match(preview.innerHTML, /gewählten Verfügbarkeit: 1/);
+      assert.equal(save.disabled, true);
+      availability.value = 'all';
+      view.generateFlightPlan();
+      assert.match(preview.innerHTML, /Numbered Oloroso/);
+      assert.match(preview.innerHTML, /1 von 1 verfügbaren/);
+      assert.doesNotMatch(preview.innerHTML, /gewählten Verfügbarkeit/);
+      assert.equal(save.disabled, false);
+      state.flightCandidateIds = [];
+      view.startPlannedFlight();
+      view.generateFlightPlan();
+      assert.match(preview.innerHTML, /gefilterten Sammlung: 1/);
+      assert.doesNotMatch(preview.innerHTML, /Numbered Oloroso/);
+      assert.equal(save.disabled, true);
+      view.startPlannedFlight();
+      availability.value = 'open';
+      bottling.bottles[0].status = 'open';
+      view.generateFlightPlan();
+      assert.match(preview.innerHTML, /Numbered Oloroso/);
+      assert.equal(save.disabled, false);
+    } finally {
+      globalThis.document = previousDocument;
+    }
+  }
+);

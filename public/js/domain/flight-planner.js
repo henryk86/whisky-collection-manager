@@ -347,7 +347,7 @@ function selectFlight(
     let result = 0;
     if (caskMode === 'specific' && hasCaskFilter) result += items.reduce(
       (sum, item) => sum + (caskMatches(item.cask, groupFilters,
-        Object.keys(groupFilters).length ? 'any' : caskPhase) ? 9 : 0) +
+        caskPhase) ? 9 : 0) +
         (hasCaskDetails && caskMatches(item.cask, detailedFilters, caskPhase) ?
           4 : 0), 0);
     if (ageMode === 'range' && (ageMin !== null || ageMax !==
@@ -557,6 +557,49 @@ function selectFlight(
 }
 
 /**
+ * Checks whether a candidate satisfies the active cask and age criteria.
+ * @param {!Object} item Candidate with classified cask and age.
+ * @param {!Object} options Planner criteria, independently of strict mode.
+ * @return {boolean} Whether all active criteria match.
+ */
+function matchesFlightCriteria(item, options) {
+  const {caskMode, caskFilters, caskPhase, ageMode, ageMin, ageMax} = options;
+  return (caskMode !== 'specific' ||
+    caskMatches(item.cask, caskFilters, caskPhase)) &&
+    (ageMode !== 'range' || (ageMin === null && ageMax === null) ||
+      ageMatches(item.age, ageMin, ageMax));
+}
+
+/**
+ * Explains candidate exclusions without changing availability or preferences.
+ * Counts distinct bottlings with non-empty physical bottles, not bottles.
+ * @param {!Object} collection Current collection.
+ * @param {!Object} options The same criteria used to generate the proposal.
+ * @param {!Array<!Object>} proposal Generated physical bottle references.
+ * @return {{matching: number, available: number, proposed: number,
+ *     excludedAvailability: number, excludedScope: number}} Candidate counts.
+ */
+export function flightCandidateDiagnostics(collection, options, proposal) {
+  const {availability = 'open', bottlingIds = null} = options;
+  const all = flightCandidates(collection, {availability: 'all'});
+  const matching = all.filter(item => matchesFlightCriteria(item, options));
+  const scope = Array.isArray(bottlingIds) ? new Set(bottlingIds) : null;
+  const inScope = matching.filter(item => !scope ||
+    scope.has(item.bottling.id));
+  const available = flightCandidates(collection, {availability, bottlingIds});
+  const eligible = available.filter(item => matchesFlightCriteria(item,
+    options));
+  const ids = new Set(eligible.map(item => item.bottling.id));
+  return {
+    matching: eligible.length,
+    available: available.length,
+    proposed: proposal.filter(item => ids.has(item.bottlingId)).length,
+    excludedAvailability: inScope.length - eligible.length,
+    excludedScope: matching.length - inScope.length,
+  };
+}
+
+/**
  * Stable physical references and evidence-based reasons; never infer
  * unrecorded flavors.
  *
@@ -600,10 +643,8 @@ export function suggestFlight(
     throw new Error('Invalid flight request');
   let candidates = flightCandidates(collection, {availability, bottlingIds});
   if (strictMatches) candidates = candidates.filter(item =>
-    (caskMode !== 'specific' ||
-      caskMatches(item.cask, caskFilters, caskPhase)) &&
-    (ageMode !== 'range' || (ageMin === null && ageMax === null) ||
-      ageMatches(item.age, ageMin, ageMax)));
+    matchesFlightCriteria(item, {caskMode, caskFilters, caskPhase, ageMode,
+      ageMin, ageMax}));
   if (!candidates.length) return [];
   const history = style === 'discover' ? [
     ...(collection.bottlings || []).map(b => ({

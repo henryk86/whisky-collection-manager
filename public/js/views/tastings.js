@@ -27,8 +27,8 @@ import {
 } from '../ui/flight-cask-options.js';
 import {reorderFlightIds} from '../features/flight-order.js';
 import {
-  suggestFlight, flightCandidates, FLIGHT_STYLES, FLIGHT_AVAILABILITY,
-  FLIGHT_FOCUSES, CASK_MODES, AGE_MODES,
+  suggestFlight, flightCandidates, flightCandidateDiagnostics, FLIGHT_STYLES,
+  FLIGHT_AVAILABILITY, FLIGHT_FOCUSES, CASK_MODES, AGE_MODES,
 } from '../domain/flight-planner.js';
 
 /**
@@ -1059,6 +1059,17 @@ export function createTastingsView({
                 ${metadata.length ?
             `<small>${escapeHtml(metadata.join(' · '))}</small>` : ''}</li>`;
       }).join('')}</ol>` : `<p class="hint">${t('flightPlan.none')}</p>`;
+    if (view && (caskMode === 'specific' || ageMode === 'range')) {
+      const counts = flightCandidateDiagnostics(state.collection,
+        {...options, bottlingIds: flightPlanSourceIds}, draft);
+      const messages = [t('flightPlan.matches', counts)];
+      if (counts.excludedAvailability) messages.push(t(
+        'flightPlan.excludedAvailability', counts));
+      if (counts.excludedScope) messages.push(t(
+        'flightPlan.excludedScope', counts));
+      view.innerHTML += messages.map(message =>
+        `<p class="hint">${escapeHtml(message)}</p>`).join('');
+    }
     const button = box?.querySelector('[data-act="flight-plan-create"]');
     if (button) button.disabled = !draft.length;
   }

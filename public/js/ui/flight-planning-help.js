@@ -17,6 +17,7 @@ const FORMULAS = Object.freeze({
   combined: 'wG=0.65, wF=0.25, wA=0.10\nDsigned = 10 * sum(wi * direction(i) * di) / sum(wi for known dimensions)\ndirection(i): Similar=-1, Contrast=+1; explicit preferences override F/A',
   preferences: 'Pref = 9*matchingCaskGroup + 4*matchingCaskDetails + ' +
     '3*agesInPreferredRange\n' +
+    '(group and detail matches require the selected phase)\n' +
     '(phase only: +9 for matching phase; no extra detail bonus)\n' +
     'For Balanced/Discover: +4*sum(dF) if varied, -4*sum(dF) if similar;\n' +
     '+2*sum(dA) if varied, -2*sum(dA) if similar',
