@@ -28,7 +28,7 @@ Nur übersetzte Texte, **keine** Pfeilzeichen, an die Back-Navigation geben. Ein
 
 ## Vor einem UI-Commit
 
-`npm run check`, `npm test`, `npm run test:browser` und bei Layout `npm run test:visual` prüfen. Referenzbilder nur nach bewusster visueller Freigabe mit `npm run visual:update` aktualisieren. Dokumentationswirkung prüfen: [Entwicklung](ENTWICKLUNG.md).
+`npm run check`, `npm test`, `npm run test:browser` und bei Layout `npm run test:visual` prüfen. Optische Änderungen anhand des dynamischen PR-Berichts freigeben; keine Referenzbilder für die CI aktualisieren. Dokumentationswirkung prüfen: [Entwicklung](ENTWICKLUNG.md).
 
 ## Farb- und Theme-Regeln
 

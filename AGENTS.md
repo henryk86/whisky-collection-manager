@@ -29,7 +29,7 @@
 
 - `npm run check`, `npm test` und bei UI-Arbeit `npm run test:browser` ausführen; für Geometrie/Layout zusätzlich `npm run test:visual`. Fehlende Abdeckung klar kennzeichnen; CI-Grün nicht behaupten, solange sie nicht bestätigt ist.
 - Bevor Tests angepasst werden, Verhalten gegen den erwarteten Vertrag prüfen; Assertions nicht bloß lockern, damit sie grün sind.
-- Visuelle CI-Prüfung: **Geometrie, Überlauf und Interaktionen blockieren**, Pixelabweichungen sind derzeit reine Diagnosen (Referenzen/CI haben unterschiedliche Chromium-Versionen). `npm run test:visual:strict` nur nach bewusster Freigabe passender Browser-Baselines einsetzen. Bei Referenzänderungen Baselines **nur bewusst** mit `npm run visual:update` aktualisieren; keine automatischen Überschreibungen bei Fehlern.
+- Visuelle CI-Prüfung: Überlauf, Aufnahmefehler und Interaktionen blockieren. Geometrie- und Pixeländerungen zwischen frischem PR-Basisstand und Merge-Kandidat erfordern eine gezielte Freigabe im PR. Lokale historische Baselines sind optional und werden in CI nicht aktualisiert. Siehe [Visuelle Tests](docs/DESIGNSYSTEM_VISUELLE_TESTS.md).
 - Mobile Formulare auch bei schmalen Viewports prüfen. Chromium ist kein Ersatz für echte iOS-/Android-Geräte.
 
 ## Git, Versionierung, Release

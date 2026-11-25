@@ -64,7 +64,7 @@ Der statische `npm run check` prüft Dokumentationslinks und ausgewählte Inkons
 - `npm run check`: Syntax, Imports, Sprachdateien, Links, Deploymentregeln.
 - `npm test`: Unit- und Integrationstests (OpenSSL für einzelne TLS-Tests).
 - `npm run test:browser`: Playwright/Chromium einschließlich echter History/Reload (nicht im DOM-only-Modus).
-- `npm run test:visual`: verbindliche Geometrie-/Interaktionsprüfungen mit diagnostischen Pixel-Diffs (nicht pixel-blockierend). `npm run test:visual:strict` verlangt zuvor passende Browser-Baselines. Artefakte enthalten bei Abweichungen Screenshots und Diffs.
+- `npm run test:visual`: lokale Aufnahmen mit Überlauf- und Interaktionsprüfungen. PR-CI vergleicht Basis und Merge-Kandidat mit demselben Browser; Geometrie- und Pixeländerungen benötigen eine gezielte Freigabe. Details: [Visuelle Tests](DESIGNSYSTEM_VISUELLE_TESTS.md).
 - `npm run verify`: `npm run check && npm test`.
 
 Screenshotdateien für die README nur aus geeigneten Demo-Daten erstellen. Bei visuellen Änderungen 390/768/1024/1440 px, beide Themes, lange Texte und leere Zustände prüfen. Chromium-Emulation ist kein Ersatz für Safari/iOS-/Android-Hardware.

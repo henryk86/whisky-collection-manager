@@ -4,50 +4,103 @@
 
 ```bash
 npm run test:browser        # Playwright: Navigation, Fokus, Bedienung, Scroll
-npm run test:visual         # verpflichtend: Geometrie, Überlauf, Modalinteraktion
-npm run test:visual:strict  # optional: Pixelvergleich bei exakt passender Browser-Version
-npm run visual:update       # ausschließlich manuelle Baseline-Freigabe
+npm run test:visual         # frische Aufnahmen, Überlauf, Modalinteraktion
+npm run test:visual:strict  # optionaler Vergleich mit historischen Baselines
+npm run visual:update       # nur lokal, für den optionalen historischen Vergleich
 ```
 
-`test:visual` erzeugt **136 Aufnahmen** (17 Zustände × vier Breiten
+Die visuelle Suite erzeugt 136 Aufnahmen (17 Zustände × vier Breiten
 390/768/1024/1440 px × Hell-/Dunkelmodus) mit festen Testdaten,
-Browserzeit, Locale, Fonts und deaktivierten Animationen. Der Lauf prüft:
+Browserzeit, Locale, Fonts und deaktivierten Animationen. Sie prüft Überlauf,
+Modal-Fokus, Tab-Falle, Escape, verschachtelte Formulare und Hintergrundscroll.
+Die Browser- und Aufnahmetests sind unabhängig von der visuellen Freigabe.
+Aufnahmefehler, horizontaler Überlauf und Interaktionsfehler lassen sich nicht
+mit einer visuellen Freigabe umgehen.
 
-- Positionen und Abmessungen wichtiger UI-Bereiche gegen die freigegebenen
-  Geometrie-Dateien; Abweichungen über 2 px schlagen fehl.
-- Horizontalen Überlauf und Screenshotabmessungen.
-- Modal-Fokus, Tab-Falle, Escape, Wiederherstellung verschachtelter Flight-Formulare,
-  Hintergrundscroll und wiederholtes Öffnen/Schließen.
+## Dynamischer PR-Vergleich
 
-**Verpflichtend für PRs:** funktionale Browserprüfungen und die genannten
-Geometrie-/Interaktionsprüfungen. Sie können einen PR blockieren.
+`Visual Comparison` läuft bei PRs nach `develop` und `main`. Der Workflow
+checkt den exakten Basis-Commit und den von GitHub erzeugten Merge-Kandidaten
+in getrennten Verzeichnissen aus. Beide Versionen erhalten ihre eigenen
+npm-Abhängigkeiten und verwenden denselben, anhand des Kandidaten gepinnten
+Playwright-Chromium auf demselben Runner. Die Testserver benutzen temporäre
+Datenverzeichnisse. Bei Änderungen der Testfixtures sind die fachlichen Zustände
+kompatibel zu halten; bewusst neue oder entfernte Szenarien erscheinen separat.
+Unvereinbare Browser-, Zeit-, Locale- oder Zeitzonen-Einstellungen schlagen fehl.
 
-**Nur Diagnose:** Pixeländerungen an den Bildern. Der bisherige globale
-2-%-Grenzwert ist kein CI-Fehlerkriterium mehr. Ein Farb- oder Iconfehler kann
-unter 2 % liegen, während eine andere Schrift-Engine ohne UI-Fehler deutlich
-mehr Pixel ändern kann. Bei jeder erkannten Pixeländerung werden aktuelle Screenshots und rote
-Differenzbilder als CI-Artefakte gesichert; sämtliche Pixelwerte stehen im
-JSON-Bericht. Auch kleine Icon-Änderungen bleiben so erkennbar.
+Die Auswertung vergleicht die gemessene Geometrie und die gerenderten Pixel
+ohne pauschale Toleranz. Gewollte Verschiebungen oder neue Felder dürfen nach
+Sichtprüfung freigegeben werden. Der Prozentwert ist reine Information und
+kein automatisches Akzeptanzkriterium. Das Artefakt `visual-review-<attempt>`
+enthält einen portablen HTML-Bericht (`index.html`), Vorher-/Nachher-/Diff-PNGs
+für Abweichungen, bei Geometrieänderungen zusätzlich Vorher-/Nachher-Rechtecke
+als JSON sowie die Aufnahmeberichte. Neue bzw. entfernte Szenarien
+haben nur das jeweils vorhandene Bild. Die Vorschau umfasst 1100 px Höhe;
+Safari, Firefox und echte Mobilgeräte benötigen gesonderte Prüfungen.
 
-## Browser und Baselines
+Die lokalen historischen Referenzen sind nicht Bestandteil dieses CI-Vergleichs.
+Für ältere Basisstände mit der bisherigen visuellen Suite wird ausschließlich
+im wegwerfbaren Checkout der lokale Aufnahmemodus verwendet; es werden keine
+Referenzänderungen committed. Fehlt die Suite im Basisstand ganz, scheitert der
+Vergleich ausdrücklich. `visual:update` bleibt außerhalb dieser Übergangslösung
+in CI verboten. `test:visual:strict` benötigt weiterhin identische historische
+Browser-Baselines, ist aber kein Pflichtcheck.
 
-Die CI installiert Chromium über die in `package-lock.json` gepinnte
-`playwright-core`-Version und verwendet genau deren Executable. Die ursprünglichen
-Baselines wurden mit einer anderen Chromium-Version aufgezeichnet. Der
-JSON-Bericht nennt **beide** Versionen und warnt verständlich bei Abweichung.
+## Freigabe im Pull Request
 
-`test:visual:strict` verweigert den Vergleich bei abweichenden Versionen
-*bevor* Einzelbilder geprüft werden. Strikte Pixelprüfungen dürfen erst nach
-bewusster Referenzfreigabe mit passender CI-/Font-Umgebung verbindlich werden.
-Anschließend müssen sie in mehreren unveränderten CI-Läufen reproduzierbar sein.
+Der Controller `Visual Approval Controller` veröffentlicht einen PR-Kommentar
+mit Berichts-ID, Status je Screenshot und Link zum Actions-Lauf. Das ZIP aus
+Artifacts herunterladen, entpacken und `index.html` öffnen. Ohne Abweichungen
+wird `Visual Approval` automatisch erfolgreich.
 
-**Keine automatische Referenzaktualisierung.** `visual:update` ist in CI
-verboten. Bildreferenzen werden nur nach Sichtprüfung mit einem expliziten
-Commit aktualisiert. Nicht einfach Schwellenwerte erhöhen oder Unterschiede
-pauschal maskieren: tatsächliche Fehler an Fokusrahmen, Text und Icons müssen
-im Vergleich erkennbar bleiben.
+Bei gewollten Abweichungen einen normalen PR-Kommentar schreiben (Beispiele
+mit fiktiver Berichts-ID):
 
-Diagnose unter `test-artifacts/designsystem-visual/`:
-`report.json`, `actual/*.png` und `diff/*.png`. Screenshots zeigen nur den
-1100-px-Ausschnitt; längere Seiten sowie Safari, Firefox und echte Mobilgeräte
-benötigen weiterhin gesonderte Prüfungen.
+```text
+/visual-approve 123456789.1 modal-edit__390__dark
+/visual-approve 123456789.1 modal-edit modal-new
+/visual-approve 123456789.1 all
+```
+
+Ein Szenarioname umfasst alle geänderten Breiten und Themes dieses Szenarios.
+`all` gilt nur für den angegebenen Bericht. Unbekannte Selektoren verwerfen
+den gesamten Befehl. Nur Benutzer mit Repository-Schreibrechten können
+freigeben. Die PR-Beschreibung darf weiterhin leer bleiben.
+
+Weitere Commits erfordern einen neuen Vergleich. Bereits freigegebene identische
+Vorher-/Nachher-Pixel und Geometrien werden innerhalb desselben PR wiedererkannt;
+neue oder veränderte Abweichungen bleiben offen. Berichts-ID und Prüfsummen
+verhindern die pauschale Freigabe eines neueren Berichts durch einen alten
+Kommentar. Freigabekommentare und Bot-Berichte bis zum Merge nicht löschen.
+Bearbeitete bzw. gelöschte Freigabekommentare werden bei erneuter Auswertung
+berücksichtigt. Nach Ablauf der Artefakte den Vergleich erneut ausführen.
+
+Ein ausschließlich aus verifizierten, unveränderlichen Release-Metadaten
+bestehender automatischer Versions-PR nach `main` erhält eine automatische
+visuelle Freigabe, sofern der bestehende Release-Verifizierer ihn bestätigt.
+Der Vergleich selbst und alle übrigen Pflichtchecks bleiben erforderlich.
+
+## Einmalige GitHub-Konfiguration
+
+1. Den Workflow zunächst regulär über `develop` nach `main` übernehmen.
+   Der Controller muss im Standardbranch `main` vorhanden sein, weil GitHub
+   `workflow_run` und `issue_comment` von dort ausführt. Die erste Einführung
+   kann deshalb noch nicht durch den neuen Controller bestätigt werden.
+2. Einen Folge-PR öffnen und beide Workflows samt PR-Kommentar und Status prüfen.
+3. Unter **Settings → Rules → Rulesets** (oder Branch protection rules) für
+   `main` und gegebenenfalls `develop` die vorhandenen Prüfungen beibehalten
+   und `Visual Comparison` sowie `Visual Approval` als Required status checks
+   ergänzen. Als Quelle GitHub Actions auswählen, sofern verfügbar. Nicht den
+   Controller-Job `review` als Pflichtcheck auswählen.
+4. **Require branches to be up to date before merging** aktivieren. Wird die
+   Basis nach einer Aufnahme weiterentwickelt, den PR-Branch aktualisieren;
+   dies löst einen neuen Vergleich aus. Ohne diese Einstellung können alte
+   Vergleiche bei einer fortgeschriebenen Basis noch als gültig erscheinen.
+5. Beim automatischen Versions-PR sicherstellen, dass der vorhandene Release-
+   Workflow weiterhin einen echten PR-Lauf auslösen darf. Keine Admin-Bypässe.
+
+Der Controller benutzt ausschließlich den Standardbranch-Code und verarbeitete
+JSON-Daten, keine ausführbaren PR-Artefakte. Der Vergleich läuft ohne
+Schreibrechte und ohne Release-Secrets. Die Freigabe ist kein Sicherheitsnachweis
+gegen vorsätzlich manipulierten PR-Code: Änderungen an Workflows, Testharness
+oder Vergleichslogik müssen weiterhin im Code-Review geprüft werden.
