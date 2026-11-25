@@ -3,6 +3,8 @@ import importlib.util
 import io
 import json
 import unittest
+import urllib.error
+from unittest.mock import Mock, patch
 import zipfile
 from pathlib import Path
 
@@ -80,6 +82,40 @@ class ApprovalTest(unittest.TestCase):
             archive.writestr('../changes.json', '{}')
         with self.assertRaises(ValueError):
             controller.read_artifact(raw.getvalue())
+
+
+class ControllerStatusTest(unittest.TestCase):
+    def test_comment_failure_preserves_correct_status(self):
+        for changes, expected in [([], 'success'),
+                                  ([{'id': FIRST, 'kind': 'changed',
+                                     'digest': 'a' * 64, 'percent': 1}], 'pending')]:
+            for existing in (False, True):
+                with self.subTest(expected=expected, existing=existing):
+                    report = {'pr': 7, 'base': '1' * 40, 'head': '2' * 40,
+                              'merge': '3' * 40, 'total': 1, 'changes': changes}
+                    run = {'id': 1, 'run_attempt': 1, 'html_url': 'https://github.com/run/1'}
+                    api = Mock()
+                    api.pages.return_value = ([dict(bot('1.1', {}), id=9)]
+                                              if existing else [])
+                    pr = {'state': 'open'}
+
+                    def request(endpoint, method='GET', data=None):
+                        if method == 'GET':
+                            return pr
+                        self.assertEqual(method, 'PATCH' if existing else 'POST')
+                        api.status.assert_called_once_with(report['merge'], expected, run)
+                        raise urllib.error.HTTPError(endpoint, 403, 'Forbidden', {}, None)
+
+                    api.request.side_effect = request
+                    with patch.object(controller, 'GitHub', return_value=api), \
+                            patch.object(controller.Path, 'read_text', return_value='{"issue":{"number":7}}'), \
+                            patch.dict(controller.os.environ, {'GITHUB_EVENT_PATH': 'event.json'}), \
+                            patch.object(controller, 'latest_report', return_value=(report, run)), \
+                            patch.object(controller, 'current', return_value=True), \
+                            patch.object(controller, 'verified_release', return_value=False):
+                        with self.assertRaises(urllib.error.HTTPError):
+                            controller.main()
+                    api.status.assert_called_once_with(report['merge'], expected, run)
 
 
 if __name__ == '__main__':

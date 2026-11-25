@@ -179,9 +179,14 @@ class GitHub:
                 return response.read(MAX_DATA + 1)
         payload = None if data is None else json.dumps(data).encode()
         headers['Content-Type'] = 'application/json'
-        with urllib.request.urlopen(urllib.request.Request(
-                url, data=payload, headers=headers, method=method), timeout=30) as response:
-            return json.load(response)
+        try:
+            with urllib.request.urlopen(urllib.request.Request(
+                    url, data=payload, headers=headers, method=method), timeout=30) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as error:
+            detail = error.read(4096).decode('utf-8', errors='replace')
+            print(f'GitHub API {method} {endpoint}: HTTP {error.code}; response={detail!r}')
+            raise
 
     def pages(self, endpoint, key=None):
         result = []
@@ -339,12 +344,7 @@ def main():
     release = verified_release(pr, api.repo)
     approved = approved_fingerprints(comments, api.permitted)
     body = report_body(report, run, approved, release)
-    if existing:
-        if existing['body'] != body:
-            api.request(f"issues/comments/{existing['id']}", 'PATCH', {'body': body})
-    else:
-        api.request(f'issues/{number}/comments', 'POST', {'body': body})
-    # Recheck both the revision and latest run after potentially slow API calls.
+    # Recheck both the revision and latest run before reporting the status.
     fresh = api.request(f'pulls/{number}')
     latest, latest_run = latest_report(api, fresh)
     if latest is None or report_key(latest_run) != key or not current(report, fresh, run):
@@ -352,6 +352,13 @@ def main():
         return
     complete = release or all(c['digest'] in approved for c in report['changes'])
     api.status(report['merge'], 'success' if complete else 'pending', run)
+    # A comment failure must not prevent a valid status from being reported.
+    # Still fail the controller run so permission and publication errors are visible.
+    if existing:
+        if existing['body'] != body:
+            api.request(f"issues/comments/{existing['id']}", 'PATCH', {'body': body})
+    else:
+        api.request(f'issues/{number}/comments', 'POST', {'body': body})
 
 
 if __name__ == '__main__':
