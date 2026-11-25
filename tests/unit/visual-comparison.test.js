@@ -102,7 +102,7 @@ test('small pixel differences are tolerated and remain reviewable', () => {
     assert.equal(ignored[0].kind, 'rendering-noise');
     assert.ok(existsSync(path.join(output, `${id}-diff.png`)));
     for (const positions of [[0, 1, 2], [0, 401, 802],
-      Array.from({length: 16}, (_, i) => i)]) {
+    Array.from({length: 16}, (_, i) => i)]) {
       after.entries.set(id, noisyCapture(positions));
       assert.deepEqual(compareCaptures(before, after, output), []);
     }
