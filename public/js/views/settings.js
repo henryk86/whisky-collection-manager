@@ -1,3 +1,4 @@
+import {actionButton} from '../ui/buttons.js';
 import {headingTitle, pageHeader} from '../ui/headers.js';
 import {addActionLabel} from '../ui/action-icons.js';
 import {escapeHtml} from '../ui/dom.js';
@@ -64,14 +65,21 @@ export function createSettingsView(state, auth = {
       <details class="settings-legacy-import"><summary>${t("settings.imports.legacyJsonImport")}</summary>
       <p class="warning">${t("settings.imports.jsonDoesNotIncludeAttachments")}</p>
       <input type="file" id="import-file" accept="application/json,.json">
-      <button class="btn danger" data-act="import">${t("settings.imports.importJson")}</button></details>
+      ${actionButton({
+      label: t("settings.imports.importJson"),
+      action: 'import',
+      variant: 'destructive',
+    })}</details>
     </div>
 `;
     const distilleries = `    <div class="panel section">
     <div class="distillery-tools">
     <input type="search" class="distillery-search" id="distillery-search" value="${escapeHtml(state.distillerySearch || '')}" placeholder="${t("settings.distilleries.searchPlaceholder")}" aria-label="${t("settings.distilleries.search")}" autocomplete="off">
     <span class="distillery-count" id="distillery-count" role="status" aria-live="polite">${state.collection.distilleries.filter(d => d.name.toLocaleLowerCase('de').includes((state.distillerySearch || '').trim().toLocaleLowerCase('de'))).length} von ${state.collection.distilleries.length}</span>
-    <button class="btn" type="button" data-act="add-distillery">${addActionLabel(t("settings.distilleries.add"))}</button>
+    ${actionButton({
+      trustedContent: addActionLabel(t("settings.distilleries.add")),
+      action: 'add-distillery',
+    })}
     </div>
     <div class="distillery-list" role="list" aria-label="${t("backups.summary.distilleriesLabel")}">${state.collection.distilleries.slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).map(distillery => `<div class="distillery-row" role="listitem" ${distillery.name.toLocaleLowerCase('de').includes((state.distillerySearch || '').trim().toLocaleLowerCase('de')) ? '' : 'hidden'}>
     <strong data-i18n-ignore>${escapeHtml(distillery.name)}</strong>

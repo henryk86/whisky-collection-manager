@@ -1,3 +1,4 @@
+import {actionButton} from '../ui/buttons.js';
 /**
  * A compact, two-mode room transfer dialog. The server owns validation and
  * persistence.
@@ -31,7 +32,10 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode = 'export'
     `<button type="button" class="btn warehouse-transfer-tab${mode ===
       name ? ' active' :
       ''}" role="tab" id="warehouse-transfer-tab-${name}" aria-selected="${mode === name}" aria-controls="warehouse-transfer-panel-${name}" tabindex="${mode === name ? 0 : -1}" data-transfer-tab="${name}" ${name === 'export' && !exportAvailable ? 'disabled' : ''}>${label}</button>`;
-  const actions = `<button type="button" class="btn" data-act="close-modal">${t('common.actions.cancel')}</button>`;
+  const actions = `${actionButton({
+    label: t('common.actions.cancel'),
+    action: 'close-modal',
+  })}`;
   return `<div id="warehouse-room-transfer" class="warehouse-room-transfer">
         <div class="warehouse-transfer-tabs" role="tablist" aria-label="${t('warehouse.transfer.action')}">
             ${tab('export', t('warehouse.transfer.exportAction'))}

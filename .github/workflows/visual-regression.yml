@@ -1,0 +1,105 @@
+name: Visual Comparison
+
+on:
+  pull_request:
+    branches: [develop, main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Visual Comparison
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # Test the actual merge candidate against its exact base, not a moving ref.
+      - uses: actions/checkout@v7
+        with:
+          path: candidate
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          path: baseline
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Install both versions and one Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd baseline && npm ci)
+          cd candidate
+          npm ci
+          npx playwright-core install --with-deps chromium
+          CHROME_PATH="$(node --input-type=module -e 'import { chromium } from "playwright-core"; process.stdout.write(chromium.executablePath())')"
+          test -x "$CHROME_PATH"
+          echo "WCM_VISUAL_BROWSER_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+      - name: Capture base and merge candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/visual/base" "$RUNNER_TEMP/visual/head"
+          (
+            cd baseline
+            if grep -q -- "includes('--capture')" scripts/designsystem-visual.js; then
+              node scripts/designsystem-visual.js --capture
+              cp test-artifacts/designsystem-visual/captures/* "$RUNNER_TEMP/visual/base/"
+            else
+              # One-time compatibility with pre-capture revisions. Only a disposable
+              # checkout is modified; no baselines are committed or uploaded as source.
+              rm -rf tests/visual/baselines
+              env -u CI -u GITHUB_STEP_SUMMARY npm run visual:update
+              cp tests/visual/baselines/*.png tests/visual/baselines/*__*.json "$RUNNER_TEMP/visual/base/"
+            fi
+            cp test-artifacts/designsystem-visual/report.json "$RUNNER_TEMP/visual/base/"
+          )
+          (
+            cd candidate
+            node scripts/designsystem-visual.js --capture
+            cp test-artifacts/designsystem-visual/captures/* "$RUNNER_TEMP/visual/head/"
+            cp test-artifacts/designsystem-visual/report.json "$RUNNER_TEMP/visual/head/"
+          )
+      - name: Compare captures and bind result to PR revision
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          MERGE_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node candidate/scripts/visual-compare.js "$RUNNER_TEMP/visual/base" "$RUNNER_TEMP/visual/head" "$RUNNER_TEMP/visual/report"
+          python3 - <<'PY'
+          import json, os, pathlib
+          report = pathlib.Path(os.environ['RUNNER_TEMP']) / 'visual/report/changes.json'
+          result = json.loads(report.read_text())
+          result.update(pr=int(os.environ['PR_NUMBER']), base=os.environ['BASE_SHA'],
+                        head=os.environ['HEAD_SHA'], merge=os.environ['MERGE_SHA'])
+          report.write_text(json.dumps(result))
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: visual-review-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/visual/report/
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v7
+        if: success()
+        with:
+          name: visual-approval-data-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/visual/report/changes.json
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: visual-capture-failures
+          path: |
+            baseline/test-artifacts/designsystem-visual/
+            candidate/test-artifacts/designsystem-visual/
+          retention-days: 14

@@ -21,11 +21,15 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINES = path.join(ROOT, 'tests/visual/baselines');
 const ARTIFACTS = path.join(ROOT, 'test-artifacts/designsystem-visual');
 const update = process.argv.includes('--update');
+const capture = process.argv.includes('--capture');
+const CAPTURES = path.join(ARTIFACTS, 'captures');
+if (capture && update) throw new Error('Capture cannot update baselines.');
 const pixels = pixelMode(process.argv.slice(2), process.env);
 if (update && process.env
   .CI) throw new Error('CI must never update visual baselines. Review them locally.');
-if (update && pixels ===
-  'strict') throw new Error('Cannot combine baseline update with strict verification.');
+if ((update || capture) && pixels === 'strict') {
+  throw new Error('Capture/update cannot use strict verification.');
+}
 const widths = [390, 768, 1024, 1440];
 const themes = ['light', 'dark'];
 const date = '2026-11-20';
@@ -446,7 +450,11 @@ try {
   mkdirSync(ARTIFACTS, {recursive: true});
   if (update) mkdirSync(BASELINES, {recursive: true});
   await boot();
-  if (!update) {
+  if (capture) {
+    rmSync(CAPTURES, {recursive: true, force: true});
+    mkdirSync(CAPTURES, {recursive: true});
+  }
+  if (!update && !capture) {
     const manifestPath = path.join(BASELINES, 'manifest.json');
     if (!existsSync(manifestPath)) throw new Error('Approved visual manifest is missing. Baselines must be reviewed locally.');
     const baselineBrowser = JSON.parse(readFileSync(manifestPath, 'utf8'))
@@ -516,7 +524,16 @@ try {
           );
           const reference = path.join(BASELINES, `${id}.png`);
           const referenceGeometry = path.join(BASELINES, `${id}.json`);
-          if (update) {
+          if (capture) {
+            writeFileSync(path.join(CAPTURES, `${id}.png`), image);
+            writeFileSync(path.join(CAPTURES, `${id}.json`),
+              JSON.stringify(currentGeometry) + '\n');
+            if (!Number.isFinite(currentGeometry.overflow) ||
+              currentGeometry.overflow > 1) {
+              problems.push(`${id}: horizontal overflow`);
+            }
+            results.push({id, status: 'captured'});
+          } else if (update) {
             writeFileSync(reference, image);
             writeFileSync(
               referenceGeometry,
@@ -579,11 +596,14 @@ try {
   await pause(100);
   rmSync(scratch, {recursive: true, force: true});
   writeFileSync(path.join(ARTIFACTS, 'report.json'), JSON.stringify({
-    mode: update ? 'explicit-baseline-update' : 'geometry-gate',
-    pixelMode: pixels,
+    mode: capture ? 'capture' : update ?
+      'explicit-baseline-update' : 'geometry-gate',
+    pixelMode: capture ? 'not-compared' : pixels,
     browser: browserVersion,
-    baselineBrowser: existsSync(path.join(BASELINES, 'manifest.json')) ?
-      JSON.parse(readFileSync(path.join(BASELINES, 'manifest.json'), 'utf8')).browser : 'unknown',
+    baselineBrowser: capture ? null :
+      existsSync(path.join(BASELINES, 'manifest.json')) ?
+        JSON.parse(readFileSync(path.join(BASELINES, 'manifest.json'),
+          'utf8')).browser : 'unknown',
     snapshotClock,
     timezone: 'Europe/Berlin',
     locale: 'de-DE',
@@ -600,7 +620,7 @@ try {
     results,
   }, null, 2) + '\n');
 }
-if (process.env.GITHUB_STEP_SUMMARY) {
+if (process.env.GITHUB_STEP_SUMMARY && !capture) {
   appendFileSync(process.env.GITHUB_STEP_SUMMARY,
     `## Design-system visual checks\n\n` +
     `- Blocking layout/interaction issues: **${problems.length}**\n` +
@@ -609,9 +629,17 @@ if (process.env.GITHUB_STEP_SUMMARY) {
     'unavailable'}; approved references: ${existsSync(path.join(BASELINES, 'manifest.json')) ? JSON.parse(readFileSync(path.join(BASELINES, 'manifest.json'), 'utf8')).browser : 'missing'}\n` +
     `- Reference images were not modified. See the uploaded visual artifacts for actual images, diffs and report.\n\n`);
 }
-console.log(`Designsystem visual: ${results.length} captures, ${problems.length} blocking issues, ` +
-  `${results.filter(r => r.pixelChanged)
-    .length} pixel differences (${pixels} mode), ` +
-  `${results.filter(r => r.diffSaved)
-    .length} diagnostic diffs saved. Report: test-artifacts/designsystem-visual/report.json`);
+if (capture) {
+  console.log(`Designsystem visual: ${results.length} fresh captures, ` +
+    `${problems.length} blocking issues; no local baseline comparison. ` +
+    'Report: test-artifacts/designsystem-visual/report.json');
+} else {
+  console.log(`Designsystem visual: ${results.length} captures, ` +
+    `${problems.length} blocking issues, ` +
+    `${results.filter(r => r.pixelChanged)
+      .length} pixel differences (${pixels} mode), ` +
+    `${results.filter(r => r.diffSaved)
+      .length} diagnostic diffs saved. ` +
+    'Report: test-artifacts/designsystem-visual/report.json');
+}
 if (problems.length) {for (const problem of problems) console.error(`FAIL ${problem}`); process.exitCode = 1;}

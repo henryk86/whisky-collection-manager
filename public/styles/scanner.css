@@ -5,7 +5,7 @@
   min-height: 180px;
   margin: 10px auto;
   overflow: hidden;
-  background: #091b2a;
+  background: var(--ds-color-scan-reader-background);
   border: 1px solid var(--line);
 }
 
@@ -33,15 +33,15 @@
 }
 
 #scan-error[data-status=success] {
-  border-left-color: #328b55;
+  border-left-color: var(--ds-color-scanner-status-success);
 }
 
 #scan-error[data-status=error] {
-  border-left-color: #bf504b;
+  border-left-color: var(--ds-color-scanner-status-error);
 }
 
 #scan-error[data-status=warning] {
-  border-left-color: #bf8a32;
+  border-left-color: var(--ds-color-scanner-status-warning);
 }
 
 /* Scan modal: static layout spacing; live video remains scanner-specific. */

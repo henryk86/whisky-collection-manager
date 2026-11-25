@@ -1,3 +1,4 @@
+import {actionButton} from '../../ui/buttons.js';
 import {request, clearResourceCache} from '../../api.js';
 import {escapeHtml} from '../../ui/dom.js';
 import {t} from '../../i18n/index.js';
@@ -119,7 +120,11 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
                 <p class="muted auth-note">${tr('passwordHint')}</p>${errorText()}
                 <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">${tr('savePassword')}</button>
                 ${canCancel ?
-          `<button class="btn auth-secondary-action" type="button" data-act="auth-cancel">${tr('cancel')}</button>` : ''}</div></form>`);
+          `${actionButton({
+            label: tr('cancel'),
+            action: 'auth-cancel',
+            className: 'auth-secondary-action',
+          })}` : ''}</div></form>`);
     } else {
       root.innerHTML = panel(tr('loginTitle'),
         `<form id="auth-login-form" class="auth-form auth-form-main">
@@ -136,7 +141,11 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
                 ${errorText()}
                 <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">${tr('signIn')}</button>
                 ${!state.auth?.required ?
-          `<button class="btn auth-secondary-action" type="button" data-act="auth-cancel">${tr('cancel')}</button>` : ''}</div></form>`);
+          `${actionButton({
+            label: tr('cancel'),
+            action: 'auth-cancel',
+            className: 'auth-secondary-action',
+          })}` : ''}</div></form>`);
     }
     applyTheme();
     root.querySelector(mandatory || mode === 'change' ? '#currentPassword' :
@@ -226,8 +235,16 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     showModal(
       tr('loginRequired'),
       `<p>${required ? tr('enableConfirm') : tr('disableConfirm')}</p>
-        <div class="actions ds-modal-footer ds-modal-footer--flush"><button class="btn" type="button" data-act="close-modal">${tr('cancel')}</button>
-        <button type="button" class="btn primary" data-act="auth-confirm-required">${tr('apply')}</button></div>`
+        <div class="actions ds-modal-footer ds-modal-footer--flush">
+        ${actionButton({
+        label: tr('cancel'),
+        action: 'close-modal',
+      })}
+        ${actionButton({
+        label: tr('apply'),
+        action: 'auth-confirm-required',
+        variant: 'primary',
+      })}</div>`
     );
   }
 
@@ -256,7 +273,10 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
         <h3>${tr('loginRequired')}</h3><p class="muted">${tr('loginSettingDescription')}</p>
         <div class="auth-setting-row"><strong>${state.auth.required ?
         tr('enabled') : tr('disabled')}</strong>
-        <button class="btn" type="button" data-act="auth-toggle-required">${state.auth.required ? tr('disable') : tr('enable')}</button></div></div>
+        ${actionButton({
+          label: state.auth.required ? tr('disable') : tr('enable'),
+          action: 'auth-toggle-required',
+        })}</div></div>
         <div class="panel section auth-settings"><h3>${tr('users')}</h3>
         <div class="auth-user-list" role="list">${users.map(user =>
           `<div class="auth-user-row" role="listitem">
@@ -330,7 +350,10 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
         {autocomplete: 'new-password', minLength: 12}
       )}
               <p class="muted">${tr('newUserHint')}</p>
-              <div class="actions"><button class="btn" type="button" data-act="close-modal">${tr('cancel')}</button>
+              <div class="actions">${actionButton({
+        label: tr('cancel'),
+        action: 'close-modal',
+      })}
               <button class="btn primary" type="submit">${tr('apply')}</button></div></form>`);
     } else if (act === 'auth-delete-user') {
       const user = state.authUsers?.find(u => u.id === button.dataset.id);
@@ -339,8 +362,15 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
       showModal(
         tr('deleteUser'),
         `<p>${tr('deleteConfirm')} <strong>${escapeHtml(user.username)}</strong>?</p>
-            <div class="actions"><button class="btn" type="button" data-act="close-modal">${tr('cancel')}</button>
-            <button class="btn danger" type="button" data-act="auth-confirm-delete">${tr('delete')}</button></div>`
+            <div class="actions">${actionButton({
+          label: tr('cancel'),
+          action: 'close-modal',
+        })}
+            ${actionButton({
+          label: tr('delete'),
+          action: 'auth-confirm-delete',
+          variant: 'destructive',
+        })}</div>`
       );
     } else if (act === 'auth-confirm-delete') {
       if (!pendingDelete) return;

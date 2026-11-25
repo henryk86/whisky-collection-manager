@@ -1,3 +1,4 @@
+import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
 import {inventoryScanIcon} from '../../ui/action-icons.js';
@@ -59,7 +60,10 @@ export function createBottleForm({state, selectors}) {
         }
       )}<div class="form-field">
     <span>${t("forms.bottle.autoInventoryNumber")}</span>
-    <button type="button" class="btn" data-act="suggest-bottle">${t("forms.bottle.suggestInventoryNumber")}</button>
+    ${actionButton({
+        label: t("forms.bottle.suggestInventoryNumber"),
+        action: 'suggest-bottle',
+      })}
     </div>${selectInput(
         t("forms.bottle.type"),
         'volumeType',
@@ -134,7 +138,7 @@ export function createBottleForm({state, selectors}) {
     </div>
     <div class="actions ds-modal-footer ds-modal-footer--form">
     <button type="button" class="btn" data-act="scan-into-bottle">${inventoryScanIcon}<span>${t("forms.bottle.scanLabel")}</span></button>
-    <button type="button" class="btn" data-act="close-modal">${t("common.actions.cancel")}</button>
+    ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
     <button class="btn primary" type="submit">${t("common.actions.save")}</button>
     </div>
     </form>`;

@@ -1,3 +1,4 @@
+import {actionButton} from '../ui/buttons.js';
 import {pageHeader} from '../ui/headers.js';
 import {request} from '../api.js';
 import {toast} from '../ui/notifications.js';
@@ -344,8 +345,15 @@ export function createHomeView({
       t('collection.saved.saveTitle'),
       `<div class="collection-save-view-dialog">
             <label>${escapeHtml(t('collection.saved.name'))}<input data-view-name maxlength="80" required autocomplete="off"></label>
-            <div class="actions"><button type="button" class="btn" data-act="close-modal">${t('common.actions.cancel')}</button>
-            <button type="button" class="btn primary" data-act="collection-view-save-confirm">${t('common.actions.save')}</button></div></div>`,
+            <div class="actions">${actionButton({
+        label: t('common.actions.cancel'),
+        action: 'close-modal',
+      })}
+            ${actionButton({
+        label: t('common.actions.save'),
+        action: 'collection-view-save-confirm',
+        variant: 'primary',
+      })}</div></div>`,
       false
     );
   }
@@ -389,8 +397,15 @@ export function createHomeView({
       t('collection.saved.rename'),
       `<div class="collection-save-view-dialog">
             <label>${t('collection.saved.name')}<input data-view-name maxlength="80" required value="${escapeHtml(item.name)}"></label>
-            <div class="actions"><button class="btn" type="button" data-act="close-modal">${t('common.actions.cancel')}</button>
-            <button class="btn primary" type="button" data-act="collection-view-rename-confirm">${t('common.actions.save')}</button></div></div>`,
+            <div class="actions">${actionButton({
+        label: t('common.actions.cancel'),
+        action: 'close-modal',
+      })}
+            ${actionButton({
+        label: t('common.actions.save'),
+        action: 'collection-view-rename-confirm',
+        variant: 'primary',
+      })}</div></div>`,
       false
     );
   }
@@ -520,8 +535,15 @@ export function createHomeView({
         `<div class="collection-flavor-add"><select id="collection-add-flavor-axis" aria-label="${escapeHtml(t('collection.flavor.axis'))}"><option value="" selected disabled>${escapeHtml(t('collection.flavor.selectAxis'))}</option>${available.map(axis => `<option value="${axis}">${escapeHtml(t(`flavor.axis.${axis}`))}</option>`).join('')}</select>
                 <button type="button" class="btn" data-act="collection-flavor-add" disabled>${escapeHtml(t('collection.flavor.add'))}</button></div>` : ''}
         </div>
-        <div class="collection-flavor-actions"><button type="button" class="btn" data-act="collection-flavor-reset">${escapeHtml(t('analytics.filters.reset'))}</button>
-            <button type="button" class="btn primary" data-act="collection-flavor-apply">${escapeHtml(t('collection.flavor.apply'))}</button></div>`;
+        <div class="collection-flavor-actions">${actionButton({
+          label: t('analytics.filters.reset'),
+          action: 'collection-flavor-reset',
+        })}
+            ${actionButton({
+          label: t('collection.flavor.apply'),
+          action: 'collection-flavor-apply',
+          variant: 'primary',
+        })}</div>`;
   }
 
   /**
@@ -942,7 +964,12 @@ export function createHomeView({
             <div class="collection-table-columns-menu" role="group" aria-label="${t('home.table.selectColumns')}">
                 ${TABLE_COLUMNS[mode].map(column =>
         `<label class="collection-table-column-choice"><input type="checkbox" data-collection-column="${column.id}" ${columnSelection[mode].includes(column.id) ? 'checked' : ''}>${escapeHtml(t(column.label))}</label>`).join('')}
-                <button type="button" class="btn small collection-table-columns-reset" data-act="collection-columns-default">${t('home.table.resetColumns')}</button>
+                ${actionButton({
+          label: t('home.table.resetColumns'),
+          action: 'collection-columns-default',
+          size: 'small',
+          className: 'collection-table-columns-reset',
+        })}
             </div>
         </details></div>`;
     // The original description stays verbatim. CSS keeps the whole copy on
@@ -1144,7 +1171,14 @@ export function createHomeView({
                 ${flavorEditorHtml()}
             </div>
         </details>
-        <button type="button" class="btn collection-flavor-mobile-trigger" data-act="collection-flavor-open">${escapeHtml(t('collection.flavor.filter'))}${(state.flavorCriteria || []).length ? ` (${state.flavorCriteria.length})` : ''}${state.profileMissing || state.profilePresent ? ' •' : ''}</button>
+        ${actionButton({
+              label: t('collection.flavor.filter') +
+                ((state.flavorCriteria || []).length ?
+                  ` (${state.flavorCriteria.length})` : '') +
+                (state.profileMissing || state.profilePresent ? ' •' : ''),
+              action: 'collection-flavor-open',
+              className: 'collection-flavor-mobile-trigger',
+            })}
     </div>
     ${active.length ? `<div class="collection-filter-active" aria-label="${t('home.filters.activeFilters')}">${active.map(([key, value, label]) => `<button type="button" class="collection-filter-chip" ${key.startsWith('flavor-axis:') ? `data-reset-collection-flavor-axis="${escapeHtml(key.slice(12))}"` : `data-reset-collection-filter="${key}"`} aria-label="${escapeHtml(t('home.filters.removeFilter', {name: `${label}: ${value}`}))}">${escapeHtml(value)} ${closeIcon}</button>`).join('')}</div>` : ''}
     </div>`;
@@ -1185,7 +1219,11 @@ export function createHomeView({
               .length ? t("home.filters.changeFiltersHint") :
               t("home.empty.getStartedHint"),
           actions: collection.bottlings.length ? '' :
-            `<button class="btn primary" data-act="new">${t("collection.actions.newBottle")}</button>`,
+            `${actionButton({
+              label: t("collection.actions.newBottle"),
+              action: 'new',
+              variant: 'primary',
+            })}`,
         })}${pageData.total ? pagerHtml(pageData, state.pageSize, mode) : ''}`);
 
     // DOM reconciliation preserves form nodes to avoid scroll/focus jumps.

@@ -1,0 +1,41 @@
+/* Bottle domain palette: original colours, independent of UI themes.
+   Shared semantic UI and status colours live in tokens.css instead. */
+:root {
+  --ds-bottle-badge-sample-open-background: #f2cf95;
+  --ds-bottle-badge-sample-open-color: #68461d;
+  --ds-bottle-entry-scanned-bottle-background: #fbf3e4;
+  --ds-bottle-entry-scanned-bottle-box-shadow: rgba(189,152,98,.20);
+  --ds-bottle-white: #fff;
+  --ds-bottle-main-source-color: var(--ds-color-on-interactive);
+  --ds-bottle-cutout-checker-background-color: #f4f4f4;
+  --ds-bottle-cutout-checker-background-image-1: #d7d7d7;
+  --ds-bottle-document-preview-pdf-background: var(--ds-bottle-white);
+  --ds-bottle-photo-add-background: #f5f1e8;
+  --ds-bottle-photo-add-border: #bda981;
+  --ds-bottle-photo-add-color: #806137;
+  --ds-bottle-photo-add-hover-background: #ebe2d0;
+  --ds-bottle-photo-control-shadow: #0003;
+  --ds-bottle-photo-remove-background: #102b40;
+  --ds-bottle-photo-remove-color: var(--ds-bottle-white);
+  --ds-bottle-photo-source-color: var(--ds-color-on-interactive);
+  --ds-bottle-photo-tile-background: #f1ede6;
+  --ds-bottle-whisky-color-choice-is-selected-after-color: #142231;
+  --ds-bottle-whisky-custom-area-background-1: rgba(255,247,239,.80);
+  --ds-bottle-whisky-custom-area-background-2: rgba(26,12,9,.82);
+  --ds-bottle-whisky-custom-area-background-3: #cb7593;
+  --ds-bottle-whisky-custom-area-background-4: #d73745;
+  --ds-bottle-whisky-custom-area-background-5: #d76a33;
+  --ds-bottle-whisky-custom-area-background-6: #e0a12e;
+  --ds-bottle-whisky-custom-area-background-7: #eadc6d;
+  --ds-bottle-whisky-custom-cursor-border: var(--ds-bottle-white);
+  --ds-bottle-whisky-custom-cursor-box-shadow-1: #171717;
+}
+
+:root[data-theme="dark"] {
+  --ds-bottle-badge-sample-open-background: #6a4a2a;
+  --ds-bottle-badge-sample-open-color: #ffe0ab;
+  --ds-bottle-entry-scanned-bottle-background: #3c3529;
+  --ds-bottle-entry-scanned-bottle-box-shadow: rgba(201,164,107,.25);
+  --ds-bottle-bottling-context-background: #172638;
+  --ds-bottle-document-add-background: #1b2c3e;
+}

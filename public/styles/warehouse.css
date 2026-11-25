@@ -166,23 +166,23 @@
 }
 
 .warehouse-drag rect {
-  fill: #b18b57;
-  stroke: #e4ceac;
+  fill: var(--ds-warehouse-drag-rect-fill);
+  stroke: var(--ds-warehouse-drag-rect-stroke);
   stroke-width: 2;
 }
 
 .warehouse-drag:hover rect,
 .warehouse-selected rect,
 .warehouse-drag.warehouse-hovered rect {
-  fill: #d2a86d;
-  stroke: #fff1d7;
+  fill: var(--ds-warehouse-drag-hover-rect-fill);
+  stroke: var(--ds-warehouse-drag-hover-rect-stroke);
   stroke-width: 3;
 }
 
 .warehouse-drag text {
   font-family: var(--sans);
   font-size: 13px;
-  fill: #112439;
+  fill: var(--ds-warehouse-drag-text-fill);
   font-weight: 700;
   pointer-events: none;
 }
@@ -215,13 +215,13 @@
   max-width: 850px;
   margin: 18px 0;
   background: color-mix(in srgb,var(--gold) 8%,var(--paper));
-  border-left: 7px solid #a17d4c;
-  border-right: 7px solid #a17d4c;
+  border-left: 7px solid var(--ds-warehouse-wood);
+  border-right: 7px solid var(--ds-warehouse-wood);
   padding: 0 10px;
 }
 
 .warehouse-shelf {
-  border-bottom: 9px solid #a17d4c;
+  border-bottom: 9px solid var(--ds-warehouse-wood);
   min-height: 122px;
   padding: 10px 6px 2px;
 }
@@ -271,7 +271,7 @@
 
 .warehouse-bottle-symbol .warehouse-label {
   stroke: none;
-  fill: #dfcba9;
+  fill: var(--ds-warehouse-bottle-symbol-warehouse-label-fill);
 }
 
 .warehouse-bottle-photo {
@@ -517,14 +517,14 @@
 /* An elevated shelf remains identifiable on the overhead plan, even when it
    overlaps a cabinet. */
 .warehouse-elevated rect {
-  fill: #6c98a9;
-  stroke: #e4ceac;
+  fill: var(--ds-warehouse-elevated-rect-fill);
+  stroke: var(--ds-warehouse-elevated-rect-stroke);
   stroke-dasharray: 7 3;
 }
 
 .warehouse-elevated:hover rect,
 .warehouse-elevated.warehouse-selected rect {
-  fill: #91baca;
+  fill: var(--ds-warehouse-elevated-hover-rect-fill);
 }
 
 @media (max-width: 740px) {
@@ -678,6 +678,7 @@
 
 .warehouse-bulk-open,
 .warehouse-bulk-pick {
+  border-radius: var(--ds-control-radius);
   display: grid;
   gap: 3px;
   flex: 1 1 0;
@@ -717,6 +718,7 @@
 }
 
 .warehouse-bulk-visibility {
+  border-radius: var(--ds-control-radius);
   flex: 0 0 44px;
   display: flex;
   align-items: center;
@@ -1047,6 +1049,7 @@
 }
 
 .warehouse-plan-tools .warehouse-view-switch {
+  border-radius: var(--ds-control-radius);
   display: inline-flex;
   width: auto;
   align-items: center;
@@ -1097,6 +1100,7 @@
 }
 
 .warehouse-plan-tools .warehouse-plan-filter select {
+  border-radius: var(--ds-control-radius);
   min-height: 32px;
   height: 32px;
   min-width: 80px;
@@ -1675,7 +1679,7 @@
   color: var(--ink);
   background: var(--paper);
   cursor: pointer;
-  box-shadow: 0 1px 3px rgb(0 0 0 / .2);
+  box-shadow: 0 1px 3px var(--ds-warehouse-wall-furniture-edit-box-shadow);
 }
 
 .warehouse-wall-furniture-edit:hover {
@@ -1701,10 +1705,10 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-left: 7px solid #a17d4c;
-  border-right: 7px solid #a17d4c;
+  border-left: 7px solid var(--ds-warehouse-wood);
+  border-right: 7px solid var(--ds-warehouse-wood);
   background: color-mix(in srgb,var(--gold) 5%,var(--paper));
-  box-shadow: inset 0 5px 0 #a17d4c;
+  box-shadow: inset 0 5px 0 var(--ds-warehouse-wood);
 }
 
 .warehouse-wall-clearance {
@@ -1713,7 +1717,7 @@
   min-height: 0;
   box-sizing: border-box;
   background: repeating-linear-gradient(135deg,transparent 0,transparent 9px,color-mix(in srgb,var(--line) 30%,transparent) 9px,color-mix(in srgb,var(--line) 30%,transparent) 10px);
-  box-shadow: inset 0 -5px 0 #a17d4c;
+  box-shadow: inset 0 -5px 0 var(--ds-warehouse-wood);
 }
 
 /* Override the individual-shelf minimum of 122px. The real bay height must
@@ -1728,7 +1732,7 @@
   flex-direction: column;
   padding: 3px 4px 4px;
   border-bottom: 0;
-  box-shadow: inset 0 -5px 0 #a17d4c;
+  box-shadow: inset 0 -5px 0 var(--ds-warehouse-wood);
 }
 
 /* The furniture body paints a 5px rail INSIDE its top edge. The first bay
@@ -1808,12 +1812,12 @@
 }
 
 .warehouse-wall-bay[data-front="glass"] {
-  background: color-mix(in srgb,#80b5cc 15%,var(--paper));
+  background: color-mix(in srgb,var(--ds-warehouse-wall-bay-data-front-glass-background) 15%,var(--paper));
 }
 
 .warehouse-wall-bay[data-front="door"],
 .warehouse-wall-bay[data-front="drawer"] {
-  background: color-mix(in srgb,#a17d4c 15%,var(--paper));
+  background: color-mix(in srgb,var(--ds-warehouse-wood) 15%,var(--paper));
 }
 
 /* Empty, assignable bays use the same small text as non-assignable bays. */
@@ -1851,7 +1855,7 @@
   height: 84px;
   opacity: .9;
   pointer-events: none !important;
-  filter: drop-shadow(0 4px 8px rgb(0 0 0 / .3));
+  filter: drop-shadow(0 4px 8px var(--ds-warehouse-drag-avatar-filter));
 }
 
 .warehouse-is-dragging .warehouse-wall-scroll {
@@ -2075,8 +2079,8 @@
   margin: 14px 0 18px;
   padding: 12px;
   border: 1px solid var(--line);
-  border-top: 5px solid #a17d4c;
-  border-bottom: 7px solid #a17d4c;
+  border-top: 5px solid var(--ds-warehouse-wood);
+  border-bottom: 7px solid var(--ds-warehouse-wood);
   border-radius: 9px;
   background: color-mix(in srgb, var(--gold) 5%, var(--paper));
 }
@@ -2870,8 +2874,8 @@
 .warehouse-find-return-badge {
   padding: 3px 7px;
   border-radius: 4px;
-  color: #fff;
-  background: #092e4d;
+  color: var(--ds-warehouse-find-return-badge-color);
+  background: var(--ds-warehouse-find-return-badge-background);
   font-size: 10px;
   font-weight: 750;
   letter-spacing: .07em;
@@ -2905,9 +2909,9 @@
 
 .warehouse-wall-bay.is-find-focus {
   z-index: 2;
-  box-shadow: inset 0 -5px 0 #a17d4c,
-              0 0 0 3px #f4ce73,
-              0 0 17px 7px rgb(222 153 33 / .78);
+  box-shadow: inset 0 -5px 0 var(--ds-warehouse-wood),
+              0 0 0 3px var(--ds-warehouse-wall-bay-is-find-focus-box-shadow-2),
+              0 0 17px 7px var(--ds-warehouse-wall-bay-is-find-focus-box-shadow-3);
 }
 
 .warehouse-wall-bay.is-find-focus .warehouse-wall-bottle {
@@ -2922,7 +2926,7 @@
 .warehouse-wall-bay.is-find-focus .warehouse-wall-bottle.is-find-focus {
   z-index: 2;
   transform: scale(1.08);
-  filter: drop-shadow(0 0 10px rgb(244 206 115 / .85));
+  filter: drop-shadow(0 0 10px var(--ds-warehouse-wall-bay-is-find-focus-warehouse-wall-bottle-is-find-focus-filter));
 }
 
 .warehouse-wall-bay.is-find-focus .warehouse-wall-bottle.is-find-focus .warehouse-bottle-symbol {
@@ -3000,10 +3004,36 @@
   gap: .5rem;
   margin: .6rem 0;
   padding: .6rem;
-  border: 1px solid var(--border-color,#888);
+  border: 1px solid var(--border-color,var(--ds-warehouse-door-range-border));
   border-radius: .4rem;
 }
 
 .warehouse-door-ranges {
   grid-column: 1/-1;
+}
+
+/* This feature owns its surfaces; only the radius is a shared token. */
+.warehouse-room-card,
+.warehouse-room-summary,
+.warehouse-room-preview,
+.warehouse-map-wrap,
+.warehouse-bottle-list,
+.warehouse-three-viewport,
+.warehouse-bulk-panel,
+.warehouse-bulk-item,
+.warehouse-bulk-field,
+.warehouse-wall-options,
+.warehouse-wall-toggle,
+.warehouse-assignment-target,
+.warehouse-section-boundary,
+.warehouse-wall-scroll,
+.warehouse-room-wall-empty,
+.warehouse-bottle-bulk-tools,
+.warehouse-unassigned-tray,
+.warehouse-unassigned-bottle.warehouse-wall-bottle,
+.warehouse-shelf-detail-bottle,
+.warehouse-transfer-rooms,
+.warehouse-wall-controls,
+.warehouse-bottle-preview-photo {
+  border-radius: var(--ds-surface-radius);
 }

@@ -1,3 +1,4 @@
+import {actionButton} from '../ui/buttons.js';
 import {headingTitle, headerActions, sectionHeader, pageHeader, backNavigation} from '../ui/headers.js';
 import {panel, detailField, detailGrid, emptyState, divider, actionToolbar, documentList, documentItem} from '../ui/content.js';
 import {latestTasting} from '../../../shared/tasting-records.js';
@@ -167,9 +168,29 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
           `<span class="bottle-size">${escapeHtml(entry.volumeMl)} ml</span>` : ''}
                         </div>
                         ${actionToolbar(`
-                            <button class="btn small" data-act="warehouse-assign" data-id="${escapeHtml(entry.id)}">${t('warehouse.bottles.relocate')}</button>
-                            <button class="btn small" data-act="edit-bottle" data-id="${escapeHtml(entry.id)}">${editIcon}<span>${t('common.actions.edit')}</span></button>
-                            <button class="btn small danger" data-act="delete-bottle" data-id="${escapeHtml(entry.id)}">${deleteIcon}<span>${t('common.actions.delete')}</span></button>
+                            ${actionButton({
+            label: t('warehouse.bottles.relocate'),
+            action: 'warehouse-assign',
+            size: 'small',
+            data: {id: entry.id},
+          })}
+                            ${actionButton({
+            label: t('common.actions.edit'),
+            action: 'edit-bottle',
+            size: 'small',
+            data: {id: entry.id},
+            icon: editIcon,
+            wrapLabel: true,
+          })}
+                            ${actionButton({
+            label: t('common.actions.delete'),
+            action: 'delete-bottle',
+            variant: 'destructive',
+            size: 'small',
+            data: {id: entry.id},
+            icon: deleteIcon,
+            wrapLabel: true,
+          })}
                         `, {className: 'bottle-entry-actions'})}
                     </div>
                     ${headingTitle({
@@ -241,7 +262,16 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
     <button type="button" class="inline-link document-preview-link" data-act="preview-file" data-id="${escapeHtml(entry.id)}" data-file-id="${escapeHtml(file.id)}" data-file-name="${escapeHtml(file.name)}" title="${escapeHtml(t('detail.documents.openPreview'))}">${escapeHtml(file.name)}</button>
     <span class="muted document-size">${formatFileSize(file.size)}</span>
     <a class="btn small document-download" href="/api/bottles/${encodeURIComponent(entry.id)}/files/${encodeURIComponent(file.id)}" download="${escapeHtml(file.name)}" aria-label="${escapeHtml(t('detail.documents.downloadNamed', {name: file.name}))}">${arrowDownIcon}<span>${escapeHtml(t('detail.documents.download'))}</span></a>
-    <button class="btn small danger" type="button" data-act="delete-file" data-id="${escapeHtml(entry.id)}" data-file-id="${escapeHtml(file.id)}" aria-label="${t("detail.documents.deleteNamed", {name: escapeHtml(file.name)})}">${deleteIcon}<span>${t("common.actions.delete")}</span></button>
+    ${actionButton({
+              label: t('common.actions.delete'),
+              action: 'delete-file',
+              variant: 'destructive',
+              size: 'small',
+              data: {id: entry.id, 'file-id': file.id},
+              ariaLabel: t('detail.documents.deleteNamed', {name: file.name}),
+              icon: deleteIcon,
+              wrapLabel: true,
+            })}
     `))) : emptyState({description: t("detail.empty.noAttachments")})}
     <label class="document-add">${addActionLabel(t("detail.actions.addAttachments"))}
     <input type="file" accept="${fileAccept}" multiple data-bottle-files="${escapeHtml(entry.id)}">
@@ -254,7 +284,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
       t("detail.navigation.backToCollection"),
       "detail-back"
     )}
-    <div data-region="detail-bottling" class="section" style="margin-top:18px">
+    <div data-region="detail-bottling" class="section detail-bottling-section">
     ${pageHeader({
       title: bottling.name,
       period: false,
@@ -264,9 +294,28 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
       copyClass: '',
       actions: headerActions(
         `${relatedDistilleries.length ?
-          `<button class="btn" type="button" data-act="bottling-map" title="${t("detail.map.showRelatedDistilleries")}">${locationIcon}<span>${relatedDistilleries.length > 1 ? t("detail.sections.mapLocations") : t("detail.actions.showOnMap")}</span></button>` : ''}
-    <button class="btn" data-act="edit-bottling">${editIcon}<span>${t("common.actions.edit")}</span></button>
-    <button class="btn danger" data-act="delete-bottling">${deleteIcon}<span>${t("common.actions.delete")}</span></button>
+          `${actionButton({
+            label: relatedDistilleries.length > 1 ?
+              t('detail.sections.mapLocations') :
+              t('detail.actions.showOnMap'),
+            action: 'bottling-map',
+            title: t('detail.map.showRelatedDistilleries'),
+            icon: locationIcon,
+            wrapLabel: true,
+          })}` : ''}
+    ${actionButton({
+            label: t('common.actions.edit'),
+            action: 'edit-bottling',
+            icon: editIcon,
+            wrapLabel: true,
+          })}
+    ${actionButton({
+            label: t('common.actions.delete'),
+            action: 'delete-bottling',
+            variant: 'destructive',
+            icon: deleteIcon,
+            wrapLabel: true,
+          })}
     `,
         {className: 'detail-head-actions'}
       ),
@@ -306,8 +355,17 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
           copyClass: 'tasting-summary-section-heading',
           actionsClass: 'tasting-summary-heading-actions',
           actions: `${latest ? '' :
-            `<button type="button" class="btn" data-act="tastings-open">${escapeHtml(t('tastings.openAll'))}</button>`}
-                <button type="button" class="btn primary" data-act="tastings-new">${newBottlingIcon}<span>${escapeHtml(t(tastingCount ? 'tastings.add' : 'tastings.first'))}</span></button>`,
+            `${actionButton({
+              label: t('tastings.openAll'),
+              action: 'tastings-open',
+            })}`}
+                ${actionButton({
+              label: t(tastingCount ? 'tastings.add' : 'tastings.first'),
+              action: 'tastings-new',
+              variant: 'primary',
+              icon: newBottlingIcon,
+              wrapLabel: true,
+            })}`,
         })}
         ${latest ? panel({
           className: 'tasting-summary-card', content: `
@@ -330,7 +388,11 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
                     </div>
                     <span class="muted tasting-summary-meta">${escapeHtml(formatDate(latest.tastedOn))} · ${escapeHtml(t('tastings.count', {count: tastingCount}))}</span>
                     <div class="actions tasting-summary-actions">
-                        <button type="button" class="btn" data-act="tastings-open" data-tasting-id="${escapeHtml(latest.id)}">${escapeHtml(t('tastings.openOne'))}</button>
+                        ${actionButton({
+                label: t('tastings.openOne'),
+                action: 'tastings-open',
+                data: {'tasting-id': latest.id},
+              })}
                     </div>
                 </div>
                 ${tastingRadar ?
@@ -355,9 +417,14 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
                     {count: physicalBottles.length}
                   ),
                   actionsBare: true,
-                  actions: `<button class="btn primary" data-act="add-bottle">${newBottlingIcon}<span>${escapeHtml(t('detail.actions.addAnotherBottle').replace(/^\+\s*/,
-                    ''
-                  ))}</span></button>`,
+                  actions: `${actionButton({
+                    label: t('detail.actions.addAnotherBottle')
+                      .replace(/^\+\s*/, ''),
+                    action: 'add-bottle',
+                    variant: 'primary',
+                    icon: newBottlingIcon,
+                    wrapLabel: true,
+                  })}`,
                 })}
     <div class="bottle-entry-list">${list ||
       `<div class="panel"><p class="muted">${t("detail.empty.noPhysicalBottles")}</p></div>`}</div>

@@ -2,10 +2,11 @@
    These are NOT resets: specialist views retain approved padding, columns and
    surfaces. The collection/Abfuellungsdetails are the visual reference. */
 .panel {
+  border-radius: var(--ds-surface-radius);
   background: var(--ds-color-surface);
   border: 1px solid var(--ds-color-border);
   padding: var(--ds-panel-padding);
-  box-shadow: 0 8px 24px #0f2e4410;
+  box-shadow: 0 8px 24px var(--ds-color-panel-box-shadow);
 }
 
 /* Analytics panels keep their own distinct, existing 22px geometry. */
@@ -97,8 +98,8 @@
   text-align: center;
   padding: 75px 25px;
   background: var(--ds-color-surface);
-  border: 1px dashed #c9c0af;
-  color: #7b817f;
+  border: 1px dashed var(--ds-color-empty-state-border);
+  color: var(--ds-color-empty-state-text);
 }
 
 .empty-state strong {

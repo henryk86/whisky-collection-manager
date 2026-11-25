@@ -21,7 +21,7 @@
 }
 
 .distillery-option:hover {
-  background: #f0ebdf;
+  background: var(--ds-color-distillery-option-hover-background);
 }
 
 .distillery-option[hidden] {
@@ -49,14 +49,9 @@
    rows. */
 /* Match the status badge's borderless appearance in both themes. */
 .badge.sample {
-  background: #f1dfb4;
-  color: #5e431c;
+  background: var(--ds-color-badge-sample-background);
+  color: var(--ds-color-badge-sample-text);
   border: 0;
-}
-
-:root[data-theme="dark"] .badge.sample {
-  background: #4b3a25;
-  color: #f0d9a6;
 }
 
 /* On a physical bottle, status and sample badges are inline siblings. */
@@ -118,7 +113,7 @@
 .collection-mode-button.active {
   background: var(--navy-deep);
   border-color: var(--navy-deep);
-  color: #fff;
+  color: var(--ds-color-collection-mode-active-text);
 }
 
 .collection-mode-button:focus-visible,

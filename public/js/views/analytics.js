@@ -1,3 +1,4 @@
+import {actionButton} from '../ui/buttons.js';
 import {headingTitle, pageHeader} from '../ui/headers.js';
 import {t, currentLanguage} from '../i18n/index.js';
 /**
@@ -1022,7 +1023,11 @@ function filterControls(state, options) {
     ],
     filters.status || 'all'
   )}
-        <button class="btn small" type="button" data-act="analytics-reset">${t("analytics.filters.reset")}</button></div>`;
+        ${actionButton({
+    label: t("analytics.filters.reset"),
+    action: 'analytics-reset',
+    size: 'small',
+  })}</div>`;
 }
 
 /**
