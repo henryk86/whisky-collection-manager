@@ -5,6 +5,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import urllib.error
 import urllib.request
 import urllib.parse
@@ -292,9 +293,10 @@ def verified_release(pr, repo):
 
 
 def mark_pending(api, source):
-    """Invalidate an earlier successful status when a comparison is rerun."""
+    """Invalidate approval while the latest comparison is running or unsuccessful."""
     run = api.request(f"actions/runs/{source['id']}")
-    if (run['status'] == 'completed' or run['run_attempt'] != source['run_attempt']
+    if ((run['status'] == 'completed' and run['conclusion'] == 'success')
+            or run['run_attempt'] != source['run_attempt']
             or not run.get('head_repository')):
         return
     associated = run.get('pull_requests') or []
@@ -313,17 +315,24 @@ def mark_pending(api, source):
         latest = candidate_runs(api, pr)
         if latest and report_key(latest[0]) == report_key(run):
             live = api.request(f"actions/runs/{run['id']}")
-            if live['status'] != 'completed' and report_key(live) == report_key(run):
+            if (report_key(live) == report_key(run) and
+                    (live['status'] != 'completed' or live['conclusion'] != 'success')):
                 api.status(pr['merge_commit_sha'], 'pending', run)
 
 
-def main():
+def main(invalidate=False):
     api = GitHub()
     event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text())
+    if invalidate:
+        source = event['workflow_run']
+        if source['event'] == 'pull_request':
+            mark_pending(api, source)
+        return
     if 'workflow_run' in event:
         source = event['workflow_run']
-        if event['action'] == 'in_progress':
-            mark_pending(api, source)
+        if (source['event'] != 'pull_request' or event['action'] != 'completed' or
+                source['status'] != 'completed' or source['conclusion'] != 'success'):
+            print('Visual comparison not successfully completed; no approval issued')
             return
         report = api.artifact(source)
         if report is None:
@@ -362,4 +371,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(invalidate=sys.argv[1:] == ['--invalidate'])

@@ -53,6 +53,12 @@ mit Berichts-ID, Status je Screenshot und Link zum Actions-Lauf. Das ZIP aus
 Artifacts herunterladen, entpacken und `index.html` öffnen. Ohne Abweichungen
 wird `Visual Approval` automatisch erfolgreich.
 
+Die Freigabeauswertung startet erst nach einem erfolgreichen, abgeschlossenen
+`Visual Comparison`. Der separate Workflow `Visual Comparison Status` setzt
+eine alte Freigabe bei einem laufenden oder fehlgeschlagenen Vergleich zurück.
+Freigabekommentare während eines laufenden Vergleichs können keine Freigabe
+erteilen; der erfolgreiche Abschluss wertet die Kommentare erneut aus.
+
 Bei gewollten Abweichungen einen normalen PR-Kommentar schreiben (Beispiele
 mit fiktiver Berichts-ID):
 
@@ -83,10 +89,10 @@ Der Vergleich selbst und alle übrigen Pflichtchecks bleiben erforderlich.
 ## Einmalige GitHub-Konfiguration
 
 1. Den Workflow zunächst regulär über `develop` nach `main` übernehmen.
-   Der Controller muss im Standardbranch `main` vorhanden sein, weil GitHub
+   Beide Controller-Workflows müssen im Standardbranch `main` vorhanden sein, weil GitHub
    `workflow_run` und `issue_comment` von dort ausführt. Die erste Einführung
    kann deshalb noch nicht durch den neuen Controller bestätigt werden.
-2. Einen Folge-PR öffnen und beide Workflows samt PR-Kommentar und Status prüfen.
+2. Einen Folge-PR öffnen und die Workflows samt PR-Kommentar und Status prüfen.
 3. Unter **Settings → Rules → Rulesets** (oder Branch protection rules) für
    `main` und gegebenenfalls `develop` die vorhandenen Prüfungen beibehalten
    und `Visual Comparison` sowie `Visual Approval` als Required status checks

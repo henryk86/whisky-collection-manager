@@ -85,6 +85,41 @@ class ApprovalTest(unittest.TestCase):
 
 
 class ControllerStatusTest(unittest.TestCase):
+    def test_workflow_review_requires_successful_completion(self):
+        for action, status, conclusion in [('in_progress', 'in_progress', None),
+                                           ('completed', 'completed', 'failure'),
+                                           ('completed', 'completed', 'cancelled')]:
+            with self.subTest(action=action, conclusion=conclusion):
+                api = Mock()
+                event = {'action': action, 'workflow_run': {'event': 'pull_request',
+                         'status': status, 'conclusion': conclusion}}
+                with patch.object(controller, 'GitHub', return_value=api),                         patch.object(controller.Path, 'read_text', return_value=json.dumps(event)),                         patch.dict(controller.os.environ, {'GITHUB_EVENT_PATH': 'event.json'}):
+                    controller.main()
+                api.artifact.assert_not_called()
+                api.status.assert_not_called()
+
+    def test_latest_comparison_blocks_comment_approval(self):
+        api = Mock()
+        for status, conclusion in [('queued', None), ('in_progress', None),
+                                   ('completed', 'failure'), ('completed', 'cancelled')]:
+            with self.subTest(status=status, conclusion=conclusion):
+                with patch.object(controller, 'candidate_runs', return_value=[
+                        {'status': status, 'conclusion': conclusion}]):
+                    self.assertEqual(controller.latest_report(api, {}), (None, None))
+        api.artifact.assert_not_called()
+
+    def test_failed_latest_comparison_invalidates_previous_approval(self):
+        api = Mock()
+        run = {'id': 1, 'run_attempt': 2, 'status': 'completed', 'conclusion': 'failure',
+               'head_repository': {'id': 1}, 'head_branch': 'feature', 'head_sha': 'a' * 40,
+               'pull_requests': [{'number': 7}]}
+        pr = {'state': 'open', 'base': {'ref': 'main'}, 'merge_commit_sha': 'b' * 40,
+              'head': {'repo': {'id': 1}, 'ref': 'feature', 'sha': 'a' * 40}}
+        api.request.side_effect = [run, pr, run]
+        with patch.object(controller, 'candidate_runs', return_value=[run]):
+            controller.mark_pending(api, run)
+        api.status.assert_called_once_with(pr['merge_commit_sha'], 'pending', run)
+
     def test_comment_failure_preserves_correct_status(self):
         for changes, expected in [([], 'success'),
                                   ([{'id': FIRST, 'kind': 'changed',
