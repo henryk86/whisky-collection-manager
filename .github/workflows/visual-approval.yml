@@ -3,14 +3,14 @@ name: Visual Approval Controller
 on:
   workflow_run:
     workflows: [Visual Comparison]
-    types: [in_progress, completed]
+    types: [completed]
   issue_comment:
     types: [created, edited, deleted]
 
 permissions:
   contents: read
   actions: read
-  pull-requests: read
+  pull-requests: write
   issues: write
   statuses: write
 
@@ -22,8 +22,7 @@ jobs:
     if: >-
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.event == 'pull_request' &&
-       (github.event.action == 'in_progress' ||
-        github.event.workflow_run.conclusion == 'success')) ||
+       github.event.workflow_run.conclusion == 'success') ||
       (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
        (github.event.action != 'created' ||
         startsWith(github.event.comment.body, '/visual-approve')))

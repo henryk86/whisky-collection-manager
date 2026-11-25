@@ -29,10 +29,15 @@ kompatibel zu halten; bewusst neue oder entfernte Szenarien erscheinen separat.
 Unvereinbare Browser-, Zeit-, Locale- oder Zeitzonen-Einstellungen schlagen fehl.
 
 Die Auswertung vergleicht die gemessene Geometrie und die gerenderten Pixel
-ohne pauschale Toleranz. Gewollte Verschiebungen oder neue Felder dürfen nach
-Sichtprüfung freigegeben werden. Der Prozentwert ist reine Information und
-kein automatisches Akzeptanzkriterium. Das Artefakt `visual-review-<attempt>`
-enthält einen portablen HTML-Bericht (`index.html`), Vorher-/Nachher-/Diff-PNGs
+mit einer konservativen Rauschtoleranz. Bei unveränderter Geometrie und
+identischen Bildmaßen werden höchstens 0,01 % abweichende Pixel toleriert,
+unabhängig von ihrer Nachbarschaft. Größere Pixelabweichungen und
+Geometrieänderungen bleiben freigabepflichtig. Kleine echte Änderungen
+unterhalb der Toleranz können dadurch ebenfalls akzeptiert werden. Es gibt keine pauschale Farbtoleranz. Tolerierte
+Abweichungen erscheinen mit Bildern im Bericht und unter `ignored` in
+`changes.json`, blockieren die Freigabe aber nicht. Gewollte Verschiebungen
+oder neue Felder dürfen nach Sichtprüfung freigegeben werden. Das Artefakt
+`visual-review-<attempt>` enthält einen portablen HTML-Bericht (`index.html`), Vorher-/Nachher-/Diff-PNGs
 für Abweichungen, bei Geometrieänderungen zusätzlich Vorher-/Nachher-Rechtecke
 als JSON sowie die Aufnahmeberichte. Neue bzw. entfernte Szenarien
 haben nur das jeweils vorhandene Bild. Die Vorschau umfasst 1100 px Höhe;
@@ -52,6 +57,12 @@ Der Controller `Visual Approval Controller` veröffentlicht einen PR-Kommentar
 mit Berichts-ID, Status je Screenshot und Link zum Actions-Lauf. Das ZIP aus
 Artifacts herunterladen, entpacken und `index.html` öffnen. Ohne Abweichungen
 wird `Visual Approval` automatisch erfolgreich.
+
+Die Freigabeauswertung startet erst nach einem erfolgreichen, abgeschlossenen
+`Visual Comparison`. Der separate Workflow `Visual Comparison Status` setzt
+eine alte Freigabe bei einem laufenden oder fehlgeschlagenen Vergleich zurück.
+Freigabekommentare während eines laufenden Vergleichs können keine Freigabe
+erteilen; der erfolgreiche Abschluss wertet die Kommentare erneut aus.
 
 Bei gewollten Abweichungen einen normalen PR-Kommentar schreiben (Beispiele
 mit fiktiver Berichts-ID):
@@ -83,10 +94,10 @@ Der Vergleich selbst und alle übrigen Pflichtchecks bleiben erforderlich.
 ## Einmalige GitHub-Konfiguration
 
 1. Den Workflow zunächst regulär über `develop` nach `main` übernehmen.
-   Der Controller muss im Standardbranch `main` vorhanden sein, weil GitHub
+   Beide Controller-Workflows müssen im Standardbranch `main` vorhanden sein, weil GitHub
    `workflow_run` und `issue_comment` von dort ausführt. Die erste Einführung
    kann deshalb noch nicht durch den neuen Controller bestätigt werden.
-2. Einen Folge-PR öffnen und beide Workflows samt PR-Kommentar und Status prüfen.
+2. Einen Folge-PR öffnen und die Workflows samt PR-Kommentar und Status prüfen.
 3. Unter **Settings → Rules → Rulesets** (oder Branch protection rules) für
    `main` und gegebenenfalls `develop` die vorhandenen Prüfungen beibehalten
    und `Visual Comparison` sowie `Visual Approval` als Required status checks

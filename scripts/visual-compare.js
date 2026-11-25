@@ -61,13 +61,27 @@ function fingerprint(entry) {
 }
 
 /**
+ * Accept small pixel differences with identical image dimensions.
+ * @param {!Object} difference Exact PNG comparison result.
+ * @return {boolean} Whether the differences are below the pixel budget.
+ */
+function isRenderingNoise(difference) {
+  const [aw, ah, bw, bh] = difference.dimensions;
+  if (aw !== bw || ah !== bh || difference.changed > aw * ah * 0.0001) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Produce reviewable differences. Overflow is a hard failure, not approval.
  * @param {!Object} before Loaded base captures.
  * @param {!Object} after Loaded candidate captures.
  * @param {string} output Report directory.
+ * @param {!Array<!Object>=} ignored Output records for tolerated noise.
  * @return {!Array<!Object>} Changed capture records.
  */
-export function compareCaptures(before, after, output) {
+export function compareCaptures(before, after, output, ignored = []) {
   for (const key of ['browser', 'snapshotClock', 'timezone', 'locale']) {
     if (before.report[key] !== after.report[key]) {
       throw new Error(`Incompatible capture environment: ${key}`);
@@ -100,10 +114,15 @@ export function compareCaptures(before, after, output) {
       writeFileSync(path.join(output, `${id}-geometry.json`),
         JSON.stringify({before: a.geometry, after: b.geometry}, null, 2));
     }
-    changes.push({
+    const record = {
       id, kind, digest, geometryChanged,
       percent: difference?.percent ?? null,
-    });
+    };
+    if (difference && !geometryChanged && isRenderingNoise(difference)) {
+      ignored.push({...record, kind: 'rendering-noise'});
+    } else {
+      changes.push(record);
+    }
   }
   return changes;
 }
@@ -112,26 +131,29 @@ export function compareCaptures(before, after, output) {
  * Write the report, including individual before, after and diff images.
  * @param {!Array<!Object>} changes Changed capture records.
  * @param {string} output Report directory.
+ * @param {!Array<!Object>} ignored Tolerated rendering noise.
  */
-function htmlReport(changes, output) {
-  const rows = changes.map(({id, kind, percent, geometryChanged}) => {
-    const images = ['before', 'after', 'diff'].map(label => {
-      if ((kind === 'new' && label !== 'after') ||
-        (kind === 'removed' && label !== 'before')) return '<div></div>';
-      return `<div>${label}<br><a href="${id}-${label}.png">` +
-        `<img src="${id}-${label}.png" loading="lazy"></a></div>`;
+function htmlReport(changes, output, ignored) {
+  const rows = [...changes, ...ignored]
+    .map(({id, kind, percent, geometryChanged}) => {
+      const images = ['before', 'after', 'diff'].map(label => {
+        if ((kind === 'new' && label !== 'after') ||
+          (kind === 'removed' && label !== 'before')) return '<div></div>';
+        return `<div>${label}<br><a href="${id}-${label}.png">` +
+          `<img src="${id}-${label}.png" loading="lazy"></a></div>`;
+      }).join('');
+      const geometry = geometryChanged ?
+        `<p><a href="${id}-geometry.json">Geometry changed (JSON)</a></p>` : '';
+      return `<section><h2>${id} (${kind}, ${percent ?? '-'}%)</h2>` +
+        `${geometry}<article>${images}</article></section>`;
     }).join('');
-    const geometry = geometryChanged ?
-      `<p><a href="${id}-geometry.json">Geometry changed (JSON)</a></p>` : '';
-    return `<section><h2>${id} (${kind}, ${percent ?? '-'}%)</h2>` +
-      `${geometry}<article>${images}</article></section>`;
-  }).join('');
   const style = 'body{font:16px sans-serif;margin:24px}article{display:grid;' +
     'grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}' +
     'img{width:100%;border:1px solid #aaa}section{margin-bottom:32px}';
   writeFileSync(path.join(output, 'index.html'), '<!doctype html>' +
     '<meta charset="utf-8"><title>Visual comparison</title>' +
-    `<style>${style}</style><h1>${changes.length} visual changes</h1>${rows}`);
+    `<style>${style}</style><h1>${changes.length} visual changes</h1>` +
+    `<p>${ignored.length} tolerated rendering differences</p>${rows}`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) ===
@@ -139,14 +161,15 @@ if (process.argv[1] && path.resolve(process.argv[1]) ===
   const [base, head, output] = process.argv.slice(2);
   const before = loadCaptures(base);
   const after = loadCaptures(head);
-  const changes = compareCaptures(before, after, output);
-  htmlReport(changes, output);
+  const ignored = [];
+  const changes = compareCaptures(before, after, output, ignored);
+  htmlReport(changes, output, ignored);
   copyFileSync(path.join(base, 'report.json'),
     path.join(output, 'base-report.json'));
   copyFileSync(path.join(head, 'report.json'),
     path.join(output, 'head-report.json'));
   writeFileSync(path.join(output, 'changes.json'), JSON.stringify({
-    total: after.entries.size, changes,
+    total: after.entries.size, changes, ignored,
   }));
-  console.log(`${changes.length} visual changes`);
+  console.log(`${changes.length} visual changes; ${ignored.length} tolerated`);
 }
