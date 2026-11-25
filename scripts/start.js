@@ -34,7 +34,8 @@ function readJson(file) {
  */
 export function needsNpmCi(root, {production = false} = {}) {
   const wanted = readJson(path.join(root, 'package-lock.json'));
-  const installed = readJson(path.join(root, 'node_modules', '.package-lock.json'));
+  const installed = readJson(path.join(root, 'node_modules',
+    '.package-lock.json'));
   if (!wanted?.packages || !installed?.packages) return true;
   for (const [name, entry] of Object.entries(wanted.packages)) {
     if (!name.startsWith('node_modules/') || (production &&
@@ -56,7 +57,8 @@ function readEnvFile(root) {
   const file = path.join(root, '.env');
   if (!fs.existsSync(file)) return result;
   for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
-    const match = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
+    const match = line.match(
+      /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
     if (!match) continue;
     let value = match[2].trim();
     if ((value.startsWith('"') && value.endsWith('"')) ||
@@ -144,7 +146,8 @@ function defaultExecute(command, args, {root, env}) {
     }
   );
   if (result.error) throw result.error;
-  if (result.status !== 0) throw new Error(`${path.basename(command)} ${args.join(' ')} failed (${result.status ?? result.signal}).`);
+  if (result.status !== 0) throw new Error(`${path.basename(command)} ${args
+    .join(' ')} failed (${result.status ?? result.signal}).`);
 }
 
 /**
@@ -153,9 +156,11 @@ function defaultExecute(command, args, {root, env}) {
  *
  * @param {!Object=} options Optional configuration for the operation.
  */
-export function prepareStartup({root = ROOT, env = process.env, execute = defaultExecute} = {}) {
+export function prepareStartup({root = ROOT, env = process.env,
+  execute = defaultExecute} = {}) {
   const production = env.NODE_ENV === 'production';
-  const offline = fs.existsSync(path.join(root, '.offline')); // Fail closed if an offline bundle is incomplete.
+  const offline = fs.existsSync(path.join(root,
+    '.offline')); // Fail closed if an offline bundle is incomplete.
   if (offline) verifyOfflineBundle(root);
   if (needsNpmCi(root, {production})) {
     console.log('[Start] Installing missing/stale npm dependencies...');
@@ -182,7 +187,9 @@ export function prepareStartup({root = ROOT, env = process.env, execute = defaul
       if (offlineCache) fs.rmSync(offlineCache, {recursive: true, force: true});
     }
     if (needsNpmCi(root, {production})) {
-      throw new Error('npm ci did not install all dependencies. Check package-lock.json and node_modules.');
+      throw new Error(
+        'npm ci did not install all dependencies. Check package-lock.json \
+and node_modules.');
     }
   }
 
@@ -203,13 +210,17 @@ export function prepareStartup({root = ROOT, env = process.env, execute = defaul
   }
   const tls = localTlsStatus(root, env);
   if (tls === 'custom-missing') {
-    throw new Error('Configured HTTPS certificate/key missing. Supply the configured files or update HTTPS_CERT_FILE and HTTPS_KEY_FILE.');
+    throw new Error(
+      'Configured HTTPS certificate/key missing. Supply the configured \
+files or update HTTPS_CERT_FILE and HTTPS_KEY_FILE.');
   }
   if (tls === 'missing') {
     console.log('[Start] Creating initial local HTTPS certificate...');
     execute(process.execPath, ['scripts/setup-https.js'], {root, env});
     if (localTlsStatus(root, env) !== 'ready') {
-      throw new Error('HTTPS setup did not create usable certificate and key files. Install mkcert or OpenSSL, then rerun npm start.');
+      throw new Error(
+        'HTTPS setup did not create usable certificate and key files. \
+Install mkcert or OpenSSL, then rerun npm start.');
     }
   }
 }
@@ -231,7 +242,10 @@ export function launchServer({root = ROOT, env = process.env} = {}) {
   }
   server.on(
     'error',
-    error => {console.error(`[Start] Server failed: ${error.message}`); process.exitCode = 1;}
+    error => {
+      console.error(`[Start] Server failed: ${error.message}`);
+      process.exitCode = 1;
+    }
   );
   server.on(
     'exit',

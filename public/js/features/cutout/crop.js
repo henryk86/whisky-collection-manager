@@ -107,7 +107,8 @@ function silhouetteAngle(labels, id, maskWidth, maskHeight, scaleX, scaleY) {
  *     Isolated mask, crop rectangle in photo pixels, and rotation in radians.
  * @throws {Error} If the mask is invalid or no bottle component is found.
  */
-export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight) {
+export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
+  sourceHeight) {
   validateMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight);
   const labels = new Int32Array(mask.length);
   const queue = new Int32Array(mask.length);
@@ -266,8 +267,10 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth, sour
  * @param {number} sourceHeight Height of the source image in pixels.
  * @return {!Object} Structured result for the caller.
  */
-export function bottleCropRect(mask, maskWidth, maskHeight, sourceWidth, sourceHeight) {
-  return analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight).crop;
+export function bottleCropRect(mask, maskWidth, maskHeight, sourceWidth,
+  sourceHeight) {
+  return analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
+    sourceHeight).crop;
 }
 
 /**
@@ -298,7 +301,8 @@ export function cutoutOutputSize(crop, maxSide) {
  * @param {number=} minAlpha Minimum alpha value considered visible.
  * @return {?Object} Calculated numeric result.
  */
-export function visibleAlphaRows(rgba, width, height, minAlpha = FEATHER_ALPHA) {
+export function visibleAlphaRows(rgba, width, height, minAlpha = FEATHER_ALPHA
+) {
   if (!rgba || rgba.length !== width * height *
     4) throw new Error(t('errors.images.invalidData'));
   let first = height, last = -1;

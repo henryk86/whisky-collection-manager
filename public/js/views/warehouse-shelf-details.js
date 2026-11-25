@@ -1,7 +1,10 @@
 /** Shelf details show all rows of bottles, not just the front-facing row. */
 import {t, formatNumber} from '../i18n/index.js';
 import {actionToolbar} from '../ui/content.js';
-import {bottleSymbol, bottleLabel, bottleListFacts, bottleActionButtons, safe} from './warehouse-presentation.js';
+import {
+  bottleSymbol, bottleLabel, bottleListFacts, bottleActionButtons,
+  safe
+} from './warehouse-presentation.js';
 
 const STATUS_KEYS = {
   closed: 'home.status.closed',
@@ -46,10 +49,15 @@ export function shelfContents(warehouse, shelfId, bottlings = []) {
               [t('forms.bottle.statusLabel'), statusKey ? t(statusKey) : null],
             ].filter(([, value]) => value != null && value !== '')
               .map(([label, value]) =>
-                `<span class="warehouse-bottle-fact"><span class="warehouse-bottle-fact-label">${safe(label)}:</span> ${safe(value)}</span>`).join('');
-            return `<article class="warehouse-shelf-detail-bottle" data-bottle-id="${safe(b.id)}">
+                `<span class="warehouse-bottle-fact"><span \
+class="warehouse-bottle-fact-label">${safe(label)}:</span> ${safe(value)}</s\
+pan>`).join('');
+            return `<article class="warehouse-shelf-detail-bottle" \
+data-bottle-id="${safe(b.id)}">
                 ${bottleSymbol(b, {placeholderImage: true, staticImage: true})}
-                <div class="warehouse-shelf-detail-info"><strong>${safe(b.name)}</strong><div class="warehouse-bottle-facts">${facts}${bottleListFacts(b)}</div></div>
+                <div class="warehouse-shelf-detail-info"><strong>${safe(b.name
+            )}</strong><div class="warehouse-bottle-facts">${facts}${
+bottleListFacts(b)}</div></div>
                 ${actionToolbar(
               bottleActionButtons(b),
               {className: 'warehouse-shelf-detail-actions'}
@@ -60,7 +68,9 @@ export function shelfContents(warehouse, shelfId, bottlings = []) {
         return {
           title: `${room.name} / ${furniture.name} / ${shelf.name}`,
           count: bottles.length,
-          html: `<div class="warehouse-shelf-details"><p>${t('warehouse.shelves.bottleCount', {count: bottles.length})}</p>${body}</div>`,
+          html: `<div class="warehouse-shelf-details"><p>${t(
+            'warehouse.shelves.bottleCount', {count: bottles.length}
+          )}</p>${body}</div>`,
         };
       }
   return null;

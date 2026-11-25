@@ -5,7 +5,8 @@ import {createAnalyticsView} from '../../public/js/views/analytics.js';
 import {shelfContents} from '../../public/js/views/warehouse-shelf-details.js';
 
 test(
-  'M5: collection summary cards use the shared panel renderer without nesting panels',
+  'M5: collection summary cards use the shared panel renderer without \
+nesting panels',
   () => {
     const previous = {
       document: globalThis.document,
@@ -95,14 +96,16 @@ test(
       );
     } finally {
       for (const [name, value] of Object.entries(previous)) {
-        if (value === undefined) delete globalThis[name]; else globalThis[name] = value;
+        if (value === undefined) delete globalThis[name]; else globalThis[
+          name] = value;
       }
     }
   }
 );
 
 test(
-  'M5: analytics KPIs use the same panel contract but keep chart-specific styles separate',
+  'M5: analytics KPIs use the same panel contract but keep chart-specific \
+styles separate',
   () => {
     let html = '';
     const state = {
@@ -128,7 +131,8 @@ test(
 );
 
 test(
-  'M5: warehouse shelf actions share the toolbar renderer and keep bottle event bindings',
+  'M5: warehouse shelf actions share the toolbar renderer and keep bottle \
+event bindings',
   () => {
     const room = {
       id: 'r1',
@@ -153,7 +157,10 @@ test(
     )?.html || '';
     assert.match(
       html,
-      /class="actions warehouse-shelf-detail-actions" data-ds-action-toolbar="inline"/
+      new RegExp(
+        'class="actions warehouse-shelf-detail-acti' +
+        'ons" data-ds-action-toolbar="inline"'
+      )
     );
     assert.match(html, /data-act="warehouse-assign" data-id="p1"/);
     assert.match(html, /href="\/\?bottling=b1"/);

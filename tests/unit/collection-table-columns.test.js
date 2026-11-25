@@ -4,7 +4,8 @@ import {
   TABLE_COLUMNS, DEFAULT_TABLE_COLUMNS, TABLE_COLUMNS_STORAGE_KEY,
   loadTableColumns, saveTableColumns, normalizeTableColumns, sortForColumn,
 } from '../../public/js/domain/collection-table-columns.js';
-import {collectionOverviewEntries} from '../../public/js/domain/collection-overview.js';
+import {collectionOverviewEntries}
+  from '../../public/js/domain/collection-overview.js';
 import {createHomeView} from '../../public/js/views/home.js';
 
 /**
@@ -156,9 +157,11 @@ test(
 );
 
 test(
-  'every available column has two sort directions and toggles deterministically',
+  'every available column has two sort directions and toggles \
+deterministically',
   () => {
-    for (const mode of ['bottles', 'bottlings']) for (const column of TABLE_COLUMNS[mode]) {
+    for (const mode of ['bottles', 'bottlings']) for (
+      const column of TABLE_COLUMNS[mode]) {
       assert.ok(
         column.asc && column.desc && column.asc !== column.desc,
         `${mode}/${column.id}`
@@ -181,7 +184,8 @@ test('switching from last tasted to name starts A-Z, then flips to Z-A', () => {
 });
 
 test(
-  'header sorts cover inventory, status, amount, stock, ABV, age, year and completion',
+  'header sorts cover inventory, status, amount, stock, ABV, age, year and \
+completion',
   () => {
     /**
      * Derives the entries result from the supplied values.
@@ -236,7 +240,8 @@ test(
 );
 
 test(
-  'table columns can be enabled and removed and header sorting synchronizes the dropdown',
+  'table columns can be enabled and removed and header sorting synchronizes \
+the dropdown',
   () => {
     const original = {
       document: globalThis.document,
@@ -338,8 +343,14 @@ test(
       currentPicker.onToggle();
       view();
       assert.doesNotMatch(html, /class="collection-table-columns" open/,
-        'the manually closed column picker remains closed on a subsequent render');
-      view.handleClick({dataset: {act: 'collection-sort-column', column: 'age'}});
+        'the manually closed column picker remains closed on a subsequent \
+render');
+      view.handleClick({
+        dataset: {
+          act: 'collection-sort-column',
+          column: 'age',
+        },
+      });
       assert.doesNotMatch(html, /class="collection-table-columns" open/,
         'sorting a header closes the picker after editing columns');
       assert.equal(state.sort, 'age');
@@ -348,17 +359,32 @@ test(
         extractHeader(html),
         /aria-sort="descending"[^>]*>\s*<button[^>]*data-column="age"/
       );
-      view.handleClick({dataset: {act: 'collection-sort-column', column: 'age'}});
+      view.handleClick({
+        dataset: {
+          act: 'collection-sort-column',
+          column: 'age',
+        },
+      });
       assert.equal(state.sort, 'ageAsc');
       assert.match(html, /<option value="ageAsc" selected>/);
       state.overviewMode = 'bottles';
       view();
       assert.match(extractHeader(html), /data-column="inventory"/);
       assert.match(extractHeader(html), /data-column="rating"/);
-      view.handleClick({dataset: {act: 'collection-sort-column', column: 'inventory'}});
+      view.handleClick({
+        dataset: {
+          act: 'collection-sort-column',
+          column: 'inventory',
+        },
+      });
       assert.equal(state.sort, 'inventoryAsc');
       assert.match(html, /<option value="inventoryAsc" selected>/);
-      view.handleClick({dataset: {act: 'collection-sort-column', column: 'inventory'}});
+      view.handleClick({
+        dataset: {
+          act: 'collection-sort-column',
+          column: 'inventory',
+        },
+      });
       assert.equal(state.sort, 'inventoryDesc');
       view.handleClick({dataset: {act: 'collection-columns-default'}});
       assert.deepEqual(

@@ -1,9 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {WAREHOUSE_CAMERAS, furnitureFootprint, cameraDirection, cameraForFurniture, warehouse3DGeometry, shelfIdAtHeight} from '../../public/js/domain/warehouse-3d-model.js';
+import {
+  WAREHOUSE_CAMERAS, furnitureFootprint, cameraDirection,
+  cameraForFurniture, warehouse3DGeometry, shelfIdAtHeight
+}
+  from '../../public/js/domain/warehouse-3d-model.js';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
-import {warehouseCameraHalfHeight} from '../../public/js/ui/warehouse-three-scene.js';
+import {warehouseCameraHalfHeight}
+  from '../../public/js/ui/warehouse-three-scene.js';
 
 const room = {
   id: 'room', name: 'Zimmer', width: 5, height: 4, furniture: [
@@ -48,7 +53,12 @@ const room = {
     },
   ],
 };
-const warehouse = {rooms: [room], bottles: [{id: 'b1'}], assignments: {b1: 's2'}};
+const warehouse = {
+  rooms: [room], bottles: [{id: 'b1'}], assignments: {
+    b1:
+      's2',
+  },
+};
 /**
  * Derives the model result from the supplied values.
  * @return {*} Result computed from the supplied inputs.
@@ -63,7 +73,8 @@ test(
       ['nw', 'ne', 'se', 'sw']
     );
     for (const [id] of WAREHOUSE_CAMERAS) {
-      const [x, z] = cameraDirection(id); assert.equal(Math.abs(x), 1); assert.equal(Math.abs(z), 1);
+      const [x, z] = cameraDirection(id); assert.equal(Math.abs(x), 1);
+      assert.equal(Math.abs(z), 1);
     }
     assert.equal(cameraForFurniture(room.furniture[0], 'sw'), 'sw');
     assert.equal(cameraForFurniture(room.furniture[2], 'se'), 'nw');
@@ -75,7 +86,8 @@ test(
 );
 
 test(
-  'open rack is built from solid shelf boards and four actual posts, not projected polygons',
+  'open rack is built from solid shelf boards and four actual posts, not \
+projected polygons',
   () => {
     const rack = model().objects.find(o => o.id === 'rack');
     assert.equal(rack.parts.filter(p => p.role === 'post').length, 4);
@@ -111,7 +123,8 @@ test(
 );
 
 test(
-  'physical compartments follow stored shelves; occupied ones contain bottle models',
+  'physical compartments follow stored shelves; occupied ones contain \
+bottle models',
   () => {
     const rack = model().objects.find(o => o.id === 'rack');
     assert.equal(rack.shelfCount, 2);
@@ -195,7 +208,8 @@ test(
       });
       view.render(); assert.match(html, /class="warehouse-floor"/);
       state.warehousePlanMode =
-        '3d'; view.render(); assert.match(html, /class="warehouse-three-viewport"/);
+        '3d'; view.render(); assert.match(html,
+          /class="warehouse-three-viewport"/);
       assert.doesNotMatch(html, /class="warehouse-isometric"/);
       assert.equal(
         (html.match(/data-act="warehouse-camera"/g) || []).length,
@@ -224,7 +238,8 @@ test(
 );
 
 test(
-  'Three.js is served locally from a fixed allowlist and is not loaded from CDN',
+  'Three.js is served locally from a fixed allowlist and is not loaded from \
+CDN',
   () => {
     const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
     assert.equal(pkg.dependencies.three, '0.187.0');
@@ -232,7 +247,8 @@ test(
 );
 
 test(
-  'cabinet doors, showcase glass and drawers follow the physical front at 0, 90, 180 and 270 degrees',
+  'cabinet doors, showcase glass and drawers follow the physical front at 0,\
+ 90, 180 and 270 degrees',
   () => {
     const original = room.furniture[0];
     const normals = [[0, 1], [-1, 0], [0, -1], [1, 0]];
@@ -260,7 +276,8 @@ test(
           assert.ok(
             Math.abs(dx * nx + dz * nz - (item.depth / 2 +
               front.size[rotation % 180 ? 0 : 2] / 2)) < 1e-7,
-            `${type} ${rotation}°: front must point in the direction of its door/glass`
+            `${type} ${rotation}°: front must point in the direction of its \
+door/glass`
           );
           if (rotation % 180 === 0) assert.ok(
             front.size[0] > front.size[2],
@@ -277,7 +294,8 @@ test(
 );
 
 test(
-  'warehouse multi-edit selection panel and optional properties are wired for the current room',
+  'warehouse multi-edit selection panel and optional properties are wired \
+for the current room',
   () => {
     let html = ''; let form = ''; const state = {
       warehouse,
@@ -392,7 +410,8 @@ test(
 );
 
 test(
-  'rotated rack side and back panels follow the local axes and remain separately optional',
+  'rotated rack side and back panels follow the local axes and remain \
+separately optional',
   () => {
     for (const rotation of [0, 90, 180, 270]) {
       const base = {
@@ -409,7 +428,8 @@ test(
         Math.round(Math.cos(rotation * Math.PI / 180)),
         Math.round(Math.sin(rotation * Math.PI / 180)),
       ];
-      const parts = warehouse3DGeometry({...room, furniture: [base]}, warehouse).objects[0].parts;
+      const parts = warehouse3DGeometry({...room, furniture: [base]},
+        warehouse).objects[0].parts;
       const left = parts.find(p => p.role === 'left-side-panel');
       const back = parts.find(p => p.role === 'back-panel');
       assert.ok(left && back);
@@ -432,7 +452,8 @@ test(
 
 
 test(
-  'room plan furniture selection highlights layout without opening shelf details or scrolling',
+  'room plan furniture selection highlights layout without opening shelf \
+details or scrolling',
   () => {
     const originalDocument = globalThis.document, originalWindow =
       globalThis.window;
@@ -527,7 +548,8 @@ test(
 
 
 test(
-  'room plans default to 3D while a deliberate 2D selection keeps the floor plan',
+  'room plans default to 3D while a deliberate 2D selection keeps the floor \
+plan',
   () => {
     let html = '';
     const original = globalThis.document;
@@ -585,7 +607,10 @@ test(
       );
       assert.match(
         html,
-        /aria-pressed="true" title="Schrank ausblenden" aria-label="Schrank ausblenden"/
+        new RegExp(
+          'aria-pressed="true" title="Schrank ausblen' +
+          'den" aria-label="Schrank ausblenden"'
+        )
       );
       const selectedId = state.warehouseFurnitureId;
       assert.equal(view.toggleFurnitureVisibility('cabinet'), false);
@@ -598,7 +623,10 @@ test(
       view.render();
       assert.match(
         html,
-        /aria-pressed="false" title="Schrank einblenden" aria-label="Schrank einblenden"/
+        new RegExp(
+          'aria-pressed="false" title="Schrank einble' +
+          'nden" aria-label="Schrank einblenden"'
+        )
       );
       assert.match(html, /aria-pressed="true" title="Regal ausblenden"/);
       assert.equal(view.toggleFurnitureVisibility('wall'), false);
@@ -621,7 +649,8 @@ test(
 );
 
 test(
-  '3D furniture controls share a compact workspace with the room and provide one show-all action',
+  '3D furniture controls share a compact workspace with the room and \
+provide one show-all action',
   () => {
     let html = '';
     const original = globalThis.document;
@@ -678,7 +707,10 @@ test(
       );
       assert.match(
         html,
-        /class="btn small warehouse-show-all" data-act="warehouse-show-all" >Alle einblenden/
+        new RegExp(
+          'class="btn small warehouse-show-all" data-' +
+          'act="warehouse-show-all" >Alle einblenden'
+        )
       );
       assert.ok(html.indexOf('warehouse-plan-stage') <
         html.indexOf('warehouse-bulk-panel--sidebar'));
@@ -693,7 +725,11 @@ test(
       view.render();
       assert.match(
         html,
-        /class="btn small warehouse-show-all" data-act="warehouse-show-all" disabled>Alle einblenden/
+        new RegExp(
+          'class="btn small warehouse-show-all" data-' +
+          'act="warehouse-show-all" disabled>Alle ein' +
+          'blenden'
+        )
       );
       state.warehousePlanMode = '2d'; view.render();
       assert.doesNotMatch(html, /warehouse-plan-workspace|warehouse-show-all/);
@@ -706,7 +742,8 @@ test(
 );
 
 test(
-  'show all only restores furniture of the selected room and syncs all eye buttons',
+  'show all only restores furniture of the selected room and syncs all eye \
+buttons',
   () => {
     const original = globalThis.document;
     const changes = [];
@@ -1023,16 +1060,19 @@ test(
 
 
 test(
-  '3D room uses almost the available viewport at default 100% zoom without clipping',
+  '3D room uses almost the available viewport at default 100% zoom without \
+clipping',
   () => {
     // These projected dimensions cover both landscape and portrait plan stages.
-    for (const [width, height, aspect] of [[7, 4, 1.7], [4, 7, 0.7], [2.4, 1.7, 1.5], [10, 5, 2.2]]) {
+    for (const [width, height, aspect] of [[7, 4, 1.7], [4, 7, 0.7], [2.4, 1.7,
+      1.5], [10, 5, 2.2]]) {
       const halfH = warehouseCameraHalfHeight(width, height, aspect);
       const fillX = width / (2 * halfH * aspect);
       const fillY = height / (2 * halfH);
       const dominant = Math.max(fillX, fillY);
       assert.ok(dominant >= 0.85 && dominant < 1,
-        `Room should occupy most of frame but remain inside it: ${width}x${height}, aspect ${aspect}, fill ${dominant}`);
+        `Room should occupy most of frame but remain inside it: ${width}x${
+height}, aspect ${aspect}, fill ${dominant}`);
     }
     const before = 7 / (2 * (Math.max(4, 7 / 1.7) * 0.62 + 0.15) * 1.7);
     const after = 7 / (2 * warehouseCameraHalfHeight(7, 4, 1.7) * 1.7);
@@ -1071,7 +1111,10 @@ test(
       null,
       'unused clearance above explicit heights is not a shelf'
     );
-    const blocked = {...rack, shelves: [{id: 'blocked', capacity: 0}, {id: 'usable'}]};
+    const blocked = {
+      ...rack, shelves: [{id: 'blocked', capacity: 0},
+      {id: 'usable'}],
+    };
     assert.equal(
       shelfIdAtHeight(blocked, 2),
       null,
@@ -1082,7 +1125,8 @@ test(
 );
 
 test(
-  '3D room-plan double-click opens only occupied shelf contents in place, never furniture editing',
+  '3D room-plan double-click opens only occupied shelf contents in place, \
+never furniture editing',
   () => {
     const room = {
       id: 'room', name: 'Raum', furniture: [{

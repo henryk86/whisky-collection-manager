@@ -14,7 +14,8 @@ export function pixelMode(args = [], env = {}) {
   const requested = args.includes('--strict-pixels') ? 'strict' :
     (env.WCM_VISUAL_PIXEL_MODE || 'diagnostic');
   if (!['diagnostic', 'strict'].includes(requested)) {
-    throw new Error(`Invalid pixel mode "${requested}"; use diagnostic or strict.`);
+    throw new Error(
+      `Invalid pixel mode "${requested}"; use diagnostic or strict.`);
   }
   return requested;
 }
@@ -30,11 +31,15 @@ export function pixelMode(args = [], env = {}) {
  */
 export function browserWarning(browser, baselineBrowser, mode) {
   if (browser && baselineBrowser && browser === baselineBrowser) return null;
-  const message = `Visual baseline browser mismatch: reference=${baselineBrowser || 'unknown'}, ` +
+  const message =
+    `Visual baseline browser mismatch: reference=${baselineBrowser ||
+    'unknown'}, ` +
     `runner=${browser ||
     'unknown'}. Browser/font rasterization may change screenshots. ` +
-    'Use the pinned CI Chromium and approve new baselines manually before enabling strict pixels.';
-  if (mode === 'strict') throw new Error(`${message} Strict pixel verification was not started.`);
+    'Use the pinned CI Chromium and approve new baselines manually before \
+enabling strict pixels.';
+  if (mode === 'strict') throw new Error(
+    `${message} Strict pixel verification was not started.`);
   return message;
 }
 
@@ -51,7 +56,8 @@ export function compareGeometry(before, after) {
   if (!Number.isFinite(after.overflow) || after.overflow > 1) {
     mismatches.push(`horizontal overflow ${after.overflow}px`);
   }
-  for (const key of ['main', 'header', 'heading', 'panel', 'grid', 'field', 'dialog', 'footer']) {
+  for (const key of ['main', 'header', 'heading', 'panel', 'grid', 'field',
+    'dialog', 'footer']) {
     const a = before[key];
     const b = after[key];
     if (Boolean(a) !== Boolean(b)) {

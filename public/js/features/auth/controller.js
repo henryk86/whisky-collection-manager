@@ -12,7 +12,8 @@ import {eyeIcon, eyeOffIcon} from '../../ui/action-icons.js';
  * @param {!Object} options Optional configuration for the operation.
  * @return {!Object} Structured result for the caller.
  */
-export function createAuthController({root, state, render, refresh, applyTheme, showModal, closeModal}) {
+export function createAuthController({root, state, render, refresh, applyTheme,
+  showModal, closeModal}) {
   let mode = 'login';
   let pendingDelete = null;
   let pendingRequired = null;
@@ -32,7 +33,11 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
    * @return {string} Resulting text.
    */
   const passwordToggle = (id, hidden = true) =>
-    `<button class="auth-password-toggle" type="button" data-act="auth-toggle-password" data-target="${id}" aria-controls="${id}" aria-label="${escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" title="${escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" aria-pressed="${hidden ? 'false' : 'true'}">${hidden ? eyeIcon : eyeOffIcon}</button>`;
+    `<button class="auth-password-toggle" type="button" data-act="auth-toggl\
+e-password" data-target="${id}" aria-controls="${id}" aria-label="${
+escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" title="${
+escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" aria-pressed="${
+hidden ? 'false' : 'true'}">${hidden ? eyeIcon : eyeOffIcon}</button>`;
 
   /**
    * Produces the field text used by the caller.
@@ -50,8 +55,14 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     const isPassword = type === 'password';
     return `<label class="form-field${isPassword ? ' auth-password-field' :
       ''}" for="${id}">${label}${isPassword
-        ? `<div class="auth-password-input"><input id="${id}" name="${id}" type="password" autocomplete="${autocomplete}"${minLength ? ` minlength="${minLength}"` : ''}${value ? ` value="${escapeHtml(value)}"` : ''} required>${passwordToggle(id)}</div>`
-        : `<input id="${id}" name="${id}" type="${type}" autocomplete="${autocomplete}"${minLength ? ` minlength="${minLength}"` : ''}${value ? ` value="${escapeHtml(value)}"` : ''} required>`}</label>`;
+        ? `<div class="auth-password-input"><input id="${id}" name="${id}" \
+type="password" autocomplete="${autocomplete}"${minLength ? ` \
+minlength="${minLength}"` : ''}${value ? ` value="${escapeHtml(value)}"` :
+          ''} required>${passwordToggle(id)}</div>`
+        : `<input id="${id}" name="${id}" type="${type}" \
+autocomplete="${autocomplete}"${minLength ? ` minlength="${minLength}"` :
+          ''}${value ? ` value="${escapeHtml(value)}"` :
+            ''} required>`}</label>`;
   };
 
   /**
@@ -59,10 +70,13 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
    * @return {string} Resulting text.
    */
   const brand = () => `<div class="auth-brand">
-      <img class="auth-brand-logo" src="/assets/logo.svg" width="112" height="112" alt="">
+      <img class="auth-brand-logo" src="/assets/logo.svg" width="112" \
+height="112" alt="">
       <div class="auth-brand-copy">
         <span class="brand-overline">${t('ui.branding.privateReserve')}</span>
-        <p class="auth-brand-title">${t('ui.branding.whiskyLabel')} <em>${t('ui.branding.collectionLabel')}</em> <span>${t('ui.branding.managerLabel')}</span></p>
+        <p class="auth-brand-title">${t('ui.branding.whiskyLabel')} <em>${t(
+    'ui.branding.collectionLabel')}</em> <span>${t(
+      'ui.branding.managerLabel')}</span></p>
       </div>
     </div>`;
 
@@ -74,7 +88,8 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
    * @return {string} Resulting text.
    */
   const panel = (title, body) =>
-    `<div class="auth-page"><section class="panel auth-card">${brand()}<h1>${title}</h1>${body}</section></div>`;
+    `<div class="auth-page"><section class="panel auth-card">${brand(
+    )}<h1>${title}</h1>${body}</section></div>`;
 
   /**
    * Derives the error text result from the supplied values.
@@ -89,7 +104,8 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
    * @return {string} Resulting text.
    */
   const errorMarkup = text =>
-    `<span class="auth-error-icon" aria-hidden="true">!</span><span>${escapeHtml(text)}</span>`;
+    `<span class="auth-error-icon" aria-hidden="true">!</span><span>\
+${escapeHtml(text)}</span>`;
 
   /**
    * Renders the controller state.
@@ -117,8 +133,11 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
           tr('confirmPassword'),
           {autocomplete: 'new-password', minLength: 12}
         )}
-                <p class="muted auth-note">${tr('passwordHint')}</p>${errorText()}
-                <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">${tr('savePassword')}</button>
+                <p class="muted auth-note">${tr('passwordHint'
+        )}</p>${errorText()}
+                <div class="actions auth-actions auth-actions--stacked">\
+<button class="btn primary auth-submit" type="submit">${tr('savePassword')}<\
+/button>
                 ${canCancel ?
           `${actionButton({
             label: tr('cancel'),
@@ -139,7 +158,8 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
           {autocomplete: 'current-password'}
         )}
                 ${errorText()}
-                <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">${tr('signIn')}</button>
+                <div class="actions auth-actions auth-actions--stacked">\
+<button class="btn primary auth-submit" type="submit">${tr('signIn')}</button>
                 ${!state.auth?.required ?
           `${actionButton({
             label: tr('cancel'),
@@ -270,7 +290,8 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     if (!state.auth?.canManageUsers) return '';
     const users = state.authUsers || [];
     return `<div class="panel section auth-settings">
-        <h3>${tr('loginRequired')}</h3><p class="muted">${tr('loginSettingDescription')}</p>
+        <h3>${tr('loginRequired')}</h3><p class="muted">${tr(
+      'loginSettingDescription')}</p>
         <div class="auth-setting-row"><strong>${state.auth.required ?
         tr('enabled') : tr('disabled')}</strong>
         ${actionButton({
@@ -280,10 +301,18 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
         <div class="panel section auth-settings"><h3>${tr('users')}</h3>
         <div class="auth-user-list" role="list">${users.map(user =>
           `<div class="auth-user-row" role="listitem">
-            <div><strong>${escapeHtml(user.username)}</strong><span class="muted">${user.role === 'admin' ? tr('administrator') : tr('standardUser')}${user.mustChangePassword ? ' · ' + tr('changePending') : ''}</span></div>
+            <div><strong>${escapeHtml(user.username
+          )}</strong><span class="muted">${user.role === 'admin' ?
+            tr('administrator') : tr('standardUser')}${user
+              .mustChangePassword ? ' · ' + tr('changePending') :
+              ''}</span></div>
             ${user.id !== state.auth.user.id ?
-            `<div class="actions"><button type="button" class="btn small" data-act="auth-reset-user" data-id="${escapeHtml(user.id)}">${tr('resetPassword')}</button>
-            <button type="button" class="btn small danger" data-act="auth-delete-user" data-id="${escapeHtml(user.id)}">${tr('delete')}</button></div>` : ''}
+            `<div class="actions"><button type="button" class="btn small" \
+data-act="auth-reset-user" data-id="${escapeHtml(user.id)}">${tr('resetPassw\
+ord')}</button>
+            <button type="button" class="btn small danger" \
+data-act="auth-delete-user" data-id="${escapeHtml(user.id)}">${tr('delete')
+            }</button></div>` : ''}
         </div>`).join('')}</div>
         <h3 class="auth-subtitle">${tr('createUser')}</h3>
         <form id="auth-create-form" class="auth-form auth-create-form">
@@ -297,7 +326,9 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
               tr('temporaryPassword'),
               {autocomplete: 'new-password', minLength: 12}
             )}
-        <p class="muted">${tr('newUserHint')}</p><button class="btn primary" type="submit">${tr('createUser')}</button></form>
+        <p class="muted">${tr('newUserHint'
+            )}</p><button class="btn primary" type="submit">${tr('createUser'
+            )}</button></form>
         </div>`;
   }
 
@@ -343,7 +374,8 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
       const user = state.authUsers?.find(u => u.id === button.dataset.id);
       if (!user) return;
       showModal(tr('resetPassword'), `<p>${escapeHtml(user.username)}</p>
-              <form id="auth-reset-form" class="auth-form" data-user-id="${escapeHtml(user.id)}">
+              <form id="auth-reset-form" class="auth-form" \
+data-user-id="${escapeHtml(user.id)}">
               ${field(
         'password',
         tr('temporaryPassword'),
@@ -354,14 +386,16 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
         label: tr('cancel'),
         action: 'close-modal',
       })}
-              <button class="btn primary" type="submit">${tr('apply')}</button></div></form>`);
+              <button class="btn primary" type="submit">${tr('apply'
+      )}</button></div></form>`);
     } else if (act === 'auth-delete-user') {
       const user = state.authUsers?.find(u => u.id === button.dataset.id);
       if (!user) return;
       pendingDelete = user.id;
       showModal(
         tr('deleteUser'),
-        `<p>${tr('deleteConfirm')} <strong>${escapeHtml(user.username)}</strong>?</p>
+        `<p>${tr('deleteConfirm')} <strong>${escapeHtml(user.username
+        )}</strong>?</p>
             <div class="actions">${actionButton({
           label: tr('cancel'),
           action: 'close-modal',

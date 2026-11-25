@@ -1,4 +1,5 @@
-/** A virtual staging shelf: only the current page is rendered, regardless of inventory size.
+/** A virtual staging shelf: only the current page is rendered, regardless of
+ * inventory size.
  * It is not persisted as furniture, and never creates a fictitious shelf ID.
  */
 export const UNASSIGNED_WALL_PAGE_SIZE = 24;

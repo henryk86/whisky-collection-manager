@@ -20,11 +20,13 @@ const valid = {
 };
 
 test(
-  'one standalone tasting is one record; it does not create an inventory or subject object',
+  'one standalone tasting is one record; it does not create an inventory or \
+subject object',
   async () => {
     const server = await startTestServer();
     try {
-      const owned = (await api(server.base, '/api/bottlings', 'POST', {name: 'Owned Whisky'})).data.bottling;
+      const owned = (await api(server.base, '/api/bottlings', 'POST',
+        {name: 'Owned Whisky'})).data.bottling;
       const ownedEndpoint = `/api/bottlings/${owned.id}/tastings`;
       assert.equal(
         (await api(
@@ -35,7 +37,8 @@ test(
         )).status,
         201
       );
-      const first = await api(server.base, '/api/external-tastings', 'POST', valid);
+      const first = await api(server.base, '/api/external-tastings', 'POST',
+        valid);
       assert.equal(first.status, 201);
       assert.equal(first.data.bottling.name, 'Tasted elsewhere');
       assert.equal(first.data.bottling.abv, 48.5);
@@ -114,7 +117,8 @@ test(
         404
       );
       assert.equal(
-        (await api(server.base, `/api/external-tastings/${firstId}`, 'DELETE')).status,
+        (await api(server.base, `/api/external-tastings/${firstId}`,
+          'DELETE')).status,
         200
       );
       data = (await api(server.base, '/api/collection')).data;
@@ -130,11 +134,13 @@ test(
 );
 
 test(
-  'custom warm HEX values persist on owned and external tastings; untypical colours are rejected',
+  'custom warm HEX values persist on owned and external tastings; untypical \
+colours are rejected',
   async () => {
     const server = await startTestServer();
     try {
-      const owned = (await api(server.base, '/api/bottlings', 'POST', {name: 'Colour test'})).data.bottling;
+      const owned = (await api(server.base, '/api/bottlings', 'POST',
+        {name: 'Colour test'})).data.bottling;
       const tasting = (await api(
         server.base,
         `/api/bottlings/${owned.id}/tastings`,
@@ -164,7 +170,8 @@ test(
           400
         );
       assert.equal(
-        (await api(server.base, `/api/bottlings/${owned.id}/tastings/${id}`)).data.whiskyColor,
+        (await api(server.base, `/api/bottlings/${owned.id}/tastings/${id}`))
+          .data.whiskyColor,
         'custom:#f4b3c1'
       );
       const external = (await api(
@@ -189,7 +196,8 @@ test(
 );
 
 test(
-  'standalone URL is a single editor, not a second bottling or tasting overview',
+  'standalone URL is a single editor, not a second bottling or tasting \
+overview',
   () => {
     assert.equal(normalizeTastingSubject({name: 'W'}).ageYears, null);
     assert.throws(() => normalizeTastingSubject({name: 'Z', bottles: []}));
@@ -212,12 +220,15 @@ test(
 );
 
 test(
-  'standalone tasting can be assigned once to an existing owned bottling with no lost fields or duplicate',
+  'standalone tasting can be assigned once to an existing owned bottling \
+with no lost fields or duplicate',
   async () => {
     const server = await startTestServer();
     try {
-      const owned = (await api(server.base, '/api/bottlings', 'POST', {name: 'Purchased later'})).data.bottling;
-      const second = (await api(server.base, '/api/bottlings', 'POST', {name: 'Other owned'})).data.bottling;
+      const owned = (await api(server.base, '/api/bottlings', 'POST',
+        {name: 'Purchased later'})).data.bottling;
+      const second = (await api(server.base, '/api/bottlings', 'POST',
+        {name: 'Other owned'})).data.bottling;
       const tasting = {
         bottling: {name: 'Sample before purchase', abv: 55},
         tastedOn: '2026-10-10',
@@ -239,13 +250,15 @@ test(
       };
       // Old 8-axis profiles remain accepted, with new aroma dimensions
       // unassessed.
-      const created = await api(server.base, '/api/external-tastings', 'POST', tasting);
+      const created = await api(server.base, '/api/external-tastings', 'POST',
+        tasting);
       assert.equal(created.status, 201);
       const id = created.data.id;
       const apiPath = `/api/external-tastings/${id}/assign`;
       assert.equal((await api(server.base, apiPath, 'POST', {})).status, 400);
       assert.equal(
-        (await api(server.base, apiPath, 'POST', {bottlingId: 'missing'})).status,
+        (await api(server.base, apiPath, 'POST', {bottlingId: 'missing'}))
+          .status,
         404
       );
       assert.equal(
@@ -263,7 +276,10 @@ test(
         1,
         'failed assigns must not consume source'
       );
-      const moved = await api(server.base, apiPath, 'POST', {bottlingId: owned.id});
+      const moved = await api(server.base, apiPath, 'POST', {
+        bottlingId:
+          owned.id,
+      });
       assert.equal(moved.status, 200);
       assert.deepEqual(moved.data, {bottlingId: owned.id, tastingId: id});
       const collection = (await api(server.base, '/api/collection')).data;
@@ -297,12 +313,14 @@ test(
         0
       );
       assert.equal(
-        (await api(server.base, apiPath, 'POST', {bottlingId: owned.id})).status,
+        (await api(server.base, apiPath, 'POST', {bottlingId: owned.id}))
+          .status,
         404,
         'no double assignment'
       );
       assert.equal(
-        (await api(server.base, `/api/bottlings/${owned.id}/tastings/${id}`)).status,
+        (await api(server.base, `/api/bottlings/${owned.id}/tastings/${id}`))
+          .status,
         200
       );
     } finally {await server.stop();}
@@ -310,11 +328,13 @@ test(
 );
 
 test(
-  'attaching an older standalone tasting does not replace the latest owned rating',
+  'attaching an older standalone tasting does not replace the latest owned \
+rating',
   async () => {
     const server = await startTestServer();
     try {
-      const owned = (await api(server.base, '/api/bottlings', 'POST', {name: 'Collection item'})).data.bottling;
+      const owned = (await api(server.base, '/api/bottlings', 'POST',
+        {name: 'Collection item'})).data.bottling;
       assert.equal(
         (await api(
           server.base,

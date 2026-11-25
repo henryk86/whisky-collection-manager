@@ -16,7 +16,8 @@ async function goTastings(page) {
 
 // Check real positions with computed boxes rather than just source rules.
 test(
-  'browser: modal lock preserves background layout/scroll, focus and Escape at four widths in both themes',
+  'browser: modal lock preserves background layout/scroll, focus and Escape \
+at four widths in both themes',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -93,7 +94,8 @@ test(
 );
 
 test(
-  'browser: planner-help nesting restores the identical live form, values, focus and scroll',
+  'browser: planner-help nesting restores the identical live form, values, \
+focus and scroll',
   async () => {
     await session(async ({page, open}) => {
       await open(); await goTastings(page);
@@ -183,7 +185,8 @@ test(
 );
 
 test(
-  'browser: a nonzero background scroll offset survives modal stacking and keyboard exit',
+  'browser: a nonzero background scroll offset survives modal stacking and \
+keyboard exit',
   async () => {
     await session(async ({page, open}) => {
       await open();

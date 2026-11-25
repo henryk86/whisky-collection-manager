@@ -58,5 +58,6 @@ export function capacityLabel(summary) {
   if (summary.defined ===
     0) return `${summary.unlimited} ${summary.unlimited === 1 ? 'Fach' :
       'Fächer'} ohne Limit`;
-  return `mind. ${summary.defined} Plätze · ${summary.unlimited} ${summary.unlimited === 1 ? 'Fach' : 'Fächer'} ohne Limit`;
+  return `mind. ${summary.defined} Plätze · ${summary.unlimited} ${summary
+    .unlimited === 1 ? 'Fach' : 'Fächer'} ohne Limit`;
 }

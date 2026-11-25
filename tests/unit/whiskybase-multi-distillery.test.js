@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {splitDistilleryNames, matchImportedDistilleries} from '../../public/js/features/import/distillery-matching.js';
+import {splitDistilleryNames, matchImportedDistilleries}
+  from '../../public/js/features/import/distillery-matching.js';
 import {importChoice} from '../../public/js/features/import/choice-template.js';
-import {validateExtensionPayload} from '../../public/js/features/whiskybase/payload.js';
+import {validateExtensionPayload}
+  from '../../public/js/features/whiskybase/payload.js';
 
 const distilleries = [
   {id: 'd-caol', name: 'Caol Ila'}, {id: 'd-bow', name: 'Bowmore'},
@@ -10,7 +12,8 @@ const distilleries = [
 ];
 
 test(
-  'Whiskybase: a comma-separated distillery field creates four individual contributors',
+  'Whiskybase: a comma-separated distillery field creates four individual \
+contributors',
   () => {
     assert.deepEqual(
       splitDistilleryNames(' Caol Ila, Bowmore, Ardbeg, Port Ellen '),
@@ -30,7 +33,8 @@ test(
 );
 
 test(
-  'Whiskybase: one distillery still imports normally; names are normalized and duplicates removed',
+  'Whiskybase: one distillery still imports normally; names are normalized \
+and duplicates removed',
   () => {
     assert.deepEqual(
       splitDistilleryNames('  caol   ila,  BOWMORE ; Caol Ila\nPort Ellen,  '),
@@ -54,7 +58,8 @@ test(
 );
 
 test(
-  'Whiskybase: commas inside a historical distillery name do not split the name',
+  'Whiskybase: commas inside a historical distillery name do not split the \
+name',
   () => {
     assert.deepEqual(
       splitDistilleryNames("John O'Groats (original, 1826), Bowmore"),
@@ -64,9 +69,11 @@ test(
 );
 
 test(
-  'Whiskybase: unknown contributors are listed separately, disabled and escaped in preview',
+  'Whiskybase: unknown contributors are listed separately, disabled and \
+escaped in preview',
   () => {
-    const matches = matchImportedDistilleries('Ardbeg, New & <Scotch> Works', distilleries);
+    const matches = matchImportedDistilleries('Ardbeg, New & <Scotch> Works',
+      distilleries);
     assert.deepEqual(
       matches,
       [{name: 'Ardbeg', id: 'd-ard'}, {name: 'New & <Scotch> Works', id: null}]
@@ -88,7 +95,8 @@ test(
 );
 
 test(
-  'Whiskybase: longer contributor lists are not truncated midway through a name',
+  'Whiskybase: longer contributor lists are not truncated midway through a \
+name',
   () => {
     const names = Array.from(
       {length: 14},

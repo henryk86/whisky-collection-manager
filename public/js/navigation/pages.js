@@ -26,7 +26,8 @@ export const MAIN_PAGES = Object.freeze([
     get label() {return t('tastings.homeTitle');},
     url: '/?view=tastings',
     action: 'goto-tastings-home',
-    icon: `<path fill-rule="evenodd" d="${GLENCAIRN_INK}" stroke="currentColor" stroke-width="11" stroke-linejoin="round"/>`,
+    icon: `<path fill-rule="evenodd" d="${GLENCAIRN_INK}" \
+stroke="currentColor" stroke-width="11" stroke-linejoin="round"/>`,
     viewBox: '130 50 220 355',
     filled: true,
     navClass: 'nav-glencairn',
@@ -51,7 +52,8 @@ export const MAIN_PAGES = Object.freeze([
     get label() {return t("navigation.warehouse");},
     url: '/?view=warehouse',
     action: 'goto-warehouse',
-    icon: '<path d="M3 8l9-5 9 5v13H3Z"/><path d="M3 11h18M8 21v-9h8v9M8 16h8"/>',
+    icon: '<path d="M3 8l9-5 9 5v13H3Z"/><path d="M3 11h18M8 21v-9h8v9M8 \
+16h8"/>',
   },
   {
     id: 'map',
@@ -62,7 +64,8 @@ export const MAIN_PAGES = Object.freeze([
     get label() {return t("navigation.map");},
     url: '/?view=map',
     action: 'goto-map',
-    icon: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/>',
+    icon: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 \
+6v15"/>',
   },
   {
     id: 'help',
@@ -73,7 +76,8 @@ export const MAIN_PAGES = Object.freeze([
     get label() {return t("navigation.help");},
     url: '/?view=help',
     action: 'goto-help',
-    icon: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.7 2.7 0 1 1 4.7 1.8c-.7.7-2.2 1.2-2.2 2.8M12 17.5h.01"/>',
+    icon: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.7 2.7 0 1 1 4.7 \
+1.8c-.7.7-2.2 1.2-2.2 2.8M12 17.5h.01"/>',
   },
   {
     id: 'settings',

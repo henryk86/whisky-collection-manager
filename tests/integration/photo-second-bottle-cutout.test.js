@@ -4,11 +4,15 @@ import fs from 'node:fs';
 import {startTestServer, requestJson} from '../helpers/server.js';
 
 const png = 'data:image/png;base64,' +
-  fs.readFileSync(new URL('../fixtures/photo-import-reference.png', import.meta.url)).toString('base64');
-const webp = 'data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAACQAQCdASoCAAMAAUAmJZgCdLoAA5gA/vDXA/8K1zD8w9rf9XYnwoLAAAA=';
+  fs.readFileSync(new URL('../fixtures/photo-import-reference.png',
+    import.meta.url)).toString('base64');
+const webp =
+  'data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAACQAQCdASoCAAMAAUAmJZgCdL\
+oAA5gA/vDXA/8K1zD8w9rf9XYnwoLAAAA=';
 
 test(
-  'first photo on a second physical bottle can save cutout and automatic adjustments independently',
+  'first photo on a second physical bottle can save cutout and automatic \
+adjustments independently',
   async () => {
     const server = await startTestServer();
     try {
@@ -70,7 +74,8 @@ test(
 
 
 test(
-  'camera workflow: first photo on an opened second bottle saves PNG correction fallback after cutout and auto',
+  'camera workflow: first photo on an opened second bottle saves PNG \
+correction fallback after cutout and auto',
   async () => {
     const server = await startTestServer();
     try {
@@ -141,7 +146,8 @@ test(
       );
       // The original-photo correction endpoint must also support the same
       // fallback.
-      const original = await requestJson(server.base, `${url}/cutout`, 'PATCH', {selected: false});
+      const original = await requestJson(server.base, `${url}/cutout`, 'PATCH',
+        {selected: false});
       assert.equal(original.status, 200);
       const originalEdit = await requestJson(
         server.base,

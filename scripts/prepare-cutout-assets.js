@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-/** Download pinned, locally hosted AI runtime assets during installation/image build.
+/** Download pinned, locally hosted AI runtime assets during
+ * installation/image build.
  * These files are deliberately not fetched from the user's browser or a CDN at
  * runtime.
  */
@@ -15,7 +16,8 @@ const targets = [
     name: 'ai/models/u2netp.onnx',
     urls: [
       'https://huggingface.co/edgetools/u2netp/resolve/main/u2netp.onnx',
-      'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx',
+      'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.\
+onnx',
     ],
     bytes: 4574861,
     sha256: '309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8',
@@ -60,7 +62,8 @@ function valid(bytes, entry) {
 async function download(entry) {
   const target = path.join(root, 'public', entry.name);
   if (fs.existsSync(target) && valid(fs.readFileSync(target), entry)) return;
-  if (process.argv.includes('--verify')) throw new Error(`${entry.name} fehlt oder ist beschädigt. npm run cutout:prepare ausführen.`);
+  if (process.argv.includes('--verify')) throw new Error(`${entry
+    .name} fehlt oder ist beschädigt. npm run cutout:prepare ausführen.`);
   fs.mkdirSync(path.dirname(target), {recursive: true});
   let content;
   let lastError;
@@ -69,18 +72,23 @@ async function download(entry) {
       const response = await fetch(url, {signal: AbortSignal.timeout(120000)});
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const candidate = Buffer.from(await response.arrayBuffer());
-      if (!valid(candidate, entry)) throw new Error('Dateigröße, Format oder Prüfsumme stimmt nicht');
+      if (!valid(candidate, entry)) throw new Error(
+        'Dateigröße, Format oder Prüfsumme stimmt nicht');
       content = candidate;
       break;
     } catch (error) {
       lastError = error;
-      console.warn(`${entry.name}: Downloadversuch fehlgeschlagen (${error.message})`);
+      console.warn(`${entry.name}: Downloadversuch fehlgeschlagen (${error
+        .message})`);
     }
   }
   if (!content) throw new Error(`${entry.name}: ${lastError?.message ||
     'Keine Quelle erreichbar'}`);
   const temp = `${target}.tmp-${process.pid}`;
-  try {fs.writeFileSync(temp, content, {mode: 0o644}); fs.renameSync(temp, target);}
+  try {
+    fs.writeFileSync(temp, content, {mode: 0o644}); fs.renameSync(temp,
+      target);
+  }
   finally {fs.rmSync(temp, {force: true});}
   console.log(`${entry.name}: ${content.length} Bytes bereitgestellt`);
 }
@@ -89,6 +97,7 @@ try {
   for (const item of targets) await download(item);
   console.log('KI-Freistellung: lokale Laufzeit und Modell sind bereit.');
 } catch (error) {
-  console.error(`KI-Freistellung konnte nicht vorbereitet werden: ${error.message}`);
+  console.error(`KI-Freistellung konnte nicht vorbereitet werden: ${error
+    .message}`);
   process.exitCode = 1;
 }

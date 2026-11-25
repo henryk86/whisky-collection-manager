@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {sharpenCutoutAlpha, EDGE_ALPHA_LOW, EDGE_ALPHA_HIGH} from '../../public/js/features/cutout/edge.js';
+import {sharpenCutoutAlpha, EDGE_ALPHA_LOW, EDGE_ALPHA_HIGH}
+  from '../../public/js/features/cutout/edge.js';
 
 test(
-  'cutout edge refinement removes faint background blending and retains a narrow antialias transition',
+  'cutout edge refinement removes faint background blending and retains a \
+narrow antialias transition',
   () => {
     const original = [
       0,
@@ -39,7 +41,8 @@ test(
 );
 
 test(
-  'cutout edge refinement is deterministic, idempotent for empty/opaque pixels, and rejects malformed inputs',
+  'cutout edge refinement is deterministic, idempotent for empty/opaque \
+pixels, and rejects malformed inputs',
   () => {
     const blank = new Uint8ClampedArray([10, 20, 30, 0, 60, 70, 80, 255]);
     assert.equal(sharpenCutoutAlpha(blank), blank);

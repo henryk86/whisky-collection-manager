@@ -22,7 +22,8 @@ const visibleBottlingLabelKeys = [
 
 for (const language of ['de', 'en']) {
   test(
-    `${language}: bottling detail and edit labels have no explanatory parentheses`,
+    `${language}: bottling detail and edit labels have no explanatory \
+parentheses`,
     () => {
       const catalog = JSON.parse(fs.readFileSync(
         new URL(`../../public/locales/${language}.json`, import.meta.url),

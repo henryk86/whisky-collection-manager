@@ -181,9 +181,11 @@ export function normalizeBottling(input, old = {}) {
 export function normalizeBottle(input, old = {}) {
   if (Object.hasOwn(input, 'labelCode')) {
     throw fail(
-      'Nur Inventarnummer verwenden; separates Feld Etikettencode wurde entfernt. Bitte Anwendung aktualisieren.',
+      'Nur Inventarnummer verwenden; separates Feld Etikettencode wurde \
+entfernt. Bitte Anwendung aktualisieren.',
       400,
-      "api.errors.useInventoryNumberOnlyTheSeparateLabelCodeFieldHasBeenRemovedPleaseUpdateTheApplication"
+      "api.errors.useInventoryNumberOnlyTheSeparateLabelCodeFieldHasBeenRemo\
+vedPleaseUpdateTheApplication"
     );
   }
   const val = {

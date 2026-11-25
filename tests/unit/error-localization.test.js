@@ -1,13 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {createTranslator, initializeLanguage, t} from '../../public/js/i18n/index.js';
+import {
+  createTranslator, initializeLanguage,
+  t
+} from '../../public/js/i18n/index.js';
 import {httpResponseError, request} from '../../public/js/api.js';
 import {apiErrorCode} from '../../shared/api-error-codes.js';
 import {jobErrorText} from '../../public/js/i18n/job-errors.js';
-import {publicErrorResponse} from '../../server/domain/public-error-response.js';
+import {publicErrorResponse}
+  from '../../server/domain/public-error-response.js';
 import {fail} from '../../server/domain/errors.js';
-import {adjustPhotoPixels, validatePhotoAdjustments} from '../../public/js/features/photo-editor/adjustments.js';
+import {adjustPhotoPixels, validatePhotoAdjustments}
+  from '../../public/js/features/photo-editor/adjustments.js';
 import {sharpenCutoutAlpha} from '../../public/js/features/cutout/edge.js';
 
 const catalogs = Object.fromEntries(['de', 'en', 'index'].map(language =>
@@ -108,7 +113,8 @@ test(
 );
 
 test(
-  'server errors expose stable codes and English-only fallback, never raw German text',
+  'server errors expose stable codes and English-only fallback, never raw \
+German text',
   () => {
     assert.equal(apiErrorCode('Ungültiger Pfad'), 'api.errors.invalidPath');
     assert.equal(
@@ -117,7 +123,8 @@ test(
       'Object.prototype properties must not be valid error codes'
     );
     assert.deepEqual(
-      publicErrorResponse(fail('Ungültiger Pfad', 400, 'api.errors.invalidPath')),
+      publicErrorResponse(fail('Ungültiger Pfad', 400, 'api.errors.invalidPath'
+      )),
       {error: 'Invalid path.', errorCode: 'api.errors.invalidPath'}
     );
     assert.deepEqual(
@@ -171,7 +178,8 @@ test(
 );
 
 test(
-  'API errors use selected language and sanitized code instead of raw server error',
+  'API errors use selected language and sanitized code instead of raw \
+server error',
   async () => {
     const originalFetch = globalThis.fetch;
     try {
@@ -232,14 +240,16 @@ test(
       );
       assert.equal(
         jobErrorText({errorCode: 'backup.errors.mountMarkerMissing'}),
-        'Backup destination unavailable: USB/NAS drive is not mounted correctly (backup marker missing).'
+        'Backup destination unavailable: USB/NAS drive is not mounted \
+correctly (backup marker missing).'
       );
       assert.equal(
         jobErrorText({
           errorCode: 'backup.errors.sourceSnapshotFailed',
           errorParams: {status: '503'},
         }),
-        'The application could not create a consistent backup snapshot (HTTP 503).'
+        'The application could not create a consistent backup snapshot \
+(HTTP 503).'
       );
       assert.equal(
         jobErrorText({
@@ -268,7 +278,8 @@ test(
       );
       assert.equal(
         jobErrorText({errorCode: 'backup.errors.mountMarkerMissing'}),
-        'Backup-Ziel nicht bereit: USB-/NAS-Laufwerk ist nicht korrekt eingehängt (Backup-Marker fehlt).'
+        'Backup-Ziel nicht bereit: USB-/NAS-Laufwerk ist nicht korrekt \
+eingehängt (Backup-Marker fehlt).'
       );
 
     } finally {

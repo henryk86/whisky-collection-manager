@@ -5,7 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
 
-const pdf = Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n');
+const pdf = Buffer.
+  from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n');
 const image = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
 /**
  * Produces the data url text used by the caller.
@@ -18,13 +19,17 @@ const dataUrl = (bytes, mime) =>
   `data:${mime};base64,${bytes.toString('base64')}`;
 
 test(
-  'files: invoices and additional images belong to physical bottles, survive export and download securely',
+  'files: invoices and additional images belong to physical bottles, \
+survive export and download securely',
   async () => {
     const ctx = await startTestServer();
     try {
       const created = await requestJson(ctx.base, '/api/bottlings', 'POST', {
         name: 'Insurance archive',
-        firstBottle: {inventoryNumber: '000555', volumeType: 'sample', volumeMl: 30},
+        firstBottle: {
+          inventoryNumber: '000555', volumeType: 'sample',
+          volumeMl: 30,
+        },
       });
       assert.equal(created.status, 201);
       const {bottle, bottling} = created.data;
@@ -69,7 +74,8 @@ test(
       assert.ok(!Object.hasOwn(current.bottlings[0], 'files'));
       assert.equal(current.bottlings[0].bottles[0].volumeType, 'sample');
       const downloaded =
-        await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${receipt.data.id}`);
+        await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${receipt.data
+          .id}`);
       assert.equal(downloaded.status, 200);
       assert.match(
         downloaded.headers.get('content-disposition'),
@@ -80,7 +86,8 @@ test(
         'application/octet-stream'
       );
       assert.deepEqual(Buffer.from(await downloaded.arrayBuffer()), pdf);
-      const preview = await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${receipt.data.id}/preview`);
+      const preview = await fetch(`${ctx.base}/api/bottles/${bottle
+        .id}/files/${receipt.data.id}/preview`);
       assert.equal(preview.status, 200);
       assert.equal(preview.headers.get('content-type'), 'application/pdf');
       assert.match(
@@ -91,7 +98,8 @@ test(
       assert.equal(preview.headers.get('cache-control'), 'no-store');
       assert.deepEqual(Buffer.from(await preview.arrayBuffer()), pdf);
       assert.equal(
-        (await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${photoEvidence.data.id}/preview`)).status,
+        (await fetch(`${ctx.base}/api/bottles/${bottle
+          .id}/files/${photoEvidence.data.id}/preview`)).status,
         415,
         'non-PDF attachments must never render inline'
       );
@@ -139,7 +147,8 @@ test(
       assert.equal(remove.status, 200);
       assert.equal(fs.existsSync(path.join(ctx.dir, receipt.data.path)), false);
       assert.equal(
-        (await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${receipt.data.id}`)).status,
+        (await fetch(`${ctx.base}/api/bottles/${bottle.id}/files/${receipt.data
+          .id}`)).status,
         404
       );
       assert.equal(
@@ -152,7 +161,8 @@ test(
 );
 
 test(
-  'files: reject incompatible formats, forged headers, traversal, and unknown bottle IDs',
+  'files: reject incompatible formats, forged headers, traversal, and \
+unknown bottle IDs',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -205,7 +215,10 @@ test(
     try {
       const created = await requestJson(ctx.base, '/api/bottlings', 'POST', {
         name: 'Historical sample',
-        firstBottle: {inventoryNumber: '009009', volumeType: 'sample', volumeMl: 30},
+        firstBottle: {
+          inventoryNumber: '009009', volumeType: 'sample',
+          volumeMl: 30,
+        },
       });
       assert.equal(created.status, 201);
       const current = (await requestJson(ctx.base, '/api/collection')).data;
@@ -213,7 +226,8 @@ test(
       // A former bottling-wide sample marker must migrate to a bottle marker.
       old.bottlings[0].volumeType = 'sample';
       delete old.bottlings[0].bottles[0].volumeType;
-      const result = await requestJson(ctx.base, '/api/import/json', 'POST', old);
+      const result = await requestJson(ctx.base, '/api/import/json', 'POST',
+        old);
       assert.equal(result.status, 200);
       const after = (await requestJson(ctx.base, '/api/collection')).data;
       assert.equal(after.schemaVersion, 6);

@@ -6,7 +6,8 @@ import {loadResources} from '../../public/js/ui/refresh-resources.js';
 import {runAction} from '../../public/js/ui/action-result.js';
 
 test(
-  'N-3: an accepted POST remains successful when the next warehouse refresh fails',
+  'N-3: an accepted POST remains successful when the next warehouse refresh \
+fails',
   async () => {
     const server = await startTestServer();
     try {

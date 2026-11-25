@@ -15,7 +15,8 @@
  * positions from manually saved coordinates.
  */
 const approximateSites = `
-// International distilleries: locality-level estimates, not surveyed GPS positions.
+// International distilleries: locality-level estimates, not surveyed GPS \
+positions.
 Great Northern Distillery|54.0|-6.4
 Pearse Lyons|53.34|-6.28
 Dublin Liberties Distillery|53.34|-6.28

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {paintMaskSegment, applyMaskStrokes} from '../../public/js/features/photo-editor/mask-brush.js';
+import {paintMaskSegment, applyMaskStrokes}
+  from '../../public/js/features/photo-editor/mask-brush.js';
 
 /**
  * Derives the fixture result from the supplied values.
@@ -45,7 +46,8 @@ test('eraser removes only alpha and never touches RGB', () => {
     4) assert.deepEqual(Array.from(current.slice(i, i + 3)), [210, 60, 31]);
 });
 test(
-  'restore brush restores accidentally erased alpha but does not invent model-missing pixels',
+  'restore brush restores accidentally erased alpha but does not invent \
+model-missing pixels',
   () => {
     const source = fixture();
     source.data[(40 * 80 + 40) * 4 + 3] =
@@ -76,9 +78,13 @@ test(
   }
 );
 test(
-  'stroke replays identically at a new preview resolution and preserves transparent borders',
+  'stroke replays identically at a new preview resolution and preserves \
+transparent borders',
   () => {
-    const strokes = [{mode: 'erase', size: 8, points: [{x: .15, y: .6}, {x: .65, y: .6}]}];
+    const strokes = [{
+      mode: 'erase', size: 8, points: [{x: .15, y: .6},
+      {x: .65, y: .6}],
+    }];
     for (const size of [80, 160]) {
       const source = fixture(size, size);
       for (let i = 0; i < size; i++) source.data[(10 * size + i) * 4 + 3] = 0;

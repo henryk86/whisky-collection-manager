@@ -11,7 +11,8 @@ const fileTypes = {
   png: 'image/png', webp: 'image/webp', gif: 'image/gif',
   heic: 'image/heic', heif: 'image/heif',
   txt: 'text/plain', csv: 'text/csv', eml: 'message/rfc822',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.docu\
+ment',
   xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   odt: 'application/vnd.oasis.opendocument.text',
   ods: 'application/vnd.oasis.opendocument.spreadsheet',

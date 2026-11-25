@@ -10,12 +10,15 @@ import {latestTasting} from '../../shared/tasting-records.js';
  */
 const notes = nose => ({nose, palate: '', finish: ''});
 test(
-  'tasting CRUD, latest-date summary, no implicit migration and cross-bottling isolation',
+  'tasting CRUD, latest-date summary, no implicit migration and \
+cross-bottling isolation',
   async () => {
     const server = await startTestServer();
     try {
-      const a = (await api(server.base, '/api/bottlings', 'POST', {name: 'Release A'})).data.bottling;
-      const b = (await api(server.base, '/api/bottlings', 'POST', {name: 'Release B'})).data.bottling;
+      const a = (await api(server.base, '/api/bottlings', 'POST',
+        {name: 'Release A'})).data.bottling;
+      const b = (await api(server.base, '/api/bottlings', 'POST',
+        {name: 'Release B'})).data.bottling;
       assert.deepEqual(a.tastings, []);
       assert.equal(
         a.rating,
@@ -91,7 +94,8 @@ test(
         404
       );
       assert.equal(
-        (await api(server.base, `/api/bottlings/${a.id}`, 'PATCH', {rating: 45})).status,
+        (await api(server.base, `/api/bottlings/${a.id}`, 'PATCH',
+          {rating: 45})).status,
         400
       );
       const edit = await api(
@@ -168,7 +172,8 @@ test(
 );
 
 test(
-  'legacy flavor scores survive API reads and edits; new aroma scores persist independently',
+  'legacy flavor scores survive API reads and edits; new aroma scores \
+persist independently',
   async () => {
     const server = await startTestServer();
     try {
@@ -198,9 +203,12 @@ test(
       assert.equal(created.status, 201);
       const id = created.data.id;
       const stored = (await api(server.base, `${route}/${id}`)).data;
-      for (const [key, score] of Object.entries(legacy)) assert.equal(stored.flavorProfile[key], score);
-      for (const key of ['smoky', 'medicinal']) assert.equal(stored.flavorProfile[key], null);
-      const edit = await api(server.base, `${route}/${id}`, 'PATCH', {title: 'Retasted'});
+      for (const [key, score] of Object.entries(legacy)) assert.equal(stored
+        .flavorProfile[key], score);
+      for (const key of ['smoky', 'medicinal']) assert.equal(stored
+        .flavorProfile[key], null);
+      const edit = await api(server.base, `${route}/${id}`, 'PATCH',
+        {title: 'Retasted'});
       assert.equal(edit.status, 200);
       const unchanged = (await api(server.base, `${route}/${id}`)).data
         .flavorProfile;
@@ -217,7 +225,8 @@ test(
         .flavorProfile;
       assert.equal(saved.smoky, 0, 'explicit zero is a recorded score');
       assert.equal(saved.medicinal, 5);
-      for (const [key, score] of Object.entries(legacy)) assert.equal(saved[key], score);
+      for (const [key, score] of Object.entries(legacy)) assert.equal(saved[
+        key], score);
       const withOldEleventh = {...saved, fiery: 9};
       const oldUpdate = await api(
         server.base,

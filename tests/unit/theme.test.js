@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {getThemePreference, effectiveTheme, nextTheme} from '../../public/js/theme/preference.js';
+import {getThemePreference, effectiveTheme, nextTheme}
+  from '../../public/js/theme/preference.js';
 test('theme defaults to system preference', () => {
   assert.equal(getThemePreference({
     /**

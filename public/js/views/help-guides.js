@@ -27,9 +27,10 @@ export function helpGuides(topic) {
   const guides = HELP_GUIDES[topic] || [];
   if (!guides.length) return '';
   return `<div class="help-technical-guides">${guides.map(id =>
-    `<details class="help-guide"><summary>${escapeHtml(t(`help.guide.${topic}.${id}.title`))}</summary><ol>${Array.from(
-      {length: Number(t(`help.guide.${topic}.${id}.count`))},
-      (_, index) => `<li>${escapeHtml(t(`help.guide.${topic}.${id}.${index +
-        1}`))}</li>`
-    ).join('')}</ol></details>`).join('')}</div>`;
+    `<details class="help-guide"><summary>${escapeHtml(t(
+      `help.guide.${topic}.${id}.title`))}</summary><ol>${Array.from(
+        {length: Number(t(`help.guide.${topic}.${id}.count`))},
+        (_, index) => `<li>${escapeHtml(t(`help.guide.${topic}.${id}.${index +
+          1}`))}</li>`
+      ).join('')}</ol></details>`).join('')}</div>`;
 }

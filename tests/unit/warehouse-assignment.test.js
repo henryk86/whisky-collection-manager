@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assignmentLocation, assignmentShelfInfo, assignmentPayload, renderWarehouseAssignment, shelfCapacityIncrease, approveShelfCapacityIncrease} from '../../public/js/ui/warehouse-assignment.js';
+import {
+  assignmentLocation, assignmentShelfInfo, assignmentPayload,
+  renderWarehouseAssignment, shelfCapacityIncrease,
+  approveShelfCapacityIncrease
+}
+  from '../../public/js/ui/warehouse-assignment.js';
 
 /**
  * Derives the fixture result from the supplied values.
@@ -22,7 +27,8 @@ function fixture() {
 }
 
 test(
-  'assignment dialog separates room, furniture and shelf with current path and safe markup',
+  'assignment dialog separates room, furniture and shelf with current path \
+and safe markup',
   () => {
     const {warehouse, shelf} = fixture();
     const html = renderWarehouseAssignment(warehouse, warehouse.bottles[0]);
@@ -37,7 +43,10 @@ test(
     assert.doesNotMatch(html, /<details|<summary>/);
     assert.match(
       html,
-      /<fieldset class="warehouse-assignment-target"><legend>Neuer Lagerort<\/legend>/
+      new RegExp(
+        '<fieldset class="warehouse-assignment-targ' +
+        'et"><legend>Neuer Lagerort<\\/legend>'
+      )
     );
     assert.match(html, /data-assignment-room/);
     assert.match(html, /data-assignment-furniture/);
@@ -53,7 +62,8 @@ test(
 );
 
 test(
-  'a bottle can remain on a filled shelf but cannot choose a different full shelf',
+  'a bottle can remain on a filled shelf but cannot choose a different full \
+shelf',
   () => {
     const {warehouse, shelf, full} = fixture();
     assert.deepEqual(
@@ -81,7 +91,8 @@ test(
 );
 
 test(
-  'bulk assignment form checks total capacity and preserves per-bottle selection',
+  'bulk assignment form checks total capacity and preserves per-bottle \
+selection',
   async () => {
     const {bulkAssignmentPayload} =
       await import('../../public/js/ui/warehouse-assignment.js');
@@ -95,7 +106,10 @@ test(
           shelves: [{id: 'target', name: 'Target', capacity: 2}],
         }],
       }],
-      bottles: [{id: 'a', name: 'A'}, {id: 'b', name: 'B'}, {id: 'c', name: 'C'}],
+      bottles: [{id: 'a', name: 'A'}, {id: 'b', name: 'B'}, {
+        id: 'c',
+        name: 'C',
+      }],
       assignments: {a: 'target'},
     };
     assert.deepEqual(
@@ -124,7 +138,8 @@ test(
 );
 
 test(
-  'positive overcapacity has a confirmable required capacity; zero stays non-assignable',
+  'positive overcapacity has a confirmable required capacity; zero stays \
+non-assignable',
   () => {
     const {warehouse, full} = fixture();
     warehouse.bottles.push({id: 'b2', name: 'B'});
@@ -169,7 +184,8 @@ test(
 );
 
 test(
-  'user confirms the exact new capacity before any assignment can request its increase',
+  'user confirms the exact new capacity before any assignment can request \
+its increase',
   async () => {
     const {warehouse} = fixture();
     warehouse.bottles.push({id: 'b2', name: 'B'});
@@ -217,7 +233,8 @@ test(
 );
 
 test(
-  'capacity increase requires an explicit callback and never opens a native browser dialog',
+  'capacity increase requires an explicit callback and never opens a native \
+browser dialog',
   async () => {
     const {warehouse} = fixture();
     warehouse.bottles.push({id: 'b2'});

@@ -7,7 +7,8 @@ import {lookupInventoryNumber} from '../../domain/selectors.js';
  * @param {!Object} options Optional configuration for the operation.
  * @return {Function} Result computed from the supplied inputs.
  */
-export function createCodeResolver({state, navigate, toast, closeModal, renderModal, query = select}) {
+export function createCodeResolver({state, navigate, toast, closeModal,
+  renderModal, query = select}) {
   /**
    * Retrieves code for resolve code.
    *

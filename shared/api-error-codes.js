@@ -5,115 +5,179 @@
 const codes = Object.freeze({
   "Invalid room selection": "api.errors.roomTransferInvalidRoomSelection",
   "Invalid assignment option": "api.errors.roomTransferInvalidAssignmentOption",
-  "Invalid or unsupported room transfer file": "api.errors.roomTransferInvalidFile",
+  "Invalid or unsupported room transfer file":
+    "api.errors.roomTransferInvalidFile",
   "Room transfer file is too large": "api.errors.roomTransferTooLarge",
-  "Room transfer file exceeds the supported size": "api.errors.roomTransferTooManyItems",
-  "Invalid bottle reference in room transfer file": "api.errors.roomTransferInvalidBottle",
+  "Room transfer file exceeds the supported size":
+    "api.errors.roomTransferTooManyItems",
+  "Invalid bottle reference in room transfer file":
+    "api.errors.roomTransferInvalidBottle",
   "Invalid room import options": "api.errors.roomTransferInvalidOptions",
-  "Cannot replace a room containing allocated bottles": "api.errors.roomTransferOccupiedRoom",
+  "Cannot replace a room containing allocated bottles":
+    "api.errors.roomTransferOccupiedRoom",
   "Room changed during import": "api.errors.roomTransferRoomChanged",
   "API-Endpunkt nicht gefunden": "api.errors.apiEndpointNotFound",
   "Abfüllung nicht gefunden": "api.errors.bottlingNotFound",
-  "Abfüllung referenziert unbekannte Destillerie": "api.errors.bottlingReferencesAnUnknownDistillery",
-  "Altes Restic-Repository: Bitte für ZIP-Sicherungen einen neuen Zielordner auswählen. Das alte Backup bleibt erhalten.": "api.errors.legacyResticRepositoryChooseANewDestinationFolderForZIPBackupsTheOldBackupIsRetained",
+  "Abfüllung referenziert unbekannte Destillerie":
+    "api.errors.bottlingReferencesAnUnknownDistillery",
+  "Altes Restic-Repository: Bitte für ZIP-Sicherungen einen neuen \
+Zielordner auswählen. Das alte Backup bleibt erhalten.": "api.errors.legacyR\
+esticRepositoryChooseANewDestinationFolderForZIPBackupsTheOldBackupIsRetained",
   "Anfrage zu groß": "api.errors.requestIsTooLarge",
   "Backup-Datei nicht gefunden": "api.errors.backupFileNotFound",
   "Backup-Profil nicht gefunden": "api.errors.backupProfileNotFound",
-  "Backup-Verwaltung gesperrt: Administrator-Schlüssel erforderlich.": "api.errors.backupManagementIsLockedAdministratorKeyRequired",
-  "Backup-Verwaltung nicht eingerichtet": "api.errors.backupManagementIsNotConfigured",
-  "Backup-Verwaltung nicht eingerichtet. Siehe docs/DOCKER_BACKUP.md.": "api.errors.backupManagementIsNotConfiguredSeeDocsDOCKERBACKUPMd",
+  "Backup-Verwaltung gesperrt: Administrator-Schlüssel erforderlich.":
+    "api.errors.backupManagementIsLockedAdministratorKeyRequired",
+  "Backup-Verwaltung nicht eingerichtet":
+    "api.errors.backupManagementIsNotConfigured",
+  "Backup-Verwaltung nicht eingerichtet. Siehe docs/DOCKER_BACKUP.md.":
+    "api.errors.backupManagementIsNotConfiguredSeeDocsDOCKERBACKUPMd",
   "Backup-Worker nicht autorisiert.": "api.errors.backupWorkerIsNotAuthorized",
   "Backup-Ziel nicht erlaubt": "api.errors.backupDestinationIsNotAllowed",
   "Bearbeitetes Bild muss WebP sein": "api.errors.editedImageMustUseWebPFormat",
-  "Bearbeitetes Bild muss WebP oder PNG sein": "api.errors.editedImageMustUseWebPOrPNGFormat",
-  "Bewertung muss zwischen 0 und 100 liegen": "api.errors.ratingMustBeBetween0And100",
+  "Bearbeitetes Bild muss WebP oder PNG sein":
+    "api.errors.editedImageMustUseWebPOrPNGFormat",
+  "Bewertung muss zwischen 0 und 100 liegen":
+    "api.errors.ratingMustBeBetween0And100",
   "Bild zu groß oder leer": "api.errors.imageIsTooLargeOrEmpty",
-  "Bildformat nicht unterstützt (JPEG, PNG, WebP oder GIF)": "api.errors.unsupportedImageFormatJPEGPNGWebPOrGIF",
-  "Bildinhalt entspricht nicht dem Dateiformat": "api.errors.imageContentsDoNotMatchTheFileFormat",
+  "Bildformat nicht unterstützt (JPEG, PNG, WebP oder GIF)":
+    "api.errors.unsupportedImageFormatJPEGPNGWebPOrGIF",
+  "Bildinhalt entspricht nicht dem Dateiformat":
+    "api.errors.imageContentsDoNotMatchTheFileFormat",
   "Bildquelle hat sich geändert": "api.errors.imageSourceHasChanged",
-  "Bitte 1 bis 200 unterschiedliche Lagermöbel auswählen": "api.errors.selectBetween1And200DifferentStorageUnits",
+  "Bitte 1 bis 200 unterschiedliche Lagermöbel auswählen":
+    "api.errors.selectBetween1And200DifferentStorageUnits",
   "Bitte eine ZIP-Datei auswählen": "api.errors.pleaseSelectAZIPFile",
-  "Bitte einen gültigen Destillerienamen eingeben": "api.errors.pleaseEnterAValidDistilleryName",
-  "Bitte vor der nächsten Standortsuche kurz warten": "api.errors.pleaseWaitBeforeSearchingForALocationAgain",
-  "Breitengrad und Längengrad müssen gültige Zahlen sein": "api.errors.latitudeAndLongitudeMustBeValidNumbers",
-  "Content-Type muss application/json sein": "api.errors.contentTypeMustBeApplicationJson",
+  "Bitte einen gültigen Destillerienamen eingeben":
+    "api.errors.pleaseEnterAValidDistilleryName",
+  "Bitte vor der nächsten Standortsuche kurz warten":
+    "api.errors.pleaseWaitBeforeSearchingForALocationAgain",
+  "Breitengrad und Längengrad müssen gültige Zahlen sein":
+    "api.errors.latitudeAndLongitudeMustBeValidNumbers",
+  "Content-Type muss application/json sein":
+    "api.errors.contentTypeMustBeApplicationJson",
   "Datei auf dem Server nicht gefunden": "api.errors.fileNotFoundOnServer",
   "Datei leer oder groesser als 15 MB": "api.errors.fileIsEmptyOrExceeds15MB",
   "Datei nicht gefunden": "api.errors.fileNotFound",
-  "Dateiinhalt passt nicht zum Dateityp": "api.errors.fileContentsDoNotMatchTheFileType",
+  "Dateiinhalt passt nicht zum Dateityp":
+    "api.errors.fileContentsDoNotMatchTheFileType",
   "Dateityp nicht unterstuetzt": "api.errors.unsupportedFileType",
-  "Der Flaschentyp gehört zu einer physischen Flasche, nicht zur Abfüllung": "api.errors.bottleTypeBelongsToAPhysicalBottleNotABottling",
-  "Destillerie benötigt beide Koordinaten": "api.errors.distilleryRequiresBothCoordinates",
+  "Der Flaschentyp gehört zu einer physischen Flasche, nicht zur Abfüllung":
+    "api.errors.bottleTypeBelongsToAPhysicalBottleNotABottling",
+  "Destillerie benötigt beide Koordinaten":
+    "api.errors.distilleryRequiresBothCoordinates",
   "Destillerie existiert bereits": "api.errors.distilleryAlreadyExists",
   "Destillerie nicht gefunden": "api.errors.distilleryNotFound",
   "Destillerien müssen eine Liste sein": "api.errors.distilleriesMustBeAList",
-  "Die Fachhöhen passen nicht zur Möbelhöhe": "api.errors.compartmentHeightsDoNotFitTheFurnitureHeight",
-  "Die Fotoreihenfolge enthält unbekannte oder doppelte IDs": "api.errors.photoOrderContainsUnknownOrDuplicateIDs",
-  "Die Kopie passt nicht in den Zielraum": "api.errors.theCopyDoesNotFitInTheDestinationRoom",
-  "Die OpenStreetMap-Standortsuche ist derzeit nicht erreichbar. Koordinaten können manuell eingetragen werden.": "api.errors.openstreetmapLocationSearchIsCurrentlyUnavailableYouCanEnterCoordinatesManually",
-  "Dieses Altprofil verwendet Restic. Für neue Sicherungen bitte auf ZIP umstellen.": "api.errors.thisLegacyProfileUsesResticSwitchToZIPForNewBackups",
-  "Dieses Backup-Ziel wird bereits von einem anderen Profil genutzt. Jedes Profil benötigt ein eigenes Repository.": "api.errors.anotherProfileIsAlreadyUsingThisBackupDestinationEachProfileRequiresItsOwnRepository",
+  "Die Fachhöhen passen nicht zur Möbelhöhe":
+    "api.errors.compartmentHeightsDoNotFitTheFurnitureHeight",
+  "Die Fotoreihenfolge enthält unbekannte oder doppelte IDs":
+    "api.errors.photoOrderContainsUnknownOrDuplicateIDs",
+  "Die Kopie passt nicht in den Zielraum":
+    "api.errors.theCopyDoesNotFitInTheDestinationRoom",
+  "Die OpenStreetMap-Standortsuche ist derzeit nicht erreichbar. \
+Koordinaten können manuell eingetragen werden.": "api.errors.openstreetmapLo\
+cationSearchIsCurrentlyUnavailableYouCanEnterCoordinatesManually",
+  "Dieses Altprofil verwendet Restic. Für neue Sicherungen bitte auf ZIP \
+umstellen.": "api.errors.thisLegacyProfileUsesResticSwitchToZIPForNewBackups",
+  "Dieses Backup-Ziel wird bereits von einem anderen Profil genutzt. Jedes \
+Profil benötigt ein eigenes Repository.": "api.errors.anotherProfileIsAlread\
+yUsingThisBackupDestinationEachProfileRequiresItsOwnRepository",
   "Dieses Fach ist voll belegt": "api.errors.thisCompartmentIsFull",
-  "Direkter Download ist derzeit nur für lokale ZIP-Backups verfügbar": "api.errors.directDownloadIsCurrentlyAvailableOnlyForLocalZIPBackups",
+  "Direkter Download ist derzeit nur für lokale ZIP-Backups verfügbar":
+    "api.errors.directDownloadIsCurrentlyAvailableOnlyForLocalZIPBackups",
   "Doppelte Abfüllungs-ID": "api.errors.duplicateBottlingID",
   "Doppelte Bildkorrektur": "api.errors.duplicateImageAdjustment",
-  "Doppelte Destillerie innerhalb einer Abfüllung": "api.errors.duplicateDistilleryWithinABottling",
+  "Doppelte Destillerie innerhalb einer Abfüllung":
+    "api.errors.duplicateDistilleryWithinABottling",
   "Doppelte Destillerie-ID": "api.errors.duplicateDistilleryID",
   "Doppelte Flaschen-ID": "api.errors.duplicateBottleID",
   "Doppelte Freistellung": "api.errors.duplicateBackgroundRemoval",
   "Doppelte Lager-ID": "api.errors.duplicateStorageID",
-  "Doppelte reservierte Inventarnummern": "api.errors.duplicateReservedInventoryNumbers",
+  "Doppelte reservierte Inventarnummern":
+    "api.errors.duplicateReservedInventoryNumbers",
   "Doppelter Dateianhang": "api.errors.duplicateFileAttachment",
   "Doppelter Destilleriename": "api.errors.duplicateDistilleryName",
   "Doppeltes Flaschenfoto": "api.errors.duplicateBottlePhoto",
-  "Drehung nur 0, 90, 180 oder 270 Grad": "api.errors.rotationMustBe090180Or270Degrees",
+  "Drehung nur 0, 90, 180 oder 270 Grad":
+    "api.errors.rotationMustBe090180Or270Degrees",
   "Fach ist bereits am Rand": "api.errors.compartmentIsAlreadyAtTheEdge",
   "Fach nicht gefunden": "api.errors.compartmentNotFound",
-  "Fachhöhen überschreiten die Möbelhöhe": "api.errors.compartmentHeightsExceedTheFurnitureHeight",
-  "Fehlende Liste reservierter Inventarnummern": "api.errors.missingListOfReservedInventoryNumbers",
+  "Fachhöhen überschreiten die Möbelhöhe":
+    "api.errors.compartmentHeightsExceedTheFurnitureHeight",
+  "Fehlende Liste reservierter Inventarnummern":
+    "api.errors.missingListOfReservedInventoryNumbers",
   "Flasche nicht gefunden": "api.errors.bottleNotFound",
   "Flaschenliste der Abfüllung fehlt": "api.errors.bottlingBottleListIsMissing",
   "Foto nicht gefunden": "api.errors.photoNotFound",
-  "Freistellung muss ein PNG-Bild sein": "api.errors.backgroundRemovalMustBeAPNGImage",
-  "Für Single Whisky darf maximal eine Destillerie gewählt werden": "api.errors.singleWhiskyMayHaveAtMostOneDistillery",
-  "Für automatisch eingeteilte Fächer bleiben weniger als 5 cm übrig": "api.errors.lessThan5CmRemainsForAutomaticallyDividedCompartments",
+  "Freistellung muss ein PNG-Bild sein":
+    "api.errors.backgroundRemovalMustBeAPNGImage",
+  "Für Single Whisky darf maximal eine Destillerie gewählt werden":
+    "api.errors.singleWhiskyMayHaveAtMostOneDistillery",
+  "Für automatisch eingeteilte Fächer bleiben weniger als 5 cm übrig":
+    "api.errors.lessThan5CmRemainsForAutomaticallyDividedCompartments",
   "Glasrahmen: ungültiger Wert": "api.errors.invalidGlassFrameValue",
-  "Gründungsjahr muss zwischen 1600 und dem aktuellen Jahr liegen": "api.errors.foundingYearMustBeBetween1600AndTheCurrentYear",
+  "Gründungsjahr muss zwischen 1600 und dem aktuellen Jahr liegen":
+    "api.errors.foundingYearMustBeBetween1600AndTheCurrentYear",
   "Hochgeladene Sicherung nicht gefunden": "api.errors.uploadedBackupNotFound",
-  "Inventarnummer bereits vergeben": "api.errors.inventoryNumberAlreadyAssigned",
+  "Inventarnummer bereits vergeben":
+    "api.errors.inventoryNumberAlreadyAssigned",
   "JSON-Anfrage muss ein Objekt sein": "api.errors.jsonRequestMustBeAnObject",
-  "Kapazität liegt unter der aktuellen Belegung": "api.errors.capacityIsBelowCurrentOccupancy",
-  "Kapazität muss eine ganze Zahl zwischen 0 und 10000 sein": "api.errors.capacityMustBeAnIntegerBetween0And10000",
+  "Kapazität liegt unter der aktuellen Belegung":
+    "api.errors.capacityIsBelowCurrentOccupancy",
+  "Kapazität muss eine ganze Zahl zwischen 0 und 10000 sein":
+    "api.errors.capacityMustBeAnIntegerBetween0And10000",
   "Kein freier Kopiename verfügbar": "api.errors.noUnusedCopyNameIsAvailable",
-  "Kein freier Platz für die Kopie. Bitte zuerst Platz im Zielraum schaffen.": "api.errors.notEnoughSpaceForTheCopyMakeRoomInTheDestinationRoomFirst",
+  "Kein freier Platz für die Kopie. Bitte zuerst Platz im Zielraum schaffen.":
+    "api.errors.notEnoughSpaceForTheCopyMakeRoomInTheDestinationRoomFirst",
   "Keine Bildkorrekturen gewählt": "api.errors.noPhotoAdjustmentsSelected",
-  "Keine Freistellung vorhanden": "api.errors.noBackgroundRemovedImageAvailable",
-  "Keine gültigen gemeinsamen Eigenschaften angegeben": "api.errors.noValidSharedPropertiesSpecified",
-  "Lagermöbel liegt außerhalb der Raumgrenzen": "api.errors.storageFurnitureLiesOutsideTheRoomBoundaries",
-  "Lagermöbel liegt außerhalb des Raums": "api.errors.storageFurnitureLiesOutsideTheRoom",
+  "Keine Freistellung vorhanden":
+    "api.errors.noBackgroundRemovedImageAvailable",
+  "Keine gültigen gemeinsamen Eigenschaften angegeben":
+    "api.errors.noValidSharedPropertiesSpecified",
+  "Lagermöbel liegt außerhalb der Raumgrenzen":
+    "api.errors.storageFurnitureLiesOutsideTheRoomBoundaries",
+  "Lagermöbel liegt außerhalb des Raums":
+    "api.errors.storageFurnitureLiesOutsideTheRoom",
   "Lagermöbel nicht gefunden": "api.errors.storageFurnitureNotFound",
-  "Lagerort enthält Flaschen. Bitte zuerst umlagern.": "api.errors.storageLocationContainsBottlesMoveThemFirst",
-  "Lokales Backup-Ziel muss aus Laufwerk und Ordner bestehen, z. B. usb/whisky-backups": "api.errors.localBackupDestinationMustIncludeADriveAndFolderEGUsbWhiskyBackups",
-  "Maximal 64 Backup-Profile möglich": "api.errors.atMost64BackupProfilesAreSupported",
+  "Lagerort enthält Flaschen. Bitte zuerst umlagern.":
+    "api.errors.storageLocationContainsBottlesMoveThemFirst",
+  "Lokales Backup-Ziel muss aus Laufwerk und Ordner bestehen, z. B. \
+usb/whisky-backups": "api.errors.localBackupDestinationMustIncludeADriveAndF\
+olderEGUsbWhiskyBackups",
+  "Maximal 64 Backup-Profile möglich":
+    "api.errors.atMost64BackupProfilesAreSupported",
   "Methode nicht erlaubt": "api.errors.methodNotAllowed",
-  "Mindestens eine Aufbewahrungsregel erforderlich": "api.errors.atLeastOneRetentionRuleIsRequired",
-  "Name muss zwischen 1 und 100 Zeichen enthalten": "api.errors.nameMustContainBetween1And100Characters",
-  "Nur Inventarnummer verwenden; separates Feld Etikettencode wurde entfernt. Bitte Anwendung aktualisieren.": "api.errors.useInventoryNumberOnlyTheSeparateLabelCodeFieldHasBeenRemovedPleaseUpdateTheApplication",
+  "Mindestens eine Aufbewahrungsregel erforderlich":
+    "api.errors.atLeastOneRetentionRuleIsRequired",
+  "Name muss zwischen 1 und 100 Zeichen enthalten":
+    "api.errors.nameMustContainBetween1And100Characters",
+  "Nur Inventarnummer verwenden; separates Feld Etikettencode wurde \
+entfernt. Bitte Anwendung aktualisieren.": "api.errors.useInventoryNumberOnl\
+yTheSeparateLabelCodeFieldHasBeenRemovedPleaseUpdateTheApplication",
   "Passwörter stimmen nicht überein": "api.errors.passwordsDoNotMatch",
   "Physische Flasche nicht gefunden": "api.errors.physicalBottleNotFound",
   "Raum nicht gefunden": "api.errors.roomNotFound",
-  "Rclone-Verbindung darf nur Buchstaben, Zahlen, - und _ enthalten": "api.errors.rcloneConnectionMayContainOnlyLettersDigitsAnd",
+  "Rclone-Verbindung darf nur Buchstaben, Zahlen, - und _ enthalten":
+    "api.errors.rcloneConnectionMayContainOnlyLettersDigitsAnd",
   "Sammlungsdatei fehlt": "api.errors.collectionFileIsMissing",
-  "Scanner-Bibliothek fehlt. Bitte npm install ausführen.": "api.errors.scannerLibraryIsMissingRunNpmInstall",
-  "Schreibzugriff von fremder Webseite nicht erlaubt": "api.errors.writeAccessFromAnotherWebsiteIsNotAllowed",
+  "Scanner-Bibliothek fehlt. Bitte npm install ausführen.":
+    "api.errors.scannerLibraryIsMissingRunNpmInstall",
+  "Schreibzugriff von fremder Webseite nicht erlaubt":
+    "api.errors.writeAccessFromAnotherWebsiteIsNotAllowed",
   "Sicherung nicht gefunden": "api.errors.backupNotFound",
-  "Single Whisky darf nur eine Destillerie enthalten": "api.errors.singleWhiskyMayContainOnlyOneDistillery",
-  "Three.js fehlt. Bitte npm ci ausführen.": "api.errors.threeJsIsMissingRunNpmCi",
-  "Türbereich: Fachnummern oder Front ungültig": "api.errors.doorAreaHasInvalidCompartmentNumbersOrFront",
-  "Türbereiche dürfen sich nicht überlappen": "api.errors.doorAreasMustNotOverlap",
+  "Single Whisky darf nur eine Destillerie enthalten":
+    "api.errors.singleWhiskyMayContainOnlyOneDistillery",
+  "Three.js fehlt. Bitte npm ci ausführen.":
+    "api.errors.threeJsIsMissingRunNpmCi",
+  "Türbereich: Fachnummern oder Front ungültig":
+    "api.errors.doorAreaHasInvalidCompartmentNumbersOrFront",
+  "Türbereiche dürfen sich nicht überlappen":
+    "api.errors.doorAreasMustNotOverlap",
   "Türbereiche: ungültige Liste": "api.errors.invalidListOfDoorAreas",
   "Türflügel: nur 1 oder 2 erlaubt": "api.errors.doorLeafCountMustBe1Or2",
-  "USB-Backup-Ziel nicht eingebunden": "api.errors.usbBackupDestinationIsNotMounted",
+  "USB-Backup-Ziel nicht eingebunden":
+    "api.errors.usbBackupDestinationIsNotMounted",
   "Unbekannte Destillerie": "api.errors.unknownDistillery",
   "Unbekannter Backup-Anbieter": "api.errors.unknownBackupProvider",
   "Unbekannter Backup-Auftrag": "api.errors.unknownBackupJob",
@@ -129,7 +193,8 @@ const codes = Object.freeze({
   "Ungueltiger Dokumentpfad": "api.errors.invalidDocumentPath",
   "Ungueltiges Upload-Datum": "api.errors.invalidUploadDate",
   "Ungültige Abfüllung": "api.errors.invalidBottling",
-  "Ungültige Antwort der Standortsuche": "api.errors.invalidResponseFromLocationSearch",
+  "Ungültige Antwort der Standortsuche":
+    "api.errors.invalidResponseFromLocationSearch",
   "Ungültige Backup-Auftrags-ID": "api.errors.invalidBackupJobID",
   "Ungültige Bildauswahl": "api.errors.invalidImageSelection",
   "Ungültige Bildkorrekturen": "api.errors.invalidImageAdjustments",
@@ -142,7 +207,8 @@ const codes = Object.freeze({
   "Ungültige Flaschengröße (ml)": "api.errors.invalidBottleSizeMl",
   "Ungültige Fotoliste": "api.errors.invalidPhotoList",
   "Ungültige Fotoreihenfolge": "api.errors.invalidPhotoOrder",
-  "Ungültige Größe der physischen Flasche": "api.errors.invalidPhysicalBottleSize",
+  "Ungültige Größe der physischen Flasche":
+    "api.errors.invalidPhysicalBottleSize",
   "Ungültige Inventarnummer": "api.errors.invalidInventoryNumber",
   "Ungültige Kopieroption": "api.errors.invalidCopyOption",
   "Ungültige Lagerdatei": "api.errors.invalidStorageFile",
@@ -158,15 +224,19 @@ const codes = Object.freeze({
   "Ungültige Whisky-Kategorie": "api.errors.invalidWhiskyCategory",
   "Ungültige Wiederherstellungs-ID": "api.errors.invalidRestoreID",
   "Ungültige alte Bildreferenz": "api.errors.invalidLegacyImageReference",
-  "Ungültige korrigierte Freistellung": "api.errors.invalidAdjustedBackgroundRemoval",
-  "Ungültige oder nicht unterstützte JSON-Schemaversion": "api.errors.invalidOrUnsupportedJSONSchemaVersion",
-  "Ungültige reservierte Inventarnummer": "api.errors.invalidReservedInventoryNumber",
+  "Ungültige korrigierte Freistellung":
+    "api.errors.invalidAdjustedBackgroundRemoval",
+  "Ungültige oder nicht unterstützte JSON-Schemaversion":
+    "api.errors.invalidOrUnsupportedJSONSchemaVersion",
+  "Ungültige reservierte Inventarnummer":
+    "api.errors.invalidReservedInventoryNumber",
   "Ungültiger Archivname": "api.errors.invalidArchiveName",
   "Ungültiger Bild-Token": "api.errors.invalidImageToken",
   "Ungültiger Bildpfad": "api.errors.invalidImagePath",
   "Ungültiger Destilleriestatus": "api.errors.invalidDistilleryStatus",
   "Ungültiger Flaschentyp": "api.errors.invalidBottleType",
-  "Ungültiger Inventarnummern-Zähler": "api.errors.invalidInventoryNumberCounter",
+  "Ungültiger Inventarnummern-Zähler":
+    "api.errors.invalidInventoryNumberCounter",
   "Ungültiger Kaufpreis": "api.errors.invalidPurchasePrice",
   "Ungültiger Lagerraum": "api.errors.invalidStorageRoom",
   "Ungültiger OSM-Geocoding-Endpunkt": "api.errors.invalidOSMGeocodingEndpoint",
@@ -181,20 +251,33 @@ const codes = Object.freeze({
   "Ungültiges JSON": "api.errors.invalidJSON",
   "Ungültiges Lagerfach": "api.errors.invalidStorageCompartment",
   "Ungültiges Lagermöbel": "api.errors.invalidStorageFurniture",
-  "Unvollständiges Backup-Staging vorhanden": "api.errors.incompleteBackupStagingIsPresent",
-  "Verwaiste Flasche kann nicht migriert werden": "api.errors.orphanedBottleCannotBeMigrated",
+  "Unvollständiges Backup-Staging vorhanden":
+    "api.errors.incompleteBackupStagingIsPresent",
+  "Verwaiste Flasche kann nicht migriert werden":
+    "api.errors.orphanedBottleCannotBeMigrated",
   "Vorbereitete Sicherung nicht gefunden": "api.errors.preparedBackupNotFound",
-  "Vorschau abgelaufen oder Bild nicht vorhanden": "api.errors.previewExpiredOrImageIsMissing",
-  "Importiertes Bild nicht mehr verfügbar. Bitte erneut importieren.": "api.errors.importImageIsNoLongerAvailablePleaseImportItAgain",
-  "Wiederherstellung muss ausdrücklich bestätigt werden": "api.errors.restoreMustBeExplicitlyConfirmed",
-  "ZIP enthält keine gültige Whisky-Sammlung": "api.errors.zipDoesNotContainAValidWhiskyCollection",
-  "ZIP-Sicherungen über die Vorschau einspielen.": "api.errors.restoreZIPBackupsThroughThePreview",
+  "Vorschau abgelaufen oder Bild nicht vorhanden":
+    "api.errors.previewExpiredOrImageIsMissing",
+  "Importiertes Bild nicht mehr verfügbar. Bitte erneut importieren.":
+    "api.errors.importImageIsNoLongerAvailablePleaseImportItAgain",
+  "Wiederherstellung muss ausdrücklich bestätigt werden":
+    "api.errors.restoreMustBeExplicitlyConfirmed",
+  "ZIP enthält keine gültige Whisky-Sammlung":
+    "api.errors.zipDoesNotContainAValidWhiskyCollection",
+  "ZIP-Sicherungen über die Vorschau einspielen.":
+    "api.errors.restoreZIPBackupsThroughThePreview",
   "ZIP-Upload ist zu groß": "api.errors.zipUploadIsTooLarge",
-  "Zielpfad muss relativ sein und darf keine übergeordneten Verzeichnisse enthalten.": "api.errors.destinationPathMustBeRelativeAndMustNotContainParentDirectories",
-  "Zu viele ausstehende Bilder; bitte später erneut versuchen": "api.errors.tooManyPendingImagesPleaseTryAgainLater",
-  "Zuerst alle zugeordneten Flaschen löschen": "api.errors.deleteAllAssignedBottlesFirst",
+  "Zielpfad muss relativ sein und darf keine übergeordneten Verzeichnisse \
+enthalten.": "api.errors.destinationPathMustBeRelativeAndMustNotContainParen\
+tDirectories",
+  "Zu viele ausstehende Bilder; bitte später erneut versuchen":
+    "api.errors.tooManyPendingImagesPleaseTryAgainLater",
+  "Zuerst alle zugeordneten Flaschen löschen":
+    "api.errors.deleteAllAssignedBottlesFirst",
   "Überlappende Türbereiche": "api.errors.overlappingDoorAreas",
-  "Nicht erlaubter Host. Adresse in ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_IP_ADDRESSES eintragen.": "api.errors.hostNotAllowedAddTheAddressToALLOWEDHOSTSOrCERTDNSNAMESCERTIPADDRESSES",
+  "Nicht erlaubter Host. Adresse in ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_I\
+P_ADDRESSES eintragen.": "api.errors.hostNotAllowedAddTheAddressToALLOWEDHOS\
+TSOrCERTDNSNAMESCERTIPADDRESSES",
 });
 /**
  * Creates an application error identifier from a known error category.
@@ -202,4 +285,7 @@ const codes = Object.freeze({
  * @param {*} message Message used by this operation.
  * @return {*} Result computed from the supplied inputs.
  */
-export function apiErrorCode(message) {return Object.hasOwn(codes, message) ? codes[message] : null;}
+export function apiErrorCode(message) {
+  return Object.hasOwn(codes,
+    message) ? codes[message] : null;
+}

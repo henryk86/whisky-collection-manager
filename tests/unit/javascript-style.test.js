@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createHash} from 'node:crypto';
-import {mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {
+  mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
+} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {widthViolations} from '../../scripts/check-line-width.js';
 import {checkJSDoc, undocumentedExports} from '../../scripts/check-jsdoc.js';
 import {jsdocViolations} from '../../scripts/check-jsdoc-complete.js';
@@ -100,16 +103,47 @@ test('JavaScript style: new lines above 80 columns fail', () => {
   assert.deepEqual(widthViolations(line), [{line: 1, length: line.length}]);
 });
 
-test(
-  'JavaScript style: unchanged exceptions cannot hide another occurrence',
-  () => {
-    const source = 'x'.repeat(81);
-    const hash = createHash('sha256').update(source).digest('hex');
-    assert.deepEqual(widthViolations(source + '\n' + source, {[hash]: 1}),
-      [{line: 2, length: 81}]);
-  }
-);
+test('JavaScript style: all overlong lines fail without exceptions', () => {
+  const source = 'x'.repeat(81);
+  assert.deepEqual(widthViolations(source + '\n' + source), [
+    {line: 1, length: 81}, {line: 2, length: 81},
+  ]);
+  assert.deepEqual(widthViolations('x'.repeat(80) + '\r\n'), []);
+});
 
+
+test('JavaScript style: formatter preserves HTML interpolation breaks', () => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'wcm-style-template-'));
+  try {
+    const root = path.join(directory, 'public');
+    mkdirSync(root);
+    const fixture = path.join(root, 'template.js');
+    const script = fileURLToPath(new URL('../../scripts/format-js.js',
+      import.meta.url));
+    const source = [
+      "const title = 'Sample';",
+      'const html = `<section data-title="${',
+      '  title',
+      '}"><strong>${',
+      '  title',
+      '}</strong></section>`;',
+      'console.log(html);',
+      '',
+    ].join('\n');
+    writeFileSync(fixture, source);
+    const before = execFileSync(process.execPath, [fixture],
+      {encoding: 'utf8'});
+    execFileSync(process.execPath, [script, '--write'], {cwd: directory});
+    const formatted = readFileSync(fixture, 'utf8');
+    assert.match(formatted, /\$\{\n/);
+    assert.deepEqual(widthViolations(formatted), []);
+    assert.equal(execFileSync(process.execPath, [fixture],
+      {encoding: 'utf8'}), before);
+    execFileSync(process.execPath, [script], {cwd: directory});
+  } finally {
+    rmSync(directory, {recursive: true, force: true});
+  }
+});
 
 test(
   'JavaScript style: every export needs full JSDoc, without exceptions',
@@ -209,7 +243,8 @@ test(
   'JavaScript style: splits long object entries without altering strings',
   () => {
     const source = `export const empty = () => ({
-  schemaVersion: 6, nextInventoryNumber: 1, reservedInventoryNumbers: [], settings: {establishedYear: null}, bottlings: [], tastingFlights: []
+  schemaVersion: 6, nextInventoryNumber: 1, reservedInventoryNumbers: [], \
+settings: {establishedYear: null}, bottlings: [], tastingFlights: []
 });\n`;
     const wrapped = wrapLongStructures('sample.js', source);
     assert.match(wrapped, /schemaVersion: 6,\n/);
@@ -261,7 +296,8 @@ test('JavaScript style: optional chaining stays syntactically intact', () => {
 });
 
 test('JavaScript style: separates consecutive arrow-function exports', () => {
-  const source = 'export const first = () => 1;\nexport const second = () => 2;\n';
+  const source =
+    'export const first = () => 1;\nexport const second = () => 2;\n';
   assert.match(separateFunctions('sample.js', source),
     /=> 1;\n\nexport const second/);
 });

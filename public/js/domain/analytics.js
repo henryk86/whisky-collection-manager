@@ -1,4 +1,5 @@
-import {displayedTastingRating, latestTasting} from '../../../shared/tasting-records.js';
+import {displayedTastingRating, latestTasting}
+  from '../../../shared/tasting-records.js';
 /**
  * Pure analytics over the current schema-6 collection. No storage writes, no
  * inferred market values.
@@ -285,7 +286,8 @@ export function analyzeCollection(collection, filters = {}) {
       }
     }
   }
-  for (const bottling of bottlings) if (isNumber(displayedTastingRating(bottling))) {
+  for (const bottling of bottlings) if (isNumber(displayedTastingRating(
+    bottling))) {
     for (const id of idsOf(bottling)) distilleryCounts.get(id)?.ratings
       .push(displayedTastingRating(bottling));
   }

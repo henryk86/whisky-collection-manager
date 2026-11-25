@@ -10,10 +10,15 @@ test('settings page has a translated, visible punchline', () => {
   assert.match(html, /class="section-head ds-page-header settings-heading"/);
   assert.match(
     html,
-    /<p class="intro">Sprache, Destillerien, Exporte und Datensicherung verwalten\.<\/p>/
+    new RegExp(
+      '<p class="intro">Sprache, Destillerien, Ex' +
+      'porte und Datensicherung verwalten\\.<\\/p' +
+      '>'
+    )
   );
   assert.equal(
-    JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'))['settings.page.intro'],
+    JSON.parse(fs.readFileSync('public/locales/en.json',
+      'utf8'))['settings.page.intro'],
     'Manage language, distilleries, exports, and backups.'
   );
 });

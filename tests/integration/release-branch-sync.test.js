@@ -24,7 +24,8 @@ const sh = (cwd, ...args) =>
  */
 const text = (dir, name, value) => {
   const f =
-    path.join(dir, name); fs.mkdirSync(path.dirname(f), {recursive: true}); fs.writeFileSync(f, value);
+    path.join(dir, name); fs.mkdirSync(path.dirname(f), {recursive: true});
+  fs.writeFileSync(f, value);
 };
 
 /**
@@ -51,7 +52,8 @@ function fixture(
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-branch-sync-'));
   t.after(() => fs.rmSync(tmp, {recursive: true, force: true}));
   const dir = path.join(tmp, 'work'), remote = path.join(tmp, 'remote.git');
-  fs.mkdirSync(dir); sh(tmp, 'git', 'init', '--bare', remote); sh(dir, 'git', 'init', '-b', 'main'); config(dir);
+  fs.mkdirSync(dir); sh(tmp, 'git', 'init', '--bare', remote); sh(dir, 'git',
+    'init', '-b', 'main'); config(dir);
   for (const file of [
     'release-version.js',
     'release-manifest.js',
@@ -65,12 +67,14 @@ function fixture(
   text(
     dir,
     'package.json',
-    JSON.stringify({name: 'wcm-fixture', type: 'module', version: '1.4.0'}) + '\n'
+    JSON.stringify({name: 'wcm-fixture', type: 'module', version: '1.4.0'}) +
+    '\n'
   );
   text(
     dir,
     'package-lock.json',
-    JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) + '\n'
+    JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) +
+    '\n'
   );
   text(
     dir,
@@ -96,10 +100,12 @@ function fixture(
   sh(dir, 'git', 'add', '.'); sh(dir, 'git', 'commit', '-m', 'chore: baseline');
   sh(dir, 'git', 'remote', 'add', 'origin', remote);
   sh(dir, 'git', 'push', 'origin', 'main');
-  sh(dir, 'git', 'branch', 'develop'); sh(dir, 'git', 'push', 'origin', 'develop');
+  sh(dir, 'git', 'branch', 'develop'); sh(dir, 'git', 'push', 'origin',
+    'develop');
   sh(dir, 'git', 'checkout', 'develop');
   text(dir, 'feature.txt', 'approved functionality\n');
-  sh(dir, 'git', 'add', '.'); sh(dir, 'git', 'commit', '-m', 'fix: approved change');
+  sh(dir, 'git', 'add', '.'); sh(dir, 'git', 'commit', '-m',
+    'fix: approved change');
   sh(dir, 'git', 'push', 'origin', 'develop');
   sh(dir, 'git', 'checkout', 'main');
   sh(
@@ -117,12 +123,14 @@ function fixture(
   text(
     dir,
     'package.json',
-    JSON.stringify({name: 'wcm-fixture', type: 'module', version: '1.4.1'}) + '\n'
+    JSON.stringify({name: 'wcm-fixture', type: 'module', version: '1.4.1'}) +
+    '\n'
   );
   text(
     dir,
     'package-lock.json',
-    JSON.stringify({version: '1.4.1', packages: {'': {version: '1.4.1'}}}) + '\n'
+    JSON.stringify({version: '1.4.1', packages: {'': {version: '1.4.1'}}}) +
+    '\n'
   );
   text(
     dir,
@@ -132,7 +140,8 @@ function fixture(
   text(
     dir,
     'CHANGELOG.md',
-    '# Changelog\n\n## 1.4.1 - 2026-11-16\n\n- fix: approved change\n\n## 1.4.0 - 2026-11-16\n\n- Historical information\n'
+    '# Changelog\n\n## 1.4.1 - 2026-11-16\n\n- fix: approved change\n\n## \
+1.4.0 - 2026-11-16\n\n- Historical information\n'
   );
   text(
     dir,
@@ -140,13 +149,16 @@ function fixture(
     '# Teststatus - Whisky Collection Manager v1.4.1\n\nRelease CI pending\n'
   );
   sh(dir, process.execPath, 'scripts/release-manifest.js', 'create');
-  sh(dir, 'git', 'add', '.'); sh(dir, 'git', 'commit', '-m', 'WCM Release Snapshot v1.4.1');
+  sh(dir, 'git', 'add', '.'); sh(dir, 'git', 'commit', '-m',
+    'WCM Release Snapshot v1.4.1');
   const snapshot = sh(dir, 'git', 'rev-parse', 'HEAD');
-  sh(dir, 'git', 'tag', 'v1.4.1'); sh(dir, 'git', 'push', 'origin', 'refs/tags/v1.4.1');
+  sh(dir, 'git', 'tag', 'v1.4.1'); sh(dir, 'git', 'push', 'origin',
+    'refs/tags/v1.4.1');
   if (moving || modifiedMetadata) {
     sh(dir, 'git', 'checkout', 'develop');
     text(dir, 'public/js/new-feature.js', 'export const next = true;\n');
-    if (modifiedMetadata) text(dir, 'README.md', '# Locally revised readme v1.4.0\n');
+    if (modifiedMetadata) text(dir, 'README.md',
+      '# Locally revised readme v1.4.0\n');
     sh(dir, 'git', 'add', '.'); sh(
       dir,
       'git',
@@ -239,7 +251,8 @@ const remoteRef = (dir, branch) =>
   sh(dir, 'git', 'ls-remote', 'origin', `refs/heads/${branch}`).split(/\s+/)[0];
 
 test(
-  'protected main is never directly pushed; a merged release PR synchronizes both branches',
+  'protected main is never directly pushed; a merged release PR \
+synchronizes both branches',
   t => {
     const state = fixture(t), {dir, merge, snapshot} = state;
     const initialMain = remoteRef(dir, 'main');
@@ -282,7 +295,8 @@ test(
 );
 
 test(
-  'develop can advance while release PR is being merged; source and manifest preserved',
+  'develop can advance while release PR is being merged; source and \
+manifest preserved',
   t => {
     const state = fixture(t, {moving: true}), {dir} = state;
     const initial = remoteRef(dir, 'develop');
@@ -339,7 +353,8 @@ test('invalid tag and stale main refuse to create a version PR', t => {
   );
   sh(dir, 'git', 'checkout', 'main');
   text(dir, 'unapproved.txt', 'main was edited\n');
-  sh(dir, 'git', 'add', '.'); sh(dir, 'git', 'commit', '-m', 'fix: changed main');
+  sh(dir, 'git', 'add', '.'); sh(dir, 'git', 'commit', '-m',
+    'fix: changed main');
   sh(dir, 'git', 'push', 'origin', 'main');
   assert.throws(() => prepare(state), /Command failed/);
 });
@@ -352,7 +367,8 @@ test(
     sh(dir, 'git', 'fetch', 'origin');
     sh(dir, 'git', 'checkout', '-B', 'develop', 'refs/remotes/origin/develop');
     text(dir, 'following-feature.txt', 'another feature\n');
-    sh(dir, 'git', 'add', '.'); sh(dir, 'git', 'commit', '-m', 'feat: next release feature');
+    sh(dir, 'git', 'add', '.'); sh(dir, 'git', 'commit', '-m',
+      'feat: next release feature');
     sh(dir, 'git', 'push', 'origin', 'develop');
     sh(dir, 'git', 'checkout', '-B', 'main', 'refs/remotes/origin/main');
     sh(
@@ -385,7 +401,8 @@ test('release in-flight develop commits survive the next merge', t => {
   sh(dir, 'git', 'fetch', 'origin');
   sh(dir, 'git', 'checkout', '-B', 'develop', 'refs/remotes/origin/develop');
   text(dir, 'next.txt', 'a further fix\n');
-  sh(dir, 'git', 'add', '.'); sh(dir, 'git', 'commit', '-m', 'fix: further changes');
+  sh(dir, 'git', 'add', '.'); sh(dir, 'git', 'commit', '-m',
+    'fix: further changes');
   sh(dir, 'git', 'push', 'origin', 'develop');
   sh(dir, 'git', 'checkout', '-B', 'main', 'refs/remotes/origin/main');
   sh(
@@ -418,7 +435,8 @@ test('conflicting future main merge must prevent develop update', t => {
 });
 
 test(
-  'version PR verifier allows only the exact tagged metadata snapshot from the release bot',
+  'version PR verifier allows only the exact tagged metadata snapshot from \
+the release bot',
   t => {
     const state = fixture(t), {dir, merge, snapshot} = state;
     prepare(state);

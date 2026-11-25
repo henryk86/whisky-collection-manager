@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {initializeLanguage, currentLanguage} from '../../public/js/i18n/index.js';
+import {initializeLanguage, currentLanguage}
+  from '../../public/js/i18n/index.js';
 import {createAnalyticsView} from '../../public/js/views/analytics.js';
 import {createHomeView} from '../../public/js/views/home.js';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
@@ -91,7 +92,8 @@ const selectors = {
 };
 
 test(
-  'English renders actual collection, analytics and warehouse controls, not German literals',
+  'English renders actual collection, analytics and warehouse controls, not \
+German literals',
   async () => {
     const previous = {
       location: globalThis.location,
@@ -259,7 +261,8 @@ test(
       }).openForm('furniture',
         'f1'
       );
-      for (const label of ['Left side panel', 'Right side panel', 'Back panel', 'Door leaves']) assert.match(furnitureForm, new RegExp(label));
+      for (const label of ['Left side panel', 'Right side panel', 'Back panel',
+        'Door leaves']) assert.match(furnitureForm, new RegExp(label));
       assert.doesNotMatch(
         furnitureForm,
         /Linke Seitenwand|Rechte Seitenwand|R\u00fcckwand|T\u00fcrfl\u00fcgel/

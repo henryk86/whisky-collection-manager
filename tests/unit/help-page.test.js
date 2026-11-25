@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {parseRoute, routeUrl} from '../../public/js/navigation/routes.js';
 import {MAIN_PAGES} from '../../public/js/navigation/pages.js';
-import {HELP_TOPICS, helpView, activateHelpTopic} from '../../public/js/views/help.js';
+import {HELP_TOPICS, helpView, activateHelpTopic}
+  from '../../public/js/views/help.js';
 import {mapLegendHtml} from '../../public/js/views/map.js';
 
 test(
@@ -17,7 +18,8 @@ test(
 );
 
 test(
-  'help topics are translated in both languages and render in the shared sidebar',
+  'help topics are translated in both languages and render in the shared \
+sidebar',
   () => {
     const de = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
     const en = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
@@ -34,11 +36,14 @@ test(
     );
     assert.equal(
       de['help.description'],
-      'Hier findest du Anleitungen zu Abfüllungen, Verkostungsnotizen, Tasting-Flights, Lager, Landkarte, Fotos, Analysen, Backups und Datenspeicherung.'
+      'Hier findest du Anleitungen zu Abfüllungen, Verkostungsnotizen, \
+Tasting-Flights, Lager, Landkarte, Fotos, Analysen, Backups und \
+Datenspeicherung.'
     );
     assert.equal(
       en['help.description'],
-      'Find guides for bottlings, tasting notes, tasting flights, storage, maps, photos, analytics, backups and data storage.'
+      'Find guides for bottlings, tasting notes, tasting flights, storage, \
+maps, photos, analytics, backups and data storage.'
     );
     // Long help text belongs inside the first topic panel, not under the page
     // heading.
@@ -83,7 +88,11 @@ test(
     );
     assert.match(
       html,
-      /class="analytics-section-title" id="help-title-basics">[^<]+<\/h2>\s*<div class="help-content-panel">/
+      new RegExp(
+        'class="analytics-section-title" id="help-t' +
+        'itle-basics">[^<]+<\\/h2>\\s*<div class="h' +
+        'elp-content-panel">'
+      )
     );
     assert.match(html, /data-help-topic="basics" aria-current="page"/);
     assert.match(html, /id="help-panel-basics"/);
@@ -92,7 +101,8 @@ test(
 );
 
 test(
-  'help covers current tasting notes and flights in both languages without old bottling editing advice',
+  'help covers current tasting notes and flights in both languages without \
+old bottling editing advice',
   () => {
     const de = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
     const en = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
@@ -126,7 +136,8 @@ test(
 );
 
 test(
-  'selecting help topics synchronizes sidebar, selector and visible panel without navigating',
+  'selecting help topics synchronizes sidebar, selector and visible panel \
+without navigating',
   () => {
     /**
      * Constructs button from the supplied data.
@@ -213,7 +224,8 @@ test(
 );
 
 test(
-  'technical storage paths belong in help documentation rather than a routine screen',
+  'technical storage paths belong in help documentation rather than a \
+routine screen',
   () => {
     const help = helpView();
     assert.match(help, /data\/collection\.json/);
@@ -222,7 +234,8 @@ test(
 );
 
 test(
-  'map legend shows empty catalog sites only when the all-distilleries filter is active',
+  'map legend shows empty catalog sites only when the all-distilleries \
+filter is active',
   () => {
     const omitted = mapLegendHtml(false);
     const included = mapLegendHtml(true);

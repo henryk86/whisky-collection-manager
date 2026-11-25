@@ -6,7 +6,10 @@ import {furnitureFootprint} from './warehouse-3d-model.js';
  * linked by vertical support belong in the SAME elevation group, including
  * a wide wall cabinet over several narrow lower cabinets.
  */
-const natural = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+const natural = new Intl.Collator(undefined, {
+  numeric: true, sensitivity:
+    'base',
+});
 /**
  * Derives the finite numeric value from its input.
  *
@@ -47,7 +50,10 @@ function position(furniture) {
   const y = finite(furniture.y);
   const width = Math.max(.01, finite(furniture.width, 1));
   const depth = Math.max(.01, finite(furniture.depth, .5));
-  const footprint = furnitureFootprint({...furniture, width, depth, rotation: orientation});
+  const footprint = furnitureFootprint({
+    ...furniture, width, depth,
+    rotation: orientation,
+  });
   // Opposite-facing units are viewed from the opposite side, so their
   // horizontal reading direction is reversed, not the shelf numbering.
   const left = orientation === 180 ? -x - footprint.width

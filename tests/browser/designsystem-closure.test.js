@@ -20,7 +20,8 @@ const viewportMetrics = () => ({
 
 // Additional contract across real page markup, not a regex on CSS source.
 test(
-  'browser: closure headers, detail grids and empty states remain aligned in four sizes and both themes',
+  'browser: closure headers, detail grids and empty states remain aligned \
+in four sizes and both themes',
   async () => {
     await session(async ({page, open, base}) => {
       const {bottling} = await seed(base, '009911');
@@ -74,7 +75,10 @@ test(
       await open();
       const html = sectionHeader({
         title: 'Wirklich sehr lange und umbruchfähige Abschnittsüberschrift',
-        trailingAction: helpIconButton({label: 'Hilfe', action: 'flight-plan-help'}),
+        trailingAction: helpIconButton({
+          label: 'Hilfe',
+          action: 'flight-plan-help',
+        }),
       });
       for (const width of [390, 1440]) {
         await page.setViewportSize({width, height: 900});
@@ -113,7 +117,8 @@ test(
 );
 
 test(
-  'browser: closure button variants and invalid form states remain keyboard accessible',
+  'browser: closure button variants and invalid form states remain keyboard \
+accessible',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -170,7 +175,8 @@ test(
 );
 
 test(
-  'browser: closure repeated modal cycles restore focus, scroll and scrollbar geometry',
+  'browser: closure repeated modal cycles restore focus, scroll and \
+scrollbar geometry',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -189,7 +195,8 @@ test(
         // Playwright.
         await page.evaluate(() => {
           const button =
-            document.querySelector('header [data-act="new"]'); button.focus({preventScroll: true}); button.click();
+            document.querySelector('header [data-act="new"]');
+          button.focus({preventScroll: true}); button.click();
         });
         await page.locator('#modal-root .ds-modal').waitFor({state: 'visible'});
         assert.equal(
@@ -226,11 +233,14 @@ test(
 );
 
 test(
-  'browser: closure long titles, missing values and languages do not overflow mobile viewport',
+  'browser: closure long titles, missing values and languages do not \
+overflow mobile viewport',
   async () => {
     await session(async ({page, open, base}) => {
       const response = await requestJson(base, '/api/bottlings', 'POST', {
-        name: 'A deliberately exceptionally long whisky bottling title with additional marketing descriptors and a few words beyond what a phone can show on a single line',
+        name: 'A deliberately exceptionally long whisky bottling title with \
+additional marketing descriptors and a few words beyond what a phone can \
+show on a single line',
         description: 'Beschreibung und ergänzende Notizen. '.repeat(25),
         firstBottle: {inventoryNumber: '009912', status: 'closed'},
       });
@@ -242,7 +252,8 @@ test(
         assert.ok(geometry.overflow <= 1, `long title at ${width}px`);
         assert.ok((await page.locator('[data-ds-detail-field]').count()) > 0);
       }
-      for (const [language, expected] of [['de', 'Zur Sammlung'], ['en', 'Back to collection']]) {
+      for (const [language, expected] of [['de', 'Zur Sammlung'], ['en',
+        'Back to collection']]) {
         await open({query: `?view=settings&lang=${language}`});
         const nav = page.locator('.settings-heading .ds-back-button');
         await nav.waitFor({state: 'visible'});

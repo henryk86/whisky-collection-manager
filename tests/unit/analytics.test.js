@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {analyzeCollection, filterAnalyticsCollection, analyticsFilterOptions} from '../../public/js/domain/analytics.js';
-import {createAnalyticsView, ANALYSIS_PAGES} from '../../public/js/views/analytics.js';
+import {analyzeCollection, filterAnalyticsCollection, analyticsFilterOptions}
+  from '../../public/js/domain/analytics.js';
+import {createAnalyticsView, ANALYSIS_PAGES}
+  from '../../public/js/views/analytics.js';
 import {parseRoute, routeUrl} from '../../public/js/navigation/routes.js';
 import {MAIN_PAGES} from '../../public/js/navigation/pages.js';
 
@@ -149,7 +151,8 @@ test(
 );
 
 test(
-  'analytics: global filters match the same physical bottle and keep multi-distillery allocations honest',
+  'analytics: global filters match the same physical bottle and keep \
+multi-distillery allocations honest',
   () => {
     const c = collection();
     const result = filterAnalyticsCollection(
@@ -171,7 +174,8 @@ test(
 );
 
 test(
-  'analytics: totals use physical bottles, multiple distilleries count toward each site',
+  'analytics: totals use physical bottles, multiple distilleries count \
+toward each site',
   () => {
     const a = analyzeCollection(collection());
     assert.deepEqual(
@@ -215,11 +219,15 @@ test(
 );
 
 test(
-  'analytics: missing prices are not zero, currencies remain separate and volume-normalised costs use only matching data',
+  'analytics: missing prices are not zero, currencies remain separate and \
+volume-normalised costs use only matching data',
   () => {
     const c = collection();
     c.bottlings[1].bottles
-      .push({id: 'missing', status: 'open', volumeType: 'sample', volumeMl: 50});
+      .push({
+        id: 'missing', status: 'open', volumeType: 'sample',
+        volumeMl: 50,
+      });
     c.bottlings[1].bottles.push({
       id: 'unpriced-currency',
       status: 'closed',
@@ -268,7 +276,8 @@ test(
 );
 
 test(
-  'analytics: the seven views have descriptive titles without index numbers and all analytics URLs are reloadable',
+  'analytics: the seven views have descriptive titles without index numbers \
+and all analytics URLs are reloadable',
   () => {
     assert.equal(ANALYSIS_PAGES.length, 7);
     assert.ok(MAIN_PAGES.some(p => p.id === 'analytics' && p.action ===
@@ -341,12 +350,14 @@ test('analytics: date range applies to actual days, not entire months', () => {
      */
     shell: output => {html = output;},
   })();
-  const registered = html.split('<h3>Erfasste Flaschen</h3>')[1]?.split('</section>')[0] || '';
+  const registered = html.split('<h3>Erfasste Flaschen</h3>')[1]?.split(
+    '</section>')[0] || '';
   assert.match(
     registered,
     /Für diese Auswertung sind keine passenden Daten vorhanden/
   );
-  const opened = html.split('<h3>Geöffnete Flaschen</h3>')[1]?.split('</section>')[0] || '';
+  const opened = html.split('<h3>Geöffnete Flaschen</h3>')[1]?.split(
+    '</section>')[0] || '';
   assert.match(opened, /2025-04/);
   assert.match(html, /type="date" id="analytics-start-date"/);
   assert.match(html, /value="2025-04-10"/);
@@ -387,9 +398,19 @@ test('analytics: last ranked distillery stays an interactive link', () => {
      */
     shell: value => {html = value;},
   })();
-  const top = html.match(/<section class="analytics-panel" data-ds-panel="analytics"><h3>Top-Destillerien<\/h3>([\s\S]*?)<\/section>/)?.[1];
+  const top = html.match(
+    new RegExp(
+      '<section class="analytics-panel" data-ds-p' +
+      'anel="analytics"><h3>Top-Destillerien<\\/h' +
+      '3>([\\s\\S]*?)<\\/section>'
+    ))?.[1];
   assert.ok(top, 'the top-distilleries panel is rendered');
-  const links = [...top.matchAll(/<button[^>]*class="analytics-bar-label analytics-link"[^>]*>([^<]*)<\/button>/g)];
+  const links = [...top.matchAll(
+    new RegExp(
+      '<button[^>]*class="analytics-bar-label ana' +
+      'lytics-link"[^>]*>([^<]*)<\\/button>',
+      'g'
+    ))];
   assert.equal(
     links.length,
     distilleries.length,
@@ -401,7 +422,8 @@ test('analytics: last ranked distillery stays an interactive link', () => {
 
 
 test(
-  'analytics: consumption uses only valid completed bottle intervals, including leap days and same-day emptying',
+  'analytics: consumption uses only valid completed bottle intervals, \
+including leap days and same-day emptying',
   () => {
     const c = collection();
     c.bottlings[0].bottles.push(
@@ -482,7 +504,8 @@ test(
 );
 
 test(
-  'analytics: duration and emptying timeline are visible even without a usable pair of dates',
+  'analytics: duration and emptying timeline are visible even without a \
+usable pair of dates',
   () => {
     const c = collection();
     let html = '';

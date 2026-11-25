@@ -52,7 +52,8 @@ export function bottlingChoiceOptions(collection, search = '') {
       `${quantity} ${quantity === 1 ? t("forms.bottle.title") :
         t("forms.bottle.plural")}`,
     ].filter(Boolean).join(' · ');
-    return `<option value="${escapeHtml(bottling.id)}">${escapeHtml(bottling.name)}${details ? ` · ${escapeHtml(details)}` : ''}</option>`;
+    return `<option value="${escapeHtml(bottling.id)}">${escapeHtml(bottling
+      .name)}${details ? ` · ${escapeHtml(details)}` : ''}</option>`;
   }).join('');
 }
 
@@ -69,18 +70,23 @@ export function bottlingChoiceDialog(collection) {
     <p>${t("forms.bottle.existingBottlingHint")}</p>
     <form id="new-bottle-choice-form">
     <label class="form-field full">${t("forms.bottling.searchExisting")}
-    <input id="bottling-choice-search" type="search" placeholder="${t("forms.bottling.searchNameDistilleryBottler")}" autocomplete="off">
+    <input id="bottling-choice-search" type="search" placeholder="${t(
+    "forms.bottling.searchNameDistilleryBottler")}" autocomplete="off">
     </label>
     <label class="form-field full">${t("forms.bottling.select")}
-    <select id="bottling-choice-select" name="bottlingId" required>${bottlingChoiceOptions(collection)}</select>
+    <select id="bottling-choice-select" name="bottlingId" required>\
+${bottlingChoiceOptions(collection)}</select>
     </label>
-    <p class="hint" id="bottling-choice-count" aria-live="polite">${t("forms.bottling.availableCount", {count})}</p>
-    <div class="actions"><button class="btn primary" type="submit">${t("forms.bottle.addToBottling")}</button></div>
+    <p class="hint" id="bottling-choice-count" aria-live="polite">${t(
+      "forms.bottling.availableCount", {count})}</p>
+    <div class="actions"><button class="btn primary" type="submit">${t(
+        "forms.bottle.addToBottling")}</button></div>
     </form>
-    <div class="bottling-choice-divider"><span>${t("forms.common.or")}</span></div>
+    <div class="bottling-choice-divider"><span>${t("forms.common.or"
+        )}</span></div>
     ${actionButton({
-    label: t("collection.actions.newBottling"),
-    action: 'new-bottling-direct',
-  })}
+          label: t("collection.actions.newBottling"),
+          action: 'new-bottling-direct',
+        })}
     </div>`;
 }

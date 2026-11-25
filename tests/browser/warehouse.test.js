@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer, requestJson} from '../helpers/server.js';
-import {domOnly, chromium, session, openSettingsFromMenu, openSettingsSection, seed, mockDecoder} from './support.js';
+import {
+  domOnly, chromium, session, openSettingsFromMenu, openSettingsSection,
+  seed, mockDecoder
+} from './support.js';
 test(
-  'browser: finder opens the exact shelf, returns to its search and keeps single-bottle relocation',
+  'browser: finder opens the exact shelf, returns to its search and keeps \
+single-bottle relocation',
   async () => {
     await session(async ({base, page, open}) => {
       const {bottling, bottle} = await seed(base, '098712');
@@ -59,14 +63,17 @@ test(
       await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
       await page.locator('.warehouse-tabs [data-section="find"]').click();
       await page.locator('#warehouse-search').fill('098712');
-      const result = page.locator(`.warehouse-finder-card[data-bottle-id="${bottle.id}"]`);
+      const result = page.locator(
+        `.warehouse-finder-card[data-bottle-id="${bottle.id}"]`);
       await result.waitFor();
       // An exceptionally tall bottle photo must remain entirely within the
       // thumbnail at its original aspect ratio, not be clipped or stretched.
       const preview = await result.locator('.warehouse-finder-photo')
         .evaluate(async slot => {
           const img = slot.querySelector('img');
-          const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="400"><rect width="80" height="400" fill="#bd955d"/></svg>';
+          const svg =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="80" \
+height="400"><rect width="80" height="400" fill="#bd955d"/></svg>';
           img.src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
           await img.decode();
           const outer = slot.getBoundingClientRect(), inner =
@@ -99,7 +106,9 @@ test(
       assert.equal(await page.locator('.warehouse-bottle-check').count(), 0);
       await page.locator('.warehouse-finder-filter-option').nth(1).click();
       assert.equal(
-        await page.locator('input[name="warehouse-find-placement"][value="assigned"]').isChecked(),
+        await page.locator(
+          'input[name="warehouse-find-placement"][value="assigned"]')
+          .isChecked(),
         true
       );
       await result.locator('[data-act="warehouse-find-location"]').click();
@@ -109,17 +118,22 @@ test(
         'page'
       );
       assert.equal(
-        await page.locator(`.warehouse-wall-bottle.is-find-focus [data-id="${bottle.id}"]`).count(),
+        await page.locator(
+          `.warehouse-wall-bottle.is-find-focus [data-id="${bottle.id}"]`)
+          .count(),
         1
       );
       assert.equal(
-        await page.locator(`.warehouse-wall-bottle.is-find-dimmed [data-id="${otherBottle.id}"]`).count(),
+        await page.locator(
+          `.warehouse-wall-bottle.is-find-dimmed [data-id="${otherBottle.id}"]`
+        ).count(),
         1
       );
       // Wait for the short fade transition before checking its computed
       // opacity.
       await page.waitForFunction(() => {
-        const other = document.querySelector('.warehouse-wall-bottle.is-find-dimmed');
+        const other = document.querySelector(
+          '.warehouse-wall-bottle.is-find-dimmed');
         return other && Number(getComputedStyle(other).opacity) < 0.9;
       }, null, {timeout: 3000});
       // The whole shelf is located by an external glow: nothing may be
@@ -139,7 +153,8 @@ test(
               selectedTransform: getComputedStyle(selected).transform,
               selectedFilter: getComputedStyle(selected).filter,
               dimmedOpacity: dimmed ? getComputedStyle(dimmed).opacity : null,
-              badgeCount: bay.querySelectorAll('.warehouse-find-bottle-badge').length,
+              badgeCount: bay.querySelectorAll('.warehouse-find-bottle-badge')
+                .length,
             };
           });
       assert.match(
@@ -174,7 +189,9 @@ test(
         '098712'
       );
       assert.equal(
-        await page.locator('input[name="warehouse-find-placement"][value="assigned"]').isChecked(),
+        await page.locator(
+          'input[name="warehouse-find-placement"][value="assigned"]')
+          .isChecked(),
         true
       );
       await result.locator('[data-act="warehouse-assign"]').click();
@@ -199,7 +216,9 @@ test(
         0
       );
       assert.equal(
-        await page.locator('.warehouse-wall-bottle.is-find-focus, .warehouse-wall-bottle.is-find-dimmed').count(),
+        await page.locator(
+          '.warehouse-wall-bottle.is-find-focus, .warehouse-wall-bottle.is-f\
+ind-dimmed').count(),
         0
       );
 
@@ -214,11 +233,15 @@ test(
       assert.equal(await storageLink.getAttribute('data-bottle-id'), bottle.id);
       await storageLink.click();
       assert.equal(
-        await page.locator(`.warehouse-wall-bottle.is-find-focus [data-id="${bottle.id}"]`).count(),
+        await page.locator(
+          `.warehouse-wall-bottle.is-find-focus [data-id="${bottle.id}"]`)
+          .count(),
         1
       );
       assert.equal(
-        await page.locator(`.warehouse-wall-bottle.is-find-dimmed [data-id="${otherBottle.id}"]`).count(),
+        await page.locator(
+          `.warehouse-wall-bottle.is-find-dimmed [data-id="${otherBottle.id}"]`
+        ).count(),
         1
       );
       assert.match(
@@ -228,7 +251,9 @@ test(
       await page.locator('[data-act="warehouse-return-find"]').click();
       assert.equal(await page.locator(`#bottle-${bottle.id}`).count(), 1);
       assert.equal(
-        await page.locator(`[data-act="warehouse-focus"][data-bottle-id="${bottle.id}"]`).count(),
+        await page.locator(
+          `[data-act="warehouse-focus"][data-bottle-id="${bottle.id}"]`).count(
+        ),
         1
       );
     });
@@ -236,7 +261,8 @@ test(
 );
 
 test(
-  'browser: warehouse room plan mounts local Three.js and keeps the 2D plan available',
+  'browser: warehouse room plan mounts local Three.js and keeps the 2D plan \
+available',
   async () => {
     await session(async ({base, page, open}) => {
       const room = await requestJson(
@@ -277,14 +303,18 @@ test(
       await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
       await page.locator('.warehouse-tabs [data-section="rooms"]').click();
       assert.equal(
-        await page.locator('[data-act="warehouse-plan-mode"][data-mode="3d"]').getAttribute('aria-pressed'),
+        await page.locator('[data-act="warehouse-plan-mode"][data-mode="3d"]')
+          .getAttribute('aria-pressed'),
         'true'
       );
       assert.equal(await page.locator('.warehouse-three-viewport').count(), 1);
       for (const corner of ['nw', 'ne', 'se', 'sw']) {
-        await page.locator(`[data-act="warehouse-camera"][data-corner="${corner}"]`).click();
+        await page.locator(
+          `[data-act="warehouse-camera"][data-corner="${corner}"]`).click();
         assert.equal(
-          await page.locator(`[data-act="warehouse-camera"][data-corner="${corner}"]`).getAttribute('aria-pressed'),
+          await page.locator(
+            `[data-act="warehouse-camera"][data-corner="${corner}"]`)
+            .getAttribute('aria-pressed'),
           'true'
         );
       }
@@ -328,7 +358,8 @@ test(
         1
       );
       assert.equal(
-        await page.locator('.warehouse-camera-toolbar [data-act="warehouse-iso-clear"]').count(),
+        await page.locator(
+          '.warehouse-camera-toolbar [data-act="warehouse-iso-clear"]').count(),
         0
       );
       await page.locator('.warehouse-bulk-visibility').first().click();
@@ -401,7 +432,8 @@ test(
               actions: measure('.warehouse-furniture-actions'),
               photos: measure('.warehouse-furniture-photos'),
               upload: measure('.warehouse-furniture-photo-actions .photo-add'),
-              camera: measure('.warehouse-furniture-photo-actions .photo-capture'),
+              camera: measure(
+                '.warehouse-furniture-photo-actions .photo-capture'),
             };
           });
       assert.ok(
@@ -439,7 +471,8 @@ test(
 
 
 test(
-  'browser: room and compact furniture strip stay together; show all restores hidden items',
+  'browser: room and compact furniture strip stay together; show all \
+restores hidden items',
   async () => {
     await session(async ({base, page, open}) => {
       const roomResult = await requestJson(
@@ -488,7 +521,8 @@ test(
           .getBoundingClientRect();
         const aside = document.querySelector('.warehouse-bulk-panel--sidebar')
           .getBoundingClientRect();
-        const list = document.querySelector('.warehouse-bulk-panel--sidebar .warehouse-bulk-list');
+        const list = document.querySelector(
+          '.warehouse-bulk-panel--sidebar .warehouse-bulk-list');
         return {
           stage: {
             left: stage.left,
@@ -507,11 +541,13 @@ test(
       );
       assert.ok(
         Math.abs(desktop.stage.top - desktop.aside.top) < 2,
-        `scene and controls must start at same height: ${JSON.stringify(desktop)}`
+        `scene and controls must start at same height: ${JSON.stringify(desktop
+        )}`
       );
       assert.ok(
         desktop.scrollHeight > desktop.clientHeight,
-        `long furniture list must scroll inside sidebar: ${JSON.stringify(desktop)}`
+        `long furniture list must scroll inside sidebar: ${JSON.stringify(
+          desktop)}`
       );
       const eyes = page.locator('.warehouse-bulk-visibility');
       await eyes.nth(0).click();
@@ -534,7 +570,8 @@ test(
         true
       );
       assert.equal(
-        await page.locator('.warehouse-bulk-visibility[aria-pressed="true"]').count(),
+        await page.locator('.warehouse-bulk-visibility[aria-pressed="true"]')
+          .count(),
         13
       );
       assert.equal(
@@ -548,7 +585,8 @@ test(
           .getBoundingClientRect();
         const aside = document.querySelector('.warehouse-bulk-panel--sidebar')
           .getBoundingClientRect();
-        const list = document.querySelector('.warehouse-bulk-panel--sidebar .warehouse-bulk-list');
+        const list = document.querySelector(
+          '.warehouse-bulk-panel--sidebar .warehouse-bulk-list');
         return {
           stageBottom: stage.bottom,
           asideTop: aside.top,
@@ -560,11 +598,13 @@ test(
       });
       assert.ok(
         mobile.asideTop >= mobile.stageBottom - 2,
-        `compact horizontal list must be immediately below the 3D scene: ${JSON.stringify(mobile)}`
+        `compact horizontal list must be immediately below the 3D scene: ${JSON
+          .stringify(mobile)}`
       );
       assert.ok(
         mobile.scrollWidth > mobile.stripWidth,
-        `many furniture cards must scroll horizontally: ${JSON.stringify(mobile)}`
+        `many furniture cards must scroll horizontally: ${JSON.stringify(mobile
+        )}`
       );
       assert.ok(
         mobile.pageWidth <= mobile.viewportWidth + 2,
@@ -577,7 +617,8 @@ test(
 
 
 test(
-  'browser: shelf overview keeps decorative bottles inert; furniture and rack can open bottle previews',
+  'browser: shelf overview keeps decorative bottles inert; furniture and \
+rack can open bottle previews',
   async () => {
     await session(async ({base, page, open}) => {
       const created = await seed(base, '098765');
@@ -623,7 +664,8 @@ test(
       await page.locator('#warehouse-room-select').selectOption(room.id);
       // Furniture modal -> bottle modal -> furniture modal must preserve
       // context.
-      await page.locator(`.warehouse-wall-furniture-edit[data-id="${furniture.id}"]`).click();
+      await page.locator(`.warehouse-wall-furniture-edit[data-id="${furniture
+        .id}"]`).click();
       const manager = page.locator('#modal-root .warehouse-furniture-manager');
       assert.equal(await manager.locator('.warehouse-shelf').count(), 1);
       const managedBottle =
@@ -688,7 +730,9 @@ test(
         await page.locator('#modal-root .warehouse-bottle-preview').count(),
         0
       );
-      await shelfOverview.locator(`[data-act="warehouse-assign"][data-id="${created.bottle.id}"]`).click();
+      await shelfOverview.locator(
+        `[data-act="warehouse-assign"][data-id="${created.bottle.id}"]`).click(
+      );
       assert.equal(
         await page.locator('#modal-root #warehouse-form').count(),
         1
@@ -715,7 +759,9 @@ test(
 
       // A click still selects for batch relocation, a double-click opens bottle
       // details.
-      const symbol = page.locator(`.warehouse-room-wall .warehouse-bottle-symbol[data-id="${created.bottle.id}"]`);
+      const symbol = page.locator(
+        `.warehouse-room-wall .warehouse-bottle-symbol[data-id="${created
+          .bottle.id}"]`);
       await symbol.click();
       assert.equal(await symbol.getAttribute('aria-pressed'), 'true');
       await symbol.dblclick();
@@ -800,10 +846,12 @@ test(
       });
       assert.ok(
         compact.dialogWidth <= 742,
-        `relocation modal should not span the full page: ${JSON.stringify(compact)}`
+        `relocation modal should not span the full page: ${JSON.stringify(
+          compact)}`
       );
       assert.ok(Math.abs(compact.bottleTop - compact.currentTop) <= 2,
-        `bottle and current location must share one row: ${JSON.stringify(compact)}`);
+        `bottle and current location must share one row: ${JSON.stringify(
+          compact)}`);
       assert.equal(
         compact.columns,
         3,
@@ -812,19 +860,21 @@ test(
       await assign.locator('.warehouse-form-actions [type="submit"]')
         .waitFor({state: 'visible'});
       const radioStyle =
-        await assign.locator('.warehouse-assignment-modes input[type="radio"]').first().evaluate(input => {
-          const style = getComputedStyle(input);
-          const bounds = input.getBoundingClientRect();
-          return {
-            width: bounds.width,
-            height: bounds.height,
-            appearance: style.appearance,
-          };
-        });
+        await assign.locator('.warehouse-assignment-modes input[type="radio"]')
+          .first().evaluate(input => {
+            const style = getComputedStyle(input);
+            const bounds = input.getBoundingClientRect();
+            return {
+              width: bounds.width,
+              height: bounds.height,
+              appearance: style.appearance,
+            };
+          });
       assert.ok(
         Math.abs(radioStyle.width - 18) < 1 && Math.abs(radioStyle.height -
           18) < 1,
-        `assignment radios should retain an 18px control instead of text-field dimensions: ${JSON.stringify(radioStyle)}`
+        `assignment radios should retain an 18px control instead of \
+text-field dimensions: ${JSON.stringify(radioStyle)}`
       );
       assert.equal(radioStyle.appearance, 'auto');
       assert.match(
@@ -853,11 +903,13 @@ test(
         const bounds = await assign.evaluate(element => {
           const frame = element.querySelector('.warehouse-assignment-photo')
             .getBoundingClientRect();
-          const image = element.querySelector('.warehouse-assignment-photo img').getBoundingClientRect();
+          const image = element.querySelector('.warehouse-assignment-photo img'
+          ).getBoundingClientRect();
           return {
             frame: {x: frame.x, y: frame.y, w: frame.width, h: frame.height},
             image: {x: image.x, y: image.y, w: image.width, h: image.height},
-            fit: getComputedStyle(element.querySelector('.warehouse-assignment-photo img')).objectFit,
+            fit: getComputedStyle(element.querySelector(
+              '.warehouse-assignment-photo img')).objectFit,
           };
         });
         assert.equal(bounds.fit, 'contain');
@@ -868,7 +920,8 @@ test(
           bounds.frame.w + 1
           && bounds.image.y + bounds.image.h <= bounds.frame.y +
           bounds.frame.h + 1,
-          `tall bottle photo must fit entirely in preview: ${JSON.stringify(bounds)}`
+          `tall bottle photo must fit entirely in preview: ${JSON.stringify(
+            bounds)}`
         );
       };
       await checkPhotoSize();
@@ -892,7 +945,9 @@ test(
       const assignmentFrame = await assign.evaluate(element => ({
         width: element.closest('.dialog').getBoundingClientRect().width,
         viewport: document.documentElement.clientWidth,
-        columns: getComputedStyle(element.querySelector('.warehouse-assignment-selectors')).gridTemplateColumns.split(' ').length,
+        columns: getComputedStyle(element.querySelector(
+          '.warehouse-assignment-selectors')).gridTemplateColumns.split(' ')
+          .length,
       }));
       assert.ok(
         assignmentFrame.width <= assignmentFrame.viewport + 1,
@@ -925,7 +980,8 @@ test(
 
 
 test(
-  'browser: Umlagern directly offers destination selectors and saves a different shelf',
+  'browser: Umlagern directly offers destination selectors and saves a \
+different shelf',
   async () => {
     await session(async ({base, page, open}) => {
       const {bottle} = await seed(base, '098766');
@@ -972,7 +1028,8 @@ test(
       await page.locator('header [data-act="toggle-menu"]').click();
       await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
       await page.locator('.warehouse-tabs [data-section="find"]').click();
-      await page.locator(`[data-act="warehouse-assign"][data-id="${bottle.id}"]`).click();
+      await page.locator(`[data-act="warehouse-assign"][data-id="${bottle
+        .id}"]`).click();
       const form = page.locator('#modal-root #warehouse-form');
       await form.waitFor();
       assert.equal(
@@ -999,7 +1056,8 @@ test(
       assert.equal(stored.status, 200);
       assert.equal(stored.data.assignments[bottle.id], target.id,
         'Umlagern must persist the chosen shelf, not the original shelf');
-      await page.locator(`[data-act="warehouse-assign"][data-id="${bottle.id}"]`).click();
+      await page.locator(`[data-act="warehouse-assign"][data-id="${bottle
+        .id}"]`).click();
       await form.waitFor();
       assert.match(
         await form.locator('.warehouse-assignment-current strong').innerText(),
@@ -1050,7 +1108,9 @@ test(
       const mobile = await form.evaluate(element => ({
         width: element.closest('.dialog').getBoundingClientRect().width,
         viewport: document.documentElement.clientWidth,
-        columns: getComputedStyle(element.querySelector('.warehouse-assignment-selectors')).gridTemplateColumns.split(' ').length,
+        columns: getComputedStyle(element.querySelector(
+          '.warehouse-assignment-selectors')).gridTemplateColumns.split(' ')
+          .length,
       }));
       assert.ok(
         mobile.width <= mobile.viewport + 1,
@@ -1066,7 +1126,8 @@ test(
 );
 
 test(
-  'browser: room plan positions furniture; shelf tab owns wall, editing and bottles',
+  'browser: room plan positions furniture; shelf tab owns wall, editing and \
+bottles',
   async () => {
     await session(async ({base, page, open}) => {
       const room = (await requestJson(
@@ -1114,7 +1175,8 @@ test(
         'no furniture bulk actions in room plans'
       );
       assert.equal(
-        await page.locator('.warehouse-plan-tools [data-act="warehouse-furniture-new"]').count(),
+        await page.locator(
+          '.warehouse-plan-tools [data-act="warehouse-furniture-new"]').count(),
         1
       );
       await page.locator('.warehouse-bulk-open').click();
@@ -1125,7 +1187,8 @@ test(
       assert.equal(
         await page.locator('.warehouse-plan-focus-info').count(),
         1,
-        'selecting furniture in Raumpläne shows position and a usable destination'
+        'selecting furniture in Raumpläne shows position and a usable \
+destination'
       );
       assert.equal(await page.locator('.warehouse-furniture-panel').count(), 0);
       await page.locator('[data-act="warehouse-open-shelves"]').click();
@@ -1147,11 +1210,14 @@ test(
       );
       await page.locator('.warehouse-wall-furniture-edit').first().click();
       assert.equal(
-        await page.locator('#modal-root .warehouse-furniture-panel .warehouse-shelf').count(),
+        await page.locator(
+          '#modal-root .warehouse-furniture-panel .warehouse-shelf').count(),
         1
       );
       assert.equal(
-        await page.locator('#modal-root .warehouse-furniture-panel .warehouse-bottle-symbol').count(),
+        await page.locator(
+          '#modal-root .warehouse-furniture-panel .warehouse-bottle-symbol')
+          .count(),
         0,
         'empty shelf has no bottle thumbnails'
       );
@@ -1182,15 +1248,19 @@ test(
       await item.click();
       assert.equal(await item.getAttribute('aria-pressed'), 'false');
       await page.locator('#modal-root [data-act="close-modal"]').click();
-      for (const action of ['warehouse-room-new', 'warehouse-room-edit', 'warehouse-room-delete'])
+      for (const action of ['warehouse-room-new', 'warehouse-room-edit',
+        'warehouse-room-delete'])
         assert.equal(
-          await page.locator(`.warehouse-room-toolbar [data-act="${action}"]`).count(),
+          await page.locator(`.warehouse-room-toolbar [data-act="${action}"]`)
+            .count(),
           0
         );
       await page.locator('.warehouse-tabs [data-section="rooms"]').click();
-      for (const action of ['warehouse-room-new', 'warehouse-room-edit', 'warehouse-room-delete'])
+      for (const action of ['warehouse-room-new', 'warehouse-room-edit',
+        'warehouse-room-delete'])
         assert.equal(
-          await page.locator(`.warehouse-room-toolbar [data-act="${action}"]`).count(),
+          await page.locator(`.warehouse-room-toolbar [data-act="${action}"]`)
+            .count(),
           1
         );
       await page.locator('[data-act="warehouse-plan-mode"][data-mode="2d"]')
@@ -1214,7 +1284,8 @@ test(
 
 
 test(
-  'browser: 3D viewport either renders WebGL canvas or clearly reports unavailable WebGL',
+  'browser: 3D viewport either renders WebGL canvas or clearly reports \
+unavailable WebGL',
   async () => {
     await session(async ({base, page, open}) => {
       const room = await requestJson(
@@ -1265,7 +1336,8 @@ test(
       await page.waitForFunction(() =>
         !!document.querySelector('.warehouse-three-canvas') ||
         /nicht verf.gbar/
-          .test(document.querySelector('.warehouse-three-viewport')?.textContent || ''));
+          .test(document.querySelector('.warehouse-three-viewport')
+            ?.textContent || ''));
       const viewport = page.locator('.warehouse-three-viewport');
       const canvas = viewport.locator('.warehouse-three-canvas');
       if (await canvas.count()) {
@@ -1287,7 +1359,8 @@ test(
 
 
 test(
-  'browser: 2D furniture drag stops at a physical obstacle but permits non-overlapping heights',
+  'browser: 2D furniture drag stops at a physical obstacle but permits \
+non-overlapping heights',
   async () => {
     await session(async ({base, page, open}) => {
       const room = (await requestJson(
@@ -1373,7 +1446,8 @@ test(
 
 
 test(
-  'browser: overview room cards show static 3D room previews and still open the room plan',
+  'browser: overview room cards show static 3D room previews and still open \
+the room plan',
   async () => {
     await session(async ({base, page, open}) => {
       const room = (await requestJson(base, '/api/warehouse/rooms', 'POST',
@@ -1403,7 +1477,8 @@ test(
       const preview = card.locator('.warehouse-room-preview');
       await preview.waitFor();
       await page.waitForFunction(id => {
-        const node = document.querySelector(`.warehouse-room-card[data-id="${id}"] .warehouse-room-preview`);
+        const node = document.querySelector(
+          `.warehouse-room-card[data-id="${id}"] .warehouse-room-preview`);
         return node?.dataset.previewState === 'ready' || node?.dataset
           .previewState === 'unavailable';
       }, room.id);
@@ -1451,7 +1526,8 @@ test(
 
 
 test(
-  'browser: eye icons independently hide and show furniture without selecting its checkbox',
+  'browser: eye icons independently hide and show furniture without \
+selecting its checkbox',
   async () => {
     await session(async ({base, page, open}) => {
       const room = await requestJson(
@@ -1532,7 +1608,8 @@ test(
 
 
 test(
-  'browser: compact room tools, uniform bulk buttons and furniture wall toggles',
+  'browser: compact room tools, uniform bulk buttons and furniture wall \
+toggles',
   async () => {
     await session(async ({base, page, open}) => {
       const room = (await requestJson(
@@ -1610,7 +1687,9 @@ test(
       await page.locator('.warehouse-tabs [data-section="shelves"]').click();
       await page.locator('[data-act="warehouse-furniture-bulk"]').click();
       const bulkButtons =
-        await page.locator('#modal-root .warehouse-furniture-bulk-manager .warehouse-bulk-actions .btn')
+        await page.locator(
+          '#modal-root .warehouse-furniture-bulk-manager .warehouse-bulk-act\
+ions .btn')
           .evaluateAll(buttons => buttons.map(button =>
             button.getBoundingClientRect().height));
       assert.equal(
@@ -1685,7 +1764,8 @@ test(
 
 
 test(
-  'browser: analysis and warehouse use the same page width as the shared main content',
+  'browser: analysis and warehouse use the same page width as the shared \
+main content',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -1705,12 +1785,17 @@ test(
               const contentRight = bounds.right -
                 parseFloat(mainStyle.paddingRight);
               const page = element.getBoundingClientRect();
-              return {left: page.left, right: page.right, contentLeft, contentRight};
+              return {
+                left: page.left, right: page.right, contentLeft,
+                contentRight,
+              };
             });
           assert.ok(Math.abs(dimensions.left - dimensions.contentLeft) < 1,
-            `${destination} left edge aligns with shared main content at ${width}px`);
+            `${destination} left edge aligns with shared main content at \
+${width}px`);
           assert.ok(Math.abs(dimensions.right - dimensions.contentRight) < 1,
-            `${destination} right edge aligns with shared main content at ${width}px`);
+            `${destination} right edge aligns with shared main content at \
+${width}px`);
         }
       }
     });
@@ -1760,7 +1845,8 @@ test(
 
 
 test(
-  'browser: complete English locale renders collection controls and analytics filters',
+  'browser: complete English locale renders collection controls and \
+analytics filters',
   async () => {
     await session(async ({page, open}) => {
       await open({query: '?lang=en'});
@@ -1794,7 +1880,8 @@ test(
 
 
 test(
-  'browser: English map legend translates active and closed for visible and empty distilleries',
+  'browser: English map legend translates active and closed for visible and \
+empty distilleries',
   async () => {
     await session(async ({page, open}) => {
       await open({query: '?lang=en'});
@@ -1825,7 +1912,8 @@ test(
 
 
 test(
-  'browser: deleting an occupied room asks to unassign its bottles, with cancel preserving everything',
+  'browser: deleting an occupied room asks to unassign its bottles, with \
+cancel preserving everything',
   async () => {
     await session(async ({base, page, open}) => {
       const bottle = await seed(base, '071615');
@@ -1867,11 +1955,13 @@ test(
       await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
       await page.locator('.warehouse-tabs [data-section="rooms"]').click();
       await page.locator('#warehouse-room-select').selectOption(room.id);
-      await page.locator('.warehouse-room-toolbar [data-act="warehouse-room-delete"]').click();
+      await page.locator(
+        '.warehouse-room-toolbar [data-act="warehouse-room-delete"]').click();
       const dialog = page.locator('#modal-root [role="dialog"]');
       assert.match(await dialog.textContent(), /1 Flasche/);
       assert.equal(
-        await dialog.locator('[data-act="warehouse-confirm-delete-unassign"]').count(),
+        await dialog.locator('[data-act="warehouse-confirm-delete-unassign"]')
+          .count(),
         1
       );
       assert.equal(
@@ -1883,7 +1973,8 @@ test(
       const afterCancel = (await requestJson(base, '/api/warehouse')).data;
       assert.equal(afterCancel.rooms.length, 2);
       assert.equal(afterCancel.assignments[bottle.bottle.id], shelf.id);
-      await page.locator('.warehouse-room-toolbar [data-act="warehouse-room-delete"]').click();
+      await page.locator(
+        '.warehouse-room-toolbar [data-act="warehouse-room-delete"]').click();
       await dialog.locator('[data-act="warehouse-confirm-delete-unassign"]')
         .click();
       await page.locator('#modal-root [role="dialog"]')
@@ -1900,7 +1991,8 @@ test(
 
 
 test(
-  'browser: showing all distilleries preserves exact map camera and viewer node',
+  'browser: showing all distilleries preserves exact map camera and viewer \
+node',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -1960,7 +2052,8 @@ test(
 
 
 test(
-  'browser: placing furniture from the 2D plan stays in room plans and permits the first compartment',
+  'browser: placing furniture from the 2D plan stays in room plans and \
+permits the first compartment',
   async () => {
     await session(async ({base, page, open}) => {
       const room = (await requestJson(base, '/api/warehouse/rooms', 'POST',
@@ -1972,22 +2065,31 @@ test(
       await page.locator('#warehouse-room-select').selectOption(room.id);
       await page.locator('[data-act="warehouse-plan-mode"][data-mode="2d"]')
         .click();
-      await page.locator('.warehouse-plan-tools [data-act="warehouse-furniture-new"]').click();
+      await page.locator(
+        '.warehouse-plan-tools [data-act="warehouse-furniture-new"]').click();
       const form = page.locator('#modal-root #warehouse-form');
       await form.locator('[name="name"]').fill('Vitrine neu');
       await form.locator('button[type="submit"]').click();
-      await page.locator('.warehouse-tabs [data-section="rooms"][aria-current="page"]').waitFor();
+      await page.locator(
+        '.warehouse-tabs [data-section="rooms"][aria-current="page"]').waitFor(
+      );
       assert.equal(await page.locator('.warehouse-floor').count(), 1);
       assert.equal(
         await page.locator('.warehouse-plan-focus-info strong').innerText(),
         'Vitrine neu'
       );
-      await page.locator('.warehouse-plan-focus [data-act="warehouse-furniture-manage"]').click();
-      await page.locator('#modal-root .warehouse-furniture-manager [data-act="warehouse-shelf-new"]').click();
+      await page.locator(
+        '.warehouse-plan-focus [data-act="warehouse-furniture-manage"]').click(
+      );
+      await page.locator(
+        '#modal-root .warehouse-furniture-manager [data-act="warehouse-shelf\
+-new"]').click();
       const shelfForm = page.locator('#modal-root #warehouse-form');
       await shelfForm.locator('[name="name"]').fill('Erstes Fach');
       await shelfForm.locator('button[type="submit"]').click();
-      await page.locator('.warehouse-tabs [data-section="rooms"][aria-current="page"]').waitFor();
+      await page.locator(
+        '.warehouse-tabs [data-section="rooms"][aria-current="page"]').waitFor(
+      );
       assert.equal(await page.locator('.warehouse-floor').count(), 1);
       assert.equal(
         (await requestJson(base, '/api/warehouse')).data.rooms

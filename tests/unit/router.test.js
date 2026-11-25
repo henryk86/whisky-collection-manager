@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {parseRoute, routeUrl} from '../../public/js/navigation/routes.js';
 test('routing: home, settings, and detail URLs are reversible', () => {
-  for (const [page, id] of [['home', null], ['settings', null], ['detail', 'bottle-123-abcd']]) {
+  for (const [page, id] of [['home', null], ['settings', null], ['detail',
+    'bottle-123-abcd']]) {
     const url = routeUrl(page, id);
     assert.deepEqual(parseRoute(new URL(url, 'http://localhost:3100').search), {
       page, selected: id,
@@ -22,7 +23,8 @@ test(
   }
 );
 test(
-  'routing: detail URL is stable across repeated navigation (no extra history entry needed)',
+  'routing: detail URL is stable across repeated navigation (no extra \
+history entry needed)',
   () => {
     const url = routeUrl('detail', 'abc-123');
     assert.equal(

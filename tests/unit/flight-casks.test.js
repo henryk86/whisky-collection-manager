@@ -4,7 +4,8 @@ import {
   classifyCask, caskDistance, readAge, ageDistance, ageClass, caskMatches,
   CASK_GROUPS, CASK_DIMENSIONS, caskCoverage, validCaskFilters,
 } from '../../public/js/domain/flight-casks.js';
-import {suggestFlight, flightCandidates, orderFlightItems} from '../../public/js/domain/flight-planner.js';
+import {suggestFlight, flightCandidates, orderFlightItems}
+  from '../../public/js/domain/flight-planner.js';
 
 const profile = {
   woody: 0,
@@ -30,7 +31,8 @@ const profile = {
 const bottle = (id, caskType, ageYears, tastedOn = '2026-11-01') => ({
   id, name: id, caskType, ageYears, abv: 46,
   distilleryIds: [id], bottles: [{id: `p-${id}`, status: 'open'}],
-  tastings: tastedOn ? [{id: `t-${id}`, tastedOn, flavorProfile: {...profile}}] : [],
+  tastings: tastedOn ? [{id: `t-${id}`, tastedOn, flavorProfile: {...profile}},
+  ] : [],
 });
 const sample = {
   bottlings: [
@@ -302,7 +304,8 @@ test(
 );
 
 test(
-  'sherry subtype differences are smaller than Bourbon versus Sherry; unknowns are not a fake zero',
+  'sherry subtype differences are smaller than Bourbon versus Sherry; \
+unknowns are not a fake zero',
   () => {
     assert.equal(
       caskDistance(classifyCask('PX'), classifyCask('Oloroso')),
@@ -335,7 +338,8 @@ test(
   }
 );
 test(
-  'similar defaults to comparable cask/age groups and explicit preferences affect selection',
+  'similar defaults to comparable cask/age groups and explicit preferences \
+affect selection',
   () => {
     assert.deepEqual(plan(sample, {}), ['bourbonA', 'bourbonB', 'bourbonC']);
     assert.deepEqual(
@@ -372,9 +376,13 @@ test(
   }
 );
 test(
-  'unavailable or unknown cask and age facts are neutral unless strict constraints are active',
+  'unavailable or unknown cask and age facts are neutral unless strict \
+constraints are active',
   () => {
-    const source = {bottlings: [bottle('unknown', 'oak finish', null), bottle('bourbon', 'bourbon', 10)]};
+    const source = {
+      bottlings: [bottle('unknown', 'oak finish', null),
+      bottle('bourbon', 'bourbon', 10)],
+    };
     assert.equal(plan(source, {count: 2}).length, 2);
     assert.deepEqual(
       plan(
@@ -400,11 +408,15 @@ test(
       null
     );
     assert.throws(() => plan(source, {caskMode: 'broken'}));
-    assert.throws(() => plan(source, {ageMode: 'range', ageMin: 19, ageMax: 12}));
+    assert.throws(() => plan(source, {
+      ageMode: 'range', ageMin: 19,
+      ageMax: 12,
+    }));
   }
 );
 test(
-  'balanced includes known cask families and discover can prefer families not yet tasted',
+  'balanced includes known cask families and discover can prefer families \
+not yet tasted',
   () => {
     const balanced = plan(sample, {style: 'balanced', count: 4});
     const categories = balanced.map(id =>
@@ -577,20 +589,28 @@ test('adjacent wine modifiers combine on the same cask', () => {
 });
 
 test('maturation includes unspecified casks but excludes finishes', () => {
-  const data = {bottlings: [
-    bottle('plain', 'Sherry Cask', 12),
-    bottle('numbered', '21 Oloroso Sherry Butts', 12),
-    bottle('aged', 'Sherry maturation', 12),
-    bottle('finish', 'Sherry Finish', 12),
-    bottle('other', 'Bourbon Cask', 12),
-  ]};
-  const criteria = {caskMode: 'specific', caskPhase: 'maturation',
-    caskFilters: {sherry: {}}, count: 4, strictMatches: true};
+  const data = {
+    bottlings: [
+      bottle('plain', 'Sherry Cask', 12),
+      bottle('numbered', '21 Oloroso Sherry Butts', 12),
+      bottle('aged', 'Sherry maturation', 12),
+      bottle('finish', 'Sherry Finish', 12),
+      bottle('other', 'Bourbon Cask', 12),
+    ],
+  };
+  const criteria = {
+    caskMode: 'specific', caskPhase: 'maturation',
+    caskFilters: {sherry: {}}, count: 4, strictMatches: true,
+  };
   assert.deepEqual(new Set(plan(data, criteria)),
     new Set(['plain', 'numbered', 'aged']));
-  assert.deepEqual(plan(data, {...criteria,
-    caskFilters: {sherry: {style: ['oloroso']}}}), ['numbered']);
-  assert.deepEqual(new Set(plan(data, {...criteria, count: 3,
-    strictMatches: false})), new Set(['plain', 'numbered', 'aged']));
+  assert.deepEqual(plan(data, {
+    ...criteria,
+    caskFilters: {sherry: {style: ['oloroso']}},
+  }), ['numbered']);
+  assert.deepEqual(new Set(plan(data, {
+    ...criteria, count: 3,
+    strictMatches: false,
+  })), new Set(['plain', 'numbered', 'aged']));
   assert.deepEqual(plan(data, {...criteria, caskPhase: 'finish'}), ['finish']);
 });

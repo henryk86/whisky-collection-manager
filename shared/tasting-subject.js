@@ -1,6 +1,7 @@
 /** Embedded, non-inventory whisky details for one standalone tasting. */
 export const TASTING_SUBJECT_FIELDS =
-  Object.freeze(['name', 'distillery', 'bottler', 'ageYears', 'abv', 'releaseYear']);
+  Object.freeze(['name', 'distillery', 'bottler', 'ageYears', 'abv',
+    'releaseYear']);
 /**
  * Normalizes tasting subject for tasting subject.
  *
@@ -11,7 +12,8 @@ export const TASTING_SUBJECT_FIELDS =
 export function normalizeTastingSubject(input, previous = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input) ||
     Object.keys(input).some(key =>
-      !TASTING_SUBJECT_FIELDS.includes(key))) throw new Error('Ungültige Abfüllungsangaben der Verkostung');
+      !TASTING_SUBJECT_FIELDS.includes(key))) throw new Error(
+        'Ungültige Abfüllungsangaben der Verkostung');
   const value = {
     name: '',
     distillery: '',
@@ -22,7 +24,8 @@ export function normalizeTastingSubject(input, previous = {}) {
     ...previous,
     ...input,
   };
-  for (const [key, length] of [['name', 180], ['distillery', 140], ['bottler', 140]]) {
+  for (const [key, length] of [['name', 180], ['distillery', 140], ['bottler',
+    140]]) {
     if (typeof value[key] !== 'string' || value[key].length > length ||
       (key === 'name' && !value[key].trim()))
       throw new Error('Ungültiges Feld: ' + key);

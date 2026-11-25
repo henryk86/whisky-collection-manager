@@ -76,7 +76,8 @@ function render({bottlingFields = {}, bottleFields = {}} = {}) {
 }
 
 test(
-  'bottling detail displays persisted editable metadata including Whiskybase ID',
+  'bottling detail displays persisted editable metadata including \
+Whiskybase ID',
   () => {
     const html = render({
       bottlingFields: {
@@ -120,7 +121,8 @@ test(
 );
 
 test(
-  'bottle detail shows opening date, personal comment, type and all other stored bottle facts',
+  'bottle detail shows opening date, personal comment, type and all other \
+stored bottle facts',
   () => {
     const html = render({
       bottleFields: {
@@ -157,9 +159,15 @@ test(
 );
 
 test(
-  'empty optional bottle fields are omitted; standard bottle type is still explicit',
+  'empty optional bottle fields are omitted; standard bottle type is still \
+explicit',
   () => {
-    const html = render({bottleFields: {openedAt: '', comment: '  ', purchasePrice: null}});
+    const html = render({
+      bottleFields: {
+        openedAt: '', comment: '  ',
+        purchasePrice: null,
+      },
+    });
     assert.doesNotMatch(html, /Öffnungsdatum<\/dt>/);
     assert.doesNotMatch(html, /Leerdatum<\/dt>/);
     assert.doesNotMatch(html, /Persönlicher Kommentar<\/dt>/);

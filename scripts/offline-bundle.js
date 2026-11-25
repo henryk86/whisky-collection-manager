@@ -86,14 +86,17 @@ function hashFile(filename) {
  */
 function allFiles(root, relative) {
   const directory = safePath(root, relative);
-  if (!fs.existsSync(directory)) throw new Error(`Missing offline npm cache: ${relative}`);
+  if (!fs.existsSync(directory)) throw new Error(
+    `Missing offline npm cache: ${relative}`);
   const entries = fs.readdirSync(directory, {withFileTypes: true})
     .sort((a, b) => a.name.localeCompare(b.name));
   return entries.flatMap(entry => {
     const name = `${relative}/${entry.name}`;
-    if (entry.isSymbolicLink()) throw new Error(`Symlink in offline npm cache: ${name}`);
+    if (entry.isSymbolicLink()) throw new Error(
+      `Symlink in offline npm cache: ${name}`);
     if (entry.isDirectory()) return allFiles(root, name);
-    if (!entry.isFile()) throw new Error(`Unexpected file type in offline npm cache: ${name}`);
+    if (!entry.isFile()) throw new Error(
+      `Unexpected file type in offline npm cache: ${name}`);
     return [name];
   });
 }
@@ -110,11 +113,14 @@ export function sealOfflineBundle(root = ROOT) {
   // Keep precisely the content-addressed store; never archive npm logs or
   // auth/configuration.
   for (const entry of fs.readdirSync(cachePath)) {
-    if (entry !== '_cacache') fs.rmSync(path.join(cachePath, entry), {recursive: true, force: true});
+    if (entry !== '_cacache') fs.rmSync(path.join(cachePath, entry),
+      {recursive: true, force: true});
   }
   const cached = allFiles(root, '.offline/npm-cache/_cacache');
   if (!cached.some(name => name.includes('/content-v2/'))) {
-    throw new Error('Offline npm cache is empty: run npm ci with --cache .offline/npm-cache first.');
+    throw new Error(
+      'Offline npm cache is empty: run npm ci with --cache \
+.offline/npm-cache first.');
   }
   const files = [...MANIFEST_FILES, ...cached];
   const hashes = Object.fromEntries(files.sort().map(name => {
@@ -123,8 +129,12 @@ export function sealOfflineBundle(root = ROOT) {
       .isFile()) throw new Error(`Missing required offline asset: ${name}`);
     return [name, hashFile(filename)];
   }));
-  const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
-  const manifest = {schema: 1, version, npm: 'locked npm ci --offline', assets: hashes};
+  const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'),
+    'utf8')).version;
+  const manifest = {
+    schema: 1, version, npm: 'locked npm ci --offline',
+    assets: hashes,
+  };
   const destination = path.join(root, OFFLINE_MANIFEST);
   fs.mkdirSync(path.dirname(destination), {recursive: true});
   fs.writeFileSync(destination, JSON.stringify(manifest, null, 2) + '\n');
@@ -141,13 +151,15 @@ export function verifyOfflineBundle(root = ROOT) {
   const name = path.join(root, OFFLINE_MANIFEST);
   if (!fs.existsSync(name)) throw new Error('Offline bundle manifest missing.');
   const manifest = JSON.parse(fs.readFileSync(name, 'utf8'));
-  const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
+  const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'),
+    'utf8')).version;
   if (manifest.schema !== 1 || manifest.version !== version ||
     !manifest.assets || Array.isArray(manifest.assets)
     || typeof manifest.assets !==
     'object') throw new Error('Offline bundle metadata/version invalid.');
   for (const required of MANIFEST_FILES) {
-    if (!validSha(manifest.assets[required])) throw new Error(`Offline bundle missing required hash: ${required}`);
+    if (!validSha(manifest.assets[required])) throw new Error(
+      `Offline bundle missing required hash: ${required}`);
   }
   const entries = Object.entries(manifest.assets);
   if (!entries.some(([name]) =>
@@ -159,7 +171,8 @@ export function verifyOfflineBundle(root = ROOT) {
       !relative.startsWith('.offline/npm-cache/_cacache/')) {
       throw new Error(`Unexpected file in offline manifest: ${relative}`);
     }
-    if (!validSha(checksum)) throw new Error(`Invalid checksum in offline manifest: ${relative}`);
+    if (!validSha(checksum)) throw new Error(
+      `Invalid checksum in offline manifest: ${relative}`);
     const filename = safePath(root, relative);
     if (!fs.existsSync(filename) || !fs.statSync(filename).isFile() ||
       hashFile(filename) !== checksum) {

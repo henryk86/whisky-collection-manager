@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {findDistilleryLocations} from '../../server/services/distillery-geocoding.js';
+import {findDistilleryLocations}
+  from '../../server/services/distillery-geocoding.js';
 
 test(
   'Nominatim lookup is human-triggered, limited, sanitized and cached by name',

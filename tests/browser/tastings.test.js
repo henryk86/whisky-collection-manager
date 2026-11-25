@@ -3,22 +3,29 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer, requestJson} from '../helpers/server.js';
-import {domOnly, chromium, session, openSettingsFromMenu, openSettingsSection, seed, mockDecoder} from './support.js';
+import {
+  domOnly, chromium, session, openSettingsFromMenu, openSettingsSection,
+  seed, mockDecoder
+} from './support.js';
 test(
-  'browser: flight help icon stays inline with its heading and never shows a hover badge',
+  'browser: flight help icon stays inline with its heading and never shows \
+a hover badge',
   async () => {
     await session(async ({page, open}) => {
       await open();
       await page.locator('header [data-act="toggle-menu"]').click();
       await page.locator('#site-drawer [data-act="goto-tastings-home"]')
         .click();
-      const title = page.locator('.tasting-flight-home h3.flight-plan-heading-title');
-      const help = page.locator('.tasting-flight-home [data-act="flight-plan-help"]');
+      const title = page.locator(
+        '.tasting-flight-home h3.flight-plan-heading-title');
+      const help = page.locator(
+        '.tasting-flight-home [data-act="flight-plan-help"]');
       await help.waitFor({state: 'visible'});
       const aligned = await help.evaluate(button => {
         const heading = button.closest('h3');
         const nextPanelHeading =
-          document.querySelector('.tasting-home-recent .tasting-panel-heading h3');
+          document.querySelector(
+            '.tasting-home-recent .tasting-panel-heading h3');
         const a = heading.getBoundingClientRect();
         const b = button.getBoundingClientRect();
         const reference = nextPanelHeading.getBoundingClientRect();
@@ -43,7 +50,8 @@ test(
       );
       assert.ok(
         Math.abs(aligned.titleTop - aligned.expectedTop) <= 1,
-        `the heading must stay at the same position as other panel headings: ${JSON.stringify(aligned)}`
+        `the heading must stay at the same position as other panel \
+headings: ${JSON.stringify(aligned)}`
       );
       assert.ok(
         aligned.distance <= 2,
@@ -71,7 +79,8 @@ test(
 
 
 test(
-  'browser: planner help returns to the same planning modal with all draft inputs preserved',
+  'browser: planner help returns to the same planning modal with all draft \
+inputs preserved',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -152,7 +161,8 @@ test(
       await form.locator('[data-flight-plan-focus]').selectOption('smoky');
       await form.locator('[data-flight-plan-cask-phase]')
         .selectOption('finish');
-      const help = page.locator('#modal-root .dialog-head [data-act="flight-plan-help"]');
+      const help = page.locator(
+        '#modal-root .dialog-head [data-act="flight-plan-help"]');
       await help.waitFor({state: 'visible'});
       assert.equal(
         await help.getAttribute('aria-label'),
@@ -229,7 +239,8 @@ test(
         true
       );
       assert.equal(
-        await page.locator('#modal-root .dialog-head [data-act="flight-plan-help"]').count(),
+        await page.locator(
+          '#modal-root .dialog-head [data-act="flight-plan-help"]').count(),
         1
       );
     });
@@ -237,7 +248,8 @@ test(
 );
 
 test(
-  'browser: bottling tasting block edits ten-axis flavor, notes and five Glencairn glasses with undo/redo',
+  'browser: bottling tasting block edits ten-axis flavor, notes and five \
+Glencairn glasses with undo/redo',
   async () => {
     await session(async ({page, base, open}) => {
       await open();
@@ -245,7 +257,8 @@ test(
       const form = page.locator('#bottling-form');
       await form.locator('[name="name"]').fill('Flavor profile browser test');
       assert.equal(await form.locator('[data-flavor-range]').count(), 0,
-        'tasting belongs to the second detail block, not the bottling master-data form');
+        'tasting belongs to the second detail block, not the bottling \
+master-data form');
       await form.locator('button[type="submit"]').click();
       await page.locator('[data-act="tastings-new"]').click();
       await page.locator('[data-act="tasting-create"]').click();
@@ -266,11 +279,13 @@ test(
         false
       );
       await section.locator('[data-flavor-range="8"]').evaluate(input => {
-        input.value = '8'; input.dispatchEvent(new Event('input', {bubbles: true}));
+        input.value = '8'; input.dispatchEvent(new Event('input',
+          {bubbles: true}));
         input.dispatchEvent(new Event('change', {bubbles: true}));
       });
       await section.locator('[name="flavor-medicinal"]').evaluate(input => {
-        input.value = '4'; input.dispatchEvent(new Event('input', {bubbles: true}));
+        input.value = '4'; input.dispatchEvent(new Event('input',
+          {bubbles: true}));
         input.dispatchEvent(new Event('change', {bubbles: true}));
       });
       await section.locator('[data-rating-points="80"]').click();
@@ -323,7 +338,8 @@ test(
 
 
 test(
-  'browser: custom whisky picker hides HEX text, saves warm colours and resets on presets',
+  'browser: custom whisky picker hides HEX text, saves warm colours and \
+resets on presets',
   async () => {
     await session(async ({page, base, open}) => {
       await open();
@@ -370,7 +386,8 @@ test(
       await clickPicker(0.12, 0.25);
       await page.waitForFunction(async () => {
         const collection = await (await fetch('/api/collection')).json();
-        return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
+        return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor
+          ?.startsWith('custom:#');
       });
       const chosen = (await requestJson(base, '/api/collection')).data
         .bottlings[0].tastings.at(-1).whiskyColor;
@@ -416,7 +433,8 @@ test(
       await clickPicker(0.80, 0.40);
       await page.waitForFunction(async () => {
         const collection = await (await fetch('/api/collection')).json();
-        return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
+        return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor
+          ?.startsWith('custom:#');
       });
       assert.notEqual(
         (await hiddenDraft.inputValue()).toLowerCase(),
@@ -429,7 +447,8 @@ test(
       await panel.locator('[data-act="tasting-color-clear"]').click();
       await page.waitForFunction(async () => {
         const collection = await (await fetch('/api/collection')).json();
-        return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor === null;
+        return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor ===
+          null;
       });
       assert.equal(await hiddenDraft.inputValue(), '');
       assert.equal(
@@ -441,7 +460,8 @@ test(
       await clickPicker(0.32, 0.26);
       await page.waitForFunction(async () => {
         const collection = await (await fetch('/api/collection')).json();
-        return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
+        return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor
+          ?.startsWith('custom:#');
       });
       await page.locator('[data-act="tasting-edit-done"]').click();
       const readonlyName =
@@ -459,7 +479,8 @@ test(
 );
 
 test(
-  'browser: v0.24 shelf editor saves capacity in suspended manager and switches with three-way confirmation',
+  'browser: v0.24 shelf editor saves capacity in suspended manager and \
+switches with three-way confirmation',
   async () => {
     await session(async ({page, base, open}) => {
       const room = (await requestJson(
@@ -500,22 +521,29 @@ test(
       await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
       await page.locator('.warehouse-tabs [data-section="shelves"]').click();
       await page.locator('#warehouse-room-select').selectOption(room.id);
-      await page.locator(`.warehouse-wall-furniture-edit[data-id="${furniture.id}"]`).click();
+      await page.locator(`.warehouse-wall-furniture-edit[data-id="${furniture
+        .id}"]`).click();
       const manager = page.locator('#modal-root .warehouse-furniture-manager');
-      await manager.locator(`[data-act="warehouse-shelf-edit"][data-id="${shelf2.id}"]`).click();
+      await manager.locator(
+        `[data-act="warehouse-shelf-edit"][data-id="${shelf2.id}"]`).click();
       await page.locator('#warehouse-form [name="capacity"]').fill('12');
-      await page.locator('#warehouse-form [data-act="warehouse-shelf-switch"]').filter({hasText: 'Nächstes'}).click();
+      await page.locator('#warehouse-form [data-act="warehouse-shelf-switch"]')
+        .filter({hasText: 'Nächstes'}).click();
       await page.locator('[data-choice="cancel"]').click();
       assert.equal(
         await page.locator('#warehouse-form [name="capacity"]').inputValue(),
         '12'
       );
-      await page.locator('#warehouse-form [data-act="warehouse-shelf-switch"]').filter({hasText: 'Nächstes'}).click();
+      await page.locator('#warehouse-form [data-act="warehouse-shelf-switch"]')
+        .filter({hasText: 'Nächstes'}).click();
       await page.locator('[data-choice="save"]').click();
-      await page.locator(`#warehouse-form[data-endpoint="/api/warehouse/shelves/${shelf1.id}"]`).waitFor();
+      await page.locator(
+        `#warehouse-form[data-endpoint="/api/warehouse/shelves/${shelf1.id}"]`)
+        .waitFor();
       await page.locator('#modal-root .dialog-head [data-act="close-modal"]')
         .click();
-      const updated = manager.locator(`.warehouse-shelf[data-shelf-id="${shelf2.id}"]`);
+      const updated = manager.locator(`.warehouse-shelf[data-shelf-id="${shelf2
+        .id}"]`);
       assert.match(
         await updated.locator('.warehouse-shelf-meta').textContent(),
         /12/
@@ -529,7 +557,8 @@ test(
         .setInputFiles({
           name: 'shelf.png', mimeType: 'image/png',
           buffer: Buffer.from(
-            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAOfb9AcAAAAASUVORK5CYII=',
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8\
+AAwMCAOfb9AcAAAAASUVORK5CYII=',
             'base64'
           ),
         });
@@ -594,7 +623,8 @@ test(
 
 
 test(
-  'browser: v0.24 nested mobile modal fixes page scrolling and technical help is expandable',
+  'browser: v0.24 nested mobile modal fixes page scrolling and technical \
+help is expandable',
   async () => {
     await session(async ({page, open}) => {
       await page.setViewportSize({width: 390, height: 844});
@@ -624,7 +654,8 @@ test(
       await page.locator('#site-drawer [data-act="goto-help"]').click();
       await page.locator('[data-section-switch="help"]')
         .selectOption('backups');
-      const technical = page.locator('#help-panel-backups .help-technical-guides');
+      const technical = page.locator(
+        '#help-panel-backups .help-technical-guides');
       assert.ok(await technical.isVisible());
       await technical.locator('details').first().locator('summary').click();
       assert.match(
@@ -638,7 +669,8 @@ test(
 
 
 test(
-  'browser: v0.25.1 palette, precise Glencairn rating, undo history and compact detail layout',
+  'browser: v0.25.1 palette, precise Glencairn rating, undo history and \
+compact detail layout',
   async () => {
     await session(async ({page, base, open}) => {
       await open();
@@ -672,18 +704,28 @@ test(
         2,
         'two grouped slider columns beside the radar chart'
       );
-      await section.locator('[data-act="tasting-color"][data-color-key="amber"]').click();
-      await section.screenshot({path: 'test-artifacts/wcm_0251_tasting_light.png'});
-      const color = section.locator('[data-color-key="amber"] .glencairn-liquid');
+      await section.locator(
+        '[data-act="tasting-color"][data-color-key="amber"]').click();
+      await section.screenshot({
+        path:
+          'test-artifacts/wcm_0251_tasting_light.png',
+      });
+      const color = section.locator(
+        '[data-color-key="amber"] .glencairn-liquid');
       const before = await color.evaluate(el => getComputedStyle(el).fill);
       await page.locator('[data-act="toggle-theme"]').click();
-      const after = await section.locator('[data-color-key="amber"] .glencairn-liquid').evaluate(el => getComputedStyle(el).fill);
+      const after = await section.locator(
+        '[data-color-key="amber"] .glencairn-liquid').evaluate(el =>
+          getComputedStyle(el).fill);
       assert.equal(
         before,
         after,
         'whisky colour must not follow the light/dark theme'
       );
-      await section.screenshot({path: 'test-artifacts/wcm_0251_tasting_dark.png'});
+      await section.screenshot({
+        path:
+          'test-artifacts/wcm_0251_tasting_dark.png',
+      });
       const score = section.locator('[data-tasting-score]');
       await score.fill('101');
       await score.press('Tab');
@@ -699,7 +741,8 @@ test(
         await section.locator('[data-tasting-rating]')
           .getAttribute('data-rating-value'),
         '87.5',
-        'the Glencairn visualization should update immediately, without waiting for blur'
+        'the Glencairn visualization should update immediately, without \
+waiting for blur'
       );
       await score.press('Tab');
       assert.equal(await score.getAttribute('aria-invalid'), null);
@@ -756,7 +799,8 @@ test(
 
 
 test(
-  'browser: v0.25.4 Full HD tasting layout groups colour separately from radar and compact 2x4 sliders',
+  'browser: v0.25.4 Full HD tasting layout groups colour separately from \
+radar and compact 2x4 sliders',
   async () => {
     await session(async ({page, open}) => {
       await page.setViewportSize({width: 1920, height: 1080});
@@ -875,7 +919,8 @@ test(
 
 
 test(
-  'browser: v0.25.4 tasting hierarchy matches analytics and gold-filled glasses preserve precise scores',
+  'browser: v0.25.4 tasting hierarchy matches analytics and gold-filled \
+glasses preserve precise scores',
   async () => {
     await session(async ({page, open}) => {
       await page.setViewportSize({width: 1440, height: 900});
@@ -893,7 +938,8 @@ test(
       assert.equal(
         await panels.count(),
         5,
-        'date/title, color, profile, notes, and rating use separate analytics-style panels'
+        'date/title, color, profile, notes, and rating use separate \
+analytics-style panels'
       );
       assert.equal(
         await section.locator('.tasting-color-panel h3').textContent(),
@@ -928,7 +974,8 @@ test(
           border: style.borderTopWidth,
           shadow: style.boxShadow,
           background: style.backgroundColor,
-          header: getComputedStyle(document.querySelector('.tasting-color-panel h3')).fontFamily,
+          header: getComputedStyle(document.querySelector(
+            '.tasting-color-panel h3')).fontFamily,
         };
       });
       assert.equal(appearance.radius, '0px');
@@ -938,7 +985,8 @@ test(
       const colorPanel = section.locator('.tasting-color-panel');
       const ratingPanel = section.locator('.tasting-rating-panel');
       assert.equal(
-        await colorPanel.locator('.whisky-color-current, .whisky-color-footer').count(),
+        await colorPanel.locator('.whisky-color-current, .whisky-color-footer')
+          .count(),
         0
       );
       assert.equal(
@@ -950,11 +998,15 @@ test(
         1
       );
       assert.equal(
-        await colorPanel.locator('.tasting-panel-heading [data-act="tasting-color-clear"]').isDisabled(),
+        await colorPanel.locator(
+          '.tasting-panel-heading [data-act="tasting-color-clear"]')
+          .isDisabled(),
         true
       );
       assert.equal(
-        await ratingPanel.locator('.tasting-panel-heading [data-act="tasting-rating-clear"]').isDisabled(),
+        await ratingPanel.locator(
+          '.tasting-panel-heading [data-act="tasting-rating-clear"]')
+          .isDisabled(),
         true
       );
       const headerPositions = await section.evaluate(() => {
@@ -1043,7 +1095,9 @@ test(
         await rating.locator('[data-glass-state="partial"]').count(),
         1
       );
-      const fifthFill = await rating.locator('[data-glass-state="partial"] [data-rating-fill]').evaluate(node => ({y: +node.getAttribute('y'), height: +node.getAttribute('height')}));
+      const fifthFill = await rating.locator(
+        '[data-glass-state="partial"] [data-rating-fill]').evaluate(node =>
+          ({y: +node.getAttribute('y'), height: +node.getAttribute('height')}));
       assert.ok(
         Math.abs(fifthFill.height - 94.875) < 0.001,
         '87.5 points fill 37.5% of the fifth glass from the bottom'
@@ -1079,14 +1133,20 @@ test(
           .isEnabled(),
         true
       );
-      await section.screenshot({path: 'test-artifacts/wcm_0253_tasting_light.png'});
+      await section.screenshot({
+        path:
+          'test-artifacts/wcm_0253_tasting_light.png',
+      });
       await page.locator('[data-act="toggle-theme"]').click();
       assert.equal(await rating.locator('.glencairn-rating-fill').count(), 5);
       assert.equal(
         await rating.locator('[data-tasting-score]').inputValue(),
         '87,5'
       );
-      await section.screenshot({path: 'test-artifacts/wcm_0253_tasting_dark.png'});
+      await section.screenshot({
+        path:
+          'test-artifacts/wcm_0253_tasting_dark.png',
+      });
       await page.setViewportSize({width: 390, height: 844});
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth <=
@@ -1100,7 +1160,8 @@ test(
 
 
 test(
-  'browser: v0.26.0 multiple dated tastings, latest summary, individual editing and modal delete',
+  'browser: v0.26.0 multiple dated tastings, latest summary, individual \
+editing and modal delete',
   async () => {
     await session(async ({page, base, open}) => {
       const bottling = (await requestJson(base, '/api/bottlings', 'POST', {
@@ -1217,7 +1278,8 @@ test(
 
 
 test(
-  'browser: rejected tasting DELETE keeps the editing page and confirmation open',
+  'browser: rejected tasting DELETE keeps the editing page and confirmation \
+open',
   async () => {
     await session(async ({page, base, open}) => {
       const bottling = (await requestJson(base, '/api/bottlings', 'POST', {
@@ -1272,10 +1334,12 @@ test(
 
 
 test(
-  'browser: flight groups owned and new external notes with an ordered sequence and no duplicate records',
+  'browser: flight groups owned and new external notes with an ordered \
+sequence and no duplicate records',
   async () => {
     await session(async ({base, page, open}) => {
-      const owned = (await requestJson(base, '/api/bottlings', 'POST', {name: 'Islay bottling'})).data.bottling;
+      const owned = (await requestJson(base, '/api/bottlings', 'POST',
+        {name: 'Islay bottling'})).data.bottling;
       const first = (await requestJson(
         base,
         `/api/bottlings/${owned.id}/tastings`,
@@ -1291,7 +1355,8 @@ test(
         .fill('Islay comparison');
       await page.locator('#modal-root [data-flight-notes]')
         .fill('Peat gets stronger near the end');
-      await page.locator('#modal-root [data-act="tasting-flight-create-confirm"]').click();
+      await page.locator(
+        '#modal-root [data-act="tasting-flight-create-confirm"]').click();
       await page.locator('.tasting-flight-page').waitFor();
       assert.match(
         await page.locator('.tasting-flight-summary').innerText(),
@@ -1324,7 +1389,9 @@ test(
       assert.equal(before.bottlings.length, 1);
       assert.equal(before.externalTastings.length, 1);
       assert.equal(before.tastingFlights[0].tastingIds.length, 2);
-      await page.locator('[data-act="tasting-flight-move"][data-index="1"][data-direction="-1"]').click();
+      await page.locator(
+        '[data-act="tasting-flight-move"][data-index="1"][data-direction="-1"]'
+      ).click();
       await page.waitForFunction(
         id => document.querySelector('.tasting-flight-member')?.dataset
           .tastingId === id,
@@ -1365,7 +1432,8 @@ test(
       await page.mouse.move(end.x, end.y, {steps: 14});
       await page.mouse.up();
       await page.waitForFunction(
-        id => document.querySelector('.tasting-flight-member:last-child')?.dataset.tastingId === id,
+        id => document.querySelector('.tasting-flight-member:last-child')
+          ?.dataset.tastingId === id,
         after.externalTastings[0].id
       );
       assert.deepEqual(
@@ -1378,7 +1446,10 @@ test(
         1,
         'drag does not navigate into tasting details'
       );
-      await page.screenshot({path: 'test-artifacts/flight-desktop.png', fullPage: true});
+      await page.screenshot({
+        path: 'test-artifacts/flight-desktop.png',
+        fullPage: true,
+      });
       for (const width of [390, 320]) {
         await page.setViewportSize({width, height: 812});
         const dimensions = await page.evaluate(() => ({
@@ -1389,7 +1460,10 @@ test(
           dimensions.scroll <= dimensions.viewport + 2,
           `flight page overflows at ${width}: ${JSON.stringify(dimensions)}`
         );
-        if (width === 390) await page.screenshot({path: 'test-artifacts/flight-mobile.png', fullPage: true});
+        if (width === 390) await page.screenshot({
+          path:
+            'test-artifacts/flight-mobile.png', fullPage: true,
+        });
       }
     });
   }
@@ -1398,10 +1472,12 @@ test(
 
 
 test(
-  'browser: mobile owned tasting list keeps full titles and ratings readable at 390 and 320 px',
+  'browser: mobile owned tasting list keeps full titles and ratings \
+readable at 390 and 320 px',
   async () => {
     await session(async ({base, page, open}) => {
-      const owned = (await requestJson(base, '/api/bottlings', 'POST', {name: 'Big Peat'})).data.bottling;
+      const owned = (await requestJson(base, '/api/bottlings', 'POST',
+        {name: 'Big Peat'})).data.bottling;
       for (const [title, rating] of [['MixMontag', 80], ['', 82], ['', 80]]) {
         assert.equal(
           (await requestJson(
@@ -1452,7 +1528,8 @@ test(
 
 
 test(
-  'browser: one upload selection stores exactly one photo and one file after repeated detail re-renders',
+  'browser: one upload selection stores exactly one photo and one file \
+after repeated detail re-renders',
   async () => {
     await session(async ({page, base, open}) => {
       const {bottling, bottle} = await seed(base, '004711');
@@ -1465,7 +1542,9 @@ test(
         await page.locator('#bottling-form').waitFor();
         await page.locator('#bottling-form [name="name"]')
           .fill(`Upload Probe ${i}`);
-        await page.locator('#bottling-form [type="submit"], #bottling-form button.primary').first().click();
+        await page.locator(
+          '#bottling-form [type="submit"], #bottling-form button.primary')
+          .first().click();
         await page.waitForFunction(
           name => document.querySelector('main h2')?.textContent.includes(name),
           `Upload Probe ${i}`
@@ -1479,7 +1558,8 @@ test(
         if (path === `/api/bottles/${bottle.id}/files`) posts.files++;
       });
       const png = Buffer.from(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=',
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwM\
+CAO+/fG8AAAAASUVORK5CYII=',
         'base64'
       );
       await page.locator('[data-bottle-photos]').first()
@@ -1487,7 +1567,8 @@ test(
       await page.locator('.photo-tile').first().waitFor();
       await page.locator('[data-bottle-files]').setInputFiles({
         name: 'probe.pdf', mimeType: 'application/pdf',
-        buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n'),
+        buffer: Buffer.
+          from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n'),
       });
       await page.locator('.document-list a').waitFor();
       await page.waitForTimeout(300);
@@ -1507,14 +1588,16 @@ test(
 
 
 test(
-  'browser: tasting overview preserves DOM when chooser opens, and flight creation avoids warehouse reload',
+  'browser: tasting overview preserves DOM when chooser opens, and flight \
+creation avoids warehouse reload',
   async () => {
     await session(async ({page, base, open}) => {
       await open();
       await page.locator('header [data-act="toggle-menu"]').click();
       await page.locator('#site-drawer [data-act="goto-tastings-home"]')
         .click();
-      const heading = page.locator('.tasting-home-page .analytics-page-heading');
+      const heading = page.locator('.tasting-home-page .analytics-page-heading'
+      );
       await heading.waitFor();
       await heading.evaluate(node => {window.__tastingHeading = node;});
       await page.locator('[data-act="tastings-start-choice"]').click();
@@ -1537,7 +1620,8 @@ test(
       await page.locator('[data-act="tasting-flight-new"]').click();
       await page.locator('#modal-root [data-flight-name]')
         .fill('Scoped flight refresh');
-      await page.locator('#modal-root [data-act="tasting-flight-create-confirm"]').click();
+      await page.locator(
+        '#modal-root [data-act="tasting-flight-create-confirm"]').click();
       await page.locator('.tasting-flight-page').waitFor();
       assert.equal(
         warehouseGets.length,
@@ -1552,7 +1636,8 @@ test(
 );
 
 test(
-  'browser: pending tasting creation blocks back navigation and prevents stale lists',
+  'browser: pending tasting creation blocks back navigation and prevents \
+stale lists',
   async () => {
     await session(async ({page, base, open}) => {
       const bottling = (await requestJson(base, '/api/bottlings', 'POST', {
@@ -1640,7 +1725,8 @@ test(
       );
       await page.locator('[data-act="tasting-create"]').click();
       await page.waitForFunction(() =>
-        document.querySelector('[data-act="tasting-create"]')?.disabled === false);
+        document.querySelector('[data-act="tasting-create"]')?.disabled ===
+        false);
       assert.equal(
         await page.locator('[data-act="tastings-back-list"]').isEnabled(),
         true

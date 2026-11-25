@@ -77,7 +77,8 @@ export function findWarehouseBottles(
     Math.min(100, Math.floor(pageSize) || WAREHOUSE_FINDER_PAGE_SIZE)
   );
   const pages = Math.max(1, Math.ceil(results.length / size));
-  const currentPage = Math.max(1, Math.min(pages, Math.floor(Number(page)) || 1));
+  const currentPage = Math.max(1, Math.min(pages, Math.floor(Number(page)) ||
+    1));
   return {
     items: results.slice((currentPage - 1) * size, currentPage * size),
     total: results.length,

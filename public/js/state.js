@@ -1,5 +1,6 @@
 import {getPageSizePreference} from './domain/page-size-preference.js';
-import {getCollectionViewPreference} from './domain/collection-view-preference.js';
+import {getCollectionViewPreference}
+  from './domain/collection-view-preference.js';
 
 /**
  * UI state only. Persistent data is replaced by GET /api/collection after

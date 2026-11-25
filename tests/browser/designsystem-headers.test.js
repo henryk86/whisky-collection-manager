@@ -45,7 +45,8 @@ const measured = () => {
 };
 
 test(
-  'browser: shared page headers have computed geometry and exactly one arrow in both themes at four widths',
+  'browser: shared page headers have computed geometry and exactly one \
+arrow in both themes at four widths',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -80,7 +81,8 @@ test(
             if (!baseline) baseline = value;
             else assert.ok(
               Math.abs(value.topGap - baseline.topGap) <= 1,
-              `${context}: global header-to-heading spacing ${value.topGap} vs ${baseline.topGap}`
+              `${context}: global header-to-heading spacing ${value
+                .topGap} vs ${baseline.topGap}`
             );
             if (value.arrowCount) {
               assert.equal(value.arrowCount, 1, `${context}: one SVG`);
@@ -100,7 +102,8 @@ test(
 );
 
 test(
-  'browser: back navigation preserves exact inline spacing and DOM action across detail and tasting pages',
+  'browser: back navigation preserves exact inline spacing and DOM action \
+across detail and tasting pages',
   async () => {
     await session(async ({page, open, base}) => {
       const {bottling} = await seed(base, '008044');
@@ -150,28 +153,30 @@ test(
 );
 
 test(
-  'browser: help icon keeps heading size and baseline while nested flight modal retains its inputs',
+  'browser: help icon keeps heading size and baseline while nested flight \
+modal retains its inputs',
   async () => {
     await session(async ({page, open}) => {
       await open();
       await go(page, 'goto-tastings-home', '.tasting-flight-home');
       for (const width of [390, 1440]) {
         await page.setViewportSize({width, height: 900});
-        const metrics = await page.locator('.tasting-flight-home .ds-help-icon-button').evaluate(button => {
-          const title = button.closest('h3');
-          const rect = title.getBoundingClientRect();
-          const a = button.getBoundingClientRect();
-          const style = getComputedStyle(title);
-          return {
-            sameCenter: Math.abs(rect.top + rect.height / 2 - a.top -
-              a.height / 2),
-            height: rect.height,
-            marginBottom: style.marginBottom,
-            textLine: parseFloat(style.lineHeight),
-            buttonSize: a.width,
-            paddingRight: parseFloat(style.paddingRight),
-          };
-        });
+        const metrics = await page.locator(
+          '.tasting-flight-home .ds-help-icon-button').evaluate(button => {
+            const title = button.closest('h3');
+            const rect = title.getBoundingClientRect();
+            const a = button.getBoundingClientRect();
+            const style = getComputedStyle(title);
+            return {
+              sameCenter: Math.abs(rect.top + rect.height / 2 - a.top -
+                a.height / 2),
+              height: rect.height,
+              marginBottom: style.marginBottom,
+              textLine: parseFloat(style.lineHeight),
+              buttonSize: a.width,
+              paddingRight: parseFloat(style.paddingRight),
+            };
+          });
         assert.ok(metrics.sameCenter <= 2);
         assert.ok(metrics.buttonSize <= 20);
         assert.equal(metrics.paddingRight, 26);
@@ -206,10 +211,12 @@ test(
 );
 
 test(
-  'browser: German and English back-navigation labels never contain text arrows',
+  'browser: German and English back-navigation labels never contain text \
+arrows',
   async () => {
     await session(async ({page, open}) => {
-      for (const [lang, label] of [['de', 'Zur Sammlung'], ['en', 'Back to collection']]) {
+      for (const [lang, label] of [['de', 'Zur Sammlung'], ['en',
+        'Back to collection']]) {
         await open({query: `?view=settings&lang=${lang}`});
         await page.locator('.settings-heading .ds-back-button').waitFor();
         const button = page.locator('.settings-heading .ds-back-button');

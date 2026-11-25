@@ -61,7 +61,8 @@ test(
       );
       const payload = {ids: [first, second], shelfId: target.id};
       assert.equal(
-        (await api(ctx.base, '/api/warehouse/bottles/bulk', 'POST', payload)).status,
+        (await api(ctx.base, '/api/warehouse/bottles/bulk', 'POST',
+          payload)).status,
         409
       );
       let state = (await api(ctx.base, '/api/warehouse')).data;
@@ -87,7 +88,8 @@ test(
         200
       );
       assert.equal(
-        (await api(ctx.base, '/api/warehouse/bottles/bulk', 'POST', payload)).status,
+        (await api(ctx.base, '/api/warehouse/bottles/bulk', 'POST',
+          payload)).status,
         200
       );
       state = (await api(ctx.base, '/api/warehouse')).data;
@@ -111,7 +113,8 @@ test(
 );
 
 test(
-  'overcapacity relocation requires explicit approval and expands capacity atomically',
+  'overcapacity relocation requires explicit approval and expands capacity \
+atomically',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -185,7 +188,10 @@ test(
         {ids: [second, third], shelfId: destination.id};
       assert.equal((await api(ctx.base, url, 'POST', request)).status, 409);
       assert.equal(
-        (await api(ctx.base, url, 'POST', {...request, increaseCapacityTo: 2})).status,
+        (await api(ctx.base, url, 'POST', {
+          ...request, increaseCapacityTo:
+            2,
+        })).status,
         409,
         'a user approval for 2 spaces cannot silently grow to 3'
       );
@@ -193,7 +199,10 @@ test(
       assert.equal(state.assignments[second], source.id);
       assert.equal(state.rooms[0].furniture[0].shelves[1].capacity, 1);
       assert.equal(
-        (await api(ctx.base, url, 'POST', {...request, increaseCapacityTo: 3})).status,
+        (await api(ctx.base, url, 'POST', {
+          ...request, increaseCapacityTo:
+            3,
+        })).status,
         200
       );
       state = (await api(ctx.base, '/api/warehouse')).data;

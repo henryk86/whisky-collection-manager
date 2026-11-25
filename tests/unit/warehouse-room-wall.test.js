@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {renderWarehouseRoomWall, wallFurniture, WALL_PIXELS_PER_METRE} from '../../public/js/views/warehouse-room-wall.js';
-import {wallFurnitureGroups} from '../../public/js/domain/warehouse-wall-layout.js';
+import {renderWarehouseRoomWall, wallFurniture, WALL_PIXELS_PER_METRE}
+  from '../../public/js/views/warehouse-room-wall.js';
+import {wallFurnitureGroups}
+  from '../../public/js/domain/warehouse-wall-layout.js';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 import {shelfDropStatus} from '../../public/js/ui/warehouse-bottle-drag.js';
 
@@ -69,7 +71,8 @@ function createWarehouse() {
 }
 
 test(
-  'room-wide virtual wall shows opposing shelves side by side and all compartments top to bottom',
+  'room-wide virtual wall shows opposing shelves side by side and all \
+compartments top to bottom',
   () => {
     const {room, warehouse} = createWarehouse();
     assert.deepEqual(wallFurniture(room).map(f => f.id), ['f1', 'f4']);
@@ -86,7 +89,11 @@ test(
       html.indexOf('data-shelf-id="source"'));
     assert.match(
       html,
-      /data-shelf-id="target" data-capacity="2" data-act="warehouse-shelf-view"[^>]*data-front="glass"/
+      new RegExp(
+        'data-shelf-id="target" data-capacity="2" d' +
+        'ata-act="warehouse-shelf-view"[^>]*data-fr' +
+        'ont="glass"'
+      )
     );
     assert.match(
       html,
@@ -103,7 +110,8 @@ test(
 );
 
 test(
-  'room wall ignores empty furniture and does not confuse other rooms or show a 3D scene',
+  'room wall ignores empty furniture and does not confuse other rooms or \
+show a 3D scene',
   () => {
     const {room, warehouse} = createWarehouse();
     const state = {
@@ -157,7 +165,10 @@ test(
     assert.match(html, /data-shelf-id="target"/);
     assert.doesNotMatch(
       html,
-      /class="warehouse-three-viewport"|class="warehouse-floor"|data-shelf-id="outside"/
+      new RegExp(
+        'class="warehouse-three-viewport"|class="wa' +
+        'rehouse-floor"|data-shelf-id="outside"'
+      )
     );
   }
 );
@@ -174,7 +185,8 @@ test('an empty room receives a translated wall-state message', () => {
 
 
 test(
-  'room wall follows physical projection by direction instead of furniture names',
+  'room wall follows physical projection by direction instead of furniture \
+names',
   () => {
     /**
      * Derives the shelf result from the supplied values.
@@ -225,13 +237,17 @@ test(
       html.indexOf('data-furniture-id="one"'));
     assert.match(
       html,
-      /class="warehouse-wall-stack warehouse-wall-stack--new-direction" data-facing="180"/
+      new RegExp(
+        'class="warehouse-wall-stack warehouse-wall' +
+        '-stack--new-direction" data-facing="180"'
+      )
     );
   }
 );
 
 test(
-  'a wall shelf directly over a cabinet is rendered above it in one shared footprint',
+  'a wall shelf directly over a cabinet is rendered above it in one shared \
+footprint',
   () => {
     const room = {
       name: 'Stacked furniture', furniture: [
@@ -284,7 +300,11 @@ test(
     const html = renderWarehouseRoomWall(room, {bottles: [], assignments: {}});
     assert.match(
       html,
-      /class="warehouse-wall-stack warehouse-wall-stack--layered"[^>]*--wall-stack-height:529px/
+      new RegExp(
+        'class="warehouse-wall-stack warehouse-wall' +
+        '-stack--layered"[^>]*--wall-stack-height:5' +
+        '29px'
+      )
     );
     assert.ok(html.indexOf('data-furniture-id="base"') <
       html.indexOf('data-furniture-id="top"'));
@@ -327,26 +347,39 @@ test(
       ],
     };
     const html = renderWarehouseRoomWall(room, {bottles: [], assignments: {}});
-    const stacked = html.match(/data-furniture-id="upper"[\s\S]*?<\/section>/)?.[0];
+    const stacked = html.match(/data-furniture-id="upper"[\s\S]*?<\/section>/)
+      ?.[0];
     assert.ok(stacked);
     assert.match(
       stacked,
-      /class="warehouse-wall-furniture-body"[\s\S]*?data-shelf-id="top"[\s\S]*?warehouse-wall-bay-title[\s\S]*?Fach 2/
+      new RegExp(
+        'class="warehouse-wall-furniture-body"[\\s' +
+        '\\S]*?data-shelf-id="top"[\\s\\S]*?warehou' +
+        'se-wall-bay-title[\\s\\S]*?Fach 2'
+      )
     );
     assert.match(
       stacked,
-      /class="warehouse-wall-furniture-edit" data-act="warehouse-furniture-manage" data-id="upper" title="Kamin"/
+      new RegExp(
+        'class="warehouse-wall-furniture-edit" data' +
+        '-act="warehouse-furniture-manage" data-id=' +
+        '"upper" title="Kamin"'
+      )
     );
     assert.doesNotMatch(
       stacked,
-      /warehouse-wall-furniture-header|warehouse-wall-furniture-name|>Kamin<|0 \/ 0/
+      new RegExp(
+        'warehouse-wall-furniture-header|warehouse-' +
+        'wall-furniture-name|>Kamin<|0 \\/ 0'
+      )
     );
     assert.match(stacked, /Glas|Offen/);
   }
 );
 
 test(
-  'overlapping but same-height furniture and units on opposite walls never stack',
+  'overlapping but same-height furniture and units on opposite walls never \
+stack',
   () => {
     /**
      * Derives the item result from the supplied values.
@@ -421,7 +454,8 @@ test(
 );
 
 test(
-  'room wall renders real cabinet, shelf and mounting heights at ONE consistent scale',
+  'room wall renders real cabinet, shelf and mounting heights at ONE \
+consistent scale',
   () => {
     const room = {
       name: 'Height test', furniture: [
@@ -466,15 +500,18 @@ test(
     const scale = WALL_PIXELS_PER_METRE;
     assert.match(
       html,
-      new RegExp(`data-furniture-id="short"[^>]+--wall-furniture-width:${1.2 * scale}px;--wall-furniture-height:${1.2 * scale}px;--wall-elevation:0px`)
+      new RegExp(`data-furniture-id="short"[^>]+--wall-furniture-width:${1.2 *
+        scale}px;--wall-furniture-height:${1.2 * scale}px;--wall-elevation:0px`)
     );
     assert.match(
       html,
-      new RegExp(`data-furniture-id="tall"[^>]+--wall-furniture-height:${2.4 * scale}px`)
+      new RegExp(`data-furniture-id="tall"[^>]+--wall-furniture-height:${2.4 *
+        scale}px`)
     );
     assert.match(
       html,
-      new RegExp(`data-furniture-id="raised"[^>]+--wall-furniture-height:${.6 * scale}px;--wall-elevation:${1.8 * scale}px`)
+      new RegExp(`data-furniture-id="raised"[^>]+--wall-furniture-height:${.6 *
+        scale}px;--wall-elevation:${1.8 * scale}px`)
     );
     assert.match(html, new RegExp(`--wall-clearance-height:${.5 * scale}px`));
     assert.match(
@@ -508,7 +545,8 @@ test(
 );
 
 test(
-  'room wall does not stretch numerous shallow compartments beyond the cabinet height',
+  'room wall does not stretch numerous shallow compartments beyond the \
+cabinet height',
   () => {
     const room = {
       name: 'Shallow bays', furniture: [{
@@ -555,7 +593,8 @@ test(
 
 
 test(
-  'a single wide upper unit spans two adjacent lower cabinets in ONE physical elevation',
+  'a single wide upper unit spans two adjacent lower cabinets in ONE \
+physical elevation',
   () => {
     /**
      * Derives the shelf result from the supplied values.
@@ -619,7 +658,8 @@ test(
     assert.deepEqual(groups[0].items.map(item => item.offset), [0, 1, 0]);
     const html = renderWarehouseRoomWall(room, {bottles: [], assignments: {}});
     assert.equal(
-      (html.match(/class="warehouse-wall-stack warehouse-wall-stack--layered"/g) || []).length,
+      (html.match(/class="warehouse-wall-stack warehouse-wall-stack--layered"/g
+      ) || []).length,
       1
     );
     assert.match(
@@ -631,13 +671,17 @@ test(
 );
 
 test(
-  'in-furniture edit icons open the management modal without visible furniture names',
+  'in-furniture edit icons open the management modal without visible \
+furniture names',
   () => {
     const {room, warehouse} = createWarehouse();
     const html = renderWarehouseRoomWall(room, warehouse);
     assert.match(
       html,
-      /class="warehouse-wall-furniture-edit" data-act="warehouse-furniture-manage"/
+      new RegExp(
+        'class="warehouse-wall-furniture-edit" data' +
+        '-act="warehouse-furniture-manage"'
+      )
     );
     assert.match(html, /title="Regal 1" aria-label=/);
     assert.doesNotMatch(
@@ -762,7 +806,8 @@ test(
 
 
 test(
-  'first room-wall bay clears the inset top frame without shifting shelf geometry',
+  'first room-wall bay clears the inset top frame without shifting shelf \
+geometry',
   () => {
     const {room, warehouse} = createWarehouse();
     const html = renderWarehouseRoomWall(room, warehouse);

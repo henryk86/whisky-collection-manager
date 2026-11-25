@@ -16,11 +16,13 @@ import crypto from 'node:crypto';
  * @return {*} Combined text from the input values.
  */
 const create = (dir, relative, text, mode = 0o600) => {
-  const file = path.join(dir, relative); fs.mkdirSync(path.dirname(file), {recursive: true});
+  const file = path.join(dir, relative); fs.mkdirSync(path.dirname(file),
+    {recursive: true});
   fs.writeFileSync(file, text, {mode}); return file;
 };
 test(
-  'legacy Restic profiles are no longer written, but old backups remain verifiable and restorable',
+  'legacy Restic profiles are no longer written, but old backups remain \
+verifiable and restorable',
   async () => {
     const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-worker-'));
     const control = path.join(folder, 'control');
@@ -32,8 +34,12 @@ test(
 printf '%s\\n' "$*" >> "$FAKE_RESTIC_LOG"
 case " $* " in
   *' snapshots --json '*) printf '[]\\n' ;;
-  *' backup '*) test -f data/collection.json && test -f images/pic.png && test -f documents/bill.pdf || exit 8 ;;
-  *' restore '*) while [ "$#" -gt 0 ]; do if [ "$1" = '--target' ]; then shift; mkdir -p "$1"; echo restored > "$1/restored.txt"; mkdir -p "$1/data"; echo '{"schemaVersion":6}' > "$1/data/collection.json"; break; fi; shift; done ;;
+  *' backup '*) test -f data/collection.json && test -f images/pic.png && \
+test -f documents/bill.pdf || exit 8 ;;
+  *' restore '*) while [ "$#" -gt 0 ]; do if [ "$1" = '--target' ]; then \
+shift; mkdir -p "$1"; echo restored > "$1/restored.txt"; mkdir -p "$1/data";\
+ echo '{"schemaVersion":6}' > "$1/data/collection.json"; break; fi; shift; \
+done ;;
 esac
 exit 0
 `, 0o700);
@@ -201,9 +207,11 @@ case "$1" in listremotes) echo 'dropbox:';; lsd) exit 0;; esac
 
 
 test(
-  'failed Rclone and Restic jobs log bounded operator diagnostics without exposing them in status',
+  'failed Rclone and Restic jobs log bounded operator diagnostics without \
+exposing them in status',
   async () => {
-    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-worker-errors-'));
+    const folder = fs.mkdtempSync(path.join(os.tmpdir(),
+      'whisky-worker-errors-'));
     const control = path.join(folder, 'control');
     const bin = path.join(folder, 'bin');
     const profiles = [
@@ -225,14 +233,18 @@ test(
     ];
     create(control, 'profiles.json', JSON.stringify({version: 1, profiles}));
     create(folder, 'bin/rclone', `#!/bin/sh
-printf '%s\n' "CRITICAL: couldn't fetch token: invalid_grant: maybe token expired? password=never-log-this access_token=hidden-token path /run/secrets/rclone-secret.conf" >&2
+printf '%s\n' "CRITICAL: couldn't fetch token: invalid_grant: maybe token \
+expired? password=never-log-this access_token=hidden-token path \
+/run/secrets/rclone-secret.conf" >&2
 exit 1
 `, 0o700);
     create(folder, 'bin/restic', `#!/bin/sh
-printf '%s\n' 'Fatal: repository unreachable; Authorization: Bearer superSecretRESTIC1234' >&2
+printf '%s\n' 'Fatal: repository unreachable; Authorization: Bearer \
+superSecretRESTIC1234' >&2
 exit 7
 `, 0o700);
-    const originals = Object.fromEntries(['BACKUP_CONTROL_DIR', 'BACKUP_TARGET_ROOT', 'PATH'].map(k => [k, process.env[k]]));
+    const originals = Object.fromEntries(['BACKUP_CONTROL_DIR',
+      'BACKUP_TARGET_ROOT', 'PATH'].map(k => [k, process.env[k]]));
     const messages = [];
     const originalConsoleError = console.error;
     try {
@@ -297,9 +309,11 @@ exit 7
 );
 
 test(
-  'ZIP worker reports missing and too-short passwords by their stable identifiers',
+  'ZIP worker reports missing and too-short passwords by their stable \
+identifiers',
   async () => {
-    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-worker-password-'));
+    const folder = fs.mkdtempSync(path.join(os.tmpdir(),
+      'whisky-worker-password-'));
     const control = path.join(folder, 'control');
     const targets = path.join(folder, 'targets');
     create(targets, 'usb/.whisky-backup-target', 'mounted');

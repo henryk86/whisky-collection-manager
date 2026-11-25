@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-/** Prepare a protected-main release PR and synchronize develop only after that PR merges.
+/** Prepare a protected-main release PR and synchronize develop only after
+ * that PR merges.
  * No direct writes to protected main and no force pushes.
  */
 import fs from 'node:fs';
@@ -72,11 +73,13 @@ const versionAt = ref => JSON.parse(git('show', `${ref}:package.json`)).version;
 export function releaseRefs({tag, merge}) {
   if (!/^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(tag))
     throw new Error(`Invalid release tag: ${tag}`);
-  if (!/^[a-f0-9]{40}$/.test(merge)) throw new Error('Invalid approved merge SHA');
+  if (!/^[a-f0-9]{40}$/.test(merge)) throw new Error(
+    'Invalid approved merge SHA');
   const snapshot = git('rev-parse', `${tag}^{commit}`);
   if (parents(snapshot).length !== 1 || parents(snapshot)[0] !== merge ||
     git('log', '-1', '--format=%s', snapshot) !== `WCM Release Snapshot ${tag}`)
-    throw new Error('Tag does not reference the approved versioned release snapshot');
+    throw new Error(
+      'Tag does not reference the approved versioned release snapshot');
   if (versionAt(snapshot) !==
     tag.slice(1)) throw new Error('Tag and application version differ');
   if (parents(merge).length !==
@@ -91,11 +94,15 @@ export function releaseRefs({tag, merge}) {
  * @return {*} Entries that meet the selection criteria.
  */
 function prepareDivergedDevelop({tip, base, snapshot, tag}) {
-  if (!ancestor(base, tip)) throw new Error('develop was rewritten after the approved merge; refusing synchronization');
+  if (!ancestor(base, tip)) throw new Error(
+    'develop was rewritten after the approved merge; refusing synchronization');
   // A change to a release metadata file after approval must not be discarded.
-  const changed = git('diff', '--name-only', `${base}..${tip}`, '--', ...RELEASE_METADATA)
+  const changed = git('diff', '--name-only', `${base}..${tip}`, '--',
+    ...RELEASE_METADATA)
     .split('\n').filter(Boolean);
-  if (changed.length) throw new Error(`develop changed release metadata since the merge: ${changed.join(', ')}. Manual resolution required.`);
+  if (changed.length) throw new Error(
+    `develop changed release metadata since the merge: ${changed.join(
+      ', ')}. Manual resolution required.`);
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-release-branch-'));
   let attached = false;
   try {
@@ -148,11 +155,14 @@ export function prepareSyncPR({tag, merge}) {
   if (main !== merge) {
     if (isCompletedMainSync({tag, merge, main, snapshot}))
       return {tag, branch, main, snapshot, alreadyMerged: true};
-    throw new Error('main changed after the approved develop merge; refusing version PR.');
+    throw new Error(
+      'main changed after the approved develop merge; refusing version PR.');
   }
-  const remote = git('ls-remote', '--heads', 'origin', `refs/heads/${branch}`).split(/\s+/)[0];
+  const remote = git('ls-remote', '--heads', 'origin', `refs/heads/${branch}`)
+    .split(/\s+/)[0];
   if (remote && remote !==
-    snapshot) throw new Error('Version PR branch exists but points at another commit');
+    snapshot) throw new Error(
+      'Version PR branch exists but points at another commit');
   if (!remote) git('push', 'origin', `${snapshot}:refs/heads/${branch}`);
   return {tag, branch, main, snapshot, alreadyMerged: false};
 }
@@ -185,23 +195,35 @@ export function finishSync({tag, merge}) {
   const main = git('rev-parse', 'refs/remotes/origin/main');
   const develop = git('rev-parse', 'refs/remotes/origin/develop');
   if (!isCompletedMainSync({tag, merge, main, snapshot}))
-    throw new Error('Protected main does not contain the approved version PR merge; refusing develop sync.');
+    throw new Error(
+      'Protected main does not contain the approved version PR merge; \
+refusing develop sync.');
   let target;
   if (ancestor(develop, main)) target = main;
   else if (ancestor(main, develop)) {
     if (versionAt(develop) !== tag.slice(1))
-      throw new Error('develop includes main release but reports a different version');
+      throw new Error(
+        'develop includes main release but reports a different version');
     target = develop;
   } else {
-    const subjects = git('log', '--format=%s', `${developAtMerge}..${develop}`).split('\n');
-    const already = subjects.includes(`chore(release): synchronize ${tag} on develop`);
+    const subjects = git('log', '--format=%s', `${developAtMerge}..${develop}`)
+      .split('\n');
+    const already = subjects.includes(
+      `chore(release): synchronize ${tag} on develop`);
     if (already && versionAt(develop) === tag.slice(1)) target = develop;
-    else target = prepareDivergedDevelop({tip: develop, base: developAtMerge, snapshot, tag});
+    else target = prepareDivergedDevelop({
+      tip: develop, base: developAtMerge,
+      snapshot, tag,
+    });
   }
   if (target !== develop && !ancestor(target, main) &&
     !ancestor(main, target)) {
     try {git('merge-tree', '--write-tree', main, target);}
-    catch {throw new Error('develop synchronization would conflict with the next main merge. Resolve manually.');}
+    catch {
+      throw new Error(
+        'develop synchronization would conflict with the next main merge. \
+Resolve manually.');
+    }
   }
   if (target !== develop) git('push', 'origin', `${target}:refs/heads/develop`);
   return {tag, main, develop: target, unchanged: target === develop};
@@ -224,7 +246,9 @@ if (running) {
     };
     const tag = get('--tag'), merge = get('--merge');
     if (!['prepare', 'finish'].includes(command) || !tag || !merge)
-      throw new Error('Usage: sync-release-branches.js prepare|finish --tag vX.Y.Z --merge 40_HEX_SHA');
+      throw new Error(
+        'Usage: sync-release-branches.js prepare|finish --tag vX.Y.Z \
+--merge 40_HEX_SHA');
     const result = command === 'prepare' ? prepareSyncPR({tag, merge}) :
       finishSync({tag, merge});
     console.log(JSON.stringify(result));

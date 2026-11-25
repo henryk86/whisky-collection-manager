@@ -1,8 +1,10 @@
 import {read, change} from '../storage/collection-store.js';
 import {saveImage, deleteImage, validateImageData} from '../storage/photos.js';
 import {basePhotoPath} from '../../shared/photo-images.js';
-import {validateAdjustmentValues as validatePhotoAdjustments} from '../../shared/photo-adjustments.js';
-import {saveDocument, readDocument, deleteDocument} from '../storage/documents.js';
+import {validateAdjustmentValues as validatePhotoAdjustments}
+  from '../../shared/photo-adjustments.js';
+import {saveDocument, readDocument, deleteDocument}
+  from '../storage/documents.js';
 import {normalizeBottle} from '../domain/normalization.js';
 import {markNumber} from '../domain/inventory.js';
 import {findBottle, now, uid} from '../domain/collection.js';
@@ -46,7 +48,8 @@ export function createBottle(input) {
     const bottling = collection.bottlings.find(entry => entry.id ===
       input.bottlingId);
     if (!bottling) {
-      throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
+      throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound"
+      );
     }
     const bottle = {
       ...normalizeBottle(input),
@@ -148,7 +151,8 @@ export async function addPhoto(id, input) {
 export async function reorderPhotos(bottleId, input) {
   if (!Array.isArray(input.photoIds) || input.photoIds.some(id =>
     typeof id !== 'string')) {
-    throw fail('Ungültige Fotoreihenfolge', 400, "api.errors.invalidPhotoOrder");
+    throw fail('Ungültige Fotoreihenfolge', 400, "api.errors.invalidPhotoOrder"
+    );
   }
   return change(collection => {
     const {bottle} = requireBottle(collection, bottleId);
@@ -210,7 +214,8 @@ export async function removePhoto(bottleId, photoId) {
 export async function savePhotoCutout(bottleId, photoId, input) {
   const photo = requireBottle(read(), bottleId).bottle.photos?.find(item =>
     item.id === photoId);
-  if (!photo) throw fail('Foto nicht gefunden', 404, "api.errors.photoNotFound");
+  if (!photo) throw fail('Foto nicht gefunden', 404, "api.errors.photoNotFound"
+  );
   // The unedited transparent cutout remains the editable base image. The
   // optional
   // processed derivative uses the SAME adjustments as the original, never baked
@@ -242,7 +247,8 @@ export async function savePhotoCutout(bottleId, photoId, input) {
       );
     validateImageData(input.adjustment.image);
   }
-  const stored = saveImage(input.image, bottleId, `photo-${photoId}-cutout-${uid()}`);
+  const stored = saveImage(input.image, bottleId,
+    `photo-${photoId}-cutout-${uid()}`);
   let edited;
   try {
     if (settings) edited = saveImage(
@@ -256,7 +262,8 @@ export async function savePhotoCutout(bottleId, photoId, input) {
     const updated = await change(collection => {
       const {bottle} = requireBottle(collection, bottleId);
       const item = (bottle.photos || []).find(p => p.id === photoId);
-      if (!item) throw fail('Foto nicht gefunden', 404, "api.errors.photoNotFound");
+      if (!item) throw fail('Foto nicht gefunden', 404,
+        "api.errors.photoNotFound");
       previous = item.cutout?.path;
       previousAdjusted = item.cutout?.adjustment?.path;
       // Older projects kept both edit variants in one slot. Discard only
@@ -267,12 +274,18 @@ export async function savePhotoCutout(bottleId, photoId, input) {
       }
       item.cutout = {
         path: stored, model: 'u2netp-v1', selected: true,
-        ...(edited ? {adjustment: {path: edited, sourcePath: stored, settings}} : {}),
+        ...(edited ? {
+          adjustment: {
+            path: edited, sourcePath: stored,
+            settings,
+          },
+        } : {}),
       };
       bottle.updatedAt = now();
       return item;
     });
-    for (const file of [previous, previousAdjusted, legacyAdjusted]) if (file && file !== stored && file !== edited) deleteImage(file);
+    for (const file of [previous, previousAdjusted, legacyAdjusted]) if (
+      file && file !== stored && file !== edited) deleteImage(file);
     return updated;
   } catch (error) {
     deleteImage(stored);
@@ -291,11 +304,13 @@ export async function savePhotoCutout(bottleId, photoId, input) {
  */
 export function selectPhotoCutout(bottleId, photoId, input) {
   if (typeof input?.selected !==
-    'boolean') throw fail('Ungültige Bildauswahl', 400, "api.errors.invalidImageSelection");
+    'boolean') throw fail('Ungültige Bildauswahl', 400,
+      "api.errors.invalidImageSelection");
   return change(collection => {
     const {bottle} = requireBottle(collection, bottleId);
     const photo = (bottle.photos || []).find(item => item.id === photoId);
-    if (!photo) throw fail('Foto nicht gefunden', 404, "api.errors.photoNotFound");
+    if (!photo) throw fail('Foto nicht gefunden', 404,
+      "api.errors.photoNotFound");
     if (!photo.cutout) throw fail(
       'Keine Freistellung vorhanden',
       409,
@@ -318,7 +333,8 @@ export async function removePhotoCutout(bottleId, photoId) {
   const old = await change(collection => {
     const {bottle} = requireBottle(collection, bottleId);
     const photo = (bottle.photos || []).find(item => item.id === photoId);
-    if (!photo) throw fail('Foto nicht gefunden', 404, "api.errors.photoNotFound");
+    if (!photo) throw fail('Foto nicht gefunden', 404,
+      "api.errors.photoNotFound");
     if (!photo.cutout) throw fail(
       'Keine Freistellung vorhanden',
       404,
@@ -351,7 +367,8 @@ export async function removePhotoCutout(bottleId, photoId) {
 export async function savePhotoAdjustments(bottleId, photoId, input) {
   const photo = requireBottle(read(), bottleId).bottle.photos?.find(item =>
     item.id === photoId);
-  if (!photo) throw fail('Foto nicht gefunden', 404, "api.errors.photoNotFound");
+  if (!photo) throw fail('Foto nicht gefunden', 404, "api.errors.photoNotFound"
+  );
   let settings;
   try {settings = validatePhotoAdjustments(input?.settings);}
   catch {
@@ -374,7 +391,8 @@ export async function savePhotoAdjustments(bottleId, photoId, input) {
       "api.errors.editedImageMustUseWebPOrPNGFormat"
     );
   validateImageData(input.image);
-  const stored = saveImage(input.image, bottleId, `photo-${photoId}-edit-${uid()}`);
+  const stored = saveImage(input.image, bottleId, `photo-${photoId}-edit-${uid(
+  )}`);
   const sourcePath = basePhotoPath(photo);
   let previous;
   try {
@@ -425,7 +443,8 @@ export async function removePhotoAdjustments(bottleId, photoId) {
   const old = await change(collection => {
     const {bottle} = requireBottle(collection, bottleId);
     const photo = (bottle.photos || []).find(item => item.id === photoId);
-    if (!photo) throw fail('Foto nicht gefunden', 404, "api.errors.photoNotFound");
+    if (!photo) throw fail('Foto nicht gefunden', 404,
+      "api.errors.photoNotFound");
     let path;
     if (photo.cutout?.selected) {
       path = photo.cutout.adjustment?.path ||
@@ -481,7 +500,8 @@ export async function addFile(bottleId, input) {
 export function downloadFile(bottleId, fileId) {
   const {bottle} = requireBottle(read(), bottleId);
   const entry = (bottle.files || []).find(file => file.id === fileId);
-  if (!entry) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
+  if (!entry) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound"
+  );
   return {
     filename: entry.name,
     type: 'application/octet-stream',
@@ -517,7 +537,8 @@ export async function removeFile(bottleId, fileId) {
   const removed = await change(collection => {
     const {bottle} = requireBottle(collection, bottleId);
     const index = (bottle.files || []).findIndex(file => file.id === fileId);
-    if (index < 0) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
+    if (index < 0) throw fail('Datei nicht gefunden', 404,
+      "api.errors.fileNotFound");
     const [file] = bottle.files.splice(index, 1);
     bottle.updatedAt = now();
     return file;

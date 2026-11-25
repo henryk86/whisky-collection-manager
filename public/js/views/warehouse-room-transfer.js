@@ -17,7 +17,8 @@ const FORM_IMPORT = 'warehouse-room-import-form';
  * @param {string=} initialMode Initial mode used by this operation.
  * @return {string} Resulting text.
  */
-export function roomTransferMarkup(rooms, selectedRoomId, initialMode = 'export') {
+export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
+  'export') {
   const exportAvailable = rooms.length > 0;
   const mode = exportAvailable && initialMode !== 'import' ? 'export' :
     'import';
@@ -31,36 +32,65 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode = 'export'
   const tab = (name, label) =>
     `<button type="button" class="btn warehouse-transfer-tab${mode ===
       name ? ' active' :
-      ''}" role="tab" id="warehouse-transfer-tab-${name}" aria-selected="${mode === name}" aria-controls="warehouse-transfer-panel-${name}" tabindex="${mode === name ? 0 : -1}" data-transfer-tab="${name}" ${name === 'export' && !exportAvailable ? 'disabled' : ''}>${label}</button>`;
+      ''}" role="tab" id="warehouse-transfer-tab-${name}" aria-selected="${mode
+      === name}" aria-controls="warehouse-transfer-panel-${name}" \
+tabindex="${mode === name ? 0 : -1}" data-transfer-tab="${name}" ${name ===
+      'export' && !exportAvailable ? 'disabled' : ''}>${label}</button>`;
   const actions = `${actionButton({
     label: t('common.actions.cancel'),
     action: 'close-modal',
   })}`;
   return `<div id="warehouse-room-transfer" class="warehouse-room-transfer">
-        <div class="warehouse-transfer-tabs" role="tablist" aria-label="${t('warehouse.transfer.action')}">
+        <div class="warehouse-transfer-tabs" role="tablist" aria-label="${t(
+    'warehouse.transfer.action')}">
             ${tab('export', t('warehouse.transfer.exportAction'))}
             ${tab('import', t('warehouse.transfer.importAction'))}
         </div>
-        <section class="warehouse-transfer-panel" id="warehouse-transfer-panel-export" role="tabpanel" aria-labelledby="warehouse-transfer-tab-export" ${mode !== 'export' ? 'hidden' : ''}>
+        <section class="warehouse-transfer-panel" id="warehouse-transfer-pan\
+el-export" role="tabpanel" aria-labelledby="warehouse-transfer-tab-export" \
+${mode !== 'export' ? 'hidden' : ''}>
             <form id="${FORM_EXPORT}" class="warehouse-transfer-form">
                 <p>${t('warehouse.transfer.exportDescription')}</p>
-                <label class="warehouse-transfer-choice"><input type="checkbox" id="warehouse-transfer-all" ${selectedRoomId ? '' : 'checked'}> ${t('warehouse.transfer.allRooms')}</label>
+                <label class="warehouse-transfer-choice"><input \
+type="checkbox" id="warehouse-transfer-all" ${selectedRoomId ? '' : 'checke\
+d'}> ${t('warehouse.transfer.allRooms')}</label>
                 <div class="warehouse-transfer-rooms">${rooms.map(room =>
-    `<label class="warehouse-transfer-choice"><input class="warehouse-transfer-room" type="checkbox" value="${esc(room.id)}" ${selectedRoomId === room.id ? 'checked' : ''}> ${esc(room.name)} (${room.furniture.length})</label>`).join('')}</div>
-                <label class="warehouse-transfer-choice"><input type="checkbox" id="warehouse-transfer-assignments"> ${t('warehouse.transfer.includeAssignments')}</label>
+      `<label class="warehouse-transfer-choice"><input class="warehouse-transf\
+er-room" type="checkbox" value="${esc(room.id)}" ${selectedRoomId ===
+        room.id ? 'checked' : ''}> ${esc(room.name)} (${room.furniture
+          .length})</label>`).join('')}</div>
+                <label class="warehouse-transfer-choice"><input \
+type="checkbox" id="warehouse-transfer-assignments"> ${t('warehouse.transfer\
+.includeAssignments')}</label>
                 <p class="hint">${t('warehouse.transfer.exportNote')}</p>
-                <div class="actions ds-modal-footer warehouse-form-actions">${actions}<button type="submit" class="btn primary">${t('warehouse.transfer.download')}</button></div>
+                <div class="actions ds-modal-footer warehouse-form-actions">\
+${actions}<button type="submit" class="btn primary">${t('warehouse.transfer.\
+download')}</button></div>
             </form>
         </section>
-        <section class="warehouse-transfer-panel" id="warehouse-transfer-panel-import" role="tabpanel" aria-labelledby="warehouse-transfer-tab-import" ${mode !== 'import' ? 'hidden' : ''}>
+        <section class="warehouse-transfer-panel" id="warehouse-transfer-pan\
+el-import" role="tabpanel" aria-labelledby="warehouse-transfer-tab-import" \
+${mode !== 'import' ? 'hidden' : ''}>
             <form id="${FORM_IMPORT}" class="warehouse-transfer-form">
                 <p>${t('warehouse.transfer.importDescription')}</p>
-                <label class="form-field">${t('warehouse.transfer.file')}<input type="file" id="warehouse-transfer-file" accept=".json,application/json" required></label>
-                <label class="warehouse-transfer-choice"><input type="checkbox" id="warehouse-transfer-import-assignments" checked> ${t('warehouse.transfer.includeAssignments')}</label>
-                <label class="form-field">${t('warehouse.transfer.conflicts')}<select id="warehouse-transfer-conflict-policy"><option value="skip">${t('warehouse.transfer.skipConflicts')}</option><option value="replace">${t('warehouse.transfer.replaceConflicts')}</option></select></label>
+                <label class="form-field">${t('warehouse.transfer.file'
+          )}<input type="file" id="warehouse-transfer-file" \
+accept=".json,application/json" required></label>
+                <label class="warehouse-transfer-choice"><input \
+type="checkbox" id="warehouse-transfer-import-assignments" checked> ${t('war\
+ehouse.transfer.includeAssignments')}</label>
+                <label class="form-field">${t('warehouse.transfer.conflicts'
+          )}<select id="warehouse-transfer-conflict-policy"><option \
+value="skip">${t('warehouse.transfer.skipConflicts')}</option><option \
+value="replace">${t('warehouse.transfer.replaceConflicts')}</option>\
+</select></label>
                 <p class="hint">${t('warehouse.transfer.importWarning')}</p>
                 <div id="warehouse-transfer-preview" aria-live="polite"></div>
-                <div class="actions ds-modal-footer warehouse-form-actions">${actions}<button type="submit" class="btn primary">${t('warehouse.transfer.preview')}</button><button type="button" class="btn primary" id="warehouse-transfer-apply" disabled>${t('warehouse.transfer.confirm')}</button></div>
+                <div class="actions ds-modal-footer warehouse-form-actions">\
+${actions}<button type="submit" class="btn primary">${t('warehouse.transfer.\
+preview')}</button><button type="button" class="btn primary" \
+id="warehouse-transfer-apply" disabled>${t('warehouse.transfer.confirm')}</b\
+utton></div>
             </form>
         </section>
     </div>`;
@@ -72,7 +102,8 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode = 'export'
  * @param {!Object} options Optional configuration for the operation.
  * @return {!Object} Structured result for the caller.
  */
-export function createWarehouseRoomTransfer({modal, request, getWarehouse, refresh, toast}) {
+export function createWarehouseRoomTransfer({modal, request, getWarehouse,
+  refresh, toast}) {
   /**
    * Controls transfer for warehouse room transfer.
    *
@@ -123,7 +154,8 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse, refre
       });
     });
     const all = exportForm.querySelector('#warehouse-transfer-all');
-    const choices = [...exportForm.querySelectorAll('.warehouse-transfer-room')];
+    const choices = [...exportForm.querySelectorAll('.warehouse-transfer-room'),
+    ];
     /**
      * Updates choices in the current state.
           * @return {*} Result of this expression.
@@ -140,7 +172,8 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse, refre
         input.checked).map(input => input.value);
       if (Array.isArray(ids) &&
         !ids.length) return toast(t('warehouse.transfer.selectRoom'), true);
-      const submit = exportForm.querySelector('[type="submit"]'); submit.disabled = true;
+      const submit = exportForm.querySelector('[type="submit"]');
+      submit.disabled = true;
       try {
         const bundle = await request(
           '/api/warehouse/rooms/export',
@@ -148,7 +181,8 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse, refre
             method: 'POST',
             body: JSON.stringify({
               roomIds: ids,
-              includeAssignments: exportForm.querySelector('#warehouse-transfer-assignments').checked,
+              includeAssignments: exportForm.querySelector(
+                '#warehouse-transfer-assignments').checked,
             }),
           }
         );
@@ -164,7 +198,10 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse, refre
           document.body.appendChild(link); link.click(); link.remove();
         } finally {setTimeout(() => URL.revokeObjectURL(url), 1000);}
         modal.closeModal();
-      } catch (error) {toast(error.message, true);} finally {submit.disabled = false;}
+      } catch (error) {toast(error.message, true);} finally {
+        submit.disabled =
+          false;
+      }
     });
     const preview = importForm.querySelector('#warehouse-transfer-preview');
     const apply = importForm.querySelector('#warehouse-transfer-apply');
@@ -189,8 +226,10 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse, refre
      * @return {!Object} Matching DOM element, if present.
      */
     const options = () => ({
-      includeAssignments: importForm.querySelector('#warehouse-transfer-import-assignments').checked,
-      conflictPolicy: importForm.querySelector('#warehouse-transfer-conflict-policy').value,
+      includeAssignments: importForm.querySelector(
+        '#warehouse-transfer-import-assignments').checked,
+      conflictPolicy: importForm.querySelector(
+        '#warehouse-transfer-conflict-policy').value,
     });
     importForm.addEventListener('submit', async event => {
       event.preventDefault(); event.stopPropagation(); invalidate();
@@ -199,7 +238,8 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse, refre
       if (!file) return toast(t('warehouse.transfer.selectFile'), true);
       if (file.size > 12 * 1024 *
         1024) return toast(t('warehouse.transfer.tooLarge'), true);
-      const submit = importForm.querySelector('[type="submit"]'); submit.disabled = true;
+      const submit = importForm.querySelector('[type="submit"]');
+      submit.disabled = true;
       try {
         importedFile = JSON.parse(await file.text());
         const summary = await request(
@@ -222,7 +262,12 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse, refre
           ['capacityExceeded', 'warehouse.transfer.capacityExceeded'],
         ];
         preview.innerHTML =
-          `<div class="panel warehouse-transfer-summary"><strong>${t('warehouse.transfer.previewTitle')}</strong><dl>${entries.map(([field, label]) => `<div><dt>${t(label)}</dt><dd>${summary[field] ?? 0}</dd></div>`).join('')}</dl>${summary.blockedRooms ? `<p class="hint">${t('warehouse.transfer.blockedWarning')}</p>` : ''}</div>`;
+          `<div class="panel warehouse-transfer-summary"><strong>${t(
+            'warehouse.transfer.previewTitle')}</strong><dl>${entries.map(([
+              field, label]) => `<div><dt>${t(label)}</dt><dd>${summary[
+              field] ?? 0}</dd></div>`).join('')}</dl>${summary
+                .blockedRooms ? `<p class="hint">${t(
+                  'warehouse.transfer.blockedWarning')}</p>` : ''}</div>`;
         apply.disabled = !!summary.blockedRooms || (!summary.createdRooms &&
           !summary.replacedRooms);
       } catch (error) {

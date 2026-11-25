@@ -6,10 +6,12 @@ const doc = fs.readFileSync(
   new URL('../../docs/TESTSTATUS.md', import.meta.url),
   'utf8'
 );
-const pkg = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+const pkg = JSON.parse(fs.readFileSync(new URL('../../package.json',
+  import.meta.url), 'utf8'));
 
 test(
-  'current test status separates completed runs from pending browser CI and does not duplicate release history',
+  'current test status separates completed runs from pending browser CI and \
+does not duplicate release history',
   () => {
     assert.match(
       doc,

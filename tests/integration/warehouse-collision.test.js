@@ -27,7 +27,8 @@ const furniture = (name, x, y, extra = {}) => ({
 });
 
 test(
-  'create/update collision checks enforce 3D volumes but allow stacked and touching furniture',
+  'create/update collision checks enforce 3D volumes but allow stacked and \
+touching furniture',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -51,7 +52,10 @@ test(
       );
       const lower = (await post(furniture('Floor', 0, 0))).data;
       assert.equal((await post(furniture('Collision', .5, .5))).status, 409);
-      const exact = (await post(furniture('Atop', 0, 0, {elevation: 1.8, itemHeight: .4}))).data;
+      const exact = (await post(furniture('Atop', 0, 0, {
+        elevation: 1.8,
+        itemHeight: .4,
+      }))).data;
       assert.equal(exact.elevation, 1.8);
       assert.equal(
         (await post(furniture(
@@ -64,7 +68,8 @@ test(
       );
       assert.equal((await post(furniture('Alongside', 1, 0))).status, 201);
       const far = (await post(furniture('Far', 3, 0))).data;
-      const persisted = fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'));
+      const persisted = fs.readFileSync(path.join(ctx.dir,
+        'data/warehouse.json'));
       assert.equal(
         (await api(
           ctx.base,
@@ -96,9 +101,15 @@ test(
       );
       assert.equal(success.status, 200);
       assert.equal(success.data.elevation, 2.2);
-      const rotated = (await post(furniture('Rotated', 2, 2, {width: 1.5, depth: .5, rotation: 90}))).data;
+      const rotated = (await post(furniture('Rotated', 2, 2, {
+        width: 1.5,
+        depth: .5, rotation: 90,
+      }))).data;
       assert.equal(
-        (await post(furniture('Hits rotated', 2.2, 2.8, {width: .5, depth: .5}))).status,
+        (await post(furniture('Hits rotated', 2.2, 2.8, {
+          width: .5,
+          depth: .5,
+        }))).status,
         409
       );
       assert.equal(
@@ -111,7 +122,8 @@ test(
 );
 
 test(
-  'bulk edits detect collision with unmoved furniture and between selected furniture atomically',
+  'bulk edits detect collision with unmoved furniture and between selected \
+furniture atomically',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -149,7 +161,8 @@ test(
           {ids: [b.id, c.id], changes: {elevation: 0, width: 1.4}}
         )).status,
         409,
-        'two updated furniture items would collide with each other and the floor item'
+        'two updated furniture items would collide with each other and the \
+floor item'
       );
       assert.deepEqual(
         fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')),

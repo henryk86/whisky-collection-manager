@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {bottleListFacts, bottleRow} from '../../public/js/views/warehouse-presentation.js';
-import {renderUnassignedTray} from '../../public/js/views/warehouse-unassigned-tray.js';
+import {bottleListFacts, bottleRow}
+  from '../../public/js/views/warehouse-presentation.js';
+import {renderUnassignedTray}
+  from '../../public/js/views/warehouse-unassigned-tray.js';
 
 const bottle = {
   id: 'b1',
@@ -13,7 +15,8 @@ const bottle = {
 };
 
 test(
-  'warehouse inventory rows show age, release year and cask type next to the correct bottle',
+  'warehouse inventory rows show age, release year and cask type next to \
+the correct bottle',
   () => {
     const facts = bottleListFacts(bottle);
     assert.match(facts, /Alter:/);
@@ -29,7 +32,8 @@ test(
 );
 
 test(
-  'missing facts remain absent, and label text is escaped in the inventory and tray',
+  'missing facts remain absent, and label text is escaped in the inventory \
+and tray',
   () => {
     assert.equal(bottleListFacts({name: 'unknown'}), '');
     assert.doesNotMatch(
@@ -76,7 +80,10 @@ test(
       shelves: [{id: 's', name: 'Bay', capacity: 10}],
     };
     const warehouse = {
-      rooms: [{id: 'r', name: 'Room', width: 3, height: 3, furniture: [furniture]}],
+      rooms: [{
+        id: 'r', name: 'Room', width: 3, height: 3,
+        furniture: [furniture],
+      }],
       bottles: [bottle],
       assignments: {},
     };

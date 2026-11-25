@@ -1,5 +1,6 @@
 /** One collection -> warehouse-bottle projection on client and server.
- * Pure function: changing tasting notes never alters room or shelf assignments. */
+ * Pure function: changing tasting notes never alters room or shelf assignments.
+ */
 import {displayPhotoPath} from './photo-images.js';
 /**
  * Computes warehouse bottle entries from the current collection state.

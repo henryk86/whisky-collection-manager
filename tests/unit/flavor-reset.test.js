@@ -1,12 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {displayFlavorProfile, readFlavorProfile, handleFlavorRange} from '../../public/js/ui/flavor-profile.js';
+import {displayFlavorProfile, readFlavorProfile, handleFlavorRange}
+  from '../../public/js/ui/flavor-profile.js';
 import {createTastingHistory} from '../../public/js/domain/tasting-history.js';
 import {FLAVOR_AXES} from '../../shared/flavor-profile.js';
 
 const axes = FLAVOR_AXES;
 test(
-  'clear radar restores true null state, not a recorded all-zero profile; undo works',
+  'clear radar restores true null state, not a recorded all-zero profile; \
+undo works',
   () => {
     const sliders = axes.map(axis => ({value: 0, name: axis}));
     const editor = {
@@ -48,7 +50,10 @@ test(
       },
     };
     const value = Object.fromEntries(axes.map((axis, index) => [axis, index]));
-    const history = createTastingHistory({flavorProfile: value, tastingNotes: {nose: '', palate: '', finish: ''}});
+    const history = createTastingHistory({
+      flavorProfile: value, tastingNotes:
+        {nose: '', palate: '', finish: ''},
+    });
     history.record({...history.value, flavorProfile: null});
     displayFlavorProfile(container, history.value.flavorProfile);
     assert.equal(editor.dataset.flavorSet, '');
@@ -62,7 +67,8 @@ test(
 );
 
 test(
-  'editing a legacy tasting does not convert unassessed aromas into zero, including undo',
+  'editing a legacy tasting does not convert unassessed aromas into zero, \
+including undo',
   () => {
     const previous = {
       woody: 8,

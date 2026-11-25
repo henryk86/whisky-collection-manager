@@ -56,13 +56,18 @@ export function createFilePreview({modal, state}) {
     const bottleId = button.dataset.id;
     const fileId = button.dataset.fileId;
     const name = button.dataset.fileName;
-    const url = `/api/bottles/${encodeURIComponent(bottleId)}/files/${encodeURIComponent(fileId)}`;
+    const url = `/api/bottles/${encodeURIComponent(bottleId
+    )}/files/${encodeURIComponent(fileId)}`;
     const preview = documentPreviewKind(name);
     modal.showModal(
       name,
-      `<div class="document-preview-stage" aria-live="polite"><p class="hint">${escapeHtml(t(preview.kind === 'unsupported' ? 'detail.documents.previewUnavailable' : 'detail.documents.previewLoading'))}</p></div>
+      `<div class="document-preview-stage" aria-live="polite"><p \
+class="hint">${escapeHtml(t(preview.kind === 'unsupported' ? 'detail.documen\
+ts.previewUnavailable' : 'detail.documents.previewLoading'))}</p></div>
             ${modalFooter(
-        `<a class="btn primary" href="${escapeHtml(url)}" download="${escapeHtml(name)}">${escapeHtml(t('detail.documents.download'))}</a>`,
+        `<a class="btn primary" href="${escapeHtml(
+          url)}" download="${escapeHtml(name)}">${escapeHtml(t(
+            'detail.documents.download'))}</a>`,
         {className: 'document-preview-actions'}
       )}`,
       true
@@ -84,13 +89,18 @@ export function createFilePreview({modal, state}) {
       return;
     }
     try {
-      const response = await fetch(url, {credentials: 'same-origin', cache: 'no-store'});
+      const response = await fetch(url, {
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
       if (!response.ok) {
         if (response.status ===
           401) window.dispatchEvent(new Event('wcm:auth-required'));
         let data = null;
         if (response.headers.get('content-type')?.includes('json')) {
-          try {data = await response.json();} catch { /* A missing body is handled below. */}
+          try {
+            data = await response.json();
+          } catch { /* A missing body is handled below. */}
         }
         throw httpResponseError(response.status, data);
       }

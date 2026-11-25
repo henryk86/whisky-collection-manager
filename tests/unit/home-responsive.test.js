@@ -18,7 +18,8 @@ const createBottlings = count => Array.from({length: count}, (_, index) => ({
 }));
 
 test(
-  'changing the viewport does not change page content or multiply the chosen page size',
+  'changing the viewport does not change page content or multiply the \
+chosen page size',
   () => {
     const prior = {
       document: globalThis.document,
@@ -132,17 +133,20 @@ test(
 );
 
 test(
-  'home hero preserves the established descriptive copy without hard-coded line breaks',
+  'home hero preserves the established descriptive copy without hard-coded \
+line breaks',
   () => {
     const de = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
     const en = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
     assert.equal(
       de['home.hero.description'],
-      'Von der besonderen Abfüllung bis zum letzten Dram. Entdecke, erfasse und verwalte deine Whisky-Sammlung.'
+      'Von der besonderen Abfüllung bis zum letzten Dram. Entdecke, erfasse \
+und verwalte deine Whisky-Sammlung.'
     );
     assert.equal(
       en['home.hero.description'],
-      'From a special bottling to the last dram. Discover, document and manage your whisky collection.'
+      'From a special bottling to the last dram. Discover, document and \
+manage your whisky collection.'
     );
     for (const catalog of [de, en]) {
       assert.doesNotMatch(

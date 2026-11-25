@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer, requestJson} from '../helpers/server.js';
-import {domOnly, chromium, session, openSettingsFromMenu, openSettingsSection, seed, mockDecoder} from './support.js';
+import {
+  domOnly, chromium, session, openSettingsFromMenu, openSettingsSection,
+  seed, mockDecoder
+} from './support.js';
 test(
-  'browser: adjustments followed by cutting create one corrected editable cutout',
+  'browser: adjustments followed by cutting create one corrected editable \
+cutout',
   async () => {
     await session(async ({base, page, open}) => {
       const created = await seed(base, 'CUT-EDIT');
@@ -23,9 +27,11 @@ test(
       // Geometry + real adjustment pipeline and server persistence still
       // execute.
       const fakeOrt = `export const env={wasm:{}};
-            export class Tensor {constructor(type,data,shape){this.data=data;} dispose(){}}
+            export class Tensor {constructor(type,data,shape){this.data=data\
+;} dispose(){}}
             export const InferenceSession={async create(){return {
-                inputNames:['input'],outputNames:['out'],async run(){const data=new Float32Array(320*320);
+                inputNames:['input'],outputNames:['out'],async run(){const \
+data=new Float32Array(320*320);
                 for(let y=20;y<306;y++)for(let x=106;x<213;x++)data[y*320+x]=1;
                 return {out:{data}};}}}};`;
       await page.route('**/ai/vendor/ort.wasm.min.mjs', route => route.fulfill({
@@ -34,7 +40,8 @@ test(
       await open();
       await page.locator(`[data-act="open"][data-id="${created.bottling
         .id}"]`).first().click();
-      const tile = page.locator(`[data-photo-tile][data-photo-id="${photo.id}"]`);
+      const tile = page.locator(`[data-photo-tile][data-photo-id="${photo
+        .id}"]`);
       const pen = tile.locator('[data-act="photo-editor-open"]');
       /**
        * Derives the size result from the supplied values.
@@ -43,7 +50,10 @@ test(
        * @return {!Promise<*>} Promise for the asynchronous operation.
        */
       const size = async element => element.evaluate(el => {
-        const box = el.getBoundingClientRect(); return {width: box.width, height: box.height};
+        const box = el.getBoundingClientRect(); return {
+          width: box.width,
+          height: box.height,
+        };
       });
       assert.deepEqual(await size(pen), {width: 28, height: 28});
       assert.equal(await tile.locator('[data-act="cutout-open"]').count(), 0);
@@ -109,7 +119,8 @@ test(
         document.querySelector('[data-act="photo-editor-before"]')
           ?.getAttribute('aria-pressed') === 'true');
       assert.equal((await alphaBounds()).transparent, 0,
-        'Before must show the entire opaque original, even when the cutout is already active');
+        'Before must show the entire opaque original, even when the cutout \
+is already active');
       assert.equal(
         await page.locator('[data-photo-editor]').count(),
         1,
@@ -146,7 +157,8 @@ test(
         document.querySelector('[data-act="photo-editor-before"]')
           ?.getAttribute('aria-pressed') === 'true');
       assert.equal((await alphaBounds()).transparent, 0,
-        'reopening a saved cutout must still compare against the complete original');
+        'reopening a saved cutout must still compare against the complete \
+original');
       await page.locator('[data-act="photo-editor-before"]').click();
       await page.waitForFunction(() =>
         document.querySelector('[data-act="photo-editor-before"]')
@@ -159,7 +171,8 @@ test(
 
 
 test(
-  'browser: cutout then automatic correction saves the first photo of a second physical bottle',
+  'browser: cutout then automatic correction saves the first photo of a \
+second physical bottle',
   async () => {
     await session(async ({base, page, open}) => {
       const {bottling, bottle} = await seed(base, 'CUT-1');
@@ -183,9 +196,11 @@ test(
         {image: png}
       )).data;
       const fakeOrt = `export const env={wasm:{}};
-            export class Tensor {constructor(type,data,shape){this.data=data;} dispose(){}}
+            export class Tensor {constructor(type,data,shape){this.data=data\
+;} dispose(){}}
             export const InferenceSession={async create(){return {
-                inputNames:['input'],outputNames:['out'],async run(){const data=new Float32Array(320*320);
+                inputNames:['input'],outputNames:['out'],async run(){const \
+data=new Float32Array(320*320);
                 for(let y=20;y<306;y++)for(let x=106;x<213;x++)data[y*320+x]=1;
                 return {out:{data}};}}}};`;
       await page.route('**/ai/vendor/ort.wasm.min.mjs', route => route.fulfill({
@@ -224,7 +239,8 @@ test(
       );
       await page.locator('[data-act="photo-editor-auto"]').click();
       await page.waitForFunction(() =>
-        Number(document.querySelector('[data-photo-slider="clarity"]')?.value) === 9);
+        Number(document.querySelector('[data-photo-slider="clarity"]')?.value
+        ) === 9);
       await page.locator('[data-act="photo-editor-save"]').click();
       await page.locator('[data-photo-editor]')
         .waitFor({state: 'detached', timeout: 25000});
@@ -253,7 +269,8 @@ test(
 );
 
 test(
-  'browser: first cutout before/after compares the uncut photo without slider edits',
+  'browser: first cutout before/after compares the uncut photo without \
+slider edits',
   async () => {
     await session(async ({base, page, open}) => {
       const created = await seed(base, 'CUT-BEFORE');
@@ -267,9 +284,11 @@ test(
         {image: png}
       )).data;
       const fakeOrt = `export const env={wasm:{}};
-            export class Tensor {constructor(type,data,shape){this.data=data;} dispose(){}}
+            export class Tensor {constructor(type,data,shape){this.data=data\
+;} dispose(){}}
             export const InferenceSession={async create(){return {
-                inputNames:['input'],outputNames:['out'],async run(){const data=new Float32Array(320*320);
+                inputNames:['input'],outputNames:['out'],async run(){const \
+data=new Float32Array(320*320);
                 for(let y=20;y<306;y++)for(let x=106;x<213;x++)data[y*320+x]=1;
                 return {out:{data}};}}}};`;
       await page.route('**/ai/vendor/ort.wasm.min.mjs', route => route.fulfill({
@@ -278,7 +297,8 @@ test(
       await open();
       await page.locator(`[data-act="open"][data-id="${created.bottling
         .id}"]`).first().click();
-      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo
+        .id}"]`).click();
       await page.waitForFunction(() =>
         !document.querySelector('[data-photo-slider="exposure"]')?.disabled);
       assert.equal(
@@ -313,7 +333,9 @@ test(
       await page.locator('[data-act="photo-editor-before"]').click();
       await page.waitForFunction(() => {
         const canvas = document.querySelector('[data-photo-editor-preview]');
-        if (!canvas || document.querySelector('[data-act="photo-editor-before"]')?.getAttribute('aria-pressed') !== 'true') return false;
+        if (!canvas || document.querySelector(
+          '[data-act="photo-editor-before"]')?.getAttribute('aria-pressed') !==
+          'true') return false;
         const pixels = canvas.getContext('2d').getImageData(0,
           0,
           canvas.width,
@@ -341,7 +363,9 @@ test(
   async () => {
     await session(async ({base, page, open}) => {
       const created = await seed(base, 'CUT-FIT');
-      const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+      const png =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA\
+AAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
       const photo = (await requestJson(
         base,
         `/api/bottles/${created.bottle.id}/photos`,
@@ -357,7 +381,8 @@ test(
       await open();
       await page.locator(`.whisky-card[data-id="${created.bottling.id}"]`)
         .first().click();
-      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo
+        .id}"]`).click();
       await page.locator('[data-photo-editor-preview]').waitFor();
       await page.waitForFunction(() =>
         !document.querySelector('[data-photo-slider="exposure"]').disabled);
@@ -459,10 +484,12 @@ test(
           assert.ok(
             layout.help.top >= layout.frame.bottom && layout.actions.top >=
             layout.help.bottom,
-            'status and action bar must follow both columns without overlapping them'
+            'status and action bar must follow both columns without \
+overlapping them'
           );
           assert.ok(layout.actions.bottom <= layout.screenHeight + 1,
-            'the action bar must stay visible on normal desktop-sized viewports');
+            'the action bar must stay visible on normal desktop-sized \
+viewports');
           assert.ok(
             Math.abs(layout.help.left - layout.dialog.left) < 3 &&
             Math.abs(layout.help.right - layout.dialog.right) < 3,
@@ -477,12 +504,15 @@ test(
 
 
 test(
-  'browser: a saved photo cutout can be previewed, toggled and deleted without losing the original',
+  'browser: a saved photo cutout can be previewed, toggled and deleted \
+without losing the original',
   async () => {
     await session(async ({base, page, open}) => {
       const created = await seed(base, 'CUT-001');
       const bottleId = created.bottle.id;
-      const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+      const png =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA\
+AAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
       const photo = (await requestJson(
         base,
         `/api/bottles/${bottleId}/photos`,
@@ -494,12 +524,15 @@ test(
       await open();
       await page.locator(`.whisky-card[data-id="${created.bottling.id}"]`)
         .first().click();
-      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).waitFor();
+      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo
+        .id}"]`).waitFor();
       assert.match(
-        await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`).getAttribute('src'),
+        await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`
+        ).getAttribute('src'),
         /cutout/
       );
-      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo
+        .id}"]`).click();
       await page.locator('[data-photo-editor]').waitFor();
       await page.waitForFunction(() =>
         !document.querySelector('[data-photo-slider="exposure"]').disabled);
@@ -530,7 +563,8 @@ test(
         true
       );
       assert.match(
-        await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`).getAttribute('src'),
+        await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`
+        ).getAttribute('src'),
         /cutout/
       );
       await page.locator('[data-photo-editor-tab="adjustments"]').click();
@@ -554,17 +588,20 @@ test(
       assert.equal(
         await page.locator('[data-photo-slider="exposure"]').inputValue(),
         '0.6',
-        'unsaved adjustment values for each source must survive preview switching'
+        'unsaved adjustment values for each source must survive preview \
+switching'
       );
       // Saving the selected source commits it and its edits, but never deletes
       // the cutout.
       await page.locator('[data-act="photo-editor-save"]').click();
-      await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img[src*="edit-"]`).waitFor();
+      await page.locator(`[data-photo-tile][data-photo-id="${photo
+        .id}"] img[src*="edit-"]`).waitFor();
       const afterSaving = (await requestJson(base, '/api/collection')).data
         .bottlings[0].bottles[0].photos[0];
       assert.equal(afterSaving.cutout.selected, false);
       assert.equal(afterSaving.adjustment.settings.exposure, .6);
-      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo
+        .id}"]`).click();
       await page.locator('[data-photo-editor-tab="cutout"]').click();
       await page.locator('[data-act="photo-editor-remove-cutout"]').click();
       await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`)
@@ -583,7 +620,8 @@ test(
         'original edits survive cutout deletion'
       );
       assert.equal(
-        await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`).getAttribute('src'),
+        await page.locator(`[data-photo-tile][data-photo-id="${photo.id}"] img`
+        ).getAttribute('src'),
         `/${photoAfterDelete.adjustment.path}`
       );
     });
@@ -593,7 +631,8 @@ test(
 
 
 test(
-  'browser: saved transparent cutout Before displays all opaque original pixels synchronously',
+  'browser: saved transparent cutout Before displays all opaque original \
+pixels synchronously',
   async () => {
     await session(async ({base, page, open}) => {
       const {bottle, bottling} = await seed(base, 'CUT-OPAQUE');
@@ -618,7 +657,8 @@ test(
       await open();
       await page.locator(`[data-act="open"][data-id="${bottling.id}"]`)
         .first().click();
-      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo
+        .id}"]`).click();
       await page.waitForFunction(() =>
         !document.querySelector('[data-photo-slider="exposure"]').disabled);
       /**
@@ -654,7 +694,8 @@ test(
 
 
 test(
-  'browser: cutout mask brush erases at preview zoom, supports undo, and saves only the new mask',
+  'browser: cutout mask brush erases at preview zoom, supports undo, and \
+saves only the new mask',
   async () => {
     await session(async ({base, page, open, dir}) => {
       const created = await seed(base, 'MASK-EDIT');
@@ -674,7 +715,8 @@ test(
       await open();
       await page.locator(`.whisky-card[data-id="${created.bottling.id}"]`)
         .first().click();
-      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo.id}"]`).click();
+      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${photo
+        .id}"]`).click();
       await page.waitForFunction(() =>
         !document.querySelector('[data-photo-slider="exposure"]').disabled);
       const frameHeightBeforeMask = await page.locator('.photo-editor-image')
@@ -743,7 +785,8 @@ test(
         .down(); await page.mouse.up();
       await page.locator('[data-photo-editor-tab="adjustments"]').click();
       await page.locator('[data-photo-slider="exposure"]').evaluate(slider => {
-        slider.value = '.6'; slider.dispatchEvent(new Event('input', {bubbles: true}));
+        slider.value = '.6'; slider.dispatchEvent(new Event('input',
+          {bubbles: true}));
       });
       await page.locator('[data-act="photo-editor-save"]').click();
       await page.locator('[data-photo-editor]').waitFor({state: 'detached'});
@@ -764,17 +807,20 @@ test(
 
 
 test(
-  'browser: isolated slightly tilted bottle fills both vertical edges of transparent 2:3 cutout',
+  'browser: isolated slightly tilted bottle fills both vertical edges of \
+transparent 2:3 cutout',
   async () => {
     await session(async ({page, open}) => {
       await open();
       const result = await page.evaluate(async () => {
         const {composeCutout} =
-          await import(new URL('js/features/cutout/image.js', document.baseURI).href);
+          await import(new URL('js/features/cutout/image.js',
+            document.baseURI).href);
         const source = document.createElement('canvas');
         source.width = 720; source.height = 1080;
         const sc = source.getContext('2d');
-        sc.fillStyle = '#bc7623'; sc.fillRect(0, 0, source.width, source.height);
+        sc.fillStyle = '#bc7623'; sc.fillRect(0, 0, source.width,
+          source.height);
         const img = new Image(); img.src =
           source.toDataURL('image/png'); await img.decode();
         const mask = new Uint8ClampedArray(320 * 320);
@@ -842,13 +888,15 @@ test(
 
 
 test(
-  'browser: cutout compositor sharpens the model feather into a narrow transparent bottle edge',
+  'browser: cutout compositor sharpens the model feather into a narrow \
+transparent bottle edge',
   async () => {
     await session(async ({page, open}) => {
       await open();
       const result = await page.evaluate(async () => {
         const {composeCutout} =
-          await import(new URL('js/features/cutout/image.js', document.baseURI).href);
+          await import(new URL('js/features/cutout/image.js',
+            document.baseURI).href);
         const original = document.createElement('canvas');
         original.width = 640; original.height = 960;
         const sourceContext = original.getContext('2d');
@@ -888,7 +936,8 @@ test(
       });
       assert.equal(result.ratio, true, 'the PNG keeps the original 2:3 ratio');
       assert.ok(result.transition > 0 && result.transition <= 16,
-        `the final edge needs narrow antialiasing, not a broad model feather: ${JSON.stringify(result)}`);
+        `the final edge needs narrow antialiasing, not a broad model \
+feather: ${JSON.stringify(result)}`);
       assert.ok(result.opaque > 0 && result.transparent > 0,
         'the image has a fully opaque bottle and transparent background');
     });
@@ -898,12 +947,16 @@ test(
 
 
 test(
-  'browser: photo editor previews exposure, saves reversible adjustments and restores the original',
+  'browser: photo editor previews exposure, saves reversible adjustments \
+and restores the original',
   async () => {
     await session(async ({page, open, base}) => {
       const created = await seed(base, '002018');
       const bottle = created.bottle;
-      const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAqCAIAAAAmpwwJAAAALUlEQVR4nO3MMQ0AMAgAsDFn2MAG/hNMwNcKaGT12/BXFpFIJBKJRCKRSHQSDaMuAWIphFaeAAAAAElFTkSuQmCC';
+      const png =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAqCAIAAAAmpwwJA\
+AAALUlEQVR4nO3MMQ0AMAgAsDFn2MAG/hNMwNcKaGT12/BXFpFIJBKJRCKRSHQSDaMuAWIphFaeA\
+AAAAElFTkSuQmCC';
       const upload = await requestJson(
         base,
         `/api/bottles/${bottle.id}/photos`,
@@ -914,7 +967,9 @@ test(
       await open();
       await page.locator(`[data-act="open"][data-id="${created.bottling
         .id}"]`).first().click();
-      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${upload.data.id}"]`).click();
+      await page.locator(
+        `[data-act="photo-editor-open"][data-photo-id="${upload.data.id}"]`)
+        .click();
       const exposure = page.locator('[data-photo-slider="exposure"]');
       await exposure.waitFor({state: 'visible'});
       await page.waitForFunction(() =>
@@ -972,7 +1027,8 @@ test(
 
 
 test(
-  'browser: photo editor group resets and white-balance eyedropper select real image pixels',
+  'browser: photo editor group resets and white-balance eyedropper select \
+real image pixels',
   async () => {
     await session(async ({page, open, base}) => {
       const created = await seed(base, '002019');
@@ -989,7 +1045,9 @@ test(
       await open();
       await page.locator(`[data-act="open"][data-id="${created.bottling
         .id}"]`).first().click();
-      await page.locator(`[data-act="photo-editor-open"][data-photo-id="${upload.data.id}"]`).click();
+      await page.locator(
+        `[data-act="photo-editor-open"][data-photo-id="${upload.data.id}"]`)
+        .click();
       const exposure = page.locator('[data-photo-slider="exposure"]');
       await page.waitForFunction(() =>
         !document.querySelector('[data-photo-slider="exposure"]').disabled);
@@ -1002,14 +1060,17 @@ test(
        */
       const change = async (name, value) =>
         page.locator(`[data-photo-slider="${name}"]`).evaluate((el, v) => {
-          el.value = String(v); el.dispatchEvent(new Event('input', {bubbles: true}));
+          el.value = String(v); el.dispatchEvent(new Event('input',
+            {bubbles: true}));
         },
           value
         );
       await change('exposure', .5);
       await change('temperature', 30);
       await change('clarity', 12);
-      await page.locator('[data-act="photo-editor-reset-group"][data-photo-group="light"]').click();
+      await page.locator(
+        '[data-act="photo-editor-reset-group"][data-photo-group="light"]')
+        .click();
       assert.equal(await exposure.inputValue(), '0');
       assert.equal(
         await page.locator('[data-photo-slider="temperature"]').inputValue(),
@@ -1044,14 +1105,17 @@ test(
       await page.mouse.move(point.x + point.dx, point.y + point.dy, {steps: 3});
       await page.mouse.up();
       await page.waitForFunction(() =>
-        document.querySelector('[data-act="photo-editor-pick-white"]')?.getAttribute('aria-pressed') === 'false');
+        document.querySelector('[data-act="photo-editor-pick-white"]')
+          ?.getAttribute('aria-pressed') === 'false');
       assert.ok(Number(await page.locator('[data-photo-slider="temperature"]')
         .inputValue()) < 0);
       assert.equal(
         await page.locator('[data-photo-slider="clarity"]').inputValue(),
         '12'
       );
-      await page.locator('[data-act="photo-editor-reset-group"][data-photo-group="color"]').click();
+      await page.locator(
+        '[data-act="photo-editor-reset-group"][data-photo-group="color"]')
+        .click();
       assert.equal(
         await page.locator('[data-photo-slider="temperature"]').inputValue(),
         '0'
@@ -1060,7 +1124,9 @@ test(
         await page.locator('[data-photo-slider="clarity"]').inputValue(),
         '12'
       );
-      await page.locator('[data-act="photo-editor-reset-group"][data-photo-group="detail"]').click();
+      await page.locator(
+        '[data-act="photo-editor-reset-group"][data-photo-group="detail"]')
+        .click();
       assert.equal(
         await page.locator('[data-photo-slider="clarity"]').inputValue(),
         '0'

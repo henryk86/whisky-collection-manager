@@ -127,7 +127,8 @@ export function validateFlightPlan(collection, flight) {
     // the UI.
   }
   if (flight.phase === 'planned' &&
-    flight.tastingIds?.length) throw new Error('Planning may not contain tastings');
+    flight.tastingIds?.length) throw new Error(
+      'Planning may not contain tastings');
   // Existing records may be removed later; a completed flight must remain valid
   // even when its last tasting is deleted. The transition itself requires a
   // tasting.

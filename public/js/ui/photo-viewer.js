@@ -1,7 +1,8 @@
 import {t} from '../i18n/index.js';
 import {escapeHtml, query, queryAll} from './dom.js';
 import {createPhotoZoom} from './photo-zoom.js';
-import {minusIcon, plusIcon, arrowLeftIcon, arrowRightIcon} from './action-icons.js';
+import {minusIcon, plusIcon, arrowLeftIcon, arrowRightIcon}
+  from './action-icons.js';
 
 /**
  * A photo lightbox inside the application's existing modal system. The source
@@ -43,7 +44,8 @@ export function createPhotoViewer({state, showModal}) {
     } else if (button.matches('[data-bottle-photo-preview]')) {
       // The preview repeats the first sorted image, not a second gallery
       // entry. Limit navigation to this exact physical bottle.
-      const gallery = button.closest('.bottle-entry')?.querySelector('[data-photo-list]');
+      const gallery = button.closest('.bottle-entry')?.querySelector(
+        '[data-photo-list]');
       if (gallery) buttons = queryAll('[data-act="open-photo"]', gallery);
     } else if (button.matches('.hero-photo-open')) {
       // The large cover photo belongs to a physical bottle; enable
@@ -68,20 +70,28 @@ export function createPhotoViewer({state, showModal}) {
 
     showModal(t("ui.photos.bottlePhoto"), `<figure class="photo-lightbox">
     <div class="photo-lightbox-stage">
-    <img class="photo-lightbox-image" src="${escapeHtml(photo.src)}" alt="${escapeHtml(photo.alt)}" draggable="false">
+    <img class="photo-lightbox-image" src="${escapeHtml(photo.src
+    )}" alt="${escapeHtml(photo.alt)}" draggable="false">
     </div>
     <figcaption class="photo-lightbox-footer">
     <span class="photo-lightbox-caption">${escapeHtml(photo.alt)}</span>
-    <span class="photo-lightbox-zoom" role="group" aria-label="${t('ui.photos.zoomControls')}">
-    <button type="button" class="btn small" data-act="photo-zoom-out" aria-label="${t('ui.photos.zoomOut')}" disabled>${minusIcon}</button>
-    <button type="button" class="btn small photo-lightbox-zoom-level" data-act="photo-zoom-reset" aria-label="${t('ui.photos.zoomReset')}" disabled><span data-photo-zoom-level>100 %</span></button>
-    <button type="button" class="btn small" data-act="photo-zoom-in" aria-label="${t('ui.photos.zoomIn')}">${plusIcon}</button>
+    <span class="photo-lightbox-zoom" role="group" aria-label="${t(
+      'ui.photos.zoomControls')}">
+    <button type="button" class="btn small" data-act="photo-zoom-out" \
+aria-label="${t('ui.photos.zoomOut')}" disabled>${minusIcon}</button>
+    <button type="button" class="btn small photo-lightbox-zoom-level" \
+data-act="photo-zoom-reset" aria-label="${t('ui.photos.zoomReset')}" \
+disabled><span data-photo-zoom-level>100 %</span></button>
+    <button type="button" class="btn small" data-act="photo-zoom-in" \
+aria-label="${t('ui.photos.zoomIn')}">${plusIcon}</button>
     </span>
     ${multiple ? `<span class="photo-lightbox-navigation">
-    <button type="button" class="btn small" data-act="photo-prev" aria-label="${t("ui.photos.previous")}">${arrowLeftIcon}</button>
+    <button type="button" class="btn small" data-act="photo-prev" \
+aria-label="${t("ui.photos.previous")}">${arrowLeftIcon}</button>
     <span class="photo-lightbox-count" aria-live="polite">${active +
         1} / ${photos.length}</span>
-    <button type="button" class="btn small" data-act="photo-next" aria-label="${t("ui.photos.next")}">${arrowRightIcon}</button>
+    <button type="button" class="btn small" data-act="photo-next" \
+aria-label="${t("ui.photos.next")}">${arrowRightIcon}</button>
     </span>` : ''}
     </figcaption>
     </figure>`, true, Boolean(state.modal), '', 'photo');

@@ -45,7 +45,8 @@ test(
 );
 
 test(
-  'ONNX runtime .mjs modules are delivered with a JavaScript MIME type under nosniff',
+  'ONNX runtime .mjs modules are delivered with a JavaScript MIME type \
+under nosniff',
   async () => {
     // The actual ONNX runtime is populated during the Docker build /
     // cutout:prepare.
@@ -164,7 +165,8 @@ test(
       const oldBottleId = created.data.bottle.id;
       const bottlingId = created.data.bottling.id;
       assert.equal(
-        (await requestJson(context.base, `/api/bottles/${oldBottleId}`, 'DELETE')).status,
+        (await requestJson(context.base, `/api/bottles/${oldBottleId}`,
+          'DELETE')).status,
         200
       );
       const payload = {bottlingId, inventoryNumber: '000078'};

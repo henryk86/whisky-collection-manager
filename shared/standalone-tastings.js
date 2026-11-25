@@ -3,7 +3,8 @@
  * bottling.
  */
 import {normalizeTastingSubject} from './tasting-subject.js';
-import {normalizeTastingRecord, VALID_TASTING_FIELDS} from './tasting-records.js';
+import {normalizeTastingRecord, VALID_TASTING_FIELDS}
+  from './tasting-records.js';
 
 const ALLOWED = new Set(['bottling', ...VALID_TASTING_FIELDS]);
 /**
@@ -23,7 +24,8 @@ export function normalizeStandaloneTasting(input, previous = {}) {
   );
   const tastingInput = Object.fromEntries(Object.entries(input)
     .filter(([key]) => key !== 'bottling'));
-  const {id, createdAt, updatedAt, bottling: previousBottling, ...previousTasting} = previous;
+  const {id, createdAt, updatedAt, bottling: previousBottling,
+    ...previousTasting} = previous;
   return {bottling, ...normalizeTastingRecord(tastingInput, previousTasting)};
 }
 

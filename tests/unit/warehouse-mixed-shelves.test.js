@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {shelfLevels, effectiveShelfFront, totalExplicitHeightCm} from '../../shared/warehouse-compartments.js';
-import {warehouse3DGeometry, furnitureFootprint} from '../../public/js/domain/warehouse-3d-model.js';
+import {shelfLevels, effectiveShelfFront, totalExplicitHeightCm}
+  from '../../shared/warehouse-compartments.js';
+import {warehouse3DGeometry, furnitureFootprint}
+  from '../../public/js/domain/warehouse-3d-model.js';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 
 const base = {
@@ -25,7 +27,8 @@ const room = {id: 'r', name: 'Zimmer', width: 5, height: 4, furniture: [base]};
 const warehouse = {rooms: [room], assignments: {}, bottles: []};
 
 test(
-  'specified shelf heights and fronts are measured from bottom to top without modifying data',
+  'specified shelf heights and fronts are measured from bottom to top \
+without modifying data',
   () => {
     const before = JSON.stringify(base);
     const levels = shelfLevels(base);
@@ -58,12 +61,14 @@ test(
 );
 
 test(
-  '3D mixed front geometry has open upper bays without solid cabinet body in all rotations',
+  '3D mixed front geometry has open upper bays without solid cabinet body \
+in all rotations',
   () => {
     const expected = [[0, 1], [-1, 0], [0, -1], [1, 0]];
     for (const [i, rotation] of [0, 90, 180, 270].entries()) {
       const item = {...base, rotation};
-      const model = warehouse3DGeometry({...room, furniture: [item]}, warehouse).objects[0];
+      const model = warehouse3DGeometry({...room, furniture: [item]},
+        warehouse).objects[0];
       /**
        * Filters records according to the groups selection rules.
        *
@@ -96,9 +101,11 @@ test(
 );
 
 test(
-  'open above wood door and glass above door work regardless of original furniture type',
+  'open above wood door and glass above door work regardless of original \
+furniture type',
   () => {
-    for (const type of ['regal', 'schrank', 'vitrine', 'kommode', 'haengeregal']) {
+    for (const type of ['regal', 'schrank', 'vitrine', 'kommode',
+      'haengeregal']) {
       const item = {...base, type};
       const obj = warehouse3DGeometry({...room, furniture: [item]}, warehouse)
         .objects[0];
@@ -114,7 +121,8 @@ test(
 );
 
 test(
-  'shelf edit form offers front and centimeter height and panel lists fronts top to bottom',
+  'shelf edit form offers front and centimeter height and panel lists \
+fronts top to bottom',
   () => {
     let html = ''; let form = '';
     const state = {
@@ -196,16 +204,19 @@ test(
 
 
 test(
-  'single/double wood and glass doors with and without glazing frames rotate with furniture',
+  'single/double wood and glass doors with and without glazing frames \
+rotate with furniture',
   () => {
-    for (const rotation of [0, 90, 180, 270]) for (const front of ['door', 'glass'])
+    for (const rotation of [0, 90, 180, 270]) for (const front of ['door',
+      'glass'])
       for (const doorLeaves of [1, 2]) for (const glassFrame of [false, true]) {
         const item = {
           ...base,
           rotation,
           shelves: [{id: 's', front, doorLeaves, glassFrame, heightCm: 100}],
         };
-        const parts = warehouse3DGeometry({...room, furniture: [item]}, warehouse).objects[0].parts;
+        const parts = warehouse3DGeometry({...room, furniture: [item]},
+          warehouse).objects[0].parts;
         assert.equal(
           parts.filter(p => p.role === (front === 'glass' ? 'glass-front' :
             'door')).length,
@@ -221,7 +232,8 @@ test(
 );
 
 test(
-  'furniture-level door settings act as defaults, shelf overrides win in all rotations',
+  'furniture-level door settings act as defaults, shelf overrides win in \
+all rotations',
   () => {
     for (const rotation of [0, 90, 180, 270]) {
       const item = {
@@ -249,7 +261,8 @@ test(
           },
         ],
       };
-      const parts = warehouse3DGeometry({...room, furniture: [item]}, warehouse).objects[0].parts;
+      const parts = warehouse3DGeometry({...room, furniture: [item]},
+        warehouse).objects[0].parts;
       assert.equal(parts.filter(p => p.role === 'glass-front').length, 3);
       assert.equal(parts.filter(p => p.role === 'glass-frame').length, 8);
       assert.equal(parts.filter(p => p.role === 'door').length, 2);

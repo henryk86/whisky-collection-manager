@@ -8,11 +8,13 @@ import https from 'node:https';
 import {spawnSync} from 'node:child_process';
 import {once} from 'node:events';
 /**
- * Retrieves https from the available state.
+ * Requests the collection endpoint through a real TLS socket, with explicit
+ * certificate verification behavior and no connection pooling.
  *
- * @param {*} port Value used by this operation.
- * @param {*} rejectUnauthorized Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @param {number} port TCP port assigned to the HTTPS listener.
+ * @param {boolean} rejectUnauthorized Whether to reject untrusted certificates.
+ * @return {!Promise<{status: number, body: string}>} HTTP status and response
+ *     body; rejects on a TLS or network error.
  */
 async function getHttps(port, rejectUnauthorized) {
   return await new Promise((resolve, reject) => {
@@ -32,7 +34,8 @@ const openssl = spawnSync('openssl', ['version'], {
   stdio: 'ignore',
 });
 test(
-  'TLS server serves collection, rejects untrusted cert by default, and disables HTTP',
+  'TLS server serves collection, rejects untrusted cert by default, and \
+disables HTTP',
   {
     skip: openssl.error ? 'OpenSSL fehlt' : false,
   },

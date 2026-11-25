@@ -42,11 +42,13 @@ function safePath(root, filename) {
  * @param {boolean=} prune Prune used by this operation.
  * @return {!Object} Structured result for the caller.
  */
-export function inspectManifestUpgrade(newRelease, installation, prune = false) {
+export function inspectManifestUpgrade(newRelease, installation,
+  prune = false) {
   const newer = verifySourceManifest(newRelease);
   const earlier = readSourceManifest(installation);
   if (earlier.version ===
-    newer.version) throw new Error('Old and new manifests have the same version');
+    newer.version) throw new Error(
+      'Old and new manifests have the same version');
   const report = {removable: [], modified: [], missing: [], removed: []};
   for (const [name, oldHash] of Object.entries(earlier.files)) {
     if (Object.hasOwn(newer.files, name)) continue;
@@ -70,12 +72,15 @@ if (isCli) {
   const [newRelease, installation, flag] = process.argv.slice(2);
   try {
     if (!newRelease || !installation || (flag && flag !== '--prune'))
-      throw new Error('Usage: node scripts/upgrade-manifest.js <new-release-dir> <installed-dir> [--prune]');
+      throw new Error(
+        'Usage: node scripts/upgrade-manifest.js <new-release-dir> \
+<installed-dir> [--prune]');
     if (fs.realpathSync(newRelease) === fs.realpathSync(installation))
       throw new Error('Source and installation must differ');
     const report = inspectManifestUpgrade(newRelease, installation, flag ===
       '--prune');
     console.log(JSON.stringify(report, null, 2));
-    if (report.modified.length) console.warn('Locally edited source modules have been preserved.');
+    if (report.modified.length) console.warn(
+      'Locally edited source modules have been preserved.');
   } catch (error) {console.error(error.message); process.exitCode = 1;}
 }

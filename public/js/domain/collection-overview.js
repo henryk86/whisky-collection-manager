@@ -3,8 +3,10 @@
  * bottle.
  */
 import {bottleStatusLabels, whiskyTypeName} from './labels.js';
-import {displayedTastingRating, latestTasting, sortedTastings} from '../../../shared/tasting-records.js';
-import {normalizeFlavorCriteria} from '../../../shared/collection-saved-views.js';
+import {displayedTastingRating, latestTasting, sortedTastings}
+  from '../../../shared/tasting-records.js';
+import {normalizeFlavorCriteria}
+  from '../../../shared/collection-saved-views.js';
 
 export const OVERVIEW_MODES = Object.freeze(['bottlings', 'bottles']);
 
@@ -181,16 +183,21 @@ function compareEntries(left, right, sort, distilleryNames) {
       right.bottle?.inventoryNumber || null,
       true
     );
-    case 'ageAsc': return comparePresent(asNumber(a.ageYears), asNumber(b.ageYears));
+    case 'ageAsc': return comparePresent(asNumber(a.ageYears),
+      asNumber(b.ageYears));
     case 'abvAsc': return comparePresent(asNumber(a.abv), asNumber(b.abv));
-    case 'abvDesc': return comparePresent(asNumber(a.abv), asNumber(b.abv), true);
-    case 'yearAsc': return comparePresent(asNumber(a.releaseYear), asNumber(b.releaseYear));
+    case 'abvDesc': return comparePresent(asNumber(a.abv), asNumber(b.abv),
+      true);
+    case 'yearAsc': return comparePresent(asNumber(a.releaseYear),
+      asNumber(b.releaseYear));
     case 'stockAsc': return comparePresent(a.bottles?.length ||
       0, b.bottles?.length || 0);
     case 'stockDesc': return comparePresent(a.bottles?.length ||
       0, b.bottles?.length || 0, true);
-    case 'completionAsc': return comparePresent(a.completionStatus, b.completionStatus);
-    case 'completionDesc': return comparePresent(a.completionStatus, b.completionStatus, true);
+    case 'completionAsc': return comparePresent(a.completionStatus,
+      b.completionStatus);
+    case 'completionDesc': return comparePresent(a.completionStatus,
+      b.completionStatus, true);
     case 'statusAsc': return comparePresent(
       STATUS_ORDER[left.bottle?.status] ?? null,
       STATUS_ORDER[right.bottle?.status] ?? null
@@ -240,22 +247,28 @@ function compareEntries(left, right, sort, distilleryNames) {
       displayedTastingRating(b),
       true
     );
-    case 'scoreAsc': return comparePresent(displayedTastingRating(a), displayedTastingRating(b));
-    case 'updatedDesc': return comparePresent(latestUpdate(left), latestUpdate(right), true);
-    case 'updatedAsc': return comparePresent(latestUpdate(left), latestUpdate(right));
+    case 'scoreAsc': return comparePresent(displayedTastingRating(a),
+      displayedTastingRating(b));
+    case 'updatedDesc': return comparePresent(latestUpdate(left),
+      latestUpdate(right), true);
+    case 'updatedAsc': return comparePresent(latestUpdate(left),
+      latestUpdate(right));
     case 'tastedDesc': return comparePresent(
       latestTasting(a)?.tastedOn,
       latestTasting(b)?.tastedOn,
       true
     );
-    case 'tastedAsc': return comparePresent(latestTasting(a)?.tastedOn, latestTasting(b)?.tastedOn);
+    case 'tastedAsc': return comparePresent(latestTasting(a)?.tastedOn,
+      latestTasting(b)?.tastedOn);
     case 'newest': return comparePresent(
       left.bottle?.createdAt || a.createdAt,
       right.bottle?.createdAt || b.createdAt,
       true
     );
-    case 'age': return comparePresent(asNumber(a.ageYears), asNumber(b.ageYears), true);
-    case 'year': return comparePresent(asNumber(a.releaseYear), asNumber(b.releaseYear), true);
+    case 'age': return comparePresent(asNumber(a.ageYears),
+      asNumber(b.ageYears), true);
+    case 'year': return comparePresent(asNumber(a.releaseYear),
+      asNumber(b.releaseYear), true);
     default: return 0;
   }
 }
@@ -270,7 +283,8 @@ function compareEntries(left, right, sort, distilleryNames) {
  * @param {boolean=} profilePresent Profile present used by this operation.
  * @return {boolean} Whether the condition is satisfied.
  */
-export function matchesFlavorCriteria(bottling, criteria = [], profileMissing = false, profilePresent = false) {
+export function matchesFlavorCriteria(bottling, criteria = [], profileMissing =
+  false, profilePresent = false) {
   const profile = sortedTastings(bottling).find(item =>
     item.flavorProfile)?.flavorProfile || null;
   if (profileMissing) return !profile;
@@ -334,7 +348,8 @@ export function collectionOverviewEntries(collection, {
         isMatchingBottleType(bottle, volumeType));
       if ((status !== 'all' || volumeType !== 'all') &&
         !matchingBottles.length) continue;
-      const text = [...common, ...matchingBottles.flatMap(matchingBottleText)].join(' ').toLocaleLowerCase('de');
+      const text = [...common, ...matchingBottles.flatMap(matchingBottleText)]
+        .join(' ').toLocaleLowerCase('de');
       if (text.includes(needle)) entries.push({bottling, bottle: null});
     }
   }

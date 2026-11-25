@@ -2,7 +2,8 @@ import {t} from '../i18n/index.js';
 import {request} from '../api.js';
 
 export const fileAccept =
-  '.pdf,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif,.txt,.csv,.eml,.docx,.xlsx,.odt,.ods';
+  '.pdf,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif,.txt,.csv,.eml,.docx,.xlsx,\
+.odt,.ods';
 const extensions = new Set(fileAccept.split(',').map(value => value.slice(1)));
 const MAX_BYTES = 15 * 1024 * 1024;
 
@@ -66,7 +67,8 @@ export async function uploadFiles(bottleId, files) {
     try {
       await request(`/api/bottles/${encodeURIComponent(bottleId)}/files`, {
         method: 'POST',
-        body: JSON.stringify({filename: file.name, data: await toDataUrl(file)}),
+        body: JSON.stringify({filename: file.name, data: await toDataUrl(file)}
+        ),
       });
       saved++;
     }

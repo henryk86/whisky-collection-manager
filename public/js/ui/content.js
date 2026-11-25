@@ -34,12 +34,14 @@ const assertVariant = (value, allowed, kind) => {
  * @return {string} Panel markup.
  * @throws {RangeError} If tag or style variant is unsupported.
  */
-export function panel({content = '', variant = 'standard', tag = 'div', className = ''} = {}) {
+export function panel({content = '', variant = 'standard', tag = 'div',
+  className = ''} = {}) {
   assertVariant(variant, ['standard', 'analytics', 'plain'], 'panel');
   assertVariant(tag, ['div', 'section', 'article'], 'panel tag');
   const baseClass = variant === 'analytics' ? 'analytics-panel' :
     variant === 'plain' ? '' : 'panel';
-  return `<${tag} class="${safe(classes(baseClass, className))}" data-ds-panel="${variant}">${content}</${tag}>`;
+  return `<${tag} class="${safe(classes(baseClass,
+    className))}" data-ds-panel="${variant}">${content}</${tag}>`;
 }
 
 /**
@@ -85,7 +87,8 @@ export function detailField({
  * @return {string} Grid wrapper HTML.
  * @throws {RangeError} If the columns or wrapper tag are unsupported.
  */
-export function detailGrid(content, {columns = 3, tag = 'div', className = ''} = {}) {
+export function detailGrid(content, {columns = 3, tag = 'div', className =
+  ''} = {}) {
   assertVariant(columns, [2, 3], 'detail grid');
   assertVariant(tag, ['div', 'dl'], 'detail grid tag');
   return `<${tag}${className ? ` class="${safe(className)}"` :
@@ -107,10 +110,16 @@ export function emptyState({
   className = ''
 } = {}) {
   assertVariant(variant, ['collection', 'subtle', 'inline'], 'empty state');
-  if (variant === 'inline') return `<p class="${safe(classes('analytics-empty', className))}" data-ds-empty-state="inline">${safe(description || title)}</p>`;
-  if (variant === 'subtle') return `<p class="${safe(classes('hint', className))}" data-ds-empty-state="subtle">${safe(description || title)}</p>`;
-  return `<div class="${safe(classes('empty-state', className))}" data-ds-empty-state="collection">` +
-    `<strong>${safe(title)}</strong><p>${safe(description)}</p>${actions}</div>`;
+  if (variant === 'inline') return `<p class="${safe(classes('analytics-empty',
+    className))}" data-ds-empty-state="inline">${safe(description ||
+      title)}</p>`;
+  if (variant === 'subtle') return `<p class="${safe(classes('hint',
+    className))}" data-ds-empty-state="subtle">${safe(description ||
+      title)}</p>`;
+  return `<div class="${safe(classes('empty-state',
+    className))}" data-ds-empty-state="collection">` +
+    `<strong>${safe(title)}</strong><p>${safe(description
+    )}</p>${actions}</div>`;
 }
 
 /**
@@ -123,8 +132,10 @@ export function emptyState({
 export function divider({orientation = 'horizontal', className = ''} = {}) {
   assertVariant(orientation, ['horizontal', 'vertical'], 'divider');
   return orientation === 'horizontal'
-    ? `<hr class="${safe(classes('divider', className))}" data-ds-divider="horizontal">`
-    : `<span class="${safe(className)}" data-ds-divider="vertical" aria-hidden="true"></span>`;
+    ? `<hr class="${safe(classes('divider',
+      className))}" data-ds-divider="horizontal">`
+    : `<span class="${safe(className
+    )}" data-ds-divider="vertical" aria-hidden="true"></span>`;
 }
 
 /**
@@ -135,10 +146,12 @@ export function divider({orientation = 'horizontal', className = ''} = {}) {
  * @return {string} Toolbar HTML.
  * @throws {RangeError} If the toolbar variant is unsupported.
  */
-export function actionToolbar(content, {className = '', variant = 'inline'} = {}) {
+export function actionToolbar(content, {className = '', variant = 'inline'} =
+  {}) {
   assertVariant(variant, ['inline', 'filters', 'end'], 'action toolbar');
   const baseClass = variant === 'filters' ? 'toolbar' : 'actions';
-  return `<div class="${safe(classes(baseClass, className))}" data-ds-action-toolbar="${variant}">${content}</div>`;
+  return `<div class="${safe(classes(baseClass,
+    className))}" data-ds-action-toolbar="${variant}">${content}</div>`;
 }
 
 /**
@@ -158,5 +171,6 @@ export function documentItem(content) {
  * @return {string} Document-list HTML.
  */
 export function documentList(items) {
-  return `<ul class="document-list" data-ds-document-list>${items.join('')}</ul>`;
+  return `<ul class="document-list" data-ds-document-list>${items.join(
+    '')}</ul>`;
 }

@@ -54,7 +54,8 @@ export function homePageUrl(page, mode = 'bottlings') {
  * @param {number=} requestedSize Requested size used by this operation.
  * @return {!Object} Structured result for the caller.
  */
-export function paginate(items, requestedPage = 1, requestedSize = DEFAULT_PAGE_SIZE) {
+export function paginate(items, requestedPage = 1, requestedSize =
+  DEFAULT_PAGE_SIZE) {
   const pageSize = Number.isSafeInteger(Number(requestedSize)) &&
     Number(requestedSize) >= 1 && Number(requestedSize) <= 240 ?
     Number(requestedSize) : DEFAULT_PAGE_SIZE;

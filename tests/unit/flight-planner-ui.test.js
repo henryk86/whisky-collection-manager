@@ -9,7 +9,10 @@ const base = {
     id: 'b1',
     name: 'Islay Malt',
     abv: 46,
-    bottles: [{id: 'x1', inventoryNumber: '10', status: 'open', volumeType: 'standard'}],
+    bottles: [{
+      id: 'x1', inventoryNumber: '10', status: 'open', volumeType:
+        'standard',
+    }],
     tastings: [],
     completionStatus: 'complete',
   }],
@@ -27,7 +30,8 @@ const plan = {
   updatedAt: '2026-11-22T01:00:00Z',
 };
 test(
-  'planned and historic flights render separately without creating fake tasting notes',
+  'planned and historic flights render separately without creating fake \
+tasting notes',
   () => {
     const collection = structuredClone(base);
     collection.tastingFlights = [plan];
@@ -82,7 +86,8 @@ test(
   }
 );
 test(
-  'collection view integrates flavor overlay, saved views header and contextual flight action',
+  'collection view integrates flavor overlay, saved views header and \
+contextual flight action',
   () => {
     const collection = structuredClone(base);
     const state = {
@@ -146,7 +151,11 @@ test(
     assert.match(html, /value="with" data-flavor-profile-status/);
     assert.match(
       html,
-      /data-flavor-axis="smoky" data-flavor-part="min"[^>]*>[\s\S]*?<option value="6" selected>/
+      new RegExp(
+        'data-flavor-axis="smoky" data-flavor-part=' +
+        '"min"[^>]*>[\\s\\S]*?<option value="6" sel' +
+        'ected>'
+      )
     );
     assert.match(html, /data-act="collection-flavor-add"/);
     assert.match(html, /data-act="collection-flavor-apply"/);
@@ -211,7 +220,8 @@ test('planner distinguishes unavailable sherry casks from cask mismatches',
       querySelector() {return root;},
     };
     try {
-      const view = createTastingsView({state,
+      const view = createTastingsView({
+        state,
         /** Displays the planner without requiring a browser. */
         showModal() {},
       });

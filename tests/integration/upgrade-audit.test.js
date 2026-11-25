@@ -36,7 +36,8 @@ function withReleases(fn) {
 }
 
 test(
-  'upgrade audit reports obsolete release modules but never modifies installation in dry run',
+  'upgrade audit reports obsolete release modules but never modifies \
+installation in dry run',
   () => withReleases(({previous, next, installed, put}) => {
     for (const dir of [previous, installed]) {
       put(dir, 'public/js/obsolete.js', 'old module');
@@ -60,7 +61,8 @@ test(
 );
 
 test(
-  'explicit prune removes only obsolete unmodified modules; unrelated data and modified code survive',
+  'explicit prune removes only obsolete unmodified modules; unrelated data \
+and modified code survive',
   () => withReleases(({previous, next, installed, put}) => {
     put(previous, 'server/obsolete.js', 'old');
     put(installed, 'server/obsolete.js', 'old');

@@ -7,7 +7,8 @@ import {movePhoto} from './features/photo-order.js';
 import {bindFlightSorting} from './features/flight-order.js';
 import {routeUrl} from './navigation/routes.js';
 import {readAnalyticsDate} from './domain/analytics-period.js';
-import {saveCollectionViewPreference} from './domain/collection-view-preference.js';
+import {saveCollectionViewPreference}
+  from './domain/collection-view-preference.js';
 import {activateHelpTopic} from './views/help.js';
 import {activateSettingsSection} from './views/settings.js';
 import {handleFlavorRange, setFlavorFromPointer} from './ui/flavor-profile.js';
@@ -66,7 +67,8 @@ export function bindEvents(
    * @param {*} task Task to execute or examine.
    * @param {string=} buttonLabel Value used by this operation.
    */
-  function confirmInModal(title, message, task, buttonLabel = 'Endgültig löschen') {
+  function confirmInModal(title, message, task, buttonLabel =
+    'Endgültig löschen') {
     pendingConfirmation = task;
     modal.showModal(
       title,
@@ -583,7 +585,10 @@ export function bindEvents(
     /**
      * Handles the collection flight plan interaction.
      */
-    'collection-flight-plan': () => {home.planFromSelection(); tastingsView.startPlannedFlight();},
+    'collection-flight-plan': () => {
+      home.planFromSelection();
+      tastingsView.startPlannedFlight();
+    },
     /**
      * Handles the flight plan new interaction.
      * @return {*} Result computed from the supplied inputs.
@@ -909,7 +914,8 @@ export function bindEvents(
         const result = await action(
           () => request(
             external ? `/api/external-tastings/${encodeURIComponent(id)}` :
-              `/api/bottlings/${encodeURIComponent(state.selected)}/tastings/${encodeURIComponent(id)}`,
+              `/api/bottlings/${encodeURIComponent(state.selected
+              )}/tastings/${encodeURIComponent(id)}`,
             {method: 'DELETE'}
           ),
           {scope: 'collection'}
@@ -1091,7 +1097,10 @@ export function bindEvents(
      * Handles the goto settings menu interaction.
      * @return {!Promise<*>} Promise for the asynchronous operation.
      */
-    'goto-settings-menu': async () => {navigate('settings'); if (state.backupUnlocked) await backup.refresh(true);},
+    'goto-settings-menu': async () => {
+      navigate('settings');
+      if (state.backupUnlocked) await backup.refresh(true);
+    },
     /**
      * Handles the find distillery location interaction.
      * @return {*} Result computed from the supplied inputs.
@@ -1273,7 +1282,8 @@ export function bindEvents(
       navigate('detail', button.dataset.id, {highlightBottleId: bottleId});
       // In bottle mode show the chosen physical bottle, not only its parent
       // bottling.
-      if (bottleId) document.getElementById(`bottle-${bottleId}`)?.scrollIntoView({block: 'center', behavior: 'auto'});
+      if (bottleId) document.getElementById(`bottle-${bottleId}`)
+        ?.scrollIntoView({block: 'center', behavior: 'auto'});
     },
     /**
      * Handles the toggle view interaction.
@@ -1609,15 +1619,22 @@ export function bindEvents(
   root.addEventListener('click', async (event) => {
     // Treat the flavor and saved-view pickers like anchored menus: clicking
     // elsewhere closes them without affecting the document layout.
-    for (const picker of root.querySelectorAll('.collection-saved-menu[open], .collection-flavor-picker[open]')) {
+    for (const picker of root.querySelectorAll(
+      '.collection-saved-menu[open], .collection-flavor-picker[open]')) {
       if (!picker.contains(event.target)) picker.open = false;
     }
     const mapButton = event.target
-      .closest?.('[data-map-focus], [data-map-page], [data-map-bottling], [data-map-edit]');
+      .closest?.(
+        '[data-map-focus], [data-map-page], [data-map-bottling], \
+[data-map-edit]');
     if (state.page === 'map' &&
       mapButton) {mapView.handleClick(mapButton); return;}
     const overviewButton = event.target
-      .closest?.('[data-collection-mode], [data-page-to], [data-act="toggle-collection-filters"], [data-act="collection-sort-column"], [data-act="collection-columns-default"], [data-reset-collection-filter], [data-reset-collection-flavor-axis]');
+      .closest?.(
+        '[data-collection-mode], [data-page-to], [data-act="toggle-collectio\
+n-filters"], [data-act="collection-sort-column"], [data-act="collection-colu\
+mns-default"], [data-reset-collection-filter], [data-reset-collection-flavor\
+-axis]');
     if (overviewButton && state.page ===
       'home') {home.handleClick(overviewButton); return;}
     const button = event.target.closest('[data-act]');
@@ -1649,14 +1666,18 @@ export function bindEvents(
     // Single clicks still toggle bulk selection; the surrounding bay must
     // never interpret this as a compartment double-click.
     const bottle = event.target
-      .closest?.('.warehouse-room-wall .warehouse-bottle-symbol[data-act="warehouse-bottle-select"]');
+      .closest?.(
+        '.warehouse-room-wall .warehouse-bottle-symbol[data-act="warehouse-b\
+ottle-select"]');
     if (bottle?.dataset?.id) {
       try {warehouseView.openBottlePreview(bottle.dataset.id);}
       catch (error) {toast(error.message, true);}
       return;
     }
     const shelf = event.target
-      .closest?.('.warehouse-wall-bay[data-shelf-id], .warehouse-furniture-manager .warehouse-shelf[data-shelf-id]');
+      .closest?.(
+        '.warehouse-wall-bay[data-shelf-id], .warehouse-furniture-manager \
+.warehouse-shelf[data-shelf-id]');
     if (!shelf || shelf.dataset?.capacity === '0') return;
     // A bottle is independently selectable and draggable. Double-clicks
     // on bottle symbols or explicit buttons must not also open the shelf.
@@ -1684,11 +1705,18 @@ export function bindEvents(
   });
   root.addEventListener('input', event => {
     handleFlavorRange(event);
-    if (event.target.matches?.('[data-flavor-detail] [data-tasting-score]')) tastingsView.previewRating();
+    if (event.target.matches?.('[data-flavor-detail] [data-tasting-score]'))
+      tastingsView.previewRating();
   });
   root.addEventListener('change', event => {
-    if (event.target.matches?.('[data-flavor-detail] [data-flavor-range], [data-flavor-detail] [data-tasting-note], [data-flavor-detail] [data-tasting-score], [data-flavor-detail] [data-tasting-rating-comment]')) tastingsView.commitFlavor();
-    if (event.target.matches?.('[data-flavor-detail] [data-tasting-date], [data-flavor-detail] [data-tasting-title]')) void tastingsView.persistMeta();
+    if (event.target.matches?.(
+      '[data-flavor-detail] [data-flavor-range], [data-flavor-detail] \
+[data-tasting-note], [data-flavor-detail] [data-tasting-score], \
+[data-flavor-detail] [data-tasting-rating-comment]')) tastingsView
+        .commitFlavor();
+    if (event.target.matches?.(
+      '[data-flavor-detail] [data-tasting-date], [data-flavor-detail] \
+[data-tasting-title]')) void tastingsView.persistMeta();
   });
   let flavorPointer = null;
   let customColorPointer = null;
@@ -1702,7 +1730,8 @@ export function bindEvents(
     }
     const hit = event.target?.closest?.('[data-flavor-hit]');
     if (!hit) return;
-    flavorPointer = event.pointerId; hit.setPointerCapture?.(event.pointerId); setFlavorFromPointer(event);
+    flavorPointer = event.pointerId; hit.setPointerCapture?.(event.pointerId);
+    setFlavorFromPointer(event);
   });
   root.addEventListener('pointermove', event => {
     if (customColorPointer ===
@@ -1778,8 +1807,12 @@ export function bindEvents(
       mapView.handleChange(event.target); return;
     }
     if (state.page === 'home' && event.target
-      .matches?.('#pagination-size, [id^=filter-], [data-collection-column], #collection-add-flavor-axis, [data-flavor-profile-status], [data-flavor-axis]')) {home.handleChange(event.target); return;}
-    if (event.target.matches?.('input[data-bottle-files], input[data-bottle-photos]')) {
+      .matches?.(
+        '#pagination-size, [id^=filter-], [data-collection-column], \
+#collection-add-flavor-axis, [data-flavor-profile-status], \
+[data-flavor-axis]')) {home.handleChange(event.target); return;}
+    if (event.target.matches?.(
+      'input[data-bottle-files], input[data-bottle-photos]')) {
       void detail.handleUploadChange(event); return;
     }
     if (event.target.matches?.('input[data-furniture-photos]')) {
@@ -1858,10 +1891,14 @@ export function bindEvents(
       'warehouse-plan-zoom') {
       state.warehousePlanZoom = [100, 150, 200]
         .includes(Number(event.target.value)) ? Number(event.target
-          .value) : 100; warehouseView.update3DZoom(state.warehousePlanZoom); return;
+          .value) : 100; warehouseView.update3DZoom(state.warehousePlanZoom);
+      return;
     }
     if (event.target.name ===
-      'warehouse-find-placement') {warehouseView.setFinderPlacement(event.target.value); return;}
+      'warehouse-find-placement') {
+      warehouseView.setFinderPlacement(event
+        .target.value); return;
+    }
     const filter = event.target.dataset.analyticsFilter;
     if (filter && ['distillery', 'country', 'volumeType', 'status']
       .includes(filter)) {
@@ -1888,7 +1925,8 @@ export function bindEvents(
         return;
       }
     }
-    if (event.target.matches('#backup-profile-form [name=provider]')) backup.toggleFields(event.target.form);
+    if (event.target.matches('#backup-profile-form [name=provider]')) backup
+      .toggleFields(event.target.form);
     if (event.target.id === 'scan-file') {
       scanner.scanImage(event.target.files?.[0]);
     }
@@ -1901,7 +1939,10 @@ export function bindEvents(
     if (state.page === 'home' && event.target.id ===
       'search') {home.handleInput(event.target); return;}
     if (event.target.id ===
-      'warehouse-unassigned-wall-search') {warehouseView.setUnassignedWallSearch(event.target.value); return;}
+      'warehouse-unassigned-wall-search') {
+      warehouseView
+        .setUnassignedWallSearch(event.target.value); return;
+    }
     if (event.target.id ===
       'warehouse-search') {
       warehouseView.setFinderQuery(event.target
@@ -1955,13 +1996,16 @@ export function bindEvents(
       if (next !== current) {
         event.preventDefault();
         items[next].click();
-        document.querySelector(`.section-nav-desktop .section-nav-item:nth-child(${next + 1})`)?.focus();
+        document.querySelector(
+          `.section-nav-desktop .section-nav-item:nth-child(${next +
+          1})`)?.focus();
         return;
       }
     }
     if (event.key === 'Escape' && state.page === 'home' && !state.modal) {
       const openPicker =
-        document.querySelector('.collection-flavor-picker[open], .collection-saved-menu[open]');
+        document.querySelector(
+          '.collection-flavor-picker[open], .collection-saved-menu[open]');
       if (openPicker) {
         openPicker.open =
           false; openPicker.querySelector('summary')?.focus(); return;
@@ -1982,7 +2026,9 @@ export function bindEvents(
     }
     // Non-button cards/brand elements also support keyboard activation.
     if (['Enter', ' '].includes(event.key) && event.target
-      .matches('.whisky-card, .brand, tr.clickable[data-act], .warehouse-iso-object')) {
+      .matches(
+        '.whisky-card, .brand, tr.clickable[data-act], .warehouse-iso-object')
+    ) {
       event.preventDefault();
       event.target.click();
     }

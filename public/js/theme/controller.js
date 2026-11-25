@@ -30,7 +30,8 @@ export function createThemeController() {
    * Updates the toggle theme state for its caller.
    */
   function toggleTheme() {
-    themePreference = nextTheme(effectiveTheme(themePreference, themeMedia.matches));
+    themePreference = nextTheme(effectiveTheme(themePreference,
+      themeMedia.matches));
     try {
       localStorage.setItem('whisky-theme', themePreference);
     }

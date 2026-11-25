@@ -55,7 +55,8 @@ function validateStore(value) {
       typeof u.mustChangePassword !== 'boolean' || !/^[a-f0-9]{32}$/
         .test(u.salt) ||
       !/^[a-f0-9]{128}$/.test(u.passwordHash))) {
-    throw Error('user.json ist ungueltig. Der Anmeldeschutz wird nicht abgeschaltet.');
+    throw Error(
+      'user.json ist ungueltig. Der Anmeldeschutz wird nicht abgeschaltet.');
   }
   if (new Set(value.users.map(u => u.username)).size !== value.users.length ||
     new Set(value.users.map(u => u.id)).size !== value.users
@@ -68,7 +69,9 @@ function validateStore(value) {
  * @return {*} Parsed JSON value.
  */
 function store() {
-  if (!fs.existsSync(FILE)) throw Error('user.json fehlt; Anmeldung wird aus Sicherheitsgruenden nicht deaktiviert.');
+  if (!fs.existsSync(FILE)) throw Error(
+    'user.json fehlt; Anmeldung wird aus Sicherheitsgruenden nicht \
+deaktiviert.');
   const signature = identity();
   if (!current || signature !== fileIdentity) {
     // Restores and manual edits revoke all sessions, including administrator
@@ -146,7 +149,8 @@ async function hashPassword(password, salt = crypto.randomBytes(16)
   passwordCheck(password);
   return {
     salt,
-    passwordHash: (await scrypt(password, Buffer.from(salt, 'hex'), 64, SCRYPT_OPTIONS)).toString('hex'),
+    passwordHash: (await scrypt(password, Buffer.from(salt, 'hex'), 64,
+      SCRYPT_OPTIONS)).toString('hex'),
   };
 }
 
@@ -194,7 +198,8 @@ function sessionToken(request) {
 function cookieHeaders(request, token = '', maxAge = 0) {
   // TLS is provided by the app even when behind its optional TLS reverse proxy.
   const secure = request.socket?.encrypted ? '; Secure' : '';
-  return `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict${secure}; Max-Age=${maxAge}`;
+  return `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict${secure}; \
+Max-Age=${maxAge}`;
 }
 
 /**
@@ -230,8 +235,12 @@ export function initializeAuth() {
         ) + '\n',
         {flag: 'wx', mode: 0o600}
       );
-      console.log(`WCM Erstzugang: Benutzer admin, einmaliges Startpasswort: ${password}`);
-      console.log('Das Passwort muss bei der ersten Anmeldung geaendert werden. Es wird nicht erneut angezeigt.');
+      console.log(
+        `WCM Erstzugang: Benutzer admin, einmaliges Startpasswort: ${password}`
+      );
+      console.log(
+        'Das Passwort muss bei der ersten Anmeldung geaendert werden. Es \
+wird nicht erneut angezeigt.');
     } catch (error) {if (error.code !== 'EEXIST') throw error;}
   }
   current = null; fileIdentity = null; sessions.clear();
@@ -312,7 +321,8 @@ function requireUser(req, admin = false, allowChange = false) {
  */
 export function authorizeRequest(req, url) {
   const pathname = url.pathname;
-  if (pathname.startsWith('/internal/backup/')) return; // Separate worker-token authorization.
+  if (pathname.startsWith('/internal/backup/'))
+    return; // Separate worker-token authorization.
   if (pathname === '/api/version' && req.method ===
     'GET') return; // Docker healthcheck.
   if (pathname === '/api/auth/session' && req.method === 'GET') return;
@@ -355,8 +365,10 @@ export async function login(req, body, response) {
   const user = store().users.find(item => item.username === username);
   // Verify against a valid dummy hash even for unknown accounts.
   const check = user || {...hashDummy, username};
-  const computed = await scrypt(password, Buffer.from(check.salt, 'hex'), 64, SCRYPT_OPTIONS);
-  const equal = crypto.timingSafeEqual(computed, Buffer.from(check.passwordHash, 'hex'));
+  const computed = await scrypt(password, Buffer.from(check.salt, 'hex'), 64,
+    SCRYPT_OPTIONS);
+  const equal = crypto.timingSafeEqual(computed, Buffer.
+    from(check.passwordHash, 'hex'));
   if (!user || !equal) {
     const failures = (prior?.failures || 0) + 1;
     attempts.set(
@@ -392,7 +404,10 @@ export async function login(req, body, response) {
   return sessionInfoWithUser(user);
 }
 // A constant valid scrypt value. No separate KDF for invalid usernames.
-const hashDummy = {salt: '00000000000000000000000000000000', passwordHash: '0'.repeat(128)};
+const hashDummy = {
+  salt: '00000000000000000000000000000000', passwordHash:
+    '0'.repeat(128),
+};
 /**
  * Derives the session info with user result from the supplied values.
  *

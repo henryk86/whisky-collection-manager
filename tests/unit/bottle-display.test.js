@@ -35,11 +35,13 @@ test('bottle metadata puts separators only between actual values', () => {
   }, value => value), 'Kauf: 2026-11-05 \u00b7 45 EUR');
 });
 test(
-  'bottle form renders read-only parent information and exactly one inventory input',
+  'bottle form renders read-only parent information and exactly one \
+inventory input',
   () => {
     const {state, bottle} = forms();
     const html = bottle(state.collection.bottlings[0].bottles[0], 'bottling-a');
-    const context = html.slice(html.indexOf('<section'), html.indexOf('</section>'));
+    const context = html.slice(html.indexOf('<section'),
+      html.indexOf('</section>'));
     assert.match(context, /Test Blend/);
     assert.match(context, /Test Distillery/);
     assert.match(context, /Example Bottler/);
@@ -74,7 +76,10 @@ test('new bottling form has no extra label identifier or label type', () => {
 
 test('sample type and size are editable only on physical bottles', () => {
   const {state, bottle, bottling} = forms();
-  const sample = {id: 'sample-x', volumeType: 'sample', volumeMl: 30, status: 'closed'};
+  const sample = {
+    id: 'sample-x', volumeType: 'sample', volumeMl: 30,
+    status: 'closed',
+  };
   const bottleHtml = bottle(sample, 'bottling-a');
   const bottlingHtml = bottling(state.collection.bottlings[0]);
   assert.match(bottleHtml, /name="volumeType"/);

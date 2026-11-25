@@ -4,9 +4,13 @@ import fs from 'node:fs';
 import {importChoice} from '../../public/js/features/import/choice-template.js';
 
 test(
-  'Whiskybase preview option keeps one checkbox, field name and value in a clickable label',
+  'Whiskybase preview option keeps one checkbox, field name and value in a \
+clickable label',
   () => {
-    const html = importChoice({field: 'abv', label: 'Alkoholgehalt (%)', value: 46, checked: true});
+    const html = importChoice({
+      field: 'abv', label: 'Alkoholgehalt (%)',
+      value: 46, checked: true,
+    });
     assert.match(html, /^<label class="import-choice">/);
     assert.match(
       html,
@@ -40,7 +44,8 @@ test(
 );
 
 test(
-  'unknown distillery is unselectable but still visible with a clear explanation',
+  'unknown distillery is unselectable but still visible with a clear \
+explanation',
   () => {
     const html = importChoice({
       distillery: true,
@@ -54,7 +59,8 @@ test(
 );
 
 test(
-  'actual Whiskybase controller renders aligned selection cards without changing import defaults',
+  'actual Whiskybase controller renders aligned selection cards without \
+changing import defaults',
   async () => {
     const {createWhiskybase} =
       await import('../../public/js/features/whiskybase/controller.js');
@@ -121,7 +127,8 @@ test(
         version: 2, source: 'external', distilleryName: 'Kilchoman',
         fields: {
           whiskybaseId: '15555',
-          whiskybaseUrl: 'https://www.whiskybase.com/whiskies/whisky/15555/test',
+          whiskybaseUrl:
+            'https://www.whiskybase.com/whiskies/whisky/15555/test',
           name: 'Kilchoman Inaugural Release',
           abv: 46,
           bottler: 'Distillery Bottling',
@@ -139,7 +146,8 @@ test(
         /name="import-distillery" value="d-1" checked/
       );
       assert.match(panel.innerHTML, /data-import-field="name" checked/);
-      assert.match(panel.innerHTML, /data-import-field="abv">/); // Existing value: unchecked by default
+      assert.match(panel.innerHTML, /data-import-field="abv">/
+      ); // Existing value: unchecked by default
       assert.match(panel.innerHTML, /Aktuell: 43/);
       assert.match(panel.innerHTML, /data-act="import-apply"/);
       assert.equal(

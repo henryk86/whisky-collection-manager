@@ -2,7 +2,10 @@
 import {read, change} from '../storage/collection-store.js';
 import {now, uid} from '../domain/collection.js';
 import {fail} from '../domain/errors.js';
-import {normalizeFlightFields, FLIGHT_LIMIT, allTastingReferences, flightEntries, validateFlightPlan} from '../../shared/tasting-flights.js';
+import {
+  normalizeFlightFields, FLIGHT_LIMIT, allTastingReferences,
+  flightEntries, validateFlightPlan
+} from '../../shared/tasting-flights.js';
 import {normalizeTastingRecord} from '../../shared/tasting-records.js';
 import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
 
@@ -15,7 +18,8 @@ import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
  */
 const find = (collection, id) => {
   const flight = (collection.tastingFlights || []).find(f => f.id === id);
-  if (!flight) throw fail('Tasting-Flight nicht gefunden', 404, "api.errors.flightNotFound");
+  if (!flight) throw fail('Tasting-Flight nicht gefunden', 404,
+    "api.errors.flightNotFound");
   return flight;
 };
 
@@ -28,7 +32,10 @@ const find = (collection, id) => {
  */
 const normalize = (body, old) => {
   try {return normalizeFlightFields(body, old);}
-  catch (error) {throw fail(error.message, 400, "api.errors.invalidTastingData");}
+  catch (error) {
+    throw fail(error.message, 400, "api.errors.invalidTastingData"
+    );
+  }
 };
 
 /**
@@ -63,7 +70,8 @@ export function create(body) {
         body ||
         {},
         'planItems'
-      ))) throw fail('Ungültige Flight-Planung', 400, 'api.errors.invalidFlight');
+      ))) throw fail('Ungültige Flight-Planung', 400,
+        'api.errors.invalidFlight');
     const flight = {
       id: uid(),
       ...normalize(metadata),
@@ -73,7 +81,10 @@ export function create(body) {
     };
     if (planned) {
       flight.phase = 'planned'; flight.planItems = body.planItems;
-      try {validateFlightPlan(collection, flight);} catch {throw fail('Ungültige Flight-Planung', 400, 'api.errors.invalidFlight');}
+      try {validateFlightPlan(collection, flight);} catch {
+        throw fail(
+          'Ungültige Flight-Planung', 400, 'api.errors.invalidFlight');
+      }
       if (!flight.planItems.length || flight.planItems.some(item =>
         !collection.bottlings.some(b => b.id === item.bottlingId &&
           b.bottles?.some(x => x.id === item.bottleId && x.status !==
@@ -135,7 +146,10 @@ export function update(id, body) {
         'api.errors.invalidFlight'
       );
     }
-    try {validateFlightPlan(collection, flight);} catch {throw fail('Ungültige Flight-Planung', 400, 'api.errors.invalidFlight');}
+    try {validateFlightPlan(collection, flight);} catch {
+      throw fail(
+        'Ungültige Flight-Planung', 400, 'api.errors.invalidFlight');
+    }
     flight.updatedAt = now();
     return flight;
   });
@@ -290,9 +304,15 @@ export function createTasting(id, body) {
         );
         normalized = normalizeTastingRecord(data);
       } else normalized = normalizeStandaloneTasting({...data, bottling});
-    } catch (error) {if (error.status) throw error; throw fail(error.message, 400, "api.errors.invalidTastingData");}
+    } catch (error) {
+      if (error.status) throw error; throw fail(error.message,
+        400, "api.errors.invalidTastingData");
+    }
     const timestamp = now();
-    const record = {...normalized, id: uid(), createdAt: timestamp, updatedAt: timestamp};
+    const record = {
+      ...normalized, id: uid(), createdAt: timestamp,
+      updatedAt: timestamp,
+    };
     if (owned) {
       (owned.tastings ||= []).push(record);
 

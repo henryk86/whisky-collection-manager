@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createDetailView} from '../../public/js/views/detail.js';
 import {createBottleForm} from '../../public/js/features/forms/bottle.js';
-import {inventoryScanIcon, editIcon, deleteIcon} from '../../public/js/ui/action-icons.js';
+import {inventoryScanIcon, editIcon, deleteIcon}
+  from '../../public/js/ui/action-icons.js';
 
 /**
  * Tests input text against the button pattern.
@@ -13,7 +14,8 @@ import {inventoryScanIcon, editIcon, deleteIcon} from '../../public/js/ui/action
  * @return {*} Result computed from the supplied inputs.
  */
 function button(html, action) {
-  const found = html.match(new RegExp(String.raw`<button\b[^>]*data-act="${action}"[^>]*>[\s\S]*?<\/button>`));
+  const found = html.match(new RegExp(String
+    .raw`<button\b[^>]*data-act="${action}"[^>]*>[\s\S]*?<\/button>`));
   assert.ok(found, `${action} button is missing`);
   return found[0];
 }
@@ -39,7 +41,12 @@ function detailMarkup({photos = [], warehouse = null} = {}) {
       state: {
         selected: 'bottling-a',
         warehouse,
-        collection: {bottlings: [{id: 'bottling-a', name: 'Example Whisky', bottles: []}]},
+        collection: {
+          bottlings: [{
+            id: 'bottling-a', name: 'Example Whisky',
+            bottles: [],
+          }],
+        },
       },
       selectors: {
         /**
@@ -108,7 +115,8 @@ test(
 );
 
 test(
-  'the bottling and individual-bottle buttons show edit and delete SVGs before labels',
+  'the bottling and individual-bottle buttons show edit and delete SVGs \
+before labels',
   () => {
     const html = detailMarkup();
     for (const action of ['edit-bottling', 'edit-bottle']) {
@@ -131,7 +139,8 @@ test(
 );
 
 test(
-  'physical-bottle detail offers direct Umlagern while the Lagerort fact stays labelled',
+  'physical-bottle detail offers direct Umlagern while the Lagerort fact \
+stays labelled',
   () => {
     const html = detailMarkup();
     const relocation = button(html, 'warehouse-assign');
@@ -173,7 +182,8 @@ test(
 );
 
 test(
-  'photo editor uses only the shared pencil icon, with an accessible tooltip like the cutout button',
+  'photo editor uses only the shared pencil icon, with an accessible \
+tooltip like the cutout button',
   () => {
     const html = detailMarkup({photos: [{id: 'photo-a', path: 'bottle.webp'}]});
     const edit = button(html, 'photo-editor-open');
@@ -190,7 +200,8 @@ test(
 );
 
 test(
-  'physical bottle layout uses the first sorted photo as a large preview and preserves every gallery action',
+  'physical bottle layout uses the first sorted photo as a large preview \
+and preserves every gallery action',
   () => {
     const html = detailMarkup({
       photos: [
@@ -206,7 +217,11 @@ test(
     const card = html.slice(html.indexOf('id="bottle-physical-a"'));
     assert.match(
       card,
-      /class="bottle-entry-main-photo" data-act="open-photo" data-bottle-photo-preview="physical-a"/
+      new RegExp(
+        'class="bottle-entry-main-photo" data-act="' +
+        'open-photo" data-bottle-photo-preview="phy' +
+        'sical-a"'
+      )
     );
     assert.match(card, /class="bottle-entry-visual"/);
     assert.match(card, /class="bottle-entry-head"/);
@@ -256,7 +271,8 @@ test(
 );
 
 test(
-  'without an image the physical bottle card expands and still offers uploads and documents',
+  'without an image the physical bottle card expands and still offers \
+uploads and documents',
   () => {
     const html = detailMarkup();
     assert.match(html, /bottle-entry without-photos/);

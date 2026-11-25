@@ -4,7 +4,8 @@ import {serveStatic} from './http/static-files.js';
 import {send} from './http/response.js';
 import {fail} from './domain/errors.js';
 import {publicErrorResponse} from './domain/public-error-response.js';
-import {allowedExtensionOrigin, requireSameOriginMutation, requireAllowedHost} from './http/request-security.js';
+import {allowedExtensionOrigin, requireSameOriginMutation, requireAllowedHost}
+  from './http/request-security.js';
 import {initialize} from './storage/collection-store.js';
 import {initWarehouse} from './storage/warehouse-store.js';
 import {initializeAuth, authorizeRequest} from './services/auth.js';

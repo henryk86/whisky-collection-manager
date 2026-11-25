@@ -120,19 +120,23 @@ export function createScanner({state, showModal, resolveCode}) {
       `<p class="hint">${t("scanner.camera.supportedCodeTypes")}</p>
     <div id="scan-reader" class="scan-reader">
     </div>
-    <p id="scan-error" class="hint" role="status" aria-live="polite">${t("scanner.status.starting")}</p>
+    <p id="scan-error" class="hint" role="status" aria-live="polite">${t(
+        "scanner.status.starting")}</p>
     <div class="forms scan-manual-fields">${textInput(
-        t("scanner.input.manualInventoryNumber"),
-        'manualCode',
-        '',
-        {
-          full: true,
-        }
-      )}<label class="form-field full">${t("scanner.actions.selectCodeImage")}<input type="file" id="scan-file" accept="image/*" capture="environment">
+          t("scanner.input.manualInventoryNumber"),
+          'manualCode',
+          '',
+          {
+            full: true,
+          }
+        )}<label class="form-field full">${t("scanner.actions.selectCodeImage"
+        )}<input type="file" id="scan-file" accept="image/*" \
+capture="environment">
     </label>
     </div>
     <div class="actions scan-manual-actions">
-    <button class="btn primary" data-act="submit-code" data-assign="${assign ? '1' : '0'}">${t("scanner.actions.findAndApplyCode")}</button>
+    <button class="btn primary" data-act="submit-code" data-assign="${assign ?
+        '1' : '0'}">${t("scanner.actions.findAndApplyCode")}</button>
     ${actionButton({label: t("common.actions.close"), action: 'close-modal'})}
     </div>`
     );

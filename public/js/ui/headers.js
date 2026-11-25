@@ -36,7 +36,8 @@ export function headingTitle({
   trailingAction = '',
   period = false
 }) {
-  if (![2, 3].includes(level)) throw new RangeError('Heading level must be 2 or 3');
+  if (![2, 3].includes(level)) throw new RangeError(
+    'Heading level must be 2 or 3');
   const classes = `${className}${trailingAction ? `${className ? ' ' :
     ''}ds-heading-with-action` : ''}`;
   return `<h${level}${classes ? ` class="${escapeHtml(classes)}"` :
@@ -70,11 +71,15 @@ export function sectionHeader({
 } = {}) {
   if (!['section-head', 'tasting-panel-heading', 'dialog-head']
     .includes(layout)) throw new RangeError('Invalid section header layout');
-  const heading = headingTitle({title, level, className: titleClass, id: titleId, trailingAction});
+  const heading = headingTitle({
+    title, level, className: titleClass,
+    id: titleId, trailingAction,
+  });
   const copy = description || copyClass ? `<div class="${copyClass ?
     escapeHtml(copyClass) :
     'ds-section-heading-copy'}">${heading}${description ?
-      `<p class="${escapeHtml(descriptionClass)}">${escapeHtml(description)}</p>` : ''}</div>` : heading;
+      `<p class="${escapeHtml(descriptionClass)}">${escapeHtml(description
+      )}</p>` : ''}</div>` : heading;
   return `<div class="${layout} ds-section-header${className ?
     ` ${escapeHtml(className)}` : ''}">${copy}${actionsBare ? actions :
       headerActions(actions, {className: actionsClass})}</div>`;
@@ -125,9 +130,15 @@ export function backNavigation(action, label, region = '', variant = 'inline') {
   const attr = `data-act="${escapeHtml(action)}"${region ?
     ` data-region="${escapeHtml(region)}"` : ''}`;
   if (variant === 'page-action') {
-    return `<nav class="ds-back-nav ds-back-nav--page-action" aria-label="${text}"><button type="button" class="btn ds-back-button ds-back-button--page-action" ${attr}>${arrowLeftIcon}<span>${text}</span></button></nav>`;
+    return `<nav class="ds-back-nav ds-back-nav--page-action" \
+aria-label="${text}"><button type="button" class="btn ds-back-button \
+ds-back-button--page-action" ${attr}>${arrowLeftIcon}<span>${text}</span>\
+</button></nav>`;
   }
-  return `<nav class="page-back-nav ds-back-nav ds-back-nav--inline" aria-label="${text}"><button type="button" class="inline-link page-back ds-back-button ds-back-button--inline" ${attr}>${arrowLeftIcon}<span>${text}</span></button></nav>`;
+  return `<nav class="page-back-nav ds-back-nav ds-back-nav--inline" \
+aria-label="${text}"><button type="button" class="inline-link page-back \
+ds-back-button ds-back-button--inline" ${attr}>${arrowLeftIcon}<span>${
+text}</span></button></nav>`;
 }
 
 /**
@@ -136,7 +147,11 @@ export function backNavigation(action, label, region = '', variant = 'inline') {
  * @param {!Object=} options Help action configuration.
  * @return {string} Help-button HTML.
  */
-export function helpIconButton({label, action = 'flight-plan-help', disabled = false} = {}) {
+export function helpIconButton({label, action = 'flight-plan-help',
+  disabled = false} = {}) {
   const text = escapeHtml(String(label ?? ''));
-  return `<button type="button" class="ds-help-icon-button flight-plan-help-button" data-act="${escapeHtml(action)}" aria-label="${text}" title="${text}"${disabled ? ' disabled' : ''}>${helpCircleIcon}</button>`;
+  return `<button type="button" class="ds-help-icon-button \
+flight-plan-help-button" data-act="${escapeHtml(action)}" \
+aria-label="${text}" title="${text}"${disabled ? ' disabled' : ''}>\
+${helpCircleIcon}</button>`;
 }

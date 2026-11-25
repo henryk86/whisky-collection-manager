@@ -33,7 +33,8 @@ test(
 );
 
 test(
-  'every supported responsive column count exactly divides every offered page size',
+  'every supported responsive column count exactly divides every offered \
+page size',
   () => {
     assert.deepEqual(GRID_COLUMN_OPTIONS, [1, 2, 3, 4]);
     for (const size of PAGE_SIZE_OPTIONS) {
@@ -53,7 +54,8 @@ test(
 );
 
 test(
-  'page size stays exactly selected instead of being multiplied by responsive columns',
+  'page size stays exactly selected instead of being multiplied by \
+responsive columns',
   () => {
     for (const size of PAGE_SIZE_OPTIONS) {
       const page = paginate(bottlings, 2, size);

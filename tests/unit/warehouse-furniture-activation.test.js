@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createFurnitureActivation} from '../../public/js/ui/warehouse-furniture-activation.js';
+import {createFurnitureActivation}
+  from '../../public/js/ui/warehouse-furniture-activation.js';
 
 /**
  * Derives the pause result from the supplied values.

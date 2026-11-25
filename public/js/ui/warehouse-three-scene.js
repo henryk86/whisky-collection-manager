@@ -1,5 +1,6 @@
 import {t} from '../i18n/index.js';
-import {warehouse3DGeometry, cameraDirection, shelfIdAtHeight} from '../domain/warehouse-3d-model.js';
+import {warehouse3DGeometry, cameraDirection, shelfIdAtHeight}
+  from '../domain/warehouse-3d-model.js';
 import {createFurnitureActivation} from './warehouse-furniture-activation.js';
 
 const PALETTE = {
@@ -53,7 +54,10 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
     );
     return materials.get(style);
   }
-  const edgeMaterial = new THREE.LineBasicMaterial({color: c.edge, transparent: true, opacity: 0.8});
+  const edgeMaterial = new THREE.LineBasicMaterial({
+    color: c.edge, transparent:
+      true, opacity: 0.8,
+  });
   const highlightEdgeMaterial =
     new THREE.LineBasicMaterial({color: 0xffca58, transparent: false});
   const highlightMaterials = new Map();
@@ -118,14 +122,16 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
     mesh.visible = !hiddenFurniture.has(owner);
     mesh.userData.role = part.role;
     mesh.userData.style = part.style;
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMaterial);
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo),
+      edgeMaterial);
     mesh.add(edges);
     all.add(mesh);
     selectables.push(mesh);
     if (!byFurniture.has(owner)) byFurniture.set(owner, []);
     byFurniture.get(owner).push(mesh);
   }
-  for (const item of objects) for (const part of item.parts) piece(part, item.id);
+  for (const item of objects) for (const part of item.parts) piece(part,
+    item.id);
   /**
    * Updates furniture visible in the current state.
    *
@@ -211,7 +217,8 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
  * @param {*} aspect Aspect used by this operation.
  * @return {number} Calculated numeric result.
  */
-export function warehouseCameraHalfHeight(projectedWidth, projectedHeight, aspect) {
+export function warehouseCameraHalfHeight(projectedWidth, projectedHeight,
+  aspect) {
   const dominant = Math.max(projectedHeight, projectedWidth /
     Math.max(aspect, 0.2));
   return dominant * 0.535 + 0.035;
@@ -252,7 +259,8 @@ export function frameWarehouseCamera(
   camera.lookAt(centre);
   camera.updateMatrixWorld();
   const projected = [];
-  for (const x of [0, roomWidth]) for (const y of [-0.1, maxHeight]) for (const z of [0, roomDepth]) {
+  for (const x of [0, roomWidth]) for (const y of [-0.1, maxHeight]) for (
+    const z of [0, roomDepth]) {
     projected.push(new THREE.Vector3(x, y, z)
       .applyMatrix4(camera.matrixWorldInverse));
   }
@@ -334,7 +342,12 @@ export async function mountWarehouseThree(
   canvas.dataset.hiddenFurniture = hiddenIds.join(',');
   viewport.replaceChildren(canvas);
   let renderer;
-  try {renderer = new THREE.WebGLRenderer({canvas, antialias: true, alpha: false, powerPreference: 'low-power'});}
+  try {
+    renderer = new THREE.WebGLRenderer({
+      canvas, antialias: true,
+      alpha: false, powerPreference: 'low-power',
+    });
+  }
   catch (error) {
     viewport.textContent =
       t('warehouse.view.webglUnavailable'); return {
@@ -355,7 +368,10 @@ export async function mountWarehouseThree(
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   const theme = document.documentElement.dataset.theme;
-  const model = buildWarehouseThreeScene(THREE, room, warehouse, {hiddenIds, theme});
+  const model = buildWarehouseThreeScene(THREE, room, warehouse, {
+    hiddenIds,
+    theme,
+  });
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = false;
@@ -436,7 +452,8 @@ export async function mountWarehouseThree(
     )[0];
     const furnitureId = hit?.object?.userData?.furnitureId;
     if (furnitureId) {
-      const shelfId = shelfIdAtHeight(furnitureById.get(furnitureId), hit.point.y);
+      const shelfId = shelfIdAtHeight(furnitureById.get(furnitureId),
+        hit.point.y);
       // Selection stays furniture-wide; only a double-click into the
       // same physical bay can open that bay's occupied contents.
       activation.activate(furnitureId, shelfId);
@@ -463,10 +480,14 @@ export async function mountWarehouseThree(
      */
     dispose() {
       if (disposed) return; disposed =
-        true; activation.cancel(); removalObserver?.disconnect(); themeObserver?.disconnect(); observer?.disconnect(); if (!observer) window.removeEventListener('resize', resize);
+        true; activation.cancel(); removalObserver?.disconnect();
+      themeObserver?.disconnect(); observer?.disconnect();
+      if (!observer) window.removeEventListener('resize', resize);
       controls.removeEventListener('change', render); controls.dispose();
-      canvas.removeEventListener('pointerdown', pointerDown); canvas.removeEventListener('pointerup', pointerUp);
-      model.dispose(); renderer.dispose(); renderer.forceContextLoss(); canvas.remove();
+      canvas.removeEventListener('pointerdown', pointerDown);
+      canvas.removeEventListener('pointerup', pointerUp);
+      model.dispose(); renderer.dispose(); renderer.forceContextLoss();
+      canvas.remove();
     },
     /**
      * Updates furniture visible in the current state.
@@ -508,7 +529,8 @@ export async function mountWarehouseThree(
       // Camera frustum stays fixed; zoom changes scene scale without stretching
       // the canvas.
       camera.zoom = next / 100; cameraZoom =
-        next; camera.updateProjectionMatrix(); controls.update(); render(); return true;
+        next; camera.updateProjectionMatrix(); controls.update(); render();
+      return true;
     },
   };
   return handle;

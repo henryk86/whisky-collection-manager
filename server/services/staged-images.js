@@ -38,7 +38,8 @@ export function stageImage(input) {
   // Whiskybase. New import adapters can explicitly use null for unlabelled
   // photos.
   const source = input.source === undefined || input.source === 'whiskybase'
-    ? 'whiskybase' : null; // Unknown import providers must never be mislabelled.
+    ? 'whiskybase' :
+    null; // Unknown import providers must never be mislabelled.
   const token = crypto.randomUUID();
   pending.set(
     token,
@@ -75,7 +76,8 @@ export function previewImage(token) {
 export async function attachImageToBottle(bottleId, input) {
   cleanup();
   if (typeof input.token !== 'string' || !/^[0-9a-f-]{36}$/i
-    .test(input.token)) throw fail('Ungültiger Bild-Token', 400, "api.errors.invalidImageToken");
+    .test(input.token)) throw fail('Ungültiger Bild-Token', 400,
+      "api.errors.invalidImageToken");
   const entry = pending.get(input.token);
   if (!entry) throw fail(
     'Importiertes Bild nicht mehr verfügbar. Bitte erneut importieren.',

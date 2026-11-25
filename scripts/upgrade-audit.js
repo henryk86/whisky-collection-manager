@@ -133,7 +133,9 @@ if (isCLI) {
   const [previousRoot, nextRoot, installedRoot, flag] = process.argv.slice(2);
   if (!previousRoot || !nextRoot || !installedRoot || (flag && flag !==
     '--prune')) {
-    console.error('Usage: node scripts/upgrade-audit.js <previous-release-dir> <new-release-dir> <installation-dir> [--prune]');
+    console.error(
+      'Usage: node scripts/upgrade-audit.js <previous-release-dir> \
+<new-release-dir> <installation-dir> [--prune]');
     process.exitCode = 2;
   } else {
     try {
@@ -144,7 +146,9 @@ if (isCLI) {
       const roots = [previousRoot, nextRoot, installedRoot].map(dir =>
         fs.realpathSync(dir));
       if (new Set(roots).size !==
-        3) throw new Error('Old release, new release and installation must be separate directories.');
+        3) throw new Error(
+          'Old release, new release and installation must be separate \
+directories.');
       for (const dir of [previousRoot, nextRoot]) {
         if (!fs.existsSync(path.join(dir, 'package.json')) ||
           !fs.existsSync(path.join(dir, 'public/js'))) {
@@ -163,7 +167,9 @@ if (isCLI) {
         2
       ));
       if (report.changed
-        .length) console.warn('Modified or symlinked files were left untouched. Review them manually.');
+        .length) console.warn(
+          'Modified or symlinked files were left untouched. Review them \
+manually.');
     } catch (error) {
       console.error(error.message);
       process.exitCode = 1;

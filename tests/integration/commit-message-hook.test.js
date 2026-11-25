@@ -78,7 +78,8 @@ test(
       'patch'
     );
     assert.equal(
-      validateMessage('docs!: neue Konfiguration\n\nBREAKING CHANGE: alt entfernt\n').level,
+      validateMessage(
+        'docs!: neue Konfiguration\n\nBREAKING CHANGE: alt entfernt\n').level,
       'major'
     );
     assert.throws(
@@ -100,7 +101,8 @@ test(
     );
     fs.writeFileSync(path.join(dir, 'change.txt'), 'updated\n');
     success(dir, 'git', 'add', '.');
-    const bad = run(dir, 'git', ['commit', '-m', 'Refactor unit tests without prefix']);
+    const bad = run(dir, 'git', ['commit', '-m',
+      'Refactor unit tests without prefix']);
     assert.notEqual(bad.status, 0);
     assert.match(bad.stderr, /Commit abgelehnt/);
     assert.notEqual(
@@ -144,7 +146,8 @@ test(
     success(dir, process.execPath, 'scripts/install-git-hooks.js');
     success(dir, process.execPath, 'scripts/install-git-hooks.js');
     success(dir, 'git', 'config', '--local', 'core.hooksPath', '.existing');
-    const refused = run(dir, process.execPath, ['scripts/install-git-hooks.js']);
+    const refused = run(dir, process.execPath, ['scripts/install-git-hooks.js']
+    );
     assert.notEqual(refused.status, 0);
     assert.match(refused.stderr, /anderer core.hooksPath/);
     assert.equal(
@@ -169,7 +172,8 @@ test(
     success(dir, 'git', 'checkout', 'develop');
     fs.writeFileSync(path.join(dir, 'develop.txt'), 'develop\n');
     success(dir, 'git', 'add', '.');
-    const fake = run(dir, 'git', ['commit', '-m', 'Merge feature into develop']);
+    const fake = run(dir, 'git', ['commit', '-m', 'Merge feature into develop']
+    );
     assert.notEqual(fake.status, 0);
     success(dir, 'git', 'commit', '-m', 'fix: develop cleanup');
     success(
@@ -189,12 +193,15 @@ test(
 );
 
 test(
-  'hook installer does not silently replace a preexisting default commit-msg hook',
+  'hook installer does not silently replace a preexisting default \
+commit-msg hook',
   t => {
     const dir = fixture(t);
-    const pathToHook = success(dir, 'git', 'rev-parse', '--git-path', 'hooks/commit-msg');
+    const pathToHook = success(dir, 'git', 'rev-parse', '--git-path',
+      'hooks/commit-msg');
     fs.writeFileSync(path.resolve(dir, pathToHook), '#!/bin/sh\nexit 0\n');
-    const refused = run(dir, process.execPath, ['scripts/install-git-hooks.js']);
+    const refused = run(dir, process.execPath, ['scripts/install-git-hooks.js']
+    );
     assert.notEqual(refused.status, 0);
     assert.match(refused.stderr, /vorhandener commit-msg-Hook/);
     assert.equal(

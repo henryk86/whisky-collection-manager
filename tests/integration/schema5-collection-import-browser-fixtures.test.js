@@ -24,7 +24,8 @@ test(
           createdAt: '2026-11-06T08:00:00.000Z',
         }));
         const imported =
-          await requestJson(server.base, '/api/import/json', 'POST', collection);
+          await requestJson(server.base, '/api/import/json', 'POST',
+            collection);
         assert.equal(
           imported.status,
           200,

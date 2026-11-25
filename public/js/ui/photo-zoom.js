@@ -82,7 +82,8 @@ export function createPhotoZoom() {
     image.style.transform =
       `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
     stage.classList.toggle('is-zoomed', view.zoom > PHOTO_ZOOM_MIN);
-    const controls = stage.closest('.photo-lightbox')?.querySelector('.photo-lightbox-zoom');
+    const controls = stage.closest('.photo-lightbox')?.querySelector(
+      '.photo-lightbox-zoom');
     if (!controls) return;
     const value = controls.querySelector('[data-photo-zoom-level]');
     if (value) value.textContent = `${Math.round(view.zoom * 100)} %`;

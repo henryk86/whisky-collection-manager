@@ -1,13 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {normalizeBottling, normalizeBottle} from '../../server/domain/normalization.js';
+import {normalizeBottling, normalizeBottle}
+  from '../../server/domain/normalization.js';
 import {createTastingHistory} from '../../public/js/domain/tasting-history.js';
 import {glencairnRating} from '../../public/js/ui/glencairn-rating.js';
 import {analyzeCollection} from '../../public/js/domain/analytics.js';
 import {parseTastingScore} from '../../shared/tasting.js';
-import {WHISKY_COLORS, whiskyPickerHex, whiskyPickerPosition, isAllowedWhiskyHex, normalizeWhiskyColor} from '../../shared/whisky-colors.js';
-import {whiskyColorSelector, whiskyColorDisplay, whiskyCustomColorName} from '../../public/js/ui/whisky-color-selector.js';
-import {WHISKY_COLOR_REFERENCES, whiskyColorNameKey} from '../../shared/whisky-color-names.js';
+import {
+  WHISKY_COLORS, whiskyPickerHex, whiskyPickerPosition,
+  isAllowedWhiskyHex, normalizeWhiskyColor
+}
+  from '../../shared/whisky-colors.js';
+import {whiskyColorSelector, whiskyColorDisplay, whiskyCustomColorName}
+  from '../../public/js/ui/whisky-color-selector.js';
+import {WHISKY_COLOR_REFERENCES, whiskyColorNameKey}
+  from '../../shared/whisky-color-names.js';
 import {createTranslator} from '../../public/js/i18n/index.js';
 import german from '../../public/locales/de.json' with {type: 'json'};
 import english from '../../public/locales/en.json' with {type: 'json'};
@@ -21,7 +28,8 @@ import {GLENCAIRN_INK} from '../../public/js/ui/glencairn-icon.js';
  */
 const notes = nose => ({nose, palate: '', finish: ''});
 test(
-  'schema 6 rejects legacy tasting fields on a bottling; bottles do not store sensory data',
+  'schema 6 rejects legacy tasting fields on a bottling; bottles do not \
+store sensory data',
   () => {
     for (const field of [
       'rating',
@@ -35,7 +43,10 @@ test(
           name: 'Release', [field]: field === 'rating' ?
             87 : null,
         }));
-    const bottle = normalizeBottle({inventoryNumber: '003', rating: 15, tastingNotes: notes('No')});
+    const bottle = normalizeBottle({
+      inventoryNumber: '003', rating: 15,
+      tastingNotes: notes('No'),
+    });
     assert.equal(bottle.rating, undefined);
     assert.equal(bottle.tastingNotes, undefined);
   }
@@ -48,7 +59,9 @@ test(
     assert.equal((html.match(/class="tasting-glass"/g) || []).length, 5);
     assert.match(html, /data-tasting-score/);
     assert.match(html, /value="85"/);
-    assert.match(html, /--glass-fill:25%/); // the fifth GLASS is filled to 25% of its liquid height
+    assert.match(html,
+      /--glass-fill:25%/
+    ); // the fifth GLASS is filled to 25% of its liquid height
     assert.match(html, /role="group"/);
     assert.match(html, /clip-path="url\(#rating-glass-4\)"/);
     assert.match(
@@ -78,11 +91,18 @@ test(
   }
 );
 test(
-  'undo/redo includes notes, glass ratings, rating comment and flavor values and resets redo on new edit',
+  'undo/redo includes notes, glass ratings, rating comment and flavor \
+values and resets redo on new edit',
   () => {
-    const initial = {flavorProfile: null, tastingNotes: notes(''), rating: null};
+    const initial = {
+      flavorProfile: null, tastingNotes: notes(''),
+      rating: null,
+    };
     const history = createTastingHistory(initial);
-    history.record({flavorProfile: null, tastingNotes: notes('Oak'), rating: 40});
+    history.record({
+      flavorProfile: null, tastingNotes: notes('Oak'),
+      rating: 40,
+    });
     history.record({
       flavorProfile: null,
       tastingNotes: notes('Oak'),
@@ -104,7 +124,8 @@ test(
   }
 );
 test(
-  'analytics counts only the latest dated tasting, independent of physical bottle count',
+  'analytics counts only the latest dated tasting, independent of physical \
+bottle count',
   () => {
     const collection = {
       schemaVersion: 6, distilleries: [], bottlings: [{
@@ -130,21 +151,24 @@ test(
 );
 
 test(
-  'precise rating input accepts comma and period, preserves one decimal, rejects invalid values',
+  'precise rating input accepts comma and period, preserves one decimal, \
+rejects invalid values',
   () => {
     assert.equal(parseTastingScore('87,5'), 87.5);
     assert.equal(parseTastingScore('87.5'), 87.5);
     assert.equal(parseTastingScore('0'), 0);
     assert.equal(parseTastingScore('100'), 100);
     assert.equal(parseTastingScore(''), null);
-    for (const bad of ['-1', '100.1', '87.55', 'word', '1e2']) assert.throws(() => parseTastingScore(bad));
+    for (const bad of ['-1', '100.1', '87.55', 'word', '1e2']) assert.throws((
+    ) => parseTastingScore(bad));
     assert.throws(() => normalizeBottling({name: 'Release', rating: 87.5}));
     assert.match(glencairnRating(87.5), /value="87,5"/);
     assert.match(glencairnRating(87.5), /--glass-fill:37.5%/);
   }
 );
 test(
-  'twelve-step whisky color scale persists as independent, validated bottling attribute and joins undo history',
+  'twelve-step whisky color scale persists as independent, validated \
+bottling attribute and joins undo history',
   () => {
     assert.equal(WHISKY_COLORS.length, 12);
     const chosen = whiskyColorSelector('butter');
@@ -156,8 +180,12 @@ test(
       'no repeated colour name or clear control below palette'
     );
     assert.equal(new Set(WHISKY_COLORS.map(v => v.key)).size, 12);
-    for (const color of WHISKY_COLORS) assert.match(color.hex, /^#[0-9a-f]{6}$/);
-    assert.throws(() => normalizeBottling({name: 'Release', whiskyColor: 'amber', rating: 87.5}));
+    for (const color of WHISKY_COLORS) assert.match(color.hex,
+      /^#[0-9a-f]{6}$/);
+    assert.throws(() => normalizeBottling({
+      name: 'Release', whiskyColor:
+        'amber', rating: 87.5,
+    }));
     const html = whiskyColorSelector('amber');
     assert.equal((html.match(/data-color-key=/g) || []).length, 12);
     assert.match(html, /data-whisky-color="amber"/);
@@ -175,7 +203,8 @@ test(
 );
 
 test(
-  'custom whisky picker hides HEX from users, stores exact shades and rejects green/blue',
+  'custom whisky picker hides HEX from users, stores exact shades and \
+rejects green/blue',
   () => {
     const html = whiskyColorSelector('custom:#b74154');
     assert.equal(
@@ -231,7 +260,8 @@ test(
       'custom:#f4b3c1',
       'rose HEX is normalized'
     );
-    for (const hex of ['#b74154', '#f4b3c1', '#9b2125', '#eaa52e', '#50392d', '#f6efb6'])
+    for (const hex of ['#b74154', '#f4b3c1', '#9b2125', '#eaa52e', '#50392d',
+      '#f6efb6'])
       assert.equal(normalizeWhiskyColor(`custom:${hex}`), `custom:${hex}`);
     for (const hex of [
       '#00ff00',
@@ -278,7 +308,8 @@ test(
 );
 
 test(
-  '50 curated custom-colour names use perceptual matches without changing stored HEX',
+  '50 curated custom-colour names use perceptual matches without changing \
+stored HEX',
   () => {
     assert.equal(WHISKY_COLOR_REFERENCES.length, 50);
     const keys = new Set(), shades = new Set();
@@ -345,7 +376,8 @@ test(
 );
 
 test(
-  'help only expands substantial backup procedures and warehouse furniture photos stay under shelves without sort buttons',
+  'help only expands substantial backup procedures and warehouse furniture \
+photos stay under shelves without sort buttons',
   async () => {
     const {HELP_GUIDES} = await import('../../public/js/views/help-guides.js');
     assert.deepEqual(Object.keys(HELP_GUIDES), ['backups']);

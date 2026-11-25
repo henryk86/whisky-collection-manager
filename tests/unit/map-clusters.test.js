@@ -17,7 +17,8 @@ const distillery = (id, lat, lon, bottleCount = 0, bottlingCount = 0) => ({
 });
 
 test(
-  'low zoom combines neighbouring distilleries and counts sites, bottlings and physical bottles separately',
+  'low zoom combines neighbouring distilleries and counts sites, bottlings \
+and physical bottles separately',
   () => {
     const sites = [
       distillery('ardbeg', 55.6406, -6.1086, 4, 2),
@@ -56,7 +57,8 @@ test(
 );
 
 test(
-  'panning and viewport changes cannot affect grouping; focus can expose a site inside a cluster',
+  'panning and viewport changes cannot affect grouping; focus can expose a \
+site inside a cluster',
   () => {
     const sites = [
       distillery('one', 55.6406, -6.1086),
@@ -102,7 +104,8 @@ test('an unlocated distillery cannot create a marker cluster', () => {
 });
 
 test(
-  'a group with no physical bottles remains zero even when it includes many distilleries',
+  'a group with no physical bottles remains zero even when it includes many \
+distilleries',
   () => {
     const sites = [
       distillery('one', 55.64, -6.10, 0, 0),
@@ -137,7 +140,8 @@ test(
 );
 
 test(
-  'different nearby distilleries resolve even with overlapping markers at maximum zoom',
+  'different nearby distilleries resolve even with overlapping markers at \
+maximum zoom',
   () => {
     const sites = [
       distillery('a', 55.640600, -6.108600, 3, 2),
@@ -153,7 +157,8 @@ test(
 );
 
 test(
-  'world overview can aggregate the only stocked site, but focusing it exposes a single marker',
+  'world overview can aggregate the only stocked site, but focusing it \
+exposes a single marker',
   () => {
     const sites = [
       distillery('kilchoman', 55.7869, -6.4308, 1, 1),

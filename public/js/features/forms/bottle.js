@@ -3,7 +3,8 @@ import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
 import {inventoryScanIcon} from '../../ui/action-icons.js';
 import {textInput, selectInput, areaInput} from '../../ui/fields.js';
-import {bottleStatusLabels, whiskyTypeName, photoAccept} from '../../domain/labels.js';
+import {bottleStatusLabels, whiskyTypeName, photoAccept}
+  from '../../domain/labels.js';
 import {fileAccept} from '../files.js';
 /**
  * Creates bottle form for bottle.
@@ -41,8 +42,10 @@ export function createBottleForm({state, selectors}) {
         owner.volumeMl == null ? '' : `${owner.volumeMl} ml`,
       ],
     ].filter(([, value]) => value && value !== 'Nicht angegeben');
-    const context = `<section class="bottling-context" aria-label="${t("forms.bottle.linkedBottlingReadonly")}">
-    <div class="bottling-context-heading">${t("forms.bottling.title")} <span class="muted">${t("forms.bottle.informationalOnly")}</span>
+    const context = `<section class="bottling-context" aria-label="${t(
+      "forms.bottle.linkedBottlingReadonly")}">
+    <div class="bottling-context-heading">${t("forms.bottling.title"
+      )} <span class="muted">${t("forms.bottle.informationalOnly")}</span>
     </div>
     <strong class="bottling-context-name">${escapeHtml(owner.name)}</strong>
     <dl>${facts.map(([label, value]) => `<div>
@@ -51,7 +54,8 @@ export function createBottleForm({state, selectors}) {
     </div>`).join('')}</dl>
     </section>`;
     return `<form id="bottle-form" data-id="${escapeHtml(bottle.id ||
-      '')}" data-bottling-id="${escapeHtml(bottlingId)}">${context}<div class="forms">${textInput(
+      '')}" data-bottling-id="${escapeHtml(bottlingId
+      )}">${context}<div class="forms">${textInput(
         t("forms.bottle.inventoryNumber"),
         'inventoryNumber',
         bottle.inventoryNumber,
@@ -111,25 +115,27 @@ export function createBottleForm({state, selectors}) {
         t("forms.bottle.currency"),
         'currency',
         bottle.currency || 'EUR'
-      )}${textInput(t("forms.bottle.seller"), 'merchant', bottle.merchant)}${textInput(
-        t("forms.bottle.openingDate"),
-        'openedAt',
-        bottle.openedAt,
-        {
-          type: 'date',
-        }
-      )}${textInput(
-        t("forms.bottle.emptyDate"),
-        'emptiedAt',
-        bottle.emptiedAt,
-        {
-          type: 'date',
-        }
-      )}${areaInput(
-        t("forms.bottle.personalComment"),
-        'comment',
-        bottle.comment
-      )}<label class="form-field full">${t("forms.bottle.additionalPhotos")}<input type="file" name="photos" accept="${photoAccept}" multiple>
+      )}${textInput(t("forms.bottle.seller"), 'merchant',
+        bottle.merchant)}${textInput(
+          t("forms.bottle.openingDate"),
+          'openedAt',
+          bottle.openedAt,
+          {
+            type: 'date',
+          }
+        )}${textInput(
+          t("forms.bottle.emptyDate"),
+          'emptiedAt',
+          bottle.emptiedAt,
+          {
+            type: 'date',
+          }
+        )}${areaInput(
+          t("forms.bottle.personalComment"),
+          'comment',
+          bottle.comment
+        )}<label class="form-field full">${t("forms.bottle.additionalPhotos"
+        )}<input type="file" name="photos" accept="${photoAccept}" multiple>
     </label>
     <label class="form-field full">${t("forms.bottle.attachments")}
     <input type="file" name="documents" accept="${fileAccept}" multiple>
@@ -137,9 +143,11 @@ export function createBottleForm({state, selectors}) {
     </label>
     </div>
     <div class="actions ds-modal-footer ds-modal-footer--form">
-    <button type="button" class="btn" data-act="scan-into-bottle">${inventoryScanIcon}<span>${t("forms.bottle.scanLabel")}</span></button>
+    <button type="button" class="btn" data-act="scan-into-bottle">${
+inventoryScanIcon}<span>${t("forms.bottle.scanLabel")}</span></button>
     ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
-    <button class="btn primary" type="submit">${t("common.actions.save")}</button>
+    <button class="btn primary" type="submit">${t("common.actions.save"
+        )}</button>
     </div>
     </form>`;
   }

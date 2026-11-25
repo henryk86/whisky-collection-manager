@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {cameraConfig, scannerFormatNames, supportedFormats} from '../../public/js/features/scanner/config.js';
+import {cameraConfig, scannerFormatNames, supportedFormats}
+  from '../../public/js/features/scanner/config.js';
 import {createScanner} from '../../public/js/features/scanner/controller.js';
-import {createCodeResolver} from '../../public/js/features/scanner/resolve-code.js';
+import {createCodeResolver}
+  from '../../public/js/features/scanner/resolve-code.js';
 import {lookupInventoryNumber} from '../../public/js/domain/selectors.js';
 import {collectionFixture} from '../helpers/fixtures.js';
 /**

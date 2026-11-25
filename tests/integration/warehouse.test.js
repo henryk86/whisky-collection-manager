@@ -8,7 +8,8 @@ import {inspectReadableZip} from '../../shared/backup-zip.js';
 const pass = 'SicheresTestpasswort-2026-mindestens-14!';
 
 test(
-  'warehouse is persisted independently of collection.json, assignments are per physical bottle, and backups contain warehouse.json',
+  'warehouse is persisted independently of collection.json, assignments are \
+per physical bottle, and backups contain warehouse.json',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -91,14 +92,16 @@ test(
         {shelfId: null}
       );
       assert.equal(move.status, 200);
-      const delShelf = await api(ctx.base, `/api/warehouse/shelves/${shelf.data.id}`, 'DELETE');
+      const delShelf = await api(ctx.base, `/api/warehouse/shelves/${shelf.data
+        .id}`, 'DELETE');
       assert.equal(delShelf.status, 200);
       assert.deepEqual(
         fs.readFileSync(path.join(ctx.dir, 'data/collection.json')),
         collectionBeforeWarehouseChange,
         'Lageroperationen dürfen collection.json nicht ändern'
       );
-      const saved = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')));
+      const saved = JSON.parse(fs.readFileSync(path.join(ctx.dir,
+        'data/warehouse.json')));
       assert.equal(saved.rooms.length, 1);
       assert.equal(saved.rooms[0].furniture.length, 1);
       assert.deepEqual(saved.assignments, {});
@@ -128,7 +131,8 @@ test(
 );
 
 test(
-  'warehouse rejects out-of-bounds furniture, invalid inputs and missing bottles without corruption',
+  'warehouse rejects out-of-bounds furniture, invalid inputs and missing \
+bottles without corruption',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -213,7 +217,8 @@ test(
 );
 
 test(
-  'deleted physical bottles no longer appear as assigned and do not block shelf removal',
+  'deleted physical bottles no longer appear as assigned and do not block \
+shelf removal',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -259,7 +264,8 @@ test(
       assert.equal(after.assignments[bottleId], undefined);
       assert.equal(after.staleAssignments, 1);
       assert.equal(
-        (await api(ctx.base, `/api/warehouse/shelves/${shelf.id}`, 'DELETE')).status,
+        (await api(ctx.base, `/api/warehouse/shelves/${shelf.id}`,
+          'DELETE')).status,
         200
       );
       const warehouse = (await api(ctx.base, '/api/warehouse')).data;
@@ -270,7 +276,8 @@ test(
 );
 
 test(
-  'warehouse copies furniture with or without shelves and copies individual shelves without physical bottle assignments',
+  'warehouse copies furniture with or without shelves and copies individual \
+shelves without physical bottle assignments',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -426,7 +433,8 @@ test(
 );
 
 test(
-  'warehouse copies reject a physically full room and include existing per-bottle photo paths for shelf thumbnails',
+  'warehouse copies reject a physically full room and include existing \
+per-bottle photo paths for shelf thumbnails',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -453,12 +461,16 @@ test(
         (await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture.length,
         1
       );
-      const bottle = (await api(ctx.base, '/api/bottlings', 'POST', {name: 'Bottle with photo'})).data.bottle;
+      const bottle = (await api(ctx.base, '/api/bottlings', 'POST',
+        {name: 'Bottle with photo'})).data.bottle;
       const before = (await api(ctx.base, '/api/warehouse')).data.bottles
         .find(b => b.id === bottle.id);
       assert.equal(before.photoPath, null);
-      const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
-      const photo = await api(ctx.base, `/api/bottles/${bottle.id}/photos`, 'POST', {image});
+      const image =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA\
+AAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+      const photo = await api(ctx.base, `/api/bottles/${bottle.id}/photos`,
+        'POST', {image});
       assert.equal(photo.status, 201);
       const after = (await api(ctx.base, '/api/warehouse')).data.bottles
         .find(b => b.id === bottle.id);
@@ -471,7 +483,8 @@ test(
 );
 
 test(
-  'elevated wall shelves may occupy the cabinet footprint and keep height values across copies and restarts',
+  'elevated wall shelves may occupy the cabinet footprint and keep height \
+values across copies and restarts',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -540,7 +553,8 @@ test(
       assert.equal(copied.data.y, 0);
       assert.equal(copied.data.elevation, 1.8);
       assert.equal(copied.data.itemHeight, 0.4);
-      const saved = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'), 'utf8'));
+      const saved = JSON.parse(fs.readFileSync(path.join(ctx.dir,
+        'data/warehouse.json'), 'utf8'));
       assert.equal(
         saved.rooms.find(r => r.id === targetRoom.id).furniture.length,
         2
@@ -573,7 +587,8 @@ test(
 );
 
 test(
-  'warehouse backwards compatibility: older furniture without elevation or height remains readable',
+  'warehouse backwards compatibility: older furniture without elevation or \
+height remains readable',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -611,7 +626,8 @@ test(
 );
 
 test(
-  'bulk furniture editing is atomic: multi-rotation/elevation/height and invalid layout leave collection unchanged',
+  'bulk furniture editing is atomic: multi-rotation/elevation/height and \
+invalid layout leave collection unchanged',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -662,8 +678,12 @@ test(
       assert.equal(success.data.count, 2);
       const first = (await api(ctx.base, '/api/warehouse')).data.rooms[0]
         .furniture;
-      for (const item of first) {assert.equal(item.rotation, 90); assert.equal(item.elevation, 1); assert.equal(item.itemHeight, 2);}
-      const persisted = fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'));
+      for (const item of first) {
+        assert.equal(item.rotation, 90);
+        assert.equal(item.elevation, 1); assert.equal(item.itemHeight, 2);
+      }
+      const persisted = fs.readFileSync(path.join(ctx.dir,
+        'data/warehouse.json'));
       const invalid = await api(
         ctx.base,
         url,
@@ -757,7 +777,8 @@ test('shelf capacity zero is persisted and rejects assignments', async () => {
 });
 
 test(
-  'multi-delete is atomic for occupied shelves and optional wall settings survive edits, copies and bulk updates',
+  'multi-delete is atomic for occupied shelves and optional wall settings \
+survive edits, copies and bulk updates',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -822,13 +843,19 @@ test(
       const before = fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'));
       const url = '/api/warehouse/furniture/bulk';
       const deleteUrl = url + '/delete';
-      const blocked = await api(ctx.base, deleteUrl, 'POST', {ids: [a.id, b.id]});
+      const blocked = await api(ctx.base, deleteUrl, 'POST', {
+        ids: [a.id,
+        b.id],
+      });
       assert.equal(blocked.status, 409);
       assert.deepEqual(
         fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')),
         before
       );
-      const invalid = await api(ctx.base, deleteUrl, 'POST', {ids: [b.id, 'unknown']});
+      const invalid = await api(ctx.base, deleteUrl, 'POST', {
+        ids: [b.id,
+          'unknown'],
+      });
       assert.equal(invalid.status, 404);
       assert.deepEqual(
         fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')),
@@ -840,14 +867,19 @@ test(
         'PATCH',
         {
           ids: [b.id, c.id],
-          changes: {leftSidePanel: false, rightSidePanel: true, backPanel: false},
+          changes: {
+            leftSidePanel: false, rightSidePanel: true,
+            backPanel: false,
+          },
         }
       );
       assert.equal(changed.status, 200);
       const changedRoom = (await api(ctx.base, '/api/warehouse')).data.rooms[0];
       for (const item of changedRoom.furniture.filter(f => [b.id, c.id]
         .includes(f.id))) {
-        assert.equal(item.leftSidePanel, false); assert.equal(item.rightSidePanel, true); assert.equal(item.backPanel, false);
+        assert.equal(item.leftSidePanel, false);
+        assert.equal(item.rightSidePanel, true); assert.equal(item.backPanel,
+          false);
       }
       const copied = await api(
         ctx.base,
@@ -892,7 +924,8 @@ test(
 );
 
 test(
-  'occupied room removal requires explicit opt-in and atomically unassigns only its bottles',
+  'occupied room removal requires explicit opt-in and atomically unassigns \
+only its bottles',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -908,7 +941,10 @@ test(
         '/api/warehouse/rooms',
         {name: 'To remove', width: 4, height: 3}
       )).data;
-      const b = (await create('/api/warehouse/rooms', {name: 'Keep', width: 4, height: 3})).data;
+      const b = (await create('/api/warehouse/rooms', {
+        name: 'Keep', width: 4,
+        height: 3,
+      })).data;
       const furnitureA = (await create(
         `/api/warehouse/rooms/${a.id}/furniture`,
         {name: 'Shelf A', type: 'regal', x: 0, y: 0, width: 1, depth: .5}
@@ -947,7 +983,8 @@ test(
         [physical[2], shelfB.id],
       ]) {
         assert.equal(
-          (await api(ctx.base, `/api/warehouse/bottles/${id}`, 'PUT', {shelfId})).status,
+          (await api(ctx.base, `/api/warehouse/bottles/${id}`, 'PUT',
+            {shelfId})).status,
           200
         );
       }

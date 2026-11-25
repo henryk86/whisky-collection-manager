@@ -7,7 +7,8 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-import {writeSourceManifest, verifySourceManifest, FILENAME} from './release-manifest.js';
+import {writeSourceManifest, verifySourceManifest, FILENAME}
+  from './release-manifest.js';
 
 const PENDING_STATUS = 'Noch nicht ausgeführt';
 const LOCAL_PENDING_STATUS = 'Nicht lokal ausgeführt';
@@ -38,7 +39,8 @@ const write = (name, value) => fs.writeFileSync(path.join(ROOT, name), value);
  */
 export function parseVersion(value) {
   const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(value || '');
-  if (!match) throw new Error(`Ungueltige Release-Version: ${value} (erwartet X.Y.Z ohne Suffix)`);
+  if (!match) throw new Error(
+    `Ungueltige Release-Version: ${value} (erwartet X.Y.Z ohne Suffix)`);
   return match.slice(1).map(Number);
 }
 
@@ -70,7 +72,9 @@ export function nextVersion(current, part) {
   if (part === 'major') return `${major + 1}.0.0`;
   if (part === 'minor') return `${major}.${minor + 1}.0`;
   if (part === 'patch') return `${major}.${minor}.${patch + 1}`;
-  throw new Error('Verwendung: npm run release:bump -- patch|minor|major "Changelog-Eintrag"');
+  throw new Error(
+    'Verwendung: npm run release:bump -- patch|minor|major "Changelog-Eintrag"'
+  );
 }
 
 /**
@@ -80,7 +84,8 @@ export function nextVersion(current, part) {
  * @param {!Object=} options2 Destructured options for this operation.
  * @return {!Object} Structured result for the caller.
  */
-export function verifyReleaseMetadata(root = ROOT, {allowReadmeMismatch = false} = {}) {
+export function verifyReleaseMetadata(root = ROOT, {allowReadmeMismatch =
+  false} = {}) {
   /**
    * Reads content data from the local filesystem.
    *
@@ -93,7 +98,9 @@ export function verifyReleaseMetadata(root = ROOT, {allowReadmeMismatch = false}
   parseVersion(version);
   const lock = JSON.parse(content('package-lock.json'));
   if (lock.version !== version || lock.packages?.['']?.version !== version) {
-    throw new Error('Versionen von package.json und package-lock.json stimmen nicht ueberein.');
+    throw new Error(
+      'Versionen von package.json und package-lock.json stimmen nicht \
+ueberein.');
   }
   if (!allowReadmeMismatch && !content('README.md')
     .startsWith(`# Whisky Collection Manager v${version}\n`)) {
@@ -101,17 +108,27 @@ export function verifyReleaseMetadata(root = ROOT, {allowReadmeMismatch = false}
   }
   if (!content('docs/TESTSTATUS.md')
     .startsWith(`# Teststatus - Whisky Collection Manager v${version}\n`)) {
-    throw new Error(`docs/TESTSTATUS.md enthaelt nicht die Release-Version v${version}. Bitte release:bump verwenden.`);
+    throw new Error(
+      `docs/TESTSTATUS.md enthaelt nicht die Release-Version v${version}. \
+Bitte release:bump verwenden.`);
   }
   const changelog = content('CHANGELOG.md');
-  const match = /^# Changelog\s*\n\s*## ([^\s]+) - (\d{4}-\d{2}-\d{2})\s*\n([\s\S]*?)(?=\n## |$)/.exec(changelog);
+  const match =
+    new RegExp(
+      '^# Changelog\\s*\\n\\s*## ([^\\s]+) - (\\d' +
+      '{4}-\\d{2}-\\d{2})\\s*\\n([\\s\\S]*?)(?=\\' +
+      'n## |$)'
+    ).exec(changelog);
   if (!match || match[1] !== version || !/^- /m.test(match[3]) ||
     /BITTE_ERGAENZEN/.test(match[3])) {
-    throw new Error(`CHANGELOG.md braucht einen ausgefuellten obersten Eintrag fuer ${version}.`);
+    throw new Error(
+      `CHANGELOG.md braucht einen ausgefuellten obersten Eintrag fuer \
+${version}.`);
   }
   if (compareVersions(version, '1.3.0') >= 0 &&
     !fs.existsSync(path.join(root, FILENAME))) {
-    throw new Error(`Quellcode-Manifest ${FILENAME} fehlt im Release v${version}.`);
+    throw new Error(
+      `Quellcode-Manifest ${FILENAME} fehlt im Release v${version}.`);
   }
   if (fs.existsSync(path.join(root, FILENAME))) verifySourceManifest(root);
   return {version, tag: `v${version}`};
@@ -131,7 +148,9 @@ function validateFreshVersion(version) {
   const versions = output.split(/\s+/).filter(tag => /^v\d+\.\d+\.\d+$/
     .test(tag));
   if (versions.some(tag => compareVersions(version, tag.slice(1)) <= 0)) {
-    throw new Error(`v${version} ist nicht neuer als alle bereits vorhandenen Release-Tags. Version auf develop erhoehen.`);
+    throw new Error(
+      `v${version} ist nicht neuer als alle bereits vorhandenen \
+Release-Tags. Version auf develop erhoehen.`);
   }
 }
 
@@ -144,9 +163,17 @@ function validateFreshVersion(version) {
  */
 export function updateReadmeTitle(source, version) {
   const heading = `# Whisky Collection Manager v${version}`;
-  if (/^# [^\n]*(?:Whisky Collection Manager|Whisky-Collection-Manager)[^\n]*$/im.test(source)) {
+  if (new RegExp(
+    '^# [^\\n]*(?:Whisky Collection Manager|Whi' +
+    'sky-Collection-Manager)[^\\n]*$',
+    'im'
+  ).test(source)) {
     return source.replace(
-      /^# [^\n]*(?:Whisky Collection Manager|Whisky-Collection-Manager)[^\n]*$/im,
+      new RegExp(
+        '^# [^\\n]*(?:Whisky Collection Manager|Whi' +
+        'sky-Collection-Manager)[^\\n]*$',
+        'im'
+      ),
       heading
     );
   }
@@ -180,7 +207,8 @@ export function pendingTestStatus(version, note, date) {
   parseVersion(version);
   return `# Teststatus - Whisky Collection Manager v${version}
 
-**Stand:** ${date}. **Status:** Pruefungen fuer v${version} noch ausstehend. Vergangene Releases und Aenderungen: [Changelog](../CHANGELOG.md).
+**Stand:** ${date}. **Status:** Pruefungen fuer v${version} noch \
+ausstehend. Vergangene Releases und Aenderungen: [Changelog](../CHANGELOG.md).
 
 ## Durchgefuehrte Pruefungen
 
@@ -197,7 +225,8 @@ Browserpruefungen separat dokumentieren. |
 | Docker-Image-Build / ARM64-Live-Test | **${LOCAL_PENDING_STATUS}** | \
 Nach einem Release auf dem Zielsystem pruefen. |
 
-Nach Durchfuehrung der Pruefungen die Ergebnisse und ihre Grenzen hier dokumentieren. Aenderungen stehen ausschliesslich im Changelog.
+Nach Durchfuehrung der Pruefungen die Ergebnisse und ihre Grenzen hier \
+dokumentieren. Aenderungen stehen ausschliesslich im Changelog.
 `;
 }
 
@@ -209,7 +238,8 @@ Nach Durchfuehrung der Pruefungen die Ergebnisse und ihre Grenzen hier dokumenti
  */
 function bump(part, note) {
   if (!note?.trim() || note.length > 500 || /[\r\n]/.test(note)) {
-    throw new Error('Ein kurzer, einzeiliger Changelog-Eintrag ist erforderlich.');
+    throw new Error(
+      'Ein kurzer, einzeiliger Changelog-Eintrag ist erforderlich.');
   }
   const {version: current} =
     verifyReleaseMetadata(ROOT, {allowReadmeMismatch: true});
@@ -229,7 +259,9 @@ function bump(part, note) {
   write('docs/TESTSTATUS.md', pendingTestStatus(version, note, date));
   writeSourceManifest(ROOT);
   verifyReleaseMetadata();
-  console.log(`Version ${current} -> ${version}. Jetzt nach develop committen und danach develop -> main mergen.`);
+  console.log(
+    `Version ${current} -> ${version}. Jetzt nach develop committen und \
+danach develop -> main mergen.`);
 }
 
 /**
@@ -286,7 +318,8 @@ export function applyAutomatedRelease(version, commits, mergeSha, previousTag) {
   write(
     'docs/TESTSTATUS.md',
     `# Teststatus - Whisky Collection Manager v${version}\n\n`
-    + `**Stand:** ${date}. Automatischer Release-Snapshot aus Merge ${mergeSha.slice(0, 12)} (${previousTag}).\n\n`
+    + `**Stand:** ${date}. Automatischer Release-Snapshot aus Merge ${mergeSha
+      .slice(0, 12)} (${previousTag}).\n\n`
     + `## Pruefungen\n\n`
     + `- \`npm test\`: **${PENDING_STATUS}**`
     + ` auf dem Release-Snapshot; `
@@ -296,10 +329,14 @@ export function applyAutomatedRelease(version, commits, mergeSha, previousTag) {
     + ` auf dem Release-Snapshot; `
     + `die Browser-CI des Merge-Quellstands war vor Erstellung `
     + `des Tags erfolgreich.\n`
-    + `- Vor Erstellung des Tags: GitHub-CI fuer den Merge-Quellstand mit \`npm run check\`, \`npm test\` und \`npm run test:browser\`.\n`
-    + `- Release-Metadaten und SHA-256-Quellmanifest werden im Snapshot separat geprueft.\n`
-    + `- Docker/ARM64/AMD64 sowie ZIP-/Offline-Archive werden vom Release-Workflow vor der Veroeffentlichung geprueft.\n`
-    + `- Externe Hardware-/Pi-Pruefungen sind nicht Bestandteil dieses CI-Laufs.\n\n`
+    + `- Vor Erstellung des Tags: GitHub-CI fuer den Merge-Quellstand mit \
+\`npm run check\`, \`npm test\` und \`npm run test:browser\`.\n`
+    + `- Release-Metadaten und SHA-256-Quellmanifest werden im Snapshot \
+separat geprueft.\n`
+    + `- Docker/ARM64/AMD64 sowie ZIP-/Offline-Archive werden vom \
+Release-Workflow vor der Veroeffentlichung geprueft.\n`
+    + `- Externe Hardware-/Pi-Pruefungen sind nicht Bestandteil dieses \
+CI-Laufs.\n\n`
     + `Aenderungen und fruehere Releases: [Changelog](../CHANGELOG.md).\n`
   );
   writeSourceManifest(ROOT);
@@ -322,13 +359,18 @@ if (isCLI) {
     } else if (command === 'bump') {
       bump(process.argv[3], process.argv.slice(4).join(' '));
     } else {
-      throw new Error('Verwendung: release-version.js check [--fresh] | tag | sync | bump patch|minor|major "Aenderungen"');
+      throw new Error(
+        'Verwendung: release-version.js check [--fresh] | tag | sync | bump \
+patch|minor|major "Aenderungen"');
     }
   } catch (error) {
     console.error(error.message);
     if (process.argv[2] === 'check' && error.message ===
       'Source manifest differs from release files') {
-      console.error('Hinweis: Auf unveroeffentlichtem develop nach Quellcodeaenderungen erwartet. release:check ist nur fuer unveraenderte Release-Snapshots vorgesehen.');
+      console.error(
+        'Hinweis: Auf unveroeffentlichtem develop nach Quellcodeaenderungen \
+erwartet. release:check ist nur fuer unveraenderte Release-Snapshots \
+vorgesehen.');
     }
     process.exitCode = 1;
   }

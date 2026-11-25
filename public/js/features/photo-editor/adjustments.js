@@ -1,5 +1,6 @@
 import {t} from '../../i18n/index.js';
-import {validateAdjustmentValues} from '../../../../shared/photo-adjustments.js';
+import {validateAdjustmentValues}
+  from '../../../../shared/photo-adjustments.js';
 /**
  * Reversible editing parameters: original/cutout image files are never
  * modified.
@@ -52,7 +53,8 @@ export function validatePhotoAdjustments(value) {
   try {return validateAdjustmentValues(value);}
   catch (error) {
     if (error.code === 'INVALID_ADJUSTMENT_FIELD')
-      throw new RangeError(t('errors.photoEditor.invalidAdjustmentValue', {field: error.field}));
+      throw new RangeError(t('errors.photoEditor.invalidAdjustmentValue',
+        {field: error.field}));
     throw new RangeError(t('errors.photoEditor.invalidAdjustments'));
   }
 }
@@ -92,7 +94,8 @@ export function resetPhotoAdjustmentGroup(current, groupKey) {
  * @param {!Object=} current Current resource data to update.
  * @return {!Object} Structured result for the caller.
  */
-export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTMENTS) {
+export function whiteBalanceFromArea(source, area,
+  current = EMPTY_PHOTO_ADJUSTMENTS) {
   const settings = validatePhotoAdjustments(current);
   const {width, height, data} = source || {};
   if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 ||
@@ -106,11 +109,15 @@ export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTM
   const x1 = Math.min(width, Math.ceil(area.x + area.width));
   const y0 = Math.max(0, Math.floor(area.y));
   const y1 = Math.min(height, Math.ceil(area.y + area.height));
-  if (x1 <= x0 || y1 <= y0) throw new RangeError(t('errors.photoEditor.invalidWhiteBalanceArea'));
+  if (x1 <= x0 || y1 <= y0) throw new RangeError(t(
+    'errors.photoEditor.invalidWhiteBalanceArea'));
   // Do not compensate the pre-existing WB a second time. Estimate both WB
   // controls
   // afresh from the reference, while preserving exposure and other corrections.
-  const neutral = adjustPhotoPixels(source, {...settings, temperature: 0, tint: 0});
+  const neutral = adjustPhotoPixels(source, {
+    ...settings, temperature: 0,
+    tint: 0,
+  });
   const stride = Math.max(1, Math.floor(Math.sqrt((x1 - x0) * (y1 - y0) /
     32000)));
   let r = 0, g = 0, b = 0, count = 0;
@@ -122,7 +129,8 @@ export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTM
       Math.max(red, green, blue) > 247) continue;
     r += red; g += green; b += blue; count++;
   }
-  if (!count) throw new RangeError(t('errors.photoEditor.noWhiteBalancePixels'));
+  if (!count) throw new RangeError(t('errors.photoEditor.noWhiteBalancePixels')
+  );
   r /= count; g /= count; b /= count;
   // Invert the exact RGB gain model used by adjustPhotoPixels:
   // r*(1+.18*T+.065*I) = g*(1-.12*I) = b*(1-.18*T+.065*I)

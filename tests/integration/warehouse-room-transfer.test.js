@@ -10,7 +10,10 @@ import {startTestServer, requestJson as api} from '../helpers/server.js';
  * @return {!Promise<*>} Promise for the asynchronous operation.
  */
 const create = async (base, name) =>
-  (await api(base, '/api/warehouse/rooms', 'POST', {name, width: 5, height: 4})).data;
+  (await api(base, '/api/warehouse/rooms', 'POST', {
+    name, width: 5,
+    height: 4,
+  })).data;
 
 /**
  * Coordinates asynchronous work for furniture.
@@ -102,7 +105,8 @@ const apply = (base, document, opts = {}) =>
   api(base, '/api/warehouse/rooms/import', 'POST', {document, ...opts});
 
 test(
-  'export of selected/multiple/all rooms can be imported with or without matching bottle allocations across instances',
+  'export of selected/multiple/all rooms can be imported with or without \
+matching bottle allocations across instances',
   async () => {
     const source = await startTestServer(), destination =
       await startTestServer();
@@ -126,7 +130,8 @@ test(
       assert.equal(single.rooms.length, 1);
       assert.equal(single.assignments.length, 0);
       assert.equal(single.includesAssignments, false);
-      const several = (await exportRooms(source.base, [room1.id, room2.id], true)).data;
+      const several = (await exportRooms(source.base, [room1.id, room2.id],
+        true)).data;
       assert.deepEqual(
         several.rooms.map(r => r.name),
         ['Original room', 'Spare room']
@@ -164,7 +169,10 @@ test(
         (await api(destination.base, '/api/warehouse')).data.rooms.length,
         2
       );
-      const extra = (await apply(destination.base, all, {includeAssignments: false})).data;
+      const extra = (await apply(destination.base, all, {
+        includeAssignments:
+          false,
+      })).data;
       assert.equal(extra.createdRooms, 1);
       assert.equal(extra.assigned, 0);
       assert.equal(
@@ -174,11 +182,13 @@ test(
       // An existing occupied room cannot be replaced even when explicitly
       // requested.
       assert.equal(
-        (await preview(destination.base, several, {conflictPolicy: 'replace'})).data.blockedRooms,
+        (await preview(destination.base, several, {conflictPolicy: 'replace'}))
+          .data.blockedRooms,
         1
       );
       assert.equal(
-        (await apply(destination.base, several, {conflictPolicy: 'replace'})).status,
+        (await apply(destination.base, several, {conflictPolicy: 'replace'}))
+          .status,
         409
       );
       assert.equal(

@@ -44,6 +44,7 @@ export function fail(message, status = 400, code = null, params = {}) {
  * @param {!Object=} params Safe structured translation parameters.
  * @throws {HttpError} When the condition is false.
  */
-export function assert(condition, message, status = 400, code = null, params = {}) {
+export function assert(condition, message, status = 400, code = null,
+  params = {}) {
   if (!condition) throw new HttpError(message, status, code, params);
 }

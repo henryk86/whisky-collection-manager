@@ -45,7 +45,8 @@ export function furnitureOverlap(first, second) {
  * @param {*=} otherFurniture Other furniture used by this operation.
  * @return {*} Result computed from the supplied inputs.
  */
-export function furnitureCollision(room, candidate, otherFurniture = room.furniture || []) {
+export function furnitureCollision(room, candidate, otherFurniture =
+  room.furniture || []) {
   return otherFurniture.find(other => (candidate.id === undefined ||
     other.id !== candidate.id) && furnitureOverlap(candidate, other)) ?? null;
 }
@@ -78,7 +79,8 @@ export function furnitureFitsRoom(room, item) {
  */
 export function moveFurnitureTowards(room, item, fromX, fromY, toX, toY) {
   const dx = toX - fromX, dy = toY - fromY;
-  const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 0.04));
+  const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) /
+    0.04));
   let x = fromX, y = fromY;
   /**
    * Checks whether place applies.

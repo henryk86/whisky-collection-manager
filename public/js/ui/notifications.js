@@ -23,7 +23,11 @@ export function toast(message, error = false) {
     close.className = 'toast-close';
     close.setAttribute('aria-label', t('common.actions.close'));
     close.title = t('common.actions.close');
-    close.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+    close.innerHTML =
+      '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" \
+stroke="currentColor" stroke-width="2" stroke-linecap="round" \
+stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/>\
+</svg>';
     close.addEventListener('click', () => el.remove());
     el.append(close);
   } else {

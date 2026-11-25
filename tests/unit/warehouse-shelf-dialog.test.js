@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {renderWarehouseRoomWall} from '../../public/js/views/warehouse-room-wall.js';
+import {renderWarehouseRoomWall}
+  from '../../public/js/views/warehouse-room-wall.js';
 import {shelfContents} from '../../public/js/views/warehouse-shelf-details.js';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 
@@ -43,7 +44,8 @@ function warehouse() {
 }
 
 test(
-  'a narrow shelf only shows one front row and no internal horizontal scrollbar, modal shows all 15 bottles',
+  'a narrow shelf only shows one front row and no internal horizontal \
+scrollbar, modal shows all 15 bottles',
   () => {
     const w = warehouse();
     const html = renderWarehouseRoomWall(w.rooms[0], w);
@@ -67,7 +69,8 @@ test(
 );
 
 test(
-  'furniture dialog uses bottle previews and opens the shelf modal by compartment double-click',
+  'furniture dialog uses bottle previews and opens the shelf modal by \
+compartment double-click',
   () => {
     const w = warehouse();
     const forms = [];
@@ -139,7 +142,8 @@ test(
 );
 
 test(
-  'warehouse room actions expose one transfer entry on overview and floor plan; shelf opens all bottles',
+  'warehouse room actions expose one transfer entry on overview and floor \
+plan; shelf opens all bottles',
   () => {
     const w = warehouse(), state = {
       warehouse: w,
@@ -236,7 +240,8 @@ test(
 );
 
 test(
-  'compartment cards directly expose relocation, the physical bottle detail route, inventory number, ABV and status',
+  'compartment cards directly expose relocation, the physical bottle detail \
+route, inventory number, ABV and status',
   () => {
     const w = warehouse();
     w.bottles = [{
@@ -264,7 +269,11 @@ test(
     );
     assert.match(
       contents.html,
-      /href="\/\?bottling=bottling-1" data-act="open" data-id="bottling-1" data-bottle-id="physical-1"/
+      new RegExp(
+        'href="\\/\\?bottling=bottling-1" data-act=' +
+        '"open" data-id="bottling-1" data-bottle-id' +
+        '="physical-1"'
+      )
     );
     assert.match(
       contents.html,
@@ -297,7 +306,8 @@ test(
 );
 
 test(
-  'the rack selection preview opens individual details for assigned and unassigned bottles',
+  'the rack selection preview opens individual details for assigned and \
+unassigned bottles',
   () => {
     const w = warehouse();
     w.bottles = [
@@ -380,7 +390,8 @@ test(
 );
 
 test(
-  'shelf overview uses decorative bottle images while offering direct relocation and details actions',
+  'shelf overview uses decorative bottle images while offering direct \
+relocation and details actions',
   () => {
     const w = warehouse();
     w.bottles = [
@@ -396,7 +407,11 @@ test(
     const html = shelfContents(w, 's').html;
     assert.match(
       html,
-      /<span class="warehouse-bottle-symbol warehouse-bottle-static has-photo" aria-hidden="true">/
+      new RegExp(
+        '<span class="warehouse-bottle-symbol wareh' +
+        'ouse-bottle-static has-photo" aria-hidden=' +
+        '"true">'
+      )
     );
     assert.match(html, /src="\/assets\/photo-placeholder\.svg"/);
     assert.match(
@@ -406,10 +421,15 @@ test(
     assert.equal((html.match(/photo-placeholder\.svg/g) || []).length, 1);
     assert.doesNotMatch(
       html,
-      /data-act="warehouse-bottle-select"|data-act="warehouse-bottle-preview"|aria-pressed=|is-selected|data-select-label=/
+      new RegExp(
+        'data-act="warehouse-bottle-select"|data-ac' +
+        't="warehouse-bottle-preview"|aria-pressed=' +
+        '|is-selected|data-select-label='
+      )
     );
     assert.equal(
-      (html.match(/class="warehouse-bottle-symbol warehouse-bottle-static/g) || []).length,
+      (html.match(/class="warehouse-bottle-symbol warehouse-bottle-static/g) ||
+        []).length,
       2
     );
     assert.doesNotMatch(html, /<button[^>]*class="warehouse-bottle-symbol/);

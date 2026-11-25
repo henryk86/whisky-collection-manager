@@ -26,7 +26,8 @@ export function allowedExtensionOrigin(origin, configuredIds = process.env
  * @param {string} url URL of the requested resource.
  * @param {!Object=} options3 Destructured options for this operation.
  */
-export function requireSameOriginMutation(request, url, {extensionStage = false} = {}) {
+export function requireSameOriginMutation(request, url, {extensionStage =
+  false} = {}) {
   const method = request.method;
   if (!url.pathname.startsWith('/api/') || method === 'GET' || method ===
     'HEAD' || method === 'OPTIONS') return;
@@ -42,7 +43,10 @@ export function requireSameOriginMutation(request, url, {extensionStage = false}
   }
   if (origin) {
     let supplied;
-    try {supplied = new URL(origin);} catch {throw fail('Ungültiger Origin-Header', 403, "api.errors.invalidOriginHeader");}
+    try {supplied = new URL(origin);} catch {
+      throw fail(
+        'Ungültiger Origin-Header', 403, "api.errors.invalidOriginHeader");
+    }
     const scheme = request.socket?.encrypted ? 'https:' : 'http:';
     if (supplied.origin !== `${scheme}//${url.host}`) {
       throw fail(
@@ -62,7 +66,8 @@ const warnedHosts = new Set();
 const MAX_HOST_WARNINGS = 20;
 let warnedHostLimit = false;
 const HOST_REJECTION_MESSAGE =
-  'Nicht erlaubter Host. Adresse in ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_IP_ADDRESSES eintragen.';
+  'Nicht erlaubter Host. Adresse in ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_I\
+P_ADDRESSES eintragen.';
 
 /**
  * Transforms the reject host text with the required substitutions.
@@ -82,16 +87,21 @@ function rejectHost(raw, hostname) {
   if (!warnedHosts.has(label)) {
     if (warnedHosts.size < MAX_HOST_WARNINGS) {
       warnedHosts.add(label);
-      console.warn(`Abgelehnter HTTP-Host: ${label}. Erlaubte Adressen in ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_IP_ADDRESSES eintragen.`);
+      console.warn(
+        `Abgelehnter HTTP-Host: ${label}. Erlaubte Adressen in \
+ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_IP_ADDRESSES eintragen.`);
     } else if (!warnedHostLimit) {
       warnedHostLimit = true;
-      console.warn('Weitere abgelehnte Hosts werden nicht mehr einzeln protokolliert (Limit: 20). ALLOWED_HOSTS und CERT_DNS_NAMES/CERT_IP_ADDRESSES pruefen.');
+      console.warn(
+        'Weitere abgelehnte Hosts werden nicht mehr einzeln protokolliert \
+(Limit: 20). ALLOWED_HOSTS und CERT_DNS_NAMES/CERT_IP_ADDRESSES pruefen.');
     }
   }
   throw fail(
     HOST_REJECTION_MESSAGE,
     421,
-    "api.errors.hostNotAllowedAddTheAddressToALLOWEDHOSTSOrCERTDNSNAMESCERTIPADDRESSES"
+    "api.errors.hostNotAllowedAddTheAddressToALLOWEDHOSTSOrCERTDNSNAMESCERTI\
+PADDRESSES"
   );
 }
 

@@ -49,7 +49,8 @@ export function bindFlightSorting(root, onReorder) {
    * @return {*} Result computed from the supplied inputs.
    */
   const rowUnderPointer = (x, y, list) => {
-    const row = document.elementFromPoint(x, y)?.closest?.('.tasting-flight-member');
+    const row = document.elementFromPoint(x,
+      y)?.closest?.('.tasting-flight-member');
     return row?.parentElement === list ? row : null;
   };
 
@@ -76,7 +77,8 @@ export function bindFlightSorting(root, onReorder) {
     const {handle, pointerId, list} = drag;
     clearTargets(list);
     drag = null;
-    if (handle.hasPointerCapture?.(pointerId)) handle.releasePointerCapture(pointerId);
+    if (handle.hasPointerCapture?.(pointerId)) handle.releasePointerCapture(
+      pointerId);
   }
   root.addEventListener('pointerdown', event => {
     if (!event.isPrimary || event.button !== 0 || drag) return;

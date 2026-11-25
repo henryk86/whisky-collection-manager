@@ -4,7 +4,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {compareVersions, nextVersion, parseVersion, updateReadmeTitle, pendingTestStatus, verifyReleaseMetadata} from '../../scripts/release-version.js';
+import {
+  compareVersions, nextVersion, parseVersion, updateReadmeTitle,
+  pendingTestStatus, verifyReleaseMetadata
+}
+  from '../../scripts/release-version.js';
 import {prohibitedReleasePath} from '../../scripts/verify-release-files.js';
 import {readSourceManifest} from '../../scripts/release-manifest.js';
 /**
@@ -31,7 +35,8 @@ test(
 );
 
 test(
-  'develop keeps version metadata aligned without rewriting the immutable released source manifest',
+  'develop keeps version metadata aligned without rewriting the immutable \
+released source manifest',
   () => {
     const expected = JSON.parse(read('package.json')).version;
     const lock = JSON.parse(read('package-lock.json'));
@@ -120,7 +125,8 @@ test(
 
 
 test(
-  'release:bump resets current test status and records history only in changelog',
+  'release:bump resets current test status and records history only in \
+changelog',
   () => {
     const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-release-bump-'));
     try {
@@ -140,7 +146,11 @@ test(
       );
       fs.writeFileSync(
         path.join(temp, 'package-lock.json'),
-        JSON.stringify({version: '0.16.11', packages: {'': {version: '0.16.11'}}})
+        JSON.stringify({
+          version: '0.16.11', packages: {
+            '': {version: '0.16.11'},
+          },
+        })
       );
       fs.writeFileSync(
         path.join(temp, 'README.md'),
@@ -152,7 +162,8 @@ test(
       );
       fs.writeFileSync(
         path.join(temp, 'docs/TESTSTATUS.md'),
-        '# Teststatus - Whisky Collection Manager v0.16.11\n\n## Durchgefuehrte Pruefungen\n\n- 341/341 bestanden\n'
+        '# Teststatus - Whisky Collection Manager v0.16.11\n\n## \
+Durchgefuehrte Pruefungen\n\n- 341/341 bestanden\n'
       );
       execFileSync(
         process.execPath,
@@ -174,7 +185,8 @@ test(
           .version,
         '0.16.12'
       );
-      const status = fs.readFileSync(path.join(temp, 'docs/TESTSTATUS.md'), 'utf8');
+      const status = fs.readFileSync(path.join(temp, 'docs/TESTSTATUS.md'),
+        'utf8');
       assert.match(
         status,
         /^# Teststatus - Whisky Collection Manager v0\.16\.12\n/

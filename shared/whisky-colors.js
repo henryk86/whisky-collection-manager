@@ -148,6 +148,9 @@ export function isCustomWhiskyColor(value) {
 export function resolveWhiskyColor(value) {
   const fixed = WHISKY_COLORS.find(color => color.key === value);
   if (fixed) return fixed;
-  if (isCustomWhiskyColor(value)) return {key: value, hex: value.slice(CUSTOM_PREFIX.length).toLowerCase()};
+  if (isCustomWhiskyColor(value)) return {
+    key: value, hex: value.slice(
+      CUSTOM_PREFIX.length).toLowerCase(),
+  };
   return null;
 }

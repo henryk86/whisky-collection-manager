@@ -86,7 +86,8 @@ function fakeDocument() {
 }
 
 test(
-  'error toast is dismissible by an accessible close button and still auto-expires',
+  'error toast is dismissible by an accessible close button and still \
+auto-expires',
   () => {
     const oldDocument = globalThis.document;
     const oldSetTimeout = globalThis.setTimeout;
@@ -94,7 +95,10 @@ test(
     const scheduled = [];
     globalThis.document = doc;
     globalThis.setTimeout =
-      (callback, delay) => {scheduled.push({callback, delay}); return scheduled.length;};
+      (callback, delay) => {
+        scheduled.push({callback, delay});
+        return scheduled.length;
+      };
     try {
       toast('Ungültiges Leerdatum', true);
       assert.equal(doc.body.children.length, 1);
@@ -130,7 +134,8 @@ test(
 );
 
 test(
-  'success toast remains unchanged and a second toast replaces the previous notification',
+  'success toast remains unchanged and a second toast replaces the previous \
+notification',
   () => {
     const oldDocument = globalThis.document;
     const oldSetTimeout = globalThis.setTimeout;

@@ -361,7 +361,8 @@ export function migrateCollectionToCurrent(source) {
     source && typeof source === 'object' && !Array.isArray(source) &&
     Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >=
     1 && source.schemaVersion <= 6,
-    'Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben unverändert',
+    'Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben \
+unverändert',
     400,
     "api.errors.unsupportedCollectionVersion"
   );

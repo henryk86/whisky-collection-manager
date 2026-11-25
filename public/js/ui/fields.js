@@ -36,7 +36,10 @@ function props(name, options = {}) {
  */
 function help(name, options = {}) {
   return `${options.description ?
-    `<span class="ds-field-description" id="ds-${e(name)}-hint">${e(options.description)}</span>` : ''}${options.error ? `<span class="ds-field-error" id="ds-${e(name)}-error" role="alert">${e(options.error)}</span>` : ''}`;
+    `<span class="ds-field-description" id="ds-${e(name)}-hint">${e(options
+      .description)}</span>` : ''}${options.error ?
+        `<span class="ds-field-error" id="ds-${e(
+          name)}-error" role="alert">${e(options.error)}</span>` : ''}`;
 }
 
 /**

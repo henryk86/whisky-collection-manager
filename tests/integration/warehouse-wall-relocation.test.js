@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {startTestServer, requestJson as api} from '../helpers/server.js';
 
 test(
-  'moving a physical bottle between opposite racks uses the same assignment endpoint and enforces target capacity',
+  'moving a physical bottle between opposite racks uses the same assignment \
+endpoint and enforces target capacity',
   async () => {
     const ctx = await startTestServer();
     try {

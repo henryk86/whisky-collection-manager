@@ -3,10 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
-const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+const image =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0l\
+EQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
 
 test(
-  'Whiskybase image is physically copied to an individual bottle only on approval',
+  'Whiskybase image is physically copied to an individual bottle only on \
+approval',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -18,13 +21,15 @@ test(
       );
       assert.equal(created.status, 201);
       const bottle = created.data.bottle;
-      const staged = await requestJson(ctx.base, '/api/import-image/stage', 'POST', {image});
+      const staged = await requestJson(ctx.base, '/api/import-image/stage',
+        'POST', {image});
       assert.equal(staged.status, 201, JSON.stringify(staged.data));
       assert.match(staged.data.token, /^[0-9a-f-]{36}$/);
       const before = (await requestJson(ctx.base, '/api/collection')).data
         .bottlings[0].bottles[0];
       assert.deepEqual(before.photos, []);
-      const preview = await fetch(`${ctx.base}/api/import-image/stage/${staged.data.token}`);
+      const preview = await fetch(`${ctx.base}/api/import-image/stage/${staged
+        .data.token}`);
       assert.equal(preview.status, 200);
       assert.equal(preview.headers.get('content-type'), 'image/png');
       assert.ok((await preview.arrayBuffer()).byteLength > 0);
@@ -66,7 +71,8 @@ test(
 );
 
 test(
-  'generic staged import does not falsely label a reference image as Whiskybase',
+  'generic staged import does not falsely label a reference image as \
+Whiskybase',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -132,7 +138,8 @@ test(
         );
         assert.equal(response.status, 400);
       }
-      const stage = await requestJson(ctx.base, '/api/import-image/stage', 'POST', {image});
+      const stage = await requestJson(ctx.base, '/api/import-image/stage',
+        'POST', {image});
       assert.equal(stage.status, 201);
       const invalid = await requestJson(
         ctx.base,
@@ -161,9 +168,12 @@ test(
         {name: 'Photo Order'}
       );
       const id = created.data.bottle.id;
-      const first = await requestJson(ctx.base, `/api/bottles/${id}/photos`, 'POST', {image});
-      const second = await requestJson(ctx.base, `/api/bottles/${id}/photos`, 'POST', {image});
-      const third = await requestJson(ctx.base, `/api/bottles/${id}/photos`, 'POST', {image});
+      const first = await requestJson(ctx.base, `/api/bottles/${id}/photos`,
+        'POST', {image});
+      const second = await requestJson(ctx.base, `/api/bottles/${id}/photos`,
+        'POST', {image});
+      const third = await requestJson(ctx.base, `/api/bottles/${id}/photos`,
+        'POST', {image});
       const order = [third.data.id, first.data.id, second.data.id];
       const res = await requestJson(
         ctx.base,
@@ -206,7 +216,8 @@ test(
 );
 
 test(
-  'the image stage grants CORS only to Chrome/Edge extensions, never to random pages',
+  'the image stage grants CORS only to Chrome/Edge extensions, never to \
+random pages',
   async () => {
     const ctx = await startTestServer();
     try {

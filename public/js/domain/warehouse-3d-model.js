@@ -113,7 +113,8 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
   const assignments = warehouse.assignments || {};
   const bottles = new Set((warehouse.bottles || []).map(b => b.id));
   const count = new Map();
-  for (const [bottleId, shelfId] of Object.entries(assignments)) if (bottles.has(bottleId)) {
+  for (const [bottleId, shelfId] of Object.entries(assignments)) if (bottles
+    .has(bottleId)) {
     count.set(shelfId, (count.get(shelfId) || 0) + 1);
   }
   for (const item of room.furniture || []) {
@@ -196,7 +197,8 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
      * @param {*} style Visual style or rendering properties.
      * @param {*} role Value used by this operation.
      */
-    const frontPlane = (offset, py, faceWidth, faceHeight, thickness, style, role) => {
+    const frontPlane = (offset, py, faceWidth, faceHeight, thickness, style,
+      role) => {
       const out = Number(item.width);
       const d = Number(item.depth);
       const distance = d / 2 + thickness / 2;
@@ -230,7 +232,8 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
        * @param {*} leavesOverride Leaves override used by this operation.
        * @param {*} frameOverride Frame override used by this operation.
        */
-      const makeFront = (front, bottom, upper, leavesOverride, frameOverride) => {
+      const makeFront = (front, bottom, upper, leavesOverride,
+        frameOverride) => {
         const span = upper - bottom;
         const panelH = Math.max(0.015, span - t * 1.3);
         const centreY = (bottom + upper) / 2;

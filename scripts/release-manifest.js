@@ -1,5 +1,7 @@
-/** Versioned source-file fingerprints make ZIP upgrades auditable without keeping
- * the previous release unpacked. Never include mutable user data or local keys. */
+/** Versioned source-file fingerprints make ZIP upgrades auditable without
+ * keeping
+ * the previous release unpacked. Never include mutable user data or local keys.
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -31,18 +33,23 @@ export function sourceManifest(root) {
    */
   function scan(dir) {
     if (!fs.existsSync(path.join(root, dir))) return;
-    for (const item of fs.readdirSync(path.join(root, dir), {withFileTypes: true}).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)) {
+    for (const item of fs.readdirSync(path.join(root, dir), {
+      withFileTypes:
+        true,
+    }).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)) {
       const name = `${dir}/${item.name}`;
       if (item.isDirectory()) scan(name);
       else if (item.isFile() && /\.(?:js|mjs|json)$/.test(item.name))
         files[name] = hash(path.join(root, name));
-      else if (item.isSymbolicLink()) throw new Error(`Symlink in source release: ${name}`);
+      else if (item.isSymbolicLink()) throw new Error(
+        `Symlink in source release: ${name}`);
     }
   }
   for (const dir of MODULE_DIRS) scan(dir);
   return {
     schema: 1,
-    version: JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version,
+    version: JSON.parse(fs.readFileSync(path.join(root, 'package.json'),
+      'utf8')).version,
     files,
   };
 }
@@ -66,7 +73,8 @@ export function writeSourceManifest(root) {
  * @return {*} Parsed JSON value.
  */
 export function readSourceManifest(root) {
-  const manifest = JSON.parse(fs.readFileSync(path.join(root, FILENAME), 'utf8'));
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, FILENAME),
+    'utf8'));
   if (manifest?.schema !== 1 || typeof manifest.version !== 'string' ||
     !manifest.files || typeof manifest.files !== 'object' ||
     Array.isArray(manifest.files))
@@ -90,7 +98,8 @@ export function verifySourceManifest(root) {
   const expected = readSourceManifest(root);
   const actual = sourceManifest(root);
   if (JSON.stringify(actual) !==
-    JSON.stringify(expected)) throw new Error('Source manifest differs from release files');
+    JSON.stringify(expected)) throw new Error(
+      'Source manifest differs from release files');
   return expected;
 }
 const isCli = process.argv[1] && path.resolve(process.argv[1]) ===
@@ -100,7 +109,8 @@ if (isCli) {
     const root = path.resolve(process.argv[3] || '.');
     if (process.argv[2] === 'create') writeSourceManifest(root);
     else if (process.argv[2] === 'verify') verifySourceManifest(root);
-    else throw new Error('Usage: node scripts/release-manifest.js create|verify [root]');
+    else throw new Error(
+      'Usage: node scripts/release-manifest.js create|verify [root]');
     console.log('WCM source manifest OK');
   } catch (error) {console.error(error.message); process.exitCode = 1;}
 }

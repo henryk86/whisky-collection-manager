@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {matchingBottlings, bottlingChoiceDialog, bottlingChoiceOptions} from '../../public/js/features/forms/bottling-choice.js';
+import {matchingBottlings, bottlingChoiceDialog, bottlingChoiceOptions}
+  from '../../public/js/features/forms/bottling-choice.js';
 import {createEditors} from '../../public/js/features/editor-controller.js';
 
 const collection = {
@@ -23,7 +24,8 @@ const collection = {
 };
 
 test(
-  'chooser searches existing bottlings by name, distillery and bottler without mutating them',
+  'chooser searches existing bottlings by name, distillery and bottler \
+without mutating them',
   () => {
     assert.deepEqual(
       matchingBottlings(collection, 'islay').map(entry => entry.id),
@@ -54,7 +56,12 @@ test(
 );
 
 test('chooser escapes untrusted whisky names and identifiers', () => {
-  const malicious = {bottlings: [{id: 'x" onclick="oops', name: '<img src=x onerror=alert(1)>', bottles: []}]};
+  const malicious = {
+    bottlings: [{
+      id: 'x" onclick="oops',
+      name: '<img src=x onerror=alert(1)>', bottles: [],
+    }],
+  };
   const html = bottlingChoiceDialog(malicious);
   assert.match(html, /&lt;img src=x onerror=alert\(1\)&gt;/);
   assert.doesNotMatch(html, /<img src=x/);
@@ -62,7 +69,8 @@ test('chooser escapes untrusted whisky names and identifiers', () => {
 });
 
 test(
-  'global action chooses reuse or new bottling; detail action still adds to selected bottling',
+  'global action chooses reuse or new bottling; detail action still adds to \
+selected bottling',
   () => {
     const state = {collection, selected: 'whisky-a'};
     const calls = [];

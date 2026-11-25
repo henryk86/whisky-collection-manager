@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {createTranslator, availableLanguages, chooseLanguage, t} from '../../public/js/i18n/index.js';
+import {
+  createTranslator, availableLanguages, chooseLanguage,
+  t
+} from '../../public/js/i18n/index.js';
 
 const catalog = JSON.parse(fs.readFileSync(
   new URL('../../public/locales/de.json', import.meta.url),
@@ -13,7 +16,8 @@ const registry = JSON.parse(fs.readFileSync(
 ));
 
 test(
-  'German catalog consists of stable named keys instead of German source sentences',
+  'German catalog consists of stable named keys instead of German source \
+sentences',
   () => {
     assert.equal(registry.de, 'Deutsch');
     assert.ok(Object.keys(catalog).length >= 650);
@@ -46,13 +50,15 @@ test(
     assert.ok(
       !Object.keys(catalog).some(key =>
         /[äöüß]|[a-z]\.[a-z]\.[a-z]\.|\.2564a$/iu.test(key)),
-      'translation keys must be stable English names, not transliterations or generated hashes'
+      'translation keys must be stable English names, not transliterations \
+or generated hashes'
     );
   }
 );
 
 test(
-  'translator replaces named placeholders, ICU plurals and falls back to German by key',
+  'translator replaces named placeholders, ICU plurals and falls back to \
+German by key',
   () => {
     const german = {
       'common.actions.save': 'Speichern',
@@ -77,7 +83,8 @@ test(
 );
 
 test(
-  'invalid or unsupported language choices never redirect or change saved preference',
+  'invalid or unsupported language choices never redirect or change saved \
+preference',
   () => {
     assert.equal(availableLanguages().de, 'Deutsch');
     assert.equal(chooseLanguage('../en'), false);

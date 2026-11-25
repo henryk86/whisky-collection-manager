@@ -3,14 +3,19 @@
  * mutations.
  */
 import crypto from 'node:crypto';
-import {projectedWarehouseBottles} from '../../shared/warehouse-bottle-projection.js';
+import {projectedWarehouseBottles}
+  from '../../shared/warehouse-bottle-projection.js';
 import {createRoomExport, planRoomImport} from './room-transfer.js';
 import {read} from '../storage/collection-store.js';
 import {readWarehouse, changeWarehouse} from '../storage/warehouse-store.js';
 import {fail} from '../domain/errors.js';
 import {saveImage, deleteImage} from '../storage/photos.js';
-import {furnitureBounds, furnitureCollision, furnitureOverlap} from '../../shared/warehouse-placement.js';
-import {name, number, capacity, shelfFront, doorLeaves, glassFrame, doorRanges, shelfHeight, ensureShelfHeights, layout} from '../domain/warehouse-fields.js';
+import {furnitureBounds, furnitureCollision, furnitureOverlap}
+  from '../../shared/warehouse-placement.js';
+import {
+  name, number, capacity, shelfFront, doorLeaves, glassFrame, doorRanges,
+  shelfHeight, ensureShelfHeights, layout
+} from '../domain/warehouse-fields.js';
 
 /**
  * Derives the new id result from the supplied values.
@@ -75,7 +80,8 @@ function refuseOccupied(data, shelfIds) {
   // Deleting a physical bottle only changes collection.json. Old warehouse
   // references must not permanently block a now-empty room or shelf.
   const liveIds = new Set(physicalBottles().map(bottle => bottle.id));
-  for (const id of Object.keys(data.assignments)) if (!liveIds.has(id)) delete data.assignments[id];
+  for (const id of Object.keys(data.assignments)) if (!liveIds.has(
+    id)) delete data.assignments[id];
   if (Object.values(data.assignments).some(id => shelfIds.has(id))) throw fail(
     'Lagerort enthält Flaschen. Bitte zuerst umlagern.',
     409,
@@ -260,7 +266,8 @@ export const bulkUpdateFurniture = input => changeWarehouse(data => {
   }
   const updates = ids.map(id => {
     const {room, furniture} = furnishingById(data, id);
-    const next = layout({...furniture, ...changes, shelves: furniture.shelves}, room);
+    const next = layout({...furniture, ...changes, shelves: furniture.shelves},
+      room);
     ensureShelfHeights(furniture, furniture.shelves, next.itemHeight);
     return {furniture, next};
   });
@@ -555,7 +562,8 @@ function copiedName(source, siblings) {
 function ensureNoFurnitureCollision(room, item, others = room.furniture) {
   const conflict = furnitureCollision(room, item, others);
   if (conflict) throw fail(
-    `Lagermöbel überschneidet sich mit „${conflict.name}“ (Grundfläche und Höhenbereich)`,
+    `Lagermöbel überschneidet sich mit „${conflict
+      .name}“ (Grundfläche und Höhenbereich)`,
     409,
     "api.errors.furnitureOverlap",
     {name: conflict.name}
@@ -632,7 +640,8 @@ export const copyFurniture = (id, input = {}) => changeWarehouse(data => {
   const targetRoom = input.roomId === undefined ? source.room :
     roomById(data, input.roomId);
   if (input.withShelves !== undefined && typeof input.withShelves !==
-    'boolean') throw fail('Ungültige Kopieroption', 400, "api.errors.invalidCopyOption");
+    'boolean') throw fail('Ungültige Kopieroption', 400,
+      "api.errors.invalidCopyOption");
   const withShelves = input.withShelves !== false;
   const position = copyPosition(targetRoom, source.furniture);
   const item = {
@@ -691,7 +700,8 @@ export const copyShelf = (id, input = {}) => changeWarehouse(data => {
  * @param {*} known Known used by this operation.
  * @param {*} increaseCapacityTo Increase capacity to used by this operation.
  */
-function enforceAssignmentCapacity(data, shelf, shelfId, selectedIds, known, increaseCapacityTo) {
+function enforceAssignmentCapacity(data, shelf, shelfId, selectedIds, known,
+  increaseCapacityTo) {
   if (shelf.capacity === null) return;
   const selected = new Set(selectedIds);
   const others = Object.entries(data.assignments).filter(([id, assigned]) =>
@@ -729,7 +739,8 @@ export const assignBottle = (bottleId, input) => changeWarehouse(data => {
   if (id === null || id === '' || id === undefined) {
     delete data.assignments[bottleId]; return {bottleId, shelfId: null};
   }
-  if (typeof id !== 'string') throw fail('Ungültige Fach-ID', 400, "api.errors.invalidCompartmentID");
+  if (typeof id !== 'string') throw fail('Ungültige Fach-ID', 400,
+    "api.errors.invalidCompartmentID");
   const {shelf} = shelfById(data, id);
   enforceAssignmentCapacity(
     data,
@@ -742,7 +753,8 @@ export const assignBottle = (bottleId, input) => changeWarehouse(data => {
   data.assignments[bottleId] = id;
   // Removing stale references is safe: absent bottles can no longer be
   // reassigned.
-  for (const bid of Object.keys(data.assignments)) if (!known.has(bid)) delete data.assignments[bid];
+  for (const bid of Object.keys(data.assignments)) if (!known.has(
+    bid)) delete data.assignments[bid];
   return {bottleId, shelfId: id};
 });
 
@@ -770,7 +782,8 @@ export const assignBottles = input => changeWarehouse(data => {
   );
   const target = input?.shelfId;
   if (target !== null && (typeof target !== 'string' ||
-    !target.trim())) throw fail('Invalid shelf ID', 400, "api.errors.invalidShelfID");
+    !target.trim())) throw fail('Invalid shelf ID', 400,
+      "api.errors.invalidShelfID");
   const shelf = target === null ? null : shelfById(data, target).shelf;
   if (shelf) enforceAssignmentCapacity(
     data,
@@ -785,7 +798,8 @@ export const assignBottles = input => changeWarehouse(data => {
     if (target === null) delete data.assignments[id];
     else data.assignments[id] = target;
   }
-  for (const id of Object.keys(data.assignments)) if (!known.has(id)) delete data.assignments[id];
+  for (const id of Object.keys(data.assignments)) if (!known.has(
+    id)) delete data.assignments[id];
   return {count: ids.length, shelfId: target};
 });
 
@@ -847,6 +861,7 @@ export const importRooms = input => changeWarehouse(data => {
     data.rooms[index] = room;
   }
   data.rooms.push(...plan.toAdd);
-  for (const [bottleId, shelfId] of plan.transfers) data.assignments[bottleId] = shelfId;
+  for (const [bottleId, shelfId] of plan.transfers) data.assignments[bottleId
+  ] = shelfId;
   return plan.summary;
 });

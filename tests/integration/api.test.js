@@ -4,7 +4,8 @@ import {spawn} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {startTestServer as start, requestJson as api} from '../helpers/server.js';
+import {startTestServer as start, requestJson as api}
+  from '../helpers/server.js';
 test(
   'lifecycle: CRUD, uniqueness, atomic JSON, exports and upload',
   async () => {
@@ -49,7 +50,9 @@ test(
         status: 'open', comment: 'Getestet',
       });
       assert.equal(patch.data.status, 'open');
-      const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+      const png =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA\
+AAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
       const upload = await api(
         base,
         `/api/bottles/${bottleId}/photos`,
@@ -89,7 +92,8 @@ test(
       assert.equal((await zip.arrayBuffer()).byteLength > 100, true);
       const csv = await fetch(base + '/api/export/csv');
       assert.match(await csv.text(), /Uigeadail/);
-      const db = JSON.parse(fs.readFileSync(path.join(dir, 'data/collection.json')));
+      const db = JSON.parse(fs.readFileSync(path.join(dir,
+        'data/collection.json')));
       assert.equal(db.bottlings[0].bottles.length, 2);
       assert.equal(db.bottlings[0].images, undefined);
       assert.equal(db.bottlings[0].bottles[0].photos.length, 2);
@@ -131,7 +135,8 @@ test(
   }
 );
 test(
-  'previously assigned inventory numbers can be manually reused after a correction, but never while occupied',
+  'previously assigned inventory numbers can be manually reused after a \
+correction, but never while occupied',
   async () => {
     const ctx = await start();
     try {
@@ -280,13 +285,17 @@ test(
   }
 );
 test(
-  'physical bottle type: regular 700 ml and 30 ml sample under the same bottling',
+  'physical bottle type: regular 700 ml and 30 ml sample under the same \
+bottling',
   async () => {
     const ctx = await start();
     try {
       const created = await api(ctx.base, '/api/bottlings', 'POST', {
         name: 'Mixed release', volumeMl: 700,
-        firstBottle: {inventoryNumber: '000700', volumeType: 'standard', status: 'closed'},
+        firstBottle: {
+          inventoryNumber: '000700', volumeType: 'standard',
+          status: 'closed',
+        },
       });
       assert.equal(created.status, 201, JSON.stringify(created.data));
       assert.equal(created.data.bottling.volumeType, undefined);
@@ -365,7 +374,8 @@ test('legacy labelType is discarded on write and JSON import', async () => {
     );
     const after = (await api(ctx.base, '/api/collection')).data;
     assert.ok(!Object.hasOwn(after.bottlings[0].bottles[0], 'labelType'));
-    const persisted = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json'), 'utf8'));
+    const persisted = JSON.parse(fs.readFileSync(path.join(ctx.dir,
+      'data/collection.json'), 'utf8'));
     assert.ok(!Object.hasOwn(persisted.bottlings[0].bottles[0], 'labelType'));
     assert.ok(!Object.hasOwn(persisted.bottlings[0].bottles[0], 'labelCode'));
   }
@@ -399,7 +409,8 @@ test(
       const csvText = await csv.text();
       assert.ok(csvText.includes('Inventarnummer'));
       assert.ok(!csvText.includes('Etikettencode'));
-      const db = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json')));
+      const db = JSON.parse(fs.readFileSync(path.join(ctx.dir,
+        'data/collection.json')));
       assert.equal(db.schemaVersion, 6);
       assert.equal(db.bottlings[0].bottles[0].inventoryNumber, '000123');
       assert.equal(db.bottlings[0].bottles[0].labelCode, undefined);
@@ -413,7 +424,8 @@ test(
 // A historical database is upgraded in place; only pre-schema-5 tasting content
 // is disposable.
 test(
-  'schema 4 upgrade retains bottles, inventory, photos, files, distilleries, settings and warehouse assignments',
+  'schema 4 upgrade retains bottles, inventory, photos, files, distilleries,\
+ settings and warehouse assignments',
   async () => {
     const ctx = await start();
     try {
@@ -458,7 +470,9 @@ test(
         )).status,
         200
       );
-      const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+      const png =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA\
+AAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
       assert.equal(
         (await api(
           ctx.base,
@@ -468,7 +482,8 @@ test(
         )).status,
         201
       );
-      const pdf = Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n');
+      const pdf = Buffer.
+        from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n');
       assert.equal(
         (await api(
           ctx.base,
@@ -500,7 +515,10 @@ test(
       const child = spawn(
         process.execPath,
         ['--input-type=module', '-e',
-          "import {initialize,read} from './server/storage/collection-store.js';import {readWarehouse} from './server/storage/warehouse-store.js';initialize();console.log(JSON.stringify({collection:read(),warehouse:readWarehouse()}));"],
+          "import {initialize,read} from './server/storage/collection-store.\
+js';import {readWarehouse} from './server/storage/warehouse-store.js';\
+initialize();console.log(JSON.stringify({collection:read(),\
+warehouse:readWarehouse()}));"],
         {
           cwd: process.cwd(),
           env: {...process.env, WHISKY_DATA_DIR: ctx.dir},
@@ -576,7 +594,8 @@ test(
   }
 );
 test(
-  'schema 5 to 6 preserves existing tastings, rating comments, flights, and warehouse data',
+  'schema 5 to 6 preserves existing tastings, rating comments, flights, and \
+warehouse data',
   async () => {
     const ctx = await start();
     try {
@@ -608,7 +627,8 @@ test(
       const child = spawn(
         process.execPath,
         ['--input-type=module', '-e',
-          "import {initialize,read} from './server/storage/collection-store.js';initialize();console.log(JSON.stringify(read()));"],
+          "import {initialize,read} from './server/storage/collection-store.\
+js';initialize();console.log(JSON.stringify(read()));"],
         {
           cwd: process.cwd(),
           env: {...process.env, WHISKY_DATA_DIR: ctx.dir},
@@ -653,7 +673,8 @@ test(
   async () => {
     const ctx = await start();
     try {
-      const created = await api(ctx.base, '/api/bottlings', 'POST', {name: 'Imported tasting'});
+      const created = await api(ctx.base, '/api/bottlings', 'POST',
+        {name: 'Imported tasting'});
       assert.equal(created.status, 201);
       const id = created.data.bottling.id;
       const tasting = await api(
@@ -706,7 +727,8 @@ test(
       const child = spawn(
         process.execPath,
         ['--input-type=module', '-e',
-          "import {initialize} from './server/storage/collection-store.js';initialize();"],
+          "import {initialize} from './server/storage/collection-store.js';\
+initialize();"],
         {
           cwd: process.cwd(),
           env: {...process.env, WHISKY_DATA_DIR: ctx.dir},
@@ -726,7 +748,8 @@ test(
   }
 );
 test(
-  'JSON import upgrades old schema without retaining old tastings and rejects stale summary fields in schema 6',
+  'JSON import upgrades old schema without retaining old tastings and \
+rejects stale summary fields in schema 6',
   async () => {
     const ctx = await start();
     try {

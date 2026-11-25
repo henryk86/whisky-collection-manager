@@ -45,7 +45,8 @@ function activeMerge() {
  */
 function main() {
   const file = process.argv[2];
-  if (!file) throw new Error('Usage: validate-commit-message.js COMMIT_MSG_FILE');
+  if (!file) throw new Error(
+    'Usage: validate-commit-message.js COMMIT_MSG_FILE');
   if (activeMerge()) return;
   const result = validateMessage(fs.readFileSync(file, 'utf8'));
   console.log(`Commit-Nachricht OK: ${result.type}${result.scope ?
@@ -56,7 +57,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) ===
   fileURLToPath(import.meta.url)) {
   try {main();} catch (error) {
     console.error(`Commit abgelehnt: ${error.message}`);
-    console.error('Erwartet z. B. fix(warehouse): Fehler korrigieren oder feat: neue Funktion');
+    console.error(
+      'Erwartet z. B. fix(warehouse): Fehler korrigieren oder feat: neue \
+Funktion');
     process.exitCode = 1;
   }
 }

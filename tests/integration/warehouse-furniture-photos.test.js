@@ -5,9 +5,12 @@ import path from 'node:path';
 import {startTestServer, requestJson as api} from '../helpers/server.js';
 import {writeReadableZip, inspectReadableZip} from '../../shared/backup-zip.js';
 
-const px = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAOfb9AcAAAAASUVORK5CYII=';
+const px =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0l\
+EQVR42mP8/x8AAwMCAOfb9AcAAAAASUVORK5CYII=';
 test(
-  'furniture photo API: upload, reorder, validate, preserve on furniture edit, remove and backup-covered storage',
+  'furniture photo API: upload, reorder, validate, preserve on furniture \
+edit, remove and backup-covered storage',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -57,7 +60,10 @@ test(
         )).status,
         400
       );
-      const saved = (await api(ctx.base, url, 'PATCH', {...furniture, name: 'Renamed shelf'})).data;
+      const saved = (await api(ctx.base, url, 'PATCH', {
+        ...furniture,
+        name: 'Renamed shelf',
+      })).data;
       assert.equal(saved.photos?.length, 2);
       assert.deepEqual(
         saved.photos.map(photo => photo.id),

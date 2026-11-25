@@ -103,7 +103,8 @@ test(
 );
 
 test(
-  'navigation retains bottle overview across detail visits and restores mode and page with back/forward',
+  'navigation retains bottle overview across detail visits and restores \
+mode and page with back/forward',
   () => {
     const context = setup();
     context.state.overviewMode = 'bottles';

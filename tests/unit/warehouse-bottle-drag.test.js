@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mountWarehouseBottleDrag, shelfDropStatus} from '../../public/js/ui/warehouse-bottle-drag.js';
+import {mountWarehouseBottleDrag, shelfDropStatus}
+  from '../../public/js/ui/warehouse-bottle-drag.js';
 
 /**
  * Derives the fixture result from the supplied values.
@@ -23,7 +24,8 @@ function fixture() {
 }
 
 test(
-  'bottle drop checks current assignment and live occupancy without inventing available space',
+  'bottle drop checks current assignment and live occupancy without \
+inventing available space',
   () => {
     const w = fixture();
     assert.equal(
@@ -100,25 +102,26 @@ function fakeDom() {
     closest: selector => selector === '.warehouse-bottle-symbol' ?
       button : null,
   };
-  const shelves = Object.fromEntries(['source', 'destination', 'full', 'disabled'].map(id =>
-    [
-      id,
-      {
-        dataset: {shelfId: id},
-        classList: classList(),
-        /**
-         * Performs the closest lifecycle action.
-         *
-         * @param {function(...*): *} selector Selector input for this
-         * operation.
-         * @return {!Object} Result computed from the supplied inputs.
-         */
-        closest(selector) {
-          return selector === '.warehouse-shelf' ?
-            this : null;
+  const shelves = Object.fromEntries(['source', 'destination', 'full',
+    'disabled'].map(id =>
+      [
+        id,
+        {
+          dataset: {shelfId: id},
+          classList: classList(),
+          /**
+           * Performs the closest lifecycle action.
+           *
+           * @param {function(...*): *} selector Selector input for this
+           * operation.
+           * @return {!Object} Result computed from the supplied inputs.
+           */
+          closest(selector) {
+            return selector === '.warehouse-shelf' ?
+              this : null;
+          },
         },
-      },
-    ]));
+      ]));
   const panel = {
     classList: classList(),
     ownerDocument: {
@@ -156,7 +159,10 @@ function fakeDom() {
      * @param {*} name Environment variable or setting name.
      * @param {*} listener Value used by this operation.
      */
-    addEventListener(name, listener) {if (!listeners.has(name)) listeners.set(name, []); listeners.get(name).push(listener);},
+    addEventListener(name, listener) {
+      if (!listeners.has(name)) listeners.set(
+        name, []); listeners.get(name).push(listener);
+    },
     /**
      * Removes or resets event listener.
      *
@@ -208,7 +214,8 @@ function fakeDom() {
 }
 
 test(
-  'pointer relocation keeps a tap as a detail click; drag highlights, saves once and suppresses modal click',
+  'pointer relocation keeps a tap as a detail click; drag highlights, saves \
+once and suppresses modal click',
   async () => {
     const warehouse = fixture();
     const dom = fakeDom();
@@ -267,7 +274,8 @@ test(
 );
 
 test(
-  'overcapacity shelf requests confirmation flow, while cancelled gestures clean up',
+  'overcapacity shelf requests confirmation flow, while cancelled gestures \
+clean up',
   async () => {
     const w = fixture();
     const dom = fakeDom();
@@ -318,7 +326,8 @@ test(
 );
 
 test(
-  'drag across two racks on a long virtual wall auto-scrolls and saves only at the destination',
+  'drag across two racks on a long virtual wall auto-scrolls and saves only \
+at the destination',
   async () => {
     const warehouse = fixture();
     const original = warehouse.rooms[0].furniture[0];
@@ -333,7 +342,12 @@ test(
        * Retrieves bounding client rect from the available state.
        * @return {!Object} Structured result assembled from the input data.
        */
-      getBoundingClientRect() {return {left: 0, right: 140, top: 0, bottom: 100};},
+      getBoundingClientRect() {
+        return {
+          left: 0, right: 140, top: 0,
+          bottom: 100,
+        };
+      },
     };
     dom.panel.querySelector = selector => selector ===
       '.warehouse-wall-scroll' ? scroll : null;

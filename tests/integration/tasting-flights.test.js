@@ -20,7 +20,8 @@ test(
     const server = await startTestServer();
     try {
       const base = server.base;
-      const owned = (await api(base, '/api/bottlings', 'POST', {name: 'Collection release'})).data.bottling;
+      const owned = (await api(base, '/api/bottlings', 'POST',
+        {name: 'Collection release'})).data.bottling;
       const note = (await api(
         base,
         `/api/bottlings/${owned.id}/tastings`,
@@ -37,7 +38,10 @@ test(
       const other = (await createFlight(base, 'Other session')).data;
       const endpoint = `/api/tasting-flights/${flight.id}/tastings`;
       assert.equal(
-        (await api(base, endpoint, 'PUT', {tastingIds: [external.id, note.id]})).status,
+        (await api(base, endpoint, 'PUT', {
+          tastingIds: [external.id,
+          note.id],
+        })).status,
         200
       );
       assert.deepEqual(
@@ -54,11 +58,17 @@ test(
         409
       );
       assert.equal(
-        (await api(base, endpoint, 'PUT', {tastingIds: [note.id, note.id]})).status,
+        (await api(base, endpoint, 'PUT', {
+          tastingIds: [note.id,
+          note.id],
+        })).status,
         400
       );
       assert.equal(
-        (await api(base, endpoint, 'PUT', {tastingIds: [note.id, 'missing']})).status,
+        (await api(base, endpoint, 'PUT', {
+          tastingIds: [note.id,
+            'missing'],
+        })).status,
         400
       );
       assert.deepEqual(
@@ -66,7 +76,10 @@ test(
         []
       );
       assert.equal(
-        (await api(base, endpoint, 'PUT', {tastingIds: [note.id, external.id]})).status,
+        (await api(base, endpoint, 'PUT', {
+          tastingIds: [note.id,
+          external.id],
+        })).status,
         200
       );
       const moved = await api(
@@ -80,7 +93,8 @@ test(
       assert.deepEqual(
         after.tastingFlights.find(f => f.id === flight.id).tastingIds,
         [note.id, external.id],
-        'acquiring an unowned whisky does not change the tasting identity or order'
+        'acquiring an unowned whisky does not change the tasting identity \
+or order'
       );
       assert.equal(after.bottlings[0].tastings.length, 2);
       assert.equal(
@@ -110,12 +124,14 @@ test(
 );
 
 test(
-  'flight creates new owned and external tasting atomically, never creating inventory for external',
+  'flight creates new owned and external tasting atomically, never creating \
+inventory for external',
   async () => {
     const server = await startTestServer();
     try {
       const base = server.base;
-      const owned = (await api(base, '/api/bottlings', 'POST', {name: 'Owned'})).data.bottling;
+      const owned = (await api(base, '/api/bottlings', 'POST',
+        {name: 'Owned'})).data.bottling;
       const flight = (await createFlight(base)).data;
       const path = `/api/tasting-flights/${flight.id}/tastings`;
       const first = await api(
@@ -135,11 +151,17 @@ test(
       assert.equal(external.status, 201);
       assert.equal(external.data.bottlingId, null);
       assert.equal(
-        (await api(base, path, 'POST', {bottlingId: 'unknown', tastedOn: day})).status,
+        (await api(base, path, 'POST', {
+          bottlingId: 'unknown',
+          tastedOn: day,
+        })).status,
         404
       );
       assert.equal(
-        (await api(base, path, 'POST', {bottling: {name: ''}, tastedOn: day})).status,
+        (await api(base, path, 'POST', {
+          bottling: {name: ''},
+          tastedOn: day,
+        })).status,
         400
       );
       const data = (await api(base, '/api/collection')).data;
@@ -180,7 +202,8 @@ test(
       )).data;
       assert.equal((await createFlight(base, '')).status, 400);
       assert.equal(
-        (await api(base, '/api/tasting-flights', 'POST', {name: 'No date'})).status,
+        (await api(base, '/api/tasting-flights', 'POST', {name: 'No date'}))
+          .status,
         400
       );
       const flight = (await createFlight(base)).data;

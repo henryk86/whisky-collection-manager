@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {normalizeImportPayload} from '../../public/js/features/import/payload.js';
-import {validateExtensionPayload} from '../../public/js/features/whiskybase/payload.js';
+import {normalizeImportPayload}
+  from '../../public/js/features/import/payload.js';
+import {validateExtensionPayload}
+  from '../../public/js/features/whiskybase/payload.js';
 
 test(
   'a provider-neutral payload retains allowed fields and strips unknown data',
@@ -47,12 +49,16 @@ test(
       validateExtensionPayload(raw).fields.whiskybaseUrl,
       raw.fields.whiskybaseUrl
     );
-    assert.throws(() => validateExtensionPayload({...raw, fields: {...raw.fields, whiskybaseUrl: 'https://evil.invalid/'}}));
+    assert.throws(() => validateExtensionPayload({
+      ...raw,
+      fields: {...raw.fields, whiskybaseUrl: 'https://evil.invalid/'},
+    }));
   }
 );
 
 test(
-  'generic payload rejects missing names, unsafe image tokens and malformed schemas',
+  'generic payload rejects missing names, unsafe image tokens and malformed \
+schemas',
   () => {
     const raw = {version: 2, source: 'external', fields: {name: 'Example'}};
     assert.throws(
@@ -70,7 +76,10 @@ test(
       /Whiskyname/
     );
     assert.throws(
-      () => normalizeImportPayload({...raw, fields: []}, {referenceId: 'EXT-1'}),
+      () => normalizeImportPayload({...raw, fields: []}, {
+        referenceId:
+          'EXT-1',
+      }),
       /Importdaten/
     );
     assert.throws(

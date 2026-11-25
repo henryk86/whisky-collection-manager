@@ -5,7 +5,8 @@ import {toast} from '../ui/notifications.js';
 import {formValues} from './forms/values.js';
 import {uploadPhotos} from './photos.js';
 import {uploadFiles} from './files.js';
-import {bottlingChoiceDialog, bottlingChoiceOptions, matchingBottlings} from './forms/bottling-choice.js';
+import {bottlingChoiceDialog, bottlingChoiceOptions, matchingBottlings}
+  from './forms/bottling-choice.js';
 /**
  * Coordinates forms and API calls; templates and persistence are separate
  * modules.
@@ -90,7 +91,8 @@ export function createEditors({
    * @param {*} bottling Bottling record being inspected or updated.
    * @param {!Object=} options Options controlling the operation.
    */
-  function showNewBottleEditor(bottling, {fromImport = false, fromOverview = false} = {}) {
+  function showNewBottleEditor(bottling, {fromImport = false, fromOverview =
+    false} = {}) {
     const token = fromImport ? getPendingImageToken() : null;
     let form = bottleForm({}, bottling.id);
     if (fromOverview) form = form.replace(
@@ -98,7 +100,9 @@ export function createEditors({
       '<form id="bottle-form" data-from-overview="1"'
     );
     const photoOption = token ?
-      `<label class="import-photo form-field full"><input type="checkbox" name="importReferencePhoto" checked> ${t("imports.images.copyReference")}</label>` : '';
+      `<label class="import-photo form-field full"><input type="checkbox" \
+name="importReferencePhoto" checked> ${t("imports.images.copyReference")}</l\
+abel>` : '';
     showModal(
       `Weitere Flasche · ${bottling.name}`,
       form.replace('</form>', `${photoOption}</form>`),
@@ -153,7 +157,8 @@ export function createEditors({
     if (form.dataset.saving === '1') return;
     form.dataset.saving = '1';
     form.setAttribute('aria-busy', 'true');
-    const buttons = [...form.querySelectorAll('button[type="submit"],input[type="submit"]')];
+    const buttons = [...form.querySelectorAll(
+      'button[type="submit"],input[type="submit"]')];
     const previouslyDisabled = buttons.map(button => button.disabled);
     buttons.forEach(button => {button.disabled = true;});
     try {
@@ -221,7 +226,8 @@ export function createEditors({
             form.querySelector('#import-image:checked')) {
             try {
               await request(
-                `/api/bottles/${encodeURIComponent(firstBottleId)}/photos/from-stage`,
+                `/api/bottles/${encodeURIComponent(firstBottleId
+                )}/photos/from-stage`,
                 {
                   method: 'POST',
                   body: JSON.stringify({token: getPendingImageToken()}),

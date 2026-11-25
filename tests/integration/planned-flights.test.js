@@ -28,7 +28,10 @@ test(
         date,
         notes: 'Plan only',
         phase: 'planned',
-        planItems: [{bottlingId: bottling.id, bottleId: bottle.id, reason: 'manual'}],
+        planItems: [{
+          bottlingId: bottling.id, bottleId: bottle.id,
+          reason: 'manual',
+        }],
       };
       const fresh = await api(base, '/api/tasting-flights', 'POST', body);
       assert.equal(fresh.status, 201, JSON.stringify(fresh.data));
@@ -158,7 +161,8 @@ test(
   }
 );
 test(
-  'saved collection views persist through collection API and reject unsafe payloads atomically',
+  'saved collection views persist through collection API and reject unsafe \
+payloads atomically',
   async () => {
     const server = await startTestServer();
     try {
@@ -180,11 +184,15 @@ test(
           sort: 'name',
           view: 'table',
           mode: 'bottlings',
-          columns: {bottlings: ['name', 'rating'], bottles: ['name', 'inventory']},
+          columns: {
+            bottlings: ['name', 'rating'], bottles: ['name',
+              'inventory'],
+          },
         },
       };
       assert.equal(
-        (await api(base, '/api/settings/saved-views', 'PUT', {views: [view]})).status,
+        (await api(base, '/api/settings/saved-views', 'PUT',
+          {views: [view]})).status,
         200
       );
       assert.deepEqual(
@@ -214,7 +222,8 @@ test(
         [view]
       );
       assert.equal(
-        (await api(base, '/api/settings', 'PATCH', {establishedYear: 2015})).status,
+        (await api(base, '/api/settings', 'PATCH', {establishedYear: 2015}))
+          .status,
         200
       );
       assert.deepEqual(

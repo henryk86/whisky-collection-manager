@@ -29,13 +29,17 @@ const collection = {
 };
 
 test(
-  'flight routes support direct navigation and back links without impacting ordinary tasting URLs',
+  'flight routes support direct navigation and back links without impacting \
+ordinary tasting URLs',
   () => {
     assert.deepEqual(
       parseRoute(routeUrl('tasting-flight', 'flight-1').split('?')[1]),
       {page: 'tasting-flight', selected: 'flight-1'}
     );
-    const url = routeUrl('tasting', 'b-1', {tastingId: 'new', flightId: 'flight-1'});
+    const url = routeUrl('tasting', 'b-1', {
+      tastingId: 'new',
+      flightId: 'flight-1',
+    });
     assert.equal(parseRoute(url.split('?')[1]).flightId, 'flight-1');
     assert.equal(
       parseRoute(routeUrl('external-tasting', 'new', {flightId: 'flight-1'})
@@ -51,7 +55,8 @@ test(
 );
 
 test(
-  'flight UI shows the session and individual notes with stable one-flight membership links',
+  'flight UI shows the session and individual notes with stable one-flight \
+membership links',
   () => {
     let html = ''; const state =
       {collection, page: 'tastings-home', selected: null};

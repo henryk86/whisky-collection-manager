@@ -5,10 +5,12 @@ import {
   validatePhotoAdjustments, adjustPhotoPixels, autoPhotoAdjustments,
   resetPhotoAdjustmentGroup, whiteBalanceFromArea
 } from '../../public/js/features/photo-editor/adjustments.js';
-import {basePhotoPath, displayPhotoPath, editorPhotoSourceSettings} from '../../shared/photo-images.js';
+import {basePhotoPath, displayPhotoPath, editorPhotoSourceSettings}
+  from '../../shared/photo-images.js';
 
 test(
-  'photo corrections accept only bounded, finite, explicitly supported controls',
+  'photo corrections accept only bounded, finite, explicitly supported \
+controls',
   () => {
     assert.equal(PHOTO_ADJUSTMENT_FIELDS.length, 9);
     assert.deepEqual(validatePhotoAdjustments({}), EMPTY_PHOTO_ADJUSTMENTS);
@@ -31,7 +33,8 @@ test(
 );
 
 test(
-  'pixel corrections preserve alpha, keep a neutral edit pixel-exact, and process all light/color controls',
+  'pixel corrections preserve alpha, keep a neutral edit pixel-exact, and \
+process all light/color controls',
   () => {
     const pixels = {
       width: 3, height: 2, data: new Uint8ClampedArray([
@@ -76,12 +79,16 @@ test(
       ).data[0] < 40,
       true
     );
-    assert.throws(() => adjustPhotoPixels({width: 2, height: 1, data: new Uint8Array(4)}, {}));
+    assert.throws(() => adjustPhotoPixels({
+      width: 2, height: 1,
+      data: new Uint8Array(4),
+    }, {}));
   }
 );
 
 test(
-  'automatic correction only samples the opaque subject and remains within accepted slider limits',
+  'automatic correction only samples the opaque subject and remains within \
+accepted slider limits',
   () => {
     const source = {
       width: 2, height: 2, data: new Uint8ClampedArray([
@@ -99,7 +106,8 @@ test(
 );
 
 test(
-  'edited image only overrides its source, retaining original/cutout independent',
+  'edited image only overrides its source, retaining original/cutout \
+independent',
   () => {
     const photo = {
       path: 'images/example/original.png',
@@ -143,7 +151,8 @@ test('reset icons clear only their own adjustment group', () => {
 });
 
 test(
-  'white-balance eyedropper neutralizes selected gray region and leaves other sliders alone',
+  'white-balance eyedropper neutralizes selected gray region and leaves \
+other sliders alone',
   () => {
     const original = {
       width: 24, height: 18, data: new Uint8ClampedArray(24 *
@@ -154,7 +163,10 @@ test(
       original.data.set(x < 4 ? [0, 255, 0, 0] : [168, 150, 128, 255], i);
     }
     const originalCopy = new Uint8ClampedArray(original.data);
-    const base = {contrast: 9, exposure: .2, temperature: 50, tint: -10, sharpen: 8};
+    const base = {
+      contrast: 9, exposure: .2, temperature: 50, tint: -10,
+      sharpen: 8,
+    };
     const result = whiteBalanceFromArea(
       original,
       {x: 5, y: 2, width: 17, height: 12},
@@ -206,7 +218,8 @@ test(
 );
 
 test(
-  'white-balance eyedropper rejects clipped highlights instead of inventing settings',
+  'white-balance eyedropper rejects clipped highlights instead of inventing \
+settings',
   () => {
     const source = {
       width: 8, height: 8, data: new Uint8ClampedArray(8 *
@@ -261,7 +274,8 @@ test(
     assert.deepEqual(
       editorPhotoSourceSettings(photo),
       {original: {exposure: .7}, cutout: {exposure: .7}},
-      'legacy cutouts inherit the original adjustments when no cutout correction exists'
+      'legacy cutouts inherit the original adjustments when no cutout \
+correction exists'
     );
     photo.adjustment = {sourcePath: photo.cutout.path, settings: {shadows: 15}};
     assert.deepEqual(

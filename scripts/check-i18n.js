@@ -23,18 +23,21 @@ const files = walk('public/js').concat('public/app.js');
 const keys = new Set();
 for (const file of files) {
   if (file.includes(`${path.sep}i18n${path.sep}`)) continue;
-  const source = fs.readFileSync(file, 'utf8');
+  // A JavaScript line continuation does not change a literal key.
+  const source = fs.readFileSync(file, 'utf8').replace(/\\\r?\n/g, '');
   // Translation identifiers are domain keys, never concatenated pieces of
   // source text.
   if (/\bt\(\s*['"][^'"]+['"]\s*\+/u.test(source)) {
     throw new Error(`Dynamically assembled translation key in ${file}`);
   }
-  for (const match of source.matchAll(/\bt\(\s*(['"])([a-zA-Z][a-zA-Z0-9.]*)\1/gu)) {
+  for (const match of source.matchAll(
+    /\bt\(\s*(['"])([a-zA-Z][a-zA-Z0-9.]*)\1/gu)) {
     if (!match[2].endsWith('.')) keys.add(match[2]);
   }
 }
 for (const key of keys) {
-  if (!Object.hasOwn(catalog, key)) throw new Error(`Missing German translation key: ${key}`);
+  if (!Object.hasOwn(catalog, key)) throw new Error(
+    `Missing German translation key: ${key}`);
 }
 for (const key of Object.keys(catalog)) {
   if (!/^[a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9]+)+$/u.test(key)) {
@@ -47,20 +50,30 @@ for (const key of Object.keys(catalog)) {
 }
 // Explicit lookup tables for persisted type/front/camera IDs must also point to
 // valid keys.
-const warehouseSource = fs.readFileSync('public/js/views/warehouse.js', 'utf8');
-for (const [, key] of warehouseSource.matchAll(/['"](warehouse\.(?:furniture\.types|front|camera|navigation)\.[a-zA-Z]+)['"]/gu)) {
-  if (!Object.hasOwn(catalog, key)) throw new Error(`Missing dynamic warehouse translation key: ${key}`);
+const warehouseSource = fs.readFileSync('public/js/views/warehouse.js',
+  'utf8').replace(/\\\r?\n/g, '');
+for (const [, key] of warehouseSource.matchAll(
+  new RegExp(
+    '[\'"](warehouse\\.(?:furniture\\.types|fro' +
+    'nt|camera|navigation)\\.[a-zA-Z]+)[\'"]',
+    'gu'
+  ))) {
+  if (!Object.hasOwn(catalog, key)) throw new Error(
+    `Missing dynamic warehouse translation key: ${key}`);
 }
-const registry = JSON.parse(fs.readFileSync('public/locales/index.json', 'utf8'));
+const registry = JSON.parse(fs.readFileSync('public/locales/index.json',
+  'utf8'));
 for (const code of Object.keys(registry)) {
   if (code === 'de') continue;
-  const other = JSON.parse(fs.readFileSync(`public/locales/${code}.json`, 'utf8'));
+  const other = JSON.parse(fs.readFileSync(`public/locales/${code}.json`,
+    'utf8'));
   const sourceKeys = Object.keys(catalog).sort();
   const translatedKeys = Object.keys(other).sort();
   if (JSON.stringify(translatedKeys) !== JSON.stringify(sourceKeys)) {
     const missing = sourceKeys.filter(key => !Object.hasOwn(other, key));
     const extra = translatedKeys.filter(key => !Object.hasOwn(catalog, key));
-    throw new Error(`Incomplete ${code} catalog: missing ${missing.join(', ') || '-'}, extra ${extra.join(', ') || '-'}`);
+    throw new Error(`Incomplete ${code} catalog: missing ${missing.join(
+      ', ') || '-'}, extra ${extra.join(', ') || '-'}`);
   }
   for (const [key, value] of Object.entries(other)) {
     if (typeof value !== 'string' || !value.trim()) {
@@ -82,4 +95,5 @@ for (const code of Object.keys(registry)) {
     }
   }
 }
-console.log(`${keys.size} referenced translation keys, ${Object.keys(catalog).length} German entries: OK`);
+console.log(`${keys.size} referenced translation keys, ${Object.keys(catalog)
+  .length} German entries: OK`);

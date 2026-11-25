@@ -42,7 +42,8 @@ export function normalizedMask(raw) {
   let minimum = Infinity, maximum = -Infinity;
   for (let i = 0; i < PIXELS; i++) {
     const value = raw[i];
-    if (!Number.isFinite(value)) throw new Error(t('errors.cutout.invalidInference'));
+    if (!Number.isFinite(value)) throw new Error(t(
+      'errors.cutout.invalidInference'));
     minimum = Math.min(minimum, value);
     maximum = Math.max(maximum, value);
   }

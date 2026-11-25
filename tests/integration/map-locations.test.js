@@ -5,7 +5,8 @@ import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
 
 test(
-  'API saves editable distillery locations without changing associated bottlings or collection schema',
+  'API saves editable distillery locations without changing associated \
+bottlings or collection schema',
   async () => {
     const server = await startTestServer();
     try {
@@ -29,7 +30,8 @@ test(
       assert.equal(updated.schemaVersion, 6);
       assert.equal(updated.bottlings.length, 1);
       assert.equal(updated.bottlings[0].distilleryIds[0], kilchoman.id);
-      const stored = JSON.parse(fs.readFileSync(path.join(server.dir, 'data', 'collection.json')));
+      const stored = JSON.parse(fs.readFileSync(path.join(server.dir, 'data',
+        'collection.json')));
       assert.equal(
         stored.distilleries.find(d => d.id === kilchoman.id).longitude,
         -6.4308

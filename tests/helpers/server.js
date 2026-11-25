@@ -59,7 +59,8 @@ export async function startTestServer() {
     // process on a port that was once available.
     const port = await new Promise((resolve, reject) => {
       const timeout = setTimeout(
-        () => finish(new Error(`Test server did not become ready: ${diagnostics}`)),
+        () => finish(new Error(
+          `Test server did not become ready: ${diagnostics}`)),
         20000
       );
       /**

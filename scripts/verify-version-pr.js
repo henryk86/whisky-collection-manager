@@ -23,13 +23,16 @@ export function verifyVersionPR({branch, head, base, author}) {
   const match = /^release\/version-(v\d+\.\d+\.\d+)$/.exec(branch || '');
   if (!match || !['github-actions[bot]', process.env
     .GITHUB_REPOSITORY?.split('/')[0]].includes(author))
-    throw new Error('Only the release bot or repository owner may open version PRs');
+    throw new Error(
+      'Only the release bot or repository owner may open version PRs');
   const tag = match[1], {snapshot} = releaseRefs({tag, merge: base});
-  if (head !== snapshot) throw new Error('Version PR head must be the immutable tagged snapshot');
+  if (head !== snapshot) throw new Error(
+    'Version PR head must be the immutable tagged snapshot');
   const changed = git('diff', '--name-only', base, snapshot).split('\n')
     .filter(Boolean);
   if (!changed.length || changed.some(file => !RELEASE_METADATA.includes(file)))
-    throw new Error(`Version PR contains unexpected files: ${changed.join(', ')}`);
+    throw new Error(`Version PR contains unexpected files: ${changed.join(
+      ', ')}`);
   return {tag, changed};
 }
 if (process.argv[1]?.endsWith('verify-version-pr.js')) {

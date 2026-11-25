@@ -91,6 +91,27 @@ function format(file, original) {
     };
     const languageService = ts.createLanguageService(host);
     let formatted = source;
+    const templateBoundaries = new Set();
+    const parsed = ts.createSourceFile(file, source, ts.ScriptTarget.Latest,
+      true, ts.ScriptKind.JS);
+    /**
+     * Records interpolation boundaries where whitespace is not literal HTML.
+     *
+     * @param {!ts.Node} node Syntax node to inspect.
+     */
+    function collectTemplateBoundaries(node) {
+      if (ts.isTemplateExpression(node)) {
+        templateBoundaries.add(node.head.end);
+        for (const span of node.templateSpans) {
+          templateBoundaries.add(span.literal.getStart(parsed));
+          if (span.literal.kind === ts.SyntaxKind.TemplateMiddle) {
+            templateBoundaries.add(span.literal.end);
+          }
+        }
+      }
+      ts.forEachChild(node, collectTemplateBoundaries);
+    }
+    collectTemplateBoundaries(parsed);
     try {
       const edits = languageService.getFormattingEditsForDocument(
         file,
@@ -98,6 +119,13 @@ function format(file, original) {
       );
       for (const edit of edits.sort((a, b) => b.span.start - a.span.start)) {
         const {start, length} = edit.span;
+        // TypeScript removes deliberate newlines at interpolation boundaries.
+        // Keep these breaks so long HTML expressions stay within 80 columns.
+        if (length && !edit.newText.includes('\n') &&
+          source.slice(start, start + length).includes('\n') &&
+          /^\s*$/.test(source.slice(start, start + length)) &&
+          (templateBoundaries.has(start) ||
+            templateBoundaries.has(start + length))) continue;
         formatted = formatted.slice(0, start) + edit.newText +
           formatted.slice(start + length);
       }

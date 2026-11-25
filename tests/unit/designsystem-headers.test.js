@@ -1,11 +1,15 @@
-import {pageHeader, sectionHeader, headingTitle, headerActions, backNavigation, helpIconButton} from '../../public/js/ui/headers.js';
+import {
+  pageHeader, sectionHeader, headingTitle, headerActions, backNavigation,
+  helpIconButton
+} from '../../public/js/ui/headers.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import de from '../../public/locales/de.json' with {type: 'json'};
 import en from '../../public/locales/en.json' with {type: 'json'};
 
 test(
-  'page header escapes text, retains one semantic title and trusted action slots',
+  'page header escapes text, retains one semantic title and trusted action \
+slots',
   () => {
     const html = pageHeader({
       title: 'A < B',
@@ -20,7 +24,10 @@ test(
     );
     assert.match(
       html,
-      /<h2>A &lt; B<span class="heading-period" aria-hidden="true">\.<\/span><\/h2>/
+      new RegExp(
+        '<h2>A &lt; B<span class="heading-period" a' +
+        'ria-hidden="true">\\.<\\/span><\\/h2>'
+      )
     );
     assert.match(html, /The &quot;reserve&quot;/);
     assert.ok(!html.includes('<script>'));
@@ -30,7 +37,8 @@ test(
 );
 
 test(
-  'page header respects disabled decorative punctuation for data-derived bottling names',
+  'page header respects disabled decorative punctuation for data-derived \
+bottling names',
   () => {
     const html = pageHeader({
       title: 'Browser Test Blend',
@@ -41,15 +49,21 @@ test(
     assert.doesNotMatch(html, /heading-period/);
     assert.match(
       pageHeader({title: 'Sammlung'}),
-      /<h2>Sammlung<span class="heading-period" aria-hidden="true">\.<\/span><\/h2>/
+      new RegExp(
+        '<h2>Sammlung<span class="heading-period" a' +
+        'ria-hidden="true">\\.<\\/span><\\/h2>'
+      )
     );
   }
 );
 
 test(
-  'section heading keeps actions separate and help inside the heading without injecting inline style',
+  'section heading keeps actions separate and help inside the heading \
+without injecting inline style',
   () => {
-    const help = helpIconButton({label: 'Show help', action: 'flight-plan-help'});
+    const help = helpIconButton({
+      label: 'Show help', action: 'flight-plan-help',
+    });
     const html = sectionHeader({
       title: 'Planning',
       layout: 'tasting-panel-heading',
@@ -68,11 +82,16 @@ test(
     );
     assert.match(
       html,
-      /<div class="actions ds-header-actions"><button disabled>Next<\/button><\/div>/
+      new RegExp(
+        '<div class="actions ds-header-actions"><bu' +
+        'tton disabled>Next<\\/button><\\/div>'
+      )
     );
     assert.ok(!html.includes('style='));
     assert.match(
-      headingTitle({title: '<&', level: 2, className: 'analytics-section-title'}),
+      headingTitle({
+        title: '<&', level: 2, className: 'analytics-section-title',
+      }),
       /<h2 class="analytics-section-title">&lt;&amp;<\/h2>/
     );
     assert.throws(
@@ -87,7 +106,8 @@ test(
 );
 
 test(
-  'header actions do not take over behavior and can be disabled without altering data-act',
+  'header actions do not take over behavior and can be disabled without \
+altering data-act',
   () => {
     const html = headerActions(
       '<button data-act="edit-bottling" disabled>Bearbeiten</button>',
@@ -99,7 +119,8 @@ test(
 );
 
 test(
-  'back navigation owns exactly one SVG arrow and has accessible action semantics',
+  'back navigation owns exactly one SVG arrow and has accessible action \
+semantics',
   () => {
     for (const [language, catalog] of [['de', de], ['en', en]]) {
       const text = catalog['common.navigation.backToCollection'];
@@ -127,7 +148,8 @@ test(
 );
 
 test(
-  'help icon receives a readable name, a single SVG, and an explicit disabled state',
+  'help icon receives a readable name, a single SVG, and an explicit \
+disabled state',
   () => {
     const html = helpIconButton({label: 'Why "this"?', disabled: true});
     assert.match(html, /aria-label="Why &quot;this&quot;\?"/);

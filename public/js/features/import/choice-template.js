@@ -34,7 +34,8 @@ export function importChoice({
     <span class="import-choice-label">${escapeHtml(label)}</span>
     <span class="import-choice-value">${escapeHtml(String(value))}</span>
     ${existing}${disabled ?
-      `<small class="import-choice-current">${t("imports.preview.choiceNotFound")}</small>` : ''}
+      `<small class="import-choice-current">${t(
+        "imports.preview.choiceNotFound")}</small>` : ''}
     </span>
     </label>`;
 }

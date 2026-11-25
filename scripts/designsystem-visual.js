@@ -8,7 +8,10 @@
  * tests/browser/.
  */
 import {spawn} from 'node:child_process';
-import {appendFileSync, existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync} from 'node:fs';
+import {
+  appendFileSync, existsSync, mkdtempSync, readFileSync, writeFileSync,
+  mkdirSync, rmSync
+} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {setTimeout as pause} from 'node:timers/promises';
@@ -26,7 +29,8 @@ const CAPTURES = path.join(ARTIFACTS, 'captures');
 if (capture && update) throw new Error('Capture cannot update baselines.');
 const pixels = pixelMode(process.argv.slice(2), process.env);
 if (update && process.env
-  .CI) throw new Error('CI must never update visual baselines. Review them locally.');
+  .CI) throw new Error(
+    'CI must never update visual baselines. Review them locally.');
 if ((update || capture) && pixels === 'strict') {
   throw new Error('Capture/update cannot use strict verification.');
 }
@@ -112,7 +116,8 @@ async function evaluate(expression) {
     'Runtime.evaluate',
     {expression, awaitPromise: true, returnByValue: true}
   );
-  if (out.exceptionDetails) throw new Error(`Browser evaluation failed: ${out.exceptionDetails.text}`);
+  if (out.exceptionDetails) throw new Error(`Browser evaluation failed: ${out
+    .exceptionDetails.text}`);
   return out.result?.value;
 }
 
@@ -183,7 +188,9 @@ async function intercept({requestId, request}) {
 function absoluteChromium() {
   const value = process.env.WCM_VISUAL_BROWSER_PATH || process.env
     .PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/chromium';
-  if (!existsSync(value)) throw new Error(`Chromium executable not found: ${value}. CI must install Playwright Chromium first.`);
+  if (!existsSync(value)) throw new Error(
+    `Chromium executable not found: ${value}. CI must install Playwright \
+Chromium first.`);
   return value;
 }
 const scratch = mkdtempSync(path.join(tmpdir(), 'wcm-visual-'));
@@ -215,11 +222,13 @@ async function boot() {
         .split('\n')[0]); break;
     }
     if (browser.exitCode !=
-      null) throw new Error(`Chromium exited unexpectedly: ${browser.exitCode}`);
+      null) throw new Error(`Chromium exited unexpectedly: ${browser.exitCode}`
+      );
     await pause(100);
   }
   if (!port) throw new Error('Chromium did not expose its debugging port');
-  const pages = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
+  const pages = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json(
+  );
   const target = pages.find(p => p.type === 'page');
   socket = new WebSocket(target.webSocketDebuggerUrl);
   await new Promise((resolve, reject) => {
@@ -261,11 +270,15 @@ async function render(route, selector, action, scenarioName) {
     'Page.navigate',
     {url: `about:blank${route === '/' ? '' : route.slice(1)}`}
   );
-  await evaluate('history.pushState = () => undefined; history.replaceState = () => undefined');
+  await evaluate(
+    'history.pushState = () => undefined; history.replaceState = () => \
+undefined');
   // Freeze only browser time before the application's entry module executes.
   // API data remains isolated/deterministic and unchanged.
-  await evaluate(`(()=>{const NativeDate=Date;const fixed=${JSON.stringify(snapshotClock)};
-    globalThis.Date=class extends NativeDate{constructor(...args){super(...(args.length?args:[fixed]));}
+  await evaluate(`(()=>{const NativeDate=Date;const fixed=${JSON.stringify(
+    snapshotClock)};
+    globalThis.Date=class extends NativeDate{constructor(...args){super(...(\
+args.length?args:[fixed]));}
     static now(){return NativeDate.parse(fixed);}};})()`);
   const html = await (await fetch(server.base)).text();
   const frame = (await command('Page.getFrameTree')).frameTree.frame.id;
@@ -282,22 +295,30 @@ async function render(route, selector, action, scenarioName) {
       `document.querySelector(${JSON.stringify(action[0])})`,
       action[0]
     );
-    await evaluate(`document.querySelector(${JSON.stringify(action[0])}).click()`);
+    await evaluate(`document.querySelector(${JSON.stringify(action[
+      0])}).click()`);
     if (action[1]) {
       if (scenarioName === 'modal-flight-help') {
-        await evaluate(`(()=>{const form=document.querySelector('.flight-plan-form'); form.dataset.qaIdentity='original-dom'; form.querySelector('[data-flight-name]').value='Preserved flight';form.querySelector('[data-flight-notes]').value='Unsaved notes';})()`);
+        await evaluate(
+          `(()=>{const form=document.querySelector('.flight-plan-form'); \
+form.dataset.qaIdentity='original-dom'; form.querySelector('[data-flight-nam\
+e]').value='Preserved flight';form.querySelector('[data-flight-notes]').valu\
+e='Unsaved notes';})()`);
       }
       await until(
         `document.querySelector(${JSON.stringify(action[1])})`,
         action[1]
       );
-      await evaluate(`document.querySelector(${JSON.stringify(action[1])}).click()`);
+      await evaluate(`document.querySelector(${JSON.stringify(action[
+        1])}).click()`);
     }
   }
   await until(`document.querySelector(${JSON.stringify(selector)})`, selector);
   await evaluate(`(async()=>{
     const style = document.createElement('style');
-    style.textContent = ':root{--sans:Arial,sans-serif} *,*::before,*::after{transition:none!important;animation:none!important;caret-color:transparent!important;scroll-behavior:auto!important}';
+    style.textContent = ':root{--sans:Arial,sans-serif} *,*::before,\
+*::after{transition:none!important;animation:none!important;\
+caret-color:transparent!important;scroll-behavior:auto!important}';
     document.head.append(style);
     if(document.fonts?.ready) await document.fonts.ready;
   })()`);
@@ -387,7 +408,8 @@ function geometryExpression() {
       const r=el.getBoundingClientRect();
       return [r.x,r.y,r.width,r.height].map(v=>Math.round(v*100)/100);
     };
-    return {overflow:Math.max(0,document.documentElement.scrollWidth-innerWidth),
+    return {overflow:Math.max(0,document.documentElement.scrollWidth-innerWi\
+dth),
       main:rect(document.querySelector('main')),
       header:rect(document.querySelector('.site-header')),
       heading:rect(document.querySelector('.ds-page-header')),
@@ -424,11 +446,15 @@ async function key(key, code, windowsVirtualKeyCode) {
  */
 async function checkModalInteractions(name) {
   if (!name.startsWith('modal-')) return;
-  const focus = await evaluate(`Boolean(document.activeElement?.closest?.('#modal-root .dialog'))`);
+  const focus = await evaluate(
+    `Boolean(document.activeElement?.closest?.('#modal-root .dialog'))`);
   if (!focus) throw new Error(`${name}: initial focus escaped the modal`);
-  await evaluate(`document.querySelector('#modal-root .ds-modal-close').focus({preventScroll:true})`);
+  await evaluate(
+    `document.querySelector('#modal-root .ds-modal-close').focus({preventScr\
+oll:true})`);
   await key('Tab', 'Tab', 9);
-  if (!await evaluate(`Boolean(document.activeElement?.closest?.('#modal-root .dialog'))`))
+  if (!await evaluate(
+    `Boolean(document.activeElement?.closest?.('#modal-root .dialog'))`))
     throw new Error(`${name}: Tab escaped modal focus trap`);
   await key('Escape', 'Escape', 27);
   if (name === 'modal-flight-help') {
@@ -436,32 +462,56 @@ async function checkModalInteractions(name) {
       `document.querySelector('#modal-root [data-flight-name]')`,
       'restored parent flight'
     );
-    const original = await evaluate(`(()=>{const f=document.querySelector('#modal-root .flight-plan-form');return f?.dataset.qaIdentity==='original-dom' && f.querySelector('[data-flight-name]').value==='Preserved flight' && f.querySelector('[data-flight-notes]').value==='Unsaved notes';})()`);
-    if (!original) throw new Error('Nested help modal lost the original parent DOM or unsaved field values');
-    interactionChecks.push('Flight help: same form DOM and unsaved values restored after Escape');
+    const original = await evaluate(
+      `(()=>{const f=document.querySelector('#modal-root .flight-plan-form')\
+;return f?.dataset.qaIdentity==='original-dom' && f.querySelector('[data-fli\
+ght-name]').value==='Preserved flight' && f.querySelector('[data-flight-note\
+s]').value==='Unsaved notes';})()`);
+    if (!original) throw new Error(
+      'Nested help modal lost the original parent DOM or unsaved field values');
+    interactionChecks.push(
+      'Flight help: same form DOM and unsaved values restored after Escape');
     await key('Escape', 'Escape', 27);
   }
-  if (await evaluate(`Boolean(document.querySelector('#modal-root .dialog'))`)) throw new Error(`${name}: Escape did not close modal`);
-  if (await evaluate(`Boolean(document.querySelector('main')?.inert)`)) throw new Error(`${name}: background remained inert after Escape`);
-  interactionChecks.push(`${name}: initial focus, Tab trap, Escape and background restoration`);
+  if (await evaluate(`Boolean(document.querySelector('#modal-root .dialog'))`))
+    throw new Error(`${name}: Escape did not close modal`);
+  if (await evaluate(`Boolean(document.querySelector('main')?.inert)`))
+    throw new Error(`${name}: background remained inert after Escape`);
+  interactionChecks.push(
+    `${name}: initial focus, Tab trap, Escape and background restoration`);
   if (name === 'modal-new') {
-    const before = await evaluate(`(()=>{document.querySelector('main').style.minHeight='1900px';scrollTo({top:520,behavior:'instant'});const r=document.querySelector('main').getBoundingClientRect();return {scroll:scrollY,left:r.left,width:r.width};})()`);
-    if (before.scroll < 400) throw new Error('Could not establish nonzero background scroll');
+    const before = await evaluate(
+      `(()=>{document.querySelector('main').style.minHeight='1900px';\
+scrollTo({top:520,behavior:'instant'});const r=document.querySelector('main'\
+).getBoundingClientRect();return {scroll:scrollY,left:r.left,width:r.width};\
+})()`);
+    if (before.scroll < 400) throw new Error(
+      'Could not establish nonzero background scroll');
     for (let cycle = 0; cycle < 3; cycle++) {
-      await evaluate(`(()=>{const el=document.querySelector('header [data-act="new"]');el.focus({preventScroll:true});el.click()})()`);
+      await evaluate(
+        `(()=>{const el=document.querySelector('header [data-act="new"]');\
+el.focus({preventScroll:true});el.click()})()`);
       await until(
         `document.querySelector('#modal-root .dialog')`,
         'reopened modal'
       );
-      const during = await evaluate(`(()=>{const r=document.querySelector('main').getBoundingClientRect();return {left:r.left,width:r.width};})()`);
+      const during = await evaluate(
+        `(()=>{const r=document.querySelector('main').getBoundingClientRect(\
+);return {left:r.left,width:r.width};})()`);
       if (Math.abs(during.left - before.left) > 1 || Math.abs(during.width -
-        before.width) > 1) throw new Error('Modal scrollbar produced a horizontal layout jump');
+        before.width) > 1) throw new Error(
+          'Modal scrollbar produced a horizontal layout jump');
       await key('Escape', 'Escape', 27);
-      const after = await evaluate(`({scroll:scrollY,focus:document.activeElement.matches('header [data-act="new"]')})`);
+      const after = await evaluate(
+        `({scroll:scrollY,focus:document.activeElement.matches('header \
+[data-act="new"]')})`);
       if (Math.abs(after.scroll - before.scroll) > 1 ||
-        !after.focus) throw new Error(`Modal cycle ${cycle} lost scroll or focus`);
+        !after.focus) throw new Error(
+          `Modal cycle ${cycle} lost scroll or focus`);
     }
-    interactionChecks.push('New modal: 3 reopen/close cycles at nonzero background scroll, no geometry jump');
+    interactionChecks.push(
+      'New modal: 3 reopen/close cycles at nonzero background scroll, no \
+geometry jump');
   }
 }
 
@@ -479,7 +529,8 @@ async function seedFixtures() {
     whiskyType: 'single_malt',
     abv: 46,
     volumeMl: 700,
-    description: 'Ein Beschreibungstext mit mehreren Zeilen.\nDie zweite Zeile.',
+    description:
+      'Ein Beschreibungstext mit mehreren Zeilen.\nDie zweite Zeile.',
     firstBottle: {
       inventoryNumber: '001234',
       status: 'closed',
@@ -508,8 +559,12 @@ async function seedFixtures() {
   );
   if (tasting.status !== 201) throw new Error('Unable to seed tasting');
   const long = await requestJson(server.base, '/api/bottlings', 'POST', {
-    name: 'A very long single malt whisky title with numerous words, exceptional descriptors and a deliberately overflowing-looking name to test responsive line breaks in every interface language',
-    description: 'An extended description that must not produce horizontal overflow. '.repeat(12),
+    name: 'A very long single malt whisky title with numerous words, \
+exceptional descriptors and a deliberately overflowing-looking name to test \
+responsive line breaks in every interface language',
+    description:
+      'An extended description that must not produce horizontal overflow. '
+        .repeat(12),
     firstBottle: {inventoryNumber: '001235', status: 'closed'},
   });
   if (long.status !== 201) throw new Error('Unable to seed long-title fixture');
@@ -531,7 +586,9 @@ try {
   }
   if (!update && !capture) {
     const manifestPath = path.join(BASELINES, 'manifest.json');
-    if (!existsSync(manifestPath)) throw new Error('Approved visual manifest is missing. Baselines must be reviewed locally.');
+    if (!existsSync(manifestPath)) throw new Error(
+      'Approved visual manifest is missing. Baselines must be reviewed \
+locally.');
     const baselineBrowser = JSON.parse(readFileSync(manifestPath, 'utf8'))
       .browser;
     const warning = browserWarning(browserVersion, baselineBrowser, pixels);
@@ -542,12 +599,14 @@ try {
   }
   if (update) {
     writeFileSync(path.join(BASELINES, 'manifest.json'), JSON.stringify({
-      description: 'Explicitly approved design-system baseline. Do not rewrite in CI.',
+      description:
+        'Explicitly approved design-system baseline. Do not rewrite in CI.',
       source: 'corrected Phase-5 UI baseline', browser: browserVersion,
       snapshotClock, timezone: 'Europe/Berlin', locale: 'de-DE',
       dimensions: {widths, height: 1100, scale: 1}, themes,
       scenarios: scenarios.map(([id]) => id),
-      note: 'Arial/sans-serif fallback, animation/transition and caret suppression only during capture',
+      note: 'Arial/sans-serif fallback, animation/transition and caret \
+suppression only during capture',
     }, null, 2) + '\n');
   }
   let fixture;
@@ -558,7 +617,8 @@ try {
     const routes = fixture ? {
       'bottling-partial': `/?bottling=${fixture.partialId}`,
       'bottling-full': `/?bottling=${fixture.fullId}`,
-      'tasting-readonly': `/?bottling=${fixture.fullId}&tasting=${fixture.tastingId}`,
+      'tasting-readonly': `/?bottling=${fixture.fullId}&tasting=${fixture
+        .tastingId}`,
       'modal-edit': `/?bottling=${fixture.fullId}`,
       'modal-confirm': `/?bottling=${fixture.fullId}`,
       'bottling-long': `/?bottling=${fixture.longId}`,
@@ -578,7 +638,10 @@ try {
       await render(route, selector, action, name);
       if (name === 'modal-flight-expanded') await expandFlightPlanner();
     }
-    catch (error) {problems.push(`${name}: ${error.message}`); console.error('FAIL', name, error.message); continue;}
+    catch (error) {
+      problems.push(`${name}: ${error.message}`);
+      console.error('FAIL', name, error.message); continue;
+    }
     for (const width of widths) {
       await command(
         'Emulation.setDeviceMetricsOverride',
@@ -587,10 +650,15 @@ try {
       for (const theme of themes) {
         const id = `${name}__${width}__${theme}`;
         try {
-          await evaluate(`document.documentElement.dataset.theme=${JSON.stringify(theme)};document.documentElement.style.colorScheme=${JSON.stringify(theme)}`);
+          await evaluate(`document.documentElement.dataset.theme=${JSON
+            .stringify(
+              theme)};document.documentElement.style.colorScheme=${JSON
+                .stringify(theme)}`);
           // Force a layout flush before the screenshot; avoid arbitrary
           // sleep-based waits.
-          await evaluate('document.body.getBoundingClientRect().width; document.fonts?.ready');
+          await evaluate(
+            'document.body.getBoundingClientRect().width; \
+document.fonts?.ready');
           let captureHeight = 1100;
           if (name === 'modal-flight-expanded') {
             captureHeight = await fitFlightPlanner(width);
@@ -628,8 +696,11 @@ try {
           } else {
             const actualDir = path.join(ARTIFACTS, 'actual');
             if (!existsSync(reference) || !existsSync(referenceGeometry)) {
-              problems.push(`${id}: approved snapshot missing, run --update locally and review`);
-              mkdirSync(actualDir, {recursive: true}); writeFileSync(path.join(actualDir, `${id}.png`), image);
+              problems.push(
+                `${id}: approved snapshot missing, run --update locally and \
+review`);
+              mkdirSync(actualDir, {recursive: true}); writeFileSync(path.join(
+                actualDir, `${id}.png`), image);
               continue;
             }
             const initial = JSON.parse(readFileSync(referenceGeometry, 'utf8'));
@@ -665,7 +736,8 @@ try {
             });
           }
         } catch (error) {
-          problems.push(`${id}: ${error.message}`); console.error('FAIL', id, error.stack);
+          problems.push(`${id}: ${error.message}`); console.error('FAIL', id,
+            error.stack);
         }
       }
     }
@@ -676,7 +748,11 @@ try {
           mobile: false,
         });
     }
-    try {await checkModalInteractions(name);} catch (error) {problems.push(`${name} interaction: ${error.message}`); console.error('FAIL', name, error.message);}
+    try {await checkModalInteractions(name);} catch (error) {
+      problems.push(
+        `${name} interaction: ${error.message}`); console.error('FAIL', name,
+          error.message);
+    }
     console.log(`${name}: ${results.filter(r => r.id
       .startsWith(`${name}__`) && r.status !== 'failed')
       .length} geometry checks passed`);
@@ -716,10 +792,15 @@ if (process.env.GITHUB_STEP_SUMMARY && !capture) {
   appendFileSync(process.env.GITHUB_STEP_SUMMARY,
     `## Design-system visual checks\n\n` +
     `- Blocking layout/interaction issues: **${problems.length}**\n` +
-    `- Captures: **${results.length}**; pixel differences (diagnostic unless strict): **${results.filter(r => r.pixelChanged).length}**\n` +
+    `- Captures: **${results
+      .length}**; pixel differences (diagnostic unless strict): **${results
+        .filter(r => r.pixelChanged).length}**\n` +
     `- Browser: ${browserVersion ||
-    'unavailable'}; approved references: ${existsSync(path.join(BASELINES, 'manifest.json')) ? JSON.parse(readFileSync(path.join(BASELINES, 'manifest.json'), 'utf8')).browser : 'missing'}\n` +
-    `- Reference images were not modified. See the uploaded visual artifacts for actual images, diffs and report.\n\n`);
+    'unavailable'}; approved references: ${existsSync(path.join(BASELINES,
+      'manifest.json')) ? JSON.parse(readFileSync(path.join(BASELINES,
+        'manifest.json'), 'utf8')).browser : 'missing'}\n` +
+    `- Reference images were not modified. See the uploaded visual \
+artifacts for actual images, diffs and report.\n\n`);
 }
 if (capture) {
   console.log(`Designsystem visual: ${results.length} fresh captures, ` +
@@ -734,4 +815,7 @@ if (capture) {
       .length} diagnostic diffs saved. ` +
     'Report: test-artifacts/designsystem-visual/report.json');
 }
-if (problems.length) {for (const problem of problems) console.error(`FAIL ${problem}`); process.exitCode = 1;}
+if (problems.length) {
+  for (const problem of problems) console.error(
+    `FAIL ${problem}`); process.exitCode = 1;
+}

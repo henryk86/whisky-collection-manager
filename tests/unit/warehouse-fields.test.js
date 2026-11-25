@@ -1,13 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FURNITURE_TYPES, SHELF_FRONTS} from '../../shared/warehouse-compartments.js';
-import {name, capacity, shelfFront, ensureShelfHeights, layout} from '../../server/domain/warehouse-fields.js';
+import {FURNITURE_TYPES, SHELF_FRONTS}
+  from '../../shared/warehouse-compartments.js';
+import {name, capacity, shelfFront, ensureShelfHeights, layout}
+  from '../../server/domain/warehouse-fields.js';
 import {validateWarehouse} from '../../server/storage/warehouse-store.js';
 
 const room = {id: 'room-1', name: 'Test', width: 4, height: 3, furniture: []};
 
 test(
-  'shared furniture type definitions remain compatible with server validation and normalization',
+  'shared furniture type definitions remain compatible with server \
+validation and normalization',
   () => {
     assert.deepEqual(
       FURNITURE_TYPES,
@@ -43,7 +46,8 @@ test(
 );
 
 test(
-  'extracted warehouse field validation retains null capacity, zero capacity, labels and bounds',
+  'extracted warehouse field validation retains null capacity, zero \
+capacity, labels and bounds',
   () => {
     assert.equal(capacity(''), null);
     assert.equal(capacity(0), 0);
@@ -71,7 +75,10 @@ test(
     };
     assert.doesNotThrow(() => ensureShelfHeights(furniture));
     assert.throws(
-      () => ensureShelfHeights({...furniture, shelves: [{heightCm: 180}, {heightCm: null}]}),
+      () => ensureShelfHeights({
+        ...furniture, shelves: [{heightCm: 180},
+        {heightCm: null}],
+      }),
       /5 cm/
     );
     assert.throws(
@@ -79,7 +86,10 @@ test(
         {
           name: 'Schrank',
           type: 'schrank',
-          doorRanges: [{from: 1, to: 2, front: 'glass'}, {from: 2, to: 3, front: 'door'}],
+          doorRanges: [{from: 1, to: 2, front: 'glass'}, {
+            from: 2, to: 3,
+            front: 'door',
+          }],
           shelves: [{}, {}, {}],
         },
         room

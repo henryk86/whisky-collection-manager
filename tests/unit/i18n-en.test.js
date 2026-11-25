@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {createTranslator, initializeLanguage, currentLanguage, t} from '../../public/js/i18n/index.js';
+import {
+  createTranslator, initializeLanguage, currentLanguage,
+  t
+} from '../../public/js/i18n/index.js';
 
 /**
  * Reads read data from the local filesystem.
@@ -30,7 +33,8 @@ const parameters = (message) => [
 ].sort();
 
 test(
-  'English locale is selectable and contains precisely the same keys and parameters as German',
+  'English locale is selectable and contains precisely the same keys and \
+parameters as German',
   () => {
     assert.equal(registry.en, 'English');
     assert.deepEqual(Object.keys(english).sort(), Object.keys(german).sort());
@@ -55,7 +59,8 @@ test(
 );
 
 test(
-  'English translates storage labels, dynamic placeholders, plurals and leaves user names intact',
+  'English translates storage labels, dynamic placeholders, plurals and \
+leaves user names intact',
   () => {
     const t = createTranslator(english, german, 'en');
     assert.equal(t('warehouse.page.title'), 'Storage management');

@@ -7,12 +7,14 @@ const themes = ['light', 'dark'];
 
 // Geometry is read from Chromium's layout boxes, not asserted from CSS text.
 test(
-  'browser: M4 detail panels and 2-/3-column fields keep their geometry in both themes',
+  'browser: M4 detail panels and 2-/3-column fields keep their geometry in \
+both themes',
   async () => {
     await session(async ({page, open, base}) => {
       const {bottling} = await seed(base, '008901');
       await open({query: `?bottling=${bottling.id}`});
-      await page.locator('[data-region="detail-bottling"] [data-ds-detail-grid]').waitFor();
+      await page.locator(
+        '[data-region="detail-bottling"] [data-ds-detail-grid]').waitFor();
       for (const width of sizes) {
         await page.setViewportSize({width, height: 900});
         for (const theme of themes) {
@@ -22,7 +24,8 @@ test(
           );
           const geometry = await page.evaluate(() => {
             const panel =
-              document.querySelector('[data-region="detail-bottling"] [data-ds-panel="standard"]');
+              document.querySelector(
+                '[data-region="detail-bottling"] [data-ds-panel="standard"]');
             const grid = panel.querySelector('[data-ds-detail-grid="2"]');
             const field = grid.querySelector('[data-ds-detail-field="fact"]');
             const r = panel.getBoundingClientRect();
@@ -84,7 +87,8 @@ test(
     await session(async ({page, open, base}) => {
       const {bottling} = await seed(base, '008902');
       await open({query: `?bottling=${bottling.id}`});
-      const hint = page.locator('.bottle-documents [data-ds-empty-state="subtle"]');
+      const hint = page.locator(
+        '.bottle-documents [data-ds-empty-state="subtle"]');
       await hint.waitFor({state: 'visible'});
       assert.equal(
         await hint.evaluate(el => getComputedStyle(el).borderTopWidth),
@@ -96,7 +100,8 @@ test(
 );
 
 test(
-  'browser: M4 saved tasting notes use the common detail fields without losing text',
+  'browser: M4 saved tasting notes use the common detail fields without \
+losing text',
   async () => {
     await session(async ({page, open, base}) => {
       const {bottling} = await seed(base, '008903');
@@ -118,9 +123,11 @@ test(
       );
       assert.equal(response.status, 201);
       await open({query: `?bottling=${bottling.id}`});
-      const opener = page.locator('.tasting-summary-card [data-act="tastings-open"]');
+      const opener = page.locator(
+        '.tasting-summary-card [data-act="tastings-open"]');
       await opener.click();
-      const notes = page.locator('.tasting-readonly-notes [data-ds-detail-field="note"]');
+      const notes = page.locator(
+        '.tasting-readonly-notes [data-ds-detail-field="note"]');
       await notes.first().waitFor();
       assert.equal(await notes.count(), 3);
       assert.match(await notes.first().innerText(), /Frucht & Vanille/);

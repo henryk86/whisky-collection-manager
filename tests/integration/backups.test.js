@@ -70,11 +70,17 @@ async function fixture({withTargets = false} = {}) {
      * Performs the stop lifecycle action.
      * @return {!Promise<*>} Promise for the asynchronous operation.
      */
-    stop: async () => {await server.stop(); fs.rmSync(control, {recursive: true, force: true});},
+    stop: async () => {
+      await server.stop(); fs.rmSync(control, {
+        recursive:
+          true, force: true,
+      });
+    },
   };
 }
 test(
-  'backup password is admin-only, persistent, never returned, and required for new ZIPs',
+  'backup password is admin-only, persistent, never returned, and required \
+for new ZIPs',
   async () => {
     const ctx = await fixture();
     try {
@@ -158,7 +164,8 @@ test(
 );
 
 test(
-  'backup admin API requires separate key and manages 1-n schedules without touching collection.json',
+  'backup admin API requires separate key and manages 1-n schedules without \
+touching collection.json',
   async () => {
     const ctx = await fixture();
     try {
@@ -170,8 +177,10 @@ test(
         (await request(ctx.base, '/api/backups', 'GET', null, 'wrong')).status,
         401
       );
-      const original = fs.readFileSync(path.join(ctx.dir, 'data/collection.json'));
-      const first = await request(ctx.base, '/api/backups', 'POST', validProfile);
+      const original = fs.readFileSync(path.join(ctx.dir,
+        'data/collection.json'));
+      const first = await request(ctx.base, '/api/backups', 'POST',
+        validProfile);
       assert.equal(first.status, 201);
       assert.match(first.data.id, /^[0-9a-f-]{36}$/i);
       const second = await request(
@@ -277,7 +286,8 @@ test(
   }
 );
 test(
-  'worker-only endpoint produces consistent data, image and document directories',
+  'worker-only endpoint produces consistent data, image and document \
+directories',
   async () => {
     const ctx = await fixture();
     try {
@@ -319,8 +329,10 @@ test(
         'receipt'
       );
       assert.deepEqual(
-        JSON.parse(fs.readFileSync(path.join(folder, 'data', 'collection.json'))),
-        JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data', 'collection.json')))
+        JSON.parse(fs.readFileSync(path.join(folder, 'data',
+          'collection.json'))),
+        JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data',
+          'collection.json')))
       );
       const duplicate = await fetch(
         ctx.base + endpoint,
@@ -340,7 +352,8 @@ test(
 );
 
 test(
-  'browser can download an existing readable USB ZIP with admin key; USB target is discovered',
+  'browser can download an existing readable USB ZIP with admin key; USB \
+target is discovered',
   async () => {
     const ctx = await fixture({withTargets: true});
     try {
@@ -397,7 +410,8 @@ test(
 );
 
 test(
-  'ZIP restore is previewed before confirmation and saves the current collection before replacement',
+  'ZIP restore is previewed before confirmation and saves the current \
+collection before replacement',
   async () => {
     const ctx = await fixture();
     try {
@@ -409,7 +423,8 @@ test(
         path.join(ctx.dir, 'images', 'existing.png'),
         Buffer.from([1, 2, 3])
       );
-      const original = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json'), 'utf8'));
+      const original = JSON.parse(fs.readFileSync(path.join(ctx.dir,
+        'data/collection.json'), 'utf8'));
       const archive = path.join(ctx.control, 'my-backup.zip');
       writeReadableZip(ctx.dir, archive, zipPass);
       const added = await request(
@@ -472,7 +487,10 @@ test(
         'preview must not replace live data'
       );
       const endpoint = `/api/backups/import-zip/${preview.id}/apply`;
-      const denied = await request(ctx.base, endpoint, 'POST', {acknowledge: false});
+      const denied = await request(ctx.base, endpoint, 'POST', {
+        acknowledge:
+          false,
+      });
       assert.equal(denied.status, 400);
       const wrongApply = await request(
         ctx.base,
@@ -511,10 +529,12 @@ test(
 
 
 test(
-  'schema-4 ZIP restore upgrades collection without losing bottles, warehouse assignments or media',
+  'schema-4 ZIP restore upgrades collection without losing bottles, \
+warehouse assignments or media',
   async () => {
     const ctx = await fixture();
-    const legacyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-v4-restore-'));
+    const legacyDir = fs.mkdtempSync(path.join(os.tmpdir(),
+      'whisky-v4-restore-'));
     try {
       const {writeReadableZip} = await import('../../shared/backup-zip.js');
       const created = await request(ctx.base, '/api/bottlings', 'POST', {
@@ -553,11 +573,13 @@ test(
         200
       );
       const collection =
-        JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json'), 'utf8'));
+        JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json'),
+          'utf8'));
       collection.schemaVersion = 4;
       collection.bottlings[0].tastings = [{id: 'demo-score'}];
       collection.bottlings[0].rating = 88;
-      const warehouse = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'), 'utf8'));
+      const warehouse = JSON.parse(fs.readFileSync(path.join(ctx.dir,
+        'data/warehouse.json'), 'utf8'));
       for (const folder of ['data', 'images', 'documents']) fs.cpSync(
         path.join(ctx.dir, folder),
         path.join(legacyDir, folder),
@@ -608,7 +630,8 @@ test(
       assert.deepEqual(upgraded.bottlings[0].tastings, []);
       assert.equal(upgraded.bottlings[0].rating, undefined);
       const warehouseAfter =
-        JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'), 'utf8'));
+        JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'),
+          'utf8'));
       assert.deepEqual(warehouseAfter, warehouse);
       assert.equal(
         fs.readFileSync(
@@ -624,12 +647,16 @@ test(
         ),
         'receipt content'
       );
-    } finally {fs.rmSync(legacyDir, {recursive: true, force: true}); await ctx.stop();}
+    } finally {
+      fs.rmSync(legacyDir, {recursive: true, force: true});
+      await ctx.stop();
+    }
   }
 );
 
 test(
-  'manual full ZIP download uses shared backup archive and can be inspected with the restore reader',
+  'manual full ZIP download uses shared backup archive and can be inspected \
+with the restore reader',
   async () => {
     const ctx = await fixture();
     try {
@@ -667,7 +694,8 @@ test(
         'evidence'
       );
       assert.deepEqual(
-        JSON.parse(fs.readFileSync(path.join(restored, 'data/collection.json'))),
+        JSON.parse(fs.readFileSync(path.join(restored, 'data/collection.json'))
+        ),
         JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json')))
       );
       // The client may finish receiving the last byte just before the server's

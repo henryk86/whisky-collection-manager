@@ -136,7 +136,8 @@ export const TABLE_COLUMNS = Object.freeze({
 });
 
 export const DEFAULT_TABLE_COLUMNS = Object.freeze({
-  bottlings: Object.freeze(['name', 'distillery', 'age', 'abv', 'year', 'stock', 'rating']),
+  bottlings: Object.freeze(['name', 'distillery', 'age', 'abv', 'year',
+    'stock', 'rating']),
   bottles: Object.freeze([
     'name',
     'inventory',
@@ -177,7 +178,8 @@ export function normalizeTableColumns(mode, value) {
 export function loadTableColumns(storage) {
   try {
     const source = storage === undefined ? globalThis.localStorage : storage;
-    const value = JSON.parse(source?.getItem(TABLE_COLUMNS_STORAGE_KEY) || '{}');
+    const value = JSON.parse(source?.getItem(TABLE_COLUMNS_STORAGE_KEY) ||
+      '{}');
     return {
       bottlings: normalizeTableColumns('bottlings', value?.bottlings),
       bottles: normalizeTableColumns('bottles', value?.bottles),

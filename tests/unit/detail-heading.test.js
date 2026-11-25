@@ -71,13 +71,18 @@ function renderDetail(distilleryIds, bottler) {
 }
 
 test(
-  'detail headline uses the overview card kicker for distillery, and a muted separate status',
+  'detail headline uses the overview card kicker for distillery, and a \
+muted separate status',
   () => {
     const html = renderDetail(['distillery-laphroaig']);
     assert.match(html, /<span class="card-kicker">Laphroaig<\/span>/);
     assert.match(
       html,
-      /<span class="detail-heading-separator" aria-hidden="true">·<\/span><span class="muted">Unvollständig<\/span>/
+      new RegExp(
+        '<span class="detail-heading-separator" ari' +
+        'a-hidden="true">·<\\/span><span class="mut' +
+        'ed">Unvollständig<\\/span>'
+      )
     );
   }
 );
@@ -100,7 +105,10 @@ test(
     const html = renderDetail([]);
     assert.match(
       html,
-      /<div class="detail-heading-meta"><span class="muted">Unvollständig<\/span><\/div>/
+      new RegExp(
+        '<div class="detail-heading-meta"><span cla' +
+        'ss="muted">Unvollständig<\\/span><\\/div>'
+      )
     );
     assert.doesNotMatch(html, /detail-heading-separator/);
   }
@@ -118,7 +126,8 @@ test('detail heading uses the bottler when no distillery is supplied', () => {
 });
 
 test(
-  'detail offers a right-aligned map link with location icon for one or several assigned distilleries, but not for an unassigned bottling',
+  'detail offers a right-aligned map link with location icon for one or \
+several assigned distilleries, but not for an unassigned bottling',
   () => {
     const single = renderDetail(['distillery-laphroaig']);
     assert.match(
@@ -127,16 +136,25 @@ test(
     );
     assert.match(
       single,
-      /data-act="bottling-map"[^>]*><svg class="action-icon"[\s\S]*?<span>Auf Landkarte anzeigen<\/span><\/button>/
+      new RegExp(
+        'data-act="bottling-map"[^>]*><svg class="a' +
+        'ction-icon"[\\s\\S]*?<span>Auf Landkarte a' +
+        'nzeigen<\\/span><\\/button>'
+      )
     );
     assert.match(
       single,
       /<header class="section-head ds-page-header detail-page-head">/
     );
-    const multiple = renderDetail(['distillery-laphroaig', 'distillery-ardbeg']);
+    const multiple = renderDetail(['distillery-laphroaig',
+      'distillery-ardbeg']);
     assert.match(
       multiple,
-      /data-act="bottling-map"[^>]*><svg class="action-icon"[\s\S]*?<span>Standorte auf Landkarte<\/span><\/button>/
+      new RegExp(
+        'data-act="bottling-map"[^>]*><svg class="a' +
+        'ction-icon"[\\s\\S]*?<span>Standorte auf L' +
+        'andkarte<\\/span><\\/button>'
+      )
     );
     assert.doesNotMatch(renderDetail([]), /data-act="bottling-map"/);
   }

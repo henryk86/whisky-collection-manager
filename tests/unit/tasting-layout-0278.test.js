@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
-import {addActionLabel, newBottlingIcon} from '../../public/js/ui/action-icons.js';
+import {addActionLabel, newBottlingIcon}
+  from '../../public/js/ui/action-icons.js';
 
 const bottling = {id: 'b1', name: 'Sample', tastings: [], distillery: 'Demo'};
 /**
@@ -48,15 +49,23 @@ test('add action in the owned tasting list is inside its framed panel', () => {
   assert.doesNotMatch(html, /class="tasting-add-action"/);
   assert.match(
     html,
-    /<section class="analytics-panel tasting-list-section">\s*<div class="tasting-panel-heading ds-section-header">[\s\S]*?data-act="tastings-new"[^>]*><svg class="new-icon"/
+    new RegExp(
+      '<section class="analytics-panel tasting-li' +
+      'st-section">\\s*<div class="tasting-panel-' +
+      'heading ds-section-header">[\\s\\S]*?data-' +
+      'act="tastings-new"[^>]*><svg class="new-ic' +
+      'on"'
+    )
   );
 });
 
 test(
-  'editor actions belong to the first form card and the section heading has no duplicate margin',
+  'editor actions belong to the first form card and the section heading has \
+no duplicate margin',
   async () => {
     const html = render('tasting', 'new');
-    const start = html.indexOf('class="tasting-record-fields analytics-panel tasting-edit-meta-panel"');
+    const start = html.indexOf(
+      'class="tasting-record-fields analytics-panel tasting-edit-meta-panel"');
     const end = html.indexOf('class="tasting-top-row"', start);
     assert.ok(start !== -1 && end > start);
     const panel = html.slice(start, end);
@@ -72,7 +81,9 @@ test(
       'actions should follow date and title'
     );
     assert.doesNotMatch(
-      html.match(/<div class="section-head tasting-editor-section-head">[\s\S]*?<\/div>/)?.[0] || '',
+      html.match(
+        /<div class="section-head tasting-editor-section-head">[\s\S]*?<\/div>/
+      )?.[0] || '',
       /flavor-detail-undo/
     );
   }

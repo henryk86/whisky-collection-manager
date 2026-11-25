@@ -61,10 +61,12 @@ const tlsGet = (port, ca, url) => new Promise((resolve, reject) => {
 });
 
 test(
-  'one container process supervises app + worker; verified TLS loopback, real backup queue, no HTTP listener',
+  'one container process supervises app + worker; verified TLS loopback, \
+real backup queue, no HTTP listener',
   {timeout: 35000},
   async () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-single-container-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(),
+      'whisky-single-container-'));
     const port = await freePort();
     const httpPort = await freePort();
     const cert = path.join(dir, 'server-cert.pem');
@@ -196,7 +198,8 @@ exit 0
           }
           if (status.jobs.some(job => job.id === jobId && job.state ===
             'failed')) {
-            assert.fail(`Backup job failed: ${JSON.stringify(status.jobs)} ${output}`);
+            assert.fail(`Backup job failed: ${JSON.stringify(status.jobs
+            )} ${output}`);
           }
         }
         await new Promise(resolve => setTimeout(resolve, 100));

@@ -6,10 +6,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {session, seed} from './support.js';
-import {renderWarehouseRoomWall} from '../../public/js/views/warehouse-room-wall.js';
+import {renderWarehouseRoomWall}
+  from '../../public/js/views/warehouse-room-wall.js';
 import {createTastingsView} from '../../public/js/views/tastings.js';
 import {importChoice} from '../../public/js/features/import/choice-template.js';
-import {roomTransferMarkup} from '../../public/js/views/warehouse-room-transfer.js';
+import {roomTransferMarkup}
+  from '../../public/js/views/warehouse-room-transfer.js';
 
 /**
  * Updates the DOM elements managed by fixture.
@@ -112,7 +114,8 @@ function tastingForm() {
 }
 
 test(
-  'browser B-5: physical shelf wall uses real heights, horizontal scrolling and a visible edit action',
+  'browser B-5: physical shelf wall uses real heights, horizontal scrolling \
+and a visible edit action',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -184,7 +187,8 @@ test(
 );
 
 test(
-  'browser B-5: eight shallow bays remain inside the cabinet rather than stretching it',
+  'browser B-5: eight shallow bays remain inside the cabinet rather than \
+stretching it',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -194,7 +198,10 @@ test(
           width: .7, depth: .5, itemHeight: .8, elevation: 0,
           shelves: Array.from(
             {length: 8},
-            (_, i) => ({id: `s${i}`, name: `Fach ${i}`, heightCm: 10, capacity: 3})
+            (_, i) => ({
+              id: `s${i}`, name: `Fach ${i}`, heightCm: 10,
+              capacity: 3,
+            })
           ),
         }],
       };
@@ -234,7 +241,8 @@ test(
 );
 
 test(
-  'browser B-5: tasting metadata stays three columns on desktop and stacks on a phone',
+  'browser B-5: tasting metadata stays three columns on desktop and stacks \
+on a phone',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -260,7 +268,8 @@ test(
         });
       assert.ok(
         desktop.date.x < desktop.title.x && desktop.title.x < desktop.actions.x,
-        `desktop date/title/actions are side-by-side: ${JSON.stringify(desktop)}`
+        `desktop date/title/actions are side-by-side: ${JSON.stringify(desktop
+        )}`
       );
       assert.equal(desktop.notesAlignment, 'start');
       assert.equal(desktop.resize, 'vertical');
@@ -291,15 +300,23 @@ test(
 );
 
 test(
-  'browser B-5: import option checkboxes are usable, responsive and follow theme changes',
+  'browser B-5: import option checkboxes are usable, responsive and follow \
+theme changes',
   async () => {
     await session(async ({page, open}) => {
       await open();
       const markup = '<div class="import-choice-list" role="group">' +
-        importChoice({field: 'name', label: 'Name', value: 'Neu', checked: true}) +
-        importChoice({field: 'abv', label: 'Alkohol', value: '46%', checked: false}) + '</div>';
+        importChoice({
+          field: 'name', label: 'Name', value: 'Neu',
+          checked: true,
+        }) +
+        importChoice({
+          field: 'abv', label: 'Alkohol', value: '46%',
+          checked: false,
+        }) + '</div>';
       await fixture(page, markup);
-      const selected = page.locator('#b5-contract-fixture .import-choice input[type="checkbox"]').first();
+      const selected = page.locator(
+        '#b5-contract-fixture .import-choice input[type="checkbox"]').first();
       const desktop = await page.locator('#b5-contract-fixture')
         .evaluate(root => {
           const list = root.querySelector('.import-choice-list');
@@ -325,7 +342,8 @@ test(
         'selection is a live form control, not static markup'
       );
       await page.setViewportSize({width: 390, height: 844});
-      const cols = await page.locator('#b5-contract-fixture .import-choice-list')
+      const cols = await page.locator(
+        '#b5-contract-fixture .import-choice-list')
         .evaluate(node => getComputedStyle(node).gridTemplateColumns
           .split(' ').length);
       assert.equal(cols, 1, 'choices remain readable on mobile');
@@ -354,14 +372,17 @@ test(
     await session(async ({page, open}) => {
       await open();
       await fixture(page, roomTransferMarkup([], null));
-      const hidden = page.locator('#b5-contract-fixture #warehouse-transfer-panel-export');
+      const hidden = page.locator(
+        '#b5-contract-fixture #warehouse-transfer-panel-export');
       assert.equal(await hidden.isVisible(), false);
       assert.equal(
-        await page.locator('#b5-contract-fixture #warehouse-transfer-panel-import').isVisible(),
+        await page.locator(
+          '#b5-contract-fixture #warehouse-transfer-panel-import').isVisible(),
         true
       );
       assert.equal(
-        await page.locator('#b5-contract-fixture #warehouse-transfer-tab-export').isDisabled(),
+        await page.locator(
+          '#b5-contract-fixture #warehouse-transfer-tab-export').isDisabled(),
         true
       );
     });
@@ -369,7 +390,8 @@ test(
 );
 
 test(
-  'browser B-5: entrypoint buttons open dialogs and iOS icon resolves as a real image',
+  'browser B-5: entrypoint buttons open dialogs and iOS icon resolves as a \
+real image',
   async () => {
     await session(async ({page, open, base}) => {
       await seed(base, '003765');
@@ -390,7 +412,8 @@ test(
 );
 
 test(
-  'browser B-5: empty bottle images use a fitted SVG placeholder in both themes',
+  'browser B-5: empty bottle images use a fitted SVG placeholder in both \
+themes',
   async () => {
     await session(async ({page, open, base}) => {
       await seed(base, '009532');
@@ -398,7 +421,8 @@ test(
       const card = page.locator('.card-img:has(img.image-placeholder)').first();
       await card.waitFor();
       const placeholder = card.locator('img.image-placeholder');
-      const resource = await fetch(new URL(await placeholder.getAttribute('src'), base));
+      const resource = await fetch(new URL(await placeholder.getAttribute(
+        'src'), base));
       assert.equal(resource.status, 200);
       assert.match(
         resource.headers.get('content-type') || '',
@@ -447,7 +471,8 @@ test(
 );
 
 test(
-  'browser B-5: header branding is a loaded SVG and the installed app icon is reachable',
+  'browser B-5: header branding is a loaded SVG and the installed app icon \
+is reachable',
   async () => {
     await session(async ({page, open, base}) => {
       await open();

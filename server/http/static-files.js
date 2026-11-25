@@ -5,7 +5,8 @@ import {pipeline} from 'node:stream/promises';
 import {fileURLToPath} from 'node:url';
 import {ROOT, IMAGE_DIR} from '../storage/paths.js';
 import {fail} from '../domain/errors.js';
-const WEB = path.resolve(fileURLToPath(new URL('../../public/', import.meta.url)));
+const WEB = path.resolve(fileURLToPath(new URL('../../public/',
+  import.meta.url)));
 const SHARED = path.resolve(WEB, '../shared');
 // Only browser-safe shared modules are served. Node-only backup modules stay
 // private.
@@ -51,7 +52,8 @@ function decodePath(encoded) {
  * @return {!Object} Structured result for the caller.
  */
 function htmlSecurityHeaders(html) {
-  const hashes = [...html.matchAll(/<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)]
+  const hashes = [...html.matchAll(
+    /<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)]
     .map(([, body]) => `'sha256-${crypto.createHash('sha256').update(body)
       .digest('base64')}'`);
   return {
@@ -87,7 +89,8 @@ function htmlSecurityHeaders(html) {
  * @param {!Object=} securityHeaders Security headers used by this operation.
  * @return {*} Whether the requested condition is met.
  */
-function streamStatic(req, res, file, contentType, cacheControl, securityHeaders = {}) {
+function streamStatic(req, res, file, contentType, cacheControl,
+  securityHeaders = {}) {
   const stat = fs.statSync(file);
   const etag = `W/"${stat.size.toString(16)}-${Math.trunc(stat.mtimeMs)
     .toString(16)}"`;
@@ -136,7 +139,8 @@ export async function serveStatic(req, res, url) {
   }
   let file;
   if (url.pathname === '/vendor/html5-qrcode.min.js') {
-    const vendor = path.resolve(WEB, '../node_modules/html5-qrcode/html5-qrcode.min.js');
+    const vendor = path.resolve(WEB,
+      '../node_modules/html5-qrcode/html5-qrcode.min.js');
     if (!fs.existsSync(vendor)) throw fail(
       'Scanner-Bibliothek fehlt. Bitte npm install ausführen.',
       503,
@@ -155,10 +159,12 @@ export async function serveStatic(req, res, url) {
   const threeFiles = {
     '/vendor/three.module.js': 'build/three.module.js',
     '/vendor/three.core.js': 'build/three.core.js',
-    '/vendor/three/addons/controls/OrbitControls.js': 'examples/jsm/controls/OrbitControls.js',
+    '/vendor/three/addons/controls/OrbitControls.js':
+      'examples/jsm/controls/OrbitControls.js',
   };
   if (Object.hasOwn(threeFiles, url.pathname)) {
-    const vendor = path.resolve(WEB, '../node_modules/three', threeFiles[url.pathname]);
+    const vendor = path.resolve(WEB, '../node_modules/three',
+      threeFiles[url.pathname]);
     if (!fs.existsSync(vendor)) throw fail(
       'Three.js fehlt. Bitte npm ci ausführen.',
       503,
@@ -174,13 +180,15 @@ export async function serveStatic(req, res, url) {
   }
   if (url.pathname.startsWith('/shared/')) {
     const name = decodePath(url.pathname.slice('/shared/'.length));
-    if (!SHARED_BROWSER_FILES.has(name)) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
+    if (!SHARED_BROWSER_FILES.has(name)) throw fail('Datei nicht gefunden',
+      404, "api.errors.fileNotFound");
     file = path.join(SHARED, name);
   } else if (url.pathname.startsWith('/images/')) {
     const name = decodePath(url.pathname.slice(1));
     file = path.resolve(ROOT, name);
     if (!file.startsWith(IMAGE_DIR +
-      path.sep)) throw fail('Ungültiger Bildpfad', 403, "api.errors.invalidImagePath");
+      path.sep)) throw fail('Ungültiger Bildpfad', 403,
+        "api.errors.invalidImagePath");
   } else {
     const name = url.pathname === '/' ? 'index.html' :
       decodePath(url.pathname.slice(1));
@@ -189,7 +197,8 @@ export async function serveStatic(req, res, url) {
       path.sep)) throw fail('Ungültiger Pfad', 403, "api.errors.invalidPath");
   }
   if (!fs.existsSync(file) || !fs.statSync(file)
-    .isFile()) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
+    .isFile()) throw fail('Datei nicht gefunden', 404,
+      "api.errors.fileNotFound");
   const ext = path.extname(file).toLowerCase();
   const types = {
     '.webmanifest': 'application/manifest+json; charset=utf-8',

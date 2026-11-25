@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {collectionOverviewEntries, matchesFlavorCriteria} from '../../public/js/domain/collection-overview.js';
-import {normalizeFlavorCriteria, normalizeSavedViews} from '../../shared/collection-saved-views.js';
-import {suggestFlight, flightCandidates} from '../../public/js/domain/flight-planner.js';
+import {collectionOverviewEntries, matchesFlavorCriteria}
+  from '../../public/js/domain/collection-overview.js';
+import {normalizeFlavorCriteria, normalizeSavedViews}
+  from '../../shared/collection-saved-views.js';
+import {suggestFlight, flightCandidates}
+  from '../../public/js/domain/flight-planner.js';
 
 /**
  * Derives the profile result from the supplied values.
@@ -30,14 +33,20 @@ const coll = {
       name: 'Smoky',
       abv: 50,
       bottles: [{id: 'a1', status: 'open', volumeType: 'standard'}],
-      tastings: [{id: 'ta', tastedOn: '2026-11-01', flavorProfile: profile(8, 6)}],
+      tastings: [{
+        id: 'ta', tastedOn: '2026-11-01', flavorProfile: profile(8,
+          6),
+      }],
     },
     {
       id: 'b',
       name: 'Gentle',
       abv: 40,
       bottles: [{id: 'b1', status: 'closed', volumeType: 'sample'}],
-      tastings: [{id: 'tb', tastedOn: '2026-10-01', flavorProfile: profile(1, 3)}],
+      tastings: [{
+        id: 'tb', tastedOn: '2026-10-01', flavorProfile: profile(1,
+          3),
+      }],
     },
     {
       id: 'c',
@@ -49,9 +58,13 @@ const coll = {
   ],
 };
 test(
-  'flavor criteria are ANDed, old profiles have genuinely unassessed axes, zero is a score',
+  'flavor criteria are ANDed, old profiles have genuinely unassessed axes, \
+zero is a score',
   () => {
-    const c = [{axis: 'smoky', min: 7, max: 10}, {axis: 'fruity', min: 5, max: 10}];
+    const c = [{axis: 'smoky', min: 7, max: 10}, {
+      axis: 'fruity', min: 5,
+      max: 10,
+    }];
     assert.deepEqual(
       collectionOverviewEntries(coll, {flavorCriteria: c}).map(x =>
         x.bottling.id),
@@ -103,7 +116,8 @@ test(
   }
 );
 test(
-  'old tasting with a profile remains filterable even if newer tasting omitted profile',
+  'old tasting with a profile remains filterable even if newer tasting \
+omitted profile',
   () => {
     const b = {
       ...coll.bottlings[0],
@@ -119,7 +133,8 @@ test(
   }
 );
 test(
-  'saved views reject duplicate IDs, malformed criteria and preserve both column preferences',
+  'saved views reject duplicate IDs, malformed criteria and preserve both \
+column preferences',
   () => {
     const view = {
       id: 'v1',
@@ -148,7 +163,12 @@ test(
       'old saved views retain their format'
     );
     assert.equal(
-      normalizeSavedViews([{...view, filters: {...view.filters, profilePresent: true}}])[0].filters.profilePresent,
+      normalizeSavedViews([{
+        ...view, filters: {
+          ...view.filters, profilePresent:
+            true,
+        },
+      }])[0].filters.profilePresent,
       true
     );
     assert.throws(() => normalizeSavedViews([{
@@ -156,12 +176,19 @@ test(
       filters: {...view.filters, profileMissing: true, profilePresent: true},
     }]));
     assert.throws(() => normalizeSavedViews([view, view]));
-    assert.throws(() => normalizeFlavorCriteria([{axis: 'smoky', min: 9, max: 4}]));
-    assert.throws(() => normalizeFlavorCriteria([{axis: 'smoky', min: 0, max: 10}, {axis: 'smoky', min: 3, max: 7}]));
+    assert.throws(() => normalizeFlavorCriteria([{
+      axis: 'smoky', min: 9,
+      max: 4,
+    }]));
+    assert.throws(() => normalizeFlavorCriteria([{
+      axis: 'smoky', min: 0,
+      max: 10,
+    }, {axis: 'smoky', min: 3, max: 7}]));
   }
 );
 test(
-  'offline flight suggestion keeps physical bottle identities, excludes empty, and never invents flavors',
+  'offline flight suggestion keeps physical bottle identities, excludes \
+empty, and never invents flavors',
   () => {
     const open = flightCandidates(coll, {availability: 'open'});
     assert.deepEqual(open.map(x => x.bottling.id), ['a', 'c']);
@@ -170,7 +197,10 @@ test(
       ['b1']
     );
     for (const style of ['balanced', 'similar', 'contrast', 'discover']) {
-      const result = suggestFlight(coll, {style, count: 3, availability: 'all'});
+      const result = suggestFlight(coll, {
+        style, count: 3, availability:
+          'all',
+      });
       assert.equal(result.length, 3);
       assert.equal(new Set(result.map(x => x.bottlingId)).size, 3);
       assert.equal(new Set(result.map(x => x.bottleId)).size, 3);

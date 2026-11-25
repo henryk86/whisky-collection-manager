@@ -1,5 +1,6 @@
 import {takeMutationUpdates, takeUpdatedResource} from '../api.js';
-import {synchronizeWarehouseProjection} from '../../../shared/warehouse-bottle-projection.js';
+import {synchronizeWarehouseProjection}
+  from '../../../shared/warehouse-bottle-projection.js';
 /**
  * Refresh only resources known to be affected by a mutation. Unknown/mixed
  * mutations deliberately use both endpoints. The cache module retains
@@ -33,7 +34,8 @@ export async function loadResources(state, getJson, scope = 'all') {
     warehouseResult.value;
   if (changed.has('collection') && !changed.has('warehouse') &&
     collectionResult.status === 'fulfilled' && state.warehouse) {
-    state.warehouse = synchronizeWarehouseProjection(state.warehouse, state.collection);
+    state.warehouse = synchronizeWarehouseProjection(state.warehouse,
+      state.collection);
   }
   if (collectionResult.status === 'rejected') throw collectionResult.reason;
   if (warehouseResult.status === 'rejected') throw warehouseResult.reason;

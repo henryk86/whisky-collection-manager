@@ -23,7 +23,8 @@ const create = (dir, relative, text) => {
   return full;
 };
 test(
-  'AES-256 ZIP encrypts collection, images, documents; HMAC detects damaged archives',
+  'AES-256 ZIP encrypts collection, images, documents; HMAC detects damaged \
+archives',
   () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-readable-zip-'));
     try {
@@ -93,7 +94,8 @@ test(
   }
 );
 test(
-  'ZIP backup worker writes portable archives, prunes old runs and restores without changing live data',
+  'ZIP backup worker writes portable archives, prunes old runs and restores \
+without changing live data',
   async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-zip-worker-'));
     const control = path.join(root, 'control'), targets =
@@ -255,7 +257,8 @@ test(
     } finally {
       if (server) await new Promise(resolve => server.close(resolve));
       for (const [key, value] of Object.entries(original)) {
-        if (value === undefined) delete process.env[key]; else process.env[key] = value;
+        if (value === undefined) delete process.env[key]; else process.env[
+          key] = value;
       }
       fs.rmSync(root, {recursive: true, force: true});
     }

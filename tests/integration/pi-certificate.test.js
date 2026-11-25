@@ -23,8 +23,10 @@ const createProject = (envContent = null, legacyEnv = null) => {
   fs.mkdirSync(deploy);
   fs.writeFileSync(path.join(deploy, 'setup-pi.sh'), script);
   fs.writeFileSync(path.join(deploy, '.env.example'), template);
-  if (envContent !== null) fs.writeFileSync(path.join(root, '.env'), envContent);
-  if (legacyEnv !== null) fs.writeFileSync(path.join(deploy, '.env'), legacyEnv);
+  if (envContent !== null) fs.writeFileSync(path.join(root, '.env'),
+    envContent);
+  if (legacyEnv !== null) fs.writeFileSync(path.join(deploy, '.env'),
+    legacyEnv);
   /**
    * Derives the run result from the supplied values.
    *
@@ -53,7 +55,10 @@ const createProject = (envContent = null, legacyEnv = null) => {
     /**
      * Updates the cleanup state for its caller.
      */
-    cleanup: () => {fs.rmSync(root, {recursive: true, force: true}); fs.rmSync(home, {recursive: true, force: true});},
+    cleanup: () => {
+      fs.rmSync(root, {recursive: true, force: true});
+      fs.rmSync(home, {recursive: true, force: true});
+    },
   };
 };
 
@@ -79,14 +84,17 @@ const certificateHas = (certificate, flag, name, match = true) => {
 };
 
 test(
-  'Pi setup copies the Docker Compose .env template and certifies configured hosts and IPv4 addresses',
+  'Pi setup copies the Docker Compose .env template and certifies \
+configured hosts and IPv4 addresses',
   () => {
     const {root, deploy, run, cert, cleanup} = createProject();
     try {
       run();
       assert.equal(
         fs.readFileSync(path.join(root, '.env'), 'utf8'),
-        template + `\n# Persistente Laufzeitdaten (ausserhalb des Git-Repositories)\nWCM_DATA_DIR=${path.dirname(cert).split('/secrets/certs')[0]}\n`
+        template +
+        `\n# Persistente Laufzeitdaten (ausserhalb des Git-Repositories)\n\
+WCM_DATA_DIR=${path.dirname(cert).split('/secrets/certs')[0]}\n`
       );
       const token = path.join(path.dirname(cert), '../backup-admin-token');
       const tokenBefore = fs.readFileSync(token);
@@ -100,7 +108,8 @@ test(
       ]) {
         certificateHas(cert, '-checkhost', name);
       }
-      for (const ip of ['127.0.0.1', '192.168.178.40']) certificateHas(cert, '-checkip', ip);
+      for (const ip of ['127.0.0.1', '192.168.178.40']) certificateHas(cert,
+        '-checkip', ip);
       assert.equal(
         fs.statSync(path.join(path.dirname(cert), 'server-key.pem'))
           .mode & 0o777,
@@ -115,7 +124,8 @@ test(
         name.startsWith('previous.'));
       assert.equal(backups.length, 1);
       assert.deepEqual(
-        fs.readFileSync(path.join(path.dirname(cert), backups[0], 'server-cert.pem')),
+        fs.readFileSync(path.join(path.dirname(cert), backups[0],
+          'server-cert.pem')),
         firstCert
       );
     } finally {
@@ -125,7 +135,8 @@ test(
 );
 
 test(
-  'Changing only .env allows custom DNS/IP SANs after explicit certificate renewal',
+  'Changing only .env allows custom DNS/IP SANs after explicit certificate \
+renewal',
   () => {
     const initialEnv = [
       'IMAGE_TAG=v0.6.36',
@@ -171,9 +182,11 @@ test(
 );
 
 test(
-  'Pi setup imports older deploy/.env and supports the original WHISKY_LAN_IP override',
+  'Pi setup imports older deploy/.env and supports the original \
+WHISKY_LAN_IP override',
   () => {
-    const project = createProject(null, 'IMAGE_TAG=v0.6.35\nTZ=Europe/Berlin\n');
+    const project = createProject(null, 'IMAGE_TAG=v0.6.35\nTZ=Europe/Berlin\n'
+    );
     try {
       project.run([], {WHISKY_LAN_IP: '10.1.1.5'});
       const current = fs.readFileSync(path.join(project.root, '.env'), 'utf8');
@@ -188,7 +201,8 @@ test(
 );
 
 test(
-  'Invalid SAN values are rejected before replacing certificates; .env is never sourced as shell code',
+  'Invalid SAN values are rejected before replacing certificates; .env is \
+never sourced as shell code',
   () => {
     const project = createProject(template);
     try {
@@ -196,12 +210,14 @@ test(
       const original = fs.readFileSync(project.cert);
       const evil = path.join(project.root, 'should-not-exist');
       fs.writeFileSync(path.join(project.root, '.env'),
-        `IMAGE_TAG=latest\nUNRELATED=$(touch ${evil})\nCERT_DNS_NAMES=home-pi,https://evil.test\nCERT_IP_ADDRESSES=127.0.0.1\n`);
+        `IMAGE_TAG=latest\nUNRELATED=$(touch ${evil})\nCERT_DNS_NAMES=home-p\
+i,https://evil.test\nCERT_IP_ADDRESSES=127.0.0.1\n`);
       assert.throws(() => project.run(['--renew-cert']));
       assert.deepEqual(fs.readFileSync(project.cert), original);
       assert.equal(fs.existsSync(evil), false);
       fs.writeFileSync(path.join(project.root, '.env'),
-        'CERT_DNS_NAMES=home-pi,home-pi.local\nCERT_IP_ADDRESSES=127.0.0.1,999.22.3.4\n');
+        'CERT_DNS_NAMES=home-pi,home-pi.local\nCERT_IP_ADDRESSES=127.0.0.1,\
+999.22.3.4\n');
       assert.throws(() => project.run(['--renew-cert']));
       assert.deepEqual(fs.readFileSync(project.cert), original);
     } finally {

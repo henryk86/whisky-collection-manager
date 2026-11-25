@@ -31,7 +31,8 @@ const COMMON_IMPORT_FIELDS = Object.freeze([
  * @param {!Object=} options2 Destructured options for this operation.
  * @return {!Object} Structured result for the caller.
  */
-export function normalizeImportPayload(data, {referenceId, extraFields = []} = {}) {
+export function normalizeImportPayload(data, {referenceId, extraFields = []} =
+  {}) {
   if (!data || data.version !== 2 || data.source !== 'external' ||
     !data.fields || typeof data.fields !== 'object' ||
     Array.isArray(data.fields)) {

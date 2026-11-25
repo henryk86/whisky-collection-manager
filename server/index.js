@@ -5,7 +5,10 @@ import http from 'node:http';
 import https from 'node:https';
 import {fileURLToPath} from 'node:url';
 import {createRequestHandler} from './app.js';
-import {PORT, HOST, HTTPS_ENABLED, HTTP_ENABLED, HTTPS_PORT, HTTPS_CERT_FILE, HTTPS_KEY_FILE, ALLOWED_HOSTS} from './config.js';
+import {
+  PORT, HOST, HTTPS_ENABLED, HTTP_ENABLED, HTTPS_PORT, HTTPS_CERT_FILE,
+  HTTPS_KEY_FILE, ALLOWED_HOSTS
+} from './config.js';
 export {createServer} from './app.js';
 /**
  * Initializes and starts the configured HTTP and HTTPS listeners.
@@ -16,7 +19,9 @@ export function startServers() {
   let tlsOptions;
   if (HTTPS_ENABLED) {
     if (!fs.existsSync(HTTPS_KEY_FILE) || !fs.existsSync(HTTPS_CERT_FILE)) {
-      throw new Error('HTTPS-Zertifikat fehlt. Bitte npm run https:setup -- --ip <LAPTOP-IP> ausfuehren.');
+      throw new Error(
+        'HTTPS-Zertifikat fehlt. Bitte npm run https:setup -- --ip \
+<LAPTOP-IP> ausfuehren.');
     }
     tlsOptions = {
       key: fs.readFileSync(HTTPS_KEY_FILE),
@@ -32,7 +37,9 @@ export function startServers() {
     secure.listen(
       HTTPS_PORT,
       HOST,
-      () => console.log(`Whisky Collection Manager HTTPS: https://localhost:${HTTPS_PORT} (LAN: https://<LAPTOP-IP>:${HTTPS_PORT})`)
+      () => console.log(
+        `Whisky Collection Manager HTTPS: https://localhost:${HTTPS_PORT} \
+(LAN: https://<LAPTOP-IP>:${HTTPS_PORT})`)
     );
     servers.push(secure);
   }
@@ -41,7 +48,9 @@ export function startServers() {
     plain.listen(
       PORT,
       HOST,
-      () => console.log(`Whisky Collection Manager HTTP: http://localhost:${PORT} (LAN: http://<LAPTOP-IP>:${PORT})`)
+      () => console.log(
+        `Whisky Collection Manager HTTP: http://localhost:${PORT} (LAN: \
+http://<LAPTOP-IP>:${PORT})`)
     );
     servers.push(plain);
   }

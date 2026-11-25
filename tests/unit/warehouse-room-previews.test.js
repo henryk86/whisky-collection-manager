@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
-import {mountWarehouseRoomPreviews} from '../../public/js/ui/warehouse-room-previews.js';
+import {mountWarehouseRoomPreviews}
+  from '../../public/js/ui/warehouse-room-previews.js';
 
 const rooms = [
   {
@@ -26,7 +27,8 @@ const rooms = [
 ];
 
 test(
-  'each overview room card has one decorative snapshot slot and stays a single clickable card',
+  'each overview room card has one decorative snapshot slot and stays a \
+single clickable card',
   () => {
     const previous = globalThis.document;
     let html = '';
@@ -93,7 +95,8 @@ test(
 );
 
 test(
-  'overview thumbnails reuse actual 3D scene construction and only allocate a shared temporary renderer',
+  'overview thumbnails reuse actual 3D scene construction and only allocate \
+a shared temporary renderer',
   () => {
     const previous = globalThis.document;
     try {

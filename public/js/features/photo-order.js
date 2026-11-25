@@ -54,7 +54,8 @@ async function savePhotoOrder(bottleId, ids, action) {
  * @return {!Promise<void>} Completion of the move, if one is possible.
  */
 export async function movePhoto(bottleId, photoId, step, action) {
-  const list = document.querySelector(`[data-photo-list="${CSS.escape(bottleId)}"]`);
+  const list = document.querySelector(`[data-photo-list="${CSS.escape(bottleId
+  )}"]`);
   if (!list) return;
   const ids = [...list.querySelectorAll('[data-photo-tile]')].map(tile =>
     tile.dataset.photoId);
@@ -99,7 +100,8 @@ export function attachPhotoSorting(action) {
      * @return {?Element} Target tile or null when outside the list.
      */
     const tileAt = (x, y) => {
-      const tile = document.elementFromPoint(x, y)?.closest('[data-photo-tile]');
+      const tile = document.elementFromPoint(x, y)?.closest('[data-photo-tile]'
+      );
       return tile?.closest('[data-photo-list]') === list ? tile : null;
     };
 

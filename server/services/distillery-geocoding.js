@@ -5,7 +5,8 @@
  */
 import {fail} from '../domain/errors.js';
 import fs from 'node:fs';
-const appVersion = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
+const appVersion = JSON.parse(fs.readFileSync(new URL('../../package.json',
+  import.meta.url), 'utf8')).version;
 const cache = new Map();
 let lastLookup = 0;
 const MIN_INTERVAL_MS = 1200;
@@ -19,7 +20,8 @@ const DEFAULT_URL = 'https://nominatim.openstreetmap.org/search';
  * @param {!Object=} options2 Destructured options for this operation.
  * @return {!Promise<*>} Promise fulfilled when the operation completes.
  */
-export async function findDistilleryLocations(input, {now = Date.now, fetchImpl = fetch} = {}) {
+export async function findDistilleryLocations(input, {now = Date.now,
+  fetchImpl = fetch} = {}) {
   const name = typeof input?.name === 'string' ? input.name.trim() : '';
   if (name.length < 2 || name.length > 150 || /[\x00-\x1f]/.test(name)) {
     throw fail(
@@ -60,7 +62,9 @@ export async function findDistilleryLocations(input, {now = Date.now, fetchImpl 
     const response = await fetchImpl(url, {
       signal: AbortSignal.timeout(8000),
       headers: {
-        'User-Agent': `WhiskyCollectionManager/${appVersion} (+https://github.com/henryk86/whisky-collection-manager)`,
+        'User-Agent':
+          `WhiskyCollectionManager/${appVersion} (+https://github.com/henryk\
+86/whisky-collection-manager)`,
         'Accept': 'application/json',
         'Accept-Language': 'en',
       },
@@ -69,9 +73,11 @@ export async function findDistilleryLocations(input, {now = Date.now, fetchImpl 
     raw = await response.json();
   } catch {
     throw fail(
-      'Die OpenStreetMap-Standortsuche ist derzeit nicht erreichbar. Koordinaten können manuell eingetragen werden.',
+      'Die OpenStreetMap-Standortsuche ist derzeit nicht erreichbar. \
+Koordinaten können manuell eingetragen werden.',
       503,
-      "api.errors.openstreetmapLocationSearchIsCurrentlyUnavailableYouCanEnterCoordinatesManually"
+      "api.errors.openstreetmapLocationSearchIsCurrentlyUnavailableYouCanEnt\
+erCoordinatesManually"
     );
   }
   if (!Array.isArray(raw)) throw fail(

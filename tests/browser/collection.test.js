@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer, requestJson} from '../helpers/server.js';
-import {domOnly, chromium, session, openSettingsFromMenu, openSettingsSection, seed, mockDecoder} from './support.js';
+import {
+  domOnly, chromium, session, openSettingsFromMenu, openSettingsSection,
+  seed, mockDecoder
+} from './support.js';
 test(
-  'browser: bottling editor shows external import preview only after incoming data',
+  'browser: bottling editor shows external import preview only after \
+incoming data',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -29,7 +33,8 @@ test(
           version: 2, source: 'external',
           fields: {
             whiskybaseId: '765432', name: 'Private import example',
-            whiskybaseUrl: 'https://www.whiskybase.com/whiskies/whisky/765432/example',
+            whiskybaseUrl:
+              'https://www.whiskybase.com/whiskies/whisky/765432/example',
           },
         };
         location.hash = '#wcm-import=' +
@@ -56,7 +61,8 @@ test(
 
 
 test(
-  'browser: Whiskybase import assigns four comma-separated distilleries to one bottling',
+  'browser: Whiskybase import assigns four comma-separated distilleries to \
+one bottling',
   async () => {
     await session(async ({page, open, base}) => {
       await open();
@@ -78,7 +84,8 @@ test(
             whiskybaseId: '987654',
             name: 'Four-Distillery Blended Malt',
             whiskyType: 'blended_malt',
-            whiskybaseUrl: 'https://www.whiskybase.com/whiskies/whisky/987654/test',
+            whiskybaseUrl:
+              'https://www.whiskybase.com/whiskies/whisky/987654/test',
           },
         };
         location.hash = '#wcm-import=' +
@@ -95,11 +102,13 @@ test(
         expectedIds
       );
       assert.equal(
-        await page.locator('#import-panel input[name="import-distillery"]:checked').count(),
+        await page.locator(
+          '#import-panel input[name="import-distillery"]:checked').count(),
         4
       );
       assert.equal(
-        await page.locator('#import-panel input[name="import-distillery"]:disabled').count(),
+        await page.locator(
+          '#import-panel input[name="import-distillery"]:disabled').count(),
         0
       );
       await page.locator('#import-panel [data-act="import-apply"]').click();
@@ -140,7 +149,8 @@ test(
         'UI Lifecycle'
       );
       assert.equal(
-        await page.locator('.bottling-context input, .bottling-context select').count(),
+        await page.locator('.bottling-context input, .bottling-context select')
+          .count(),
         0
       );
       assert.equal(await page.locator('[name="inventoryNumber"]').count(), 1);
@@ -149,7 +159,8 @@ test(
       await page.locator('[name="photos"]').setInputFiles({
         name: 'test.png', mimeType: 'image/png',
         buffer: Buffer.from(
-          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=',
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AA\
+wMCAO+/fG8AAAAASUVORK5CYII=',
           'base64'
         ),
       });
@@ -224,11 +235,14 @@ test(
 
 
 test(
-  'browser: Chrome pointer dragging reorders bottle photos without opening the viewer',
+  'browser: Chrome pointer dragging reorders bottle photos without opening \
+the viewer',
   async () => {
     await session(async ({page, open, base}) => {
       const {bottling, bottle} = await seed(base, '000325');
-      const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+      const png =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA\
+AAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
       const photos = [];
       for (let i = 0; i < 3; i++) {
         const saved = await requestJson(
@@ -294,7 +308,8 @@ test(
         gallery.locator('[data-photo-tile]').last()
       );
       await page.waitForFunction(expected => {
-        const tiles = document.querySelectorAll('[data-photo-list] [data-photo-tile]');
+        const tiles = document.querySelectorAll(
+          '[data-photo-list] [data-photo-tile]');
         return JSON.stringify([...tiles].map(t => t.dataset.photoId)) ===
           JSON.stringify(expected);
       }, [photos[1], photos[2], photos[0]]);
@@ -307,7 +322,8 @@ test(
         gallery.locator('[data-photo-tile]').first()
       );
       await page.waitForFunction(expected => {
-        const tiles = document.querySelectorAll('[data-photo-list] [data-photo-tile]');
+        const tiles = document.querySelectorAll(
+          '[data-photo-list] [data-photo-tile]');
         return JSON.stringify([...tiles].map(t => t.dataset.photoId)) ===
           JSON.stringify(expected);
       }, [photos[0], photos[1], photos[2]]);
@@ -417,7 +433,8 @@ test(
 
 
 test(
-  'browser: a decoded inventory number opens details at the top, without edit mode',
+  'browser: a decoded inventory number opens details at the top, without \
+edit mode',
   async () => {
     await session(async ({page, base, open}) => {
       const data = await seed(base);
@@ -450,7 +467,8 @@ test(
 
 
 test(
-  'browser: scanning into an edit form retains the bottle ID and unsaved comment',
+  'browser: scanning into an edit form retains the bottle ID and unsaved \
+comment',
   async () => {
     await session(async ({page, base, open}) => {
       const data = await seed(base);
@@ -507,7 +525,8 @@ test(
           const header = document.querySelector('.site-header')
             .getBoundingClientRect();
           const buttons =
-            [...document.querySelectorAll('.site-header .top-actions > button')];
+            [...document.querySelectorAll('.site-header .top-actions > button'),
+            ];
           return {
             brandRight: brand.right, actionsLeft: actions.left,
             brandCenter: brand.top + brand.height / 2,
@@ -643,7 +662,8 @@ test(
           document.querySelector('#scrollbar-layout-filler').remove());
         const autoShort = await measure();
         if (autoLong.clientWidth === autoShort.clientWidth) {
-          t.skip('Browser uses overlay/hidden scrollbars; no measurable scrollbar width');
+          t.skip('Browser uses overlay/hidden scrollbars; no measurable \
+scrollbar width');
           return;
         }
         assert.ok(
@@ -679,7 +699,8 @@ test(
 
 
 test(
-  'browser: opening a modal does not shift centered content when a classic scrollbar is present',
+  'browser: opening a modal does not shift centered content when a classic \
+scrollbar is present',
   async t => {
     // The browser harness normally hides scrollbars. Use a visible classic
     // scrollbar to detect the 15px viewport-width regression during modal lock.
@@ -712,7 +733,8 @@ test(
         }));
         const before = await measure();
         if (before.width === 1366) {
-          t.skip('Browser uses overlay scrollbars; no physical gutter to measure');
+          t.skip('Browser uses overlay scrollbars; no physical gutter to \
+measure');
           return;
         }
         await page.evaluate(() => window.scrollTo(0, 350));
@@ -727,13 +749,17 @@ test(
           'keep the original scrollbar track'
         );
         assert.ok(Math.abs(opened.centeredLeft - before.centeredLeft) < 0.5,
-          `page header must not shift on modal open: ${JSON.stringify({before, opened})}`);
+          `page header must not shift on modal open: ${JSON.stringify({
+            before,
+            opened,
+          })}`);
         assert.ok(Math.abs(opened.centeredWidth - before.centeredWidth) < 0.5);
         assert.equal(
           await page.evaluate(() => document.documentElement.style.overflowY),
           'scroll'
         );
-        await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+        await page.locator('#modal-root .dialog-head [data-act="close-modal"]')
+          .click();
         const closed = await measure();
         assert.equal(closed.width, before.width);
         assert.ok(Math.abs(closed.centeredLeft - before.centeredLeft) < 0.5);
@@ -766,7 +792,8 @@ test(
         const brand = document.querySelector('.brand').getBoundingClientRect();
         const actions = document.querySelector('.top-actions')
           .getBoundingClientRect();
-        const icon = document.querySelector('header [data-act="toggle-theme"] svg');
+        const icon = document.querySelector(
+          'header [data-act="toggle-theme"] svg');
         return {
           gap: text.left - logo.right,
           brandRight: brand.right,
@@ -829,12 +856,14 @@ test(
 
 
 test(
-  'browser: header actions match hero; settings live only in the rightmost menu',
+  'browser: header actions match hero; settings live only in the rightmost \
+menu',
   async () => {
     await session(async ({page, open}) => {
       await open();
       await page.waitForSelector('.hero-actions');
-      for (const [action, label] of [['new', 'Neue Flasche'], ['scan', 'Inventar scannen']]) {
+      for (const [action, label] of [['new', 'Neue Flasche'], ['scan',
+        'Inventar scannen']]) {
         const headerButton = page.locator(`header [data-act="${action}"]`);
         const heroButton = page.locator(`.hero-actions [data-act="${action}"]`);
         assert.equal(await headerButton.locator('span').innerText(), label);
@@ -854,7 +883,8 @@ test(
         .evaluateAll(items => items.map(item => item.dataset.act));
       assert.deepEqual(buttons, ['toggle-theme', 'scan', 'new', 'toggle-menu']);
       await page.locator('#menu-button').click();
-      const settings = page.locator('#site-drawer [data-act="goto-settings-menu"]');
+      const settings = page.locator(
+        '#site-drawer [data-act="goto-settings-menu"]');
       assert.equal(await settings.isVisible(), true);
       assert.equal(
         await settings.locator('svg > path').count(),
@@ -867,7 +897,8 @@ test(
         'settings gear retains center circle'
       );
       await settings.click();
-      await page.getByRole('heading', {name: 'Einstellungen & Datensicherung'}).waitFor();
+      await page.getByRole('heading', {name: 'Einstellungen & Datensicherung'})
+        .waitFor();
       assert.equal(
         await page.locator('.settings-heading .eyebrow.dark').innerText(),
         'DEINE SAMMLUNG VERWALTEN'
@@ -900,7 +931,8 @@ test(
 
 
 test(
-  'browser: both themes and a narrow mobile layout render without page overflow',
+  'browser: both themes and a narrow mobile layout render without page \
+overflow',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -979,11 +1011,13 @@ test(
 
 
 test(
-  'browser: cards have equal heights per current grid row, but different rows can differ',
+  'browser: cards have equal heights per current grid row, but different \
+rows can differ',
   async () => {
     await session(async ({page, base, open}) => {
       const names = [
-        'A ' + 'Besonders langer Whiskyname mit mehreren Worten und vielen Angaben '.repeat(3).trim(),
+        'A ' + 'Besonders langer Whiskyname mit mehreren Worten und vielen \
+Angaben '.repeat(3).trim(),
         'B Kurz', 'C Kurz', 'D Kurz', 'E Kurz', 'F Kurz', 'G Kurz', 'H Kurz',
       ];
       for (let index = 0; index < names.length; index++) {
@@ -998,7 +1032,8 @@ test(
         document.querySelectorAll('.whisky-card').length === 8);
       // The same eight DOM cards must reflow into 4/3/2/1 columns without
       // changing the page size.
-      for (const [width, expectedColumns] of [[1366, 4], [900, 3], [740, 2], [390, 2], [320, 1]]) {
+      for (const [width, expectedColumns] of [[1366, 4], [900, 3], [740, 2],
+      [390, 2], [320, 1]]) {
         await page.setViewportSize({width, height: 900});
         const layout = await page.evaluate(() => {
           const grid = document.querySelector('.grid');
@@ -1029,10 +1064,12 @@ test(
         assert.equal(layout.rows.flatMap(row => row.cards).length, 8);
         for (const row of layout.rows) {
           assert.ok(Math.max(...row.heights) - Math.min(...row.heights) < 1,
-            `${width}px: cards in the same grid row must have equal heights: ${row.heights}`);
+            `${width}px: cards in the same grid row must have equal \
+heights: ${row.heights}`);
         }
         assert.ok(layout.rows[0].heights[0] > layout.rows[1].heights[0] + 10,
-          `${width}px: the first (long-title) row must not force its height onto later rows`);
+          `${width}px: the first (long-title) row must not force its height \
+onto later rows`);
         assert.ok(layout.gap >= 0 && layout.gap < 10,
           `${width}px: title and facts should stay close (${layout.gap}px)`);
       }
@@ -1043,7 +1080,8 @@ test(
 
 
 test(
-  'browser: founding year and bottler fallback work in home, table and detail after reload',
+  'browser: founding year and bottler fallback work in home, table and \
+detail after reload',
   async () => {
     await session(async ({page, open, base}) => {
       const created = await requestJson(base, '/api/bottlings', 'POST', {
@@ -1076,7 +1114,8 @@ test(
       });
       assert.ok(
         footerGap <= 55,
-        `Footer must follow pagination without excessive whitespace (${footerGap}px)`
+        `Footer must follow pagination without excessive whitespace \
+(${footerGap}px)`
       );
       await page.locator('[data-act="toggle-view"]').click();
       assert.match(
@@ -1121,7 +1160,9 @@ test(
 
 
 test('browser: real back/forward navigation and direct reload', {
-  skip: domOnly ? 'Managed environment: only DOM mode available; history controller is unit-tested separately' : false,
+  skip: domOnly ?
+    'Managed environment: only DOM mode available; history controller is \
+unit-tested separately' : false,
 }, async () => {
   await session(async ({page, base, open}) => {
     const data = await seed(base);
@@ -1134,7 +1175,8 @@ test('browser: real back/forward navigation and direct reload', {
     await page.waitForSelector('[data-act="edit-bottling"]');
     await page.goForward();
     await page.waitForURL('**/?view=settings');
-    await page.getByRole('heading', {name: 'Einstellungen & Datensicherung'}).waitFor();
+    await page.getByRole('heading', {name: 'Einstellungen & Datensicherung'})
+      .waitFor();
     // Import/export is a separate settings panel; the legacy JSON import
     // inside it remains in a closed <details> until the user opens it.
     await openSettingsSection(page, 'transfer');
@@ -1153,7 +1195,8 @@ test('browser: real back/forward navigation and direct reload', {
 
 
 test(
-  'browser: overview and detail mark individual samples, not the bottling itself',
+  'browser: overview and detail mark individual samples, not the bottling \
+itself',
   async () => {
     await session(async ({page, open, base}) => {
       const created = await seed(base);
@@ -1243,7 +1286,8 @@ test('browser: upload and remove invoice for one physical bottle', async () => {
         .id}/files`);
     await files.setInputFiles({
       name: 'Rechnung.pdf', mimeType: 'application/pdf',
-      buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n'),
+      buffer: Buffer.
+        from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n'),
     });
     const uploadResponse = await uploaded;
     assert.equal(uploadResponse.status(), 201,
@@ -1273,7 +1317,9 @@ test('browser: upload and remove invoice for one physical bottle', async () => {
     assert.equal(await iframe.getAttribute('sandbox'), null,
       'Chrome PDF viewer must not be blocked by iframe sandbox restrictions');
     assert.equal(
-      await page.locator('#modal-root .document-preview-actions a[download="Rechnung.pdf"]').count(),
+      await page.locator(
+        '#modal-root .document-preview-actions a[download="Rechnung.pdf"]')
+        .count(),
       1
     );
     await page.locator('#modal-root [data-act="close-modal"]').click();
@@ -1289,7 +1335,8 @@ test('browser: upload and remove invoice for one physical bottle', async () => {
 
 
 test(
-  'browser: attachments preview images and safe plaintext, with download fallback for office files',
+  'browser: attachments preview images and safe plaintext, with download \
+fallback for office files',
   async () => {
     await session(async ({page, base, open}) => {
       const {bottling, bottle} = await seed(base, '000936');
@@ -1298,18 +1345,21 @@ test(
           name: 'proof.png',
           mime: 'image/png',
           bytes: Buffer.from(
-            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=',
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8\
+AAwMCAO+/fG8AAAAASUVORK5CYII=',
             'base64'
           ),
         },
         {
           name: 'memo.txt',
           mime: 'text/plain',
-          bytes: Buffer.from('<script>alert("not HTML")</script>\nOriginal receipt'),
+          bytes: Buffer.
+            from('<script>alert("not HTML")</script>\nOriginal receipt'),
         },
         {
           name: 'letter.docx',
-          mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          mime: 'application/vnd.openxmlformats-officedocument.wordprocessin\
+gml.document',
           bytes: Buffer.from('504b030400000000', 'hex'),
         },
       ];
@@ -1343,7 +1393,9 @@ test(
         /^blob:/
       );
       assert.equal(
-        await page.locator('#modal-root .document-preview-actions [download="proof.png"]').count(),
+        await page.locator(
+          '#modal-root .document-preview-actions [download="proof.png"]')
+          .count(),
         1
       );
       await page.locator('#modal-root [data-act="close-modal"]').click();
@@ -1365,7 +1417,9 @@ test(
         /keine Vorschau verfügbar/
       );
       assert.equal(
-        await page.locator('#modal-root .document-preview-actions [download="letter.docx"]').count(),
+        await page.locator(
+          '#modal-root .document-preview-actions [download="letter.docx"]')
+          .count(),
         1
       );
       await page.locator('#modal-root [data-act="close-modal"]').click();
@@ -1374,11 +1428,14 @@ test(
 );
 
 test(
-  'browser: removing a photo or attachment does not bounce the detail page to the top',
+  'browser: removing a photo or attachment does not bounce the detail page \
+to the top',
   async () => {
     await session(async ({page, base, open}) => {
       const {bottling, bottle} = await seed(base, '002286');
-      const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+      const png =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA\
+AAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
       for (let i = 0; i < 8; i++) {
         assert.equal(
           (await requestJson(
@@ -1398,7 +1455,8 @@ test(
         new URL(response.url()).pathname === `/api/bottles/${bottle.id}/files`);
       await invoice.setInputFiles({
         name: 'receipt.pdf', mimeType: 'application/pdf',
-        buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n'),
+        buffer: Buffer.
+          from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n'),
       });
       assert.equal((await uploaded).status(), 201);
       await page.locator('.document-list a').waitFor();
@@ -1427,7 +1485,8 @@ test(
        * @param {*} expectedCount Value used by this operation.
        * @return {!Promise<*>} Promise for the asynchronous operation.
        */
-      async function confirmAndCheck(selector, expectedSelector, expectedCount) {
+      async function confirmAndCheck(selector, expectedSelector,
+        expectedCount) {
         const trigger = selector === 'photo' ?
           page.locator('[data-act="delete-photo"]').nth(4)
           : selector === 'cover' ?
@@ -1454,7 +1513,8 @@ test(
             window.__scrollSamples.push({
               y: window.scrollY,
               fixed: document.body.style.position === 'fixed',
-              cardTop: document.querySelector('.bottle-entry')?.getBoundingClientRect().top,
+              cardTop: document.querySelector('.bottle-entry')
+                ?.getBoundingClientRect().top,
             });
             if (!window.__stopScrollSamples) requestAnimationFrame(sample);
           };
@@ -1480,7 +1540,8 @@ test(
         assert.ok(
           samples.every(sample => Math.abs(sample.cardTop -
             previous.cardTop) <= 3),
-          `visible bottle card must not move while saving: ${JSON.stringify(samples)}`
+          `visible bottle card must not move while saving: ${JSON.stringify(
+            samples)}`
         );
       }
       await page.locator('.photo-tile').nth(4).scrollIntoViewIfNeeded();
@@ -1549,7 +1610,8 @@ test('browser: six bottlings still use four columns on desktop', async () => {
 test(
   'browser: selected entries per page survive F5 in both collection modes',
   async () => {
-    if (domOnly) return; // Actual F5 requires navigation, not the DOM-only test harness.
+    if (domOnly)
+      return; // Actual F5 requires navigation, not the DOM-only test harness.
     await session(async ({page, base, open}) => {
       const source = await requestJson(base, '/api/collection');
       const collection = source.data;
@@ -1565,7 +1627,8 @@ test(
         createdAt: '2026-11-06T08:00:00.000Z',
       }));
       assert.equal(
-        (await requestJson(base, '/api/import/json', 'POST', collection)).status,
+        (await requestJson(base, '/api/import/json', 'POST',
+          collection)).status,
         200
       );
       await open();
@@ -1596,7 +1659,8 @@ test(
 
 
 test(
-  'browser: 450 bottlings keep a fixed page size with only divisor-friendly grid widths',
+  'browser: 450 bottlings keep a fixed page size with only divisor-friendly \
+grid widths',
   async () => {
     await session(async ({page, base, open}) => {
       const source = await requestJson(base, '/api/collection');
@@ -1608,7 +1672,8 @@ test(
         bottles: [], tastings: [],
         createdAt: '2026-11-06T08:00:00.000Z',
       }));
-      const result = await requestJson(base, '/api/import/json', 'POST', collection);
+      const result = await requestJson(base, '/api/import/json', 'POST',
+        collection);
       assert.equal(result.status, 200);
       await open();
       await page.waitForSelector('.collection-pagination');
@@ -1627,7 +1692,8 @@ test(
       assert.equal(await page.locator('#pagination-size').inputValue(), '24');
 
       // 24 remains 24 even when the grid changes 2 -> 3 -> 4 columns.
-      for (const [width, columns] of [[390, 2], [820, 3], [1366, 4], [1660, 4], [360, 1]]) {
+      for (const [width, columns] of [[390, 2], [820, 3], [1366, 4], [1660, 4],
+      [360, 1]]) {
         await page.setViewportSize({width, height: 900});
         assert.equal(
           await page.locator('.grid').evaluate(el => getComputedStyle(el)
@@ -1706,7 +1772,8 @@ test(
 
 
 test(
-  'browser: distillery management uses normal page scrolling and app dialogs for create and rename',
+  'browser: distillery management uses normal page scrolling and app \
+dialogs for create and rename',
   async () => {
     await session(async ({page, base, open}) => {
       await open();
@@ -1738,7 +1805,8 @@ test(
         await page.locator('#distillery-count').innerText(),
         /1 von/
       );
-      await page.locator('.distillery-row:visible [data-act="rename-distillery"]').click();
+      await page.locator(
+        '.distillery-row:visible [data-act="rename-distillery"]').click();
       assert.equal(
         await page.locator('#distillery-name').inputValue(),
         'Ardbeg'
@@ -1781,7 +1849,8 @@ test(
 
 
 test(
-  'browser: adding a distillery within a bottling form restores unsaved fields and selected files',
+  'browser: adding a distillery within a bottling form restores unsaved \
+fields and selected files',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -1793,7 +1862,8 @@ test(
       await page.locator('#bottling-form [name="firstPhotos"]').setInputFiles({
         name: 'snapshot.png', mimeType: 'image/png',
         buffer: Buffer.from(
-          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=',
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AA\
+wMCAO+/fG8AAAAASUVORK5CYII=',
           'base64'
         ),
       });
@@ -1835,20 +1905,22 @@ test(
     await session(async ({page, open, base}) => {
       const {bottle} = await seed(base, '000912');
       await requestJson(base, `/api/bottles/${bottle.id}/photos`, 'POST', {
-        image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=',
+        image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAA\
+C1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=',
       });
       await open();
       for (const width of [1366, 390, 350]) {
         await page.setViewportSize({width, height: 850});
-        const spacing = await page.locator('.card-img img:not(.image-placeholder)').evaluate(el => {
-          const image = getComputedStyle(el);
-          const card = el.closest('.card-img');
-          const rule = getComputedStyle(card, '::after');
-          return {
-            padding: parseFloat(image.paddingBottom),
-            ruleBottom: parseFloat(rule.bottom),
-          };
-        });
+        const spacing = await page.locator(
+          '.card-img img:not(.image-placeholder)').evaluate(el => {
+            const image = getComputedStyle(el);
+            const card = el.closest('.card-img');
+            const rule = getComputedStyle(card, '::after');
+            return {
+              padding: parseFloat(image.paddingBottom),
+              ruleBottom: parseFloat(rule.bottom),
+            };
+          });
         // The line is 13px from the card bottom; the image padding must be
         // greater than that to avoid any visible pixels touching the line.
         assert.ok(
@@ -1863,7 +1935,8 @@ test(
 
 
 test(
-  'browser: switch between bottlings and physical bottles, filter, navigate and restore the mode',
+  'browser: switch between bottlings and physical bottles, filter, navigate \
+and restore the mode',
   async () => {
     await session(async ({page, base, open}) => {
       const created = await seed(base, '000701');
@@ -1877,7 +1950,8 @@ test(
         `/api/bottles/${created.bottle.id}/photos`,
         'POST',
         {
-          image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=',
+          image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQA\
+AAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=',
         }
       );
       assert.equal(photo.status, 201);
@@ -1912,8 +1986,12 @@ test(
       await page.setViewportSize({width: 1366, height: 900});
       await page.locator('[data-collection-mode="bottles"]').click();
       assert.equal(await page.locator('.whisky-card').count(), 2);
-      const firstSrc = await page.locator(`.whisky-card[data-bottle-id="${created.bottle.id}"] .card-img img`).getAttribute('src');
-      const secondSrc = await page.locator(`.whisky-card[data-bottle-id="${added.data.id}"] .card-img img`).getAttribute('src');
+      const firstSrc = await page.locator(
+        `.whisky-card[data-bottle-id="${created.bottle.id}"] .card-img img`)
+        .getAttribute('src');
+      const secondSrc = await page.locator(
+        `.whisky-card[data-bottle-id="${added.data.id}"] .card-img img`)
+        .getAttribute('src');
       assert.ok(
         firstSrc && !firstSrc.includes('photo-placeholder'),
         'The first bottle has its own photo'
@@ -1971,7 +2049,8 @@ test(
 
 
 test(
-  'browser: overview quick filters list only used distilleries and combine standard bottles and samples',
+  'browser: overview quick filters list only used distilleries and combine \
+standard bottles and samples',
   async () => {
     await session(async ({page, base, open}) => {
       const catalog = (await requestJson(base, '/api/collection')).data
@@ -2048,7 +2127,8 @@ test(
             // The flavor filter is a <summary> on desktop and a modal button
             // on mobile. Exactly one of those two controls must be visible.
             const controls = [...toolbar.querySelectorAll(
-              'input#search, select, button.btn, .collection-flavor-picker > summary'
+              'input#search, select, button.btn, .collection-flavor-picker >\
+ summary'
             )];
             return controls.filter(element => element.getClientRects().length >
               0).map(element => ({
@@ -2077,7 +2157,8 @@ test(
           `${width}px: exactly one flavor filter trigger is visible`
         );
         assert.ok(layout.every(item => Math.abs(item.height - 44) <= 1),
-          `${width}px: all visible controls including More filters and flavor must be 44px high`);
+          `${width}px: all visible controls including More filters and \
+flavor must be 44px high`);
         if (width === 1366) {
           assert.equal(
             layout[0].top,
@@ -2099,7 +2180,8 @@ test(
 
 
 test(
-  'browser: horizontal overflow check detects an 8px overflow with a reserved scrollbar track',
+  'browser: horizontal overflow check detects an 8px overflow with a \
+reserved scrollbar track',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -2129,15 +2211,18 @@ test(
         `Baseline layout overflow: ${JSON.stringify(measurement)}`
       );
       assert.ok(measurement.visualExcess >= 7,
-        `Probe must extend 8px beyond the usable body layout: ${JSON.stringify(measurement)}`);
+        `Probe must extend 8px beyond the usable body layout: ${JSON.stringify(
+          measurement)}`);
       assert.ok(measurement.withOverflow >= 7,
-        `8px overflow must be detected with a reserved scrollbar track: ${JSON.stringify(measurement)}`);
+        `8px overflow must be detected with a reserved scrollbar track: ${JSON
+          .stringify(measurement)}`);
     });
   }
 );
 
 test(
-  'browser: a committed bottling is not created twice after the following warehouse GET fails',
+  'browser: a committed bottling is not created twice after the following \
+warehouse GET fails',
   async () => {
     await session(async ({page, open, base}) => {
       await open();
@@ -2171,7 +2256,8 @@ test(
 );
 
 test(
-  'browser: concurrent bottling submits and Enter repeat create only one record',
+  'browser: concurrent bottling submits and Enter repeat create only one \
+record',
   async () => {
     await session(async ({page, open, base}) => {
       await open();
@@ -2188,7 +2274,10 @@ test(
       await page.evaluate(() => {
         const form = document.querySelector('#bottling-form');
         form.requestSubmit();
-        form.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));
+        form.dispatchEvent(new Event('submit', {
+          bubbles: true, cancelable:
+            true,
+        }));
       });
       assert.equal(
         await page.locator('#bottling-form').getAttribute('aria-busy'),
@@ -2211,7 +2300,8 @@ test(
 );
 
 test(
-  'browser: concurrent bottle submits create once; HTTP POST failure allows another attempt',
+  'browser: concurrent bottle submits create once; HTTP POST failure allows \
+another attempt',
   async () => {
     await session(async ({page, open, base}) => {
       const {bottling} = await seed(base);
@@ -2237,10 +2327,14 @@ test(
       await page.evaluate(() => {
         const form = document.querySelector('#bottle-form');
         form.requestSubmit();
-        form.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));
+        form.dispatchEvent(new Event('submit', {
+          bubbles: true, cancelable:
+            true,
+        }));
       });
       await page.waitForFunction(() =>
-        document.querySelector('#bottle-form')?.getAttribute('aria-busy') === null);
+        document.querySelector('#bottle-form')?.getAttribute('aria-busy') ===
+        null);
       assert.equal(
         await page.locator('#bottle-form button[type="submit"]').isEnabled(),
         true
@@ -2259,7 +2353,10 @@ test(
       await page.evaluate(() => {
         const form = document.querySelector('#bottle-form');
         form.requestSubmit();
-        form.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));
+        form.dispatchEvent(new Event('submit', {
+          bubbles: true, cancelable:
+            true,
+        }));
       });
       await page.locator('#bottle-form').waitFor({state: 'detached'});
       assert.equal(postCount, 2);
@@ -2274,9 +2371,12 @@ test(
 );
 
 test(
-  'browser: cards and table preference survive a full reload in both directions',
+  'browser: cards and table preference survive a full reload in both \
+directions',
   async () => {
-    if (domOnly) return; // F5 must reload the actual application, not the DOM-only harness.
+    if (domOnly)
+      // F5 must reload the actual application, not the DOM-only harness.
+      return;
     await session(async ({base, page, open}) => {
       await seed(base, '092310');
       await open();
@@ -2315,10 +2415,12 @@ test(
 );
 
 test(
-  'browser: collection table columns are configurable and header sorting updates the sort selector',
+  'browser: collection table columns are configurable and header sorting \
+updates the sort selector',
   async () => {
     await session(async ({base, page, open}) => {
-      for (const [name, inventoryNumber] of [['Column Alpha', '092311'], ['Column Zulu', '092312']]) {
+      for (const [name, inventoryNumber] of [['Column Alpha', '092311'],
+      ['Column Zulu', '092312']]) {
         const created = await requestJson(base, '/api/bottlings', 'POST', {
           name, firstBottle: {inventoryNumber, status: 'closed'},
         });
@@ -2454,7 +2556,8 @@ test(
       await page.locator('thead [data-column="name"]').click();
       assert.equal(await page.locator('#filter-sort').inputValue(), 'name');
       assert.equal(
-        await page.locator('thead th[aria-sort="ascending"] [data-column="name"]').count(),
+        await page.locator(
+          'thead th[aria-sort="ascending"] [data-column="name"]').count(),
         1
       );
       assert.match(
@@ -2464,7 +2567,8 @@ test(
       await page.locator('thead [data-column="name"]').click();
       assert.equal(await page.locator('#filter-sort').inputValue(), 'nameDesc');
       assert.equal(
-        await page.locator('thead th[aria-sort="descending"] [data-column="name"]').count(),
+        await page.locator(
+          'thead th[aria-sort="descending"] [data-column="name"]').count(),
         1
       );
       assert.match(

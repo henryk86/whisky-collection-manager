@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {roomCapacity, totalCapacity, capacityLabel} from '../../public/js/domain/warehouse-capacity.js';
+import {roomCapacity, totalCapacity, capacityLabel}
+  from '../../public/js/domain/warehouse-capacity.js';
 
 const sample = {
   rooms: [
@@ -22,7 +23,8 @@ const sample = {
 };
 
 test(
-  'room capacity sums only configured shelf slots and counts existing physical bottles once',
+  'room capacity sums only configured shelf slots and counts existing \
+physical bottles once',
   () => {
     assert.deepEqual(
       roomCapacity(sample.rooms[0], sample),
@@ -56,7 +58,14 @@ test(
 );
 
 test('zero capacity is a configured limit, not unlimited', () => {
-  const room = {furniture: [{shelves: [{id: 'empty', capacity: 0}, {id: 'free', capacity: null}]}]};
+  const room = {
+    furniture: [{
+      shelves: [{id: 'empty', capacity: 0}, {
+        id: 'free',
+        capacity: null,
+      }],
+    }],
+  };
   assert.deepEqual(
     roomCapacity(room, {bottles: [], assignments: {}}),
     {occupied: 0, defined: 0, unlimited: 1, shelves: 2}

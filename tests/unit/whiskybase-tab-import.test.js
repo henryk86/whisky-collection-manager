@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createWhiskybase} from '../../public/js/features/whiskybase/controller.js';
+import {createWhiskybase}
+  from '../../public/js/features/whiskybase/controller.js';
 
 const payload = {
   version: 2, source: 'external',
@@ -91,7 +92,10 @@ function mockImport({openEditor}) {
      *
      * @param {!Array<*>} args Arguments forwarded to the operation.
      */
-    closeModal: (...args) => {calls.push(['closeModal', ...args]); state.modal = null;},
+    closeModal: (...args) => {
+      calls.push(['closeModal', ...args]);
+      state.modal = null;
+    },
     /**
      * Constructs bottling from the supplied data.
      * @return {number} Calculated numeric value.
@@ -134,7 +138,8 @@ test('incoming hash import is processed in an already open manager tab', () => {
 });
 
 test(
-  'incoming hash import does not discard an already open form without confirmation',
+  'incoming hash import does not discard an already open form without \
+confirmation',
   () => {
     const {calls, controller, restore} = mockImport({openEditor: true});
     try {

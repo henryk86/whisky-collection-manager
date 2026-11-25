@@ -10,7 +10,9 @@ const key = path.join(certDir, 'server-key.pem');
 const cert = path.join(certDir, 'server-cert.pem');
 const args = process.argv.slice(2);
 if (args.includes('--help')) {
-  console.log('Aufruf: npm run https:setup -- --ip 192.168.1.50 [--hostname whisky.local]');
+  console.log(
+    'Aufruf: npm run https:setup -- --ip 192.168.1.50 [--hostname \
+whisky.local]');
   process.exit(0);
 }
 const envPath = path.join(root, '.env');
@@ -60,7 +62,9 @@ if (ips.length === 1) {
     console.log(`Erkannte LAN-IP: ${found[0]}`);
   }
   else {
-    console.warn('Mehrere oder keine LAN-IPs erkannt. Bitte --ip <Laptop-IP> angeben, damit das Zertifikat auf dem Smartphone funktioniert.');
+    console.warn(
+      'Mehrere oder keine LAN-IPs erkannt. Bitte --ip <Laptop-IP> angeben, \
+damit das Zertifikat auf dem Smartphone funktioniert.');
   }
 }
 const sans = [...new Set([...names.map(x => 'DNS:' + x), ...ips.map(x =>
@@ -150,13 +154,22 @@ setEnv('HTTPS_KEY_FILE', 'certs/server-key.pem');
 // No insecure HTTP endpoint after setup; can be deliberately enabled later.
 setEnv('HTTP_ENABLED', 'false');
 fs.writeFileSync(envPath, env.endsWith('\n') ? env : env + '\n');
-console.log(`\nZertifikat erstellt (${generatedBy}). HTTPS in .env aktiviert, HTTP deaktiviert.`);
+console.log(
+  `\nZertifikat erstellt (${generatedBy}). HTTPS in .env aktiviert, HTTP \
+deaktiviert.`);
 console.log('Server starten: npm start');
 console.log(`URL: https://${ips.at(-1)}:${httpsPort}/`);
 if (generatedBy === 'mkcert') {
-  console.log('WICHTIG: mkcert -install auf dem Laptop und Root-CA auf dem Smartphone als vertrauenswuerdig installieren.');
+  console.log(
+    'WICHTIG: mkcert -install auf dem Laptop und Root-CA auf dem Smartphone \
+als vertrauenswuerdig installieren.');
 }
 else {
-  console.log('WARNUNG: Selbstsigniertes Zertifikat. Der Browser wird es ohne explizite Vertrauensstellung ablehnen; Kamera/Scanner sind dann nicht garantiert verfuegbar. mkcert wird empfohlen.');
+  console.log(
+    'WARNUNG: Selbstsigniertes Zertifikat. Der Browser wird es ohne \
+explizite Vertrauensstellung ablehnen; Kamera/Scanner sind dann nicht \
+garantiert verfuegbar. mkcert wird empfohlen.');
 }
-console.log('Zertifikat bei IP-/Hostname-Wechsel neu erzeugen. Private Keys niemals hochladen.');
+console.log(
+  'Zertifikat bei IP-/Hostname-Wechsel neu erzeugen. Private Keys niemals \
+hochladen.');

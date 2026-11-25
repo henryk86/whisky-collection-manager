@@ -1,15 +1,18 @@
 /**
- * A persisted mutation is successful even when the subsequent view refresh
- * fails. Callers may close their forms and must not retry a committed POST.
+ * Runs a persisted mutation and then refreshes the view. A refresh failure does
+ * not invalidate a committed mutation or authorize a retry.
  *
- * @param {*} task Task used by this operation.
- * @param {*} refresh Refresh used by this operation.
- * @param {Function} onError On error used by this operation.
- * @param {Function=} onRefreshError On refresh error used by this operation.
- * @return {!Promise<(!Object)>} Promise fulfilled when the operation
- * completes.
+ * @param {Function} task Mutation callback; may return a value or promise.
+ * @param {Function} refresh Callback to reload the view after successful
+ *     mutation.
+ * @param {Function} onError Receives a mutation error.
+ * @param {Function=} onRefreshError Receives a post-mutation refresh error.
+ * @return {!Promise<!Object>} Result with ok and either value or error; a
+ *     committed mutation may also include refreshError.
  */
-export async function runAction(task, refresh, onError, onRefreshError = () => {}) {
+export async function runAction(
+  task, refresh, onError, onRefreshError = () => {}
+) {
   let value;
   try {
     value = await task();

@@ -3,7 +3,8 @@ import {pageHeader} from '../ui/headers.js';
 import {request} from '../api.js';
 import {toast} from '../ui/notifications.js';
 import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
-import {normalizeFlavorCriteria} from '../../../shared/collection-saved-views.js';
+import {normalizeFlavorCriteria}
+  from '../../../shared/collection-saved-views.js';
 import {displayPhotoPath} from '../../../shared/photo-images.js';
 import {t, currentLanguage} from '../i18n/index.js';
 /**
@@ -17,7 +18,12 @@ const statusText = status => t(({
   open: 'analytics.inventory.openedStatus',
   empty: 'home.status.empty',
 })[status] || 'features.distilleries.unknownStatus');
-import {newBottlingIcon, inventoryScanIcon, chevronDownIcon, chevronLeftIcon, chevronRightIcon, chevronsLeftIcon, chevronsRightIcon, arrowUpIcon, arrowDownIcon, arrowsUpDownIcon, closeIcon, collectionTableIcon, collectionCardsIcon, flightPlanIcon} from '../ui/action-icons.js';
+import {
+  newBottlingIcon, inventoryScanIcon, chevronDownIcon, chevronLeftIcon,
+  chevronRightIcon, chevronsLeftIcon, chevronsRightIcon, arrowUpIcon,
+  arrowDownIcon, arrowsUpDownIcon, closeIcon, collectionTableIcon,
+  collectionCardsIcon, flightPlanIcon
+} from '../ui/action-icons.js';
 import {escapeHtml, query} from '../ui/dom.js';
 import {emptyState, panel as contentPanel} from '../ui/content.js';
 import {imageUrl} from '../ui/format.js';
@@ -25,11 +31,20 @@ import {bottleStatusLabels} from '../domain/labels.js';
 import {inventoryCountGroups} from '../domain/inventory-counts.js';
 import {bottlingOriginLabel} from '../domain/bottling-origin.js';
 import {hasBottlingDetail} from '../domain/bottling-details.js';
-import {paginate, visiblePages, PAGE_SIZE_OPTIONS, homePageUrl} from '../domain/pagination.js';
+import {paginate, visiblePages, PAGE_SIZE_OPTIONS, homePageUrl}
+  from '../domain/pagination.js';
 import {savePageSizePreference} from '../domain/page-size-preference.js';
-import {availableOverviewDistilleries, collectionOverviewEntries, purchasePrice, latestUpdate} from '../domain/collection-overview.js';
-import {TABLE_COLUMNS, loadTableColumns, saveTableColumns, sortForColumn, normalizeTableColumns, DEFAULT_TABLE_COLUMNS} from '../domain/collection-table-columns.js';
-import {displayedTastingRating, latestTasting} from '../../../shared/tasting-records.js';
+import {
+  availableOverviewDistilleries, collectionOverviewEntries,
+  purchasePrice, latestUpdate
+} from '../domain/collection-overview.js';
+import {
+  TABLE_COLUMNS, loadTableColumns, saveTableColumns, sortForColumn,
+  normalizeTableColumns, DEFAULT_TABLE_COLUMNS
+}
+  from '../domain/collection-table-columns.js';
+import {displayedTastingRating, latestTasting}
+  from '../../../shared/tasting-records.js';
 import {glencairnRatingSymbol} from '../ui/glencairn-icon.js';
 /**
  * The count labels represent mutually exclusive bottle types. Sample bottles
@@ -88,7 +103,8 @@ function overviewFacts(bottling) {
  * @param {*} distilleryNames Distillery names used by this operation.
  * @return {string} Resulting text.
  */
-function collectionTableCell(columnId, entry, allBottlingBottles, distilleryNames) {
+function collectionTableCell(columnId, entry, allBottlingBottles,
+  distilleryNames) {
   const {bottling, bottle} = entry;
   const displayedBottles = bottle ? [bottle] : allBottlingBottles;
   let value = '';
@@ -103,7 +119,8 @@ function collectionTableCell(columnId, entry, allBottlingBottles, distilleryName
     case 'abv': value = overviewField(bottling.abv, ' %'); break;
     case 'year': value = overviewField(bottling.releaseYear); break;
     case 'stock': value =
-      `<div class="inventory-badges">${inventoryBadges(displayedBottles)}</div>`; break;
+      `<div class="inventory-badges">${inventoryBadges(displayedBottles
+      )}</div>`; break;
     case 'editing': value = bottling.completionStatus === 'complete' ?
       t('detail.status.complete') : t('detail.status.incomplete'); break;
     case 'rating': {
@@ -166,7 +183,14 @@ export function collectionCardRating(bottling, photoId = null) {
     const fill = Math.max(0, Math.min(100, (safe - i * 20) * 5));
     return glencairnRatingSymbol({fill, id: `overview-rating-${unique}-${i}`});
   }).join('');
-  return `<span class="collection-card-rating" role="img" aria-label="${escapeHtml(t('home.filters.ratingScore', {score: String(safe).replace('.', ',')}))}" title="${escapeHtml(t('home.filters.ratingScore', {score: String(safe).replace('.', ',')}))}">${glasses}</span>`;
+  return `<span class="collection-card-rating" role="img" \
+aria-label="${escapeHtml(t('home.filters.ratingScore', {
+    score: String(safe)
+      .replace('.', ','),
+  }))}" title="${escapeHtml(t('home.filters.ratingScore', {
+    score: String(safe)
+      .replace('.', ','),
+  }))}">${glasses}</span>`;
 }
 
 /**
@@ -178,7 +202,8 @@ export function collectionCardRating(bottling, photoId = null) {
  * @param {string=} mode Requested display mode or configuration variant.
  * @return {string} Resulting text.
  */
-function pagerHtml({page, pageCount, total, from, to}, selectedSize, mode = 'bottlings') {
+function pagerHtml({page, pageCount, total, from, to}, selectedSize,
+  mode = 'bottlings') {
   const label = mode === 'bottles' ? t("forms.bottle.plural") :
     t("analytics.inventory.bottlings");
   const pageSizeLabel = mode === 'bottles' ?
@@ -193,43 +218,52 @@ function pagerHtml({page, pageCount, total, from, to}, selectedSize, mode = 'bot
    * @return {string} Resulting text.
    */
   const button = (target, label, title, disabled = false) =>
-    `<button type="button" class="btn small pagination-button" data-page-to="${target}" aria-label="${title}" ${disabled ? 'disabled' : ''}>${label}</button>`;
+    `<button type="button" class="btn small pagination-button" \
+data-page-to="${target}" aria-label="${title}" ${disabled ? 'disabled' :
+      ''}>${label}</button>`;
   const pages = visiblePages(page, pageCount).map(number => number === '…'
     ? '<span class="pagination-ellipsis" aria-hidden="true">…</span>'
     : `<button type="button" class="btn small pagination-button${number ===
       page ? ' current' :
-      ''}" data-page-to="${number}" aria-label="${t("home.pagination.pageLabel", {page: number})}" ${number === page ? 'aria-current="page"' : ''}>${number}</button>`).join('');
-  return `<nav class="collection-pagination" aria-label="${t("home.pagination.collectionPages")}">
-        <span class="pagination-summary">${t("home.pagination.rangeSummary", {from, to, total, label})}</span>
+      ''}" data-page-to="${number}" aria-label="${t(
+        "home.pagination.pageLabel", {page: number})}" ${number === page ?
+          'aria-current="page"' : ''}>${number}</button>`).join('');
+  return `<nav class="collection-pagination" aria-label="${t(
+    "home.pagination.collectionPages")}">
+        <span class="pagination-summary">${t("home.pagination.rangeSummary",
+      {from, to, total, label})}</span>
         <div class="pagination-pages">
             ${button(
-    1,
-    chevronsLeftIcon,
-    t('home.pagination.first'),
-    page === 1
-  )}
+        1,
+        chevronsLeftIcon,
+        t('home.pagination.first'),
+        page === 1
+      )}
             ${button(
-    Math.max(1, page - 1),
-    chevronLeftIcon,
-    t('home.pagination.previous'),
-    page === 1
-  )}
+        Math.max(1, page - 1),
+        chevronLeftIcon,
+        t('home.pagination.previous'),
+        page === 1
+      )}
             ${pages}
             ${button(
-    Math.min(pageCount, page + 1),
-    chevronRightIcon,
-    t('home.pagination.next'),
-    page === pageCount
-  )}
+        Math.min(pageCount, page + 1),
+        chevronRightIcon,
+        t('home.pagination.next'),
+        page === pageCount
+      )}
             ${button(
-    pageCount,
-    chevronsRightIcon,
-    t('home.pagination.last'),
-    page === pageCount
-  )}
+        pageCount,
+        chevronsRightIcon,
+        t('home.pagination.last'),
+        page === pageCount
+      )}
         </div>
         <label class="pagination-size">${pageSizeLabel}
-            <select id="pagination-size" aria-label="${pageSizeLabel}">${PAGE_SIZE_OPTIONS.map(option => `<option value="${option}" ${option === selectedSize ? 'selected' : ''}>${option}</option>`).join('')}</select>
+            <select id="pagination-size" aria-label="${pageSizeLabel}">${
+PAGE_SIZE_OPTIONS.map(option => `<option value="${option}" ${
+option === selectedSize ? 'selected' : ''}>${option}</option>`).join('')
+    }</select>
         </label>
     </nav>`;
 }
@@ -290,7 +324,10 @@ export function createHomeView({
     state.pageNumber = next;
     updatePageUrl();
     home();
-    document.querySelector('.collection-heading')?.scrollIntoView({block: 'start', behavior: 'auto'});
+    document.querySelector('.collection-heading')?.scrollIntoView({
+      block:
+        'start', behavior: 'auto',
+    });
   }
 
   /**
@@ -344,7 +381,9 @@ export function createHomeView({
     showModal(
       t('collection.saved.saveTitle'),
       `<div class="collection-save-view-dialog">
-            <label>${escapeHtml(t('collection.saved.name'))}<input data-view-name maxlength="80" required autocomplete="off"></label>
+            <label>${escapeHtml(t('collection.saved.name')
+      )}<input data-view-name maxlength="80" required \
+autocomplete="off"></label>
             <div class="actions">${actionButton({
         label: t('common.actions.cancel'),
         action: 'close-modal',
@@ -396,7 +435,9 @@ export function createHomeView({
     showModal(
       t('collection.saved.rename'),
       `<div class="collection-save-view-dialog">
-            <label>${t('collection.saved.name')}<input data-view-name maxlength="80" required value="${escapeHtml(item.name)}"></label>
+            <label>${t('collection.saved.name'
+      )}<input data-view-name maxlength="80" required \
+value="${escapeHtml(item.name)}"></label>
             <div class="actions">${actionButton({
         label: t('common.actions.cancel'),
         action: 'close-modal',
@@ -449,7 +490,8 @@ export function createHomeView({
     if (!id) {resetStandardView(); return;}
     const item = savedViews().find(view => view.id === id);
     if (!item) {state.activeSavedViewId = null; home(); return;}
-    for (const field of ['search', 'status', 'completion', 'distillery', 'rating', 'volumeType']) state[field] = item.filters[field];
+    for (const field of ['search', 'status', 'completion', 'distillery',
+      'rating', 'volumeType']) state[field] = item.filters[field];
     state.flavorCriteria = normalizeFlavorCriteria(item.filters.flavorCriteria);
     state.profileMissing = !!item.filters.profileMissing;
     state.profilePresent = !!item.filters.profilePresent;
@@ -518,22 +560,42 @@ export function createHomeView({
       (_, i) => `<option value="${i}" ${selected === i ? 'selected' :
         ''}>${i}/10</option>`
     ).join('');
-    return `<fieldset class="collection-flavor-status"><legend>${escapeHtml(t('collection.flavor.missing'))}</legend>
-            <div class="collection-flavor-status-options">${statusOptions.map(([value, label]) => `<label><input type="radio" name="collection-profile-status" value="${value}" data-flavor-profile-status ${draft.status === value ? 'checked' : ''}><span>${escapeHtml(t(label))}</span></label>`).join('')}</div>
+    return `<fieldset class="collection-flavor-status"><legend>${escapeHtml(t(
+      'collection.flavor.missing'))}</legend>
+            <div class="collection-flavor-status-options">${statusOptions.map((
+        [value, label]) =>
+        `<label><input type="radio" name="collection-profile-status"\
+ value="${value}" data-flavor-profile-status ${draft.status === value ? 'che\
+cked' : ''}><span>${escapeHtml(t(label))}</span></label>`).join('')}</div>
         </fieldset>
         <div class="collection-flavor-criteria" ${draft.status ===
         'without' ? 'hidden' : ''}>
             ${draft.criteria.map(item => `<div class="collection-flavor-row">
-                <div class="collection-flavor-row-head"><strong>${escapeHtml(t(`flavor.axis.${item.axis}`))}</strong><button type="button" class="collection-flavor-remove" data-act="collection-flavor-remove" data-axis="${item.axis}" aria-label="${escapeHtml(t(
+                <div class="collection-flavor-row-head"><strong>${escapeHtml(t(
+          `flavor.axis.${item.axis}`)
+        )}</strong><button type="button" class="collection-flavo\
+r-remove" data-act="collection-flavor-remove" data-axis="${item.axis}" \
+aria-label="${escapeHtml(t(
           'collection.flavor.remove',
           {name: t(`flavor.axis.${item.axis}`)}
         ))}">${closeIcon}</button></div>
-                <div class="collection-flavor-range"><label>${escapeHtml(t('collection.flavor.min'))}<select data-flavor-axis="${item.axis}" data-flavor-part="min">${scoreOptions(item.min)}</select></label>
-                <label>${escapeHtml(t('collection.flavor.max'))}<select data-flavor-axis="${item.axis}" data-flavor-part="max">${scoreOptions(item.max)}</select></label></div>
+                <div class="collection-flavor-range"><label>${escapeHtml(t(
+          'collection.flavor.min'))}<select data-flavor-axis="${item
+            .axis}" data-flavor-part="min">${scoreOptions(item.min
+            )}</select></label>
+                <label>${escapeHtml(t('collection.flavor.max')
+            )}<select data-flavor-axis="${item
+              .axis}" data-flavor-part="max">${scoreOptions(item.max
+              )}</select></label></div>
             </div>`).join('')}
             ${available.length ?
-        `<div class="collection-flavor-add"><select id="collection-add-flavor-axis" aria-label="${escapeHtml(t('collection.flavor.axis'))}"><option value="" selected disabled>${escapeHtml(t('collection.flavor.selectAxis'))}</option>${available.map(axis => `<option value="${axis}">${escapeHtml(t(`flavor.axis.${axis}`))}</option>`).join('')}</select>
-                <button type="button" class="btn" data-act="collection-flavor-add" disabled>${escapeHtml(t('collection.flavor.add'))}</button></div>` : ''}
+        `<div class="collection-flavor-add"><select id="collection-add-flavo\
+r-axis" aria-label="${escapeHtml(t('collection.flavor.axis'))}"><option \
+value="" selected disabled>${escapeHtml(t('collection.flavor.selectAxis'))}<\
+/option>${available.map(axis => `<option value="${axis}">${escapeHtml(t(`fla\
+vor.axis.${axis}`))}</option>`).join('')}</select>
+                <button type="button" class="btn" data-act="collection-flavo\
+r-add" disabled>${escapeHtml(t('collection.flavor.add'))}</button></div>` : ''}
         </div>
         <div class="collection-flavor-actions">${actionButton({
           label: t('analytics.filters.reset'),
@@ -551,7 +613,8 @@ export function createHomeView({
    * @return {string} Resulting text.
    */
   function flavorEditorHtml() {
-    return `<div class="collection-flavor-editor" data-collection-flavor-editor>${flavorEditorContent()}</div>`;
+    return `<div class="collection-flavor-editor" data-collection-flavor-edi\
+tor>${flavorEditorContent()}</div>`;
   }
 
   /**
@@ -562,7 +625,8 @@ export function createHomeView({
   function redrawFlavorEditor(focusSelector = null) {
     const editor = document.querySelector('[data-collection-flavor-editor]');
     if (!editor) return;
-    const scrollTop = editor.closest('.collection-flavor-popover, .dialog')?.scrollTop || 0;
+    const scrollTop = editor.closest('.collection-flavor-popover, .dialog')
+      ?.scrollTop || 0;
     editor.innerHTML = flavorEditorContent();
     const scroller = editor.closest('.collection-flavor-popover, .dialog');
     if (scroller) scroller.scrollTop = scrollTop;
@@ -581,7 +645,8 @@ export function createHomeView({
    * Locates the DOM elements used by add flavor criterion.
    */
   function addFlavorCriterion() {
-    const axis = document.querySelector('[data-collection-flavor-editor] #collection-add-flavor-axis')?.value;
+    const axis = document.querySelector(
+      '[data-collection-flavor-editor] #collection-add-flavor-axis')?.value;
     if (!flavorDraft || !FLAVOR_AXES.includes(axis) || flavorDraft.criteria
       .some(item => item.axis === axis)) return;
     flavorDraft.criteria.push({axis, min: 0, max: 10});
@@ -617,7 +682,8 @@ export function createHomeView({
       !Number.isInteger(value) || value < 0 || value > 10) return;
     entry[part] = part === 'min' ? Math.min(value, entry.max) :
       Math.max(value, entry.min);
-    redrawFlavorEditor(`[data-flavor-axis="${axis}"][data-flavor-part="${part}"]`);
+    redrawFlavorEditor(
+      `[data-flavor-axis="${axis}"][data-flavor-part="${part}"]`);
   }
 
   /**
@@ -650,7 +716,8 @@ export function createHomeView({
       normalizeFlavorCriteria(flavorDraft.criteria);
     flavorDraft = null;
     state.pageNumber = 1;
-    if (document.querySelector('#modal-root [data-collection-flavor-editor]')) closeModal();
+    if (document.querySelector('#modal-root [data-collection-flavor-editor]'))
+      closeModal();
     home();
   }
 
@@ -658,7 +725,8 @@ export function createHomeView({
    * Removes or resets standard view.
    */
   function resetStandardView() {
-    for (const field of ['status', 'completion', 'distillery', 'rating', 'volumeType']) state[field] = 'all';
+    for (const field of ['status', 'completion', 'distillery', 'rating',
+      'volumeType']) state[field] = 'all';
     state.search = ''; state.sort = 'name'; state.flavorCriteria = [];
     state.profileMissing = false; state.profilePresent = false;
     state.activeSavedViewId = null; state.pageNumber = 1;
@@ -691,18 +759,41 @@ export function createHomeView({
       state.activeSavedViewId);
     const dirty = current && activeViewChanged();
     const label = current?.name || t('collection.saved.standard');
-    const bookmark = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg>';
-    return `<details class="collection-saved-menu" id="collection-saved-views"><summary aria-label="${escapeHtml(t('collection.saved.title'))}: ${escapeHtml(label)}">${bookmark}<span class="collection-saved-label">${escapeHtml(t('collection.saved.view'))}: <strong>${escapeHtml(label)}</strong></span>${dirty ? `<span class="collection-saved-dirty">${escapeHtml(t('collection.saved.changed'))}</span>` : ''}${chevronDownIcon('collection-menu-chevron')}</summary>
-            <div class="collection-saved-dropdown" role="group" aria-label="${escapeHtml(t('collection.saved.title'))}">
-                <button type="button" class="collection-saved-item${!current ? ' is-active' : ''}" data-act="collection-view-apply" data-id="">${escapeHtml(t('collection.saved.standard'))}</button>
+    const bookmark =
+      '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" \
+stroke="currentColor" stroke-width="1.8" stroke-linecap="round" \
+stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-4-6 \
+4z"/></svg>';
+    return `<details class="collection-saved-menu" id="collection-saved-view\
+s"><summary aria-label="${escapeHtml(t('collection.saved.title'))}: \
+${escapeHtml(label)}">${bookmark}<span class="collection-saved-label">\
+${escapeHtml(t('collection.saved.view'))}: <strong>${escapeHtml(label)}</str\
+ong></span>${dirty ? `<span class="collection-saved-dirty">${escapeHtml(t('c\
+ollection.saved.changed'))}</span>` : ''}${chevronDownIcon('collection-menu-\
+chevron')}</summary>
+            <div class="collection-saved-dropdown" role="group" \
+aria-label="${escapeHtml(t('collection.saved.title'))}">
+                <button type="button" class="collection-saved-item${!current ?
+        ' is-active' :
+        ''}" data-act="collection-view-apply" data-id="">\
+${escapeHtml(t('collection.saved.standard'))}</button>
                 ${savedViews().map(view =>
-      `<button type="button" class="collection-saved-item${current?.id ===
-        view.id ? ' is-active' :
-        ''}" data-act="collection-view-apply" data-id="${escapeHtml(view.id)}">${escapeHtml(view.name)}</button>`).join('')}
+          `<button type="button" class="collection-saved-item${current?.id ===
+            view.id ? ' is-active' :
+            ''}" data-act="collection-view-apply" data-id="${escapeHtml(view.id
+            )}">${escapeHtml(view.name)}</button>`).join('')}
                 <div class="collection-saved-divider"></div>
-                <button type="button" class="collection-saved-item" data-act="collection-view-save">${escapeHtml(t('collection.saved.save'))}</button>
+                <button type="button" class="collection-saved-item" \
+data-act="collection-view-save">${escapeHtml(t('collection.saved.save'))}</b\
+utton>
                 ${current ?
-        `<button type="button" class="collection-saved-item" data-act="collection-view-update">${escapeHtml(t('collection.saved.update'))}</button><button type="button" class="collection-saved-item" data-act="collection-view-rename">${escapeHtml(t('collection.saved.rename'))}</button><button type="button" class="collection-saved-item collection-saved-danger" data-act="collection-view-delete">${escapeHtml(t('collection.saved.delete'))}</button>` : ''}
+        `<button type="button" class="collection-saved-item" \
+data-act="collection-view-update">${escapeHtml(t('collection.saved.updat\
+e'))}</button><button type="button" class="collection-saved-item" \
+data-act="collection-view-rename">${escapeHtml(t('collection.saved.renam\
+e'))}</button><button type="button" class="collection-saved-item \
+collection-saved-danger" data-act="collection-view-delete">${escapeHtml(t('c\
+ollection.saved.delete'))}</button>` : ''}
             </div>
         </details>`;
   }
@@ -803,7 +894,8 @@ export function createHomeView({
     if (input.dataset?.flavorProfileStatus !=
       null) {changeFlavorStatus(input.value); return;}
     if (input.id === 'collection-add-flavor-axis') {
-      const button = input.closest('[data-collection-flavor-editor]')?.querySelector('[data-act="collection-flavor-add"]');
+      const button = input.closest('[data-collection-flavor-editor]')
+        ?.querySelector('[data-act="collection-flavor-add"]');
       if (button) button.disabled = !FLAVOR_AXES.includes(input.value);
       return;
     }
@@ -826,7 +918,11 @@ export function createHomeView({
     state.pageNumber = 1;
     updatePageUrl(true);
     home();
-    if (input.id === 'pagination-size') document.querySelector('.collection-heading')?.scrollIntoView({block: 'start', behavior: 'auto'});
+    if (input.id === 'pagination-size') document.querySelector(
+      '.collection-heading')?.scrollIntoView({
+        block: 'start',
+        behavior: 'auto',
+      });
   }
 
   /**
@@ -909,37 +1005,55 @@ export function createHomeView({
           t("imports.bottles.noInventoryNumber"),
         bottle.volumeMl != null ? `${escapeHtml(bottle.volumeMl)} ml` : '',
       ].filter(Boolean).join(' · ') : '';
-      return `<article tabindex="0" class="whisky-card" data-act="open" data-id="${escapeHtml(bottling.id)}"${bottle ? ` data-bottle-id="${escapeHtml(bottle.id)}" aria-label="${escapeHtml(t(
-        "home.image.bottleAccessibleName",
-        {
-          name: bottling.name,
-          number: bottle.inventoryNumber ||
-            t("home.inventory.withoutInventoryNumber"),
-        }
-      ))}"` : ''}>
+      return `<article tabindex="0" class="whisky-card" data-act="open" \
+data-id="${escapeHtml(bottling.id)}"${bottle ?
+          ` data-bottle-id="${escapeHtml(bottle.id)}" aria-label="${
+escapeHtml(t(
+            "home.image.bottleAccessibleName",
+            {
+              name: bottling.name,
+              number: bottle.inventoryNumber ||
+                t("home.inventory.withoutInventoryNumber"),
+            }
+          ))}"` : ''}>
     <div class="card-img">${photo ?
-          `<img src="${imageUrl(photo)}" alt="${escapeHtml(t("home.image.bottleAlt", {name: bottling.name}))}" loading="lazy">` : '<img class="image-placeholder" src="/assets/photo-placeholder.svg" alt="" aria-hidden="true">'}${collectionCardRating(bottling, bottle?.id)}</div>
+          `<img src="${imageUrl(photo)}" alt="${escapeHtml(t(
+            "home.image.bottleAlt", {name: bottling.name})
+          )}" loading="lazy">` :
+          '<img class="image-placeholder" src="/assets/photo-placehold\
+er.svg" alt="" aria-hidden="true">'}${
+collectionCardRating(bottling, bottle?.id)}</div>
     <div class="card-body">
     ${origin ? `<div class="card-kicker">${escapeHtml(origin)}</div>` : ''}
     <h3 data-i18n-ignore>${escapeHtml(bottling.name)}</h3>
     ${bottleInfo ? `<div class="card-bottle-meta">${bottleInfo}</div>` : ''}
-    ${facts.length ? `<div class="card-facts muted">${facts.join(' · ')}</div>` : ''}
+    ${facts.length ? `<div class="card-facts muted">${facts.join(
+            ' · ')}</div>` : ''}
     <div class="badges">
     ${bottle ? `<span class="badge ${escapeHtml(bottle.status ||
-            '')}">${escapeHtml(statusText(bottle.status))}</span>${bottle.volumeType === 'sample' ? '<span class="badge sample">Sample</span>' : ''}` : inventoryBadges(physicalBottles)}${bottling.completionStatus === 'incomplete' ? `<span class="badge">${t("home.status.incomplete")}</span>` : ''}</div>
+              '')}">${escapeHtml(statusText(bottle.status))}</span>${bottle
+                .volumeType === 'sample' ?
+                '<span class="badge sample">Sample</span>' : ''}` :
+          inventoryBadges(physicalBottles)}${bottling
+            .completionStatus === 'incomplete' ?
+            `<span class="badge">${t("home.status.incomplete"
+            )}</span>` : ''}</div>
     </div>
     </article>`;
     }).join('');
     const rows = visibleList.map(({bottling, bottle}) => {
       const entry = {bottling, bottle};
-      const attrs = `class="clickable" tabindex="0" data-act="open" data-id="${escapeHtml(bottling.id)}"${bottle ? ` data-bottle-id="${escapeHtml(bottle.id)}" aria-label="${escapeHtml(t(
-        'home.image.bottleAccessibleName',
-        {
-          name: bottling.name,
-          number: bottle.inventoryNumber ||
-            t('home.inventory.withoutInventoryNumber'),
-        }
-      ))}"` : ''}`;
+      const attrs =
+        `class="clickable" tabindex="0" data-act="open" data-id="${escapeHtml(
+          bottling.id)}"${bottle ? ` data-bottle-id="${escapeHtml(bottle.id
+          )}" aria-label="${escapeHtml(t(
+            'home.image.bottleAccessibleName',
+            {
+              name: bottling.name,
+              number: bottle.inventoryNumber ||
+                t('home.inventory.withoutInventoryNumber'),
+            }
+          ))}"` : ''}`;
       const cells = selectedColumns.map(column => collectionTableCell(
         column.id,
         entry,
@@ -956,14 +1070,32 @@ export function createHomeView({
         'descending' : 'ascending'}"` :
         ''}><button type="button" class="collection-table-sort${active ?
           ' is-active' :
-          ''}" data-act="collection-sort-column" data-column="${column.id}" aria-label="${escapeHtml(t('home.table.sortBy', {name: title}))}">${escapeHtml(title)}<span class="collection-table-sort-direction" aria-hidden="true">${active ? (descending ? arrowDownIcon : arrowUpIcon) : arrowsUpDownIcon}</span></button></th>`;
+          ''}" data-act="collection-sort-column" data-column="${column
+            .id}" aria-label="${escapeHtml(t('home.table.sortBy',
+              {name: title}))}">${escapeHtml(
+                title)}<span class="collection-table-sort-direction" \
+aria-hidden="true">${active ? (descending ? arrowDownIcon : arrowUpIcon) :
+          arrowsUpDownIcon}</span></button></th>`;
     }).join('');
     const columnPicker =
-      `<div class="collection-table-tools"><details class="collection-table-columns"${columnPickerOpen ? ' open' : ''}>
-            <summary aria-label="${t('home.table.selectColumns')}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M10 4v16M16 4v16"/></svg>${t('home.table.columns')}<svg class="collection-table-columns-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
-            <div class="collection-table-columns-menu" role="group" aria-label="${t('home.table.selectColumns')}">
+      `<div class="collection-table-tools"><details class="collection-table-\
+columns"${columnPickerOpen ? ' open' : ''}>
+            <summary aria-label="${t('home.table.selectColumns'
+      )}"><svg viewBox="0 0 24 24" width="16" height="16" \
+fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" \
+aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"/><path \
+d="M10 4v16M16 4v16"/></svg>${t('home.table.columns')}<svg \
+class="collection-table-columns-chevron" viewBox="0 0 24 24" width="15" \
+height="15" fill="none" stroke="currentColor" stroke-width="2" \
+stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path \
+d="m6 9 6 6 6-6"/></svg></summary>
+            <div class="collection-table-columns-menu" role="group" \
+aria-label="${t('home.table.selectColumns')}">
                 ${TABLE_COLUMNS[mode].map(column =>
-        `<label class="collection-table-column-choice"><input type="checkbox" data-collection-column="${column.id}" ${columnSelection[mode].includes(column.id) ? 'checked' : ''}>${escapeHtml(t(column.label))}</label>`).join('')}
+        `<label class="collection-table-column-choice"><input \
+type="checkbox" data-collection-column="${column.id}" ${
+columnSelection[mode].includes(column.id) ? 'checked' : ''}>${
+escapeHtml(t(column.label))}</label>`).join('')}
                 ${actionButton({
           label: t('home.table.resetColumns'),
           action: 'collection-columns-default',
@@ -990,8 +1122,12 @@ export function createHomeView({
     </h2>
     <p class="hero-description">${heroCopy}</p>
     <div class="hero-actions">
-    <button class="btn primary" type="button" data-act="new" aria-label="${t("collection.actions.newBottle")}">${newBottlingIcon}<span>${t("collection.actions.newBottle")}</span></button>
-    <button class="btn hero-secondary" type="button" data-act="scan" aria-label="${t("collection.actions.scanInventory")}">${inventoryScanIcon}<span>${t("collection.actions.scanInventory")}</span></button>
+    <button class="btn primary" type="button" data-act="new" aria-label="${t(
+      "collection.actions.newBottle")}">${newBottlingIcon}<span>${t(
+        "collection.actions.newBottle")}</span></button>
+    <button class="btn hero-secondary" type="button" data-act="scan" \
+aria-label="${t("collection.actions.scanInventory")}">${inventoryScanIcon}<s\
+pan>${t("collection.actions.scanInventory")}</span></button>
     </div>
     </div>
     <span class="hero-footnote">COLLECTION${establishedYear ?
@@ -1003,15 +1139,20 @@ export function createHomeView({
           intro: t("home.hero.everyBottlingHasStory"),
           className: 'collection-heading',
           copyClass: '',
-          actions: `<div class="collection-mode-toggle" role="group" aria-label="${t("home.view.displayAs")}">
+          actions:
+            `<div class="collection-mode-toggle" role="group" aria-label="${t(
+              "home.view.displayAs")}">
     <button type="button" class="collection-mode-button${mode ===
               'bottlings' ? ' active' :
               ''}" data-collection-mode="bottlings" aria-pressed="${mode ===
-              'bottlings'}">${t("analytics.inventory.bottlings")} <span class="collection-mode-count">${collection.bottlings.length}</span></button>
+              'bottlings'}">${t("analytics.inventory.bottlings"
+              )} <span class="collection-mode-count">${collection.bottlings
+                .length}</span></button>
     <button type="button" class="collection-mode-button${mode ===
               'bottles' ? ' active' :
               ''}" data-collection-mode="bottles" aria-pressed="${mode ===
-              'bottles'}">${t("forms.bottle.plural")} <span class="collection-mode-count">${total}</span></button>
+              'bottles'}">${t("forms.bottle.plural"
+              )} <span class="collection-mode-count">${total}</span></button>
     </div>`,
         })}
     <div class="stats">
@@ -1075,9 +1216,16 @@ export function createHomeView({
             t('collection.flavor.title'),
           ],
         ].filter(([, value]) => value);
-        return `<div class="toolbar collection-filters" data-expanded="${filtersExpanded}" aria-label="${escapeHtml(t('home.filters.filters'))}">
-    <div class="collection-filter-heading"><span class="collection-filter-heading-label">${escapeHtml(t('home.filters.filters'))}</span>${savedViewsMenuHtml()}</div>
-    <input type="search" id="search" aria-label="${t('home.filters.searchCollection')}" placeholder="${t('home.filters.searchPlaceholder')}" value="${escapeHtml(state.search)}">
+        return `<div class="toolbar collection-filters" \
+data-expanded="${filtersExpanded}" aria-label="${escapeHtml(t('home.filters.\
+filters'))}">
+    <div class="collection-filter-heading"><span class="collection-filter-he\
+ading-label">${escapeHtml(t('home.filters.filters'))}</span>${
+savedViewsMenuHtml()}</div>
+    <input type="search" id="search" aria-label="${t(
+          'home.filters.searchCollection')}" placeholder="${t(
+            'home.filters.searchPlaceholder')}" value="${
+escapeHtml(state.search)}">
     <select id="filter-sort" aria-label="${t('home.sort.title')}">
     ${[
             ['name', 'home.sort.nameAscending'],
@@ -1123,25 +1271,58 @@ export function createHomeView({
             value ? 'selected' : ''}>${t(key)}</option>`).join('')}
     </select>
     <select id="filter-status" aria-label="${t('forms.bottle.status')}">
-    <option value="all">${t('home.filters.allStatuses')}</option>${Object.entries(bottleStatusLabels).map(([k]) => `<option value="${k}" ${state.status === k ? 'selected' : ''}>${statusText(k)}</option>`).join('')}</select>
-    <select id="filter-completion" aria-label="${t('home.filters.completeness')}">
+    <option value="all">${t('home.filters.allStatuses')}</option>${Object
+            .entries(bottleStatusLabels).map(([k]) =>
+              `<option value="${k}" ${state
+                .status === k ? 'selected' :
+                ''}>${statusText(k)}</option>`).join(
+                  '')}</select>
+    <select id="filter-completion" aria-label="${t('home.filters.completeness'
+                  )}">
     <option value="all">${t('home.filters.allEntries')}</option>
     <option value="incomplete" ${state.completion === 'incomplete' ?
             'selected' : ''}>${t('detail.status.incomplete')}</option>
     <option value="complete" ${state.completion === 'complete' ?
             'selected' : ''}>${t('detail.status.complete')}</option>
     </select>
-    <button type="button" class="btn collection-filter-toggle" data-act="toggle-collection-filters" aria-expanded="${filtersExpanded}" aria-controls="collection-filter-extra"><svg class="collection-filter-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg><span class="collection-filter-toggle-desktop">${t('home.filters.moreFilters')}</span><span class="collection-filter-toggle-mobile">${t('home.filters.filters')}</span><svg class="collection-filter-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-    <button class="btn collection-filter-view" type="button" data-act="toggle-view" aria-label="${state.view === 'cards' ? t('home.view.table') : t('home.view.cards')}" title="${state.view === 'cards' ? t('home.view.table') : t('home.view.cards')}">${state.view === 'cards' ? collectionTableIcon : collectionCardsIcon} <span class="collection-filter-view-text">${state.view === 'cards' ? t('home.view.table') : t('home.view.cards')}</span></button>
-    <div class="collection-filter-extra" id="collection-filter-extra" role="group" aria-label="${t('home.filters.moreFilters')}">
-        <select id="filter-distillery" aria-label="${t('home.filters.filterDistillery')}">
+    <button type="button" class="btn collection-filter-toggle" \
+data-act="toggle-collection-filters" aria-expanded="${filtersExpanded}" \
+aria-controls="collection-filter-extra"><svg class="collection-filter-icon" \
+viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"\
+ stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" \
+aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" \
+x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" \
+x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line \
+x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line \
+x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>\
+<span class="collection-filter-toggle-desktop">${t('home.filters.moreFilters')
+          }</span><span class="collection-filter-toggle-mobile">${
+t('home.filters.filters')
+          }</span><svg class="collection-filter-chevron" viewBox="0 0 24 24"\
+ width="16\
+" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-line\
+cap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6\
+"/></svg></button>
+    <button class="btn collection-filter-view" type="button" \
+data-act="toggle-view" aria-label="${state.view === 'cards' ? t('home.view.t\
+able') : t('home.view.cards')}" title="${state.view === 'cards' ? t('home.vi\
+ew.table') : t('home.view.cards')}">${state.view === 'cards' ?
+            collectionTableIcon :
+            collectionCardsIcon} <span class="collection-filter-view-text">${
+state.view === 'cards' ? t('home.view.table') : t('home.view.cards')
+          }</span></button>
+    <div class="collection-filter-extra" id="collection-filter-extra" \
+role="group" aria-label="${t('home.filters.moreFilters')}">
+        <select id="filter-distillery" aria-label="${t(
+            'home.filters.filterDistillery')}">
         <option value="all">${t('home.filters.allDistilleries')}</option>
         ${distilleries.map(item =>
               `<option value="${escapeHtml(item.id)}" ${state.distillery ===
                 item.id ? 'selected' :
                 ''}>${escapeHtml(item.name)}</option>`).join('')}
         </select>
-        <select id="filter-rating" aria-label="${t('home.filters.filterRating')}">
+        <select id="filter-rating" aria-label="${t('home.filters.filterRating'
+                )}">
         <option value="all" ${state.rating === 'all' ? 'selected' :
             ''}>${t('home.filters.allRatings')}</option>
         ${[1, 2, 3, 4, 5].map(level =>
@@ -1156,7 +1337,8 @@ export function createHomeView({
         <option value="unrated" ${state.rating === 'unrated' ? 'selected' :
             ''}>${t('home.filters.unrated')}</option>
         </select>
-        <select id="filter-volume-type" aria-label="${t('home.filters.filterBottleType')}">
+        <select id="filter-volume-type" aria-label="${t(
+              'home.filters.filterBottleType')}">
         <option value="all" ${state.volumeType === 'all' ? 'selected' :
             ''}>${t('home.filters.allBottleTypes')}</option>
         <option value="standard" ${state.volumeType === 'standard' ?
@@ -1165,39 +1347,76 @@ export function createHomeView({
             'selected' : ''}>${t('analytics.inventory.samples')}</option>
         </select>
         <details class="collection-flavor-picker" data-collection-flavor-picker>
-            <summary class="collection-flavor-trigger">${escapeHtml(t('collection.flavor.filter'))}${(state.flavorCriteria || []).length ? ` (${state.flavorCriteria.length})` : ''}${state.profileMissing || state.profilePresent ? ' •' : ''}${chevronDownIcon('collection-flavor-chevron')}</summary>
-            <div class="collection-flavor-popover" role="group" aria-label="${escapeHtml(t('collection.flavor.title'))}">
-                <div class="collection-flavor-popover-head"><strong>${escapeHtml(t('collection.flavor.filter'))}</strong><button type="button" class="collection-popover-close" data-act="collection-flavor-close" aria-label="${escapeHtml(t('common.actions.close'))}">${closeIcon}</button></div>
+            <summary class="collection-flavor-trigger">${escapeHtml(t(
+              'collection.flavor.filter'))}${(state.flavorCriteria ||
+                []).length ? ` (${state.flavorCriteria.length})` : ''}${state
+                  .profileMissing || state.profilePresent ? ' •' :
+                  ''}${chevronDownIcon('collection-flavor-chevron')}</summary>
+            <div class="collection-flavor-popover" role="group" \
+aria-label="${escapeHtml(t('collection.flavor.title'))}">
+                <div class="collection-flavor-popover-head"><strong>\
+${escapeHtml(t('collection.flavor.filter'))}</strong><button type="button" \
+class="collection-popover-close" data-act="collection-flavor-close" \
+aria-label="${escapeHtml(t('common.actions.close'))}">${closeIcon}</button>\
+</div>
                 ${flavorEditorHtml()}
             </div>
         </details>
         ${actionButton({
-              label: t('collection.flavor.filter') +
-                ((state.flavorCriteria || []).length ?
-                  ` (${state.flavorCriteria.length})` : '') +
-                (state.profileMissing || state.profilePresent ? ' •' : ''),
-              action: 'collection-flavor-open',
-              className: 'collection-flavor-mobile-trigger',
-            })}
+                    label: t('collection.flavor.filter') +
+                      ((state.flavorCriteria || []).length ?
+                        ` (${state.flavorCriteria.length})` : '') +
+                      (state.profileMissing || state.profilePresent ?
+                        ' •' : ''),
+                    action: 'collection-flavor-open',
+                    className: 'collection-flavor-mobile-trigger',
+                  })}
     </div>
-    ${active.length ? `<div class="collection-filter-active" aria-label="${t('home.filters.activeFilters')}">${active.map(([key, value, label]) => `<button type="button" class="collection-filter-chip" ${key.startsWith('flavor-axis:') ? `data-reset-collection-flavor-axis="${escapeHtml(key.slice(12))}"` : `data-reset-collection-filter="${key}"`} aria-label="${escapeHtml(t('home.filters.removeFilter', {name: `${label}: ${value}`}))}">${escapeHtml(value)} ${closeIcon}</button>`).join('')}</div>` : ''}
+    ${active.length ? `<div class="collection-filter-active" aria-label="${t(
+                    'home.filters.activeFilters')}">${active.map(([key, value,
+                      label]) =>
+                      `<button type="button" class="collection-filter-chip" ${
+key
+                        .startsWith('flavor-axis:') ?
+                        `data-reset-collection-flavor-axis="${
+escapeHtml(key.slice(
+                          12))}"` :
+                        `data-reset-collection-filter="${key}"`} \
+aria-label="${escapeHtml(t(
+                          'home.filters.removeFilter',
+                          {
+                            name: `${label}: ${value}`,
+                          }
+                        ))}">${escapeHtml(value)} ${closeIcon}</button>`)
+                      .join('')}</div>` : ''}
     </div>`;
       })()}<div class="collection-results-heading">
-        <span class="collection-results-count">${escapeHtml(t('collection.results.count', {count: list.length, label}))}</span>
-        <div class="collection-results-actions"><button type="button" class="btn small" data-act="collection-flight-plan" ${list.length ? '' : 'disabled'}>${flightPlanIcon}<span>${escapeHtml(t('collection.results.planFlight'))}</span></button>
+        <span class="collection-results-count">${escapeHtml(t(
+        'collection.results.count', {count: list.length, label}))}</span>
+        <div class="collection-results-actions"><button type="button" \
+class="btn small" data-act="collection-flight-plan" ${list.length ? '' : 'di\
+sabled'}>${flightPlanIcon}<span>${escapeHtml(t('collection.results.planFligh\
+t'))}</span></button>
         ${state.view === 'table' && list.length ? columnPicker : ''}</div>
     </div>${pageData.pageCount > 1 ? `<div class="pagination-topline">
         <span>${t(
-        "home.pagination.rangeSummary",
-        {from: pageData.from, to: pageData.to, total: pageData.total, label}
-      )}</span>
+          "home.pagination.rangeSummary",
+          {from: pageData.from, to: pageData.to, total: pageData.total, label}
+        )}</span>
         <div class="pagination-topactions">
-            <button type="button" class="btn small" data-page-to="${Math.max(1, pageData.page - 1)}" ${pageData.page === 1 ? 'disabled' : ''} aria-label="${t("home.pagination.previousPageLabel")}">${chevronLeftIcon}</button>
+            <button type="button" class="btn small" data-page-to="${Math.max(1,
+          pageData.page - 1)}" ${pageData.page === 1 ? 'disabled' :
+            ''} aria-label="${t("home.pagination.previousPageLabel"
+            )}">${chevronLeftIcon}</button>
             <span>${t(
-        "home.pagination.pageOf",
-        {page: pageData.page, total: pageData.pageCount}
-      )}</span>
-            <button type="button" class="btn small" data-page-to="${Math.min(pageData.pageCount, pageData.page + 1)}" ${pageData.page === pageData.pageCount ? 'disabled' : ''} aria-label="${t("home.pagination.nextPageLabel")}">${chevronRightIcon}</button>
+              "home.pagination.pageOf",
+              {page: pageData.page, total: pageData.pageCount}
+            )}</span>
+            <button type="button" class="btn small" data-page-to="${Math.min(
+              pageData.pageCount, pageData.page + 1)}" ${pageData.page ===
+                pageData.pageCount ? 'disabled' : ''} aria-label="${t(
+                  "home.pagination.nextPageLabel"
+                )}">${chevronRightIcon}</button>
         </div>
     </div>` : ''}${list.length ? (state.view === 'cards' ?
         `<div class="grid">${cards}</div>` :
@@ -1279,7 +1498,8 @@ export function createHomeView({
   home.applyFlavorDraft = applyFlavorDraft;
   home.closeFlavorFilter = () => {
     const picker =
-      document.querySelector('[data-collection-flavor-picker]'); if (picker) picker.open = false; flavorDraft = null;
+      document.querySelector('[data-collection-flavor-picker]');
+    if (picker) picker.open = false; flavorDraft = null;
   };
   home.changeFlavorStatus = changeFlavorStatus;
   home.applySavedView = applySavedView;

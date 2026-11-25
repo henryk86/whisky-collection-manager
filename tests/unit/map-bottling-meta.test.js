@@ -4,7 +4,8 @@ import {buildDistilleryMap} from '../../public/js/domain/distillery-map.js';
 import {mapBottlingFacts} from '../../public/js/domain/map-bottling-meta.js';
 
 test(
-  'map list displays age, ABV and clearly labelled years to distinguish identical names',
+  'map list displays age, ABV and clearly labelled years to distinguish \
+identical names',
   () => {
     const collection = {
       distilleries: [{id: 'kilchoman', name: 'Kilchoman'}],
@@ -47,7 +48,8 @@ test(
 );
 
 test(
-  'map metadata renders only present values and labels the release year fallback',
+  'map metadata renders only present values and labels the release year \
+fallback',
   () => {
     assert.equal(
       mapBottlingFacts({

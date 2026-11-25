@@ -7,7 +7,8 @@ import crypto from 'node:crypto';
 import {DATA_DIR} from './paths.js';
 import {fail} from '../domain/errors.js';
 import {trackMutation} from '../domain/mutation-tracker.js';
-import {FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm} from '../../shared/warehouse-compartments.js';
+import {FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm}
+  from '../../shared/warehouse-compartments.js';
 
 export const WAREHOUSE_FILE = path.join(DATA_DIR, 'warehouse.json');
 /**
@@ -63,8 +64,10 @@ export function validateWarehouse(data) {
     if (!validText(room.id, 120) || !validText(room.name) ||
       !validNumber(room.width, 1, 100) ||
       !validNumber(room.height, 1, 100) ||
-      !Array.isArray(room.furniture)) throw fail('Ungültiger Lagerraum', 400, "api.errors.invalidStorageRoom");
-    if (ids.has(room.id)) throw fail('Doppelte Lager-ID', 400, "api.errors.duplicateStorageID"); ids.add(room.id);
+      !Array.isArray(room.furniture)) throw fail('Ungültiger Lagerraum', 400,
+        "api.errors.invalidStorageRoom");
+    if (ids.has(room.id)) throw fail('Doppelte Lager-ID', 400,
+      "api.errors.duplicateStorageID"); ids.add(room.id);
     for (const furniture of room.furniture) {
       if (!validText(furniture.id, 120) || !validText(furniture.name) ||
         !FURNITURE_TYPES.includes(furniture.type) ||
@@ -102,7 +105,8 @@ export function validateWarehouse(data) {
             );
       if (furniture.doorRanges !== undefined) {
         if (!Array.isArray(furniture.doorRanges) || furniture.doorRanges
-          .length > 100) throw fail('Ungültige Türbereiche', 400, "api.errors.invalidDoorAreas");
+          .length > 100) throw fail('Ungültige Türbereiche', 400,
+            "api.errors.invalidDoorAreas");
         const covered = new Set();
         for (const range of furniture.doorRanges) {
           if (!range || !Number.isInteger(range.from) ||
@@ -136,7 +140,8 @@ export function validateWarehouse(data) {
           400,
           "api.errors.storageFurnitureLiesOutsideTheRoom"
         );
-      if (ids.has(furniture.id)) throw fail('Doppelte Lager-ID', 400, "api.errors.duplicateStorageID"); ids.add(furniture.id);
+      if (ids.has(furniture.id)) throw fail('Doppelte Lager-ID', 400,
+        "api.errors.duplicateStorageID"); ids.add(furniture.id);
       for (const shelf of furniture.shelves) {
         if (!validText(shelf.id, 120) || !validText(shelf.name) ||
           (shelf.capacity !== null && (!Number.isInteger(shelf.capacity) ||
@@ -152,7 +157,9 @@ export function validateWarehouse(data) {
               400,
               "api.errors.invalidStorageCompartment"
             );
-        if (ids.has(shelf.id)) throw fail('Doppelte Lager-ID', 400, "api.errors.duplicateStorageID"); ids.add(shelf.id); shelfIds.add(shelf.id);
+        if (ids.has(shelf.id)) throw fail('Doppelte Lager-ID', 400,
+          "api.errors.duplicateStorageID"); ids.add(shelf.id);
+        shelfIds.add(shelf.id);
       }
       const explicit = totalExplicitHeightCm(furniture.shelves);
       const available = (furniture.itemHeight ?? (furniture.type ===
@@ -205,7 +212,8 @@ export function invalidateWarehouseCache() {
 function loadWarehouse() {
   const current = identity();
   if (warehouseCache === null || warehouseIdentity !== current) {
-    warehouseCache = structuredClone(validateWarehouse(JSON.parse(fs.readFileSync(WAREHOUSE_FILE, 'utf8'))));
+    warehouseCache = structuredClone(validateWarehouse(JSON.parse(
+      fs.readFileSync(WAREHOUSE_FILE, 'utf8'))));
     warehouseIdentity = current;
     warehouseRevision = crypto.randomUUID();
   }
@@ -251,7 +259,8 @@ export function readWarehouse() {
 function writeWarehouse(data) {
   validateWarehouse(data);
   fs.mkdirSync(DATA_DIR, {recursive: true});
-  const temporary = `${WAREHOUSE_FILE}.${process.pid}.${crypto.randomUUID()}.tmp`;
+  const temporary = `${WAREHOUSE_FILE}.${process.pid}.${crypto.randomUUID(
+  )}.tmp`;
   try {
     fs.writeFileSync(
       temporary,

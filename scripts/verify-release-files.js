@@ -30,7 +30,12 @@ export function prohibitedReleasePath(name) {
   if (parts.some(part => part === '.env' || (part.startsWith('.env.') &&
     part !== '.env.example'))) return true;
   if (parts.some(part =>
-    /^(?:collection\.json|rclone\.conf|restic-password|backup-admin-token|backup-worker-token|server-key\.pem)$/i.test(part))) return true;
+    new RegExp(
+      '^(?:collection\\.json|rclone\\.conf|restic' +
+      '-password|backup-admin-token|backup-worker' +
+      '-token|server-key\\.pem)$',
+      'i'
+    ).test(part))) return true;
   return false;
 }
 
@@ -62,8 +67,10 @@ if (process.argv[1]?.endsWith('/verify-release-files.js')) {
     }
   }
   if (lines.some(name => name.replaceAll('\\', '/').startsWith('extension/'))) {
-    console.error('Private extension code must not be part of public WCM releases.');
+    console.error(
+      'Private extension code must not be part of public WCM releases.');
     process.exit(1);
   }
-  console.log(`Release archive checked: ${lines.length} files, no runtime data, extension source or secrets.`);
+  console.log(`Release archive checked: ${lines
+    .length} files, no runtime data, extension source or secrets.`);
 }

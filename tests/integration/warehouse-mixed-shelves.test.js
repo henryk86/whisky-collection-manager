@@ -18,11 +18,13 @@ const furnitureInput = {
 };
 
 test(
-  'mixed cupboard supports independent wood, open and glass fronts, heights in cm and bottom-to-top reordering',
+  'mixed cupboard supports independent wood, open and glass fronts, heights \
+in cm and bottom-to-top reordering',
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', roomInput)).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST',
+        roomInput)).data;
       const furniture = (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -41,11 +43,20 @@ test(
         'POST',
         body
       );
-      const lower = await add({name: 'Unten mit Holztür', capacity: 5, front: 'door', heightCm: 60});
+      const lower = await add({
+        name: 'Unten mit Holztür', capacity: 5,
+        front: 'door', heightCm: 60,
+      });
       assert.equal(lower.status, 201);
-      const middle = await add({name: 'Mitte offen', capacity: 7, front: 'open', heightCm: 80});
+      const middle = await add({
+        name: 'Mitte offen', capacity: 7,
+        front: 'open', heightCm: 80,
+      });
       assert.equal(middle.status, 201);
-      const upper = await add({name: 'Oben Glas', capacity: 3, front: 'glass', heightCm: 60});
+      const upper = await add({
+        name: 'Oben Glas', capacity: 3, front: 'glass',
+        heightCm: 60,
+      });
       assert.equal(upper.status, 201);
       const framed = await api(
         ctx.base,
@@ -60,7 +71,10 @@ test(
         await add({name: 'Ungültige Tür', front: 'door', doorLeaves: 3});
       assert.equal(invalidLeaves.status, 400);
       const invalidFrame =
-        await add({name: 'Ungültiger Rahmen', front: 'glass', glassFrame: 'true'});
+        await add({
+          name: 'Ungültiger Rahmen', front: 'glass', glassFrame:
+            'true',
+        });
       assert.equal(invalidFrame.status, 400);
       const info = (await api(ctx.base, '/api/warehouse')).data;
       const shelves = info.rooms[0].furniture[0].shelves;
@@ -82,7 +96,8 @@ test(
         persisted,
         'failed write must not affect persisted warehouse'
       );
-      const badFront = await add({name: 'Unsicher', front: 'javascript:danger'});
+      const badFront = await add({name: 'Unsicher', front: 'javascript:danger'}
+      );
       assert.equal(badFront.status, 400);
       assert.deepEqual(fs.readFileSync(file), persisted);
       const tooShortBulk = await api(
@@ -181,11 +196,13 @@ test(
 );
 
 test(
-  'legacy warehouse shelf data stays readable without front/heightCm and automatically uses furniture defaults',
+  'legacy warehouse shelf data stays readable without front/heightCm and \
+automatically uses furniture defaults',
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', roomInput)).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST',
+        roomInput)).data;
       const furniture = (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -223,11 +240,13 @@ test(
 );
 
 test(
-  'mixed height validation reserves at least 5 cm for automatically sized shelves',
+  'mixed height validation reserves at least 5 cm for automatically sized \
+shelves',
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', roomInput)).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST',
+        roomInput)).data;
       const furniture = (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -265,11 +284,13 @@ test(
 );
 
 test(
-  'furniture door defaults persist, copy and bulk update without destroying shelf overrides',
+  'furniture door defaults persist, copy and bulk update without destroying \
+shelf overrides',
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', roomInput)).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST',
+        roomInput)).data;
       const furniture = (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,

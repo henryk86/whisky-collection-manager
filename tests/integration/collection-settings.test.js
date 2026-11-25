@@ -5,7 +5,8 @@ import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
 
 test(
-  'founding year persists in collection.json, is included in API data and can be cleared',
+  'founding year persists in collection.json, is included in API data and \
+can be cleared',
   async () => {
     const server = await startTestServer();
     try {
@@ -52,7 +53,8 @@ test(
       // Older pre-settings backups remain valid in the same schema version.
       const legacy = {...stored};
       delete legacy.settings;
-      const imported = await requestJson(server.base, '/api/import/json', 'POST', legacy);
+      const imported = await requestJson(server.base, '/api/import/json',
+        'POST', legacy);
       assert.equal(imported.status, 200);
       const updated = await requestJson(
         server.base,

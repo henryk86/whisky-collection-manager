@@ -167,7 +167,8 @@ export function routeUrl(page, selected, filters = {}) {
       if (filters.roomId && /^[a-zA-Z0-9-]{1,100}$/
         .test(filters.roomId)) params.set('room', filters.roomId);
       if (filters.furnitureId && /^[a-zA-Z0-9-]{1,100}$/
-        .test(filters.furnitureId)) params.set('furniture', filters.furnitureId);
+        .test(filters.furnitureId)) params.set('furniture',
+          filters.furnitureId);
     }
     return '/?' + params.toString();
   }

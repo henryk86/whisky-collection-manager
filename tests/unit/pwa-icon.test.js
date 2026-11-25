@@ -35,7 +35,8 @@ test(
       pngSize('public/assets/icon-512.png'),
       {width: 512, height: 512}
     );
-    const manifest = JSON.parse(fs.readFileSync('public/manifest.webmanifest', 'utf8'));
+    const manifest = JSON.parse(fs.readFileSync('public/manifest.webmanifest',
+      'utf8'));
     assert.ok(manifest.icons.some(icon => icon.src === '/assets/icon-192.png'));
     assert.ok(manifest.icons.some(icon => icon.src === '/assets/icon-512.png'));
   }

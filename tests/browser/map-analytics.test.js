@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer, requestJson} from '../helpers/server.js';
-import {domOnly, chromium, session, openSettingsFromMenu, openSettingsSection, seed, mockDecoder} from './support.js';
+import {
+  domOnly, chromium, session, openSettingsFromMenu, openSettingsSection,
+  seed, mockDecoder
+} from './support.js';
 test(
-  'browser: map and collection use the same full-width content frame, right drawer and unified return button',
+  'browser: map and collection use the same full-width content frame, right \
+drawer and unified return button',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -30,7 +34,8 @@ test(
         assert.ok(
           Math.abs(homeFrame.width -
             Math.min(homeFrame.viewportContentWidth, 1350)) <= 1,
-          `${width}px: collection main should fill usable width ${homeFrame.viewportContentWidth}, got ${homeFrame.width}`
+          `${width}px: collection main should fill usable width ${homeFrame
+            .viewportContentWidth}, got ${homeFrame.width}`
         );
         assert.ok(
           homeFrame.viewportContentWidth <= width &&
@@ -58,10 +63,12 @@ test(
         // A fixed element can end at the gutter boundary, not innerWidth.
         // It must align with its backdrop and remain at the usable right edge.
         assert.ok(Math.abs(drawer.right - drawer.backdropRight) <= 1,
-          `${width}px: menu drawer must align with fixed backdrop right edge: ${JSON.stringify(drawer)}`);
+          `${width}px: menu drawer must align with fixed backdrop right \
+edge: ${JSON.stringify(drawer)}`);
         assert.ok(
           drawer.right >= drawer.layoutRight - 1 && drawer.right <= width + 1,
-          `${width}px: menu drawer must stay on the right, including the scrollbar gutter: ${JSON.stringify(drawer)}`
+          `${width}px: menu drawer must stay on the right, including the \
+scrollbar gutter: ${JSON.stringify(drawer)}`
         );
         assert.ok(
           drawer.left >= -1,
@@ -104,12 +111,15 @@ test(
         });
         for (const field of ['left', 'right', 'width']) {
           assert.ok(Math.abs(mapFrame[field] - homeFrame[field]) <= 1,
-            `${width}px: map and collection ${field} differ: ${mapFrame[field]} vs ${homeFrame[field]}`);
+            `${width}px: map and collection ${field} differ: ${mapFrame[
+            field]} vs ${homeFrame[field]}`);
         }
         assert.ok(Math.abs(mapFrame.contentLeft - homeFrame.contentLeft) <= 1,
-          `${width}px: map content must align with collection content left edge`);
+          `${width}px: map content must align with collection content left \
+edge`);
         assert.ok(Math.abs(mapFrame.contentRight - homeFrame.contentRight) <= 1,
-          `${width}px: map content must align with collection content right edge`);
+          `${width}px: map content must align with collection content right \
+edge`);
         if (width > 950) {
           assert.equal(
             mapFrame.actualGridColumns,
@@ -132,7 +142,8 @@ test(
           );
         }
         assert.ok(mapFrame.overflow <= 1, `${width}px: map must not overflow`);
-        const mapBack = page.locator('main .section-head .ds-back-button--page-action');
+        const mapBack = page.locator(
+          'main .section-head .ds-back-button--page-action');
         assert.equal(await mapBack.innerText(), 'Zur Sammlung');
         assert.equal(await mapBack.getAttribute('data-act'), 'goto-home');
         await mapBack.click();
@@ -141,7 +152,8 @@ test(
       await page.locator('#menu-button').click();
       await page.locator('#site-drawer [data-act="goto-settings-menu"]')
         .click();
-      await page.getByRole('heading', {name: 'Einstellungen & Datensicherung'}).waitFor();
+      await page.getByRole('heading', {name: 'Einstellungen & Datensicherung'})
+        .waitFor();
       const settingsBack =
         page.locator('main .section-head .ds-back-button--page-action');
       assert.equal(await settingsBack.innerText(), 'Zur Sammlung');
@@ -155,7 +167,8 @@ test(
 
 
 test(
-  'browser: map can toggle every catalogued distillery and show pagoda markers for empty sites',
+  'browser: map can toggle every catalogued distillery and show pagoda \
+markers for empty sites',
   async () => {
     await session(async ({page, open, base}) => {
       const catalog = (await requestJson(base, '/api/collection')).data
@@ -171,7 +184,8 @@ test(
       await open();
       await page.locator('[data-act="toggle-menu"]').click();
       await page.locator('#site-drawer [data-act="goto-map"]').click();
-      const toggle = page.getByRole('switch', {name: 'Alle Destillerien anzeigen'});
+      const toggle = page.getByRole('switch',
+        {name: 'Alle Destillerien anzeigen'});
       assert.equal(await toggle.isChecked(), false);
       assert.equal(await page.locator('#map-site-select option').count(), 1);
       assert.equal(await page.locator('.map-marker-pagoda').count(), 0);
@@ -240,13 +254,16 @@ test(
         'legend example shows a group, not a single distillery'
       );
       assert.equal(
-        await page.locator('.map-markers .map-marker-cluster.map-cluster-visual').count() > 0,
+        await page.locator(
+          '.map-markers .map-marker-cluster.map-cluster-visual').count() > 0,
         true
       );
       assert.equal(
         await clusterLegend.evaluate(el => getComputedStyle(el)
           .backgroundColor),
-        await page.locator('.map-markers .map-marker-cluster.map-cluster-visual:not(.selected)').first()
+        await page.locator(
+          '.map-markers .map-marker-cluster.map-cluster-visual:not(.selected)')
+          .first()
           .evaluate(el => getComputedStyle(el).backgroundColor),
         'cluster and legend icon use the same cluster background'
       );
@@ -260,7 +277,8 @@ test(
           'map-legend-stock',
           'map-legend-clusters',
         ],
-        'both status sections are adjacent, followed by the size scale and groups'
+        'both status sections are adjacent, followed by the size scale and \
+groups'
       );
       assert.equal(
         await page.locator('.map-legend .map-legend-status-icon').count(),
@@ -268,7 +286,8 @@ test(
         'stocked active and closed sites have distinct legend symbols'
       );
       assert.equal(
-        await page.locator('.map-legend .map-legend-status-icon.map-marker-closed').count(),
+        await page.locator(
+          '.map-legend .map-legend-status-icon.map-marker-closed').count(),
         1,
         'closed stocked marker uses the dashed closed marker class'
       );
@@ -286,7 +305,8 @@ test(
         'legend samples use compact proportional diameters'
       );
       assert.equal(Math.round((await clusterLegend.boundingBox()).width), 27,
-        'group sample should remain compact while live groups keep their map sizes');
+        'group sample should remain compact while live groups keep their \
+map sizes');
       assert.deepEqual(await stockLegend.allInnerTexts(), ['1', '10', '100'],
         'bottle counts are displayed inside their markers, as on the map');
       // At the worldwide overview zoom, even the sole stocked distillery can
@@ -303,11 +323,12 @@ test(
           color: getComputedStyle(el).color,
         }));
         const markerStyle =
-          await page.locator('.map-markers .map-marker-cluster:not(.selected)').first().evaluate(el => ({
-            background: getComputedStyle(el).backgroundColor,
-            border: getComputedStyle(el).borderTopColor,
-            color: getComputedStyle(el).color,
-          }));
+          await page.locator('.map-markers .map-marker-cluster:not(.selected)')
+            .first().evaluate(el => ({
+              background: getComputedStyle(el).backgroundColor,
+              border: getComputedStyle(el).borderTopColor,
+              color: getComputedStyle(el).color,
+            }));
         assert.deepEqual(
           legendStyle,
           markerStyle,
@@ -318,10 +339,11 @@ test(
           shape: getComputedStyle(el).clipPath,
         }));
         const liveClusterGeometry =
-          await page.locator('.map-markers .map-marker-cluster:not(.selected)').first().evaluate(el => ({
-            radius: getComputedStyle(el).borderRadius,
-            shape: getComputedStyle(el).clipPath,
-          }));
+          await page.locator('.map-markers .map-marker-cluster:not(.selected)')
+            .first().evaluate(el => ({
+              radius: getComputedStyle(el).borderRadius,
+              shape: getComputedStyle(el).clipPath,
+            }));
         assert.deepEqual(
           clusterGeometry,
           {radius: '50%', shape: 'none'},
@@ -364,8 +386,11 @@ test(
           `closed stocked legend shows dashed outline in ${theme} mode`
         );
         assert.notEqual(statusStyles[0].background, statusStyles[1].background,
-          `closed and active stocked markers are distinguishable in ${theme} mode`);
-        for (const legendIcon of await page.locator('.map-legend .map-legend-marker, .map-legend .map-pagoda-icon').all()) {
+          `closed and active stocked markers are distinguishable in ${
+theme} mode`);
+        for (const legendIcon of await page.locator(
+          '.map-legend .map-legend-marker, .map-legend .map-pagoda-icon').all(
+        )) {
           const decoration = await legendIcon.evaluate(el => ({
             boxShadow: getComputedStyle(el).boxShadow,
             filter: getComputedStyle(el).filter,
@@ -391,14 +416,16 @@ test(
         ));
       assert.ok(
         allZoom < 11,
-        'explicitly fitting all locations should zoom out to the wider geographic area'
+        'explicitly fitting all locations should zoom out to the wider \
+geographic area'
       );
       await page.locator('#map-site-select').selectOption(aberfeldy.id);
       const emptyMarker =
         page.locator('.map-marker-pagoda[aria-label^="Aberfeldy:"]');
       await emptyMarker.waitFor({state: 'visible'});
       assert.equal(await emptyMarker.locator('.map-pagoda-icon').count(), 1,
-        'focusing an empty distillery reveals its pagoda marker, even if the overview showed only clusters');
+        'focusing an empty distillery reveals its pagoda marker, even if \
+the overview showed only clusters');
       assert.match(
         await page.locator('.map-site-heading').innerText(),
         /0 Abfüllungen · 0 Flaschen/
@@ -415,7 +442,9 @@ test(
       // even if it was previously aggregated in a worldwide overview.
       await page.locator('#map-site-select').selectOption(kilchoman.id);
       const stockedMarker =
-        page.locator('.map-markers .map-marker.map-stock-visual[aria-label^="Kilchoman:"]');
+        page.locator(
+          '.map-markers .map-marker.map-stock-visual[aria-label^="Kilchoman:"]'
+        );
       await stockedMarker.waitFor({state: 'visible'});
       assert.match(
         await stockedMarker.getAttribute('aria-label'),
@@ -456,7 +485,8 @@ test(
 
 
 test(
-  'browser: zoom-dependent clusters expand on click while keeping the underlying distillery records',
+  'browser: zoom-dependent clusters expand on click while keeping the \
+underlying distillery records',
   async () => {
     await session(async ({page, open, base}) => {
       const list = (await requestJson(base, '/api/collection')).data
@@ -464,7 +494,8 @@ test(
       const ardbeg = list.find(site => site.name === 'Ardbeg');
       const lagavulin = list.find(site => site.name === 'Lagavulin');
       assert.ok(ardbeg && lagavulin);
-      for (const [site, inventory] of [[ardbeg, '088711'], [lagavulin, '088712']]) {
+      for (const [site, inventory] of [[ardbeg, '088711'], [lagavulin,
+        '088712']]) {
         const added = await requestJson(base, '/api/bottlings', 'POST', {
           name: `Cluster ${site.name}`, distilleryIds: [site.id],
           firstBottle: {inventoryNumber: inventory, status: 'closed'},
@@ -538,7 +569,8 @@ test(
 
 
 test(
-  'browser: map menu, location-based aggregation, responsive fit and detail link',
+  'browser: map menu, location-based aggregation, responsive fit and detail \
+link',
   async () => {
     await session(async ({page, open, base}) => {
       const list = (await requestJson(base, '/api/collection')).data
@@ -673,7 +705,8 @@ test(
 
 
 test(
-  'browser: unknown distillery can be positioned in app and large per-site list is paginated',
+  'browser: unknown distillery can be positioned in app and large per-site \
+list is paginated',
   async () => {
     await session(async ({page, open, base}) => {
       const added = await requestJson(
@@ -707,7 +740,8 @@ test(
           .find(d => d.id === added.data.id).latitude,
         55.7869
       );
-      const marker = page.locator('.map-marker[aria-label^="Private Test Destillery:"]');
+      const marker = page.locator(
+        '.map-marker[aria-label^="Private Test Destillery:"]');
       await marker.waitFor({state: 'visible'});
       await page.locator('#map-site-select').selectOption(added.data.id);
       assert.equal(await page.locator('.map-bottling-link').count(), 12);
@@ -725,7 +759,8 @@ test(
 
 
 test(
-  'browser: editing map coordinates keeps zoom and recenters only after a position change',
+  'browser: editing map coordinates keeps zoom and recenters only after a \
+position change',
   async () => {
     await session(async ({page, open, base}) => {
       const distilleries = (await requestJson(base, '/api/collection')).data
@@ -733,7 +768,8 @@ test(
       const ardbeg = distilleries.find(site => site.name === 'Ardbeg');
       const kilchoman = distilleries.find(site => site.name === 'Kilchoman');
       assert.ok(ardbeg && kilchoman);
-      for (const [distillery, number] of [[ardbeg, '071411'], [kilchoman, '071412']]) {
+      for (const [distillery, number] of [[ardbeg, '071411'], [kilchoman,
+        '071412']]) {
         const created = await requestJson(base, '/api/bottlings', 'POST', {
           name: `Map position edit ${distillery.name}`,
           distilleryIds: [distillery.id],
@@ -775,7 +811,8 @@ test(
         };
       });
       assert.ok(Math.abs(position.x) < 3 && Math.abs(position.y) < 3,
-        `corrected location should be centered at the original zoom: ${JSON.stringify(position)}`);
+        `corrected location should be centered at the original zoom: ${JSON
+          .stringify(position)}`);
       assert.equal(
         (await requestJson(base, '/api/collection')).data.distilleries
           .find(site => site.id === ardbeg.id).latitude,
@@ -801,7 +838,8 @@ test(
         {steps: 5}
       );
       await page.mouse.up();
-      const displaced = await page.locator('.map-marker[aria-label^="Ardbeg:"]').evaluate(element => {
+      const displaced = await page.locator('.map-marker[aria-label^="Ardbeg:"]'
+      ).evaluate(element => {
         const marker = element.getBoundingClientRect();
         const view = document.querySelector('.map-viewport')
           .getBoundingClientRect();
@@ -826,7 +864,8 @@ test(
         await page.locator('#distillery-map')
           .getAttribute('data-camera-identity'),
         'keep',
-        'a metadata edit should update map markers without remounting the map viewer'
+        'a metadata edit should update map markers without remounting the \
+map viewer'
       );
       assert.equal(
         await page.locator('#map-site-select').inputValue(),
@@ -860,7 +899,8 @@ test(
     await session(async ({page, base, open}) => {
       const catalog = (await requestJson(base, '/api/collection')).data
         .distilleries;
-      for (const [name, number] of [['Kilchoman', '071301'], ['Ardbeg', '071302']]) {
+      for (const [name, number] of [['Kilchoman', '071301'], ['Ardbeg',
+        '071302']]) {
         const distillery = catalog.find(site => site.name === name);
         assert.ok(distillery, `${name} should be in the catalog`);
         const added = await requestJson(base, '/api/bottlings', 'POST', {
@@ -884,8 +924,10 @@ test(
         filter: getComputedStyle(document.querySelector('.map-tiles')).filter,
         mapBackground: getComputedStyle(document.querySelector('.map-canvas'))
           .backgroundColor,
-        markerFilter: getComputedStyle(document.querySelector('.map-marker')).filter,
-        controlsBg: getComputedStyle(document.querySelector('.map-controls button')).backgroundColor,
+        markerFilter: getComputedStyle(document.querySelector('.map-marker'))
+          .filter,
+        controlsBg: getComputedStyle(document.querySelector(
+          '.map-controls button')).backgroundColor,
       }));
       const initial = await themeStyle();
       await page.locator('[data-act="toggle-theme"]').click();
@@ -905,7 +947,8 @@ test(
       assert.match(
         darker.filter,
         /invert\(0\.91\).*brightness\(1\.02\).*contrast\(0\.96\)/,
-        'dark OSM palette must remain readable and brighter than the old map style'
+        'dark OSM palette must remain readable and brighter than the old \
+map style'
       );
       assert.equal(
         lighter.filter,
@@ -958,7 +1001,9 @@ test(
       assert.ok(
         Math.abs(afterIn.x - initialMarker.x) < 2 && Math.abs(afterIn.y -
           initialMarker.y) < 2,
-        `wheel under marker moved anchored location: ${JSON.stringify({initialMarker, afterIn})}`
+        `wheel under marker moved anchored location: ${JSON.stringify({
+          initialMarker, afterIn,
+        })}`
       );
 
       // Zooming out around a point next to the marker must scale the marker's
@@ -983,7 +1028,9 @@ test(
       assert.ok(
         Math.abs(afterOut.x - expected.x) < 2 && Math.abs(afterOut.y -
           expected.y) < 2,
-        `wheel off marker must preserve cursor position: ${JSON.stringify({expected, afterOut})}`
+        `wheel off marker must preserve cursor position: ${JSON.stringify({
+          expected, afterOut,
+        })}`
       );
     });
   }
@@ -1049,7 +1096,8 @@ test(
         await page.locator('[data-analytics-filter="distillery"]').inputValue(),
         site.id
       );
-      for (const section of ['inventory', 'origins', 'profile', 'finance', 'timeline', 'quality']) {
+      for (const section of ['inventory', 'origins', 'profile', 'finance',
+        'timeline', 'quality']) {
         await page.locator(`.section-nav-item[data-section="${section}"]`)
           .click();
         assert.equal(await page.locator('.analytics-section-title').count(), 1);
@@ -1060,7 +1108,9 @@ test(
         );
       }
       await page.locator('.section-nav-item[data-section="origins"]').click();
-      await page.locator('.analytics-bar-label[data-act="analytics-distillery"]').first().click();
+      await page.locator(
+        '.analytics-bar-label[data-act="analytics-distillery"]').first().click(
+      );
       await page.locator('.collection-heading').waitFor();
       assert.equal(
         await page.locator('#filter-distillery').inputValue(),
@@ -1101,7 +1151,8 @@ test(
         return footer.top - content.bottom;
       });
       assert.ok(footerGap >= 0 && footerGap <= 55,
-        `analytics footer must follow the final note with compact spacing (${footerGap}px)`);
+        `analytics footer must follow the final note with compact spacing \
+(${footerGap}px)`);
       const overflow = await page.evaluate(() => document.body.scrollWidth -
         document.body.getBoundingClientRect().width);
       assert.ok(
@@ -1115,7 +1166,8 @@ test(
 
 
 test(
-  'browser: detail map link opens all locations of a multi-distillery bottling and remains reloadable',
+  'browser: detail map link opens all locations of a multi-distillery \
+bottling and remains reloadable',
   async () => {
     await session(async ({page, open, base}) => {
       const catalog = (await requestJson(base, '/api/collection')).data
@@ -1169,7 +1221,8 @@ test(
 
 
 test(
-  'browser: phone detail title, mobile analytics selector and period controls, and overview view switch fit their layout',
+  'browser: phone detail title, mobile analytics selector and period \
+controls, and overview view switch fit their layout',
   async () => {
     await session(async ({page, open, base}) => {
       const catalog = (await requestJson(base, '/api/collection')).data
@@ -1226,7 +1279,8 @@ test(
       const toolbarHeights = await page.evaluate(() => [
         '#search', '#filter-status', '#filter-completion', '#filter-sort',
         '#filter-distillery', '#filter-volume-type', '[data-act="toggle-view"]',
-      ].map(selector => Math.round(document.querySelector(`.toolbar ${selector}`).getBoundingClientRect().height)));
+      ].map(selector => Math.round(document.querySelector(
+        `.toolbar ${selector}`).getBoundingClientRect().height)));
       assert.equal(
         new Set(toolbarHeights).size,
         1,
@@ -1280,9 +1334,11 @@ test(
         return [Math.round(width), Math.round(height)];
       }));
       assert.equal(new Set(periodGeometry.map(([, height]) => height)).size, 1,
-        `period controls should have equal heights: ${JSON.stringify(periodGeometry)}`);
+        `period controls should have equal heights: ${JSON.stringify(
+          periodGeometry)}`);
       assert.equal(new Set(periodGeometry.map(([width]) => width)).size, 1,
-        `period controls should have equal widths on phones: ${JSON.stringify(periodGeometry)}`);
+        `period controls should have equal widths on phones: ${JSON.stringify(
+          periodGeometry)}`);
       await page.locator('#analytics-start-date').fill('2026-01-15');
       assert.equal(
         await page.locator('#analytics-start-date').inputValue(),
@@ -1301,7 +1357,9 @@ test(
       for (const width of [320, 360, 390, 412, 600]) {
         await page.setViewportSize({width, height: 844});
         const tooWide = await page.evaluate(() =>
-          [...document.querySelectorAll('.analytics-period input, .analytics-period select, .analytics-filters select')]
+          [...document.querySelectorAll(
+            '.analytics-period input, .analytics-period select, \
+.analytics-filters select')]
             .filter(el => {
               const r = el.getBoundingClientRect();
               const parent = el.parentElement.getBoundingClientRect();
@@ -1317,12 +1375,15 @@ test(
       await openSettingsFromMenu(page);
       await openSettingsSection(page, 'distilleries');
       await page.locator('#distillery-search').fill('Ardbeg');
-      await page.locator('.distillery-row:visible [data-act="rename-distillery"]').first().click();
+      await page.locator(
+        '.distillery-row:visible [data-act="rename-distillery"]').first(
+      ).click();
       await page.locator('#distillery-form').waitFor();
       for (const width of [320, 360, 390, 412]) {
         await page.setViewportSize({width, height: 844});
         const tooWide = await page.evaluate(() =>
-          [...document.querySelectorAll('#distillery-form input, #distillery-form select')]
+          [...document.querySelectorAll(
+            '#distillery-form input, #distillery-form select')]
             .filter(el => {
               const r = el.getBoundingClientRect();
               const parent = el.parentElement.getBoundingClientRect();

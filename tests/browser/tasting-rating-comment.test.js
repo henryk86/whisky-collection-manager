@@ -4,7 +4,8 @@ import {session} from './support.js';
 import {requestJson} from '../helpers/server.js';
 
 test(
-  'browser: rating comments persist through edit, read-only view and the 14px bottling summary',
+  'browser: rating comments persist through edit, read-only view and the \
+14px bottling summary',
   async () => {
     await session(async ({page, base, open}) => {
       await open();
@@ -19,13 +20,16 @@ test(
       await editor.locator('[data-tasting-rating-comment]')
         .fill('Sehr rund und komplex.');
       await page.locator('[data-act="tasting-create"]').click();
-      const comment = editor.locator('.tasting-rating-comment .tasting-readonly-note');
+      const comment = editor.locator(
+        '.tasting-rating-comment .tasting-readonly-note');
       await comment.waitFor();
       assert.equal(await comment.textContent(), 'Sehr rund und komplex.');
       await page.setViewportSize({width: 1440, height: 900});
       const readonlyBorders =
-        await editor.locator('.tasting-readonly-notes > .tasting-readonly-field').evaluateAll(nodes =>
-          nodes.map(node => getComputedStyle(node).borderInlineStartWidth));
+        await editor.locator(
+          '.tasting-readonly-notes > .tasting-readonly-field').evaluateAll(
+            nodes =>
+              nodes.map(node => getComputedStyle(node).borderInlineStartWidth));
       assert.deepEqual(readonlyBorders, ['0px', '1px', '1px'],
         'read-only nose, palate and finish have vertical separators');
       await editor.locator('[data-act="tasting-edit-start"]').click();
@@ -56,7 +60,8 @@ test(
 );
 
 test(
-  'browser: tasting preview balances present sections without desktop wrapping or overflow',
+  'browser: tasting preview balances present sections without desktop \
+wrapping or overflow',
   async () => {
     await session(async ({page, base, open}) => {
       const bottling = (await requestJson(base, '/api/bottlings', 'POST', {
@@ -73,8 +78,10 @@ test(
         {
           tastedOn: '2026-11-22', rating: 80, flavorProfile,
           tastingNotes: {
-            nose: 'Vanille, frische Früchte und ein langer, leicht rauchiger Nachklang',
-            palate: 'Ausgewogen mit einer etwas längeren Beschreibung für die Vorschau',
+            nose: 'Vanille, frische Früchte und ein langer, leicht \
+rauchiger Nachklang',
+            palate: 'Ausgewogen mit einer etwas längeren Beschreibung für \
+die Vorschau',
             finish: 'Würzig und warm',
           },
         }
@@ -96,12 +103,18 @@ test(
           const parts = ['main', 'radar', 'notes'].map(name => {
             const el = row.querySelector(`.tasting-summary-${name}`);
             const r = el.getBoundingClientRect();
-            return {name, left: r.left, right: r.right, top: r.top, width: r.width};
+            return {
+              name, left: r.left, right: r.right, top: r.top,
+              width: r.width,
+            };
           });
           const parent = row.getBoundingClientRect();
-          const meta = row.querySelector('.tasting-summary-main .tasting-summary-meta').getBoundingClientRect();
+          const meta = row.querySelector(
+            '.tasting-summary-main .tasting-summary-meta')
+            .getBoundingClientRect();
           const action =
-            row.querySelector('.tasting-summary-main .tasting-summary-actions').getBoundingClientRect();
+            row.querySelector('.tasting-summary-main .tasting-summary-actions')
+              .getBoundingClientRect();
           return {
             wrap: getComputedStyle(row).flexWrap, parts,
             left: parent.left, right: parent.right, top: parent.top,
@@ -117,7 +130,8 @@ test(
         if (width >= 1200) {
           const [, radar, notes] = layout.parts;
           assert.ok(notes.width >= radar.width * 1.65,
-            `tasting notes are considerably wider than the radar at ${width}px`);
+            `tasting notes are considerably wider than the radar at ${width}px`
+          );
         }
         assert.ok(
           layout.actionBelowMeta,

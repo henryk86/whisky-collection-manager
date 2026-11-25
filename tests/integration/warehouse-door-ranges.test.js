@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {startTestServer, requestJson as api} from '../helpers/server.js';
 
 test(
-  'door ranges persist, reject overlaps, survive copies and adjust when a shelf is removed',
+  'door ranges persist, reject overlaps, survive copies and adjust when a \
+shelf is removed',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -46,7 +47,10 @@ test(
         {from: 3, to: 5, front: 'glass', doorLeaves: 2, glassFrame: true},
       ];
       const endpoint = `/api/warehouse/furniture/${furniture.id}`;
-      const updated = await api(ctx.base, endpoint, 'PATCH', {...furniture, doorRanges: ranges});
+      const updated = await api(ctx.base, endpoint, 'PATCH', {
+        ...furniture,
+        doorRanges: ranges,
+      });
       assert.equal(updated.status, 200);
       assert.deepEqual(updated.data.doorRanges, ranges);
       const invalid = await api(
@@ -66,7 +70,8 @@ test(
         {...updated.data, doorRanges: [{from: 1, to: 6, front: 'glass'}]}
       );
       assert.equal(outOfRange.status, 400);
-      const copy = await api(ctx.base, `${endpoint}/copy`, 'POST', {withShelves: true});
+      const copy = await api(ctx.base, `${endpoint}/copy`, 'POST',
+        {withShelves: true});
       assert.equal(copy.status, 201);
       assert.deepEqual(copy.data.doorRanges, ranges);
       const deleteShelf =

@@ -11,7 +11,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta
   .url)), '../..');
 
 test(
-  'optional login protects collection, images and API while only admin can manage accounts',
+  'optional login protects collection, images and API while only admin can \
+manage accounts',
   async () => {
     const data = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-auth-'));
     let child;
@@ -56,7 +57,8 @@ test(
           cookie: response.headers.get('set-cookie')?.split(';')[0],
         };
       };
-      const seed = JSON.parse(fs.readFileSync(path.join(data, 'data/user.json'), 'utf8'));
+      const seed = JSON.parse(fs.readFileSync(path.join(data,
+        'data/user.json'), 'utf8'));
       assert.equal(seed.loginRequired, false);
       assert.equal(seed.users.length, 1);
       assert.equal(seed.users[0].role, 'admin');
@@ -111,7 +113,8 @@ test(
       );
       const adminCookie = adminChanged.cookie;
       assert.equal(
-        (await call('/api/auth/config', 'PATCH', {required: true}, adminCookie)).status,
+        (await call('/api/auth/config', 'PATCH', {required: true},
+          adminCookie)).status,
         200
       );
       assert.equal((await call('/api/collection')).status, 401);
@@ -119,13 +122,16 @@ test(
       assert.equal((await call('/api/export/json')).status, 401);
       fs.writeFileSync(path.join(data, 'images', 'secret.png'), 'PRIVATE');
       assert.equal((await call('/images/secret.png')).status, 401);
-      const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+      const png =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA\
+AAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
       assert.equal(
         (await call('/api/import-image/stage', 'POST', {image: png})).status,
         401,
         'extension image uploads without a session must remain blocked'
       );
-      const staged = await call('/api/import-image/stage', 'POST', {image: png}, adminCookie);
+      const staged = await call('/api/import-image/stage', 'POST',
+        {image: png}, adminCookie);
       assert.equal(
         staged.status,
         201,
@@ -156,7 +162,8 @@ test(
         200,
         'login shell still loads'
       );
-      const listing = await call('/api/auth/users', 'GET', undefined, adminCookie);
+      const listing = await call('/api/auth/users', 'GET', undefined,
+        adminCookie);
       assert.equal(listing.status, 200);
       assert.equal(listing.value.users[0].passwordHash, undefined);
       const added = await call(
@@ -175,7 +182,8 @@ test(
       );
       assert.equal(userLogin.status, 200);
       assert.equal(
-        (await call('/api/collection', 'GET', undefined, userLogin.cookie)).status,
+        (await call('/api/collection', 'GET', undefined, userLogin.cookie))
+          .status,
         403
       );
       const userChanged = await call('/api/auth/password', 'POST', {
@@ -197,7 +205,8 @@ test(
         403
       );
       assert.equal(
-        (await call('/api/auth/config', 'PATCH', {required: false}, userCookie)).status,
+        (await call('/api/auth/config', 'PATCH', {required: false},
+          userCookie)).status,
         403
       );
       const reset = await call(
@@ -264,7 +273,8 @@ test(
 );
 
 test(
-  'offline admin recovery sets a temporary password without clearing users or login requirement',
+  'offline admin recovery sets a temporary password without clearing users \
+or login requirement',
   async () => {
     const data = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-auth-reset-'));
     try {
@@ -299,7 +309,8 @@ test(
         }
       );
       assert.match(result, /Neues Startpasswort fuer admin: [A-Za-z0-9_-]+/);
-      const after = JSON.parse(fs.readFileSync(path.join(data, 'data/user.json'), 'utf8'));
+      const after = JSON.parse(fs.readFileSync(path.join(data,
+        'data/user.json'), 'utf8'));
       assert.equal(after.loginRequired, true);
       assert.equal(after.users[0].username, 'admin');
       assert.equal(after.users[0].mustChangePassword, true);

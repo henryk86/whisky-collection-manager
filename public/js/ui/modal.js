@@ -4,12 +4,12 @@ import {actionButton} from './buttons.js';
 import {modalFrame, modalFooter} from './modal-layout.js';
 
 /**
- * Single modal host; nested dialogs suspend their parent DOM (including
- * FileList, field values, scroll and event listeners), and only the top layer
- * is active.
+ * Manages the active dialog and suspended parent dialogs without recreating
+ * their DOM or losing entered values.
  *
- * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @param {!Object} options Shared application state and close callback.
+ * @return {!Object} Methods for opening, updating, closing and confirming
+ *     dialogs.
  */
 export function createModal({state, onClose}) {
   const suspended = [];
@@ -19,9 +19,10 @@ export function createModal({state, onClose}) {
   let originFocus = null;
   let pageSiblings = [];
   /**
-   * Selects and transforms the lock background records.
+   * Freezes page scrolling and marks the siblings of the modal host inert while
+   * saving their previous states.
    *
-   * @param {*} host Network host or host configuration.
+   * @param {?HTMLElement} host Container that holds the active modal.
    */
   function lockBackground(host) {
     if (scrollLock || typeof document === 'undefined') return;
@@ -47,7 +48,8 @@ export function createModal({state, onClose}) {
   }
 
   /**
-   * Updates element attributes used by unlock background.
+   * Restores the original page styles, inert flags and scroll position after
+   * the final dialog closes.
    */
   function unlockBackground() {
     if (!scrollLock || typeof document === 'undefined') return;
@@ -66,9 +68,10 @@ export function createModal({state, onClose}) {
   }
 
   /**
-   * Updates the focus element state for its caller.
+   * Focuses a connected element without scrolling the page or dialog.
    *
-   * @param {*} element DOM element involved in the operation.
+   * @param {?HTMLElement} element Candidate to focus; absent elements are
+   *     ignored.
    */
   function focusElement(element) {
     if (element?.isConnected !== false && typeof element?.focus === 'function')
@@ -76,14 +79,18 @@ export function createModal({state, onClose}) {
   }
 
   /**
-   * Filters records according to the focusable selection rules.
+   * Finds visible, enabled controls in the active dialog that can receive
+   * keyboard focus.
    *
-   * @param {*} dialog Value used by this operation.
-   * @return {!Array<*>} Resulting entries in their output order.
+   * @param {?HTMLElement} dialog Dialog whose descendants are inspected.
+   * @return {!Array<!HTMLElement>} Focusable controls in DOM order.
    */
   function focusable(dialog) {
     if (!dialog?.querySelectorAll) return [];
-    return [...dialog.querySelectorAll('a[href],button:not(:disabled),input:not([type="hidden"]):not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])')]
+    return [...dialog.querySelectorAll(
+      'a[href],button:not(:disabled),input:not([type="hidden"]):not(:disable\
+d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
+1"])')]
       .filter(element => !element.inert && element.getClientRects?.()
         .length !== 0 &&
         element.getAttribute('aria-hidden') !== 'true' &&
@@ -92,9 +99,10 @@ export function createModal({state, onClose}) {
   }
 
   /**
-   * Derives the focus first result from the supplied values.
+   * Focuses the autofocus control, first form field, first focusable control or
+   * the dialog itself, in that order.
    *
-   * @param {*} dialog Value used by this operation.
+   * @param {?HTMLElement} dialog Newly rendered or restored dialog.
    */
   function focusFirst(dialog) {
     if (!dialog) return;
@@ -106,9 +114,10 @@ export function createModal({state, onClose}) {
   }
 
   /**
-   * Derives the trap keys result from the supplied values.
+   * Closes the active dialog on Escape and cycles Tab focus within it rather
+   * than allowing focus into the background.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!KeyboardEvent} event Key event dispatched from the active overlay.
    */
   function trapKeys(event) {
     if (event.key === 'Escape') {
@@ -117,7 +126,10 @@ export function createModal({state, onClose}) {
     if (event.key !== 'Tab') return;
     const dialog = event.currentTarget.querySelector?.('.dialog');
     const controls = focusable(dialog);
-    if (!controls.length) {event.preventDefault(); focusElement(dialog); return;}
+    if (!controls.length) {
+      event.preventDefault(); focusElement(dialog);
+      return;
+    }
     const active = document.activeElement;
     const i = controls.indexOf(active);
     if (event.shiftKey && (i <=
@@ -127,14 +139,17 @@ export function createModal({state, onClose}) {
   }
 
   /**
-   * Renders modal for modal.
+   * Opens a dialog, suspending the previous dialog by default or replacing it
+   * when requested. Cancels an unresolved confirmation or choice.
    *
-   * @param {string} title Title shown to the user.
-   * @param {*} content Content used by this operation.
-   * @param {boolean=} wide Wide used by this operation.
-   * @param {boolean=} nested Nested used by this operation.
-   * @param {string=} headingAction Heading action used by this operation.
-   * @param {string=} variant Variant used by this operation.
+   * @param {string} title Visible dialog heading.
+   * @param {string} content HTML markup for the dialog body.
+   * @param {boolean=} wide Enables the wide layout when no explicit variant
+   *     overrides it.
+   * @param {(boolean|string)=} nested Whether to suspend the parent; 'replace'
+   *     swaps the active dialog without adding a stack entry.
+   * @param {string=} headingAction HTML markup for an optional heading action.
+   * @param {string=} variant Explicit dialog size or layout variant.
    */
   function showModal(
     title,
@@ -172,14 +187,19 @@ export function createModal({state, onClose}) {
   }
 
   /**
-   * Renders modal in the current view.
+   * Mounts the current dialog only when its state object has changed. Registers
+   * focus trapping and backdrop dismissal without resetting an existing edit
+   * form.
    */
   function renderModal() {
     const host = query('#modal-root');
     if (!host || !state.modal) return;
     // Refreshes of the background view must never reset an open edit form.
     if (host.firstElementChild?.__dsModalState === state.modal) return;
-    host.innerHTML = modalFrame({...state.modal, closeLabel: t('common.actions.close')});
+    host.innerHTML = modalFrame({
+      ...state.modal, closeLabel:
+        t('common.actions.close'),
+    });
     const overlay = host.querySelector('.overlay');
     if (!overlay) return;
     overlay.__dsModalState = state.modal;
@@ -210,9 +230,10 @@ export function createModal({state, onClose}) {
   }
 
   /**
-   * Controls modal for modal.
+   * Cancels outstanding choices, then restores the suspended parent or clears
+   * the entire modal stack and unlocks the background.
    *
-   * @param {boolean=} all All used by this operation.
+   * @param {boolean=} all Close every layer instead of restoring the parent.
    */
   function closeModal(all = false) {
     if (pendingChoice) {
@@ -243,18 +264,20 @@ export function createModal({state, onClose}) {
   }
 
   /**
- * Confirmation and choice dialogs never invoke window.confirm/alert/prompt.
- * Their actions use the same central footer and button contracts as forms.
- *
- * @param {string} title Title shown to the user.
- * @param {*} message Message used by this operation.
- * @param {*} acceptLabel Accept label used by this operation.
- * @param {*=} cancelLabel Cancel label used by this operation.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
- */
-  function confirm(title, message, acceptLabel, cancelLabel = t('common.actions.cancel')) {
+   * Shows an application confirmation dialog and resolves after acceptance or
+   * dismissal. The default focus is on the cancel action.
+   *
+   * @param {string} title Dialog heading.
+   * @param {string} message Plain text, escaped before rendering.
+   * @param {string} acceptLabel Label of the primary confirmation button.
+   * @param {string=} cancelLabel Label of the dismissal button.
+   * @return {!Promise<boolean>} True on acceptance; false on dismissal.
+   */
+  function confirm(title, message, acceptLabel, cancelLabel =
+    t('common.actions.cancel')) {
     return new Promise(resolve => {
-      const buttons = actionButton({label: cancelLabel, action: 'close-modal'}) +
+      const buttons = actionButton({label: cancelLabel, action: 'close-modal'}
+      ) +
         actionButton({
           label: acceptLabel,
           action: 'modal-confirm-accept',
@@ -267,13 +290,16 @@ export function createModal({state, onClose}) {
         Boolean(state.modal)
       );
       pendingConfirmation = resolve;
-      focusElement(query('#modal-root .ds-modal-footer [data-act="close-modal"]'));
+      focusElement(query(
+        '#modal-root .ds-modal-footer [data-act="close-modal"]'));
     });
   }
 
   /**
-   * Derives the accept confirmation result from the supplied values.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * Resolves the pending confirmation as accepted and restores the parent
+   * dialog if present.
+   *
+   * @return {boolean} True when a confirmation was pending.
    */
   function acceptConfirmation() {
     if (!pendingConfirmation) return false;
@@ -282,12 +308,14 @@ export function createModal({state, onClose}) {
   }
 
   /**
-   * Transforms the entries used by choose.
+   * Shows a choice dialog and resolves with the selected action ID or 'cancel'
+   * on dismissal.
    *
-   * @param {*} title Title displayed or stored by this operation.
-   * @param {*} message Message to display or use for diagnostics.
-   * @param {*} options Options controlling the operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @param {string} title Dialog heading.
+   * @param {string} message Plain text, escaped before rendering.
+   * @param {!Array<{id: string, label: string, primary: boolean}>} options
+   *     Buttons to display; accepted action IDs are save, discard and cancel.
+   * @return {!Promise<string>} Selected action ID or cancel.
    */
   function choose(title, message, options) {
     return new Promise(resolve => {
@@ -309,10 +337,11 @@ export function createModal({state, onClose}) {
   }
 
   /**
-   * Derives the accept choice result from the supplied values.
+   * Resolves a pending choice only for one of the supported action IDs and
+   * restores the parent dialog if present.
    *
-   * @param {*} choice Value used by this operation.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * @param {string} choice Requested save, discard or cancel action.
+   * @return {boolean} True when the pending choice was resolved.
    */
   function acceptChoice(choice) {
     if (!pendingChoice || !['save', 'discard', 'cancel']
@@ -322,9 +351,10 @@ export function createModal({state, onClose}) {
   }
 
   /**
-   * Updates content in the current state.
+   * Replaces the active dialog body in both application state and DOM, leaving
+   * its header and stack intact.
    *
-   * @param {*} content Content to render, store or examine.
+   * @param {string} content HTML markup to render inside the body.
    */
   function updateContent(content) {
     if (!state.modal) return;

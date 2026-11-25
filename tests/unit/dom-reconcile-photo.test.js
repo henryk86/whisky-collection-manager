@@ -181,7 +181,8 @@ const tile = (id, cutout = false) => el('div', {
 ...(cutout ? [el('span', {'class': 'photo-cutout-badge'})] : [])]);
 
 test(
-  'photo reconciliation retains distinct editor and delete controls after cutout update',
+  'photo reconciliation retains distinct editor and delete controls after \
+cutout update',
   () => {
     const current = el('div', {}, [tile('picture-1')]);
     const originalTile = current.firstChild;

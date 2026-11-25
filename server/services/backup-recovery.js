@@ -1,4 +1,5 @@
-/** Admin-gated, two-step ZIP restoration. Upload -> validate/preview -> explicit apply.
+/** Admin-gated, two-step ZIP restoration. Upload -> validate/preview ->
+ * explicit apply.
  * The live collection is never touched by an upload or preview.
  */
 import fs from 'node:fs';
@@ -7,7 +8,8 @@ import crypto from 'node:crypto';
 import {authorizeAdmin} from './backups.js';
 import {fail} from '../domain/errors.js';
 import {migrateCollectionToCurrent} from '../storage/migrations.js';
-import {runExclusive, invalidateCollectionCache} from '../storage/collection-store.js';
+import {runExclusive, invalidateCollectionCache}
+  from '../storage/collection-store.js';
 import {invalidateWarehouseCache} from '../storage/warehouse-store.js';
 import {ROOT, BACKUP_DIR} from '../storage/paths.js';
 import {writeReadableZip, inspectReadableZip} from '../../shared/backup-zip.js';
@@ -66,7 +68,10 @@ function pathFor(id) {
 function validatePreview(dir, {writeMigrated = false} = {}) {
   const filename = path.join(dir, 'data', 'collection.json');
   let migration;
-  try {migration = migrateCollectionToCurrent(JSON.parse(fs.readFileSync(filename, 'utf8')));}
+  try {
+    migration = migrateCollectionToCurrent(JSON.parse(fs.readFileSync(
+      filename, 'utf8')));
+  }
   catch {
     throw fail(
       'ZIP enthält keine gültige Whisky-Sammlung',
@@ -121,7 +126,8 @@ export async function receiveZip(req) {
     );
   }
   if (Number(req.headers['content-length'] || 0) >
-    LIMIT) throw fail('ZIP-Upload ist zu groß', 413, "api.errors.zipUploadIsTooLarge");
+    LIMIT) throw fail('ZIP-Upload ist zu groß', 413,
+      "api.errors.zipUploadIsTooLarge");
   removeOldImports();
   const id = crypto.randomUUID();
   const dir = pathFor(id);
@@ -132,7 +138,8 @@ export async function receiveZip(req) {
   try {
     for await (const chunk of req) {
       bytes += chunk.length;
-      if (bytes > LIMIT) throw fail('ZIP-Upload ist zu groß', 413, "api.errors.zipUploadIsTooLarge");
+      if (bytes > LIMIT) throw fail('ZIP-Upload ist zu groß', 413,
+        "api.errors.zipUploadIsTooLarge");
       let written = 0;
       while (written < chunk.length) written +=
         fs.writeSync(fd, chunk, written, chunk.length - written);
@@ -213,7 +220,10 @@ export async function applyZip(req, id, input) {
       for (const name of FOLDERS) {
         const source = path.join(preview, name);
         const target = path.join(fresh, name);
-        if (fs.existsSync(source)) fs.cpSync(source, target, {recursive: true, dereference: false});
+        if (fs.existsSync(source)) fs.cpSync(source, target, {
+          recursive: true,
+          dereference: false,
+        });
         else fs.mkdirSync(target);
       }
       validatePreview(fresh, {writeMigrated: true});
@@ -240,7 +250,9 @@ export async function applyZip(req, id, input) {
         applied: true,
         ...summary,
         safetyBackup: path.join('backups', safetyName),
-        message: 'Sicherung übernommen. Vorherige Sammlung als Sicherheits-ZIP gespeichert.',
+        message:
+          'Sicherung übernommen. Vorherige Sammlung als Sicherheits-ZIP \
+gespeichert.',
       };
     } catch (error) {
       // Roll back even if only part of the three directories was swapped.
@@ -248,7 +260,8 @@ export async function applyZip(req, id, input) {
         fs.rmSync(path.join(ROOT, name), {recursive: true, force: true});
       }
       for (const name of [...saved].reverse()) {
-        if (fs.existsSync(path.join(parked, name))) fs.renameSync(path.join(parked, name), path.join(ROOT, name));
+        if (fs.existsSync(path.join(parked, name))) fs.renameSync(path.join(
+          parked, name), path.join(ROOT, name));
       }
       throw error;
     } finally {
@@ -273,7 +286,8 @@ export function previewZip(req, id) {
   const archive = path.join(dir, 'uploaded.zip');
   const preview = path.join(dir, 'preview');
   if (!fs.existsSync(archive) ||
-    !fs.existsSync(preview)) throw fail('Sicherung nicht gefunden', 404, "api.errors.backupNotFound");
+    !fs.existsSync(preview)) throw fail('Sicherung nicht gefunden', 404,
+      "api.errors.backupNotFound");
   const result = inspectReadableZip(archive, null, suppliedPassword(req));
   return {id, ...result, ...validatePreview(preview)};
 }

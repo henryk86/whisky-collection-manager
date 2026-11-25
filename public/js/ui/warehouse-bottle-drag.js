@@ -39,7 +39,8 @@ export function shelfDropStatus(warehouse, bottleId, targetShelfId) {
  * @param {!Object=} options2 Destructured options for this operation.
  * @return {!Object} Structured result for the caller.
  */
-export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalidDrop, getDraggedIds} = {}) {
+export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
+  onInvalidDrop, getDraggedIds} = {}) {
   if (!panel?.addEventListener || typeof getWarehouse !== 'function' ||
     typeof onDrop !== 'function') return () => {};
   const threshold = 8;
@@ -91,7 +92,8 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
    * @return {*} Result computed from the supplied inputs.
    */
   function destinationAt(x, y) {
-    const node = panel.ownerDocument?.elementFromPoint?.(x, y)?.closest?.('.warehouse-shelf');
+    const node = panel.ownerDocument?.elementFromPoint?.(x,
+      y)?.closest?.('.warehouse-shelf');
     return node && panel.contains(node) ? node : null;
   }
 
@@ -167,7 +169,9 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
       y: event.clientY,
       moved: false,
     };
-    try {button.setPointerCapture?.(event.pointerId);} catch { /* pointer capture may not be available */}
+    try {
+      button.setPointerCapture?.(event.pointerId);
+    } catch { /* pointer capture may not be available */}
   };
 
   /**

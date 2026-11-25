@@ -27,7 +27,8 @@ function crc32(data) {
 function chunk(type, data) {
   const header = Buffer.from(type, 'ascii'); const length =
     Buffer.alloc(4); length.writeUInt32BE(data.length);
-  const check = Buffer.alloc(4); check.writeUInt32BE(crc32(Buffer.concat([header, data])));
+  const check = Buffer.alloc(4); check.writeUInt32BE(crc32(Buffer.concat([
+    header, data])));
   return Buffer.concat([length, header, data, check]);
 }
 
@@ -57,7 +58,8 @@ export function decodePNG(bytes) {
     else if (type === 'IEND') break;
   }
   if (!channels || bitDepth !== 8 || interlace !== 0 || !width ||
-    !height) throw new Error('Unsupported PNG format (expected 8-bit noninterlaced RGB/RGBA)');
+    !height) throw new Error(
+      'Unsupported PNG format (expected 8-bit noninterlaced RGB/RGBA)');
   const input = inflateSync(Buffer.concat(idat)); const stride = width *
     channels;
   const output = Buffer.allocUnsafe(stride * height); let pos = 0;
@@ -95,7 +97,8 @@ export function decodePNG(bytes) {
  * @return {*} Result computed from the supplied inputs.
  */
 export function encodeRGB(width, height, rgb) {
-  const header = Buffer.alloc(13); header.writeUInt32BE(width); header.writeUInt32BE(height, 4); header[8] = 8; header[9] = 2;
+  const header = Buffer.alloc(13); header.writeUInt32BE(width);
+  header.writeUInt32BE(height, 4); header[8] = 8; header[9] = 2;
   const rows = Buffer.allocUnsafe((width * 3 + 1) * height);
   for (let y = 0; y < height; y++) {
     const start = y * (width * 3 +

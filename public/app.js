@@ -6,7 +6,8 @@ import {t} from './js/i18n/index.js';
 import {request, requestCachedJson} from './js/api.js';
 import {initializeLanguage} from './js/i18n/index.js';
 import {createState} from './js/state.js';
-import {pageFromSearch, overviewModeFromSearch} from './js/domain/pagination.js';
+import {pageFromSearch, overviewModeFromSearch}
+  from './js/domain/pagination.js';
 import {createSelectors} from './js/domain/selectors.js';
 import {parseRoute} from './js/navigation/routes.js';
 import {createNavigation} from './js/navigation/controller.js';
@@ -56,7 +57,10 @@ const modal = createModal({
 });
 filePreview = createFilePreview({modal, state});
 const photoViewer = createPhotoViewer({state, showModal: modal.showModal});
-const photoEditor = createPhotoEditor({state, showModal: modal.showModal, closeModal: modal.closeModal, action});
+const photoEditor = createPhotoEditor({
+  state, showModal: modal.showModal,
+  closeModal: modal.closeModal, action,
+});
 const navigation = createNavigation({
   state, render, closeModal: modal.closeModal,
 });
@@ -117,7 +121,10 @@ const editors = createEditors({
    */
   markImageAttached: () => externalImport?.markImageAttached(),
 });
-const backup = createBackupController({state, render, showModal: modal.showModal, closeModal: modal.closeModal});
+const backup = createBackupController({
+  state, render,
+  showModal: modal.showModal, closeModal: modal.closeModal,
+});
 const settings = createSettingsController({
   state, action, navigate, ...modal,
   /**
@@ -131,7 +138,10 @@ const settings = createSettingsController({
 });
 const mapView = createMapView({state, shell, navigate, settings});
 const analyticsView = createAnalyticsView({state, shell});
-const warehouseView = createWarehouseView({state, shell, navigate, modal, refresh});
+const warehouseView = createWarehouseView({
+  state, shell, navigate, modal,
+  refresh,
+});
 const resolveCode = createCodeResolver({
   state, navigate, toast, ...modal,
 });

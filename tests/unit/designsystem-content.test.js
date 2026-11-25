@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {panel, detailField, detailGrid, emptyState, divider, actionToolbar, documentList, documentItem} from '../../public/js/ui/content.js';
+import {
+  panel, detailField, detailGrid, emptyState, divider, actionToolbar,
+  documentList, documentItem
+} from '../../public/js/ui/content.js';
 
 test(
-  'M4: panel variants reuse the existing surface without wrapping it in a second border',
+  'M4: panel variants reuse the existing surface without wrapping it in a \
+second border',
   () => {
     assert.equal(
       panel({content: '<p>Info</p>'}),
@@ -11,7 +15,8 @@ test(
     );
     assert.equal(
       panel({tag: 'section', variant: 'analytics', content: '<p>C</p>'}),
-      '<section class="analytics-panel" data-ds-panel="analytics"><p>C</p></section>'
+      '<section class="analytics-panel" data-ds-panel="analytics"><p>C</p>\
+</section>'
     );
     assert.doesNotMatch(
       panel({content: 'one'}),
@@ -22,7 +27,8 @@ test(
 );
 
 test(
-  'M4: definition, fact and saved-note fields preserve semantics, values and XSS safety',
+  'M4: definition, fact and saved-note fields preserve semantics, values \
+and XSS safety',
   () => {
     const definition = detailField({label: 'Kaufpreis', value: '49,90 €'});
     assert.match(definition, /<dt>Kaufpreis<\/dt><dd>49,90 €<\/dd>/);
@@ -65,7 +71,8 @@ test(
 );
 
 test(
-  'M4: empty states distinguish collection onboarding from absent optional content',
+  'M4: empty states distinguish collection onboarding from absent optional \
+content',
   () => {
     const quiet = emptyState({description: 'Noch keine Notizen'});
     assert.match(quiet, /class="hint" data-ds-empty-state="subtle"/);
@@ -91,7 +98,8 @@ test(
 );
 
 test(
-  'M4: divider and action toolbar have explicit axes and preserve action delegation',
+  'M4: divider and action toolbar have explicit axes and preserve action \
+delegation',
   () => {
     assert.equal(
       divider(),
@@ -103,7 +111,11 @@ test(
     );
     assert.match(
       actionToolbar('<button data-act="edit-bottle">Edit</button>'),
-      /class="actions" data-ds-action-toolbar="inline"><button data-act="edit-bottle">Edit<\/button>/
+      new RegExp(
+        'class="actions" data-ds-action-toolbar="in' +
+        'line"><button data-act="edit-bottle">Edit<' +
+        '\\/button>'
+      )
     );
     assert.match(
       actionToolbar('X', {variant: 'filters'}),
@@ -116,7 +128,8 @@ test(
 test(
   'M4: documents remain one semantic list with original item and action markup',
   () => {
-    const item = documentItem('<button data-act="preview-file">Datei</button><a download>Download</a>');
+    const item = documentItem(
+      '<button data-act="preview-file">Datei</button><a download>Download</a>');
     const list = documentList([item]);
     assert.equal((list.match(/<ul/g) || []).length, 1);
     assert.equal((list.match(/<li>/g) || []).length, 1);

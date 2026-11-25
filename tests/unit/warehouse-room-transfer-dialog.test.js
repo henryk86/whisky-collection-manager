@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {roomTransferMarkup} from '../../public/js/views/warehouse-room-transfer.js';
+import {roomTransferMarkup}
+  from '../../public/js/views/warehouse-room-transfer.js';
 
 const rooms = [
   {id: 'r1', name: 'Room 1', furniture: [{id: 'f1'}]},
@@ -8,7 +9,8 @@ const rooms = [
 ];
 
 test(
-  'one room transfer dialog contains two mutually exclusive tabs and preserves both forms',
+  'one room transfer dialog contains two mutually exclusive tabs and \
+preserves both forms',
   () => {
     const html = roomTransferMarkup(rooms, 'r2');
     assert.match(html, /role="tablist"/);

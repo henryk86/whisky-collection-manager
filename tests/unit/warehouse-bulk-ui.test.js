@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 
 test(
-  'physical bottle multi-selection remains in the storage wall, not in the finder',
+  'physical bottle multi-selection remains in the storage wall, not in the \
+finder',
   () => {
     const warehouse = {
       rooms: [{
@@ -102,7 +103,8 @@ test(
 );
 
 test(
-  'wall bottle selection toggles a pressed, highlighted bottle without checkboxes',
+  'wall bottle selection toggles a pressed, highlighted bottle without \
+checkboxes',
   () => {
     const warehouse = {
       rooms: [],
@@ -165,7 +167,8 @@ test(
         '.warehouse-wall-bottle .warehouse-bottle-symbol': [button],
         '.warehouse-bottles-preview-selected': [preview],
         '.warehouse-bottle-selection-count': [label],
-        '.warehouse-bottles-select-clear,.warehouse-bottles-assign-selected': [clear, assign],
+        '.warehouse-bottles-select-clear,.warehouse-bottles-assign-selected':
+          [clear, assign],
       }[selector] || []),
     };
     try {

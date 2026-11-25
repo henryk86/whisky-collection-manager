@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {bottlingOrigins, countryLabel} from '../../public/js/domain/distillery-origin.js';
-import {analyzeCollection, analyticsFilterOptions, filterAnalyticsCollection} from '../../public/js/domain/analytics.js';
+import {bottlingOrigins, countryLabel}
+  from '../../public/js/domain/distillery-origin.js';
+import {analyzeCollection, analyticsFilterOptions, filterAnalyticsCollection}
+  from '../../public/js/domain/analytics.js';
 import {bottlingDetails} from '../../public/js/domain/bottling-details.js';
 
 const sites = [
@@ -20,7 +22,10 @@ const sites = [
  */
 const entry = (id, distilleryIds, bottler, country = '') => ({
   id, name: id, distilleryIds, bottler, country,
-  bottles: [{id: id + '-b', status: 'closed', volumeType: 'standard', volumeMl: 700}],
+  bottles: [{
+    id: id + '-b', status: 'closed', volumeType: 'standard',
+    volumeMl: 700,
+  }],
 });
 
 test(
@@ -31,7 +36,8 @@ test(
       bottlingOrigins(b, sites),
       {countries: ['Schottland'], regions: ['Islay']}
     );
-    assert.equal(countryLabel('UK'), 'Vereinigtes Königreich'); // UK cannot mean Scotland by itself
+    assert.equal(countryLabel('UK'), 'Vereinigtes Königreich'
+    ); // UK cannot mean Scotland by itself
     const detail = Object.fromEntries(bottlingDetails(b, () =>
       'Ardbeg', sites).map(([k, v]) => [k, v]));
     assert.equal(detail.Land, 'Schottland');
@@ -40,7 +46,8 @@ test(
 );
 
 test(
-  'a blend has unique origin countries and regions, even with two distilleries on Islay',
+  'a blend has unique origin countries and regions, even with two \
+distilleries on Islay',
   () => {
     const b = entry(
       'blend',
@@ -82,7 +89,8 @@ test(
 );
 
 test(
-  'Distillery Bottling counts as original bottling (case and whitespace insensitive)',
+  'Distillery Bottling counts as original bottling (case and whitespace \
+insensitive)',
   () => {
     const c = {
       distilleries: sites, bottlings: [
@@ -103,7 +111,8 @@ test(
 );
 
 test(
-  'bottling form omits origin explanations; help page explains distillery sourcing',
+  'bottling form omits origin explanations; help page explains distillery \
+sourcing',
   async () => {
     const {createBottlingForm} =
       await import('../../public/js/features/forms/bottling.js');

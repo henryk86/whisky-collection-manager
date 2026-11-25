@@ -28,7 +28,8 @@ test(
             const header = document.querySelector('.header-inner');
             const swatch = document.createElement('div');
             swatch.style.cssText =
-              'position:absolute;visibility:hidden;background:var(--ds-color-page);color:var(--ds-color-text);border:1px solid var(--ds-color-border)';
+              'position:absolute;visibility:hidden;background:var(--ds-color\
+-page);color:var(--ds-color-text);border:1px solid var(--ds-color-border)';
             document.body.append(swatch);
             const visual = getComputedStyle(swatch);
             const control = document.createElement('input');

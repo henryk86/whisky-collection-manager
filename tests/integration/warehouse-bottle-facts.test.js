@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {startTestServer, requestJson as api} from '../helpers/server.js';
 
 test(
-  'storage API exposes read-only age, release year and cask type from bottling data',
+  'storage API exposes read-only age, release year and cask type from \
+bottling data',
   async () => {
     const ctx = await startTestServer();
     try {

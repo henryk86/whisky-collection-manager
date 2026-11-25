@@ -17,8 +17,10 @@ export const DEFAULT_MASK_BRUSH_SIZE = 4;
  * @param {*} mode Requested display mode or configuration variant.
  * @return {*} Whether the requested condition is met.
  */
-export function paintMaskSegment(current, reference, width, height, from, to, sizePercent, mode) {
-  if (!MASK_BRUSH_MODES.includes(mode)) throw new RangeError(t('errors.photoEditor.invalidBrushMode'));
+export function paintMaskSegment(current, reference, width, height, from, to,
+  sizePercent, mode) {
+  if (!MASK_BRUSH_MODES.includes(mode)) throw new RangeError(t(
+    'errors.photoEditor.invalidBrushMode'));
   if (!(width > 0 && height > 0) || current.length !== width * height * 4 ||
     reference.length !== current.length)
     throw new RangeError(t('errors.images.invalidDimensions'));

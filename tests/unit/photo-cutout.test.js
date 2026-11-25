@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {modelInput, normalizedMask, MODEL_SIZE} from '../../public/js/features/cutout/model.js';
-import {displayPhotoPath, initialPhotoAdjustmentSettings} from '../../shared/photo-images.js';
+import {modelInput, normalizedMask, MODEL_SIZE}
+  from '../../public/js/features/cutout/model.js';
+import {displayPhotoPath, initialPhotoAdjustmentSettings}
+  from '../../shared/photo-images.js';
 import {cutoutExportSizes} from '../../public/js/features/cutout/image.js';
-import {analyzeBottleMask, bottleCropRect, cutoutOutputSize} from '../../public/js/features/cutout/crop.js';
+import {analyzeBottleMask, bottleCropRect, cutoutOutputSize}
+  from '../../public/js/features/cutout/crop.js';
 
 const size = MODEL_SIZE * MODEL_SIZE;
 test(
@@ -20,12 +23,14 @@ test(
 );
 
 test(
-  'normalized mask preserves low and high values and rejects invalid inference outputs',
+  'normalized mask preserves low and high values and rejects invalid \
+inference outputs',
   () => {
     const model = new Float32Array(size).fill(.5);
     model[0] = 0; model[1] = 1;
     const mask = normalizedMask(model);
-    assert.equal(mask[0], 0); assert.equal(mask[1], 255); assert.equal(mask[2], 128);
+    assert.equal(mask[0], 0); assert.equal(mask[1], 255); assert.equal(mask[2],
+      128);
     assert.throws(
       () => normalizedMask(new Float32Array(size)),
       /Keine Flasche/
@@ -69,10 +74,12 @@ function sampleMask(rect) {
 }
 
 test(
-  'automatic 2:3 crop reaches bottle top and bottom and ignores detached segmentation speckles',
+  'automatic 2:3 crop reaches bottle top and bottom and ignores detached \
+segmentation speckles',
   () => {
     const mask = sampleMask({left: 120, top: 20, right: 200, bottom: 300});
-    mask[0] = 255; // stray high-confidence background pixel must not determine the crop
+    mask[0] =
+      255; // stray high-confidence background pixel must not determine the crop
     const rect = bottleCropRect(mask, MODEL_SIZE, MODEL_SIZE, 640, 960);
     assert.equal(rect.x, 40);
     assert.equal(rect.y, 60);
@@ -85,7 +92,8 @@ test(
 );
 
 test(
-  '2:3 crop never truncates a wide bottle and can pad beyond original photo boundaries',
+  '2:3 crop never truncates a wide bottle and can pad beyond original photo \
+boundaries',
   () => {
     const mask = sampleMask({left: 60, top: 20, right: 260, bottom: 70});
     const rect = bottleCropRect(mask, MODEL_SIZE, MODEL_SIZE, 900, 900);
@@ -100,7 +108,8 @@ test(
 );
 
 test(
-  '2:3 crop keeps transparency outside the source frame instead of scaling bottle unnaturally',
+  '2:3 crop keeps transparency outside the source frame instead of scaling \
+bottle unnaturally',
   () => {
     const mask = sampleMask({left: 0, top: 10, right: 61, bottom: 310});
     const rect = bottleCropRect(mask, MODEL_SIZE, MODEL_SIZE, 1200, 800);
@@ -133,7 +142,8 @@ test('2:3 crop rejects masks without a meaningful foreground component', () => {
 });
 
 test(
-  'isolation keeps the main central connected bottle and removes disconnected bright and faint speckles',
+  'isolation keeps the main central connected bottle and removes \
+disconnected bright and faint speckles',
   async () => {
     const {analyzeBottleMask} =
       await import('../../public/js/features/cutout/crop.js');
@@ -159,7 +169,8 @@ test(
 );
 
 test(
-  'slightly tilted bottles are rotated upright in original image pixel geometry',
+  'slightly tilted bottles are rotated upright in original image pixel \
+geometry',
   async () => {
     const {analyzeBottleMask} =
       await import('../../public/js/features/cutout/crop.js');
@@ -204,7 +215,8 @@ test(
 );
 
 test(
-  'moderately tilted bottles at +/-16 degrees are straightened without clipping',
+  'moderately tilted bottles at +/-16 degrees are straightened without \
+clipping',
   async () => {
     const {analyzeBottleMask} =
       await import('../../public/js/features/cutout/crop.js');
@@ -236,7 +248,8 @@ test(
 );
 
 test(
-  'transparent bottle with disconnected glass rim uses the outer centreline, not the opaque pixel mass',
+  'transparent bottle with disconnected glass rim uses the outer centreline,\
+ not the opaque pixel mass',
   () => {
     const sourceWidth = 1536, sourceHeight = 2048;
     const scaleX = sourceWidth / MODEL_SIZE, scaleY = sourceHeight / MODEL_SIZE;
@@ -276,7 +289,8 @@ test(
 );
 
 test(
-  'near-square silhouettes and steep shapes never trigger a large automatic rotation',
+  'near-square silhouettes and steep shapes never trigger a large automatic \
+rotation',
   async () => {
     const {analyzeBottleMask} =
       await import('../../public/js/features/cutout/crop.js');
@@ -300,7 +314,8 @@ test(
 );
 
 test(
-  'raster-level trim eliminates vertical transparent rows but does not clip wide bottles',
+  'raster-level trim eliminates vertical transparent rows but does not clip \
+wide bottles',
   async () => {
     const {visibleAlphaRows, tightenedCrop} =
       await import('../../public/js/features/cutout/crop.js');
@@ -312,7 +327,8 @@ test(
       {top: 2, bottom: 56}
     );
     const old = {x: 10, y: 5, width: 40, height: 60};
-    const trimmed = tightenedCrop(old, {width, height}, {top: 2, bottom: 56}, 25);
+    const trimmed = tightenedCrop(old, {width, height}, {top: 2, bottom: 56},
+      25);
     assert.ok(Math.abs(trimmed.x - (11 + 2 / 3)) < 1e-10);
     assert.equal(trimmed.y, 7);
     assert.equal(trimmed.height, 55);
@@ -326,7 +342,8 @@ test(
 );
 
 test(
-  'cutout export starts at native crop resolution instead of shrinking to 1600 px',
+  'cutout export starts at native crop resolution instead of shrinking to \
+1600 px',
   () => {
     const full = cutoutExportSizes(3600);
     assert.equal(full[0], 3600);
@@ -349,7 +366,8 @@ test(
 );
 
 test(
-  'editor restores adjustments from an original for earlier cutouts missing their derivative',
+  'editor restores adjustments from an original for earlier cutouts missing \
+their derivative',
   () => {
     const photo = {
       path: 'images/a/source.png', adjustment: {

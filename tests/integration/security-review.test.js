@@ -93,7 +93,8 @@ test(
 );
 
 test(
-  'security: served HTML has CSP, referrer and framing protections with valid inline hashes',
+  'security: served HTML has CSP, referrer and framing protections with \
+valid inline hashes',
   async () => {
     const context = await startTestServer();
     try {
@@ -117,7 +118,8 @@ test(
         'unrestricted code evaluation remains forbidden'
       );
       const html = await response.text();
-      const inlines = [...html.matchAll(/<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)];
+      const inlines = [...html.matchAll(
+        /<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)];
       assert.equal(inlines.length, 2);
       for (const [, body] of inlines) {
         const hash = crypto.createHash('sha256').update(body).digest('base64');
@@ -128,7 +130,8 @@ test(
 );
 
 test(
-  'security: malformed percent-encoded paths are client errors, not server crashes',
+  'security: malformed percent-encoded paths are client errors, not server \
+crashes',
   async () => {
     const context = await startTestServer();
     try {
@@ -200,7 +203,8 @@ test(
 );
 
 test(
-  'security: aborted static downloads do not log expected broken-pipe stack traces',
+  'security: aborted static downloads do not log expected broken-pipe stack \
+traces',
   async () => {
     const context = await startTestServer();
     const errors = [];
@@ -237,7 +241,8 @@ test(
 );
 
 test(
-  'security: HTTPS Origin over an HTTP upstream is rejected without proxy trust',
+  'security: HTTPS Origin over an HTTP upstream is rejected without proxy \
+trust',
   async () => {
     const context = await startTestServer();
     try {
@@ -299,7 +304,9 @@ test(
         output
       );
       assert.equal(
-        (output.match(/Weitere abgelehnte Hosts werden nicht mehr einzeln protokolliert/g) || []).length,
+        (output.match(
+          /Weitere abgelehnte Hosts werden nicht mehr einzeln protokolliert/g
+        ) || []).length,
         1,
         output
       );
@@ -310,7 +317,8 @@ test(
 );
 
 test(
-  'security: disconnect during incoming JSON upload is not an internal server error',
+  'security: disconnect during incoming JSON upload is not an internal \
+server error',
   async () => {
     const context = await startTestServer();
     const stderr = [];
@@ -338,7 +346,10 @@ test(
       await new Promise(resolve => setTimeout(resolve, 110));
       assert.doesNotMatch(
         stderr.join(''),
-        /Interner Serverfehler|Error: aborted|ECONNRESET|ERR_STREAM_PREMATURE_CLOSE|EPIPE/
+        new RegExp(
+          'Interner Serverfehler|Error: aborted|ECONN' +
+          'RESET|ERR_STREAM_PREMATURE_CLOSE|EPIPE'
+        )
       );
       assert.equal(
         fs.readFileSync(file, 'utf8'),

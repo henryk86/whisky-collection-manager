@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {bottlingDistilleryIds, matchingBottlingSites} from '../../public/js/domain/bottling-map-focus.js';
+import {bottlingDistilleryIds, matchingBottlingSites}
+  from '../../public/js/domain/bottling-map-focus.js';
 import {parseRoute, routeUrl} from '../../public/js/navigation/routes.js';
 
 const located = [
@@ -10,7 +11,8 @@ const located = [
 const missing = [{id: 'other', location: null}];
 
 test(
-  'detail-map focus resolves every contributing distillery and includes missing locations without creating a fake midpoint',
+  'detail-map focus resolves every contributing distillery and includes \
+missing locations without creating a fake midpoint',
   () => {
     const bottling = {
       id: 'blend-1',

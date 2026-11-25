@@ -36,16 +36,19 @@ export function helpView(activeTopic = 'basics') {
    */
   const title = id => escapeHtml(t(`help.${id}.title`));
   const panels = HELP_TOPICS.map(topic => `
-        <section class="help-section" id="help-panel-${topic.id}" aria-labelledby="help-title-${topic.id}"${topic.id === current ? '' : ' hidden'}>
+        <section class="help-section" id="help-panel-${topic
+      .id}" aria-labelledby="help-title-${topic.id}"${topic.id ===
+        current ? '' : ' hidden'}>
             ${headingTitle({
-    title: t(`help.${topic.id}.title`),
-    level: 2,
-    className: 'analytics-section-title',
-    id: `help-title-${topic.id}`,
-  })}
+          title: t(`help.${topic.id}.title`),
+          level: 2,
+          className: 'analytics-section-title',
+          id: `help-title-${topic.id}`,
+        })}
             <div class="help-content-panel">
                 ${topic.id === 'basics' ?
-      `<p class="help-description muted">${escapeHtml(t('help.description'))}</p>` : ''}
+      `<p class="help-description muted">${escapeHtml(t('help.description')
+      )}</p>` : ''}
                 <ol class="help-steps">${Array.from(
         {length: topic.items},
         (_, index) =>
@@ -81,7 +84,8 @@ export function helpView(activeTopic = 'basics') {
 export function activateHelpTopic(topicId, container) {
   if (!HELP_TOPICS.some(topic => topic.id === topicId) ||
     !container) return false;
-  for (const button of container.querySelectorAll('.section-nav-item[data-help-topic]')) {
+  for (const button of container.querySelectorAll(
+    '.section-nav-item[data-help-topic]')) {
     const active = button.dataset.helpTopic === topicId;
     button.classList.toggle('active', active);
     if (active) button.setAttribute('aria-current', 'page');
@@ -89,6 +93,7 @@ export function activateHelpTopic(topicId, container) {
   }
   const selector = container.querySelector('[data-section-switch="help"]');
   if (selector) selector.value = topicId;
-  for (const panel of container.querySelectorAll('.help-section')) panel.hidden = panel.id !== `help-panel-${topicId}`;
+  for (const panel of container.querySelectorAll('.help-section')) panel
+    .hidden = panel.id !== `help-panel-${topicId}`;
   return true;
 }

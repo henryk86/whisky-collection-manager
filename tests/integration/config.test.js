@@ -45,7 +45,9 @@ function runConfig(cwd, overrides = {}) {
   for (const key of Object.keys(expected)) {
     delete env[key];
   }
-  const script = `import * as c from ${JSON.stringify(configUrl)};console.log(JSON.stringify({HTTP_ENABLED:c.HTTP_ENABLED,HTTPS_ENABLED:c.HTTPS_ENABLED,HTTPS_PORT:c.HTTPS_PORT,PORT:c.PORT}));`;
+  const script = `import * as c from ${JSON.stringify(configUrl
+  )};console.log(JSON.stringify({HTTP_ENABLED:c.HTTP_ENABLED,\
+HTTPS_ENABLED:c.HTTPS_ENABLED,HTTPS_PORT:c.HTTPS_PORT,PORT:c.PORT}));`;
   const result = spawnSync(
     process.execPath,
     ['--input-type=module', '-e', script],
@@ -80,7 +82,8 @@ test('server defaults without env match HTTPS-only configuration', () => {
   }
 });
 test(
-  'env template loads correctly and explicit environment variables take precedence',
+  'env template loads correctly and explicit environment variables take \
+precedence',
   () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-config-'));
     try {

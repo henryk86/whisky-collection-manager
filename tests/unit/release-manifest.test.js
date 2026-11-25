@@ -4,7 +4,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import {sourceManifest, writeSourceManifest, readSourceManifest, verifySourceManifest} from '../../scripts/release-manifest.js';
+import {
+  sourceManifest, writeSourceManifest, readSourceManifest,
+  verifySourceManifest
+} from '../../scripts/release-manifest.js';
 import {inspectManifestUpgrade} from '../../scripts/upgrade-manifest.js';
 import {verifyReleaseMetadata} from '../../scripts/release-version.js';
 
@@ -35,7 +38,8 @@ function fixture(root, version, modules) {
 }
 
 test(
-  'release manifest fingerprints actual source tree independently of process working directory',
+  'release manifest fingerprints actual source tree independently of \
+process working directory',
   () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-manifest-root-'));
     try {
@@ -64,7 +68,8 @@ test(
 );
 
 test(
-  'ZIP upgrade audit preserves user data, modified modules, and symlinks; removes only unchanged obsolete sources',
+  'ZIP upgrade audit preserves user data, modified modules, and symlinks; \
+removes only unchanged obsolete sources',
   () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-upgrade-audit-'));
     const old = path.join(root, 'old');
@@ -143,13 +148,23 @@ test(
       ]) {
         fs.writeFileSync(
           path.join(root, 'wcm-source-manifest.json'),
-          JSON.stringify({schema: 1, version: '1.0.0', files: {[item]: hash('bad')}})
+          JSON.stringify({
+            schema: 1, version: '1.0.0', files: {
+              [item]: hash(
+                'bad'),
+            },
+          })
         );
         assert.throws(() => readSourceManifest(root), /Unsafe/);
       }
       fs.writeFileSync(
         path.join(root, 'wcm-source-manifest.json'),
-        JSON.stringify({schema: 1, version: '1.0.0', files: {'server/legit.js': 'invalid'}})
+        JSON.stringify({
+          schema: 1, version: '1.0.0', files: {
+            'server/legit.js':
+              'invalid',
+          },
+        })
       );
       assert.throws(() => readSourceManifest(root), /Unsafe/);
     } finally {fs.rmSync(root, {recursive: true, force: true});}
@@ -159,7 +174,8 @@ test(
 test(
   'release metadata requires a verified source manifest for modern releases',
   () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-release-verified-'));
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-release-verified-')
+    );
     try {
       fixture(root, '1.3.0', {'server/service.js': 'original'});
       fs.writeFileSync(

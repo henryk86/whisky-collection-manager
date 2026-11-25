@@ -1,4 +1,5 @@
-import {APPROXIMATE_LOCATIONS, normalizeDistilleryName} from './distillery-locations.js';
+import {APPROXIMATE_LOCATIONS, normalizeDistilleryName}
+  from './distillery-locations.js';
 /** Explicitly stored coordinates take priority over the built-in directory. */
 export const ISLAY_LOCATIONS = Object.freeze({
   'ardbeg': [55.6406, -6.1086],
@@ -25,7 +26,10 @@ export const ISLAY_LOCATIONS = Object.freeze({
 export function locationFor(distillery) {
   if (Number.isFinite(distillery.latitude) &&
     Number.isFinite(distillery.longitude)) {
-    return {lat: distillery.latitude, lon: distillery.longitude, source: 'saved'};
+    return {
+      lat: distillery.latitude, lon: distillery.longitude,
+      source: 'saved',
+    };
   }
   const key = normalizeDistilleryName(distillery.name);
   const exact = ISLAY_LOCATIONS[key];
@@ -51,7 +55,8 @@ export function locationFor(distillery) {
  * @return {!Object} Distilleries grouped with physical bottle counts
  *     and geographic coordinates.
  */
-export function buildDistilleryMap(collection, {includeAllDistilleries = false} = {}) {
+export function buildDistilleryMap(collection, {includeAllDistilleries =
+  false} = {}) {
   const byId = new Map((collection.distilleries || []).map(distillery =>
     [distillery.id, distillery]));
   const groups = new Map();

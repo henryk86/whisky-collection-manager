@@ -10,7 +10,8 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta
   .url)), '../..');
 
 test(
-  'npm start runs cutout preparation before launching the server, without reinstalling valid dependencies',
+  'npm start runs cutout preparation before launching the server, without \
+reinstalling valid dependencies',
   t => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-start-process-'));
     t.after(() => fs.rmSync(root, {recursive: true, force: true}));
@@ -43,7 +44,8 @@ test(
       'HTTPS_ENABLED=false\nHTTP_ENABLED=true\n'
     );
 
-    const lock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8'));
+    const lock = JSON.parse(fs.readFileSync(path.join(root,
+      'package-lock.json'), 'utf8'));
     const installed = {};
     for (const [name, entry] of Object.entries(lock.packages)) {
       if (!name.startsWith('node_modules/')) continue;

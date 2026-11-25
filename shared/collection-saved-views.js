@@ -62,10 +62,12 @@ export function normalizeSavedViews(input) {
       !item.display || typeof item.display !== 'object' ||
       Array.isArray(item.display) ||
       Object.keys(item.display).some(key =>
-        !VIEW_DISPLAY_KEYS.includes(key))) throw new Error('Invalid saved view');
+        !VIEW_DISPLAY_KEYS.includes(key))) throw new Error('Invalid saved view'
+        );
     ids.add(item.id);
     const f = item.filters, d = item.display;
-    for (const key of ['search', 'status', 'completion', 'distillery', 'rating', 'volumeType']) {
+    for (const key of ['search', 'status', 'completion', 'distillery',
+      'rating', 'volumeType']) {
       if (typeof f[key] !== 'string' || f[key].length >
         300) throw new Error('Invalid saved filter');
     }
@@ -86,7 +88,9 @@ export function normalizeSavedViews(input) {
     return {
       id: item.id,
       name: item.name.trim(),
-      filters: {...f, flavorCriteria: normalizeFlavorCriteria(f.flavorCriteria)},
+      filters: {
+        ...f, flavorCriteria: normalizeFlavorCriteria(f.flavorCriteria),
+      },
       display: {
         ...d,
         columns: {

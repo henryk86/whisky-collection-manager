@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {readBackupPassword, hasBackupPassword, BACKUP_PASSWORD_FAILURE} from '../../shared/backup-password.js';
+import {readBackupPassword, hasBackupPassword, BACKUP_PASSWORD_FAILURE}
+  from '../../shared/backup-password.js';
 
 test(
-  'backup password availability uses stable error identifiers instead of German messages',
+  'backup password availability uses stable error identifiers instead of \
+German messages',
   () => {
     const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-password-'));
     const old = process.env.BACKUP_CONTROL_DIR;

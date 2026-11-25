@@ -26,7 +26,8 @@ import {warehouseETag} from './storage/warehouse-store.js';
 import {withMutationTracking} from './domain/mutation-tracker.js';
 // Parameters match existing IDs (UUIDs as well as IDs from imported
 // collections).
-const version = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
+const version = JSON.parse(fs.readFileSync(new URL('../package.json',
+  import.meta.url), 'utf8')).version;
 const routes = [
   {
     method: 'GET', path: /^\/api\/version$/,
@@ -617,7 +618,10 @@ const routes = [
   },
   {
     method: 'POST',
-    path: /^\/api\/backups\/([\w-]+)\/(run|check|test|snapshots|restore|prepare)$/,
+    path: new RegExp(
+      '^\\/api\\/backups\\/([\\w-]+)\\/(run|check' +
+      '|test|snapshots|restore|prepare)$'
+    ),
     status: 202,
     /**
      * Derives the run result from the supplied values.

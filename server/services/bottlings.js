@@ -69,7 +69,8 @@ export function updateBottling(id, input) {
   return change(collection => {
     const bottling = collection.bottlings.find(entry => entry.id === id);
     if (!bottling) {
-      throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
+      throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound"
+      );
     }
     if ([
       'rating',
@@ -79,7 +80,8 @@ export function updateBottling(id, input) {
       'legacyTastings',
     ].some(key => Object.hasOwn(input, key)))
       throw fail(
-        'Verkostungsdaten dürfen nur innerhalb einer Verkostung geändert werden',
+        'Verkostungsdaten dürfen nur innerhalb einer Verkostung geändert \
+werden',
         400,
         "api.errors.tastingDataRequiresTasting"
       );
@@ -102,7 +104,8 @@ export function deleteBottling(id) {
   return change(collection => {
     const index = collection.bottlings.findIndex(entry => entry.id === id);
     if (index < 0) {
-      throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
+      throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound"
+      );
     }
     if (collection.bottlings[index].bottles.length) {
       throw fail(

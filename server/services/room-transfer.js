@@ -29,7 +29,8 @@ const furnitureKeys = [
   'doorLeaves',
   'glassFrame',
 ];
-const shelfKeys = ['name', 'capacity', 'front', 'heightCm', 'doorLeaves', 'glassFrame'];
+const shelfKeys = ['name', 'capacity', 'front', 'heightCm', 'doorLeaves',
+  'glassFrame'];
 /**
  * Selects and transforms the pick records.
  *
@@ -227,11 +228,20 @@ export function planRoomImport(
       room.id === source.id) || existing.find(room => key(room.name) ===
         key(source.name));
     if (match && conflictPolicy ===
-      'skip') {skippedRooms++; roomActions.push({name: source.name, action: 'skip'}); continue;}
-    if (!match && plannedNames.has(key(source.name))) {skippedRooms++; roomActions.push({name: source.name, action: 'skip'}); continue;}
+      'skip') {
+      skippedRooms++; roomActions.push({
+        name: source.name,
+        action: 'skip',
+      }); continue;
+    }
+    if (!match && plannedNames.has(key(source.name))) {
+      skippedRooms++;
+      roomActions.push({name: source.name, action: 'skip'}); continue;
+    }
     if (match && Object.values(warehouse.assignments || {}).some(shelfId =>
       match.furniture.some(f => f.shelves.some(s => s.id === shelfId)))) {
-      blockedRooms++; roomActions.push({name: source.name, action: 'blocked'}); continue;
+      blockedRooms++; roomActions.push({name: source.name, action: 'blocked'});
+      continue;
     }
     /**
      * Constructs id from the supplied data.
@@ -241,7 +251,8 @@ export function planRoomImport(
       let fresh; do {
         fresh =
           id();
-      } while (destinationIds.has(fresh)); destinationIds.add(fresh); return fresh;
+      } while (destinationIds.has(fresh)); destinationIds.add(fresh);
+      return fresh;
     };
     const target = {
       id: match ? match.id : makeId(), transferSourceId: source.id,
@@ -252,12 +263,20 @@ export function planRoomImport(
           pick(range, ['from', 'to', 'front', 'doorLeaves', 'glassFrame'])),
         shelves: f.shelves.map(s => {
           const newShelf =
-            {id: makeId(), ...pick(s, shelfKeys)}; remap.set(s.id, newShelf.id); return newShelf;
+            {id: makeId(), ...pick(s, shelfKeys)}; remap.set(s.id,
+              newShelf.id); return newShelf;
         }),
       })),
     };
-    if (match) {toReplace.push(target); replacedRooms++; roomActions.push({name: source.name, action: 'replace'});}
-    else {toAdd.push(target); plannedNames.add(key(source.name)); roomActions.push({name: source.name, action: 'add'});}
+    if (match) {
+      toReplace.push(target); replacedRooms++; roomActions.push({
+        name: source.name, action: 'replace',
+      });
+    }
+    else {
+      toAdd.push(target); plannedNames.add(key(source.name));
+      roomActions.push({name: source.name, action: 'add'});
+    }
   }
   const matchingIds = new Map((warehouse.bottles || []).map(b => [b.id, b]));
   const matchingInventory = new Map();
@@ -292,7 +311,10 @@ export function planRoomImport(
       }
       if (!bottle) {assignmentStats.unmatched++; continue;}
       if (selectedBottles.has(bottle.id) ||
-        warehouse.assignments?.[bottle.id]) {assignmentStats.alreadyAssigned++; continue;}
+        warehouse.assignments?.[bottle.id]) {
+        assignmentStats.alreadyAssigned++;
+        continue;
+      }
       const nextCount = (newOccupancy.get(shelfId) || 0) + 1;
       const limit = capacities.get(shelfId);
       if (limit !== null && nextCount >

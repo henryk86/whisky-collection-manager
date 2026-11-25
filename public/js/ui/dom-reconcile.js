@@ -54,15 +54,20 @@ function reconcileNode(current, next) {
   const priorHeight = container?.getBoundingClientRect().height || 0;
   const priorMinHeight = container?.style.minHeight || '';
   if (container && priorHeight) container.style.minHeight = `${priorHeight}px`;
-  for (const attr of [...current.attributes]) if (!next.hasAttribute(attr.name)) current.removeAttribute(attr.name);
-  for (const attr of [...next.attributes]) if (current.getAttribute(attr.name) !== attr.value) current.setAttribute(attr.name, attr.value);
+  for (const attr of [...current.attributes]) if (!next.hasAttribute(attr.name)
+  ) current.removeAttribute(attr.name);
+  for (const attr of [...next.attributes]) if (current.getAttribute(attr.name
+  ) !== attr.value) current.setAttribute(attr.name, attr.value);
   if (changingImage && container && priorHeight) {
     /**
      * Updates the done state for its caller.
      */
     const done = () => {container.style.minHeight = priorMinHeight;};
     if (current.complete && current.naturalWidth) requestAnimationFrame(done);
-    else {current.addEventListener('load', done, {once: true}); current.addEventListener('error', done, {once: true});}
+    else {
+      current.addEventListener('load', done, {once: true});
+      current.addEventListener('error', done, {once: true});
+    }
   }
   // Do not reset text currently entered into a focused control.
   if (current === document.activeElement && ['INPUT', 'TEXTAREA']

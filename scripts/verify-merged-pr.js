@@ -34,7 +34,9 @@ export function isApprovedReleaseMerge(pr, sha, repo) {
 export function verifyMergedPRs(prs, sha, repo) {
   if (!Array.isArray(prs) || !prs.some(pr =>
     isApprovedReleaseMerge(pr, sha, repo)))
-    throw new Error('Release blocked: no merged develop -> main PR matches this commit and repository.');
+    throw new Error(
+      'Release blocked: no merged develop -> main PR matches this commit \
+and repository.');
   return true;
 }
 
@@ -67,8 +69,11 @@ export function approvedVersionMerge(pr, sha, repo) {
 export function verifyMainMerge(prs, sha, repo) {
   if (!Array.isArray(prs)) throw new Error('Invalid PR response');
   if (prs.some(pr => isApprovedReleaseMerge(pr, sha, repo))) return 'release';
-  if (prs.some(pr => approvedVersionMerge(pr, sha, repo))) return 'version-sync';
-  throw new Error('Main push denied: neither a develop release merge nor an approved version PR.');
+  if (prs.some(pr => approvedVersionMerge(pr, sha,
+    repo))) return 'version-sync';
+  throw new Error(
+    'Main push denied: neither a develop release merge nor an approved \
+version PR.');
 }
 
 /**
@@ -83,7 +88,8 @@ async function main() {
   const prs = lines.map(line => JSON.parse(line));
   const kind = verifyMainMerge(prs, sha, repo);
   if (process.argv.includes('--require-release') && kind !== 'release')
-    throw new Error('Recovery must originate from a manually approved develop -> main merge');
+    throw new Error(
+      'Recovery must originate from a manually approved develop -> main merge');
   if (kind === 'version-sync') {
     // Verify the GitHub API's PR origin against the real Git ancestry and tag.
     const pr = prs.find(p => approvedVersionMerge(p, sha, repo));
@@ -113,4 +119,7 @@ async function main() {
 }
 const isCLI = process.argv[1] && path.resolve(process.argv[1]) ===
   fileURLToPath(import.meta.url);
-if (isCLI) main().catch(error => {console.error(error.message); process.exitCode = 1;});
+if (isCLI) main().catch(error => {
+  console.error(error.message);
+  process.exitCode = 1;
+});

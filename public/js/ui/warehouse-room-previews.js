@@ -1,5 +1,6 @@
 import {t} from '../i18n/index.js';
-import {buildWarehouseThreeScene, frameWarehouseCamera} from './warehouse-three-scene.js';
+import {buildWarehouseThreeScene, frameWarehouseCamera}
+  from './warehouse-three-scene.js';
 
 const PREVIEW_WIDTH = 360;
 const PREVIEW_HEIGHT = 210;
@@ -23,7 +24,8 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
        */
       dispose() {},
     };
-  const previews = [...document.querySelectorAll('.warehouse-room-preview[data-preview-room-id]')];
+  const previews = [...document.querySelectorAll(
+    '.warehouse-room-preview[data-preview-room-id]')];
   if (!previews.length) return {
     /**
      * Performs the dispose lifecycle action.
@@ -55,7 +57,8 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
     let img = node.querySelector('img');
     if (!img) {
       img = document.createElement('img');
-      img.alt = ''; // The parent card already contains the room's accessible name.
+      img.alt =
+        ''; // The parent card already contains the room's accessible name.
       img.decoding = 'async';
       node.replaceChildren(img);
     }

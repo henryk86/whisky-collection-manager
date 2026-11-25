@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {validateProfile, validateRelativePath} from '../../server/services/backups.js';
+import {validateProfile, validateRelativePath}
+  from '../../server/services/backups.js';
 import {dueSlot, repositoryFor} from '../../worker/backup-worker.js';
-import {renderBackupSection, profileForm} from '../../public/js/views/backups.js';
+import {renderBackupSection, profileForm}
+  from '../../public/js/views/backups.js';
 
 const valid = {
   name: 'Dropbox täglich',
@@ -55,19 +57,31 @@ test(
       /Anbieter/
     );
     assert.throws(
-      () => validateProfile({...valid, schedule: {...valid.schedule, minute: 61}}),
+      () => validateProfile({
+        ...valid, schedule: {
+          ...valid.schedule,
+          minute: 61,
+        },
+      }),
       /Minute/
     );
     assert.throws(
-      () => validateProfile({...valid, retention: {daily: 0, weekly: 0, monthly: 0}}),
+      () => validateProfile({
+        ...valid, retention: {
+          daily: 0, weekly: 0,
+          monthly: 0,
+        },
+      }),
       /Aufbewahrung/
     );
   }
 );
 test(
-  'backup scheduler is deterministic and respects weekly/hourly/daily slots in Berlin time',
+  'backup scheduler is deterministic and respects weekly/hourly/daily slots \
+in Berlin time',
   () => {
-    const at0210 = new Date('2026-11-07T01:10:00.000Z'); // Saturday, Berlin 02:10
+    const at0210 = new Date('2026-11-07T01:10:00.000Z'
+    ); // Saturday, Berlin 02:10
     const sat = {
       enabled: true,
       format: 'zip',
@@ -115,7 +129,8 @@ test(
   }
 );
 test(
-  'Rclone repositories are isolated; local targets require mounted-drive marker',
+  'Rclone repositories are isolated; local targets require mounted-drive \
+marker',
   () => {
     assert.equal(repositoryFor(valid), 'rclone:my_dropbox:whisky/backups');
     // Marker guard: absent marker must fail rather than silently backing up to
@@ -127,7 +142,10 @@ test(
   }
 );
 test('backup UI escapes names and errors; never renders credentials', () => {
-  const malicious = {...valid, format: 'zip', id: 'fake', name: '<script>alert(1)</script>'};
+  const malicious = {
+    ...valid, format: 'zip', id: 'fake',
+    name: '<script>alert(1)</script>',
+  };
   const state = {
     backupUnlocked: true,
     backupDashboard: {
@@ -165,9 +183,13 @@ test('backup UI escapes names and errors; never renders credentials', () => {
 });
 
 test(
-  'one backup screen provides direct ZIP, scheduled profiles and full restore without a duplicate download',
+  'one backup screen provides direct ZIP, scheduled profiles and full \
+restore without a duplicate download',
   () => {
-    const locked = renderBackupSection({backupUnlocked: false, backupDashboard: null});
+    const locked = renderBackupSection({
+      backupUnlocked: false, backupDashboard:
+        null,
+    });
     const unlocked = renderBackupSection({
       backupUnlocked: true, backupDashboard: {
         profiles: [],
@@ -193,7 +215,8 @@ test(
 );
 
 test(
-  'version footer is derived from server metadata and ZIP exports require unlock',
+  'version footer is derived from server metadata and ZIP exports require \
+unlock',
   () => {
     const unlockedNoPassword = renderBackupSection({
       backupUnlocked: true, backupDashboard: {

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {warehouse3DGeometry} from '../../public/js/domain/warehouse-3d-model.js';
+import {warehouse3DGeometry}
+  from '../../public/js/domain/warehouse-3d-model.js';
 import {visibleShelfFront} from '../../shared/warehouse-compartments.js';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 
@@ -44,7 +45,8 @@ test(
     );
     for (const rotation of [0, 90, 180, 270]) {
       const furniture = {...item, rotation};
-      const parts = warehouse3DGeometry({...room, furniture: [furniture]}, warehouse).objects[0].parts;
+      const parts = warehouse3DGeometry({...room, furniture: [furniture]},
+        warehouse).objects[0].parts;
       const doors = parts.filter(p => p.role === 'door');
       const glass = parts.filter(p => p.role === 'glass-front');
       assert.equal(doors.length, 1);
@@ -58,7 +60,8 @@ test(
 );
 
 test(
-  'furniture form exposes range configuration and zero-capacity shelves hide empty text',
+  'furniture form exposes range configuration and zero-capacity shelves \
+hide empty text',
   () => {
     let html = '', form = ''; const previous = globalThis.document;
     globalThis.document = {
@@ -114,7 +117,8 @@ test(
       assert.equal(
         (html.match(/Fach ist leer/g) || []).length,
         4,
-        'the room wall renders four compartments once; edit controls live in a modal'
+        'the room wall renders four compartments once; edit controls live \
+in a modal'
       );
       view.openForm('furniture', 'f');
       assert.match(form, /warehouse-door-range-list/);

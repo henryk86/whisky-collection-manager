@@ -1,7 +1,8 @@
 /** Backup background process in the same Docker container as the HTTPS app.
  * Uses ZIP for new backups, Rclone for cloud and Restic only for old snapshots.
  * Asks the app for a consistent staging snapshot over
- * certificate-verified HTTPS loopback. It never modifies the live collection. */
+ * certificate-verified HTTPS loopback. It never modifies the live collection.
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -9,9 +10,11 @@ import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {writeReadableZip, inspectReadableZip} from '../shared/backup-zip.js';
 import {readBackupPassword} from '../shared/backup-password.js';
-import {backupJobError, serializeBackupJobError} from '../shared/backup-job-errors.js';
+import {backupJobError, serializeBackupJobError}
+  from '../shared/backup-job-errors.js';
 import {BACKUP_PASSWORD_FAILURE} from '../shared/backup-password.js';
-import {commandFailureDiagnostic, logBackupJobFailure} from './backup-diagnostics.js';
+import {commandFailureDiagnostic, logBackupJobFailure}
+  from './backup-diagnostics.js';
 
 const CONTROL = path.resolve(process.env.BACKUP_CONTROL_DIR ||
   '/backup-control');
@@ -29,8 +32,15 @@ if (process.env.NODE_ENV === 'production') {
 const SAFE_REMOTE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,49}$/;
 const SAFE_ID = /^[0-9a-f]{8}-[0-9a-f-]{20,50}$/i;
 const SAFE_PATH = /^[a-zA-Z0-9 _./-]{1,180}$/;
-const TYPES = new Set(['run', 'check', 'test', 'snapshots', 'restore', 'prepare']);
-const ZIP_FILE = /^whisky-backup-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}(?:-\d{3})?-[0-9a-f]{8}\.zip$/i;
+const TYPES = new Set(['run', 'check', 'test', 'snapshots', 'restore',
+  'prepare']);
+const ZIP_FILE =
+  new RegExp(
+    '^whisky-backup-\\d{4}-\\d{2}-\\d{2}T\\d{2}' +
+    '-\\d{2}-\\d{2}(?:-\\d{3})?-[0-9a-f]{8}\\.z' +
+    'ip$',
+    'i'
+  );
 const timeFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: TZ,
   year: 'numeric',
@@ -156,7 +166,8 @@ export function repositoryFor(profile) {
     return result;
   }
   if (typeof profile.remote !== 'string' ||
-    !SAFE_REMOTE.test(profile.remote)) throw backupJobError('backup.errors.invalidRcloneRemote');
+    !SAFE_REMOTE.test(profile.remote)) throw backupJobError(
+      'backup.errors.invalidRcloneRemote');
   return `rclone:${profile.remote}:${target}`;
 }
 
@@ -167,7 +178,8 @@ export function repositoryFor(profile) {
 function loadProfiles() {
   const data = readJson('profiles.json', {version: 1, profiles: []});
   if (data.version !== 1 ||
-    !Array.isArray(data.profiles)) throw backupJobError('backup.errors.invalidProfiles');
+    !Array.isArray(data.profiles)) throw backupJobError(
+      'backup.errors.invalidProfiles');
   return data.profiles;
 }
 
@@ -263,8 +275,12 @@ const restic = (repo, args, options) =>
 async function snapshots(repo) {
   const raw = await restic(repo, ['snapshots', '--json'], {timeout: 120000});
   let entries;
-  try {entries = JSON.parse(raw);} catch {throw backupJobError('backup.errors.invalidResticListing');}
-  if (!Array.isArray(entries)) throw backupJobError('backup.errors.invalidResticListing');
+  try {entries = JSON.parse(raw);} catch {
+    throw backupJobError(
+      'backup.errors.invalidResticListing');
+  }
+  if (!Array.isArray(entries)) throw backupJobError(
+    'backup.errors.invalidResticListing');
   return entries.slice(-80).reverse().map(x => ({
     id: x.id, shortId: x.short_id || x.id?.slice(0, 8), time: x.time,
     paths: x.paths, hostname: x.hostname, tags: x.tags || [],
@@ -322,8 +338,12 @@ async function zipFilesFor(profile, repo) {
       {timeout: 120000}
     );
     let listing;
-    try {listing = JSON.parse(output);} catch {throw backupJobError('backup.errors.invalidRcloneListing');}
-    if (!Array.isArray(listing)) throw backupJobError('backup.errors.invalidRcloneListing');
+    try {listing = JSON.parse(output);} catch {
+      throw backupJobError(
+        'backup.errors.invalidRcloneListing');
+    }
+    if (!Array.isArray(listing)) throw backupJobError(
+      'backup.errors.invalidRcloneListing');
     entries = listing.filter(item => ZIP_FILE.test(item.Name) && !item.IsDir)
       .map(item => ({name: item.Name, size: item.Size}));
   }
@@ -422,7 +442,8 @@ async function runZipBackup(job, profile, repo, status) {
   const folder = await ensureSourceSnapshot(job);
   const local = profile.provider === 'local';
   const filename = archiveName(job);
-  if (local && fs.existsSync(path.join(repo, 'config'))) throw backupJobError('backup.errors.legacyTargetForZip');
+  if (local && fs.existsSync(path.join(repo, 'config'))) throw backupJobError(
+    'backup.errors.legacyTargetForZip');
   const tempFolder = local ? repo : path.join(CONTROL, 'zip-temp', job.id);
   fs.mkdirSync(tempFolder, {recursive: true, mode: 0o700});
   const temporary = path.join(tempFolder, `.${filename}.part`);
@@ -444,7 +465,9 @@ async function runZipBackup(job, profile, repo, status) {
     status.snapshots[profile.id] =
       await zipPrune(profile, repo, await zipFilesFor(profile, repo));
     return {
-      message: 'AES-256-geschütztes ZIP-Backup erstellt (Sammlung, Bilder und Dokumente)',
+      message:
+        'AES-256-geschütztes ZIP-Backup erstellt (Sammlung, Bilder und \
+Dokumente)',
       snapshotCount: status.snapshots[profile.id].length, filename,
     };
   } finally {
@@ -546,7 +569,10 @@ async function ensureSourceSnapshot(job) {
   try {
     result = await fetch(`${APP}/internal/backup/snapshot/${job.id}`, {
       method: 'POST',
-      headers: {'X-Backup-Worker-Token': token, 'Content-Type': 'application/json'},
+      headers: {
+        'X-Backup-Worker-Token': token, 'Content-Type':
+          'application/json',
+      },
       body: '{}',
       signal: AbortSignal.timeout(120000),
     });
@@ -661,7 +687,10 @@ export async function executeJob(job, profile, status) {
         } finally {fs.rmSync(folder, {recursive: true, force: true});}
       }
     }
-    return {message: `${archives.length} ZIP-Datei(en) inklusive AES-Authentifizierung kontrolliert`};
+    return {
+      message: `${archives
+        .length} ZIP-Datei(en) inklusive AES-Authentifizierung kontrolliert`,
+    };
   }
   if (job.type === 'check') {
     await restic(repo, ['check'], {timeout: 3600000});
@@ -690,13 +719,18 @@ export async function executeJob(job, profile, status) {
       throw error;
     }
     return {
-      message: 'Wiederherstellung in separaten Prüf-Ordner abgeschlossen. Laufende Sammlung unverändert.',
+      message:
+        'Wiederherstellung in separaten Prüf-Ordner abgeschlossen. Laufende \
+Sammlung unverändert.',
       restorePath: target,
     };
   }
   throw backupJobError('backup.errors.unknownJobType');
 }
-const EMPTY_STATUS = {updatedAt: null, timeZone: TZ, jobs: [], snapshots: {}, remotes: []};
+const EMPTY_STATUS = {
+  updatedAt: null, timeZone: TZ, jobs: [], snapshots: {},
+  remotes: [],
+};
 /**
  * Creates worker for backup worker.
  *
@@ -707,7 +741,10 @@ export function createWorker() {
   status.jobs = (status.jobs || []).map(job => {
     if (job.state !== 'running') return job;
     const {error, ...rest} = job;
-    return {...rest, state: 'failed', errorCode: 'backup.errors.workerInterrupted'};
+    return {
+      ...rest, state: 'failed',
+      errorCode: 'backup.errors.workerInterrupted',
+    };
   });
   status.snapshots ||= {};
   status.remotes ||= [];
@@ -729,7 +766,8 @@ export function createWorker() {
    */
   async function loadRemotes() {
     try {
-      const result = await runCommand('rclone', ['listremotes'], {timeout: 15000});
+      const result = await runCommand('rclone', ['listremotes'],
+        {timeout: 15000});
       status.remotes = result.split(/\r?\n/).map(s => s.trim()
         .replace(/:$/, '')).filter(s => SAFE_REMOTE.test(s));
     } catch {status.remotes = [];}

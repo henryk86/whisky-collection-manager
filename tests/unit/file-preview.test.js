@@ -33,7 +33,8 @@ test(
 );
 
 test(
-  'attachment preview does not embed unsupported office, HEIC, SVG or HTML files',
+  'attachment preview does not embed unsupported office, HEIC, SVG or HTML \
+files',
   () => {
     for (const name of [
       'order.docx',

@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import {createSettingsView} from '../../public/js/views/settings.js';
 
 test(
-  'distillery management is fully scrollable as a page, searchable and keeps names escaped',
+  'distillery management is fully scrollable as a page, searchable and \
+keeps names escaped',
   () => {
     const state = {
       distillerySearch: 'Port',
@@ -29,14 +30,16 @@ test(
       /class="distillery-management-head"|<h3>Destillerien<\/h3>/
     );
     assert.equal(
-      (view.match(/<h2 class="analytics-section-title">Destillerien<\/h2>/g) || []).length,
+      (view.match(/<h2 class="analytics-section-title">Destillerien<\/h2>/g) ||
+        []).length,
       1
     );
   }
 );
 
 test(
-  'legacy JSON import is hidden in a collapsed disclosure until the user opens it',
+  'legacy JSON import is hidden in a collapsed disclosure until the user \
+opens it',
   () => {
     const state = {
       backupUnlocked: false, backupDashboard: null,
@@ -53,14 +56,19 @@ test(
     );
     assert.match(
       view,
-      /<h2>Einstellungen &amp; Datensicherung<span class="heading-period" aria-hidden="true">\.<\/span><\/h2>/
+      new RegExp(
+        '<h2>Einstellungen &amp; Datensicherung<spa' +
+        'n class="heading-period" aria-hidden="true' +
+        '">\\.<\\/span><\\/h2>'
+      )
     );
     assert.doesNotMatch(
       view,
       /<p class="intro">Die Sammlung wird lokal gespeichert/
     );
     assert.match(view, /data-act="goto-home"/);
-    const english = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
+    const english = JSON.parse(fs.readFileSync('public/locales/en.json',
+      'utf8'));
     assert.equal(english['settings.page.eyebrow'], 'MANAGE YOUR COLLECTION');
     assert.match(
       view,

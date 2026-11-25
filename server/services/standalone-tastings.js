@@ -4,7 +4,8 @@ import {uid, now} from '../domain/collection.js';
 import {fail} from '../domain/errors.js';
 import {detachTastings} from '../../shared/tasting-flights.js';
 import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
-import {normalizeTastingRecord, VALID_TASTING_FIELDS} from '../../shared/tasting-records.js';
+import {normalizeTastingRecord, VALID_TASTING_FIELDS}
+  from '../../shared/tasting-records.js';
 
 /**
  * Validates the clean state and rejects invalid inputs.
@@ -15,7 +16,10 @@ import {normalizeTastingRecord, VALID_TASTING_FIELDS} from '../../shared/tasting
  */
 function clean(input, old) {
   try {return normalizeStandaloneTasting(input, old);}
-  catch (error) {throw fail(error.message, 400, "api.errors.invalidTastingData");}
+  catch (error) {
+    throw fail(error.message, 400, "api.errors.invalidTastingData"
+    );
+  }
 }
 
 /**
@@ -27,7 +31,8 @@ function clean(input, old) {
  */
 function find(collection, id) {
   const record = (collection.externalTastings || []).find(x => x.id === id);
-  if (!record) throw fail('Verkostung nicht gefunden', 404, "api.errors.tastingNotFound");
+  if (!record) throw fail('Verkostung nicht gefunden', 404,
+    "api.errors.tastingNotFound");
   return record;
 }
 
@@ -55,7 +60,10 @@ export function get(id) {return find(read(), id);}
 export function create(input) {
   return change(collection => {
     const timestamp = now();
-    const record = {...clean(input), id: uid(), createdAt: timestamp, updatedAt: timestamp};
+    const record = {
+      ...clean(input), id: uid(), createdAt: timestamp,
+      updatedAt: timestamp,
+    };
     if (!collection.externalTastings) collection.externalTastings = [];
     collection.externalTastings.push(record);
     return record;
@@ -117,7 +125,8 @@ export function assignToBottling(id, input) {
     const tasting = find(collection, id);
     const bottling = (collection.bottlings || []).find(b => b.id ===
       input.bottlingId);
-    if (!bottling) throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
+    if (!bottling) throw fail('Abfüllung nicht gefunden', 404,
+      "api.errors.bottlingNotFound");
     if ((bottling.tastings || []).some(item => item.id === id)) throw fail(
       'Verkostung bereits zugeordnet',
       409,

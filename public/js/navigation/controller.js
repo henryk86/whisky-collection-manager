@@ -1,6 +1,7 @@
 import {t} from '../i18n/index.js';
 import {parseRoute, routeUrl} from './routes.js';
-import {homePageUrl, pageFromSearch, overviewModeFromSearch} from '../domain/pagination.js';
+import {homePageUrl, pageFromSearch, overviewModeFromSearch}
+  from '../domain/pagination.js';
 /**
  * History changes navigate to the page top; a scanned bottle is highlighted,
  * not focused.
@@ -8,7 +9,8 @@ import {homePageUrl, pageFromSearch, overviewModeFromSearch} from '../domain/pag
  * @param {!Object} options Optional configuration for the operation.
  * @return {!Object} Structured result for the caller.
  */
-export function createNavigation({state, render, closeModal, browser = window}) {
+export function createNavigation({state, render, closeModal,
+  browser = window}) {
   /**
    * Controls the controller state.
    *

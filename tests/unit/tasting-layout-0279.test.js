@@ -34,7 +34,8 @@ test(
        */
       refresh() {},
     }).editor();
-    const start = html.indexOf('class="tasting-record-fields analytics-panel tasting-edit-meta-panel"');
+    const start = html.indexOf(
+      'class="tasting-record-fields analytics-panel tasting-edit-meta-panel"');
     const end = html.indexOf('class="tasting-top-row"', start);
     assert.ok(start > -1 && end > start);
     const panel = html.slice(start, end);

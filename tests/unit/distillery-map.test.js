@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {buildDistilleryMap, locationFor, markerDiameter, fitMapToSites, project, unproject, zoomAroundPoint} from '../../public/js/domain/distillery-map.js';
+import {
+  buildDistilleryMap, locationFor, markerDiameter, fitMapToSites,
+  project, unproject, zoomAroundPoint
+}
+  from '../../public/js/domain/distillery-map.js';
 
 /**
  * Derives the fixture result from the supplied values.
@@ -18,7 +22,8 @@ function fixture() {
   };
 }
 test(
-  'map groups 120 bottlings of one distillery in a single marker, with 142 physical bottles',
+  'map groups 120 bottlings of one distillery in a single marker, with 142 \
+physical bottles',
   () => {
     const collection = fixture();
     for (let i = 0; i < 120; i++) {
@@ -40,7 +45,8 @@ test(
   }
 );
 test(
-  'optional map layer includes all distilleries, including sites with no bottlings or bottles',
+  'optional map layer includes all distilleries, including sites with no \
+bottlings or bottles',
   () => {
     const collection = fixture();
     collection.bottlings.push({
@@ -56,7 +62,10 @@ test(
       'normal map still only shows stocked distilleries'
     );
     assert.equal(defaultSites.missing.length, 0);
-    const allSites = buildDistilleryMap(collection, {includeAllDistilleries: true});
+    const allSites = buildDistilleryMap(collection, {
+      includeAllDistilleries:
+        true,
+    });
     assert.equal(allSites.located.length, 2);
     assert.equal(
       allSites.missing.length,
@@ -172,14 +181,18 @@ test(
     collection.distilleries[2].latitude = 40;
     collection.distilleries[2].longitude = -100;
     collection.bottlings
-      .push({id: 'c', name: 'Far away', distilleryIds: ['unknown'], bottles: []});
+      .push({
+        id: 'c', name: 'Far away', distilleryIds: ['unknown'],
+        bottles: [],
+      });
     map = buildDistilleryMap(collection);
     assert.ok(fitMapToSites(map.located, 900, 600).zoom < islay.zoom);
     assert.equal(fitMapToSites([map.located[0]], 900, 600).zoom, 11);
   }
 );
 test(
-  'Web Mercator is reversible and respects the dateline, without external map dependencies',
+  'Web Mercator is reversible and respects the dateline, without external \
+map dependencies',
   () => {
     for (const [lat, lon] of [[55.7869, -6.4308], [0, 0], [-40, 169]]) {
       const point = project(lat, lon, 11);
@@ -191,7 +204,8 @@ test(
 );
 
 test(
-  'all 450 built-in distilleries have reference coordinates; manual values always win',
+  'all 450 built-in distilleries have reference coordinates; manual values \
+always win',
   () => {
     const catalog = JSON.parse(fs.readFileSync(
       new URL('../../seed/distillery.json', import.meta.url),
@@ -223,7 +237,8 @@ test(
 );
 
 test(
-  'historic distilleries with shared former names use consistent locality positions',
+  'historic distilleries with shared former names use consistent locality \
+positions',
   () => {
     const gleniffer = locationFor({name: 'Gleniffer'});
     const glenpatrick = locationFor({name: 'Glenpatrick'});
@@ -338,7 +353,10 @@ test(
         bottles: [{id: 'physical'}],
       }],
     };
-    const sites = buildDistilleryMap(collection, {includeAllDistilleries: true}).located;
+    const sites = buildDistilleryMap(collection, {
+      includeAllDistilleries:
+        true,
+    }).located;
     assert.equal(sites.find(s => s.id === 'closed').status, 'closed');
     assert.equal(sites.find(s => s.id === 'closed').bottleCount, 1);
     assert.equal(sites.find(s => s.id === 'reopened').status, 'reopened');

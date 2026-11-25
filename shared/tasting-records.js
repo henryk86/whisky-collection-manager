@@ -4,7 +4,8 @@
  */
 import {normalizeFlavorProfile} from './flavor-profile.js';
 import {normalizeWhiskyColor} from './whisky-colors.js';
-import {emptyTastingNotes, normalizeTastingNotes, normalizeTastingRating} from './tasting.js';
+import {emptyTastingNotes, normalizeTastingNotes, normalizeTastingRating}
+  from './tasting.js';
 export const VALID_TASTING_FIELDS = Object.freeze([
   'tastedOn',
   'title',
@@ -49,7 +50,8 @@ export function normalizeTastingRecord(input, old = {}) {
     ...old,
     ...input,
   };
-  if (!validTastingDate(value.tastedOn)) throw new Error('Ungültiges Verkostungsdatum');
+  if (!validTastingDate(value.tastedOn)) throw new Error(
+    'Ungültiges Verkostungsdatum');
   if (typeof value.title !== 'string' || value.title.length >
     120) throw new Error('Ungültiger Verkostungstitel');
   value.title = value.title.trim();
@@ -82,7 +84,10 @@ export function sortedTastings(bottling) {
  * @param {!Object} bottling Bottling record being processed.
  * @return {*} Value returned by the delegated operation.
  */
-export function latestTasting(bottling) {return sortedTastings(bottling)[0] || null;}
+export function latestTasting(bottling) {
+  return sortedTastings(bottling)[0] ||
+    null;
+}
 
 /**
  * The newest record is the sole rating source. No persisted summary or legacy

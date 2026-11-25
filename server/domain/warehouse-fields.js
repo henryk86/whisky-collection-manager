@@ -3,7 +3,8 @@
  * Keep the existing input normalization and error messages compatible.
  */
 import {fail} from './errors.js';
-import {FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm} from '../../shared/warehouse-compartments.js';
+import {FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm}
+  from '../../shared/warehouse-compartments.js';
 
 const types = new Set(FURNITURE_TYPES);
 /**
@@ -83,7 +84,8 @@ export function capacity(value) {
  */
 export function shelfFront(value) {
   if (value === '' || value === null || value === undefined) return null;
-  if (!SHELF_FRONTS.includes(value)) throw fail('Ungültige Fachfront', 400, "api.errors.invalidCompartmentFront");
+  if (!SHELF_FRONTS.includes(value)) throw fail('Ungültige Fachfront', 400,
+    "api.errors.invalidCompartmentFront");
   return value;
 }
 

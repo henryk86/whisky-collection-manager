@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {sealOfflineBundle, verifyOfflineBundle} from '../../scripts/offline-bundle.js';
+import {sealOfflineBundle, verifyOfflineBundle}
+  from '../../scripts/offline-bundle.js';
 import {prepareStartup} from '../../scripts/start.js';
 
 const assets = [
@@ -37,7 +38,12 @@ function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-offline-test-'));
   t.after(() => fs.rmSync(root, {recursive: true, force: true}));
   const pkg = {version: '0.20.0'};
-  const lock = {packages: {'': {version: pkg.version}, 'node_modules/three': {version: '0.187.0'}}};
+  const lock = {
+    packages: {
+      '': {version: pkg.version}, 'node_modules/three':
+        {version: '0.187.0'},
+    },
+  };
   write(root, 'package.json', JSON.stringify(pkg));
   write(root, 'package-lock.json', JSON.stringify(lock));
   write(root, '.env.example', 'HTTPS_ENABLED=false\n');
@@ -61,20 +67,23 @@ function fixture(t) {
 }
 
 test(
-  'offline seal captures npm cache, AI model, vendor runtime and licenses but excludes npm logs',
+  'offline seal captures npm cache, AI model, vendor runtime and licenses \
+but excludes npm logs',
   t => {
     const root = fixture(t);
     const manifest = sealOfflineBundle(root);
     assert.equal(manifest.version, '0.20.0');
     assert.ok(manifest.assets['public/ai/models/u2netp.onnx']);
-    assert.ok(manifest.assets['.offline/npm-cache/_cacache/content-v2/sha512/ab/cd/123']);
+    assert.ok(manifest.assets[
+      '.offline/npm-cache/_cacache/content-v2/sha512/ab/cd/123']);
     assert.ok(!fs.existsSync(path.join(root, '.offline/npm-cache/_logs')));
     assert.deepEqual(verifyOfflineBundle(root), manifest);
   }
 );
 
 test(
-  'offline archive rejects changed model bytes, tampered npm cache and changed application version',
+  'offline archive rejects changed model bytes, tampered npm cache and \
+changed application version',
   t => {
     const root = fixture(t);
     sealOfflineBundle(root);
@@ -130,7 +139,8 @@ test('offline archive rejects symlinks and unsafe manifest paths', t => {
 });
 
 test(
-  'offline startup installs from an isolated cache and verifies AI assets, never fetching network data',
+  'offline startup installs from an isolated cache and verifies AI assets, \
+never fetching network data',
   t => {
     const root = fixture(t);
     sealOfflineBundle(root);
@@ -150,7 +160,8 @@ test(
           assert.ok(args.includes('--ignore-scripts'));
           const cache = args[args.indexOf('--cache') + 1];
           assert.notEqual(cache, path.join(root, '.offline/npm-cache'));
-          assert.ok(fs.existsSync(path.join(cache, '_cacache/content-v2/sha512/ab/cd/123')));
+          assert.ok(fs.existsSync(path.join(cache,
+            '_cacache/content-v2/sha512/ab/cd/123')));
           write(
             root,
             'node_modules/three/package.json',
@@ -159,7 +170,14 @@ test(
           write(
             root,
             'node_modules/.package-lock.json',
-            JSON.stringify({packages: {'node_modules/three': {version: '0.187.0'}}})
+            JSON.stringify({
+              packages: {
+                'node_modules/three': {
+                  version:
+                    '0.187.0',
+                },
+              },
+            })
           );
           write(
             cache,
@@ -183,7 +201,8 @@ test(
 );
 
 test(
-  'an incomplete offline bundle must fail closed before attempting npm installation',
+  'an incomplete offline bundle must fail closed before attempting npm \
+installation',
   t => {
     const root = fixture(t);
     let called = false;

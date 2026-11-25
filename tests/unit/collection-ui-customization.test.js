@@ -14,7 +14,8 @@ import {createSettingsView} from '../../public/js/views/settings.js';
  * @param {string=} view View used by this operation.
  * @return {undefined} Structured result assembled from the input data.
  */
-function renderHome(establishedYear, bottlings = [], physicalBottles = [], view = 'cards') {
+function renderHome(establishedYear, bottlings = [], physicalBottles = [],
+  view = 'cards') {
   const former = {
     document: globalThis.document,
     location: globalThis.location,
@@ -96,7 +97,8 @@ function renderHome(establishedYear, bottlings = [], physicalBottles = [], view 
     return html;
   } finally {
     for (const [name, value] of Object.entries(former)) {
-      if (value === undefined) delete globalThis[name]; else globalThis[name] = value;
+      if (value === undefined) delete globalThis[name]; else globalThis[name] =
+        value;
     }
   }
 }
@@ -172,7 +174,11 @@ test(
     const table = renderHome(null, [b], [], 'table');
     assert.match(
       table,
-      /data-act="collection-sort-column" data-column="distillery"[^>]*>Destillerie \/ Abfüller/
+      new RegExp(
+        'data-act="collection-sort-column" data-col' +
+        'umn="distillery"[^>]*>Destillerie \\/ Abfü' +
+        'ller'
+      )
     );
     assert.match(table, /<td>Signatory Vintage<\/td>/);
     assert.match(
@@ -183,7 +189,8 @@ test(
 );
 
 test(
-  'settings exposes a persistent founding-year form next to existing backup controls',
+  'settings exposes a persistent founding-year form next to existing backup \
+controls',
   () => {
     const html = createSettingsView({
       collection: {settings: {establishedYear: 1989}, distilleries: []},
@@ -197,7 +204,8 @@ test(
 );
 
 test(
-  'overview omits empty age, alcohol and year instead of showing placeholder units',
+  'overview omits empty age, alcohol and year instead of showing \
+placeholder units',
   () => {
     const blank = {
       id: 'no-meta',
@@ -218,7 +226,10 @@ test(
     const table = renderHome(null, [blank], [], 'table');
     assert.match(
       table,
-      /<strong>Ohne Angaben<\/strong>[\s\S]*?<td><\/td>\s*<td><\/td>\s*<td><\/td>/
+      new RegExp(
+        '<strong>Ohne Angaben<\\/strong>[\\s\\S]*?<' +
+        'td><\\/td>\\s*<td><\\/td>\\s*<td><\\/td>'
+      )
     );
     assert.doesNotMatch(table, /– %|– Jahre/);
 
@@ -236,10 +247,15 @@ test(
 
 
 test(
-  'advanced filter toggle uses the intended filter icon and a separate chevron, never a text glyph',
+  'advanced filter toggle uses the intended filter icon and a separate \
+chevron, never a text glyph',
   () => {
     const html = renderHome(null);
-    const toggle = html.match(/<button[^>]*class="btn collection-filter-toggle"[^>]*>[\s\S]*?<\/button>/)?.[0];
+    const toggle = html.match(
+      new RegExp(
+        '<button[^>]*class="btn collection-filter-t' +
+        'oggle"[^>]*>[\\s\\S]*?<\\/button>'
+      ))?.[0];
     assert.ok(toggle, 'advanced filter toggle exists');
     assert.match(toggle, /class="collection-filter-icon"/);
     assert.match(toggle, /class="collection-filter-chevron"/);

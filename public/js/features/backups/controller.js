@@ -49,7 +49,9 @@ export function createBackupController({state, render, showModal, closeModal}) {
       redraw();
       if (!quiet) toast(t("backups.status.refreshed"));
     } catch (err) {
-      if (err.code === 'api.errors.backupManagementIsLockedAdministratorKeyRequired' || err.status === 401) lock();
+      if (err.code ===
+        'api.errors.backupManagementIsLockedAdministratorKeyRequired' ||
+        err.status === 401) lock();
       else {
         state.backupError =
           err.message; if (!quiet) toast(err.message, true);
@@ -123,10 +125,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
   function toggleFields(form) {
     if (!form) return;
     const local = form.elements.provider.value === 'local';
-    for (const row of form.querySelectorAll('[data-backup-local], [data-backup-cloud]')) {
+    for (const row of form.querySelectorAll(
+      '[data-backup-local], [data-backup-cloud]')) {
       const display = row.hasAttribute('data-backup-local') ? local : !local;
       row.hidden = !display;
-      for (const control of row.querySelectorAll('input, select')) control.disabled = !display;
+      for (const control of row.querySelectorAll('input, select')) control
+        .disabled = !display;
     }
   }
 
@@ -191,7 +195,8 @@ export function createBackupController({state, render, showModal, closeModal}) {
     const form = event.target;
     const password = form.elements.password.value;
     const confirm = form.elements.confirm.value;
-    if (password !== confirm) return toast(t("backups.password.mismatch"), true);
+    if (password !== confirm) return toast(t("backups.password.mismatch"),
+      true);
     const button = form.querySelector('[type="submit"]');
     button.disabled = true;
     try {
@@ -300,7 +305,8 @@ export function createBackupController({state, render, showModal, closeModal}) {
   async function download(id, filename) {
     if (!token) return toast(t("backups.security.unlockFirst"), true);
     const response = await fetch(
-      `/api/backups/${encodeURIComponent(id)}/files/${encodeURIComponent(filename)}`,
+      `/api/backups/${encodeURIComponent(id)}/files/${encodeURIComponent(
+        filename)}`,
       {
         headers: {'X-Backup-Admin-Token': token}, cache: 'no-store',
       }
@@ -330,20 +336,29 @@ export function createBackupController({state, render, showModal, closeModal}) {
       `<form id="backup-apply-zip-form" data-id="${h(result.id)}">
           <p>${t("backups.summary.backupLabel")} <strong>${h(filename ||
         t("backups.page.backupTitle"))}</strong></p>
-          <p><strong>${result.bottlings}</strong> ${t("backups.summary.bottlingsLabel")} <strong>${result.bottles}</strong> ${t("backups.summary.bottlesLabel")} <strong>${result.distilleries}</strong> ${t("backups.summary.distilleriesLabel")}</p>
+          <p><strong>${result.bottlings}</strong> ${t(
+          "backups.summary.bottlingsLabel")} <strong>${result
+            .bottles}</strong> ${t("backups.summary.bottlesLabel"
+            )} <strong>${result.distilleries}</strong> ${t(
+              "backups.summary.distilleriesLabel")}</p>
           <p>${t(
-          "features.backups.restoredAssets",
-          {count: result.files, size: (result.bytes / 1048576).toFixed(1)}
-        )}</p>
-          <p class="warning">${t("backups.restore.replaceIncludesAttachments")}</p>
-          <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> ${t("backups.restore.confirmReplaceCollection")}</label>
+                "features.backups.restoredAssets",
+                {count: result.files, size: (result.bytes / 1048576).toFixed(1)}
+              )}</p>
+          <p class="warning">${t("backups.restore.replaceIncludesAttachments"
+              )}</p>
+          <label class="backup-checkbox"><input type="checkbox" \
+name="acknowledge" required> ${t("backups.restore.confirmReplaceCollectio\
+n")}</label>
           <div class="actions ds-modal-footer ds-modal-footer--compact">
-            <button class="btn" type="button" data-act="backup-download-prepared" data-id="${h(result.id)}">${t("backups.actions.downloadZip")}</button>
+            <button class="btn" type="button" data-act="backup-download-prep\
+ared" data-id="${h(result.id)}">${t("backups.actions.downloadZip")}</button>
             ${actionButton({
-          label: t("common.actions.cancel"),
-          action: 'close-modal',
-        })}
-            <button class="btn danger" type="submit">${t("backups.actions.importBackup")}</button>
+                label: t("common.actions.cancel"),
+                action: 'close-modal',
+              })}
+            <button class="btn danger" type="submit">${t(
+                "backups.actions.importBackup")}</button>
           </div></form>`,
       true
     );
@@ -358,15 +373,19 @@ export function createBackupController({state, render, showModal, closeModal}) {
   function promptPreparedZip(id, filename) {
     showModal(
       t("backups.password.zipEnter"),
-      `<form id="backup-unlock-zip-form" data-id="${h(id)}" data-filename="${h(filename || 'Sicherung.zip')}">
+      `<form id="backup-unlock-zip-form" data-id="${h(id)}" data-filename="${h(
+        filename || 'Sicherung.zip')}">
           <p>${t("backups.restore.savedArchive")} <strong>${h(filename ||
-        '')}</strong> ${t("backups.restore.openForPreview")}</p>
-          <label class="form-field">${t("backups.password.archiveLabel")}<input type="password" name="password" autocomplete="off" placeholder="${t("backups.password.optionalForLegacy")}"></label>
+          '')}</strong> ${t("backups.restore.openForPreview")}</p>
+          <label class="form-field">${t("backups.password.archiveLabel"
+          )}<input type="password" name="password" autocomplete="off" \
+placeholder="${t("backups.password.optionalForLegacy")}"></label>
           <div class="actions">${actionButton({
-          label: t("common.actions.cancel"),
-          action: 'close-modal',
-        })}
-          <button type="submit" class="btn primary">${t("backups.actions.validateZip")}</button></div></form>`,
+            label: t("common.actions.cancel"),
+            action: 'close-modal',
+          })}
+          <button type="submit" class="btn primary">${t(
+            "backups.actions.validateZip")}</button></div></form>`,
       true
     );
   }
@@ -491,14 +510,17 @@ export function createBackupController({state, render, showModal, closeModal}) {
     if (!profile) return;
     showModal(
       t("backups.profiles.delete"),
-      `<p>${t("backups.schedule.should")} <strong>${h(profile.name)}</strong> ${t("backups.confirmation.deleteSuffix")}</p>
-        <p class="warning">${t("backups.profiles.deleteDoesNotDeleteArchives")}</p>
+      `<p>${t("backups.schedule.should")} <strong>${h(profile.name
+      )}</strong> ${t("backups.confirmation.deleteSuffix")}</p>
+        <p class="warning">${t("backups.profiles.deleteDoesNotDeleteArchives"
+      )}</p>
         <div class="actions ds-modal-footer ds-modal-footer--spaced">
         ${actionButton({
         label: t("common.actions.cancel"),
         action: 'close-modal',
       })}
-        <button type="button" class="btn danger" data-act="backup-confirm-delete" data-id="${h(id)}">${t("backups.profiles.deleteAction")}</button></div>`
+        <button type="button" class="btn danger" data-act="backup-confirm-de\
+lete" data-id="${h(id)}">${t("backups.profiles.deleteAction")}</button></div>`
     );
   }
 
@@ -511,7 +533,8 @@ export function createBackupController({state, render, showModal, closeModal}) {
   async function confirmDelete(id) {
     try {
       await get(`/api/backups/${encodeURIComponent(id)}`, {method: 'DELETE'});
-      closeModal(); await refresh(true); toast(t("backups.profiles.deletedArchivesKept"));
+      closeModal(); await refresh(true);
+      toast(t("backups.profiles.deletedArchivesKept"));
     } catch (err) {toast(err.message, true);}
   }
 
@@ -528,7 +551,8 @@ export function createBackupController({state, render, showModal, closeModal}) {
     showModal(
       t("backups.actions.restoreBackup"),
       `<form id="backup-restore-form" data-id="${h(id)}">
-        <p>${t("backups.profiles.label")} <strong>${h(profile.name)}</strong></p>
+        <p>${t("backups.profiles.label")} <strong>${h(profile.name
+      )}</strong></p>
         <p class="muted">${zip ?
         t("backups.restore.validationBeforeOverwrite") :
         t("backups.legacy.resticConvertExplanation")}</p>
@@ -537,14 +561,18 @@ export function createBackupController({state, render, showModal, closeModal}) {
         snapshots.map(s =>
           `<option value="${h(s.id)}">${h(s.shortId)} · ${h(new Date(s.time)
             .toLocaleString('de-DE'))}</option>`).join('') :
-        `<option value="latest">${t("backups.legacy.latestSnapshot")}</option>`}</select></label>
-        <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> ${t("backups.restore.confirmInspectBackup")}</label>
+        `<option value="latest">${t("backups.legacy.latestSnapshot"
+        )}</option>`}</select></label>
+        <label class="backup-checkbox"><input type="checkbox" \
+name="acknowledge" required> ${t("backups.restore.confirmInspectBackup")}</l\
+abel>
         <div class="actions ds-modal-footer ds-modal-footer--spaced">
         ${actionButton({
           label: t("common.actions.cancel"),
           action: 'close-modal',
         })}
-        <button type="submit" class="btn primary">${t("backups.restore.preparePreview")}</button></div></form>`,
+        <button type="submit" class="btn primary">${t(
+          "backups.restore.preparePreview")}</button></div></form>`,
       true
     );
   }

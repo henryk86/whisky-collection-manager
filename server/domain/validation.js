@@ -1,4 +1,5 @@
-import {validateAdjustmentValues as validatePhotoAdjustments} from '../../shared/photo-adjustments.js';
+import {validateAdjustmentValues as validatePhotoAdjustments}
+  from '../../shared/photo-adjustments.js';
 /**
  * Validate the complete JSON document before any write or import. No filesystem
  * access.
@@ -7,7 +8,10 @@ import {assert} from './errors.js';
 import {allBottles, WHISKY_TYPES} from './collection.js';
 import {normalizeTastingRecord} from '../../shared/tasting-records.js';
 import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
-import {normalizeFlightFields, FLIGHT_LIMIT, allTastingReferences, validateFlightPlan} from '../../shared/tasting-flights.js';
+import {
+  normalizeFlightFields, FLIGHT_LIMIT, allTastingReferences,
+  validateFlightPlan
+} from '../../shared/tasting-flights.js';
 import {normalizeSavedViews} from '../../shared/collection-saved-views.js';
 import {isDocumentPath} from '../storage/documents.js';
 /**
@@ -477,8 +481,16 @@ export function validate(collection) {
         400,
         "api.errors.unknownFlightField"
       );
-      try {normalizeFlightFields({name: flight.name, date: flight.date, notes: flight.notes});}
-      catch {assert(false, 'Ungültiger Flight', 400, "api.errors.invalidFlight");}
+      try {
+        normalizeFlightFields({
+          name: flight.name, date: flight.date,
+          notes: flight.notes,
+        });
+      }
+      catch {
+        assert(false, 'Ungültiger Flight', 400, "api.errors.invalidFlight"
+        );
+      }
       try {validateFlightPlan(collection, flight);}
       catch {
         assert(

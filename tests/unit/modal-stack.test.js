@@ -49,7 +49,8 @@ function fakeModalHost() {
 
 
 test(
-  'background scroll lock preserves the scrollbar gutter until the last nested modal closes',
+  'background scroll lock preserves the scrollbar gutter until the last \
+nested modal closes',
   () => {
     const host = fakeModalHost();
     const previousDocument = globalThis.document;
@@ -156,7 +157,8 @@ test(
 );
 
 test(
-  'a nested form dialog restores the exact parent DOM node and unsaved file inputs',
+  'a nested form dialog restores the exact parent DOM node and unsaved file \
+inputs',
   () => {
     const host = fakeModalHost();
     const previous = globalThis.document;
@@ -230,7 +232,8 @@ test('closing all dialogs discards nested parents during navigation', () => {
 });
 
 test(
-  'in-app confirmation restores the original edit form after acceptance, never using browser confirm',
+  'in-app confirmation restores the original edit form after acceptance, \
+never using browser confirm',
   async () => {
     const host = fakeModalHost();
     const oldDocument = globalThis.document;
@@ -316,7 +319,8 @@ test(
 );
 
 test(
-  'every modal opened from another modal automatically returns one level at a time',
+  'every modal opened from another modal automatically returns one level at \
+a time',
   () => {
     const host = fakeModalHost();
     const previous = globalThis.document;
@@ -395,7 +399,8 @@ test('explicit replacement can discard older modal history', () => {
 
 
 test(
-  'flight planner help opens as a child dialog and closing restores its live form, preview and heading action',
+  'flight planner help opens as a child dialog and closing restores its \
+live form, preview and heading action',
   () => {
     const host = fakeModalHost();
     // The real modal renderer uses the overlay as a DOM element. For this test
@@ -460,7 +465,8 @@ test(
 );
 
 test(
-  'tasting view returns from flight planning help to the original unsaved planner dialog',
+  'tasting view returns from flight planning help to the original unsaved \
+planner dialog',
   async () => {
     const {createTastingsView} =
       await import('../../public/js/views/tastings.js');

@@ -34,7 +34,8 @@ export function resourceDelta(kind, before, after) {
   if (!spec) throw new Error(`Unknown resource: ${kind}`);
   const values = {};
   const arrays = {};
-  for (const key of spec.values) if (!identical(before[key], after[key])) values[key] = structuredClone(after[key]);
+  for (const key of spec.values) if (!identical(before[key],
+    after[key])) values[key] = structuredClone(after[key]);
   for (const key of spec.arrays) {
     const prev = before[key], next = after[key];
     if (!Array.isArray(prev) ||
@@ -70,7 +71,8 @@ export function applyResourceDelta(current, delta) {
     'object') throw new Error('Invalid resource delta');
   const next = structuredClone(current);
   for (const [key, value] of Object.entries(delta.values || {})) {
-    if (!spec.values.includes(key)) throw new Error(`Invalid resource property: ${key}`);
+    if (!spec.values.includes(key)) throw new Error(
+      `Invalid resource property: ${key}`);
     next[key] = structuredClone(value);
   }
   for (const [key, change] of Object.entries(delta.arrays || {})) {

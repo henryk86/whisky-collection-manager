@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {suggestFlight, flightCandidates, orderFlightItems, FLIGHT_FOCUSES} from '../../public/js/domain/flight-planner.js';
+import {suggestFlight, flightCandidates, orderFlightItems, FLIGHT_FOCUSES}
+  from '../../public/js/domain/flight-planner.js';
 import {createTastingsView} from '../../public/js/views/tastings.js';
 
 const axes = {
@@ -30,7 +31,12 @@ const entry = (id, values = {}, tastedOn = '2026-08-01', abv = 46) => ({
   abv,
   distilleryIds: [`dist-${id}`],
   bottles: [{id: `p-${id}`, status: 'open', volumeType: 'standard'}],
-  tastings: tastedOn ? [{id: `t-${id}`, tastedOn, flavorProfile: {...axes, ...values}}] : [],
+  tastings: tastedOn ? [{
+    id: `t-${id}`, tastedOn, flavorProfile: {
+      ...axes,
+      ...values,
+    },
+  }] : [],
 });
 const items = [
   entry('smoke1', {smoky: 9, peaty: 8}),
@@ -56,7 +62,8 @@ const ids = (style, opts = {}) => suggestFlight(
 ).map(item => item.bottlingId);
 
 test(
-  'balanced suggests distinct aroma families rather than only the best documented bottles',
+  'balanced suggests distinct aroma families rather than only the best \
+documented bottles',
   () => {
     const selected = ids('balanced', {count: 5});
     /**
@@ -72,7 +79,8 @@ test(
   }
 );
 test(
-  'similar selects tight profiles; focus prefers matching radar axes; contrast spans families',
+  'similar selects tight profiles; focus prefers matching radar axes; \
+contrast spans families',
   () => {
     assert.deepEqual(
       new Set(ids('similar')),
@@ -94,7 +102,8 @@ test(
   }
 );
 test(
-  'discover favors untried bottles, and remains stable on the same data and date',
+  'discover favors untried bottles, and remains stable on the same data and \
+date',
   () => {
     const collection = {bottlings: [entry('untasted', {}, ''), ...items]};
     const options = {
@@ -110,7 +119,8 @@ test(
   }
 );
 test(
-  'unfamiliarity compares against previous tastings outside the availability filter',
+  'unfamiliarity compares against previous tastings outside the \
+availability filter',
   () => {
     const familiar = entry('a', {fruity: 5}, '2026-10-01');
     const novel = entry('b', {woody: 9}, '2026-10-01');
@@ -168,7 +178,8 @@ test(
   }
 );
 test(
-  'tasting overview provides an accessible help button and translated planning modal',
+  'tasting overview provides an accessible help button and translated \
+planning modal',
   () => {
     const collection = {
       bottlings: items,
@@ -219,7 +230,11 @@ test(
     view.home();
     assert.match(
       html,
-      /class="ds-help-icon-button flight-plan-help-button" data-act="flight-plan-help" aria-label="So wird ein Flight geplant"/
+      new RegExp(
+        'class="ds-help-icon-button flight-plan-hel' +
+        'p-button" data-act="flight-plan-help" aria' +
+        '-label="So wird ein Flight geplant"'
+      )
     );
     assert.doesNotMatch(html, /class="btn small flight-plan-help-button"/);
     view.showFlightPlanningHelp();
@@ -265,7 +280,10 @@ test(
     assert.equal(nested, false, 'new planner starts as a top-level modal');
     assert.match(
       headingAction,
-      /class="ds-help-icon-button flight-plan-help-button" data-act="flight-plan-help"/
+      new RegExp(
+        'class="ds-help-icon-button flight-plan-hel' +
+        'p-button" data-act="flight-plan-help"'
+      )
     );
     assert.match(headingAction, /aria-label="So wird ein Flight geplant"/);
     assert.match(modal, /data-flight-plan-focus-wrap hidden/);

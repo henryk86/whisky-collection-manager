@@ -34,7 +34,8 @@ export function actionButton({
     text: 'ds-button--text',
     icon: 'ds-button--icon',
   };
-  if (!Object.hasOwn(variants, variant)) throw new RangeError('Invalid button variant');
+  if (!Object.hasOwn(variants, variant)) throw new RangeError(
+    'Invalid button variant');
   if (!['default', 'small', 'large']
     .includes(size)) throw new RangeError('Invalid button size');
   if (!['button', 'submit', 'reset']

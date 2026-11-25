@@ -35,7 +35,8 @@ export function assertVersionPR(pr, branch, snapshot) {
   if (pr?.baseRefName !== 'main' || pr.headRefName !== branch ||
     pr.headRefOid !== snapshot ||
     !['OPEN', 'MERGED'].includes(pr.state))
-    throw new Error('Existing version PR does not match the approved release snapshot');
+    throw new Error(
+      'Existing version PR does not match the approved release snapshot');
 }
 
 /**
@@ -49,7 +50,8 @@ export async function mergeVersionPR({tag, merge, repo = process.env
   .GITHUB_REPOSITORY}) {
   if (!repo || !/^[\w.-]+\/[\w.-]+$/
     .test(repo)) throw new Error('GITHUB_REPOSITORY must be set');
-  if (!process.env.GH_TOKEN) throw new Error('GH_TOKEN required for protected main PR');
+  if (!process.env.GH_TOKEN) throw new Error(
+    'GH_TOKEN required for protected main PR');
   const {branch, snapshot, alreadyMerged} = prepareSyncPR({tag, merge});
   if (alreadyMerged) return {tag, branch, alreadyMerged: true};
   let pr;
@@ -77,7 +79,8 @@ export async function mergeVersionPR({tag, merge, repo = process.env
       '--title',
       `chore(release): synchronize ${tag}`,
       '--body',
-      `Automated metadata-only synchronization from the verified tag ${tag}. No application code changes.`
+      `Automated metadata-only synchronization from the verified tag ${tag}.\
+ No application code changes.`
     );
     pr = JSON.parse(gh(
       'pr',
@@ -109,10 +112,13 @@ export async function mergeVersionPR({tag, merge, repo = process.env
     ));
     if (state.state === 'MERGED' &&
       state.mergedAt) return {tag, branch, merged: true};
-    if (state.state === 'CLOSED') throw new Error('Version PR was closed without merging');
+    if (state.state === 'CLOSED') throw new Error(
+      'Version PR was closed without merging');
     await sleep(10000);
   }
-  throw new Error('Version PR not yet merged after 15 minutes. Check required status checks and re-run the failed publish job.');
+  throw new Error(
+    'Version PR not yet merged after 15 minutes. Check required status \
+checks and re-run the failed publish job.');
 }
 const main = process.argv[1] && path.resolve(process.argv[1]) ===
   fileURLToPath(import.meta.url);

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assessCapture, browserWarning, compareGeometry, pixelMode} from '../../scripts/visual-policy.js';
+import {assessCapture, browserWarning, compareGeometry, pixelMode}
+  from '../../scripts/visual-policy.js';
 
 const rect = [0, 80, 360, 50];
 const baseline = {
@@ -22,7 +23,8 @@ function capture(overrides = {}) {
 }
 
 test(
-  'visual pixel policy defaults to diagnosis and requires explicit opt-in for strict',
+  'visual pixel policy defaults to diagnosis and requires explicit opt-in \
+for strict',
   () => {
     assert.equal(pixelMode([], {}), 'diagnostic');
     assert.equal(pixelMode(['--strict-pixels'], {}), 'strict');
@@ -35,7 +37,8 @@ test(
 );
 
 test(
-  'different browser versions give one actionable warning or abort strict comparison',
+  'different browser versions give one actionable warning or abort strict \
+comparison',
   () => {
     assert.match(
       browserWarning('Chrome/159', 'Chrome/144', 'diagnostic'),
@@ -50,7 +53,8 @@ test(
 );
 
 test(
-  'high pixel difference with unchanged geometry is diagnostic, not a failed PR gate',
+  'high pixel difference with unchanged geometry is diagnostic, not a \
+failed PR gate',
   () => {
     assert.deepEqual(assessCapture(capture()), {
       geometryErrors: [],
@@ -68,7 +72,8 @@ test(
 );
 
 test(
-  'changed component geometry and horizontal overflow still fail regardless of pixel mode',
+  'changed component geometry and horizontal overflow still fail regardless \
+of pixel mode',
   () => {
     const shifted = {...baseline, header: [5, 80, 360, 50]};
     assert.match(compareGeometry(baseline, shifted).join(''), /header moved/);

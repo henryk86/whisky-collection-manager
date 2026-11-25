@@ -1,10 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {session, openSettingsFromMenu, openSettingsSection, seed} from './support.js';
+import {
+  session, openSettingsFromMenu, openSettingsSection,
+  seed
+} from './support.js';
 import {requestJson} from '../helpers/server.js';
 
 test(
-  'browser: collection search, pagination and view change retain the mounted controls',
+  'browser: collection search, pagination and view change retain the \
+mounted controls',
   async () => {
     await session(async ({page, open, base}) => {
       await seed(base, '008101');
@@ -39,7 +43,8 @@ test(
 );
 
 test(
-  'browser: collection settings save applies server delta without extra collection GET',
+  'browser: collection settings save applies server delta without extra \
+collection GET',
   async () => {
     await session(async ({page, open, base}) => {
       await open();
@@ -79,7 +84,8 @@ test(
       await open();
       await openSettingsFromMenu(page);
       await openSettingsSection(page, 'general');
-      const prior = await requestJson(base, '/api/settings', 'PATCH', {establishedYear: 2010});
+      const prior = await requestJson(base, '/api/settings', 'PATCH',
+        {establishedYear: 2010});
       assert.equal(prior.status, 200);
       const requests = [];
       page.on(
@@ -132,7 +138,8 @@ test(
 );
 
 test(
-  'browser: analytics workspace and footer use actual computed layout at desktop and mobile sizes',
+  'browser: analytics workspace and footer use actual computed layout at \
+desktop and mobile sizes',
   async () => {
     await session(async ({page, open}) => {
       await open();

@@ -7,7 +7,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {compareVersions, nextVersion, parseVersion, applyAutomatedRelease, verifyReleaseMetadata} from './release-version.js';
+import {
+  compareVersions, nextVersion, parseVersion, applyAutomatedRelease,
+  verifyReleaseMetadata
+} from './release-version.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /**
@@ -48,7 +51,8 @@ const LABELS = {
 export function classifyCommit(subject, body = '') {
   const match = /^([a-z]+)(?:\(([a-z\d._/-]+)\))?(!)?: (\S.+|\S)$/
     .exec(subject.trim());
-  if (!match || !TYPES.has(match[1])) throw new Error(`Commit ohne gueltigen Conventional-Commit-Typ: ${subject}`);
+  if (!match || !TYPES.has(match[1])) throw new Error(
+    `Commit ohne gueltigen Conventional-Commit-Typ: ${subject}`);
   const [, type, scope, breaking, description] = match;
   if (description.length >
     180) throw new Error(`Commit-Beschreibung zu lang: ${subject}`);
@@ -66,7 +70,8 @@ export function classifyCommit(subject, body = '') {
  * @return {!Object} Structured result for the caller.
  */
 export function analyzeCommits(commits) {
-  if (!commits.length) throw new Error('Seit dem letzten Release sind keine neuen Commits vorhanden.');
+  if (!commits.length) throw new Error(
+    'Seit dem letzten Release sind keine neuen Commits vorhanden.');
   const parsed = commits.map(commit =>
     ({...classifyCommit(commit.subject, commit.body || ''), sha: commit.sha}));
   const level = parsed.some(c => c.level === 'major') ? 'major' :
@@ -106,7 +111,8 @@ export function notesForPlan(plan) {
     '',
   ];
   if (plan.ignoredLegacyCommits) rows.push(
-    `${plan.ignoredLegacyCommits} historische Commits vor Einfuehrung der Commit-Konvention wurden nicht erneut klassifiziert.`,
+    `${plan.ignoredLegacyCommits} historische Commits vor Einfuehrung der \
+Commit-Konvention wurden nicht erneut klassifiziert.`,
     ''
   );
   for (const [level, title] of Object.entries(LABELS)) {
@@ -210,7 +216,9 @@ export function planRelease({head = 'HEAD', requireMerge = true} = {}) {
   const sha = git('rev-parse', head);
   const parents = commitParents(sha);
   if (requireMerge && parents.length !==
-    2) throw new Error('main darf nur ueber einen Merge-Commit aus develop veroeffentlicht werden (kein Squash oder Direktpush).');
+    2) throw new Error(
+      'main darf nur ueber einen Merge-Commit aus develop veroeffentlicht \
+werden (kein Squash oder Direktpush).');
   const releases = knownReleases(sha), latest = releases[0];
   // Re-running the exact push must reuse its snapshot/tag, not bump twice.
   if (latest?.snapshot && latest.anchor === sha) {
@@ -225,14 +233,16 @@ export function planRelease({head = 'HEAD', requireMerge = true} = {}) {
       snapshot: latest.sha,
     };
   }
-  const baseline = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
+  const baseline = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'),
+    'utf8')).version;
   parseVersion(baseline);
   // The first merge after installing this automation may legitimately bring
   // the last manually maintained version from develop (e.g. 1.4.0 while
   // main still contains 1.3.x). This is NOT a new manual bump. Allow it
   // exactly once, when the automation script did not exist on main before
   // this merge. All later merges must leave the checked-in version alone.
-  const beforeVersion = JSON.parse(git('show', `${parents[0]}:package.json`)).version;
+  const beforeVersion = JSON.parse(git('show', `${parents[0]}:package.json`))
+    .version;
   const introducingAutomation =
     !hasFileAt(parents[0], 'scripts/release-automation.js')
     && hasFileAt(sha, 'scripts/release-automation.js');
@@ -240,23 +250,30 @@ export function planRelease({head = 'HEAD', requireMerge = true} = {}) {
     && !releases.some(release => release.snapshot)
     && compareVersions(baseline, beforeVersion) > 0;
   if (baseline !== beforeVersion && !legacyTransition)
-    throw new Error('Keine manuellen Versionsspruenge auf develop: das Release wird nach dem main-Merge versioniert.');
+    throw new Error(
+      'Keine manuellen Versionsspruenge auf develop: das Release wird nach \
+dem main-Merge versioniert.');
   if (legacyTransition) {
     // Only accept the old, fully synchronized release metadata, not an
     // arbitrary package.json version inserted into the merge.
     // Do not run release:check on a development checkout: its source
     // manifest intentionally reflects the previous packaged release.
-    const lock = JSON.parse(fs.readFileSync(path.join(ROOT, 'package-lock.json'), 'utf8'));
+    const lock = JSON.parse(fs.readFileSync(path.join(ROOT,
+      'package-lock.json'), 'utf8'));
     const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
     const changelog = fs.readFileSync(path.join(ROOT, 'CHANGELOG.md'), 'utf8');
     if (lock.version !== baseline || lock.packages?.['']?.version !== baseline
       || !readme.includes(`Whisky Collection Manager v${baseline}`)
       || !changelog.includes(`## ${baseline} -`))
-      throw new Error('Vorhandene Versionsmetadaten beim einmaligen Automatik-Umstieg sind inkonsistent.');
+      throw new Error(
+        'Vorhandene Versionsmetadaten beim einmaligen Automatik-Umstieg \
+sind inkonsistent.');
   }
   if (latest && compareVersions(baseline, latest.version) < 0 &&
     !latest.snapshot)
-    throw new Error('Entwicklungs-Version ist aelter als der letzte erreichbare Release-Tag.');
+    throw new Error(
+      'Entwicklungs-Version ist aelter als der letzte erreichbare Release-Tag.'
+    );
   // During the transition, the checked-in 1.4.0 may be newer than the
   // latest reachable tag. Never downgrade it to a 1.3.x release.
   const current = latest && compareVersions(latest.version, baseline) > 0 ?
@@ -287,10 +304,13 @@ export function planRelease({head = 'HEAD', requireMerge = true} = {}) {
       'scripts/release-automation.js'
     ).split(/\s+/).filter(Boolean);
     if (additions.length !==
-      1) throw new Error('Der Einfuehrungs-Commit der Release-Automatik ist nicht eindeutig ermittelbar.');
+      1) throw new Error(
+        'Der Einfuehrungs-Commit der Release-Automatik ist nicht eindeutig \
+ermittelbar.');
     const cutoverIndex = commits.findIndex(commit => commit.sha ===
       additions[0]);
-    if (cutoverIndex < 0) throw new Error('Der Einfuehrungs-Commit muss ein eigener Nicht-Merge-Commit sein.');
+    if (cutoverIndex < 0) throw new Error(
+      'Der Einfuehrungs-Commit muss ein eigener Nicht-Merge-Commit sein.');
     ignoredLegacyCommits = commits.length - cutoverIndex - 1;
     commits = commits.slice(0, cutoverIndex + 1);
   }
@@ -298,7 +318,9 @@ export function planRelease({head = 'HEAD', requireMerge = true} = {}) {
   const version = nextVersion(current, analysis.level), tag = `v${version}`;
   if (releases.some(release => compareVersions(version, release.version) <=
     0) || gitExists(`refs/tags/${tag}`)) {
-    throw new Error(`Tag ${tag} existiert bereits oder ist nicht neuer als die vorhandenen Releases.`);
+    throw new Error(
+      `Tag ${tag} existiert bereits oder ist nicht neuer als die \
+vorhandenen Releases.`);
   }
   return {
     head: sha,
@@ -333,7 +355,8 @@ function parseOption(args, name) {
 function validateRange(range) {
   if (!range || !/^[a-zA-Z0-9_./~^{}-]+\.\.[a-zA-Z0-9_./~^{}-]+$/.test(range))
     throw new Error('Commit-Validierung erfordert --range BASE..HEAD');
-  const commits = parseGitLog(git('log', '--no-merges', '--format=%H%x00%s%x00%b%x00', range));
+  const commits = parseGitLog(git('log', '--no-merges',
+    '--format=%H%x00%s%x00%b%x00', range));
   for (const commit of commits) classifyCommit(commit.subject, commit.body);
   console.log(`${commits.length} Conventional Commits: OK`);
 }
@@ -343,9 +366,14 @@ function validateRange(range) {
  */
 function main() {
   const [, , command, ...args] = process.argv;
-  if (command === 'validate') {validateRange(parseOption(args, '--range')); return;}
+  if (command === 'validate') {
+    validateRange(parseOption(args, '--range'));
+    return;
+  }
   if (!['plan', 'snapshot']
-    .includes(command)) throw new Error('Usage: release-automation.js validate --range BASE..HEAD | plan [--json] | snapshot --output DIR');
+    .includes(command)) throw new Error(
+      'Usage: release-automation.js validate --range BASE..HEAD | plan \
+[--json] | snapshot --output DIR');
   const plan = planRelease();
   if (command === 'plan') {
     if (args.includes('--json')) console.log(JSON.stringify(plan));
@@ -359,7 +387,8 @@ function main() {
   if (!dir) throw new Error('snapshot braucht --output DIR');
   fs.mkdirSync(dir, {recursive: true});
   if (!plan.reuse) {
-    if (git('status', '--porcelain')) throw new Error('Der Release-Snapshot erfordert einen sauberen Git-Checkout.');
+    if (git('status', '--porcelain')) throw new Error(
+      'Der Release-Snapshot erfordert einen sauberen Git-Checkout.');
     // Detach before the snapshot commit: a local checkout may still be on main.
     git('checkout', '--detach', plan.head);
     applyAutomatedRelease(
@@ -410,8 +439,14 @@ function main() {
     path.join(dir, 'release-info.txt'),
     `tag=${plan.tag}\nversion=${plan.version}\n`
   );
-  console.log(`Release-Snapshot ${plan.tag}: ${git('rev-parse', `${plan.tag}^{commit}`)}`);
+  console.log(`Release-Snapshot ${plan.tag}: ${git('rev-parse',
+    `${plan.tag}^{commit}`)}`);
 }
 const isCLI = process.argv[1] && path.resolve(process.argv[1]) ===
   fileURLToPath(import.meta.url);
-if (isCLI) {try {main();} catch (error) {console.error(error.message); process.exitCode = 1;} }
+if (isCLI) {
+  try {main();} catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
+}

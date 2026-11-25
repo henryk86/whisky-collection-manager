@@ -5,7 +5,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import {DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR, DATA_FILE} from './paths.js';
+import {DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR, DATA_FILE}
+  from './paths.js';
 import {validate} from '../domain/validation.js';
 import {trackMutation} from '../domain/mutation-tracker.js';
 import {migrateCollectionToCurrent} from './migrations.js';
@@ -59,7 +60,8 @@ function loadCurrent() {
   const current = identity();
   if (cached === null || cachedIdentity !== current) {
     // A foreign file replacement or restore is never silently reused.
-    cached = structuredClone(validate(JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'))));
+    cached = structuredClone(validate(JSON.parse(fs.readFileSync(DATA_FILE,
+      'utf8'))));
     cachedIdentity = current;
     revision = crypto.randomUUID();
   }
@@ -142,7 +144,8 @@ export function atomicWrite(value) {
   fs.mkdirSync(DATA_DIR, {
     recursive: true,
   });
-  const temporaryFile = `${DATA_FILE}.${process.pid}.${crypto.randomUUID()}.tmp`;
+  const temporaryFile = `${DATA_FILE}.${process.pid}.${crypto.randomUUID(
+  )}.tmp`;
   try {
     fs.writeFileSync(temporaryFile, JSON.stringify(value, null, 2) + '\n', {
       flag: 'wx', mode: 0o600,

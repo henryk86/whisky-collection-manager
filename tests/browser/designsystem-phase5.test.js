@@ -5,7 +5,8 @@ import {session, seed, openSettingsSection} from './support.js';
 const widths = [390, 768, 1024, 1440];
 
 test(
-  'browser: M5 collection and analytics summary cards share surface tokens and stay responsive',
+  'browser: M5 collection and analytics summary cards share surface tokens \
+and stay responsive',
   async () => {
     await session(async ({page, open, base}) => {
       await seed(base, '005500');
@@ -92,7 +93,8 @@ test(
 );
 
 test(
-  'browser: M5 physical-bottle gallery geometry is stable without collection stylesheet overrides',
+  'browser: M5 physical-bottle gallery geometry is stable without \
+collection stylesheet overrides',
   async () => {
     await session(async ({page, open, base}) => {
       const {bottling} = await seed(base, '005501');
@@ -102,7 +104,8 @@ test(
         const fixture = document.createElement('div');
         fixture.className = 'photo-tile';
         fixture.innerHTML =
-          '<button class="photo-open" type="button"><img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" /></button>';
+          '<button class="photo-open" type="button"><img alt="" \
+src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" /></button>';
         document.body.append(fixture);
         const outer = getComputedStyle(fixture);
         const inner = getComputedStyle(fixture.firstElementChild);

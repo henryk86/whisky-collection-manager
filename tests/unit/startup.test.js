@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {needsNpmCi, localTlsStatus, prepareStartup} from '../../scripts/start.js';
+import {needsNpmCi, localTlsStatus, prepareStartup}
+  from '../../scripts/start.js';
 
 const packages = {
   '': {version: '0.17.15'},
@@ -60,7 +61,8 @@ function install(root, {dev = true} = {}) {
 }
 
 test(
-  'npm start skips npm ci when the installation matches the lockfile, but always verifies local cutout assets',
+  'npm start skips npm ci when the installation matches the lockfile, but \
+always verifies local cutout assets',
   t => {
     const root = fixture(t);
     const calls = [];
@@ -85,7 +87,8 @@ test(
 );
 
 test(
-  'npm start installs missing dependencies using npm ci before preparing cutout',
+  'npm start installs missing dependencies using npm ci before preparing \
+cutout',
   t => {
     const root = fixture(t, {installed: false});
     const calls = [];
@@ -113,7 +116,8 @@ test(
 );
 
 test(
-  'npm start detects mismatched dependency versions and incomplete node_modules',
+  'npm start detects mismatched dependency versions and incomplete \
+node_modules',
   t => {
     const root = fixture(t);
     assert.equal(needsNpmCi(root), false);
@@ -122,14 +126,22 @@ test(
     install(root);
     fs.writeFileSync(
       path.join(root, 'node_modules/.package-lock.json'),
-      JSON.stringify({packages: {...packages, 'node_modules/three': {version: '0.1.0'}}})
+      JSON.stringify({
+        packages: {
+          ...packages, 'node_modules/three': {
+            version:
+              '0.1.0',
+          },
+        },
+      })
     );
     assert.equal(needsNpmCi(root), true);
   }
 );
 
 test(
-  'production npm start does not require devDependencies after npm ci --omit=dev',
+  'production npm start does not require devDependencies after npm ci \
+--omit=dev',
   t => {
     const root = fixture(t);
     install(root, {dev: false});
@@ -139,7 +151,8 @@ test(
 );
 
 test(
-  'npm start provisions missing local HTTPS once without replacing an existing .env',
+  'npm start provisions missing local HTTPS once without replacing an \
+existing .env',
   t => {
     const root = fixture(t, {certificate: false});
     fs.writeFileSync(
@@ -177,7 +190,8 @@ test(
 );
 
 test(
-  'npm start creates .env only on first local startup; explicit HTTP and custom certificates are respected',
+  'npm start creates .env only on first local startup; explicit HTTP and \
+custom certificates are respected',
   t => {
     const root = fixture(t, {certificate: false});
     let setupCount = 0;

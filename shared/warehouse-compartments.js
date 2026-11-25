@@ -1,4 +1,5 @@
-/** Shared warehouse shelf layout contract (metres in 3D, centimetres in JSON/UI).
+/** Shared warehouse shelf layout contract (metres in 3D, centimetres in
+ * JSON/UI).
  * Older warehouses omit `front` and `heightCm`; those fields are optional.
  * The stored `shelves` array is ordered from BOTTOM to TOP.
  */
@@ -19,7 +20,8 @@ export const SHELF_FRONTS = Object.freeze(['open', 'door', 'glass', 'drawer']);
  * @return {*} Structured result assembled from the input data.
  */
 export function defaultShelfFront(type) {
-  return {schrank: 'door', vitrine: 'glass', kommode: 'drawer', kiste: 'door'}[type] ?? 'open';
+  return {schrank: 'door', vitrine: 'glass', kommode: 'drawer', kiste: 'door'}[
+    type] ?? 'open';
 }
 
 /**

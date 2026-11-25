@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {startTestServer, requestJson} from '../helpers/server.js';
 
 test(
-  'bottle emptying date is persisted, validated and exported without requiring a schema migration',
+  'bottle emptying date is persisted, validated and exported without \
+requiring a schema migration',
   async () => {
     const ctx = await startTestServer();
     try {

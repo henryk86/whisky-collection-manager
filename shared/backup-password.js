@@ -51,7 +51,8 @@ export function readBackupPassword() {
   } catch (error) {
     if (error.code === 'ENOENT') throw passwordError(
       BACKUP_PASSWORD_FAILURE.missing,
-      'Backup-Passwort noch nicht eingerichtet. Bitte in der Backup-Verwaltung festlegen.'
+      'Backup-Passwort noch nicht eingerichtet. Bitte in der \
+Backup-Verwaltung festlegen.'
     );
     throw error;
   }

@@ -2,10 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {actionButton} from '../../public/js/ui/buttons.js';
 import {modalFrame, modalFooter} from '../../public/js/ui/modal-layout.js';
-import {textInput, selectInput, areaInput, checkboxInput} from '../../public/js/ui/fields.js';
+import {textInput, selectInput, areaInput, checkboxInput}
+  from '../../public/js/ui/fields.js';
 
 test(
-  'button variants preserve existing semantics and expose loading/disabled/focusable controls',
+  'button variants preserve existing semantics and expose \
+loading/disabled/focusable controls',
   () => {
     for (const [variant, className] of [
       ['primary', 'primary'],
@@ -19,7 +21,10 @@ test(
         new RegExp(className)
       );
     }
-    const loading = actionButton({label: 'Save', variant: 'primary', type: 'submit', loading: true});
+    const loading = actionButton({
+      label: 'Save', variant: 'primary',
+      type: 'submit', loading: true,
+    });
     assert.match(loading, /type="submit"/);
     assert.match(loading, /disabled aria-busy="true"/);
     const icon = actionButton({
@@ -82,7 +87,8 @@ test(
 );
 
 test(
-  'central modal frame provides title, named close action, inner content and explicit variants',
+  'central modal frame provides title, named close action, inner content \
+and explicit variants',
   () => {
     const html = modalFrame({
       title: 'Whisky & Me',
@@ -114,7 +120,10 @@ test(
       /ds-modal--wide/,
       'assignment stays at the documented 740px maximum'
     );
-    const legacyWide = modalFrame({title: 'Other', content: '<p></p>', wide: true, closeLabel: 'Close'});
+    const legacyWide = modalFrame({
+      title: 'Other', content: '<p></p>',
+      wide: true, closeLabel: 'Close',
+    });
     assert.match(legacyWide, /class="dialog ds-modal wide ds-modal--wide"/);
     assert.match(html, /id="ds-modal-title">Whisky &amp; Me/);
     assert.match(html, /class="ds-modal-body"><form id="edit"><\/form>/);
@@ -123,7 +132,10 @@ test(
       () => modalFrame({title: 'bad', variant: 'random'}),
       RangeError
     );
-    const footer = modalFooter(actionButton({label: 'Cancel', action: 'close-modal'}));
+    const footer = modalFooter(actionButton({
+      label: 'Cancel',
+      action: 'close-modal',
+    }));
     assert.match(footer, /class="actions ds-modal-footer"/);
   }
 );
@@ -139,13 +151,19 @@ test(
     );
     assert.match(
       field,
-      /name="name" required aria-invalid="true" aria-describedby="ds-name-hint ds-name-error"/
+      new RegExp(
+        'name="name" required aria-invalid="true" a' +
+        'ria-describedby="ds-name-hint ds-name-erro' +
+        'r"'
+      )
     );
     assert.match(field, /value="&lt;x&gt;"/);
     assert.match(field, /id="ds-name-hint">Helpful/);
     assert.match(field, /id="ds-name-error" role="alert">Wrong &amp; missing/);
-    const select = selectInput('Choose', 'id', [['', '<Empty>'], ['a', 'Yes']], 'a');
-    assert.match(select, /&lt;Empty&gt;/); assert.match(select, /value="a" selected/);
+    const select = selectInput('Choose', 'id', [['', '<Empty>'], ['a', 'Yes']],
+      'a');
+    assert.match(select, /&lt;Empty&gt;/); assert.match(select,
+      /value="a" selected/);
     assert.match(areaInput('Note', 'note', '<br>'), /&lt;br&gt;/);
     assert.match(
       checkboxInput('Accept', 'consent', true),

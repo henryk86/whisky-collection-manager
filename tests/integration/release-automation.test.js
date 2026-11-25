@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {classifyCommit, analyzeCommits, parseGitLog, notesForPlan} from '../../scripts/release-automation.js';
+import {classifyCommit, analyzeCommits, parseGitLog, notesForPlan}
+  from '../../scripts/release-automation.js';
 
 /**
  * Normalizes the run text for subsequent processing.
@@ -26,7 +27,8 @@ const run = (cwd, cmd, ...args) =>
  */
 const write = (dir, name, data) => {
   const file =
-    path.join(dir, name); fs.mkdirSync(path.dirname(file), {recursive: true}); fs.writeFileSync(file, data);
+    path.join(dir, name); fs.mkdirSync(path.dirname(file), {recursive: true});
+  fs.writeFileSync(file, data);
 };
 
 /**
@@ -49,7 +51,8 @@ function fixture(t) {
   write(
     dir,
     'package-lock.json',
-    JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) + '\n'
+    JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) +
+    '\n'
   );
   write(dir, 'README.md', '# Whisky Collection Manager v1.4.0\n');
   write(
@@ -60,15 +63,18 @@ function fixture(t) {
   write(
     dir,
     'docs/TESTSTATUS.md',
-    '# Teststatus - Whisky Collection Manager v1.4.0\n\n| `npm test` | **532/532 bestanden** | x |\n'
+    '# Teststatus - Whisky Collection Manager v1.4.0\n\n| `npm test` | \
+**532/532 bestanden** | x |\n'
   );
   fs.mkdirSync(path.join(dir, 'scripts'), {recursive: true});
-  for (const script of ['release-version.js', 'release-manifest.js', 'release-automation.js'])
+  for (const script of ['release-version.js', 'release-manifest.js',
+    'release-automation.js'])
     fs.copyFileSync(
       path.join('scripts', script),
       path.join(dir, 'scripts', script)
     );
-  run(dir, 'git', 'add', '.'); run(dir, 'git', 'commit', '-m', 'chore: start release test fixture');
+  run(dir, 'git', 'add', '.'); run(dir, 'git', 'commit', '-m',
+    'chore: start release test fixture');
   run(dir, 'git', 'tag', 'v1.4.0');
   run(dir, 'git', 'branch', 'develop');
   return dir;
@@ -128,21 +134,23 @@ function plan(dir) {
  */
 function snapshot(dir) {
   const out =
-    path.join(dir, '..', `${path.basename(dir)}-notes`); fs.mkdirSync(out, {recursive: true}); return {
-      out,
-      result: run(
-        dir,
-        process.execPath,
-        'scripts/release-automation.js',
-        'snapshot',
-        '--output',
-        out
-      ),
-    };
+    path.join(dir, '..', `${path.basename(dir)}-notes`); fs.mkdirSync(out,
+      {recursive: true}); return {
+        out,
+        result: run(
+          dir,
+          process.execPath,
+          'scripts/release-automation.js',
+          'snapshot',
+          '--output',
+          out
+        ),
+      };
 }
 
 test(
-  'Conventional Commits decide major > minor > patch; maintenance alone is one patch',
+  'Conventional Commits decide major > minor > patch; maintenance alone is \
+one patch',
   () => {
     assert.equal(
       classifyCommit('fix(warehouse): Umlagern korrigieren').level,
@@ -189,7 +197,8 @@ test(
 );
 
 test(
-  'merge produces a versioned off-branch snapshot; next merge increments from tag, retry reuses it',
+  'merge produces a versioned off-branch snapshot; next merge increments \
+from tag, retry reuses it',
   t => {
     const dir = fixture(t);
     run(dir, 'git', 'checkout', 'develop');
@@ -266,7 +275,8 @@ test(
 );
 
 test(
-  'nonconventional commits fail instead of silently publishing an arbitrary version',
+  'nonconventional commits fail instead of silently publishing an arbitrary \
+version',
   t => {
     const dir = fixture(t);
     run(dir, 'git', 'checkout', 'develop');
@@ -318,7 +328,8 @@ function legacyFixture(t, {tagCurrent = false, historicalSubjects = []} = {}) {
   write(
     dir,
     'package-lock.json',
-    JSON.stringify({version: '1.3.3', packages: {'': {version: '1.3.3'}}}) + '\n'
+    JSON.stringify({version: '1.3.3', packages: {'': {version: '1.3.3'}}}) +
+    '\n'
   );
   write(dir, 'README.md', '# Whisky Collection Manager v1.3.3\n');
   write(
@@ -356,13 +367,15 @@ function legacyFixture(t, {tagCurrent = false, historicalSubjects = []} = {}) {
   write(
     dir,
     'package-lock.json',
-    JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) + '\n'
+    JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) +
+    '\n'
   );
   write(dir, 'README.md', '# Whisky Collection Manager v1.4.0\n');
   write(
     dir,
     'CHANGELOG.md',
-    '# Changelog\n\n## 1.4.0 - 2026-11-16\n\n- Last manual release\n\n## 1.3.3 - 2026-11-15\n\n- Historical release\n'
+    '# Changelog\n\n## 1.4.0 - 2026-11-16\n\n- Last manual release\n\n## \
+1.3.3 - 2026-11-15\n\n- Historical release\n'
   );
   write(
     dir,
@@ -377,7 +390,8 @@ function legacyFixture(t, {tagCurrent = false, historicalSubjects = []} = {}) {
     'chore: complete existing release v1.4.0'
   );
   if (tagCurrent) run(dir, 'git', 'tag', 'v1.4.0');
-  for (const subject of historicalSubjects) commit(dir, subject, `legacy-${historicalSubjects.indexOf(subject)}.txt`);
+  for (const subject of historicalSubjects) commit(dir, subject,
+    `legacy-${historicalSubjects.indexOf(subject)}.txt`);
   fs.copyFileSync(
     'scripts/release-automation.js',
     path.join(dir, 'scripts/release-automation.js')
@@ -393,7 +407,8 @@ function legacyFixture(t, {tagCurrent = false, historicalSubjects = []} = {}) {
 }
 
 test(
-  'first automation merge accepts pre-existing higher develop version without a v1.4.0 tag',
+  'first automation merge accepts pre-existing higher develop version \
+without a v1.4.0 tag',
   t => {
     const dir = legacyFixture(t);
     commit(dir, 'fix: repair warehouse relocation');
@@ -431,11 +446,13 @@ test(
 );
 
 test(
-  'first merge exempts historical nonconventional commits and previously released features only',
+  'first merge exempts historical nonconventional commits and previously \
+released features only',
   t => {
     const dir = legacyFixture(t, {
       historicalSubjects: [
-        'Refactor unit tests to remove file system dependencies and CSS assertions',
+        'Refactor unit tests to remove file system dependencies and CSS \
+assertions',
         'feat: already part of manually versioned v1.4.0',
       ],
     });
@@ -443,9 +460,11 @@ test(
     merge(dir);
     const preview = plan(dir);
     assert.equal(preview.legacyTransition, true);
-    assert.equal(preview.version, '1.4.1'); // historical feat does not cause 1.5.0
+    assert.equal(preview.version,
+      '1.4.1'); // historical feat does not cause 1.5.0
     assert.equal(preview.level, 'patch');
-    assert.equal(preview.ignoredLegacyCommits, 3); // manual v1.4.0 plus two historical changes
+    assert.equal(preview.ignoredLegacyCommits,
+      3); // manual v1.4.0 plus two historical changes
     assert.deepEqual(preview.commits.map(c => c.subject), [
       'fix(ci): correct transition handling',
       'chore: adopt automatic release workflow',
@@ -464,11 +483,13 @@ test(
 );
 
 test(
-  'the same first merge rejects commits without a type AFTER automation adoption',
+  'the same first merge rejects commits without a type AFTER automation \
+adoption',
   t => {
     const dir = legacyFixture(t, {
       historicalSubjects: [
-        'Refactor unit tests to remove file system dependencies and CSS assertions',
+        'Refactor unit tests to remove file system dependencies and CSS \
+assertions',
       ],
     });
     commit(dir, 'new commit without prefix');
@@ -478,7 +499,8 @@ test(
 );
 
 test(
-  'adoption cutover works even if main and develop already share the same version',
+  'adoption cutover works even if main and develop already share the same \
+version',
   t => {
     const dir = fixture(t);
     run(dir, 'git', 'checkout', 'develop');
@@ -540,14 +562,16 @@ test(
       'package.json',
       JSON.stringify({type: 'module', version: '1.5.0'}) + '\n'
     );
-    run(dir, 'git', 'add', '.'); run(dir, 'git', 'commit', '-m', 'feat: attempt manual version bump');
+    run(dir, 'git', 'add', '.'); run(dir, 'git', 'commit', '-m',
+      'feat: attempt manual version bump');
     merge(dir);
     assert.throws(() => plan(dir), /Command failed/);
   }
 );
 
 test(
-  'free-account release gate accepts only the matching merged same-repository PR',
+  'free-account release gate accepts only the matching merged \
+same-repository PR',
   async () => {
     const {isApprovedReleaseMerge, verifyMergedPRs} =
       await import('../../scripts/verify-merged-pr.js');
@@ -579,7 +603,8 @@ test(
 );
 
 test(
-  'main release gate recognizes approved version PRs without starting a second release',
+  'main release gate recognizes approved version PRs without starting a \
+second release',
   async () => {
     const {verifyMainMerge} = await import('../../scripts/verify-merged-pr.js');
     const sha = 'a'.repeat(40), repo = 'owner/repo';
@@ -622,8 +647,10 @@ test(
       headRefOid: 'abc',
     };
     assert.doesNotThrow(() => assertVersionPR(pr, pr.headRefName, 'abc'));
-    assert.throws(() => assertVersionPR({...pr, headRefOid: 'def'}, pr.headRefName, 'abc'));
-    assert.throws(() => assertVersionPR({...pr, baseRefName: 'develop'}, pr.headRefName, 'abc'));
+    assert.throws(() => assertVersionPR({...pr, headRefOid: 'def'},
+      pr.headRefName, 'abc'));
+    assert.throws(() => assertVersionPR({...pr, baseRefName: 'develop'},
+      pr.headRefName, 'abc'));
     assert.throws(() => assertVersionPR(
       {...pr, headRefName: 'dependabot/npm'},
       pr.headRefName,

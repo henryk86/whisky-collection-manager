@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {furnitureBounds, furnitureOverlap, furnitureCollision, furnitureFitsRoom, moveFurnitureTowards} from '../../shared/warehouse-placement.js';
+import {
+  furnitureBounds, furnitureOverlap, furnitureCollision,
+  furnitureFitsRoom, moveFurnitureTowards
+}
+  from '../../shared/warehouse-placement.js';
 
 /**
  * Derives the furniture result from the supplied values.
@@ -17,7 +21,8 @@ const furniture = (id, x, y, extra = {}) => ({
 });
 
 test(
-  'placement compares rotated footprints and occupied vertical ranges, allowing touching faces',
+  'placement compares rotated footprints and occupied vertical ranges, \
+allowing touching faces',
   () => {
     const base = furniture('base', 0, 0);
     assert.equal(
@@ -55,7 +60,10 @@ test(
       furnitureOverlap(base, furniture('far', 2, 2, {elevation: 0.5})),
       false
     );
-    const rotated = furniture('rotated', 1.1, 0, {width: 2, depth: .4, rotation: 90});
+    const rotated = furniture('rotated', 1.1, 0, {
+      width: 2, depth: .4,
+      rotation: 90,
+    });
     assert.deepEqual(
       furnitureBounds(rotated),
       {x: 1.1, y: 0, w: .4, h: 2, z: 0, d: 1.8}
@@ -71,7 +79,8 @@ test(
 );
 
 test(
-  'placement helper detects all furniture levels and validates the room boundary',
+  'placement helper detects all furniture levels and validates the room \
+boundary',
   () => {
     const base = furniture('base', 0, 0), upper =
       furniture('upper', 0, 0, {elevation: 1.8});

@@ -11,7 +11,8 @@ import {toast} from '../ui/notifications.js';
  * @param {!Object} options Optional configuration for the operation.
  * @return {!Object} Structured result for the caller.
  */
-export function createSettingsController({state, action, navigate, closeModal, showModal, onDistilleryLocationChanged}) {
+export function createSettingsController({state, action, navigate, closeModal,
+  showModal, onDistilleryLocationChanged}) {
   /**
    * Transforms the entries used by prompt distillery.
    *
@@ -21,16 +22,21 @@ export function createSettingsController({state, action, navigate, closeModal, s
   function promptDistillery(id = null) {
     const current = id ? state.collection.distilleries.find(entry =>
       entry.id === id) : null;
-    if (id && !current) return toast(t("features.errors.distilleryNotFound"), true);
+    if (id && !current) return toast(t("features.errors.distilleryNotFound"),
+      true);
     const nested = Boolean(query('#bottling-form') && state.modal);
     const coordinates = current ? locationFor(current) : null;
     showModal(
       id ? t("features.distilleries.edit") :
         t("forms.bottling.newDistillery"),
       `<form id="distillery-form" data-id="${escapeHtml(id || '')}">
-    <label class="form-field" for="distillery-name">${t("features.distilleries.nameLabel")}
-    <input id="distillery-name" name="name" type="text" value="${escapeHtml(current?.name || '')}" maxlength="150" autocomplete="off" required></label>
-    <label class="form-field" for="distillery-status">${t("features.distilleries.operatingStatus")}
+    <label class="form-field" for="distillery-name">${t(
+        "features.distilleries.nameLabel")}
+    <input id="distillery-name" name="name" type="text" value="${escapeHtml(
+          current?.name ||
+          '')}" maxlength="150" autocomplete="off" required></label>
+    <label class="form-field" for="distillery-status">${t(
+            "features.distilleries.operatingStatus")}
       <select id="distillery-status" name="status">
       ${[
         ["active", t("map.status.active")],
@@ -42,18 +48,25 @@ export function createSettingsController({state, action, navigate, closeModal, s
           value ? "selected" : ""}>${label}</option>`)
         .join("")}</select></label>
     <div class="map-coordinates-fields">
-    <label class="form-field" for="distillery-latitude">${t("features.map.latitudeLabel")}
-      <input id="distillery-latitude" name="latitude" type="number" step="any" min="-90" max="90" placeholder="${t("features.map.latitudeExample")}" value="${current?.latitude ?? coordinates?.lat ?? ''}"></label>
-    <label class="form-field" for="distillery-longitude">${t("features.map.longitudeLabel")}
-      <input id="distillery-longitude" name="longitude" type="number" step="any" min="-180" max="180" placeholder="${t("features.map.longitudeExample")}" value="${current?.longitude ?? coordinates?.lon ?? ''}"></label>
+    <label class="form-field" for="distillery-latitude">${t(
+          "features.map.latitudeLabel")}
+      <input id="distillery-latitude" name="latitude" type="number" \
+step="any" min="-90" max="90" placeholder="${t("features.map.latitudeExampl\
+e")}" value="${current?.latitude ?? coordinates?.lat ?? ''}"></label>
+    <label class="form-field" for="distillery-longitude">${t(
+            "features.map.longitudeLabel")}
+      <input id="distillery-longitude" name="longitude" type="number" \
+step="any" min="-180" max="180" placeholder="${t("features.map.longitudeExam\
+ple")}" value="${current?.longitude ?? coordinates?.lon ?? ''}"></label>
     </div>
     <p class="hint">${t("features.map.optionalCoordinatesHint")}</p>
     ${actionButton({
-          label: t("features.map.searchOpenStreetMap"),
-          action: 'find-distillery-location',
-          size: 'small',
-        })}
-    <div id="distillery-location-results" class="map-location-results" aria-live="polite"></div>
+              label: t("features.map.searchOpenStreetMap"),
+              action: 'find-distillery-location',
+              size: 'small',
+            })}
+    <div id="distillery-location-results" class="map-location-results" \
+aria-live="polite"></div>
     <div class="actions ds-modal-footer ds-modal-footer--form">
     ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
     <button type="submit" class="btn primary">${id ?
@@ -81,7 +94,8 @@ export function createSettingsController({state, action, navigate, closeModal, s
     const previousLocation = previousDistillery ?
       locationFor(previousDistillery) : null;
     const status = form.elements.namedItem('status').value;
-    if (!name) return toast(t("features.validation.distilleryNameRequired"), true);
+    if (!name) return toast(t("features.validation.distilleryNameRequired"),
+      true);
     const rawLat = form.elements.namedItem('latitude').value.trim()
       .replace(',', '.');
     const rawLon = form.elements.namedItem('longitude').value.trim()
@@ -120,11 +134,15 @@ export function createSettingsController({state, action, navigate, closeModal, s
     const parentForm = query('#bottling-form');
     if (!id && parentForm) {
       const options = parentForm.querySelector('.distillery-options');
-      if (options && ![...options.querySelectorAll('input[name="distilleryIds"]')].some(input => input.value === saved.value.id)) {
+      if (options && ![...options.querySelectorAll(
+        'input[name="distilleryIds"]')].some(input => input.value ===
+          saved.value.id)) {
         const label = document.createElement('label');
         label.className = 'distillery-option';
         label.innerHTML =
-          `<input type="checkbox" name="distilleryIds" value="${escapeHtml(saved.value.id)}" checked><span>${escapeHtml(saved.value.name)}</span>`;
+          `<input type="checkbox" name="distilleryIds" value="${escapeHtml(
+            saved.value.id)}" checked><span>${escapeHtml(saved.value.name
+            )}</span>`;
         const matching = [...options.querySelectorAll('.distillery-option')]
           .find(option =>
             option.querySelector('span').textContent
@@ -145,7 +163,8 @@ export function createSettingsController({state, action, navigate, closeModal, s
    */
   async function findDistilleryLocation() {
     const name = query('#distillery-name')?.value.trim();
-    if (!name) return toast(t("features.validation.distilleryNameRequiredForSearch"), true);
+    if (!name) return toast(t(
+      "features.validation.distilleryNameRequiredForSearch"), true);
     const output = query('#distillery-location-results');
     const button = query('[data-act="find-distillery-location"]');
     if (!output || !button) return;
@@ -157,8 +176,10 @@ export function createSettingsController({state, action, navigate, closeModal, s
         {method: 'POST', body: JSON.stringify({name})}
       );
       output.innerHTML = matches.length ?
-        `<p class="hint">${t("features.map.verifySelectedLocation")}</p>${matches.map((candidate, index) => `
-            <button type="button" class="map-location-choice" data-act="apply-distillery-location" data-index="${index}">
+        `<p class="hint">${t("features.map.verifySelectedLocation"
+        )}</p>${matches.map((candidate, index) => `
+            <button type="button" class="map-location-choice" \
+data-act="apply-distillery-location" data-index="${index}">
             ${escapeHtml(candidate.name)}<small>${candidate.latitude
             .toFixed(5)}, ${candidate.longitude
               .toFixed(5)}</small></button>`).join('')}` :
@@ -182,7 +203,8 @@ export function createSettingsController({state, action, navigate, closeModal, s
     if (!item) return;
     query('#distillery-latitude').value = String(item.latitude);
     query('#distillery-longitude').value = String(item.longitude);
-    output.innerHTML = `<p class="hint">${t("features.map.coordinatesReadyToSave")}</p>`;
+    output.innerHTML = `<p class="hint">${t(
+      "features.map.coordinatesReadyToSave")}</p>`;
   }
 
   /**
@@ -199,14 +221,16 @@ export function createSettingsController({state, action, navigate, closeModal, s
     }
     showModal(
       t("features.import.replaceWithJson"),
-      `<p>${t("features.import.prefix")} <strong>${t("features.import.replacesCollection")}</strong>${t("features.import.jsonExcludesAttachmentsWarning")}</p>
+      `<p>${t("features.import.prefix")} <strong>${t(
+        "features.import.replacesCollection")}</strong>${t(
+          "features.import.jsonExcludesAttachmentsWarning")}</p>
     <div class="actions ds-modal-footer">
     ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
     ${actionButton({
-        label: t("features.import.replaceCollection"),
-        action: 'confirm-import',
-        variant: 'destructive',
-      })}
+            label: t("features.import.replaceCollection"),
+            action: 'confirm-import',
+            variant: 'destructive',
+          })}
     </div>`
     );
   }

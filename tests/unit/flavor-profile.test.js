@@ -2,14 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {normalizeBottling} from '../../server/domain/normalization.js';
 import {normalizeTastingRecord} from '../../shared/tasting-records.js';
-import {FLAVOR_AXES, LEGACY_FLAVOR_AXES, NEW_FLAVOR_AXES, normalizeFlavorProfile} from '../../shared/flavor-profile.js';
+import {
+  FLAVOR_AXES, LEGACY_FLAVOR_AXES, NEW_FLAVOR_AXES,
+  normalizeFlavorProfile
+} from '../../shared/flavor-profile.js';
 import {flavorChart, flavorPolygon} from '../../public/js/ui/flavor-profile.js';
 import german from '../../public/locales/de.json' with {type: 'json'};
 import english from '../../public/locales/en.json' with {type: 'json'};
 
 const profile = Object.fromEntries(FLAVOR_AXES.map((key, i) => [key, i]));
 test('flavor profile is owned by a dated tasting, not by the bottling', () => {
-  const value = normalizeTastingRecord({tastedOn: '2026-11-15', flavorProfile: profile});
+  const value = normalizeTastingRecord({
+    tastedOn: '2026-11-15', flavorProfile:
+      profile,
+  });
   assert.deepEqual(value.flavorProfile, profile);
   assert.deepEqual(
     normalizeTastingRecord({rating: 88}, value).flavorProfile,
@@ -19,10 +25,14 @@ test('flavor profile is owned by a dated tasting, not by the bottling', () => {
     normalizeTastingRecord({flavorProfile: null}, value).flavorProfile,
     null
   );
-  assert.throws(() => normalizeBottling({name: 'Sample', flavorProfile: profile}));
+  assert.throws(() => normalizeBottling({
+    name: 'Sample', flavorProfile:
+      profile,
+  }));
 });
 test(
-  'flavor values require the legacy eight or all ten axes; new axes may be unassessed only in older tastings',
+  'flavor values require the legacy eight or all ten axes; new axes may be \
+unassessed only in older tastings',
   () => {
     for (const invalid of [
       {woody: 5},
@@ -37,7 +47,10 @@ test(
     ]) {
       assert.throws(() => normalizeFlavorProfile(invalid));
       assert.throws(() =>
-        normalizeTastingRecord({tastedOn: '2026-11-15', flavorProfile: invalid}));
+        normalizeTastingRecord({
+          tastedOn: '2026-11-15', flavorProfile:
+            invalid,
+        }));
     }
     assert.deepEqual(
       normalizeFlavorProfile(Object.fromEntries(FLAVOR_AXES.map(key =>
@@ -47,7 +60,8 @@ test(
   }
 );
 test(
-  'flavor chart has ten axes and sliders and does not misrepresent missing profile as zero',
+  'flavor chart has ten axes and sliders and does not misrepresent missing \
+profile as zero',
   () => {
     const editor = flavorChart(profile, {editable: true});
     assert.equal((editor.match(/data-flavor-range=/g) || []).length, 10);
@@ -59,7 +73,8 @@ test(
   }
 );
 test(
-  'German and English axis names are localized, with German Alkoholisch for English Feinty',
+  'German and English axis names are localized, with German Alkoholisch for \
+English Feinty',
   () => {
     assert.equal(german['flavor.axis.feinty'], 'Alkoholisch');
     assert.equal(english['flavor.axis.feinty'], 'Feinty');
@@ -74,7 +89,8 @@ test('optional color column is emitted before the ten-axis radar chart', () => {
     profile,
     {
       editable: true,
-      colorSection: '<div class="tasting-color-column" data-test="palette"></div>',
+      colorSection:
+        '<div class="tasting-color-column" data-test="palette"></div>',
     }
   );
   assert.match(html, /class="flavor-editor is-editable has-color"/);
@@ -87,12 +103,14 @@ test('optional color column is emitted before the ten-axis radar chart', () => {
 
 
 test(
-  'older eight-axis tasting remains valid without fabricating ratings for new aromas',
+  'older eight-axis tasting remains valid without fabricating ratings for \
+new aromas',
   () => {
     const older = Object.fromEntries(LEGACY_FLAVOR_AXES.map((key, i) =>
       [key, i]));
     const normalized = normalizeFlavorProfile(older);
-    for (const axis of LEGACY_FLAVOR_AXES) assert.equal(normalized[axis], older[axis]);
+    for (const axis of LEGACY_FLAVOR_AXES) assert.equal(normalized[axis],
+      older[axis]);
     for (const axis of NEW_FLAVOR_AXES) assert.equal(normalized[axis], null);
     assert.deepEqual(
       normalizeFlavorProfile(normalized),
@@ -100,7 +118,8 @@ test(
       'normalized old record can be saved again'
     );
     const readOnly = flavorChart(normalized);
-    for (const name of ['Rauchig', 'Medizinisch']) assert.match(readOnly, new RegExp(name));
+    for (const name of ['Rauchig', 'Medizinisch']) assert.match(readOnly,
+      new RegExp(name));
     assert.equal((readOnly.match(/<strong>–<\/strong>/g) || []).length, 2);
     assert.equal((readOnly.match(/visibility="hidden"/g) || []).length, 2);
     const editor = flavorChart(normalized, {editable: true});
@@ -114,7 +133,8 @@ test(
 );
 
 test(
-  'both newly added flavor dimensions accept real zero but not missing legacy scores',
+  'both newly added flavor dimensions accept real zero but not missing \
+legacy scores',
   () => {
     const complete = {...profile};
     for (const axis of NEW_FLAVOR_AXES) complete[axis] = 0;
@@ -122,12 +142,16 @@ test(
     for (const axis of NEW_FLAVOR_AXES) complete[axis] = null;
     assert.deepEqual(normalizeFlavorProfile(complete), complete);
     assert.throws(() => normalizeFlavorProfile({...complete, cereal: null}));
-    assert.throws(() => normalizeFlavorProfile({...complete, fruity: undefined}));
+    assert.throws(() => normalizeFlavorProfile({
+      ...complete,
+      fruity: undefined,
+    }));
   }
 );
 
 test(
-  'obsolete eleven-axis payload is accepted but fiery is not part of the new ten-axis profile',
+  'obsolete eleven-axis payload is accepted but fiery is not part of the \
+new ten-axis profile',
   () => {
     const eleven = {...profile, fiery: 7};
     assert.deepEqual(normalizeFlavorProfile(eleven), profile);
@@ -142,7 +166,8 @@ test(
 );
 
 test(
-  'compact tasting radar uses the original ten-axis graphic without duplicating sliders',
+  'compact tasting radar uses the original ten-axis graphic without \
+duplicating sliders',
   () => {
     const preview = flavorChart(profile, {compact: true});
     assert.match(preview, /class="flavor-editor is-preview"/);
@@ -163,7 +188,9 @@ test(
      * @return {number} Calculated numeric value.
      */
     const labelY = html =>
-      Number(html.match(/<text class="flavor-axis-text"[^>]*y="([^"]+)"[^>]*>Holzig<\/text>/)?.[1]);
+      Number(html.match(
+        /<text class="flavor-axis-text"[^>]*y="([^"]+)"[^>]*>Holzig<\/text>/)
+        ?.[1]);
     // Only the detail preview tightens axis labels; the full tasting radar is
     // unchanged.
     assert.ok(labelY(preview) > labelY(flavorChart(profile)));

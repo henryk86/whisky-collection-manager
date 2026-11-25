@@ -10,21 +10,36 @@ import {
   adjustPhotoPixels, autoPhotoAdjustments, validatePhotoAdjustments,
   resetPhotoAdjustmentGroup, whiteBalanceFromArea
 } from './adjustments.js';
-import {basePhotoPath, editorPhotoSourceSettings} from '../../../../shared/photo-images.js';
+import {basePhotoPath, editorPhotoSourceSettings}
+  from '../../../../shared/photo-images.js';
 import {cutoutImage} from '../cutout/image.js';
-import {MIN_PREVIEW_ZOOM, MAX_PREVIEW_ZOOM, clampPreviewZoom, zoomAroundPoint, constrainPreviewPan} from './preview-zoom.js';
-import {DEFAULT_MASK_BRUSH_SIZE, paintMaskSegment, applyMaskStrokes} from './mask-brush.js';
+import {
+  MIN_PREVIEW_ZOOM, MAX_PREVIEW_ZOOM, clampPreviewZoom, zoomAroundPoint,
+  constrainPreviewPan
+} from './preview-zoom.js';
+import {DEFAULT_MASK_BRUSH_SIZE, paintMaskSegment, applyMaskStrokes}
+  from './mask-brush.js';
 
 const MAX_PREVIEW_SIDE = 1050;
 const MAX_EXPORT_SIDE = 4096;
-const MAX_IMAGE_BYTES = 9_400_000; // Allow room for JSON/base64 request overhead.
+const MAX_IMAGE_BYTES =
+  9_400_000; // Allow room for JSON/base64 request overhead.
 /**
  * Locates the DOM elements used by root.
  * @return {*} Matching DOM element, if present.
  */
 const root = () => document.querySelector('[data-photo-editor]');
-const resetIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.7 6.5"/><path d="M3 4v7h7"/></svg>';
-const pipetteIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(43 12 12)"><rect x="9.5" y="1.5" width="5" height="5" rx="2.4"/><path d="M9 6.5h6v2.5H9z"/><path d="M10 9v8l2 5 2-5V9"/><path d="M11 13h2"/></g></svg>';
+const resetIcon =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" \
+stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" \
+aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.7 6.5"/><path d="M3 4v7h7"/>\
+</svg>';
+const pipetteIcon =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" \
+stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" \
+aria-hidden="true"><g transform="rotate(43 12 12)"><rect x="9.5" y="1.5" \
+width="5" height="5" rx="2.4"/><path d="M9 6.5h6v2.5H9z"/><path d="M10 \
+9v8l2 5 2-5V9"/><path d="M11 13h2"/></g></svg>';
 /**
  * Derives the form value result from the supplied values.
  *
@@ -119,8 +134,10 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   let image = null;
   let sourceData = null;
   let pendingCutout = null;
-  let maskBaseData = null; // The unmodified transparent base for undo and restore.
-  let maskStrokes = []; // Normalized to image coordinates, independent of preview zoom.
+  let maskBaseData =
+    null; // The unmodified transparent base for undo and restore.
+  let maskStrokes =
+    []; // Normalized to image coordinates, independent of preview zoom.
   let brushMode = null;
   let brushSize = DEFAULT_MASK_BRUSH_SIZE;
   let activeBrush = null;
@@ -141,7 +158,10 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   let showingBefore = false;
   let originalPreviewData =
     null; // Before/after for a cutout always shows the complete original.
-  let sourceImages = {original: null, cutout: null}; // Already decoded, for synchronous source switching.
+  let sourceImages = {
+    original: null,
+    cutout: null,
+  }; // Already decoded, for synchronous source switching.
   let sourcePixels = {original: null, cutout: null};
   let activeTab = 'adjustments';
   let whitePicking = false;
@@ -170,7 +190,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
    * @return {string} Resulting text.
    */
   const endpoint = () =>
-    `/api/bottles/${encodeURIComponent(selection.bottleId)}/photos/${encodeURIComponent(selection.photoId)}/adjustments`;
+    `/api/bottles/${encodeURIComponent(selection.bottleId
+    )}/photos/${encodeURIComponent(selection.photoId)}/adjustments`;
 
   /**
    * Builds the localized slider html text for the current language.
@@ -180,8 +201,10 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
    */
   const sliderHtml = ({key, min, max, step}) =>
     `<label class="photo-editor-slider">
-        <span>${escapeHtml(t(`photoEditor.${key}`))} <output data-photo-output="${key}">0</output></span>
-        <input type="range" data-photo-slider="${key}" min="${min}" max="${max}" step="${step}" value="0" disabled>
+        <span>${escapeHtml(t(`photoEditor.${key}`)
+    )} <output data-photo-output="${key}">0</output></span>
+        <input type="range" data-photo-slider="${key}" min="${min}" \
+max="${max}" step="${step}" value="0" disabled>
     </label>`;
 
   /**
@@ -264,7 +287,9 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       panPointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
       canvas.setPointerCapture?.(event.pointerId);
       if (panPointers.size === 1) {
-        panStart = {x: event.clientX, y: event.clientY, viewport: {...viewport}};
+        panStart = {
+          x: event.clientX, y: event.clientY, viewport: {...viewport},
+        };
         pinchStart = null;
       } else if (panPointers.size === 2) {
         const [a, b] = [...panPointers.values()];
@@ -313,7 +338,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
      */
     const release = event => {
       if (!panPointers.delete(event.pointerId)) return;
-      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas
+        .releasePointerCapture(event.pointerId);
       pinchStart = null;
       panStart = null;
       if (panPointers.size === 1) {
@@ -367,17 +393,20 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         .photoSlider}"]`).textContent = formValue(value);
       input.disabled = busy || !sourceData;
     }
-    for (const button of host.querySelectorAll('[data-photo-editor-ready]')) button.disabled = busy || !sourceData;
+    for (const button of host.querySelectorAll('[data-photo-editor-ready]'))
+      button.disabled = busy || !sourceData;
     const generateButton =
       host.querySelector('[data-act="photo-editor-cutout"]');
     if (generateButton) generateButton.disabled = busy || !sourceData;
-    for (const button of host.querySelectorAll('[data-photo-editor-existing-cutout]')) {
+    for (const button of host.querySelectorAll(
+      '[data-photo-editor-existing-cutout]')) {
       button.disabled = busy || Boolean(pendingCutout) || !sourceData;
       button.textContent = previewCutout ? t('cutout.showOriginal') :
         t('cutout.showCutout');
     }
     host.dataset.photoPreviewSource = previewCutout ? 'cutout' : 'original';
-    const undoCutout = host.querySelector('[data-act="photo-editor-remove-cutout"]');
+    const undoCutout = host.querySelector(
+      '[data-act="photo-editor-remove-cutout"]');
     if (undoCutout) {
       const photo = selection &&
         findPhoto(selection.bottleId, selection.photoId);
@@ -389,14 +418,16 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     const maskTools = host.querySelector('[data-photo-editor-mask-tools]');
     if (maskTools) {
       maskTools.hidden = !maskBaseData;
-      for (const button of maskTools.querySelectorAll('[data-photo-brush-mode]')) {
+      for (const button of maskTools.querySelectorAll('[data-photo-brush-mode]'
+      )) {
         button.setAttribute(
           'aria-pressed',
           String(brushMode === button.dataset.photoBrushMode)
         );
         button.disabled = busy;
       }
-      const undo = maskTools.querySelector('[data-act="photo-editor-brush-undo"]');
+      const undo = maskTools.querySelector(
+        '[data-act="photo-editor-brush-undo"]');
       if (undo) undo.disabled = busy || !maskStrokes.length;
       const size = maskTools.querySelector('[data-photo-brush-size]');
       if (size) {size.disabled = busy; size.value = String(brushSize);}
@@ -425,7 +456,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     pickStart = null;
     const host = root();
     if (host) {
-      host.querySelector('[data-photo-editor-selection]')?.setAttribute('hidden',
+      host.querySelector('[data-photo-editor-selection]')?.setAttribute(
+        'hidden',
         ''
       );
       host.querySelector('.photo-editor-image')?.classList.remove('is-picking');
@@ -522,7 +554,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     canvas.addEventListener('pointercancel', event => {
       if (pickStart?.pointerId === event.pointerId) {
         pickStart = null;
-        root()?.querySelector('[data-photo-editor-selection]')?.setAttribute('hidden',
+        root()?.querySelector('[data-photo-editor-selection]')?.setAttribute(
+          'hidden',
           ''
         );
       }
@@ -534,7 +567,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       const start = pickStart.point;
       const end = imagePoint(canvas, event, true);
       pickStart = null;
-      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas
+        .releasePointerCapture(event.pointerId);
       let x0 = Math.min(start.x, end.x), x1 = Math.max(start.x, end.x);
       let y0 = Math.min(start.y, end.y), y1 = Math.max(start.y, end.y);
       // A single tap/click samples a small neighborhood, not a noisy lone
@@ -567,7 +601,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   function stopBrush() {
     brushMode = null;
     activeBrush = null;
-    root()?.querySelector('[data-photo-editor-brush-cursor]')?.setAttribute('hidden',
+    root()?.querySelector('[data-photo-editor-brush-cursor]')?.setAttribute(
+      'hidden',
       ''
     );
   }
@@ -720,7 +755,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
      */
     const release = event => {
       if (!activeBrush || activeBrush.pointerId !== event.pointerId) return;
-      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas
+        .releasePointerCapture(event.pointerId);
       if (event.type === 'pointercancel') {
         maskStrokes.pop();
         refreshMaskPreview();
@@ -731,7 +767,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     canvas.addEventListener('pointerup', release);
     canvas.addEventListener('pointercancel', release);
     canvas.addEventListener('pointerleave', () => {
-      root()?.querySelector('[data-photo-editor-brush-cursor]')?.setAttribute('hidden',
+      root()?.querySelector('[data-photo-editor-brush-cursor]')?.setAttribute(
+        'hidden',
         ''
       );
     });
@@ -756,7 +793,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       canvas.height = adjusted.height;
     }
     canvas.getContext('2d', {willReadFrequently: true})
-      .putImageData(new ImageData(adjusted.data, adjusted.width, adjusted.height),
+      .putImageData(new ImageData(adjusted.data, adjusted.width,
+        adjusted.height),
         0,
         0
       );
@@ -852,72 +890,131 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
             <div class="photo-editor-layout">
                 <div class="photo-editor-stage">
                     <div class="photo-editor-image cutout-checker">
-                        <canvas data-photo-editor-preview role="img" aria-label="${escapeHtml(t('photoEditor.preview'))}"></canvas>
-                        <div data-photo-editor-selection class="photo-editor-selection" hidden aria-hidden="true"></div>
-                        <div data-photo-editor-brush-cursor class="photo-editor-brush-cursor" hidden aria-hidden="true"></div>
+                        <canvas data-photo-editor-preview role="img" \
+aria-label="${escapeHtml(t('photoEditor.preview'))}"></canvas>
+                        <div data-photo-editor-selection class="photo-editor\
+-selection" hidden aria-hidden="true"></div>
+                        <div data-photo-editor-brush-cursor \
+class="photo-editor-brush-cursor" hidden aria-hidden="true"></div>
                         <div class="photo-editor-overlay">
-                            <div class="photo-editor-zoom" role="group" aria-label="${escapeHtml(t('photoEditor.zoom'))}">
-                                <button type="button" data-act="photo-editor-zoom-out" aria-label="${escapeHtml(t('photoEditor.zoomOut'))}" title="${escapeHtml(t('photoEditor.zoomOut'))}" disabled>${minusIcon}</button>
-                                <button type="button" data-act="photo-editor-zoom-reset" aria-label="${escapeHtml(t('photoEditor.zoomReset'))}" title="${escapeHtml(t('photoEditor.zoomReset'))}" disabled><span data-photo-editor-zoom-level>100 %</span></button>
-                                <button type="button" data-act="photo-editor-zoom-in" aria-label="${escapeHtml(t('photoEditor.zoomIn'))}" title="${escapeHtml(t('photoEditor.zoomIn'))}">${plusIcon}</button>
+                            <div class="photo-editor-zoom" role="group" \
+aria-label="${escapeHtml(t('photoEditor.zoom'))}">
+                                <button type="button" data-act="photo-editor\
+-zoom-out" aria-label="${escapeHtml(t('photoEditor.zoomOut'))}" \
+title="${escapeHtml(t('photoEditor.zoomOut'))}" disabled>${minusIcon}</button>
+                                <button type="button" data-act="photo-editor\
+-zoom-reset" aria-label="${escapeHtml(t('photoEditor.zoomReset'))}" \
+title="${escapeHtml(t('photoEditor.zoomReset'))}" disabled><span \
+data-photo-editor-zoom-level>100 %</span></button>
+                                <button type="button" data-act="photo-editor\
+-zoom-in" aria-label="${escapeHtml(t('photoEditor.zoomIn'))}" \
+title="${escapeHtml(t('photoEditor.zoomIn'))}">${plusIcon}</button>
                             </div>
                             <div class="photo-editor-stage-actions">
-                                <button type="button" class="btn small" data-act="photo-editor-before" data-photo-editor-ready disabled aria-pressed="false">${escapeHtml(t('photoEditor.before'))}</button>
+                                <button type="button" class="btn small" \
+data-act="photo-editor-before" data-photo-editor-ready disabled \
+aria-pressed="false">${escapeHtml(t('photoEditor.before'))}</button>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="photo-editor-controls">
-                    <div class="photo-editor-tabs" role="tablist" aria-label="${escapeHtml(t('photoEditor.title'))}">
-                        <button type="button" id="photo-editor-tab-adjustments" role="tab" data-photo-editor-tab="adjustments" data-act="photo-editor-tab" aria-controls="photo-editor-panel-adjustments" aria-selected="true">${escapeHtml(t('photoEditor.adjustmentsTab'))}</button>
-                        <button type="button" id="photo-editor-tab-cutout" role="tab" data-photo-editor-tab="cutout" data-act="photo-editor-tab" aria-controls="photo-editor-panel-cutout" aria-selected="false">${escapeHtml(t('photoEditor.cutoutTab'))}</button>
+                    <div class="photo-editor-tabs" role="tablist" \
+aria-label="${escapeHtml(t('photoEditor.title'))}">
+                        <button type="button" id="photo-editor-tab-adjustmen\
+ts" role="tab" data-photo-editor-tab="adjustments" data-act="photo-editor-ta\
+b" aria-controls="photo-editor-panel-adjustments" aria-selected="true">\
+${escapeHtml(t('photoEditor.adjustmentsTab'))}</button>
+                        <button type="button" id="photo-editor-tab-cutout" \
+role="tab" data-photo-editor-tab="cutout" data-act="photo-editor-tab" \
+aria-controls="photo-editor-panel-cutout" aria-selected="false">${
+escapeHtml(t('photoEditor.cutoutTab'))}</button>
                     </div>
-                    <div class="photo-editor-tab-panel" id="photo-editor-panel-adjustments" role="tabpanel" aria-labelledby="photo-editor-tab-adjustments" data-photo-editor-panel="adjustments">
+                    <div class="photo-editor-tab-panel" id="photo-editor-pan\
+el-adjustments" role="tabpanel" aria-labelledby="photo-editor-tab-adjustment\
+s" data-photo-editor-panel="adjustments">
                     ${PHOTO_ADJUSTMENT_GROUPS.map(group =>
-        `<section class="photo-editor-group" aria-label="${escapeHtml(t(`photoEditor.${group.key}`))}">
-                        <div class="photo-editor-group-header"><h3>${escapeHtml(t(`photoEditor.${group.key}`))}</h3>
-                        <div class="photo-editor-group-tools">${group.key === 'color' ? `<button type="button" class="photo-editor-white-picker" data-act="photo-editor-pick-white" data-photo-editor-ready disabled aria-pressed="false" title="${escapeHtml(t('photoEditor.pickWhite'))}" aria-label="${escapeHtml(t('photoEditor.pickWhite'))}">${pipetteIcon}</button>` : ''}
-                        <button type="button" class="photo-editor-group-reset" data-act="photo-editor-reset-group" data-photo-group="${group.key}" data-photo-editor-ready disabled title="${escapeHtml(t(
-          'photoEditor.resetGroup',
-          {group: t(`photoEditor.${group.key}`)}
-        ))}" aria-label="${escapeHtml(t(
-          'photoEditor.resetGroup',
-          {group: t(`photoEditor.${group.key}`)}
-        ))}">${resetIcon}</button></div></div>
+        `<section class="photo-editor-group" aria-label="${escapeHtml(t(
+          `photoEditor.${group.key}`))}">
+                        <div class="photo-editor-group-header"><h3>\
+${escapeHtml(t(`photoEditor.${group.key}`))}</h3>
+                        <div class="photo-editor-group-tools">${group.key ===
+          'color' ?
+          `<button type="button" class="photo-editor-white\
+-picker" data-act="photo-editor-pick-white" data-photo-editor-ready \
+disabled aria-pressed="false" title="${escapeHtml(t('photoEditor.pickWhit\
+e'))}" aria-label="${escapeHtml(t('photoEditor.pickWhite'))}">${pipetteIcon
+          }</button>` : ''}
+                        <button type="button" class="photo-editor-group-rese\
+t" data-act="photo-editor-reset-group" data-photo-group="${group.key}" \
+data-photo-editor-ready disabled title="${escapeHtml(t(
+            'photoEditor.resetGroup',
+            {group: t(`photoEditor.${group.key}`)}
+          ))}" aria-label="${escapeHtml(t(
+            'photoEditor.resetGroup',
+            {group: t(`photoEditor.${group.key}`)}
+          ))}">${resetIcon}</button></div></div>
                         ${group.sliders.map(sliderHtml)
           .join('')}</section>`).join('')}
                     </div>
-                    <div class="photo-editor-tab-panel" id="photo-editor-panel-cutout" role="tabpanel" aria-labelledby="photo-editor-tab-cutout" data-photo-editor-panel="cutout" hidden>
+                    <div class="photo-editor-tab-panel" id="photo-editor-pan\
+el-cutout" role="tabpanel" aria-labelledby="photo-editor-tab-cutout" \
+data-photo-editor-panel="cutout" hidden>
                         <div class="photo-editor-cutout-actions">
-                            <button type="button" class="btn small" data-act="photo-editor-cutout" data-photo-editor-ready disabled>${escapeHtml(t(photo.cutout ? 'photoEditor.recutout' : 'cutout.title'))}</button>
+                            <button type="button" class="btn small" \
+data-act="photo-editor-cutout" data-photo-editor-ready disabled>${
+escapeHtml(t(photo.cutout ? 'photoEditor.recutout' : 'cutout.title'))}</button>
                             ${photo.cutout ?
-        `<button type="button" class="btn small" data-act="photo-editor-toggle-cutout" data-photo-editor-existing-cutout>${escapeHtml(photo.cutout.selected ? t('cutout.showOriginal') : t('cutout.showCutout'))}</button>` : ''}
-                            <button type="button" class="btn small danger" data-act="photo-editor-remove-cutout" data-photo-editor-ready disabled hidden>${escapeHtml(t('cutout.remove'))}</button>
+        `<button type="button" class="btn small" data-act="photo-editor-togg\
+le-cutout" data-photo-editor-existing-cutout>${escapeHtml(photo.cutout
+          .selected ? t('cutout.showOriginal') :
+          t('cutout.showCutout'))}</button>` : ''}
+                            <button type="button" class="btn small danger" \
+data-act="photo-editor-remove-cutout" data-photo-editor-ready disabled \
+hidden>${escapeHtml(t('cutout.remove'))}</button>
                         </div>
-                    <div class="photo-editor-mask-tools" data-photo-editor-mask-tools hidden>
-                        <div class="photo-editor-mask-buttons" role="group" aria-label="${escapeHtml(t('photoEditor.maskTools'))}">
-                            <button type="button" class="btn small" data-photo-brush-mode="erase" data-act="photo-editor-brush-mode" aria-pressed="false">${escapeHtml(t('photoEditor.erase'))}</button>
-                            <button type="button" class="btn small" data-photo-brush-mode="restore" data-act="photo-editor-brush-mode" aria-pressed="false">${escapeHtml(t('photoEditor.restore'))}</button>
-                            <button type="button" class="btn small" data-act="photo-editor-brush-undo" disabled>${escapeHtml(t('photoEditor.brushUndo'))}</button>
+                    <div class="photo-editor-mask-tools" data-photo-editor-m\
+ask-tools hidden>
+                        <div class="photo-editor-mask-buttons" role="group" \
+aria-label="${escapeHtml(t('photoEditor.maskTools'))}">
+                            <button type="button" class="btn small" \
+data-photo-brush-mode="erase" data-act="photo-editor-brush-mode" \
+aria-pressed="false">${escapeHtml(t('photoEditor.erase'))}</button>
+                            <button type="button" class="btn small" \
+data-photo-brush-mode="restore" data-act="photo-editor-brush-mode" \
+aria-pressed="false">${escapeHtml(t('photoEditor.restore'))}</button>
+                            <button type="button" class="btn small" \
+data-act="photo-editor-brush-undo" disabled>${escapeHtml(t('photoEditor.brus\
+hUndo'))}</button>
                         </div>
-                        <label class="photo-editor-mask-size">${escapeHtml(t('photoEditor.brushSize'))}
-                            <input type="range" min="1" max="15" step="1" value="${DEFAULT_MASK_BRUSH_SIZE}" data-photo-brush-size>
-                            <output data-photo-brush-size-value>${DEFAULT_MASK_BRUSH_SIZE} %</output>
+                        <label class="photo-editor-mask-size">${escapeHtml(t(
+            'photoEditor.brushSize'))}
+                            <input type="range" min="1" max="15" step="1" \
+value="${DEFAULT_MASK_BRUSH_SIZE}" data-photo-brush-size>
+                            <output data-photo-brush-size-value>${
+DEFAULT_MASK_BRUSH_SIZE} %</output>
                         </label>
                     </div>
                     </div>
                 </div>
             </div>
-            <p class="photo-editor-help" data-photo-editor-message role="status">${escapeHtml(t('photoEditor.loading'))}</p>
+            <p class="photo-editor-help" data-photo-editor-message \
+role="status">${escapeHtml(t('photoEditor.loading'))}</p>
             <div class="photo-editor-actions">
-                <button type="button" class="btn" data-act="photo-editor-auto" data-photo-editor-ready disabled>${escapeHtml(t('photoEditor.auto'))}</button>
-                <button type="button" class="btn" data-act="photo-editor-reset" data-photo-editor-ready disabled>${escapeHtml(t('photoEditor.reset'))}</button>
+                <button type="button" class="btn" data-act="photo-editor-aut\
+o" data-photo-editor-ready disabled>${escapeHtml(t('photoEditor.auto'))}</bu\
+tton>
+                <button type="button" class="btn" data-act="photo-editor-res\
+et" data-photo-editor-ready disabled>${escapeHtml(t('photoEditor.reset'))}</\
+button>
                 <span class="photo-editor-actions-spacer"></span>
                 ${actionButton({
-          label: t('common.actions.cancel'),
-          action: 'close-modal',
-        })}
-                <button type="button" class="btn primary" data-act="photo-editor-save" data-photo-editor-ready disabled>${escapeHtml(t('common.actions.save'))}</button>
+              label: t('common.actions.cancel'),
+              action: 'close-modal',
+            })}
+                <button type="button" class="btn primary" \
+data-act="photo-editor-save" data-photo-editor-ready disabled>${
+escapeHtml(t('common.actions.save'))}</button>
             </div>
         </div>`,
       true,
@@ -977,9 +1074,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       if (currentGeneration !== generation || !root()) return;
       sourceImages = {original: originalImage, cutout: cutoutImage};
       sourcePixels = {
-        original: imageDataFromCanvas(canvasFromImage(originalImage, MAX_PREVIEW_SIDE)),
+        original: imageDataFromCanvas(canvasFromImage(originalImage,
+          MAX_PREVIEW_SIDE)),
         cutout: cutoutImage ?
-          imageDataFromCanvas(canvasFromImage(cutoutImage, MAX_PREVIEW_SIDE)) : null,
+          imageDataFromCanvas(canvasFromImage(cutoutImage, MAX_PREVIEW_SIDE)) :
+          null,
       };
       originalPreviewData = sourcePixels.original;
       const sourceKey = previewCutout ? 'cutout' : 'original';
@@ -1135,7 +1234,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         const corrected =
           adjustPhotoPixels(imageDataFromCanvas(sourceCanvas), values);
         sourceCanvas.getContext('2d')
-          .putImageData(new ImageData(corrected.data, corrected.width, corrected.height),
+          .putImageData(new ImageData(corrected.data, corrected.width,
+            corrected.height),
             0,
             0
           );
@@ -1255,7 +1355,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     }
     if (!photo.cutout) return;
     const result = await action(() => request(
-      `/api/bottles/${encodeURIComponent(selection.bottleId)}/photos/${encodeURIComponent(selection.photoId)}/cutout`,
+      `/api/bottles/${encodeURIComponent(selection.bottleId
+      )}/photos/${encodeURIComponent(selection.photoId)}/cutout`,
       {method: 'DELETE'}
     ));
     if (result.ok) {generation++; closeModal(true); toast(t('cutout.removed'));}
@@ -1343,7 +1444,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
       let cutoutDataUrl = pendingCutout;
       if (maskStrokes.length) {
         cutoutCanvas = canvasFromImage(image, MAX_EXPORT_SIDE);
-        const masked = applyMaskStrokes(imageDataFromCanvas(cutoutCanvas), maskStrokes);
+        const masked = applyMaskStrokes(imageDataFromCanvas(cutoutCanvas),
+          maskStrokes);
         cutoutCanvas.getContext('2d')
           .putImageData(new ImageData(masked.data, masked.width, masked.height),
             0,
@@ -1374,7 +1476,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         const source = imageDataFromCanvas(canvas);
         const adjusted = adjustPhotoPixels(source, storedSettings);
         canvas.getContext('2d')
-          .putImageData(new ImageData(adjusted.data, adjusted.width, adjusted.height),
+          .putImageData(new ImageData(adjusted.data, adjusted.width,
+            adjusted.height),
             0,
             0
           );

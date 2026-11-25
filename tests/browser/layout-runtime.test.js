@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {session, seed, openSettingsFromMenu, openSettingsSection} from './support.js';
+import {session, seed, openSettingsFromMenu, openSettingsSection}
+  from './support.js';
 import {requestJson} from '../helpers/server.js';
 
-const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+const png =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0l\
+EQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
 
 /**
  * Coordinates asynchronous work for go.
@@ -25,7 +28,8 @@ async function go(page, action, selector) {
 // cascade. They replace source-regex assertions that passed even when another
 // stylesheet overrode the property in a real viewport.
 test(
-  'browser: mobile header keeps accessible actions in order, usable icons and positive spacing',
+  'browser: mobile header keeps accessible actions in order, usable icons \
+and positive spacing',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -82,7 +86,8 @@ test(
 );
 
 test(
-  'browser: mobile detail uses full-width controls and two action rows without overflow',
+  'browser: mobile detail uses full-width controls and two action rows \
+without overflow',
   async () => {
     await session(async ({page, open, base}) => {
       const {bottling} = await seed(base, '001291');
@@ -138,7 +143,8 @@ test(
 );
 
 test(
-  'browser: page headings share readable typography and fit desktop and phone viewports',
+  'browser: page headings share readable typography and fit desktop and \
+phone viewports',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -187,7 +193,8 @@ test(
 );
 
 test(
-  'browser: square content surfaces, filter controls and KPIs inherit their shared design',
+  'browser: square content surfaces, filter controls and KPIs inherit their \
+shared design',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -201,14 +208,17 @@ test(
           // The home page contains one dedicated collection filter bar.
           // Test only its visible direct controls, not inputs inside a
           // collapsed nested filter group (which have a 0px client rect).
-          toolbar: [...document.querySelectorAll('.collection-filters > input,.collection-filters > select,.collection-filters > button')]
+          toolbar: [...document.querySelectorAll(
+            '.collection-filters > input,.collection-filters > select,\
+.collection-filters > button')]
             .filter(el => el.getClientRects().length > 0 &&
               getComputedStyle(el).visibility !== 'hidden')
             .map(el => ({
               name: el.id || el.dataset.act,
               height: el.getBoundingClientRect().height,
             })),
-          hiddenExtras: [...document.querySelectorAll('.collection-filter-extra select')]
+          hiddenExtras: [...document.querySelectorAll(
+            '.collection-filter-extra select')]
             .every(el => el.getClientRects().length === 0),
           overflow: document.documentElement.scrollWidth >
             document.documentElement.clientWidth + 1,
@@ -220,7 +230,8 @@ test(
           `${width}: visible filter controls exist`
         );
         assert.ok(home.toolbar.every(item => item.height >= 40),
-          `${width}: accessible filter height (${JSON.stringify(home.toolbar)})`);
+          `${width}: accessible filter height (${JSON.stringify(home.toolbar
+          )})`);
         assert.equal(
           home.hiddenExtras,
           true,
@@ -229,7 +240,9 @@ test(
         assert.equal(home.overflow, false, `${width}: no horizontal overflow`);
         await page.locator('[data-act="toggle-collection-filters"]').click();
         const expanded = await page.evaluate(() => ({
-          controls: [...document.querySelectorAll('.collection-filter-extra select,#filter-status,#filter-completion')]
+          controls: [...document.querySelectorAll(
+            '.collection-filter-extra select,#filter-status,#filter-completion'
+          )]
             .filter(el => el.getClientRects().length > 0)
             .map(el => ({
               name: el.id, height: el.getBoundingClientRect()
@@ -243,7 +256,8 @@ test(
           `${width}: advanced filters are visible when opened`
         );
         assert.ok(expanded.controls.every(item => item.height >= 40),
-          `${width}: expanded filter height (${JSON.stringify(expanded.controls)})`);
+          `${width}: expanded filter height (${JSON.stringify(expanded.controls
+          )})`);
         assert.equal(
           expanded.overflow,
           false,
@@ -263,7 +277,8 @@ test(
       const help = await page.locator('.help-content-panel').first()
         .evaluate(el => ({
           radius: getComputedStyle(el).borderRadius,
-          textSize: parseFloat(getComputedStyle(document.querySelector('.help-description')).fontSize),
+          textSize: parseFloat(getComputedStyle(document.querySelector(
+            '.help-description')).fontSize),
         }));
       assert.equal(help.radius, '0px');
       assert.ok(help.textSize <= 18 && help.textSize >= 12);
@@ -310,7 +325,8 @@ test(
 );
 
 test(
-  'browser: collection hero stays dark in both themes and photos have real internal spacing',
+  'browser: collection hero stays dark in both themes and photos have real \
+internal spacing',
   async () => {
     await session(async ({page, open, base}) => {
       const {bottling, bottle} = await seed(base, '001292');
@@ -356,7 +372,8 @@ test(
 );
 
 test(
-  'browser: map theme changes tile colors while leaving marker icons and legend unfiltered',
+  'browser: map theme changes tile colors while leaving marker icons and \
+legend unfiltered',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -400,7 +417,8 @@ test(
 );
 
 test(
-  'browser: settings headings, distillery form and collection spacing use live geometry',
+  'browser: settings headings, distillery form and collection spacing use \
+live geometry',
   async () => {
     await session(async ({page, open}) => {
       await open();

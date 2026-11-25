@@ -15,16 +15,30 @@ export function sanitizeBackupDiagnostic(raw) {
     .replace(/([a-z][a-z0-9+.-]*:\/\/)[^\s/@:]+:[^\s/@]*@/gi,
       '$1[Zugangsdaten]@'
     )
-    .replace(/([?&](?:access_token|refresh_token|password|secret|key|signature|code)=)[^\s&#]+/gi,
+    .replace(
+      new RegExp(
+        '([?&](?:access_token|refresh_token|passwor' +
+        'd|secret|key|signature|code)=)[^\\s&#]+',
+        'gi'
+      ),
       '$1[geschuetzt]'
     )
     .replace(/\b(Bearer|Basic)\s+[a-z0-9+/_.~=-]{8,}/gi, '$1 [geschuetzt]')
-    .replace(/\b(password|passwd|access[_-]?token|refresh[_-]?token|client[_-]?secret|api[_-]?key|authorization|secret|credential|credentials|key)["']?\s*[:=]\s*(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi,
+    .replace(
+      new RegExp(
+        '\\b(password|passwd|access[_-]?token|refre' +
+        'sh[_-]?token|client[_-]?secret|api[_-]?key' +
+        '|authorization|secret|credential|credentia' +
+        'ls|key)["\']?\\s*[:=]\\s*(?:"[^"]*"|\'[^\'' +
+        ']*\'|[^\\s,;]+)',
+        'gi'
+      ),
       '$1=[geschuetzt]'
     )
     // Keep the diagnostic "couldn't fetch token: invalid_grant", but
     // redact tokens in key/value formats (including JSON error output).
-    .replace(/(["']token["']\s*:\s*|\btoken\s*=\s*)(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi,
+    .replace(
+      /(["']token["']\s*:\s*|\btoken\s*=\s*)(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi,
       '$1[geschuetzt]'
     )
     .replace(/\b(?:[A-Za-z]:\\[^\s"']+|\/(?:[^\s/"']+\/)+[^\s"']+)/g, '[Pfad]')
@@ -93,7 +107,9 @@ export function unexpectedBackupDiagnostic(error) {
   let location = '';
   for (const frame of stack) {
     // Discard absolute directory names, user names, URLs and raw stack text.
-    const match = frame.match(/(?:^|[\/])([A-Za-z0-9_.-]+\.(?:js|mjs|cjs)):(\d{1,6}):(\d{1,5})(?:\)|$)/);
+    const match = frame.match(
+      /(?:^|[\/])([A-Za-z0-9_.-]+\.(?:js|mjs|cjs)):(\d{1,6}):(\d{1,5})(?:\)|$)/
+    );
     if (match) {
       location = `; Position ${match[1]}:${match[2]}:${match[3]}`;
       break;
@@ -115,5 +131,6 @@ export function logBackupJobFailure(jobId, serialized, error) {
     unexpectedBackupDiagnostic(error);
   // Never log exception objects, raw .message or full stacks: these can contain
   // credentials.
-  console.error(`[Backup-Worker] Auftrag ${jobId} fehlgeschlagen (${serialized.errorCode}): ${diagnostic}`);
+  console.error(`[Backup-Worker] Auftrag ${jobId} fehlgeschlagen (${serialized
+    .errorCode}): ${diagnostic}`);
 }

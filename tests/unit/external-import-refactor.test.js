@@ -1,16 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createExternalImport} from '../../public/js/features/import/controller.js';
+import {createExternalImport}
+  from '../../public/js/features/import/controller.js';
 
 /**
  * A different source can feed the import UI without Whiskybase fields or
  * selectors.
  */
 test(
-  'generic import preview applies fields and matches distilleries without provider coupling',
+  'generic import preview applies fields and matches distilleries without \
+provider coupling',
   () => {
-    const previous = {document: globalThis.document, setTimeout: globalThis.setTimeout};
-    const state = {collection: {bottlings: [], distilleries: [{id: 'local-d', name: 'Test Distillery'}]}};
+    const previous = {
+      document: globalThis.document, setTimeout: globalThis
+        .setTimeout,
+    };
+    const state = {
+      collection: {
+        bottlings: [], distilleries: [{
+          id: 'local-d',
+          name: 'Test Distillery',
+        }],
+      },
+    };
     let panel = null;
     const choices = [
       {dataset: {importField: 'name'}},
@@ -151,7 +163,8 @@ test(
 );
 
 test(
-  'new physical bottle uses a source-independent photo opt-in only for pending imports',
+  'new physical bottle uses a source-independent photo opt-in only for \
+pending imports',
   async () => {
     const {createEditors} =
       await import('../../public/js/features/editor-controller.js');

@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {analyzeCollection} from '../../public/js/domain/analytics.js';
-import {normalizeTastingRecord, latestTasting, sortedTastings, displayedTastingRating} from '../../shared/tasting-records.js';
+import {
+  normalizeTastingRecord, latestTasting, sortedTastings,
+  displayedTastingRating
+} from '../../shared/tasting-records.js';
 /**
  * Derives the tasting result from the supplied values.
  *
@@ -11,7 +14,8 @@ import {normalizeTastingRecord, latestTasting, sortedTastings, displayedTastingR
  * @param {string=} createdAt Value used by this operation.
  * @return {!Object} Result computed from the supplied inputs.
  */
-const tasting = (id, tastedOn, rating, createdAt = '2026-11-01T08:00:00.000Z') => ({
+const tasting = (id, tastedOn, rating, createdAt = '2026-11-01T08:00:00.000Z'
+) => ({
   id,
   tastedOn,
   rating,
@@ -23,7 +27,8 @@ const tasting = (id, tastedOn, rating, createdAt = '2026-11-01T08:00:00.000Z') =
   updatedAt: createdAt,
 });
 test(
-  '0-n tastings are chronologically sorted; a scoreless latest tasting does not reveal older scores',
+  '0-n tastings are chronologically sorted; a scoreless latest tasting does \
+not reveal older scores',
   () => {
     const b = {
       tastings: [
@@ -47,7 +52,8 @@ test(
   }
 );
 test(
-  'same-day tastings sort by creation timestamp and then id, independent of update timestamp',
+  'same-day tastings sort by creation timestamp and then id, independent of \
+update timestamp',
   () => {
     const b = {
       tastings: [
@@ -91,13 +97,20 @@ test(
     for (const rating of [-1, 101, '87', NaN])
       assert.throws(() =>
         normalizeTastingRecord({tastedOn: '2026-11-15', rating}));
-    assert.throws(() => normalizeTastingRecord({tastedOn: '2026-11-15', id: 'injected'}));
-    assert.throws(() => normalizeTastingRecord({tastedOn: '2026-11-15', title: 'a'.repeat(121)}));
+    assert.throws(() => normalizeTastingRecord({
+      tastedOn: '2026-11-15',
+      id: 'injected',
+    }));
+    assert.throws(() => normalizeTastingRecord({
+      tastedOn: '2026-11-15',
+      title: 'a'.repeat(121),
+    }));
   }
 );
 
 test(
-  'analytics counts only the latest tasting per bottling and never an older rated record',
+  'analytics counts only the latest tasting per bottling and never an older \
+rated record',
   () => {
     const b = {
       id: 'release-1',

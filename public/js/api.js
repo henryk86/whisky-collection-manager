@@ -38,7 +38,8 @@ export async function request(url, options = {}) {
   }
   if (!res.ok) {
     if (res.status === 401 &&
-      !url.startsWith('/api/auth/')) window.dispatchEvent(new Event('wcm:auth-required'));
+      !url.startsWith('/api/auth/')) window.dispatchEvent(new Event(
+        'wcm:auth-required'));
     throw httpResponseError(res.status, data);
   }
   if (data?.__wcmStateDelta === 1 && Array.isArray(data.updates)) {
@@ -77,12 +78,17 @@ export function httpResponseError(status, data) {
 }
 
 /** Local validator cache. A 304 reuses parsed JSON instead of transmitting MBs.
- * API mutation results are never cached and an HTTP error never returns stale data. */
+ * API mutation results are never cached and an HTTP error never returns
+ * stale data.
+ */
 const validatedResponses = new Map();
 /**
  * Clears resource cache for api.
  */
-export function clearResourceCache() {validatedResponses.clear(); pendingUpdates.length = 0;}
+export function clearResourceCache() {
+  validatedResponses.clear();
+  pendingUpdates.length = 0;
+}
 const pendingUpdates = [];
 /**
  * Apply only deltas whose starting revision matches the last validated GET. If
@@ -162,7 +168,8 @@ export async function requestCachedJson(url) {
   let data;
   try {data = await res.json();} catch {data = null;}
   if (!res.ok) {
-    if (res.status === 401) window.dispatchEvent(new Event('wcm:auth-required'));
+    if (res.status === 401) window.dispatchEvent(new Event('wcm:auth-required')
+    );
     throw httpResponseError(res.status, data);
   }
   const etag = res.headers.get('etag');

@@ -4,7 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
 import {writeReadableZip, inspectReadableZip} from '../../shared/backup-zip.js';
-const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+const png =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0l\
+EQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
 const zipPassword = 'SicheresTestpasswort-2026-mindestens-14!';
 
 /**
@@ -14,7 +16,8 @@ const zipPassword = 'SicheresTestpasswort-2026-mindestens-14!';
  * @return {!Promise<*>} Promise for the asynchronous operation.
  */
 async function fixture(base) {
-  const bottle = (await requestJson(base, '/api/bottlings', 'POST', {name: 'Cutout Test'})).data.bottle;
+  const bottle = (await requestJson(base, '/api/bottlings', 'POST',
+    {name: 'Cutout Test'})).data.bottle;
   const photo = (await requestJson(
     base,
     `/api/bottles/${bottle.id}/photos`,
@@ -29,7 +32,8 @@ async function fixture(base) {
 }
 
 test(
-  'cutout is an optional version of an unchanged original; selection and removal work',
+  'cutout is an optional version of an unchanged original; selection and \
+removal work',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -74,11 +78,13 @@ test(
         fs.readFileSync(path.join(ctx.dir, photo.path)),
         original
       );
-      result = await requestJson(ctx.base, endpoint, 'PATCH', {selected: false});
+      result = await requestJson(ctx.base, endpoint, 'PATCH',
+        {selected: false});
       assert.equal(result.status, 200);
       assert.equal(result.data.cutout.selected, false);
       assert.equal(
-        (await requestJson(ctx.base, endpoint, 'PATCH', {selected: 'false'})).status,
+        (await requestJson(ctx.base, endpoint, 'PATCH', {selected: 'false'}))
+          .status,
         400
       );
       assert.equal(

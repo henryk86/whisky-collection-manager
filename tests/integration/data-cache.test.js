@@ -17,7 +17,8 @@ async function get(base, endpoint, etag) {
 }
 
 test(
-  'collection and warehouse ETags return empty 304 on unchanged data and change after a bottling mutation',
+  'collection and warehouse ETags return empty 304 on unchanged data and \
+change after a bottling mutation',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -33,7 +34,8 @@ test(
       const whTag = initialWarehouse.headers.get('etag');
       assert.ok(whTag);
       await initialWarehouse.json();
-      for (const [url, tag] of [['/api/collection', colTag], ['/api/warehouse', whTag]]) {
+      for (const [url, tag] of [['/api/collection', colTag], ['/api/warehouse',
+        whTag]]) {
         const response = await get(ctx.base, url, tag);
         assert.equal(response.status, 304);
         assert.equal(await response.text(), '');
@@ -65,7 +67,8 @@ test(
 );
 
 test(
-  'warehouse revisions are independent of collection; replacing collection file bypasses in-memory cache',
+  'warehouse revisions are independent of collection; replacing collection \
+file bypasses in-memory cache',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -108,7 +111,8 @@ test(
 );
 
 test(
-  'browser-safe shared modules are public but server-only shared modules remain private',
+  'browser-safe shared modules are public but server-only shared modules \
+remain private',
   async () => {
     const ctx = await startTestServer();
     try {

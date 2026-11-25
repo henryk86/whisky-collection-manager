@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {unassignedWallPage, UNASSIGNED_WALL_PAGE_SIZE} from '../../public/js/domain/warehouse-unassigned-tray.js';
-import {renderUnassignedTray, renderUnassignedTrayPage} from '../../public/js/views/warehouse-unassigned-tray.js';
-import {renderWarehouseRoomWall} from '../../public/js/views/warehouse-room-wall.js';
+import {unassignedWallPage, UNASSIGNED_WALL_PAGE_SIZE}
+  from '../../public/js/domain/warehouse-unassigned-tray.js';
+import {renderUnassignedTray, renderUnassignedTrayPage}
+  from '../../public/js/views/warehouse-unassigned-tray.js';
+import {renderWarehouseRoomWall}
+  from '../../public/js/views/warehouse-room-wall.js';
 
 /**
  * Derives the inventory result from the supplied values.
@@ -19,7 +22,8 @@ const inventory = count => ({
 });
 
 test(
-  'virtual unassigned shelf pages thousands of bottles without rendering the entire inventory',
+  'virtual unassigned shelf pages thousands of bottles without rendering \
+the entire inventory',
   () => {
     const warehouse = inventory(2502);
     const first = unassignedWallPage(warehouse);
@@ -47,10 +51,14 @@ test(
 );
 
 test(
-  'unassigned search is case insensitive and pagination clamps when results shrink',
+  'unassigned search is case insensitive and pagination clamps when results \
+shrink',
   () => {
     const warehouse = inventory(500);
-    const matches = unassignedWallPage(warehouse, {query: 'whisky 004', page: 9});
+    const matches = unassignedWallPage(warehouse, {
+      query: 'whisky 004',
+      page: 9,
+    });
     assert.equal(matches.page, 1);
     assert.ok(matches.items.length > 0);
     assert.ok(matches.items.every(bottle => bottle.name.toLowerCase()
@@ -94,7 +102,8 @@ test(
 );
 
 test(
-  'room wall offers the unassigned shelf without adding furniture or duplicating bottle locations',
+  'room wall offers the unassigned shelf without adding furniture or \
+duplicating bottle locations',
   () => {
     const warehouse = inventory(40);
     const room = {
@@ -105,7 +114,12 @@ test(
     };
     const html = renderWarehouseRoomWall(room, warehouse, [], {page: 2});
     assert.equal(
-      (html.match(/class="warehouse-unassigned-tray warehouse-unassigned-tray--embedded"/g) || []).length,
+      (html.match(
+        new RegExp(
+          'class="warehouse-unassigned-tray warehouse' +
+          '-unassigned-tray--embedded"',
+          'g'
+        )) || []).length,
       1
     );
     assert.equal(
@@ -118,7 +132,11 @@ test(
     );
     assert.match(
       html,
-      /class="warehouse-unassigned-toggle"[^>]*aria-controls="warehouse-wall-unassigned-content"[^>]*aria-expanded="false"/
+      new RegExp(
+        'class="warehouse-unassigned-toggle"[^>]*ar' +
+        'ia-controls="warehouse-wall-unassigned-con' +
+        'tent"[^>]*aria-expanded="false"'
+      )
     );
     assert.match(html, /id="warehouse-wall-unassigned-content"[^>]*hidden/);
     assert.equal(
@@ -147,14 +165,16 @@ test(
 );
 
 test(
-  'wall combines unassigned disclosure and selected-bottle actions into one compact header',
+  'wall combines unassigned disclosure and selected-bottle actions into one \
+compact header',
   () => {
     const warehouse = {
       bottles: [{id: 'b1', name: 'One'}, {id: 'b2', name: 'Two'}],
       assignments: {},
     };
     const room = {id: 'room', name: 'Room', furniture: []};
-    const html = renderWarehouseRoomWall(room, warehouse, ['b1'], {expanded: true});
+    const html = renderWarehouseRoomWall(room, warehouse, ['b1'],
+      {expanded: true});
     assert.match(html, /class="warehouse-wall-controls"/);
     assert.match(html, /1 Flaschen ausgewählt/);
     assert.match(html, /Nicht zugeordnet \(2\)/);
@@ -178,10 +198,14 @@ test(
 
 
 test(
-  'search is inline between bottle count and pager, and the input value survives pagination',
+  'search is inline between bottle count and pager, and the input value \
+survives pagination',
   () => {
     const warehouse = inventory(50);
-    const html = renderUnassignedTrayPage(warehouse, [], {query: 'Whisky 00', page: 2});
+    const html = renderUnassignedTrayPage(warehouse, [], {
+      query: 'Whisky 00',
+      page: 2,
+    });
     const count = html.indexOf('class="warehouse-unassigned-page-summary"');
     const search = html.indexOf('id="warehouse-unassigned-wall-search"');
     const controls = html.indexOf('class="warehouse-unassigned-page-controls"');

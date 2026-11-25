@@ -33,7 +33,8 @@ function fixture(t, provider = 'cloudflare') {
   const ini = provider === 'netcup-clouddns'
     ? 'dns_netcup_api_v1_key = fake-test-key\n'
     : provider === 'netcup-legacy'
-      ? 'dns_netcup_customer_id = 123456\ndns_netcup_api_key = fake-test-key\ndns_netcup_api_password = fake-test-password\n'
+      ? 'dns_netcup_customer_id = 123456\ndns_netcup_api_key = \
+fake-test-key\ndns_netcup_api_password = fake-test-password\n'
       : 'dns_cloudflare_api_token = fake-test-token\n';
   fs.writeFileSync(creds, ini, {mode: 0o600});
   fs.writeFileSync(path.join(project, '.env'), [
@@ -53,13 +54,17 @@ printf '%s\\n' "$*" >> "$DOCKER_LOG"
 if [ "$1" = run ]; then
   mkdir -p "$TEST_DATA/secrets/letsencrypt/config/live/whisky.example.org"
   if [ "$MOCK_ISSUE_NEW" = 1 ]; then
-    openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 30 -subj /CN=whisky.example.org \\
+    openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 30 -subj \
+/CN=whisky.example.org \\
       -addext subjectAltName=DNS:whisky.example.org \\
-      -keyout "$TEST_DATA/secrets/letsencrypt/config/live/whisky.example.org/privkey.pem" \\
-      -out "$TEST_DATA/secrets/letsencrypt/config/live/whisky.example.org/fullchain.pem" >/dev/null 2>&1
+      -keyout "$TEST_DATA/secrets/letsencrypt/config/live/whisky.example.org\
+/privkey.pem" \\
+      -out "$TEST_DATA/secrets/letsencrypt/config/live/whisky.example.org/fu\
+llchain.pem" >/dev/null 2>&1
   fi
 fi
-if [ "$1" = compose ] && [ "$2" = --profile ] && [ "$3" = letsencrypt ] && [ "$4" = ps ]; then
+if [ "$1" = compose ] && [ "$2" = --profile ] && [ "$3" = letsencrypt ] && \
+[ "$4" = ps ]; then
   [ "$MOCK_PROXY_RUNNING" = 1 ] && echo letsencrypt-proxy
 fi
 `, {mode: 0o755});
@@ -129,7 +134,8 @@ test(
 );
 
 test(
-  'issue publishes a verified pair atomically and renew leaves it intact when unchanged',
+  'issue publishes a verified pair atomically and renew leaves it intact \
+when unchanged',
   t => {
     const x = fixture(t);
     let result = x.run('issue');
@@ -185,7 +191,8 @@ test(
 );
 
 test(
-  'netcup CloudDNS uses the v1 API key, supported ARM64 image and explicit authenticator',
+  'netcup CloudDNS uses the v1 API key, supported ARM64 image and explicit \
+authenticator',
   t => {
     const x = fixture(t, 'netcup-clouddns');
     let result = x.run('check', {LE_DNS_PROPAGATION_SECONDS: ''});
@@ -224,7 +231,8 @@ test(
 );
 
 test(
-  'netcup Legacy credentials use the same plugin but require three legacy fields',
+  'netcup Legacy credentials use the same plugin but require three legacy \
+fields',
   t => {
     const x = fixture(t, 'netcup-legacy');
     let result = x.run('issue');
@@ -242,7 +250,8 @@ test(
 );
 
 test('NGINX public TLS validates the internal HTTPS upstream', () => {
-  const config = fs.readFileSync(path.join(root, 'deploy/nginx-letsencrypt.conf'), 'utf8');
+  const config = fs.readFileSync(path.join(root,
+    'deploy/nginx-letsencrypt.conf'), 'utf8');
   assert.match(config, /proxy_pass https:\/\/app:3543;/);
   assert.match(config, /proxy_ssl_verify on;/);
   assert.match(config, /proxy_ssl_name localhost;/);
@@ -259,7 +268,8 @@ test('NGINX public TLS validates the internal HTTPS upstream', () => {
 test(
   'NGINX certificate mounts are not hidden by the Alpine /var/run tmpfs',
   () => {
-    const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8');
+    const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'),
+      'utf8');
     const proxy = compose.split('  letsencrypt-proxy:')[1];
     assert.ok(proxy, 'letsencrypt-proxy service exists');
     assert.match(
@@ -278,14 +288,19 @@ test(
 );
 
 test(
-  'non-root NGINX gets writable tmpfs directories for cache, PID and temporary files',
+  'non-root NGINX gets writable tmpfs directories for cache, PID and \
+temporary files',
   () => {
-    const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8');
+    const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'),
+      'utf8');
     const proxy = compose.split('  letsencrypt-proxy:')[1];
     assert.ok(proxy, 'letsencrypt-proxy service exists');
-    for (const [directory, size] of [['/var/cache/nginx', '16m'], ['/var/run', '1m'], ['/tmp', '16m']]) {
+    for (const [directory, size] of [['/var/cache/nginx', '16m'], ['/var/run',
+      '1m'], ['/tmp', '16m']]) {
       assert.ok(
-        proxy.includes(`${directory}:rw,nosuid,nodev,size=${size},uid=${'${LE_PROXY_UID:-1000}'},gid=${'${LE_PROXY_GID:-1000}'},mode=0700`),
+        proxy.includes(
+          `${directory}:rw,nosuid,nodev,size=${size},uid=${'${LE_PROXY_UID:-\
+1000}'},gid=${'${LE_PROXY_GID:-1000}'},mode=0700`),
         `${directory} must be writable by LE_PROXY_UID/GID`
       );
     }

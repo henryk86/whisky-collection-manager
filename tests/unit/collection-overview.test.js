@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {availableOverviewDistilleries, collectionOverviewEntries} from '../../public/js/domain/collection-overview.js';
-import {homePageUrl, overviewModeFromSearch, paginate} from '../../public/js/domain/pagination.js';
+import {availableOverviewDistilleries, collectionOverviewEntries}
+  from '../../public/js/domain/collection-overview.js';
+import {homePageUrl, overviewModeFromSearch, paginate}
+  from '../../public/js/domain/pagination.js';
 import {createHomeView} from '../../public/js/views/home.js';
 
 /**
@@ -61,14 +63,18 @@ const selectors = {
 };
 
 test(
-  'bottling mode remains one entry per bottling, bottle mode uses individual physical bottles',
+  'bottling mode remains one entry per bottling, bottle mode uses \
+individual physical bottles',
   () => {
     const collection = sample();
     const bottlings = collectionOverviewEntries(
       collection,
       {mode: 'bottlings', ...selectors}
     );
-    const bottles = collectionOverviewEntries(collection, {mode: 'bottles', ...selectors});
+    const bottles = collectionOverviewEntries(collection, {
+      mode: 'bottles',
+      ...selectors,
+    });
     assert.deepEqual(bottlings.map(item => item.bottling.id), ['z', 'a']);
     assert.deepEqual(bottlings.map(item => item.bottle), [null, null]);
     assert.equal(bottles.length, 3);
@@ -139,7 +145,8 @@ test(
 );
 
 test(
-  'quick distillery options contain only distilleries used by a bottling, including blends',
+  'quick distillery options contain only distilleries used by a bottling, \
+including blends',
   () => {
     const collection = {
       distilleries: [
@@ -178,7 +185,8 @@ test(
 );
 
 test(
-  'standard/sample quick filter is applied before pagination in both overview modes',
+  'standard/sample quick filter is applied before pagination in both \
+overview modes',
   () => {
     const collection = sample();
     collection.distilleries =
@@ -283,7 +291,8 @@ test(
 );
 
 test(
-  'bottle mode is bookmarkable and the default bottling URL is backward compatible',
+  'bottle mode is bookmarkable and the default bottling URL is backward \
+compatible',
   () => {
     assert.equal(homePageUrl(1), '/');
     assert.equal(homePageUrl(4), '/?page=4');
@@ -295,7 +304,8 @@ test(
 );
 
 test(
-  'physical bottle cards use their own photo, identifier, status and volume; table rows stay distinct',
+  'physical bottle cards use their own photo, identifier, status and volume;\
+ table rows stay distinct',
   () => {
     const collection = sample();
     const original = {
@@ -399,7 +409,11 @@ test(
       );
       assert.match(
         html,
-        /class="section-head ds-page-header collection-heading"[\s\S]*class="collection-mode-toggle"[\s\S]*class="stats"/
+        new RegExp(
+          'class="section-head ds-page-header collect' +
+          'ion-heading"[\\s\\S]*class="collection-mod' +
+          'e-toggle"[\\s\\S]*class="stats"'
+        )
       );
       assert.ok(html.indexOf('class="collection-mode-toggle"') <
         html.indexOf('class="stats"'));
@@ -463,7 +477,8 @@ test(
 );
 
 test(
-  'pagination in bottle mode counts physical bottles rather than their shared bottling',
+  'pagination in bottle mode counts physical bottles rather than their \
+shared bottling',
   () => {
     const collection = {
       bottlings: [{
@@ -488,7 +503,8 @@ test(
 );
 
 test(
-  'latest tasting rating filters are applied before pagination in both overview modes',
+  'latest tasting rating filters are applied before pagination in both \
+overview modes',
   async () => {
     const {matchesOverviewRating} =
       await import('../../public/js/domain/collection-overview.js');
@@ -513,7 +529,10 @@ test(
       ['a']
     );
     assert.equal(
-      collectionOverviewEntries(collection, {mode: 'bottles', rating: '5'}).length,
+      collectionOverviewEntries(collection, {
+        mode: 'bottles',
+        rating: '5',
+      }).length,
       3
     );
     assert.deepEqual(
@@ -552,7 +571,8 @@ test(
 );
 
 test(
-  'glencairn rating is drawn over the bottle image with five proportional fills and unique IDs per bottle',
+  'glencairn rating is drawn over the bottle image with five proportional \
+fills and unique IDs per bottle',
   async () => {
     const {collectionCardRating} =
       await import('../../public/js/views/home.js');
@@ -574,7 +594,8 @@ test(
 
 
 test(
-  'collection filters expand in place and active chips reset a single selection',
+  'collection filters expand in place and active chips reset a single \
+selection',
   () => {
     const collection = {settings: {}, bottlings: [], distilleries: []};
     const state = {
@@ -684,7 +705,8 @@ test(
 );
 
 test(
-  'sorting by name and distillery is locale-aware and keeps equal entries stable',
+  'sorting by name and distillery is locale-aware and keeps equal entries \
+stable',
   () => {
     const collection = {
       bottlings: [
@@ -708,7 +730,10 @@ test(
      * @param {*} sort Sort direction or ordering rule.
      * @return {!Array<*>} Resulting entries in their output order.
      */
-    const ids = sort => collectionOverviewEntries(collection, {sort, distilleryNames}).map(e => e.bottling.id);
+    const ids = sort => collectionOverviewEntries(collection, {
+      sort,
+      distilleryNames,
+    }).map(e => e.bottling.id);
     assert.deepEqual(ids('name'), ['one', 'two', 'three']);
     assert.deepEqual(ids('nameDesc'), ['three', 'two', 'one']);
     assert.deepEqual(ids('distillery'), ['two', 'one', 'three']);
@@ -717,7 +742,8 @@ test(
 );
 
 test(
-  'price sorting uses individual bottle prices or same-currency bottling averages; missing data sorts last',
+  'price sorting uses individual bottle prices or same-currency bottling \
+averages; missing data sorts last',
   () => {
     const collection = {
       bottlings: [
@@ -772,7 +798,8 @@ test(
 );
 
 test(
-  'score and last-tasted sorting use the latest dated tasting, with null values at the end',
+  'score and last-tasted sorting use the latest dated tasting, with null \
+values at the end',
   () => {
     const collection = {
       bottlings: [
@@ -816,7 +843,8 @@ test(
 );
 
 test(
-  'last updated sorting includes bottle changes and falls back to creation timestamps',
+  'last updated sorting includes bottle changes and falls back to creation \
+timestamps',
   () => {
     const collection = {
       bottlings: [
@@ -860,7 +888,8 @@ test(
 );
 
 test(
-  'sort options include price, score, changed and tasting dates and are selectable in both modes',
+  'sort options include price, score, changed and tasting dates and are \
+selectable in both modes',
   () => {
     const collection = sample();
     const original = {
@@ -953,7 +982,8 @@ test(
       assert.doesNotMatch(markup, /Ø Kaufpreis aufsteigend/);
     } finally {
       for (const [name, value] of Object.entries(original)) {
-        if (value === undefined) delete globalThis[name]; else globalThis[name] = value;
+        if (value === undefined) delete globalThis[name]; else globalThis[
+          name] = value;
       }
     }
   }

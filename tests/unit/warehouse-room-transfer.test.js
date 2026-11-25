@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRoomExport, planRoomImport} from '../../server/services/room-transfer.js';
+import {createRoomExport, planRoomImport}
+  from '../../server/services/room-transfer.js';
 
 const room = {
   id: 'r', name: 'Room A', width: 5, height: 4, furniture: [{
@@ -27,10 +28,14 @@ const warehouse = () => ({
 });
 
 test(
-  'room transfer plans preserve all furniture fields but reassign unique IDs and do not overwrite bottle positions',
+  'room transfer plans preserve all furniture fields but reassign unique \
+IDs and do not overwrite bottle positions',
   () => {
     const exported = createRoomExport(warehouse(), ['r'], true);
-    const target = {rooms: [], bottles: [{id: 'target', number: 'ABC'}], assignments: {}};
+    const target = {
+      rooms: [], bottles: [{id: 'target', number: 'ABC'}],
+      assignments: {},
+    };
     const plan = planRoomImport(target, exported);
     assert.equal(plan.summary.createdRooms, 1);
     assert.equal(plan.summary.assigned, 1);
@@ -49,7 +54,8 @@ test(
 );
 
 test(
-  'ambiguous inventory number and insufficient source capacity are never guessed into assignments',
+  'ambiguous inventory number and insufficient source capacity are never \
+guessed into assignments',
   () => {
     const exported = createRoomExport(warehouse(), ['r'], true);
     const target = {
@@ -71,13 +77,15 @@ test(
 );
 
 test(
-  'replacing empty matching rooms requires explicit replace but is denied if room has assignments',
+  'replacing empty matching rooms requires explicit replace but is denied \
+if room has assignments',
   () => {
     const doc = createRoomExport(warehouse(), ['r'], false);
     const existing = structuredClone(room);
     const target = {rooms: [existing], bottles: [], assignments: {}};
     assert.equal(planRoomImport(target, doc).summary.skippedRooms, 1);
-    const replacement = planRoomImport(target, doc, {conflictPolicy: 'replace'});
+    const replacement = planRoomImport(target, doc, {conflictPolicy: 'replace'}
+    );
     assert.equal(replacement.summary.replacedRooms, 1);
     assert.equal(replacement.toReplace[0].id, 'r');
     assert.notEqual(replacement.toReplace[0].furniture[0].id, 'f');

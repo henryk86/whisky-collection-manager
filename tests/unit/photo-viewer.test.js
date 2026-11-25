@@ -86,7 +86,8 @@ function harness({
      * @return {*} Computed value, or null when the input has no match.
      */
     querySelector(selector) {
-      if (selector === '.dialog .dialog-head [data-act="close-modal"]') return focus;
+      if (selector === '.dialog .dialog-head [data-act="close-modal"]')
+        return focus;
       if (selector === '.photo-lightbox') return opened ? {} : null;
       if (selector === '.photo-lightbox-image') return currentImage;
       if (selector === '.photo-lightbox-caption') return caption;
@@ -141,7 +142,8 @@ function harness({
 }
 
 test(
-  'photo thumbnails open in the in-app modal, preserve form when nested, and navigate within one bottle',
+  'photo thumbnails open in the in-app modal, preserve form when nested, \
+and navigate within one bottle',
   () => {
     const h = harness({nested: true});
     try {

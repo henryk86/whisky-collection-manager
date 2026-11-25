@@ -3,14 +3,20 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
-import {displayPhotoPath, activePhotoAdjustment} from '../../shared/photo-images.js';
+import {displayPhotoPath, activePhotoAdjustment}
+  from '../../shared/photo-images.js';
 
-const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
-const webp = 'data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAACQAQCdASoCAAMAAUAmJZgCdLoAA5gA/vDXA/8K1zD8w9rf9XYnwoLAAAA=';
+const png =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0l\
+EQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+const webp =
+  'data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAACQAQCdASoCAAMAAUAmJZgCdL\
+oAA5gA/vDXA/8K1zD8w9rf9XYnwoLAAAA=';
 const settings = {exposure: .6, contrast: 12};
 
 test(
-  'combined editing and cutout keeps both editable variants, backups and original',
+  'combined editing and cutout keeps both editable variants, backups and \
+original',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -75,10 +81,12 @@ test(
         initial
       );
 
-      const reverted = (await requestJson(ctx.base, `${route}/cutout`, 'PATCH', {selected: false})).data;
+      const reverted = (await requestJson(ctx.base, `${route}/cutout`, 'PATCH',
+        {selected: false})).data;
       assert.equal(displayPhotoPath(reverted), originalEdit.adjustment.path);
       assert.equal(activePhotoAdjustment(reverted).sourcePath, photo.path);
-      const again = (await requestJson(ctx.base, `${route}/cutout`, 'PATCH', {selected: true})).data;
+      const again = (await requestJson(ctx.base, `${route}/cutout`, 'PATCH',
+        {selected: true})).data;
       assert.equal(displayPhotoPath(again), cutout.adjustment.path);
       const adjusted = (await requestJson(
         ctx.base,

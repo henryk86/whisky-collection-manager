@@ -26,7 +26,8 @@ const json = async (base, path, method = 'GET', data, headers = {}) => {
 };
 
 test(
-  'mutation envelopes contain keyed changes and retain the unmodified API result',
+  'mutation envelopes contain keyed changes and retain the unmodified API \
+result',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -71,7 +72,8 @@ test(
 );
 
 test(
-  'warehouse mutations can be applied independently, without replacing rooms or changing the collection',
+  'warehouse mutations can be applied independently, without replacing \
+rooms or changing the collection',
   async () => {
     const ctx = await startTestServer();
     try {
@@ -120,7 +122,12 @@ test('delta validation rejects malformed arrays and unsafe fields', () => {
       source,
       {
         kind: 'collection',
-        arrays: {bottlings: {upsert: [{id: 'one'}], remove: [], order: ['missing']}},
+        arrays: {
+          bottlings: {
+            upsert: [{id: 'one'}], remove: [],
+            order: ['missing'],
+          },
+        },
       }
     ),
     /Invalid delta entity order/

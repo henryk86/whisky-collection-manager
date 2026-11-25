@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {findWarehouseBottles} from '../../public/js/domain/warehouse-finder.js';
-import {renderWarehouseFinder, renderWarehouseFinderResults} from '../../public/js/views/warehouse-finder.js';
-import {renderWarehouseRoomWall} from '../../public/js/views/warehouse-room-wall.js';
+import {renderWarehouseFinder, renderWarehouseFinderResults}
+  from '../../public/js/views/warehouse-finder.js';
+import {renderWarehouseRoomWall}
+  from '../../public/js/views/warehouse-room-wall.js';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 
 const bottles = Array.from({length: 9}, (_, i) => ({
@@ -34,7 +36,8 @@ const warehouse = {
 };
 
 test(
-  'finder matches inventory numbers, accented names, locations and multiple terms without grouping physical bottles',
+  'finder matches inventory numbers, accented names, locations and multiple \
+terms without grouping physical bottles',
   () => {
     assert.equal(
       findWarehouseBottles(warehouse, {query: 'glenfarclas'}).total,
@@ -89,7 +92,8 @@ test('finder pagination returns bounded pages and stable counts', () => {
 });
 
 test(
-  'finder cards show location action only when assigned and safely escape display data',
+  'finder cards show location action only when assigned and safely escape \
+display data',
   () => {
     const html = renderWarehouseFinder({
       query: '<script>',
@@ -105,14 +109,16 @@ test(
     assert.match(html, /Islay &lt;strong&gt;/);
     assert.match(html, /Lagerort zuweisen/);
     assert.match(html, /Whiskyzimmer \/ Vitrine links \/ Fach 2/);
-    const paged = renderWarehouseFinderResults(findWarehouseBottles(warehouse, {page: 1, pageSize: 3}));
+    const paged = renderWarehouseFinderResults(findWarehouseBottles(warehouse,
+      {page: 1, pageSize: 3}));
     assert.match(paged, /warehouse-find-next/);
     assert.match(paged, /9 Flaschen gefunden/);
   }
 );
 
 test(
-  'a bottle beyond the wall preview limit is visible and individually highlighted when found',
+  'a bottle beyond the wall preview limit is visible and individually \
+highlighted when found',
   () => {
     const ordinary = renderWarehouseRoomWall(warehouse.rooms[0], warehouse, []);
     assert.doesNotMatch(ordinary, /data-id="b8"/);
@@ -132,7 +138,8 @@ test(
 );
 
 test(
-  'finder navigation preserves query, filter and pagination when returning from focused shelf',
+  'finder navigation preserves query, filter and pagination when returning \
+from focused shelf',
   () => {
     const extended = {
       ...warehouse, bottles: [...warehouse.bottles,
@@ -229,7 +236,8 @@ test(
 );
 
 test(
-  'detail-page storage link highlights the same shelf and bottle and returns to its bottling',
+  'detail-page storage link highlights the same shelf and bottle and \
+returns to its bottling',
   () => {
     const state = {
       warehouse,
@@ -322,7 +330,8 @@ test(
 );
 
 test(
-  'closing the finder banner removes both shelf and bottle highlights without navigation',
+  'closing the finder banner removes both shelf and bottle highlights \
+without navigation',
   () => {
     const state = {
       warehouse,
@@ -404,7 +413,8 @@ test(
        * @return {!Array<*>} Resulting entries in their output order.
        */
       querySelectorAll(selector) {
-        if (selector.includes('.warehouse-wall-bay.is-find-focus')) return [bay, focused, dimmed];
+        if (selector.includes('.warehouse-wall-bay.is-find-focus')) return [
+          bay, focused, dimmed];
         return [];
       },
     };
@@ -458,7 +468,8 @@ test(
 );
 
 test(
-  'narrow shelves reserve a separate overflow slot and keep the focused bottle visible',
+  'narrow shelves reserve a separate overflow slot and keep the focused \
+bottle visible',
   () => {
     const narrow = structuredClone(warehouse);
     narrow.rooms[0].furniture[0].width = 0.7;
@@ -470,8 +481,15 @@ test(
       {focusBottleId: 'b8'}
     );
     // Every bottle slot plus the +N badge must fit within the physical bay.
-    const preview = html.match(/data-shelf-id="s"[\s\S]*?<div class="warehouse-bottle-silhouettes">([\s\S]*?)<\/div>/)?.[1] || '';
-    const visibleIds = [...preview.matchAll(/data-act="warehouse-bottle-select" data-id="(b\d+)"/g)].map(match => match[1]);
+    const preview = html.match(
+      new RegExp(
+        'data-shelf-id="s"[\\s\\S]*?<div class="war' +
+        'ehouse-bottle-silhouettes">([\\s\\S]*?)<\\' +
+        '/div>'
+      ))?.[1] || '';
+    const visibleIds = [...preview.matchAll(
+      /data-act="warehouse-bottle-select" data-id="(b\d+)"/g)].map(match =>
+        match[1]);
     const slotWidth = Number(html.match(/--wall-bottle-width:([\d.]+)px/)?.[1]);
     assert.ok(visibleIds.length > 0 && visibleIds.length < 5);
     assert.ok(visibleIds.length * (slotWidth + 2) + 27 <= 0.7 * 230 - 22);

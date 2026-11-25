@@ -1,12 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {backupJobError, serializeBackupJobError} from '../../shared/backup-job-errors.js';
+import {backupJobError, serializeBackupJobError}
+  from '../../shared/backup-job-errors.js';
 import {jobErrorText} from '../../public/js/i18n/job-errors.js';
 import {renderBackupSection} from '../../public/js/views/backups.js';
 
 test(
-  'structured worker errors preserve known causes and only bounded, neutral parameters',
+  'structured worker errors preserve known causes and only bounded, neutral \
+parameters',
   () => {
     const error = backupJobError('backup.errors.sourceSnapshotFailed', {
       status: '503',
@@ -30,7 +32,9 @@ test(
       {errorCode: 'backup.errors.missingFile'}
     );
     assert.deepEqual(
-      serializeBackupJobError({backupCommand: 'rclone', message: 'access token'}),
+      serializeBackupJobError({
+        backupCommand: 'rclone', message: 'access token',
+      }),
       {errorCode: 'backup.errors.rcloneFailed'}
     );
     assert.deepEqual(
@@ -66,18 +70,22 @@ test(
     assert.doesNotMatch(html, /onerror=|img src=/);
     assert.equal(
       jobErrorText(job),
-      'Backup-Ziel nicht bereit: USB-/NAS-Laufwerk ist nicht korrekt eingehängt (Backup-Marker fehlt).'
+      'Backup-Ziel nicht bereit: USB-/NAS-Laufwerk ist nicht korrekt \
+eingehängt (Backup-Marker fehlt).'
     );
   }
 );
 
 
 test(
-  'command diagnostics preserve causes but redact credentials, paths, controls and long output',
+  'command diagnostics preserve causes but redact credentials, paths, \
+controls and long output',
   async () => {
     const {sanitizeBackupDiagnostic, commandFailureDiagnostic} =
       await import('../../worker/backup-diagnostics.js');
-    const output = "\u001b[31mCRITICAL: couldn't fetch token: invalid_grant: maybe token expired?" +
+    const output =
+      "\u001b[31mCRITICAL: couldn't fetch token: invalid_grant: maybe token \
+expired?" +
       ' password=sensitivePW123 access_token: xYzToken123456789' +
       ' Authorization: Bearer aBCdef0123456789' +
       ' https://user:secret@example.org/path?refresh_token=supersecret' +
@@ -88,7 +96,12 @@ test(
     assert.match(diagnostic, /invalid_grant: maybe token expired/);
     assert.doesNotMatch(
       diagnostic,
-      /sensitivePW123|xYzToken123456789|aBCdef0123456789|secret@example|supersecret|rclone-private\.conf|123456789012345678901234|shortSecret123|anotherSecret|123456/
+      new RegExp(
+        'sensitivePW123|xYzToken123456789|aBCdef012' +
+        '3456789|secret@example|supersecret|rclone-' +
+        'private\\.conf|123456789012345678901234|sh' +
+        'ortSecret123|anotherSecret|123456'
+      )
     );
     assert.doesNotMatch(diagnostic, /\u001b|\n/);
     assert.ok(diagnostic.length <= 700);
@@ -102,7 +115,8 @@ test(
 
 
 test(
-  'unexpected worker failures report safe exception type, source position and system code to operators only',
+  'unexpected worker failures report safe exception type, source position \
+and system code to operators only',
   async () => {
     const {logBackupJobFailure, unexpectedBackupDiagnostic} =
       await import('../../worker/backup-diagnostics.js');
@@ -112,14 +126,20 @@ test(
     try {
       console.error = message => failures.push(message);
       const programming =
-        new TypeError('password=never-show-me; /home/operator/private/secret.json');
+        new TypeError(
+          'password=never-show-me; /home/operator/private/secret.json');
       programming.stack = 'TypeError: password=never-show-me\n' +
-        '    at perform (/home/operator/private/worker/backup-worker.js:421:22)\n' +
+        '    at perform (/home/operator/private/worker/backup-worker.js:421:\
+22)\n' +
         '    at async /home/operator/private/worker/backup-worker.js:440:11';
       logBackupJobFailure('job-programming', code, programming);
       assert.match(
         failures[0],
-        /job-programming.*backup\.errors\.unexpected.*TypeError; Position backup-worker\.js:421:22/
+        new RegExp(
+          'job-programming.*backup\\.errors\\.unexpec' +
+          'ted.*TypeError; Position backup-worker\\.j' +
+          's:421:22'
+        )
       );
       assert.doesNotMatch(
         failures[0],
@@ -128,7 +148,9 @@ test(
       assert.deepEqual(serializeBackupJobError(programming), code);
 
       const filesystem = Object.assign(
-        new Error('EISDIR: illegal operation on a directory, read /run/secrets/password'),
+        new Error(
+          'EISDIR: illegal operation on a directory, read \
+/run/secrets/password'),
         {code: 'EISDIR'}
       );
       filesystem.stack =
@@ -160,7 +182,8 @@ test(
 );
 
 test(
-  'backup management missing has a specific localizable code in both language catalogs',
+  'backup management missing has a specific localizable code in both \
+language catalogs',
   () => {
     const de = JSON.parse(fs.readFileSync(
       new URL('../../public/locales/de.json', import.meta.url),

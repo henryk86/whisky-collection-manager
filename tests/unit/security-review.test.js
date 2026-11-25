@@ -31,7 +31,8 @@ test(
   () => {
     const first = `chrome-extension://${'a'.repeat(32)}`;
     const other = `chrome-extension://${'b'.repeat(32)}`;
-    assert.equal(allowedExtensionOrigin(first, ''), true); // backwards compatible
+    assert.equal(allowedExtensionOrigin(first, ''),
+      true); // backwards compatible
     assert.equal(allowedExtensionOrigin(first, 'a'.repeat(32)), true);
     assert.equal(allowedExtensionOrigin(other, 'a'.repeat(32)), false);
     assert.equal(allowedExtensionOrigin('https://evil.example', ''), false);

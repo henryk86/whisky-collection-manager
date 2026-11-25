@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer, requestJson} from '../helpers/server.js';
-import {domOnly, chromium, session, openSettingsFromMenu, openSettingsSection, seed, mockDecoder} from './support.js';
+import {
+  domOnly, chromium, session, openSettingsFromMenu, openSettingsSection,
+  seed, mockDecoder
+} from './support.js';
 test(
   'browser: help page is available from the menu and on direct navigation',
   async () => {
@@ -57,22 +60,25 @@ test(
       await page.locator('#site-drawer [data-act="goto-help"]').click();
       for (const width of [1440, 390]) {
         await page.setViewportSize({width, height: 900});
-        const layout = await page.locator('#help-panel-basics .help-content-panel').evaluate(panel => {
-          const section = panel.closest('.help-section');
-          const title = section.querySelector(':scope > .analytics-section-title');
-          const panelRect = panel.getBoundingClientRect();
-          const titleRect = title.getBoundingClientRect();
-          const style = getComputedStyle(panel);
-          return {
-            corner: style.borderRadius,
-            border: style.borderTopWidth,
-            background: style.backgroundColor,
-            titleAbove: titleRect.bottom < panelRect.top,
-            overflows: document.documentElement.scrollWidth >
-              window.innerWidth + 1,
-            leftNav: getComputedStyle(document.querySelector('.section-nav-desktop')).display,
-          };
-        });
+        const layout = await page.locator(
+          '#help-panel-basics .help-content-panel').evaluate(panel => {
+            const section = panel.closest('.help-section');
+            const title = section.querySelector(
+              ':scope > .analytics-section-title');
+            const panelRect = panel.getBoundingClientRect();
+            const titleRect = title.getBoundingClientRect();
+            const style = getComputedStyle(panel);
+            return {
+              corner: style.borderRadius,
+              border: style.borderTopWidth,
+              background: style.backgroundColor,
+              titleAbove: titleRect.bottom < panelRect.top,
+              overflows: document.documentElement.scrollWidth >
+                window.innerWidth + 1,
+              leftNav: getComputedStyle(document.querySelector(
+                '.section-nav-desktop')).display,
+            };
+          });
         assert.equal(layout.corner, '0px');
         assert.equal(layout.border, '1px');
         assert.notEqual(layout.background, 'rgba(0, 0, 0, 0)');
@@ -93,7 +99,8 @@ test(
       await page.locator('.section-nav-item[data-help-topic="storage"]')
         .click();
       assert.equal(
-        await page.locator('#help-panel-storage:not([hidden]) .help-content-panel').count(),
+        await page.locator(
+          '#help-panel-storage:not([hidden]) .help-content-panel').count(),
         1
       );
       assert.equal(
@@ -108,7 +115,8 @@ test(
 
 
 test(
-  'browser: straight active navigation line and shared responsive analysis/help workspace',
+  'browser: straight active navigation line and shared responsive \
+analysis/help workspace',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -182,7 +190,8 @@ test(
 
 
 test(
-  'browser: consistent section layout, readable help text and intentional filter rows at three widths',
+  'browser: consistent section layout, readable help text and intentional \
+filter rows at three widths',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -219,7 +228,8 @@ test(
         });
         assert.equal(
           home.text,
-          'Von der besonderen Abfüllung bis zum letzten Dram. Entdecke, erfasse und verwalte deine Whisky-Sammlung.'
+          'Von der besonderen Abfüllung bis zum letzten Dram. Entdecke, \
+erfasse und verwalte deine Whisky-Sammlung.'
         );
         assert.ok(
           home.scroll <= width,
@@ -260,14 +270,16 @@ test(
         );
         const help = await page.evaluate(() => ({
           scroll: document.documentElement.scrollWidth,
-          sidebarVisible: getComputedStyle(document.querySelector('.section-nav-desktop')).display !== 'none',
+          sidebarVisible: getComputedStyle(document.querySelector(
+            '.section-nav-desktop')).display !== 'none',
           itemHeights: [...document.querySelectorAll('.section-nav-item')]
             .map(item => item.getBoundingClientRect().height),
         }));
         assert.ok(help.scroll <= width, `${width}px: help must not overflow`);
         if (width >= 1040) assert.ok(
           help.itemHeights.every(height => height <= 45),
-          `${width}px: help topic names must not wrap (heights: ${help.itemHeights.join(', ')})`
+          `${width}px: help topic names must not wrap (heights: ${help
+            .itemHeights.join(', ')})`
         );
         else assert.equal(
           help.sidebarVisible,
@@ -286,7 +298,8 @@ test(
         .evaluateAll(nodes =>
           nodes.map(node => Math.round(node.getBoundingClientRect().top)));
       assert.ok(filterTops.every(top => top === filterTops[0]),
-        'analytics: reset button must not be stranded on a separate row on tablets');
+        'analytics: reset button must not be stranded on a separate row on \
+tablets');
     });
   }
 );
@@ -295,7 +308,8 @@ test(
 
 
 test(
-  'browser: settings and warehouse share section navigation with mobile selector and preserve unsaved settings',
+  'browser: settings and warehouse share section navigation with mobile \
+selector and preserve unsaved settings',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -351,7 +365,8 @@ test(
       await page.locator('[data-section-switch="warehouse"]')
         .selectOption('find');
       assert.equal(
-        await page.locator('.section-workspace-content > .analytics-section-title').innerText(),
+        await page.locator(
+          '.section-workspace-content > .analytics-section-title').innerText(),
         'Flaschen finden'
       );
       assert.equal(
@@ -366,7 +381,8 @@ test(
 
 
 test(
-  'browser: distilleries settings use a flat single-heading section without nested scrolling',
+  'browser: distilleries settings use a flat single-heading section without \
+nested scrolling',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -415,7 +431,8 @@ test(
 
 
 test(
-  'browser: home hero shows the entire original description on one line at desktop widths',
+  'browser: home hero shows the entire original description on one line at \
+desktop widths',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -435,7 +452,8 @@ test(
           };
         });
         assert.equal(result.text,
-          'Von der besonderen Abfüllung bis zum letzten Dram. Entdecke, erfasse und verwalte deine Whisky-Sammlung.');
+          'Von der besonderen Abfüllung bis zum letzten Dram. Entdecke, \
+erfasse und verwalte deine Whisky-Sammlung.');
         assert.equal(
           result.lines,
           1,
@@ -457,7 +475,8 @@ test(
 
 
 test(
-  'browser: unassigned staging search shares the pagination footer and retains focus while filtering',
+  'browser: unassigned staging search shares the pagination footer and \
+retains focus while filtering',
   async () => {
     await session(async ({base, page, open}) => {
       const room = (await requestJson(base, '/api/warehouse/rooms', 'POST',
@@ -524,14 +543,18 @@ test(
         });
       assert.ok(
         footer.right[0] < footer.left[1] && footer.right[1] < footer.left[2],
-        `footer order is count – search – previous page: ${JSON.stringify(footer)}`
+        `footer order is count – search – previous page: ${JSON.stringify(
+          footer)}`
       );
       assert.ok(
         Math.max(...footer.top) - Math.min(...footer.top) < 16,
         'footer elements belong in the same row'
       );
       await page.locator('.warehouse-unassigned-pagination')
-        .screenshot({path: 'test-artifacts/warehouse-unassigned-footer-0233.png'});
+        .screenshot({
+          path:
+            'test-artifacts/warehouse-unassigned-footer-0233.png',
+        });
       const input = page.locator('#warehouse-unassigned-wall-search');
       await input.fill('731001');
       assert.equal(
@@ -565,7 +588,8 @@ test(
         await page.evaluate(() => document.documentElement.scrollWidth <=
           innerWidth + 1),
         true,
-        'the footer search and pager must not cause horizontal overflow on phones'
+        'the footer search and pager must not cause horizontal overflow on \
+phones'
       );
     });
   }
@@ -574,7 +598,8 @@ test(
 
 
 test(
-  'browser: settings General heading uses the same panel gap as other settings sections',
+  'browser: settings General heading uses the same panel gap as other \
+settings sections',
   async () => {
     await session(async ({page, open}) => {
       await open();
@@ -589,14 +614,16 @@ test(
         });
       assert.ok(
         Math.abs(gap - 16) < 0.75,
-        `General heading and first panel should have the same 16px spacing as other settings groups, got ${gap}px`
+        `General heading and first panel should have the same 16px spacing \
+as other settings groups, got ${gap}px`
       );
     });
   }
 );
 
 test(
-  'browser: saving settings retains the form node and does not reload unchanged warehouse data',
+  'browser: saving settings retains the form node and does not reload \
+unchanged warehouse data',
   async () => {
     await session(async ({page, open, base}) => {
       await open();

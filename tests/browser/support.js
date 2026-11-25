@@ -142,8 +142,14 @@ export async function session(callback, activeBrowser = browser) {
   catch (error) {
     // Screenshot is diagnostic only; never replace the original assertion.
     // Generated exclusively from synthetic per-test fixtures, not user data.
-    const filename = `test-artifacts/browser-failure-${process.pid}-${++failedSessionCapture}.png`;
-    try {await page.screenshot({path: filename, fullPage: true, animations: 'disabled'});}
+    const filename = `test-artifacts/browser-failure-${process
+      .pid}-${++failedSessionCapture}.png`;
+    try {
+      await page.screenshot({
+        path: filename, fullPage: true, animations:
+          'disabled',
+      });
+    }
     catch { /* A crashed or closed page must not conceal the original error. */}
     throw error;
   }
@@ -176,7 +182,8 @@ export async function openSettingsFromMenu(page) {
  * @param {string} id Identifier used to select the relevant record.
  */
 export async function openSettingsSection(page, id) {
-  const desktop = page.locator(`.settings-page .section-nav-desktop [data-settings-section="${id}"]`);
+  const desktop = page.locator(
+    `.settings-page .section-nav-desktop [data-settings-section="${id}"]`);
   if (await desktop.isVisible()) await desktop.click();
   else await page.locator('.settings-page [data-section-switch="settings"]')
     .selectOption(id);

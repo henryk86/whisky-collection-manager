@@ -76,10 +76,15 @@ function detailHtml(tastings = []) {
 }
 
 test(
-  'detail-page empty tastings use a subdued heading hint and two buttons without a panel',
+  'detail-page empty tastings use a subdued heading hint and two buttons \
+without a panel',
   () => {
     const html = detailHtml();
-    const section = html.match(/<section[^>]*class="section tasting-summary is-empty"[\s\S]*?<\/section>/)?.[0];
+    const section = html.match(
+      new RegExp(
+        '<section[^>]*class="section tasting-summar' +
+        'y is-empty"[\\s\\S]*?<\\/section>'
+      ))?.[0];
     assert.ok(section);
     assert.match(section, /data-act="tastings-new"[^>]*><svg class="new-icon"/);
     assert.doesNotMatch(section, /class="panel tasting-summary-card"/);
@@ -97,7 +102,8 @@ test(
 );
 
 test(
-  'detail-page latest tasting uses five fillable glencairns before its numeric score',
+  'detail-page latest tasting uses five fillable glencairns before its \
+numeric score',
   () => {
     const latest = {
       id: 'note-1',
@@ -106,7 +112,12 @@ test(
       rating: 85,
     };
     const html = detailHtml([latest]);
-    const row = html.match(/<div class="tasting-summary-score">[\s\S]*?<div class="tasting-summary-rating">[^<]*<\/div>/)?.[0];
+    const row = html.match(
+      new RegExp(
+        '<div class="tasting-summary-score">[\\s\\S' +
+        ']*?<div class="tasting-summary-rating">[^<' +
+        ']*<\\/div>'
+      ))?.[0];
     assert.ok(row);
     assert.equal(
       (row.match(/class="glencairn-symbol glencairn-rating-symbol"/g) ||
@@ -119,7 +130,8 @@ test(
 );
 
 test(
-  'multiple tastings still open the exact latest record from the preview button',
+  'multiple tastings still open the exact latest record from the preview \
+button',
   () => {
     const html = detailHtml([
       {id: 'earlier', tastedOn: '2026-11-10', rating: 70},
@@ -137,7 +149,8 @@ test(
 );
 
 test(
-  'when a bottling has no notes, the overview action does not use an invalid tasting ID',
+  'when a bottling has no notes, the overview action does not use an \
+invalid tasting ID',
   () => {
     const html = detailHtml();
     assert.match(html, /data-act="tastings-open"(?=\s|>)/);
@@ -188,7 +201,13 @@ test(
     }).home();
     assert.match(
       html,
-      /<section class="analytics-panel tasting-home-recent">\s*<div class="tasting-panel-heading ds-section-header"><h3>Einträge<\/h3>\s*<button[^>]*data-act="tastings-start-choice"[^>]*><svg class="new-icon"/
+      new RegExp(
+        '<section class="analytics-panel tasting-ho' +
+        'me-recent">\\s*<div class="tasting-panel-h' +
+        'eading ds-section-header"><h3>Einträge<\\/' +
+        'h3>\\s*<button[^>]*data-act="tastings-star' +
+        't-choice"[^>]*><svg class="new-icon"'
+      )
     );
     assert.doesNotMatch(html, /class="tasting-add-action"/);
   }
@@ -238,7 +257,12 @@ test(
        */
       refresh() {},
     }).list();
-    const info = html.match(/<div class="tasting-bottling-summary tasting-bottling-photo-layout">[\s\S]*?<\/section>/)?.[0];
+    const info = html.match(
+      new RegExp(
+        '<div class="tasting-bottling-summary tasti' +
+        'ng-bottling-photo-layout">[\\s\\S]*?<\\/se' +
+        'ction>'
+      ))?.[0];
     assert.ok(info);
     assert.ok(info.indexOf('class="tasting-bottling-photo"') <
       info.indexOf('class="tasting-bottling-copy"'));
@@ -246,7 +270,8 @@ test(
 );
 
 test(
-  'saved tasting edit control sits inside the record data panel rather than the section heading',
+  'saved tasting edit control sits inside the record data panel rather than \
+the section heading',
   () => {
     let html = '';
     const note = {
@@ -282,7 +307,9 @@ test(
        */
       refresh() {},
     }).editor();
-    const start = html.indexOf('class="tasting-record-fields analytics-panel tasting-readonly-meta-panel"');
+    const start = html.indexOf(
+      'class="tasting-record-fields analytics-panel tasting-readonly-meta-pa\
+nel"');
     const end = html.indexOf('class="tasting-top-row"', start);
     assert.ok(start > -1 && end > start);
     const recordPanel = html.slice(start, end);
@@ -300,7 +327,8 @@ test(
 );
 
 test(
-  'latest tasting card reuses the radar and previews notes as other detail facts, but hides colour',
+  'latest tasting card reuses the radar and previews notes as other detail \
+facts, but hides colour',
   () => {
     const flavorProfile = {
       woody: 4,
@@ -330,7 +358,10 @@ test(
         rating: 80,
         whiskyColor: 'amber',
         flavorProfile,
-        tastingNotes: {nose: 'Rauch & Vanille', palate: '<Frucht>', finish: '   '},
+        tastingNotes: {
+          nose: 'Rauch & Vanille', palate: '<Frucht>',
+          finish: '   ',
+        },
       },
     ]);
     const summary = html.split('<section data-region="detail-tastings"')[1]
@@ -346,11 +377,20 @@ test(
     assert.doesNotMatch(summary, /flavor-sliders|data-flavor-range/);
     assert.match(
       summary,
-      /class="tasting-summary-note"[\s\S]*class="tasting-summary-field-label">Nase<\/span>[\s\S]*class="tasting-summary-note-value">Rauch &amp; Vanille/
+      new RegExp(
+        'class="tasting-summary-note"[\\s\\S]*class' +
+        '="tasting-summary-field-label">Nase<\\/spa' +
+        'n>[\\s\\S]*class="tasting-summary-note-val' +
+        'ue">Rauch &amp; Vanille'
+      )
     );
     assert.match(
       summary,
-      /class="tasting-summary-field-label">Geschmack<\/span>[\s\S]*class="tasting-summary-note-value">&lt;Frucht&gt;/
+      new RegExp(
+        'class="tasting-summary-field-label">Geschm' +
+        'ack<\\/span>[\\s\\S]*class="tasting-summar' +
+        'y-note-value">&lt;Frucht&gt;'
+      )
     );
     assert.doesNotMatch(summary, /Old note|>Abgang<\/span>/);
     assert.match(summary, /data-act="tastings-open"/);
@@ -358,7 +398,8 @@ test(
 );
 
 test(
-  'compact preview shares panel edges and uses normal buttons and detail-field notes',
+  'compact preview shares panel edges and uses normal buttons and \
+detail-field notes',
   () => {
     const html = detailHtml([{
       id: 'compact',
@@ -383,10 +424,15 @@ test(
     );
     const mainEnd = section.indexOf('class="tasting-summary-radar"');
     assert.ok(date < button && button < mainEnd && mainEnd < notes,
-      'the tasting button follows the date inside the left summary, before radar and optional notes');
+      'the tasting button follows the date inside the left summary, before \
+radar and optional notes');
     assert.match(
       section,
-      /class="muted tasting-summary-meta"[^>]*>[^<]*<\/span>\s*<div class="actions tasting-summary-actions">/
+      new RegExp(
+        'class="muted tasting-summary-meta"[^>]*>[^' +
+        '<]*<\\/span>\\s*<div class="actions tastin' +
+        'g-summary-actions">'
+      )
     );
     assert.match(
       section,
@@ -394,11 +440,19 @@ test(
     );
     assert.match(
       section,
-      /class="tasting-summary-field-label">Nase<\/span><div class="tasting-summary-note-value">Vanille und Frucht<\/div>/
+      new RegExp(
+        'class="tasting-summary-field-label">Nase<' +
+        '\\/span><div class="tasting-summary-note-v' +
+        'alue">Vanille und Frucht<\\/div>'
+      )
     );
     assert.doesNotMatch(
       section,
-      /tasting-summary-color|tasting-readonly-color|>Farbe<|>Geschmacksprofil<|>Geschmacksnoten</
+      new RegExp(
+        'tasting-summary-color|tasting-readonly-col' +
+        'or|>Farbe<|>Geschmacksprofil<|>Geschmacksn' +
+        'oten<'
+      )
     );
   }
 );
@@ -426,7 +480,11 @@ test(
       .split('</section>')[0];
     assert.match(
       section,
-      /class="tasting-summary-radar"[\s\S]*?class="tasting-summary-notes is-empty" aria-hidden="true"><\/div>/
+      new RegExp(
+        'class="tasting-summary-radar"[\\s\\S]*?cla' +
+        'ss="tasting-summary-notes is-empty" aria-h' +
+        'idden="true"><\\/div>'
+      )
     );
     assert.doesNotMatch(
       section,
@@ -466,7 +524,11 @@ test(
         .split('</section>')[0];
     assert.doesNotMatch(
       colorSummary,
-      /tasting-summary-color|tasting-summary-radar|class="tasting-summary-note"|tasting-readonly-color/
+      new RegExp(
+        'tasting-summary-color|tasting-summary-rada' +
+        'r|class="tasting-summary-note"|tasting-rea' +
+        'donly-color'
+      )
     );
     assert.match(
       colorSummary,

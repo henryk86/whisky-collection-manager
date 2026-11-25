@@ -1,13 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {mapLegendHtml, legendMarkerDiameter} from '../../public/js/views/map.js';
+import {mapLegendHtml, legendMarkerDiameter}
+  from '../../public/js/views/map.js';
 import {markerDiameter} from '../../public/js/domain/distillery-map.js';
 import {initializeLanguage} from '../../public/js/i18n/index.js';
 
 
 test(
-  'map legend explains stocked status before the compact bottle-size scale and clusters',
+  'map legend explains stocked status before the compact bottle-size scale \
+and clusters',
   () => {
     const html = mapLegendHtml(false);
     assert.equal((html.match(/class="map-legend-section /g) || []).length, 3);
@@ -24,18 +26,22 @@ test(
     assert.match(html, /Flaschenzahl/);
     assert.equal((html.match(/map-legend-stock-icon/g) || []).length, 3);
     for (const n of [1, 10, 100]) {
-      assert.ok(html.includes(`map-legend-stock-icon" style="--legend-diameter:${legendMarkerDiameter(n)}px"`));
+      assert.ok(html.includes(
+        `map-legend-stock-icon" style="--legend-diameter:${
+legendMarkerDiameter(n)}px"`));
     }
     assert.ok(html.indexOf('>1</span>') < html.indexOf('>10</span>'));
     assert.ok(html.indexOf('>10</span>') < html.indexOf('>100</span>'));
-    assert.ok(html.includes(`map-cluster-legend-icon" style="--legend-diameter:${27}px"`));
+    assert.ok(html.includes(
+      `map-cluster-legend-icon" style="--legend-diameter:${27}px"`));
     assert.match(html, />6<\/span>Gruppiert/);
     assert.doesNotMatch(html, /map-legend-empty|map-pagoda-icon/);
   }
 );
 
 test(
-  'both stocked and empty-site legend sections use heading followed by status icons',
+  'both stocked and empty-site legend sections use heading followed by \
+status icons',
   () => {
     const html = mapLegendHtml(true);
     assert.ok(html.indexOf('map-legend-status') <
@@ -64,7 +70,8 @@ test('legend marker sizes remain compact relative to real map markers', () => {
 });
 
 test(
-  'map legend translates active and closed distillery statuses in English for stocked and empty sites',
+  'map legend translates active and closed distillery statuses in English \
+for stocked and empty sites',
   async () => {
     const originalLocation = globalThis.location;
     /**

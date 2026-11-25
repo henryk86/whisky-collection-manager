@@ -1,6 +1,7 @@
 import {t} from '../../i18n/index.js';
 import {MODEL_SIZE, segment} from './model.js';
-import {analyzeBottleMask, cutoutOutputSize, tightenedCrop, visibleAlphaRows} from './crop.js';
+import {analyzeBottleMask, cutoutOutputSize, tightenedCrop, visibleAlphaRows}
+  from './crop.js';
 import {sharpenCutoutAlpha} from './edge.js';
 
 /**
@@ -157,7 +158,8 @@ export function composeCutout(image, rawMask) {
  * @param {!Object=} options3 Destructured options for this operation.
  * @return {!Promise<string>} Promise fulfilled when the operation completes.
  */
-export async function cutoutImage(url, onProgress = () => {}, {segmentationUrl} = {}) {
+export async function cutoutImage(url, onProgress = () => {},
+  {segmentationUrl} = {}) {
   onProgress('loading');
   const image = await loadImage(url);
   const input = canvas(MODEL_SIZE, MODEL_SIZE);
@@ -168,7 +170,8 @@ export async function cutoutImage(url, onProgress = () => {}, {segmentationUrl} 
     await loadImage(segmentationUrl) : image;
   inputContext.drawImage(segmentationImage, 0, 0, MODEL_SIZE, MODEL_SIZE);
   onProgress('segmenting');
-  const mask = await segment(inputContext.getImageData(0, 0, MODEL_SIZE, MODEL_SIZE));
+  const mask = await segment(inputContext.getImageData(0, 0, MODEL_SIZE,
+    MODEL_SIZE));
   onProgress('compositing');
   return composeCutout(image, mask);
 }

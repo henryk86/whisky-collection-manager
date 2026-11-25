@@ -6,7 +6,8 @@ const catalog = JSON.parse(fs.readFileSync(
   'utf8'
 ));
 test(
-  'published distilleries have countries; Scottish names are not UK/GB and key regions are curated',
+  'published distilleries have countries; Scottish names are not UK/GB and \
+key regions are curated',
   () => {
     assert.equal(catalog.length, 450);
     assert.ok(catalog.every(site => site.country));

@@ -16,7 +16,10 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
  * @param {*} value Value to process.
  * @param {*} message Message to display or use for diagnostics.
  */
-const check = (value, message) => {if (!value) throw new Error(`Deployment contract: ${message}`);};
+const check = (value, message) => {
+  if (!value) throw new Error(
+    `Deployment contract: ${message}`);
+};
 
 /**
  * Enforces the text precondition.
@@ -113,12 +116,14 @@ export function verifyDeploymentConfiguration(read = name =>
     'read_only: true',
     'container root filesystem must remain read-only'
   );
-  for (const destination of ['/srv/whisky', '/backup-control', '/backup-targets', '/config/rclone'])
+  for (const destination of ['/srv/whisky', '/backup-control',
+    '/backup-targets', '/config/rclone'])
     check(
       compose.includes(`:${destination}`),
       `durable volume missing: ${destination}`
     );
-  for (const secret of ['backup-admin-token', 'backup-worker-token', 'restic-password'])
+  for (const secret of ['backup-admin-token', 'backup-worker-token',
+    'restic-password'])
     check(
       compose.includes(`/run/secrets/${secret}:ro`),
       `read-only secret missing: ${secret}`
@@ -281,7 +286,8 @@ export function verifyDeploymentConfiguration(read = name =>
   );
   check(!fs.existsSync(path.join(ROOT, '.github/workflows/docker-publish.yml')),
     'obsolete parallel Docker publisher must not exist');
-  const uploads = [...release.matchAll(/^\s*run: gh release upload (.*)$/gm)].map(hit => hit[1]);
+  const uploads = [...release.matchAll(/^\s*run: gh release upload (.*)$/gm)]
+    .map(hit => hit[1]);
   check(
     uploads.length === 2,
     'both release assets must be explicitly uploaded'
@@ -310,11 +316,16 @@ export function verifyDeploymentConfiguration(read = name =>
     'lockfile must match the pinned Playwright dependency');
   check(lock.packages?.['node_modules/playwright-core']?.version === pinned,
     'lockfile must contain that exact Playwright version');
-  return {service: 'app', statusJob: 'test', browserCheck: true, offlineCheck: true};
+  return {
+    service: 'app', statusJob: 'test', browserCheck: true, offlineCheck:
+      true,
+  };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) ===
   fileURLToPath(import.meta.url)) {
   verifyDeploymentConfiguration();
-  console.log('Deployment contracts: Docker, HTTPS, backup, offline release and GitHub CI OK.');
+  console.log(
+    'Deployment contracts: Docker, HTTPS, backup, offline release and \
+GitHub CI OK.');
 }

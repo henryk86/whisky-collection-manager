@@ -49,7 +49,8 @@ export function normalizeFlavorProfile(value) {
     (hasFormerFiery && value.fiery !== null &&
       !(typeof value.fiery === 'number' && Number.isInteger(value.fiery) &&
         value.fiery >= 0 && value.fiery <= 10))) {
-    throw new Error('Geschmacksprofil muss acht bisherige oder alle zehn Achsen enthalten');
+    throw new Error(
+      'Geschmacksprofil muss acht bisherige oder alle zehn Achsen enthalten');
   }
   const result = {};
   for (const axis of FLAVOR_AXES) {
@@ -62,7 +63,8 @@ export function normalizeFlavorProfile(value) {
       score >= 0 && score <= 10) {
       result[axis] = score;
     } else {
-      throw new Error('Geschmacksprofil: Werte müssen ganze Zahlen von 0 bis 10 sein');
+      throw new Error(
+        'Geschmacksprofil: Werte müssen ganze Zahlen von 0 bis 10 sein');
     }
   }
   return result;

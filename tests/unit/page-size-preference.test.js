@@ -42,7 +42,8 @@ test('all selectable page sizes are persisted and restored', () => {
 });
 
 test('missing, unsupported and malformed stored values revert to 24', () => {
-  for (const value of [null, '', '0', '13', '240', '-1', '1e2', '024', 'Infinity', 'invalid']) {
+  for (const value of [null, '', '0', '13', '240', '-1', '1e2', '024',
+    'Infinity', 'invalid']) {
     const storage = fakeStorage(value === null ? {} :
       {[PAGE_SIZE_STORAGE_KEY]: value});
     assert.equal(getPageSizePreference(storage), 24);
@@ -73,7 +74,8 @@ test(
 test(
   'initial UI state restores the browser preference across new app instances',
   () => {
-    const oldStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    const oldStorage = Object.getOwnPropertyDescriptor(globalThis,
+      'localStorage');
     const storage = fakeStorage({[PAGE_SIZE_STORAGE_KEY]: '96'});
     try {
       Object.defineProperty(
@@ -86,7 +88,8 @@ test(
       savePageSizePreference(12);
       assert.equal(createState(route).pageSize, 12);
     } finally {
-      if (oldStorage) Object.defineProperty(globalThis, 'localStorage', oldStorage);
+      if (oldStorage) Object.defineProperty(globalThis, 'localStorage',
+        oldStorage);
       else delete globalThis.localStorage;
     }
   }

@@ -1,5 +1,6 @@
 import {t} from '../../i18n/index.js';
-/** Reduce the broad, semi-transparent U2Netp fringe without introducing a hard jagged contour.
+/** Reduce the broad, semi-transparent U2Netp fringe without introducing a
+ * hard jagged contour.
  * The input is unpremultiplied RGBA from Canvas ImageData; RGB remains
  * untouched.
  * Apply AFTER resampling/rotation, so the transition is narrow in final image
