@@ -9,10 +9,14 @@ npm run test:visual:strict  # optionaler Vergleich mit historischen Baselines
 npm run visual:update       # nur lokal, für den optionalen historischen Vergleich
 ```
 
-Die visuelle Suite erzeugt 136 Aufnahmen (17 Zustände × vier Breiten
+Die visuelle Suite erzeugt 144 Aufnahmen (18 Zustände × vier Breiten
 390/768/1024/1440 px × Hell-/Dunkelmodus) mit festen Testdaten,
 Browserzeit, Locale, Fonts und deaktivierten Animationen. Sie prüft Überlauf,
 Modal-Fokus, Tab-Falle, Escape, verschachtelte Formulare und Hintergrundscroll.
+Der zusätzliche Zustand `modal-flight-expanded` öffnet sämtliche Fassgruppen
+und Untertypen über die echten Bedienelemente, aktiviert die Altersspanne und
+harte Filter und erfasst den vollständigen Dialog mit bedarfsgerechter Höhe.
+Abgeschnittene Inhalte und horizontaler Dialogüberlauf sind Fehler.
 Die Browser- und Aufnahmetests sind unabhängig von der visuellen Freigabe.
 Aufnahmefehler, horizontaler Überlauf und Interaktionsfehler lassen sich nicht
 mit einer visuellen Freigabe umgehen.

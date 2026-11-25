@@ -27,8 +27,12 @@ export function loadCaptures(directory) {
     const geometry = JSON.parse(readFileSync(
       path.join(directory, `${id}.json`)));
     const decoded = decodePNG(image);
+    const expectedHeight = id.startsWith('modal-flight-expanded__') ?
+      geometry.captureHeight : 1100;
     if (decoded.width !== Number(id.split('__')[1]) ||
-      decoded.height !== 1100 || !Number.isFinite(geometry.overflow)) {
+      !Number.isInteger(expectedHeight) || expectedHeight < 1100 ||
+      decoded.height !== expectedHeight ||
+      !Number.isFinite(geometry.overflow)) {
       throw new Error(`Invalid capture dimensions or geometry: ${id}`);
     }
     entries.set(id, {image, geometry});

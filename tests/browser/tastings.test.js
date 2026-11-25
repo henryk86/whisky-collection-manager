@@ -86,11 +86,72 @@ test(
       await form.locator('[data-flight-notes]').fill('Notes stay on reopening');
       await form.locator('[data-flight-plan-style]').selectOption('similar');
       await form.locator('[data-flight-plan-focus]').selectOption('smoky');
-      await form.locator('.flight-plan-advanced summary').click();
+      await form.locator('.flight-plan-advanced > summary').click();
       await form.locator('[data-flight-plan-cask-mode]')
         .selectOption('specific');
-      await form.locator('[data-flight-plan-cask-group]')
-        .selectOption('sherry');
+      await form.locator('[name="flight-cask-group-sherry"]').check();
+      await form.locator('[name="flight-cask-group-port"]').check();
+      const sherry = form.locator(
+        '[data-flight-plan-cask-subtype-wrap="sherry"]');
+      assert.ok(await sherry.evaluate(el => el.open));
+      await form.locator('[name="flight-cask-feature-sherry-style-px"]')
+        .check();
+      const port = form.locator(
+        '[data-flight-plan-cask-subtype-wrap="port"]');
+      assert.ok(await port.evaluate(el => el.open));
+      await form.locator('[name="flight-cask-feature-port-style-tawny"]')
+        .check();
+      assert.equal(await sherry.locator('[data-flight-plan-cask-count]')
+        .textContent(), '1 ausgewählt');
+      await sherry.locator('summary').click();
+      assert.equal(await sherry.evaluate(el => el.open), false);
+      await sherry.locator('summary').click();
+      assert.match(await form.locator('[data-flight-plan-cask-selection]')
+        .textContent(), /Sherry.*Portwein/);
+      await form.locator('[data-flight-plan-style]').selectOption('discover');
+      const strict = form.locator('[name="flight-plan-strict"]');
+      await strict.check();
+      await strict.focus();
+      for (const viewport of [
+        {width: 1366, height: 900}, {width: 390, height: 844},
+      ]) {
+        await page.setViewportSize(viewport);
+        const layout = await form.locator('label.ds-checkbox-field:visible')
+          .evaluateAll(labels =>
+            labels.map(label => {
+              const box = label.getBoundingClientRect();
+              const input = label.querySelector('input')
+                .getBoundingClientRect();
+              const text = label.querySelector('span').getBoundingClientRect();
+              const size = parseFloat(getComputedStyle(label)
+                .getPropertyValue('--ds-checkbox-size'));
+              return {
+                name: label.querySelector('input').name,
+                inline: text.left >= input.right && Math.abs(
+                  input.top + input.height / 2 - text.top - text.height / 2
+                ) <= 2,
+                fits: text.right <= box.right + 1,
+                compact: Math.abs(input.width - size) <= 1 &&
+                  Math.abs(input.height - size) <= 1,
+              };
+            })
+          );
+        assert.ok(layout.some(item => item.name === 'flight-plan-strict'),
+          'Hard filter checkbox must be covered by layout checks');
+        assert.ok(layout.some(item => item.name === 'flight-plan-unfamiliar'),
+          'Discovery checkbox must be covered by layout checks');
+        for (const item of layout) {
+          assert.ok(item.inline && item.fits && item.compact,
+            `Checkbox layout at ${viewport.width}px: ${JSON.stringify(item)}`);
+        }
+      }
+      await page.setViewportSize({width: 1366, height: 900});
+      assert.equal(await strict.isChecked(), true);
+      await strict.uncheck();
+      await form.locator('[data-flight-plan-style]').selectOption('similar');
+      await form.locator('[data-flight-plan-focus]').selectOption('smoky');
+      await form.locator('[data-flight-plan-cask-phase]')
+        .selectOption('finish');
       const help = page.locator('#modal-root .dialog-head [data-act="flight-plan-help"]');
       await help.waitFor({state: 'visible'});
       assert.equal(
@@ -131,10 +192,38 @@ test(
         await form.locator('[data-flight-plan-focus]').inputValue(),
         'smoky'
       );
+      for (const name of [
+        'flight-cask-group-sherry',
+        'flight-cask-group-port',
+        'flight-cask-feature-sherry-style-px',
+        'flight-cask-feature-port-style-tawny',
+      ])
+        assert.ok(await form.locator(`[name="${name}"]`).isChecked(), name);
       assert.equal(
-        await form.locator('[data-flight-plan-cask-group]').inputValue(),
-        'sherry'
+        await form.locator('[data-flight-plan-cask-phase]').inputValue(),
+        'finish'
       );
+      await form.locator('[name="flight-cask-group-port"]').uncheck();
+      assert.equal(
+        await form.locator('[data-flight-plan-cask-subtype-wrap="port"]')
+          .isVisible(),
+        false
+      );
+      await form.locator('[name="flight-cask-group-rum"]').check();
+      assert.equal(
+        await form.locator('[data-flight-plan-cask-subtype-wrap="rum"]')
+          .count(),
+        0
+      );
+      await form.locator('[data-act="flight-plan-cask-reset"]').click();
+      assert.equal(await form.locator('[name^="flight-cask-"]:checked')
+        .count(), 0);
+      assert.equal(await form.locator('[data-flight-plan-cask-phase]')
+        .inputValue(), 'any');
+      assert.equal(await form.locator('[data-flight-plan-cask-selection]')
+        .textContent(), 'Alle Fassgruppen');
+      assert.equal(await form.locator('[data-flight-name]').inputValue(),
+        'Draft remains unchanged');
       assert.equal(
         await form.locator('.flight-plan-advanced').evaluate(el => el.open),
         true

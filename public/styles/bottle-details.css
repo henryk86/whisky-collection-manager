@@ -2501,6 +2501,10 @@
   margin-bottom: 18px;
 }
 
+.tasting-flight-page > .actions + .tasting-flight-members {
+  margin-top: var(--ds-space-5);
+}
+
 .tasting-flight-summary .tasting-panel-heading {
   align-items: start;
 }
@@ -2521,14 +2525,14 @@
   gap: 14px;
 }
 
-.tasting-flight-form label,
+.tasting-flight-form label:not(.ds-checkbox-field),
 .tasting-flight-add label {
   display: grid;
   gap: 7px;
   min-width: 0;
 }
 
-.tasting-flight-form input,
+.tasting-flight-form input:not([type="checkbox"]):not([type="radio"]),
 .tasting-flight-form textarea,
 .tasting-flight-add select {
   width: 100%;

@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync, rmSync, existsSync} from 'node:fs';
+import {mkdtempSync, rmSync, existsSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {compareCaptures} from '../../scripts/visual-compare.js';
+import {compareCaptures, loadCaptures} from '../../scripts/visual-compare.js';
 import {encodeRGB} from '../../scripts/visual-png.js';
 
 /**
@@ -118,3 +118,37 @@ test('small pixel differences are tolerated and remain reviewable', () => {
     rmSync(output, {recursive: true, force: true});
   }
 });
+
+
+test('expanded planner captures use their measured full viewport height',
+  () => {
+    const directory = mkdtempSync(path.join(tmpdir(), 'wcm-expanded-'));
+    try {
+      const expanded = 'modal-flight-expanded__390__dark';
+      const height = 1800;
+      const image = encodeRGB(390, height, Buffer.alloc(390 * height * 3));
+      writeFileSync(path.join(directory, 'report.json'), JSON.stringify({
+        ...report, failed: 0, results: [{id: expanded}],
+      }));
+      writeFileSync(path.join(directory, `${expanded}.png`), image);
+      const geometryPath = path.join(directory, `${expanded}.json`);
+      writeFileSync(geometryPath, JSON.stringify({
+        overflow: 0, captureHeight: height,
+      }));
+      assert.equal(loadCaptures(directory).entries.size, 1);
+      writeFileSync(geometryPath, JSON.stringify({
+        overflow: 0, captureHeight: 1100,
+      }));
+      assert.throws(
+        () => loadCaptures(directory),
+        /Invalid capture dimensions/
+      );
+      writeFileSync(geometryPath, JSON.stringify({overflow: 0}));
+      assert.throws(
+        () => loadCaptures(directory),
+        /Invalid capture dimensions/
+      );
+    } finally {
+      rmSync(directory, {recursive: true, force: true});
+    }
+  });
