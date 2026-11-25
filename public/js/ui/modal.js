@@ -183,8 +183,24 @@ export function createModal({state, onClose}) {
     const overlay = host.querySelector('.overlay');
     if (!overlay) return;
     overlay.__dsModalState = state.modal;
+    // A drag from a form field can dispatch click on the common ancestor.
+    // Dismiss only when the primary pointer starts and ends on the backdrop.
+    let backdropPressed = false;
+    overlay.addEventListener('pointerdown', event => {
+      backdropPressed = event.isPrimary && event.button === 0 &&
+        event.target === overlay;
+    }, true);
+    overlay.addEventListener('pointerup', event => {
+      backdropPressed = backdropPressed && event.isPrimary &&
+        event.target === overlay;
+    }, true);
+    overlay.addEventListener('pointercancel', () => {
+      backdropPressed = false;
+    }, true);
     overlay.addEventListener('click', event => {
-      if (event.target === event.currentTarget) closeModal();
+      const dismiss = backdropPressed && event.target === overlay;
+      backdropPressed = false;
+      if (dismiss) closeModal();
     });
     overlay.addEventListener('keydown', trapKeys);
     overlay.addEventListener('touchmove', event => {

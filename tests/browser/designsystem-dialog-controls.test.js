@@ -242,3 +242,26 @@ test(
     });
   }
 );
+
+
+test('browser: dragging text outside a modal does not dismiss it', async () => {
+  await session(async ({page, open}) => {
+    await open(); await goTastings(page);
+    await page.locator('.tasting-flight-home [data-act="flight-plan-new"]')
+      .click();
+    const dialog = page.locator('#modal-root .dialog');
+    const field = dialog.locator('[data-flight-name]');
+    await field.fill('Unsaved flight name');
+    const bounds = await field.boundingBox();
+    assert.ok(bounds);
+    const x = bounds.x + 20, y = bounds.y + bounds.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(2, 2, {steps: 12});
+    await page.mouse.up();
+    assert.equal(await dialog.count(), 1, 'selection must not close modal');
+    assert.equal(await field.inputValue(), 'Unsaved flight name');
+    await page.mouse.click(2, 2);
+    assert.equal(await dialog.count(), 0, 'direct backdrop click closes modal');
+  });
+});
