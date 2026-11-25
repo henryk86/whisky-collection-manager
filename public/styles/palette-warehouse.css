@@ -1,7 +1,7 @@
 /* Warehouse domain palette: original colours, independent of UI themes.
    Shared semantic UI and status colours live in tokens.css instead. */
 :root {
-  --ds-warehouse-bottle-symbol-warehouse-label-fill: #dfcba9;
+  --ds-warehouse-bottle-symbol-warehouse-label-fill: var(--ds-warehouse-drag-rect-stroke);
   --ds-warehouse-door-range-border: #888;
   --ds-warehouse-drag-avatar-filter: rgb(0 0 0 / .3);
   --ds-warehouse-drag-hover-rect-fill: #d2a86d;
@@ -11,7 +11,7 @@
   --ds-warehouse-drag-text-fill: #112439;
   --ds-warehouse-elevated-hover-rect-fill: #91baca;
   --ds-warehouse-elevated-rect-fill: #6c98a9;
-  --ds-warehouse-elevated-rect-stroke: #e4ceac;
+  --ds-warehouse-elevated-rect-stroke: var(--ds-warehouse-drag-rect-stroke);
   --ds-warehouse-find-return-badge-background: #092e4d;
   --ds-warehouse-find-return-badge-color: #fff;
   --ds-warehouse-wood: #a17d4c;

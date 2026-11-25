@@ -3,12 +3,13 @@
 :root {
   --ds-map-all-toggle-input-before-box-shadow: rgba(0,0,0,.25);
   --ds-map-accent: #a77b40;
-  --ds-map-all-toggle-input-checked-before-background: #fff;
+  --ds-map-contrast-white: #fff;
+  --ds-map-all-toggle-input-checked-before-background: var(--ds-map-contrast-white);
   --ds-map-attribution-a-color: #174f7c;
   --ds-map-attribution-background: #ffffffdb;
   --ds-map-attribution-color: #172e39;
   --ds-map-canvas-background: #c4d7d4;
-  --ds-map-closed-legend-map-pagoda-icon-color: #626773;
+  --ds-map-closed-legend-map-pagoda-icon-color: var(--ds-map-marker-closed-background);
   --ds-map-cluster-visual-box-shadow: rgba(0,0,0,.4);
   --ds-map-cluster-visual-cluster-fill: #a27238;
   --ds-map-cluster-visual-cluster-rim: #fff5dc;
@@ -18,13 +19,13 @@
   --ds-map-controls-button-color: #19364d;
   --ds-map-marker-closed-background: #626773;
   --ds-map-marker-closed-border-color: #d3d5d9;
-  --ds-map-marker-closed-color: #fff;
+  --ds-map-marker-closed-color: var(--ds-map-contrast-white);
   --ds-map-marker-closed-hover-background: #818590;
   --ds-map-marker-closed-map-marker-pagoda-background: #d7d9de;
-  --ds-map-marker-closed-map-marker-pagoda-border-color: #626773;
+  --ds-map-marker-closed-map-marker-pagoda-border-color: var(--ds-map-marker-closed-background);
   --ds-map-marker-closed-map-marker-pagoda-color: #343b46;
   --ds-map-marker-closed-selected-background: #747985;
-  --ds-map-marker-closed-selected-border-color: #fff;
+  --ds-map-marker-closed-selected-border-color: var(--ds-map-contrast-white);
   --ds-map-marker-cluster-hover-cluster-fill: #865726;
   --ds-map-marker-cluster-selected-cluster-fill: #986526;
   --ds-map-marker-hover-background: #a7732f;
@@ -35,20 +36,20 @@
   --ds-map-marker-pagoda-hover-background: #f4d49b;
   --ds-map-marker-pagoda-hover-color: #17334b;
   --ds-map-marker-pagoda-selected-background: #d2ad76;
-  --ds-map-marker-pagoda-selected-border-color: #fff;
+  --ds-map-marker-pagoda-selected-border-color: var(--ds-map-contrast-white);
   --ds-map-marker-pagoda-selected-color: #132e46;
   --ds-map-marker-selected-background: #b18446;
-  --ds-map-marker-selected-border-color: #fff;
+  --ds-map-marker-selected-border-color: var(--ds-map-contrast-white);
   --ds-map-marker-gold: #a27238;
   --ds-map-stock-visual-background: #173b5c;
   --ds-map-stock-visual-border: #ffead1;
   --ds-map-stock-visual-box-shadow: rgba(0,0,0,.34);
-  --ds-map-stock-visual-color: #fff;
+  --ds-map-stock-visual-color: var(--ds-map-contrast-white);
   --ds-map-zoom-level-background: #fffdf3dd;
-  --ds-map-zoom-level-color: #1e3245;
+  --ds-map-zoom-level-color: var(--ds-map-controls-button-color);
   --ds-map-site-drawer-backdrop-background: rgba(3,14,25,.58);
   --ds-map-site-drawer-box-shadow: rgba(0,0,0,.25);
-  --ds-map-site-nav-a-aria-current-page-color: #fff;
+  --ds-map-site-nav-a-aria-current-page-color: var(--ds-map-contrast-white);
 }
 
 :root[data-theme="dark"] {
@@ -62,7 +63,7 @@
   --ds-map-controls-button-border-color: #65798b;
   --ds-map-controls-button-color: #edf3fa;
   --ds-map-marker-cluster-hover-cluster-fill: #c6985c;
-  --ds-map-zoom-level-background: #182e41e8;
-  --ds-map-zoom-level-color: #e7eff7;
+  --ds-map-zoom-level-background: var(--ds-map-attribution-background);
+  --ds-map-zoom-level-color: var(--ds-map-controls-button-color);
   --ds-map-site-nav-a-aria-current-page-background: #34506b;
 }
