@@ -42,14 +42,14 @@
 
 .pagination-pages .current {
   background: var(--navy);
-  color: #fff;
+  color: var(--ds-color-pagination-pages-current-color);
   border-color: var(--navy);
   cursor: default;
 }
 
 .pagination-pages .current:hover {
   background: var(--navy);
-  color: #fff;
+  color: var(--ds-color-pagination-pages-current-hover-color);
 }
 
 .pagination-ellipsis {

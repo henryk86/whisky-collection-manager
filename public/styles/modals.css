@@ -21,7 +21,7 @@
   touch-action: pan-y;
   background: var(--paper);
   padding: var(--ds-dialog-padding);
-  box-shadow: 0 25px 80px #0005;
+  box-shadow: 0 25px 80px var(--ds-color-dialog-box-shadow);
   border-top: 5px solid var(--gold);
 }
 

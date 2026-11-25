@@ -16,7 +16,7 @@
   position: fixed;
   inset: 0;
   z-index: 80;
-  background: rgba(3,14,25,.58);
+  background: var(--ds-map-site-drawer-backdrop-background);
 }
 
 .site-drawer {
@@ -27,7 +27,7 @@
   padding: 20px;
   background: var(--paper);
   color: var(--ink);
-  box-shadow: -6px 0 35px rgba(0,0,0,.25);
+  box-shadow: -6px 0 35px var(--ds-map-site-drawer-box-shadow);
   overflow-y: auto;
 }
 
@@ -72,7 +72,7 @@
 .site-nav a[aria-current="page"] {
   background: var(--navy-deep);
   border-color: var(--navy-deep);
-  color: #fff;
+  color: var(--ds-map-site-nav-a-aria-current-page-color);
 }
 
 .site-nav svg {
@@ -82,7 +82,7 @@
 }
 
 :root[data-theme="dark"] .site-nav a[aria-current="page"] {
-  background: #34506b;
+  background: var(--ds-map-site-nav-a-aria-current-page-background);
 }
 
 /* Map title, summary and split view */
@@ -160,18 +160,18 @@
   left: 2px;
   background: var(--paper);
   border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  box-shadow: 0 1px 3px var(--ds-map-all-toggle-input-before-box-shadow);
   transition: transform .16s;
 }
 
 .map-all-toggle input:checked {
-  background: #a77b40;
-  border-color: #a77b40;
+  background: var(--ds-map-accent);
+  border-color: var(--ds-map-accent);
 }
 
 .map-all-toggle input:checked::before {
   transform: translateX(15px);
-  background: #fff;
+  background: var(--ds-map-all-toggle-input-checked-before-background);
 }
 
 .map-all-toggle input:focus-visible {
@@ -197,7 +197,7 @@
   overflow: hidden;
   position: relative;
   border: 1px solid var(--line);
-  background: #c4d7d4;
+  background: var(--ds-map-canvas-background);
 }
 
 .map-viewport {
@@ -245,7 +245,7 @@
    * CSS reacts immediately when data-theme changes, without tile reloading.
    */
 :root[data-theme="dark"] .map-canvas {
-  background: #2a4052;
+  background: var(--ds-map-canvas-background);
 }
 
 :root[data-theme="dark"] .map-tiles {
@@ -253,29 +253,29 @@
 }
 
 :root[data-theme="dark"] .map-controls button {
-  background: #1c3348;
-  color: #edf3fa;
-  border-color: #65798b;
+  background: var(--ds-map-controls-button-background);
+  color: var(--ds-map-controls-button-color);
+  border-color: var(--ds-map-controls-button-border-color);
 }
 
 :root[data-theme="dark"] .map-zoom-level {
-  background: #182e41e8;
-  color: #e7eff7;
+  background: var(--ds-map-zoom-level-background);
+  color: var(--ds-map-zoom-level-color);
 }
 
 :root[data-theme="dark"] .map-attribution {
-  background: #182e41e8;
-  color: #e7eff7;
+  background: var(--ds-map-attribution-background);
+  color: var(--ds-map-attribution-color);
 }
 
 :root[data-theme="dark"] .map-attribution a {
-  color: #e5c18b;
+  color: var(--ds-map-attribution-a-color);
 }
 
 .map-marker-stem {
   position: absolute;
   height: 2px;
-  background: #a27238;
+  background: var(--ds-map-marker-gold);
   opacity: .8;
   transform-origin: left center;
   pointer-events: none;
@@ -297,22 +297,22 @@
 
 /* Shared shape for stocked individual distilleries. */
 .map-stock-visual {
-  background: #173b5c;
-  border: 3px solid #ffead1;
+  background: var(--ds-map-stock-visual-background);
+  border: 3px solid var(--ds-map-stock-visual-border);
   border-radius: 50%;
-  color: #fff;
-  box-shadow: 0 3px 13px rgba(0,0,0,.34);
+  color: var(--ds-map-stock-visual-color);
+  box-shadow: 0 3px 13px var(--ds-map-stock-visual-box-shadow);
 }
 
 .map-marker:hover,
 .map-marker:focus-visible {
-  background: #a7732f;
+  background: var(--ds-map-marker-hover-background);
   z-index: 10;
 }
 
 .map-marker.selected {
-  background: #b18446;
-  border-color: #fff;
+  background: var(--ds-map-marker-selected-background);
+  border-color: var(--ds-map-marker-selected-border-color);
   z-index: 5;
 }
 
@@ -321,22 +321,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5ebd7;
-  border: 2px solid #334b5c;
-  color: #213a51;
-  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  background: var(--ds-map-marker-pagoda-background);
+  border: 2px solid var(--ds-map-marker-pagoda-border);
+  color: var(--ds-map-marker-pagoda-color);
+  box-shadow: 0 2px 8px var(--ds-map-marker-pagoda-box-shadow);
 }
 
 .map-marker-pagoda:hover,
 .map-marker-pagoda:focus-visible {
-  background: #f4d49b;
-  color: #17334b;
+  background: var(--ds-map-marker-pagoda-hover-background);
+  color: var(--ds-map-marker-pagoda-hover-color);
 }
 
 .map-marker-pagoda.selected {
-  background: #d2ad76;
-  color: #132e46;
-  border-color: #fff;
+  background: var(--ds-map-marker-pagoda-selected-background);
+  color: var(--ds-map-marker-pagoda-selected-color);
+  border-color: var(--ds-map-marker-pagoda-selected-border-color);
 }
 
 .map-pagoda-icon {
@@ -349,7 +349,7 @@
 .map-pagoda-legend .map-pagoda-icon {
   width: 20px;
   height: 20px;
-  color: #a77b40;
+  color: var(--ds-map-accent);
 }
 
 .map-controls {
@@ -365,9 +365,9 @@
   place-items: center;
   width: 40px;
   height: 40px;
-  background: #fff;
-  color: #19364d;
-  border: 1px solid #b5b5b5;
+  background: var(--ds-map-controls-button-background);
+  color: var(--ds-map-controls-button-color);
+  border: 1px solid var(--ds-map-controls-button-border);
   cursor: pointer;
 }
 
@@ -380,9 +380,9 @@
   right: 12px;
   top: 12px;
   padding: 6px 9px;
-  background: #fffdf3dd;
+  background: var(--ds-map-zoom-level-background);
   font-size: 11px;
-  color: #1e3245;
+  color: var(--ds-map-zoom-level-color);
 }
 
 .map-attribution {
@@ -391,12 +391,12 @@
   right: 0;
   padding: 4px 7px;
   font-size: 10px;
-  color: #172e39;
-  background: #ffffffdb;
+  color: var(--ds-map-attribution-color);
+  background: var(--ds-map-attribution-background);
 }
 
 .map-attribution a {
-  color: #174f7c;
+  color: var(--ds-map-attribution-a-color);
 }
 
 /* Compact, content-sized legend: related markers stay together, with no
@@ -765,67 +765,67 @@
 /* Closed sites are identifiable by symbol AND muted colour, not colour
    alone. */
 .map-marker-closed {
-  background: #626773;
-  border-color: #d3d5d9;
-  color: #fff;
+  background: var(--ds-map-marker-closed-background);
+  border-color: var(--ds-map-marker-closed-border-color);
+  color: var(--ds-map-marker-closed-color);
   border-style: dashed;
 }
 
 .map-marker-closed.map-marker-pagoda {
-  background: #d7d9de;
-  border-color: #626773;
-  color: #343b46;
+  background: var(--ds-map-marker-closed-map-marker-pagoda-background);
+  border-color: var(--ds-map-marker-closed-map-marker-pagoda-border-color);
+  color: var(--ds-map-marker-closed-map-marker-pagoda-color);
 }
 
 .map-marker-closed:hover,
 .map-marker-closed:focus-visible {
-  background: #818590;
+  background: var(--ds-map-marker-closed-hover-background);
 }
 
 .map-marker-closed.selected {
-  background: #747985;
-  border-color: #fff;
+  background: var(--ds-map-marker-closed-selected-background);
+  border-color: var(--ds-map-marker-closed-selected-border-color);
 }
 
 .map-closed-legend .map-pagoda-icon {
-  color: #626773;
+  color: var(--ds-map-closed-legend-map-pagoda-icon-color);
 }
 
 /* Gold circular clusters remain distinct from blue/grey individual sites.
    * Their numeric label always shows the sum of physical bottles. */
 .map-cluster-visual {
-  --cluster-fill: #a27238;
-  --cluster-rim: #fff5dc;
+  --cluster-fill: var(--ds-map-cluster-visual-cluster-fill);
+  --cluster-rim: var(--ds-map-cluster-visual-cluster-rim);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--cluster-fill);
   border: 3px solid var(--cluster-rim);
   border-radius: 50%;
-  color: #152738;
-  box-shadow: 0 3px 14px rgba(0,0,0,.4);
+  color: var(--ds-map-cluster-visual-color);
+  box-shadow: 0 3px 14px var(--ds-map-cluster-visual-box-shadow);
   font-size: 14px;
   font-weight: 800;
 }
 
 .map-marker-cluster:hover,
 .map-marker-cluster:focus-visible {
-  --cluster-fill: #865726;
+  --cluster-fill: var(--ds-map-marker-cluster-hover-cluster-fill);
   z-index: 10;
 }
 
 .map-marker-cluster.selected {
-  --cluster-fill: #986526;
+  --cluster-fill: var(--ds-map-marker-cluster-selected-cluster-fill);
 }
 
 :root[data-theme="dark"] .map-cluster-visual {
-  --cluster-fill: #a97b41;
-  --cluster-rim: #ffe9c0;
+  --cluster-fill: var(--ds-map-cluster-visual-cluster-fill);
+  --cluster-rim: var(--ds-map-cluster-visual-cluster-rim);
 }
 
 :root[data-theme="dark"] .map-marker-cluster:hover,
 :root[data-theme="dark"] .map-marker-cluster:focus-visible {
-  --cluster-fill: #c6985c;
+  --cluster-fill: var(--ds-map-marker-cluster-hover-cluster-fill);
 }
 
 @media (max-width: 600px) {

@@ -11,7 +11,7 @@
   height: 137px;
   position: relative;
   border: 1px solid var(--line);
-  background: #f1ede6;
+  background: var(--ds-bottle-photo-tile-background);
 }
 
 .photo-tile .photo-open {
@@ -37,8 +37,8 @@
   top: 2px;
   width: 26px;
   height: 26px;
-  background: #102b40;
-  color: white;
+  background: var(--ds-bottle-photo-remove-background);
+  color: var(--ds-bottle-photo-remove-color);
   border: 0;
   border-radius: 2px;
   cursor: pointer;
@@ -64,22 +64,22 @@
   height: 110px;
   padding: 8px;
   text-align: center;
-  border: 1px dashed #bda981;
-  background: #f5f1e8;
-  color: #806137;
+  border: 1px dashed var(--ds-bottle-photo-add-border);
+  background: var(--ds-bottle-photo-add-background);
+  color: var(--ds-bottle-photo-add-color);
   font-size: 12px;
   cursor: pointer;
 }
 
 .photo-add:hover {
-  background: #ebe2d0;
+  background: var(--ds-bottle-photo-add-hover-background);
 }
 
 /* Scan result: highlight the physical bottle, without opening an editor. */
 .bottle-entry.scanned-bottle {
   border: 2px solid var(--gold);
-  background: #fbf3e4;
-  box-shadow: 0 0 0 4px rgba(189,152,98,.20);
+  background: var(--ds-bottle-entry-scanned-bottle-background);
+  box-shadow: 0 0 0 4px var(--ds-bottle-entry-scanned-bottle-box-shadow);
   scroll-margin-block: 20px;
 }
 
@@ -131,13 +131,8 @@
   overflow-wrap: anywhere;
 }
 
-:root[data-theme="dark"] .bottle-entry.scanned-bottle {
-  background: #3c3529;
-  box-shadow: 0 0 0 4px rgba(201,164,107,.25);
-}
-
 :root[data-theme="dark"] .bottling-context {
-  background: #172638;
+  background: var(--ds-bottle-bottling-context-background);
 }
 
 @media (max-width:520px) {
@@ -220,7 +215,7 @@
   height: min(65vh, 780px);
   min-height: 320px;
   border: 1px solid var(--line);
-  background: white;
+  background: var(--ds-bottle-document-preview-pdf-background);
 }
 
 .document-preview-text {
@@ -264,19 +259,14 @@
 }
 
 :root[data-theme="dark"] .document-add {
-  background: #1b2c3e;
+  background: var(--ds-bottle-document-add-background);
 }
 
 /* Type and status are part of the same inventory group, never separate
    counts. */
 .badge.sample.open {
-  background: #f2cf95;
-  color: #68461d;
-}
-
-:root[data-theme="dark"] .badge.sample.open {
-  background: #6a4a2a;
-  color: #ffe0ab;
+  background: var(--ds-bottle-badge-sample-open-background);
+  color: var(--ds-bottle-badge-sample-open-color);
 }
 
 /* Drag-and-drop gallery ordering (desktop mouse, touch and accessible
@@ -394,7 +384,7 @@
   font-weight: bold;
   padding: 2px 4px;
   background: var(--navy);
-  color: white;
+  color: var(--ds-bottle-photo-source-color);
   pointer-events: none;
 }
 
@@ -520,8 +510,8 @@
 }
 
 .cutout-checker {
-  background-color: #f4f4f4;
-  background-image: linear-gradient(45deg,#d7d7d7 25%, transparent 25%),linear-gradient(-45deg,#d7d7d7 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d7d7d7 75%),linear-gradient(-45deg,transparent 75%,#d7d7d7 75%);
+  background-color: var(--ds-bottle-cutout-checker-background-color);
+  background-image: linear-gradient(45deg,var(--ds-bottle-cutout-checker-background-image-1) 25%, transparent 25%),linear-gradient(-45deg,var(--ds-bottle-cutout-checker-background-image-1) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--ds-bottle-cutout-checker-background-image-1) 75%),linear-gradient(-45deg,transparent 75%,var(--ds-bottle-cutout-checker-background-image-1) 75%);
   background-size: 22px 22px;
   background-position: 0 0,0 11px,11px -11px,-11px 0;
 }
@@ -626,7 +616,7 @@
   color: var(--ink);
   font: 600 14px var(--sans);
   cursor: pointer;
-  box-shadow: 0 1px 5px #0003;
+  box-shadow: 0 1px 5px var(--ds-bottle-photo-control-shadow);
 }
 
 .photo-editor-zoom button[disabled] {
@@ -924,7 +914,7 @@
   min-height: 30px;
   padding: 4px 10px;
   background: var(--paper);
-  box-shadow: 0 1px 5px #0003;
+  box-shadow: 0 1px 5px var(--ds-bottle-photo-control-shadow);
 }
 
 .photo-editor-slider {
@@ -1339,7 +1329,7 @@
 }
 
 .tasting-score-control:has([aria-invalid="true"]) {
-  border-color: var(--danger, #bb4848);
+  border-color: var(--ds-color-tasting-score-error);
 }
 
 .tasting-score-control > input {
@@ -1376,7 +1366,7 @@
 }
 
 .tasting-score-error {
-  color: var(--danger, #bb4848);
+  color: var(--ds-color-tasting-score-error);
   font-size: 12px;
 }
 
@@ -1436,7 +1426,7 @@
   height: 18px;
   border-radius: 50%;
   background: var(--gold);
-  color: #142231;
+  color: var(--ds-bottle-whisky-color-choice-is-selected-after-color);
   font: 700 13px/1 var(--sans);
 }
 
@@ -1508,8 +1498,8 @@
   border: 1px solid var(--line);
   cursor: crosshair;
   touch-action: none;
-  background: linear-gradient(to bottom,rgba(255,247,239,.80) 0%,transparent 40%,rgba(26,12,9,.82) 100%),
-        linear-gradient(to right,#cb7593 0%,#d73745 24%,#d76a33 49%,#e0a12e 78%,#eadc6d 100%);
+  background: linear-gradient(to bottom,var(--ds-bottle-whisky-custom-area-background-1) 0%,transparent 40%,var(--ds-bottle-whisky-custom-area-background-2) 100%),
+        linear-gradient(to right,var(--ds-bottle-whisky-custom-area-background-3) 0%,var(--ds-bottle-whisky-custom-area-background-4) 24%,var(--ds-bottle-whisky-custom-area-background-5) 49%,var(--ds-bottle-whisky-custom-area-background-6) 78%,var(--ds-bottle-whisky-custom-area-background-7) 100%);
 }
 
 .whisky-custom-area:focus-visible {
@@ -1524,9 +1514,9 @@
   width: 14px;
   height: 14px;
   transform: translate(-50%,-50%);
-  border: 2px solid #fff;
+  border: 2px solid var(--ds-bottle-whisky-custom-cursor-border);
   border-radius: 50%;
-  box-shadow: 0 0 0 1px #171717,0 1px 3px #171717;
+  box-shadow: 0 0 0 1px var(--ds-bottle-whisky-custom-cursor-box-shadow-1),0 1px 3px var(--ds-bottle-whisky-custom-cursor-box-shadow-1);
   pointer-events: none;
 }
 
@@ -2825,7 +2815,7 @@
 
 .bottle-main-source {
   left: 9px;
-  color: #fff;
+  color: var(--ds-bottle-main-source-color);
   background: var(--navy);
 }
 

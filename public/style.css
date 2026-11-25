@@ -2,6 +2,9 @@
    existing feature order -> feature-owned surfaces. Moving feature imports or
    introducing native @layer requires separate visual regression approval. */
 @import url("./styles/tokens.css");
+@import url("./styles/palette-bottle.css");
+@import url("./styles/palette-map.css");
+@import url("./styles/palette-warehouse.css");
 @import url("./styles/layout.css");
 @import url("./styles/controls.css");
 @import url("./styles/content.css");

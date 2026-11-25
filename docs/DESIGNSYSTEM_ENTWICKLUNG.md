@@ -29,3 +29,16 @@ Nur übersetzte Texte, **keine** Pfeilzeichen, an die Back-Navigation geben. Ein
 ## Vor einem UI-Commit
 
 `npm run check`, `npm test`, `npm run test:browser` und bei Layout `npm run test:visual` prüfen. Referenzbilder nur nach bewusster visueller Freigabe mit `npm run visual:update` aktualisieren. Dokumentationswirkung prüfen: [Entwicklung](ENTWICKLUNG.md).
+
+## Farb- und Theme-Regeln
+
+Standardfarben für Buttons, Texte, Status, Panels, Formulare und Hinweise
+werden in `public/styles/tokens.css` zentral definiert. Fachpaletten für
+Flaschen/Whisky, Karte und Lager stehen in `palette-bottle.css`,
+`palette-map.css` und `palette-warehouse.css`. Die Fachansichten verwenden
+ausschließlich diese Variablen; ihre bisherigen Farbwerte bleiben erhalten.
+
+Bei neuen Zuständen einen semantischen Token wählen und seine benötigten
+Hell-/Dunkelwerte im jeweiligen Palette-Modul definieren. Niemals eine
+Fallback-Hexfarbe in der Fachregel ergänzen. Die statische Prüfung
+`node scripts/check-css-colors.js` läuft verbindlich über `npm run check`.

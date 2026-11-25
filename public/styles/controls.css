@@ -303,9 +303,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 :root[data-theme="dark"] .btn.dark {
-  background: #35536e;
-  border-color: #58738a;
-  color: #fff;
+  background: var(--ds-color-btn-dark-background);
+  border-color: var(--ds-color-btn-dark-border-color);
+  color: var(--ds-color-btn-dark-color);
 }
 
 :root[data-theme="dark"] .btn.danger {
@@ -321,5 +321,5 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 :root[data-theme="dark"] .header-btn:hover {
   background: var(--ds-color-header-action-hover);
-  color: #fff;
+  color: var(--ds-color-header-action-hover-text);
 }

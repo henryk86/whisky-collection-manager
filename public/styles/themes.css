@@ -88,72 +88,7 @@
 
 :root[data-theme="dark"] .brand h1,
 :root[data-theme="dark"] .brand {
-  color: #f1f4f7;
-}
-
-:root[data-theme="dark"] .hero-secondary {
-  background: #ffffff16;
-  color: #fff;
-  border-color: #ffffff66;
-}
-
-:root[data-theme="dark"] .hero-secondary:hover {
-  background: #ffffff2d;
-}
-
-:root[data-theme="dark"] .collection-hero {
-  color: #fff;
-  background: linear-gradient(115deg,#0a2440 0%,#103452 60%,#153a58 100%);
-}
-
-:root[data-theme="dark"] .hero-media img {
-  filter: saturate(.88) contrast(.96) brightness(.66);
-}
-
-:root[data-theme="dark"] .hero-overlay {
-  background: linear-gradient(90deg,rgba(7,20,33,.84) 0%,rgba(8,24,39,.70) 34%,rgba(11,29,45,.38) 62%,rgba(11,29,45,.55) 100%);
-}
-
-:root[data-theme="dark"] .collection-hero:before {
-  background: linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0) 30%,rgba(2,9,16,.14) 100%);
-}
-
-:root[data-theme="dark"] .collection-hero:after {
-  background: linear-gradient(180deg,transparent,rgba(7,18,30,.22) 40%,rgba(7,18,30,.54) 100%);
-}
-
-:root[data-theme="dark"] .collection-hero .eyebrow {
-  color: var(--gold-light);
-}
-
-:root[data-theme="dark"] .collection-hero .eyebrow-line {
-  background: var(--gold-light);
-}
-
-:root[data-theme="dark"] .collection-hero h2 em {
-  color: #e3c69b;
-}
-
-:root[data-theme="dark"] .hero-content>p {
-  color: #dbe2e9;
-  text-shadow: 0 1px 8px rgba(0,0,0,.25);
-}
-
-:root[data-theme="dark"] .hero-footnote {
-  color: #d6c29b;
-  text-shadow: 0 1px 8px rgba(0,0,0,.35);
-}
-
-:root[data-theme="dark"] .toolbar {
-  background: #1b2936;
-  border-color: var(--line);
-}
-
-/* Analysis filter bar must follow dark mode just like the collection toolbar.
-   Its light-mode beige background is intentionally retained in analytics.css. */
-:root[data-theme="dark"] .analytics-filters {
-  background: #1b2936;
-  border-color: var(--line);
+  color: var(--ds-color-brand-h1-color);
 }
 
 :root[data-theme="dark"] input,
@@ -167,11 +102,11 @@
 
 :root[data-theme="dark"] input::placeholder,
 :root[data-theme="dark"] textarea::placeholder {
-  color: #a3b1bd;
+  color: var(--ds-color-input-placeholder-color);
 }
 
 :root[data-theme="dark"] input[type="checkbox"] {
-  accent-color: #c9a46b;
+  accent-color: var(--ds-color-input-type-checkbox-accent-color);
 }
 
 :root[data-theme="dark"] .toolbar input[type="search"] {
@@ -195,20 +130,20 @@
 :root[data-theme="dark"] .bottle .info span,
 :root[data-theme="dark"] .muted,
 :root[data-theme="dark"] .site-footer {
-  color: #acbac7;
+  color: var(--ds-color-stat-label);
 }
 
 :root[data-theme="dark"] .stat strong,
 :root[data-theme="dark"] .card-body h3,
 :root[data-theme="dark"] .empty-state strong,
 :root[data-theme="dark"] .site-footer span:first-child {
-  color: #f1e8dc;
+  color: var(--ds-color-stat-strong-color);
 }
 
 :root[data-theme="dark"] .card-img,
 :root[data-theme="dark"] .hero-photo {
-  background: linear-gradient(145deg,#263849,#1a2937);
-  color: #c4b197;
+  background: linear-gradient(145deg,var(--ds-color-card-image-background-1),var(--ds-color-card-image-background-2));
+  color: var(--ds-color-card-image-placeholder);
 }
 
 :root[data-theme="dark"] .card-img img {
@@ -219,35 +154,6 @@
 :root[data-theme="dark"] .hero-photo .image-placeholder {
   mix-blend-mode: normal;
   opacity: .9;
-}
-
-:root[data-theme="dark"] .badge {
-  background: #344555;
-  color: #e2eaf2;
-}
-
-:root[data-theme="dark"] .badge.open {
-  background: #52412b;
-  color: #f6d7a5;
-}
-
-:root[data-theme="dark"] .badge.closed {
-  background: #254738;
-  color: #c2eed1;
-}
-
-:root[data-theme="dark"] .badge.empty {
-  background: #512f38;
-  color: #f4c9c9;
-}
-
-:root[data-theme="dark"] th {
-  background: #293949;
-  color: #d1dbe5;
-}
-
-:root[data-theme="dark"] tr.clickable:hover {
-  background: #263849;
 }
 
 :root[data-theme="dark"] .inline-link,
@@ -261,38 +167,33 @@
 }
 
 :root[data-theme="dark"] .photo-add {
-  color: #f1f5f9;
+  color: var(--ds-color-button-text);
 }
 
 :root[data-theme="dark"] .hero-actions .btn.primary {
-  color: #10263c;
+  color: var(--ds-color-button-primary-text);
 }
 
 :root[data-theme="dark"] .photo-tile,
 :root[data-theme="dark"] .preview {
-  background: #263746;
+  background: var(--ds-color-preview-background);
 }
 
 :root[data-theme="dark"] .photo-add {
-  background: #263746;
-  border-color: #8a7557;
+  background: var(--ds-color-photo-add-background);
+  border-color: var(--ds-color-photo-add-border-color);
 }
 
 :root[data-theme="dark"] .photo-add:hover {
-  background: #334758;
-}
-
-:root[data-theme="dark"] .warning {
-  background: #463a29;
-  color: #f2d6a9;
+  background: var(--ds-color-photo-add-hover-background);
 }
 
 :root[data-theme="dark"] .distillery-option:hover {
-  background: #293c4e;
+  background: var(--ds-color-distillery-option-hover-background);
 }
 
 :root[data-theme="dark"] .distillery-options {
-  background: #172532;
+  background: var(--ds-color-distillery-options-background);
   border-color: var(--line);
 }
 
@@ -307,21 +208,17 @@
 }
 
 :root[data-theme="dark"] .toast {
-  background: #243d53;
-  color: #fff;
-}
-
-:root[data-theme="dark"] .toast.error {
-  background: #963d38;
+  background: var(--ds-color-toast-background);
+  color: var(--ds-color-toast-color);
 }
 
 :root[data-theme="dark"] .photo-lightbox-stage {
-  background: #1a2e40;
+  background: var(--ds-color-photo-lightbox-stage-background);
 }
 
 :root[data-theme="dark"] .eyebrow.dark,
 :root[data-theme="dark"] .heading-period {
-  color: #d4ab72;
+  color: var(--ds-color-eyebrow-dark-color);
 }
 
 :root[data-theme="dark"] button:focus-visible,
@@ -344,6 +241,6 @@
 }
 
 :root[data-theme="dark"] .photo-remove {
-  background: #31495e;
-  color: #fff;
+  background: var(--ds-color-photo-remove-background);
+  color: var(--ds-color-photo-remove-color);
 }

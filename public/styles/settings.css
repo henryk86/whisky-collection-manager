@@ -118,11 +118,11 @@
 }
 
 .backup-status.online {
-  color: var(--success, #368e5e);
+  color: var(--ds-color-status-success);
 }
 
 .backup-status.offline {
-  color: var(--danger, #d75c5c);
+  color: var(--ds-color-status-danger);
 }
 
 .backup-unlock {
@@ -195,7 +195,7 @@
 }
 
 .backup-job-error {
-  color: var(--danger, #d75c5c);
+  color: var(--ds-color-status-danger);
 }
 
 .backup-job-state .ui-symbol {
@@ -204,11 +204,11 @@
 }
 
 .backup-job-state.success {
-  color: var(--success, #368e5e);
+  color: var(--ds-color-status-success);
 }
 
 .backup-job-state.failed {
-  color: var(--danger, #d75c5c);
+  color: var(--ds-color-status-danger);
 }
 
 .backup-form {
@@ -536,7 +536,7 @@
   align-items: center;
   gap: 8px;
   margin: 0;
-  color: var(--danger, #b54848);
+  color: var(--ds-color-status-danger-strong);
   font-size: inherit;
 }
 

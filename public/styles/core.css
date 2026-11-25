@@ -81,7 +81,7 @@ textarea:focus-visible,
   height: 57px;
   border: 0;
   /* The SVG already draws the emblem frame. */
-  color: #e6d3ad;
+  color: var(--ds-color-brand-emblem-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,7 +110,7 @@ textarea:focus-visible,
   display: block;
   font-size: 10px;
   letter-spacing: 3.5px;
-  color: #d9bd8a;
+  color: var(--ds-color-brand-overline-color);
   font-weight: 700;
   margin-bottom: 7px;
 }
@@ -131,7 +131,7 @@ textarea:focus-visible,
 
 .brand h1 em {
   font-weight: 400;
-  color: #e8d3ae;
+  color: var(--ds-color-brand-h1-em-color);
 }
 
 .top-actions,
@@ -150,7 +150,7 @@ textarea:focus-visible,
 
 .header-btn:hover {
   background: var(--ds-color-header-action-hover);
-  color: white;
+  color: var(--ds-color-header-action-hover-text);
 }
 
 .site-footer {
@@ -162,7 +162,7 @@ textarea:focus-visible,
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  color: #7e827e;
+  color: var(--ds-color-text-footer);
   font-size: 11px;
   letter-spacing: .7px;
 }
@@ -187,8 +187,8 @@ main {
   overflow: hidden;
   isolation: isolate;
   min-height: 386px;
-  background: linear-gradient(115deg,#0a2440 0%,#103452 60%,#153a58 100%);
-  color: #fff;
+  background: linear-gradient(115deg,var(--ds-color-hero-background-1) 0%,var(--ds-color-hero-background-2) 60%,var(--ds-color-hero-background-3) 100%);
+  color: var(--ds-color-header-text);
   padding: 58px clamp(28px,6vw,88px);
   margin: 26px 0 42px;
 }
@@ -211,7 +211,7 @@ main {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: linear-gradient(90deg,rgba(7,20,33,.84) 0%,rgba(8,24,39,.70) 34%,rgba(11,29,45,.38) 62%,rgba(11,29,45,.55) 100%);
+  background: linear-gradient(90deg,var(--ds-color-hero-overlay-background-1) 0%,var(--ds-color-hero-overlay-background-2) 34%,var(--ds-color-hero-overlay-background-3) 62%,var(--ds-color-hero-overlay-background-4) 100%);
 }
 
 .collection-hero:before {
@@ -219,7 +219,7 @@ main {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0) 30%,rgba(2,9,16,.14) 100%);
+  background: linear-gradient(180deg,var(--ds-color-hero-top-shade-1),var(--ds-color-hero-top-shade-2) 30%,var(--ds-color-hero-top-shade-3) 100%);
 }
 
 .collection-hero:after {
@@ -227,7 +227,7 @@ main {
   position: absolute;
   inset: auto 0 0 0;
   height: 38%;
-  background: linear-gradient(180deg,transparent,rgba(7,18,30,.22) 40%,rgba(7,18,30,.54) 100%);
+  background: linear-gradient(180deg,transparent,var(--ds-color-hero-bottom-shade-1) 40%,var(--ds-color-hero-bottom-shade-2) 100%);
   pointer-events: none;
 }
 
@@ -240,7 +240,7 @@ main {
 .eyebrow {
   font-size: 10px;
   letter-spacing: 3px;
-  color: #946d3e;
+  color: var(--ds-color-eyebrow-text);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -252,21 +252,21 @@ main {
   display: inline-block;
   width: 31px;
   height: 1px;
-  background: #946d3e;
+  background: var(--ds-color-eyebrow-text);
 }
 
 .eyebrow.dark {
-  color: #a57b45;
+  color: var(--ds-color-eyebrow-emphasis);
 }
 
 /* The home hero is intentionally dark in BOTH themes. Keep the gold
    eyebrow legible without changing the global light-theme labels. */
 .collection-hero .eyebrow {
-  color: #e2c398;
+  color: var(--ds-color-accent-soft);
 }
 
 .collection-hero .eyebrow-line {
-  background: #e2c398;
+  background: var(--ds-color-accent-soft);
 }
 
 .collection-hero h2 {
@@ -279,7 +279,7 @@ main {
 }
 
 .collection-hero h2 em {
-  color: #e3c69b;
+  color: var(--ds-color-hero-emphasis);
   font-weight: 400;
 }
 
@@ -287,9 +287,9 @@ main {
   max-width: 400px;
   font-size: 14px;
   line-height: 1.85;
-  color: #dbe2e9;
+  color: var(--ds-color-hero-description);
   margin: 0;
-  text-shadow: 0 1px 8px rgba(0,0,0,.25);
+  text-shadow: 0 1px 8px var(--ds-color-hero-description-shadow);
 }
 
 .hero-actions {
@@ -300,14 +300,14 @@ main {
 }
 
 .hero-secondary {
-  background: #ffffff08;
-  color: #fff;
-  border-color: #ffffff55;
+  background: var(--ds-color-hero-action-background);
+  color: var(--ds-color-header-text);
+  border-color: var(--ds-color-hero-action-border);
 }
 
 .hero-secondary:hover {
-  background: #ffffff20;
-  color: #fff;
+  background: var(--ds-color-hero-action-hover);
+  color: var(--ds-color-header-text);
 }
 
 .hero-footnote {
@@ -316,8 +316,8 @@ main {
   bottom: 23px;
   font-size: 9px;
   letter-spacing: 2px;
-  color: #d6c29b;
-  text-shadow: 0 1px 8px rgba(0,0,0,.35);
+  color: var(--ds-color-hero-footnote);
+  text-shadow: 0 1px 8px var(--ds-color-hero-footnote-shadow);
 }
 
 .collection-heading {
@@ -380,7 +380,7 @@ h3 {
 }
 
 .intro {
-  color: #7f8588;
+  color: var(--ds-color-text-intro);
   margin: 4px 0 0;
   font-size: 13px;
 }
@@ -403,7 +403,7 @@ h3 {
 }
 
 .stat span {
-  color: #7a8184;
+  color: var(--ds-color-text-stat-label);
   text-transform: uppercase;
   font-size: 10px;
   font-weight: 700;
@@ -423,8 +423,8 @@ h3 {
 .toolbar {
   margin: 21px 0 22px;
   padding: 17px;
-  background: #ece9e1;
-  border: 1px solid #e8e2d6;
+  background: var(--ds-color-filter-surface-background);
+  border: 1px solid var(--ds-color-filter-surface-border);
   gap: 9px;
 }
 
@@ -475,7 +475,7 @@ h3 {
 .whisky-card {
   border-radius: var(--ds-surface-radius);
   background: var(--paper);
-  border: 1px solid #e3dfd5;
+  border: 1px solid var(--ds-color-card-border);
   cursor: pointer;
   transition: transform .2s,box-shadow .2s,border-color .2s;
   overflow: hidden;
@@ -483,17 +483,17 @@ h3 {
 
 .whisky-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 17px 30px #1029411d;
-  border-color: #cbb998;
+  box-shadow: 0 17px 30px var(--ds-color-card-hover-shadow);
+  border-color: var(--ds-color-card-hover-border);
 }
 
 .card-img {
   height: 265px;
-  background: radial-gradient(ellipse at 50% 88%,#ddd7c9 0%,transparent 45%),linear-gradient(165deg,#f2f0e9,#e7e5de);
+  background: radial-gradient(ellipse at 50% 88%,var(--ds-color-card-image-background-1) 0%,transparent 45%),linear-gradient(165deg,var(--ds-color-card-image-background-2),var(--ds-color-card-image-background-3));
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #bcaa8e;
+  color: var(--ds-color-card-image-placeholder);
   font-family: var(--serif);
   font-size: 76px;
   position: relative;
@@ -504,7 +504,7 @@ h3 {
   position: absolute;
   inset: auto 18px 13px;
   height: 1px;
-  background: #b8ab9455;
+  background: var(--ds-color-card-image-rule);
 }
 
 .card-img img {
@@ -532,7 +532,7 @@ h3 {
   padding: 0;
   mix-blend-mode: multiply;
   opacity: .78;
-  filter: drop-shadow(0 8px 18px rgba(16, 43, 72, .08));
+  filter: drop-shadow(0 8px 18px var(--ds-color-card-image-shadow));
 }
 
 .card-body {
@@ -541,7 +541,7 @@ h3 {
 
 .card-kicker {
   font-size: 10px;
-  color: #a17d4c;
+  color: var(--ds-color-card-kicker-text);
   letter-spacing: 1.6px;
   text-transform: uppercase;
   font-weight: 700;
@@ -580,23 +580,23 @@ h3 {
   font-weight: 700;
   border-radius: 2px;
   padding: 5px 8px;
-  background: #eeece5;
-  color: #526271;
+  background: var(--ds-color-badge-neutral-background);
+  color: var(--ds-color-badge-neutral-text);
 }
 
 .badge.open {
-  background: #f7ead7;
-  color: #926a32;
+  background: var(--ds-color-badge-open-background);
+  color: var(--ds-color-badge-open-text);
 }
 
 .badge.closed {
-  background: #e7eee6;
-  color: #386b4c;
+  background: var(--ds-color-badge-closed-background);
+  color: var(--ds-color-badge-closed-text);
 }
 
 .badge.empty {
-  background: #f2e5e3;
-  color: #89534d;
+  background: var(--ds-color-badge-empty-background);
+  color: var(--ds-color-badge-empty-text);
 }
 
 .two-col {
@@ -606,7 +606,7 @@ h3 {
 }
 
 .hero-photo {
-  background: linear-gradient(140deg,#e9e6dd,#f7f4ec);
+  background: linear-gradient(140deg,var(--ds-color-hero-photo-background-1),var(--ds-color-hero-photo-background-2));
   border: 1px solid var(--line);
   min-height: 300px;
   padding: 8px 8px 12px;
@@ -615,7 +615,7 @@ h3 {
   align-items: center;
   justify-content: center;
   font: 80px var(--serif);
-  color: #bba988;
+  color: var(--ds-color-hero-photo-text);
   overflow: hidden;
 }
 
@@ -674,7 +674,7 @@ h3 {
 
 .bottle .info span {
   font-size: 12px;
-  color: #7b8184;
+  color: var(--ds-color-text-bottle-secondary);
 }
 
 .table-wrap {
@@ -697,8 +697,8 @@ td {
 }
 
 th {
-  background: #eeeae0;
-  color: #6c6f6c;
+  background: var(--ds-color-table-heading-bg);
+  color: var(--ds-color-table-heading-text);
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -710,13 +710,13 @@ tr.clickable {
 }
 
 tr.clickable:hover {
-  background: #f3eee4;
+  background: var(--ds-color-table-row-hover);
 }
 
 .inline-link {
   border: none;
   background: none;
-  color: #986f38;
+  color: var(--ds-color-inline-link-text);
   padding: 0;
   font-weight: 700;
   font-size: 12px;
@@ -728,17 +728,17 @@ tr.clickable:hover {
   right: 24px;
   max-width: 370px;
   background: var(--navy);
-  color: white;
+  color: var(--ds-color-toast-color);
   padding: 16px 21px;
   border-left: 3px solid var(--gold);
-  box-shadow: 0 12px 32px #0004;
+  box-shadow: 0 12px 32px var(--ds-color-toast-box-shadow);
   z-index: 100;
   font-size: 13px;
 }
 
 .toast.error {
-  background: #943d37;
-  border-left-color: #eab3aa;
+  background: var(--ds-color-toast-error-bg);
+  border-left-color: var(--ds-color-toast-error-border);
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -767,7 +767,7 @@ tr.clickable:hover {
 }
 
 .toast-close:hover {
-  background: rgb(255 255 255 / .18);
+  background: var(--ds-color-toast-close-hover);
 }
 
 .toast-close:focus-visible {
@@ -782,7 +782,7 @@ tr.clickable:hover {
 
 .hint {
   font-size: 13px;
-  color: #747e82;
+  color: var(--ds-color-form-help);
   line-height: 1.65;
 }
 
@@ -790,14 +790,14 @@ tr.clickable:hover {
   max-width: 100%;
   max-height: 180px;
   object-fit: contain;
-  background: #f0ece4;
+  background: var(--ds-color-preview-background);
   margin-top: 8px;
 }
 
 .warning {
   padding: 15px;
-  background: #faf0da;
-  color: #836237;
+  background: var(--ds-color-status-warning-background);
+  color: var(--ds-color-status-warning-text);
   border-left: 3px solid var(--gold);
   font-size: 13px;
 }
@@ -1327,7 +1327,7 @@ tr.clickable:hover {
 }
 
 .photo-lightbox-stage {
-  background: #f1eee7;
+  background: var(--ds-color-photo-lightbox-stage-background);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1485,7 +1485,7 @@ tr.clickable:hover {
 
 .help-steps li::before {
   content: counter(help-step, decimal-leading-zero);
-  color: #a57b45;
+  color: var(--ds-color-eyebrow-emphasis);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: .05em;
@@ -1829,7 +1829,7 @@ tr.clickable:hover {
   padding: 7px;
   background: var(--paper);
   border: 1px solid var(--line);
-  box-shadow: 0 10px 25px rgb(0 0 0 / .13);
+  box-shadow: 0 10px 25px var(--ds-color-popup-shadow);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1984,15 +1984,15 @@ tr.clickable:hover {
   display: block;
   width: 11px;
   height: 19px;
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,.38));
+  filter: drop-shadow(0 1px 1px var(--ds-color-rating-glass-shadow));
 }
 
 .collection-card-rating .glencairn-rating-outline {
-  fill: #f5efe2;
+  fill: var(--ds-color-rating-glass-outline);
 }
 
 .collection-card-rating .glencairn-rating-fill {
-  fill: #d6ad62;
+  fill: var(--ds-color-rating-glass-fill);
 }
 
 /* Collection overview: saved presets occupy one compact header; filters and
@@ -2081,7 +2081,7 @@ tr.clickable:hover {
   padding: 6px;
   background: var(--paper);
   border: 1px solid var(--line);
-  box-shadow: 0 10px 25px rgb(0 0 0 / .14);
+  box-shadow: 0 10px 25px var(--ds-color-dropdown-shadow);
   z-index: 20;
 }
 
@@ -2119,7 +2119,7 @@ tr.clickable:hover {
 }
 
 .collection-saved-danger {
-  color: #a33d33;
+  color: var(--ds-color-action-danger);
 }
 
 .collection-flavor-picker {
@@ -2138,7 +2138,7 @@ tr.clickable:hover {
   height: 44px;
   padding: 0 12px;
   background: var(--paper);
-  border: 1px solid #d8d8d2;
+  border: 1px solid var(--ds-color-flavor-picker-border);
   border-radius: 2px;
   color: var(--ink);
   cursor: pointer;
@@ -2171,7 +2171,7 @@ tr.clickable:hover {
   overflow-y: auto;
   background: var(--paper);
   border: 1px solid var(--line);
-  box-shadow: 0 12px 28px rgb(0 0 0 / .15);
+  box-shadow: 0 12px 28px var(--ds-color-flavor-popover-shadow);
   padding: 14px;
   z-index: 20;
 }
@@ -2269,7 +2269,7 @@ tr.clickable:hover {
 
 .collection-flavor-status-options input:checked + span {
   background: var(--navy);
-  color: white;
+  color: var(--ds-color-filter-chip-selected-text);
 }
 
 .collection-flavor-status-options input:focus-visible + span {

@@ -1,0 +1,23 @@
+/* Warehouse domain palette: original colours, independent of UI themes.
+   Shared semantic UI and status colours live in tokens.css instead. */
+:root {
+  --ds-warehouse-bottle-symbol-warehouse-label-fill: #dfcba9;
+  --ds-warehouse-door-range-border: #888;
+  --ds-warehouse-drag-avatar-filter: rgb(0 0 0 / .3);
+  --ds-warehouse-drag-hover-rect-fill: #d2a86d;
+  --ds-warehouse-drag-hover-rect-stroke: #fff1d7;
+  --ds-warehouse-drag-rect-fill: #b18b57;
+  --ds-warehouse-drag-rect-stroke: #e4ceac;
+  --ds-warehouse-drag-text-fill: #112439;
+  --ds-warehouse-elevated-hover-rect-fill: #91baca;
+  --ds-warehouse-elevated-rect-fill: #6c98a9;
+  --ds-warehouse-elevated-rect-stroke: #e4ceac;
+  --ds-warehouse-find-return-badge-background: #092e4d;
+  --ds-warehouse-find-return-badge-color: #fff;
+  --ds-warehouse-wood: #a17d4c;
+  --ds-warehouse-wall-bay-data-front-glass-background: #80b5cc;
+  --ds-warehouse-wall-bay-is-find-focus-box-shadow-2: #f4ce73;
+  --ds-warehouse-wall-bay-is-find-focus-box-shadow-3: rgb(222 153 33 / .78);
+  --ds-warehouse-wall-bay-is-find-focus-warehouse-wall-bottle-is-find-focus-filter: rgb(244 206 115 / .85);
+  --ds-warehouse-wall-furniture-edit-box-shadow: rgb(0 0 0 / .2);
+}
