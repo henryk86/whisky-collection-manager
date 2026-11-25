@@ -249,7 +249,7 @@ test(
     for (const formula of [
       'wG=0.65, wF=0.25, wA=0.10',
       'dA = min(abs(ageA-ageB)/15, 1)',
-      '9*matchingCaskGroup + 4*matchingSherrySubtype',
+      '9*matchingCaskGroup + 4*matchingCaskDetails',
       '0.65*(dF(A,B) or 0)',
     ])
       assert.ok(modal.includes(formula), formula);
@@ -270,16 +270,17 @@ test(
     assert.match(headingAction, /aria-label="So wird ein Flight geplant"/);
     assert.match(modal, /data-flight-plan-focus-wrap hidden/);
     assert.match(modal, /data-flight-plan-unfamiliar-wrap hidden/);
-    assert.match(modal, /data-flight-plan-unfamiliar checked/);
+    assert.match(modal, /name="flight-plan-unfamiliar" checked/);
     assert.match(modal, /<details class="flight-plan-advanced">/);
     for (const field of [
       'data-flight-plan-cask-mode',
-      'data-flight-plan-cask-group',
-      'data-flight-plan-cask-subtype',
+      'flight-cask-group-sherry',
+      'flight-cask-feature-sherry-style-px',
+      'data-flight-plan-cask-phase',
       'data-flight-plan-age-mode',
       'data-flight-plan-age-min',
       'data-flight-plan-age-max',
-      'data-flight-plan-strict',
+      'name="flight-plan-strict"',
     ])
       assert.match(modal, new RegExp(field));
   }

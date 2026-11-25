@@ -1,4 +1,5 @@
 import {actionButton} from '../ui/buttons.js';
+import {checkboxInput} from '../ui/fields.js';
 import {helpIconButton, sectionHeader, headingTitle, pageHeader, backNavigation} from '../ui/headers.js';
 import {t} from '../i18n/index.js';
 import {displayPhotoPath} from '../../../shared/photo-images.js';
@@ -20,8 +21,15 @@ import {allTastingReferences, flightEntries, flightForTasting} from '../../../sh
 import {allStandaloneTastings} from '../../../shared/standalone-tastings.js';
 import {editIcon, newBottlingIcon, flightPlanIcon, chevronRightIcon, arrowUpIcon, arrowDownIcon} from '../ui/action-icons.js';
 import {flightPlanningHelpHtml} from '../ui/flight-planning-help.js';
+import {
+  flightCaskOptionsHtml, readFlightCaskFilters, syncFlightCaskOptions,
+  resetFlightCaskOptions,
+} from '../ui/flight-cask-options.js';
 import {reorderFlightIds} from '../features/flight-order.js';
-import {suggestFlight, flightCandidates, FLIGHT_STYLES, FLIGHT_AVAILABILITY, FLIGHT_FOCUSES, CASK_GROUPS, SHERRY_SUBTYPES, CASK_MODES, AGE_MODES} from '../domain/flight-planner.js';
+import {
+  suggestFlight, flightCandidates, FLIGHT_STYLES, FLIGHT_AVAILABILITY,
+  FLIGHT_FOCUSES, CASK_MODES, AGE_MODES,
+} from '../domain/flight-planner.js';
 
 /**
  * Tasting list and single-record editor; no migration of earlier bottling
@@ -871,16 +879,11 @@ export function createTastingsView({
     const similar = box?.querySelector('[data-flight-plan-focus-wrap]');
     const discover = box?.querySelector('[data-flight-plan-unfamiliar-wrap]');
     const caskMode = box?.querySelector('[data-flight-plan-cask-mode]')?.value;
-    const group = box?.querySelector('[data-flight-plan-cask-group]')?.value;
+    syncFlightCaskOptions(box, caskMode === 'specific', t);
     const ageMode = box?.querySelector('[data-flight-plan-age-mode]')?.value;
     if (similar) similar.hidden = style !== 'similar';
     if (discover) discover.hidden = style !== 'discover';
     for (const [selector, visible] of [
-      ['[data-flight-plan-cask-group-wrap]', caskMode === 'specific'],
-      [
-        '[data-flight-plan-cask-subtype-wrap]',
-        caskMode === 'specific' && group === 'sherry',
-      ],
       ['[data-flight-plan-age-range-wrap]', ageMode === 'range'],
       [
         '[data-flight-plan-strict-wrap]',
@@ -912,8 +915,9 @@ export function createTastingsView({
             <div class="flight-plan-conditional" data-flight-plan-focus-wrap hidden><label>${escapeHtml(t('flightPlan.focus'))}
                 <select data-flight-plan-focus>${FLIGHT_FOCUSES.map(id =>
         `<option value="${id}">${escapeHtml(t(`flightPlan.focus.${id}`))}</option>`).join('')}</select></label></div>
-            <div class="flight-plan-conditional" data-flight-plan-unfamiliar-wrap hidden><label class="flight-plan-toggle">
-                <input type="checkbox" data-flight-plan-unfamiliar checked><span>${escapeHtml(t('flightPlan.unfamiliar'))}</span></label></div>
+            <div class="flight-plan-conditional"
+              data-flight-plan-unfamiliar-wrap hidden>${checkboxInput(
+          t('flightPlan.unfamiliar'), 'flight-plan-unfamiliar', true)}</div>
             <details class="flight-plan-advanced">
                 <summary>${escapeHtml(t('flightPlan.caskAge.title'))}</summary>
                 <p class="hint">${escapeHtml(t('flightPlan.caskAge.hint'))}</p>
@@ -921,27 +925,25 @@ export function createTastingsView({
                     <label>${escapeHtml(t('flightPlan.caskAge.caskMode'))}<select data-flight-plan-cask-mode>${CASK_MODES.map(id => `<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.caskMode.${id}`))}</option>`).join('')}</select></label>
                     <label>${escapeHtml(t('flightPlan.caskAge.ageMode'))}<select data-flight-plan-age-mode>${AGE_MODES.map(id => `<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.ageMode.${id}`))}</option>`).join('')}</select></label>
                 </div>
+                ${flightCaskOptionsHtml(t)}
                 <div class="flight-plan-options flight-plan-advanced-grid">
-                    <div class="flight-plan-conditional" data-flight-plan-cask-group-wrap hidden><label>${escapeHtml(t('flightPlan.caskAge.caskGroup'))}
-                        <select data-flight-plan-cask-group>${['any', ...CASK_GROUPS].map(id => `<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.group.${id}`))}</option>`).join('')}</select></label></div>
-                    <div class="flight-plan-conditional" data-flight-plan-cask-subtype-wrap hidden><label>${escapeHtml(t('flightPlan.caskAge.subtype'))}
-                        <select data-flight-plan-cask-subtype>${['any', ...SHERRY_SUBTYPES].map(id => `<option value="${id}">${escapeHtml(t(`flightPlan.caskAge.subtype.${id}`))}</option>`).join('')}</select></label></div>
                     <div class="flight-plan-conditional" data-flight-plan-age-range-wrap hidden><label>${escapeHtml(t('flightPlan.caskAge.ageRange'))}
                         <span class="flight-plan-age-range"><input type="number" min="0" max="200" step="1" data-flight-plan-age-min placeholder="${escapeHtml(t('flightPlan.caskAge.ageMin'))}" aria-label="${escapeHtml(t('flightPlan.caskAge.ageMin'))}">
                             <input type="number" min="0" max="200" step="1" data-flight-plan-age-max placeholder="${escapeHtml(t('flightPlan.caskAge.ageMax'))}" aria-label="${escapeHtml(t('flightPlan.caskAge.ageMax'))}"></span></label></div>
                 </div>
-                <div class="flight-plan-conditional" data-flight-plan-strict-wrap hidden><label class="flight-plan-toggle">
-                    <input type="checkbox" data-flight-plan-strict><span>${escapeHtml(t('flightPlan.caskAge.strict'))}</span></label></div>
+                <div class="flight-plan-conditional"
+                  data-flight-plan-strict-wrap hidden>${checkboxInput(
+            t('flightPlan.caskAge.strict'), 'flight-plan-strict')}</div>
             </details>
             <div class="actions">${actionButton({
-          label: t('flightPlan.suggest'),
-          action: 'flight-plan-generate',
-        })}</div>
+              label: t('flightPlan.suggest'),
+              action: 'flight-plan-generate',
+            })}</div>
             <div class="flight-plan-preview" aria-live="polite"></div>
             <div class="actions">${actionButton({
-          label: t('common.actions.cancel'),
-          action: 'close-modal',
-        })}
+              label: t('common.actions.cancel'),
+              action: 'close-modal',
+            })}
                 <button class="btn primary" type="button" data-act="flight-plan-create" disabled>${t('flightPlan.save')}</button></div>
         </div>`,
       true,
@@ -966,6 +968,14 @@ export function createTastingsView({
   }
 
   /**
+   * Clears cask preferences without affecting other planner inputs.
+   */
+  function resetFlightCaskSelection() {
+    resetFlightCaskOptions(document.querySelector('#modal-root'));
+    invalidateFlightPlan();
+  }
+
+  /**
    * Updates the DOM elements managed by generate flight plan.
    */
   function generateFlightPlan() {
@@ -978,13 +988,13 @@ export function createTastingsView({
     const focus = style === 'similar' ?
       (box?.querySelector('[data-flight-plan-focus]')?.value || 'any') : 'any';
     const preferUnfamiliar = style === 'discover' ?
-      Boolean(box?.querySelector('[data-flight-plan-unfamiliar]')?.checked) : false;
+      Boolean(box?.querySelector('[name="flight-plan-unfamiliar"]')
+        ?.checked) : false;
     const caskMode = box?.querySelector('[data-flight-plan-cask-mode]')?.value || 'auto';
-    const caskGroup = caskMode === 'specific' ?
-      box?.querySelector('[data-flight-plan-cask-group]')?.value ||
-      'any' : 'any';
-    const caskSubtype = caskGroup === 'sherry' ?
-      box?.querySelector('[data-flight-plan-cask-subtype]')?.value ||
+    const caskFilters = caskMode === 'specific' ?
+      readFlightCaskFilters(box) : {};
+    const caskPhase = caskMode === 'specific' ?
+      box?.querySelector('[data-flight-plan-cask-phase]')?.value ||
       'any' : 'any';
     const ageMode = box?.querySelector('[data-flight-plan-age-mode]')?.value || 'auto';
     // Clear any stale cross-field error before validating a corrected range.
@@ -1012,7 +1022,7 @@ export function createTastingsView({
     }
     box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.('');
     const strictMatches =
-      Boolean(box?.querySelector('[data-flight-plan-strict]')?.checked);
+      Boolean(box?.querySelector('[name="flight-plan-strict"]')?.checked);
     const options = {
       style,
       count,
@@ -1020,8 +1030,8 @@ export function createTastingsView({
       focus,
       preferUnfamiliar,
       caskMode,
-      caskGroup,
-      caskSubtype,
+      caskFilters,
+      caskPhase,
       ageMode,
       ageMin,
       ageMax,
@@ -2075,6 +2085,7 @@ export function createTastingsView({
     showFlightPlanningHelp,
     generateFlightPlan,
     invalidateFlightPlan,
+    resetFlightCaskSelection,
     createPlannedFlight,
     changePlannedMember,
     transitionPlannedFlight,

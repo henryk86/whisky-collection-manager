@@ -6,9 +6,10 @@ import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
 import {latestTasting, sortedTastings} from '../../../shared/tasting-records.js';
 import {
   classifyCask, caskDistance, readAge, ageDistance, ageClass, caskMatches, ageMatches,
-  CASK_GROUPS, SHERRY_SUBTYPES, CASK_MODES, AGE_MODES
+  CASK_GROUPS, CASK_MODES, AGE_MODES, CASK_PHASES, validCaskFilters,
+  caskComparison, caskCoverage,
 } from './flight-casks.js';
-export {CASK_GROUPS, SHERRY_SUBTYPES, CASK_MODES, AGE_MODES} from './flight-casks.js';
+export {CASK_MODES, AGE_MODES} from './flight-casks.js';
 
 export const FLIGHT_STYLES =
   Object.freeze(['balanced', 'similar', 'contrast', 'discover']);
@@ -232,7 +233,7 @@ function selectFlight(
   candidates,
   count,
   {style, focus, preferUnfamiliar, today, history,
-    caskMode, caskGroup, caskSubtype, ageMode, ageMin, ageMax}
+    caskMode, caskFilters, caskPhase, ageMode, ageMin, ageMax}
 ) {
   const distanceCache = new Map();
   /**
@@ -257,6 +258,14 @@ function selectFlight(
     if (bucket) triedAges.add(bucket);
   }
   const caskCache = new Map(), ageCache = new Map();
+  const groupFilters = Object.fromEntries(Object.keys(caskFilters)
+    .map(group => [group, {}]));
+  const detailedFilters = Object.fromEntries(Object.entries(caskFilters)
+    .filter(([, dimensions]) => Object.keys(dimensions).length > 0 ||
+      caskPhase !== 'any'));
+  const hasCaskFilter = Object.keys(groupFilters).length > 0 ||
+    caskPhase !== 'any';
+  const hasCaskDetails = Object.keys(detailedFilters).length > 0;
   /**
    * Orders the pair facts records using the configured comparison.
    *
@@ -266,9 +275,13 @@ function selectFlight(
    */
   const pairFacts = (a, b) => {
     const key = [a.bottling.id, b.bottling.id].sort().join('|');
-    if (!caskCache.has(key)) caskCache.set(key, caskDistance(a.cask, b.cask));
+    if (!caskCache.has(key)) caskCache.set(key, caskComparison(a.cask, b.cask));
     if (!ageCache.has(key)) ageCache.set(key, ageDistance(a.age, b.age));
-    return {profile: dist(a, b), cask: caskCache.get(key), age: ageCache.get(key)};
+    const comparison = caskCache.get(key);
+    return {
+      profile: dist(a, b), cask: comparison.distance,
+      caskDetail: comparison.detail, age: ageCache.get(key),
+    };
   };
   // The known parts of 65/25/10 are renormalized; unavailable values do not
   // masquerade as zero distance. Profile-data penalties stay independent.
@@ -332,13 +345,11 @@ function selectFlight(
    */
   const preferenceScore = items => {
     let result = 0;
-    if (caskMode === 'specific' && caskGroup !== 'any') result += items.reduce(
-      (sum, item) =>
-        sum + (caskMatches(item.cask, caskGroup, 'any') ? 9 : 0) +
-        (caskGroup === 'sherry' && caskSubtype !== 'any' &&
-          caskMatches(item.cask, caskGroup, caskSubtype) ? 4 : 0),
-      0
-    );
+    if (caskMode === 'specific' && hasCaskFilter) result += items.reduce(
+      (sum, item) => sum + (caskMatches(item.cask, groupFilters,
+        Object.keys(groupFilters).length ? 'any' : caskPhase) ? 9 : 0) +
+        (hasCaskDetails && caskMatches(item.cask, detailedFilters, caskPhase) ?
+          4 : 0), 0);
     if (ageMode === 'range' && (ageMin !== null || ageMax !==
       null)) result += items.reduce(
         (sum, item) =>
@@ -369,6 +380,23 @@ function selectFlight(
    */
   const noveltyScore = item => noveltyCache.get(item);
   const unfamiliarityCache = new Map();
+  const caskNoveltyCache = new Map();
+
+  /**
+   * Finds the closest previously tasted comparable subtype, without treating
+   * missing subtype information as novelty.
+   * @param {!Object} item Current candidate.
+   * @return {number} Bounded novelty contribution 0..0.25.
+   */
+  const caskNovelty = item => {
+    if (!caskNoveltyCache.has(item)) {
+      const distances = history.map(past =>
+        caskComparison(item.cask, past.cask).detail).filter(x => x !== null);
+      caskNoveltyCache.set(item, distances.length ? Math.min(...distances) : 0);
+    }
+    return caskNoveltyCache.get(item);
+  };
+
   /**
    * Selects and transforms the unfamiliarity records.
    *
@@ -407,8 +435,7 @@ function selectFlight(
     const avg = distances.length ? distances.reduce((sum, x) => sum +
       x, 0) / distances.length : 0;
     const families = new Set(profiled.map(item => item.family).filter(Boolean));
-    const caskGroups = new Set(items.flatMap(item => Object.keys(item.cask
-      .groups)));
+    const caskProfiles = items.map(item => item.cask);
     const ageClasses = new Set(items.map(item => ageClass(item.age))
       .filter(Boolean));
     const preferences = preferenceScore(items);
@@ -417,7 +444,9 @@ function selectFlight(
       items.reduce((sum, item) => sum + noveltyScore(item) * 0.08, 0) -
       (distances.length ? Math.abs(avg - 3) * 1.2 : 4) - largestGap * 1.5 -
       missingPairs * 1.5 +
-      (caskMode === 'auto' ? caskGroups.size * 4 : 0) +
+      (caskMode === 'auto' ? 4 * caskCoverage(caskProfiles) +
+        4 * pairs.reduce((sum, facts) => sum + (facts.caskDetail ?? 0), 0) /
+        Math.max(1, pairs.length) : 0) +
       (ageMode === 'auto' ? ageClasses.size * 2 : 0) + preferences;
     if (style === 'similar') return total + profiled.length * 8 +
       pairs.reduce(
@@ -435,13 +464,13 @@ function selectFlight(
         0
       ) + families.size * 3 - missingPairs * 14 -
       Math.max(0, largestGap - 3) * 3 + preferences;
-    const novelCasks = new Set([...caskGroups].filter(group =>
-      !triedCasks.has(group)));
     const novelAges = new Set([...ageClasses].filter(age =>
       !triedAges.has(age)));
     return total + items.reduce((sum, item) => sum + noveltyScore(item) +
       (preferUnfamiliar ? unfamiliarity(item) * 2 : 0), 0) + families.size * 2 +
-      (caskMode === 'auto' ? novelCasks.size * 5 : 0) +
+      (caskMode === 'auto' ? 5 * caskCoverage(caskProfiles, triedCasks) +
+        4 * items.reduce((sum, item) => sum + caskNovelty(item), 0) /
+        Math.max(1, items.length) : 0) +
       (ageMode === 'auto' ? novelAges.size * 3 : 0) + preferences;
   };
 
@@ -546,8 +575,8 @@ export function suggestFlight(
     preferUnfamiliar = true,
     today = Date.now(),
     caskMode = 'auto',
-    caskGroup = 'any',
-    caskSubtype = 'any',
+    caskFilters = {},
+    caskPhase = 'any',
     ageMode = 'auto',
     ageMin = null,
     ageMax = null,
@@ -557,9 +586,8 @@ export function suggestFlight(
   if (!FLIGHT_STYLES.includes(style) ||
     !FLIGHT_AVAILABILITY.includes(availability) ||
     !FLIGHT_FOCUSES.includes(focus) || typeof preferUnfamiliar !== 'boolean' ||
-    !CASK_MODES.includes(caskMode) || !['any', ...CASK_GROUPS]
-      .includes(caskGroup) ||
-    !['any', ...SHERRY_SUBTYPES].includes(caskSubtype) ||
+    !CASK_MODES.includes(caskMode) || !validCaskFilters(caskFilters) ||
+    !CASK_PHASES.includes(caskPhase) ||
     !AGE_MODES.includes(ageMode) ||
     typeof strictMatches !== 'boolean' ||
     (ageMin !== null && (!Number.isInteger(ageMin) || ageMin < 0 || ageMin >
@@ -572,8 +600,8 @@ export function suggestFlight(
     throw new Error('Invalid flight request');
   let candidates = flightCandidates(collection, {availability, bottlingIds});
   if (strictMatches) candidates = candidates.filter(item =>
-    (caskMode !== 'specific' || caskGroup === 'any' ||
-      caskMatches(item.cask, caskGroup, caskSubtype)) &&
+    (caskMode !== 'specific' ||
+      caskMatches(item.cask, caskFilters, caskPhase)) &&
     (ageMode !== 'range' || (ageMin === null && ageMax === null) ||
       ageMatches(item.age, ageMin, ageMax)));
   if (!candidates.length) return [];
@@ -596,7 +624,7 @@ export function suggestFlight(
   ].filter(item => item.tasted) : [];
   const picked = selectFlight(candidates, Math.min(count, candidates.length), {
     style, focus, preferUnfamiliar, today, history,
-    caskMode, caskGroup, caskSubtype, ageMode, ageMin, ageMax,
+    caskMode, caskFilters, caskPhase, ageMode, ageMin, ageMax,
   });
   return orderFlightItems(picked).map(item => ({
     bottlingId: item.bottling.id, bottleId: item.bottle.id,

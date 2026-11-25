@@ -34,6 +34,11 @@ function fakeModalHost() {
      */
     querySelector() {return overlay;},
     /**
+     * The fake host has no parsed DOM controls.
+     * @return {!Array<!Object>} Matching nodes in this test host.
+     */
+    querySelectorAll() {return [];},
+    /**
      * Updates the replace children state for its caller.
      *
      * @param {*} element DOM element involved in the operation.

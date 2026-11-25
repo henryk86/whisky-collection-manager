@@ -595,6 +595,10 @@ export function bindEvents(
      */
     'flight-plan-help': () => tastingsView.showFlightPlanningHelp(),
     /**
+     * Clears only the planner's cask preferences.
+     */
+    'flight-plan-cask-reset': () => {tastingsView.resetFlightCaskSelection();},
+    /**
      * Handles the flight plan generate interaction.
      * @return {*} Result computed from the supplied inputs.
      */
@@ -1784,7 +1788,16 @@ export function bindEvents(
         [...event.target.files]
       ); return;
     }
-    if (event.target.matches?.('[data-flight-plan-style], [data-flight-plan-count], [data-flight-plan-availability], [data-flight-plan-focus], [data-flight-plan-unfamiliar], [data-flight-plan-cask-mode], [data-flight-plan-cask-group], [data-flight-plan-cask-subtype], [data-flight-plan-age-mode], [data-flight-plan-age-min], [data-flight-plan-age-max], [data-flight-plan-strict]')) {tastingsView.invalidateFlightPlan(); return;}
+    if (event.target.matches?.([
+      '[data-flight-plan-style]', '[data-flight-plan-count]',
+      '[data-flight-plan-availability]', '[data-flight-plan-focus]',
+      '[name="flight-plan-unfamiliar"]', '[data-flight-plan-cask-mode]',
+      '[name^="flight-cask-"]', '[data-flight-plan-cask-phase]',
+      '[data-flight-plan-age-mode]', '[data-flight-plan-age-min]',
+      '[data-flight-plan-age-max]', '[name="flight-plan-strict"]',
+    ].join(', '))) {
+      tastingsView.invalidateFlightPlan(); return;
+    }
     if (event.target.id === 'ui-language') {
       chooseLanguage(event.target
         .value); return;

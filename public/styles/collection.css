@@ -300,24 +300,13 @@ tr.clickable:focus-visible {
   display: none;
 }
 
-.flight-plan-conditional label {
+.flight-plan-conditional label:not(.ds-checkbox-field) {
   display: grid;
   gap: 7px;
 }
 
 .flight-plan-conditional select {
   width: 100%;
-}
-
-.flight-plan-conditional .flight-plan-toggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.flight-plan-conditional .flight-plan-toggle input {
-  width: auto;
-  flex: none;
 }
 
 /* Long technical reference: section breaks, readable equations and natural
@@ -461,6 +450,117 @@ tr.clickable:focus-visible {
 .flight-plan-advanced-grid {
   grid-template-columns: repeat(2,minmax(0,1fr));
   margin: 10px 0;
+}
+
+/* Shared checkbox fields presented as compact, wrapping choices. */
+.flight-plan-cask-filter,
+.flight-plan-cask-details,
+.flight-plan-cask-dimensions,
+.flight-plan-cask-dimension,
+.flight-plan-cask-selection {
+  display: grid;
+  gap: var(--ds-space-2);
+  min-width: 0;
+}
+
+.flight-plan-cask-filter[hidden],
+.flight-plan-cask-details[hidden],
+.flight-plan-cask-refinement[hidden] {
+  display: none;
+}
+
+.flight-plan-cask-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-space-2);
+}
+
+.flight-plan-cask-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2);
+}
+
+.flight-plan-cask-choices .ds-checkbox-field {
+  min-height: var(--ds-button-height-sm);
+  box-sizing: border-box;
+  padding: var(--ds-space-1) var(--ds-space-2);
+  border: 1px solid var(--ds-color-control-border);
+  border-radius: var(--ds-control-radius);
+  background: var(--ds-color-control-bg);
+  color: var(--ds-color-text);
+  font-size: var(--ds-type-ui-md);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.flight-plan-cask-choices .ds-checkbox-field:has(input:checked) {
+  border-color: var(--ds-color-accent);
+  background: color-mix(in srgb,var(--ds-color-accent) 14%,var(--ds-color-surface));
+}
+
+.flight-plan-cask-choices .ds-checkbox-field:has(input:focus-visible) {
+  outline: 2px solid var(--ds-color-accent);
+  outline-offset: 2px;
+}
+
+.flight-plan-cask-choices .ds-checkbox-field > span {
+  overflow-wrap: anywhere;
+}
+
+.flight-plan-cask-refinement {
+  min-width: 0;
+  border: 1px solid var(--ds-color-border);
+  border-radius: var(--ds-control-radius);
+  background: var(--ds-color-surface);
+}
+
+.flight-plan-cask-refinement > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+  min-height: var(--ds-button-height-sm);
+  padding: var(--ds-space-2) var(--ds-space-3);
+  font-size: var(--ds-type-ui-md);
+  list-style: none;
+  border-inline-start: 3px solid var(--ds-color-accent);
+}
+
+.flight-plan-cask-refinement > summary::-webkit-details-marker {
+  display: none;
+}
+
+.flight-plan-cask-count {
+  margin-inline-start: auto;
+  font-weight: 400;
+}
+
+.flight-plan-cask-count,
+.flight-plan-cask-caption,
+.flight-plan-cask-dimension > span {
+  color: var(--ds-color-text-subtle);
+  font-size: var(--ds-type-ui-sm);
+}
+
+.flight-plan-cask-chevron {
+  flex-shrink: 0;
+}
+
+.flight-plan-cask-refinement[open] .flight-plan-cask-chevron {
+  transform: rotate(180deg);
+}
+
+.flight-plan-cask-dimensions {
+  padding: var(--ds-space-2) var(--ds-space-3) var(--ds-space-3);
+  border-top: 1px solid var(--ds-color-border);
+}
+
+.flight-plan-cask-selection {
+  padding-top: var(--ds-space-2);
+  border-top: 1px solid var(--ds-color-border);
+  font-size: var(--ds-type-ui-md);
+  overflow-wrap: anywhere;
 }
 
 .flight-plan-age-range {
