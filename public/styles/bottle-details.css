@@ -2501,6 +2501,10 @@
   margin-bottom: 18px;
 }
 
+.tasting-flight-page > .actions + .tasting-flight-members {
+  margin-top: var(--ds-space-5);
+}
+
 .tasting-flight-summary .tasting-panel-heading {
   align-items: start;
 }
