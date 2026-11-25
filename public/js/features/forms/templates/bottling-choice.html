@@ -8,18 +8,22 @@
 
 <!-- wcm-template:bottlingChoice -->
 <div class="bottling-choice">
-    <p>{{t:forms.bottle.existingBottlingHint}}</p>
-    <form id="new-bottle-choice-form">
+  <p>{{t:forms.bottle.existingBottlingHint}}</p>
+  <form id="new-bottle-choice-form">
     <label class="form-field full">{{t:forms.bottling.searchExisting}}
-    <input id="bottling-choice-search" type="search" placeholder="{{t:forms.bottling.searchNameDistilleryBottler}}" autocomplete="off">
+    <input
+        id="bottling-choice-search"
+        type="search"
+        placeholder="{{t:forms.bottling.searchNameDistilleryBottler}}"
+        autocomplete="off">
     </label>
     <label class="form-field full">{{t:forms.bottling.select}}
     <select id="bottling-choice-select" name="bottlingId" required>{{raw:bottlingChoiceOptions}}</select>
     </label>
     <p class="hint" id="bottling-choice-count" aria-live="polite">{{raw:availableCount}}</p>
     <div class="actions"><button class="btn primary" type="submit">{{t:forms.bottle.addToBottling}}</button></div>
-    </form>
-    <div class="bottling-choice-divider"><span>{{t:forms.common.or}}</span></div>
+  </form>
+  <div class="bottling-choice-divider"><span>{{t:forms.common.or}}</span></div>
     {{raw:newBottlingDirectButton}}
     </div>
 <!-- /wcm-template -->

@@ -40,22 +40,29 @@ Die zentrale Modal-Verwaltung kontrolliert verschachtelte Dialoge, Fokus, Escape
 HTML und SVG werden in den `templates/`-Unterordnern der jeweiligen
 Frontend-Module gepflegt. Neue JavaScript-Strings mit Markup sind unzulässig.
 Der gemeinsame Loader `public/js/ui/templates.js` lädt die Fragmente einmal
-pro Modul; die bisherigen synchronen Renderer bleiben nach dem Laden nutzbar.
-Die Dateien werden vom lokalen HTTP-Server ohne Build-Schritt ausgeliefert.
+pro Modul. Im Browser liefert ein Renderer einen unveränderlichen RenderPlan.
+`composeMarkup` kombiniert RenderPläne, `materialize` klont die statische
+DOM-Struktur und setzt Werte als Text, Attribute oder untergeordnete Nodes.
+`replaceContent`, `appendContent` und `replaceElement` montieren die Nodes.
+Die Dateien werden ohne Build-Schritt vom lokalen HTTP-Server ausgeliefert.
 
 Ein Fragment beginnt mit `<!-- wcm-template:fragmentName -->` und endet mit
-`<!-- /wcm-template -->`. `{{text:name}}` bindet HTML-escaped Text,
-`{{t:domain.key}}` eine Übersetzung. `{{raw:name}}` ist nur für kontrollierte
-Markup-Fragmente oder geprüfte technische Werte vorgesehen; niemals für
-ungeprüfte Benutzereingaben. Die Slot-Namen sollen ihre Bedeutung ausdrücken.
-Geschäftslogik, Datenaufbereitung und Ereignisse gehören nicht in die Templates.
-Der Backup-Profildialog trennt die Datenaufbereitung in `profile-model.js`.
+`<!-- /wcm-template -->`. `{{text:name}}` bindet Text, `{{t:domain.key}}`
+eine Übersetzung. `{{raw:name}}` bindet einen untergeordneten RenderPlan
+oder einen bisher HTML-escaped technischen Wert; Attributlisten werden
+kontrolliert in einzelne DOM-Attribute zerlegt. `{{tag:name}}` ist für
+validierte strukturelle Tag-Varianten vorgesehen. Dynamische Daten werden
+nicht als HTML geparst. Die String-Serialisierung ist ausschließlich die
+Kompatibilitätsschicht für DOM-freie Tests.
 
-`npm run check` prüft per JavaScript-AST, dass kein HTML/SVG in
-JavaScript-Literalen steht und dass Fragmentreferenzen und Slot-Bindungen
-vollständig sind. Die Übersetzungsprüfung umfasst auch die HTML-Dateien.
-Die String-Renderer sind ein Kompatibilitätsschritt; native DOM-Datenbindung
-und eine weitergehende Trennung der ViewModels sind eigenständige Folgearbeiten.
+Die Hauptansichten bereiten Auswahldaten und abgeleitete Werte in
+`public/js/views/models/` auf. Fachlogik verbleibt in den Domänenmodulen;
+`profile-model.js` bereitet den Backup-Profildialog vor. Views montieren
+Templates und koordinieren Ereignisse und Zustandsänderungen.
+
+`npm run format:html` formatiert die externen Templates mit LF-Zeilenenden.
+`npm run check` prüft die Formatierung, HTML-freie JavaScript-Literale,
+Fragmentreferenzen, Slot-Bindungen und Übersetzungsschlüssel.
 
 ## Sicherheit und Betrieb
 

@@ -1,3 +1,4 @@
+import {replaceContent} from '../ui/dom-renderer.js';
 import {t} from '../i18n/index.js';
 import {query} from '../ui/dom.js';
 import {request} from '../api.js';
@@ -7,10 +8,6 @@ import {uploadPhotos} from './photos.js';
 import {uploadFiles} from './files.js';
 import {bottlingChoiceDialog, bottlingChoiceOptions, matchingBottlings}
   from './forms/bottling-choice.js';
-import {loadTemplates} from '../ui/templates.js';
-
-const renderTemplate = await loadTemplates(
-  new URL('./templates/editor-controller.html', import.meta.url));
 
 /**
  * Coordinates forms and API calls; templates and persistence are separate
@@ -63,7 +60,7 @@ export function createEditors({
     if (!select) return;
     const previous = select.value;
     const matches = matchingBottlings(state.collection, term);
-    select.innerHTML = bottlingChoiceOptions(state.collection, term);
+    replaceContent(select, bottlingChoiceOptions(state.collection, term));
     if (matches.some(item => item.id === previous)) select.value = previous;
     const counter = query('#bottling-choice-count');
     if (counter) counter.textContent =
@@ -99,24 +96,9 @@ export function createEditors({
   function showNewBottleEditor(bottling, {fromImport = false, fromOverview =
     false} = {}) {
     const token = fromImport ? getPendingImageToken() : null;
-    let form = bottleForm({}, bottling.id);
-    if (fromOverview) form = form.replace(
-      renderTemplate('bottleForm'),
-      renderTemplate('bottleForm2')
-    );
-    const photoOption = token ?
-      renderTemplate('importPhoto') : '';
     showModal(
       `Weitere Flasche · ${bottling.name}`,
-      form.replace(
-        renderTemplate('showNewBottleEditor'),
-        renderTemplate(
-          'showNewBottleEditor2',
-          {
-            photoOption: photoOption,
-          }
-        )
-      ),
+      bottleForm({}, bottling.id, {fromOverview, importPhoto: Boolean(token)}),
       true
     );
   }

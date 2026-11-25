@@ -1,3 +1,4 @@
+import {composeMarkup} from './render-plan.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
@@ -29,7 +30,7 @@ export function sectionWorkspace(
     ({id: String(section.id), label: String(section.label)}));
   const selected = items.some(item => item.id === activeId) ? activeId :
     items[0]?.id;
-  const desktop = items.map(item =>
+  const desktop = composeMarkup(items.map(item =>
     renderTemplate('sectionNavItem', {
       id: item.id === selected ?
         ' active' : '',
@@ -40,14 +41,14 @@ export function sectionWorkspace(
       id2: item.id === selected ? ' aria-current="page"' : '',
       safe3: safe(item
         .label),
-    })).join('');
-  const options = items.map(item =>
+    })));
+  const options = composeMarkup(items.map(item =>
     renderTemplate('optionsOption', {
       safe: safe(item.id),
       selected: item.id === selected ? ' selected' :
         '',
       safe2: safe(item.label),
-    })).join('');
+    })));
   return renderTemplate('sectionWorkspace', {
     desktopClass: desktopClass ?
       ` ${safe(desktopClass)}` :

@@ -1,3 +1,4 @@
+import {createBottleForm} from '../../public/js/features/forms/bottle.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {matchingBottlings, bottlingChoiceDialog, bottlingChoiceOptions}
@@ -96,8 +97,15 @@ selected bottling',
        * @param {*} id Identifier of the affected record.
        * @return {string} Resulting text.
        */
-      bottleForm: (_, id) =>
-        `<form id="bottle-form" data-bottling-id="${id}"></form>`,
+      bottleForm: createBottleForm({
+        state, selectors: {
+          /**
+           * Returns the test bottling's distillery label.
+           * @return {string} Empty label for this fixture.
+           */
+          distilleryNames: () => '',
+        },
+      }),
       /**
        * Renders modal in the current view.
        *

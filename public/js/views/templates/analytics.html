@@ -19,7 +19,12 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsDistillery -->
-<button type="button" class="analytics-bar-label analytics-link" data-act="analytics-distillery" data-id="{{raw:safe}}" title="{{raw:collectionByName}}">{{raw:label}}</button>
+<button
+  type="button"
+  class="analytics-bar-label analytics-link"
+  data-act="analytics-distillery"
+  data-id="{{raw:safe}}"
+  title="{{raw:collectionByName}}">{{raw:label}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsBarLabel -->
@@ -39,11 +44,18 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:legend -->
-<{{raw:action}} class="analytics-pie-item{{raw:action2}}"{{raw:action3}}><i style="--slice:{{raw:colors}}"></i><span>{{raw:label}}</span><strong>{{raw:count}}</strong></{{raw:action4}}>
+<{{tag:action}}{{raw:buttonType}} class="analytics-pie-item{{raw:action2}}"{{raw:action3}}><i style="--slice:{{raw:colors}}"></i><span>{{raw:label}}</span><strong>{{raw:count}}</strong></{{tag:action4}}>
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsComposition -->
-<div class="analytics-composition"><div class="analytics-donut" role="img" aria-label="{{raw:safe}}" style="background:conic-gradient({{raw:slices}})"><span>{{raw:number}}</span></div><div class="analytics-pie-legend">{{raw:legend}}</div></div>
+<div class="analytics-composition">
+  <div
+    class="analytics-donut"
+    role="img"
+    aria-label="{{raw:safe}}"
+    style="background:conic-gradient({{raw:slices}})"><span>{{raw:number}}</span></div>
+  <div class="analytics-pie-legend">{{raw:legend}}</div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:th -->
@@ -59,7 +71,14 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsTableWrap -->
-<div class="analytics-table-wrap"><table class="analytics-table"><thead><tr>{{raw:headings}}</tr></thead><tbody>{{raw:rows}}</tbody></table></div>
+<div class="analytics-table-wrap">
+  <table class="analytics-table">
+    <thead>
+      <tr>{{raw:headings}}</tr>
+    </thead>
+    <tbody>{{raw:rows}}</tbody>
+  </table>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:open -->
@@ -72,19 +91,25 @@
 
 <!-- wcm-template:analyticsDateBoundary -->
 <label class="analytics-date-boundary">{{raw:caption}}<span class="analytics-date-control">
-        <input type="date" id="analytics-{{raw:boundary}}-date" data-analytics-boundary="{{raw:boundary2}}"
-            aria-label="{{raw:dateAccessibleName}}" value="{{raw:readAnalyticsDate}}" min="1600-01-01" max="2300-12-31">
-        </span></label>
+    <input
+      type="date"
+      id="analytics-{{raw:boundary}}-date"
+      data-analytics-boundary="{{raw:boundary2}}"
+      aria-label="{{raw:dateAccessibleName}}"
+      value="{{raw:readAnalyticsDate}}"
+      min="1600-01-01"
+      max="2300-12-31">
+  </span></label>
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsPeriod -->
 <div class="analytics-period" aria-label="{{t:analytics.trends.granularity}}"><label>{{t:analytics.filters.dateRange}} <select id="analytics-period"><option value="month" {{raw:selected}}>{{t:analytics.trends.monthly}}</option><option value="year" {{raw:selected2}}>{{t:analytics.trends.yearly}}</option></select></label>
-        {{raw:dateBoundary}}{{raw:dateBoundary2}}</div>
+  {{raw:dateBoundary}}{{raw:dateBoundary2}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsIntro -->
 <p class="analytics-intro">{{t:analytics.notes.documentedCostsNoCurrencyConversion}}</p>{{raw:main}}{{raw:costPages}}
-    {{raw:periodControls}}{{raw:priceCharts}}{{raw:two}}
+{{raw:periodControls}}{{raw:priceCharts}}{{raw:two}}
 <!-- /wcm-template -->
 
 <!-- wcm-template:open2 -->
@@ -92,14 +117,18 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsSection -->
-<button class="analytics-section-card" type="button" data-act="analytics-section" data-section="{{raw:safe}}"><span class="analytics-section-icon">{{raw:icon}}</span><span><strong>{{raw:safe2}}</strong><small>{{raw:safe3}}</small></span><span class="analytics-section-chevron" aria-hidden="true">{{raw:chevronRightIcon}}</span></button>
+<button
+  class="analytics-section-card"
+  type="button"
+  data-act="analytics-section"
+  data-section="{{raw:safe}}"><span class="analytics-section-icon">{{raw:icon}}</span><span><strong>{{raw:safe2}}</strong><small>{{raw:safe3}}</small></span><span class="analytics-section-chevron" aria-hidden="true">{{raw:chevronRightIcon}}</span></button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:overview -->
 {{raw:metricGrid}}
-        {{raw:two}}
-        <div class="analytics-overview-note"><strong>{{t:analytics.finance.recordedExpensesLabel}}</strong> {{raw:safe}}<span> · {{raw:priceCoverage}}</span></div>
-        {{raw:sectionHeading}}<div class="analytics-section-grid">{{raw:aNALYSISPAGES}}</div>
+{{raw:two}}
+<div class="analytics-overview-note"><strong>{{t:analytics.finance.recordedExpensesLabel}}</strong> {{raw:safe}}<span> · {{raw:priceCoverage}}</span></div>
+{{raw:sectionHeading}}<div class="analytics-section-grid">{{raw:aNALYSISPAGES}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:selectOption -->
@@ -112,15 +141,15 @@
 
 <!-- wcm-template:analyticsFilters -->
 <div class="analytics-filters" aria-label="{{t:analytics.filters.title}}">
-        {{raw:select}}
-        {{raw:select2}}
-        {{raw:select3}}
-        {{raw:select4}}
-        {{raw:analyticsResetButton}}</div>
+  {{raw:select}}
+  {{raw:select2}}
+  {{raw:select3}}
+  {{raw:select4}}
+  {{raw:analyticsResetButton}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsPage -->
 <div class="analytics-page">{{raw:pageHeader}}
-            {{raw:workspace}}
-            </div>
+  {{raw:workspace}}
+</div>
 <!-- /wcm-template -->

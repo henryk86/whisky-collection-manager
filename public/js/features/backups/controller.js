@@ -1,3 +1,4 @@
+import {composeMarkup} from '../../ui/render-plan.js';
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 /**
@@ -547,13 +548,13 @@ export function createBackupController({state, render, showModal, closeModal}) {
           t("backups.restore.validationBeforeOverwrite") :
           t("backups.legacy.resticConvertExplanation"),
         length: snapshots.length ?
-          snapshots.map(s =>
+          composeMarkup(snapshots.map(s =>
             renderTemplate('restoreOption', {
               id: s.id,
               shortId: s.shortId,
               toLocaleString: new Date(s.time)
                 .toLocaleString('de-DE'),
-            })).join('') :
+            }))) :
           renderTemplate('restoreOption2'),
         closeModalButton: actionButton({
           label: t("common.actions.cancel"),

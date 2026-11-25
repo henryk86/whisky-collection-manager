@@ -1,3 +1,4 @@
+import {composeMarkup} from './render-plan.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
@@ -80,27 +81,25 @@ export function detailField({
   const labelTag = definition ? 'dt' : 'span';
   const valueTag = definition ? 'dd' : variant === 'readonly' ? 'strong' :
     variant === 'note' ? 'p' : 'div';
-  const valueContent = valueHtml ? String(value) : safe(value);
+  const valueContent = valueHtml ? value : safe(value);
   return renderTemplate('detailFieldDiv', {
-    className: className ? ` class="${safe(className)}"` :
-      '',
-    variant: variant,
-  }) +
-    renderTemplate('detailField', {
-      labelTag: labelTag,
-      labelClass: labelClass ? ` class="${safe(labelClass)}"` :
-        '',
-      safe: safe(label),
-      labelTag2: labelTag,
-    }) +
-    renderTemplate('detailField2', {
-      valueTag: valueTag,
-      valueClass: valueClass ? ` class="${safe(valueClass)}"` :
-        '',
-      valueContent: valueContent,
-      valueTag2: valueTag,
-    }) +
-    renderTemplate('detailField3');
+    className: className ? ` class="${safe(className)}"` : '',
+    variant,
+    children: composeMarkup(
+      renderTemplate('detailField', {
+        labelTag,
+        labelClass: labelClass ? ` class="${safe(labelClass)}"` : '',
+        safe: safe(label),
+        labelTag2: labelTag,
+      }),
+      renderTemplate('detailField2', {
+        valueTag,
+        valueClass: valueClass ? ` class="${safe(valueClass)}"` : '',
+        valueContent,
+        valueTag2: valueTag,
+      })
+    ),
+  });
 }
 
 /**
@@ -153,15 +152,11 @@ export function emptyState({
       title),
   });
   return renderTemplate('emptyStateDiv', {
-    safe: safe(classes('empty-state',
-      className)),
-  }) +
-    renderTemplate('strong', {
-      safe: safe(title),
-      safe2: safe(description
-      ),
-      actions: actions,
-    });
+    safe: safe(classes('empty-state', className)),
+    title: safe(title),
+    description: safe(description),
+    actions,
+  });
 }
 
 /**
@@ -224,7 +219,6 @@ export function documentItem(content) {
  */
 export function documentList(items) {
   return renderTemplate('documentList', {
-    items: items.join(
-      ''),
+    items: composeMarkup(items),
   });
 }

@@ -11,19 +11,44 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorHitTarget -->
-<circle class="flavor-hit-target" data-flavor-hit="1" cx="{{raw:cx}}" cy="{{raw:cy}}" r="{{raw:radius}}"/>
+<circle
+  class="flavor-hit-target"
+  data-flavor-hit="1"
+  cx="{{raw:cx}}"
+  cy="{{raw:cy}}"
+  r="{{raw:radius}}"/>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorPoint -->
-<circle class="flavor-point" data-flavor-point="{{raw:i}}" cx="{{raw:x}}" cy="{{raw:y}}" r="{{raw:editable}}" {{raw:scorePresent}}/>
+<circle
+  class="flavor-point"
+  data-flavor-point="{{raw:i}}"
+  cx="{{raw:x}}"
+  cy="{{raw:y}}"
+  r="{{raw:editable}}"
+  {{raw:scorePresent}}/>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorAxisText -->
-<text class="flavor-axis-text" x="{{raw:x}}" y="{{raw:y}}" text-anchor="{{raw:anchor}}" dominant-baseline="middle">{{text:flavorAxisTitle}}</text>
+<text
+  class="flavor-axis-text"
+  x="{{raw:x}}"
+  y="{{raw:y}}"
+  text-anchor="{{raw:anchor}}"
+  dominant-baseline="middle">{{text:flavorAxisTitle}}</text>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorChartInput -->
-<input type="range" min="0" max="10" step="1" value="{{raw:missing}}" name="flavor-{{raw:axis}}" data-flavor-range="{{raw:i}}" {{raw:missing2}} aria-label="{{text:flavorAxisTitle}}"><output data-flavor-value="{{raw:i2}}">{{raw:missing3}}</output>
+<input
+  type="range"
+  min="0"
+  max="10"
+  step="1"
+  value="{{raw:missing}}"
+  name="flavor-{{raw:axis}}"
+  data-flavor-range="{{raw:i}}"
+  {{raw:missing2}}
+  aria-label="{{text:flavorAxisTitle}}"><output data-flavor-value="{{raw:i2}}">{{raw:missing3}}</output>
 <!-- /wcm-template -->
 
 <!-- wcm-template:strong -->

@@ -1,3 +1,4 @@
+import {replaceContent} from './dom-renderer.js';
 import {query} from './dom.js';
 import {t} from '../i18n/index.js';
 import {loadTemplates} from './templates.js';
@@ -28,8 +29,7 @@ export function toast(message, error = false) {
     close.className = 'toast-close';
     close.setAttribute('aria-label', t('common.actions.close'));
     close.title = t('common.actions.close');
-    close.innerHTML =
-      renderTemplate('toastSvg');
+    replaceContent(close, renderTemplate('toastSvg'));
     close.addEventListener('click', () => el.remove());
     el.append(close);
   } else {

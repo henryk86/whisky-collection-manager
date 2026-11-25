@@ -1,3 +1,5 @@
+import {composeMarkup} from '../ui/render-plan.js';
+import {replaceContent} from '../ui/dom-renderer.js';
 import {actionButton} from '../ui/buttons.js';
 import {t} from '../i18n/index.js';
 import {locationFor} from '../domain/distillery-map.js';
@@ -38,7 +40,7 @@ export function createSettingsController({state, action, navigate, closeModal,
         id: id || '',
         name: current?.name ||
           '',
-        content: [
+        content: composeMarkup([
           ["active", t("map.status.active")],
           ["closed", t("home.status.closed")],
           ["reopened", t("map.status.reopened")],
@@ -49,8 +51,7 @@ export function createSettingsController({state, action, navigate, closeModal,
             selected: (current?.status || "unknown") ===
               value ? "selected" : "",
             label: label,
-          }))
-          .join(""),
+          }))),
         latitude: current?.latitude ?? coordinates?.lat ?? '',
         longitude: current?.longitude ?? coordinates?.lon ?? '',
         findDistilleryLocationButton: actionButton({
@@ -132,11 +133,10 @@ export function createSettingsController({state, action, navigate, closeModal,
           saved.value.id)) {
         const label = document.createElement('label');
         label.className = 'distillery-option';
-        label.innerHTML =
-          renderTemplate('saveDistilleryInput', {
-            id: saved.value.id,
-            name: saved.value.name,
-          });
+        replaceContent(label, renderTemplate('saveDistilleryInput', {
+          id: saved.value.id,
+          name: saved.value.name,
+        }));
         const matching = [...options.querySelectorAll('.distillery-option')]
           .find(option =>
             option.querySelector('span').textContent
@@ -163,27 +163,28 @@ export function createSettingsController({state, action, navigate, closeModal,
     const button = query('[data-act="find-distillery-location"]');
     if (!output || !button) return;
     button.disabled = true;
-    output.innerHTML = renderTemplate('hint');
+    replaceContent(output, renderTemplate('hint'));
     try {
       const matches = await request(
         '/api/map/find-distillery',
         {method: 'POST', body: JSON.stringify({name})}
       );
-      output.innerHTML = matches.length ?
+      replaceContent(output, matches.length ?
         renderTemplate('hint2', {
-          matches: matches.map((candidate, index) => renderTemplate(
-            'applyDistilleryLocation',
-            {
-              index: index,
-              name: candidate.name,
-              toFixed: candidate.latitude
-                .toFixed(5),
-              toFixed2: candidate.longitude
-                .toFixed(5),
-            }
-          )).join(''),
+          matches: composeMarkup(matches.map((candidate, index) =>
+            renderTemplate(
+              'applyDistilleryLocation',
+              {
+                index: index,
+                name: candidate.name,
+                toFixed: candidate.latitude
+                  .toFixed(5),
+                toFixed2: candidate.longitude
+                  .toFixed(5),
+              }
+            ))),
         }) :
-        renderTemplate('hint3');
+        renderTemplate('hint3'));
       output._candidates = matches;
     } catch (error) {
       output.textContent = error.message;
@@ -203,7 +204,7 @@ export function createSettingsController({state, action, navigate, closeModal,
     if (!item) return;
     query('#distillery-latitude').value = String(item.latitude);
     query('#distillery-longitude').value = String(item.longitude);
-    output.innerHTML = renderTemplate('hint4');
+    replaceContent(output, renderTemplate('hint4'));
   }
 
   /**

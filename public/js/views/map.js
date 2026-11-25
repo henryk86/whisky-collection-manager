@@ -1,3 +1,6 @@
+import {createMapSidebarViewModel} from './models/map.js';
+import {composeMarkup} from '../ui/render-plan.js';
+import {replaceContent, replaceElement} from '../ui/dom-renderer.js';
 import {pageHeader} from '../ui/headers.js';
 import {t} from '../i18n/index.js';
 import {buildDistilleryMap, markerDiameter} from '../domain/distillery-map.js';
@@ -68,12 +71,12 @@ export function mapLegendHtml(showAllDistilleries = false) {
       legendMarkerDiameter: legendMarkerDiameter(count),
       count: count,
     });
-  const samples = [1, 10, 100].map(count =>
+  const samples = composeMarkup([1, 10, 100].map(count =>
     renderTemplate('mapLegendItem', {
       plural: plural(count,
         t("forms.bottle.title"), t("forms.bottle.plural")),
       stockExample: stockExample(count, 'map-legend-stock-icon'),
-    })).join('');
+    })));
   const emptySites = showAllDistilleries ?
     renderTemplate('mapLegendSection', {
       pagodaRoofIcon: pagodaRoofIcon,
@@ -116,7 +119,7 @@ export function createMapView({state, shell, navigate, settings}) {
    */
   function relatedSitesHtml() {
     if (!relatedBottling) return '';
-    const entries = relatedSites.map(site => site.location
+    const entries = composeMarkup(relatedSites.map(site => site.location
       ? renderTemplate('mapRelatedSite', {
         id: site.id,
         name: site.name,
@@ -124,7 +127,7 @@ export function createMapView({state, shell, navigate, settings}) {
       : renderTemplate('mapRelatedMissing', {
         name: site.name,
         id: site.id,
-      })).join('');
+      })));
     return renderTemplate('mapRelatedBottling', {
       locationsFor: t(
         "map.bottling.locationsFor",
@@ -142,19 +145,15 @@ export function createMapView({state, shell, navigate, settings}) {
    * @return {string} Resulting text.
    */
   function sidebarHtml() {
-    const selected = sites.find(site => site.id === selectedId) || null;
-    const filtered = selected ? selected.bottlings.filter(entry =>
-      entry.name.toLocaleLowerCase('de')
-        .includes(search.toLocaleLowerCase('de'))) : [];
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_LIMIT));
-    page = Math.max(1, Math.min(page, totalPages));
-    const subset = filtered.slice((page - 1) * PAGE_LIMIT, page * PAGE_LIMIT);
+    const {selected, filtered, totalPages, currentPage, subset} =
+      createMapSidebarViewModel(sites, selectedId, search, page, PAGE_LIMIT);
+    page = currentPage;
     return renderTemplate('sidebarHtml', {
       relatedSitesHtml: relatedSitesHtml(),
       length: sites.length ? '' : 'disabled',
       option: sites.length && !selectedId ?
         renderTemplate('sidebarHtmlOption') : '',
-      length2: sites.length ? sites.map(site =>
+      length2: sites.length ? composeMarkup(sites.map(site =>
         renderTemplate('sidebarHtmlOption2', {
           id: site.id,
           selected: site.id === selectedId ?
@@ -166,8 +165,7 @@ export function createMapView({state, shell, navigate, settings}) {
             t("forms.bottle.title"),
             t("forms.bottle.plural")
           ) : t("map.filters.withoutBottlesLowercase"),
-        }))
-        .join('') : renderTemplate('sidebarHtmlOption3'),
+        }))) : renderTemplate('sidebarHtmlOption3'),
       mapSiteHeading: selected ?
         renderTemplate('mapSiteHeading', {
           name: selected.name,
@@ -201,7 +199,7 @@ export function createMapView({state, shell, navigate, settings}) {
                 "map.bottling.bottlingsAtSite",
                 {name: escapeHtml(selected.name)}
               ),
-              length: subset.length ? subset.map(entry =>
+              length: subset.length ? composeMarkup(subset.map(entry =>
                 renderTemplate('mapBottlingLink', {
                   id: entry.id,
                   name: entry.name,
@@ -214,7 +212,7 @@ export function createMapView({state, shell, navigate, settings}) {
                     t("forms.bottle.title"),
                     t("forms.bottle.plural")
                   ),
-                })).join('') :
+                }))) :
                 renderTemplate('hint2'),
               mapListPager: totalPages > 1 ?
                 renderTemplate('mapListPager', {
@@ -256,14 +254,17 @@ ination.pageOf", {page, total: totalPages}),
    * @return {string} Resulting text.
    */
   function missingRows(items) {
-    return items.length ? items.slice(0, 18).map(site =>
-      renderTemplate('mapMissingRow', {
-        name: site.name,
-        id: site.id,
-      })).join('') + (items.length > 18 ? renderTemplate('hint5', {
+    return items.length ? composeMarkup(
+      composeMarkup(items.slice(0, 18).map(site =>
+        renderTemplate('mapMissingRow', {
+          name: site.name,
+          id: site.id,
+        }))),
+      (items.length > 18 ? renderTemplate('hint5', {
         moreResults: t("map.search\
 .moreResults", {count: items.length - 18}),
-      }) : '') : renderTemplate('hint6');
+      }) : '')
+    ) : renderTemplate('hint6');
   }
 
   /**
@@ -274,8 +275,8 @@ ination.pageOf", {page, total: totalPages}),
   function renderSidebar({focusSearch = false} = {}) {
     const sidebar = document.getElementById('map-sidebar');
     if (!sidebar) return;
-    sidebar.innerHTML = sidebarHtml() + (missing.length > 0 ?
-      missingHtml() : '');
+    replaceContent(sidebar, composeMarkup(sidebarHtml(), (missing.length > 0 ?
+      missingHtml() : '')));
     if (focusSearch) {
       const field = document.getElementById('map-bottling-search');
       field?.focus();
@@ -342,7 +343,7 @@ ination.pageOf", {page, total: totalPages}),
     tileMap.updateSites(sites, selectedId, showAllDistilleries);
     // Changing which distilleries are displayed must not refit the camera.
     const legend = document.querySelector('.map-legend');
-    if (legend) legend.outerHTML = mapLegendHtml(showAllDistilleries);
+    if (legend) replaceElement(legend, mapLegendHtml(showAllDistilleries));
     const emptyNotice = document.querySelector('.map-no-sites');
     if (sites.length) emptyNotice?.remove();
     else if (!emptyNotice) {
@@ -396,7 +397,7 @@ ination.pageOf", {page, total: totalPages}),
         intro: t('map.page.description'),
         className: 'map-heading',
         copyClass: '',
-        actions: String(backToCollectionButton),
+        actions: backToCollectionButton(),
       }),
       length: sites.length,
       bottleTotal: bottleTotal,
@@ -472,9 +473,9 @@ ination.pageOf", {page, total: totalPages}),
     } else if (target.id === 'map-missing-search') {
       missingFilter = target.value;
       const panel = document.getElementById('map-missing-list');
-      if (panel) panel.innerHTML = missingRows(missing.filter(site =>
+      if (panel) replaceContent(panel, missingRows(missing.filter(site =>
         site.name.toLocaleLowerCase('de')
-          .includes(missingFilter.toLocaleLowerCase('de'))));
+          .includes(missingFilter.toLocaleLowerCase('de')))));
     }
   }
 

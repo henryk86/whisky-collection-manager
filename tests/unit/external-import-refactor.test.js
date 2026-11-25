@@ -1,3 +1,4 @@
+import {createBottleForm} from '../../public/js/features/forms/bottle.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createExternalImport}
@@ -185,7 +186,16 @@ pending imports',
        * Derives the bottle form result from the supplied values.
        * @return {string} Resulting text.
        */
-      bottleForm: () => '<form id="bottle-form"></form>',
+      bottleForm: createBottleForm({
+        state: {collection: {bottlings: [{id: 'bottling-1', name: 'Test'}]}},
+        selectors: {
+          /**
+           * Returns the test bottling's distillery label.
+           * @return {string} Empty label for this fixture.
+           */
+          distilleryNames: () => '',
+        },
+      }),
       /**
        * Renders modal in the current view.
        *

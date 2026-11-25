@@ -4,9 +4,10 @@
 
 <!-- wcm-template:tastingBottlingSummary -->
 <div class="tasting-bottling-summary" data-external-read>
-            <div class="tasting-bottling-summary-head"><strong>{{text:name}}</strong>
-                <div class="tasting-external-summary-actions"><button type="button" class="btn small" data-act="tasting-external-edit">{{raw:editIcon}}<span>{{text:edit}}</span></button>
-                {{raw:tastingExternalAssignButton}}</div></div>
+  <div class="tasting-bottling-summary-head"><strong>{{text:name}}</strong>
+    <div class="tasting-external-summary-actions"><button type="button" class="btn small" data-act="tasting-external-edit">{{raw:editIcon}}<span>{{text:edit}}</span></button>
+                {{raw:tastingExternalAssignButton}}</div>
+  </div>
             {{raw:muted}}
         </div>
 <!-- /wcm-template -->
@@ -19,7 +20,7 @@
 <!-- wcm-template:bottlingInfo -->
 {{raw:draft}}
         <div data-external-edit {{raw:draft2}}>
-            <div class="tasting-external-fields">{{raw:externalFields}}</div>
+  <div class="tasting-external-fields">{{raw:externalFields}}</div>
             {{raw:draft3}}
         </div>
 <!-- /wcm-template -->
@@ -36,11 +37,11 @@
 <div class="tasting-bottling-summary tasting-bottling-photo-layout">
             {{raw:tastingBottlingPhoto}}
             <div class="tasting-bottling-copy">
-                <div class="tasting-bottling-summary-head"><strong>{{text:name}}</strong>
+    <div class="tasting-bottling-summary-head"><strong>{{text:name}}</strong>
                     {{raw:tastingOpenBottlingButton}}</div>
                 {{raw:muted}}
             </div>
-        </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsPanel -->
@@ -50,7 +51,11 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingOpenFlight -->
-<div class="tasting-flight-context"><button type="button" class="inline-link" data-act="tasting-open-flight" data-flight-id="{{text:id}}">{{text:name}} · {{text:position}}</button></div>
+<div class="tasting-flight-context"><button
+    type="button"
+    class="inline-link"
+    data-act="tasting-open-flight"
+    data-flight-id="{{text:id}}">{{text:name}} · {{text:position}}</button></div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:muted3 -->
@@ -71,24 +76,24 @@
 
 <!-- wcm-template:flavorDetailPanel -->
 <div class="flavor-detail-panel tasting-panel tasting-readonly-panels">
-        <div class="tasting-record-fields analytics-panel tasting-readonly-meta-panel">
+  <div class="tasting-record-fields analytics-panel tasting-readonly-meta-panel">
             {{raw:detailGrid}}
             {{raw:actionToolbar}}
         </div>
-        <div class="tasting-top-row">
-            <section class="analytics-panel tasting-color-panel">{{raw:headingTitle}}
+  <div class="tasting-top-row">
+    <section class="analytics-panel tasting-color-panel">{{raw:headingTitle}}
                 {{raw:whiskyColorDisplay}}
             </section>
-            <section class="analytics-panel tasting-senses-section">{{raw:headingTitle2}}
+    <section class="analytics-panel tasting-senses-section">{{raw:headingTitle2}}
                 {{raw:flavorChart}}</section>
-        </div>
-        <section class="analytics-panel">{{raw:headingTitle3}}
+  </div>
+  <section class="analytics-panel">{{raw:headingTitle3}}
             {{raw:detailGrid2}}
         </section>
-        <section class="analytics-panel tasting-rating-panel">{{raw:headingTitle4}}
+  <section class="analytics-panel tasting-rating-panel">{{raw:headingTitle4}}
             {{raw:staticRating}}
             {{raw:trim}}</section>
-    </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingListGlasses -->
@@ -96,39 +101,57 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingDelete -->
-<div class="tasting-entry-actions"><button type="button" class="btn small danger" data-act="tasting-delete" data-tasting-id="{{text:id}}">{{text:delete}}</button></div>
+<div class="tasting-entry-actions"><button
+    type="button"
+    class="btn small danger"
+    data-act="tasting-delete"
+    data-tasting-id="{{text:id}}">{{text:delete}}</button></div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseBottleRow -->
 <div class="warehouse-bottle-row tasting-entry-row {{raw:home}}">
-        <button type="button" class="tasting-entry-open" data-act="{{raw:home2}}" {{raw:home3}} data-tasting-id="{{text:id}}"
-            aria-label="{{text:content}}">
-            <span class="warehouse-bottle-row-info tasting-entry-info">
-                <strong>{{text:home4}}</strong>
-                <small>{{text:home5}}{{raw:home6}}</small>
-            </span>
-            <span class="tasting-entry-trailing">{{raw:tastingListGlasses}}<span class="tasting-list-rating">{{raw:tastingRating}}</span><span class="tasting-entry-chevron" aria-hidden="true">{{raw:chevronRightIcon}}</span></span>
-        </button>
+  <button
+    type="button"
+    class="tasting-entry-open"
+    data-act="{{raw:home2}}"
+    {{raw:home3}}
+    data-tasting-id="{{text:id}}"
+    aria-label="{{text:content}}">
+    <span class="warehouse-bottle-row-info tasting-entry-info">
+      <strong>{{text:home4}}</strong>
+      <small>{{text:home5}}{{raw:home6}}</small>
+    </span>
+    <span class="tasting-entry-trailing">{{raw:tastingListGlasses}}<span class="tasting-list-rating">{{raw:tastingRating}}</span><span class="tasting-entry-chevron" aria-hidden="true">{{raw:chevronRightIcon}}</span></span>
+  </button>
         {{raw:home7}}
     </div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:externalFieldsLabel -->
 <label>{{text:t}}
-            <input data-external-field="{{raw:key}}" name="{{raw:key2}}" type="{{raw:type}}" {{raw:max}} {{raw:required}}
-                {{raw:type2}}
-                value="{{text:info}}"></label>
+            <input
+    data-external-field="{{raw:key}}"
+    name="{{raw:key2}}"
+    type="{{raw:type}}"
+    {{raw:max}}
+    {{raw:required}}
+    {{raw:type2}}
+    value="{{text:info}}"></label>
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingFlightNew -->
 <button type="button" class="btn small" data-act="tasting-flight-new">{{raw:newBottlingIcon}}<span>{{text:document}}</span></button>
-                <button type="button" class="btn small primary" data-act="flight-plan-new">{{raw:flightPlanIcon}}<span>{{text:plan}}</span></button>
+<button type="button" class="btn small primary" data-act="flight-plan-new">{{raw:flightPlanIcon}}<span>{{text:plan}}</span></button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingFlightOpen -->
-<button class="tasting-flight-home-link" type="button" data-act="tasting-flight-open" data-flight-id="{{text:id}}">
-                <span><strong>{{text:name}}</strong><small>{{text:formatDate}} · {{raw:phase}}{{text:t}}</small></span>
-                <span class="tasting-entry-chevron" aria-hidden="true">{{raw:chevronRightIcon}}</span></button>
+<button
+  class="tasting-flight-home-link"
+  type="button"
+  data-act="tasting-flight-open"
+  data-flight-id="{{text:id}}">
+  <span><strong>{{text:name}}</strong><small>{{text:formatDate}} · {{raw:phase}}{{text:t}}</small></span>
+  <span class="tasting-entry-chevron" aria-hidden="true">{{raw:chevronRightIcon}}</span></button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseBottleList -->
@@ -178,38 +201,51 @@
 <div class="tasting-flight-form flight-plan-form">
             {{raw:candidateText}}
             <label>{{t:tastingFlights.name}}<input data-flight-name maxlength="160" required placeholder="{{text:namePlaceholder}}"></label>
-            <label>{{t:tastingFlights.date}}<input type="date" data-flight-date required value="{{raw:localToday}}"></label>
-            <label>{{t:tastingFlights.notes}}<textarea data-flight-notes maxlength="10000" rows="2"></textarea></label>
-            <div class="flight-plan-options">
-                <label>{{t:flightPlan.mode}}<select data-flight-plan-style>{{raw:fLIGHTSTYLES}}</select></label>
-                <label>{{t:flightPlan.count}}<select data-flight-plan-count>{{raw:content}}</select></label>
-                <label>{{t:flightPlan.availability}}<select data-flight-plan-availability>{{raw:fLIGHTAVAILABILITY}}</select></label>
-            </div>
-            <div class="flight-plan-conditional" data-flight-plan-focus-wrap hidden><label>{{text:focus}}
+  <label>{{t:tastingFlights.date}}<input type="date" data-flight-date required value="{{raw:localToday}}"></label>
+  <label>{{t:tastingFlights.notes}}<textarea data-flight-notes maxlength="10000" rows="2"></textarea></label>
+  <div class="flight-plan-options">
+    <label>{{t:flightPlan.mode}}<select data-flight-plan-style>{{raw:fLIGHTSTYLES}}</select></label>
+    <label>{{t:flightPlan.count}}<select data-flight-plan-count>{{raw:content}}</select></label>
+    <label>{{t:flightPlan.availability}}<select data-flight-plan-availability>{{raw:fLIGHTAVAILABILITY}}</select></label>
+  </div>
+  <div class="flight-plan-conditional" data-flight-plan-focus-wrap hidden><label>{{text:focus}}
                 <select data-flight-plan-focus>{{raw:fLIGHTFOCUSES}}</select></label></div>
-            <div class="flight-plan-conditional"
-              data-flight-plan-unfamiliar-wrap hidden>{{raw:checkboxInput}}</div>
-            <details class="flight-plan-advanced">
-                <summary>{{text:title}}</summary>
-                <p class="hint">{{text:hint}}</p>
-                <div class="flight-plan-options flight-plan-advanced-grid">
-                    <label>{{text:caskMode}}<select data-flight-plan-cask-mode>{{raw:cASKMODES}}</select></label>
-                    <label>{{text:ageMode}}<select data-flight-plan-age-mode>{{raw:aGEMODES}}</select></label>
-                </div>
+  <div class="flight-plan-conditional" data-flight-plan-unfamiliar-wrap hidden>{{raw:checkboxInput}}</div>
+  <details class="flight-plan-advanced">
+    <summary>{{text:title}}</summary>
+    <p class="hint">{{text:hint}}</p>
+    <div class="flight-plan-options flight-plan-advanced-grid">
+      <label>{{text:caskMode}}<select data-flight-plan-cask-mode>{{raw:cASKMODES}}</select></label>
+      <label>{{text:ageMode}}<select data-flight-plan-age-mode>{{raw:aGEMODES}}</select></label>
+    </div>
                 {{raw:flightCaskOptionsHtml}}
                 <div class="flight-plan-options flight-plan-advanced-grid">
-                    <div class="flight-plan-conditional" data-flight-plan-age-range-wrap hidden><label>{{text:ageRange}}
-                        <span class="flight-plan-age-range"><input type="number" min="0" max="200" step="1" data-flight-plan-age-min placeholder="{{text:ageMin}}" aria-label="{{text:ageMin2}}">
-                            <input type="number" min="0" max="200" step="1" data-flight-plan-age-max placeholder="{{text:ageMax}}" aria-label="{{text:ageMax2}}"></span></label></div>
-                </div>
-                <div class="flight-plan-conditional"
-                  data-flight-plan-strict-wrap hidden>{{raw:checkboxInput2}}</div>
-            </details>
-            <div class="actions">{{raw:flightPlanGenerateButton}}</div>
-            <div class="flight-plan-preview" aria-live="polite"></div>
-            <div class="actions">{{raw:closeModalButton}}
+      <div class="flight-plan-conditional" data-flight-plan-age-range-wrap hidden><label>{{text:ageRange}}
+                        <span class="flight-plan-age-range"><input
+              type="number"
+              min="0"
+              max="200"
+              step="1"
+              data-flight-plan-age-min
+              placeholder="{{text:ageMin}}"
+              aria-label="{{text:ageMin2}}">
+            <input
+              type="number"
+              min="0"
+              max="200"
+              step="1"
+              data-flight-plan-age-max
+              placeholder="{{text:ageMax}}"
+              aria-label="{{text:ageMax2}}"></span></label></div>
+    </div>
+    <div class="flight-plan-conditional" data-flight-plan-strict-wrap hidden>{{raw:checkboxInput2}}</div>
+  </details>
+  <div class="actions">{{raw:flightPlanGenerateButton}}</div>
+  <div class="flight-plan-preview" aria-live="polite">
+  </div>
+  <div class="actions">{{raw:closeModalButton}}
                 <button class="btn primary" type="button" data-act="flight-plan-create" disabled>{{t:flightPlan.save}}</button></div>
-        </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:small -->
@@ -222,7 +258,8 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint4 -->
-<p class="hint">{{text:description}}</p><ol class="flight-plan-proposal">{{raw:draft}}</ol>
+<p class="hint">{{text:description}}</p>
+<ol class="flight-plan-proposal">{{raw:draft}}</ol>
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint5 -->
@@ -242,30 +279,64 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanLocation -->
-<button type="button" class="inline-link" data-act="flight-plan-location" data-bottle-id="{{text:bottleId}}">{{text:label}}</button>
+<button
+  type="button"
+  class="inline-link"
+  data-act="flight-plan-location"
+  data-bottle-id="{{text:bottleId}}">{{text:label}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanOpenBottling -->
-<button type="button" class="btn small" data-act="flight-plan-open-bottling" data-bottling-id="{{text:id}}">{{t:tastings.openBottlingDetails}}</button>
+<button
+  type="button"
+  class="btn small"
+  data-act="flight-plan-open-bottling"
+  data-bottling-id="{{text:id}}">{{t:tastings.openBottlingDetails}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanMove -->
 <div class="flight-plan-member-actions">
-                        <button type="button" class="btn small" data-act="flight-plan-move" data-index="{{raw:index}}" data-step="-1" {{raw:disabled}} aria-label="{{t:tastingFlights.moveUp}}">{{raw:arrowUpIcon}}</button>
-                        <button type="button" class="btn small" data-act="flight-plan-move" data-index="{{raw:index2}}" data-step="1" {{raw:disabled2}} aria-label="{{t:tastingFlights.moveDown}}">{{raw:arrowDownIcon}}</button>
-                        <select data-flight-replace="{{raw:index3}}" aria-label="{{t:flightPlan.replace}}"><option value="">{{t:flightPlan.replace}}</option>{{raw:choices}}</select>
-                        <button type="button" class="btn small" data-act="flight-plan-replace" data-index="{{raw:index4}}">{{t:flightPlan.replace}}</button>
-                        <button type="button" class="btn small danger" data-act="flight-plan-remove" data-index="{{raw:index5}}">{{t:flightPlan.remove}}</button>
-                    </div>
+  <button
+    type="button"
+    class="btn small"
+    data-act="flight-plan-move"
+    data-index="{{raw:index}}"
+    data-step="-1"
+    {{raw:disabled}}
+    aria-label="{{t:tastingFlights.moveUp}}">{{raw:arrowUpIcon}}</button>
+  <button
+    type="button"
+    class="btn small"
+    data-act="flight-plan-move"
+    data-index="{{raw:index2}}"
+    data-step="1"
+    {{raw:disabled2}}
+    aria-label="{{t:tastingFlights.moveDown}}">{{raw:arrowDownIcon}}</button>
+  <select data-flight-replace="{{raw:index3}}" aria-label="{{t:flightPlan.replace}}"><option value="">{{t:flightPlan.replace}}</option>{{raw:choices}}</select>
+  <button
+    type="button"
+    class="btn small"
+    data-act="flight-plan-replace"
+    data-index="{{raw:index4}}">{{t:flightPlan.replace}}</button>
+  <button
+    type="button"
+    class="btn small danger"
+    data-act="flight-plan-remove"
+    data-index="{{raw:index5}}">{{t:flightPlan.remove}}</button>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanRecord -->
-<button type="button" class="btn small primary" data-act="flight-plan-record" data-bottling-id="{{text:bottlingId}}">{{t:flightPlan.addTasting}}</button>
+<button
+  type="button"
+  class="btn small primary"
+  data-act="flight-plan-record"
+  data-bottling-id="{{text:bottlingId}}">{{t:flightPlan.addTasting}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanMember -->
 <li class="flight-plan-member"><span class="flight-plan-number" aria-hidden="true">{{raw:index}}</span>{{raw:flightPlanMemberPhoto}}<div class="flight-plan-member-copy"><strong>{{text:label}}</strong>
-                    <small>{{raw:unavailable}}{{raw:bottle}}</small>
+    <small>{{raw:unavailable}}{{raw:bottle}}</small>
                     {{raw:flightPlanLocation}}</div>
                     {{raw:flightPlanOpenBottling}}
                     {{raw:flightPlanMove}}
@@ -274,8 +345,7 @@
 
 <!-- wcm-template:flightPlanAdd -->
 <div class="flight-plan-add">
-        <select data-flight-manual-add
-          aria-label="{{t:flightPlan.selectBottle}}">
+  <select data-flight-manual-add aria-label="{{t:flightPlan.selectBottle}}">
           {{raw:choices}}</select>
         {{raw:flightPlanAddButton}}</div>
 <!-- /wcm-template -->
@@ -285,8 +355,9 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsPanel3 -->
-<section class="analytics-panel flight-plan-members"><div class="tasting-panel-heading">{{raw:headingTitle}}</div>
-            <ol class="flight-plan-members-list">{{raw:planItems}}</ol>
+<section class="analytics-panel flight-plan-members">
+  <div class="tasting-panel-heading">{{raw:headingTitle}}</div>
+  <ol class="flight-plan-members-list">{{raw:planItems}}</ol>
             {{raw:flightPlanAdd}}
             {{raw:flightPlanStart}}
         </section>
@@ -294,21 +365,21 @@
 
 <!-- wcm-template:tastingFlightForm2 -->
 <div class="tasting-flight-form">
-            <label>{{text:name}}<input data-flight-name maxlength="160" required placeholder="{{text:namePlaceholder}}"></label>
-            <label>{{text:date}}<input type="date" data-flight-date required value="{{raw:localToday}}"></label>
-            <label>{{text:notes}}<textarea data-flight-notes maxlength="10000" rows="3"></textarea></label>
-            <div class="actions">{{raw:closeModalButton}}
+  <label>{{text:name}}<input data-flight-name maxlength="160" required placeholder="{{text:namePlaceholder}}"></label>
+  <label>{{text:date}}<input type="date" data-flight-date required value="{{raw:localToday}}"></label>
+  <label>{{text:notes}}<textarea data-flight-notes maxlength="10000" rows="3"></textarea></label>
+  <div class="actions">{{raw:closeModalButton}}
             {{raw:tastingFlightCreateConfirmButton}}</div>
-        </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingFlightForm3 -->
 <div class="tasting-flight-form">
-                    <label>{{t:tastingFlights.name}}<input data-flight-name maxlength="160" required value="{{text:name}}"></label>
-                    <label>{{t:tastingFlights.date}}<input type="date" data-flight-date value="{{text:date}}"></label>
-                    <label>{{t:tastingFlights.notes}}<textarea data-flight-notes rows="3">{{text:notes}}</textarea></label>
-                    <div class="actions">{{raw:tastingFlightCancelEditButton}}{{raw:tastingFlightSaveButton}}</div>
-                    </div>
+  <label>{{t:tastingFlights.name}}<input data-flight-name maxlength="160" required value="{{text:name}}"></label>
+  <label>{{t:tastingFlights.date}}<input type="date" data-flight-date value="{{text:date}}"></label>
+  <label>{{t:tastingFlights.notes}}<textarea data-flight-notes rows="3">{{text:notes}}</textarea></label>
+  <div class="actions">{{raw:tastingFlightCancelEditButton}}{{raw:tastingFlightSaveButton}}</div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightP -->
@@ -316,7 +387,11 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingPanelHeading -->
-<div class="tasting-panel-heading"><div>{{raw:headingTitle}}<p class="muted">{{text:formatDate}} · {{t:flightPlan.phase.planned}}</p></div><div class="actions"><button class="btn small" type="button" data-act="tasting-flight-edit">{{t:common.actions.edit}}</button><button class="btn small danger" type="button" data-act="tasting-flight-delete">{{t:common.actions.delete}}</button></div></div>{{raw:p}}
+<div class="tasting-panel-heading">
+  <div>{{raw:headingTitle}}<p class="muted">{{text:formatDate}} · {{t:flightPlan.phase.planned}}</p>
+  </div>
+  <div class="actions"><button class="btn small" type="button" data-act="tasting-flight-edit">{{t:common.actions.edit}}</button><button class="btn small danger" type="button" data-act="tasting-flight-delete">{{t:common.actions.delete}}</button></div>
+</div>{{raw:p}}
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsPage -->
@@ -334,29 +409,58 @@
 
 <!-- wcm-template:tastingFlightMember -->
 <div class="tasting-flight-member" data-tasting-id="{{text:id}}">
-            <div class="tasting-flight-order-control"><button type="button" class="tasting-flight-drag-handle" data-flight-drag aria-label="{{text:dragHandle}}" title="{{text:dragHandle2}}">
+  <div class="tasting-flight-order-control"><button
+      type="button"
+      class="tasting-flight-drag-handle"
+      data-flight-drag
+      aria-label="{{text:dragHandle}}"
+      title="{{text:dragHandle2}}">
                 <svg width="17" height="19" viewBox="0 0 16 20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="10" r="1.5"/><circle cx="11" cy="10" r="1.5"/><circle cx="5" cy="17" r="1.5"/><circle cx="11" cy="17" r="1.5"/></svg>
             </button><span class="tasting-flight-position" aria-label="{{text:position}}">{{raw:i}}</span></div>
-            <button type="button" class="tasting-flight-member-open" data-act="tasting-flight-note-open" data-tasting-id="{{text:id2}}" data-bottling-id="{{text:external}}" data-external="{{raw:external2}}">
-                <strong>{{text:name}}</strong><small>{{text:title}}</small>
-            </button>
-            <span class="tasting-flight-member-score">{{raw:tastingListGlasses}}<strong>{{raw:tastingRating}}</strong></span>
-            <div class="tasting-flight-member-actions">
-                <button type="button" class="btn small" data-act="tasting-flight-move" data-index="{{raw:i2}}" data-direction="-1" {{raw:disabled}} aria-label="{{text:moveUp}}">{{raw:arrowUpIcon}}</button>
-                <button type="button" class="btn small" data-act="tasting-flight-move" data-index="{{raw:i3}}" data-direction="1" {{raw:disabled2}} aria-label="{{text:moveDown}}">{{raw:arrowDownIcon}}</button>
-                <button type="button" class="btn small" data-act="tasting-flight-remove-note" data-tasting-id="{{text:id3}}">{{text:detach}}</button>
-            </div>
-        </div>
+  <button
+    type="button"
+    class="tasting-flight-member-open"
+    data-act="tasting-flight-note-open"
+    data-tasting-id="{{text:id2}}"
+    data-bottling-id="{{text:external}}"
+    data-external="{{raw:external2}}">
+    <strong>{{text:name}}</strong><small>{{text:title}}</small>
+  </button>
+  <span class="tasting-flight-member-score">{{raw:tastingListGlasses}}<strong>{{raw:tastingRating}}</strong></span>
+  <div class="tasting-flight-member-actions">
+    <button
+      type="button"
+      class="btn small"
+      data-act="tasting-flight-move"
+      data-index="{{raw:i2}}"
+      data-direction="-1"
+      {{raw:disabled}}
+      aria-label="{{text:moveUp}}">{{raw:arrowUpIcon}}</button>
+    <button
+      type="button"
+      class="btn small"
+      data-act="tasting-flight-move"
+      data-index="{{raw:i3}}"
+      data-direction="1"
+      {{raw:disabled2}}
+      aria-label="{{text:moveDown}}">{{raw:arrowDownIcon}}</button>
+    <button
+      type="button"
+      class="btn small"
+      data-act="tasting-flight-remove-note"
+      data-tasting-id="{{text:id3}}">{{text:detach}}</button>
+  </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingFlightForm4 -->
 <div class="tasting-flight-form">
-                    <label>{{text:name}}<input data-flight-name maxlength="160" required value="{{text:name2}}"></label>
-                    <label>{{text:date}}<input type="date" data-flight-date required value="{{text:date2}}"></label>
-                    <label>{{text:notes}}<textarea data-flight-notes maxlength="10000" rows="4">{{text:notes2}}</textarea></label>
-                    <div class="actions">{{raw:tastingFlightCancelEditButton}}
+  <label>{{text:name}}<input data-flight-name maxlength="160" required value="{{text:name2}}"></label>
+  <label>{{text:date}}<input type="date" data-flight-date required value="{{text:date2}}"></label>
+  <label>{{text:notes}}<textarea data-flight-notes maxlength="10000" rows="4">{{text:notes2}}</textarea></label>
+  <div class="actions">{{raw:tastingFlightCancelEditButton}}
                     {{raw:tastingFlightSaveButton}}</div>
-                </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingFlightComment -->
@@ -364,9 +468,12 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingPanelHeading2 -->
-<div class="tasting-panel-heading"><div>{{raw:headingTitle}}<p class="muted">{{text:formatDate}}</p></div>
-                    <div class="actions"><button type="button" class="btn small" data-act="tasting-flight-edit">{{raw:editIcon}}<span>{{text:edit}}</span></button>
-                        {{raw:tastingFlightDeleteButton}}</div></div>
+<div class="tasting-panel-heading">
+  <div>{{raw:headingTitle}}<p class="muted">{{text:formatDate}}</p>
+  </div>
+  <div class="actions"><button type="button" class="btn small" data-act="tasting-flight-edit">{{raw:editIcon}}<span>{{text:edit}}</span></button>
+                        {{raw:tastingFlightDeleteButton}}</div>
+</div>
                     {{raw:tastingFlightComment}}
 <!-- /wcm-template -->
 
@@ -388,14 +495,14 @@
 
 <!-- wcm-template:tastingFlightAdd -->
 <div class="tasting-flight-add">
-                    <div class="tasting-flight-add-existing"><label>{{text:selectExisting}}
+  <div class="tasting-flight-add-existing"><label>{{text:selectExisting}}
                         <select data-flight-tasting-option {{raw:length}}>{{raw:available}}</select></label>
-                        <button class="btn" type="button" data-act="tasting-flight-attach" {{raw:length2}}>{{text:addExisting}}</button></div>
-                    <div class="tasting-flight-add-new"><label>{{text:chooseBottling}}
+    <button class="btn" type="button" data-act="tasting-flight-attach" {{raw:length2}}>{{text:addExisting}}</button></div>
+  <div class="tasting-flight-add-new"><label>{{text:chooseBottling}}
                         <select data-flight-owned-bottling>{{raw:bottlings}}</select></label>
-                        <button class="btn" type="button" data-act="tasting-flight-new-owned" {{raw:length3}}>{{text:fromCollection}}</button>
+    <button class="btn" type="button" data-act="tasting-flight-new-owned" {{raw:length3}}>{{text:fromCollection}}</button>
                         {{raw:tastingFlightNewExternalButton}}</div>
-                </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseBottleList2 -->
@@ -415,11 +522,13 @@
             </section>
             {{raw:length}}
             {{raw:flightPlanFinish}}
-            <section class="analytics-panel tasting-flight-members"><div class="tasting-panel-heading">{{raw:headingTitle}}
+            <section class="analytics-panel tasting-flight-members">
+    <div class="tasting-panel-heading">{{raw:headingTitle}}
                 {{raw:phase}}</div>
                 {{raw:tastingFlightAdd}}
                 {{raw:warehouseBottleList}}
-            </section></div>
+            </section>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingsStartChoice -->
@@ -431,11 +540,12 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingCreateChooser -->
-<div class="tasting-create-chooser"><div class="tasting-choose-owned">
-                    <label>{{text:chooseBottling}}<select data-owned-tasting-bottling>
+<div class="tasting-create-chooser">
+  <div class="tasting-choose-owned">
+    <label>{{text:chooseBottling}}<select data-owned-tasting-bottling>
                     {{raw:owned}}</select></label>
-                    <button type="button" class="btn" data-act="tastings-start-owned" {{raw:length}}>{{text:fromCollection}}</button>
-                </div>{{raw:tastingsStartExternalButton}}</div>
+    <button type="button" class="btn" data-act="tastings-start-owned" {{raw:length}}>{{text:fromCollection}}</button>
+  </div>{{raw:tastingsStartExternalButton}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseBottleList3 -->
@@ -455,7 +565,7 @@
                 {{raw:tastingCreateChooser}}
                 {{raw:warehouseBottleList}}
             </section>
-        </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingsNew -->
@@ -478,20 +588,24 @@
         <section class="analytics-panel tasting-list-section">
             {{raw:sectionHeader}}
             {{raw:warehouseBottleList}}
-        </section></div>
+        </section>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsPage5 -->
 <div class="analytics-page tasting-child-page">
                 {{raw:backLink}}
                 {{raw:pageTitle}}
-                <section class="section tasting-editor-content tasting-readonly-content" data-flavor-detail data-tasting-readonly="true">
+                <section
+    class="section tasting-editor-content tasting-readonly-content"
+    data-flavor-detail
+    data-tasting-readonly="true">
                     {{raw:bottlingInfo}}
                     {{raw:flightHint}}
                     {{raw:sectionHeader}}
                     {{raw:tastingReadOnly}}
                 </section>
-            </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingFlightContext -->
@@ -499,7 +613,11 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingEditDone -->
-<button type="button" class="btn small" data-act="tasting-edit-done">{{text:done}}</button><button type="button" class="btn small danger" data-act="tasting-delete" data-tasting-id="{{text:id}}">{{text:delete}}</button>
+<button type="button" class="btn small" data-act="tasting-edit-done">{{text:done}}</button><button
+  type="button"
+  class="btn small danger"
+  data-act="tasting-delete"
+  data-tasting-id="{{text:id}}">{{text:delete}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingColorClear -->
@@ -526,42 +644,64 @@
 <div class="analytics-page tasting-child-page">
         {{raw:backLink}}
         {{raw:pageTitle}}
-    <section class="section tasting-editor-content" data-flavor-detail data-bottling-id="{{text:id}}" aria-label="{{text:title}}">
+    <section
+    class="section tasting-editor-content"
+    data-flavor-detail
+    data-bottling-id="{{text:id}}"
+    aria-label="{{text:title}}">
         {{raw:bottlingInfo}}
         {{raw:existing}}
         {{raw:sectionHeader}}
         <div class="flavor-detail-panel tasting-panel">
-            <div class="tasting-record-fields analytics-panel tasting-edit-meta-panel">
-                <label>{{text:date}}<input type="date" data-tasting-date required value="{{text:tastedOn}}"></label>
-                <label>{{text:nameOptional}}<input type="text" maxlength="120" data-tasting-title value="{{text:title2}}" placeholder="{{text:titlePlaceholder}}"></label>
-            <div class="actions tasting-editor-actions"><div class="actions flavor-history-actions">
-                <button type="button" class="btn small tasting-action-btn" data-act="flavor-detail-undo" title="{{text:undo}}" aria-label="{{text:undo2}}" {{raw:canUndo}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/></svg></button>
-                <button type="button" class="btn small tasting-action-btn" data-act="flavor-detail-redo" title="{{text:redo}}" aria-label="{{text:redo2}}" {{raw:canRedo}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h2"/></svg></button>
-            </div>
+      <div class="tasting-record-fields analytics-panel tasting-edit-meta-panel">
+        <label>{{text:date}}<input type="date" data-tasting-date required value="{{text:tastedOn}}"></label>
+        <label>{{text:nameOptional}}<input
+            type="text"
+            maxlength="120"
+            data-tasting-title
+            value="{{text:title2}}"
+            placeholder="{{text:titlePlaceholder}}"></label>
+        <div class="actions tasting-editor-actions">
+          <div class="actions flavor-history-actions">
+            <button
+              type="button"
+              class="btn small tasting-action-btn"
+              data-act="flavor-detail-undo"
+              title="{{text:undo}}"
+              aria-label="{{text:undo2}}"
+              {{raw:canUndo}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/></svg></button>
+            <button
+              type="button"
+              class="btn small tasting-action-btn"
+              data-act="flavor-detail-redo"
+              title="{{text:redo}}"
+              aria-label="{{text:redo2}}"
+              {{raw:canRedo}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h2"/></svg></button>
+          </div>
                 {{raw:draft}}
             </div>
-            </div>
-            <div class="tasting-top-row">
-                <section class="analytics-panel tasting-color-panel">
+      </div>
+      <div class="tasting-top-row">
+        <section class="analytics-panel tasting-color-panel">
                     {{raw:sectionHeader2}}
                     {{raw:whiskyColorSelector}}
                 </section>
-                <section class="analytics-panel tasting-senses-section">{{raw:sectionHeader3}}
+        <section class="analytics-panel tasting-senses-section">{{raw:sectionHeader3}}
                     <p class="hint" data-flavor-missing {{raw:hidden}}>{{text:notRecorded}}</p>
                     {{raw:flavorChart}}
                 </section>
-            </div>
-            <section class="analytics-panel">{{raw:headingTitle}}
+      </div>
+      <section class="analytics-panel">{{raw:headingTitle}}
                 <div class="tasting-notes">{{raw:content}}</div>
-            </section>
-            <section class="analytics-panel tasting-rating-panel">
+      </section>
+      <section class="analytics-panel tasting-rating-panel">
                 {{raw:sectionHeader4}}
                 {{raw:glencairnRating}}
                 <label class="tasting-rating-comment tasting-rating-comment-editor">{{text:ratingComment}}
                     <textarea data-tasting-rating-comment maxlength="10000" rows="3">{{text:ratingComment2}}</textarea>
                 </label>
-            </section>
-        </div>
+      </section>
+    </div>
         {{raw:actions}}
     </section>
 
@@ -574,9 +714,9 @@
 
 <!-- wcm-template:showAssignDialogP -->
 <p>{{text:assignExplanation}}</p>
-            <label class="tasting-assign-field">{{text:chooseBottling}}
+<label class="tasting-assign-field">{{text:chooseBottling}}
                 <select data-tasting-assign-target required>{{raw:options}}</select>
-            </label><div class="actions tasting-assign-actions">
+</label><div class="actions tasting-assign-actions">
                 {{raw:closeModalButton}}
                 {{raw:tastingExternalAssignConfirmButton}}
             </div>

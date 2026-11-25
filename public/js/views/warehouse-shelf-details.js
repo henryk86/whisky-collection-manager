@@ -1,3 +1,4 @@
+import {composeMarkup} from '../ui/render-plan.js';
 /** Shelf details show all rows of bottles, not just the front-facing row. */
 import {t, formatNumber} from '../i18n/index.js';
 import {actionToolbar} from '../ui/content.js';
@@ -42,10 +43,10 @@ export function shelfContents(warehouse, shelfId, bottlings = []) {
           ));
         const body = bottles.length ?
           renderTemplate('warehouseShelfDetailGrid', {
-            bottles: bottles.map(b => {
+            bottles: composeMarkup(bottles.map(b => {
               const bottling = bottlingById.get(b.bottlingId);
               const statusKey = STATUS_KEYS[b.status];
-              const facts = [
+              const facts = composeMarkup([
                 [t('forms.bottle.inventoryNumber'), b.number || null],
                 [
                   t('forms.bottling.abv'),
@@ -61,7 +62,7 @@ export function shelfContents(warehouse, shelfId, bottlings = []) {
                   renderTemplate('warehouseBottleFact', {
                     safe: safe(label),
                     safe2: safe(value),
-                  })).join('');
+                  })));
               return renderTemplate('warehouseShelfDetailBottle', {
                 safe: safe(b.id),
                 bottleSymbol: bottleSymbol(
@@ -77,7 +78,7 @@ export function shelfContents(warehouse, shelfId, bottlings = []) {
                   {className: 'warehouse-shelf-detail-actions'}
                 ),
               });
-            }).join(''),
+            })),
           }) :
           renderTemplate('hint');
         return {

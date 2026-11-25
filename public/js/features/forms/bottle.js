@@ -1,3 +1,4 @@
+import {composeMarkup} from '../../ui/render-plan.js';
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
@@ -24,9 +25,11 @@ export function createBottleForm({state, selectors}) {
    *
    * @param {!Object=} bottle Physical bottle record under consideration.
    * @param {*} bottlingId Value used by this operation.
+   * @param {!Object=} options3 Opening context and reference photo option.
    * @return {string} Resulting text.
    */
-  function bottleForm(bottle = {}, bottlingId) {
+  function bottleForm(bottle = {}, bottlingId,
+    {fromOverview = false, importPhoto = false} = {}) {
     const owner = state.collection.bottlings.find(entry => entry.id ===
       bottlingId);
     if (!owner) {
@@ -49,12 +52,17 @@ export function createBottleForm({state, selectors}) {
     ].filter(([, value]) => value && value !== 'Nicht angegeben');
     const context = renderTemplate('bottlingContext', {
       name: owner.name,
-      facts: facts.map(([label, value]) => renderTemplate('contextDiv', {
-        label: label,
-        value: value,
-      })).join(''),
+      facts: composeMarkup(facts.map(([label, value]) => renderTemplate(
+        'contextDiv',
+        {
+          label: label,
+          value: value,
+        }
+      ))),
     });
     return renderTemplate('bottleForm', {
+      fromOverview: fromOverview ? ' data-from-overview="1"' : '',
+      photoOption: importPhoto ? renderTemplate('importPhoto') : '',
       id: bottle.id ||
         '',
       bottlingId: bottlingId,

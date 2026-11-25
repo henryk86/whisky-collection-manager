@@ -49,7 +49,7 @@ export function headingTitle({
   const classes = `${className}${trailingAction ? `${className ? ' ' :
     ''}ds-heading-with-action` : ''}`;
   return renderTemplate('h', {
-    level: level,
+    level: `h${level}`,
     classes: classes ? ` class="${escapeHtml(classes)}"` :
       '',
     id: id ? ` id="${escapeHtml(id)}"` :
@@ -59,7 +59,7 @@ export function headingTitle({
       renderTemplate('headingPeriod') :
       '',
     trailingAction: trailingAction || '',
-    level2: level,
+    level2: `h${level}`,
   });
 }
 

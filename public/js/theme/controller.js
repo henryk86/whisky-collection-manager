@@ -1,3 +1,4 @@
+import {replaceContent} from '../ui/dom-renderer.js';
 import {t} from '../i18n/index.js';
 import {getThemePreference, effectiveTheme, nextTheme} from './preference.js';
 import {themeSunIcon, themeMoonIcon} from '../ui/action-icons.js';
@@ -18,7 +19,7 @@ export function createThemeController() {
     document.documentElement.style.colorScheme = active;
     const button = document.querySelector('[data-act=toggle-theme]');
     if (button) {
-      button.innerHTML = active === 'dark' ? themeSunIcon : themeMoonIcon;
+      replaceContent(button, active === 'dark' ? themeSunIcon : themeMoonIcon);
       button.title = active === 'dark' ? t("ui.theme.enableLight") :
         t("ui.theme.enableDark");
       button.setAttribute('aria-label', button.title);

@@ -1,3 +1,4 @@
+import {composeMarkup} from '../../ui/render-plan.js';
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 import {addActionLabel} from '../../ui/action-icons.js';
@@ -30,7 +31,7 @@ export function createBottlingForm({state, selectors}) {
     const options = state.collection.distilleries.slice().sort((a, z) =>
       a.name.localeCompare(z.name, 'de'));
     return renderTemplate('formField', {
-      options: options.map(distillery =>
+      options: composeMarkup(options.map(distillery =>
         renderTemplate('distilleryOption', {
           id: distillery
             .id,
@@ -38,7 +39,7 @@ export function createBottlingForm({state, selectors}) {
           name: distillery.name,
           status: distillery.status === 'closed' ?
             ` · ${t('home.status.closed').toLowerCase()}` : '',
-        })).join(''),
+        }))),
     });
   }
 

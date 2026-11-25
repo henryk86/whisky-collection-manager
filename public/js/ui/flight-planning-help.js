@@ -1,3 +1,4 @@
+import {composeMarkup} from './render-plan.js';
 import {actionButton} from './buttons.js';
 import {headingTitle} from './headers.js';
 import {escapeHtml} from './dom.js';
@@ -154,11 +155,11 @@ export function flightPlanningHelpHtml(t) {
     p9: p(
       'basics.unfamiliarDetails'),
     tx5: tx('basics.variables'),
-    content: [
+    content: composeMarkup([
       ['S', 'score'], ['V', 'repeats'], ['G', 'families'], ['R', 'profiled'],
       ['M', 'missing'], ['sum(d)', 'distanceSum'], ['Davg', 'distanceMean'],
       ['L', 'gap'], ['N / U', 'other'], ['K / Q / J', 'caskAgeGroups'],
-    ].map(([symbol, key]) => variable(symbol, key)).join(''),
+    ].map(([symbol, key]) => variable(symbol, key))),
     heading3: heading('caskAge.title'),
     p10: p('caskAge.classification'),
     tx6: tx('caskAge.groups'),
@@ -178,14 +179,13 @@ export function flightPlanningHelpHtml(t) {
     p14: p('caskAge.missing', 'flight-plan-help-caption'),
     heading4: heading('strategies.title'),
     p15: p('strategies.intro'),
-    content2: ['balanced', 'similar', 'contrast', 'discover'].map(strategy)
-      .join(''),
+    content2: composeMarkup(['balanced', 'similar', 'contrast', 'discover']
+      .map(strategy)),
     heading5: heading('search.title'),
-    content3: ['shortlist', 'seeds',
+    content3: composeMarkup(['shortlist', 'seeds',
       'improve'].map(key => renderTemplate('li', {
         tx: tx(`search.${key}`),
-      })).join(
-        ''),
+      }))),
     heading6: heading('sequence'),
     p16: p('sequenceIntro'),
     formula9: formula('transition'

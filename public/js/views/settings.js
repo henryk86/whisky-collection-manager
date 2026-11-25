@@ -1,8 +1,9 @@
+import {createSettingsViewModel} from './models/settings.js';
+import {composeMarkup} from '../ui/render-plan.js';
 import {actionButton} from '../ui/buttons.js';
 import {headingTitle, pageHeader} from '../ui/headers.js';
 import {addActionLabel} from '../ui/action-icons.js';
-import {escapeHtml} from '../ui/dom.js';
-import {availableLanguages, currentLanguage, t} from '../i18n/index.js';
+import {t} from '../i18n/index.js';
 import {renderBackupSection} from './backups.js';
 import {backToCollectionButton} from '../ui/navigation-controls.js';
 import {sectionWorkspace} from '../ui/section-navigation.js';
@@ -30,15 +31,8 @@ export function createSettingsView(state, auth = {
    * @return {string} Resulting text.
    */
   function settings() {
-    const tabs = [
-      ...['general', 'backups', 'transfer', 'distilleries'],
-      ...(state.auth?.canManageUsers ? ['users'] : []),
-    ].map(id => ({
-      id,
-      label: id === 'users' ? t('auth.users') : t(`settings.navigation.${id}`),
-    }));
-    const active = tabs.some(item => item.id === state.settingsSection) ?
-      state.settingsSection : 'general';
+    const {tabs, active, languages, distillerySearch, distilleries,
+      matchCount, establishedYear} = createSettingsViewModel(state);
     /**
      * Builds the localized panel text for the current language.
      *
@@ -64,18 +58,13 @@ export function createSettingsView(state, auth = {
           t('settings.language.label'),
       }
       ),
-      entries: Object.entries(availableLanguages(
-      )).map(([code, name]) => renderTemplate('generalOption', {
-        code: code,
-        selected: code === currentLanguage() ? 'selected' :
-          '',
-        name: name,
-      })).join(
-        ''),
+      entries: composeMarkup(languages.map(({code, name, selected}) =>
+        renderTemplate('generalOption', {
+          code, selected: selected ? 'selected' : '', name,
+        }))),
       headingTitle2: headingTitle({title: t('settings.collection.title')}),
       fullYear: new Date().getFullYear(),
-      establishedYear: state.collection
-        .settings?.establishedYear ?? '',
+      establishedYear,
     });
     const backups = renderBackupSection(state);
     const transfer = renderTemplate('panel2', {
@@ -88,34 +77,21 @@ export function createSettingsView(state, auth = {
         variant: 'destructive',
       }),
     });
-    const distilleries = renderTemplate('distillerySearch', {
-      distillerySearch: state.distillerySearch || '',
-      length: state.collection.distilleries.filter(d => d.name
-        .toLocaleLowerCase('de').includes((state.distillerySearch || '')
-          .trim().toLocaleLowerCase('de'))).length,
-      length2: state.collection
-        .distilleries.length,
+    const distilleryPanel = renderTemplate('distillerySearch', {
+      distillerySearch,
+      length: matchCount,
+      length2: distilleries.length,
       addDistilleryButton: actionButton({
         trustedContent: addActionLabel(t("settings.distilleries.add")),
         action: 'add-distillery',
       }),
-      sort: state.collection
-        .distilleries
-        .slice().sort((a, b) => a.name.localeCompare(b.name,
-          'de')).map(distillery =>
-            renderTemplate('distilleryRow', {
-              includes: distillery.name
-                .toLocaleLowerCase('de').includes((state.distillerySearch ||
-                  '').trim().toLocaleLowerCase('de')) ? '' : 'hidden',
-              name: distillery.name,
-              id: distillery.id,
-              name2: distillery.name,
-            })).join(''),
-      hidden: state.collection
-        .distilleries.some(d => d.name.toLocaleLowerCase('de')
-          .includes((state.distillerySearch || '').trim()
-            .toLocaleLowerCase('de'))) ? 'hidden' :
-        '',
+      sort: composeMarkup(distilleries.map(distillery =>
+        renderTemplate('distilleryRow', {
+          includes: distillery.visible ? '' : 'hidden',
+          name: distillery.name, id: distillery.id, name2: distillery.name,
+        }))),
+      hidden: matchCount ? 'hidden' : '',
+
     });
     const workspace = sectionWorkspace(
       {
@@ -123,20 +99,24 @@ export function createSettingsView(state, auth = {
         action: 'settings-section', itemAttribute: 'data-settings-section',
         label: t('settings.navigation.label'), switchKind: 'settings',
       },
-      panel('general', general) + panel('backups', backups) +
-      panel('transfer', transfer) + panel('distilleries', distilleries) +
-      (state.auth?.canManageUsers ?
-        renderTemplate('settingsSection2', {
-          active: active
-            === 'users' ? '' : ' hidden',
-          headingTitle: headingTitle({
-            title: t('auth.users'),
-            level: 2,
-            className: 'analytics-section-title',
-          }),
-          usersSection: auth.usersSection(
-          ),
-        }) : '')
+      composeMarkup(
+        panel('general', general),
+        panel('backups', backups),
+        panel('transfer', transfer),
+        panel('distilleries', distilleryPanel),
+        (state.auth?.canManageUsers ?
+          renderTemplate('settingsSection2', {
+            active: active
+              === 'users' ? '' : ' hidden',
+            headingTitle: headingTitle({
+              title: t('auth.users'),
+              level: 2,
+              className: 'analytics-section-title',
+            }),
+            usersSection: auth.usersSection(
+            ),
+          }) : '')
+      )
     );
     return renderTemplate('analyticsPage', {
       pageHeader: pageHeader({
@@ -144,7 +124,7 @@ export function createSettingsView(state, auth = {
         eyebrow: t('settings.page.eyebrow'),
         intro: t('settings.page.intro'),
         className: 'settings-heading',
-        actions: String(backToCollectionButton),
+        actions: backToCollectionButton(),
       }),
       workspace: workspace,
     });

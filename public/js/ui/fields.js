@@ -1,3 +1,4 @@
+import {composeMarkup} from './render-plan.js';
 import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
@@ -40,17 +41,17 @@ function props(name, options = {}) {
  * @return {string} Escaped inline help markup.
  */
 function help(name, options = {}) {
-  return `${options.description ?
+  return composeMarkup(options.description ?
     renderTemplate('dsFieldDescription', {
       name: e(name),
       description: e(options
         .description),
-    }) : ''}${options.error ?
-      renderTemplate('dsFieldError', {
-        name: e(
-          name),
-        error: e(options.error),
-      }) : ''}`;
+    }) : '', options.error ?
+    renderTemplate('dsFieldError', {
+      name: e(
+        name),
+      error: e(options.error),
+    }) : '');
 }
 
 /**
@@ -114,13 +115,13 @@ export const selectInput =
     name,
     renderTemplate('select', {
       props: props(name, config),
-      options: options.map(([v, t]) =>
+      options: composeMarkup(options.map(([v, t]) =>
         renderTemplate('selectInputOption', {
           v: e(v),
           selected: String(v) === String(value ?? '') ?
             ' selected' : '',
           t: e(t),
-        })).join(''),
+        }))),
     }),
     config
   );

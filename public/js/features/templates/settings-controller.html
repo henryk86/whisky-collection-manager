@@ -4,24 +4,49 @@
 
 <!-- wcm-template:distilleryForm -->
 <form id="distillery-form" data-id="{{text:id}}">
-    <label class="form-field" for="distillery-name">{{t:features.distilleries.nameLabel}}
-    <input id="distillery-name" name="name" type="text" value="{{text:name}}" maxlength="150" autocomplete="off" required></label>
-    <label class="form-field" for="distillery-status">{{t:features.distilleries.operatingStatus}}
+  <label class="form-field" for="distillery-name">{{t:features.distilleries.nameLabel}}
+    <input
+      id="distillery-name"
+      name="name"
+      type="text"
+      value="{{text:name}}"
+      maxlength="150"
+      autocomplete="off"
+      required></label>
+  <label class="form-field" for="distillery-status">{{t:features.distilleries.operatingStatus}}
       <select id="distillery-status" name="status">
       {{raw:content}}</select></label>
-    <div class="map-coordinates-fields">
+  <div class="map-coordinates-fields">
     <label class="form-field" for="distillery-latitude">{{t:features.map.latitudeLabel}}
-      <input id="distillery-latitude" name="latitude" type="number" step="any" min="-90" max="90" placeholder="{{t:features.map.latitudeExample}}" value="{{raw:latitude}}"></label>
+      <input
+        id="distillery-latitude"
+        name="latitude"
+        type="number"
+        step="any"
+        min="-90"
+        max="90"
+        placeholder="{{t:features.map.latitudeExample}}"
+        value="{{raw:latitude}}"></label>
     <label class="form-field" for="distillery-longitude">{{t:features.map.longitudeLabel}}
-      <input id="distillery-longitude" name="longitude" type="number" step="any" min="-180" max="180" placeholder="{{t:features.map.longitudeExample}}" value="{{raw:longitude}}"></label>
-    </div>
-    <p class="hint">{{t:features.map.optionalCoordinatesHint}}</p>
+      <input
+        id="distillery-longitude"
+        name="longitude"
+        type="number"
+        step="any"
+        min="-180"
+        max="180"
+        placeholder="{{t:features.map.longitudeExample}}"
+        value="{{raw:longitude}}"></label>
+  </div>
+  <p class="hint">{{t:features.map.optionalCoordinatesHint}}</p>
     {{raw:findDistilleryLocationButton}}
-    <div id="distillery-location-results" class="map-location-results" aria-live="polite"></div>
-    <div class="actions ds-modal-footer ds-modal-footer--form">
+    <div id="distillery-location-results" class="map-location-results" aria-live="polite">
+  </div>
+  <div class="actions ds-modal-footer ds-modal-footer--form">
     {{raw:closeModalButton}}
     <button type="submit" class="btn primary">{{raw:id2}}</button>
-    </div></form>
+  </div>
+</form>
 <!-- /wcm-template -->
 
 <!-- wcm-template:saveDistilleryInput -->
@@ -34,7 +59,11 @@
 
 <!-- wcm-template:applyDistilleryLocation -->
 
-            <button type="button" class="map-location-choice" data-act="apply-distillery-location" data-index="{{raw:index}}">
+            <button
+  type="button"
+  class="map-location-choice"
+  data-act="apply-distillery-location"
+  data-index="{{raw:index}}">
             {{text:name}}<small>{{raw:toFixed}}, {{raw:toFixed2}}</small></button>
 <!-- /wcm-template -->
 
@@ -52,7 +81,7 @@
 
 <!-- wcm-template:importJSONP -->
 <p>{{t:features.import.prefix}} <strong>{{t:features.import.replacesCollection}}</strong>{{t:features.import.jsonExcludesAttachmentsWarning}}</p>
-    <div class="actions ds-modal-footer">
+<div class="actions ds-modal-footer">
     {{raw:closeModalButton}}
     {{raw:confirmImportButton}}
     </div>

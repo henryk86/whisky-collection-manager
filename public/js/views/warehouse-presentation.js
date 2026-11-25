@@ -1,3 +1,4 @@
+import {composeMarkup} from '../ui/render-plan.js';
 import {displayedTastingRating} from '../../../shared/tasting-records.js';
 /** Warehouse presentation helpers: pure HTML/SVG fragments and display labels.
  * No API writes, navigation or modal state. The controller is in warehouse.js.
@@ -155,13 +156,13 @@ function choices(name, label, options, chosen = '') {
   return renderTemplate('formField2', {
     label: label,
     name: name,
-    options: options.map(([id,
+    options: composeMarkup(options.map(([id,
       title]) => renderTemplate('choicesOption', {
         safe: safe(id),
         selected: id === chosen ? 'selected' :
           '',
         title: title,
-      })).join(''),
+      }))),
   });
 }
 
@@ -208,11 +209,12 @@ function bottleListFacts(bottle) {
         null : bottle.caskType,
     ],
   ];
-  return facts.filter(([, value]) => value !== null).map(([key, value]) =>
-    renderTemplate('warehouseBottleFact', {
-      safe: safe(t(key)),
-      safe2: safe(value),
-    })).join('');
+  return composeMarkup(facts.filter(([, value]) => value !== null)
+    .map(([key, value]) =>
+      renderTemplate('warehouseBottleFact', {
+        safe: safe(t(key)),
+        safe2: safe(value),
+      })));
 }
 
 /**
@@ -327,13 +329,12 @@ function roomDiagram(room, w, layer = 'all') {
   makeGrid(room.width, sx, true);
   makeGrid(room.height, sy, false);
   const grid = renderTemplate('warehousePlanGrid', {
-    gridLines: gridLines
-      .join(''),
+    gridLines: composeMarkup(gridLines),
   });
   const items = room.furniture.filter(f => layer === 'all' || (layer ===
     'floor' ? (f.elevation ?? 0) === 0 : (f.elevation ?? 0) > 0))
     .slice().sort((a, b) => (a.elevation ?? 0) - (b.elevation ?? 0));
-  const shapes = items.map((f, i) => {
+  const shapes = composeMarkup(items.map((f, i) => {
     const fw = (f.rotation % 180 === 0 ? f.width : f.depth) * sx;
     const fh = (f.rotation % 180 === 0 ? f.depth : f.width) * sy;
     const x = f.x * sx, y = f.y * sy;
@@ -370,7 +371,7 @@ function roomDiagram(room, w, layer = 'all') {
       abbreviatedBottleCount: t("wareh\
 ouse.view.abbreviatedBottleCount", {count: assigned}),
     });
-  }).join('');
+  }));
   return renderTemplate('warehouseMapWrap', {
     vbW: vbW,
     vbH: vbH,
@@ -546,12 +547,12 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
   return renderTemplate('warehouseBottlePreview', {
     photo: photo,
     safe: safe(bottle.name),
-    fields: fields.map(([label,
+    fields: composeMarkup(fields.map(([label,
       value]) => renderTemplate('bottlePreviewDiv', {
         safe: safe(label),
         safe2: safe(
           value),
-      })).join(''),
+      }))),
     warehouseBottlePreviewComment: physicalBottle?.comment ?
       renderTemplate('warehouseBottlePreviewComment', {
         safe: safe(physicalBottle
@@ -575,7 +576,7 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
  */
 function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
   const levels = shelfLevels(furniture);
-  const shelves = levels.slice().reverse().map(level => {
+  const shelves = composeMarkup(levels.slice().reverse().map(level => {
     const shelf = level.shelf;
     const i = level.index;
     const occupants = w.bottles.filter(b => w.assignments[b.id] === shelf.id);
@@ -627,8 +628,8 @@ function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
       safe6: safe(shelf.id),
       safe7: safe(shelf.id),
       safe8: safe(shelf.id),
-      occupants: occupants.slice(0,
-        6).map(b => bottleSymbol(b)).join(''),
+      occupants: composeMarkup(occupants.slice(0,
+        6).map(b => bottleSymbol(b))),
       warehouseShelfView: occupants.length > 6 ?
         renderTemplate('warehouseShelfView', {
           safe: safe(shelf.id),
@@ -639,7 +640,7 @@ function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
         renderTemplate('hint') :
         '',
     });
-  }).join('');
+  }));
   const height = furnitureHeight(furniture);
   const used = levels.reduce((sum, entry) => sum + entry.height, 0);
   const topSpace = Math.max(0, Math.round((height - used) * 100));
@@ -672,7 +673,7 @@ function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
     addActionLabel: addActionLabel(t("warehouse.shelves.addWithPlus")),
     warehouseFurniturePhotos: managementOnly ?
       renderTemplate('warehouseFurniturePhotos', {
-        photos: (furniture
+        photos: composeMarkup((furniture
           .photos || []).map((photo) =>
             renderTemplate('warehousePhotoOpen', {
               safe: safe(photo.path),
@@ -682,7 +683,7 @@ function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
               safe5: safe(furniture.id),
               safe6: safe(photo.id),
               closeIcon: closeIcon,
-            })).join(''),
+            }))),
         addActionLabel: addActionLabel(t('warehouse.photos.add')),
         safe: safe(furniture.id),
         safe2: safe(furniture.id),

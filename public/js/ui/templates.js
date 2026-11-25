@@ -1,6 +1,5 @@
 /** @fileoverview Shared loader and renderer for external HTML fragments. */
-import {t} from '../i18n/index.js';
-import {escapeHtml} from './dom.js';
+import {RenderPlan, serializeMarkup} from './render-plan.js';
 
 const cache = new Map();
 
@@ -35,16 +34,19 @@ export function parseTemplates(source) {
  * @return {function(string, Object=): string} Synchronous renderer.
  */
 export function createTemplateRenderer(fragments) {
+  const render = createPlanRenderer(fragments);
+  return (name, values = {}) => serializeMarkup(render(name, values));
+}
+
+/**
+ * Creates a renderer producing immutable template data, not HTML strings.
+ * @param {!Map<string, string>} fragments Named template sources.
+ * @return {function(string, Object=): !RenderPlan} Template plan factory.
+ */
+export function createPlanRenderer(fragments) {
   return (name, values = {}) => {
     if (!fragments.has(name)) throw new Error(`Unknown template: ${name}`);
-    return fragments.get(name).replace(/\{\{(raw|text|t):([\w.]+)\}\}/g,
-      (_, mode, key) => {
-        if (mode === 't') return t(key);
-        if (!Object.hasOwn(values, key)) {
-          throw new Error(`Missing slot ${key} in template ${name}`);
-        }
-        return mode === 'text' ? escapeHtml(values[key]) : String(values[key]);
-      });
+    return new RenderPlan(fragments.get(name), values);
   };
 }
 
@@ -73,7 +75,8 @@ async function readTemplateFile(url) {
 export async function loadTemplates(url) {
   if (!cache.has(url.href)) {
     cache.set(url.href, readTemplateFile(url).then(parseTemplates)
-      .then(createTemplateRenderer));
+      .then(url.protocol === 'file:' ? createTemplateRenderer :
+        createPlanRenderer));
   }
   return cache.get(url.href);
 }

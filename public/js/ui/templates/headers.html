@@ -7,7 +7,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:h -->
-<h{{raw:level}}{{raw:classes}}{{raw:id}}>{{text:title}}{{raw:headingPeriod}}{{raw:trailingAction}}</h{{raw:level2}}>
+<{{tag:level}}{{raw:classes}}{{raw:id}}>{{text:title}}{{raw:headingPeriod}}{{raw:trailingAction}}</{{tag:level2}}>
 <!-- /wcm-template -->
 
 <!-- wcm-template:copyP -->
@@ -39,9 +39,17 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:pageBackNav -->
-<nav class="page-back-nav ds-back-nav ds-back-nav--inline" aria-label="{{raw:text}}"><button type="button" class="inline-link page-back ds-back-button ds-back-button--inline" {{raw:attr}}>{{raw:arrowLeftIcon}}<span>{{raw:text2}}</span></button></nav>
+<nav class="page-back-nav ds-back-nav ds-back-nav--inline" aria-label="{{raw:text}}"><button
+    type="button"
+    class="inline-link page-back ds-back-button ds-back-button--inline"
+    {{raw:attr}}>{{raw:arrowLeftIcon}}<span>{{raw:text2}}</span></button></nav>
 <!-- /wcm-template -->
 
 <!-- wcm-template:dsHelpIconButton -->
-<button type="button" class="ds-help-icon-button flight-plan-help-button" data-act="{{text:action}}" aria-label="{{raw:text}}" title="{{raw:text2}}"{{raw:disabled}}>{{raw:helpCircleIcon}}</button>
+<button
+  type="button"
+  class="ds-help-icon-button flight-plan-help-button"
+  data-act="{{text:action}}"
+  aria-label="{{raw:text}}"
+  title="{{raw:text2}}"{{raw:disabled}}>{{raw:helpCircleIcon}}</button>
 <!-- /wcm-template -->

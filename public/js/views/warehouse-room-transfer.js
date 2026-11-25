@@ -1,3 +1,5 @@
+import {composeMarkup} from '../ui/render-plan.js';
+import {replaceContent} from '../ui/dom-renderer.js';
 import {actionButton} from '../ui/buttons.js';
 /**
  * A compact, two-mode room transfer dialog. The server owns validation and
@@ -49,10 +51,10 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
         'export' && !exportAvailable ? 'disabled' : '',
       label: label,
     });
-  const actions = `${actionButton({
+  const actions = actionButton({
     label: t('common.actions.cancel'),
     action: 'close-modal',
-  })}`;
+  });
   return renderTemplate('warehouseRoomTransfer', {
     tab: tab('export', t('warehouse.transfer.exportAction')),
     tab2: tab('import', t('warehouse.transfer.importAction')),
@@ -60,7 +62,7 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
     fORMEXPORT: FORM_EXPORT,
     selectedRoomId: selectedRoomId ? '' : 'checke\
 d',
-    rooms: rooms.map(room =>
+    rooms: composeMarkup(rooms.map(room =>
       renderTemplate('warehouseTransferChoice', {
         id: room.id,
         checked: selectedRoomId ===
@@ -68,7 +70,7 @@ d',
         name: room.name,
         length: room.furniture
           .length,
-      })).join(''),
+      }))),
     actions: actions,
     hidden2: mode !== 'import' ? 'hidden' : '',
     fORMIMPORT: FORM_IMPORT,
@@ -241,17 +243,16 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
           ['alreadyAssigned', 'warehouse.transfer.alreadyAssigned'],
           ['capacityExceeded', 'warehouse.transfer.capacityExceeded'],
         ];
-        preview.innerHTML =
-          renderTemplate('panel', {
-            entries: entries.map(([
-              field, label]) => renderTemplate('openTransferDiv', {
-                t: t(label),
-                summary: summary[
-                  field] ?? 0,
-              })).join(''),
-            hint: summary
-              .blockedRooms ? renderTemplate('hint') : '',
-          });
+        replaceContent(preview, renderTemplate('panel', {
+          entries: composeMarkup(entries.map(([
+            field, label]) => renderTemplate('openTransferDiv', {
+              t: t(label),
+              summary: summary[
+                field] ?? 0,
+            }))),
+          hint: summary
+            .blockedRooms ? renderTemplate('hint') : '',
+        }));
         apply.disabled = !!summary.blockedRooms || (!summary.createdRooms &&
           !summary.replacedRooms);
       } catch (error) {

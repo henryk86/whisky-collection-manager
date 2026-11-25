@@ -1,3 +1,5 @@
+import {composeMarkup} from './render-plan.js';
+import {replaceContent} from './dom-renderer.js';
 /**
  * Guided room -> furniture -> shelf assignment. The API still receives only
  * shelfId.
@@ -128,9 +130,11 @@ function option(value, label, {selected = false, disabled = false} = {}) {
  * @return {string} Resulting text.
  */
 function roomOptions(warehouse, selected) {
-  return option('', t('warehouse.assignment.chooseRoom'))
-    + (warehouse.rooms || []).map(room =>
-      option(room.id, room.name, {selected: room.id === selected})).join('');
+  return composeMarkup(
+    option('', t('warehouse.assignment.chooseRoom')),
+    composeMarkup((warehouse.rooms || []).map(room =>
+      option(room.id, room.name, {selected: room.id === selected})))
+  );
 }
 
 /**
@@ -141,12 +145,14 @@ function roomOptions(warehouse, selected) {
  * @return {string} Resulting text.
  */
 function furnitureOptions(room, selected) {
-  return option('', t('warehouse.assignment.chooseFurniture'))
-    + (room?.furniture || []).map(furniture => option(
+  return composeMarkup(
+    option('', t('warehouse.assignment.chooseFurniture')),
+    composeMarkup((room?.furniture || []).map(furniture => option(
       furniture.id,
       furniture.name,
       {selected: furniture.id === selected}
-    )).join('');
+    )))
+  );
 }
 
 /**
@@ -159,8 +165,9 @@ function furnitureOptions(room, selected) {
  * @return {string} Resulting text.
  */
 function shelfOptions(warehouse, furniture, bottleId, selected) {
-  return option('', t('warehouse.assignment.chooseShelf'))
-    + (furniture?.shelves || []).map(shelf => {
+  return composeMarkup(
+    option('', t('warehouse.assignment.chooseShelf')),
+    composeMarkup((furniture?.shelves || []).map(shelf => {
       const info = assignmentShelfInfo(warehouse, shelf, bottleId);
       const detail = shelf.capacity === null
         ? t('warehouse.assignment.occupiedUnlimited', {count: info.occupied})
@@ -173,7 +180,8 @@ function shelfOptions(warehouse, furniture, bottleId, selected) {
         `${shelf.name} · ${detail}`,
         {selected: shelf.id === selected, disabled: shelf.capacity === 0}
       );
-    }).join('');
+    }))
+  );
 }
 
 /**
@@ -339,11 +347,18 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
   };
   form.addEventListener('change', event => {
     if (event.target === room) {
-      furniture.innerHTML = furnitureOptions(selectedRoom(), '');
-      shelf.innerHTML = shelfOptions(warehouse, null, bottleId, '');
+      replaceContent(furniture, furnitureOptions(selectedRoom(), ''));
+      replaceContent(shelf, shelfOptions(warehouse, null, bottleId, ''));
     } else if (event.target === furniture) {
-      shelf.innerHTML = shelfOptions(warehouse, selectedFurniture(), bottleId,
-        '');
+      replaceContent(
+        shelf,
+        shelfOptions(
+          warehouse,
+          selectedFurniture(),
+          bottleId,
+          ''
+        )
+      );
     }
     updateMode();
   });

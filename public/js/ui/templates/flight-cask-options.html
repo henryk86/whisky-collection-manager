@@ -1,17 +1,18 @@
 <!-- wcm-template:flightPlanCaskDimension -->
-<div class="flight-plan-cask-dimension" role="group"
-          aria-label="{{raw:title}}"><span>{{raw:title2}}</span>
-          <div class="flight-plan-cask-choices">{{raw:fields}}</div></div>
+<div class="flight-plan-cask-dimension" role="group" aria-label="{{raw:title}}"><span>{{raw:title2}}</span>
+  <div class="flight-plan-cask-choices">{{raw:fields}}</div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanCaskRefinement -->
-<details class="flight-plan-cask-refinement"
-      data-flight-plan-cask-subtype-wrap="{{raw:group}}" hidden>
-      <summary><span>{{raw:title}}</span>
-        <span class="flight-plan-cask-count" data-flight-plan-cask-count
-          >{{raw:all}}</span>{{raw:chevronDownIcon}}
+<details
+  class="flight-plan-cask-refinement"
+  data-flight-plan-cask-subtype-wrap="{{raw:group}}"
+  hidden>
+  <summary><span>{{raw:title}}</span>
+    <span class="flight-plan-cask-count" data-flight-plan-cask-count>{{raw:all}}</span>{{raw:chevronDownIcon}}
       </summary><div class="flight-plan-cask-dimensions">{{raw:dimensions}}</div>
-    </details>
+</details>
 <!-- /wcm-template -->
 
 <!-- wcm-template:phasesOption -->
@@ -19,26 +20,27 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanCaskFilter -->
-<div class="flight-plan-cask-filter"
-    data-flight-plan-cask-group-wrap hidden>
-    <div class="form-field full" role="group" aria-label="{{raw:label}}"
-      aria-describedby="flight-plan-cask-hint">
-      <div class="flight-plan-cask-heading"><span>{{raw:label2}}</span>{{raw:reset}}</div>
-      <span class="ds-field-description" id="flight-plan-cask-hint"
-        >{{raw:hint}}</span>
-      <div class="flight-plan-cask-choices">{{raw:groups}}</div>
-    </div>
-    <div class="flight-plan-cask-details" data-flight-plan-cask-details hidden>
-      <span class="flight-plan-cask-caption">{{text:t}}</span>{{raw:details}}
-    </div>
-    <div class="flight-plan-options flight-plan-advanced-grid">
-      <label>{{raw:phaseLabel}}
-        <select data-flight-plan-cask-phase>{{raw:phases}}</select>
-      </label>
-    </div>
-    <div class="flight-plan-cask-selection" aria-live="polite">
-      <span class="flight-plan-cask-caption">{{text:t2}}</span>
-      <span data-flight-plan-cask-selection>{{text:t3}}</span>
-    </div>
+<div class="flight-plan-cask-filter" data-flight-plan-cask-group-wrap hidden>
+  <div
+    class="form-field full"
+    role="group"
+    aria-label="{{raw:label}}"
+    aria-describedby="flight-plan-cask-hint">
+    <div class="flight-plan-cask-heading"><span>{{raw:label2}}</span>{{raw:reset}}</div>
+    <span class="ds-field-description" id="flight-plan-cask-hint">{{raw:hint}}</span>
+    <div class="flight-plan-cask-choices">{{raw:groups}}</div>
   </div>
+  <div class="flight-plan-cask-details" data-flight-plan-cask-details hidden>
+    <span class="flight-plan-cask-caption">{{text:t}}</span>{{raw:details}}
+    </div>
+  <div class="flight-plan-options flight-plan-advanced-grid">
+    <label>{{raw:phaseLabel}}
+        <select data-flight-plan-cask-phase>{{raw:phases}}</select>
+    </label>
+  </div>
+  <div class="flight-plan-cask-selection" aria-live="polite">
+    <span class="flight-plan-cask-caption">{{text:t2}}</span>
+    <span data-flight-plan-cask-selection>{{text:t3}}</span>
+  </div>
+</div>
 <!-- /wcm-template -->

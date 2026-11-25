@@ -309,6 +309,7 @@ console.log('B-5: No application-source-text unit/integration assertions.');
 // Both are checked in CI via npm run check; no automatic formatting in CI.
 for (const script of [
   'check-html-templates.js',
+  'format-html-templates.js',
   'check-css-colors.js',
   'format-js.js',
   'format-css.js',

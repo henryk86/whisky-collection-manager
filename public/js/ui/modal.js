@@ -1,3 +1,5 @@
+import {composeMarkup} from './render-plan.js';
+import {replaceContent} from './dom-renderer.js';
 import {t} from '../i18n/index.js';
 import {escapeHtml, query} from './dom.js';
 import {actionButton} from './buttons.js';
@@ -201,10 +203,10 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
     if (!host || !state.modal) return;
     // Refreshes of the background view must never reset an open edit form.
     if (host.firstElementChild?.__dsModalState === state.modal) return;
-    host.innerHTML = modalFrame({
+    replaceContent(host, modalFrame({
       ...state.modal, closeLabel:
         t('common.actions.close'),
-    });
+    }));
     const overlay = host.querySelector('.overlay');
     if (!overlay) return;
     overlay.__dsModalState = state.modal;
@@ -261,7 +263,7 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
     }
     suspended.length = 0;
     state.modal = null;
-    if (host) host.innerHTML = '';
+    if (host) replaceContent(host, '');
     unlockBackground();
     // Restore focus without a hidden scroll-to-element action.
     focusElement(originFocus);
@@ -281,13 +283,15 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
   function confirm(title, message, acceptLabel, cancelLabel =
     t('common.actions.cancel')) {
     return new Promise(resolve => {
-      const buttons = actionButton({label: cancelLabel, action: 'close-modal'}
-      ) +
+      const buttons = composeMarkup(
+        actionButton({label: cancelLabel, action: 'close-modal'}
+        ),
         actionButton({
           label: acceptLabel,
           action: 'modal-confirm-accept',
           variant: 'primary',
-        });
+        })
+      );
       showModal(
         title,
         renderTemplate('confirmP', {
@@ -327,12 +331,13 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
    */
   function choose(title, message, options) {
     return new Promise(resolve => {
-      const buttons = options.map(({id, label, primary}) => actionButton({
-        label,
-        variant: primary ? 'primary' : 'secondary',
-        action: 'modal-choice',
-        attributes: `data-choice="${escapeHtml(id)}"`,
-      })).join('');
+      const buttons = composeMarkup(options.map(({id, label, primary}) =>
+        actionButton({
+          label,
+          variant: primary ? 'primary' : 'secondary',
+          action: 'modal-choice',
+          attributes: `data-choice="${escapeHtml(id)}"`,
+        })));
       showModal(
         title,
         renderTemplate('chooseP', {
@@ -372,7 +377,7 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
     state.modal.content = content;
     const host = query('#modal-root');
     const body = host?.querySelector('.ds-modal-body');
-    if (body) body.innerHTML = content;
+    if (body) replaceContent(body, content);
   }
   return {
     showModal,

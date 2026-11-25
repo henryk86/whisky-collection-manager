@@ -1,3 +1,4 @@
+import {composeMarkup} from '../../ui/render-plan.js';
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
@@ -901,32 +902,32 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         title: t('photoEditor.title'),
         adjustmentsTab: t('photoEditor.adjustmentsTab'),
         cutoutTab: t('photoEditor.cutoutTab'),
-        pHOTOADJUSTMENTGROUPS: PHOTO_ADJUSTMENT_GROUPS.map(group =>
-          renderTemplate('photoEditorGroup', {
-            t: t(
-              `photoEditor.${group.key}`),
-            t2: t(`photoEditor.${group.key}`),
-            photoEditorPickWhite: group.key ===
-              'color' ?
-              renderTemplate('photoEditorPickWhite', {
-                pickWhite: t('photoEditor.pickWhit\
+        pHOTOADJUSTMENTGROUPS: composeMarkup(
+          PHOTO_ADJUSTMENT_GROUPS.map(group =>
+            renderTemplate('photoEditorGroup', {
+              t: t(
+                `photoEditor.${group.key}`),
+              t2: t(`photoEditor.${group.key}`),
+              photoEditorPickWhite: group.key ===
+                'color' ?
+                renderTemplate('photoEditorPickWhite', {
+                  pickWhite: t('photoEditor.pickWhit\
 e'),
-                pickWhite2: t('photoEditor.pickWhite'),
-                pipetteIcon: pipetteIcon,
-              }) : '',
-            key: group.key,
-            resetGroup: t(
-              'photoEditor.resetGroup',
-              {group: t(`photoEditor.${group.key}`)}
-            ),
-            resetGroup2: t(
-              'photoEditor.resetGroup',
-              {group: t(`photoEditor.${group.key}`)}
-            ),
-            resetIcon: resetIcon,
-            sliders: group.sliders.map(sliderHtml)
-              .join(''),
-          })).join(''),
+                  pickWhite2: t('photoEditor.pickWhite'),
+                  pipetteIcon: pipetteIcon,
+                }) : '',
+              key: group.key,
+              resetGroup: t(
+                'photoEditor.resetGroup',
+                {group: t(`photoEditor.${group.key}`)}
+              ),
+              resetGroup2: t(
+                'photoEditor.resetGroup',
+                {group: t(`photoEditor.${group.key}`)}
+              ),
+              resetIcon: resetIcon,
+              sliders: composeMarkup(group.sliders.map(sliderHtml)),
+            }))),
         t: t(photo.cutout ? 'photoEditor.recutout' : 'cutout.title'),
         photoEditorToggleCutout: photo.cutout ?
           renderTemplate('photoEditorToggleCutout', {

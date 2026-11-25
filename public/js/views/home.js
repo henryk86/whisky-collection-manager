@@ -1,3 +1,6 @@
+import {createCollectionViewModel} from './models/home.js';
+import {composeMarkup} from '../ui/render-plan.js';
+import {replaceContent} from '../ui/dom-renderer.js';
 import {actionButton} from '../ui/buttons.js';
 import {pageHeader} from '../ui/headers.js';
 import {request} from '../api.js';
@@ -40,7 +43,6 @@ import {paginate, visiblePages, PAGE_SIZE_OPTIONS, homePageUrl}
   from '../domain/pagination.js';
 import {savePageSizePreference} from '../domain/page-size-preference.js';
 import {
-  availableOverviewDistilleries, collectionOverviewEntries,
   purchasePrice, latestUpdate
 } from '../domain/collection-overview.js';
 import {
@@ -59,7 +61,7 @@ import {glencairnRatingSymbol} from '../ui/glencairn-icon.js';
  * @return {string} Resulting text.
  */
 function inventoryBadges(physicalBottles) {
-  return inventoryCountGroups(physicalBottles)
+  return composeMarkup(inventoryCountGroups(physicalBottles)
     .map(group => renderTemplate('badge', {
       type: group.type === 'sample' ? ' sample' :
         '',
@@ -73,8 +75,7 @@ function inventoryBadges(physicalBottles) {
         })[`${group.type}.${group.status}`],
         {count: group.count}
       ),
-    }))
-    .join('');
+    })));
 }
 
 /**
@@ -197,10 +198,10 @@ export function collectionCardRating(bottling, photoId = null) {
     .replace(/[^a-zA-Z0-9_-]/g,
       '-'
     );
-  const glasses = Array.from({length: 5}, (_, i) => {
+  const glasses = composeMarkup(Array.from({length: 5}, (_, i) => {
     const fill = Math.max(0, Math.min(100, (safe - i * 20) * 5));
     return glencairnRatingSymbol({fill, id: `overview-rating-${unique}-${i}`});
-  }).join('');
+  }));
   return renderTemplate('collectionCardRating', {
     ratingScore: t('home.filters.ratingScore', {
       score: String(safe)
@@ -246,19 +247,20 @@ function pagerHtml({page, pageCount, total, from, to}, selectedSize,
         '',
       label: label,
     });
-  const pages = visiblePages(page, pageCount).map(number => number === '…'
-    ? renderTemplate('paginationEllipsis')
-    : renderTemplate('smallButton2', {
-      number: number ===
-        page ? ' current' :
-        '',
-      number2: number,
-      pageLabel: t(
-        "home.pagination.pageLabel", {page: number}),
-      number3: number === page ?
-        'aria-current="page"' : '',
-      number4: number,
-    })).join('');
+  const pages = composeMarkup(visiblePages(page, pageCount).map(number =>
+    number === '…'
+      ? renderTemplate('paginationEllipsis')
+      : renderTemplate('smallButton2', {
+        number: number ===
+          page ? ' current' :
+          '',
+        number2: number,
+        pageLabel: t(
+          "home.pagination.pageLabel", {page: number}),
+        number3: number === page ?
+          'aria-current="page"' : '',
+        number4: number,
+      })));
   return renderTemplate('collectionPagination', {
     rangeSummary: t("home.pagination.rangeSummary",
       {from, to, total, label}),
@@ -289,14 +291,15 @@ function pagerHtml({page, pageCount, total, from, to}, selectedSize,
     ),
     pageSizeLabel: pageSizeLabel,
     pageSizeLabel2: pageSizeLabel,
-    pAGESIZEOPTIONS: PAGE_SIZE_OPTIONS.map(option => renderTemplate(
-      'pagerHtmlOption',
-      {
-        option: option,
-        selected: option === selectedSize ? 'selected' : '',
-        option2: option,
-      }
-    )).join(''),
+    pAGESIZEOPTIONS: composeMarkup(PAGE_SIZE_OPTIONS.map(option =>
+      renderTemplate(
+        'pagerHtmlOption',
+        {
+          option: option,
+          selected: option === selectedSize ? 'selected' : '',
+          option2: option,
+        }
+      ))),
   });
 }
 
@@ -317,7 +320,7 @@ export function createHomeView({
   closeModal,
   confirm: confirmModal
 }) {
-  const {allBottles, bottles, coverPhoto, distilleryNames} = selectors;
+  const {bottles, coverPhoto, distilleryNames} = selectors;
   let activeList = [];
   let activePageSize = 1;
   let filtersExpanded = false;
@@ -585,7 +588,7 @@ export function createHomeView({
      * @param {*} selected Currently selected item or identifier.
      * @return {string} Resulting text.
      */
-    const scoreOptions = (selected) => Array.from(
+    const scoreOptions = (selected) => composeMarkup(Array.from(
       {length: 11},
       (_, i) => renderTemplate('scoreOptionsOption', {
         i: i,
@@ -593,21 +596,21 @@ export function createHomeView({
           '',
         i2: i,
       })
-    ).join('');
+    ));
     return renderTemplate('collectionFlavorStatus', {
       missing: t(
         'collection.flavor.missing'),
-      statusOptions: statusOptions.map((
+      statusOptions: composeMarkup(statusOptions.map((
         [value, label]) =>
         renderTemplate('flavorEditorContentLabel', {
           value: value,
           checked: draft.status === value ? 'che\
 cked' : '',
           t: t(label),
-        })).join(''),
+        }))),
       hidden: draft.status ===
         'without' ? 'hidden' : '',
-      criteria: draft.criteria.map(item => renderTemplate(
+      criteria: composeMarkup(draft.criteria.map(item => renderTemplate(
         'collectionFlavorRow',
         {
           t: t(
@@ -630,19 +633,19 @@ cked' : '',
           scoreOptions2: scoreOptions(item.max
           ),
         }
-      )).join(''),
+      ))),
       collectionAddFlavorAxis: available.length ?
         renderTemplate('collectionAddFlavorAxis', {
           axis: t('collection.flavor.axis'),
           selectAxis: t('collection.flavor.selectAxis'),
-          available: available.map(axis => renderTemplate(
+          available: composeMarkup(available.map(axis => renderTemplate(
             'flavorEditorContentOption',
             {
               axis: axis,
               t: t(`fla\
 vor.axis.${axis}`),
             }
-          )).join(''),
+          ))),
           add: t('collection.flavor.add'),
         }) : '',
       collectionFlavorResetButton: actionButton({
@@ -677,7 +680,7 @@ vor.axis.${axis}`),
     if (!editor) return;
     const scrollTop = editor.closest('.collection-flavor-popover, .dialog')
       ?.scrollTop || 0;
-    editor.innerHTML = flavorEditorContent();
+    replaceContent(editor, flavorEditorContent());
     const scroller = editor.closest('.collection-flavor-popover, .dialog');
     if (scroller) scroller.scrollTop = scrollTop;
     if (focusSelector) editor.querySelector(focusSelector)?.focus();
@@ -828,14 +831,14 @@ chevron'),
         ' is-active' :
         '',
       standard: t('collection.saved.standard'),
-      savedViews: savedViews().map(view =>
+      savedViews: composeMarkup(savedViews().map(view =>
         renderTemplate('collectionSavedItem', {
           id: current?.id ===
             view.id ? ' is-active' :
             '',
           id2: view.id,
           name: view.name,
-        })).join(''),
+        }))),
       save: t('collection.saved.save'),
       collectionViewUpdate: current ?
         renderTemplate('collectionViewUpdate', {
@@ -996,42 +999,10 @@ ollection.saved.delete'),
    * Selects and transforms the home records.
    */
   function home() {
-    const collection = state.collection;
-    const physical = allBottles();
-    const total = physical.length, open = physical.filter(entry =>
-      entry.status === 'open').length, closed = physical.filter(entry =>
-        entry.status === 'closed').length;
-    const establishedYear = collection.settings?.establishedYear;
-    const mode = state.overviewMode === 'bottles' ? 'bottles' : 'bottlings';
-    const selectedColumns = TABLE_COLUMNS[mode].filter(column =>
-      columnSelection[mode].includes(column.id));
-    const label = mode === 'bottles' ? t("forms.bottle.plural") :
-      t("analytics.inventory.bottlings");
-    const distilleries = availableOverviewDistilleries(collection);
-    // Do not keep a deleted distillery selected after refreshing the
-    // collection.
-    if (state.distillery !== 'all' && !distilleries.some(item => item.id ===
-      state.distillery)) {
-      state.distillery = 'all';
-    }
-    // The mode changes the unit of filtering, counting and pagination, not the
-    // collection data.
-    const list = collectionOverviewEntries(collection, {
-      mode,
-      search: state.search,
-      status: state.status,
-      completion: state.completion,
-      sort: state.sort,
-      distillery: state.distillery,
-      volumeType: state.volumeType,
-      rating: state.rating,
-      flavorCriteria: state.flavorCriteria,
-      profileMissing: state.profileMissing,
-      profilePresent: state.profilePresent,
-      distilleryNames,
-    });
-    const pageSize = state.pageSize;
-    const pageData = paginate(list, state.pageNumber, pageSize);
+    const {collection, physical, total, open, closed, establishedYear, mode,
+      selectedColumns, label, distilleries, distillery, list, pageSize,
+      pageData} = createCollectionViewModel(state, selectors, columnSelection);
+    state.distillery = distillery;
     if (state.pageNumber !== pageData.page) {
       state.pageNumber = pageData.page;
       history.replaceState(
@@ -1043,7 +1014,7 @@ ollection.saved.delete'),
     const visibleList = pageData.items;
     activeList = list;
     activePageSize = pageSize;
-    const cards = visibleList.map(({bottling, bottle}) => {
+    const cards = composeMarkup(visibleList.map(({bottling, bottle}) => {
       const physicalBottles = bottle ? [bottle] : bottles(bottling.id);
       const origin = bottlingOriginLabel(bottling, distilleryNames);
       const facts = overviewFacts(bottling);
@@ -1100,8 +1071,8 @@ escapeHtml(t(
           .completionStatus === 'incomplete' ?
           renderTemplate('badge5') : '',
       });
-    }).join('');
-    const rows = visibleList.map(({bottling, bottle}) => {
+    }));
+    const rows = composeMarkup(visibleList.map(({bottling, bottle}) => {
       const entry = {bottling, bottle};
       const attrs =
         `class="clickable" tabindex="0" data-act="open" data-id="${escapeHtml(
@@ -1114,18 +1085,19 @@ escapeHtml(t(
                 t('home.inventory.withoutInventoryNumber'),
             }
           ))}"` : ''}`;
-      const cells = selectedColumns.map(column => collectionTableCell(
-        column.id,
-        entry,
-        bottle ? [bottle] : bottles(bottling.id),
-        distilleryNames
-      )).join('');
+      const cells = composeMarkup(selectedColumns.map(column =>
+        collectionTableCell(
+          column.id,
+          entry,
+          bottle ? [bottle] : bottles(bottling.id),
+          distilleryNames
+        )));
       return renderTemplate('tr', {
         attrs: attrs,
         cells: cells,
       });
-    }).join('');
-    const tableHead = selectedColumns.map(column => {
+    }));
+    const tableHead = composeMarkup(selectedColumns.map(column => {
       const active = state.sort === column.asc || state.sort === column.desc;
       const descending = state.sort === column.desc;
       const title = t(column.label);
@@ -1144,16 +1116,16 @@ escapeHtml(t(
         active3: active ? (descending ? arrowDownIcon : arrowUpIcon) :
           arrowsUpDownIcon,
       });
-    }).join('');
+    }));
     const columnPicker =
       renderTemplate('collectionTableTools', {
         columnPickerOpen: columnPickerOpen ? ' open' : '',
-        tABLECOLUMNS: TABLE_COLUMNS[mode].map(column =>
+        tABLECOLUMNS: composeMarkup(TABLE_COLUMNS[mode].map(column =>
           renderTemplate('collectionTableColumnChoice', {
             id: column.id,
             checked: columnSelection[mode].includes(column.id) ? 'checked' : '',
             t: t(column.label),
-          })).join(''),
+          }))),
         collectionColumnsDefaultButton: actionButton({
           label: t('home.table.resetColumns'),
           action: 'collection-columns-default',
@@ -1193,7 +1165,7 @@ escapeHtml(t(
             total: total,
           }),
       }),
-      content: [
+      content: composeMarkup([
         [t("analytics.inventory.bottlings"), collection.bottlings.length],
         [t("home.inventory.totalStock"), total],
         [t("home.status.closed"), closed],
@@ -1204,7 +1176,7 @@ escapeHtml(t(
           label: label,
           value: value,
         }),
-      })).join(''),
+      }))),
       content2: (() => {
         const distillery = distilleries.find(item => item.id ===
           state.distillery);
@@ -1262,7 +1234,7 @@ filters'),
           filters2: t('home.filters.filters'),
           savedViewsMenuHtml: savedViewsMenuHtml(),
           search: state.search,
-          content: [
+          content: composeMarkup([
             ['name', 'home.sort.nameAscending'],
             ['nameDesc', 'home.sort.nameDescending'],
             ['inventoryAsc', 'home.sort.inventoryAscending'],
@@ -1307,8 +1279,8 @@ filters'),
             selected: state.sort ===
               value ? 'selected' : '',
             t: t(key),
-          })).join(''),
-          entries: Object
+          }))),
+          entries: composeMarkup(Object
             .entries(bottleStatusLabels).map(([k]) =>
               renderTemplate('homeOption2', {
                 k: k,
@@ -1316,8 +1288,7 @@ filters'),
                   .status === k ? 'selected' :
                   '',
                 statusText: statusText(k),
-              })).join(
-                ''),
+              }))),
           selected: state.completion === 'incomplete' ?
             'selected' : '',
           selected2: state.completion === 'complete' ?
@@ -1332,17 +1303,17 @@ ew.table') : t('home.view.cards'),
             collectionCardsIcon,
           view4: state.view === 'cards' ? t('home.view.table') :
             t('home.view.cards'),
-          distilleries: distilleries.map(item =>
+          distilleries: composeMarkup(distilleries.map(item =>
             renderTemplate('homeOption3', {
               id: item.id,
               selected: state.distillery ===
                 item.id ? 'selected' :
                 '',
               name: item.name,
-            })).join(''),
+            }))),
           selected3: state.rating === 'all' ? 'selected' :
             '',
-          content2: [1, 2, 3, 4, 5].map(level =>
+          content2: composeMarkup([1, 2, 3, 4, 5].map(level =>
             renderTemplate('homeOption4', {
               level: level,
               selected: state.rating === String(level) ?
@@ -1354,7 +1325,7 @@ ew.table') : t('home.view.cards'),
                   to: level * 20,
                 }
               ),
-            })).join(''),
+            }))),
           selected4: state.rating === 'unrated' ? 'selected' :
             '',
           selected5: state.volumeType === 'all' ? 'selected' :
@@ -1388,7 +1359,7 @@ ew.table') : t('home.view.cards'),
           collectionFilterActive: active.length ? renderTemplate(
             'collectionFilterActive',
             {
-              active: active.map(([key, value,
+              active: composeMarkup(active.map(([key, value,
                 label]) =>
                 renderTemplate('collectionFilterChip', {
                   startsWith: key
@@ -1405,8 +1376,7 @@ escapeHtml(key.slice(
                   ),
                   value: value,
                   closeIcon: closeIcon,
-                }))
-                .join(''),
+                }))),
             }
           ) : '',
         });
@@ -1462,11 +1432,11 @@ t'),
               .length ? t("home.filters.changeFiltersHint") :
               t("home.empty.getStartedHint"),
           actions: collection.bottlings.length ? '' :
-            `${actionButton({
+            actionButton({
               label: t("collection.actions.newBottle"),
               action: 'new',
               variant: 'primary',
-            })}`,
+            }),
         }),
       total: pageData.total ? pagerHtml(pageData, state.pageSize, mode) : '',
     }));

@@ -1,3 +1,4 @@
+import {composeMarkup} from '../ui/render-plan.js';
 /** Compact results for locating an actual physical bottle, not bulk editing. */
 import {t} from '../i18n/index.js';
 import {imageUrl} from '../ui/format.js';
@@ -28,7 +29,7 @@ export function renderWarehouseFinderResults({items, total, page, pages}) {
         t('warehouse.find.matches', {count: total}) :
         t('warehouse.find.noMatches')),
     });
-  const cards = items.map(({bottle, place}) => {
+  const cards = composeMarkup(items.map(({bottle, place}) => {
     const photo = bottle.photoPath
       ? renderTemplate('img', {
         safe: safe(imageUrl(bottle.photoPath)),
@@ -74,7 +75,7 @@ export function renderWarehouseFinderResults({items, total, page, pages}) {
 e' : 'warehouse.find.assignLocation'),
       details: details,
     });
-  }).join('') || renderTemplate('hint');
+  })) || renderTemplate('hint');
   const pagination = pages > 1 ?
     renderTemplate('warehouseFinderPages', {
       safe: safe(t(
@@ -104,13 +105,13 @@ export function renderWarehouseFinder({query, placement, results}) {
   ];
   return renderTemplate('warehouseFinder', {
     safe: safe(query),
-    filters: filters.map(([id, key]) =>
+    filters: composeMarkup(filters.map(([id, key]) =>
       renderTemplate('warehouseFinderFilterOption', {
         id: id,
         checked: id === placement ? 'checke\
 d' : '',
         t: t(key),
-      })).join(''),
+      }))),
     warehouseFinderResults: renderWarehouseFinderResults(
       results),
   });

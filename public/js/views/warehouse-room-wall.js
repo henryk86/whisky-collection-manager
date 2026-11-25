@@ -1,3 +1,4 @@
+import {composeMarkup} from '../ui/render-plan.js';
 /** Room-wide, front-facing storage wall.  The physical geometry is a single
  * scale across every furniture item. Opposing floor-plan orientations do not
  * rotate the fronts or change their displayed sizes.
@@ -94,7 +95,7 @@ ight', {height: num(clearanceCm)})),
         safe3: safe(t('warehouse.shelves.showForFu\
 rniture', {name: item.name})),
       });
-    const bays = levels.slice().reverse().map((level, index) => {
+    const bays = composeMarkup(levels.slice().reverse().map((level, index) => {
       const shelf = level.shelf;
       const occupants = occupantsByShelf.get(shelf.id) || [];
       const front = visibleShelfFront(item, level.index);
@@ -186,7 +187,7 @@ t('warehouse.shelves.doubleClickHint')}`)}"`,
         safe4: safe(frontName),
         occupancy: occupancy ? ` · ${safe(
           occupancy)}` : '',
-        preview: preview.map(
+        preview: composeMarkup(preview.map(
           bottle => {
             const isFocusedBottle = bottle.id === focusedBottleId;
             const dimmed = isFocusedShelf && focusedBottleId &&
@@ -207,7 +208,7 @@ t('warehouse.shelves.doubleClickHint')}`)}"`,
                 }
               ),
             });
-          }).join(''),
+          })),
         warehouseShelfOverflow: hiddenCount ?
           renderTemplate('warehouseShelfOverflow', {
             safe: safe(t(
@@ -220,7 +221,7 @@ t('warehouse.shelves.doubleClickHint')}`)}"`,
             renderTemplate('warehouseWallNoSpace') :
             renderTemplate('hint')) : '',
       });
-    }).join('');
+    }));
     return renderTemplate('warehouseWallFurniture', {
       stacked: stacked ?
         ' warehouse-wall-furniture--stacked' :
@@ -237,12 +238,12 @@ t('warehouse.shelves.doubleClickHint')}`)}"`,
     });
   };
   let previousOrientation = null;
-  const cards = groups.map(group => {
+  const cards = composeMarkup(groups.map(group => {
     const changeWall = previousOrientation !== null &&
       previousOrientation !== group.orientation;
     previousOrientation = group.orientation;
-    const furnitureHtml = group.items.map(entry =>
-      renderFurniture(entry, group.items.length > 1)).join('');
+    const furnitureHtml = composeMarkup(group.items.map(entry =>
+      renderFurniture(entry, group.items.length > 1)));
     return renderTemplate('warehouseWallStack', {
       length: group.items.length > 1 ?
         ' warehouse-wall-stack--layered' : '',
@@ -256,7 +257,7 @@ t('warehouse.shelves.doubleClickHint')}`)}"`,
       ),
       furnitureHtml: furnitureHtml,
     });
-  }).join('');
+  }));
   return renderTemplate('warehouseRoomWall', {
     focusedBottleId: focusedBottleId ?
       ' has-find-focus' : '',

@@ -1,3 +1,4 @@
+import {replaceContent} from '../../ui/dom-renderer.js';
 import {t} from '../../i18n/index.js';
 /** A small self-contained, interactive OpenStreetMap raster viewer.
  * Downloads ONLY tiles in the current viewport (no prefetch/offline cache).
@@ -149,8 +150,8 @@ export function createTileMap(
           }
         );
         marker.setAttribute('aria-label', marker.title);
-        if (isPagoda) marker.innerHTML = isClosed ? closedDistilleryIcon :
-          pagodaRoofIcon;
+        if (isPagoda) replaceContent(marker, isClosed ? closedDistilleryIcon :
+          pagodaRoofIcon);
         else marker.textContent = String(site.bottleCount);
         marker.addEventListener('click', event => {
           if (Date.now() - lastDrag < 260) {event.preventDefault(); return;}

@@ -1,3 +1,4 @@
+import {composeMarkup} from './render-plan.js';
 import {t} from '../i18n/index.js';
 import {escapeHtml} from './dom.js';
 import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
@@ -96,12 +97,12 @@ export function flavorChart(values, {editable = false, colorSection = null,
       '1' : ''}"` : '',
     colorSection2: colorSection || '',
     chartLabel: t('flavor.chartLabel'),
-    content: [2, 4, 6, 8, 10].map(score =>
+    content: composeMarkup([2, 4, 6, 8, 10].map(score =>
       renderTemplate('flavorGrid', {
         fLAVORAXES: FLAVOR_AXES.map((_, i) =>
           point(i, score).join(',')).join(' '),
-      })).join(''),
-    fLAVORAXES: FLAVOR_AXES.map((axis, i) => {
+      }))),
+    fLAVORAXES: composeMarkup(FLAVOR_AXES.map((axis, i) => {
       const [x, y] =
         point(i, 10);
       return renderTemplate('flavorGrid2', {
@@ -110,7 +111,7 @@ export function flavorChart(values, {editable = false, colorSection = null,
         x: x,
         y: y,
       });
-    }).join(''),
+    })),
     flavorPolygon: flavorPolygon(scores),
     flavorHitTarget: editable ?
       renderTemplate('flavorHitTarget', {
@@ -118,7 +119,7 @@ export function flavorChart(values, {editable = false, colorSection = null,
         cy: cy,
         radius: radius,
       }) : '',
-    fLAVORAXES2: FLAVOR_AXES.map((axis, i) => {
+    fLAVORAXES2: composeMarkup(FLAVOR_AXES.map((axis, i) => {
       const score =
         scores[axis]; const [x, y] = point(i, scorePresent(score) ?
           score : 0);
@@ -130,8 +131,8 @@ export function flavorChart(values, {editable = false, colorSection = null,
         scorePresent: scorePresent(score) ? '' : 'vi\
 sibility="hidden"',
       });
-    }).join(''),
-    fLAVORAXES3: FLAVOR_AXES.map((axis, i) => {
+    })),
+    fLAVORAXES3: composeMarkup(FLAVOR_AXES.map((axis, i) => {
       const [x, y] =
         point(i, compact ? 11.2 : 13.5); const side =
           Math.cos(angleAt(i)); const anchor = side > .3 ? 'start' :
@@ -143,10 +144,10 @@ sibility="hidden"',
         anchor: anchor,
         flavorAxisTitle: flavorAxisTitle(axis),
       });
-    }).join(''),
+    })),
     compact2: compact ? '' :
       renderTemplate('flavorSliders', {
-        fLAVORAXES: FLAVOR_AXES.map((axis,
+        fLAVORAXES: composeMarkup(FLAVOR_AXES.map((axis,
           i) => {
           const score = scores[axis]; const missing = !scorePresent(
             score); return renderTemplate('flavorScale', {
@@ -167,7 +168,7 @@ sibility="hidden"',
                     `${score} / 10`,
                 }),
             });
-        }).join(''),
+        })),
       }),
   });
 }

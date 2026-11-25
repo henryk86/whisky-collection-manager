@@ -1,3 +1,5 @@
+import {composeMarkup} from '../../ui/render-plan.js';
+import {replaceContent} from '../../ui/dom-renderer.js';
 import {actionButton} from '../../ui/buttons.js';
 import {request, clearResourceCache} from '../../api.js';
 import {escapeHtml} from '../../ui/dom.js';
@@ -137,36 +139,41 @@ minlength="${minLength}"` : '',
     if (mandatory) mode = 'change';
     if (mode === 'change') {
       const canCancel = !mandatory;
-      root.innerHTML = panel(tr(mandatory ? 'firstChangeTitle' : 'changeTitle'),
-        renderTemplate('authChangeForm', {
-          field: field(
-            'currentPassword',
-            tr('currentPassword'),
-            {autocomplete: 'current-password'}
-          ),
-          field2: field(
-            'newPassword',
-            tr('newPassword'),
-            {autocomplete: 'new-password', minLength: 12}
-          ),
-          field3: field(
-            'confirmPassword',
-            tr('confirmPassword'),
-            {autocomplete: 'new-password', minLength: 12}
-          ),
-          passwordHint: tr('passwordHint'
-          ),
-          errorText: errorText(),
-          savePassword: tr('savePassword'),
-          canCancel: canCancel ?
-            `${actionButton({
-              label: tr('cancel'),
-              action: 'auth-cancel',
-              className: 'auth-secondary-action',
-            })}` : '',
-        }));
+      replaceContent(
+        root,
+        panel(
+          tr(mandatory ? 'firstChangeTitle' : 'changeTitle'),
+          renderTemplate('authChangeForm', {
+            field: field(
+              'currentPassword',
+              tr('currentPassword'),
+              {autocomplete: 'current-password'}
+            ),
+            field2: field(
+              'newPassword',
+              tr('newPassword'),
+              {autocomplete: 'new-password', minLength: 12}
+            ),
+            field3: field(
+              'confirmPassword',
+              tr('confirmPassword'),
+              {autocomplete: 'new-password', minLength: 12}
+            ),
+            passwordHint: tr('passwordHint'
+            ),
+            errorText: errorText(),
+            savePassword: tr('savePassword'),
+            canCancel: canCancel ?
+              actionButton({
+                label: tr('cancel'),
+                action: 'auth-cancel',
+                className: 'auth-secondary-action',
+              }) : '',
+          })
+        )
+      );
     } else {
-      root.innerHTML = panel(tr('loginTitle'),
+      replaceContent(root, panel(tr('loginTitle'),
         renderTemplate('authLoginForm', {
           field: field(
             'username',
@@ -181,12 +188,12 @@ minlength="${minLength}"` : '',
           errorText: errorText(),
           signIn: tr('signIn'),
           content: !state.auth?.required ?
-            `${actionButton({
+            actionButton({
               label: tr('cancel'),
               action: 'auth-cancel',
               className: 'auth-secondary-action',
-            })}` : '',
-        }));
+            }) : '',
+        })));
     }
     applyTheme();
     root.querySelector(mandatory || mode === 'change' ? '#currentPassword' :
@@ -210,7 +217,7 @@ minlength="${minLength}"` : '',
         .trim()) message = reason.message;
     } else if (typeof reason?.message === 'string' && reason.message
       .trim()) message = reason.message;
-    output.innerHTML = errorMarkup(message);
+    replaceContent(output, errorMarkup(message));
     output.hidden = false;
   }
 
@@ -300,7 +307,7 @@ minlength="${minLength}"` : '',
     state.authUsers = result.users;
     state.auth.required = result.required;
     const host = root.querySelector('#auth-users-content');
-    if (host) host.innerHTML = usersSection();
+    if (host) replaceContent(host, usersSection());
     else render();
   }
 
@@ -322,7 +329,7 @@ minlength="${minLength}"` : '',
         action: 'auth-toggle-required',
       }),
       users: tr('users'),
-      users2: users.map(user =>
+      users2: composeMarkup(users.map(user =>
         renderTemplate('authUserRow', {
           username: user.username,
           role: user.role === 'admin' ?
@@ -338,7 +345,7 @@ ord'),
               id2: user.id,
               delete: tr('delete'),
             }) : '',
-        })).join(''),
+        }))),
       createUser: tr('createUser'),
       field: field(
         'username',
@@ -375,7 +382,7 @@ ord'),
       if (!input) return;
       const hidden = input.type === 'password';
       input.type = hidden ? 'text' : 'password';
-      button.innerHTML = hidden ? eyeOffIcon : eyeIcon;
+      replaceContent(button, hidden ? eyeOffIcon : eyeIcon);
       button.setAttribute(
         'aria-label',
         tr(hidden ? 'hidePassword' : 'showPassword')

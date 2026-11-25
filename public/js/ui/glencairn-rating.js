@@ -1,3 +1,4 @@
+import {composeMarkup} from './render-plan.js';
 import {t} from '../i18n/index.js';
 import {escapeHtml} from './dom.js';
 import {glencairnRatingSymbol} from './glencairn-icon.js';
@@ -22,7 +23,7 @@ export function glencairnRating(rating) {
     safe: safe ?? '',
     rating: t(
       'tasting.rating'),
-    from: Array.from({length: 5}, (_, i) => {
+    from: composeMarkup(Array.from({length: 5}, (_, i) => {
       const fill = safe == null ? 0 : Math.max(0, Math.min(100, (safe - i *
         20) * 5));
       const selected = safe != null && safe > i * 20;
@@ -41,7 +42,7 @@ tingGlass', {count: i + 1}),
           id: `rating-glass-${i}`,
         }),
       });
-    }).join(''),
+    })),
     inputValue: inputValue,
     points: t('tasting.points'),
   });

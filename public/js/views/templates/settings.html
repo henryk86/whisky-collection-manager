@@ -7,50 +7,73 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:panel -->
-    <div class="panel section">{{raw:headingTitle}}<label class="form-field" for="ui-language">{{t:settings.language.choose}}<select id="ui-language" aria-label="{{t:settings.language.label}}">{{raw:entries}}</select></label></div>
-    <form id="collection-settings-form" class="panel section collection-settings">
+<div class="panel section">{{raw:headingTitle}}<label class="form-field" for="ui-language">{{t:settings.language.choose}}<select id="ui-language" aria-label="{{t:settings.language.label}}">{{raw:entries}}</select></label></div>
+<form id="collection-settings-form" class="panel section collection-settings">
     {{raw:headingTitle2}}
     <label class="form-field" for="established-year">{{t:settings.collection.foundingYearLabel}}
-    <input type="number" inputmode="numeric" id="established-year" name="establishedYear" min="1600" max="{{raw:fullYear}}" step="1" placeholder="z. B. 2018" value="{{raw:establishedYear}}">
-    </label>
-    <button type="submit" class="btn primary">{{t:settings.collection.saveFoundingYear}}</button>
-    </form>
+    <input
+      type="number"
+      inputmode="numeric"
+      id="established-year"
+      name="establishedYear"
+      min="1600"
+      max="{{raw:fullYear}}"
+      step="1"
+      placeholder="z. B. 2018"
+      value="{{raw:establishedYear}}">
+  </label>
+  <button type="submit" class="btn primary">{{t:settings.collection.saveFoundingYear}}</button>
+</form>
 
 <!-- /wcm-template -->
 
 <!-- wcm-template:panel2 -->
-    <div class="panel section">
+<div class="panel section">
       {{raw:headingTitle}}
       <p class="muted">{{t:settings.exports.notFullBackupWarning}}</p>
-      <div class="actions"><a class="btn" href="/api/export/json" download>{{t:settings.exports.downloadJson}}</a><a class="btn" href="/api/export/csv" download>{{t:settings.exports.downloadCsv}}</a></div>
-      <details class="settings-legacy-import"><summary>{{t:settings.imports.legacyJsonImport}}</summary>
-      <p class="warning">{{t:settings.imports.jsonDoesNotIncludeAttachments}}</p>
-      <input type="file" id="import-file" accept="application/json,.json">
+  <div class="actions"><a class="btn" href="/api/export/json" download>{{t:settings.exports.downloadJson}}</a><a class="btn" href="/api/export/csv" download>{{t:settings.exports.downloadCsv}}</a></div>
+  <details class="settings-legacy-import"><summary>{{t:settings.imports.legacyJsonImport}}</summary>
+    <p class="warning">{{t:settings.imports.jsonDoesNotIncludeAttachments}}</p>
+    <input type="file" id="import-file" accept="application/json,.json">
       {{raw:importButton}}</details>
-    </div>
+</div>
 
 <!-- /wcm-template -->
 
 <!-- wcm-template:distilleryRow -->
 <div class="distillery-row" role="listitem" {{raw:includes}}>
-    <strong data-i18n-ignore>{{text:name}}</strong>
-    <button type="button" class="btn small" data-act="rename-distillery" data-id="{{text:id}}" aria-label="{{text:name2}} umbenennen">{{t:common.actions.edit}}</button>
-    </div>
+  <strong data-i18n-ignore>{{text:name}}</strong>
+  <button
+    type="button"
+    class="btn small"
+    data-act="rename-distillery"
+    data-id="{{text:id}}"
+    aria-label="{{text:name2}} umbenennen">{{t:common.actions.edit}}</button>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:distillerySearch -->
-    <div class="panel section">
-    <div class="distillery-tools">
-    <input type="search" class="distillery-search" id="distillery-search" value="{{text:distillerySearch}}" placeholder="{{t:settings.distilleries.searchPlaceholder}}" aria-label="{{t:settings.distilleries.search}}" autocomplete="off">
+<div class="panel section">
+  <div class="distillery-tools">
+    <input
+      type="search"
+      class="distillery-search"
+      id="distillery-search"
+      value="{{text:distillerySearch}}"
+      placeholder="{{t:settings.distilleries.searchPlaceholder}}"
+      aria-label="{{t:settings.distilleries.search}}"
+      autocomplete="off">
     <span class="distillery-count" id="distillery-count" role="status" aria-live="polite">{{raw:length}} von {{raw:length2}}</span>
     {{raw:addDistilleryButton}}
     </div>
-    <div class="distillery-list" role="list" aria-label="{{t:backups.summary.distilleriesLabel}}">{{raw:sort}}<p class="distillery-no-results" {{raw:hidden}}>{{t:settings.distilleries.noMatches}}</p></div>
-    </div>
+  <div class="distillery-list" role="list" aria-label="{{t:backups.summary.distilleriesLabel}}">{{raw:sort}}<p class="distillery-no-results" {{raw:hidden}}>{{t:settings.distilleries.noMatches}}</p>
+  </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:settingsSection2 -->
-<section class="settings-section" data-settings-panel="users"{{raw:active}}>{{raw:headingTitle}}<div id="auth-users-content">{{raw:usersSection}}</div></section>
+<section class="settings-section" data-settings-panel="users"{{raw:active}}>{{raw:headingTitle}}<div id="auth-users-content">{{raw:usersSection}}</div>
+</section>
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsPage -->

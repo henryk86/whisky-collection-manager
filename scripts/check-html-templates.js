@@ -25,10 +25,24 @@ for (const file of files) {
       [node.head.text, ...node.templateSpans.map(span => span.literal.text)] :
       ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) ?
         [node.text] : [];
-    if (parts.some(part => tag.test(part)) ||
-      ts.isTemplateExpression(node) && parts.some(part => /<\/?$/.test(part))) {
+    const marker = file.endsWith('/ui/dom-renderer.js') &&
+      (ts.isStringLiteral(node) && node.text === '<!--' ||
+        ts.isTemplateExpression(node) && node.head.text === '<!--wcm-slot-' &&
+        node.templateSpans.length === 1 &&
+        node.templateSpans[0].literal.text === '-end-->');
+    if (!marker && (parts.some(part =>
+      tag.test(part)) ||
+      ts.isTemplateExpression(node) && parts.some(part => /<\/?$/
+        .test(part)))) {
       const {line} = source.getLineAndCharacterOfPosition(node.getStart());
       throw new Error(`${file}:${line + 1}: HTML belongs in a template`);
+    }
+    if (!file.endsWith('/ui/dom-renderer.js') &&
+      ts.isPropertyAccessExpression(node) &&
+      ['innerHTML', 'outerHTML', 'insertAdjacentHTML',
+        'createContextualFragment'].includes(node.name.text)) {
+      const {line} = source.getLineAndCharacterOfPosition(node.getStart());
+      throw new Error(`${file}:${line + 1}: Use native template mounting`);
     }
     if (ts.isCallExpression(node) && node.expression.getText(source) ===
       'renderTemplate') {
@@ -38,7 +52,7 @@ for (const file of files) {
       }
       used.add(name.text);
       const slots = new Set([...templates.get(name.text).matchAll(
-        /\{\{(?:raw|text):([\w.]+)\}\}/g)].map(match => match[1]));
+        /\{\{(?:raw|text|tag):([\w.]+)\}\}/g)].map(match => match[1]));
       const supplied = new Set(bindings && ts.isObjectLiteralExpression(
         bindings) ? bindings.properties.map(prop => prop.name?.getText(
           source)) : []);

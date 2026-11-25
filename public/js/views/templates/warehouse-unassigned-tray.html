@@ -3,7 +3,9 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseUnassignedBottle -->
-<div class="warehouse-unassigned-bottle warehouse-wall-bottle{{raw:checked}}" data-unassigned-id="{{raw:safe}}">
+<div
+  class="warehouse-unassigned-bottle warehouse-wall-bottle{{raw:checked}}"
+  data-unassigned-id="{{raw:safe}}">
             {{raw:bottleSymbol}}
             <span class="warehouse-unassigned-name" title="{{raw:safe2}}">{{raw:safe3}}</span>
             {{raw:warehouseUnassignedFacts}}
@@ -16,17 +18,28 @@
 
 <!-- wcm-template:warehouseUnassignedResults -->
 <div class="warehouse-unassigned-results" aria-live="polite">
-        <div class="warehouse-unassigned-grid">{{raw:cards}}</div>
-        <div class="warehouse-unassigned-pagination">
-            <span class="warehouse-unassigned-page-summary">{{raw:unassignedShown}}</span>
-            <input type="search" id="warehouse-unassigned-wall-search" class="warehouse-unassigned-page-search" value="{{raw:safe}}" placeholder="{{raw:safe2}}" aria-label="{{raw:safe3}}" autocomplete="off">
-            <div class="warehouse-unassigned-page-controls">
-                <button type="button" class="btn small" data-act="warehouse-unassigned-prev" {{raw:disabled}}>{{t:home.pagination.previous}}</button>
-                <span>{{raw:pageOf}}</span>
-                <button type="button" class="btn small" data-act="warehouse-unassigned-next" {{raw:disabled2}}>{{t:home.pagination.next}}</button>
-            </div>
-        </div>
+  <div class="warehouse-unassigned-grid">{{raw:cards}}</div>
+  <div class="warehouse-unassigned-pagination">
+    <span class="warehouse-unassigned-page-summary">{{raw:unassignedShown}}</span>
+    <input
+      type="search"
+      id="warehouse-unassigned-wall-search"
+      class="warehouse-unassigned-page-search"
+      value="{{raw:safe}}"
+      placeholder="{{raw:safe2}}"
+      aria-label="{{raw:safe3}}"
+      autocomplete="off">
+    <div class="warehouse-unassigned-page-controls">
+      <button type="button" class="btn small" data-act="warehouse-unassigned-prev" {{raw:disabled}}>{{t:home.pagination.previous}}</button>
+      <span>{{raw:pageOf}}</span>
+      <button
+        type="button"
+        class="btn small"
+        data-act="warehouse-unassigned-next"
+        {{raw:disabled2}}>{{t:home.pagination.next}}</button>
     </div>
+  </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseUnassignedContent -->
@@ -36,12 +49,16 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseWallUnassignedContent -->
-<div class="warehouse-unassigned-tray warehouse-unassigned-tray--embedded" id="warehouse-wall-unassigned-content" aria-label="{{raw:label}}" {{raw:expanded}}>{{raw:content}}</div>
+<div
+  class="warehouse-unassigned-tray warehouse-unassigned-tray--embedded"
+  id="warehouse-wall-unassigned-content"
+  aria-label="{{raw:label}}"
+  {{raw:expanded}}>{{raw:content}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseUnassignedTray -->
 <details class="warehouse-unassigned-tray" {{raw:expanded}} aria-label="{{raw:label}}">
-        <summary class="warehouse-unassigned-summary"><strong>{{raw:label2}}</strong><span>{{t:warehouse.wall.unassignedToggleHint}}</span></summary>
+  <summary class="warehouse-unassigned-summary"><strong>{{raw:label2}}</strong><span>{{t:warehouse.wall.unassignedToggleHint}}</span></summary>
         {{raw:content}}
     </details>
 <!-- /wcm-template -->

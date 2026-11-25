@@ -1,8 +1,12 @@
+import {createWarehouseViewModel} from './models/warehouse.js';
+import {composeMarkup} from '../ui/render-plan.js';
+import {replaceContent, appendContent, materialize}
+  from '../ui/dom-renderer.js';
 import {headerActions, headingTitle, pageHeader} from '../ui/headers.js';
 import {destructiveFooter} from '../ui/modal-layout.js';
 import {escapeHtml as esc} from '../ui/dom.js';
 import {t, tHtml} from '../i18n/index.js';
-import {roomCapacity, totalCapacity} from '../domain/warehouse-capacity.js';
+import {roomCapacity} from '../domain/warehouse-capacity.js';
 import {toast} from '../ui/notifications.js';
 import {imageData} from '../features/photos.js';
 import {request} from '../api.js';
@@ -235,13 +239,12 @@ d',
       {query: unassignedWallQuery, page: unassignedWallPageNumber}
     );
     unassignedWallPageNumber = data.page;
-    const template = document.createElement('template');
-    template.innerHTML = renderUnassignedTrayPage(
+    const template = materialize(renderUnassignedTrayPage(
       w(),
       selectedBottleIds(),
       {query: unassignedWallQuery, page: data.page}
-    );
-    const updated = template.content.firstElementChild;
+    ), document);
+    const updated = template.firstElementChild;
     // Patch only the changing results and pagination. The search input stays
     // mounted, so typing does not lose focus or its caret position.
     for (const selector of [
@@ -350,7 +353,9 @@ d',
   function refreshFinderResults() {
     const host = typeof document === 'undefined' ? null :
       document.querySelector?.('.warehouse-finder-results');
-    if (host) host.innerHTML = renderWarehouseFinderResults(finderResults());
+    if (host) {
+      replaceContent(host, renderWarehouseFinderResults(finderResults()));
+    }
   }
 
   /**
@@ -537,7 +542,7 @@ us, .warehouse-wall-bottle.is-find-dimmed')
             'disabled',
         }) :
         '',
-      furniture: room.furniture.map(furniture => {
+      furniture: composeMarkup(room.furniture.map(furniture => {
         const occupied = furniture.shelves.reduce((n, shelf) => n +
           count(w(), shelf.id), 0);
         const visible = !hiddenIds.has(furniture.id);
@@ -596,7 +601,7 @@ urrent="true"' : '',
               visible2: visible ? eyeIcon : eyeOffIcon,
             }) : '',
         });
-      }).join(''),
+      })),
       layoutOnly2: layoutOnly ? '' :
         renderTemplate('warehouseBulkSelectAll', {
           size: selected.size ?
@@ -634,7 +639,7 @@ urrent="true"' : '',
       button.setAttribute('aria-pressed', String(visible));
       button.setAttribute('aria-label', label);
       button.title = label;
-      button.innerHTML = visible ? eyeIcon : eyeOffIcon;
+      replaceContent(button, visible ? eyeIcon : eyeOffIcon);
       button.closest('.warehouse-bulk-item')?.classList.toggle('is-hidden',
         !visible
       );
@@ -792,18 +797,14 @@ urrent="true"' : '',
           null; state.warehouseFindReturnBottlingId =
             null; state.warehouseFindReturnFlightId = null;
     }
-    const total = data.bottles.length;
-    const assigned = data.bottles.filter(b => !!data.assignments[b.id]).length;
-    const overallCapacity = totalCapacity(data);
+    const {total, assigned, overallCapacity, roomCount, furnitureCount} =
+      createWarehouseViewModel(data);
     let content = '';
     if (section === 'overview') {
       content =
         renderTemplate('stats', {
-          length: data.rooms
-            .length,
-          reduce: data.rooms.reduce(
-            (n, r) => n + r.furniture.length,
-            0),
+          length: roomCount,
+          reduce: furnitureCount,
           assigned: assigned,
           total: total,
           unlimited: overallCapacity.unlimited ? ` ${t(
@@ -821,7 +822,7 @@ overallCapacity.unlimited ? '+' :
               t('warehouse.rooms.yourRooms'),
           }
           ),
-          rooms: data.rooms.map(room => {
+          rooms: composeMarkup(data.rooms.map(room => {
             const cap =
               roomCapacity(room, data);
             return renderTemplate('warehouseSelectRoom', {
@@ -843,7 +844,7 @@ overallCapacity.unlimited ? '+' :
               count: t("warehouse.occupancy.count",
                 {count: cap.occupied}),
             });
-          }).join('') ||
+          })) ||
             renderTemplate('hint3'),
           addActionLabel: addActionLabel(t("warehouse.rooms.c\
 reateWithPlus")),
@@ -866,14 +867,13 @@ reateWithPlus")),
         })
         : '';
       content = renderTemplate('warehouseRoomToolbar', {
-        rooms: data
+        rooms: composeMarkup(data
           .rooms.map(r => renderTemplate('renderOption', {
             safe: safe(r.id),
             selected: r.id === room?.id ?
               'selected' : '',
             safe2: safe(r.name),
-          })).join(
-            ''),
+          }))),
         roomManagementActions: roomManagementActions,
       });
       if (room) {
@@ -918,7 +918,7 @@ reateWithPlus")),
             selected3: level ===
               'elevated' ? 'selected' : '',
           }) : renderTemplate('warehousePlanFilter2', {
-            content: [100, 150, 200].map(z => renderTemplate(
+            content: composeMarkup([100, 150, 200].map(z => renderTemplate(
               'planFilterOption',
               {
                 z: z,
@@ -926,11 +926,11 @@ reateWithPlus")),
 d' : '',
                 z2: z,
               }
-            )).join(''),
+            ))),
           });
         const cornerButtons = planMode === '3d' ?
           renderTemplate('warehouseCameraToolbar', {
-            wAREHOUSECAMERAS: WAREHOUSE_CAMERAS.map(([id,
+            wAREHOUSECAMERAS: composeMarkup(WAREHOUSE_CAMERAS.map(([id,
               label]) => renderTemplate('smallButton', {
                 planCorner: planCorner
                   === id ? ' primary' :
@@ -938,8 +938,7 @@ d' : '',
                 id: id,
                 planCorner2: planCorner === id,
                 t: t(CAMERA_KEYS[id]),
-              }))
-              .join(''),
+              }))),
           }) : '';
         const planToolbar =
           renderTemplate('warehousePlanTools', {
@@ -963,8 +962,10 @@ lace')),
           // Room plans own spatial layout only: 2D/3D positioning,
           // camera and visibility. All furniture/shelf editing and
           // physical bottle work lives in Regale & Fächer.
-          content += roomSummary + planToolbar
-            + (planMode === '3d'
+          content = composeMarkup(content,
+            roomSummary,
+            planToolbar,
+            (planMode === '3d'
               ? renderTemplate('warehousePlanWorkspace', {
                 plan: plan,
                 selectionPanel: selectionPanel(
@@ -972,27 +973,31 @@ lace')),
                   {isolate: true, compact: true, layoutOnly: true}
                 ),
               })
-              : `${plan}${selectionPanel(room, {layoutOnly: true})}`)
-            + renderTemplate('warehouseSectionBoundary', {
-              furniture: furniture ?
-                ' warehouse-plan-focus' : '',
-              warehousePlanFocusInfo: furniture
-                ? renderTemplate('warehousePlanFocusInfo', {
-                  safe: safe(
-                    furniture.name),
-                  safe2: safe(typeName(furniture.type
-                  )),
-                  num: num(furniture.x),
-                  num2: num(furniture
-                    .y),
-                  num3: num(furniture.elevation ?? 0),
-                })
-                : '',
-              warehouseFurnitureManage: furniture ?
-                renderTemplate('warehouseFurnitureManage', {
-                  safe: safe(furniture.id),
-                }) : '',
-            });
+              : composeMarkup(plan, selectionPanel(room, {layoutOnly: true}))),
+            renderTemplate(
+              'warehouseSectionBoundary',
+              {
+                furniture: furniture ?
+                  ' warehouse-plan-focus' : '',
+                warehousePlanFocusInfo: furniture
+                  ? renderTemplate('warehousePlanFocusInfo', {
+                    safe: safe(
+                      furniture.name),
+                    safe2: safe(typeName(furniture.type
+                    )),
+                    num: num(furniture.x),
+                    num2: num(furniture
+                      .y),
+                    num3: num(furniture.elevation ?? 0),
+                  })
+                  : '',
+                warehouseFurnitureManage: furniture ?
+                  renderTemplate('warehouseFurnitureManage', {
+                    safe: safe(furniture.id),
+                  }) : '',
+              }
+            )
+          );
         } else {
           const createButton =
             renderTemplate('warehouseFurnitureNew2', {
@@ -1033,29 +1038,35 @@ ht')),
             .length === 0);
           const firstShelfActions = withoutShelves.length
             ? renderTemplate('warehouseUnconfiguredFurniture', {
-              withoutShelves: withoutShelves.map(item => renderTemplate(
-                'warehouseUnconfiguredItem',
-                {
-                  safe: safe(item.name),
-                  safe2: safe(item.id),
-                  addActionLabel: addActionLabel(
-                    t('warehouse.shelves.addWithPlus')
-                  ),
-                }
-              )).join(''),
+              withoutShelves: composeMarkup(withoutShelves.map(item =>
+                renderTemplate(
+                  'warehouseUnconfiguredItem',
+                  {
+                    safe: safe(item.name),
+                    safe2: safe(item.id),
+                    addActionLabel: addActionLabel(
+                      t('warehouse.shelves.addWithPlus')
+                    ),
+                  }
+                ))),
             })
             : '';
-          content += roomSummary + findReturn
-            + renderTemplate('warehouseShelvesToolbar', {
-              headingTitle: headingTitle({
-                title:
-                  t('warehouse.navigation.shelves'),
-              }),
-              headerActions: headerActions(
-                manageButton + createButton),
-            })
-            + firstShelfActions
-            + renderWarehouseRoomWall(
+          content = composeMarkup(content,
+            roomSummary,
+            findReturn,
+            renderTemplate(
+              'warehouseShelvesToolbar',
+              {
+                headingTitle: headingTitle({
+                  title:
+                    t('warehouse.navigation.shelves'),
+                }),
+                headerActions: headerActions(
+                  composeMarkup(manageButton, createButton)),
+              }
+            ),
+            firstShelfActions,
+            renderWarehouseRoomWall(
               room,
               data,
               selectedBottleIds(),
@@ -1065,9 +1076,10 @@ ht')),
                 expanded: unassignedWallExpanded,
                 focusBottleId: inRoom ? focusBottle.id : null,
               }
-            );
+            )
+          );
         }
-      } else content += renderTemplate('hint4');
+      } else content = composeMarkup(content, renderTemplate('hint4'));
     } else {
       content = renderWarehouseFinder({
         query: state.warehouseSearch || '',
@@ -1087,11 +1099,11 @@ ht')),
         switchKind: 'warehouse',
         desktopClass: 'warehouse-tabs',
       },
-      `${headingTitle({
+      composeMarkup(headingTitle({
         title: t(ROOM_SECTION_KEYS[section] || ROOM_SECTION_KEYS.overview),
         level: 2,
         className: 'analytics-section-title',
-      })}${content}`
+      }), content)
     );
     shell(renderTemplate('analyticsPage', {
       pageHeader: pageHeader({
@@ -1260,7 +1272,7 @@ ht')),
      * @param {*} chosen Value used by this operation.
      * @return {string} Resulting text.
      */
-    const opts = (chosen) => Array.from(
+    const opts = (chosen) => composeMarkup(Array.from(
       {length: count},
       (_, i) => renderTemplate('optsOption', {
         i: i + 1,
@@ -1271,7 +1283,7 @@ ht')),
             1,
         }),
       })
-    ).join('');
+    ));
     return renderTemplate('warehouseDoorRange', {
       opts: opts(range.from ||
         1),
@@ -1412,20 +1424,28 @@ ht')),
       title = item ? t("warehouse.rooms.edit") : t("warehouse.rooms.create");
       endpoint = item ? `/api/warehouse/rooms/${item.id}` :
         '/api/warehouse/rooms'; method = item ? 'PATCH' : 'POST';
-      fields = field('name', t("warehouse.rooms.roomName"), item?.name ||
-        '') + field(
+      fields = composeMarkup(
+        field(
+          'name',
+          t("warehouse.rooms.roomName"),
+          item?.name ||
+          ''
+        ),
+        field(
           'width',
           t("warehouse.fields.widthMeters"),
           item?.width ?? 4,
           'number',
           'step="0.01" min="1" max="100"'
-        ) + field(
+        ),
+        field(
           'height',
           t("warehouse.fields.depthMeters"),
           item?.height ?? 4,
           'number',
           'step="0.01" min="1" max="100"'
-        );
+        )
+      );
     } else if (kind === 'furniture') {
       const found = findFurniture(data, id);
       const room = found?.room || currentRoom();
@@ -1436,90 +1456,83 @@ ht')),
       endpoint = item ? `/api/warehouse/furniture/${item.id}` :
         `/api/warehouse/rooms/${room.id}/furniture`; method = item ?
           'PATCH' : 'POST';
-      fields = field(
+      fields = composeMarkup(field(
         'name',
         t("warehouse.fields.name"),
         item?.name || t("warehouse.furniture.defaultShelfName")
-      ) + choices(
+      ), choices(
         'type',
         t("warehouse.fields.furnitureType"),
         typeChoices(),
         item?.type || 'regal'
-      ) + field(
+      ), field(
         'x',
         t("warehouse.fields.positionXMeters"),
         item?.x ?? 0,
         'number',
         'step="0.01" min="0"'
-      ) + field(
+      ), field(
         'y',
         t("warehouse.fields.positionYMeters"),
         item?.y ?? 0,
         'number',
         'step="0.01" min="0"'
-      ) + field(
+      ), field(
         'width',
         t("warehouse.fields.widthMetersShort"),
         item?.width ?? 1,
         'number',
         'min="0.2" step="0.01"'
-      ) + field(
+      ), field(
         'depth',
         t("warehouse.fields.depthMetersShort"),
         item?.depth ?? 0.5,
         'number',
         'min="0.2" step="0.01"'
-      ) + choices(
+      ), choices(
         'rotation',
         t("warehouse.fields.rotation"),
         [[0, '0°'], [90, '90°'], [180, '180°'], [270, '270°']],
         item?.rotation ?? 0
-      )
-        + field(
-          'elevation',
-          t("warehouse.fields.bottomElevationMeters"),
-          item?.elevation ?? 0,
-          'number',
-          'step="0.01" min="0" max="10"'
-        )
-        + field(
-          'itemHeight',
-          t("warehouse.fields.furnitureHeightMeters"),
-          item?.itemHeight ?? (item?.type === 'haengeregal' ? 0.4 : 1.8),
-          'number',
-          'step="0.01" min="0.1" max="5"'
-        )
-        + choices(
-          'doorLeaves',
-          t("warehouse.walls.doorLeavesDefault"),
-          [
-            ['', t('warehouse.shelves.defaultWoodDoors')],
-            ['1', t('warehouse.doors.singleLeaf')],
-            ['2', t('warehouse.doors.doubleLeaf')],
-          ],
-          String(item?.doorLeaves ?? '')
-        )
-        + choices(
-          'glassFrame',
-          t("warehouse.walls.glassDoorFrameDefault"),
-          [
-            ['', t('warehouse.walls.withoutFrameDefault')],
-            ['true', t('warehouse.walls.withFrame')],
-            ['false', t('warehouse.walls.withoutFrame')],
-          ],
-          String(item?.glassFrame ?? '')
-        )
-        + (item?.shelves.length ?
-          renderTemplate('warehouseDoorRanges', {
-            doorRanges: (item
-              .doorRanges || []).map(range => doorRangeRow(range,
-                item.shelves.length)).join(
-                  ''),
-            addActionLabel: addActionLabel(t("warehouse.shelves.addDoorRang\
+      ), field(
+        'elevation',
+        t("warehouse.fields.bottomElevationMeters"),
+        item?.elevation ?? 0,
+        'number',
+        'step="0.01" min="0" max="10"'
+      ), field(
+        'itemHeight',
+        t("warehouse.fields.furnitureHeightMeters"),
+        item?.itemHeight ?? (item?.type === 'haengeregal' ? 0.4 : 1.8),
+        'number',
+        'step="0.01" min="0.1" max="5"'
+      ), choices(
+        'doorLeaves',
+        t("warehouse.walls.doorLeavesDefault"),
+        [
+          ['', t('warehouse.shelves.defaultWoodDoors')],
+          ['1', t('warehouse.doors.singleLeaf')],
+          ['2', t('warehouse.doors.doubleLeaf')],
+        ],
+        String(item?.doorLeaves ?? '')
+      ), choices(
+        'glassFrame',
+        t("warehouse.walls.glassDoorFrameDefault"),
+        [
+          ['', t('warehouse.walls.withoutFrameDefault')],
+          ['true', t('warehouse.walls.withFrame')],
+          ['false', t('warehouse.walls.withoutFrame')],
+        ],
+        String(item?.glassFrame ?? '')
+      ), (item?.shelves.length ?
+        renderTemplate('warehouseDoorRanges', {
+          doorRanges: composeMarkup((item
+            .doorRanges || []).map(range => doorRangeRow(range,
+              item.shelves.length))),
+          addActionLabel: addActionLabel(t("warehouse.shelves.addDoorRang\
 e")),
-          }) : '')
-        + renderTemplate('warehouseWallOptions', {
-          content: [
+        }) : ''), renderTemplate('warehouseWallOptions', {
+          content: composeMarkup([
             ['leftSidePanel', t('warehouse.walls.leftPanel'), 'left'],
             ['rightSidePanel', t('warehouse.walls.rightPanel'), 'right'],
             ['backPanel', t('warehouse.walls.backPanel'), 'back'],
@@ -1529,9 +1542,8 @@ e")),
               checked: item?.[key] === true ? 'checked' : '',
               side: side,
               label: label,
-            })).join(''),
-        })
-        + renderTemplate('hint5');
+            }))),
+        }), renderTemplate('hint5'));
     } else if (kind === 'furniture-bulk') {
       const room = currentRoom();
       const ids = selectedFurniture(room);
@@ -1565,45 +1577,45 @@ e")),
           key: key,
           constraints: constraints,
         });
-      fields = renderTemplate('hint6', {
-        bulkDescription: t(
-          "warehouse.selection.bulkDescription",
-          {
-            names: ids.map(id => room.furniture.find(f => f.id === id)?.name)
-              .map(safe).join(', '),
-          }
-        ),
-      })
-        + bulkField(renderTemplate('formField2', {
-          content: [[0, '0°'], [90, '90°'],
+      fields = composeMarkup(
+        renderTemplate('hint6', {
+          bulkDescription: t(
+            "warehouse.selection.bulkDescription",
+            {
+              names: ids.map(id => room.furniture.find(f => f.id === id)?.name)
+                .map(safe).join(', '),
+            }
+          ),
+        }),
+        bulkField(renderTemplate('formField2', {
+          content: composeMarkup([[0, '0°'], [90, '90°'],
           [180, '180°'], [270, '270°']].map(([value,
             label]) => renderTemplate('openFormOption', {
               value: value,
               label: label,
-            })).join(
-              ''),
-        }))
-        + bulkField(optionalNumber(
+            }))),
+        })),
+        bulkField(optionalNumber(
           'elevation',
           t('warehouse.fields.bottomElevationShort'),
           'step="0.01" min="0" max="10"'
-        ))
-        + bulkField(optionalNumber(
+        )),
+        bulkField(optionalNumber(
           'itemHeight',
           t('warehouse.fields.heightShort'),
           'step="0.01" min="0.1" max="5"'
-        ))
-        + bulkField(optionalNumber(
+        )),
+        bulkField(optionalNumber(
           'width',
           t('warehouse.fields.widthShort'),
           'step="0.01" min="0.2" max="20"'
-        ))
-        + bulkField(optionalNumber(
+        )),
+        bulkField(optionalNumber(
           'depth',
           t('warehouse.fields.depthShort'),
           'step="0.01" min="0.2" max="20"'
-        ))
-        + bulkField(choices(
+        )),
+        bulkField(choices(
           'doorLeaves',
           t("warehouse.walls.doorLeavesFurnitureDefault"),
           [
@@ -1612,8 +1624,8 @@ e")),
             ['2', t('warehouse.doors.doubleLeaf')],
             ['default', t('warehouse.walls.automatic')],
           ]
-        ))
-        + bulkField(choices(
+        )),
+        bulkField(choices(
           'glassFrame',
           t("warehouse.walls.glassDoorFrameFurnitureDefault"),
           [
@@ -1622,22 +1634,24 @@ e")),
             ['false', t('warehouse.walls.withoutFrame')],
             ['default', t('warehouse.walls.automatic')],
           ]
-        ))
-        + ['leftSidePanel', 'rightSidePanel', 'backPanel'].map((key, i) =>
-          bulkField(choices(
-            key,
-            [
-              t('warehouse.walls.leftPanel'),
-              t('warehouse.walls.rightPanel'),
-              t('warehouse.walls.backPanel'),
-            ][i],
-            [
-              ['', t('warehouse.fields.unchanged')],
-              ['true', t('warehouse.walls.present')],
-              ['false', t('warehouse.walls.absent')],
-            ]
-          ))).join('')
-        + renderTemplate('hint7');
+        )),
+        composeMarkup(['leftSidePanel', 'rightSidePanel', 'backPanel']
+          .map((key, i) =>
+            bulkField(choices(
+              key,
+              [
+                t('warehouse.walls.leftPanel'),
+                t('warehouse.walls.rightPanel'),
+                t('warehouse.walls.backPanel'),
+              ][i],
+              [
+                ['', t('warehouse.fields.unchanged')],
+                ['true', t('warehouse.walls.present')],
+                ['false', t('warehouse.walls.absent')],
+              ]
+            )))),
+        renderTemplate('hint7')
+      );
     } else if (kind === 'shelf') {
       let found = null;
       for (const room of data.rooms) for (const furniture of room.furniture)
@@ -1670,7 +1684,7 @@ e")),
       endpoint = item ? `/api/warehouse/shelves/${item.id}` :
         `/api/warehouse/furniture/${furnitureId}/shelves`; method = item ?
           'PATCH' : 'POST';
-      fields = field(
+      fields = composeMarkup(field(
         'name',
         t("warehouse.shelves.name"),
         item?.name || t(
@@ -1680,44 +1694,38 @@ e")),
               .length || 0) + 1,
           }
         )
-      )
-        + renderTemplate('formField3', {
-          safe: safe(item?.capacity ?? ''),
-        })
-        + choices(
-          'front',
-          t("warehouse.shelves.frontType"),
-          [
-            ['', t('warehouse.shelves.defaultFront')],
-            ...['open', 'door', 'glass', 'drawer'].map(id =>
-              [id, t(FRONT_KEYS[id])]),
-          ],
-          item?.front ?? ''
-        )
-        + choices(
-          'doorLeaves',
-          t("warehouse.walls.doorLeaves"),
-          [
-            ['', t('warehouse.fields.furnitureDefaultAutomatic')],
-            ['1', t('warehouse.doors.singleLeaf')],
-            ['2', t('warehouse.doors.doubleLeaf')],
-          ],
-          String(item?.doorLeaves ?? '')
-        )
-        + choices(
-          'glassFrame',
-          t("warehouse.walls.glassDoorFrame"),
-          [
-            ['', t('warehouse.fields.furnitureDefaultWithoutFrame')],
-            ['false', t('warehouse.walls.withoutFrame')],
-            ['true', t('warehouse.walls.withFrame')],
-          ],
-          String(item?.glassFrame ?? '')
-        )
-        + renderTemplate('formField4', {
-          safe: safe(item?.heightCm ?? ''),
-        })
-        + renderTemplate('hint8');
+      ), renderTemplate('formField3', {
+        safe: safe(item?.capacity ?? ''),
+      }), choices(
+        'front',
+        t("warehouse.shelves.frontType"),
+        [
+          ['', t('warehouse.shelves.defaultFront')],
+          ...['open', 'door', 'glass', 'drawer'].map(id =>
+            [id, t(FRONT_KEYS[id])]),
+        ],
+        item?.front ?? ''
+      ), choices(
+        'doorLeaves',
+        t("warehouse.walls.doorLeaves"),
+        [
+          ['', t('warehouse.fields.furnitureDefaultAutomatic')],
+          ['1', t('warehouse.doors.singleLeaf')],
+          ['2', t('warehouse.doors.doubleLeaf')],
+        ],
+        String(item?.doorLeaves ?? '')
+      ), choices(
+        'glassFrame',
+        t("warehouse.walls.glassDoorFrame"),
+        [
+          ['', t('warehouse.fields.furnitureDefaultWithoutFrame')],
+          ['false', t('warehouse.walls.withoutFrame')],
+          ['true', t('warehouse.walls.withFrame')],
+        ],
+        String(item?.glassFrame ?? '')
+      ), renderTemplate('formField4', {
+        safe: safe(item?.heightCm ?? ''),
+      }), renderTemplate('hint8'));
     } else if (kind === 'furniture-copy') {
       const found = findFurniture(data, id);
       if (!found) return toast(t("warehouse.furniture.notFound"), true);
@@ -1726,19 +1734,16 @@ e")),
         {type: typeName(found.furniture.type)}
       );
       endpoint = `/api/warehouse/furniture/${safe(id)}/copy`;
-      fields = field(
+      fields = composeMarkup(field(
         'name',
         t("warehouse.furniture.copyName"),
         t("warehouse.furniture.copyNameSuffix", {name: found.furniture.name})
-      )
-        + choices(
-          'roomId',
-          t("warehouse.bottles.destinationRoom"),
-          data.rooms.map(r => [r.id, r.name]),
-          found.room.id
-        )
-        + renderTemplate('warehouseCopyOption')
-        + renderTemplate('hint9');
+      ), choices(
+        'roomId',
+        t("warehouse.bottles.destinationRoom"),
+        data.rooms.map(r => [r.id, r.name]),
+        found.room.id
+      ), renderTemplate('warehouseCopyOption'), renderTemplate('hint9'));
     } else if (kind === 'shelf-copy') {
       let found = null;
       for (const room of data.rooms) for (const furniture of room.furniture)
@@ -1748,19 +1753,17 @@ e")),
       if (!found) return toast(t("warehouse.shelves.notFound"), true);
       title = t('warehouse.shelves.copyTitle');
       endpoint = `/api/warehouse/shelves/${safe(id)}/copy`;
-      fields = field(
+      fields = composeMarkup(field(
         'name',
         t("warehouse.furniture.copyName"),
         t("warehouse.furniture.copyNameSuffix", {name: found.shelf.name})
-      )
-        + choices(
-          'furnitureId',
-          t("warehouse.bottles.destinationFurniture"),
-          data.rooms.flatMap(r => r.furniture.map(f =>
-            [f.id, `${r.name} / ${f.name}`])),
-          found.furniture.id
-        )
-        + renderTemplate('hint10');
+      ), choices(
+        'furnitureId',
+        t("warehouse.bottles.destinationFurniture"),
+        data.rooms.flatMap(r => r.furniture.map(f =>
+          [f.id, `${r.name} / ${f.name}`])),
+        found.furniture.id
+      ), renderTemplate('hint10'));
     } else if (kind === 'assign-bulk') {
       const bottles = data.bottles.filter(b => selectedBottleIds()
         .includes(b.id));
@@ -1816,7 +1819,7 @@ e")),
         const list = editor.querySelector('.warehouse-door-range-list');
         const shelfCount = findFurniture(w(), id)?.furniture.shelves
           .length || 0;
-        list.insertAdjacentHTML('beforeend', doorRangeRow({}, shelfCount));
+        appendContent(list, doorRangeRow({}, shelfCount));
       }
     });
   }

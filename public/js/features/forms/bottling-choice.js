@@ -1,3 +1,4 @@
+import {composeMarkup} from '../../ui/render-plan.js';
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
@@ -52,7 +53,7 @@ export function bottlingChoiceOptions(collection, search = '') {
       t("forms.bottling.selectPlaceholder") :
       t("forms.bottling.noMatchingBottling"),
   });
-  return placeholder + matches.map(bottling => {
+  return composeMarkup(placeholder, composeMarkup(matches.map(bottling => {
     const quantity = (bottling.bottles || []).length;
     const details = [
       bottling.bottler,
@@ -65,7 +66,7 @@ export function bottlingChoiceOptions(collection, search = '') {
         .name,
       details: details ? ` · ${escapeHtml(details)}` : '',
     });
-  }).join('');
+  })));
 }
 
 /**

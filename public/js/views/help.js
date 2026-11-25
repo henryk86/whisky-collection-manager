@@ -1,7 +1,8 @@
+import {createHelpViewModel} from './models/help.js';
+import {composeMarkup} from '../ui/render-plan.js';
 import {headingTitle, pageHeader} from '../ui/headers.js';
 /** Contextual guidance belongs on this page, not on everyday work screens. */
 import {t} from '../i18n/index.js';
-import {escapeHtml} from '../ui/dom.js';
 import {backToCollectionButton} from '../ui/navigation-controls.js';
 import {sectionWorkspace} from '../ui/section-navigation.js';
 import {helpGuides} from './help-guides.js';
@@ -31,43 +32,32 @@ export const HELP_TOPICS = Object.freeze([
  * @return {string} Resulting text.
  */
 export function helpView(activeTopic = 'basics') {
-  const current = HELP_TOPICS.some(topic => topic.id === activeTopic) ?
-    activeTopic : 'basics';
-  /**
-   * Builds the localized title text for the current language.
-   *
-   * @param {*} id Identifier of the affected record.
-   * @return {string} Resulting text.
-   */
-  const title = id => escapeHtml(t(`help.${id}.title`));
-  const panels = HELP_TOPICS.map(topic => renderTemplate('helpSection', {
-    id: topic
-      .id,
-    id2: topic.id,
-    id3: topic.id ===
-      current ? '' : ' hidden',
-    headingTitle: headingTitle({
-      title: t(`help.${topic.id}.title`),
-      level: 2,
-      className: 'analytics-section-title',
-      id: `help-title-${topic.id}`,
-    }),
-    helpDescription: topic.id === 'basics' ?
-      renderTemplate('helpDescription', {
-        description: t('help.description'),
-      }) : '',
-    from: Array.from(
-      {length: topic.items},
-      (_, index) =>
-        renderTemplate('li', {
-          t: t(`help.${topic.id}.${index + 1}`),
-        })
-    ).join(''),
-    helpGuides: helpGuides(topic.id),
-  })).join('');
+  const {current, topics} = createHelpViewModel(HELP_TOPICS, activeTopic);
+  const panels = composeMarkup(topics.map(topic => renderTemplate(
+    'helpSection',
+    {
+      id: topic
+        .id,
+      id2: topic.id,
+      id3: topic.id ===
+        current ? '' : ' hidden',
+      headingTitle: headingTitle({
+        title: topic.label,
+        level: 2,
+        className: 'analytics-section-title',
+        id: `help-title-${topic.id}`,
+      }),
+      helpDescription: topic.id === 'basics' ?
+        renderTemplate('helpDescription', {
+          description: t('help.description'),
+        }) : '',
+      from: composeMarkup(topic.entries.map(entry =>
+        renderTemplate('li', {t: entry}))),
+      helpGuides: helpGuides(topic.id),
+    }
+  )));
   const workspace = sectionWorkspace({
-    sections: HELP_TOPICS.map(topic =>
-      ({id: topic.id, label: t(`help.${topic.id}.title`)})),
+    sections: topics,
     activeId: current, action: 'help-tab', itemAttribute: 'data-help-topic',
     label: t('help.contents'), switchKind: 'help',
   }, renderTemplate('helpPanels', {
@@ -79,7 +69,7 @@ export function helpView(activeTopic = 'basics') {
       eyebrow: t('help.eyebrow'),
       intro: t('help.intro'),
       className: 'help-heading',
-      actions: String(backToCollectionButton),
+      actions: backToCollectionButton(),
     }),
     workspace: workspace,
   });

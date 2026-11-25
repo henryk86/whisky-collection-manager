@@ -46,6 +46,14 @@ Der bereits vorhandene TypeScript-Formatter wird zusammen mit syntaxbewussten Um
 
 Alle Textdateien verwenden plattformübergreifend LF. `.gitattributes` erzwingt LF beim Git-Checkout, auch unter Windows. Die VS-Code-Workspace-Einstellung `files.eol` und `.editorconfig` geben LF für neue Dateien vor. Bereits geöffnete CRLF-Dateien bei Bedarf über die Statusleiste von CRLF auf LF umstellen und speichern. Binärdateien werden von Git nicht als Text normalisiert.
 
+## HTML-Template-Formatierung
+
+Externe HTML-Templates werden mit `npm run format:html` formatiert und mit
+`npm run format:html:check` geprüft. Die Formatierung bewahrt Inline-Text,
+Attributwerte, Platzhalter und whitespace-sensitive Elemente. Sie wird auch
+in `npm run check` geprüft. Neue dynamische HTML-Strings sind unzulässig;
+Views kombinieren RenderPläne und montieren native DOM-Nodes.
+
 ## CSS-Formatierung
 
 CSS wird einheitlich gemäß dem CSS-Teil des [Google HTML/CSS Style Guide](https://google.github.io/styleguide/htmlcssguide.html) formatiert: zwei Leerzeichen, eine Deklaration je Zeile, getrennte Selektoren in Listen und Leerzeilen zwischen Regeln. Neue oder veränderte CSS-Dateien vor dem Commit formatieren:

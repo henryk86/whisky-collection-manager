@@ -1,3 +1,4 @@
+import {composeMarkup} from './render-plan.js';
 import {
   WHISKY_COLORS, isCustomWhiskyColor, resolveWhiskyColor,
   whiskyPickerHex, whiskyPickerPosition
@@ -56,7 +57,7 @@ export function whiskyColorSelector(selected) {
     selected: selected || '',
     color: t(
       'tasting.color'),
-    wHISKYCOLORS: WHISKY_COLORS.map((item, i) =>
+    wHISKYCOLORS: composeMarkup(WHISKY_COLORS.map((item, i) =>
       renderTemplate('whiskyColorChoice', {
         selected: selected === item.key ?
           ' is-selected' :
@@ -72,7 +73,7 @@ export function whiskyColorSelector(selected) {
           id: `color-glass-${i}`,
         }),
         t2: t(COLOR_LABEL_KEYS[item.key]),
-      })).join(''),
+      }))),
     custom: custom ? ' is-selected' :
       '',
     colorCustom: t('tasting.colorCustom'),

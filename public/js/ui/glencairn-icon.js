@@ -1,3 +1,4 @@
+import {composeMarkup} from './render-plan.js';
 
 import {loadTemplates} from './templates.js';
 
@@ -40,26 +41,15 @@ export function glencairnSymbol({
   return renderTemplate('glencairnSymbol', {
     accessible: accessible ?
       'role="img"' : 'aria-hidden="true" focusable="false"',
-  }) +
-    renderTemplate('defs', {
-      id: id,
-      y: y,
-      content: 394 - y,
-    }) +
-    (liquidColor ?
-      renderTemplate('glencairnLiquid', {
-        gLENCAIRNCAVITY: GLENCAIRN_CAVITY,
-        liquidColor: liquidColor,
-      }) : '') +
-    renderTemplate('glencairnInk', {
-      gLENCAIRNINK: GLENCAIRN_INK,
-    }) +
-    renderTemplate('glencairnGold', {
-      gLENCAIRNINK: GLENCAIRN_INK,
-      id: id,
-      color: color,
-    }) +
-    renderTemplate('glencairnSymbol2');
+    children: composeMarkup(
+      renderTemplate('defs', {id, y, content: 394 - y}),
+      liquidColor ? renderTemplate('glencairnLiquid', {
+        gLENCAIRNCAVITY: GLENCAIRN_CAVITY, liquidColor,
+      }) : '',
+      renderTemplate('glencairnInk', {gLENCAIRNINK: GLENCAIRN_INK}),
+      renderTemplate('glencairnGold', {gLENCAIRNINK: GLENCAIRN_INK, id, color})
+    ),
+  });
 }
 
 /**
@@ -74,18 +64,11 @@ export function glencairnRatingSymbol({fill = 0, id = 'rating-glass'} = {}) {
   const percent = Math.max(0, Math.min(100, Number(fill) || 0));
   const height = 253 * percent / 100;
   const y = 331 - height;
-  return renderTemplate('glencairnSymbol3') +
-    renderTemplate('defs2', {
-      id: id,
-      gLENCAIRNCAVITY: GLENCAIRN_CAVITY,
-    }) +
-    renderTemplate('glencairnRatingFill', {
-      y: y,
-      height: height,
-      id: id,
-    }) +
-    renderTemplate('glencairnRatingOutline', {
-      gLENCAIRNINK: GLENCAIRN_INK,
-    }) +
-    renderTemplate('glencairnRatingSymbol');
+  return renderTemplate('glencairnSymbol3', {
+    children: composeMarkup(
+      renderTemplate('defs2', {id, gLENCAIRNCAVITY: GLENCAIRN_CAVITY}),
+      renderTemplate('glencairnRatingFill', {y, height, id}),
+      renderTemplate('glencairnRatingOutline', {gLENCAIRNINK: GLENCAIRN_INK})
+    ),
+  });
 }

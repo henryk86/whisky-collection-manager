@@ -1,3 +1,4 @@
+import {composeMarkup} from '../ui/render-plan.js';
 import {t} from '../i18n/index.js';
 import {escapeHtml} from '../ui/dom.js';
 import {loadTemplates} from '../ui/templates.js';
@@ -32,17 +33,17 @@ export function helpGuides(topic) {
   const guides = HELP_GUIDES[topic] || [];
   if (!guides.length) return '';
   return renderTemplate('helpTechnicalGuides', {
-    guides: guides.map(id =>
+    guides: composeMarkup(guides.map(id =>
       renderTemplate('helpGuide', {
         t: t(
           `help.guide.${topic}.${id}.title`),
-        from: Array.from(
+        from: composeMarkup(Array.from(
           {length: Number(t(`help.guide.${topic}.${id}.count`))},
           (_, index) => renderTemplate('li', {
             t: t(`help.guide.${topic}.${id}.${index +
               1}`),
           })
-        ).join(''),
-      })).join(''),
+        )),
+      }))),
   });
 }

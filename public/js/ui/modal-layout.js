@@ -1,3 +1,4 @@
+import {composeMarkup} from './render-plan.js';
 import {sectionHeader} from './headers.js';
 import {escapeHtml} from './dom.js';
 import {actionButton} from './buttons.js';
@@ -74,11 +75,13 @@ export function modalFooter(actions, {className = ''} = {}) {
 export function destructiveFooter({cancelLabel, acceptLabel, acceptAction,
   className = ''}) {
   return modalFooter(
-    actionButton({label: cancelLabel, action: 'close-modal'}) +
-    actionButton({
-      label: acceptLabel, action: acceptAction,
-      variant: 'destructive',
-    }),
+    composeMarkup(
+      actionButton({label: cancelLabel, action: 'close-modal'}),
+      actionButton({
+        label: acceptLabel, action: acceptAction,
+        variant: 'destructive',
+      })
+    ),
     {className}
   );
 }

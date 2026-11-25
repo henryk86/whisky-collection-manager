@@ -1,3 +1,4 @@
+import {composeMarkup} from './render-plan.js';
 import {
   CASK_GROUPS, CASK_DIMENSIONS, CASK_PHASES,
 } from '../domain/flight-casks.js';
@@ -42,23 +43,26 @@ export function flightCaskOptionsHtml(t) {
    * @return {string} Display label.
    */
   const groupLabel = group => t(`${prefix}group.${group}`);
-  const groups = CASK_GROUPS.map(group => checkboxInput(groupLabel(group),
-    groupField(group))).join('');
-  const details = CASK_GROUPS.filter(group =>
+  const groups = composeMarkup(CASK_GROUPS.map(group => checkboxInput(
+    groupLabel(group),
+    groupField(group)
+  )));
+  const details = composeMarkup(CASK_GROUPS.filter(group =>
     Object.keys(CASK_DIMENSIONS[group]).length).map(group => {
-      const dimensions = Object.entries(CASK_DIMENSIONS[group]).map(
-        ([dimension, values]) => {
-          const title = escapeHtml(t(`${prefix}dimension.${dimension}`));
-          const fields = values.map(value => checkboxInput(
-            t(`${prefix}subtype.${value}`),
-            featureField(group, dimension, value)
-          )).join('');
-          return renderTemplate('flightPlanCaskDimension', {
-            title: title,
-            title2: title,
-            fields: fields,
-          });
-        }).join('');
+      const dimensions =
+        composeMarkup(Object.entries(CASK_DIMENSIONS[group]).map(
+          ([dimension, values]) => {
+            const title = escapeHtml(t(`${prefix}dimension.${dimension}`));
+            const fields = composeMarkup(values.map(value => checkboxInput(
+              t(`${prefix}subtype.${value}`),
+              featureField(group, dimension, value)
+            )));
+            return renderTemplate('flightPlanCaskDimension', {
+              title: title,
+              title2: title,
+              fields: fields,
+            });
+          }));
       const title = escapeHtml(groupLabel(group));
       const all = escapeHtml(t(`${prefix}allTypes`));
       return renderTemplate('flightPlanCaskRefinement', {
@@ -68,17 +72,17 @@ export function flightCaskOptionsHtml(t) {
         chevronDownIcon: chevronDownIcon('flight-plan-cask-chevron'),
         dimensions: dimensions,
       });
-    }).join('');
+    }));
   const label = escapeHtml(t(`${prefix}caskGroup`));
   const hint = escapeHtml(t(`${prefix}groupHint`));
   const phaseLabel = escapeHtml(t(`${prefix}phase`));
-  const phases = CASK_PHASES.map(phase => {
+  const phases = composeMarkup(CASK_PHASES.map(phase => {
     const text = escapeHtml(t(`${prefix}phase.${phase}`));
     return renderTemplate('phasesOption', {
       phase: phase,
       text: text,
     });
-  }).join('');
+  }));
   const reset = actionButton({
     label: t(`${prefix}reset`),
     action: 'flight-plan-cask-reset', size: 'small', variant: 'text',

@@ -1,3 +1,4 @@
+import {replaceContent} from './js/ui/dom-renderer.js';
 import {t} from './js/i18n/index.js';
 /**
  * Composition root: create feature controllers and connect them, then load the
@@ -261,9 +262,9 @@ window.addEventListener('wcm:auth-required', () => {
 });
 auth.init().then(allowed => allowed ? refresh()
   .then(externalImport.importFromExtension) : null).catch(error => {
-    root.innerHTML = renderTemplate('main', {
+    replaceContent(root, renderTemplate('main', {
       message: error.message,
-    });
+    }));
     document.querySelector('#retry-connection').addEventListener('click',
       () => location.reload()
     );

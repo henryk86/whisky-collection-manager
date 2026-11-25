@@ -11,28 +11,33 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:openPhoto -->
-<div class="import-photo"><button type="button" class="import-preview-photo-open" data-act="open-photo" title="{{t:imports.images.enlarge}}" aria-label="{{raw:openOverlay}}"><img src="/api/import-image/stage/{{raw:imageToken}}" alt="{{raw:reference}}"></button>{{raw:hint}}<small class="hint">{{raw:referenceNotOwnership}}</small></div>
+<div class="import-photo"><button
+    type="button"
+    class="import-preview-photo-open"
+    data-act="open-photo"
+    title="{{t:imports.images.enlarge}}"
+    aria-label="{{raw:openOverlay}}"><img src="/api/import-image/stage/{{raw:imageToken}}" alt="{{raw:reference}}"></button>{{raw:hint}}<small class="hint">{{raw:referenceNotOwnership}}</small></div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:panel -->
 <div class="panel import-preview">
-    <h3>{{raw:title}}</h3>
-    <p class="hint">{{t:imports.import.sourceAndSaveInstructions}}</p>{{raw:openPhoto}}
+  <h3>{{raw:title}}</h3>
+  <p class="hint">{{t:imports.import.sourceAndSaveInstructions}}</p>{{raw:openPhoto}}
     <div class="import-choice-list" role="group" aria-label="{{t:imports.import.selectFields}}">
     {{raw:distilleryChoice}}{{raw:fieldChoices}}
     </div>
-    <div class="actions import-preview-actions">
+  <div class="actions import-preview-actions">
     <button type="button" class="btn primary" data-act="import-apply">{{t:imports.import.applySelectedFields}}</button>
-    </div>
-    </div>
+  </div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:importFromExtensionP -->
 <p>{{raw:unsavedDialogNotice}}</p>
-    <div class="actions">
-    <button class="btn" type="button" data-act="close-modal">{{t:imports.import.keepCurrentInput}}</button>
-    <button class="btn primary" type="button" data-act="import-continue">{{t:imports.import.discardPreviousDialog}}</button>
-    </div>
+<div class="actions">
+  <button class="btn" type="button" data-act="close-modal">{{t:imports.import.keepCurrentInput}}</button>
+  <button class="btn primary" type="button" data-act="import-continue">{{t:imports.import.discardPreviousDialog}}</button>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:processExtensionImportOption -->
@@ -44,17 +49,18 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:importExistingPhoto -->
-<div class="import-existing-photo"><p><strong>{{raw:preparedLocally}}</strong> {{t:imports.images.addExistingOrNewNotice}}</p>{{raw:formField}}</div>
+<div class="import-existing-photo">
+  <p><strong>{{raw:preparedLocally}}</strong> {{t:imports.images.addExistingOrNewNotice}}</p>{{raw:formField}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:panel2 -->
 <div class="panel">
-    <p>{{raw:existingBottlingPrefix}} <strong>{{text:name}}</strong> {{t:imports.import.existingBottlingSuffix}}</p>
-    <p class="hint">{{t:imports.import.existingBottlingOptions}}</p>{{raw:importExistingPhoto}}
+  <p>{{raw:existingBottlingPrefix}} <strong>{{text:name}}</strong> {{t:imports.import.existingBottlingSuffix}}</p>
+  <p class="hint">{{t:imports.import.existingBottlingOptions}}</p>{{raw:importExistingPhoto}}
     <div class="actions">
     <button class="btn primary" data-act="import-existing-bottle">{{t:imports.bottles.addAnother}}</button>
     <button class="btn" data-act="import-existing-edit">{{t:imports.import.reviewMasterData}}</button>
     <button class="btn" data-act="close-modal">{{t:common.actions.cancel}}</button>
-    </div>
-    </div>
+  </div>
+</div>
 <!-- /wcm-template -->

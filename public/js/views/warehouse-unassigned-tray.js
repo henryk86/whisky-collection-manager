@@ -1,3 +1,4 @@
+import {composeMarkup} from '../ui/render-plan.js';
 /**
  * Global, searchable staging area for bottles not assigned to any physical
  * shelf.
@@ -26,7 +27,7 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [],
   {query = '', page = 1} = {}) {
   const data = unassignedWallPage(warehouse, {query, page});
   const selected = new Set(selectedIds);
-  const cards = data.items.map(bottle => {
+  const cards = composeMarkup(data.items.map(bottle => {
     const checked = selected.has(bottle.id);
     const facts = bottleListFacts(bottle);
     return renderTemplate('warehouseUnassignedBottle', {
@@ -41,7 +42,7 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [],
           facts: facts,
         }) : '',
     });
-  }).join('');
+  }));
   const empty = data.total === 0 ? 'warehouse.wall.unassignedEmpty' :
     'warehouse.wall.unassignedNoMatches';
   return renderTemplate('warehouseUnassignedResults', {

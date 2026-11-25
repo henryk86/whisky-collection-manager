@@ -7,10 +7,12 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:backupStep -->
-<div class="backup-step"><h4>{{t:backups.sections.downloadDirectly}}</h4>
+<div class="backup-step">
+  <h4>{{t:backups.sections.downloadDirectly}}</h4>
   <p class="muted">{{t:backups.export.encryptedZipDescription}}</p>
   {{raw:backupManualDownload}}
-  <p class="hint">{{t:backups.password.safeStorageAdvice}}</p></div>
+  <p class="hint">{{t:backups.password.safeStorageAdvice}}</p>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warning -->
@@ -19,15 +21,28 @@
 
 <!-- wcm-template:backupManagement -->
 <section class="panel section backup-management" id="backup-management">
-        <div class="backup-head"><div>{{raw:headingTitle}}<p class="muted">{{t:backups.page.zipWorkflowDescription}}</p></div></div>
+  <div class="backup-head">
+    <div>{{raw:headingTitle}}<p class="muted">{{t:backups.page.zipWorkflowDescription}}</p>
+    </div>
+  </div>
         {{raw:manual}}
-        <div class="backup-step"><h4>{{t:backups.sections.automaticAndRestore}}</h4>
-        <p class="muted">{{t:backups.security.adminKeyRequiredForJobs}}</p>
-        <form id="backup-unlock-form" class="backup-unlock">
-          <label class="form-field">{{t:backups.security.adminKey}}<input id="backup-admin-key" name="token" type="password" autocomplete="off" minlength="24" required placeholder="{{t:backups.password.enterOnce}}"></label>
-          <button type="submit" class="btn primary">{{t:backups.security.openManagement}}</button>
-        </form><p class="hint">{{t:backups.security.adminKeySessionInfo}} <code>{{raw:content}}</code>).</p>
-        {{raw:warning}}</div></section>
+        <div class="backup-step">
+    <h4>{{t:backups.sections.automaticAndRestore}}</h4>
+    <p class="muted">{{t:backups.security.adminKeyRequiredForJobs}}</p>
+    <form id="backup-unlock-form" class="backup-unlock">
+      <label class="form-field">{{t:backups.security.adminKey}}<input
+          id="backup-admin-key"
+          name="token"
+          type="password"
+          autocomplete="off"
+          minlength="24"
+          required
+          placeholder="{{t:backups.password.enterOnce}}"></label>
+      <button type="submit" class="btn primary">{{t:backups.security.openManagement}}</button>
+    </form>
+    <p class="hint">{{t:backups.security.adminKeySessionInfo}} <code>{{raw:content}}</code>).</p>
+        {{raw:warning}}</div>
+</section>
 <!-- /wcm-template -->
 
 <!-- wcm-template:backupStatus -->
@@ -75,13 +90,21 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:backupDownload -->
-<button class="btn small" data-act="backup-download" data-id="{{text:id}}" data-file="{{text:filename}}">{{t:backups.actions.download}}</button>
+<button
+  class="btn small"
+  data-act="backup-download"
+  data-id="{{text:id}}"
+  data-file="{{text:filename}}">{{t:backups.actions.download}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:backupSnapshot -->
 <div class="backup-snapshot"><span>{{text:labelTime}}{{raw:size}}</span>
                 {{raw:backupDownload}}
-                <button class="btn small" data-act="backup-prepare" data-id="{{text:id}}" data-file="{{text:id2}}">{{t:backups.actions.applyBackup}}</button></div>
+                <button
+    class="btn small"
+    data-act="backup-prepare"
+    data-id="{{text:id}}"
+    data-file="{{text:id2}}">{{t:backups.actions.applyBackup}}</button></div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:backupSnapshotList -->
@@ -94,19 +117,19 @@
 
 <!-- wcm-template:backupProfile -->
 <article class="backup-profile">
-              <div class="backup-card-head"><strong>{{text:name}}</strong><span class="backup-status {{raw:legacy}}">{{raw:legacy2}}</span></div>
-              <p class="muted">{{text:content}} · {{text:provider}}</p>
+  <div class="backup-card-head"><strong>{{text:name}}</strong><span class="backup-status {{raw:legacy}}">{{raw:legacy2}}</span></div>
+  <p class="muted">{{text:content}} · {{text:provider}}</p>
               {{raw:warning}}
               <p class="backup-last">{{raw:lastJob}}</p>
-              <div class="actions backup-card-actions">
+  <div class="actions backup-card-actions">
                 {{raw:legacy3}}
                 <button class="btn small" data-act="backup-snapshots" data-id="{{text:id}}">{{t:backups.archives.show}}</button>
                 {{raw:backupRestore}}
                 <button class="btn small" data-act="backup-test" data-id="{{text:id2}}">{{t:backups.targets.test}}</button>
-                <button class="btn small" data-act="backup-check" data-id="{{text:id3}}">{{t:backups.actions.verifyIntegrity}}</button>
-                <button class="btn small" data-act="backup-edit" data-id="{{text:id4}}">{{t:common.actions.edit}}</button>
-                <button class="btn small danger" data-act="backup-delete" data-id="{{text:id5}}">{{t:common.actions.delete}}</button>
-              </div>
+    <button class="btn small" data-act="backup-check" data-id="{{text:id3}}">{{t:backups.actions.verifyIntegrity}}</button>
+    <button class="btn small" data-act="backup-edit" data-id="{{text:id4}}">{{t:common.actions.edit}}</button>
+    <button class="btn small danger" data-act="backup-delete" data-id="{{text:id5}}">{{t:common.actions.delete}}</button>
+  </div>
               {{raw:backupSnapshotList}}
               </article>
 <!-- /wcm-template -->
@@ -125,9 +148,10 @@
 
 <!-- wcm-template:backupJob -->
 <div class="backup-job" role="listitem">
-        <span class="backup-job-state {{text:state}}">{{raw:state2}}</span>
-        <div><strong>{{text:content}}</strong> <span class="muted">· {{text:name}} · {{text:labelTime}}</span>
-        {{raw:backupJobError}}{{raw:muted}}</div></div>
+  <span class="backup-job-state {{text:state}}">{{raw:state2}}</span>
+  <div><strong>{{text:content}}</strong> <span class="muted">· {{text:name}} · {{text:labelTime}}</span>
+        {{raw:backupJobError}}{{raw:muted}}</div>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:muted5 -->
@@ -136,37 +160,63 @@
 
 <!-- wcm-template:backupManagement2 -->
 <section class="panel section backup-management" id="backup-management">
-      <div class="backup-head"><div>{{raw:headingTitle}}<p class="muted">{{raw:zipAndTimezone}}</p></div>{{raw:worker}}</div>
+  <div class="backup-head">
+    <div>{{raw:headingTitle}}<p class="muted">{{raw:zipAndTimezone}}</p>
+    </div>{{raw:worker}}</div>
       {{raw:manual}}
-      <div class="backup-step"><h4>{{t:backups.password.label}}</h4>
-        <p class="{{raw:passwordConfigured}}">{{raw:passwordConfigured2}}</p>
-        <form id="backup-password-form" class="backup-form">
+      <div class="backup-step">
+    <h4>{{t:backups.password.label}}</h4>
+    <p class="{{raw:passwordConfigured}}">{{raw:passwordConfigured2}}</p>
+    <form id="backup-password-form" class="backup-form">
           {{raw:formField}}
-          <label class="form-field">{{raw:passwordConfigured3}}<input type="password" name="password" autocomplete="new-password" minlength="14" maxlength="256" required></label>
-          <label class="form-field">{{t:backups.password.repeat}}<input type="password" name="confirm" autocomplete="new-password" minlength="14" maxlength="256" required></label>
+          <label class="form-field">{{raw:passwordConfigured3}}<input
+          type="password"
+          name="password"
+          autocomplete="new-password"
+          minlength="14"
+          maxlength="256"
+          required></label>
+      <label class="form-field">{{t:backups.password.repeat}}<input
+          type="password"
+          name="confirm"
+          autocomplete="new-password"
+          minlength="14"
+          maxlength="256"
+          required></label>
           {{raw:warning}}
           <div class="actions"><button type="submit" class="btn">{{raw:passwordConfigured4}}</button></div>
-        </form>
+    </form>
+  </div>
+  <div class="backup-step">
+    <div class="backup-head">
+      <div>
+        <h4>{{t:backups.sections.scheduledBackups}}</h4>
+        <p class="muted">{{t:backups.targets.storageRetentionDescription}}</p>
       </div>
-      <div class="backup-step"><div class="backup-head"><div><h4>{{t:backups.sections.scheduledBackups}}</h4><p class="muted">{{t:backups.targets.storageRetentionDescription}}</p></div></div>
-        <p class="muted">{{raw:length}}</p>
-        <div class="actions backup-tools"><button type="button" class="btn primary" data-act="backup-new">{{raw:addActionLabel}}</button>
-          <button type="button" class="btn" data-act="backup-refresh">{{t:backups.actions.refresh}}</button>
-          <button type="button" class="btn" data-act="backup-lock">{{t:backups.security.lock}}</button></div>
+    </div>
+    <p class="muted">{{raw:length}}</p>
+    <div class="actions backup-tools"><button type="button" class="btn primary" data-act="backup-new">{{raw:addActionLabel}}</button>
+      <button type="button" class="btn" data-act="backup-refresh">{{t:backups.actions.refresh}}</button>
+      <button type="button" class="btn" data-act="backup-lock">{{t:backups.security.lock}}</button></div>
         {{raw:warning2}}
         <div class="backup-profiles">{{raw:length2}}</div>
-      </div>
-      <div class="backup-step"><h4>{{t:backups.sections.restoreBackup}}</h4>
-        <p class="muted">{{t:backups.restore.uploadInstructions}}</p>
-        <form id="backup-import-zip-form" class="backup-unlock"><label class="form-field">{{t:backups.export.zipFilenameLabel}}
+  </div>
+  <div class="backup-step">
+    <h4>{{t:backups.sections.restoreBackup}}</h4>
+    <p class="muted">{{t:backups.restore.uploadInstructions}}</p>
+    <form id="backup-import-zip-form" class="backup-unlock"><label class="form-field">{{t:backups.export.zipFilenameLabel}}
           <input name="archive" type="file" accept=".zip,application/zip" required></label>
-          <label class="form-field">{{t:backups.password.zipArchiveLabel}}<input name="password" type="password" autocomplete="off" placeholder="{{t:backups.password.optionalForLegacy}}"></label>
-          <button class="btn primary" type="submit">{{t:backups.actions.validateZipAndPreview}}</button></form>
-        <p class="hint">{{t:backups.restore.confirmationCreatesSafetyBackup}}</p>
-      </div>
-      <h4>{{t:backups.jobs.recent}}</h4>
-      <div class="backup-job-list" role="list">{{raw:length3}}</div>
-    </section>
+      <label class="form-field">{{t:backups.password.zipArchiveLabel}}<input
+          name="password"
+          type="password"
+          autocomplete="off"
+          placeholder="{{t:backups.password.optionalForLegacy}}"></label>
+      <button class="btn primary" type="submit">{{t:backups.actions.validateZipAndPreview}}</button></form>
+    <p class="hint">{{t:backups.restore.confirmationCreatesSafetyBackup}}</p>
+  </div>
+  <h4>{{t:backups.jobs.recent}}</h4>
+  <div class="backup-job-list" role="list">{{raw:length3}}</div>
+</section>
 <!-- /wcm-template -->
 
 <!-- wcm-template:legacyProfileWarning -->
@@ -186,8 +236,12 @@
   {{raw:warning}}
   <label class="form-field">
     {{t:backups.profiles.name}}
-    <input name="name" maxlength="80" required value="{{text:name}}"
-           placeholder="{{t:backups.targets.placeholderName}}">
+    <input
+      name="name"
+      maxlength="80"
+      required
+      value="{{text:name}}"
+      placeholder="{{t:backups.targets.placeholderName}}">
   </label>
   <label class="form-field">
     {{t:backups.profiles.storageLocation}}
@@ -204,15 +258,21 @@
   </label>
   <label class="form-field" data-backup-cloud>
     {{t:backups.cloud.rcloneConnection}}
-    <input name="remote" list="backup-remote-list" maxlength="50"
-           value="{{text:remote}}"
-           placeholder="{{t:backups.cloud.placeholderProvider}}">
+    <input
+      name="remote"
+      list="backup-remote-list"
+      maxlength="50"
+      value="{{text:remote}}"
+      placeholder="{{t:backups.cloud.placeholderProvider}}">
     <datalist id="backup-remote-list">{{raw:remoteOptions}}</datalist>
   </label>
   <label class="form-field" data-backup-cloud>
     {{t:backups.cloud.subfolder}}
-    <input name="cloudTargetPath" maxlength="180"
-           value="{{text:cloudTargetPath}}" placeholder="whisky-backups">
+    <input
+      name="cloudTargetPath"
+      maxlength="180"
+      value="{{text:cloudTargetPath}}"
+      placeholder="whisky-backups">
   </label>
   <fieldset class="backup-fieldset">
     <legend>{{t:backups.schedule.optionalCron}}</legend>
@@ -223,13 +283,11 @@
       </label>
       <label class="form-field">
         {{t:backups.schedule.hour}}
-        <input name="hour" type="number" min="0" max="23"
-               value="{{text:hour}}" required>
+        <input name="hour" type="number" min="0" max="23" value="{{text:hour}}" required>
       </label>
       <label class="form-field">
         {{t:backups.schedule.minute}}
-        <input name="minute" type="number" min="0" max="59"
-               value="{{text:minute}}" required>
+        <input name="minute" type="number" min="0" max="59" value="{{text:minute}}" required>
       </label>
       <label class="form-field">
         {{t:backups.schedule.weekday}}
@@ -242,18 +300,33 @@
     <div class="backup-form-grid">
       <label class="form-field">
         {{t:backups.schedule.dailyRetention}}
-        <input name="daily" type="number" min="0" max="366"
-               required value="{{text:dailyRetention}}">
+        <input
+          name="daily"
+          type="number"
+          min="0"
+          max="366"
+          required
+          value="{{text:dailyRetention}}">
       </label>
       <label class="form-field">
         {{t:backups.schedule.weeklyRetention}}
-        <input name="weekly" type="number" min="0" max="104"
-               required value="{{text:weeklyRetention}}">
+        <input
+          name="weekly"
+          type="number"
+          min="0"
+          max="104"
+          required
+          value="{{text:weeklyRetention}}">
       </label>
       <label class="form-field">
         {{t:backups.schedule.monthlyRetention}}
-        <input name="monthly" type="number" min="0" max="120"
-               required value="{{text:monthlyRetention}}">
+        <input
+          name="monthly"
+          type="number"
+          min="0"
+          max="120"
+          required
+          value="{{text:monthlyRetention}}">
       </label>
     </div>
   </fieldset>

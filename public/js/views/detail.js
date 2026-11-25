@@ -1,3 +1,6 @@
+import {hasBottlingDetail} from '../domain/bottling-details.js';
+import {createDetailViewModel} from './models/detail.js';
+import {composeMarkup} from '../ui/render-plan.js';
 import {actionButton} from '../ui/buttons.js';
 import {headingTitle, headerActions, sectionHeader, pageHeader, backNavigation}
   from '../ui/headers.js';
@@ -5,7 +8,6 @@ import {
   panel, detailField, detailGrid, emptyState, divider, actionToolbar,
   documentList, documentItem
 } from '../ui/content.js';
-import {latestTasting} from '../../../shared/tasting-records.js';
 import {displayPhotoPath} from '../../../shared/photo-images.js';
 import {t} from '../i18n/index.js';
 import {loadTemplates} from '../ui/templates.js';
@@ -65,10 +67,6 @@ import {uploadPhotos} from '../features/photos.js';
 import {uploadFiles, fileAccept, formatFileSize} from '../features/files.js';
 import {toast} from '../ui/notifications.js';
 import {attachPhotoSorting} from '../features/photo-order.js';
-import {bottlingDetails, hasBottlingDetail}
-  from '../domain/bottling-details.js';
-import {bottlingOriginLabel} from '../domain/bottling-origin.js';
-import {bottlingDistilleryIds} from '../domain/bottling-map-focus.js';
 import {storagePath} from './warehouse.js';
 /**
  * Creates detail view for detail.
@@ -82,39 +80,18 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
    * Selects and transforms the detail records.
    */
   function detail() {
-    const bottling = state.collection.bottlings.find(entry => entry.id ===
-      state.selected);
-    if (!bottling) {
-      navigate('home', null, {
-        replace: true,
-      });
+    const model = createDetailViewModel(state, selectors);
+    if (!model) {
+      navigate('home', null, {replace: true});
       return;
     }
-    const latest = latestTasting(bottling);
-    const tastingCount = bottling.tastings?.length || 0;
+    const {bottling, latest, tastingCount, tastingNotes, physicalBottles,
+      facts, originLabel, relatedDistilleries, statusText, description,
+      whiskybaseUrl} = model;
     const tastingRadar = latest?.flavorProfile &&
       Object.values(latest.flavorProfile).some(Number.isInteger)
       ? flavorChart(latest.flavorProfile, {compact: true}) : '';
-    const tastingNotes = ['nose', 'palate', 'finish'].map(key => ({
-      label: t(`forms.bottling.${key}`),
-      text: typeof latest?.tastingNotes?.[key] === 'string' ?
-        latest.tastingNotes[key].trim() : '',
-    })).filter(note => note.text);
-    const physicalBottles = bottles(bottling.id);
-    const facts = bottlingDetails(
-      bottling,
-      distilleryNames,
-      state.collection.distilleries
-    );
-    const originLabel = bottlingOriginLabel(bottling, distilleryNames);
-    const relatedDistilleries = bottlingDistilleryIds(bottling);
-    const statusText = bottling.completionStatus === 'complete' ?
-      t("detail.status.complete") : t("detail.status.incomplete");
-    const description = hasBottlingDetail(bottling.description) ?
-      bottling.description : null;
-    const whiskybaseUrl = hasBottlingDetail(bottling.whiskybaseUrl) ?
-      bottling.whiskybaseUrl : null;
-    const list = physicalBottles.map(entry => {
+    const list = composeMarkup(physicalBottles.map(entry => {
       const entryPhotos = entry.photos || [];
       const firstPhoto = entryPhotos[0];
       const storageShelfId = state.warehouse?.assignments[entry.id];
@@ -126,7 +103,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
       const photoGallery =
         renderTemplate('bottlePhotos', {
           id: entry.id,
-          photos: (entry.photos || []).map(photo =>
+          photos: composeMarkup((entry.photos || []).map(photo =>
             renderTemplate('photoTile', {
               id: photo.id,
               imageUrl: imageUrl(displayPhotoPath(photo)
@@ -161,8 +138,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
               id8: entry.id,
               id9: photo.id,
               arrowRightIcon: arrowRightIcon,
-            })).join(
-              ''),
+            }))),
           addActionLabel: addActionLabel(t("detail.actions.addPhotos")),
           photoAccept: photoAccept,
           id2: entry.id,
@@ -206,36 +182,43 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
             volumeMl: entry.volumeMl,
           }) :
           '',
-        actionToolbar: actionToolbar(`
-                            ${actionButton({
-          label: t('warehouse.bottles.relocate'),
-          action: 'warehouse-assign',
-          size: 'small',
-          data: {id: entry.id},
-        })}
-                            ${actionButton({
-          label: t('common.actions.edit'),
-          action: 'edit-bottle',
-          size: 'small',
-          data: {id: entry.id},
-          icon: editIcon,
-          wrapLabel: true,
-        })}
-                            ${actionButton({
-          label: t('common.actions.delete'),
-          action: 'delete-bottle',
-          variant: 'destructive',
-          size: 'small',
-          data: {id: entry.id},
-          icon: deleteIcon,
-          wrapLabel: true,
-        })}
-                        `, {className: 'bottle-entry-actions'}),
+        actionToolbar: actionToolbar(
+          composeMarkup(
+            "\n                            ",
+            actionButton({
+              label: t('warehouse.bottles.relocate'),
+              action: 'warehouse-assign',
+              size: 'small',
+              data: {id: entry.id},
+            }),
+            "\n                            ",
+            actionButton({
+              label: t('common.actions.edit'),
+              action: 'edit-bottle',
+              size: 'small',
+              data: {id: entry.id},
+              icon: editIcon,
+              wrapLabel: true,
+            }),
+            "\n                            ",
+            actionButton({
+              label: t('common.actions.delete'),
+              action: 'delete-bottle',
+              variant: 'destructive',
+              size: 'small',
+              data: {id: entry.id},
+              icon: deleteIcon,
+              wrapLabel: true,
+            }),
+            "\n                        "
+          ),
+          {className: 'bottle-entry-actions'}
+        ),
         headingTitle: headingTitle({
           title: t('detail.sections.bottleData'),
           className: 'bottle-entry-data-title',
         }),
-        detailGrid: detailGrid([
+        detailGrid: detailGrid(composeMarkup([
           detailField({
             label: t('forms.bottle.type'),
             value: t(entry.volumeType === 'sample' ?
@@ -283,7 +266,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
             value: entry.comment,
             className: 'bottle-entry-comment',
           }) : '',
-        ].join(''), {columns: 3, tag: 'dl', className: 'bottle-entry-facts'}),
+        ]), {columns: 3, tag: 'dl', className: 'bottle-entry-facts'}),
         bottlePhotos: t(
           'detail.sections.bottlePhotos',
           {count: entryPhotos.length}
@@ -337,7 +320,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
         fileAccept: fileAccept,
         id2: entry.id,
       });
-    }).join('');
+    }));
     shell(renderTemplate('detail', {
       backNavigation: backNavigation(
         "back",
@@ -358,8 +341,8 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
         }),
         copyClass: '',
         actions: headerActions(
-          `${relatedDistilleries.length ?
-            `${actionButton({
+          composeMarkup(relatedDistilleries.length ?
+            actionButton({
               label: relatedDistilleries.length > 1 ?
                 t('detail.sections.mapLocations') :
                 t('detail.actions.showOnMap'),
@@ -367,21 +350,18 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
               title: t('detail.map.showRelatedDistilleries'),
               icon: locationIcon,
               wrapLabel: true,
-            })}` : ''}
-    ${actionButton({
+            }) : '', "\n    ", actionButton({
               label: t('common.actions.edit'),
               action: 'edit-bottling',
               icon: editIcon,
               wrapLabel: true,
-            })}
-    ${actionButton({
+            }), "\n    ", actionButton({
               label: t('common.actions.delete'),
               action: 'delete-bottling',
               variant: 'destructive',
               icon: deleteIcon,
               wrapLabel: true,
-            })}
-    `,
+            }), "\n    "),
           {className: 'detail-head-actions'}
         ),
       }),
@@ -390,28 +370,34 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
           imageUrl: imageUrl(coverPhoto(bottling.id)),
         }) : renderTemplate('heroPhoto'),
       panel: panel({
-        content: `
-    ${headingTitle({title: t('detail.sections.bottlingData')})}
-    ${facts.length ? detailGrid(
-          facts.map(([label, value, suffix = '']) => detailField({
-            label: factLabel(label),
-            value: `${formatValue(value === "Ja" ? t("common.choices.yes") :
-              value === "Nein" ? t("common.choices.no") :
-                value)}${suffix ? ` ${escapeHtml(suffix === "Jahre" ?
-                  t("detail.facts.yearSuffix") : suffix)}` : ''}`,
-            valueHtml: true, variant: 'fact',
-          })).join(''),
-          {columns: 2, className: 'forms'}
-        ) : (!description && !whiskybaseUrl ?
-          emptyState({description: t("detail.empty.noAdditionalInformation")}
-          ) : '')}${description ? renderTemplate('content', {
+        content: composeMarkup(
+          "\n    ",
+          headingTitle({title: t('detail.sections.bottlingData')}),
+          "\n    ",
+          facts.length ? detailGrid(
+            composeMarkup(facts.map(([label, value, suffix = '']) =>
+              detailField({
+                label: factLabel(label),
+                value: `${formatValue(value === "Ja" ? t("common.choices.yes") :
+                  value === "Nein" ? t("common.choices.no") :
+                    value)}${suffix ? ` ${escapeHtml(suffix === "Jahre" ?
+                      t("detail.facts.yearSuffix") : suffix)}` : ''}`,
+                valueHtml: true, variant: 'fact',
+              }))),
+            {columns: 2, className: 'forms'}
+          ) : (!description && !whiskybaseUrl ?
+            emptyState({description: t("detail.empty.noAdditionalInformation")}
+            ) : ''),
+          description ? renderTemplate('content', {
             divider: divider(),
             headingTitle: headingTitle({title: t('detail.fields.comment')}),
             description: description,
-          }) : ''}${whiskybaseUrl ? renderTemplate('content2', {
+          }) : '',
+          whiskybaseUrl ? renderTemplate('content2', {
             divider: divider(),
             whiskybaseUrl: whiskybaseUrl,
-          }) : ''}`,
+          }) : ''
+        ),
       }),
       latest: latest ? '' : ' is-empty',
       title: t('tas\
@@ -423,18 +409,17 @@ tings.title'),
         descriptionClass: 'hint tasting-summary-empty',
         copyClass: 'tasting-summary-section-heading',
         actionsClass: 'tasting-summary-heading-actions',
-        actions: `${latest ? '' :
-          `${actionButton({
+        actions: composeMarkup(latest ? '' :
+          actionButton({
             label: t('tastings.openAll'),
             action: 'tastings-open',
-          })}`}
-                ${actionButton({
+          }), "\n                ", actionButton({
             label: t(tastingCount ? 'tastings.add' : 'tastings.first'),
             action: 'tastings-new',
             variant: 'primary',
             icon: newBottlingIcon,
             wrapLabel: true,
-          })}`,
+          })),
       }),
       latest2: latest ? panel({
         className: 'tasting-summary-card',
@@ -445,7 +430,7 @@ tings.title'),
               'tastings.latest'),
             tastingSummaryGlasses: latest.rating != null ?
               renderTemplate('tastingSummaryGlasses', {
-                from: Array
+                from: composeMarkup(Array
                   .from(
                     {length: 5},
                     (_, i) => glencairnRatingSymbol({
@@ -455,7 +440,7 @@ tings.title'),
                       ),
                       id: `detail-tasting-${i}`,
                     })
-                  ).join(''),
+                  )),
               }) : '',
             rating: latest.rating ==
               null ? escapeHtml(t('tasting.unrated')) :
@@ -476,14 +461,14 @@ tings.title'),
               '' : ' is-empty',
             length2: tastingNotes.length ? '' :
               ' aria-hidden="true"',
-            tastingNotes: tastingNotes.map(note => detailField({
+            tastingNotes: composeMarkup(tastingNotes.map(note => detailField({
               label: note.label,
               value: note.text,
               variant: 'preview',
               className: 'tasting-summary-note',
               labelClass: 'tasting-summary-field-label',
               valueClass: 'tasting-summary-note-value',
-            })).join(''),
+            }))),
           }
         ),
       }) : '',
@@ -493,14 +478,14 @@ tings.title'),
           {count: physicalBottles.length}
         ),
         actionsBare: true,
-        actions: `${actionButton({
+        actions: actionButton({
           label: t('detail.actions.addAnotherBottle')
             .replace(/^\+\s*/, ''),
           action: 'add-bottle',
           variant: 'primary',
           icon: newBottlingIcon,
           wrapLabel: true,
-        })}`,
+        }),
       }),
       list: list ||
         renderTemplate('panel'),

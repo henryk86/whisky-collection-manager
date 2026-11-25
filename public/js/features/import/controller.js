@@ -1,3 +1,5 @@
+import {composeMarkup} from '../../ui/render-plan.js';
+import {appendContent, replaceContent} from '../../ui/dom-renderer.js';
 import {t} from '../../i18n/index.js';
 import {escapeHtml, query, queryAll} from '../../ui/dom.js';
 import {whiskyTypeLabels} from '../../domain/labels.js';
@@ -57,11 +59,9 @@ export function createExternalImport({
     if (panel) {
       const oldStatus = query('#import-status', panel);
       if (oldStatus) oldStatus.textContent = message;
-      else panel.insertAdjacentHTML(
-        'beforeend',
-        renderTemplate('importStatus', {
-          message: message,
-        })
+      else appendContent(panel, renderTemplate('importStatus', {
+        message: message,
+      })
       );
     }
   }
@@ -110,16 +110,17 @@ export function createExternalImport({
         .map(input => input.value));
     const values = Object.entries(importDetails.fields).filter(([k, v]) =>
       v !== null && v !== undefined && v !== '');
-    const distilleryChoice = distilleries.map(distillery => importChoice({
-      label: t("imports.fields.distillery"),
-      value: distillery.name,
-      distillery: true,
-      distilleryId: distillery.id,
-      checked: Boolean(distillery.id &&
-        !selectedDistilleries.has(distillery.id)),
-      disabled: !distillery.id,
-    })).join('');
-    const fieldChoices = values.map(([key, value]) => {
+    const distilleryChoice = composeMarkup(distilleries.map(distillery =>
+      importChoice({
+        label: t("imports.fields.distillery"),
+        value: distillery.name,
+        distillery: true,
+        distilleryId: distillery.id,
+        checked: Boolean(distillery.id &&
+          !selectedDistilleries.has(distillery.id)),
+        disabled: !distillery.id,
+      })));
+    const fieldChoices = composeMarkup(values.map(([key, value]) => {
       const old = form.elements[key]?.value;
       return importChoice({
         field: key, label: IMPORT_FIELD_LABELS[key] || key,
@@ -127,8 +128,8 @@ export function createExternalImport({
           value) : value,
         currentValue: old, checked: !old,
       });
-    }).join('');
-    panel.innerHTML = renderTemplate('panel', {
+    }));
+    replaceContent(panel, renderTemplate('panel', {
       title: t("imports.preview.title", {
         id: escapeHtml(importDetails.referenceId),
       }),
@@ -152,7 +153,7 @@ orts.images.reference",
         }) : '',
       distilleryChoice: distilleryChoice,
       fieldChoices: fieldChoices,
-    });
+    }));
   }
 
   /**
@@ -224,7 +225,7 @@ orts.images.reference",
               ),
               formField: (
                 existing.bottles || []).length ? renderTemplate('formField', {
-                  bottles: existing.bottles
+                  bottles: composeMarkup(existing.bottles
                     .map(b => renderTemplate('processExtensionImportOption', {
                       id: b.id,
                       inventoryNumber: b.inventoryNumber ||
@@ -232,7 +233,7 @@ orts.images.reference",
                       volumeType: b.volumeType === 'sample' ?
                         t("imports.bottles.sample") : t("imports.bottles.sta\
 ndard"),
-                    })).join(''),
+                    }))),
                 }) : '',
             }) : '',
         }), true);

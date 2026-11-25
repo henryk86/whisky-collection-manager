@@ -1,13 +1,13 @@
 <!-- wcm-template:hint -->
 <p class="hint">{{t:scanner.camera.supportedCodeTypes}}</p>
-    <div id="scan-reader" class="scan-reader">
-    </div>
-    <p id="scan-error" class="hint" role="status" aria-live="polite">{{t:scanner.status.starting}}</p>
-    <div class="forms scan-manual-fields">{{raw:manualCodeField}}<label class="form-field full">{{t:scanner.actions.selectCodeImage}}<input type="file" id="scan-file" accept="image/*" capture="environment">
-    </label>
-    </div>
-    <div class="actions scan-manual-actions">
-    <button class="btn primary" data-act="submit-code" data-assign="{{raw:assign}}">{{t:scanner.actions.findAndApplyCode}}</button>
+<div id="scan-reader" class="scan-reader">
+</div>
+<p id="scan-error" class="hint" role="status" aria-live="polite">{{t:scanner.status.starting}}</p>
+<div class="forms scan-manual-fields">{{raw:manualCodeField}}<label class="form-field full">{{t:scanner.actions.selectCodeImage}}<input type="file" id="scan-file" accept="image/*" capture="environment">
+  </label>
+</div>
+<div class="actions scan-manual-actions">
+  <button class="btn primary" data-act="submit-code" data-assign="{{raw:assign}}">{{t:scanner.actions.findAndApplyCode}}</button>
     {{raw:closeModalButton}}
     </div>
 <!-- /wcm-template -->

@@ -1,29 +1,35 @@
 <!-- wcm-template:backupApplyZipForm -->
 <form id="backup-apply-zip-form" data-id="{{text:id}}">
-          <p>{{t:backups.summary.backupLabel}} <strong>{{text:filename}}</strong></p>
-          <p><strong>{{raw:bottlings}}</strong> {{t:backups.summary.bottlingsLabel}} <strong>{{raw:bottles}}</strong> {{t:backups.summary.bottlesLabel}} <strong>{{raw:distilleries}}</strong> {{t:backups.summary.distilleriesLabel}}</p>
-          <p>{{raw:restoredAssets}}</p>
-          <p class="warning">{{t:backups.restore.replaceIncludesAttachments}}</p>
-          <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> {{t:backups.restore.confirmReplaceCollection}}</label>
-          <div class="actions ds-modal-footer ds-modal-footer--compact">
-            <button class="btn" type="button" data-act="backup-download-prepared" data-id="{{text:id2}}">{{t:backups.actions.downloadZip}}</button>
+  <p>{{t:backups.summary.backupLabel}} <strong>{{text:filename}}</strong></p>
+  <p><strong>{{raw:bottlings}}</strong> {{t:backups.summary.bottlingsLabel}} <strong>{{raw:bottles}}</strong> {{t:backups.summary.bottlesLabel}} <strong>{{raw:distilleries}}</strong> {{t:backups.summary.distilleriesLabel}}</p>
+  <p>{{raw:restoredAssets}}</p>
+  <p class="warning">{{t:backups.restore.replaceIncludesAttachments}}</p>
+  <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> {{t:backups.restore.confirmReplaceCollection}}</label>
+  <div class="actions ds-modal-footer ds-modal-footer--compact">
+    <button class="btn" type="button" data-act="backup-download-prepared" data-id="{{text:id2}}">{{t:backups.actions.downloadZip}}</button>
             {{raw:closeModalButton}}
             <button class="btn danger" type="submit">{{t:backups.actions.importBackup}}</button>
-          </div></form>
+  </div>
+</form>
 <!-- /wcm-template -->
 
 <!-- wcm-template:backupUnlockZipForm -->
 <form id="backup-unlock-zip-form" data-id="{{text:id}}" data-filename="{{text:filename}}">
-          <p>{{t:backups.restore.savedArchive}} <strong>{{text:filename2}}</strong> {{t:backups.restore.openForPreview}}</p>
-          <label class="form-field">{{t:backups.password.archiveLabel}}<input type="password" name="password" autocomplete="off" placeholder="{{t:backups.password.optionalForLegacy}}"></label>
-          <div class="actions">{{raw:closeModalButton}}
-          <button type="submit" class="btn primary">{{t:backups.actions.validateZip}}</button></div></form>
+  <p>{{t:backups.restore.savedArchive}} <strong>{{text:filename2}}</strong> {{t:backups.restore.openForPreview}}</p>
+  <label class="form-field">{{t:backups.password.archiveLabel}}<input
+      type="password"
+      name="password"
+      autocomplete="off"
+      placeholder="{{t:backups.password.optionalForLegacy}}"></label>
+  <div class="actions">{{raw:closeModalButton}}
+          <button type="submit" class="btn primary">{{t:backups.actions.validateZip}}</button></div>
+</form>
 <!-- /wcm-template -->
 
 <!-- wcm-template:removeP -->
 <p>{{t:backups.schedule.should}} <strong>{{text:name}}</strong> {{t:backups.confirmation.deleteSuffix}}</p>
-        <p class="warning">{{t:backups.profiles.deleteDoesNotDeleteArchives}}</p>
-        <div class="actions ds-modal-footer ds-modal-footer--spaced">
+<p class="warning">{{t:backups.profiles.deleteDoesNotDeleteArchives}}</p>
+<div class="actions ds-modal-footer ds-modal-footer--spaced">
         {{raw:closeModalButton}}
         <button type="button" class="btn danger" data-act="backup-confirm-delete" data-id="{{text:id}}">{{t:backups.profiles.deleteAction}}</button></div>
 <!-- /wcm-template -->
@@ -38,12 +44,13 @@
 
 <!-- wcm-template:backupRestoreForm -->
 <form id="backup-restore-form" data-id="{{text:id}}">
-        <p>{{t:backups.profiles.label}} <strong>{{text:name}}</strong></p>
-        <p class="muted">{{raw:zip}}</p>
-        <label class="form-field">{{t:backups.archives.snapshot}}
+  <p>{{t:backups.profiles.label}} <strong>{{text:name}}</strong></p>
+  <p class="muted">{{raw:zip}}</p>
+  <label class="form-field">{{t:backups.archives.snapshot}}
         <select name="snapshotId" required>{{raw:length}}</select></label>
-        <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> {{t:backups.restore.confirmInspectBackup}}</label>
-        <div class="actions ds-modal-footer ds-modal-footer--spaced">
+  <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> {{t:backups.restore.confirmInspectBackup}}</label>
+  <div class="actions ds-modal-footer ds-modal-footer--spaced">
         {{raw:closeModalButton}}
-        <button type="submit" class="btn primary">{{t:backups.restore.preparePreview}}</button></div></form>
+        <button type="submit" class="btn primary">{{t:backups.restore.preparePreview}}</button></div>
+</form>
 <!-- /wcm-template -->

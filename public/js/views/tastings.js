@@ -1,3 +1,7 @@
+import {createTastingIndexViewModel} from './models/tastings.js';
+import {composeMarkup} from '../ui/render-plan.js';
+import {replaceElement, replaceContent, appendContent}
+  from '../ui/dom-renderer.js';
 import {actionButton} from '../ui/buttons.js';
 import {checkboxInput} from '../ui/fields.js';
 import {
@@ -269,14 +273,14 @@ export function createTastingsView({
    */
   const staticRating = record =>
     renderTemplate('tastingReadonlyRating', {
-      rating: record.rating == null ? '' : Array.from(
+      rating: record.rating == null ? '' : composeMarkup(Array.from(
         {length: 5},
         (_, i) => {
           const fill = Math.max(0, Math.min(100, (Number(record.rating) - i *
             20) * 5));
           return glencairnRatingSymbol({fill, id: `read-rating-${i}`});
         }
-      ).join(''),
+      )),
       tastingRating: tastingRating(record),
     });
 
@@ -288,7 +292,7 @@ export function createTastingsView({
    */
   const tastingReadOnly = value =>
     renderTemplate('flavorDetailPanel', {
-      detailGrid: detailGrid([
+      detailGrid: detailGrid(composeMarkup([
         detailField({
           label: t('tastings.date'),
           value: formatDate(value.tastedOn || ''),
@@ -303,7 +307,7 @@ export function createTastingsView({
           className: 'tasting-readonly-field',
           labelClass: 'tasting-readonly-label',
         }) : '',
-      ].join(''), {columns: 2, className: 'tasting-readonly-meta-fields'}),
+      ]), {columns: 2, className: 'tasting-readonly-meta-fields'}),
       actionToolbar: actionToolbar(
         renderTemplate('tastingEditStart', {
           editIcon: editIcon,
@@ -323,7 +327,7 @@ export function createTastingsView({
           t('tasting.notes'),
       }),
       detailGrid2: detailGrid(
-        ['nose', 'palate', 'finish'].map(key => detailField({
+        composeMarkup(['nose', 'palate', 'finish'].map(key => detailField({
           label: t(`forms.bottling.${key}`),
           value: blank(value.tastingNotes?.[key]),
           valueHtml: true,
@@ -331,21 +335,21 @@ export function createTastingsView({
           className: 'tasting-readonly-field',
           labelClass: 'tasting-readonly-label',
           valueClass: 'tasting-readonly-note',
-        })).join(''),
+        }))),
         {columns: 3, className: 'tasting-notes tasting-readonly-notes'}
       ),
       headingTitle4: headingTitle({
         title: t('tasting.overallRating'),
       }),
       staticRating: staticRating(value),
-      trim: value.ratingComment?.trim() ? `${detailField({
+      trim: value.ratingComment?.trim() ? detailField({
         label: t('tasting.ratingComment'),
         value: value.ratingComment,
         variant: 'note',
         className: 'tasting-rating-comment',
         labelClass: 'tasting-readonly-label',
         valueClass: 'tasting-readonly-note',
-      })}` : '',
+      }) : '',
     });
 
   /**
@@ -360,14 +364,14 @@ export function createTastingsView({
     const safe = Math.max(0, Math.min(100, Number(record.rating)));
     const unique = String(record.id).replace(/[^a-zA-Z0-9_-]/g, '-');
     return renderTemplate('tastingListGlasses', {
-      from: Array.from(
+      from: composeMarkup(Array.from(
         {length: 5},
         (_, i) =>
           glencairnRatingSymbol({
             fill: Math.max(0, Math.min(100, (safe - i * 20) * 5)),
             id: `tasting-list-${unique}-${i}`,
           })
-      ).join(''),
+      )),
     });
   };
 
@@ -508,9 +512,9 @@ lete'),
     const ratingComment = node.querySelector('[data-tasting-rating-comment]');
     if (ratingComment) ratingComment.value = value.ratingComment;
     const rating = node.querySelector('[data-tasting-rating]');
-    if (rating) rating.outerHTML = glencairnRating(value.rating);
+    if (rating) replaceElement(rating, glencairnRating(value.rating));
     const color = node.querySelector('[data-whisky-color]');
-    if (color) color.outerHTML = whiskyColorSelector(value.whiskyColor);
+    if (color) replaceElement(color, whiskyColorSelector(value.whiskyColor));
     updateTastingButtons();
   }
 
@@ -846,7 +850,7 @@ lete'),
       ['abv', 'tastings.externalAbv', 'number', null, false],
       ['releaseYear', 'tastings.externalYear', 'number', null, false],
     ];
-    return fields.map(([key, label, type, max, required]) =>
+    return composeMarkup(fields.map(([key, label, type, max, required]) =>
       renderTemplate('externalFieldsLabel', {
         t: t(label),
         key: key,
@@ -859,8 +863,7 @@ lete'),
             'min="0" max="200" step="1"' :
             'min="1800" max="2200" step="1"') : '',
         info: String(info[key] ?? ''),
-      }))
-      .join('');
+      })));
   }
 
   /**
@@ -916,7 +919,7 @@ lete'),
       }),
       warehouseBottleList: flights.length ?
         renderTemplate('warehouseBottleList', {
-          flights: flights.map(
+          flights: composeMarkup(flights.map(
             item => renderTemplate('tastingFlightOpen', {
               id: item.id,
               name: item.name,
@@ -933,7 +936,7 @@ lete'),
                 }
               ),
               chevronRightIcon: chevronRightIcon,
-            })).join(''),
+            }))),
         }) : renderTemplate('hint2', {
           none: t('tastingFlights.none'),
         }),
@@ -1006,31 +1009,30 @@ lete'),
         candidateText: candidateText,
         namePlaceholder: t('tastingFlights.namePlaceholder'),
         localToday: localToday(),
-        fLIGHTSTYLES: FLIGHT_STYLES.map(id =>
+        fLIGHTSTYLES: composeMarkup(FLIGHT_STYLES.map(id =>
           renderTemplate('startPlannedFlightOption', {
             id: id,
             t: t(`flightPlan.${id}`),
-          }))
-          .join(''),
-        content: [3, 4, 5, 6].map(n =>
+          }))),
+        content: composeMarkup([3, 4, 5, 6].map(n =>
           renderTemplate('startPlannedFlightOption2', {
             n: n,
             selected: n === 5 ? 'selected' :
               '',
             n2: n,
-          })).join(''),
-        fLIGHTAVAILABILITY: FLIGHT_AVAILABILITY
+          }))),
+        fLIGHTAVAILABILITY: composeMarkup(FLIGHT_AVAILABILITY
           .map(id => renderTemplate('startPlannedFlightOption3', {
             id: id,
             t: t(`flightPlan.${id}`
             ),
-          })).join(''),
+          }))),
         focus: t('flightPlan.focus'),
-        fLIGHTFOCUSES: FLIGHT_FOCUSES.map(id =>
+        fLIGHTFOCUSES: composeMarkup(FLIGHT_FOCUSES.map(id =>
           renderTemplate('startPlannedFlightOption4', {
             id: id,
             t: t(`flightPlan.focus.${id}`),
-          })).join(''),
+          }))),
         checkboxInput: checkboxInput(
           t('flightPlan.unfamiliar'),
           'flight-plan-unfamiliar',
@@ -1039,21 +1041,19 @@ lete'),
         title: t('flightPlan.caskAge.title'),
         hint: t('flightPlan.caskAge.hint'),
         caskMode: t('flightPlan.caskAge.caskMode'),
-        cASKMODES: CASK_MODES.map(
+        cASKMODES: composeMarkup(CASK_MODES.map(
           id => renderTemplate('startPlannedFlightOption5', {
             id: id,
             t: t(
               `flightPlan.caskAge.caskMode.${id}`),
-          }))
-          .join(''),
+          }))),
         ageMode: t('flightPlan.caskAge.ageMode'),
-        aGEMODES: AGE_MODES.map(id =>
+        aGEMODES: composeMarkup(AGE_MODES.map(id =>
           renderTemplate('startPlannedFlightOption6', {
             id: id,
             t: t(
               `flightPlan.caskAge.ageMode.${id}`),
-          }))
-          .join(''),
+          }))),
         flightCaskOptionsHtml: flightCaskOptionsHtml(t),
         ageRange: t('flightPlan.caskAge.ageRange'),
         ageMin: t('flightPlan.caskAge.ageMin'),
@@ -1178,10 +1178,10 @@ Max'),
       items: draft, ...options, sourceIds: flightPlanSourceIds,
     };
     const view = box?.querySelector('.flight-plan-preview');
-    if (view) view.innerHTML = draft.length ?
+    if (view) replaceContent(view, draft.length ?
       renderTemplate('hint4', {
         description: t('flightPlan.description'),
-        draft: draft.map(item => {
+        draft: composeMarkup(draft.map(item => {
           const b = state.collection.bottlings.find(b => b.id ===
             item.bottlingId);
           const metadata = [
@@ -1202,8 +1202,8 @@ Max'),
                 metadata: metadata.join(' · '),
               }) : '',
           });
-        }).join(''),
-      }) : renderTemplate('hint5');
+        })),
+      }) : renderTemplate('hint5'));
     if (view && (caskMode === 'specific' || ageMode === 'range')) {
       const counts = flightCandidateDiagnostics(state.collection,
         {...options, bottlingIds: flightPlanSourceIds}, draft);
@@ -1212,10 +1212,10 @@ Max'),
         'flightPlan.excludedAvailability', counts));
       if (counts.excludedScope) messages.push(t(
         'flightPlan.excludedScope', counts));
-      view.innerHTML += messages.map(message =>
+      appendContent(view, composeMarkup(messages.map(message =>
         renderTemplate('hint6', {
           message: message,
-        })).join('');
+        }))));
     }
     const button = box?.querySelector('[data-act="flight-plan-create"]');
     if (button) button.disabled = !draft.length;
@@ -1296,7 +1296,7 @@ Max'),
      * @param {string=} excludeId Value used by this operation.
      * @return {*} Entries that meet the selection criteria.
      */
-    const choices = (excludeId = '') => candidates.filter(x =>
+    const choices = (excludeId = '') => composeMarkup(candidates.filter(x =>
       !selected.has(x.bottling.id) || x.bottling.id === excludeId)
       .map(x => renderTemplate('choicesOption', {
         id: x.bottle
@@ -1304,13 +1304,13 @@ Max'),
         name: x.bottling.name,
         inventoryNumber: x.bottle
           .inventoryNumber || '–',
-      })).join('');
+      })));
     return renderTemplate('analyticsPanel3', {
       headingTitle: headingTitle({
         title: `${t('flightPlan.planne\
 dMembers')} · ${current.planItems.length}`,
       }),
-      planItems: current.planItems
+      planItems: composeMarkup(current.planItems
         .map((item, index) => {
           const {b, bottle, label, unavailable} = planMemberLabel(item);
           const photo = displayPhotoPath(bottle?.photos?.[0]) || (b ?
@@ -1365,7 +1365,7 @@ dMembers')} · ${current.planItems.length}`,
                 bottlingId: item.bottlingId,
               }) : '',
           });
-        }).join(''),
+        })),
       flightPlanAdd: editable && candidates.some(x => !selected.has(x.bottling
         .id)) && current.planItems.length < 6 ?
         renderTemplate('flightPlanAdd', {
@@ -1686,23 +1686,23 @@ n.actions.edit'),
           selectExisting: t('tastingFlights.selectExisting'),
           length: available.length ?
             '' : 'disabled',
-          available: available.map(item =>
+          available: composeMarkup(available.map(item =>
             renderTemplate('flightOption', {
               id: item.record.id,
               flightEntryLabel: flightEntryLabel(
                 item),
-            })).join(''),
+            }))),
           length2: available.length ? '' : 'disable\
 d',
           addExisting: t('tastingFlights.addExisting'),
           chooseBottling: t(
             'tastings.chooseBottling'),
-          bottlings: (state.collection
+          bottlings: composeMarkup((state.collection
             ?.bottlings || []).map(b =>
               renderTemplate('flightOption2', {
                 id: b.id,
                 name: b.name,
-              })).join(''),
+              }))),
           length3: (state.collection?.bottlings || [])
             .length ? '' :
             'disabled',
@@ -1714,8 +1714,8 @@ d',
         }) : '',
       warehouseBottleList: refs.length ?
         renderTemplate('warehouseBottleList2', {
-          refs: refs
-            .map(entryRow).join(''),
+          refs: composeMarkup(refs
+            .map(entryRow)),
         }) : renderTemplate('hint7', {
           noEntries: t(
             'tastingFlights.noEntries'),
@@ -1859,16 +1859,7 @@ d',
     // Returning to an index ends any prior edit session. Reopening is always
     // read-only.
     flavorSession = null;
-    const owned = state.collection?.bottlings || [];
-    const entries = [
-      ...owned.flatMap(b => sortedTastings(b).map(record =>
-        ({record, b, external: false}))),
-      ...standalone().map(record =>
-        ({record, b: record.bottling, external: true})),
-    ].sort((a, b) => (b.record.tastedOn || '').localeCompare(a.record
-      .tastedOn || '') ||
-      (b.record.createdAt || '').localeCompare(a.record.createdAt || '') ||
-      b.record.id.localeCompare(a.record.id));
+    const {owned, entries} = createTastingIndexViewModel(state);
     shell(renderTemplate('analyticsPage3', {
       pageHeader: pageHeader({
         title: t('tastings.homeTitle'),
@@ -1890,12 +1881,11 @@ d',
       tastingCreateChooser: createChoiceOpen ?
         renderTemplate('tastingCreateChooser', {
           chooseBottling: t('tastings.chooseBottling'),
-          owned: owned.map(b =>
+          owned: composeMarkup(owned.map(b =>
             renderTemplate('homeOption', {
               id: b.id,
               name: b.name,
-            }))
-            .join(''),
+            }))),
           length: owned.length ? '' : 'disabled',
           fromCollection: t('tastings.fromCol\
 lection'),
@@ -1906,8 +1896,8 @@ lection'),
         }) : '',
       warehouseBottleList: entries.length ?
         renderTemplate('warehouseBottleList3', {
-          entries: entries.map(
-            item => tastingRow({...item, home: true})).join(''),
+          entries: composeMarkup(entries.map(
+            item => tastingRow({...item, home: true}))),
         }) :
         renderTemplate('hint8', {
           emptyHome: t('tastings.emptyHome'),
@@ -1946,8 +1936,8 @@ lection'),
       }),
       warehouseBottleList: tastings.length ?
         renderTemplate('warehouseBottleList4', {
-          tastings: tastings.map(
-            record => tastingRow({record, b: bottling})).join(''),
+          tastings: composeMarkup(tastings.map(
+            record => tastingRow({record, b: bottling}))),
         }) :
         renderTemplate('hint9', {
           none: t('tastings.none'),
@@ -2095,14 +2085,13 @@ d',
         title:
           t('tasting.notes'),
       }),
-      content: ['nose', 'palate', 'finish']
+      content: composeMarkup(['nose', 'palate', 'finish']
         .map(key => renderTemplate('editorLabel', {
           t: t(`forms.bottling.${key}`),
           key: key,
           tastingNotes: flavorSession
             .history.value.tastingNotes[key],
-        })).join(
-          ''),
+        }))),
       sectionHeader4: sectionHeader({
         title: t('tasting.overallRating'),
         layout: 'tasting-panel-heading',
@@ -2335,8 +2324,9 @@ d',
       const item = state.collection?.externalTastings?.find(t => t.id ===
         session.id);
       if (item) Object.assign(item, updated);
-      if (panel?.isConnected) panel.outerHTML =
-        bottlingInfo(updated.bottling, true, false);
+      if (panel?.isConnected) {
+        replaceElement(panel, bottlingInfo(updated.bottling, true, false));
+      }
     } catch (error) {toast(error.message, true);}
   }
 
@@ -2352,12 +2342,11 @@ d',
       toast(t('tastings.assignNoBottlings'), true);
       return;
     }
-    const options = owned.map(b =>
+    const options = composeMarkup(owned.map(b =>
       renderTemplate('optionsOption', {
         id: b.id,
         name: b.name,
-      }))
-      .join('');
+      })));
     showModal(
       t('tastings.assignToCollection'),
       renderTemplate('showAssignDialogP', {

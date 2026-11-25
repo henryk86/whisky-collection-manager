@@ -1,3 +1,5 @@
+import {composeMarkup} from './render-plan.js';
+import {replaceContent, materialize} from './dom-renderer.js';
 import {actionButton} from './buttons.js';
 import {t} from '../i18n/index.js';
 import {newBottlingIcon, inventoryScanIcon, themeMoonIcon, closeIcon}
@@ -38,11 +40,10 @@ export function createShell({root, state, applyTheme, renderModal}) {
     const main = root.querySelector?.(':scope > main');
     if (main && displayedRoute === route) {
       const scrollY = typeof window !== 'undefined' ? window.scrollY : null;
-      const next = document.createElement('template');
-      next.innerHTML = content;
+      const next = materialize(content, root.ownerDocument, main);
       // All routes share one reconciler. Interactive widgets mark their
       // subtree with data-reconcile="replace" to remount local handlers.
-      reconcileChildren(main, next.content);
+      reconcileChildren(main, next);
       // Guard against scroll anchoring changing the viewport when a
       // replaced section is shorter (e.g. one fewer photo tile).
       if (scrollY != null && Math.abs(window.scrollY - scrollY) > 1) {
@@ -53,12 +54,12 @@ export function createShell({root, state, applyTheme, renderModal}) {
       return;
     }
     displayedRoute = route;
-    root.innerHTML = renderTemplate('back', {
+    replaceContent(root, renderTemplate('back', {
       themeMoonIcon: themeMoonIcon,
       inventoryScanIcon: inventoryScanIcon,
       newBottlingIcon: newBottlingIcon,
       closeIcon: closeIcon,
-      mAINPAGES: MAIN_PAGES.map(item => renderTemplate('a', {
+      mAINPAGES: composeMarkup(MAIN_PAGES.map(item => renderTemplate('a', {
         url: item.url,
         action: item.action,
         id: item.id ===
@@ -75,7 +76,7 @@ export function createShell({root, state, applyTheme, renderModal}) {
           'currentColor',
         icon: item.icon,
         label: item.label,
-      })).join(''),
+      }))),
       muted: state.auth?.user ? renderTemplate('muted', {
         username: state.auth.user
           .username,
@@ -88,7 +89,7 @@ export function createShell({root, state, applyTheme, renderModal}) {
           action: 'auth-logout',
         }),
       }) :
-        `${actionButton({label: t('auth.signIn'), action: 'auth-open-login'})}`,
+        actionButton({label: t('auth.signIn'), action: 'auth-open-login'}),
       content: content,
       footer: t(
         'ui.shell.footer',
@@ -97,7 +98,7 @@ export function createShell({root, state, applyTheme, renderModal}) {
             t('ui.status.unknownVersion'),
         }
       ),
-    });
+    }));
     applyTheme();
     if (state.modal) {
       renderModal();
