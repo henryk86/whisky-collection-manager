@@ -7,7 +7,7 @@
 | `npm run check` | JS-Syntax, Imports, Modulgrenzen, Übersetzungen, Dokumentationslinks und Deploymentkonfiguration |
 | `npm test` | Unit- und Integrationstests für Fachregeln, Persistenz, API, Backup, Migration, Negativfälle |
 | `npm run test:browser` | Playwright/Chromium: Navigation, Formularbedienung, Modals, Fokus, responsive Geometrie, Sprachen, Scroll |
-| `npm run test:visual` | 136 Aufnahmen: Überlauf und Modalinteraktion; PR-CI vergleicht frische Geometrie und Pixel |
+| `npm run test:visual` | 144 Aufnahmen: Überlauf und Modalinteraktion; PR-CI vergleicht frische Geometrie und Pixel |
 | GitHub Actions | Vollständige PR-/Push-Prüfungen mit Screenshots und Differenzbildern als Fehlerartefakte |
 
 Ein bestandener Unit-Test ersetzt keinen Browserlauf; Screenshots ersetzen keine Interaktionsprüfung. Der eingeschränkte Modus `WHISKY_BROWSER_DOM_ONLY=true` prüft kein echtes Vorwärts-/Rückwärts-/Neuladen im HTTP-Browser. Reale Mobilgeräte, Safari/Firefox, Screenreader, WebGL/GPU und Dauerbetrieb benötigen getrennte Abnahmen.

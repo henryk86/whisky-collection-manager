@@ -51,6 +51,8 @@ const scenarios = [
   ['tasting-list', '/?view=tastings', '.tasting-home-page'],
   ['modal-new', '/', '#modal-root .dialog'],
   ['modal-flight', '/?view=tastings', '#modal-root .flight-plan-form'],
+  ['modal-flight-expanded', '/?view=tastings',
+    '#modal-root .flight-plan-form'],
   ['modal-flight-help', '/?view=tastings', '#modal-root .flight-plan-help'],
   ['modal-edit', null, '#bottling-form'],
   ['modal-confirm', null, '#modal-root .ds-modal-footer'],
@@ -302,6 +304,79 @@ async function render(route, selector, action, scenarioName) {
 }
 
 /**
+ * Opens every cask refinement using the actual planner controls.
+ * @return {!Promise<void>} Completion of the expanded fixture setup.
+ */
+async function expandFlightPlanner() {
+  await evaluate(`(()=>{
+    const form = document.querySelector('.flight-plan-form');
+    const select = (selector, value) => {
+      const field = form.querySelector(selector);
+      field.value = value;
+      field.dispatchEvent(new Event('change', {bubbles:true}));
+    };
+    form.querySelector('.flight-plan-advanced > summary').click();
+    select('[data-flight-plan-style]', 'discover');
+    select('[data-flight-plan-cask-mode]', 'specific');
+    select('[data-flight-plan-age-mode]', 'range');
+    for (const input of form.querySelectorAll('[name^="flight-cask-group-"]')) {
+      if (!input.checked) input.click();
+    }
+    for (const detail of form.querySelectorAll(
+      '[data-flight-plan-cask-subtype-wrap]')) {
+      if (!detail.open) detail.querySelector('summary').click();
+      const first = detail.querySelector('input[type="checkbox"]');
+      if (first && !first.checked) first.click();
+    }
+    const strict = form.querySelector('[name="flight-plan-strict"]');
+    if (!strict.checked) strict.click();
+    strict.focus({preventScroll:true});
+    document.querySelector('#modal-root .dialog').scrollTop = 0;
+  })()`);
+  const expanded = await evaluate(`(()=>{
+    const form = document.querySelector('.flight-plan-form');
+    const groups = [...form.querySelectorAll('[name^="flight-cask-group-"]')];
+    const details = [...form.querySelectorAll(
+      '[data-flight-plan-cask-subtype-wrap]')];
+    return groups.length > 0 && groups.every(el => el.checked) &&
+      details.length > 0 && details.every(el => el.open && !el.hidden &&
+        el.getBoundingClientRect().height > 0) &&
+      ['.flight-plan-advanced', '[data-flight-plan-cask-group-wrap]',
+        '[data-flight-plan-age-range-wrap]', '[data-flight-plan-strict-wrap]',
+        '[data-flight-plan-unfamiliar-wrap]'].every(selector =>
+        form.querySelector(selector).getBoundingClientRect().height > 0);
+  })()`);
+  if (!expanded) throw new Error('Expanded flight fixture is incomplete');
+}
+
+/**
+ * Enlarges only the expanded scenario to include the entire scrollable modal.
+ * @param {number} width Viewport width in CSS pixels.
+ * @return {!Promise<number>} Actual capture viewport height.
+ */
+async function fitFlightPlanner(width) {
+  const required = await evaluate(`(()=>{
+    const dialog = document.querySelector('#modal-root .dialog');
+    return Math.ceil((dialog.scrollHeight + 12) / 0.94) + 32;
+  })()`);
+  const height = Math.max(1100, required);
+  await command('Emulation.setDeviceMetricsOverride',
+    {width, height, deviceScaleFactor: 1, mobile: false});
+  const complete = await evaluate(`(()=>{
+    const dialog = document.querySelector('#modal-root .dialog');
+    dialog.scrollTop = 0;
+    const rect = dialog.getBoundingClientRect();
+    return dialog.scrollHeight <= dialog.clientHeight + 1 &&
+      dialog.scrollWidth <= dialog.clientWidth + 1 &&
+      rect.top >= 0 && rect.bottom <= innerHeight;
+  })()`);
+  if (!complete) {
+    throw new Error('Expanded flight modal is clipped or overflows');
+  }
+  return height;
+}
+
+/**
  * Locates the DOM elements used by geometry expression.
  * @return {string} Resulting text.
  */
@@ -492,14 +567,17 @@ try {
     const action = name === 'modal-new' ? ['header [data-act="new"]']
       : name === 'modal-edit' ? ['[data-act="edit-bottling"]']
         : name === 'modal-confirm' ? ['[data-act="delete-bottling"]']
-          : name === 'modal-flight' ?
+          : ['modal-flight', 'modal-flight-expanded'].includes(name) ?
             ['.tasting-flight-home [data-act="flight-plan-new"]']
             : name === 'modal-flight-help' ? [
               '.tasting-flight-home [data-act="flight-plan-new"]',
               '#modal-root [data-act="flight-plan-help"]',
             ]
               : null;
-    try {await render(route, selector, action, name);}
+    try {
+      await render(route, selector, action, name);
+      if (name === 'modal-flight-expanded') await expandFlightPlanner();
+    }
     catch (error) {problems.push(`${name}: ${error.message}`); console.error('FAIL', name, error.message); continue;}
     for (const width of widths) {
       await command(
@@ -513,8 +591,15 @@ try {
           // Force a layout flush before the screenshot; avoid arbitrary
           // sleep-based waits.
           await evaluate('document.body.getBoundingClientRect().width; document.fonts?.ready');
+          let captureHeight = 1100;
+          if (name === 'modal-flight-expanded') {
+            captureHeight = await fitFlightPlanner(width);
+          }
           const currentGeometry =
             JSON.parse(await evaluate(geometryExpression()));
+          if (name === 'modal-flight-expanded') {
+            currentGeometry.captureHeight = captureHeight;
+          }
           const image = Buffer.from(
             (await command(
               'Page.captureScreenshot',
@@ -583,6 +668,13 @@ try {
           problems.push(`${id}: ${error.message}`); console.error('FAIL', id, error.stack);
         }
       }
+    }
+    if (name === 'modal-flight-expanded') {
+      await command('Emulation.setDeviceMetricsOverride',
+        {
+          width: widths.at(-1), height: 1100, deviceScaleFactor: 1,
+          mobile: false,
+        });
     }
     try {await checkModalInteractions(name);} catch (error) {problems.push(`${name} interaction: ${error.message}`); console.error('FAIL', name, error.message);}
     console.log(`${name}: ${results.filter(r => r.id
