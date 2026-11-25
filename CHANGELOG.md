@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.12.6 - 2026-11-25
+
+- fix(docs): remove redundant information about JSON file usability in README
+
 ## 1.12.5 - 2026-11-25
 
 - style(ci): fix JavaScript formatting in visual comparison tests
