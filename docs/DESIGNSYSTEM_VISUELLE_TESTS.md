@@ -29,10 +29,15 @@ kompatibel zu halten; bewusst neue oder entfernte Szenarien erscheinen separat.
 Unvereinbare Browser-, Zeit-, Locale- oder Zeitzonen-Einstellungen schlagen fehl.
 
 Die Auswertung vergleicht die gemessene Geometrie und die gerenderten Pixel
-ohne pauschale Toleranz. Gewollte Verschiebungen oder neue Felder dürfen nach
-Sichtprüfung freigegeben werden. Der Prozentwert ist reine Information und
-kein automatisches Akzeptanzkriterium. Das Artefakt `visual-review-<attempt>`
-enthält einen portablen HTML-Bericht (`index.html`), Vorher-/Nachher-/Diff-PNGs
+mit einer konservativen Rauschtoleranz. Bei unveränderter Geometrie und
+identischen Bildmaßen werden höchstens 0,01 % abweichende Pixel toleriert,
+wenn diese nur isolierte Punkte oder Paare bilden (8er-Nachbarschaft).
+Zusammenhängende Änderungen ab drei Pixeln und größere verstreute Änderungen
+bleiben freigabepflichtig. Es gibt keine pauschale Farbtoleranz. Tolerierte
+Abweichungen erscheinen mit Bildern im Bericht und unter `ignored` in
+`changes.json`, blockieren die Freigabe aber nicht. Gewollte Verschiebungen
+oder neue Felder dürfen nach Sichtprüfung freigegeben werden. Das Artefakt
+`visual-review-<attempt>` enthält einen portablen HTML-Bericht (`index.html`), Vorher-/Nachher-/Diff-PNGs
 für Abweichungen, bei Geometrieänderungen zusätzlich Vorher-/Nachher-Rechtecke
 als JSON sowie die Aufnahmeberichte. Neue bzw. entfernte Szenarien
 haben nur das jeweils vorhandene Bild. Die Vorschau umfasst 1100 px Höhe;

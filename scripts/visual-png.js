@@ -124,6 +124,7 @@ export function comparePNG(beforeBytes, afterBytes, delta = 36) {
     Math.max(a.height, b.height);
   const diff = Buffer.allocUnsafe(width * height * 3);
   let changed = 0;
+  const changedPositions = [];
   for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
     const pos = (y * width + x) * 3;
     const inA = x < a.width && y < a.height, inB = x < b.width && y < b.height;
@@ -134,7 +135,9 @@ export function comparePNG(beforeBytes, afterBytes, delta = 36) {
         b.pixels[bi + 1]) + Math.abs(a.pixels[ai + 2] - b.pixels[bi +
           2]) > delta);
     if (mismatch) {
-      changed++; diff[pos] = 255; diff[pos + 1] =
+      changed++;
+      if (changed <= width * height * 0.0001) changedPositions.push(pos / 3);
+      diff[pos] = 255; diff[pos + 1] =
         29; diff[pos + 2] = 45;
     }
     else {
@@ -142,8 +145,21 @@ export function comparePNG(beforeBytes, afterBytes, delta = 36) {
         Math.min(255, Math.round(b.pixels[bi + c] * 0.35 + 170));
     }
   }
+  const positions = new Set(changedPositions);
+  // Every changed pixel may have at most one adjacent changed pixel.
+  // This permits isolated points and pairs, but no connected larger shape.
+  const isolated = changed === positions.size && changedPositions.every(pos => {
+    const x = pos % width, y = Math.floor(pos / width);
+    let neighbors = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if ((!dx && !dy) || x + dx < 0 || x + dx >= width ||
+        y + dy < 0 || y + dy >= height) continue;
+      if (positions.has(pos + dy * width + dx)) neighbors++;
+    }
+    return neighbors <= 1;
+  });
   return {
-    changed,
+    changed, isolated,
     percent: Math.round(changed / (width * height) * 100000) / 1000,
     dimensions: [a.width, a.height, b.width, b.height],
     diff: encodeRGB(width, height, diff),

@@ -75,3 +75,43 @@ test('geometry changes require review while overflow and environment fail',
       rmSync(output, {recursive: true, force: true});
     }
   });
+
+/**
+ * Create a screenshot with deliberately changed pixel coordinates.
+ * @param {!Array<number>} positions Changed pixel indices.
+ * @param {number=} x Geometry coordinate.
+ * @return {!Object} Capture.
+ */
+function noisyCapture(positions, x = 0) {
+  const pixels = Buffer.alloc(400 * 400 * 3, 100);
+  for (const pos of positions) pixels.fill(101, pos * 3, pos * 3 + 3);
+  return {
+    image: encodeRGB(400, 400, pixels),
+    geometry: {overflow: 0, main: [x, 0, 400, 400]},
+  };
+}
+
+test('only sparse isolated noise is tolerated and remains reviewable', () => {
+  const output = mkdtempSync(path.join(tmpdir(), 'wcm-noise-'));
+  try {
+    const before = {report, entries: new Map([[id, noisyCapture([])]])};
+    const after = {report, entries: new Map([[id, noisyCapture([0, 1, 800])]])};
+    const ignored = [];
+    assert.deepEqual(compareCaptures(before, after, output, ignored), []);
+    assert.equal(ignored.length, 1);
+    assert.equal(ignored[0].kind, 'rendering-noise');
+    assert.ok(existsSync(path.join(output, `${id}-diff.png`)));
+    for (const positions of [[0, 1, 2], [0, 401, 802],
+    Array.from({length: 17}, (_, i) => i * 3)]) {
+      after.entries.set(id, noisyCapture(positions));
+      assert.equal(compareCaptures(before, after, output).length, 1);
+    }
+    after.entries.set(id, noisyCapture([0], 2));
+    assert.equal(
+      compareCaptures(before, after, output)[0].geometryChanged,
+      true
+    );
+  } finally {
+    rmSync(output, {recursive: true, force: true});
+  }
+});
