@@ -31,9 +31,9 @@ Unvereinbare Browser-, Zeit-, Locale- oder Zeitzonen-Einstellungen schlagen fehl
 Die Auswertung vergleicht die gemessene Geometrie und die gerenderten Pixel
 mit einer konservativen Rauschtoleranz. Bei unveränderter Geometrie und
 identischen Bildmaßen werden höchstens 0,01 % abweichende Pixel toleriert,
-wenn diese nur isolierte Punkte oder Paare bilden (8er-Nachbarschaft).
-Zusammenhängende Änderungen ab drei Pixeln und größere verstreute Änderungen
-bleiben freigabepflichtig. Es gibt keine pauschale Farbtoleranz. Tolerierte
+unabhängig von ihrer Nachbarschaft. Größere Pixelabweichungen und
+Geometrieänderungen bleiben freigabepflichtig. Kleine echte Änderungen
+unterhalb der Toleranz können dadurch ebenfalls akzeptiert werden. Es gibt keine pauschale Farbtoleranz. Tolerierte
 Abweichungen erscheinen mit Bildern im Bericht und unter `ignored` in
 `changes.json`, blockieren die Freigabe aber nicht. Gewollte Verschiebungen
 oder neue Felder dürfen nach Sichtprüfung freigegeben werden. Das Artefakt

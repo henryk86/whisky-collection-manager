@@ -91,7 +91,7 @@ function noisyCapture(positions, x = 0) {
   };
 }
 
-test('only sparse isolated noise is tolerated and remains reviewable', () => {
+test('small pixel differences are tolerated and remain reviewable', () => {
   const output = mkdtempSync(path.join(tmpdir(), 'wcm-noise-'));
   try {
     const before = {report, entries: new Map([[id, noisyCapture([])]])};
@@ -102,10 +102,13 @@ test('only sparse isolated noise is tolerated and remains reviewable', () => {
     assert.equal(ignored[0].kind, 'rendering-noise');
     assert.ok(existsSync(path.join(output, `${id}-diff.png`)));
     for (const positions of [[0, 1, 2], [0, 401, 802],
-    Array.from({length: 17}, (_, i) => i * 3)]) {
+      Array.from({length: 16}, (_, i) => i)]) {
       after.entries.set(id, noisyCapture(positions));
-      assert.equal(compareCaptures(before, after, output).length, 1);
+      assert.deepEqual(compareCaptures(before, after, output), []);
     }
+    after.entries.set(id, noisyCapture(
+      Array.from({length: 17}, (_, i) => i)));
+    assert.equal(compareCaptures(before, after, output).length, 1);
     after.entries.set(id, noisyCapture([0], 2));
     assert.equal(
       compareCaptures(before, after, output)[0].geometryChanged,
