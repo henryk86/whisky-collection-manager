@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import {session, seed} from './support.js';
 import {requestJson} from '../helpers/server.js';
 import {actionButton} from '../../public/js/ui/buttons.js';
+import {composeMarkup} from '../../public/js/ui/render-plan.js';
+import {mountRenderFixture} from './render-fixture.js';
 const widths = [390, 768, 1024, 1440];
 const themes = ['light', 'dark'];
 
@@ -58,7 +60,7 @@ test(
   async () => {
     await session(async ({page, open}) => {
       await open();
-      const html = sectionHeader({
+      const plan = sectionHeader({
         title: 'Wirklich sehr lange und umbruchfähige Abschnittsüberschrift',
         trailingAction: helpIconButton({
           label: 'Hilfe',
@@ -67,11 +69,10 @@ test(
       });
       for (const width of [390, 1440]) {
         await page.setViewportSize({width, height: 900});
-        const data = await page.evaluate(html => {
-          const container = document.createElement('div');
-          container.style.cssText = 'width:min(100%,360px);margin:8px 0;';
-          container.innerHTML = html;
-          document.querySelector('main').append(container);
+        const fixture = await mountRenderFixture(page, plan, {
+          id: 'closure-heading-fixture', style: 'width:min(100%,360px);margin:8px 0;',
+        });
+        const data = await fixture.evaluate(container => {
           const title = container.querySelector('h3');
           const icon = container.querySelector('.ds-help-icon-button');
           const before = title.getBoundingClientRect();
@@ -87,7 +88,7 @@ test(
             label: icon.getAttribute('aria-label'),
             svg: icon.querySelectorAll('svg').length,
           };
-        }, html);
+        });
         assert.equal(data.height, data.without, `${width}: help icon must not change line box`);
         assert.ok(data.height > 0 && parseFloat(data.lineHeight) > 0);
         assert.equal(data.label, 'Hilfe');
@@ -102,22 +103,22 @@ test(
   async () => {
     await session(async ({page, open}) => {
       await open();
-      const examples = ['primary', 'secondary', 'destructive', 'text', 'icon'].map(variant =>
+      const examples = composeMarkup(['primary', 'secondary', 'destructive', 'text', 'icon'].map(variant =>
         actionButton({
           label: variant,
           variant,
           iconOnly: variant === 'icon',
           disabled: variant === 'destructive',
           loading: variant === 'primary',
-        })).join('');
-      const styles = await page.evaluate(html => {
-        const host = document.createElement('div'); host.innerHTML = html; document.querySelector('main').append(host);
+        })));
+      const fixture = await mountRenderFixture(page, examples, {id: 'closure-button-fixture'});
+      const styles = await fixture.evaluate(host => {
         const buttons = [...host.querySelectorAll('button')].map(button => ({
           width: button.getBoundingClientRect().width,
           disabled: button.disabled, busy: button.getAttribute('aria-busy'),
           name: button.getAttribute('aria-label') || button.textContent.trim(),
         })); host.remove(); return buttons;
-      }, examples);
+      });
       assert.equal(styles.length, 5);
       assert.ok(styles.every(value => value.width > 0 && value.name));
       assert.equal(styles[0].busy, 'true');

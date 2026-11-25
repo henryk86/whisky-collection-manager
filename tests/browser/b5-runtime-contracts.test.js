@@ -12,30 +12,26 @@ import {createTastingsView} from '../../public/js/views/tastings.js';
 import {importChoice} from '../../public/js/features/import/choice-template.js';
 import {roomTransferMarkup}
   from '../../public/js/views/warehouse-room-transfer.js';
+import {RenderPlan, composeMarkup} from '../../public/js/ui/render-plan.js';
+import {mountRenderFixture} from './render-fixture.js';
 
 /**
- * Updates the DOM elements managed by fixture.
- *
- * @param {*} page Page or view being rendered or selected.
- * @param {*} html HTML markup to render or inspect.
- * @param {string=} width Width in pixels.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Mounts an isolated fixture with the actual application renderer and styles.
+ * @param {!Object} page Playwright page with the application loaded.
+ * @param {!RenderPlan} plan Fixture content.
+ * @param {string=} width CSS width of the fixture.
+ * @return {!Promise<*>} Locator for the mounted fixture.
  */
-async function fixture(page, html, width = '850px') {
-  await page.evaluate(({html, width}) => {
-    document.querySelector('#b5-contract-fixture')?.remove();
-    const root = document.createElement('section');
-    root.id = 'b5-contract-fixture';
-    root.style.cssText = `box-sizing:border-box;width:${width};max-width:100%;margin:20px auto;`;
-    root.innerHTML = html;
-    document.body.append(root);
-  }, {html, width});
-  return page.locator('#b5-contract-fixture');
+async function fixture(page, plan, width = '850px') {
+  return mountRenderFixture(page, plan, {
+    id: 'b5-contract-fixture', tag: 'section', parent: 'body',
+    style: `box-sizing:border-box;width:${width};max-width:100%;margin:20px auto;`,
+  });
 }
 
 /**
  * Derives the simple warehouse result from the supplied values.
- * @return {!Array<*>} Resulting entries in their output order.
+ * @return {!Object} Synthetic room and warehouse with one assigned bottle.
  */
 function simpleWarehouse() {
   const room = {
@@ -77,11 +73,11 @@ function simpleWarehouse() {
 }
 
 /**
- * Derives the tasting form result from the supplied values.
- * @return {string} Resulting text.
+ * Captures the tasting editor render plan for an unsaved tasting.
+ * @return {!RenderPlan} Editor content passed to the shell.
  */
 function tastingForm() {
-  let html = '';
+  let plan;
   const state = {
     page: 'tasting', selected: 'b5-bottling', tastingId: 'new',
     collection: {
@@ -92,12 +88,11 @@ function tastingForm() {
   createTastingsView({
     state,
     /**
-     * Updates the shell state for its caller.
-     *
-     * @param {*} markup HTML markup for the selected content.
+     * Captures the editor content at its normal mount boundary.
+     * @param {!RenderPlan} markup Render plan for the editor.
      */
     shell: markup => {
-      html = markup;
+      plan = markup;
     },
     /**
      * Updates the navigate state for its caller.
@@ -108,7 +103,7 @@ function tastingForm() {
      */
     refresh() {},
   }).editor();
-  return html;
+  return plan;
 }
 
 test(
@@ -183,8 +178,8 @@ test(
           ),
         }],
       };
-      const html = renderWarehouseRoomWall(room, {rooms: [room], bottles: [], assignments: {}});
-      await fixture(page, html);
+      const plan = renderWarehouseRoomWall(room, {rooms: [room], bottles: [], assignments: {}});
+      await fixture(page, plan);
       const measured = await page.locator('#b5-contract-fixture').evaluate(root => {
         const frame = root.querySelector('[data-furniture-id="many"]');
         const bays = [...frame.querySelectorAll('.warehouse-wall-bay')];
@@ -258,16 +253,11 @@ test(
   async () => {
     await session(async ({page, open}) => {
       await open();
-      const markup = '<div class="import-choice-list" role="group">' +
-        importChoice({
-          field: 'name', label: 'Name', value: 'Neu',
-          checked: true,
-        }) +
-        importChoice({
-          field: 'abv', label: 'Alkohol', value: '46%',
-          checked: false,
-        }) + '</div>';
-      await fixture(page, markup);
+      const choices = composeMarkup(
+        importChoice({field: 'name', label: 'Name', value: 'Neu', checked: true}),
+        importChoice({field: 'abv', label: 'Alkohol', value: '46%', checked: false})
+      );
+      await fixture(page, new RenderPlan('<div class="import-choice-list" role="group">{{content:choices}}</div>', {choices}));
       const selected = page.locator('#b5-contract-fixture .import-choice input[type="checkbox"]').first();
       const desktop = await page.locator('#b5-contract-fixture').evaluate(root => {
         const list = root.querySelector('.import-choice-list');
