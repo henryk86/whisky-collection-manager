@@ -146,7 +146,7 @@ export function renderBackupSection(state) {
                       filename: s.filename,
                     }) : '',
                   id: p.id,
-                  id2: s.id,
+                  file: s.id,
                 }))),
             }) : renderTemplate('muted2'),
         });
@@ -185,7 +185,7 @@ function renderOptions(options, current) {
     {
       value,
       label,
-      selected: value === current ? 'selected' : '',
+      selectedAttributes: value === current ? {"selected": true} : {},
     }
   )));
 }
@@ -217,6 +217,6 @@ export function profileForm(profile = {}, remotes = [], targets = []) {
     dailyRetention: retention.daily,
     weeklyRetention: retention.weekly,
     monthlyRetention: retention.monthly,
-    enabled: model.enabled ? 'checked' : '',
+    checkedAttributes: model.enabled ? {"checked": true} : {},
   });
 }

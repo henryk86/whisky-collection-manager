@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWhiskybase}
@@ -137,10 +138,10 @@ test(
       assert.deepEqual(calls[0], ['history', '/?bottling=local-bottling']);
       const confirmation = calls.find(call => call[0] === 'showModal');
       assert.ok(confirmation, 'requires the in-app confirmation modal');
-      assert.equal(confirmation[1], 'Externe Importdaten bereit');
-      assert.match(confirmation[2], /ungespeicherte Eingaben/);
-      assert.match(confirmation[2], /data-act="import-continue"/);
-      assert.equal(confirmation[4], true, 'keep the existing dialog nested underneath');
+      assert.equal(renderedText(confirmation[1]), 'Externe Importdaten bereit');
+      assert.match(renderedText(confirmation[2]), /ungespeicherte Eingaben/);
+      assert.match(renderedText(confirmation[2]), /data-act="import-continue"/);
+      assert.equal(renderedText(confirmation[4]), true, 'keep the existing dialog nested underneath');
       assert.ok(!calls.some(call => call[0] === 'navigate'));
       assert.ok(!calls.some(call => call[0] === 'createBottling'));
 
@@ -158,10 +159,10 @@ test(
   async () => {
     const {validateExtensionPayload} = await import('../../public/js/features/whiskybase/payload.js');
     const once = validateExtensionPayload(payload);
-    assert.equal(once.imageToken, null);
+    assert.equal(renderedText(once.imageToken), null);
     const twice = validateExtensionPayload(once);
-    assert.equal(twice.fields.whiskybaseId, '54321');
-    assert.equal(twice.imageToken, null);
+    assert.equal(renderedText(twice.fields.whiskybaseId), '54321');
+    assert.equal(renderedText(twice.imageToken), null);
     assert.throws(() => validateExtensionPayload({...payload, imageToken: '../bad-token'}), /Bild-Token/);
   }
 );

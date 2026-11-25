@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -146,27 +147,27 @@ test(
     try {
       h.viewer.open(h.buttons[1]);
       assert.equal(h.calls.length, 1);
-      assert.equal(h.calls[0].title, 'Flaschenfoto');
-      assert.equal(h.calls[0].wide, true);
-      assert.equal(h.calls[0].keepParent, true, 'existing editor must remain in the modal stack');
-      assert.match(h.html, /src="\/images\/two\.png"/);
-      assert.match(h.html, /2 \/ 2/);
-      assert.match(h.html, /data-act="photo-prev"/);
-      assert.match(h.html, /data-act="photo-zoom-in"/);
-      assert.match(h.html, /data-act="photo-zoom-out"/);
-      assert.match(h.html, /data-act="photo-zoom-reset"/);
-      assert.equal(h.focus.called, true);
-      assert.equal(h.viewer.isOpen(), true);
+      assert.equal(renderedText(h.calls[0].title), 'Flaschenfoto');
+      assert.equal(renderedText(h.calls[0].wide), true);
+      assert.equal(renderedText(h.calls[0].keepParent), true, 'existing editor must remain in the modal stack');
+      assert.match(renderedText(h.html), /src="\/images\/two\.png"/);
+      assert.match(renderedText(h.html), /2 \/ 2/);
+      assert.match(renderedText(h.html), /data-act="photo-prev"/);
+      assert.match(renderedText(h.html), /data-act="photo-zoom-in"/);
+      assert.match(renderedText(h.html), /data-act="photo-zoom-out"/);
+      assert.match(renderedText(h.html), /data-act="photo-zoom-reset"/);
+      assert.equal(renderedText(h.focus.called), true);
+      assert.equal(renderedText(h.viewer.isOpen()), true);
       h.viewer.step(-1);
-      assert.equal(h.currentImage.src, '/images/one.png');
-      assert.equal(h.currentImage.alt, 'Foto 1');
-      assert.equal(h.counter.textContent, '1 / 2');
+      assert.equal(renderedText(h.currentImage.src), '/images/one.png');
+      assert.equal(renderedText(h.currentImage.alt), 'Foto 1');
+      assert.equal(renderedText(h.counter.textContent), '1 / 2');
       h.viewer.step(-1);
-      assert.equal(h.currentImage.src, '/images/two.png', 'previous wraps to last photo');
+      assert.equal(renderedText(h.currentImage.src), '/images/two.png', 'previous wraps to last photo');
       h.close();
-      assert.equal(h.viewer.isOpen(), false);
+      assert.equal(renderedText(h.viewer.isOpen()), false);
       h.viewer.step(1);
-      assert.equal(h.currentImage.src, '/images/two.png', 'closed view must not change');
+      assert.equal(renderedText(h.currentImage.src), '/images/two.png', 'closed view must not change');
     } finally {h.restore();}
   }
 );
@@ -177,12 +178,12 @@ test(
     const h = harness({images: ['/images/only.png']});
     try {
       h.viewer.open(h.buttons[0]);
-      assert.match(h.html, /src="\/images\/only\.png"/);
-      assert.doesNotMatch(h.html, /data-act="photo-next"/);
-      assert.match(h.html, /data-act="photo-zoom-in"/, 'single photos remain zoomable');
-      assert.equal(h.calls[0].keepParent, false);
+      assert.match(renderedText(h.html), /src="\/images\/only\.png"/);
+      assert.doesNotMatch(renderedText(h.html), /data-act="photo-next"/);
+      assert.match(renderedText(h.html), /data-act="photo-zoom-in"/, 'single photos remain zoomable');
+      assert.equal(renderedText(h.calls[0].keepParent), false);
       h.viewer.step(1);
-      assert.equal(h.currentImage.src, '');
+      assert.equal(renderedText(h.currentImage.src), '');
     } finally {h.restore();}
     const unsafe = harness({images: ['https://untrusted.invalid/image.png']});
     try {
@@ -231,10 +232,10 @@ test(
       };
       h.viewer.open(hero);
       assert.equal(h.calls.length, 1);
-      assert.match(h.html, /src="\/images\/two\.png"/);
-      assert.match(h.html, /2 \/ 2/);
+      assert.match(renderedText(h.html), /src="\/images\/two\.png"/);
+      assert.match(renderedText(h.html), /2 \/ 2/);
       h.viewer.step(1);
-      assert.equal(h.currentImage.src, '/images/one.png', 'cover viewer continues within same bottle gallery');
+      assert.equal(renderedText(h.currentImage.src), '/images/one.png', 'cover viewer continues within same bottle gallery');
     } finally {h.restore();}
   }
 );
@@ -251,8 +252,8 @@ test('photo markup is escaped and old new-tab photo links are gone', () => {
       getAttribute: key => key === 'src' ? '/images/test.png' : '"<script>alert(1)</script>',
     });
     h.viewer.open(h.buttons[0]);
-    assert.doesNotMatch(h.html, /<script>/);
-    assert.match(h.html, /&lt;script&gt;/);
+    assert.doesNotMatch(renderedText(h.html), /<script>/);
+    assert.match(renderedText(h.html), /&lt;script&gt;/);
   } finally {h.restore();}
 });
 
@@ -313,9 +314,9 @@ test(
         matches: selector => selector === '[data-bottle-photo-preview]',
       };
       h.viewer.open(preview);
-      assert.match(h.html, /1 \/ 2/);
+      assert.match(renderedText(h.html), /1 \/ 2/);
       h.viewer.step(1);
-      assert.equal(h.currentImage.src, '/images/two.png');
+      assert.equal(renderedText(h.currentImage.src), '/images/two.png');
     } finally {h.restore();}
   }
 );

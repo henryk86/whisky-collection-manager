@@ -142,7 +142,8 @@ console.log(`${fixtureReferences.size} test fixture files: references OK.`);
 // A new direct binding in a view must be reviewed and listed here deliberately.
 const allowedViewListeners = new Map([
   ['warehouse.js',
-    12],       // SVG pointer/keyboard interactions and transient dialogs.
+    11],       // SVG pointer/keyboard interactions and transient dialogs.
+  ['warehouse-form-controller.js', 1], // Dialog-local door-range controls.
   ['warehouse-room-transfer.js', 9], // Modal-local import/export controls.
 ]);
 for (const file of sources.filter(name => name.includes(`${path.sep}public${path.sep}js${path.sep}views${path.sep}`))) {

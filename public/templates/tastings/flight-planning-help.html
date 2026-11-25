@@ -1,5 +1,5 @@
 <!-- wcm-template:p -->
-<p{{raw:extraClass}}>{{raw:tx}}</p>
+<p{{attrs:classAttributes}}>{{content:tx}}</p>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanHelpFormula -->
@@ -7,63 +7,64 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanHelpDefinition -->
-<div class="flight-plan-help-definition"><dt>{{text:symbol}}</dt><dd>{{raw:tx}}</dd></div>
+<div class="flight-plan-help-definition"><dt>{{text:symbol}}</dt><dd>{{content:tx}}</dd>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanHelpStrategy -->
 <section class="flight-plan-help-strategy">
-  <h4>{{raw:tx}}</h4>
-        {{raw:p}}{{raw:formula}}{{raw:p2}}
-    </section>
+  <h4>{{content:tx}}</h4>
+  {{content:p}}{{content:formula}}{{content:p2}}
+</section>
 <!-- /wcm-template -->
 
 <!-- wcm-template:li -->
-<li>{{raw:tx}}</li>
+<li>{{content:tx}}</li>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanHelp -->
 <div class="flight-plan-help">
-        {{raw:p}}
-        <section class="flight-plan-help-section">
-            {{raw:heading}}
-            {{raw:p2}}{{raw:p3}}{{raw:p4}}
-        </section>
+  {{content:p}}
   <section class="flight-plan-help-section">
-            {{raw:heading2}}
-            <h4>{{raw:tx}}</h4>{{raw:formula}}{{raw:p5}}{{raw:p6}}
-            <h4>{{raw:tx2}}</h4>{{raw:formula2}}{{raw:p7}}
-            <h4>{{raw:tx3}}</h4>{{raw:formula3}}{{raw:p8}}
-            <h4>{{raw:tx4}}</h4>{{raw:formula4}}{{raw:p9}}
-            <h4>{{raw:tx5}}</h4>
-    <dl class="flight-plan-help-definitions">{{raw:content}}</dl>
+    {{content:heading}}
+    {{content:p2}}{{content:p3}}{{content:p4}}
   </section>
   <section class="flight-plan-help-section">
-            {{raw:heading3}}
-            {{raw:p10}}
-            <h4>{{raw:tx6}}</h4>
-    <p>{{raw:cASKGROUPS}}</p>
-            {{raw:p11}}{{raw:p12}}
-            {{raw:p13}}
-            <h4>{{raw:tx7}}</h4>{{raw:formula5}}{{raw:formula6}}
-            <h4>{{raw:tx8}}</h4>{{raw:formula7}}
-            <h4>{{raw:tx9}}</h4>{{raw:formula8}}
-            {{raw:p14}}
-        </section>
-  <section class="flight-plan-help-section">
-            {{raw:heading4}}
-            {{raw:p15}}
-            {{raw:content2}}
-        </section>
-  <section class="flight-plan-help-section">
-            {{raw:heading5}}
-            <ol class="flight-plan-help-steps">{{raw:content3}}</ol>
+    {{content:heading2}}
+    <h4>{{content:tx}}</h4>{{content:formula}}{{content:p5}}{{content:p6}}
+    <h4>{{content:tx2}}</h4>{{content:formula2}}{{content:p7}}
+    <h4>{{content:tx3}}</h4>{{content:formula3}}{{content:p8}}
+    <h4>{{content:tx4}}</h4>{{content:formula4}}{{content:p9}}
+    <h4>{{content:tx5}}</h4>
+    <dl class="flight-plan-help-definitions">{{content:content}}</dl>
   </section>
   <section class="flight-plan-help-section">
-            {{raw:heading6}}{{raw:p16}}{{raw:formula9}}{{raw:formula10}}{{raw:p17}}
-        </section>
+    {{content:heading3}}
+    {{content:p10}}
+    <h4>{{content:tx6}}</h4>
+    <p>{{content:cASKGROUPS}}</p>
+    {{content:p11}}{{content:p12}}
+    {{content:p13}}
+    <h4>{{content:tx7}}</h4>{{content:formula5}}{{content:formula6}}
+    <h4>{{content:tx8}}</h4>{{content:formula7}}
+    <h4>{{content:tx9}}</h4>{{content:formula8}}
+            {{content:p14}}
+  </section>
   <section class="flight-plan-help-section">
-            {{raw:heading7}}{{raw:p18}}{{raw:p19}}
-        </section>
-  <div class="actions">{{raw:closeModalButton}}</div>
+    {{content:heading4}}
+    {{content:p15}}
+    {{content:content2}}
+  </section>
+  <section class="flight-plan-help-section">
+    {{content:heading5}}
+    <ol class="flight-plan-help-steps">{{content:content3}}</ol>
+  </section>
+  <section class="flight-plan-help-section">
+    {{content:heading6}}{{content:p16}}{{content:formula9}}{{content:formula10}}{{content:p17}}
+  </section>
+  <section class="flight-plan-help-section">
+    {{content:heading7}}{{content:p18}}{{content:p19}}
+  </section>
+  <div class="actions">{{content:closeModalButton}}</div>
 </div>
 <!-- /wcm-template -->

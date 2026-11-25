@@ -1,13 +1,13 @@
 <!-- wcm-template:mapStockVisual -->
 <span
-  class="map-stock-visual map-legend-marker {{raw:extraClass}}"
-  style="--legend-diameter:{{raw:legendMarkerDiameter}}px"
-  aria-hidden="true">{{raw:count}}</span>
+  class="map-stock-visual map-legend-marker {{attr:extraClass}}"
+  style="--legend-diameter:{{attr:legendMarkerDiameter}}px"
+  aria-hidden="true">{{content:count}}</span>
 <!-- /wcm-template -->
 
 <!-- wcm-template:mapLegendItem -->
-<span class="map-legend-item" aria-label="{{raw:plural}}">
-      {{raw:stockExample}}</span>
+<span class="map-legend-item" aria-label="{{attr:plural}}">
+  {{content:stockExample}}</span>
 <!-- /wcm-template -->
 
 <!-- wcm-template:mapLegendSection -->
@@ -16,8 +16,8 @@
   role="group"
   aria-label="{{t:map.legend.distilleriesWithoutBottles}}">
   <span class="map-legend-heading">{{t:map.filters.withoutBottles}}</span>
-  <span class="map-legend-item map-pagoda-legend">{{raw:pagodaRoofIcon}}{{t:map.status.active}}</span>
-  <span class="map-legend-item map-pagoda-legend map-closed-legend">{{raw:closedDistilleryIcon}}{{t:home.status.closed}}</span>
+  <span class="map-legend-item map-pagoda-legend">{{content:pagodaRoofIcon}}{{t:map.status.active}}</span>
+  <span class="map-legend-item map-pagoda-legend map-closed-legend">{{content:closedDistilleryIcon}}{{t:home.status.closed}}</span>
 </div>
 <!-- /wcm-template -->
 
@@ -28,22 +28,22 @@
     role="group"
     aria-label="{{t:map.legend.distilleriesWithBottles}}">
     <span class="map-legend-heading">{{t:map.filters.withBottles}}</span>
-    <span class="map-legend-item">{{raw:stockExample}}{{t:map.status.active}}</span>
-    <span class="map-legend-item">{{raw:stockExample2}}{{t:home.status.closed}}</span>
-  </div>{{raw:emptySites}}
-      <div
+    <span class="map-legend-item">{{content:stockExample}}{{t:map.status.active}}</span>
+    <span class="map-legend-item">{{content:stockExample2}}{{t:home.status.closed}}</span>
+  </div>{{content:emptySites}}
+  <div
     class="map-legend-section map-legend-stock"
     role="group"
     aria-label="{{t:map.statistics.bottlesPerDistillery}}">
-    <span class="map-legend-heading">{{t:map.statistics.bottleCount}}</span>{{raw:samples}}
-      </div>
+    <span class="map-legend-heading">{{t:map.statistics.bottleCount}}</span>{{content:samples}}
+  </div>
   <div
     class="map-legend-section map-legend-clusters"
     role="group"
     aria-label="{{t:map.statistics.groupedDistilleries}}">
     <span class="map-legend-item"><span
         class="map-cluster-visual map-legend-marker map-cluster-legend-icon"
-        style="--legend-diameter:{{raw:lEGENDCLUSTERDIAMETER}}px"
+        style="--legend-diameter:{{attr:lEGENDCLUSTERDIAMETER}}px"
         aria-hidden="true">6</span>{{t:map.filters.grouped}}</span>
   </div>
 </div>
@@ -58,7 +58,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:mapRelatedSites -->
-<div class="map-related-sites">{{raw:entries}}</div>
+<div class="map-related-sites">{{content:entries}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint -->
@@ -67,9 +67,9 @@
 
 <!-- wcm-template:mapRelatedBottling -->
 <div class="map-related-bottling" aria-label="{{t:map.bottling.locations}}">
-  <strong>{{raw:locationsFor}}</strong>
-          {{raw:mapRelatedSites}}
-        </div>
+  <strong>{{content:locationsFor}}</strong>
+  {{content:mapRelatedSites}}
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:sidebarHtmlOption -->
@@ -77,7 +77,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:sidebarHtmlOption2 -->
-<option value="{{text:id}}" {{raw:selected}}>{{text:name}} · {{raw:bottleCount}}</option>
+<option value="{{text:id}}" {{attrs:selectedAttributes}}>{{text:name}} · {{content:bottleCount}}</option>
 <!-- /wcm-template -->
 
 <!-- wcm-template:sidebarHtmlOption3 -->
@@ -90,7 +90,7 @@
 
 <!-- wcm-template:mapBottlingLink -->
 <button type="button" class="map-bottling-link" data-map-bottling="{{text:id}}">
-  <span>{{text:name}}</span>{{raw:mapBottlingFacts}}<small>{{raw:plural}}</small></button>
+  <span>{{text:name}}</span>{{content:mapBottlingFacts}}<small>{{content:plural}}</small></button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint2 -->
@@ -101,26 +101,27 @@
 <div class="map-list-pager"><button
     type="button"
     data-map-page="prev"
-    {{raw:disabled}}
-    aria-label="{{t:map.pagination.previousBottlings}}">{{raw:chevronLeftIcon}}</button><span>{{raw:pageOf}}</span><button
+    {{attrs:disabledAttributes}}
+    aria-label="{{t:map.pagination.previousBottlings}}">{{content:chevronLeftIcon}}</button><span>{{content:pageOf}}</span><button
     type="button"
     data-map-page="next"
-    {{raw:disabled2}}
-    aria-label="{{t:map.pagination.moreBottlings}}">{{raw:chevronRightIcon}}</button></div>
+    {{attrs:disabled2}}
+    aria-label="{{t:map.pagination.moreBottlings}}">{{content:chevronRightIcon}}</button>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:formField -->
 <label class="form-field map-bottling-search">{{t:map.actions.searchBottlingsAtLocation}}
-            <input
+  <input
     id="map-bottling-search"
     type="search"
     placeholder="{{t:map.filters.searchNamePlaceholder}}"
     value="{{text:search}}"
     autocomplete="off"></label>
-<div class="map-bottling-list" aria-label="{{raw:bottlingsAtSite}}">
-            {{raw:length}}
-          </div>
-          {{raw:mapListPager}}
+<div class="map-bottling-list" aria-label="{{attr:bottlingsAtSite}}">
+  {{content:length}}
+</div>
+          {{content:mapListPager}}
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint3 -->
@@ -134,10 +135,12 @@
       class="btn small map-position-edit"
       type="button"
       data-map-edit="{{text:id}}"
-      aria-label="{{raw:correctLocationFor}}"
-      title="{{t:map.actions.correctLocation}}">{{raw:editIcon}}</button></div>
-  <span>{{raw:plural}} · {{raw:plural2}} · {{raw:status}}{{raw:approximate}}</span></div>
-          {{raw:formField}}
+      aria-label="{{attr:correctLocationFor}}"
+      title="{{t:map.actions.correctLocation}}">{{content:editIcon}}</button>
+  </div>
+  <span>{{content:plural}} · {{content:plural2}} · {{content:status}}{{content:approximate}}</span>
+</div>
+          {{content:formField}}
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint4 -->
@@ -145,14 +148,14 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:sidebarHtml -->
-{{raw:relatedSitesHtml}}<div class="map-site-panel">
+{{content:relatedSitesHtml}}<div class="map-site-panel">
   <label class="form-field map-site-chooser" for="map-site-select">{{t:map.actions.showDistillery}}
-        <select id="map-site-select" {{raw:length}}>
-          {{raw:option}}
-          {{raw:length2}}
-        </select></label>
-        {{raw:mapSiteHeading}}
-        </div>
+    <select id="map-site-select" {{attrs:disabledAttributes}}>
+      {{content:option}}
+      {{content:length2}}
+    </select></label>
+  {{content:mapSiteHeading}}
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:formField2 -->
@@ -164,19 +167,20 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:mapMissing -->
-<details class="map-missing" {{raw:content}}>
-  <summary>{{raw:unmappedCount}}</summary>
-          {{raw:formField}}
-          <div id="map-missing-list">{{raw:missingRows}}</div>
+<details class="map-missing" {{attrs:openAttributes}}>
+  <summary>{{content:unmappedCount}}</summary>
+  {{content:formField}}
+  <div id="map-missing-list">{{content:missingRows}}</div>
 </details>
 <!-- /wcm-template -->
 
 <!-- wcm-template:mapMissingRow -->
-<div class="map-missing-row"><span>{{text:name}}</span><button type="button" class="btn small" data-map-edit="{{text:id}}">{{t:map.actions.setLocation}}</button></div>
+<div class="map-missing-row"><span>{{text:name}}</span><button type="button" class="btn small" data-map-edit="{{text:id}}">{{t:map.actions.setLocation}}</button>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint5 -->
-<p class="hint">{{raw:moreResults}}</p>
+<p class="hint">{{content:moreResults}}</p>
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint6 -->
@@ -184,7 +188,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:renderSpan -->
-<span data-map-stat="missing"><strong>{{raw:length}}</strong> {{t:map.filters.withoutLocation}}</span>
+<span data-map-stat="missing"><strong>{{content:length}}</strong> {{t:map.filters.withoutLocation}}</span>
 <!-- /wcm-template -->
 
 <!-- wcm-template:mapNoSites -->
@@ -192,17 +196,22 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:render -->
-{{raw:pageHeader}}
-          <div class="map-summary"><span data-map-stat="located"><strong>{{raw:length}}</strong> {{t:map.statistics.mappedDistilleries}}</span>
-  <span data-map-stat="bottles"><strong>{{raw:bottleTotal}}</strong> {{t:map.statistics.assignedBottles}}</span>
-          {{raw:span}}
-          <label class="map-all-toggle" for="map-all-distilleries"><span>{{t:map.actions.showAllDistilleries}}</span>
-    <input id="map-all-distilleries" type="checkbox" role="switch" {{raw:checked}}></label></div>
+{{content:pageHeader}}
+<div class="map-summary"><span data-map-stat="located"><strong>{{content:length}}</strong> {{t:map.statistics.mappedDistilleries}}</span>
+  <span data-map-stat="bottles"><strong>{{content:bottleTotal}}</strong> {{t:map.statistics.assignedBottles}}</span>
+  {{content:span}}
+  <label class="map-all-toggle" for="map-all-distilleries"><span>{{t:map.actions.showAllDistilleries}}</span>
+    <input
+      id="map-all-distilleries"
+      type="checkbox"
+      role="switch"
+      {{attrs:checkedAttributes}}></label>
+</div>
 <div class="map-layout" data-reconcile="replace">
-  <div class="map-stage">{{raw:mapCanvasHtml}}
-            {{raw:mapLegendHtml}}
-            {{raw:mapNoSites}}
-            </div>
+  <div class="map-stage">{{content:mapCanvasHtml}}
+            {{content:mapLegendHtml}}
+            {{content:mapNoSites}}
+  </div>
   <aside id="map-sidebar" class="map-sidebar" aria-label="{{t:map.page.title}}">
   </aside>
 </div>

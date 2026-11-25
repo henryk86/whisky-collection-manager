@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
@@ -32,19 +33,19 @@ test(
   'flight routes support direct navigation and back links without impacting ordinary tasting URLs',
   () => {
     assert.deepEqual(
-      parseRoute(routeUrl('tasting-flight', 'flight-1').split('?')[1]),
+      parseRoute(renderedText(routeUrl('tasting-flight', 'flight-1')).split('?')[1]),
       {page: 'tasting-flight', selected: 'flight-1'}
     );
     const url = routeUrl('tasting', 'b-1', {
       tastingId: 'new',
       flightId: 'flight-1',
     });
-    assert.equal(parseRoute(url.split('?')[1]).flightId, 'flight-1');
+    assert.equal(parseRoute(renderedText(url).split('?')[1]).flightId, 'flight-1');
     assert.equal(
-      parseRoute(routeUrl('external-tasting', 'new', {flightId: 'flight-1'}).split('?')[1]).flightId,
+      parseRoute(renderedText(routeUrl('external-tasting', 'new', {flightId: 'flight-1'})).split('?')[1]).flightId,
       'flight-1'
     );
-    assert.equal(parseRoute(routeUrl('tasting', 'b-1', {tastingId: 'note-1'}).split('?')[1]).flightId, undefined);
+    assert.equal(parseRoute(renderedText(routeUrl('tasting', 'b-1', {tastingId: 'note-1'})).split('?')[1]).flightId, undefined);
   }
 );
 
@@ -71,21 +72,21 @@ test(
       refresh() {},
     });
     view.home();
-    assert.match(html, /Islay comparison/);
-    assert.match(html, /data-act="tasting-flight-new"/);
+    assert.match(renderedText(html), /Islay comparison/);
+    assert.match(renderedText(html), /data-act="tasting-flight-new"/);
     state.page = 'tasting-flight'; state.selected = 'flight-1'; view.flight();
-    assert.doesNotMatch(html, /data-act="tasting-flight-new-owned"/);
+    assert.doesNotMatch(renderedText(html), /data-act="tasting-flight-new-owned"/);
     // The add panel is optional, hidden until clicking the add button.
-    assert.match(html, /data-act="tasting-flight-toggle-add"/);
+    assert.match(renderedText(html), /data-act="tasting-flight-toggle-add"/);
     view.toggleFlightAdd();
-    assert.match(html, /data-act="tasting-flight-new-owned"/);
-    assert.match(html, /data-act="tasting-flight-move"/);
-    assert.match(html, /data-act="tasting-flight-note-open"/);
-    assert.match(html, /peat and smoke/);
+    assert.match(renderedText(html), /data-act="tasting-flight-new-owned"/);
+    assert.match(renderedText(html), /data-act="tasting-flight-move"/);
+    assert.match(renderedText(html), /data-act="tasting-flight-note-open"/);
+    assert.match(renderedText(html), /peat and smoke/);
     state.page = 'tasting'; state.selected = 'b-1'; state.tastingId = 'note-1'; view.editor();
-    assert.match(html, /data-act="tasting-open-flight"/);
-    assert.match(html, /Position 1 von 1/);
-    assert.equal(flightForTasting(collection, 'note-1').id, 'flight-1');
-    assert.equal(flightEntries(collection, collection.tastingFlights[0])[0].record.id, 'note-1');
+    assert.match(renderedText(html), /data-act="tasting-open-flight"/);
+    assert.match(renderedText(html), /Position 1 von 1/);
+    assert.equal(renderedText(flightForTasting(collection, 'note-1').id), 'flight-1');
+    assert.equal(renderedText(flightEntries(collection, collection.tastingFlights[0])[0].record.id), 'note-1');
   }
 );

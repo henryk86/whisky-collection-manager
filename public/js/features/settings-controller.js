@@ -43,7 +43,7 @@ export function createSettingsController({state, action, navigate, closeModal,
         ].map(([value, label]) =>
           renderTemplate('promptDistilleryOption', {
             value: value,
-            selected: (current?.status || "unknown") === value ? "selected" : "",
+            unknownAttributes: (current?.status || "unknown") === value ? {"selected": true} : {},
             label: label,
           }))),
         latitude: current?.latitude ?? coordinates?.lat ?? '',

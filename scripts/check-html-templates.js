@@ -6,6 +6,7 @@ import {listJavaScriptFiles} from './javascript-files.js';
 import {parseTemplates, resolveTemplateURL} from '../public/js/ui/templates.js';
 import {fileURLToPath} from 'node:url';
 import {listTemplateFiles} from './template-files.js';
+import {validateTemplateStructure} from './html-template-structure.js';
 
 const tag = /<\/?[A-Za-z][\w:-]*(?=[\s/>]|$)|<!--|<!DOCTYPE/i;
 const files = listJavaScriptFiles(process.cwd(), ['public']);
@@ -67,7 +68,7 @@ for (const filename of files) {
         throw new Error(`${file}: unknown or dynamic template reference`);
       }
       used.add(name.text);
-      const slots = new Set([...templates.get(name.text).matchAll(/\{\{(?:raw|text|tag):([\w.]+)\}\}/g)].map(match => match[1]));
+      const slots = new Set([...templates.get(name.text).matchAll(/\{\{(?:content|attr|attrs|text|tag):([\w.]+)\}\}/g)].map(match => match[1]));
       const supplied = new Set(bindings && ts.isObjectLiteralExpression(bindings) ? bindings.properties.map(prop => prop.name?.getText(source)) : []);
       if (slots.size !== supplied.size || [...slots].some(slot => !supplied.has(slot))) {
         throw new Error(`${file}: incorrect bindings for ${name.text}`);
@@ -80,7 +81,8 @@ for (const filename of files) {
 for (const file of templateFiles) {
   const reference = referencedFiles.get(file);
   if (!reference) throw new Error(`${file}: unreferenced template file`);
-  for (const name of reference.templates.keys()) {
+  for (const [name, markup] of reference.templates) {
+    validateTemplateStructure(markup, `${file}#${name}`);
     if (!reference.used.has(name)) throw new Error(`${file}: unused ${name}`);
   }
   templateCount += reference.templates.size;

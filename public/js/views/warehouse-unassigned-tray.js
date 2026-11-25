@@ -31,10 +31,10 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [],
     const facts = bottleListFacts(bottle);
     return renderTemplate('warehouseUnassignedBottle', {
       checked: checked ? ' is-selected' : '',
-      safe: safe(bottle.id),
+      unassignedId: safe(bottle.id),
       bottleSymbol: bottleSymbol(bottle, {selectable: true, selected: checked}),
-      safe2: safe(bottleLabel(bottle)),
-      safe3: safe(bottleLabel(bottle)),
+      title: safe(bottleLabel(bottle)),
+      bottleName: safe(bottleLabel(bottle)),
       warehouseUnassignedFacts: facts ? renderTemplate('warehouseUnassignedFacts', {facts: facts, }) : '',
     });
   }));
@@ -42,12 +42,12 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [],
   return renderTemplate('warehouseUnassignedResults', {
     cards: cards || renderTemplate('hint', {t: t(empty), }),
     unassignedShown: t('warehouse.wall.unassignedShown', {shown: data.filtered, total: data.total}),
-    safe: safe(query),
-    safe2: safe(t('warehouse.wall.unassignedSearchPlaceholder')),
-    safe3: safe(t('warehouse.wall.unassignedSearch')),
-    disabled: data.page === 1 ? 'disabled' : '',
+    value: safe(query),
+    placeholder: safe(t('warehouse.wall.unassignedSearchPlaceholder')),
+    ariaLabel: safe(t('warehouse.wall.unassignedSearch')),
+    disabledAttributes: data.page === 1 ? {"disabled": true} : {},
     pageOf: t('home.pagination.pageOf', {page: data.page, total: data.pages}),
-    disabled2: data.page === data.pages ? 'disabled' : '',
+    disabled2: data.page === data.pages ? {"disabled": true} : {},
   });
 }
 
@@ -71,11 +71,11 @@ export function renderUnassignedTray(warehouse, selectedIds = [],
   if (options.embedded)
     return renderTemplate('warehouseWallUnassignedContent', {
       label: label,
-      expanded: options.expanded ? '' : 'hidden',
+      hiddenAttributes: options.expanded ? {} : {"hidden": true},
       content: content,
     });
   return renderTemplate('warehouseUnassignedTray', {
-    expanded: options.expanded ? 'open' : '',
+    openAttributes: options.expanded ? {"open": true} : {},
     label: label,
     label2: label,
     content: content,

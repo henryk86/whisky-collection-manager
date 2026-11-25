@@ -311,7 +311,7 @@ export function createModal({state, onClose}) {
           label,
           variant: primary ? 'primary' : 'secondary',
           action: 'modal-choice',
-          attributes: `data-choice="${escapeHtml(id)}"`,
+          attributes: {'data-choice': id},
         })));
       showModal(
         title,

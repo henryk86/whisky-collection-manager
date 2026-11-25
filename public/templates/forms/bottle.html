@@ -10,30 +10,38 @@
   <div class="bottling-context-heading">{{t:forms.bottling.title}} <span class="muted">{{t:forms.bottle.informationalOnly}}</span>
   </div>
   <strong class="bottling-context-name">{{text:name}}</strong>
-  <dl>{{raw:facts}}</dl>
+  <dl>{{content:facts}}</dl>
 </section>
 <!-- /wcm-template -->
 
 <!-- wcm-template:bottleForm -->
 <form
-  id="bottle-form"{{raw:fromOverview}}
+  id="bottle-form"{{attrs:dataFromOverviewAttributes}}
   data-id="{{text:id}}"
-  data-bottling-id="{{text:bottlingId}}">{{raw:context}}<div class="forms">{{raw:inventoryNumberField}}<div class="form-field">
+  data-bottling-id="{{text:bottlingId}}">{{content:context}}<div class="forms">{{content:inventoryNumberField}}<div class="form-field">
       <span>{{t:forms.bottle.autoInventoryNumber}}</span>
-      {{raw:suggestBottleButton}}
-    </div>{{raw:volumeTypeField}}{{raw:volumeMlField}}{{raw:statusField}}{{raw:purchaseDateField}}{{raw:purchasePriceField}}{{raw:currencyField}}{{raw:merchantField}}{{raw:openedAtField}}{{raw:emptiedAtField}}{{raw:commentField}}<label class="form-field full">{{t:forms.bottle.additionalPhotos}}<input type="file" name="photos" accept="{{raw:photoAccept}}" multiple>
+      {{content:suggestBottleButton}}
+    </div>{{content:volumeTypeField}}{{content:volumeMlField}}{{content:statusField}}{{content:purchaseDateField}}{{content:purchasePriceField}}{{content:currencyField}}{{content:merchantField}}{{content:openedAtField}}{{content:emptiedAtField}}{{content:commentField}}<label class="form-field full">{{t:forms.bottle.additionalPhotos}}<input
+        type="file"
+        name="photos"
+        accept="{{attr:photoAccept}}"
+        multiple>
     </label>
     <label class="form-field full">{{t:forms.bottle.attachments}}
-      <input type="file" name="documents" accept="{{raw:fileAccept}}" multiple>
+      <input
+        type="file"
+        name="documents"
+        accept="{{attr:fileAccept}}"
+        multiple>
       <small class="hint">{{t:forms.bottle.attachmentSizeLimit}}</small>
     </label>
   </div>
   <div class="actions ds-modal-footer ds-modal-footer--form">
-    <button type="button" class="btn" data-act="scan-into-bottle">{{raw:inventoryScanIcon}}<span>{{t:forms.bottle.scanLabel}}</span></button>
-    {{raw:closeModalButton}}
+    <button type="button" class="btn" data-act="scan-into-bottle">{{content:inventoryScanIcon}}<span>{{t:forms.bottle.scanLabel}}</span></button>
+    {{content:closeModalButton}}
     <button class="btn primary" type="submit">{{t:common.actions.save}}</button>
   </div>
-  {{raw:photoOption}}</form>
+  {{content:photoOption}}</form>
 <!-- /wcm-template -->
 
 <!-- wcm-template:importPhoto -->

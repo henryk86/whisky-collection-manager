@@ -13,12 +13,12 @@ test('browser: native template bindings preserve text, SVG and table rows',
         const row = new RenderPlan('<tr><td>{{text:value}}</td></tr>', {value: input});
         const path = new RenderPlan('<path d="{{text:path}}"/>', {path: 'M 0 0 L 2 2'});
         const plan = new RenderPlan(
-          '<section><table><tbody>{{raw:rows}}</tbody></table>' + '<svg viewBox="{{text:box}}">{{raw:path}}</svg>' +
-          '<input title="{{text:value}}" {{raw:attributes}}>' +
+          '<section><table><tbody>{{content:rows}}</tbody></table>' + '<svg viewBox="{{text:box}}">{{content:path}}</svg>' +
+          '<input title="{{text:value}}" {{attrs:attributes}}>' +
           '<textarea>{{text:value}}</textarea></section>',
           {
             rows: composeMarkup(row, row), path, box: '0 0 2 2',
-            value: input, attributes: 'checked disabled',
+            value: input, attributes: {checked: true, disabled: true},
           });
         const node = materialize(plan, document).firstElementChild;
         return {
@@ -42,3 +42,35 @@ test('browser: native template bindings preserve text, SVG and table rows',
       });
     });
   });
+
+test('browser: DOM and diagnostic serialization agree on typed attributes and literal content', async () => {
+  await session(async ({page, open, base}) => {
+    await open();
+    const result = await page.evaluate(async url => {
+      const {RenderPlan, serializeMarkup} = await import(`${url}/js/ui/render-plan.js`);
+      const {materialize} = await import(`${url}/js/ui/dom-renderer.js`);
+      const plan = new RenderPlan('<button{{attrs:props}}>{{content:message}}</button>', {
+        props: {disabled: false, 'aria-expanded': false, title: '" < &'},
+        message: '<svg onload="alert(1)"></svg>',
+      });
+      const native = materialize(plan, document).firstElementChild;
+      const fixture = document.createElement('template');
+      fixture.innerHTML = serializeMarkup(plan);
+      const serialized = fixture.content.firstElementChild;
+      const invalid = new RenderPlan('<button{{attrs:props}}></button>', {props: {onclick: 'alert(1)'}});
+      let nativeRejected = false, serializerRejected = false;
+      try {materialize(invalid, document);} catch {nativeRejected = true;}
+      try {serializeMarkup(invalid);} catch {serializerRejected = true;}
+      return {
+        equal: native.isEqualNode(serialized), nativeRejected, serializerRejected,
+        disabled: native.disabled, expanded: native.getAttribute('aria-expanded'),
+        childCount: native.childElementCount, text: native.textContent,
+      };
+    }, base);
+    assert.deepEqual(result, {
+      equal: true, nativeRejected: true, serializerRejected: true,
+      disabled: false, expanded: 'false', childCount: 0,
+      text: '<svg onload="alert(1)"></svg>',
+    });
+  });
+});

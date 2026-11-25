@@ -1,14 +1,14 @@
 <!-- wcm-template:a -->
 
-        <a href="{{raw:url}}" data-act="{{raw:action}}" {{raw:id}}>
-          <svg class="{{raw:navClass}}" viewBox="{{raw:viewBox}}" fill="{{raw:filled}}" stroke="{{raw:filled2}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{raw:icon}}</svg>{{raw:label}}
-        </a>
+<a href="{{attr:url}}" data-act="{{attr:action}}" {{attrs:homeAttributes}}>
+          <svg class="{{attr:navClass}}" viewBox="{{attr:viewBox}}" fill="{{attr:filled}}" stroke="{{attr:stroke}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{content:icon}}</svg>{{content:label}}
+</a>
 <!-- /wcm-template -->
 
 <!-- wcm-template:muted -->
 <p class="muted">{{text:username}}</p>
-        {{raw:authOpenChangeButton}}
-        {{raw:authLogoutButton}}
+        {{content:authOpenChangeButton}}
+        {{content:authLogoutButton}}
 <!-- /wcm-template -->
 
 <!-- wcm-template:back -->
@@ -21,7 +21,12 @@
       data-act="back"
       aria-label="{{t:ui.navigation.backToCollection}}">
       <span class="brand-emblem" aria-hidden="true">
-        <img class="brand-logo" src="/assets/logo.svg" alt="" width="57" height="57">
+        <img
+          class="brand-logo"
+          src="/assets/logo.svg"
+          alt=""
+          width="57"
+          height="57">
       </span>
       <div class="brand-copy">
         <span class="brand-overline">{{t:ui.branding.privateReserve}}</span>
@@ -35,19 +40,19 @@
         type="button"
         data-act="toggle-theme"
         aria-label="{{t:ui.theme.toggle}}"
-        title="{{t:ui.theme.toggle}}">{{raw:themeMoonIcon}}</button>
+        title="{{t:ui.theme.toggle}}">{{content:themeMoonIcon}}</button>
       <button
         class="btn header-btn"
         type="button"
         data-act="scan"
         aria-label="{{t:collection.actions.scanInventory}}"
-        title="{{t:collection.actions.scanInventory}}">{{raw:inventoryScanIcon}}<span>{{t:collection.actions.scanInventory}}</span></button>
+        title="{{t:collection.actions.scanInventory}}">{{content:inventoryScanIcon}}<span>{{t:collection.actions.scanInventory}}</span></button>
       <button
         class="btn primary"
         type="button"
         data-act="new"
         aria-label="{{t:collection.actions.newBottle}}"
-        title="{{t:collection.actions.newBottle}}">{{raw:newBottlingIcon}}<span>{{t:collection.actions.newBottle}}</span></button>
+        title="{{t:collection.actions.newBottle}}">{{content:newBottlingIcon}}<span>{{t:collection.actions.newBottle}}</span></button>
       <button
         class="btn header-btn menu-button"
         type="button"
@@ -62,22 +67,27 @@
 </header>
 <div class="site-drawer-backdrop" data-act="close-menu" hidden>
 </div>
-<aside class="site-drawer" id="site-drawer" aria-label="{{t:ui.navigation.sideMenu}}" hidden>
+<aside
+  class="site-drawer"
+  id="site-drawer"
+  aria-label="{{t:ui.navigation.sideMenu}}"
+  hidden>
   <div class="site-drawer-head">
     <h2>{{t:ui.navigation.label}}</h2><button
       type="button"
       class="btn small"
       data-act="close-menu"
-      aria-label="{{t:ui.navigation.closeMenu}}">{{raw:closeIcon}}</button></div>
-  <nav class="site-nav" aria-label="{{t:ui.navigation.primary}}">{{raw:mAINPAGES}}</nav>
+      aria-label="{{t:ui.navigation.closeMenu}}">{{content:closeIcon}}</button>
+  </div>
+  <nav class="site-nav" aria-label="{{t:ui.navigation.primary}}">{{content:mAINPAGES}}</nav>
   <div class="auth-drawer-actions">
-        {{raw:muted}}
-      </div>
+    {{content:muted}}
+  </div>
 </aside>
-<main data-live-regions>{{raw:content}}</main>
+<main data-live-regions>{{content:content}}</main>
 <footer class="site-footer">
   <span>{{t:ui.branding.whiskyCollectionManager}}</span>
-  <span>{{raw:footer}}</span>
+  <span>{{content:footer}}</span>
 </footer>
 <div id="modal-root">
 </div>

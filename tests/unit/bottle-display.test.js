@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {bottleMeta} from '../../public/js/domain/bottle-display.js';
@@ -21,46 +22,46 @@ function forms() {
   };
 }
 test('bottle metadata puts separators only between actual values', () => {
-  assert.equal(bottleMeta({}), '');
-  assert.equal(bottleMeta({inventoryNumber: '000123', }), '');
-  assert.equal(bottleMeta({purchasePrice: 0, }), '0 EUR');
-  assert.equal(bottleMeta({
+  assert.equal(renderedText(bottleMeta({})), '');
+  assert.equal(renderedText(bottleMeta({inventoryNumber: '000123', })), '');
+  assert.equal(renderedText(bottleMeta({purchasePrice: 0, })), '0 EUR');
+  assert.equal(renderedText(bottleMeta({
     purchaseDate: '2026-11-05', purchasePrice: 45,
-  }, value => value), 'Kauf: 2026-11-05 \u00b7 45 EUR');
+  }, value => value)), 'Kauf: 2026-11-05 \u00b7 45 EUR');
 });
 test(
   'bottle form renders read-only parent information and exactly one inventory input',
   () => {
     const {state, bottle} = forms();
     const html = bottle(state.collection.bottlings[0].bottles[0], 'bottling-a');
-    const context = html.slice(html.indexOf('<section'), html.indexOf('</section>'));
-    assert.match(context, /Test Blend/);
-    assert.match(context, /Test Distillery/);
-    assert.match(context, /Example Bottler/);
-    assert.match(context, /schreibgesch\u00fctzt/);
-    assert.doesNotMatch(context, /<input|<select|<textarea/);
-    assert.equal((html.match(/name="inventoryNumber"/g) || []).length, 1);
-    assert.match(html, /Leerdatum<input\s+name="emptiedAt" type="date"/);
+    const context = renderedText(html).slice(renderedText(html).indexOf('<section'), renderedText(html).indexOf('</section>'));
+    assert.match(renderedText(context), /Test Blend/);
+    assert.match(renderedText(context), /Test Distillery/);
+    assert.match(renderedText(context), /Example Bottler/);
+    assert.match(renderedText(context), /schreibgesch\u00fctzt/);
+    assert.doesNotMatch(renderedText(context), /<input|<select|<textarea/);
+    assert.equal((renderedText(html).match(/name="inventoryNumber"/g) || []).length, 1);
+    assert.match(renderedText(html), /Leerdatum<input\s+name="emptiedAt" type="date"/);
     assert.match(
-      bottle({...state.collection.bottlings[0].bottles[0], emptiedAt: '2026-11-20'}, 'bottling-a'),
+      renderedText(bottle({...state.collection.bottlings[0].bottles[0], emptiedAt: '2026-11-20'}, 'bottling-a')),
       /name="emptiedAt" type="date"[^>]*value="2026-11-20"/
     );
-    assert.doesNotMatch(html, /labelCode|labelType|Etikettentyp|Etikettencode/);
+    assert.doesNotMatch(renderedText(html), /labelCode|labelType|Etikettentyp|Etikettencode/);
   }
 );
 test('forms escape user data instead of treating it as HTML', () => {
   const {state, bottle, bottling} = forms();
   const owner = state.collection.bottlings[0];
   owner.name = '<img src=x onerror=alert(1)>';
-  const html = bottle({}, owner.id) + bottling(owner);
-  assert.doesNotMatch(html, /<img src=x/);
-  assert.match(html, /&lt;img src=x onerror=alert\(1\)&gt;/);
+  const html = renderedText(bottle({}, owner.id)) + renderedText(bottling(owner));
+  assert.doesNotMatch(renderedText(html), /<img src=x/);
+  assert.match(renderedText(html), /&lt;img src=x onerror=alert\(1\)&gt;/);
 });
 test('new bottling form has no extra label identifier or label type', () => {
   const {bottling} = forms();
   const html = bottling();
-  assert.equal((html.match(/name="firstInventoryNumber"/g) || []).length, 1);
-  assert.doesNotMatch(html, /labelCode|labelType|firstLabelCode|Etikettencode/);
+  assert.equal((renderedText(html).match(/name="firstInventoryNumber"/g) || []).length, 1);
+  assert.doesNotMatch(renderedText(html), /labelCode|labelType|firstLabelCode|Etikettencode/);
 });
 
 test('sample type and size are editable only on physical bottles', () => {
@@ -71,13 +72,13 @@ test('sample type and size are editable only on physical bottles', () => {
   };
   const bottleHtml = bottle(sample, 'bottling-a');
   const bottlingHtml = bottling(state.collection.bottlings[0]);
-  assert.match(bottleHtml, /name="volumeType"/);
-  assert.match(bottleHtml, /name="volumeMl"/);
-  assert.match(bottleHtml, /<option value="sample" selected/);
-  assert.doesNotMatch(bottlingHtml, /name="volumeType"/);
-  assert.match(bottlingHtml, /Nennfüllmenge der Abfüllung/);
-  assert.match(bottlingHtml, /name="volumeMl"/);
+  assert.match(renderedText(bottleHtml), /name="volumeType"/);
+  assert.match(renderedText(bottleHtml), /name="volumeMl"/);
+  assert.match(renderedText(bottleHtml), /<option value="sample" selected/);
+  assert.doesNotMatch(renderedText(bottlingHtml), /name="volumeType"/);
+  assert.match(renderedText(bottlingHtml), /Nennfüllmenge der Abfüllung/);
+  assert.match(renderedText(bottlingHtml), /name="volumeMl"/);
   const first = bottling();
-  assert.match(first, /name="firstVolumeType"/);
-  assert.match(first, /name="firstVolumeMl"/);
+  assert.match(renderedText(first), /name="firstVolumeType"/);
+  assert.match(renderedText(first), /name="firstVolumeMl"/);
 });

@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {shelfLevels, effectiveShelfFront, totalExplicitHeightCm}
@@ -34,16 +35,16 @@ test(
     assert.deepEqual(levels.map(x => [x.front, x.heightCm]), [['door', 60], ['open', 80], ['glass', 60]]);
     assert.deepEqual(levels.map(x => Number(x.bottom.toFixed(2))), [0.2, 0.8, 1.6]);
     assert.deepEqual(levels.map(x => Number(x.top.toFixed(2))), [0.8, 1.6, 2.2]);
-    assert.equal(JSON.stringify(base), before);
+    assert.equal(JSON.stringify(base), renderedText(before));
     const mixedAuto = {
       ...base,
       shelves: [{id: 'a', heightCm: 40}, {id: 'b', front: 'glass'}, {id: 'c'}],
     };
     assert.deepEqual(shelfLevels(mixedAuto).map(level => level.heightCm), [40, 80, 80]);
-    assert.equal(totalExplicitHeightCm(base.shelves), 200);
-    assert.equal(effectiveShelfFront({}, 'schrank'), 'door');
-    assert.equal(effectiveShelfFront({}, 'vitrine'), 'glass');
-    assert.equal(effectiveShelfFront({}, 'regal'), 'open');
+    assert.equal(renderedText(totalExplicitHeightCm(base.shelves)), 200);
+    assert.equal(renderedText(effectiveShelfFront({}, 'schrank')), 'door');
+    assert.equal(renderedText(effectiveShelfFront({}, 'vitrine')), 'glass');
+    assert.equal(renderedText(effectiveShelfFront({}, 'regal')), 'open');
   }
 );
 
@@ -151,19 +152,19 @@ test(
         refresh: async () => {},
       });
       view.render();
-      assert.ok(html.indexOf('Glas oben') < html.indexOf('Offenes Fach'));
-      assert.ok(html.indexOf('Offenes Fach') < html.indexOf('Untertür'));
+      assert.ok(renderedText(html).indexOf('Glas oben') < renderedText(html).indexOf('Offenes Fach'));
+      assert.ok(renderedText(html).indexOf('Offenes Fach') < renderedText(html).indexOf('Untertür'));
       view.openFurnitureManager('c');
-      assert.match(form, /Glastür · 1-flügelig · ohne Rahmen · 60 cm/);
-      assert.match(form, /Fach nach oben verschieben/);
-      assert.doesNotMatch(html, /warehouse-furniture-panel/, 'furniture editing is modal only');
+      assert.match(renderedText(form), /Glastür · 1-flügelig · ohne Rahmen · 60 cm/);
+      assert.match(renderedText(form), /Fach nach oben verschieben/);
+      assert.doesNotMatch(renderedText(html), /warehouse-furniture-panel/, 'furniture editing is modal only');
       view.openForm('shelf', 'mid');
-      assert.match(form, /name="heightCm"/);
-      assert.match(form, /name="front"/);
-      assert.match(form, /name="doorLeaves"/);
-      assert.match(form, /name="glassFrame"/);
-      assert.match(form, />Holztür</);
-      assert.match(form, />Glastür</);
+      assert.match(renderedText(form), /name="heightCm"/);
+      assert.match(renderedText(form), /name="front"/);
+      assert.match(renderedText(form), /name="doorLeaves"/);
+      assert.match(renderedText(form), /name="glassFrame"/);
+      assert.match(renderedText(form), />Holztür</);
+      assert.match(renderedText(form), />Glastür</);
     } finally {
       if (doc === undefined) delete globalThis.document; else globalThis.document = doc;
     }
@@ -183,10 +184,10 @@ test(
           shelves: [{id: 's', front, doorLeaves, glassFrame, heightCm: 100}],
         };
         const parts = warehouse3DGeometry({...room, furniture: [item]}, warehouse).objects[0].parts;
-        assert.equal(parts.filter(p => p.role === (front === 'glass' ? 'glass-front' : 'door')).length, doorLeaves);
+        assert.equal(parts.filter(p => p.role === (front === 'glass' ? 'glass-front' : 'door')).length, renderedText(doorLeaves));
         assert.equal(
           parts.filter(p => p.role === 'glass-frame').length,
-          front === 'glass' && glassFrame ? 4 * doorLeaves : 0
+          renderedText(front === 'glass' && glassFrame ? 4 * doorLeaves : 0)
         );
         assert.ok(parts.every(p => p.size.every(n => n > 0)));
       }
@@ -281,12 +282,12 @@ test(
         refresh: async () => {},
       });
       view.openForm('furniture', 'c');
-      assert.match(form, /name="doorLeaves"/);
-      assert.match(form, /name="glassFrame"/);
+      assert.match(renderedText(form), /name="doorLeaves"/);
+      assert.match(renderedText(form), /name="glassFrame"/);
       state.warehouseSelectedFurnitureIds = ['c'];
       view.openForm('furniture-bulk');
-      assert.match(form, /name="doorLeaves"/);
-      assert.match(form, /name="glassFrame"/);
+      assert.match(renderedText(form), /name="doorLeaves"/);
+      assert.match(renderedText(form), /name="glassFrame"/);
     } finally {
       if (doc === undefined) delete globalThis.document; else globalThis.document = doc;
     }

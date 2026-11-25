@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {warehouse3DGeometry}
@@ -111,17 +112,17 @@ test(
         refresh: async () => {},
       });
       view.render();
-      assert.ok(!html.includes('0 / 0 Flaschen'));
+      assert.ok(!renderedText(html).includes('0 / 0 Flaschen'));
       assert.equal(
-        (html.match(/Fach ist leer/g) || []).length,
+        (renderedText(html).match(/Fach ist leer/g) || []).length,
         4,
         'the room wall renders four compartments once; edit controls live in a modal'
       );
       view.openForm('furniture', 'f');
-      assert.match(form, /warehouse-door-range-list/);
-      assert.match(form, /door-range-from/);
-      assert.match(form, /door-range-frame/);
-      assert.match(form, /Türbereich/);
+      assert.match(renderedText(form), /warehouse-door-range-list/);
+      assert.match(renderedText(form), /door-range-from/);
+      assert.match(renderedText(form), /door-range-frame/);
+      assert.match(renderedText(form), /Türbereich/);
     } finally {
       if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
     }

@@ -1,5 +1,5 @@
 <!-- wcm-template:importChoiceCurrent -->
-<small class="import-choice-current">{{raw:currentValue}}</small>
+<small class="import-choice-current">{{content:currentValue}}</small>
 <!-- /wcm-template -->
 
 <!-- wcm-template:importChoiceCurrent2 -->
@@ -8,11 +8,11 @@
 
 <!-- wcm-template:importChoice -->
 <label class="import-choice">
-  <input type="checkbox" {{raw:attribute}}{{raw:checked}}{{raw:disabled}}>
+  <input type="checkbox" {{attrs:attribute}}{{attrs:checkedAttributes}}{{attrs:disabledAttributes}}>
   <span class="import-choice-copy">
     <span class="import-choice-label">{{text:label}}</span>
     <span class="import-choice-value">{{text:value}}</span>
-    {{raw:existing}}{{raw:importChoiceCurrent}}
-    </span>
+    {{content:existing}}{{content:importChoiceCurrent}}
+  </span>
 </label>
 <!-- /wcm-template -->

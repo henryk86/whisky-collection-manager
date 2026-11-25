@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -10,12 +11,12 @@ test(
       field: 'abv', label: 'Alkoholgehalt (%)',
       value: 46, checked: true,
     });
-    assert.match(html, /^<label class="import-choice">/);
-    assert.match(html, /<input type="checkbox" data-import-field="abv" checked>/);
-    assert.match(html, /class="import-choice-copy"/);
-    assert.match(html, /class="import-choice-label">Alkoholgehalt \(%\)<\/span>/);
-    assert.match(html, /class="import-choice-value">46<\/span>/);
-    assert.equal((html.match(/type="checkbox"/g) || []).length, 1);
+    assert.match(renderedText(html), /^<label class="import-choice">/);
+    assert.match(renderedText(html), /<input type="checkbox" data-import-field="abv" checked>/);
+    assert.match(renderedText(html), /class="import-choice-copy"/);
+    assert.match(renderedText(html), /class="import-choice-label">Alkoholgehalt \(%\)<\/span>/);
+    assert.match(renderedText(html), /class="import-choice-value">46<\/span>/);
+    assert.equal((renderedText(html).match(/type="checkbox"/g) || []).length, 1);
   }
 );
 
@@ -29,10 +30,10 @@ test(
       currentValue: 'ALT & Neu',
       checked: false,
     });
-    assert.ok(!html.includes('<script>'));
-    assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
-    assert.ok(html.includes('Aktuell: ALT &amp; Neu'));
-    assert.ok(!html.includes(' checked'));
+    assert.ok(!renderedText(html).includes('<script>'));
+    assert.ok(renderedText(html).includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
+    assert.ok(renderedText(html).includes('Aktuell: ALT &amp; Neu'));
+    assert.ok(!renderedText(html).includes(' checked'));
   }
 );
 
@@ -45,8 +46,8 @@ test(
       value: 'Neue Brennerei',
       disabled: true,
     });
-    assert.match(html, /name="import-distillery" disabled/);
-    assert.match(html, /Nicht gefunden/);
+    assert.match(renderedText(html), /name="import-distillery" disabled/);
+    assert.match(renderedText(html), /Nicht gefunden/);
   }
 );
 
@@ -121,15 +122,15 @@ test(
           bottler: 'Distillery Bottling',
         },
       });
-      assert.equal(panel.id, 'import-panel', 'preview holder created only after payload arrives');
-      assert.match(panel.className, /import-area/);
-      assert.match(panel.innerHTML, /class="import-choice-list" role="group"/);
-      assert.match(panel.innerHTML, /name="import-distillery" value="d-1" checked/);
-      assert.match(panel.innerHTML, /data-import-field="name" checked/);
-      assert.match(panel.innerHTML, /data-import-field="abv">/); // Existing value: unchecked by default
-      assert.match(panel.innerHTML, /Aktuell: 43/);
-      assert.match(panel.innerHTML, /data-act="import-apply"/);
-      assert.equal((panel.innerHTML.match(/<label class="import-choice">/g) ?? []).length, 6);
+      assert.equal(renderedText(panel.id), 'import-panel', 'preview holder created only after payload arrives');
+      assert.match(renderedText(panel.className), /import-area/);
+      assert.match(renderedText(panel.innerHTML), /class="import-choice-list" role="group"/);
+      assert.match(renderedText(panel.innerHTML), /name="import-distillery" value="d-1" checked/);
+      assert.match(renderedText(panel.innerHTML), /data-import-field="name" checked/);
+      assert.match(renderedText(panel.innerHTML), /data-import-field="abv">/); // Existing value: unchecked by default
+      assert.match(renderedText(panel.innerHTML), /Aktuell: 43/);
+      assert.match(renderedText(panel.innerHTML), /data-act="import-apply"/);
+      assert.equal((renderedText(panel.innerHTML).match(/<label class="import-choice">/g) ?? []).length, 6);
     } finally {
       if (oldDocument === undefined) delete globalThis.document;
       else globalThis.document = oldDocument;

@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -118,7 +119,7 @@ const selectors = {
  * @param {*} html HTML markup to render or inspect.
  * @return {*} Result computed from the supplied inputs.
  */
-const extractHeader = html => html.match(/<thead><tr>([\s\S]*?)<\/tr><\/thead>/)?.[1] || '';
+const extractHeader = html => renderedText(html).match(/<thead><tr>([\s\S]*?)<\/tr><\/thead>/)?.[1] || '';
 
 // These preferences must not modify collection.json or leak across overview
 // modes.
@@ -129,11 +130,11 @@ test(
     const defaults = loadTableColumns(storage);
     assert.deepEqual(defaults.bottlings, DEFAULT_TABLE_COLUMNS.bottlings);
     assert.deepEqual(defaults.bottles, DEFAULT_TABLE_COLUMNS.bottles);
-    assert.ok(defaults.bottlings.includes('rating'));
-    assert.ok(!defaults.bottlings.includes('editing'));
-    assert.ok(defaults.bottles.includes('rating'));
+    assert.ok(renderedText(defaults.bottlings).includes('rating'));
+    assert.ok(!renderedText(defaults.bottlings).includes('editing'));
+    assert.ok(renderedText(defaults.bottles).includes('rating'));
     assert.equal(
-      saveTableColumns({bottlings: ['rating', 'editing', 'nonsense'], bottles: ['inventory']}, storage),
+      renderedText(saveTableColumns({bottlings: ['rating', 'editing', 'nonsense'], bottles: ['inventory']}, storage)),
       true
     );
     assert.deepEqual(loadTableColumns(storage), {bottlings: ['editing', 'rating'], bottles: ['inventory']});
@@ -150,17 +151,17 @@ test(
       const column of TABLE_COLUMNS[mode]) {
       assert.ok(column.asc && column.desc && column.asc !== column.desc, `${mode}/${column.id}`);
       const first = sortForColumn(column, 'name');
-      assert.ok([column.asc, column.desc].includes(first));
-      assert.equal(sortForColumn(column, first), first === column.asc ? column.desc : column.asc);
+      assert.ok([column.asc, column.desc].includes(renderedText(first)));
+      assert.equal(renderedText(sortForColumn(column, first)), renderedText(first === column.asc ? column.desc : column.asc));
     }
   }
 );
 
 test('switching from last tasted to name starts A-Z, then flips to Z-A', () => {
   const name = TABLE_COLUMNS.bottlings.find(column => column.id === 'name');
-  assert.equal(sortForColumn(name, 'tastedDesc'), 'name');
-  assert.equal(sortForColumn(name, 'name'), 'nameDesc');
-  assert.equal(sortForColumn(name, 'nameDesc'), 'name');
+  assert.equal(renderedText(sortForColumn(name, 'tastedDesc')), 'name');
+  assert.equal(renderedText(sortForColumn(name, 'name')), 'nameDesc');
+  assert.equal(renderedText(sortForColumn(name, 'nameDesc')), 'name');
 });
 
 test(
@@ -254,7 +255,7 @@ test(
           // Simulate native details toggling when the user clicks the
           // dropdown summary, rather than changing its view state directly.
           currentPicker = {
-            open: /class="collection-table-columns" open/.test(markup),
+            open: /class="collection-table-columns" open/.test(renderedText(markup)),
             isConnected: true,
             /**
              * Updates the add event listener state for its caller.
@@ -269,22 +270,22 @@ test(
         },
       });
       view();
-      assert.match(extractHeader(html), /data-column="rating"/);
-      assert.doesNotMatch(extractHeader(html), /data-column="editing"/);
+      assert.match(renderedText(extractHeader(html)), /data-column="rating"/);
+      assert.doesNotMatch(renderedText(extractHeader(html)), /data-column="editing"/);
       const rating = {dataset: {collectionColumn: 'rating'}, checked: false};
       view.handleChange(rating);
-      assert.doesNotMatch(extractHeader(html), /data-column="rating"/);
+      assert.doesNotMatch(renderedText(extractHeader(html)), /data-column="rating"/);
       const editing = {dataset: {collectionColumn: 'editing'}, checked: true};
       view.handleChange(editing);
-      assert.match(extractHeader(html), /data-column="editing"/);
-      assert.match(html, /class="collection-table-columns" open/);
-      assert.deepEqual(loadTableColumns(storage).bottlings.includes('editing'), true);
+      assert.match(renderedText(extractHeader(html)), /data-column="editing"/);
+      assert.match(renderedText(html), /class="collection-table-columns" open/);
+      assert.deepEqual(renderedText(loadTableColumns(storage).bottlings).includes('editing'), true);
       // Closing the native <details> summary must persist across renders;
       // previously the next table update reopened it unexpectedly.
       currentPicker.open = false;
       currentPicker.onToggle();
       view();
-      assert.doesNotMatch(html, /class="collection-table-columns" open/,
+      assert.doesNotMatch(renderedText(html), /class="collection-table-columns" open/,
         'the manually closed column picker remains closed on a subsequent render');
       view.handleClick({
         dataset: {
@@ -292,38 +293,38 @@ test(
           column: 'age',
         },
       });
-      assert.doesNotMatch(html, /class="collection-table-columns" open/,
+      assert.doesNotMatch(renderedText(html), /class="collection-table-columns" open/,
         'sorting a header closes the picker after editing columns');
-      assert.equal(state.sort, 'age');
-      assert.match(html, /<option value="age" selected>/);
-      assert.match(extractHeader(html), /aria-sort="descending"[^>]*>\s*<button[^>]*data-column="age"/);
+      assert.equal(renderedText(state.sort), 'age');
+      assert.match(renderedText(html), /<option value="age" selected>/);
+      assert.match(renderedText(extractHeader(html)), /aria-sort="descending"[^>]*>\s*<button[^>]*data-column="age"/);
       view.handleClick({
         dataset: {
           act: 'collection-sort-column',
           column: 'age',
         },
       });
-      assert.equal(state.sort, 'ageAsc');
-      assert.match(html, /<option value="ageAsc" selected>/);
+      assert.equal(renderedText(state.sort), 'ageAsc');
+      assert.match(renderedText(html), /<option value="ageAsc" selected>/);
       state.overviewMode = 'bottles';
       view();
-      assert.match(extractHeader(html), /data-column="inventory"/);
-      assert.match(extractHeader(html), /data-column="rating"/);
+      assert.match(renderedText(extractHeader(html)), /data-column="inventory"/);
+      assert.match(renderedText(extractHeader(html)), /data-column="rating"/);
       view.handleClick({
         dataset: {
           act: 'collection-sort-column',
           column: 'inventory',
         },
       });
-      assert.equal(state.sort, 'inventoryAsc');
-      assert.match(html, /<option value="inventoryAsc" selected>/);
+      assert.equal(renderedText(state.sort), 'inventoryAsc');
+      assert.match(renderedText(html), /<option value="inventoryAsc" selected>/);
       view.handleClick({
         dataset: {
           act: 'collection-sort-column',
           column: 'inventory',
         },
       });
-      assert.equal(state.sort, 'inventoryDesc');
+      assert.equal(renderedText(state.sort), 'inventoryDesc');
       view.handleClick({dataset: {act: 'collection-columns-default'}});
       assert.deepEqual(loadTableColumns(storage).bottles, DEFAULT_TABLE_COLUMNS.bottles);
     } finally {

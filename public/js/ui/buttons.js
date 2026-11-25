@@ -29,7 +29,7 @@ export function actionButton({
   disabled = false,
   loading = false,
   className = '',
-  attributes = ''
+  attributes = {}
 } = {}) {
   const variants = {
     primary: 'primary',
@@ -51,24 +51,24 @@ export function actionButton({
     iconOnly || variant === 'icon' ? 'ds-button--icon' : '',
     className,
   ].filter(Boolean).join(' ');
-  const dataAttributes = Object.entries(data).map(([key, value]) => {
+  const dataAttributes = Object.fromEntries(Object.entries(data).map(([key, value]) => {
     if (!/^[a-z][a-z0-9-]*$/.test(key)) {
       throw new RangeError('Invalid button data attribute');
     }
-    return ` data-${key}="${escapeHtml(String(value))}"`;
-  }).join('');
-  // attributes is app-owned static HTML only; never pass input/user data.
+    return [`data-${key}`, String(value)];
+  }));
+  // Additional attributes are validated by the shared binding contract.
   return renderTemplate('actionButtonButton', {
     classes: classes,
     type: type,
-    action: action ? ` data-act="${escapeHtml(action)}"` : '',
-    ariaLabel: ariaLabel || iconOnly ? ` aria-label="${escapeHtml(String(ariaLabel || label))}"` : '',
-    disabled: disabled || loading ? ' disabled' : '',
-    loading: loading ? ' aria-busy="true"' : '',
+    dataActAttributes: action ? {"data-act": action} : {},
+    ariaLabelAttributes: ariaLabel || iconOnly ? {"aria-label": String(ariaLabel || label)} : {},
+    disabledAttributes: disabled || loading ? {"disabled": true} : {},
+    ariaBusyAttributes: loading ? {"aria-busy": "true"} : {},
     dataAttributes: dataAttributes,
-    title: title ? ` title="${escapeHtml(String(title))}"` : '',
-    attributes: attributes ? ` ${attributes}` : '',
+    titleAttributes: title ? {"title": String(title)} : {},
+    attributes: attributes,
     trustedContent: trustedContent || icon,
-    trustedContent2: trustedContent ? '' : iconOnly ? '' : wrapLabel ? renderTemplate('actionButtonSpan', {safe: safe, }) : safe,
+    trustedContent2: trustedContent ? '' : iconOnly ? '' : wrapLabel ? renderTemplate('actionButtonSpan', {label: safe, }) : safe,
   });
 }

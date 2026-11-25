@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {unassignedWallPage, UNASSIGNED_WALL_PAGE_SIZE}
@@ -26,18 +27,18 @@ test(
   () => {
     const warehouse = inventory(2502);
     const first = unassignedWallPage(warehouse);
-    assert.equal(first.total, 2500);
-    assert.equal(first.items.length, UNASSIGNED_WALL_PAGE_SIZE);
-    assert.equal(first.pages, Math.ceil(2500 / UNASSIGNED_WALL_PAGE_SIZE));
-    assert.equal(first.items[0].id, 'b1');
+    assert.equal(renderedText(first.total), 2500);
+    assert.equal(first.items.length, renderedText(UNASSIGNED_WALL_PAGE_SIZE));
+    assert.equal(renderedText(first.pages), Math.ceil(2500 / UNASSIGNED_WALL_PAGE_SIZE));
+    assert.equal(renderedText(first.items[0].id), 'b1');
     const last = unassignedWallPage(warehouse, {page: 100000});
-    assert.equal(last.page, last.pages);
+    assert.equal(renderedText(last.page), renderedText(last.pages));
     assert.ok(last.items.length > 0 && last.items.length <= UNASSIGNED_WALL_PAGE_SIZE);
     assert.ok(last.items.every(item => item.id !== 'b0' && item.id !== 'b10'));
     const pageHtml = renderUnassignedTrayPage(warehouse);
-    assert.equal((pageHtml.match(/data-unassigned-id=/g) || []).length, UNASSIGNED_WALL_PAGE_SIZE);
-    assert.doesNotMatch(pageHtml, /data-unassigned-id="b0"/);
-    assert.doesNotMatch(pageHtml, /data-shelf-id=/, 'staging must not pretend to be a real target shelf');
+    assert.equal((renderedText(pageHtml).match(/data-unassigned-id=/g) || []).length, renderedText(UNASSIGNED_WALL_PAGE_SIZE));
+    assert.doesNotMatch(renderedText(pageHtml), /data-unassigned-id="b0"/);
+    assert.doesNotMatch(renderedText(pageHtml), /data-shelf-id=/, 'staging must not pretend to be a real target shelf');
   }
 );
 
@@ -49,13 +50,13 @@ test(
       query: 'whisky 004',
       page: 9,
     });
-    assert.equal(matches.page, 1);
+    assert.equal(renderedText(matches.page), 1);
     assert.ok(matches.items.length > 0);
     assert.ok(matches.items.every(bottle => bottle.name.toLowerCase().includes('whisky 004')));
     const byNumber = unassignedWallPage(warehouse, {query: 'inv-111'});
     assert.deepEqual(byNumber.items.map(item => item.id), ['b111']);
     assert.equal(unassignedWallPage(warehouse, {query: 'nonexistent'}).items.length, 0);
-    assert.equal(unassignedWallPage(warehouse, {query: 'nonexistent'}).pages, 1);
+    assert.equal(renderedText(unassignedWallPage(warehouse, {query: 'nonexistent'}).pages), 1);
   }
 );
 
@@ -66,12 +67,12 @@ test(
       bottles: [{id: 'unsafe', name: '<script>alert(1)</script>', number: '123'}, {id: 'placed', name: 'Placed'},], assignments: {placed: 'shelf'},
     };
     const html = renderUnassignedTray(warehouse, ['unsafe']);
-    assert.match(html, /warehouse-unassigned-bottle warehouse-wall-bottle is-selected/);
-    assert.match(html, /data-act="warehouse-bottle-select" data-id="unsafe" aria-pressed="true"/);
-    assert.match(html, /&lt;script&gt;/);
-    assert.doesNotMatch(html, /<script>/);
-    assert.doesNotMatch(html, /data-id="placed"/);
-    assert.match(html, /data-act="warehouse-unassigned-next" disabled/);
+    assert.match(renderedText(html), /warehouse-unassigned-bottle warehouse-wall-bottle is-selected/);
+    assert.match(renderedText(html), /data-act="warehouse-bottle-select" data-id="unsafe" aria-pressed="true"/);
+    assert.match(renderedText(html), /&lt;script&gt;/);
+    assert.doesNotMatch(renderedText(html), /<script>/);
+    assert.doesNotMatch(renderedText(html), /data-id="placed"/);
+    assert.match(renderedText(html), /data-act="warehouse-unassigned-next" disabled/);
   }
 );
 
@@ -87,28 +88,28 @@ test(
     };
     const html = renderWarehouseRoomWall(room, warehouse, [], {page: 2});
     assert.equal(
-      (html.match(new RegExp('class="warehouse-unassigned-tray warehouse' + '-unassigned-tray--embedded"', 'g')) || []).length,
+      (renderedText(html).match(new RegExp('class="warehouse-unassigned-tray warehouse' + '-unassigned-tray--embedded"', 'g')) || []).length,
       1
     );
-    assert.equal((html.match(/class="warehouse-bottle-bulk-tools"/g) || []).length, 1);
-    assert.equal((html.match(/class="warehouse-wall-controls"/g) || []).length, 1);
+    assert.equal((renderedText(html).match(/class="warehouse-bottle-bulk-tools"/g) || []).length, 1);
+    assert.equal((renderedText(html).match(/class="warehouse-wall-controls"/g) || []).length, 1);
     assert.match(
-      html,
+      renderedText(html),
       new RegExp(
         'class="warehouse-unassigned-toggle"[^>]*ar' + 'ia-controls="warehouse-wall-unassigned-con' +
         'tent"[^>]*aria-expanded="false"'
       )
     );
-    assert.match(html, /id="warehouse-wall-unassigned-content"[^>]*hidden/);
-    assert.equal((html.match(/warehouse-unassigned-summary/g) || []).length, 0, 'no redundant collapsed header');
-    assert.match(html, /data-unassigned-id="b26"/);
-    assert.doesNotMatch(html, /data-unassigned-id="b0"/);
-    assert.equal((html.match(/data-shelf-id=/g) || []).length, 1);
-    assert.match(html, /data-shelf-id="s0"/);
-    assert.equal((html.match(/class="warehouse-wall-scroll"/g) || []).length, 1);
+    assert.match(renderedText(html), /id="warehouse-wall-unassigned-content"[^>]*hidden/);
+    assert.equal((renderedText(html).match(/warehouse-unassigned-summary/g) || []).length, 0, 'no redundant collapsed header');
+    assert.match(renderedText(html), /data-unassigned-id="b26"/);
+    assert.doesNotMatch(renderedText(html), /data-unassigned-id="b0"/);
+    assert.equal((renderedText(html).match(/data-shelf-id=/g) || []).length, 1);
+    assert.match(renderedText(html), /data-shelf-id="s0"/);
+    assert.equal((renderedText(html).match(/class="warehouse-wall-scroll"/g) || []).length, 1);
     const emptyRoom = renderWarehouseRoomWall({id: 'r2', name: 'Empty room', furniture: []}, warehouse);
-    assert.match(emptyRoom, /class="warehouse-unassigned-tray warehouse-unassigned-tray--embedded"/);
-    assert.match(emptyRoom, /noch keine Möbel mit Fächern/);
+    assert.match(renderedText(emptyRoom), /class="warehouse-unassigned-tray warehouse-unassigned-tray--embedded"/);
+    assert.match(renderedText(emptyRoom), /noch keine Möbel mit Fächern/);
   }
 );
 
@@ -121,14 +122,14 @@ test(
     };
     const room = {id: 'room', name: 'Room', furniture: []};
     const html = renderWarehouseRoomWall(room, warehouse, ['b1'], {expanded: true});
-    assert.match(html, /class="warehouse-wall-controls"/);
-    assert.match(html, /1 Flaschen ausgewählt/);
-    assert.match(html, /Nicht zugeordnet \(2\)/);
-    assert.match(html, /class="warehouse-unassigned-toggle"[^>]*aria-expanded="true"/);
-    assert.doesNotMatch(html, /id="warehouse-wall-unassigned-content"[^>]*hidden/);
-    assert.equal((html.match(/warehouse-bottle-bulk-tools/g) || []).length, 1);
-    assert.equal((html.match(/data-act="warehouse-bottles-assign-selected"/g) || []).length, 1);
-    assert.match(html, /data-unassigned-id="b1"/);
+    assert.match(renderedText(html), /class="warehouse-wall-controls"/);
+    assert.match(renderedText(html), /1 Flaschen ausgewählt/);
+    assert.match(renderedText(html), /Nicht zugeordnet \(2\)/);
+    assert.match(renderedText(html), /class="warehouse-unassigned-toggle"[^>]*aria-expanded="true"/);
+    assert.doesNotMatch(renderedText(html), /id="warehouse-wall-unassigned-content"[^>]*hidden/);
+    assert.equal((renderedText(html).match(/warehouse-bottle-bulk-tools/g) || []).length, 1);
+    assert.equal((renderedText(html).match(/data-act="warehouse-bottles-assign-selected"/g) || []).length, 1);
+    assert.match(renderedText(html), /data-unassigned-id="b1"/);
   }
 );
 
@@ -141,11 +142,11 @@ test(
       query: 'Whisky 00',
       page: 2,
     });
-    const count = html.indexOf('class="warehouse-unassigned-page-summary"');
-    const search = html.indexOf('id="warehouse-unassigned-wall-search"');
-    const controls = html.indexOf('class="warehouse-unassigned-page-controls"');
+    const count = renderedText(html).indexOf('class="warehouse-unassigned-page-summary"');
+    const search = renderedText(html).indexOf('id="warehouse-unassigned-wall-search"');
+    const controls = renderedText(html).indexOf('class="warehouse-unassigned-page-controls"');
     assert.ok(count !== -1 && count < search && search < controls);
-    assert.match(html, /value="Whisky 00"/);
-    assert.doesNotMatch(html, /warehouse-unassigned-search-footer/);
+    assert.match(renderedText(html), /value="Whisky 00"/);
+    assert.doesNotMatch(renderedText(html), /warehouse-unassigned-search-footer/);
   }
 );

@@ -30,25 +30,24 @@ export function sectionWorkspace(
   const desktop = composeMarkup(items.map(item =>
     renderTemplate('sectionNavItem', {
       id: item.id === selected ? ' active' : '',
-      safe: safe(action),
-      itemAttribute: itemAttribute,
-      safe2: safe(item.id),
-      id2: item.id === selected ? ' aria-current="page"' : '',
-      safe3: safe(item.label),
+      act: safe(action),
+      itemAttributes: {[itemAttribute]: item.id},
+      ariaCurrentAttributes: item.id === selected ? {"aria-current": "page"} : {},
+      label: safe(item.label),
     })));
   const options = composeMarkup(items.map(item =>
     renderTemplate('optionsOption', {
-      safe: safe(item.id),
-      selected: item.id === selected ? ' selected' : '',
-      safe2: safe(item.label),
+      value: safe(item.id),
+      selectedAttributes: item.id === selected ? {"selected": true} : {},
+      label: safe(item.label),
     })));
   return renderTemplate('sectionWorkspace', {
     desktopClass: desktopClass ? ` ${safe(desktopClass)}` : '',
-    safe: safe(label),
+    ariaLabel: safe(label),
     desktop: desktop,
-    safe2: safe(label),
-    safe3: safe(switchKind),
-    safe4: safe(label),
+    label: safe(label),
+    sectionSwitch: safe(switchKind),
+    navigationLabel: safe(label),
     options: options,
     content: content,
   });

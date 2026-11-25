@@ -3,8 +3,9 @@
  */
 import {t} from '../i18n/index.js';
 import {escapeHtml} from './dom.js';
+import {attributeEntries, checkedTag, decodeEscaped} from './bindings.js';
 
-export const SLOT = /\{\{(raw|text|t|tag):([\w.]+)\}\}/g;
+export const SLOT = /\{\{(content|attr|attrs|text|t|tag):([\w.]+)\}\}/g;
 
 /** Immutable description of a template instance or a sequence of instances. */
 export class RenderPlan {
@@ -73,15 +74,39 @@ function compactTemplate(source) {
 }
 
 /**
- * Serializes a render plan for DOM-free markup assertions, never for mounting.
- * @param {*} value Render plan or legacy escaped text.
- * @return {string} Serialized markup.
+ * Resolves a scalar binding using the same rules as the browser renderer.
+ * @param {!RenderPlan} plan Template instance.
+ * @param {string} mode Binding type.
+ * @param {string} key Slot name.
+ * @return {string} Literal scalar text.
+ */
+export function scalarBinding(plan, mode, key) {
+  const value = slotValue(plan, mode, key);
+  if (value != null && !['string', 'number', 'boolean'].includes(typeof value)) {
+    throw new TypeError(`Non-scalar binding: ${key}`);
+  }
+  return mode === 'attr' || mode === 'content' ? decodeEscaped(value) : String(value ?? '');
+}
+
+/**
+ * Serializes a render plan for diagnostic/test assertions. Shares binding
+ * normalization and structural validation with native DOM materialization.
+ * @param {*} value Render plan or scalar content.
+ * @return {string} Escaped markup representation.
  */
 export function serializeMarkup(value) {
-  if (!(value instanceof RenderPlan)) return String(value);
+  if (!(value instanceof RenderPlan)) return escapeHtml(decodeEscaped(value));
   if (value.parts) return value.parts.map(serializeMarkup).join('');
-  return compactTemplate(value.source).replace(SLOT, (_, mode, key) => {
+  const source = compactTemplate(value.source);
+  return source.replace(SLOT, (_, mode, key, offset) => {
     const binding = slotValue(value, mode, key);
-    return mode === 'text' ? escapeHtml(binding) : serializeMarkup(binding);
+    if (mode === 'tag') return checkedTag(binding);
+    if (mode === 'attrs') {
+      const attributes = attributeEntries(binding).map(([name, text, flag]) =>
+        flag ? name : `${name}="${escapeHtml(text)}"`).join(' ');
+      return attributes && (/\s/.test(source[offset - 1]) ? '' : ' ') + attributes;
+    }
+    if (mode === 'content' && binding instanceof RenderPlan) return serializeMarkup(binding);
+    return escapeHtml(scalarBinding(value, mode, key));
   });
 }

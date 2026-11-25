@@ -1,5 +1,5 @@
 <!-- wcm-template:actions -->
-<div class="actions ds-header-actions{{raw:className}}">{{raw:content}}</div>
+<div class="actions ds-header-actions{{attr:className}}">{{content:content}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:headingPeriod -->
@@ -7,7 +7,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:h -->
-<{{tag:level}}{{raw:classes}}{{raw:id}}>{{text:title}}{{raw:headingPeriod}}{{raw:trailingAction}}</{{tag:level2}}>
+<{{tag:level}}{{attrs:classAttributes}}{{attrs:idAttributes}}>{{text:title}}{{content:headingPeriod}}{{content:trailingAction}}</{{tag:level2}}>
 <!-- /wcm-template -->
 
 <!-- wcm-template:copyP -->
@@ -15,11 +15,11 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:copyDiv -->
-<div class="{{raw:copyClass}}">{{raw:heading}}{{raw:p}}</div>
+<div class="{{attr:copyClass}}">{{content:heading}}{{content:p}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:sectionHeaderDiv -->
-<div class="{{raw:layout}} ds-section-header{{raw:className}}">{{raw:copy}}{{raw:actionsBare}}</div>
+<div class="{{attr:layout}} ds-section-header{{attr:className}}">{{content:copy}}{{content:actionsBare}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:eyebrow -->
@@ -31,18 +31,20 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:header -->
-<header class="{{raw:classes}}"><div{{raw:copyClass}}>{{raw:eyebrow}}{{raw:preTitle}}{{raw:headingTitle}}{{raw:intro}}</div>{{raw:actions}}</header>
+<header class="{{attr:classes}}"><div{{attrs:classAttributes}}>{{content:eyebrow}}{{content:preTitle}}{{content:headingTitle}}{{content:intro}}</div>{{content:actions}}</header>
 <!-- /wcm-template -->
 
 <!-- wcm-template:dsBackNav -->
-<nav class="ds-back-nav ds-back-nav--page-action" aria-label="{{raw:text}}"><button type="button" class="btn ds-back-button ds-back-button--page-action" {{raw:attr}}>{{raw:arrowLeftIcon}}<span>{{raw:text2}}</span></button></nav>
+<nav class="ds-back-nav ds-back-nav--page-action" aria-label="{{attr:text}}"><button type="button" class="btn ds-back-button ds-back-button--page-action" {{attrs:attr}}>{{content:arrowLeftIcon}}<span>{{content:text2}}</span></button>
+</nav>
 <!-- /wcm-template -->
 
 <!-- wcm-template:pageBackNav -->
-<nav class="page-back-nav ds-back-nav ds-back-nav--inline" aria-label="{{raw:text}}"><button
+<nav class="page-back-nav ds-back-nav ds-back-nav--inline" aria-label="{{attr:text}}"><button
     type="button"
     class="inline-link page-back ds-back-button ds-back-button--inline"
-    {{raw:attr}}>{{raw:arrowLeftIcon}}<span>{{raw:text2}}</span></button></nav>
+    {{attrs:attr}}>{{content:arrowLeftIcon}}<span>{{content:text2}}</span></button>
+</nav>
 <!-- /wcm-template -->
 
 <!-- wcm-template:dsHelpIconButton -->
@@ -50,6 +52,6 @@
   type="button"
   class="ds-help-icon-button flight-plan-help-button"
   data-act="{{text:action}}"
-  aria-label="{{raw:text}}"
-  title="{{raw:text2}}"{{raw:disabled}}>{{raw:helpCircleIcon}}</button>
+  aria-label="{{attr:text}}"
+  title="{{attr:title}}"{{attrs:disabledAttributes}}>{{content:helpCircleIcon}}</button>
 <!-- /wcm-template -->

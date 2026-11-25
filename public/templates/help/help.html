@@ -8,25 +8,25 @@
 
 <!-- wcm-template:helpSection -->
 
-        <section
+<section
   class="help-section"
-  id="help-panel-{{raw:id}}"
-  aria-labelledby="help-title-{{raw:id2}}"{{raw:id3}}>
-            {{raw:headingTitle}}
-            <div class="help-content-panel">
-                {{raw:helpDescription}}
-                <ol class="help-steps">{{raw:from}}</ol>{{raw:helpGuides}}
-            </div>
+  id="help-panel-{{attr:id}}"
+  aria-labelledby="help-title-{{attr:ariaLabelledby}}"{{attrs:hiddenAttributes}}>
+  {{content:headingTitle}}
+  <div class="help-content-panel">
+    {{content:helpDescription}}
+    <ol class="help-steps">{{content:from}}</ol>{{content:helpGuides}}
+  </div>
 </section>
 <!-- /wcm-template -->
 
 <!-- wcm-template:helpPanels -->
-<div class="help-panels">{{raw:panels}}</div>
+<div class="help-panels">{{content:panels}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsPage -->
 <div class="analytics-page help-page">
-        {{raw:pageHeader}}
-        {{raw:workspace}}
-    </div>
+  {{content:pageHeader}}
+  {{content:workspace}}
+</div>
 <!-- /wcm-template -->

@@ -1,5 +1,5 @@
 /** @fileoverview Shared loader and renderer for external HTML fragments. */
-import {RenderPlan, serializeMarkup} from './render-plan.js';
+import {RenderPlan} from './render-plan.js';
 
 const cache = new Map();
 
@@ -23,17 +23,6 @@ export function parseTemplates(source) {
     throw new Error('Invalid HTML template file');
   }
   return fragments;
-}
-
-/**
- * Creates a renderer for preloaded HTML with explicit text and markup slots.
- *
- * @param {!Map<string, string>} fragments Named HTML fragments.
- * @return {function(string, Object=): string} Synchronous renderer.
- */
-export function createTemplateRenderer(fragments) {
-  const render = createPlanRenderer(fragments);
-  return (name, values = {}) => serializeMarkup(render(name, values));
 }
 
 /**
@@ -86,7 +75,7 @@ export function resolveTemplateURL(name) {
 export async function loadTemplates(name) {
   const url = resolveTemplateURL(name);
   if (!cache.has(url.href)) {
-    cache.set(url.href, readTemplateFile(url).then(parseTemplates).then(url.protocol === 'file:' ? createTemplateRenderer : createPlanRenderer));
+    cache.set(url.href, readTemplateFile(url).then(parseTemplates).then(createPlanRenderer));
   }
   return cache.get(url.href);
 }

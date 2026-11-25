@@ -112,7 +112,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
                 }
               ),
               id2: entry.id,
-              id3: photo.id,
+              photoId: photo.id,
               editIcon: editIcon,
               photoCutoutBadge: photo.cutout ? renderTemplate('photoCutoutBadge', {sparkleIcon: sparkleIcon, }) : '',
               id4: entry.id,
@@ -129,7 +129,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
             }))),
           addActionLabel: addActionLabel(t("detail.actions.addPhotos")),
           photoAccept: photoAccept,
-          id2: entry.id,
+          bottlePhotos: entry.id,
           id3: entry.id,
         });
       return renderTemplate('bottle', {
@@ -245,13 +245,13 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
         length: (entry.files || []).length ? documentList(entry.files.map(file =>
           documentItem(renderTemplate('previewFile', {
             id: entry.id,
-            id2: file.id,
+            fileId: file.id,
             name: file.name,
             openPreview: t('detail.documents.openPreview'),
             name2: file.name,
             formatFileSize: formatFileSize(file.size),
             encodeURIComponent: encodeURIComponent(entry.id),
-            encodeURIComponent2: encodeURIComponent(file.id),
+            href: encodeURIComponent(file.id),
             name3: file.name,
             downloadNamed: t('detail.documents.downloadNamed', {name: file.name}),
             arrowDownIcon: arrowDownIcon,
@@ -269,7 +269,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
           })))) : emptyState({description: t("detail.empty.noAttachments")}),
         addActionLabel: addActionLabel(t("detail.actions.addAttachments")),
         fileAccept: fileAccept,
-        id2: entry.id,
+        bottleFiles: entry.id,
       });
     }));
     shell(renderTemplate('detail', {
@@ -380,7 +380,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
             }),
             tastingSummaryRadar: tastingRadar ? renderTemplate('tastingSummaryRadar', {tastingRadar: tastingRadar, }) : '',
             length: tastingNotes.length ? '' : ' is-empty',
-            length2: tastingNotes.length ? '' : ' aria-hidden="true"',
+            ariaHiddenAttributes: tastingNotes.length ? {} : {"aria-hidden": "true"},
             tastingNotes: composeMarkup(tastingNotes.map(note => detailField({
               label: note.label,
               value: note.text,

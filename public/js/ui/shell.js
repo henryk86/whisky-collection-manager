@@ -61,12 +61,12 @@ export function createShell({root, state, applyTheme, renderModal}) {
       mAINPAGES: composeMarkup(MAIN_PAGES.map(item => renderTemplate('a', {
         url: item.url,
         action: item.action,
-        id: item.id === state.page || (item.id === 'home' && state.page === 'detail') ||
-          (item.id === 'tastings-home' && ['tastings', 'tasting', 'external-tasting', 'tasting-flight'].includes(state.page)) ? 'aria-current="page"' : '',
+        homeAttributes: item.id === state.page || (item.id === 'home' && state.page === 'detail') ||
+          (item.id === 'tastings-home' && ['tastings', 'tasting', 'external-tasting', 'tasting-flight'].includes(state.page)) ? {"aria-current": "page"} : {},
         navClass: item.navClass || '',
         viewBox: item.viewBox || '0 0 24 24',
         filled: item.filled ? 'currentColor' : 'none',
-        filled2: item.filled ? 'none' : 'currentColor',
+        stroke: item.filled ? 'none' : 'currentColor',
         icon: item.icon,
         label: item.label,
       }))),

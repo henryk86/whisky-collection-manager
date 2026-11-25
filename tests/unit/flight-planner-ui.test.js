@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
@@ -60,24 +61,24 @@ test(
       },
     });
     view.home();
-    assert.match(html, /data-act="flight-plan-new"[^>]*><svg class="ui-symbol"/);
-    assert.match(html, /Next tasting/);
+    assert.match(renderedText(html), /data-act="flight-plan-new"[^>]*><svg class="ui-symbol"/);
+    assert.match(renderedText(html), /Next tasting/);
     state.page = 'tasting-flight'; state.selected = 'plan-a'; view.flight();
-    assert.match(html, /data-act="flight-plan-start"/);
-    assert.match(html, /data-act="flight-plan-replace"/);
-    assert.match(html, /data-act="flight-plan-move"/);
-    assert.match(html, /data-act="flight-plan-remove"/);
-    assert.doesNotMatch(html, /data-act="tasting-flight-note-open"/);
+    assert.match(renderedText(html), /data-act="flight-plan-start"/);
+    assert.match(renderedText(html), /data-act="flight-plan-replace"/);
+    assert.match(renderedText(html), /data-act="flight-plan-move"/);
+    assert.match(renderedText(html), /data-act="flight-plan-remove"/);
+    assert.doesNotMatch(renderedText(html), /data-act="tasting-flight-note-open"/);
     collection.tastingFlights[0].phase = 'inProgress';
     view.flight();
-    assert.match(html, /data-act="flight-plan-record"/);
-    assert.match(html, /data-act="flight-plan-finish"/);
-    assert.doesNotMatch(html, /data-act="tasting-flight-toggle-add"/);
-    assert.doesNotMatch(html, /data-act="tasting-flight-attach"/);
+    assert.match(renderedText(html), /data-act="flight-plan-record"/);
+    assert.match(renderedText(html), /data-act="flight-plan-finish"/);
+    assert.doesNotMatch(renderedText(html), /data-act="tasting-flight-toggle-add"/);
+    assert.doesNotMatch(renderedText(html), /data-act="tasting-flight-attach"/);
     collection.tastingFlights[0].phase = 'completed';
     view.flight();
-    assert.doesNotMatch(html, /data-act="flight-plan-record"/);
-    assert.match(html, /data-act="tasting-flight-toggle-add"[^>]+disabled/);
+    assert.doesNotMatch(renderedText(html), /data-act="flight-plan-record"/);
+    assert.match(renderedText(html), /data-act="tasting-flight-toggle-add"[^>]+disabled/);
   }
 );
 test(
@@ -136,30 +137,30 @@ test(
       },
     });
     home();
-    assert.match(html, /data-collection-flavor-picker/);
-    assert.match(html, /class="ui-symbol collection-flavor-chevron"/);
-    assert.match(html, /class="ui-symbol collection-menu-chevron"/);
-    assert.doesNotMatch(html, /aria-hidden="true">⌄/);
-    assert.match(html, /data-flavor-profile-status/);
-    assert.match(html, /value="with" data-flavor-profile-status/);
+    assert.match(renderedText(html), /data-collection-flavor-picker/);
+    assert.match(renderedText(html), /class="ui-symbol collection-flavor-chevron"/);
+    assert.match(renderedText(html), /class="ui-symbol collection-menu-chevron"/);
+    assert.doesNotMatch(renderedText(html), /aria-hidden="true">⌄/);
+    assert.match(renderedText(html), /data-flavor-profile-status/);
+    assert.match(renderedText(html), /value="with" data-flavor-profile-status/);
     assert.match(
-      html,
+      renderedText(html),
       new RegExp(
         'data-flavor-axis="smoky" data-flavor-part=' + '"min"[^>]*>[\\s\\S]*?<option value="6" sel' + 'ected>'
       )
     );
-    assert.match(html, /data-act="collection-flavor-add"/);
-    assert.match(html, /data-act="collection-flavor-apply"/);
-    assert.match(html, /data-act="collection-flavor-open"/);
-    assert.doesNotMatch(html, /collection-flavor-filter/);
-    assert.match(html, /id="collection-saved-views"/);
-    assert.match(html, /data-act="collection-view-save"/);
-    assert.match(html, /data-act="collection-view-apply"/);
-    assert.doesNotMatch(html, /collection-saved-controls/);
-    assert.match(html, /data-act="collection-flight-plan"[^>]*><svg class="ui-symbol"/);
-    assert.match(html, /<div class="collection-results-heading">/);
-    assert.ok(html.indexOf('data-act="collection-flight-plan"') > html.indexOf('class="collection-results-heading"'));
-    assert.ok(html.indexOf('data-act="collection-flight-plan"') < html.indexOf('class="empty-state"'));
+    assert.match(renderedText(html), /data-act="collection-flavor-add"/);
+    assert.match(renderedText(html), /data-act="collection-flavor-apply"/);
+    assert.match(renderedText(html), /data-act="collection-flavor-open"/);
+    assert.doesNotMatch(renderedText(html), /collection-flavor-filter/);
+    assert.match(renderedText(html), /id="collection-saved-views"/);
+    assert.match(renderedText(html), /data-act="collection-view-save"/);
+    assert.match(renderedText(html), /data-act="collection-view-apply"/);
+    assert.doesNotMatch(renderedText(html), /collection-saved-controls/);
+    assert.match(renderedText(html), /data-act="collection-flight-plan"[^>]*><svg class="ui-symbol"/);
+    assert.match(renderedText(html), /<div class="collection-results-heading">/);
+    assert.ok(renderedText(html).indexOf('data-act="collection-flight-plan"') > renderedText(html).indexOf('class="collection-results-heading"'));
+    assert.ok(renderedText(html).indexOf('data-act="collection-flight-plan"') < renderedText(html).indexOf('class="empty-state"'));
   }
 );
 
@@ -213,28 +214,28 @@ test('planner distinguishes unavailable sherry casks from cask mismatches',
       });
       view.startPlannedFlight();
       view.generateFlightPlan();
-      assert.match(preview.innerHTML, /Keine passenden Flaschen/);
-      assert.match(preview.innerHTML, /0 von 0 verfügbaren/);
-      assert.match(preview.innerHTML, /gewählten Verfügbarkeit: 1/);
-      assert.equal(save.disabled, true);
+      assert.match(renderedText(preview.innerHTML), /Keine passenden Flaschen/);
+      assert.match(renderedText(preview.innerHTML), /0 von 0 verfügbaren/);
+      assert.match(renderedText(preview.innerHTML), /gewählten Verfügbarkeit: 1/);
+      assert.equal(renderedText(save.disabled), true);
       availability.value = 'all';
       view.generateFlightPlan();
-      assert.match(preview.innerHTML, /Numbered Oloroso/);
-      assert.match(preview.innerHTML, /1 von 1 verfügbaren/);
-      assert.doesNotMatch(preview.innerHTML, /gewählten Verfügbarkeit/);
-      assert.equal(save.disabled, false);
+      assert.match(renderedText(preview.innerHTML), /Numbered Oloroso/);
+      assert.match(renderedText(preview.innerHTML), /1 von 1 verfügbaren/);
+      assert.doesNotMatch(renderedText(preview.innerHTML), /gewählten Verfügbarkeit/);
+      assert.equal(renderedText(save.disabled), false);
       state.flightCandidateIds = [];
       view.startPlannedFlight();
       view.generateFlightPlan();
-      assert.match(preview.innerHTML, /gefilterten Sammlung: 1/);
-      assert.doesNotMatch(preview.innerHTML, /Numbered Oloroso/);
-      assert.equal(save.disabled, true);
+      assert.match(renderedText(preview.innerHTML), /gefilterten Sammlung: 1/);
+      assert.doesNotMatch(renderedText(preview.innerHTML), /Numbered Oloroso/);
+      assert.equal(renderedText(save.disabled), true);
       view.startPlannedFlight();
       availability.value = 'open';
       bottling.bottles[0].status = 'open';
       view.generateFlightPlan();
-      assert.match(preview.innerHTML, /Numbered Oloroso/);
-      assert.equal(save.disabled, false);
+      assert.match(renderedText(preview.innerHTML), /Numbered Oloroso/);
+      assert.equal(renderedText(save.disabled), false);
     } finally {
       globalThis.document = previousDocument;
     }

@@ -41,9 +41,9 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   const passwordToggle = (id, hidden = true) =>
     renderTemplate('authTogglePassword', {
       id: id,
-      id2: id,
+      ariaControls: id,
       tr: tr(hidden ? 'showPassword' : 'hidePassword'),
-      tr2: tr(hidden ? 'showPassword' : 'hidePassword'),
+      title: tr(hidden ? 'showPassword' : 'hidePassword'),
       hidden: hidden ? 'false' : 'true',
       hidden2: hidden ? eyeIcon : eyeOffIcon,
     });
@@ -69,19 +69,19 @@ export function createAuthController({root, state, render, refresh, applyTheme,
       authPasswordInput: isPassword
         ? renderTemplate('authPasswordInput', {
           id: id,
-          id2: id,
+          name: id,
           autocomplete: autocomplete,
-          minLength: minLength ? ` minlength="${minLength}"` : '',
-          value: value ? ` value="${escapeHtml(value)}"` : '',
+          minlengthAttributes: minLength ? {"minlength": minLength} : {},
+          valueAttributes: value ? {"value": value} : {},
           passwordToggle: passwordToggle(id),
         })
         : renderTemplate('fieldInput', {
           id: id,
-          id2: id,
+          name: id,
           type: type,
           autocomplete: autocomplete,
-          minLength: minLength ? ` minlength="${minLength}"` : '',
-          value: value ? ` value="${escapeHtml(value)}"` : '',
+          minlengthAttributes: minLength ? {"minlength": minLength} : {},
+          valueAttributes: value ? {"value": value} : {},
         }),
     });
   };

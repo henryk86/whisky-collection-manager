@@ -42,7 +42,7 @@ export function createSettingsView(state, auth = {
     const panel = (id, content) =>
       renderTemplate('settingsSection', {
         id: id,
-        id2: id === active ? '' : ' hidden',
+        hiddenAttributes: id === active ? {} : {"hidden": true},
         headingTitle: headingTitle({
           title: t(`settings.navigation.${id}`),
           level: 2,
@@ -54,7 +54,7 @@ export function createSettingsView(state, auth = {
       headingTitle: headingTitle({title: t('settings.language.label'), }),
       entries: composeMarkup(languages.map(({code, name, selected}) =>
         renderTemplate('generalOption', {
-          code, selected: selected ? 'selected' : '', name,
+          code, selectedAttributes: selected ? {"selected": true} : {}, name,
         }))),
       headingTitle2: headingTitle({title: t('settings.collection.title')}),
       fullYear: new Date().getFullYear(),
@@ -79,10 +79,10 @@ export function createSettingsView(state, auth = {
       }),
       sort: composeMarkup(distilleries.map(distillery =>
         renderTemplate('distilleryRow', {
-          includes: distillery.visible ? '' : 'hidden',
-          name: distillery.name, id: distillery.id, name2: distillery.name,
+          hiddenAttributes: distillery.visible ? {} : {"hidden": true},
+          name: distillery.name, id: distillery.id, ariaLabel: distillery.name,
         }))),
-      hidden: matchCount ? 'hidden' : '',
+      hiddenAttributes: matchCount ? {"hidden": true} : {},
 
     });
     const workspace = sectionWorkspace(
@@ -98,7 +98,7 @@ export function createSettingsView(state, auth = {
         panel('distilleries', distilleryPanel),
         (state.auth?.canManageUsers ?
           renderTemplate('settingsSection2', {
-            active: active === 'users' ? '' : ' hidden',
+            usersAttributes: active === 'users' ? {} : {"hidden": true},
             headingTitle: headingTitle({
               title: t('auth.users'),
               level: 2,

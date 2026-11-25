@@ -50,13 +50,13 @@ export function shelfContents(warehouse, shelfId, bottlings = []) {
           ].filter(([, value]) => value != null && value !== '')
             .map(([label, value]) =>
               renderTemplate('warehouseBottleFact', {
-                safe: safe(label),
-                safe2: safe(value),
+                label: safe(label),
+                value: safe(value),
               })));
           return renderTemplate('warehouseShelfDetailBottle', {
-            safe: safe(b.id),
+            bottleId: safe(b.id),
             bottleSymbol: bottleSymbol(b, {placeholderImage: true, staticImage: true}),
-            safe2: safe(b.name),
+            name: safe(b.name),
             facts: facts,
             bottleListFacts: bottleListFacts(b),
             actionToolbar: actionToolbar(bottleActionButtons(b), {className: 'warehouse-shelf-detail-actions'}),

@@ -58,7 +58,7 @@ export function createBottleForm({state, selectors}) {
       ))),
     });
     return renderTemplate('bottleForm', {
-      fromOverview: fromOverview ? ' data-from-overview="1"' : '',
+      dataFromOverviewAttributes: fromOverview ? {"data-from-overview": "1"} : {},
       photoOption: importPhoto ? renderTemplate('importPhoto') : '',
       id: bottle.id || '',
       bottlingId: bottlingId,

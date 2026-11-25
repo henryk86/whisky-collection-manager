@@ -8,13 +8,13 @@
 
 <!-- wcm-template:photoEditorSlider -->
 <label class="photo-editor-slider">
-  <span>{{text:t}} <output data-photo-output="{{raw:key}}">0</output></span>
+  <span>{{text:t}} <output data-photo-output="{{attr:key}}">0</output></span>
   <input
     type="range"
-    data-photo-slider="{{raw:key2}}"
-    min="{{raw:min}}"
-    max="{{raw:max}}"
-    step="{{raw:step}}"
+    data-photo-slider="{{attr:photoSlider}}"
+    min="{{attr:min}}"
+    max="{{attr:max}}"
+    step="{{attr:step}}"
     value="0"
     disabled>
 </label>
@@ -29,25 +29,26 @@
   disabled
   aria-pressed="false"
   title="{{text:pickWhite}}"
-  aria-label="{{text:pickWhite2}}">{{raw:pipetteIcon}}</button>
+  aria-label="{{text:ariaLabel}}">{{content:pipetteIcon}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:photoEditorGroup -->
 <section class="photo-editor-group" aria-label="{{text:t}}">
   <div class="photo-editor-group-header">
     <h3>{{text:t2}}</h3>
-    <div class="photo-editor-group-tools">{{raw:photoEditorPickWhite}}
-                        <button
+    <div class="photo-editor-group-tools">{{content:photoEditorPickWhite}}
+      <button
         type="button"
         class="photo-editor-group-reset"
         data-act="photo-editor-reset-group"
-        data-photo-group="{{raw:key}}"
+        data-photo-group="{{attr:key}}"
         data-photo-editor-ready
         disabled
         title="{{text:resetGroup}}"
-        aria-label="{{text:resetGroup2}}">{{raw:resetIcon}}</button></div>
+        aria-label="{{text:ariaLabel}}">{{content:resetIcon}}</button>
+    </div>
   </div>
-                        {{raw:sliders}}</section>
+  {{content:sliders}}</section>
 <!-- /wcm-template -->
 
 <!-- wcm-template:photoEditorToggleCutout -->
@@ -64,7 +65,11 @@
     <div class="photo-editor-stage">
       <div class="photo-editor-image cutout-checker">
         <canvas data-photo-editor-preview role="img" aria-label="{{text:preview}}"></canvas>
-        <div data-photo-editor-selection class="photo-editor-selection" hidden aria-hidden="true">
+        <div
+          data-photo-editor-selection
+          class="photo-editor-selection"
+          hidden
+          aria-hidden="true">
         </div>
         <div
           data-photo-editor-brush-cursor
@@ -79,7 +84,7 @@
               data-act="photo-editor-zoom-out"
               aria-label="{{text:zoomOut}}"
               title="{{text:zoomOut2}}"
-              disabled>{{raw:minusIcon}}</button>
+              disabled>{{content:minusIcon}}</button>
             <button
               type="button"
               data-act="photo-editor-zoom-reset"
@@ -90,7 +95,7 @@
               type="button"
               data-act="photo-editor-zoom-in"
               aria-label="{{text:zoomIn}}"
-              title="{{text:zoomIn2}}">{{raw:plusIcon}}</button>
+              title="{{text:zoomIn2}}">{{content:plusIcon}}</button>
           </div>
           <div class="photo-editor-stage-actions">
             <button
@@ -129,8 +134,8 @@
         role="tabpanel"
         aria-labelledby="photo-editor-tab-adjustments"
         data-photo-editor-panel="adjustments">
-                    {{raw:pHOTOADJUSTMENTGROUPS}}
-                    </div>
+        {{content:pHOTOADJUSTMENTGROUPS}}
+      </div>
       <div
         class="photo-editor-tab-panel"
         id="photo-editor-panel-cutout"
@@ -145,8 +150,8 @@
             data-act="photo-editor-cutout"
             data-photo-editor-ready
             disabled>{{text:t}}</button>
-                            {{raw:photoEditorToggleCutout}}
-                            <button
+          {{content:photoEditorToggleCutout}}
+          <button
             type="button"
             class="btn small danger"
             data-act="photo-editor-remove-cutout"
@@ -168,17 +173,21 @@
               data-photo-brush-mode="restore"
               data-act="photo-editor-brush-mode"
               aria-pressed="false">{{text:restore}}</button>
-            <button type="button" class="btn small" data-act="photo-editor-brush-undo" disabled>{{text:brushUndo}}</button>
+            <button
+              type="button"
+              class="btn small"
+              data-act="photo-editor-brush-undo"
+              disabled>{{text:brushUndo}}</button>
           </div>
           <label class="photo-editor-mask-size">{{text:brushSize}}
-                            <input
+            <input
               type="range"
               min="1"
               max="15"
               step="1"
-              value="{{raw:dEFAULTMASKBRUSHSIZE}}"
+              value="{{attr:dEFAULTMASKBRUSHSIZE}}"
               data-photo-brush-size>
-            <output data-photo-brush-size-value>{{raw:dEFAULTMASKBRUSHSIZE2}} %</output>
+            <output data-photo-brush-size-value>{{content:DEFAULT_MASK_BRUSH_SIZE}} %</output>
           </label>
         </div>
       </div>
@@ -186,7 +195,12 @@
   </div>
   <p class="photo-editor-help" data-photo-editor-message role="status">{{text:loading}}</p>
   <div class="photo-editor-actions">
-    <button type="button" class="btn" data-act="photo-editor-auto" data-photo-editor-ready disabled>{{text:auto}}</button>
+    <button
+      type="button"
+      class="btn"
+      data-act="photo-editor-auto"
+      data-photo-editor-ready
+      disabled>{{text:auto}}</button>
     <button
       type="button"
       class="btn"
@@ -194,8 +208,8 @@
       data-photo-editor-ready
       disabled>{{text:reset}}</button>
     <span class="photo-editor-actions-spacer"></span>
-                {{raw:closeModalButton}}
-                <button
+    {{content:closeModalButton}}
+    <button
       type="button"
       class="btn primary"
       data-act="photo-editor-save"

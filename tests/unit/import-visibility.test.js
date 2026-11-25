@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createBottlingForm} from '../../public/js/features/forms/bottling.js';
@@ -18,9 +19,9 @@ test(
     });
     for (const bottling of [{}, {id: 'existing', name: 'Example whisky'}]) {
       const html = form(bottling);
-      assert.doesNotMatch(html, /import-search|import-panel|import-area/);
-      assert.match(html, /name="whiskybaseId"/);
-      assert.match(html, /name="whiskybaseUrl"/);
+      assert.doesNotMatch(renderedText(html), /import-search|import-panel|import-area/);
+      assert.match(renderedText(html), /name="whiskybaseId"/);
+      assert.match(renderedText(html), /name="whiskybaseUrl"/);
     }
   }
 );

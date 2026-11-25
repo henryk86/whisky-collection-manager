@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHomeView} from '../../public/js/views/home.js';
@@ -80,9 +81,9 @@ test(
          */
         shell: markup => {html = markup;},
       })();
-      assert.equal((html.match(/class="panel stat" data-ds-panel="standard"/g) || []).length, 4);
-      assert.match(html, /class="empty-state" data-ds-empty-state="collection"/);
-      assert.doesNotMatch(html, /class="panel stat"[^>]*>\s*<div class="panel"/);
+      assert.equal((renderedText(html).match(/class="panel stat" data-ds-panel="standard"/g) || []).length, 4);
+      assert.match(renderedText(html), /class="empty-state" data-ds-empty-state="collection"/);
+      assert.doesNotMatch(renderedText(html), /class="panel stat"[^>]*>\s*<div class="panel"/);
     } finally {
       for (const [name, value] of Object.entries(previous)) {
         if (value === undefined) delete globalThis[name]; else globalThis[name] = value;
@@ -108,9 +109,9 @@ test(
        */
       shell: markup => {html = markup;},
     })();
-    assert.match(html, /class="panel stat analytics-metric" data-ds-panel="standard"/);
-    assert.match(html, /class="analytics-panel" data-ds-panel="analytics"/);
-    assert.match(html, /data-ds-empty-state="inline"/);
+    assert.match(renderedText(html), /class="panel stat analytics-metric" data-ds-panel="standard"/);
+    assert.match(renderedText(html), /class="analytics-panel" data-ds-panel="analytics"/);
+    assert.match(renderedText(html), /data-ds-empty-state="inline"/);
   }
 );
 
@@ -135,11 +136,11 @@ test(
     };
     const html = shelfContents({rooms: [room], bottles: [bottle], assignments: {p1: 's1'}}, 's1', [{id: 'b1', abv: 46}])?.html || '';
     assert.match(
-      html,
+      renderedText(html),
       new RegExp('class="actions warehouse-shelf-detail-acti' + 'ons" data-ds-action-toolbar="inline"')
     );
-    assert.match(html, /data-act="warehouse-assign" data-id="p1"/);
-    assert.match(html, /href="\/\?bottling=b1"/);
-    assert.match(html, /A&amp;B/);
+    assert.match(renderedText(html), /data-act="warehouse-assign" data-id="p1"/);
+    assert.match(renderedText(html), /href="\/\?bottling=b1"/);
+    assert.match(renderedText(html), /A&amp;B/);
   }
 );

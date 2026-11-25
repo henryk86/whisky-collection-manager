@@ -1,18 +1,18 @@
 <!-- wcm-template:warehouseBottleFact -->
-<span class="warehouse-bottle-fact"><span class="warehouse-bottle-fact-label">{{raw:safe}}:</span> {{raw:safe2}}</span>
+<span class="warehouse-bottle-fact"><span class="warehouse-bottle-fact-label">{{content:label}}:</span> {{content:value}}</span>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseShelfDetailBottle -->
-<article class="warehouse-shelf-detail-bottle" data-bottle-id="{{raw:safe}}">
-                {{raw:bottleSymbol}}
-                <div class="warehouse-shelf-detail-info"><strong>{{raw:safe2}}</strong><div class="warehouse-bottle-facts">{{raw:facts}}{{raw:bottleListFacts}}</div>
+<article class="warehouse-shelf-detail-bottle" data-bottle-id="{{attr:bottleId}}">
+  {{content:bottleSymbol}}
+  <div class="warehouse-shelf-detail-info"><strong>{{content:name}}</strong><div class="warehouse-bottle-facts">{{content:facts}}{{content:bottleListFacts}}</div>
   </div>
-                {{raw:actionToolbar}}
-             </article>
+  {{content:actionToolbar}}
+</article>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseShelfDetailGrid -->
-<div class="warehouse-shelf-detail-grid">{{raw:bottles}}</div>
+<div class="warehouse-shelf-detail-grid">{{content:bottles}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint -->
@@ -21,5 +21,5 @@
 
 <!-- wcm-template:warehouseShelfDetails -->
 <div class="warehouse-shelf-details">
-  <p>{{raw:bottleCount}}</p>{{raw:body}}</div>
+  <p>{{content:bottleCount}}</p>{{content:body}}</div>
 <!-- /wcm-template -->

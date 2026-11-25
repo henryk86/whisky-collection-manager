@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
@@ -78,18 +79,18 @@ test(
     };
     try {
       view.render();
-      assert.doesNotMatch(html, /class="warehouse-bottle-check"/);
-      assert.doesNotMatch(html, /data-act="warehouse-bottles-assign-selected"/);
-      assert.match(html, /warehouse-finder-card/);
-      assert.match(html, /data-act="warehouse-find-location"/);
+      assert.doesNotMatch(renderedText(html), /class="warehouse-bottle-check"/);
+      assert.doesNotMatch(renderedText(html), /data-act="warehouse-bottles-assign-selected"/);
+      assert.match(renderedText(html), /warehouse-finder-card/);
+      assert.match(renderedText(html), /data-act="warehouse-find-location"/);
       state.selected = 'shelves';
       view.render();
       view.assignSelectedBottles();
-      assert.match(dialog, /data-endpoint="\/api\/warehouse\/bottles\/bulk"/);
-      assert.match(dialog, /data-bottle-bulk="true"/);
-      assert.match(html, /class="warehouse-room-wall"/);
-      assert.equal((html.match(/class="warehouse-wall-bottle is-selected"/g) || []).length, 2);
-      assert.match(html, /warehouse-bottle-bulk-tools/);
+      assert.match(renderedText(dialog), /data-endpoint="\/api\/warehouse\/bottles\/bulk"/);
+      assert.match(renderedText(dialog), /data-bottle-bulk="true"/);
+      assert.match(renderedText(html), /class="warehouse-room-wall"/);
+      assert.equal((renderedText(html).match(/class="warehouse-wall-bottle is-selected"/g) || []).length, 2);
+      assert.match(renderedText(html), /warehouse-bottle-bulk-tools/);
     } finally {
       if (oldDocument === undefined) delete globalThis.document;
       else globalThis.document = oldDocument;
@@ -167,23 +168,23 @@ test(
       const view = createWarehouseView({state});
       view.toggleWallBottleSelection('b1');
       assert.deepEqual(state.warehouseSelectedBottleIds, ['b1']);
-      assert.equal(attributes.get('aria-pressed'), 'true');
-      assert.equal(attributes.get('aria-label'), 'Remove bottle');
-      assert.equal(marked.has('is-selected'), true);
-      assert.equal(clear.disabled, false);
-      assert.equal(assign.disabled, false);
-      assert.equal(preview.disabled, false);
+      assert.equal(renderedText(attributes.get('aria-pressed')), 'true');
+      assert.equal(renderedText(attributes.get('aria-label')), 'Remove bottle');
+      assert.equal(renderedText(marked.has('is-selected')), true);
+      assert.equal(renderedText(clear.disabled), false);
+      assert.equal(renderedText(assign.disabled), false);
+      assert.equal(renderedText(preview.disabled), false);
       view.toggleWallBottleSelection('b2');
       assert.deepEqual(state.warehouseSelectedBottleIds, ['b1', 'b2']);
-      assert.equal(preview.disabled, true);
+      assert.equal(renderedText(preview.disabled), true);
       view.toggleWallBottleSelection('b1');
       assert.deepEqual(state.warehouseSelectedBottleIds, ['b2']);
-      assert.equal(attributes.get('aria-pressed'), 'false');
-      assert.equal(marked.has('is-selected'), false);
+      assert.equal(renderedText(attributes.get('aria-pressed')), 'false');
+      assert.equal(renderedText(marked.has('is-selected')), false);
       view.clearBottleSelection();
       assert.deepEqual(state.warehouseSelectedBottleIds, []);
-      assert.equal(clear.disabled, true);
-      assert.equal(assign.disabled, true);
+      assert.equal(renderedText(clear.disabled), true);
+      assert.equal(renderedText(assign.disabled), true);
     } finally {
       if (original === undefined) delete globalThis.document;
       else globalThis.document = original;

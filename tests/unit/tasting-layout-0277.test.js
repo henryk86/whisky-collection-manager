@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
@@ -79,14 +80,14 @@ test(
   'detail-page empty tastings use a subdued heading hint and two buttons without a panel',
   () => {
     const html = detailHtml();
-    const section = html.match(new RegExp('<section[^>]*class="section tasting-summar' + 'y is-empty"[\\s\\S]*?<\\/section>'))?.[0];
+    const section = renderedText(html).match(new RegExp('<section[^>]*class="section tasting-summar' + 'y is-empty"[\\s\\S]*?<\\/section>'))?.[0];
     assert.ok(section);
-    assert.match(section, /data-act="tastings-new"[^>]*><svg class="new-icon"/);
-    assert.doesNotMatch(section, /class="panel tasting-summary-card"/);
-    assert.match(section, /class="hint tasting-summary-empty">Noch keine Verkostung<\/p>/);
-    assert.match(section, /<button[^>]*data-act="tastings-open"[\s\S]*?tastings-new"/);
-    assert.equal((section.match(/data-act="tastings-new"/g) || []).length, 1);
-    assert.match(html, /data-act="add-bottle"><svg class="new-icon"/);
+    assert.match(renderedText(section), /data-act="tastings-new"[^>]*><svg class="new-icon"/);
+    assert.doesNotMatch(renderedText(section), /class="panel tasting-summary-card"/);
+    assert.match(renderedText(section), /class="hint tasting-summary-empty">Noch keine Verkostung<\/p>/);
+    assert.match(renderedText(section), /<button[^>]*data-act="tastings-open"[\s\S]*?tastings-new"/);
+    assert.equal((renderedText(section).match(/data-act="tastings-new"/g) || []).length, 1);
+    assert.match(renderedText(html), /data-act="add-bottle"><svg class="new-icon"/);
   }
 );
 
@@ -100,14 +101,14 @@ test(
       rating: 85,
     };
     const html = detailHtml([latest]);
-    const row = html.match(
+    const row = renderedText(html).match(
       new RegExp(
         '<div class="tasting-summary-score">[\\s\\S' + ']*?<div class="tasting-summary-rating">[^<' + ']*<\\/div>'
       ))?.[0];
     assert.ok(row);
-    assert.equal((row.match(/class="glencairn-symbol glencairn-rating-symbol"/g) || []).length, 5);
-    assert.match(row, /tasting-summary-glasses[\s\S]*?85 \/ 100/);
-    assert.match(html, /data-act="tastings-open" data-tasting-id="note-1"/);
+    assert.equal((renderedText(row).match(/class="glencairn-symbol glencairn-rating-symbol"/g) || []).length, 5);
+    assert.match(renderedText(row), /tasting-summary-glasses[\s\S]*?85 \/ 100/);
+    assert.match(renderedText(html), /data-act="tastings-open" data-tasting-id="note-1"/);
   }
 );
 
@@ -118,10 +119,10 @@ test(
       {id: 'earlier', tastedOn: '2026-11-10', rating: 70},
       {id: 'newer', tastedOn: '2026-11-22', rating: 80},
     ]);
-    const section = html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    assert.match(section, /data-act="tastings-open" data-tasting-id="newer"/);
-    assert.match(section, /22\.11\.2026 · 2 Verkostungsnotizen/);
-    assert.doesNotMatch(section, /Alle Verkostungsnotizen/);
+    const section = renderedText(html).split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    assert.match(renderedText(section), /data-act="tastings-open" data-tasting-id="newer"/);
+    assert.match(renderedText(section), /22\.11\.2026 · 2 Verkostungsnotizen/);
+    assert.doesNotMatch(renderedText(section), /Alle Verkostungsnotizen/);
   }
 );
 
@@ -129,13 +130,13 @@ test(
   'when a bottling has no notes, the overview action does not use an invalid tasting ID',
   () => {
     const html = detailHtml();
-    assert.match(html, /data-act="tastings-open"(?=\s|>)/);
-    assert.doesNotMatch(html, /data-act="tastings-open"[^>]*data-tasting-id=/);
-    assert.match(html, /class="section tasting-summary is-empty"/);
-    assert.match(html, /<p class="hint tasting-summary-empty">Noch keine Verkostung<\/p>/);
-    assert.match(html, /<button[^>]*data-act="tastings-open"[^>]*>Alle Verkostungsnotizen/);
-    assert.doesNotMatch(html, /class="panel tasting-summary-card"|class="tasting-summary-rating"/);
-    assert.equal((html.match(/data-act="tastings-open"/g) || []).length, 1);
+    assert.match(renderedText(html), /data-act="tastings-open"(?=\s|>)/);
+    assert.doesNotMatch(renderedText(html), /data-act="tastings-open"[^>]*data-tasting-id=/);
+    assert.match(renderedText(html), /class="section tasting-summary is-empty"/);
+    assert.match(renderedText(html), /<p class="hint tasting-summary-empty">Noch keine Verkostung<\/p>/);
+    assert.match(renderedText(html), /<button[^>]*data-act="tastings-open"[^>]*>Alle Verkostungsnotizen/);
+    assert.doesNotMatch(renderedText(html), /class="panel tasting-summary-card"|class="tasting-summary-rating"/);
+    assert.equal((renderedText(html).match(/data-act="tastings-open"/g) || []).length, 1);
   }
 );
 
@@ -166,7 +167,7 @@ test(
       refresh() {},
     }).home();
     assert.match(
-      html,
+      renderedText(html),
       new RegExp(
         '<section class="analytics-panel tasting-ho' + 'me-recent">\\s*<div class="tasting-panel-h' +
         'eading ds-section-header"><h3>Einträge<\\/' +
@@ -174,7 +175,7 @@ test(
         't-choice"[^>]*><svg class="new-icon"'
       )
     );
-    assert.doesNotMatch(html, /class="tasting-add-action"/);
+    assert.doesNotMatch(renderedText(html), /class="tasting-add-action"/);
   }
 );
 
@@ -222,12 +223,12 @@ test(
        */
       refresh() {},
     }).list();
-    const info = html.match(
+    const info = renderedText(html).match(
       new RegExp(
         '<div class="tasting-bottling-summary tasti' + 'ng-bottling-photo-layout">[\\s\\S]*?<\\/se' + 'ction>'
       ))?.[0];
     assert.ok(info);
-    assert.ok(info.indexOf('class="tasting-bottling-photo"') < info.indexOf('class="tasting-bottling-copy"'));
+    assert.ok(renderedText(info).indexOf('class="tasting-bottling-photo"') < renderedText(info).indexOf('class="tasting-bottling-copy"'));
   }
 );
 
@@ -267,14 +268,14 @@ test(
        */
       refresh() {},
     }).editor();
-    const start = html.indexOf('class="tasting-record-fields analytics-panel tasting-readonly-meta-panel"');
-    const end = html.indexOf('class="tasting-top-row"', start);
+    const start = renderedText(html).indexOf('class="tasting-record-fields analytics-panel tasting-readonly-meta-panel"');
+    const end = renderedText(html).indexOf('class="tasting-top-row"', start);
     assert.ok(start > -1 && end > start);
-    const recordPanel = html.slice(start, end);
-    assert.match(recordPanel, /data-act="tasting-edit-start"/);
-    assert.match(recordPanel, /class="actions tasting-readonly-meta-actions"/);
-    assert.doesNotMatch(html, /<div class="section-head"><h3>Eindrücke<\/h3>\s*<div class="actions">/);
-    assert.equal((html.match(/data-act="tasting-edit-start"/g) || []).length, 1);
+    const recordPanel = renderedText(html).slice(start, end);
+    assert.match(renderedText(recordPanel), /data-act="tasting-edit-start"/);
+    assert.match(renderedText(recordPanel), /class="actions tasting-readonly-meta-actions"/);
+    assert.doesNotMatch(renderedText(html), /<div class="section-head"><h3>Eindrücke<\/h3>\s*<div class="actions">/);
+    assert.equal((renderedText(html).match(/data-act="tasting-edit-start"/g) || []).length, 1);
   }
 );
 
@@ -315,15 +316,15 @@ test(
         },
       },
     ]);
-    const summary = html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    assert.match(summary, /class="tasting-summary-content"/);
-    assert.doesNotMatch(summary, /tasting-summary-color|tasting-readonly-color|glencairn-liquid/);
-    assert.match(summary, /class="tasting-summary-radar"/);
-    assert.match(summary, /class="flavor-editor is-preview"/);
-    assert.equal((summary.match(/class="flavor-axis-text"/g) || []).length, 10);
-    assert.doesNotMatch(summary, /flavor-sliders|data-flavor-range/);
+    const summary = renderedText(html).split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    assert.match(renderedText(summary), /class="tasting-summary-content"/);
+    assert.doesNotMatch(renderedText(summary), /tasting-summary-color|tasting-readonly-color|glencairn-liquid/);
+    assert.match(renderedText(summary), /class="tasting-summary-radar"/);
+    assert.match(renderedText(summary), /class="flavor-editor is-preview"/);
+    assert.equal((renderedText(summary).match(/class="flavor-axis-text"/g) || []).length, 10);
+    assert.doesNotMatch(renderedText(summary), /flavor-sliders|data-flavor-range/);
     assert.match(
-      summary,
+      renderedText(summary),
       new RegExp(
         'class="tasting-summary-note"[\\s\\S]*class' + '="tasting-summary-field-label">Nase<\\/spa' +
         'n>[\\s\\S]*class="tasting-summary-note-val' +
@@ -331,14 +332,14 @@ test(
       )
     );
     assert.match(
-      summary,
+      renderedText(summary),
       new RegExp(
         'class="tasting-summary-field-label">Geschm' + 'ack<\\/span>[\\s\\S]*class="tasting-summar' +
         'y-note-value">&lt;Frucht&gt;'
       )
     );
-    assert.doesNotMatch(summary, /Old note|>Abgang<\/span>/);
-    assert.match(summary, /data-act="tastings-open"/);
+    assert.doesNotMatch(renderedText(summary), /Old note|>Abgang<\/span>/);
+    assert.match(renderedText(summary), /data-act="tastings-open"/);
   }
 );
 
@@ -353,37 +354,37 @@ test(
       flavorProfile: {woody: 5},
       tastingNotes: {nose: 'Vanille und Frucht', palate: '', finish: ''},
     }]);
-    const section = html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    const summary = section.indexOf('class="tasting-summary-main"');
-    const heading = section.indexOf('class="muted tasting-summary-lead"');
-    const score = section.indexOf('class="tasting-summary-score"');
-    const date = section.indexOf('class="muted tasting-summary-meta"');
-    const radar = section.indexOf('class="tasting-summary-radar"');
-    const notes = section.indexOf('class="tasting-summary-notes"');
-    const button = section.indexOf('class="actions tasting-summary-actions"');
+    const section = renderedText(html).split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    const summary = renderedText(section).indexOf('class="tasting-summary-main"');
+    const heading = renderedText(section).indexOf('class="muted tasting-summary-lead"');
+    const score = renderedText(section).indexOf('class="tasting-summary-score"');
+    const date = renderedText(section).indexOf('class="muted tasting-summary-meta"');
+    const radar = renderedText(section).indexOf('class="tasting-summary-radar"');
+    const notes = renderedText(section).indexOf('class="tasting-summary-notes"');
+    const button = renderedText(section).indexOf('class="actions tasting-summary-actions"');
     assert.ok(
       summary >= 0 && summary < heading && heading < score && score < date,
       'left summary keeps the original heading, rating, date hierarchy'
     );
-    const mainEnd = section.indexOf('class="tasting-summary-radar"');
+    const mainEnd = renderedText(section).indexOf('class="tasting-summary-radar"');
     assert.ok(date < button && button < mainEnd && mainEnd < notes,
       'the tasting button follows the date inside the left summary, before radar and optional notes');
     assert.match(
-      section,
+      renderedText(section),
       new RegExp(
         'class="muted tasting-summary-meta"[^>]*>[^' + '<]*<\\/span>\\s*<div class="actions tastin' + 'g-summary-actions">'
       )
     );
-    assert.match(section, /data-act="tastings-open" data-tasting-id="compact"/);
+    assert.match(renderedText(section), /data-act="tastings-open" data-tasting-id="compact"/);
     assert.match(
-      section,
+      renderedText(section),
       new RegExp(
         'class="tasting-summary-field-label">Nase<' + '\\/span><div class="tasting-summary-note-v' +
         'alue">Vanille und Frucht<\\/div>'
       )
     );
     assert.doesNotMatch(
-      section,
+      renderedText(section),
       new RegExp('tasting-summary-color|tasting-readonly-col' + 'or|>Farbe<|>Geschmacksprofil<|>Geschmacksn' + 'oten<')
     );
   }
@@ -408,15 +409,15 @@ test(
       id: 'without-notes', tastedOn: '2026-11-15', rating: 80,
       flavorProfile, tastingNotes: {nose: ' ', palate: '', finish: ''},
     }]);
-    const section = html.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    const section = renderedText(html).split('<section data-region="detail-tastings"')[1].split('</section>')[0];
     assert.match(
-      section,
+      renderedText(section),
       new RegExp(
         'class="tasting-summary-radar"[\\s\\S]*?cla' + 'ss="tasting-summary-notes is-empty" aria-h' +
         'idden="true"><\\/div>'
       )
     );
-    assert.doesNotMatch(section, /class="tasting-summary-note"|class="tasting-summary-field-label"/);
+    assert.doesNotMatch(renderedText(section), /class="tasting-summary-note"|class="tasting-summary-field-label"/);
   }
 );
 
@@ -431,22 +432,22 @@ test(
       flavorProfile: null,
       tastingNotes: {nose: ' ', palate: '', finish: ''},
     }]);
-    const summary = none.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    assert.doesNotMatch(summary, /tasting-summary-color|tasting-summary-radar|class="tasting-summary-note"/);
-    assert.match(summary, /class="tasting-summary-notes is-empty" aria-hidden="true"><\/div>/);
-    assert.match(summary, /60 \/ 100/);
+    const summary = renderedText(none).split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    assert.doesNotMatch(renderedText(summary), /tasting-summary-color|tasting-summary-radar|class="tasting-summary-note"/);
+    assert.match(renderedText(summary), /class="tasting-summary-notes is-empty" aria-hidden="true"><\/div>/);
+    assert.match(renderedText(summary), /60 \/ 100/);
     const withColor = detailHtml([{
       id: 'color', tastedOn: '2026-11-16', whiskyColor: 'custom:#be602f',
       flavorProfile: null, tastingNotes: {nose: '', palate: '', finish: ''},
     }]);
-    const colorSummary = withColor.split('<section data-region="detail-tastings"')[1].split('</section>')[0];
+    const colorSummary = renderedText(withColor).split('<section data-region="detail-tastings"')[1].split('</section>')[0];
     assert.doesNotMatch(
-      colorSummary,
+      renderedText(colorSummary),
       new RegExp(
         'tasting-summary-color|tasting-summary-rada' + 'r|class="tasting-summary-note"|tasting-rea' + 'donly-color'
       )
     );
-    assert.match(colorSummary, /class="tasting-summary-notes is-empty" aria-hidden="true"><\/div>/);
-    assert.match(colorSummary, /Nicht bewertet/);
+    assert.match(renderedText(colorSummary), /class="tasting-summary-notes is-empty" aria-hidden="true"><\/div>/);
+    assert.match(renderedText(colorSummary), /Nicht bewertet/);
   }
 );

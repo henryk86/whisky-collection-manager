@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import de from '../../public/locales/de.json' with {type: 'json'};
@@ -27,19 +28,19 @@ test('each category, phase and dimension has a label in both languages', () => {
     }
     const t = createTranslator(messages, {}, language);
     const html = flightCaskOptionsHtml(t);
-    assert.equal(t('flightPlan.caskAge.group.wine'), language === 'de' ? 'Wein' : 'Wine');
-    assert.equal((html.match(/data-flight-plan-cask-subtype-wrap="wine"/g) || []).length, 1);
-    assert.doesNotMatch(html, /flightPlan\.caskAge\./);
-    assert.match(html, /name="flight-cask-group-rum"/);
-    assert.doesNotMatch(html, /name="flight-cask-feature-rum-/);
+    assert.equal(renderedText(t('flightPlan.caskAge.group.wine')), renderedText(language === 'de' ? 'Wein' : 'Wine'));
+    assert.equal((renderedText(html).match(/data-flight-plan-cask-subtype-wrap="wine"/g) || []).length, 1);
+    assert.doesNotMatch(renderedText(html), /flightPlan\.caskAge\./);
+    assert.match(renderedText(html), /name="flight-cask-group-rum"/);
+    assert.doesNotMatch(renderedText(html), /name="flight-cask-feature-rum-/);
     for (const group of CASK_GROUPS) {
-      assert.ok(html.includes(`name="flight-cask-group-${group}"`));
+      assert.ok(renderedText(html).includes(`name="flight-cask-group-${group}"`));
     }
     const help = flightPlanningHelpHtml(t);
-    assert.doesNotMatch(help, /flightPlan\.(?:help|caskAge)\./);
-    assert.match(help, /Sauternes/);
-    assert.match(help, /Colheita/);
-    assert.match(help, /Madeira/);
+    assert.doesNotMatch(renderedText(help), /flightPlan\.(?:help|caskAge)\./);
+    assert.match(renderedText(help), /Sauternes/);
+    assert.match(renderedText(help), /Colheita/);
+    assert.match(renderedText(help), /Madeira/);
   }
 });
 
@@ -79,7 +80,7 @@ test('only selected groups contribute their chosen refinements', () => {
       if (selector === '[data-flight-plan-cask-details]') return detailGroup;
       if (selector === '[data-flight-plan-cask-selection]') return summary;
       if (selector === '[data-flight-plan-cask-phase]') return phase;
-      return inputs.get(selector.match(/^\[name="(.+)"\]$/)?.[1]) || null;
+      return inputs.get(renderedText(selector).match(/^\[name="(.+)"\]$/)?.[1]) || null;
     },
     /**
      * Provides the simulated contextual refinement elements.
@@ -94,26 +95,26 @@ test('only selected groups contribute their chosen refinements', () => {
     wine: {color: ['whiteWine'], style: ['sweetWine']}, rum: {},
   });
   syncFlightCaskOptions(root, true, t);
-  assert.equal(wrapper.hidden, false);
-  assert.equal(detailGroup.hidden, false);
-  assert.equal(details[0].open, true);
-  assert.equal(details[0].counter.textContent, '2 ausgewählt');
-  assert.match(summary.textContent, /Wein.*Rum/);
+  assert.equal(renderedText(wrapper.hidden), false);
+  assert.equal(renderedText(detailGroup.hidden), false);
+  assert.equal(renderedText(details[0].open), true);
+  assert.equal(renderedText(details[0].counter.textContent), '2 ausgewählt');
+  assert.match(renderedText(summary.textContent), /Wein.*Rum/);
   details[0].open = false;
   assert.deepEqual(details.map(detail => detail.hidden), [false, true, true]);
   inputs.get('flight-cask-group-port').checked = true;
   syncFlightCaskOptions(root, true, t);
   assert.deepEqual(readFlightCaskFilters(root).port, {style: ['tawny']});
-  assert.equal(details[1].hidden, false);
-  assert.equal(details[0].open, false);
-  assert.equal(details[1].open, true);
+  assert.equal(renderedText(details[1].hidden), false);
+  assert.equal(renderedText(details[0].open), false);
+  assert.equal(renderedText(details[1].open), true);
   syncFlightCaskOptions(root, false, t);
-  assert.equal(wrapper.hidden, true);
+  assert.equal(renderedText(wrapper.hidden), true);
   assert.ok(details.every(detail => detail.hidden));
   resetFlightCaskOptions(root);
   syncFlightCaskOptions(root, true, t);
   assert.deepEqual(readFlightCaskFilters(root), {});
-  assert.equal(phase.value, 'any');
-  assert.equal(detailGroup.hidden, true);
-  assert.equal(summary.textContent, 'Alle Fassgruppen');
+  assert.equal(renderedText(phase.value), 'any');
+  assert.equal(renderedText(detailGroup.hidden), true);
+  assert.equal(renderedText(summary.textContent), 'Alle Fassgruppen');
 });

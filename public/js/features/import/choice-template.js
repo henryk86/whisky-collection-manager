@@ -22,16 +22,16 @@ export function importChoice({
   distillery = false,
   distilleryId = null
 }) {
-  const attribute = distillery ? `name="import-distillery"${distilleryId ? ` value="${escapeHtml(distilleryId)}"` : ''}` :
-    `data-import-field="${escapeHtml(field)}"`;
+  const attribute = distillery ? {name: 'import-distillery', value: distilleryId || null} :
+    {'data-import-field': field};
   const existing = currentValue === null || currentValue === undefined || currentValue === ''
     ? '' : renderTemplate('importChoiceCurrent', {
       currentValue: t("imports.preview.currentValue", {value: escapeHtml(String(currentValue))}),
     });
   return renderTemplate('importChoice', {
     attribute: attribute,
-    checked: checked ? ' checked' : '',
-    disabled: disabled ? ' disabled' : '',
+    checkedAttributes: checked ? {"checked": true} : {},
+    disabledAttributes: disabled ? {"disabled": true} : {},
     label: label,
     value: String(value),
     existing: existing,

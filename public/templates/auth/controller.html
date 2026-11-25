@@ -3,48 +3,54 @@
   class="auth-password-toggle"
   type="button"
   data-act="auth-toggle-password"
-  data-target="{{raw:id}}"
-  aria-controls="{{raw:id2}}"
+  data-target="{{attr:id}}"
+  aria-controls="{{attr:ariaControls}}"
   aria-label="{{text:tr}}"
-  title="{{text:tr2}}"
-  aria-pressed="{{raw:hidden}}">{{raw:hidden2}}</button>
+  title="{{text:title}}"
+  aria-pressed="{{attr:hidden}}">{{content:hidden2}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:authPasswordInput -->
 <div class="auth-password-input"><input
-    id="{{raw:id}}"
-    name="{{raw:id2}}"
+    id="{{attr:id}}"
+    name="{{attr:name}}"
     type="password"
-    autocomplete="{{raw:autocomplete}}"{{raw:minLength}}{{raw:value}}
-    required>{{raw:passwordToggle}}</div>
+    autocomplete="{{attr:autocomplete}}"{{attrs:minlengthAttributes}}{{attrs:valueAttributes}}
+    required>{{content:passwordToggle}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:fieldInput -->
 <input
-  id="{{raw:id}}"
-  name="{{raw:id2}}"
-  type="{{raw:type}}"
-  autocomplete="{{raw:autocomplete}}"{{raw:minLength}}{{raw:value}}
+  id="{{attr:id}}"
+  name="{{attr:name}}"
+  type="{{attr:type}}"
+  autocomplete="{{attr:autocomplete}}"{{attrs:minlengthAttributes}}{{attrs:valueAttributes}}
   required>
 <!-- /wcm-template -->
 
 <!-- wcm-template:formField -->
-<label class="form-field{{raw:isPassword}}" for="{{raw:id}}">{{raw:label}}{{raw:authPasswordInput}}</label>
+<label class="form-field{{attr:isPassword}}" for="{{attr:id}}">{{content:label}}{{content:authPasswordInput}}</label>
 <!-- /wcm-template -->
 
 <!-- wcm-template:authBrand -->
 <div class="auth-brand">
-  <img class="auth-brand-logo" src="/assets/logo.svg" width="112" height="112" alt="">
+  <img
+    class="auth-brand-logo"
+    src="/assets/logo.svg"
+    width="112"
+    height="112"
+    alt="">
   <div class="auth-brand-copy">
     <span class="brand-overline">{{t:ui.branding.privateReserve}}</span>
-    <p class="auth-brand-title">{{t:ui.branding.whiskyLabel}} <em>{{t:ui.branding.collectionLabel}}</em> <span>{{t:ui.branding.managerLabel}}</span></p>
+    <p class="auth-brand-title">{{t:ui.branding.whiskyLabel}} <em>{{t:ui.branding.collectionLabel}}</em> <span>{{t:ui.branding.managerLabel}}</span>
+    </p>
   </div>
 </div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:authPage -->
 <div class="auth-page">
-  <section class="panel auth-card">{{raw:brand}}<h1>{{raw:title}}</h1>{{raw:body}}</section>
+  <section class="panel auth-card">{{content:brand}}<h1>{{content:title}}</h1>{{content:body}}</section>
 </div>
 <!-- /wcm-template -->
 
@@ -59,74 +65,86 @@
 
 <!-- wcm-template:authChangeForm -->
 <form id="auth-change-form" class="auth-form auth-form-main">
-                {{raw:field}}
-                {{raw:field2}}
-                {{raw:field3}}
-                <p class="muted auth-note">{{raw:passwordHint}}</p>{{raw:errorText}}
-                <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">{{raw:savePassword}}</button>
-                {{raw:canCancel}}</div>
+  {{content:field}}
+  {{content:field2}}
+  {{content:field3}}
+  <p class="muted auth-note">{{content:passwordHint}}</p>{{content:errorText}}
+  <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">{{content:savePassword}}</button>
+    {{content:canCancel}}</div>
 </form>
 <!-- /wcm-template -->
 
 <!-- wcm-template:authLoginForm -->
 <form id="auth-login-form" class="auth-form auth-form-main">
-                {{raw:field}}
-                {{raw:field2}}
-                {{raw:errorText}}
-                <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">{{raw:signIn}}</button>
-                {{raw:content}}</div>
+  {{content:field}}
+  {{content:field2}}
+  {{content:errorText}}
+  <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">{{content:signIn}}</button>
+    {{content:content}}</div>
 </form>
 <!-- /wcm-template -->
 
 <!-- wcm-template:changeSettingP -->
-<p>{{raw:required}}</p>
+<p>{{content:required}}</p>
 <div class="actions ds-modal-footer ds-modal-footer--flush">
-        {{raw:closeModalButton}}
-        {{raw:authConfirmRequiredButton}}</div>
+  {{content:closeModalButton}}
+  {{content:authConfirmRequiredButton}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:authResetUser -->
-<div class="actions"><button type="button" class="btn small" data-act="auth-reset-user" data-id="{{text:id}}">{{raw:resetPassword}}</button>
-  <button type="button" class="btn small danger" data-act="auth-delete-user" data-id="{{text:id2}}">{{raw:delete}}</button></div>
+<div class="actions"><button
+    type="button"
+    class="btn small"
+    data-act="auth-reset-user"
+    data-id="{{text:id}}">{{content:resetPassword}}</button>
+  <button
+    type="button"
+    class="btn small danger"
+    data-act="auth-delete-user"
+    data-id="{{text:id2}}">{{content:delete}}</button>
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:authUserRow -->
 <div class="auth-user-row" role="listitem">
-  <div><strong>{{text:username}}</strong><span class="muted">{{raw:role}}{{raw:mustChangePassword}}</span></div>
-            {{raw:authResetUser}}
-        </div>
+  <div><strong>{{text:username}}</strong><span class="muted">{{content:role}}{{content:mustChangePassword}}</span>
+  </div>
+  {{content:authResetUser}}
+</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:panel -->
 <div class="panel section auth-settings">
-  <h3>{{raw:loginRequired}}</h3>
-  <p class="muted">{{raw:loginSettingDescription}}</p>
-  <div class="auth-setting-row"><strong>{{raw:required}}</strong>
-        {{raw:authToggleRequiredButton}}</div>
+  <h3>{{content:loginRequired}}</h3>
+  <p class="muted">{{content:loginSettingDescription}}</p>
+  <div class="auth-setting-row"><strong>{{content:required}}</strong>
+    {{content:authToggleRequiredButton}}</div>
 </div>
 <div class="panel section auth-settings">
-  <h3>{{raw:users}}</h3>
-  <div class="auth-user-list" role="list">{{raw:users2}}</div>
-  <h3 class="auth-subtitle">{{raw:createUser}}</h3>
+  <h3>{{content:users}}</h3>
+  <div class="auth-user-list" role="list">{{content:users2}}</div>
+  <h3 class="auth-subtitle">{{content:createUser}}</h3>
   <form id="auth-create-form" class="auth-form auth-create-form">
-        {{raw:field}}
-        {{raw:field2}}
-        <p class="muted">{{raw:newUserHint}}</p><button class="btn primary" type="submit">{{raw:createUser2}}</button></form>
+    {{content:field}}
+    {{content:field2}}
+    <p class="muted">{{content:newUserHint}}</p><button class="btn primary" type="submit">{{content:createUser2}}</button>
+  </form>
 </div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:handleActionP -->
 <p>{{text:username}}</p>
 <form id="auth-reset-form" class="auth-form" data-user-id="{{text:id}}">
-              {{raw:field}}
-              <p class="muted">{{raw:newUserHint}}</p>
-  <div class="actions">{{raw:closeModalButton}}
-              <button class="btn primary" type="submit">{{raw:apply}}</button></div>
+  {{content:field}}
+  <p class="muted">{{content:newUserHint}}</p>
+  <div class="actions">{{content:closeModalButton}}
+    <button class="btn primary" type="submit">{{content:apply}}</button>
+  </div>
 </form>
 <!-- /wcm-template -->
 
 <!-- wcm-template:handleActionP2 -->
-<p>{{raw:deleteConfirm}} <strong>{{text:username}}</strong>?</p>
-<div class="actions">{{raw:closeModalButton}}
-            {{raw:authConfirmDeleteButton}}</div>
+<p>{{content:deleteConfirm}} <strong>{{text:username}}</strong>?</p>
+<div class="actions">{{content:closeModalButton}}
+            {{content:authConfirmDeleteButton}}</div>
 <!-- /wcm-template -->

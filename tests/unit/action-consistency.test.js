@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createShell} from '../../public/js/ui/shell.js';
@@ -121,7 +122,7 @@ function renderHome() {
  */
 function button(html, action) {
   const re = new RegExp(String.raw`<button\b[^>]*data-act="${action}"[^>]*>[\s\S]*?</button>`);
-  const match = html.match(re);
+  const match = renderedText(html).match(re);
   assert.ok(match, `Button ${action} missing`);
   return match[0];
 }
@@ -137,13 +138,13 @@ test(
     ]) {
       for (const view of [header, home]) {
         const html = button(view, action);
-        assert.ok(html.includes(icon), `${action}: both views must reuse the same SVG`);
-        assert.ok(html.includes(`<span>${label}</span>`), `${action}: consistent visible label`);
-        assert.ok(html.includes(`aria-label="${label}"`), `${action}: consistent accessible name`);
+        assert.ok(renderedText(html).includes(renderedText(icon)), `${action}: both views must reuse the same SVG`);
+        assert.ok(renderedText(html).includes(`<span>${label}</span>`), `${action}: consistent visible label`);
+        assert.ok(renderedText(html).includes(`aria-label="${label}"`), `${action}: consistent accessible name`);
       }
     }
-    assert.doesNotMatch(header, />Flasche erfassen<|>Scannen</);
-    assert.doesNotMatch(home, />\+ Neue Flasche|>▣ Inventar scannen/);
+    assert.doesNotMatch(renderedText(header), />Flasche erfassen<|>Scannen</);
+    assert.doesNotMatch(renderedText(home), />\+ Neue Flasche|>▣ Inventar scannen/);
   }
 );
 
@@ -151,22 +152,22 @@ test(
   'settings are accessible through the side menu with the shared, correct gear icon',
   () => {
     const shell = renderShell();
-    assert.doesNotMatch(shell, /<button[^>]+data-act="settings"/, 'no duplicate settings action in the header');
-    assert.match(shell, /<a[^>]+data-act="goto-settings-menu"[^>]*>/);
-    assert.match(shell, /<a[^>]+data-act="goto-settings-menu"[^>]*>[\s\S]*?Einstellungen\s*<\/a>/);
-    assert.ok(shell.includes(settingsIconPaths), 'sidebar uses exactly the shared gear drawing');
-    const actions = [...shell.matchAll(/<button[^>]+data-act="([^"]+)"[^>]*>/g),].map(match => match[1]);
-    assert.deepEqual(actions.slice(0, 4), ['toggle-theme', 'scan', 'new', 'toggle-menu']);
+    assert.doesNotMatch(renderedText(shell), /<button[^>]+data-act="settings"/, 'no duplicate settings action in the header');
+    assert.match(renderedText(shell), /<a[^>]+data-act="goto-settings-menu"[^>]*>/);
+    assert.match(renderedText(shell), /<a[^>]+data-act="goto-settings-menu"[^>]*>[\s\S]*?Einstellungen\s*<\/a>/);
+    assert.ok(renderedText(shell).includes(renderedText(settingsIconPaths)), 'sidebar uses exactly the shared gear drawing');
+    const actions = [...renderedText(shell).matchAll(/<button[^>]+data-act="([^"]+)"[^>]*>/g),].map(match => match[1]);
+    assert.deepEqual(renderedText(actions).slice(0, 4), ['toggle-theme', 'scan', 'new', 'toggle-menu']);
   }
 );
 
 test(
   'settings icon is a clean, symmetrical gear outline without stray paths',
   () => {
-    assert.match(settingsIcon, /<path d="M10\.5 2h3/);
-    assert.match(settingsIcon, /<circle cx="12" cy="12" r="3"\/>/);
-    assert.doesNotMatch(settingsIcon, /H21|M21|<text|<polygon/);
-    assert.equal((settingsIcon.match(/<svg/g) || []).length, 1);
-    assert.equal((settingsIcon.match(/<\/svg>/g) || []).length, 1);
+    assert.match(renderedText(settingsIcon), /<path d="M10\.5 2h3/);
+    assert.match(renderedText(settingsIcon), /<circle cx="12" cy="12" r="3"\/>/);
+    assert.doesNotMatch(renderedText(settingsIcon), /H21|M21|<text|<polygon/);
+    assert.equal((renderedText(settingsIcon).match(/<svg/g) || []).length, 1);
+    assert.equal((renderedText(settingsIcon).match(/<\/svg>/g) || []).length, 1);
   }
 );

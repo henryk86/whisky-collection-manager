@@ -18,7 +18,7 @@ export function glencairnRating(rating) {
   const safe = rating == null ? null : Math.max(0, Math.min(100, Number(rating)));
   const inputValue = safe == null ? '' : String(safe).replace('.', ',');
   return renderTemplate('tastingRating', {
-    safe: safe ?? '',
+    ratingValue: safe ?? '',
     rating: t('tasting.rating'),
     from: composeMarkup(Array.from({length: 5}, (_, i) => {
       const fill = safe == null ? 0 : Math.max(0, Math.min(100, (safe - i * 20) * 5));
@@ -30,7 +30,7 @@ export function glencairnRating(rating) {
         points: points,
         selected: selected,
         ratingGlass: t('tasting.ratingGlass', {count: i + 1}),
-        points2: points,
+        title: points,
         fill: fill,
         glencairnRatingSymbol: glencairnRatingSymbol({
           fill,

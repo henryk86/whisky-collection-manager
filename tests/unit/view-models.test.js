@@ -46,3 +46,14 @@ test('HTML formatter is idempotent and preserves inline and raw text', () => {
   assert.match(formatted, /Hello <strong>\{\{text:name\}\}<\/strong> !/);
   assert.match(formatted, /<textarea>  unchanged\n text <\/textarea>/);
 });
+
+test('analytics chart models calculate widths and date-window totals without changing source rows', async () => {
+  const {createRankBarViewModel, aggregateAnalyticsPeriods} = await import('../../public/js/views/models/analytics.js');
+  const rows = [{name: '2026-01-02', count: 10}, {name: '2026-01-08', count: 5}, {name: '2026-02-01', count: 1}];
+  const before = structuredClone(rows);
+  const bars = createRankBarViewModel(rows, 'count', 2);
+  assert.deepEqual(bars.data.map(entry => entry.width), [100, 50]);
+  assert.equal(bars.hasMore, true);
+  assert.deepEqual(aggregateAnalyticsPeriods(rows, {analyticsStartDate: '2026-01-03'}, 'count'), [{name: '2026-01', count: 5}, {name: '2026-02', count: 1}]);
+  assert.deepEqual(rows, before);
+});

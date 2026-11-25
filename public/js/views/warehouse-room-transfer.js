@@ -38,11 +38,11 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
     renderTemplate('warehouseTransferTabButton', {
       mode: mode === name ? ' active' : '',
       name: name,
-      mode2: mode === name,
-      name2: name,
-      mode3: mode === name ? 0 : -1,
-      name3: name,
-      disabled: name === 'export' && !exportAvailable ? 'disabled' : '',
+      ariaSelected: mode === name,
+      ariaControls: name,
+      tabindex: mode === name ? 0 : -1,
+      transferTab: name,
+      exportAttributes: name === 'export' && !exportAvailable ? {"disabled": true} : {},
       label: label,
     });
   const actions = actionButton({
@@ -52,18 +52,18 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
   return renderTemplate('warehouseRoomTransfer', {
     tab: tab('export', t('warehouse.transfer.exportAction')),
     tab2: tab('import', t('warehouse.transfer.importAction')),
-    hidden: mode !== 'export' ? 'hidden' : '',
+    exportAttributes: mode !== 'export' ? {"hidden": true} : {},
     fORMEXPORT: FORM_EXPORT,
-    selectedRoomId: selectedRoomId ? '' : 'checked',
+    checkedAttributes: selectedRoomId ? {} : {"checked": true},
     rooms: composeMarkup(rooms.map(room =>
       renderTemplate('warehouseTransferChoice', {
         id: room.id,
-        checked: selectedRoomId === room.id ? 'checked' : '',
+        checkedAttributes: selectedRoomId === room.id ? {"checked": true} : {},
         name: room.name,
         length: room.furniture.length,
       }))),
     actions: actions,
-    hidden2: mode !== 'import' ? 'hidden' : '',
+    importAttributes: mode !== 'import' ? {"hidden": true} : {},
     fORMIMPORT: FORM_IMPORT,
     actions2: actions,
   });

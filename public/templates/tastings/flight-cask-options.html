@@ -1,22 +1,22 @@
 <!-- wcm-template:flightPlanCaskDimension -->
-<div class="flight-plan-cask-dimension" role="group" aria-label="{{raw:title}}"><span>{{raw:title2}}</span>
-  <div class="flight-plan-cask-choices">{{raw:fields}}</div>
+<div class="flight-plan-cask-dimension" role="group" aria-label="{{attr:title}}"><span>{{content:title2}}</span>
+  <div class="flight-plan-cask-choices">{{content:fields}}</div>
 </div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanCaskRefinement -->
 <details
   class="flight-plan-cask-refinement"
-  data-flight-plan-cask-subtype-wrap="{{raw:group}}"
+  data-flight-plan-cask-subtype-wrap="{{attr:group}}"
   hidden>
-  <summary><span>{{raw:title}}</span>
-    <span class="flight-plan-cask-count" data-flight-plan-cask-count>{{raw:all}}</span>{{raw:chevronDownIcon}}
-      </summary><div class="flight-plan-cask-dimensions">{{raw:dimensions}}</div>
+  <summary><span>{{content:title}}</span>
+    <span class="flight-plan-cask-count" data-flight-plan-cask-count>{{content:all}}</span>{{content:chevronDownIcon}}
+  </summary><div class="flight-plan-cask-dimensions">{{content:dimensions}}</div>
 </details>
 <!-- /wcm-template -->
 
 <!-- wcm-template:phasesOption -->
-<option value="{{raw:phase}}">{{raw:text}}</option>
+<option value="{{attr:phase}}">{{content:text}}</option>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanCaskFilter -->
@@ -24,18 +24,18 @@
   <div
     class="form-field full"
     role="group"
-    aria-label="{{raw:label}}"
+    aria-label="{{attr:label}}"
     aria-describedby="flight-plan-cask-hint">
-    <div class="flight-plan-cask-heading"><span>{{raw:label2}}</span>{{raw:reset}}</div>
-    <span class="ds-field-description" id="flight-plan-cask-hint">{{raw:hint}}</span>
-    <div class="flight-plan-cask-choices">{{raw:groups}}</div>
+    <div class="flight-plan-cask-heading"><span>{{content:label2}}</span>{{content:reset}}</div>
+    <span class="ds-field-description" id="flight-plan-cask-hint">{{content:hint}}</span>
+    <div class="flight-plan-cask-choices">{{content:groups}}</div>
   </div>
   <div class="flight-plan-cask-details" data-flight-plan-cask-details hidden>
-    <span class="flight-plan-cask-caption">{{text:t}}</span>{{raw:details}}
-    </div>
+    <span class="flight-plan-cask-caption">{{text:t}}</span>{{content:details}}
+  </div>
   <div class="flight-plan-options flight-plan-advanced-grid">
-    <label>{{raw:phaseLabel}}
-        <select data-flight-plan-cask-phase>{{raw:phases}}</select>
+    <label>{{content:phaseLabel}}
+      <select data-flight-plan-cask-phase>{{content:phases}}</select>
     </label>
   </div>
   <div class="flight-plan-cask-selection" aria-live="polite">

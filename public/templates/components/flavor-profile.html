@@ -3,38 +3,43 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorGrid -->
-<polygon class="flavor-grid" points="{{raw:fLAVORAXES}}"/>
+<polygon class="flavor-grid" points="{{attr:fLAVORAXES}}"/>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorGrid2 -->
-<line class="flavor-grid" x1="{{raw:cx}}" y1="{{raw:cy}}" x2="{{raw:x}}" y2="{{raw:y}}"/>
+<line
+  class="flavor-grid"
+  x1="{{attr:cx}}"
+  y1="{{attr:cy}}"
+  x2="{{attr:x}}"
+  y2="{{attr:y}}"/>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorHitTarget -->
 <circle
   class="flavor-hit-target"
   data-flavor-hit="1"
-  cx="{{raw:cx}}"
-  cy="{{raw:cy}}"
-  r="{{raw:radius}}"/>
+  cx="{{attr:cx}}"
+  cy="{{attr:cy}}"
+  r="{{attr:radius}}"/>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorPoint -->
 <circle
   class="flavor-point"
-  data-flavor-point="{{raw:i}}"
-  cx="{{raw:x}}"
-  cy="{{raw:y}}"
-  r="{{raw:editable}}"
-  {{raw:scorePresent}}/>
+  data-flavor-point="{{attr:i}}"
+  cx="{{attr:x}}"
+  cy="{{attr:y}}"
+  r="{{attr:editable}}"
+  {{attrs:visibilityAttributes}}/>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorAxisText -->
 <text
   class="flavor-axis-text"
-  x="{{raw:x}}"
-  y="{{raw:y}}"
-  text-anchor="{{raw:anchor}}"
+  x="{{attr:x}}"
+  y="{{attr:y}}"
+  text-anchor="{{attr:anchor}}"
   dominant-baseline="middle">{{text:flavorAxisTitle}}</text>
 <!-- /wcm-template -->
 
@@ -44,36 +49,36 @@
   min="0"
   max="10"
   step="1"
-  value="{{raw:missing}}"
-  name="flavor-{{raw:axis}}"
-  data-flavor-range="{{raw:i}}"
-  {{raw:missing2}}
-  aria-label="{{text:flavorAxisTitle}}"><output data-flavor-value="{{raw:i2}}">{{raw:missing3}}</output>
+  value="{{attr:missing}}"
+  name="flavor-{{attr:axis}}"
+  data-flavor-range="{{attr:i}}"
+  {{attrs:dataFlavorUnsetAttributes}}
+  aria-label="{{text:flavorAxisTitle}}"><output data-flavor-value="{{attr:flavorValue}}">{{content:missing3}}</output>
 <!-- /wcm-template -->
 
 <!-- wcm-template:strong -->
-<strong>{{raw:missing}}</strong>
+<strong>{{content:missing}}</strong>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorScale -->
-<label class="flavor-scale"><span>{{text:flavorAxisTitle}}</span>{{raw:input}}</label>
+<label class="flavor-scale"><span>{{text:flavorAxisTitle}}</span>{{content:input}}</label>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorSliders -->
-<div class="flavor-sliders">{{raw:fLAVORAXES}}</div>
+<div class="flavor-sliders">{{content:fLAVORAXES}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorEditor -->
-<div class="flavor-editor{{raw:editable}}{{raw:colorSection}}{{raw:compact}}" {{raw:editable2}}>
-        {{raw:colorSection2}}
+<div class="flavor-editor{{attr:editable}}{{attr:colorSection}}{{attr:compact}}" {{attrs:dataFlavorEditorAttributes}}>
+        {{content:colorSection2}}
         <svg class="flavor-chart" viewBox="0 0 460 390" role="img" aria-label="{{text:chartLabel}}">
-            {{raw:content}}
-            {{raw:fLAVORAXES}}
-            <polygon class="flavor-area" data-flavor-polygon points="{{raw:flavorPolygon}}"/>
-            {{raw:flavorHitTarget}}
-            {{raw:fLAVORAXES2}}
-            {{raw:fLAVORAXES3}}
+            {{content:content}}
+            {{content:fLAVORAXES}}
+            <polygon class="flavor-area" data-flavor-polygon points="{{attr:flavorPolygon}}"/>
+            {{content:flavorHitTarget}}
+            {{content:fLAVORAXES2}}
+            {{content:fLAVORAXES3}}
         </svg>
-        {{raw:compact2}}
-    </div>
+        {{content:compact2}}
+</div>
 <!-- /wcm-template -->

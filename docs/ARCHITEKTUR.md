@@ -51,12 +51,14 @@ Die Dateien werden ohne Build-Schritt vom lokalen HTTP-Server ausgeliefert.
 
 Ein Fragment beginnt mit `<!-- wcm-template:fragmentName -->` und endet mit
 `<!-- /wcm-template -->`. `{{text:name}}` bindet Text, `{{t:domain.key}}`
-eine Übersetzung. `{{raw:name}}` bindet einen untergeordneten RenderPlan
-oder einen bisher HTML-escaped technischen Wert; Attributlisten werden
-kontrolliert in einzelne DOM-Attribute zerlegt. `{{tag:name}}` ist für
-validierte strukturelle Tag-Varianten vorgesehen. Dynamische Daten werden
-nicht als HTML geparst. Die String-Serialisierung ist ausschließlich die
-Kompatibilitätsschicht für DOM-freie Tests.
+eine Übersetzung. `{{content:name}}` fügt einen untergeordneten RenderPlan
+oder einen skalaren Text ein. `{{attr:name}}` bindet einen skalaren Wert
+in einem Attribut; `{{attrs:name}}` erwartet ein strukturiertes Objekt aus
+Attributnamen und Werten. `{{tag:name}}` ist für validierte strukturelle
+Tag-Varianten vorgesehen. Dynamische Daten werden nicht als HTML geparst.
+Browser und Node erzeugen dieselben RenderPläne. DOM-freie Tests können an
+ihrer Testgrenze ausdrücklich serialisieren; DOM-Tests prüfen tatsächliche
+Elemente, Attribute und Textinhalte. Bindungen erhalten fachliche Namen.
 
 Die Hauptansichten bereiten Auswahldaten und abgeleitete Werte in
 `public/js/views/models/` auf. Fachlogik verbleibt in den Domänenmodulen;
@@ -65,7 +67,8 @@ Templates und koordinieren Ereignisse und Zustandsänderungen.
 
 `npm run format:html` formatiert die externen Templates mit LF-Zeilenenden.
 `npm run check` prüft die Formatierung, HTML-freie JavaScript-Literale,
-zentrale Ablage, Fragmentreferenzen, Slot-Bindungen und Übersetzungsschlüssel.
+zentrale Ablage, ausgeglichene Tags, Bindungspositionen, Fragmentreferenzen,
+Slot-Bindungen und Übersetzungsschlüssel.
 
 ## Sicherheit und Betrieb
 

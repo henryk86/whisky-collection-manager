@@ -19,11 +19,17 @@ const e = value => escapeHtml(String(value ?? ''));
  *
  * @param {string} name Form field name, escaped before interpolation.
  * @param {!Object=} options Validation state and hint/error text.
- * @return {string} Trusted HTML attributes.
+ * @return {!Object} Accessible control attributes.
  */
 function props(name, options = {}) {
-  const messages = [options.description ? `ds-${e(name)}-hint` : '', options.error ? `ds-${e(name)}-error` : '',].filter(Boolean);
-  return `name="${e(name)}"${options.required ? ' required' : ''}${options.disabled ? ' disabled' : ''}${options.error ? ' aria-invalid="true"' : ''}${messages.length ? ` aria-describedby="${messages.join(' ')}"` : ''}`;
+  const messages = [options.description ? `ds-${name}-hint` : '', options.error ? `ds-${name}-error` : '',].filter(Boolean);
+  return {
+    name,
+    required: options.required || null,
+    disabled: options.disabled || null,
+    'aria-invalid': options.error ? 'true' : null,
+    'aria-describedby': messages.length ? messages.join(' ') : null,
+  };
 }
 
 /**
@@ -78,9 +84,9 @@ export const textInput = (label, name, value = '', options = {}) => wrapper(
   renderTemplate('textInputInput', {
     props: props(name, options),
     type: e(options.type || 'text'),
-    step: options.step != null ? ` step="${e(options.step)}"` : '',
+    stepAttributes: options.step != null ? {"step": options.step} : {},
     value: e(value),
-    placeholder: options.placeholder ? ` placeholder="${e(options.placeholder)}"` : '',
+    placeholderAttributes: options.placeholder ? {"placeholder": options.placeholder} : {},
   }),
   options
 );
@@ -105,7 +111,7 @@ export const selectInput =
       options: composeMarkup(options.map(([v, t]) =>
         renderTemplate('selectInputOption', {
           v: e(v),
-          selected: String(v) === String(value ?? '') ? ' selected' : '',
+          selectedAttributes: String(v) === String(value ?? '') ? {"selected": true} : {},
           t: e(t),
         }))),
     }),
@@ -144,7 +150,7 @@ export const checkboxInput = (label, name, checked = false, options = {}) =>
   renderTemplate('formField2', {
     full: options.full ? ' full' : '',
     props: props(name, options),
-    checked: checked ? ' checked' : '',
+    checkedAttributes: checked ? {"checked": true} : {},
     label: e(label),
     help: help(name, options),
   });

@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -31,25 +32,25 @@ test(
   () => {
     const {warehouse, shelf} = fixture();
     const html = renderWarehouseAssignment(warehouse, warehouse.bottles[0]);
-    assert.match(html, /class="warehouse-assignment-bottle"/);
-    assert.match(html, /class="warehouse-assignment-current"/);
-    assert.match(html, /Aktueller Lagerort/);
-    assert.match(html, /<strong>Whiskyzimmer \/ Regal &lt;1&gt; \/ Fach 1<\/strong>/);
-    assert.match(html, /<div class="warehouse-assignment-editor">/);
-    assert.doesNotMatch(html, /<details|<summary>/);
+    assert.match(renderedText(html), /class="warehouse-assignment-bottle"/);
+    assert.match(renderedText(html), /class="warehouse-assignment-current"/);
+    assert.match(renderedText(html), /Aktueller Lagerort/);
+    assert.match(renderedText(html), /<strong>Whiskyzimmer \/ Regal &lt;1&gt; \/ Fach 1<\/strong>/);
+    assert.match(renderedText(html), /<div class="warehouse-assignment-editor">/);
+    assert.doesNotMatch(renderedText(html), /<details|<summary>/);
     assert.match(
-      html,
+      renderedText(html),
       new RegExp('<fieldset class="warehouse-assignment-targ' + 'et"><legend>Neuer Lagerort<\\/legend>')
     );
-    assert.match(html, /data-assignment-room/);
-    assert.match(html, /data-assignment-furniture/);
-    assert.match(html, /data-assignment-shelf/);
-    assert.match(html, /Whiskyzimmer \/ Regal &lt;1&gt; \/ Fach 1/);
-    assert.doesNotMatch(html, /<1>/);
-    assert.doesNotMatch(html, /<test>/);
-    assert.match(html, /value="s1" selected/);
-    assert.match(html, /value="s2" disabled/);
-    assert.match(html, /1 von 1 Plätzen belegt/);
+    assert.match(renderedText(html), /data-assignment-room/);
+    assert.match(renderedText(html), /data-assignment-furniture/);
+    assert.match(renderedText(html), /data-assignment-shelf/);
+    assert.match(renderedText(html), /Whiskyzimmer \/ Regal &lt;1&gt; \/ Fach 1/);
+    assert.doesNotMatch(renderedText(html), /<1>/);
+    assert.doesNotMatch(renderedText(html), /<test>/);
+    assert.match(renderedText(html), /value="s1" selected/);
+    assert.match(renderedText(html), /value="s2" disabled/);
+    assert.match(renderedText(html), /1 von 1 Plätzen belegt/);
     assert.deepEqual(assignmentLocation(warehouse, 's1')?.shelf, shelf);
   }
 );
@@ -60,7 +61,7 @@ test(
     const {warehouse, shelf, full} = fixture();
     assert.deepEqual(assignmentShelfInfo(warehouse, shelf, 'b1'), {occupied: 1, full: false, capacity: 1});
     assert.deepEqual(assignmentShelfInfo(warehouse, shelf, 'b2'), {occupied: 1, full: true, capacity: 1});
-    assert.equal(assignmentShelfInfo(warehouse, full, 'b1').full, true);
+    assert.equal(renderedText(assignmentShelfInfo(warehouse, full, 'b1').full), true);
     assert.deepEqual(assignmentPayload('none', 's1', warehouse), {shelfId: null});
     assert.deepEqual(assignmentPayload('shelf', 's1', warehouse), {shelfId: 's1'});
     assert.throws(() => assignmentPayload('shelf', 'missing', warehouse), /gültiges Fach/);
@@ -93,9 +94,9 @@ test(
     assert.throws(() => bulkAssignmentPayload(['a', 'a'], 'shelf', 'target', w), /zuerst Flaschen/);
     const {renderWarehouseAssignment} = await import('../../public/js/ui/warehouse-assignment.js');
     const html = renderWarehouseAssignment(w, [w.bottles[0], w.bottles[1]]);
-    assert.match(html, /2 Flaschen ausgewählt/);
-    assert.match(html, /<div class="warehouse-assignment-editor">/);
-    assert.doesNotMatch(html, /<details|<summary>/);
+    assert.match(renderedText(html), /2 Flaschen ausgewählt/);
+    assert.match(renderedText(html), /<div class="warehouse-assignment-editor">/);
+    assert.doesNotMatch(renderedText(html), /<details|<summary>/);
   }
 );
 
@@ -109,10 +110,10 @@ test(
       {current: 1, required: 2, blocked: false}
     );
     assert.deepEqual(shelfCapacityIncrease(warehouse, full, 'b2'), {current: 0, required: 1, blocked: true});
-    assert.equal(shelfCapacityIncrease(warehouse, warehouse.rooms[0].furniture[0].shelves[0], ['b1']), null);
+    assert.equal(renderedText(shelfCapacityIncrease(warehouse, warehouse.rooms[0].furniture[0].shelves[0], ['b1'])), null);
     warehouse.rooms[0].furniture[0].shelves.push({id: 'unlimited', capacity: null});
-    assert.equal(shelfCapacityIncrease(warehouse, warehouse.rooms[0].furniture[0].shelves[2], ['b2']), null);
-    assert.match(renderWarehouseAssignment(warehouse, [warehouse.bottles[0], warehouse.bottles[1]]), /value="r1"/);
+    assert.equal(renderedText(shelfCapacityIncrease(warehouse, warehouse.rooms[0].furniture[0].shelves[2], ['b2'])), null);
+    assert.match(renderedText(renderWarehouseAssignment(warehouse, [warehouse.bottles[0], warehouse.bottles[1]])), /value="r1"/);
   }
 );
 
@@ -133,8 +134,8 @@ test(
       await approveShelfCapacityIncrease(warehouse, 's1', ['b2'], async message => accept(message)),
       {increaseCapacityTo: 2}
     );
-    assert.match(question, /1.*2.*2/);
-    assert.equal(await approveShelfCapacityIncrease(warehouse, 's1', ['b2'], async () => false), null);
+    assert.match(renderedText(question), /1.*2.*2/);
+    assert.equal(renderedText(await approveShelfCapacityIncrease(warehouse, 's1', ['b2'], async () => false)), null);
     assert.deepEqual(
       await approveShelfCapacityIncrease(
         warehouse,
@@ -157,7 +158,7 @@ test(
     globalThis.confirm =
       () => {throw new Error('native confirm must never run');};
     try {
-      assert.equal(await approveShelfCapacityIncrease(warehouse, 's1', ['b2']), null);
+      assert.equal(renderedText(await approveShelfCapacityIncrease(warehouse, 's1', ['b2'])), null);
       assert.deepEqual(
         await approveShelfCapacityIncrease(warehouse, 's1', ['b2'], async () => true),
         {increaseCapacityTo: 2}

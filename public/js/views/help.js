@@ -36,8 +36,8 @@ export function helpView(activeTopic = 'basics') {
     'helpSection',
     {
       id: topic.id,
-      id2: topic.id,
-      id3: topic.id === current ? '' : ' hidden',
+      ariaLabelledby: topic.id,
+      hiddenAttributes: topic.id === current ? {} : {"hidden": true},
       headingTitle: headingTitle({
         title: topic.label,
         level: 2,

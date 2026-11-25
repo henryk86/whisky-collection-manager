@@ -1,7 +1,7 @@
 import {composeMarkup} from '../../ui/render-plan.js';
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
-import {escapeHtml} from '../../ui/dom.js';
+
 import {imageUrl} from '../../ui/format.js';
 import {plusIcon, minusIcon} from '../../ui/action-icons.js';
 import {request} from '../../api.js';
@@ -14,16 +14,12 @@ import {
 import {basePhotoPath, editorPhotoSourceSettings}
   from '../../../../shared/photo-images.js';
 import {cutoutImage} from '../cutout/image.js';
-import {
-  MIN_PREVIEW_ZOOM, MAX_PREVIEW_ZOOM, clampPreviewZoom, zoomAroundPoint,
-  constrainPreviewPan
-} from './preview-zoom.js';
+import {createPhotoViewport} from './viewport-controller.js';
 import {DEFAULT_MASK_BRUSH_SIZE, paintMaskSegment, applyMaskStrokes}
   from './mask-brush.js';
 import {loadTemplates} from '../../ui/templates.js';
 
 const renderTemplate = await loadTemplates('photo-editor/controller.html');
-
 
 const MAX_PREVIEW_SIDE = 1050;
 const MAX_EXPORT_SIDE = 4096;
@@ -150,10 +146,24 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   let busy = false;
   let renderId = 0;
   let generation = 0;
-  let viewport = {zoom: 1, x: 0, y: 0};
-  const panPointers = new Map();
-  let panStart = null;
-  let pinchStart = null;
+  const {zoom, attachViewport, resetViewport, updateViewport} = createPhotoViewport({
+    root,
+    /**
+     * Reports whether source pixels are ready for preview interaction.
+     * @return {boolean} Whether magnification is enabled.
+     */
+    canZoom: () => Boolean(sourceData) && !busy,
+    /**
+     * Prevents panning from competing with editing tools.
+     * @return {boolean} Whether pointer panning is enabled.
+     */
+    canPan: () => Boolean(sourceData) && !busy && !whitePicking && !brushMode,
+    /**
+     * Reports whether the white-balance pipette is active.
+     * @return {boolean} Whether the pipette owns the pointer.
+     */
+    picking: () => whitePicking,
+  });
   /**
    * Selects photo matching the input.
    *
@@ -181,148 +191,11 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     renderTemplate('photoEditorSlider', {
       t: t(`photoEditor.${key}`),
       key: key,
-      key2: key,
+      photoSlider: key,
       min: min,
       max: max,
       step: step,
     });
-
-  /**
-   * Locates the DOM elements used by viewport size.
-   * @return {!Object} Structured result assembled from the input data.
-   */
-  function viewportSize() {
-    const canvas = root()?.querySelector('[data-photo-editor-preview]');
-    return {width: canvas?.clientWidth || 1, height: canvas?.clientHeight || 1};
-  }
-
-  /**
-   * Updates viewport for controller.
-   */
-  function updateViewport() {
-    const host = root();
-    if (!host) return;
-    const canvas = host.querySelector('[data-photo-editor-preview]');
-    if (!canvas) return;
-    viewport = constrainPreviewPan(viewport, viewportSize());
-    canvas.style.transform = `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`;
-    host.querySelector('[data-photo-editor-zoom-level]').textContent = `${Math.round(viewport.zoom * 100)} %`;
-    host.querySelector('[data-act="photo-editor-zoom-out"]').disabled = viewport.zoom <= MIN_PREVIEW_ZOOM;
-    host.querySelector('[data-act="photo-editor-zoom-in"]').disabled = viewport.zoom >= MAX_PREVIEW_ZOOM;
-    host.querySelector('[data-act="photo-editor-zoom-reset"]').disabled = viewport.zoom === MIN_PREVIEW_ZOOM;
-    host.querySelector('.photo-editor-image').classList.toggle('is-zoomed', viewport.zoom > MIN_PREVIEW_ZOOM);
-  }
-
-  /**
-   * Derives the zoom result from the supplied values.
-   *
-   * @param {*} direction Direction used for traversal or movement.
-   * @param {*=} pointer Value used by this operation.
-   */
-  function zoom(direction, pointer = null) {
-    if (!root() || !sourceData || busy) return;
-    const size = viewportSize();
-    viewport = zoomAroundPoint(
-      viewport,
-      direction === 0 ? 1 : clampPreviewZoom(viewport.zoom * direction),
-      pointer || {x: size.width / 2, y: size.height / 2},
-      size
-    );
-    updateViewport();
-  }
-
-  /**
-   * Registers viewport for controller.
-   *
-   * @param {*} canvas Canvas used by this operation.
-   */
-  function attachViewport(canvas) {
-    const stage = canvas.closest('.photo-editor-image');
-    stage.addEventListener('wheel', event => {
-      if (whitePicking || !sourceData || busy) return;
-      event.preventDefault();
-      // Canvas coordinates must be relative to its untransformed layout box.
-      const stageRect = stage.getBoundingClientRect();
-      const point = {
-        x: event.clientX - stageRect.left - stage.clientLeft - parseFloat(getComputedStyle(stage).paddingLeft || 0),
-        y: event.clientY - stageRect.top - stage.clientTop - parseFloat(getComputedStyle(stage).paddingTop || 0),
-      };
-      zoom(event.deltaY < 0 ? 1.15 : 1 / 1.15, point);
-    }, {passive: false});
-    canvas.addEventListener('pointerdown', event => {
-      if (whitePicking || brushMode || busy || !sourceData || viewport.zoom === 1 || !event.isPrimary && event.pointerType !== 'touch') return;
-      if (event.pointerType === 'mouse' && event.button !== 0) return;
-      event.preventDefault();
-      panPointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
-      canvas.setPointerCapture?.(event.pointerId);
-      if (panPointers.size === 1) {
-        panStart = {
-          x: event.clientX, y: event.clientY, viewport: {...viewport},
-        };
-        pinchStart = null;
-      } else if (panPointers.size === 2) {
-        const [a, b] = [...panPointers.values()];
-        pinchStart = {
-          distance: Math.hypot(b.x - a.x, b.y - a.y), zoom: viewport.zoom,
-        };
-        panStart = null;
-      }
-    });
-    canvas.addEventListener('pointermove', event => {
-      if (!panPointers.has(event.pointerId) || whitePicking) return;
-      panPointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
-      if (pinchStart && panPointers.size === 2) {
-        const [a, b] = [...panPointers.values()];
-        const stageRect = stage.getBoundingClientRect();
-        const point = {
-          x: (a.x + b.x) / 2 - stageRect.left - stage.clientLeft - parseFloat(getComputedStyle(stage).paddingLeft || 0),
-          y: (a.y + b.y) / 2 - stageRect.top - stage.clientTop - parseFloat(getComputedStyle(stage).paddingTop || 0),
-        };
-        // Finger distance is proportional to preview magnification.
-        viewport = zoomAroundPoint(
-          viewport,
-          viewport.zoom * (Math.hypot(b.x - a.x, b.y - a.y) / Math.max(1, pinchStart.lastDistance || pinchStart.distance)),
-          point,
-          viewportSize()
-        );
-        pinchStart.lastDistance = Math.hypot(b.x - a.x, b.y - a.y);
-        updateViewport();
-      } else if (panStart && panPointers.size === 1) {
-        viewport = constrainPreviewPan({
-          zoom: panStart.viewport.zoom,
-          x: panStart.viewport.x + event.clientX - panStart.x,
-          y: panStart.viewport.y + event.clientY - panStart.y,
-        }, viewportSize());
-        updateViewport();
-      }
-    });
-    /**
-     * Derives the release result from the supplied values.
-     *
-     * @param {!Event} event Event that triggered this operation.
-     */
-    const release = event => {
-      if (!panPointers.delete(event.pointerId)) return;
-      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
-      pinchStart = null;
-      panStart = null;
-      if (panPointers.size === 1) {
-        const [position] = panPointers.values();
-        panStart = {x: position.x, y: position.y, viewport: {...viewport}};
-      }
-    };
-    canvas.addEventListener('pointerup', release);
-    canvas.addEventListener('pointercancel', release);
-  }
-
-  /**
-   * Removes or resets viewport.
-   */
-  function resetViewport() {
-    viewport = {zoom: 1, x: 0, y: 0};
-    panPointers.clear(); panStart = null; pinchStart = null;
-    if (root()) updateViewport();
-  }
 
   /**
    * Selects tab matching the input.
@@ -777,8 +650,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     pickStart = null;
     showingBefore = false;
     activeTab = 'adjustments';
-    viewport = {zoom: 1, x: 0, y: 0};
-    panPointers.clear(); panStart = null; pinchStart = null;
+    resetViewport(false);
     generation++;
     const currentGeneration = generation;
     if (renderId) cancelAnimationFrame(renderId);
@@ -807,12 +679,12 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
               photoEditorPickWhite: group.key === 'color' ?
                 renderTemplate('photoEditorPickWhite', {
                   pickWhite: t('photoEditor.pickWhite'),
-                  pickWhite2: t('photoEditor.pickWhite'),
+                  ariaLabel: t('photoEditor.pickWhite'),
                   pipetteIcon: pipetteIcon,
                 }) : '',
               key: group.key,
               resetGroup: t('photoEditor.resetGroup', {group: t(`photoEditor.${group.key}`)}),
-              resetGroup2: t('photoEditor.resetGroup', {group: t(`photoEditor.${group.key}`)}),
+              ariaLabel: t('photoEditor.resetGroup', {group: t(`photoEditor.${group.key}`)}),
               resetIcon: resetIcon,
               sliders: composeMarkup(group.sliders.map(sliderHtml)),
             }))),
@@ -828,7 +700,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
         brushUndo: t('photoEditor.brushUndo'),
         brushSize: t('photoEditor.brushSize'),
         dEFAULTMASKBRUSHSIZE: DEFAULT_MASK_BRUSH_SIZE,
-        dEFAULTMASKBRUSHSIZE2: DEFAULT_MASK_BRUSH_SIZE,
+        DEFAULT_MASK_BRUSH_SIZE: DEFAULT_MASK_BRUSH_SIZE,
         loading: t('photoEditor.loading'),
         auto: t('photoEditor.auto'),
         reset: t('photoEditor.reset'),

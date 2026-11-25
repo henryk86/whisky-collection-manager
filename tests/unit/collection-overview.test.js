@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {availableOverviewDistilleries, collectionOverviewEntries}
@@ -76,7 +77,7 @@ test(
     assert.equal(bottles.length, 3);
     assert.deepEqual(bottles.map(item => item.bottle.id), ['a-1', 'a-2', 'a-3']);
     assert.equal(bottles.every(item => item.bottling.id === 'a'), true);
-    assert.equal(paginate(bottles, 2, 2).items[0].bottle.id, 'a-3');
+    assert.equal(renderedText(paginate(bottles, 2, 2).items[0].bottle.id), 'a-3');
   }
 );
 
@@ -202,7 +203,7 @@ test(
       1
     );
     assert.equal(
-      paginate(collectionOverviewEntries(collection, {mode: 'bottles', volumeType: 'standard', ...options}), 1, 1).total,
+      renderedText(paginate(collectionOverviewEntries(collection, {mode: 'bottles', volumeType: 'standard', ...options}), 1, 1).total),
       2
     );
   }
@@ -211,12 +212,12 @@ test(
 test(
   'bottle mode is bookmarkable and the default bottling URL is backward compatible',
   () => {
-    assert.equal(homePageUrl(1), '/');
-    assert.equal(homePageUrl(4), '/?page=4');
-    assert.equal(homePageUrl(1, 'bottles'), '/?mode=bottles');
-    assert.equal(homePageUrl(4, 'bottles'), '/?mode=bottles&page=4');
-    assert.equal(overviewModeFromSearch('?mode=bottles&page=2'), 'bottles');
-    assert.equal(overviewModeFromSearch('?mode=unknown'), 'bottlings');
+    assert.equal(renderedText(homePageUrl(1)), '/');
+    assert.equal(renderedText(homePageUrl(4)), '/?page=4');
+    assert.equal(renderedText(homePageUrl(1, 'bottles')), '/?mode=bottles');
+    assert.equal(renderedText(homePageUrl(4, 'bottles')), '/?mode=bottles&page=4');
+    assert.equal(renderedText(overviewModeFromSearch('?mode=bottles&page=2')), 'bottles');
+    assert.equal(renderedText(overviewModeFromSearch('?mode=unknown')), 'bottlings');
   }
 );
 
@@ -300,61 +301,61 @@ test(
         shell(value) {html = value;},
       });
       view();
-      assert.equal((html.match(/<article\b/g) || []).length, 3);
-      assert.equal((html.match(/data-bottle-id=/g) || []).length, 3);
-      assert.match(html, /data-bottle-id="a-1"[\s\S]*?one\.jpg/);
-      assert.match(html, /data-bottle-id="a-2"[\s\S]*?two\.jpg/);
+      assert.equal((renderedText(html).match(/<article\b/g) || []).length, 3);
+      assert.equal((renderedText(html).match(/data-bottle-id=/g) || []).length, 3);
+      assert.match(renderedText(html), /data-bottle-id="a-1"[\s\S]*?one\.jpg/);
+      assert.match(renderedText(html), /data-bottle-id="a-2"[\s\S]*?two\.jpg/);
       /**
        * Derives the card for result from the supplied values.
        *
        * @param {*} id Identifier of the affected record.
        * @return {string} Resulting text.
        */
-      const cardFor = id => (html.match(/<article\b[\s\S]*?<\/article>/g) || []).find(card => card.includes(`data-bottle-id="${id}"`));
-      assert.match(cardFor('a-1'), /src="\/one\.jpg"/);
-      assert.match(cardFor('a-2'), /src="\/two\.jpg"/);
+      const cardFor = id => (renderedText(html).match(/<article\b[\s\S]*?<\/article>/g) || []).find(card => renderedText(card).includes(`data-bottle-id="${id}"`));
+      assert.match(renderedText(cardFor('a-1')), /src="\/one\.jpg"/);
+      assert.match(renderedText(cardFor('a-2')), /src="\/two\.jpg"/);
       // Only bottles with no photo inherit the displayed bottling cover.
-      assert.match(cardFor('a-3'), /src="\/bottling-cover\.jpg"/);
-      assert.doesNotMatch(cardFor('a-1'), /bottling-cover\.jpg/);
-      assert.doesNotMatch(cardFor('a-2'), /bottling-cover\.jpg/);
-      assert.equal((html.match(/class="collection-mode-toggle"/g) || []).length, 1);
+      assert.match(renderedText(cardFor('a-3')), /src="\/bottling-cover\.jpg"/);
+      assert.doesNotMatch(renderedText(cardFor('a-1')), /bottling-cover\.jpg/);
+      assert.doesNotMatch(renderedText(cardFor('a-2')), /bottling-cover\.jpg/);
+      assert.equal((renderedText(html).match(/class="collection-mode-toggle"/g) || []).length, 1);
       assert.match(
-        html,
+        renderedText(html),
         new RegExp(
           'class="section-head ds-page-header collect' + 'ion-heading"[\\s\\S]*class="collection-mod' +
           'e-toggle"[\\s\\S]*class="stats"'
         )
       );
-      assert.ok(html.indexOf('class="collection-mode-toggle"') < html.indexOf('class="stats"'));
-      assert.match(html, /#000102 · 50 ml/);
-      assert.match(html, /<span class="badge open">Geöffnet<\/span>/);
-      assert.match(html, /<span class="badge sample">Sample<\/span>/);
-      assert.match(html, /1–3 von 3 Flaschen/);
-      assert.match(html, /id="filter-distillery"/);
-      assert.match(html, /id="filter-volume-type"/);
-      assert.match(html, /<option value="sample"\s*>Samples<\/option>/);
-      const toolbar = html.slice(
-        html.indexOf('<div class="toolbar collection-filters"'),
-        html.indexOf('<div class="pagination-topline"') === -1 ?
-          html.length : html.indexOf('<div class="pagination-topline"')
+      assert.ok(renderedText(html).indexOf('class="collection-mode-toggle"') < renderedText(html).indexOf('class="stats"'));
+      assert.match(renderedText(html), /#000102 · 50 ml/);
+      assert.match(renderedText(html), /<span class="badge open">Geöffnet<\/span>/);
+      assert.match(renderedText(html), /<span class="badge sample">Sample<\/span>/);
+      assert.match(renderedText(html), /1–3 von 3 Flaschen/);
+      assert.match(renderedText(html), /id="filter-distillery"/);
+      assert.match(renderedText(html), /id="filter-volume-type"/);
+      assert.match(renderedText(html), /<option value="sample"\s*>Samples<\/option>/);
+      const toolbar = renderedText(html).slice(
+        renderedText(html).indexOf('<div class="toolbar collection-filters"'),
+        renderedText(html).indexOf('<div class="pagination-topline"') === -1 ?
+          html.length : renderedText(html).indexOf('<div class="pagination-topline"')
       );
       assert.ok(toolbar, 'overview toolbar must exist');
-      assert.equal((toolbar.match(/<select id="filter-/g) || []).length, 6,
+      assert.equal((renderedText(toolbar).match(/<select id="filter-/g) || []).length, 6,
         'all six existing selectors remain available');
-      assert.match(toolbar, /data-flavor-profile-status/, 'profile status lives in the flavor overlay');
-      assert.match(toolbar, /data-act="toggle-collection-filters" aria-expanded="false"/);
-      assert.match(toolbar, /id="collection-filter-extra"/);
-      assert.ok(toolbar.indexOf('id="filter-sort"') < toolbar.indexOf('id="filter-distillery"'));
-      assert.ok(toolbar.indexOf('data-act="toggle-view"') < toolbar.indexOf('id="filter-distillery"'));
-      assert.match(toolbar, /<select id="filter-distillery" aria-label="Destillerie filtern">/);
-      assert.match(toolbar, /<select id="filter-volume-type" aria-label="Flaschentyp filtern">/);
-      assert.match(toolbar, /<select id="filter-rating" aria-label="Nach Bewertung filtern">/);
+      assert.match(renderedText(toolbar), /data-flavor-profile-status/, 'profile status lives in the flavor overlay');
+      assert.match(renderedText(toolbar), /data-act="toggle-collection-filters" aria-expanded="false"/);
+      assert.match(renderedText(toolbar), /id="collection-filter-extra"/);
+      assert.ok(renderedText(toolbar).indexOf('id="filter-sort"') < renderedText(toolbar).indexOf('id="filter-distillery"'));
+      assert.ok(renderedText(toolbar).indexOf('data-act="toggle-view"') < renderedText(toolbar).indexOf('id="filter-distillery"'));
+      assert.match(renderedText(toolbar), /<select id="filter-distillery" aria-label="Destillerie filtern">/);
+      assert.match(renderedText(toolbar), /<select id="filter-volume-type" aria-label="Flaschentyp filtern">/);
+      assert.match(renderedText(toolbar), /<select id="filter-rating" aria-label="Nach Bewertung filtern">/);
       state.view = 'table';
       view();
-      assert.equal((html.match(/<tr class="clickable"/g) || []).length, 3);
-      assert.match(html, /data-act="collection-sort-column" data-column="inventory"[^>]*>Flasche/);
-      assert.match(html, /data-bottle-id="a-2"/);
-      assert.match(html, /#000102/);
+      assert.equal((renderedText(html).match(/<tr class="clickable"/g) || []).length, 3);
+      assert.match(renderedText(html), /data-act="collection-sort-column" data-column="inventory"[^>]*>Flasche/);
+      assert.match(renderedText(html), /data-bottle-id="a-2"/);
+      assert.match(renderedText(html), /#000102/);
     } finally {
       for (const [key, value] of Object.entries(original)) {
         if (value === undefined) delete globalThis[key];
@@ -380,9 +381,9 @@ test(
     };
     const bottlingEntries = collectionOverviewEntries(collection, {mode: 'bottlings', ...selectors});
     const bottleEntries = collectionOverviewEntries(collection, {mode: 'bottles', ...selectors});
-    assert.equal(paginate(bottlingEntries).total, 1);
-    assert.equal(paginate(bottleEntries).total, 28);
-    assert.equal(paginate(bottleEntries).pageCount, 2);
+    assert.equal(renderedText(paginate(bottlingEntries).total), 1);
+    assert.equal(renderedText(paginate(bottleEntries).total), 28);
+    assert.equal(renderedText(paginate(bottleEntries).pageCount), 2);
     assert.equal(paginate(bottleEntries, 2).items.length, 4);
   }
 );
@@ -398,9 +399,9 @@ test(
       {id: 'new', tastedOn: date, rating: 87.5},
     ];
     collection.bottlings[1].tastings = [];
-    assert.equal(matchesOverviewRating(collection.bottlings[0], '5'), true);
-    assert.equal(matchesOverviewRating(collection.bottlings[0], '4'), false);
-    assert.equal(matchesOverviewRating(collection.bottlings[1], 'unrated'), true);
+    assert.equal(renderedText(matchesOverviewRating(collection.bottlings[0], '5')), true);
+    assert.equal(renderedText(matchesOverviewRating(collection.bottlings[0], '4')), false);
+    assert.equal(renderedText(matchesOverviewRating(collection.bottlings[1], 'unrated')), true);
     assert.deepEqual(
       collectionOverviewEntries(collection, {mode: 'bottlings', rating: '5'}).map(e => e.bottling.id),
       ['a']
@@ -420,8 +421,8 @@ test(
     assert.equal(collectionOverviewEntries(collection, {rating: '5'}).length, 0);
     assert.deepEqual(collectionOverviewEntries(collection, {rating: 'unrated'}).map(e => e.bottling.id), ['z', 'a']);
     collection.bottlings[0].tastings = [{id: 'zero', tastedOn: date, rating: 0}];
-    assert.equal(matchesOverviewRating(collection.bottlings[0], '1'), true, 'zero belongs to the first glass');
-    assert.equal(matchesOverviewRating({tastings: [{id: 'edge', tastedOn: date, rating: 20.1}]}, '2'), true);
+    assert.equal(renderedText(matchesOverviewRating(collection.bottlings[0], '1')), true, 'zero belongs to the first glass');
+    assert.equal(renderedText(matchesOverviewRating({tastings: [{id: 'edge', tastedOn: date, rating: 20.1}]}, '2')), true);
   }
 );
 
@@ -435,13 +436,13 @@ test(
     };
     const a = collectionCardRating(bottling, 'bottle-1');
     const b = collectionCardRating(bottling, 'bottle-2');
-    assert.match(a, /class="collection-card-rating"/);
-    assert.equal((a.match(/glencairn-rating-symbol/g) || []).length, 5);
-    assert.match(a, /y="236\.125" width="220" height="94\.875"/);
-    assert.match(a, /overview-rating-bottle-1-0/);
-    assert.match(b, /overview-rating-bottle-2-0/);
-    assert.doesNotMatch(b, /overview-rating-bottle-1-0/);
-    assert.equal(collectionCardRating({id: 'no-score', tastings: []}), '');
+    assert.match(renderedText(a), /class="collection-card-rating"/);
+    assert.equal((renderedText(a).match(/glencairn-rating-symbol/g) || []).length, 5);
+    assert.match(renderedText(a), /y="236\.125" width="220" height="94\.875"/);
+    assert.match(renderedText(a), /overview-rating-bottle-1-0/);
+    assert.match(renderedText(b), /overview-rating-bottle-2-0/);
+    assert.doesNotMatch(renderedText(b), /overview-rating-bottle-1-0/);
+    assert.equal(renderedText(collectionCardRating({id: 'no-score', tastings: []})), '');
   }
 );
 
@@ -522,8 +523,8 @@ test(
         shell: markup => {html = markup;},
       });
       view();
-      assert.match(html, /data-expanded="false"/);
-      assert.match(html, /data-reset-collection-filter="status"/);
+      assert.match(renderedText(html), /data-expanded="false"/);
+      assert.match(renderedText(html), /data-reset-collection-filter="status"/);
       const toggle = {
         dataset: {act: 'toggle-collection-filters'},
         /**
@@ -535,14 +536,14 @@ test(
         setAttribute(name, value) {this[name] = value;},
       };
       view.handleClick(toggle);
-      assert.equal(filterElement.dataset.expanded, 'true');
-      assert.equal(toggle['aria-expanded'], 'true');
+      assert.equal(renderedText(filterElement.dataset.expanded), 'true');
+      assert.equal(renderedText(toggle['aria-expanded']), 'true');
       view();
-      assert.match(html, /data-expanded="true"/);
+      assert.match(renderedText(html), /data-expanded="true"/);
       view.handleClick({dataset: {resetCollectionFilter: 'status'}});
-      assert.equal(state.status, 'all');
-      assert.doesNotMatch(html, /data-reset-collection-filter="status"/);
-      assert.match(html, /data-expanded="true"/, 'expanded filters stay open when values change');
+      assert.equal(renderedText(state.status), 'all');
+      assert.doesNotMatch(renderedText(html), /data-reset-collection-filter="status"/);
+      assert.match(renderedText(html), /data-expanded="true"/, 'expanded filters stay open when values change');
     } finally {
       for (const [key, value] of Object.entries(original)) {
         if (value === undefined) delete globalThis[key];
@@ -799,14 +800,14 @@ test(
         'tastedDesc',
         'tastedAsc',
       ]) {
-        assert.match(markup, new RegExp(`<option value="${value}"`));
+        assert.match(renderedText(markup), new RegExp(`<option value="${value}"`));
       }
-      assert.match(markup, /<option value="tastedDesc" selected>/);
-      assert.match(markup, /Ø Kaufpreis aufsteigend/);
+      assert.match(renderedText(markup), /<option value="tastedDesc" selected>/);
+      assert.match(renderedText(markup), /Ø Kaufpreis aufsteigend/);
       state.overviewMode = 'bottles';
       view();
-      assert.match(markup, /Kaufpreis aufsteigend/);
-      assert.doesNotMatch(markup, /Ø Kaufpreis aufsteigend/);
+      assert.match(renderedText(markup), /Kaufpreis aufsteigend/);
+      assert.doesNotMatch(renderedText(markup), /Ø Kaufpreis aufsteigend/);
     } finally {
       for (const [name, value] of Object.entries(original)) {
         if (value === undefined) delete globalThis[name]; else globalThis[name] = value;

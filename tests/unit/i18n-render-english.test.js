@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -28,7 +29,7 @@ const fetchLocale = async url => ({
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   json: async () =>
-    locale(url.split('/').at(-1)),
+    locale(renderedText(url).split('/').at(-1)),
 });
 const room = {
   id: 'room-1',
@@ -129,8 +130,8 @@ test(
          */
         replaceState() {},
       };
-      assert.equal(await initializeLanguage(fetchLocale), 'en');
-      assert.equal(currentLanguage(), 'en');
+      assert.equal(renderedText(await initializeLanguage(fetchLocale)), 'en');
+      assert.equal(renderedText(currentLanguage()), 'en');
       const state = {
         collection,
         overviewMode: 'bottlings',
@@ -154,7 +155,7 @@ test(
          */
         shell: html => {home = html;},
       })();
-      assert.match(home, /toggle-view[^>]*>[\s\S]*class="collection-filter-view-text">Table</);
+      assert.match(renderedText(home), /toggle-view[^>]*>[\s\S]*class="collection-filter-view-text">Table</);
       state.view = 'table';
       createHomeView({
         state, selectors,
@@ -165,11 +166,11 @@ test(
          */
         shell: html => {home = html;},
       })();
-      assert.match(home, /toggle-view[^>]*>[\s\S]*class="collection-filter-view-text">Cards</);
-      assert.match(home, /All distilleries/);
-      assert.match(home, /All statuses/);
-      assert.doesNotMatch(home, />Tabelle<|>Kacheln<|>Alle Destillerien<|>Alle Status</);
-      assert.match(home, /Custom Islay/);
+      assert.match(renderedText(home), /toggle-view[^>]*>[\s\S]*class="collection-filter-view-text">Cards</);
+      assert.match(renderedText(home), /All distilleries/);
+      assert.match(renderedText(home), /All statuses/);
+      assert.doesNotMatch(renderedText(home), />Tabelle<|>Kacheln<|>Alle Destillerien<|>Alle Status</);
+      assert.match(renderedText(home), /Custom Islay/);
       let analytics = '';
       createAnalyticsView({
         state: {collection, selected: 'overview', analyticsFilters: {}},
@@ -185,8 +186,8 @@ test(
         'All countries',
         'All bottle types',
         'All statuses',
-      ]) assert.match(analytics, new RegExp(label));
-      assert.doesNotMatch(analytics, /Alle Destillerien|Alle L\u00e4nder|Alle Flaschentypen|Alle Status/);
+      ]) assert.match(renderedText(analytics), new RegExp(label));
+      assert.doesNotMatch(renderedText(analytics), /Alle Destillerien|Alle L\u00e4nder|Alle Flaschentypen|Alle Status/);
       let warehouse = '';
       const warehouseState = {
         warehouse: {rooms: [room], bottles: [], assignments: {}},
@@ -213,10 +214,10 @@ test(
          */
         refresh: async () => {},
       }).render();
-      assert.match(warehouse, /Storage management/);
-      assert.match(warehouse, /Whiskyzimmer/);
-      assert.match(warehouse, /Mein Regal/);
-      assert.doesNotMatch(warehouse, />Lagerverwaltung</);
+      assert.match(renderedText(warehouse), /Storage management/);
+      assert.match(renderedText(warehouse), /Whiskyzimmer/);
+      assert.match(renderedText(warehouse), /Mein Regal/);
+      assert.doesNotMatch(renderedText(warehouse), />Lagerverwaltung</);
       let furnitureForm = '';
       createWarehouseView({
         state: warehouseState,
@@ -246,11 +247,11 @@ test(
         'f1'
       );
       for (const label of ['Left side panel', 'Right side panel', 'Back panel',
-        'Door leaves']) assert.match(furnitureForm, new RegExp(label));
-      assert.doesNotMatch(furnitureForm, /Linke Seitenwand|Rechte Seitenwand|R\u00fcckwand|T\u00fcrfl\u00fcgel/);
+        'Door leaves']) assert.match(renderedText(furnitureForm), new RegExp(label));
+      assert.doesNotMatch(renderedText(furnitureForm), /Linke Seitenwand|Rechte Seitenwand|R\u00fcckwand|T\u00fcrfl\u00fcgel/);
     } finally {
       for (const [name, value] of Object.entries(previous)) if (value === undefined) delete globalThis[name]; else globalThis[name] = value;
-      await initializeLanguage(async url => url.endsWith('index.json') ?
+      await initializeLanguage(async url => renderedText(url).endsWith('index.json') ?
         {
           ok: true,
           /**

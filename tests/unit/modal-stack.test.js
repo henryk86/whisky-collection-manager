@@ -1,3 +1,4 @@
+import {fixtureMarkup, renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createModal} from '../../public/js/ui/modal.js';
@@ -124,19 +125,19 @@ test(
         onClose() {},
       });
       modal.showModal('Parent', '<form></form>');
-      assert.equal(body.style.position, 'fixed');
-      assert.equal(body.style.top, '-420px');
-      assert.equal(html.style.overflowY, 'scroll', 'keep the classic scrollbar track');
-      assert.notEqual(html.style.overflow, 'hidden');
+      assert.equal(renderedText(body.style.position), 'fixed');
+      assert.equal(renderedText(body.style.top), '-420px');
+      assert.equal(renderedText(html.style.overflowY), 'scroll', 'keep the classic scrollbar track');
+      assert.notEqual(renderedText(html.style.overflow), 'hidden');
       modal.showModal('Help', '<p>Help</p>');
       modal.closeModal();
-      assert.equal(state.modal.title, 'Parent');
-      assert.equal(body.style.position, 'fixed', 'nested close must not unlock the page');
-      assert.equal(html.style.overflowY, 'scroll');
+      assert.equal(renderedText(state.modal.title), 'Parent');
+      assert.equal(renderedText(body.style.position), 'fixed', 'nested close must not unlock the page');
+      assert.equal(renderedText(html.style.overflowY), 'scroll');
       modal.closeModal();
-      assert.equal(state.modal, null);
-      assert.equal(body.style.position, undefined);
-      assert.equal(html.style.overflowY, undefined);
+      assert.equal(renderedText(state.modal), null);
+      assert.equal(renderedText(body.style.position), undefined);
+      assert.equal(renderedText(html.style.overflowY), undefined);
       assert.deepEqual(scrollCalls, [{top: 420, left: 0, behavior: 'instant'}]);
     } finally {
       if (previousDocument === undefined) delete globalThis.document;
@@ -173,15 +174,15 @@ test(
       original.form.name = 'Unsaved whisky';
       original.form.files = ['image.png'];
       modal.showModal('Neue Destillerie', '<form id="distillery-form"></form>', false, true);
-      assert.notEqual(host.firstElementChild, original);
-      assert.equal(state.modal.title, 'Neue Destillerie');
+      assert.notEqual(renderedText(host.firstElementChild), renderedText(original));
+      assert.equal(renderedText(state.modal.title), 'Neue Destillerie');
       modal.closeModal();
-      assert.equal(host.firstElementChild, original);
-      assert.equal(host.firstElementChild.form.name, 'Unsaved whisky');
+      assert.equal(renderedText(host.firstElementChild), renderedText(original));
+      assert.equal(renderedText(host.firstElementChild.form.name), 'Unsaved whisky');
       assert.deepEqual(host.firstElementChild.form.files, ['image.png']);
-      assert.equal(state.modal.title, 'Abfüllung');
+      assert.equal(renderedText(state.modal.title), 'Abfüllung');
       modal.closeModal();
-      assert.equal(state.modal, null);
+      assert.equal(renderedText(state.modal), null);
     } finally {globalThis.document = previous;}
   }
 );
@@ -208,11 +209,11 @@ test('closing all dialogs discards nested parents during navigation', () => {
     modal.showModal('Parent', '<p>Parent</p>');
     modal.showModal('Child', '<p>Child</p>', false, true);
     modal.closeModal(true);
-    assert.equal(state.modal, null);
-    assert.equal(host.firstElementChild, null);
+    assert.equal(renderedText(state.modal), null);
+    assert.equal(renderedText(host.firstElementChild), null);
     modal.showModal('Other', '<p>Other</p>');
     modal.closeModal();
-    assert.equal(state.modal, null);
+    assert.equal(renderedText(state.modal), null);
   } finally {globalThis.document = previous;}
 });
 
@@ -241,13 +242,13 @@ test(
       const original = host.firstElementChild;
       original.form.name = 'Selected destination';
       const answer = modal.confirm('Increase capacity', 'Increase from 3 to 5?', 'Increase and assign');
-      assert.equal(state.modal.title, 'Increase capacity');
-      assert.match(host.firstElementChild.html, /data-act="modal-confirm-accept"/);
-      assert.match(host.firstElementChild.html, /data-act="close-modal"/);
-      assert.equal(modal.acceptConfirmation(), true);
-      assert.equal(await answer, true);
-      assert.equal(host.firstElementChild, original);
-      assert.equal(original.form.name, 'Selected destination');
+      assert.equal(renderedText(state.modal.title), 'Increase capacity');
+      assert.match(renderedText(host.firstElementChild.html), /data-act="modal-confirm-accept"/);
+      assert.match(renderedText(host.firstElementChild.html), /data-act="close-modal"/);
+      assert.equal(renderedText(modal.acceptConfirmation()), true);
+      assert.equal(renderedText(await answer), true);
+      assert.equal(renderedText(host.firstElementChild), renderedText(original));
+      assert.equal(renderedText(original.form.name), 'Selected destination');
       modal.closeModal();
     } finally {
       if (oldDocument === undefined) delete globalThis.document; else globalThis.document = oldDocument;
@@ -279,12 +280,12 @@ test(
       modal.showModal('Assignment', '<form id="warehouse-form"></form>');
       const answer = modal.confirm('Full', 'More places?', 'Increase');
       modal.closeModal();
-      assert.equal(await answer, false);
-      assert.equal(state.modal.title, 'Assignment');
+      assert.equal(renderedText(await answer), false);
+      assert.equal(renderedText(state.modal.title), 'Assignment');
       const second = modal.confirm('Full', 'More places?', 'Increase');
       modal.closeModal(true);
-      assert.equal(await second, false);
-      assert.equal(state.modal, null);
+      assert.equal(renderedText(await second), false);
+      assert.equal(renderedText(state.modal), null);
     } finally {
       if (oldDocument === undefined) delete globalThis.document; else globalThis.document = oldDocument;
     }
@@ -319,17 +320,17 @@ test(
       const shelf = host.firstElementChild;
       shelf.form.name = 'Edited shelf';
       modal.showModal('Bottle', '<div id="bottle-preview"></div>');
-      assert.equal(state.modal.title, 'Bottle');
+      assert.equal(renderedText(state.modal.title), 'Bottle');
       modal.closeModal();
-      assert.equal(state.modal.title, 'Shelf');
-      assert.equal(host.firstElementChild, shelf);
-      assert.equal(shelf.form.name, 'Edited shelf');
+      assert.equal(renderedText(state.modal.title), 'Shelf');
+      assert.equal(renderedText(host.firstElementChild), renderedText(shelf));
+      assert.equal(renderedText(shelf.form.name), 'Edited shelf');
       modal.closeModal();
-      assert.equal(state.modal.title, 'Furniture');
-      assert.equal(host.firstElementChild, furniture);
-      assert.equal(furniture.form.name, 'Furniture not saved');
+      assert.equal(renderedText(state.modal.title), 'Furniture');
+      assert.equal(renderedText(host.firstElementChild), renderedText(furniture));
+      assert.equal(renderedText(furniture.form.name), 'Furniture not saved');
       modal.closeModal();
-      assert.equal(state.modal, null);
+      assert.equal(renderedText(state.modal), null);
     } finally {
       if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
     }
@@ -359,7 +360,7 @@ test('explicit replacement can discard older modal history', () => {
     modal.showModal('Shelf', '<div></div>');
     modal.showModal('Standalone', '<div></div>', false, false);
     modal.closeModal();
-    assert.equal(state.modal, null);
+    assert.equal(renderedText(state.modal), null);
   } finally {
     if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
   }
@@ -390,21 +391,21 @@ test(
          */
         onClose() {},
       });
-      const plannerHelpButton = '<button type="button" data-act="flight-plan-help">?</button>';
-      modal.showModal('Flight planen', '<form id="flight-plan"></form>', true, false, plannerHelpButton);
+      const plannerHelpButton = fixtureMarkup('<button type="button" data-act="flight-plan-help">?</button>');
+      modal.showModal('Flight planen', fixtureMarkup('<form id="flight-plan"></form>'), true, false, plannerHelpButton);
       const planner = host.firstElementChild;
       planner.form.name = 'Not yet saved flight';
       planner.form.files = ['draft-proposal'];
-      assert.match(planner.html, /ds-heading-with-action/);
-      assert.match(planner.html, /data-act="flight-plan-help"/);
-      modal.showModal('So wird ein Flight geplant', '<section>Formeln</section>', true, true);
-      assert.equal(state.modal.title, 'So wird ein Flight geplant');
-      assert.notEqual(host.firstElementChild, planner);
+      assert.match(renderedText(planner.html), /ds-heading-with-action/);
+      assert.match(renderedText(planner.html), /data-act="flight-plan-help"/);
+      modal.showModal('So wird ein Flight geplant', fixtureMarkup('<section>Formeln</section>'), true, true);
+      assert.equal(renderedText(state.modal.title), 'So wird ein Flight geplant');
+      assert.notEqual(renderedText(host.firstElementChild), renderedText(planner));
       modal.closeModal();
-      assert.equal(state.modal.title, 'Flight planen');
-      assert.equal(state.modal.headingAction, plannerHelpButton);
-      assert.equal(host.firstElementChild, planner, 'the exact original DOM must return');
-      assert.equal(planner.form.name, 'Not yet saved flight');
+      assert.equal(renderedText(state.modal.title), 'Flight planen');
+      assert.equal(renderedText(state.modal.headingAction), renderedText(plannerHelpButton));
+      assert.equal(renderedText(host.firstElementChild), renderedText(planner), 'the exact original DOM must return');
+      assert.equal(renderedText(planner.form.name), 'Not yet saved flight');
       assert.deepEqual(planner.form.files, ['draft-proposal']);
     } finally {
       if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
@@ -457,16 +458,16 @@ test(
       });
       view.startPlannedFlight();
       const planner = host.firstElementChild;
-      assert.equal(state.modal.title, 'Flight planen');
-      assert.match(planner.html, /data-act="flight-plan-help"/);
+      assert.equal(renderedText(state.modal.title), 'Flight planen');
+      assert.match(renderedText(planner.html), /data-act="flight-plan-help"/);
       planner.form.name = 'Kept draft';
       planner.form.files = ['kept-proposal'];
       view.showFlightPlanningHelp();
-      assert.equal(state.modal.title, 'So wird ein Flight geplant');
+      assert.equal(renderedText(state.modal.title), 'So wird ein Flight geplant');
       modal.closeModal();
-      assert.equal(state.modal.title, 'Flight planen');
-      assert.equal(host.firstElementChild, planner);
-      assert.equal(planner.form.name, 'Kept draft');
+      assert.equal(renderedText(state.modal.title), 'Flight planen');
+      assert.equal(renderedText(host.firstElementChild), renderedText(planner));
+      assert.equal(renderedText(planner.form.name), 'Kept draft');
       assert.deepEqual(planner.form.files, ['kept-proposal']);
     } finally {
       if (previous === undefined) delete globalThis.document; else globalThis.document = previous;

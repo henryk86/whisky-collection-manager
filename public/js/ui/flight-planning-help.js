@@ -66,7 +66,7 @@ export function flightPlanningHelpHtml(t) {
    * @return {string} Resulting text.
    */
   const p = (key, extraClass = '') => renderTemplate('p', {
-    extraClass: extraClass ? ` class="${extraClass}"` : '',
+    classAttributes: extraClass ? {"class": extraClass} : {},
     tx: tx(key),
   });
 

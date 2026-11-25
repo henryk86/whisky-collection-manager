@@ -46,7 +46,7 @@ export function panel({content = '', variant = 'standard', tag = 'div',
   const baseClass = variant === 'analytics' ? 'analytics-panel' : variant === 'plain' ? '' : 'panel';
   return renderTemplate('panel', {
     tag: tag,
-    safe: safe(classes(baseClass, className)),
+    className: safe(classes(baseClass, className)),
     variant: variant,
     content: content,
     tag2: tag,
@@ -75,18 +75,18 @@ export function detailField({
   const valueTag = definition ? 'dd' : variant === 'readonly' ? 'strong' : variant === 'note' ? 'p' : 'div';
   const valueContent = valueHtml ? value : safe(value);
   return renderTemplate('detailFieldDiv', {
-    className: className ? ` class="${safe(className)}"` : '',
+    classAttributes: className ? {"class": className} : {},
     variant,
     children: composeMarkup(
       renderTemplate('detailField', {
         labelTag,
-        labelClass: labelClass ? ` class="${safe(labelClass)}"` : '',
-        safe: safe(label),
+        classAttributes: labelClass ? {"class": labelClass} : {},
+        label: safe(label),
         labelTag2: labelTag,
       }),
       renderTemplate('detailField2', {
         valueTag,
-        valueClass: valueClass ? ` class="${safe(valueClass)}"` : '',
+        classAttributes: valueClass ? {"class": valueClass} : {},
         valueContent,
         valueTag2: valueTag,
       })
@@ -108,7 +108,7 @@ export function detailGrid(content, {columns = 3, tag = 'div', className =
   assertVariant(tag, ['div', 'dl'], 'detail grid tag');
   return renderTemplate('detailGrid', {
     tag: tag,
-    className: className ? ` class="${safe(className)}"` : '',
+    classAttributes: className ? {"class": className} : {},
     columns: columns,
     content: content,
     tag2: tag,
@@ -131,15 +131,15 @@ export function emptyState({
 } = {}) {
   assertVariant(variant, ['collection', 'subtle', 'inline'], 'empty state');
   if (variant === 'inline') return renderTemplate('emptyStateP', {
-    safe: safe(classes('analytics-empty', className)),
-    safe2: safe(description || title),
+    className: safe(classes('analytics-empty', className)),
+    message: safe(description || title),
   });
   if (variant === 'subtle') return renderTemplate('emptyStateP2', {
-    safe: safe(classes('hint', className)),
-    safe2: safe(description || title),
+    className: safe(classes('hint', className)),
+    message: safe(description || title),
   });
   return renderTemplate('emptyStateDiv', {
-    safe: safe(classes('empty-state', className)),
+    className: safe(classes('empty-state', className)),
     title: safe(title),
     description: safe(description),
     actions,
@@ -156,8 +156,8 @@ export function emptyState({
 export function divider({orientation = 'horizontal', className = ''} = {}) {
   assertVariant(orientation, ['horizontal', 'vertical'], 'divider');
   return orientation === 'horizontal'
-    ? renderTemplate('hr', {safe: safe(classes('divider', className)), })
-    : renderTemplate('dividerSpan', {safe: safe(className), });
+    ? renderTemplate('hr', {className: safe(classes('divider', className)), })
+    : renderTemplate('dividerSpan', {className: safe(className), });
 }
 
 /**
@@ -173,7 +173,7 @@ export function actionToolbar(content, {className = '', variant = 'inline'} =
   assertVariant(variant, ['inline', 'filters', 'end'], 'action toolbar');
   const baseClass = variant === 'filters' ? 'toolbar' : 'actions';
   return renderTemplate('actionToolbarDiv', {
-    safe: safe(classes(baseClass, className)),
+    className: safe(classes(baseClass, className)),
     variant: variant,
     content: content,
   });

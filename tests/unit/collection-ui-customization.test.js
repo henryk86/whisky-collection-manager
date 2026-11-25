@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {bottlingOriginLabel} from '../../public/js/domain/bottling-origin.js';
@@ -102,10 +103,10 @@ function renderHome(establishedYear, bottlings = [], physicalBottles = [],
 }
 
 test('home shows the saved founding year and never assumes 2026', () => {
-  assert.match(renderHome(1997), /COLLECTION · EST\. 1997/);
+  assert.match(renderedText(renderHome(1997)), /COLLECTION · EST\. 1997/);
   const unset = renderHome(null);
-  assert.match(unset, /class="hero-footnote">COLLECTION<\/span>/);
-  assert.doesNotMatch(unset, /EST\. 2026/);
+  assert.match(renderedText(unset), /class="hero-footnote">COLLECTION<\/span>/);
+  assert.doesNotMatch(renderedText(unset), /EST\. 2026/);
 });
 
 test(
@@ -128,16 +129,16 @@ test(
       }],
       physicalBottles
     );
-    const stats = html.slice(html.indexOf('<div class="stats">'), html.indexOf('<div class="toolbar collection-filters"'));
-    assert.equal((stats.match(/class="panel stat"/g) || []).length, 4);
-    assert.match(stats, /<span>Geöffnet<\/span>\s*<strong>1<\/strong>/);
-    assert.match(stats, /<span>Geschlossen<\/span>\s*<strong>2<\/strong>/);
+    const stats = renderedText(html).slice(renderedText(html).indexOf('<div class="stats">'), renderedText(html).indexOf('<div class="toolbar collection-filters"'));
+    assert.equal((renderedText(stats).match(/class="panel stat"/g) || []).length, 4);
+    assert.match(renderedText(stats), /<span>Geöffnet<\/span>\s*<strong>1<\/strong>/);
+    assert.match(renderedText(stats), /<span>Geschlossen<\/span>\s*<strong>2<\/strong>/);
     assert.ok(
-      stats.indexOf('<span>Geschlossen</span>') < stats.indexOf('<span>Geöffnet</span>'),
+      renderedText(stats).indexOf('<span>Geschlossen</span>') < renderedText(stats).indexOf('<span>Geöffnet</span>'),
       'Geschlossen must be shown before Geöffnet'
     );
-    assert.match(stats, /<span>Bestand gesamt<\/span>\s*<strong>4<\/strong>/);
-    assert.doesNotMatch(stats, /Unvollständig|Ungeöffnet \/ geöffnet/);
+    assert.match(renderedText(stats), /<span>Bestand gesamt<\/span>\s*<strong>4<\/strong>/);
+    assert.doesNotMatch(renderedText(stats), /Unvollständig|Ungeöffnet \/ geöffnet/);
   }
 );
 
@@ -152,18 +153,18 @@ test(
       bottles: [],
       createdAt: '2026-01-01',
     };
-    assert.equal(bottlingOriginLabel(b, () => 'wrong distillery'), 'Signatory Vintage');
-    assert.equal(bottlingOriginLabel({...b, distilleryIds: ['d1']}, () => 'Talisker'), 'Talisker');
-    assert.equal(bottlingOriginLabel({...b, bottler: '  '}, () => 'wrong'), '');
-    assert.match(renderHome(null, [b]), /class="card-kicker">Signatory Vintage/);
+    assert.equal(renderedText(bottlingOriginLabel(b, () => 'wrong distillery')), 'Signatory Vintage');
+    assert.equal(renderedText(bottlingOriginLabel({...b, distilleryIds: ['d1']}, () => 'Talisker')), 'Talisker');
+    assert.equal(renderedText(bottlingOriginLabel({...b, bottler: '  '}, () => 'wrong')), '');
+    assert.match(renderedText(renderHome(null, [b])), /class="card-kicker">Signatory Vintage/);
     const table = renderHome(null, [b], [], 'table');
     assert.match(
-      table,
+      renderedText(table),
       new RegExp('data-act="collection-sort-column" data-col' + 'umn="distillery"[^>]*>Destillerie \\/ Abfü' + 'ller')
     );
-    assert.match(table, /<td>Signatory Vintage<\/td>/);
+    assert.match(renderedText(table), /<td>Signatory Vintage<\/td>/);
     assert.match(
-      renderHome(null, [{...b, bottler: '<script>alert(1)</script>'}]),
+      renderedText(renderHome(null, [{...b, bottler: '<script>alert(1)</script>'}])),
       /&lt;script&gt;alert\(1\)&lt;\/script&gt;/
     );
   }
@@ -176,10 +177,10 @@ test(
       collection: {settings: {establishedYear: 1989}, distilleries: []},
       backupDashboard: null,
     })();
-    assert.match(html, /id="collection-settings-form"/);
-    assert.match(html, /name="establishedYear"[^>]*value="1989"/);
-    assert.match(html, /Gründungsjahr speichern/);
-    assert.match(html, /Datensicherung/);
+    assert.match(renderedText(html), /id="collection-settings-form"/);
+    assert.match(renderedText(html), /name="establishedYear"[^>]*value="1989"/);
+    assert.match(renderedText(html), /Gründungsjahr speichern/);
+    assert.match(renderedText(html), /Datensicherung/);
   }
 );
 
@@ -196,22 +197,22 @@ test(
       releaseYear: null,
     };
     const card = renderHome(null, [blank]);
-    assert.match(card, /<h3(?: data-i18n-ignore)?>Ohne Angaben<\/h3>/);
-    assert.doesNotMatch(card, /class="card-facts muted"/);
-    assert.doesNotMatch(card, /– Jahre|– %|NaN|<div class="card-kicker"><\/div>/);
+    assert.match(renderedText(card), /<h3(?: data-i18n-ignore)?>Ohne Angaben<\/h3>/);
+    assert.doesNotMatch(renderedText(card), /class="card-facts muted"/);
+    assert.doesNotMatch(renderedText(card), /– Jahre|– %|NaN|<div class="card-kicker"><\/div>/);
     const table = renderHome(null, [blank], [], 'table');
     assert.match(
-      table,
+      renderedText(table),
       new RegExp('<strong>Ohne Angaben<\\/strong>[\\s\\S]*?<' + 'td><\\/td>\\s*<td><\\/td>\\s*<td><\\/td>')
     );
-    assert.doesNotMatch(table, /– %|– Jahre/);
+    assert.doesNotMatch(renderedText(table), /– %|– Jahre/);
 
     const withAbv = {...blank, abv: 46.5};
     const abvCard = renderHome(null, [withAbv]);
-    assert.match(abvCard, /class="card-facts muted">46.5 % Vol\.<\/div>/);
-    assert.doesNotMatch(abvCard, /Jahre| · 46/);
+    assert.match(renderedText(abvCard), /class="card-facts muted">46.5 % Vol\.<\/div>/);
+    assert.doesNotMatch(renderedText(abvCard), /Jahre| · 46/);
     const withZero = renderHome(null, [{...blank, ageYears: 0, abv: 0}]);
-    assert.match(withZero, /class="card-facts muted">0 Jahre · 0 % Vol\.<\/div>/);
+    assert.match(renderedText(withZero), /class="card-facts muted">0 Jahre · 0 % Vol\.<\/div>/);
   }
 );
 
@@ -220,11 +221,11 @@ test(
   'advanced filter toggle uses the intended filter icon and a separate chevron, never a text glyph',
   () => {
     const html = renderHome(null);
-    const toggle = html.match(new RegExp('<button[^>]*class="btn collection-filter-t' + 'oggle"[^>]*>[\\s\\S]*?<\\/button>'))?.[0];
+    const toggle = renderedText(html).match(new RegExp('<button[^>]*class="btn collection-filter-t' + 'oggle"[^>]*>[\\s\\S]*?<\\/button>'))?.[0];
     assert.ok(toggle, 'advanced filter toggle exists');
-    assert.match(toggle, /class="collection-filter-icon"/);
-    assert.match(toggle, /class="collection-filter-chevron"/);
-    assert.match(toggle, /aria-expanded="false"/);
-    assert.doesNotMatch(toggle, /⌄/);
+    assert.match(renderedText(toggle), /class="collection-filter-icon"/);
+    assert.match(renderedText(toggle), /class="collection-filter-chevron"/);
+    assert.match(renderedText(toggle), /aria-expanded="false"/);
+    assert.doesNotMatch(renderedText(toggle), /⌄/);
   }
 );

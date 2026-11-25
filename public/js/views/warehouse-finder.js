@@ -24,10 +24,10 @@ const statusKeys = {
 export function renderWarehouseFinderResults({items, total, page, pages}) {
   const count =
     renderTemplate('warehouseFinderSummary', {
-      safe: safe(total ? t('warehouse.find.matches', {count: total}) : t('warehouse.find.noMatches')),
+      resultSummary: safe(total ? t('warehouse.find.matches', {count: total}) : t('warehouse.find.noMatches')),
     });
   const cards = composeMarkup(items.map(({bottle, place}) => {
-    const photo = bottle.photoPath ? renderTemplate('img', {safe: safe(imageUrl(bottle.photoPath)), }) : renderTemplate('img2');
+    const photo = bottle.photoPath ? renderTemplate('img', {src: safe(imageUrl(bottle.photoPath)), }) : renderTemplate('img2');
     const inventory = bottle.number ? `#${safe(bottle.number)} · ` : '';
     const status = statusKeys[bottle.status] ? safe(t(statusKeys[bottle.status])) : '';
     const volume = bottle.volumeMl != null ? `${safe(bottle.volumeMl)} ml` : '';
@@ -35,29 +35,29 @@ export function renderWarehouseFinderResults({items, total, page, pages}) {
     const meta = [volume, type, status].filter(Boolean).join(' · ');
     const details = bottle.bottlingId
       ? renderTemplate('smallButton', {
-        safe: safe(routeUrl('detail', bottle.bottlingId)),
-        safe2: safe(bottle.bottlingId),
-        safe3: safe(bottle.id),
+        href: safe(routeUrl('detail', bottle.bottlingId)),
+        id: safe(bottle.bottlingId),
+        bottleId: safe(bottle.id),
       }) : '';
     return renderTemplate('warehouseFinderCard', {
-      safe: safe(bottle.id),
+      bottleId: safe(bottle.id),
       photo: photo,
       inventory: inventory,
-      safe2: safe(bottle.name),
+      name: safe(bottle.name),
       warehouseFinderMeta: meta ? renderTemplate('warehouseFinderMeta', {meta: meta, }) : '',
-      span: place ? renderTemplate('cardsSpan', {safe: safe(place.label), }) : safe(t('detail.fields.unassigned')),
-      warehouseFindLocation: place ? renderTemplate('warehouseFindLocation', {safe: safe(bottle.id), }) : '',
-      safe3: safe(bottle.id),
+      span: place ? renderTemplate('cardsSpan', {label: safe(place.label), }) : safe(t('detail.fields.unassigned')),
+      warehouseFindLocation: place ? renderTemplate('warehouseFindLocation', {id: safe(bottle.id), }) : '',
+      id: safe(bottle.id),
       t: t(place ? 'warehouse.bottles.relocate' : 'warehouse.find.assignLocation'),
       details: details,
     });
   })) || renderTemplate('hint');
   const pagination = pages > 1 ?
     renderTemplate('warehouseFinderPages', {
-      safe: safe(t('warehouse.find.pagination')),
-      disabled: page <= 1 ? 'disabled' : '',
-      safe2: safe(t('warehouse.find.page', {page, pages})),
-      disabled2: page >= pages ? 'disabled' : '',
+      ariaLabel: safe(t('warehouse.find.pagination')),
+      disabledAttributes: page <= 1 ? {"disabled": true} : {},
+      page: safe(t('warehouse.find.page', {page, pages})),
+      disabled2: page >= pages ? {"disabled": true} : {},
     }) : '';
   return renderTemplate('renderWarehouseFinderResults', {
     count: count,
@@ -79,11 +79,11 @@ export function renderWarehouseFinder({query, placement, results}) {
     ['unassigned', 'warehouse.find.unassigned'],
   ];
   return renderTemplate('warehouseFinder', {
-    safe: safe(query),
+    value: safe(query),
     filters: composeMarkup(filters.map(([id, key]) =>
       renderTemplate('warehouseFinderFilterOption', {
         id: id,
-        checked: id === placement ? 'checked' : '',
+        checkedAttributes: id === placement ? {"checked": true} : {},
         t: t(key),
       }))),
     warehouseFinderResults: renderWarehouseFinderResults(results),

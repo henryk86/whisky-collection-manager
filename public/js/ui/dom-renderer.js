@@ -1,52 +1,12 @@
 /** @fileoverview Clones static templates and binds values through the DOM. */
-import {RenderPlan, SLOT, slotValue} from './render-plan.js';
+import {RenderPlan, SLOT, slotValue, scalarBinding, serializeMarkup} from './render-plan.js';
+import {attributeEntries, checkedAttribute, checkedTag, decodeEscaped} from './bindings.js';
 
 const templates = new WeakMap();
 const marker = /wcm-slot-(\d+)-end/g;
-const tagName = new RegExp('^(?:a|article|button|dd|div|dl|dt|h2|h3|p|section|span|strong)$');
-const attributeName = /^[a-zA-Z_:][\w:.-]*$/;
 const htmlNamespace = 'http://www.w3.org/1999/xhtml';
 const xlinkNamespace = 'http://www.w3.org/1999/xlink';
 const xmlNamespace = 'http://www.w3.org/XML/1998/namespace';
-const entities = {'amp': '&', 'lt': '<', 'gt': '>', 'quot': '"', '#39': "'"};
-
-/**
- * Decodes the five entities used by the former HTML escape helper once.
- * @param {*} value Previously escaped raw text or attribute value.
- * @return {string} Literal DOM text.
- */
-function unescapeText(value) {
-  return String(value).replace(/&(amp|lt|gt|quot|#39);/g, (_, name) => entities[name]);
-}
-
-/**
- * Rejects executable attributes and malformed dynamic attribute names.
- * @param {string} name Attribute name.
- * @return {string} Validated name.
- */
-function checkedAttribute(name) {
-  if (!attributeName.test(name) || /^on/i.test(name) || name.toLowerCase() === 'srcdoc') {
-    throw new Error(`Invalid template attribute: ${name}`);
-  }
-  return name;
-}
-
-/**
- * Converts old attribute-list bindings to DOM attributes without parsing HTML.
- * @param {!Element} element Target element.
- * @param {*} value Application-generated attribute list.
- */
-function bindAttributes(element, value) {
-  let remaining = String(value).trim();
-  const pattern = /^([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/;
-  while (remaining) {
-    const match = remaining.match(pattern);
-    if (!match) throw new Error('Invalid template attribute list');
-    element.setAttribute(checkedAttribute(match[1]), unescapeText(match[2] ?? match[3] ?? match[4] ?? ''));
-    remaining = remaining.slice(match[0].length).trim();
-  }
-}
-
 /**
  * Builds parser-safe static markup with inert markers instead of user values.
  * Tag names and dynamic attribute names are validated structural choices.
@@ -58,9 +18,7 @@ function prepare(plan) {
   const boundAttributes = [];
   const source = plan.source.replace(SLOT, (whole, mode, key) => {
     if (mode !== 'tag') return whole;
-    const value = String(slotValue(plan, mode, key));
-    if (!tagName.test(value)) throw new Error(`Invalid template tag: ${value}`);
-    return value;
+    return checkedTag(slotValue(plan, mode, key));
   });
   const tokens = new RegExp([
     /<!--[^]*?-->/, /<\/?(?:[^>"']|"[^"]*"|'[^']*')+>/, SLOT,
@@ -81,12 +39,9 @@ function prepare(plan) {
         } else if (char === '"' || char === "'") quote = char;
       }
       previous = offset + whole.length;
-      if (!quote && /^\s*=/.test(token.slice(previous))) {
-        return checkedAttribute(String(slotValue(plan, mode, key)));
-      }
       const index = slots.push({mode, key}) - 1;
       if (quote) return `wcm-slot-${index}-end`;
-      if (mode !== 'raw') throw new Error('Invalid structural template slot');
+      if (mode !== 'attrs') throw new Error('Invalid structural template slot');
       return ` data-wcm-slot-${index}-end=""`;
     });
     // Never give the HTML/SVG parser placeholder URLs, paths or numbers.
@@ -95,27 +50,12 @@ function prepare(plan) {
         if (!/wcm-slot-\d+-end/.test(quoted)) return whole;
         const index = boundAttributes.push({
           name: checkedAttribute(name),
-          value: unescapeText(quoted.slice(1, -1)),
+          value: decodeEscaped(quoted.slice(1, -1)),
         }) - 1;
         return ` data-wcm-bound-${index}=""`;
       });
   });
   return {markup, slots, boundAttributes};
-}
-
-/**
- * Resolves a marker to literal text. Raw values historically contained escaped
- * text; they are decoded once, never interpreted as markup.
- * @param {!RenderPlan} plan Template instance.
- * @param {!Object} slot Slot descriptor.
- * @return {string} Literal text for a node or attribute.
- */
-function textValue(plan, slot) {
-  const value = slotValue(plan, slot.mode, slot.key);
-  if (value instanceof RenderPlan) {
-    throw new Error(`Markup used in text or attribute: ${slot.key}`);
-  }
-  return slot.mode === 'raw' ? unescapeText(value) : String(value ?? '');
 }
 
 /**
@@ -174,13 +114,15 @@ function bind(root, plan, slots, boundAttributes, doc, context) {
       if (bound) {
         const {name, value} = boundAttributes[Number(bound[1])];
         root.removeAttribute(attr.name);
-        setAttribute(root, name, value.replace(marker, (_, index) => textValue(plan, slots[Number(index)])));
+        setAttribute(root, name, value.replace(marker, (_, index) => scalarBinding(plan, slots[Number(index)].mode, slots[Number(index)].key)));
       } else if (dynamic) {
         const {mode, key} = slots[Number(dynamic[1])];
         root.removeAttribute(attr.name);
-        bindAttributes(root, slotValue(plan, mode, key));
+        for (const [name, value] of attributeEntries(slotValue(plan, mode, key))) {
+          setAttribute(root, name, value);
+        }
       } else {
-        const value = attr.value.replace(marker, (_, index) => textValue(plan, slots[Number(index)]));
+        const value = attr.value.replace(marker, (_, index) => scalarBinding(plan, slots[Number(index)].mode, slots[Number(index)].key));
         if (value !== attr.value) setAttribute(root, attr.name, value);
       }
     }
@@ -190,13 +132,13 @@ function bind(root, plan, slots, boundAttributes, doc, context) {
     if (match) {
       const slot = slots[Number(match[1])];
       const value = slotValue(plan, slot.mode, slot.key);
-      const fragment = slot.mode === 'raw' ? materialize(value, doc, context) : doc.createTextNode(String(value ?? ''));
+      const fragment = slot.mode === 'content' ? materialize(value, doc, context) : doc.createTextNode(scalarBinding(plan, slot.mode, slot.key));
       root.replaceWith(fragment);
       return;
     }
   } else if (root.nodeType === 3) {
     // Raw-text elements such as textarea retain comment markers as text.
-    root.data = root.data.replace(/<!--wcm-slot-(\d+)-end-->/g, (_, index) => textValue(plan, slots[Number(index)]));
+    root.data = root.data.replace(/<!--wcm-slot-(\d+)-end-->/g, (_, index) => scalarBinding(plan, slots[Number(index)].mode, slots[Number(index)].key));
   }
   for (const child of [...root.childNodes]) {
     bind(child, plan, slots, boundAttributes, doc, context);
@@ -213,7 +155,7 @@ function bind(root, plan, slots, boundAttributes, doc, context) {
 export function materialize(value, doc, context = null) {
   if (value?.nodeType && typeof value.cloneNode === 'function') return value;
   if (!(value instanceof RenderPlan)) {
-    return doc.createTextNode(unescapeText(value ?? ''));
+    return doc.createTextNode(decodeEscaped(value));
   }
   if (value.parts) {
     const group = doc.createDocumentFragment();
@@ -234,7 +176,7 @@ export function materialize(value, doc, context = null) {
  * @param {*} value Render plan or native node.
  */
 export function replaceContent(host, value) {
-  if (!host.ownerDocument) {host.innerHTML = value; return;}
+  if (!host.ownerDocument) {host.innerHTML = serializeMarkup(value); return;}
   host.replaceChildren(materialize(value, host.ownerDocument, host));
 }
 
@@ -245,8 +187,8 @@ export function replaceContent(host, value) {
  */
 export function appendContent(host, value) {
   if (!host.ownerDocument) {
-    if (host.insertAdjacentHTML) host.insertAdjacentHTML('beforeend', value);
-    else host.innerHTML += value;
+    if (host.insertAdjacentHTML) host.insertAdjacentHTML('beforeend', serializeMarkup(value));
+    else host.innerHTML += serializeMarkup(value);
     return;
   }
   host.append(materialize(value, host.ownerDocument, host));

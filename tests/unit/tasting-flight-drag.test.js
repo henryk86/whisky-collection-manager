@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -12,10 +13,10 @@ test(
     assert.deepEqual(reorderFlightIds(original, 'a', 'c', true), ['b', 'c', 'a', 'd']);
     assert.deepEqual(reorderFlightIds(original, 'd', 'b', false), ['a', 'd', 'b', 'c']);
     assert.deepEqual(reorderFlightIds(original, 'd', 'b', true), ['a', 'b', 'd', 'c']);
-    assert.equal(reorderFlightIds(original, 'a', 'b', false), null);
-    assert.equal(reorderFlightIds(original, 'd', 'c', true), null);
-    assert.equal(reorderFlightIds(original, 'a', 'a', true), null);
-    assert.equal(reorderFlightIds(original, 'unknown', 'b', false), null);
+    assert.equal(renderedText(reorderFlightIds(original, 'a', 'b', false)), null);
+    assert.equal(renderedText(reorderFlightIds(original, 'd', 'c', true)), null);
+    assert.equal(renderedText(reorderFlightIds(original, 'a', 'a', true)), null);
+    assert.equal(renderedText(reorderFlightIds(original, 'unknown', 'b', false)), null);
     assert.deepEqual(original, ['a', 'b', 'c', 'd'], 'input array is never mutated');
   }
 );
@@ -59,9 +60,9 @@ test(
       refresh() {},
     });
     view.flight();
-    assert.equal((html.match(/data-flight-drag/g) || []).length, 3);
-    assert.equal((html.match(/data-act="tasting-flight-note-open"/g) || []).length, 3);
-    assert.match(html, /aria-label="Reihenfolge per Ziehen ändern"/);
-    assert.match(html, /data-act="tasting-flight-move"/, 'keyboard/accessible buttons remain');
+    assert.equal((renderedText(html).match(/data-flight-drag/g) || []).length, 3);
+    assert.equal((renderedText(html).match(/data-act="tasting-flight-note-open"/g) || []).length, 3);
+    assert.match(renderedText(html), /aria-label="Reihenfolge per Ziehen ändern"/);
+    assert.match(renderedText(html), /data-act="tasting-flight-move"/, 'keyboard/accessible buttons remain');
   }
 );

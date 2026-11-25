@@ -2,13 +2,12 @@
 import {readFileSync, writeFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 import {listTemplateFiles} from './template-files.js';
+import {tagPattern, voidElement} from './html-template-structure.js';
 
 const block = 'article|aside|div|fieldset|form|h[1-6]|header|footer|' +
   'legend|li|main|nav|ol|p|section|table|tbody|td|th|thead|tr|ul';
 const blockTag = new RegExp(`^</?(?:${block})(?:[\\s>])`, 'i');
-const tokenPattern = /<!--[\s\S]*?-->|<\/?(?:[^>"']|"[^"]*"|'[^']*')+>/g;
 const attributeToken = /(?:[^\s"']|"[^"]*"|'[^']*')+/g;
-const voidElement = new RegExp('^(?:area|base|br|col|embed|hr|img|input|link|meta|' + 'param|source|track|wbr)$', 'i');
 
 /**
  * Formats structural markup and long attribute lists. Inline text, quoted
@@ -25,9 +24,9 @@ export function formatTemplateFile(source) {
   let cursor = 0;
   let previous = '';
   let result = '';
-  for (const match of normalized.matchAll(tokenPattern)) {
+  for (const match of normalized.matchAll(tagPattern)) {
     const tag = match[0];
-    const between = normalized.slice(cursor, match.index);
+    let between = normalized.slice(cursor, match.index);
     if (tag.startsWith('<!--')) {
       depth = 0;
       result += between + tag;
@@ -36,12 +35,21 @@ export function formatTemplateFile(source) {
       const name = tag.match(/^<\/?([\w:-]+|\{\{tag:[\w.]+\}\})/)?.[1];
       if (closing) depth = Math.max(0, depth - 1);
       const indent = '  '.repeat(depth);
-      if ((!between && blockTag.test(previous) && blockTag.test(tag)) || /^\n[ \t]*$/.test(between)) {
+      const structuralClose = closing && blockTag.test(tag) && /^<\//.test(previous);
+      if ((!between && (structuralClose || blockTag.test(previous) && blockTag.test(tag))) || /^\n[ \t]*$/.test(between)) {
         result += '\n' + indent;
-      } else result += between;
+      } else {
+        // Re-indent existing standalone bindings without introducing new spaces
+        // into mixed inline text (where whitespace is visible to the user).
+        if (/^\s+(?:\{\{(?:content|text|t):[\w.]+\}\}\s*)+$/.test(between) && between.includes('\n')) {
+          const contentIndent = '  '.repeat(depth + (closing ? 1 : 0));
+          between = between.replace(/\n[ \t]*(?=\{\{)/g, '\n' + contentIndent);
+        }
+        result += between.replace(/\n[ \t]+$/, '\n' + indent);
+      }
       const parts = tag.slice(1, -1).match(attributeToken) || [];
       const compact = '<' + parts.join(' ') + '>';
-      if (!closing && parts.length > 1 && compact.length + indent.length > 100) {
+      if (!closing && parts.length > 1 && (parts.length >= 5 || tag.includes('\n'))) {
         result += `<${parts[0]}\n${parts.slice(1).map(part => indent + '  ' + part).join('\n')}>`;
       } else result += compact;
       if (!closing && !tag.endsWith('/>') && !voidElement.test(name || '')) {

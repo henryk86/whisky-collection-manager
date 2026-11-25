@@ -1,3 +1,6 @@
+import {bottlingOriginLabel} from '../../domain/bottling-origin.js';
+import {hasBottlingDetail} from '../../domain/bottling-details.js';
+import {displayPhotoPath} from '../../../../shared/photo-images.js';
 import {t} from '../../i18n/index.js';
 import {paginate} from '../../domain/pagination.js';
 import {availableOverviewDistilleries, collectionOverviewEntries}
@@ -46,4 +49,22 @@ export function createCollectionViewModel(state, selectors, columnSelection) {
     collection, physical, total, open, closed, establishedYear, mode,
     selectedColumns, label, distilleries, distillery, list, pageSize, pageData,
   };
+}
+
+/**
+ * Prepares visible collection entries, photo precedence and summary fields.
+ * @param {!Array<!Object>} entries Paginated collection entries.
+ * @param {!Object} selectors Inventory and cover-photo selectors.
+ * @return {!Array<!Object>} Presentation records for cards and table rows.
+ */
+export function createCollectionEntryModels(entries, selectors) {
+  const {bottles, coverPhoto, distilleryNames} = selectors;
+  return entries.map(({bottling, bottle}) => ({
+    bottling, bottle,
+    physicalBottles: bottle ? [bottle] : bottles(bottling.id),
+    origin: bottlingOriginLabel(bottling, distilleryNames),
+    age: hasBottlingDetail(bottling.ageYears) ? t('home.facts.years', {count: bottling.ageYears}) : '',
+    abv: hasBottlingDetail(bottling.abv) ? `${bottling.abv} % Vol.` : '',
+    photo: displayPhotoPath((bottle?.photos || [])[0]) || coverPhoto(bottling.id),
+  }));
 }

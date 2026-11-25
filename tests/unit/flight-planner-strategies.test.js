@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {suggestFlight, flightCandidates, orderFlightItems, FLIGHT_FOCUSES}
@@ -68,9 +69,9 @@ test(
      * @param {*} id Identifier of the affected record.
      * @return {*} Result computed from the supplied inputs.
      */
-    const family = id => id.startsWith('smoke') ? 'smoke' : id.startsWith('fruit') ? 'fruit' : id;
+    const family = id => renderedText(id).startsWith('smoke') ? 'smoke' : renderedText(id).startsWith('fruit') ? 'fruit' : id;
     assert.equal(selected.length, 5);
-    assert.equal(new Set(selected.map(family)).size, 5);
+    assert.equal(renderedText(new Set(selected.map(family)).size), 5);
   }
 );
 test(
@@ -78,8 +79,8 @@ test(
   () => {
     assert.deepEqual(new Set(ids('similar')), new Set(['smoke1', 'smoke2', 'smoke3']));
     const fruity = ids('similar', {focus: 'fruity'});
-    assert.ok(fruity.includes('fruit1') && fruity.includes('fruit2'), fruity.join(','));
-    assert.equal(new Set(ids('contrast').map(id => id.replace(/[0-9]/g, ''))).size, 3);
+    assert.ok(renderedText(fruity).includes('fruit1') && renderedText(fruity).includes('fruit2'), fruity.join(','));
+    assert.equal(renderedText(new Set(ids('contrast').map(id => renderedText(id).replace(/[0-9]/g, ''))).size), 3);
     assert.deepEqual(FLIGHT_FOCUSES, ['any', 'smoky', 'peaty', 'fruity', 'winey', 'woody']);
   }
 );
@@ -112,8 +113,8 @@ test(
       availability: 'open',
       today: Date.parse('2026-11-23'),
     };
-    assert.equal(suggestFlight(collection, {...request, preferUnfamiliar: false})[0].bottlingId, 'a');
-    assert.equal(suggestFlight(collection, {...request, preferUnfamiliar: true})[0].bottlingId, 'b');
+    assert.equal(renderedText(suggestFlight(collection, {...request, preferUnfamiliar: false})[0].bottlingId), 'a');
+    assert.equal(renderedText(suggestFlight(collection, {...request, preferUnfamiliar: true})[0].bottlingId), 'b');
   }
 );
 test(
@@ -126,7 +127,7 @@ test(
       entry('woody2', {woody: 8}),
     ];
     const ordered = orderFlightItems(flightCandidates({bottlings: bottles}));
-    const families = ordered.map(item => item.bottling.id.slice(0, -1));
+    const families = ordered.map(item => renderedText(item.bottling.id).slice(0, -1));
     assert.equal(families.filter((value, i) => i > 0 && value !== families[i - 1]).length, 1);
   }
 );
@@ -187,24 +188,24 @@ test(
     });
     view.home();
     assert.match(
-      html,
+      renderedText(html),
       new RegExp(
         'class="ds-help-icon-button flight-plan-hel' + 'p-button" data-act="flight-plan-help" aria' +
         '-label="So wird ein Flight geplant"'
       )
     );
-    assert.doesNotMatch(html, /class="btn small flight-plan-help-button"/);
+    assert.doesNotMatch(renderedText(html), /class="btn small flight-plan-help-button"/);
     view.showFlightPlanningHelp();
-    assert.equal(title, 'So wird ein Flight geplant');
-    assert.equal(wide, true);
-    assert.equal(nested, true, 'help must preserve an already open planning modal');
+    assert.equal(renderedText(title), 'So wird ein Flight geplant');
+    assert.equal(renderedText(wide), true);
+    assert.equal(renderedText(nested), true, 'help must preserve an already open planning modal');
     for (const word of [
       'Ausgewogen',
       'Thematisch ähnlich',
       'Kontrastreich',
       'Entdecken',
       'Reihenfolge optimieren',
-    ]) assert.ok(modal.includes(word), word);
+    ]) assert.ok(renderedText(modal).includes(renderedText(word)), word);
     for (const formula of [
       '13*G + 4*R + 0.08*sum(N)',
       '8*R + 3.2*sum(Dsigned) - 14*M + F + Pref',
@@ -212,31 +213,31 @@ test(
       'sum(N + (prefer unfamiliar ? 2*U : 0))',
       '0.35*abs(delta) + 1.8*max(0, delta-3)',
       'C(total) = C(start) + sum(C(previous, next))',
-    ]) assert.ok(modal.includes(formula), formula);
-    assert.match(modal, /flight-plan-help-formula/);
+    ]) assert.ok(renderedText(modal).includes(renderedText(formula)), formula);
+    assert.match(renderedText(modal), /flight-plan-help-formula/);
     for (const formula of [
       'wG=0.65, wF=0.25, wA=0.10',
       'dA = min(abs(ageA-ageB)/15, 1)',
       '9*matchingCaskGroup + 4*matchingCaskDetails',
       '0.65*(dF(A,B) or 0)',
     ])
-      assert.ok(modal.includes(formula), formula);
-    assert.match(modal, /Mindestens zwei gemeinsame Achsen/);
-    assert.match(modal, /sechs bestplatzierten Flaschen/);
-    assert.match(modal, /720/);
-    assert.ok(modal.length > 6000, 'Detailed explanations should remain available');
-    assert.match(modal, /data-act="close-modal"/);
+      assert.ok(renderedText(modal).includes(renderedText(formula)), formula);
+    assert.match(renderedText(modal), /Mindestens zwei gemeinsame Achsen/);
+    assert.match(renderedText(modal), /sechs bestplatzierten Flaschen/);
+    assert.match(renderedText(modal), /720/);
+    assert.ok(renderedText(modal).length > 6000, 'Detailed explanations should remain available');
+    assert.match(renderedText(modal), /data-act="close-modal"/);
     view.startPlannedFlight();
-    assert.equal(nested, false, 'new planner starts as a top-level modal');
+    assert.equal(renderedText(nested), false, 'new planner starts as a top-level modal');
     assert.match(
-      headingAction,
+      renderedText(headingAction),
       new RegExp('class="ds-help-icon-button flight-plan-hel' + 'p-button" data-act="flight-plan-help"')
     );
-    assert.match(headingAction, /aria-label="So wird ein Flight geplant"/);
-    assert.match(modal, /data-flight-plan-focus-wrap hidden/);
-    assert.match(modal, /data-flight-plan-unfamiliar-wrap hidden/);
-    assert.match(modal, /name="flight-plan-unfamiliar" checked/);
-    assert.match(modal, /<details class="flight-plan-advanced">/);
+    assert.match(renderedText(headingAction), /aria-label="So wird ein Flight geplant"/);
+    assert.match(renderedText(modal), /data-flight-plan-focus-wrap hidden/);
+    assert.match(renderedText(modal), /data-flight-plan-unfamiliar-wrap hidden/);
+    assert.match(renderedText(modal), /name="flight-plan-unfamiliar" checked/);
+    assert.match(renderedText(modal), /<details class="flight-plan-advanced">/);
     for (const field of [
       'data-flight-plan-cask-mode',
       'flight-cask-group-sherry',
@@ -247,6 +248,6 @@ test(
       'data-flight-plan-age-max',
       'name="flight-plan-strict"',
     ])
-      assert.match(modal, new RegExp(field));
+      assert.match(renderedText(modal), new RegExp(field));
   }
 );

@@ -108,10 +108,10 @@ export async function approveShelfCapacityIncrease(warehouse, shelfId,
  */
 function option(value, label, {selected = false, disabled = false} = {}) {
   return renderTemplate('option', {
-    safe: safe(value),
-    selected: selected ? ' selected' : '',
-    disabled: disabled ? ' disabled' : '',
-    safe2: safe(label),
+    value: safe(value),
+    selectedAttributes: selected ? {"selected": true} : {},
+    disabledAttributes: disabled ? {"disabled": true} : {},
+    label: safe(label),
   });
 }
 
@@ -198,35 +198,35 @@ export function renderWarehouseAssignment(warehouse, bottle) {
   const roomId = current?.room.id || '';
   const furnitureId = current?.furniture.id || '';
   const shelfId = current?.shelf.id || '';
-  const photo = isBulk ? '' : bottle.photoPath ? renderTemplate('img', {safe: safe(imageUrl(bottle.photoPath)), }) : renderTemplate('photoSvg');
+  const photo = isBulk ? '' : bottle.photoPath ? renderTemplate('img', {src: safe(imageUrl(bottle.photoPath)), }) : renderTemplate('photoSvg');
   return renderTemplate('warehouseAssignment', {
-    safe: safe(t('warehouse.assignment.bottleLabel')),
+    ariaLabel: safe(t('warehouse.assignment.bottleLabel')),
     photo: photo,
     isBulk: isBulk ? safe(t('warehouse.bottles.bulkSelected', {count: bottles.length})) : safe(bottleLabel(bottle)),
     warehouseAssignmentBulkList: isBulk ? renderTemplate(
       'warehouseAssignmentBulkList',
       {
-        safe: safe(bottles.slice(0, 5).map(bottleLabel).join(' · ')),
+        bottleNames: safe(bottles.slice(0, 5).map(bottleLabel).join(' · ')),
         length: bottles.length > 5 ? ' …' : '',
       }
     ) : '',
     isBulk2: isBulk ? '' :
       renderTemplate('warehouseAssignmentCurrent', {
-        safe: safe(t('warehouse.assignment.currentLocation')),
-        safe2: safe(t('warehouse.assignment.currentLocation')),
-        safe3: safe(current?.label || t('warehouse.bottles.unassignedLabel')),
+        ariaLabel: safe(t('warehouse.assignment.currentLocation')),
+        currentLocation: safe(t('warehouse.assignment.currentLocation')),
+        currentLocation: safe(current?.label || t('warehouse.bottles.unassignedLabel')),
       }),
-    safe2: safe(t('warehouse.assignment.newLocation')),
-    safe3: safe(t('warehouse.assignment.modeLabel')),
-    safe4: safe(t('warehouse.assignment.room')),
+    newLocation: safe(t('warehouse.assignment.newLocation')),
+    modeLabel: safe(t('warehouse.assignment.modeLabel')),
+    roomLabel: safe(t('warehouse.assignment.room')),
     roomOptions: roomOptions(warehouse, roomId),
-    safe5: safe(t('warehouse.assignment.furniture')),
-    disabled: !roomId ? 'disabled' : '',
+    furnitureLabel: safe(t('warehouse.assignment.furniture')),
+    disabledAttributes: !roomId ? {"disabled": true} : {},
     furnitureOptions: furnitureOptions(current?.room, furnitureId),
-    safe6: safe(t('warehouse.assignment.shelf')),
-    disabled2: !furnitureId ? 'disabled' : '',
+    shelfLabel: safe(t('warehouse.assignment.shelf')),
+    disabled2: !furnitureId ? {"disabled": true} : {},
     shelfOptions: shelfOptions(warehouse, current?.furniture, ids, shelfId),
-    safe7: safe(shelfId ? occupancyMessage(warehouse, shelfId, ids) : t('warehouse.assignment.selectHint')),
+    feedback: safe(shelfId ? occupancyMessage(warehouse, shelfId, ids) : t('warehouse.assignment.selectHint')),
   });
 }
 

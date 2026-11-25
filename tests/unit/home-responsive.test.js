@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -110,16 +111,16 @@ test(
       });
       globalThis.innerWidth = 390;
       view();
-      assert.equal(state.pageNumber, 18);
-      assert.equal(markup.match(/<article\b/g).length, 24);
-      assert.match(markup, /409–432 von 450 Abfüllungen/);
+      assert.equal(renderedText(state.pageNumber), 18);
+      assert.equal(renderedText(markup).match(/<article\b/g).length, 24);
+      assert.match(renderedText(markup), /409–432 von 450 Abfüllungen/);
       const mobileHtml = markup;
 
       globalThis.innerWidth = 1366;
       view();
-      assert.equal(state.pageNumber, 18);
-      assert.equal(markup.match(/<article\b/g).length, 24);
-      assert.equal(markup, mobileHtml);
+      assert.equal(renderedText(state.pageNumber), 18);
+      assert.equal(renderedText(markup).match(/<article\b/g).length, 24);
+      assert.equal(renderedText(markup), renderedText(mobileHtml));
       assert.deepEqual(historyCalls, []);
     } finally {
       for (const [key, value] of Object.entries(prior)) {
@@ -136,15 +137,15 @@ test(
     const de = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
     const en = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
     assert.equal(
-      de['home.hero.description'],
+      renderedText(de['home.hero.description']),
       'Von der besonderen Abfüllung bis zum letzten Dram. Entdecke, erfasse und verwalte deine Whisky-Sammlung.'
     );
     assert.equal(
-      en['home.hero.description'],
+      renderedText(en['home.hero.description']),
       'From a special bottling to the last dram. Discover, document and manage your whisky collection.'
     );
     for (const catalog of [de, en]) {
-      assert.doesNotMatch(catalog['home.hero.description'], /\n|<br\s*\/?\s*>/i);
+      assert.doesNotMatch(renderedText(catalog['home.hero.description']), /\n|<br\s*\/?\s*>/i);
     }
   }
 );

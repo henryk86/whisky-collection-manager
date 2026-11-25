@@ -46,8 +46,8 @@ export function headingTitle({
   const classes = `${className}${trailingAction ? `${className ? ' ' : ''}ds-heading-with-action` : ''}`;
   return renderTemplate('h', {
     level: `h${level}`,
-    classes: classes ? ` class="${escapeHtml(classes)}"` : '',
-    id: id ? ` id="${escapeHtml(id)}"` : '',
+    classAttributes: classes ? {"class": classes} : {},
+    idAttributes: id ? {"id": id} : {},
     title: String(title),
     headingPeriod: period ? renderTemplate('headingPeriod') : '',
     trailingAction: trailingAction || '',
@@ -119,7 +119,7 @@ export function pageHeader({
   const classes = `section-head ds-page-header${className ? ` ${escapeHtml(className)}` : ''}`;
   return renderTemplate('header', {
     classes: classes,
-    copyClass: copyClass ? ` class="${escapeHtml(copyClass)}"` : '',
+    classAttributes: copyClass ? {"class": copyClass} : {},
     eyebrow: eyebrow ? renderTemplate('eyebrow', {eyebrow: eyebrow, }) : '',
     preTitle: preTitle,
     headingTitle: headingTitle({title, level: 2, period}),
@@ -142,7 +142,7 @@ export function pageHeader({
 export function backNavigation(action, label, region = '', variant = 'inline') {
   if (!['inline', 'page-action'].includes(variant)) throw new RangeError('Invalid back-navigation variant');
   const text = escapeHtml(String(label).replace(/^\s*(?:(?:←|⟵|⬅)\s*)+/u, ''));
-  const attr = `data-act="${escapeHtml(action)}"${region ? ` data-region="${escapeHtml(region)}"` : ''}`;
+  const attr = {'data-act': action, 'data-region': region || null};
   if (variant === 'page-action') {
     return renderTemplate('dsBackNav', {
       text: text,
@@ -171,8 +171,8 @@ export function helpIconButton({label, action = 'flight-plan-help',
   return renderTemplate('dsHelpIconButton', {
     action: action,
     text: text,
-    text2: text,
-    disabled: disabled ? ' disabled' : '',
+    title: text,
+    disabledAttributes: disabled ? {"disabled": true} : {},
     helpCircleIcon: helpCircleIcon,
   });
 }

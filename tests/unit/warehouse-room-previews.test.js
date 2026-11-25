@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -66,14 +67,14 @@ test(
         refresh: async () => {},
       });
       view.render();
-      assert.equal((html.match(/class="warehouse-room-card"/g) || []).length, 2);
-      assert.equal((html.match(/class="warehouse-room-preview"/g) || []).length, 2);
-      assert.equal((html.match(/class="warehouse-room-card-details"/g) || []).length, 2);
-      assert.match(html, /data-preview-room-id="raum-a" aria-hidden="true"/);
-      assert.match(html, /data-preview-room-id="raum-b" aria-hidden="true"/);
-      assert.match(html, /data-act="warehouse-select-room" data-id="raum-a"/);
-      assert.match(html, /data-act="warehouse-select-room" data-id="raum-b"/);
-      assert.doesNotMatch(html, /warehouse-three-canvas|warehouse-three-viewport/);
+      assert.equal((renderedText(html).match(/class="warehouse-room-card"/g) || []).length, 2);
+      assert.equal((renderedText(html).match(/class="warehouse-room-preview"/g) || []).length, 2);
+      assert.equal((renderedText(html).match(/class="warehouse-room-card-details"/g) || []).length, 2);
+      assert.match(renderedText(html), /data-preview-room-id="raum-a" aria-hidden="true"/);
+      assert.match(renderedText(html), /data-preview-room-id="raum-b" aria-hidden="true"/);
+      assert.match(renderedText(html), /data-act="warehouse-select-room" data-id="raum-a"/);
+      assert.match(renderedText(html), /data-act="warehouse-select-room" data-id="raum-b"/);
+      assert.doesNotMatch(renderedText(html), /warehouse-three-canvas|warehouse-three-viewport/);
     } finally {
       if (previous === undefined) delete globalThis.document;
       else globalThis.document = previous;

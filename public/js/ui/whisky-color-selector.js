@@ -59,7 +59,7 @@ export function whiskyColorSelector(selected) {
       renderTemplate('whiskyColorChoice', {
         selected: selected === item.key ? ' is-selected' : '',
         key: item.key,
-        selected2: selected === item.key,
+        ariaPressed: selected === item.key,
         t: t(COLOR_LABEL_KEYS[item.key]),
         glencairnSymbol: glencairnSymbol({
           liquidColor: item.hex,

@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {splitDistilleryNames, matchImportedDistilleries}
@@ -69,11 +70,11 @@ test(
       label: 'Destillerie', value: matches[1].name,
       distillery: true, disabled: true,
     });
-    assert.match(known, /name="import-distillery" value="d-ard" checked/);
-    assert.match(unknown, /name="import-distillery" disabled/);
-    assert.match(unknown, /New &amp; &lt;Scotch&gt; Works/);
-    assert.doesNotMatch(unknown, /<Scotch>/);
-    assert.match(unknown, /Nicht gefunden/);
+    assert.match(renderedText(known), /name="import-distillery" value="d-ard" checked/);
+    assert.match(renderedText(unknown), /name="import-distillery" disabled/);
+    assert.match(renderedText(unknown), /New &amp; &lt;Scotch&gt; Works/);
+    assert.doesNotMatch(renderedText(unknown), /<Scotch>/);
+    assert.match(renderedText(unknown), /Nicht gefunden/);
   }
 );
 
@@ -102,5 +103,5 @@ test('new fragment schema rejects old and unmarked payload versions', () => {
   };
   assert.throws(() => validateExtensionPayload({version: 1, fields}));
   assert.throws(() => validateExtensionPayload({version: 2, fields}));
-  assert.equal(validateExtensionPayload({version: 2, source: 'external', fields}).version, 2);
+  assert.equal(renderedText(validateExtensionPayload({version: 2, source: 'external', fields}).version), 2);
 });

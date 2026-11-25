@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {bottleListFacts, bottleRow}
@@ -18,38 +19,38 @@ test(
   'warehouse inventory rows show age, release year and cask type next to the correct bottle',
   () => {
     const facts = bottleListFacts(bottle);
-    assert.match(facts, /Alter:/);
-    assert.match(facts, /18 Jahre/);
-    assert.match(facts, /Erscheinungsjahr:.*2012/);
-    assert.match(facts, /Fasstyp:.*Oloroso &amp; Bourbon/);
+    assert.match(renderedText(facts), /Alter:/);
+    assert.match(renderedText(facts), /18 Jahre/);
+    assert.match(renderedText(facts), /Erscheinungsjahr:.*2012/);
+    assert.match(renderedText(facts), /Fasstyp:.*Oloroso &amp; Bourbon/);
     const row = bottleRow({assignments: {}, rooms: []}, bottle);
-    assert.match(row, /class="warehouse-bottle-row-info"/);
-    assert.match(row, /Whisky &lt;Test&gt;/);
-    assert.match(row, /warehouse-bottle-facts/);
-    assert.match(row, /data-bottle-search="[^"]*2012[^"]*oloroso/);
+    assert.match(renderedText(row), /class="warehouse-bottle-row-info"/);
+    assert.match(renderedText(row), /Whisky &lt;Test&gt;/);
+    assert.match(renderedText(row), /warehouse-bottle-facts/);
+    assert.match(renderedText(row), /data-bottle-search="[^"]*2012[^"]*oloroso/);
   }
 );
 
 test(
   'missing facts remain absent, and label text is escaped in the inventory and tray',
   () => {
-    assert.equal(bottleListFacts({name: 'unknown'}), '');
+    assert.equal(renderedText(bottleListFacts({name: 'unknown'})), '');
     assert.doesNotMatch(
-      bottleRow({assignments: {}, rooms: []}, {id: 'b2', name: 'No facts'}),
+      renderedText(bottleRow({assignments: {}, rooms: []}, {id: 'b2', name: 'No facts'})),
       /warehouse-bottle-facts/
     );
-    assert.match(bottleListFacts({...bottle, caskType: '<script>'}), /&lt;script&gt;/);
+    assert.match(renderedText(bottleListFacts({...bottle, caskType: '<script>'})), /&lt;script&gt;/);
     const warehouse = {bottles: [bottle], assignments: {}};
     const html = renderUnassignedTray(warehouse);
-    assert.match(html, /<details class="warehouse-unassigned-tray"\s+aria-label=/);
-    assert.doesNotMatch(html, /<details class="warehouse-unassigned-tray" open/);
-    assert.match(html, /<summary class="warehouse-unassigned-summary"/);
-    assert.match(html, /Erscheinungsjahr:.*2012/);
+    assert.match(renderedText(html), /<details class="warehouse-unassigned-tray"\s+aria-label=/);
+    assert.doesNotMatch(renderedText(html), /<details class="warehouse-unassigned-tray" open/);
+    assert.match(renderedText(html), /<summary class="warehouse-unassigned-summary"/);
+    assert.match(renderedText(html), /Erscheinungsjahr:.*2012/);
     assert.match(
-      renderUnassignedTray(warehouse, [], {expanded: true}),
+      renderedText(renderUnassignedTray(warehouse, [], {expanded: true})),
       /<details class="warehouse-unassigned-tray" open/
     );
-    assert.match(html, /data-unassigned-id="b1"/);
+    assert.match(renderedText(html), /data-unassigned-id="b1"/);
   }
 );
 
@@ -103,7 +104,7 @@ test(
            * operation.
            */
           addEventListener: (name, handler) => {
-            assert.equal(name, 'click');
+            assert.equal(renderedText(name), 'click');
             onClick = handler;
           },
         }
@@ -136,8 +137,8 @@ test(
         refresh: async () => {},
       });
       view.render();
-      assert.match(html, /id="warehouse-wall-unassigned-content"[^>]*hidden/);
-      assert.equal(typeof onClick, 'function');
+      assert.match(renderedText(html), /id="warehouse-wall-unassigned-content"[^>]*hidden/);
+      assert.equal(renderedText(typeof onClick), 'function');
       onClick({
         currentTarget: {
           /**
@@ -151,11 +152,11 @@ test(
             attributes.set(name, value),
         },
       });
-      assert.equal(attributes.get('aria-expanded'), 'true');
-      assert.equal(tray.hidden, false);
+      assert.equal(renderedText(attributes.get('aria-expanded')), 'true');
+      assert.equal(renderedText(tray.hidden), false);
       view.render();
-      assert.match(html, /class="warehouse-unassigned-toggle"[^>]*aria-expanded="true"/);
-      assert.doesNotMatch(html, /id="warehouse-wall-unassigned-content"[^>]*hidden/);
+      assert.match(renderedText(html), /class="warehouse-unassigned-toggle"[^>]*aria-expanded="true"/);
+      assert.doesNotMatch(renderedText(html), /id="warehouse-wall-unassigned-content"[^>]*hidden/);
       onClick({
         currentTarget: {
           /**
@@ -169,9 +170,9 @@ test(
             attributes.set(name, value),
         },
       });
-      assert.equal(tray.hidden, true);
+      assert.equal(renderedText(tray.hidden), true);
       view.render();
-      assert.match(html, /id="warehouse-wall-unassigned-content"[^>]*hidden/);
+      assert.match(renderedText(html), /id="warehouse-wall-unassigned-content"[^>]*hidden/);
     } finally {
       if (original === undefined) delete globalThis.document;
       else globalThis.document = original;

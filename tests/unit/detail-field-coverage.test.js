@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createDetailView} from '../../public/js/views/detail.js';
@@ -112,10 +113,10 @@ test(
       'WB-12345',
       'Anmerkung zur Abfüllung',
     ]) {
-      assert.ok(html.includes(value), `Bottling value ${value} must be shown`);
+      assert.ok(renderedText(html).includes(renderedText(value)), `Bottling value ${value} must be shown`);
     }
-    assert.match(html, /Whiskybase-ID/);
-    assert.match(html, /Whiskybase-Eintrag öffnen/);
+    assert.match(renderedText(html), /Whiskybase-ID/);
+    assert.match(renderedText(html), /Whiskybase-Eintrag öffnen/);
   }
 );
 
@@ -135,18 +136,18 @@ test(
         comment: 'Meine Notiz\nZweite Zeile <script>alert(1)</script>',
       },
     });
-    assert.match(html, /Öffnungsdatum<\/dt><dd>18\.10\.2026<\/dd>/);
-    assert.match(html, /Leerdatum<\/dt><dd>20\.11\.2026<\/dd>/);
-    assert.match(html, /Persönlicher Kommentar<\/dt>/);
-    assert.match(html, /Meine Notiz\nZweite Zeile &lt;script&gt;alert\(1\)&lt;\/script&gt;/);
-    assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
-    assert.match(html, /Flaschentyp<\/dt><dd>Sample \/ Probeflasche<\/dd>/);
-    assert.match(html, /Kauf<\/dt><dd>12\.2\.2025<\/dd>|Kauf<\/dt><dd>12\.02\.2025<\/dd>/);
-    assert.match(html, /Preis<\/dt><dd>9\.95 GBP<\/dd>/);
-    assert.match(html, /Händler<\/dt><dd>Händler Z<\/dd>/);
-    assert.match(html, /Füllmenge<\/dt><dd>50 ml<\/dd>/);
-    assert.match(html, /#000043/);
-    assert.match(html, /Geöffnet/);
+    assert.match(renderedText(html), /Öffnungsdatum<\/dt><dd>18\.10\.2026<\/dd>/);
+    assert.match(renderedText(html), /Leerdatum<\/dt><dd>20\.11\.2026<\/dd>/);
+    assert.match(renderedText(html), /Persönlicher Kommentar<\/dt>/);
+    assert.match(renderedText(html), /Meine Notiz\nZweite Zeile &lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+    assert.doesNotMatch(renderedText(html), /<script>alert\(1\)<\/script>/);
+    assert.match(renderedText(html), /Flaschentyp<\/dt><dd>Sample \/ Probeflasche<\/dd>/);
+    assert.match(renderedText(html), /Kauf<\/dt><dd>12\.2\.2025<\/dd>|Kauf<\/dt><dd>12\.02\.2025<\/dd>/);
+    assert.match(renderedText(html), /Preis<\/dt><dd>9\.95 GBP<\/dd>/);
+    assert.match(renderedText(html), /Händler<\/dt><dd>Händler Z<\/dd>/);
+    assert.match(renderedText(html), /Füllmenge<\/dt><dd>50 ml<\/dd>/);
+    assert.match(renderedText(html), /#000043/);
+    assert.match(renderedText(html), /Geöffnet/);
   }
 );
 
@@ -159,11 +160,11 @@ test(
         purchasePrice: null,
       },
     });
-    assert.doesNotMatch(html, /Öffnungsdatum<\/dt>/);
-    assert.doesNotMatch(html, /Leerdatum<\/dt>/);
-    assert.doesNotMatch(html, /Persönlicher Kommentar<\/dt>/);
-    assert.match(html, /Flaschentyp<\/dt><dd>Normale Flasche<\/dd>/);
-    assert.doesNotMatch(html, /Preis<\/dt>/);
+    assert.doesNotMatch(renderedText(html), /Öffnungsdatum<\/dt>/);
+    assert.doesNotMatch(renderedText(html), /Leerdatum<\/dt>/);
+    assert.doesNotMatch(renderedText(html), /Persönlicher Kommentar<\/dt>/);
+    assert.match(renderedText(html), /Flaschentyp<\/dt><dd>Normale Flasche<\/dd>/);
+    assert.doesNotMatch(renderedText(html), /Preis<\/dt>/);
     assert.equal(bottlingDetails({whiskybaseId: '   ', distilleryIds: []}, () => '', []).length, 0);
   }
 );

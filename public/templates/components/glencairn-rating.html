@@ -2,19 +2,19 @@
 <button
   type="button"
   class="tasting-glass"
-  data-glass-state="{{raw:state}}"
+  data-glass-state="{{attr:state}}"
   data-act="tasting-rating"
-  data-rating-points="{{raw:points}}"
-  aria-pressed="{{raw:selected}}"
+  data-rating-points="{{attr:points}}"
+  aria-pressed="{{attr:selected}}"
   aria-label="{{text:ratingGlass}}"
-  title="{{raw:points2}} / 100"
-  style="--glass-fill:{{raw:fill}}%">{{raw:glencairnRatingSymbol}}</button>
+  title="{{attr:title}} / 100"
+  style="--glass-fill:{{attr:fill}}%">{{content:glencairnRatingSymbol}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:tastingRating -->
-<div class="tasting-rating" data-tasting-rating data-rating-value="{{raw:safe}}">
+<div class="tasting-rating" data-tasting-rating data-rating-value="{{attr:ratingValue}}">
   <div class="tasting-glasses" role="group" aria-label="{{text:rating}}">
-        {{raw:from}}</div>
+    {{content:from}}</div>
   <div class="tasting-score-field">
     <label class="tasting-score-control"><input
         type="text"
@@ -25,7 +25,11 @@
         aria-label="{{text:points}}"
         aria-describedby="tasting-score-suffix tasting-score-error"
         placeholder="–"/><span id="tasting-score-suffix">/ 100</span></label>
-    <span id="tasting-score-error" class="tasting-score-error" role="status" aria-live="polite"></span>
+    <span
+      id="tasting-score-error"
+      class="tasting-score-error"
+      role="status"
+      aria-live="polite"></span>
   </div>
 </div>
 <!-- /wcm-template -->

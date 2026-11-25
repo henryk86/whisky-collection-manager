@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {bottlingOrigins, countryLabel}
@@ -33,10 +34,10 @@ test(
   () => {
     const b = entry('single', ['ard'], 'Distillery Bottling', 'USA');
     assert.deepEqual(bottlingOrigins(b, sites), {countries: ['Schottland'], regions: ['Islay']});
-    assert.equal(countryLabel('UK'), 'Vereinigtes Königreich'); // UK cannot mean Scotland by itself
+    assert.equal(renderedText(countryLabel('UK')), 'Vereinigtes Königreich'); // UK cannot mean Scotland by itself
     const detail = Object.fromEntries(bottlingDetails(b, () => 'Ardbeg', sites).map(([k, v]) => [k, v]));
-    assert.equal(detail.Land, 'Schottland');
-    assert.equal(detail.Region, 'Islay');
+    assert.equal(renderedText(detail.Land), 'Schottland');
+    assert.equal(renderedText(detail.Region), 'Islay');
   }
 );
 
@@ -50,8 +51,8 @@ test(
     );
     const c = {distilleries: sites, bottlings: [b]};
     const analysis = analyzeCollection(c);
-    assert.equal(analysis.provenance.byCountry.reduce((sum, row) => sum + row.count, 0), 2);
-    assert.equal(analysis.provenance.byRegion.reduce((sum, row) => sum + row.count, 0), 2);
+    assert.equal(renderedText(analysis.provenance.byCountry.reduce((sum, row) => sum + row.count, 0)), 2);
+    assert.equal(renderedText(analysis.provenance.byRegion.reduce((sum, row) => sum + row.count, 0)), 2);
     assert.deepEqual(analyticsFilterOptions(c).countries, ['Deutschland', 'Schottland']);
     assert.equal(filterAnalyticsCollection(c, {country: 'Schottland'}).bottles.length, 1);
     assert.equal(filterAnalyticsCollection(c, {country: 'Deutschland'}).bottles.length, 1);
@@ -71,9 +72,9 @@ test(
       ],
     };
     const result = analyzeCollection(c).provenance.byBottler;
-    assert.equal(result.find(row => row.name === 'Originalabfüllung').count, 2);
-    assert.equal(result.find(row => row.name === 'Andere / nicht eindeutig').count, 1);
-    assert.equal(result.find(row => row.name === 'Nicht angegeben').count, 1);
+    assert.equal(renderedText(result.find(row => row.name === 'Originalabfüllung').count), 2);
+    assert.equal(renderedText(result.find(row => row.name === 'Andere / nicht eindeutig').count), 1);
+    assert.equal(renderedText(result.find(row => row.name === 'Nicht angegeben').count), 1);
   }
 );
 
@@ -96,9 +97,9 @@ test(
         },
       });
     const html = bottlingForm(entry('test', ['ard'], 'Distillery Bottling'));
-    assert.doesNotMatch(html, /name="(?:country|region)"/);
-    assert.doesNotMatch(html, /Herkunftsland und Whiskyregion werden anhand/);
+    assert.doesNotMatch(renderedText(html), /name="(?:country|region)"/);
+    assert.doesNotMatch(renderedText(html), /Herkunftsland und Whiskyregion werden anhand/);
     const {helpView} = await import('../../public/js/views/help.js');
-    assert.match(helpView(), /Die Herkunft wird aus zugeordneten Destillerien abgeleitet/);
+    assert.match(renderedText(helpView()), /Die Herkunft wird aus zugeordneten Destillerien abgeleitet/);
   }
 );

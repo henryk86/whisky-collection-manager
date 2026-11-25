@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderWarehouseRoomWall, wallFurniture, WALL_PIXELS_PER_METRE}
@@ -70,22 +71,22 @@ test(
     const {room, warehouse} = createWarehouse();
     assert.deepEqual(wallFurniture(room).map(f => f.id), ['f1', 'f4']);
     const html = renderWarehouseRoomWall(room, warehouse);
-    assert.equal((html.match(/class="warehouse-wall-furniture"/g) || []).length, 2);
-    assert.match(html, /data-furniture-id="f1"/);
-    assert.match(html, /data-furniture-id="f4"/);
-    assert.ok(html.indexOf('data-furniture-id="f1"') < html.indexOf('data-furniture-id="f4"'));
-    assert.ok(html.indexOf('data-shelf-id="higher"') < html.indexOf('data-shelf-id="source"'));
+    assert.equal((renderedText(html).match(/class="warehouse-wall-furniture"/g) || []).length, 2);
+    assert.match(renderedText(html), /data-furniture-id="f1"/);
+    assert.match(renderedText(html), /data-furniture-id="f4"/);
+    assert.ok(renderedText(html).indexOf('data-furniture-id="f1"') < renderedText(html).indexOf('data-furniture-id="f4"'));
+    assert.ok(renderedText(html).indexOf('data-shelf-id="higher"') < renderedText(html).indexOf('data-shelf-id="source"'));
     assert.match(
-      html,
+      renderedText(html),
       new RegExp(
         'data-shelf-id="target" data-capacity="2" d' + 'ata-act="warehouse-shelf-view"[^>]*data-fr' + 'ont="glass"'
       )
     );
-    assert.match(html, /data-act="warehouse-bottle-select" data-id="b1" aria-pressed="false"/);
-    assert.match(html, /Ardbeg &amp; &lt;One&gt;/);
-    assert.doesNotMatch(html, /Room & <one>|Ardbeg & <One>|data-shelf-id="outside"/);
-    assert.equal(shelfDropStatus(warehouse, 'b1', 'target'), 'valid');
-    assert.equal(shelfDropStatus(warehouse, 'b1', 'full'), 'expand');
+    assert.match(renderedText(html), /data-act="warehouse-bottle-select" data-id="b1" aria-pressed="false"/);
+    assert.match(renderedText(html), /Ardbeg &amp; &lt;One&gt;/);
+    assert.doesNotMatch(renderedText(html), /Room & <one>|Ardbeg & <One>|data-shelf-id="outside"/);
+    assert.equal(renderedText(shelfDropStatus(warehouse, 'b1', 'target')), 'valid');
+    assert.equal(renderedText(shelfDropStatus(warehouse, 'b1', 'full')), 'expand');
   }
 );
 
@@ -139,11 +140,11 @@ test(
       if (oldDocument === undefined) delete globalThis.document;
       else globalThis.document = oldDocument;
     }
-    assert.doesNotMatch(html, /data-mode="wall"/);
-    assert.match(html, /class="warehouse-room-wall"/);
-    assert.match(html, /data-shelf-id="target"/);
+    assert.doesNotMatch(renderedText(html), /data-mode="wall"/);
+    assert.match(renderedText(html), /class="warehouse-room-wall"/);
+    assert.match(renderedText(html), /data-shelf-id="target"/);
     assert.doesNotMatch(
-      html,
+      renderedText(html),
       new RegExp('class="warehouse-three-viewport"|class="wa' + 'rehouse-floor"|data-shelf-id="outside"')
     );
   }
@@ -151,7 +152,7 @@ test(
 
 test('an empty room receives a translated wall-state message', () => {
   assert.match(
-    renderWarehouseRoomWall({name: 'Empty', furniture: []}, {bottles: [], assignments: {}}),
+    renderedText(renderWarehouseRoomWall({name: 'Empty', furniture: []}, {bottles: [], assignments: {}})),
     /noch keine Möbel mit Fächern/
   );
 });
@@ -203,10 +204,10 @@ test(
     };
     assert.deepEqual(wallFurniture(room).map(f => f.id), ['ten', 'two', 'one']);
     const html = renderWarehouseRoomWall(room, {bottles: [], assignments: {}});
-    assert.ok(html.indexOf('data-furniture-id="ten"') < html.indexOf('data-furniture-id="two"'));
-    assert.ok(html.indexOf('data-furniture-id="two"') < html.indexOf('data-furniture-id="one"'));
+    assert.ok(renderedText(html).indexOf('data-furniture-id="ten"') < renderedText(html).indexOf('data-furniture-id="two"'));
+    assert.ok(renderedText(html).indexOf('data-furniture-id="two"') < renderedText(html).indexOf('data-furniture-id="one"'));
     assert.match(
-      html,
+      renderedText(html),
       new RegExp('class="warehouse-wall-stack warehouse-wall' + '-stack--new-direction" data-facing="180"')
     );
   }
@@ -258,18 +259,18 @@ test(
     const groups = wallFurnitureGroups(room);
     assert.equal(groups.length, 2);
     assert.deepEqual(groups[0].items.map(item => item.furniture.id), ['base', 'top']);
-    assert.equal(groups[0].height, 2.3);
-    assert.equal(groups[0].width, 1.2);
+    assert.equal(renderedText(groups[0].height), 2.3);
+    assert.equal(renderedText(groups[0].width), 1.2);
     const html = renderWarehouseRoomWall(room, {bottles: [], assignments: {}});
     assert.match(
-      html,
+      renderedText(html),
       new RegExp('class="warehouse-wall-stack warehouse-wall' + '-stack--layered"[^>]*--wall-stack-height:5' + '29px')
     );
-    assert.ok(html.indexOf('data-furniture-id="base"') < html.indexOf('data-furniture-id="top"'));
-    assert.match(html, /data-furniture-id="top"[^>]*--wall-elevation:437px/);
-    assert.match(html, /data-furniture-id="base"[^>]*--wall-elevation:0px/);
-    assert.match(html, /data-shelf-id="topShelf"/);
-    assert.match(html, /data-shelf-id="baseShelf"/);
+    assert.ok(renderedText(html).indexOf('data-furniture-id="base"') < renderedText(html).indexOf('data-furniture-id="top"'));
+    assert.match(renderedText(html), /data-furniture-id="top"[^>]*--wall-elevation:437px/);
+    assert.match(renderedText(html), /data-furniture-id="base"[^>]*--wall-elevation:0px/);
+    assert.match(renderedText(html), /data-shelf-id="topShelf"/);
+    assert.match(renderedText(html), /data-shelf-id="baseShelf"/);
   }
 );
 
@@ -305,27 +306,27 @@ test(
       ],
     };
     const html = renderWarehouseRoomWall(room, {bottles: [], assignments: {}});
-    const stacked = html.match(/data-furniture-id="upper"[\s\S]*?<\/section>/)?.[0];
+    const stacked = renderedText(html).match(/data-furniture-id="upper"[\s\S]*?<\/section>/)?.[0];
     assert.ok(stacked);
     assert.match(
-      stacked,
+      renderedText(stacked),
       new RegExp(
         'class="warehouse-wall-furniture-body"[\\s' + '\\S]*?data-shelf-id="top"[\\s\\S]*?warehou' +
         'se-wall-bay-title[\\s\\S]*?Fach 2'
       )
     );
     assert.match(
-      stacked,
+      renderedText(stacked),
       new RegExp(
         'class="warehouse-wall-furniture-edit" data' + '-act="warehouse-furniture-manage" data-id=' +
         '"upper" title="Kamin"'
       )
     );
     assert.doesNotMatch(
-      stacked,
+      renderedText(stacked),
       new RegExp('warehouse-wall-furniture-header|warehouse-' + 'wall-furniture-name|>Kamin<|0 \\/ 0')
     );
-    assert.match(stacked, /Glas|Offen/);
+    assert.match(renderedText(stacked), /Glas|Offen/);
   }
 );
 
@@ -400,7 +401,7 @@ test(
     assert.equal(groups.length, 1);
     assert.ok(Math.abs(groups[0].items[1].offset - .4) < .001);
     const html = renderWarehouseRoomWall(room, {bottles: [], assignments: {}});
-    assert.match(html, /data-furniture-id="upper"[^>]+--wall-offset-x:92px/);
+    assert.match(renderedText(html), /data-furniture-id="upper"[^>]+--wall-offset-x:92px/);
   }
 );
 
@@ -443,24 +444,24 @@ test(
     const html = renderWarehouseRoomWall(room, {bottles: [{id: 'b', name: 'Bottle'}], assignments: {b: 'low'}});
     const scale = WALL_PIXELS_PER_METRE;
     assert.match(
-      html,
+      renderedText(html),
       new RegExp(`data-furniture-id="short"[^>]+--wall-furniture-width:${1.2 * scale}px;--wall-furniture-height:${1.2 * scale}px;--wall-elevation:0px`)
     );
-    assert.match(html, new RegExp(`data-furniture-id="tall"[^>]+--wall-furniture-height:${2.4 * scale}px`));
+    assert.match(renderedText(html), new RegExp(`data-furniture-id="tall"[^>]+--wall-furniture-height:${2.4 * scale}px`));
     assert.match(
-      html,
+      renderedText(html),
       new RegExp(`data-furniture-id="raised"[^>]+--wall-furniture-height:${.6 * scale}px;--wall-elevation:${1.8 * scale}px`)
     );
-    assert.match(html, new RegExp(`--wall-clearance-height:${.5 * scale}px`));
-    assert.match(html, new RegExp(`data-shelf-id="low"[^>]+--wall-bay-height:${.4 * scale}px`));
-    assert.match(html, new RegExp(`data-shelf-id="upper"[^>]+--wall-bay-height:${.3 * scale}px`));
-    assert.match(html, new RegExp(`data-shelf-id="large"[^>]+--wall-bay-height:${1 * scale}px`));
-    assert.match(html, new RegExp(`data-shelf-id="auto"[^>]+--wall-bay-height:${1.4 * scale}px`));
+    assert.match(renderedText(html), new RegExp(`--wall-clearance-height:${.5 * scale}px`));
+    assert.match(renderedText(html), new RegExp(`data-shelf-id="low"[^>]+--wall-bay-height:${.4 * scale}px`));
+    assert.match(renderedText(html), new RegExp(`data-shelf-id="upper"[^>]+--wall-bay-height:${.3 * scale}px`));
+    assert.match(renderedText(html), new RegExp(`data-shelf-id="large"[^>]+--wall-bay-height:${1 * scale}px`));
+    assert.match(renderedText(html), new RegExp(`data-shelf-id="auto"[^>]+--wall-bay-height:${1.4 * scale}px`));
     // Remaining clearance is not a phantom shelf: bottles can only be dropped
     // on real shelf IDs.
-    assert.equal((html.match(/class="warehouse-wall-clearance"/g) || []).length, 1);
-    assert.equal((html.match(/data-shelf-id=/g) || []).length, 5);
-    assert.match(html, /data-shelf-id="low"[\s\S]*data-act="warehouse-bottle-select" data-id="b"/);
+    assert.equal((renderedText(html).match(/class="warehouse-wall-clearance"/g) || []).length, 1);
+    assert.equal((renderedText(html).match(/data-shelf-id=/g) || []).length, 5);
+    assert.match(renderedText(html), /data-shelf-id="low"[\s\S]*data-act="warehouse-bottle-select" data-id="b"/);
   }
 );
 
@@ -488,9 +489,9 @@ test(
       }],
     };
     const html = renderWarehouseRoomWall(room, {bottles: [], assignments: {}});
-    assert.match(html, /--wall-furniture-height:184px/);
-    assert.equal((html.match(/--wall-bay-height:23px/g) || []).length, 8);
-    assert.doesNotMatch(html, /--wall-clearance-height:/);
+    assert.match(renderedText(html), /--wall-furniture-height:184px/);
+    assert.equal((renderedText(html).match(/--wall-bay-height:23px/g) || []).length, 8);
+    assert.doesNotMatch(renderedText(html), /--wall-clearance-height:/);
   }
 );
 
@@ -499,11 +500,11 @@ test(
   () => {
     const {room, warehouse} = createWarehouse();
     const html = renderWarehouseRoomWall(room, warehouse, ['b1']);
-    assert.match(html, /class="warehouse-wall-bottle is-selected"/);
-    assert.match(html, /data-act="warehouse-bottle-select" data-id="b1" aria-pressed="true"/);
-    assert.doesNotMatch(html, /class="warehouse-bottle-check"/);
-    assert.match(html, /data-act="warehouse-bottles-preview-selected"/);
-    assert.match(html, /data-act="warehouse-bottles-assign-selected"/);
+    assert.match(renderedText(html), /class="warehouse-wall-bottle is-selected"/);
+    assert.match(renderedText(html), /data-act="warehouse-bottle-select" data-id="b1" aria-pressed="true"/);
+    assert.doesNotMatch(renderedText(html), /class="warehouse-bottle-check"/);
+    assert.match(renderedText(html), /data-act="warehouse-bottles-preview-selected"/);
+    assert.match(renderedText(html), /data-act="warehouse-bottles-assign-selected"/);
   }
 );
 
@@ -560,14 +561,14 @@ test(
     };
     const groups = wallFurnitureGroups(room);
     assert.equal(groups.length, 1, 'both lower cabinets connect through the wide upper cabinet');
-    assert.equal(groups[0].width, 2);
-    assert.equal(groups[0].height, 2.2);
+    assert.equal(renderedText(groups[0].width), 2);
+    assert.equal(renderedText(groups[0].height), 2.2);
     assert.deepEqual(groups[0].items.map(item => item.furniture.id), ['left', 'right', 'top']);
     assert.deepEqual(groups[0].items.map(item => item.offset), [0, 1, 0]);
     const html = renderWarehouseRoomWall(room, {bottles: [], assignments: {}});
-    assert.equal((html.match(/class="warehouse-wall-stack warehouse-wall-stack--layered"/g) || []).length, 1);
-    assert.match(html, /data-furniture-id="top"[^>]*--wall-furniture-width:460px/);
-    assert.match(html, /data-furniture-id="right"[^>]*--wall-offset-x:230px/);
+    assert.equal((renderedText(html).match(/class="warehouse-wall-stack warehouse-wall-stack--layered"/g) || []).length, 1);
+    assert.match(renderedText(html), /data-furniture-id="top"[^>]*--wall-furniture-width:460px/);
+    assert.match(renderedText(html), /data-furniture-id="right"[^>]*--wall-offset-x:230px/);
   }
 );
 
@@ -577,12 +578,12 @@ test(
     const {room, warehouse} = createWarehouse();
     const html = renderWarehouseRoomWall(room, warehouse);
     assert.match(
-      html,
+      renderedText(html),
       new RegExp('class="warehouse-wall-furniture-edit" data' + '-act="warehouse-furniture-manage"')
     );
-    assert.match(html, /title="Regal 1" aria-label=/);
-    assert.doesNotMatch(html, /warehouse-wall-furniture-header|warehouse-wall-furniture-name/);
-    assert.equal((html.match(/class="warehouse-wall-furniture-edit"/g) || []).length, 2);
+    assert.match(renderedText(html), /title="Regal 1" aria-label=/);
+    assert.doesNotMatch(renderedText(html), /warehouse-wall-furniture-header|warehouse-wall-furniture-name/);
+    assert.equal((renderedText(html).match(/class="warehouse-wall-furniture-edit"/g) || []).length, 2);
   }
 );
 
@@ -646,17 +647,17 @@ test(
       view.render();
       viewport.scrollLeft = 830;
       view.render();
-      assert.equal(viewport.scrollLeft, 830);
+      assert.equal(renderedText(viewport.scrollLeft), 830);
       state.warehouseRoomId = other.id;
       view.render();
-      assert.equal(viewport.scrollLeft, 0, 'another room must start with its own offset');
+      assert.equal(renderedText(viewport.scrollLeft), 0, 'another room must start with its own offset');
       viewport.scrollLeft = 145;
       state.warehouseRoomId = room.id;
       view.render();
-      assert.equal(viewport.scrollLeft, 830, 'returning to the first room restores its own position');
+      assert.equal(renderedText(viewport.scrollLeft), 830, 'returning to the first room restores its own position');
       state.warehouseRoomId = other.id;
       view.render();
-      assert.equal(viewport.scrollLeft, 145);
+      assert.equal(renderedText(viewport.scrollLeft), 145);
     } finally {
       if (oldDocument === undefined) delete globalThis.document;
       else globalThis.document = oldDocument;
@@ -675,8 +676,8 @@ test(
       }],
     };
     const html = renderWarehouseRoomWall(room, {bottles: [], assignments: {}});
-    assert.match(html, /class="hint">Fach ist leer<\/span>/);
-    assert.match(html, /class="warehouse-wall-no-space">Nicht belegbar<\/span>/);
+    assert.match(renderedText(html), /class="hint">Fach ist leer<\/span>/);
+    assert.match(renderedText(html), /class="warehouse-wall-no-space">Nicht belegbar<\/span>/);
   }
 );
 
@@ -686,6 +687,6 @@ test(
   () => {
     const {room, warehouse} = createWarehouse();
     const html = renderWarehouseRoomWall(room, warehouse);
-    assert.match(html, /warehouse-wall-bay--top[^\"]*\"[^>]*--wall-bay-height:/);
+    assert.match(renderedText(html), /warehouse-wall-bay--top[^\"]*\"[^>]*--wall-bay-height:/);
   }
 );

@@ -1,3 +1,4 @@
+import {fixtureMarkup, renderedText} from '../helpers/rendering.js';
 import {
   pageHeader, sectionHeader, headingTitle, headerActions, backNavigation,
   helpIconButton
@@ -15,17 +16,17 @@ test(
       eyebrow: 'The "reserve"',
       intro: '<script>x</script>',
       className: 'settings-heading',
-      actions: '<button data-act="goto-home">Back</button>',
+      actions: fixtureMarkup('<button data-act="goto-home">Back</button>'),
     });
-    assert.match(html, /<header class="section-head ds-page-header settings-heading">/);
+    assert.match(renderedText(html), /<header class="section-head ds-page-header settings-heading">/);
     assert.match(
-      html,
+      renderedText(html),
       new RegExp('<h2>A &lt; B<span class="heading-period" a' + 'ria-hidden="true">\\.<\\/span><\\/h2>')
     );
-    assert.match(html, /The &quot;reserve&quot;/);
-    assert.ok(!html.includes('<script>'));
-    assert.match(html, /<button data-act="goto-home">Back<\/button>/);
-    assert.equal((html.match(/<h2\b/g) || []).length, 1);
+    assert.match(renderedText(html), /The &quot;reserve&quot;/);
+    assert.ok(!renderedText(html).includes('<script>'));
+    assert.match(renderedText(html), /<button data-act="goto-home">Back<\/button>/);
+    assert.equal((renderedText(html).match(/<h2\b/g) || []).length, 1);
   }
 );
 
@@ -37,10 +38,10 @@ test(
       period: false,
       className: 'detail-page-head',
     });
-    assert.match(html, /<h2>Browser Test Blend<\/h2>/);
-    assert.doesNotMatch(html, /heading-period/);
+    assert.match(renderedText(html), /<h2>Browser Test Blend<\/h2>/);
+    assert.doesNotMatch(renderedText(html), /heading-period/);
     assert.match(
-      pageHeader({title: 'Sammlung'}),
+      renderedText(pageHeader({title: 'Sammlung'})),
       new RegExp('<h2>Sammlung<span class="heading-period" a' + 'ria-hidden="true">\\.<\\/span><\\/h2>')
     );
   }
@@ -57,19 +58,19 @@ test(
       layout: 'tasting-panel-heading',
       titleClass: 'flight-plan-heading-title',
       trailingAction: help,
-      actions: '<button disabled>Next</button>',
+      actions: fixtureMarkup('<button disabled>Next</button>'),
     });
-    assert.match(html, /<h3 class="flight-plan-heading-title ds-heading-with-action">Planning/);
-    assert.equal((html.match(/class="ds-help-icon-button flight-plan-help-button"/g) || []).length, 1);
+    assert.match(renderedText(html), /<h3 class="flight-plan-heading-title ds-heading-with-action">Planning/);
+    assert.equal((renderedText(html).match(/class="ds-help-icon-button flight-plan-help-button"/g) || []).length, 1);
     assert.match(
-      html,
+      renderedText(html),
       new RegExp('<div class="actions ds-header-actions"><bu' + 'tton disabled>Next<\\/button><\\/div>')
     );
-    assert.ok(!html.includes('style='));
+    assert.ok(!renderedText(html).includes('style='));
     assert.match(
-      headingTitle({
+      renderedText(headingTitle({
         title: '<&', level: 2, className: 'analytics-section-title',
-      }),
+      })),
       /<h2 class="analytics-section-title">&lt;&amp;<\/h2>/
     );
     assert.throws(() => headingTitle({title: 'wrong', level: 1}), /Heading level/);
@@ -81,11 +82,11 @@ test(
   'header actions do not take over behavior and can be disabled without altering data-act',
   () => {
     const html = headerActions(
-      '<button data-act="edit-bottling" disabled>Bearbeiten</button>',
+      fixtureMarkup('<button data-act="edit-bottling" disabled>Bearbeiten</button>'),
       {className: 'detail-head-actions'}
     );
-    assert.match(html, /class="actions ds-header-actions detail-head-actions"/);
-    assert.match(html, /data-act="edit-bottling" disabled/);
+    assert.match(renderedText(html), /class="actions ds-header-actions detail-head-actions"/);
+    assert.match(renderedText(html), /data-act="edit-bottling" disabled/);
   }
 );
 
@@ -94,19 +95,19 @@ test(
   () => {
     for (const [language, catalog] of [['de', de], ['en', en]]) {
       const text = catalog['common.navigation.backToCollection'];
-      assert.doesNotMatch(text, /^[←⟵⬅]/u, `${language}: translation contains no icon`);
+      assert.doesNotMatch(renderedText(text), /^[←⟵⬅]/u, `${language}: translation contains no icon`);
       const page = backNavigation('goto-home', text, '', 'page-action');
-      assert.equal((page.match(/<svg\b/g) || []).length, 1);
-      assert.match(page, /data-act="goto-home"/);
-      assert.match(page, /ds-back-nav--page-action/);
-      assert.ok(page.includes(`<span>${text}</span>`));
+      assert.equal((renderedText(page).match(/<svg\b/g) || []).length, 1);
+      assert.match(renderedText(page), /data-act="goto-home"/);
+      assert.match(renderedText(page), /ds-back-nav--page-action/);
+      assert.ok(renderedText(page).includes(`<span>${text}</span>`));
       const inline = backNavigation('back', ` ←  ← ${text}`, 'detail-back');
-      assert.equal((inline.match(/<svg\b/g) || []).length, 1);
-      assert.ok(!inline.includes('←'), `${language}: no repeated arrow glyph`);
-      assert.match(inline, /data-region="detail-back"/);
+      assert.equal((renderedText(inline).match(/<svg\b/g) || []).length, 1);
+      assert.ok(!renderedText(inline).includes('←'), `${language}: no repeated arrow glyph`);
+      assert.match(renderedText(inline), /data-region="detail-back"/);
     }
     assert.throws(() => backNavigation('back', 'Back', '', 'invalid'), /Invalid back-navigation/);
-    assert.match(backNavigation('x', '<img onerror=alert(1)>'), /&lt;img/);
+    assert.match(renderedText(backNavigation('x', '<img onerror=alert(1)>')), /&lt;img/);
   }
 );
 
@@ -114,8 +115,8 @@ test(
   'help icon receives a readable name, a single SVG, and an explicit disabled state',
   () => {
     const html = helpIconButton({label: 'Why "this"?', disabled: true});
-    assert.match(html, /aria-label="Why &quot;this&quot;\?"/);
-    assert.match(html, /disabled>/);
-    assert.equal((html.match(/<svg\b/g) || []).length, 1);
+    assert.match(renderedText(html), /aria-label="Why &quot;this&quot;\?"/);
+    assert.match(renderedText(html), /disabled>/);
+    assert.equal((renderedText(html).match(/<svg\b/g) || []).length, 1);
   }
 );

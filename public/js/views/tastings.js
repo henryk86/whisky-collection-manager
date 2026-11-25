@@ -1,19 +1,15 @@
-import {createTastingIndexViewModel} from './models/tastings.js';
+import {createTastingPresentation, readExternalFields} from './tasting-presentation.js';
+import {createTastingIndexViewModel, createPlannedFlightViewModel} from './models/tastings.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {replaceElement, replaceContent, appendContent}
   from '../ui/dom-renderer.js';
 import {actionButton} from '../ui/buttons.js';
 import {checkboxInput} from '../ui/fields.js';
-import {
-  helpIconButton, sectionHeader, headingTitle, pageHeader,
-  backNavigation
-} from '../ui/headers.js';
+import {helpIconButton, sectionHeader, headingTitle, pageHeader} from '../ui/headers.js';
 import {t} from '../i18n/index.js';
-import {displayPhotoPath} from '../../../shared/photo-images.js';
-import {storagePath} from './warehouse-presentation.js';
+
 import {escapeHtml} from '../ui/dom.js';
-import {detailField, detailGrid, actionToolbar, panel, emptyState}
-  from '../ui/content.js';
+import {panel} from '../ui/content.js';
 import {formatDate, imageUrl} from '../ui/format.js';
 import {request} from '../api.js';
 import {toast} from '../ui/notifications.js';
@@ -21,9 +17,8 @@ import {flavorChart, readFlavorProfile, displayFlavorProfile}
   from '../ui/flavor-profile.js';
 import {createTastingHistory} from '../domain/tasting-history.js';
 import {glencairnRating, syncGlencairnRating} from '../ui/glencairn-rating.js';
-import {glencairnRatingSymbol} from '../ui/glencairn-icon.js';
-import {whiskyColorSelector, whiskyColorDisplay, whiskyCustomColorName}
-  from '../ui/whisky-color-selector.js';
+
+import {whiskyColorSelector, whiskyCustomColorName} from '../ui/whisky-color-selector.js';
 import {
   isAllowedWhiskyHex, normalizeWhiskyColor, whiskyPickerHex,
   whiskyPickerPosition
@@ -43,14 +38,10 @@ import {
   resetFlightCaskOptions,
 } from '../ui/flight-cask-options.js';
 import {reorderFlightIds} from '../features/flight-order.js';
-import {
-  suggestFlight, flightCandidates, flightCandidateDiagnostics, FLIGHT_STYLES,
-  FLIGHT_AVAILABILITY, FLIGHT_FOCUSES, CASK_MODES, AGE_MODES,
-} from '../domain/flight-planner.js';
+import {suggestFlight, flightCandidateDiagnostics, FLIGHT_STYLES, FLIGHT_AVAILABILITY, FLIGHT_FOCUSES, CASK_MODES, AGE_MODES} from '../domain/flight-planner.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('tastings/tastings.html');
-
 
 /**
  * Tasting list and single-record editor; no migration of earlier bottling
@@ -102,269 +93,7 @@ export function createTastingsView({
    */
   const editPage = (external = isExternal()) => external ? 'external-tasting' : 'tasting';
 
-  /**
-   * Selects and transforms the distillery meta records.
-   *
-   * @param {*} bottling Bottling record being inspected or updated.
-   * @param {boolean=} owned Value used by this operation.
-   * @return {string} Resulting text.
-   */
-  const distilleryMeta = (bottling, owned = true) => [
-    (bottling?.distilleryIds || []).map(id => state.collection?.distilleries?.find(d => d.id === id)?.name).filter(Boolean).join(', ') || bottling?.distillery || '',
-    bottling?.ageYears != null && bottling.ageYears !== '' ?
-      `${t('forms.bottling.ageYears')}: ${t('home.facts.years', {count: bottling.ageYears})}` : '',
-    owned && typeof bottling?.caskType === 'string' && bottling.caskType.trim() ? `${t('forms.bottling.caskType')}: ${bottling.caskType.trim()}` : '',
-    bottling?.abv != null && bottling.abv !== '' ?
-      `${t('forms.bottling.abv')}: ${String(bottling.abv).replace('.', ',')} % Vol.` : '',
-    !owned && bottling?.bottler ? `${t('forms.bottling.bottler')}: ${bottling.bottler}` : '',
-    !owned && bottling?.releaseYear != null && bottling.releaseYear !== '' ?
-      `${t('forms.bottling.releaseYear')}: ${bottling.releaseYear}` : '',
-  ].filter(Boolean).join(' · ');
-
-  /**
-   * Derives the back link result from the supplied values.
-   *
-   * @param {*} action Operation or action callback to invoke.
-   * @param {*} label Label shown to the user.
-   * @return {string} Resulting text.
-   */
-  const backLink = (action, label) => backNavigation(action, t(label));
-
-  /**
-   * Derives the page title result from the supplied values.
-   *
-   * @param {*} title Title displayed or stored by this operation.
-   * @param {*} intro Value used by this operation.
-   * @param {*=} eyebrow Value used by this operation.
-   * @return {string} Resulting text.
-   */
-  const pageTitle = (title, intro, eyebrow = t('tastings.childEyebrow')) =>
-    pageHeader({title, intro, eyebrow, className: 'analytics-page-heading'});
-  // Show exactly the same Abfuellungsfoto (cover image) as the bottling detail
-  // page.
-
-  /**
-   * Builds the localized bottling info text for the current language.
-   *
-   * @param {*} bottling Bottling record being inspected or updated.
-   * @param {boolean=} external Value used by this operation.
-   * @param {boolean=} draft Value used by this operation.
-   * @return {string} Resulting text.
-   */
-  const bottlingInfo = (bottling, external = false, draft = false) => {
-    const photo = external ? '' : (selectors?.coverPhoto?.(bottling.id) || '');
-    return renderTemplate('analyticsPanel', {
-      external: external ? renderTemplate('bottlingInfo', {
-        draft: draft ? '' :
-          renderTemplate('tastingBottlingSummary', {
-            name: bottling.name || '',
-            editIcon: editIcon,
-            edit: t('common.actions.edit'),
-            tastingExternalAssignButton: actionButton({
-              label: t('tastings.assignToCollection'),
-              action: 'tasting-external-assign',
-              size: 'small',
-            }),
-            muted: distilleryMeta(bottling, false) ?
-              renderTemplate('muted', {distilleryMeta: distilleryMeta(bottling, false), }) : '',
-          }),
-        draft2: draft ? '' : 'hidden',
-        externalFields: externalFields(bottling),
-        draft3: draft ? '' :
-          renderTemplate('actions', {
-            tastingExternalCancelButton: actionButton({
-              label: t('common.actions.cancel'),
-              action: 'tasting-external-cancel',
-            }),
-            tastingExternalSaveButton: actionButton({
-              label: t('common.actions.save'),
-              action: 'tasting-external-save',
-              variant: 'primary',
-            }),
-          }),
-      }) :
-        renderTemplate('tastingBottlingSummary2', {
-          tastingBottlingPhoto: photo ? renderTemplate('tastingBottlingPhoto', {
-            imageUrl: imageUrl(photo),
-            bottleAlt: t('home.image.bottleAlt', {name: bottling.name || ''}),
-          }) : '',
-          name: bottling.name || '',
-          tastingOpenBottlingButton: actionButton({
-            label: t('tastings.openBottlingDetails'),
-            action: 'tasting-open-bottling',
-            size: 'small',
-          }),
-          muted: distilleryMeta(bottling) ? renderTemplate('muted2', {distilleryMeta: distilleryMeta(bottling), }) : '',
-        }),
-    });
-  };
-
-  /**
-   * Derives the associated flight result from the supplied values.
-   *
-   * @param {*} record Record to validate or persist.
-   * @return {*} Result computed from the supplied inputs.
-   */
-  const associatedFlight = record => record?.id ? flightForTasting(state.collection, record.id) : null;
-
-  /**
-   * Produces the flight hint text used by the caller.
-   *
-   * @param {*} record Record to validate or persist.
-   * @return {string} Resulting text.
-   */
-  const flightHint = record => {
-    const flight = associatedFlight(record);
-    if (!flight) return '';
-    const pos = flight.tastingIds.indexOf(record.id) + 1;
-    return renderTemplate('tastingOpenFlight', {
-      id: flight.id,
-      name: flight.name,
-      position: t('tastingFlights.position', {position: pos, count: flight.tastingIds.length}),
-    });
-  };
-
-  /**
-   * Builds the localized tasting rating text for the current language.
-   *
-   * @param {*} record Record to validate or persist.
-   * @return {string} Resulting text.
-   */
-  const tastingRating = record => record.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(String(record.rating))} / 100`;
-
-  /**
-   * Normalizes the blank text for subsequent processing.
-   *
-   * @param {*} value Value to process.
-   * @return {string} Resulting text.
-   */
-  const blank = value => value == null || String(value).trim() === '' ? renderTemplate('muted3') : escapeHtml(String(value));
-
-  /**
-   * Calculates the static rating numeric value.
-   *
-   * @param {*} record Record to validate or persist.
-   * @return {string} Resulting text.
-   */
-  const staticRating = record =>
-    renderTemplate('tastingReadonlyRating', {
-      rating: record.rating == null ? '' : composeMarkup(Array.from(
-        {length: 5},
-        (_, i) => {
-          const fill = Math.max(0, Math.min(100, (Number(record.rating) - i * 20) * 5));
-          return glencairnRatingSymbol({fill, id: `read-rating-${i}`});
-        }
-      )),
-      tastingRating: tastingRating(record),
-    });
-
-  /**
-   * Transforms the entries used by tasting read only.
-   *
-   * @param {*} value Value to process.
-   * @return {string} Resulting text.
-   */
-  const tastingReadOnly = value =>
-    renderTemplate('flavorDetailPanel', {
-      detailGrid: detailGrid(composeMarkup([
-        detailField({
-          label: t('tastings.date'),
-          value: formatDate(value.tastedOn || ''),
-          variant: 'readonly',
-          className: 'tasting-readonly-field',
-          labelClass: 'tasting-readonly-label',
-        }),
-        value.title ? detailField({
-          label: t('tastings.nameReadonly'),
-          value: value.title,
-          variant: 'readonly',
-          className: 'tasting-readonly-field',
-          labelClass: 'tasting-readonly-label',
-        }) : '',
-      ]), {columns: 2, className: 'tasting-readonly-meta-fields'}),
-      actionToolbar: actionToolbar(
-        renderTemplate('tastingEditStart', {
-          editIcon: editIcon,
-          edit: t('common.actions.edit'),
-        }),
-        {className: 'tasting-readonly-meta-actions'}
-      ),
-      headingTitle: headingTitle({title: t('tasting.colorHeading')}),
-      whiskyColorDisplay: whiskyColorDisplay(value.whiskyColor) || renderTemplate('hint', {notRecorded: t('tastings.notRecorded'), }),
-      headingTitle2: headingTitle({title: t('flavor.title')}),
-      flavorChart: flavorChart(value.flavorProfile, {editable: false}),
-      headingTitle3: headingTitle({title: t('tasting.notes'), }),
-      detailGrid2: detailGrid(
-        composeMarkup(['nose', 'palate', 'finish'].map(key => detailField({
-          label: t(`forms.bottling.${key}`),
-          value: blank(value.tastingNotes?.[key]),
-          valueHtml: true,
-          variant: 'note',
-          className: 'tasting-readonly-field',
-          labelClass: 'tasting-readonly-label',
-          valueClass: 'tasting-readonly-note',
-        }))),
-        {columns: 3, className: 'tasting-notes tasting-readonly-notes'}
-      ),
-      headingTitle4: headingTitle({title: t('tasting.overallRating'), }),
-      staticRating: staticRating(value),
-      trim: value.ratingComment?.trim() ? detailField({
-        label: t('tasting.ratingComment'),
-        value: value.ratingComment,
-        variant: 'note',
-        className: 'tasting-rating-comment',
-        labelClass: 'tasting-readonly-label',
-        valueClass: 'tasting-readonly-note',
-      }) : '',
-    });
-
-  /**
-   * Calculates the tasting list glasses numeric value.
-   *
-   * @param {*} record Record to validate or persist.
-   * @return {string} Resulting text.
-   */
-  const tastingListGlasses = record => {
-    if (record.rating == null || !Number.isFinite(Number(record.rating))) return '';
-    const safe = Math.max(0, Math.min(100, Number(record.rating)));
-    const unique = String(record.id).replace(/[^a-zA-Z0-9_-]/g, '-');
-    return renderTemplate('tastingListGlasses', {
-      from: composeMarkup(Array.from(
-        {length: 5},
-        (_, i) =>
-          glencairnRatingSymbol({
-            fill: Math.max(0, Math.min(100, (safe - i * 20) * 5)),
-            id: `tasting-list-${unique}-${i}`,
-          })
-      )),
-    });
-  };
-
-  /**
-   * Builds the localized tasting row text for the current language.
-   *
-   * @param {!Object} options Options controlling the operation.
-   * @return {string} Resulting text.
-   */
-  const tastingRow = ({record, b, external = false, home = false}) =>
-    renderTemplate('warehouseBottleRow', {
-      home: home ? 'tasting-home-row' : 'tasting-list-row',
-      home2: home ? 'tastings-home-open' : 'tastings-open',
-      home3: home ? `data-external="${external ? '1' : '0'}" data-bottling-id="${escapeHtml(external ? record.id : b.id)}"` : '',
-      id: record.id,
-      content: `${t('tastings.open')}: ${home ? b.name : (record.title || formatDate(record.tastedOn))}`,
-      home4: home ? b.name : (record.title || formatDate(record.tastedOn)),
-      home5: home ? formatDate(record.tastedOn) : (record.title ? formatDate(record.tastedOn) : ''),
-      home6: home && record.title ? ` · ${escapeHtml(record.title)}` : '',
-      tastingListGlasses: tastingListGlasses(record),
-      tastingRating: tastingRating(record),
-      chevronRightIcon: chevronRightIcon,
-      home7: home ? '' :
-        renderTemplate('tastingDelete', {
-          id: record.id,
-          delete: t('common.actions.delete'),
-        }),
-    });
+  const {distilleryMeta, backLink, pageTitle, bottlingInfo, associatedFlight, flightHint, tastingRating, blank, staticRating, tastingReadOnly, tastingListGlasses, tastingRow} = createTastingPresentation({state, selectors});
 
   /**
    * Derives the empty record result from the supplied values.
@@ -733,56 +462,6 @@ export function createTastingsView({
   }
 
   /**
-   * Transforms the entries used by external fields.
-   *
-   * @param {!Object=} info Value used by this operation.
-   * @return {string} Resulting text.
-   */
-  function externalFields(info = {}) {
-    const fields = [
-      ['name', 'tastings.externalName', 'text', 180, true],
-      ['distillery', 'tastings.externalDistillery', 'text', 140, false],
-      ['bottler', 'tastings.externalBottler', 'text', 140, false],
-      ['ageYears', 'tastings.externalAge', 'number', null, false],
-      ['abv', 'tastings.externalAbv', 'number', null, false],
-      ['releaseYear', 'tastings.externalYear', 'number', null, false],
-    ];
-    return composeMarkup(fields.map(([key, label, type, max, required]) =>
-      renderTemplate('externalFieldsLabel', {
-        t: t(label),
-        key: key,
-        key2: key,
-        type: type,
-        max: max ? `maxlength="${max}"` : '',
-        required: required ? 'required' : '',
-        type2: type === 'number' ? (key === 'abv' ?
-          'min="0" max="100" step="0.1"' : key === 'ageYears' ? 'min="0" max="200" step="1"' : 'min="1800" max="2200" step="1"') : '',
-        info: String(info[key] ?? ''),
-      })));
-  }
-
-  /**
-   * Retrieves external fields from the available state.
-   *
-   * @param {*} node Node to inspect or update.
-   * @return {*} Computed value, or null when the input has no match.
-   */
-  function readExternalFields(node) {
-    const data = {};
-    for (const key of ['name', 'distillery', 'bottler', 'ageYears', 'abv',
-      'releaseYear']) {
-      const input = node.querySelector(`[data-external-field="${key}"]`);
-      if (!input?.checkValidity()) {input?.reportValidity(); return null;}
-      data[key] = ['ageYears', 'abv', 'releaseYear'].includes(key) ?
-        (input.value === '' ? null : Number(input.value)) : input.value.trim();
-    }
-    if (!data.name) {
-      node.querySelector('[data-external-field="name"]')?.reportValidity(); return null;
-    }
-    return data;
-  }
-
-  /**
    * Orders the flight list records using the configured comparison.
    * @return {!Array<*>} Resulting entries in their output order.
    */
@@ -893,7 +572,7 @@ export function createTastingsView({
         content: composeMarkup([3, 4, 5, 6].map(n =>
           renderTemplate('startPlannedFlightOption2', {
             n: n,
-            selected: n === 5 ? 'selected' : '',
+            selectedAttributes: n === 5 ? {"selected": true} : {},
             n2: n,
           }))),
         fLIGHTAVAILABILITY: composeMarkup(FLIGHT_AVAILABILITY.map(id => renderTemplate('startPlannedFlightOption3', {
@@ -924,7 +603,7 @@ export function createTastingsView({
         flightCaskOptionsHtml: flightCaskOptionsHtml(t),
         ageRange: t('flightPlan.caskAge.ageRange'),
         ageMin: t('flightPlan.caskAge.ageMin'),
-        ageMin2: t('flightPlan.caskAge.ageMin'),
+        ariaLabel: t('flightPlan.caskAge.ageMin'),
         ageMax: t('flightPlan.caskAge.ageMax'),
         ageMax2: t('flightPlan.caskAge.ageMax'),
         checkboxInput2: checkboxInput(t('flightPlan.caskAge.strict'), 'flight-plan-strict'),
@@ -1087,49 +766,28 @@ export function createTastingsView({
   }
 
   /**
-   * Builds the localized plan member label text for the current language.
-   *
-   * @param {*} item Current item under consideration.
-   * @return {!Object} Structured result assembled from the input data.
-   */
-  function planMemberLabel(item) {
-    const b = state.collection?.bottlings?.find(b => b.id === item.bottlingId);
-    const bottle = b?.bottles?.find(x => x.id === item.bottleId);
-    return {
-      b,
-      bottle,
-      label: b ? `${b.name}${bottle?.inventoryNumber ? ' · #' + bottle.inventoryNumber : ''}` : t('flightPlan.missing'),
-      unavailable: !bottle || bottle.status === 'empty',
-    };
-  }
-
-  /**
    * Selects and transforms the planned flight detail records.
    *
    * @param {*} current Value used by this operation.
    * @return {string} Resulting text.
    */
   function plannedFlightDetail(current) {
-    const editable = current.phase === 'planned';
-    const candidates = flightCandidates(state.collection, {availability: 'all', });
-    const selected = new Set(current.planItems.map(item => item.bottlingId));
+    const model = createPlannedFlightViewModel(current, state.collection, state.warehouse, selectors);
+    const {editable, members, canAdd, canStart, choicesFor} = model;
     /**
      * Selects and transforms the choices records.
      *
      * @param {string=} excludeId Value used by this operation.
      * @return {*} Entries that meet the selection criteria.
      */
-    const choices = (excludeId = '') => composeMarkup(candidates.filter(x => !selected.has(x.bottling.id) || x.bottling.id === excludeId).map(x => renderTemplate('choicesOption', {
+    const choices = (excludeId = '') => composeMarkup(choicesFor(excludeId).map(x => renderTemplate('choicesOption', {
       id: x.bottle.id,
       name: x.bottling.name,
       inventoryNumber: x.bottle.inventoryNumber || '–',
     })));
     return renderTemplate('analyticsPanel3', {
       headingTitle: headingTitle({title: `${t('flightPlan.plannedMembers')} · ${current.planItems.length}`, }),
-      planItems: composeMarkup(current.planItems.map((item, index) => {
-        const {b, bottle, label, unavailable} = planMemberLabel(item);
-        const photo = displayPhotoPath(bottle?.photos?.[0]) || (b ? selectors?.coverPhoto?.(b.id) : null);
-        const place = bottle && state.warehouse ? storagePath(state.warehouse, state.warehouse.assignments?.[bottle.id]) : null;
+      planItems: composeMarkup(members.map(({item, b, bottle, label, unavailable, photo, place}, index) => {
         return renderTemplate('flightPlanMember', {
           index: index + 1,
           flightPlanMemberPhoto: photo ? renderTemplate('flightPlanMemberPhoto', {imageUrl: imageUrl(photo), }) : '',
@@ -1144,12 +802,12 @@ export function createTastingsView({
           flightPlanOpenBottling: b ? renderTemplate('flightPlanOpenBottling', {id: b.id, }) : '',
           flightPlanMove: editable ? renderTemplate('flightPlanMove', {
             index: index,
-            disabled: index === 0 ? 'disabled' : '',
+            disabledAttributes: index === 0 ? {"disabled": true} : {},
             arrowUpIcon: arrowUpIcon,
             index2: index,
-            disabled2: index === current.planItems.length - 1 ? 'disabled' : '',
+            disabled2: index === current.planItems.length - 1 ? {"disabled": true} : {},
             arrowDownIcon: arrowDownIcon,
-            index3: index,
+            flightReplace: index,
             choices: choices(item.bottlingId),
             index4: index,
             index5: index,
@@ -1157,7 +815,7 @@ export function createTastingsView({
             renderTemplate('flightPlanRecord', {bottlingId: item.bottlingId, }) : '',
         });
       })),
-      flightPlanAdd: editable && candidates.some(x => !selected.has(x.bottling.id)) && current.planItems.length < 6 ?
+      flightPlanAdd: canAdd ?
         renderTemplate('flightPlanAdd', {
           choices: choices(),
           flightPlanAddButton: actionButton({
@@ -1167,7 +825,7 @@ export function createTastingsView({
         }) : '',
       flightPlanStart: editable ?
         renderTemplate('flightPlanStart', {
-          disabled: current.planItems.some(i => planMemberLabel(i).unavailable) || !current.planItems.length ? 'disabled' : '',
+          disabledAttributes: !canStart ? {"disabled": true} : {},
         }) : '',
     });
   }
@@ -1353,19 +1011,19 @@ export function createTastingsView({
         dragHandle2: t('tastingFlights.dragHandle'),
         position: t('tastingFlights.position', {position: i + 1, count: refs.length}),
         i: i + 1,
-        id2: item.record.id,
+        tastingId: item.record.id,
         external: item.external ? item.record.id : item.bottling.id,
         external2: item.external ? '1' : '0',
         name: item.bottling.name,
         title: item.record.title || formatDate(item.record.tastedOn),
         tastingListGlasses: tastingListGlasses(item.record) || renderTemplate('tastingListGlasses2'),
         tastingRating: tastingRating(item.record),
-        i2: i,
-        disabled: i === 0 ? 'disabled' : '',
+        index: i,
+        disabledAttributes: i === 0 ? {"disabled": true} : {},
         moveUp: t('tastingFlights.moveUp'),
         arrowUpIcon: arrowUpIcon,
         i3: i,
-        disabled2: i === refs.length - 1 ? 'disabled' : '',
+        disabled2: i === refs.length - 1 ? {"disabled": true} : {},
         moveDown: t('tastingFlights.moveDown'),
         arrowDownIcon: arrowDownIcon,
         id3: item.record.id,
@@ -1376,7 +1034,7 @@ export function createTastingsView({
       pageTitle: pageTitle(t('tastingFlights.detailTitle'), t('tastingFlights.detailIntro')),
       tastingFlightForm: flightEditing ? renderTemplate('tastingFlightForm4', {
         name: t('tastingFlights.name'),
-        name2: current.name,
+        value: current.name,
         date: t('tastingFlights.date'),
         date2: current.date,
         notes: t('tastingFlights.notes'),
@@ -1406,26 +1064,26 @@ export function createTastingsView({
         }),
       length: current.planItems?.length ? plannedFlightDetail(current) : '',
       flightPlanFinish: current.phase === 'inProgress' ?
-        renderTemplate('flightPlanFinish', {length: refs.length ? '' : 'disabled', }) : '',
+        renderTemplate('flightPlanFinish', {disabledAttributes: refs.length ? {} : {"disabled": true}, }) : '',
       headingTitle: headingTitle({
         title: t(refs.length === 1 ? 'tastingFlights.oneEntry' : 'tastingFlights.entriesCount', {count: refs.length}),
       }),
       phase: current.phase === 'inProgress' ? '' :
         renderTemplate('tastingFlightToggleAdd', {
-          disabled: current.phase === 'completed' ? 'disabled' : '',
+          completedAttributes: current.phase === 'completed' ? {"disabled": true} : {},
           newBottlingIcon: newBottlingIcon,
           add: t('tastingFlights.add'),
         }),
       tastingFlightAdd: flightAdding && current.phase !== 'inProgress' ?
         renderTemplate('tastingFlightAdd', {
           selectExisting: t('tastingFlights.selectExisting'),
-          length: available.length ? '' : 'disabled',
+          disabledAttributes: available.length ? {} : {"disabled": true},
           available: composeMarkup(available.map(item =>
             renderTemplate('flightOption', {
               id: item.record.id,
               flightEntryLabel: flightEntryLabel(item),
             }))),
-          length2: available.length ? '' : 'disabled',
+          length2: available.length ? {} : {"disabled": true},
           addExisting: t('tastingFlights.addExisting'),
           chooseBottling: t('tastings.chooseBottling'),
           bottlings: composeMarkup((state.collection?.bottlings || []).map(b =>
@@ -1433,7 +1091,7 @@ export function createTastingsView({
               id: b.id,
               name: b.name,
             }))),
-          length3: (state.collection?.bottlings || []).length ? '' : 'disabled',
+          length3: (state.collection?.bottlings || []).length ? {} : {"disabled": true},
           fromCollection: t('tastings.fromCollection'),
           tastingFlightNewExternalButton: actionButton({
             label: t('tastings.outsideCollection'),
@@ -1595,7 +1253,7 @@ export function createTastingsView({
               id: b.id,
               name: b.name,
             }))),
-          length: owned.length ? '' : 'disabled',
+          disabledAttributes: owned.length ? {} : {"disabled": true},
           fromCollection: t('tastings.fromCollection'),
           tastingsStartExternalButton: actionButton({
             label: t('tastings.outsideCollection'),
@@ -1709,14 +1367,14 @@ export function createTastingsView({
       date: t('tastings.date'),
       tastedOn: value.tastedOn,
       nameOptional: t('tastings.nameOptional'),
-      title2: value.title || '',
+      value: value.title || '',
       titlePlaceholder: t('tastings.titlePlaceholder'),
       undo: t('flavor.undo'),
-      undo2: t('flavor.undo'),
-      canUndo: flavorSession.history.canUndo ? '' : 'disabled',
+      ariaLabel: t('flavor.undo'),
+      disabledAttributes: flavorSession.history.canUndo ? {} : {"disabled": true},
       redo: t('flavor.redo'),
       redo2: t('flavor.redo'),
-      canRedo: flavorSession.history.canRedo ? '' : 'disabled',
+      canRedo: flavorSession.history.canRedo ? {} : {"disabled": true},
       draft: draft ? '' :
         renderTemplate('tastingEditDone', {
           done: t('tastings.done'),
@@ -1729,7 +1387,7 @@ export function createTastingsView({
         actionsBare: true,
         actions:
           renderTemplate('tastingColorClear', {
-            whiskyColor: flavorSession.history.value.whiskyColor ? '' : 'disabled',
+            disabledAttributes: flavorSession.history.value.whiskyColor ? {} : {"disabled": true},
             colorClear: t('tasting.colorClear'),
           }),
       }),
@@ -1740,11 +1398,11 @@ export function createTastingsView({
         actionsBare: true,
         actions:
           renderTemplate('tastingFlavorClear', {
-            flavorProfile: flavorSession.history.value.flavorProfile ? '' : 'disabled',
+            disabledAttributes: flavorSession.history.value.flavorProfile ? {} : {"disabled": true},
             clearRadar: t('tastings.clearRadar'),
           }),
       }),
-      hidden: flavorSession.history.value.flavorProfile ? 'hidden' : '',
+      hiddenAttributes: flavorSession.history.value.flavorProfile ? {"hidden": true} : {},
       notRecorded: t('flavor.notRecorded'),
       flavorChart: flavorChart(flavorSession.history.value.flavorProfile, {editable: true}),
       headingTitle: headingTitle({title: t('tasting.notes'), }),
@@ -1759,7 +1417,7 @@ export function createTastingsView({
         actionsBare: true,
         actions:
           renderTemplate('tastingRatingClear', {
-            disabled: flavorSession.history.value.rating == null ? 'disabled' : '',
+            disabledAttributes: flavorSession.history.value.rating == null ? {"disabled": true} : {},
             clearRating: t('tasting.clearRating'),
           }),
       }),

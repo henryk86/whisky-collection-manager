@@ -1,5 +1,5 @@
 <!-- wcm-template:promptDistilleryOption -->
-<option value="{{raw:value}}" {{raw:selected}}>{{raw:label}}</option>
+<option value="{{attr:value}}" {{attrs:unknownAttributes}}>{{content:label}}</option>
 <!-- /wcm-template -->
 
 <!-- wcm-template:distilleryForm -->
@@ -14,8 +14,8 @@
       autocomplete="off"
       required></label>
   <label class="form-field" for="distillery-status">{{t:features.distilleries.operatingStatus}}
-      <select id="distillery-status" name="status">
-      {{raw:content}}</select></label>
+    <select id="distillery-status" name="status">
+      {{content:content}}</select></label>
   <div class="map-coordinates-fields">
     <label class="form-field" for="distillery-latitude">{{t:features.map.latitudeLabel}}
       <input
@@ -26,7 +26,7 @@
         min="-90"
         max="90"
         placeholder="{{t:features.map.latitudeExample}}"
-        value="{{raw:latitude}}"></label>
+        value="{{attr:latitude}}"></label>
     <label class="form-field" for="distillery-longitude">{{t:features.map.longitudeLabel}}
       <input
         id="distillery-longitude"
@@ -36,21 +36,25 @@
         min="-180"
         max="180"
         placeholder="{{t:features.map.longitudeExample}}"
-        value="{{raw:longitude}}"></label>
+        value="{{attr:longitude}}"></label>
   </div>
   <p class="hint">{{t:features.map.optionalCoordinatesHint}}</p>
-    {{raw:findDistilleryLocationButton}}
-    <div id="distillery-location-results" class="map-location-results" aria-live="polite">
+  {{content:findDistilleryLocationButton}}
+  <div id="distillery-location-results" class="map-location-results" aria-live="polite">
   </div>
   <div class="actions ds-modal-footer ds-modal-footer--form">
-    {{raw:closeModalButton}}
-    <button type="submit" class="btn primary">{{raw:id2}}</button>
+    {{content:closeModalButton}}
+    <button type="submit" class="btn primary">{{content:id2}}</button>
   </div>
 </form>
 <!-- /wcm-template -->
 
 <!-- wcm-template:saveDistilleryInput -->
-<input type="checkbox" name="distilleryIds" value="{{text:id}}" checked><span>{{text:name}}</span>
+<input
+  type="checkbox"
+  name="distilleryIds"
+  value="{{text:id}}"
+  checked><span>{{text:name}}</span>
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint -->
@@ -59,16 +63,16 @@
 
 <!-- wcm-template:applyDistilleryLocation -->
 
-            <button
+<button
   type="button"
   class="map-location-choice"
   data-act="apply-distillery-location"
-  data-index="{{raw:index}}">
-            {{text:name}}<small>{{raw:toFixed}}, {{raw:toFixed2}}</small></button>
+  data-index="{{attr:index}}">
+  {{text:name}}<small>{{content:toFixed}}, {{content:toFixed2}}</small></button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint2 -->
-<p class="hint">{{t:features.map.verifySelectedLocation}}</p>{{raw:matches}}
+<p class="hint">{{t:features.map.verifySelectedLocation}}</p>{{content:matches}}
 <!-- /wcm-template -->
 
 <!-- wcm-template:hint3 -->
@@ -82,7 +86,7 @@
 <!-- wcm-template:importJSONP -->
 <p>{{t:features.import.prefix}} <strong>{{t:features.import.replacesCollection}}</strong>{{t:features.import.jsonExcludesAttachmentsWarning}}</p>
 <div class="actions ds-modal-footer">
-    {{raw:closeModalButton}}
-    {{raw:confirmImportButton}}
-    </div>
+  {{content:closeModalButton}}
+  {{content:confirmImportButton}}
+</div>
 <!-- /wcm-template -->

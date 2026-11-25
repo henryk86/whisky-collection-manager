@@ -32,7 +32,7 @@ export function createBottlingForm({state, selectors}) {
       options: composeMarkup(options.map(distillery =>
         renderTemplate('distilleryOption', {
           id: distillery.id,
-          checked: selected.has(distillery.id) ? 'checked' : '',
+          checkedAttributes: selected.has(distillery.id) ? {"checked": true} : {},
           name: distillery.name,
           status: distillery.status === 'closed' ? ` · ${t('home.status.closed').toLowerCase()}` : '',
         }))),

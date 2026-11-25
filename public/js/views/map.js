@@ -139,12 +139,12 @@ export function createMapView({state, shell, navigate, settings}) {
     page = currentPage;
     return renderTemplate('sidebarHtml', {
       relatedSitesHtml: relatedSitesHtml(),
-      length: sites.length ? '' : 'disabled',
+      disabledAttributes: sites.length ? {} : {"disabled": true},
       option: sites.length && !selectedId ? renderTemplate('sidebarHtmlOption') : '',
       length2: sites.length ? composeMarkup(sites.map(site =>
         renderTemplate('sidebarHtmlOption2', {
           id: site.id,
-          selected: site.id === selectedId ? 'selected' : '',
+          selectedAttributes: site.id === selectedId ? {"selected": true} : {},
           name: site.name,
           bottleCount: site.bottleCount ? plural(site.bottleCount, t("forms.bottle.title"), t("forms.bottle.plural")) : t("map.filters.withoutBottlesLowercase"),
         }))) : renderTemplate('sidebarHtmlOption3'),
@@ -174,10 +174,10 @@ export function createMapView({state, shell, navigate, settings}) {
                 renderTemplate('hint2'),
               mapListPager: totalPages > 1 ?
                 renderTemplate('mapListPager', {
-                  disabled: page === 1 ? 'disabled' : '',
+                  disabledAttributes: page === 1 ? {"disabled": true} : {},
                   chevronLeftIcon: chevronLeftIcon,
                   pageOf: t("map.pagination.pageOf", {page, total: totalPages}),
-                  disabled2: page === totalPages ? 'disabled' : '',
+                  disabled2: page === totalPages ? {"disabled": true} : {},
                   chevronRightIcon: chevronRightIcon,
                 }) : '',
             }) : renderTemplate('hint3'),
@@ -192,7 +192,7 @@ export function createMapView({state, shell, navigate, settings}) {
   function missingHtml() {
     const filtered = missing.filter(site => site.name.toLocaleLowerCase('de').includes(missingFilter.toLocaleLowerCase('de')));
     return renderTemplate('mapMissing', {
-      content: !sites.length ? 'open' : '',
+      openAttributes: !sites.length ? {"open": true} : {},
       unmappedCount: t("map.statistics.unmappedCount", {count: missing.length}),
       formField: missing.length > 6 ? renderTemplate('formField2', {missingFilter: missingFilter, }) : '',
       missingRows: missingRows(filtered),
@@ -334,7 +334,7 @@ export function createMapView({state, shell, navigate, settings}) {
       length: sites.length,
       bottleTotal: bottleTotal,
       span: missing.length > 0 ? renderTemplate('renderSpan', {length: missing.length, }) : '',
-      checked: showAllDistilleries ? 'checked' : '',
+      checkedAttributes: showAllDistilleries ? {"checked": true} : {},
       mapCanvasHtml: mapCanvasHtml(),
       mapLegendHtml: mapLegendHtml(showAllDistilleries),
       mapNoSites: !sites.length ? renderTemplate('mapNoSites') : '',

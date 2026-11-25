@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createDetailView} from '../../public/js/views/detail.js';
@@ -74,9 +75,9 @@ test(
   'detail headline uses the overview card kicker for distillery, and a muted separate status',
   () => {
     const html = renderDetail(['distillery-laphroaig']);
-    assert.match(html, /<span class="card-kicker">Laphroaig<\/span>/);
+    assert.match(renderedText(html), /<span class="card-kicker">Laphroaig<\/span>/);
     assert.match(
-      html,
+      renderedText(html),
       new RegExp(
         '<span class="detail-heading-separator" ari' + 'a-hidden="true">·<\\/span><span class="mut' +
         'ed">Unvollständig<\\/span>'
@@ -89,8 +90,8 @@ test(
   'bottling title is unchanged by shared decorative page heading punctuation',
   () => {
     const html = renderDetail(['distillery-laphroaig']);
-    assert.match(html, /<h2>Laphroaig WILLEM 14-year-old<\/h2>/);
-    assert.doesNotMatch(html, /<h2>Laphroaig WILLEM 14-year-old<span class="heading-period"/);
+    assert.match(renderedText(html), /<h2>Laphroaig WILLEM 14-year-old<\/h2>/);
+    assert.doesNotMatch(renderedText(html), /<h2>Laphroaig WILLEM 14-year-old<span class="heading-period"/);
   }
 );
 
@@ -99,42 +100,42 @@ test(
   () => {
     const html = renderDetail([]);
     assert.match(
-      html,
+      renderedText(html),
       new RegExp('<div class="detail-heading-meta"><span cla' + 'ss="muted">Unvollständig<\\/span><\\/div>')
     );
-    assert.doesNotMatch(html, /detail-heading-separator/);
+    assert.doesNotMatch(renderedText(html), /detail-heading-separator/);
   }
 );
 
 test('detail heading uses the bottler when no distillery is supplied', () => {
   const html = renderDetail([], 'Signatory Vintage');
-  assert.match(html, /<span class="card-kicker">Signatory Vintage<\/span>/);
-  assert.match(html, /<span class="detail-heading-separator" aria-hidden="true">·<\/span>/);
-  assert.match(html, /<span class="muted">Unvollständig<\/span>/);
-  assert.match(html, /data-ds-detail-field="fact"><span>Abfüller<\/span>/);
+  assert.match(renderedText(html), /<span class="card-kicker">Signatory Vintage<\/span>/);
+  assert.match(renderedText(html), /<span class="detail-heading-separator" aria-hidden="true">·<\/span>/);
+  assert.match(renderedText(html), /<span class="muted">Unvollständig<\/span>/);
+  assert.match(renderedText(html), /data-ds-detail-field="fact"><span>Abfüller<\/span>/);
 });
 
 test(
   'detail offers a right-aligned map link with location icon for one or several assigned distilleries, but not for an unassigned bottling',
   () => {
     const single = renderDetail(['distillery-laphroaig']);
-    assert.match(single, /class="actions ds-header-actions detail-head-actions"/);
+    assert.match(renderedText(single), /class="actions ds-header-actions detail-head-actions"/);
     assert.match(
-      single,
+      renderedText(single),
       new RegExp(
         'data-act="bottling-map"[^>]*><svg class="a' + 'ction-icon"[\\s\\S]*?<span>Auf Landkarte a' +
         'nzeigen<\\/span><\\/button>'
       )
     );
-    assert.match(single, /<header class="section-head ds-page-header detail-page-head">/);
+    assert.match(renderedText(single), /<header class="section-head ds-page-header detail-page-head">/);
     const multiple = renderDetail(['distillery-laphroaig', 'distillery-ardbeg']);
     assert.match(
-      multiple,
+      renderedText(multiple),
       new RegExp(
         'data-act="bottling-map"[^>]*><svg class="a' + 'ction-icon"[\\s\\S]*?<span>Standorte auf L' +
         'andkarte<\\/span><\\/button>'
       )
     );
-    assert.doesNotMatch(renderDetail([]), /data-act="bottling-map"/);
+    assert.doesNotMatch(renderedText(renderDetail([])), /data-act="bottling-map"/);
   }
 );

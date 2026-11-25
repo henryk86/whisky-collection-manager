@@ -1,23 +1,23 @@
 <!-- wcm-template:sectionNavItem -->
 <button
   type="button"
-  class="section-nav-item{{raw:id}}"
-  data-act="{{raw:safe}}"
-  {{raw:itemAttribute}}="{{raw:safe2}}"{{raw:id2}}>{{raw:safe3}}</button>
+  class="section-nav-item{{attr:id}}"
+  data-act="{{attr:act}}"
+  {{attrs:itemAttributes}}{{attrs:ariaCurrentAttributes}}>{{content:label}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:optionsOption -->
-<option value="{{raw:safe}}"{{raw:selected}}>{{raw:safe2}}</option>
+<option value="{{attr:value}}"{{attrs:selectedAttributes}}>{{content:label}}</option>
 <!-- /wcm-template -->
 
 <!-- wcm-template:sectionWorkspace -->
 <div class="section-workspace">
   <div class="section-workspace-navigation">
-    <nav class="section-nav-desktop{{raw:desktopClass}}" aria-label="{{raw:safe}}">{{raw:desktop}}</nav>
-    <label class="section-nav-mobile"><span>{{raw:safe2}}</span>
-      <select data-section-switch="{{raw:safe3}}" aria-label="{{raw:safe4}}">{{raw:options}}</select>
+    <nav class="section-nav-desktop{{attr:desktopClass}}" aria-label="{{attr:ariaLabel}}">{{content:desktop}}</nav>
+    <label class="section-nav-mobile"><span>{{content:label}}</span>
+      <select data-section-switch="{{attr:sectionSwitch}}" aria-label="{{attr:navigationLabel}}">{{content:options}}</select>
     </label>
   </div>
-  <div class="section-workspace-content">{{raw:content}}</div>
+  <div class="section-workspace-content">{{content:content}}</div>
 </div>
 <!-- /wcm-template -->

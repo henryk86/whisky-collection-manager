@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
@@ -61,12 +62,12 @@ test(
   () => {
     for (const page of ['tasting', 'external-tasting']) {
       const html = render(page).markup;
-      const section = html.split('class="analytics-panel tasting-rating-panel"')[1];
-      assert.match(section, /Gesamtbewertung/);
-      assert.match(section, /class="tasting-rating-comment"/);
-      assert.match(section, /Kommentar zur Bewertung/);
-      assert.match(section, /Sehr rund\nMit &lt;Charakter&gt; &amp; Struktur/);
-      assert.doesNotMatch(section, /data-tasting-rating-comment/, 'saved tasting begins read-only');
+      const section = renderedText(html).split('class="analytics-panel tasting-rating-panel"')[1];
+      assert.match(renderedText(section), /Gesamtbewertung/);
+      assert.match(renderedText(section), /class="tasting-rating-comment"/);
+      assert.match(renderedText(section), /Kommentar zur Bewertung/);
+      assert.match(renderedText(section), /Sehr rund\nMit &lt;Charakter&gt; &amp; Struktur/);
+      assert.doesNotMatch(renderedText(section), /data-tasting-rating-comment/, 'saved tasting begins read-only');
     }
   }
 );
@@ -76,17 +77,17 @@ test(
   () => {
     const draft = render('tasting', false).markup;
     assert.match(
-      draft,
+      renderedText(draft),
       new RegExp('tasting-rating-panel[\\s\\S]*?data-tasting' + '-rating-comment maxlength="10000" rows="3"')
     );
     assert.match(
-      draft,
+      renderedText(draft),
       new RegExp('<textarea data-tasting-rating-comment maxl' + 'ength="10000" rows="3"><\\/textarea>')
     );
-    assert.match(draft, /data-tasting-note="nose"/);
-    assert.equal((draft.match(/data-tasting-note="/g) || []).length, 3);
+    assert.match(renderedText(draft), /data-tasting-note="nose"/);
+    assert.equal((renderedText(draft).match(/data-tasting-note="/g) || []).length, 3);
     const externalDraft = render('external-tasting', false).markup;
-    assert.match(externalDraft, /data-tasting-rating-comment/);
+    assert.match(renderedText(externalDraft), /data-tasting-rating-comment/);
     const absent = {...record, ratingComment: ''};
     let html = '';
     const state = {
@@ -116,6 +117,6 @@ test(
        */
       refresh() {},
     }).editor();
-    assert.doesNotMatch(html, /class="tasting-rating-comment"/);
+    assert.doesNotMatch(renderedText(html), /class="tasting-rating-comment"/);
   }
 );

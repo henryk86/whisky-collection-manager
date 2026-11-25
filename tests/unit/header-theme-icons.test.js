@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {themeMoonIcon, themeSunIcon} from '../../public/js/ui/action-icons.js';
@@ -8,14 +9,14 @@ test(
   'theme toggle uses shared, device-independent SVGs rather than platform-specific characters',
   () => {
     for (const icon of [themeMoonIcon, themeSunIcon]) {
-      assert.match(icon, /^<svg class="theme-icon" /);
-      assert.match(icon, /viewBox="0 0 24 24"/);
-      assert.match(icon, /stroke="currentColor"/);
-      assert.match(icon, /aria-hidden="true"/);
-      assert.equal((icon.match(/<svg/g) || []).length, 1);
-      assert.equal((icon.match(/<\/svg>/g) || []).length, 1);
+      assert.match(renderedText(icon), /^<svg class="theme-icon" /);
+      assert.match(renderedText(icon), /viewBox="0 0 24 24"/);
+      assert.match(renderedText(icon), /stroke="currentColor"/);
+      assert.match(renderedText(icon), /aria-hidden="true"/);
+      assert.equal((renderedText(icon).match(/<svg/g) || []).length, 1);
+      assert.equal((renderedText(icon).match(/<\/svg>/g) || []).length, 1);
     }
-    assert.notEqual(themeMoonIcon, themeSunIcon);
+    assert.notEqual(renderedText(themeMoonIcon), renderedText(themeSunIcon));
     const root = {innerHTML: ''};
     createShell({
       root,
@@ -29,8 +30,8 @@ test(
        */
       renderModal() {},
     })('');
-    assert.ok(root.innerHTML.includes(`data-act="toggle-theme"`));
-    assert.ok(root.innerHTML.includes(themeMoonIcon));
+    assert.ok(renderedText(root.innerHTML).includes(`data-act="toggle-theme"`));
+    assert.ok(renderedText(root.innerHTML).includes(renderedText(themeMoonIcon)));
   }
 );
 
@@ -98,17 +99,17 @@ test(
           button,
       };
       const theme = createThemeController();
-      assert.equal(button.innerHTML, themeMoonIcon);
-      assert.equal(button.title, 'Dark Mode aktivieren');
-      assert.equal(attributes['aria-pressed'], 'false');
+      assert.equal(renderedText(button.innerHTML), renderedText(themeMoonIcon));
+      assert.equal(renderedText(button.title), 'Dark Mode aktivieren');
+      assert.equal(renderedText(attributes['aria-pressed']), 'false');
       theme.toggleTheme();
-      assert.equal(button.innerHTML, themeSunIcon);
-      assert.equal(button.title, 'Light Mode aktivieren');
-      assert.equal(attributes['aria-pressed'], 'true');
-      assert.equal(saved.get('whisky-theme'), 'dark');
+      assert.equal(renderedText(button.innerHTML), renderedText(themeSunIcon));
+      assert.equal(renderedText(button.title), 'Light Mode aktivieren');
+      assert.equal(renderedText(attributes['aria-pressed']), 'true');
+      assert.equal(renderedText(saved.get('whisky-theme')), 'dark');
       theme.toggleTheme();
-      assert.equal(button.innerHTML, themeMoonIcon);
-      assert.equal(root.dataset.theme, 'light');
+      assert.equal(renderedText(button.innerHTML), renderedText(themeMoonIcon));
+      assert.equal(renderedText(root.dataset.theme), 'light');
     } finally {
       for (const [key, value] of Object.entries(original)) {
         if (value === undefined) delete globalThis[key]; else globalThis[key] = value;

@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
@@ -33,13 +34,13 @@ test(
        */
       refresh() {},
     }).editor();
-    const start = html.indexOf('class="tasting-record-fields analytics-panel tasting-edit-meta-panel"');
-    const end = html.indexOf('class="tasting-top-row"', start);
+    const start = renderedText(html).indexOf('class="tasting-record-fields analytics-panel tasting-edit-meta-panel"');
+    const end = renderedText(html).indexOf('class="tasting-top-row"', start);
     assert.ok(start > -1 && end > start);
-    const panel = html.slice(start, end);
-    assert.ok(panel.indexOf('data-tasting-date') < panel.indexOf('data-tasting-title'));
-    assert.ok(panel.indexOf('data-tasting-title') < panel.indexOf('class="actions tasting-editor-actions"'));
-    assert.match(panel, /data-act="flavor-detail-undo"/);
-    assert.match(panel, /data-act="flavor-detail-redo"/);
+    const panel = renderedText(html).slice(start, end);
+    assert.ok(renderedText(panel).indexOf('data-tasting-date') < renderedText(panel).indexOf('data-tasting-title'));
+    assert.ok(renderedText(panel).indexOf('data-tasting-title') < renderedText(panel).indexOf('class="actions tasting-editor-actions"'));
+    assert.match(renderedText(panel), /data-act="flavor-detail-undo"/);
+    assert.match(renderedText(panel), /data-act="flavor-detail-redo"/);
   }
 );

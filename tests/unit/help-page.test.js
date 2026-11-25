@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -11,7 +12,7 @@ test(
   'help route and drawer destination work on direct navigation and reload',
   () => {
     assert.deepEqual(parseRoute('?view=help'), {page: 'help', selected: null});
-    assert.equal(routeUrl('help'), '/?view=help');
+    assert.equal(renderedText(routeUrl('help')), '/?view=help');
     assert.ok(MAIN_PAGES.some(item => item.id === 'help' && item.action === 'goto-help' && item.url === '/?view=help'));
   }
 );
@@ -21,28 +22,28 @@ test(
   () => {
     const de = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
     const en = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
-    assert.equal(de['navigation.help'], 'Hilfe');
-    assert.equal(en['navigation.help'], 'Help');
+    assert.equal(renderedText(de['navigation.help']), 'Hilfe');
+    assert.equal(renderedText(en['navigation.help']), 'Help');
     // Keep the headline short, with concrete guidance in the help body instead.
-    assert.equal(de['help.intro'], 'Anleitungen und Antworten zum Whisky Collection Manager.');
-    assert.equal(en['help.intro'], 'Guides and answers for Whisky Collection Manager.');
+    assert.equal(renderedText(de['help.intro']), 'Anleitungen und Antworten zum Whisky Collection Manager.');
+    assert.equal(renderedText(en['help.intro']), 'Guides and answers for Whisky Collection Manager.');
     assert.equal(
-      de['help.description'],
+      renderedText(de['help.description']),
       'Hier findest du Anleitungen zu Abfüllungen, Verkostungsnotizen, Tasting-Flights, Lager, Landkarte, Fotos, Analysen, Backups und Datenspeicherung.'
     );
     assert.equal(
-      en['help.description'],
+      renderedText(en['help.description']),
       'Find guides for bottlings, tasting notes, tasting flights, storage, maps, photos, analytics, backups and data storage.'
     );
     // Long help text belongs inside the first topic panel, not under the page
     // heading.
-    assert.match(helpView(), /class="analytics-page help-page"/);
-    assert.match(helpView(), /class="section-workspace"/);
-    assert.match(helpView(), /class="section-nav-desktop"/);
-    assert.match(helpView(), /data-section-switch="help"/);
-    assert.match(helpView(), /class="help-description muted"/);
+    assert.match(renderedText(helpView()), /class="analytics-page help-page"/);
+    assert.match(renderedText(helpView()), /class="section-workspace"/);
+    assert.match(renderedText(helpView()), /class="section-nav-desktop"/);
+    assert.match(renderedText(helpView()), /data-section-switch="help"/);
+    assert.match(renderedText(helpView()), /class="help-description muted"/);
     assert.ok(de['help.intro'].length < 75 && en['help.intro'].length < 75);
-    assert.match(helpView(), /class="help-description muted"/);
+    assert.match(renderedText(helpView()), /class="help-description muted"/);
     for (const topic of HELP_TOPICS) {
       for (const catalog of [de, en]) {
         assert.ok(catalog[`help.${topic.id}.title`]);
@@ -51,25 +52,25 @@ test(
     }
     const html = helpView();
     for (const topic of HELP_TOPICS) {
-      assert.match(html, new RegExp(`data-help-topic="${topic.id}"`));
-      assert.match(html, new RegExp(`id="help-panel-${topic.id}"`));
-      assert.match(html, new RegExp(`data-help-topic="${topic.id}"`));
+      assert.match(renderedText(html), new RegExp(`data-help-topic="${topic.id}"`));
+      assert.match(renderedText(html), new RegExp(`id="help-panel-${topic.id}"`));
+      assert.match(renderedText(html), new RegExp(`data-help-topic="${topic.id}"`));
     }
-    assert.equal((html.match(/class="help-section"/g) || []).length, HELP_TOPICS.length);
-    assert.equal((html.match(/class="help-section"[^>]+hidden/g) || []).length, HELP_TOPICS.length - 1);
-    assert.doesNotMatch(html, /class="panel help-section"/, 'help articles must not render as cards');
+    assert.equal((renderedText(html).match(/class="help-section"/g) || []).length, HELP_TOPICS.length);
+    assert.equal((renderedText(html).match(/class="help-section"[^>]+hidden/g) || []).length, HELP_TOPICS.length - 1);
+    assert.doesNotMatch(renderedText(html), /class="panel help-section"/, 'help articles must not render as cards');
     // Approved layout: the right-hand article alone gets a flat content panel,
     // while its section heading and the left navigation remain outside.
-    assert.equal((html.match(/class="help-content-panel"/g) || []).length, HELP_TOPICS.length);
+    assert.equal((renderedText(html).match(/class="help-content-panel"/g) || []).length, HELP_TOPICS.length);
     assert.match(
-      html,
+      renderedText(html),
       new RegExp(
         'class="analytics-section-title" id="help-t' + 'itle-basics">[^<]+<\\/h2>\\s*<div class="h' + 'elp-content-panel">'
       )
     );
-    assert.match(html, /data-help-topic="basics" aria-current="page"/);
-    assert.match(html, /id="help-panel-basics"/);
-    assert.match(html, /data-act="goto-home"/);
+    assert.match(renderedText(html), /data-help-topic="basics" aria-current="page"/);
+    assert.match(renderedText(html), /id="help-panel-basics"/);
+    assert.match(renderedText(html), /data-act="goto-home"/);
   }
 );
 
@@ -79,23 +80,23 @@ test(
     const de = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
     const en = JSON.parse(fs.readFileSync('public/locales/en.json', 'utf8'));
     const ids = HELP_TOPICS.map(topic => topic.id);
-    assert.equal(ids.indexOf('tastings'), ids.indexOf('bottlings') + 1);
-    assert.equal(ids.indexOf('flights'), ids.indexOf('tastings') + 1);
+    assert.equal(renderedText(ids).indexOf('tastings'), renderedText(ids).indexOf('bottlings') + 1);
+    assert.equal(renderedText(ids).indexOf('flights'), renderedText(ids).indexOf('tastings') + 1);
     for (const catalog of [de, en]) {
       const tasting = Array.from({length: 8}, (_, i) => catalog[`help.tastings.${i + 1}`]).join(' ');
       const flight = Array.from({length: 5}, (_, i) => catalog[`help.flights.${i + 1}`]).join(' ');
-      assert.match(tasting, /100/);
-      assert.match(tasting, /20/);
-      assert.match(flight, /[Dd]rag|Ziehgriff/);
-      assert.match(flight, /[Oo]ne flight|einem Flight/);
-      assert.match(flight, /[Dd]elet|Löschen/);
-      assert.doesNotMatch(catalog['help.bottlings.6'], /directly in the second|direkt im zweiten/);
+      assert.match(renderedText(tasting), /100/);
+      assert.match(renderedText(tasting), /20/);
+      assert.match(renderedText(flight), /[Dd]rag|Ziehgriff/);
+      assert.match(renderedText(flight), /[Oo]ne flight|einem Flight/);
+      assert.match(renderedText(flight), /[Dd]elet|Löschen/);
+      assert.doesNotMatch(renderedText(catalog['help.bottlings.6']), /directly in the second|direkt im zweiten/);
     }
     const html = helpView('tastings');
-    assert.match(html, /id="help-panel-tastings"/);
-    assert.match(html, /data-help-topic="tastings" aria-current="page"/);
-    assert.match(helpView('flights'), /data-help-topic="flights" aria-current="page"/);
-    assert.match(html, /Glencairn/);
+    assert.match(renderedText(html), /id="help-panel-tastings"/);
+    assert.match(renderedText(html), /data-help-topic="tastings" aria-current="page"/);
+    assert.match(renderedText(helpView('flights')), /data-help-topic="flights" aria-current="page"/);
+    assert.match(renderedText(html), /Glencairn/);
   }
 );
 
@@ -157,17 +158,17 @@ test(
         return query === '[data-section-switch="help"]' ? selector : null;
       },
     };
-    assert.equal(activateHelpTopic('storage', container), true);
+    assert.equal(renderedText(activateHelpTopic('storage', container)), true);
     assert.deepEqual(
       buttons.filter(button => button.classList.active).map(button => button.dataset.helpTopic),
       ['storage']
     );
-    assert.equal(buttons.find(button => button.dataset.helpTopic === 'storage').attrs['aria-current'], 'page');
-    assert.equal(buttons.find(button => button.dataset.helpTopic === 'basics').attrs['aria-current'], undefined);
-    assert.equal(selector.value, 'storage');
+    assert.equal(renderedText(buttons.find(button => button.dataset.helpTopic === 'storage').attrs['aria-current']), 'page');
+    assert.equal(renderedText(buttons.find(button => button.dataset.helpTopic === 'basics').attrs['aria-current']), undefined);
+    assert.equal(renderedText(selector.value), 'storage');
     assert.deepEqual(panels.filter(panel => !panel.hidden).map(panel => panel.id), ['help-panel-storage']);
-    assert.equal(activateHelpTopic('not-a-topic', container), false);
-    assert.equal(selector.value, 'storage');
+    assert.equal(renderedText(activateHelpTopic('not-a-topic', container)), false);
+    assert.equal(renderedText(selector.value), 'storage');
   }
 );
 
@@ -175,8 +176,8 @@ test(
   'technical storage paths belong in help documentation rather than a routine screen',
   () => {
     const help = helpView();
-    assert.match(help, /data\/collection\.json/);
-    assert.match(help, /data\/warehouse\.json/);
+    assert.match(renderedText(help), /data\/collection\.json/);
+    assert.match(renderedText(help), /data\/warehouse\.json/);
   }
 );
 
@@ -185,8 +186,8 @@ test(
   () => {
     const omitted = mapLegendHtml(false);
     const included = mapLegendHtml(true);
-    assert.doesNotMatch(omitted, /map-legend-empty/);
-    assert.match(included, /map-legend-empty/);
-    assert.match(included, /map-pagoda-legend/);
+    assert.doesNotMatch(renderedText(omitted), /map-legend-empty/);
+    assert.match(renderedText(included), /map-legend-empty/);
+    assert.match(renderedText(included), /map-pagoda-legend/);
   }
 );

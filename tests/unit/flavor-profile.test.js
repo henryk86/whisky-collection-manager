@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {normalizeBottling} from '../../server/domain/normalization.js';
@@ -17,7 +18,7 @@ test('flavor profile is owned by a dated tasting, not by the bottling', () => {
   });
   assert.deepEqual(value.flavorProfile, profile);
   assert.deepEqual(normalizeTastingRecord({rating: 88}, value).flavorProfile, profile);
-  assert.equal(normalizeTastingRecord({flavorProfile: null}, value).flavorProfile, null);
+  assert.equal(renderedText(normalizeTastingRecord({flavorProfile: null}, value).flavorProfile), null);
   assert.throws(() => normalizeBottling({
     name: 'Sample', flavorProfile: profile,
   }));
@@ -52,19 +53,19 @@ test(
   'flavor chart has ten axes and sliders and does not misrepresent missing profile as zero',
   () => {
     const editor = flavorChart(profile, {editable: true});
-    assert.equal((editor.match(/data-flavor-range=/g) || []).length, 10);
-    assert.equal((editor.match(/data-flavor-point=/g) || []).length, 10);
-    assert.match(editor, /data-flavor-set="1"/);
-    assert.match(flavorChart(null, {editable: true}), /data-flavor-set=""/);
+    assert.equal((renderedText(editor).match(/data-flavor-range=/g) || []).length, 10);
+    assert.equal((renderedText(editor).match(/data-flavor-point=/g) || []).length, 10);
+    assert.match(renderedText(editor), /data-flavor-set="1"/);
+    assert.match(renderedText(flavorChart(null, {editable: true})), /data-flavor-set=""/);
     assert.equal((flavorPolygon(profile).match(/ /g) || []).length, 9);
-    assert.match(flavorChart(null), /Noch kein Geschmacksprofil/);
+    assert.match(renderedText(flavorChart(null)), /Noch kein Geschmacksprofil/);
   }
 );
 test(
   'German and English axis names are localized, with German Alkoholisch for English Feinty',
   () => {
-    assert.equal(german['flavor.axis.feinty'], 'Alkoholisch');
-    assert.equal(english['flavor.axis.feinty'], 'Feinty');
+    assert.equal(renderedText(german['flavor.axis.feinty']), 'Alkoholisch');
+    assert.equal(renderedText(english['flavor.axis.feinty']), 'Feinty');
     for (const axis of FLAVOR_AXES) {
       assert.ok(german[`flavor.axis.${axis}`]);
       assert.ok(english[`flavor.axis.${axis}`]);
@@ -79,10 +80,10 @@ test('optional color column is emitted before the ten-axis radar chart', () => {
       colorSection: '<div class="tasting-color-column" data-test="palette"></div>',
     }
   );
-  assert.match(html, /class="flavor-editor is-editable has-color"/);
-  assert.ok(html.indexOf('data-test="palette"') < html.indexOf('<svg class="flavor-chart"'));
-  assert.ok(html.indexOf('<svg class="flavor-chart"') < html.indexOf('<div class="flavor-sliders"'));
-  assert.equal((html.match(/data-flavor-range=/g) || []).length, 10);
+  assert.match(renderedText(html), /class="flavor-editor is-editable has-color"/);
+  assert.ok(renderedText(html).indexOf('data-test="palette"') < renderedText(html).indexOf('<svg class="flavor-chart"'));
+  assert.ok(renderedText(html).indexOf('<svg class="flavor-chart"') < renderedText(html).indexOf('<div class="flavor-sliders"'));
+  assert.equal((renderedText(html).match(/data-flavor-range=/g) || []).length, 10);
 });
 
 
@@ -91,15 +92,15 @@ test(
   () => {
     const older = Object.fromEntries(LEGACY_FLAVOR_AXES.map((key, i) => [key, i]));
     const normalized = normalizeFlavorProfile(older);
-    for (const axis of LEGACY_FLAVOR_AXES) assert.equal(normalized[axis], older[axis]);
-    for (const axis of NEW_FLAVOR_AXES) assert.equal(normalized[axis], null);
+    for (const axis of LEGACY_FLAVOR_AXES) assert.equal(renderedText(normalized[axis]), renderedText(older[axis]));
+    for (const axis of NEW_FLAVOR_AXES) assert.equal(renderedText(normalized[axis]), null);
     assert.deepEqual(normalizeFlavorProfile(normalized), normalized, 'normalized old record can be saved again');
     const readOnly = flavorChart(normalized);
-    for (const name of ['Rauchig', 'Medizinisch']) assert.match(readOnly, new RegExp(name));
-    assert.equal((readOnly.match(/<strong>–<\/strong>/g) || []).length, 2);
-    assert.equal((readOnly.match(/visibility="hidden"/g) || []).length, 2);
+    for (const name of ['Rauchig', 'Medizinisch']) assert.match(renderedText(readOnly), new RegExp(name));
+    assert.equal((renderedText(readOnly).match(/<strong>–<\/strong>/g) || []).length, 2);
+    assert.equal((renderedText(readOnly).match(/visibility="hidden"/g) || []).length, 2);
     const editor = flavorChart(normalized, {editable: true});
-    assert.equal((editor.match(/data-flavor-unset="1"/g) || []).length, 2);
+    assert.equal((renderedText(editor).match(/data-flavor-unset="1"/g) || []).length, 2);
     assert.equal(flavorPolygon(normalized).trim().split(/\s+/).length, 8, 'unassessed axes are not plotted as zero');
   }
 );
@@ -128,7 +129,7 @@ test(
     assert.deepEqual(normalizeFlavorProfile({...eleven, fiery: null}), profile);
     assert.throws(() => normalizeFlavorProfile({...eleven, fiery: '7'}));
     assert.equal(FLAVOR_AXES.length, 10);
-    assert.equal(flavorChart(normalizeFlavorProfile(eleven)).includes('Brennend'), false);
+    assert.equal(renderedText(flavorChart(normalizeFlavorProfile(eleven))).includes('Brennend'), false);
   }
 );
 
@@ -136,18 +137,18 @@ test(
   'compact tasting radar uses the original ten-axis graphic without duplicating sliders',
   () => {
     const preview = flavorChart(profile, {compact: true});
-    assert.match(preview, /class="flavor-editor is-preview"/);
-    assert.match(preview, /<svg class="flavor-chart"/);
-    assert.equal((preview.match(/class="flavor-axis-text"/g) || []).length, 10);
-    assert.doesNotMatch(preview, /flavor-sliders|flavor-scale|data-flavor-range/);
-    assert.equal((flavorChart(profile).match(/flavor-sliders/g) || []).length, 1);
+    assert.match(renderedText(preview), /class="flavor-editor is-preview"/);
+    assert.match(renderedText(preview), /<svg class="flavor-chart"/);
+    assert.equal((renderedText(preview).match(/class="flavor-axis-text"/g) || []).length, 10);
+    assert.doesNotMatch(renderedText(preview), /flavor-sliders|flavor-scale|data-flavor-range/);
+    assert.equal((renderedText(flavorChart(profile)).match(/flavor-sliders/g) || []).length, 1);
     /**
      * Formats y for presentation.
      *
      * @param {*} html HTML markup to render or inspect.
      * @return {number} Calculated numeric value.
      */
-    const labelY = html => Number(html.match(/<text class="flavor-axis-text"[^>]*y="([^"]+)"[^>]*>Holzig<\/text>/)?.[1]);
+    const labelY = html => Number(renderedText(html).match(/<text class="flavor-axis-text"[^>]*y="([^"]+)"[^>]*>Holzig<\/text>/)?.[1]);
     // Only the detail preview tightens axis labels; the full tasting radar is
     // unchanged.
     assert.ok(labelY(preview) > labelY(flavorChart(profile)));

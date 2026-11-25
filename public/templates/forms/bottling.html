@@ -1,7 +1,11 @@
 <!-- wcm-template:distilleryOption -->
 <label class="distillery-option">
-  <input type="checkbox" name="distilleryIds" value="{{text:id}}" {{raw:checked}}>
-  <span>{{text:name}}{{raw:status}}</span>
+  <input
+    type="checkbox"
+    name="distilleryIds"
+    value="{{text:id}}"
+    {{attrs:checkedAttributes}}>
+  <span>{{text:name}}{{content:status}}</span>
 </label>
 <!-- /wcm-template -->
 
@@ -13,20 +17,28 @@
     class="distillery-filter"
     placeholder="{{t:forms.bottling.searchDistilleries}}"
     aria-label="{{t:forms.bottling.filterDistilleries}}">
-  <div class="distillery-options">{{raw:options}}</div>
+  <div class="distillery-options">{{content:options}}</div>
 </div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:divider -->
 <hr class="divider">
 <h3>{{t:forms.bottle.firstBottle}}</h3>
-<div class="forms">{{raw:firstInventoryNumberField}}<div class="form-field">
+<div class="forms">{{content:firstInventoryNumberField}}<div class="form-field">
     <span>{{t:forms.bottle.autoInventoryNumber}}</span>
-    {{raw:suggestFirstButton}}
-    </div>{{raw:firstVolumeTypeField}}{{raw:firstVolumeMlField}}{{raw:firstStatusField}}<label class="form-field full">{{t:forms.bottle.initialPhotos}}<input name="firstPhotos" type="file" accept="{{raw:photoAccept}}" multiple>
+    {{content:suggestFirstButton}}
+  </div>{{content:firstVolumeTypeField}}{{content:firstVolumeMlField}}{{content:firstStatusField}}<label class="form-field full">{{t:forms.bottle.initialPhotos}}<input
+      name="firstPhotos"
+      type="file"
+      accept="{{attr:photoAccept}}"
+      multiple>
   </label>
   <label class="form-field full">{{t:forms.bottle.initialAttachments}}
-    <input name="firstFiles" type="file" accept="{{raw:fileAccept}}" multiple>
+    <input
+      name="firstFiles"
+      type="file"
+      accept="{{attr:fileAccept}}"
+      multiple>
     <small class="hint">{{t:forms.bottle.attachmentTypesAndLimit}}</small>
   </label>
 </div>
@@ -35,10 +47,10 @@
 
 <!-- wcm-template:bottlingForm -->
 <form id="bottling-form" data-id="{{text:id}}">
-  <div class="forms">{{raw:nameField}}{{raw:whiskyTypeField}}{{raw:brandField}}{{raw:distilleryPicker}}{{raw:compositionCompleteField}}<div class="form-field">{{t:forms.bottling.newDistillery}}
-    {{raw:addDistilleryButton}}
-    </div>{{raw:bottlerField}}{{raw:ageYearsField}}{{raw:abvField}}{{raw:volumeMlField}}{{raw:releaseYearField}}{{raw:distillationDateField}}{{raw:distillationYearField}}{{raw:bottlingDateField}}{{raw:bottlingYearField}}{{raw:caskTypeField}}{{raw:caskNumberField}}{{raw:limitedEditionCountField}}{{raw:whiskybaseUrlField}}{{raw:whiskybaseIdField}}{{raw:completionStatusField}}{{raw:descriptionField}}</div>{{raw:id2}}<div class="actions ds-modal-footer ds-modal-footer--form">
-    {{raw:closeModalButton}}
+  <div class="forms">{{content:nameField}}{{content:whiskyTypeField}}{{content:brandField}}{{content:distilleryPicker}}{{content:compositionCompleteField}}<div class="form-field">{{t:forms.bottling.newDistillery}}
+    {{content:addDistilleryButton}}
+    </div>{{content:bottlerField}}{{content:ageYearsField}}{{content:abvField}}{{content:volumeMlField}}{{content:releaseYearField}}{{content:distillationDateField}}{{content:distillationYearField}}{{content:bottlingDateField}}{{content:bottlingYearField}}{{content:caskTypeField}}{{content:caskNumberField}}{{content:limitedEditionCountField}}{{content:whiskybaseUrlField}}{{content:whiskybaseIdField}}{{content:completionStatusField}}{{content:descriptionField}}</div>{{content:id2}}<div class="actions ds-modal-footer ds-modal-footer--form">
+    {{content:closeModalButton}}
     <button class="btn primary" type="submit">{{t:common.actions.save}}</button>
   </div>
 </form>

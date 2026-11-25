@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -62,7 +63,7 @@ test(
       modal.showModal('First', '<p>First</p>');
       modal.showModal('Second', '<p>Second</p>', false, 'replace');
       modal.closeModal();
-      assert.equal(host.firstElementChild, parent);
+      assert.equal(renderedText(host.firstElementChild), renderedText(parent));
       const prompt = modal.choose(
         'Unsaved',
         'Choose',
@@ -72,10 +73,10 @@ test(
           {id: 'save', label: 'Save'},
         ]
       );
-      assert.equal(modal.acceptChoice('discard'), true);
-      assert.equal(await prompt, 'discard');
+      assert.equal(renderedText(modal.acceptChoice('discard')), true);
+      assert.equal(renderedText(await prompt), 'discard');
       modal.closeModal();
-      assert.equal(state.modal, null);
+      assert.equal(renderedText(state.modal), null);
     } finally {globalThis.document = prior;}
   }
 );
@@ -83,11 +84,11 @@ test(
   'help retains existing short guidance and includes technical accordion guides in the same content panel',
   () => {
     const html = helpView('backups');
-    assert.match(html, /help-content-panel/);
-    assert.match(html, /help-technical-guides/);
-    assert.match(html, /class="help-guide"/);
-    assert.match(html, /backup-admin-token/);
-    assert.match(html, /rclone config/);
-    assert.match(html, /OneDrive/);
+    assert.match(renderedText(html), /help-content-panel/);
+    assert.match(renderedText(html), /help-technical-guides/);
+    assert.match(renderedText(html), /class="help-guide"/);
+    assert.match(renderedText(html), /backup-admin-token/);
+    assert.match(renderedText(html), /rclone config/);
+    assert.match(renderedText(html), /OneDrive/);
   }
 );

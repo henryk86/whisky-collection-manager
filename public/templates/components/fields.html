@@ -1,31 +1,31 @@
 <!-- wcm-template:dsFieldDescription -->
-<span class="ds-field-description" id="ds-{{raw:name}}-hint">{{raw:description}}</span>
+<span class="ds-field-description" id="ds-{{attr:name}}-hint">{{content:description}}</span>
 <!-- /wcm-template -->
 
 <!-- wcm-template:dsFieldError -->
-<span class="ds-field-error" id="ds-{{raw:name}}-error" role="alert">{{raw:error}}</span>
+<span class="ds-field-error" id="ds-{{attr:name}}-error" role="alert">{{content:error}}</span>
 <!-- /wcm-template -->
 
 <!-- wcm-template:formField -->
-<label class="form-field ds-form-field{{raw:full}}">{{raw:label}}{{raw:control}}{{raw:help}}</label>
+<label class="form-field ds-form-field{{attr:full}}">{{content:label}}{{content:control}}{{content:help}}</label>
 <!-- /wcm-template -->
 
 <!-- wcm-template:textInputInput -->
-<input {{raw:props}} type="{{raw:type}}"{{raw:step}} value="{{raw:value}}"{{raw:placeholder}}>
+<input {{attrs:props}} type="{{attr:type}}"{{attrs:stepAttributes}} value="{{attr:value}}"{{attrs:placeholderAttributes}}>
 <!-- /wcm-template -->
 
 <!-- wcm-template:selectInputOption -->
-<option value="{{raw:v}}"{{raw:selected}}>{{raw:t}}</option>
+<option value="{{attr:v}}"{{attrs:selectedAttributes}}>{{content:t}}</option>
 <!-- /wcm-template -->
 
 <!-- wcm-template:select -->
-<select {{raw:props}}>{{raw:options}}</select>
+<select {{attrs:props}}>{{content:options}}</select>
 <!-- /wcm-template -->
 
 <!-- wcm-template:textarea -->
-<textarea {{raw:props}}>{{raw:value}}</textarea>
+<textarea {{attrs:props}}>{{content:value}}</textarea>
 <!-- /wcm-template -->
 
 <!-- wcm-template:formField2 -->
-<label class="form-field ds-checkbox-field{{raw:full}}"><input type="checkbox" {{raw:props}}{{raw:checked}}><span>{{raw:label}}</span>{{raw:help}}</label>
+<label class="form-field ds-checkbox-field{{attr:full}}"><input type="checkbox" {{attrs:props}}{{attrs:checkedAttributes}}><span>{{content:label}}</span>{{content:help}}</label>
 <!-- /wcm-template -->

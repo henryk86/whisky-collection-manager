@@ -27,7 +27,7 @@ export function glencairnSymbol({
   const amount = Math.max(0, Math.min(100, Number(fill) || 0));
   const y = 394 - 334 * amount / 100;
   return renderTemplate('glencairnSymbol', {
-    accessible: accessible ? 'role="img"' : 'aria-hidden="true" focusable="false"',
+    roleAttributes: accessible ? {"role": "img"} : {"aria-hidden": "true", "focusable": "false"},
     children: composeMarkup(
       renderTemplate('defs', {id, y, content: 394 - y}),
       liquidColor ? renderTemplate('glencairnLiquid', {

@@ -4,16 +4,24 @@
     type="button"
     class="btn small"
     data-act="photo-prev"
-    aria-label="{{t:ui.photos.previous}}">{{raw:arrowLeftIcon}}</button>
-  <span class="photo-lightbox-count" aria-live="polite">{{raw:active}} / {{raw:length}}</span>
-  <button type="button" class="btn small" data-act="photo-next" aria-label="{{t:ui.photos.next}}">{{raw:arrowRightIcon}}</button>
+    aria-label="{{t:ui.photos.previous}}">{{content:arrowLeftIcon}}</button>
+  <span class="photo-lightbox-count" aria-live="polite">{{content:active}} / {{content:length}}</span>
+  <button
+    type="button"
+    class="btn small"
+    data-act="photo-next"
+    aria-label="{{t:ui.photos.next}}">{{content:arrowRightIcon}}</button>
 </span>
 <!-- /wcm-template -->
 
 <!-- wcm-template:photoLightbox -->
 <figure class="photo-lightbox">
   <div class="photo-lightbox-stage">
-    <img class="photo-lightbox-image" src="{{text:src}}" alt="{{text:alt}}" draggable="false">
+    <img
+      class="photo-lightbox-image"
+      src="{{text:src}}"
+      alt="{{text:alt}}"
+      draggable="false">
   </div>
   <figcaption class="photo-lightbox-footer">
     <span class="photo-lightbox-caption">{{text:alt2}}</span>
@@ -23,7 +31,7 @@
         class="btn small"
         data-act="photo-zoom-out"
         aria-label="{{t:ui.photos.zoomOut}}"
-        disabled>{{raw:minusIcon}}</button>
+        disabled>{{content:minusIcon}}</button>
       <button
         type="button"
         class="btn small photo-lightbox-zoom-level"
@@ -34,9 +42,9 @@
         type="button"
         class="btn small"
         data-act="photo-zoom-in"
-        aria-label="{{t:ui.photos.zoomIn}}">{{raw:plusIcon}}</button>
+        aria-label="{{t:ui.photos.zoomIn}}">{{content:plusIcon}}</button>
     </span>
-    {{raw:photoPrev}}
-    </figcaption>
+    {{content:photoPrev}}
+  </figcaption>
 </figure>
 <!-- /wcm-template -->

@@ -1,4 +1,5 @@
-import {createCollectionViewModel} from './models/home.js';
+import {statusText, inventoryBadges, collectionTableCell, collectionCardRating, pagerHtml} from './collection-presentation.js';
+import {createCollectionViewModel, createCollectionEntryModels} from './models/home.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {replaceContent} from '../ui/dom-renderer.js';
 import {actionButton} from '../ui/buttons.js';
@@ -8,240 +9,25 @@ import {toast} from '../ui/notifications.js';
 import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
 import {normalizeFlavorCriteria}
   from '../../../shared/collection-saved-views.js';
-import {displayPhotoPath} from '../../../shared/photo-images.js';
-import {t, currentLanguage} from '../i18n/index.js';
+
+import {t} from '../i18n/index.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('collection/home.html');
-
-/**
- * Derives the status text result from the supplied values.
- *
- * @param {*} status Status value determining the next action.
- * @return {*} Result computed from the supplied inputs.
- */
-const statusText = status => t(({
-  closed: 'home.status.closed',
-  open: 'analytics.inventory.openedStatus',
-  empty: 'home.status.empty',
-})[status] || 'features.distilleries.unknownStatus');
-import {
-  newBottlingIcon, inventoryScanIcon, chevronDownIcon, chevronLeftIcon,
-  chevronRightIcon, chevronsLeftIcon, chevronsRightIcon, arrowUpIcon,
-  arrowDownIcon, arrowsUpDownIcon, closeIcon, collectionTableIcon,
-  collectionCardsIcon, flightPlanIcon
-} from '../ui/action-icons.js';
-import {escapeHtml, query} from '../ui/dom.js';
+import {newBottlingIcon, inventoryScanIcon, chevronDownIcon, chevronLeftIcon, chevronRightIcon, arrowUpIcon, arrowDownIcon, arrowsUpDownIcon, closeIcon, collectionTableIcon, collectionCardsIcon, flightPlanIcon} from '../ui/action-icons.js';
+import {escapeHtml} from '../ui/dom.js';
 import {emptyState, panel as contentPanel} from '../ui/content.js';
 import {imageUrl} from '../ui/format.js';
 import {bottleStatusLabels} from '../domain/labels.js';
-import {inventoryCountGroups} from '../domain/inventory-counts.js';
-import {bottlingOriginLabel} from '../domain/bottling-origin.js';
-import {hasBottlingDetail} from '../domain/bottling-details.js';
-import {paginate, visiblePages, PAGE_SIZE_OPTIONS, homePageUrl}
-  from '../domain/pagination.js';
+
+import {paginate, homePageUrl} from '../domain/pagination.js';
 import {savePageSizePreference} from '../domain/page-size-preference.js';
-import {
-  purchasePrice, latestUpdate
-} from '../domain/collection-overview.js';
+
 import {
   TABLE_COLUMNS, loadTableColumns, saveTableColumns, sortForColumn,
   normalizeTableColumns, DEFAULT_TABLE_COLUMNS
 }
   from '../domain/collection-table-columns.js';
-import {displayedTastingRating, latestTasting}
-  from '../../../shared/tasting-records.js';
-import {glencairnRatingSymbol} from '../ui/glencairn-icon.js';
-/**
- * The count labels represent mutually exclusive bottle types. Sample bottles
- * are not displayed again in the Standardflaschen count.
- *
- * @param {*} physicalBottles Physical bottles used by this operation.
- * @return {string} Resulting text.
- */
-function inventoryBadges(physicalBottles) {
-  return composeMarkup(inventoryCountGroups(physicalBottles).map(group => renderTemplate('badge', {
-    type: group.type === 'sample' ? ' sample' : '',
-    status: group.status === 'open' ? ' open' : '',
-    t: t(
-      ({
-        "standard.closed": "home.badges.standardClosed",
-        "standard.open": "home.badges.standardOpen",
-        "sample.closed": "home.badges.sampleClosed",
-        "sample.open": "home.badges.sampleOpen",
-      })[`${group.type}.${group.status}`],
-      {count: group.count}
-    ),
-  })));
-}
-
-/**
- * Only supplied details are shown on cards and in the overview table.
- *
- * @param {*} value Input value to process.
- * @param {string=} suffix Suffix used by this operation.
- * @return {string} Resulting text.
- */
-function overviewField(value, suffix = '') {
-  return hasBottlingDetail(value) ? `${escapeHtml(value)}${suffix}` : '';
-}
-
-/**
- * Filters records according to the overview facts selection rules.
- *
- * @param {*} bottling Bottling record being inspected or updated.
- * @return {!Array<*>} Resulting entries in their output order.
- */
-function overviewFacts(bottling) {
-  return [
-    hasBottlingDetail(bottling.ageYears) ? t('home.facts.years', {count: bottling.ageYears}) : '',
-    overviewField(bottling.abv, ' % Vol.'),
-  ].filter(Boolean);
-}
-
-/**
- * Render a single table cell. The same field definitions power both table
- * modes.
- *
- * @param {*} columnId Column id used by this operation.
- * @param {*} entry Entry to include in the calculation.
- * @param {*} allBottlingBottles All bottling bottles used by this operation.
- * @param {*} distilleryNames Distillery names used by this operation.
- * @return {string} Resulting text.
- */
-function collectionTableCell(columnId, entry, allBottlingBottles,
-  distilleryNames) {
-  const {bottling, bottle} = entry;
-  const displayedBottles = bottle ? [bottle] : allBottlingBottles;
-  let value = '';
-  switch (columnId) {
-    case 'name': value = renderTemplate('strong', {name: bottling.name, }); break;
-    case 'inventory': value = bottle?.inventoryNumber ? `#${escapeHtml(bottle.inventoryNumber)}` : t('imports.bottles.noInventoryNumber'); break;
-    case 'distillery': value = escapeHtml(bottlingOriginLabel(bottling, distilleryNames)); break;
-    case 'age': value = overviewField(bottling.ageYears); break;
-    case 'abv': value = overviewField(bottling.abv, ' %'); break;
-    case 'year': value = overviewField(bottling.releaseYear); break;
-    case 'stock': value = renderTemplate('inventoryBadges', {inventoryBadges: inventoryBadges(displayedBottles), }); break;
-    case 'editing': value = bottling.completionStatus === 'complete' ? t('detail.status.complete') : t('detail.status.incomplete'); break;
-    case 'rating': {
-      const score = displayedTastingRating(bottling);
-      value = score == null || !Number.isFinite(Number(score)) ? '–' :
-        escapeHtml(t(
-          'home.table.scoreValue',
-          {
-            score: new Intl.NumberFormat(currentLanguage() === 'de' ? 'de-DE' : 'en-US', {maximumFractionDigits: 2}).format(Number(score)),
-          }
-        ));
-      break;
-    }
-    case 'status': value = bottle ?
-      renderTemplate('badge2', {
-        status: bottle.status || '',
-        statusText: statusText(bottle.status),
-      }) : ''; break;
-    case 'type': value = bottle ? t(bottle.volumeType === 'sample' ? 'imports.bottles.sample' : 'imports.bottles.standard') : ''; break;
-    case 'size': value = bottle?.volumeMl != null ? `${escapeHtml(bottle.volumeMl)} ml` : ''; break;
-    case 'price': {
-      const price = purchasePrice(entry);
-      value = price ? new Intl.NumberFormat(
-        currentLanguage() === 'de' ? 'de-DE' : 'en-US',
-        {style: 'currency', currency: price.currency}
-      ).format(price.value) : '–';
-      break;
-    }
-    case 'updated':
-    case 'tasted': {
-      const date = columnId === 'updated' ? latestUpdate(entry) : latestTasting(bottling)?.tastedOn;
-      value = date && Number.isFinite(new Date(date).getTime()) ?
-        escapeHtml(new Date(date).toLocaleDateString(currentLanguage())) : '–';
-      break;
-    }
-  }
-  return renderTemplate('td', {value: value, });
-}
-
-/**
- * Compact, non-interactive rating shown inside the photo frame.
- *
- * @param {!Object} bottling Bottling record being processed.
- * @param {null=} photoId Identifier of the photo.
- * @return {string} Resulting text.
- */
-export function collectionCardRating(bottling, photoId = null) {
-  const score = displayedTastingRating(bottling);
-  if (score == null || !Number.isFinite(Number(score))) return '';
-  const safe = Math.min(100, Math.max(0, Number(score)));
-  const unique = String(photoId || bottling.id || 'bottling').replace(/[^a-zA-Z0-9_-]/g, '-');
-  const glasses = composeMarkup(Array.from({length: 5}, (_, i) => {
-    const fill = Math.max(0, Math.min(100, (safe - i * 20) * 5));
-    return glencairnRatingSymbol({fill, id: `overview-rating-${unique}-${i}`});
-  }));
-  return renderTemplate('collectionCardRating', {
-    ratingScore: t('home.filters.ratingScore', {score: String(safe).replace('.', ','), }),
-    ratingScore2: t('home.filters.ratingScore', {score: String(safe).replace('.', ','), }),
-    glasses: glasses,
-  });
-}
-
-/**
- * Render only the necessary page controls; page content is loaded from local
- * JSON.
- *
- * @param {!Object} options Optional configuration for the operation.
- * @param {*} selectedSize Selected size used by this operation.
- * @param {string=} mode Requested display mode or configuration variant.
- * @return {string} Resulting text.
- */
-function pagerHtml({page, pageCount, total, from, to}, selectedSize,
-  mode = 'bottlings') {
-  const label = mode === 'bottles' ? t("forms.bottle.plural") : t("analytics.inventory.bottlings");
-  const pageSizeLabel = mode === 'bottles' ? t("home.pagination.bottlesPerPage") : t("home.pagination.bottlingsPerPage");
-  /**
-   * Produces the button text used by the caller.
-   *
-   * @param {*} target Target of the operation.
-   * @param {*} label Label shown to the user.
-   * @param {*} title Title displayed or stored by this operation.
-   * @param {boolean=} disabled Value used by this operation.
-   * @return {string} Resulting text.
-   */
-  const button = (target, label, title, disabled = false) =>
-    renderTemplate('smallButton', {
-      target: target,
-      title: title,
-      disabled: disabled ? 'disabled' : '',
-      label: label,
-    });
-  const pages = composeMarkup(visiblePages(page, pageCount).map(number =>
-    number === '…'
-      ? renderTemplate('paginationEllipsis')
-      : renderTemplate('smallButton2', {
-        number: number === page ? ' current' : '',
-        number2: number,
-        pageLabel: t("home.pagination.pageLabel", {page: number}),
-        number3: number === page ? 'aria-current="page"' : '',
-        number4: number,
-      })));
-  return renderTemplate('collectionPagination', {
-    rangeSummary: t("home.pagination.rangeSummary", {from, to, total, label}),
-    button: button(1, chevronsLeftIcon, t('home.pagination.first'), page === 1),
-    button2: button(Math.max(1, page - 1), chevronLeftIcon, t('home.pagination.previous'), page === 1),
-    pages: pages,
-    button3: button(Math.min(pageCount, page + 1), chevronRightIcon, t('home.pagination.next'), page === pageCount),
-    button4: button(pageCount, chevronsRightIcon, t('home.pagination.last'), page === pageCount),
-    pageSizeLabel: pageSizeLabel,
-    pageSizeLabel2: pageSizeLabel,
-    pAGESIZEOPTIONS: composeMarkup(PAGE_SIZE_OPTIONS.map(option =>
-      renderTemplate(
-        'pagerHtmlOption',
-        {
-          option: option,
-          selected: option === selectedSize ? 'selected' : '',
-          option2: option,
-        }
-      ))),
-  });
-}
 
 /**
  * Collection overview uses delegated root events; render does not bind
@@ -517,7 +303,7 @@ export function createHomeView({
       {length: 11},
       (_, i) => renderTemplate('scoreOptionsOption', {
         i: i,
-        selected: selected === i ? 'selected' : '',
+        selectedAttributes: selected === i ? {"selected": true} : {},
         i2: i,
       })
     ));
@@ -527,10 +313,10 @@ export function createHomeView({
         [value, label]) =>
         renderTemplate('flavorEditorContentLabel', {
           value: value,
-          checked: draft.status === value ? 'checked' : '',
+          checkedAttributes: draft.status === value ? {"checked": true} : {},
           t: t(label),
         }))),
-      hidden: draft.status === 'without' ? 'hidden' : '',
+      withoutAttributes: draft.status === 'without' ? {"hidden": true} : {},
       criteria: composeMarkup(draft.criteria.map(item => renderTemplate(
         'collectionFlavorRow',
         {
@@ -539,7 +325,7 @@ export function createHomeView({
           remove: t('collection.flavor.remove', {name: t(`flavor.axis.${item.axis}`)}),
           closeIcon: closeIcon,
           min: t('collection.flavor.min'),
-          axis2: item.axis,
+          flavorAxis: item.axis,
           scoreOptions: scoreOptions(item.min),
           max: t('collection.flavor.max'),
           axis3: item.axis,
@@ -718,7 +504,7 @@ export function createHomeView({
       label2: label,
       collectionSavedDirty: dirty ? renderTemplate('collectionSavedDirty', {changed: t('collection.saved.changed'), }) : '',
       chevronDownIcon: chevronDownIcon('collection-menu-chevron'),
-      title2: t('collection.saved.title'),
+      ariaLabel: t('collection.saved.title'),
       content: !current ? ' is-active' : '',
       standard: t('collection.saved.standard'),
       savedViews: composeMarkup(savedViews().map(view =>
@@ -887,30 +673,26 @@ export function createHomeView({
       state.pageNumber = pageData.page;
       history.replaceState({whiskyRoute: true}, '', homePageUrl(pageData.page, mode));
     }
-    const visibleList = pageData.items;
+    const visibleList = createCollectionEntryModels(pageData.items, selectors);
     activeList = list;
     activePageSize = pageSize;
-    const cards = composeMarkup(visibleList.map(({bottling, bottle}) => {
-      const physicalBottles = bottle ? [bottle] : bottles(bottling.id);
-      const origin = bottlingOriginLabel(bottling, distilleryNames);
-      const facts = overviewFacts(bottling);
-      // Prefer the photo of this physical bottle; without one, show the same
-      // cover photo as the bottling overview (without modifying photo data).
-      const photo = displayPhotoPath((bottle?.photos || [])[0]) || coverPhoto(bottling.id);
+    const cards = composeMarkup(visibleList.map(({bottling, bottle, physicalBottles, origin, age, abv, photo}) => {
+      const facts = [age, abv ? escapeHtml(abv) : ''].filter(Boolean);
       const bottleInfo = bottle ? [
         bottle.inventoryNumber ? `#${escapeHtml(bottle.inventoryNumber)}` : t("imports.bottles.noInventoryNumber"),
         bottle.volumeMl != null ? `${escapeHtml(bottle.volumeMl)} ml` : '',
       ].filter(Boolean).join(' · ') : '';
       return renderTemplate('open', {
         id: bottling.id,
-        bottle: bottle ?
-          ` data-bottle-id="${escapeHtml(bottle.id)}" aria-label="${escapeHtml(t(
+        dataBottleIdAttributes: bottle ? {
+          "data-bottle-id": bottle.id, "aria-label": t(
             "home.image.bottleAccessibleName",
             {
               name: bottling.name,
               number: bottle.inventoryNumber || t("home.inventory.withoutInventoryNumber"),
             }
-          ))}"` : '',
+          ),
+        } : {},
         img: photo ?
           renderTemplate('img', {
             imageUrl: imageUrl(photo),
@@ -931,18 +713,18 @@ export function createHomeView({
         badge2: bottling.completionStatus === 'incomplete' ? renderTemplate('badge5') : '',
       });
     }));
-    const rows = composeMarkup(visibleList.map(({bottling, bottle}) => {
+    const rows = composeMarkup(visibleList.map(({bottling, bottle, physicalBottles}) => {
       const entry = {bottling, bottle};
-      const attrs =
-        `class="clickable" tabindex="0" data-act="open" data-id="${escapeHtml(bottling.id)}"${bottle ? ` data-bottle-id="${escapeHtml(bottle.id)}" aria-label="${escapeHtml(t(
-          'home.image.bottleAccessibleName',
-          {
-            name: bottling.name,
-            number: bottle.inventoryNumber || t('home.inventory.withoutInventoryNumber'),
-          }
-        ))}"` : ''}`;
+      const attrs = {
+        class: 'clickable', tabindex: '0', 'data-act': 'open', 'data-id': bottling.id,
+        'data-bottle-id': bottle?.id,
+        'aria-label': bottle ? t('home.image.bottleAccessibleName', {
+          name: bottling.name,
+          number: bottle.inventoryNumber || t('home.inventory.withoutInventoryNumber'),
+        }) : null,
+      };
       const cells = composeMarkup(selectedColumns.map(column =>
-        collectionTableCell(column.id, entry, bottle ? [bottle] : bottles(bottling.id), distilleryNames)));
+        collectionTableCell(column.id, entry, physicalBottles, distilleryNames)));
       return renderTemplate('tr', {
         attrs: attrs,
         cells: cells,
@@ -953,7 +735,7 @@ export function createHomeView({
       const descending = state.sort === column.desc;
       const title = t(column.label);
       return renderTemplate('th', {
-        active: active ? ` aria-sort="${descending ? 'descending' : 'ascending'}"` : '',
+        ariaSortAttributes: active ? {"aria-sort": descending ? 'descending' : 'ascending'} : {},
         active2: active ? ' is-active' : '',
         id: column.id,
         sortBy: t('home.table.sortBy', {name: title}),
@@ -963,11 +745,11 @@ export function createHomeView({
     }));
     const columnPicker =
       renderTemplate('collectionTableTools', {
-        columnPickerOpen: columnPickerOpen ? ' open' : '',
-        tABLECOLUMNS: composeMarkup(TABLE_COLUMNS[mode].map(column =>
+        openAttributes: columnPickerOpen ? {"open": true} : {},
+        columnChoices: composeMarkup(TABLE_COLUMNS[mode].map(column =>
           renderTemplate('collectionTableColumnChoice', {
             id: column.id,
-            checked: columnSelection[mode].includes(column.id) ? 'checked' : '',
+            checkedAttributes: columnSelection[mode].includes(column.id) ? {"checked": true} : {},
             t: t(column.label),
           }))),
         collectionColumnsDefaultButton: actionButton({
@@ -994,7 +776,7 @@ export function createHomeView({
         actions:
           renderTemplate('collectionModeToggle', {
             mode: mode === 'bottlings' ? ' active' : '',
-            mode2: mode === 'bottlings',
+            ariaPressed: mode === 'bottlings',
             length: collection.bottlings.length,
             mode3: mode === 'bottles' ? ' active' : '',
             mode4: mode === 'bottles',
@@ -1105,18 +887,18 @@ export function createHomeView({
             ['volumeMlDesc', 'home.sort.sizeDescending'],
           ].map(([value, key]) => renderTemplate('homeOption', {
             value: value,
-            selected: state.sort === value ? 'selected' : '',
+            selectedAttributes: state.sort === value ? {"selected": true} : {},
             t: t(key),
           }))),
           entries: composeMarkup(Object.entries(bottleStatusLabels).map(([k]) =>
             renderTemplate('homeOption2', {
               k: k,
-              selected: state.status === k ? 'selected' : '',
+              selectedAttributes: state.status === k ? {"selected": true} : {},
               statusText: statusText(k),
             }))),
-          selected: state.completion === 'incomplete' ? 'selected' : '',
-          selected2: state.completion === 'complete' ? 'selected' : '',
-          filtersExpanded2: filtersExpanded,
+          incompleteAttributes: state.completion === 'incomplete' ? {"selected": true} : {},
+          completeAttributes: state.completion === 'complete' ? {"selected": true} : {},
+          ariaExpanded: filtersExpanded,
           view: state.view === 'cards' ? t('home.view.table') : t('home.view.cards'),
           view2: state.view === 'cards' ? t('home.view.table') : t('home.view.cards'),
           view3: state.view === 'cards' ? collectionTableIcon : collectionCardsIcon,
@@ -1124,14 +906,14 @@ export function createHomeView({
           distilleries: composeMarkup(distilleries.map(item =>
             renderTemplate('homeOption3', {
               id: item.id,
-              selected: state.distillery === item.id ? 'selected' : '',
+              selectedAttributes: state.distillery === item.id ? {"selected": true} : {},
               name: item.name,
             }))),
-          selected3: state.rating === 'all' ? 'selected' : '',
+          allAttributes: state.rating === 'all' ? {"selected": true} : {},
           content2: composeMarkup([1, 2, 3, 4, 5].map(level =>
             renderTemplate('homeOption4', {
               level: level,
-              selected: state.rating === String(level) ? 'selected' : '',
+              selectedAttributes: state.rating === String(level) ? {"selected": true} : {},
               ratingRange: t(
                 'home.filters.ratingRange',
                 {
@@ -1140,10 +922,10 @@ export function createHomeView({
                 }
               ),
             }))),
-          selected4: state.rating === 'unrated' ? 'selected' : '',
-          selected5: state.volumeType === 'all' ? 'selected' : '',
-          selected6: state.volumeType === 'standard' ? 'selected' : '',
-          selected7: state.volumeType === 'sample' ? 'selected' : '',
+          unratedAttributes: state.rating === 'unrated' ? {"selected": true} : {},
+          selected5: state.volumeType === 'all' ? {"selected": true} : {},
+          standardAttributes: state.volumeType === 'standard' ? {"selected": true} : {},
+          sampleAttributes: state.volumeType === 'sample' ? {"selected": true} : {},
           filter: t('collection.flavor.filter'),
           length: (state.flavorCriteria || []).length ? ` (${state.flavorCriteria.length})` : '',
           profileMissing: state.profileMissing || state.profilePresent ? ' •' : '',
@@ -1165,9 +947,7 @@ export function createHomeView({
               active: composeMarkup(active.map(([key, value,
                 label]) =>
                 renderTemplate('collectionFilterChip', {
-                  startsWith: key.startsWith('flavor-axis:') ?
-                    `data-reset-collection-flavor-axis="${escapeHtml(key.slice(12))}"` :
-                    `data-reset-collection-filter="${key}"`,
+                  dataResetCollectionFlavorAxisAttributes: key.startsWith('flavor-axis:') ? {"data-reset-collection-flavor-axis": key.slice(12)} : {"data-reset-collection-filter": key},
                   removeFilter: t('home.filters.removeFilter', {name: `${label}: ${value}`, }),
                   value: value,
                   closeIcon: closeIcon,
@@ -1177,7 +957,7 @@ export function createHomeView({
         });
       })(),
       count: t('collection.results.count', {count: list.length, label}),
-      length: list.length ? '' : 'disabled',
+      disabledAttributes: list.length ? {} : {"disabled": true},
       flightPlanIcon: flightPlanIcon,
       planFlight: t('collection.results.planFlight'),
       view: state.view === 'table' && list.length ? columnPicker : '',
@@ -1186,11 +966,11 @@ export function createHomeView({
         {
           rangeSummary: t("home.pagination.rangeSummary", {from: pageData.from, to: pageData.to, total: pageData.total, label}),
           max: Math.max(1, pageData.page - 1),
-          disabled: pageData.page === 1 ? 'disabled' : '',
+          disabledAttributes: pageData.page === 1 ? {"disabled": true} : {},
           chevronLeftIcon: chevronLeftIcon,
           pageOf: t("home.pagination.pageOf", {page: pageData.page, total: pageData.pageCount}),
           min: Math.min(pageData.pageCount, pageData.page + 1),
-          disabled2: pageData.page === pageData.pageCount ? 'disabled' : '',
+          disabled2: pageData.page === pageData.pageCount ? {"disabled": true} : {},
           chevronRightIcon: chevronRightIcon,
         }
       ) : '',
@@ -1272,3 +1052,5 @@ export function createHomeView({
   home.planFromSelection = planFromSelection;
   return home;
 }
+
+export {collectionCardRating} from './collection-presentation.js';

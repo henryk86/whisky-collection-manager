@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {findWarehouseBottles} from '../../public/js/domain/warehouse-finder.js';
@@ -32,31 +33,31 @@ const warehouse = {
     }],
   }],
   bottles,
-  assignments: Object.fromEntries(bottles.slice(0, 8).map(b => [b.id, 's'])),
+  assignments: Object.fromEntries(renderedText(bottles).slice(0, 8).map(b => [b.id, 's'])),
 };
 
 test(
   'finder matches inventory numbers, accented names, locations and multiple terms without grouping physical bottles',
   () => {
-    assert.equal(findWarehouseBottles(warehouse, {query: 'glenfarclas'}).total, 8);
-    assert.equal(findWarehouseBottles(warehouse, {query: '#104'}).items[0].bottle.id, 'b5');
-    assert.equal(findWarehouseBottles(warehouse, {query: 'vitrine Fach 2'}).total, 8);
-    assert.equal(findWarehouseBottles(warehouse, {query: 'glenfarclas Fach 2'}).total, 8);
-    assert.equal(findWarehouseBottles(warehouse, {query: 'glenfarclas', placement: 'unassigned'}).total, 0);
-    assert.equal(findWarehouseBottles(warehouse, {placement: 'unassigned'}).items[0].bottle.id, 'b9');
-    assert.equal(findWarehouseBottles(warehouse, {placement: 'assigned'}).total, 8);
-    assert.equal(findWarehouseBottles(warehouse, {placement: 'invalid'}).total, 9);
+    assert.equal(renderedText(findWarehouseBottles(warehouse, {query: 'glenfarclas'}).total), 8);
+    assert.equal(renderedText(findWarehouseBottles(warehouse, {query: '#104'}).items[0].bottle.id), 'b5');
+    assert.equal(renderedText(findWarehouseBottles(warehouse, {query: 'vitrine Fach 2'}).total), 8);
+    assert.equal(renderedText(findWarehouseBottles(warehouse, {query: 'glenfarclas Fach 2'}).total), 8);
+    assert.equal(renderedText(findWarehouseBottles(warehouse, {query: 'glenfarclas', placement: 'unassigned'}).total), 0);
+    assert.equal(renderedText(findWarehouseBottles(warehouse, {placement: 'unassigned'}).items[0].bottle.id), 'b9');
+    assert.equal(renderedText(findWarehouseBottles(warehouse, {placement: 'assigned'}).total), 8);
+    assert.equal(renderedText(findWarehouseBottles(warehouse, {placement: 'invalid'}).total), 9);
   }
 );
 
 test('finder pagination returns bounded pages and stable counts', () => {
   const page = findWarehouseBottles(warehouse, {page: 3, pageSize: 3});
-  assert.equal(page.total, 9);
-  assert.equal(page.pages, 3);
-  assert.equal(page.page, 3);
+  assert.equal(renderedText(page.total), 9);
+  assert.equal(renderedText(page.pages), 3);
+  assert.equal(renderedText(page.page), 3);
   assert.equal(page.items.length, 3);
-  assert.equal(findWarehouseBottles(warehouse, {page: 99, pageSize: 3}).page, 3);
-  assert.equal(findWarehouseBottles(warehouse, {query: 'absent'}).total, 0);
+  assert.equal(renderedText(findWarehouseBottles(warehouse, {page: 99, pageSize: 3}).page), 3);
+  assert.equal(renderedText(findWarehouseBottles(warehouse, {query: 'absent'}).total), 0);
 });
 
 test(
@@ -67,15 +68,15 @@ test(
       placement: 'all',
       results: findWarehouseBottles(warehouse),
     });
-    assert.match(html, /value="&lt;script&gt;"/);
-    assert.equal((html.match(/data-act="warehouse-find-location"/g) || []).length, 8);
-    assert.equal((html.match(/data-act="warehouse-assign"/g) || []).length, 9);
-    assert.match(html, /Islay &lt;strong&gt;/);
-    assert.match(html, /Lagerort zuweisen/);
-    assert.match(html, /Whiskyzimmer \/ Vitrine links \/ Fach 2/);
+    assert.match(renderedText(html), /value="&lt;script&gt;"/);
+    assert.equal((renderedText(html).match(/data-act="warehouse-find-location"/g) || []).length, 8);
+    assert.equal((renderedText(html).match(/data-act="warehouse-assign"/g) || []).length, 9);
+    assert.match(renderedText(html), /Islay &lt;strong&gt;/);
+    assert.match(renderedText(html), /Lagerort zuweisen/);
+    assert.match(renderedText(html), /Whiskyzimmer \/ Vitrine links \/ Fach 2/);
     const paged = renderWarehouseFinderResults(findWarehouseBottles(warehouse, {page: 1, pageSize: 3}));
-    assert.match(paged, /warehouse-find-next/);
-    assert.match(paged, /9 Flaschen gefunden/);
+    assert.match(renderedText(paged), /warehouse-find-next/);
+    assert.match(renderedText(paged), /9 Flaschen gefunden/);
   }
 );
 
@@ -83,14 +84,14 @@ test(
   'a bottle beyond the wall preview limit is visible and individually highlighted when found',
   () => {
     const ordinary = renderWarehouseRoomWall(warehouse.rooms[0], warehouse, []);
-    assert.doesNotMatch(ordinary, /data-id="b8"/);
+    assert.doesNotMatch(renderedText(ordinary), /data-id="b8"/);
     const focused = renderWarehouseRoomWall(warehouse.rooms[0], warehouse, [], {focusBottleId: 'b8'});
-    assert.match(focused, /class="warehouse-wall-bottle is-find-focus"/);
-    assert.match(focused, /class="warehouse-wall-bottle is-find-dimmed"/);
-    assert.match(focused, /data-id="b8"/);
-    assert.match(focused, /warehouse-wall-bay is-find-focus/);
-    assert.equal((focused.match(/class="warehouse-wall-bottle/g) || []).length,
-      (ordinary.match(/class="warehouse-wall-bottle/g) || []).length);
+    assert.match(renderedText(focused), /class="warehouse-wall-bottle is-find-focus"/);
+    assert.match(renderedText(focused), /class="warehouse-wall-bottle is-find-dimmed"/);
+    assert.match(renderedText(focused), /data-id="b8"/);
+    assert.match(renderedText(focused), /warehouse-wall-bay is-find-focus/);
+    assert.equal((renderedText(focused).match(/class="warehouse-wall-bottle/g) || []).length,
+      (renderedText(ordinary).match(/class="warehouse-wall-bottle/g) || []).length);
   }
 );
 
@@ -169,20 +170,20 @@ test(
         refresh: async () => {},
       });
       view.showBottleLocation('b8');
-      assert.equal(state.selected, 'shelves');
-      assert.equal(state.warehouseRoomId, 'r');
-      assert.equal(state.warehouseFurnitureId, 'f');
-      assert.match(html, /class="warehouse-wall-bottle is-find-focus"/);
-      assert.match(html, /class="warehouse-wall-bottle is-find-dimmed"/);
-      assert.match(html, /data-act="warehouse-return-find"/);
-      assert.match(html, /data-act="warehouse-find-clear"/);
+      assert.equal(renderedText(state.selected), 'shelves');
+      assert.equal(renderedText(state.warehouseRoomId), 'r');
+      assert.equal(renderedText(state.warehouseFurnitureId), 'f');
+      assert.match(renderedText(html), /class="warehouse-wall-bottle is-find-focus"/);
+      assert.match(renderedText(html), /class="warehouse-wall-bottle is-find-dimmed"/);
+      assert.match(renderedText(html), /data-act="warehouse-return-find"/);
+      assert.match(renderedText(html), /data-act="warehouse-find-clear"/);
       view.returnToFinder();
-      assert.equal(state.selected, 'find');
-      assert.equal(state.warehouseSearch, 'glenfarclas');
-      assert.equal(state.warehouseFinderPlacement, 'assigned');
-      assert.equal(state.warehouseFinderPage, 2);
-      assert.doesNotMatch(html, /warehouse-bottle-check/);
-      assert.doesNotMatch(html, /data-act="warehouse-return-find"/);
+      assert.equal(renderedText(state.selected), 'find');
+      assert.equal(renderedText(state.warehouseSearch), 'glenfarclas');
+      assert.equal(renderedText(state.warehouseFinderPlacement), 'assigned');
+      assert.equal(renderedText(state.warehouseFinderPage), 2);
+      assert.doesNotMatch(renderedText(html), /warehouse-bottle-check/);
+      assert.doesNotMatch(renderedText(html), /data-act="warehouse-return-find"/);
     } finally {
       if (originalDocument === undefined) delete globalThis.document;
       else globalThis.document = originalDocument;
@@ -253,14 +254,14 @@ test(
       });
       view.showBottleLocation('b8', {returnToBottlingId: 'release-8'});
       assert.deepEqual(navigation.at(-1), {page: 'warehouse', selected: 'shelves', options: undefined});
-      assert.equal(state.warehouseRoomId, 'r');
-      assert.equal(state.warehouseFurnitureId, 'f');
-      assert.equal(state.warehouseFindFocusBottleId, 'b8');
-      assert.match(html, /warehouse-wall-bay is-find-focus/);
-      assert.match(html, /class="warehouse-wall-bottle is-find-focus"/);
-      assert.match(html, /class="warehouse-wall-bottle is-find-dimmed"/);
-      assert.match(html, /Zurück zur Abfüllung/);
-      assert.match(html, /data-act="warehouse-find-clear"/);
+      assert.equal(renderedText(state.warehouseRoomId), 'r');
+      assert.equal(renderedText(state.warehouseFurnitureId), 'f');
+      assert.equal(renderedText(state.warehouseFindFocusBottleId), 'b8');
+      assert.match(renderedText(html), /warehouse-wall-bay is-find-focus/);
+      assert.match(renderedText(html), /class="warehouse-wall-bottle is-find-focus"/);
+      assert.match(renderedText(html), /class="warehouse-wall-bottle is-find-dimmed"/);
+      assert.match(renderedText(html), /Zurück zur Abfüllung/);
+      assert.match(renderedText(html), /data-act="warehouse-find-clear"/);
       view.returnToFinder();
       assert.deepEqual(
         navigation.at(-1),
@@ -270,9 +271,9 @@ test(
           options: {highlightBottleId: 'b8'},
         }
       );
-      assert.equal(state.warehouseFindReturn, false);
-      assert.equal(state.warehouseFindFocusBottleId, null);
-      assert.equal(state.warehouseFindReturnBottlingId, null);
+      assert.equal(renderedText(state.warehouseFindReturn), false);
+      assert.equal(renderedText(state.warehouseFindFocusBottleId), null);
+      assert.equal(renderedText(state.warehouseFindReturnBottlingId), null);
     } finally {
       if (previousDocument === undefined) delete globalThis.document;
       else globalThis.document = previousDocument;
@@ -363,7 +364,7 @@ test(
        * @return {!Array<*>} Resulting entries in their output order.
        */
       querySelectorAll(selector) {
-        if (selector.includes('.warehouse-wall-bay.is-find-focus')) return [
+        if (renderedText(selector).includes('.warehouse-wall-bay.is-find-focus')) return [
           bay, focused, dimmed];
         return [];
       },
@@ -394,18 +395,18 @@ test(
         refresh: async () => {},
       });
       view.showBottleLocation('b1');
-      assert.equal(state.selected, 'shelves');
-      assert.match(html, /data-act="warehouse-find-clear"/);
+      assert.equal(renderedText(state.selected), 'shelves');
+      assert.match(renderedText(html), /data-act="warehouse-find-clear"/);
       view.clearFindFocus();
-      assert.equal(state.selected, 'shelves', 'the shelf view stays open');
-      assert.equal(state.warehouseFindReturn, false);
-      assert.equal(state.warehouseFindFocusBottleId, null);
-      assert.equal(banner.removed, true);
+      assert.equal(renderedText(state.selected), 'shelves', 'the shelf view stays open');
+      assert.equal(renderedText(state.warehouseFindReturn), false);
+      assert.equal(renderedText(state.warehouseFindFocusBottleId), null);
+      assert.equal(renderedText(banner.removed), true);
       assert.ok(removedClasses.some(([which, name]) => which === 'wall' && name === 'has-find-focus'));
       assert.ok(removedClasses.some(([which, name]) => which === 'bay' && name === 'is-find-focus'));
       assert.ok(removedClasses.some(([which, , name]) => which === 'dimmed' && name === 'is-find-dimmed'));
-      assert.equal(state.warehouseSearch, 'glenfarclas');
-      assert.equal(state.warehouseFinderPlacement, 'assigned');
+      assert.equal(renderedText(state.warehouseSearch), 'glenfarclas');
+      assert.equal(renderedText(state.warehouseFinderPlacement), 'assigned');
     } finally {
       if (originalDocument === undefined) delete globalThis.document;
       else globalThis.document = originalDocument;
@@ -421,19 +422,19 @@ test(
     narrow.rooms[0].furniture[0].itemHeight = 0.48;
     const html = renderWarehouseRoomWall(narrow.rooms[0], narrow, [], {focusBottleId: 'b8'});
     // Every bottle slot plus the +N badge must fit within the physical bay.
-    const preview = html.match(
+    const preview = renderedText(html).match(
       new RegExp('data-shelf-id="s"[\\s\\S]*?<div class="war' + 'ehouse-bottle-silhouettes">([\\s\\S]*?)<\\' + '/div>'))?.[1] || '';
-    const visibleIds = [...preview.matchAll(/data-act="warehouse-bottle-select" data-id="(b\d+)"/g)].map(match => match[1]);
-    const slotWidth = Number(html.match(/--wall-bottle-width:([\d.]+)px/)?.[1]);
+    const visibleIds = [...renderedText(preview).matchAll(/data-act="warehouse-bottle-select" data-id="(b\d+)"/g)].map(match => match[1]);
+    const slotWidth = Number(renderedText(html).match(/--wall-bottle-width:([\d.]+)px/)?.[1]);
     assert.ok(visibleIds.length > 0 && visibleIds.length < 5);
     assert.ok(visibleIds.length * (slotWidth + 2) + 27 <= 0.7 * 230 - 22);
-    assert.ok(visibleIds.includes('b8'), 'a bottle beyond the preview limit remains the focus');
-    assert.match(html, new RegExp(`warehouse-shelf-overflow[^>]*>\\+${8 - visibleIds.length}<\\/span>`));
-    assert.doesNotMatch(html, /warehouse-find-bottle-badge/);
-    assert.match(html, /class="warehouse-room-wall has-find-focus"/);
+    assert.ok(renderedText(visibleIds).includes('b8'), 'a bottle beyond the preview limit remains the focus');
+    assert.match(renderedText(html), new RegExp(`warehouse-shelf-overflow[^>]*>\\+${8 - visibleIds.length}<\\/span>`));
+    assert.doesNotMatch(renderedText(html), /warehouse-find-bottle-badge/);
+    assert.match(renderedText(html), /class="warehouse-room-wall has-find-focus"/);
     // 0.48m shelf -> 110.4px. The preview height must not consume its title +
     // rail.
-    const height = Number(html.match(/--wall-bottle-height:([\d.]+)px/)?.[1]);
+    const height = Number(renderedText(html).match(/--wall-bottle-height:([\d.]+)px/)?.[1]);
     assert.ok(height > 0 && height < 74, 'photo height fits the label and shelf frame');
   }
 );

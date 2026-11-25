@@ -1,3 +1,4 @@
+import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -22,10 +23,10 @@ test(
   'backup profile: typed and bounded provider, schedule, retention, target',
   () => {
     assert.deepEqual(validateProfile(valid).schedule, valid.schedule);
-    assert.equal(validateProfile(valid).format, 'zip');
+    assert.equal(renderedText(validateProfile(valid).format), 'zip');
     assert.throws(() => validateProfile({...valid, format: 'restic'}), /Format/);
     assert.throws(() => validateProfile({...valid, format: 'unknown'}), /Format/);
-    assert.equal(validateProfile({...valid, provider: 'local', remote: 'ignored'}).remote, '');
+    assert.equal(renderedText(validateProfile({...valid, provider: 'local', remote: 'ignored'}).remote), '');
     for (const targetPath of [
       '../etc',
       '/root',
@@ -70,26 +71,26 @@ test(
       format: 'zip',
       schedule: {frequency: 'daily', hour: 2, minute: 0, weekday: 6},
     };
-    assert.equal(dueSlot(sat, at0210), '2026-11-07');
-    assert.equal(dueSlot({...sat, schedule: {...sat.schedule, hour: 3}}, at0210), null);
+    assert.equal(renderedText(dueSlot(sat, at0210)), '2026-11-07');
+    assert.equal(renderedText(dueSlot({...sat, schedule: {...sat.schedule, hour: 3}}, at0210)), null);
     assert.equal(
-      dueSlot({...sat, schedule: {...sat.schedule, frequency: 'weekly', weekday: 6}}, at0210),
+      renderedText(dueSlot({...sat, schedule: {...sat.schedule, frequency: 'weekly', weekday: 6}}, at0210)),
       '2026-11-07'
     );
-    assert.equal(dueSlot({...sat, schedule: {...sat.schedule, frequency: 'weekly', weekday: 1}}, at0210), null);
+    assert.equal(renderedText(dueSlot({...sat, schedule: {...sat.schedule, frequency: 'weekly', weekday: 1}}, at0210)), null);
     assert.equal(
-      dueSlot({...sat, schedule: {...sat.schedule, frequency: 'hourly', minute: 10}}, at0210),
+      renderedText(dueSlot({...sat, schedule: {...sat.schedule, frequency: 'hourly', minute: 10}}, at0210)),
       '2026-11-07T02'
     );
-    assert.equal(dueSlot({...sat, schedule: {...sat.schedule, frequency: 'hourly', minute: 11}}, at0210), null);
-    assert.equal(dueSlot({...sat, enabled: false}, at0210), null);
-    assert.equal(dueSlot({...sat, format: undefined}, at0210), null, 'legacy Restic schedule disabled');
+    assert.equal(renderedText(dueSlot({...sat, schedule: {...sat.schedule, frequency: 'hourly', minute: 11}}, at0210)), null);
+    assert.equal(renderedText(dueSlot({...sat, enabled: false}, at0210)), null);
+    assert.equal(renderedText(dueSlot({...sat, format: undefined}, at0210)), null, 'legacy Restic schedule disabled');
   }
 );
 test(
   'Rclone repositories are isolated; local targets require mounted-drive marker',
   () => {
-    assert.equal(repositoryFor(valid), 'rclone:my_dropbox:whisky/backups');
+    assert.equal(renderedText(repositoryFor(valid)), 'rclone:my_dropbox:whisky/backups');
     // Marker guard: absent marker must fail rather than silently backing up to
     // host SD card.
     assert.throws(
@@ -120,14 +121,14 @@ test('backup UI escapes names and errors; never renders credentials', () => {
     },
   };
   const html = renderBackupSection(state);
-  assert.match(html, /&lt;script&gt;/);
-  assert.doesNotMatch(html, /<script>|<img src=x/);
-  assert.match(html, /data-act="backup-run"/);
-  assert.match(html, /data-act="backup-restore"/);
-  assert.match(profileForm(malicious, ['dropbox']), /id="backup-profile-form"/);
-  assert.match(profileForm({}, [], [{name: 'usb', label: 'USB-Stick'}]), /AES-256-Passwortschutz/);
-  assert.match(profileForm({}, [], [{name: 'usb', label: 'USB-Stick'}]), /usb\/whisky-zip/);
-  assert.match(renderBackupSection({backupUnlocked: false, backupDashboard: null}), /backup-admin-key/);
+  assert.match(renderedText(html), /&lt;script&gt;/);
+  assert.doesNotMatch(renderedText(html), /<script>|<img src=x/);
+  assert.match(renderedText(html), /data-act="backup-run"/);
+  assert.match(renderedText(html), /data-act="backup-restore"/);
+  assert.match(renderedText(profileForm(malicious, ['dropbox'])), /id="backup-profile-form"/);
+  assert.match(renderedText(profileForm({}, [], [{name: 'usb', label: 'USB-Stick'}])), /AES-256-Passwortschutz/);
+  assert.match(renderedText(profileForm({}, [], [{name: 'usb', label: 'USB-Stick'}])), /usb\/whisky-zip/);
+  assert.match(renderedText(renderBackupSection({backupUnlocked: false, backupDashboard: null})), /backup-admin-key/);
 });
 
 test(
@@ -148,15 +149,15 @@ test(
       },
     });
     for (const html of [locked, unlocked]) {
-      assert.equal((html.match(/href="\/api\/export\/zip"/g) || []).length, 0);
-      assert.match(html, /Backup direkt herunterladen/);
-      assert.match(html, /Automatische Backups/);
-      assert.match(html, /Wiederherstellen|Backup einspielen/);
+      assert.equal((renderedText(html).match(/href="\/api\/export\/zip"/g) || []).length, 0);
+      assert.match(renderedText(html), /Backup direkt herunterladen/);
+      assert.match(renderedText(html), /Automatische Backups/);
+      assert.match(renderedText(html), /Wiederherstellen|Backup einspielen/);
     }
-    assert.match(unlocked, /data-act="backup-manual-download"/);
-    assert.match(unlocked, /id="backup-password-form"/);
-    assert.match(unlocked, /id="backup-import-zip-form"/);
-    assert.match(unlocked, /data-act="backup-new"/);
+    assert.match(renderedText(unlocked), /data-act="backup-manual-download"/);
+    assert.match(renderedText(unlocked), /id="backup-password-form"/);
+    assert.match(renderedText(unlocked), /id="backup-import-zip-form"/);
+    assert.match(renderedText(unlocked), /data-act="backup-new"/);
   }
 );
 
@@ -174,7 +175,7 @@ test(
         passwordConfigured: false,
       },
     });
-    assert.doesNotMatch(unlockedNoPassword, /data-act="backup-manual-download"/);
-    assert.match(unlockedNoPassword, /Backup-Passwort festlegen/);
+    assert.doesNotMatch(renderedText(unlockedNoPassword), /data-act="backup-manual-download"/);
+    assert.match(renderedText(unlockedNoPassword), /Backup-Passwort festlegen/);
   }
 );
