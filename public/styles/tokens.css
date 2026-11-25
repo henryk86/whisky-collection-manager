@@ -28,6 +28,7 @@
   --ds-color-link-hover: var(--ds-color-link);
   --ds-color-header-bg: var(--navy-deep);
   --ds-color-on-strong: #fff;
+  --ds-color-on-interactive: var(--ds-color-on-strong);
   --ds-color-header-text: var(--ds-color-on-strong);
   --ds-color-header-border: #ffffff22;
   /* Common controls; their actual light/dark computed values are retained. */
@@ -72,7 +73,7 @@
   --ds-color-card-kicker-text: #a17d4c;
   --ds-color-rating-glass-shadow: rgba(0,0,0,.38);
   --ds-color-flavor-popover-shadow: rgb(0 0 0 / .15);
-  --ds-color-filter-chip-selected-text: var(--ds-color-on-strong);
+  --ds-color-filter-chip-selected-text: var(--ds-color-on-interactive);
   --ds-color-collection-mode-active-text: var(--ds-color-on-strong);
   --ds-color-dropdown-shadow: rgb(0 0 0 / .14);
   --ds-color-popup-shadow: rgb(0 0 0 / .13);
@@ -109,8 +110,8 @@
   --ds-color-hero-action-border: #ffffff55;
   --ds-color-hero-action-hover: #ffffff20;
   --ds-color-inline-link-text: #986f38;
-  --ds-color-pagination-pages-current-color: var(--ds-color-on-strong);
-  --ds-color-pagination-pages-current-hover-color: var(--ds-color-on-strong);
+  --ds-color-pagination-pages-current-color: var(--ds-color-on-interactive);
+  --ds-color-pagination-pages-current-hover-color: var(--ds-color-on-interactive);
   --ds-color-panel-box-shadow: #0f2e4410;
   --ds-color-photo-lightbox-stage-background: #f1eee7;
   --ds-color-preview-background: #f0ece4;
@@ -215,6 +216,7 @@
    Keep these values together so feature CSS reads the correct palette. */
 :root[data-theme="dark"] {
   --navy: #d7e4ef;
+  --ds-color-on-interactive: var(--ds-color-page);
   --navy-deep: #0a1724;
   --blue: #b9d2e6;
   --gold: #c9a46b;
