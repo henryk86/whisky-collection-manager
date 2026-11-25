@@ -5,6 +5,11 @@ import {escapeHtml} from '../ui/dom.js';
 import {backToCollectionButton} from '../ui/navigation-controls.js';
 import {sectionWorkspace} from '../ui/section-navigation.js';
 import {helpGuides} from './help-guides.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/help.html', import.meta.url));
+
 
 export const HELP_TOPICS = Object.freeze([
   {id: 'basics', items: 4},
@@ -35,43 +40,49 @@ export function helpView(activeTopic = 'basics') {
    * @return {string} Resulting text.
    */
   const title = id => escapeHtml(t(`help.${id}.title`));
-  const panels = HELP_TOPICS.map(topic => `
-        <section class="help-section" id="help-panel-${topic
-      .id}" aria-labelledby="help-title-${topic.id}"${topic.id ===
-        current ? '' : ' hidden'}>
-            ${headingTitle({
-          title: t(`help.${topic.id}.title`),
-          level: 2,
-          className: 'analytics-section-title',
-          id: `help-title-${topic.id}`,
-        })}
-            <div class="help-content-panel">
-                ${topic.id === 'basics' ?
-      `<p class="help-description muted">${escapeHtml(t('help.description')
-      )}</p>` : ''}
-                <ol class="help-steps">${Array.from(
-        {length: topic.items},
-        (_, index) =>
-          `<li>${escapeHtml(t(`help.${topic.id}.${index + 1}`))}</li>`
-      ).join('')}</ol>${helpGuides(topic.id)}
-            </div>
-        </section>`).join('');
+  const panels = HELP_TOPICS.map(topic => renderTemplate('helpSection', {
+    id: topic
+      .id,
+    id2: topic.id,
+    id3: topic.id ===
+      current ? '' : ' hidden',
+    headingTitle: headingTitle({
+      title: t(`help.${topic.id}.title`),
+      level: 2,
+      className: 'analytics-section-title',
+      id: `help-title-${topic.id}`,
+    }),
+    helpDescription: topic.id === 'basics' ?
+      renderTemplate('helpDescription', {
+        description: t('help.description'),
+      }) : '',
+    from: Array.from(
+      {length: topic.items},
+      (_, index) =>
+        renderTemplate('li', {
+          t: t(`help.${topic.id}.${index + 1}`),
+        })
+    ).join(''),
+    helpGuides: helpGuides(topic.id),
+  })).join('');
   const workspace = sectionWorkspace({
     sections: HELP_TOPICS.map(topic =>
       ({id: topic.id, label: t(`help.${topic.id}.title`)})),
     activeId: current, action: 'help-tab', itemAttribute: 'data-help-topic',
     label: t('help.contents'), switchKind: 'help',
-  }, `<div class="help-panels">${panels}</div>`);
-  return `<div class="analytics-page help-page">
-        ${pageHeader({
-    title: t('navigation.help'),
-    eyebrow: t('help.eyebrow'),
-    intro: t('help.intro'),
-    className: 'help-heading',
-    actions: String(backToCollectionButton),
-  })}
-        ${workspace}
-    </div>`;
+  }, renderTemplate('helpPanels', {
+    panels: panels,
+  }));
+  return renderTemplate('analyticsPage', {
+    pageHeader: pageHeader({
+      title: t('navigation.help'),
+      eyebrow: t('help.eyebrow'),
+      intro: t('help.intro'),
+      className: 'help-heading',
+      actions: String(backToCollectionButton),
+    }),
+    workspace: workspace,
+  });
 }
 
 /**

@@ -4,6 +4,11 @@ import {escapeHtml} from '../../ui/dom.js';
 import {t} from '../../i18n/index.js';
 import {toast} from '../../ui/notifications.js';
 import {eyeIcon, eyeOffIcon} from '../../ui/action-icons.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/controller.html', import.meta.url));
+
 
 /**
  * Authentication pages intentionally replace, rather than cover, the
@@ -33,11 +38,14 @@ export function createAuthController({root, state, render, refresh, applyTheme,
    * @return {string} Resulting text.
    */
   const passwordToggle = (id, hidden = true) =>
-    `<button class="auth-password-toggle" type="button" data-act="auth-toggl\
-e-password" data-target="${id}" aria-controls="${id}" aria-label="${
-escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" title="${
-escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" aria-pressed="${
-hidden ? 'false' : 'true'}">${hidden ? eyeIcon : eyeOffIcon}</button>`;
+    renderTemplate('authTogglePassword', {
+      id: id,
+      id2: id,
+      tr: tr(hidden ? 'showPassword' : 'hidePassword'),
+      tr2: tr(hidden ? 'showPassword' : 'hidePassword'),
+      hidden: hidden ? 'false' : 'true',
+      hidden2: hidden ? eyeIcon : eyeOffIcon,
+    });
 
   /**
    * Produces the field text used by the caller.
@@ -53,32 +61,40 @@ hidden ? 'false' : 'true'}">${hidden ? eyeIcon : eyeOffIcon}</button>`;
     {type = 'password', autocomplete = 'off', minLength = null, value = ''} = {}
   ) => {
     const isPassword = type === 'password';
-    return `<label class="form-field${isPassword ? ' auth-password-field' :
-      ''}" for="${id}">${label}${isPassword
-        ? `<div class="auth-password-input"><input id="${id}" name="${id}" \
-type="password" autocomplete="${autocomplete}"${minLength ? ` \
-minlength="${minLength}"` : ''}${value ? ` value="${escapeHtml(value)}"` :
-          ''} required>${passwordToggle(id)}</div>`
-        : `<input id="${id}" name="${id}" type="${type}" \
-autocomplete="${autocomplete}"${minLength ? ` minlength="${minLength}"` :
-          ''}${value ? ` value="${escapeHtml(value)}"` :
-            ''} required>`}</label>`;
+    return renderTemplate('formField', {
+      isPassword: isPassword ? ' auth-password-field' :
+        '',
+      id: id,
+      label: label,
+      authPasswordInput: isPassword
+        ? renderTemplate('authPasswordInput', {
+          id: id,
+          id2: id,
+          autocomplete: autocomplete,
+          minLength: minLength ? ` \
+minlength="${minLength}"` : '',
+          value: value ? ` value="${escapeHtml(value)}"` :
+            '',
+          passwordToggle: passwordToggle(id),
+        })
+        : renderTemplate('fieldInput', {
+          id: id,
+          id2: id,
+          type: type,
+          autocomplete: autocomplete,
+          minLength: minLength ? ` minlength="${minLength}"` :
+            '',
+          value: value ? ` value="${escapeHtml(value)}"` :
+            '',
+        }),
+    });
   };
 
   /**
    * Builds the localized brand text for the current language.
    * @return {string} Resulting text.
    */
-  const brand = () => `<div class="auth-brand">
-      <img class="auth-brand-logo" src="/assets/logo.svg" width="112" \
-height="112" alt="">
-      <div class="auth-brand-copy">
-        <span class="brand-overline">${t('ui.branding.privateReserve')}</span>
-        <p class="auth-brand-title">${t('ui.branding.whiskyLabel')} <em>${t(
-    'ui.branding.collectionLabel')}</em> <span>${t(
-      'ui.branding.managerLabel')}</span></p>
-      </div>
-    </div>`;
+  const brand = () => renderTemplate('authBrand');
 
   /**
    * Produces the panel text used by the caller.
@@ -88,14 +104,18 @@ height="112" alt="">
    * @return {string} Resulting text.
    */
   const panel = (title, body) =>
-    `<div class="auth-page"><section class="panel auth-card">${brand(
-    )}<h1>${title}</h1>${body}</section></div>`;
+    renderTemplate('authPage', {
+      brand: brand(
+      ),
+      title: title,
+      body: body,
+    });
 
   /**
    * Derives the error text result from the supplied values.
    * @return {string} Resulting text.
    */
-  const errorText = () => `<p class="auth-error" role="alert" hidden></p>`;
+  const errorText = () => renderTemplate('authError');
 
   /**
    * Produces the error markup text used by the caller.
@@ -104,8 +124,9 @@ height="112" alt="">
    * @return {string} Resulting text.
    */
   const errorMarkup = text =>
-    `<span class="auth-error-icon" aria-hidden="true">!</span><span>\
-${escapeHtml(text)}</span>`;
+    renderTemplate('authErrorIcon', {
+      text: text,
+    });
 
   /**
    * Renders the controller state.
@@ -117,55 +138,55 @@ ${escapeHtml(text)}</span>`;
     if (mode === 'change') {
       const canCancel = !mandatory;
       root.innerHTML = panel(tr(mandatory ? 'firstChangeTitle' : 'changeTitle'),
-        `<form id="auth-change-form" class="auth-form auth-form-main">
-                ${field(
-          'currentPassword',
-          tr('currentPassword'),
-          {autocomplete: 'current-password'}
-        )}
-                ${field(
-          'newPassword',
-          tr('newPassword'),
-          {autocomplete: 'new-password', minLength: 12}
-        )}
-                ${field(
-          'confirmPassword',
-          tr('confirmPassword'),
-          {autocomplete: 'new-password', minLength: 12}
-        )}
-                <p class="muted auth-note">${tr('passwordHint'
-        )}</p>${errorText()}
-                <div class="actions auth-actions auth-actions--stacked">\
-<button class="btn primary auth-submit" type="submit">${tr('savePassword')}<\
-/button>
-                ${canCancel ?
-          `${actionButton({
-            label: tr('cancel'),
-            action: 'auth-cancel',
-            className: 'auth-secondary-action',
-          })}` : ''}</div></form>`);
+        renderTemplate('authChangeForm', {
+          field: field(
+            'currentPassword',
+            tr('currentPassword'),
+            {autocomplete: 'current-password'}
+          ),
+          field2: field(
+            'newPassword',
+            tr('newPassword'),
+            {autocomplete: 'new-password', minLength: 12}
+          ),
+          field3: field(
+            'confirmPassword',
+            tr('confirmPassword'),
+            {autocomplete: 'new-password', minLength: 12}
+          ),
+          passwordHint: tr('passwordHint'
+          ),
+          errorText: errorText(),
+          savePassword: tr('savePassword'),
+          canCancel: canCancel ?
+            `${actionButton({
+              label: tr('cancel'),
+              action: 'auth-cancel',
+              className: 'auth-secondary-action',
+            })}` : '',
+        }));
     } else {
       root.innerHTML = panel(tr('loginTitle'),
-        `<form id="auth-login-form" class="auth-form auth-form-main">
-                ${field(
-          'username',
-          tr('username'),
-          {type: 'text', autocomplete: 'username'}
-        )}
-                ${field(
-          'password',
-          tr('password'),
-          {autocomplete: 'current-password'}
-        )}
-                ${errorText()}
-                <div class="actions auth-actions auth-actions--stacked">\
-<button class="btn primary auth-submit" type="submit">${tr('signIn')}</button>
-                ${!state.auth?.required ?
-          `${actionButton({
-            label: tr('cancel'),
-            action: 'auth-cancel',
-            className: 'auth-secondary-action',
-          })}` : ''}</div></form>`);
+        renderTemplate('authLoginForm', {
+          field: field(
+            'username',
+            tr('username'),
+            {type: 'text', autocomplete: 'username'}
+          ),
+          field2: field(
+            'password',
+            tr('password'),
+            {autocomplete: 'current-password'}
+          ),
+          errorText: errorText(),
+          signIn: tr('signIn'),
+          content: !state.auth?.required ?
+            `${actionButton({
+              label: tr('cancel'),
+              action: 'auth-cancel',
+              className: 'auth-secondary-action',
+            })}` : '',
+        }));
     }
     applyTheme();
     root.querySelector(mandatory || mode === 'change' ? '#currentPassword' :
@@ -254,17 +275,18 @@ ${escapeHtml(text)}</span>`;
     pendingRequired = required;
     showModal(
       tr('loginRequired'),
-      `<p>${required ? tr('enableConfirm') : tr('disableConfirm')}</p>
-        <div class="actions ds-modal-footer ds-modal-footer--flush">
-        ${actionButton({
-        label: tr('cancel'),
-        action: 'close-modal',
-      })}
-        ${actionButton({
-        label: tr('apply'),
-        action: 'auth-confirm-required',
-        variant: 'primary',
-      })}</div>`
+      renderTemplate('changeSettingP', {
+        required: required ? tr('enableConfirm') : tr('disableConfirm'),
+        closeModalButton: actionButton({
+          label: tr('cancel'),
+          action: 'close-modal',
+        }),
+        authConfirmRequiredButton: actionButton({
+          label: tr('apply'),
+          action: 'auth-confirm-required',
+          variant: 'primary',
+        }),
+      })
     );
   }
 
@@ -289,47 +311,50 @@ ${escapeHtml(text)}</span>`;
   function usersSection() {
     if (!state.auth?.canManageUsers) return '';
     const users = state.authUsers || [];
-    return `<div class="panel section auth-settings">
-        <h3>${tr('loginRequired')}</h3><p class="muted">${tr(
-      'loginSettingDescription')}</p>
-        <div class="auth-setting-row"><strong>${state.auth.required ?
-        tr('enabled') : tr('disabled')}</strong>
-        ${actionButton({
-          label: state.auth.required ? tr('disable') : tr('enable'),
-          action: 'auth-toggle-required',
-        })}</div></div>
-        <div class="panel section auth-settings"><h3>${tr('users')}</h3>
-        <div class="auth-user-list" role="list">${users.map(user =>
-          `<div class="auth-user-row" role="listitem">
-            <div><strong>${escapeHtml(user.username
-          )}</strong><span class="muted">${user.role === 'admin' ?
-            tr('administrator') : tr('standardUser')}${user
-              .mustChangePassword ? ' · ' + tr('changePending') :
-              ''}</span></div>
-            ${user.id !== state.auth.user.id ?
-            `<div class="actions"><button type="button" class="btn small" \
-data-act="auth-reset-user" data-id="${escapeHtml(user.id)}">${tr('resetPassw\
-ord')}</button>
-            <button type="button" class="btn small danger" \
-data-act="auth-delete-user" data-id="${escapeHtml(user.id)}">${tr('delete')
-            }</button></div>` : ''}
-        </div>`).join('')}</div>
-        <h3 class="auth-subtitle">${tr('createUser')}</h3>
-        <form id="auth-create-form" class="auth-form auth-create-form">
-        ${field(
-              'username',
-              tr('username'),
-              {type: 'text', autocomplete: 'off'}
-            )}
-        ${field(
-              'password',
-              tr('temporaryPassword'),
-              {autocomplete: 'new-password', minLength: 12}
-            )}
-        <p class="muted">${tr('newUserHint'
-            )}</p><button class="btn primary" type="submit">${tr('createUser'
-            )}</button></form>
-        </div>`;
+    return renderTemplate('panel', {
+      loginRequired: tr('loginRequired'),
+      loginSettingDescription: tr(
+        'loginSettingDescription'),
+      required: state.auth.required ?
+        tr('enabled') : tr('disabled'),
+      authToggleRequiredButton: actionButton({
+        label: state.auth.required ? tr('disable') : tr('enable'),
+        action: 'auth-toggle-required',
+      }),
+      users: tr('users'),
+      users2: users.map(user =>
+        renderTemplate('authUserRow', {
+          username: user.username,
+          role: user.role === 'admin' ?
+            tr('administrator') : tr('standardUser'),
+          mustChangePassword: user
+            .mustChangePassword ? ' · ' + tr('changePending') :
+            '',
+          authResetUser: user.id !== state.auth.user.id ?
+            renderTemplate('authResetUser', {
+              id: user.id,
+              resetPassword: tr('resetPassw\
+ord'),
+              id2: user.id,
+              delete: tr('delete'),
+            }) : '',
+        })).join(''),
+      createUser: tr('createUser'),
+      field: field(
+        'username',
+        tr('username'),
+        {type: 'text', autocomplete: 'off'}
+      ),
+      field2: field(
+        'password',
+        tr('temporaryPassword'),
+        {autocomplete: 'new-password', minLength: 12}
+      ),
+      newUserHint: tr('newUserHint'
+      ),
+      createUser2: tr('createUser'
+      ),
+    });
   }
 
   /**
@@ -373,38 +398,41 @@ data-act="auth-delete-user" data-id="${escapeHtml(user.id)}">${tr('delete')
     } else if (act === 'auth-reset-user') {
       const user = state.authUsers?.find(u => u.id === button.dataset.id);
       if (!user) return;
-      showModal(tr('resetPassword'), `<p>${escapeHtml(user.username)}</p>
-              <form id="auth-reset-form" class="auth-form" \
-data-user-id="${escapeHtml(user.id)}">
-              ${field(
-        'password',
-        tr('temporaryPassword'),
-        {autocomplete: 'new-password', minLength: 12}
-      )}
-              <p class="muted">${tr('newUserHint')}</p>
-              <div class="actions">${actionButton({
-        label: tr('cancel'),
-        action: 'close-modal',
-      })}
-              <button class="btn primary" type="submit">${tr('apply'
-      )}</button></div></form>`);
+      showModal(tr('resetPassword'), renderTemplate('handleActionP', {
+        username: user.username,
+        id: user.id,
+        field: field(
+          'password',
+          tr('temporaryPassword'),
+          {autocomplete: 'new-password', minLength: 12}
+        ),
+        newUserHint: tr('newUserHint'),
+        closeModalButton: actionButton({
+          label: tr('cancel'),
+          action: 'close-modal',
+        }),
+        apply: tr('apply'
+        ),
+      }));
     } else if (act === 'auth-delete-user') {
       const user = state.authUsers?.find(u => u.id === button.dataset.id);
       if (!user) return;
       pendingDelete = user.id;
       showModal(
         tr('deleteUser'),
-        `<p>${tr('deleteConfirm')} <strong>${escapeHtml(user.username
-        )}</strong>?</p>
-            <div class="actions">${actionButton({
-          label: tr('cancel'),
-          action: 'close-modal',
-        })}
-            ${actionButton({
-          label: tr('delete'),
-          action: 'auth-confirm-delete',
-          variant: 'destructive',
-        })}</div>`
+        renderTemplate('handleActionP2', {
+          deleteConfirm: tr('deleteConfirm'),
+          username: user.username,
+          closeModalButton: actionButton({
+            label: tr('cancel'),
+            action: 'close-modal',
+          }),
+          authConfirmDeleteButton: actionButton({
+            label: tr('delete'),
+            action: 'auth-confirm-delete',
+            variant: 'destructive',
+          }),
+        })
       );
     } else if (act === 'auth-confirm-delete') {
       if (!pendingDelete) return;

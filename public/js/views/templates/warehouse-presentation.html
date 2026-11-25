@@ -1,0 +1,149 @@
+<!-- wcm-template:formField -->
+<label class="form-field">{{text:label}}<input name="{{raw:name}}" type="{{raw:type}}" {{raw:options}} value="{{raw:safe}}" required></label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:choicesOption -->
+<option value="{{raw:safe}}" {{raw:selected}}>{{text:title}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:formField2 -->
+<label class="form-field">{{text:label}}<select name="{{raw:name}}">{{raw:options}}</select></label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:closeModal -->
+<div class="actions ds-modal-footer warehouse-form-actions"><button type="button" class="btn" data-act="close-modal">{{t:common.actions.cancel}}</button><button type="submit" class="btn primary">{{t:common.actions.save}}</button></div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottleFact -->
+<span class="warehouse-bottle-fact"><span class="warehouse-bottle-fact-label">{{raw:safe}}:</span> {{raw:safe2}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottleFacts -->
+<div class="warehouse-bottle-facts">{{raw:facts}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottleRow -->
+<div class="warehouse-bottle-row" data-bottle-search="{{raw:safe}}"><label class="warehouse-bottle-row-select"><input type="checkbox" class="warehouse-bottle-check" data-id="{{raw:safe2}}" aria-label="{{raw:safe3}}" {{raw:checked}}></label><div class="warehouse-bottle-row-info"><strong>{{raw:safe4}}</strong><small>{{raw:place}}</small>{{raw:warehouseBottleFacts}}</div><button class="btn small" type="button" data-act="warehouse-assign" data-id="{{raw:safe5}}">{{raw:place2}}</button></div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseGrid -->
+<line class="warehouse-grid-{{raw:level}}" x1="{{raw:position}}" y1="0" x2="{{raw:position2}}" y2="{{raw:vbH}}"/>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseGrid2 -->
+<line class="warehouse-grid-{{raw:level}}" x1="0" y1="{{raw:position}}" x2="{{raw:vbW}}" y2="{{raw:position2}}"/>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehousePlanGrid -->
+<g class="warehouse-plan-grid" aria-hidden="true">{{raw:gridLines}}</g>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseDrag -->
+<g class="warehouse-drag {{raw:elevation}} {{raw:focusFurnitureId}}" data-id="{{raw:safe}}" role="button" tabindex="0" aria-label="{{raw:safe2}}" style="cursor:grab"><rect x="{{raw:x}}" y="{{raw:y}}" width="{{raw:max}}" height="{{raw:max2}}" rx="3"/><text x="{{raw:x2}}" y="{{raw:y2}}" text-anchor="middle">{{raw:safe3}}</text><text x="{{raw:x3}}" y="{{raw:y3}}" text-anchor="middle">{{raw:elevation2}}{{raw:abbreviatedBottleCount}}</text></g>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseMapWrap -->
+<div class="warehouse-map-wrap"><svg class="warehouse-floor" viewBox="0 0 {{raw:vbW}} {{raw:vbH}}" data-room-id="{{raw:safe}}" aria-label="{{raw:safe2}}"><rect class="warehouse-boundary" x="1" y="1" width="{{raw:vbW2}}" height="{{raw:vbH2}}" rx="2"/>{{raw:grid}}{{raw:shapes}}<text class="warehouse-room-hint" x="10" y="{{raw:vbH3}}">{{t:warehouse.view.twoDimensionalInstructions}}</text></svg></div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottlePhoto -->
+<img class="warehouse-bottle-photo" src="{{raw:safe}}" alt="" loading="lazy">
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottlePhoto2 -->
+<img class="warehouse-bottle-photo warehouse-bottle-placeholder" src="/assets/photo-placeholder.svg" alt="" aria-hidden="true">
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseLabel -->
+<svg viewBox="0 0 24 60" aria-hidden="true"><rect x="8" y="2" width="8" height="12" rx="2"/><path d="M8 14 Q3 19 3 25V54Q3 58 7 58H17Q21 58 21 54V25Q21 19 16 14Z"/><rect class="warehouse-label" x="5" y="31" width="14" height="16" rx="1"/></svg>{{raw:photo}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottleSymbol -->
+<span class="warehouse-bottle-symbol warehouse-bottle-static{{raw:showPlaceholder}}" aria-hidden="true">{{raw:content}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottleSymbol2 -->
+<button type="button" class="warehouse-bottle-symbol{{raw:showPlaceholder}}" data-act="{{raw:action}}" data-id="{{raw:safe}}" {{raw:selectable}} title="{{raw:safe2}}" aria-label="{{raw:safe3}}">{{raw:content}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:primaryButton -->
+<a class="btn primary" href="{{raw:safe}}" data-act="open" data-id="{{raw:safe2}}" data-bottle-id="{{raw:safe3}}">{{raw:t}}</a>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseAssign -->
+<button type="button" class="btn" data-act="warehouse-assign" data-id="{{raw:safe}}">{{t:warehouse.bottles.relocate}}</button>{{raw:detailsLink}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:img -->
+<img src="{{raw:safe}}" alt="{{raw:safe2}}">
+<!-- /wcm-template -->
+
+<!-- wcm-template:img2 -->
+<img src="/assets/photo-placeholder.svg" alt="" aria-hidden="true">
+<!-- /wcm-template -->
+
+<!-- wcm-template:bottlePreviewDiv -->
+<div><dt>{{raw:safe}}</dt><dd>{{raw:safe2}}</dd></div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottlePreviewComment -->
+<div class="warehouse-bottle-preview-comment"><strong>{{t:forms.bottle.personalComment}}</strong><p>{{raw:safe}}</p></div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottlePreview -->
+<div class="warehouse-bottle-preview">
+        <div class="warehouse-bottle-preview-photo">{{raw:photo}}</div>
+        <div class="warehouse-bottle-preview-info"><strong class="warehouse-bottle-preview-name">{{raw:safe}}</strong>
+            <dl class="warehouse-bottle-preview-fields">{{raw:fields}}</dl>
+            {{raw:warehouseBottlePreviewComment}}
+        </div>
+    </div>
+    <div class="actions warehouse-bottle-preview-actions">
+        {{raw:bottleActionButtons}}
+    </div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseShelfView -->
+<button type="button" class="btn small warehouse-shelf-overflow" data-act="warehouse-shelf-view" data-id="{{raw:safe}}">+{{raw:length}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint -->
+<span class="hint">{{t:warehouse.shelves.empty}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseShelf -->
+<div class="warehouse-shelf" data-shelf-id="{{raw:safe}}" data-capacity="{{raw:capacity}}"><div class="warehouse-shelf-head"><strong>{{raw:safe2}}</strong>
+            <span class="warehouse-shelf-meta">{{raw:safe3}}{{raw:doorLabel}} · {{raw:num}} cm{{raw:heightCm}}{{raw:capacity2}}</span>
+            <div class="actions"><button class="btn small" type="button" data-act="warehouse-shelf-up" data-id="{{raw:safe4}}" {{raw:disabled}} title="{{t:warehouse.shelves.moveUp}}" aria-label="{{t:warehouse.shelves.moveUp}}">{{raw:arrowUpIcon}}</button><button class="btn small" type="button" data-act="warehouse-shelf-down" data-id="{{raw:safe5}}" {{raw:disabled2}} title="{{t:warehouse.shelves.moveDown}}" aria-label="{{t:warehouse.shelves.moveDown}}">{{raw:arrowDownIcon}}</button><button class="btn small" data-act="warehouse-shelf-copy" data-id="{{raw:safe6}}">{{t:warehouse.furniture.copy}}</button><button class="btn small" data-act="warehouse-shelf-edit" data-id="{{raw:safe7}}">{{t:common.actions.edit}}</button><button class="btn small danger" data-act="warehouse-shelf-delete" data-id="{{raw:safe8}}">{{t:common.actions.remove}}</button></div></div>
+            <div class="warehouse-bottle-silhouettes">{{raw:occupants}}{{raw:warehouseShelfView}}{{raw:hint}}</div></div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint2 -->
+<p class="hint">{{raw:remainingHeight}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint3 -->
+<p class="hint">{{t:warehouse.shelves.noShelves}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehousePhotoOpen -->
+<div class="warehouse-furniture-photo photo-tile">
+        <button type="button" class="warehouse-photo-open photo-open" data-act="warehouse-photo-open" data-path="{{raw:safe}}" data-title="{{raw:safe2}}" title="{{t:warehouse.photos.view}}" aria-label="{{t:warehouse.photos.view}}"><img src="/{{raw:safe3}}" loading="lazy" draggable="false" alt="{{raw:safe4}}"></button>
+        <button type="button" class="photo-remove" data-act="warehouse-photo-delete" data-id="{{raw:safe5}}" data-photo-id="{{raw:safe6}}" aria-label="{{t:warehouse.photos.remove}}">{{raw:closeIcon}}</button>
+    </div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseFurniturePhotos -->
+<section class="warehouse-furniture-photos bottle-entry-gallery"><h4>{{t:warehouse.photos.title}}</h4>
+    <div class="warehouse-furniture-photo-list bottle-photos">{{raw:photos}}</div>
+    <div class="warehouse-furniture-photo-actions bottle-photo-add-actions"><label class="photo-add">{{raw:addActionLabel}}<input type="file" data-furniture-photos="{{raw:safe}}" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden></label><label class="photo-add photo-capture">{{t:cutout.takePhoto}}<input type="file" accept="image/*" capture="environment" data-furniture-photos="{{raw:safe2}}" hidden></label></div>
+    </section>
+<!-- /wcm-template -->
+
+<!-- wcm-template:panel -->
+<div class="panel warehouse-furniture-panel"><div class="warehouse-panel-head"><div><h3>{{raw:safe}} <span class="muted">({{raw:safe2}})</span></h3><p class="hint">{{raw:sizeDescription}}</p></div><div class="actions"><button class="btn small" data-act="warehouse-furniture-copy" data-id="{{raw:safe3}}">{{t:warehouse.furniture.copy}}</button><button class="btn small" data-act="warehouse-furniture-edit" data-id="{{raw:safe4}}">{{t:common.actions.edit}}</button><button class="btn small danger" data-act="warehouse-furniture-delete" data-id="{{raw:safe5}}">{{t:common.actions.remove}}</button></div></div>
+    {{raw:hint}}
+    <div class="warehouse-shelves{{raw:managementOnly}}">{{raw:shelves}}</div>
+    <div class="actions warehouse-furniture-actions"><button type="button" class="btn" data-act="warehouse-shelf-new" data-id="{{raw:safe6}}">{{raw:addActionLabel}}</button><button type="button" class="btn" data-act="warehouse-find">{{t:warehouse.bottles.assign}}</button></div>
+    {{raw:warehouseFurniturePhotos}}</div>
+<!-- /wcm-template -->

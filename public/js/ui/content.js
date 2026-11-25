@@ -1,4 +1,9 @@
 import {escapeHtml} from './dom.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/content.html', import.meta.url));
+
 
 /**
  * Derives the safe result from the supplied values.
@@ -40,8 +45,14 @@ export function panel({content = '', variant = 'standard', tag = 'div',
   assertVariant(tag, ['div', 'section', 'article'], 'panel tag');
   const baseClass = variant === 'analytics' ? 'analytics-panel' :
     variant === 'plain' ? '' : 'panel';
-  return `<${tag} class="${safe(classes(baseClass,
-    className))}" data-ds-panel="${variant}">${content}</${tag}>`;
+  return renderTemplate('panel', {
+    tag: tag,
+    safe: safe(classes(baseClass,
+      className)),
+    variant: variant,
+    content: content,
+    tag2: tag,
+  });
 }
 
 /**
@@ -70,13 +81,26 @@ export function detailField({
   const valueTag = definition ? 'dd' : variant === 'readonly' ? 'strong' :
     variant === 'note' ? 'p' : 'div';
   const valueContent = valueHtml ? String(value) : safe(value);
-  return `<div${className ? ` class="${safe(className)}"` :
-    ''} data-ds-detail-field="${variant}">` +
-    `<${labelTag}${labelClass ? ` class="${safe(labelClass)}"` :
-      ''}>${safe(label)}</${labelTag}>` +
-    `<${valueTag}${valueClass ? ` class="${safe(valueClass)}"` :
-      ''}>${valueContent}</${valueTag}>` +
-    `</div>`;
+  return renderTemplate('detailFieldDiv', {
+    className: className ? ` class="${safe(className)}"` :
+      '',
+    variant: variant,
+  }) +
+    renderTemplate('detailField', {
+      labelTag: labelTag,
+      labelClass: labelClass ? ` class="${safe(labelClass)}"` :
+        '',
+      safe: safe(label),
+      labelTag2: labelTag,
+    }) +
+    renderTemplate('detailField2', {
+      valueTag: valueTag,
+      valueClass: valueClass ? ` class="${safe(valueClass)}"` :
+        '',
+      valueContent: valueContent,
+      valueTag2: valueTag,
+    }) +
+    renderTemplate('detailField3');
 }
 
 /**
@@ -91,8 +115,14 @@ export function detailGrid(content, {columns = 3, tag = 'div', className =
   ''} = {}) {
   assertVariant(columns, [2, 3], 'detail grid');
   assertVariant(tag, ['div', 'dl'], 'detail grid tag');
-  return `<${tag}${className ? ` class="${safe(className)}"` :
-    ''} data-ds-detail-grid="${columns}">${content}</${tag}>`;
+  return renderTemplate('detailGrid', {
+    tag: tag,
+    className: className ? ` class="${safe(className)}"` :
+      '',
+    columns: columns,
+    content: content,
+    tag2: tag,
+  });
 }
 
 /**
@@ -110,16 +140,28 @@ export function emptyState({
   className = ''
 } = {}) {
   assertVariant(variant, ['collection', 'subtle', 'inline'], 'empty state');
-  if (variant === 'inline') return `<p class="${safe(classes('analytics-empty',
-    className))}" data-ds-empty-state="inline">${safe(description ||
-      title)}</p>`;
-  if (variant === 'subtle') return `<p class="${safe(classes('hint',
-    className))}" data-ds-empty-state="subtle">${safe(description ||
-      title)}</p>`;
-  return `<div class="${safe(classes('empty-state',
-    className))}" data-ds-empty-state="collection">` +
-    `<strong>${safe(title)}</strong><p>${safe(description
-    )}</p>${actions}</div>`;
+  if (variant === 'inline') return renderTemplate('emptyStateP', {
+    safe: safe(classes('analytics-empty',
+      className)),
+    safe2: safe(description ||
+      title),
+  });
+  if (variant === 'subtle') return renderTemplate('emptyStateP2', {
+    safe: safe(classes('hint',
+      className)),
+    safe2: safe(description ||
+      title),
+  });
+  return renderTemplate('emptyStateDiv', {
+    safe: safe(classes('empty-state',
+      className)),
+  }) +
+    renderTemplate('strong', {
+      safe: safe(title),
+      safe2: safe(description
+      ),
+      actions: actions,
+    });
 }
 
 /**
@@ -132,10 +174,14 @@ export function emptyState({
 export function divider({orientation = 'horizontal', className = ''} = {}) {
   assertVariant(orientation, ['horizontal', 'vertical'], 'divider');
   return orientation === 'horizontal'
-    ? `<hr class="${safe(classes('divider',
-      className))}" data-ds-divider="horizontal">`
-    : `<span class="${safe(className
-    )}" data-ds-divider="vertical" aria-hidden="true"></span>`;
+    ? renderTemplate('hr', {
+      safe: safe(classes('divider',
+        className)),
+    })
+    : renderTemplate('dividerSpan', {
+      safe: safe(className
+      ),
+    });
 }
 
 /**
@@ -150,8 +196,12 @@ export function actionToolbar(content, {className = '', variant = 'inline'} =
   {}) {
   assertVariant(variant, ['inline', 'filters', 'end'], 'action toolbar');
   const baseClass = variant === 'filters' ? 'toolbar' : 'actions';
-  return `<div class="${safe(classes(baseClass,
-    className))}" data-ds-action-toolbar="${variant}">${content}</div>`;
+  return renderTemplate('actionToolbarDiv', {
+    safe: safe(classes(baseClass,
+      className)),
+    variant: variant,
+    content: content,
+  });
 }
 
 /**
@@ -161,7 +211,9 @@ export function actionToolbar(content, {className = '', variant = 'inline'} =
  * @return {string} List-item HTML.
  */
 export function documentItem(content) {
-  return `<li>${content}</li>`;
+  return renderTemplate('li', {
+    content: content,
+  });
 }
 
 /**
@@ -171,6 +223,8 @@ export function documentItem(content) {
  * @return {string} Document-list HTML.
  */
 export function documentList(items) {
-  return `<ul class="document-list" data-ds-document-list>${items.join(
-    '')}</ul>`;
+  return renderTemplate('documentList', {
+    items: items.join(
+      ''),
+  });
 }

@@ -12,6 +12,11 @@ import {saveCollectionViewPreference}
 import {activateHelpTopic} from './views/help.js';
 import {activateSettingsSection} from './views/settings.js';
 import {handleFlavorRange, setFlavorFromPointer} from './ui/flavor-profile.js';
+import {loadTemplates} from './ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/events.html', import.meta.url));
+
 /**
  * One delegated click handler; HTML data-act values are the UI action names.
  *
@@ -72,11 +77,14 @@ export function bindEvents(
     pendingConfirmation = task;
     modal.showModal(
       title,
-      `<p>${escapeHtml(message)}</p>${destructiveFooter({
-        cancelLabel: t('common.actions.cancel'),
-        acceptLabel: buttonLabel,
-        acceptAction: 'confirm-action',
-      })}`
+      renderTemplate('confirmInModalP', {
+        message: message,
+        destructiveFooter: destructiveFooter({
+          cancelLabel: t('common.actions.cancel'),
+          acceptLabel: buttonLabel,
+          acceptAction: 'confirm-action',
+        }),
+      })
     );
   }
 

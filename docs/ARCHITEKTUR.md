@@ -7,7 +7,8 @@ WhiskyCollectionManager besteht aus einem Node.js-Server und nativen Browser-ES-
 | Bereich | Zuständigkeit |
 |---|---|
 | `public/app.js`, `public/js/navigation/`, `public/js/events.js` | Browserstart, Routing, History, delegierte Aktionen |
-| `public/js/views/` | Fachansichten und gerendertes HTML |
+| `public/js/views/` | Datenbindung und Komposition der Fachansichten |
+| `public/**/templates/*.html` | HTML- und SVG-Struktur der UI |
 | `public/js/ui/`, `public/styles/` | Designsystem, Dialoge, Widgets, 3D-Renderer, Fachstyles |
 | `public/js/domain/` | Abgeleitete Anzeige-/Analyseberechnungen |
 | `public/locales/de.json`, `en.json` | Übersetzungsschlüssel und Sprachvarianten |
@@ -33,6 +34,28 @@ WhiskyCollectionManager besteht aus einem Node.js-Server und nativen Browser-ES-
 Benutzeraktion → delegierte Events/UI-Zustand → `public/js/api.js` → HTTP-Routen → Services → Domain/Storage → API-Antwort → DOM-Abgleich. Ein Mutationsergebnis kann optional ein revisionsgebundenes State-Delta enthalten; bei nicht passender Revision lädt der Browser die Ressource erneut.
 
 Die zentrale Modal-Verwaltung kontrolliert verschachtelte Dialoge, Fokus, Escape und die Hintergrund-Scrollposition. Fachansichten erhalten ihre jeweiligen Daten und Dialogaktionen, nicht eine zweite globale Modalverwaltung.
+
+## Externe UI-Templates
+
+HTML und SVG werden in den `templates/`-Unterordnern der jeweiligen
+Frontend-Module gepflegt. Neue JavaScript-Strings mit Markup sind unzulässig.
+Der gemeinsame Loader `public/js/ui/templates.js` lädt die Fragmente einmal
+pro Modul; die bisherigen synchronen Renderer bleiben nach dem Laden nutzbar.
+Die Dateien werden vom lokalen HTTP-Server ohne Build-Schritt ausgeliefert.
+
+Ein Fragment beginnt mit `<!-- wcm-template:fragmentName -->` und endet mit
+`<!-- /wcm-template -->`. `{{text:name}}` bindet HTML-escaped Text,
+`{{t:domain.key}}` eine Übersetzung. `{{raw:name}}` ist nur für kontrollierte
+Markup-Fragmente oder geprüfte technische Werte vorgesehen; niemals für
+ungeprüfte Benutzereingaben. Die Slot-Namen sollen ihre Bedeutung ausdrücken.
+Geschäftslogik, Datenaufbereitung und Ereignisse gehören nicht in die Templates.
+Der Backup-Profildialog trennt die Datenaufbereitung in `profile-model.js`.
+
+`npm run check` prüft per JavaScript-AST, dass kein HTML/SVG in
+JavaScript-Literalen steht und dass Fragmentreferenzen und Slot-Bindungen
+vollständig sind. Die Übersetzungsprüfung umfasst auch die HTML-Dateien.
+Die String-Renderer sind ein Kompatibilitätsschritt; native DOM-Datenbindung
+und eine weitergehende Trennung der ViewModels sind eigenständige Folgearbeiten.
 
 ## Sicherheit und Betrieb
 

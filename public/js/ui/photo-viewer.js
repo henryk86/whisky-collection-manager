@@ -3,6 +3,11 @@ import {escapeHtml, query, queryAll} from './dom.js';
 import {createPhotoZoom} from './photo-zoom.js';
 import {minusIcon, plusIcon, arrowLeftIcon, arrowRightIcon}
   from './action-icons.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/photo-viewer.html', import.meta.url));
+
 
 /**
  * A photo lightbox inside the application's existing modal system. The source
@@ -68,33 +73,20 @@ export function createPhotoViewer({state, showModal}) {
     const photo = photos[active];
     const multiple = photos.length > 1;
 
-    showModal(t("ui.photos.bottlePhoto"), `<figure class="photo-lightbox">
-    <div class="photo-lightbox-stage">
-    <img class="photo-lightbox-image" src="${escapeHtml(photo.src
-    )}" alt="${escapeHtml(photo.alt)}" draggable="false">
-    </div>
-    <figcaption class="photo-lightbox-footer">
-    <span class="photo-lightbox-caption">${escapeHtml(photo.alt)}</span>
-    <span class="photo-lightbox-zoom" role="group" aria-label="${t(
-      'ui.photos.zoomControls')}">
-    <button type="button" class="btn small" data-act="photo-zoom-out" \
-aria-label="${t('ui.photos.zoomOut')}" disabled>${minusIcon}</button>
-    <button type="button" class="btn small photo-lightbox-zoom-level" \
-data-act="photo-zoom-reset" aria-label="${t('ui.photos.zoomReset')}" \
-disabled><span data-photo-zoom-level>100 %</span></button>
-    <button type="button" class="btn small" data-act="photo-zoom-in" \
-aria-label="${t('ui.photos.zoomIn')}">${plusIcon}</button>
-    </span>
-    ${multiple ? `<span class="photo-lightbox-navigation">
-    <button type="button" class="btn small" data-act="photo-prev" \
-aria-label="${t("ui.photos.previous")}">${arrowLeftIcon}</button>
-    <span class="photo-lightbox-count" aria-live="polite">${active +
-        1} / ${photos.length}</span>
-    <button type="button" class="btn small" data-act="photo-next" \
-aria-label="${t("ui.photos.next")}">${arrowRightIcon}</button>
-    </span>` : ''}
-    </figcaption>
-    </figure>`, true, Boolean(state.modal), '', 'photo');
+    showModal(t("ui.photos.bottlePhoto"), renderTemplate('photoLightbox', {
+      src: photo.src,
+      alt: photo.alt,
+      alt2: photo.alt,
+      minusIcon: minusIcon,
+      plusIcon: plusIcon,
+      photoPrev: multiple ? renderTemplate('photoPrev', {
+        arrowLeftIcon: arrowLeftIcon,
+        active: active +
+          1,
+        length: photos.length,
+        arrowRightIcon: arrowRightIcon,
+      }) : '',
+    }), true, Boolean(state.modal), '', 'photo');
     photoZoom.attach();
     query('.dialog .dialog-head [data-act="close-modal"]')?.focus();
   }

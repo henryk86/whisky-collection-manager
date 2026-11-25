@@ -1,0 +1,69 @@
+<!-- wcm-template:warehouseWallClearance -->
+<div class="warehouse-wall-clearance" style="--wall-clearance-height:{{raw:px}}px" title="{{raw:safe}}" aria-hidden="true"></div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseFurnitureManage -->
+<button type="button" class="warehouse-wall-furniture-edit" data-act="warehouse-furniture-manage" data-id="{{raw:safe}}" title="{{raw:safe2}}" aria-label="{{raw:safe3}}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseWallBottle -->
+<span class="warehouse-wall-bottle{{raw:has}}{{raw:isFocusedBottle}}{{raw:dimmed}}">{{raw:bottleSymbol}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseShelfOverflow -->
+<span class="warehouse-shelf-overflow" aria-label="{{raw:safe}}">+{{raw:hiddenCount}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseWallNoSpace -->
+<span class="warehouse-wall-no-space">{{t:warehouse.wall.noSpace}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint -->
+<span class="hint">{{t:warehouse.shelves.empty}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseShelf -->
+<div class="warehouse-shelf warehouse-wall-bay{{raw:isFocusedShelf}}{{raw:compact}}{{raw:tiny}}{{raw:index}}{{raw:capacity}}" data-shelf-id="{{raw:safe}}" data-capacity="{{raw:capacity2}}"{{raw:capacity3}} data-front="{{raw:safe2}}" style="--wall-bay-height:{{raw:bayHeight}}px;--wall-bottle-height:{{raw:bottleHeight}}px;--wall-bottle-width:{{raw:bottleWidth}}px">
+                <div class="warehouse-wall-bay-title"><strong>{{raw:safe3}}</strong><span>{{raw:safe4}}{{raw:occupancy}}</span></div>
+                <div class="warehouse-bottle-silhouettes">{{raw:preview}}{{raw:warehouseShelfOverflow}}{{raw:content}}</div>
+            </div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseWallFurniture -->
+<section class="warehouse-wall-furniture{{raw:stacked}}" data-furniture-id="{{raw:safe}}" style="--wall-furniture-width:{{raw:widthPx}}px;--wall-furniture-height:{{raw:heightPx}}px;--wall-elevation:{{raw:elevationPx}}px;--wall-offset-x:{{raw:px}}px">
+            <div class="warehouse-wall-furniture-body">{{raw:clearance}}{{raw:bays}}</div>
+            {{raw:editFurniture}}
+        </section>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseWallStack -->
+<div class="warehouse-wall-stack{{raw:length}}{{raw:changeWall}}" data-facing="{{raw:orientation}}" style="--wall-stack-width:{{raw:px}}px;--wall-stack-height:{{raw:px2}}px">{{raw:furnitureHtml}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseWallScroll -->
+<div class="warehouse-wall-scroll" data-room-id="{{raw:safe}}" tabindex="0" role="region" aria-label="{{raw:safe2}}">
+            <div class="warehouse-wall-surface"><div class="warehouse-wall-furniture-list">{{raw:cards}}</div></div>
+        </div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseRoomWallEmpty -->
+<div class="warehouse-room-wall-empty"><p class="hint">{{t:warehouse.wall.noFurniture}}</p></div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseRoomWall -->
+<section class="warehouse-room-wall{{raw:focusedBottleId}}" aria-label="{{raw:safe}}">
+        <div class="warehouse-wall-controls">
+            <div class="warehouse-bottle-bulk-tools" aria-label="{{raw:safe2}}">
+                <span class="warehouse-bottle-selection-count" aria-live="polite">{{raw:safe3}}</span>
+                <button type="button" class="warehouse-unassigned-toggle" aria-controls="warehouse-wall-unassigned-content" aria-expanded="{{raw:expanded}}" title="{{raw:safe4}}">
+                    <span class="warehouse-unassigned-toggle-chevron" aria-hidden="true"></span>{{raw:unassignedTitle}}
+                </button>
+                <button type="button" class="btn small warehouse-bottles-select-clear" data-act="warehouse-bottles-select-clear" {{raw:size}}>{{t:warehouse.selection.clear}}</button>
+                <button type="button" class="btn small warehouse-bottles-preview-selected" data-act="warehouse-bottles-preview-selected" {{raw:size2}}>{{t:warehouse.bottles.detailsTitle}}</button>
+                <button type="button" class="btn small primary warehouse-bottles-assign-selected" data-act="warehouse-bottles-assign-selected" {{raw:size3}}>{{t:warehouse.bottles.bulkAssignAction}}</button>
+            </div>
+            {{raw:unassignedTray}}
+        </div>
+        {{raw:warehouseWallScroll}}
+    </section>
+<!-- /wcm-template -->

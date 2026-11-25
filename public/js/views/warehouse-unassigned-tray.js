@@ -8,6 +8,11 @@ import {
   bottleLabel, bottleListFacts, bottleSymbol,
   safe
 } from './warehouse-presentation.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/warehouse-unassigned-tray.html', import.meta.url));
+
 
 /**
  * Renders unassigned tray page for warehouse unassigned tray.
@@ -24,43 +29,40 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [],
   const cards = data.items.map(bottle => {
     const checked = selected.has(bottle.id);
     const facts = bottleListFacts(bottle);
-    return `<div class="warehouse-unassigned-bottle warehouse-wall-bottle\
-${checked ? ' is-selected' : ''}" data-unassigned-id="${safe(bottle.id)}">
-            ${bottleSymbol(bottle, {selectable: true, selected: checked})}
-            <span class="warehouse-unassigned-name" title="${safe(bottleLabel(
-      bottle))}">${safe(bottleLabel(bottle))}</span>
-            ${facts ?
-        `<span class="warehouse-unassigned-facts">${facts}</span>` : ''}
-        </div>`;
+    return renderTemplate('warehouseUnassignedBottle', {
+      checked: checked ? ' is-selected' : '',
+      safe: safe(bottle.id),
+      bottleSymbol: bottleSymbol(bottle, {selectable: true, selected: checked}),
+      safe2: safe(bottleLabel(
+        bottle)),
+      safe3: safe(bottleLabel(bottle)),
+      warehouseUnassignedFacts: facts ?
+        renderTemplate('warehouseUnassignedFacts', {
+          facts: facts,
+        }) : '',
+    });
   }).join('');
   const empty = data.total === 0 ? 'warehouse.wall.unassignedEmpty' :
     'warehouse.wall.unassignedNoMatches';
-  return `<div class="warehouse-unassigned-results" aria-live="polite">
-        <div class="warehouse-unassigned-grid">${cards ||
-    `<p class="hint warehouse-unassigned-empty">${t(empty)}</p>`}</div>
-        <div class="warehouse-unassigned-pagination">
-            <span class="warehouse-unassigned-page-summary">${t(
+  return renderTemplate('warehouseUnassignedResults', {
+    cards: cards ||
+      renderTemplate('hint', {
+        t: t(empty),
+      }),
+    unassignedShown: t(
       'warehouse.wall.unassignedShown',
       {shown: data.filtered, total: data.total}
-    )}</span>
-            <input type="search" id="warehouse-unassigned-wall-search" \
-class="warehouse-unassigned-page-search" value="${safe(query)}" \
-placeholder="${safe(t('warehouse.wall.unassignedSearchPlaceholder'))}" \
-aria-label="${safe(t('warehouse.wall.unassignedSearch'))}" autocomplete="off">
-            <div class="warehouse-unassigned-page-controls">
-                <button type="button" class="btn small" data-act="warehouse-\
-unassigned-prev" ${data.page === 1 ? 'disabled' : ''}>${t('home.pagination.p\
-revious')}</button>
-                <span>${t(
+    ),
+    safe: safe(query),
+    safe2: safe(t('warehouse.wall.unassignedSearchPlaceholder')),
+    safe3: safe(t('warehouse.wall.unassignedSearch')),
+    disabled: data.page === 1 ? 'disabled' : '',
+    pageOf: t(
       'home.pagination.pageOf',
       {page: data.page, total: data.pages}
-    )}</span>
-                <button type="button" class="btn small" data-act="warehouse-\
-unassigned-next" ${data.page === data.pages ? 'disabled' : ''}>${t('home.pag\
-ination.next')}</button>
-            </div>
-        </div>
-    </div>`;
+    ),
+    disabled2: data.page === data.pages ? 'disabled' : '',
+  });
 }
 
 /**
@@ -75,19 +77,24 @@ export function renderUnassignedTray(warehouse, selectedIds = [],
   options = {}) {
   const total = unassignedWallPage(warehouse).total;
   const label = safe(t('warehouse.wall.unassignedTitle', {count: total}));
-  const content = `<div class="warehouse-unassigned-content">
-            ${renderUnassignedTrayPage(warehouse, selectedIds, options)}
-        </div>`;
+  const content = renderTemplate('warehouseUnassignedContent', {
+    unassignedTrayPage: renderUnassignedTrayPage(
+      warehouse, selectedIds, options
+    ),
+  });
   // Inside a room wall, the staging tray shares the selection toolbar's
   // single header. Keep a standalone native disclosure for other callers.
   if (options.embedded)
-    return `<div class="warehouse-unassigned-tray warehouse-unassigned-tray-\
--embedded" id="warehouse-wall-unassigned-content" aria-label="${label}" ${
-options.expanded ? '' : 'hidden'}>${content}</div>`;
-  return `<details class="warehouse-unassigned-tray" ${options.expanded ?
-    'open' : ''} aria-label="${label}">
-        <summary class="warehouse-unassigned-summary"><strong>${label}</stro\
-ng><span>${t('warehouse.wall.unassignedToggleHint')}</span></summary>
-        ${content}
-    </details>`;
+    return renderTemplate('warehouseWallUnassignedContent', {
+      label: label,
+      expanded: options.expanded ? '' : 'hidden',
+      content: content,
+    });
+  return renderTemplate('warehouseUnassignedTray', {
+    expanded: options.expanded ?
+      'open' : '',
+    label: label,
+    label2: label,
+    content: content,
+  });
 }

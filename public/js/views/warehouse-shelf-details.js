@@ -5,6 +5,11 @@ import {
   bottleSymbol, bottleLabel, bottleListFacts, bottleActionButtons,
   safe
 } from './warehouse-presentation.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/warehouse-shelf-details.html', import.meta.url));
+
 
 const STATUS_KEYS = {
   closed: 'home.status.closed',
@@ -36,41 +41,54 @@ export function shelfContents(warehouse, shelfId, bottlings = []) {
             {numeric: true}
           ));
         const body = bottles.length ?
-          `<div class="warehouse-shelf-detail-grid">${bottles.map(b => {
-            const bottling = bottlingById.get(b.bottlingId);
-            const statusKey = STATUS_KEYS[b.status];
-            const facts = [
-              [t('forms.bottle.inventoryNumber'), b.number || null],
-              [
-                t('forms.bottling.abv'),
-                bottling?.abv == null || bottling.abv === '' ? null :
-                  `${formatNumber(bottling.abv)} % Vol.`,
-              ],
-              [t('forms.bottle.statusLabel'), statusKey ? t(statusKey) : null],
-            ].filter(([, value]) => value != null && value !== '')
-              .map(([label, value]) =>
-                `<span class="warehouse-bottle-fact"><span \
-class="warehouse-bottle-fact-label">${safe(label)}:</span> ${safe(value)}</s\
-pan>`).join('');
-            return `<article class="warehouse-shelf-detail-bottle" \
-data-bottle-id="${safe(b.id)}">
-                ${bottleSymbol(b, {placeholderImage: true, staticImage: true})}
-                <div class="warehouse-shelf-detail-info"><strong>${safe(b.name
-            )}</strong><div class="warehouse-bottle-facts">${facts}${
-bottleListFacts(b)}</div></div>
-                ${actionToolbar(
-              bottleActionButtons(b),
-              {className: 'warehouse-shelf-detail-actions'}
-            )}
-             </article>`;
-          }).join('')}</div>` :
-          `<p class="hint">${t('warehouse.shelves.empty')}</p>`;
+          renderTemplate('warehouseShelfDetailGrid', {
+            bottles: bottles.map(b => {
+              const bottling = bottlingById.get(b.bottlingId);
+              const statusKey = STATUS_KEYS[b.status];
+              const facts = [
+                [t('forms.bottle.inventoryNumber'), b.number || null],
+                [
+                  t('forms.bottling.abv'),
+                  bottling?.abv == null || bottling.abv === '' ? null :
+                    `${formatNumber(bottling.abv)} % Vol.`,
+                ],
+                [
+                  t('forms.bottle.statusLabel'),
+                  statusKey ? t(statusKey) : null,
+                ],
+              ].filter(([, value]) => value != null && value !== '')
+                .map(([label, value]) =>
+                  renderTemplate('warehouseBottleFact', {
+                    safe: safe(label),
+                    safe2: safe(value),
+                  })).join('');
+              return renderTemplate('warehouseShelfDetailBottle', {
+                safe: safe(b.id),
+                bottleSymbol: bottleSymbol(
+                  b,
+                  {placeholderImage: true, staticImage: true}
+                ),
+                safe2: safe(b.name
+                ),
+                facts: facts,
+                bottleListFacts: bottleListFacts(b),
+                actionToolbar: actionToolbar(
+                  bottleActionButtons(b),
+                  {className: 'warehouse-shelf-detail-actions'}
+                ),
+              });
+            }).join(''),
+          }) :
+          renderTemplate('hint');
         return {
           title: `${room.name} / ${furniture.name} / ${shelf.name}`,
           count: bottles.length,
-          html: `<div class="warehouse-shelf-details"><p>${t(
-            'warehouse.shelves.bottleCount', {count: bottles.length}
-          )}</p>${body}</div>`,
+          html: renderTemplate('warehouseShelfDetails', {
+            bottleCount: t(
+              'warehouse.shelves.bottleCount', {count: bottles.length}
+            ),
+            body: body,
+          }),
         };
       }
   return null;

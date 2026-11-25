@@ -1,0 +1,41 @@
+<!-- wcm-template:distilleryOption -->
+<label class="distillery-option">
+    <input type="checkbox" name="distilleryIds" value="{{text:id}}" {{raw:checked}}>
+    <span>{{text:name}}{{raw:status}}</span>
+    </label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:formField -->
+<div class="form-field full">
+    <span>{{t:forms.bottling.participatingDistilleries}}</span>
+    <input type="search" class="distillery-filter" placeholder="{{t:forms.bottling.searchDistilleries}}" aria-label="{{t:forms.bottling.filterDistilleries}}">
+    <div class="distillery-options">{{raw:options}}</div>
+    </div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:divider -->
+<hr class="divider">
+    <h3>{{t:forms.bottle.firstBottle}}</h3>
+    <div class="forms">{{raw:firstInventoryNumberField}}<div class="form-field">
+    <span>{{t:forms.bottle.autoInventoryNumber}}</span>
+    {{raw:suggestFirstButton}}
+    </div>{{raw:firstVolumeTypeField}}{{raw:firstVolumeMlField}}{{raw:firstStatusField}}<label class="form-field full">{{t:forms.bottle.initialPhotos}}<input name="firstPhotos" type="file" accept="{{raw:photoAccept}}" multiple>
+    </label>
+    <label class="form-field full">{{t:forms.bottle.initialAttachments}}
+    <input name="firstFiles" type="file" accept="{{raw:fileAccept}}" multiple>
+    <small class="hint">{{t:forms.bottle.attachmentTypesAndLimit}}</small>
+    </label>
+    </div>
+    <p class="hint">{{t:forms.bottle.addToExistingBottlingHint}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:bottlingForm -->
+<form id="bottling-form" data-id="{{text:id}}">
+    <div class="forms">{{raw:nameField}}{{raw:whiskyTypeField}}{{raw:brandField}}{{raw:distilleryPicker}}{{raw:compositionCompleteField}}<div class="form-field">{{t:forms.bottling.newDistillery}}
+    {{raw:addDistilleryButton}}
+    </div>{{raw:bottlerField}}{{raw:ageYearsField}}{{raw:abvField}}{{raw:volumeMlField}}{{raw:releaseYearField}}{{raw:distillationDateField}}{{raw:distillationYearField}}{{raw:bottlingDateField}}{{raw:bottlingYearField}}{{raw:caskTypeField}}{{raw:caskNumberField}}{{raw:limitedEditionCountField}}{{raw:whiskybaseUrlField}}{{raw:whiskybaseIdField}}{{raw:completionStatusField}}{{raw:descriptionField}}</div>{{raw:id2}}<div class="actions ds-modal-footer ds-modal-footer--form">
+    {{raw:closeModalButton}}
+    <button class="btn primary" type="submit">{{t:common.actions.save}}</button>
+    </div>
+    </form>
+<!-- /wcm-template -->

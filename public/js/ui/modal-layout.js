@@ -2,6 +2,11 @@ import {sectionHeader} from './headers.js';
 import {escapeHtml} from './dom.js';
 import {actionButton} from './buttons.js';
 import {closeIcon} from './action-icons.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/modal-layout.html', import.meta.url));
+
 
 /**
  * Builds an accessible dialog around trusted application-rendered HTML.
@@ -22,27 +27,27 @@ export function modalFrame({title, content, wide = false, variant = '',
     wide && !variant ? 'wide ds-modal--wide' : '',
     variant ? `ds-modal--${variant}` : '',
   ].filter(Boolean).join(' ');
-  return `<div class="overlay ds-modal-overlay" data-overlay="1">
-    <div class="${classes}" role="dialog" aria-modal="true" \
-aria-labelledby="ds-modal-title" aria-label="${escapeHtml(title)}" \
-tabindex="-1">
-    ${sectionHeader({
-    layout: 'dialog-head',
-    level: 2,
-    title,
-    titleId: 'ds-modal-title',
-    trailingAction: headingAction,
-    actionsBare: true,
-    actions: actionButton({
-      label: closeLabel,
-      action: 'close-modal',
-      size: 'small',
-      icon: closeIcon,
-      iconOnly: true,
-      className: 'ds-modal-close',
+  return renderTemplate('overlay', {
+    classes: classes,
+    title: title,
+    sectionHeader: sectionHeader({
+      layout: 'dialog-head',
+      level: 2,
+      title,
+      titleId: 'ds-modal-title',
+      trailingAction: headingAction,
+      actionsBare: true,
+      actions: actionButton({
+        label: closeLabel,
+        action: 'close-modal',
+        size: 'small',
+        icon: closeIcon,
+        iconOnly: true,
+        className: 'ds-modal-close',
+      }),
     }),
-  })}
-    <div class="ds-modal-body">${content}</div></div></div>`;
+    content: content,
+  });
 }
 
 /**
@@ -53,8 +58,11 @@ tabindex="-1">
  * @return {string} Footer HTML without changing submit behavior.
  */
 export function modalFooter(actions, {className = ''} = {}) {
-  return `<div class="actions ds-modal-footer${className ?
-    ` ${escapeHtml(className)}` : ''}">${actions}</div>`;
+  return renderTemplate('actions', {
+    className: className ?
+      ` ${escapeHtml(className)}` : '',
+    actions: actions,
+  });
 }
 
 /**

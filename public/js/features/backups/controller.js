@@ -8,6 +8,11 @@ import {request, httpResponseError} from '../../api.js';
 import {jobErrorText} from '../../i18n/job-errors.js';
 import {toast} from '../../ui/notifications.js';
 import {profileForm} from '../../views/backups.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/controller.html', import.meta.url));
+
 /**
  * Creates backup controller for controller.
  *
@@ -333,33 +338,24 @@ export function createBackupController({state, render, showModal, closeModal}) {
   function showZipPreview(result, filename) {
     showModal(
       t("backups.actions.validateAndRestoreZip"),
-      `<form id="backup-apply-zip-form" data-id="${h(result.id)}">
-          <p>${t("backups.summary.backupLabel")} <strong>${h(filename ||
-        t("backups.page.backupTitle"))}</strong></p>
-          <p><strong>${result.bottlings}</strong> ${t(
-          "backups.summary.bottlingsLabel")} <strong>${result
-            .bottles}</strong> ${t("backups.summary.bottlesLabel"
-            )} <strong>${result.distilleries}</strong> ${t(
-              "backups.summary.distilleriesLabel")}</p>
-          <p>${t(
-                "features.backups.restoredAssets",
-                {count: result.files, size: (result.bytes / 1048576).toFixed(1)}
-              )}</p>
-          <p class="warning">${t("backups.restore.replaceIncludesAttachments"
-              )}</p>
-          <label class="backup-checkbox"><input type="checkbox" \
-name="acknowledge" required> ${t("backups.restore.confirmReplaceCollectio\
-n")}</label>
-          <div class="actions ds-modal-footer ds-modal-footer--compact">
-            <button class="btn" type="button" data-act="backup-download-prep\
-ared" data-id="${h(result.id)}">${t("backups.actions.downloadZip")}</button>
-            ${actionButton({
-                label: t("common.actions.cancel"),
-                action: 'close-modal',
-              })}
-            <button class="btn danger" type="submit">${t(
-                "backups.actions.importBackup")}</button>
-          </div></form>`,
+      renderTemplate('backupApplyZipForm', {
+        id: result.id,
+        filename: filename ||
+          t("backups.page.backupTitle"),
+        bottlings: result.bottlings,
+        bottles: result
+          .bottles,
+        distilleries: result.distilleries,
+        restoredAssets: t(
+          "features.backups.restoredAssets",
+          {count: result.files, size: (result.bytes / 1048576).toFixed(1)}
+        ),
+        id2: result.id,
+        closeModalButton: actionButton({
+          label: t("common.actions.cancel"),
+          action: 'close-modal',
+        }),
+      }),
       true
     );
   }
@@ -373,19 +369,16 @@ ared" data-id="${h(result.id)}">${t("backups.actions.downloadZip")}</button>
   function promptPreparedZip(id, filename) {
     showModal(
       t("backups.password.zipEnter"),
-      `<form id="backup-unlock-zip-form" data-id="${h(id)}" data-filename="${h(
-        filename || 'Sicherung.zip')}">
-          <p>${t("backups.restore.savedArchive")} <strong>${h(filename ||
-          '')}</strong> ${t("backups.restore.openForPreview")}</p>
-          <label class="form-field">${t("backups.password.archiveLabel"
-          )}<input type="password" name="password" autocomplete="off" \
-placeholder="${t("backups.password.optionalForLegacy")}"></label>
-          <div class="actions">${actionButton({
-            label: t("common.actions.cancel"),
-            action: 'close-modal',
-          })}
-          <button type="submit" class="btn primary">${t(
-            "backups.actions.validateZip")}</button></div></form>`,
+      renderTemplate('backupUnlockZipForm', {
+        id: id,
+        filename: filename || 'Sicherung.zip',
+        filename2: filename ||
+          '',
+        closeModalButton: actionButton({
+          label: t("common.actions.cancel"),
+          action: 'close-modal',
+        }),
+      }),
       true
     );
   }
@@ -510,17 +503,14 @@ placeholder="${t("backups.password.optionalForLegacy")}"></label>
     if (!profile) return;
     showModal(
       t("backups.profiles.delete"),
-      `<p>${t("backups.schedule.should")} <strong>${h(profile.name
-      )}</strong> ${t("backups.confirmation.deleteSuffix")}</p>
-        <p class="warning">${t("backups.profiles.deleteDoesNotDeleteArchives"
-      )}</p>
-        <div class="actions ds-modal-footer ds-modal-footer--spaced">
-        ${actionButton({
-        label: t("common.actions.cancel"),
-        action: 'close-modal',
-      })}
-        <button type="button" class="btn danger" data-act="backup-confirm-de\
-lete" data-id="${h(id)}">${t("backups.profiles.deleteAction")}</button></div>`
+      renderTemplate('removeP', {
+        name: profile.name,
+        closeModalButton: actionButton({
+          label: t("common.actions.cancel"),
+          action: 'close-modal',
+        }),
+        id: id,
+      })
     );
   }
 
@@ -550,29 +540,26 @@ lete" data-id="${h(id)}">${t("backups.profiles.deleteAction")}</button></div>`
     const zip = profile.format === 'zip';
     showModal(
       t("backups.actions.restoreBackup"),
-      `<form id="backup-restore-form" data-id="${h(id)}">
-        <p>${t("backups.profiles.label")} <strong>${h(profile.name
-      )}</strong></p>
-        <p class="muted">${zip ?
-        t("backups.restore.validationBeforeOverwrite") :
-        t("backups.legacy.resticConvertExplanation")}</p>
-        <label class="form-field">${t("backups.archives.snapshot")}
-        <select name="snapshotId" required>${snapshots.length ?
-        snapshots.map(s =>
-          `<option value="${h(s.id)}">${h(s.shortId)} · ${h(new Date(s.time)
-            .toLocaleString('de-DE'))}</option>`).join('') :
-        `<option value="latest">${t("backups.legacy.latestSnapshot"
-        )}</option>`}</select></label>
-        <label class="backup-checkbox"><input type="checkbox" \
-name="acknowledge" required> ${t("backups.restore.confirmInspectBackup")}</l\
-abel>
-        <div class="actions ds-modal-footer ds-modal-footer--spaced">
-        ${actionButton({
+      renderTemplate('backupRestoreForm', {
+        id: id,
+        name: profile.name,
+        zip: zip ?
+          t("backups.restore.validationBeforeOverwrite") :
+          t("backups.legacy.resticConvertExplanation"),
+        length: snapshots.length ?
+          snapshots.map(s =>
+            renderTemplate('restoreOption', {
+              id: s.id,
+              shortId: s.shortId,
+              toLocaleString: new Date(s.time)
+                .toLocaleString('de-DE'),
+            })).join('') :
+          renderTemplate('restoreOption2'),
+        closeModalButton: actionButton({
           label: t("common.actions.cancel"),
           action: 'close-modal',
-        })}
-        <button type="submit" class="btn primary">${t(
-          "backups.restore.preparePreview")}</button></div></form>`,
+        }),
+      }),
       true
     );
   }

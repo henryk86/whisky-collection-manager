@@ -1,5 +1,10 @@
 import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/choice-template.html', import.meta.url));
+
 
 /**
  * One accessible, clickable import option; checkbox and its text stay in the
@@ -23,19 +28,21 @@ export function importChoice({
     `data-import-field="${escapeHtml(field)}"`;
   const existing = currentValue === null || currentValue === undefined ||
     currentValue === ''
-    ? '' : `<small class="import-choice-current">${t(
-      "imports.preview.currentValue",
-      {value: escapeHtml(String(currentValue))}
-    )}</small>`;
-  return `<label class="import-choice">
-    <input type="checkbox" ${attribute}${checked ? ' checked' :
-      ''}${disabled ? ' disabled' : ''}>
-    <span class="import-choice-copy">
-    <span class="import-choice-label">${escapeHtml(label)}</span>
-    <span class="import-choice-value">${escapeHtml(String(value))}</span>
-    ${existing}${disabled ?
-      `<small class="import-choice-current">${t(
-        "imports.preview.choiceNotFound")}</small>` : ''}
-    </span>
-    </label>`;
+    ? '' : renderTemplate('importChoiceCurrent', {
+      currentValue: t(
+        "imports.preview.currentValue",
+        {value: escapeHtml(String(currentValue))}
+      ),
+    });
+  return renderTemplate('importChoice', {
+    attribute: attribute,
+    checked: checked ? ' checked' :
+      '',
+    disabled: disabled ? ' disabled' : '',
+    label: label,
+    value: String(value),
+    existing: existing,
+    importChoiceCurrent: disabled ?
+      renderTemplate('importChoiceCurrent2') : '',
+  });
 }

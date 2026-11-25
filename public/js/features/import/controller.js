@@ -5,6 +5,11 @@ import {toast} from '../../ui/notifications.js';
 import {request} from '../../api.js';
 import {importChoice} from './choice-template.js';
 import {matchImportedDistilleries} from './distillery-matching.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/controller.html', import.meta.url));
+
 /**
  * Source-independent import workflow. The provider validates and identifies
  * its own records.
@@ -54,7 +59,9 @@ export function createExternalImport({
       if (oldStatus) oldStatus.textContent = message;
       else panel.insertAdjacentHTML(
         'beforeend',
-        `<p class="hint" id="import-status">${escapeHtml(message)}</p>`
+        renderTemplate('importStatus', {
+          message: message,
+        })
       );
     }
   }
@@ -121,34 +128,31 @@ export function createExternalImport({
         currentValue: old, checked: !old,
       });
     }).join('');
-    panel.innerHTML = `<div class="panel import-preview">
-    <h3>${t("imports.preview.title", {
-      id: escapeHtml(importDetails.referenceId),
-    })}</h3>
-    <p class="hint">${t("imports.import.sourceAndSaveInstructions"
-    )}</p>${importDetails.imageToken ?
-      `<div class="import-photo"><button type="button" class="import-previ\
-ew-photo-open" data-act="open-photo" title="${t("imports.images.enlarge")}" \
-aria-label="${t("imports.images.openOverlay", {source: safeSourceName})}">\
-<img src="/api/import-image/stage/${importDetails.imageToken}" alt="${t(
-        "imp\
+    panel.innerHTML = renderTemplate('panel', {
+      title: t("imports.preview.title", {
+        id: escapeHtml(importDetails.referenceId),
+      }),
+      openPhoto: importDetails.imageToken ?
+        renderTemplate('openPhoto', {
+          openOverlay: t(
+            "imports.images.openOverlay", {source: safeSourceName}
+          ),
+          imageToken: importDetails.imageToken,
+          reference: t(
+            "imp\
 orts.images.reference",
-        {source: safeSourceName}
-      )}"></button>${form.dataset.id ?
-        `<p class="hint">${t("imports.images.physicalBottleOnlyNotice")
-        }</p>` : `<label><input id="import-image" type="checkbox" checked> ${
-t("imports.images.attachAsLocalFirstBottle")}</label>`}<small class="hint">${
-t("imports.images.referenceNotOwnership", {source: safeSourceName})
-      }</small></div>` : ''}
-    <div class="import-choice-list" role="group" aria-label="${t(
-        "imports.import.selectFields")}">
-    ${distilleryChoice}${fieldChoices}
-    </div>
-    <div class="actions import-preview-actions">
-    <button type="button" class="btn primary" data-act="import-apply">${t(
-          "imports.import.applySelectedFields")}</button>
-    </div>
-    </div>`;
+            {source: safeSourceName}
+          ),
+          hint: form.dataset.id ?
+            renderTemplate('hint') : renderTemplate('importImage'),
+          referenceNotOwnership: t(
+            "imports.images.referenceNotOwnership",
+            {source: safeSourceName}
+          ),
+        }) : '',
+      distilleryChoice: distilleryChoice,
+      fieldChoices: fieldChoices,
+    });
   }
 
   /**
@@ -166,14 +170,12 @@ t("imports.images.referenceNotOwnership", {source: safeSourceName})
       pendingExtensionImport = raw;
       showModal(
         t("imports.import.ready"),
-        `<p>${t("imports.import.unsavedDialogNotice", {source: safeSourceName}
-        )}</p>
-    <div class="actions">
-    <button class="btn" type="button" data-act="close-modal">${t(
-          "imports.import.keepCurrentInput")}</button>
-    <button class="btn primary" type="button" data-act="import-continue">${t(
-            "imports.import.discardPreviousDialog")}</button>
-    </div>`,
+        renderTemplate('importFromExtensionP', {
+          unsavedDialogNotice: t(
+            "imports.import.unsavedDialogNotice",
+            {source: safeSourceName}
+          ),
+        }),
         false,
         true
       );
@@ -209,33 +211,31 @@ t("imports.images.referenceNotOwnership", {source: safeSourceName})
         navigate('detail', existing.id, {
           replace: true,
         });
-        showModal(t("imports.import.alreadyExists"), `<div class="panel">
-    <p>${t("imports.import.existingBottlingPrefix", {source: safeSourceName}
-        )} <strong>${escapeHtml(existing.name)}</strong> ${t(
-          "imports.import.existingBottlingSuffix")}</p>
-    <p class="hint">${t("imports.import.existingBottlingOptions")}</p>${data
-            .imageToken ? `<div class="import-existing-photo"><p><strong>${t(
-              "imports.images.preparedLocally", {source: safeSourceName}
-            )}</strong> ${t("imports.images.addExistingOrNewNotice")}</p>${(
-              existing.bottles || []).length ? `<label class="form-field">${t(
-                "imports.images.attachExistingBottle"
-              )}<select id="import-existing-photo-bottle">${existing.bottles
-                .map(b => `<option value="${escapeHtml(b.id)}">${escapeHtml(
-                  b.inventoryNumber || t("imports.bottles.noInventoryNumber")
-                )} · ${b.volumeType === 'sample' ?
-                  t("imports.bottles.sample") : t("imports.bottles.sta\
-ndard")}</option>`).join('')}</select></label><button class="btn small" \
-type="button" data-act="import-existing-photo">${t("imports.images.copyToSel\
-ectedBottle")}</button>` : ''}</div>` : ''}
-    <div class="actions">
-    <button class="btn primary" data-act="import-existing-bottle">${t(
-                    "imports.bottles.addAnother")}</button>
-    <button class="btn" data-act="import-existing-edit">${t(
-                      "imports.import.reviewMasterData")}</button>
-    <button class="btn" data-act="close-modal">${t("common.actions.cancel"
-                      )}</button>
-    </div>
-    </div>`, true);
+        showModal(t("imports.import.alreadyExists"), renderTemplate('panel2', {
+          existingBottlingPrefix: t(
+            "imports.import.existingBottlingPrefix",
+            {source: safeSourceName}
+          ),
+          name: existing.name,
+          importExistingPhoto: data
+            .imageToken ? renderTemplate('importExistingPhoto', {
+              preparedLocally: t(
+                "imports.images.preparedLocally", {source: safeSourceName}
+              ),
+              formField: (
+                existing.bottles || []).length ? renderTemplate('formField', {
+                  bottles: existing.bottles
+                    .map(b => renderTemplate('processExtensionImportOption', {
+                      id: b.id,
+                      inventoryNumber: b.inventoryNumber ||
+                        t("imports.bottles.noInventoryNumber"),
+                      volumeType: b.volumeType === 'sample' ?
+                        t("imports.bottles.sample") : t("imports.bottles.sta\
+ndard"),
+                    })).join(''),
+                }) : '',
+            }) : '',
+        }), true);
         importDetails = data;
       }
       else {

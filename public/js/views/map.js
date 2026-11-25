@@ -10,6 +10,11 @@ import {
 import {backToCollectionButton} from '../ui/navigation-controls.js';
 import {createTileMap, mapCanvasHtml} from '../features/map/tile-map.js';
 import {matchingBottlingSites} from '../domain/bottling-map-focus.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/map.html', import.meta.url));
+
 
 const PAGE_LIMIT = 12;
 const ALL_SITES_PREF = 'wcm-map-all-distilleries';
@@ -58,47 +63,31 @@ export function mapLegendHtml(showAllDistilleries = false) {
    * @return {string} Resulting text.
    */
   const stockExample = (count, extraClass = '') =>
-    `<span class="map-stock-visual map-legend-marker ${extraClass}" \
-style="--legend-diameter:${legendMarkerDiameter(count)}px" \
-aria-hidden="true">${count}</span>`;
+    renderTemplate('mapStockVisual', {
+      extraClass: extraClass,
+      legendMarkerDiameter: legendMarkerDiameter(count),
+      count: count,
+    });
   const samples = [1, 10, 100].map(count =>
-    `<span class="map-legend-item" aria-label="${plural(count,
-      t("forms.bottle.title"), t("forms.bottle.plural"))}">
-      ${stockExample(count, 'map-legend-stock-icon')}</span>`).join('');
+    renderTemplate('mapLegendItem', {
+      plural: plural(count,
+        t("forms.bottle.title"), t("forms.bottle.plural")),
+      stockExample: stockExample(count, 'map-legend-stock-icon'),
+    })).join('');
   const emptySites = showAllDistilleries ?
-    `<div class="map-legend-section map-legend-empty" role="group" \
-aria-label="${t("map.legend.distilleriesWithoutBottles")}">
-        <span class="map-legend-heading">${t("map.filters.withoutBottles"
-    )}</span>
-        <span class="map-legend-item map-pagoda-legend">${pagodaRoofIcon}${t(
-      "map.status.active")}</span>
-        <span class="map-legend-item map-pagoda-legend map-closed-legend">\
-${closedDistilleryIcon}${t("home.status.closed")}</span>
-      </div>` : '';
-  return `<div class="map-legend" role="group" aria-label="${t(
-    "map.legend.title")}">
-      <div class="map-legend-section map-legend-status" role="group" \
-aria-label="${t("map.legend.distilleriesWithBottles")}">
-        <span class="map-legend-heading">${t("map.filters.withBottles")}</span>
-        <span class="map-legend-item">${stockExample(1,
-      'map-legend-status-icon')}${t("map.status.active")}</span>
-        <span class="map-legend-item">${stockExample(1,
-        'map-marker-closed map-legend-status-icon')}${t("home.status.closed"
-        )}</span>
-      </div>${emptySites}
-      <div class="map-legend-section map-legend-stock" role="group" \
-aria-label="${t("map.statistics.bottlesPerDistillery")}">
-        <span class="map-legend-heading">${t("map.statistics.bottleCount"
-        )}</span>${samples}
-      </div>
-      <div class="map-legend-section map-legend-clusters" role="group" \
-aria-label="${t("map.statistics.groupedDistilleries")}">
-        <span class="map-legend-item"><span class="map-cluster-visual \
-map-legend-marker map-cluster-legend-icon" style="--legend-diameter:\
-${LEGEND_CLUSTER_DIAMETER}px" aria-hidden="true">6</span>${t("map.filters.gr\
-ouped")}</span>
-      </div>
-    </div>`;
+    renderTemplate('mapLegendSection', {
+      pagodaRoofIcon: pagodaRoofIcon,
+      closedDistilleryIcon: closedDistilleryIcon,
+    }) : '';
+  return renderTemplate('mapLegend', {
+    stockExample: stockExample(1,
+      'map-legend-status-icon'),
+    stockExample2: stockExample(1,
+      'map-marker-closed map-legend-status-icon'),
+    emptySites: emptySites,
+    samples: samples,
+    lEGENDCLUSTERDIAMETER: LEGEND_CLUSTER_DIAMETER,
+  });
 }
 
 /**
@@ -128,22 +117,24 @@ export function createMapView({state, shell, navigate, settings}) {
   function relatedSitesHtml() {
     if (!relatedBottling) return '';
     const entries = relatedSites.map(site => site.location
-      ? `<button type="button" class="map-related-site" \
-data-map-focus="${escapeHtml(site.id)}">${escapeHtml(site.name)}</button>`
-      : `<span class="map-related-missing">${escapeHtml(site.name)} · ${t(
-        "map.filters.withoutLocation"
-      )} <button type="button" class="map-related-set-location" \
-data-map-edit="${escapeHtml(site.id)}">${t("map.actions.setLocation")}</butt\
-on></span>`).join('');
-    return `<div class="map-related-bottling" aria-label="${t(
-      "map.bottling.locations")}">
-          <strong>${t(
+      ? renderTemplate('mapRelatedSite', {
+        id: site.id,
+        name: site.name,
+      })
+      : renderTemplate('mapRelatedMissing', {
+        name: site.name,
+        id: site.id,
+      })).join('');
+    return renderTemplate('mapRelatedBottling', {
+      locationsFor: t(
         "map.bottling.locationsFor",
         {name: escapeHtml(relatedBottling.name)}
-      )}</strong>
-          ${entries ? `<div class="map-related-sites">${entries}</div>` :
-        `<p class="hint">${t("map.empty.noCatalogMatches")}</p>`}
-        </div>`;
+      ),
+      mapRelatedSites: entries ? renderTemplate('mapRelatedSites', {
+        entries: entries,
+      }) :
+        renderTemplate('hint'),
+    });
   }
 
   /**
@@ -158,79 +149,85 @@ on></span>`).join('');
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_LIMIT));
     page = Math.max(1, Math.min(page, totalPages));
     const subset = filtered.slice((page - 1) * PAGE_LIMIT, page * PAGE_LIMIT);
-    return `${relatedSitesHtml()}<div class="map-site-panel">
-        <label class="form-field map-site-chooser" for="map-site-select">${t(
-      "map.actions.showDistillery")}
-        <select id="map-site-select" ${sites.length ? '' : 'disabled'}>
-          ${sites.length && !selectedId ?
-        `<option value="" selected>${t("map.filters.selectLocation"
-        )}</option>` : ''}
-          ${sites.length ? sites.map(site =>
-          `<option value="${escapeHtml(site.id)}" ${site.id === selectedId ?
+    return renderTemplate('sidebarHtml', {
+      relatedSitesHtml: relatedSitesHtml(),
+      length: sites.length ? '' : 'disabled',
+      option: sites.length && !selectedId ?
+        renderTemplate('sidebarHtmlOption') : '',
+      length2: sites.length ? sites.map(site =>
+        renderTemplate('sidebarHtmlOption2', {
+          id: site.id,
+          selected: site.id === selectedId ?
             'selected' :
-            ''}>${escapeHtml(site.name)} · ${site.bottleCount ? plural(
-              site.bottleCount,
-              t("forms.bottle.title"),
-              t("forms.bottle.plural")
-            ) : t("map.filters.withoutBottlesLowercase")}</option>`)
-        .join('') : `<option>${t("map.empty.noGeolocatedDistillery")}</option>`}
-        </select></label>
-        ${selected ?
-        `<div class="map-site-heading"><div class="map-site-title">\
-<strong>${escapeHtml(selected.name)}</strong>
-          <button class="btn small map-position-edit" type="button" \
-data-map-edit="${escapeHtml(selected.id)}" aria-label="${t(
-          "map.actions.correctLocationFor",
-          {name: escapeHtml(selected.name)}
-        )}" title="${t("map.actions.correctLocation"
-        )}">${editIcon}</button></div>
-          <span>${plural(
-          selected.bottlingCount,
-          t("forms.bottling.title"),
-          t("analytics.inventory.bottlings")
-        )} · ${plural(
-          selected.bottleCount,
-          t("forms.bottle.title"),
-          t("forms.bottle.plural")
-        )} · ${selected.status === 'closed' ? t("home.status.closed") :
-          selected.status === 'reopened' ? t("map.status.reopened") :
-            selected.status === 'active' ? t("map.status.active") :
-              t("features.distilleries.unknownStatus")}${selected.location
-                ?.approximate ? t("features.map.approximateLocation") :
-                ''}</span></div>
-          ${selected.bottlingCount ?
-          `<label class="form-field map-bottling-search">${t(
-            "map.actions.searchBottlingsAtLocation")}
-            <input id="map-bottling-search" type="search" placeholder="${t(
-              "map.filters.searchNamePlaceholder")}" value="${escapeHtml(search
-              )}" autocomplete="off"></label>
-          <div class="map-bottling-list" aria-label="${t(
+            '',
+          name: site.name,
+          bottleCount: site.bottleCount ? plural(
+            site.bottleCount,
+            t("forms.bottle.title"),
+            t("forms.bottle.plural")
+          ) : t("map.filters.withoutBottlesLowercase"),
+        }))
+        .join('') : renderTemplate('sidebarHtmlOption3'),
+      mapSiteHeading: selected ?
+        renderTemplate('mapSiteHeading', {
+          name: selected.name,
+          id: selected.id,
+          correctLocationFor: t(
+            "map.actions.correctLocationFor",
+            {name: escapeHtml(selected.name)}
+          ),
+          editIcon: editIcon,
+          plural: plural(
+            selected.bottlingCount,
+            t("forms.bottling.title"),
+            t("analytics.inventory.bottlings")
+          ),
+          plural2: plural(
+            selected.bottleCount,
+            t("forms.bottle.title"),
+            t("forms.bottle.plural")
+          ),
+          status: selected.status === 'closed' ? t("home.status.closed") :
+            selected.status === 'reopened' ? t("map.status.reopened") :
+              selected.status === 'active' ? t("map.status.active") :
+                t("features.distilleries.unknownStatus"),
+          approximate: selected.location
+            ?.approximate ? t("features.map.approximateLocation") :
+            '',
+          formField: selected.bottlingCount ?
+            renderTemplate('formField', {
+              search: search,
+              bottlingsAtSite: t(
                 "map.bottling.bottlingsAtSite",
                 {name: escapeHtml(selected.name)}
-              )}">
-            ${subset.length ? subset.map(entry =>
-                `<button type="button" class="map-bottling-link" \
-data-map-bottling="${escapeHtml(entry.id)}">
-              <span>${escapeHtml(entry.name)}</span>${mapBottlingFacts(entry) ?
-                  `<small class="map-bottling-facts">${escapeHtml(
-                    mapBottlingFacts(entry))}</small>` : ''}<small>${plural(
-                      entry.bottleCount,
-                      t("forms.bottle.title"),
-                      t("forms.bottle.plural")
-                    )}</small></button>`).join('') :
-            `<p class="hint">${t("map.empty.noMatchingBottlings")}</p>`}
-          </div>
-          ${totalPages > 1 ?
-            `<div class="map-list-pager"><button type="button" \
-data-map-page="prev" ${page === 1 ? 'disabled' : ''} aria-label="${t("map.pa\
-gination.previousBottlings")}">${chevronLeftIcon}</button><span>${t("map.pag\
-ination.pageOf", {page, total: totalPages})}</span><button type="button" \
-data-map-page="next" ${page === totalPages ? 'disabled' : ''} \
-aria-label="${t("map.pagination.moreBottlings")}">${chevronRightIcon}</butto\
-n></div>` : ''}` : `<p class="hint map-empty-site">${t("map.empty.noCollecti\
-onBottlings")}</p>`}` : `<p class="hint">${t("map.empty.chooseDistillery")}<\
-/p>`}
-        </div>`;
+              ),
+              length: subset.length ? subset.map(entry =>
+                renderTemplate('mapBottlingLink', {
+                  id: entry.id,
+                  name: entry.name,
+                  mapBottlingFacts: mapBottlingFacts(entry) ?
+                    renderTemplate('mapBottlingFacts', {
+                      mapBottlingFacts: mapBottlingFacts(entry),
+                    }) : '',
+                  plural: plural(
+                    entry.bottleCount,
+                    t("forms.bottle.title"),
+                    t("forms.bottle.plural")
+                  ),
+                })).join('') :
+                renderTemplate('hint2'),
+              mapListPager: totalPages > 1 ?
+                renderTemplate('mapListPager', {
+                  disabled: page === 1 ? 'disabled' : '',
+                  chevronLeftIcon: chevronLeftIcon,
+                  pageOf: t("map.pag\
+ination.pageOf", {page, total: totalPages}),
+                  disabled2: page === totalPages ? 'disabled' : '',
+                  chevronRightIcon: chevronRightIcon,
+                }) : '',
+            }) : renderTemplate('hint3'),
+        }) : renderTemplate('hint4'),
+    });
   }
 
   /**
@@ -240,16 +237,16 @@ onBottlings")}</p>`}` : `<p class="hint">${t("map.empty.chooseDistillery")}<\
   function missingHtml() {
     const filtered = missing.filter(site => site.name
       .toLocaleLowerCase('de').includes(missingFilter.toLocaleLowerCase('de')));
-    return `<details class="map-missing" ${!sites.length ? 'open' : ''}>
-          <summary>${t("map.statistics.unmappedCount", {count: missing.length}
-    )}</summary>
-          ${missing.length > 6 ?
-        `<label class="form-field">${t("map.filters.searchDistillery"
-        )}<input id="map-missing-search" type="search" placeholder="${t(
-          "map.filters.namePlaceholder")}" value="${escapeHtml(missingFilter
-          )}"></label>` : ''}
-          <div id="map-missing-list">${missingRows(filtered)}</div>
-        </details>`;
+    return renderTemplate('mapMissing', {
+      content: !sites.length ? 'open' : '',
+      unmappedCount: t("map.statistics.unmappedCount", {count: missing.length}
+      ),
+      formField: missing.length > 6 ?
+        renderTemplate('formField2', {
+          missingFilter: missingFilter,
+        }) : '',
+      missingRows: missingRows(filtered),
+    });
   }
 
   /**
@@ -260,12 +257,13 @@ onBottlings")}</p>`}` : `<p class="hint">${t("map.empty.chooseDistillery")}<\
    */
   function missingRows(items) {
     return items.length ? items.slice(0, 18).map(site =>
-      `<div class="map-missing-row"><span>${escapeHtml(site.name
-      )}</span><button type="button" class="btn small" \
-data-map-edit="${escapeHtml(site.id)}">${t("map.actions.setLocation")}</butt\
-on></div>`).join('') + (items.length > 18 ? `<p class="hint">${t("map.search\
-.moreResults", {count: items.length - 18})}</p>` : '') : `<p class="hint">\
-${t("map.empty.noMatchingDistilleries")}</p>`;
+      renderTemplate('mapMissingRow', {
+        name: site.name,
+        id: site.id,
+      })).join('') + (items.length > 18 ? renderTemplate('hint5', {
+        moreResults: t("map.search\
+.moreResults", {count: items.length - 18}),
+      }) : '') : renderTemplate('hint6');
   }
 
   /**
@@ -391,36 +389,27 @@ ${t("map.empty.noMatchingDistilleries")}</p>`;
     tileMap?.destroy(); tileMap = null;
     syncSites();
     const bottleTotal = sites.reduce((sum, site) => sum + site.bottleCount, 0);
-    shell(`${pageHeader({
-      title: t('navigation.map'),
-      eyebrow: t('map.page.eyebrow'),
-      intro: t('map.page.description'),
-      className: 'map-heading',
-      copyClass: '',
-      actions: String(backToCollectionButton),
-    })}
-          <div class="map-summary"><span data-map-stat="located"><strong>\
-${sites.length}</strong> ${t("map.statistics.mappedDistilleries")}</span>
-          <span data-map-stat="bottles"><strong>${bottleTotal}</strong> ${t(
-      "map.statistics.assignedBottles")}</span>
-          ${missing.length > 0 ?
-        `<span data-map-stat="missing"><strong>${missing.length}</strong> ${t(
-          "map.filters.withoutLocation")}</span>` : ''}
-          <label class="map-all-toggle" for="map-all-distilleries"><span>${t(
-            "map.actions.showAllDistilleries")}</span>
-          <input id="map-all-distilleries" type="checkbox" role="switch" \
-${showAllDistilleries ? 'checked' : ''}></label></div>
-          <div class="map-layout" data-reconcile="replace">
-            <div class="map-stage">${mapCanvasHtml()}
-            ${mapLegendHtml(showAllDistilleries)}
-            ${!sites.length ?
-        `<div class="map-no-sites">${t("map.empty.noMappedDistilleries"
-        )}</div>` : ''}
-            </div>
-            <aside id="map-sidebar" class="map-sidebar" aria-label="${t(
-          "map.page.title")}"></aside>
-          </div>
-          `);
+    shell(renderTemplate('render', {
+      pageHeader: pageHeader({
+        title: t('navigation.map'),
+        eyebrow: t('map.page.eyebrow'),
+        intro: t('map.page.description'),
+        className: 'map-heading',
+        copyClass: '',
+        actions: String(backToCollectionButton),
+      }),
+      length: sites.length,
+      bottleTotal: bottleTotal,
+      span: missing.length > 0 ?
+        renderTemplate('renderSpan', {
+          length: missing.length,
+        }) : '',
+      checked: showAllDistilleries ? 'checked' : '',
+      mapCanvasHtml: mapCanvasHtml(),
+      mapLegendHtml: mapLegendHtml(showAllDistilleries),
+      mapNoSites: !sites.length ?
+        renderTemplate('mapNoSites') : '',
+    }));
     renderSidebar();
     tileMap = createTileMap(
       document.getElementById('distillery-map'),

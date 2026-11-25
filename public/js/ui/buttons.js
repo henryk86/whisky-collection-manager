@@ -1,4 +1,9 @@
 import {escapeHtml} from './dom.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/buttons.html', import.meta.url));
+
 
 /**
  * Renders a shared button with escaped text and delegated actions.
@@ -57,13 +62,30 @@ export function actionButton({
     return ` data-${key}="${escapeHtml(String(value))}"`;
   }).join('');
   // attributes is app-owned static HTML only; never pass input/user data.
-  return `<button class="${escapeHtml(classes)}" type="${type}"${action ?
-    ` data-act="${escapeHtml(action)}"` : ''}${ariaLabel || iconOnly ?
+  return renderTemplate('actionButtonButton', {
+    classes: classes,
+    type: type,
+    action: action ?
+      ` data-act="${escapeHtml(action)}"` : '',
+    ariaLabel: ariaLabel || iconOnly ?
       ` aria-label="${escapeHtml(String(ariaLabel || label))}"` :
-      ''}${disabled || loading ? ' disabled' :
-        ''}${loading ? ' aria-busy="true"' : ''}${dataAttributes}${title ?
-          ` title="${escapeHtml(String(title))}"` : ''}${attributes ?
-            ` ${attributes}` : ''}>${trustedContent || icon}${trustedContent ?
-              '' : iconOnly ? '' : wrapLabel ? `<span>${safe}</span>` :
-                safe}</button>`;
+      '',
+    disabled: disabled || loading ? ' disabled' :
+      '',
+    loading: loading ? ' aria-busy="true"' : '',
+    dataAttributes: dataAttributes,
+    title: title ?
+      ` title="${escapeHtml(String(title))}"` : '',
+    attributes: attributes ?
+      ` ${attributes}` : '',
+    trustedContent: trustedContent || icon,
+    trustedContent2: trustedContent ?
+      '' : iconOnly ? '' : wrapLabel ? renderTemplate(
+        'actionButtonSpan',
+        {
+          safe: safe,
+        }
+      ) :
+        safe,
+  });
 }

@@ -2,6 +2,11 @@ import {t} from '../i18n/index.js';
 import {modalFooter} from '../ui/modal-layout.js';
 import {escapeHtml, query} from '../ui/dom.js';
 import {httpResponseError} from '../api.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/file-preview.html', import.meta.url));
+
 
 /**
  * Browsers can preview these file types without uploading data to an external
@@ -61,15 +66,19 @@ export function createFilePreview({modal, state}) {
     const preview = documentPreviewKind(name);
     modal.showModal(
       name,
-      `<div class="document-preview-stage" aria-live="polite"><p \
-class="hint">${escapeHtml(t(preview.kind === 'unsupported' ? 'detail.documen\
-ts.previewUnavailable' : 'detail.documents.previewLoading'))}</p></div>
-            ${modalFooter(
-        `<a class="btn primary" href="${escapeHtml(
-          url)}" download="${escapeHtml(name)}">${escapeHtml(t(
-            'detail.documents.download'))}</a>`,
-        {className: 'document-preview-actions'}
-      )}`,
+      renderTemplate('documentPreviewStage', {
+        t: t(preview.kind === 'unsupported' ? 'detail.documen\
+ts.previewUnavailable' : 'detail.documents.previewLoading'),
+        modalFooter: modalFooter(
+          renderTemplate('primaryButton', {
+            url: url,
+            name: name,
+            download: t(
+              'detail.documents.download'),
+          }),
+          {className: 'document-preview-actions'}
+        ),
+      }),
       true
     );
     const shownModal = state.modal;

@@ -7,6 +7,11 @@ import {uploadPhotos} from './photos.js';
 import {uploadFiles} from './files.js';
 import {bottlingChoiceDialog, bottlingChoiceOptions, matchingBottlings}
   from './forms/bottling-choice.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/editor-controller.html', import.meta.url));
+
 /**
  * Coordinates forms and API calls; templates and persistence are separate
  * modules.
@@ -96,16 +101,22 @@ export function createEditors({
     const token = fromImport ? getPendingImageToken() : null;
     let form = bottleForm({}, bottling.id);
     if (fromOverview) form = form.replace(
-      '<form id="bottle-form"',
-      '<form id="bottle-form" data-from-overview="1"'
+      renderTemplate('bottleForm'),
+      renderTemplate('bottleForm2')
     );
     const photoOption = token ?
-      `<label class="import-photo form-field full"><input type="checkbox" \
-name="importReferencePhoto" checked> ${t("imports.images.copyReference")}</l\
-abel>` : '';
+      renderTemplate('importPhoto') : '';
     showModal(
       `Weitere Flasche · ${bottling.name}`,
-      form.replace('</form>', `${photoOption}</form>`),
+      form.replace(
+        renderTemplate('showNewBottleEditor'),
+        renderTemplate(
+          'showNewBottleEditor2',
+          {
+            photoOption: photoOption,
+          }
+        )
+      ),
       true
     );
   }

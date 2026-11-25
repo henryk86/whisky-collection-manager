@@ -9,6 +9,11 @@ import {renderUnassignedTray} from './warehouse-unassigned-tray.js';
 import {unassignedWallPage} from '../domain/warehouse-unassigned-tray.js';
 import {t} from '../i18n/index.js';
 import {bottleSymbol, num, safe} from './warehouse-presentation.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/warehouse-room-wall.html', import.meta.url));
+
 
 /** Same number of screen pixels for every real-world metre in both axes. */
 export const WALL_PIXELS_PER_METRE = 230;
@@ -74,21 +79,21 @@ export function renderWarehouseRoomWall(room, warehouse, selectedBottleIds =
     const usedCm = levels.reduce((sum, level) => sum + level.heightCm, 0);
     const clearanceCm = Math.max(0, height * 100 - usedCm);
     const clearance = clearanceCm > 0.001
-      ? `<div class="warehouse-wall-clearance" style="--wall-clearance-heigh\
-t:${px(clearanceCm / 100)}px" title="${safe(t('warehouse.shelves.remainingHe\
-ight', {height: num(clearanceCm)}))}" aria-hidden="true"></div>`
+      ? renderTemplate('warehouseWallClearance', {
+        px: px(clearanceCm / 100),
+        safe: safe(t('warehouse.shelves.remainingHe\
+ight', {height: num(clearanceCm)})),
+      })
       : '';
     // The action stays inside the physical furniture outline, overlaying the
     // first bay without changing any furniture or shelf dimensions.
     const editFurniture =
-      `<button type="button" class="warehouse-wall-furniture-edit" \
-data-act="warehouse-furniture-manage" data-id="${safe(item.id)}" \
-title="${safe(item.name)}" aria-label="${safe(t('warehouse.shelves.showForFu\
-rniture', {name: item.name}))}"><svg viewBox="0 0 24 24" width="16" \
-height="16" fill="none" stroke="currentColor" stroke-width="2" \
-stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path \
-d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>\
-</button>`;
+      renderTemplate('warehouseFurnitureManage', {
+        safe: safe(item.id),
+        safe2: safe(item.name),
+        safe3: safe(t('warehouse.shelves.showForFu\
+rniture', {name: item.name})),
+      });
     const bays = levels.slice().reverse().map((level, index) => {
       const shelf = level.shelf;
       const occupants = occupantsByShelf.get(shelf.id) || [];
@@ -152,61 +157,84 @@ d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>\
       const hiddenCount = occupants.length - preview.length;
       const isFocusedShelf = !!focusedBottleId && occupants.some(b =>
         b.id === focusedBottleId);
-      return `<div class="warehouse-shelf warehouse-wall-bay${isFocusedShelf ?
-        ' is-find-focus' : ''}${compact ? ' warehouse-wall-bay--compact' :
-          ''}${tiny ? ' warehouse-wall-bay--tiny' : ''}${index === 0 ?
-            ' warehouse-wall-bay--top' : ''}${shelf.capacity === 0 ?
-              ' warehouse-wall-bay--unavailable' : ''}" data-shelf-id="${safe(
-                shelf.id)}" data-capacity="${shelf.capacity ??
-                'unlimited'}"${shelf.capacity === 0 ? '' :
-                  ` data-act="warehouse-shelf-view" tabindex="0" \
+      return renderTemplate('warehouseShelf', {
+        isFocusedShelf: isFocusedShelf ?
+          ' is-find-focus' : '',
+        compact: compact ? ' warehouse-wall-bay--compact' :
+          '',
+        tiny: tiny ? ' warehouse-wall-bay--tiny' : '',
+        index: index === 0 ?
+          ' warehouse-wall-bay--top' : '',
+        capacity: shelf.capacity === 0 ?
+          ' warehouse-wall-bay--unavailable' : '',
+        safe: safe(
+          shelf.id),
+        capacity2: shelf.capacity ??
+          'unlimited',
+        capacity3: shelf.capacity === 0 ? '' :
+          ` data-act="warehouse-shelf-view" tabindex="0" \
 role="button" aria-label="${safe(`${item.name} / ${shelf.name} — ${t('wareho\
 use.shelves.doubleClickHint')}`)}" title="${safe(`${item.name} / ${
 shelf.name} · ${frontName}${occupancy ? ` · ${occupancy}` : ''} · ${
-t('warehouse.shelves.doubleClickHint')}`)}"`} data-front="${safe(front)
-        }" style="--wall-bay-height:${bayHeight}px;--wall-bottle-height:${
-bottleHeight
-        }px;--wall-bottle-width:${bottleWidth}px">
-                <div class="warehouse-wall-bay-title"><strong>${safe(shelf.name
-        )}</strong><span>${safe(frontName)}${occupancy ? ` · ${safe(
-          occupancy)}` : ''}</span></div>
-                <div class="warehouse-bottle-silhouettes">${preview.map(
-            bottle => {
-              const isFocusedBottle = bottle.id === focusedBottleId;
-              const dimmed = isFocusedShelf && focusedBottleId &&
-                !isFocusedBottle;
-              return `<span class="warehouse-wall-bottle${
-selected.has(bottle.id) ?
-                  ' is-selected' : ''}${isFocusedBottle ?
-                    ' is-find-focus' :
-                    ''}${dimmed ? ' is-find-dimmed' :
-                      ''}">${bottleSymbol(
-                        bottle,
-                        {
-                          selectable: true,
-                          selected: selected.has(bottle.id),
-                        }
-                      )}</span>`;
-            }).join('')}${hiddenCount ?
-              `<span class="warehouse-shelf-overflow" aria-label="${safe(t(
-                'warehouse.shelves.moreBottles', {count: hiddenCount})
-              )}">+${hiddenCount}</span>` : ''}${!occupants.length ?
-                (shelf.capacity === 0 ?
-                  `<span class="warehouse-wall-no-space">${t(
-                    'warehouse.wall.noSpace')}</span>` :
-                  `<span class="hint">${t(
-                    'warehouse.shelves.empty')}</span>`) : ''}</div>
-            </div>`;
+t('warehouse.shelves.doubleClickHint')}`)}"`,
+        safe2: safe(front),
+        bayHeight: bayHeight,
+        bottleHeight: bottleHeight,
+        bottleWidth: bottleWidth,
+        safe3: safe(shelf.name
+        ),
+        safe4: safe(frontName),
+        occupancy: occupancy ? ` · ${safe(
+          occupancy)}` : '',
+        preview: preview.map(
+          bottle => {
+            const isFocusedBottle = bottle.id === focusedBottleId;
+            const dimmed = isFocusedShelf && focusedBottleId &&
+              !isFocusedBottle;
+            return renderTemplate('warehouseWallBottle', {
+              has: selected.has(bottle.id) ?
+                ' is-selected' : '',
+              isFocusedBottle: isFocusedBottle ?
+                ' is-find-focus' :
+                '',
+              dimmed: dimmed ? ' is-find-dimmed' :
+                '',
+              bottleSymbol: bottleSymbol(
+                bottle,
+                {
+                  selectable: true,
+                  selected: selected.has(bottle.id),
+                }
+              ),
+            });
+          }).join(''),
+        warehouseShelfOverflow: hiddenCount ?
+          renderTemplate('warehouseShelfOverflow', {
+            safe: safe(t(
+              'warehouse.shelves.moreBottles', {count: hiddenCount})
+            ),
+            hiddenCount: hiddenCount,
+          }) : '',
+        content: !occupants.length ?
+          (shelf.capacity === 0 ?
+            renderTemplate('warehouseWallNoSpace') :
+            renderTemplate('hint')) : '',
+      });
     }).join('');
-    return `<section class="warehouse-wall-furniture${stacked ?
-      ' warehouse-wall-furniture--stacked' :
-      ''}" data-furniture-id="${safe(item.id
-      )}" style="--wall-furniture-width:${widthPx}px;--wall-furniture-heig\
-ht:${heightPx}px;--wall-elevation:${elevationPx}px;\
---wall-offset-x:${px(offset)}px">
-            <div class="warehouse-wall-furniture-body">${clearance}${bays}</div>
-            ${editFurniture}
-        </section>`;
+    return renderTemplate('warehouseWallFurniture', {
+      stacked: stacked ?
+        ' warehouse-wall-furniture--stacked' :
+        '',
+      safe: safe(item.id
+      ),
+      widthPx: widthPx,
+      heightPx: heightPx,
+      elevationPx: elevationPx,
+      px: px(offset),
+      clearance: clearance,
+      bays: bays,
+      editFurniture: editFurniture,
+    });
   };
   let previousOrientation = null;
   const cards = groups.map(group => {
@@ -215,57 +243,50 @@ ht:${heightPx}px;--wall-elevation:${elevationPx}px;\
     previousOrientation = group.orientation;
     const furnitureHtml = group.items.map(entry =>
       renderFurniture(entry, group.items.length > 1)).join('');
-    return `<div class="warehouse-wall-stack${group.items.length > 1 ?
-      ' warehouse-wall-stack--layered' : ''}${changeWall ?
+    return renderTemplate('warehouseWallStack', {
+      length: group.items.length > 1 ?
+        ' warehouse-wall-stack--layered' : '',
+      changeWall: changeWall ?
         ' warehouse-wall-stack--new-direction' :
-        ''}" data-facing="${group.orientation}" style="--wall-stack-width:${px(
-          group.width)}px;--wall-stack-height:${px(group.height
-          )}px">${furnitureHtml}</div>`;
+        '',
+      orientation: group.orientation,
+      px: px(
+        group.width),
+      px2: px(group.height
+      ),
+      furnitureHtml: furnitureHtml,
+    });
   }).join('');
-  return `<section class="warehouse-room-wall${focusedBottleId ?
-    ' has-find-focus' : ''}" aria-label="${safe(t('warehouse.wall.aria',
-      {room: room.name}))}">
-        <div class="warehouse-wall-controls">
-            <div class="warehouse-bottle-bulk-tools" aria-label="${safe(t(
-        'warehouse.bottles.bulkTools'))}">
-                <span class="warehouse-bottle-selection-count" \
-aria-live="polite">${
-safe(t('warehouse.bottles.bulkSelected', {count: selected.size}))}</span>
-                <button type="button" class="warehouse-unassigned-toggle" \
-aria-controls="warehouse-wall-unassigned-content" aria-expanded="${
-unassignedOptions.expanded ? 'true' : 'false'}" title="${
-safe(t('warehouse.wall.unassignedToggleHint'))}">
-                    <span class="warehouse-unassigned-toggle-chevron" \
-aria-hidden="true"></span>${t(
-          'warehouse.wall.unassignedTitle',
-          {count: unassignedWallPage(warehouse).total}
-        )}
-                </button>
-                <button type="button" class="btn small warehouse-bottles-sel\
-ect-clear" data-act="warehouse-bottles-select-clear" ${selected.size ? '' :
-      'disabled'}>${t('warehouse.selection.clear')}</button>
-                <button type="button" class="btn small warehouse-bottles-pre\
-view-selected" data-act="warehouse-bottles-preview-selected" ${
-selected.size === 1 ? '' : 'disabled'}>${t('warehouse.bottles.detailsTitle')
-    }</button>
-                <button type="button" class="btn small primary \
-warehouse-bottles-assign-selected" data-act="warehouse-bottles-assign-select\
-ed" ${selected.size ? '' : 'disabled'}>${t('warehouse.bottles.bulkAssignActi\
-on')}</button>
-            </div>
-            ${renderUnassignedTray(
+  return renderTemplate('warehouseRoomWall', {
+    focusedBottleId: focusedBottleId ?
+      ' has-find-focus' : '',
+    safe: safe(t('warehouse.wall.aria',
+      {room: room.name})),
+    safe2: safe(t(
+      'warehouse.bottles.bulkTools')),
+    safe3: safe(t('warehouse.bottles.bulkSelected', {count: selected.size})),
+    expanded: unassignedOptions.expanded ? 'true' : 'false',
+    safe4: safe(t('warehouse.wall.unassignedToggleHint')),
+    unassignedTitle: t(
+      'warehouse.wall.unassignedTitle',
+      {count: unassignedWallPage(warehouse).total}
+    ),
+    size: selected.size ? '' :
+      'disabled',
+    size2: selected.size === 1 ? '' : 'disabled',
+    size3: selected.size ? '' : 'disabled',
+    unassignedTray: renderUnassignedTray(
       warehouse,
       selectedBottleIds,
       {...unassignedOptions, embedded: true}
-    )}
-        </div>
-        ${groups.length ?
-      `<div class="warehouse-wall-scroll" data-room-id="${safe(room.id
-      )}" tabindex="0" role="region" aria-label="${safe(t(
-        'warehouse.wall.scrollAria'))}">
-            <div class="warehouse-wall-surface"><div class="warehouse-wall-f\
-urniture-list">${cards}</div></div>
-        </div>` : `<div class="warehouse-room-wall-empty"><p class="hint">${t(
-          'warehouse.wall.noFurniture')}</p></div>`}
-    </section>`;
+    ),
+    warehouseWallScroll: groups.length ?
+      renderTemplate('warehouseWallScroll', {
+        safe: safe(room.id
+        ),
+        safe2: safe(t(
+          'warehouse.wall.scrollAria')),
+        cards: cards,
+      }) : renderTemplate('warehouseRoomWallEmpty'),
+  });
 }

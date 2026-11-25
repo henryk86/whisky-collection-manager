@@ -4,6 +4,11 @@ import {locationFor} from '../domain/distillery-map.js';
 import {escapeHtml, query} from '../ui/dom.js';
 import {request} from '../api.js';
 import {toast} from '../ui/notifications.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/settings-controller.html', import.meta.url));
+
 /**
  * Settings workflows use app dialogs instead of blocking browser
  * prompt/confirm.
@@ -29,49 +34,37 @@ export function createSettingsController({state, action, navigate, closeModal,
     showModal(
       id ? t("features.distilleries.edit") :
         t("forms.bottling.newDistillery"),
-      `<form id="distillery-form" data-id="${escapeHtml(id || '')}">
-    <label class="form-field" for="distillery-name">${t(
-        "features.distilleries.nameLabel")}
-    <input id="distillery-name" name="name" type="text" value="${escapeHtml(
-          current?.name ||
-          '')}" maxlength="150" autocomplete="off" required></label>
-    <label class="form-field" for="distillery-status">${t(
-            "features.distilleries.operatingStatus")}
-      <select id="distillery-status" name="status">
-      ${[
-        ["active", t("map.status.active")],
-        ["closed", t("home.status.closed")],
-        ["reopened", t("map.status.reopened")],
-        ["unknown", t("features.distilleries.unknownStatus")],
-      ].map(([value, label]) =>
-        `<option value="${value}" ${(current?.status || "unknown") ===
-          value ? "selected" : ""}>${label}</option>`)
-        .join("")}</select></label>
-    <div class="map-coordinates-fields">
-    <label class="form-field" for="distillery-latitude">${t(
-          "features.map.latitudeLabel")}
-      <input id="distillery-latitude" name="latitude" type="number" \
-step="any" min="-90" max="90" placeholder="${t("features.map.latitudeExampl\
-e")}" value="${current?.latitude ?? coordinates?.lat ?? ''}"></label>
-    <label class="form-field" for="distillery-longitude">${t(
-            "features.map.longitudeLabel")}
-      <input id="distillery-longitude" name="longitude" type="number" \
-step="any" min="-180" max="180" placeholder="${t("features.map.longitudeExam\
-ple")}" value="${current?.longitude ?? coordinates?.lon ?? ''}"></label>
-    </div>
-    <p class="hint">${t("features.map.optionalCoordinatesHint")}</p>
-    ${actionButton({
-              label: t("features.map.searchOpenStreetMap"),
-              action: 'find-distillery-location',
-              size: 'small',
-            })}
-    <div id="distillery-location-results" class="map-location-results" \
-aria-live="polite"></div>
-    <div class="actions ds-modal-footer ds-modal-footer--form">
-    ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
-    <button type="submit" class="btn primary">${id ?
-        t("common.actions.save") : t("features.common.create")}</button>
-    </div></form>`,
+      renderTemplate('distilleryForm', {
+        id: id || '',
+        name: current?.name ||
+          '',
+        content: [
+          ["active", t("map.status.active")],
+          ["closed", t("home.status.closed")],
+          ["reopened", t("map.status.reopened")],
+          ["unknown", t("features.distilleries.unknownStatus")],
+        ].map(([value, label]) =>
+          renderTemplate('promptDistilleryOption', {
+            value: value,
+            selected: (current?.status || "unknown") ===
+              value ? "selected" : "",
+            label: label,
+          }))
+          .join(""),
+        latitude: current?.latitude ?? coordinates?.lat ?? '',
+        longitude: current?.longitude ?? coordinates?.lon ?? '',
+        findDistilleryLocationButton: actionButton({
+          label: t("features.map.searchOpenStreetMap"),
+          action: 'find-distillery-location',
+          size: 'small',
+        }),
+        closeModalButton: actionButton({
+          label: t("common.actions.cancel"),
+          action: 'close-modal',
+        }),
+        id2: id ?
+          t("common.actions.save") : t("features.common.create"),
+      }),
       false,
       nested
     );
@@ -140,9 +133,10 @@ aria-live="polite"></div>
         const label = document.createElement('label');
         label.className = 'distillery-option';
         label.innerHTML =
-          `<input type="checkbox" name="distilleryIds" value="${escapeHtml(
-            saved.value.id)}" checked><span>${escapeHtml(saved.value.name
-            )}</span>`;
+          renderTemplate('saveDistilleryInput', {
+            id: saved.value.id,
+            name: saved.value.name,
+          });
         const matching = [...options.querySelectorAll('.distillery-option')]
           .find(option =>
             option.querySelector('span').textContent
@@ -169,21 +163,27 @@ aria-live="polite"></div>
     const button = query('[data-act="find-distillery-location"]');
     if (!output || !button) return;
     button.disabled = true;
-    output.innerHTML = `<p class="hint">${t("features.map.searching")}</p>`;
+    output.innerHTML = renderTemplate('hint');
     try {
       const matches = await request(
         '/api/map/find-distillery',
         {method: 'POST', body: JSON.stringify({name})}
       );
       output.innerHTML = matches.length ?
-        `<p class="hint">${t("features.map.verifySelectedLocation"
-        )}</p>${matches.map((candidate, index) => `
-            <button type="button" class="map-location-choice" \
-data-act="apply-distillery-location" data-index="${index}">
-            ${escapeHtml(candidate.name)}<small>${candidate.latitude
-            .toFixed(5)}, ${candidate.longitude
-              .toFixed(5)}</small></button>`).join('')}` :
-        `<p class="hint">${t("features.map.noExactLocationMatch")}</p>`;
+        renderTemplate('hint2', {
+          matches: matches.map((candidate, index) => renderTemplate(
+            'applyDistilleryLocation',
+            {
+              index: index,
+              name: candidate.name,
+              toFixed: candidate.latitude
+                .toFixed(5),
+              toFixed2: candidate.longitude
+                .toFixed(5),
+            }
+          )).join(''),
+        }) :
+        renderTemplate('hint3');
       output._candidates = matches;
     } catch (error) {
       output.textContent = error.message;
@@ -203,8 +203,7 @@ data-act="apply-distillery-location" data-index="${index}">
     if (!item) return;
     query('#distillery-latitude').value = String(item.latitude);
     query('#distillery-longitude').value = String(item.longitude);
-    output.innerHTML = `<p class="hint">${t(
-      "features.map.coordinatesReadyToSave")}</p>`;
+    output.innerHTML = renderTemplate('hint4');
   }
 
   /**
@@ -221,17 +220,17 @@ data-act="apply-distillery-location" data-index="${index}">
     }
     showModal(
       t("features.import.replaceWithJson"),
-      `<p>${t("features.import.prefix")} <strong>${t(
-        "features.import.replacesCollection")}</strong>${t(
-          "features.import.jsonExcludesAttachmentsWarning")}</p>
-    <div class="actions ds-modal-footer">
-    ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
-    ${actionButton({
-            label: t("features.import.replaceCollection"),
-            action: 'confirm-import',
-            variant: 'destructive',
-          })}
-    </div>`
+      renderTemplate('importJSONP', {
+        closeModalButton: actionButton({
+          label: t("common.actions.cancel"),
+          action: 'close-modal',
+        }),
+        confirmImportButton: actionButton({
+          label: t("features.import.replaceCollection"),
+          action: 'confirm-import',
+          variant: 'destructive',
+        }),
+      })
     );
   }
 

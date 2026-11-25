@@ -3,6 +3,11 @@ import {t} from '../../i18n/index.js';
 import {query} from '../../ui/dom.js';
 import {textInput} from '../../ui/fields.js';
 import {supportedFormats, cameraConfig} from './config.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/controller.html', import.meta.url));
+
 /**
  * Camera lifecycle only. Inventory lookup lives in resolve-code.js.
  *
@@ -117,28 +122,22 @@ export function createScanner({state, showModal, resolveCode}) {
     const sequence = scannerSequence;
     showModal(
       t("forms.bottle.scanLabel"),
-      `<p class="hint">${t("scanner.camera.supportedCodeTypes")}</p>
-    <div id="scan-reader" class="scan-reader">
-    </div>
-    <p id="scan-error" class="hint" role="status" aria-live="polite">${t(
-        "scanner.status.starting")}</p>
-    <div class="forms scan-manual-fields">${textInput(
+      renderTemplate('hint', {
+        manualCodeField: textInput(
           t("scanner.input.manualInventoryNumber"),
           'manualCode',
           '',
           {
             full: true,
           }
-        )}<label class="form-field full">${t("scanner.actions.selectCodeImage"
-        )}<input type="file" id="scan-file" accept="image/*" \
-capture="environment">
-    </label>
-    </div>
-    <div class="actions scan-manual-actions">
-    <button class="btn primary" data-act="submit-code" data-assign="${assign ?
-        '1' : '0'}">${t("scanner.actions.findAndApplyCode")}</button>
-    ${actionButton({label: t("common.actions.close"), action: 'close-modal'})}
-    </div>`
+        ),
+        assign: assign ?
+          '1' : '0',
+        closeModalButton: actionButton({
+          label: t("common.actions.close"),
+          action: 'close-modal',
+        }),
+      })
     );
     if (!window.isSecureContext) {
       scanStatus(t("scanner.camera.requiresHttps"), 'error');

@@ -43,6 +43,11 @@ import {
   suggestFlight, flightCandidates, flightCandidateDiagnostics, FLIGHT_STYLES,
   FLIGHT_AVAILABILITY, FLIGHT_FOCUSES, CASK_MODES, AGE_MODES,
 } from '../domain/flight-planner.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/tastings.html', import.meta.url));
+
 
 /**
  * Tasting list and single-record editor; no migration of earlier bottling
@@ -154,54 +159,58 @@ export function createTastingsView({
    */
   const bottlingInfo = (bottling, external = false, draft = false) => {
     const photo = external ? '' : (selectors?.coverPhoto?.(bottling.id) || '');
-    return `<section class="analytics-panel tasting-bottling-info">
-        ${external ? `${draft ? '' :
-        `<div class="tasting-bottling-summary" data-external-read>
-            <div class="tasting-bottling-summary-head"><strong>${escapeHtml(
-          bottling.name || '')}</strong>
-                <div class="tasting-external-summary-actions"><button \
-type="button" class="btn small" data-act="tasting-external-edit">${
-editIcon}<span>${escapeHtml(t('common.actions.edit'))}</span></button>
-                ${actionButton({
-            label: t('tastings.assignToCollection'),
-            action: 'tasting-external-assign',
-            size: 'small',
-          })}</div></div>
-            ${distilleryMeta(bottling, false) ?
-          `<p class="muted">${escapeHtml(distilleryMeta(bottling,
-            false))}</p>` : ''}
-        </div>`}
-        <div data-external-edit ${draft ? '' : 'hidden'}>
-            <div class="tasting-external-fields">${externalFields(bottling
-            )}</div>
-            ${draft ? '' :
-          `<div class="actions tasting-external-actions">${actionButton({
-            label: t('common.actions.cancel'),
-            action: 'tasting-external-cancel',
-          })}
-                ${actionButton({
-            label: t('common.actions.save'),
-            action: 'tasting-external-save',
-            variant: 'primary',
-          })}</div>`}
-        </div>` :
-        `<div class="tasting-bottling-summary tasting-bottling-photo-layout">
-            ${photo ? `<img class="tasting-bottling-photo" src="${escapeHtml(
-          imageUrl(photo))}" alt="${escapeHtml(t('home.image.bottleAlt',
-            {name: bottling.name || ''}))}" loading="lazy">` : ''}
-            <div class="tasting-bottling-copy">
-                <div class="tasting-bottling-summary-head"><strong>\
-${escapeHtml(bottling.name || '')}</strong>
-                    ${actionButton({
-              label: t('tastings.openBottlingDetails'),
-              action: 'tasting-open-bottling',
+    return renderTemplate('analyticsPanel', {
+      external: external ? renderTemplate('bottlingInfo', {
+        draft: draft ? '' :
+          renderTemplate('tastingBottlingSummary', {
+            name: bottling.name || '',
+            editIcon: editIcon,
+            edit: t('common.actions.edit'),
+            tastingExternalAssignButton: actionButton({
+              label: t('tastings.assignToCollection'),
+              action: 'tasting-external-assign',
               size: 'small',
-            })}</div>
-                ${distilleryMeta(bottling) ?
-          `<p class="muted">${escapeHtml(distilleryMeta(bottling))}</p>` : ''}
-            </div>
-        </div>`}
-    </section>`;
+            }),
+            muted: distilleryMeta(bottling, false) ?
+              renderTemplate('muted', {
+                distilleryMeta: distilleryMeta(bottling,
+                  false),
+              }) : '',
+          }),
+        draft2: draft ? '' : 'hidden',
+        externalFields: externalFields(bottling
+        ),
+        draft3: draft ? '' :
+          renderTemplate('actions', {
+            tastingExternalCancelButton: actionButton({
+              label: t('common.actions.cancel'),
+              action: 'tasting-external-cancel',
+            }),
+            tastingExternalSaveButton: actionButton({
+              label: t('common.actions.save'),
+              action: 'tasting-external-save',
+              variant: 'primary',
+            }),
+          }),
+      }) :
+        renderTemplate('tastingBottlingSummary2', {
+          tastingBottlingPhoto: photo ? renderTemplate('tastingBottlingPhoto', {
+            imageUrl: imageUrl(photo),
+            bottleAlt: t('home.image.bottleAlt',
+              {name: bottling.name || ''}),
+          }) : '',
+          name: bottling.name || '',
+          tastingOpenBottlingButton: actionButton({
+            label: t('tastings.openBottlingDetails'),
+            action: 'tasting-open-bottling',
+            size: 'small',
+          }),
+          muted: distilleryMeta(bottling) ?
+            renderTemplate('muted2', {
+              distilleryMeta: distilleryMeta(bottling),
+            }) : '',
+        }),
+    });
   };
 
   /**
@@ -223,13 +232,14 @@ ${escapeHtml(bottling.name || '')}</strong>
     const flight = associatedFlight(record);
     if (!flight) return '';
     const pos = flight.tastingIds.indexOf(record.id) + 1;
-    return `<div class="tasting-flight-context"><button type="button" \
-class="inline-link" data-act="tasting-open-flight" \
-data-flight-id="${escapeHtml(flight.id)}">${escapeHtml(flight.name)} · \
-${escapeHtml(t(
-      'tastingFlights.position',
-      {position: pos, count: flight.tastingIds.length}
-    ))}</button></div>`;
+    return renderTemplate('tastingOpenFlight', {
+      id: flight.id,
+      name: flight.name,
+      position: t(
+        'tastingFlights.position',
+        {position: pos, count: flight.tastingIds.length}
+      ),
+    });
   };
 
   /**
@@ -249,7 +259,7 @@ ${escapeHtml(t(
    * @return {string} Resulting text.
    */
   const blank = value => value == null || String(value).trim() === '' ?
-    '<span class="muted">&ndash;</span>' : escapeHtml(String(value));
+    renderTemplate('muted3') : escapeHtml(String(value));
 
   /**
    * Calculates the static rating numeric value.
@@ -258,15 +268,17 @@ ${escapeHtml(t(
    * @return {string} Resulting text.
    */
   const staticRating = record =>
-    `<div class="tasting-readonly-rating"><span class="tasting-readonly-glas\
-ses" aria-hidden="true">${record.rating == null ? '' : Array.from(
-      {length: 5},
-      (_, i) => {
-        const fill = Math.max(0, Math.min(100, (Number(record.rating) - i *
-          20) * 5));
-        return glencairnRatingSymbol({fill, id: `read-rating-${i}`});
-      }
-    ).join('')}</span><strong>${tastingRating(record)}</strong></div>`;
+    renderTemplate('tastingReadonlyRating', {
+      rating: record.rating == null ? '' : Array.from(
+        {length: 5},
+        (_, i) => {
+          const fill = Math.max(0, Math.min(100, (Number(record.rating) - i *
+            20) * 5));
+          return glencairnRatingSymbol({fill, id: `read-rating-${i}`});
+        }
+      ).join(''),
+      tastingRating: tastingRating(record),
+    });
 
   /**
    * Transforms the entries used by tasting read only.
@@ -275,71 +287,66 @@ ses" aria-hidden="true">${record.rating == null ? '' : Array.from(
    * @return {string} Resulting text.
    */
   const tastingReadOnly = value =>
-    `<div class="flavor-detail-panel tasting-panel tasting-readonly-panels">
-        <div class="tasting-record-fields analytics-panel \
-tasting-readonly-meta-panel">
-            ${detailGrid([
-      detailField({
-        label: t('tastings.date'),
-        value: formatDate(value.tastedOn || ''),
-        variant: 'readonly',
-        className: 'tasting-readonly-field',
-        labelClass: 'tasting-readonly-label',
+    renderTemplate('flavorDetailPanel', {
+      detailGrid: detailGrid([
+        detailField({
+          label: t('tastings.date'),
+          value: formatDate(value.tastedOn || ''),
+          variant: 'readonly',
+          className: 'tasting-readonly-field',
+          labelClass: 'tasting-readonly-label',
+        }),
+        value.title ? detailField({
+          label: t('tastings.nameReadonly'),
+          value: value.title,
+          variant: 'readonly',
+          className: 'tasting-readonly-field',
+          labelClass: 'tasting-readonly-label',
+        }) : '',
+      ].join(''), {columns: 2, className: 'tasting-readonly-meta-fields'}),
+      actionToolbar: actionToolbar(
+        renderTemplate('tastingEditStart', {
+          editIcon: editIcon,
+          edit: t('common.actions.edit'),
+        }),
+        {className: 'tasting-readonly-meta-actions'}
+      ),
+      headingTitle: headingTitle({title: t('tasting.colorHeading')}),
+      whiskyColorDisplay: whiskyColorDisplay(value.whiskyColor) ||
+        renderTemplate('hint', {
+          notRecorded: t('tastings.notRecorded'),
+        }),
+      headingTitle2: headingTitle({title: t('flavor.title')}),
+      flavorChart: flavorChart(value.flavorProfile, {editable: false}),
+      headingTitle3: headingTitle({
+        title:
+          t('tasting.notes'),
       }),
-      value.title ? detailField({
-        label: t('tastings.nameReadonly'),
-        value: value.title,
-        variant: 'readonly',
-        className: 'tasting-readonly-field',
-        labelClass: 'tasting-readonly-label',
-      }) : '',
-    ].join(''), {columns: 2, className: 'tasting-readonly-meta-fields'})}
-            ${actionToolbar(
-      `<button type="button" class="btn small" data-act="tasting-edit-start"\
->${editIcon}<span>${escapeHtml(t('common.actions.edit'))}</span></button>`,
-      {className: 'tasting-readonly-meta-actions'}
-    )}
-        </div>
-        <div class="tasting-top-row">
-            <section class="analytics-panel tasting-color-panel">${
-headingTitle({title: t('tasting.colorHeading')})}
-                ${whiskyColorDisplay(value.whiskyColor) ||
-    `<p class="hint">${escapeHtml(t('tastings.notRecorded'))}</p>`}
-            </section>
-            <section class="analytics-panel tasting-senses-section">\
-${headingTitle({title: t('flavor.title')})}
-                ${flavorChart(value.flavorProfile, {editable: false})}</section>
-        </div>
-        <section class="analytics-panel">${headingTitle({
-      title:
-        t('tasting.notes'),
-    })}
-            ${detailGrid(
-      ['nose', 'palate', 'finish'].map(key => detailField({
-        label: t(`forms.bottling.${key}`),
-        value: blank(value.tastingNotes?.[key]),
-        valueHtml: true,
+      detailGrid2: detailGrid(
+        ['nose', 'palate', 'finish'].map(key => detailField({
+          label: t(`forms.bottling.${key}`),
+          value: blank(value.tastingNotes?.[key]),
+          valueHtml: true,
+          variant: 'note',
+          className: 'tasting-readonly-field',
+          labelClass: 'tasting-readonly-label',
+          valueClass: 'tasting-readonly-note',
+        })).join(''),
+        {columns: 3, className: 'tasting-notes tasting-readonly-notes'}
+      ),
+      headingTitle4: headingTitle({
+        title: t('tasting.overallRating'),
+      }),
+      staticRating: staticRating(value),
+      trim: value.ratingComment?.trim() ? `${detailField({
+        label: t('tasting.ratingComment'),
+        value: value.ratingComment,
         variant: 'note',
-        className: 'tasting-readonly-field',
+        className: 'tasting-rating-comment',
         labelClass: 'tasting-readonly-label',
         valueClass: 'tasting-readonly-note',
-      })).join(''),
-      {columns: 3, className: 'tasting-notes tasting-readonly-notes'}
-    )}
-        </section>
-        <section class="analytics-panel tasting-rating-panel">${headingTitle({
-      title: t('tasting.overallRating'),
-    })}
-            ${staticRating(value)}
-            ${value.ratingComment?.trim() ? `${detailField({
-      label: t('tasting.ratingComment'),
-      value: value.ratingComment,
-      variant: 'note',
-      className: 'tasting-rating-comment',
-      labelClass: 'tasting-readonly-label',
-      valueClass: 'tasting-readonly-note',
-    })}` : ''}</section>
-    </div>`;
+      })}` : '',
+    });
 
   /**
    * Calculates the tasting list glasses numeric value.
@@ -352,14 +359,16 @@ ${headingTitle({title: t('flavor.title')})}
       !Number.isFinite(Number(record.rating))) return '';
     const safe = Math.max(0, Math.min(100, Number(record.rating)));
     const unique = String(record.id).replace(/[^a-zA-Z0-9_-]/g, '-');
-    return `<span class="tasting-list-glasses" aria-hidden="true">${Array.from(
-      {length: 5},
-      (_, i) =>
-        glencairnRatingSymbol({
-          fill: Math.max(0, Math.min(100, (safe - i * 20) * 5)),
-          id: `tasting-list-${unique}-${i}`,
-        })
-    ).join('')}</span>`;
+    return renderTemplate('tastingListGlasses', {
+      from: Array.from(
+        {length: 5},
+        (_, i) =>
+          glencairnRatingSymbol({
+            fill: Math.max(0, Math.min(100, (safe - i * 20) * 5)),
+            id: `tasting-list-${unique}-${i}`,
+          })
+      ).join(''),
+    });
   };
 
   /**
@@ -369,34 +378,37 @@ ${headingTitle({title: t('flavor.title')})}
    * @return {string} Resulting text.
    */
   const tastingRow = ({record, b, external = false, home = false}) =>
-    `<div class="warehouse-bottle-row tasting-entry-row ${home ?
-      'tasting-home-row' : 'tasting-list-row'}">
-        <button type="button" class="tasting-entry-open" data-act="${home ?
-      'tastings-home-open' : 'tastings-open'}" ${home ?
+    renderTemplate('warehouseBottleRow', {
+      home: home ?
+        'tasting-home-row' : 'tasting-list-row',
+      home2: home ?
+        'tastings-home-open' : 'tastings-open',
+      home3: home ?
         `data-external="${external ? '1' :
           '0'}" data-bottling-id="${escapeHtml(external ? record.id :
-            b.id)}"` : ''} data-tasting-id="${escapeHtml(record.id)}"
-            aria-label="${escapeHtml(`${t('tastings.open')}: ${home ?
-              b.name : (record.title || formatDate(record.tastedOn))}`)}">
-            <span class="warehouse-bottle-row-info tasting-entry-info">
-                <strong>${escapeHtml(home ? b.name : (record.title ||
-                formatDate(record.tastedOn)))}</strong>
-                <small>${escapeHtml(home ? formatDate(record.tastedOn) :
-                  (record.title ? formatDate(record.tastedOn) : ''))}${home &&
-                    record.title ? ` · ${escapeHtml(record.title)}` :
-                    ''}</small>
-            </span>
-            <span class="tasting-entry-trailing">${tastingListGlasses(record
-                    )}<span class="tasting-list-rating">${tastingRating(record
-                    )}</span><span class="tasting-entry-chevron" \
-aria-hidden="true">${chevronRightIcon}</span></span>
-        </button>
-        ${home ? '' :
-      `<div class="tasting-entry-actions"><button type="button" \
-class="btn small danger" data-act="tasting-delete" \
-data-tasting-id="${escapeHtml(record.id)}">${escapeHtml(t('common.actions.de\
-lete'))}</button></div>`}
-    </div>`;
+            b.id)}"` : '',
+      id: record.id,
+      content: `${t('tastings.open')}: ${home ?
+        b.name : (record.title || formatDate(record.tastedOn))}`,
+      home4: home ? b.name : (record.title ||
+        formatDate(record.tastedOn)),
+      home5: home ? formatDate(record.tastedOn) :
+        (record.title ? formatDate(record.tastedOn) : ''),
+      home6: home &&
+        record.title ? ` · ${escapeHtml(record.title)}` :
+        '',
+      tastingListGlasses: tastingListGlasses(record
+      ),
+      tastingRating: tastingRating(record
+      ),
+      chevronRightIcon: chevronRightIcon,
+      home7: home ? '' :
+        renderTemplate('tastingDelete', {
+          id: record.id,
+          delete: t('common.actions.de\
+lete'),
+        }),
+    });
 
   /**
    * Derives the empty record result from the supplied values.
@@ -835,13 +847,19 @@ lete'))}</button></div>`}
       ['releaseYear', 'tastings.externalYear', 'number', null, false],
     ];
     return fields.map(([key, label, type, max, required]) =>
-      `<label>${escapeHtml(t(label))}
-            <input data-external-field="${key}" name="${key}" type="${type}"\
- ${max ? `maxlength="${max}"` : ''} ${required ? 'required' : ''}
-                ${type === 'number' ? (key === 'abv' ?
-        'min="0" max="100" step="0.1"' : key === 'ageYears' ?
-          'min="0" max="200" step="1"' : 'min="1800" max="2200" step="1"') : ''}
-                value="${escapeHtml(String(info[key] ?? ''))}"></label>`)
+      renderTemplate('externalFieldsLabel', {
+        t: t(label),
+        key: key,
+        key2: key,
+        type: type,
+        max: max ? `maxlength="${max}"` : '',
+        required: required ? 'required' : '',
+        type2: type === 'number' ? (key === 'abv' ?
+          'min="0" max="100" step="0.1"' : key === 'ageYears' ?
+            'min="0" max="200" step="1"' :
+            'min="1800" max="2200" step="1"') : '',
+        info: String(info[key] ?? ''),
+      }))
       .join('');
   }
 
@@ -881,40 +899,45 @@ lete'))}</button></div>`}
    */
   function homeFlights() {
     const flights = flightList();
-    return `<section class="analytics-panel tasting-flight-home">
-            ${sectionHeader({
-      title: t('tastingFlights.plural'),
-      layout: 'tasting-panel-heading',
-      titleClass: 'flight-plan-heading-title',
-      trailingAction: flightPlanningHelpButton(),
-      actions:
-        `<button type="button" class="btn small" data-act="tasting-flight-ne\
-w">${newBottlingIcon}<span>${escapeHtml(t('flightPlan.document'))}</span>\
-</button>
-                <button type="button" class="btn small primary" \
-data-act="flight-plan-new">${flightPlanIcon}<span>${escapeHtml(t('flightPlan\
-.plan'))}</span></button>`,
-    })}
-            ${flights.length ?
-        `<div class="warehouse-bottle-list tasting-flight-list">${flights.map(
-          item => `<button class="tasting-flight-home-link" type="button" \
-data-act="tasting-flight-open" data-flight-id="${escapeHtml(item.id)}">
-                <span><strong>${escapeHtml(item.name
-          )}</strong><small>${escapeHtml(formatDate(item.date)
-          )} · ${item.phase ? escapeHtml(t(`flightPlan.phase.${item
-            .phase}`)) + ' · ' : ''}${escapeHtml(t(
-              item.phase === 'planned' ? 'flightPlan.countSelected' :
-                item.tastingIds.length === 1 ? 'tastingFlights.oneEntry' :
-                  'tastingFlights.entriesCount',
-              {
-                count: item.phase === 'planned' ? item.planItems
-                  .length : item.tastingIds.length,
-              }
-            ))}</small></span>
-                <span class="tasting-entry-chevron" aria-hidden="true">\
-${chevronRightIcon}</span></button>`).join('')}</div>` : `<p class="hint">\
-${escapeHtml(t('tastingFlights.none'))}</p>`}
-        </section>`;
+    return renderTemplate('analyticsPanel2', {
+      sectionHeader: sectionHeader({
+        title: t('tastingFlights.plural'),
+        layout: 'tasting-panel-heading',
+        titleClass: 'flight-plan-heading-title',
+        trailingAction: flightPlanningHelpButton(),
+        actions:
+          renderTemplate('tastingFlightNew', {
+            newBottlingIcon: newBottlingIcon,
+            document: t('flightPlan.document'),
+            flightPlanIcon: flightPlanIcon,
+            plan: t('flightPlan\
+.plan'),
+          }),
+      }),
+      warehouseBottleList: flights.length ?
+        renderTemplate('warehouseBottleList', {
+          flights: flights.map(
+            item => renderTemplate('tastingFlightOpen', {
+              id: item.id,
+              name: item.name,
+              formatDate: formatDate(item.date),
+              phase: item.phase ? escapeHtml(t(`flightPlan.phase.${item
+                .phase}`)) + ' · ' : '',
+              t: t(
+                item.phase === 'planned' ? 'flightPlan.countSelected' :
+                  item.tastingIds.length === 1 ? 'tastingFlights.oneEntry' :
+                    'tastingFlights.entriesCount',
+                {
+                  count: item.phase === 'planned' ? item.planItems
+                    .length : item.tastingIds.length,
+                }
+              ),
+              chevronRightIcon: chevronRightIcon,
+            })).join(''),
+        }) : renderTemplate('hint2', {
+          none: t('tastingFlights.none'),
+        }),
+    });
   }
 
   /**
@@ -973,92 +996,84 @@ ${escapeHtml(t('tastingFlights.none'))}</p>`}
     flightPlanDraft = null;
     const fromCollection = Array.isArray(state.flightCandidateIds);
     const candidateText = fromCollection ?
-      `<p class="hint">${t('flightPlan.filterSubset')}: ${state
-        .flightCandidateIds.length}</p>` : '';
+      renderTemplate('hint3', {
+        length: state
+          .flightCandidateIds.length,
+      }) : '';
     showModal(
       t('flightPlan.plan'),
-      `<div class="tasting-flight-form flight-plan-form">
-            ${candidateText}
-            <label>${t('tastingFlights.name'
-      )}<input data-flight-name maxlength="160" required \
-placeholder="${escapeHtml(t('tastingFlights.namePlaceholder'))}"></label>
-            <label>${t('tastingFlights.date'
-      )}<input type="date" data-flight-date required \
-value="${localToday()}"></label>
-            <label>${t('tastingFlights.notes'
-      )}<textarea data-flight-notes maxlength="10000" rows="2">\
-</textarea></label>
-            <div class="flight-plan-options">
-                <label>${t('flightPlan.mode'
-      )}<select data-flight-plan-style>${FLIGHT_STYLES.map(id =>
-        `<option value="${id}">${t(`flightPlan.${id}`)}</option>`)
-        .join('')}</select></label>
-                <label>${t('flightPlan.count'
-        )}<select data-flight-plan-count>${[3, 4, 5, 6].map(n =>
-          `<option value="${n}" ${n === 5 ? 'selected' :
-            ''}>${n}</option>`).join('')}</select></label>
-                <label>${t('flightPlan.availability'
-            )}<select data-flight-plan-availability>${FLIGHT_AVAILABILITY
-              .map(id => `<option value="${id}">${t(`flightPlan.${id}`
-              )}</option>`).join('')}</select></label>
-            </div>
-            <div class="flight-plan-conditional" data-flight-plan-focus-wrap\
- hidden><label>${escapeHtml(t('flightPlan.focus'))}
-                <select data-flight-plan-focus>${FLIGHT_FOCUSES.map(id =>
-                `<option value="${id}">${escapeHtml(t(`flightPlan.focus.${id}`)
-                )}</option>`).join('')}</select></label></div>
-            <div class="flight-plan-conditional"
-              data-flight-plan-unfamiliar-wrap hidden>${checkboxInput(
-                  t('flightPlan.unfamiliar'),
-                  'flight-plan-unfamiliar',
-                  true
-                )}</div>
-            <details class="flight-plan-advanced">
-                <summary>${escapeHtml(t('flightPlan.caskAge.title'))}</summary>
-                <p class="hint">${escapeHtml(t('flightPlan.caskAge.hint'))}</p>
-                <div class="flight-plan-options flight-plan-advanced-grid">
-                    <label>${escapeHtml(t('flightPlan.caskAge.caskMode')
-                )}<select data-flight-plan-cask-mode>${CASK_MODES.map(
-                  id => `<option value="${id}">${escapeHtml(t(
-                    `flightPlan.caskAge.caskMode.${id}`))}</option>`)
-                  .join('')}</select></label>
-                    <label>${escapeHtml(t('flightPlan.caskAge.ageMode')
-                  )}<select data-flight-plan-age-mode>${AGE_MODES.map(id =>
-                    `<option value="${id}">${escapeHtml(t(
-                      `flightPlan.caskAge.ageMode.${id}`))}</option>`)
-                    .join('')}</select></label>
-                </div>
-                ${flightCaskOptionsHtml(t)}
-                <div class="flight-plan-options flight-plan-advanced-grid">
-                    <div class="flight-plan-conditional" data-flight-plan-ag\
-e-range-wrap hidden><label>${escapeHtml(t('flightPlan.caskAge.ageRange'))}
-                        <span class="flight-plan-age-range"><input \
-type="number" min="0" max="200" step="1" data-flight-plan-age-min \
-placeholder="${escapeHtml(t('flightPlan.caskAge.ageMin'))}" \
-aria-label="${escapeHtml(t('flightPlan.caskAge.ageMin'))}">
-                            <input type="number" min="0" max="200" step="1" \
-data-flight-plan-age-max placeholder="${escapeHtml(t('flightPlan.caskAge.age\
-Max'))}" aria-label="${escapeHtml(t('flightPlan.caskAge.ageMax'))}"></span>\
-</label></div>
-                </div>
-                <div class="flight-plan-conditional"
-                  data-flight-plan-strict-wrap hidden>${checkboxInput(
-                      t('flightPlan.caskAge.strict'),
-                      'flight-plan-strict'
-                    )}</div>
-            </details>
-            <div class="actions">${actionButton({
-                      label: t('flightPlan.suggest'),
-                      action: 'flight-plan-generate',
-                    })}</div>
-            <div class="flight-plan-preview" aria-live="polite"></div>
-            <div class="actions">${actionButton({
-                      label: t('common.actions.cancel'),
-                      action: 'close-modal',
-                    })}
-                <button class="btn primary" type="button" \
-data-act="flight-plan-create" disabled>${t('flightPlan.save')}</button></div>
-        </div>`,
+      renderTemplate('tastingFlightForm', {
+        candidateText: candidateText,
+        namePlaceholder: t('tastingFlights.namePlaceholder'),
+        localToday: localToday(),
+        fLIGHTSTYLES: FLIGHT_STYLES.map(id =>
+          renderTemplate('startPlannedFlightOption', {
+            id: id,
+            t: t(`flightPlan.${id}`),
+          }))
+          .join(''),
+        content: [3, 4, 5, 6].map(n =>
+          renderTemplate('startPlannedFlightOption2', {
+            n: n,
+            selected: n === 5 ? 'selected' :
+              '',
+            n2: n,
+          })).join(''),
+        fLIGHTAVAILABILITY: FLIGHT_AVAILABILITY
+          .map(id => renderTemplate('startPlannedFlightOption3', {
+            id: id,
+            t: t(`flightPlan.${id}`
+            ),
+          })).join(''),
+        focus: t('flightPlan.focus'),
+        fLIGHTFOCUSES: FLIGHT_FOCUSES.map(id =>
+          renderTemplate('startPlannedFlightOption4', {
+            id: id,
+            t: t(`flightPlan.focus.${id}`),
+          })).join(''),
+        checkboxInput: checkboxInput(
+          t('flightPlan.unfamiliar'),
+          'flight-plan-unfamiliar',
+          true
+        ),
+        title: t('flightPlan.caskAge.title'),
+        hint: t('flightPlan.caskAge.hint'),
+        caskMode: t('flightPlan.caskAge.caskMode'),
+        cASKMODES: CASK_MODES.map(
+          id => renderTemplate('startPlannedFlightOption5', {
+            id: id,
+            t: t(
+              `flightPlan.caskAge.caskMode.${id}`),
+          }))
+          .join(''),
+        ageMode: t('flightPlan.caskAge.ageMode'),
+        aGEMODES: AGE_MODES.map(id =>
+          renderTemplate('startPlannedFlightOption6', {
+            id: id,
+            t: t(
+              `flightPlan.caskAge.ageMode.${id}`),
+          }))
+          .join(''),
+        flightCaskOptionsHtml: flightCaskOptionsHtml(t),
+        ageRange: t('flightPlan.caskAge.ageRange'),
+        ageMin: t('flightPlan.caskAge.ageMin'),
+        ageMin2: t('flightPlan.caskAge.ageMin'),
+        ageMax: t('flightPlan.caskAge.age\
+Max'),
+        ageMax2: t('flightPlan.caskAge.ageMax'),
+        checkboxInput2: checkboxInput(
+          t('flightPlan.caskAge.strict'),
+          'flight-plan-strict'
+        ),
+        flightPlanGenerateButton: actionButton({
+          label: t('flightPlan.suggest'),
+          action: 'flight-plan-generate',
+        }),
+        closeModalButton: actionButton({
+          label: t('common.actions.cancel'),
+          action: 'close-modal',
+        }),
+      }),
       true,
       false,
       flightPlanningHelpButton()
@@ -1164,24 +1179,31 @@ data-act="flight-plan-create" disabled>${t('flightPlan.save')}</button></div>
     };
     const view = box?.querySelector('.flight-plan-preview');
     if (view) view.innerHTML = draft.length ?
-      `<p class="hint">${escapeHtml(t('flightPlan.description')
-      )}</p><ol class="flight-plan-proposal">${draft.map(item => {
-        const b = state.collection.bottlings.find(b => b.id ===
-          item.bottlingId);
-        const metadata = [
-          b?.caskType?.trim() ? `${t('forms.bottling.caskType')}: ${b.caskType
-            .trim()}` : '',
-          b?.ageYears !== null && b?.ageYears !== undefined &&
-            b?.ageYears !== '' ?
-            `${t('forms.bottling.ageYears')}: ${t('home.facts.years',
-              {count: b.ageYears})}` : '',
-        ].filter(Boolean);
-        return `<li><strong>${escapeHtml(b?.name ||
-          '')}</strong><small>${escapeHtml(t(`flightPlan.reason.${item.reason}`
-          ))}</small>
-                ${metadata.length ?
-            `<small>${escapeHtml(metadata.join(' · '))}</small>` : ''}</li>`;
-      }).join('')}</ol>` : `<p class="hint">${t('flightPlan.none')}</p>`;
+      renderTemplate('hint4', {
+        description: t('flightPlan.description'),
+        draft: draft.map(item => {
+          const b = state.collection.bottlings.find(b => b.id ===
+            item.bottlingId);
+          const metadata = [
+            b?.caskType?.trim() ? `${t('forms.bottling.caskType')}: ${b.caskType
+              .trim()}` : '',
+            b?.ageYears !== null && b?.ageYears !== undefined &&
+              b?.ageYears !== '' ?
+              `${t('forms.bottling.ageYears')}: ${t('home.facts.years',
+                {count: b.ageYears})}` : '',
+          ].filter(Boolean);
+          return renderTemplate('li', {
+            name: b?.name ||
+              '',
+            t: t(`flightPlan.reason.${item.reason}`
+            ),
+            small: metadata.length ?
+              renderTemplate('small', {
+                metadata: metadata.join(' · '),
+              }) : '',
+          });
+        }).join(''),
+      }) : renderTemplate('hint5');
     if (view && (caskMode === 'specific' || ageMode === 'range')) {
       const counts = flightCandidateDiagnostics(state.collection,
         {...options, bottlingIds: flightPlanSourceIds}, draft);
@@ -1191,7 +1213,9 @@ data-act="flight-plan-create" disabled>${t('flightPlan.save')}</button></div>
       if (counts.excludedScope) messages.push(t(
         'flightPlan.excludedScope', counts));
       view.innerHTML += messages.map(message =>
-        `<p class="hint">${escapeHtml(message)}</p>`).join('');
+        renderTemplate('hint6', {
+          message: message,
+        })).join('');
     }
     const button = box?.querySelector('[data-act="flight-plan-create"]');
     if (button) button.disabled = !draft.length;
@@ -1274,15 +1298,19 @@ data-act="flight-plan-create" disabled>${t('flightPlan.save')}</button></div>
      */
     const choices = (excludeId = '') => candidates.filter(x =>
       !selected.has(x.bottling.id) || x.bottling.id === excludeId)
-      .map(x => `<option value="${escapeHtml(x.bottle
-        .id)}">${escapeHtml(x.bottling.name)} · #${escapeHtml(x.bottle
-          .inventoryNumber || '–')}</option>`).join('');
-    return `<section class="analytics-panel flight-plan-members"><div \
-class="tasting-panel-heading">${headingTitle({
-      title: `${t('flightPlan.planne\
+      .map(x => renderTemplate('choicesOption', {
+        id: x.bottle
+          .id,
+        name: x.bottling.name,
+        inventoryNumber: x.bottle
+          .inventoryNumber || '–',
+      })).join('');
+    return renderTemplate('analyticsPanel3', {
+      headingTitle: headingTitle({
+        title: `${t('flightPlan.planne\
 dMembers')} · ${current.planItems.length}`,
-    })}</div>
-            <ol class="flight-plan-members-list">${current.planItems
+      }),
+      planItems: current.planItems
         .map((item, index) => {
           const {b, bottle, label, unavailable} = planMemberLabel(item);
           const photo = displayPhotoPath(bottle?.photos?.[0]) || (b ?
@@ -1291,68 +1319,69 @@ dMembers')} · ${current.planItems.length}`,
             state.warehouse,
             state.warehouse.assignments?.[bottle.id]
           ) : null;
-          return `<li class="flight-plan-member"><span class="flight-plan-nu\
-mber" aria-hidden="true">${index + 1}</span>${photo ? `<img \
-class="flight-plan-member-photo" src="${escapeHtml(imageUrl(photo))}" \
-loading="lazy" alt="">` : ''}<div class="flight-plan-member-copy"><strong>\
-${escapeHtml(label)}</strong>
-                    <small>${unavailable ? t('flightPlan.missing') :
+          return renderTemplate('flightPlanMember', {
+            index: index + 1,
+            flightPlanMemberPhoto: photo ? renderTemplate(
+              'flightPlanMemberPhoto',
+              {
+                imageUrl: imageUrl(photo),
+              }
+            ) : '',
+            label: label,
+            unavailable: unavailable ? t('flightPlan.missing') :
               escapeHtml(t(`flightPlan.reason.${item.reason ||
-                'manual'}`))}${bottle ? ' · ' +
-                  escapeHtml(t(bottle.status === 'open' ?
-                    'analytics.inventory.openedStatus' :
-                    'home.status.closed')) : ''}</small>
-                    ${place ?
-              `<button type="button" class="inline-link" data-act="flight-pl\
-an-location" data-bottle-id="${escapeHtml(item.bottleId)}">${
-escapeHtml(place.label)}</button>` : ''}</div>
-                    ${b ?
-              `<button type="button" class="btn small" data-act="flight-plan\
--open-bottling" data-bottling-id="${escapeHtml(b.id)}">${t('tastings.openBot\
-tlingDetails')}</button>` : ''}
-                    ${editable ? `<div class="flight-plan-member-actions">
-                        <button type="button" class="btn small" \
-data-act="flight-plan-move" data-index="${index}" data-step="-1" ${index ===
+                'manual'}`)),
+            bottle: bottle ? ' · ' +
+              escapeHtml(t(bottle.status === 'open' ?
+                'analytics.inventory.openedStatus' :
+                'home.status.closed')) : '',
+            flightPlanLocation: place ?
+              renderTemplate('flightPlanLocation', {
+                bottleId: item.bottleId,
+                label: place.label,
+              }) : '',
+            flightPlanOpenBottling: b ?
+              renderTemplate('flightPlanOpenBottling', {
+                id: b.id,
+              }) : '',
+            flightPlanMove: editable ? renderTemplate('flightPlanMove', {
+              index: index,
+              disabled: index ===
                 0 ? 'disabled' :
-                ''} aria-label="${t('tastingFlights.moveUp')}">${arrowUpIcon
-              }</button>
-                        <button type="button" class="btn small" \
-data-act="flight-plan-move" data-index="${index}" data-step="1" ${index ===
+                '',
+              arrowUpIcon: arrowUpIcon,
+              index2: index,
+              disabled2: index ===
                 current.planItems.length - 1 ? 'disabled' :
-                ''} aria-label="${t('tastingFlights.moveDown')}">${
-arrowDownIcon}</button>
-                        <select data-flight-replace="${index}" aria-label="${t(
-                  'flightPlan.replace')}"><option value="">${t(
-                    'flightPlan.replace')}</option>${choices(item
-                      .bottlingId)}</select>
-                        <button type="button" class="btn small" \
-data-act="flight-plan-replace" data-index="${index}">${t('flightPlan.replac\
-e')}</button>
-                        <button type="button" class="btn small danger" \
-data-act="flight-plan-remove" data-index="${index}">${t('flightPlan.remov\
-e')}</button>
-                    </div>` : current.phase === 'inProgress' && !unavailable ?
-              `<button type="button" class="btn small primary" \
-data-act="flight-plan-record" data-bottling-id="${escapeHtml(item.bottlingId)
-              }">${t('flightPlan.addTasting')}</button>` : ''}
-                </li>`;
-        }).join('')}</ol>
-            ${editable && candidates.some(x => !selected.has(x.bottling
-          .id)) && current.planItems.length < 6 ?
-        `<div class="flight-plan-add">
-        <select data-flight-manual-add
-          aria-label="${t('flightPlan.selectBottle')}">
-          ${choices()}</select>
-        ${actionButton({
-          label: t('flightPlan.add'),
-          action: 'flight-plan-add',
-        })}</div>` : ''}
-            ${editable ?
-        `<div class="actions"><button type="button" class="btn primary" \
-data-act="flight-plan-start" ${current.planItems.some(i =>
-          planMemberLabel(i).unavailable) || !current.planItems.length ?
-          'disabled' : ''}>${t('flightPlan.start')}</button></div>` : ''}
-        </section>`;
+                '',
+              arrowDownIcon: arrowDownIcon,
+              index3: index,
+              choices: choices(item
+                .bottlingId),
+              index4: index,
+              index5: index,
+            }) : current.phase === 'inProgress' && !unavailable ?
+              renderTemplate('flightPlanRecord', {
+                bottlingId: item.bottlingId,
+              }) : '',
+          });
+        }).join(''),
+      flightPlanAdd: editable && candidates.some(x => !selected.has(x.bottling
+        .id)) && current.planItems.length < 6 ?
+        renderTemplate('flightPlanAdd', {
+          choices: choices(),
+          flightPlanAddButton: actionButton({
+            label: t('flightPlan.add'),
+            action: 'flight-plan-add',
+          }),
+        }) : '',
+      flightPlanStart: editable ?
+        renderTemplate('flightPlanStart', {
+          disabled: current.planItems.some(i =>
+            planMemberLabel(i).unavailable) || !current.planItems.length ?
+            'disabled' : '',
+        }) : '',
+    });
   }
 
   /**
@@ -1436,26 +1465,22 @@ data-act="flight-plan-start" ${current.planItems.some(i =>
    * Performs the start flight lifecycle action.
    */
   function startFlight() {
-    showModal(t('tastingFlights.create'), `<div class="tasting-flight-form">
-            <label>${escapeHtml(t('tastingFlights.name')
-    )}<input data-flight-name maxlength="160" required \
-placeholder="${escapeHtml(t('tastingFlights.namePlaceholder'))}"></label>
-            <label>${escapeHtml(t('tastingFlights.date')
-    )}<input type="date" data-flight-date required \
-value="${localToday()}"></label>
-            <label>${escapeHtml(t('tastingFlights.notes')
-    )}<textarea data-flight-notes maxlength="10000" rows="3">\
-</textarea></label>
-            <div class="actions">${actionButton({
-      label: t('common.actions.cancel'),
-      action: 'close-modal',
-    })}
-            ${actionButton({
-      label: t('tastingFlights.create'),
-      action: 'tasting-flight-create-confirm',
-      variant: 'primary',
-    })}</div>
-        </div>`, false);
+    showModal(t('tastingFlights.create'), renderTemplate('tastingFlightForm2', {
+      name: t('tastingFlights.name'),
+      namePlaceholder: t('tastingFlights.namePlaceholder'),
+      date: t('tastingFlights.date'),
+      localToday: localToday(),
+      notes: t('tastingFlights.notes'),
+      closeModalButton: actionButton({
+        label: t('common.actions.cancel'),
+        action: 'close-modal',
+      }),
+      tastingFlightCreateConfirmButton: actionButton({
+        label: t('tastingFlights.create'),
+        action: 'tasting-flight-create-confirm',
+        variant: 'primary',
+      }),
+    }), false);
   }
 
   /**
@@ -1511,41 +1536,40 @@ value="${localToday()}"></label>
       item.id === state.selected);
     if (!current) {navigate('tastings-home', null, {replace: true}); return;}
     if (current.phase === 'planned') {
-      shell(`<div class="analytics-page tasting-child-page \
-tasting-flight-page" data-reconcile="replace">
-                ${backLink('tasting-flight-back', 'tastingFlights.back')}
-                ${pageTitle(t('flightPlan.plan'), t('flightPlan.description'))}
-                <section class="analytics-panel tasting-flight-summary">
-                ${flightEditing ? `<div class="tasting-flight-form">
-                    <label>${t('tastingFlights.name'
-      )}<input data-flight-name maxlength="160" required \
-value="${escapeHtml(current.name)}"></label>
-                    <label>${t('tastingFlights.date'
-      )}<input type="date" data-flight-date \
-value="${escapeHtml(current.date)}"></label>
-                    <label>${t('tastingFlights.notes'
-      )}<textarea data-flight-notes rows="3">${escapeHtml(
-        current.notes)}</textarea></label>
-                    <div class="actions">${actionButton({
-          label: t('common.actions.cancel'),
-          action: 'tasting-flight-cancel-edit',
-        })}${actionButton({
-          label: t('common.actions.save'),
-          action: 'tasting-flight-save',
-          variant: 'primary',
-        })}</div>
-                    </div>`:
-          `<div class="tasting-panel-heading"><div>${headingTitle({
-            title:
-              current.name,
-          })}<p class="muted">${escapeHtml(formatDate(current
-            .date))} · ${t('flightPlan.phase.planned'
-            )}</p></div><div class="actions"><button class="btn small" \
-type="button" data-act="tasting-flight-edit">${t('common.actions.edit')}</bu\
-tton><button class="btn small danger" type="button" data-act="tasting-flight\
--delete">${t('common.actions.delete')}</button></div></div>${current.notes ?
-            `<p>${escapeHtml(current.notes)}</p>` : ''}`}
-                </section>${plannedFlightDetail(current)}</div>`);
+      shell(renderTemplate('analyticsPage', {
+        backLink: backLink('tasting-flight-back', 'tastingFlights.back'),
+        pageTitle: pageTitle(t('flightPlan.plan'), t('flightPlan.description')),
+        tastingFlightForm: flightEditing ? renderTemplate(
+          'tastingFlightForm3',
+          {
+            name: current.name,
+            date: current.date,
+            notes: current.notes,
+            tastingFlightCancelEditButton: actionButton({
+              label: t('common.actions.cancel'),
+              action: 'tasting-flight-cancel-edit',
+            }),
+            tastingFlightSaveButton: actionButton({
+              label: t('common.actions.save'),
+              action: 'tasting-flight-save',
+              variant: 'primary',
+            }),
+          }
+        ) :
+          renderTemplate('tastingPanelHeading', {
+            headingTitle: headingTitle({
+              title:
+                current.name,
+            }),
+            formatDate: formatDate(current
+              .date),
+            p: current.notes ?
+              renderTemplate('flightP', {
+                notes: current.notes,
+              }) : '',
+          }),
+        plannedFlightDetail: plannedFlightDetail(current),
+      }));
       return;
     }
     const refs = flightEntries(state.collection, current);
@@ -1560,145 +1584,143 @@ tton><button class="btn small danger" type="button" data-act="tasting-flight\
      * @return {string} Resulting text.
      */
     const entryRow = (item, i) =>
-      `<div class="tasting-flight-member" data-tasting-id="${escapeHtml(item
-        .record.id)}">
-            <div class="tasting-flight-order-control"><button type="button" \
-class="tasting-flight-drag-handle" data-flight-drag aria-label="${
-escapeHtml(t('tastingFlights.dragHandle'))}" title="${
-escapeHtml(t('tastingFlights.dragHandle'))}">
-                <svg width="17" height="19" viewBox="0 0 16 20" \
-fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.5"/>\
-<circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="10" r="1.5"/><circle \
-cx="11" cy="10" r="1.5"/><circle cx="5" cy="17" r="1.5"/><circle cx="11" \
-cy="17" r="1.5"/></svg>
-            </button><span class="tasting-flight-position" \
-aria-label="${escapeHtml(t(
+      renderTemplate('tastingFlightMember', {
+        id: item
+          .record.id,
+        dragHandle: t('tastingFlights.dragHandle'),
+        dragHandle2: t('tastingFlights.dragHandle'),
+        position: t(
           'tastingFlights.position',
           {position: i + 1, count: refs.length}
-        ))}">${i + 1}</span></div>
-            <button type="button" class="tasting-flight-member-open" \
-data-act="tasting-flight-note-open" data-tasting-id="${
-escapeHtml(item.record.id)}" data-bottling-id="${
-escapeHtml(item.external ? item.record.id : item.bottling.id)
-      }" data-external="${item.external ? '1' : '0'}">
-                <strong>${escapeHtml(item.bottling
-        .name)}</strong><small>${escapeHtml(item.record.title ||
-          formatDate(item.record.tastedOn))}</small>
-            </button>
-            <span class="tasting-flight-member-score">${tastingListGlasses(item
-            .record) ||
-      '<span class="tasting-list-glasses" aria-hidden="true">\
-</span>'}<strong>${tastingRating(item.record)}</strong></span>
-            <div class="tasting-flight-member-actions">
-                <button type="button" class="btn small" data-act="tasting-fl\
-ight-move" data-index="${i}" data-direction="-1" ${i === 0 ? 'disable\
-d' : ''} aria-label="${escapeHtml(t('tastingFlights.moveUp'))}">${arrowUpIcon
-      }</button>
-                <button type="button" class="btn small" data-act="tasting-fl\
-ight-move" data-index="${i}" data-direction="1" ${i === refs.length - 1 ? 'd\
-isabled' : ''} aria-label="${escapeHtml(t('tastingFlights.moveDown'))}">${
-arrowDownIcon}</button>
-                <button type="button" class="btn small" data-act="tasting-fl\
-ight-remove-note" data-tasting-id="${escapeHtml(item.record
-        .id)}">${escapeHtml(t('tastingFlights.detach'))}</button>
-            </div>
-        </div>`;
-    shell(`<div class="analytics-page tasting-child-page tasting-flight-page\
-" data-reconcile="replace">
-            ${backLink('tasting-flight-back', 'tastingFlights.back')}
-            ${pageTitle(
-      t('tastingFlights.detailTitle'),
-      t('tastingFlights.detailIntro')
-    )}
-            <section class="analytics-panel tasting-flight-summary">
-                ${flightEditing ? `<div class="tasting-flight-form">
-                    <label>${escapeHtml(t('tastingFlights.name')
-    )}<input data-flight-name maxlength="160" required \
-value="${escapeHtml(current.name)}"></label>
-                    <label>${escapeHtml(t('tastingFlights.date')
-    )}<input type="date" data-flight-date required \
-value="${escapeHtml(current.date)}"></label>
-                    <label>${escapeHtml(t('tastingFlights.notes')
-    )}<textarea data-flight-notes maxlength="10000" \
-rows="4">${escapeHtml(current.notes)}</textarea></label>
-                    <div class="actions">${actionButton({
-      label: t('common.actions.cancel'),
-      action: 'tasting-flight-cancel-edit',
-    })}
-                    ${actionButton({
-      label: t('common.actions.save'),
-      action: 'tasting-flight-save',
-      variant: 'primary',
-    })}</div>
-                </div>`:
-        `<div class="tasting-panel-heading"><div>${headingTitle({
-          title: current
-            .name,
-        })}<p class="muted">${escapeHtml(formatDate(current.date)
-        )}</p></div>
-                    <div class="actions"><button type="button" class="btn \
-small" data-act="tasting-flight-edit">${editIcon}<span>${escapeHtml(t('commo\
-n.actions.edit'))}</span></button>
-                        ${actionButton({
-          label: t('common.actions.delete'),
-          action: 'tasting-flight-delete',
-          variant: 'destructive',
-          size: 'small',
-        })}</div></div>
-                    ${current.notes ?
-          `<p class="tasting-flight-comment">${escapeHtml(current.notes
-          )}</p>` : ''}`}
-            </section>
-            ${current.planItems?.length ? plannedFlightDetail(current) : ''}
-            ${current.phase === 'inProgress' ?
-        `<div class="actions"><button type="button" class="btn" \
-data-act="flight-plan-finish" ${refs.length ? '' : 'disabled'}>${t('flightPl\
-an.finish')}</button></div>` : ''}
-            <section class="analytics-panel tasting-flight-members"><div \
-class="tasting-panel-heading">${headingTitle({
-          title: t(
-            refs.length === 1 ? 'tastingFlights.oneEntry' :
-              'tastingFlights.entriesCount',
-            {count: refs.length}
-          ),
-        })}
-                ${current.phase === 'inProgress' ? '' :
-        `<button type="button" class="btn primary" data-act="tasting-flight-\
-toggle-add" ${current.phase === 'completed' ? 'disabled' :
-          ''}>${newBottlingIcon}<span>${escapeHtml(t('tastingFlights.add'))
-        }</span></button>`}</div>
-                ${flightAdding && current.phase !== 'inProgress' ?
-        `<div class="tasting-flight-add">
-                    <div class="tasting-flight-add-existing"><label>\
-${escapeHtml(t('tastingFlights.selectExisting'))}
-                        <select data-flight-tasting-option ${available.length ?
-          '' : 'disabled'}>${available.map(item =>
-            `<option value="${escapeHtml(item.record.id
-            )}">${escapeHtml(flightEntryLabel(
-              item))}</option>`).join('')}</select></label>
-                        <button class="btn" type="button" \
-data-act="tasting-flight-attach" ${available.length ? '' : 'disable\
-d'}>${escapeHtml(t('tastingFlights.addExisting'))}</button></div>
-                    <div class="tasting-flight-add-new"><label>${escapeHtml(t(
-                'tastings.chooseBottling'))}
-                        <select data-flight-owned-bottling>${(state.collection
-          ?.bottlings || []).map(b =>
-            `<option value="${escapeHtml(b.id)}">${escapeHtml(
-              b.name)}</option>`).join('')}</select></label>
-                        <button class="btn" type="button" \
-data-act="tasting-flight-new-owned" ${(state.collection?.bottlings || [])
-          .length ? '' :
-          'disabled'}>${escapeHtml(t('tastings.fromCollection'))}</button>
-                        ${actionButton({
+        ),
+        i: i + 1,
+        id2: item.record.id,
+        external: item.external ? item.record.id : item.bottling.id,
+        external2: item.external ? '1' : '0',
+        name: item.bottling
+          .name,
+        title: item.record.title ||
+          formatDate(item.record.tastedOn),
+        tastingListGlasses: tastingListGlasses(item
+          .record) ||
+          renderTemplate('tastingListGlasses2'),
+        tastingRating: tastingRating(item.record),
+        i2: i,
+        disabled: i === 0 ? 'disable\
+d' : '',
+        moveUp: t('tastingFlights.moveUp'),
+        arrowUpIcon: arrowUpIcon,
+        i3: i,
+        disabled2: i === refs.length - 1 ? 'd\
+isabled' : '',
+        moveDown: t('tastingFlights.moveDown'),
+        arrowDownIcon: arrowDownIcon,
+        id3: item.record
+          .id,
+        detach: t('tastingFlights.detach'),
+      });
+    shell(renderTemplate('analyticsPage2', {
+      backLink: backLink('tasting-flight-back', 'tastingFlights.back'),
+      pageTitle: pageTitle(
+        t('tastingFlights.detailTitle'),
+        t('tastingFlights.detailIntro')
+      ),
+      tastingFlightForm: flightEditing ? renderTemplate('tastingFlightForm4', {
+        name: t('tastingFlights.name'),
+        name2: current.name,
+        date: t('tastingFlights.date'),
+        date2: current.date,
+        notes: t('tastingFlights.notes'),
+        notes2: current.notes,
+        tastingFlightCancelEditButton: actionButton({
+          label: t('common.actions.cancel'),
+          action: 'tasting-flight-cancel-edit',
+        }),
+        tastingFlightSaveButton: actionButton({
+          label: t('common.actions.save'),
+          action: 'tasting-flight-save',
+          variant: 'primary',
+        }),
+      }) :
+        renderTemplate('tastingPanelHeading2', {
+          headingTitle: headingTitle({
+            title: current
+              .name,
+          }),
+          formatDate: formatDate(current.date),
+          editIcon: editIcon,
+          edit: t('commo\
+n.actions.edit'),
+          tastingFlightDeleteButton: actionButton({
+            label: t('common.actions.delete'),
+            action: 'tasting-flight-delete',
+            variant: 'destructive',
+            size: 'small',
+          }),
+          tastingFlightComment: current.notes ?
+            renderTemplate('tastingFlightComment', {
+              notes: current.notes,
+            }) : '',
+        }),
+      length: current.planItems?.length ? plannedFlightDetail(current) : '',
+      flightPlanFinish: current.phase === 'inProgress' ?
+        renderTemplate('flightPlanFinish', {
+          length: refs.length ? '' : 'disabled',
+        }) : '',
+      headingTitle: headingTitle({
+        title: t(
+          refs.length === 1 ? 'tastingFlights.oneEntry' :
+            'tastingFlights.entriesCount',
+          {count: refs.length}
+        ),
+      }),
+      phase: current.phase === 'inProgress' ? '' :
+        renderTemplate('tastingFlightToggleAdd', {
+          disabled: current.phase === 'completed' ? 'disabled' :
+            '',
+          newBottlingIcon: newBottlingIcon,
+          add: t('tastingFlights.add'),
+        }),
+      tastingFlightAdd: flightAdding && current.phase !== 'inProgress' ?
+        renderTemplate('tastingFlightAdd', {
+          selectExisting: t('tastingFlights.selectExisting'),
+          length: available.length ?
+            '' : 'disabled',
+          available: available.map(item =>
+            renderTemplate('flightOption', {
+              id: item.record.id,
+              flightEntryLabel: flightEntryLabel(
+                item),
+            })).join(''),
+          length2: available.length ? '' : 'disable\
+d',
+          addExisting: t('tastingFlights.addExisting'),
+          chooseBottling: t(
+            'tastings.chooseBottling'),
+          bottlings: (state.collection
+            ?.bottlings || []).map(b =>
+              renderTemplate('flightOption2', {
+                id: b.id,
+                name: b.name,
+              })).join(''),
+          length3: (state.collection?.bottlings || [])
+            .length ? '' :
+            'disabled',
+          fromCollection: t('tastings.fromCollection'),
+          tastingFlightNewExternalButton: actionButton({
             label: t('tastings.outsideCollection'),
             action: 'tasting-flight-new-external',
-          })}</div>
-                </div>`: ''}
-                ${refs.length ?
-        `<div class="warehouse-bottle-list tasting-flight-members-list">${refs
-          .map(entryRow).join('')}</div>` : `<p class="hint">${escapeHtml(t(
-            'tastingFlights.noEntries'))}</p>`}
-            </section></div>`);
+          }),
+        }) : '',
+      warehouseBottleList: refs.length ?
+        renderTemplate('warehouseBottleList2', {
+          refs: refs
+            .map(entryRow).join(''),
+        }) : renderTemplate('hint7', {
+          noEntries: t(
+            'tastingFlights.noEntries'),
+        }),
+    }));
   }
 
   /**
@@ -1847,44 +1869,50 @@ data-act="tasting-flight-new-owned" ${(state.collection?.bottlings || [])
       .tastedOn || '') ||
       (b.record.createdAt || '').localeCompare(a.record.createdAt || '') ||
       b.record.id.localeCompare(a.record.id));
-    shell(`<div class="analytics-page tasting-home-page">
-            ${pageHeader({
-      title: t('tastings.homeTitle'),
-      eyebrow: t('tastings.homeEyebrow'),
-      intro: t('tastings.homeIntro'),
-      className: 'analytics-page-heading',
-    })}
-            ${homeFlights()}
-            <section class="analytics-panel tasting-home-recent">
-                ${sectionHeader({
-      title: t('tastings.entries'),
-      layout: 'tasting-panel-heading',
-      actionsBare: true,
-      actions:
-        `<button type="button" class="btn primary" data-act="tastings-start-\
-choice">${newBottlingIcon}<span>${escapeHtml(t('tastings.add'))}</span>\
-</button>`,
-    })}
-                ${createChoiceOpen ?
-        `<div class="tasting-create-chooser"><div class="tasting-choose-owned">
-                    <label>${escapeHtml(t('tastings.chooseBottling')
-        )}<select data-owned-tasting-bottling>
-                    ${owned.map(b =>
-          `<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`)
-          .join('')}</select></label>
-                    <button type="button" class="btn" data-act="tastings-sta\
-rt-owned" ${owned.length ? '' : 'disabled'}>${escapeHtml(t('tastings.fromCol\
-lection'))}</button>
-                </div>${actionButton({
+    shell(renderTemplate('analyticsPage3', {
+      pageHeader: pageHeader({
+        title: t('tastings.homeTitle'),
+        eyebrow: t('tastings.homeEyebrow'),
+        intro: t('tastings.homeIntro'),
+        className: 'analytics-page-heading',
+      }),
+      homeFlights: homeFlights(),
+      sectionHeader: sectionHeader({
+        title: t('tastings.entries'),
+        layout: 'tasting-panel-heading',
+        actionsBare: true,
+        actions:
+          renderTemplate('tastingsStartChoice', {
+            newBottlingIcon: newBottlingIcon,
+            add: t('tastings.add'),
+          }),
+      }),
+      tastingCreateChooser: createChoiceOpen ?
+        renderTemplate('tastingCreateChooser', {
+          chooseBottling: t('tastings.chooseBottling'),
+          owned: owned.map(b =>
+            renderTemplate('homeOption', {
+              id: b.id,
+              name: b.name,
+            }))
+            .join(''),
+          length: owned.length ? '' : 'disabled',
+          fromCollection: t('tastings.fromCol\
+lection'),
+          tastingsStartExternalButton: actionButton({
             label: t('tastings.outsideCollection'),
             action: 'tastings-start-external',
-          })}</div>` : ''}
-                ${entries.length ?
-        `<div class="warehouse-bottle-list tasting-entry-list">${entries.map(
-          item => tastingRow({...item, home: true})).join('')}</div>` :
-        `<p class="hint">${escapeHtml(t('tastings.emptyHome'))}</p>`}
-            </section>
-        </div>`);
+          }),
+        }) : '',
+      warehouseBottleList: entries.length ?
+        renderTemplate('warehouseBottleList3', {
+          entries: entries.map(
+            item => tastingRow({...item, home: true})).join(''),
+        }) :
+        renderTemplate('hint8', {
+          emptyHome: t('tastings.emptyHome'),
+        }),
+    }));
   }
 
   /**
@@ -1900,24 +1928,31 @@ lection'))}</button>
     const bottling = subject();
     if (!bottling) {navigate('tastings-home', null, {replace: true}); return;}
     const tastings = sortedTastings(bottling);
-    shell(`<div class="analytics-page tasting-child-page">
-        ${backLink('tastings-back-detail', 'tastings.backDetail')}
-        ${pageTitle(t('tastings.overviewTitle'), t('tastings.overviewIntro'))}
-        ${bottlingInfo(bottling)}
-        <section class="analytics-panel tasting-list-section">
-            ${sectionHeader({
-      title: t('tastings.entriesCount', {count: tastings.length}),
-      layout: 'tasting-panel-heading',
-      actionsBare: true,
-      actions:
-        `<button type="button" class="btn primary" data-act="tastings-new">\
-${newBottlingIcon}<span>${escapeHtml(t('tastings.add'))}</span></button>`,
-    })}
-            ${tastings.length ?
-        `<div class="warehouse-bottle-list tasting-entry-list">${tastings.map(
-          record => tastingRow({record, b: bottling})).join('')}</div>` :
-        `<p class="hint">${escapeHtml(t('tastings.none'))}</p>`}
-        </section></div>`);
+    shell(renderTemplate('analyticsPage4', {
+      backLink: backLink('tastings-back-detail', 'tastings.backDetail'),
+      pageTitle: pageTitle(
+        t('tastings.overviewTitle'), t('tastings.overviewIntro')
+      ),
+      bottlingInfo: bottlingInfo(bottling),
+      sectionHeader: sectionHeader({
+        title: t('tastings.entriesCount', {count: tastings.length}),
+        layout: 'tasting-panel-heading',
+        actionsBare: true,
+        actions:
+          renderTemplate('tastingsNew', {
+            newBottlingIcon: newBottlingIcon,
+            add: t('tastings.add'),
+          }),
+      }),
+      warehouseBottleList: tastings.length ?
+        renderTemplate('warehouseBottleList4', {
+          tastings: tastings.map(
+            record => tastingRow({record, b: bottling})).join(''),
+        }) :
+        renderTemplate('hint9', {
+          none: t('tastings.none'),
+        }),
+    }));
   }
 
   /**
@@ -1970,147 +2005,126 @@ ${newBottlingIcon}<span>${escapeHtml(t('tastings.add'))}</span></button>`,
       flavorSaveQueue = Promise.resolve();
     }
     if (!draft && !flavorSession.editing) {
-      shell(`<div class="analytics-page tasting-child-page">
-                ${backLink(backAction, backLabel)}
-                ${pageTitle(
-        t('tastings.editorViewTitle'),
-        t('tastings.editorViewIntro')
-      )}
-                <section class="section tasting-editor-content \
-tasting-readonly-content" data-flavor-detail data-tasting-readonly="true">
-                    ${bottlingInfo(bottling, external, false)}
-                    ${flightHint(existing)}
-                    ${sectionHeader({title: t('tastings.editorSection')})}
-                    ${tastingReadOnly(value)}
-                </section>
-            </div>`);
+      shell(renderTemplate('analyticsPage5', {
+        backLink: backLink(backAction, backLabel),
+        pageTitle: pageTitle(
+          t('tastings.editorViewTitle'),
+          t('tastings.editorViewIntro')
+        ),
+        bottlingInfo: bottlingInfo(bottling, external, false),
+        flightHint: flightHint(existing),
+        sectionHeader: sectionHeader({title: t('tastings.editorSection')}),
+        tastingReadOnly: tastingReadOnly(value),
+      }));
       return;
     }
-    shell(`<div class="analytics-page tasting-child-page">
-        ${backLink(backAction, backLabel)}
-        ${pageTitle(
-      draft ? t('tastings.editorCreateTitle') :
-        t('tastings.editorEditTitle'),
-      draft ? t('tastings.editorCreateIntro') : t('tastings.editorEditIntro')
-    )}
-    <section class="section tasting-editor-content" data-flavor-detail \
-data-bottling-id="${escapeHtml(bottling?.id || record?.id || 'new')}" \
-aria-label="${escapeHtml(t('flavor.title'))}">
-        ${bottlingInfo(bottling, external, draft)}
-        ${existing ? flightHint(existing) : (flightBack ?
-        `<div class="tasting-flight-context">${escapeHtml(t(
-          'tastingFlights.newInFlight'))}</div>` : '')}
-        ${sectionHeader({
-            title: t('tastings.editorSection'),
-            className: 'tasting-editor-section-head',
-          })}
-        <div class="flavor-detail-panel tasting-panel">
-            <div class="tasting-record-fields analytics-panel \
-tasting-edit-meta-panel">
-                <label>${escapeHtml(t('tastings.date')
-          )}<input type="date" data-tasting-date required \
-value="${escapeHtml(value.tastedOn)}"></label>
-                <label>${escapeHtml(t('tastings.nameOptional')
-          )}<input type="text" maxlength="120" data-tasting-title \
-value="${escapeHtml(value.title || '')}" placeholder="${escapeHtml(t('tastin\
-gs.titlePlaceholder'))}"></label>
-            <div class="actions tasting-editor-actions"><div class="actions \
-flavor-history-actions">
-                <button type="button" class="btn small tasting-action-btn" \
-data-act="flavor-detail-undo" title="${escapeHtml(t('flavor.undo'))}" \
-aria-label="${escapeHtml(t('flavor.undo'))}" ${flavorSession.history
-        .canUndo ? '' : 'disabled'
-      }><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi\
-dth="1\
-.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path \
-d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/></svg></button>
-                <button type="button" class="btn small tasting-action-btn" \
-data-act="flavor-detail-redo" title="${escapeHtml(t('flavor.redo'))}" \
-aria-label="${escapeHtml(t('flavor.redo'))}" ${flavorSession.history
-        .canRedo ? '' : 'disabled'
-      }><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi\
-dth="1\
-.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path \
-d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h2"/></svg></button>
-            </div>
-                ${draft ? '' :
-        `<button type="button" class="btn small" data-act="tasting-edit-done\
-">${escapeHtml(t('tastings.done'))}</button><button type="button" \
-class="btn small danger" data-act="tasting-delete" \
-data-tasting-id="${escapeHtml(value.id)}">${escapeHtml(t('common.actions.del\
-ete'))}</button>`}
-            </div>
-            </div>
-            <div class="tasting-top-row">
-                <section class="analytics-panel tasting-color-panel">
-                    ${sectionHeader({
-          title: t('tasting.colorHeading'),
-          layout: 'tasting-panel-heading',
-          actionsBare: true,
-          actions:
-            `<button type="button" class="btn small" data-act="tasting-color\
--clear" ${flavorSession.history.value.whiskyColor ? '' : 'disabled'}>\
-${escapeHtml(t('tasting.colorClear'))}</button>`,
-        })}
-                    ${whiskyColorSelector(flavorSession.history.value
-          .whiskyColor)}
-                </section>
-                <section class="analytics-panel tasting-senses-section">\
-${sectionHeader({
-            title: t('flavor.title'),
-            layout: 'tasting-panel-heading',
-            actionsBare: true,
-            actions:
-              `<button type="button" class="btn small" data-act="tasting-fla\
-vor-clear" ${flavorSession.history.value.flavorProfile ? '' : 'disable\
-d'}>${escapeHtml(t('tastings.clearRadar'))}</button>`,
-          })}
-                    <p class="hint" data-flavor-missing ${flavorSession.history
-        .value.flavorProfile ? 'hidden' : ''}>${escapeHtml(t(
-          'flavor.notRecorded'))}</p>
-                    ${flavorChart(
-            flavorSession.history.value.flavorProfile,
-            {editable: true}
-          )}
-                </section>
-            </div>
-            <section class="analytics-panel">${headingTitle({
-            title:
-              t('tasting.notes'),
-          })}
-                <div class="tasting-notes">${['nose', 'palate', 'finish']
-        .map(key => `<label>${escapeHtml(t(`forms.bottling.${key}`)
-        )}<textarea data-tasting-note="${key}">${escapeHtml(flavorSession
-          .history.value.tastingNotes[key])}</textarea></label>`).join(
-            '')}</div>
-            </section>
-            <section class="analytics-panel tasting-rating-panel">
-                ${sectionHeader({
-              title: t('tasting.overallRating'),
-              layout: 'tasting-panel-heading',
-              actionsBare: true,
-              actions:
-                `<button type="button" class="btn small" data-act="tasting-r\
-atin\
-g-clear" ${flavorSession.history.value.rating == null ? 'disabled' :
-                  ''}>${escapeHtml(t('tasting.clearRating'))}</button>`,
-            })}
-                ${glencairnRating(flavorSession.history.value.rating)}
-                <label class="tasting-rating-comment tasting-rating-comment-\
-editor">${escapeHtml(t('tasting.ratingComment'))}
-                    <textarea data-tasting-rating-comment maxlength="10000" \
-rows="3">${escapeHtml(flavorSession.history.value.ratingComment)}</textarea>
-                </label>
-            </section>
-        </div>
-        ${draft ? `<div class="actions tasting-create-actions">${actionButton({
-              label: t('tastings.save'),
-              action: 'tasting-create',
-              variant: 'primary',
-            })}</div>` : ''}
-    </section>
-
-</div>`);
+    shell(renderTemplate('analyticsPage6', {
+      backLink: backLink(backAction, backLabel),
+      pageTitle: pageTitle(
+        draft ? t('tastings.editorCreateTitle') :
+          t('tastings.editorEditTitle'),
+        draft ? t('tastings.editorCreateIntro') : t('tastings.editorEditIntro')
+      ),
+      id: bottling?.id || record?.id || 'new',
+      title: t('flavor.title'),
+      bottlingInfo: bottlingInfo(bottling, external, draft),
+      existing: existing ? flightHint(existing) : (flightBack ?
+        renderTemplate('tastingFlightContext', {
+          newInFlight: t(
+            'tastingFlights.newInFlight'),
+        }) : ''),
+      sectionHeader: sectionHeader({
+        title: t('tastings.editorSection'),
+        className: 'tasting-editor-section-head',
+      }),
+      date: t('tastings.date'),
+      tastedOn: value.tastedOn,
+      nameOptional: t('tastings.nameOptional'),
+      title2: value.title || '',
+      titlePlaceholder: t('tastin\
+gs.titlePlaceholder'),
+      undo: t('flavor.undo'),
+      undo2: t('flavor.undo'),
+      canUndo: flavorSession.history
+        .canUndo ? '' : 'disabled',
+      redo: t('flavor.redo'),
+      redo2: t('flavor.redo'),
+      canRedo: flavorSession.history
+        .canRedo ? '' : 'disabled',
+      draft: draft ? '' :
+        renderTemplate('tastingEditDone', {
+          done: t('tastings.done'),
+          id: value.id,
+          delete: t('common.actions.del\
+ete'),
+        }),
+      sectionHeader2: sectionHeader({
+        title: t('tasting.colorHeading'),
+        layout: 'tasting-panel-heading',
+        actionsBare: true,
+        actions:
+          renderTemplate('tastingColorClear', {
+            whiskyColor: flavorSession.history.value.whiskyColor ? '' :
+              'disabled',
+            colorClear: t('tasting.colorClear'),
+          }),
+      }),
+      whiskyColorSelector: whiskyColorSelector(flavorSession.history.value
+        .whiskyColor),
+      sectionHeader3: sectionHeader({
+        title: t('flavor.title'),
+        layout: 'tasting-panel-heading',
+        actionsBare: true,
+        actions:
+          renderTemplate('tastingFlavorClear', {
+            flavorProfile: flavorSession.history.value.flavorProfile ? '' :
+              'disable\
+d',
+            clearRadar: t('tastings.clearRadar'),
+          }),
+      }),
+      hidden: flavorSession.history
+        .value.flavorProfile ? 'hidden' : '',
+      notRecorded: t(
+        'flavor.notRecorded'),
+      flavorChart: flavorChart(
+        flavorSession.history.value.flavorProfile,
+        {editable: true}
+      ),
+      headingTitle: headingTitle({
+        title:
+          t('tasting.notes'),
+      }),
+      content: ['nose', 'palate', 'finish']
+        .map(key => renderTemplate('editorLabel', {
+          t: t(`forms.bottling.${key}`),
+          key: key,
+          tastingNotes: flavorSession
+            .history.value.tastingNotes[key],
+        })).join(
+          ''),
+      sectionHeader4: sectionHeader({
+        title: t('tasting.overallRating'),
+        layout: 'tasting-panel-heading',
+        actionsBare: true,
+        actions:
+          renderTemplate('tastingRatingClear', {
+            disabled: flavorSession.history.value.rating == null ? 'disabled' :
+              '',
+            clearRating: t('tasting.clearRating'),
+          }),
+      }),
+      glencairnRating: glencairnRating(flavorSession.history.value.rating),
+      ratingComment: t('tasting.ratingComment'),
+      ratingComment2: flavorSession.history.value.ratingComment,
+      actions: draft ? renderTemplate('actions2', {
+        tastingCreateButton: actionButton({
+          label: t('tastings.save'),
+          action: 'tasting-create',
+          variant: 'primary',
+        }),
+      }) : '',
+    }));
   }
 
   /**
@@ -2339,25 +2353,28 @@ rows="3">${escapeHtml(flavorSession.history.value.ratingComment)}</textarea>
       return;
     }
     const options = owned.map(b =>
-      `<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`)
+      renderTemplate('optionsOption', {
+        id: b.id,
+        name: b.name,
+      }))
       .join('');
     showModal(
       t('tastings.assignToCollection'),
-      `<p>${escapeHtml(t('tastings.assignExplanation'))}</p>
-            <label class="tasting-assign-field">${escapeHtml(t(
-        'tastings.chooseBottling'))}
-                <select data-tasting-assign-target required>${options}</select>
-            </label><div class="actions tasting-assign-actions">
-                ${actionButton({
+      renderTemplate('showAssignDialogP', {
+        assignExplanation: t('tastings.assignExplanation'),
+        chooseBottling: t(
+          'tastings.chooseBottling'),
+        options: options,
+        closeModalButton: actionButton({
           label: t('common.actions.cancel'),
           action: 'close-modal',
-        })}
-                ${actionButton({
+        }),
+        tastingExternalAssignConfirmButton: actionButton({
           label: t('tastings.assignToCollection'),
           action: 'tasting-external-assign-confirm',
           variant: 'primary',
-        })}
-            </div>`,
+        }),
+      }),
       false
     );
   }

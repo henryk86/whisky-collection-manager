@@ -1,0 +1,24 @@
+<!-- wcm-template:photoPrev -->
+<span class="photo-lightbox-navigation">
+    <button type="button" class="btn small" data-act="photo-prev" aria-label="{{t:ui.photos.previous}}">{{raw:arrowLeftIcon}}</button>
+    <span class="photo-lightbox-count" aria-live="polite">{{raw:active}} / {{raw:length}}</span>
+    <button type="button" class="btn small" data-act="photo-next" aria-label="{{t:ui.photos.next}}">{{raw:arrowRightIcon}}</button>
+    </span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:photoLightbox -->
+<figure class="photo-lightbox">
+    <div class="photo-lightbox-stage">
+    <img class="photo-lightbox-image" src="{{text:src}}" alt="{{text:alt}}" draggable="false">
+    </div>
+    <figcaption class="photo-lightbox-footer">
+    <span class="photo-lightbox-caption">{{text:alt2}}</span>
+    <span class="photo-lightbox-zoom" role="group" aria-label="{{t:ui.photos.zoomControls}}">
+    <button type="button" class="btn small" data-act="photo-zoom-out" aria-label="{{t:ui.photos.zoomOut}}" disabled>{{raw:minusIcon}}</button>
+    <button type="button" class="btn small photo-lightbox-zoom-level" data-act="photo-zoom-reset" aria-label="{{t:ui.photos.zoomReset}}" disabled><span data-photo-zoom-level>100 %</span></button>
+    <button type="button" class="btn small" data-act="photo-zoom-in" aria-label="{{t:ui.photos.zoomIn}}">{{raw:plusIcon}}</button>
+    </span>
+    {{raw:photoPrev}}
+    </figcaption>
+    </figure>
+<!-- /wcm-template -->

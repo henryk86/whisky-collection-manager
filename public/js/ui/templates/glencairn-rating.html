@@ -1,0 +1,14 @@
+<!-- wcm-template:tastingGlass -->
+<button type="button" class="tasting-glass" data-glass-state="{{raw:state}}" data-act="tasting-rating" data-rating-points="{{raw:points}}" aria-pressed="{{raw:selected}}" aria-label="{{text:ratingGlass}}" title="{{raw:points2}} / 100" style="--glass-fill:{{raw:fill}}%">{{raw:glencairnRatingSymbol}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingRating -->
+<div class="tasting-rating" data-tasting-rating data-rating-value="{{raw:safe}}">
+        <div class="tasting-glasses" role="group" aria-label="{{text:rating}}">
+        {{raw:from}}</div>
+        <div class="tasting-score-field">
+            <label class="tasting-score-control"><input type="text" data-tasting-score inputmode="decimal" autocomplete="off" value="{{text:inputValue}}" aria-label="{{text:points}}" aria-describedby="tasting-score-suffix tasting-score-error" placeholder="–"/><span id="tasting-score-suffix">/ 100</span></label>
+            <span id="tasting-score-error" class="tasting-score-error" role="status" aria-live="polite"></span>
+        </div>
+    </div>
+<!-- /wcm-template -->

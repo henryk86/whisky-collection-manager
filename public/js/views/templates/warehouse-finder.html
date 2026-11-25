@@ -1,0 +1,73 @@
+<!-- wcm-template:warehouseFinderSummary -->
+<div class="warehouse-finder-summary" aria-live="polite">{{raw:safe}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:img -->
+<img src="{{raw:safe}}" alt="" loading="lazy">
+<!-- /wcm-template -->
+
+<!-- wcm-template:img2 -->
+<img src="/assets/photo-placeholder.svg" alt="" aria-hidden="true">
+<!-- /wcm-template -->
+
+<!-- wcm-template:smallButton -->
+<a class="btn small" href="{{raw:safe}}" data-act="open" data-id="{{raw:safe2}}" data-bottle-id="{{raw:safe3}}">{{t:warehouse.bottles.detailsTitle}}</a>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseFinderMeta -->
+<span class="warehouse-finder-meta">{{raw:meta}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:cardsSpan -->
+<span aria-hidden="true">⌖</span> {{raw:safe}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseFindLocation -->
+<button type="button" class="btn small primary" data-act="warehouse-find-location" data-id="{{raw:safe}}">{{t:warehouse.find.showLocation}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseFinderCard -->
+<article class="warehouse-finder-card" data-bottle-id="{{raw:safe}}">
+            <div class="warehouse-finder-photo">{{raw:photo}}</div>
+            <div class="warehouse-finder-info"><strong>{{raw:inventory}}{{raw:safe2}}</strong>
+                {{raw:warehouseFinderMeta}}
+                <span class="warehouse-finder-location">{{raw:span}}</span>
+            </div>
+            <div class="warehouse-finder-actions">
+                {{raw:warehouseFindLocation}}
+                <button type="button" class="btn small" data-act="warehouse-assign" data-id="{{raw:safe3}}">{{raw:t}}</button>
+                {{raw:details}}
+            </div>
+        </article>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint -->
+<p class="hint warehouse-finder-empty">{{t:warehouse.bottles.noResults}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseFinderPages -->
+<nav class="warehouse-finder-pages" aria-label="{{raw:safe}}">
+        <button type="button" class="btn small" data-act="warehouse-find-prev" {{raw:disabled}}>{{t:warehouse.find.previous}}</button>
+        <span>{{raw:safe2}}</span>
+        <button type="button" class="btn small" data-act="warehouse-find-next" {{raw:disabled2}}>{{t:warehouse.find.next}}</button>
+    </nav>
+<!-- /wcm-template -->
+
+<!-- wcm-template:renderWarehouseFinderResults -->
+{{raw:count}}<div class="warehouse-finder-list">{{raw:cards}}</div>{{raw:pagination}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseFinderFilterOption -->
+<label class="warehouse-finder-filter-option"><input type="radio" name="warehouse-find-placement" value="{{raw:id}}" {{raw:checked}}><span>{{raw:t}}</span></label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseFinder -->
+<section class="warehouse-finder" aria-label="{{t:warehouse.navigation.findBottles}}">
+        <label class="warehouse-finder-search-label" for="warehouse-search">{{t:warehouse.bottles.searchInventory}}</label>
+        <input id="warehouse-search" type="search" autocomplete="off" value="{{raw:safe}}" placeholder="{{t:warehouse.bottles.searchPlaceholder}}">
+        <fieldset class="warehouse-finder-filter"><legend>{{t:warehouse.find.placement}}</legend>
+          {{raw:filters}}
+        </fieldset>
+        <div class="warehouse-finder-results">{{raw:warehouseFinderResults}}</div>
+    </section>
+<!-- /wcm-template -->

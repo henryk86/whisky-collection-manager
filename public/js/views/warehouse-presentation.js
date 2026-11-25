@@ -12,6 +12,11 @@ import {
   shelfLevels, effectiveShelfFront, visibleShelfFront, doorRangeForIndex,
   furnitureHeight
 } from '../../../shared/warehouse-compartments.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/warehouse-presentation.html', import.meta.url));
+
 
 // Stable semantic keys, explicitly mapped from persisted domain codes.
 // Never construct a translation key from a translated display label.
@@ -127,9 +132,14 @@ export function storagePath(warehouse, shelfId) {
  * @return {string} Resulting text.
  */
 function field(name, label, value = '', type = 'text', options = '') {
-  return `<label class="form-field">${esc(
-    label)}<input name="${name}" type="${type}" ${options} value="${safe(
-      value)}" required></label>`;
+  return renderTemplate('formField', {
+    label: label,
+    name: name,
+    type: type,
+    options: options,
+    safe: safe(
+      value),
+  });
 }
 
 /**
@@ -142,10 +152,17 @@ function field(name, label, value = '', type = 'text', options = '') {
  * @return {string} Resulting text.
  */
 function choices(name, label, options, chosen = '') {
-  return `<label class="form-field">${esc(
-    label)}<select name="${name}">${options.map(([id,
-      title]) => `<option value="${safe(id)}" ${id === chosen ? 'selected' :
-        ''}>${esc(title)}</option>`).join('')}</select></label>`;
+  return renderTemplate('formField2', {
+    label: label,
+    name: name,
+    options: options.map(([id,
+      title]) => renderTemplate('choicesOption', {
+        safe: safe(id),
+        selected: id === chosen ? 'selected' :
+          '',
+        title: title,
+      })).join(''),
+  });
 }
 
 /**
@@ -153,10 +170,7 @@ function choices(name, label, options, chosen = '') {
  * @return {string} Resulting text.
  */
 function footer() {
-  return `<div class="actions ds-modal-footer warehouse-form-actions">\
-<button type="button" class="btn" data-act="close-modal">${t("common.actions\
-.cancel")}</button><button type="submit" class="btn primary">${t("common.act\
-ions.save")}</button></div>`;
+  return renderTemplate('closeModal');
 }
 
 /**
@@ -195,8 +209,10 @@ function bottleListFacts(bottle) {
     ],
   ];
   return facts.filter(([, value]) => value !== null).map(([key, value]) =>
-    `<span class="warehouse-bottle-fact"><span class="warehouse-bottle-fact-\
-label">${safe(t(key))}:</span> ${safe(value)}</span>`).join('');
+    renderTemplate('warehouseBottleFact', {
+      safe: safe(t(key)),
+      safe2: safe(value),
+    })).join('');
 }
 
 /**
@@ -218,21 +234,22 @@ function bottleRow(w, bottle, selected = false) {
     bottle.caskType,
   ]
     .filter(value => value != null).join(' ').toLocaleLowerCase('de');
-  return `<div class="warehouse-bottle-row" data-bottle-search="${safe(
-    searchable
-  )}"><label class="warehouse-bottle-row-select"><input type="checkbox" \
-class="warehouse-bottle-check" data-id="${safe(bottle.id)}" \
-aria-label="${safe(t('warehouse.bottles.bulkSelectOne', {name: bottle.name}))
-    }" ${selected ? 'checked' : ''
-    }></label><div class="warehouse-bottle-row-info"><strong>${
-safe(bottleLabel(bottle))}</strong><small>${
-place ? safe(place.label) : t("detail.fields.unassigned")}</small>${
-facts ? `<div class="warehouse-bottle-facts">${facts}</div>` : ''
-    }</div><button class="btn small" type="button" data-act="warehouse-assig\
-n" d\
-ata-id="${safe(bottle.id)}">${place ? t("warehouse.bottles.relocate") :
-      t("warehouse.bottles.assignAction")
-    }</button></div>`;
+  return renderTemplate('warehouseBottleRow', {
+    safe: safe(
+      searchable
+    ),
+    safe2: safe(bottle.id),
+    safe3: safe(t('warehouse.bottles.bulkSelectOne', {name: bottle.name})),
+    checked: selected ? 'checked' : '',
+    safe4: safe(bottleLabel(bottle)),
+    place: place ? safe(place.label) : t("detail.fields.unassigned"),
+    warehouseBottleFacts: facts ? renderTemplate('warehouseBottleFacts', {
+      facts: facts,
+    }) : '',
+    safe5: safe(bottle.id),
+    place2: place ? t("warehouse.bottles.relocate") :
+      t("warehouse.bottles.assignAction"),
+  });
 }
 
 /**
@@ -293,16 +310,26 @@ function roomDiagram(room, w, layer = 'all') {
       const level = index % 10 === 0 ? 'major' : index % 5 === 0 ?
         'minor' : 'fine';
       gridLines.push(vertical
-        ? `<line class="warehouse-grid-${level}" x1="${position}" y1="0" \
-x2="${position}" y2="${vbH}"/>`
-        : `<line class="warehouse-grid-${level}" x1="0" y1="${position}" \
-x2="${vbW}" y2="${position}"/>`);
+        ? renderTemplate('warehouseGrid', {
+          level: level,
+          position: position,
+          position2: position,
+          vbH: vbH,
+        })
+        : renderTemplate('warehouseGrid2', {
+          level: level,
+          position: position,
+          vbW: vbW,
+          position2: position,
+        }));
     }
   };
   makeGrid(room.width, sx, true);
   makeGrid(room.height, sy, false);
-  const grid = `<g class="warehouse-plan-grid" aria-hidden="true">${gridLines
-    .join('')}</g>`;
+  const grid = renderTemplate('warehousePlanGrid', {
+    gridLines: gridLines
+      .join(''),
+  });
   const items = room.furniture.filter(f => layer === 'all' || (layer ===
     'floor' ? (f.elevation ?? 0) === 0 : (f.elevation ?? 0) > 0))
     .slice().sort((a, b) => (a.elevation ?? 0) - (b.elevation ?? 0));
@@ -311,30 +338,50 @@ x2="${vbW}" y2="${position}"/>`);
     const fh = (f.rotation % 180 === 0 ? f.depth : f.width) * sy;
     const x = f.x * sx, y = f.y * sy;
     const assigned = f.shelves.reduce((s, shelf) => s + count(w, shelf.id), 0);
-    return `<g class="warehouse-drag ${(f.elevation ?? 0) > 0 ?
-      'warehouse-elevated' :
-      'warehouse-floor-level'} ${w.focusFurnitureId === f.id ?
+    return renderTemplate('warehouseDrag', {
+      elevation: (f.elevation ?? 0) > 0 ?
+        'warehouse-elevated' :
+        'warehouse-floor-level',
+      focusFurnitureId: w.focusFurnitureId === f.id ?
         'warehouse-selected' :
-        ''}" data-id="${safe(
-          f.id)}" role="button" tabindex="0" aria-label="${safe(t(
-            "warehouse.view.furnitureKeyboardHint",
-            {name: f.name}))}" style="cursor:grab"><rect x="${x +
-            1}" y="${y + 1}" width="${Math.max(2, fw - 2)}" height="${Math
-              .max(2, fh - 2)}" rx="3"/><text x="${x + fw / 2}" y="${y +
-              fh / 2 - 4}" text-anchor="middle">${safe(f.name.slice(0,
-                19))}</text><text x="${x + fw / 2}" y="${y + fh / 2 +
-                13}" text-anchor="middle">${(f.elevation ?? 0) > 0 ?
-                  `${t("warehouse.view.fromElevation",
-                    {height: num(f.elevation)})} · ` : ''}${t("wareh\
-ouse.view.abbreviatedBottleCount", {count: assigned})}</text></g>`;
+        '',
+      safe: safe(
+        f.id),
+      safe2: safe(t(
+        "warehouse.view.furnitureKeyboardHint",
+        {name: f.name})),
+      x: x +
+        1,
+      y: y + 1,
+      max: Math.max(2, fw - 2),
+      max2: Math
+        .max(2, fh - 2),
+      x2: x + fw / 2,
+      y2: y +
+        fh / 2 - 4,
+      safe3: safe(f.name.slice(0,
+        19)),
+      x3: x + fw / 2,
+      y3: y + fh / 2 +
+        13,
+      elevation2: (f.elevation ?? 0) > 0 ?
+        `${t("warehouse.view.fromElevation",
+          {height: num(f.elevation)})} · ` : '',
+      abbreviatedBottleCount: t("wareh\
+ouse.view.abbreviatedBottleCount", {count: assigned}),
+    });
   }).join('');
-  return `<div class="warehouse-map-wrap"><svg class="warehouse-floor" \
-viewBox="0 0 ${vbW} ${vbH}" data-room-id="${safe(room.id)}" \
-aria-label="${safe(t("warehouse.view.roomPlanAria", {name: room.name}))}">\
-<rect class="warehouse-boundary" x="1" y="1" width="${vbW - 2}" \
-height="${vbH - 2}" rx="2"/>${grid}${shapes}<text class="warehouse-room-hint\
-" x="10" y="${vbH - 9}">${t("warehouse.view.twoDimensionalInstructions")}</t\
-ext></svg></div>`;
+  return renderTemplate('warehouseMapWrap', {
+    vbW: vbW,
+    vbH: vbH,
+    safe: safe(room.id),
+    safe2: safe(t("warehouse.view.roomPlanAria", {name: room.name})),
+    vbW2: vbW - 2,
+    vbH2: vbH - 2,
+    grid: grid,
+    shapes: shapes,
+    vbH3: vbH - 9,
+  });
 }
 
 /**
@@ -359,21 +406,23 @@ function bottleSymbol(
   // unaffected.
   const showPlaceholder = placeholderImage && !b.photoPath;
   const photo = b.photoPath ?
-    `<img class="warehouse-bottle-photo" src="${safe(imageUrl(b.photoPath)
-    )}" alt="" loading="lazy">`
+    renderTemplate('warehouseBottlePhoto', {
+      safe: safe(imageUrl(b.photoPath)
+      ),
+    })
     : showPlaceholder ?
-      '<img class="warehouse-bottle-photo warehouse-bottle-placeholder" \
-src="/assets/photo-placeholder.svg" alt="" aria-hidden="true">' : '';
+      renderTemplate('warehouseBottlePhoto2') : '';
   // In the shelf content dialog the picture is decorative. Selection and
   // relocation are intentionally handled outside this picture (actions below).
   const content =
-    `<svg viewBox="0 0 24 60" aria-hidden="true"><rect x="8" y="2" \
-width="8" height="12" rx="2"/><path d="M8 14 Q3 19 3 25V54Q3 58 7 58H17Q21 \
-58 21 54V25Q21 19 16 14Z"/><rect class="warehouse-label" x="5" y="31" \
-width="14" height="16" rx="1"/></svg>${photo}`;
+    renderTemplate('warehouseLabel', {
+      photo: photo,
+    });
   if (staticImage) {
-    return `<span class="warehouse-bottle-symbol warehouse-bottle-static\
-${showPlaceholder ? ' has-photo' : ''}" aria-hidden="true">${content}</span>`;
+    return renderTemplate('warehouseBottleSymbol', {
+      showPlaceholder: showPlaceholder ? ' has-photo' : '',
+      content: content,
+    });
   }
   const action = selectable ? 'warehouse-bottle-select' :
     'warehouse-bottle-preview';
@@ -385,13 +434,21 @@ ${showPlaceholder ? ' has-photo' : ''}" aria-hidden="true">${content}</span>`;
     {name: bottleLabel(b)});
   const accessible = selectable ? (selected ? deselectLabel : selectLabel)
     : t('warehouse.bottles.openDetailsNamed', {name: bottleLabel(b)});
-  return `<button type="button" class="warehouse-bottle-symbol${showPlaceholder
-    ? ' has-photo' : ''}" data-act="${action}" data-id="${safe(
-      b.id)}" ${selectable ?
-        `aria-pressed="${selected}" data-select-label="${safe(selectLabel
-        )}" data-deselect-label="${safe(deselectLabel)}"` :
-        ''} title="${safe(accessible)}" aria-label="${safe(accessible
-        )}">${content}</button>`;
+  return renderTemplate('warehouseBottleSymbol2', {
+    showPlaceholder: showPlaceholder
+      ? ' has-photo' : '',
+    action: action,
+    safe: safe(
+      b.id),
+    selectable: selectable ?
+      `aria-pressed="${selected}" data-select-label="${safe(selectLabel
+      )}" data-deselect-label="${safe(deselectLabel)}"` :
+      '',
+    safe2: safe(accessible),
+    safe3: safe(accessible
+    ),
+    content: content,
+  });
 }
 
 /**
@@ -405,13 +462,19 @@ ${showPlaceholder ? ' has-photo' : ''}" aria-hidden="true">${content}</span>`;
 function bottleActionButtons(bottle, {detailLabelKey =
   'warehouse.bottles.goToDetails'} = {}) {
   const detailsLink = bottle.bottlingId
-    ? `<a class="btn primary" href="${safe(routeUrl('detail',
-      bottle.bottlingId))}" data-act="open" data-id="${safe(bottle.bottlingId
-      )}" data-bottle-id="${safe(bottle.id)}">${t(detailLabelKey)}</a>`
+    ? renderTemplate('primaryButton', {
+      safe: safe(routeUrl('detail',
+        bottle.bottlingId)),
+      safe2: safe(bottle.bottlingId
+      ),
+      safe3: safe(bottle.id),
+      t: t(detailLabelKey),
+    })
     : '';
-  return `<button type="button" class="btn" data-act="warehouse-assign" \
-data-id="${safe(bottle.id)}">${t('warehouse.bottles.relocate')}</button>\
-${detailsLink}`;
+  return renderTemplate('warehouseAssign', {
+    safe: safe(bottle.id),
+    detailsLink: detailsLink,
+  });
 }
 
 /**
@@ -474,28 +537,31 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
   ].filter(([, value]) => value !== null && value !== undefined &&
     value !== '');
   const photo = bottle.photoPath
-    ? `<img src="${safe(imageUrl(bottle.photoPath))}" alt="${safe(bottle.name
-    )}">`
-    : `<img src="/assets/photo-placeholder.svg" alt="" aria-hidden="true">`;
-  return `<div class="warehouse-bottle-preview">
-        <div class="warehouse-bottle-preview-photo">${photo}</div>
-        <div class="warehouse-bottle-preview-info"><strong \
-class="warehouse-bottle-preview-name">${safe(bottle.name)}</strong>
-            <dl class="warehouse-bottle-preview-fields">${fields.map(([label,
-    value]) => `<div><dt>${safe(label)}</dt><dd>${safe(
-      value)}</dd></div>`).join('')}</dl>
-            ${physicalBottle?.comment ?
-      `<div class="warehouse-bottle-preview-comment"><strong>${t(
-        'forms.bottle.personalComment')}</strong><p>${safe(physicalBottle
-          .comment)}</p></div>` : ''}
-        </div>
-    </div>
-    <div class="actions warehouse-bottle-preview-actions">
-        ${bottleActionButtons(
-            bottle,
-            {detailLabelKey: 'warehouse.bottles.goToBottleDetails'}
-          )}
-    </div>`;
+    ? renderTemplate('img', {
+      safe: safe(imageUrl(bottle.photoPath)),
+      safe2: safe(bottle.name
+      ),
+    })
+    : renderTemplate('img2');
+  return renderTemplate('warehouseBottlePreview', {
+    photo: photo,
+    safe: safe(bottle.name),
+    fields: fields.map(([label,
+      value]) => renderTemplate('bottlePreviewDiv', {
+        safe: safe(label),
+        safe2: safe(
+          value),
+      })).join(''),
+    warehouseBottlePreviewComment: physicalBottle?.comment ?
+      renderTemplate('warehouseBottlePreviewComment', {
+        safe: safe(physicalBottle
+          .comment),
+      }) : '',
+    bottleActionButtons: bottleActionButtons(
+      bottle,
+      {detailLabelKey: 'warehouse.bottles.goToBottleDetails'}
+    ),
+  });
 }
 
 /**
@@ -532,99 +598,96 @@ function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
                   "warehouse.shelves.doorAcross",
                   {from: range.from, to: range.to}
                 )}` : ''}` : '';
-    return `<div class="warehouse-shelf" data-shelf-id="${safe(shelf.id
-    )}" data-capacity="${shelf.capacity ??
-    'unlimited'}"><div class="warehouse-shelf-head"><strong>${safe(shelf
-      .name)}</strong>
-            <span class="warehouse-shelf-meta">${safe(
-        front)}${doorLabel} · ${num(height)} cm${shelf.heightCm == null ?
-          ` ${t('warehouse.shelves.automaticHeight')}` : ''}${shelf
-            .capacity === 0 ? '' : ` · ${occupants.length}${shelf
-              .capacity === null ? '' : ` / ${shelf.capacity}`} ${t(
-                "forms.bottle.plural")}`}</span>
-            <div class="actions"><button class="btn small" type="button" \
-data-act="warehouse-shelf-up" data-id="${safe(shelf.id)}" ${i ===
+    return renderTemplate('warehouseShelf', {
+      safe: safe(shelf.id
+      ),
+      capacity: shelf.capacity ??
+        'unlimited',
+      safe2: safe(shelf
+        .name),
+      safe3: safe(
+        front),
+      doorLabel: doorLabel,
+      num: num(height),
+      heightCm: shelf.heightCm == null ?
+        ` ${t('warehouse.shelves.automaticHeight')}` : '',
+      capacity2: shelf
+        .capacity === 0 ? '' : ` · ${occupants.length}${shelf
+          .capacity === null ? '' : ` / ${shelf.capacity}`} ${t(
+            "forms.bottle.plural")}`,
+      safe4: safe(shelf.id),
+      disabled: i ===
         furniture.shelves.length - 1 ? 'disabled' :
-        ''} title="${t("warehouse.shelves.moveUp")}" aria-label="${
-t("warehouse.shelves.moveUp")}">${arrowUpIcon
-      }</button><button class="btn small" type="button" data-act="warehouse-\
-shelf-\
-down" data-id="${safe(shelf.id)}" ${i === 0 ? 'disabled' :
-        ''} title="${t("warehouse.shelves.moveDown")}" aria-label="${
-t("warehouse.shelves.moveDown")
-      }">${arrowDownIcon
-      }</button><button class="btn small" data-act="warehouse-shelf-copy" da\
-ta-id="${safe(shelf.id)}">${t("warehouse.furniture.copy")
-      }</button><button class="btn small" data-act="warehouse-shelf-edit" da\
-ta-id="${safe(shelf.id)}">${t("common.actions.edit")
-      }</button><button class="btn small danger" data-act="warehouse-shelf-d\
-elete"\
- data-id="${safe(shelf.id)}">${t("common.actions.remove")}</button></div></div>
-            <div class="warehouse-bottle-silhouettes">${occupants.slice(0,
-        6).map(b => bottleSymbol(b)).join('')}${occupants.length > 6 ?
-          `<button type="button" class="btn small warehouse-shelf-over\
-flow" data-act="warehouse-shelf-view" data-id="${safe(shelf.id)}">\
-+${occupants.length - 6}</button>` : ''}${!occupants.length &&
+        '',
+      arrowUpIcon: arrowUpIcon,
+      safe5: safe(shelf.id),
+      disabled2: i === 0 ? 'disabled' :
+        '',
+      arrowDownIcon: arrowDownIcon,
+      safe6: safe(shelf.id),
+      safe7: safe(shelf.id),
+      safe8: safe(shelf.id),
+      occupants: occupants.slice(0,
+        6).map(b => bottleSymbol(b)).join(''),
+      warehouseShelfView: occupants.length > 6 ?
+        renderTemplate('warehouseShelfView', {
+          safe: safe(shelf.id),
+          length: occupants.length - 6,
+        }) : '',
+      hint: !occupants.length &&
         shelf.capacity !== 0 ?
-        `<span class="hint">${t('warehouse.shelves.empty')}</span>` :
-        ''}</div></div>`;
+        renderTemplate('hint') :
+        '',
+    });
   }).join('');
   const height = furnitureHeight(furniture);
   const used = levels.reduce((sum, entry) => sum + entry.height, 0);
   const topSpace = Math.max(0, Math.round((height - used) * 100));
-  return `<div class="panel warehouse-furniture-panel"><div \
-class="warehouse-panel-head"><div><h3>${safe(furniture.name)} <span \
-class="muted">(${safe(typeName(furniture.type))})</span></h3><p \
-class="hint">${t(
-    "warehouse.furniture.sizeDescription",
-    {
-      width: num(furniture.width),
-      depth: num(furniture.depth),
-      rotation: furniture.rotation,
-      elevation: num(furniture.elevation ?? 0),
-      height: num(height),
-      shelves: furniture.shelves.length,
-    }
-  )}</p></div><div class="actions"><button class="btn small" \
-data-act="warehouse-furniture-copy" data-id="${safe(furniture.id)}">${t("war\
-ehouse.furniture.copy")}</button><button class="btn small" \
-data-act="warehouse-furniture-edit" data-id="${safe(furniture.id)}">${t("com\
-mon.actions.edit")}</button><button class="btn small danger" \
-data-act="warehouse-furniture-delete" data-id="${safe(furniture.id)}">${t("c\
-ommon.actions.remove")}</button></div></div>
-    ${topSpace >= 1 ? `<p class="hint">${t("warehouse.shelves.remainingHeight",
-    {height: num(topSpace)})}</p>` : ''}
-    <div class="warehouse-shelves${managementOnly ?
-      ' warehouse-shelves--management' : ''}">${shelves ||
-      `<p class="hint">${t("warehouse.shelves.noShelves")}</p>`}</div>
-    <div class="actions warehouse-furniture-actions"><button type="button" \
-class="btn" data-act="warehouse-shelf-new" data-id="${safe(furniture.id)}">\
-${addActionLabel(t("warehouse.shelves.addWithPlus"))}</button><button \
-type="button" class="btn" data-act="warehouse-find">${t("warehouse.bottles.a\
-ssign")}</button></div>
-    ${managementOnly ?
-      `<section class="warehouse-furniture-photos bottle-entry-gallery"><h4>\
-${t('warehouse.photos.title')}</h4>
-    <div class="warehouse-furniture-photo-list bottle-photos">${(furniture
-        .photos || []).map((photo) =>
-          `<div class="warehouse-furniture-photo photo-tile">
-        <button type="button" class="warehouse-photo-open photo-open" \
-data-act="warehouse-photo-open" data-path="${safe(photo.path)}" \
-data-title="${safe(furniture.name)}" title="${t('warehouse.photos.view')}" \
-aria-label="${t('warehouse.photos.view')}"><img src="/${safe(photo.path)}" \
-loading="lazy" draggable="false" alt="${safe(furniture.name)}"></button>
-        <button type="button" class="photo-remove" data-act="warehouse-photo\
--delete" data-id="${safe(furniture.id)}" data-photo-id="${safe(photo.id)}" \
-aria-label="${t('warehouse.photos.remove')}">${closeIcon}</button>
-    </div>`).join('')}</div>
-    <div class="warehouse-furniture-photo-actions bottle-photo-add-actions">\
-<label class="photo-add">${addActionLabel(t('warehouse.photos.add'))}<input \
-type="file" data-furniture-photos="${safe(furniture.id)}" \
-accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden></label>\
-<label class="photo-add photo-capture">${t('cutout.takePhoto')}<input \
-type="file" accept="image/*" capture="environment" data-furniture-photos="\
-${safe(furniture.id)}" hidden></label></div>
-    </section>` : ''}</div>`;
+  return renderTemplate('panel', {
+    safe: safe(furniture.name),
+    safe2: safe(typeName(furniture.type)),
+    sizeDescription: t(
+      "warehouse.furniture.sizeDescription",
+      {
+        width: num(furniture.width),
+        depth: num(furniture.depth),
+        rotation: furniture.rotation,
+        elevation: num(furniture.elevation ?? 0),
+        height: num(height),
+        shelves: furniture.shelves.length,
+      }
+    ),
+    safe3: safe(furniture.id),
+    safe4: safe(furniture.id),
+    safe5: safe(furniture.id),
+    hint: topSpace >= 1 ? renderTemplate('hint2', {
+      remainingHeight: t("warehouse.shelves.remainingHeight",
+        {height: num(topSpace)}),
+    }) : '',
+    managementOnly: managementOnly ?
+      ' warehouse-shelves--management' : '',
+    shelves: shelves ||
+      renderTemplate('hint3'),
+    safe6: safe(furniture.id),
+    addActionLabel: addActionLabel(t("warehouse.shelves.addWithPlus")),
+    warehouseFurniturePhotos: managementOnly ?
+      renderTemplate('warehouseFurniturePhotos', {
+        photos: (furniture
+          .photos || []).map((photo) =>
+            renderTemplate('warehousePhotoOpen', {
+              safe: safe(photo.path),
+              safe2: safe(furniture.name),
+              safe3: safe(photo.path),
+              safe4: safe(furniture.name),
+              safe5: safe(furniture.id),
+              safe6: safe(photo.id),
+              closeIcon: closeIcon,
+            })).join(''),
+        addActionLabel: addActionLabel(t('warehouse.photos.add')),
+        safe: safe(furniture.id),
+        safe2: safe(furniture.id),
+      }) : '',
+  });
 }
 
 

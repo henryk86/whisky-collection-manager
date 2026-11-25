@@ -1,6 +1,11 @@
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 import {escapeHtml} from '../../ui/dom.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/bottling-choice.html', import.meta.url));
+
 
 /**
  * Find existing bottlings without changing their data or creating duplicates.
@@ -42,9 +47,11 @@ export function matchingBottlings(collection, value = '') {
  */
 export function bottlingChoiceOptions(collection, search = '') {
   const matches = matchingBottlings(collection, search);
-  const placeholder = `<option value="">${matches.length ?
-    t("forms.bottling.selectPlaceholder") :
-    t("forms.bottling.noMatchingBottling")}</option>`;
+  const placeholder = renderTemplate('placeholderOption', {
+    length: matches.length ?
+      t("forms.bottling.selectPlaceholder") :
+      t("forms.bottling.noMatchingBottling"),
+  });
   return placeholder + matches.map(bottling => {
     const quantity = (bottling.bottles || []).length;
     const details = [
@@ -52,8 +59,12 @@ export function bottlingChoiceOptions(collection, search = '') {
       `${quantity} ${quantity === 1 ? t("forms.bottle.title") :
         t("forms.bottle.plural")}`,
     ].filter(Boolean).join(' · ');
-    return `<option value="${escapeHtml(bottling.id)}">${escapeHtml(bottling
-      .name)}${details ? ` · ${escapeHtml(details)}` : ''}</option>`;
+    return renderTemplate('bottlingChoiceOptionsOption', {
+      id: bottling.id,
+      name: bottling
+        .name,
+      details: details ? ` · ${escapeHtml(details)}` : '',
+    });
   }).join('');
 }
 
@@ -66,27 +77,13 @@ export function bottlingChoiceOptions(collection, search = '') {
 export function bottlingChoiceDialog(collection) {
   const count = (collection.bottlings || []).length;
   if (!count) return '';
-  return `<div class="bottling-choice">
-    <p>${t("forms.bottle.existingBottlingHint")}</p>
-    <form id="new-bottle-choice-form">
-    <label class="form-field full">${t("forms.bottling.searchExisting")}
-    <input id="bottling-choice-search" type="search" placeholder="${t(
-    "forms.bottling.searchNameDistilleryBottler")}" autocomplete="off">
-    </label>
-    <label class="form-field full">${t("forms.bottling.select")}
-    <select id="bottling-choice-select" name="bottlingId" required>\
-${bottlingChoiceOptions(collection)}</select>
-    </label>
-    <p class="hint" id="bottling-choice-count" aria-live="polite">${t(
-      "forms.bottling.availableCount", {count})}</p>
-    <div class="actions"><button class="btn primary" type="submit">${t(
-        "forms.bottle.addToBottling")}</button></div>
-    </form>
-    <div class="bottling-choice-divider"><span>${t("forms.common.or"
-        )}</span></div>
-    ${actionButton({
-          label: t("collection.actions.newBottling"),
-          action: 'new-bottling-direct',
-        })}
-    </div>`;
+  return renderTemplate('bottlingChoice', {
+    bottlingChoiceOptions: bottlingChoiceOptions(collection),
+    availableCount: t(
+      "forms.bottling.availableCount", {count}),
+    newBottlingDirectButton: actionButton({
+      label: t("collection.actions.newBottling"),
+      action: 'new-bottling-direct',
+    }),
+  });
 }

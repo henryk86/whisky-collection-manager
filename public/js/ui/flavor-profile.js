@@ -1,6 +1,11 @@
 import {t} from '../i18n/index.js';
 import {escapeHtml} from './dom.js';
 import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/flavor-profile.html', import.meta.url));
+
 
 /**
  * Resolves the localized label for a flavour-profile axis.
@@ -75,65 +80,96 @@ export function flavorPolygon(values) {
  */
 export function flavorChart(values, {editable = false, colorSection = null,
   compact = false} = {}) {
-  if (!values && !editable) return `<p class="hint">${escapeHtml(t(
-    'flavor.notRecorded'))}</p>`;
+  if (!values && !editable) return renderTemplate('hint', {
+    notRecorded: t(
+      'flavor.notRecorded'),
+  });
   const scores = values || Object.fromEntries(FLAVOR_AXES.map(axis =>
     [axis, 0]));
-  return `<div class="flavor-editor${editable ? ' is-editable' :
-    ''}${colorSection ? ' has-color' : ''}${compact ? ' is-preview' :
-      ''}" ${editable ? `data-flavor-editor data-flavor-set="${values ?
-        '1' : ''}"` : ''}>
-        ${colorSection || ''}
-        <svg class="flavor-chart" viewBox="0 0 460 390" role="img" \
-aria-label="${escapeHtml(t('flavor.chartLabel'))}">
-            ${[2, 4, 6, 8, 10].map(score =>
-          `<polygon class="flavor-grid" points="${FLAVOR_AXES.map((_, i) =>
-            point(i, score).join(',')).join(' ')}"/>`).join('')}
-            ${FLAVOR_AXES.map((axis, i) => {
-              const [x, y] =
-                point(i, 10);
-              return `<line class="flavor-grid" x1="${cx}" y1="${cy}" \
-x2="${x}" y2="${y}"/>`;
-            }).join('')}
-            <polygon class="flavor-area" data-flavor-polygon \
-points="${flavorPolygon(scores)}"/>
-            ${editable ?
-      `<circle class="flavor-hit-target" data-flavor-hit="1" cx="${cx}" \
-cy="${cy}" r="${radius}"/>` : ''}
-            ${FLAVOR_AXES.map((axis, i) => {
-        const score =
-          scores[axis]; const [x, y] = point(i, scorePresent(score) ?
-            score : 0);
-        return `<circle class="flavor-point" data-flavor-point="${i}" \
-cx="${x}" cy="${y}" r="${editable ? 6 : 4}" ${scorePresent(score) ? '' : 'vi\
-sibility="hidden"'}/>`;
-      }).join('')}
-            ${FLAVOR_AXES.map((axis, i) => {
-        const [x, y] =
-          point(i, compact ? 11.2 : 13.5); const side =
-            Math.cos(angleAt(i)); const anchor = side > .3 ? 'start' :
-              side < -.3 ? 'end' :
-                'middle';
-        return `<text class="flavor-axis-text" x="${x}" y="${y}" \
-text-anchor="${anchor}" dominant-baseline="middle">${
-escapeHtml(flavorAxisTitle(axis))}</text>`;
-      }).join('')}
-        </svg>
-        ${compact ? '' :
-      `<div class="flavor-sliders">${FLAVOR_AXES.map((axis,
-        i) => {
-        const score = scores[axis]; const missing = !scorePresent(
-          score); return `<label class="flavor-scale"><span>${escapeHtml(
-            flavorAxisTitle(axis))}</span>${editable ?
-              `<input type="range" min="0" max="10" step="1" value="${missing ?
-                0 : score}" name="flavor-${axis}" data-flavor-range="${i}" \
-${missing ? 'data-flavor-unset="1"' :
-                ''} aria-label="${escapeHtml(flavorAxisTitle(axis))
-              }"><output data-flavor-value="${i}">${missing ? '–' : score
-              }</output>` : `<strong>${missing ? '–' :
-                `${score} / 10`}</strong>`}</label>`;
-      }).join('')}</div>`}
-    </div>`;
+  return renderTemplate('flavorEditor', {
+    editable: editable ? ' is-editable' :
+      '',
+    colorSection: colorSection ? ' has-color' : '',
+    compact: compact ? ' is-preview' :
+      '',
+    editable2: editable ? `data-flavor-editor data-flavor-set="${values ?
+      '1' : ''}"` : '',
+    colorSection2: colorSection || '',
+    chartLabel: t('flavor.chartLabel'),
+    content: [2, 4, 6, 8, 10].map(score =>
+      renderTemplate('flavorGrid', {
+        fLAVORAXES: FLAVOR_AXES.map((_, i) =>
+          point(i, score).join(',')).join(' '),
+      })).join(''),
+    fLAVORAXES: FLAVOR_AXES.map((axis, i) => {
+      const [x, y] =
+        point(i, 10);
+      return renderTemplate('flavorGrid2', {
+        cx: cx,
+        cy: cy,
+        x: x,
+        y: y,
+      });
+    }).join(''),
+    flavorPolygon: flavorPolygon(scores),
+    flavorHitTarget: editable ?
+      renderTemplate('flavorHitTarget', {
+        cx: cx,
+        cy: cy,
+        radius: radius,
+      }) : '',
+    fLAVORAXES2: FLAVOR_AXES.map((axis, i) => {
+      const score =
+        scores[axis]; const [x, y] = point(i, scorePresent(score) ?
+          score : 0);
+      return renderTemplate('flavorPoint', {
+        i: i,
+        x: x,
+        y: y,
+        editable: editable ? 6 : 4,
+        scorePresent: scorePresent(score) ? '' : 'vi\
+sibility="hidden"',
+      });
+    }).join(''),
+    fLAVORAXES3: FLAVOR_AXES.map((axis, i) => {
+      const [x, y] =
+        point(i, compact ? 11.2 : 13.5); const side =
+          Math.cos(angleAt(i)); const anchor = side > .3 ? 'start' :
+            side < -.3 ? 'end' :
+              'middle';
+      return renderTemplate('flavorAxisText', {
+        x: x,
+        y: y,
+        anchor: anchor,
+        flavorAxisTitle: flavorAxisTitle(axis),
+      });
+    }).join(''),
+    compact2: compact ? '' :
+      renderTemplate('flavorSliders', {
+        fLAVORAXES: FLAVOR_AXES.map((axis,
+          i) => {
+          const score = scores[axis]; const missing = !scorePresent(
+            score); return renderTemplate('flavorScale', {
+              flavorAxisTitle: flavorAxisTitle(axis),
+              input: editable ?
+                renderTemplate('flavorChartInput', {
+                  missing: missing ?
+                    0 : score,
+                  axis: axis,
+                  i: i,
+                  missing2: missing ? 'data-flavor-unset="1"' :
+                    '',
+                  flavorAxisTitle: flavorAxisTitle(axis),
+                  i2: i,
+                  missing3: missing ? '–' : score,
+                }) : renderTemplate('strong', {
+                  missing: missing ? '–' :
+                    `${score} / 10`,
+                }),
+            });
+        }).join(''),
+      }),
+  });
 }
 
 /**

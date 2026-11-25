@@ -1,3 +1,8 @@
+
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/glencairn-icon.html', import.meta.url));
 /**
  * Vector contours traced from the user-provided Glencairn icon, including its
  * internal shine.
@@ -32,17 +37,29 @@ export function glencairnSymbol({
 } = {}) {
   const amount = Math.max(0, Math.min(100, Number(fill) || 0));
   const y = 394 - 334 * amount / 100;
-  return `<svg class="glencairn-symbol" viewBox="130 50 220 355" ${accessible ?
-    'role="img"' : 'aria-hidden="true" focusable="false"'}>` +
-    `<defs><clipPath id="${id}"><rect x="130" y="${y}" width="220" \
-height="${394 - y}"/></clipPath></defs>` +
+  return renderTemplate('glencairnSymbol', {
+    accessible: accessible ?
+      'role="img"' : 'aria-hidden="true" focusable="false"',
+  }) +
+    renderTemplate('defs', {
+      id: id,
+      y: y,
+      content: 394 - y,
+    }) +
     (liquidColor ?
-      `<path class="glencairn-liquid" d="${GLENCAIRN_CAVITY}" \
-style="fill:${liquidColor}"/>` : '') +
-    `<path class="glencairn-ink" d="${GLENCAIRN_INK}" fill-rule="evenodd"/>` +
-    `<path class="glencairn-gold" d="${GLENCAIRN_INK}" fill-rule="evenodd" \
-clip-path="url(#${id})" style="fill:${color}"/>` +
-    `</svg>`;
+      renderTemplate('glencairnLiquid', {
+        gLENCAIRNCAVITY: GLENCAIRN_CAVITY,
+        liquidColor: liquidColor,
+      }) : '') +
+    renderTemplate('glencairnInk', {
+      gLENCAIRNINK: GLENCAIRN_INK,
+    }) +
+    renderTemplate('glencairnGold', {
+      gLENCAIRNINK: GLENCAIRN_INK,
+      id: id,
+      color: color,
+    }) +
+    renderTemplate('glencairnSymbol2');
 }
 
 /**
@@ -57,13 +74,18 @@ export function glencairnRatingSymbol({fill = 0, id = 'rating-glass'} = {}) {
   const percent = Math.max(0, Math.min(100, Number(fill) || 0));
   const height = 253 * percent / 100;
   const y = 331 - height;
-  return `<svg class="glencairn-symbol glencairn-rating-symbol" \
-viewBox="130 50 220 355" aria-hidden="true" focusable="false">` +
-    `<defs><clipPath id="${id}"><path d="${GLENCAIRN_CAVITY}"/></clipPath>\
-</defs>` +
-    `<rect class="glencairn-rating-fill" data-rating-fill x="130" y="${y}" \
-width="220" height="${height}" clip-path="url(#${id})"/>` +
-    `<path class="glencairn-rating-outline" d="${GLENCAIRN_INK}" \
-fill-rule="evenodd"/>` +
-    `</svg>`;
+  return renderTemplate('glencairnSymbol3') +
+    renderTemplate('defs2', {
+      id: id,
+      gLENCAIRNCAVITY: GLENCAIRN_CAVITY,
+    }) +
+    renderTemplate('glencairnRatingFill', {
+      y: y,
+      height: height,
+      id: id,
+    }) +
+    renderTemplate('glencairnRatingOutline', {
+      gLENCAIRNINK: GLENCAIRN_INK,
+    }) +
+    renderTemplate('glencairnRatingSymbol');
 }

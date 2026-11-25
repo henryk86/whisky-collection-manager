@@ -16,6 +16,11 @@ import {
   analysisOriginsIcon, analysisProfileIcon, analysisFinanceIcon,
   analysisTimelineIcon, analysisQualityIcon
 } from '../ui/action-icons.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/analytics.html', import.meta.url));
+
 
 export const ANALYSIS_PAGES = Object.freeze([
   {
@@ -271,7 +276,9 @@ function panel(title, content, note = '', extra = '') {
   return contentPanel({
     tag: 'section', variant: 'analytics', className: extra,
     content: `${headingTitle({title})}${content}${note ?
-      `<p class="analytics-note">${safe(note)}</p>` : ''}`,
+      renderTemplate('analyticsNote', {
+        safe: safe(note),
+      }) : ''}`,
   });
 }
 
@@ -286,8 +293,14 @@ function panel(title, content, note = '', extra = '') {
 function metric(label, value, detail = '') {
   return contentPanel({
     className: 'stat analytics-metric',
-    content: `<span>${safe(label)}</span><strong>${safe(
-      value)}</strong>${detail ? `<small>${safe(detail)}</small>` : ''}`,
+    content: renderTemplate('contentSpan', {
+      safe: safe(label),
+      safe2: safe(
+        value),
+      small: detail ? renderTemplate('small', {
+        safe: safe(detail),
+      }) : '',
+    }),
   });
 }
 
@@ -298,7 +311,9 @@ function metric(label, value, detail = '') {
  * @return {string} Resulting text.
  */
 function metricGrid(cards) {
-  return `<div class="stats analytics-metrics">${cards.join('')}</div>`;
+  return renderTemplate('stats', {
+    cards: cards.join(''),
+  });
 }
 
 /**
@@ -321,8 +336,10 @@ function sectionHeading(text) {
  * @return {string} Resulting text.
  */
 function two(...items) {
-  return `<div class="analytics-two">${items.join(
-    '')}</div>`;
+  return renderTemplate('analyticsTwo', {
+    items: items.join(
+      ''),
+  });
 }
 
 /**
@@ -337,24 +354,35 @@ function rankBars(rows, {value = 'count', format = number, limit = 14,
   const data = rows.slice(0, limit);
   if (!data.length) return empty();
   const max = Math.max(1, ...data.map(row => Number(row[value]) || 0));
-  return `<div class="analytics-bars" role="list">${data.map(row => {
-    const width = Math.max(0, (Number(row[value]) || 0) / max * 100);
-    const label = safe(categoryLabel(row.name));
-    const title = safe(format(row[value], row.currency));
-    const opener = drill && row.id !== undefined && row.id !== null &&
-      String(row.id).trim() ?
-      `<button type="button" class="analytics-bar-label analytics-link" \
-data-act="analytics-distillery" data-id="${safe(row.id)}" title="${t("analyt\
-ics.filters.collectionByName", {name: label})}">${label}</button>` : `<span \
-class="analytics-bar-label">${label}</span>`;
-    return `<div class="analytics-bar-row" role="listitem">${opener}<div \
-class="analytics-bar-track"><span style="width:${width.toFixed(2)}%"></span>\
-</div><strong>${title}</strong></div>`;
-  }).join('')}</div>${rows.length > limit ?
-    `<p class="analytics-note">${t("analytics.rankings.topEntries", {
-      limit,
-      total: rows.length,
-    })}</p>` : ''}`;
+  return renderTemplate('analyticsBars', {
+    data: data.map(row => {
+      const width = Math.max(0, (Number(row[value]) || 0) / max * 100);
+      const label = safe(categoryLabel(row.name));
+      const title = safe(format(row[value], row.currency));
+      const opener = drill && row.id !== undefined && row.id !== null &&
+        String(row.id).trim() ?
+        renderTemplate('analyticsDistillery', {
+          safe: safe(row.id),
+          collectionByName: t("analyt\
+ics.filters.collectionByName", {name: label}),
+          label: label,
+        }) : renderTemplate('analyticsBarLabel', {
+          label: label,
+        });
+      return renderTemplate('analyticsBarRow', {
+        opener: opener,
+        toFixed: width.toFixed(2),
+        title: title,
+      });
+    }).join(''),
+    analyticsNote: rows.length > limit ?
+      renderTemplate('analyticsNote2', {
+        topEntries: t("analytics.rankings.topEntries", {
+          limit,
+          total: rows.length,
+        }),
+      }) : '',
+  });
 }
 
 /**
@@ -393,18 +421,28 @@ function composition(rows, {drill = null} = {}) {
       ` data-act="analytics-drill-filter" data-kind="${safe(drill.kind
       )}" data-value="${safe(drill.kind === 'country' ? row.name : drill[row
         .name])}"` : '';
-    return `<${action ? 'button type="button"' :
-      'div'} class="analytics-pie-item${action ? ' analytics-link' :
-        ''}"${action}><i style="--slice:${colors[i %
+    return renderTemplate('legend', {
+      action: action ? 'button type="button"' :
+        'div',
+      action2: action ? ' analytics-link' :
+        '',
+      action3: action,
+      colors: colors[i %
         colors.length
-        ]}"></i><span>${label}</span><strong>${count}</strong></${action ?
-          'button' : 'div'}>`;
+      ],
+      label: label,
+      count: count,
+      action4: action ?
+        'button' : 'div',
+    });
   }).join('');
-  return `<div class="analytics-composition"><div class="analytics-donut" \
-role="img" aria-label="${safe(valid.map(row => `${row.name}: ${row.count}`)
-    .join(', '))}" style="background:conic-gradient(${slices.join(',')
-    })"><span>${number(total)}</span></div><div class="analytics-pie-legend">${
-legend}</div></div>`;
+  return renderTemplate('analyticsComposition', {
+    safe: safe(valid.map(row => `${row.name}: ${row.count}`)
+      .join(', ')),
+    slices: slices.join(','),
+    number: number(total),
+    legend: legend,
+  });
 }
 
 /**
@@ -416,10 +454,16 @@ legend}</div></div>`;
  */
 function detailsTable(headings, rows) {
   if (!rows.length) return empty();
-  return `<div class="analytics-table-wrap"><table class="analytics-table">\
-<thead><tr>${headings.map(h => `<th>${safe(h)}</th>`).join('')}</tr></thead>\
-<tbody>${rows.map(cells => `<tr>${cells.map(cell => `<td>${cell}</td\
->`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  return renderTemplate('analyticsTableWrap', {
+    headings: headings.map(h => renderTemplate('th', {
+      safe: safe(h),
+    })).join(''),
+    rows: rows.map(cells => renderTemplate('tr', {
+      cells: cells.map(cell => renderTemplate('td', {
+        cell: cell,
+      })).join(''),
+    })).join(''),
+  });
 }
 
 /**
@@ -430,10 +474,14 @@ function detailsTable(headings, rows) {
  * @return {string} Resulting text.
  */
 function bottlingLink(item, extra = '') {
-  return `<button type="button" class="analytics-link" data-act="open" \
-data-id="${safe(item.id)}"${item.bottleId ?
+  return renderTemplate('open', {
+    safe: safe(item.id),
+    bottleId: item.bottleId ?
       ` data-bottle-id="${safe(item.bottleId)}"` :
-      ''}>${safe(item.name)}</button>${extra}`;
+      '',
+    safe2: safe(item.name),
+    extra: extra,
+  });
 }
 
 /**
@@ -443,8 +491,10 @@ data-id="${safe(item.id)}"${item.bottleId ?
  * @return {string} Resulting text.
  */
 function distilleryLink(item) {
-  return `<button type="button" class="analytics-link" data-act="analytics-d\
-istillery" data-id="${safe(item.id)}">${safe(item.name)}</button>`;
+  return renderTemplate('analyticsDistillery2', {
+    safe: safe(item.id),
+    safe2: safe(item.name),
+  });
 }
 
 /**
@@ -506,14 +556,15 @@ function timeChart(title, rows, state, {field = 'count', currency = ''} = {}) {
 function dateBoundary(boundary, value) {
   const caption = boundary === 'start' ? t("analytics.filters.from") :
     t("analytics.filters.until");
-  return `<label class="analytics-date-boundary">${caption}<span \
-class="analytics-date-control">
-        <input type="date" id="analytics-${boundary}-date" \
-data-analytics-boundary="${boundary}"
-            aria-label="${t("analytics.filters.dateAccessibleName",
-    {label: caption})}" value="${readAnalyticsDate(
-      value)}" min="1600-01-01" max="2300-12-31">
-        </span></label>`;
+  return renderTemplate('analyticsDateBoundary', {
+    caption: caption,
+    boundary: boundary,
+    boundary2: boundary,
+    dateAccessibleName: t("analytics.filters.dateAccessibleName",
+      {label: caption}),
+    readAnalyticsDate: readAnalyticsDate(
+      value),
+  });
 }
 
 /**
@@ -524,14 +575,15 @@ data-analytics-boundary="${boundary}"
  */
 function periodControls(state) {
   const selected = state.analyticsPeriod || 'month';
-  return `<div class="analytics-period" aria-label="${t(
-    "analytics.trends.granularity")}"><label>${t("analytics.filters.dateRange"
-    )} <select id="analytics-period"><option value="month" ${selected ===
-      'month' ? 'selected' : ''}>${t("analytics.trends.monthly"
-      )}</option><option value="year" ${selected === 'year' ? ' selected' :
-        ''}>${t("analytics.trends.yearly")}</option></select></label>
-        ${dateBoundary('start', state.analyticsStartDate ||
-          '')}${dateBoundary('end', state.analyticsEndDate || '')}</div>`;
+  return renderTemplate('analyticsPeriod', {
+    selected: selected ===
+      'month' ? 'selected' : '',
+    selected2: selected === 'year' ? ' selected' :
+      '',
+    dateBoundary: dateBoundary('start', state.analyticsStartDate ||
+      ''),
+    dateBoundary2: dateBoundary('end', state.analyticsEndDate || ''),
+  });
 }
 
 /**
@@ -787,32 +839,35 @@ function finance(analytics, state) {
     state,
     {field: 'total', currency: p.currency}
   ));
-  return `<p class="analytics-intro">${t(
-    "analytics.notes.documentedCostsNoCurrencyConversion"
-  )}</p>${main}${costPages.join('')}
-    ${periodControls(state)}${priceCharts.join('')}${two(
-    panel(
-      t("analytics.finance.mostExpensiveBottlesByCurrency"),
-      detailsTable(
-        [t("analytics.table.bottle"), t("analytics.table.price")],
-        byPrices
+  return renderTemplate('analyticsIntro', {
+    main: main,
+    costPages: costPages.join(''),
+    periodControls: periodControls(state),
+    priceCharts: priceCharts.join(''),
+    two: two(
+      panel(
+        t("analytics.finance.mostExpensiveBottlesByCurrency"),
+        detailsTable(
+          [t("analytics.table.bottle"), t("analytics.table.price")],
+          byPrices
+        ),
+        t("analytics.notes.priceCurrencyComparison")
       ),
-      t("analytics.notes.priceCurrencyComparison")
+      panel(
+        t("forms.bottle.seller"),
+        detailsTable(
+          [
+            t("forms.bottle.seller"),
+            t("analytics.table.currency"),
+            t("analytics.table.purchases"),
+            t("analytics.table.spending"),
+          ],
+          merchants
+        ),
+        t("analytics.notes.purchasesWithPricesOnly")
+      )
     ),
-    panel(
-      t("forms.bottle.seller"),
-      detailsTable(
-        [
-          t("forms.bottle.seller"),
-          t("analytics.table.currency"),
-          t("analytics.table.purchases"),
-          t("analytics.table.spending"),
-        ],
-        merchants
-      ),
-      t("analytics.notes.purchasesWithPricesOnly")
-    )
-  )}`;
+  });
 }
 
 /**
@@ -923,11 +978,13 @@ function quality(analytics) {
       safe(categoryLabel(row.name)),
       safe(number(row.count)),
       row.count && row.ids?.length
-        ? `<button type="button" class="analytics-link" data-act="open" \
-data-id="${safe(typeof row.ids[0] === 'string' ? row.ids[0] : row.ids[0]
-          .id)}"${typeof row.ids[0] === 'object' ?
+        ? renderTemplate('open2', {
+          safe: safe(typeof row.ids[0] === 'string' ? row.ids[0] : row.ids[0]
+            .id),
+          content: typeof row.ids[0] === 'object' ?
             ` data-bottle-id="${safe(row.ids[0].bottleId)}"` :
-            ''}>${t("analytics.actions.view")}</button>` : '–',
+            '',
+        }) : '–',
     ])
   );
   return `${two(
@@ -960,12 +1017,13 @@ data-id="${safe(typeof row.ids[0] === 'string' ? row.ids[0] : row.ids[0]
  * @return {string} Resulting text.
  */
 function sectionCard(page, stat) {
-  return `<button class="analytics-section-card" type="button" \
-data-act="analytics-section" data-section="${safe(page.id)}"><span \
-class="analytics-section-icon">${page.icon}</span><span><strong>${
-safe(page.title)}</strong><small>${safe(page.sub)
-    }</small></span><span class="analytics-section-chevron" aria-hidden="tru\
-e">${chevronRightIcon}</span></button>`;
+  return renderTemplate('analyticsSection', {
+    safe: safe(page.id),
+    icon: page.icon,
+    safe2: safe(page.title),
+    safe3: safe(page.sub),
+    chevronRightIcon: chevronRightIcon,
+  });
 }
 
 /**
@@ -979,57 +1037,60 @@ function overview(analytics) {
   const best = analytics.finance.prices.map(row =>
     `${money(row.total, row.currency)}`).join(' · ') ||
     t("analytics.finance.noPrices");
-  return `${metricGrid([
-    metric(t("analytics.inventory.bottlings"), number(s.bottlings)),
-    metric(t("forms.bottle.plural"), number(s.bottles)),
-    metric(t("backups.summary.distilleriesLabel"), number(s.distilleries)),
-    metric(
-      t("analytics.inventory.nominalVolume"),
-      `${number(s.volumeLitres)} l`
-    ),
-    metric(
-      t("analytics.inventory.openedStatus"),
-      number(analytics.inventory.status.find(v => v.name ===
-        'Geöffnet')?.count || 0)
-    ),
-    metric(
-      t("analytics.inventory.samples"),
-      number(analytics.inventory.volumeTypes.find(v => v.name ===
-        'Samples')?.count || 0)
-    ),
-  ])}
-        ${two(
-    panel(
-      t("analytics.rankings.topDistilleries"),
-      rankBars(
-        p.byDistilleryBottles.slice(0, 8),
-        {value: 'bottles', drill: true}
+  return renderTemplate('overview', {
+    metricGrid: metricGrid([
+      metric(t("analytics.inventory.bottlings"), number(s.bottlings)),
+      metric(t("forms.bottle.plural"), number(s.bottles)),
+      metric(t("backups.summary.distilleriesLabel"), number(s.distilleries)),
+      metric(
+        t("analytics.inventory.nominalVolume"),
+        `${number(s.volumeLitres)} l`
+      ),
+      metric(
+        t("analytics.inventory.openedStatus"),
+        number(analytics.inventory.status.find(v => v.name ===
+          'Geöffnet')?.count || 0)
+      ),
+      metric(
+        t("analytics.inventory.samples"),
+        number(analytics.inventory.volumeTypes.find(v => v.name ===
+          'Samples')?.count || 0)
+      ),
+    ]),
+    two: two(
+      panel(
+        t("analytics.rankings.topDistilleries"),
+        rankBars(
+          p.byDistilleryBottles.slice(0, 8),
+          {value: 'bottles', drill: true}
+        )
+      ),
+      panel(
+        t("forms.bottle.status"),
+        composition(
+          analytics.inventory.status,
+          {
+            drill: {
+              kind: 'status',
+              Geschlossen: 'closed',
+              Geöffnet: 'open',
+              Leer: 'empty',
+            },
+          }
+        )
       )
     ),
-    panel(
-      t("forms.bottle.status"),
-      composition(
-        analytics.inventory.status,
-        {
-          drill: {
-            kind: 'status',
-            Geschlossen: 'closed',
-            Geöffnet: 'open',
-            Leer: 'empty',
-          },
-        }
-      )
-    )
-  )}
-        <div class="analytics-overview-note"><strong>${t(
-    "analytics.finance.recordedExpensesLabel")}</strong> ${safe(
-      best)}<span> · ${t(
-        "analytics.statistics.priceCoverage",
-        {priced: analytics.finance.priceCoverage, total: s.bottles}
-      )}</span></div>
-        ${sectionHeading(t("analytics.sections.all")
-      )}<div class="analytics-section-grid">${ANALYSIS_PAGES.slice(1).map(
-        page => sectionCard(page)).join('')}</div>`;
+    safe: safe(
+      best),
+    priceCoverage: t(
+      "analytics.statistics.priceCoverage",
+      {priced: analytics.finance.priceCoverage, total: s.bottles}
+    ),
+    sectionHeading: sectionHeading(t("analytics.sections.all")
+    ),
+    aNALYSISPAGES: ANALYSIS_PAGES.slice(1).map(
+      page => sectionCard(page)).join(''),
+  });
 }
 
 /**
@@ -1051,13 +1112,20 @@ function filterControls(state, options) {
    * @return {string} Resulting text.
    */
   const select = (name, caption, options, selected) =>
-    `<select data-analytics-filter="${name}" aria-label="${safe(caption
-    )}">${options.map(([value, label]) => `<option value="${safe(
-      value)}"${value === selected ? ' selected' : ''}>${safe(
-        label)}</option>`).join('')}</select>`;
-  return `<div class="analytics-filters" aria-label="${t(
-    "analytics.filters.title")}">
-        ${select(
+    renderTemplate('select', {
+      name: name,
+      safe: safe(caption
+      ),
+      options: options.map(([value, label]) => renderTemplate('selectOption', {
+        safe: safe(
+          value),
+        selected: value === selected ? ' selected' : '',
+        safe2: safe(
+          label),
+      })).join(''),
+    });
+  return renderTemplate('analyticsFilters', {
+    select: select(
       'distillery',
       t('analytics.filters.distillery'),
       [
@@ -1065,8 +1133,8 @@ function filterControls(state, options) {
         ...options.distilleries.map(d => [d.id, d.name]),
       ],
       filters.distillery || 'all'
-    )}
-        ${select(
+    ),
+    select2: select(
       'country',
       t('analytics.filters.country'),
       [
@@ -1074,8 +1142,8 @@ function filterControls(state, options) {
         ...options.countries.map(c => [c, countryName(c)]),
       ],
       filters.country || 'all'
-    )}
-        ${select(
+    ),
+    select3: select(
       'volumeType',
       t('analytics.filters.bottleType'),
       [
@@ -1084,8 +1152,8 @@ function filterControls(state, options) {
         ['sample', t('analytics.inventory.samples')],
       ],
       filters.volumeType || 'all'
-    )}
-        ${select(
+    ),
+    select4: select(
       'status',
       t('forms.bottle.status'),
       [
@@ -1095,12 +1163,13 @@ function filterControls(state, options) {
         ['empty', t('home.status.empty')],
       ],
       filters.status || 'all'
-    )}
-        ${actionButton({
+    ),
+    analyticsResetButton: actionButton({
       label: t("analytics.filters.reset"),
       action: 'analytics-reset',
       size: 'small',
-    })}</div>`;
+    }),
+  });
 }
 
 /**
@@ -1178,14 +1247,15 @@ export function createAnalyticsView({state, shell}) {
         label: t('analytics.navigation.sections'),
         switchKind: 'analytics',
       }, content);
-      shell(`<div class="analytics-page">${pageHeader({
-        title: t('navigation.analytics'),
-        eyebrow: t('analytics.summary.eyebrow'),
-        intro: t('analytics.summary.highlights'),
-        className: 'analytics-page-heading',
-      })}
-            ${workspace}
-            </div>`);
+      shell(renderTemplate('analyticsPage', {
+        pageHeader: pageHeader({
+          title: t('navigation.analytics'),
+          eyebrow: t('analytics.summary.eyebrow'),
+          intro: t('analytics.summary.highlights'),
+          className: 'analytics-page-heading',
+        }),
+        workspace: workspace,
+      }));
     }
   );
 }

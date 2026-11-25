@@ -42,6 +42,10 @@ Jede benannte Funktion, auch interne Funktionen, benannte Arrow-Funktionen, Klas
 
 Der bereits vorhandene TypeScript-Formatter wird zusammen mit syntaxbewussten Umbruch- und Leerzeilenregeln nur zur **Formatierung** eingesetzt. HTML-Templates, RegExps und lange Literale dürfen nicht blind aufgeteilt werden. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
 
+## Zeilenenden
+
+Alle Textdateien verwenden plattformübergreifend LF. `.gitattributes` erzwingt LF beim Git-Checkout, auch unter Windows. Die VS-Code-Workspace-Einstellung `files.eol` und `.editorconfig` geben LF für neue Dateien vor. Bereits geöffnete CRLF-Dateien bei Bedarf über die Statusleiste von CRLF auf LF umstellen und speichern. Binärdateien werden von Git nicht als Text normalisiert.
+
 ## CSS-Formatierung
 
 CSS wird einheitlich gemäß dem CSS-Teil des [Google HTML/CSS Style Guide](https://google.github.io/styleguide/htmlcssguide.html) formatiert: zwei Leerzeichen, eine Deklaration je Zeile, getrennte Selektoren in Listen und Leerzeilen zwischen Regeln. Neue oder veränderte CSS-Dateien vor dem Commit formatieren:

@@ -1,4 +1,9 @@
 import {escapeHtml} from './dom.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/section-navigation.html', import.meta.url));
+
 
 /**
  * Shared desktop sidebar and mobile selector for multi-section content pages.
@@ -25,23 +30,35 @@ export function sectionWorkspace(
   const selected = items.some(item => item.id === activeId) ? activeId :
     items[0]?.id;
   const desktop = items.map(item =>
-    `<button type="button" class="section-nav-item${item.id === selected ?
-      ' active' : ''}" data-act="${safe(action)}" ${itemAttribute}="${safe(item
-        .id)}"${item.id === selected ? ' aria-current="page"' : ''}>${safe(item
-          .label)}</button>`).join('');
+    renderTemplate('sectionNavItem', {
+      id: item.id === selected ?
+        ' active' : '',
+      safe: safe(action),
+      itemAttribute: itemAttribute,
+      safe2: safe(item
+        .id),
+      id2: item.id === selected ? ' aria-current="page"' : '',
+      safe3: safe(item
+        .label),
+    })).join('');
   const options = items.map(item =>
-    `<option value="${safe(item.id)}"${item.id === selected ? ' selected' :
-      ''}>${safe(item.label)}</option>`).join('');
-  return `<div class="section-workspace">
-        <div class="section-workspace-navigation">
-            <nav class="section-nav-desktop${desktopClass ?
+    renderTemplate('optionsOption', {
+      safe: safe(item.id),
+      selected: item.id === selected ? ' selected' :
+        '',
+      safe2: safe(item.label),
+    })).join('');
+  return renderTemplate('sectionWorkspace', {
+    desktopClass: desktopClass ?
       ` ${safe(desktopClass)}` :
-      ''}" aria-label="${safe(label)}">${desktop}</nav>
-            <label class="section-nav-mobile"><span>${safe(label)}</span>
-                <select data-section-switch="${safe(switchKind
-      )}" aria-label="${safe(label)}">${options}</select>
-            </label>
-        </div>
-        <div class="section-workspace-content">${content}</div>
-    </div>`;
+      '',
+    safe: safe(label),
+    desktop: desktop,
+    safe2: safe(label),
+    safe3: safe(switchKind
+    ),
+    safe4: safe(label),
+    options: options,
+    content: content,
+  });
 }

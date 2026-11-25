@@ -1,0 +1,54 @@
+<!-- wcm-template:hint -->
+<p class="hint">{{text:notRecorded}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorGrid -->
+<polygon class="flavor-grid" points="{{raw:fLAVORAXES}}"/>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorGrid2 -->
+<line class="flavor-grid" x1="{{raw:cx}}" y1="{{raw:cy}}" x2="{{raw:x}}" y2="{{raw:y}}"/>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorHitTarget -->
+<circle class="flavor-hit-target" data-flavor-hit="1" cx="{{raw:cx}}" cy="{{raw:cy}}" r="{{raw:radius}}"/>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorPoint -->
+<circle class="flavor-point" data-flavor-point="{{raw:i}}" cx="{{raw:x}}" cy="{{raw:y}}" r="{{raw:editable}}" {{raw:scorePresent}}/>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorAxisText -->
+<text class="flavor-axis-text" x="{{raw:x}}" y="{{raw:y}}" text-anchor="{{raw:anchor}}" dominant-baseline="middle">{{text:flavorAxisTitle}}</text>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorChartInput -->
+<input type="range" min="0" max="10" step="1" value="{{raw:missing}}" name="flavor-{{raw:axis}}" data-flavor-range="{{raw:i}}" {{raw:missing2}} aria-label="{{text:flavorAxisTitle}}"><output data-flavor-value="{{raw:i2}}">{{raw:missing3}}</output>
+<!-- /wcm-template -->
+
+<!-- wcm-template:strong -->
+<strong>{{raw:missing}}</strong>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorScale -->
+<label class="flavor-scale"><span>{{text:flavorAxisTitle}}</span>{{raw:input}}</label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorSliders -->
+<div class="flavor-sliders">{{raw:fLAVORAXES}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorEditor -->
+<div class="flavor-editor{{raw:editable}}{{raw:colorSection}}{{raw:compact}}" {{raw:editable2}}>
+        {{raw:colorSection2}}
+        <svg class="flavor-chart" viewBox="0 0 460 390" role="img" aria-label="{{text:chartLabel}}">
+            {{raw:content}}
+            {{raw:fLAVORAXES}}
+            <polygon class="flavor-area" data-flavor-polygon points="{{raw:flavorPolygon}}"/>
+            {{raw:flavorHitTarget}}
+            {{raw:fLAVORAXES2}}
+            {{raw:fLAVORAXES3}}
+        </svg>
+        {{raw:compact2}}
+    </div>
+<!-- /wcm-template -->

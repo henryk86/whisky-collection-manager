@@ -5,6 +5,11 @@ import {actionButton} from '../ui/buttons.js';
  */
 import {t} from '../i18n/index.js';
 import {escapeHtml as esc} from '../ui/dom.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/warehouse-room-transfer.html', import.meta.url));
+
 
 const FORM_EXPORT = 'warehouse-room-export-form';
 const FORM_IMPORT = 'warehouse-room-import-form';
@@ -30,70 +35,45 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
    * @return {string} Resulting text.
    */
   const tab = (name, label) =>
-    `<button type="button" class="btn warehouse-transfer-tab${mode ===
-      name ? ' active' :
-      ''}" role="tab" id="warehouse-transfer-tab-${name}" aria-selected="${mode
-      === name}" aria-controls="warehouse-transfer-panel-${name}" \
-tabindex="${mode === name ? 0 : -1}" data-transfer-tab="${name}" ${name ===
-      'export' && !exportAvailable ? 'disabled' : ''}>${label}</button>`;
+    renderTemplate('warehouseTransferTabButton', {
+      mode: mode ===
+        name ? ' active' :
+        '',
+      name: name,
+      mode2: mode
+        === name,
+      name2: name,
+      mode3: mode === name ? 0 : -1,
+      name3: name,
+      disabled: name ===
+        'export' && !exportAvailable ? 'disabled' : '',
+      label: label,
+    });
   const actions = `${actionButton({
     label: t('common.actions.cancel'),
     action: 'close-modal',
   })}`;
-  return `<div id="warehouse-room-transfer" class="warehouse-room-transfer">
-        <div class="warehouse-transfer-tabs" role="tablist" aria-label="${t(
-    'warehouse.transfer.action')}">
-            ${tab('export', t('warehouse.transfer.exportAction'))}
-            ${tab('import', t('warehouse.transfer.importAction'))}
-        </div>
-        <section class="warehouse-transfer-panel" id="warehouse-transfer-pan\
-el-export" role="tabpanel" aria-labelledby="warehouse-transfer-tab-export" \
-${mode !== 'export' ? 'hidden' : ''}>
-            <form id="${FORM_EXPORT}" class="warehouse-transfer-form">
-                <p>${t('warehouse.transfer.exportDescription')}</p>
-                <label class="warehouse-transfer-choice"><input \
-type="checkbox" id="warehouse-transfer-all" ${selectedRoomId ? '' : 'checke\
-d'}> ${t('warehouse.transfer.allRooms')}</label>
-                <div class="warehouse-transfer-rooms">${rooms.map(room =>
-      `<label class="warehouse-transfer-choice"><input class="warehouse-transf\
-er-room" type="checkbox" value="${esc(room.id)}" ${selectedRoomId ===
-        room.id ? 'checked' : ''}> ${esc(room.name)} (${room.furniture
-          .length})</label>`).join('')}</div>
-                <label class="warehouse-transfer-choice"><input \
-type="checkbox" id="warehouse-transfer-assignments"> ${t('warehouse.transfer\
-.includeAssignments')}</label>
-                <p class="hint">${t('warehouse.transfer.exportNote')}</p>
-                <div class="actions ds-modal-footer warehouse-form-actions">\
-${actions}<button type="submit" class="btn primary">${t('warehouse.transfer.\
-download')}</button></div>
-            </form>
-        </section>
-        <section class="warehouse-transfer-panel" id="warehouse-transfer-pan\
-el-import" role="tabpanel" aria-labelledby="warehouse-transfer-tab-import" \
-${mode !== 'import' ? 'hidden' : ''}>
-            <form id="${FORM_IMPORT}" class="warehouse-transfer-form">
-                <p>${t('warehouse.transfer.importDescription')}</p>
-                <label class="form-field">${t('warehouse.transfer.file'
-          )}<input type="file" id="warehouse-transfer-file" \
-accept=".json,application/json" required></label>
-                <label class="warehouse-transfer-choice"><input \
-type="checkbox" id="warehouse-transfer-import-assignments" checked> ${t('war\
-ehouse.transfer.includeAssignments')}</label>
-                <label class="form-field">${t('warehouse.transfer.conflicts'
-          )}<select id="warehouse-transfer-conflict-policy"><option \
-value="skip">${t('warehouse.transfer.skipConflicts')}</option><option \
-value="replace">${t('warehouse.transfer.replaceConflicts')}</option>\
-</select></label>
-                <p class="hint">${t('warehouse.transfer.importWarning')}</p>
-                <div id="warehouse-transfer-preview" aria-live="polite"></div>
-                <div class="actions ds-modal-footer warehouse-form-actions">\
-${actions}<button type="submit" class="btn primary">${t('warehouse.transfer.\
-preview')}</button><button type="button" class="btn primary" \
-id="warehouse-transfer-apply" disabled>${t('warehouse.transfer.confirm')}</b\
-utton></div>
-            </form>
-        </section>
-    </div>`;
+  return renderTemplate('warehouseRoomTransfer', {
+    tab: tab('export', t('warehouse.transfer.exportAction')),
+    tab2: tab('import', t('warehouse.transfer.importAction')),
+    hidden: mode !== 'export' ? 'hidden' : '',
+    fORMEXPORT: FORM_EXPORT,
+    selectedRoomId: selectedRoomId ? '' : 'checke\
+d',
+    rooms: rooms.map(room =>
+      renderTemplate('warehouseTransferChoice', {
+        id: room.id,
+        checked: selectedRoomId ===
+          room.id ? 'checked' : '',
+        name: room.name,
+        length: room.furniture
+          .length,
+      })).join(''),
+    actions: actions,
+    hidden2: mode !== 'import' ? 'hidden' : '',
+    fORMIMPORT: FORM_IMPORT,
+    actions2: actions,
+  });
 }
 
 /**
@@ -262,12 +242,16 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
           ['capacityExceeded', 'warehouse.transfer.capacityExceeded'],
         ];
         preview.innerHTML =
-          `<div class="panel warehouse-transfer-summary"><strong>${t(
-            'warehouse.transfer.previewTitle')}</strong><dl>${entries.map(([
-              field, label]) => `<div><dt>${t(label)}</dt><dd>${summary[
-              field] ?? 0}</dd></div>`).join('')}</dl>${summary
-                .blockedRooms ? `<p class="hint">${t(
-                  'warehouse.transfer.blockedWarning')}</p>` : ''}</div>`;
+          renderTemplate('panel', {
+            entries: entries.map(([
+              field, label]) => renderTemplate('openTransferDiv', {
+                t: t(label),
+                summary: summary[
+                  field] ?? 0,
+              })).join(''),
+            hint: summary
+              .blockedRooms ? renderTemplate('hint') : '',
+          });
         apply.disabled = !!summary.blockedRooms || (!summary.createdRooms &&
           !summary.replacedRooms);
       } catch (error) {

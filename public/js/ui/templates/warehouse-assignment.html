@@ -1,0 +1,49 @@
+<!-- wcm-template:option -->
+<option value="{{raw:safe}}"{{raw:selected}}{{raw:disabled}}>{{raw:safe2}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:img -->
+<img src="{{raw:safe}}" alt="" loading="lazy">
+<!-- /wcm-template -->
+
+<!-- wcm-template:photoSvg -->
+<svg viewBox="0 0 32 60" aria-hidden="true"><rect x="12" y="2" width="8" height="13" rx="2"/><path d="M12 15C9 20 5 23 5 30v22c0 4 3 6 7 6h8c4 0 7-2 7-6V30c0-7-4-10-7-15Z"/><rect x="8" y="34" width="16" height="15" rx="2"/></svg>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseAssignmentBulkList -->
+<span class="warehouse-assignment-bulk-list">{{raw:safe}}{{raw:length}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseAssignmentCurrent -->
+<div class="warehouse-assignment-current" aria-label="{{raw:safe}}">
+        <span>{{raw:safe2}}</span>
+        <strong>{{raw:safe3}}</strong>
+      </div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseAssignment -->
+<section class="warehouse-assignment" aria-label="{{raw:safe}}">
+      <div class="warehouse-assignment-bottle">
+        <div class="warehouse-assignment-photo">{{raw:photo}}</div>
+        <div class="warehouse-assignment-bottle-details"><span class="warehouse-assignment-eyebrow">{{t:warehouse.assignment.bottleLabel}}</span>
+          <strong>{{raw:isBulk}}</strong>
+          {{raw:warehouseAssignmentBulkList}}
+        </div>
+      </div>
+      {{raw:isBulk2}}
+      <div class="warehouse-assignment-editor">
+        <fieldset class="warehouse-assignment-target"><legend>{{raw:safe2}}</legend>
+        <div class="warehouse-assignment-modes" role="radiogroup" aria-label="{{raw:safe3}}">
+          <label><input type="radio" name="warehouseAssignmentMode" value="shelf" checked><span>{{t:warehouse.assignment.selectCompartment}}</span></label>
+          <label><input type="radio" name="warehouseAssignmentMode" value="none"><span>{{t:warehouse.assignment.withoutLocation}}</span></label>
+        </div>
+        <div class="warehouse-assignment-selectors">
+          <label class="form-field">{{t:warehouse.assignment.room}}<select data-assignment-room aria-label="{{raw:safe4}}" required>{{raw:roomOptions}}</select></label>
+          <label class="form-field">{{t:warehouse.assignment.furniture}}<select data-assignment-furniture aria-label="{{raw:safe5}}" required {{raw:disabled}}>{{raw:furnitureOptions}}</select></label>
+          <label class="form-field warehouse-assignment-shelf">{{t:warehouse.assignment.shelf}}<select name="shelfId" data-assignment-shelf aria-label="{{raw:safe6}}" required {{raw:disabled2}}>{{raw:shelfOptions}}</select></label>
+        </div>
+          <p class="warehouse-assignment-feedback" aria-live="polite">{{raw:safe7}}</p>
+        </fieldset>
+      </div>
+    </section>
+<!-- /wcm-template -->

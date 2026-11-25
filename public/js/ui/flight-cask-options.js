@@ -5,6 +5,11 @@ import {checkboxInput} from './fields.js';
 import {actionButton} from './buttons.js';
 import {chevronDownIcon} from './action-icons.js';
 import {escapeHtml} from './dom.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/flight-cask-options.html', import.meta.url));
+
 
 /**
  * Returns the form field name for a cask category.
@@ -48,56 +53,52 @@ export function flightCaskOptionsHtml(t) {
             t(`${prefix}subtype.${value}`),
             featureField(group, dimension, value)
           )).join('');
-          return `<div class="flight-plan-cask-dimension" role="group"
-          aria-label="${title}"><span>${title}</span>
-          <div class="flight-plan-cask-choices">${fields}</div></div>`;
+          return renderTemplate('flightPlanCaskDimension', {
+            title: title,
+            title2: title,
+            fields: fields,
+          });
         }).join('');
       const title = escapeHtml(groupLabel(group));
       const all = escapeHtml(t(`${prefix}allTypes`));
-      return `<details class="flight-plan-cask-refinement"
-      data-flight-plan-cask-subtype-wrap="${group}" hidden>
-      <summary><span>${title}</span>
-        <span class="flight-plan-cask-count" data-flight-plan-cask-count
-          >${all}</span>${chevronDownIcon('flight-plan-cask-chevron')}
-      </summary><div class="flight-plan-cask-dimensions">${dimensions}</div>
-    </details>`;
+      return renderTemplate('flightPlanCaskRefinement', {
+        group: group,
+        title: title,
+        all: all,
+        chevronDownIcon: chevronDownIcon('flight-plan-cask-chevron'),
+        dimensions: dimensions,
+      });
     }).join('');
   const label = escapeHtml(t(`${prefix}caskGroup`));
   const hint = escapeHtml(t(`${prefix}groupHint`));
   const phaseLabel = escapeHtml(t(`${prefix}phase`));
   const phases = CASK_PHASES.map(phase => {
     const text = escapeHtml(t(`${prefix}phase.${phase}`));
-    return `<option value="${phase}">${text}</option>`;
+    return renderTemplate('phasesOption', {
+      phase: phase,
+      text: text,
+    });
   }).join('');
   const reset = actionButton({
     label: t(`${prefix}reset`),
     action: 'flight-plan-cask-reset', size: 'small', variant: 'text',
   });
-  return `<div class="flight-plan-cask-filter"
-    data-flight-plan-cask-group-wrap hidden>
-    <div class="form-field full" role="group" aria-label="${label}"
-      aria-describedby="flight-plan-cask-hint">
-      <div class="flight-plan-cask-heading"><span>${label}</span>${reset}</div>
-      <span class="ds-field-description" id="flight-plan-cask-hint"
-        >${hint}</span>
-      <div class="flight-plan-cask-choices">${groups}</div>
-    </div>
-    <div class="flight-plan-cask-details" data-flight-plan-cask-details hidden>
-      <span class="flight-plan-cask-caption">${escapeHtml(t(
-    `${prefix}refine`))}</span>${details}
-    </div>
-    <div class="flight-plan-options flight-plan-advanced-grid">
-      <label>${phaseLabel}
-        <select data-flight-plan-cask-phase>${phases}</select>
-      </label>
-    </div>
-    <div class="flight-plan-cask-selection" aria-live="polite">
-      <span class="flight-plan-cask-caption">${escapeHtml(t(
-      `${prefix}selection`))}</span>
-      <span data-flight-plan-cask-selection>${escapeHtml(t(
-        `${prefix}allGroups`))}</span>
-    </div>
-  </div>`;
+  return renderTemplate('flightPlanCaskFilter', {
+    label: label,
+    label2: label,
+    reset: reset,
+    hint: hint,
+    groups: groups,
+    t: t(
+      `${prefix}refine`),
+    details: details,
+    phaseLabel: phaseLabel,
+    phases: phases,
+    t2: t(
+      `${prefix}selection`),
+    t3: t(
+      `${prefix}allGroups`),
+  });
 }
 
 /**

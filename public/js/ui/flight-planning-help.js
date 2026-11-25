@@ -2,6 +2,11 @@ import {actionButton} from './buttons.js';
 import {headingTitle} from './headers.js';
 import {escapeHtml} from './dom.js';
 import {CASK_GROUPS} from '../domain/flight-casks.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/flight-planning-help.html', import.meta.url));
+
 
 /**
  * The formulas below mirror public/js/domain/flight-planner.js. Keep both in
@@ -71,8 +76,11 @@ export function flightPlanningHelpHtml(t) {
    * @param {string=} extraClass Value used by this operation.
    * @return {string} Resulting text.
    */
-  const p = (key, extraClass = '') => `<p${extraClass ?
-    ` class="${extraClass}"` : ''}>${tx(key)}</p>`;
+  const p = (key, extraClass = '') => renderTemplate('p', {
+    extraClass: extraClass ?
+      ` class="${extraClass}"` : '',
+    tx: tx(key),
+  });
 
   /**
    * Produces the formula text used by the caller.
@@ -81,8 +89,10 @@ export function flightPlanningHelpHtml(t) {
    * @return {string} Resulting text.
    */
   const formula = key =>
-    `<pre class="flight-plan-help-formula"><code>${escapeHtml(FORMULAS[
-      key])}</code></pre>`;
+    renderTemplate('flightPlanHelpFormula', {
+      fORMULAS: FORMULAS[
+        key],
+    });
 
   /**
    * Builds the localized heading text for the current language.
@@ -100,8 +110,10 @@ export function flightPlanningHelpHtml(t) {
    * @return {string} Resulting text.
    */
   const variable = (symbol, key) =>
-    `<div class="flight-plan-help-definition"><dt>${escapeHtml(symbol
-    )}</dt><dd>${tx(`vars.${key}`)}</dd></div>`;
+    renderTemplate('flightPlanHelpDefinition', {
+      symbol: symbol,
+      tx: tx(`vars.${key}`),
+    });
 
   /**
    * Produces the strategy text used by the caller.
@@ -109,72 +121,84 @@ export function flightPlanningHelpHtml(t) {
    * @param {*} key Key used to select or group values.
    * @return {string} Resulting text.
    */
-  const strategy = key => `<section class="flight-plan-help-strategy">
-        <h4>${tx(`${key}.title`)}</h4>
-        ${p(`${key}.text`)}${formula(key)}${p(`${key}.details`,
-    'flight-plan-help-caption')}
-    </section>`;
-  return `<div class="flight-plan-help">
-        ${p('intro', 'flight-plan-help-intro')}
-        <section class="flight-plan-help-section">
-            ${heading('selection')}
-            ${p('candidates')}${p('profileData')}${p('families')}
-        </section>
-        <section class="flight-plan-help-section">
-            ${heading('basics.title')}
-            <h4>${tx('basics.distance')}</h4>${formula('distance')}${p(
-    'basics.distanceDetails')}${p('basics.example',
-      'flight-plan-help-example')}
-            <h4>${tx('basics.intensity')}</h4>${formula('intensity')}${p(
-        'basics.intensityDetails')}
-            <h4>${tx('basics.novelty')}</h4>${formula('novelty')}${p(
-          'basics.noveltyDetails')}
-            <h4>${tx('basics.unfamiliar')}</h4>${formula('unfamiliar')}${p(
-            'basics.unfamiliarDetails')}
-            <h4>${tx('basics.variables')}</h4>
-            <dl class="flight-plan-help-definitions">${[
+  const strategy = key => renderTemplate('flightPlanHelpStrategy', {
+    tx: tx(`${key}.title`),
+    p: p(`${key}.text`),
+    formula: formula(key),
+    p2: p(`${key}.details`,
+      'flight-plan-help-caption'),
+  });
+  return renderTemplate('flightPlanHelp', {
+    p: p('intro', 'flight-plan-help-intro'),
+    heading: heading('selection'),
+    p2: p('candidates'),
+    p3: p('profileData'),
+    p4: p('families'),
+    heading2: heading('basics.title'),
+    tx: tx('basics.distance'),
+    formula: formula('distance'),
+    p5: p(
+      'basics.distanceDetails'),
+    p6: p('basics.example',
+      'flight-plan-help-example'),
+    tx2: tx('basics.intensity'),
+    formula2: formula('intensity'),
+    p7: p(
+      'basics.intensityDetails'),
+    tx3: tx('basics.novelty'),
+    formula3: formula('novelty'),
+    p8: p(
+      'basics.noveltyDetails'),
+    tx4: tx('basics.unfamiliar'),
+    formula4: formula('unfamiliar'),
+    p9: p(
+      'basics.unfamiliarDetails'),
+    tx5: tx('basics.variables'),
+    content: [
       ['S', 'score'], ['V', 'repeats'], ['G', 'families'], ['R', 'profiled'],
       ['M', 'missing'], ['sum(d)', 'distanceSum'], ['Davg', 'distanceMean'],
       ['L', 'gap'], ['N / U', 'other'], ['K / Q / J', 'caskAgeGroups'],
-    ].map(([symbol, key]) => variable(symbol, key)).join('')}</dl>
-        </section>
-        <section class="flight-plan-help-section">
-            ${heading('caskAge.title')}
-            ${p('caskAge.classification')}
-            <h4>${tx('caskAge.groups')}</h4>
-            <p>${CASK_GROUPS.map(group =>
-      escapeHtml(t(`flightPlan.caskAge.group.${group}`))).join(' · ')}</p>
-            ${p('caskAge.selection')}${p('caskAge.examples')}
-            ${p('caskAge.coverage')}
-            <h4>${tx('caskAge.distance')}</h4>${formula('cask')}${formula(
-        'age')}
-            <h4>${tx('caskAge.combined')}</h4>${formula('combined')}
-            <h4>${tx('caskAge.preferences')}</h4>${formula('preferences')}
-            ${p('caskAge.missing', 'flight-plan-help-caption')}
-        </section>
-        <section class="flight-plan-help-section">
-            ${heading('strategies.title')}
-            ${p('strategies.intro')}
-            ${['balanced', 'similar', 'contrast', 'discover'].map(strategy)
-      .join('')}
-        </section>
-        <section class="flight-plan-help-section">
-            ${heading('search.title')}
-            <ol class="flight-plan-help-steps">${['shortlist', 'seeds',
-      'improve'].map(key => `<li>${tx(`search.${key}`)}</li>`).join(
-        '')}</ol>
-        </section>
-        <section class="flight-plan-help-section">
-            ${heading('sequence')}${p('sequenceIntro')}${formula('transition'
-        )}${formula('order')}${p('sequenceDetails')}
-        </section>
-        <section class="flight-plan-help-section">
-            ${heading('limits.title')}${p('limits')}${p('limitationsDetails')}
-        </section>
-        <div class="actions">${actionButton({
-          label: t('common.actions.close'),
-          action: 'close-modal',
-          variant: 'primary',
-        })}</div>
-    </div>`;
+    ].map(([symbol, key]) => variable(symbol, key)).join(''),
+    heading3: heading('caskAge.title'),
+    p10: p('caskAge.classification'),
+    tx6: tx('caskAge.groups'),
+    cASKGROUPS: CASK_GROUPS.map(group =>
+      escapeHtml(t(`flightPlan.caskAge.group.${group}`))).join(' · '),
+    p11: p('caskAge.selection'),
+    p12: p('caskAge.examples'),
+    p13: p('caskAge.coverage'),
+    tx7: tx('caskAge.distance'),
+    formula5: formula('cask'),
+    formula6: formula(
+      'age'),
+    tx8: tx('caskAge.combined'),
+    formula7: formula('combined'),
+    tx9: tx('caskAge.preferences'),
+    formula8: formula('preferences'),
+    p14: p('caskAge.missing', 'flight-plan-help-caption'),
+    heading4: heading('strategies.title'),
+    p15: p('strategies.intro'),
+    content2: ['balanced', 'similar', 'contrast', 'discover'].map(strategy)
+      .join(''),
+    heading5: heading('search.title'),
+    content3: ['shortlist', 'seeds',
+      'improve'].map(key => renderTemplate('li', {
+        tx: tx(`search.${key}`),
+      })).join(
+        ''),
+    heading6: heading('sequence'),
+    p16: p('sequenceIntro'),
+    formula9: formula('transition'
+    ),
+    formula10: formula('order'),
+    p17: p('sequenceDetails'),
+    heading7: heading('limits.title'),
+    p18: p('limits'),
+    p19: p('limitationsDetails'),
+    closeModalButton: actionButton({
+      label: t('common.actions.close'),
+      action: 'close-modal',
+      variant: 'primary',
+    }),
+  });
 }

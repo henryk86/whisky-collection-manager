@@ -52,7 +52,9 @@ function decodePath(encoded) {
  * @return {!Object} Structured result for the caller.
  */
 function htmlSecurityHeaders(html) {
-  const hashes = [...html.matchAll(
+  // HTML parsing normalizes CRLF and CR before CSP checks inline scripts.
+  const normalized = html.replace(/\r\n?/g, '\n');
+  const hashes = [...normalized.matchAll(
     /<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)]
     .map(([, body]) => `'sha256-${crypto.createHash('sha256').update(body)
       .digest('base64')}'`);

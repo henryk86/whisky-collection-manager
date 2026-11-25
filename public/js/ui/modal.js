@@ -2,6 +2,11 @@ import {t} from '../i18n/index.js';
 import {escapeHtml, query} from './dom.js';
 import {actionButton} from './buttons.js';
 import {modalFrame, modalFooter} from './modal-layout.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/modal.html', import.meta.url));
+
 
 /**
  * Manages the active dialog and suspended parent dialogs without recreating
@@ -285,7 +290,10 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
         });
       showModal(
         title,
-        `<p>${escapeHtml(message)}</p>${modalFooter(buttons)}`,
+        renderTemplate('confirmP', {
+          message: message,
+          modalFooter: modalFooter(buttons),
+        }),
         false,
         Boolean(state.modal)
       );
@@ -327,7 +335,10 @@ d),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-\
       })).join('');
       showModal(
         title,
-        `<p>${escapeHtml(message)}</p>${modalFooter(buttons)}`,
+        renderTemplate('chooseP', {
+          message: message,
+          modalFooter: modalFooter(buttons),
+        }),
         false,
         Boolean(state.modal)
       );

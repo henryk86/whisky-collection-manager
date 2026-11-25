@@ -19,6 +19,11 @@ import {
 } from './preview-zoom.js';
 import {DEFAULT_MASK_BRUSH_SIZE, paintMaskSegment, applyMaskStrokes}
   from './mask-brush.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/controller.html', import.meta.url));
+
 
 const MAX_PREVIEW_SIDE = 1050;
 const MAX_EXPORT_SIDE = 4096;
@@ -30,16 +35,9 @@ const MAX_IMAGE_BYTES =
  */
 const root = () => document.querySelector('[data-photo-editor]');
 const resetIcon =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" \
-stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" \
-aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.7 6.5"/><path d="M3 4v7h7"/>\
-</svg>';
+  renderTemplate('resetIconSvg');
 const pipetteIcon =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" \
-stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" \
-aria-hidden="true"><g transform="rotate(43 12 12)"><rect x="9.5" y="1.5" \
-width="5" height="5" rx="2.4"/><path d="M9 6.5h6v2.5H9z"/><path d="M10 \
-9v8l2 5 2-5V9"/><path d="M11 13h2"/></g></svg>';
+  renderTemplate('pipetteIconSvg');
 /**
  * Derives the form value result from the supplied values.
  *
@@ -200,12 +198,14 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
    * @return {string} Resulting text.
    */
   const sliderHtml = ({key, min, max, step}) =>
-    `<label class="photo-editor-slider">
-        <span>${escapeHtml(t(`photoEditor.${key}`)
-    )} <output data-photo-output="${key}">0</output></span>
-        <input type="range" data-photo-slider="${key}" min="${min}" \
-max="${max}" step="${step}" value="0" disabled>
-    </label>`;
+    renderTemplate('photoEditorSlider', {
+      t: t(`photoEditor.${key}`),
+      key: key,
+      key2: key,
+      min: min,
+      max: max,
+      step: step,
+    });
 
   /**
    * Locates the DOM elements used by viewport size.
@@ -886,137 +886,73 @@ max="${max}" step="${step}" value="0" disabled>
     if (renderId) cancelAnimationFrame(renderId);
     showModal(
       t('photoEditor.title'),
-      `<div class="photo-editor" data-photo-editor>
-            <div class="photo-editor-layout">
-                <div class="photo-editor-stage">
-                    <div class="photo-editor-image cutout-checker">
-                        <canvas data-photo-editor-preview role="img" \
-aria-label="${escapeHtml(t('photoEditor.preview'))}"></canvas>
-                        <div data-photo-editor-selection class="photo-editor\
--selection" hidden aria-hidden="true"></div>
-                        <div data-photo-editor-brush-cursor \
-class="photo-editor-brush-cursor" hidden aria-hidden="true"></div>
-                        <div class="photo-editor-overlay">
-                            <div class="photo-editor-zoom" role="group" \
-aria-label="${escapeHtml(t('photoEditor.zoom'))}">
-                                <button type="button" data-act="photo-editor\
--zoom-out" aria-label="${escapeHtml(t('photoEditor.zoomOut'))}" \
-title="${escapeHtml(t('photoEditor.zoomOut'))}" disabled>${minusIcon}</button>
-                                <button type="button" data-act="photo-editor\
--zoom-reset" aria-label="${escapeHtml(t('photoEditor.zoomReset'))}" \
-title="${escapeHtml(t('photoEditor.zoomReset'))}" disabled><span \
-data-photo-editor-zoom-level>100 %</span></button>
-                                <button type="button" data-act="photo-editor\
--zoom-in" aria-label="${escapeHtml(t('photoEditor.zoomIn'))}" \
-title="${escapeHtml(t('photoEditor.zoomIn'))}">${plusIcon}</button>
-                            </div>
-                            <div class="photo-editor-stage-actions">
-                                <button type="button" class="btn small" \
-data-act="photo-editor-before" data-photo-editor-ready disabled \
-aria-pressed="false">${escapeHtml(t('photoEditor.before'))}</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="photo-editor-controls">
-                    <div class="photo-editor-tabs" role="tablist" \
-aria-label="${escapeHtml(t('photoEditor.title'))}">
-                        <button type="button" id="photo-editor-tab-adjustmen\
-ts" role="tab" data-photo-editor-tab="adjustments" data-act="photo-editor-ta\
-b" aria-controls="photo-editor-panel-adjustments" aria-selected="true">\
-${escapeHtml(t('photoEditor.adjustmentsTab'))}</button>
-                        <button type="button" id="photo-editor-tab-cutout" \
-role="tab" data-photo-editor-tab="cutout" data-act="photo-editor-tab" \
-aria-controls="photo-editor-panel-cutout" aria-selected="false">${
-escapeHtml(t('photoEditor.cutoutTab'))}</button>
-                    </div>
-                    <div class="photo-editor-tab-panel" id="photo-editor-pan\
-el-adjustments" role="tabpanel" aria-labelledby="photo-editor-tab-adjustment\
-s" data-photo-editor-panel="adjustments">
-                    ${PHOTO_ADJUSTMENT_GROUPS.map(group =>
-        `<section class="photo-editor-group" aria-label="${escapeHtml(t(
-          `photoEditor.${group.key}`))}">
-                        <div class="photo-editor-group-header"><h3>\
-${escapeHtml(t(`photoEditor.${group.key}`))}</h3>
-                        <div class="photo-editor-group-tools">${group.key ===
-          'color' ?
-          `<button type="button" class="photo-editor-white\
--picker" data-act="photo-editor-pick-white" data-photo-editor-ready \
-disabled aria-pressed="false" title="${escapeHtml(t('photoEditor.pickWhit\
-e'))}" aria-label="${escapeHtml(t('photoEditor.pickWhite'))}">${pipetteIcon
-          }</button>` : ''}
-                        <button type="button" class="photo-editor-group-rese\
-t" data-act="photo-editor-reset-group" data-photo-group="${group.key}" \
-data-photo-editor-ready disabled title="${escapeHtml(t(
-            'photoEditor.resetGroup',
-            {group: t(`photoEditor.${group.key}`)}
-          ))}" aria-label="${escapeHtml(t(
-            'photoEditor.resetGroup',
-            {group: t(`photoEditor.${group.key}`)}
-          ))}">${resetIcon}</button></div></div>
-                        ${group.sliders.map(sliderHtml)
-          .join('')}</section>`).join('')}
-                    </div>
-                    <div class="photo-editor-tab-panel" id="photo-editor-pan\
-el-cutout" role="tabpanel" aria-labelledby="photo-editor-tab-cutout" \
-data-photo-editor-panel="cutout" hidden>
-                        <div class="photo-editor-cutout-actions">
-                            <button type="button" class="btn small" \
-data-act="photo-editor-cutout" data-photo-editor-ready disabled>${
-escapeHtml(t(photo.cutout ? 'photoEditor.recutout' : 'cutout.title'))}</button>
-                            ${photo.cutout ?
-        `<button type="button" class="btn small" data-act="photo-editor-togg\
-le-cutout" data-photo-editor-existing-cutout>${escapeHtml(photo.cutout
-          .selected ? t('cutout.showOriginal') :
-          t('cutout.showCutout'))}</button>` : ''}
-                            <button type="button" class="btn small danger" \
-data-act="photo-editor-remove-cutout" data-photo-editor-ready disabled \
-hidden>${escapeHtml(t('cutout.remove'))}</button>
-                        </div>
-                    <div class="photo-editor-mask-tools" data-photo-editor-m\
-ask-tools hidden>
-                        <div class="photo-editor-mask-buttons" role="group" \
-aria-label="${escapeHtml(t('photoEditor.maskTools'))}">
-                            <button type="button" class="btn small" \
-data-photo-brush-mode="erase" data-act="photo-editor-brush-mode" \
-aria-pressed="false">${escapeHtml(t('photoEditor.erase'))}</button>
-                            <button type="button" class="btn small" \
-data-photo-brush-mode="restore" data-act="photo-editor-brush-mode" \
-aria-pressed="false">${escapeHtml(t('photoEditor.restore'))}</button>
-                            <button type="button" class="btn small" \
-data-act="photo-editor-brush-undo" disabled>${escapeHtml(t('photoEditor.brus\
-hUndo'))}</button>
-                        </div>
-                        <label class="photo-editor-mask-size">${escapeHtml(t(
-            'photoEditor.brushSize'))}
-                            <input type="range" min="1" max="15" step="1" \
-value="${DEFAULT_MASK_BRUSH_SIZE}" data-photo-brush-size>
-                            <output data-photo-brush-size-value>${
-DEFAULT_MASK_BRUSH_SIZE} %</output>
-                        </label>
-                    </div>
-                    </div>
-                </div>
-            </div>
-            <p class="photo-editor-help" data-photo-editor-message \
-role="status">${escapeHtml(t('photoEditor.loading'))}</p>
-            <div class="photo-editor-actions">
-                <button type="button" class="btn" data-act="photo-editor-aut\
-o" data-photo-editor-ready disabled>${escapeHtml(t('photoEditor.auto'))}</bu\
-tton>
-                <button type="button" class="btn" data-act="photo-editor-res\
-et" data-photo-editor-ready disabled>${escapeHtml(t('photoEditor.reset'))}</\
-button>
-                <span class="photo-editor-actions-spacer"></span>
-                ${actionButton({
-              label: t('common.actions.cancel'),
-              action: 'close-modal',
-            })}
-                <button type="button" class="btn primary" \
-data-act="photo-editor-save" data-photo-editor-ready disabled>${
-escapeHtml(t('common.actions.save'))}</button>
-            </div>
-        </div>`,
+      renderTemplate('photoEditor', {
+        preview: t('photoEditor.preview'),
+        zoom: t('photoEditor.zoom'),
+        zoomOut: t('photoEditor.zoomOut'),
+        zoomOut2: t('photoEditor.zoomOut'),
+        minusIcon: minusIcon,
+        zoomReset: t('photoEditor.zoomReset'),
+        zoomReset2: t('photoEditor.zoomReset'),
+        zoomIn: t('photoEditor.zoomIn'),
+        zoomIn2: t('photoEditor.zoomIn'),
+        plusIcon: plusIcon,
+        before: t('photoEditor.before'),
+        title: t('photoEditor.title'),
+        adjustmentsTab: t('photoEditor.adjustmentsTab'),
+        cutoutTab: t('photoEditor.cutoutTab'),
+        pHOTOADJUSTMENTGROUPS: PHOTO_ADJUSTMENT_GROUPS.map(group =>
+          renderTemplate('photoEditorGroup', {
+            t: t(
+              `photoEditor.${group.key}`),
+            t2: t(`photoEditor.${group.key}`),
+            photoEditorPickWhite: group.key ===
+              'color' ?
+              renderTemplate('photoEditorPickWhite', {
+                pickWhite: t('photoEditor.pickWhit\
+e'),
+                pickWhite2: t('photoEditor.pickWhite'),
+                pipetteIcon: pipetteIcon,
+              }) : '',
+            key: group.key,
+            resetGroup: t(
+              'photoEditor.resetGroup',
+              {group: t(`photoEditor.${group.key}`)}
+            ),
+            resetGroup2: t(
+              'photoEditor.resetGroup',
+              {group: t(`photoEditor.${group.key}`)}
+            ),
+            resetIcon: resetIcon,
+            sliders: group.sliders.map(sliderHtml)
+              .join(''),
+          })).join(''),
+        t: t(photo.cutout ? 'photoEditor.recutout' : 'cutout.title'),
+        photoEditorToggleCutout: photo.cutout ?
+          renderTemplate('photoEditorToggleCutout', {
+            selected: photo.cutout
+              .selected ? t('cutout.showOriginal') :
+              t('cutout.showCutout'),
+          }) : '',
+        remove: t('cutout.remove'),
+        maskTools: t('photoEditor.maskTools'),
+        erase: t('photoEditor.erase'),
+        restore: t('photoEditor.restore'),
+        brushUndo: t('photoEditor.brus\
+hUndo'),
+        brushSize: t(
+          'photoEditor.brushSize'),
+        dEFAULTMASKBRUSHSIZE: DEFAULT_MASK_BRUSH_SIZE,
+        dEFAULTMASKBRUSHSIZE2: DEFAULT_MASK_BRUSH_SIZE,
+        loading: t('photoEditor.loading'),
+        auto: t('photoEditor.auto'),
+        reset: t('photoEditor.reset'),
+        closeModalButton: actionButton({
+          label: t('common.actions.cancel'),
+          action: 'close-modal',
+        }),
+        save: t('common.actions.save'),
+      }),
       true,
       Boolean(state.modal),
       '',

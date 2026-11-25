@@ -6,6 +6,11 @@ import {availableLanguages, currentLanguage, t} from '../i18n/index.js';
 import {renderBackupSection} from './backups.js';
 import {backToCollectionButton} from '../ui/navigation-controls.js';
 import {sectionWorkspace} from '../ui/section-navigation.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/settings.html', import.meta.url));
+
 /**
  * Creates settings view for settings.
  *
@@ -42,91 +47,76 @@ export function createSettingsView(state, auth = {
      * @return {string} Resulting text.
      */
     const panel = (id, content) =>
-      `<section class="settings-section" data-settings-panel="${id}"${id ===
-        active ? '' : ' hidden'}>${headingTitle({
+      renderTemplate('settingsSection', {
+        id: id,
+        id2: id ===
+          active ? '' : ' hidden',
+        headingTitle: headingTitle({
           title: t(`settings.navigation.${id}`),
           level: 2,
           className: 'analytics-section-title',
-        })}${content}</section>`;
-    const general = `    <div class="panel section">${headingTitle({
-      title:
-        t('settings.language.label'),
-    }
-    )}<label class="form-field" for="ui-language">${t(
-      "settings.language.choose")}<select id="ui-language" aria-label="${t(
-        "settings.language.label")}">${Object.entries(availableLanguages(
-        )).map(([code, name]) => `<option value="${escapeHtml(
-          code)}" ${code === currentLanguage() ? 'selected' :
-            ''}>${escapeHtml(name)}</option>`).join(
-              '')}</select></label></div>
-    <form id="collection-settings-form" class="panel section \
-collection-settings">
-    ${headingTitle({title: t('settings.collection.title')})}
-    <label class="form-field" for="established-year">${t(
-                "settings.collection.foundingYearLabel")}
-    <input type="number" inputmode="numeric" id="established-year" \
-name="establishedYear" min="1600" max="${new Date().getFullYear()}" \
-step="1" placeholder="z. B. 2018" value="${state.collection
-        .settings?.establishedYear ?? ''}">
-    </label>
-    <button type="submit" class="btn primary">${t(
-          "settings.collection.saveFoundingYear")}</button>
-    </form>
-`;
+        }),
+        content: content,
+      });
+    const general = renderTemplate('panel', {
+      headingTitle: headingTitle({
+        title:
+          t('settings.language.label'),
+      }
+      ),
+      entries: Object.entries(availableLanguages(
+      )).map(([code, name]) => renderTemplate('generalOption', {
+        code: code,
+        selected: code === currentLanguage() ? 'selected' :
+          '',
+        name: name,
+      })).join(
+        ''),
+      headingTitle2: headingTitle({title: t('settings.collection.title')}),
+      fullYear: new Date().getFullYear(),
+      establishedYear: state.collection
+        .settings?.establishedYear ?? '',
+    });
     const backups = renderBackupSection(state);
-    const transfer = `    <div class="panel section">
-      ${headingTitle({title: t('settings.exports.additionalExports')})}
-      <p class="muted">${t("settings.exports.notFullBackupWarning")}</p>
-      <div class="actions"><a class="btn" href="/api/export/json" download>${t(
-      "settings.exports.downloadJson"
-    )}</a><a class="btn" href="/api/export/csv" download>${t(
-      "settings.exports.downloadCsv")}</a></div>
-      <details class="settings-legacy-import"><summary>${t(
-        "settings.imports.legacyJsonImport")}</summary>
-      <p class="warning">${t("settings.imports.jsonDoesNotIncludeAttachments"
-        )}</p>
-      <input type="file" id="import-file" accept="application/json,.json">
-      ${actionButton({
-          label: t("settings.imports.importJson"),
-          action: 'import',
-          variant: 'destructive',
-        })}</details>
-    </div>
-`;
-    const distilleries = `    <div class="panel section">
-    <div class="distillery-tools">
-    <input type="search" class="distillery-search" id="distillery-search" \
-value="${escapeHtml(state.distillerySearch || '')}" placeholder="${t("settin\
-gs.distilleries.searchPlaceholder")}" aria-label="${t("settings.distilleries\
-.search")}" autocomplete="off">
-    <span class="distillery-count" id="distillery-count" role="status" \
-aria-live="polite">${state.collection.distilleries.filter(d => d.name
-      .toLocaleLowerCase('de').includes((state.distillerySearch || '')
-        .trim().toLocaleLowerCase('de'))).length} von ${state.collection
-          .distilleries.length}</span>
-    ${actionButton({
-            trustedContent: addActionLabel(t("settings.distilleries.add")),
-            action: 'add-distillery',
-          })}
-    </div>
-    <div class="distillery-list" role="list" aria-label="${t(
-            "backups.summary.distilleriesLabel")}">${state.collection
-              .distilleries
-              .slice().sort((a, b) => a.name.localeCompare(b.name,
-                'de')).map(distillery =>
-                  `<div class="distillery-row" role="listitem" ${distillery.name
-                    .toLocaleLowerCase('de').includes((state.distillerySearch ||
-                      '').trim().toLocaleLowerCase('de')) ? '' : 'hidden'}>
-    <strong data-i18n-ignore>${escapeHtml(distillery.name)}</strong>
-    <button type="button" class="btn small" data-act="rename-distillery" \
-data-id="${escapeHtml(distillery.id)}" aria-label="${
-escapeHtml(distillery.name)} umbenennen">${t("common.actions.edit")}</button>
-    </div>`).join('')}<p class="distillery-no-results" ${state.collection
+    const transfer = renderTemplate('panel2', {
+      headingTitle: headingTitle({
+        title: t('settings.exports.additionalExports'),
+      }),
+      importButton: actionButton({
+        label: t("settings.imports.importJson"),
+        action: 'import',
+        variant: 'destructive',
+      }),
+    });
+    const distilleries = renderTemplate('distillerySearch', {
+      distillerySearch: state.distillerySearch || '',
+      length: state.collection.distilleries.filter(d => d.name
+        .toLocaleLowerCase('de').includes((state.distillerySearch || '')
+          .trim().toLocaleLowerCase('de'))).length,
+      length2: state.collection
+        .distilleries.length,
+      addDistilleryButton: actionButton({
+        trustedContent: addActionLabel(t("settings.distilleries.add")),
+        action: 'add-distillery',
+      }),
+      sort: state.collection
+        .distilleries
+        .slice().sort((a, b) => a.name.localeCompare(b.name,
+          'de')).map(distillery =>
+            renderTemplate('distilleryRow', {
+              includes: distillery.name
+                .toLocaleLowerCase('de').includes((state.distillerySearch ||
+                  '').trim().toLocaleLowerCase('de')) ? '' : 'hidden',
+              name: distillery.name,
+              id: distillery.id,
+              name2: distillery.name,
+            })).join(''),
+      hidden: state.collection
         .distilleries.some(d => d.name.toLocaleLowerCase('de')
           .includes((state.distillerySearch || '').trim()
             .toLocaleLowerCase('de'))) ? 'hidden' :
-        ''}>${t("settings.distilleries.noMatches")}</p></div>
-    </div>`;
+        '',
+    });
     const workspace = sectionWorkspace(
       {
         sections: tabs, activeId: active,
@@ -136,21 +126,28 @@ escapeHtml(distillery.name)} umbenennen">${t("common.actions.edit")}</button>
       panel('general', general) + panel('backups', backups) +
       panel('transfer', transfer) + panel('distilleries', distilleries) +
       (state.auth?.canManageUsers ?
-        `<section class="settings-section" data-settings-panel="users"${active
-          === 'users' ? '' : ' hidden'}>${headingTitle({
+        renderTemplate('settingsSection2', {
+          active: active
+            === 'users' ? '' : ' hidden',
+          headingTitle: headingTitle({
             title: t('auth.users'),
             level: 2,
             className: 'analytics-section-title',
-          })}<div id="auth-users-content">${auth.usersSection(
-          )}</div></section>` : '')
+          }),
+          usersSection: auth.usersSection(
+          ),
+        }) : '')
     );
-    return `<div class="analytics-page settings-page">${pageHeader({
-      title: t('settings.page.title'),
-      eyebrow: t('settings.page.eyebrow'),
-      intro: t('settings.page.intro'),
-      className: 'settings-heading',
-      actions: String(backToCollectionButton),
-    })}${workspace}</div>`;
+    return renderTemplate('analyticsPage', {
+      pageHeader: pageHeader({
+        title: t('settings.page.title'),
+        eyebrow: t('settings.page.eyebrow'),
+        intro: t('settings.page.intro'),
+        className: 'settings-heading',
+        actions: String(backToCollectionButton),
+      }),
+      workspace: workspace,
+    });
   }
   return settings;
 }

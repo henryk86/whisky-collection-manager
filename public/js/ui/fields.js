@@ -1,4 +1,9 @@
 import {escapeHtml} from './dom.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/fields.html', import.meta.url));
+
 
 /**
  * Existing field APIs are kept. Labels, names and values are escaped;
@@ -36,10 +41,16 @@ function props(name, options = {}) {
  */
 function help(name, options = {}) {
   return `${options.description ?
-    `<span class="ds-field-description" id="ds-${e(name)}-hint">${e(options
-      .description)}</span>` : ''}${options.error ?
-        `<span class="ds-field-error" id="ds-${e(
-          name)}-error" role="alert">${e(options.error)}</span>` : ''}`;
+    renderTemplate('dsFieldDescription', {
+      name: e(name),
+      description: e(options
+        .description),
+    }) : ''}${options.error ?
+      renderTemplate('dsFieldError', {
+        name: e(
+          name),
+        error: e(options.error),
+      }) : ''}`;
 }
 
 /**
@@ -52,8 +63,13 @@ function help(name, options = {}) {
  * @return {string} Complete labeled form-field HTML.
  */
 function wrapper(label, name, control, options = {}) {
-  return `<label class="form-field ds-form-field${options.full ? ' full' :
-    ''}">${e(label)}${control}${help(name, options)}</label>`;
+  return renderTemplate('formField', {
+    full: options.full ? ' full' :
+      '',
+    label: e(label),
+    control: control,
+    help: help(name, options),
+  });
 }
 
 /**
@@ -68,10 +84,16 @@ function wrapper(label, name, control, options = {}) {
 export const textInput = (label, name, value = '', options = {}) => wrapper(
   label,
   name,
-  `<input ${props(name, options)} type="${e(options.type ||
-    'text')}"${options.step != null ? ` step="${e(options.step)}"` :
-      ''} value="${e(value)}"${options.placeholder ?
-        ` placeholder="${e(options.placeholder)}"` : ''}>`,
+  renderTemplate('textInputInput', {
+    props: props(name, options),
+    type: e(options.type ||
+      'text'),
+    step: options.step != null ? ` step="${e(options.step)}"` :
+      '',
+    value: e(value),
+    placeholder: options.placeholder ?
+      ` placeholder="${e(options.placeholder)}"` : '',
+  }),
   options
 );
 
@@ -90,9 +112,16 @@ export const selectInput =
   (label, name, options, value = '', config = {}) => wrapper(
     label,
     name,
-    `<select ${props(name, config)}>${options.map(([v, t]) =>
-      `<option value="${e(v)}"${String(v) === String(value ?? '') ?
-        ' selected' : ''}>${e(t)}</option>`).join('')}</select>`,
+    renderTemplate('select', {
+      props: props(name, config),
+      options: options.map(([v, t]) =>
+        renderTemplate('selectInputOption', {
+          v: e(v),
+          selected: String(v) === String(value ?? '') ?
+            ' selected' : '',
+          t: e(t),
+        })).join(''),
+    }),
     config
   );
 
@@ -108,7 +137,10 @@ export const selectInput =
 export const areaInput = (label, name, value = '', options = {}) => wrapper(
   label,
   name,
-  `<textarea ${props(name, options)}>${e(value)}</textarea>`,
+  renderTemplate('textarea', {
+    props: props(name, options),
+    value: e(value),
+  }),
   {...options, full: options.full !== false}
 );
 
@@ -122,6 +154,12 @@ export const areaInput = (label, name, value = '', options = {}) => wrapper(
  * @return {string} Labeled checkbox HTML.
  */
 export const checkboxInput = (label, name, checked = false, options = {}) =>
-  `<label class="form-field ds-checkbox-field${options.full ? ' full' :
-    ''}"><input type="checkbox" ${props(name, options)}${checked ?
-      ' checked' : ''}><span>${e(label)}</span>${help(name, options)}</label>`;
+  renderTemplate('formField2', {
+    full: options.full ? ' full' :
+      '',
+    props: props(name, options),
+    checked: checked ?
+      ' checked' : '',
+    label: e(label),
+    help: help(name, options),
+  });

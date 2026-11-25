@@ -6,6 +6,11 @@ import {textInput, selectInput, areaInput} from '../../ui/fields.js';
 import {bottleStatusLabels, whiskyTypeName, photoAccept}
   from '../../domain/labels.js';
 import {fileAccept} from '../files.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/bottle.html', import.meta.url));
+
 /**
  * Creates bottle form for bottle.
  *
@@ -42,33 +47,31 @@ export function createBottleForm({state, selectors}) {
         owner.volumeMl == null ? '' : `${owner.volumeMl} ml`,
       ],
     ].filter(([, value]) => value && value !== 'Nicht angegeben');
-    const context = `<section class="bottling-context" aria-label="${t(
-      "forms.bottle.linkedBottlingReadonly")}">
-    <div class="bottling-context-heading">${t("forms.bottling.title"
-      )} <span class="muted">${t("forms.bottle.informationalOnly")}</span>
-    </div>
-    <strong class="bottling-context-name">${escapeHtml(owner.name)}</strong>
-    <dl>${facts.map(([label, value]) => `<div>
-    <dt>${escapeHtml(label)}</dt>
-    <dd>${escapeHtml(value)}</dd>
-    </div>`).join('')}</dl>
-    </section>`;
-    return `<form id="bottle-form" data-id="${escapeHtml(bottle.id ||
-      '')}" data-bottling-id="${escapeHtml(bottlingId
-      )}">${context}<div class="forms">${textInput(
+    const context = renderTemplate('bottlingContext', {
+      name: owner.name,
+      facts: facts.map(([label, value]) => renderTemplate('contextDiv', {
+        label: label,
+        value: value,
+      })).join(''),
+    });
+    return renderTemplate('bottleForm', {
+      id: bottle.id ||
+        '',
+      bottlingId: bottlingId,
+      context: context,
+      inventoryNumberField: textInput(
         t("forms.bottle.inventoryNumber"),
         'inventoryNumber',
         bottle.inventoryNumber,
         {
           placeholder: t('forms.bottle.inventoryPlaceholder'),
         }
-      )}<div class="form-field">
-    <span>${t("forms.bottle.autoInventoryNumber")}</span>
-    ${actionButton({
+      ),
+      suggestBottleButton: actionButton({
         label: t("forms.bottle.suggestInventoryNumber"),
         action: 'suggest-bottle',
-      })}
-    </div>${selectInput(
+      }),
+      volumeTypeField: selectInput(
         t("forms.bottle.type"),
         'volumeType',
         [
@@ -76,7 +79,8 @@ export function createBottleForm({state, selectors}) {
           ['sample', t('forms.bottle.sampleBottle')],
         ],
         bottle.volumeType || 'standard'
-      )}${textInput(
+      ),
+      volumeMlField: textInput(
         t("forms.bottle.size"),
         'volumeMl',
         bottle.volumeMl,
@@ -85,7 +89,8 @@ export function createBottleForm({state, selectors}) {
           placeholder: owner.volumeMl == null ? t("forms.bottle.sizeExample") :
             t("forms.bottle.ownerVolumePlaceholder", {volume: owner.volumeMl}),
         }
-      )}${selectInput(
+      ),
+      statusField: selectInput(
         t("forms.bottle.statusLabel"),
         'status',
         Object.keys(bottleStatusLabels).map(status => [
@@ -97,59 +102,59 @@ export function createBottleForm({state, selectors}) {
           })[status]),
         ]),
         bottle.status || 'closed'
-      )}${textInput(
+      ),
+      purchaseDateField: textInput(
         t("forms.bottle.purchaseDate"),
         'purchaseDate',
         bottle.purchaseDate,
         {
           type: 'date',
         }
-      )}${textInput(
+      ),
+      purchasePriceField: textInput(
         t("forms.bottle.purchasePrice"),
         'purchasePrice',
         bottle.purchasePrice,
         {
           type: 'number', step: '0.01',
         }
-      )}${textInput(
+      ),
+      currencyField: textInput(
         t("forms.bottle.currency"),
         'currency',
         bottle.currency || 'EUR'
-      )}${textInput(t("forms.bottle.seller"), 'merchant',
-        bottle.merchant)}${textInput(
-          t("forms.bottle.openingDate"),
-          'openedAt',
-          bottle.openedAt,
-          {
-            type: 'date',
-          }
-        )}${textInput(
-          t("forms.bottle.emptyDate"),
-          'emptiedAt',
-          bottle.emptiedAt,
-          {
-            type: 'date',
-          }
-        )}${areaInput(
-          t("forms.bottle.personalComment"),
-          'comment',
-          bottle.comment
-        )}<label class="form-field full">${t("forms.bottle.additionalPhotos"
-        )}<input type="file" name="photos" accept="${photoAccept}" multiple>
-    </label>
-    <label class="form-field full">${t("forms.bottle.attachments")}
-    <input type="file" name="documents" accept="${fileAccept}" multiple>
-    <small class="hint">${t("forms.bottle.attachmentSizeLimit")}</small>
-    </label>
-    </div>
-    <div class="actions ds-modal-footer ds-modal-footer--form">
-    <button type="button" class="btn" data-act="scan-into-bottle">${
-inventoryScanIcon}<span>${t("forms.bottle.scanLabel")}</span></button>
-    ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
-    <button class="btn primary" type="submit">${t("common.actions.save"
-        )}</button>
-    </div>
-    </form>`;
+      ),
+      merchantField: textInput(t("forms.bottle.seller"), 'merchant',
+        bottle.merchant),
+      openedAtField: textInput(
+        t("forms.bottle.openingDate"),
+        'openedAt',
+        bottle.openedAt,
+        {
+          type: 'date',
+        }
+      ),
+      emptiedAtField: textInput(
+        t("forms.bottle.emptyDate"),
+        'emptiedAt',
+        bottle.emptiedAt,
+        {
+          type: 'date',
+        }
+      ),
+      commentField: areaInput(
+        t("forms.bottle.personalComment"),
+        'comment',
+        bottle.comment
+      ),
+      photoAccept: photoAccept,
+      fileAccept: fileAccept,
+      inventoryScanIcon: inventoryScanIcon,
+      closeModalButton: actionButton({
+        label: t("common.actions.cancel"),
+        action: 'close-modal',
+      }),
+    });
   }
   return bottleForm;
 }

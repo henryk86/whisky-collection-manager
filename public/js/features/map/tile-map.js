@@ -11,6 +11,11 @@ import {
 import {pagodaRoofIcon, closedDistilleryIcon, plusIcon, minusIcon}
   from '../../ui/action-icons.js';
 import {clusterMapSites} from '../../domain/map-clusters.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/tile-map.html', import.meta.url));
+
 
 const TILE_BASE = 'https://tile.openstreetmap.org';
 /**
@@ -474,26 +479,8 @@ export function createTileMap(
  * @return {string} Resulting text.
  */
 export function mapCanvasHtml() {
-  return `<div class="map-canvas" id="distillery-map">
-      <div class="map-viewport" tabindex="0" role="application" \
-aria-label="${t("features.map.keyboardInstructions")}">
-        <div class="map-movable"><div class="map-tiles" aria-hidden="true">\
-</div><div class="map-markers"></div></div>
-      </div>
-      <div class="map-controls" aria-label="${t("features.map.controls")}">
-        <button type="button" data-map-control="in" aria-label="${t(
-    "features.map.zoomIn")}" title="${t("features.map.zoomInAction"
-    )}">${plusIcon}</button>
-        <button type="button" data-map-control="out" aria-label="${t(
-      "features.map.zoomOut")}" title="${t("features.map.zoomOutAction"
-      )}">${minusIcon}</button>
-        <button type="button" data-map-control="fit" aria-label="${t(
-        "features.map.showAllLocations")}" title="${t(
-          "features.map.showAllLocations")}">⊡</button>
-      </div>
-      <div class="map-zoom-level" aria-hidden="true"></div>
-      <div class="map-attribution">© <a href="https://www.openstreetmap.org/\
-copyright" target="_blank" rel="noopener noreferrer">${t("features.map.openS\
-treetMapCredits")}</a></div>
-    </div>`;
+  return renderTemplate('distilleryMap', {
+    plusIcon: plusIcon,
+    minusIcon: minusIcon,
+  });
 }

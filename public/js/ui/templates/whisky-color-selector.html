@@ -1,0 +1,32 @@
+<!-- wcm-template:whiskyColorChoice -->
+<button class="whisky-color-choice{{raw:selected}}" type="button" data-act="tasting-color" data-color-key="{{raw:key}}" aria-pressed="{{raw:selected2}}" title="{{text:t}}">
+                {{raw:glencairnSymbol}}
+                <span>{{text:t2}}</span></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:whiskyColorSelector -->
+<div class="whisky-color-selector" data-whisky-color="{{text:selected}}">
+        <div class="whisky-color-grid" role="group" aria-label="{{text:color}}">
+            {{raw:wHISKYCOLORS}}
+        </div>
+        <div class="whisky-custom-row{{raw:custom}}" role="group" aria-label="{{text:colorCustom}}">
+            <div class="whisky-custom-preview">
+                {{raw:glencairnSymbol}}
+                <strong>{{text:colorCustom2}}</strong>
+            </div>
+            <div class="whisky-custom-controls">
+                <div class="whisky-custom-area" data-whisky-picker-area tabindex="0" role="button"
+                    aria-label="{{text:colorCustomPicker}}" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"
+                    style="--picker-x:{{raw:toFixed}}%;--picker-y:{{raw:toFixed2}}%">
+                    <span class="whisky-custom-cursor" aria-hidden="true"></span>
+                </div>
+                <output class="whisky-custom-name" data-whisky-custom-name aria-live="polite">{{text:whiskyCustomColorName}}</output>
+                <input type="hidden" data-whisky-custom-hex value="{{raw:hex}}">
+            </div>
+        </div>
+    </div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingReadonlyColor -->
+<div class="tasting-readonly-color">{{raw:glencairnSymbol}}<strong>{{text:label}}</strong></div>
+<!-- /wcm-template -->

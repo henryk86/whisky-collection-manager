@@ -36,6 +36,11 @@ import {
   bottlePreview, roomOptions, storagePath, findFurniture, roomDiagram,
   shelfPanel
 } from './warehouse-presentation.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates(
+  new URL('./templates/warehouse.html', import.meta.url));
+
 export {storagePath} from './warehouse-presentation.js';
 /**
  * Registers bottle photos behavior.
@@ -152,20 +157,17 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
    */
   const bottleSelectionTools = (withAll = false) => {
     const total = selectedBottleIds().length;
-    return `<div class="warehouse-bottle-bulk-tools" aria-label="${safe(t(
-      'warehouse.bottles.bulkTools'))}">
-          <span class="warehouse-bottle-selection-count" aria-live="polite">\
-${safe(t('warehouse.bottles.bulkSelected', {count: total}))}</span>
-          ${withAll ?
-        `<button type="button" class="btn small" data-act="warehouse-bot\
-tles-select-all">${t('warehouse.selection.selectAll')}</button>` : ''}
-          <button type="button" class="btn small warehouse-bottles-select-cl\
-ear" data-act="warehouse-bottles-select-clear" ${total ? '' : 'disable\
-d'}>${t('warehouse.selection.clear')}</button>
-          <button type="button" class="btn small primary warehouse-bottles-a\
-ssign-selected" data-act="warehouse-bottles-assign-selected" ${total ? '' :
-        'disabled'}>${t('warehouse.bottles.bulkAssignAction')}</button>
-        </div>`;
+    return renderTemplate('warehouseBottleBulkTools', {
+      safe: safe(t(
+        'warehouse.bottles.bulkTools')),
+      safe2: safe(t('warehouse.bottles.bulkSelected', {count: total})),
+      warehouseBottlesSelectAll: withAll ?
+        renderTemplate('warehouseBottlesSelectAll') : '',
+      total: total ? '' : 'disable\
+d',
+      total2: total ? '' :
+        'disabled',
+    });
   };
 
   /**
@@ -509,87 +511,106 @@ us, .warehouse-wall-bottle.is-find-dimmed')
    */
   function selectionPanel(room, {isolate = false, compact = false, layoutOnly =
     false} = {}) {
-    if (!room.furniture.length) return `<p class="hint">${t(
-      "warehouse.rooms.noFurniture")}</p>`;
+    if (!room.furniture.length) return renderTemplate('hint');
     const selected = new Set(selectedFurniture(room));
     const hiddenIds = new Set(state.warehouseHiddenFurnitureIds || []);
-    return `<section class="warehouse-bulk-panel${compact ?
-      ' warehouse-bulk-panel--sidebar' : ''}" aria-label="${layoutOnly ?
+    return renderTemplate('warehouseBulkPanel', {
+      compact: compact ?
+        ' warehouse-bulk-panel--sidebar' : '',
+      layoutOnly: layoutOnly ?
         t("warehouse.furniture.plural") :
-        t("warehouse.selection.instructions")}">
-            <div class="warehouse-bulk-head"><strong>${t(
-          "warehouse.furniture.plural")}</strong>${layoutOnly ?
-            `<span>${room.furniture.length}</span>` :
-            `<span class="warehouse-bulk-count" aria-live="polite">${t(
-              "warehouse.selection.count",
-              {selected: selected.size, total: room.furniture.length}
-            )}</span>`}${isolate ?
-              `<button type="button" class="btn small warehouse-show-all" \
-data-act="warehouse-show-all" ${room.furniture.some(item =>
-                hiddenIds.has(item.id)) ? '' :
-                'disabled'}>${t("warehouse.visibility.showAll")}</button>` :
-              ''}</div>
-            <div class="warehouse-bulk-list">${room.furniture.map(furniture => {
-                const occupied = furniture.shelves.reduce((n, shelf) => n +
-                  count(w(), shelf.id), 0);
-                const visible = !hiddenIds.has(furniture.id);
-                const actionLabel = t(
-                  "warehouse.visibility.accessibleLabel",
-                  {
-                    name: furniture.name,
-                    action: t(visible ? "warehouse.visibility.hide" :
-                      "warehouse.visibility.show"),
-                  }
-                );
-                const name = safe(furniture.name);
-                const summary = t(
-                  "warehouse.furniture.summary",
-                  {
-                    type: safe(typeName(furniture.type)),
-                    shelves: furniture.shelves.length,
-                    bottles: occupied,
-                  }
-                );
-                const furnitureControl = layoutOnly
-                  ? `<button type="button" class="warehouse-bulk-open" \
-data-act="warehouse-select-furniture" data-id="${safe(furniture.id)}" \
-aria-label="${name}" ${state.warehouseFurnitureId === furniture.id ? 'aria-c\
-urrent="true"' : ''}><strong>${name}</strong><small>${summary}</small></button>`
-                  : `<button type="button" class="warehouse-bulk-pick" \
-data-act="warehouse-toggle-furniture" data-id="${safe(furniture.id)}" \
-aria-pressed="${selected.has(furniture.id)}" aria-label="${safe(t(
-                    'warehouse.furniture.selectForBulkEdit',
-                    {name: furniture.name}
-                  ))}"><strong>${name}</strong><small>${
-summary}</small></button>`;
-                return `<div class="warehouse-bulk-item${!layoutOnly &&
-                  selected.has(furniture.id) ? ' is-selected' :
-                  ''}${state.warehouseFurnitureId === furniture.id &&
-                    layoutOnly ? ' is-current' : ''}${isolate && !visible ?
-                      ' is-hidden' : ''}">${furnitureControl}${isolate ?
-                        `<button type="button" class="btn warehouse-bulk-vis\
-ibil\
-ity" data-act="warehouse-visibility-toggle" data-id="${safe(furniture.id)}" \
-aria-pressed="${visible}" title="${safe(actionLabel)}" \
-aria-label="${safe(actionLabel)}">${visible ? eyeIcon : eyeOffIcon}</button\
->` : ''}</div>`;
-              }).join('')}</div>
-            ${layoutOnly ? '' :
-        `<div class="actions warehouse-bulk-actions"><button type="button" \
-class="btn small" data-act="warehouse-bulk-select-all">${t("warehouse.select\
-ion.selectAll")}</button><button type="button" class="btn small \
-warehouse-bulk-clear-btn" data-act="warehouse-bulk-clear" ${selected.size ?
-          '' : 'disabled'}>${t("warehouse.selection.clear")
-        }</button><button type="button" class="btn small danger warehouse-bu\
-lk-delet\
-e-btn" data-act="warehouse-bulk-delete" ${selected.size ? '' :
-          'disabled'}>${t("warehouse.bulk.deleteAction", {count: selected.size})
-        }</button><button type="button" class="btn small primary warehouse-b\
-ulk-edit\
--btn" data-act="warehouse-bulk-edit" ${selected.size ? '' :
-          'disabled'}>${t("warehouse.bulk.editAction", {count: selected.size})
-        }</button></div>`}
-        </section>`;
+        t("warehouse.selection.instructions"),
+      span: layoutOnly ?
+        renderTemplate('selectionPanelSpan', {
+          length: room.furniture.length,
+        }) :
+        renderTemplate('warehouseBulkCount', {
+          count: t(
+            "warehouse.selection.count",
+            {selected: selected.size, total: room.furniture.length}
+          ),
+        }),
+      warehouseShowAll: isolate ?
+        renderTemplate('warehouseShowAll', {
+          some: room.furniture.some(item =>
+            hiddenIds.has(item.id)) ? '' :
+            'disabled',
+        }) :
+        '',
+      furniture: room.furniture.map(furniture => {
+        const occupied = furniture.shelves.reduce((n, shelf) => n +
+          count(w(), shelf.id), 0);
+        const visible = !hiddenIds.has(furniture.id);
+        const actionLabel = t(
+          "warehouse.visibility.accessibleLabel",
+          {
+            name: furniture.name,
+            action: t(visible ? "warehouse.visibility.hide" :
+              "warehouse.visibility.show"),
+          }
+        );
+        const name = safe(furniture.name);
+        const summary = t(
+          "warehouse.furniture.summary",
+          {
+            type: safe(typeName(furniture.type)),
+            shelves: furniture.shelves.length,
+            bottles: occupied,
+          }
+        );
+        const furnitureControl = layoutOnly
+          ? renderTemplate('warehouseSelectFurniture', {
+            safe: safe(furniture.id),
+            name: name,
+            warehouseFurnitureId: state.warehouseFurnitureId ===
+              furniture.id ? 'aria-c\
+urrent="true"' : '',
+            name2: name,
+            summary: summary,
+          })
+          : renderTemplate('warehouseToggleFurniture', {
+            safe: safe(furniture.id),
+            has: selected.has(furniture.id),
+            safe2: safe(t(
+              'warehouse.furniture.selectForBulkEdit',
+              {name: furniture.name}
+            )),
+            name: name,
+            summary: summary,
+          });
+        return renderTemplate('warehouseBulkItem', {
+          content: !layoutOnly &&
+            selected.has(furniture.id) ? ' is-selected' :
+            '',
+          warehouseFurnitureId: state.warehouseFurnitureId === furniture.id &&
+            layoutOnly ? ' is-current' : '',
+          isolate: isolate && !visible ?
+            ' is-hidden' : '',
+          furnitureControl: furnitureControl,
+          warehouseVisibilityToggle: isolate ?
+            renderTemplate('warehouseVisibilityToggle', {
+              safe: safe(furniture.id),
+              visible: visible,
+              safe2: safe(actionLabel),
+              safe3: safe(actionLabel),
+              visible2: visible ? eyeIcon : eyeOffIcon,
+            }) : '',
+        });
+      }).join(''),
+      layoutOnly2: layoutOnly ? '' :
+        renderTemplate('warehouseBulkSelectAll', {
+          size: selected.size ?
+            '' : 'disabled',
+          size2: selected.size ? '' :
+            'disabled',
+          deleteAction: t(
+            "warehouse.bulk.deleteAction", {count: selected.size}
+          ),
+          size3: selected.size ? '' :
+            'disabled',
+          editAction: t("warehouse.bulk.editAction", {count: selected.size}),
+        }),
+    });
   }
 
   /**
@@ -763,8 +784,7 @@ ulk-edit\
     roomPreviews = null;
     const currentTicket = ++threeTicket;
     const data = w();
-    if (!data) return shell(`<p class="hint">${t("warehouse.storage.loading"
-    )}</p>`);
+    if (!data) return shell(renderTemplate('hint2'));
     const section = state.selected || 'overview';
     if (section === 'find') {
       state.warehouseFindReturn =
@@ -778,87 +798,101 @@ ulk-edit\
     let content = '';
     if (section === 'overview') {
       content =
-        `<div class="stats warehouse-stats"><div class="panel stat"><span>${t(
-          "warehouse.rooms.title")}</span><strong>${data.rooms
-            .length}</strong></div><div class="panel stat"><span>${t(
-              "warehouse.furniture.plural")}</span><strong>${data.rooms.reduce(
-                (n, r) => n + r.furniture.length,
-                0)}</strong></div><div class="panel stat"><span>${t(
-                  "warehouse.bottles.assigned"
-                )}</span><strong>${assigned} / ${total}</strong></div>\
-<div class="panel stat"><span>${t('warehouse.capacity.title')}${
-overallCapacity.unlimited ? ` ${t(
-                  'warehouse.capacity.unlimitedExtra',
-                  {count: overallCapacity.unlimited}
-                )}` : ''}</span><strong>${overallCapacity.shelves === 0 ? '–' :
-                  overallCapacity.unlimited && overallCapacity.defined === 0 ?
-                    t('warehouse.capacity.open') :
-                    `${overallCapacity.defined}${
+        renderTemplate('stats', {
+          length: data.rooms
+            .length,
+          reduce: data.rooms.reduce(
+            (n, r) => n + r.furniture.length,
+            0),
+          assigned: assigned,
+          total: total,
+          unlimited: overallCapacity.unlimited ? ` ${t(
+            'warehouse.capacity.unlimitedExtra',
+            {count: overallCapacity.unlimited}
+          )}` : '',
+          shelves: overallCapacity.shelves === 0 ? '–' :
+            overallCapacity.unlimited && overallCapacity.defined === 0 ?
+              t('warehouse.capacity.open') :
+              `${overallCapacity.defined}${
 overallCapacity.unlimited ? '+' :
-                      ''}`}</strong></div></div>${headingTitle({
-                        title:
-                          t('warehouse.rooms.yourRooms'),
-                      }
-                      )}<div class="warehouse-cards">${data.rooms.map(room => {
-                        const cap =
-                          roomCapacity(room, data);
-                        return `<button class="warehouse-room-card" \
-data-act="warehouse-select-room" data-id="${safe(room.id)}"><span \
-class="warehouse-room-preview" data-preview-room-id="${safe(room.id)}" \
-aria-hidden="true">${t("warehouse.preview.loading3d")}</span><span \
-class="warehouse-room-card-details"><strong data-i18n-ignore>${safe(room.name)
-                          }</strong><span>${t(
-                            "warehouse.rooms.furnitureAndDimensions",
-                            {
-                              count: room.furniture.length,
-                              width: num(room.width),
-                              depth: num(room.height),
-                            }
-                          )}</span><span>${t(
-                            "warehouse.capacity.summary",
-                            {capacity: capacityLabel(cap)}
-                          )}</span><span>${t("warehouse.occupancy.count",
-                            {count: cap.occupied})}</span></span></button>`;
-                      }).join('') ||
-                      `<p class="hint">${t("warehouse.rooms.getStarted"
-                      )}</p>`}</div><div class="actions"><button class="btn \
-primary" data-act="warehouse-room-new">${addActionLabel(t("warehouse.rooms.c\
-reateWithPlus"))}</button><button class="btn" data-act="warehouse-find">${t(
-                        "warehouse.bottles.unassignedCount",
-                        {count: total - assigned}
-                      )
-        }</button><button class="btn" data-act="warehouse-rooms-transfe\
-r">${t('warehouse.transfer.action')}</button></div>`;
+                ''}`,
+          headingTitle: headingTitle({
+            title:
+              t('warehouse.rooms.yourRooms'),
+          }
+          ),
+          rooms: data.rooms.map(room => {
+            const cap =
+              roomCapacity(room, data);
+            return renderTemplate('warehouseSelectRoom', {
+              safe: safe(room.id),
+              safe2: safe(room.id),
+              safe3: safe(room.name),
+              furnitureAndDimensions: t(
+                "warehouse.rooms.furnitureAndDimensions",
+                {
+                  count: room.furniture.length,
+                  width: num(room.width),
+                  depth: num(room.height),
+                }
+              ),
+              summary: t(
+                "warehouse.capacity.summary",
+                {capacity: capacityLabel(cap)}
+              ),
+              count: t("warehouse.occupancy.count",
+                {count: cap.occupied}),
+            });
+          }).join('') ||
+            renderTemplate('hint3'),
+          addActionLabel: addActionLabel(t("warehouse.rooms.c\
+reateWithPlus")),
+          unassignedCount: t(
+            "warehouse.bottles.unassignedCount",
+            {count: total - assigned}
+          ),
+        });
     } else if (section === 'rooms' || section === 'shelves') {
       const room = currentRoom();
       const roomManagementActions = section === 'rooms'
-        ? `<button class="btn" data-act="warehouse-room-new">${addActionLabel(
-          t("warehouse.rooms.addWithPlus")
-        )}</button><button class="btn" data-act="warehouse-rooms-transfe\
-r">${t("warehouse.transfer.action")}</button>${room ? `<button class="btn" \
-data-act="warehouse-room-edit" data-id="${safe(room.id)}">${t("warehouse.roo\
-ms.edit")}</button><button class="btn danger" data-act="warehouse-room-delet\
-e" data-id="${safe(room.id)}">${t("warehouse.rooms.delete")}</button>` : ''}`
+        ? renderTemplate('warehouseRoomNew', {
+          addActionLabel: addActionLabel(
+            t("warehouse.rooms.addWithPlus")
+          ),
+          warehouseRoomEdit: room ? renderTemplate('warehouseRoomEdit', {
+            safe: safe(room.id),
+            safe2: safe(room.id),
+          }) : '',
+        })
         : '';
-      content = `<div class="warehouse-room-toolbar"><label>${t(
-        "warehouse.rooms.select")} <select id="warehouse-room-select">${data
-          .rooms.map(r => `<option value="${safe(r.id)}" ${r.id === room?.id ?
-            'selected' : ''}>${safe(r.name)}</option>`).join(
-              '')}</select></label>${roomManagementActions}</div>`;
+      content = renderTemplate('warehouseRoomToolbar', {
+        rooms: data
+          .rooms.map(r => renderTemplate('renderOption', {
+            safe: safe(r.id),
+            selected: r.id === room?.id ?
+              'selected' : '',
+            safe2: safe(r.name),
+          })).join(
+            ''),
+        roomManagementActions: roomManagementActions,
+      });
       if (room) {
         const furniture = currentFurniture(room);
         const cap = roomCapacity(room, data);
         const roomSummary =
-          `<header class="warehouse-room-summary"><div class="warehouse-room\
--identity"><h3 data-i18n-ignore>${safe(room.name)}</h3><span>${t(
-            "warehouse.rooms.gridDimensions",
-            {width: num(room.width), height: num(room.height)}
-          )}</span></div><div class="warehouse-room-metrics"><span>${t(
-            "warehouse.capacity.label")} <strong>${capacityLabel(
-              cap)}</strong></span><span>${t("warehouse.occupancy.label"
-              )} <strong>${cap.occupied} ${cap.occupied === 1 ?
-                t("forms.bottle.title") : t("forms.bottle.plural"
-                )}</strong></span></div></header>`;
+          renderTemplate('warehouseRoomSummary', {
+            safe: safe(room.name),
+            gridDimensions: t(
+              "warehouse.rooms.gridDimensions",
+              {width: num(room.width), height: num(room.height)}
+            ),
+            capacityLabel: capacityLabel(
+              cap),
+            occupied: cap.occupied,
+            occupied2: cap.occupied === 1 ?
+              t("forms.bottle.title") : t("forms.bottle.plural"
+              ),
+          });
         const level = ['all', 'floor', 'elevated']
           .includes(state.warehousePlanLevel) ?
           state.warehousePlanLevel : 'all';
@@ -869,134 +903,157 @@ e" data-id="${safe(room.id)}">${t("warehouse.rooms.delete")}</button>` : ''}`
         const zoom = [100, 150, 200].includes(state.warehousePlanZoom) ?
           state.warehousePlanZoom : 100;
         const viewSwitch =
-          `<fieldset class="warehouse-view-switch" aria-label="${t(
-            "warehouse.view.planDisplay")}"><legend>${t("warehouse.view.label"
-            )}</legend><button type="button" data-act="warehouse-plan-mode\
-" data-mode="2d" class="btn small${planMode === '2d' ? ' primary' : ''}" \
-aria-pressed="${planMode === '2d'}">${t("warehouse.view.twoDimensional")}</b\
-utton><button type="button" data-act="warehouse-plan-mode" data-mode="3d" \
-class="btn small${planMode === '3d' ? ' primary' : ''}" \
-aria-pressed="${planMode === '3d'}">${t("warehouse.view.threeDimensional")}<\
-/button></fieldset>`;
+          renderTemplate('warehouseViewSwitch', {
+            planMode: planMode === '2d' ? ' primary' : '',
+            planMode2: planMode === '2d',
+            planMode3: planMode === '3d' ? ' primary' : '',
+            planMode4: planMode === '3d',
+          });
         const planFilter = planMode === '2d' ?
-          `<label class="warehouse-plan-filter">${t("warehouse.fields.level"
-          )} <select id="warehouse-plan-layer" aria-label="${t(
-            "warehouse.view.furnitureLayer")}"><option value="all" ${level
-              === 'all' ? 'selected' : ''}>${t(
-                "warehouse.selection.allFurniture"
-              )}</option><option value="floor" ${level === 'floor' ?
-                'selected' : ''}>${t("warehouse.furniture.floorStanding"
-                )}</option><option value="elevated" ${level ===
-                  'elevated' ? 'selected' : ''}>${t(
-                    "warehouse.furniture.elevated"
-                  )}</option></select></label>` : `<label \
-class="warehouse-plan-filter">${t("warehouse.view.zoom")} <select \
-id="warehouse-plan-zoom" aria-label="${t("warehouse.view.zoomDescription")}"\
->${[100, 150, 200].map(z => `<option value="${z}" ${z === zoom ? 'selecte\
-d' : ''}>${z} %</option>`).join('')}</select></label>`;
+          renderTemplate('warehousePlanFilter', {
+            selected: level
+              === 'all' ? 'selected' : '',
+            selected2: level === 'floor' ?
+              'selected' : '',
+            selected3: level ===
+              'elevated' ? 'selected' : '',
+          }) : renderTemplate('warehousePlanFilter2', {
+            content: [100, 150, 200].map(z => renderTemplate(
+              'planFilterOption',
+              {
+                z: z,
+                selected: z === zoom ? 'selecte\
+d' : '',
+                z2: z,
+              }
+            )).join(''),
+          });
         const cornerButtons = planMode === '3d' ?
-          `<div class="warehouse-camera-toolbar" role="group" aria-label="${t(
-            "warehouse.view.cameraAngle")}">${WAREHOUSE_CAMERAS.map(([id,
-              label]) => `<button type="button" class="btn small${planCorner
-                === id ? ' primary' :
-                ''}" data-act="warehouse-camera" data-corner="${id}" \
-aria-pressed="${planCorner === id}">${t(CAMERA_KEYS[id])}</button>`)
-              .join('')}</div>` : '';
+          renderTemplate('warehouseCameraToolbar', {
+            wAREHOUSECAMERAS: WAREHOUSE_CAMERAS.map(([id,
+              label]) => renderTemplate('smallButton', {
+                planCorner: planCorner
+                  === id ? ' primary' :
+                  '',
+                id: id,
+                planCorner2: planCorner === id,
+                t: t(CAMERA_KEYS[id]),
+              }))
+              .join(''),
+          }) : '';
         const planToolbar =
-          `<div class="warehouse-plan-tools" role="toolbar" aria-label="${t(
-            "warehouse.view.toolbar"
-          )}">${viewSwitch}${cornerButtons}${planFilter}${section ===
-            'rooms' ?
-            `<button type="button" class="btn primary" \
-data-act="warehouse-furniture-new">${addActionLabel(t('warehouse.furniture.p\
-lace'))}</button>` : ''}</div>`;
+          renderTemplate('warehousePlanTools', {
+            viewSwitch: viewSwitch,
+            cornerButtons: cornerButtons,
+            planFilter: planFilter,
+            warehouseFurnitureNew: section ===
+              'rooms' ?
+              renderTemplate('warehouseFurnitureNew', {
+                addActionLabel: addActionLabel(t('warehouse.furniture.p\
+lace')),
+              }) : '',
+          });
         const plan = planMode === '3d' ?
-          `<div class="warehouse-three-viewport" role="region" aria-label="${t(
-            "warehouse.view.interactive3d")}">${t("warehouse.view.loading3d"
-            )}</div>` : roomDiagram(
-              room,
-              {...data, focusFurnitureId: furniture?.id},
-              level
-            );
+          renderTemplate('warehouseThreeViewport') : roomDiagram(
+            room,
+            {...data, focusFurnitureId: furniture?.id},
+            level
+          );
         if (section === 'rooms') {
           // Room plans own spatial layout only: 2D/3D positioning,
           // camera and visibility. All furniture/shelf editing and
           // physical bottle work lives in Regale & Fächer.
           content += roomSummary + planToolbar
             + (planMode === '3d'
-              ? `<div class="warehouse-plan-workspace"><div \
-class="warehouse-plan-stage">${plan}</div>${selectionPanel(
-                room,
-                {isolate: true, compact: true, layoutOnly: true}
-              )}</div>`
+              ? renderTemplate('warehousePlanWorkspace', {
+                plan: plan,
+                selectionPanel: selectionPanel(
+                  room,
+                  {isolate: true, compact: true, layoutOnly: true}
+                ),
+              })
               : `${plan}${selectionPanel(room, {layoutOnly: true})}`)
-            + `<div class="warehouse-section-boundary${furniture ?
-              ' warehouse-plan-focus' : ''}">${furniture
-                ? `<div class="warehouse-plan-focus-info"><strong>${safe(
-                  furniture.name)}</strong><span>${safe(typeName(furniture.type
-                  ))} · X: ${num(furniture.x)} m · Y: ${num(furniture
-                    .y)} m · ${t('warehouse.fields.bottomElevationMeters'
-                    )}: ${num(furniture.elevation ?? 0)} m</span></div>`
-                : ''}
-                           <div class="actions">${furniture ?
-              `<button type="button" class="btn" data-act="warehouse-furnitu\
-re-manage" data-id="${safe(furniture.id)}">${t('warehouse.furniture.manageSh\
-elves')}</button>` : ''}
-                           <button type="button" class="btn primary" \
-data-act="warehouse-open-shelves">${t('warehouse.navigation.shelves')}</butt\
-on></div></div>`;
+            + renderTemplate('warehouseSectionBoundary', {
+              furniture: furniture ?
+                ' warehouse-plan-focus' : '',
+              warehousePlanFocusInfo: furniture
+                ? renderTemplate('warehousePlanFocusInfo', {
+                  safe: safe(
+                    furniture.name),
+                  safe2: safe(typeName(furniture.type
+                  )),
+                  num: num(furniture.x),
+                  num2: num(furniture
+                    .y),
+                  num3: num(furniture.elevation ?? 0),
+                })
+                : '',
+              warehouseFurnitureManage: furniture ?
+                renderTemplate('warehouseFurnitureManage', {
+                  safe: safe(furniture.id),
+                }) : '',
+            });
         } else {
           const createButton =
-            `<button type="button" class="btn primary" data-act="warehouse-f\
-urniture-new" data-id="${safe(room.id)}">${addActionLabel(t('warehouse.furni\
-ture.place'))}</button>`;
+            renderTemplate('warehouseFurnitureNew2', {
+              safe: safe(room.id),
+              addActionLabel: addActionLabel(t('warehouse.furni\
+ture.place')),
+            });
           const manageButton =
-            `<button type="button" class="btn" data-act="warehouse-furniture\
--bulk">${t('warehouse.bulk.manageAction')}</button>`;
+            renderTemplate('warehouseFurnitureBulk');
           const focusBottle = state.warehouseFindReturn ? data.bottles
             .find(b => b.id === state.warehouseFindFocusBottleId) : null;
           const focusPlace = focusBottle ?
             storagePath(data, data.assignments[focusBottle.id]) : null;
           const inRoom = focusPlace?.room.id === room.id;
           const findReturn = state.warehouseFindReturn
-            ? `<div class="warehouse-find-return"><button type="button" \
-class="btn small" data-act="warehouse-return-find">${
-t(state.warehouseFindReturnFlightId ? 'flightPlan.backToFlight' : state
-              .warehouseFindReturnBottlingId ? 'warehouse.find.backToBottling' :
-              'warehouse.find.backToResults')}</button>${inRoom ?
-                `<span class="warehouse-find-return-label"><strong class="wa\
-rehouse\
--find-return-badge">${t('warehouse.find.match')}</strong>${safe(t(
-                  'warehouse.find.highlighted',
-                  {name: bottleLabel(focusBottle), location: focusPlace.label}
-                ))}</span>` :
-                ''}<button type="button" class="warehouse-find-clear" \
-data-act="warehouse-find-clear" title="${safe(t('warehouse.find.clearHighlig\
-ht'))}" aria-label="${safe(t('warehouse.find.clearHighlight'))}"><svg \
-viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"\
- stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 \
-6 18M6 6l12 12"/></svg></button></div>` : '';
+            ? renderTemplate('warehouseReturnFind', {
+              t: t(state.warehouseFindReturnFlightId ?
+                'flightPlan.backToFlight' : state
+                  .warehouseFindReturnBottlingId ?
+                  'warehouse.find.backToBottling' :
+                  'warehouse.find.backToResults'),
+              warehouseFindReturnLabel: inRoom ?
+                renderTemplate('warehouseFindReturnLabel', {
+                  safe: safe(t(
+                    'warehouse.find.highlighted',
+                    {name: bottleLabel(focusBottle), location: focusPlace.label}
+                  )),
+                }) :
+                '',
+              safe: safe(t('warehouse.find.clearHighlig\
+ht')),
+              safe2: safe(t('warehouse.find.clearHighlight')),
+            }) : '';
           // The physical wall intentionally omits furniture without shelves.
           // Provide
           // a direct first-shelf action so a newly placed unit is not stranded.
           const withoutShelves = room.furniture.filter(item => item.shelves
             .length === 0);
           const firstShelfActions = withoutShelves.length
-            ? `<div class="warehouse-unconfigured-furniture panel section">\
-<strong>${t('warehouse.furniture.withoutShelves')}</strong>
-                           <div class="warehouse-unconfigured-list">\
-${withoutShelves.map(item => `<div class="warehouse-unconfigured-item">\
-<span>${safe(item.name)}</span><button type="button" class="btn small" \
-data-act="warehouse-shelf-new" data-id="${safe(item.id)}">${
-addActionLabel(t('warehouse.shelves.addWithPlus'))}</button></div>`).join('')
-            }</div></div>`
+            ? renderTemplate('warehouseUnconfiguredFurniture', {
+              withoutShelves: withoutShelves.map(item => renderTemplate(
+                'warehouseUnconfiguredItem',
+                {
+                  safe: safe(item.name),
+                  safe2: safe(item.id),
+                  addActionLabel: addActionLabel(
+                    t('warehouse.shelves.addWithPlus')
+                  ),
+                }
+              )).join(''),
+            })
             : '';
           content += roomSummary + findReturn
-            + `<div class="warehouse-shelves-toolbar">${headingTitle({
-              title:
-                t('warehouse.navigation.shelves'),
-            })}${headerActions(
-              manageButton + createButton)}</div>`
+            + renderTemplate('warehouseShelvesToolbar', {
+              headingTitle: headingTitle({
+                title:
+                  t('warehouse.navigation.shelves'),
+              }),
+              headerActions: headerActions(
+                manageButton + createButton),
+            })
             + firstShelfActions
             + renderWarehouseRoomWall(
               room,
@@ -1010,7 +1067,7 @@ addActionLabel(t('warehouse.shelves.addWithPlus'))}</button></div>`).join('')
               }
             );
         }
-      } else content += `<p class="hint">${t("warehouse.rooms.noRooms")}</p>`;
+      } else content += renderTemplate('hint4');
     } else {
       content = renderWarehouseFinder({
         query: state.warehouseSearch || '',
@@ -1036,13 +1093,15 @@ addActionLabel(t('warehouse.shelves.addWithPlus'))}</button></div>`).join('')
         className: 'analytics-section-title',
       })}${content}`
     );
-    shell(`<div class="analytics-page warehouse-page" data-reconcile="replac\
-e">${pageHeader({
-      title: t('warehouse.page.title'),
-      eyebrow: t('warehouse.page.eyebrow'),
-      intro: t('warehouse.page.intro'),
-      className: 'warehouse-heading',
-    })}${workspace}</div>`);
+    shell(renderTemplate('analyticsPage', {
+      pageHeader: pageHeader({
+        title: t('warehouse.page.title'),
+        eyebrow: t('warehouse.page.eyebrow'),
+        intro: t('warehouse.page.intro'),
+        className: 'warehouse-heading',
+      }),
+      workspace: workspace,
+    }));
     if (typeof document !== 'undefined' && typeof document.querySelector ===
       'function') {
       restoreWallScroll();
@@ -1203,48 +1262,39 @@ e">${pageHeader({
      */
     const opts = (chosen) => Array.from(
       {length: count},
-      (_, i) => `<option value="${i + 1}" ${chosen === i + 1 ?
-        'selected' : ''}>${t("warehouse.shelves.numbered", {
+      (_, i) => renderTemplate('optsOption', {
+        i: i + 1,
+        selected: chosen === i + 1 ?
+          'selected' : '',
+        numbered: t("warehouse.shelves.numbered", {
           index: i +
             1,
-        })}</option>`
+        }),
+      })
     ).join('');
-    return `<div class="warehouse-door-range">
-            <label class="form-field">${t("warehouse.shelves.rangeBottom"
-    )}<select class="door-range-from">${opts(range.from ||
-      1)}</select></label>
-            <label class="form-field">${t("warehouse.range.endTop"
-      )}<select class="door-range-to">${opts(range.to ||
-        count)}</select></label>
-            <label class="form-field">${t("warehouse.shelves.doorLabel"
-        )}<select class="door-range-front"><option value="door" ${range
-          .front !== 'glass' ? 'selected' : ''}>${t(
-            "warehouse.front.woodDoorLabel"
-          )}</option><option value="glass" ${range.front ===
-            'glass' ? 'selected' : ''}>${t(
-              "warehouse.front.glassDoorLabel"
-            )}</option></select></label>
-            <label class="form-field">${t("warehouse.shelves.doorLeaves"
-            )}<select class="door-range-leaves"><option value="" ${range
-              .doorLeaves == null ? 'selected' : ''}>${t(
-                "warehouse.fields.furnitureDefault"
-              )}</option><option value="1" ${range.doorLeaves === 1 ?
-                'selected' : ''}>1</option><option value="2" ${range
-                  .doorLeaves === 2 ? 'selected' :
-                  ''}>2</option></select></label>
-            <label class="form-field">${t("warehouse.walls.glassFrame"
-                  )}<select class="door-range-frame"><option value="" ${range
-                    .glassFrame == null ? 'selected' : ''}>${t(
-                      "warehouse.fields.furnitureDefault"
-                    )}</option><option value="true" ${range.glassFrame ===
-                      true ? 'selected' : ''}>${t("warehouse.walls.withFrame"
-                      )}</option><option value="false" ${range.glassFrame ===
-                        false ? 'selected' : ''}>${t(
-                          "warehouse.walls.withoutFrame"
-                        )}</option></select></label>
-            <button type="button" class="btn small danger \
-warehouse-door-range-remove">${t("common.actions.remove")}</button>
-        </div>`;
+    return renderTemplate('warehouseDoorRange', {
+      opts: opts(range.from ||
+        1),
+      opts2: opts(range.to ||
+        count),
+      selected: range
+        .front !== 'glass' ? 'selected' : '',
+      selected2: range.front ===
+        'glass' ? 'selected' : '',
+      selected3: range
+        .doorLeaves == null ? 'selected' : '',
+      selected4: range.doorLeaves === 1 ?
+        'selected' : '',
+      selected5: range
+        .doorLeaves === 2 ? 'selected' :
+        '',
+      selected6: range
+        .glassFrame == null ? 'selected' : '',
+      selected7: range.glassFrame ===
+        true ? 'selected' : '',
+      selected8: range.glassFrame ===
+        false ? 'selected' : '',
+    });
   }
 
   /**
@@ -1262,14 +1312,16 @@ warehouse-door-range-remove">${t("common.actions.remove")}</button>
     state.warehouseFurnitureId = found.furniture.id;
     modal.showModal(
       found.furniture.name,
-      `<div class="warehouse-furniture-manager warehouse-shelves-management"\
- data-furniture-id="${safe(found.furniture
-        .id)}">${shelfPanel(
+      renderTemplate('warehouseFurnitureManager', {
+        safe: safe(found.furniture
+          .id),
+        shelfPanel: shelfPanel(
           data,
           found.room,
           found.furniture,
           {managementOnly: true}
-        )}</div>`,
+        ),
+      }),
       true
     );
     attachBottlePhotos();
@@ -1286,8 +1338,10 @@ warehouse-door-range-remove">${t("common.actions.remove")}</button>
     if (!room) return false;
     modal.showModal(
       t('warehouse.bulk.manageAction'),
-      `<div class="warehouse-furniture-bulk-manager">${selectionPanel(
-        room)}</div>`,
+      renderTemplate('warehouseFurnitureBulkManager', {
+        selectionPanel: selectionPanel(
+          room),
+      }),
       true
     );
     return true;
@@ -1456,31 +1510,28 @@ warehouse-door-range-remove">${t("common.actions.remove")}</button>
           String(item?.glassFrame ?? '')
         )
         + (item?.shelves.length ?
-          `<div class="warehouse-door-ranges"><strong>${t(
-            "warehouse.shelves.doorRangesHeading"
-          )}</strong><p class="hint">${t("warehouse.shelves.doorRangesHelp"
-          )}</p><div class="warehouse-door-range-list">${(item
-            .doorRanges || []).map(range => doorRangeRow(range,
-              item.shelves.length)).join(
-                '')}</div><button type="button" class="btn small \
-warehouse-door-range-add">${addActionLabel(t("warehouse.shelves.addDoorRang\
-e"))}</button></div>` : '')
-        + `<fieldset class="warehouse-wall-options"><legend>${t(
-          "warehouse.walls.furniturePanels")}</legend><p class="hint">${t(
-            "warehouse.walls.description"
-          )}</p><div class="warehouse-wall-toggles">${[
+          renderTemplate('warehouseDoorRanges', {
+            doorRanges: (item
+              .doorRanges || []).map(range => doorRangeRow(range,
+                item.shelves.length)).join(
+                  ''),
+            addActionLabel: addActionLabel(t("warehouse.shelves.addDoorRang\
+e")),
+          }) : '')
+        + renderTemplate('warehouseWallOptions', {
+          content: [
             ['leftSidePanel', t('warehouse.walls.leftPanel'), 'left'],
             ['rightSidePanel', t('warehouse.walls.rightPanel'), 'right'],
             ['backPanel', t('warehouse.walls.backPanel'), 'back'],
           ].map(([key, label, side]) =>
-            `<label class="warehouse-wall-toggle"><input type="checkbox" \
-name="${key}" ${item?.[key] === true ? 'checked' : ''}><span \
-class="warehouse-wall-pictogram warehouse-wall-pictogram--${side}" \
-aria-hidden="true"></span><span class="warehouse-wall-label">${label}<small \
-class="warehouse-wall-state"></small></span></label>`).join('')}</div>\
-</fieldset>`
-        + `<p class="hint warehouse-copy-hint">${t(
-          "warehouse.placement.verticalOverlapHint")}</p>`;
+            renderTemplate('warehouseWallToggle', {
+              key: key,
+              checked: item?.[key] === true ? 'checked' : '',
+              side: side,
+              label: label,
+            })).join(''),
+        })
+        + renderTemplate('hint5');
     } else if (kind === 'furniture-bulk') {
       const room = currentRoom();
       const ids = selectedFurniture(room);
@@ -1495,7 +1546,9 @@ class="warehouse-wall-state"></small></span></label>`).join('')}</div>\
        * @return {string} Resulting text.
        */
       const bulkField = (control) =>
-        `<div class="warehouse-bulk-field">${control}</div>`;
+        renderTemplate('warehouseBulkField', {
+          control: control,
+        });
 
       /**
        * Builds the localized optional number text for the current language.
@@ -1506,22 +1559,30 @@ class="warehouse-wall-state"></small></span></label>`).join('')}</div>\
        * @return {string} Resulting text.
        */
       const optionalNumber = (key, label, constraints) =>
-        `<label class="form-field">${safe(
-          label)}<input type="number" name="${key}" placeholder="${t(
-            "warehouse.fields.unchanged")}" ${constraints}></label>`;
-      fields = `<p class="hint warehouse-copy-hint">${t(
-        "warehouse.selection.bulkDescription",
-        {
-          names: ids.map(id => room.furniture.find(f => f.id === id)?.name)
-            .map(safe).join(', '),
-        }
-      )}</p>`
-        + bulkField(`<label class="form-field">${t("warehouse.fields.angle"
-        )}<select name="rotation"><option value="">${t(
-          "warehouse.fields.unchanged")}</option>${[[0, '0°'], [90, '90°'],
+        renderTemplate('formField', {
+          safe: safe(
+            label),
+          key: key,
+          constraints: constraints,
+        });
+      fields = renderTemplate('hint6', {
+        bulkDescription: t(
+          "warehouse.selection.bulkDescription",
+          {
+            names: ids.map(id => room.furniture.find(f => f.id === id)?.name)
+              .map(safe).join(', '),
+          }
+        ),
+      })
+        + bulkField(renderTemplate('formField2', {
+          content: [[0, '0°'], [90, '90°'],
           [180, '180°'], [270, '270°']].map(([value,
-            label]) => `<option value="${value}">${label}</option>`).join(
-              '')}</select></label>`)
+            label]) => renderTemplate('openFormOption', {
+              value: value,
+              label: label,
+            })).join(
+              ''),
+        }))
         + bulkField(optionalNumber(
           'elevation',
           t('warehouse.fields.bottomElevationShort'),
@@ -1576,8 +1637,7 @@ class="warehouse-wall-state"></small></span></label>`).join('')}</div>\
               ['false', t('warehouse.walls.absent')],
             ]
           ))).join('')
-        + `<p class="hint warehouse-copy-hint">${t(
-          "warehouse.bulk.validationHint")}</p>`;
+        + renderTemplate('hint7');
     } else if (kind === 'shelf') {
       let found = null;
       for (const room of data.rooms) for (const furniture of room.furniture)
@@ -1589,20 +1649,22 @@ class="warehouse-wall-state"></small></span></label>`).join('')}</div>\
         const order = found.furniture.shelves.slice().reverse();
         const index = order.findIndex(shelf => shelf.id === id);
         shelfNavigation =
-          `<nav class="warehouse-shelf-editor-navigation" aria-label="${t(
-            'warehouse.shelves.switchAria'
-          )}"><button type="button" class="btn small" \
-data-act="warehouse-shelf-switch" data-target="${safe(order[index -
-            1]?.id || '')}" ${index === 0 ? 'disabled' :
-              ''}>${arrowLeftIcon}<span>${t('warehouse.shelves.previous')
-          }</span></button><span>${t(
-            'warehouse.shelves.position',
-            {current: index + 1, total: order.length}
-          )}</span><button type="button" class="btn small" \
-data-act="warehouse-shelf-switch" data-target="${safe(order[index +
-            1]?.id || '')}" ${index === order.length - 1 ? 'disabled' :
-              ''}><span>${t('warehouse.shelves.next')}</span>${arrowRightIcon
-          }</button></nav>`;
+          renderTemplate('warehouseShelfEditorNavigation', {
+            safe: safe(order[index -
+              1]?.id || ''),
+            disabled: index === 0 ? 'disabled' :
+              '',
+            arrowLeftIcon: arrowLeftIcon,
+            position: t(
+              'warehouse.shelves.position',
+              {current: index + 1, total: order.length}
+            ),
+            safe2: safe(order[index +
+              1]?.id || ''),
+            disabled2: index === order.length - 1 ? 'disabled' :
+              '',
+            arrowRightIcon: arrowRightIcon,
+          });
       }
       title = item ? t("warehouse.shelves.edit") : t("warehouse.shelves.add");
       endpoint = item ? `/api/warehouse/shelves/${item.id}` :
@@ -1619,9 +1681,9 @@ data-act="warehouse-shelf-switch" data-target="${safe(order[index +
           }
         )
       )
-        + `<label class="form-field">${t("warehouse.shelves.capacityHint"
-        )}<input type="number" name="capacity" min="0" max="10000" \
-value="${safe(item?.capacity ?? '')}"></label>`
+        + renderTemplate('formField3', {
+          safe: safe(item?.capacity ?? ''),
+        })
         + choices(
           'front',
           t("warehouse.shelves.frontType"),
@@ -1652,13 +1714,10 @@ value="${safe(item?.capacity ?? '')}"></label>`
           ],
           String(item?.glassFrame ?? '')
         )
-        + `<label class="form-field">${t(
-          "warehouse.shelves.heightCentimetersOptional"
-        )}<input type="number" name="heightCm" min="5" max="500" \
-step="0.5" placeholder="${t("warehouse.fields.automatic")}" \
-value="${safe(item?.heightCm ?? '')}"></label>`
-        + `<p class="hint warehouse-copy-hint">${t(
-          "warehouse.shelves.heightDistributionHint")}</p>`;
+        + renderTemplate('formField4', {
+          safe: safe(item?.heightCm ?? ''),
+        })
+        + renderTemplate('hint8');
     } else if (kind === 'furniture-copy') {
       const found = findFurniture(data, id);
       if (!found) return toast(t("warehouse.furniture.notFound"), true);
@@ -1678,11 +1737,8 @@ value="${safe(item?.heightCm ?? '')}"></label>`
           data.rooms.map(r => [r.id, r.name]),
           found.room.id
         )
-        + `<label class="warehouse-copy-option"><input type="checkbox" \
-name="withShelves" checked> ${t("warehouse.shelves.copyAllIncludingCapacit\
-y")}</label>`
-        + `<p class="hint warehouse-copy-hint">${t(
-          "warehouse.furniture.copyDoesNotAssignBottles")}</p>`;
+        + renderTemplate('warehouseCopyOption')
+        + renderTemplate('hint9');
     } else if (kind === 'shelf-copy') {
       let found = null;
       for (const room of data.rooms) for (const furniture of room.furniture)
@@ -1704,8 +1760,7 @@ y")}</label>`
             [f.id, `${r.name} / ${f.name}`])),
           found.furniture.id
         )
-        + `<p class="hint warehouse-copy-hint">${t(
-          "warehouse.shelves.copyDescription")}</p>`;
+        + renderTemplate('hint10');
     } else if (kind === 'assign-bulk') {
       const bottles = data.bottles.filter(b => selectedBottleIds()
         .includes(b.id));
@@ -1723,14 +1778,23 @@ y")}</label>`
     }
     modal.showModal(
       title,
-      `<form id="warehouse-form" data-endpoint="${safe(endpoint
-      )}" data-method="${method}" data-new-furniture="${kind ===
-        'furniture' && !id ? 'true' : 'false'}" data-bulk="${kind ===
-        'furniture-bulk'}" data-bottle-bulk="${kind ===
-        'assign-bulk'}" class="warehouse-form${['assign',
+      renderTemplate('warehouseForm', {
+        safe: safe(endpoint
+        ),
+        method: method,
+        kind: kind ===
+          'furniture' && !id ? 'true' : 'false',
+        kind2: kind ===
+          'furniture-bulk',
+        kind3: kind ===
+          'assign-bulk',
+        includes: ['assign',
           'assign-bulk'].includes(kind) ? ' warehouse-assignment-form' :
-          ''}">${shelfNavigation}<div class="forms">${fields}</div>\
-${footer()}</form>`,
+          '',
+        shelfNavigation: shelfNavigation,
+        fields: fields,
+        footer: footer(),
+      }),
       kind === 'assign',
       replaceCurrent ? 'replace' : true,
       '',
@@ -1802,14 +1866,16 @@ ${footer()}</form>`,
     const found = findFurniture(w(), manager.dataset.furnitureId);
     if (!found) return;
     modal.updateContent(
-      `<div class="warehouse-furniture-manager warehouse-shelves-management"\
- data-furniture-id="${safe(found.furniture
-        .id)}">${shelfPanel(
+      renderTemplate('warehouseFurnitureManager2', {
+        safe: safe(found.furniture
+          .id),
+        shelfPanel: shelfPanel(
           w(),
           found.room,
           found.furniture,
           {managementOnly: true}
-        )}</div>`);
+        ),
+      }));
     attachBottlePhotos();
   }
 
@@ -1872,8 +1938,11 @@ ${footer()}</form>`,
       .test(path)) return;
     modal.showModal(
       title,
-      `<div class="warehouse-photo-lightbox"><img src="/${safe(
-        path)}" alt="${safe(title)}"></div>`,
+      renderTemplate('warehousePhotoLightbox', {
+        safe: safe(
+          path),
+        safe2: safe(title),
+      }),
       true
     );
   }
@@ -2138,16 +2207,19 @@ ${footer()}</form>`,
     pendingDelete = {ids};
     modal.showModal(
       t("warehouse.bulk.deleteTitle", {count: ids.length}),
-      `<p>${t("warehouse.bulk.deleteConfirmation",
-        {count: ids.length})}</p><p class="hint">${ids.map(id => room.furniture
-          .find(f => f.id === id)?.name).map(safe).join(', ')}</p><p>${t(
-            "warehouse.bulk.deleteOccupiedWarning")}</p>${destructiveFooter({
-              cancelLabel: t("common.actions.cancel"),
-              acceptLabel: t("warehouse.bulk.deleteAction", {count: ids.length}
-              ),
-              acceptAction: 'warehouse-confirm-delete',
-              className: 'warehouse-form-actions',
-            })}`
+      renderTemplate('askBulkDeleteP', {
+        deleteConfirmation: t("warehouse.bulk.deleteConfirmation",
+          {count: ids.length}),
+        ids: ids.map(id => room.furniture
+          .find(f => f.id === id)?.name).map(safe).join(', '),
+        destructiveFooter: destructiveFooter({
+          cancelLabel: t("common.actions.cancel"),
+          acceptLabel: t("warehouse.bulk.deleteAction", {count: ids.length}
+          ),
+          acceptAction: 'warehouse-confirm-delete',
+          className: 'warehouse-form-actions',
+        }),
+      })
     );
   }
 
@@ -2174,39 +2246,46 @@ ${footer()}</form>`,
       if (occupied) {
         modal.showModal(
           t('warehouse.rooms.deleteOccupiedTitle'),
-          `<p>${tHtml(
-            'warehouse.rooms.deleteOccupiedMessage',
-            {name: room.name, count: occupied}
-          )}</p>${destructiveFooter({
-            cancelLabel: t('common.actions.cancel'),
-            acceptLabel: t('warehouse.rooms.unassignAndDelete'),
-            acceptAction: 'warehouse-confirm-delete-unassign',
-            className: 'warehouse-form-actions',
-          })}`
+          renderTemplate('askDeleteP', {
+            deleteOccupiedMessage: tHtml(
+              'warehouse.rooms.deleteOccupiedMessage',
+              {name: room.name, count: occupied}
+            ),
+            destructiveFooter: destructiveFooter({
+              cancelLabel: t('common.actions.cancel'),
+              acceptLabel: t('warehouse.rooms.unassignAndDelete'),
+              acceptAction: 'warehouse-confirm-delete-unassign',
+              className: 'warehouse-form-actions',
+            }),
+          })
         );
         return;
       }
       modal.showModal(
         t('warehouse.rooms.delete'),
-        `<p>${tHtml('warehouse.rooms.deleteEmptyMessage',
-          {name: room.name})}</p>${destructiveFooter({
+        renderTemplate('askDeleteP2', {
+          deleteEmptyMessage: tHtml('warehouse.rooms.deleteEmptyMessage',
+            {name: room.name}),
+          destructiveFooter: destructiveFooter({
             cancelLabel: t('common.actions.cancel'),
             acceptLabel: t('common.actions.remove'),
             acceptAction: 'warehouse-confirm-delete',
             className: 'warehouse-form-actions',
-          })}`
+          }),
+        })
       );
       return;
     }
     modal.showModal(
       t("warehouse.bottles.removeStorageLocation"),
-      `<p>${t("warehouse.shelves.deleteOccupiedConfirmation"
-      )}</p>${destructiveFooter({
-        cancelLabel: t("common.actions.cancel"),
-        acceptLabel: t("common.actions.remove"),
-        acceptAction: 'warehouse-confirm-delete',
-        className: 'warehouse-form-actions',
-      })}`
+      renderTemplate('askDeleteP3', {
+        destructiveFooter: destructiveFooter({
+          cancelLabel: t("common.actions.cancel"),
+          acceptLabel: t("common.actions.remove"),
+          acceptAction: 'warehouse-confirm-delete',
+          className: 'warehouse-form-actions',
+        }),
+      })
     );
   }
 

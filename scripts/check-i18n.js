@@ -16,15 +16,19 @@ const catalog = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
 const walk = directory => fs.readdirSync(directory, {withFileTypes: true})
   .flatMap(entry => {
     const file = path.join(directory, entry.name);
-    return entry.isDirectory() ? walk(file) : file.endsWith('.js') ?
+    return entry.isDirectory() ? walk(file) : (/\.(?:js|html)$/.test(file)) ?
       [file] : [];
   });
-const files = walk('public/js').concat('public/app.js');
+const files = walk('public/js')
+  .concat('public/app.js', 'public/templates/app.html');
 const keys = new Set();
 for (const file of files) {
   if (file.includes(`${path.sep}i18n${path.sep}`)) continue;
   // A JavaScript line continuation does not change a literal key.
   const source = fs.readFileSync(file, 'utf8').replace(/\\\r?\n/g, '');
+  for (const [, key] of source.matchAll(/\{\{t:([\w.]+)\}\}/g)) {
+    keys.add(key);
+  }
   // Translation identifiers are domain keys, never concatenated pieces of
   // source text.
   if (/\bt\(\s*['"][^'"]+['"]\s*\+/u.test(source)) {

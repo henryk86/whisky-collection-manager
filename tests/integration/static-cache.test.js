@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
 import {startTestServer} from '../helpers/server.js';
 
 test(
@@ -57,3 +60,30 @@ response body',
     }
   }
 );
+
+
+test('CSP hashes match browser-normalized inline script text', async () => {
+  const server = await startTestServer();
+  const directory = fs.mkdtempSync(path.join('public', 'csp-test-'));
+  const script = '\n  window.example = true;\n';
+  const expected = crypto.createHash('sha256').update(script).digest('base64');
+  try {
+    for (const [index, newline] of ['\n', '\r\n', '\r'].entries()) {
+      const name = `fixture-${index}.html`;
+      const html = `<script>${script.replaceAll('\n', newline)}</script>`;
+      fs.writeFileSync(path.join(directory, name), html);
+      const resource = `${path.basename(directory)}/${name}`;
+      const response = await fetch(`${server.base}/${resource}`);
+      assert.equal(response.status, 200);
+      const csp = response.headers.get('content-security-policy');
+      const scriptPolicy = csp.split(';').find(part =>
+        part.trim().startsWith('script-src'));
+      assert.ok(scriptPolicy.includes(`'sha256-${expected}'`));
+      assert.ok(!scriptPolicy.includes("'unsafe-inline'"));
+      assert.equal(await response.text(), html);
+    }
+  } finally {
+    fs.rmSync(directory, {recursive: true, force: true});
+    await server.stop();
+  }
+});

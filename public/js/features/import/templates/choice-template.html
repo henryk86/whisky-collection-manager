@@ -1,0 +1,18 @@
+<!-- wcm-template:importChoiceCurrent -->
+<small class="import-choice-current">{{raw:currentValue}}</small>
+<!-- /wcm-template -->
+
+<!-- wcm-template:importChoiceCurrent2 -->
+<small class="import-choice-current">{{t:imports.preview.choiceNotFound}}</small>
+<!-- /wcm-template -->
+
+<!-- wcm-template:importChoice -->
+<label class="import-choice">
+    <input type="checkbox" {{raw:attribute}}{{raw:checked}}{{raw:disabled}}>
+    <span class="import-choice-copy">
+    <span class="import-choice-label">{{text:label}}</span>
+    <span class="import-choice-value">{{text:value}}</span>
+    {{raw:existing}}{{raw:importChoiceCurrent}}
+    </span>
+    </label>
+<!-- /wcm-template -->
