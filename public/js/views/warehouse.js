@@ -1,14 +1,17 @@
+import {createWarehouseFinderController} from './warehouse-finder-controller.js';
+import {createWarehouseMutationController} from './warehouse-mutation-controller.js';
+import {createWarehousePhotoController} from './warehouse-photo-controller.js';
+import {createWarehouseDeleteController} from './warehouse-delete-controller.js';
 import {createWarehouseFormController} from './warehouse-form-controller.js';
-import {createWarehouseViewModel} from './models/warehouse.js';
+import {createWarehouseViewModel, createWarehouseRoomViewModel} from './models/warehouse.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {replaceContent, materialize} from '../ui/dom-renderer.js';
 import {headerActions, headingTitle, pageHeader} from '../ui/headers.js';
-import {destructiveFooter} from '../ui/modal-layout.js';
 
-import {t, tHtml} from '../i18n/index.js';
-import {roomCapacity} from '../domain/warehouse-capacity.js';
+import {t} from '../i18n/index.js';
+
 import {toast} from '../ui/notifications.js';
-import {imageData} from '../features/photos.js';
+
 import {request} from '../api.js';
 import {sectionWorkspace} from '../ui/section-navigation.js';
 import {WAREHOUSE_CAMERAS} from '../domain/warehouse-3d-model.js';
@@ -19,16 +22,15 @@ import {routeUrl} from '../navigation/routes.js';
 import {createFurnitureActivation}
   from '../ui/warehouse-furniture-activation.js';
 import {eyeIcon, eyeOffIcon, addActionLabel} from '../ui/action-icons.js';
-import {assignmentPayload, bulkAssignmentPayload, approveShelfCapacityIncrease} from '../ui/warehouse-assignment.js';
+
 import {mountWarehouseBottleDrag} from '../ui/warehouse-bottle-drag.js';
 import {renderWarehouseRoomWall} from './warehouse-room-wall.js';
 import {createWarehouseRoomTransfer} from './warehouse-room-transfer.js';
 import {shelfContents} from './warehouse-shelf-details.js';
 import {renderUnassignedTrayPage} from './warehouse-unassigned-tray.js';
 import {unassignedWallPage} from '../domain/warehouse-unassigned-tray.js';
-import {findWarehouseBottles} from '../domain/warehouse-finder.js';
-import {renderWarehouseFinder, renderWarehouseFinderResults}
-  from './warehouse-finder.js';
+
+import {renderWarehouseFinder} from './warehouse-finder.js';
 import {CAMERA_KEYS, ROOM_SECTION_KEYS, typeName, num, capacityLabel, safe, count, bottleLabel, bottlePreview, roomOptions, storagePath, findFurniture, roomDiagram, shelfPanel} from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 
@@ -58,8 +60,7 @@ function attachBottlePhotos() {
  * @param {!Object} options Optional configuration for the operation.
  * @return {!Object} Structured result for the caller.
  */
-export function createWarehouseView({state, shell, navigate, modal, refresh}) {
-  let pendingDelete = null;
+export function createWarehouseView({state, shell, navigate, modal, refresh, mountContent = replaceContent}) {
   let threeHandle = null;
   let roomPreviews = null;
   let unmountBottleDrag = null;
@@ -67,10 +68,10 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
   let unassignedWallQuery = '';
   let unassignedWallPageNumber = 1;
   let unassignedWallExpanded = false;
-  let pendingFindFocusScroll = false;
   // The page is rebuilt after each successful relocation; remember the
   // *horizontal* wall viewport independently from the document scroll.
   const wallScrollByRoom = new Map();
+
   /**
    * Derives the remember wall scroll numeric value from its input.
    */
@@ -146,7 +147,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
       bulkSelected: safe(t('warehouse.bottles.bulkSelected', {count: total})),
       warehouseBottlesSelectAll: withAll ? renderTemplate('warehouseBottlesSelectAll') : '',
       disabledAttributes: total ? {} : {"disabled": true},
-      total2: total ? {} : {"disabled": true},
+      assignDisabled: total ? {} : {"disabled": true},
     });
   };
 
@@ -285,167 +286,6 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
   }
 
   /**
-   * Derives the finder results result from the supplied values.
-   * @return {*} Result computed from the supplied inputs.
-   */
-  function finderResults() {
-    const result = findWarehouseBottles(w(), {
-      query: state.warehouseSearch || '',
-      placement: state.warehouseFinderPlacement || 'all',
-      page: state.warehouseFinderPage || 1,
-    });
-    state.warehouseFinderPage = result.page;
-    return result;
-  }
-
-  /**
-   * Performs the refresh finder results lifecycle action.
-   */
-  function refreshFinderResults() {
-    const host = typeof document === 'undefined' ? null : document.querySelector?.('.warehouse-finder-results');
-    if (host) {
-      replaceContent(host, renderWarehouseFinderResults(finderResults()));
-    }
-  }
-
-  /**
-   * Updates finder query in the current state.
-   *
-   * @param {*} value Value to process.
-   */
-  function setFinderQuery(value) {
-    state.warehouseSearch = String(value ?? '');
-    state.warehouseFinderPage = 1;
-    refreshFinderResults();
-  }
-
-  /**
-   * Updates finder placement in the current state.
-   *
-   * @param {*} value Value to process.
-   */
-  function setFinderPlacement(value) {
-    if (!['all', 'assigned', 'unassigned'].includes(value)) return;
-    state.warehouseFinderPlacement = value;
-    state.warehouseFinderPage = 1;
-    refreshFinderResults();
-  }
-
-  /**
-   * Updates the step finder page state for its caller.
-   *
-   * @param {*} delta Value used by this operation.
-   */
-  function stepFinderPage(delta) {
-    state.warehouseFinderPage = (state.warehouseFinderPage || 1) + delta;
-    refreshFinderResults();
-  }
-
-  /**
-   * Renders bottle location in the current view.
-   *
-   * @param {*} id Identifier of the affected record.
-   * @param {!Object=} options Options controlling the operation.
-      * @return {*} Result of this expression.
-*/
-  function showBottleLocation(id, {returnToBottlingId = null,
-    returnToFlightId = null} = {}) {
-    const bottle = w()?.bottles?.find(item => item.id === id);
-    const place = bottle ? storagePath(w(), w().assignments?.[id]) : null;
-    if (!place) return toast(t('warehouse.find.locationUnavailable'), true);
-    state.warehouseRoomId = place.room.id;
-    state.warehouseFurnitureId = place.furniture.id;
-    state.warehouseFindFocusBottleId = id;
-    state.warehouseFindReturnBottlingId = returnToBottlingId;
-    state.warehouseFindReturnFlightId = returnToFlightId;
-    state.warehouseFindReturn = true;
-    pendingFindFocusScroll = true;
-    navigate('warehouse', 'shelves');
-  }
-
-  /**
-   * Removes or resets find focus.
-   */
-  function clearFindFocus() {
-    // Close the finder banner without navigating or rebuilding the shelf wall:
-    // scrolling, bottle selections and in-progress interactions stay intact.
-    state.warehouseFindReturn = false;
-    state.warehouseFindFocusBottleId = null;
-    state.warehouseFindReturnBottlingId = null;
-    state.warehouseFindReturnFlightId = null;
-    pendingFindFocusScroll = false;
-    if (typeof document === 'undefined') return;
-    document.querySelector?.('.warehouse-find-return')?.remove();
-    document.querySelector?.('.warehouse-room-wall.has-find-focus')?.classList.remove('has-find-focus');
-    document.querySelectorAll?.(
-      '.warehouse-wall-bay.is-find-focus, .warehouse-wall-bottle.is-find-focus, .warehouse-wall-bottle.is-find-dimmed')
-      .forEach(node => node.classList.remove('is-find-focus', 'is-find-dimmed'));
-  }
-
-  /**
-   * Updates element attributes used by return to finder.
-   */
-  function returnToFinder() {
-    const id = state.warehouseFindFocusBottleId;
-    const bottlingId = state.warehouseFindReturnBottlingId;
-    const flightId = state.warehouseFindReturnFlightId;
-    state.warehouseFindReturn = false;
-    state.warehouseFindFocusBottleId = null;
-    state.warehouseFindReturnBottlingId = null;
-    state.warehouseFindReturnFlightId = null;
-    pendingFindFocusScroll = false;
-    if (flightId) {navigate('tasting-flight', flightId); return;}
-    if (bottlingId) {
-      navigate('detail', bottlingId, {highlightBottleId: id});
-      if (id && typeof requestAnimationFrame === 'function') requestAnimationFrame(() => {
-        if (state.page === 'detail' && state.selected === bottlingId) {
-          document.getElementById?.(`bottle-${id}`)?.scrollIntoView?.({
-            block: 'center', behavior: 'instant',
-          });
-        }
-      });
-      return;
-    }
-    navigate('warehouse', 'find');
-    // Navigation normally moves to the page top. Return to the actual
-    // selected search result after that navigation, when it is still listed.
-    if (id && typeof requestAnimationFrame === 'function') requestAnimationFrame(() => {
-      if (state.page !== 'warehouse' || state.selected !== 'find') return;
-      const target = [...(document.querySelectorAll?.('.warehouse-finder-card') || [])].find(node => node.dataset.bottleId === id);
-      target?.scrollIntoView?.({
-        block: 'center', inline: 'nearest',
-        behavior: 'instant',
-      });
-    });
-  }
-
-  /**
-   * Controls to found bottle for warehouse.
-   */
-  function scrollToFoundBottle() {
-    if (!pendingFindFocusScroll || typeof document === 'undefined') return;
-    pendingFindFocusScroll = false;
-    const id = state.warehouseFindFocusBottleId;
-    if (!id || typeof requestAnimationFrame !== 'function') return;
-    requestAnimationFrame(() => {
-      if (state.page !== 'warehouse' || state.selected !== 'shelves') return;
-      const target = [...(document.querySelectorAll?.('.warehouse-wall-bottle.is-find-focus') || [])].find(node => node.querySelector?.('.warehouse-bottle-symbol')?.dataset.id === id);
-      if (!target?.isConnected) return;
-      const scroller = target.closest?.('.warehouse-wall-scroll');
-      if (scroller?.getBoundingClientRect && target.getBoundingClientRect) {
-        const outer = scroller.getBoundingClientRect();
-        const inner = target.getBoundingClientRect();
-        scroller.scrollLeft += inner.left - outer.left - outer.width / 2 + inner.width / 2;
-        rememberWallScroll();
-      }
-      target.scrollIntoView?.({
-        block: 'center', inline: 'nearest',
-        behavior: 'instant',
-      });
-    });
-  }
-
-  /**
    * Aggregates input values for the selection panel calculation.
    *
    * @param {*} room Warehouse room being inspected or modified.
@@ -494,7 +334,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
             id: safe(furniture.id),
             name: name,
             ariaCurrentAttributes: state.warehouseFurnitureId === furniture.id ? {"aria-current": "true"} : {},
-            name2: name,
+            furnitureName: name,
             summary: summary,
           })
           : renderTemplate('warehouseToggleFurniture', {
@@ -515,16 +355,16 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
               visible: visible,
               title: safe(actionLabel),
               ariaLabel: safe(actionLabel),
-              visible2: visible ? eyeIcon : eyeOffIcon,
+              visibilityIcon: visible ? eyeIcon : eyeOffIcon,
             }) : '',
         });
       })),
-      layoutOnly2: layoutOnly ? '' :
+      selectionControls: layoutOnly ? '' :
         renderTemplate('warehouseBulkSelectAll', {
           disabledAttributes: selected.size ? {} : {"disabled": true},
-          size2: selected.size ? {} : {"disabled": true},
+          clearDisabled: selected.size ? {} : {"disabled": true},
           deleteAction: t("warehouse.bulk.deleteAction", {count: selected.size}),
-          size3: selected.size ? {} : {"disabled": true},
+          manageDisabled: selected.size ? {} : {"disabled": true},
           editAction: t("warehouse.bulk.editAction", {count: selected.size}),
         }),
     });
@@ -549,7 +389,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
       button.setAttribute('aria-pressed', String(visible));
       button.setAttribute('aria-label', label);
       button.title = label;
-      replaceContent(button, visible ? eyeIcon : eyeOffIcon);
+      mountContent(button, visible ? eyeIcon : eyeOffIcon);
       button.closest('.warehouse-bulk-item')?.classList.toggle('is-hidden', !visible);
     }
     threeHandle?.setFurnitureVisible?.(furniture.id, visible);
@@ -671,10 +511,14 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
     syncBulkControls();
   }
 
+  const {refreshFurnitureModal, uploadFurniturePhotos, moveFurniturePhoto, openFurniturePhoto, deleteFurniturePhoto} = createWarehousePhotoController({w, modal, refresh, attachBottlePhotos});
+  const {askBulkDelete, askDelete, deleteConfirmed} = createWarehouseDeleteController({currentRoom, selectedFurniture, modal, w, state, refresh});
+  const {finderResults, setFinderQuery, setFinderPlacement, stepFinderPage, showBottleLocation, clearFindFocus, returnToFinder, scrollToFoundBottle} = createWarehouseFinderController({w, state, mountContent, navigate, rememberWallScroll});
+  const {submit, relocateBottle, moveShelf} = createWarehouseMutationController({w, modal, selectedFurniture, currentRoom, refresh, selectedBottleIds, state, refreshFurnitureModal, rememberWallScroll, render});
+
   /**
-   * Renders the warehouse state.
-   *
-   * @return {*} Structured result assembled from the input data.
+   * Renders the selected warehouse workspace.
+   * @return {*} Shell result when no warehouse exists, otherwise undefined.
    */
   function render() {
     rememberWallScroll();
@@ -692,6 +536,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
       state.warehouseFindReturn = false; state.warehouseFindFocusBottleId = null; state.warehouseFindReturnBottlingId = null; state.warehouseFindReturnFlightId = null;
     }
     const {total, assigned, overallCapacity, roomCount, furnitureCount} = createWarehouseViewModel(data);
+    const roomModel = createWarehouseRoomViewModel(data, state);
     let content = '';
     if (section === 'overview') {
       content =
@@ -706,8 +551,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
               t('warehouse.capacity.open') :
               `${overallCapacity.defined}${overallCapacity.unlimited ? '+' : ''}`,
           headingTitle: headingTitle({title: t('warehouse.rooms.yourRooms'), }),
-          rooms: composeMarkup(data.rooms.map(room => {
-            const cap = roomCapacity(room, data);
+          rooms: composeMarkup(roomModel.rooms.map(({room, capacity: cap}) => {
             return renderTemplate('warehouseSelectRoom', {
               id: safe(room.id),
               previewRoomId: safe(room.id),
@@ -749,25 +593,22 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
       });
       if (room) {
         const furniture = currentFurniture(room);
-        const cap = roomCapacity(room, data);
+        const cap = roomModel.rooms.find(item => item.room.id === room.id).capacity;
         const roomSummary =
           renderTemplate('warehouseRoomSummary', {
             name: safe(room.name),
             gridDimensions: t("warehouse.rooms.gridDimensions", {width: num(room.width), height: num(room.height)}),
             capacityLabel: capacityLabel(cap),
             occupied: cap.occupied,
-            occupied2: cap.occupied === 1 ? t("forms.bottle.title") : t("forms.bottle.plural"),
+            bottleUnit: cap.occupied === 1 ? t("forms.bottle.title") : t("forms.bottle.plural"),
           });
-        const level = ['all', 'floor', 'elevated'].includes(state.warehousePlanLevel) ? state.warehousePlanLevel : 'all';
-        const planMode = ['2d', '3d'].includes(state.warehousePlanMode) ? state.warehousePlanMode : '3d';
-        const planCorner = WAREHOUSE_CAMERAS.some(([id]) => id === state.warehousePlanCorner) ? state.warehousePlanCorner : 'nw';
-        const zoom = [100, 150, 200].includes(state.warehousePlanZoom) ? state.warehousePlanZoom : 100;
+        const {level, planMode, planCorner, zoom} = roomModel;
         const viewSwitch =
           renderTemplate('warehouseViewSwitch', {
             planMode: planMode === '2d' ? ' primary' : '',
             ariaPressed: planMode === '2d',
-            planMode3: planMode === '3d' ? ' primary' : '',
-            planMode4: planMode === '3d',
+            threeDimensionalClass: planMode === '3d' ? ' primary' : '',
+            threeDimensionalPressed: planMode === '3d',
           });
         const planFilter = planMode === '2d' ?
           renderTemplate('warehousePlanFilter', {
@@ -780,13 +621,13 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
               {
                 z: z,
                 selectedAttributes: z === zoom ? {"selected": true} : {},
-                z2: z,
+                zoomLabel: z,
               }
             ))),
           });
         const cornerButtons = planMode === '3d' ?
           renderTemplate('warehouseCameraToolbar', {
-            wAREHOUSECAMERAS: composeMarkup(WAREHOUSE_CAMERAS.map(([id,
+            cameraButtons: composeMarkup(WAREHOUSE_CAMERAS.map(([id,
               label]) => renderTemplate('smallButton', {
                 planCorner: planCorner === id ? ' primary' : '',
                 id: id,
@@ -826,8 +667,8 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
                     name: safe(furniture.name),
                     furnitureType: safe(typeName(furniture.type)),
                     num: num(furniture.x),
-                    num2: num(furniture.y),
-                    num3: num(furniture.elevation ?? 0),
+                    positionY: num(furniture.y),
+                    bottomElevation: num(furniture.elevation ?? 0),
                   })
                   : '',
                 warehouseFurnitureManage: furniture ? renderTemplate('warehouseFurnitureManage', {id: safe(furniture.id), }) : '',
@@ -1171,415 +1012,6 @@ export function createWarehouseView({state, shell, navigate, modal, refresh}) {
       }
     }
     openForm('shelf', id, {replaceCurrent: true});
-  }
-
-  /**
-   * Performs the refresh furniture modal lifecycle action.
-   */
-  function refreshFurnitureModal() {
-    const manager = document.querySelector('#modal-root .warehouse-furniture-manager');
-    if (!manager) return;
-    const found = findFurniture(w(), manager.dataset.furnitureId);
-    if (!found) return;
-    modal.updateContent(
-      renderTemplate('warehouseFurnitureManager2', {
-        furnitureId: safe(found.furniture.id),
-        shelfPanel: shelfPanel(w(), found.room, found.furniture, {managementOnly: true}),
-      }));
-    attachBottlePhotos();
-  }
-
-  /**
-   * Serializes upload furniture photos data to JSON.
-   *
-   * @param {*} id Identifier of the affected record.
-   * @param {*} files Value used by this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
-   */
-  async function uploadFurniturePhotos(id, files) {
-    if (!files.length) return;
-    try {
-      for (const file of files) await request(
-        `/api/warehouse/furniture/${encodeURIComponent(id)}/photos`,
-        {
-          method: 'POST', body: JSON.stringify({image: await imageData(file)}),
-        }
-      );
-      await refresh(); refreshFurnitureModal();
-    } catch (error) {
-      toast(error.message, true); await refresh();
-      refreshFurnitureModal();
-    }
-  }
-
-  /**
-   * Serializes move furniture photo data to JSON.
-   *
-   * @param {*} id Identifier of the affected record.
-   * @param {*} photoId Value used by this operation.
-   * @param {*} direction Direction used for traversal or movement.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
-   */
-  async function moveFurniturePhoto(id, photoId, direction) {
-    const found = findFurniture(w(), id); if (!found) return;
-    const order = (found.furniture.photos || []).map(photo => photo.id);
-    const index = order.indexOf(photoId), target = index + Number(direction);
-    if (index < 0 || target < 0 || target >= order.length) return;
-    [order[index], order[target]] = [order[target], order[index]];
-    try {
-      await request(
-        `/api/warehouse/furniture/${encodeURIComponent(id)}/photos/order`,
-        {
-          method: 'PUT', body: JSON.stringify({photoIds: order}),
-        }
-      );
-      await refresh(); refreshFurnitureModal();
-    } catch (error) {toast(error.message, true);}
-  }
-
-  /**
-   * Performs the open furniture photo lifecycle action.
-   *
-   * @param {*} path Path to the target resource.
-   * @param {*} title Title displayed or stored by this operation.
-   */
-  function openFurniturePhoto(path, title) {
-    if (!/^images\/[\w-]+\/furniture-[\w-]+\.(?:jpg|png|webp|gif)$/.test(path)) return;
-    modal.showModal(
-      title,
-      renderTemplate('warehousePhotoLightbox', {
-        src: safe(path),
-        alt: safe(title),
-      }),
-      true
-    );
-  }
-
-  /**
-   * Removes or resets furniture photo.
-   *
-   * @param {*} id Identifier of the affected record.
-   * @param {*} photoId Value used by this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
-   */
-  async function deleteFurniturePhoto(id, photoId) {
-    if (!await modal.confirm(t('warehouse.photos.remove'), t('warehouse.photos.removeConfirm'), t('common.actions.remove'))) return;
-    try {
-      await request(
-        `/api/warehouse/furniture/${encodeURIComponent(id)}/photos/${encodeURIComponent(photoId)}`,
-        {method: 'DELETE'}
-      );
-      await refresh(); refreshFurnitureModal();
-    } catch (error) {toast(error.message, true);}
-  }
-
-  /**
-   * Builds the localized approve capacity increase text for the current
-   * language.
-   *
-   * @param {*} ids Identifiers in their current order.
-   * @param {*} shelfId Value used by this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
-   */
-  const approveCapacityIncrease = (ids, shelfId) =>
-    approveShelfCapacityIncrease(
-      w(),
-      shelfId,
-      ids,
-      message => modal.confirm(
-        t('warehouse.assignment.increaseCapacityTitle'),
-        message,
-        t('warehouse.assignment.increaseCapacityAction')
-      )
-    );
-
-  /**
-   * Performs the submit lifecycle action.
-   *
-   * @param {!Event} event Event that triggered this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
-   */
-  async function submit(event) {
-    event.preventDefault();
-    const form = event.target;
-    if (form.dataset.bulk === 'true') {
-      const changes = {};
-      for (const key of ['rotation', 'elevation', 'itemHeight', 'width',
-        'depth']) {
-        const value = form.elements.namedItem(key)?.value;
-        if (value !== undefined && value !== '') changes[key] = Number(value);
-      }
-      for (const key of ['doorLeaves', 'glassFrame']) {
-        const value = form.elements.namedItem(key)?.value;
-        if (value === 'default') changes[key] = null;
-        else if (value !== undefined && value !== '') changes[key] = key === 'doorLeaves' ? Number(value) : value === 'true';
-      }
-      for (const key of ['leftSidePanel', 'rightSidePanel', 'backPanel']) {
-        const value = form.elements.namedItem(key)?.value;
-        if (value === 'true' || value === 'false') changes[key] = value === 'true';
-      }
-      if (!Object.keys(changes).length) return toast(t("warehouse.validation.atLeastOneField"), true);
-      const ids = selectedFurniture(currentRoom());
-      if (!ids.length) return toast(t("warehouse.selection.noFurniture"), true);
-      try {
-        const result = await request('/api/warehouse/furniture/bulk', {method: 'PATCH', body: JSON.stringify({ids, changes})});
-        modal.closeModal();
-        await refresh();
-        toast(t("warehouse.bulk.editedSuccess", {count: result.count}));
-      } catch (err) {toast(err.message, true);}
-      return;
-    }
-    let data = Object.fromEntries(new FormData(form).entries());
-    if (form.classList.contains('warehouse-assignment-form')) {
-      try {
-        const ids = form.dataset.bottleBulk === 'true' ? selectedBottleIds() :
-          [decodeURIComponent(form.dataset.endpoint.split('/').at(-1))];
-        data = form.dataset.bottleBulk === 'true'
-          ? bulkAssignmentPayload(
-            ids,
-            data.warehouseAssignmentMode,
-            form.querySelector('[data-assignment-shelf]')?.value,
-            w()
-          )
-          : assignmentPayload(data.warehouseAssignmentMode, form.querySelector('[data-assignment-shelf]')?.value, w());
-        const approval = await approveCapacityIncrease(ids, data.shelfId);
-        if (approval === null) return; // User declined; keep the form and selections.
-        Object.assign(data, approval);
-      } catch (error) {toast(error.message, true); return;}
-    }
-    for (const key of [
-      'width',
-      'height',
-      'depth',
-      'x',
-      'y',
-      'rotation',
-      'elevation',
-      'itemHeight',
-    ]) if (key in data) data[key] = Number(data[key]);
-    if (form.dataset.newFurniture === 'true' ||
-      ['leftSidePanel', 'rightSidePanel', 'backPanel'].some(key => form.elements.namedItem(key))) {
-      for (const key of ['leftSidePanel', 'rightSidePanel', 'backPanel']) if (
-        form.elements.namedItem(key)) data[key] = form.elements.namedItem(key).checked;
-    }
-    if (form.elements.namedItem('doorLeaves')) data.doorLeaves = data.doorLeaves === '' ? null : Number(data.doorLeaves);
-    if (form.elements.namedItem('glassFrame')) data.glassFrame = data.glassFrame === '' ? null : data.glassFrame === 'true';
-    if (form.querySelector('.warehouse-door-ranges')) {
-      data.doorRanges = [...form.querySelectorAll('.warehouse-door-range')].map(row => ({
-        from: Number(row.querySelector('.door-range-from').value),
-        to: Number(row.querySelector('.door-range-to').value),
-        front: row.querySelector('.door-range-front').value,
-        doorLeaves: row.querySelector('.door-range-leaves').value === '' ? null : Number(row.querySelector('.door-range-leaves').value),
-        glassFrame: row.querySelector('.door-range-frame').value === '' ?
-          null : row.querySelector('.door-range-frame').value === 'true',
-      }));
-    }
-    if ('capacity' in data) data.capacity = data.capacity === '' ? null : Number(data.capacity);
-    if ('heightCm' in data) data.heightCm = data.heightCm === '' ? null : Number(data.heightCm);
-    if ('front' in data) data.front = data.front || null;
-    if ('shelfId' in data) data.shelfId = data.shelfId || null;
-    if (form.querySelector('[name="withShelves"]')) data.withShelves = form.querySelector('[name="withShelves"]').checked;
-    try {
-      const result = await request(form.dataset.endpoint, {method: form.dataset.method, body: JSON.stringify(data)});
-      if (form.dataset.newFurniture === 'true' && result?.id) {
-        // Keep the current room-plan tab and select the newly placed unit.
-        // Its shelf manager can then be opened from the plan without routing.
-        state.warehouseFurnitureId = result.id;
-      }
-      if (form.dataset.endpoint.endsWith('/copy')) {
-        const copiedFurniture = form.querySelector('[name="withShelves"]');
-        if (copiedFurniture) {
-          state.warehouseRoomId = data.roomId;
-          state.warehouseFurnitureId = result.id;
-        } else {
-          for (const room of w().rooms) for (const furniture of room.furniture) if (furniture.id === data.furnitureId) {
-            state.warehouseRoomId = room.id;
-            state.warehouseFurnitureId = furniture.id;
-          }
-        }
-      }
-      modal.closeModal();
-      if (form.dataset.bottleBulk === 'true') state.warehouseSelectedBottleIds = [];
-      await refresh();
-      refreshFurnitureModal(); // refresh a suspended furniture manager after shelf capacity edits
-      toast(form.dataset.endpoint.endsWith('/copy') ?
-        t("warehouse.furniture.copiedWithoutAssignments") :
-        t("warehouse.storage.saved"));
-      return true;
-    }
-    catch (err) {toast(err.message, true);}
-  }
-
-  /**
-   * Serializes relocate bottle data to JSON.
-   *
-   * @param {*} bottleId Value used by this operation.
-   * @param {*} shelfId Value used by this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
-   */
-  async function relocateBottle(bottleId, shelfId) {
-    const ids = Array.isArray(bottleId) ? bottleId : [bottleId];
-    let approval;
-    try {approval = await approveCapacityIncrease(ids, shelfId);}
-    catch (error) {toast(error.message, true); return;}
-    if (approval === null) return; // Capacity stays unchanged when cancelled.
-    // This action rebuilds the warehouse page after the API responds.
-    // Remember the exact viewport before waiting for the server.
-    rememberWallScroll();
-    const previousPageY = typeof window !== 'undefined' && Number.isFinite(window.scrollY) ? window.scrollY : null;
-    try {
-      if (Array.isArray(bottleId) && bottleId.length > 1) {
-        await request('/api/warehouse/bottles/bulk', {
-          method: 'POST',
-          body: JSON.stringify({
-            ...bulkAssignmentPayload(bottleId, 'shelf', shelfId, w()),
-            ...approval,
-          }),
-        });
-        state.warehouseSelectedBottleIds = [];
-      } else {
-        const id = Array.isArray(bottleId) ? bottleId[0] : bottleId;
-        await request(`/api/warehouse/bottles/${encodeURIComponent(id)}`, {
-          method: 'PUT', body: JSON.stringify({shelfId, ...approval}),
-        });
-      }
-      await refresh();
-      if (previousPageY !== null && typeof window.scrollTo === 'function') {
-        window.scrollTo({top: previousPageY, left: 0, behavior: 'instant'});
-      }
-      toast(t('warehouse.shelves.dragSuccess'));
-    } catch (error) {
-      toast(error.message, true);
-      render();
-    }
-  }
-
-  /**
-   * Serializes move shelf data to JSON.
-   *
-   * @param {*} id Identifier of the affected record.
-   * @param {*} direction Direction used for traversal or movement.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
-   */
-  async function moveShelf(id, direction) {
-    try {
-      await request(
-        `/api/warehouse/shelves/${encodeURIComponent(id)}/move`,
-        {method: 'PATCH', body: JSON.stringify({direction})}
-      );
-      await refresh();
-    } catch (error) {toast(error.message, true);}
-  }
-
-  /**
-   * Transforms the entries used by ask bulk delete.
-      * @return {*} Result of this expression.
-*/
-  function askBulkDelete() {
-    const room = currentRoom();
-    const ids = selectedFurniture(room);
-    if (!ids.length) return toast(t("warehouse.selection.noFurniture"), true);
-    pendingDelete = {ids};
-    modal.showModal(
-      t("warehouse.bulk.deleteTitle", {count: ids.length}),
-      renderTemplate('askBulkDeleteP', {
-        deleteConfirmation: t("warehouse.bulk.deleteConfirmation", {count: ids.length}),
-        ids: ids.map(id => room.furniture.find(f => f.id === id)?.name).map(safe).join(', '),
-        destructiveFooter: destructiveFooter({
-          cancelLabel: t("common.actions.cancel"),
-          acceptLabel: t("warehouse.bulk.deleteAction", {count: ids.length}),
-          acceptAction: 'warehouse-confirm-delete',
-          className: 'warehouse-form-actions',
-        }),
-      })
-    );
-  }
-
-  /**
-   * Selects and transforms the ask delete records.
-   *
-   * @param {*} kind Value used by this operation.
-   * @param {*} id Identifier of the affected record.
-   */
-  function askDelete(kind, id) {
-    const endpoints = {
-      room: `/api/warehouse/rooms/${id}`,
-      furniture: `/api/warehouse/furniture/${id}`,
-      shelf: `/api/warehouse/shelves/${id}`,
-    };
-    pendingDelete = endpoints[kind];
-    if (kind === 'room') {
-      const room = w().rooms.find(entry => entry.id === id);
-      if (!room) return;
-      const shelfIds = new Set(room.furniture.flatMap(furniture => furniture.shelves.map(shelf => shelf.id)));
-      const occupied = Object.values(w().assignments || {}).filter(shelfId => shelfIds.has(shelfId)).length;
-      if (occupied) {
-        modal.showModal(
-          t('warehouse.rooms.deleteOccupiedTitle'),
-          renderTemplate('askDeleteP', {
-            deleteOccupiedMessage: tHtml('warehouse.rooms.deleteOccupiedMessage', {name: room.name, count: occupied}),
-            destructiveFooter: destructiveFooter({
-              cancelLabel: t('common.actions.cancel'),
-              acceptLabel: t('warehouse.rooms.unassignAndDelete'),
-              acceptAction: 'warehouse-confirm-delete-unassign',
-              className: 'warehouse-form-actions',
-            }),
-          })
-        );
-        return;
-      }
-      modal.showModal(
-        t('warehouse.rooms.delete'),
-        renderTemplate('askDeleteP2', {
-          deleteEmptyMessage: tHtml('warehouse.rooms.deleteEmptyMessage', {name: room.name}),
-          destructiveFooter: destructiveFooter({
-            cancelLabel: t('common.actions.cancel'),
-            acceptLabel: t('common.actions.remove'),
-            acceptAction: 'warehouse-confirm-delete',
-            className: 'warehouse-form-actions',
-          }),
-        })
-      );
-      return;
-    }
-    modal.showModal(
-      t("warehouse.bottles.removeStorageLocation"),
-      renderTemplate('askDeleteP3', {
-        destructiveFooter: destructiveFooter({
-          cancelLabel: t("common.actions.cancel"),
-          acceptLabel: t("common.actions.remove"),
-          acceptAction: 'warehouse-confirm-delete',
-          className: 'warehouse-form-actions',
-        }),
-      })
-    );
-  }
-
-  /**
-   * Clears confirmed for warehouse.
-   *
-   * @param {boolean=} unassignBottles Unassign bottles used by this operation.
-   */
-  async function deleteConfirmed(unassignBottles = false) {
-    if (!pendingDelete) return;
-    const target = pendingDelete;
-    const bulk = typeof target === 'object';
-    const endpoint = unassignBottles && !bulk && target.startsWith('/api/warehouse/rooms/') ? `${target}?unassignBottles=true` : target;
-    try {
-      await request(
-        bulk ? '/api/warehouse/furniture/bulk/delete' : endpoint,
-        {
-          method: bulk ? 'POST' : 'DELETE',
-          ...(bulk ? {body: JSON.stringify(target)} : {}),
-        }
-      );
-      pendingDelete = null;
-      modal.closeModal(); state.warehouseFurnitureId = null;
-      if (bulk) state.warehouseSelectedFurnitureIds = [];
-      await refresh(); toast(bulk ?
-        t("warehouse.bulk.deletedSuccess", {count: target.ids.length}) :
-        t("warehouse.bottles.storageLocationRemoved"));
-    } catch (err) {toast(err.message, true);}
   }
 
   /**

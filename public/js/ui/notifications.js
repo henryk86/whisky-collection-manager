@@ -10,9 +10,10 @@ const renderTemplate = await loadTemplates('components/notifications.html');
  * Shows a transient status notification in the application shell.
  *
  * @param {*} message Message used by this operation.
- * @param {boolean=} error Error being handled.
+ * @param {boolean=} error Whether the notification reports an error.
+ * @param {function(!Element, *): void=} mountContent Content mount boundary.
  */
-export function toast(message, error = false) {
+export function toast(message, error = false, mountContent = replaceContent) {
   query('.toast')?.remove();
   const el = document.createElement('div');
   el.className = 'toast' + (error ? ' error' : '');
@@ -28,7 +29,7 @@ export function toast(message, error = false) {
     close.className = 'toast-close';
     close.setAttribute('aria-label', t('common.actions.close'));
     close.title = t('common.actions.close');
-    replaceContent(close, renderTemplate('toastSvg'));
+    mountContent(close, renderTemplate('toastSvg'));
     close.addEventListener('click', () => el.remove());
     el.append(close);
   } else {

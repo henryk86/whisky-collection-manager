@@ -10,7 +10,7 @@
 <div class="panel section">{{content:headingTitle}}<label class="form-field" for="ui-language">{{t:settings.language.choose}}<select id="ui-language" aria-label="{{t:settings.language.label}}">{{content:entries}}</select></label>
 </div>
 <form id="collection-settings-form" class="panel section collection-settings">
-  {{content:headingTitle2}}
+  {{content:collectionHeading}}
   <label class="form-field" for="established-year">{{t:settings.collection.foundingYearLabel}}
     <input
       type="number"
@@ -69,7 +69,7 @@
       class="distillery-count"
       id="distillery-count"
       role="status"
-      aria-live="polite">{{content:length}} von {{content:length2}}</span>
+      aria-live="polite">{{content:length}} von {{content:distilleryCount}}</span>
     {{content:addDistilleryButton}}
   </div>
   <div class="distillery-list" role="list" aria-label="{{t:backups.summary.distilleriesLabel}}">{{content:sort}}<p class="distillery-no-results" {{attrs:hiddenAttributes}}>{{t:settings.distilleries.noMatches}}</p>

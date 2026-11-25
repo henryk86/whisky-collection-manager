@@ -15,7 +15,7 @@
     type="button"
     class="btn small primary warehouse-bottles-assign-selected"
     data-act="warehouse-bottles-assign-selected"
-    {{attrs:total2}}>{{t:warehouse.bottles.bulkAssignAction}}</button>
+    {{attrs:assignDisabled}}>{{t:warehouse.bottles.bulkAssignAction}}</button>
 </div>
 <!-- /wcm-template -->
 
@@ -46,7 +46,7 @@
   data-act="warehouse-select-furniture"
   data-id="{{attr:id}}"
   aria-label="{{attr:name}}"
-  {{attrs:ariaCurrentAttributes}}><strong>{{content:name2}}</strong><small>{{content:summary}}</small></button>
+  {{attrs:ariaCurrentAttributes}}><strong>{{content:furnitureName}}</strong><small>{{content:summary}}</small></button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseToggleFurniture -->
@@ -67,7 +67,7 @@
   data-id="{{attr:id}}"
   aria-pressed="{{attr:visible}}"
   title="{{attr:title}}"
-  aria-label="{{attr:ariaLabel}}">{{content:visible2}}</button>
+  aria-label="{{attr:ariaLabel}}">{{content:visibilityIcon}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseBulkItem -->
@@ -83,11 +83,11 @@
     type="button"
     class="btn small danger warehouse-bulk-delete-btn"
     data-act="warehouse-bulk-delete"
-    {{attrs:size2}}>{{content:deleteAction}}</button><button
+    {{attrs:clearDisabled}}>{{content:deleteAction}}</button><button
     type="button"
     class="btn small primary warehouse-bulk-edit-btn"
     data-act="warehouse-bulk-edit"
-    {{attrs:size3}}>{{content:editAction}}</button>
+    {{attrs:manageDisabled}}>{{content:editAction}}</button>
 </div>
 <!-- /wcm-template -->
 
@@ -95,7 +95,7 @@
 <section class="warehouse-bulk-panel{{attr:compact}}" aria-label="{{attr:layoutOnly}}">
   <div class="warehouse-bulk-head"><strong>{{t:warehouse.furniture.plural}}</strong>{{content:span}}{{content:warehouseShowAll}}</div>
   <div class="warehouse-bulk-list">{{content:furniture}}</div>
-  {{content:layoutOnly2}}
+  {{content:selectionControls}}
 </section>
 <!-- /wcm-template -->
 
@@ -147,7 +147,7 @@
   <div class="warehouse-room-identity">
     <h3 data-i18n-ignore>{{content:name}}</h3><span>{{content:gridDimensions}}</span>
   </div>
-  <div class="warehouse-room-metrics"><span>{{t:warehouse.capacity.label}} <strong>{{content:capacityLabel}}</strong></span><span>{{t:warehouse.occupancy.label}} <strong>{{content:occupied}} {{content:occupied2}}</strong></span>
+  <div class="warehouse-room-metrics"><span>{{t:warehouse.capacity.label}} <strong>{{content:capacityLabel}}</strong></span><span>{{t:warehouse.occupancy.label}} <strong>{{content:occupied}} {{content:bottleUnit}}</strong></span>
   </div>
 </header>
 <!-- /wcm-template -->
@@ -163,8 +163,8 @@
     type="button"
     data-act="warehouse-plan-mode"
     data-mode="3d"
-    class="btn small{{attr:planMode3}}"
-    aria-pressed="{{attr:planMode4}}">{{t:warehouse.view.threeDimensional}}</button>
+    class="btn small{{attr:threeDimensionalClass}}"
+    aria-pressed="{{attr:threeDimensionalPressed}}">{{t:warehouse.view.threeDimensional}}</button>
 </fieldset>
 <!-- /wcm-template -->
 
@@ -173,7 +173,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:planFilterOption -->
-<option value="{{attr:z}}" {{attrs:selectedAttributes}}>{{content:z2}} %</option>
+<option value="{{attr:z}}" {{attrs:selectedAttributes}}>{{content:zoomLabel}} %</option>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehousePlanFilter2 -->
@@ -190,7 +190,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseCameraToolbar -->
-<div class="warehouse-camera-toolbar" role="group" aria-label="{{t:warehouse.view.cameraAngle}}">{{content:wAREHOUSECAMERAS}}</div>
+<div class="warehouse-camera-toolbar" role="group" aria-label="{{t:warehouse.view.cameraAngle}}">{{content:cameraButtons}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseFurnitureNew -->
@@ -211,7 +211,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehousePlanFocusInfo -->
-<div class="warehouse-plan-focus-info"><strong>{{content:name}}</strong><span>{{content:furnitureType}} · X: {{content:num}} m · Y: {{content:num2}} m · {{t:warehouse.fields.bottomElevationMeters}}: {{content:num3}} m</span>
+<div class="warehouse-plan-focus-info"><strong>{{content:name}}</strong><span>{{content:furnitureType}} · X: {{content:num}} m · Y: {{content:positionY}} m · {{t:warehouse.fields.bottomElevationMeters}}: {{content:bottomElevation}} m</span>
 </div>
 <!-- /wcm-template -->
 
@@ -291,10 +291,10 @@
 <!-- wcm-template:warehouseDoorRange -->
 <div class="warehouse-door-range">
   <label class="form-field">{{t:warehouse.shelves.rangeBottom}}<select class="door-range-from">{{content:opts}}</select></label>
-  <label class="form-field">{{t:warehouse.range.endTop}}<select class="door-range-to">{{content:opts2}}</select></label>
-  <label class="form-field">{{t:warehouse.shelves.doorLabel}}<select class="door-range-front"><option value="door" {{attrs:glassAttributes}}>{{t:warehouse.front.woodDoorLabel}}</option><option value="glass" {{attrs:selected2}}>{{t:warehouse.front.glassDoorLabel}}</option></select></label>
-  <label class="form-field">{{t:warehouse.shelves.doorLeaves}}<select class="door-range-leaves"><option value="" {{attrs:selectedAttributes}}>{{t:warehouse.fields.furnitureDefault}}</option><option value="1" {{attrs:selected4}}>1</option><option value="2" {{attrs:selected5}}>2</option></select></label>
-  <label class="form-field">{{t:warehouse.walls.glassFrame}}<select class="door-range-frame"><option value="" {{attrs:selected6}}>{{t:warehouse.fields.furnitureDefault}}</option><option value="true" {{attrs:selected7}}>{{t:warehouse.walls.withFrame}}</option><option value="false" {{attrs:selected8}}>{{t:warehouse.walls.withoutFrame}}</option></select></label>
+  <label class="form-field">{{t:warehouse.range.endTop}}<select class="door-range-to">{{content:endShelfOptions}}</select></label>
+  <label class="form-field">{{t:warehouse.shelves.doorLabel}}<select class="door-range-front"><option value="door" {{attrs:glassAttributes}}>{{t:warehouse.front.woodDoorLabel}}</option><option value="glass" {{attrs:glassSelected}}>{{t:warehouse.front.glassDoorLabel}}</option></select></label>
+  <label class="form-field">{{t:warehouse.shelves.doorLeaves}}<select class="door-range-leaves"><option value="" {{attrs:selectedAttributes}}>{{t:warehouse.fields.furnitureDefault}}</option><option value="1" {{attrs:singleLeafSelected}}>1</option><option value="2" {{attrs:doubleLeafSelected}}>2</option></select></label>
+  <label class="form-field">{{t:warehouse.walls.glassFrame}}<select class="door-range-frame"><option value="" {{attrs:defaultFrameSelected}}>{{t:warehouse.fields.furnitureDefault}}</option><option value="true" {{attrs:withFrameSelected}}>{{t:warehouse.walls.withFrame}}</option><option value="false" {{attrs:withoutFrameSelected}}>{{t:warehouse.walls.withoutFrame}}</option></select></label>
   <button type="button" class="btn small danger warehouse-door-range-remove">{{t:common.actions.remove}}</button>
 </div>
 <!-- /wcm-template -->
@@ -370,7 +370,7 @@
     class="btn small"
     data-act="warehouse-shelf-switch"
     data-target="{{attr:nextShelfId}}"
-    {{attrs:disabled2}}><span>{{t:warehouse.shelves.next}}</span>{{content:arrowRightIcon}}</button>
+    {{attrs:nextDisabled}}><span>{{t:warehouse.shelves.next}}</span>{{content:arrowRightIcon}}</button>
 </nav>
 <!-- /wcm-template -->
 

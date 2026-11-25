@@ -57,7 +57,7 @@ export function renderWarehouseFinderResults({items, total, page, pages}) {
       ariaLabel: safe(t('warehouse.find.pagination')),
       disabledAttributes: page <= 1 ? {"disabled": true} : {},
       page: safe(t('warehouse.find.page', {page, pages})),
-      disabled2: page >= pages ? {"disabled": true} : {},
+      nextDisabled: page >= pages ? {"disabled": true} : {},
     }) : '';
   return renderTemplate('renderWarehouseFinderResults', {
     count: count,

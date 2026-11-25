@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, captureContent} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -52,6 +52,7 @@ test(
     try {
       const state = {modal: null}; const modal =
         createModal({
+          mountContent: captureContent,
           state,
           /**
            * Handles the close interaction.

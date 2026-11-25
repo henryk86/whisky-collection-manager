@@ -11,17 +11,17 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:glencairnLiquid -->
-<path class="glencairn-liquid" d="{{attr:gLENCAIRNCAVITY}}" style="fill:{{attr:liquidColor}}"/>
+<path class="glencairn-liquid" d="{{attr:cavityPath}}" style="fill:{{attr:liquidColor}}"/>
 <!-- /wcm-template -->
 
 <!-- wcm-template:glencairnInk -->
-<path class="glencairn-ink" d="{{attr:gLENCAIRNINK}}" fill-rule="evenodd"/>
+<path class="glencairn-ink" d="{{attr:glassOutlinePath}}" fill-rule="evenodd"/>
 <!-- /wcm-template -->
 
 <!-- wcm-template:glencairnGold -->
 <path
   class="glencairn-gold"
-  d="{{attr:gLENCAIRNINK}}"
+  d="{{attr:glassOutlinePath}}"
   fill-rule="evenodd"
   clip-path="url(#{{attr:id}})"
   style="fill:{{attr:color}}"/>
@@ -33,7 +33,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:defs2 -->
-<defs><clipPath id="{{attr:id}}"><path d="{{attr:gLENCAIRNCAVITY}}"/></clipPath></defs>
+<defs><clipPath id="{{attr:id}}"><path d="{{attr:cavityPath}}"/></clipPath></defs>
 <!-- /wcm-template -->
 
 <!-- wcm-template:glencairnRatingFill -->
@@ -48,5 +48,5 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:glencairnRatingOutline -->
-<path class="glencairn-rating-outline" d="{{attr:gLENCAIRNINK}}" fill-rule="evenodd"/>
+<path class="glencairn-rating-outline" d="{{attr:glassOutlinePath}}" fill-rule="evenodd"/>
 <!-- /wcm-template -->

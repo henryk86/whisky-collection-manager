@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, captureContent, captureAppend} from '../helpers/rendering.js';
 import {createBottleForm} from '../../public/js/features/forms/bottle.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -118,6 +118,7 @@ test(
     globalThis.setTimeout = () => 0;
     try {
       const controller = createExternalImport({
+        mountContent: captureContent, mountAppend: captureAppend,
         state, sourceName: 'Local Catalog',
         /**
          * Validates payload against its constraints.

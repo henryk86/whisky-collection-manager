@@ -3,7 +3,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanHelpFormula -->
-<pre class="flight-plan-help-formula"><code>{{text:fORMULAS}}</code></pre>
+<pre class="flight-plan-help-formula"><code>{{text:formula}}</code></pre>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flightPlanHelpDefinition -->
@@ -14,7 +14,7 @@
 <!-- wcm-template:flightPlanHelpStrategy -->
 <section class="flight-plan-help-strategy">
   <h4>{{content:tx}}</h4>
-  {{content:p}}{{content:formula}}{{content:p2}}
+  {{content:p}}{{content:formula}}{{content:strategyDetails}}
 </section>
 <!-- /wcm-template -->
 
@@ -27,43 +27,43 @@
   {{content:p}}
   <section class="flight-plan-help-section">
     {{content:heading}}
-    {{content:p2}}{{content:p3}}{{content:p4}}
+    {{content:candidatesIntro}}{{content:profileDataIntro}}{{content:familiesIntro}}
   </section>
   <section class="flight-plan-help-section">
-    {{content:heading2}}
-    <h4>{{content:tx}}</h4>{{content:formula}}{{content:p5}}{{content:p6}}
-    <h4>{{content:tx2}}</h4>{{content:formula2}}{{content:p7}}
-    <h4>{{content:tx3}}</h4>{{content:formula3}}{{content:p8}}
-    <h4>{{content:tx4}}</h4>{{content:formula4}}{{content:p9}}
-    <h4>{{content:tx5}}</h4>
+    {{content:basicsHeading}}
+    <h4>{{content:tx}}</h4>{{content:formula}}{{content:distanceDetails}}{{content:distanceExample}}
+    <h4>{{content:intensityLabel}}</h4>{{content:intensityFormula}}{{content:intensityDetails}}
+    <h4>{{content:noveltyLabel}}</h4>{{content:noveltyFormula}}{{content:noveltyDetails}}
+    <h4>{{content:unfamiliarLabel}}</h4>{{content:unfamiliarFormula}}{{content:unfamiliarDetails}}
+    <h4>{{content:variablesLabel}}</h4>
     <dl class="flight-plan-help-definitions">{{content:content}}</dl>
   </section>
   <section class="flight-plan-help-section">
-    {{content:heading3}}
-    {{content:p10}}
-    <h4>{{content:tx6}}</h4>
-    <p>{{content:cASKGROUPS}}</p>
-    {{content:p11}}{{content:p12}}
-    {{content:p13}}
-    <h4>{{content:tx7}}</h4>{{content:formula5}}{{content:formula6}}
-    <h4>{{content:tx8}}</h4>{{content:formula7}}
-    <h4>{{content:tx9}}</h4>{{content:formula8}}
-            {{content:p14}}
+    {{content:caskAgeHeading}}
+    {{content:classificationIntro}}
+    <h4>{{content:groupsLabel}}</h4>
+    <p>{{content:caskGroupLabels}}</p>
+    {{content:selectionIntro}}{{content:examples}}
+    {{content:coverage}}
+    <h4>{{content:distanceLabel}}</h4>{{content:caskFormula}}{{content:ageFormula}}
+    <h4>{{content:combinedLabel}}</h4>{{content:combinedFormula}}
+    <h4>{{content:preferencesLabel}}</h4>{{content:preferencesFormula}}
+            {{content:missingDataNote}}
   </section>
   <section class="flight-plan-help-section">
-    {{content:heading4}}
-    {{content:p15}}
-    {{content:content2}}
+    {{content:strategiesHeading}}
+    {{content:strategiesIntro}}
+    {{content:strategyCards}}
   </section>
   <section class="flight-plan-help-section">
-    {{content:heading5}}
-    <ol class="flight-plan-help-steps">{{content:content3}}</ol>
+    {{content:searchHeading}}
+    <ol class="flight-plan-help-steps">{{content:searchSteps}}</ol>
   </section>
   <section class="flight-plan-help-section">
-    {{content:heading6}}{{content:p16}}{{content:formula9}}{{content:formula10}}{{content:p17}}
+    {{content:sequenceHeading}}{{content:sequenceIntro}}{{content:transitionFormula}}{{content:orderFormula}}{{content:sequenceDetails}}
   </section>
   <section class="flight-plan-help-section">
-    {{content:heading7}}{{content:p18}}{{content:p19}}
+    {{content:limitsHeading}}{{content:limitsIntro}}{{content:limitationsDetails}}
   </section>
   <div class="actions">{{content:closeModalButton}}</div>
 </div>

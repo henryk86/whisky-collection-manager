@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, captureContent} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -654,6 +654,7 @@ test(
         warehouseSelectedFurnitureIds: ['wall'],
       };
       const view = createWarehouseView({
+        mountContent: captureContent,
         state,
         /**
          * Updates the shell state for its caller.

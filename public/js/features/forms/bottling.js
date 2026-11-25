@@ -136,7 +136,7 @@ export function createBottlingForm({state, selectors}) {
         bottling.completionStatus || 'incomplete'
       ),
       descriptionField: areaInput(t("forms.bottling.comment"), 'description', bottling.description),
-      id2: bottling.id ? '' : renderTemplate('divider', {
+      firstInventoryFields: bottling.id ? '' : renderTemplate('divider', {
         firstInventoryNumberField: textInput(
           t("forms.bottle.inventoryNumberOptional"),
           'firstInventoryNumber',

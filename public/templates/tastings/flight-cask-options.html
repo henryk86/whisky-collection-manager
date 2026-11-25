@@ -1,5 +1,5 @@
 <!-- wcm-template:flightPlanCaskDimension -->
-<div class="flight-plan-cask-dimension" role="group" aria-label="{{attr:title}}"><span>{{content:title2}}</span>
+<div class="flight-plan-cask-dimension" role="group" aria-label="{{attr:title}}"><span>{{content:dimensionTitle}}</span>
   <div class="flight-plan-cask-choices">{{content:fields}}</div>
 </div>
 <!-- /wcm-template -->
@@ -26,7 +26,7 @@
     role="group"
     aria-label="{{attr:label}}"
     aria-describedby="flight-plan-cask-hint">
-    <div class="flight-plan-cask-heading"><span>{{content:label2}}</span>{{content:reset}}</div>
+    <div class="flight-plan-cask-heading"><span>{{content:filterLabel}}</span>{{content:reset}}</div>
     <span class="ds-field-description" id="flight-plan-cask-hint">{{content:hint}}</span>
     <div class="flight-plan-cask-choices">{{content:groups}}</div>
   </div>
@@ -39,8 +39,8 @@
     </label>
   </div>
   <div class="flight-plan-cask-selection" aria-live="polite">
-    <span class="flight-plan-cask-caption">{{text:t2}}</span>
-    <span data-flight-plan-cask-selection>{{text:t3}}</span>
+    <span class="flight-plan-cask-caption">{{text:selectionLabel}}</span>
+    <span data-flight-plan-cask-selection>{{text:allGroupsLabel}}</span>
   </div>
 </div>
 <!-- /wcm-template -->

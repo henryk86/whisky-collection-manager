@@ -2,13 +2,13 @@
 
 ## Schnellstart
 
-Node.js ≥ 20. `npm start` startet den Setup-/Starthelfer; `npm run dev` startet den Node-Server im Watch-Modus. Für Browser-Tests zusätzlich Chromium installieren:
+Node.js ≥ 20. `npm start` startet den Setup-/Starthelfer; `npm run dev` startet den Node-Server im Watch-Modus. Für UI-Assertions in Unit-Tests und Browser-Tests Chromium installieren:
 
 ```bash
 npm ci
 npm run check
-npm test
 npx playwright-core install --with-deps chromium
+npm test
 npm run test:browser
 npm run test:visual
 ```
@@ -75,7 +75,7 @@ Der statische `npm run check` prüft Dokumentationslinks und ausgewählte Inkons
 ## Tests
 
 - `npm run check`: Syntax, Imports, Sprachdateien, Links, Deploymentregeln.
-- `npm test`: Unit- und Integrationstests (OpenSSL für einzelne TLS-Tests).
+- `npm test`: Unit- und Integrationstests (Chromium für DOM-Assertions, OpenSSL für einzelne TLS-Tests).
 - `npm run test:browser`: Playwright/Chromium einschließlich echter History/Reload (nicht im DOM-only-Modus).
 - `npm run test:visual`: lokale Aufnahmen mit Überlauf- und Interaktionsprüfungen. PR-CI vergleicht Basis und Merge-Kandidat mit demselben Browser; Geometrie- und Pixeländerungen benötigen eine gezielte Freigabe. Details: [Visuelle Tests](DESIGNSYSTEM_VISUELLE_TESTS.md).
 - `npm run verify`: `npm run check && npm test`.

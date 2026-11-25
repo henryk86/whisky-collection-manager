@@ -49,7 +49,7 @@ export function panel({content = '', variant = 'standard', tag = 'div',
     className: safe(classes(baseClass, className)),
     variant: variant,
     content: content,
-    tag2: tag,
+    closingTag: tag,
   });
 }
 
@@ -82,13 +82,13 @@ export function detailField({
         labelTag,
         classAttributes: labelClass ? {"class": labelClass} : {},
         label: safe(label),
-        labelTag2: labelTag,
+        closingLabelTag: labelTag,
       }),
       renderTemplate('detailField2', {
         valueTag,
         classAttributes: valueClass ? {"class": valueClass} : {},
         valueContent,
-        valueTag2: valueTag,
+        closingValueTag: valueTag,
       })
     ),
   });
@@ -111,7 +111,7 @@ export function detailGrid(content, {columns = 3, tag = 'div', className =
     classAttributes: className ? {"class": className} : {},
     columns: columns,
     content: content,
-    tag2: tag,
+    closingTag: tag,
   });
 }
 

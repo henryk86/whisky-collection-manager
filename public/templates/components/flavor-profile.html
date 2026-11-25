@@ -3,7 +3,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorGrid -->
-<polygon class="flavor-grid" points="{{attr:fLAVORAXES}}"/>
+<polygon class="flavor-grid" points="{{attr:gridPoints}}"/>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorGrid2 -->
@@ -53,7 +53,7 @@
   name="flavor-{{attr:axis}}"
   data-flavor-range="{{attr:i}}"
   {{attrs:dataFlavorUnsetAttributes}}
-  aria-label="{{text:flavorAxisTitle}}"><output data-flavor-value="{{attr:flavorValue}}">{{content:missing3}}</output>
+  aria-label="{{text:flavorAxisTitle}}"><output data-flavor-value="{{attr:flavorValue}}">{{content:displayScore}}</output>
 <!-- /wcm-template -->
 
 <!-- wcm-template:strong -->
@@ -65,20 +65,20 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorSliders -->
-<div class="flavor-sliders">{{content:fLAVORAXES}}</div>
+<div class="flavor-sliders">{{content:axisSliders}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorEditor -->
 <div class="flavor-editor{{attr:editable}}{{attr:colorSection}}{{attr:compact}}" {{attrs:dataFlavorEditorAttributes}}>
-        {{content:colorSection2}}
+        {{content:colorControl}}
         <svg class="flavor-chart" viewBox="0 0 460 390" role="img" aria-label="{{text:chartLabel}}">
             {{content:content}}
-            {{content:fLAVORAXES}}
+            {{content:axisLines}}
             <polygon class="flavor-area" data-flavor-polygon points="{{attr:flavorPolygon}}"/>
             {{content:flavorHitTarget}}
-            {{content:fLAVORAXES2}}
-            {{content:fLAVORAXES3}}
+            {{content:scoreMarkers}}
+            {{content:axisLabels}}
         </svg>
-        {{content:compact2}}
+        {{content:sliderPanel}}
 </div>
 <!-- /wcm-template -->

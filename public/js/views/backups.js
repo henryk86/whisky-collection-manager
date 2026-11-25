@@ -88,20 +88,20 @@ export function renderBackupSection(state) {
     worker: worker,
     manual: manual(Boolean(dash.passwordConfigured)),
     passwordConfigured: dash.passwordConfigured ? 'muted' : 'warning',
-    passwordConfigured2: dash.passwordConfigured ? t("backups.password.encryptionEnabled") : t("backups.password.requiredBeforeBackup"),
+    encryptionStatus: dash.passwordConfigured ? t("backups.password.encryptionEnabled") : t("backups.password.requiredBeforeBackup"),
     formField: dash.passwordConfigured ? renderTemplate('formField') : '',
-    passwordConfigured3: dash.passwordConfigured ? t("backups.password.new") : t("backups.password.label"),
+    passwordFieldLabel: dash.passwordConfigured ? t("backups.password.new") : t("backups.password.label"),
     warning: dash.passwordConfigured ? renderTemplate('warning2') : '',
-    passwordConfigured4: dash.passwordConfigured ? t("backups.password.change") : t("backups.password.configure"),
+    passwordActionLabel: dash.passwordConfigured ? t("backups.password.change") : t("backups.password.configure"),
     length: targets.length ? t("backups.targets.preparedLocalTargets", {targets: targets.map(item => item.label).join(', ')}) : renderTemplate('renderBackupSection'),
     addActionLabel: addActionLabel(t("backups.targets.configure")),
-    warning2: !dash.worker?.online ? renderTemplate('warning3') : '',
-    length2: profiles.length ?
+    workerWarning: !dash.worker?.online ? renderTemplate('warning3') : '',
+    profileList: profiles.length ?
       composeMarkup(profileRows.map(({profile: p, legacy, snapshots, last}) => {
         return renderTemplate('backupProfile', {
           name: p.name,
           legacy: legacy ? '' : p.enabled ? 'online' : '',
-          legacy2: legacy ?
+          scheduleStatus: legacy ?
             t("backups.legacy.resticProfile") : p.enabled ? t("backups.schedule.enabled") : t("backups.schedule.manual"),
           content: ({
             local: t('backups.providers.local'),
@@ -127,13 +127,13 @@ export function renderBackupSection(state) {
               summary: last ? `${labelTime(last.startedAt)} (${last.state})` : t("backups.jobs.none"),
             }
           ),
-          legacy3: legacy ? '' : renderTemplate('backupRun', {id: p.id, }),
+          runAction: legacy ? '' : renderTemplate('backupRun', {id: p.id, }),
           id: p.id,
           backupRestore: legacy ? renderTemplate('backupRestore', {id: p.id, }) : renderTemplate('backupRestore2', {id: p.id, }),
-          id2: p.id,
-          id3: p.id,
-          id4: p.id,
-          id5: p.id,
+          restoreProfileId: p.id,
+          editProfileId: p.id,
+          deleteProfileId: p.id,
+          profileActionId: p.id,
           backupSnapshotList: snapshots.length ?
             renderTemplate('backupSnapshotList', {
               snapshots: composeMarkup(snapshots.map(s =>
@@ -151,10 +151,10 @@ export function renderBackupSection(state) {
             }) : renderTemplate('muted2'),
         });
       })) : renderTemplate('muted3'),
-    length3: jobs.length ? composeMarkup(jobs.map(j =>
+    jobList: jobs.length ? composeMarkup(jobs.map(j =>
       renderTemplate('backupJob', {
         state: j.state,
-        state2: j.state === 'success' ? successIcon : j.state === 'failed' ? warningIcon : moreIcon,
+        statusIcon: j.state === 'success' ? successIcon : j.state === 'failed' ? warningIcon : moreIcon,
         content: ({
           run: t('backups.jobs.run'),
           test: t('backups.jobs.test'),

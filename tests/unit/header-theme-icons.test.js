@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, captureContent} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {themeMoonIcon, themeSunIcon} from '../../public/js/ui/action-icons.js';
@@ -19,6 +19,7 @@ test(
     assert.notEqual(renderedText(themeMoonIcon), renderedText(themeSunIcon));
     const root = {innerHTML: ''};
     createShell({
+      mountContent: captureContent,
       root,
       state: {version: '0.8.5', modal: null},
       /**
@@ -98,7 +99,7 @@ test(
         querySelector: () =>
           button,
       };
-      const theme = createThemeController();
+      const theme = createThemeController(captureContent);
       assert.equal(renderedText(button.innerHTML), renderedText(themeMoonIcon));
       assert.equal(renderedText(button.title), 'Dark Mode aktivieren');
       assert.equal(renderedText(attributes['aria-pressed']), 'false');

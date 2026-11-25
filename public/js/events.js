@@ -1,3 +1,7 @@
+import {createCollectionActions} from './events/collection-actions.js';
+import {createBackupActions} from './events/backup-actions.js';
+import {createAnalyticsActions} from './events/analytics-actions.js';
+import {createImportActions} from './events/import-actions.js';
 import {createWarehouseActions} from './events/warehouse-actions.js';
 import {createTastingActions} from './events/tasting-actions.js';
 import {createPhotoEditorActions} from './events/photo-editor-actions.js';
@@ -107,6 +111,10 @@ export function bindEvents(
     else button.focus();
   }
   const handlers = {
+    ...createCollectionActions({home, tastingsView}),
+    ...createBackupActions({backup}),
+    ...createAnalyticsActions({navigate, state, render}),
+    ...createImportActions({externalImport, editors}),
     ...createWarehouseActions({warehouseView, state, navigate, render}),
     ...createTastingActions({tastingsView, warehouseView, state, navigate, confirmInModal, action}),
     ...createPhotoEditorActions({photoEditor}),
@@ -186,122 +194,6 @@ export function bindEvents(
      */
     'flavor-detail-redo': () => tastingsView.redoFlavor(),
     /**
-     * Handles the collection view save interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-view-save': () => home.openSaveView(),
-    /**
-     * Handles the collection view save confirm interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-view-save-confirm': () => home.saveCurrentView(),
-    /**
-     * Handles the collection view update interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-view-update': () => home.updateCurrentView(),
-    /**
-     * Handles the collection view rename interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-view-rename': () => home.renameCurrentView(),
-    /**
-     * Handles the collection view rename confirm interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-view-rename-confirm': () => home.confirmRenameView(),
-    /**
-     * Handles the collection view delete interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-view-delete': () => home.deleteCurrentView(),
-    /**
-     * Handles the collection flavor open interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-flavor-open': () => home.openFlavorFilter(),
-    /**
-     * Handles the collection flavor close interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-flavor-close': () => home.closeFlavorFilter(),
-    /**
-     * Handles the collection flavor reset interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-flavor-reset': () => home.resetFlavorDraft(),
-    /**
-     * Handles the collection flavor apply interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-flavor-apply': () => home.applyFlavorDraft(),
-    /**
-     * Handles the collection view apply interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-view-apply': button => home.applySavedView(button.dataset.id),
-    /**
-     * Handles the collection flavor add interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-flavor-add': () => home.addFlavorCriterion(),
-    /**
-     * Handles the collection flavor remove interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'collection-flavor-remove': button =>
-      home.removeFlavorCriterion(button.dataset.axis),
-    /**
-     * Handles the collection flight plan interaction.
-     */
-    'collection-flight-plan': () => {
-      home.planFromSelection();
-      tastingsView.startPlannedFlight();
-    },
-    /**
-     * Handles the analytics section interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'analytics-section': button => navigate('analytics', button.dataset.section),
-    /**
-     * Handles the analytics reset interaction.
-     */
-    'analytics-reset': () => {
-      state.analyticsFilters = {distillery: 'all', country: 'all', volumeType: 'all', status: 'all'};
-      state.analyticsPeriod = 'month'; state.analyticsStartDate = ''; state.analyticsEndDate = '';
-      history.replaceState({whiskyRoute: true}, '', routeUrl('analytics', state.selected));
-      render();
-    },
-    /**
-     * Handles the analytics distillery interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     */
-    'analytics-distillery': button => {
-      state.distillery = button.dataset.id; state.pageNumber = 1; navigate('home');
-    },
-    /**
-     * Handles the analytics drill filter interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     */
-    'analytics-drill-filter': button => {
-      if (button.dataset.kind === 'country') {
-        state.analyticsFilters.country = button.dataset.value;
-        history.replaceState({whiskyRoute: true}, '', routeUrl('analytics', state.selected, state.analyticsFilters));
-        render(); return;
-      }
-      if (button.dataset.kind === 'status' && ['closed', 'open', 'empty'].includes(button.dataset.value)) state.status = button.dataset.value;
-      else if (button.dataset.kind === 'volumeType' && ['standard', 'sample'].includes(button.dataset.value)) state.volumeType = button.dataset.value;
-      state.pageNumber = 1; navigate('home');
-    },
-    /**
      * Handles the goto settings menu interaction.
      * @return {!Promise<*>} Promise for the asynchronous operation.
      */
@@ -328,104 +220,6 @@ export function bindEvents(
      */
     'toggle-theme': () => theme.toggleTheme(),
     /**
-     * Handles the backup refresh interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-refresh': () => backup.refresh(),
-    /**
-     * Handles the backup manual download interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-manual-download': () => backup.downloadManual(),
-    /**
-     * Handles the backup lock interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-lock': () => backup.lock(),
-    /**
-     * Handles the backup new interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-new': () => backup.edit(),
-    /**
-     * Handles the backup edit interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-edit': button => backup.edit(button.dataset.id),
-    /**
-     * Handles the backup run interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-run': button => backup.job(button.dataset.id, 'run'),
-    /**
-     * Handles the backup test interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-test': button => backup.job(button.dataset.id, 'test'),
-    /**
-     * Handles the backup check interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-check': button => backup.job(button.dataset.id, 'check'),
-    /**
-     * Handles the backup snapshots interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-snapshots': button => backup.job(button.dataset.id, 'snapshots'),
-    /**
-     * Handles the backup restore interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-restore': button => backup.restore(button.dataset.id),
-    /**
-     * Handles the backup prepare interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-prepare': button => backup.job(button.dataset.id, 'prepare', {snapshotId: button.dataset.file}),
-    /**
-     * Handles the backup download prepared interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-download-prepared': button =>
-      backup.downloadPrepared(button.dataset.id),
-    /**
-     * Handles the backup download interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-download': button => backup.download(button.dataset.id, button.dataset.file),
-    /**
-     * Handles the backup delete interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-delete': button => backup.remove(button.dataset.id),
-    /**
-     * Handles the backup confirm delete interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'backup-confirm-delete': button => backup.confirmDelete(button.dataset.id),
-    /**
      * Handles the suggest first interaction.
      * @return {!Promise<*>} Promise for the asynchronous operation.
      */
@@ -435,31 +229,6 @@ export function bindEvents(
      * @return {!Promise<*>} Promise for the asynchronous operation.
      */
     'suggest-bottle': () => suggestNumber('inventoryNumber'),
-    /**
-     * Handles the import apply interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'import-apply': () => externalImport.applyImport(),
-    /**
-     * Handles the import continue interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'import-continue': () => externalImport.confirmPendingImport(),
-    /**
-     * Handles the import existing bottle interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'import-existing-bottle': () => editors.newBottle(true),
-    /**
-     * Handles the import existing photo interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'import-existing-photo': () => externalImport.attachToExistingBottle(),
-    /**
-     * Handles the import existing edit interaction.
-     * @return {*} Result computed from the supplied inputs.
-     */
-    'import-existing-edit': () => externalImport.editExisting(),
     /**
      * Handles the new interaction.
      * @return {*} Result computed from the supplied inputs.

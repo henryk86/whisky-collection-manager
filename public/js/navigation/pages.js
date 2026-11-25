@@ -30,7 +30,7 @@ export const MAIN_PAGES = Object.freeze([
     get label() {return t('tastings.homeTitle');},
     url: '/?view=tastings',
     action: 'goto-tastings-home',
-    icon: renderTemplate('iconPath2', {gLENCAIRNINK: GLENCAIRN_INK, }),
+    icon: renderTemplate('iconPath2', {glassOutlinePath: GLENCAIRN_INK, }),
     viewBox: '130 50 220 355',
     filled: true,
     navClass: 'nav-glencairn',

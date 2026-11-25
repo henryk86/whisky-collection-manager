@@ -1,4 +1,4 @@
-import {fixtureMarkup, renderedText} from '../helpers/rendering.js';
+import {fixtureMarkup, renderedText, captureContent, captureAppend} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createModal} from '../../public/js/ui/modal.js';
@@ -118,6 +118,7 @@ test(
     try {
       const state = {modal: null};
       const modal = createModal({
+        mountContent: captureContent,
         state,
         /**
          * Handles the close interaction.
@@ -163,6 +164,7 @@ test(
     try {
       const state = {modal: null};
       const modal = createModal({
+        mountContent: captureContent,
         state,
         /**
          * Handles the close interaction.
@@ -200,6 +202,7 @@ test('closing all dialogs discards nested parents during navigation', () => {
   try {
     const state = {modal: null};
     const modal = createModal({
+      mountContent: captureContent,
       state,
       /**
        * Handles the close interaction.
@@ -232,6 +235,7 @@ test(
     try {
       const state = {modal: null};
       const modal = createModal({
+        mountContent: captureContent,
         state,
         /**
          * Handles the close interaction.
@@ -271,6 +275,7 @@ test(
     try {
       const state = {modal: null};
       const modal = createModal({
+        mountContent: captureContent,
         state,
         /**
          * Handles the close interaction.
@@ -307,6 +312,7 @@ test(
     try {
       const state = {modal: null};
       const modal = createModal({
+        mountContent: captureContent,
         state,
         /**
          * Handles the close interaction.
@@ -350,6 +356,7 @@ test('explicit replacement can discard older modal history', () => {
   try {
     const state = {modal: null};
     const modal = createModal({
+      mountContent: captureContent,
       state,
       /**
        * Handles the close interaction.
@@ -385,6 +392,7 @@ test(
     try {
       const state = {modal: null};
       const modal = createModal({
+        mountContent: captureContent,
         state,
         /**
          * Handles the close interaction.
@@ -434,6 +442,7 @@ test(
         flightCandidateIds: null,
       };
       const modal = createModal({
+        mountContent: captureContent,
         state,
         /**
          * Handles the close interaction.
@@ -441,6 +450,7 @@ test(
         onClose() {},
       });
       const view = createTastingsView({
+        mountContent: captureContent, mountAppend: captureAppend,
         state, selectors: {},
         /**
          * Updates the shell state for its caller.

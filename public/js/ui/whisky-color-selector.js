@@ -55,7 +55,7 @@ export function whiskyColorSelector(selected) {
   return renderTemplate('whiskyColorSelector', {
     selected: selected || '',
     color: t('tasting.color'),
-    wHISKYCOLORS: composeMarkup(WHISKY_COLORS.map((item, i) =>
+    colorOptions: composeMarkup(WHISKY_COLORS.map((item, i) =>
       renderTemplate('whiskyColorChoice', {
         selected: selected === item.key ? ' is-selected' : '',
         key: item.key,
@@ -65,17 +65,17 @@ export function whiskyColorSelector(selected) {
           liquidColor: item.hex,
           id: `color-glass-${i}`,
         }),
-        t2: t(COLOR_LABEL_KEYS[item.key]),
+        colorLabel: t(COLOR_LABEL_KEYS[item.key]),
       }))),
     custom: custom ? ' is-selected' : '',
     colorCustom: t('tasting.colorCustom'),
     glencairnSymbol: glencairnSymbol({
       liquidColor: hex || 'transparent', id: 'custom-color-glass',
     }),
-    colorCustom2: t('tasting.colorCustom'),
+    customColorLabel: t('tasting.colorCustom'),
     colorCustomPicker: t('tasting.colorCustomPicker'),
     toFixed: (x * 100).toFixed(1),
-    toFixed2: (y * 100).toFixed(1),
+    pickerY: (y * 100).toFixed(1),
     whiskyCustomColorName: whiskyCustomColorName(hex),
     hex: hex,
   });

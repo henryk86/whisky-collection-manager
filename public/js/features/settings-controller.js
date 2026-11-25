@@ -57,7 +57,7 @@ export function createSettingsController({state, action, navigate, closeModal,
           label: t("common.actions.cancel"),
           action: 'close-modal',
         }),
-        id2: id ? t("common.actions.save") : t("features.common.create"),
+        submitLabel: id ? t("common.actions.save") : t("features.common.create"),
       }),
       false,
       nested
@@ -149,7 +149,7 @@ export function createSettingsController({state, action, navigate, closeModal,
                 index: index,
                 name: candidate.name,
                 toFixed: candidate.latitude.toFixed(5),
-                toFixed2: candidate.longitude.toFixed(5),
+                longitude: candidate.longitude.toFixed(5),
               }
             ))),
         }) :

@@ -2,8 +2,7 @@
  * @fileoverview Composable template data, independent of DOM or HTML output.
  */
 import {t} from '../i18n/index.js';
-import {escapeHtml} from './dom.js';
-import {attributeEntries, checkedTag, decodeEscaped} from './bindings.js';
+import {decodeEscaped} from './bindings.js';
 
 export const SLOT = /\{\{(content|attr|attrs|text|t|tag):([\w.]+)\}\}/g;
 
@@ -34,9 +33,9 @@ export class RenderPlan {
 
 /**
  * Composes ordered fragments without coercing native render plans to strings.
- * String-only sequences support the DOM-free serialization adapter in tests.
+ * String-only sequences contain scalar text, never generated HTML.
  * @param {...*} parts Nested plans or already escaped text.
- * @return {(RenderPlan|string)} Sequence, or empty/serialized text.
+ * @return {(RenderPlan|string)} Sequence or scalar text.
  */
 export function composeMarkup(...parts) {
   const items = parts.flat(Infinity).filter(item => item != null && item !== '');
@@ -62,18 +61,6 @@ export function slotValue(plan, mode, key) {
 }
 
 /**
- * Compacts structural whitespace for DOM-free markup assertions, preserving
- * quoted attributes, user data, and inline spacing.
- * @param {string} source Static template source.
- * @return {string} Canonical markup for the test adapter.
- */
-function compactTemplate(source) {
-  return source.replace(/<\/?(?:[^>"']|"[^"]*"|'[^']*')+>/g, tag =>
-    tag.replace(/"[^"]*"|'[^']*'|\s+/g, part => /^\s/.test(part) ? ' ' : part))
-    .replace(/>\n[ \t]*</g, '><');
-}
-
-/**
  * Resolves a scalar binding using the same rules as the browser renderer.
  * @param {!RenderPlan} plan Template instance.
  * @param {string} mode Binding type.
@@ -86,27 +73,4 @@ export function scalarBinding(plan, mode, key) {
     throw new TypeError(`Non-scalar binding: ${key}`);
   }
   return mode === 'attr' || mode === 'content' ? decodeEscaped(value) : String(value ?? '');
-}
-
-/**
- * Serializes a render plan for diagnostic/test assertions. Shares binding
- * normalization and structural validation with native DOM materialization.
- * @param {*} value Render plan or scalar content.
- * @return {string} Escaped markup representation.
- */
-export function serializeMarkup(value) {
-  if (!(value instanceof RenderPlan)) return escapeHtml(decodeEscaped(value));
-  if (value.parts) return value.parts.map(serializeMarkup).join('');
-  const source = compactTemplate(value.source);
-  return source.replace(SLOT, (_, mode, key, offset) => {
-    const binding = slotValue(value, mode, key);
-    if (mode === 'tag') return checkedTag(binding);
-    if (mode === 'attrs') {
-      const attributes = attributeEntries(binding).map(([name, text, flag]) =>
-        flag ? name : `${name}="${escapeHtml(text)}"`).join(' ');
-      return attributes && (/\s/.test(source[offset - 1]) ? '' : ' ') + attributes;
-    }
-    if (mode === 'content' && binding instanceof RenderPlan) return serializeMarkup(binding);
-    return escapeHtml(scalarBinding(value, mode, key));
-  });
 }

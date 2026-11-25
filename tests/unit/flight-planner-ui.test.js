@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, captureContent, captureAppend} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
@@ -37,6 +37,7 @@ test(
     let html = '';
     const state = {page: 'tastings-home', selected: null, collection};
     const view = createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
        * Updates the shell state for its caller.
@@ -208,6 +209,7 @@ test('planner distinguishes unavailable sherry casks from cask mismatches',
     };
     try {
       const view = createTastingsView({
+        mountContent: captureContent, mountAppend: captureAppend,
         state,
         /** Displays the planner without requiring a browser. */
         showModal() {},

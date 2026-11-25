@@ -29,7 +29,7 @@
     aria-label="{{t:map.legend.distilleriesWithBottles}}">
     <span class="map-legend-heading">{{t:map.filters.withBottles}}</span>
     <span class="map-legend-item">{{content:stockExample}}{{t:map.status.active}}</span>
-    <span class="map-legend-item">{{content:stockExample2}}{{t:home.status.closed}}</span>
+    <span class="map-legend-item">{{content:closedStockExample}}{{t:home.status.closed}}</span>
   </div>{{content:emptySites}}
   <div
     class="map-legend-section map-legend-stock"
@@ -43,7 +43,7 @@
     aria-label="{{t:map.statistics.groupedDistilleries}}">
     <span class="map-legend-item"><span
         class="map-cluster-visual map-legend-marker map-cluster-legend-icon"
-        style="--legend-diameter:{{attr:lEGENDCLUSTERDIAMETER}}px"
+        style="--legend-diameter:{{attr:clusterDiameter}}px"
         aria-hidden="true">6</span>{{t:map.filters.grouped}}</span>
   </div>
 </div>
@@ -105,7 +105,7 @@
     aria-label="{{t:map.pagination.previousBottlings}}">{{content:chevronLeftIcon}}</button><span>{{content:pageOf}}</span><button
     type="button"
     data-map-page="next"
-    {{attrs:disabled2}}
+    {{attrs:nextDisabled}}
     aria-label="{{t:map.pagination.moreBottlings}}">{{content:chevronRightIcon}}</button>
 </div>
 <!-- /wcm-template -->
@@ -138,7 +138,7 @@
       aria-label="{{attr:correctLocationFor}}"
       title="{{t:map.actions.correctLocation}}">{{content:editIcon}}</button>
   </div>
-  <span>{{content:plural}} · {{content:plural2}} · {{content:status}}{{content:approximate}}</span>
+  <span>{{content:plural}} · {{content:bottleCountLabel}} · {{content:status}}{{content:approximate}}</span>
 </div>
           {{content:formField}}
 <!-- /wcm-template -->
@@ -152,7 +152,7 @@
   <label class="form-field map-site-chooser" for="map-site-select">{{t:map.actions.showDistillery}}
     <select id="map-site-select" {{attrs:disabledAttributes}}>
       {{content:option}}
-      {{content:length2}}
+      {{content:siteOptions}}
     </select></label>
   {{content:mapSiteHeading}}
 </div>

@@ -7,7 +7,7 @@
   aria-controls="{{attr:ariaControls}}"
   aria-label="{{text:tr}}"
   title="{{text:title}}"
-  aria-pressed="{{attr:hidden}}">{{content:hidden2}}</button>
+  aria-pressed="{{attr:hidden}}">{{content:visibilityIcon}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:authPasswordInput -->
@@ -66,8 +66,8 @@
 <!-- wcm-template:authChangeForm -->
 <form id="auth-change-form" class="auth-form auth-form-main">
   {{content:field}}
-  {{content:field2}}
-  {{content:field3}}
+  {{content:newPasswordField}}
+  {{content:confirmPasswordField}}
   <p class="muted auth-note">{{content:passwordHint}}</p>{{content:errorText}}
   <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">{{content:savePassword}}</button>
     {{content:canCancel}}</div>
@@ -77,7 +77,7 @@
 <!-- wcm-template:authLoginForm -->
 <form id="auth-login-form" class="auth-form auth-form-main">
   {{content:field}}
-  {{content:field2}}
+  {{content:passwordField}}
   {{content:errorText}}
   <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">{{content:signIn}}</button>
     {{content:content}}</div>
@@ -101,7 +101,7 @@
     type="button"
     class="btn small danger"
     data-act="auth-delete-user"
-    data-id="{{text:id2}}">{{content:delete}}</button>
+    data-id="{{text:deleteUserId}}">{{content:delete}}</button>
 </div>
 <!-- /wcm-template -->
 
@@ -122,12 +122,12 @@
 </div>
 <div class="panel section auth-settings">
   <h3>{{content:users}}</h3>
-  <div class="auth-user-list" role="list">{{content:users2}}</div>
+  <div class="auth-user-list" role="list">{{content:userList}}</div>
   <h3 class="auth-subtitle">{{content:createUser}}</h3>
   <form id="auth-create-form" class="auth-form auth-create-form">
     {{content:field}}
-    {{content:field2}}
-    <p class="muted">{{content:newUserHint}}</p><button class="btn primary" type="submit">{{content:createUser2}}</button>
+    {{content:temporaryPasswordField}}
+    <p class="muted">{{content:newUserHint}}</p><button class="btn primary" type="submit">{{content:createUserButtonLabel}}</button>
   </form>
 </div>
 <!-- /wcm-template -->

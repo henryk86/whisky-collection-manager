@@ -72,7 +72,7 @@ export function createPhotoViewer({state, showModal}) {
     showModal(t("ui.photos.bottlePhoto"), renderTemplate('photoLightbox', {
       src: photo.src,
       alt: photo.alt,
-      alt2: photo.alt,
+      caption: photo.alt,
       minusIcon: minusIcon,
       plusIcon: plusIcon,
       photoPrev: multiple ? renderTemplate('photoPrev', {

@@ -38,7 +38,7 @@
     class="btn small"
     type="button"
     data-act="warehouse-assign"
-    data-id="{{attr:locationBottleId}}">{{content:place2}}</button>
+    data-id="{{attr:locationBottleId}}">{{content:assignmentLabel}}</button>
 </div>
 <!-- /wcm-template -->
 
@@ -47,7 +47,7 @@
   class="warehouse-grid-{{attr:level}}"
   x1="{{attr:position}}"
   y1="0"
-  x2="{{attr:x2}}"
+  x2="{{attr:endX}}"
   y2="{{attr:vbH}}"/>
 <!-- /wcm-template -->
 
@@ -57,7 +57,7 @@
   x1="0"
   y1="{{attr:position}}"
   x2="{{attr:vbW}}"
-  y2="{{attr:y2}}"/>
+  y2="{{attr:endY}}"/>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehousePlanGrid -->
@@ -76,7 +76,7 @@
     y="{{attr:y}}"
     width="{{attr:max}}"
     height="{{attr:height}}"
-    rx="3"/><text x="{{attr:x2}}" y="{{attr:y2}}" text-anchor="middle">{{content:furnitureName}}</text><text x="{{attr:x3}}" y="{{attr:y3}}" text-anchor="middle">{{content:elevation2}}{{content:abbreviatedBottleCount}}</text></g>
+    rx="3"/><text x="{{attr:nameX}}" y="{{attr:nameY}}" text-anchor="middle">{{content:furnitureName}}</text><text x="{{attr:detailsX}}" y="{{attr:detailsY}}" text-anchor="middle">{{content:elevationLabel}}{{content:abbreviatedBottleCount}}</text></g>
 <!-- /wcm-template -->
 
 <!-- wcm-template:warehouseMapWrap -->
@@ -183,7 +183,7 @@
 <!-- wcm-template:warehouseShelf -->
 <div class="warehouse-shelf" data-shelf-id="{{attr:shelfId}}" data-capacity="{{attr:capacity}}">
   <div class="warehouse-shelf-head"><strong>{{content:name}}</strong>
-    <span class="warehouse-shelf-meta">{{content:front}}{{content:doorLabel}} · {{content:num}} cm{{content:heightCm}}{{content:capacity2}}</span>
+    <span class="warehouse-shelf-meta">{{content:front}}{{content:doorLabel}} · {{content:num}} cm{{content:heightCm}}{{content:occupancyLabel}}</span>
     <div class="actions"><button
         class="btn small"
         type="button"
@@ -196,7 +196,7 @@
         type="button"
         data-act="warehouse-shelf-down"
         data-id="{{attr:moveDownShelfId}}"
-        {{attrs:disabled2}}
+        {{attrs:moveUpDisabled}}
         title="{{t:warehouse.shelves.moveDown}}"
         aria-label="{{t:warehouse.shelves.moveDown}}">{{content:arrowDownIcon}}</button><button class="btn small" data-act="warehouse-shelf-copy" data-id="{{attr:copyShelfId}}">{{t:warehouse.furniture.copy}}</button><button class="btn small" data-act="warehouse-shelf-edit" data-id="{{attr:editShelfId}}">{{t:common.actions.edit}}</button><button class="btn small danger" data-act="warehouse-shelf-delete" data-id="{{attr:deleteShelfId}}">{{t:common.actions.remove}}</button>
     </div>

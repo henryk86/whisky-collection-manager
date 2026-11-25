@@ -73,8 +73,8 @@ jobs:
       - name: Analyze commits from the approved develop merge
         run: node scripts/release-automation.js plan --json
       - run: npm ci
-      - run: npm run verify
       - run: npx playwright-core install --with-deps chromium
+      - run: npm run verify
       - run: npm run test:browser
       - name: Create or reuse versioned release snapshot and draft
         id: version

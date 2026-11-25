@@ -1,3 +1,4 @@
+import {captureContent} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {toast} from '../../public/js/ui/notifications.js';
@@ -95,7 +96,7 @@ test(
         return scheduled.length;
       };
     try {
-      toast('Ungültiges Leerdatum', true);
+      toast('Ungültiges Leerdatum', true, captureContent);
       assert.equal(doc.body.children.length, 1);
       const note = doc.body.children[0];
       assert.equal(note.className, 'toast error');
@@ -127,8 +128,8 @@ test(
     globalThis.document = doc;
     globalThis.setTimeout = () => 1;
     try {
-      toast('Fehlermeldung', true);
-      toast('Gespeichert');
+      toast('Fehlermeldung', true, captureContent);
+      toast('Gespeichert', false, captureContent);
       assert.equal(doc.body.children.length, 1);
       const note = doc.body.children[0];
       assert.equal(note.className, 'toast');

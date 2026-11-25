@@ -20,7 +20,7 @@ const renderTemplate = await loadTemplates('import/controller.html');
  */
 export function createExternalImport({
   state, navigate, showModal, closeModal, action, createBottling, editBottling,
-  validatePayload, findExistingBottling, sourceName, extraFieldLabels = {},
+  validatePayload, findExistingBottling, sourceName, extraFieldLabels = {}, mountContent = replaceContent, mountAppend = appendContent,
 }) {
   if (typeof validatePayload !== 'function' || typeof findExistingBottling !== 'function' ||
     typeof sourceName !== 'string' || !sourceName.trim()) {
@@ -56,7 +56,7 @@ export function createExternalImport({
     if (panel) {
       const oldStatus = query('#import-status', panel);
       if (oldStatus) oldStatus.textContent = message;
-      else appendContent(panel, renderTemplate('importStatus', {message: message, }));
+      else mountAppend(panel, renderTemplate('importStatus', {message: message, }));
     }
   }
 
@@ -114,7 +114,7 @@ export function createExternalImport({
         currentValue: old, checked: !old,
       });
     }));
-    replaceContent(panel, renderTemplate('panel', {
+    mountContent(panel, renderTemplate('panel', {
       title: t("imports.preview.title", {id: escapeHtml(importDetails.referenceId), }),
       openPhoto: importDetails.imageToken ?
         renderTemplate('openPhoto', {

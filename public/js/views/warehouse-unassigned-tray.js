@@ -47,7 +47,7 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [],
     ariaLabel: safe(t('warehouse.wall.unassignedSearch')),
     disabledAttributes: data.page === 1 ? {"disabled": true} : {},
     pageOf: t('home.pagination.pageOf', {page: data.page, total: data.pages}),
-    disabled2: data.page === data.pages ? {"disabled": true} : {},
+    nextDisabled: data.page === data.pages ? {"disabled": true} : {},
   });
 }
 
@@ -77,7 +77,7 @@ export function renderUnassignedTray(warehouse, selectedIds = [],
   return renderTemplate('warehouseUnassignedTray', {
     openAttributes: options.expanded ? {"open": true} : {},
     label: label,
-    label2: label,
+    trayLabel: label,
     content: content,
   });
 }

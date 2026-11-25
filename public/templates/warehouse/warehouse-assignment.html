@@ -16,7 +16,7 @@
 
 <!-- wcm-template:warehouseAssignmentCurrent -->
 <div class="warehouse-assignment-current" aria-label="{{attr:ariaLabel}}">
-  <span>{{content:currentLocation}}</span>
+  <span>{{content:currentLocationLabel}}</span>
   <strong>{{content:currentLocation}}</strong>
 </div>
 <!-- /wcm-template -->
@@ -30,7 +30,7 @@
       {{content:warehouseAssignmentBulkList}}
     </div>
   </div>
-  {{content:isBulk2}}
+  {{content:currentLocationPanel}}
   <div class="warehouse-assignment-editor">
     <fieldset class="warehouse-assignment-target">
       <legend>{{content:newLocation}}</legend>
@@ -54,7 +54,7 @@
             data-assignment-shelf
             aria-label="{{attr:shelfLabel}}"
             required
-            {{attrs:disabled2}}>{{content:shelfOptions}}</select></label>
+            {{attrs:shelfDisabled}}>{{content:shelfOptions}}</select></label>
       </div>
       <p class="warehouse-assignment-feedback" aria-live="polite">{{content:feedback}}</p>
     </fieldset>

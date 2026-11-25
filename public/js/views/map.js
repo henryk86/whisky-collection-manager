@@ -81,10 +81,10 @@ export function mapLegendHtml(showAllDistilleries = false) {
     }) : '';
   return renderTemplate('mapLegend', {
     stockExample: stockExample(1, 'map-legend-status-icon'),
-    stockExample2: stockExample(1, 'map-marker-closed map-legend-status-icon'),
+    closedStockExample: stockExample(1, 'map-marker-closed map-legend-status-icon'),
     emptySites: emptySites,
     samples: samples,
-    lEGENDCLUSTERDIAMETER: LEGEND_CLUSTER_DIAMETER,
+    clusterDiameter: LEGEND_CLUSTER_DIAMETER,
   });
 }
 
@@ -141,7 +141,7 @@ export function createMapView({state, shell, navigate, settings}) {
       relatedSitesHtml: relatedSitesHtml(),
       disabledAttributes: sites.length ? {} : {"disabled": true},
       option: sites.length && !selectedId ? renderTemplate('sidebarHtmlOption') : '',
-      length2: sites.length ? composeMarkup(sites.map(site =>
+      siteOptions: sites.length ? composeMarkup(sites.map(site =>
         renderTemplate('sidebarHtmlOption2', {
           id: site.id,
           selectedAttributes: site.id === selectedId ? {"selected": true} : {},
@@ -155,7 +155,7 @@ export function createMapView({state, shell, navigate, settings}) {
           correctLocationFor: t("map.actions.correctLocationFor", {name: escapeHtml(selected.name)}),
           editIcon: editIcon,
           plural: plural(selected.bottlingCount, t("forms.bottling.title"), t("analytics.inventory.bottlings")),
-          plural2: plural(selected.bottleCount, t("forms.bottle.title"), t("forms.bottle.plural")),
+          bottleCountLabel: plural(selected.bottleCount, t("forms.bottle.title"), t("forms.bottle.plural")),
           status: selected.status === 'closed' ? t("home.status.closed") :
             selected.status === 'reopened' ? t("map.status.reopened") :
               selected.status === 'active' ? t("map.status.active") : t("features.distilleries.unknownStatus"),
@@ -177,7 +177,7 @@ export function createMapView({state, shell, navigate, settings}) {
                   disabledAttributes: page === 1 ? {"disabled": true} : {},
                   chevronLeftIcon: chevronLeftIcon,
                   pageOf: t("map.pagination.pageOf", {page, total: totalPages}),
-                  disabled2: page === totalPages ? {"disabled": true} : {},
+                  nextDisabled: page === totalPages ? {"disabled": true} : {},
                   chevronRightIcon: chevronRightIcon,
                 }) : '',
             }) : renderTemplate('hint3'),

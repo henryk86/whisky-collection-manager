@@ -283,12 +283,12 @@ export function composition(rows, {drill = null} = {}) {
     return renderTemplate('legend', {
       action: action ? 'button' : 'div',
       typeAttributes: action ? {"type": "button"} : {},
-      action2: action ? ' analytics-link' : '',
-      action3: action || {},
+      linkClass: action ? ' analytics-link' : '',
+      linkAttributes: action || {},
       colors: colors[i % colors.length],
       label: label,
       count: count,
-      action4: action ? 'button' : 'div',
+      closingTag: action ? 'button' : 'div',
     });
   }));
   return renderTemplate('analyticsComposition', {

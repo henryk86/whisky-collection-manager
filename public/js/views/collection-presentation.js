@@ -16,17 +16,8 @@ import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('collection/home.html');
 
-/**
- * Derives the status text result from the supplied values.
- *
- * @param {*} status Status value determining the next action.
- * @return {*} Result computed from the supplied inputs.
- */
-export const statusText = status => t(({
-  closed: 'home.status.closed',
-  open: 'analytics.inventory.openedStatus',
-  empty: 'home.status.empty',
-})[status] || 'features.distilleries.unknownStatus');
+export {statusText} from './models/home.js';
+import {statusText} from './models/home.js';
 
 /**
  * The count labels represent mutually exclusive bottle types. Sample bottles
@@ -196,15 +187,15 @@ export function pagerHtml({page, pageCount, total, from, to}, selectedSize,
         pageTo: number,
         pageLabel: t("home.pagination.pageLabel", {page: number}),
         ariaCurrentAttributes: number === page ? {"aria-current": "page"} : {},
-        number4: number,
+        pageNumberLabel: number,
       })));
   return renderTemplate('collectionPagination', {
     rangeSummary: t("home.pagination.rangeSummary", {from, to, total, label}),
     button: button(1, chevronsLeftIcon, t('home.pagination.first'), page === 1),
-    button2: button(Math.max(1, page - 1), chevronLeftIcon, t('home.pagination.previous'), page === 1),
+    previousPageButton: button(Math.max(1, page - 1), chevronLeftIcon, t('home.pagination.previous'), page === 1),
     pages: pages,
-    button3: button(Math.min(pageCount, page + 1), chevronRightIcon, t('home.pagination.next'), page === pageCount),
-    button4: button(pageCount, chevronsRightIcon, t('home.pagination.last'), page === pageCount),
+    nextPageButton: button(Math.min(pageCount, page + 1), chevronRightIcon, t('home.pagination.next'), page === pageCount),
+    lastPageButton: button(pageCount, chevronsRightIcon, t('home.pagination.last'), page === pageCount),
     pageSizeLabel: pageSizeLabel,
     ariaLabel: pageSizeLabel,
     pageSizeChoices: composeMarkup(PAGE_SIZE_OPTIONS.map(option =>
@@ -213,7 +204,7 @@ export function pagerHtml({page, pageCount, total, from, to}, selectedSize,
         {
           option: option,
           selectedAttributes: option === selectedSize ? {"selected": true} : {},
-          option2: option,
+          pageSizeLabel: option,
         }
       ))),
   });

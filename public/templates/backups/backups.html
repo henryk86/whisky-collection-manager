@@ -122,19 +122,19 @@
 
 <!-- wcm-template:backupProfile -->
 <article class="backup-profile">
-  <div class="backup-card-head"><strong>{{text:name}}</strong><span class="backup-status {{attr:legacy}}">{{content:legacy2}}</span>
+  <div class="backup-card-head"><strong>{{text:name}}</strong><span class="backup-status {{attr:legacy}}">{{content:scheduleStatus}}</span>
   </div>
   <p class="muted">{{text:content}} · {{text:provider}}</p>
   {{content:warning}}
   <p class="backup-last">{{content:lastJob}}</p>
   <div class="actions backup-card-actions">
-    {{content:legacy3}}
+    {{content:runAction}}
     <button class="btn small" data-act="backup-snapshots" data-id="{{text:id}}">{{t:backups.archives.show}}</button>
     {{content:backupRestore}}
-    <button class="btn small" data-act="backup-test" data-id="{{text:id2}}">{{t:backups.targets.test}}</button>
-    <button class="btn small" data-act="backup-check" data-id="{{text:id3}}">{{t:backups.actions.verifyIntegrity}}</button>
-    <button class="btn small" data-act="backup-edit" data-id="{{text:id4}}">{{t:common.actions.edit}}</button>
-    <button class="btn small danger" data-act="backup-delete" data-id="{{text:id5}}">{{t:common.actions.delete}}</button>
+    <button class="btn small" data-act="backup-test" data-id="{{text:restoreProfileId}}">{{t:backups.targets.test}}</button>
+    <button class="btn small" data-act="backup-check" data-id="{{text:editProfileId}}">{{t:backups.actions.verifyIntegrity}}</button>
+    <button class="btn small" data-act="backup-edit" data-id="{{text:deleteProfileId}}">{{t:common.actions.edit}}</button>
+    <button class="btn small danger" data-act="backup-delete" data-id="{{text:profileActionId}}">{{t:common.actions.delete}}</button>
   </div>
   {{content:backupSnapshotList}}
 </article>
@@ -154,7 +154,7 @@
 
 <!-- wcm-template:backupJob -->
 <div class="backup-job" role="listitem">
-  <span class="backup-job-state {{text:state}}">{{content:state2}}</span>
+  <span class="backup-job-state {{text:state}}">{{content:statusIcon}}</span>
   <div><strong>{{text:content}}</strong> <span class="muted">· {{text:name}} · {{text:labelTime}}</span>
     {{content:backupJobError}}{{content:muted}}</div>
 </div>
@@ -172,10 +172,10 @@
   {{content:manual}}
   <div class="backup-step">
     <h4>{{t:backups.password.label}}</h4>
-    <p class="{{attr:passwordConfigured}}">{{content:passwordConfigured2}}</p>
+    <p class="{{attr:passwordConfigured}}">{{content:encryptionStatus}}</p>
     <form id="backup-password-form" class="backup-form">
       {{content:formField}}
-      <label class="form-field">{{content:passwordConfigured3}}<input
+      <label class="form-field">{{content:passwordFieldLabel}}<input
           type="password"
           name="password"
           autocomplete="new-password"
@@ -190,7 +190,7 @@
           maxlength="256"
           required></label>
       {{content:warning}}
-      <div class="actions"><button type="submit" class="btn">{{content:passwordConfigured4}}</button>
+      <div class="actions"><button type="submit" class="btn">{{content:passwordActionLabel}}</button>
       </div>
     </form>
   </div>
@@ -206,8 +206,8 @@
       <button type="button" class="btn" data-act="backup-refresh">{{t:backups.actions.refresh}}</button>
       <button type="button" class="btn" data-act="backup-lock">{{t:backups.security.lock}}</button>
     </div>
-    {{content:warning2}}
-    <div class="backup-profiles">{{content:length2}}</div>
+    {{content:workerWarning}}
+    <div class="backup-profiles">{{content:profileList}}</div>
   </div>
   <div class="backup-step">
     <h4>{{t:backups.sections.restoreBackup}}</h4>
@@ -228,7 +228,7 @@
     <p class="hint">{{t:backups.restore.confirmationCreatesSafetyBackup}}</p>
   </div>
   <h4>{{t:backups.jobs.recent}}</h4>
-  <div class="backup-job-list" role="list">{{content:length3}}</div>
+  <div class="backup-job-list" role="list">{{content:jobList}}</div>
 </section>
 <!-- /wcm-template -->
 

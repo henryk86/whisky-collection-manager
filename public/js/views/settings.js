@@ -56,7 +56,7 @@ export function createSettingsView(state, auth = {
         renderTemplate('generalOption', {
           code, selectedAttributes: selected ? {"selected": true} : {}, name,
         }))),
-      headingTitle2: headingTitle({title: t('settings.collection.title')}),
+      collectionHeading: headingTitle({title: t('settings.collection.title')}),
       fullYear: new Date().getFullYear(),
       establishedYear,
     });
@@ -72,7 +72,7 @@ export function createSettingsView(state, auth = {
     const distilleryPanel = renderTemplate('distillerySearch', {
       distillerySearch,
       length: matchCount,
-      length2: distilleries.length,
+      distilleryCount: distilleries.length,
       addDistilleryButton: actionButton({
         trustedContent: addActionLabel(t("settings.distilleries.add")),
         action: 'add-distillery',

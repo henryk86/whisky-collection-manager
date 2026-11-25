@@ -39,15 +39,15 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
     ));
     return renderTemplate('warehouseDoorRange', {
       opts: opts(range.from || 1),
-      opts2: opts(range.to || count),
+      endShelfOptions: opts(range.to || count),
       glassAttributes: range.front !== 'glass' ? {"selected": true} : {},
-      selected2: range.front === 'glass' ? {"selected": true} : {},
+      glassSelected: range.front === 'glass' ? {"selected": true} : {},
       selectedAttributes: range.doorLeaves == null ? {"selected": true} : {},
-      selected4: range.doorLeaves === 1 ? {"selected": true} : {},
-      selected5: range.doorLeaves === 2 ? {"selected": true} : {},
-      selected6: range.glassFrame == null ? {"selected": true} : {},
-      selected7: range.glassFrame === true ? {"selected": true} : {},
-      selected8: range.glassFrame === false ? {"selected": true} : {},
+      singleLeafSelected: range.doorLeaves === 1 ? {"selected": true} : {},
+      doubleLeafSelected: range.doorLeaves === 2 ? {"selected": true} : {},
+      defaultFrameSelected: range.glassFrame == null ? {"selected": true} : {},
+      withFrameSelected: range.glassFrame === true ? {"selected": true} : {},
+      withoutFrameSelected: range.glassFrame === false ? {"selected": true} : {},
     });
   }
 
@@ -231,7 +231,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
             arrowLeftIcon: arrowLeftIcon,
             position: t('warehouse.shelves.position', {current: index + 1, total: order.length}),
             nextShelfId: safe(order[index + 1]?.id || ''),
-            disabled2: index === order.length - 1 ? {"disabled": true} : {},
+            nextDisabled: index === order.length - 1 ? {"disabled": true} : {},
             arrowRightIcon: arrowRightIcon,
           });
       }

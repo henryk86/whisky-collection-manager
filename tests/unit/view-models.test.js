@@ -57,3 +57,30 @@ test('analytics chart models calculate widths and date-window totals without cha
   assert.deepEqual(aggregateAnalyticsPeriods(rows, {analyticsStartDate: '2026-01-03'}, 'count'), [{name: '2026-01', count: 5}, {name: '2026-02', count: 1}]);
   assert.deepEqual(rows, before);
 });
+
+test('warehouse room view model prepares room capacity and normalizes invalid plan preferences', async () => {
+  const {createWarehouseRoomViewModel} = await import('../../public/js/views/models/warehouse.js');
+  const warehouse = {
+    rooms: [{id: 'room', furniture: [{shelves: [{id: 'shelf', capacity: 8}]}]}],
+    bottles: [{id: 'bottle'}], assignments: {bottle: 'shelf'},
+  };
+  const state = {warehousePlanLevel: 'invalid', warehousePlanMode: 'invalid', warehousePlanCorner: 'invalid', warehousePlanZoom: 999};
+  const before = structuredClone({warehouse, state});
+  const model = createWarehouseRoomViewModel(warehouse, state);
+  assert.deepEqual(model.rooms[0].capacity, {occupied: 1, defined: 8, unlimited: 0, shelves: 1});
+  assert.deepEqual([model.level, model.planMode, model.planCorner, model.zoom], ['all', '3d', 'nw', 100]);
+  assert.deepEqual({warehouse, state}, before);
+});
+
+test('tasting editor view model resolves saved records, missing routes and draft defaults', async () => {
+  const {createTastingEditorViewModel} = await import('../../public/js/views/models/tastings.js');
+  const record = {id: 'tasting', title: 'A tasting'};
+  const state = {page: 'tasting', selected: 'bottling', tastingId: 'tasting', flightId: 'flight', collection: {bottlings: [{id: 'bottling', tastings: [record]}], tastingFlights: [{id: 'flight', tastingIds: ['tasting']}]}};
+  const before = structuredClone(state);
+  const model = createTastingEditorViewModel(state);
+  assert.equal(model.value, record);
+  assert.equal(model.backAction, 'tasting-back-flight');
+  assert.deepEqual(state, before);
+  assert.equal(createTastingEditorViewModel({...state, tastingId: 'new'}).draft, true);
+  assert.deepEqual(createTastingEditorViewModel({...state, selected: 'missing'}).redirect, {page: 'tastings-home', selected: null});
+});

@@ -45,7 +45,7 @@ export function createAuthController({root, state, render, refresh, applyTheme,
       tr: tr(hidden ? 'showPassword' : 'hidePassword'),
       title: tr(hidden ? 'showPassword' : 'hidePassword'),
       hidden: hidden ? 'false' : 'true',
-      hidden2: hidden ? eyeIcon : eyeOffIcon,
+      visibilityIcon: hidden ? eyeIcon : eyeOffIcon,
     });
 
   /**
@@ -135,8 +135,8 @@ export function createAuthController({root, state, render, refresh, applyTheme,
           tr(mandatory ? 'firstChangeTitle' : 'changeTitle'),
           renderTemplate('authChangeForm', {
             field: field('currentPassword', tr('currentPassword'), {autocomplete: 'current-password'}),
-            field2: field('newPassword', tr('newPassword'), {autocomplete: 'new-password', minLength: 12}),
-            field3: field('confirmPassword', tr('confirmPassword'), {autocomplete: 'new-password', minLength: 12}),
+            newPasswordField: field('newPassword', tr('newPassword'), {autocomplete: 'new-password', minLength: 12}),
+            confirmPasswordField: field('confirmPassword', tr('confirmPassword'), {autocomplete: 'new-password', minLength: 12}),
             passwordHint: tr('passwordHint'),
             errorText: errorText(),
             savePassword: tr('savePassword'),
@@ -153,7 +153,7 @@ export function createAuthController({root, state, render, refresh, applyTheme,
       replaceContent(root, panel(tr('loginTitle'),
         renderTemplate('authLoginForm', {
           field: field('username', tr('username'), {type: 'text', autocomplete: 'username'}),
-          field2: field('password', tr('password'), {autocomplete: 'current-password'}),
+          passwordField: field('password', tr('password'), {autocomplete: 'current-password'}),
           errorText: errorText(),
           signIn: tr('signIn'),
           content: !state.auth?.required ?
@@ -289,7 +289,7 @@ export function createAuthController({root, state, render, refresh, applyTheme,
         action: 'auth-toggle-required',
       }),
       users: tr('users'),
-      users2: composeMarkup(users.map(user =>
+      userList: composeMarkup(users.map(user =>
         renderTemplate('authUserRow', {
           username: user.username,
           role: user.role === 'admin' ? tr('administrator') : tr('standardUser'),
@@ -298,15 +298,15 @@ export function createAuthController({root, state, render, refresh, applyTheme,
             renderTemplate('authResetUser', {
               id: user.id,
               resetPassword: tr('resetPassword'),
-              id2: user.id,
+              deleteUserId: user.id,
               delete: tr('delete'),
             }) : '',
         }))),
       createUser: tr('createUser'),
       field: field('username', tr('username'), {type: 'text', autocomplete: 'off'}),
-      field2: field('password', tr('temporaryPassword'), {autocomplete: 'new-password', minLength: 12}),
+      temporaryPasswordField: field('password', tr('temporaryPassword'), {autocomplete: 'new-password', minLength: 12}),
       newUserHint: tr('newUserHint'),
-      createUser2: tr('createUser'),
+      createUserButtonLabel: tr('createUser'),
     });
   }
 

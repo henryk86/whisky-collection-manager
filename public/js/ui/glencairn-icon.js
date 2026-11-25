@@ -31,10 +31,10 @@ export function glencairnSymbol({
     children: composeMarkup(
       renderTemplate('defs', {id, y, content: 394 - y}),
       liquidColor ? renderTemplate('glencairnLiquid', {
-        gLENCAIRNCAVITY: GLENCAIRN_CAVITY, liquidColor,
+        cavityPath: GLENCAIRN_CAVITY, liquidColor,
       }) : '',
-      renderTemplate('glencairnInk', {gLENCAIRNINK: GLENCAIRN_INK}),
-      renderTemplate('glencairnGold', {gLENCAIRNINK: GLENCAIRN_INK, id, color})
+      renderTemplate('glencairnInk', {glassOutlinePath: GLENCAIRN_INK}),
+      renderTemplate('glencairnGold', {glassOutlinePath: GLENCAIRN_INK, id, color})
     ),
   });
 }
@@ -53,9 +53,9 @@ export function glencairnRatingSymbol({fill = 0, id = 'rating-glass'} = {}) {
   const y = 331 - height;
   return renderTemplate('glencairnSymbol3', {
     children: composeMarkup(
-      renderTemplate('defs2', {id, gLENCAIRNCAVITY: GLENCAIRN_CAVITY}),
+      renderTemplate('defs2', {id, cavityPath: GLENCAIRN_CAVITY}),
       renderTemplate('glencairnRatingFill', {y, height, id}),
-      renderTemplate('glencairnRatingOutline', {gLENCAIRNINK: GLENCAIRN_INK})
+      renderTemplate('glencairnRatingOutline', {glassOutlinePath: GLENCAIRN_INK})
     ),
   });
 }

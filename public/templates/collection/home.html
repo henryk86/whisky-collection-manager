@@ -45,11 +45,11 @@
   class="btn small pagination-button{{attr:number}}"
   data-page-to="{{attr:pageTo}}"
   aria-label="{{attr:pageLabel}}"
-  {{attrs:ariaCurrentAttributes}}>{{content:number4}}</button>
+  {{attrs:ariaCurrentAttributes}}>{{content:pageNumberLabel}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:pagerHtmlOption -->
-<option value="{{attr:option}}" {{attrs:selectedAttributes}}>{{content:option2}}</option>
+<option value="{{attr:option}}" {{attrs:selectedAttributes}}>{{content:pageSizeLabel}}</option>
 <!-- /wcm-template -->
 
 <!-- wcm-template:collectionPagination -->
@@ -57,10 +57,10 @@
   <span class="pagination-summary">{{content:rangeSummary}}</span>
   <div class="pagination-pages">
     {{content:button}}
-    {{content:button2}}
+    {{content:previousPageButton}}
     {{content:pages}}
-    {{content:button3}}
-    {{content:button4}}
+    {{content:nextPageButton}}
+    {{content:lastPageButton}}
   </div>
   <label class="pagination-size">{{content:pageSizeLabel}}
     <select id="pagination-size" aria-label="{{attr:ariaLabel}}">{{content:pageSizeChoices}}</select>
@@ -93,7 +93,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:scoreOptionsOption -->
-<option value="{{attr:i}}" {{attrs:selectedAttributes}}>{{content:i2}}/10</option>
+<option value="{{attr:i}}" {{attrs:selectedAttributes}}>{{content:scoreLabel}}/10</option>
 <!-- /wcm-template -->
 
 <!-- wcm-template:flavorEditorContentLabel -->
@@ -115,7 +115,7 @@
       aria-label="{{text:remove}}">{{content:closeIcon}}</button>
   </div>
   <div class="collection-flavor-range"><label>{{text:min}}<select data-flavor-axis="{{attr:flavorAxis}}" data-flavor-part="min">{{content:scoreOptions}}</select></label>
-    <label>{{text:max}}<select data-flavor-axis="{{attr:axis3}}" data-flavor-part="max">{{content:scoreOptions2}}</select></label>
+    <label>{{text:max}}<select data-flavor-axis="{{attr:maxAxis}}" data-flavor-part="max">{{content:maxScoreOptions}}</select></label>
   </div>
 </div>
 <!-- /wcm-template -->
@@ -164,7 +164,7 @@
   type="button"
   class="collection-saved-item{{attr:id}}"
   data-act="collection-view-apply"
-  data-id="{{text:id2}}">{{text:name}}</button>
+  data-id="{{text:savedViewId}}">{{text:name}}</button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:collectionViewUpdate -->
@@ -175,7 +175,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:collectionSavedViews -->
-<details class="collection-saved-menu" id="collection-saved-views"><summary aria-label="{{text:title}}: {{text:label}}">{{content:bookmark}}<span class="collection-saved-label">{{text:view}}: <strong>{{text:label2}}</strong></span>{{content:collectionSavedDirty}}{{content:chevronDownIcon}}</summary>
+<details class="collection-saved-menu" id="collection-saved-views"><summary aria-label="{{text:title}}: {{text:label}}">{{content:bookmark}}<span class="collection-saved-label">{{text:view}}: <strong>{{text:activeViewLabel}}</strong></span>{{content:collectionSavedDirty}}{{content:chevronDownIcon}}</summary>
   <div class="collection-saved-dropdown" role="group" aria-label="{{text:ariaLabel}}">
     <button
       type="button"
@@ -240,7 +240,7 @@
     {{content:cardBottleMeta}}
     {{content:cardFacts}}
     <div class="badges">
-      {{content:badge}}{{content:badge2}}</div>
+      {{content:badge}}{{content:incompleteBadge}}</div>
   </div>
 </article>
 <!-- /wcm-template -->
@@ -252,10 +252,10 @@
 <!-- wcm-template:th -->
 <th scope="col"{{attrs:ariaSortAttributes}}><button
     type="button"
-    class="collection-table-sort{{attr:active2}}"
+    class="collection-table-sort{{attr:sortClass}}"
     data-act="collection-sort-column"
     data-column="{{attr:id}}"
-    aria-label="{{text:sortBy}}">{{text:title}}<span class="collection-table-sort-direction" aria-hidden="true">{{content:active3}}</span></button>
+    aria-label="{{text:sortBy}}">{{text:title}}<span class="collection-table-sort-direction" aria-hidden="true">{{content:sortDirectionIcon}}</span></button>
 </th>
 <!-- /wcm-template -->
 
@@ -286,9 +286,9 @@
     aria-pressed="{{attr:ariaPressed}}">{{t:analytics.inventory.bottlings}} <span class="collection-mode-count">{{content:length}}</span></button>
   <button
     type="button"
-    class="collection-mode-button{{attr:mode3}}"
+    class="collection-mode-button{{attr:bottlesModeClass}}"
     data-collection-mode="bottles"
-    aria-pressed="{{attr:mode4}}">{{t:forms.bottle.plural}} <span class="collection-mode-count">{{content:total}}</span></button>
+    aria-pressed="{{attr:bottlesModePressed}}">{{t:forms.bottle.plural}} <span class="collection-mode-count">{{content:total}}</span></button>
 </div>
 <!-- /wcm-template -->
 
@@ -329,7 +329,7 @@
   class="toolbar collection-filters"
   data-expanded="{{attr:filtersExpanded}}"
   aria-label="{{text:filters}}">
-  <div class="collection-filter-heading"><span class="collection-filter-heading-label">{{text:filters2}}</span>{{content:savedViewsMenuHtml}}</div>
+  <div class="collection-filter-heading"><span class="collection-filter-heading-label">{{text:filtersLabel}}</span>{{content:savedViewsMenuHtml}}</div>
   <input
     type="search"
     id="search"
@@ -357,7 +357,7 @@
     type="button"
     data-act="toggle-view"
     aria-label="{{attr:view}}"
-    title="{{attr:view2}}">{{content:view3}} <span class="collection-filter-view-text">{{content:view4}}</span></button>
+    title="{{attr:toggleViewTitle}}">{{content:toggleViewIcon}} <span class="collection-filter-view-text">{{content:toggleViewLabel}}</span></button>
   <div
     class="collection-filter-extra"
     id="collection-filter-extra"
@@ -369,18 +369,18 @@
     </select>
     <select id="filter-rating" aria-label="{{t:home.filters.filterRating}}">
       <option value="all" {{attrs:allAttributes}}>{{t:home.filters.allRatings}}</option>
-      {{content:content2}}
+      {{content:ratingOptions}}
       <option value="unrated" {{attrs:unratedAttributes}}>{{t:home.filters.unrated}}</option>
     </select>
     <select id="filter-volume-type" aria-label="{{t:home.filters.filterBottleType}}">
-      <option value="all" {{attrs:selected5}}>{{t:home.filters.allBottleTypes}}</option>
+      <option value="all" {{attrs:allVolumesSelected}}>{{t:home.filters.allBottleTypes}}</option>
       <option value="standard" {{attrs:standardAttributes}}>{{t:home.inventory.standardBottles}}</option>
       <option value="sample" {{attrs:sampleAttributes}}>{{t:analytics.inventory.samples}}</option>
     </select>
     <details class="collection-flavor-picker" data-collection-flavor-picker>
       <summary class="collection-flavor-trigger">{{text:filter}}{{content:length}}{{content:profileMissing}}{{content:chevronDownIcon}}</summary>
       <div class="collection-flavor-popover" role="group" aria-label="{{text:title}}">
-        <div class="collection-flavor-popover-head"><strong>{{text:filter2}}</strong><button
+        <div class="collection-flavor-popover-head"><strong>{{text:flavorFilterTitle}}</strong><button
             type="button"
             class="collection-popover-close"
             data-act="collection-flavor-close"
@@ -410,7 +410,7 @@
       type="button"
       class="btn small"
       data-page-to="{{attr:min}}"
-      {{attrs:disabled2}}
+      {{attrs:nextDisabled}}
       aria-label="{{t:home.pagination.nextPageLabel}}">{{content:chevronRightIcon}}</button>
   </div>
 </div>
@@ -465,7 +465,7 @@
 <div class="stats">
   {{content:content}}
 </div>
-{{content:content2}}<div class="collection-results-heading">
+{{content:activeFilterSummary}}<div class="collection-results-heading">
   <span class="collection-results-count">{{text:count}}</span>
   <div class="collection-results-actions"><button
       type="button"
@@ -473,5 +473,5 @@
       data-act="collection-flight-plan"
       {{attrs:disabledAttributes}}>{{content:flightPlanIcon}}<span>{{text:planFlight}}</span></button>
     {{content:view}}</div>
-</div>{{content:paginationTopline}}{{content:length2}}{{content:total}}
+</div>{{content:paginationTopline}}{{content:resultsContent}}{{content:total}}
 <!-- /wcm-template -->

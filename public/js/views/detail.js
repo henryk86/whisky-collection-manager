@@ -111,26 +111,26 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
                   number: entry.inventoryNumber || '',
                 }
               ),
-              id2: entry.id,
+              editorEntryId: entry.id,
               photoId: photo.id,
               editIcon: editIcon,
               photoCutoutBadge: photo.cutout ? renderTemplate('photoCutoutBadge', {sparkleIcon: sparkleIcon, }) : '',
-              id4: entry.id,
-              id5: photo.id,
+              deleteEntryId: entry.id,
+              deletePhotoId: photo.id,
               closeIcon: closeIcon,
               photoSource: photo.source === 'whiskybase' ? renderTemplate('photoSource') : '',
-              id6: entry.id,
-              id7: photo.id,
+              previousEntryId: entry.id,
+              previousPhotoId: photo.id,
               arrowLeftIcon: arrowLeftIcon,
               gripIcon: gripIcon,
-              id8: entry.id,
-              id9: photo.id,
+              nextEntryId: entry.id,
+              nextPhotoId: photo.id,
               arrowRightIcon: arrowRightIcon,
             }))),
           addActionLabel: addActionLabel(t("detail.actions.addPhotos")),
           photoAccept: photoAccept,
           bottlePhotos: entry.id,
-          id3: entry.id,
+          cameraBottleId: entry.id,
         });
       return renderTemplate('bottle', {
         firstPhoto: firstPhoto ? ' has-photos' : ' without-photos',
@@ -239,7 +239,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
           }) : '',
         ]), {columns: 3, tag: 'dl', className: 'bottle-entry-facts'}),
         bottlePhotos: t('detail.sections.bottlePhotos', {count: entryPhotos.length}),
-        bottlePhotos2: t('detail.sections.bottlePhotos', {count: entryPhotos.length}),
+        galleryHeading: t('detail.sections.bottlePhotos', {count: entryPhotos.length}),
         photoGallery: photoGallery,
         replace: t("detail.statistics.attachmentCount", {count: (entry.files || []).length}).replace("&", "&amp;"),
         length: (entry.files || []).length ? documentList(entry.files.map(file =>
@@ -248,11 +248,11 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
             fileId: file.id,
             name: file.name,
             openPreview: t('detail.documents.openPreview'),
-            name2: file.name,
+            fileLabel: file.name,
             formatFileSize: formatFileSize(file.size),
             encodeURIComponent: encodeURIComponent(entry.id),
             href: encodeURIComponent(file.id),
-            name3: file.name,
+            downloadFilename: file.name,
             downloadNamed: t('detail.documents.downloadNamed', {name: file.name}),
             arrowDownIcon: arrowDownIcon,
             download: t('detail.documents.download'),
@@ -354,7 +354,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
             wrapLabel: true,
           })),
       }),
-      latest2: latest ? panel({
+      latestTastingPanel: latest ? panel({
         className: 'tasting-summary-card',
         content: renderTemplate(
           'tastingSummaryContent',
@@ -392,7 +392,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
           }
         ),
       }) : '',
-      sectionHeader2: sectionHeader({
+      physicalBottlesHeading: sectionHeader({
         title: t('detail.statistics.bottleAndSampleCount', {count: physicalBottles.length}),
         actionsBare: true,
         actions: actionButton({

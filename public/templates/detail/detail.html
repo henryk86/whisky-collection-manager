@@ -24,7 +24,7 @@
     class="photo-edit-trigger"
     type="button"
     data-act="photo-editor-open"
-    data-id="{{text:id2}}"
+    data-id="{{text:editorEntryId}}"
     data-photo-id="{{text:photoId}}"
     title="{{t:photoEditor.title}}"
     aria-label="{{t:photoEditor.title}}">{{content:editIcon}}</button>
@@ -33,8 +33,8 @@
     class="photo-remove"
     type="button"
     data-act="delete-photo"
-    data-id="{{text:id4}}"
-    data-photo-id="{{text:id5}}"
+    data-id="{{text:deleteEntryId}}"
+    data-photo-id="{{text:deletePhotoId}}"
     aria-label="{{t:ui.confirmations.deletePhoto}}">{{content:closeIcon}}</button>
   {{content:photoSource}}
   <div class="photo-controls">
@@ -42,8 +42,8 @@
       class="photo-move"
       type="button"
       data-act="move-photo"
-      data-id="{{text:id6}}"
-      data-photo-id="{{text:id7}}"
+      data-id="{{text:previousEntryId}}"
+      data-photo-id="{{text:previousPhotoId}}"
       data-dir="-1"
       aria-label="{{t:detail.photos.moveForward}}">{{content:arrowLeftIcon}}</button>
     <button
@@ -56,8 +56,8 @@
       class="photo-move"
       type="button"
       data-act="move-photo"
-      data-id="{{text:id8}}"
-      data-photo-id="{{text:id9}}"
+      data-id="{{text:nextEntryId}}"
+      data-photo-id="{{text:nextPhotoId}}"
       data-dir="1"
       aria-label="{{t:detail.photos.moveBackward}}">{{content:arrowRightIcon}}</button>
   </div>
@@ -77,7 +77,7 @@
       accept="image/*"
       capture="environment"
       hidden
-      data-bottle-photos="{{text:id3}}"></label>
+      data-bottle-photos="{{text:cameraBottleId}}"></label>
 </div>
 <!-- /wcm-template -->
 
@@ -130,12 +130,12 @@
   data-id="{{text:id}}"
   data-file-id="{{text:fileId}}"
   data-file-name="{{text:name}}"
-  title="{{text:openPreview}}">{{text:name2}}</button>
+  title="{{text:openPreview}}">{{text:fileLabel}}</button>
 <span class="muted document-size">{{content:formatFileSize}}</span>
 <a
   class="btn small document-download"
   href="/api/bottles/{{attr:encodeURIComponent}}/files/{{attr:href}}"
-  download="{{text:name3}}"
+  download="{{text:downloadFilename}}"
   aria-label="{{text:downloadNamed}}">{{content:arrowDownIcon}}<span>{{text:download}}</span></a>
     {{content:deleteFileButton}}
 
@@ -158,7 +158,7 @@
     {{content:detailGrid}}
   </div>
   <section class="bottle-entry-gallery" aria-label="{{attr:bottlePhotos}}">
-    <h4>{{content:bottlePhotos2}}</h4>
+    <h4>{{content:galleryHeading}}</h4>
     {{content:photoGallery}}
   </section>
   <section class="bottle-documents" aria-label="{{t:detail.sections.attachments}}">
@@ -262,10 +262,10 @@
   class="section tasting-summary{{attr:latest}}"
   aria-label="{{text:title}}">
   {{content:sectionHeader}}
-  {{content:latest2}}
+  {{content:latestTastingPanel}}
 </section>
 <div data-region="detail-physical-bottles" class="section">
-  {{content:sectionHeader2}}
+  {{content:physicalBottlesHeading}}
   <div class="bottle-entry-list">{{content:list}}</div>
 </div>
 <!-- /wcm-template -->

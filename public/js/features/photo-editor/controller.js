@@ -1,9 +1,9 @@
-import {composeMarkup} from '../../ui/render-plan.js';
-import {actionButton} from '../../ui/buttons.js';
+import {renderPhotoEditor} from './presentation.js';
+
 import {t} from '../../i18n/index.js';
 
 import {imageUrl} from '../../ui/format.js';
-import {plusIcon, minusIcon} from '../../ui/action-icons.js';
+
 import {request} from '../../api.js';
 import {toast} from '../../ui/notifications.js';
 import {
@@ -17,9 +17,6 @@ import {cutoutImage} from '../cutout/image.js';
 import {createPhotoViewport} from './viewport-controller.js';
 import {DEFAULT_MASK_BRUSH_SIZE, paintMaskSegment, applyMaskStrokes}
   from './mask-brush.js';
-import {loadTemplates} from '../../ui/templates.js';
-
-const renderTemplate = await loadTemplates('photo-editor/controller.html');
 
 const MAX_PREVIEW_SIDE = 1050;
 const MAX_EXPORT_SIDE = 4096;
@@ -29,8 +26,7 @@ const MAX_IMAGE_BYTES = 9_400_000; // Allow room for JSON/base64 request overhea
  * @return {*} Matching DOM element, if present.
  */
 const root = () => document.querySelector('[data-photo-editor]');
-const resetIcon = renderTemplate('resetIconSvg');
-const pipetteIcon = renderTemplate('pipetteIconSvg');
+
 /**
  * Derives the form value result from the supplied values.
  *
@@ -180,22 +176,6 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
    */
   const endpoint = () =>
     `/api/bottles/${encodeURIComponent(selection.bottleId)}/photos/${encodeURIComponent(selection.photoId)}/adjustments`;
-
-  /**
-   * Builds the localized slider html text for the current language.
-   *
-   * @param {!Object} options Options controlling the operation.
-   * @return {string} Resulting text.
-   */
-  const sliderHtml = ({key, min, max, step}) =>
-    renderTemplate('photoEditorSlider', {
-      t: t(`photoEditor.${key}`),
-      key: key,
-      photoSlider: key,
-      min: min,
-      max: max,
-      step: step,
-    });
 
   /**
    * Selects tab matching the input.
@@ -656,60 +636,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
     if (renderId) cancelAnimationFrame(renderId);
     showModal(
       t('photoEditor.title'),
-      renderTemplate('photoEditor', {
-        preview: t('photoEditor.preview'),
-        zoom: t('photoEditor.zoom'),
-        zoomOut: t('photoEditor.zoomOut'),
-        zoomOut2: t('photoEditor.zoomOut'),
-        minusIcon: minusIcon,
-        zoomReset: t('photoEditor.zoomReset'),
-        zoomReset2: t('photoEditor.zoomReset'),
-        zoomIn: t('photoEditor.zoomIn'),
-        zoomIn2: t('photoEditor.zoomIn'),
-        plusIcon: plusIcon,
-        before: t('photoEditor.before'),
-        title: t('photoEditor.title'),
-        adjustmentsTab: t('photoEditor.adjustmentsTab'),
-        cutoutTab: t('photoEditor.cutoutTab'),
-        pHOTOADJUSTMENTGROUPS: composeMarkup(
-          PHOTO_ADJUSTMENT_GROUPS.map(group =>
-            renderTemplate('photoEditorGroup', {
-              t: t(`photoEditor.${group.key}`),
-              t2: t(`photoEditor.${group.key}`),
-              photoEditorPickWhite: group.key === 'color' ?
-                renderTemplate('photoEditorPickWhite', {
-                  pickWhite: t('photoEditor.pickWhite'),
-                  ariaLabel: t('photoEditor.pickWhite'),
-                  pipetteIcon: pipetteIcon,
-                }) : '',
-              key: group.key,
-              resetGroup: t('photoEditor.resetGroup', {group: t(`photoEditor.${group.key}`)}),
-              ariaLabel: t('photoEditor.resetGroup', {group: t(`photoEditor.${group.key}`)}),
-              resetIcon: resetIcon,
-              sliders: composeMarkup(group.sliders.map(sliderHtml)),
-            }))),
-        t: t(photo.cutout ? 'photoEditor.recutout' : 'cutout.title'),
-        photoEditorToggleCutout: photo.cutout ?
-          renderTemplate('photoEditorToggleCutout', {
-            selected: photo.cutout.selected ? t('cutout.showOriginal') : t('cutout.showCutout'),
-          }) : '',
-        remove: t('cutout.remove'),
-        maskTools: t('photoEditor.maskTools'),
-        erase: t('photoEditor.erase'),
-        restore: t('photoEditor.restore'),
-        brushUndo: t('photoEditor.brushUndo'),
-        brushSize: t('photoEditor.brushSize'),
-        dEFAULTMASKBRUSHSIZE: DEFAULT_MASK_BRUSH_SIZE,
-        DEFAULT_MASK_BRUSH_SIZE: DEFAULT_MASK_BRUSH_SIZE,
-        loading: t('photoEditor.loading'),
-        auto: t('photoEditor.auto'),
-        reset: t('photoEditor.reset'),
-        closeModalButton: actionButton({
-          label: t('common.actions.cancel'),
-          action: 'close-modal',
-        }),
-        save: t('common.actions.save'),
-      }),
+      renderPhotoEditor(photo),
       true,
       Boolean(state.modal),
       '',

@@ -1,5 +1,5 @@
 /** @fileoverview Clones static templates and binds values through the DOM. */
-import {RenderPlan, SLOT, slotValue, scalarBinding, serializeMarkup} from './render-plan.js';
+import {RenderPlan, SLOT, slotValue, scalarBinding} from './render-plan.js';
 import {attributeEntries, checkedAttribute, checkedTag, decodeEscaped} from './bindings.js';
 
 const templates = new WeakMap();
@@ -170,13 +170,11 @@ export function materialize(value, doc, context = null) {
 }
 
 /**
- * Replaces a host's content with native nodes. The fallback is exclusively for
- * existing DOM-free test doubles receiving serialized template output.
+ * Replaces a host's content with native nodes.
  * @param {!Element} host Target element.
  * @param {*} value Render plan or native node.
  */
 export function replaceContent(host, value) {
-  if (!host.ownerDocument) {host.innerHTML = serializeMarkup(value); return;}
   host.replaceChildren(materialize(value, host.ownerDocument, host));
 }
 
@@ -186,11 +184,6 @@ export function replaceContent(host, value) {
  * @param {*} value Render plan or native node.
  */
 export function appendContent(host, value) {
-  if (!host.ownerDocument) {
-    if (host.insertAdjacentHTML) host.insertAdjacentHTML('beforeend', serializeMarkup(value));
-    else host.innerHTML += serializeMarkup(value);
-    return;
-  }
   host.append(materialize(value, host.ownerDocument, host));
 }
 

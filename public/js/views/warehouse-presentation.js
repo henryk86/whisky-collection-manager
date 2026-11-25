@@ -212,7 +212,7 @@ function bottleRow(w, bottle, selected = false) {
     place: place ? safe(place.label) : t("detail.fields.unassigned"),
     warehouseBottleFacts: facts ? renderTemplate('warehouseBottleFacts', {facts: facts, }) : '',
     locationBottleId: safe(bottle.id),
-    place2: place ? t("warehouse.bottles.relocate") : t("warehouse.bottles.assignAction"),
+    assignmentLabel: place ? t("warehouse.bottles.relocate") : t("warehouse.bottles.assignAction"),
   });
 }
 
@@ -273,14 +273,14 @@ function roomDiagram(room, w, layer = 'all') {
         ? renderTemplate('warehouseGrid', {
           level: level,
           position: position,
-          x2: position,
+          endX: position,
           vbH: vbH,
         })
         : renderTemplate('warehouseGrid2', {
           level: level,
           position: position,
           vbW: vbW,
-          y2: position,
+          endY: position,
         }));
     }
   };
@@ -303,12 +303,12 @@ function roomDiagram(room, w, layer = 'all') {
       y: y + 1,
       max: Math.max(2, fw - 2),
       height: Math.max(2, fh - 2),
-      x2: x + fw / 2,
-      y2: y + fh / 2 - 4,
+      nameX: x + fw / 2,
+      nameY: y + fh / 2 - 4,
       furnitureName: safe(f.name.slice(0, 19)),
-      x3: x + fw / 2,
-      y3: y + fh / 2 + 13,
-      elevation2: (f.elevation ?? 0) > 0 ? `${t("warehouse.view.fromElevation", {height: num(f.elevation)})} · ` : '',
+      detailsX: x + fw / 2,
+      detailsY: y + fh / 2 + 13,
+      elevationLabel: (f.elevation ?? 0) > 0 ? `${t("warehouse.view.fromElevation", {height: num(f.elevation)})} · ` : '',
       abbreviatedBottleCount: t("warehouse.view.abbreviatedBottleCount", {count: assigned}),
     });
   }));
@@ -500,12 +500,12 @@ function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
       doorLabel: doorLabel,
       num: num(height),
       heightCm: shelf.heightCm == null ? ` ${t('warehouse.shelves.automaticHeight')}` : '',
-      capacity2: shelf.capacity === 0 ? '' : ` · ${occupants.length}${shelf.capacity === null ? '' : ` / ${shelf.capacity}`} ${t("forms.bottle.plural")}`,
+      occupancyLabel: shelf.capacity === 0 ? '' : ` · ${occupants.length}${shelf.capacity === null ? '' : ` / ${shelf.capacity}`} ${t("forms.bottle.plural")}`,
       id: safe(shelf.id),
       disabledAttributes: i === furniture.shelves.length - 1 ? {"disabled": true} : {},
       arrowUpIcon: arrowUpIcon,
       moveDownShelfId: safe(shelf.id),
-      disabled2: i === 0 ? {"disabled": true} : {},
+      moveUpDisabled: i === 0 ? {"disabled": true} : {},
       arrowDownIcon: arrowDownIcon,
       copyShelfId: safe(shelf.id),
       editShelfId: safe(shelf.id),

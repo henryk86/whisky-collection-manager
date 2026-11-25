@@ -46,7 +46,7 @@
 <!-- /wcm-template -->
 
 <!-- wcm-template:legend -->
-<{{tag:action}}{{attrs:typeAttributes}} class="analytics-pie-item{{attr:action2}}"{{attrs:action3}}><i style="--slice:{{attr:colors}}"></i><span>{{content:label}}</span><strong>{{content:count}}</strong></{{tag:action4}}>
+<{{tag:action}}{{attrs:typeAttributes}} class="analytics-pie-item{{attr:linkClass}}"{{attrs:linkAttributes}}><i style="--slice:{{attr:colors}}"></i><span>{{content:label}}</span><strong>{{content:count}}</strong></{{tag:closingTag}}>
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsComposition -->
@@ -115,7 +115,7 @@
 
 <!-- wcm-template:analyticsPeriod -->
 <div class="analytics-period" aria-label="{{t:analytics.trends.granularity}}"><label>{{t:analytics.filters.dateRange}} <select id="analytics-period"><option value="month" {{attrs:monthAttributes}}>{{t:analytics.trends.monthly}}</option><option value="year" {{attrs:yearAttributes}}>{{t:analytics.trends.yearly}}</option></select></label>
-  {{content:dateBoundary}}{{content:dateBoundary2}}</div>
+  {{content:dateBoundary}}{{content:endDateControl}}</div>
 <!-- /wcm-template -->
 
 <!-- wcm-template:analyticsIntro -->
@@ -158,9 +158,9 @@
 <!-- wcm-template:analyticsFilters -->
 <div class="analytics-filters" aria-label="{{t:analytics.filters.title}}">
   {{content:select}}
-  {{content:select2}}
-  {{content:select3}}
-  {{content:select4}}
+  {{content:countryFilter}}
+  {{content:volumeFilter}}
+  {{content:statusFilter}}
   {{content:analyticsResetButton}}</div>
 <!-- /wcm-template -->
 

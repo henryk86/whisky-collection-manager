@@ -51,9 +51,9 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
   });
   return renderTemplate('warehouseRoomTransfer', {
     tab: tab('export', t('warehouse.transfer.exportAction')),
-    tab2: tab('import', t('warehouse.transfer.importAction')),
+    importTab: tab('import', t('warehouse.transfer.importAction')),
     exportAttributes: mode !== 'export' ? {"hidden": true} : {},
-    fORMEXPORT: FORM_EXPORT,
+    exportFormId: FORM_EXPORT,
     checkedAttributes: selectedRoomId ? {} : {"checked": true},
     rooms: composeMarkup(rooms.map(room =>
       renderTemplate('warehouseTransferChoice', {
@@ -64,8 +64,8 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
       }))),
     actions: actions,
     importAttributes: mode !== 'import' ? {"hidden": true} : {},
-    fORMIMPORT: FORM_IMPORT,
-    actions2: actions,
+    importFormId: FORM_IMPORT,
+    footerActions: actions,
   });
 }
 

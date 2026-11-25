@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, captureContent, captureAppend} from '../helpers/rendering.js';
 import {backNavigation} from '../../public/js/ui/headers.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,6 +16,7 @@ import {createSelectors} from '../../public/js/domain/selectors.js';
 function headerFor(page) {
   const root = {innerHTML: ''};
   createShell({
+    mountContent: captureContent,
     root,
     state: {page, version: '0.27.1', modal: null},
     /**
@@ -63,6 +64,7 @@ test('tasting landing page uses the shared analytics page heading only', () => {
     },
   };
   createTastingsView({
+    mountContent: captureContent, mountAppend: captureAppend,
     state,
     /**
      * Derives the shell result from the supplied values.
@@ -123,6 +125,7 @@ test(
     };
     let html = '';
     const view = createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
        * Derives the shell result from the supplied values.
@@ -204,6 +207,7 @@ test(
     };
     let html = '';
     const view = createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
        * Derives the shell result from the supplied values.
@@ -269,6 +273,7 @@ test(
       collection: {bottlings: [], distilleries: [], externalTastings: []},
     };
     createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
        * Derives the shell result from the supplied values.
@@ -322,6 +327,7 @@ test(
     };
     let html = '';
     const view = createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
        * Derives the shell result from the supplied values.
@@ -409,6 +415,7 @@ test(
     };
     let html = '';
     const view = createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
        * Derives the shell result from the supplied values.
@@ -477,6 +484,7 @@ test(
     };
     let html = '';
     const view = createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
        * Derives the shell result from the supplied values.
@@ -528,6 +536,7 @@ test(
       collection: {bottlings: [], externalTastings: [saved]},
     };
     const view = createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
        * Updates the shell state for its caller.
@@ -639,6 +648,7 @@ test(
       },
     };
     const view = createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
        * Derives the shell result from the supplied values.
@@ -707,6 +717,7 @@ test(
     };
     let html = '';
     const view = createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       selectors: createSelectors(state),
       /**
@@ -783,6 +794,7 @@ test(
       collection: {bottlings: [b], externalTastings: []},
     };
     const view = createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
        * Derives the shell result from the supplied values.
@@ -851,6 +863,7 @@ test(
       collection: {bottlings: [], externalTastings: [external]},
     };
     const view = createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
        * Derives the shell result from the supplied values.
@@ -949,6 +962,7 @@ test(
     }
     let tastingHtml = '';
     createTastingsView({
+      mountContent: captureContent, mountAppend: captureAppend,
       state: {page: 'tastings', selected: 'b1', collection},
       /**
        * Derives the shell result from the supplied values.

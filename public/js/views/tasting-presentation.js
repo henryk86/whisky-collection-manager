@@ -89,7 +89,7 @@ export function createTastingPresentation({state, selectors}) {
           }),
         hiddenAttributes: draft ? {} : {"hidden": true},
         externalFields: externalFields(bottling),
-        draft3: draft ? '' :
+        existingRecordActions: draft ? '' :
           renderTemplate('actions', {
             tastingExternalCancelButton: actionButton({
               label: t('common.actions.cancel'),
@@ -210,10 +210,10 @@ export function createTastingPresentation({state, selectors}) {
       ),
       headingTitle: headingTitle({title: t('tasting.colorHeading')}),
       whiskyColorDisplay: whiskyColorDisplay(value.whiskyColor) || renderTemplate('hint', {notRecorded: t('tastings.notRecorded'), }),
-      headingTitle2: headingTitle({title: t('flavor.title')}),
+      flavorHeading: headingTitle({title: t('flavor.title')}),
       flavorChart: flavorChart(value.flavorProfile, {editable: false}),
-      headingTitle3: headingTitle({title: t('tasting.notes'), }),
-      detailGrid2: detailGrid(
+      notesHeading: headingTitle({title: t('tasting.notes'), }),
+      notesGrid: detailGrid(
         composeMarkup(['nose', 'palate', 'finish'].map(key => detailField({
           label: t(`forms.bottling.${key}`),
           value: blank(value.tastingNotes?.[key]),
@@ -225,7 +225,7 @@ export function createTastingPresentation({state, selectors}) {
         }))),
         {columns: 3, className: 'tasting-notes tasting-readonly-notes'}
       ),
-      headingTitle4: headingTitle({title: t('tasting.overallRating'), }),
+      ratingHeading: headingTitle({title: t('tasting.overallRating'), }),
       staticRating: staticRating(value),
       trim: value.ratingComment?.trim() ? detailField({
         label: t('tasting.ratingComment'),
@@ -272,13 +272,13 @@ export function createTastingPresentation({state, selectors}) {
       dataExternalAttributes: home ? {"data-external": external ? '1' : '0', "data-bottling-id": external ? record.id : b.id} : {},
       id: record.id,
       content: `${t('tastings.open')}: ${home ? b.name : (record.title || formatDate(record.tastedOn))}`,
-      home4: home ? b.name : (record.title || formatDate(record.tastedOn)),
-      home5: home ? formatDate(record.tastedOn) : (record.title ? formatDate(record.tastedOn) : ''),
-      home6: home && record.title ? ` · ${escapeHtml(record.title)}` : '',
+      entryTitle: home ? b.name : (record.title || formatDate(record.tastedOn)),
+      entryDate: home ? formatDate(record.tastedOn) : (record.title ? formatDate(record.tastedOn) : ''),
+      entrySubtitle: home && record.title ? ` · ${escapeHtml(record.title)}` : '',
       tastingListGlasses: tastingListGlasses(record),
       tastingRating: tastingRating(record),
       chevronRightIcon: chevronRightIcon,
-      home7: home ? '' :
+      deleteAction: home ? '' :
         renderTemplate('tastingDelete', {
           id: record.id,
           delete: t('common.actions.delete'),

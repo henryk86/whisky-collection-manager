@@ -40,7 +40,7 @@
         type="button"
         class="btn small"
         data-act="warehouse-unassigned-next"
-        {{attrs:disabled2}}>{{t:home.pagination.next}}</button>
+        {{attrs:nextDisabled}}>{{t:home.pagination.next}}</button>
     </div>
   </div>
 </div>
@@ -62,7 +62,7 @@
 
 <!-- wcm-template:warehouseUnassignedTray -->
 <details class="warehouse-unassigned-tray" {{attrs:openAttributes}} aria-label="{{attr:label}}">
-  <summary class="warehouse-unassigned-summary"><strong>{{content:label2}}</strong><span>{{t:warehouse.wall.unassignedToggleHint}}</span></summary>
+  <summary class="warehouse-unassigned-summary"><strong>{{content:trayLabel}}</strong><span>{{t:warehouse.wall.unassignedToggleHint}}</span></summary>
   {{content:content}}
 </details>
 <!-- /wcm-template -->

@@ -35,7 +35,7 @@
 <!-- wcm-template:photoEditorGroup -->
 <section class="photo-editor-group" aria-label="{{text:t}}">
   <div class="photo-editor-group-header">
-    <h3>{{text:t2}}</h3>
+    <h3>{{text:groupHeading}}</h3>
     <div class="photo-editor-group-tools">{{content:photoEditorPickWhite}}
       <button
         type="button"
@@ -83,19 +83,19 @@
               type="button"
               data-act="photo-editor-zoom-out"
               aria-label="{{text:zoomOut}}"
-              title="{{text:zoomOut2}}"
+              title="{{text:zoomOutTitle}}"
               disabled>{{content:minusIcon}}</button>
             <button
               type="button"
               data-act="photo-editor-zoom-reset"
               aria-label="{{text:zoomReset}}"
-              title="{{text:zoomReset2}}"
+              title="{{text:zoomResetTitle}}"
               disabled><span data-photo-editor-zoom-level>100 %</span></button>
             <button
               type="button"
               data-act="photo-editor-zoom-in"
               aria-label="{{text:zoomIn}}"
-              title="{{text:zoomIn2}}">{{content:plusIcon}}</button>
+              title="{{text:zoomInTitle}}">{{content:plusIcon}}</button>
           </div>
           <div class="photo-editor-stage-actions">
             <button
@@ -134,7 +134,7 @@
         role="tabpanel"
         aria-labelledby="photo-editor-tab-adjustments"
         data-photo-editor-panel="adjustments">
-        {{content:pHOTOADJUSTMENTGROUPS}}
+        {{content:adjustmentGroups}}
       </div>
       <div
         class="photo-editor-tab-panel"
@@ -185,9 +185,9 @@
               min="1"
               max="15"
               step="1"
-              value="{{attr:dEFAULTMASKBRUSHSIZE}}"
+              value="{{attr:defaultBrushSize}}"
               data-photo-brush-size>
-            <output data-photo-brush-size-value>{{content:DEFAULT_MASK_BRUSH_SIZE}} %</output>
+            <output data-photo-brush-size-value>{{text:defaultBrushSize}} %</output>
           </label>
         </div>
       </div>

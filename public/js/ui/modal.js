@@ -17,7 +17,7 @@ const renderTemplate = await loadTemplates('dialogs/modal.html');
  * @return {!Object} Methods for opening, updating, closing and confirming
  *     dialogs.
  */
-export function createModal({state, onClose}) {
+export function createModal({state, onClose, mountContent = replaceContent}) {
   const suspended = [];
   let pendingConfirmation = null;
   let pendingChoice = null;
@@ -185,7 +185,7 @@ export function createModal({state, onClose}) {
     if (!host || !state.modal) return;
     // Refreshes of the background view must never reset an open edit form.
     if (host.firstElementChild?.__dsModalState === state.modal) return;
-    replaceContent(host, modalFrame({
+    mountContent(host, modalFrame({
       ...state.modal, closeLabel: t('common.actions.close'),
     }));
     const overlay = host.querySelector('.overlay');
@@ -240,7 +240,7 @@ export function createModal({state, onClose}) {
     }
     suspended.length = 0;
     state.modal = null;
-    if (host) replaceContent(host, '');
+    if (host) mountContent(host, '');
     unlockBackground();
     // Restore focus without a hidden scroll-to-element action.
     focusElement(originFocus);
@@ -351,7 +351,7 @@ export function createModal({state, onClose}) {
     state.modal.content = content;
     const host = query('#modal-root');
     const body = host?.querySelector('.ds-modal-body');
-    if (body) replaceContent(body, content);
+    if (body) mountContent(body, content);
   }
   return {
     showModal,

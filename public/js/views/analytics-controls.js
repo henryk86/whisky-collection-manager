@@ -37,7 +37,7 @@ export function periodControls(state) {
     monthAttributes: selected === 'month' ? {"selected": true} : {},
     yearAttributes: selected === 'year' ? {"selected": true} : {},
     dateBoundary: dateBoundary('start', state.analyticsStartDate || ''),
-    dateBoundary2: dateBoundary('end', state.analyticsEndDate || ''),
+    endDateControl: dateBoundary('end', state.analyticsEndDate || ''),
   });
 }
 
@@ -82,7 +82,7 @@ export function filterControls(state, options) {
       ],
       filters.distillery || 'all'
     ),
-    select2: select(
+    countryFilter: select(
       'country',
       t('analytics.filters.country'),
       [
@@ -91,7 +91,7 @@ export function filterControls(state, options) {
       ],
       filters.country || 'all'
     ),
-    select3: select(
+    volumeFilter: select(
       'volumeType',
       t('analytics.filters.bottleType'),
       [
@@ -101,7 +101,7 @@ export function filterControls(state, options) {
       ],
       filters.volumeType || 'all'
     ),
-    select4: select(
+    statusFilter: select(
       'status',
       t('forms.bottle.status'),
       [

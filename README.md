@@ -97,6 +97,7 @@ Beim ersten Start wird `admin` mit einem **individuellen Startpasswort** angeleg
 ```bash
 npm run hooks:install  # Commit-Nachrichten lokal prüfen (einmal pro Klon)
 npm run check          # Syntax, Module, Übersetzungen und Dokumentationslinks
+npx playwright-core install --with-deps chromium
 npm test               # Unit- und Integrationstests
 npm run test:browser   # Browser-Tests mit Playwright/Chromium
 ```

@@ -69,6 +69,6 @@ export function actionButton({
     titleAttributes: title ? {"title": String(title)} : {},
     attributes: attributes,
     trustedContent: trustedContent || icon,
-    trustedContent2: trustedContent ? '' : iconOnly ? '' : wrapLabel ? renderTemplate('actionButtonSpan', {label: safe, }) : safe,
+    buttonLabel: trustedContent ? '' : iconOnly ? '' : wrapLabel ? renderTemplate('actionButtonSpan', {label: safe, }) : safe,
   });
 }

@@ -51,7 +51,7 @@ export function headingTitle({
     title: String(title),
     headingPeriod: period ? renderTemplate('headingPeriod') : '',
     trailingAction: trailingAction || '',
-    level2: `h${level}`,
+    closingHeadingTag: `h${level}`,
   });
 }
 
@@ -148,14 +148,14 @@ export function backNavigation(action, label, region = '', variant = 'inline') {
       text: text,
       attr: attr,
       arrowLeftIcon: arrowLeftIcon,
-      text2: text,
+      buttonLabel: text,
     });
   }
   return renderTemplate('pageBackNav', {
     text: text,
     attr: attr,
     arrowLeftIcon: arrowLeftIcon,
-    text2: text,
+    buttonLabel: text,
   });
 }
 

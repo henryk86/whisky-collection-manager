@@ -70,7 +70,7 @@ for (const filename of files) {
       used.add(name.text);
       const slots = new Set([...templates.get(name.text).matchAll(/\{\{(?:content|attr|attrs|text|tag):([\w.]+)\}\}/g)].map(match => match[1]));
       const supplied = new Set(bindings && ts.isObjectLiteralExpression(bindings) ? bindings.properties.map(prop => prop.name?.getText(source)) : []);
-      if (slots.size !== supplied.size || [...slots].some(slot => !supplied.has(slot))) {
+      if (supplied.size !== (bindings?.properties?.length || 0) || slots.size !== supplied.size || [...slots].some(slot => !supplied.has(slot))) {
         throw new Error(`${file}: incorrect bindings for ${name.text}`);
       }
     }
@@ -83,6 +83,13 @@ for (const file of templateFiles) {
   if (!reference) throw new Error(`${file}: unreferenced template file`);
   for (const [name, markup] of reference.templates) {
     validateTemplateStructure(markup, `${file}#${name}`);
+    const names = new Set([...markup.matchAll(/\{\{(?:content|attr|attrs|text|tag):([\w.]+)\}\}/g)].map(match => match[1]));
+    for (const slot of names) {
+      const numbered = slot.match(/^(.{2,}?)[2-9]\d*$/);
+      if ((numbered && names.has(numbered[1])) || /^[a-z][A-Z]{3,}$/.test(slot)) {
+        throw new Error(`${file}#${name}: give ${slot} a descriptive binding name`);
+      }
+    }
     if (!reference.used.has(name)) throw new Error(`${file}: unused ${name}`);
   }
   templateCount += reference.templates.size;

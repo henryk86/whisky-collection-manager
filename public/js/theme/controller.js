@@ -5,9 +5,10 @@ import {themeSunIcon, themeMoonIcon} from '../ui/action-icons.js';
 /**
  * Theme is a local browser preference, not collection data.
  *
+ * @param {function(!Element, *): void=} mountContent Content mount boundary.
  * @return {!Object} Structured result for the caller.
  */
-export function createThemeController() {
+export function createThemeController(mountContent = replaceContent) {
   const themeMedia = window.matchMedia('(prefers-color-scheme: dark)');
   let themePreference = getThemePreference();
   /**
@@ -19,7 +20,7 @@ export function createThemeController() {
     document.documentElement.style.colorScheme = active;
     const button = document.querySelector('[data-act=toggle-theme]');
     if (button) {
-      replaceContent(button, active === 'dark' ? themeSunIcon : themeMoonIcon);
+      mountContent(button, active === 'dark' ? themeSunIcon : themeMoonIcon);
       button.title = active === 'dark' ? t("ui.theme.enableLight") : t("ui.theme.enableDark");
       button.setAttribute('aria-label', button.title);
       button.setAttribute('aria-pressed', String(active === 'dark'));

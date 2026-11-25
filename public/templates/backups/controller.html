@@ -11,7 +11,7 @@
       class="btn"
       type="button"
       data-act="backup-download-prepared"
-      data-id="{{text:id2}}">{{t:backups.actions.downloadZip}}</button>
+      data-id="{{text:restoreId}}">{{t:backups.actions.downloadZip}}</button>
     {{content:closeModalButton}}
     <button class="btn danger" type="submit">{{t:backups.actions.importBackup}}</button>
   </div>
@@ -20,7 +20,7 @@
 
 <!-- wcm-template:backupUnlockZipForm -->
 <form id="backup-unlock-zip-form" data-id="{{text:id}}" data-filename="{{text:filename}}">
-  <p>{{t:backups.restore.savedArchive}} <strong>{{text:filename2}}</strong> {{t:backups.restore.openForPreview}}</p>
+  <p>{{t:backups.restore.savedArchive}} <strong>{{text:displayFilename}}</strong> {{t:backups.restore.openForPreview}}</p>
   <label class="form-field">{{t:backups.password.archiveLabel}}<input
       type="password"
       name="password"

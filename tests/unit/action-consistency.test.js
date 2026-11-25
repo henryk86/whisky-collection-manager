@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, captureContent} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createShell} from '../../public/js/ui/shell.js';
@@ -13,6 +13,7 @@ import {newBottlingIcon, inventoryScanIcon, settingsIcon, settingsIconPaths}
 function renderShell() {
   const root = {innerHTML: ''};
   createShell({
+    mountContent: captureContent,
     root,
     state: {version: '0.6.50', modal: null},
     /**

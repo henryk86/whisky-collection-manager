@@ -23,7 +23,7 @@
 <div id="warehouse-room-transfer" class="warehouse-room-transfer">
   <div class="warehouse-transfer-tabs" role="tablist" aria-label="{{t:warehouse.transfer.action}}">
     {{content:tab}}
-    {{content:tab2}}
+    {{content:importTab}}
   </div>
   <section
     class="warehouse-transfer-panel"
@@ -31,7 +31,7 @@
     role="tabpanel"
     aria-labelledby="warehouse-transfer-tab-export"
     {{attrs:exportAttributes}}>
-    <form id="{{attr:fORMEXPORT}}" class="warehouse-transfer-form">
+    <form id="{{attr:exportFormId}}" class="warehouse-transfer-form">
       <p>{{t:warehouse.transfer.exportDescription}}</p>
       <label class="warehouse-transfer-choice"><input type="checkbox" id="warehouse-transfer-all" {{attrs:checkedAttributes}}> {{t:warehouse.transfer.allRooms}}</label>
       <div class="warehouse-transfer-rooms">{{content:rooms}}</div>
@@ -47,7 +47,7 @@
     role="tabpanel"
     aria-labelledby="warehouse-transfer-tab-import"
     {{attrs:importAttributes}}>
-    <form id="{{attr:fORMIMPORT}}" class="warehouse-transfer-form">
+    <form id="{{attr:importFormId}}" class="warehouse-transfer-form">
       <p>{{t:warehouse.transfer.importDescription}}</p>
       <label class="form-field">{{t:warehouse.transfer.file}}<input
           type="file"
@@ -59,7 +59,7 @@
       <p class="hint">{{t:warehouse.transfer.importWarning}}</p>
       <div id="warehouse-transfer-preview" aria-live="polite">
       </div>
-      <div class="actions ds-modal-footer warehouse-form-actions">{{content:actions2}}<button type="submit" class="btn primary">{{t:warehouse.transfer.preview}}</button><button
+      <div class="actions ds-modal-footer warehouse-form-actions">{{content:footerActions}}<button type="submit" class="btn primary">{{t:warehouse.transfer.preview}}</button><button
           type="button"
           class="btn primary"
           id="warehouse-transfer-apply"

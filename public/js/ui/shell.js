@@ -17,7 +17,7 @@ const renderTemplate = await loadTemplates('components/shell.html');
  * @param {!Object} options Optional configuration for the operation.
  * @return {Function} Entries transformed for the consuming code.
  */
-export function createShell({root, state, applyTheme, renderModal}) {
+export function createShell({root, state, applyTheme, renderModal, mountContent = replaceContent}) {
   let displayedRoute = null;
   /**
    * Transforms the entries used by shell.
@@ -53,12 +53,12 @@ export function createShell({root, state, applyTheme, renderModal}) {
       return;
     }
     displayedRoute = route;
-    replaceContent(root, renderTemplate('back', {
+    mountContent(root, renderTemplate('back', {
       themeMoonIcon: themeMoonIcon,
       inventoryScanIcon: inventoryScanIcon,
       newBottlingIcon: newBottlingIcon,
       closeIcon: closeIcon,
-      mAINPAGES: composeMarkup(MAIN_PAGES.map(item => renderTemplate('a', {
+      navigationLinks: composeMarkup(MAIN_PAGES.map(item => renderTemplate('a', {
         url: item.url,
         action: item.action,
         homeAttributes: item.id === state.page || (item.id === 'home' && state.page === 'detail') ||

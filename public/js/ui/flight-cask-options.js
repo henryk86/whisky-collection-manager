@@ -50,7 +50,7 @@ export function flightCaskOptionsHtml(t) {
           const fields = composeMarkup(values.map(value => checkboxInput(t(`${prefix}subtype.${value}`), featureField(group, dimension, value))));
           return renderTemplate('flightPlanCaskDimension', {
             title: title,
-            title2: title,
+            dimensionTitle: title,
             fields: fields,
           });
         }));
@@ -80,7 +80,7 @@ export function flightCaskOptionsHtml(t) {
   });
   return renderTemplate('flightPlanCaskFilter', {
     label: label,
-    label2: label,
+    filterLabel: label,
     reset: reset,
     hint: hint,
     groups: groups,
@@ -88,8 +88,8 @@ export function flightCaskOptionsHtml(t) {
     details: details,
     phaseLabel: phaseLabel,
     phases: phases,
-    t2: t(`${prefix}selection`),
-    t3: t(`${prefix}allGroups`),
+    selectionLabel: t(`${prefix}selection`),
+    allGroupsLabel: t(`${prefix}allGroups`),
   });
 }
 

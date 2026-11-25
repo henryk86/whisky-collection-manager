@@ -7,18 +7,18 @@
   aria-pressed="{{attr:ariaPressed}}"
   title="{{text:t}}">
   {{content:glencairnSymbol}}
-  <span>{{text:t2}}</span></button>
+  <span>{{text:colorLabel}}</span></button>
 <!-- /wcm-template -->
 
 <!-- wcm-template:whiskyColorSelector -->
 <div class="whisky-color-selector" data-whisky-color="{{text:selected}}">
   <div class="whisky-color-grid" role="group" aria-label="{{text:color}}">
-    {{content:wHISKYCOLORS}}
+    {{content:colorOptions}}
   </div>
   <div class="whisky-custom-row{{attr:custom}}" role="group" aria-label="{{text:colorCustom}}">
     <div class="whisky-custom-preview">
       {{content:glencairnSymbol}}
-      <strong>{{text:colorCustom2}}</strong>
+      <strong>{{text:customColorLabel}}</strong>
     </div>
     <div class="whisky-custom-controls">
       <div
@@ -28,7 +28,7 @@
         role="button"
         aria-label="{{text:colorCustomPicker}}"
         aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"
-        style="--picker-x:{{attr:toFixed}}%;--picker-y:{{attr:toFixed2}}%">
+        style="--picker-x:{{attr:toFixed}}%;--picker-y:{{attr:pickerY}}%">
         <span class="whisky-custom-cursor" aria-hidden="true"></span>
       </div>
       <output class="whisky-custom-name" data-whisky-custom-name aria-live="polite">{{text:whiskyCustomColorName}}</output>

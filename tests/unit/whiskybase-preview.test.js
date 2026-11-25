@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, captureContent, captureAppend} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -111,7 +111,7 @@ test(
       }),
     };
     try {
-      const controller = createWhiskybase({state: {collection: {distilleries: [{id: 'd-1', name: 'Kilchoman'}]}}, });
+      const controller = createWhiskybase({mountContent: captureContent, mountAppend: captureAppend, state: {collection: {distilleries: [{id: 'd-1', name: 'Kilchoman'}]}}, });
       controller.previewImport({
         version: 2, source: 'external', distilleryName: 'Kilchoman',
         fields: {

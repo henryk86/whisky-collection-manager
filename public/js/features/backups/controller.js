@@ -330,7 +330,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
         bottles: result.bottles,
         distilleries: result.distilleries,
         restoredAssets: t("features.backups.restoredAssets", {count: result.files, size: (result.bytes / 1048576).toFixed(1)}),
-        id2: result.id,
+        restoreId: result.id,
         closeModalButton: actionButton({
           label: t("common.actions.cancel"),
           action: 'close-modal',
@@ -352,7 +352,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
       renderTemplate('backupUnlockZipForm', {
         id: id,
         filename: filename || 'Sicherung.zip',
-        filename2: filename || '',
+        displayFilename: filename || '',
         closeModalButton: actionButton({
           label: t("common.actions.cancel"),
           action: 'close-modal',

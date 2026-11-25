@@ -210,10 +210,10 @@ export function renderWarehouseAssignment(warehouse, bottle) {
         length: bottles.length > 5 ? ' …' : '',
       }
     ) : '',
-    isBulk2: isBulk ? '' :
+    currentLocationPanel: isBulk ? '' :
       renderTemplate('warehouseAssignmentCurrent', {
         ariaLabel: safe(t('warehouse.assignment.currentLocation')),
-        currentLocation: safe(t('warehouse.assignment.currentLocation')),
+        currentLocationLabel: safe(t('warehouse.assignment.currentLocation')),
         currentLocation: safe(current?.label || t('warehouse.bottles.unassignedLabel')),
       }),
     newLocation: safe(t('warehouse.assignment.newLocation')),
@@ -224,7 +224,7 @@ export function renderWarehouseAssignment(warehouse, bottle) {
     disabledAttributes: !roomId ? {"disabled": true} : {},
     furnitureOptions: furnitureOptions(current?.room, furnitureId),
     shelfLabel: safe(t('warehouse.assignment.shelf')),
-    disabled2: !furnitureId ? {"disabled": true} : {},
+    shelfDisabled: !furnitureId ? {"disabled": true} : {},
     shelfOptions: shelfOptions(warehouse, current?.furniture, ids, shelfId),
     feedback: safe(shelfId ? occupancyMessage(warehouse, shelfId, ids) : t('warehouse.assignment.selectHint')),
   });
