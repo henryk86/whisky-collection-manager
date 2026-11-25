@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.13.0 - 2026-11-25
+
+- test: cover fully expanded tasting planner in visual regression
+- fix: restore spacing below flight completion action
+- feat: unify cask classification and update tasting planning help
+
 ## 1.12.6 - 2026-11-25
 
 - fix(docs): remove redundant information about JSON file usability in README
