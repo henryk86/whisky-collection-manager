@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.12.5 - 2026-11-25
+
+- style(ci): fix JavaScript formatting in visual comparison tests
+- fix(ci): consistently apply visual pixel tolerance
+- fix(ci): tolerate isolated rendering noise in visual comparisons
+- fix(ci): enforce successful visual comparison before visual approval
+- fix(ci): correct visual approval permissions and decouple status reporting from PR comments
+- fix: clarify README description of JSON file usage
+
 ## 1.12.4 - 2026-11-25
 
 - fix(ci): implement dynamic visual regression comparison and PR approval
