@@ -26,10 +26,12 @@
     "visual:update": "node scripts/designsystem-visual.js --update",
     "format:js": "node scripts/format-js.js --write",
     "format:check": "node scripts/format-js.js",
-    "check:jsdoc": "node scripts/check-jsdoc.js && node scripts/check-jsdoc-complete.js",
-    "check:line-width": "node scripts/check-line-width.js",
+    "check:jsdoc": "node scripts/check-jsdoc.js && node scripts/check-jsdoc-complete.js && node scripts/check-js-types.js",
+    "check:jsdoc:all": "node scripts/check-js-types.js",
     "format:css": "node scripts/format-css.js --write",
-    "format:css:check": "node scripts/format-css.js"
+    "format:css:check": "node scripts/format-css.js",
+    "format:html": "node scripts/format-html-templates.js --write",
+    "format:html:check": "node scripts/format-html-templates.js"
   },
   "engines": {
     "node": ">=20"
@@ -40,6 +42,7 @@
     "three": "0.187.0"
   },
   "devDependencies": {
+    "@types/node": "22.15.33",
     "playwright-core": "1.65.1",
     "typescript": "5.8.3"
   }

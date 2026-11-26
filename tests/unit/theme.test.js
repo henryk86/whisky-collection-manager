@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {getThemePreference, effectiveTheme, nextTheme} from '../../public/js/theme/preference.js';
+import {getThemePreference, effectiveTheme, nextTheme}
+  from '../../public/js/theme/preference.js';
 test('theme defaults to system preference', () => {
   assert.equal(getThemePreference({
     /**
@@ -24,7 +25,7 @@ test('toggle flips light/dark and ignores invalid stored data', () => {
   assert.equal(getThemePreference({
     /**
      * Retrieves item from the available state.
-     * @return {string} Resulting text.
+     * @return {string} Unsupported stored theme value used to exercise fallback handling.
      */
     getItem() {
       return 'unexpected';

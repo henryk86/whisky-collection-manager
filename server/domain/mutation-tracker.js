@@ -6,8 +6,8 @@ const storage = new AsyncLocalStorage();
 /**
  * Runs a collection mutation while tracking affected resources.
  *
- * @param {*} task Task used by this operation.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @param {*} task Operation executed with an isolated asynchronous mutation log.
+ * @return {!Promise<!Object>} Task result and the resource updates recorded during its execution.
  */
 export async function withMutationTracking(task) {
   const updates = [];
@@ -19,10 +19,10 @@ export async function withMutationTracking(task) {
  * Records the domain resource modified by the current request.
  *
  * @param {string} kind Resource kind selecting the relevant schema.
- * @param {*} previous Previous used by this operation.
+ * @param {*} previous Resource snapshot before the mutation.
  * @param {*} current Current resource data to update.
- * @param {*} previousEtag Previous etag used by this operation.
- * @param {*} nextEtag Next etag used by this operation.
+ * @param {string} previousEtag Entity tag identifying the previous resource version.
+ * @param {string} nextEtag Entity tag identifying the updated resource version.
  */
 export function trackMutation(kind, previous, current, previousEtag, nextEtag) {
   const updates = storage.getStore();

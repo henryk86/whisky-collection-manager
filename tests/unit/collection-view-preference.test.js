@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createState} from '../../public/js/state.js';
 import {
-  COLLECTION_VIEW_STORAGE_KEY, getCollectionViewPreference, saveCollectionViewPreference,
+  COLLECTION_VIEW_STORAGE_KEY, getCollectionViewPreference,
+  saveCollectionViewPreference,
 } from '../../public/js/domain/collection-view-preference.js';
 
 /**
@@ -52,10 +53,7 @@ test(
     assert.equal(saveCollectionViewPreference('grid', storage), false);
     assert.equal(storage.getItem(COLLECTION_VIEW_STORAGE_KEY), 'table');
     for (const value of ['', 'tables', 'TABLE', 'grid', 'undefined']) {
-      assert.equal(
-        getCollectionViewPreference(fakeStorage({[COLLECTION_VIEW_STORAGE_KEY]: value})),
-        'cards'
-      );
+      assert.equal(getCollectionViewPreference(fakeStorage({[COLLECTION_VIEW_STORAGE_KEY]: value, })), 'cards');
     }
   }
 );
@@ -82,11 +80,7 @@ test(
     const storage = fakeStorage();
     const route = {page: 'home', selected: null};
     try {
-      Object.defineProperty(
-        globalThis,
-        'localStorage',
-        {configurable: true, value: storage}
-      );
+      Object.defineProperty(globalThis, 'localStorage', {configurable: true, value: storage});
       assert.equal(createState(route).view, 'cards');
       assert.equal(saveCollectionViewPreference('table'), true);
       assert.equal(createState(route).view, 'table');

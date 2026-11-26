@@ -8,10 +8,10 @@ export const WAREHOUSE_CAMERAS = Object.freeze([
   ['nw', 'Nordwest'], ['ne', 'Nordost'], ['se', 'Südost'], ['sw', 'Südwest'],
 ]);
 /**
- * Derives the rotate result from the supplied values.
+ * Normalizes a furniture rotation to the interval from zero to just below 360 degrees.
  *
- * @param {*} item Current item under consideration.
- * @return {number} Calculated numeric value.
+ * @param {*} item Furniture record with an optional rotation in degrees.
+ * @return {number} Normalized rotation in degrees.
  */
 const rotate = item => ((Number(item.rotation) || 0) % 360 + 360) % 360;
 
@@ -19,7 +19,7 @@ const rotate = item => ((Number(item.rotation) || 0) % 360 + 360) % 360;
  * Computes the room-space footprint of a furniture item.
  *
  * @param {*} item Warehouse item or record being evaluated.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Room-space width and depth, swapped for quarter-turn furniture orientations.
  */
 export const furnitureFootprint = item => rotate(item) % 180 === 0
   ? {width: Number(item.width), depth: Number(item.depth)}
@@ -29,8 +29,8 @@ export const furnitureFootprint = item => rotate(item) % 180 === 0
  * Selects the camera position and target for a furniture view.
  *
  * @param {*} item Warehouse item or record being evaluated.
- * @param {string=} previous Previous used by this operation.
- * @return {*} Entries transformed for the consuming code.
+ * @param {string=} previous Previously selected camera direction, retained if it faces the furniture front.
+ * @return {*} Camera corner facing the furniture, retaining the previous corner when possible.
  */
 export function cameraForFurniture(item, previous = 'nw') {
   const faces = {
@@ -42,22 +42,22 @@ export function cameraForFurniture(item, previous = 'nw') {
 }
 
 /**
- * Computes the camera-facing direction for the 3D scene.
+ * Resolves the horizontal viewing direction from the selected room corner.
  *
- * @param {*} corner Corner of the furniture footprint.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} corner Room corner key, defaulting to northwest for unknown values.
+ * @return {*} Two horizontal direction components along X and Z.
  */
 export const cameraDirection = corner => ({
   nw: [-1, -1], ne: [1, -1], se: [1, 1], sw: [-1, 1],
 })[corner] || [-1, -1];
 
 /**
- * Calculates the limit numeric value.
+ * Clamps a coordinate or dimension to the supplied bounds.
  *
  * @param {*} x Horizontal coordinate.
  * @param {*} min Minimum accepted value.
  * @param {*} max Maximum accepted value.
- * @return {number} Calculated numeric value.
+ * @return {number} Value within the inclusive bounds.
  */
 const limit = (x, min, max) => Math.max(min, Math.min(max, x));
 
@@ -66,7 +66,7 @@ const limit = (x, min, max) => Math.max(min, Math.min(max, x));
  * The footprint is axis-aligned, but front elements must rotate with it.
  *
  * @param {*} item Warehouse item or record being evaluated.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Unit normal and tangent vectors of the rotated furniture front.
  */
 export function furnitureFront(item) {
   const angle = rotate(item) * Math.PI / 180;
@@ -85,15 +85,14 @@ export function furnitureFront(item) {
  *
  * @param {*} furniture Furniture configuration including its dimensions.
  * @param {number} height Height in pixels.
- * @return {*} Computed value, or null when the input has no match.
+ * @return {*} Identifier of the accessible shelf at the given height, or null outside a shelf.
  */
 export function shelfIdAtHeight(furniture, height) {
   if (!furniture) return null;
   const y = Number(height);
   if (!Number.isFinite(y)) return null;
   const levels = shelfLevels(furniture);
-  if (!levels.length || y < levels[0].bottom - 0.035 || y > levels.at(-1)
-    .top + 0.035) return null;
+  if (!levels.length || y < levels[0].bottom - 0.035 || y > levels.at(-1).top + 0.035) return null;
   const level = levels.find(entry => y < entry.top) || levels.at(-1);
   return level.shelf.capacity === 0 ? null : level.shelf.id;
 }
@@ -105,8 +104,8 @@ export function shelfIdAtHeight(furniture, height) {
  *
  * @param {*} room Room model containing dimensions and furniture.
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {null=} isolatedId Isolated id used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {?string=} isolatedId Identifier of furniture to isolate, or null to show the whole room.
+ * @return {!Object} Room bounds and furniture part descriptors for the 3D scene.
  */
 export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
   const objects = [];
@@ -122,15 +121,12 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
     const x = Number(item.x) + width / 2;
     const z = Number(item.y) + depth / 2;
     const base = Number(item.elevation) || 0;
-    const height = Number(item.itemHeight) || (item.type === 'haengeregal' ?
-      0.4 : 1.8);
+    const height = Number(item.itemHeight) || (item.type === 'haengeregal' ? 0.4 : 1.8);
     const shelves = item.shelves || [];
     const bayCount = Math.max(1, shelves.length);
     const levels = shelfLevels(item);
-    const customised = (item.doorRanges || []).length > 0 ||
-      item.doorLeaves != null || item.glassFrame != null ||
-      shelves.some(shelf => shelf.front != null || shelf.heightCm != null ||
-        shelf.doorLeaves != null || shelf.glassFrame != null);
+    const customised = (item.doorRanges || []).length > 0 || item.doorLeaves != null || item.glassFrame != null ||
+      shelves.some(shelf => shelf.front != null || shelf.heightCm != null || shelf.doorLeaves != null || shelf.glassFrame != null);
     const t = limit(Math.min(width, depth, height) * 0.045, 0.012, 0.035);
     const upright = limit(Math.min(width, depth) * 0.065, 0.018, 0.047);
     const result = {
@@ -141,32 +137,31 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
       shelfCount: shelves.length,
     };
     /**
-     * Appends entries to the box result collection.
+     * Appends one box to the furniture geometry model.
      *
-     * @param {*} px Horizontal position in pixels.
-     * @param {*} py Vertical position in pixels.
-     * @param {*} pz Depth position in pixels.
-     * @param {*} w Width or value used by the calculation.
-     * @param {*} h Value used by this operation.
-     * @param {*} d Value used by this operation.
-     * @param {*} style Visual style or rendering properties.
-     * @param {string=} role Value used by this operation.
+     * @param {*} px Centre X in metres.
+     * @param {*} py Centre Y in metres.
+     * @param {*} pz Centre Z in metres.
+     * @param {*} w Width in metres.
+     * @param {*} h Height in metres.
+     * @param {*} d Depth in metres.
+     * @param {*} style Material or visual style key.
+     * @param {string=} role Optional semantic role of the part.
      */
     const box = (px, py, pz, w, h, d, style, role = '') => {
       result.parts.push({center: [px, py, pz], size: [w, h, d], style, role});
     };
 
     /**
-     * Derives the board result from the supplied values.
+     * Adds a shelf board at the specified physical height.
      *
-     * @param {*} level Value used by this operation.
-          * @return {*} Result of this expression.
-*/
-    const board = level =>
-      box(x, level, z, width, t, depth, 'board', 'shelf-board');
+     * @param {*} level Board centre height in metres.
+     * @return {void} Appends the board to the geometry model.
+     */
+    const board = level => box(x, level, z, width, t, depth, 'board', 'shelf-board');
 
     /**
-     * Updates the frame state for its caller.
+     * Adds the four vertical frame posts to the furniture geometry.
      */
     const frame = () => {
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
@@ -183,20 +178,20 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
       }
     };
     const top = base + height;
-    const {normal: [frontX, frontZ], tangent: [sideX, sideZ]} =
-      furnitureFront(item);
+    const {normal: [frontX, frontZ], tangent: [sideX, sideZ]} = furnitureFront(item);
     /**
-     * Calculates the front plane numeric value.
+     * Adds a front-facing rectangular part at the furniture's rotated physical front.
      *
-     * @param {*} offset Value used by this operation.
-     * @param {*} py Vertical position in pixels.
-     * @param {*} faceWidth Value used by this operation.
-     * @param {*} faceHeight Value used by this operation.
-     * @param {*} thickness Value used by this operation.
-     * @param {*} style Visual style or rendering properties.
-     * @param {*} role Value used by this operation.
+     * @param {*} offset Lateral offset from the front centre in metres.
+     * @param {*} py Vertical centre in metres.
+     * @param {*} faceWidth Front part width in metres.
+     * @param {*} faceHeight Front part height in metres.
+     * @param {*} thickness Part thickness in metres.
+     * @param {*} style Material or visual style key.
+     * @param {*} role Semantic role of the part.
      */
-    const frontPlane = (offset, py, faceWidth, faceHeight, thickness, style, role) => {
+    const frontPlane = (offset, py, faceWidth, faceHeight, thickness, style,
+      role) => {
       const out = Number(item.width);
       const d = Number(item.depth);
       const distance = d / 2 + thickness / 2;
@@ -219,24 +214,23 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
     if (individual) {
       if (item.type !== 'haengeregal') frame();
       const boardLevels = [base, ...levels.map(level => level.top)];
-      for (const level of boardLevels) board(Math.min(top - t / 2, level +
-        t / 2));
+      for (const level of boardLevels) board(Math.min(top - t / 2, level + t / 2));
       /**
-       * Creates front for warehouse 3d model.
+       * Builds door, glass or drawer geometry for the vertical span of a furniture front.
        *
        * @param {*} front Front-facing side of the shelf or room.
        * @param {*} bottom Lower boundary of the geometry.
        * @param {*} upper Upper boundary of the geometry.
-       * @param {*} leavesOverride Leaves override used by this operation.
-       * @param {*} frameOverride Frame override used by this operation.
+       * @param {*} leavesOverride Optional override for the number of door leaves.
+       * @param {*} frameOverride Optional override for the front frame thickness.
        */
-      const makeFront = (front, bottom, upper, leavesOverride, frameOverride) => {
+      const makeFront = (front, bottom, upper, leavesOverride,
+        frameOverride) => {
         const span = upper - bottom;
         const panelH = Math.max(0.015, span - t * 1.3);
         const centreY = (bottom + upper) / 2;
         if (front === 'door' || front === 'glass') {
-          const leaves = leavesOverride ?? item.doorLeaves ?? (front ===
-            'glass' ? 1 : 2);
+          const leaves = leavesOverride ?? item.doorLeaves ?? (front === 'glass' ? 1 : 2);
           const leafWidth = Number(item.width) / leaves;
           const glass = front === 'glass';
           const hasFrame = glass && (frameOverride ?? item.glassFrame) === true;
@@ -256,67 +250,29 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
               const edge = (leafWidth - fw) / 2;
               const topEdge = (panelH - fw) / 2;
               for (const sign of [-1, 1]) {
-                frontPlane(
-                  offset + sign * edge,
-                  centreY,
-                  fw,
-                  panelH,
-                  t,
-                  'frame',
-                  'glass-frame'
-                );
-                frontPlane(
-                  offset,
-                  centreY + sign * topEdge,
-                  Math.max(0.015, leafWidth - fw),
-                  fw,
-                  t,
-                  'frame',
-                  'glass-frame'
-                );
+                frontPlane(offset + sign * edge, centreY, fw, panelH, t, 'frame', 'glass-frame');
+                frontPlane(offset, centreY + sign * topEdge, Math.max(0.015, leafWidth - fw), fw, t, 'frame', 'glass-frame');
               }
             }
           }
         } else if (front === 'drawer') {
-          frontPlane(
-            0,
-            centreY,
-            Math.max(0.03, Number(item.width) - t * 2),
-            panelH,
-            t,
-            'drawer',
-            'drawer'
-          );
+          frontPlane(0, centreY, Math.max(0.03, Number(item.width) - t * 2), panelH, t, 'drawer', 'drawer');
         }
       };
       for (const range of item.doorRanges || []) {
         const first = levels[range.from - 1], last = levels[range.to - 1];
-        if (first && last) makeFront(
-          range.front,
-          first.bottom,
-          last.top,
-          range.doorLeaves,
-          range.glassFrame
-        );
+        if (first && last) makeFront(range.front, first.bottom, last.top, range.doorLeaves, range.glassFrame);
       }
       for (const level of levels) {
-        const range = (item.doorRanges || []).find(r => level.index + 1 >=
-          r.from && level.index + 1 <= r.to);
+        const range = (item.doorRanges || []).find(r => level.index + 1 >= r.from && level.index + 1 <= r.to);
         const front = range?.front || level.front;
         const span = level.height;
-        if (!range) makeFront(
-          front,
-          level.bottom,
-          level.top,
-          level.shelf.doorLeaves,
-          level.shelf.glassFrame
-        );
+        if (!range) makeFront(front, level.bottom, level.top, level.shelf.doorLeaves, level.shelf.glassFrame);
         const amount = Math.min(4, count.get(level.shelf.id) || 0);
         if (front === 'open' || front === 'glass') {
           const bottleHeight = limit(span * 0.55, 0.035, 0.22);
           for (let j = 0; j < amount; j++) {
-            const along = ((j + 1) / (amount + 1) - 0.5) *
-              Number(item.width) * 0.72;
+            const along = ((j + 1) / (amount + 1) - 0.5) * Number(item.width) * 0.72;
             box(
               x + sideX * along,
               level.bottom + t + bottleHeight / 2,
@@ -332,55 +288,24 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
       }
       // A wall-mounted mixed unit has physical boards without floor legs.
       if (item.type === 'haengeregal') for (const side of [-1, 1]) {
-        box(
-          x + side * width * 0.37,
-          base + 0.1,
-          z - depth / 2 + t,
-          t,
-          0.18,
-          t,
-          'frame',
-          'wall-bracket'
-        );
+        box(x + side * width * 0.37, base + 0.1, z - depth / 2 + t, t, 0.18, t, 'frame', 'wall-bracket');
       }
     } else if (item.type === 'regal') {
       frame();
-      for (let i = 0; i <= bayCount; i++) board(base + (height - t) * i /
-        bayCount + t / 2);
+      for (let i = 0; i <= bayCount; i++) board(base + (height - t) * i / bayCount + t / 2);
 
     } else if (item.type === 'haengeregal') {
-      for (let i = 0; i < bayCount; i++) board(base + t / 2 + height * i /
-        bayCount);
+      for (let i = 0; i < bayCount; i++) board(base + t / 2 + height * i / bayCount);
       for (const side of [-1, 1]) {
         const front = rotate(item);
-        const bx = front === 90 || front === 270 ? x + (front === 90 ? 1 :
-          -1) * (width / 2 - t) : x + side * width * 0.37;
-        const bz = front === 0 || front === 180 ? z + (front === 0 ? -1 :
-          1) * (depth / 2 - t) : z + side * depth * 0.37;
-        box(
-          bx,
-          base + t * 1.8,
-          bz,
-          t,
-          limit(height * 0.24, 0.07, 0.22),
-          t,
-          'frame',
-          'wall-bracket'
-        );
+        const bx = front === 90 || front === 270 ? x + (front === 90 ? 1 : -1) * (width / 2 - t) : x + side * width * 0.37;
+        const bz = front === 0 || front === 180 ? z + (front === 0 ? -1 : 1) * (depth / 2 - t) : z + side * depth * 0.37;
+        box(bx, base + t * 1.8, bz, t, limit(height * 0.24, 0.07, 0.22), t, 'frame', 'wall-bracket');
       }
     } else if (item.type === 'vitrine') {
       frame();
-      for (let i = 0; i <= bayCount; i++) board(base + (height - t) * i /
-        bayCount + t / 2);
-      frontPlane(
-        0,
-        base + height / 2,
-        Number(item.width),
-        height,
-        t * 0.7,
-        'glass',
-        'glass-front'
-      );
+      for (let i = 0; i <= bayCount; i++) board(base + (height - t) * i / bayCount + t / 2);
+      frontPlane(0, base + height / 2, Number(item.width), height, t * 0.7, 'glass', 'glass-front');
     } else if (item.type === 'kommode') {
       box(x, base + height / 2, z, width, height, depth, 'cabinet', 'body');
       for (let i = 0; i < bayCount; i++) frontPlane(
@@ -433,28 +358,17 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
         Math.abs(frontZ) ? t : Number(item.width), 'back', 'back-panel');
     }
     // Legacy shelves retain their original equal-height bottle placement.
-    if (!individual && ['regal', 'vitrine', 'haengeregal']
-      .includes(item.type)) {
+    if (!individual && ['regal', 'vitrine', 'haengeregal'].includes(item.type)) {
       shelves.forEach((shelf, i) => {
         const amount = Math.min(4, count.get(shelf.id) || 0);
         const bayHeight = height / bayCount;
         const bottleHeight = limit(bayHeight * 0.65, 0.055, 0.22);
         for (let j = 0; j < amount; j++) {
-          const along = ((j + 1) / (amount + 1) - 0.5) *
-            Number(item.width) * 0.8;
+          const along = ((j + 1) / (amount + 1) - 0.5) * Number(item.width) * 0.8;
           const px = x + sideX * along;
           const py = base + bayHeight * i + t + bottleHeight / 2;
           const pz = z + sideZ * along;
-          box(
-            px,
-            py,
-            pz,
-            Math.min(0.09, width / 10),
-            bottleHeight,
-            Math.min(0.08, depth / 5),
-            'bottle',
-            'bottle'
-          );
+          box(px, py, pz, Math.min(0.09, width / 10), bottleHeight, Math.min(0.08, depth / 5), 'bottle', 'bottle');
         }
       });
     }
@@ -462,10 +376,6 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
   }
   return {
     objects, roomWidth: Number(room.width), roomDepth: Number(room.height),
-    maxHeight: Math.max(
-      2.5,
-      ...(room.furniture || []).map(f => (Number(f.elevation) || 0) +
-        (Number(f.itemHeight) || 1.8))
-    ),
+    maxHeight: Math.max(2.5, ...(room.furniture || []).map(f => (Number(f.elevation) || 0) + (Number(f.itemHeight) || 1.8))),
   };
 }

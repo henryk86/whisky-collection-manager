@@ -19,9 +19,11 @@ const codes = Object.freeze({
   "Anfrage zu groß": "api.errors.requestIsTooLarge",
   "Backup-Datei nicht gefunden": "api.errors.backupFileNotFound",
   "Backup-Profil nicht gefunden": "api.errors.backupProfileNotFound",
-  "Backup-Verwaltung gesperrt: Administrator-Schlüssel erforderlich.": "api.errors.backupManagementIsLockedAdministratorKeyRequired",
+  "Backup-Verwaltung gesperrt: Administrator-Schlüssel erforderlich.":
+    "api.errors.backupManagementIsLockedAdministratorKeyRequired",
   "Backup-Verwaltung nicht eingerichtet": "api.errors.backupManagementIsNotConfigured",
-  "Backup-Verwaltung nicht eingerichtet. Siehe docs/DOCKER_BACKUP.md.": "api.errors.backupManagementIsNotConfiguredSeeDocsDOCKERBACKUPMd",
+  "Backup-Verwaltung nicht eingerichtet. Siehe docs/DOCKER_BACKUP.md.":
+    "api.errors.backupManagementIsNotConfiguredSeeDocsDOCKERBACKUPMd",
   "Backup-Worker nicht autorisiert.": "api.errors.backupWorkerIsNotAuthorized",
   "Backup-Ziel nicht erlaubt": "api.errors.backupDestinationIsNotAllowed",
   "Bearbeitetes Bild muss WebP sein": "api.errors.editedImageMustUseWebPFormat",
@@ -42,7 +44,8 @@ const codes = Object.freeze({
   "Datei nicht gefunden": "api.errors.fileNotFound",
   "Dateiinhalt passt nicht zum Dateityp": "api.errors.fileContentsDoNotMatchTheFileType",
   "Dateityp nicht unterstuetzt": "api.errors.unsupportedFileType",
-  "Der Flaschentyp gehört zu einer physischen Flasche, nicht zur Abfüllung": "api.errors.bottleTypeBelongsToAPhysicalBottleNotABottling",
+  "Der Flaschentyp gehört zu einer physischen Flasche, nicht zur Abfüllung":
+    "api.errors.bottleTypeBelongsToAPhysicalBottleNotABottling",
   "Destillerie benötigt beide Koordinaten": "api.errors.distilleryRequiresBothCoordinates",
   "Destillerie existiert bereits": "api.errors.distilleryAlreadyExists",
   "Destillerie nicht gefunden": "api.errors.distilleryNotFound",
@@ -54,7 +57,8 @@ const codes = Object.freeze({
   "Dieses Altprofil verwendet Restic. Für neue Sicherungen bitte auf ZIP umstellen.": "api.errors.thisLegacyProfileUsesResticSwitchToZIPForNewBackups",
   "Dieses Backup-Ziel wird bereits von einem anderen Profil genutzt. Jedes Profil benötigt ein eigenes Repository.": "api.errors.anotherProfileIsAlreadyUsingThisBackupDestinationEachProfileRequiresItsOwnRepository",
   "Dieses Fach ist voll belegt": "api.errors.thisCompartmentIsFull",
-  "Direkter Download ist derzeit nur für lokale ZIP-Backups verfügbar": "api.errors.directDownloadIsCurrentlyAvailableOnlyForLocalZIPBackups",
+  "Direkter Download ist derzeit nur für lokale ZIP-Backups verfügbar":
+    "api.errors.directDownloadIsCurrentlyAvailableOnlyForLocalZIPBackups",
   "Doppelte Abfüllungs-ID": "api.errors.duplicateBottlingID",
   "Doppelte Bildkorrektur": "api.errors.duplicateImageAdjustment",
   "Doppelte Destillerie innerhalb einer Abfüllung": "api.errors.duplicateDistilleryWithinABottling",
@@ -75,17 +79,21 @@ const codes = Object.freeze({
   "Flaschenliste der Abfüllung fehlt": "api.errors.bottlingBottleListIsMissing",
   "Foto nicht gefunden": "api.errors.photoNotFound",
   "Freistellung muss ein PNG-Bild sein": "api.errors.backgroundRemovalMustBeAPNGImage",
-  "Für Single Whisky darf maximal eine Destillerie gewählt werden": "api.errors.singleWhiskyMayHaveAtMostOneDistillery",
-  "Für automatisch eingeteilte Fächer bleiben weniger als 5 cm übrig": "api.errors.lessThan5CmRemainsForAutomaticallyDividedCompartments",
+  "Für Single Whisky darf maximal eine Destillerie gewählt werden":
+    "api.errors.singleWhiskyMayHaveAtMostOneDistillery",
+  "Für automatisch eingeteilte Fächer bleiben weniger als 5 cm übrig":
+    "api.errors.lessThan5CmRemainsForAutomaticallyDividedCompartments",
   "Glasrahmen: ungültiger Wert": "api.errors.invalidGlassFrameValue",
-  "Gründungsjahr muss zwischen 1600 und dem aktuellen Jahr liegen": "api.errors.foundingYearMustBeBetween1600AndTheCurrentYear",
+  "Gründungsjahr muss zwischen 1600 und dem aktuellen Jahr liegen":
+    "api.errors.foundingYearMustBeBetween1600AndTheCurrentYear",
   "Hochgeladene Sicherung nicht gefunden": "api.errors.uploadedBackupNotFound",
   "Inventarnummer bereits vergeben": "api.errors.inventoryNumberAlreadyAssigned",
   "JSON-Anfrage muss ein Objekt sein": "api.errors.jsonRequestMustBeAnObject",
   "Kapazität liegt unter der aktuellen Belegung": "api.errors.capacityIsBelowCurrentOccupancy",
   "Kapazität muss eine ganze Zahl zwischen 0 und 10000 sein": "api.errors.capacityMustBeAnIntegerBetween0And10000",
   "Kein freier Kopiename verfügbar": "api.errors.noUnusedCopyNameIsAvailable",
-  "Kein freier Platz für die Kopie. Bitte zuerst Platz im Zielraum schaffen.": "api.errors.notEnoughSpaceForTheCopyMakeRoomInTheDestinationRoomFirst",
+  "Kein freier Platz für die Kopie. Bitte zuerst Platz im Zielraum schaffen.":
+    "api.errors.notEnoughSpaceForTheCopyMakeRoomInTheDestinationRoomFirst",
   "Keine Bildkorrekturen gewählt": "api.errors.noPhotoAdjustmentsSelected",
   "Keine Freistellung vorhanden": "api.errors.noBackgroundRemovedImageAvailable",
   "Keine gültigen gemeinsamen Eigenschaften angegeben": "api.errors.noValidSharedPropertiesSpecified",
@@ -102,7 +110,8 @@ const codes = Object.freeze({
   "Passwörter stimmen nicht überein": "api.errors.passwordsDoNotMatch",
   "Physische Flasche nicht gefunden": "api.errors.physicalBottleNotFound",
   "Raum nicht gefunden": "api.errors.roomNotFound",
-  "Rclone-Verbindung darf nur Buchstaben, Zahlen, - und _ enthalten": "api.errors.rcloneConnectionMayContainOnlyLettersDigitsAnd",
+  "Rclone-Verbindung darf nur Buchstaben, Zahlen, - und _ enthalten":
+    "api.errors.rcloneConnectionMayContainOnlyLettersDigitsAnd",
   "Sammlungsdatei fehlt": "api.errors.collectionFileIsMissing",
   "Scanner-Bibliothek fehlt. Bitte npm install ausführen.": "api.errors.scannerLibraryIsMissingRunNpmInstall",
   "Schreibzugriff von fremder Webseite nicht erlaubt": "api.errors.writeAccessFromAnotherWebsiteIsNotAllowed",
@@ -185,7 +194,8 @@ const codes = Object.freeze({
   "Verwaiste Flasche kann nicht migriert werden": "api.errors.orphanedBottleCannotBeMigrated",
   "Vorbereitete Sicherung nicht gefunden": "api.errors.preparedBackupNotFound",
   "Vorschau abgelaufen oder Bild nicht vorhanden": "api.errors.previewExpiredOrImageIsMissing",
-  "Importiertes Bild nicht mehr verfügbar. Bitte erneut importieren.": "api.errors.importImageIsNoLongerAvailablePleaseImportItAgain",
+  "Importiertes Bild nicht mehr verfügbar. Bitte erneut importieren.":
+    "api.errors.importImageIsNoLongerAvailablePleaseImportItAgain",
   "Wiederherstellung muss ausdrücklich bestätigt werden": "api.errors.restoreMustBeExplicitlyConfirmed",
   "ZIP enthält keine gültige Whisky-Sammlung": "api.errors.zipDoesNotContainAValidWhiskyCollection",
   "ZIP-Sicherungen über die Vorschau einspielen.": "api.errors.restoreZIPBackupsThroughThePreview",
@@ -197,9 +207,10 @@ const codes = Object.freeze({
   "Nicht erlaubter Host. Adresse in ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_IP_ADDRESSES eintragen.": "api.errors.hostNotAllowedAddTheAddressToALLOWEDHOSTSOrCERTDNSNAMESCERTIPADDRESSES",
 });
 /**
- * Creates an application error identifier from a known error category.
- *
- * @param {*} message Message used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Resolves a legacy error message to its stable public error code.
+ * @param {string} message Original error message.
+ * @return {(string|null)} Mapped code or null if unknown.
  */
-export function apiErrorCode(message) {return Object.hasOwn(codes, message) ? codes[message] : null;}
+export function apiErrorCode(message) {
+  return Object.hasOwn(codes, message) ? codes[message] : null;
+}

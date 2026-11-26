@@ -3,22 +3,18 @@
  * Keep the existing input normalization and error messages compatible.
  */
 import {fail} from './errors.js';
-import {FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm} from '../../shared/warehouse-compartments.js';
+import {FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm}
+  from '../../shared/warehouse-compartments.js';
 
 const types = new Set(FURNITURE_TYPES);
 /**
  * Validates a nonempty furniture or room name.
  *
  * @param {*} value Input value to process.
- * @return {string} Resulting text.
+ * @return {string} Trimmed nonempty name with at most 100 characters.
  */
 export function name(value) {
-  if (typeof value !== 'string' || !value.trim() || value.trim().length >
-    100) throw fail(
-      'Name muss zwischen 1 und 100 Zeichen enthalten',
-      400,
-      "api.errors.nameMustContainBetween1And100Characters"
-    );
+  if (typeof value !== 'string' || !value.trim() || value.trim().length > 100) throw fail('Name muss zwischen 1 und 100 Zeichen enthalten', 400, "api.errors.nameMustContainBetween1And100Characters");
   return value.trim();
 }
 
@@ -26,35 +22,26 @@ export function name(value) {
  * Validates a finite numeric warehouse field against bounds.
  *
  * @param {*} value Input value to process.
- * @param {*} field Field used by this operation.
+ * @param {string} field API field name included in validation errors.
  * @param {*} min Minimum permitted value.
  * @param {*} max Maximum permitted value.
- * @return {number} Calculated numeric result.
+ * @return {number} Validated number rounded to two decimal places.
  */
 export function number(value, field, min, max) {
   const n = Number(value);
-  if (!Number.isFinite(n) || n < min || n > max) throw fail(
-    `${field}: ungültiger Wert`,
-    400,
-    "api.errors.invalidField",
-    {field}
-  );
+  if (!Number.isFinite(n) || n < min || n > max) throw fail(`${field}: ungültiger Wert`, 400, "api.errors.invalidField", {field});
   return Math.round(n * 100) / 100;
 }
 
 /**
- * Validates the rotation state and rejects invalid inputs.
+ * Normalizes furniture rotation and rejects angles outside the four supported orientations.
  *
  * @param {*} value Value to process.
- * @return {number} Calculated numeric value.
+ * @return {number} Rotation in degrees: 0, 90, 180 or 270.
  */
 function rotation(value) {
   const n = Number(value ?? 0);
-  if (![0, 90, 180, 270].includes(n)) throw fail(
-    'Drehung nur 0, 90, 180 oder 270 Grad',
-    400,
-    "api.errors.rotationMustBe090180Or270Degrees"
-  );
+  if (![0, 90, 180, 270].includes(n)) throw fail('Drehung nur 0, 90, 180 oder 270 Grad', 400, "api.errors.rotationMustBe090180Or270Degrees");
   return n;
 }
 
@@ -62,7 +49,7 @@ function rotation(value) {
  * Validates a shelf's physical bottle capacity.
  *
  * @param {*} value Input value to process.
- * @return {?number} Calculated numeric result.
+ * @return {?number} Validated finite shelf capacity, or null for unlimited capacity.
  */
 export function capacity(value) {
   if (value === null || value === '' || value === undefined) return null;
@@ -79,7 +66,7 @@ export function capacity(value) {
  * Validates the front-edge configuration of a shelf.
  *
  * @param {*} value Input value to process.
- * @return {*} Computed value, or null when the input has no match.
+ * @return {*} Supported shelf-front style, or null when not explicitly set.
  */
 export function shelfFront(value) {
   if (value === '' || value === null || value === undefined) return null;
@@ -91,15 +78,11 @@ export function shelfFront(value) {
  * Validates the number and geometry of door leaves.
  *
  * @param {*} value Input value to process.
- * @return {*} Computed value, or null when the input has no match.
+ * @return {*} Validated door-leaf count, or null when not explicitly set.
  */
 export function doorLeaves(value) {
   if (value === undefined || value === null || value === '') return null;
-  if (value !== 1 && value !== 2) throw fail(
-    'Türflügel: nur 1 oder 2 erlaubt',
-    400,
-    "api.errors.doorLeafCountMustBe1Or2"
-  );
+  if (value !== 1 && value !== 2) throw fail('Türflügel: nur 1 oder 2 erlaubt', 400, "api.errors.doorLeafCountMustBe1Or2");
   return value;
 }
 
@@ -107,15 +90,11 @@ export function doorLeaves(value) {
  * Validates a glass-door frame specification.
  *
  * @param {*} value Input value to process.
- * @return {?boolean} Computed value, or null when the input has no match.
+ * @return {?boolean} Validated frame flag, or null when not explicitly set.
  */
 export function glassFrame(value) {
   if (value === undefined || value === null || value === '') return null;
-  if (typeof value !== 'boolean') throw fail(
-    'Glasrahmen: ungültiger Wert',
-    400,
-    "api.errors.invalidGlassFrameValue"
-  );
+  if (typeof value !== 'boolean') throw fail('Glasrahmen: ungültiger Wert', 400, "api.errors.invalidGlassFrameValue");
   return value;
 }
 
@@ -123,20 +102,15 @@ export function glassFrame(value) {
  * Validates shelf ranges covered by furniture doors.
  *
  * @param {*} value Input value to process.
- * @param {*} shelves Shelves used by this operation.
- * @return {!Array<!Object>} Resulting list of values.
+ * @param {*} shelves Furniture shelf list defining the order and valid endpoints of door ranges.
+ * @return {!Array<!Object>} Validated door ranges referencing the existing shelf sequence.
  */
 export function doorRanges(value, shelves) {
   if (value == null) return [];
-  if (!Array.isArray(value) || value.length > 100) throw fail(
-    'Türbereiche: ungültige Liste',
-    400,
-    "api.errors.invalidListOfDoorAreas"
-  );
+  if (!Array.isArray(value) || value.length > 100) throw fail('Türbereiche: ungültige Liste', 400, "api.errors.invalidListOfDoorAreas");
   const covered = new Set();
   return value.map(range => {
-    if (!range || typeof range !== 'object' ||
-      !Number.isInteger(range.from) || !Number.isInteger(range.to) ||
+    if (!range || typeof range !== 'object' || !Number.isInteger(range.from) || !Number.isInteger(range.to) ||
       range.from < 1 || range.to > shelves.length || range.from > range.to ||
       !['door', 'glass'].includes(range.front)) throw fail(
         'Türbereich: Fachnummern oder Front ungültig',
@@ -144,11 +118,7 @@ export function doorRanges(value, shelves) {
         "api.errors.doorAreaHasInvalidCompartmentNumbersOrFront"
       );
     for (let i = range.from; i <= range.to; i++) {
-      if (covered.has(i)) throw fail(
-        'Türbereiche dürfen sich nicht überlappen',
-        400,
-        "api.errors.doorAreasMustNotOverlap"
-      );
+      if (covered.has(i)) throw fail('Türbereiche dürfen sich nicht überlappen', 400, "api.errors.doorAreasMustNotOverlap");
       covered.add(i);
     }
     return {
@@ -165,7 +135,7 @@ export function doorRanges(value, shelves) {
  * Validates the available height for a storage shelf.
  *
  * @param {*} value Input value to process.
- * @return {?number} Calculated numeric result.
+ * @return {?number} Shelf height in centimeters, or null for automatic height.
  */
 export function shelfHeight(value) {
   if (value === '' || value === null || value === undefined) return null;
@@ -176,21 +146,16 @@ export function shelfHeight(value) {
  * Verifies all configured shelf heights fit the furniture.
  *
  * @param {*} furniture Furniture configuration including its dimensions.
- * @param {*=} shelves Shelves used by this operation.
+ * @param {*=} shelves Shelves whose explicitly configured heights must fit within the furniture height.
  * @param {number=} height Height in pixels.
  */
 export function ensureShelfHeights(
   furniture,
   shelves = furniture.shelves,
-  height = furniture.itemHeight ?? (furniture.type === 'haengeregal' ?
-    0.4 : 1.8)
+  height = furniture.itemHeight ?? (furniture.type === 'haengeregal' ? 0.4 : 1.8)
 ) {
   const used = totalExplicitHeightCm(shelves);
-  if (used > height * 100 + 0.001) throw fail(
-    'Fachhöhen überschreiten die Möbelhöhe',
-    409,
-    "api.errors.compartmentHeightsExceedTheFurnitureHeight"
-  );
+  if (used > height * 100 + 0.001) throw fail('Fachhöhen überschreiten die Möbelhöhe', 409, "api.errors.compartmentHeightsExceedTheFurnitureHeight");
   // Preserve legacy all-automatic layouts. In a partly specified layout, an
   // automatic bay must have at least 5 cm left to be a usable compartment.
   const automatic = shelves.filter(shelf => shelf.heightCm == null).length;
@@ -203,20 +168,15 @@ export function ensureShelfHeights(
 }
 
 /**
- * Validates the panel option state and rejects invalid inputs.
+ * Defaults an omitted panel flag to false and rejects non-boolean values.
  *
  * @param {*} value Value to process.
  * @param {*} label Label shown to the user.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} Validated panel visibility flag.
  */
 function panelOption(value, label) {
   if (value === undefined) return false;
-  if (typeof value !== 'boolean') throw fail(
-    `${label}: ungültiger Wert`,
-    400,
-    "api.errors.invalidField",
-    {field: label}
-  );
+  if (typeof value !== 'boolean') throw fail(`${label}: ungültiger Wert`, 400, "api.errors.invalidField", {field: label});
   return value;
 }
 
@@ -225,7 +185,7 @@ function panelOption(value, label) {
  *
  * @param {*} input Input to process.
  * @param {*} room Room model containing dimensions and furniture.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Validated furniture dimensions, position and layout fields.
  */
 export function layout(input, room) {
   const furniture = {
@@ -245,20 +205,14 @@ export function layout(input, room) {
     // Backward compatible: older warehouse.json files have no vertical
     // coordinates.
     elevation: number(input.elevation ?? 0, 'elevation', 0, 10),
-    itemHeight: number(
-      input.itemHeight ?? (input.type === 'haengeregal' ? 0.4 : 1.8),
-      'itemHeight',
-      0.1,
-      5
-    ),
+    itemHeight: number(input.itemHeight ?? (input.type === 'haengeregal' ? 0.4 : 1.8), 'itemHeight', 0.1, 5),
   };
   const w = furniture.rotation % 180 === 0 ? furniture.width : furniture.depth;
   const h = furniture.rotation % 180 === 0 ? furniture.depth : furniture.width;
-  if (furniture.x + w > room.width + 0.00001 || furniture.y + h >
-    room.height + 0.00001) throw fail(
-      'Lagermöbel liegt außerhalb der Raumgrenzen',
-      400,
-      "api.errors.storageFurnitureLiesOutsideTheRoomBoundaries"
-    );
+  if (furniture.x + w > room.width + 0.00001 || furniture.y + h > room.height + 0.00001) throw fail(
+    'Lagermöbel liegt außerhalb der Raumgrenzen',
+    400,
+    "api.errors.storageFurnitureLiesOutsideTheRoomBoundaries"
+  );
   return furniture;
 }

@@ -28,67 +28,32 @@ test(
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-readable-zip-'));
     try {
       const source = path.join(root, 'source');
-      create(
-        source,
-        'data/collection.json',
-        JSON.stringify({schemaVersion: 6})
-      );
-      create(
-        source,
-        'images/subfolder/photo.jpg',
-        Buffer.from([0, 1, 2, 3, 255])
-      );
+      create(source, 'data/collection.json', JSON.stringify({schemaVersion: 6}));
+      create(source, 'images/subfolder/photo.jpg', Buffer.from([0, 1, 2, 3, 255]));
       create(source, 'documents/rechnung.pdf', '%PDF-1.4 test');
       const archive = path.join(root, 'backup.zip');
-      const result = writeReadableZip(
-        source,
-        archive,
-        zipPass,
-        '2026-11-07T14:00:00.000Z'
-      );
+      const result = writeReadableZip(source, archive, zipPass, '2026-11-07T14:00:00.000Z');
       assert.equal(result.files, 4);
       assert.throws(() => inspectReadableZip(archive), /Passwort/);
-      assert.throws(
-        () => inspectReadableZip(archive, null, 'falsch'),
-        /Passwort/
-      );
+      assert.throws(() => inspectReadableZip(archive, null, 'falsch'), /Passwort/);
       assert.equal(inspectReadableZip(archive, null, zipPass).files, 4);
-      assert.equal(
-        fs.readFileSync(archive).includes(Buffer.from('\"schemaVersion\":6')),
-        false
-      );
+      assert.equal(fs.readFileSync(archive).includes(Buffer.from('\"schemaVersion\":6')), false);
       const extract = path.join(root, 'extracted');
       inspectReadableZip(archive, extract, zipPass);
-      assert.equal(
-        fs.readFileSync(path.join(extract, 'data/collection.json'), 'utf8'),
-        '{"schemaVersion":6}'
-      );
+      assert.equal(fs.readFileSync(path.join(extract, 'data/collection.json'), 'utf8'), '{"schemaVersion":6}');
       assert.deepEqual(
         fs.readFileSync(path.join(extract, 'images/subfolder/photo.jpg')),
         Buffer.from([0, 1, 2, 3, 255])
       );
-      assert.equal(
-        fs.readFileSync(path.join(extract, 'documents/rechnung.pdf'), 'utf8'),
-        '%PDF-1.4 test'
-      );
+      assert.equal(fs.readFileSync(path.join(extract, 'documents/rechnung.pdf'), 'utf8'), '%PDF-1.4 test');
       // Tamper with README ciphertext; AES authentication must reject it.
       const data = fs.readFileSync(archive);
       const changed = Buffer.from(data);
       changed[30 + Buffer.byteLength('README.txt') + 11 + 18] ^= 1;
       fs.writeFileSync(archive, changed);
-      assert.throws(
-        () => inspectReadableZip(archive, null, zipPass),
-        /Authentifizierung/
-      );
-      assert.throws(
-        () => inspectReadableZip(archive, path.join(root, 'failed'), zipPass),
-        /Authentifizierung/
-      );
-      assert.equal(
-        fs.existsSync(path.join(root, 'failed')),
-        false,
-        'failed extraction must clean up'
-      );
+      assert.throws(() => inspectReadableZip(archive, null, zipPass), /Authentifizierung/);
+      assert.throws(() => inspectReadableZip(archive, path.join(root, 'failed'), zipPass), /Authentifizierung/);
+      assert.equal(fs.existsSync(path.join(root, 'failed')), false, 'failed extraction must clean up');
     } finally {fs.rmSync(root, {recursive: true, force: true});}
   }
 );
@@ -96,8 +61,7 @@ test(
   'ZIP backup worker writes portable archives, prunes old runs and restores without changing live data',
   async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-zip-worker-'));
-    const control = path.join(root, 'control'), targets =
-      path.join(root, 'targets');
+    const control = path.join(root, 'control'), targets = path.join(root, 'targets');
     const token = 'a'.repeat(64), profileId = crypto.randomUUID();
     const profile = {
       id: profileId,
@@ -112,11 +76,7 @@ test(
     };
     create(targets, 'usb/.whisky-backup-target', 'test');
     create(control, 'backup-zip-password', zipPass);
-    create(
-      control,
-      'profiles.json',
-      JSON.stringify({version: 1, profiles: [profile]})
-    );
+    create(control, 'profiles.json', JSON.stringify({version: 1, profiles: [profile]}));
     create(root, 'worker-token', token);
     const original = Object.fromEntries([
       'BACKUP_CONTROL_DIR',
@@ -127,16 +87,11 @@ test(
     let server;
     try {
       server = http.createServer((req, res) => {
-        if (req.headers['x-backup-worker-token'] !== token || req.method !==
-          'POST') {
+        if (req.headers['x-backup-worker-token'] !== token || req.method !== 'POST') {
           res.writeHead(403); return res.end('{}');
         }
         const id = req.url.split('/').at(-1);
-        create(
-          control,
-          `staging/${id}/data/collection.json`,
-          '{"schemaVersion":6}'
-        );
+        create(control, `staging/${id}/data/collection.json`, '{"schemaVersion":6}');
         create(control, `staging/${id}/images/pic.png`, 'photo');
         create(control, `staging/${id}/documents/bill.pdf`, 'invoice');
         res.setHeader('Content-Type', 'application/json'); res.end('{}');
@@ -147,8 +102,7 @@ test(
         BACKUP_WORKER_TOKEN_FILE: path.join(root, 'worker-token'),
         APP_INTERNAL_URL: `http://127.0.0.1:${server.address().port}`,
       });
-      const {createWorker} =
-        await import('../../worker/backup-worker.js?zip-integration');
+      const {createWorker} = await import('../../worker/backup-worker.js?zip-integration');
       const worker = createWorker();
       /**
        * Serializes queue data to JSON.
@@ -163,56 +117,30 @@ test(
           control,
           `jobs/${id}.json`,
           JSON.stringify({
-            id, profileId, type, createdAt: new Date()
-              .toISOString(), ...extras,
+            id, profileId, type, createdAt: new Date().toISOString(), ...extras,
           })
         );
         return id;
       };
       const first = queue('run');
       await worker.processQueue();
-      assert.equal(
-        worker.getStatus().jobs.find(j => j.id === first).state,
-        'success'
-      );
-      let archives = fs.readdirSync(path.join(targets, 'usb/whisky-zip'))
-        .filter(f => f.endsWith('.zip'));
+      assert.equal(worker.getStatus().jobs.find(j => j.id === first).state, 'success');
+      let archives = fs.readdirSync(path.join(targets, 'usb/whisky-zip')).filter(f => f.endsWith('.zip'));
       assert.equal(archives.length, 1);
-      assert.equal(
-        inspectReadableZip(
-          path.join(targets, 'usb/whisky-zip', archives[0]),
-          null,
-          zipPass
-        ).files,
-        4
-      );
+      assert.equal(inspectReadableZip(path.join(targets, 'usb/whisky-zip', archives[0]), null, zipPass).files, 4);
       const second = queue('run');
       await worker.processQueue();
-      archives = fs.readdirSync(path.join(targets, 'usb/whisky-zip'))
-        .filter(f => f.endsWith('.zip'));
+      archives = fs.readdirSync(path.join(targets, 'usb/whisky-zip')).filter(f => f.endsWith('.zip'));
       assert.equal(archives.length, 1, 'retention keeps only one per day');
       const verify = queue('check');
       const list = queue('snapshots');
       const restore = queue('prepare', {snapshotId: 'latest'});
       await worker.processQueue();
+      assert.equal(worker.getStatus().jobs.find(j => j.id === verify).state, 'success');
+      assert.equal(worker.getStatus().jobs.find(j => j.id === list).state, 'success');
+      assert.equal(worker.getStatus().jobs.find(j => j.id === restore).state, 'success');
       assert.equal(
-        worker.getStatus().jobs.find(j => j.id === verify).state,
-        'success'
-      );
-      assert.equal(
-        worker.getStatus().jobs.find(j => j.id === list).state,
-        'success'
-      );
-      assert.equal(
-        worker.getStatus().jobs.find(j => j.id === restore).state,
-        'success'
-      );
-      assert.equal(
-        inspectReadableZip(
-          path.join(control, 'imports', restore, 'uploaded.zip'),
-          null,
-          zipPass
-        ).files,
+        inspectReadableZip(path.join(control, 'imports', restore, 'uploaded.zip'), null, zipPass).files,
         4
       );
       const prepared = queue('prepare', {snapshotId: 'latest'});
@@ -221,11 +149,7 @@ test(
       assert.equal(ready.state, 'success', ready.error);
       assert.equal(ready.importId, prepared);
       assert.equal(
-        inspectReadableZip(
-          path.join(control, 'imports', prepared, 'uploaded.zip'),
-          null,
-          zipPass
-        ).encrypted,
+        inspectReadableZip(path.join(control, 'imports', prepared, 'uploaded.zip'), null, zipPass).encrypted,
         true
       );
 
@@ -236,19 +160,10 @@ test(
       fs.rmSync(path.join(targets, 'usb/.whisky-backup-target'));
       const failed = queue('run');
       await worker.processQueue();
+      assert.equal(worker.getStatus().jobs.find(j => j.id === failed).state, 'failed');
+      assert.equal(worker.getStatus().jobs.find(j => j.id === failed).errorCode, 'backup.errors.mountMarkerMissing');
       assert.equal(
-        worker.getStatus().jobs.find(j => j.id === failed).state,
-        'failed'
-      );
-      assert.equal(
-        worker.getStatus().jobs.find(j => j.id === failed).errorCode,
-        'backup.errors.mountMarkerMissing'
-      );
-      assert.equal(
-        Object.hasOwn(
-          worker.getStatus().jobs.find(j => j.id === failed),
-          'error'
-        ),
+        Object.hasOwn(worker.getStatus().jobs.find(j => j.id === failed), 'error'),
         false,
         'worker must not persist raw German diagnostics or paths'
       );

@@ -1,0 +1,171 @@
+<!-- wcm-template:analyticsNote -->
+<p class="analytics-note">{{content:note}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:small -->
+<small>{{content:detail}}</small>
+<!-- /wcm-template -->
+
+<!-- wcm-template:contentSpan -->
+<span>{{content:label}}</span><strong>{{content:value}}</strong>{{content:small}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:stats -->
+<div class="stats analytics-metrics">{{content:cards}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsTwo -->
+<div class="analytics-two">{{content:items}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsDistillery -->
+<button
+  type="button"
+  class="analytics-bar-label analytics-link"
+  data-act="analytics-distillery"
+  data-id="{{attr:id}}"
+  title="{{attr:collectionByName}}">{{content:label}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsBarLabel -->
+<span class="analytics-bar-label">{{content:label}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsBarRow -->
+<div class="analytics-bar-row" role="listitem">{{content:opener}}<div class="analytics-bar-track"><span style="width:{{attr:toFixed}}%"></span>
+  </div><strong>{{content:title}}</strong>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsNote2 -->
+<p class="analytics-note">{{content:topEntries}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsBars -->
+<div class="analytics-bars" role="list">{{content:data}}</div>{{content:analyticsNote}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:legend -->
+<{{tag:action}}{{attrs:typeAttributes}} class="analytics-pie-item{{attr:linkClass}}"{{attrs:linkAttributes}}><i style="--slice:{{attr:colors}}"></i><span>{{content:label}}</span><strong>{{content:count}}</strong></{{tag:closingTag}}>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsComposition -->
+<div class="analytics-composition">
+  <div
+    class="analytics-donut"
+    role="img"
+    aria-label="{{attr:ariaLabel}}"
+    style="background:conic-gradient({{attr:slices}})"><span>{{content:number}}</span>
+  </div>
+  <div class="analytics-pie-legend">{{content:legend}}</div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:th -->
+<th>{{content:h}}</th>
+<!-- /wcm-template -->
+
+<!-- wcm-template:td -->
+<td>{{content:cell}}</td>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tr -->
+<tr>{{content:cells}}</tr>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsTableWrap -->
+<div class="analytics-table-wrap">
+  <table class="analytics-table">
+    <thead>
+      <tr>{{content:headings}}</tr>
+    </thead>
+    <tbody>{{content:rows}}</tbody>
+  </table>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:open -->
+<button
+  type="button"
+  class="analytics-link"
+  data-act="open"
+  data-id="{{attr:id}}"{{attrs:dataBottleIdAttributes}}>{{content:name}}</button>{{content:extra}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsDistillery2 -->
+<button
+  type="button"
+  class="analytics-link"
+  data-act="analytics-distillery"
+  data-id="{{attr:id}}">{{content:name}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsDateBoundary -->
+<label class="analytics-date-boundary">{{content:caption}}<span class="analytics-date-control">
+    <input
+      type="date"
+      id="analytics-{{attr:boundary}}-date"
+      data-analytics-boundary="{{attr:analyticsBoundary}}"
+      aria-label="{{attr:dateAccessibleName}}"
+      value="{{attr:readAnalyticsDate}}"
+      min="1600-01-01"
+      max="2300-12-31">
+  </span></label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPeriod -->
+<div class="analytics-period" aria-label="{{t:analytics.trends.granularity}}"><label>{{t:analytics.filters.dateRange}} <select id="analytics-period"><option value="month" {{attrs:monthAttributes}}>{{t:analytics.trends.monthly}}</option><option value="year" {{attrs:yearAttributes}}>{{t:analytics.trends.yearly}}</option></select></label>
+  {{content:dateBoundary}}{{content:endDateControl}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsIntro -->
+<p class="analytics-intro">{{t:analytics.notes.documentedCostsNoCurrencyConversion}}</p>{{content:main}}{{content:costPages}}
+{{content:periodControls}}{{content:priceCharts}}{{content:two}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:open2 -->
+<button
+  type="button"
+  class="analytics-link"
+  data-act="open"
+  data-id="{{attr:id}}"{{attrs:objectAttributes}}>{{t:analytics.actions.view}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsSection -->
+<button
+  class="analytics-section-card"
+  type="button"
+  data-act="analytics-section"
+  data-section="{{attr:section}}"><span class="analytics-section-icon">{{content:icon}}</span><span><strong>{{content:title}}</strong><small>{{content:sub}}</small></span><span class="analytics-section-chevron" aria-hidden="true">{{content:chevronRightIcon}}</span></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:overview -->
+{{content:metricGrid}}
+{{content:two}}
+<div class="analytics-overview-note"><strong>{{t:analytics.finance.recordedExpensesLabel}}</strong> {{content:best}}<span> · {{content:priceCoverage}}</span>
+</div>
+{{content:sectionHeading}}<div class="analytics-section-grid">{{content:sectionCards}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:selectOption -->
+<option value="{{attr:value}}"{{attrs:selectedAttributes}}>{{content:label}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:select -->
+<select data-analytics-filter="{{attr:name}}" aria-label="{{attr:ariaLabel}}">{{content:options}}</select>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsFilters -->
+<div class="analytics-filters" aria-label="{{t:analytics.filters.title}}">
+  {{content:select}}
+  {{content:countryFilter}}
+  {{content:volumeFilter}}
+  {{content:statusFilter}}
+  {{content:analyticsResetButton}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPage -->
+<div class="analytics-page">{{content:pageHeader}}
+  {{content:workspace}}
+</div>
+<!-- /wcm-template -->

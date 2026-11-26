@@ -1,5 +1,6 @@
 import {t} from '../../i18n/index.js';
-/** Reduce the broad, semi-transparent U2Netp fringe without introducing a hard jagged contour.
+/** Reduce the broad, semi-transparent U2Netp fringe without introducing a
+ * hard jagged contour.
  * The input is unpremultiplied RGBA from Canvas ImageData; RGB remains
  * untouched.
  * Apply AFTER resampling/rotation, so the transition is narrow in final image
@@ -11,12 +12,11 @@ export const EDGE_ALPHA_HIGH = 190;
 /**
  * Refines alpha transitions around an extracted bottle silhouette.
  *
- * @param {*} rgba Rgba used by this operation.
- * @return {*} Calculated numeric result.
+ * @param {*} rgba Mutable RGBA pixel array; only alpha samples are changed.
+ * @return {*} The same RGBA buffer with its alpha channel sharpened in place.
  */
 export function sharpenCutoutAlpha(rgba) {
-  if (!rgba || rgba.length % 4 !==
-    0) throw new Error(t('errors.images.invalidRgba'));
+  if (!rgba || rgba.length % 4 !== 0) throw new Error(t('errors.images.invalidRgba'));
   for (let index = 3; index < rgba.length; index += 4) {
     const alpha = rgba[index];
     if (alpha <= EDGE_ALPHA_LOW) {

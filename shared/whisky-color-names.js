@@ -68,8 +68,8 @@ export const WHISKY_COLOR_REFERENCES = Object.freeze([
  * sRGB -> OKLab. Perceptual distance is much more useful for naming adjacent
  * warm shades than raw RGB or hue distances.
  *
- * @param {*} hex Hex used by this operation.
- * @return {!Array<number>} Resulting list of values.
+ * @param {string} hex Six-digit sRGB color, including the leading hash.
+ * @return {!Array<number>} OKLab coordinates used to compare whisky-color distances.
  */
 function oklab(hex) {
   const rgb = [1, 3, 5].map(i => {
@@ -96,30 +96,27 @@ const references = WHISKY_COLOR_REFERENCES.map(({key, hex}) => {
 // more strongly, while still comparing lightness and chroma continuously.
 const HUE_WEIGHT = 8;
 /**
- * Calculates the naming distance numeric value.
- *
- * @param {*} lab Value used by this operation.
- * @param {*} chroma Value used by this operation.
- * @param {*} reference Reference value to compare against.
- * @return {number} Calculated numeric value.
+ * Compares perceptual lightness, chroma and hue against a reference whisky shade.
+ * @param {number[]} lab Candidate Lab colour coordinates.
+ * @param {number} chroma Candidate chroma.
+ * @param {Object} reference Reference Lab coordinates and chroma.
+ * @return {number} Perceptual naming distance.
  */
 function namingDistance(lab, chroma, reference) {
   const lightnessDifference = lab[0] - reference.lab[0];
   const chromaDifference = chroma - reference.chroma;
   const chromaDot = lab[1] * reference.lab[1] + lab[2] * reference.lab[2];
   // 2 * C1 * C2 * (1 - cos(delta hue)), without angular discontinuities.
-  const hueDifferenceSquared = Math.max(0, 2 * (chroma * reference.chroma -
-    chromaDot));
-  return lightnessDifference ** 2 + chromaDifference ** 2 + HUE_WEIGHT *
-    hueDifferenceSquared;
+  const hueDifferenceSquared = Math.max(0, 2 * (chroma * reference.chroma - chromaDot));
+  return lightnessDifference ** 2 + chromaDifference ** 2 + HUE_WEIGHT * hueDifferenceSquared;
 }
 
 /**
  * Stable, locale-independent name key. The original HEX is never rounded or
  * changed.
  *
- * @param {*} hex Hex used by this operation.
- * @return {?string} Resulting text.
+ * @param {*} hex Candidate whisky color; invalid colors return null.
+ * @return {?string} Translation key of the closest named whisky color, or null for disallowed colors.
  */
 export function whiskyColorNameKey(hex) {
   if (!isAllowedWhiskyHex(hex)) return null;

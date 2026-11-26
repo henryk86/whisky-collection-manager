@@ -1,14 +1,18 @@
 import {t} from '../i18n/index.js';
 import {modalFooter} from '../ui/modal-layout.js';
-import {escapeHtml, query} from '../ui/dom.js';
+import {query} from '../ui/dom.js';
 import {httpResponseError} from '../api.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates('dialogs/file-preview.html');
+
 
 /**
  * Browsers can preview these file types without uploading data to an external
  * service.
  *
  * @param {string} name Name of the item.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Preview kind and MIME type, with null MIME type for unsupported files.
  */
 export function documentPreviewKind(name) {
   const ext = String(name || '').split('.').pop()?.toLowerCase();
@@ -21,8 +25,7 @@ export function documentPreviewKind(name) {
     gif: 'image/gif',
   };
   if (Object.hasOwn(images, ext)) return {kind: 'image', type: images[ext]};
-  if (['txt', 'csv', 'eml']
-    .includes(ext)) return {kind: 'text', type: 'text/plain'};
+  if (['txt', 'csv', 'eml'].includes(ext)) return {kind: 'text', type: 'text/plain'};
   return {kind: 'unsupported', type: null};
 }
 
@@ -31,13 +34,13 @@ export function documentPreviewKind(name) {
  * endpoint. Object URLs are revoked when the application closes the modal.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Attachment preview operations and object-URL cleanup.
  */
 export function createFilePreview({modal, state}) {
   let blobUrl = null;
   let sequence = 0;
   /**
-   * Performs the close lifecycle action.
+   * Invalidates pending preview requests and revokes the active object URL.
    */
   function close() {
     sequence++;
@@ -48,7 +51,7 @@ export function createFilePreview({modal, state}) {
   /**
    * Controls the file preview state.
    *
-   * @param {*} button Button used by this operation.
+   * @param {*} button Attachment preview control containing bottle ID, file ID and filename.
    */
   async function open(button) {
     close();
@@ -60,11 +63,17 @@ export function createFilePreview({modal, state}) {
     const preview = documentPreviewKind(name);
     modal.showModal(
       name,
-      `<div class="document-preview-stage" aria-live="polite"><p class="hint">${escapeHtml(t(preview.kind === 'unsupported' ? 'detail.documents.previewUnavailable' : 'detail.documents.previewLoading'))}</p></div>
-            ${modalFooter(
-        `<a class="btn primary" href="${escapeHtml(url)}" download="${escapeHtml(name)}">${escapeHtml(t('detail.documents.download'))}</a>`,
-        {className: 'document-preview-actions'}
-      )}`,
+      renderTemplate('documentPreviewStage', {
+        t: t(preview.kind === 'unsupported' ? 'detail.documents.previewUnavailable' : 'detail.documents.previewLoading'),
+        modalFooter: modalFooter(
+          renderTemplate('primaryButton', {
+            url: url,
+            name: name,
+            download: t('detail.documents.download'),
+          }),
+          {className: 'document-preview-actions'}
+        ),
+      }),
       true
     );
     const shownModal = state.modal;
@@ -84,13 +93,17 @@ export function createFilePreview({modal, state}) {
       return;
     }
     try {
-      const response = await fetch(url, {credentials: 'same-origin', cache: 'no-store'});
+      const response = await fetch(url, {
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
       if (!response.ok) {
-        if (response.status ===
-          401) window.dispatchEvent(new Event('wcm:auth-required'));
+        if (response.status === 401) window.dispatchEvent(new Event('wcm:auth-required'));
         let data = null;
         if (response.headers.get('content-type')?.includes('json')) {
-          try {data = await response.json();} catch { /* A missing body is handled below. */}
+          try {
+            data = await response.json();
+          } catch { /* A missing body is handled below. */}
         }
         throw httpResponseError(response.status, data);
       }

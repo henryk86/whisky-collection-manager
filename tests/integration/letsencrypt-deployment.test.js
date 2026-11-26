@@ -6,8 +6,7 @@ import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta
-  .url)), '../..');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 /**
  * Writes fixture data to the local filesystem.
@@ -24,10 +23,7 @@ function fixture(t, provider = 'cloudflare') {
   const bindir = path.join(temp, 'bin');
   fs.mkdirSync(path.join(project, 'deploy'), {recursive: true});
   fs.mkdirSync(bindir);
-  fs.copyFileSync(
-    path.join(root, 'deploy/letsencrypt.sh'),
-    path.join(project, 'deploy/letsencrypt.sh')
-  );
+  fs.copyFileSync(path.join(root, 'deploy/letsencrypt.sh'), path.join(project, 'deploy/letsencrypt.sh'));
   fs.mkdirSync(path.join(data, 'secrets/letsencrypt'), {recursive: true});
   const creds = path.join(data, 'secrets/letsencrypt/dns-credentials.ini');
   const ini = provider === 'netcup-clouddns'
@@ -121,8 +117,7 @@ test(
     const bad = x.run('check', {LE_DOMAIN: '127.0.0.1'});
     assert.notEqual(bad.status, 0);
     assert.equal(fs.existsSync(x.log), false);
-    const conflictingPorts =
-      x.run('check', {HTTPS_PUBLIC_PORT: '443', LE_HTTPS_PUBLIC_PORT: '443'});
+    const conflictingPorts = x.run('check', {HTTPS_PUBLIC_PORT: '443', LE_HTTPS_PUBLIC_PORT: '443'});
     assert.notEqual(conflictingPorts.status, 0);
     assert.match(conflictingPorts.stderr, /duerfen nicht gleich sein/);
   }
@@ -134,28 +129,16 @@ test(
     const x = fixture(t);
     let result = x.run('issue');
     assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
-    const cert = path.join(
-      x.data,
-      'secrets/letsencrypt/published/current/fullchain.pem'
-    );
+    const cert = path.join(x.data, 'secrets/letsencrypt/published/current/fullchain.pem');
     assert.ok(fs.readFileSync(cert, 'utf8').includes('BEGIN CERTIFICATE'));
     const before = fs.readFileSync(cert);
-    assert.match(
-      fs.readFileSync(x.log, 'utf8'),
-      /certbot\/dns-cloudflare:latest certonly/
-    );
-    assert.match(
-      fs.readFileSync(x.log, 'utf8'),
-      /--dns-cloudflare-credentials \/run\/secrets\/dns.ini/
-    );
+    assert.match(fs.readFileSync(x.log, 'utf8'), /certbot\/dns-cloudflare:latest certonly/);
+    assert.match(fs.readFileSync(x.log, 'utf8'), /--dns-cloudflare-credentials \/run\/secrets\/dns.ini/);
     result = x.run('renew', {MOCK_ISSUE_NEW: '0'});
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /unveraendert/);
     assert.deepEqual(fs.readFileSync(cert), before);
-    assert.doesNotMatch(
-      fs.readFileSync(x.log, 'utf8'),
-      /compose --profile letsencrypt exec/
-    );
+    assert.doesNotMatch(fs.readFileSync(x.log, 'utf8'), /compose --profile letsencrypt exec/);
   }
 );
 
@@ -173,14 +156,8 @@ test(
     const log = fs.readFileSync(x.log, 'utf8');
     assert.match(log, /certbot\/dns-rfc2136:latest certonly/);
     assert.match(log, /--dns-rfc2136-credentials \/run\/secrets\/dns.ini/);
-    assert.match(
-      log,
-      /compose --profile letsencrypt exec -T letsencrypt-proxy nginx -t/
-    );
-    assert.match(
-      log,
-      /compose --profile letsencrypt exec -T letsencrypt-proxy nginx -s reload/
-    );
+    assert.match(log, /compose --profile letsencrypt exec -T letsencrypt-proxy nginx -t/);
+    assert.match(log, /compose --profile letsencrypt exec -T letsencrypt-proxy nginx -s reload/);
   }
 );
 
@@ -200,10 +177,7 @@ test(
     assert.doesNotMatch(log, /--dns-netcup --dns-netcup-credentials/);
     result = x.run('renew', {MOCK_ISSUE_NEW: '0'});
     assert.equal(result.status, 0, result.stderr);
-    assert.match(
-      fs.readFileSync(x.log, 'utf8'),
-      /coldfix\/certbot-dns-netcup:v2\.1\.0 certbot renew/
-    );
+    assert.match(fs.readFileSync(x.log, 'utf8'), /coldfix\/certbot-dns-netcup:v2\.1\.0 certbot renew/);
   }
 );
 
@@ -211,11 +185,7 @@ test(
   'netcup CloudDNS rejects legacy-only credentials without invoking Docker',
   t => {
     const x = fixture(t, 'netcup-clouddns');
-    fs.writeFileSync(
-      x.creds,
-      'dns_netcup_api_key = fake-legacy-key\n',
-      {mode: 0o600}
-    );
+    fs.writeFileSync(x.creds, 'dns_netcup_api_key = fake-legacy-key\n', {mode: 0o600});
     const result = x.run('check');
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /dns_netcup_api_v1_key fehlt/);
@@ -230,11 +200,7 @@ test(
     let result = x.run('issue');
     assert.equal(result.status, 0, result.stderr);
     assert.match(fs.readFileSync(x.log, 'utf8'), /--authenticator dns-netcup/);
-    fs.writeFileSync(
-      x.creds,
-      'dns_netcup_customer_id = 123456\n',
-      {mode: 0o600}
-    );
+    fs.writeFileSync(x.creds, 'dns_netcup_customer_id = 123456\n', {mode: 0o600});
     result = x.run('check');
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /dns_netcup_api_key fehlt/);
@@ -246,14 +212,8 @@ test('NGINX public TLS validates the internal HTTPS upstream', () => {
   assert.match(config, /proxy_pass https:\/\/app:3543;/);
   assert.match(config, /proxy_ssl_verify on;/);
   assert.match(config, /proxy_ssl_name localhost;/);
-  assert.match(
-    config,
-    /ssl_certificate \/etc\/nginx\/wcm-letsencrypt\/current\/fullchain\.pem;/
-  );
-  assert.match(
-    config,
-    /proxy_ssl_trusted_certificate \/etc\/nginx\/wcm-certs\/server-cert\.pem;/
-  );
+  assert.match(config, /ssl_certificate \/etc\/nginx\/wcm-letsencrypt\/current\/fullchain\.pem;/);
+  assert.match(config, /proxy_ssl_trusted_certificate \/etc\/nginx\/wcm-certs\/server-cert\.pem;/);
 });
 
 test(
@@ -262,16 +222,10 @@ test(
     const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8');
     const proxy = compose.split('  letsencrypt-proxy:')[1];
     assert.ok(proxy, 'letsencrypt-proxy service exists');
-    assert.match(
-      proxy,
-      /\/secrets\/letsencrypt\/published:\/etc\/nginx\/wcm-letsencrypt:ro/
-    );
+    assert.match(proxy, /\/secrets\/letsencrypt\/published:\/etc\/nginx\/wcm-letsencrypt:ro/);
     assert.match(proxy, /\/secrets\/certs:\/etc\/nginx\/wcm-certs:ro/);
     assert.doesNotMatch(proxy, /\/secrets\/letsencrypt\/published:\/run\//);
-    assert.match(
-      proxy,
-      /user: '\$\{LE_PROXY_UID:-1000\}:\$\{LE_PROXY_GID:-1000\}'/
-    );
+    assert.match(proxy, /user: '\$\{LE_PROXY_UID:-1000\}:\$\{LE_PROXY_GID:-1000\}'/);
     assert.match(proxy, /cap_drop:\s*\n\s*- ALL/);
     assert.doesNotMatch(proxy, /cap_add:/);
   }
@@ -283,16 +237,15 @@ test(
     const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8');
     const proxy = compose.split('  letsencrypt-proxy:')[1];
     assert.ok(proxy, 'letsencrypt-proxy service exists');
-    for (const [directory, size] of [['/var/cache/nginx', '16m'], ['/var/run', '1m'], ['/tmp', '16m']]) {
+    for (const [directory, size] of [['/var/cache/nginx', '16m'], ['/var/run',
+      '1m'], ['/tmp', '16m']]) {
       assert.ok(
-        proxy.includes(`${directory}:rw,nosuid,nodev,size=${size},uid=${'${LE_PROXY_UID:-1000}'},gid=${'${LE_PROXY_GID:-1000}'},mode=0700`),
+        proxy.includes(
+          `${directory}:rw,nosuid,nodev,size=${size},uid=${'${LE_PROXY_UID:-1000}'},gid=${'${LE_PROXY_GID:-1000}'},mode=0700`),
         `${directory} must be writable by LE_PROXY_UID/GID`
       );
     }
-    assert.match(
-      proxy,
-      /user: '\$\{LE_PROXY_UID:-1000\}:\$\{LE_PROXY_GID:-1000\}'/
-    );
+    assert.match(proxy, /user: '\$\{LE_PROXY_UID:-1000\}:\$\{LE_PROXY_GID:-1000\}'/);
     assert.match(proxy, /read_only: true/);
   }
 );

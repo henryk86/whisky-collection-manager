@@ -20,10 +20,7 @@ const ALLOWED = new Set(['tokens.css', 'palette-bottle.css',
 export function directColors(source) {
   const css = source.replace(/\/\*[\s\S]*?\*\//g, '');
   const declarations = /(?:(?<=^)|(?<=[\n{;]))\s*[\w-]+\s*:\s*([^;{}]*);/gm;
-  const functional = new RegExp(
-    '#[a-f\\d]{3,8}\\b|\\b(?:rgba?|hsla?|oklch|oklab|' +
-    'lab|lch|hwb|color)\\s*\\(', 'i'
-  );
+  const functional = new RegExp('#[a-f\\d]{3,8}\\b|\\b(?:rgba?|hsla?|oklch|oklab|' + 'lab|lch|hwb|color)\\s*\\(', 'i');
   const named = new RegExp(
     '(?<![\\w-])(?:white|black|red|green|blue|yellow|orange|' +
     'gray|grey|purple|teal|silver|maroon|olive|lime|aqua|fuchsia)' +
@@ -47,10 +44,8 @@ export function directColors(source) {
  */
 export function missingDesignTokens(sources) {
   const css = sources.join('\n');
-  const defined = new Set([...css.matchAll(/(--ds-[\w-]+)\s*:/g)]
-    .map(match => match[1]));
-  const requested = new Set([...css.matchAll(/var\(\s*(--ds-[\w-]+)/g)]
-    .map(match => match[1]));
+  const defined = new Set([...css.matchAll(/(--ds-[\w-]+)\s*:/g)].map(match => match[1]));
+  const requested = new Set([...css.matchAll(/var\(\s*(--ds-[\w-]+)/g)].map(match => match[1]));
   return [...requested].filter(name => !defined.has(name)).sort();
 }
 
@@ -86,8 +81,7 @@ export function colorViolations(directory) {
   return errors;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const errors = colorViolations(STYLES);
   if (errors.length) {
     console.error(`Hard-coded CSS colours:\n${errors.join('\n')}`);

@@ -56,8 +56,7 @@ async function savePhotoOrder(bottleId, ids, action) {
 export async function movePhoto(bottleId, photoId, step, action) {
   const list = document.querySelector(`[data-photo-list="${CSS.escape(bottleId)}"]`);
   if (!list) return;
-  const ids = [...list.querySelectorAll('[data-photo-tile]')].map(tile =>
-    tile.dataset.photoId);
+  const ids = [...list.querySelectorAll('[data-photo-tile]')].map((/** @type {HTMLElement} */ tile) => tile.dataset.photoId);
   const from = ids.indexOf(photoId);
   const order = reorderedPhotoIds(ids, photoId, ids[from + step]);
   if (order) await savePhotoOrder(bottleId, order, action);
@@ -76,7 +75,7 @@ const boundPhotoLists = new WeakSet();
  * @param {Function} action Mutation wrapper used to save the new photo order.
  */
 export function attachPhotoSorting(action) {
-  for (const list of document.querySelectorAll('[data-photo-list]')) {
+  for (const list of /** @type {Iterable<HTMLElement>} */ (document.querySelectorAll('[data-photo-list]'))) {
     // An unchanged section may be retained across data refreshes.
     if (boundPhotoLists.has(list)) continue;
     boundPhotoLists.add(list);
@@ -96,10 +95,10 @@ export function attachPhotoSorting(action) {
      *
      * @param {number} x Pointer X position in viewport pixels.
      * @param {number} y Pointer Y position in viewport pixels.
-     * @return {?Element} Target tile or null when outside the list.
+     * @return {?HTMLElement} Target tile or null when outside the list.
      */
     const tileAt = (x, y) => {
-      const tile = document.elementFromPoint(x, y)?.closest('[data-photo-tile]');
+      const tile = /** @type {HTMLElement} */ (document.elementFromPoint(x, y)?.closest('[data-photo-tile]'));
       return tile?.closest('[data-photo-list]') === list ? tile : null;
     };
 
@@ -109,8 +108,7 @@ export function attachPhotoSorting(action) {
      * @param {?Element} target Tile under the pointer, if any.
      */
     const showTarget = target => {
-      for (const tile of tiles()) tile.classList
-        .toggle('photo-drop-target', tile === target);
+      for (const tile of tiles()) tile.classList.toggle('photo-drop-target', tile === target);
     };
 
     /**
@@ -119,8 +117,7 @@ export function attachPhotoSorting(action) {
     const clear = () => {
       const active = gesture;
       gesture = null;
-      for (const tile of tiles()) tile.classList
-        .remove('photo-dragging', 'photo-drop-target');
+      for (const tile of tiles()) tile.classList.remove('photo-dragging', 'photo-drop-target');
       if (active?.source.hasPointerCapture?.(active.pointerId)) {
         active.source.releasePointerCapture(active.pointerId);
       }
@@ -130,11 +127,11 @@ export function attachPhotoSorting(action) {
      * Saves a completed drag unless it is a no-op or save is in progress.
      *
      * @param {string} photoId ID of the dragged photo.
-     * @param {?Element} target Destination tile, if the pointer is over one.
+     * @param {?HTMLElement} target Destination tile, if the pointer is over one.
      * @return {!Promise<void>} Completion of the save attempt.
      */
     const commit = async (photoId, target) => {
-      const ids = tiles().map(tile => tile.dataset.photoId);
+      const ids = tiles().map((/** @type {HTMLElement} */ tile) => tile.dataset.photoId);
       const order = reorderedPhotoIds(ids, photoId, target?.dataset.photoId);
       if (!order || saving) return;
       saving = true;
@@ -144,13 +141,12 @@ export function attachPhotoSorting(action) {
 
     // Never let Chrome start the native image/HTML5 drag operation.
     list.addEventListener('dragstart', event => event.preventDefault());
-    list.addEventListener('pointerdown', event => {
+    list.addEventListener('pointerdown', (/** @type {PointerEvent} */ event) => {
       if (!event.isPrimary || event.button !== 0 || gesture || saving) return;
-      const handle = event.target.closest('[data-photo-drag]');
-      const photo = event.pointerType === 'mouse' ? event.target
-        .closest('.photo-open') : null;
+      const handle = /** @type {Element} */ (event.target).closest('[data-photo-drag]');
+      const photo = event.pointerType === 'mouse' ? /** @type {Element} */ (event.target).closest('.photo-open') : null;
       const source = handle || photo;
-      const tile = source?.closest('[data-photo-tile]');
+      const tile = /** @type {HTMLElement} */ (source?.closest('[data-photo-tile]'));
       if (!tile || tile.closest('[data-photo-list]') !== list) return;
       gesture = {
         pointerId: event.pointerId, photoId: tile.dataset.photoId,
@@ -159,21 +155,20 @@ export function attachPhotoSorting(action) {
       source.setPointerCapture(event.pointerId);
       if (handle) event.preventDefault();
     });
-    list.addEventListener('pointermove', event => {
+    list.addEventListener('pointermove', (/** @type {PointerEvent} */ event) => {
       const active = gesture;
       if (!active || event.pointerId !== active.pointerId) return;
       const dx = event.clientX - active.startX;
       const dy = event.clientY - active.startY;
       if (!active.moved && dx * dx + dy * dy > 36) {
         active.moved = true;
-        active.source.closest('[data-photo-tile]').classList
-          .add('photo-dragging');
+        active.source.closest('[data-photo-tile]').classList.add('photo-dragging');
       }
       if (!active.moved) return;
       event.preventDefault();
       showTarget(tileAt(event.clientX, event.clientY));
     });
-    list.addEventListener('pointerup', event => {
+    list.addEventListener('pointerup', (/** @type {PointerEvent} */ event) => {
       const active = gesture;
       if (!active || event.pointerId !== active.pointerId) return;
       const target = active.moved ? tileAt(event.clientX, event.clientY) : null;
@@ -186,10 +181,10 @@ export function attachPhotoSorting(action) {
       clear();
       if (target) void commit(active.photoId, target);
     });
-    list.addEventListener('pointercancel', event => {
+    list.addEventListener('pointercancel', (/** @type {PointerEvent} */ event) => {
       if (gesture?.pointerId === event.pointerId) clear();
     });
-    list.addEventListener('lostpointercapture', event => {
+    list.addEventListener('lostpointercapture', (/** @type {PointerEvent} */ event) => {
       if (gesture?.pointerId === event.pointerId) clear();
     });
     list.addEventListener('click', event => {

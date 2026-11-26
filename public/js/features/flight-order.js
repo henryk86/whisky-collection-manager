@@ -2,10 +2,10 @@
  * Reorder a flight only when the drop changes its sequence. No record copies.
  *
  * @param {!Array<*>} ids Identifiers in their current order.
- * @param {*} sourceId Source id used by this operation.
+ * @param {string} sourceId Identifier of the flight member being moved.
  * @param {string} targetId Identifier of the destination photo.
  * @param {boolean=} after Resource data after the mutation.
- * @return {?Array<*>} Resulting list of values.
+ * @return {?Array<*>} Reordered flight-member IDs, or null when the requested move does not change the order.
  */
 export function reorderFlightIds(ids, sourceId, targetId, after = false) {
   if (!Array.isArray(ids) || sourceId === targetId) return null;
@@ -25,7 +25,7 @@ export function reorderFlightIds(ids, sourceId, targetId, after = false) {
  * its tasting note.
  *
  * @param {!Element} root Root element or directory.
- * @param {Function} onReorder On reorder used by this operation.
+ * @param {Function} onReorder Called with the updated member order after a valid drag-and-drop operation.
  */
 export function bindFlightSorting(root, onReorder) {
   let drag = null;
@@ -41,12 +41,12 @@ export function bindFlightSorting(root, onReorder) {
   };
 
   /**
-   * Derives the row under pointer result from the supplied values.
+   * Finds the flight member under the viewport coordinates if it belongs to this list.
    *
    * @param {*} x Horizontal coordinate.
    * @param {*} y Vertical coordinate.
    * @param {*} list Collection of entries to process.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Flight member element belonging to the list, or null if the pointer is elsewhere.
    */
   const rowUnderPointer = (x, y, list) => {
     const row = document.elementFromPoint(x, y)?.closest?.('.tasting-flight-member');
@@ -54,12 +54,12 @@ export function bindFlightSorting(root, onReorder) {
   };
 
   /**
-   * Derives the destination result from the supplied values.
+   * Determines the destination row and whether insertion is before or after its midpoint.
    *
    * @param {*} x Horizontal coordinate.
    * @param {*} y Vertical coordinate.
    * @param {*} list Collection of entries to process.
-   * @return {!Object} Computed value, or null when the input has no match.
+   * @return {!Object} Destination row and before-or-after insertion flag, or null outside eligible rows.
    */
   const destination = (x, y, list) => {
     const row = rowUnderPointer(x, y, list);
@@ -69,7 +69,7 @@ export function bindFlightSorting(root, onReorder) {
   };
 
   /**
-   * Derives the release result from the supplied values.
+   * Clears the active drag state and releases the captured pointer.
    */
   function release() {
     if (!drag) return;
@@ -78,13 +78,12 @@ export function bindFlightSorting(root, onReorder) {
     drag = null;
     if (handle.hasPointerCapture?.(pointerId)) handle.releasePointerCapture(pointerId);
   }
-  root.addEventListener('pointerdown', event => {
+  root.addEventListener('pointerdown', (/** @type {PointerEvent} */ event) => {
     if (!event.isPrimary || event.button !== 0 || drag) return;
-    const handle = event.target.closest?.('[data-flight-drag]');
-    const row = handle?.closest('.tasting-flight-member');
+    const handle = /** @type {Element} */ (event.target).closest?.('[data-flight-drag]');
+    const row = /** @type {HTMLElement} */ (handle?.closest('.tasting-flight-member'));
     const list = row?.parentElement;
-    if (!list?.matches('.tasting-flight-members-list') || !row.dataset
-      .tastingId) return;
+    if (!list?.matches('.tasting-flight-members-list') || !row.dataset.tastingId) return;
     drag = {
       handle,
       list,
@@ -96,38 +95,31 @@ export function bindFlightSorting(root, onReorder) {
     };
     handle.setPointerCapture?.(event.pointerId);
   });
-  root.addEventListener('pointermove', event => {
+  root.addEventListener('pointermove', (/** @type {PointerEvent} */ event) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
-    if (!drag.moved && (event.clientX - drag.x) ** 2 + (event.clientY -
-      drag.y) ** 2 < 64) return;
+    if (!drag.moved && (event.clientX - drag.x) ** 2 + (event.clientY - drag.y) ** 2 < 64) return;
     drag.moved = true;
     event.preventDefault();
     clearTargets(drag.list);
     drag.row.classList.add('is-dragging');
     const target = destination(event.clientX, event.clientY, drag.list);
     if (target && target.row !== drag.row)
-      target.row.classList.add(target.after ? 'is-drop-after' :
-        'is-drop-before');
+      target.row.classList.add(target.after ? 'is-drop-after' : 'is-drop-before');
   });
-  root.addEventListener('pointerup', event => {
+  root.addEventListener('pointerup', (/** @type {PointerEvent} */ event) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
     const {row, list, moved} = drag;
-    const target = moved ?
-      destination(event.clientX, event.clientY, list) : null;
+    const target = moved ? destination(event.clientX, event.clientY, list) : null;
     if (moved) event.preventDefault();
     release();
-    if (target && target.row !== row) void onReorder(
-      row.dataset.tastingId,
-      target.row.dataset.tastingId,
-      target.after
-    );
+    if (target && target.row !== row) void onReorder(row.dataset.tastingId, target.row.dataset.tastingId, target.after);
   });
   root.addEventListener(
     'pointercancel',
-    event => {if (drag?.pointerId === event.pointerId) release();}
+    (/** @type {PointerEvent} */ event) => {if (drag?.pointerId === event.pointerId) release();}
   );
   root.addEventListener(
     'lostpointercapture',
-    event => {if (drag?.pointerId === event.pointerId) release();}
+    (/** @type {PointerEvent} */ event) => {if (drag?.pointerId === event.pointerId) release();}
   );
 }

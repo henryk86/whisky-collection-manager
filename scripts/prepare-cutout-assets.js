@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-/** Download pinned, locally hosted AI runtime assets during installation/image build.
+/** Download pinned, locally hosted AI runtime assets during
+ * installation/image build.
  * These files are deliberately not fetched from the user's browser or a CDN at
  * runtime.
  */
@@ -35,19 +36,16 @@ const targets = [
 ];
 
 /**
- * Derives the valid result from the supplied values.
- *
- * @param {*} bytes Value used by this operation.
- * @param {*} entry Entry currently being processed.
- * @return {boolean} Whether the operation matched or succeeded.
+ * Checks asset byte length and the configured integrity digest.
+ * @param {Buffer} bytes Downloaded or cached asset bytes.
+ * @param {Object} entry Manifest entry with optional byte limits and SHA-256.
+ * @return {boolean} Whether all specified integrity constraints pass.
  */
 function valid(bytes, entry) {
   if (entry.bytes != null && bytes.length !== entry.bytes) return false;
   if (entry.minimumBytes && bytes.length < entry.minimumBytes) return false;
-  if (entry.sha256 && crypto.createHash('sha256').update(bytes)
-    .digest('hex') !== entry.sha256) return false;
-  if (entry.name.endsWith('.wasm') && bytes.toString('hex', 0, 4) !==
-    '0061736d') return false;
+  if (entry.sha256 && crypto.createHash('sha256').update(bytes).digest('hex') !== entry.sha256) return false;
+  if (entry.name.endsWith('.wasm') && bytes.toString('hex', 0, 4) !== '0061736d') return false;
   if (entry.name.endsWith('.onnx') && bytes.length < 1000000) return false;
   return true;
 }
@@ -77,10 +75,11 @@ async function download(entry) {
       console.warn(`${entry.name}: Downloadversuch fehlgeschlagen (${error.message})`);
     }
   }
-  if (!content) throw new Error(`${entry.name}: ${lastError?.message ||
-    'Keine Quelle erreichbar'}`);
+  if (!content) throw new Error(`${entry.name}: ${lastError?.message || 'Keine Quelle erreichbar'}`);
   const temp = `${target}.tmp-${process.pid}`;
-  try {fs.writeFileSync(temp, content, {mode: 0o644}); fs.renameSync(temp, target);}
+  try {
+    fs.writeFileSync(temp, content, {mode: 0o644}); fs.renameSync(temp, target);
+  }
   finally {fs.rmSync(temp, {force: true});}
   console.log(`${entry.name}: ${content.length} Bytes bereitgestellt`);
 }

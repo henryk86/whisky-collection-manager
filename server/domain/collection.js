@@ -6,14 +6,13 @@ import crypto from 'node:crypto';
 /**
  * Returns a timestamp suitable for collection audit fields.
  *
- * @return {string} Resulting text.
+ * @return {string} Current UTC instant formatted as an ISO timestamp.
  */
 export const now = () => new Date().toISOString();
 
 /**
- * Creates a unique identifier for a new collection entity.
- *
- * @return {*} Result computed from the supplied inputs.
+ * Generates a UUID for a new collection record.
+ * @return {string} Random UUID.
  */
 export const uid = () => crypto.randomUUID();
 export const WHISKY_TYPES = [
@@ -24,10 +23,9 @@ export const WHISKY_TYPES = [
   'blended_scotch',
 ];
 /**
- * Enumerates physical bottle entries nested within bottlings.
- *
- * @param {*} db Db used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Flattens the physical bottles nested under all bottlings.
+ * @param {import('../../shared/types.js').Collection} db Collection with nested bottlings.
+ * @return {import('../../shared/types.js').Bottle[]} Physical bottle references in collection order.
  */
 export function allBottles(db) {
   return db.bottlings.flatMap(b => b.bottles || []);
@@ -36,9 +34,9 @@ export function allBottles(db) {
 /**
  * Retrieves bottle for collection.
  *
- * @param {*} db Db used by this operation.
+ * @param {*} db Collection containing the bottlings and their physical bottle records.
  * @param {string} id Identifier used to select the relevant record.
- * @return {?Object} Computed value, or null when the input has no match.
+ * @return {?Object} Physical bottle and its owning bottling, or null when the ID is unknown.
  */
 export function findBottle(db, id) {
   for (const bottling of db.bottlings) {

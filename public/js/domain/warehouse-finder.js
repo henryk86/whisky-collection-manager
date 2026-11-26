@@ -7,17 +7,16 @@ export const WAREHOUSE_FINDER_PAGE_SIZE = 24;
  * Normalizes the normalize text for subsequent processing.
  *
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {string} Normalized, case-insensitive trimmed search key.
  */
-const normalize = value => String(value ?? '').normalize('NFKC')
-  .toLocaleLowerCase().trim();
+const normalize = value => String(value ?? '').normalize('NFKC').toLocaleLowerCase().trim();
 
 /**
  * Retrieves warehouse bottles for warehouse finder.
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Filtered bottle search page with location labels, total count and pagination metadata.
  */
 export function findWarehouseBottles(
   warehouse,
@@ -29,22 +28,19 @@ export function findWarehouseBottles(
   } = {}
 ) {
   const locations = new Map();
-  for (const room of warehouse?.rooms ||
-    []) for (const furniture of room.furniture ||
-      []) for (const shelf of furniture.shelves || []) {
-        locations.set(
-          shelf.id,
-          {
-            room,
-            furniture,
-            shelf,
-            label: `${room.name} / ${furniture.name} / ${shelf.name}`,
-          }
-        );
+  for (const room of warehouse?.rooms || []) for (const furniture of room.furniture || []) for (const shelf of furniture.shelves || []) {
+    locations.set(
+      shelf.id,
+      {
+        room,
+        furniture,
+        shelf,
+        label: `${room.name} / ${furniture.name} / ${shelf.name}`,
       }
+    );
+  }
   const terms = normalize(query).split(/\s+/).filter(Boolean);
-  const normalizedPlacement = ['all', 'assigned', 'unassigned']
-    .includes(placement) ? placement : 'all';
+  const normalizedPlacement = ['all', 'assigned', 'unassigned'].includes(placement) ? placement : 'all';
   const results = (warehouse?.bottles || []).flatMap(bottle => {
     const place = locations.get(warehouse.assignments?.[bottle.id]) || null;
     if (normalizedPlacement === 'assigned' && !place) return [];
@@ -59,23 +55,11 @@ export function findWarehouseBottles(
       bottle.volumeMl,
       place?.label,
     ].filter(value => value != null).join(' '));
-    return terms.every(term => haystack.includes(term)) ?
-      [{bottle, place}] : [];
+    return terms.every(term => haystack.includes(term)) ? [{bottle, place}] : [];
   });
-  results.sort((left, right) => left.bottle.name.localeCompare(
-    right.bottle.name,
-    undefined,
-    {numeric: true}
-  ) ||
-    String(left.bottle.number ?? '').localeCompare(String(right.bottle
-      .number ?? ''),
-      undefined,
-      {numeric: true}
-    ));
-  const size = Math.max(
-    1,
-    Math.min(100, Math.floor(pageSize) || WAREHOUSE_FINDER_PAGE_SIZE)
-  );
+  results.sort((left, right) => left.bottle.name.localeCompare(right.bottle.name, undefined, {numeric: true}) ||
+    String(left.bottle.number ?? '').localeCompare(String(right.bottle.number ?? ''), undefined, {numeric: true}));
+  const size = Math.max(1, Math.min(100, Math.floor(pageSize) || WAREHOUSE_FINDER_PAGE_SIZE));
   const pages = Math.max(1, Math.ceil(results.length / size));
   const currentPage = Math.max(1, Math.min(pages, Math.floor(Number(page)) || 1));
   return {

@@ -1,74 +1,80 @@
+import {composeMarkup} from '../ui/render-plan.js';
 /**
  * Global, searchable staging area for bottles not assigned to any physical
  * shelf.
  */
 import {unassignedWallPage} from '../domain/warehouse-unassigned-tray.js';
 import {t} from '../i18n/index.js';
-import {bottleLabel, bottleListFacts, bottleSymbol, safe} from './warehouse-presentation.js';
+import {bottleLabel, bottleListFacts, bottleSymbol} from './warehouse-presentation.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates('warehouse/warehouse-unassigned-tray.html');
+
 
 /**
- * Renders unassigned tray page for warehouse unassigned tray.
+ * Prepares paginated unassigned-bottle cards with selection states.
  *
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {!Array<*>=} selectedIds Selected ids used by this operation.
+ * @param {!Array<*>=} selectedIds Identifiers of bottles that should appear selected in the current tray page.
  * @param {!Object=} options3 Destructured options for this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Paginated unassigned-bottle cards with selection states.
  */
-export function renderUnassignedTrayPage(warehouse, selectedIds = [], {query = '', page = 1} = {}) {
+export function renderUnassignedTrayPage(warehouse, selectedIds = [],
+  {query = '', page = 1} = {}) {
   const data = unassignedWallPage(warehouse, {query, page});
   const selected = new Set(selectedIds);
-  const cards = data.items.map(bottle => {
+  const cards = composeMarkup(data.items.map(bottle => {
     const checked = selected.has(bottle.id);
     const facts = bottleListFacts(bottle);
-    return `<div class="warehouse-unassigned-bottle warehouse-wall-bottle${checked ? ' is-selected' : ''}" data-unassigned-id="${safe(bottle.id)}">
-            ${bottleSymbol(bottle, {selectable: true, selected: checked})}
-            <span class="warehouse-unassigned-name" title="${safe(bottleLabel(bottle))}">${safe(bottleLabel(bottle))}</span>
-            ${facts ? `<span class="warehouse-unassigned-facts">${facts}</span>` : ''}
-        </div>`;
-  }).join('');
-  const empty = data.total === 0 ? 'warehouse.wall.unassignedEmpty' :
-    'warehouse.wall.unassignedNoMatches';
-  return `<div class="warehouse-unassigned-results" aria-live="polite">
-        <div class="warehouse-unassigned-grid">${cards ||
-    `<p class="hint warehouse-unassigned-empty">${t(empty)}</p>`}</div>
-        <div class="warehouse-unassigned-pagination">
-            <span class="warehouse-unassigned-page-summary">${t(
-      'warehouse.wall.unassignedShown',
-      {shown: data.filtered, total: data.total}
-    )}</span>
-            <input type="search" id="warehouse-unassigned-wall-search" class="warehouse-unassigned-page-search" value="${safe(query)}" placeholder="${safe(t('warehouse.wall.unassignedSearchPlaceholder'))}" aria-label="${safe(t('warehouse.wall.unassignedSearch'))}" autocomplete="off">
-            <div class="warehouse-unassigned-page-controls">
-                <button type="button" class="btn small" data-act="warehouse-unassigned-prev" ${data.page === 1 ? 'disabled' : ''}>${t('home.pagination.previous')}</button>
-                <span>${t(
-      'home.pagination.pageOf',
-      {page: data.page, total: data.pages}
-    )}</span>
-                <button type="button" class="btn small" data-act="warehouse-unassigned-next" ${data.page === data.pages ? 'disabled' : ''}>${t('home.pagination.next')}</button>
-            </div>
-        </div>
-    </div>`;
+    return renderTemplate('warehouseUnassignedBottle', {
+      checked: checked ? ' is-selected' : '',
+      unassignedId: String(bottle.id ?? ''),
+      bottleSymbol: bottleSymbol(bottle, {selectable: true, selected: checked}),
+      title: bottleLabel(bottle),
+      bottleName: bottleLabel(bottle),
+      warehouseUnassignedFacts: facts ? renderTemplate('warehouseUnassignedFacts', {facts: facts, }) : '',
+    });
+  }));
+  const empty = data.total === 0 ? 'warehouse.wall.unassignedEmpty' : 'warehouse.wall.unassignedNoMatches';
+  return renderTemplate('warehouseUnassignedResults', {
+    cards: cards || renderTemplate('hint', {t: t(empty), }),
+    unassignedShown: t('warehouse.wall.unassignedShown', {shown: data.filtered, total: data.total}),
+    value: String(query ?? ''),
+    placeholder: t('warehouse.wall.unassignedSearchPlaceholder'),
+    ariaLabel: t('warehouse.wall.unassignedSearch'),
+    disabledAttributes: data.page === 1 ? {"disabled": true} : {},
+    pageOf: t('home.pagination.pageOf', {page: data.page, total: data.pages}),
+    nextDisabled: data.page === data.pages ? {"disabled": true} : {},
+  });
 }
 
 /**
- * Renders unassigned tray for warehouse unassigned tray.
+ * Prepares unassigned-bottle tray with count, search and current page.
  *
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {!Array<*>=} selectedIds Selected ids used by this operation.
+ * @param {!Array<*>=} selectedIds Identifiers of bottles selected for assignment or relocation.
  * @param {!Object=} options Optional configuration for the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Unassigned-bottle tray with count, search and current page.
  */
-export function renderUnassignedTray(warehouse, selectedIds = [], options = {}) {
+export function renderUnassignedTray(warehouse, selectedIds = [],
+  options = {}) {
   const total = unassignedWallPage(warehouse).total;
-  const label = safe(t('warehouse.wall.unassignedTitle', {count: total}));
-  const content = `<div class="warehouse-unassigned-content">
-            ${renderUnassignedTrayPage(warehouse, selectedIds, options)}
-        </div>`;
+  const label = t('warehouse.wall.unassignedTitle', {count: total});
+  const content = renderTemplate('warehouseUnassignedContent', {
+    unassignedTrayPage: renderUnassignedTrayPage(warehouse, selectedIds, options),
+  });
   // Inside a room wall, the staging tray shares the selection toolbar's
   // single header. Keep a standalone native disclosure for other callers.
-  if (options.embedded) return `<div class="warehouse-unassigned-tray warehouse-unassigned-tray--embedded" id="warehouse-wall-unassigned-content" aria-label="${label}" ${options.expanded ? '' : 'hidden'}>${content}</div>`;
-  return `<details class="warehouse-unassigned-tray" ${options.expanded ?
-    'open' : ''} aria-label="${label}">
-        <summary class="warehouse-unassigned-summary"><strong>${label}</strong><span>${t('warehouse.wall.unassignedToggleHint')}</span></summary>
-        ${content}
-    </details>`;
+  if (options.embedded)
+    return renderTemplate('warehouseWallUnassignedContent', {
+      label: label,
+      hiddenAttributes: options.expanded ? {} : {"hidden": true},
+      content: content,
+    });
+  return renderTemplate('warehouseUnassignedTray', {
+    openAttributes: options.expanded ? {"open": true} : {},
+    label: label,
+    trayLabel: label,
+    content: content,
+  });
 }

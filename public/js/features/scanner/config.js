@@ -18,12 +18,11 @@ export const scannerFormatNames = [
 /**
  * Returns barcode formats supported by the scanner configuration.
  *
- * @param {!Object=} supported Supported used by this operation.
- * @return {!Array<*>} Resulting list of values.
+ * @param {Record<string, number>=} supported Scanner library's mapping of barcode-format names to numeric constants.
+ * @return {number[]} Supported numeric barcode-format identifiers.
  */
 export function supportedFormats(supported = {}) {
-  const formats = scannerFormatNames.map(name => supported[name])
-    .filter(Number.isInteger);
+  const formats = scannerFormatNames.map(name => supported[name]).filter(Number.isInteger);
   if (!formats.length) {
     throw Error(t('errors.scanner.formatsUnavailable'));
   }
@@ -33,17 +32,17 @@ export function supportedFormats(supported = {}) {
 /**
  * Builds camera constraints for the selected scanner mode.
  *
- * @return {!Object} Structured result for the caller.
+ * @return {{fps: number, qrbox: (width: number, height: number) => {width: number, height: number}}} Decoder frame rate and scan-area sizing callback.
  */
 export function cameraConfig() {
   return {
     fps: 12,
     /**
-     * Calculates the qrbox numeric value.
+     * Fits the rectangular scan area inside the available camera preview.
      *
-     * @param {*} width Width in pixels.
-     * @param {*} height Height in pixels.
-     * @return {!Object} Structured result assembled from the input data.
+     * @param {number} width Width in pixels.
+     * @param {number} height Height in pixels.
+     * @return {{width: number, height: number}} Scan-area dimensions in pixels.
      */
     qrbox: (width, height) => {
       const side = Math.floor(Math.min(width * .92, height * .85));

@@ -3,10 +3,55 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import {pipeline} from 'node:stream/promises';
 import {fileURLToPath} from 'node:url';
-import {ROOT, IMAGE_DIR} from '../storage/paths.js';
+import {ROOT, DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR} from '../storage/paths.js';
+import {HTTPS_KEY_FILE} from '../config.js';
 import {fail} from '../domain/errors.js';
 const WEB = path.resolve(fileURLToPath(new URL('../../public/', import.meta.url)));
 const SHARED = path.resolve(WEB, '../shared');
+const RASTER_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
+const PRIVATE_LOCATIONS = [
+  DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR, path.join(ROOT, 'secrets'),
+  ...['data', 'images', 'documents', 'backups', 'secrets'].map(name => path.join(WEB, name)),
+  HTTPS_KEY_FILE,
+  ...['BACKUP_CONTROL_DIR', 'BACKUP_TARGET_ROOT', 'RCLONE_CONFIG',
+    'BACKUP_ADMIN_TOKEN_FILE', 'BACKUP_WORKER_TOKEN_FILE', 'RESTIC_PASSWORD_FILE']
+    .map(name => process.env[name]).filter(Boolean).map(name => path.resolve(name)),
+];
+
+/**
+ * Checks containment using path components, including Windows path semantics.
+ * @param {string} location Allowed directory or exact file path.
+ * @param {string} file Candidate absolute path.
+ * @return {boolean} Whether the file is the location itself or a descendant.
+ */
+function containsPath(location, file) {
+  const relative = path.relative(location, file);
+  return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+
+/**
+ * Checks the private restore journal, temporary files and staged storage directories below the data root.
+ * @param {string} root Lexical or canonical application data root.
+ * @param {string} file Candidate public file path.
+ * @return {boolean} True when the first path component belongs to a restore transaction.
+ */
+function isRestoreArtifact(root, file) {
+  return containsPath(root, file) && /^\.restore-/i.test(path.relative(root, file).split(path.sep)[0]);
+}
+
+/**
+ * Rejects private storage exposed through misplaced or aliased public paths.
+ * @param {string} file Lexically resolved public file path.
+ * @param {string} realFile Canonical filesystem path after resolving links.
+ * @return {boolean} Whether the requested file belongs to configured private storage.
+ */
+function isPrivateLocation(file, realFile) {
+  return isRestoreArtifact(ROOT, file) ||
+    (fs.existsSync(ROOT) && isRestoreArtifact(fs.realpathSync(ROOT), realFile)) ||
+    PRIVATE_LOCATIONS.some(location => containsPath(location, file) ||
+      (fs.existsSync(location) && containsPath(fs.realpathSync(location), realFile)));
+}
+
 // Only browser-safe shared modules are served. Node-only backup modules stay
 // private.
 export const SHARED_BROWSER_FILES = new Set([
@@ -29,16 +74,18 @@ export const SHARED_BROWSER_FILES = new Set([
   'photo-adjustments.js',
 ]);
 /**
- * Parses path from its input.
- *
- * @param {*} encoded Value used by this operation.
- * @return {string} Resulting text.
+ * Decodes a URL path and converts malformed percent encoding into a bad-request error.
+ * @param {string} encoded Encoded request path.
+ * @return {string} Decoded path.
  */
 function decodePath(encoded) {
-  try {return decodeURIComponent(encoded);}
+  try {
+    const decoded = decodeURIComponent(encoded);
+    if (decoded.includes('\0')) throw new URIError('NUL in path');
+    return decoded;
+  }
   catch (error) {
-    if (error instanceof
-      URIError) throw fail('Ungültiger Pfad', 400, "api.errors.invalidPath");
+    if (error instanceof URIError) throw fail('Ungültiger Pfad', 400, "api.errors.invalidPath");
     throw error;
   }
 }
@@ -47,13 +94,13 @@ function decodePath(encoded) {
  * Hash the actual inline theme bootstrap and import map; no unsafe-inline
  * scripts.
  *
- * @param {*} html Html used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {string} html Static HTML document whose inline scripts require CSP hashes.
+ * @return {!Object} Security headers containing the exact inline-script hashes and restrictive CSP.
  */
 function htmlSecurityHeaders(html) {
-  const hashes = [...html.matchAll(/<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)]
-    .map(([, body]) => `'sha256-${crypto.createHash('sha256').update(body)
-      .digest('base64')}'`);
+  // HTML parsing normalizes CRLF and CR before CSP checks inline scripts.
+  const normalized = html.replace(/\r\n?/g, '\n');
+  const hashes = [...normalized.matchAll(/<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)].map(([, body]) => `'sha256-${crypto.createHash('sha256').update(body).digest('base64')}'`);
   return {
     'Content-Security-Policy': [
       "default-src 'self'",
@@ -82,15 +129,15 @@ function htmlSecurityHeaders(html) {
  * @param {!Object} req Incoming HTTP request.
  * @param {!Object} res Outgoing HTTP response.
  * @param {*} file Source file or file name being processed.
- * @param {*} contentType Content type used by this operation.
- * @param {*} cacheControl Cache control used by this operation.
- * @param {!Object=} securityHeaders Security headers used by this operation.
+ * @param {string} contentType Media type of the static file.
+ * @param {string} cacheControl Cache policy for the resource.
+ * @param {!Object=} securityHeaders Additional security headers, including CSP for HTML documents.
  * @return {*} Whether the requested condition is met.
  */
-function streamStatic(req, res, file, contentType, cacheControl, securityHeaders = {}) {
+function streamStatic(req, res, file, contentType, cacheControl,
+  securityHeaders = {}) {
   const stat = fs.statSync(file);
-  const etag = `W/"${stat.size.toString(16)}-${Math.trunc(stat.mtimeMs)
-    .toString(16)}"`;
+  const etag = `W/"${stat.size.toString(16)}-${Math.trunc(stat.mtimeMs).toString(16)}"`;
   const lastModified = stat.mtime.toUTCString();
   const headers = {
     'Content-Type': contentType,
@@ -103,14 +150,10 @@ function streamStatic(req, res, file, contentType, cacheControl, securityHeaders
   const ifNoneMatch = req.headers?.['if-none-match'];
   // If-None-Match takes precedence over If-Modified-Since, even on a miss.
   const etagMatches = typeof ifNoneMatch === 'string' &&
-    (ifNoneMatch.trim() === '*' || ifNoneMatch.split(',').some(value =>
-      value.trim().replace(/^W\//, '') === etag.replace(/^W\//, '')));
+    (ifNoneMatch.trim() === '*' || ifNoneMatch.split(',').some(value => value.trim().replace(/^W\//, '') === etag.replace(/^W\//, '')));
   const ifModifiedSince = req.headers?.['if-modified-since'];
-  const since = typeof ifModifiedSince === 'string' ?
-    Date.parse(ifModifiedSince) : NaN;
-  const modifiedSinceMatches = ifNoneMatch === undefined &&
-    Number.isFinite(since) &&
-    Math.floor(stat.mtimeMs / 1000) * 1000 <= since;
+  const since = typeof ifModifiedSince === 'string' ? Date.parse(ifModifiedSince) : NaN;
+  const modifiedSinceMatches = ifNoneMatch === undefined && Number.isFinite(since) && Math.floor(stat.mtimeMs / 1000) * 1000 <= since;
   if (etagMatches || modifiedSinceMatches) {
     res.writeHead(304, headers);
     res.end();
@@ -125,8 +168,8 @@ function streamStatic(req, res, file, contentType, cacheControl, securityHeaders
  *
  * @param {!Object} req Incoming HTTP request.
  * @param {!Object} res Outgoing HTTP response.
- * @param {string} url URL of the requested resource.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @param {URL} url Parsed request URL.
+ * @return {!Promise<*>} Completion of serving or rejecting the requested public resource.
  */
 export async function serveStatic(req, res, url) {
   // Runtime data must never become static assets, even if DATA_ROOT was
@@ -135,6 +178,7 @@ export async function serveStatic(req, res, url) {
     throw fail('Datei nicht gefunden', 404, 'api.errors.fileNotFound');
   }
   let file;
+  let base;
   if (url.pathname === '/vendor/html5-qrcode.min.js') {
     const vendor = path.resolve(WEB, '../node_modules/html5-qrcode/html5-qrcode.min.js');
     if (!fs.existsSync(vendor)) throw fail(
@@ -142,13 +186,7 @@ export async function serveStatic(req, res, url) {
       503,
       "api.errors.scannerLibraryIsMissingRunNpmInstall"
     );
-    return streamStatic(
-      req,
-      res,
-      vendor,
-      'text/javascript; charset=utf-8',
-      'public, max-age=3600'
-    );
+    return streamStatic(req, res, vendor, 'text/javascript; charset=utf-8', 'public, max-age=3600');
   }
   // Only these fixed Three.js ESM files are exposed from node_modules.
   // No CDN dependency and no arbitrary access to installed packages.
@@ -159,38 +197,39 @@ export async function serveStatic(req, res, url) {
   };
   if (Object.hasOwn(threeFiles, url.pathname)) {
     const vendor = path.resolve(WEB, '../node_modules/three', threeFiles[url.pathname]);
-    if (!fs.existsSync(vendor)) throw fail(
-      'Three.js fehlt. Bitte npm ci ausführen.',
-      503,
-      "api.errors.threeJsIsMissingRunNpmCi"
-    );
-    return streamStatic(
-      req,
-      res,
-      vendor,
-      'text/javascript; charset=utf-8',
-      'public, max-age=3600'
-    );
+    if (!fs.existsSync(vendor)) throw fail('Three.js fehlt. Bitte npm ci ausführen.', 503, "api.errors.threeJsIsMissingRunNpmCi");
+    return streamStatic(req, res, vendor, 'text/javascript; charset=utf-8', 'public, max-age=3600');
   }
   if (url.pathname.startsWith('/shared/')) {
     const name = decodePath(url.pathname.slice('/shared/'.length));
     if (!SHARED_BROWSER_FILES.has(name)) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
+    base = SHARED;
     file = path.join(SHARED, name);
   } else if (url.pathname.startsWith('/images/')) {
     const name = decodePath(url.pathname.slice(1));
+    base = IMAGE_DIR;
     file = path.resolve(ROOT, name);
-    if (!file.startsWith(IMAGE_DIR +
-      path.sep)) throw fail('Ungültiger Bildpfad', 403, "api.errors.invalidImagePath");
+    if (!containsPath(base, file)) throw fail('Ungültiger Bildpfad', 403, "api.errors.invalidImagePath");
   } else {
-    const name = url.pathname === '/' ? 'index.html' :
-      decodePath(url.pathname.slice(1));
+    const name = url.pathname === '/' ? 'index.html' : decodePath(url.pathname.slice(1));
+    base = WEB;
     file = path.resolve(WEB, name);
-    if (file !== WEB && !file.startsWith(WEB +
-      path.sep)) throw fail('Ungültiger Pfad', 403, "api.errors.invalidPath");
+    if (!containsPath(base, file)) throw fail('Ungültiger Pfad', 403, "api.errors.invalidPath");
   }
-  if (!fs.existsSync(file) || !fs.statSync(file)
-    .isFile()) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
-  const ext = path.extname(file).toLowerCase();
+  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
+  const realFile = fs.realpathSync(file);
+  if (!containsPath(fs.realpathSync(base), realFile)) {
+    throw fail('Ungültiger Pfad', 403, "api.errors.invalidPath");
+  }
+  if (base !== IMAGE_DIR && isPrivateLocation(file, realFile)) {
+    throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
+  }
+  const ext = path.extname(realFile).toLowerCase();
+  if (base === IMAGE_DIR && !RASTER_EXTENSIONS.has(ext)) {
+    throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
+  }
+  // Open the checked canonical path, not the unchecked symlink alias.
+  file = realFile;
   const types = {
     '.webmanifest': 'application/manifest+json; charset=utf-8',
     '.wasm': 'application/wasm',
@@ -210,10 +249,9 @@ export async function serveStatic(req, res, url) {
   // Paths such as /ai/vendor/ort.wasm.min.mjs and /ai/models/u2netp.onnx
   // have no version/hash in the URL. They MUST revalidate before reuse.
   const versionedAi = url.pathname.startsWith('/ai/') &&
-    /(?:^|\/)(?:v?\d+\.\d+\.\d+|[a-f0-9]{16,})(?:\/|[-.])/i
-      .test(url.pathname.slice(4));
-  const cacheControl = versionedAi ? 'public, max-age=31536000, immutable' :
-    'no-cache';
+    /(?:^|\/)(?:v?\d+\.\d+\.\d+|[a-f0-9]{16,})(?:\/|[-.])/i.test(url.pathname.slice(4));
+  const cacheControl = base === IMAGE_DIR ? 'private, no-cache' :
+    versionedAi ? 'public, max-age=31536000, immutable' : 'no-cache';
   return streamStatic(
     req,
     res,

@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {collectionOverviewEntries, matchesFlavorCriteria} from '../../public/js/domain/collection-overview.js';
-import {normalizeFlavorCriteria, normalizeSavedViews} from '../../shared/collection-saved-views.js';
-import {suggestFlight, flightCandidates} from '../../public/js/domain/flight-planner.js';
+import {collectionOverviewEntries, matchesFlavorCriteria}
+  from '../../public/js/domain/collection-overview.js';
+import {normalizeFlavorCriteria, normalizeSavedViews}
+  from '../../shared/collection-saved-views.js';
+import {suggestFlight, flightCandidates}
+  from '../../public/js/domain/flight-planner.js';
 
 /**
  * Derives the profile result from the supplied values.
@@ -30,14 +33,18 @@ const coll = {
       name: 'Smoky',
       abv: 50,
       bottles: [{id: 'a1', status: 'open', volumeType: 'standard'}],
-      tastings: [{id: 'ta', tastedOn: '2026-11-01', flavorProfile: profile(8, 6)}],
+      tastings: [{
+        id: 'ta', tastedOn: '2026-11-01', flavorProfile: profile(8, 6),
+      }],
     },
     {
       id: 'b',
       name: 'Gentle',
       abv: 40,
       bottles: [{id: 'b1', status: 'closed', volumeType: 'sample'}],
-      tastings: [{id: 'tb', tastedOn: '2026-10-01', flavorProfile: profile(1, 3)}],
+      tastings: [{
+        id: 'tb', tastedOn: '2026-10-01', flavorProfile: profile(1, 3),
+      }],
     },
     {
       id: 'c',
@@ -51,30 +58,15 @@ const coll = {
 test(
   'flavor criteria are ANDed, old profiles have genuinely unassessed axes, zero is a score',
   () => {
-    const c = [{axis: 'smoky', min: 7, max: 10}, {axis: 'fruity', min: 5, max: 10}];
-    assert.deepEqual(
-      collectionOverviewEntries(coll, {flavorCriteria: c}).map(x =>
-        x.bottling.id),
-      ['a']
-    );
+    const c = [{axis: 'smoky', min: 7, max: 10}, {
+      axis: 'fruity', min: 5,
+      max: 10,
+    }];
+    assert.deepEqual(collectionOverviewEntries(coll, {flavorCriteria: c}).map(x => x.bottling.id), ['a']);
     assert.equal(matchesFlavorCriteria(coll.bottlings[2], c), false);
-    assert.deepEqual(
-      collectionOverviewEntries(coll, {profileMissing: true}).map(x =>
-        x.bottling.id),
-      ['c']
-    );
-    assert.deepEqual(
-      collectionOverviewEntries(coll, {profilePresent: true}).map(x =>
-        x.bottling.id),
-      ['b', 'a']
-    );
-    assert.equal(
-      matchesFlavorCriteria(
-        coll.bottlings[1],
-        [{axis: 'medicinal', min: 0, max: 0}]
-      ),
-      true
-    );
+    assert.deepEqual(collectionOverviewEntries(coll, {profileMissing: true}).map(x => x.bottling.id), ['c']);
+    assert.deepEqual(collectionOverviewEntries(coll, {profilePresent: true}).map(x => x.bottling.id), ['b', 'a']);
+    assert.equal(matchesFlavorCriteria(coll.bottlings[1], [{axis: 'medicinal', min: 0, max: 0}]), true);
     const legacy = {
       ...coll.bottlings[0],
       tastings: [{
@@ -92,14 +84,8 @@ test(
         },
       }],
     };
-    assert.equal(
-      matchesFlavorCriteria(legacy, [{axis: 'smoky', min: 0, max: 10}]),
-      false
-    );
-    assert.equal(
-      matchesFlavorCriteria(legacy, [{axis: 'fruity', min: 6, max: 6}]),
-      true
-    );
+    assert.equal(matchesFlavorCriteria(legacy, [{axis: 'smoky', min: 0, max: 10}]), false);
+    assert.equal(matchesFlavorCriteria(legacy, [{axis: 'fruity', min: 6, max: 6}]), true);
   }
 );
 test(
@@ -107,15 +93,9 @@ test(
   () => {
     const b = {
       ...coll.bottlings[0],
-      tastings: [
-        ...coll.bottlings[0].tastings,
-        {id: 'new', tastedOn: '2026-11-02', flavorProfile: null},
-      ],
+      tastings: [...coll.bottlings[0].tastings, {id: 'new', tastedOn: '2026-11-02', flavorProfile: null},],
     };
-    assert.equal(
-      matchesFlavorCriteria(b, [{axis: 'smoky', min: 8, max: 8}]),
-      true
-    );
+    assert.equal(matchesFlavorCriteria(b, [{axis: 'smoky', min: 8, max: 8}]), true);
   }
 );
 test(
@@ -148,7 +128,11 @@ test(
       'old saved views retain their format'
     );
     assert.equal(
-      normalizeSavedViews([{...view, filters: {...view.filters, profilePresent: true}}])[0].filters.profilePresent,
+      normalizeSavedViews([{
+        ...view, filters: {
+          ...view.filters, profilePresent: true,
+        },
+      }])[0].filters.profilePresent,
       true
     );
     assert.throws(() => normalizeSavedViews([{
@@ -156,8 +140,14 @@ test(
       filters: {...view.filters, profileMissing: true, profilePresent: true},
     }]));
     assert.throws(() => normalizeSavedViews([view, view]));
-    assert.throws(() => normalizeFlavorCriteria([{axis: 'smoky', min: 9, max: 4}]));
-    assert.throws(() => normalizeFlavorCriteria([{axis: 'smoky', min: 0, max: 10}, {axis: 'smoky', min: 3, max: 7}]));
+    assert.throws(() => normalizeFlavorCriteria([{
+      axis: 'smoky', min: 9,
+      max: 4,
+    }]));
+    assert.throws(() => normalizeFlavorCriteria([{
+      axis: 'smoky', min: 0,
+      max: 10,
+    }, {axis: 'smoky', min: 3, max: 7}]));
   }
 );
 test(
@@ -165,26 +155,19 @@ test(
   () => {
     const open = flightCandidates(coll, {availability: 'open'});
     assert.deepEqual(open.map(x => x.bottling.id), ['a', 'c']);
-    assert.deepEqual(
-      flightCandidates(coll, {availability: 'samples'}).map(x => x.bottle.id),
-      ['b1']
-    );
+    assert.deepEqual(flightCandidates(coll, {availability: 'samples'}).map(x => x.bottle.id), ['b1']);
     for (const style of ['balanced', 'similar', 'contrast', 'discover']) {
-      const result = suggestFlight(coll, {style, count: 3, availability: 'all'});
+      const result = suggestFlight(coll, {
+        style, count: 3, availability: 'all',
+      });
       assert.equal(result.length, 3);
       assert.equal(new Set(result.map(x => x.bottlingId)).size, 3);
       assert.equal(new Set(result.map(x => x.bottleId)).size, 3);
-      assert.deepEqual(
-        suggestFlight(coll, {style, count: 3, availability: 'all'}),
-        result
-      );
+      assert.deepEqual(suggestFlight(coll, {style, count: 3, availability: 'all'}), result);
       assert.ok(result.some(x => x.reason === 'noProfile'));
     }
     assert.deepEqual(
-      suggestFlight(
-        coll,
-        {style: 'discover', count: 5, bottlingIds: ['a'], availability: 'all'}
-      ).map(x => x.bottleId),
+      suggestFlight(coll, {style: 'discover', count: 5, bottlingIds: ['a'], availability: 'all'}).map(x => x.bottleId),
       ['a1']
     );
   }

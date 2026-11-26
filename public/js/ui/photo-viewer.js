@@ -1,7 +1,12 @@
 import {t} from '../i18n/index.js';
-import {escapeHtml, query, queryAll} from './dom.js';
+import {query, queryAll} from './dom.js';
 import {createPhotoZoom} from './photo-zoom.js';
-import {minusIcon, plusIcon, arrowLeftIcon, arrowRightIcon} from './action-icons.js';
+import {minusIcon, plusIcon, arrowLeftIcon, arrowRightIcon}
+  from './action-icons.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates('dialogs/photo-viewer.html');
+
 
 /**
  * A photo lightbox inside the application's existing modal system. The source
@@ -9,7 +14,7 @@ import {minusIcon, plusIcon, arrowLeftIcon, arrowRightIcon} from './action-icons
  * open new tabs. Nested mode preserves unsaved editor form DOM nodes.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Photo lightbox opening, navigation and lifecycle operations.
  */
 export function createPhotoViewer({state, showModal}) {
   let photos = [];
@@ -17,10 +22,10 @@ export function createPhotoViewer({state, showModal}) {
   const photoZoom = createPhotoZoom();
 
   /**
-   * Locates the DOM elements used by photo from.
+   * Extracts a local image URL and alternative text from a photo control.
    *
    * @param {*} button Button control involved in the interaction.
-   * @return {!Object} Computed value, or null when the input has no match.
+   * @return {!Object} Local photo descriptor, or null for an unsupported or missing URL.
    */
   function photoFrom(button) {
     const img = button?.querySelector('img');
@@ -32,7 +37,7 @@ export function createPhotoViewer({state, showModal}) {
   /**
    * Controls the photo viewer state.
    *
-   * @param {*} button Button used by this operation.
+   * @param {*} button Photo action control used to determine the active gallery and image.
    */
   function open(button) {
     if (!button) return;
@@ -50,8 +55,7 @@ export function createPhotoViewer({state, showModal}) {
       // gallery navigation for that bottle rather than for all bottles.
       const cover = photoFrom(button);
       const matchingThumb = cover &&
-        queryAll('.bottle-photos [data-act="open-photo"]')
-          .find(candidate => photoFrom(candidate)?.src === cover.src);
+        queryAll('.bottle-photos [data-act="open-photo"]').find(candidate => photoFrom(candidate)?.src === cover.src);
       const gallery = matchingThumb?.closest('[data-photo-list]');
       if (gallery) buttons = queryAll('[data-act="open-photo"]', gallery);
     }
@@ -59,55 +63,47 @@ export function createPhotoViewer({state, showModal}) {
     const selection = buttons.map(photoFrom).filter(Boolean);
     if (!selection.length) return;
     const clicked = photoFrom(button);
-    const selectedIndex = selection.findIndex(photo => photo.src ===
-      clicked?.src);
+    const selectedIndex = selection.findIndex(photo => photo.src === clicked?.src);
     photos = selection;
     active = selectedIndex < 0 ? 0 : selectedIndex;
     const photo = photos[active];
     const multiple = photos.length > 1;
 
-    showModal(t("ui.photos.bottlePhoto"), `<figure class="photo-lightbox">
-    <div class="photo-lightbox-stage">
-    <img class="photo-lightbox-image" src="${escapeHtml(photo.src)}" alt="${escapeHtml(photo.alt)}" draggable="false">
-    </div>
-    <figcaption class="photo-lightbox-footer">
-    <span class="photo-lightbox-caption">${escapeHtml(photo.alt)}</span>
-    <span class="photo-lightbox-zoom" role="group" aria-label="${t('ui.photos.zoomControls')}">
-    <button type="button" class="btn small" data-act="photo-zoom-out" aria-label="${t('ui.photos.zoomOut')}" disabled>${minusIcon}</button>
-    <button type="button" class="btn small photo-lightbox-zoom-level" data-act="photo-zoom-reset" aria-label="${t('ui.photos.zoomReset')}" disabled><span data-photo-zoom-level>100 %</span></button>
-    <button type="button" class="btn small" data-act="photo-zoom-in" aria-label="${t('ui.photos.zoomIn')}">${plusIcon}</button>
-    </span>
-    ${multiple ? `<span class="photo-lightbox-navigation">
-    <button type="button" class="btn small" data-act="photo-prev" aria-label="${t("ui.photos.previous")}">${arrowLeftIcon}</button>
-    <span class="photo-lightbox-count" aria-live="polite">${active +
-        1} / ${photos.length}</span>
-    <button type="button" class="btn small" data-act="photo-next" aria-label="${t("ui.photos.next")}">${arrowRightIcon}</button>
-    </span>` : ''}
-    </figcaption>
-    </figure>`, true, Boolean(state.modal), '', 'photo');
+    showModal(t("ui.photos.bottlePhoto"), renderTemplate('photoLightbox', {
+      src: photo.src,
+      alt: photo.alt,
+      caption: photo.alt,
+      minusIcon: minusIcon,
+      plusIcon: plusIcon,
+      photoPrev: multiple ? renderTemplate('photoPrev', {
+        arrowLeftIcon: arrowLeftIcon,
+        active: active + 1,
+        length: photos.length,
+        arrowRightIcon: arrowRightIcon,
+      }) : '',
+    }), true, Boolean(state.modal), '', 'photo');
     photoZoom.attach();
-    query('.dialog .dialog-head [data-act="close-modal"]')?.focus();
+    /** @type {HTMLElement} */ (query('.dialog .dialog-head [data-act="close-modal"]'))?.focus();
   }
 
   /**
    * Checks whether open applies.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * @return {boolean} True while the photo lightbox is mounted.
    */
   function isOpen() {
     return Boolean(query('.photo-lightbox'));
   }
 
   /**
-   * Derives the step result from the supplied values.
+   * Moves to the previous or next photo, wrapping at either end of the gallery.
    *
    * @param {*} direction Direction used for traversal or movement.
    */
   function step(direction) {
     if (!isOpen() || photos.length < 2) return;
-    active = (active + (direction < 0 ? -1 : 1) + photos.length) %
-      photos.length;
+    active = (active + (direction < 0 ? -1 : 1) + photos.length) % photos.length;
     const photo = photos[active];
-    const image = query('.photo-lightbox-image');
+    const image = /** @type {HTMLImageElement} */ (query('.photo-lightbox-image'));
     const caption = query('.photo-lightbox-caption');
     const counter = query('.photo-lightbox-count');
     if (image) {

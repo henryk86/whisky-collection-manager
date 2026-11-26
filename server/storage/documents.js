@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {DOCUMENT_DIR, ROOT} from './paths.js';
 import {assert, fail} from '../domain/errors.js';
+import {writeDurableFile} from '../../shared/durable-files.js';
 
 // Whitelist file types used for invoices, photographs, and supporting records.
 const fileTypes = {
@@ -22,12 +23,11 @@ export const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024;
  * Checks whether document path applies in documents.
  *
  * @param {*} value Input value to process.
- * @param {string} bottleId Identifier of the physical bottle.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {string=} bottleId Optional physical-bottle identifier to restrict the path.
+ * @return {boolean} True for an allowed document path and matching owner.
  */
 export function isDocumentPath(value, bottleId) {
-  if (typeof value !== 'string' ||
-    !/^documents\/[\w-]+\/[a-f0-9-]{36}\.[a-z0-9]+$/i.test(value)) {
+  if (typeof value !== 'string' || !/^documents\/[\w-]+\/[a-f0-9-]{36}\.[a-z0-9]+$/i.test(value)) {
     return false;
   }
   if (bottleId != null && !value.startsWith(`documents/${bottleId}/`)) {
@@ -39,21 +39,16 @@ export function isDocumentPath(value, bottleId) {
 /**
  * Checks whether valid content applies in documents.
  *
- * @param {*} extension Extension used by this operation.
- * @param {*} bytes Bytes used by this operation.
- * @return {*} Whether the required condition is satisfied.
+ * @param {string} extension Lowercase attachment extension without the leading dot.
+ * @param {Buffer} bytes Attachment bytes to inspect for the expected file signature.
+ * @return {boolean} Whether the bytes match the declared allowed document type.
  */
 function isValidContent(extension, bytes) {
-  if (extension === 'pdf') return bytes.subarray(0, 5).toString('ascii') ===
-    '%PDF-';
-  if (extension === 'jpg' || extension === 'jpeg') return bytes[0] ===
-    0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
-  if (extension === 'png') return bytes.subarray(0, 8)
-    .equals(Buffer.from('89504e470d0a1a0a', 'hex'));
-  if (extension === 'webp') return bytes.toString('ascii', 0, 4) ===
-    'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP';
-  if (extension === 'gif') return ['GIF87a', 'GIF89a']
-    .includes(bytes.toString('ascii', 0, 6));
+  if (extension === 'pdf') return bytes.subarray(0, 5).toString('ascii') === '%PDF-';
+  if (extension === 'jpg' || extension === 'jpeg') return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (extension === 'png') return bytes.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex'));
+  if (extension === 'webp') return bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP';
+  if (extension === 'gif') return ['GIF87a', 'GIF89a'].includes(bytes.toString('ascii', 0, 6));
   if (extension === 'heic' || extension === 'heif') {
     return bytes.length >= 12 && bytes.toString('ascii', 4, 8) === 'ftyp' &&
       /^(hei[cfmx]|mif1|msf1)$/.test(bytes.toString('ascii', 8, 12));
@@ -73,18 +68,12 @@ function isValidContent(extension, bytes) {
 }
 
 /**
- * Derives the file location result from the supplied values.
- *
- * @param {*} relativePath Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Validates a relative document path and confines it to document storage.
+ * @param {string} relativePath Relative document path from a record.
+ * @return {string} Validated absolute document path.
  */
 function fileLocation(relativePath) {
-  assert(
-    isDocumentPath(relativePath),
-    'Ungueltiger Dokumentpfad',
-    400,
-    "api.errors.invalidDocumentPath"
-  );
+  assert(isDocumentPath(relativePath), 'Ungueltiger Dokumentpfad', 400, "api.errors.invalidDocumentPath");
   const absolute = path.resolve(ROOT, relativePath);
   assert(
     absolute.startsWith(DOCUMENT_DIR + path.sep),
@@ -101,7 +90,7 @@ function fileLocation(relativePath) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {!Object} options2 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Stored document ID, name, path, byte count, MIME type, SHA-256 and upload timestamp.
  */
 export function saveDocument(bottleId, {filename, data}) {
   assert(
@@ -111,34 +100,22 @@ export function saveDocument(bottleId, {filename, data}) {
     "api.errors.invalidBottleID"
   );
   assert(
-    typeof filename === 'string' && filename.length > 0 &&
-    filename.length <= 180
+    typeof filename === 'string' && filename.length > 0 && filename.length <= 180
     && !/[\\/\x00-\x1f\x7f]/.test(filename) && filename.trim() === filename,
     'Ungueltiger Dateiname',
     400,
     "api.errors.invalidFilename"
   );
   const ext = path.extname(filename).slice(1).toLowerCase();
+  assert(Object.hasOwn(fileTypes, ext), 'Dateityp nicht unterstuetzt', 400, "api.errors.unsupportedFileType");
   assert(
-    Object.hasOwn(fileTypes, ext),
-    'Dateityp nicht unterstuetzt',
-    400,
-    "api.errors.unsupportedFileType"
-  );
-  assert(
-    typeof data === 'string' && data.length < MAX_DOCUMENT_BYTES * 4 /
-    3 + 1024,
+    typeof data === 'string' && data.length < MAX_DOCUMENT_BYTES * 4 / 3 + 1024,
     'Datei zu gross (max. 15 MB)',
     413,
     "api.errors.fileExceeds15MB"
   );
   const match = /^data:[^;,]*;base64,([A-Za-z0-9+/]+={0,2})$/.exec(data);
-  assert(
-    match,
-    'Ungueltige Dateiuebertragung',
-    400,
-    "api.errors.invalidFileTransfer"
-  );
+  assert(match, 'Ungueltige Dateiuebertragung', 400, "api.errors.invalidFileTransfer");
   const bytes = Buffer.from(match[1], 'base64');
   assert(
     bytes.length > 0 && bytes.length <= MAX_DOCUMENT_BYTES,
@@ -155,8 +132,7 @@ export function saveDocument(bottleId, {filename, data}) {
   const documentId = crypto.randomUUID();
   const relativePath = `documents/${bottleId}/${documentId}.${ext}`;
   const target = fileLocation(relativePath);
-  fs.mkdirSync(path.dirname(target), {recursive: true});
-  fs.writeFileSync(target, bytes, {flag: 'wx', mode: 0o600});
+  writeDurableFile(target, bytes, {exclusive: true});
   return {
     id: documentId,
     name: filename,
@@ -169,19 +145,14 @@ export function saveDocument(bottleId, {filename, data}) {
 }
 
 /**
- * Parses document for documents.
- *
- * @param {*} relativePath Relative path used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Reads a stored attachment after verifying its path and existence.
+ * @param {string} relativePath Relative document path from a record.
+ * @return {Buffer} Document bytes.
  */
 export function readDocument(relativePath) {
   const file = fileLocation(relativePath);
   if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
-    throw fail(
-      'Datei auf dem Server nicht gefunden',
-      404,
-      "api.errors.fileNotFoundOnServer"
-    );
+    throw fail('Datei auf dem Server nicht gefunden', 404, "api.errors.fileNotFoundOnServer");
   }
   return fs.readFileSync(file);
 }
@@ -189,7 +160,7 @@ export function readDocument(relativePath) {
 /**
  * Clears document for documents.
  *
- * @param {*} relativePath Relative path used by this operation.
+ * @param {string} relativePath Stored document path relative to the application data root.
  */
 export function deleteDocument(relativePath) {
   const file = fileLocation(relativePath);

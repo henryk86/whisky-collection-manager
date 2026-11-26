@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assessCapture, browserWarning, compareGeometry, pixelMode} from '../../scripts/visual-policy.js';
+import {assessCapture, browserWarning, compareGeometry, pixelMode}
+  from '../../scripts/visual-policy.js';
 
 const rect = [0, 80, 360, 50];
 const baseline = {
@@ -27,20 +28,14 @@ test(
     assert.equal(pixelMode([], {}), 'diagnostic');
     assert.equal(pixelMode(['--strict-pixels'], {}), 'strict');
     assert.equal(pixelMode([], {WCM_VISUAL_PIXEL_MODE: 'strict'}), 'strict');
-    assert.throws(
-      () => pixelMode([], {WCM_VISUAL_PIXEL_MODE: 'disabled'}),
-      /Invalid pixel mode/
-    );
+    assert.throws(() => pixelMode([], {WCM_VISUAL_PIXEL_MODE: 'disabled'}), /Invalid pixel mode/);
   }
 );
 
 test(
   'different browser versions give one actionable warning or abort strict comparison',
   () => {
-    assert.match(
-      browserWarning('Chrome/159', 'Chrome/144', 'diagnostic'),
-      /browser mismatch/
-    );
+    assert.match(browserWarning('Chrome/159', 'Chrome/144', 'diagnostic'), /browser mismatch/);
     assert.equal(browserWarning('Chrome/144', 'Chrome/144', 'strict'), null);
     assert.throws(
       () => browserWarning('Chrome/159', 'Chrome/144', 'strict'),
@@ -60,10 +55,7 @@ test(
     });
     assert.equal(assessCapture(capture({mode: 'strict'})).status, 'failed');
     assert.equal(assessCapture(capture({changed: 1})).pixelChanged, true);
-    assert.equal(
-      assessCapture(capture({changed: 0, mode: 'strict'})).status,
-      'passed'
-    );
+    assert.equal(assessCapture(capture({changed: 0, mode: 'strict'})).status, 'passed');
   }
 );
 
@@ -72,22 +64,10 @@ test(
   () => {
     const shifted = {...baseline, header: [5, 80, 360, 50]};
     assert.match(compareGeometry(baseline, shifted).join(''), /header moved/);
-    assert.equal(
-      assessCapture(capture({after: shifted, changed: 0})).status,
-      'failed'
-    );
-    assert.match(
-      compareGeometry(baseline, {...baseline, overflow: 15}).join(''),
-      /horizontal overflow/
-    );
-    assert.equal(
-      assessCapture(capture({after: {...baseline, overflow: 15}})).blocking,
-      true
-    );
-    assert.equal(
-      assessCapture(capture({dimensions: [390, 1100, 390, 1080]})).blocking,
-      true
-    );
+    assert.equal(assessCapture(capture({after: shifted, changed: 0})).status, 'failed');
+    assert.match(compareGeometry(baseline, {...baseline, overflow: 15}).join(''), /horizontal overflow/);
+    assert.equal(assessCapture(capture({after: {...baseline, overflow: 15}})).blocking, true);
+    assert.equal(assessCapture(capture({dimensions: [390, 1100, 390, 1080]})).blocking, true);
     assert.equal(assessCapture(capture({before: null})).blocking, true);
   }
 );

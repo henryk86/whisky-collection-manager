@@ -9,15 +9,13 @@ import path from 'node:path';
 /**
  * Checks whether approved release merge applies in verify merged pr.
  *
- * @param {*} pr Pr used by this operation.
- * @param {*} sha Sha used by this operation.
- * @param {*} repo Repo used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} pr GitHub pull-request metadata to compare with the approved merge.
+ * @param {string} sha Expected merge commit SHA.
+ * @param {string} repo Expected owner/repository name.
+ * @return {boolean} True when the merged pull request satisfies the release approval requirements.
  */
 export function isApprovedReleaseMerge(pr, sha, repo) {
-  return /^[a-f0-9]{40}$/.test(sha || '') && typeof repo === 'string' &&
-    repo.includes('/')
-    && pr?.merged_at != null
+  return /^[a-f0-9]{40}$/.test(sha || '') && typeof repo === 'string' && repo.includes('/') && pr?.merged_at != null
     && pr.merge_commit_sha === sha
     && pr.base?.ref === 'main' && pr.head?.ref === 'develop'
     && pr.base?.repo?.full_name === repo && pr.head?.repo?.full_name === repo;
@@ -26,14 +24,13 @@ export function isApprovedReleaseMerge(pr, sha, repo) {
 /**
  * Validates merged p rs for verify merged pr.
  *
- * @param {*} prs Prs used by this operation.
- * @param {*} sha Sha used by this operation.
- * @param {*} repo Repo used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} prs Pull requests associated with the main-branch commit.
+ * @param {string} sha Expected merge commit SHA.
+ * @param {string} repo Expected owner/repository name.
+ * @return {boolean} True after at least one eligible merged pull request has been verified.
  */
 export function verifyMergedPRs(prs, sha, repo) {
-  if (!Array.isArray(prs) || !prs.some(pr =>
-    isApprovedReleaseMerge(pr, sha, repo)))
+  if (!Array.isArray(prs) || !prs.some(pr => isApprovedReleaseMerge(pr, sha, repo)))
     throw new Error('Release blocked: no merged develop -> main PR matches this commit and repository.');
   return true;
 }
@@ -41,27 +38,25 @@ export function verifyMergedPRs(prs, sha, repo) {
 /**
  * Checks whether a merged pull request is the authorized version PR.
  *
- * @param {*} pr Pr used by this operation.
- * @param {*} sha Sha used by this operation.
- * @param {*} repo Repo used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} pr GitHub pull-request metadata for a release-version branch.
+ * @param {string} sha Expected merge commit SHA.
+ * @param {string} repo Expected owner/repository name.
+ * @return {boolean} True when the pull request is the expected approved version merge into main.
  */
 export function approvedVersionMerge(pr, sha, repo) {
-  return /^[a-f0-9]{40}$/.test(sha || '') && pr?.merged_at != null
-    && pr.merge_commit_sha === sha && pr.base?.ref === 'main'
+  return /^[a-f0-9]{40}$/.test(sha || '') && pr?.merged_at != null && pr.merge_commit_sha === sha && pr.base?.ref === 'main'
     && pr.base?.repo?.full_name === repo && pr.head?.repo?.full_name === repo
     && /^release\/version-v\d+\.\d+\.\d+$/.test(pr.head?.ref || '')
     && ['github-actions[bot]', repo?.split('/')[0]].includes(pr.user?.login)
-    && pr.title === `chore(release): synchronize ${pr.head.ref
-      .slice('release/version-'.length)}`;
+    && pr.title === `chore(release): synchronize ${pr.head.ref.slice('release/version-'.length)}`;
 }
 
 /**
  * Validates main merge for verify merged pr.
  *
- * @param {*} prs Prs used by this operation.
- * @param {*} sha Sha used by this operation.
- * @param {*} repo Repo used by this operation.
+ * @param {*} prs Pull requests associated with the main-branch push.
+ * @param {string} sha Expected merge commit SHA.
+ * @param {string} repo Expected owner/repository name.
  * @return {(string)} Whether the requested condition is met.
  */
 export function verifyMainMerge(prs, sha, repo) {
@@ -78,8 +73,7 @@ async function main() {
   const sha = process.env.MERGE_SHA, repo = process.env.GITHUB_REPOSITORY;
   const chunks = [];
   for await (const chunk of process.stdin) chunks.push(chunk);
-  const lines = Buffer.concat(chunks).toString('utf8').split(/\r?\n/)
-    .filter(Boolean);
+  const lines = Buffer.concat(chunks).toString('utf8').split(/\r?\n/).filter(Boolean);
   const prs = lines.map(line => JSON.parse(line));
   const kind = verifyMainMerge(prs, sha, repo);
   if (process.argv.includes('--require-release') && kind !== 'release')
@@ -89,28 +83,24 @@ async function main() {
     const pr = prs.find(p => approvedVersionMerge(p, sha, repo));
     const {execFileSync} = await import('node:child_process');
     /**
-     * Normalizes the git text for subsequent processing.
-     *
-     * @param {!Array<*>} args Arguments forwarded to the operation.
-     * @return {*} Result computed from the supplied inputs.
+     * Runs Git to inspect the merged pull-request commit.
+     * @param {...string} args Git arguments.
+     * @return {string} Trimmed standard output.
      */
-    const git = (...args) =>
-      execFileSync('git', args, {encoding: 'utf8'}).trim();
+    const git = (...args) => execFileSync('git', args, {encoding: 'utf8'}).trim();
     const tag = pr.head.ref.slice('release/version-'.length);
     const snapshot = git('rev-parse', `${tag}^{commit}`);
-    const parents = git('rev-list', '--parents', '-n', '1', sha)
-      .split(/\s+/).slice(1);
+    const parents = git('rev-list', '--parents', '-n', '1', sha).split(/\s+/).slice(1);
     const snapshotParent = git('rev-parse', `${snapshot}^`);
-    if (pr.head.sha !== snapshot || parents.length !== 2 || parents[0] !==
-      snapshotParent || parents[1] !== snapshot)
+    if (pr.head.sha !== snapshot || parents.length !== 2 || parents[0] !== snapshotParent || parents[1] !== snapshot)
       throw new Error('Version merge is not the expected release snapshot PR');
   }
   if (process.env.GITHUB_OUTPUT)
-    (await import('node:fs')).appendFileSync(process.env.GITHUB_OUTPUT,
-      `kind=${kind}\n`
-    );
+    (await import('node:fs')).appendFileSync(process.env.GITHUB_OUTPUT, `kind=${kind}\n`);
   console.log(`Main merge validated: ${kind} ${sha.slice(0, 12)}.`);
 }
-const isCLI = process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url);
-if (isCLI) main().catch(error => {console.error(error.message); process.exitCode = 1;});
+const isCLI = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isCLI) main().catch(error => {
+  console.error(error.message);
+  process.exitCode = 1;
+});

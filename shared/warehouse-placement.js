@@ -7,7 +7,7 @@ const EPSILON = 0.00001;
  * Computes the occupied rectangle of a furniture item.
  *
  * @param {*} furniture Furniture configuration including its dimensions.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Rotated room-space furniture bounds, including vertical extent.
  */
 export function furnitureBounds(furniture) {
   const swapped = Number(furniture.rotation ?? 0) % 180 !== 0;
@@ -16,38 +16,35 @@ export function furnitureBounds(furniture) {
     w: Number(swapped ? furniture.depth : furniture.width),
     h: Number(swapped ? furniture.width : furniture.depth),
     z: Number(furniture.elevation ?? 0),
-    d: Number(furniture.itemHeight ?? (furniture.type === 'haengeregal' ?
-      0.4 : 1.8)),
+    d: Number(furniture.itemHeight ?? (furniture.type === 'haengeregal' ? 0.4 : 1.8)),
   };
 }
 
 /**
  * Tests whether two furniture footprints overlap.
  *
- * @param {*} first First used by this operation.
- * @param {*} second Second used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} first First furniture record, including position and dimensions.
+ * @param {*} second Second furniture record to test for three-dimensional intersection.
+ * @return {boolean} True when the two furniture bounding volumes overlap.
  */
 export function furnitureOverlap(first, second) {
   const a = furnitureBounds(first), b = furnitureBounds(second);
   // Touching faces are valid. The XY rectangles AND vertical height intervals
   // must intersect for a physical collision to occur.
-  return a.x < b.x + b.w - EPSILON && b.x < a.x + a.w - EPSILON &&
-    a.y < b.y + b.h - EPSILON && b.y < a.y + a.h - EPSILON &&
+  return a.x < b.x + b.w - EPSILON && b.x < a.x + a.w - EPSILON && a.y < b.y + b.h - EPSILON && b.y < a.y + a.h - EPSILON &&
     a.z < b.z + b.d - EPSILON && b.z < a.z + a.d - EPSILON;
 }
 
 /**
- * Checks furniture placement against other items and the room.
- *
- * @param {*} room Room model containing dimensions and furniture.
- * @param {*} candidate Candidate used by this operation.
- * @param {*=} otherFurniture Other furniture used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Finds the first colliding furniture item, ignoring the candidate's own ID.
+ * @param {Object} room Room being checked.
+ * @param {Object} candidate Candidate furniture geometry.
+ * @param {Object[]=} otherFurniture Comparison items, defaulting to the room's furniture.
+ * @return {(Object|null)} First collision or null.
  */
-export function furnitureCollision(room, candidate, otherFurniture = room.furniture || []) {
-  return otherFurniture.find(other => (candidate.id === undefined ||
-    other.id !== candidate.id) && furnitureOverlap(candidate, other)) ?? null;
+export function furnitureCollision(room, candidate, otherFurniture =
+  room.furniture || []) {
+  return otherFurniture.find(other => (candidate.id === undefined || other.id !== candidate.id) && furnitureOverlap(candidate, other)) ?? null;
 }
 
 /**
@@ -55,12 +52,11 @@ export function furnitureCollision(room, candidate, otherFurniture = room.furnit
  *
  * @param {*} room Room model containing dimensions and furniture.
  * @param {*} item Warehouse item or record being evaluated.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True when the rotated furniture footprint is fully within the room bounds.
  */
 export function furnitureFitsRoom(room, item) {
   const b = furnitureBounds(item);
-  return b.x >= 0 && b.y >= 0 && b.x + b.w <= room.width + EPSILON && b.y +
-    b.h <= room.height + EPSILON;
+  return b.x >= 0 && b.y >= 0 && b.x + b.w <= room.width + EPSILON && b.y + b.h <= room.height + EPSILON;
 }
 
 /**
@@ -70,27 +66,25 @@ export function furnitureFitsRoom(room, item) {
  *
  * @param {*} room Room model containing dimensions and furniture.
  * @param {*} item Warehouse item or record being evaluated.
- * @param {*} fromX From x used by this operation.
- * @param {*} fromY From y used by this operation.
- * @param {*} toX To x used by this operation.
- * @param {*} toY To y used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {number} fromX Starting horizontal position in metres.
+ * @param {number} fromY Starting depth position in metres.
+ * @param {number} toX Requested horizontal position in metres.
+ * @param {number} toY Requested depth position in metres.
+ * @return {!Object} Furthest valid rounded position toward the requested destination, or the original position.
  */
 export function moveFurnitureTowards(room, item, fromX, fromY, toX, toY) {
   const dx = toX - fromX, dy = toY - fromY;
   const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 0.04));
   let x = fromX, y = fromY;
   /**
-   * Checks whether place applies.
-   *
-   * @param {*} nextX Value used by this operation.
-   * @param {*} nextY Value used by this operation.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * Tests whether the furniture fits at a candidate room position without colliding.
+   * @param {number} nextX Candidate horizontal room position in metres.
+   * @param {number} nextY Candidate depth position in metres.
+   * @return {boolean} Whether the proposed position is valid.
    */
   const canPlace = (nextX, nextY) => {
     const candidate = {...item, x: nextX, y: nextY};
-    return furnitureFitsRoom(room, candidate) &&
-      !furnitureCollision(room, candidate);
+    return furnitureFitsRoom(room, candidate) && !furnitureCollision(room, candidate);
   };
   for (let i = 1; i <= steps; i++) {
     // Use actual progress for each axis, not the starting position, so
@@ -104,8 +98,6 @@ export function moveFurnitureTowards(room, item, fromX, fromY, toX, toY) {
     // When one axis was blocked, don't accumulate offset past its obstacle.
     // Remaining steps can continue sliding along the unobstructed axis.
   }
-  const roundedX = Math.round(x * 100) / 100, roundedY = Math.round(y *
-    100) / 100;
-  return canPlace(roundedX, roundedY) ? {x: roundedX, y: roundedY} :
-    {x: fromX, y: fromY};
+  const roundedX = Math.round(x * 100) / 100, roundedY = Math.round(y * 100) / 100;
+  return canPlace(roundedX, roundedY) ? {x: roundedX, y: roundedY} : {x: fromX, y: fromY};
 }

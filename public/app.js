@@ -1,3 +1,4 @@
+import {replaceContent} from './js/ui/dom-renderer.js';
 import {t} from './js/i18n/index.js';
 /**
  * Composition root: create feature controllers and connect them, then load the
@@ -6,7 +7,8 @@ import {t} from './js/i18n/index.js';
 import {request, requestCachedJson} from './js/api.js';
 import {initializeLanguage} from './js/i18n/index.js';
 import {createState} from './js/state.js';
-import {pageFromSearch, overviewModeFromSearch} from './js/domain/pagination.js';
+import {pageFromSearch, overviewModeFromSearch}
+  from './js/domain/pagination.js';
 import {createSelectors} from './js/domain/selectors.js';
 import {parseRoute} from './js/navigation/routes.js';
 import {createNavigation} from './js/navigation/controller.js';
@@ -16,7 +18,6 @@ import {createFilePreview} from './js/features/file-preview.js';
 import {createPhotoViewer} from './js/ui/photo-viewer.js';
 import {createPhotoEditor} from './js/features/photo-editor/controller.js';
 import {createShell} from './js/ui/shell.js';
-import {escapeHtml} from './js/ui/dom.js';
 import {toast} from './js/ui/notifications.js';
 import {runAction} from './js/ui/action-result.js';
 import {loadResources} from './js/ui/refresh-resources.js';
@@ -38,6 +39,10 @@ import {createScanner} from './js/features/scanner/controller.js';
 import {createWhiskybase} from './js/features/whiskybase/controller.js';
 import {bindEvents} from './js/events.js';
 import {createAuthController} from './js/features/auth/controller.js';
+import {loadTemplates} from './js/ui/templates.js';
+
+const renderTemplate = await loadTemplates('app.html');
+
 await initializeLanguage();
 const root = document.querySelector('#app');
 const state = createState(parseRoute(location.search));
@@ -56,7 +61,10 @@ const modal = createModal({
 });
 filePreview = createFilePreview({modal, state});
 const photoViewer = createPhotoViewer({state, showModal: modal.showModal});
-const photoEditor = createPhotoEditor({state, showModal: modal.showModal, closeModal: modal.closeModal, action});
+const photoEditor = createPhotoEditor({
+  state, showModal: modal.showModal,
+  closeModal: modal.closeModal, action,
+});
 const navigation = createNavigation({
   state, render, closeModal: modal.closeModal,
 });
@@ -107,17 +115,20 @@ let externalImport;
 const editors = createEditors({
   state, selectors, bottlingForm, bottleForm, ...modal, navigate, action,
   /**
-   * Retrieves pending image token from the available state.
-   * @return {*} Result computed from the supplied inputs.
+   * Returns the staged image token selected for attachment to the new bottle.
+   * @return {*} Selected import-image token, or null or undefined when no image is pending.
    */
   getPendingImageToken: () => externalImport?.getPendingImageToken(),
   /**
-   * Derives the mark image attached result from the supplied values.
-   * @return {*} Result computed from the supplied inputs.
+   * Notifies the import controller that its staged image has been attached.
+   * @return {*} No return value; clears the staged import-image token.
    */
   markImageAttached: () => externalImport?.markImageAttached(),
 });
-const backup = createBackupController({state, render, showModal: modal.showModal, closeModal: modal.closeModal});
+const backup = createBackupController({
+  state, render,
+  showModal: modal.showModal, closeModal: modal.closeModal,
+});
 const settings = createSettingsController({
   state, action, navigate, ...modal,
   /**
@@ -131,7 +142,10 @@ const settings = createSettingsController({
 });
 const mapView = createMapView({state, shell, navigate, settings});
 const analyticsView = createAnalyticsView({state, shell});
-const warehouseView = createWarehouseView({state, shell, navigate, modal, refresh});
+const warehouseView = createWarehouseView({
+  state, shell, navigate, modal,
+  refresh,
+});
 const resolveCode = createCodeResolver({
   state, navigate, toast, ...modal,
 });
@@ -162,10 +176,8 @@ function render() {
   if (state.page === 'warehouse') return warehouseView.render();
   if (state.page === 'tastings-home') return tastingsView.home();
   if (state.page === 'tasting-flight') return tastingsView.flight();
-  if (['tastings', 'external-tastings']
-    .includes(state.page)) return tastingsView.list();
-  if (['tasting', 'external-tasting']
-    .includes(state.page)) return tastingsView.editor();
+  if (['tastings', 'external-tastings'].includes(state.page)) return tastingsView.list();
+  if (['tasting', 'external-tasting'].includes(state.page)) return tastingsView.editor();
   if (state.page === 'detail') {
     return detail();
   }
@@ -176,16 +188,15 @@ function render() {
 }
 
 /**
- * Performs the refresh lifecycle action.
+ * Reloads the requested resource scope and updates the active view.
  *
- * @param {string=} scope Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @param {string=} scope Resource scope to refresh: all, collection or warehouse.
+ * @return {!Promise<*>} Completion after refreshing the view and version information.
  */
 async function refresh(scope = 'all') {
   const [_, meta] = await Promise.all([
     loadResources(state, requestCachedJson, scope),
-    state.version ? Promise.resolve({version: state.version}) :
-      request('/api/version').catch(() => ({version: ''})),
+    state.version ? Promise.resolve({version: state.version}) : request('/api/version').catch(() => ({version: ''})),
   ]);
   state.version = meta.version;
   if (state.page === 'map') mapView.refreshData();
@@ -193,11 +204,11 @@ async function refresh(scope = 'all') {
 }
 
 /**
- * Builds the localized action text for the current language.
+ * Executes a user action and refreshes resources, reporting action and refresh failures separately.
  *
  * @param {*} task Task to execute or examine.
  * @param {!Object=} options Options controlling the operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Action outcome, including any refresh error after a successful write.
  */
 async function action(task, {scope = 'all'} = {}) {
   return runAction(
@@ -244,14 +255,7 @@ window.addEventListener('wcm:auth-required', () => {
   auth.init().then(allowed => {if (!allowed) state.collection = null;})
     .catch(() => {});
 });
-auth.init().then(allowed => allowed ? refresh()
-  .then(externalImport.importFromExtension) : null).catch(error => {
-    root.innerHTML = `<main>
-    <h2>${t("ui.errors.serverConnectionFailed")}</h2>
-    <p>${escapeHtml(error.message)}</p>
-    <button class="btn" id="retry-connection">${t("ui.errors.retry")}</button>
-    </main>`;
-    document.querySelector('#retry-connection').addEventListener('click',
-      () => location.reload()
-    );
-  });
+auth.init().then(allowed => allowed ? refresh().then(externalImport.importFromExtension) : null).catch(error => {
+  replaceContent(root, renderTemplate('main', {message: error.message, }));
+  document.querySelector('#retry-connection').addEventListener('click', () => location.reload());
+});

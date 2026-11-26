@@ -25,16 +25,20 @@ test(
         assert.equal(response.status, 200, file);
         assert.ok((await response.arrayBuffer()).byteLength > 0, file);
       }
+      for (const file of ['/templates/app.html', '/templates/backups/backups.html', '/templates/icons/action-icons.html', '/templates/warehouse/warehouse.html']) {
+        const response = await fetch(context.base + file);
+        assert.equal(response.status, 200, file);
+        assert.match(response.headers.get('content-type') || '', /^text\/html(?:;|$)/i);
+        assert.match(await response.text(), /<!-- wcm-template:/);
+      }
+      assert.equal((await fetch(context.base + '/js/views/templates/backups.html')).status, 404);
       const html = await fetch(context.base + '/');
       assert.match(
         html.headers.get('content-security-policy') || '',
         /frame-src 'self'(?:;|$)/,
         'PDF previews use a same-origin frame without a blob exception'
       );
-      assert.equal(
-        (await fetch(context.base + '/server/config.js')).status,
-        404
-      );
+      assert.equal((await fetch(context.base + '/server/config.js')).status, 404);
       assert.equal((await fetch(context.base + '/.env')).status, 404);
       assert.equal((await fetch(context.base + '/js/missing.js')).status, 404);
     }
@@ -58,17 +62,10 @@ test(
     const fixture = path.join(directory, name);
     const context = await startTestServer();
     try {
-      fs.writeFileSync(
-        fixture,
-        'export const runtimeReady = true;\n',
-        {flag: 'wx'}
-      );
+      fs.writeFileSync(fixture, 'export const runtimeReady = true;\n', {flag: 'wx'});
       const response = await fetch(`${context.base}/ai/vendor/${name}`);
       assert.equal(response.status, 200);
-      assert.match(
-        response.headers.get('content-type') || '',
-        /^text\/javascript(?:;|$)/i
-      );
+      assert.match(response.headers.get('content-type') || '', /^text\/javascript(?:;|$)/i);
       assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
       assert.match(await response.text(), /runtimeReady/);
     } finally {
@@ -88,9 +85,7 @@ test(
       const original = fs.readFileSync(file, 'utf8');
       for (const body of ['null', '[]', '123', '"text"', '{invalid']) {
         const response = await fetch(context.base + '/api/bottlings', {
-          method: 'POST', headers: {
-            'Content-Type': 'application/json',
-          }, body,
+          method: 'POST', headers: {'Content-Type': 'application/json', }, body,
         });
         assert.equal(response.status, 400, body);
         assert.ok((await response.json()).error);
@@ -107,35 +102,14 @@ test(
   async () => {
     const context = await startTestServer();
     try {
-      const created = await requestJson(
-        context.base,
-        '/api/bottlings',
-        'POST',
-        {
-          name: 'Atomic Test',
-        }
-      );
+      const created = await requestJson(context.base, '/api/bottlings', 'POST', {name: 'Atomic Test', });
       const id = created.data.bottling.id;
       const file = path.join(context.dir, 'data', 'collection.json');
       const original = fs.readFileSync(file, 'utf8');
-      const failed = await requestJson(
-        context.base,
-        `/api/bottlings/${id}`,
-        'PATCH',
-        {
-          abv: 'not a number',
-        }
-      );
+      const failed = await requestJson(context.base, `/api/bottlings/${id}`, 'PATCH', {abv: 'not a number', });
       assert.equal(failed.status, 400);
       assert.equal(fs.readFileSync(file, 'utf8'), original);
-      const success = await requestJson(
-        context.base,
-        `/api/bottlings/${id}`,
-        'PATCH',
-        {
-          abv: 46,
-        }
-      );
+      const success = await requestJson(context.base, `/api/bottlings/${id}`, 'PATCH', {abv: 46, });
       assert.equal(success.status, 200);
       assert.equal(success.data.abv, 46);
       const entries = fs.readdirSync(path.dirname(file));
@@ -163,10 +137,7 @@ test(
       assert.equal(created.status, 201);
       const oldBottleId = created.data.bottle.id;
       const bottlingId = created.data.bottling.id;
-      assert.equal(
-        (await requestJson(context.base, `/api/bottles/${oldBottleId}`, 'DELETE')).status,
-        200
-      );
+      assert.equal((await requestJson(context.base, `/api/bottles/${oldBottleId}`, 'DELETE')).status, 200);
       const payload = {bottlingId, inventoryNumber: '000078'};
       const results = await Promise.all([
         requestJson(context.base, '/api/bottles', 'POST', payload),
@@ -174,15 +145,8 @@ test(
       ]);
       assert.deepEqual(results.map(result => result.status).sort(), [201, 409]);
       const stored = await requestJson(context.base, '/api/collection');
-      assert.equal(
-        stored.data.bottlings[0].bottles.filter(b => b.inventoryNumber ===
-          '000078').length,
-        1
-      );
-      assert.equal(
-        stored.data.reservedInventoryNumbers.filter(n => n === '000078').length,
-        1
-      );
+      assert.equal(stored.data.bottlings[0].bottles.filter(b => b.inventoryNumber === '000078').length, 1);
+      assert.equal(stored.data.reservedInventoryNumbers.filter(n => n === '000078').length, 1);
     } finally {
       await context.stop();
     }
@@ -194,14 +158,7 @@ test(
   async () => {
     const context = await startTestServer();
     try {
-      const created = await requestJson(
-        context.base,
-        '/api/bottlings',
-        'POST',
-        {
-          name: 'Concurrency Test',
-        }
-      );
+      const created = await requestJson(context.base, '/api/bottlings', 'POST', {name: 'Concurrency Test', });
       const payload = {
         bottlingId: created.data.bottling.id, inventoryNumber: '009900',
       };
@@ -211,11 +168,7 @@ test(
       ]);
       assert.deepEqual(results.map(result => result.status).sort(), [201, 409]);
       const stored = await requestJson(context.base, '/api/collection');
-      assert.equal(
-        stored.data.bottlings[0].bottles.filter(bottle =>
-          bottle.inventoryNumber === '009900').length,
-        1
-      );
+      assert.equal(stored.data.bottlings[0].bottles.filter(bottle => bottle.inventoryNumber === '009900').length, 1);
     }
     finally {
       await context.stop();

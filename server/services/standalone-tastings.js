@@ -4,26 +4,27 @@ import {uid, now} from '../domain/collection.js';
 import {fail} from '../domain/errors.js';
 import {detachTastings} from '../../shared/tasting-flights.js';
 import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
-import {normalizeTastingRecord, VALID_TASTING_FIELDS} from '../../shared/tasting-records.js';
+import {normalizeTastingRecord, VALID_TASTING_FIELDS}
+  from '../../shared/tasting-records.js';
 
 /**
- * Validates the clean state and rejects invalid inputs.
- *
- * @param {*} input Input element or value to inspect.
- * @param {*} old Value used by this operation.
- * @return {*} Value returned by the delegated operation.
+ * Normalizes an unowned tasting and converts validation errors to HTTP 400.
+ * @param {*} input Proposed tasting fields.
+ * @param {Object} old Previous record used for normalization.
+ * @return {Object} Normalized standalone tasting fields.
  */
 function clean(input, old) {
   try {return normalizeStandaloneTasting(input, old);}
-  catch (error) {throw fail(error.message, 400, "api.errors.invalidTastingData");}
+  catch (error) {
+    throw fail(error.message, 400, "api.errors.invalidTastingData");
+  }
 }
 
 /**
- * Validates the find state and rejects invalid inputs.
- *
- * @param {*} collection Collection data to process.
- * @param {*} id Identifier of the affected record.
- * @return {*} Result computed from the supplied inputs.
+ * Finds a standalone tasting or raises a not-found error.
+ * @param {import('../../shared/types.js').Collection} collection Collection containing external tastings.
+ * @param {string} id Standalone tasting ID.
+ * @return {import('../../shared/types.js').StandaloneTasting} Matching standalone tasting.
  */
 function find(collection, id) {
   const record = (collection.externalTastings || []).find(x => x.id === id);
@@ -34,7 +35,7 @@ function find(collection, id) {
 /**
  * Returns standalone tasting records under the active filters.
  *
- * @return {!Array<!Object>} Resulting list of values.
+ * @return {!Array<!Object>} All saved standalone tasting records.
  */
 export function list() {return read().externalTastings || [];}
 
@@ -42,7 +43,7 @@ export function list() {return read().externalTastings || [];}
  * Retrieves the standalone tastings state.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {*} Value returned by the delegated operation.
+ * @return {*} Standalone tasting with the requested identifier.
  */
 export function get(id) {return find(read(), id);}
 
@@ -50,12 +51,15 @@ export function get(id) {return find(read(), id);}
  * Creates the standalone tastings state.
  *
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Newly created standalone tasting record.
  */
 export function create(input) {
   return change(collection => {
     const timestamp = now();
-    const record = {...clean(input), id: uid(), createdAt: timestamp, updatedAt: timestamp};
+    const record = {
+      ...clean(input), id: uid(), createdAt: timestamp,
+      updatedAt: timestamp,
+    };
     if (!collection.externalTastings) collection.externalTastings = [];
     collection.externalTastings.push(record);
     return record;
@@ -67,7 +71,7 @@ export function create(input) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Updated standalone tasting record.
  */
 export function update(id, input) {
   return change(collection => {
@@ -81,15 +85,12 @@ export function update(id, input) {
  * Clears the standalone tastings state.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after removing the standalone tasting.
  */
 export function remove(id) {
   return change(collection => {
     find(collection, id);
-    collection.externalTastings.splice(
-      collection.externalTastings.findIndex(x => x.id === id),
-      1
-    );
+    collection.externalTastings.splice(collection.externalTastings.findIndex(x => x.id === id), 1);
     detachTastings(collection, [id]);
     return {ok: true};
   });
@@ -102,29 +103,17 @@ export function remove(id) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Destination bottling ID and transferred tasting ID.
  */
 export function assignToBottling(id, input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input) ||
-    Object.keys(input).length !== 1 || typeof input.bottlingId !==
-    'string' || !input.bottlingId.trim())
-    throw fail(
-      'Ungültige Abfüllungszuordnung',
-      400,
-      "api.errors.invalidBottlingAssignment"
-    );
+  if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length !== 1 || typeof input.bottlingId !== 'string' || !input.bottlingId.trim())
+    throw fail('Ungültige Abfüllungszuordnung', 400, "api.errors.invalidBottlingAssignment");
   return change(collection => {
     const tasting = find(collection, id);
-    const bottling = (collection.bottlings || []).find(b => b.id ===
-      input.bottlingId);
+    const bottling = (collection.bottlings || []).find(b => b.id === input.bottlingId);
     if (!bottling) throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
-    if ((bottling.tastings || []).some(item => item.id === id)) throw fail(
-      'Verkostung bereits zugeordnet',
-      409,
-      "api.errors.tastingAlreadyAssigned"
-    );
-    const fields = Object.fromEntries(VALID_TASTING_FIELDS.map(key =>
-      [key, tasting[key]]));
+    if ((bottling.tastings || []).some(item => item.id === id)) throw fail('Verkostung bereits zugeordnet', 409, "api.errors.tastingAlreadyAssigned");
+    const fields = Object.fromEntries(VALID_TASTING_FIELDS.map(key => [key, tasting[key]]));
     const moved = {
       ...normalizeTastingRecord(fields), id: tasting.id,
       createdAt: tasting.createdAt, updatedAt: tasting.updatedAt,
@@ -133,10 +122,7 @@ export function assignToBottling(id, input) {
     bottling.tastings.push(moved);
 
     bottling.updatedAt = now();
-    collection.externalTastings.splice(
-      collection.externalTastings.findIndex(x => x.id === id),
-      1
-    );
+    collection.externalTastings.splice(collection.externalTastings.findIndex(x => x.id === id), 1);
     return {bottlingId: bottling.id, tastingId: id};
   });
 }

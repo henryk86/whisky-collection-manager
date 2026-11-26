@@ -48,14 +48,8 @@ test(
     assert.deepEqual(auditUpgrade(previous, next, installed), {
       removable: ['public/js/obsolete.js'], changed: [], absent: [],
     });
-    assert.equal(
-      fs.readFileSync(path.join(installed, 'public/js/obsolete.js'), 'utf8'),
-      'old module'
-    );
-    assert.equal(
-      fs.readFileSync(path.join(installed, 'collection.json'), 'utf8'),
-      'important original data'
-    );
+    assert.equal(fs.readFileSync(path.join(installed, 'public/js/obsolete.js'), 'utf8'), 'old module');
+    assert.equal(fs.readFileSync(path.join(installed, 'collection.json'), 'utf8'), 'important original data');
   })
 );
 
@@ -76,22 +70,10 @@ test(
     assert.deepEqual(report.removable, ['server/obsolete.js']);
     assert.deepEqual(report.changed, ['shared/edited.js']);
     assert.deepEqual(report.absent, ['worker/gone.js']);
-    assert.equal(
-      fs.existsSync(path.join(installed, 'server/obsolete.js')),
-      false
-    );
-    assert.equal(
-      fs.readFileSync(path.join(installed, 'shared/edited.js'), 'utf8'),
-      'locally modified'
-    );
-    assert.equal(
-      fs.readFileSync(path.join(installed, 'warehouse.json'), 'utf8'),
-      'warehouse must survive'
-    );
-    assert.equal(
-      fs.readFileSync(path.join(installed, 'images/photo.png'), 'utf8'),
-      'photo bytes'
-    );
+    assert.equal(fs.existsSync(path.join(installed, 'server/obsolete.js')), false);
+    assert.equal(fs.readFileSync(path.join(installed, 'shared/edited.js'), 'utf8'), 'locally modified');
+    assert.equal(fs.readFileSync(path.join(installed, 'warehouse.json'), 'utf8'), 'warehouse must survive');
+    assert.equal(fs.readFileSync(path.join(installed, 'images/photo.png'), 'utf8'), 'photo bytes');
   })
 );
 
@@ -107,9 +89,6 @@ test(
     const report = pruneObsolete(previous, next, installed);
     assert.deepEqual(report.removable, []);
     assert.deepEqual(report.absent, ['public/js/obsolete.js']);
-    assert.equal(
-      fs.readFileSync(path.join(outside, 'obsolete.js'), 'utf8'),
-      'old'
-    );
+    assert.equal(fs.readFileSync(path.join(outside, 'obsolete.js'), 'utf8'), 'old');
   })
 );

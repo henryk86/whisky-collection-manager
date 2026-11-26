@@ -50,8 +50,7 @@ test('comparison classifies changed, new, removed and identical captures',
       assert.ok(!existsSync(path.join(output, `${other}-after.png`)));
       assert.deepEqual(compareCaptures(before, after, output), changes);
       after.entries.set(id, capture(102));
-      assert.notEqual(compareCaptures(before, after, output)[0].digest,
-        changes[0].digest);
+      assert.notEqual(compareCaptures(before, after, output)[0].digest, changes[0].digest);
     } finally {
       rmSync(output, {recursive: true, force: true});
     }
@@ -106,14 +105,10 @@ test('small pixel differences are tolerated and remain reviewable', () => {
       after.entries.set(id, noisyCapture(positions));
       assert.deepEqual(compareCaptures(before, after, output), []);
     }
-    after.entries.set(id, noisyCapture(
-      Array.from({length: 17}, (_, i) => i)));
+    after.entries.set(id, noisyCapture(Array.from({length: 17}, (_, i) => i)));
     assert.equal(compareCaptures(before, after, output).length, 1);
     after.entries.set(id, noisyCapture([0], 2));
-    assert.equal(
-      compareCaptures(before, after, output)[0].geometryChanged,
-      true
-    );
+    assert.equal(compareCaptures(before, after, output)[0].geometryChanged, true);
   } finally {
     rmSync(output, {recursive: true, force: true});
   }
@@ -139,15 +134,9 @@ test('expanded planner captures use their measured full viewport height',
       writeFileSync(geometryPath, JSON.stringify({
         overflow: 0, captureHeight: 1100,
       }));
-      assert.throws(
-        () => loadCaptures(directory),
-        /Invalid capture dimensions/
-      );
+      assert.throws(() => loadCaptures(directory), /Invalid capture dimensions/);
       writeFileSync(geometryPath, JSON.stringify({overflow: 0}));
-      assert.throws(
-        () => loadCaptures(directory),
-        /Invalid capture dimensions/
-      );
+      assert.throws(() => loadCaptures(directory), /Invalid capture dimensions/);
     } finally {
       rmSync(directory, {recursive: true, force: true});
     }

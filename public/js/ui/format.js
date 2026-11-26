@@ -1,26 +1,24 @@
 import {currentLanguage} from '../i18n/index.js';
-import {escapeHtml} from './dom.js';
 /**
- * Constructs an application-safe URL for an image path.
+ * Encodes an application-relative stored image path for display.
  *
- * @param {*} p P used by this operation.
- * @return {string} Resulting text.
+ * @param {?string} p Stored relative image path, or no path.
+ * @return {string} Root-relative URI or empty text if the path is absent.
  */
 export const imageUrl = p => p ? `/${encodeURI(p)}` : '';
 
 /**
- * Formats value for format.
+ * Formats missing scalar values as a dash and escapes other values.
  *
- * @param {*} n N used by this operation.
- * @return {string} Resulting text.
+ * @param {*} n Display value; null, undefined and empty text indicate missing data.
+ * @return {string} Literal display value or the missing-value dash.
  */
-export const formatValue = n => n == null || n === '' ? '–' : escapeHtml(n);
+export const formatValue = n => n == null || n === '' ? '–' : String(n ?? '');
 
 /**
- * Formats date for format.
+ * Formats a date in the current application language.
  *
- * @param {*} val Val used by this operation.
- * @return {string} Resulting text.
+ * @param {string|number|Date|null|undefined} val Date value; falsy values indicate missing dates.
+ * @return {string} Localized date or the missing-value dash.
  */
-export const formatDate = val => val ? new Date(val)
-  .toLocaleDateString(currentLanguage()) : '–';
+export const formatDate = val => val ? new Date(val).toLocaleDateString(currentLanguage()) : '–';

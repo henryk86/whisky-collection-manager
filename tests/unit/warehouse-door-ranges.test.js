@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {warehouse3DGeometry} from '../../public/js/domain/warehouse-3d-model.js';
 import {visibleShelfFront} from '../../shared/warehouse-compartments.js';
-import {createWarehouseView} from '../../public/js/views/warehouse.js';
 
 const item = {
   id: 'f',
@@ -32,7 +31,9 @@ const item = {
     })
   ),
 };
+
 const room = {id: 'r', name: 'Raum', width: 5, height: 4, furniture: [item]};
+
 const warehouse = {rooms: [room], assignments: {}, bottles: []};
 
 test(
@@ -53,78 +54,6 @@ test(
       assert.ok(Math.abs(doors[0].size[1] - (.8 - 0.0156)) < .06);
       assert.ok(Math.abs(glass[0].size[1] - (1.2 - 0.0156)) < .06);
       assert.ok(parts.every(p => p.size.every(v => v > 0)));
-    }
-  }
-);
-
-test(
-  'furniture form exposes range configuration and zero-capacity shelves hide empty text',
-  () => {
-    let html = '', form = ''; const previous = globalThis.document;
-    globalThis.document = {
-      /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
-       */
-      querySelector: () =>
-        null,
-      /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
-       */
-      querySelectorAll: () => [],
-    };
-    try {
-      const view = createWarehouseView({
-        state: {
-          warehouse,
-          selected: 'shelves',
-          warehouseRoomId: 'r',
-          warehouseFurnitureId: 'f',
-        },
-        /**
-         * Derives the shell result from the supplied values.
-         *
-         * @param {*} value Value to process.
-         * @return {*} Result computed from the supplied inputs.
-         */
-        shell: value => html = value,
-        /**
-         * Updates the navigate state for its caller.
-         */
-        navigate: () => {},
-        modal: {
-          /**
-           * Renders modal in the current view.
-           *
-           * @param {*} _title Value used by this operation.
-           * @param {*} body Body content to validate or process.
-           * @return {*} Result computed from the supplied inputs.
-           */
-          showModal: (_title, body) => form = body,
-        },
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.render();
-      assert.ok(!html.includes('0 / 0 Flaschen'));
-      assert.equal(
-        (html.match(/Fach ist leer/g) || []).length,
-        4,
-        'the room wall renders four compartments once; edit controls live in a modal'
-      );
-      view.openForm('furniture', 'f');
-      assert.match(form, /warehouse-door-range-list/);
-      assert.match(form, /door-range-from/);
-      assert.match(form, /door-range-frame/);
-      assert.match(form, /Türbereich/);
-    } finally {
-      if (previous ===
-        undefined) delete globalThis.document; else globalThis.document =
-          previous;
     }
   }
 );

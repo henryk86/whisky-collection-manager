@@ -5,12 +5,15 @@ import http from 'node:http';
 import https from 'node:https';
 import {fileURLToPath} from 'node:url';
 import {createRequestHandler} from './app.js';
-import {PORT, HOST, HTTPS_ENABLED, HTTP_ENABLED, HTTPS_PORT, HTTPS_CERT_FILE, HTTPS_KEY_FILE, ALLOWED_HOSTS} from './config.js';
+import {
+  PORT, HOST, HTTPS_ENABLED, HTTP_ENABLED, HTTPS_PORT, HTTPS_CERT_FILE,
+  HTTPS_KEY_FILE, ALLOWED_HOSTS
+} from './config.js';
 export {createServer} from './app.js';
 /**
  * Initializes and starts the configured HTTP and HTTPS listeners.
  *
- * @return {!Array<*>} Resulting list of values.
+ * @return {!Array<*>} Started HTTP and HTTPS server instances.
  */
 export function startServers() {
   let tlsOptions;
@@ -23,8 +26,7 @@ export function startServers() {
       cert: fs.readFileSync(HTTPS_CERT_FILE),
     };
   }
-  console.log(`Erlaubte Hosts: ${[...ALLOWED_HOSTS].sort()
-    .join(', ')} (zusaetzliche Adressen: ALLOWED_HOSTS)`);
+  console.log(`Erlaubte Hosts: ${[...ALLOWED_HOSTS].sort().join(', ')} (zusaetzliche Adressen: ALLOWED_HOSTS)`);
   const handler = createRequestHandler();
   const servers = [];
   if (HTTPS_ENABLED) {
@@ -32,7 +34,8 @@ export function startServers() {
     secure.listen(
       HTTPS_PORT,
       HOST,
-      () => console.log(`Whisky Collection Manager HTTPS: https://localhost:${HTTPS_PORT} (LAN: https://<LAPTOP-IP>:${HTTPS_PORT})`)
+      () => console.log(
+        `Whisky Collection Manager HTTPS: https://localhost:${HTTPS_PORT} (LAN: https://<LAPTOP-IP>:${HTTPS_PORT})`)
     );
     servers.push(secure);
   }
@@ -47,8 +50,7 @@ export function startServers() {
   }
   return servers;
 }
-if (process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     startServers();
   }

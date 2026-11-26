@@ -2,13 +2,13 @@ import {read, change} from '../storage/collection-store.js';
 import {now, uid} from '../domain/collection.js';
 import {fail} from '../domain/errors.js';
 import {detachTastings} from '../../shared/tasting-flights.js';
-import {normalizeTastingRecord, sortedTastings} from '../../shared/tasting-records.js';
+import {normalizeTastingRecord, sortedTastings}
+  from '../../shared/tasting-records.js';
 /**
- * Enforces the bottling precondition.
- *
- * @param {*} collection Collection data to process.
- * @param {*} id Identifier of the affected record.
- * @return {*} Result computed from the supplied inputs.
+ * Resolves the owned bottling for a tasting operation, or raises a not-found error.
+ * @param {import('../../shared/types.js').Collection} collection Collection containing bottlings.
+ * @param {string} id Bottling ID.
+ * @return {import('../../shared/types.js').Bottling} Matching bottling.
  */
 function requireBottling(collection, id) {
   const bottling = collection.bottlings.find(b => b.id === id);
@@ -17,60 +17,66 @@ function requireBottling(collection, id) {
 }
 
 /**
- * Enforces the tasting precondition.
- *
- * @param {*} bottling Bottling record being inspected or updated.
- * @param {*} tastingId Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Finds a tasting nested in the specified bottling or raises a not-found error.
+ * @param {import('../../shared/types.js').Bottling} bottling Parent bottling.
+ * @param {string} tastingId Tasting record ID.
+ * @return {import('../../shared/types.js').Tasting} Matching owned tasting.
  */
 function requireTasting(bottling, tastingId) {
-  const tasting = (bottling.tastings || []).find(entry => entry.id ===
-    tastingId);
+  const tasting = (bottling.tastings || []).find(entry => entry.id === tastingId);
   if (!tasting) throw fail('Verkostung nicht gefunden', 404, "api.errors.tastingNotFound");
   return tasting;
 }
 
 /**
- * Validates the clean state and rejects invalid inputs.
- *
- * @param {*} input Input element or value to inspect.
- * @param {*} old Value used by this operation.
- * @return {*} Value returned by the delegated operation.
+ * Normalizes owned tasting fields and converts validation errors into HTTP 400.
+ * @param {*} input Incoming tasting fields.
+ * @param {Object} old Previous tasting fields.
+ * @return {Object} Normalized tasting fields.
  */
 function clean(input, old) {
   try {return normalizeTastingRecord(input, old);}
-  catch (error) {throw fail(error.message, 400, "api.errors.invalidTastingData");}
+  catch (error) {
+    throw fail(error.message, 400, "api.errors.invalidTastingData");
+  }
 }
 
 /**
  * Returns tastings associated with the requested collection scope.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Array<*>} Resulting list of values.
+ * @return {!Array<*>} Saved tastings of the specified bottling in display order.
  */
-export function listTastings(id) {return sortedTastings(requireBottling(read(), id));}
+export function listTastings(id) {
+  return sortedTastings(requireBottling(read(), id));
+}
 
 /**
  * Retrieves tasting for tastings.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @param {*} tastingId Tasting id used by this operation.
- * @return {*} Value returned by the delegated operation.
+ * @param {string} tastingId Identifier of the tasting within the selected bottling.
+ * @return {*} Tasting record under the specified bottling.
  */
-export function getTasting(id, tastingId) {return requireTasting(requireBottling(read(), id), tastingId);}
+export function getTasting(id, tastingId) {
+  return requireTasting(requireBottling(read(), id), tastingId);
+}
 
 /**
- * Creates tasting for tastings.
+ * Creates and timestamps a tasting within the specified bottling.
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Created tasting record.
  */
 export function createTasting(id, input) {
   return change(collection => {
     const bottling = requireBottling(collection, id);
     const timestamp = now();
-    const tasting = {...clean(input), id: uid(), createdAt: timestamp, updatedAt: timestamp};
+    const tasting = {
+      ...clean(input), id: uid(), createdAt: timestamp,
+      updatedAt: timestamp,
+    };
     if (!Array.isArray(bottling.tastings)) bottling.tastings = [];
     bottling.tastings.push(tasting);
 
@@ -83,9 +89,9 @@ export function createTasting(id, input) {
  * Updates tasting for tastings.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @param {*} tastingId Tasting id used by this operation.
+ * @param {string} tastingId Identifier of the tasting to update within the selected bottling.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Updated tasting record.
  */
 export function updateTasting(id, tastingId, input) {
   return change(collection => {
@@ -103,14 +109,13 @@ export function updateTasting(id, tastingId, input) {
  * Clears tasting for tastings.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @param {*} tastingId Tasting id used by this operation.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @param {string} tastingId Identifier of the tasting to remove from the selected bottling.
+ * @return {!Promise<!Object>} Success confirmation after deleting the tasting.
  */
 export function deleteTasting(id, tastingId) {
   return change(collection => {
     const bottling = requireBottling(collection, id);
-    const index = (bottling.tastings || []).findIndex(entry => entry.id ===
-      tastingId);
+    const index = (bottling.tastings || []).findIndex(entry => entry.id === tastingId);
     if (index < 0) throw fail('Verkostung nicht gefunden', 404, "api.errors.tastingNotFound");
     bottling.tastings.splice(index, 1);
     detachTastings(collection, [tastingId]);

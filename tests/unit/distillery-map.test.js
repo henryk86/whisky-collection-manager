@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {buildDistilleryMap, locationFor, markerDiameter, fitMapToSites, project, unproject, zoomAroundPoint} from '../../public/js/domain/distillery-map.js';
+import {
+  buildDistilleryMap, locationFor, markerDiameter, fitMapToSites,
+  project, unproject, zoomAroundPoint
+}
+  from '../../public/js/domain/distillery-map.js';
 
 /**
  * Derives the fixture result from the supplied values.
@@ -26,8 +30,7 @@ test(
         id: `b-${i}`,
         name: `Release ${i}`,
         distilleryIds: ['kilchoman'],
-        bottles: Array(i < 22 ? 2 : 1).fill(0).map((_, n) =>
-          ({id: `physical-${i}-${n}`})),
+        bottles: Array(i < 22 ? 2 : 1).fill(0).map((_, n) => ({id: `physical-${i}-${n}`})),
       });
     }
     const result = buildDistilleryMap(collection);
@@ -50,39 +53,16 @@ test(
       bottles: [{id: 'physical'}],
     });
     const defaultSites = buildDistilleryMap(collection);
-    assert.equal(
-      defaultSites.located.length,
-      1,
-      'normal map still only shows stocked distilleries'
-    );
+    assert.equal(defaultSites.located.length, 1, 'normal map still only shows stocked distilleries');
     assert.equal(defaultSites.missing.length, 0);
-    const allSites = buildDistilleryMap(collection, {includeAllDistilleries: true});
+    const allSites = buildDistilleryMap(collection, {includeAllDistilleries: true, });
     assert.equal(allSites.located.length, 2);
-    assert.equal(
-      allSites.missing.length,
-      1,
-      'unlocated distillery without stock still needs positioning'
-    );
-    assert.equal(
-      allSites.located.find(site => site.id === 'ardbeg').bottleCount,
-      0
-    );
-    assert.equal(
-      allSites.located.find(site => site.id === 'ardbeg').bottlingCount,
-      0
-    );
-    assert.deepEqual(
-      allSites.located.find(site => site.id === 'ardbeg').bottlings,
-      []
-    );
-    assert.equal(
-      allSites.located.find(site => site.id === 'kilchoman').bottleCount,
-      1
-    );
-    assert.equal(
-      allSites.located.find(site => site.id === 'kilchoman').bottlingCount,
-      1
-    );
+    assert.equal(allSites.missing.length, 1, 'unlocated distillery without stock still needs positioning');
+    assert.equal(allSites.located.find(site => site.id === 'ardbeg').bottleCount, 0);
+    assert.equal(allSites.located.find(site => site.id === 'ardbeg').bottlingCount, 0);
+    assert.deepEqual(allSites.located.find(site => site.id === 'ardbeg').bottlings, []);
+    assert.equal(allSites.located.find(site => site.id === 'kilchoman').bottleCount, 1);
+    assert.equal(allSites.located.find(site => site.id === 'kilchoman').bottlingCount, 1);
     assert.equal(allSites.missing[0].id, 'unknown');
     assert.equal(allSites.missing[0].bottleCount, 0);
     assert.equal(
@@ -96,22 +76,12 @@ test(
 test(
   'all-distilleries layer includes every location in the built-in catalog',
   () => {
-    const distilleries = JSON.parse(fs.readFileSync(
-      new URL('../../seed/distillery.json', import.meta.url),
-      'utf8'
-    ));
-    const allSites = buildDistilleryMap(
-      {distilleries, bottlings: []},
-      {includeAllDistilleries: true}
-    );
+    const distilleries = JSON.parse(fs.readFileSync(new URL('../../seed/distillery.json', import.meta.url), 'utf8'));
+    const allSites = buildDistilleryMap({distilleries, bottlings: []}, {includeAllDistilleries: true});
     assert.equal(allSites.located.length, distilleries.length);
     assert.equal(allSites.missing.length, 0);
-    assert.ok(allSites.located.every(site => site.bottleCount === 0 &&
-      site.bottlingCount === 0));
-    assert.equal(
-      buildDistilleryMap({distilleries, bottlings: []}).located.length,
-      0
-    );
+    assert.ok(allSites.located.every(site => site.bottleCount === 0 && site.bottlingCount === 0));
+    assert.equal(buildDistilleryMap({distilleries, bottlings: []}).located.length, 0);
   }
 );
 
@@ -143,8 +113,7 @@ test(
     assert.equal(map.located[0].bottlingCount, 1);
     collection.distilleries[0].latitude = 40;
     collection.distilleries[0].longitude = -7;
-    const changed = buildDistilleryMap(collection).located.find(site =>
-      site.id === 'kilchoman');
+    const changed = buildDistilleryMap(collection).located.find(site => site.id === 'kilchoman');
     assert.deepEqual(changed.location, {lat: 40, lon: -7, source: 'saved'});
   }
 );
@@ -171,8 +140,10 @@ test(
     assert.ok(islay.lon < -6 && islay.lon > -7);
     collection.distilleries[2].latitude = 40;
     collection.distilleries[2].longitude = -100;
-    collection.bottlings
-      .push({id: 'c', name: 'Far away', distilleryIds: ['unknown'], bottles: []});
+    collection.bottlings.push({
+      id: 'c', name: 'Far away', distilleryIds: ['unknown'],
+      bottles: [],
+    });
     map = buildDistilleryMap(collection);
     assert.ok(fitMapToSites(map.located, 900, 600).zoom < islay.zoom);
     assert.equal(fitMapToSites([map.located[0]], 900, 600).zoom, 11);
@@ -193,18 +164,12 @@ test(
 test(
   'all 450 built-in distilleries have reference coordinates; manual values always win',
   () => {
-    const catalog = JSON.parse(fs.readFileSync(
-      new URL('../../seed/distillery.json', import.meta.url),
-      'utf8'
-    ));
+    const catalog = JSON.parse(fs.readFileSync(new URL('../../seed/distillery.json', import.meta.url), 'utf8'));
     assert.equal(catalog.length, 450);
     for (const distillery of catalog) {
       const location = locationFor(distillery);
       assert.ok(location, `Missing coordinates for ${distillery.name}`);
-      assert.ok(
-        location.lat >= -90 && location.lat <= 90,
-        `Invalid latitude for ${distillery.name}: ${location.lat}`
-      );
+      assert.ok(location.lat >= -90 && location.lat <= 90, `Invalid latitude for ${distillery.name}: ${location.lat}`);
       assert.ok(
         location.lon >= -180 && location.lon <= 180,
         `Invalid longitude for ${distillery.name}: ${location.lon}`
@@ -227,14 +192,8 @@ test(
   () => {
     const gleniffer = locationFor({name: 'Gleniffer'});
     const glenpatrick = locationFor({name: 'Glenpatrick'});
-    assert.deepEqual(
-      [gleniffer.lat, gleniffer.lon],
-      [glenpatrick.lat, glenpatrick.lon]
-    );
-    assert.deepEqual(
-      locationFor({name: 'Kilchoman'}),
-      {lat: 55.7869, lon: -6.4308, source: 'catalog'}
-    );
+    assert.deepEqual([gleniffer.lat, gleniffer.lon], [glenpatrick.lat, glenpatrick.lon]);
+    assert.deepEqual(locationFor({name: 'Kilchoman'}), {lat: 55.7869, lon: -6.4308, source: 'catalog'});
     assert.equal(locationFor({name: 'Strathmeldrum'}).approximate, true,
       'Approximate historical town position must be identified as such');
   }
@@ -286,8 +245,7 @@ test(
      */
     function beneath(center, zoom, width, height, x, y) {
       const middle = project(center.lat, center.lon, zoom);
-      return unproject(middle.x + x - width / 2, middle.y + y - height /
-        2, zoom);
+      return unproject(middle.x + x - width / 2, middle.y + y - height / 2, zoom);
     }
     for (const {center, from, to, width, height, x, y} of samples) {
       const initial = beneath(center, from, width, height, x, y);
@@ -315,10 +273,7 @@ test(
     assert.ok(Math.abs(centered.lon - center.lon) < 1e-8);
     assert.equal(centered.zoom, 11);
     assert.equal(zoomAroundPoint(center, 16, 17, 900, 600, 150, 200).zoom, 16);
-    assert.deepEqual(
-      zoomAroundPoint(center, 2, 0, 900, 600, 150, 200),
-      {...center, zoom: 2}
-    );
+    assert.deepEqual(zoomAroundPoint(center, 2, 0, 900, 600, 150, 200), {...center, zoom: 2});
   }
 );
 
@@ -338,7 +293,7 @@ test(
         bottles: [{id: 'physical'}],
       }],
     };
-    const sites = buildDistilleryMap(collection, {includeAllDistilleries: true}).located;
+    const sites = buildDistilleryMap(collection, {includeAllDistilleries: true, }).located;
     assert.equal(sites.find(s => s.id === 'closed').status, 'closed');
     assert.equal(sites.find(s => s.id === 'closed').bottleCount, 1);
     assert.equal(sites.find(s => s.id === 'reopened').status, 'reopened');

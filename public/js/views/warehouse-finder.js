@@ -1,8 +1,12 @@
+import {composeMarkup} from '../ui/render-plan.js';
 /** Compact results for locating an actual physical bottle, not bulk editing. */
 import {t} from '../i18n/index.js';
 import {imageUrl} from '../ui/format.js';
 import {routeUrl} from '../navigation/routes.js';
-import {safe} from './warehouse-presentation.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates('warehouse/warehouse-finder.html');
+
 
 const statusKeys = {
   closed: 'home.status.closed',
@@ -11,57 +15,61 @@ const statusKeys = {
 };
 
 /**
- * Renders warehouse finder results for warehouse finder.
+ * Prepares warehouse search results and matching-count summary.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Warehouse search results and matching-count summary.
  */
 export function renderWarehouseFinderResults({items, total, page, pages}) {
-  const count = `<div class="warehouse-finder-summary" aria-live="polite">${safe(total ? t('warehouse.find.matches', {count: total}) : t('warehouse.find.noMatches'))}</div>`;
-  const cards = items.map(({bottle, place}) => {
-    const photo = bottle.photoPath
-      ? `<img src="${safe(imageUrl(bottle.photoPath))}" alt="" loading="lazy">`
-      : '<img src="/assets/photo-placeholder.svg" alt="" aria-hidden="true">';
-    const inventory = bottle.number ? `#${safe(bottle.number)} · ` : '';
-    const status = statusKeys[bottle.status] ?
-      safe(t(statusKeys[bottle.status])) : '';
-    const volume = bottle.volumeMl != null ? `${safe(bottle.volumeMl)} ml` : '';
-    const type = bottle.volumeType === 'sample' ?
-      safe(t('forms.bottle.sampleBottle')) : '';
+  const count =
+    renderTemplate('warehouseFinderSummary', {
+      resultSummary: String((total ? t('warehouse.find.matches', {count: total}) : t('warehouse.find.noMatches')) ?? ''),
+    });
+  const cards = composeMarkup(items.map(({bottle, place}) => {
+    const photo = bottle.photoPath ? renderTemplate('img', {src: String(imageUrl(bottle.photoPath) ?? ''), }) : renderTemplate('img2');
+    const inventory = bottle.number ? `#${String(bottle.number ?? '')} · ` : '';
+    const status = statusKeys[bottle.status] ? t(statusKeys[bottle.status]) : '';
+    const volume = bottle.volumeMl != null ? `${String(bottle.volumeMl ?? '')} ml` : '';
+    const type = bottle.volumeType === 'sample' ? t('forms.bottle.sampleBottle') : '';
     const meta = [volume, type, status].filter(Boolean).join(' · ');
     const details = bottle.bottlingId
-      ? `<a class="btn small" href="${safe(routeUrl('detail', bottle.bottlingId))}" data-act="open" data-id="${safe(bottle.bottlingId)}" data-bottle-id="${safe(bottle.id)}">${t('warehouse.bottles.detailsTitle')}</a>` : '';
-    return `<article class="warehouse-finder-card" data-bottle-id="${safe(bottle.id)}">
-            <div class="warehouse-finder-photo">${photo}</div>
-            <div class="warehouse-finder-info"><strong>${inventory}${safe(bottle.name)}</strong>
-                ${meta ?
-        `<span class="warehouse-finder-meta">${meta}</span>` : ''}
-                <span class="warehouse-finder-location">${place ?
-        `<span aria-hidden="true">⌖</span> ${safe(place.label)}` :
-        safe(t('detail.fields.unassigned'))}</span>
-            </div>
-            <div class="warehouse-finder-actions">
-                ${place ?
-        `<button type="button" class="btn small primary" data-act="warehouse-find-location" data-id="${safe(bottle.id)}">${t('warehouse.find.showLocation')}</button>` : ''}
-                <button type="button" class="btn small" data-act="warehouse-assign" data-id="${safe(bottle.id)}">${t(place ? 'warehouse.bottles.relocate' : 'warehouse.find.assignLocation')}</button>
-                ${details}
-            </div>
-        </article>`;
-  }).join('') || `<p class="hint warehouse-finder-empty">${t('warehouse.bottles.noResults')}</p>`;
+      ? renderTemplate('smallButton', {
+        href: String(routeUrl('detail', bottle.bottlingId) ?? ''),
+        id: String(bottle.bottlingId ?? ''),
+        bottleId: String(bottle.id ?? ''),
+      }) : '';
+    return renderTemplate('warehouseFinderCard', {
+      bottleId: String(bottle.id ?? ''),
+      photo: photo,
+      inventory: inventory,
+      name: String(bottle.name ?? ''),
+      warehouseFinderMeta: meta ? renderTemplate('warehouseFinderMeta', {meta: meta, }) : '',
+      span: place ? renderTemplate('cardsSpan', {label: String(place.label ?? ''), }) : t('detail.fields.unassigned'),
+      warehouseFindLocation: place ? renderTemplate('warehouseFindLocation', {id: String(bottle.id ?? ''), }) : '',
+      id: String(bottle.id ?? ''),
+      t: t(place ? 'warehouse.bottles.relocate' : 'warehouse.find.assignLocation'),
+      details: details,
+    });
+  })) || renderTemplate('hint');
   const pagination = pages > 1 ?
-    `<nav class="warehouse-finder-pages" aria-label="${safe(t('warehouse.find.pagination'))}">
-        <button type="button" class="btn small" data-act="warehouse-find-prev" ${page <= 1 ? 'disabled' : ''}>${t('warehouse.find.previous')}</button>
-        <span>${safe(t('warehouse.find.page', {page, pages}))}</span>
-        <button type="button" class="btn small" data-act="warehouse-find-next" ${page >= pages ? 'disabled' : ''}>${t('warehouse.find.next')}</button>
-    </nav>` : '';
-  return `${count}<div class="warehouse-finder-list">${cards}</div>${pagination}`;
+    renderTemplate('warehouseFinderPages', {
+      ariaLabel: t('warehouse.find.pagination'),
+      disabledAttributes: page <= 1 ? {"disabled": true} : {},
+      page: t('warehouse.find.page', {page, pages}),
+      nextDisabled: page >= pages ? {"disabled": true} : {},
+    }) : '';
+  return renderTemplate('renderWarehouseFinderResults', {
+    count: count,
+    cards: cards,
+    pagination: pagination,
+  });
 }
 
 /**
- * Renders warehouse finder for warehouse finder.
+ * Prepares warehouse bottle search with assignment-status filters.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Warehouse bottle search with assignment-status filters.
  */
 export function renderWarehouseFinder({query, placement, results}) {
   const filters = [
@@ -69,13 +77,14 @@ export function renderWarehouseFinder({query, placement, results}) {
     ['assigned', 'warehouse.find.assigned'],
     ['unassigned', 'warehouse.find.unassigned'],
   ];
-  return `<section class="warehouse-finder" aria-label="${t('warehouse.navigation.findBottles')}">
-        <label class="warehouse-finder-search-label" for="warehouse-search">${t('warehouse.bottles.searchInventory')}</label>
-        <input id="warehouse-search" type="search" autocomplete="off" value="${safe(query)}" placeholder="${t('warehouse.bottles.searchPlaceholder')}">
-        <fieldset class="warehouse-finder-filter"><legend>${t('warehouse.find.placement')}</legend>
-          ${filters.map(([id, key]) =>
-    `<label class="warehouse-finder-filter-option"><input type="radio" name="warehouse-find-placement" value="${id}" ${id === placement ? 'checked' : ''}><span>${t(key)}</span></label>`).join('')}
-        </fieldset>
-        <div class="warehouse-finder-results">${renderWarehouseFinderResults(results)}</div>
-    </section>`;
+  return renderTemplate('warehouseFinder', {
+    value: String(query ?? ''),
+    filters: composeMarkup(filters.map(([id, key]) =>
+      renderTemplate('warehouseFinderFilterOption', {
+        id: id,
+        checkedAttributes: id === placement ? {"checked": true} : {},
+        t: t(key),
+      }))),
+    warehouseFinderResults: renderWarehouseFinderResults(results),
+  });
 }

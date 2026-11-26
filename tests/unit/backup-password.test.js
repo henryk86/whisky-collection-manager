@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {readBackupPassword, hasBackupPassword, BACKUP_PASSWORD_FAILURE} from '../../shared/backup-password.js';
+import {readBackupPassword, hasBackupPassword, BACKUP_PASSWORD_FAILURE}
+  from '../../shared/backup-password.js';
 
 test(
   'backup password availability uses stable error identifiers instead of German messages',
@@ -13,17 +14,11 @@ test(
     try {
       process.env.BACKUP_CONTROL_DIR = folder;
       assert.equal(hasBackupPassword(), false);
-      assert.throws(() => readBackupPassword(), error =>
-        error.backupPasswordCode === BACKUP_PASSWORD_FAILURE.missing);
+      assert.throws(() => readBackupPassword(), error => error.backupPasswordCode === BACKUP_PASSWORD_FAILURE.missing);
       fs.writeFileSync(path.join(folder, 'backup-zip-password'), 'short\n');
-      assert.throws(() => readBackupPassword(), error =>
-        error.backupPasswordCode === BACKUP_PASSWORD_FAILURE.tooShort);
-      assert.throws(() => hasBackupPassword(), error =>
-        error.backupPasswordCode === BACKUP_PASSWORD_FAILURE.tooShort);
-      fs.writeFileSync(
-        path.join(folder, 'backup-zip-password'),
-        'LongEnoughPassword12345\n'
-      );
+      assert.throws(() => readBackupPassword(), error => error.backupPasswordCode === BACKUP_PASSWORD_FAILURE.tooShort);
+      assert.throws(() => hasBackupPassword(), error => error.backupPasswordCode === BACKUP_PASSWORD_FAILURE.tooShort);
+      fs.writeFileSync(path.join(folder, 'backup-zip-password'), 'LongEnoughPassword12345\n');
       assert.equal(hasBackupPassword(), true);
       delete process.env.BACKUP_CONTROL_DIR;
       assert.throws(() => readBackupPassword(), error =>

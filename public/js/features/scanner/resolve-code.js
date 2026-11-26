@@ -5,14 +5,15 @@ import {lookupInventoryNumber} from '../../domain/selectors.js';
  * A scan navigates or fills the inventory field. It never opens an editor.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {Function} Result computed from the supplied inputs.
+ * @return {Function} Function that resolves a scanned inventory code or fills the assignment field.
  */
-export function createCodeResolver({state, navigate, toast, closeModal, renderModal, query = select}) {
+export function createCodeResolver({state, navigate, toast, closeModal,
+  renderModal, query = select}) {
   /**
    * Retrieves code for resolve code.
    *
    * @param {*} value Input value to process.
-   * @param {boolean=} assign Assign used by this operation.
+   * @param {boolean=} assign Whether the caller requests warehouse assignment rather than ordinary navigation.
    */
   async function resolveCode(value, assign = false) {
     value = value.trim();
@@ -27,9 +28,7 @@ export function createCodeResolver({state, navigate, toast, closeModal, renderMo
         toast(t("scanner.validation.inventoryNumberAlreadyAssigned"), true);
         return;
       }
-      navigate('detail', match.bottling.id, {
-        highlightBottleId: found.id,
-      });
+      navigate('detail', match.bottling.id, {highlightBottleId: found.id, });
       return;
     }
     if (assign && state.scanReturn) {

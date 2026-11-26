@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {needsNpmCi, localTlsStatus, prepareStartup} from '../../scripts/start.js';
+import {needsNpmCi, localTlsStatus, prepareStartup}
+  from '../../scripts/start.js';
 
 const packages = {
   '': {version: '0.17.15'},
@@ -21,10 +22,7 @@ const packages = {
 function fixture(t, {installed = true, certificate = true} = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-autostart-'));
   t.after(() => fs.rmSync(root, {recursive: true, force: true}));
-  fs.writeFileSync(
-    path.join(root, 'package-lock.json'),
-    JSON.stringify({packages})
-  );
+  fs.writeFileSync(path.join(root, 'package-lock.json'), JSON.stringify({packages}));
   fs.writeFileSync(path.join(root, '.env.example'), 'HTTPS_ENABLED=true\n');
   if (installed) install(root);
   if (certificate) {
@@ -46,17 +44,11 @@ function install(root, {dev = true} = {}) {
   for (const [name, entry] of Object.entries(packages)) {
     if (!name.startsWith('node_modules/') || (!dev && entry.dev)) continue;
     fs.mkdirSync(path.join(root, name), {recursive: true});
-    fs.writeFileSync(
-      path.join(root, name, 'package.json'),
-      JSON.stringify({version: entry.version})
-    );
+    fs.writeFileSync(path.join(root, name, 'package.json'), JSON.stringify({version: entry.version}));
     installed[name] = entry;
   }
   fs.mkdirSync(path.join(root, 'node_modules'), {recursive: true});
-  fs.writeFileSync(
-    path.join(root, 'node_modules/.package-lock.json'),
-    JSON.stringify({packages: installed})
-  );
+  fs.writeFileSync(path.join(root, 'node_modules/.package-lock.json'), JSON.stringify({packages: installed}));
 }
 
 test(
@@ -77,10 +69,7 @@ test(
       execute: (binary, args) => calls.push([binary, ...args]),
     });
     assert.equal(needsNpmCi(root), false);
-    assert.deepEqual(
-      calls,
-      [[process.execPath, 'scripts/prepare-cutout-assets.js']]
-    );
+    assert.deepEqual(calls, [[process.execPath, 'scripts/prepare-cutout-assets.js']]);
   }
 );
 
@@ -105,10 +94,7 @@ test(
     });
     assert.equal(calls.length, 2);
     assert.ok(calls[0].includes('ci'));
-    assert.deepEqual(
-      calls[1],
-      [process.execPath, 'scripts/prepare-cutout-assets.js']
-    );
+    assert.deepEqual(calls[1], [process.execPath, 'scripts/prepare-cutout-assets.js']);
   }
 );
 
@@ -122,7 +108,11 @@ test(
     install(root);
     fs.writeFileSync(
       path.join(root, 'node_modules/.package-lock.json'),
-      JSON.stringify({packages: {...packages, 'node_modules/three': {version: '0.1.0'}}})
+      JSON.stringify({
+        packages: {
+          ...packages, 'node_modules/three': {version: '0.1.0', },
+        },
+      })
     );
     assert.equal(needsNpmCi(root), true);
   }
@@ -142,10 +132,7 @@ test(
   'npm start provisions missing local HTTPS once without replacing an existing .env',
   t => {
     const root = fixture(t, {certificate: false});
-    fs.writeFileSync(
-      path.join(root, '.env'),
-      'HTTPS_ENABLED=true\nALLOWED_HOSTS=myserver.local\n'
-    );
+    fs.writeFileSync(path.join(root, '.env'), 'HTTPS_ENABLED=true\nALLOWED_HOSTS=myserver.local\n');
     const calls = [];
     prepareStartup({
       root, env: {},
@@ -164,14 +151,8 @@ test(
         }
       },
     });
-    assert.deepEqual(
-      calls,
-      ['scripts/prepare-cutout-assets.js', 'scripts/setup-https.js']
-    );
-    assert.match(
-      fs.readFileSync(path.join(root, '.env'), 'utf8'),
-      /ALLOWED_HOSTS=myserver.local/
-    );
+    assert.deepEqual(calls, ['scripts/prepare-cutout-assets.js', 'scripts/setup-https.js']);
+    assert.match(fs.readFileSync(path.join(root, '.env'), 'utf8'), /ALLOWED_HOSTS=myserver.local/);
     assert.equal(localTlsStatus(root), 'ready');
   }
 );
@@ -196,10 +177,7 @@ test(
     assert.equal(setupCount, 0);
     assert.equal(localTlsStatus(root, {HTTPS_ENABLED: 'false'}), 'disabled');
     assert.ok(fs.existsSync(path.join(root, '.env')));
-    fs.writeFileSync(
-      path.join(root, '.env'),
-      'HTTPS_CERT_FILE=custom/my-cert.pem\n'
-    );
+    fs.writeFileSync(path.join(root, '.env'), 'HTTPS_CERT_FILE=custom/my-cert.pem\n');
     assert.equal(localTlsStatus(root), 'custom-missing');
     assert.throws(
       () => prepareStartup({

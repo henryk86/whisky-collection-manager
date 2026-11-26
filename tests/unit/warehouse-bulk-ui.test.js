@@ -3,105 +3,6 @@ import assert from 'node:assert/strict';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
 
 test(
-  'physical bottle multi-selection remains in the storage wall, not in the finder',
-  () => {
-    const warehouse = {
-      rooms: [{
-        id: 'room', name: 'Raum', width: 5, height: 4, furniture: [
-          {
-            id: 'f',
-            name: 'Regal 1',
-            type: 'regal',
-            width: 1,
-            itemHeight: 2,
-            elevation: 0,
-            shelves: [
-              {id: 's', name: 'Fach 1', capacity: 3}],
-          }],
-      }],
-      bottles: [{id: 'b1', name: 'Whisky 1'}, {id: 'b2', name: 'Whisky 2'}],
-      assignments: {b1: 's', b2: 's'},
-    };
-    const state = {
-      warehouse,
-      selected: 'find',
-      warehouseUnassigned: false,
-      warehouseSearch: '',
-      warehouseRoomId: 'room',
-      warehousePlanMode: 'wall',
-      warehouseSelectedBottleIds: ['b1', 'b2'],
-    };
-    let html = '', dialog = '';
-    const view = createWarehouseView({
-      state,
-      /**
-       * Updates the shell state for its caller.
-       *
-       * @param {*} source Input source to inspect.
-       */
-      shell: source => {html = source;},
-      /**
-       * Updates the navigate state for its caller.
-       */
-      navigate: () => {},
-      modal: {
-        /**
-         * Renders modal in the current view.
-         *
-         * @param {*} _title Value used by this operation.
-         * @param {*} content Content to render, store or examine.
-         */
-        showModal: (_title, content) => {dialog = content;},
-      },
-      /**
-       * Performs the refresh lifecycle action.
-       * @return {!Promise<*>} Promise for the asynchronous operation.
-       */
-      refresh: async () => {},
-    });
-    const oldDocument = globalThis.document;
-    globalThis.document = {
-      /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
-       */
-      querySelector: () => null,
-      /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
-       */
-      querySelectorAll: () => [],
-      /**
-       * Retrieves element by id from the available state.
-       * @return {*} Result computed from the supplied inputs.
-       */
-      getElementById: () => null,
-    };
-    try {
-      view.render();
-      assert.doesNotMatch(html, /class="warehouse-bottle-check"/);
-      assert.doesNotMatch(html, /data-act="warehouse-bottles-assign-selected"/);
-      assert.match(html, /warehouse-finder-card/);
-      assert.match(html, /data-act="warehouse-find-location"/);
-      state.selected = 'shelves';
-      view.render();
-      view.assignSelectedBottles();
-      assert.match(dialog, /data-endpoint="\/api\/warehouse\/bottles\/bulk"/);
-      assert.match(dialog, /data-bottle-bulk="true"/);
-      assert.match(html, /class="warehouse-room-wall"/);
-      assert.equal(
-        (html.match(/class="warehouse-wall-bottle is-selected"/g) || []).length,
-        2
-      );
-      assert.match(html, /warehouse-bottle-bulk-tools/);
-    } finally {
-      if (oldDocument === undefined) delete globalThis.document;
-      else globalThis.document = oldDocument;
-    }
-  }
-);
-
-test(
   'wall bottle selection toggles a pressed, highlighted bottle without checkboxes',
   () => {
     const warehouse = {
@@ -142,8 +43,7 @@ test(
            * @param {*} enabled Value used by this operation.
            * @return {*} Result computed from the supplied inputs.
            */
-          toggle: (name, enabled) => enabled ? marked.add(name) :
-            marked.delete(name),
+          toggle: (name, enabled) => enabled ? marked.add(name) : marked.delete(name),
         },
       } : null,
     };

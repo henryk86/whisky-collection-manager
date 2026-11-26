@@ -86,7 +86,7 @@ Sammlungsdaten werden außerhalb des Repositorys gespeichert und bleiben bei Con
 
 ### Anmeldung und Sicherheit
 
-Die **Loginpflicht ist standardmäßig deaktiviert**. Unter **Einstellungen → Nutzerverwaltung** kann sie durch einen Administrator aktiviert werden. Bei öffentlich erreichbaren Installationen sind Loginpflicht und HTTPS erforderlich; eine zusätzliche Netzabsicherung oder ein VPN wird empfohlen. Weitere Nutzer können die Sammlung verwalten, aber nicht die Nutzerverwaltung öffnen.
+Die **Loginpflicht ist standardmäßig deaktiviert**. Unter **Einstellungen → Nutzerverwaltung** kann sie durch einen Administrator aktiviert werden. WCM ist für den Betrieb im vertrauenswürdigen privaten Netzwerk oder über VPN vorgesehen. Eine direkte Veröffentlichung im Internet wird auch mit aktivierter Anmeldung und HTTPS nicht empfohlen. In gemeinsam genutzten Netzen die Loginpflicht aktivieren und den Zugriff per Firewall auf berechtigte Geräte beschränken. Weitere Nutzer können die Sammlung verwalten, aber nicht die Nutzerverwaltung öffnen.
 
 Beim ersten Start wird `admin` mit einem **individuellen Startpasswort** angelegt; es steht einmalig in den Serverlogs (`docker compose logs app`). Bei der ersten Anmeldung ist ein Passwortwechsel Pflicht. Die Konten liegen in `data/user.json`, Passwörter nur als gesalzene scrypt-Hashes. Zugang, Passwortwiederherstellung und Betrieb: [Anmeldung und Nutzerverwaltung](docs/ANMELDUNG.md).
 
@@ -97,7 +97,8 @@ Beim ersten Start wird `admin` mit einem **individuellen Startpasswort** angeleg
 ```bash
 npm run hooks:install  # Commit-Nachrichten lokal prüfen (einmal pro Klon)
 npm run check          # Syntax, Module, Übersetzungen und Dokumentationslinks
-npm test               # Unit- und Integrationstests
+npm test               # Unit- und Integrationstests ohne Browser
+npx playwright-core install --with-deps chromium
 npm run test:browser   # Browser-Tests mit Playwright/Chromium
 ```
 

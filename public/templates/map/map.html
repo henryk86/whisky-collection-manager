@@ -1,0 +1,219 @@
+<!-- wcm-template:mapStockVisual -->
+<span
+  class="map-stock-visual map-legend-marker {{attr:extraClass}}"
+  style="--legend-diameter:{{attr:legendMarkerDiameter}}px"
+  aria-hidden="true">{{content:count}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapLegendItem -->
+<span class="map-legend-item" aria-label="{{attr:plural}}">
+  {{content:stockExample}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapLegendSection -->
+<div
+  class="map-legend-section map-legend-empty"
+  role="group"
+  aria-label="{{t:map.legend.distilleriesWithoutBottles}}">
+  <span class="map-legend-heading">{{t:map.filters.withoutBottles}}</span>
+  <span class="map-legend-item map-pagoda-legend">{{content:pagodaRoofIcon}}{{t:map.status.active}}</span>
+  <span class="map-legend-item map-pagoda-legend map-closed-legend">{{content:closedDistilleryIcon}}{{t:home.status.closed}}</span>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapLegend -->
+<div class="map-legend" role="group" aria-label="{{t:map.legend.title}}">
+  <div
+    class="map-legend-section map-legend-status"
+    role="group"
+    aria-label="{{t:map.legend.distilleriesWithBottles}}">
+    <span class="map-legend-heading">{{t:map.filters.withBottles}}</span>
+    <span class="map-legend-item">{{content:stockExample}}{{t:map.status.active}}</span>
+    <span class="map-legend-item">{{content:closedStockExample}}{{t:home.status.closed}}</span>
+  </div>{{content:emptySites}}
+  <div
+    class="map-legend-section map-legend-stock"
+    role="group"
+    aria-label="{{t:map.statistics.bottlesPerDistillery}}">
+    <span class="map-legend-heading">{{t:map.statistics.bottleCount}}</span>{{content:samples}}
+  </div>
+  <div
+    class="map-legend-section map-legend-clusters"
+    role="group"
+    aria-label="{{t:map.statistics.groupedDistilleries}}">
+    <span class="map-legend-item"><span
+        class="map-cluster-visual map-legend-marker map-cluster-legend-icon"
+        style="--legend-diameter:{{attr:clusterDiameter}}px"
+        aria-hidden="true">6</span>{{t:map.filters.grouped}}</span>
+  </div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapRelatedSite -->
+<button type="button" class="map-related-site" data-map-focus="{{text:id}}">{{text:name}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapRelatedMissing -->
+<span class="map-related-missing">{{text:name}} · {{t:map.filters.withoutLocation}} <button type="button" class="map-related-set-location" data-map-edit="{{text:id}}">{{t:map.actions.setLocation}}</button></span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapRelatedSites -->
+<div class="map-related-sites">{{content:entries}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint -->
+<p class="hint">{{t:map.empty.noCatalogMatches}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapRelatedBottling -->
+<div class="map-related-bottling" aria-label="{{t:map.bottling.locations}}">
+  <strong>{{content:locationsFor}}</strong>
+  {{content:mapRelatedSites}}
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:sidebarHtmlOption -->
+<option value="" selected>{{t:map.filters.selectLocation}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:sidebarHtmlOption2 -->
+<option value="{{text:id}}" {{attrs:selectedAttributes}}>{{text:name}} · {{content:bottleCount}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:sidebarHtmlOption3 -->
+<option>{{t:map.empty.noGeolocatedDistillery}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapBottlingFacts -->
+<small class="map-bottling-facts">{{text:mapBottlingFacts}}</small>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapBottlingLink -->
+<button type="button" class="map-bottling-link" data-map-bottling="{{text:id}}">
+  <span>{{text:name}}</span>{{content:mapBottlingFacts}}<small>{{content:plural}}</small></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint2 -->
+<p class="hint">{{t:map.empty.noMatchingBottlings}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapListPager -->
+<div class="map-list-pager"><button
+    type="button"
+    data-map-page="prev"
+    {{attrs:disabledAttributes}}
+    aria-label="{{t:map.pagination.previousBottlings}}">{{content:chevronLeftIcon}}</button><span>{{content:pageOf}}</span><button
+    type="button"
+    data-map-page="next"
+    {{attrs:nextDisabled}}
+    aria-label="{{t:map.pagination.moreBottlings}}">{{content:chevronRightIcon}}</button>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:formField -->
+<label class="form-field map-bottling-search">{{t:map.actions.searchBottlingsAtLocation}}
+  <input
+    id="map-bottling-search"
+    type="search"
+    placeholder="{{t:map.filters.searchNamePlaceholder}}"
+    value="{{text:search}}"
+    autocomplete="off"></label>
+<div class="map-bottling-list" aria-label="{{attr:bottlingsAtSite}}">
+  {{content:length}}
+</div>
+          {{content:mapListPager}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint3 -->
+<p class="hint map-empty-site">{{t:map.empty.noCollectionBottlings}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapSiteHeading -->
+<div class="map-site-heading">
+  <div class="map-site-title"><strong>{{text:name}}</strong>
+    <button
+      class="btn small map-position-edit"
+      type="button"
+      data-map-edit="{{text:id}}"
+      aria-label="{{attr:correctLocationFor}}"
+      title="{{t:map.actions.correctLocation}}">{{content:editIcon}}</button>
+  </div>
+  <span>{{content:plural}} · {{content:bottleCountLabel}} · {{content:status}}{{content:approximate}}</span>
+</div>
+          {{content:formField}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint4 -->
+<p class="hint">{{t:map.empty.chooseDistillery}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:sidebarHtml -->
+{{content:relatedSitesHtml}}<div class="map-site-panel">
+  <label class="form-field map-site-chooser" for="map-site-select">{{t:map.actions.showDistillery}}
+    <select id="map-site-select" {{attrs:disabledAttributes}}>
+      {{content:option}}
+      {{content:siteOptions}}
+    </select></label>
+  {{content:mapSiteHeading}}
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:formField2 -->
+<label class="form-field">{{t:map.filters.searchDistillery}}<input
+    id="map-missing-search"
+    type="search"
+    placeholder="{{t:map.filters.namePlaceholder}}"
+    value="{{text:missingFilter}}"></label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapMissing -->
+<details class="map-missing" {{attrs:openAttributes}}>
+  <summary>{{content:unmappedCount}}</summary>
+  {{content:formField}}
+  <div id="map-missing-list">{{content:missingRows}}</div>
+</details>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapMissingRow -->
+<div class="map-missing-row"><span>{{text:name}}</span><button type="button" class="btn small" data-map-edit="{{text:id}}">{{t:map.actions.setLocation}}</button>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint5 -->
+<p class="hint">{{content:moreResults}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint6 -->
+<p class="hint">{{t:map.empty.noMatchingDistilleries}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:renderSpan -->
+<span data-map-stat="missing"><strong>{{content:length}}</strong> {{t:map.filters.withoutLocation}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:mapNoSites -->
+<div class="map-no-sites">{{t:map.empty.noMappedDistilleries}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:render -->
+{{content:pageHeader}}
+<div class="map-summary"><span data-map-stat="located"><strong>{{content:length}}</strong> {{t:map.statistics.mappedDistilleries}}</span>
+  <span data-map-stat="bottles"><strong>{{content:bottleTotal}}</strong> {{t:map.statistics.assignedBottles}}</span>
+  {{content:span}}
+  <label class="map-all-toggle" for="map-all-distilleries"><span>{{t:map.actions.showAllDistilleries}}</span>
+    <input
+      id="map-all-distilleries"
+      type="checkbox"
+      role="switch"
+      {{attrs:checkedAttributes}}></label>
+</div>
+<div class="map-layout" data-reconcile="replace">
+  <div class="map-stage">{{content:mapCanvasHtml}}
+            {{content:mapLegendHtml}}
+            {{content:mapNoSites}}
+  </div>
+  <aside id="map-sidebar" class="map-sidebar" aria-label="{{t:map.page.title}}">
+  </aside>
+</div>
+
+<!-- /wcm-template -->

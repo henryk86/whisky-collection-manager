@@ -25,8 +25,7 @@ test(
         }),
         () => loadResources(state, async url => {
           if (url === '/api/warehouse') {
-            const failure =
-              new Error('The request could not be completed (HTTP 503)');
+            const failure = new Error('The request could not be completed (HTTP 503)');
             failure.status = 503;
             throw failure;
           }
@@ -40,10 +39,7 @@ test(
       assert.equal(result.ok, true);
       assert.equal(result.refreshError, refreshWarning);
       assert.equal(result.refreshError.status, 503);
-      assert.equal(
-        state.collection.bottlings.filter(item => item.name === name).length,
-        1
-      );
+      assert.equal(state.collection.bottlings.filter(item => item.name === name).length, 1);
       const actual = (await requestJson(server.base, '/api/collection')).data;
       assert.equal(
         actual.bottlings.filter(item => item.name === name).length,

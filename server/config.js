@@ -14,8 +14,7 @@ if (fs.existsSync(envPath)) {
       continue;
     }
     let value = raw.trim();
-    if ((value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))) {
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }
     else {
@@ -25,20 +24,18 @@ if (fs.existsSync(envPath)) {
   }
 }
 const configuredPort = Number(process.env.PORT ?? 3100);
-if (!Number.isInteger(configuredPort) || configuredPort < 1 ||
-  configuredPort > 65535) {
+if (!Number.isInteger(configuredPort) || configuredPort < 1 || configuredPort > 65535) {
   throw new Error('PORT muss eine ganze Zahl zwischen 1 und 65535 sein.');
 }
 export const PORT = configuredPort;
 export const HOST = process.env.HOST || '0.0.0.0';
-export const DATA_ROOT = path.resolve(process.env.WHISKY_DATA_DIR ||
-  process.cwd());
+export const DATA_ROOT = path.resolve(process.env.WHISKY_DATA_DIR || process.cwd());
 /**
  * Normalizes the bool config text for subsequent processing.
  *
  * @param {*} name Environment variable or setting name.
  * @param {*} fallback Value used when the requested data is unavailable.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} Parsed configuration flag, using the supplied default when absent.
  */
 function boolConfig(name, fallback) {
   const value = String(process.env[name] ?? fallback).toLowerCase();
@@ -53,7 +50,7 @@ function boolConfig(name, fallback) {
  *
  * @param {*} name Environment variable or setting name.
  * @param {*} fallback Value used when the requested data is unavailable.
- * @return {number} Calculated numeric value.
+ * @return {number} Validated TCP port number from the environment or the supplied default.
  */
 function portConfig(name, fallback) {
   const p = Number(process.env[name] ?? fallback);
@@ -65,10 +62,8 @@ function portConfig(name, fallback) {
 export const HTTPS_ENABLED = boolConfig('HTTPS_ENABLED', true);
 export const HTTP_ENABLED = boolConfig('HTTP_ENABLED', false);
 export const HTTPS_PORT = portConfig('HTTPS_PORT', 3543);
-export const HTTPS_CERT_FILE = path.resolve(process.env.HTTPS_CERT_FILE ||
-  'certs/server-cert.pem');
-export const HTTPS_KEY_FILE = path.resolve(process.env.HTTPS_KEY_FILE ||
-  'certs/server-key.pem');
+export const HTTPS_CERT_FILE = path.resolve(process.env.HTTPS_CERT_FILE || 'certs/server-cert.pem');
+export const HTTPS_KEY_FILE = path.resolve(process.env.HTTPS_KEY_FILE || 'certs/server-key.pem');
 if (!HTTPS_ENABLED && !HTTP_ENABLED) {
   throw new Error('Mindestens HTTP_ENABLED oder HTTPS_ENABLED muss true sein.');
 }
@@ -82,8 +77,7 @@ if (HTTPS_ENABLED && HTTP_ENABLED && HTTPS_PORT === PORT) {
  */
 export const ALLOWED_HOSTS = new Set([
   'localhost', '127.0.0.1', '::1',
-  ...['ALLOWED_HOSTS', 'CERT_DNS_NAMES', 'CERT_IP_ADDRESSES']
-    .flatMap(name => String(process.env[name] || '').split(','))
+  ...['ALLOWED_HOSTS', 'CERT_DNS_NAMES', 'CERT_IP_ADDRESSES'].flatMap(name => String(process.env[name] || '').split(','))
     .map(value => value.trim().toLowerCase().replace(/^\[|\]$/g, ''))
     .filter(Boolean),
 ]);

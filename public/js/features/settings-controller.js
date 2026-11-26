@@ -1,107 +1,99 @@
+import {composeMarkup} from '../ui/render-plan.js';
+import {replaceContent} from '../ui/dom-renderer.js';
 import {actionButton} from '../ui/buttons.js';
 import {t} from '../i18n/index.js';
 import {locationFor} from '../domain/distillery-map.js';
-import {escapeHtml, query} from '../ui/dom.js';
+import {query} from '../ui/dom.js';
 import {request} from '../api.js';
 import {toast} from '../ui/notifications.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates('settings/settings-controller.html');
+
 /**
  * Settings workflows use app dialogs instead of blocking browser
  * prompt/confirm.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Collection settings, distillery editing and import workflows.
  */
-export function createSettingsController({state, action, navigate, closeModal, showModal, onDistilleryLocationChanged}) {
+export function createSettingsController({state, action, navigate, closeModal,
+  showModal, onDistilleryLocationChanged}) {
   /**
-   * Transforms the entries used by prompt distillery.
+   * Opens the create or edit distillery dialog, preserving an underlying bottling form if present.
    *
    * @param {*=} id Identifier of the affected record.
-      * @return {*} Result of this expression.
-*/
+   * @return {*} Notification if the requested distillery is missing; otherwise opens the dialog.
+   */
   function promptDistillery(id = null) {
-    const current = id ? state.collection.distilleries.find(entry =>
-      entry.id === id) : null;
+    const current = id ? state.collection.distilleries.find(entry => entry.id === id) : null;
     if (id && !current) return toast(t("features.errors.distilleryNotFound"), true);
     const nested = Boolean(query('#bottling-form') && state.modal);
     const coordinates = current ? locationFor(current) : null;
     showModal(
-      id ? t("features.distilleries.edit") :
-        t("forms.bottling.newDistillery"),
-      `<form id="distillery-form" data-id="${escapeHtml(id || '')}">
-    <label class="form-field" for="distillery-name">${t("features.distilleries.nameLabel")}
-    <input id="distillery-name" name="name" type="text" value="${escapeHtml(current?.name || '')}" maxlength="150" autocomplete="off" required></label>
-    <label class="form-field" for="distillery-status">${t("features.distilleries.operatingStatus")}
-      <select id="distillery-status" name="status">
-      ${[
-        ["active", t("map.status.active")],
-        ["closed", t("home.status.closed")],
-        ["reopened", t("map.status.reopened")],
-        ["unknown", t("features.distilleries.unknownStatus")],
-      ].map(([value, label]) =>
-        `<option value="${value}" ${(current?.status || "unknown") ===
-          value ? "selected" : ""}>${label}</option>`)
-        .join("")}</select></label>
-    <div class="map-coordinates-fields">
-    <label class="form-field" for="distillery-latitude">${t("features.map.latitudeLabel")}
-      <input id="distillery-latitude" name="latitude" type="number" step="any" min="-90" max="90" placeholder="${t("features.map.latitudeExample")}" value="${current?.latitude ?? coordinates?.lat ?? ''}"></label>
-    <label class="form-field" for="distillery-longitude">${t("features.map.longitudeLabel")}
-      <input id="distillery-longitude" name="longitude" type="number" step="any" min="-180" max="180" placeholder="${t("features.map.longitudeExample")}" value="${current?.longitude ?? coordinates?.lon ?? ''}"></label>
-    </div>
-    <p class="hint">${t("features.map.optionalCoordinatesHint")}</p>
-    ${actionButton({
+      id ? t("features.distilleries.edit") : t("forms.bottling.newDistillery"),
+      renderTemplate('distilleryForm', {
+        id: id || '',
+        name: current?.name || '',
+        content: composeMarkup([
+          ["active", t("map.status.active")],
+          ["closed", t("home.status.closed")],
+          ["reopened", t("map.status.reopened")],
+          ["unknown", t("features.distilleries.unknownStatus")],
+        ].map(([value, label]) =>
+          renderTemplate('promptDistilleryOption', {
+            value: value,
+            unknownAttributes: (current?.status || "unknown") === value ? {"selected": true} : {},
+            label: label,
+          }))),
+        latitude: current?.latitude ?? coordinates?.lat ?? '',
+        longitude: current?.longitude ?? coordinates?.lon ?? '',
+        findDistilleryLocationButton: actionButton({
           label: t("features.map.searchOpenStreetMap"),
           action: 'find-distillery-location',
           size: 'small',
-        })}
-    <div id="distillery-location-results" class="map-location-results" aria-live="polite"></div>
-    <div class="actions ds-modal-footer ds-modal-footer--form">
-    ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
-    <button type="submit" class="btn primary">${id ?
-        t("common.actions.save") : t("features.common.create")}</button>
-    </div></form>`,
+        }),
+        closeModalButton: actionButton({
+          label: t("common.actions.cancel"),
+          action: 'close-modal',
+        }),
+        submitLabel: id ? t("common.actions.save") : t("features.common.create"),
+      }),
       false,
       nested
     );
-    query('#distillery-name')?.focus();
+    /** @type {HTMLElement} */ (query('#distillery-name'))?.focus();
   }
 
   /**
    * Updates distillery for settings controller.
    *
    * @param {!KeyboardEvent} event Event that triggered the handler.
-   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   * @return {!Promise<void>} Completion of the distillery form save and view update.
    */
   async function saveDistillery(event) {
     event.preventDefault();
-    const form = event.target;
-    const name = form.querySelector('[name="name"]').value.trim();
+    const form = /** @type {HTMLFormElement} */ (event.target);
+    const name = /** @type {HTMLInputElement} */ (form.querySelector('[name="name"]')).value.trim();
     const id = form.dataset.id;
-    const previousDistillery = id ? state.collection.distilleries
-      .find(entry => entry.id === id) : null;
-    const previousLocation = previousDistillery ?
-      locationFor(previousDistillery) : null;
-    const status = form.elements.namedItem('status').value;
+    const previousDistillery = id ? state.collection.distilleries.find(entry => entry.id === id) : null;
+    const previousLocation = previousDistillery ? locationFor(previousDistillery) : null;
+    const status = /** @type {HTMLSelectElement} */ (form.elements.namedItem('status')).value;
     if (!name) return toast(t("features.validation.distilleryNameRequired"), true);
-    const rawLat = form.elements.namedItem('latitude').value.trim()
-      .replace(',', '.');
-    const rawLon = form.elements.namedItem('longitude').value.trim()
-      .replace(',', '.');
-    if ((rawLat === '') !== (rawLon ===
-      '')) return toast(t("features.validation.coordinatesBothOrNone"), true);
+    const rawLat = /** @type {HTMLInputElement} */ (form.elements.namedItem('latitude')).value.trim().replace(',', '.');
+    const rawLon = /** @type {HTMLInputElement} */ (form.elements.namedItem('longitude')).value.trim().replace(',', '.');
+    if ((rawLat === '') !== (rawLon === '')) return toast(t("features.validation.coordinatesBothOrNone"), true);
     const latitude = rawLat === '' ? null : Number(rawLat);
     const longitude = rawLon === '' ? null : Number(rawLon);
-    if ((rawLat && !Number.isFinite(latitude)) || (rawLon &&
-      !Number.isFinite(longitude)) ||
-      (latitude !== null && Math.abs(latitude) > 90) || (longitude !==
-        null && Math.abs(longitude) > 180)) {
+    if ((rawLat && !Number.isFinite(latitude)) || (rawLon && !Number.isFinite(longitude)) ||
+      (latitude !== null && Math.abs(latitude) > 90) || (longitude !== null && Math.abs(longitude) > 180)) {
       return toast(t("features.validation.invalidCoordinates"), true);
     }
-    const submit = form.querySelector('[type="submit"]');
+    const submit = /** @type {HTMLButtonElement} */ (form.querySelector('[type="submit"]'));
     if (submit.disabled) return;
     submit.disabled = true;
     const saved = await action(async () => request(
-      id ? `/api/distilleries/${encodeURIComponent(id)}` :
-        '/api/distilleries',
+      id ? `/api/distilleries/${encodeURIComponent(id)}` : '/api/distilleries',
       {
         method: id ? 'PATCH' : 'POST',
         body: JSON.stringify({name, status, latitude, longitude}),
@@ -110,9 +102,7 @@ export function createSettingsController({state, action, navigate, closeModal, s
     if (!saved.ok) {submit.disabled = false; return;}
     closeModal();
     const updatedLocation = locationFor(saved.value);
-    if (updatedLocation && (!previousLocation || previousLocation.lat !==
-      updatedLocation.lat
-      || previousLocation.lon !== updatedLocation.lon)) {
+    if (updatedLocation && (!previousLocation || previousLocation.lat !== updatedLocation.lat || previousLocation.lon !== updatedLocation.lon)) {
       onDistilleryLocationChanged?.(saved.value.id);
     }
     // Creating a new distillery from an open bottling form must preserve all
@@ -120,49 +110,50 @@ export function createSettingsController({state, action, navigate, closeModal, s
     const parentForm = query('#bottling-form');
     if (!id && parentForm) {
       const options = parentForm.querySelector('.distillery-options');
-      if (options && ![...options.querySelectorAll('input[name="distilleryIds"]')].some(input => input.value === saved.value.id)) {
+      if (options && ![...options.querySelectorAll('input[name="distilleryIds"]')].some((/** @type {HTMLInputElement} */ input) => input.value === saved.value.id)) {
         const label = document.createElement('label');
         label.className = 'distillery-option';
-        label.innerHTML =
-          `<input type="checkbox" name="distilleryIds" value="${escapeHtml(saved.value.id)}" checked><span>${escapeHtml(saved.value.name)}</span>`;
-        const matching = [...options.querySelectorAll('.distillery-option')]
-          .find(option =>
-            option.querySelector('span').textContent
-              .localeCompare(saved.value.name,
-                'de'
-              ) > 0);
+        replaceContent(label, renderTemplate('saveDistilleryInput', {
+          id: saved.value.id,
+          name: saved.value.name,
+        }));
+        const matching = [...options.querySelectorAll('.distillery-option')].find(option =>
+          option.querySelector('span').textContent.localeCompare(saved.value.name, 'de') > 0);
         options.insertBefore(label, matching || null);
       }
     }
-    toast(id ? t("features.notifications.distillerySaved") :
-      t("features.notifications.distilleryCreated"));
+    toast(id ? t("features.notifications.distillerySaved") : t("features.notifications.distilleryCreated"));
   }
 
   /**
    * Retrieves distillery location for settings controller.
    *
-   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   * @return {!Promise<void>} Completion of the distillery-location search and result display.
    */
   async function findDistilleryLocation() {
-    const name = query('#distillery-name')?.value.trim();
+    const name = /** @type {HTMLInputElement} */ (query('#distillery-name'))?.value.trim();
     if (!name) return toast(t("features.validation.distilleryNameRequiredForSearch"), true);
-    const output = query('#distillery-location-results');
-    const button = query('[data-act="find-distillery-location"]');
+    const output = /** @type {HTMLElement & {_candidates?: Array<{name: string, latitude: number, longitude: number}>}} */ (query('#distillery-location-results'));
+    const button = /** @type {HTMLButtonElement} */ (query('[data-act="find-distillery-location"]'));
     if (!output || !button) return;
     button.disabled = true;
-    output.innerHTML = `<p class="hint">${t("features.map.searching")}</p>`;
+    replaceContent(output, renderTemplate('hint'));
     try {
-      const matches = await request(
-        '/api/map/find-distillery',
-        {method: 'POST', body: JSON.stringify({name})}
-      );
-      output.innerHTML = matches.length ?
-        `<p class="hint">${t("features.map.verifySelectedLocation")}</p>${matches.map((candidate, index) => `
-            <button type="button" class="map-location-choice" data-act="apply-distillery-location" data-index="${index}">
-            ${escapeHtml(candidate.name)}<small>${candidate.latitude
-            .toFixed(5)}, ${candidate.longitude
-              .toFixed(5)}</small></button>`).join('')}` :
-        `<p class="hint">${t("features.map.noExactLocationMatch")}</p>`;
+      const matches = await request('/api/map/find-distillery', {method: 'POST', body: JSON.stringify({name})});
+      replaceContent(output, matches.length ?
+        renderTemplate('hint2', {
+          matches: composeMarkup(matches.map((candidate, index) =>
+            renderTemplate(
+              'applyDistilleryLocation',
+              {
+                index: index,
+                name: candidate.name,
+                toFixed: candidate.latitude.toFixed(5),
+                longitude: candidate.longitude.toFixed(5),
+              }
+            ))),
+        }) :
+        renderTemplate('hint3'));
       output._candidates = matches;
     } catch (error) {
       output.textContent = error.message;
@@ -172,25 +163,25 @@ export function createSettingsController({state, action, navigate, closeModal, s
   }
 
   /**
-   * Updates distillery location in the current state.
+   * Copies coordinates from the chosen location-search result into the distillery form.
    *
    * @param {*} button Button control involved in the interaction.
    */
   function applyDistilleryLocation(button) {
-    const output = query('#distillery-location-results');
+    const output = /** @type {HTMLElement & {_candidates?: Array<{name: string, latitude: number, longitude: number}>}} */ (query('#distillery-location-results'));
     const item = output?._candidates?.[Number(button.dataset.index)];
     if (!item) return;
-    query('#distillery-latitude').value = String(item.latitude);
-    query('#distillery-longitude').value = String(item.longitude);
-    output.innerHTML = `<p class="hint">${t("features.map.coordinatesReadyToSave")}</p>`;
+    /** @type {HTMLInputElement} */ (query('#distillery-latitude')).value = String(item.latitude);
+    /** @type {HTMLInputElement} */ (query('#distillery-longitude')).value = String(item.longitude);
+    replaceContent(output, renderTemplate('hint4'));
   }
 
   /**
    * Parses import json data from JSON input.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of reading and validating the selected JSON import file.
    */
   async function importJSON() {
-    const file = query('#import-file')?.files?.[0];
+    const file = /** @type {HTMLInputElement} */ (query('#import-file'))?.files?.[0];
     if (!file) return toast(t("features.validation.selectJsonFile"), true);
     try {
       JSON.parse(await file.text());
@@ -199,26 +190,28 @@ export function createSettingsController({state, action, navigate, closeModal, s
     }
     showModal(
       t("features.import.replaceWithJson"),
-      `<p>${t("features.import.prefix")} <strong>${t("features.import.replacesCollection")}</strong>${t("features.import.jsonExcludesAttachmentsWarning")}</p>
-    <div class="actions ds-modal-footer">
-    ${actionButton({label: t("common.actions.cancel"), action: 'close-modal'})}
-    ${actionButton({
-        label: t("features.import.replaceCollection"),
-        action: 'confirm-import',
-        variant: 'destructive',
-      })}
-    </div>`
+      renderTemplate('importJSONP', {
+        closeModalButton: actionButton({
+          label: t("common.actions.cancel"),
+          action: 'close-modal',
+        }),
+        confirmImportButton: actionButton({
+          label: t("features.import.replaceCollection"),
+          action: 'confirm-import',
+          variant: 'destructive',
+        }),
+      })
     );
   }
 
   /**
    * Parses confirm import data from JSON input.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the confirmed collection import.
    */
   async function confirmImport() {
-    const file = query('#import-file')?.files?.[0];
+    const file = /** @type {HTMLInputElement} */ (query('#import-file'))?.files?.[0];
     if (!file) return toast(t("features.validation.selectJsonFile"), true);
-    const button = query('[data-act="confirm-import"]');
+    const button = /** @type {HTMLButtonElement} */ (query('[data-act="confirm-import"]'));
     if (button.disabled) return;
     button.disabled = true;
     const data = JSON.parse(await file.text());
@@ -229,13 +222,7 @@ export function createSettingsController({state, action, navigate, closeModal, s
     closeModal(true);
     navigate('home', null, {replace: true});
     if (result.value?.inventoryConflicts?.length) {
-      toast(
-        t(
-          "features.import.inventoryConflicts",
-          {count: result.value.inventoryConflicts.length}
-        ),
-        true
-      );
+      toast(t("features.import.inventoryConflicts", {count: result.value.inventoryConflicts.length}), true);
     } else {
       toast(t("features.notifications.jsonImported"));
     }
@@ -245,27 +232,24 @@ export function createSettingsController({state, action, navigate, closeModal, s
    * Updates collection settings for settings controller.
    *
    * @param {!Event} event Event that triggered the handler.
-   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   * @return {!Promise<void>} Completion of persisting collection settings.
    */
   async function saveCollectionSettings(event) {
     event.preventDefault();
-    const field = event.target.elements.namedItem('establishedYear');
+    const field = /** @type {HTMLInputElement} */ (/** @type {HTMLFormElement} */ (event.target).elements.namedItem('establishedYear'));
     const raw = String(field.value).trim();
     const year = raw === '' ? null : Number(raw);
-    if (raw !== '' && (!/^\d{4}$/.test(raw) ||
-      !Number.isSafeInteger(year) || year < 1600 || year > new Date()
-        .getFullYear())) {
+    if (raw !== '' && (!/^\d{4}$/.test(raw) || !Number.isSafeInteger(year) || year < 1600 || year > new Date().getFullYear())) {
       return toast(t("features.validation.invalidFoundingYear"), true);
     }
-    const button = event.target.querySelector('[type="submit"]');
+    const button = /** @type {HTMLButtonElement} */ (/** @type {Element} */ (event.target).querySelector('[type="submit"]'));
     if (button.disabled) return;
     button.disabled = true;
     const saved = await action(() => request('/api/settings', {
       method: 'PATCH', body: JSON.stringify({establishedYear: year}),
     }), {scope: 'collection'});
     if (!saved.ok) {button.disabled = false; return;}
-    toast(year === null ? t("features.notifications.foundingYearRemoved") :
-      t("features.notifications.foundingYearSaved"));
+    toast(year === null ? t("features.notifications.foundingYearRemoved") : t("features.notifications.foundingYearSaved"));
   }
   return {
     promptDistillery,

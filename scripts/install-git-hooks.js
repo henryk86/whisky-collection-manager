@@ -7,17 +7,14 @@ import {spawnSync} from 'node:child_process';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /**
- * Normalizes the git text for subsequent processing.
- *
- * @param {!Array<*>} args Arguments forwarded to the operation.
- * @return {*} Result computed from the supplied inputs.
+ * Executes Git in the project root and reports unsuccessful invocations.
+ * @param {...string} args Git command arguments.
+ * @return {string} Trimmed command output.
  */
 function git(...args) {
   const result = spawnSync('git', args, {cwd: root, encoding: 'utf8'});
-  if (result.error || (result.status !== 0 && !(args[0] === 'config' &&
-    args[1] === '--local' && args[2] === '--get' && result.status === 1))) {
-    throw new Error(result.error?.message || result.stderr?.trim() ||
-      `Git exit ${result.status}`);
+  if (result.error || (result.status !== 0 && !(args[0] === 'config' && args[1] === '--local' && args[2] === '--get' && result.status === 1))) {
+    throw new Error(result.error?.message || result.stderr?.trim() || `Git exit ${result.status}`);
   }
   return result.stdout.trim();
 }

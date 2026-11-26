@@ -1,0 +1,118 @@
+<!-- wcm-template:warehouseWallClearance -->
+<div
+  class="warehouse-wall-clearance"
+  style="--wall-clearance-height:{{attr:clearancePx}}px"
+  title="{{attr:title}}"
+  aria-hidden="true">
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseFurnitureManage -->
+<button
+  type="button"
+  class="warehouse-wall-furniture-edit"
+  data-act="warehouse-furniture-manage"
+  data-id="{{attr:id}}"
+  title="{{attr:title}}"
+  aria-label="{{attr:ariaLabel}}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseWallBottle -->
+<span class="warehouse-wall-bottle{{attr:selectedClass}}{{attr:focusClass}}{{attr:dimmedClass}}">{{content:bottleSymbol}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseShelfOverflow -->
+<span class="warehouse-shelf-overflow" aria-label="{{attr:ariaLabel}}">+{{content:hiddenCount}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseWallNoSpace -->
+<span class="warehouse-wall-no-space">{{t:warehouse.wall.noSpace}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint -->
+<span class="hint">{{t:warehouse.shelves.empty}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseShelf -->
+<div
+  class="warehouse-shelf warehouse-wall-bay{{attr:shelfClasses}}"
+  data-shelf-id="{{attr:shelfId}}"
+  data-capacity="{{attr:shelfCapacity}}"{{attrs:shelfAction}}
+  data-front="{{attr:front}}"
+  style="--wall-bay-height:{{attr:bayHeight}}px;--wall-bottle-height:{{attr:bottleHeight}}px;--wall-bottle-width:{{attr:bottleWidth}}px">
+  <div class="warehouse-wall-bay-title"><strong>{{content:name}}</strong><span>{{content:frontName}}{{content:occupancy}}</span>
+  </div>
+  <div class="warehouse-bottle-silhouettes">{{content:preview}}{{content:warehouseShelfOverflow}}{{content:content}}</div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseWallFurniture -->
+<section
+  class="warehouse-wall-furniture{{attr:stacked}}"
+  data-furniture-id="{{attr:furnitureId}}"
+  style="--wall-furniture-width:{{attr:widthPx}}px;--wall-furniture-height:{{attr:heightPx}}px;--wall-elevation:{{attr:elevationPx}}px;--wall-offset-x:{{attr:offsetPx}}px">
+  <div class="warehouse-wall-furniture-body">{{content:clearance}}{{content:bays}}</div>
+  {{content:editFurniture}}
+</section>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseWallStack -->
+<div
+  class="warehouse-wall-stack{{attr:layeredClass}}{{attr:directionClass}}"
+  data-facing="{{attr:orientation}}"
+  style="--wall-stack-width:{{attr:widthPx}}px;--wall-stack-height:{{attr:heightPx}}px">{{content:furnitureHtml}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseWallScroll -->
+<div
+  class="warehouse-wall-scroll"
+  data-room-id="{{attr:roomId}}"
+  tabindex="0"
+  role="region"
+  aria-label="{{attr:ariaLabel}}">
+  <div class="warehouse-wall-surface">
+    <div class="warehouse-wall-furniture-list">{{content:cards}}</div>
+  </div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseRoomWallEmpty -->
+<div class="warehouse-room-wall-empty">
+  <p class="hint">{{t:warehouse.wall.noFurniture}}</p>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseRoomWall -->
+<section class="warehouse-room-wall{{attr:focusClass}}" aria-label="{{attr:ariaLabel}}">
+  <div class="warehouse-wall-controls">
+    <div class="warehouse-bottle-bulk-tools" aria-label="{{attr:bulkToolsLabel}}">
+      <span class="warehouse-bottle-selection-count" aria-live="polite">{{content:bulkSelected}}</span>
+      <button
+        type="button"
+        class="warehouse-unassigned-toggle"
+        aria-controls="warehouse-wall-unassigned-content"
+        aria-expanded="{{attr:expanded}}"
+        title="{{attr:title}}">
+        <span class="warehouse-unassigned-toggle-chevron" aria-hidden="true"></span>{{content:unassignedTitle}}
+      </button>
+      <button
+        type="button"
+        class="btn small warehouse-bottles-select-clear"
+        data-act="warehouse-bottles-select-clear"
+        {{attrs:disabledAttributes}}>{{t:warehouse.selection.clear}}</button>
+      <button
+        type="button"
+        class="btn small warehouse-bottles-preview-selected"
+        data-act="warehouse-bottles-preview-selected"
+        {{attrs:previewAttributes}}>{{t:warehouse.bottles.detailsTitle}}</button>
+      <button
+        type="button"
+        class="btn small primary warehouse-bottles-assign-selected"
+        data-act="warehouse-bottles-assign-selected"
+        {{attrs:assignAttributes}}>{{t:warehouse.bottles.bulkAssignAction}}</button>
+    </div>
+    {{content:unassignedTray}}
+  </div>
+  {{content:warehouseWallScroll}}
+</section>
+<!-- /wcm-template -->

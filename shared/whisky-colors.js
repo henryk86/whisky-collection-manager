@@ -11,29 +11,23 @@ export const WHISKY_COLORS = Object.freeze([
 const CUSTOM_PREFIX = 'custom:';
 const CUSTOM_HEX = /^#[0-9a-f]{6}$/i;
 /**
- * Calculates the clamp numeric value.
+ * Normalizes a color component to a finite number within zero and one.
  *
  * @param {*} value Value to process.
- * @return {number} Calculated numeric value.
+ * @return {number} Color component between zero and one.
  */
-const clamp = value => Math.max(
-  0,
-  Math.min(1, Number.isFinite(Number(value)) ? Number(value) : 0)
-);
+const clamp = value => Math.max(0, Math.min(1, Number.isFinite(Number(value)) ? Number(value) : 0));
 
 /**
- * Transforms the entries used by hex to hsl.
- *
- * @param {*} hex Value used by this operation.
- * @return {!Object} Structured result assembled from the input data.
+ * Converts six-digit RGB hexadecimal text to HSL components.
+ * @param {string} hex RGB hexadecimal colour.
+ * @return {Object} Hue, saturation and lightness components.
  */
 function hexToHsl(hex) {
   const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
-  const max = Math.max(r, g, b), min = Math.min(r, g, b), difference =
-    max - min;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), difference = max - min;
   const lightness = (max + min) / 2;
-  const saturation = difference === 0 ? 0 : difference / (1 - Math.abs(2 *
-    lightness - 1));
+  const saturation = difference === 0 ? 0 : difference / (1 - Math.abs(2 * lightness - 1));
   let hue = 0;
   if (difference !== 0) {
     if (max === r) hue = ((g - b) / difference) % 6;
@@ -47,38 +41,35 @@ function hexToHsl(hex) {
 /**
  * Validate real HEX shades in the warm whisky range, including red and rose.
  *
- * @param {*} hex Hex used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} hex Untrusted candidate color in six-digit CSS hexadecimal notation.
+ * @return {boolean} True if the hex color lies within the supported whisky hue, saturation and lightness range.
  */
 export function isAllowedWhiskyHex(hex) {
   if (typeof hex !== 'string' || !CUSTOM_HEX.test(hex)) return false;
   const {hue, saturation, lightness} = hexToHsl(hex);
   // No green, blue, grey or neon-magenta. Pale straw, dark brown, red and rose
   // remain possible.
-  return (hue >= 338 || hue <= 60) && saturation >= 0.20 && lightness >=
-    0.15 && lightness <= 0.94;
+  return (hue >= 338 || hue <= 60) && saturation >= 0.20 && lightness >= 0.15 && lightness <= 0.94;
 }
 
 /**
- * Calculates the hsl to hex numeric value.
- *
- * @param {*} h Value used by this operation.
- * @param {*} s Source value to transform.
- * @param {*} l Value used by this operation.
- * @return {string} Resulting text.
+ * Converts HSL components to a six-digit RGB hexadecimal colour.
+ * @param {number} h Hue angle.
+ * @param {number} s Saturation fraction.
+ * @param {number} l Lightness fraction.
+ * @return {string} RGB hexadecimal colour.
  */
 function hslToHex(h, s, l) {
   const a = s * Math.min(l, 1 - l);
   /**
-   * Calculates the channel numeric value.
+   * Converts one HSL-derived channel to a padded RGB hex pair.
    *
    * @param {*} n Count or input number to evaluate.
-   * @return {string} Resulting text.
+   * @return {string} Two-digit hexadecimal value of the requested RGB channel.
    */
   const channel = n => {
     const k = (n + h / 30) % 12;
-    return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))))
-      .toString(16).padStart(2, '0');
+    return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))).toString(16).padStart(2, '0');
   };
   return `#${channel(0)}${channel(8)}${channel(4)}`;
 }
@@ -89,7 +80,7 @@ function hslToHex(h, s, l) {
  *
  * @param {number} x Horizontal coordinate in the current coordinate system.
  * @param {number} y Vertical coordinate in the current coordinate system.
- * @return {string} Resulting text.
+ * @return {string} Hex color selected by the normalized coordinates of the warm-color picker.
  */
 export function whiskyPickerHex(x, y) {
   const h = (340 + 78 * clamp(x)) % 360;
@@ -100,15 +91,14 @@ export function whiskyPickerHex(x, y) {
 /**
  * Position the picker marker when editing a previously saved HEX colour.
  *
- * @param {*} hex Hex used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {string} hex Whisky color to map onto the picker gradient.
+ * @return {!Object} Picker coordinates corresponding to the supplied whisky color.
  */
 export function whiskyPickerPosition(hex) {
   const {hue, lightness} = hexToHsl(hex);
   const unwrapped = hue < 338 ? hue + 360 : hue;
   return {
-    x: clamp((unwrapped - 340) / 78), y: clamp((0.89 -
-      lightness) / 0.67),
+    x: clamp((unwrapped - 340) / 78), y: clamp((0.89 - lightness) / 0.67),
   };
 }
 
@@ -116,14 +106,13 @@ export function whiskyPickerPosition(hex) {
  * Saved data: existing fixed colour keys or a validated custom:#rrggbb value.
  *
  * @param {*} value Input value to process.
- * @return {?string} Resulting text.
+ * @return {?string} Accepted fixed color key or normalized custom hex color; null for missing color.
  */
 export function normalizeWhiskyColor(value) {
   if (value == null || value === '') return null;
   if (typeof value !== 'string') throw new Error('Ungültige Whiskyfarbe');
   if (WHISKY_COLORS.some(color => color.key === value)) return value;
-  if (value.startsWith(CUSTOM_PREFIX) &&
-    isAllowedWhiskyHex(value.slice(CUSTOM_PREFIX.length)))
+  if (value.startsWith(CUSTOM_PREFIX) && isAllowedWhiskyHex(value.slice(CUSTOM_PREFIX.length)))
     return `${CUSTOM_PREFIX}${value.slice(CUSTOM_PREFIX.length).toLowerCase()}`;
   throw new Error('Ungültige Whiskyfarbe');
 }
@@ -132,7 +121,7 @@ export function normalizeWhiskyColor(value) {
  * Checks whether custom whisky color applies in whisky colors.
  *
  * @param {*} value Input value to process.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the value encodes a supported custom whisky color.
  */
 export function isCustomWhiskyColor(value) {
   return typeof value === 'string' && value.startsWith(CUSTOM_PREFIX) &&
@@ -143,11 +132,13 @@ export function isCustomWhiskyColor(value) {
  * Retrieves whisky color for whisky colors.
  *
  * @param {*} value Input value to process.
- * @return {?Object} Computed value, or null when the input has no match.
+ * @return {?Object} Resolved fixed or custom color descriptor, or null for invalid or unset colors.
  */
 export function resolveWhiskyColor(value) {
   const fixed = WHISKY_COLORS.find(color => color.key === value);
   if (fixed) return fixed;
-  if (isCustomWhiskyColor(value)) return {key: value, hex: value.slice(CUSTOM_PREFIX.length).toLowerCase()};
+  if (isCustomWhiskyColor(value)) return {
+    key: value, hex: value.slice(CUSTOM_PREFIX.length).toLowerCase(),
+  };
   return null;
 }

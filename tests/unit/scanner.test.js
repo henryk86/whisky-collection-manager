@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {cameraConfig, scannerFormatNames, supportedFormats} from '../../public/js/features/scanner/config.js';
+import {cameraConfig, scannerFormatNames, supportedFormats}
+  from '../../public/js/features/scanner/config.js';
 import {createScanner} from '../../public/js/features/scanner/controller.js';
-import {createCodeResolver} from '../../public/js/features/scanner/resolve-code.js';
+import {createCodeResolver}
+  from '../../public/js/features/scanner/resolve-code.js';
 import {lookupInventoryNumber} from '../../public/js/domain/selectors.js';
 import {collectionFixture} from '../helpers/fixtures.js';
 /**
@@ -90,10 +92,7 @@ test(
 );
 test('inventory number lookup preserves leading zeroes', () => {
   assert.equal(lookupInventoryNumber(collectionFixture(), '123'), null);
-  assert.equal(
-    lookupInventoryNumber(collectionFixture(), '000123').bottle.id,
-    'bottle-a'
-  );
+  assert.equal(lookupInventoryNumber(collectionFixture(), '000123').bottle.id, 'bottle-a');
 });
 test(
   'unknown code only reports the result and never opens an editor',
@@ -117,11 +116,7 @@ test(
   async () => {
     const form = {
       elements: {
-        inventoryNumber: {
-          value: '',
-        }, comment: {
-          value: '',
-        },
+        inventoryNumber: {value: '', }, comment: {value: '', },
       },
     };
     const {state, resolve, calls} = resolverContext({
@@ -132,11 +127,7 @@ test(
       query: () => form,
     });
     state.scanReturn = {
-      modal: {
-        title: 'Edit',
-      }, values: {
-        comment: 'Unsaved',
-      },
+      modal: {title: 'Edit', }, values: {comment: 'Unsaved', },
     };
     await resolve('009999', true);
     assert.equal(form.elements.inventoryNumber.value, '009999');

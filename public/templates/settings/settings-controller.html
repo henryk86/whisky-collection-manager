@@ -1,0 +1,92 @@
+<!-- wcm-template:promptDistilleryOption -->
+<option value="{{attr:value}}" {{attrs:unknownAttributes}}>{{content:label}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:distilleryForm -->
+<form id="distillery-form" data-id="{{text:id}}">
+  <label class="form-field" for="distillery-name">{{t:features.distilleries.nameLabel}}
+    <input
+      id="distillery-name"
+      name="name"
+      type="text"
+      value="{{text:name}}"
+      maxlength="150"
+      autocomplete="off"
+      required></label>
+  <label class="form-field" for="distillery-status">{{t:features.distilleries.operatingStatus}}
+    <select id="distillery-status" name="status">
+      {{content:content}}</select></label>
+  <div class="map-coordinates-fields">
+    <label class="form-field" for="distillery-latitude">{{t:features.map.latitudeLabel}}
+      <input
+        id="distillery-latitude"
+        name="latitude"
+        type="number"
+        step="any"
+        min="-90"
+        max="90"
+        placeholder="{{t:features.map.latitudeExample}}"
+        value="{{attr:latitude}}"></label>
+    <label class="form-field" for="distillery-longitude">{{t:features.map.longitudeLabel}}
+      <input
+        id="distillery-longitude"
+        name="longitude"
+        type="number"
+        step="any"
+        min="-180"
+        max="180"
+        placeholder="{{t:features.map.longitudeExample}}"
+        value="{{attr:longitude}}"></label>
+  </div>
+  <p class="hint">{{t:features.map.optionalCoordinatesHint}}</p>
+  {{content:findDistilleryLocationButton}}
+  <div id="distillery-location-results" class="map-location-results" aria-live="polite">
+  </div>
+  <div class="actions ds-modal-footer ds-modal-footer--form">
+    {{content:closeModalButton}}
+    <button type="submit" class="btn primary">{{content:submitLabel}}</button>
+  </div>
+</form>
+<!-- /wcm-template -->
+
+<!-- wcm-template:saveDistilleryInput -->
+<input
+  type="checkbox"
+  name="distilleryIds"
+  value="{{text:id}}"
+  checked><span>{{text:name}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint -->
+<p class="hint">{{t:features.map.searching}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:applyDistilleryLocation -->
+
+<button
+  type="button"
+  class="map-location-choice"
+  data-act="apply-distillery-location"
+  data-index="{{attr:index}}">
+  {{text:name}}<small>{{content:toFixed}}, {{content:longitude}}</small></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint2 -->
+<p class="hint">{{t:features.map.verifySelectedLocation}}</p>{{content:matches}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint3 -->
+<p class="hint">{{t:features.map.noExactLocationMatch}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint4 -->
+<p class="hint">{{t:features.map.coordinatesReadyToSave}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:importJSONP -->
+<p>{{t:features.import.prefix}} <strong>{{t:features.import.replacesCollection}}</strong>{{t:features.import.jsonExcludesAttachmentsWarning}}</p>
+<div class="actions ds-modal-footer">
+  {{content:closeModalButton}}
+  {{content:confirmImportButton}}
+</div>
+<!-- /wcm-template -->

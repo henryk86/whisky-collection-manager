@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mountWarehouseBottleDrag, shelfDropStatus} from '../../public/js/ui/warehouse-bottle-drag.js';
+import {mountWarehouseBottleDrag, shelfDropStatus}
+  from '../../public/js/ui/warehouse-bottle-drag.js';
 
 /**
  * Derives the fixture result from the supplied values.
@@ -26,11 +27,7 @@ test(
   'bottle drop checks current assignment and live occupancy without inventing available space',
   () => {
     const w = fixture();
-    assert.equal(
-      shelfDropStatus(w, 'b1', 'destination'),
-      'valid',
-      'stale assignments do not consume capacity'
-    );
+    assert.equal(shelfDropStatus(w, 'b1', 'destination'), 'valid', 'stale assignments do not consume capacity');
     assert.equal(shelfDropStatus(w, 'b1', 'source'), 'same');
     assert.equal(shelfDropStatus(w, 'b1', 'full'), 'expand');
     assert.equal(shelfDropStatus(w, 'b1', 'disabled'), 'full');
@@ -97,28 +94,27 @@ function fakeDom() {
      *     values.
      * @return {!Object} Result computed from the supplied inputs.
      */
-    closest: selector => selector === '.warehouse-bottle-symbol' ?
-      button : null,
+    closest: selector => selector === '.warehouse-bottle-symbol' ? button : null,
   };
-  const shelves = Object.fromEntries(['source', 'destination', 'full', 'disabled'].map(id =>
-    [
-      id,
-      {
-        dataset: {shelfId: id},
-        classList: classList(),
-        /**
-         * Performs the closest lifecycle action.
-         *
-         * @param {function(...*): *} selector Selector input for this
-         * operation.
-         * @return {!Object} Result computed from the supplied inputs.
-         */
-        closest(selector) {
-          return selector === '.warehouse-shelf' ?
-            this : null;
+  const shelves = Object.fromEntries(['source', 'destination', 'full',
+    'disabled'].map(id =>
+      [
+        id,
+        {
+          dataset: {shelfId: id},
+          classList: classList(),
+          /**
+           * Performs the closest lifecycle action.
+           *
+           * @param {function(...*): *} selector Selector input for this
+           * operation.
+           * @return {!Object} Result computed from the supplied inputs.
+           */
+          closest(selector) {
+            return selector === '.warehouse-shelf' ? this : null;
+          },
         },
-      },
-    ]));
+      ]));
   const panel = {
     classList: classList(),
     ownerDocument: {
@@ -129,9 +125,7 @@ function fakeDom() {
        * @return {!Object} Result computed from the supplied inputs.
        */
       elementFromPoint(x) {
-        return x < 75 ? shelves.source :
-          x < 175 ? shelves.destination : x < 275 ? shelves.full :
-            shelves.disabled;
+        return x < 75 ? shelves.source : x < 175 ? shelves.destination : x < 275 ? shelves.full : shelves.disabled;
       },
     },
     /**
@@ -141,8 +135,7 @@ function fakeDom() {
      *     values.
      * @return {!Array<*>} Resulting entries in their output order.
      */
-    querySelectorAll: selector => selector === '.warehouse-shelf' ?
-      Object.values(shelves) : [],
+    querySelectorAll: selector => selector === '.warehouse-shelf' ? Object.values(shelves) : [],
     /**
      * Derives the contains result from the supplied values.
      *
@@ -156,7 +149,9 @@ function fakeDom() {
      * @param {*} name Environment variable or setting name.
      * @param {*} listener Value used by this operation.
      */
-    addEventListener(name, listener) {if (!listeners.has(name)) listeners.set(name, []); listeners.get(name).push(listener);},
+    addEventListener(name, listener) {
+      if (!listeners.has(name)) listeners.set(name, []); listeners.get(name).push(listener);
+    },
     /**
      * Removes or resets event listener.
      *
@@ -164,10 +159,7 @@ function fakeDom() {
      * @param {*} listener Value used by this operation.
      */
     removeEventListener(name, listener) {
-      listeners.set(
-        name,
-        (listeners.get(name) || []).filter(item => item !== listener)
-      );
+      listeners.set(name, (listeners.get(name) || []).filter(item => item !== listener));
     },
   };
   /**
@@ -232,34 +224,16 @@ test(
     );
     dom.fire('pointerdown', 20);
     dom.fire('pointerup', 20);
-    assert.equal(
-      dom.fire('click', 20).prevented,
-      false,
-      'tap still opens the bottle detail'
-    );
+    assert.equal(dom.fire('click', 20).prevented, false, 'tap still opens the bottle detail');
     dom.fire('pointerdown', 20);
     dom.fire('pointermove', 25);
-    assert.equal(
-      dom.panel.classList.contains('warehouse-is-dragging'),
-      false,
-      'small movement is a click'
-    );
+    assert.equal(dom.panel.classList.contains('warehouse-is-dragging'), false, 'small movement is a click');
     dom.fire('pointermove', 120);
-    assert.equal(
-      dom.shelves.destination.classList.contains('warehouse-drop-target'),
-      true
-    );
+    assert.equal(dom.shelves.destination.classList.contains('warehouse-drop-target'), true);
     dom.fire('pointerup', 120);
-    assert.equal(
-      dom.shelves.destination.classList.contains('warehouse-drop-target'),
-      false
-    );
+    assert.equal(dom.shelves.destination.classList.contains('warehouse-drop-target'), false);
     assert.equal(dom.panel.classList.contains('warehouse-is-dragging'), false);
-    assert.equal(
-      dom.fire('click', 120).prevented,
-      true,
-      'release must not open the detail modal'
-    );
+    assert.equal(dom.fire('click', 120).prevented, true, 'release must not open the detail modal');
     await new Promise(resolve => setImmediate(resolve));
     assert.deepEqual(calls, [['b1', 'destination']]);
     cleanup();
@@ -295,18 +269,12 @@ test(
     });
     dom.fire('pointerdown', 20);
     dom.fire('pointermove', 220);
-    assert.equal(
-      dom.shelves.full.classList.contains('warehouse-drop-capacity'),
-      true
-    );
+    assert.equal(dom.shelves.full.classList.contains('warehouse-drop-capacity'), true);
     dom.fire('pointerup', 220);
     dom.fire('pointerdown', 20);
     dom.fire('pointermove', 120);
     dom.fire('pointercancel', 120);
-    assert.equal(
-      dom.shelves.destination.classList.contains('warehouse-drop-target'),
-      false
-    );
+    assert.equal(dom.shelves.destination.classList.contains('warehouse-drop-target'), false);
     dom.fire('pointerdown', 20);
     dom.fire('pointermove', 120);
     dom.fire('pointerup', 20); // finish where it began
@@ -323,8 +291,7 @@ test(
     const warehouse = fixture();
     const original = warehouse.rooms[0].furniture[0];
     const destination = original.shelves.splice(1, 1)[0];
-    warehouse.rooms[0].furniture
-      .push({id: 'otherRack', shelves: [destination]});
+    warehouse.rooms[0].furniture.push({id: 'otherRack', shelves: [destination]});
     const dom = fakeDom();
     const scroll = {
       scrollLeft: 0,
@@ -333,10 +300,14 @@ test(
        * Retrieves bounding client rect from the available state.
        * @return {!Object} Structured result assembled from the input data.
        */
-      getBoundingClientRect() {return {left: 0, right: 140, top: 0, bottom: 100};},
+      getBoundingClientRect() {
+        return {
+          left: 0, right: 140, top: 0,
+          bottom: 100,
+        };
+      },
     };
-    dom.panel.querySelector = selector => selector ===
-      '.warehouse-wall-scroll' ? scroll : null;
+    dom.panel.querySelector = selector => selector === '.warehouse-wall-scroll' ? scroll : null;
     const calls = [];
     const cleanup = mountWarehouseBottleDrag(
       dom.panel,
@@ -357,10 +328,7 @@ test(
     );
     dom.fire('pointerdown', 20);
     dom.fire('pointermove', 120);
-    assert.ok(
-      scroll.scrollLeft > 0,
-      'the destination area automatically scrolls while dragging at the edge'
-    );
+    assert.ok(scroll.scrollLeft > 0, 'the destination area automatically scrolls while dragging at the edge');
     dom.fire('pointerup', 120);
     await new Promise(resolve => setImmediate(resolve));
     assert.deepEqual(
@@ -370,11 +338,7 @@ test(
     );
     const stopped = scroll.scrollLeft;
     await new Promise(resolve => setTimeout(resolve, 65));
-    assert.equal(
-      scroll.scrollLeft,
-      stopped,
-      'edge scrolling stops after dropping'
-    );
+    assert.equal(scroll.scrollLeft, stopped, 'edge scrolling stops after dropping');
     cleanup();
   }
 );

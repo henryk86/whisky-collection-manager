@@ -1,21 +1,22 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createHash} from 'node:crypto';
-import {mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {
+  mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
+} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {widthViolations} from '../../scripts/check-line-width.js';
+import {fileURLToPath} from 'node:url';
 import {checkJSDoc, undocumentedExports} from '../../scripts/check-jsdoc.js';
+import {semanticTypeDiagnostics, auditContractFiles, checkedContractFiles} from '../../scripts/check-js-types.js';
 import {jsdocViolations} from '../../scripts/check-jsdoc-complete.js';
 import {
-  separateFunctions, wrapLongStructures,
-  insertTrailingCommas
+  separateFunctions, insertTrailingCommas
 } from '../../scripts/style-layout.js';
 
 test('JavaScript style: a new exported function requires typed JSDoc', () => {
   const source = 'export function render(value) { return value; }\n';
-  assert.deepEqual(undocumentedExports('sample.js', source),
-    ['sample.js#render']);
+  assert.deepEqual(undocumentedExports('sample.js', source), ['sample.js#render']);
 });
 
 test('JavaScript style: typed JSDoc documents an exported function', () => {
@@ -31,8 +32,7 @@ export function render(value) { return value; }
 
 test('JavaScript style: exported arrow functions require typed JSDoc', () => {
   const source = 'export const render = value => value;\n';
-  assert.deepEqual(undocumentedExports('sample.js', source),
-    ['sample.js#render']);
+  assert.deepEqual(undocumentedExports('sample.js', source), ['sample.js#render']);
 });
 
 test('JavaScript style: non-function values do not need function JSDoc', () => {
@@ -59,8 +59,7 @@ test('JavaScript style: documents every argument, not just the first', () => {
  */
 export function render(value, label) { return value + label; }
 `;
-  assert.deepEqual(undocumentedExports('sample.js', source),
-    ['sample.js#render']);
+  assert.deepEqual(undocumentedExports('sample.js', source), ['sample.js#render']);
 });
 
 test('JavaScript style: rejects untyped and wrongly named parameters', () => {
@@ -71,16 +70,14 @@ test('JavaScript style: rejects untyped and wrongly named parameters', () => {
  */
 export const label = name => name;
 `;
-  assert.deepEqual(undocumentedExports('sample.js', source),
-    ['sample.js#label']);
+  assert.deepEqual(undocumentedExports('sample.js', source), ['sample.js#label']);
 });
 
 test('JavaScript style: rejects JSDoc without a meaningful summary', () => {
   const source = `/** @return {number} */
 export const count = () => 1;
 `;
-  assert.deepEqual(undocumentedExports('sample.js', source),
-    ['sample.js#count']);
+  assert.deepEqual(undocumentedExports('sample.js', source), ['sample.js#count']);
 });
 
 test(
@@ -95,21 +92,33 @@ export function clear() {cache.clear();}
   }
 );
 
-test('JavaScript style: new lines above 80 columns fail', () => {
-  const line = 'const x = ' + 'someIdentifier'.repeat(6) + ';';
-  assert.deepEqual(widthViolations(line), [{line: 1, length: line.length}]);
-});
-
-test(
-  'JavaScript style: unchanged exceptions cannot hide another occurrence',
-  () => {
-    const source = 'x'.repeat(81);
-    const hash = createHash('sha256').update(source).digest('hex');
-    assert.deepEqual(widthViolations(source + '\n' + source, {[hash]: 1}),
-      [{line: 2, length: 81}]);
+test('JavaScript style: formatter leaves long literals and keys intact', () => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'wcm-style-template-'));
+  try {
+    const root = path.join(directory, 'public');
+    mkdirSync(root);
+    const fixture = path.join(root, 'template.js');
+    const script = fileURLToPath(new URL('../../scripts/format-js.js', import.meta.url));
+    const key = 'warehouse.shelves.' + 'longTranslationKey'.repeat(5);
+    const source = [
+      `const key = '${key}';`,
+      'const title = `A longer title for the shelf: ${key}`;',
+      'const nested = `Long content: ${`A nested template with a long value: ${key}`}`;',
+      'console.log(title, nested);',
+      '',
+    ].join('\n');
+    writeFileSync(fixture, source);
+    const before = execFileSync(process.execPath, [fixture], {encoding: 'utf8'});
+    execFileSync(process.execPath, [script, '--write'], {cwd: directory});
+    const formatted = readFileSync(fixture, 'utf8');
+    assert.ok(formatted.includes(`'${key}'`));
+    assert.equal(formatted, source);
+    assert.equal(execFileSync(process.execPath, [fixture], {encoding: 'utf8'}), before);
+    execFileSync(process.execPath, [script], {cwd: directory});
+  } finally {
+    rmSync(directory, {recursive: true, force: true});
   }
-);
-
+});
 
 test(
   'JavaScript style: every export needs full JSDoc, without exceptions',
@@ -119,8 +128,7 @@ test(
       mkdirSync(path.join(directory, 'public'), {recursive: true});
       const filename = path.join(directory, 'public/sample.js');
       writeFileSync(filename, 'export const count = () => 1;\n');
-      assert.deepEqual(checkJSDoc(directory).incomplete,
-        ['public/sample.js#count']);
+      assert.deepEqual(checkJSDoc(directory).incomplete, ['public/sample.js#count']);
       writeFileSync(filename, `/**
  * Returns the current count.
  * @return {number} Current count.
@@ -149,8 +157,7 @@ function silhouetteAngle(labels, id, width, height, scaleX, scaleY) {
 
 test('JavaScript style: internal declarations require JSDoc', () => {
   const source = 'function secret(name) { return name; }';
-  assert.ok(jsdocViolations('backups.js', source)
-    .some(issue => issue.includes('missing JSDoc')));
+  assert.ok(jsdocViolations('backups.js', source).some(issue => issue.includes('missing JSDoc')));
 });
 
 test('JavaScript style: named arrows and methods require JSDoc', () => {
@@ -160,8 +167,7 @@ class Example {
 }
 const handlers = {onClose: () => false};`;
   const issues = jsdocViolations('sample.js', source);
-  assert.equal(issues.filter(issue => issue.includes('missing JSDoc')).length,
-    3);
+  assert.equal(issues.filter(issue => issue.includes('missing JSDoc')).length, 3);
 });
 
 test('JavaScript style: anonymous inline callbacks need no JSDoc', () => {
@@ -190,8 +196,7 @@ test('JavaScript style: documented local arrows also need complete JSDoc',
   () => {
     const source = `/** Sorts photo IDs for persistence. */
 const reorder = (ids, photoId) => ids.slice();`;
-    assert.ok(jsdocViolations('photo-order.js', source)
-      .some(issue => issue.includes('expected 2 @param')));
+    assert.ok(jsdocViolations('photo-order.js', source).some(issue => issue.includes('expected 2 @param')));
   });
 
 test('JavaScript style: @returns is rejected for Google-style @return',
@@ -201,32 +206,14 @@ test('JavaScript style: @returns is rejected for Google-style @return',
  * @returns {number} Session count.
  */
 function count() { return 1; }`;
-    assert.ok(jsdocViolations('sessions.js', source)
-      .some(issue => issue.includes('not @returns')));
+    assert.ok(jsdocViolations('sessions.js', source).some(issue => issue.includes('not @returns')));
   });
-
-test(
-  'JavaScript style: splits long object entries without altering strings',
-  () => {
-    const source = `export const empty = () => ({
-  schemaVersion: 6, nextInventoryNumber: 1, reservedInventoryNumbers: [], settings: {establishedYear: null}, bottlings: [], tastingFlights: []
-});\n`;
-    const wrapped = wrapLongStructures('sample.js', source);
-    assert.match(wrapped, /schemaVersion: 6,\n/);
-    assert.match(wrapped, /nextInventoryNumber: 1,\n/);
-    assert.match(wrapped, /settings: \{establishedYear: null\}/);
-    assert.match(wrapped, /tastingFlights: \[\]/);
-  }
-);
 
 test('JavaScript style: trailing commas belong to multiline literals', () => {
   const source = 'const x = {\n  a: 1,\n  b: 2\n};\n';
   assert.match(insertTrailingCommas('sample.js', source), /b: 2,\n/);
   assert.equal(insertTrailingCommas('sample.js', source),
-    insertTrailingCommas(
-      'sample.js',
-      insertTrailingCommas('sample.js', source)
-    ));
+    insertTrailingCommas('sample.js', insertTrailingCommas('sample.js', source)));
 });
 
 test(
@@ -247,21 +234,154 @@ test('JavaScript style: classes document their constructor parameters', () => {
   const source = `/** Represents a public HTTP error for API clients. */
 export class HttpError { constructor(message) { this.message = message; } }
 `;
-  assert.deepEqual(undocumentedExports('sample.js', source),
-    ['sample.js#HttpError']);
-});
-
-test('JavaScript style: optional chaining stays syntactically intact', () => {
-  const source = `const compare = () => veryLongNamedHelperFunction(
-  anotherLongNamedHelperFunction(input)?.tastedOn, second?.tastedOn, true);
-`;
-  const wrapped = wrapLongStructures('sample.js', source);
-  assert.match(wrapped, /\?\.tastedOn/);
-  assert.doesNotMatch(wrapped, /\?\s+\.tastedOn/);
+  assert.deepEqual(undocumentedExports('sample.js', source), ['sample.js#HttpError']);
 });
 
 test('JavaScript style: separates consecutive arrow-function exports', () => {
   const source = 'export const first = () => 1;\nexport const second = () => 2;\n';
-  assert.match(separateFunctions('sample.js', source),
-    /=> 1;\n\nexport const second/);
+  assert.match(separateFunctions('sample.js', source), /=> 1;\n\nexport const second/);
+});
+
+
+test('JavaScript style: concise summaries are not subject to a minimum length', () => {
+  const source = `/** Clears cache. */
+export function clear() {cache.clear();}`;
+  assert.deepEqual(undocumentedExports('cache.js', source), []);
+  assert.deepEqual(jsdocViolations('cache.js', source), []);
+});
+
+test('JavaScript style: default values require an optional parameter contract', () => {
+  const source = `/**
+ * Counts attempts.
+ * @param {number} limit Maximum attempts.
+ * @return {number} Attempt limit.
+ */
+function count(limit = 3) { return limit; }`;
+  assert.ok(jsdocViolations('sample.js', source).some(issue => issue.includes('defaulted @param limit must be optional')));
+  assert.deepEqual(jsdocViolations('sample.js', source.replace('{number} limit', '{number=} limit')), []);
+});
+
+test('JavaScript style: generic functions still need complete parameter contracts', () => {
+  const source = `/**
+ * Returns a selected record.
+ * @template T
+ * @return {T} First record.
+ */
+function first(records) { return records[0]; }`;
+  assert.ok(jsdocViolations('sample.js', source).some(issue => issue.includes('undocumented parameter records')));
+});
+
+test('JavaScript style: rejects repeated parameter tags', () => {
+  const source = `/**
+ * Reads the selected label.
+ * @param {Object} options Label options.
+ * @param {string} options.label Display label.
+ * @param {string} options.label Duplicate display label.
+ * @return {string} Selected label.
+ */
+function label(options) {return options.label;}`;
+  assert.ok(jsdocViolations('sample.js', source).some(issue => issue.includes('duplicate @param options.label')));
+});
+
+test('JavaScript style: rejects a known return-description placeholder', () => {
+  const source = `/**
+ * Reads the selected label.
+ * @return {string} Resulting text.
+ */
+function label() {return 'label';}`;
+  assert.ok(jsdocViolations('sample.js', source).some(issue => issue.includes('known placeholder')));
+  const generic = source.replace('Resulting text.', 'Structured result for the caller.');
+  assert.ok(jsdocViolations('server/sample.js', generic).some(issue => issue.includes('known placeholder')));
+  assert.deepEqual(jsdocViolations('tests/helpers/sample.js', generic), []);
+});
+
+test('JavaScript style: a template factory return cannot be documented as a string', () => {
+  const source = `import {loadTemplates as load} from './ui/templates.js';
+const render = await load('components/example.html');
+/**
+ * Builds an example control.
+ * @return {string} Example control.
+ */
+export function example() {return render('example');}`;
+  assert.ok(jsdocViolations('sample.js', source).some(issue => issue.includes('contradicts a direct template RenderPlan return')));
+  assert.deepEqual(jsdocViolations('sample.js', source.replace('@return {string}', '@return {RenderPlan}')), []);
+  const shadowed = source.replace('function example() {return render', 'function example() {const render = String; return render');
+  assert.deepEqual(jsdocViolations('sample.js', shadowed), []);
+});
+
+
+test('Semantic JSDoc: rejects incompatible return types and unknown types', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'wcm-jsdoc-types-'));
+  try {
+    const file = path.join(dir, 'contract.js');
+    writeFileSync(file, `/** @return {string} Display label. */
+export function label() { return 42; }
+/** @param {UnknownRecord} record Incoming record. */
+export function read(record) { return record; }
+export async function renderer() {
+  const THREE = await import('/vendor/three.module.js');
+  return new THREE.WebGLRenderer({canvas: 42});
+}
+`);
+    const issues = semanticTypeDiagnostics([file]);
+    assert.ok(issues.some(issue => issue.includes('TS2322')));
+    assert.ok(issues.some(issue => issue.includes('TS2304')));
+    assert.ok(issues.some(issue => issue.includes('HTMLCanvasElement') && issue.includes('TS2322')));
+  } finally {
+    rmSync(dir, {recursive: true, force: true});
+  }
+});
+
+test('Semantic JSDoc: accepts matching implementation and contract', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'wcm-jsdoc-types-'));
+  try {
+    const file = path.join(dir, 'contract.js');
+    writeFileSync(file, `/** @param {number} count Item count.
+ * @return {string} Display label. */
+export function label(count) { return String(count); }
+`);
+    assert.deepEqual(semanticTypeDiagnostics([file]), []);
+  } finally {
+    rmSync(dir, {recursive: true, force: true});
+  }
+});
+
+
+test('JavaScript style: production contracts reject generic descriptions and parameters', () => {
+  const source = `/**
+ * Derives the count result from the supplied values.
+ * @param {number} n N used by this operation.
+ * @return {number} Count of bottles.
+ */
+function count(n) {return n;}`;
+  assert.ok(jsdocViolations('public/js/count.js', source).some(issue => issue.includes('known placeholder')));
+  assert.deepEqual(jsdocViolations('public/js/count.js', source.replace('Derives the count result from the supplied values.', 'Returns the inventory count.').replace('N used by this operation.', 'Number of physical bottles.')), []);
+});
+
+test('JavaScript style: local test doubles may omit full JSDoc contracts', () => {
+  const source = 'function fakeResponse(value) {return value;}';
+  assert.deepEqual(jsdocViolations('tests/unit/example.test.js', source), []);
+  assert.ok(jsdocViolations('server/example.js', source).some(issue => issue.includes('missing JSDoc')));
+  assert.deepEqual(jsdocViolations('tests/helpers/example.js', '/** Returns a fake response. */\n' + source), []);
+});
+
+test('JavaScript style: relaxed test documentation still rejects contradictory names', () => {
+  const source = `/** Test helper.
+ * @param {number} missing Value to return.
+ */
+function fakeResponse(value) {return value;}`;
+  assert.ok(jsdocViolations('tests/helpers/example.js', source).some(issue => issue.includes('does not name a parameter')));
+});
+
+test('Semantic JSDoc: audit covers all production and tooling roots but no test roots', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'wcm-jsdoc-scope-'));
+  try {
+    for (const folder of ['public/js/domain', 'server', 'shared', 'worker', 'scripts', 'docker', 'extension', 'tests/unit']) {
+      mkdirSync(path.join(dir, folder), {recursive: true});
+      writeFileSync(path.join(dir, folder, 'example.js'), '');
+    }
+    const files = auditContractFiles(dir).map(file => file.replaceAll('\\', '/'));
+    assert.deepEqual(files.sort(), ['docker/example.js', 'extension/example.js', 'public/js/domain/example.js', 'scripts/example.js', 'server/example.js', 'shared/example.js', 'worker/example.js']);
+    assert.deepEqual(checkedContractFiles(dir).map(file => file.replaceAll('\\', '/')).sort(), files.sort());
+  } finally {rmSync(dir, {recursive: true, force: true});}
 });

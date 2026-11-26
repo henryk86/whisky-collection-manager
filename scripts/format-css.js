@@ -197,8 +197,7 @@ function splitSelectors(selector) {
 function formatComment(text, indentation) {
   const raw = text.trim();
   if (raw.includes('\n') || raw.length + indentation.length <= 80) {
-    return raw.split('\n').map((line, index) => indentation +
-      (index === 0 ? line : '   ' + line.trimStart()));
+    return raw.split('\n').map((line, index) => indentation + (index === 0 ? line : '   ' + line.trimStart()));
   }
   const words = raw.slice(2, -2).trim().split(/\s+/);
   const rows = [];
@@ -213,8 +212,7 @@ function formatComment(text, indentation) {
   }
   if (line) rows.push(line);
   if (rows.length === 1) return [indentation + raw];
-  return rows.map((row, i) => indentation + (i === 0 ? '/* ' : '   ') +
-    row + (i === rows.length - 1 ? ' */' : ''));
+  return rows.map((row, i) => indentation + (i === 0 ? '/* ' : '   ') + row + (i === rows.length - 1 ? ' */' : ''));
 }
 
 /**
@@ -241,12 +239,10 @@ export function formatCss(source) {
       lines.push(`${indent()}}`);
     } else if (token.type === 'open') {
       if (!token.text) throw new Error('Missing CSS rule selector');
-      if (prev?.type === 'close' || (depth === 0 && prev?.type ===
-        'statement')) {
+      if (prev?.type === 'close' || (depth === 0 && prev?.type === 'statement')) {
         lines.push('');
       }
-      const header = token.text.replace(/^@(media|supports|container)\(/,
-        '@$1 (');
+      const header = token.text.replace(/^@(media|supports|container)\(/, '@$1 (');
       const selectors = splitSelectors(header);
       for (const part of selectors.split('\n')) {
         lines.push(`${indent()}${part.trim()}`);
@@ -262,8 +258,7 @@ export function formatCss(source) {
       const value = colon === -1 ? '' : token.text.slice(colon + 1).trim();
       const declaration = depth > 0 && /^[-_a-zA-Z][\w-]*$/.test(property);
       if (depth === 0 && prev?.type === 'close') lines.push('');
-      lines.push(indent() + (declaration ? `${property}: ${value}` :
-        token.text) + ';');
+      lines.push(indent() + (declaration ? `${property}: ${value}` : token.text) + ';');
     }
     prev = token;
   }
@@ -272,8 +267,7 @@ export function formatCss(source) {
   return output;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const changed = [];
   for (const file of cssFiles()) {
     const source = fs.readFileSync(file, 'utf8');
@@ -283,8 +277,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) ===
     if (write) fs.writeFileSync(file, formatted);
   }
   if (changed.length) {
-    console.log(`${write ? 'Formatted' :
-      'Not formatted'}: ${changed.length} CSS files`);
+    console.log(`${write ? 'Formatted' : 'Not formatted'}: ${changed.length} CSS files`);
     for (const file of changed) console.log(`  ${file}`);
     if (!write) {
       console.error('Run `npm run format:css` to apply canonical formatting.');

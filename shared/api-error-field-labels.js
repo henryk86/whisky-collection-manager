@@ -37,18 +37,16 @@ export const apiErrorFieldLabels = Object.freeze({
  * Renders error params for api error field labels.
  *
  * @param {*} params Named values used when formatting the message.
- * @param {Function=} translate Translate used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {Function=} translate Looks up the localized label for a known API field key.
+ * @return {!Object} Error parameters with known field keys translated for display.
  */
 export function displayErrorParams(
   params,
   translate = key => apiErrorFieldLabels[key.slice('api.fields.'.length)]
 ) {
   return Object.fromEntries(Object.entries(params).map(([name, value]) => {
-    if ((name === 'field' || name === 'other') &&
-      Object.hasOwn(apiErrorFieldLabels, value)) {
-      return [name, translate(`api.fields.${value}`) ||
-        apiErrorFieldLabels[value]];
+    if ((name === 'field' || name === 'other') && Object.hasOwn(apiErrorFieldLabels, value)) {
+      return [name, translate(`api.fields.${value}`) || apiErrorFieldLabels[value]];
     }
     return [name, value];
   }));

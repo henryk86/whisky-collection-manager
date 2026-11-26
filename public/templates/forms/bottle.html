@@ -1,0 +1,49 @@
+<!-- wcm-template:contextDiv -->
+<div>
+  <dt>{{text:label}}</dt>
+  <dd>{{text:value}}</dd>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:bottlingContext -->
+<section class="bottling-context" aria-label="{{t:forms.bottle.linkedBottlingReadonly}}">
+  <div class="bottling-context-heading">{{t:forms.bottling.title}} <span class="muted">{{t:forms.bottle.informationalOnly}}</span>
+  </div>
+  <strong class="bottling-context-name">{{text:name}}</strong>
+  <dl>{{content:facts}}</dl>
+</section>
+<!-- /wcm-template -->
+
+<!-- wcm-template:bottleForm -->
+<form
+  id="bottle-form"{{attrs:dataFromOverviewAttributes}}
+  data-id="{{text:id}}"
+  data-bottling-id="{{text:bottlingId}}">{{content:context}}<div class="forms">{{content:inventoryNumberField}}<div class="form-field">
+      <span>{{t:forms.bottle.autoInventoryNumber}}</span>
+      {{content:suggestBottleButton}}
+    </div>{{content:volumeTypeField}}{{content:volumeMlField}}{{content:statusField}}{{content:purchaseDateField}}{{content:purchasePriceField}}{{content:currencyField}}{{content:merchantField}}{{content:openedAtField}}{{content:emptiedAtField}}{{content:commentField}}<label class="form-field full">{{t:forms.bottle.additionalPhotos}}<input
+        type="file"
+        name="photos"
+        accept="{{attr:photoAccept}}"
+        multiple>
+    </label>
+    <label class="form-field full">{{t:forms.bottle.attachments}}
+      <input
+        type="file"
+        name="documents"
+        accept="{{attr:fileAccept}}"
+        multiple>
+      <small class="hint">{{t:forms.bottle.attachmentSizeLimit}}</small>
+    </label>
+  </div>
+  <div class="actions ds-modal-footer ds-modal-footer--form">
+    <button type="button" class="btn" data-act="scan-into-bottle">{{content:inventoryScanIcon}}<span>{{t:forms.bottle.scanLabel}}</span></button>
+    {{content:closeModalButton}}
+    <button class="btn primary" type="submit">{{t:common.actions.save}}</button>
+  </div>
+  {{content:photoOption}}</form>
+<!-- /wcm-template -->
+
+<!-- wcm-template:importPhoto -->
+<label class="import-photo form-field full"><input type="checkbox" name="importReferencePhoto" checked> {{t:imports.images.copyReference}}</label>
+<!-- /wcm-template -->

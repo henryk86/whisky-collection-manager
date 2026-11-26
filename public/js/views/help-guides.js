@@ -1,5 +1,9 @@
+import {composeMarkup} from '../ui/render-plan.js';
 import {t} from '../i18n/index.js';
-import {escapeHtml} from '../ui/dom.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates('help/help-guides.html');
+
 
 // Only multi-step backup procedures warrant disclosure panels. Short guidance
 // belongs in the existing numbered help text rather than a second one-item
@@ -18,18 +22,22 @@ export const HELP_GUIDES = Object.freeze({
   ],
 });
 /**
- * Builds the localized help sections for the current screen.
+ * Prepares technical guides for the selected help topic.
  *
- * @param {*} topic Topic used by this operation.
- * @return {string} Resulting text.
+ * @param {*} topic Help topic identifier used to select the relevant guide content.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Technical guides for the selected help topic (or scalar/empty text when no plan is needed).
  */
 export function helpGuides(topic) {
   const guides = HELP_GUIDES[topic] || [];
   if (!guides.length) return '';
-  return `<div class="help-technical-guides">${guides.map(id =>
-    `<details class="help-guide"><summary>${escapeHtml(t(`help.guide.${topic}.${id}.title`))}</summary><ol>${Array.from(
-      {length: Number(t(`help.guide.${topic}.${id}.count`))},
-      (_, index) => `<li>${escapeHtml(t(`help.guide.${topic}.${id}.${index +
-        1}`))}</li>`
-    ).join('')}</ol></details>`).join('')}</div>`;
+  return renderTemplate('helpTechnicalGuides', {
+    guides: composeMarkup(guides.map(id =>
+      renderTemplate('helpGuide', {
+        t: t(`help.guide.${topic}.${id}.title`),
+        from: composeMarkup(Array.from(
+          {length: Number(t(`help.guide.${topic}.${id}.count`))},
+          (_, index) => renderTemplate('li', {t: t(`help.guide.${topic}.${id}.${index + 1}`), })
+        )),
+      }))),
+  });
 }

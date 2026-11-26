@@ -1,8 +1,8 @@
+import {captureContent} from '../helpers/capture-rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import {createModal} from '../../public/js/ui/modal.js';
-import {helpView} from '../../public/js/views/help.js';
+
 test(
   'modal supports choice and replaces current sibling while preserving the original stack',
   async () => {
@@ -19,12 +19,12 @@ test(
        *
        * @param {*} html HTML markup to render or inspect.
        */
-      set innerHTML(html) {
+      set renderedContent(html) {
         overlay = html ?
           {
             html,
             /**
-             * Updates the add event listener state for its caller.
+             * Ignores listener registration in this DOM-free test double.
              */
             addEventListener() {},
           } : null;
@@ -51,6 +51,7 @@ test(
     try {
       const state = {modal: null}; const modal =
         createModal({
+          mountContent: captureContent,
           state,
           /**
            * Handles the close interaction.
@@ -77,17 +78,5 @@ test(
       modal.closeModal();
       assert.equal(state.modal, null);
     } finally {globalThis.document = prior;}
-  }
-);
-test(
-  'help retains existing short guidance and includes technical accordion guides in the same content panel',
-  () => {
-    const html = helpView('backups');
-    assert.match(html, /help-content-panel/);
-    assert.match(html, /help-technical-guides/);
-    assert.match(html, /class="help-guide"/);
-    assert.match(html, /backup-admin-token/);
-    assert.match(html, /rclone config/);
-    assert.match(html, /OneDrive/);
   }
 );

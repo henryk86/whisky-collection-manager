@@ -1,0 +1,814 @@
+<!-- wcm-template:muted -->
+<p class="muted">{{text:distilleryMeta}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingBottlingSummary -->
+<div class="tasting-bottling-summary" data-external-read>
+  <div class="tasting-bottling-summary-head"><strong>{{text:name}}</strong>
+    <div class="tasting-external-summary-actions"><button type="button" class="btn small" data-act="tasting-external-edit">{{content:editIcon}}<span>{{text:edit}}</span></button>
+      {{content:tastingExternalAssignButton}}</div>
+  </div>
+  {{content:muted}}
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:actions -->
+<div class="actions tasting-external-actions">{{content:tastingExternalCancelButton}}
+                {{content:tastingExternalSaveButton}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:bottlingInfo -->
+{{content:draft}}
+<div data-external-edit {{attrs:hiddenAttributes}}>
+  <div class="tasting-external-fields">{{content:externalFields}}</div>
+  {{content:existingRecordActions}}
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingBottlingPhoto -->
+<img
+  class="tasting-bottling-photo"
+  src="{{text:imageUrl}}"
+  alt="{{text:bottleAlt}}"
+  loading="lazy">
+<!-- /wcm-template -->
+
+<!-- wcm-template:muted2 -->
+<p class="muted">{{text:distilleryMeta}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingBottlingSummary2 -->
+<div class="tasting-bottling-summary tasting-bottling-photo-layout">
+  {{content:tastingBottlingPhoto}}
+  <div class="tasting-bottling-copy">
+    <div class="tasting-bottling-summary-head"><strong>{{text:name}}</strong>
+      {{content:tastingOpenBottlingButton}}</div>
+    {{content:muted}}
+  </div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPanel -->
+<section class="analytics-panel tasting-bottling-info">
+  {{content:external}}
+</section>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingOpenFlight -->
+<div class="tasting-flight-context"><button
+    type="button"
+    class="inline-link"
+    data-act="tasting-open-flight"
+    data-flight-id="{{text:id}}">{{text:name}} · {{text:position}}</button>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:muted3 -->
+<span class="muted">&ndash;</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingReadonlyRating -->
+<div class="tasting-readonly-rating"><span class="tasting-readonly-glasses" aria-hidden="true">{{content:rating}}</span><strong>{{content:tastingRating}}</strong>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingEditStart -->
+<button type="button" class="btn small" data-act="tasting-edit-start">{{content:editIcon}}<span>{{text:edit}}</span></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint -->
+<p class="hint">{{text:notRecorded}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorDetailPanel -->
+<div class="flavor-detail-panel tasting-panel tasting-readonly-panels">
+  <div class="tasting-record-fields analytics-panel tasting-readonly-meta-panel">
+    {{content:detailGrid}}
+    {{content:actionToolbar}}
+  </div>
+  <div class="tasting-top-row">
+    <section class="analytics-panel tasting-color-panel">{{content:headingTitle}}
+                {{content:whiskyColorDisplay}}
+    </section>
+    <section class="analytics-panel tasting-senses-section">{{content:flavorHeading}}
+                {{content:flavorChart}}</section>
+  </div>
+  <section class="analytics-panel">{{content:notesHeading}}
+            {{content:notesGrid}}
+  </section>
+  <section class="analytics-panel tasting-rating-panel">{{content:ratingHeading}}
+            {{content:staticRating}}
+            {{content:trim}}</section>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingListGlasses -->
+<span class="tasting-list-glasses" aria-hidden="true">{{content:from}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingDelete -->
+<div class="tasting-entry-actions"><button
+    type="button"
+    class="btn small danger"
+    data-act="tasting-delete"
+    data-tasting-id="{{text:id}}">{{text:delete}}</button>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottleRow -->
+<div class="warehouse-bottle-row tasting-entry-row {{attr:home}}">
+  <button
+    type="button"
+    class="tasting-entry-open"
+    data-act="{{attr:act}}"
+    {{attrs:dataExternalAttributes}}
+    data-tasting-id="{{text:id}}"
+    aria-label="{{text:content}}">
+    <span class="warehouse-bottle-row-info tasting-entry-info">
+      <strong>{{text:entryTitle}}</strong>
+      <small>{{text:entryDate}}{{content:entrySubtitle}}</small>
+    </span>
+    <span class="tasting-entry-trailing">{{content:tastingListGlasses}}<span class="tasting-list-rating">{{content:tastingRating}}</span><span class="tasting-entry-chevron" aria-hidden="true">{{content:chevronRightIcon}}</span></span>
+  </button>
+  {{content:deleteAction}}
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:externalFieldsLabel -->
+<label>{{text:t}}
+  <input
+    data-external-field="{{attr:key}}"
+    name="{{attr:name}}"
+    type="{{attr:type}}"
+    {{attrs:maxlengthAttributes}}
+    {{attrs:requiredAttributes}}
+    {{attrs:numberAttributes}}
+    value="{{text:info}}"></label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlightNew -->
+<button type="button" class="btn small" data-act="tasting-flight-new">{{content:newBottlingIcon}}<span>{{text:document}}</span></button>
+<button type="button" class="btn small primary" data-act="flight-plan-new">{{content:flightPlanIcon}}<span>{{text:plan}}</span></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlightOpen -->
+<button
+  class="tasting-flight-home-link"
+  type="button"
+  data-act="tasting-flight-open"
+  data-flight-id="{{text:id}}">
+  <span><strong>{{text:name}}</strong><small>{{text:formatDate}} · {{content:phase}}{{text:t}}</small></span>
+  <span class="tasting-entry-chevron" aria-hidden="true">{{content:chevronRightIcon}}</span></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottleList -->
+<div class="warehouse-bottle-list tasting-flight-list">{{content:flights}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint2 -->
+<p class="hint">{{text:none}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPanel2 -->
+<section class="analytics-panel tasting-flight-home">
+  {{content:sectionHeader}}
+  {{content:warehouseBottleList}}
+</section>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint3 -->
+<p class="hint">{{t:flightPlan.filterSubset}}: {{content:length}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:startPlannedFlightOption -->
+<option value="{{attr:id}}">{{content:t}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:startPlannedFlightOption2 -->
+<option value="{{attr:n}}" {{attrs:selectedAttributes}}>{{content:memberCountLabel}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:startPlannedFlightOption3 -->
+<option value="{{attr:id}}">{{content:t}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:startPlannedFlightOption4 -->
+<option value="{{attr:id}}">{{text:t}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:startPlannedFlightOption5 -->
+<option value="{{attr:id}}">{{text:t}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:startPlannedFlightOption6 -->
+<option value="{{attr:id}}">{{text:t}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlightForm -->
+<div class="tasting-flight-form flight-plan-form">
+  {{content:candidateText}}
+  <label>{{t:tastingFlights.name}}<input
+      data-flight-name
+      maxlength="160"
+      required
+      placeholder="{{text:namePlaceholder}}"></label>
+  <label>{{t:tastingFlights.date}}<input
+      type="date"
+      data-flight-date
+      required
+      value="{{attr:localToday}}"></label>
+  <label>{{t:tastingFlights.notes}}<textarea data-flight-notes maxlength="10000" rows="2"></textarea></label>
+  <div class="flight-plan-options">
+    <label>{{t:flightPlan.mode}}<select data-flight-plan-style>{{content:styleOptions}}</select></label>
+    <label>{{t:flightPlan.count}}<select data-flight-plan-count>{{content:content}}</select></label>
+    <label>{{t:flightPlan.availability}}<select data-flight-plan-availability>{{content:availabilityOptions}}</select></label>
+  </div>
+  <div class="flight-plan-conditional" data-flight-plan-focus-wrap hidden><label>{{text:focus}}
+      <select data-flight-plan-focus>{{content:focusOptions}}</select></label>
+  </div>
+  <div class="flight-plan-conditional" data-flight-plan-unfamiliar-wrap hidden>{{content:checkboxInput}}</div>
+  <details class="flight-plan-advanced">
+    <summary>{{text:title}}</summary>
+    <p class="hint">{{text:hint}}</p>
+    <div class="flight-plan-options flight-plan-advanced-grid">
+      <label>{{text:caskMode}}<select data-flight-plan-cask-mode>{{content:caskModeOptions}}</select></label>
+      <label>{{text:ageMode}}<select data-flight-plan-age-mode>{{content:ageModeOptions}}</select></label>
+    </div>
+    {{content:flightCaskOptionsHtml}}
+    <div class="flight-plan-options flight-plan-advanced-grid">
+      <div class="flight-plan-conditional" data-flight-plan-age-range-wrap hidden><label>{{text:ageRange}}
+          <span class="flight-plan-age-range"><input
+              type="number"
+              min="0"
+              max="200"
+              step="1"
+              data-flight-plan-age-min
+              placeholder="{{text:ageMin}}"
+              aria-label="{{text:ariaLabel}}">
+            <input
+              type="number"
+              min="0"
+              max="200"
+              step="1"
+              data-flight-plan-age-max
+              placeholder="{{text:ageMax}}"
+              aria-label="{{text:maxAgeLabel}}"></span></label>
+      </div>
+    </div>
+    <div class="flight-plan-conditional" data-flight-plan-strict-wrap hidden>{{content:strictCheckbox}}</div>
+  </details>
+  <div class="actions">{{content:flightPlanGenerateButton}}</div>
+  <div class="flight-plan-preview" aria-live="polite">
+  </div>
+  <div class="actions">{{content:closeModalButton}}
+    <button
+      class="btn primary"
+      type="button"
+      data-act="flight-plan-create"
+      disabled>{{t:flightPlan.save}}</button>
+  </div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:small -->
+<small>{{text:metadata}}</small>
+<!-- /wcm-template -->
+
+<!-- wcm-template:li -->
+<li><strong>{{text:name}}</strong><small>{{text:t}}</small>
+  {{content:small}}</li>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint4 -->
+<p class="hint">{{text:description}}</p>
+<ol class="flight-plan-proposal">{{content:draft}}</ol>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint5 -->
+<p class="hint">{{t:flightPlan.none}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint6 -->
+<p class="hint">{{text:message}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:choicesOption -->
+<option value="{{text:id}}">{{text:name}} · #{{text:inventoryNumber}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightPlanMemberPhoto -->
+<img
+  class="flight-plan-member-photo"
+  src="{{text:imageUrl}}"
+  loading="lazy"
+  alt="">
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightPlanLocation -->
+<button
+  type="button"
+  class="inline-link"
+  data-act="flight-plan-location"
+  data-bottle-id="{{text:bottleId}}">{{text:label}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightPlanOpenBottling -->
+<button
+  type="button"
+  class="btn small"
+  data-act="flight-plan-open-bottling"
+  data-bottling-id="{{text:id}}">{{t:tastings.openBottlingDetails}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightPlanMove -->
+<div class="flight-plan-member-actions">
+  <button
+    type="button"
+    class="btn small"
+    data-act="flight-plan-move"
+    data-index="{{attr:index}}"
+    data-step="-1"
+    {{attrs:disabledAttributes}}
+    aria-label="{{t:tastingFlights.moveUp}}">{{content:arrowUpIcon}}</button>
+  <button
+    type="button"
+    class="btn small"
+    data-act="flight-plan-move"
+    data-index="{{attr:moveDownIndex}}"
+    data-step="1"
+    {{attrs:moveDownDisabled}}
+    aria-label="{{t:tastingFlights.moveDown}}">{{content:arrowDownIcon}}</button>
+  <select data-flight-replace="{{attr:flightReplace}}" aria-label="{{t:flightPlan.replace}}"><option value="">{{t:flightPlan.replace}}</option>{{content:choices}}</select>
+  <button
+    type="button"
+    class="btn small"
+    data-act="flight-plan-replace"
+    data-index="{{attr:replaceIndex}}">{{t:flightPlan.replace}}</button>
+  <button
+    type="button"
+    class="btn small danger"
+    data-act="flight-plan-remove"
+    data-index="{{attr:removeIndex}}">{{t:flightPlan.remove}}</button>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightPlanRecord -->
+<button
+  type="button"
+  class="btn small primary"
+  data-act="flight-plan-record"
+  data-bottling-id="{{text:bottlingId}}">{{t:flightPlan.addTasting}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightPlanMember -->
+<li class="flight-plan-member"><span class="flight-plan-number" aria-hidden="true">{{content:index}}</span>{{content:flightPlanMemberPhoto}}<div class="flight-plan-member-copy"><strong>{{text:label}}</strong>
+    <small>{{content:unavailable}}{{content:bottle}}</small>
+    {{content:flightPlanLocation}}</div>
+  {{content:flightPlanOpenBottling}}
+  {{content:flightPlanMove}}
+</li>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightPlanAdd -->
+<div class="flight-plan-add">
+  <select data-flight-manual-add aria-label="{{t:flightPlan.selectBottle}}">
+    {{content:choices}}</select>
+  {{content:flightPlanAddButton}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightPlanStart -->
+<div class="actions"><button
+    type="button"
+    class="btn primary"
+    data-act="flight-plan-start"
+    {{attrs:disabledAttributes}}>{{t:flightPlan.start}}</button>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPanel3 -->
+<section class="analytics-panel flight-plan-members">
+  <div class="tasting-panel-heading">{{content:headingTitle}}</div>
+  <ol class="flight-plan-members-list">{{content:planItems}}</ol>
+  {{content:flightPlanAdd}}
+  {{content:flightPlanStart}}
+</section>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlightForm2 -->
+<div class="tasting-flight-form">
+  <label>{{text:name}}<input
+      data-flight-name
+      maxlength="160"
+      required
+      placeholder="{{text:namePlaceholder}}"></label>
+  <label>{{text:date}}<input
+      type="date"
+      data-flight-date
+      required
+      value="{{attr:localToday}}"></label>
+  <label>{{text:notes}}<textarea data-flight-notes maxlength="10000" rows="3"></textarea></label>
+  <div class="actions">{{content:closeModalButton}}
+            {{content:tastingFlightCreateConfirmButton}}</div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlightForm3 -->
+<div class="tasting-flight-form">
+  <label>{{t:tastingFlights.name}}<input
+      data-flight-name
+      maxlength="160"
+      required
+      value="{{text:name}}"></label>
+  <label>{{t:tastingFlights.date}}<input type="date" data-flight-date value="{{text:date}}"></label>
+  <label>{{t:tastingFlights.notes}}<textarea data-flight-notes rows="3">{{text:notes}}</textarea></label>
+  <div class="actions">{{content:tastingFlightCancelEditButton}}{{content:tastingFlightSaveButton}}</div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightP -->
+<p>{{text:notes}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingPanelHeading -->
+<div class="tasting-panel-heading">
+  <div>{{content:headingTitle}}<p class="muted">{{text:formatDate}} · {{t:flightPlan.phase.planned}}</p>
+  </div>
+  <div class="actions"><button class="btn small" type="button" data-act="tasting-flight-edit">{{t:common.actions.edit}}</button><button class="btn small danger" type="button" data-act="tasting-flight-delete">{{t:common.actions.delete}}</button>
+  </div>
+</div>{{content:p}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPage -->
+<div class="analytics-page tasting-child-page tasting-flight-page" data-reconcile="replace">
+  {{content:backLink}}
+  {{content:pageTitle}}
+  <section class="analytics-panel tasting-flight-summary">
+    {{content:tastingFlightForm}}
+  </section>{{content:plannedFlightDetail}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingListGlasses2 -->
+<span class="tasting-list-glasses" aria-hidden="true"></span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlightMember -->
+<div class="tasting-flight-member" data-tasting-id="{{text:id}}">
+  <div class="tasting-flight-order-control"><button
+      type="button"
+      class="tasting-flight-drag-handle"
+      data-flight-drag
+      aria-label="{{text:dragHandle}}"
+      title="{{text:dragTitle}}">
+                <svg width="17" height="19" viewBox="0 0 16 20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="10" r="1.5"/><circle cx="11" cy="10" r="1.5"/><circle cx="5" cy="17" r="1.5"/><circle cx="11" cy="17" r="1.5"/></svg>
+    </button><span class="tasting-flight-position" aria-label="{{text:position}}">{{content:i}}</span>
+  </div>
+  <button
+    type="button"
+    class="tasting-flight-member-open"
+    data-act="tasting-flight-note-open"
+    data-tasting-id="{{text:tastingId}}"
+    data-bottling-id="{{text:external}}"
+    data-external="{{attr:externalFlag}}">
+    <strong>{{text:name}}</strong><small>{{text:title}}</small>
+  </button>
+  <span class="tasting-flight-member-score">{{content:tastingListGlasses}}<strong>{{content:tastingRating}}</strong></span>
+  <div class="tasting-flight-member-actions">
+    <button
+      type="button"
+      class="btn small"
+      data-act="tasting-flight-move"
+      data-index="{{attr:index}}"
+      data-direction="-1"
+      {{attrs:disabledAttributes}}
+      aria-label="{{text:moveUp}}">{{content:arrowUpIcon}}</button>
+    <button
+      type="button"
+      class="btn small"
+      data-act="tasting-flight-move"
+      data-index="{{attr:moveDownIndex}}"
+      data-direction="1"
+      {{attrs:moveDownDisabled}}
+      aria-label="{{text:moveDown}}">{{content:arrowDownIcon}}</button>
+    <button
+      type="button"
+      class="btn small"
+      data-act="tasting-flight-remove-note"
+      data-tasting-id="{{text:detachTastingId}}">{{text:detach}}</button>
+  </div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlightForm4 -->
+<div class="tasting-flight-form">
+  <label>{{text:name}}<input
+      data-flight-name
+      maxlength="160"
+      required
+      value="{{text:value}}"></label>
+  <label>{{text:date}}<input
+      type="date"
+      data-flight-date
+      required
+      value="{{text:flightDate}}"></label>
+  <label>{{text:notes}}<textarea data-flight-notes maxlength="10000" rows="4">{{text:flightNotes}}</textarea></label>
+  <div class="actions">{{content:tastingFlightCancelEditButton}}
+                    {{content:tastingFlightSaveButton}}</div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlightComment -->
+<p class="tasting-flight-comment">{{text:notes}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingPanelHeading2 -->
+<div class="tasting-panel-heading">
+  <div>{{content:headingTitle}}<p class="muted">{{text:formatDate}}</p>
+  </div>
+  <div class="actions"><button type="button" class="btn small" data-act="tasting-flight-edit">{{content:editIcon}}<span>{{text:edit}}</span></button>
+    {{content:tastingFlightDeleteButton}}</div>
+</div>
+                    {{content:tastingFlightComment}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightPlanFinish -->
+<div class="actions"><button
+    type="button"
+    class="btn"
+    data-act="flight-plan-finish"
+    {{attrs:disabledAttributes}}>{{t:flightPlan.finish}}</button>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlightToggleAdd -->
+<button
+  type="button"
+  class="btn primary"
+  data-act="tasting-flight-toggle-add"
+  {{attrs:completedAttributes}}>{{content:newBottlingIcon}}<span>{{text:add}}</span></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightOption -->
+<option value="{{text:id}}">{{text:flightEntryLabel}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flightOption2 -->
+<option value="{{text:id}}">{{text:name}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlightAdd -->
+<div class="tasting-flight-add">
+  <div class="tasting-flight-add-existing"><label>{{text:selectExisting}}
+      <select data-flight-tasting-option {{attrs:disabledAttributes}}>{{content:available}}</select></label>
+    <button
+      class="btn"
+      type="button"
+      data-act="tasting-flight-attach"
+      {{attrs:attachDisabled}}>{{text:addExisting}}</button>
+  </div>
+  <div class="tasting-flight-add-new"><label>{{text:chooseBottling}}
+      <select data-flight-owned-bottling>{{content:bottlings}}</select></label>
+    <button
+      class="btn"
+      type="button"
+      data-act="tasting-flight-new-owned"
+      {{attrs:ownedDisabled}}>{{text:fromCollection}}</button>
+    {{content:tastingFlightNewExternalButton}}</div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottleList2 -->
+<div class="warehouse-bottle-list tasting-flight-members-list">{{content:refs}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint7 -->
+<p class="hint">{{text:noEntries}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPage2 -->
+<div class="analytics-page tasting-child-page tasting-flight-page" data-reconcile="replace">
+  {{content:backLink}}
+  {{content:pageTitle}}
+  <section class="analytics-panel tasting-flight-summary">
+    {{content:tastingFlightForm}}
+  </section>
+  {{content:length}}
+  {{content:flightPlanFinish}}
+  <section class="analytics-panel tasting-flight-members">
+    <div class="tasting-panel-heading">{{content:headingTitle}}
+                {{content:phase}}</div>
+    {{content:tastingFlightAdd}}
+    {{content:warehouseBottleList}}
+  </section>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingsStartChoice -->
+<button type="button" class="btn primary" data-act="tastings-start-choice">{{content:newBottlingIcon}}<span>{{text:add}}</span></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:homeOption -->
+<option value="{{text:id}}">{{text:name}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingCreateChooser -->
+<div class="tasting-create-chooser">
+  <div class="tasting-choose-owned">
+    <label>{{text:chooseBottling}}<select data-owned-tasting-bottling>
+        {{content:owned}}</select></label>
+    <button
+      type="button"
+      class="btn"
+      data-act="tastings-start-owned"
+      {{attrs:disabledAttributes}}>{{text:fromCollection}}</button>
+  </div>{{content:tastingsStartExternalButton}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottleList3 -->
+<div class="warehouse-bottle-list tasting-entry-list">{{content:entries}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint8 -->
+<p class="hint">{{text:emptyHome}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPage3 -->
+<div class="analytics-page tasting-home-page">
+  {{content:pageHeader}}
+  {{content:homeFlights}}
+  <section class="analytics-panel tasting-home-recent">
+    {{content:sectionHeader}}
+    {{content:tastingCreateChooser}}
+    {{content:warehouseBottleList}}
+  </section>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingsNew -->
+<button type="button" class="btn primary" data-act="tastings-new">{{content:newBottlingIcon}}<span>{{text:add}}</span></button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseBottleList4 -->
+<div class="warehouse-bottle-list tasting-entry-list">{{content:tastings}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint9 -->
+<p class="hint">{{text:none}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPage4 -->
+<div class="analytics-page tasting-child-page">
+  {{content:backLink}}
+  {{content:pageTitle}}
+  {{content:bottlingInfo}}
+  <section class="analytics-panel tasting-list-section">
+    {{content:sectionHeader}}
+    {{content:warehouseBottleList}}
+  </section>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPage5 -->
+<div class="analytics-page tasting-child-page">
+  {{content:backLink}}
+  {{content:pageTitle}}
+  <section
+    class="section tasting-editor-content tasting-readonly-content"
+    data-flavor-detail
+    data-tasting-readonly="true">
+    {{content:bottlingInfo}}
+    {{content:flightHint}}
+    {{content:sectionHeader}}
+    {{content:tastingReadOnly}}
+  </section>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlightContext -->
+<div class="tasting-flight-context">{{text:newInFlight}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingEditDone -->
+<button type="button" class="btn small" data-act="tasting-edit-done">{{text:done}}</button><button
+  type="button"
+  class="btn small danger"
+  data-act="tasting-delete"
+  data-tasting-id="{{text:id}}">{{text:delete}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingColorClear -->
+<button
+  type="button"
+  class="btn small"
+  data-act="tasting-color-clear"
+  {{attrs:disabledAttributes}}>{{text:colorClear}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingFlavorClear -->
+<button
+  type="button"
+  class="btn small"
+  data-act="tasting-flavor-clear"
+  {{attrs:disabledAttributes}}>{{text:clearRadar}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:editorLabel -->
+<label>{{text:t}}<textarea data-tasting-note="{{attr:key}}">{{text:tastingNotes}}</textarea></label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tastingRatingClear -->
+<button
+  type="button"
+  class="btn small"
+  data-act="tasting-rating-clear"
+  {{attrs:disabledAttributes}}>{{text:clearRating}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:actions2 -->
+<div class="actions tasting-create-actions">{{content:tastingCreateButton}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPage6 -->
+<div class="analytics-page tasting-child-page">
+  {{content:backLink}}
+  {{content:pageTitle}}
+  <section
+    class="section tasting-editor-content"
+    data-flavor-detail
+    data-bottling-id="{{text:id}}"
+    aria-label="{{text:title}}">
+    {{content:bottlingInfo}}
+    {{content:existing}}
+    {{content:sectionHeader}}
+    <div class="flavor-detail-panel tasting-panel">
+      <div class="tasting-record-fields analytics-panel tasting-edit-meta-panel">
+        <label>{{text:date}}<input
+            type="date"
+            data-tasting-date
+            required
+            value="{{text:tastedOn}}"></label>
+        <label>{{text:nameOptional}}<input
+            type="text"
+            maxlength="120"
+            data-tasting-title
+            value="{{text:value}}"
+            placeholder="{{text:titlePlaceholder}}"></label>
+        <div class="actions tasting-editor-actions">
+          <div class="actions flavor-history-actions">
+            <button
+              type="button"
+              class="btn small tasting-action-btn"
+              data-act="flavor-detail-undo"
+              title="{{text:undo}}"
+              aria-label="{{text:ariaLabel}}"
+              {{attrs:disabledAttributes}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/></svg></button>
+            <button
+              type="button"
+              class="btn small tasting-action-btn"
+              data-act="flavor-detail-redo"
+              title="{{text:redo}}"
+              aria-label="{{text:redoLabel}}"
+              {{attrs:canRedo}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h2"/></svg></button>
+          </div>
+          {{content:draft}}
+        </div>
+      </div>
+      <div class="tasting-top-row">
+        <section class="analytics-panel tasting-color-panel">
+          {{content:colorHeading}}
+          {{content:whiskyColorSelector}}
+        </section>
+        <section class="analytics-panel tasting-senses-section">{{content:flavorHeading}}
+          <p class="hint" data-flavor-missing {{attrs:hiddenAttributes}}>{{text:notRecorded}}</p>
+          {{content:flavorChart}}
+        </section>
+      </div>
+      <section class="analytics-panel">{{content:headingTitle}}
+        <div class="tasting-notes">{{content:content}}</div>
+      </section>
+      <section class="analytics-panel tasting-rating-panel">
+        {{content:ratingHeading}}
+        {{content:glencairnRating}}
+        <label class="tasting-rating-comment tasting-rating-comment-editor">{{text:ratingComment}}
+                    <textarea data-tasting-rating-comment maxlength="10000" rows="3">{{text:ratingCommentValue}}</textarea>
+        </label>
+      </section>
+    </div>
+    {{content:actions}}
+  </section>
+
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:optionsOption -->
+<option value="{{text:id}}">{{text:name}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:showAssignDialogP -->
+<p>{{text:assignExplanation}}</p>
+<label class="tasting-assign-field">{{text:chooseBottling}}
+  <select data-tasting-assign-target required>{{content:options}}</select>
+</label><div class="actions tasting-assign-actions">
+  {{content:closeModalButton}}
+  {{content:tastingExternalAssignConfirmButton}}
+</div>
+<!-- /wcm-template -->

@@ -1,0 +1,57 @@
+<!-- wcm-template:actions -->
+<div class="actions ds-header-actions{{attr:className}}">{{content:content}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:headingPeriod -->
+<span class="heading-period" aria-hidden="true">.</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:h -->
+<{{tag:level}}{{attrs:classAttributes}}{{attrs:idAttributes}}>{{text:title}}{{content:headingPeriod}}{{content:trailingAction}}</{{tag:closingHeadingTag}}>
+<!-- /wcm-template -->
+
+<!-- wcm-template:copyP -->
+<p class="{{text:descriptionClass}}">{{text:description}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:copyDiv -->
+<div class="{{attr:copyClass}}">{{content:heading}}{{content:p}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:sectionHeaderDiv -->
+<div class="{{attr:layout}} ds-section-header{{attr:className}}">{{content:copy}}{{content:actionsBare}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:eyebrow -->
+<span class="eyebrow dark">{{text:eyebrow}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:intro -->
+<p class="intro">{{text:intro}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:header -->
+<header class="{{attr:classes}}"><div{{attrs:classAttributes}}>{{content:eyebrow}}{{content:preTitle}}{{content:headingTitle}}{{content:intro}}</div>{{content:actions}}</header>
+<!-- /wcm-template -->
+
+<!-- wcm-template:dsBackNav -->
+<nav class="ds-back-nav ds-back-nav--page-action" aria-label="{{attr:text}}"><button type="button" class="btn ds-back-button ds-back-button--page-action" {{attrs:attr}}>{{content:arrowLeftIcon}}<span>{{content:buttonLabel}}</span></button>
+</nav>
+<!-- /wcm-template -->
+
+<!-- wcm-template:pageBackNav -->
+<nav class="page-back-nav ds-back-nav ds-back-nav--inline" aria-label="{{attr:text}}"><button
+    type="button"
+    class="inline-link page-back ds-back-button ds-back-button--inline"
+    {{attrs:attr}}>{{content:arrowLeftIcon}}<span>{{content:buttonLabel}}</span></button>
+</nav>
+<!-- /wcm-template -->
+
+<!-- wcm-template:dsHelpIconButton -->
+<button
+  type="button"
+  class="ds-help-icon-button flight-plan-help-button"
+  data-act="{{text:action}}"
+  aria-label="{{attr:text}}"
+  title="{{attr:title}}"{{attrs:disabledAttributes}}>{{content:helpCircleIcon}}</button>
+<!-- /wcm-template -->

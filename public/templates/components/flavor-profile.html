@@ -1,0 +1,84 @@
+<!-- wcm-template:hint -->
+<p class="hint">{{text:notRecorded}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorGrid -->
+<polygon class="flavor-grid" points="{{attr:gridPoints}}"/>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorGrid2 -->
+<line
+  class="flavor-grid"
+  x1="{{attr:cx}}"
+  y1="{{attr:cy}}"
+  x2="{{attr:x}}"
+  y2="{{attr:y}}"/>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorHitTarget -->
+<circle
+  class="flavor-hit-target"
+  data-flavor-hit="1"
+  cx="{{attr:cx}}"
+  cy="{{attr:cy}}"
+  r="{{attr:radius}}"/>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorPoint -->
+<circle
+  class="flavor-point"
+  data-flavor-point="{{attr:i}}"
+  cx="{{attr:x}}"
+  cy="{{attr:y}}"
+  r="{{attr:editable}}"
+  {{attrs:visibilityAttributes}}/>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorAxisText -->
+<text
+  class="flavor-axis-text"
+  x="{{attr:x}}"
+  y="{{attr:y}}"
+  text-anchor="{{attr:anchor}}"
+  dominant-baseline="middle">{{text:flavorAxisTitle}}</text>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorChartInput -->
+<input
+  type="range"
+  min="0"
+  max="10"
+  step="1"
+  value="{{attr:missing}}"
+  name="flavor-{{attr:axis}}"
+  data-flavor-range="{{attr:i}}"
+  {{attrs:dataFlavorUnsetAttributes}}
+  aria-label="{{text:flavorAxisTitle}}"><output data-flavor-value="{{attr:flavorValue}}">{{content:displayScore}}</output>
+<!-- /wcm-template -->
+
+<!-- wcm-template:strong -->
+<strong>{{content:missing}}</strong>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorScale -->
+<label class="flavor-scale"><span>{{text:flavorAxisTitle}}</span>{{content:input}}</label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorSliders -->
+<div class="flavor-sliders">{{content:axisSliders}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorEditor -->
+<div class="flavor-editor{{attr:editable}}{{attr:colorSection}}{{attr:compact}}" {{attrs:dataFlavorEditorAttributes}}>
+        {{content:colorControl}}
+        <svg class="flavor-chart" viewBox="0 0 460 390" role="img" aria-label="{{text:chartLabel}}">
+            {{content:content}}
+            {{content:axisLines}}
+            <polygon class="flavor-area" data-flavor-polygon points="{{attr:flavorPolygon}}"/>
+            {{content:flavorHitTarget}}
+            {{content:scoreMarkers}}
+            {{content:axisLabels}}
+        </svg>
+        {{content:sliderPanel}}
+</div>
+<!-- /wcm-template -->

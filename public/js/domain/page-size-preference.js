@@ -4,28 +4,26 @@ import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS} from './pagination.js';
 export const PAGE_SIZE_STORAGE_KEY = 'whisky-page-size';
 
 /**
- * Derives the supported page size result from the supplied values.
+ * Accepts only a canonical numeric value from the supported page sizes.
  *
- * @param {*} value Value to process.
- * @return {number} Calculated numeric value.
+ * @param {*} value Stored preference or numeric input.
+ * @return {?number} Supported page size, or null for obsolete or invalid input.
  */
 function supportedPageSize(value) {
   const number = Number(value);
-  return String(number) === String(value) &&
-    PAGE_SIZE_OPTIONS.includes(number) ? number : null;
+  return String(number) === String(value) && PAGE_SIZE_OPTIONS.includes(number) ? number : null;
 }
 
 /**
  * Recover safely when storage is unavailable or contains an obsolete value.
  *
  * @param {*} storage Storage adapter used to load or save preferences.
- * @return {number} Calculated numeric result.
+ * @return {number} Supported number of results per page, using the default if storage is invalid.
  */
 export function getPageSizePreference(storage) {
   try {
     const source = storage === undefined ? globalThis.localStorage : storage;
-    return supportedPageSize(source?.getItem(PAGE_SIZE_STORAGE_KEY)) ??
-      DEFAULT_PAGE_SIZE;
+    return supportedPageSize(source?.getItem(PAGE_SIZE_STORAGE_KEY)) ?? DEFAULT_PAGE_SIZE;
   } catch {
     return DEFAULT_PAGE_SIZE;
   }
@@ -36,7 +34,7 @@ export function getPageSizePreference(storage) {
  *
  * @param {*} value Input value to process.
  * @param {*} storage Storage adapter used to load or save preferences.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the supported page-size preference was stored.
  */
 export function savePageSizePreference(value, storage) {
   const size = supportedPageSize(value);

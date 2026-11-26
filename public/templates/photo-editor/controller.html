@@ -1,0 +1,220 @@
+<!-- wcm-template:resetIconSvg -->
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.7 6.5"/><path d="M3 4v7h7"/></svg>
+<!-- /wcm-template -->
+
+<!-- wcm-template:pipetteIconSvg -->
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(43 12 12)"><rect x="9.5" y="1.5" width="5" height="5" rx="2.4"/><path d="M9 6.5h6v2.5H9z"/><path d="M10 9v8l2 5 2-5V9"/><path d="M11 13h2"/></g></svg>
+<!-- /wcm-template -->
+
+<!-- wcm-template:photoEditorSlider -->
+<label class="photo-editor-slider">
+  <span>{{text:t}} <output data-photo-output="{{attr:key}}">0</output></span>
+  <input
+    type="range"
+    data-photo-slider="{{attr:photoSlider}}"
+    min="{{attr:min}}"
+    max="{{attr:max}}"
+    step="{{attr:step}}"
+    value="0"
+    disabled>
+</label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:photoEditorPickWhite -->
+<button
+  type="button"
+  class="photo-editor-white-picker"
+  data-act="photo-editor-pick-white"
+  data-photo-editor-ready
+  disabled
+  aria-pressed="false"
+  title="{{text:pickWhite}}"
+  aria-label="{{text:ariaLabel}}">{{content:pipetteIcon}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:photoEditorGroup -->
+<section class="photo-editor-group" aria-label="{{text:t}}">
+  <div class="photo-editor-group-header">
+    <h3>{{text:groupHeading}}</h3>
+    <div class="photo-editor-group-tools">{{content:photoEditorPickWhite}}
+      <button
+        type="button"
+        class="photo-editor-group-reset"
+        data-act="photo-editor-reset-group"
+        data-photo-group="{{attr:key}}"
+        data-photo-editor-ready
+        disabled
+        title="{{text:resetGroup}}"
+        aria-label="{{text:ariaLabel}}">{{content:resetIcon}}</button>
+    </div>
+  </div>
+  {{content:sliders}}</section>
+<!-- /wcm-template -->
+
+<!-- wcm-template:photoEditorToggleCutout -->
+<button
+  type="button"
+  class="btn small"
+  data-act="photo-editor-toggle-cutout"
+  data-photo-editor-existing-cutout>{{text:selected}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:photoEditor -->
+<div class="photo-editor" data-photo-editor>
+  <div class="photo-editor-layout">
+    <div class="photo-editor-stage">
+      <div class="photo-editor-image cutout-checker">
+        <canvas data-photo-editor-preview role="img" aria-label="{{text:preview}}"></canvas>
+        <div
+          data-photo-editor-selection
+          class="photo-editor-selection"
+          hidden
+          aria-hidden="true">
+        </div>
+        <div
+          data-photo-editor-brush-cursor
+          class="photo-editor-brush-cursor"
+          hidden
+          aria-hidden="true">
+        </div>
+        <div class="photo-editor-overlay">
+          <div class="photo-editor-zoom" role="group" aria-label="{{text:zoom}}">
+            <button
+              type="button"
+              data-act="photo-editor-zoom-out"
+              aria-label="{{text:zoomOut}}"
+              title="{{text:zoomOutTitle}}"
+              disabled>{{content:minusIcon}}</button>
+            <button
+              type="button"
+              data-act="photo-editor-zoom-reset"
+              aria-label="{{text:zoomReset}}"
+              title="{{text:zoomResetTitle}}"
+              disabled><span data-photo-editor-zoom-level>100 %</span></button>
+            <button
+              type="button"
+              data-act="photo-editor-zoom-in"
+              aria-label="{{text:zoomIn}}"
+              title="{{text:zoomInTitle}}">{{content:plusIcon}}</button>
+          </div>
+          <div class="photo-editor-stage-actions">
+            <button
+              type="button"
+              class="btn small"
+              data-act="photo-editor-before"
+              data-photo-editor-ready
+              disabled
+              aria-pressed="false">{{text:before}}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="photo-editor-controls">
+      <div class="photo-editor-tabs" role="tablist" aria-label="{{text:title}}">
+        <button
+          type="button"
+          id="photo-editor-tab-adjustments"
+          role="tab"
+          data-photo-editor-tab="adjustments"
+          data-act="photo-editor-tab"
+          aria-controls="photo-editor-panel-adjustments"
+          aria-selected="true">{{text:adjustmentsTab}}</button>
+        <button
+          type="button"
+          id="photo-editor-tab-cutout"
+          role="tab"
+          data-photo-editor-tab="cutout"
+          data-act="photo-editor-tab"
+          aria-controls="photo-editor-panel-cutout"
+          aria-selected="false">{{text:cutoutTab}}</button>
+      </div>
+      <div
+        class="photo-editor-tab-panel"
+        id="photo-editor-panel-adjustments"
+        role="tabpanel"
+        aria-labelledby="photo-editor-tab-adjustments"
+        data-photo-editor-panel="adjustments">
+        {{content:adjustmentGroups}}
+      </div>
+      <div
+        class="photo-editor-tab-panel"
+        id="photo-editor-panel-cutout"
+        role="tabpanel"
+        aria-labelledby="photo-editor-tab-cutout"
+        data-photo-editor-panel="cutout"
+        hidden>
+        <div class="photo-editor-cutout-actions">
+          <button
+            type="button"
+            class="btn small"
+            data-act="photo-editor-cutout"
+            data-photo-editor-ready
+            disabled>{{text:t}}</button>
+          {{content:photoEditorToggleCutout}}
+          <button
+            type="button"
+            class="btn small danger"
+            data-act="photo-editor-remove-cutout"
+            data-photo-editor-ready
+            disabled
+            hidden>{{text:remove}}</button>
+        </div>
+        <div class="photo-editor-mask-tools" data-photo-editor-mask-tools hidden>
+          <div class="photo-editor-mask-buttons" role="group" aria-label="{{text:maskTools}}">
+            <button
+              type="button"
+              class="btn small"
+              data-photo-brush-mode="erase"
+              data-act="photo-editor-brush-mode"
+              aria-pressed="false">{{text:erase}}</button>
+            <button
+              type="button"
+              class="btn small"
+              data-photo-brush-mode="restore"
+              data-act="photo-editor-brush-mode"
+              aria-pressed="false">{{text:restore}}</button>
+            <button
+              type="button"
+              class="btn small"
+              data-act="photo-editor-brush-undo"
+              disabled>{{text:brushUndo}}</button>
+          </div>
+          <label class="photo-editor-mask-size">{{text:brushSize}}
+            <input
+              type="range"
+              min="1"
+              max="15"
+              step="1"
+              value="{{attr:defaultBrushSize}}"
+              data-photo-brush-size>
+            <output data-photo-brush-size-value>{{text:defaultBrushSize}} %</output>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="photo-editor-help" data-photo-editor-message role="status">{{text:loading}}</p>
+  <div class="photo-editor-actions">
+    <button
+      type="button"
+      class="btn"
+      data-act="photo-editor-auto"
+      data-photo-editor-ready
+      disabled>{{text:auto}}</button>
+    <button
+      type="button"
+      class="btn"
+      data-act="photo-editor-reset"
+      data-photo-editor-ready
+      disabled>{{text:reset}}</button>
+    <span class="photo-editor-actions-spacer"></span>
+    {{content:closeModalButton}}
+    <button
+      type="button"
+      class="btn primary"
+      data-act="photo-editor-save"
+      data-photo-editor-ready
+      disabled>{{text:save}}</button>
+  </div>
+</div>
+<!-- /wcm-template -->

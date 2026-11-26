@@ -12,41 +12,36 @@ import {fileURLToPath} from 'node:url';
 // config, vendor assets and third-party files are never candidates.
 export const SOURCE_ROOTS = ['public/js', 'server', 'shared', 'worker'];
 /**
- * Reads hash file data from the local filesystem.
- *
- * @param {*} file File resource to read, write or inspect.
- * @return {*} Result computed from the supplied inputs.
+ * Calculates the SHA-256 checksum of a candidate upgrade file.
+ * @param {string} file File path.
+ * @return {string} Hexadecimal SHA-256 digest.
  */
-const hashFile = file => crypto.createHash('sha256')
-  .update(fs.readFileSync(file)).digest('hex');
+const hashFile = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 
 /**
- * Validates the contained file state and rejects invalid inputs.
- *
- * @param {*} root Root node or directory for the operation.
- * @param {*} relative Relative path or position to resolve.
- * @return {*} Result computed from the supplied inputs.
+ * Resolves a candidate file and rejects paths outside the upgrade root.
+ * @param {string} root Allowed root directory.
+ * @param {string} relative Relative candidate path.
+ * @return {string} Validated absolute file path.
  */
 function containedFile(root, relative) {
   const full = path.resolve(root, relative);
-  if (!full.startsWith(path.resolve(root) +
-    path.sep)) throw new Error(`Unsafe path: ${relative}`);
+  if (!full.startsWith(path.resolve(root) + path.sep)) throw new Error(`Unsafe path: ${relative}`);
   return full;
 }
 
 /**
- * Derives the source files result from the supplied values.
+ * Recursively collects repository files eligible for an installation upgrade.
  *
  * @param {*} directory Directory containing the requested data.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Discovered source files relative to the inspected release root.
  */
 function sourceFiles(directory) {
   const found = new Set();
   /**
-   * Derives the walk result from the supplied values.
-   *
-   * @param {*} folder Value used by this operation.
-   * @param {*} prefix Value used by this operation.
+   * Traverses a source directory and records eligible upgrade paths while enforcing containment.
+   * @param {string} folder Directory being scanned.
+   * @param {string} prefix Repository-relative path prefix.
    */
   function walk(folder, prefix) {
     if (!fs.existsSync(folder)) return;
@@ -63,11 +58,11 @@ function sourceFiles(directory) {
 }
 
 /**
- * Validates the safe installed file state and rejects invalid inputs.
+ * Resolves an installed file path without following symbolic links or absent path components.
  *
  * @param {*} root Root node or directory for the operation.
  * @param {*} relative Relative path or position to resolve.
- * @return {*} Computed value, or null when the input has no match.
+ * @return {*} Resolved installed file path, or null if missing or unsafe.
  */
 function safeInstalledFile(root, relative) {
   let next = path.resolve(root);
@@ -86,10 +81,10 @@ function safeInstalledFile(root, relative) {
 /**
  * Audits dependencies and deployment inputs for an upgrade.
  *
- * @param {*} previousRoot Previous root used by this operation.
- * @param {*} nextRoot Next root used by this operation.
- * @param {*} installedRoot Installed root used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {string} previousRoot Directory containing the old release source.
+ * @param {string} nextRoot Directory containing the replacement release source.
+ * @param {string} installedRoot Live installation directory to compare with the old release.
+ * @return {!Object} Lists of obsolete, locally changed and absent installed files.
  */
 export function auditUpgrade(previousRoot, nextRoot, installedRoot) {
   const previous = sourceFiles(previousRoot);
@@ -111,10 +106,10 @@ export function auditUpgrade(previousRoot, nextRoot, installedRoot) {
 /**
  * Identifies obsolete files safe to remove during upgrade.
  *
- * @param {*} previousRoot Previous root used by this operation.
- * @param {*} nextRoot Next root used by this operation.
- * @param {*} installedRoot Installed root used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {string} previousRoot Directory containing the old release source.
+ * @param {string} nextRoot Directory containing the replacement release source.
+ * @param {string} installedRoot Live installation directory from which unmodified obsolete files may be removed.
+ * @return {!Object} Upgrade report after removing only unchanged obsolete files.
  */
 export function pruneObsolete(previousRoot, nextRoot, installedRoot) {
   const report = auditUpgrade(previousRoot, nextRoot, installedRoot);
@@ -122,32 +117,26 @@ export function pruneObsolete(previousRoot, nextRoot, installedRoot) {
   for (const relative of report.removable) {
     const old = safeInstalledFile(previousRoot, relative);
     const installed = safeInstalledFile(installedRoot, relative);
-    if (old && installed && hashFile(old) ===
-      hashFile(installed)) fs.unlinkSync(installed);
+    if (old && installed && hashFile(old) === hashFile(installed)) fs.unlinkSync(installed);
   }
   return report;
 }
-const isCLI = process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url);
+const isCLI = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isCLI) {
   const [previousRoot, nextRoot, installedRoot, flag] = process.argv.slice(2);
-  if (!previousRoot || !nextRoot || !installedRoot || (flag && flag !==
-    '--prune')) {
-    console.error('Usage: node scripts/upgrade-audit.js <previous-release-dir> <new-release-dir> <installation-dir> [--prune]');
+  if (!previousRoot || !nextRoot || !installedRoot || (flag && flag !== '--prune')) {
+    console.error(
+      'Usage: node scripts/upgrade-audit.js <previous-release-dir> <new-release-dir> <installation-dir> [--prune]');
     process.exitCode = 2;
   } else {
     try {
       for (const dir of [previousRoot, nextRoot, installedRoot]) {
-        if (!fs.statSync(dir)
-          .isDirectory()) throw new Error(`Not a directory: ${dir}`);
+        if (!fs.statSync(dir).isDirectory()) throw new Error(`Not a directory: ${dir}`);
       }
-      const roots = [previousRoot, nextRoot, installedRoot].map(dir =>
-        fs.realpathSync(dir));
-      if (new Set(roots).size !==
-        3) throw new Error('Old release, new release and installation must be separate directories.');
+      const roots = [previousRoot, nextRoot, installedRoot].map(dir => fs.realpathSync(dir));
+      if (new Set(roots).size !== 3) throw new Error('Old release, new release and installation must be separate directories.');
       for (const dir of [previousRoot, nextRoot]) {
-        if (!fs.existsSync(path.join(dir, 'package.json')) ||
-          !fs.existsSync(path.join(dir, 'public/js'))) {
+        if (!fs.existsSync(path.join(dir, 'package.json')) || !fs.existsSync(path.join(dir, 'public/js'))) {
           throw new Error(`Not an unpacked WCM release: ${dir}`);
         }
       }
@@ -156,14 +145,12 @@ if (isCLI) {
         : auditUpgrade(previousRoot, nextRoot, installedRoot);
       console.log(JSON.stringify(
         {
-          ...report, deleted: flag === '--prune' ? report.removable
-            .length : 0,
+          ...report, deleted: flag === '--prune' ? report.removable.length : 0,
         },
         null,
         2
       ));
-      if (report.changed
-        .length) console.warn('Modified or symlinked files were left untouched. Review them manually.');
+      if (report.changed.length) console.warn('Modified or symlinked files were left untouched. Review them manually.');
     } catch (error) {
       console.error(error.message);
       process.exitCode = 1;

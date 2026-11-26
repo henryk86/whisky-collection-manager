@@ -17,9 +17,7 @@ before(async () => {
     headless: true,
     args: process.env.CI || domOnly ? ['--no-sandbox'] : [],
   });
-  fs.mkdirSync('test-artifacts', {
-    recursive: true,
-  });
+  fs.mkdirSync('test-artifacts', {recursive: true, });
 });
 after(async () => {
   await browser?.close();
@@ -42,10 +40,8 @@ async function openApp(page, base, options = {}) {
       // The photo cutout tests register a synthetic ONNX runtime before open().
       // In DOM-only mode this catch-all route is installed later, so it must
       // defer to that earlier, more specific route rather than shadow it.
-      if (domOnly && pathname ===
-        '/ai/vendor/ort.wasm.min.mjs') return route.fallback();
-      if (options.localeOverrides &&
-        Object.hasOwn(options.localeOverrides, pathname)) {
+      if (domOnly && pathname === '/ai/vendor/ort.wasm.min.mjs') return route.fallback();
+      if (options.localeOverrides && Object.hasOwn(options.localeOverrides, pathname)) {
         return route.fulfill({
           status: 200, contentType: 'application/json',
           headers: {'Access-Control-Allow-Origin': '*'},
@@ -55,15 +51,9 @@ async function openApp(page, base, options = {}) {
       const response = await fetch(request.url(), {
         method: request.method(),
         headers: {
-          ...(request.postData() ?
-            {
-              'Content-Type': request.headers()['content-type'] ||
-                'application/json',
-            } : {}),
-          ...(request.headers()['x-wcm-state-delta'] === '1' ?
-            {'X-WCM-State-Delta': '1'} : {}),
-          ...(request.headers()['if-none-match'] ?
-            {'If-None-Match': request.headers()['if-none-match']} : {}),
+          ...(request.postData() ? {'Content-Type': request.headers()['content-type'] || 'application/json', } : {}),
+          ...(request.headers()['x-wcm-state-delta'] === '1' ? {'X-WCM-State-Delta': '1'} : {}),
+          ...(request.headers()['if-none-match'] ? {'If-None-Match': request.headers()['if-none-match']} : {}),
         },
         body: request.postData() || undefined,
       });
@@ -73,15 +63,8 @@ async function openApp(page, base, options = {}) {
           'Content-Type': response.headers.get('content-type') || 'text/plain',
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Expose-Headers': 'ETag, X-WCM-Store-ETag',
-          ...(response.headers.get('etag') ? {
-            'ETag': response.headers
-              .get('etag'),
-          } : {}),
-          ...(response.headers.get('x-wcm-store-etag') ?
-            {
-              'X-WCM-Store-ETag': response.headers
-                .get('x-wcm-store-etag'),
-            } : {}),
+          ...(response.headers.get('etag') ? {'ETag': response.headers.get('etag'), } : {}),
+          ...(response.headers.get('x-wcm-store-etag') ? {'X-WCM-Store-ETag': response.headers.get('x-wcm-store-etag'), } : {}),
         },
         body: Buffer.from(await response.arrayBuffer()),
       });
@@ -143,7 +126,11 @@ export async function session(callback, activeBrowser = browser) {
     // Screenshot is diagnostic only; never replace the original assertion.
     // Generated exclusively from synthetic per-test fixtures, not user data.
     const filename = `test-artifacts/browser-failure-${process.pid}-${++failedSessionCapture}.png`;
-    try {await page.screenshot({path: filename, fullPage: true, animations: 'disabled'});}
+    try {
+      await page.screenshot({
+        path: filename, fullPage: true, animations: 'disabled',
+      });
+    }
     catch { /* A crashed or closed page must not conceal the original error. */}
     throw error;
   }
@@ -161,8 +148,7 @@ export async function session(callback, activeBrowser = browser) {
 export async function openSettingsFromMenu(page) {
   await page.locator('header [data-act="toggle-menu"]').click();
   await page.locator('#site-drawer [data-act="goto-settings-menu"]').click();
-  await page.getByRole('heading', {name: 'Einstellungen & Datensicherung'})
-    .waitFor();
+  await page.getByRole('heading', {name: 'Einstellungen & Datensicherung'}).waitFor();
 }
 // Settings now have four mutually exclusive panels. Tests must explicitly open
 // the required panel instead of interacting with controls hidden in another
@@ -178,10 +164,8 @@ export async function openSettingsFromMenu(page) {
 export async function openSettingsSection(page, id) {
   const desktop = page.locator(`.settings-page .section-nav-desktop [data-settings-section="${id}"]`);
   if (await desktop.isVisible()) await desktop.click();
-  else await page.locator('.settings-page [data-section-switch="settings"]')
-    .selectOption(id);
-  await page.locator(`[data-settings-panel="${id}"]`)
-    .waitFor({state: 'visible'});
+  else await page.locator('.settings-page [data-section-switch="settings"]').selectOption(id);
+  await page.locator(`[data-settings-panel="${id}"]`).waitFor({state: 'visible'});
 }
 
 /**

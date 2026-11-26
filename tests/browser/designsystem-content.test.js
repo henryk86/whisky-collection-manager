@@ -21,8 +21,7 @@ test(
             theme
           );
           const geometry = await page.evaluate(() => {
-            const panel =
-              document.querySelector('[data-region="detail-bottling"] [data-ds-panel="standard"]');
+            const panel = document.querySelector('[data-region="detail-bottling"] [data-ds-panel="standard"]');
             const grid = panel.querySelector('[data-ds-detail-grid="2"]');
             const field = grid.querySelector('[data-ds-detail-field="fact"]');
             const r = panel.getBoundingClientRect();
@@ -30,26 +29,16 @@ test(
               width: r.width,
               left: r.left,
               padding: getComputedStyle(panel).paddingLeft,
-              cols: getComputedStyle(grid).gridTemplateColumns
-                .split(' ').length,
+              cols: getComputedStyle(grid).gridTemplateColumns.split(' ').length,
               fieldWidth: field.getBoundingClientRect().width,
               overflow: document.documentElement.scrollWidth - innerWidth,
               panelCount: panel.querySelectorAll('.panel').length,
             };
           });
-          assert.ok(
-            geometry.width > 0 && geometry.fieldWidth > 0,
-            `${width}/${theme}: visible panel and fields`
-          );
+          assert.ok(geometry.width > 0 && geometry.fieldWidth > 0, `${width}/${theme}: visible panel and fields`);
           assert.equal(geometry.panelCount, 0, 'no nested panel border');
-          assert.ok(
-            geometry.overflow <= 1,
-            `${width}/${theme}: no horizontal overflow`
-          );
-          assert.ok(
-            geometry.cols >= 1 && geometry.cols <= 2,
-            `${width}/${theme}: 1–2 columns, never cramped 3`
-          );
+          assert.ok(geometry.overflow <= 1, `${width}/${theme}: no horizontal overflow`);
+          assert.ok(geometry.cols >= 1 && geometry.cols <= 2, `${width}/${theme}: 1–2 columns, never cramped 3`);
           assert.ok(parseFloat(geometry.padding) > 0);
         }
       }
@@ -63,15 +52,11 @@ test(
     await session(async ({page, open}) => {
       await open();
       await page.locator('[data-ds-empty-state="collection"]').waitFor();
-      assert.equal(
-        await page.locator('[data-ds-empty-state="collection"] .panel').count(),
-        0
-      );
-      const boxes = await page.locator('[data-ds-empty-state="collection"]')
-        .evaluate(el => ({
-          border: getComputedStyle(el).borderTopStyle,
-          overflow: document.documentElement.scrollWidth - innerWidth,
-        }));
+      assert.equal(await page.locator('[data-ds-empty-state="collection"] .panel').count(), 0);
+      const boxes = await page.locator('[data-ds-empty-state="collection"]').evaluate(el => ({
+        border: getComputedStyle(el).borderTopStyle,
+        overflow: document.documentElement.scrollWidth - innerWidth,
+      }));
       assert.equal(boxes.border, 'dashed');
       assert.ok(boxes.overflow <= 1);
     });
@@ -86,10 +71,7 @@ test(
       await open({query: `?bottling=${bottling.id}`});
       const hint = page.locator('.bottle-documents [data-ds-empty-state="subtle"]');
       await hint.waitFor({state: 'visible'});
-      assert.equal(
-        await hint.evaluate(el => getComputedStyle(el).borderTopWidth),
-        '0px'
-      );
+      assert.equal(await hint.evaluate(el => getComputedStyle(el).borderTopWidth), '0px');
       assert.ok((await hint.innerText()).trim().length > 0);
     });
   }

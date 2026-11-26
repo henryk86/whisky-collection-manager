@@ -46,29 +46,16 @@ test(
             disabled: document.querySelector('.ds-modal-body') !== null,
             overflow: document.documentElement.scrollWidth - window.innerWidth,
           }));
-          assert.ok(
-            Math.abs(current.left - before.left) <= 1,
-            `${width}/${theme}: no horizontal position jump`
-          );
-          assert.ok(
-            Math.abs(current.width - before.width) <= 1,
-            `${width}/${theme}: no width jump`
-          );
+          assert.ok(Math.abs(current.left - before.left) <= 1, `${width}/${theme}: no horizontal position jump`);
+          assert.ok(Math.abs(current.width - before.width) <= 1, `${width}/${theme}: no width jump`);
           assert.equal(current.inert, true);
           assert.equal(current.focused, true);
           assert.equal(current.disabled, true);
-          assert.ok(
-            current.overflow <= 1,
-            `${width}/${theme}: no horizontal overflow`
-          );
+          assert.ok(current.overflow <= 1, `${width}/${theme}: no horizontal overflow`);
           // Focus stays in the application dialog when trying to Tab out.
           await page.locator('#modal-root .ds-modal-close').focus();
           await page.keyboard.press('Tab');
-          assert.equal(
-            await page.evaluate(() => Boolean(document.activeElement
-              .closest('#modal-root'))),
-            true
-          );
+          assert.equal(await page.evaluate(() => Boolean(document.activeElement.closest('#modal-root'))), true);
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#modal-root .dialog').count(), 0);
           const after = await page.evaluate(() => ({
@@ -81,11 +68,7 @@ test(
           assert.ok(Math.abs(after.width - before.width) <= 1);
           assert.ok(Math.abs(after.scroll - before.scroll) <= 1);
           assert.equal(after.inert, false);
-          assert.equal(
-            after.restored,
-            true,
-            `${width}/${theme}: restore original trigger`
-          );
+          assert.equal(after.restored, true, `${width}/${theme}: restore original trigger`);
         }
       }
     });
@@ -97,53 +80,24 @@ test(
   async () => {
     await session(async ({page, open}) => {
       await open(); await goTastings(page);
-      await page.locator('.tasting-flight-home [data-act="flight-plan-new"]')
-        .click();
+      await page.locator('.tasting-flight-home [data-act="flight-plan-new"]').click();
       const parent = page.locator('#modal-root .ds-modal');
-      await page.locator('#modal-root [data-flight-name]')
-        .fill('No lost form state');
-      await page.locator('#modal-root [data-flight-notes]')
-        .fill('Original unsaved notes');
-      await page.locator('#modal-root [data-flight-plan-style]')
-        .selectOption('similar');
-      await page.locator('#modal-root .flight-plan-form')
-        .evaluate(e => {e.dataset.identity = 'same-dom';});
+      await page.locator('#modal-root [data-flight-name]').fill('No lost form state');
+      await page.locator('#modal-root [data-flight-notes]').fill('Original unsaved notes');
+      await page.locator('#modal-root [data-flight-plan-style]').selectOption('similar');
+      await page.locator('#modal-root .flight-plan-form').evaluate(e => {e.dataset.identity = 'same-dom';});
       const trigger = page.locator('#modal-root [data-act="flight-plan-help"]');
       await trigger.focus(); await trigger.click();
-      await page.locator('#modal-root .flight-plan-help')
-        .waitFor({state: 'visible'});
-      assert.equal(
-        await page.locator('#modal-root .dialog').count(),
-        1,
-        'only the child is visible'
-      );
-      assert.equal(
-        await page.locator('#modal-root [data-flight-name]').count(),
-        0
-      );
+      await page.locator('#modal-root .flight-plan-help').waitFor({state: 'visible'});
+      assert.equal(await page.locator('#modal-root .dialog').count(), 1, 'only the child is visible');
+      assert.equal(await page.locator('#modal-root [data-flight-name]').count(), 0);
       await page.keyboard.press('Escape');
       await parent.locator('[data-flight-name]').waitFor({state: 'visible'});
-      assert.equal(
-        await page.locator('#modal-root .flight-plan-form')
-          .getAttribute('data-identity'),
-        'same-dom'
-      );
-      assert.equal(
-        await parent.locator('[data-flight-name]').inputValue(),
-        'No lost form state'
-      );
-      assert.equal(
-        await parent.locator('[data-flight-notes]').inputValue(),
-        'Original unsaved notes'
-      );
-      assert.equal(
-        await parent.locator('[data-flight-plan-style]').inputValue(),
-        'similar'
-      );
-      assert.equal(
-        await page.evaluate(() => document.activeElement?.dataset.act),
-        'flight-plan-help'
-      );
+      assert.equal(await page.locator('#modal-root .flight-plan-form').getAttribute('data-identity'), 'same-dom');
+      assert.equal(await parent.locator('[data-flight-name]').inputValue(), 'No lost form state');
+      assert.equal(await parent.locator('[data-flight-notes]').inputValue(), 'Original unsaved notes');
+      assert.equal(await parent.locator('[data-flight-plan-style]').inputValue(), 'similar');
+      assert.equal(await page.evaluate(() => document.activeElement?.dataset.act), 'flight-plan-help');
       await page.keyboard.press('Escape');
       assert.equal(await page.locator('#modal-root .dialog').count(), 0);
     });
@@ -159,24 +113,17 @@ test(
       // Document preview is covered by existing tests; here check edit modal
       // semantics.
       await page.locator('[data-act="edit-bottling"]').first().click();
-      await page.locator('#modal-root .ds-modal--wide')
-        .waitFor({state: 'visible'});
-      const widths = await page.locator('#modal-root .ds-modal')
-        .evaluate(el => ({
-          width: el.getBoundingClientRect().width,
-          max: getComputedStyle(el).maxHeight,
-          header: el.querySelector('.dialog-head') !== null,
-          content: el.querySelector('#bottling-form') !== null,
-        }));
+      await page.locator('#modal-root .ds-modal--wide').waitFor({state: 'visible'});
+      const widths = await page.locator('#modal-root .ds-modal').evaluate(el => ({
+        width: el.getBoundingClientRect().width,
+        max: getComputedStyle(el).maxHeight,
+        header: el.querySelector('.dialog-head') !== null,
+        content: el.querySelector('#bottling-form') !== null,
+      }));
       assert.equal(widths.header, true); assert.equal(widths.content, true);
       assert.ok(widths.width <= 860 + 1, 'existing wide modal width preserved');
-      assert.equal(
-        await page.locator('#modal-root [aria-labelledby="ds-modal-title"]')
-          .count(),
-        1
-      );
-      await page.locator('#modal-root [data-act="close-modal"]').first()
-        .click();
+      assert.equal(await page.locator('#modal-root [aria-labelledby="ds-modal-title"]').count(), 1);
+      await page.locator('#modal-root [data-act="close-modal"]').first().click();
       assert.equal(await page.locator('#modal-root .dialog').count(), 0);
     });
   }
@@ -201,8 +148,7 @@ test(
       // Clicking the off-screen header programmatically avoids Playwright
       // scrolling
       // it into view before the event and obscuring a modal scroll regression.
-      await page.evaluate(() =>
-        document.querySelector('header [data-act="new"]').click());
+      await page.evaluate(() => document.querySelector('header [data-act="new"]').click());
       await page.locator('#modal-root .dialog').waitFor({state: 'visible'});
       const during = await page.evaluate(() => ({
         top: getComputedStyle(document.body).top,
@@ -210,22 +156,12 @@ test(
         width: document.querySelector('main').getBoundingClientRect().width,
       }));
       assert.equal(during.top, `-${before.scroll}px`);
-      assert.ok(
-        Math.abs(during.left - before.left) <= 1,
-        'background does not jump horizontally'
-      );
-      assert.ok(
-        Math.abs(during.width - before.width) <= 1,
-        'background width stays fixed'
-      );
+      assert.ok(Math.abs(during.left - before.left) <= 1, 'background does not jump horizontally');
+      assert.ok(Math.abs(during.width - before.width) <= 1, 'background width stays fixed');
       const first = page.locator('#modal-root .ds-modal-close');
       await first.focus();
       await page.keyboard.press('Shift+Tab');
-      assert.equal(
-        await page.evaluate(() => Boolean(document.activeElement
-          .closest('#modal-root'))),
-        true
-      );
+      assert.equal(await page.evaluate(() => Boolean(document.activeElement.closest('#modal-root'))), true);
       await page.keyboard.press('Escape');
       assert.equal(await page.locator('#modal-root .dialog').count(), 0);
       const after = await page.evaluate(() => ({
@@ -233,12 +169,31 @@ test(
         left: document.querySelector('main').getBoundingClientRect().left,
         width: document.querySelector('main').getBoundingClientRect().width,
       }));
-      assert.ok(
-        Math.abs(after.scroll - before.scroll) <= 1,
-        `scroll restored (${after.scroll} vs ${before.scroll})`
-      );
+      assert.ok(Math.abs(after.scroll - before.scroll) <= 1, `scroll restored (${after.scroll} vs ${before.scroll})`);
       assert.ok(Math.abs(after.left - before.left) <= 1);
       assert.ok(Math.abs(after.width - before.width) <= 1);
     });
   }
 );
+
+
+test('browser: dragging text outside a modal does not dismiss it', async () => {
+  await session(async ({page, open}) => {
+    await open(); await goTastings(page);
+    await page.locator('.tasting-flight-home [data-act="flight-plan-new"]').click();
+    const dialog = page.locator('#modal-root .dialog');
+    const field = dialog.locator('[data-flight-name]');
+    await field.fill('Unsaved flight name');
+    const bounds = await field.boundingBox();
+    assert.ok(bounds);
+    const x = bounds.x + 20, y = bounds.y + bounds.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(2, 2, {steps: 12});
+    await page.mouse.up();
+    assert.equal(await dialog.count(), 1, 'selection must not close modal');
+    assert.equal(await field.inputValue(), 'Unsaved flight name');
+    await page.mouse.click(2, 2);
+    assert.equal(await dialog.count(), 0, 'direct backdrop click closes modal');
+  });
+});

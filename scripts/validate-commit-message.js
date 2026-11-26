@@ -12,8 +12,8 @@ import {classifyCommit} from './release-automation.js';
 /**
  * Validates message for validate commit message.
  *
- * @param {*} contents Contents used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {string} contents Complete commit message, including optional body and trailers.
+ * @return {!Object} Validated conventional commit classification.
  */
 export function validateMessage(contents) {
   const [subject = '', ...body] = contents.replace(/\r\n/g, '\n').split('\n');
@@ -48,12 +48,10 @@ function main() {
   if (!file) throw new Error('Usage: validate-commit-message.js COMMIT_MSG_FILE');
   if (activeMerge()) return;
   const result = validateMessage(fs.readFileSync(file, 'utf8'));
-  console.log(`Commit-Nachricht OK: ${result.type}${result.scope ?
-    `(${result.scope})` : ''} -> ${result.level}`);
+  console.log(`Commit-Nachricht OK: ${result.type}${result.scope ? `(${result.scope})` : ''} -> ${result.level}`);
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {main();} catch (error) {
     console.error(`Commit abgelehnt: ${error.message}`);
     console.error('Erwartet z. B. fix(warehouse): Fehler korrigieren oder feat: neue Funktion');

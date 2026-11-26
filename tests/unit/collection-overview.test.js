@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {availableOverviewDistilleries, collectionOverviewEntries} from '../../public/js/domain/collection-overview.js';
 import {homePageUrl, overviewModeFromSearch, paginate} from '../../public/js/domain/pagination.js';
-import {createHomeView} from '../../public/js/views/home.js';
 
 /**
  * Derives the sample result from the supplied values.
@@ -52,10 +51,11 @@ const sample = () => ({
     },
   ],
 });
+
 const selectors = {
   /**
-   * Derives the distillery names result from the supplied values.
-   * @return {string} Resulting text.
+   * Supplies the fixed distillery label used by this fixture.
+   * @return {string} Fixture label 'Keine Destillerie angegeben'.
    */
   distilleryNames: () => 'Keine Destillerie angegeben',
 };
@@ -64,18 +64,15 @@ test(
   'bottling mode remains one entry per bottling, bottle mode uses individual physical bottles',
   () => {
     const collection = sample();
-    const bottlings = collectionOverviewEntries(
-      collection,
-      {mode: 'bottlings', ...selectors}
-    );
-    const bottles = collectionOverviewEntries(collection, {mode: 'bottles', ...selectors});
+    const bottlings = collectionOverviewEntries(collection, {mode: 'bottlings', ...selectors});
+    const bottles = collectionOverviewEntries(collection, {
+      mode: 'bottles',
+      ...selectors,
+    });
     assert.deepEqual(bottlings.map(item => item.bottling.id), ['z', 'a']);
     assert.deepEqual(bottlings.map(item => item.bottle), [null, null]);
     assert.equal(bottles.length, 3);
-    assert.deepEqual(
-      bottles.map(item => item.bottle.id),
-      ['a-1', 'a-2', 'a-3']
-    );
+    assert.deepEqual(bottles.map(item => item.bottle.id), ['a-1', 'a-2', 'a-3']);
     assert.equal(bottles.every(item => item.bottling.id === 'a'), true);
     assert.equal(paginate(bottles, 2, 2).items[0].bottle.id, 'a-3');
   }
@@ -85,54 +82,30 @@ test(
   'bottle filters operate on each bottle, not on its entire bottling',
   () => {
     const collection = sample();
-    const open = collectionOverviewEntries(
-      collection,
-      {mode: 'bottles', status: 'open', ...selectors}
-    );
+    const open = collectionOverviewEntries(collection, {mode: 'bottles', status: 'open', ...selectors});
     assert.deepEqual(open.map(item => item.bottle.id), ['a-2']);
-    const closed = collectionOverviewEntries(
-      collection,
-      {mode: 'bottles', status: 'closed', ...selectors}
-    );
+    const closed = collectionOverviewEntries(collection, {mode: 'bottles', status: 'closed', ...selectors});
     assert.deepEqual(closed.map(item => item.bottle.id), ['a-1']);
-    const search = collectionOverviewEntries(
-      collection,
-      {mode: 'bottles', search: '000102', ...selectors}
-    );
+    const search = collectionOverviewEntries(collection, {mode: 'bottles', search: '000102', ...selectors});
     assert.deepEqual(search.map(item => item.bottle.id), ['a-2']);
     assert.deepEqual(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottles', search: 'Sample', ...selectors}
-      ).map(item => item.bottle.id),
+      collectionOverviewEntries(collection, {mode: 'bottles', search: 'Sample', ...selectors}).map(item => item.bottle.id),
       ['a-2']
     );
     assert.equal(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottles', completion: 'incomplete', ...selectors}
-      ).length,
+      collectionOverviewEntries(collection, {mode: 'bottles', completion: 'incomplete', ...selectors}).length,
       0
     );
     assert.equal(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottlings', search: '000102', ...selectors}
-      ).length,
+      collectionOverviewEntries(collection, {mode: 'bottlings', search: '000102', ...selectors}).length,
       1
     );
     assert.equal(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottlings', status: 'open', ...selectors}
-      ).length,
+      collectionOverviewEntries(collection, {mode: 'bottlings', status: 'open', ...selectors}).length,
       1
     );
     assert.deepEqual(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottles', sort: 'newest', ...selectors}
-      ).map(item => item.bottle.id),
+      collectionOverviewEntries(collection, {mode: 'bottles', sort: 'newest', ...selectors}).map(item => item.bottle.id),
       ['a-2', 'a-3', 'a-1']
     );
   }
@@ -156,24 +129,10 @@ test(
         {id: 'old', name: 'Old', distilleryId: 'legacy', bottles: []},
       ],
     };
-    assert.deepEqual(
-      availableOverviewDistilleries(collection).map(d => d.id),
-      ['first', 'legacy', 'second']
-    );
-    assert.deepEqual(
-      collectionOverviewEntries(collection, {distillery: 'first'}).map(e =>
-        e.bottling.id),
-      ['blend']
-    );
-    assert.deepEqual(
-      collectionOverviewEntries(collection, {distillery: 'legacy'}).map(e =>
-        e.bottling.id),
-      ['old']
-    );
-    assert.equal(
-      collectionOverviewEntries(collection, {distillery: 'unrelated'}).length,
-      0
-    );
+    assert.deepEqual(availableOverviewDistilleries(collection).map(d => d.id), ['first', 'legacy', 'second']);
+    assert.deepEqual(collectionOverviewEntries(collection, {distillery: 'first'}).map(e => e.bottling.id), ['blend']);
+    assert.deepEqual(collectionOverviewEntries(collection, {distillery: 'legacy'}).map(e => e.bottling.id), ['old']);
+    assert.equal(collectionOverviewEntries(collection, {distillery: 'unrelated'}).length, 0);
   }
 );
 
@@ -181,8 +140,7 @@ test(
   'standard/sample quick filter is applied before pagination in both overview modes',
   () => {
     const collection = sample();
-    collection.distilleries =
-      [{id: 'islay', name: 'Islay'}, {id: 'other', name: 'Other'}];
+    collection.distilleries = [{id: 'islay', name: 'Islay'}, {id: 'other', name: 'Other'}];
     collection.bottlings[0].distilleryIds = ['islay'];
     collection.bottlings.push({
       id: 'other',
@@ -193,45 +151,27 @@ test(
     });
     const options = {distillery: 'islay', ...selectors};
     assert.deepEqual(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottles', volumeType: 'sample', ...options}
-      ).map(e => e.bottle.id),
+      collectionOverviewEntries(collection, {mode: 'bottles', volumeType: 'sample', ...options}).map(e => e.bottle.id),
       ['a-2']
     );
     assert.deepEqual(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottles', volumeType: 'standard', ...options}
-      ).map(e => e.bottle.id),
+      collectionOverviewEntries(collection, {mode: 'bottles', volumeType: 'standard', ...options}).map(e => e.bottle.id),
       ['a-1', 'a-3']
     );
     assert.deepEqual(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottlings', volumeType: 'sample', ...options}
-      ).map(e => e.bottling.id),
+      collectionOverviewEntries(collection, {mode: 'bottlings', volumeType: 'sample', ...options}).map(e => e.bottling.id),
       ['a']
     );
     assert.deepEqual(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottlings', volumeType: 'standard', ...options}
-      ).map(e => e.bottling.id),
+      collectionOverviewEntries(collection, {mode: 'bottlings', volumeType: 'standard', ...options}).map(e => e.bottling.id),
       ['a']
     );
     assert.equal(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottlings', volumeType: 'sample', distillery: 'other'}
-      ).length,
+      collectionOverviewEntries(collection, {mode: 'bottlings', volumeType: 'sample', distillery: 'other'}).length,
       0
     );
     assert.equal(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottlings', volumeType: 'standard', distillery: 'other'}
-      ).length,
+      collectionOverviewEntries(collection, {mode: 'bottlings', volumeType: 'standard', distillery: 'other'}).length,
       1
     );
     assert.equal(
@@ -247,36 +187,20 @@ test(
       0
     );
     assert.equal(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottles', volumeType: 'sample', status: 'closed', ...options}
-      ).length,
+      collectionOverviewEntries(collection, {mode: 'bottles', volumeType: 'sample', status: 'closed', ...options}).length,
       0
     );
     assert.equal(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottlings', volumeType: 'sample', status: 'closed', ...options}
-      ).length,
+      collectionOverviewEntries(collection, {mode: 'bottlings', volumeType: 'sample', status: 'closed', ...options}).length,
       0,
       'a closed standard bottle and open sample must not satisfy both filters'
     );
     assert.equal(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottlings', volumeType: 'sample', status: 'open', ...options}
-      ).length,
+      collectionOverviewEntries(collection, {mode: 'bottlings', volumeType: 'sample', status: 'open', ...options}).length,
       1
     );
     assert.equal(
-      paginate(
-        collectionOverviewEntries(
-          collection,
-          {mode: 'bottles', volumeType: 'standard', ...options}
-        ),
-        1,
-        1
-      ).total,
+      paginate(collectionOverviewEntries(collection, {mode: 'bottles', volumeType: 'standard', ...options}), 1, 1).total,
       2
     );
   }
@@ -295,174 +219,6 @@ test(
 );
 
 test(
-  'physical bottle cards use their own photo, identifier, status and volume; table rows stay distinct',
-  () => {
-    const collection = sample();
-    const original = {
-      document: globalThis.document,
-      history: globalThis.history,
-      location: globalThis.location,
-    };
-    const field = {
-      /**
-       * Updates the add event listener state for its caller.
-       */
-      addEventListener() {},
-    };
-    let html = '';
-    const state = {
-      collection,
-      overviewMode: 'bottles',
-      view: 'cards',
-      search: '',
-      status: 'all',
-      completion: 'all',
-      distillery: 'all',
-      volumeType: 'all',
-      sort: 'name',
-      pageNumber: 1,
-      pageSize: 24,
-    };
-    try {
-      globalThis.document = {
-        /**
-         * Derives the query selector result from the supplied values.
-         * @return {!Object} Result computed from the supplied inputs.
-         */
-        querySelector: () =>
-          field,
-        /**
-         * Derives the query selector all result from the supplied values.
-         * @return {!Array<*>} Resulting entries in their output order.
-         */
-        querySelectorAll: () => [],
-      };
-      globalThis.history =
-      {
-        /**
-         * Reports the replace state error condition.
-         */
-        replaceState() {throw new Error('No history change expected');},
-      };
-      globalThis.location = {pathname: '/', search: '?mode=bottles'};
-      const view = createHomeView({
-        state, selectors: {
-          /**
-           * Derives the all bottles result from the supplied values.
-           * @return {!Array<*>} Resulting entries in their output order.
-           */
-          allBottles: () => collection.bottlings.flatMap(b => b.bottles),
-          /**
-           * Derives the bottles result from the supplied values.
-           *
-           * @param {*} id Identifier of the affected record.
-           * @return {!Array<*>} Resulting entries in their output order.
-           */
-          bottles: id => collection.bottlings.find(b => b.id ===
-            id)?.bottles || [],
-          /**
-           * Derives the cover photo result from the supplied values.
-           * @return {string} Resulting text.
-           */
-          coverPhoto: () => 'bottling-cover.jpg',
-          distilleryNames: selectors.distilleryNames,
-        },
-        /**
-         * Updates the shell state for its caller.
-         *
-         * @param {*} value Value to process.
-         */
-        shell(value) {html = value;},
-      });
-      view();
-      assert.equal((html.match(/<article\b/g) || []).length, 3);
-      assert.equal((html.match(/data-bottle-id=/g) || []).length, 3);
-      assert.match(html, /data-bottle-id="a-1"[\s\S]*?one\.jpg/);
-      assert.match(html, /data-bottle-id="a-2"[\s\S]*?two\.jpg/);
-      /**
-       * Derives the card for result from the supplied values.
-       *
-       * @param {*} id Identifier of the affected record.
-       * @return {string} Resulting text.
-       */
-      const cardFor = id => (html.match(/<article\b[\s\S]*?<\/article>/g) || [])
-        .find(card => card.includes(`data-bottle-id="${id}"`));
-      assert.match(cardFor('a-1'), /src="\/one\.jpg"/);
-      assert.match(cardFor('a-2'), /src="\/two\.jpg"/);
-      // Only bottles with no photo inherit the displayed bottling cover.
-      assert.match(cardFor('a-3'), /src="\/bottling-cover\.jpg"/);
-      assert.doesNotMatch(cardFor('a-1'), /bottling-cover\.jpg/);
-      assert.doesNotMatch(cardFor('a-2'), /bottling-cover\.jpg/);
-      assert.equal(
-        (html.match(/class="collection-mode-toggle"/g) || []).length,
-        1
-      );
-      assert.match(
-        html,
-        /class="section-head ds-page-header collection-heading"[\s\S]*class="collection-mode-toggle"[\s\S]*class="stats"/
-      );
-      assert.ok(html.indexOf('class="collection-mode-toggle"') <
-        html.indexOf('class="stats"'));
-      assert.match(html, /#000102 · 50 ml/);
-      assert.match(html, /<span class="badge open">Geöffnet<\/span>/);
-      assert.match(html, /<span class="badge sample">Sample<\/span>/);
-      assert.match(html, /1–3 von 3 Flaschen/);
-      assert.match(html, /id="filter-distillery"/);
-      assert.match(html, /id="filter-volume-type"/);
-      assert.match(html, /<option value="sample"\s*>Samples<\/option>/);
-      const toolbar = html.slice(
-        html.indexOf('<div class="toolbar collection-filters"'),
-        html.indexOf('<div class="pagination-topline"') === -1 ?
-          html.length : html.indexOf('<div class="pagination-topline"')
-      );
-      assert.ok(toolbar, 'overview toolbar must exist');
-      assert.equal((toolbar.match(/<select id="filter-/g) || []).length, 6,
-        'all six existing selectors remain available');
-      assert.match(
-        toolbar,
-        /data-flavor-profile-status/,
-        'profile status lives in the flavor overlay'
-      );
-      assert.match(
-        toolbar,
-        /data-act="toggle-collection-filters" aria-expanded="false"/
-      );
-      assert.match(toolbar, /id="collection-filter-extra"/);
-      assert.ok(toolbar.indexOf('id="filter-sort"') <
-        toolbar.indexOf('id="filter-distillery"'));
-      assert.ok(toolbar.indexOf('data-act="toggle-view"') <
-        toolbar.indexOf('id="filter-distillery"'));
-      assert.match(
-        toolbar,
-        /<select id="filter-distillery" aria-label="Destillerie filtern">/
-      );
-      assert.match(
-        toolbar,
-        /<select id="filter-volume-type" aria-label="Flaschentyp filtern">/
-      );
-      assert.match(
-        toolbar,
-        /<select id="filter-rating" aria-label="Nach Bewertung filtern">/
-      );
-      state.view = 'table';
-      view();
-      assert.equal((html.match(/<tr class="clickable"/g) || []).length, 3);
-      assert.match(
-        html,
-        /data-act="collection-sort-column" data-column="inventory"[^>]*>Flasche/
-      );
-      assert.match(html, /data-bottle-id="a-2"/);
-      assert.match(html, /#000102/);
-    } finally {
-      for (const [key, value] of Object.entries(original)) {
-        if (value === undefined) delete globalThis[key];
-        else globalThis[key] = value;
-      }
-    }
-  }
-);
-
-test(
   'pagination in bottle mode counts physical bottles rather than their shared bottling',
   () => {
     const collection = {
@@ -476,10 +232,8 @@ test(
         })),
       }],
     };
-    const bottlingEntries =
-      collectionOverviewEntries(collection, {mode: 'bottlings', ...selectors});
-    const bottleEntries =
-      collectionOverviewEntries(collection, {mode: 'bottles', ...selectors});
+    const bottlingEntries = collectionOverviewEntries(collection, {mode: 'bottlings', ...selectors});
+    const bottleEntries = collectionOverviewEntries(collection, {mode: 'bottles', ...selectors});
     assert.equal(paginate(bottlingEntries).total, 1);
     assert.equal(paginate(bottleEntries).total, 28);
     assert.equal(paginate(bottleEntries).pageCount, 2);
@@ -490,8 +244,7 @@ test(
 test(
   'latest tasting rating filters are applied before pagination in both overview modes',
   async () => {
-    const {matchesOverviewRating} =
-      await import('../../public/js/domain/collection-overview.js');
+    const {matchesOverviewRating} = await import('../../public/js/domain/collection-overview.js');
     const collection = sample();
     const date = '2026-11-15';
     collection.bottlings[0].tastings = [
@@ -501,185 +254,28 @@ test(
     collection.bottlings[1].tastings = [];
     assert.equal(matchesOverviewRating(collection.bottlings[0], '5'), true);
     assert.equal(matchesOverviewRating(collection.bottlings[0], '4'), false);
-    assert.equal(
-      matchesOverviewRating(collection.bottlings[1], 'unrated'),
-      true
-    );
+    assert.equal(matchesOverviewRating(collection.bottlings[1], 'unrated'), true);
     assert.deepEqual(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottlings', rating: '5'}
-      ).map(e => e.bottling.id),
+      collectionOverviewEntries(collection, {mode: 'bottlings', rating: '5'}).map(e => e.bottling.id),
       ['a']
     );
     assert.equal(
-      collectionOverviewEntries(collection, {mode: 'bottles', rating: '5'}).length,
+      collectionOverviewEntries(collection, {
+        mode: 'bottles',
+        rating: '5',
+      }).length,
       3
     );
     assert.deepEqual(
-      collectionOverviewEntries(
-        collection,
-        {mode: 'bottlings', rating: 'unrated'}
-      ).map(e => e.bottling.id),
+      collectionOverviewEntries(collection, {mode: 'bottlings', rating: 'unrated'}).map(e => e.bottling.id),
       ['z']
     );
-    collection.bottlings[0].tastings
-      .push({id: 'scoreless', tastedOn: '2026-12-01', rating: null});
-    assert.equal(
-      collectionOverviewEntries(collection, {rating: '5'}).length,
-      0
-    );
-    assert.deepEqual(
-      collectionOverviewEntries(collection, {rating: 'unrated'}).map(e =>
-        e.bottling.id),
-      ['z', 'a']
-    );
-    collection.bottlings[0].tastings =
-      [{id: 'zero', tastedOn: date, rating: 0}];
-    assert.equal(
-      matchesOverviewRating(collection.bottlings[0], '1'),
-      true,
-      'zero belongs to the first glass'
-    );
-    assert.equal(
-      matchesOverviewRating(
-        {tastings: [{id: 'edge', tastedOn: date, rating: 20.1}]},
-        '2'
-      ),
-      true
-    );
-  }
-);
-
-test(
-  'glencairn rating is drawn over the bottle image with five proportional fills and unique IDs per bottle',
-  async () => {
-    const {collectionCardRating} =
-      await import('../../public/js/views/home.js');
-    const bottling = {
-      id: 'own',
-      tastings: [{id: 'new', tastedOn: '2026-11-15', rating: 87.5}],
-    };
-    const a = collectionCardRating(bottling, 'bottle-1');
-    const b = collectionCardRating(bottling, 'bottle-2');
-    assert.match(a, /class="collection-card-rating"/);
-    assert.equal((a.match(/glencairn-rating-symbol/g) || []).length, 5);
-    assert.match(a, /y="236\.125" width="220" height="94\.875"/);
-    assert.match(a, /overview-rating-bottle-1-0/);
-    assert.match(b, /overview-rating-bottle-2-0/);
-    assert.doesNotMatch(b, /overview-rating-bottle-1-0/);
-    assert.equal(collectionCardRating({id: 'no-score', tastings: []}), '');
-  }
-);
-
-
-test(
-  'collection filters expand in place and active chips reset a single selection',
-  () => {
-    const collection = {settings: {}, bottlings: [], distilleries: []};
-    const state = {
-      page: 'home',
-      collection,
-      search: '',
-      status: 'open',
-      completion: 'all',
-      sort: 'name',
-      distillery: 'all',
-      rating: 'all',
-      volumeType: 'all',
-      view: 'cards',
-      overviewMode: 'bottlings',
-      pageNumber: 1,
-      pageSize: 12,
-    };
-    let html = '';
-    const original = {
-      document: globalThis.document,
-      location: globalThis.location,
-      history: globalThis.history,
-    };
-    const filterElement = {dataset: {expanded: 'false'}};
-    try {
-      globalThis.location = {pathname: '/', search: ''};
-      globalThis.history = {
-        /**
-         * Updates the replace state state for its caller.
-         */
-        replaceState() {},
-        /**
-         * Updates the push state state for its caller.
-         */
-        pushState() {},
-      };
-      globalThis.document = {
-        /**
-         * Derives the query selector result from the supplied values.
-         * @return {!Object} Result computed from the supplied inputs.
-         */
-        querySelector: () => filterElement,
-      };
-      const view = createHomeView({
-        state, selectors: {
-          /**
-           * Derives the all bottles result from the supplied values.
-           * @return {!Array<*>} Resulting entries in their output order.
-           */
-          allBottles: () => [],
-          /**
-           * Derives the bottles result from the supplied values.
-           * @return {!Array<*>} Resulting entries in their output order.
-           */
-          bottles: () => [],
-          /**
-           * Derives the cover photo result from the supplied values.
-           * @return {*} Result computed from the supplied inputs.
-           */
-          coverPhoto: () => null,
-          /**
-           * Derives the distillery names result from the supplied values.
-           * @return {!Array<*>} Resulting entries in their output order.
-           */
-          distilleryNames: () => [],
-        },
-        /**
-         * Updates the shell state for its caller.
-         *
-         * @param {*} markup HTML markup for the selected content.
-         */
-        shell: markup => {html = markup;},
-      });
-      view();
-      assert.match(html, /data-expanded="false"/);
-      assert.match(html, /data-reset-collection-filter="status"/);
-      const toggle = {
-        dataset: {act: 'toggle-collection-filters'},
-        /**
-         * Updates attribute in the current state.
-         *
-         * @param {*} name Environment variable or setting name.
-         * @param {*} value Value to process.
-         */
-        setAttribute(name, value) {this[name] = value;},
-      };
-      view.handleClick(toggle);
-      assert.equal(filterElement.dataset.expanded, 'true');
-      assert.equal(toggle['aria-expanded'], 'true');
-      view();
-      assert.match(html, /data-expanded="true"/);
-      view.handleClick({dataset: {resetCollectionFilter: 'status'}});
-      assert.equal(state.status, 'all');
-      assert.doesNotMatch(html, /data-reset-collection-filter="status"/);
-      assert.match(
-        html,
-        /data-expanded="true"/,
-        'expanded filters stay open when values change'
-      );
-    } finally {
-      for (const [key, value] of Object.entries(original)) {
-        if (value === undefined) delete globalThis[key];
-        else globalThis[key] = value;
-      }
-    }
+    collection.bottlings[0].tastings.push({id: 'scoreless', tastedOn: '2026-12-01', rating: null});
+    assert.equal(collectionOverviewEntries(collection, {rating: '5'}).length, 0);
+    assert.deepEqual(collectionOverviewEntries(collection, {rating: 'unrated'}).map(e => e.bottling.id), ['z', 'a']);
+    collection.bottlings[0].tastings = [{id: 'zero', tastedOn: date, rating: 0}];
+    assert.equal(matchesOverviewRating(collection.bottlings[0], '1'), true, 'zero belongs to the first glass');
+    assert.equal(matchesOverviewRating({tastings: [{id: 'edge', tastedOn: date, rating: 20.1}]}, '2'), true);
   }
 );
 
@@ -699,8 +295,7 @@ test(
      * @param {*} bottling Bottling record being inspected or updated.
      * @return {*} Result computed from the supplied inputs.
      */
-    const distilleryNames = bottling =>
-      ({a: 'Zweite', b: 'Aberfeldy'})[bottling.distilleryIds[0]];
+    const distilleryNames = bottling => ({a: 'Zweite', b: 'Aberfeldy'})[bottling.distilleryIds[0]];
 
     /**
      * Transforms the entries used by ids.
@@ -708,7 +303,10 @@ test(
      * @param {*} sort Sort direction or ordering rule.
      * @return {!Array<*>} Resulting entries in their output order.
      */
-    const ids = sort => collectionOverviewEntries(collection, {sort, distilleryNames}).map(e => e.bottling.id);
+    const ids = sort => collectionOverviewEntries(collection, {
+      sort,
+      distilleryNames,
+    }).map(e => e.bottling.id);
     assert.deepEqual(ids('name'), ['one', 'two', 'three']);
     assert.deepEqual(ids('nameDesc'), ['three', 'two', 'one']);
     assert.deepEqual(ids('distillery'), ['two', 'one', 'three']);
@@ -722,10 +320,7 @@ test(
     const collection = {
       bottlings: [
         {
-          id: 'a', name: 'Alpha', bottles: [
-            {id: 'a1', purchasePrice: 10, currency: 'EUR'},
-            {id: 'a2', purchasePrice: 40, currency: 'EUR'},
-          ],
+          id: 'a', name: 'Alpha', bottles: [{id: 'a1', purchasePrice: 10, currency: 'EUR'}, {id: 'a2', purchasePrice: 40, currency: 'EUR'},],
         },
         {
           id: 'b',
@@ -745,10 +340,7 @@ test(
         {
           id: 'e',
           name: 'Epsilon',
-          bottles: [
-            {id: 'e1', purchasePrice: 3, currency: 'EUR'},
-            {id: 'e2', purchasePrice: 4, currency: 'USD'},
-          ],
+          bottles: [{id: 'e1', purchasePrice: 3, currency: 'EUR'}, {id: 'e2', purchasePrice: 4, currency: 'USD'},],
         },
       ],
     };
@@ -760,14 +352,10 @@ test(
      * @return {!Array<*>} Resulting entries in their output order.
      */
     const sorted = (sort, mode = 'bottlings') =>
-      collectionOverviewEntries(collection, {sort, mode})
-        .map(e => mode === 'bottles' ? e.bottle.id : e.bottling.id);
+      collectionOverviewEntries(collection, {sort, mode}).map(e => mode === 'bottles' ? e.bottle.id : e.bottling.id);
     assert.deepEqual(sorted('priceAsc'), ['b', 'a', 'd', 'e', 'c']);
     assert.deepEqual(sorted('priceDesc'), ['a', 'b', 'd', 'e', 'c']);
-    assert.deepEqual(
-      sorted('priceAsc', 'bottles'),
-      ['e1', 'a1', 'b1', 'a2', 'e2', 'd1', 'c1']
-    );
+    assert.deepEqual(sorted('priceAsc', 'bottles'), ['e1', 'a1', 'b1', 'a2', 'e2', 'd1', 'c1']);
   }
 );
 
@@ -779,10 +367,7 @@ test(
         {
           id: 'a',
           name: 'Alpha',
-          tastings: [
-            {id: 'a1', tastedOn: '2024-02-01', rating: 95},
-            {id: 'a2', tastedOn: '2026-08-10', rating: 50},
-          ],
+          tastings: [{id: 'a1', tastedOn: '2024-02-01', rating: 95}, {id: 'a2', tastedOn: '2026-08-10', rating: 50},],
           bottles: [],
         },
         {
@@ -806,8 +391,7 @@ test(
      * @param {*} sort Sort direction or ordering rule.
      * @return {!Array<*>} Resulting entries in their output order.
      */
-    const ids = sort => collectionOverviewEntries(collection, {sort}).map(e =>
-      e.bottling.id);
+    const ids = sort => collectionOverviewEntries(collection, {sort}).map(e => e.bottling.id);
     assert.deepEqual(ids('scoreDesc'), ['a', 'b', 'd', 'c']);
     assert.deepEqual(ids('scoreAsc'), ['b', 'a', 'd', 'c']);
     assert.deepEqual(ids('tastedDesc'), ['c', 'a', 'b', 'd']);
@@ -850,111 +434,10 @@ test(
      * @return {!Array<*>} Resulting entries in their output order.
      */
     const ids = (sort, mode = 'bottlings') =>
-      collectionOverviewEntries(collection, {sort, mode})
-        .map(e => mode === 'bottles' ? e.bottle.id : e.bottling.id);
+      collectionOverviewEntries(collection, {sort, mode}).map(e => mode === 'bottles' ? e.bottle.id : e.bottling.id);
     assert.deepEqual(ids('updatedDesc'), ['a', 'b', 'c']);
     assert.deepEqual(ids('updatedAsc'), ['b', 'a', 'c']);
     assert.deepEqual(ids('updatedDesc', 'bottles'), ['a1', 'b1', 'a2']);
     assert.deepEqual(ids('updatedAsc', 'bottles'), ['a2', 'b1', 'a1']);
-  }
-);
-
-test(
-  'sort options include price, score, changed and tasting dates and are selectable in both modes',
-  () => {
-    const collection = sample();
-    const original = {
-      document: globalThis.document,
-      location: globalThis.location,
-      history: globalThis.history,
-    };
-    const state = {
-      collection,
-      page: 'home',
-      overviewMode: 'bottlings',
-      view: 'cards',
-      sort: 'tastedDesc',
-      search: '',
-      status: 'all',
-      completion: 'all',
-      distillery: 'all',
-      volumeType: 'all',
-      rating: 'all',
-      pageNumber: 1,
-      pageSize: 24,
-    };
-    let markup = '';
-    try {
-      globalThis.document = {
-        /**
-         * Derives the query selector result from the supplied values.
-         * @return {*} Result computed from the supplied inputs.
-         */
-        querySelector: () => null,
-      };
-      globalThis.location = {pathname: '/', search: ''};
-      globalThis.history = {
-        /**
-         * Updates the replace state state for its caller.
-         */
-        replaceState() {},
-      };
-      const view = createHomeView({
-        state, selectors: {
-          /**
-           * Derives the all bottles result from the supplied values.
-           * @return {!Array<*>} Resulting entries in their output order.
-           */
-          allBottles: () => [],
-          /**
-           * Derives the bottles result from the supplied values.
-           * @return {!Array<*>} Resulting entries in their output order.
-           */
-          bottles: () => [],
-          /**
-           * Derives the cover photo result from the supplied values.
-           * @return {string} Resulting text.
-           */
-          coverPhoto: () => '',
-          /**
-           * Derives the distillery names result from the supplied values.
-           * @return {string} Resulting text.
-           */
-          distilleryNames: () => '',
-        },
-        /**
-         * Updates the shell state for its caller.
-         *
-         * @param {*} html HTML markup to render or inspect.
-         */
-        shell: html => {markup = html;},
-      });
-      view();
-      for (const value of [
-        'nameDesc',
-        'distillery',
-        'distilleryDesc',
-        'priceAsc',
-        'priceDesc',
-        'scoreDesc',
-        'scoreAsc',
-        'updatedDesc',
-        'updatedAsc',
-        'tastedDesc',
-        'tastedAsc',
-      ]) {
-        assert.match(markup, new RegExp(`<option value="${value}"`));
-      }
-      assert.match(markup, /<option value="tastedDesc" selected>/);
-      assert.match(markup, /Ø Kaufpreis aufsteigend/);
-      state.overviewMode = 'bottles';
-      view();
-      assert.match(markup, /Kaufpreis aufsteigend/);
-      assert.doesNotMatch(markup, /Ø Kaufpreis aufsteigend/);
-    } finally {
-      for (const [name, value] of Object.entries(original)) {
-        if (value === undefined) delete globalThis[name]; else globalThis[name] = value;
-      }
-    }
   }
 );

@@ -136,7 +136,8 @@ export const TABLE_COLUMNS = Object.freeze({
 });
 
 export const DEFAULT_TABLE_COLUMNS = Object.freeze({
-  bottlings: Object.freeze(['name', 'distillery', 'age', 'abv', 'year', 'stock', 'rating']),
+  bottlings: Object.freeze(['name', 'distillery', 'age', 'abv', 'year',
+    'stock', 'rating']),
   bottles: Object.freeze([
     'name',
     'inventory',
@@ -163,8 +164,7 @@ export function normalizeTableColumns(mode, value) {
   if (!options) return [];
   if (!Array.isArray(value)) return [...DEFAULT_TABLE_COLUMNS[mode]];
   const selected = new Set(value.filter(id => typeof id === 'string'));
-  const allowed = options.map(column => column.id).filter(id =>
-    selected.has(id));
+  const allowed = options.map(column => column.id).filter(id => selected.has(id));
   return allowed.length ? allowed : [...DEFAULT_TABLE_COLUMNS[mode]];
 }
 
@@ -172,7 +172,7 @@ export function normalizeTableColumns(mode, value) {
  * Loads table columns for collection table columns.
  *
  * @param {*} storage Storage adapter used to load or save preferences.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Validated column-visibility and ordering preferences.
  */
 export function loadTableColumns(storage) {
   try {
@@ -195,7 +195,7 @@ export function loadTableColumns(storage) {
  *
  * @param {*} preferences Preferences to read, normalize or persist.
  * @param {*} storage Storage adapter used to load or save preferences.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the column preferences were saved successfully.
  */
 export function saveTableColumns(preferences, storage) {
   try {
@@ -210,12 +210,11 @@ export function saveTableColumns(preferences, storage) {
 }
 
 /**
- * Clicking an already sorted header reverses it, otherwise use its useful
- * default.
+ * Toggles an active column's sort direction or selects its preferred initial direction.
  *
- * @param {*} column Column definition used for layout and sorting.
- * @param {*} currentSort Current sorting key and direction.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} column Column definition, if available.
+ * @param {*} currentSort Previously selected sort key.
+ * @return {*} Next sort key, or the unchanged key if no column is supplied.
  */
 export function sortForColumn(column, currentSort) {
   if (!column) return currentSort;

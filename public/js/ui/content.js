@@ -1,27 +1,23 @@
-import {escapeHtml} from './dom.js';
+import {composeMarkup} from './render-plan.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates('components/content.html');
 
 /**
- * Derives the safe result from the supplied values.
+ * Combines optional class names without introducing empty class tokens.
  *
- * @param {*} value Value to process.
- * @return {string} Resulting text.
- */
-const safe = value => escapeHtml(String(value ?? ''));
-
-/**
- * Filters records according to the classes selection rules.
- *
- * @param {!Array<*>} items Entries to process.
- * @return {string} Resulting text.
+ * @param {...(string|boolean|null|undefined)} items Class names or falsy placeholders.
+ * @return {string} Space-separated CSS class names.
  */
 const classes = (...items) => items.filter(Boolean).join(' ');
 
 /**
- * Enforces the variant precondition.
+ * Rejects unsupported semantic tags and design-system variants.
  *
- * @param {*} value Value to process.
- * @param {*} allowed Value used by this operation.
- * @param {*} kind Value used by this operation.
+ * @param {string|number} value Requested variant, tag or column count.
+ * @param {Array<string|number>} allowed Supported values.
+ * @param {string} kind Name of the configuration field in the error.
+ * @throws {RangeError} If the requested value is not supported.
  */
 const assertVariant = (value, allowed, kind) => {
   if (!allowed.includes(value)) throw new RangeError(`Invalid ${kind} variant`);
@@ -31,22 +27,28 @@ const assertVariant = (value, allowed, kind) => {
  * Renders a shared visual surface with its requested semantic tag.
  *
  * @param {!Object=} options Trusted panel content and styling.
- * @return {string} Panel markup.
+ * @return {!import('./render-plan.js').RenderPlan} Semantic panel in the requested surface variant.
  * @throws {RangeError} If tag or style variant is unsupported.
  */
-export function panel({content = '', variant = 'standard', tag = 'div', className = ''} = {}) {
+export function panel({content = '', variant = 'standard', tag = 'div',
+  className = ''} = {}) {
   assertVariant(variant, ['standard', 'analytics', 'plain'], 'panel');
   assertVariant(tag, ['div', 'section', 'article'], 'panel tag');
-  const baseClass = variant === 'analytics' ? 'analytics-panel' :
-    variant === 'plain' ? '' : 'panel';
-  return `<${tag} class="${safe(classes(baseClass, className))}" data-ds-panel="${variant}">${content}</${tag}>`;
+  const baseClass = variant === 'analytics' ? 'analytics-panel' : variant === 'plain' ? '' : 'panel';
+  return renderTemplate('panel', {
+    tag: tag,
+    className: String((classes(baseClass, className)) ?? ''),
+    variant: variant,
+    content: content,
+    closingTag: tag,
+  });
 }
 
 /**
  * Renders a labeled detail value with an appropriate semantic element.
  *
  * @param {!Object=} options Detail field data and formatting.
- * @return {string} Detail-field markup.
+ * @return {!import('./render-plan.js').RenderPlan} Labeled value with semantic definition or detail elements.
  * @throws {RangeError} If the field variant is unsupported.
  */
 export function detailField({
@@ -58,45 +60,57 @@ export function detailField({
   labelClass = '',
   valueClass = ''
 } = {}) {
-  assertVariant(
-    variant,
-    ['definition', 'fact', 'readonly', 'note', 'preview'],
-    'detail field'
-  );
+  assertVariant(variant, ['definition', 'fact', 'readonly', 'note', 'preview'], 'detail field');
   const definition = variant === 'definition';
   const labelTag = definition ? 'dt' : 'span';
-  const valueTag = definition ? 'dd' : variant === 'readonly' ? 'strong' :
-    variant === 'note' ? 'p' : 'div';
-  const valueContent = valueHtml ? String(value) : safe(value);
-  return `<div${className ? ` class="${safe(className)}"` :
-    ''} data-ds-detail-field="${variant}">` +
-    `<${labelTag}${labelClass ? ` class="${safe(labelClass)}"` :
-      ''}>${safe(label)}</${labelTag}>` +
-    `<${valueTag}${valueClass ? ` class="${safe(valueClass)}"` :
-      ''}>${valueContent}</${valueTag}>` +
-    `</div>`;
+  const valueTag = definition ? 'dd' : variant === 'readonly' ? 'strong' : variant === 'note' ? 'p' : 'div';
+  const valueContent = valueHtml ? value : String(value ?? '');
+  return renderTemplate('detailFieldDiv', {
+    classAttributes: className ? {"class": className} : {},
+    variant,
+    children: composeMarkup(
+      renderTemplate('detailField', {
+        labelTag,
+        classAttributes: labelClass ? {"class": labelClass} : {},
+        label: String(label ?? ''),
+        closingLabelTag: labelTag,
+      }),
+      renderTemplate('detailField2', {
+        valueTag,
+        classAttributes: valueClass ? {"class": valueClass} : {},
+        valueContent,
+        closingValueTag: valueTag,
+      })
+    ),
+  });
 }
 
 /**
  * Groups detail fields in a responsive two- or three-column grid.
  *
- * @param {string} content Trusted application-generated field HTML.
+ * @param {import('./render-plan.js').RenderContent} content Prepared detail-field content.
  * @param {!Object=} options2 Grid layout and semantic wrapper.
- * @return {string} Grid wrapper HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Responsive grid containing the supplied detail fields.
  * @throws {RangeError} If the columns or wrapper tag are unsupported.
  */
-export function detailGrid(content, {columns = 3, tag = 'div', className = ''} = {}) {
+export function detailGrid(content, {columns = 3, tag = 'div', className =
+  ''} = {}) {
   assertVariant(columns, [2, 3], 'detail grid');
   assertVariant(tag, ['div', 'dl'], 'detail grid tag');
-  return `<${tag}${className ? ` class="${safe(className)}"` :
-    ''} data-ds-detail-grid="${columns}">${content}</${tag}>`;
+  return renderTemplate('detailGrid', {
+    tag: tag,
+    classAttributes: className ? {"class": className} : {},
+    columns: columns,
+    content: content,
+    closingTag: tag,
+  });
 }
 
 /**
  * Renders a missing-data explanation without inventing values.
  *
  * @param {!Object=} options Message, trusted actions and style.
- * @return {string} Empty-state markup.
+ * @return {!import('./render-plan.js').RenderPlan} Missing-data message in the requested visual variant.
  * @throws {RangeError} If the variant is unsupported.
  */
 export function emptyState({
@@ -107,56 +121,71 @@ export function emptyState({
   className = ''
 } = {}) {
   assertVariant(variant, ['collection', 'subtle', 'inline'], 'empty state');
-  if (variant === 'inline') return `<p class="${safe(classes('analytics-empty', className))}" data-ds-empty-state="inline">${safe(description || title)}</p>`;
-  if (variant === 'subtle') return `<p class="${safe(classes('hint', className))}" data-ds-empty-state="subtle">${safe(description || title)}</p>`;
-  return `<div class="${safe(classes('empty-state', className))}" data-ds-empty-state="collection">` +
-    `<strong>${safe(title)}</strong><p>${safe(description)}</p>${actions}</div>`;
+  if (variant === 'inline') return renderTemplate('emptyStateP', {
+    className: String((classes('analytics-empty', className)) ?? ''),
+    message: String((description || title) ?? ''),
+  });
+  if (variant === 'subtle') return renderTemplate('emptyStateP2', {
+    className: String((classes('hint', className)) ?? ''),
+    message: String((description || title) ?? ''),
+  });
+  return renderTemplate('emptyStateDiv', {
+    className: String((classes('empty-state', className)) ?? ''),
+    title: String(title ?? ''),
+    description: String(description ?? ''),
+    actions,
+  });
 }
 
 /**
  * Renders an accessible visual separator without view-specific borders.
  *
  * @param {!Object=} options Separator orientation and CSS class.
- * @return {string} HTML separator.
+ * @return {!import('./render-plan.js').RenderPlan} Horizontal or vertical visual separator.
  * @throws {RangeError} If the orientation is unsupported.
  */
 export function divider({orientation = 'horizontal', className = ''} = {}) {
   assertVariant(orientation, ['horizontal', 'vertical'], 'divider');
   return orientation === 'horizontal'
-    ? `<hr class="${safe(classes('divider', className))}" data-ds-divider="horizontal">`
-    : `<span class="${safe(className)}" data-ds-divider="vertical" aria-hidden="true"></span>`;
+    ? renderTemplate('hr', {className: String((classes('divider', className)) ?? ''), })
+    : renderTemplate('dividerSpan', {className: String(className ?? ''), });
 }
 
 /**
- * Groups trusted action markup while preserving delegated events.
+ * Groups composed action controls while preserving delegated events.
  *
- * @param {string} content Trusted application-generated action HTML.
+ * @param {import('./render-plan.js').RenderContent} content Prepared action controls.
  * @param {!Object=} options2 Toolbar style and extra class.
- * @return {string} Toolbar HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Action toolbar containing the supplied controls.
  * @throws {RangeError} If the toolbar variant is unsupported.
  */
-export function actionToolbar(content, {className = '', variant = 'inline'} = {}) {
+export function actionToolbar(content, {className = '', variant = 'inline'} =
+  {}) {
   assertVariant(variant, ['inline', 'filters', 'end'], 'action toolbar');
   const baseClass = variant === 'filters' ? 'toolbar' : 'actions';
-  return `<div class="${safe(classes(baseClass, className))}" data-ds-action-toolbar="${variant}">${content}</div>`;
+  return renderTemplate('actionToolbarDiv', {
+    className: String((classes(baseClass, className)) ?? ''),
+    variant: variant,
+    content: content,
+  });
 }
 
 /**
- * Wraps trusted document-entry markup in a list item.
+ * Wraps prepared document-entry content in a list item.
  *
- * @param {string} content Trusted application-generated document HTML.
- * @return {string} List-item HTML.
+ * @param {import('./render-plan.js').RenderContent} content Prepared document entry.
+ * @return {!import('./render-plan.js').RenderPlan} List item containing the supplied document entry.
  */
 export function documentItem(content) {
-  return `<li>${content}</li>`;
+  return renderTemplate('li', {content: content, });
 }
 
 /**
- * Renders the document list from trusted list-item HTML.
+ * Groups prepared document list items without string concatenation.
  *
- * @param {!Array<string>} items Complete, application-generated list items.
- * @return {string} Document-list HTML.
+ * @param {import('./render-plan.js').PlanPart[]} items Prepared list-item plans.
+ * @return {!import('./render-plan.js').RenderPlan} Document list containing the supplied list items.
  */
 export function documentList(items) {
-  return `<ul class="document-list" data-ds-document-list>${items.join('')}</ul>`;
+  return renderTemplate('documentList', {items: composeMarkup(items), });
 }

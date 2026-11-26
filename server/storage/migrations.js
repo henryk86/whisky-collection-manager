@@ -6,17 +6,14 @@ import fs from 'node:fs';
 import {assert} from '../domain/errors.js';
 import {allBottles, now, uid} from '../domain/collection.js';
 import {validate} from '../domain/validation.js';
-const internationalSeed = JSON.parse(fs.readFileSync(
-  new URL('../../seed/distillery.json', import.meta.url),
-  'utf8'
-));
+const internationalSeed = JSON.parse(fs.readFileSync(new URL('../../seed/distillery.json', import.meta.url), 'utf8'));
 
 // Convert legacy top-level bottles into the owning bottling before validation.
 /**
  * Moves legacy physical bottles into their parent bottlings.
  *
- * @param {*} db Db used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} db Legacy collection modified in place to nest physical bottles under their bottlings.
+ * @return {boolean} True if any legacy bottle nesting or redundant ownership fields changed.
  */
 export function migrateNestedBottles(db) {
   let changed = false;
@@ -32,12 +29,7 @@ export function migrateNestedBottles(db) {
     }
     for (const bottle of db.bottles) {
       const owner = (db.bottlings || []).find(b => b.id === bottle.bottlingId);
-      assert(
-        owner,
-        'Verwaiste Flasche kann nicht migriert werden',
-        400,
-        "api.errors.orphanedBottleCannotBeMigrated"
-      );
+      assert(owner, 'Verwaiste Flasche kann nicht migriert werden', 400, "api.errors.orphanedBottleCannotBeMigrated");
       if (owner.bottles.some(b => b.id === bottle.id)) {
         throw new Error('Doppelte Flaschen-ID bei Migration');
       }
@@ -69,8 +61,8 @@ export function migrateNestedBottles(db) {
 /**
  * Normalizes inventory numbering from earlier collection schemas.
  *
- * @param {*} db Db used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {*} db Legacy collection whose inventory numbers and old label codes are reconciled in place.
+ * @return {!Object} Whether inventory numbering changed, together with detected conflicts.
  */
 export function migrateInventoryNumbers(db) {
   let changed = false;
@@ -92,9 +84,7 @@ export function migrateInventoryNumbers(db) {
         delete bottle.labelCode;
         changed = true;
       }
-      if (bottle.inventoryNumber != null &&
-        String(bottle.inventoryNumber) !== String(bottle.inventoryNumber)
-          .trim()) {
+      if (bottle.inventoryNumber != null && String(bottle.inventoryNumber) !== String(bottle.inventoryNumber).trim()) {
         bottle.inventoryNumber = String(bottle.inventoryNumber).trim();
         changed = true;
       }
@@ -107,8 +97,7 @@ export function migrateInventoryNumbers(db) {
       }
       if (/^\d+$/.test(number)) {
         const asNumber = Number(number);
-        if (Number.isSafeInteger(asNumber) && asNumber >=
-          db.nextInventoryNumber) {
+        if (Number.isSafeInteger(asNumber) && asNumber >= db.nextInventoryNumber) {
           db.nextInventoryNumber = asNumber + 1;
           changed = true;
         }
@@ -127,14 +116,14 @@ export function migrateInventoryNumbers(db) {
 /**
  * Upgrades legacy bottle-category labels to current values.
  *
- * @param {*} db Db used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} db Collection whose physical bottles may still contain the obsolete labelType field.
+ * @return {boolean} True if obsolete bottle label-type fields were removed.
  */
 export function migrateLabelTypes(db) {
   let changed = false;
   for (const bottle of allBottles(db)) {
     if (Object.hasOwn(bottle, 'labelType')) {
-      delete bottle.labelType;
+      delete /** @type {import('../../shared/types.js').Bottle & {labelType?: string}} */ (bottle).labelType;
       changed = true;
     }
   }
@@ -144,8 +133,8 @@ export function migrateLabelTypes(db) {
 /**
  * Updates legacy distillery references to the current record structure.
  *
- * @param {*} db Db used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} db Collection whose bottlings may still refer to a single legacy distilleryId.
+ * @return {boolean} True if any distillery references were migrated.
  */
 export function migrateDistilleries(db) {
   let changed = false;
@@ -165,8 +154,8 @@ export function migrateDistilleries(db) {
 /**
  * Normalizes stored photo metadata when upgrading older collections.
  *
- * @param {*} db Db used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} db Collection whose image metadata must be moved to physical bottle photo lists.
+ * @return {boolean} True if any legacy photo metadata was migrated.
  */
 export function migratePhotos(db) {
   let changed = false;
@@ -203,8 +192,8 @@ export function migratePhotos(db) {
  * Keep bottling.volumeMl as the nominal size published by the producer; each
  * bottle additionally receives its own actual size when known.
  *
- * @param {*} db Db used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} db Collection whose legacy bottling-level bottle type is propagated to physical bottles.
+ * @return {boolean} True if bottle volume fields or the associated schema version changed.
  */
 export function migrateBottleTypes(db) {
   let changed = false;
@@ -235,8 +224,8 @@ export function migrateBottleTypes(db) {
 /**
  * Existing collections can gain the optional document list without data loss.
  *
- * @param {*} db Db used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} db Collection whose physical bottle records may lack a files array.
+ * @return {boolean} True if missing bottle document lists were added.
  */
 export function migrateDocumentLists(db) {
   let changed = false;
@@ -252,18 +241,16 @@ export function migrateDocumentLists(db) {
 /**
  * Add newly published international sites without overwriting user changes.
  *
- * @param {*} db Db used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} db Collection whose distillery catalog is augmented from the international seed.
+ * @return {boolean} True if any new international distilleries were added.
  */
 export function migrateInternationalDistilleries(db) {
   if (!Array.isArray(db.distilleries)) return false;
-  const currentNames = new Set(db.distilleries.map(d => d.name.trim()
-    .toLocaleLowerCase('en')));
+  const currentNames = new Set(db.distilleries.map(d => d.name.trim().toLocaleLowerCase('en')));
   const currentIds = new Set(db.distilleries.map(d => d.id));
   let changed = false;
   for (const entry of internationalSeed.filter(d => d.country)) {
-    if (currentNames.has(entry.name.trim().toLocaleLowerCase('en')) ||
-      currentIds.has(entry.id)) continue;
+    if (currentNames.has(entry.name.trim().toLocaleLowerCase('en')) || currentIds.has(entry.id)) continue;
     db.distilleries.push({...entry});
     currentNames.add(entry.name.trim().toLocaleLowerCase('en'));
     currentIds.add(entry.id);
@@ -277,13 +264,12 @@ export function migrateInternationalDistilleries(db) {
  * change user-set status, coordinates or explicit geographic fields.
  * Country/region belong to distilleries, not to individual bottlings.
  *
- * @param {*} db Db used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} db Collection whose existing distilleries are matched against known origin metadata.
+ * @return {boolean} True if any missing or legacy origin metadata was updated.
  */
 export function migrateDistilleryOrigins(db) {
   if (!Array.isArray(db.distilleries)) return false;
-  const catalog = new Map(internationalSeed.map(d => [d.name.trim()
-    .toLocaleLowerCase('en'), d]));
+  const catalog = new Map(internationalSeed.map(d => [d.name.trim().toLocaleLowerCase('en'), d]));
   let changed = false;
   for (const site of db.distilleries) {
     const known = catalog.get(site.name.trim().toLocaleLowerCase('en'));
@@ -292,8 +278,7 @@ export function migrateDistilleryOrigins(db) {
     // Do not reinterpret UK for unknown sites, Wales, England or Northern
     // Ireland.
     if (known.country === 'Schottland' &&
-      /^(?:UK|GB|United Kingdom|Vereinigtes Königreich)$/i
-        .test(site.country?.trim() || '')) {
+      /^(?:UK|GB|United Kingdom|Vereinigtes Königreich)$/i.test(site.country?.trim() || '')) {
       site.country = 'Schottland';
       changed = true;
     }
@@ -312,19 +297,17 @@ export function migrateDistilleryOrigins(db) {
  * validation.
  *
  * @param {!Object} collection Collection data being processed.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Migration change flag and inventory-number conflicts.
  */
 export function migrateCollection(collection) {
   assert(
-    collection && typeof collection === 'object' &&
-    !Array.isArray(collection),
+    collection && typeof collection === 'object' && !Array.isArray(collection),
     'Ungültige Sammlungsstruktur',
     400,
     "api.errors.invalidCollectionStructure"
   );
   assert(
-    Array.isArray(collection.bottlings) &&
-    Array.isArray(collection.reservedInventoryNumbers),
+    Array.isArray(collection.bottlings) && Array.isArray(collection.reservedInventoryNumbers),
     'Ungültige Sammlungsstruktur',
     400,
     "api.errors.invalidCollectionStructure"
@@ -353,14 +336,12 @@ export function migrateCollection(collection) {
  * upgraded losslessly to schema 6. The input is never changed; validation runs
  * before any file is replaced.
  *
- * @param {*} source Source used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {*} source Untrusted collection document, validated for a supported schema before migration.
+ * @return {!Object} Independent upgraded collection, change flag and detected inventory conflicts.
  */
 export function migrateCollectionToCurrent(source) {
   assert(
-    source && typeof source === 'object' && !Array.isArray(source) &&
-    Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >=
-    1 && source.schemaVersion <= 6,
+    source && typeof source === 'object' && !Array.isArray(source) && Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >= 1 && source.schemaVersion <= 6,
     'Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben unverändert',
     400,
     "api.errors.unsupportedCollectionVersion"

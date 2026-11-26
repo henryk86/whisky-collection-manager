@@ -3,22 +3,26 @@ import {t} from '../../i18n/index.js';
 import {query} from '../../ui/dom.js';
 import {textInput} from '../../ui/fields.js';
 import {supportedFormats, cameraConfig} from './config.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates('scanner/controller.html');
+
 /**
  * Camera lifecycle only. Inventory lookup lives in resolve-code.js.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {{scanCode: (assign?: boolean) => Promise<void>, scanImage: (file: File|undefined) => Promise<void>, stopScan: () => Promise<void>}} Scanner lifecycle operations.
  */
 export function createScanner({state, showModal, resolveCode}) {
   let scannerSequence = 0;
   /**
-   * Updates element attributes used by scan status.
+   * Displays the current scanner status and its visual severity.
    *
-   * @param {*} message Message to display or use for diagnostics.
-   * @param {string=} kind Value used by this operation.
+   * @param {string} message Status shown in the scanner dialog.
+   * @param {string=} kind Visual status category for the scanner message.
    */
   function scanStatus(message, kind = 'info') {
-    const element = query('#scan-error');
+    const element = /** @type {HTMLElement} */ (query('#scan-error'));
     if (element) {
       element.textContent = message;
       element.dataset.status = kind;
@@ -26,10 +30,10 @@ export function createScanner({state, showModal, resolveCode}) {
   }
 
   /**
-   * Builds the localized scan error text for the current language.
+   * Translates common camera failures and preserves the original message for other errors.
    *
    * @param {*} err Error to handle or propagate.
-   * @return {*} Value returned by the delegated operation.
+   * @return {string} Camera or decoder error message.
    */
   function scanError(err) {
     const name = err?.name || '';
@@ -42,14 +46,14 @@ export function createScanner({state, showModal, resolveCode}) {
     if (name === 'NotReadableError' || name === 'TrackStartError') {
       return t("scanner.camera.inUse");
     }
-    return err?.message || String(err) ||
-      t("scanner.errors.unknownScannerError");
+    return err?.message || String(err) || t("scanner.errors.unknownScannerError");
   }
+  /** @type {Promise<NonNullable<Window['Html5Qrcode']>>|null} */
   let scannerLibraryPromise = null;
   /**
    * Loads scanner library for controller.
    *
-   * @return {*} Created DOM element.
+   * @return {Promise<NonNullable<Window['Html5Qrcode']>>} Loaded scanner constructor.
    */
   function loadScannerLibrary() {
     if (window.Html5Qrcode) {
@@ -60,11 +64,8 @@ export function createScanner({state, showModal, resolveCode}) {
         const script = document.createElement('script');
         script.src = '/vendor/html5-qrcode.min.js';
         script.async = true;
-        script.onload = () => window.Html5Qrcode ?
-          resolve(window.Html5Qrcode) :
-          reject(Error('Scanner-Bibliothek konnte nicht geladen werden'));
-        script.onerror = () =>
-          reject(Error(t('scanner.errors.libraryMissing')));
+        script.onload = () => window.Html5Qrcode ? resolve(window.Html5Qrcode) : reject(Error('Scanner-Bibliothek konnte nicht geladen werden'));
+        script.onerror = () => reject(Error(t('scanner.errors.libraryMissing')));
         document.head.append(script);
       }).catch(err => {
         scannerLibraryPromise = null;
@@ -75,8 +76,8 @@ export function createScanner({state, showModal, resolveCode}) {
   }
 
   /**
-   * Performs the stop scan lifecycle action.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Invalidates in-flight scans, stops camera tracks and releases the decoder.
+   * @return {Promise<void>} Completion of the scanner operation.
    */
   async function stopScan() {
     scannerSequence++;
@@ -101,15 +102,14 @@ export function createScanner({state, showModal, resolveCode}) {
   }
 
   /**
-   * Builds the localized scan code text for the current language.
+   * Opens the camera dialog, starts decoding and preserves the bottle form when assigning a shelf.
    *
-   * @param {boolean=} assign Value used by this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @param {boolean=} assign Whether to assign the scanned bottle to a warehouse shelf.
+   * @return {Promise<void>} Completion of the scanner operation.
    */
   async function scanCode(assign = false) {
     const previousModal = assign ? state.modal : null;
-    const previousValues = assign && query('#bottle-form') ?
-      Object.fromEntries(new FormData(query('#bottle-form')).entries()) : null;
+    const previousValues = assign && query('#bottle-form') ? Object.fromEntries(new FormData(/** @type {HTMLFormElement} */(query('#bottle-form'))).entries()) : null;
     state.scanReturn = assign ? {
       modal: previousModal, values: previousValues,
     } : null;
@@ -117,24 +117,14 @@ export function createScanner({state, showModal, resolveCode}) {
     const sequence = scannerSequence;
     showModal(
       t("forms.bottle.scanLabel"),
-      `<p class="hint">${t("scanner.camera.supportedCodeTypes")}</p>
-    <div id="scan-reader" class="scan-reader">
-    </div>
-    <p id="scan-error" class="hint" role="status" aria-live="polite">${t("scanner.status.starting")}</p>
-    <div class="forms scan-manual-fields">${textInput(
-        t("scanner.input.manualInventoryNumber"),
-        'manualCode',
-        '',
-        {
-          full: true,
-        }
-      )}<label class="form-field full">${t("scanner.actions.selectCodeImage")}<input type="file" id="scan-file" accept="image/*" capture="environment">
-    </label>
-    </div>
-    <div class="actions scan-manual-actions">
-    <button class="btn primary" data-act="submit-code" data-assign="${assign ? '1' : '0'}">${t("scanner.actions.findAndApplyCode")}</button>
-    ${actionButton({label: t("common.actions.close"), action: 'close-modal'})}
-    </div>`
+      renderTemplate('hint', {
+        manualCodeField: textInput(t("scanner.input.manualInventoryNumber"), 'manualCode', '', {full: true, }),
+        assign: assign ? '1' : '0',
+        closeModalButton: actionButton({
+          label: t("common.actions.close"),
+          action: 'close-modal',
+        }),
+      })
     );
     if (!window.isSecureContext) {
       scanStatus(t("scanner.camera.requiresHttps"), 'error');
@@ -160,11 +150,11 @@ export function createScanner({state, showModal, resolveCode}) {
       state.scanner = scanner;
       let handled = false;
       /**
-       * Builds the localized decoded text for the current language.
+       * Accepts the first valid decode, stops the camera and resolves the inventory code.
        *
-       * @param {*} value Value to process.
-       * @param {*} result Result from the preceding operation.
-       * @return {!Promise<*>} Promise for the asynchronous operation.
+       * @param {string} value Decoded barcode or QR text.
+       * @param {WcmScannerResult} result Decoder metadata, including the format name.
+       * @return {Promise<void>} Completion of the scanner operation.
        */
       const decoded = async (value, result) => {
         if (handled || state.scanner !== scanner) {
@@ -172,10 +162,9 @@ export function createScanner({state, showModal, resolveCode}) {
         }
         handled = true;
         const code = String(value ?? '').trim();
-        const format = result?.result?.format?.formatName ||
-          t("scanner.input.barcodeOrQr");
+        const format = result?.result?.format?.formatName || t("scanner.input.barcodeOrQr");
         scanStatus(`Erkannt (${format}): ${code}`, 'success');
-        const field = query('[name=manualCode]');
+        const field = /** @type {HTMLInputElement} */ (query('[name=manualCode]'));
         if (field) {
           field.value = code;
         }
@@ -209,19 +198,16 @@ export function createScanner({state, showModal, resolveCode}) {
       if (sequence !== scannerSequence) {
         return;
       }
-      scanStatus(
-        t('scanner.errors.unavailable', {error: scanError(err)}),
-        'error'
-      );
+      scanStatus(t('scanner.errors.unavailable', {error: scanError(err)}), 'error');
       stopScan();
     }
   }
 
   /**
-   * Builds the localized scan image text for the current language.
+   * Decodes an uploaded image and resolves its inventory code without using the camera.
    *
-   * @param {*} file File resource to read, write or inspect.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @param {File|undefined} file Uploaded barcode or QR image.
+   * @return {Promise<void>} Completion of the scanner operation.
    */
   async function scanImage(file) {
     if (!file) {
@@ -239,11 +225,9 @@ export function createScanner({state, showModal, resolveCode}) {
         formatsToSupport: supportedFormats(window.Html5QrcodeSupportedFormats),
         useBarCodeDetectorIfSupported: false,
       }, false);
-      state.scanner = {
-        engine,
-      };
+      state.scanner = {engine, };
       const value = await engine.scanFile(file, true);
-      const field = query('[name=manualCode]');
+      const field = /** @type {HTMLInputElement} */ (query('[name=manualCode]'));
       if (field) {
         field.value = value;
       }
@@ -252,10 +236,7 @@ export function createScanner({state, showModal, resolveCode}) {
       await resolveCode(value, assign);
     }
     catch (err) {
-      scanStatus(
-        'Bild konnte nicht gelesen werden: ' + scanError(err),
-        'error'
-      );
+      scanStatus('Bild konnte nicht gelesen werden: ' + scanError(err), 'error');
     }
   }
   return {

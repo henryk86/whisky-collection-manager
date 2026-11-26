@@ -1,11 +1,15 @@
-import {escapeHtml} from './dom.js';
+import {composeMarkup} from './render-plan.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates('components/section-navigation.html');
+
 
 /**
  * Shared desktop sidebar and mobile selector for multi-section content pages.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @param {*} content Content used by this operation.
- * @return {string} Resulting text.
+ * @param {*} content Render content of the active workspace section.
+ * @return {!import('./render-plan.js').RenderPlan} Section workspace with desktop navigation and a mobile selector.
  */
 export function sectionWorkspace(
   {
@@ -19,26 +23,30 @@ export function sectionWorkspace(
   },
   content
 ) {
-  const safe = escapeHtml;
-  const items = sections.map(section =>
-    ({id: String(section.id), label: String(section.label)}));
-  const selected = items.some(item => item.id === activeId) ? activeId :
-    items[0]?.id;
-  const desktop = items.map(item =>
-    `<button type="button" class="section-nav-item${item.id === selected ?
-      ' active' : ''}" data-act="${safe(action)}" ${itemAttribute}="${safe(item.id)}"${item.id === selected ? ' aria-current="page"' : ''}>${safe(item.label)}</button>`).join('');
-  const options = items.map(item =>
-    `<option value="${safe(item.id)}"${item.id === selected ? ' selected' :
-      ''}>${safe(item.label)}</option>`).join('');
-  return `<div class="section-workspace">
-        <div class="section-workspace-navigation">
-            <nav class="section-nav-desktop${desktopClass ?
-      ` ${safe(desktopClass)}` :
-      ''}" aria-label="${safe(label)}">${desktop}</nav>
-            <label class="section-nav-mobile"><span>${safe(label)}</span>
-                <select data-section-switch="${safe(switchKind)}" aria-label="${safe(label)}">${options}</select>
-            </label>
-        </div>
-        <div class="section-workspace-content">${content}</div>
-    </div>`;
+  const items = sections.map(section => ({id: String(section.id), label: String(section.label)}));
+  const selected = items.some(item => item.id === activeId) ? activeId : items[0]?.id;
+  const desktop = composeMarkup(items.map(item =>
+    renderTemplate('sectionNavItem', {
+      id: item.id === selected ? ' active' : '',
+      act: String(action ?? ''),
+      itemAttributes: {[itemAttribute]: item.id},
+      ariaCurrentAttributes: item.id === selected ? {"aria-current": "page"} : {},
+      label: String(item.label ?? ''),
+    })));
+  const options = composeMarkup(items.map(item =>
+    renderTemplate('optionsOption', {
+      value: String(item.id ?? ''),
+      selectedAttributes: item.id === selected ? {"selected": true} : {},
+      label: String(item.label ?? ''),
+    })));
+  return renderTemplate('sectionWorkspace', {
+    desktopClass: desktopClass ? ` ${String(desktopClass ?? '')}` : '',
+    ariaLabel: String(label ?? ''),
+    desktop: desktop,
+    label: String(label ?? ''),
+    sectionSwitch: String(switchKind ?? ''),
+    navigationLabel: String(label ?? ''),
+    options: options,
+    content: content,
+  });
 }

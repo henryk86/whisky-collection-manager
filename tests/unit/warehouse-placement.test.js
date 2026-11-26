@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {furnitureBounds, furnitureOverlap, furnitureCollision, furnitureFitsRoom, moveFurnitureTowards} from '../../shared/warehouse-placement.js';
+import {
+  furnitureBounds, furnitureOverlap, furnitureCollision,
+  furnitureFitsRoom, moveFurnitureTowards
+}
+  from '../../shared/warehouse-placement.js';
 
 /**
  * Derives the furniture result from the supplied values.
@@ -20,71 +24,32 @@ test(
   'placement compares rotated footprints and occupied vertical ranges, allowing touching faces',
   () => {
     const base = furniture('base', 0, 0);
-    assert.equal(
-      furnitureOverlap(base, furniture('side', 1, 0)),
-      false,
-      'edge-to-edge is legal'
-    );
+    assert.equal(furnitureOverlap(base, furniture('side', 1, 0)), false, 'edge-to-edge is legal');
     assert.equal(
       furnitureOverlap(base, furniture('stack', 0, 0, {elevation: 1.8})),
       false,
       'touching vertical surfaces is legal'
     );
-    assert.equal(
-      furnitureOverlap(
-        base,
-        furniture('suspended', 0, 0, {elevation: 1.9, itemHeight: .4})
-      ),
-      false
-    );
-    assert.equal(
-      furnitureOverlap(
-        base,
-        furniture('intruding', 0, 0, {elevation: 1.79, itemHeight: .4})
-      ),
-      true
-    );
-    assert.equal(
-      furnitureOverlap(
-        base,
-        furniture('upper', 0, 0, {elevation: 0.5, itemHeight: .2})
-      ),
-      true
-    );
-    assert.equal(
-      furnitureOverlap(base, furniture('far', 2, 2, {elevation: 0.5})),
-      false
-    );
-    const rotated = furniture('rotated', 1.1, 0, {width: 2, depth: .4, rotation: 90});
-    assert.deepEqual(
-      furnitureBounds(rotated),
-      {x: 1.1, y: 0, w: .4, h: 2, z: 0, d: 1.8}
-    );
-    assert.equal(
-      furnitureOverlap(
-        furniture('left', .7, .5, {width: .5, depth: .5}),
-        rotated
-      ),
-      true
-    );
+    assert.equal(furnitureOverlap(base, furniture('suspended', 0, 0, {elevation: 1.9, itemHeight: .4})), false);
+    assert.equal(furnitureOverlap(base, furniture('intruding', 0, 0, {elevation: 1.79, itemHeight: .4})), true);
+    assert.equal(furnitureOverlap(base, furniture('upper', 0, 0, {elevation: 0.5, itemHeight: .2})), true);
+    assert.equal(furnitureOverlap(base, furniture('far', 2, 2, {elevation: 0.5})), false);
+    const rotated = furniture('rotated', 1.1, 0, {
+      width: 2, depth: .4,
+      rotation: 90,
+    });
+    assert.deepEqual(furnitureBounds(rotated), {x: 1.1, y: 0, w: .4, h: 2, z: 0, d: 1.8});
+    assert.equal(furnitureOverlap(furniture('left', .7, .5, {width: .5, depth: .5}), rotated), true);
   }
 );
 
 test(
   'placement helper detects all furniture levels and validates the room boundary',
   () => {
-    const base = furniture('base', 0, 0), upper =
-      furniture('upper', 0, 0, {elevation: 1.8});
+    const base = furniture('base', 0, 0), upper = furniture('upper', 0, 0, {elevation: 1.8});
     const room = {width: 3, height: 3, furniture: [base, upper]};
-    assert.equal(
-      furnitureCollision(room, furniture('other', 0, 0, {elevation: 2.1})).id,
-      'upper'
-    );
-    assert.equal(
-      furnitureCollision(room, base),
-      null,
-      'an item does not collide with itself'
-    );
+    assert.equal(furnitureCollision(room, furniture('other', 0, 0, {elevation: 2.1})).id, 'upper');
+    assert.equal(furnitureCollision(room, base), null, 'an item does not collide with itself');
     assert.equal(furnitureFitsRoom(room, furniture('edge', 2, 2)), true);
     assert.equal(furnitureFitsRoom(room, furniture('outside', 2.01, 2)), false);
   }

@@ -6,33 +6,22 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 /**
- * Derives the collect result from the supplied values.
- *
- * @param {*} directory Directory containing the requested data.
- * @return {*} Combined text from the input values.
+ * Recursively discovers JavaScript test files below a directory.
+ * @param {string} directory Directory to scan, including nested test folders.
+ * @return {string[]} Paths of files ending in .test.js.
  */
 function collect(directory) {
-  return fs.readdirSync(directory, {
-    withFileTypes: true,
-  }).flatMap(entry => {
+  return fs.readdirSync(directory, {withFileTypes: true, }).flatMap(entry => {
     const file = path.join(directory, entry.name);
-    return entry.isDirectory() ? collect(file) : file.endsWith('.test.js') ?
-      [file] : [];
+    return entry.isDirectory() ? collect(file) : file.endsWith('.test.js') ? [file] : [];
   });
 }
-const directories = process.argv.includes('--browser') ? ['tests/browser'] :
-  ['tests/unit', 'tests/integration'];
+const directories = process.argv.includes('--browser') ? ['tests/browser'] : ['tests/unit', 'tests/integration'];
 const files = directories.flatMap(collect).sort();
 if (!files.length) {
   throw new Error('No test files found');
 }
-const result = spawnSync(
-  process.execPath,
-  ['--test', '--test-concurrency=4', ...files],
-  {
-    stdio: 'inherit',
-  }
-);
+const result = spawnSync(process.execPath, ['--test', '--test-concurrency=4', ...files], {stdio: 'inherit', });
 if (result.error) {
   throw result.error;
 }

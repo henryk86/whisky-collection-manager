@@ -1,5 +1,6 @@
 import {t} from '../../i18n/index.js';
-import {validateAdjustmentValues} from '../../../../shared/photo-adjustments.js';
+import {validateAdjustmentValues}
+  from '../../../../shared/photo-adjustments.js';
 /**
  * Reversible editing parameters: original/cutout image files are never
  * modified.
@@ -21,24 +22,18 @@ export const PHOTO_ADJUSTMENT_GROUPS = Object.freeze([
     ],
   },
   {
-    key: 'detail', sliders: [
-      {key: 'clarity', min: -100, max: 100, step: 1},
-      {key: 'sharpen', min: 0, max: 100, step: 1},
-    ],
+    key: 'detail', sliders: [{key: 'clarity', min: -100, max: 100, step: 1}, {key: 'sharpen', min: 0, max: 100, step: 1},],
   },
 ]);
-export const PHOTO_ADJUSTMENT_FIELDS =
-  Object.freeze(PHOTO_ADJUSTMENT_GROUPS.flatMap(group => group.sliders));
-export const EMPTY_PHOTO_ADJUSTMENTS =
-  Object.freeze(Object.fromEntries(PHOTO_ADJUSTMENT_FIELDS.map(({key}) =>
-    [key, 0])));
+export const PHOTO_ADJUSTMENT_FIELDS = Object.freeze(PHOTO_ADJUSTMENT_GROUPS.flatMap(group => group.sliders));
+export const EMPTY_PHOTO_ADJUSTMENTS = Object.freeze(Object.fromEntries(PHOTO_ADJUSTMENT_FIELDS.map(({key}) => [key, 0])));
 /**
- * Calculates the clip numeric value.
+ * Clamps a photo-adjustment value to its allowed interval.
  *
  * @param {*} value Value to process.
  * @param {number=} min Minimum accepted value.
  * @param {number=} max Maximum accepted value.
- * @return {number} Calculated numeric value.
+ * @return {number} Value bounded by the supplied minimum and maximum.
  */
 const clip = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
 
@@ -46,7 +41,7 @@ const clip = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
  * Reject unknown keys and non-finite numeric values at the server boundary.
  *
  * @param {*} value Input value to process.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Normalized values for all supported photo-adjustment controls.
  */
 export function validatePhotoAdjustments(value) {
   try {return validateAdjustmentValues(value);}
@@ -61,17 +56,16 @@ export function validatePhotoAdjustments(value) {
  * Checks whether photo edits differ from the saved adjustments.
  *
  * @param {*} value Input value to process.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True when at least one supported adjustment differs from zero.
  */
-export const photoAdjustmentsChanged = value =>
-  PHOTO_ADJUSTMENT_FIELDS.some(({key}) => Number(value?.[key] || 0) !== 0);
+export const photoAdjustmentsChanged = value => PHOTO_ADJUSTMENT_FIELDS.some(({key}) => Number(value?.[key] || 0) !== 0);
 
 /**
  * Reset only one editor group; all other adjustments remain untouched.
  *
  * @param {*} current Current resource data to update.
- * @param {*} groupKey Group key used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {string} groupKey Key of the adjustment group whose sliders are reset.
+ * @return {!Object} Adjustment values with only the requested editor group reset.
  */
 export function resetPhotoAdjustmentGroup(current, groupKey) {
   const group = PHOTO_ADJUSTMENT_GROUPS.find(entry => entry.key === groupKey);
@@ -87,19 +81,17 @@ export function resetPhotoAdjustmentGroup(current, groupKey) {
  * pixels are never changed. Transparent, nearly black and clipped pixels
  * cannot provide reliable color information.
  *
- * @param {*} source Source used by this operation.
- * @param {*} area Area used by this operation.
+ * @param {*} source Source RGBA image data with pixel dimensions.
+ * @param {*} area Rectangle selected in source-image pixel coordinates for white-balance sampling.
  * @param {!Object=} current Current resource data to update.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} White-balance adjustment values derived from valid selected source pixels.
  */
-export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTMENTS) {
+export function whiteBalanceFromArea(source, area,
+  current = EMPTY_PHOTO_ADJUSTMENTS) {
   const settings = validatePhotoAdjustments(current);
   const {width, height, data} = source || {};
-  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 ||
-    height < 1 ||
-    !data || data.length !== width * height * 4 ||
-    !area || ![area.x, area.y, area.width, area.height]
-      .every(Number.isFinite) ||
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || !data || data.length !== width * height * 4 ||
+    !area || ![area.x, area.y, area.width, area.height].every(Number.isFinite) ||
     area.width <= 0 || area.height <= 0)
     throw new RangeError(t('errors.photoEditor.invalidWhiteBalanceArea'));
   const x0 = Math.max(0, Math.floor(area.x));
@@ -110,16 +102,16 @@ export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTM
   // Do not compensate the pre-existing WB a second time. Estimate both WB
   // controls
   // afresh from the reference, while preserving exposure and other corrections.
-  const neutral = adjustPhotoPixels(source, {...settings, temperature: 0, tint: 0});
-  const stride = Math.max(1, Math.floor(Math.sqrt((x1 - x0) * (y1 - y0) /
-    32000)));
+  const neutral = adjustPhotoPixels(source, {
+    ...settings, temperature: 0,
+    tint: 0,
+  });
+  const stride = Math.max(1, Math.floor(Math.sqrt((x1 - x0) * (y1 - y0) / 32000)));
   let r = 0, g = 0, b = 0, count = 0;
   for (let y = y0; y < y1; y += stride) for (let x = x0; x < x1; x += stride) {
     const i = (y * width + x) * 4;
-    const red = neutral.data[i], green = neutral.data[i + 1], blue =
-      neutral.data[i + 2];
-    if (data[i + 3] < 192 || Math.min(red, green, blue) < 12 ||
-      Math.max(red, green, blue) > 247) continue;
+    const red = neutral.data[i], green = neutral.data[i + 1], blue = neutral.data[i + 2];
+    if (data[i + 3] < 192 || Math.min(red, green, blue) < 12 || Math.max(red, green, blue) > 247) continue;
     r += red; g += green; b += blue; count++;
   }
   if (!count) throw new RangeError(t('errors.photoEditor.noWhiteBalancePixels'));
@@ -132,10 +124,8 @@ export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTM
   const det = a * e - c * d;
   if (!Number.isFinite(det) || Math.abs(det) < 1e-6)
     throw new RangeError(t('errors.photoEditor.noWhiteBalancePixels'));
-  const temperature = Math.round(clip(((g - r) * e - c * (g - b)) / det *
-    100, -100, 100));
-  const tint = Math.round(clip((a * (g - b) - d * (g - r)) / det *
-    100, -100, 100));
+  const temperature = Math.round(clip(((g - r) * e - c * (g - b)) / det * 100, -100, 100));
+  const tint = Math.round(clip((a * (g - b) - d * (g - r)) / det * 100, -100, 100));
   return {...settings, temperature, tint};
 }
 
@@ -146,8 +136,8 @@ export function whiteBalanceFromArea(source, area, current = EMPTY_PHOTO_ADJUSTM
  * @param {!Object} data Input data for the operation.
  * @param {number} width Width in pixels.
  * @param {number} height Height in pixels.
- * @param {*} radius Radius used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {number} radius Blur kernel radius in pixels.
+ * @return {!Object} Alpha-weighted blurred luminance values, one per pixel.
  */
 function blurLuma(data, width, height, radius) {
   const count = width * height;
@@ -158,8 +148,7 @@ function blurLuma(data, width, height, radius) {
   for (let p = 0; p < count; p++) {
     const i = p * 4;
     alpha[p] = data[i + 3] / 255;
-    luma[p] = (.2126 * data[i] + .7152 * data[i + 1] + .0722 * data[i +
-      2]) / 255 * alpha[p];
+    luma[p] = (.2126 * data[i] + .7152 * data[i + 1] + .0722 * data[i + 2]) / 255 * alpha[p];
   }
   const tempAlpha = new Float32Array(count);
   for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
@@ -187,16 +176,14 @@ function blurLuma(data, width, height, radius) {
  * Pure image processing, independent of Canvas/DOM. Preserves every alpha
  * byte.
  *
- * @param {*} source Source used by this operation.
+ * @param {*} source Source RGBA image data with pixel dimensions; read without mutation.
  * @param {!Array<*>} values Values to aggregate or compare.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} New RGBA image data with the requested adjustments and original alpha values.
  */
 export function adjustPhotoPixels(source, values) {
   const settings = validatePhotoAdjustments(values);
   const {width, height, data} = source;
-  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 ||
-    height < 1 ||
-    !data || data.length !== width * height * 4)
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || !data || data.length !== width * height * 4)
     throw new TypeError(t('errors.images.invalidData'));
   const result = new Uint8ClampedArray(data);
   if (!photoAdjustmentsChanged(settings)) return {width, height, data: result};
@@ -215,8 +202,7 @@ export function adjustPhotoPixels(source, values) {
   for (let i = 0; i < result.length; i += 4) {
     const alpha = result[i + 3];
     if (!alpha) continue;
-    const oldR = data[i] / 255, oldG = data[i + 1] / 255, oldB = data[i +
-      2] / 255;
+    const oldR = data[i] / 255, oldG = data[i + 1] / 255, oldB = data[i + 2] / 255;
     // EV in an approximate linear-light domain (sRGB exponent 2).
     let r = Math.sqrt(oldR * oldR * ev) * rFactor;
     let g = Math.sqrt(oldG * oldG * ev) * gFactor;
@@ -224,8 +210,7 @@ export function adjustPhotoPixels(source, values) {
     const luminosity = clip(.2126 * r + .7152 * g + .0722 * b);
     const shadowMask = (1 - luminosity) ** 2;
     const highlightMask = luminosity ** 2;
-    const change = settings.shadows / 100 * .60 * shadowMask +
-      settings.highlights / 100 * .55 * highlightMask;
+    const change = settings.shadows / 100 * .60 * shadowMask + settings.highlights / 100 * .55 * highlightMask;
     // A multiplicative lift/reduction respects dark glass and avoids hard
     // edges.
     const gain = Math.max(0, 1 + change);
@@ -239,8 +224,7 @@ export function adjustPhotoPixels(source, values) {
     b = gray + (b - gray) * saturation;
     const pixel = i / 4;
     const sourceLuma = .2126 * oldR + .7152 * oldG + .0722 * oldB;
-    const detailGain = (broad ? (sourceLuma - broad[pixel]) * clarity *
-      .85 : 0) +
+    const detailGain = (broad ? (sourceLuma - broad[pixel]) * clarity * .85 : 0) +
       (narrow ? (sourceLuma - narrow[pixel]) * sharpen * 1.10 : 0);
     result[i] = Math.round(clip(r + detailGain) * 255);
     result[i + 1] = Math.round(clip(g + detailGain) * 255);
@@ -252,8 +236,8 @@ export function adjustPhotoPixels(source, values) {
 /**
  * Conservative automatic correction from opaque image samples only.
  *
- * @param {*} source Source used by this operation.
- * @return {(!Object)} Structured result assembled from the input data.
+ * @param {*} source RGBA pixels sampled to estimate automatic exposure and color adjustments.
+ * @return {(!Object)} Estimated automatic correction values, or the defaults when no usable samples exist.
  */
 export function autoPhotoAdjustments(source) {
   const {data} = source;
@@ -277,8 +261,7 @@ export function autoPhotoAdjustments(source) {
   const temp = bTotal ? Math.round(clip(-rTotal / bTotal * 140, -30, 30)) : 0;
   return {
     ...EMPTY_PHOTO_ADJUSTMENTS,
-    exposure: Math.round(clip(Math.log2(.43 /
-      Math.max(.12, mean)), -.5, .65) * 20) / 20,
+    exposure: Math.round(clip(Math.log2(.43 / Math.max(.12, mean)), -.5, .65) * 20) / 20,
     contrast: max - min < .55 ? 12 : 4,
     highlights: max > .89 ? -22 : -8,
     shadows: min < .18 ? 22 : 8,

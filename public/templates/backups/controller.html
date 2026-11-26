@@ -1,0 +1,76 @@
+<!-- wcm-template:backupApplyZipForm -->
+<form id="backup-apply-zip-form" data-id="{{text:id}}">
+  <p>{{t:backups.summary.backupLabel}} <strong>{{text:filename}}</strong>
+  </p>
+  <p><strong>{{content:bottlings}}</strong> {{t:backups.summary.bottlingsLabel}} <strong>{{content:bottles}}</strong> {{t:backups.summary.bottlesLabel}} <strong>{{content:distilleries}}</strong> {{t:backups.summary.distilleriesLabel}}</p>
+  <p>{{content:restoredAssets}}</p>
+  <p class="warning">{{t:backups.restore.replaceIncludesAttachments}}</p>
+  <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> {{t:backups.restore.confirmReplaceCollection}}</label>
+  <div class="actions ds-modal-footer ds-modal-footer--compact">
+    <button
+      class="btn"
+      type="button"
+      data-act="backup-download-prepared"
+      data-id="{{text:restoreId}}">{{t:backups.actions.downloadZip}}</button>
+    {{content:closeModalButton}}
+    <button class="btn danger" type="submit">{{t:backups.actions.importBackup}}</button>
+  </div>
+</form>
+<!-- /wcm-template -->
+
+<!-- wcm-template:backupUnlockZipForm -->
+<form id="backup-unlock-zip-form" data-id="{{text:id}}" data-filename="{{text:filename}}">
+  <p>{{t:backups.restore.savedArchive}} <strong>{{text:displayFilename}}</strong> {{t:backups.restore.openForPreview}}</p>
+  <label class="form-field">{{t:backups.password.archiveLabel}}<input
+      type="password"
+      name="password"
+      autocomplete="off"
+      placeholder="{{t:backups.password.optionalForLegacy}}"></label>
+  <div class="actions">{{content:closeModalButton}}
+    <button type="submit" class="btn primary">{{t:backups.actions.validateZip}}</button>
+  </div>
+</form>
+<!-- /wcm-template -->
+
+<!-- wcm-template:removeP -->
+<p>{{t:backups.schedule.should}} <strong>{{text:name}}</strong> {{t:backups.confirmation.deleteSuffix}}</p>
+<p class="warning">{{t:backups.profiles.deleteDoesNotDeleteArchives}}</p>
+<div class="actions ds-modal-footer ds-modal-footer--spaced">
+  {{content:closeModalButton}}
+  <button
+    type="button"
+    class="btn danger"
+    data-act="backup-confirm-delete"
+    data-id="{{text:id}}">{{t:backups.profiles.deleteAction}}</button>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:restoreOption -->
+<option value="{{text:id}}">{{text:shortId}} · {{text:toLocaleString}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:restoreOption2 -->
+<option value="latest">{{t:backups.legacy.latestSnapshot}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:backupRestoreForm -->
+<form id="backup-restore-form" data-id="{{text:id}}">
+  <p>{{t:backups.profiles.label}} <strong>{{text:name}}</strong>
+  </p>
+  <p class="muted">{{content:zip}}</p>
+  <label class="form-field">{{t:backups.archives.snapshot}}
+    <select name="snapshotId" required>{{content:length}}</select></label>
+  <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> {{t:backups.restore.confirmInspectBackup}}</label>
+  <div class="actions ds-modal-footer ds-modal-footer--spaced">
+    {{content:closeModalButton}}
+    <button type="submit" class="btn primary">{{t:backups.restore.preparePreview}}</button>
+  </div>
+</form>
+<!-- /wcm-template -->
+
+<!-- wcm-template:backupCommittedCleanupPending -->
+<p class="warning">{{t:backups.restore.committedCleanupPending}}</p>
+<div class="actions ds-modal-footer ds-modal-footer--compact">
+  {{content:closeModalButton}}
+</div>
+<!-- /wcm-template -->

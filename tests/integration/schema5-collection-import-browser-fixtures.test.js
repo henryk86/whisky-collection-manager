@@ -8,8 +8,7 @@ test(
     const server = await startTestServer();
     try {
       for (const count of [6, 75, 450]) {
-        const collection =
-          (await requestJson(server.base, '/api/collection')).data;
+        const collection = (await requestJson(server.base, '/api/collection')).data;
         collection.bottlings = Array.from({length: count}, (_, index) => ({
           id: `browser-fixture-${index + 1}`,
           name: `Fixture Malt ${index + 1}`,
@@ -23,19 +22,11 @@ test(
           }] : [],
           createdAt: '2026-11-06T08:00:00.000Z',
         }));
-        const imported =
-          await requestJson(server.base, '/api/import/json', 'POST', collection);
-        assert.equal(
-          imported.status,
-          200,
-          `${count} bottlings must import: ${JSON.stringify(imported.data)}`
-        );
+        const imported = await requestJson(server.base, '/api/import/json', 'POST', collection);
+        assert.equal(imported.status, 200, `${count} bottlings must import: ${JSON.stringify(imported.data)}`);
         const stored = (await requestJson(server.base, '/api/collection')).data;
         assert.equal(stored.bottlings.length, count);
-        assert.equal(
-          stored.bottlings.every(b => Array.isArray(b.tastings)),
-          true
-        );
+        assert.equal(stored.bottlings.every(b => Array.isArray(b.tastings)), true);
       }
     } finally {
       await server.stop();

@@ -39,11 +39,7 @@ test(
     for (const size of PAGE_SIZE_OPTIONS) {
       assert.equal(paginate(bottlings, 1, size).items.length, size);
       for (const columns of GRID_COLUMN_OPTIONS) {
-        assert.equal(
-          size % columns,
-          0,
-          `${size} entries in ${columns} columns`
-        );
+        assert.equal(size % columns, 0, `${size} entries in ${columns} columns`);
       }
     }
     assert.ok(!GRID_COLUMN_OPTIONS.includes(5));

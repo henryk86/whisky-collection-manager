@@ -7,12 +7,7 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Bottle room', width: 6, height: 4}
-      )).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Bottle room', width: 6, height: 4})).data;
       assert.ok(room.id);
       const first = (await api(
         ctx.base,
@@ -42,69 +37,33 @@ test(
           rotation: 180,
         }
       )).data;
-      const source = (await api(
-        ctx.base,
-        `/api/warehouse/furniture/${first.id}/shelves`,
-        'POST',
-        {name: 'Fach A', capacity: 2}
-      )).data;
-      const target = (await api(
-        ctx.base,
-        `/api/warehouse/furniture/${last.id}/shelves`,
-        'POST',
-        {name: 'Fach B', capacity: 1}
-      )).data;
+      const source = (await api(ctx.base, `/api/warehouse/furniture/${first.id}/shelves`, 'POST', {name: 'Fach A', capacity: 2})).data;
+      const target = (await api(ctx.base, `/api/warehouse/furniture/${last.id}/shelves`, 'POST', {name: 'Fach B', capacity: 1})).data;
       const bottled = (await api(ctx.base, '/api/bottlings', 'POST',
         {
           name: 'Whisky',
           firstBottle: {inventoryNumber: '1001', status: 'closed'},
         })).data;
-      const another = (await api(ctx.base, '/api/bottles', 'POST',
-        {bottlingId: bottled.bottling.id, inventoryNumber: '1002'})).data;
+      const another = (await api(ctx.base, '/api/bottles', 'POST', {bottlingId: bottled.bottling.id, inventoryNumber: '1002'})).data;
       const bottleId = bottled.bottle.id;
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/bottles/${bottleId}`,
-          'PUT',
-          {shelfId: source.id}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/bottles/${bottleId}`, 'PUT', {shelfId: source.id})).status,
         200
       );
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/bottles/${another.id}`,
-          'PUT',
-          {shelfId: target.id}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/bottles/${another.id}`, 'PUT', {shelfId: target.id})).status,
         200
       );
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/bottles/${bottleId}`,
-          'PUT',
-          {shelfId: target.id}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/bottles/${bottleId}`, 'PUT', {shelfId: target.id})).status,
         409
       );
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/bottles/${another.id}`,
-          'PUT',
-          {shelfId: source.id}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/bottles/${another.id}`, 'PUT', {shelfId: source.id})).status,
         200
       );
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/bottles/${bottleId}`,
-          'PUT',
-          {shelfId: target.id}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/bottles/${bottleId}`, 'PUT', {shelfId: target.id})).status,
         200
       );
       const updated = (await api(ctx.base, '/api/warehouse')).data;

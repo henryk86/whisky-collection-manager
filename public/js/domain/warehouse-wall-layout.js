@@ -6,40 +6,39 @@ import {furnitureFootprint} from './warehouse-3d-model.js';
  * linked by vertical support belong in the SAME elevation group, including
  * a wide wall cabinet over several narrow lower cabinets.
  */
-const natural = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+const natural = new Intl.Collator(undefined, {
+  numeric: true, sensitivity: 'base',
+});
 /**
  * Derives the finite numeric value from its input.
  *
  * @param {*} value Value to process.
  * @param {number=} fallback Value used when the requested data is unavailable.
- * @return {number} Calculated numeric value.
+ * @return {number} Finite numeric conversion, or the supplied fallback.
  */
-const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ?
-  Number(value) : fallback;
+const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 
 /**
- * Derives the angle result from the supplied values.
+ * Normalizes a furniture's facing direction for front-elevation grouping.
  *
- * @param {*} furniture Warehouse furniture record being modified.
- * @return {number} Calculated numeric value.
+ * @param {*} furniture Furniture record with rotation in degrees.
+ * @return {number} Normalized angle in degrees.
  */
 const angle = furniture => ((finite(furniture.rotation) % 360) + 360) % 360;
 
 /**
- * Calculates the overlap numeric value.
+ * Calculates the length shared by two one-dimensional intervals.
  *
  * @param {*} a First entry or operand in the calculation.
  * @param {*} b Second entry or operand in the calculation.
- * @return {number} Calculated numeric value.
+ * @return {number} Intersection length, or zero for disjoint intervals.
  */
-const overlap = (a, b) => Math.max(0, Math.min(a[1], b[1]) -
-  Math.max(a[0], b[0]));
+const overlap = (a, b) => Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0]));
 
 /**
- * Calculates the position numeric value.
- *
- * @param {*} furniture Warehouse furniture record being modified.
- * @return {!Array<*>} Resulting entries in their output order.
+ * Projects furniture onto its facing wall while retaining world-space bounds.
+ * @param {!Object} furniture Furniture with metre-based geometry and rotation.
+ * @return {{furniture: Object, orientation: number, xRange: number[], yRange: number[], left: number, right: number, bottom: number, top: number, hasPosition: boolean}} Front projection and physical extents in metres.
  */
 function position(furniture) {
   const orientation = angle(furniture);
@@ -47,50 +46,47 @@ function position(furniture) {
   const y = finite(furniture.y);
   const width = Math.max(.01, finite(furniture.width, 1));
   const depth = Math.max(.01, finite(furniture.depth, .5));
-  const footprint = furnitureFootprint({...furniture, width, depth, rotation: orientation});
+  const footprint = furnitureFootprint({
+    ...furniture, width, depth,
+    rotation: orientation,
+  });
   // Opposite-facing units are viewed from the opposite side, so their
   // horizontal reading direction is reversed, not the shelf numbering.
   const left = orientation === 180 ? -x - footprint.width
-    : orientation === 270 ? -y - footprint.depth
-      : orientation === 90 ? y : x;
+    : orientation === 270 ? -y - footprint.depth : orientation === 90 ? y : x;
   return {
     furniture, orientation, xRange: [x, x + footprint.width],
     yRange: [y, y + footprint.depth], left, right: left + width,
     bottom: Math.max(0, finite(furniture.elevation)),
     top: Math.max(0, finite(furniture.elevation)) + furnitureHeight(furniture),
-    hasPosition: Number.isFinite(Number(furniture.x)) &&
-      Number.isFinite(Number(furniture.y))
-      && furniture.x != null && furniture.y != null,
+    hasPosition: Number.isFinite(Number(furniture.x)) && Number.isFinite(Number(furniture.y)) && furniture.x != null && furniture.y != null,
   };
 }
 
 /**
- * Derives the vertically separate result from the supplied values.
+ * Tests whether two projected furniture items occupy non-overlapping height intervals, allowing a small tolerance.
  *
- * @param {*} a First entry or operand in the calculation.
- * @param {*} b Second entry or operand in the calculation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @param {*} a First projected vertical interval.
+ * @param {*} b Second projected vertical interval.
+ * @return {boolean} True if their height intervals are separate within 1.5 cm.
  */
 function verticallySeparate(a, b) {
   return a.top <= b.bottom + .015 || b.top <= a.bottom + .015;
 }
 
 /**
- * Calculates the same footprint numeric value.
+ * Determines whether two oriented furniture footprints overlap sufficiently to share a wall bay.
  *
  * @param {*} a First entry or operand in the calculation.
  * @param {*} b Second entry or operand in the calculation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True when both footprints are positioned, aligned and overlap at least sixty percent on each axis.
  */
 function sameFootprint(a, b) {
-  if (!a.hasPosition || !b.hasPosition || a.orientation !==
-    b.orientation) return false;
+  if (!a.hasPosition || !b.hasPosition || a.orientation !== b.orientation) return false;
   const x = overlap(a.xRange, b.xRange);
   const y = overlap(a.yRange, b.yRange);
-  const minWidth = Math.min(a.xRange[1] - a.xRange[0], b.xRange[1] -
-    b.xRange[0]);
-  const minDepth = Math.min(a.yRange[1] - a.yRange[0], b.yRange[1] -
-    b.yRange[0]);
+  const minWidth = Math.min(a.xRange[1] - a.xRange[0], b.xRange[1] - b.xRange[0]);
+  const minDepth = Math.min(a.yRange[1] - a.yRange[0], b.yRange[1] - b.yRange[0]);
   return x >= .6 * minWidth && y >= .6 * minDepth;
 }
 
@@ -99,11 +95,10 @@ function sameFootprint(a, b) {
  *
  * @param {*} a First entry or operand in the calculation.
  * @param {*} b Second entry or operand in the calculation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True when furniture footprints overlap sufficiently and their vertical ranges are separate.
  */
 function shouldStack(a, b) {
-  return sameFootprint(a, b) &&
-    verticallySeparate(a, b);
+  return sameFootprint(a, b) && verticallySeparate(a, b);
 }
 
 /**
@@ -111,11 +106,10 @@ function shouldStack(a, b) {
  * and physical bottom/top. No mutation of warehouse furniture or assignments.
  *
  * @param {*} room Room model containing dimensions and furniture.
- * @return {!Array<!Object>} Resulting list of values.
+ * @return {!Array<!Object>} Groups of furniture ordered by wall projection and vertical arrangement.
  */
 export function wallFurnitureGroups(room) {
-  const entries = (room?.furniture || []).filter(furniture =>
-    furniture.shelves?.length).map(position);
+  const entries = (room?.furniture || []).filter(furniture => furniture.shelves?.length).map(position);
   const visited = new Set();
   const groups = [];
   for (const entry of entries) {
@@ -135,8 +129,7 @@ export function wallFurnitureGroups(room) {
     }
     const left = Math.min(...group.map(item => item.left));
     const right = Math.max(...group.map(item => item.right));
-    group.sort((a, b) => a.bottom - b.bottom || natural.compare(a.furniture
-      .name || '', b.furniture.name || ''));
+    group.sort((a, b) => a.bottom - b.bottom || natural.compare(a.furniture.name || '', b.furniture.name || ''));
     groups.push({
       orientation: entry.orientation, left, width: right - left,
       height: Math.max(...group.map(item => item.top)),
@@ -144,14 +137,8 @@ export function wallFurnitureGroups(room) {
     });
   }
   const orientations = [0, 90, 180, 270];
-  groups.sort((a, b) => orientations.indexOf(a.orientation) -
-    orientations.indexOf(b.orientation)
-    || a.left - b.left
-    || natural.compare(
-      a.items[0].furniture.name || '',
-      b.items[0].furniture.name || ''
-    )
-    || String(a.items[0].furniture.id).localeCompare(String(b.items[0]
-      .furniture.id)));
+  groups.sort((a, b) => orientations.indexOf(a.orientation) - orientations.indexOf(b.orientation) || a.left - b.left
+    || natural.compare(a.items[0].furniture.name || '', b.items[0].furniture.name || '')
+    || String(a.items[0].furniture.id).localeCompare(String(b.items[0].furniture.id)));
   return groups;
 }

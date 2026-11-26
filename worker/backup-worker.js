@@ -1,7 +1,8 @@
 /** Backup background process in the same Docker container as the HTTPS app.
  * Uses ZIP for new backups, Rclone for cloud and Restic only for old snapshots.
  * Asks the app for a consistent staging snapshot over
- * certificate-verified HTTPS loopback. It never modifies the live collection. */
+ * certificate-verified HTTPS loopback. It never modifies the live collection.
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -9,28 +10,33 @@ import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {writeReadableZip, inspectReadableZip} from '../shared/backup-zip.js';
 import {readBackupPassword} from '../shared/backup-password.js';
-import {backupJobError, serializeBackupJobError} from '../shared/backup-job-errors.js';
+import {writeDurableFile, syncDirectory, ensureDurableDirectory, syncFile} from '../shared/durable-files.js';
+import {backupJobError, serializeBackupJobError}
+  from '../shared/backup-job-errors.js';
 import {BACKUP_PASSWORD_FAILURE} from '../shared/backup-password.js';
-import {commandFailureDiagnostic, logBackupJobFailure} from './backup-diagnostics.js';
+import {commandFailureDiagnostic, logBackupJobFailure}
+  from './backup-diagnostics.js';
 
-const CONTROL = path.resolve(process.env.BACKUP_CONTROL_DIR ||
-  '/backup-control');
-const LOCAL_ROOT = path.resolve(process.env.BACKUP_TARGET_ROOT ||
-  '/backup-targets');
+const CONTROL = path.resolve(process.env.BACKUP_CONTROL_DIR || '/backup-control');
+const LOCAL_ROOT = path.resolve(process.env.BACKUP_TARGET_ROOT || '/backup-targets');
 const TZ = process.env.BACKUP_TIME_ZONE || 'Europe/Berlin';
 const APP = process.env.APP_INTERNAL_URL || 'https://127.0.0.1:3543';
 if (process.env.NODE_ENV === 'production') {
   const url = new URL(APP);
-  if (url.protocol !== 'https:' || !['127.0.0.1', 'localhost']
-    .includes(url.hostname)) {
+  if (url.protocol !== 'https:' || !['127.0.0.1', 'localhost'].includes(url.hostname)) {
     throw new Error('Backup-Verbindung muss HTTPS auf localhost verwenden.');
   }
 }
 const SAFE_REMOTE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,49}$/;
 const SAFE_ID = /^[0-9a-f]{8}-[0-9a-f-]{20,50}$/i;
 const SAFE_PATH = /^[a-zA-Z0-9 _./-]{1,180}$/;
-const TYPES = new Set(['run', 'check', 'test', 'snapshots', 'restore', 'prepare']);
-const ZIP_FILE = /^whisky-backup-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}(?:-\d{3})?-[0-9a-f]{8}\.zip$/i;
+const TYPES = new Set(['run', 'check', 'test', 'snapshots', 'restore',
+  'prepare']);
+const ZIP_FILE =
+  new RegExp(
+    '^whisky-backup-\\d{4}-\\d{2}-\\d{2}T\\d{2}' + '-\\d{2}-\\d{2}(?:-\\d{3})?-[0-9a-f]{8}\\.z' + 'ip$',
+    'i'
+  );
 const timeFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: TZ,
   year: 'numeric',
@@ -46,45 +52,37 @@ const timeFormatter = new Intl.DateTimeFormat('en-CA', {
  * Formats the worker's current time in its configured time zone.
  *
  * @param {!Date=} now Current time used by the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Local date and time fields used for backup scheduling.
  */
 export function localClock(now = new Date()) {
-  const parts = Object.fromEntries(timeFormatter.formatToParts(now)
-    .map(part => [part.type, part.value]));
+  const parts = Object.fromEntries(timeFormatter.formatToParts(now).map(part => [part.type, part.value]));
   return {
     date: `${parts.year}-${parts.month}-${parts.day}`,
     hour: Number(parts.hour), minute: Number(parts.minute),
-    weekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-      .indexOf(parts.weekday),
+    weekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(parts.weekday),
   };
 }
 
 /**
  * Determines which backup schedule slot is currently due.
  *
- * @param {*} profile Profile data used for the comparison.
+ * @param {*} profile Backup configuration selecting the repository, format and retention settings.
  * @param {!Date=} now Current time used by the operation.
- * @return {?string} Resulting text.
+ * @return {?string} Local date or date-and-hour slot identifier when due, or null.
  */
 export function dueSlot(profile, now = new Date()) {
-  if (!profile.enabled || profile.format !==
-    'zip') return null; // No more automatic Restic backups
+  if (!profile.enabled || profile.format !== 'zip') return null; // No more automatic Restic backups
   const time = localClock(now);
   const schedule = profile.schedule;
-  if (!schedule || !['hourly', 'daily', 'weekly']
-    .includes(schedule.frequency)) return null;
-  if (schedule.frequency === 'hourly') return time.minute >=
-    schedule.minute ? `${time.date}T${String(time.hour)
-      .padStart(2, '0')}` : null;
-  if (time.hour * 60 + time.minute < schedule.hour * 60 +
-    schedule.minute) return null;
-  if (schedule.frequency === 'weekly' && time.weekday !==
-    schedule.weekday) return null;
+  if (!schedule || !['hourly', 'daily', 'weekly'].includes(schedule.frequency)) return null;
+  if (schedule.frequency === 'hourly') return time.minute >= schedule.minute ? `${time.date}T${String(time.hour).padStart(2, '0')}` : null;
+  if (time.hour * 60 + time.minute < schedule.hour * 60 + schedule.minute) return null;
+  if (schedule.frequency === 'weekly' && time.weekday !== schedule.weekday) return null;
   return time.date;
 }
 
 /**
- * Retrieves json from the available state.
+ * Reads a worker control JSON file and uses the supplied fallback only when the file is absent.
  *
  * @param {*} name Environment variable or setting name.
  * @param {*} fallback Value used when the requested data is unavailable.
@@ -102,46 +100,31 @@ function readJson(name, fallback) {
  * @param {*} value Value to process.
  */
 function writeJson(name, value) {
-  fs.mkdirSync(CONTROL, {recursive: true, mode: 0o700});
-  const to = path.join(CONTROL, name);
-  const temp = `${to}.${crypto.randomUUID()}.tmp`;
-  try {
-    fs.writeFileSync(
-      temp,
-      JSON.stringify(value, null, 2) + '\n',
-      {flag: 'wx', mode: 0o600}
-    );
-    fs.renameSync(temp, to);
-  } finally {if (fs.existsSync(temp)) fs.unlinkSync(temp);}
+  writeDurableFile(path.join(CONTROL, name), JSON.stringify(value, null, 2) + '\n');
 }
 
 /**
- * Normalizes relative for consistent processing.
- *
- * @param {*} raw Value used by this operation.
- * @return {string} Resulting text.
+ * Rejects unsafe backup target paths and accepts only normalized relative paths.
+ * @param {*} raw Untrusted target path.
+ * @return {string} Validated relative target path.
  */
 function cleanRelative(raw) {
-  if (typeof raw !== 'string' || !SAFE_PATH.test(raw) ||
-    raw.startsWith('/') || raw.endsWith('/') || raw.split('/').some(p =>
-      !p || p.startsWith('.') || p === '..')) {
+  if (typeof raw !== 'string' || !SAFE_PATH.test(raw) || raw.startsWith('/') || raw.endsWith('/') || raw.split('/').some(p => !p || p.startsWith('.') || p === '..')) {
     throw backupJobError('backup.errors.invalidTargetPath');
   }
   return raw;
 }
 
 /**
- * Resolves the configured backup repository path.
- *
- * @param {*} profile Profile data used for the comparison.
- * @return {*} Combined text from the input values.
+ * Resolves the profile target to a local directory or remote repository, rejecting paths outside allowed storage.
+ * @param {Object} profile Backup profile with provider and target configuration.
+ * @return {string} Repository path or remote target.
  */
 export function repositoryFor(profile) {
   const target = cleanRelative(profile.targetPath);
   if (profile.provider === 'local') {
     const result = path.resolve(LOCAL_ROOT, target);
-    if (!result.startsWith(LOCAL_ROOT +
-      path.sep)) throw backupJobError('backup.errors.invalidLocalTarget');
+    if (!result.startsWith(LOCAL_ROOT + path.sep)) throw backupJobError('backup.errors.invalidLocalTarget');
     // Refuse to silently write to the SD card if a USB/NAS mount went away.
     const drive = path.join(LOCAL_ROOT, target.split('/')[0]);
     const marker = path.join(drive, '.whisky-backup-target');
@@ -150,34 +133,30 @@ export function repositoryFor(profile) {
     }
     if (fs.existsSync(result)) {
       const actual = fs.realpathSync(result);
-      if (!actual.startsWith(fs.realpathSync(LOCAL_ROOT) +
-        path.sep)) throw backupJobError('backup.errors.targetOutsideRoot');
+      if (!actual.startsWith(fs.realpathSync(LOCAL_ROOT) + path.sep)) throw backupJobError('backup.errors.targetOutsideRoot');
     }
     return result;
   }
-  if (typeof profile.remote !== 'string' ||
-    !SAFE_REMOTE.test(profile.remote)) throw backupJobError('backup.errors.invalidRcloneRemote');
+  if (typeof profile.remote !== 'string' || !SAFE_REMOTE.test(profile.remote)) throw backupJobError('backup.errors.invalidRcloneRemote');
   return `rclone:${profile.remote}:${target}`;
 }
 
 /**
- * Retrieves profiles from the available state.
- * @return {*} Result computed from the supplied inputs.
+ * Reads and validates the profile catalog used by the backup scheduler.
+ * @return {Object[]} Configured backup profiles.
  */
 function loadProfiles() {
   const data = readJson('profiles.json', {version: 1, profiles: []});
-  if (data.version !== 1 ||
-    !Array.isArray(data.profiles)) throw backupJobError('backup.errors.invalidProfiles');
+  if (data.version !== 1 || !Array.isArray(data.profiles)) throw backupJobError('backup.errors.invalidProfiles');
   return data.profiles;
 }
 
 /**
- * Derives the job env result from the supplied values.
- * @return {*} Structured result assembled from the input data.
+ * Builds the environment for restic and rclone subprocesses.
+ * @return {Object<string,string>} Process environment with backup configuration and secret-file paths.
  */
 function jobEnv() {
-  const password = process.env.RESTIC_PASSWORD_FILE ||
-    '/run/secrets/restic-password';
+  const password = process.env.RESTIC_PASSWORD_FILE || '/run/secrets/restic-password';
   const config = process.env.RCLONE_CONFIG || '/config/rclone/rclone.conf';
   return {
     ...process.env,
@@ -190,18 +169,14 @@ function jobEnv() {
 /**
  * Executes a backup command and captures its result.
  *
- * @param {*} binary Binary used by this operation.
- * @param {*} args Args used by this operation.
+ * @param {string} binary Executable to launch without a shell.
+ * @param {string[]} args Individual command-line arguments.
  * @param {!Object=} options3 Destructured options for this operation.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Captured subprocess standard output; rejects on failure or timeout.
  */
 export function runCommand(binary, args, {cwd, timeout = 3600000} = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(
-      binary,
-      args,
-      {cwd, env: jobEnv(), stdio: ['ignore', 'pipe', 'pipe'], shell: false}
-    );
+    const child = spawn(binary, args, {cwd, env: jobEnv(), stdio: ['ignore', 'pipe', 'pipe'], shell: false});
     let output = '';
     let stderr = '';
     child.stdout.on(
@@ -216,54 +191,44 @@ export function runCommand(binary, args, {cwd, timeout = 3600000} = {}) {
     const timer = setTimeout(() => child.kill('SIGKILL'), timeout);
     child.on('error', err => {
       clearTimeout(timer);
-      err.backupCommand = binary;
-      err.backupDiagnostic = commandFailureDiagnostic(
-        binary,
-        null,
-        null,
-        err.code || 'Startfehler'
-      );
-      reject(err);
+      const failure = /** @type {NodeJS.ErrnoException} */ (err);
+      reject(Object.assign(failure, {
+        backupCommand: binary,
+        backupDiagnostic: commandFailureDiagnostic(binary, null, null, failure.code || 'Startfehler'),
+      }));
     });
     child.on('close', (code, signal) => {
       clearTimeout(timer);
       if (code === 0) resolve(output);
       else {
-        const error = backupJobError(binary === 'rclone' ?
-          'backup.errors.rcloneFailed' : 'backup.errors.resticFailed');
-        error.backupDiagnostic = commandFailureDiagnostic(
-          binary,
-          code,
-          signal,
-          stderr || output.slice(-6000)
-        );
-        reject(error);
+        const error = backupJobError(binary === 'rclone' ? 'backup.errors.rcloneFailed' : 'backup.errors.resticFailed');
+        reject(Object.assign(error, {backupDiagnostic: commandFailureDiagnostic(binary, code, signal, stderr || output.slice(-6000))}));
       }
     });
   });
 }
 
 /**
- * Derives the restic result from the supplied values.
- *
- * @param {*} repo Repository used for the check.
- * @param {*} args Arguments forwarded to the operation.
- * @param {*} options Options controlling the operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Runs restic against the specified repository.
+ * @param {string} repo Restic repository path or URL.
+ * @param {string[]} args Restic operation arguments.
+ * @param {Object} options Subprocess options.
+ * @return {Promise<*>} Subprocess result.
  */
-const restic = (repo, args, options) =>
-  runCommand('restic', ['-r', repo, ...args], options);
+const restic = (repo, args, options) => runCommand('restic', ['-r', repo, ...args], options);
 
 /**
  * Parses snapshots data from JSON input.
  *
  * @param {*} repo Repository used for the check.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Recent backup snapshot descriptors, newest first.
  */
 async function snapshots(repo) {
   const raw = await restic(repo, ['snapshots', '--json'], {timeout: 120000});
   let entries;
-  try {entries = JSON.parse(raw);} catch {throw backupJobError('backup.errors.invalidResticListing');}
+  try {entries = JSON.parse(raw);} catch {
+    throw backupJobError('backup.errors.invalidResticListing');
+  }
   if (!Array.isArray(entries)) throw backupJobError('backup.errors.invalidResticListing');
   return entries.slice(-80).reverse().map(x => ({
     id: x.id, shortId: x.short_id || x.id?.slice(0, 8), time: x.time,
@@ -272,10 +237,9 @@ async function snapshots(repo) {
 }
 
 /**
- * Formats of for presentation.
- *
- * @param {*} profile Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Distinguishes ZIP profiles from existing Restic profiles without a format field.
+ * @param {Object} profile Backup profile configuration.
+ * @return {('zip'|'restic')} Effective backup format.
  */
 function formatOf(profile) {
   // Existing profiles have no format field and must keep their Restic
@@ -284,10 +248,9 @@ function formatOf(profile) {
 }
 
 /**
- * Converts date information for the archive name operation.
- *
- * @param {*} job Value used by this operation.
- * @return {string} Resulting text.
+ * Builds a unique ZIP backup filename using the current UTC timestamp and job ID.
+ * @param {Object} job Backup job carrying its ID.
+ * @return {string} Generated archive filename.
  */
 function archiveName(job) {
   const timestamp = new Date().toISOString().slice(0, 23).replace(/[:.]/g, '-');
@@ -295,86 +258,67 @@ function archiveName(job) {
 }
 
 /**
- * Parses zip files for data from JSON input.
- *
- * @param {*} profile Value used by this operation.
- * @param {*} repo Repository used for the check.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Enumerates ZIP archives and their metadata in the selected local or remote target.
+ * @param {Object} profile Backup profile.
+ * @param {string} repo Resolved target repository.
+ * @return {Promise<Object[]>} Discovered ZIP archive records.
  */
 async function zipFilesFor(profile, repo) {
   let entries;
   if (profile.provider === 'local') {
     try {
-      entries = fs.readdirSync(repo, {withFileTypes: true}).filter(d =>
-        d.isFile() && ZIP_FILE.test(d.name))
-        .map(d => ({
-          name: d.name, size: fs.statSync(path.join(repo, d.name))
-            .size,
-        }));
+      entries = fs.readdirSync(repo, {withFileTypes: true}).filter(d => d.isFile() && ZIP_FILE.test(d.name)).map(d => ({
+        name: d.name, size: fs.statSync(path.join(repo, d.name)).size,
+      }));
     } catch (error) {
-      if (error.code === 'ENOENT') entries =
-        []; else throw error;
+      if (error.code === 'ENOENT') entries = []; else throw error;
     }
   } else {
-    const output = await runCommand(
-      'rclone',
-      ['lsjson', '--files-only', repo],
-      {timeout: 120000}
-    );
+    const output = await runCommand('rclone', ['lsjson', '--files-only', repo], {timeout: 120000});
     let listing;
-    try {listing = JSON.parse(output);} catch {throw backupJobError('backup.errors.invalidRcloneListing');}
+    try {listing = JSON.parse(output);} catch {
+      throw backupJobError('backup.errors.invalidRcloneListing');
+    }
     if (!Array.isArray(listing)) throw backupJobError('backup.errors.invalidRcloneListing');
-    entries = listing.filter(item => ZIP_FILE.test(item.Name) && !item.IsDir)
-      .map(item => ({name: item.Name, size: item.Size}));
+    entries = listing.filter(item => ZIP_FILE.test(item.Name) && !item.IsDir).map(item => ({name: item.Name, size: item.Size}));
   }
   return entries.sort((a, b) => b.name.localeCompare(a.name)).map(entry => ({
     id: entry.name,
     filename: entry.name,
     shortId: entry.name.slice(14, 33).replace('T', ' '),
-    time: `${entry.name.slice(14, 24)}T${entry.name
-      .slice(
-        25,
-        27
-      )}:${entry.name.slice(28, 30)}:${entry.name
-        .slice(
-          31,
-          33
-        )}.${entry.name[33] === '-' && /\d{3}/.test(entry.name
-          .slice(34, 37)) ? entry.name.slice(34, 37) : '000'}Z`,
+    time: `${entry.name.slice(14, 24)}T${entry.name.slice(25, 27)}:${entry.name.slice(28, 30)}:${entry.name.slice(31, 33)}.${entry.name[33] === '-' && /\d{3}/.test(entry.name.slice(34, 37)) ? entry.name.slice(34, 37) : '000'}Z`,
     size: entry.size,
     format: 'zip',
   }));
 }
 
 /**
- * Calculates the week bucket numeric value.
- *
- * @param {*} time Value used by this operation.
- * @return {string} Resulting text.
+ * Groups a timestamp into a UTC ISO week for retention selection.
+ * @param {(string|number|Date)} time Archive timestamp.
+ * @return {string} ISO week-year and week number.
  */
 function weekBucket(time) {
   const d = new Date(time);
   d.setUTCHours(0, 0, 0, 0);
   const day = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - day);
-  return `${d.getUTCFullYear()}-${Math.ceil((((d -
-    Date.UTC(d.getUTCFullYear(), 0, 1)) / 86400000) + 1) / 7)}`;
+  return `${d.getUTCFullYear()}-${Math.ceil((((d.getTime() - Date.UTC(d.getUTCFullYear(), 0, 1)) / 86400000) + 1) / 7)}`;
 }
 
 /**
  * Retrieves zip retention for backup worker.
  *
- * @param {!Array<*>} items Items used by this operation.
- * @param {*} retention Retention used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {Array<{id: string, time: string}>} items Archives ordered newest first, each with an id and ISO timestamp.
+ * @param {{daily?: number, weekly?: number, monthly?: number}} retention Daily, weekly and monthly retention limits.
+ * @return {Set<string>} IDs of retained archives, always including the newest archive.
  */
 export function selectZipRetention(items, retention) {
   const keep = new Set(items.length ? [items[0].id] : []);
-  for (const [rule, keyOf] of [
+  for (const [rule, keyOf] of /** @type {Array<['daily'|'weekly'|'monthly', (item: {id: string, time: string}) => string]>} */ ([
     ['daily', item => item.time.slice(0, 10)],
     ['weekly', item => weekBucket(item.time)],
     ['monthly', item => item.time.slice(0, 7)],
-  ]) {
+  ])) {
     const seen = new Set();
     for (const item of items) {
       const key = keyOf(item);
@@ -387,36 +331,31 @@ export function selectZipRetention(items, retention) {
 }
 
 /**
- * Filters records according to the zip prune selection rules.
+ * Applies the configured ZIP retention policy and deletes expired local or remote archives.
  *
- * @param {*} profile Value used by this operation.
+ * @param {*} profile Backup profile specifying the storage provider and retention limits.
  * @param {*} repo Repository used for the check.
  * @param {*} items Entries to process.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Completion of retention pruning.
  */
 async function zipPrune(profile, repo, items) {
   const keep = selectZipRetention(items, profile.retention);
   for (const item of items) {
     if (keep.has(item.id)) continue;
-    if (profile.provider ===
-      'local') fs.unlinkSync(path.join(repo, item.filename));
-    else await runCommand(
-      'rclone',
-      ['deletefile', `${repo}/${item.filename}`],
-      {timeout: 120000}
-    );
+    if (profile.provider === 'local') fs.unlinkSync(path.join(repo, item.filename));
+    else await runCommand('rclone', ['deletefile', `${repo}/${item.filename}`], {timeout: 120000});
   }
   return items.filter(item => keep.has(item.id));
 }
 
 /**
- * Validates the run zip backup state and rejects invalid inputs.
+ * Creates and verifies an encrypted ZIP backup from a consistent source snapshot, then applies retention.
  *
- * @param {*} job Value used by this operation.
- * @param {*} profile Value used by this operation.
+ * @param {*} job Queued backup job and its snapshot identifier.
+ * @param {*} profile Backup profile specifying destination provider and retention.
  * @param {*} repo Repository used for the check.
  * @param {*} status Status value determining the next action.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Backup-job result containing the archive information.
  */
 async function runZipBackup(job, profile, repo, status) {
   const folder = await ensureSourceSnapshot(job);
@@ -424,7 +363,7 @@ async function runZipBackup(job, profile, repo, status) {
   const filename = archiveName(job);
   if (local && fs.existsSync(path.join(repo, 'config'))) throw backupJobError('backup.errors.legacyTargetForZip');
   const tempFolder = local ? repo : path.join(CONTROL, 'zip-temp', job.id);
-  fs.mkdirSync(tempFolder, {recursive: true, mode: 0o700});
+  ensureDurableDirectory(tempFolder);
   const temporary = path.join(tempFolder, `.${filename}.part`);
   const finished = path.join(tempFolder, filename);
   try {
@@ -432,17 +371,12 @@ async function runZipBackup(job, profile, repo, status) {
     writeReadableZip(folder, temporary, password);
     // Authenticate every AES-256 entry before publishing to the target.
     verifyZipArchive(temporary, password);
-    if (local) fs.renameSync(temporary, finished);
-    else {
-      fs.renameSync(temporary, finished);
-      await runCommand(
-        'rclone',
-        ['copyto', finished, `${repo}/${filename}`],
-        {timeout: 3600000}
-      );
+    fs.renameSync(temporary, finished);
+    syncDirectory(tempFolder);
+    if (!local) {
+      await runCommand('rclone', ['copyto', finished, `${repo}/${filename}`], {timeout: 3600000});
     }
-    status.snapshots[profile.id] =
-      await zipPrune(profile, repo, await zipFilesFor(profile, repo));
+    status.snapshots[profile.id] = await zipPrune(profile, repo, await zipFilesFor(profile, repo));
     return {
       message: 'AES-256-geschütztes ZIP-Backup erstellt (Sammlung, Bilder und Dokumente)',
       snapshotCount: status.snapshots[profile.id].length, filename,
@@ -458,26 +392,22 @@ async function runZipBackup(job, profile, repo, status) {
  * Legacy Restic is read-only: convert an old snapshot into the same ZIP format
  * for preview/apply.
  *
- * @param {*} job Job used by this operation.
- * @param {*} repo Repo used by this operation.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @param {*} job Restore job containing the requested restic snapshot identifier.
+ * @param {string} repo Restic repository path or remote location.
+ * @return {!Promise<!Object>} Prepared portable ZIP restore metadata from the legacy snapshot.
  */
 async function prepareLegacyRestore(job, repo) {
-  if (!/^(latest|[0-9a-f]{8,64})$/i.test(job.snapshotId ||
-    '')) throw backupJobError('backup.errors.invalidSnapshotId');
+  if (!/^(latest|[0-9a-f]{8,64})$/i.test(job.snapshotId || '')) throw backupJobError('backup.errors.invalidSnapshotId');
   const folder = path.join(CONTROL, 'imports', job.id);
   const extracted = path.join(folder, 'preview');
-  fs.mkdirSync(extracted, {recursive: true, mode: 0o700});
+  ensureDurableDirectory(extracted);
   try {
-    await restic(
-      repo,
-      ['restore', job.snapshotId, '--target', extracted],
-      {timeout: 3600000}
-    );
+    await restic(repo, ['restore', job.snapshotId, '--target', extracted], {timeout: 3600000});
     const archive = path.join(folder, 'uploaded.zip');
     const password = backupPassword();
     writeReadableZip(extracted, archive, password);
     verifyZipArchive(archive, password);
+    syncDirectory(folder);
     return {
       message: 'Altes Restic-Backup in prüfbares ZIP umgewandelt',
       importId: job.id,
@@ -493,32 +423,28 @@ async function prepareLegacyRestore(job, repo) {
  * Prepare a selected saved ZIP for the same preview/confirmation used by
  * browser uploads.
  *
- * @param {*} job Job used by this operation.
+ * @param {*} job Restore job containing the requested ZIP snapshot identifier.
  * @param {*} profile Profile data used for the comparison.
- * @param {*} repo Repo used by this operation.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @param {string} repo Local directory or remote ZIP repository location.
+ * @return {!Promise<!Object>} Prepared ZIP restore metadata from the selected backup archive.
  */
 async function prepareZipRestore(job, profile, repo) {
   const archives = await zipFilesFor(profile, repo);
-  const selected = job.snapshotId === 'latest' ? archives[0] :
-    archives.find(item => item.id === job.snapshotId);
+  const selected = job.snapshotId === 'latest' ? archives[0] : archives.find(item => item.id === job.snapshotId);
   if (!selected) throw backupJobError('backup.errors.snapshotNotFound');
   const folder = path.join(CONTROL, 'imports', job.id);
-  fs.mkdirSync(folder, {recursive: true, mode: 0o700});
+  ensureDurableDirectory(folder);
   const target = path.join(folder, 'uploaded.zip');
   try {
     if (profile.provider === 'local') {
       const source = path.join(repo, selected.filename);
-      if (!fs.lstatSync(source)
-        .isFile()) throw backupJobError('backup.errors.invalidZipFile');
+      if (!fs.lstatSync(source).isFile()) throw backupJobError('backup.errors.invalidZipFile');
       fs.copyFileSync(source, target, fs.constants.COPYFILE_EXCL);
     } else {
-      await runCommand(
-        'rclone',
-        ['copyto', `${repo}/${selected.filename}`, target],
-        {timeout: 3600000}
-      );
+      await runCommand('rclone', ['copyto', `${repo}/${selected.filename}`, target], {timeout: 3600000});
     }
+    syncFile(target);
+    syncDirectory(folder);
     // Password supplied later via the authenticated browser; never store it in
     // queue/status files.
     return {
@@ -533,39 +459,35 @@ async function prepareZipRestore(job, profile, repo) {
 }
 
 /**
- * Enforces the source snapshot precondition.
- *
- * @param {*} job Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Requests a consistent source snapshot from the application using the internal worker token.
+ * @param {Object} job Backup job whose ID identifies the snapshot.
+ * @return {Promise<string>} Source snapshot directory.
  */
 async function ensureSourceSnapshot(job) {
-  const file = process.env.BACKUP_WORKER_TOKEN_FILE ||
-    '/run/secrets/backup-worker-token';
+  const file = process.env.BACKUP_WORKER_TOKEN_FILE || '/run/secrets/backup-worker-token';
   const token = fs.readFileSync(file, 'utf8').trim();
   let result;
   try {
     result = await fetch(`${APP}/internal/backup/snapshot/${job.id}`, {
       method: 'POST',
-      headers: {'X-Backup-Worker-Token': token, 'Content-Type': 'application/json'},
+      headers: {
+        'X-Backup-Worker-Token': token, 'Content-Type': 'application/json',
+      },
       body: '{}',
       signal: AbortSignal.timeout(120000),
     });
   } catch {
     throw backupJobError('backup.errors.sourceUnavailable');
   }
-  if (!result.ok) throw backupJobError(
-    'backup.errors.sourceSnapshotFailed',
-    {status: String(result.status)}
-  );
+  if (!result.ok) throw backupJobError('backup.errors.sourceSnapshotFailed', {status: String(result.status)});
   const folder = path.join(CONTROL, 'staging', job.id);
   if (!fs.existsSync(path.join(folder, 'data/collection.json')) ||
-    !fs.statSync(path.join(folder, 'data/collection.json'))
-      .isFile()) throw backupJobError('backup.errors.sourceSnapshotIncomplete');
+    !fs.statSync(path.join(folder, 'data/collection.json')).isFile()) throw backupJobError('backup.errors.sourceSnapshotIncomplete');
   return folder;
 }
 
 /**
- * Validates the verify zip archive state and rejects invalid inputs.
+ * Verifies that the ZIP archive can be read using the configured password and maps validation failures to job errors.
  *
  * @param {*} file File resource to read, write or inspect.
  * @param {*=} password Password or secret supplied by the caller.
@@ -579,8 +501,8 @@ function verifyZipArchive(file, password = backupPassword()) {
 }
 
 /**
- * Validates the backup password state and rejects invalid inputs.
- * @return {*} Value returned by the delegated operation.
+ * Loads the configured backup password and maps missing or too-short passwords to worker error codes.
+ * @return {*} Validated configured backup password.
  */
 function backupPassword() {
   try {return readBackupPassword();}
@@ -599,11 +521,10 @@ function backupPassword() {
 /**
  * Executes a queued backup job and records its completion state.
  *
- * @param {*} job Job used by this operation.
+ * @param {*} job Queued job with its operation type and snapshot selection.
  * @param {*} profile Profile data used for the comparison.
  * @param {*} status HTTP or entity status used for validation.
- * @return {!Promise<(!Object)>} Promise fulfilled when the operation
- * completes.
+ * @return {!Promise<(!Object)>} Job result containing a message and any snapshot or restore metadata.
  */
 export async function executeJob(job, profile, status) {
   const repo = repositoryFor(profile);
@@ -611,7 +532,7 @@ export async function executeJob(job, profile, status) {
     // Test writes, not just read-only directory listings.
     const probe = `.whisky-write-test-${job.id}`;
     if (profile.provider === 'local') {
-      fs.mkdirSync(repo, {recursive: true, mode: 0o700});
+      ensureDurableDirectory(repo);
       const testFile = path.join(repo, probe);
       fs.writeFileSync(testFile, 'test', {flag: 'wx', mode: 0o600});
       fs.unlinkSync(testFile);
@@ -619,68 +540,48 @@ export async function executeJob(job, profile, status) {
       const probePath = path.join(CONTROL, probe);
       fs.writeFileSync(probePath, 'test', {flag: 'wx', mode: 0o600});
       try {
-        await runCommand(
-          'rclone',
-          ['copyto', probePath, `${repo}/${probe}`],
-          {timeout: 120000}
-        );
-        await runCommand(
-          'rclone',
-          ['deletefile', `${repo}/${probe}`],
-          {timeout: 120000}
-        );
+        await runCommand('rclone', ['copyto', probePath, `${repo}/${probe}`], {timeout: 120000});
+        await runCommand('rclone', ['deletefile', `${repo}/${probe}`], {timeout: 120000});
       } finally {fs.rmSync(probePath, {force: true});}
     }
     return {message: 'Schreibtest erfolgreich: Backup-Ziel ist bereit'};
   }
   if (job.type === 'prepare') {
-    return formatOf(profile) === 'zip' ?
-      prepareZipRestore(job, profile, repo) : prepareLegacyRestore(job, repo);
+    return formatOf(profile) === 'zip' ? prepareZipRestore(job, profile, repo) : prepareLegacyRestore(job, repo);
   }
   if (job.type === 'run') {
-    if (formatOf(profile) !==
-      'zip') throw backupJobError('backup.errors.legacyProfileReadOnly');
+    if (formatOf(profile) !== 'zip') throw backupJobError('backup.errors.legacyProfileReadOnly');
     return runZipBackup(job, profile, repo, status);
   }
   if (job.type === 'check' && formatOf(profile) === 'zip') {
     const archives = await zipFilesFor(profile, repo);
     if (!archives.length) throw backupJobError('backup.errors.noZipArchives');
     for (const item of archives) {
-      if (profile.provider ===
-        'local') verifyZipArchive(path.join(repo, item.filename));
+      if (profile.provider === 'local') verifyZipArchive(path.join(repo, item.filename));
       else {
         const folder = path.join(CONTROL, 'zip-temp', job.id);
         fs.mkdirSync(folder, {recursive: true, mode: 0o700});
         try {
           const file = path.join(folder, item.filename);
-          await runCommand(
-            'rclone',
-            ['copyto', `${repo}/${item.filename}`, file]
-          );
+          await runCommand('rclone', ['copyto', `${repo}/${item.filename}`, file]);
           verifyZipArchive(file);
         } finally {fs.rmSync(folder, {recursive: true, force: true});}
       }
     }
-    return {message: `${archives.length} ZIP-Datei(en) inklusive AES-Authentifizierung kontrolliert`};
+    return {message: `${archives.length} ZIP-Datei(en) inklusive AES-Authentifizierung kontrolliert`, };
   }
   if (job.type === 'check') {
     await restic(repo, ['check'], {timeout: 3600000});
     return {message: 'Restic-Repository geprüft (Struktur/Metadaten)'};
   }
   if (job.type === 'snapshots') {
-    status.snapshots[profile.id] = formatOf(profile) === 'zip' ?
-      await zipFilesFor(profile, repo) : await snapshots(repo);
-    return {
-      message: `${status.snapshots[profile.id]
-        .length} Sicherungsstände geladen`,
-    };
+    status.snapshots[profile.id] = formatOf(profile) === 'zip' ? await zipFilesFor(profile, repo) : await snapshots(repo);
+    return {message: `${status.snapshots[profile.id].length} Sicherungsstände geladen`, };
   }
   if (job.type === 'restore') {
-    if (formatOf(profile) ===
-      'zip') throw backupJobError('backup.errors.zipRestoreViaPreview');
+    if (formatOf(profile) === 'zip') throw backupJobError('backup.errors.zipRestoreViaPreview');
     const snapshotId = job.snapshotId;
-    if (!/^(latest|[0-9a-f]{8,64})$/i.test(snapshotId ||
-      '')) throw backupJobError('backup.errors.invalidSnapshotId');
+    if (!/^(latest|[0-9a-f]{8,64})$/i.test(snapshotId || '')) throw backupJobError('backup.errors.invalidSnapshotId');
     const target = path.join(CONTROL, 'restores', profile.id, job.id);
     fs.mkdirSync(target, {recursive: true, mode: 0o700});
     try {
@@ -696,18 +597,24 @@ export async function executeJob(job, profile, status) {
   }
   throw backupJobError('backup.errors.unknownJobType');
 }
-const EMPTY_STATUS = {updatedAt: null, timeZone: TZ, jobs: [], snapshots: {}, remotes: []};
+const EMPTY_STATUS = {
+  updatedAt: null, timeZone: TZ, jobs: [], snapshots: {},
+  remotes: [],
+};
 /**
- * Creates worker for backup worker.
+ * Creates the backup worker, recovering interrupted jobs and maintaining queue state.
  *
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Worker startup and queue-processing operations.
  */
 export function createWorker() {
   const status = readJson('worker-status.json', EMPTY_STATUS);
   status.jobs = (status.jobs || []).map(job => {
     if (job.state !== 'running') return job;
     const {error, ...rest} = job;
-    return {...rest, state: 'failed', errorCode: 'backup.errors.workerInterrupted'};
+    return {
+      ...rest, state: 'failed',
+      errorCode: 'backup.errors.workerInterrupted',
+    };
   });
   status.snapshots ||= {};
   status.remotes ||= [];
@@ -724,14 +631,13 @@ export function createWorker() {
   }
 
   /**
-   * Retrieves remotes from the available state.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Refreshes configured rclone remote names, clearing the list if discovery fails.
+   * @return {!Promise<*>} Completion of remote discovery.
    */
   async function loadRemotes() {
     try {
       const result = await runCommand('rclone', ['listremotes'], {timeout: 15000});
-      status.remotes = result.split(/\r?\n/).map(s => s.trim()
-        .replace(/:$/, '')).filter(s => SAFE_REMOTE.test(s));
+      status.remotes = result.split(/\r?\n/).map(s => s.trim().replace(/:$/, '')).filter(s => SAFE_REMOTE.test(s));
     } catch {status.remotes = [];}
   }
 
@@ -750,15 +656,14 @@ export function createWorker() {
         scheduled: true,
       };
       const file = path.join(CONTROL, 'jobs', `${job.id}.json`);
-      fs.mkdirSync(path.dirname(file), {recursive: true, mode: 0o700});
-      fs.writeFileSync(file, JSON.stringify(job), {flag: 'wx', mode: 0o600});
+      writeDurableFile(file, JSON.stringify(job), {exclusive: true});
       schedule[profile.id] = slot;
       writeJson('schedule-state.json', schedule);
     }
   }
 
   /**
-   * Handles queue for backup worker.
+   * Processes due schedules and queued jobs serially, skipping overlapping queue runs.
    */
   async function processQueue() {
     if (busy) return;
@@ -766,34 +671,29 @@ export function createWorker() {
     try {
       scheduleDue();
       const dir = path.join(CONTROL, 'jobs');
-      fs.mkdirSync(dir, {recursive: true, mode: 0o700});
-      const files = fs.readdirSync(dir).filter(f =>
-        SAFE_ID.test(f.replace(/\.json$/, '')) && f.endsWith('.json')).sort();
+      ensureDurableDirectory(dir);
+      const files = fs.readdirSync(dir).filter(f => SAFE_ID.test(f.replace(/\.json$/, '')) && f.endsWith('.json')).sort();
       for (const file of files) {
         const full = path.join(dir, file);
         let job;
         try {job = JSON.parse(fs.readFileSync(full, 'utf8'));}
         catch {fs.unlinkSync(full); continue;}
-        if (!SAFE_ID.test(job.id) || file !== `${job.id}.json` ||
-          !SAFE_ID.test(job.profileId) || !TYPES.has(job.type)) {
+        if (!SAFE_ID.test(job.id) || file !== `${job.id}.json` || !SAFE_ID.test(job.profileId) || !TYPES.has(job.type)) {
           fs.unlinkSync(full); continue;
         }
         const log = {
-          ...job, state: 'running', startedAt: new Date()
-            .toISOString(),
+          ...job, state: 'running', startedAt: new Date().toISOString(),
         };
         status.jobs.unshift(log);
         flush();
         try {
-          const profile = loadProfiles().find(profile => profile.id ===
-            job.profileId);
+          const profile = loadProfiles().find(profile => profile.id === job.profileId);
           if (!profile) throw backupJobError('backup.errors.profileMissing');
           const result = await executeJob(job, profile, status);
           Object.assign(
             log,
             {
-              state: 'success', finishedAt: new Date()
-                .toISOString(), ...result,
+              state: 'success', finishedAt: new Date().toISOString(), ...result,
             }
           );
         } catch (error) {
@@ -816,8 +716,8 @@ export function createWorker() {
   }
 
   /**
-   * Performs the start lifecycle action.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Loads remote configuration, processes initial jobs and starts periodic worker timers.
+   * @return {!Promise<*>} Completion of initial worker startup.
    */
   async function start() {
     await loadRemotes();
@@ -836,14 +736,12 @@ export function createWorker() {
   return {
     start, processQueue,
     /**
-     * Retrieves status from the available state.
-     * @return {*} Result computed from the supplied inputs.
+     * Returns the current backup-worker status snapshot.
+     * @return {Object} Current in-memory status record.
      */
     getStatus: () => status,
   };
 }
-if (process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url)) {
-  createWorker().start()
-    .catch(error => {console.error(error); process.exitCode = 1;});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  createWorker().start().catch(error => {console.error(error); process.exitCode = 1;});
 }

@@ -1,46 +1,59 @@
+import {composeMarkup} from '../../ui/render-plan.js';
+import {replaceContent} from '../../ui/dom-renderer.js';
 import {actionButton} from '../../ui/buttons.js';
 import {request, clearResourceCache} from '../../api.js';
-import {escapeHtml} from '../../ui/dom.js';
 import {t} from '../../i18n/index.js';
 import {toast} from '../../ui/notifications.js';
 import {eyeIcon, eyeOffIcon} from '../../ui/action-icons.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates('auth/controller.html');
+
 
 /**
  * Authentication pages intentionally replace, rather than cover, the
  * collection UI.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Authentication lifecycle, user-management rendering and action handlers.
  */
-export function createAuthController({root, state, render, refresh, applyTheme, showModal, closeModal}) {
+export function createAuthController({root, state, render, refresh, applyTheme,
+  showModal, closeModal}) {
   let mode = 'login';
   let pendingDelete = null;
   let pendingRequired = null;
   /**
-   * Builds the localized tr text for the current language.
+   * Resolves an authentication translation key.
    *
    * @param {*} key Key used to select or group values.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Localized text from the authentication catalog.
    */
   const tr = key => t(`auth.${key}`);
 
   /**
-   * Produces the password toggle text used by the caller.
+   * Prepares password visibility toggle associated with the target input.
    *
    * @param {*} id Identifier of the affected record.
-   * @param {boolean=} hidden Value used by this operation.
-   * @return {string} Resulting text.
+   * @param {boolean=} hidden Whether the password is currently concealed.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Password visibility toggle associated with the target input.
    */
   const passwordToggle = (id, hidden = true) =>
-    `<button class="auth-password-toggle" type="button" data-act="auth-toggle-password" data-target="${id}" aria-controls="${id}" aria-label="${escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" title="${escapeHtml(tr(hidden ? 'showPassword' : 'hidePassword'))}" aria-pressed="${hidden ? 'false' : 'true'}">${hidden ? eyeIcon : eyeOffIcon}</button>`;
+    renderTemplate('authTogglePassword', {
+      id: id,
+      ariaControls: id,
+      tr: tr(hidden ? 'showPassword' : 'hidePassword'),
+      title: tr(hidden ? 'showPassword' : 'hidePassword'),
+      hidden: hidden ? 'false' : 'true',
+      visibilityIcon: hidden ? eyeIcon : eyeOffIcon,
+    });
 
   /**
-   * Produces the field text used by the caller.
+   * Prepares labeled authentication input, including a visibility toggle for passwords.
    *
    * @param {*} id Identifier of the affected record.
    * @param {*} label Label shown to the user.
    * @param {!Object=} options Options controlling the operation.
-   * @return {string} Resulting text.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Labeled authentication input, including a visibility toggle for passwords.
    */
   const field = (
     id,
@@ -48,48 +61,63 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     {type = 'password', autocomplete = 'off', minLength = null, value = ''} = {}
   ) => {
     const isPassword = type === 'password';
-    return `<label class="form-field${isPassword ? ' auth-password-field' :
-      ''}" for="${id}">${label}${isPassword
-        ? `<div class="auth-password-input"><input id="${id}" name="${id}" type="password" autocomplete="${autocomplete}"${minLength ? ` minlength="${minLength}"` : ''}${value ? ` value="${escapeHtml(value)}"` : ''} required>${passwordToggle(id)}</div>`
-        : `<input id="${id}" name="${id}" type="${type}" autocomplete="${autocomplete}"${minLength ? ` minlength="${minLength}"` : ''}${value ? ` value="${escapeHtml(value)}"` : ''} required>`}</label>`;
+    return renderTemplate('formField', {
+      isPassword: isPassword ? ' auth-password-field' : '',
+      id: id,
+      label: label,
+      authPasswordInput: isPassword
+        ? renderTemplate('authPasswordInput', {
+          id: id,
+          name: id,
+          autocomplete: autocomplete,
+          minlengthAttributes: minLength ? {"minlength": minLength} : {},
+          valueAttributes: value ? {"value": value} : {},
+          passwordToggle: passwordToggle(id),
+        })
+        : renderTemplate('fieldInput', {
+          id: id,
+          name: id,
+          type: type,
+          autocomplete: autocomplete,
+          minlengthAttributes: minLength ? {"minlength": minLength} : {},
+          valueAttributes: value ? {"value": value} : {},
+        }),
+    });
   };
 
   /**
-   * Builds the localized brand text for the current language.
-   * @return {string} Resulting text.
+   * Prepares application branding for the authentication screen.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Application branding for the authentication screen.
    */
-  const brand = () => `<div class="auth-brand">
-      <img class="auth-brand-logo" src="/assets/logo.svg" width="112" height="112" alt="">
-      <div class="auth-brand-copy">
-        <span class="brand-overline">${t('ui.branding.privateReserve')}</span>
-        <p class="auth-brand-title">${t('ui.branding.whiskyLabel')} <em>${t('ui.branding.collectionLabel')}</em> <span>${t('ui.branding.managerLabel')}</span></p>
-      </div>
-    </div>`;
+  const brand = () => renderTemplate('authBrand');
 
   /**
-   * Produces the panel text used by the caller.
+   * Prepares authentication page containing the supplied form and title.
    *
    * @param {*} title Title displayed or stored by this operation.
    * @param {*} body Body content to validate or process.
-   * @return {string} Resulting text.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Authentication page containing the supplied form and title.
    */
   const panel = (title, body) =>
-    `<div class="auth-page"><section class="panel auth-card">${brand()}<h1>${title}</h1>${body}</section></div>`;
+    renderTemplate('authPage', {
+      brand: brand(),
+      title: title,
+      body: body,
+    });
 
   /**
-   * Derives the error text result from the supplied values.
-   * @return {string} Resulting text.
+   * Prepares initially hidden authentication error region.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Initially hidden authentication error region.
    */
-  const errorText = () => `<p class="auth-error" role="alert" hidden></p>`;
+  const errorText = () => renderTemplate('authError');
 
   /**
-   * Produces the error markup text used by the caller.
+   * Prepares authentication error message with its status icon.
    *
    * @param {*} text Text to process.
-   * @return {string} Resulting text.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Authentication error message with its status icon.
    */
-  const errorMarkup = text =>
-    `<span class="auth-error-icon" aria-hidden="true">!</span><span>${escapeHtml(text)}</span>`;
+  const errorMarkup = text => renderTemplate('authErrorIcon', {text: text, });
 
   /**
    * Renders the controller state.
@@ -100,123 +128,104 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     if (mandatory) mode = 'change';
     if (mode === 'change') {
       const canCancel = !mandatory;
-      root.innerHTML = panel(tr(mandatory ? 'firstChangeTitle' : 'changeTitle'),
-        `<form id="auth-change-form" class="auth-form auth-form-main">
-                ${field(
-          'currentPassword',
-          tr('currentPassword'),
-          {autocomplete: 'current-password'}
-        )}
-                ${field(
-          'newPassword',
-          tr('newPassword'),
-          {autocomplete: 'new-password', minLength: 12}
-        )}
-                ${field(
-          'confirmPassword',
-          tr('confirmPassword'),
-          {autocomplete: 'new-password', minLength: 12}
-        )}
-                <p class="muted auth-note">${tr('passwordHint')}</p>${errorText()}
-                <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">${tr('savePassword')}</button>
-                ${canCancel ?
-          `${actionButton({
-            label: tr('cancel'),
-            action: 'auth-cancel',
-            className: 'auth-secondary-action',
-          })}` : ''}</div></form>`);
+      replaceContent(
+        root,
+        panel(
+          tr(mandatory ? 'firstChangeTitle' : 'changeTitle'),
+          renderTemplate('authChangeForm', {
+            field: field('currentPassword', tr('currentPassword'), {autocomplete: 'current-password'}),
+            newPasswordField: field('newPassword', tr('newPassword'), {autocomplete: 'new-password', minLength: 12}),
+            confirmPasswordField: field('confirmPassword', tr('confirmPassword'), {autocomplete: 'new-password', minLength: 12}),
+            passwordHint: tr('passwordHint'),
+            errorText: errorText(),
+            savePassword: tr('savePassword'),
+            canCancel: canCancel ?
+              actionButton({
+                label: tr('cancel'),
+                action: 'auth-cancel',
+                className: 'auth-secondary-action',
+              }) : '',
+          })
+        )
+      );
     } else {
-      root.innerHTML = panel(tr('loginTitle'),
-        `<form id="auth-login-form" class="auth-form auth-form-main">
-                ${field(
-          'username',
-          tr('username'),
-          {type: 'text', autocomplete: 'username'}
-        )}
-                ${field(
-          'password',
-          tr('password'),
-          {autocomplete: 'current-password'}
-        )}
-                ${errorText()}
-                <div class="actions auth-actions auth-actions--stacked"><button class="btn primary auth-submit" type="submit">${tr('signIn')}</button>
-                ${!state.auth?.required ?
-          `${actionButton({
-            label: tr('cancel'),
-            action: 'auth-cancel',
-            className: 'auth-secondary-action',
-          })}` : ''}</div></form>`);
+      replaceContent(root, panel(tr('loginTitle'),
+        renderTemplate('authLoginForm', {
+          field: field('username', tr('username'), {type: 'text', autocomplete: 'username'}),
+          passwordField: field('password', tr('password'), {autocomplete: 'current-password'}),
+          errorText: errorText(),
+          signIn: tr('signIn'),
+          content: !state.auth?.required ?
+            actionButton({
+              label: tr('cancel'),
+              action: 'auth-cancel',
+              className: 'auth-secondary-action',
+            }) : '',
+        })));
     }
     applyTheme();
-    root.querySelector(mandatory || mode === 'change' ? '#currentPassword' :
-      '#username')?.focus();
+    root.querySelector(mandatory || mode === 'change' ? '#currentPassword' : '#username')?.focus();
   }
 
   /**
    * Updates the DOM elements managed by error.
    *
-   * @param {*} form Value used by this operation.
-   * @param {*} reason Value used by this operation.
+   * @param {*} form Login or password form containing the error output.
+   * @param {*} reason Request failure carrying status and API error code, when available.
    */
   function error(form, reason) {
     const output = form.querySelector('.auth-error');
     if (!output) return;
     let message = tr('failed');
     if (form.id === 'auth-login-form') {
-      if (reason?.status === 401 || reason?.code ===
-        'api.errors.invalidCredentials') message = tr('invalidCredentials');
-      else if (typeof reason?.message === 'string' && reason.message
-        .trim()) message = reason.message;
-    } else if (typeof reason?.message === 'string' && reason.message
-      .trim()) message = reason.message;
-    output.innerHTML = errorMarkup(message);
+      if (reason?.status === 401 || reason?.code === 'api.errors.invalidCredentials') message = tr('invalidCredentials');
+      else if (typeof reason?.message === 'string' && reason.message.trim()) message = reason.message;
+    } else if (typeof reason?.message === 'string' && reason.message.trim()) message = reason.message;
+    replaceContent(output, errorMarkup(message));
     output.hidden = false;
   }
 
   /**
-   * Coordinates asynchronous work for init.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Loads the session and opens login or password-change UI when access is blocked.
+   * @return {!Promise<*>} True if collection initialization may proceed.
    */
   async function init() {
     state.auth = await request('/api/auth/session');
     if (state.auth.user?.mustChangePassword) {
-      mode =
-        'change'; show(); return false;
+      mode = 'change'; show(); return false;
     }
     if (state.auth.required && !state.auth.user) {
-      mode =
-        'login'; show(); return false;
+      mode = 'login'; show(); return false;
     }
     return true;
   }
 
   /**
-   * Performs the open login lifecycle action.
+   * Opens the authentication dialog in login mode.
    */
   function openLogin() {mode = 'login'; show();}
 
   /**
-   * Performs the open change lifecycle action.
+   * Opens the authentication dialog in password-change mode.
    */
   function openChange() {mode = 'change'; show();}
 
   /**
-   * Coordinates asynchronous work for resume.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Clears cached resources and resumes the app only if the session allows access.
+   * @return {!Promise<*>} Completion of the session-dependent resource refresh.
    */
   async function resume() {
     clearResourceCache();
     if (state.auth?.required && !state.auth?.user) {
-      mode =
-        'login'; state.collection = null; show(); return;
+      mode = 'login'; state.collection = null; show(); return;
     }
     if (state.auth?.user?.mustChangePassword) {mode = 'change'; show(); return;}
     await refresh();
   }
 
   /**
-   * Coordinates asynchronous work for logout.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Ends the server session, clears sensitive client state and resumes the appropriate view.
+   * @return {!Promise<*>} Completion of logout and subsequent access handling.
    */
   async function logout() {
     state.auth = await request('/api/auth/logout', {method: 'POST'});
@@ -226,31 +235,32 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
   }
 
   /**
-   * Updates setting in the current state.
+   * Asks for confirmation before changing whether authentication is required.
    *
-   * @param {*} required Value used by this operation.
+   * @param {boolean} required Whether authentication should become mandatory.
    */
   function changeSetting(required) {
     pendingRequired = required;
     showModal(
       tr('loginRequired'),
-      `<p>${required ? tr('enableConfirm') : tr('disableConfirm')}</p>
-        <div class="actions ds-modal-footer ds-modal-footer--flush">
-        ${actionButton({
-        label: tr('cancel'),
-        action: 'close-modal',
-      })}
-        ${actionButton({
-        label: tr('apply'),
-        action: 'auth-confirm-required',
-        variant: 'primary',
-      })}</div>`
+      renderTemplate('changeSettingP', {
+        required: required ? tr('enableConfirm') : tr('disableConfirm'),
+        closeModalButton: actionButton({
+          label: tr('cancel'),
+          action: 'close-modal',
+        }),
+        authConfirmRequiredButton: actionButton({
+          label: tr('apply'),
+          action: 'auth-confirm-required',
+          variant: 'primary',
+        }),
+      })
     );
   }
 
   /**
-   * Retrieves users from the available state.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Fetches user management data when the current session has administrator permission.
+   * @return {!Promise<*>} Completion of the user-list refresh.
    */
   async function loadUsers() {
     if (!state.auth?.canManageUsers) return;
@@ -258,53 +268,51 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     state.authUsers = result.users;
     state.auth.required = result.required;
     const host = root.querySelector('#auth-users-content');
-    if (host) host.innerHTML = usersSection();
+    if (host) replaceContent(host, usersSection());
     else render();
   }
 
   /**
-   * Transforms the entries used by users section.
-   * @return {string} Resulting text.
+   * Prepares user administration panel with account actions.
+   * @return {import('../../ui/render-plan.js').RenderPlan|string} User administration panel with account actions (or scalar/empty text when no plan is needed).
    */
   function usersSection() {
     if (!state.auth?.canManageUsers) return '';
     const users = state.authUsers || [];
-    return `<div class="panel section auth-settings">
-        <h3>${tr('loginRequired')}</h3><p class="muted">${tr('loginSettingDescription')}</p>
-        <div class="auth-setting-row"><strong>${state.auth.required ?
-        tr('enabled') : tr('disabled')}</strong>
-        ${actionButton({
-          label: state.auth.required ? tr('disable') : tr('enable'),
-          action: 'auth-toggle-required',
-        })}</div></div>
-        <div class="panel section auth-settings"><h3>${tr('users')}</h3>
-        <div class="auth-user-list" role="list">${users.map(user =>
-          `<div class="auth-user-row" role="listitem">
-            <div><strong>${escapeHtml(user.username)}</strong><span class="muted">${user.role === 'admin' ? tr('administrator') : tr('standardUser')}${user.mustChangePassword ? ' · ' + tr('changePending') : ''}</span></div>
-            ${user.id !== state.auth.user.id ?
-            `<div class="actions"><button type="button" class="btn small" data-act="auth-reset-user" data-id="${escapeHtml(user.id)}">${tr('resetPassword')}</button>
-            <button type="button" class="btn small danger" data-act="auth-delete-user" data-id="${escapeHtml(user.id)}">${tr('delete')}</button></div>` : ''}
-        </div>`).join('')}</div>
-        <h3 class="auth-subtitle">${tr('createUser')}</h3>
-        <form id="auth-create-form" class="auth-form auth-create-form">
-        ${field(
-              'username',
-              tr('username'),
-              {type: 'text', autocomplete: 'off'}
-            )}
-        ${field(
-              'password',
-              tr('temporaryPassword'),
-              {autocomplete: 'new-password', minLength: 12}
-            )}
-        <p class="muted">${tr('newUserHint')}</p><button class="btn primary" type="submit">${tr('createUser')}</button></form>
-        </div>`;
+    return renderTemplate('panel', {
+      loginRequired: tr('loginRequired'),
+      loginSettingDescription: tr('loginSettingDescription'),
+      required: state.auth.required ? tr('enabled') : tr('disabled'),
+      authToggleRequiredButton: actionButton({
+        label: state.auth.required ? tr('disable') : tr('enable'),
+        action: 'auth-toggle-required',
+      }),
+      users: tr('users'),
+      userList: composeMarkup(users.map(user =>
+        renderTemplate('authUserRow', {
+          username: user.username,
+          role: user.role === 'admin' ? tr('administrator') : tr('standardUser'),
+          mustChangePassword: user.mustChangePassword ? ' · ' + tr('changePending') : '',
+          authResetUser: user.id !== state.auth.user.id ?
+            renderTemplate('authResetUser', {
+              id: user.id,
+              resetPassword: tr('resetPassword'),
+              deleteUserId: user.id,
+              delete: tr('delete'),
+            }) : '',
+        }))),
+      createUser: tr('createUser'),
+      field: field('username', tr('username'), {type: 'text', autocomplete: 'off'}),
+      temporaryPasswordField: field('password', tr('temporaryPassword'), {autocomplete: 'new-password', minLength: 12}),
+      newUserHint: tr('newUserHint'),
+      createUserButtonLabel: tr('createUser'),
+    });
   }
 
   /**
-   * Handles action for controller.
+   * Dispatches authentication actions based on the clicked control's action name.
    *
-   * @param {*} button Button used by this operation.
+   * @param {*} button Clicked authentication action control with a data-act attribute.
    */
   async function handleAction(button) {
     const act = button.dataset.act;
@@ -312,85 +320,73 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
     else if (act === 'auth-logout') await logout();
     else if (act === 'auth-open-change') openChange();
     else if (act === 'auth-cancel') await resume();
-    else if (act === 'auth-toggle-required') changeSetting(!state.auth
-      .required);
+    else if (act === 'auth-toggle-required') changeSetting(!state.auth.required);
     else if (act === 'auth-toggle-password') {
-      const input = document.getElementById(button.dataset.target || '');
+      const input = /** @type {HTMLInputElement} */ (document.getElementById(button.dataset.target || ''));
       if (!input) return;
       const hidden = input.type === 'password';
       input.type = hidden ? 'text' : 'password';
-      button.innerHTML = hidden ? eyeOffIcon : eyeIcon;
-      button.setAttribute(
-        'aria-label',
-        tr(hidden ? 'hidePassword' : 'showPassword')
-      );
-      button.setAttribute(
-        'title',
-        tr(hidden ? 'hidePassword' : 'showPassword')
-      );
+      replaceContent(button, hidden ? eyeOffIcon : eyeIcon);
+      button.setAttribute('aria-label', tr(hidden ? 'hidePassword' : 'showPassword'));
+      button.setAttribute('title', tr(hidden ? 'hidePassword' : 'showPassword'));
       button.setAttribute('aria-pressed', hidden ? 'true' : 'false');
     } else if (act === 'auth-confirm-required') {
       if (typeof pendingRequired !== 'boolean') return;
       const value = pendingRequired; pendingRequired = null;
-      const result = await request(
-        '/api/auth/config',
-        {method: 'PATCH', body: JSON.stringify({required: value})}
-      );
+      const result = await request('/api/auth/config', {method: 'PATCH', body: JSON.stringify({required: value})});
       state.auth.required = result.required;
       closeModal();
       await loadUsers();
     } else if (act === 'auth-reset-user') {
       const user = state.authUsers?.find(u => u.id === button.dataset.id);
       if (!user) return;
-      showModal(tr('resetPassword'), `<p>${escapeHtml(user.username)}</p>
-              <form id="auth-reset-form" class="auth-form" data-user-id="${escapeHtml(user.id)}">
-              ${field(
-        'password',
-        tr('temporaryPassword'),
-        {autocomplete: 'new-password', minLength: 12}
-      )}
-              <p class="muted">${tr('newUserHint')}</p>
-              <div class="actions">${actionButton({
-        label: tr('cancel'),
-        action: 'close-modal',
-      })}
-              <button class="btn primary" type="submit">${tr('apply')}</button></div></form>`);
+      showModal(tr('resetPassword'), renderTemplate('handleActionP', {
+        username: user.username,
+        id: user.id,
+        field: field('password', tr('temporaryPassword'), {autocomplete: 'new-password', minLength: 12}),
+        newUserHint: tr('newUserHint'),
+        closeModalButton: actionButton({
+          label: tr('cancel'),
+          action: 'close-modal',
+        }),
+        apply: tr('apply'),
+      }));
     } else if (act === 'auth-delete-user') {
       const user = state.authUsers?.find(u => u.id === button.dataset.id);
       if (!user) return;
       pendingDelete = user.id;
       showModal(
         tr('deleteUser'),
-        `<p>${tr('deleteConfirm')} <strong>${escapeHtml(user.username)}</strong>?</p>
-            <div class="actions">${actionButton({
-          label: tr('cancel'),
-          action: 'close-modal',
-        })}
-            ${actionButton({
-          label: tr('delete'),
-          action: 'auth-confirm-delete',
-          variant: 'destructive',
-        })}</div>`
+        renderTemplate('handleActionP2', {
+          deleteConfirm: tr('deleteConfirm'),
+          username: user.username,
+          closeModalButton: actionButton({
+            label: tr('cancel'),
+            action: 'close-modal',
+          }),
+          authConfirmDeleteButton: actionButton({
+            label: tr('delete'),
+            action: 'auth-confirm-delete',
+            variant: 'destructive',
+          }),
+        })
       );
     } else if (act === 'auth-confirm-delete') {
       if (!pendingDelete) return;
       const id = pendingDelete; pendingDelete = null;
-      await request(
-        `/api/auth/users/${encodeURIComponent(id)}`,
-        {method: 'DELETE'}
-      );
+      await request(`/api/auth/users/${encodeURIComponent(id)}`, {method: 'DELETE'});
       closeModal(); await loadUsers();
     }
   }
 
   /**
-   * Handles submit for controller.
+   * Intercepts authentication forms and submits the corresponding login or user-management operation.
    *
-   * @param {!KeyboardEvent} event Event that triggered the handler.
-   * @return {boolean} Whether the condition is satisfied.
+   * @param {!Event} event Submission from an authentication form.
+   * @return {boolean} Whether the authentication controller handled the submission.
    */
   function handleSubmit(event) {
-    const form = event.target;
+    const form = /** @type {HTMLFormElement & {elements: {username?: HTMLInputElement, password?: HTMLInputElement, currentPassword?: HTMLInputElement, newPassword?: HTMLInputElement, confirmPassword?: HTMLInputElement}}} */ (event.target);
     if (![
       'auth-login-form',
       'auth-change-form',
@@ -398,10 +394,10 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
       'auth-reset-form',
     ].includes(form.id)) return false;
     event.preventDefault();
-    const submit = form.querySelector('button[type="submit"]');
+    const submit = /** @type {HTMLButtonElement} */ (form.querySelector('button[type="submit"]'));
     if (submit?.disabled) return true;
     if (submit) submit.disabled = true;
-    const output = form.querySelector('.auth-error');
+    const output = /** @type {HTMLElement} */ (form.querySelector('.auth-error'));
     if (output) {output.hidden = true; output.textContent = '';}
     (async () => {
       if (form.id === 'auth-login-form') {
@@ -418,8 +414,7 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
         form.elements.password.value = '';
         await resume();
       } else if (form.id === 'auth-change-form') {
-        if (form.elements.newPassword.value !== form.elements
-          .confirmPassword.value) throw Error(tr('passwordMismatch'));
+        if (form.elements.newPassword.value !== form.elements.confirmPassword.value) throw Error(tr('passwordMismatch'));
         state.auth = await request(
           '/api/auth/password',
           {
@@ -446,8 +441,7 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
         await loadUsers(); toast(tr('userCreated'));
       } else if (form.id === 'auth-reset-form') {
         await request(
-          `/api/auth/users/${encodeURIComponent(form.dataset
-            .userId)}/reset-password`,
+          `/api/auth/users/${encodeURIComponent(form.dataset.userId)}/reset-password`,
           {
             method: 'POST',
             body: JSON.stringify({password: form.elements.password.value}),
@@ -456,8 +450,7 @@ export function createAuthController({root, state, render, refresh, applyTheme, 
         closeModal(); await loadUsers(); toast(tr('passwordReset'));
       }
     })().catch(reason => {
-      if (form.id === 'auth-login-form' || form.id ===
-        'auth-change-form') error(form, reason);
+      if (form.id === 'auth-login-form' || form.id === 'auth-change-form') error(form, reason);
       else toast(reason.message, true);
     }).finally(() => {if (submit.isConnected) submit.disabled = false;});
     return true;

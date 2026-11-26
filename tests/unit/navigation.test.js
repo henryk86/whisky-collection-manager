@@ -65,9 +65,7 @@ test(
   'scan navigation scrolls to the page top and preserves bottle highlighting',
   () => {
     const context = setup();
-    context.navigate('detail', 'bottling-a', {
-      highlightBottleId: 'bottle-a',
-    });
+    context.navigate('detail', 'bottling-a', {highlightBottleId: 'bottle-a', });
     assert.equal(context.state.highlightBottleId, 'bottle-a');
     assert.deepEqual(
       context.calls,

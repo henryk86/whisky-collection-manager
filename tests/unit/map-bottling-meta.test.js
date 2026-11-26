@@ -35,14 +35,8 @@ test(
     assert.equal(items.length, 2);
     assert.equal(items[0].bottleCount, 1);
     assert.equal(items[1].bottleCount, 1);
-    assert.equal(
-      mapBottlingFacts(items[0]),
-      '8 Jahre · 46,2 % Vol. · Dest. 2012 · Abgef. 2020'
-    );
-    assert.equal(
-      mapBottlingFacts(items[1]),
-      '10 Jahre · 50 % Vol. · Dest. 2013 · Abgef. 2023'
-    );
+    assert.equal(mapBottlingFacts(items[0]), '8 Jahre · 46,2 % Vol. · Dest. 2012 · Abgef. 2020');
+    assert.equal(mapBottlingFacts(items[1]), '10 Jahre · 50 % Vol. · Dest. 2013 · Abgef. 2023');
   }
 );
 
@@ -58,14 +52,8 @@ test(
       }),
       ''
     );
-    assert.equal(
-      mapBottlingFacts({abv: 46.3, releaseYear: 2024}),
-      '46,3 % Vol. · Ersch. 2024'
-    );
-    assert.equal(
-      mapBottlingFacts({ageYears: 1, bottlingYear: 2019, releaseYear: 2020}),
-      '1 Jahr · Abgef. 2019'
-    );
+    assert.equal(mapBottlingFacts({abv: 46.3, releaseYear: 2024}), '46,3 % Vol. · Ersch. 2024');
+    assert.equal(mapBottlingFacts({ageYears: 1, bottlingYear: 2019, releaseYear: 2020}), '1 Jahr · Abgef. 2019');
     assert.equal(mapBottlingFacts({distillationYear: 2015}), 'Dest. 2015');
     assert.equal(mapBottlingFacts({ageYears: 0, abv: 0}), '0 Jahre · 0 % Vol.');
   }

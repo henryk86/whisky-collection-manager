@@ -15,12 +15,7 @@ test(
       let w = await api(ctx.base, '/api/warehouse');
       assert.equal(w.status, 200);
       assert.deepEqual(w.data.rooms, []);
-      const room = await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Whiskyzimmer', width: 5, height: 4}
-      );
+      const room = await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Whiskyzimmer', width: 5, height: 4});
       assert.equal(room.status, 201);
       const furniture = await api(
         ctx.base,
@@ -37,12 +32,7 @@ test(
         }
       );
       assert.equal(furniture.status, 201);
-      const shelf = await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.data.id}/shelves`,
-        'POST',
-        {name: 'Fach 1', capacity: 1}
-      );
+      const shelf = await api(ctx.base, `/api/warehouse/furniture/${furniture.data.id}/shelves`, 'POST', {name: 'Fach 1', capacity: 1});
       assert.equal(shelf.status, 201);
       const bottling = await api(
         ctx.base,
@@ -54,42 +44,20 @@ test(
         }
       );
       assert.equal(bottling.status, 201);
-      const bottle2 = await api(
-        ctx.base,
-        '/api/bottles',
-        'POST',
-        {bottlingId: bottling.data.bottling.id, inventoryNumber: '0002'}
-      );
+      const bottle2 = await api(ctx.base, '/api/bottles', 'POST', {bottlingId: bottling.data.bottling.id, inventoryNumber: '0002'});
       assert.equal(bottle2.status, 201);
       const bottleId = bottling.data.bottle.id;
-      const collectionBeforeWarehouseChange =
-        fs.readFileSync(path.join(ctx.dir, 'data/collection.json'));
-      const first = await api(
-        ctx.base,
-        `/api/warehouse/bottles/${bottleId}`,
-        'PUT',
-        {shelfId: shelf.data.id}
-      );
+      const collectionBeforeWarehouseChange = fs.readFileSync(path.join(ctx.dir, 'data/collection.json'));
+      const first = await api(ctx.base, `/api/warehouse/bottles/${bottleId}`, 'PUT', {shelfId: shelf.data.id});
       assert.equal(first.status, 200);
-      const second = await api(
-        ctx.base,
-        `/api/warehouse/bottles/${bottle2.data.id}`,
-        'PUT',
-        {shelfId: shelf.data.id}
-      );
+      const second = await api(ctx.base, `/api/warehouse/bottles/${bottle2.data.id}`, 'PUT', {shelfId: shelf.data.id});
       assert.equal(second.status, 409, 'capacity prevents over-occupation');
       w = await api(ctx.base, '/api/warehouse');
       assert.equal(w.data.assignments[bottleId], shelf.data.id);
       assert.equal(w.data.bottles.length, 2);
-      const deleteRoom = await api(ctx.base, `/api/warehouse/rooms/${room.data
-        .id}`, 'DELETE');
+      const deleteRoom = await api(ctx.base, `/api/warehouse/rooms/${room.data.id}`, 'DELETE');
       assert.equal(deleteRoom.status, 409, 'occupied room may not be deleted');
-      const move = await api(
-        ctx.base,
-        `/api/warehouse/bottles/${bottleId}`,
-        'PUT',
-        {shelfId: null}
-      );
+      const move = await api(ctx.base, `/api/warehouse/bottles/${bottleId}`, 'PUT', {shelfId: null});
       assert.equal(move.status, 200);
       const delShelf = await api(ctx.base, `/api/warehouse/shelves/${shelf.data.id}`, 'DELETE');
       assert.equal(delShelf.status, 200);
@@ -102,27 +70,18 @@ test(
       assert.equal(saved.rooms.length, 1);
       assert.equal(saved.rooms[0].furniture.length, 1);
       assert.deepEqual(saved.assignments, {});
-      const response = await fetch(
-        ctx.base + '/api/export/zip',
-        {headers: {'X-Backup-Admin-Token': 'a'.repeat(64)}}
-      );
+      const response = await fetch(ctx.base + '/api/export/zip', {headers: {'X-Backup-Admin-Token': 'a'.repeat(64)}});
       assert.equal(response.status, 200);
       const zipPath = path.join(ctx.dir, 'warehouse-backup.zip');
       fs.writeFileSync(zipPath, Buffer.from(await response.arrayBuffer()));
       const extract = path.join(ctx.dir, 'extracted');
       inspectReadableZip(zipPath, extract, pass);
-      assert.deepEqual(
-        JSON.parse(fs.readFileSync(path.join(extract, 'data/warehouse.json'))),
-        saved
-      );
+      assert.deepEqual(JSON.parse(fs.readFileSync(path.join(extract, 'data/warehouse.json'))), saved);
       const exported = await fetch(ctx.base + '/api/export/json');
       const json = await exported.json();
       assert.equal(json.rooms, undefined);
       assert.equal(json.assignments, undefined);
-      assert.equal(
-        fs.existsSync(path.join(ctx.dir, 'data/warehouse.json')),
-        true
-      );
+      assert.equal(fs.existsSync(path.join(ctx.dir, 'data/warehouse.json')), true);
     } finally {await ctx.stop();}
   }
 );
@@ -132,12 +91,7 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Small room', width: 2, height: 2}
-      );
+      const room = await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Small room', width: 2, height: 2});
       assert.equal(
         (await api(
           ctx.base,
@@ -156,30 +110,15 @@ test(
         400
       );
       assert.equal(
-        (await api(
-          ctx.base,
-          '/api/warehouse/bottles/no-such-bottle',
-          'PUT',
-          {shelfId: null}
-        )).status,
+        (await api(ctx.base, '/api/warehouse/bottles/no-such-bottle', 'PUT', {shelfId: null})).status,
         404
       );
       assert.equal(
-        (await api(
-          ctx.base,
-          '/api/warehouse/rooms',
-          'POST',
-          {name: '  ', width: 2, height: 2}
-        )).status,
+        (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: '  ', width: 2, height: 2})).status,
         400
       );
       assert.equal(
-        (await api(
-          ctx.base,
-          '/api/warehouse/rooms',
-          'POST',
-          {name: '<script>alert(1)</script>', width: -1, height: 2}
-        )).status,
+        (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: '<script>alert(1)</script>', width: -1, height: 2})).status,
         400
       );
       const f = await api(
@@ -197,12 +136,7 @@ test(
         }
       );
       assert.equal(f.status, 201);
-      const cannotShrink = await api(
-        ctx.base,
-        `/api/warehouse/rooms/${room.data.id}`,
-        'PATCH',
-        {name: 'Too small', width: 1, height: 1}
-      );
+      const cannotShrink = await api(ctx.base, `/api/warehouse/rooms/${room.data.id}`, 'PATCH', {name: 'Too small', width: 1, height: 1});
       assert.equal(cannotShrink.status, 400);
       const saved = await api(ctx.base, '/api/warehouse');
       assert.equal(saved.data.rooms.length, 1);
@@ -217,51 +151,25 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Zimmer', width: 3, height: 3}
-      )).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Zimmer', width: 3, height: 3})).data;
       const furniture = (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
         'POST',
         {name: 'Regal', type: 'regal', x: 0, y: 0, width: 1, depth: 0.5}
       )).data;
-      const shelf = (await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}/shelves`,
-        'POST',
-        {name: 'Fach'}
-      )).data;
-      const bottling = (await api(
-        ctx.base,
-        '/api/bottlings',
-        'POST',
-        {name: 'Test Whisky', firstBottle: {inventoryNumber: '123456'}}
-      )).data;
+      const shelf = (await api(ctx.base, `/api/warehouse/furniture/${furniture.id}/shelves`, 'POST', {name: 'Fach'})).data;
+      const bottling = (await api(ctx.base, '/api/bottlings', 'POST', {name: 'Test Whisky', firstBottle: {inventoryNumber: '123456'}})).data;
       const bottleId = bottling.bottle.id;
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/bottles/${bottleId}`,
-          'PUT',
-          {shelfId: shelf.id}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/bottles/${bottleId}`, 'PUT', {shelfId: shelf.id})).status,
         200
       );
-      assert.equal(
-        (await api(ctx.base, `/api/bottles/${bottleId}`, 'DELETE')).status,
-        200
-      );
+      assert.equal((await api(ctx.base, `/api/bottles/${bottleId}`, 'DELETE')).status, 200);
       const after = (await api(ctx.base, '/api/warehouse')).data;
       assert.equal(after.assignments[bottleId], undefined);
       assert.equal(after.staleAssignments, 1);
-      assert.equal(
-        (await api(ctx.base, `/api/warehouse/shelves/${shelf.id}`, 'DELETE')).status,
-        200
-      );
+      assert.equal((await api(ctx.base, `/api/warehouse/shelves/${shelf.id}`, 'DELETE')).status, 200);
       const warehouse = (await api(ctx.base, '/api/warehouse')).data;
       assert.equal(warehouse.rooms[0].furniture[0].shelves.length, 0);
       assert.equal(warehouse.staleAssignments, 0);
@@ -274,18 +182,8 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Lagerraum', width: 5, height: 4}
-      )).data;
-      const room2 = (await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Nebenraum', width: 4, height: 4}
-      )).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Lagerraum', width: 5, height: 4})).data;
+      const room2 = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Nebenraum', width: 4, height: 4})).data;
       const furniture = (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -300,57 +198,23 @@ test(
           rotation: 90,
         }
       )).data;
-      const shelf1 = (await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}/shelves`,
-        'POST',
-        {name: 'Fach 1', capacity: 5}
-      )).data;
-      const shelf2 = (await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}/shelves`,
-        'POST',
-        {name: 'Fach 2', capacity: null}
-      )).data;
-      const bottle = (await api(
-        ctx.base,
-        '/api/bottlings',
-        'POST',
-        {name: 'Some whisky', firstBottle: {inventoryNumber: '1000'}}
-      )).data.bottle;
-      const assigned = await api(
-        ctx.base,
-        `/api/warehouse/bottles/${bottle.id}`,
-        'PUT',
-        {shelfId: shelf1.id}
-      );
+      const shelf1 = (await api(ctx.base, `/api/warehouse/furniture/${furniture.id}/shelves`, 'POST', {name: 'Fach 1', capacity: 5})).data;
+      const shelf2 = (await api(ctx.base, `/api/warehouse/furniture/${furniture.id}/shelves`, 'POST', {name: 'Fach 2', capacity: null})).data;
+      const bottle = (await api(ctx.base, '/api/bottlings', 'POST', {name: 'Some whisky', firstBottle: {inventoryNumber: '1000'}})).data.bottle;
+      const assigned = await api(ctx.base, `/api/warehouse/bottles/${bottle.id}`, 'PUT', {shelfId: shelf1.id});
       assert.equal(assigned.status, 200);
-      const collectionBefore =
-        fs.readFileSync(path.join(ctx.dir, 'data/collection.json'));
+      const collectionBefore = fs.readFileSync(path.join(ctx.dir, 'data/collection.json'));
 
-      const withShelves = await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}/copy`,
-        'POST',
-        {withShelves: true}
-      );
+      const withShelves = await api(ctx.base, `/api/warehouse/furniture/${furniture.id}/copy`, 'POST', {withShelves: true});
       assert.equal(withShelves.status, 201);
       assert.notEqual(withShelves.data.id, furniture.id);
       assert.equal(withShelves.data.name, 'Regal A (Kopie)');
       assert.equal(withShelves.data.shelves.length, 2);
-      assert.deepEqual(
-        withShelves.data.shelves.map(s => s.name),
-        ['Fach 1', 'Fach 2']
-      );
-      assert.deepEqual(
-        withShelves.data.shelves.map(s => s.capacity),
-        [5, null]
-      );
-      assert.ok(withShelves.data.shelves.every(s => s.id !== shelf1.id &&
-        s.id !== shelf2.id));
+      assert.deepEqual(withShelves.data.shelves.map(s => s.name), ['Fach 1', 'Fach 2']);
+      assert.deepEqual(withShelves.data.shelves.map(s => s.capacity), [5, null]);
+      assert.ok(withShelves.data.shelves.every(s => s.id !== shelf1.id && s.id !== shelf2.id));
       assert.equal(withShelves.data.rotation, 90);
-      assert.ok(withShelves.data.x !== furniture.x || withShelves.data.y !==
-        furniture.y);
+      assert.ok(withShelves.data.x !== furniture.x || withShelves.data.y !== furniture.y);
       const blank = await api(
         ctx.base,
         `/api/warehouse/furniture/${furniture.id}/copy`,
@@ -361,66 +225,33 @@ test(
       assert.equal(blank.data.name, 'Regal für Samples');
       assert.deepEqual(blank.data.shelves, []);
       assert.equal(blank.data.type, 'regal');
-      const shelfCopy = await api(
-        ctx.base,
-        `/api/warehouse/shelves/${shelf1.id}/copy`,
-        'POST',
-        {furnitureId: blank.data.id}
-      );
+      const shelfCopy = await api(ctx.base, `/api/warehouse/shelves/${shelf1.id}/copy`, 'POST', {furnitureId: blank.data.id});
       assert.equal(shelfCopy.status, 201);
       assert.notEqual(shelfCopy.data.id, shelf1.id);
       assert.equal(shelfCopy.data.capacity, 5);
       assert.equal(shelfCopy.data.name, 'Fach 1 (Kopie)');
-      const shelfCopy2 =
-        await api(
-          ctx.base,
-          `/api/warehouse/shelves/${shelf1.id}/copy`,
-          'POST',
-          {}
-        );
+      const shelfCopy2 = await api(ctx.base, `/api/warehouse/shelves/${shelf1.id}/copy`, 'POST', {});
       assert.equal(shelfCopy2.status, 201);
       assert.equal(shelfCopy2.data.name, 'Fach 1 (Kopie)');
 
       const saved = (await api(ctx.base, '/api/warehouse')).data;
       assert.equal(saved.rooms[0].furniture.length, 2);
       assert.equal(saved.rooms[1].furniture.length, 1);
-      assert.deepEqual(
-        saved.assignments,
-        {[bottle.id]: shelf1.id},
-        'copied shelves cannot inherit assignments'
-      );
+      assert.deepEqual(saved.assignments, {[bottle.id]: shelf1.id}, 'copied shelves cannot inherit assignments');
       assert.deepEqual(
         fs.readFileSync(path.join(ctx.dir, 'data/collection.json')),
         collectionBefore,
         'collection data must not change'
       );
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/furniture/${furniture.id}/copy`,
-          'POST',
-          {withShelves: 'yes'}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/furniture/${furniture.id}/copy`, 'POST', {withShelves: 'yes'})).status,
         400
       );
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/furniture/${furniture.id}/copy`,
-          'POST',
-          {roomId: 'missing'}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/furniture/${furniture.id}/copy`, 'POST', {roomId: 'missing'})).status,
         404
       );
-      assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/shelves/no-such-shelf/copy`,
-          'POST',
-          {}
-        )).status,
-        404
-      );
+      assert.equal((await api(ctx.base, `/api/warehouse/shelves/no-such-shelf/copy`, 'POST', {})).status, 404);
     } finally {await ctx.stop();}
   }
 );
@@ -430,38 +261,24 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Small', width: 1, height: 1}
-      )).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Small', width: 1, height: 1})).data;
       const furniture = (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
         'POST',
         {name: 'Full room', type: 'regal', width: 1, depth: 1, x: 0, y: 0}
       )).data;
-      const noRoom = await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}/copy`,
-        'POST',
-        {}
-      );
+      const noRoom = await api(ctx.base, `/api/warehouse/furniture/${furniture.id}/copy`, 'POST', {});
       assert.equal(noRoom.status, 409);
-      assert.equal(
-        (await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture.length,
-        1
-      );
+      assert.equal((await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture.length, 1);
       const bottle = (await api(ctx.base, '/api/bottlings', 'POST', {name: 'Bottle with photo'})).data.bottle;
-      const before = (await api(ctx.base, '/api/warehouse')).data.bottles
-        .find(b => b.id === bottle.id);
+      const before = (await api(ctx.base, '/api/warehouse')).data.bottles.find(b => b.id === bottle.id);
       assert.equal(before.photoPath, null);
-      const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+      const image =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
       const photo = await api(ctx.base, `/api/bottles/${bottle.id}/photos`, 'POST', {image});
       assert.equal(photo.status, 201);
-      const after = (await api(ctx.base, '/api/warehouse')).data.bottles
-        .find(b => b.id === bottle.id);
+      const after = (await api(ctx.base, '/api/warehouse')).data.bottles.find(b => b.id === bottle.id);
       assert.equal(after.photoPath, photo.data.path);
       assert.ok(after.photoPath.startsWith(`images/${bottle.id}/`));
       const originalPhoto = await fetch(`${ctx.base}/${after.photoPath}`);
@@ -475,18 +292,8 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Whiskyraum', width: 3, height: 3}
-      )).data;
-      const targetRoom = (await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Zielraum', width: 1, height: 1}
-      )).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Whiskyraum', width: 3, height: 3})).data;
+      const targetRoom = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Zielraum', width: 1, height: 1})).data;
       const cabinet = (await api(
         ctx.base,
         `/api/warehouse/rooms/${targetRoom.id}/furniture`,
@@ -541,31 +348,17 @@ test(
       assert.equal(copied.data.elevation, 1.8);
       assert.equal(copied.data.itemHeight, 0.4);
       const saved = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'), 'utf8'));
+      assert.equal(saved.rooms.find(r => r.id === targetRoom.id).furniture.length, 2);
       assert.equal(
-        saved.rooms.find(r => r.id === targetRoom.id).furniture.length,
+        (await api(ctx.base, '/api/warehouse')).data.rooms.find(r => r.id === targetRoom.id).furniture.length,
         2
       );
       assert.equal(
-        (await api(ctx.base, '/api/warehouse')).data.rooms.find(r =>
-          r.id === targetRoom.id).furniture.length,
-        2
-      );
-      assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/furniture/${wall.data.id}`,
-          'PATCH',
-          {...wall.data, elevation: -1}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/furniture/${wall.data.id}`, 'PATCH', {...wall.data, elevation: -1})).status,
         400
       );
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/furniture/${wall.data.id}`,
-          'PATCH',
-          {...wall.data, itemHeight: 0}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/furniture/${wall.data.id}`, 'PATCH', {...wall.data, itemHeight: 0})).status,
         400
       );
     } finally {await ctx.stop();}
@@ -577,12 +370,7 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Altbau', width: 3, height: 3}
-      )).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Altbau', width: 3, height: 3})).data;
       const furniture = (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -597,12 +385,7 @@ test(
       const result = await api(ctx.base, '/api/warehouse');
       assert.equal(result.status, 200);
       assert.equal(result.data.rooms[0].furniture[0].elevation, undefined);
-      const edit = await api(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}`,
-        'PATCH',
-        {...old, name: 'Altes Regal neu'}
-      );
+      const edit = await api(ctx.base, `/api/warehouse/furniture/${furniture.id}`, 'PATCH', {...old, name: 'Altes Regal neu'});
       assert.equal(edit.status, 200);
       assert.equal(edit.data.elevation, 0);
       assert.equal(edit.data.itemHeight, 1.8);
@@ -615,12 +398,7 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const r = (await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Bulkroom', width: 4, height: 4}
-      )).data;
+      const r = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Bulkroom', width: 4, height: 4})).data;
       /**
        * Coordinates asynchronous work for add.
        *
@@ -645,8 +423,7 @@ test(
         }
       )).data;
       const a = await add('A', 0.2), b = await add('B', 2.4);
-      const collectionBefore =
-        fs.readFileSync(path.join(ctx.dir, 'data/collection.json'));
+      const collectionBefore = fs.readFileSync(path.join(ctx.dir, 'data/collection.json'));
       const url = '/api/warehouse/furniture/bulk';
       const success = await api(
         ctx.base,
@@ -660,16 +437,13 @@ test(
       assert.equal(success.status, 200);
       assert.deepEqual(success.data.updated, [a.id, b.id]);
       assert.equal(success.data.count, 2);
-      const first = (await api(ctx.base, '/api/warehouse')).data.rooms[0]
-        .furniture;
-      for (const item of first) {assert.equal(item.rotation, 90); assert.equal(item.elevation, 1); assert.equal(item.itemHeight, 2);}
+      const first = (await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture;
+      for (const item of first) {
+        assert.equal(item.rotation, 90);
+        assert.equal(item.elevation, 1); assert.equal(item.itemHeight, 2);
+      }
       const persisted = fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'));
-      const invalid = await api(
-        ctx.base,
-        url,
-        'PATCH',
-        {ids: [a.id, b.id], changes: {depth: 2.5}}
-      );
+      const invalid = await api(ctx.base, url, 'PATCH', {ids: [a.id, b.id], changes: {depth: 2.5}});
       assert.equal(invalid.status, 400, 'second cabinet would leave the room');
       assert.deepEqual(
         fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')),
@@ -686,31 +460,12 @@ test(
       ]) {
         const failed = await api(ctx.base, url, 'PATCH', input);
         assert.ok(failed.status >= 400, `must reject ${JSON.stringify(input)}`);
-        assert.deepEqual(
-          fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')),
-          persisted
-        );
+        assert.deepEqual(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')), persisted);
       }
-      assert.deepEqual(
-        fs.readFileSync(path.join(ctx.dir, 'data/collection.json')),
-        collectionBefore
-      );
-      const zero = await api(
-        ctx.base,
-        url,
-        'PATCH',
-        {ids: [a.id, b.id], changes: {elevation: 0, rotation: 0}}
-      );
-      assert.equal(
-        zero.status,
-        200,
-        'zero is an explicitly selected valid value'
-      );
-      assert.deepEqual(
-        (await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture
-          .map(f => f.elevation),
-        [0, 0]
-      );
+      assert.deepEqual(fs.readFileSync(path.join(ctx.dir, 'data/collection.json')), collectionBefore);
+      const zero = await api(ctx.base, url, 'PATCH', {ids: [a.id, b.id], changes: {elevation: 0, rotation: 0}});
+      assert.equal(zero.status, 200, 'zero is an explicitly selected valid value');
+      assert.deepEqual((await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture.map(f => f.elevation), [0, 0]);
     } finally {await ctx.stop();}
   }
 );
@@ -718,38 +473,18 @@ test(
 test('shelf capacity zero is persisted and rejects assignments', async () => {
   const ctx = await startTestServer();
   try {
-    const room = (await api(
-      ctx.base,
-      '/api/warehouse/rooms',
-      'POST',
-      {name: 'Raum', width: 4, height: 4}
-    )).data;
+    const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Raum', width: 4, height: 4})).data;
     const furniture = (await api(
       ctx.base,
       `/api/warehouse/rooms/${room.id}/furniture`,
       'POST',
       {name: 'Regal', type: 'regal', x: 0, y: 0, width: 1, depth: 0.5}
     )).data;
-    const shelf = await api(
-      ctx.base,
-      `/api/warehouse/furniture/${furniture.id}/shelves`,
-      'POST',
-      {name: 'Leerfach', capacity: 0}
-    );
+    const shelf = await api(ctx.base, `/api/warehouse/furniture/${furniture.id}/shelves`, 'POST', {name: 'Leerfach', capacity: 0});
     assert.equal(shelf.status, 201);
     assert.equal(shelf.data.capacity, 0);
-    const bottling = (await api(
-      ctx.base,
-      '/api/bottlings',
-      'POST',
-      {name: 'Test', firstBottle: {inventoryNumber: '001', status: 'closed'}}
-    )).data;
-    const assigned = await api(
-      ctx.base,
-      `/api/warehouse/bottles/${bottling.bottle.id}`,
-      'PUT',
-      {shelfId: shelf.data.id}
-    );
+    const bottling = (await api(ctx.base, '/api/bottlings', 'POST', {name: 'Test', firstBottle: {inventoryNumber: '001', status: 'closed'}})).data;
+    const assigned = await api(ctx.base, `/api/warehouse/bottles/${bottling.bottle.id}`, 'PUT', {shelfId: shelf.data.id});
     assert.equal(assigned.status, 409);
     const saved = (await api(ctx.base, '/api/warehouse')).data;
     assert.equal(saved.rooms[0].furniture[0].shelves[0].capacity, 0);
@@ -761,12 +496,7 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Wall room', width: 6, height: 5}
-      )).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Wall room', width: 6, height: 5})).data;
       /**
        * Coordinates asynchronous work for create.
        *
@@ -791,16 +521,10 @@ test(
           backPanel: true,
         }
       )).data;
-      const a = await create('A', 0.5), b = await create('B', 2), c =
-        await create('C', 3.5);
+      const a = await create('A', 0.5), b = await create('B', 2), c = await create('C', 3.5);
       assert.equal(a.leftSidePanel, true);
       assert.equal(a.backPanel, true);
-      const shelf = (await api(
-        ctx.base,
-        `/api/warehouse/furniture/${a.id}/shelves`,
-        'POST',
-        {name: 'Fach', capacity: 2}
-      )).data;
+      const shelf = (await api(ctx.base, `/api/warehouse/furniture/${a.id}/shelves`, 'POST', {name: 'Fach', capacity: 2})).data;
       const bottled = (await api(
         ctx.base,
         '/api/bottlings',
@@ -811,82 +535,50 @@ test(
         }
       )).data;
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/bottles/${bottled.bottle.id}`,
-          'PUT',
-          {shelfId: shelf.id}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/bottles/${bottled.bottle.id}`, 'PUT', {shelfId: shelf.id})).status,
         200
       );
       const before = fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'));
       const url = '/api/warehouse/furniture/bulk';
       const deleteUrl = url + '/delete';
-      const blocked = await api(ctx.base, deleteUrl, 'POST', {ids: [a.id, b.id]});
+      const blocked = await api(ctx.base, deleteUrl, 'POST', {ids: [a.id, b.id], });
       assert.equal(blocked.status, 409);
-      assert.deepEqual(
-        fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')),
-        before
-      );
-      const invalid = await api(ctx.base, deleteUrl, 'POST', {ids: [b.id, 'unknown']});
+      assert.deepEqual(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')), before);
+      const invalid = await api(ctx.base, deleteUrl, 'POST', {ids: [b.id, 'unknown'], });
       assert.equal(invalid.status, 404);
-      assert.deepEqual(
-        fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')),
-        before
-      );
+      assert.deepEqual(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')), before);
       const changed = await api(
         ctx.base,
         url,
         'PATCH',
         {
           ids: [b.id, c.id],
-          changes: {leftSidePanel: false, rightSidePanel: true, backPanel: false},
+          changes: {
+            leftSidePanel: false, rightSidePanel: true,
+            backPanel: false,
+          },
         }
       );
       assert.equal(changed.status, 200);
       const changedRoom = (await api(ctx.base, '/api/warehouse')).data.rooms[0];
-      for (const item of changedRoom.furniture.filter(f => [b.id, c.id]
-        .includes(f.id))) {
-        assert.equal(item.leftSidePanel, false); assert.equal(item.rightSidePanel, true); assert.equal(item.backPanel, false);
+      for (const item of changedRoom.furniture.filter(f => [b.id, c.id].includes(f.id))) {
+        assert.equal(item.leftSidePanel, false);
+        assert.equal(item.rightSidePanel, true); assert.equal(item.backPanel, false);
       }
-      const copied = await api(
-        ctx.base,
-        `/api/warehouse/furniture/${b.id}/copy`,
-        'POST',
-        {name: 'Kopie'}
-      );
+      const copied = await api(ctx.base, `/api/warehouse/furniture/${b.id}/copy`, 'POST', {name: 'Kopie'});
       assert.equal(copied.status, 201);
       assert.equal(copied.data.rightSidePanel, true);
-      assert.equal(
-        (await api(ctx.base, deleteUrl, 'POST', {ids: [b.id, c.id]}))
-          .data.count,
-        2
-      );
+      assert.equal((await api(ctx.base, deleteUrl, 'POST', {ids: [b.id, c.id]})).data.count, 2);
       assert.deepEqual(
-        (await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture
-          .map(f => f.id).sort(),
+        (await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture.map(f => f.id).sort(),
         [a.id, copied.data.id].sort()
       );
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/bottles/${bottled.bottle.id}`,
-          'PUT',
-          {shelfId: null}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/bottles/${bottled.bottle.id}`, 'PUT', {shelfId: null})).status,
         200
       );
-      assert.equal(
-        (await api(ctx.base, deleteUrl, 'POST', {
-          ids: [a.id, copied.data
-            .id],
-        })).status,
-        200
-      );
-      assert.equal(
-        (await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture.length,
-        0
-      );
+      assert.equal((await api(ctx.base, deleteUrl, 'POST', {ids: [a.id, copied.data.id], })).status, 200);
+      assert.equal((await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture.length, 0);
     } finally {await ctx.stop();}
   }
 );
@@ -904,11 +596,11 @@ test(
        * @return {!Promise<*>} Promise for the asynchronous operation.
        */
       const create = (route, body) => api(ctx.base, route, 'POST', body);
-      const a = (await create(
-        '/api/warehouse/rooms',
-        {name: 'To remove', width: 4, height: 3}
-      )).data;
-      const b = (await create('/api/warehouse/rooms', {name: 'Keep', width: 4, height: 3})).data;
+      const a = (await create('/api/warehouse/rooms', {name: 'To remove', width: 4, height: 3})).data;
+      const b = (await create('/api/warehouse/rooms', {
+        name: 'Keep', width: 4,
+        height: 3,
+      })).data;
       const furnitureA = (await create(
         `/api/warehouse/rooms/${a.id}/furniture`,
         {name: 'Shelf A', type: 'regal', x: 0, y: 0, width: 1, depth: .5}
@@ -917,28 +609,13 @@ test(
         `/api/warehouse/rooms/${b.id}/furniture`,
         {name: 'Shelf B', type: 'regal', x: 0, y: 0, width: 1, depth: .5}
       )).data;
-      const shelfA1 = (await create(
-        `/api/warehouse/furniture/${furnitureA.id}/shelves`,
-        {name: 'Level 1'}
-      )).data;
-      const shelfA2 = (await create(
-        `/api/warehouse/furniture/${furnitureA.id}/shelves`,
-        {name: 'Level 2'}
-      )).data;
-      const shelfB = (await create(
-        `/api/warehouse/furniture/${furnitureB.id}/shelves`,
-        {name: 'Level 1'}
-      )).data;
-      const bottling = (await create(
-        '/api/bottlings',
-        {name: 'Whisky', firstBottle: {inventoryNumber: 'A001'}}
-      )).data;
+      const shelfA1 = (await create(`/api/warehouse/furniture/${furnitureA.id}/shelves`, {name: 'Level 1'})).data;
+      const shelfA2 = (await create(`/api/warehouse/furniture/${furnitureA.id}/shelves`, {name: 'Level 2'})).data;
+      const shelfB = (await create(`/api/warehouse/furniture/${furnitureB.id}/shelves`, {name: 'Level 1'})).data;
+      const bottling = (await create('/api/bottlings', {name: 'Whisky', firstBottle: {inventoryNumber: 'A001'}})).data;
       const physical = [bottling.bottle.id];
       for (const number of ['A002', 'B001']) {
-        const bottle = (await create(
-          '/api/bottles',
-          {bottlingId: bottling.bottling.id, inventoryNumber: number}
-        )).data;
+        const bottle = (await create('/api/bottles', {bottlingId: bottling.bottling.id, inventoryNumber: number})).data;
         physical.push(bottle.id);
       }
       for (const [id, shelfId] of [
@@ -946,80 +623,38 @@ test(
         [physical[1], shelfA2.id],
         [physical[2], shelfB.id],
       ]) {
-        assert.equal(
-          (await api(ctx.base, `/api/warehouse/bottles/${id}`, 'PUT', {shelfId})).status,
-          200
-        );
+        assert.equal((await api(ctx.base, `/api/warehouse/bottles/${id}`, 'PUT', {shelfId})).status, 200);
       }
-      const oldCollection =
-        fs.readFileSync(path.join(ctx.dir, 'data/collection.json'));
-      const oldWarehouse =
-        fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'));
-      assert.equal(
-        (await api(ctx.base, `/api/warehouse/rooms/${a.id}`, 'DELETE')).status,
-        409
-      );
-      assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/rooms/${a.id}?unassignBottles=maybe`,
-          'DELETE'
-        )).status,
-        400
-      );
+      const oldCollection = fs.readFileSync(path.join(ctx.dir, 'data/collection.json'));
+      const oldWarehouse = fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'));
+      assert.equal((await api(ctx.base, `/api/warehouse/rooms/${a.id}`, 'DELETE')).status, 409);
+      assert.equal((await api(ctx.base, `/api/warehouse/rooms/${a.id}?unassignBottles=maybe`, 'DELETE')).status, 400);
       assert.deepEqual(
         fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json')),
         oldWarehouse,
         'rejections may not alter room or assignments'
       );
-      const removed = await api(
-        ctx.base,
-        `/api/warehouse/rooms/${a.id}?unassignBottles=true`,
-        'DELETE'
-      );
+      const removed = await api(ctx.base, `/api/warehouse/rooms/${a.id}?unassignBottles=true`, 'DELETE');
       assert.equal(removed.status, 200);
       const result = (await api(ctx.base, '/api/warehouse')).data;
       assert.deepEqual(result.rooms.map(room => room.id), [b.id]);
       assert.equal(result.assignments[physical[0]], undefined);
       assert.equal(result.assignments[physical[1]], undefined);
-      assert.equal(
-        result.assignments[physical[2]],
-        shelfB.id,
-        'other rooms must retain their assignments'
-      );
-      assert.equal(
-        result.bottles.length,
-        3,
-        'bottles must remain in collection'
-      );
+      assert.equal(result.assignments[physical[2]], shelfB.id, 'other rooms must retain their assignments');
+      assert.equal(result.bottles.length, 3, 'bottles must remain in collection');
       assert.deepEqual(
         fs.readFileSync(path.join(ctx.dir, 'data/collection.json')),
         oldCollection,
         'collection is never modified by room removal'
       );
-      assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/rooms/${a.id}?unassignBottles=true`,
-          'DELETE'
-        )).status,
-        404
-      );
+      assert.equal((await api(ctx.base, `/api/warehouse/rooms/${a.id}?unassignBottles=true`, 'DELETE')).status, 404);
       // An empty room (with no assigned bottles) is still deletable without
       // opt-in.
       assert.equal(
-        (await api(
-          ctx.base,
-          `/api/warehouse/bottles/${physical[2]}`,
-          'PUT',
-          {shelfId: null}
-        )).status,
+        (await api(ctx.base, `/api/warehouse/bottles/${physical[2]}`, 'PUT', {shelfId: null})).status,
         200
       );
-      assert.equal(
-        (await api(ctx.base, `/api/warehouse/rooms/${b.id}`, 'DELETE')).status,
-        200
-      );
+      assert.equal((await api(ctx.base, `/api/warehouse/rooms/${b.id}`, 'DELETE')).status, 200);
     } finally {await ctx.stop();}
   }
 );

@@ -1,0 +1,84 @@
+<!-- wcm-template:warehouseTransferTabButton -->
+<button
+  type="button"
+  class="btn warehouse-transfer-tab{{attr:mode}}"
+  role="tab"
+  id="warehouse-transfer-tab-{{attr:name}}"
+  aria-selected="{{attr:ariaSelected}}"
+  aria-controls="warehouse-transfer-panel-{{attr:ariaControls}}"
+  tabindex="{{attr:tabindex}}"
+  data-transfer-tab="{{attr:transferTab}}"
+  {{attrs:exportAttributes}}>{{content:label}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseTransferChoice -->
+<label class="warehouse-transfer-choice"><input
+    class="warehouse-transfer-room"
+    type="checkbox"
+    value="{{text:id}}"
+    {{attrs:checkedAttributes}}> {{text:name}} ({{content:length}})</label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:warehouseRoomTransfer -->
+<div id="warehouse-room-transfer" class="warehouse-room-transfer">
+  <div class="warehouse-transfer-tabs" role="tablist" aria-label="{{t:warehouse.transfer.action}}">
+    {{content:tab}}
+    {{content:importTab}}
+  </div>
+  <section
+    class="warehouse-transfer-panel"
+    id="warehouse-transfer-panel-export"
+    role="tabpanel"
+    aria-labelledby="warehouse-transfer-tab-export"
+    {{attrs:exportAttributes}}>
+    <form id="{{attr:exportFormId}}" class="warehouse-transfer-form">
+      <p>{{t:warehouse.transfer.exportDescription}}</p>
+      <label class="warehouse-transfer-choice"><input type="checkbox" id="warehouse-transfer-all" {{attrs:checkedAttributes}}> {{t:warehouse.transfer.allRooms}}</label>
+      <div class="warehouse-transfer-rooms">{{content:rooms}}</div>
+      <label class="warehouse-transfer-choice"><input type="checkbox" id="warehouse-transfer-assignments"> {{t:warehouse.transfer.includeAssignments}}</label>
+      <p class="hint">{{t:warehouse.transfer.exportNote}}</p>
+      <div class="actions ds-modal-footer warehouse-form-actions">{{content:actions}}<button type="submit" class="btn primary">{{t:warehouse.transfer.download}}</button>
+      </div>
+    </form>
+  </section>
+  <section
+    class="warehouse-transfer-panel"
+    id="warehouse-transfer-panel-import"
+    role="tabpanel"
+    aria-labelledby="warehouse-transfer-tab-import"
+    {{attrs:importAttributes}}>
+    <form id="{{attr:importFormId}}" class="warehouse-transfer-form">
+      <p>{{t:warehouse.transfer.importDescription}}</p>
+      <label class="form-field">{{t:warehouse.transfer.file}}<input
+          type="file"
+          id="warehouse-transfer-file"
+          accept=".json,application/json"
+          required></label>
+      <label class="warehouse-transfer-choice"><input type="checkbox" id="warehouse-transfer-import-assignments" checked> {{t:warehouse.transfer.includeAssignments}}</label>
+      <label class="form-field">{{t:warehouse.transfer.conflicts}}<select id="warehouse-transfer-conflict-policy"><option value="skip">{{t:warehouse.transfer.skipConflicts}}</option><option value="replace">{{t:warehouse.transfer.replaceConflicts}}</option></select></label>
+      <p class="hint">{{t:warehouse.transfer.importWarning}}</p>
+      <div id="warehouse-transfer-preview" aria-live="polite">
+      </div>
+      <div class="actions ds-modal-footer warehouse-form-actions">{{content:footerActions}}<button type="submit" class="btn primary">{{t:warehouse.transfer.preview}}</button><button
+          type="button"
+          class="btn primary"
+          id="warehouse-transfer-apply"
+          disabled>{{t:warehouse.transfer.confirm}}</button>
+      </div>
+    </form>
+  </section>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:openTransferDiv -->
+<div><dt>{{content:t}}</dt><dd>{{content:summary}}</dd>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint -->
+<p class="hint">{{t:warehouse.transfer.blockedWarning}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:panel -->
+<div class="panel warehouse-transfer-summary"><strong>{{t:warehouse.transfer.previewTitle}}</strong><dl>{{content:entries}}</dl>{{content:hint}}</div>
+<!-- /wcm-template -->

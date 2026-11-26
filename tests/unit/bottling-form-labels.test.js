@@ -24,21 +24,10 @@ for (const language of ['de', 'en']) {
   test(
     `${language}: bottling detail and edit labels have no explanatory parentheses`,
     () => {
-      const catalog = JSON.parse(fs.readFileSync(
-        new URL(`../../public/locales/${language}.json`, import.meta.url),
-        'utf8'
-      ));
+      const catalog = JSON.parse(fs.readFileSync(new URL(`../../public/locales/${language}.json`, import.meta.url), 'utf8'));
       for (const key of visibleBottlingLabelKeys) {
-        assert.equal(
-          typeof catalog[key],
-          'string',
-          `${key} must remain translated`
-        );
-        assert.doesNotMatch(
-          catalog[key],
-          /\([^)]*\)/u,
-          `${key} must have a concise visible label`
-        );
+        assert.equal(typeof catalog[key], 'string', `${key} must remain translated`);
+        assert.doesNotMatch(catalog[key], /\([^)]*\)/u, `${key} must have a concise visible label`);
       }
       // Counts on the read-only page are actual data, not explanatory label
       // suffixes.

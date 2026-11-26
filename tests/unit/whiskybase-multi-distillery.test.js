@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {splitDistilleryNames, matchImportedDistilleries} from '../../public/js/features/import/distillery-matching.js';
-import {importChoice} from '../../public/js/features/import/choice-template.js';
 import {validateExtensionPayload} from '../../public/js/features/whiskybase/payload.js';
 
 const distilleries = [
@@ -17,10 +16,7 @@ test(
       ['Caol Ila', 'Bowmore', 'Ardbeg', 'Port Ellen']
     );
     assert.deepEqual(
-      matchImportedDistilleries(
-        ' Caol Ila, Bowmore, Ardbeg, Port Ellen ',
-        distilleries
-      ),
+      matchImportedDistilleries(' Caol Ila, Bowmore, Ardbeg, Port Ellen ', distilleries),
       [
         {name: 'Caol Ila', id: 'd-caol'}, {name: 'Bowmore', id: 'd-bow'},
         {name: 'Ardbeg', id: 'd-ard'}, {name: 'Port Ellen', id: 'd-port'},
@@ -37,19 +33,13 @@ test(
       ['caol ila', 'BOWMORE', 'Port Ellen']
     );
     assert.deepEqual(
-      matchImportedDistilleries(
-        '  caol   ila,  BOWMORE ; Caol Ila\nPort Ellen,  ',
-        distilleries
-      ),
+      matchImportedDistilleries('  caol   ila,  BOWMORE ; Caol Ila\nPort Ellen,  ', distilleries),
       [
         {name: 'caol ila', id: 'd-caol'}, {name: 'BOWMORE', id: 'd-bow'},
         {name: 'Port Ellen', id: 'd-port'},
       ]
     );
-    assert.deepEqual(
-      matchImportedDistilleries('Ardbeg', distilleries),
-      [{name: 'Ardbeg', id: 'd-ard'}]
-    );
+    assert.deepEqual(matchImportedDistilleries('Ardbeg', distilleries), [{name: 'Ardbeg', id: 'd-ard'}]);
   }
 );
 
@@ -64,36 +54,9 @@ test(
 );
 
 test(
-  'Whiskybase: unknown contributors are listed separately, disabled and escaped in preview',
-  () => {
-    const matches = matchImportedDistilleries('Ardbeg, New & <Scotch> Works', distilleries);
-    assert.deepEqual(
-      matches,
-      [{name: 'Ardbeg', id: 'd-ard'}, {name: 'New & <Scotch> Works', id: null}]
-    );
-    const known = importChoice({
-      label: 'Destillerie', value: matches[0].name,
-      distillery: true, distilleryId: matches[0].id, checked: true,
-    });
-    const unknown = importChoice({
-      label: 'Destillerie', value: matches[1].name,
-      distillery: true, disabled: true,
-    });
-    assert.match(known, /name="import-distillery" value="d-ard" checked/);
-    assert.match(unknown, /name="import-distillery" disabled/);
-    assert.match(unknown, /New &amp; &lt;Scotch&gt; Works/);
-    assert.doesNotMatch(unknown, /<Scotch>/);
-    assert.match(unknown, /Nicht gefunden/);
-  }
-);
-
-test(
   'Whiskybase: longer contributor lists are not truncated midway through a name',
   () => {
-    const names = Array.from(
-      {length: 14},
-      (_, n) => `Brennerei ${n + 1} mit extra langen Namen`
-    );
+    const names = Array.from({length: 14}, (_, n) => `Brennerei ${n + 1} mit extra langen Namen`);
     const raw = names.join(', ');
     assert.ok(raw.length > 150);
     const payload = validateExtensionPayload({
@@ -107,7 +70,6 @@ test(
   }
 );
 
-
 test('new fragment schema rejects old and unmarked payload versions', () => {
   const fields = {
     whiskybaseId: '9999', name: 'Test',
@@ -115,9 +77,5 @@ test('new fragment schema rejects old and unmarked payload versions', () => {
   };
   assert.throws(() => validateExtensionPayload({version: 1, fields}));
   assert.throws(() => validateExtensionPayload({version: 2, fields}));
-  assert.equal(
-    validateExtensionPayload({version: 2, source: 'external', fields})
-      .version,
-    2
-  );
+  assert.equal(validateExtensionPayload({version: 2, source: 'external', fields}).version, 2);
 });

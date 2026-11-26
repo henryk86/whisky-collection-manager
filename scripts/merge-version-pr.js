@@ -5,35 +5,28 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {prepareSyncPR} from './sync-release-branches.js';
 /**
- * Normalizes the gh text for subsequent processing.
- *
- * @param {!Array<*>} args Arguments forwarded to the operation.
- * @return {*} Result computed from the supplied inputs.
+ * Executes the GitHub CLI without interactive input.
+ * @param {...string} args GitHub CLI arguments.
+ * @return {string} Trimmed standard output.
  */
-const gh = (...args) => execFileSync(
-  'gh',
-  args,
-  {encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']}
-).trim();
+const gh = (...args) => execFileSync('gh', args, {encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']}).trim();
 
 /**
- * Derives the sleep result from the supplied values.
- *
- * @param {*} ms Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Delays the next polling attempt.
+ * @param {number} ms Delay in milliseconds.
+ * @return {Promise<void>} Resolves when the timer fires.
  */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
  * Validates version pr for merge version pr.
  *
- * @param {*} pr Pr used by this operation.
- * @param {*} branch Branch used by this operation.
- * @param {*} snapshot Snapshot used by this operation.
+ * @param {*} pr Pull-request metadata returned by the GitHub CLI.
+ * @param {string} branch Expected release-version branch name.
+ * @param {string} snapshot Expected immutable head commit SHA.
  */
 export function assertVersionPR(pr, branch, snapshot) {
-  if (pr?.baseRefName !== 'main' || pr.headRefName !== branch ||
-    pr.headRefOid !== snapshot ||
+  if (pr?.baseRefName !== 'main' || pr.headRefName !== branch || pr.headRefOid !== snapshot ||
     !['OPEN', 'MERGED'].includes(pr.state))
     throw new Error('Existing version PR does not match the approved release snapshot');
 }
@@ -42,27 +35,16 @@ export function assertVersionPR(pr, branch, snapshot) {
  * Verifies and merges the workflow-generated version pull request.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Promise<(!Object)>} Promise fulfilled when the operation
- * completes.
+ * @return {!Promise<(!Object)>} Release tag and branch, with a flag indicating a completed or previously merged PR.
  */
-export async function mergeVersionPR({tag, merge, repo = process.env
-  .GITHUB_REPOSITORY}) {
-  if (!repo || !/^[\w.-]+\/[\w.-]+$/
-    .test(repo)) throw new Error('GITHUB_REPOSITORY must be set');
+export async function mergeVersionPR({tag, merge, repo = process.env.GITHUB_REPOSITORY}) {
+  if (!repo || !/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('GITHUB_REPOSITORY must be set');
   if (!process.env.GH_TOKEN) throw new Error('GH_TOKEN required for protected main PR');
   const {branch, snapshot, alreadyMerged} = prepareSyncPR({tag, merge});
   if (alreadyMerged) return {tag, branch, alreadyMerged: true};
   let pr;
   try {
-    pr = JSON.parse(gh(
-      'pr',
-      'view',
-      branch,
-      '--repo',
-      repo,
-      '--json',
-      'number,state,baseRefName,headRefName,headRefOid'
-    ));
+    pr = JSON.parse(gh('pr', 'view', branch, '--repo', repo, '--json', 'number,state,baseRefName,headRefName,headRefOid'));
   }
   catch {
     gh(
@@ -79,15 +61,7 @@ export async function mergeVersionPR({tag, merge, repo = process.env
       '--body',
       `Automated metadata-only synchronization from the verified tag ${tag}. No application code changes.`
     );
-    pr = JSON.parse(gh(
-      'pr',
-      'view',
-      branch,
-      '--repo',
-      repo,
-      '--json',
-      'number,state,baseRefName,headRefName,headRefOid'
-    ));
+    pr = JSON.parse(gh('pr', 'view', branch, '--repo', repo, '--json', 'number,state,baseRefName,headRefName,headRefOid'));
   }
   assertVersionPR(pr, branch, snapshot);
   if (pr.state === 'MERGED') return {tag, branch, alreadyMerged: true};
@@ -98,24 +72,14 @@ export async function mergeVersionPR({tag, merge, repo = process.env
     gh('pr', 'merge', String(pr.number), '--repo', repo, '--auto', '--merge');
   }
   for (let attempt = 0; attempt < 90; attempt++) {
-    const state = JSON.parse(gh(
-      'pr',
-      'view',
-      String(pr.number),
-      '--repo',
-      repo,
-      '--json',
-      'state,mergedAt'
-    ));
-    if (state.state === 'MERGED' &&
-      state.mergedAt) return {tag, branch, merged: true};
+    const state = JSON.parse(gh('pr', 'view', String(pr.number), '--repo', repo, '--json', 'state,mergedAt'));
+    if (state.state === 'MERGED' && state.mergedAt) return {tag, branch, merged: true};
     if (state.state === 'CLOSED') throw new Error('Version PR was closed without merging');
     await sleep(10000);
   }
-  throw new Error('Version PR not yet merged after 15 minutes. Check required status checks and re-run the failed publish job.');
+  throw new Error(
+    'Version PR not yet merged after 15 minutes. Check required status checks and re-run the failed publish job.');
 }
-const main = process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url);
-if (main) mergeVersionPR({tag: process.argv[2], merge: process.argv[3]})
-  .then(data => console.log(JSON.stringify(data)))
+const main = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (main) mergeVersionPR({tag: process.argv[2], merge: process.argv[3]}).then(data => console.log(JSON.stringify(data)))
   .catch(error => {console.error(error.message); process.exitCode = 1;});

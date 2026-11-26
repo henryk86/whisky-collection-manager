@@ -1,0 +1,477 @@
+<!-- wcm-template:badge -->
+<span class="badge{{attr:type}}{{attr:status}}">{{content:t}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:strong -->
+<strong>{{text:name}}</strong>
+<!-- /wcm-template -->
+
+<!-- wcm-template:inventoryBadges -->
+<div class="inventory-badges">{{content:inventoryBadges}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:badge2 -->
+<span class="badge {{text:status}}">{{text:statusText}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:td -->
+<td>{{content:value}}</td>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionCardRating -->
+<span
+  class="collection-card-rating"
+  role="img"
+  aria-label="{{text:ratingScore}}"
+  title="{{text:title}}">{{content:glasses}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:smallButton -->
+<button
+  type="button"
+  class="btn small pagination-button"
+  data-page-to="{{attr:target}}"
+  aria-label="{{attr:title}}"
+  {{attrs:disabledAttributes}}>{{content:label}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:paginationEllipsis -->
+<span class="pagination-ellipsis" aria-hidden="true">…</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:smallButton2 -->
+<button
+  type="button"
+  class="btn small pagination-button{{attr:number}}"
+  data-page-to="{{attr:pageTo}}"
+  aria-label="{{attr:pageLabel}}"
+  {{attrs:ariaCurrentAttributes}}>{{content:pageNumberLabel}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:pagerHtmlOption -->
+<option value="{{attr:option}}" {{attrs:selectedAttributes}}>{{content:pageSizeLabel}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionPagination -->
+<nav class="collection-pagination" aria-label="{{t:home.pagination.collectionPages}}">
+  <span class="pagination-summary">{{content:rangeSummary}}</span>
+  <div class="pagination-pages">
+    {{content:button}}
+    {{content:previousPageButton}}
+    {{content:pages}}
+    {{content:nextPageButton}}
+    {{content:lastPageButton}}
+  </div>
+  <label class="pagination-size">{{content:pageSizeLabel}}
+    <select id="pagination-size" aria-label="{{attr:ariaLabel}}">{{content:pageSizeChoices}}</select>
+  </label>
+</nav>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionSaveViewDialog -->
+<div class="collection-save-view-dialog">
+  <label>{{text:name}}<input
+      data-view-name
+      maxlength="80"
+      required
+      autocomplete="off"></label>
+  <div class="actions">{{content:closeModalButton}}
+            {{content:collectionViewSaveConfirmButton}}</div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionSaveViewDialog2 -->
+<div class="collection-save-view-dialog">
+  <label>{{t:collection.saved.name}}<input
+      data-view-name
+      maxlength="80"
+      required
+      value="{{text:name}}"></label>
+  <div class="actions">{{content:closeModalButton}}
+            {{content:collectionViewRenameConfirmButton}}</div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:scoreOptionsOption -->
+<option value="{{attr:i}}" {{attrs:selectedAttributes}}>{{content:scoreLabel}}/10</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorEditorContentLabel -->
+<label><input
+    type="radio"
+    name="collection-profile-status"
+    value="{{attr:value}}"
+    data-flavor-profile-status
+    {{attrs:checkedAttributes}}><span>{{text:t}}</span></label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionFlavorRow -->
+<div class="collection-flavor-row">
+  <div class="collection-flavor-row-head"><strong>{{text:t}}</strong><button
+      type="button"
+      class="collection-flavor-remove"
+      data-act="collection-flavor-remove"
+      data-axis="{{attr:axis}}"
+      aria-label="{{text:remove}}">{{content:closeIcon}}</button>
+  </div>
+  <div class="collection-flavor-range"><label>{{text:min}}<select data-flavor-axis="{{attr:flavorAxis}}" data-flavor-part="min">{{content:scoreOptions}}</select></label>
+    <label>{{text:max}}<select data-flavor-axis="{{attr:maxAxis}}" data-flavor-part="max">{{content:maxScoreOptions}}</select></label>
+  </div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:flavorEditorContentOption -->
+<option value="{{attr:axis}}">{{text:t}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionAddFlavorAxis -->
+<div class="collection-flavor-add"><select id="collection-add-flavor-axis" aria-label="{{text:axis}}"><option value="" selected disabled>{{text:selectAxis}}</option>{{content:available}}</select>
+  <button
+    type="button"
+    class="btn"
+    data-act="collection-flavor-add"
+    disabled>{{text:add}}</button>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionFlavorStatus -->
+<fieldset class="collection-flavor-status">
+  <legend>{{text:missing}}</legend>
+  <div class="collection-flavor-status-options">{{content:statusOptions}}</div>
+</fieldset>
+<div class="collection-flavor-criteria" {{attrs:withoutAttributes}}>
+  {{content:criteria}}
+  {{content:collectionAddFlavorAxis}}
+</div>
+<div class="collection-flavor-actions">{{content:collectionFlavorResetButton}}
+            {{content:collectionFlavorApplyButton}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionFlavorEditor -->
+<div class="collection-flavor-editor" data-collection-flavor-editor>{{content:flavorEditorContent}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:bookmarkSvg -->
+<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionSavedDirty -->
+<span class="collection-saved-dirty">{{text:changed}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionSavedItem -->
+<button
+  type="button"
+  class="collection-saved-item{{attr:id}}"
+  data-act="collection-view-apply"
+  data-id="{{text:savedViewId}}">{{text:name}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionViewUpdate -->
+<button type="button" class="collection-saved-item" data-act="collection-view-update">{{text:update}}</button><button type="button" class="collection-saved-item" data-act="collection-view-rename">{{text:rename}}</button><button
+  type="button"
+  class="collection-saved-item collection-saved-danger"
+  data-act="collection-view-delete">{{text:delete}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionSavedViews -->
+<details class="collection-saved-menu" id="collection-saved-views"><summary aria-label="{{text:title}}: {{text:label}}">{{content:bookmark}}<span class="collection-saved-label">{{text:view}}: <strong>{{text:activeViewLabel}}</strong></span>{{content:collectionSavedDirty}}{{content:chevronDownIcon}}</summary>
+  <div class="collection-saved-dropdown" role="group" aria-label="{{text:ariaLabel}}">
+    <button
+      type="button"
+      class="collection-saved-item{{attr:content}}"
+      data-act="collection-view-apply"
+      data-id="">{{text:standard}}</button>
+    {{content:savedViews}}
+    <div class="collection-saved-divider">
+    </div>
+    <button type="button" class="collection-saved-item" data-act="collection-view-save">{{text:save}}</button>
+    {{content:collectionViewUpdate}}
+  </div>
+</details>
+<!-- /wcm-template -->
+
+<!-- wcm-template:img -->
+<img src="{{attr:imageUrl}}" alt="{{text:bottleAlt}}" loading="lazy">
+<!-- /wcm-template -->
+
+<!-- wcm-template:imagePlaceholder -->
+<img
+  class="image-placeholder"
+  src="/assets/photo-placeholder.svg"
+  alt=""
+  aria-hidden="true">
+<!-- /wcm-template -->
+
+<!-- wcm-template:cardKicker -->
+<div class="card-kicker">{{text:origin}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:cardBottleMeta -->
+<div class="card-bottle-meta">{{content:bottleInfo}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:cardFacts -->
+<div class="card-facts muted">{{content:facts}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:badge4 -->
+<span class="badge sample">Sample</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:badge3 -->
+<span class="badge {{text:status}}">{{text:statusText}}</span>{{content:badge}}
+<!-- /wcm-template -->
+
+<!-- wcm-template:badge5 -->
+<span class="badge">{{t:home.status.incomplete}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:open -->
+<article
+  tabindex="0"
+  class="whisky-card"
+  data-act="open"
+  data-id="{{text:id}}"{{attrs:dataBottleIdAttributes}}>
+  <div class="card-img">{{content:img}}{{content:collectionCardRating}}</div>
+  <div class="card-body">
+    {{content:cardKicker}}
+    <h3 data-i18n-ignore>{{text:name}}</h3>
+    {{content:cardBottleMeta}}
+    {{content:cardFacts}}
+    <div class="badges">
+      {{content:badge}}{{content:incompleteBadge}}</div>
+  </div>
+</article>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tr -->
+<tr {{attrs:attrs}}>{{content:cells}}</tr>
+<!-- /wcm-template -->
+
+<!-- wcm-template:th -->
+<th scope="col"{{attrs:ariaSortAttributes}}><button
+    type="button"
+    class="collection-table-sort{{attr:sortClass}}"
+    data-act="collection-sort-column"
+    data-column="{{attr:id}}"
+    aria-label="{{text:sortBy}}">{{text:title}}<span class="collection-table-sort-direction" aria-hidden="true">{{content:sortDirectionIcon}}</span></button>
+</th>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionTableColumnChoice -->
+<label class="collection-table-column-choice"><input type="checkbox" data-collection-column="{{attr:id}}" {{attrs:checkedAttributes}}>{{text:t}}</label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionTableTools -->
+<div class="collection-table-tools"><details class="collection-table-columns"{{attrs:openAttributes}}>
+    <summary aria-label="{{t:home.table.selectColumns}}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M10 4v16M16 4v16"/></svg>{{t:home.table.columns}}<svg class="collection-table-columns-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+    <div
+      class="collection-table-columns-menu"
+      role="group"
+      aria-label="{{t:home.table.selectColumns}}">
+      {{content:columnChoices}}
+      {{content:collectionColumnsDefaultButton}}
+    </div>
+  </details>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionModeToggle -->
+<div class="collection-mode-toggle" role="group" aria-label="{{t:home.view.displayAs}}">
+  <button
+    type="button"
+    class="collection-mode-button{{attr:mode}}"
+    data-collection-mode="bottlings"
+    aria-pressed="{{attr:ariaPressed}}">{{t:analytics.inventory.bottlings}} <span class="collection-mode-count">{{content:length}}</span></button>
+  <button
+    type="button"
+    class="collection-mode-button{{attr:bottlesModeClass}}"
+    data-collection-mode="bottles"
+    aria-pressed="{{attr:bottlesModePressed}}">{{t:forms.bottle.plural}} <span class="collection-mode-count">{{content:total}}</span></button>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:contentSpan -->
+<span>{{content:label}}</span><strong>{{content:value}}</strong>
+<!-- /wcm-template -->
+
+<!-- wcm-template:homeOption -->
+<option value="{{attr:value}}" {{attrs:selectedAttributes}}>{{content:t}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:homeOption2 -->
+<option value="{{attr:k}}" {{attrs:selectedAttributes}}>{{content:statusText}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:homeOption3 -->
+<option value="{{text:id}}" {{attrs:selectedAttributes}}>{{text:name}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:homeOption4 -->
+<option value="{{attr:level}}" {{attrs:selectedAttributes}}>{{content:ratingRange}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionFilterChip -->
+<button
+  type="button"
+  class="collection-filter-chip"
+  {{attrs:dataResetCollectionFlavorAxisAttributes}}
+  aria-label="{{text:removeFilter}}">{{text:value}} {{content:closeIcon}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionFilterActive -->
+<div class="collection-filter-active" aria-label="{{t:home.filters.activeFilters}}">{{content:active}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:toolbar -->
+<div
+  class="toolbar collection-filters"
+  data-expanded="{{attr:filtersExpanded}}"
+  aria-label="{{text:filters}}">
+  <div class="collection-filter-heading"><span class="collection-filter-heading-label">{{text:filtersLabel}}</span>{{content:savedViewsMenuHtml}}</div>
+  <input
+    type="search"
+    id="search"
+    aria-label="{{t:home.filters.searchCollection}}"
+    placeholder="{{t:home.filters.searchPlaceholder}}"
+    value="{{text:search}}">
+  <select id="filter-sort" aria-label="{{t:home.sort.title}}">
+    {{content:content}}
+  </select>
+  <select id="filter-status" aria-label="{{t:forms.bottle.status}}">
+    <option value="all">{{t:home.filters.allStatuses}}</option>{{content:entries}}</select>
+  <select id="filter-completion" aria-label="{{t:home.filters.completeness}}">
+    <option value="all">{{t:home.filters.allEntries}}</option>
+    <option value="incomplete" {{attrs:incompleteAttributes}}>{{t:detail.status.incomplete}}</option>
+    <option value="complete" {{attrs:completeAttributes}}>{{t:detail.status.complete}}</option>
+  </select>
+  <button
+    type="button"
+    class="btn collection-filter-toggle"
+    data-act="toggle-collection-filters"
+    aria-expanded="{{attr:ariaExpanded}}"
+    aria-controls="collection-filter-extra"><svg class="collection-filter-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg><span class="collection-filter-toggle-desktop">{{t:home.filters.moreFilters}}</span><span class="collection-filter-toggle-mobile">{{t:home.filters.filters}}</span><svg class="collection-filter-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+  <button
+    class="btn collection-filter-view"
+    type="button"
+    data-act="toggle-view"
+    aria-label="{{attr:view}}"
+    title="{{attr:toggleViewTitle}}">{{content:toggleViewIcon}} <span class="collection-filter-view-text">{{content:toggleViewLabel}}</span></button>
+  <div
+    class="collection-filter-extra"
+    id="collection-filter-extra"
+    role="group"
+    aria-label="{{t:home.filters.moreFilters}}">
+    <select id="filter-distillery" aria-label="{{t:home.filters.filterDistillery}}">
+      <option value="all">{{t:home.filters.allDistilleries}}</option>
+      {{content:distilleries}}
+    </select>
+    <select id="filter-rating" aria-label="{{t:home.filters.filterRating}}">
+      <option value="all" {{attrs:allAttributes}}>{{t:home.filters.allRatings}}</option>
+      {{content:ratingOptions}}
+      <option value="unrated" {{attrs:unratedAttributes}}>{{t:home.filters.unrated}}</option>
+    </select>
+    <select id="filter-volume-type" aria-label="{{t:home.filters.filterBottleType}}">
+      <option value="all" {{attrs:allVolumesSelected}}>{{t:home.filters.allBottleTypes}}</option>
+      <option value="standard" {{attrs:standardAttributes}}>{{t:home.inventory.standardBottles}}</option>
+      <option value="sample" {{attrs:sampleAttributes}}>{{t:analytics.inventory.samples}}</option>
+    </select>
+    <details class="collection-flavor-picker" data-collection-flavor-picker>
+      <summary class="collection-flavor-trigger">{{text:filter}}{{content:length}}{{content:profileMissing}}{{content:chevronDownIcon}}</summary>
+      <div class="collection-flavor-popover" role="group" aria-label="{{text:title}}">
+        <div class="collection-flavor-popover-head"><strong>{{text:flavorFilterTitle}}</strong><button
+            type="button"
+            class="collection-popover-close"
+            data-act="collection-flavor-close"
+            aria-label="{{text:close}}">{{content:closeIcon}}</button>
+        </div>
+        {{content:flavorEditorHtml}}
+      </div>
+    </details>
+    {{content:collectionFlavorOpenButton}}
+  </div>
+  {{content:collectionFilterActive}}
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:paginationTopline -->
+<div class="pagination-topline">
+  <span>{{content:rangeSummary}}</span>
+  <div class="pagination-topactions">
+    <button
+      type="button"
+      class="btn small"
+      data-page-to="{{attr:max}}"
+      {{attrs:disabledAttributes}}
+      aria-label="{{t:home.pagination.previousPageLabel}}">{{content:chevronLeftIcon}}</button>
+    <span>{{content:pageOf}}</span>
+    <button
+      type="button"
+      class="btn small"
+      data-page-to="{{attr:min}}"
+      {{attrs:nextDisabled}}
+      aria-label="{{t:home.pagination.nextPageLabel}}">{{content:chevronRightIcon}}</button>
+  </div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:grid -->
+<div class="grid">{{content:cards}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:tableWrap -->
+<div class="table-wrap collection-table-wrap">
+  <table>
+    <thead>
+      <tr>{{content:tableHead}}</tr>
+    </thead>
+    <tbody>{{content:rows}}</tbody>
+  </table>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:collectionHero -->
+<section class="collection-hero">
+  <div class="hero-media" aria-hidden="true">
+    <img src="/assets/hero-header.jpg" alt="">
+  </div>
+  <div class="hero-overlay" aria-hidden="true">
+  </div>
+  <div class="hero-content">
+    <span class="eyebrow">
+      <span class="eyebrow-line">
+      </span> {{t:home.hero.personalArchiveEyebrow}}</span>
+    <h2>{{t:home.hero.oneCollection}}<br>
+      <em>{{t:home.hero.manyStories}}</em>
+    </h2>
+    <p class="hero-description">{{content:heroCopy}}</p>
+    <div class="hero-actions">
+      <button
+        class="btn primary"
+        type="button"
+        data-act="new"
+        aria-label="{{t:collection.actions.newBottle}}">{{content:newBottlingIcon}}<span>{{t:collection.actions.newBottle}}</span></button>
+      <button
+        class="btn hero-secondary"
+        type="button"
+        data-act="scan"
+        aria-label="{{t:collection.actions.scanInventory}}">{{content:inventoryScanIcon}}<span>{{t:collection.actions.scanInventory}}</span></button>
+    </div>
+  </div>
+  <span class="hero-footnote">COLLECTION{{content:establishedYear}}</span>
+</section>
+{{content:pageHeader}}
+<div class="stats">
+  {{content:content}}
+</div>
+{{content:activeFilterSummary}}<div class="collection-results-heading">
+  <span class="collection-results-count">{{text:count}}</span>
+  <div class="collection-results-actions"><button
+      type="button"
+      class="btn small"
+      data-act="collection-flight-plan"
+      {{attrs:disabledAttributes}}>{{content:flightPlanIcon}}<span>{{text:planFlight}}</span></button>
+    {{content:view}}</div>
+</div>{{content:paginationTopline}}{{content:resultsContent}}{{content:total}}
+<!-- /wcm-template -->

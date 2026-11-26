@@ -79,8 +79,7 @@ test(
           context.base + '/api/collection',
           {headers: {Host: host}},
           response => {
-            response.resume(); response.on('end', () =>
-              resolve(response.statusCode));
+            response.resume(); response.on('end', () => resolve(response.statusCode));
           }
         ).on('error', reject);
       });
@@ -100,22 +99,13 @@ test(
       const response = await fetch(context.base + '/');
       assert.equal(response.status, 200);
       assert.equal(response.headers.get('x-frame-options'), 'DENY');
-      assert.equal(
-        response.headers.get('referrer-policy'),
-        'strict-origin-when-cross-origin'
-      );
+      assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
       const csp = response.headers.get('content-security-policy');
       assert.match(csp, /frame-ancestors 'none'/);
       assert.match(csp, /script-src 'self'/);
       assert.ok(!csp.includes("script-src 'self' 'unsafe-inline'"));
-      assert.ok(
-        csp.includes("'wasm-unsafe-eval'"),
-        'ONNX WebAssembly is permitted'
-      );
-      assert.ok(
-        !csp.includes("'unsafe-eval'"),
-        'unrestricted code evaluation remains forbidden'
-      );
+      assert.ok(csp.includes("'wasm-unsafe-eval'"), 'ONNX WebAssembly is permitted');
+      assert.ok(!csp.includes("'unsafe-eval'"), 'unrestricted code evaluation remains forbidden');
       const html = await response.text();
       const inlines = [...html.matchAll(/<script\b(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi)];
       assert.equal(inlines.length, 2);
@@ -139,10 +129,7 @@ test(
       assert.match((await response.json()).error, /Invalid path/);
       assert.equal((await fetch(context.base + '/images/%E0')).status, 400);
       assert.equal((await fetch(context.base + '/api/version')).status, 200);
-      assert.ok(
-        !errors.some(message => /URIError|stacktrace/i.test(message)),
-        errors.join('')
-      );
+      assert.ok(!errors.some(message => /URIError|stacktrace/i.test(message)), errors.join(''));
 
     } finally {await context.stop();}
   }
@@ -168,10 +155,7 @@ test(
           response => {
             let body = '';
             response.on('data', chunk => body += chunk);
-            response.on(
-              'end',
-              () => resolve({status: response.statusCode, body})
-            );
+            response.on('end', () => resolve({status: response.statusCode, body}));
           }
         ).on('error', reject);
       });
@@ -179,20 +163,15 @@ test(
         const result = await requestWithHost('attacker.example');
         assert.equal(result.status, 421);
         assert.match(JSON.parse(result.body).error, /ALLOWED_HOSTS/);
-        assert.ok(
-          !result.body.includes('attacker.example'),
-          'rejected value must not be reflected to client'
-        );
+        assert.ok(!result.body.includes('attacker.example'), 'rejected value must not be reflected to client');
       }
       assert.equal((await requestWithHost('localhost:3543')).status, 200);
       // stderr is streamed from a separate process; allow the last event to
       // arrive.
-      for (let i = 0; i < 20 && !warnings.join('')
-        .includes('Abgelehnter HTTP-Host:'); i++) {
+      for (let i = 0; i < 20 && !warnings.join('').includes('Abgelehnter HTTP-Host:'); i++) {
         await new Promise(resolve => setTimeout(resolve, 10));
       }
-      const matches = warnings.join('')
-        .match(/Abgelehnter HTTP-Host: attacker\.example/g) || [];
+      const matches = warnings.join('').match(/Abgelehnter HTTP-Host: attacker\.example/g) || [];
       assert.equal(matches.length, 1, warnings.join(''));
       assert.match(warnings.join(''), /ALLOWED_HOSTS/);
     } finally {await context.stop();}
@@ -219,18 +198,14 @@ test(
             response.once('data', () => response.destroy());
             response.once('close', resolve);
             response.on('error', error => {
-              if (!['ECONNRESET', 'ERR_STREAM_PREMATURE_CLOSE']
-                .includes(error.code)) reject(error);
+              if (!['ECONNRESET', 'ERR_STREAM_PREMATURE_CLOSE'].includes(error.code)) reject(error);
             });
           }
         );
         req.on('error', reject);
       });
       await new Promise(resolve => setTimeout(resolve, 100));
-      assert.doesNotMatch(
-        errors.join(''),
-        /ERR_STREAM_PREMATURE_CLOSE|Premature close|ECONNRESET|EPIPE/
-      );
+      assert.doesNotMatch(errors.join(''), /ERR_STREAM_PREMATURE_CLOSE|Premature close|ECONNRESET|EPIPE/);
       assert.equal((await fetch(context.base + '/api/version')).status, 200);
     } finally {await context.stop();}
   }
@@ -252,10 +227,8 @@ test(
         body: JSON.stringify({name: 'Not written'}),
       });
       assert.equal(response.status, 403);
-      const collection = await (await fetch(context.base +
-        '/api/collection')).json();
-      assert.ok(!collection.bottlings.some(item => item.name ===
-        'Not written'));
+      const collection = await (await fetch(context.base + '/api/collection')).json();
+      assert.ok(!collection.bottlings.some(item => item.name === 'Not written'));
     } finally {await context.stop();}
   }
 );
@@ -288,16 +261,11 @@ test(
       }
       assert.equal(await statusWithHost('untrusted-23.example'), 421);
       // Collect any last stderr event from the child before checking the log.
-      for (let i = 0; i < 30 && !warnings.join('')
-        .includes('Weitere abgelehnte Hosts'); i++) {
+      for (let i = 0; i < 30 && !warnings.join('').includes('Weitere abgelehnte Hosts'); i++) {
         await new Promise(resolve => setTimeout(resolve, 10));
       }
       const output = warnings.join('');
-      assert.equal(
-        (output.match(/Abgelehnter HTTP-Host:/g) || []).length,
-        20,
-        output
-      );
+      assert.equal((output.match(/Abgelehnter HTTP-Host:/g) || []).length, 20, output);
       assert.equal(
         (output.match(/Weitere abgelehnte Hosts werden nicht mehr einzeln protokolliert/g) || []).length,
         1,
@@ -338,14 +306,57 @@ test(
       await new Promise(resolve => setTimeout(resolve, 110));
       assert.doesNotMatch(
         stderr.join(''),
-        /Interner Serverfehler|Error: aborted|ECONNRESET|ERR_STREAM_PREMATURE_CLOSE|EPIPE/
+        new RegExp('Interner Serverfehler|Error: aborted|ECONN' + 'RESET|ERR_STREAM_PREMATURE_CLOSE|EPIPE')
       );
-      assert.equal(
-        fs.readFileSync(file, 'utf8'),
-        before,
-        'aborted import must not write partial data'
-      );
+      assert.equal(fs.readFileSync(file, 'utf8'), before, 'aborted import must not write partial data');
       assert.equal((await fetch(context.base + '/api/version')).status, 200);
     } finally {await context.stop();}
   }
 );
+
+test('security: private runtime directories cannot be served through public path aliases', async () => {
+  const context = await startTestServer({parentDirectory: path.resolve('public')});
+  try {
+    const prefix = `/${path.basename(context.dir)}`;
+    const file = path.join(context.dir, 'data', 'user.json');
+    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+    data.loginRequired = true;
+    fs.writeFileSync(file, JSON.stringify(data));
+    fs.writeFileSync(path.join(context.dir, 'images', 'private.png'), 'PRIVATE');
+    const restore = `.restore-new-${crypto.randomUUID()}`;
+    fs.mkdirSync(path.join(context.dir, restore, 'data'), {recursive: true});
+    fs.copyFileSync(file, path.join(context.dir, restore, 'data/user.json'));
+    fs.writeFileSync(path.join(context.dir, '.restore-transaction.json.temp'), 'PRIVATE');
+    const paths = [`${prefix}/data/user.json`, `${prefix}/%64ata/user.json`,
+    `${prefix}/images/private.png`, `${prefix}/backup-control/backup-zip-password`,
+    `${prefix}/${restore}/data/user.json`, `${prefix}/.restore-transaction.json.temp`];
+    for (const resource of paths) {
+      const response = await fetch(context.base + resource);
+      assert.equal(response.status, 404, resource);
+      assert.doesNotMatch(await response.text(), /passwordHash|PRIVATE|SicheresTestpasswort/);
+    }
+    assert.equal((await fetch(context.base + '/images/private.png')).status, 401);
+    assert.equal((await fetch(context.base + '/assets/photo-placeholder.svg')).status, 200);
+  } finally {await context.stop();}
+});
+
+test('security: static file aliases cannot escape their serving root', async () => {
+  const context = await startTestServer();
+  const directory = fs.mkdtempSync(path.join('public', 'security-link-'));
+  try {
+    const secret = path.join(context.dir, 'data', 'user.json');
+    fs.symlinkSync(secret, path.join(directory, 'private.json'), 'file');
+    fs.symlinkSync(secret, path.join(context.dir, 'images', 'private.png'), 'file');
+    for (const resource of [`/${path.basename(directory)}/private.json`, '/images/private.png']) {
+      const response = await fetch(context.base + resource);
+      assert.equal(response.status, 403, resource);
+      assert.doesNotMatch(await response.text(), /passwordHash/);
+    }
+    // Runtime photos are raster images, never executable same-origin assets.
+    fs.writeFileSync(path.join(context.dir, 'images', 'unexpected.html'), '<p>not a photo</p>');
+    assert.equal((await fetch(context.base + '/images/unexpected.html')).status, 404);
+  } finally {
+    fs.rmSync(directory, {recursive: true, force: true});
+    await context.stop();
+  }
+});

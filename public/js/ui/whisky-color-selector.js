@@ -1,8 +1,16 @@
-import {WHISKY_COLORS, isCustomWhiskyColor, resolveWhiskyColor, whiskyPickerHex, whiskyPickerPosition} from '../../../shared/whisky-colors.js';
+import {composeMarkup} from './render-plan.js';
+import {
+  WHISKY_COLORS, isCustomWhiskyColor, resolveWhiskyColor,
+  whiskyPickerHex, whiskyPickerPosition
+}
+  from '../../../shared/whisky-colors.js';
 import {whiskyColorNameKey} from '../../../shared/whisky-color-names.js';
 import {glencairnSymbol} from './glencairn-icon.js';
 import {t} from '../i18n/index.js';
-import {escapeHtml} from './dom.js';
+import {loadTemplates} from './templates.js';
+
+const renderTemplate = await loadTemplates('components/whisky-color-selector.html');
+
 
 const COLOR_LABEL_KEYS = Object.freeze({
   new_make: 'tasting.color.newMake',
@@ -23,8 +31,8 @@ const COLOR_LABEL_KEYS = Object.freeze({
  * The original twelve shades remain unchanged. The additional picker stores
  * its HEX value internally.
  *
- * @param {*} hex Hex used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} hex Candidate custom whisky color in CSS hexadecimal notation.
+ * @return {*} Display name for the supplied custom whisky-color hex value.
  */
 export function whiskyCustomColorName(hex) {
   const key = whiskyColorNameKey(hex);
@@ -34,8 +42,8 @@ export function whiskyCustomColorName(hex) {
 /**
  * Renders the selectable whisky-colour samples and selected glass.
  *
- * @param {*} selected Selected used by this operation.
- * @return {string} Resulting text.
+ * @param {*} selected Selected standard color code or custom hexadecimal color.
+ * @return {!import('./render-plan.js').RenderPlan} Whisky color samples, selected glass and custom-color controls.
  */
 export function whiskyColorSelector(selected) {
   const custom = isCustomWhiskyColor(selected);
@@ -43,47 +51,49 @@ export function whiskyColorSelector(selected) {
   // Fixed colours (and no selection) must not retain a custom shade.
   const hex = custom ? resolveWhiskyColor(selected).hex : '';
   const {x, y} = custom ? whiskyPickerPosition(hex) : {x: 0.65, y: 0.48};
-  return `<div class="whisky-color-selector" data-whisky-color="${escapeHtml(selected || '')}">
-        <div class="whisky-color-grid" role="group" aria-label="${escapeHtml(t('tasting.color'))}">
-            ${WHISKY_COLORS.map((item, i) =>
-    `<button class="whisky-color-choice${selected === item.key ?
-      ' is-selected' : ''}" type="button" data-act="tasting-color" data-color-key="${item.key}" aria-pressed="${selected === item.key}" title="${escapeHtml(t(COLOR_LABEL_KEYS[item.key]))}">
-                ${glencairnSymbol({liquidColor: item.hex, id: `color-glass-${i}`})}
-                <span>${escapeHtml(t(COLOR_LABEL_KEYS[item.key]))}</span></button>`).join('')}
-        </div>
-        <div class="whisky-custom-row${custom ? ' is-selected' :
-      ''}" role="group" aria-label="${escapeHtml(t('tasting.colorCustom'))}">
-            <div class="whisky-custom-preview">
-                ${glencairnSymbol({
-        liquidColor: hex ||
-          'transparent', id: 'custom-color-glass',
-      })}
-                <strong>${escapeHtml(t('tasting.colorCustom'))}</strong>
-            </div>
-            <div class="whisky-custom-controls">
-                <div class="whisky-custom-area" data-whisky-picker-area tabindex="0" role="button"
-                    aria-label="${escapeHtml(t('tasting.colorCustomPicker'))}" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"
-                    style="--picker-x:${(x * 100)
-      .toFixed(1)}%;--picker-y:${(y * 100).toFixed(1)}%">
-                    <span class="whisky-custom-cursor" aria-hidden="true"></span>
-                </div>
-                <output class="whisky-custom-name" data-whisky-custom-name aria-live="polite">${escapeHtml(whiskyCustomColorName(hex))}</output>
-                <input type="hidden" data-whisky-custom-hex value="${hex}">
-            </div>
-        </div>
-    </div>`;
+  return renderTemplate('whiskyColorSelector', {
+    selected: selected || '',
+    color: t('tasting.color'),
+    colorOptions: composeMarkup(WHISKY_COLORS.map((item, i) =>
+      renderTemplate('whiskyColorChoice', {
+        selected: selected === item.key ? ' is-selected' : '',
+        key: item.key,
+        ariaPressed: selected === item.key,
+        t: t(COLOR_LABEL_KEYS[item.key]),
+        glencairnSymbol: glencairnSymbol({
+          liquidColor: item.hex,
+          id: `color-glass-${i}`,
+        }),
+        colorLabel: t(COLOR_LABEL_KEYS[item.key]),
+      }))),
+    custom: custom ? ' is-selected' : '',
+    colorCustom: t('tasting.colorCustom'),
+    glencairnSymbol: glencairnSymbol({
+      liquidColor: hex || 'transparent', id: 'custom-color-glass',
+    }),
+    customColorLabel: t('tasting.colorCustom'),
+    colorCustomPicker: t('tasting.colorCustomPicker'),
+    toFixed: (x * 100).toFixed(1),
+    pickerY: (y * 100).toFixed(1),
+    whiskyCustomColorName: whiskyCustomColorName(hex),
+    hex: hex,
+  });
 }
 
 /**
  * Non-interactive display of the recorded colour for a saved tasting.
  *
- * @param {*} selected Selected used by this operation.
- * @return {string} Resulting text.
+ * @param {*} selected Selected standard color code or custom hexadecimal color, if available.
+ * @return {import('./render-plan.js').RenderPlan|string} Read-only glass for the recorded whisky color (or scalar/empty text when no plan is needed).
  */
 export function whiskyColorDisplay(selected) {
   const color = resolveWhiskyColor(selected);
   if (!color) return '';
-  const label = isCustomWhiskyColor(selected) ?
-    whiskyCustomColorName(color.hex) : t(COLOR_LABEL_KEYS[color.key]);
-  return `<div class="tasting-readonly-color">${glencairnSymbol({liquidColor: color.hex, id: 'readonly-whisky-color'})}<strong>${escapeHtml(label)}</strong></div>`;
+  const label = isCustomWhiskyColor(selected) ? whiskyCustomColorName(color.hex) : t(COLOR_LABEL_KEYS[color.key]);
+  return renderTemplate('tastingReadonlyColor', {
+    glencairnSymbol: glencairnSymbol({
+      liquidColor: color.hex, id: 'readonly-whisky-color',
+    }),
+    label: label,
+  });
 }

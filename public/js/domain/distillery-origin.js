@@ -5,7 +5,7 @@
  * supplies metadata.
  *
  * @param {*} value Input value to process.
- * @return {string} Resulting text.
+ * @return {string} Trimmed string, or empty text for non-string values.
  */
 const text = value => typeof value === 'string' ? value.trim() : '';
 const countryNames = Object.freeze({
@@ -49,10 +49,10 @@ const countryNames = Object.freeze({
   'china': 'China',
 });
 /**
- * Formats a country identifier into its display label.
+ * Resolves a known country label case-insensitively, preserving unknown country names.
  *
- * @param {*} value Input value to process.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} value Candidate country name.
+ * @return {*} Localized country label or the supplied normalized name.
  */
 export function countryLabel(value) {
   const name = text(value);
@@ -63,24 +63,22 @@ export function countryLabel(value) {
  * Collects the distillery IDs attributed to a bottling.
  *
  * @param {!Object} bottling Bottling record being processed.
- * @return {!Array<*>} Resulting list of values.
+ * @return {!Array<*>} Distinct distillery identifiers attributed to the bottling.
  */
 export function bottlingDistilleryIds(bottling) {
   return [...new Set(Array.isArray(bottling.distilleryIds) ?
-    bottling.distilleryIds : bottling.distilleryId ?
-      [bottling.distilleryId] : [])];
+    bottling.distilleryIds : bottling.distilleryId ? [bottling.distilleryId] : [])];
 }
 
 /**
  * Resolves geographic origins for all contributing distilleries.
  *
  * @param {!Object} bottling Bottling record being processed.
- * @param {!Array<*>=} distilleries Distilleries used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {Array<import('../../../shared/types.js').Distillery>|Map<string, import('../../../shared/types.js').Distillery>=} distilleries Distillery records or lookup indexed by ID.
+ * @return {{countries: string[], regions: string[]}} Unique producing countries and regions.
  */
 export function bottlingOrigins(bottling, distilleries = []) {
-  const lookup = distilleries instanceof Map ? distilleries :
-    new Map(distilleries.map(d => [d.id, d]));
+  const lookup = distilleries instanceof Map ? distilleries : new Map(distilleries.map(d => [d.id, d]));
   const countries = new Set(), regions = new Set();
   const ids = bottlingDistilleryIds(bottling);
   for (const id of ids) {
@@ -96,8 +94,7 @@ export function bottlingOrigins(bottling, distilleries = []) {
   // override it.
   if (!countries.size) {
     if (text(bottling.country)) countries.add(countryLabel(bottling.country));
-    if (!regions.size &&
-      text(bottling.region)) regions.add(text(bottling.region));
+    if (!regions.size && text(bottling.region)) regions.add(text(bottling.region));
   }
   return {countries: [...countries], regions: [...regions]};
 }
@@ -106,8 +103,8 @@ export function bottlingOrigins(bottling, distilleries = []) {
  * Lists the distinct country names associated with a bottling.
  *
  * @param {!Object} bottling Bottling record being processed.
- * @param {*} distilleries Distilleries used by this operation.
- * @return {!Array<*>} Resulting list of values.
+ * @param {*} distilleries Distillery catalog used to resolve the bottling's origin countries.
+ * @return {!Array<*>} Distinct known country names attributed to the bottling.
  */
 export function bottlingCountryNames(bottling, distilleries) {
   return bottlingOrigins(bottling, distilleries).countries;

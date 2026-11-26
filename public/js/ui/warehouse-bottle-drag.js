@@ -6,28 +6,23 @@
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {string} bottleId Identifier of the physical bottle.
- * @param {*} targetShelfId Target shelf id used by this operation.
- * @return {(string)} Entries that meet the selection criteria.
+ * @param {*} targetShelfId Identifier of the shelf under the proposed drop.
+ * @return {(string)} Drop status indicating valid, expandable or invalid shelf assignment.
  */
 export function shelfDropStatus(warehouse, bottleId, targetShelfId) {
   const selected = Array.isArray(bottleId) ? bottleId : [bottleId];
-  if (!selected.length || new Set(selected).size !==
-    selected.length) return 'invalid';
+  if (!selected.length || new Set(selected).size !== selected.length) return 'invalid';
   const known = new Set((warehouse?.bottles || []).map(bottle => bottle.id));
   if (selected.some(id => !known.has(id))) return 'invalid';
-  const shelves = (warehouse.rooms || []).flatMap(room =>
-    (room.furniture || []).flatMap(furniture => furniture.shelves || []));
+  const shelves = (warehouse.rooms || []).flatMap(room => (room.furniture || []).flatMap(furniture => furniture.shelves || []));
   const shelf = shelves.find(item => item.id === targetShelfId);
   if (!shelf) return 'invalid';
-  if (selected.every(id => warehouse.assignments?.[id] ===
-    targetShelfId)) return 'same';
+  if (selected.every(id => warehouse.assignments?.[id] === targetShelfId)) return 'same';
   if (shelf.capacity !== null && shelf.capacity !== undefined) {
     const chosen = new Set(selected);
-    const otherOccupants = Object.entries(warehouse.assignments || {})
-      .filter(([id, assigned]) =>
-        assigned === targetShelfId && !chosen.has(id) && known.has(id)).length;
-    if (otherOccupants + selected.length >
-      shelf.capacity) return shelf.capacity === 0 ? 'full' : 'expand';
+    const otherOccupants = Object.entries(warehouse.assignments || {}).filter(([id, assigned]) =>
+      assigned === targetShelfId && !chosen.has(id) && known.has(id)).length;
+    if (otherOccupants + selected.length > shelf.capacity) return shelf.capacity === 0 ? 'full' : 'expand';
   }
   return 'valid';
 }
@@ -35,13 +30,13 @@ export function shelfDropStatus(warehouse, bottleId, targetShelfId) {
 /**
  * Registers the drag interaction for placing bottles in warehouse shelves.
  *
- * @param {*} panel Panel used by this operation.
+ * @param {*} panel Warehouse panel receiving the bottle drag-and-drop handlers.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Mounted bottle-drag interaction and its cleanup operation.
  */
-export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalidDrop, getDraggedIds} = {}) {
-  if (!panel?.addEventListener || typeof getWarehouse !== 'function' ||
-    typeof onDrop !== 'function') return () => {};
+export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
+  onInvalidDrop, getDraggedIds} = {}) {
+  if (!panel?.addEventListener || typeof getWarehouse !== 'function' || typeof onDrop !== 'function') return () => {};
   const threshold = 8;
   let active = null;
   let suppressClickFor = null;
@@ -55,16 +50,12 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
    */
   function clearTargets() {
     for (const node of panel.querySelectorAll('.warehouse-shelf')) {
-      node.classList.remove(
-        'warehouse-drop-target',
-        'warehouse-drop-blocked',
-        'warehouse-drop-capacity'
-      );
+      node.classList.remove('warehouse-drop-target', 'warehouse-drop-blocked', 'warehouse-drop-capacity');
     }
   }
 
   /**
-   * Updates the end state for its caller.
+   * Ends the active drag, clears target highlighting and releases pointer capture.
    */
   function end() {
     clearInterval(scrollTimer);
@@ -74,8 +65,7 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
       active.button.classList.remove('warehouse-bottle-dragging');
       active.ghost?.remove();
       try {
-        active.button
-          .releasePointerCapture?.(active.pointerId);
+        active.button.releasePointerCapture?.(active.pointerId);
       } catch { /* capture can be lost on cancel */}
     }
     active = null;
@@ -84,11 +74,11 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
   }
 
   /**
-   * Derives the destination at result from the supplied values.
+   * Finds the eligible shelf drop target under the viewport pointer coordinates.
    *
    * @param {*} x Horizontal coordinate.
    * @param {*} y Vertical coordinate.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Eligible shelf element at the supplied viewport coordinates, or no destination.
    */
   function destinationAt(x, y) {
     const node = panel.ownerDocument?.elementFromPoint?.(x, y)?.closest?.('.warehouse-shelf');
@@ -96,7 +86,7 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
   }
 
   /**
-   * Updates element attributes used by mark destination.
+   * Highlights the shelf beneath the pointer according to its drop validity and capacity.
    *
    * @param {*} x Horizontal coordinate.
    * @param {*} y Vertical coordinate.
@@ -104,14 +94,9 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
   function markDestination(x, y) {
     clearTargets();
     const target = destinationAt(x, y);
-    const status = target ? shelfDropStatus(
-      getWarehouse(),
-      active.bottleIds,
-      target.dataset.shelfId
-    ) : null;
+    const status = target ? shelfDropStatus(getWarehouse(), active.bottleIds, target.dataset.shelfId) : null;
     if (target) target.classList.add(status === 'valid' ?
-      'warehouse-drop-target' : status === 'expand' ?
-        'warehouse-drop-capacity' : 'warehouse-drop-blocked');
+      'warehouse-drop-target' : status === 'expand' ? 'warehouse-drop-capacity' : 'warehouse-drop-blocked');
   }
 
   /**
@@ -125,8 +110,7 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
     let directionX = 0;
     if (viewport?.getBoundingClientRect) {
       const rect = viewport.getBoundingClientRect();
-      if (y >= rect.top && y <= rect.bottom && x >= rect.left && x <=
-        rect.right) {
+      if (y >= rect.top && y <= rect.bottom && x >= rect.left && x <= rect.right) {
         if (x < rect.left + 45) directionX = -1;
         else if (x > rect.right - 45) directionX = 1;
       }
@@ -137,7 +121,7 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
     scrollDirection = directionX;
     if (!directionX) return;
     /**
-     * Derives the tick result from the supplied values.
+     * Advances drag autoscrolling while the pointer remains near a scroll boundary.
      */
     const tick = () => {
       if (!active?.moved) return;
@@ -149,36 +133,36 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
   }
 
   /**
-   * Updates element attributes used by down.
+   * Initializes a drag candidate from a primary pointer on a bottle symbol.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!PointerEvent} event Event that triggered this operation.
    */
   const down = event => {
     if (busy || active || !event.isPrimary || event.button !== 0) return;
-    const button = event.target.closest?.('.warehouse-bottle-symbol');
+    const button = /** @type {HTMLElement|SVGElement} */ (/** @type {Element} */ (event.target).closest?.('.warehouse-bottle-symbol'));
     if (!button || !panel.contains(button)) return;
     active = {
       button,
       bottleId: button.dataset.id,
-      bottleIds: typeof getDraggedIds === 'function' ?
-        getDraggedIds(button.dataset.id) : [button.dataset.id],
+      bottleIds: typeof getDraggedIds === 'function' ? getDraggedIds(button.dataset.id) : [button.dataset.id],
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
       moved: false,
     };
-    try {button.setPointerCapture?.(event.pointerId);} catch { /* pointer capture may not be available */}
+    try {
+      button.setPointerCapture?.(event.pointerId);
+    } catch { /* pointer capture may not be available */}
   };
 
   /**
-   * Calculates the move numeric value.
+   * Starts a drag after the movement threshold, updates its ghost and marks the current drop destination.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!PointerEvent} event Event that triggered this operation.
    */
   const move = event => {
     if (!active || event.pointerId !== active.pointerId) return;
-    if (!active.moved && Math.hypot(event.clientX -
-      active.x, event.clientY - active.y) < threshold) return;
+    if (!active.moved && Math.hypot(event.clientX - active.x, event.clientY - active.y) < threshold) return;
     if (!active.moved) {
       active.moved = true;
       active.button.classList.add('warehouse-bottle-dragging');
@@ -207,9 +191,9 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
   };
 
   /**
-   * Updates element attributes used by up.
+   * Revalidates the drop destination at pointer release and completes the bottle assignment when allowed.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!PointerEvent} event Event that triggered this operation.
    */
   const up = event => {
     if (!active || event.pointerId !== active.pointerId) return;
@@ -218,8 +202,7 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
     // coordinate.
     const target = moved ? destinationAt(event.clientX, event.clientY) : null;
     const shelfId = target?.dataset.shelfId;
-    const status = shelfId ?
-      shelfDropStatus(getWarehouse(), bottleIds, shelfId) : 'invalid';
+    const status = shelfId ? shelfDropStatus(getWarehouse(), bottleIds, shelfId) : 'invalid';
     end();
     if (!moved) return;
     // Browser-generated click after pointerup must not open the detail modal.
@@ -228,28 +211,26 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop, onInvalid
     suppressTimer = setTimeout(() => {suppressClickFor = null;}, 350);
     event.preventDefault();
     if (status === 'same') return;
-    if (status !== 'valid' && status !==
-      'expand') {onInvalidDrop?.(status); return;}
+    if (status !== 'valid' && status !== 'expand') {onInvalidDrop?.(status); return;}
     busy = true;
-    Promise.resolve().then(() => onDrop(bottleIds.length === 1 ?
-      bottleIds[0] : bottleIds, shelfId)).catch(error => {
-        console.error('Bottle relocation failed:', error);
-      }).finally(() => {busy = false;});
+    Promise.resolve().then(() => onDrop(bottleIds.length === 1 ? bottleIds[0] : bottleIds, shelfId)).catch(error => {
+      console.error('Bottle relocation failed:', error);
+    }).finally(() => {busy = false;});
   };
 
   /**
-   * Performs the cancel lifecycle action.
-      * @return {*} Result of this expression.
-*/
+   * Cancels the current bottle drag and cleans up its transient state.
+   * @return {*} No return value; clears transient drag state.
+   */
   const cancel = () => end();
 
   /**
-   * Updates element attributes used by click.
+   * Suppresses the click generated after a completed drag so it cannot toggle bottle selection.
    *
    * @param {!Event} event Event that triggered this operation.
    */
   const click = event => {
-    const button = event.target.closest?.('.warehouse-bottle-symbol');
+    const button = /** @type {HTMLElement|SVGElement} */ (/** @type {Element} */ (event.target).closest?.('.warehouse-bottle-symbol'));
     if (button && button.dataset.id === suppressClickFor) {
       event.preventDefault();
       event.stopImmediatePropagation?.();

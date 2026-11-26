@@ -33,8 +33,7 @@ class Element {
    * @return {!Array<*>} Resulting entries in their output order.
    */
   get attributes() {
-    return [...this.map].map(([name, value]) =>
-      ({name, value}));
+    return [...this.map].map(([name, value]) => ({name, value}));
   }
 
   /**
@@ -86,8 +85,7 @@ class Element {
    */
   get nextSibling() {
     if (!this.parentElement) return null;
-    return this.parentElement.nodes[this.parentElement.nodes.indexOf(this) +
-      1] ?? null;
+    return this.parentElement.nodes[this.parentElement.nodes.indexOf(this) + 1] ?? null;
   }
 
   /**
@@ -99,8 +97,7 @@ class Element {
    */
   insertBefore(child, reference) {
     if (child.parentElement) child.parentElement.removeChild(child);
-    const index = reference === null ? this.nodes.length : this.nodes
-      .indexOf(reference);
+    const index = reference === null ? this.nodes.length : this.nodes.indexOf(reference);
     assert.ok(index >= 0, 'reference is a child');
     this.nodes.splice(index, 0, child);
     child.parentElement = this;
@@ -128,8 +125,7 @@ class Element {
    * @return {*} New instance constructed from the inputs.
    */
   cloneNode(deep) {
-    return new Element(this.tagName, Object.fromEntries(this.map),
-      deep ? this.nodes.map(child => child.cloneNode(true)) : []);
+    return new Element(this.tagName, Object.fromEntries(this.map), deep ? this.nodes.map(child => child.cloneNode(true)) : []);
   }
 
   /**
@@ -139,10 +135,8 @@ class Element {
    * @return {boolean} Whether the operation matched or succeeded.
    */
   isEqualNode(other) {
-    return this.tagName === other.tagName &&
-      this.map.size === other.map.size &&
-      [...this.map].every(([key, value]) => other.getAttribute(key) ===
-        value) &&
+    return this.tagName === other.tagName && this.map.size === other.map.size &&
+      [...this.map].every(([key, value]) => other.getAttribute(key) === value) &&
       this.nodes.length === other.nodes.length &&
       this.nodes.every((child, index) => child.isEqualNode(other.nodes[index]));
   }
@@ -193,20 +187,11 @@ test(
       delete globalThis.document;
     }
     assert.equal(current.childNodes.length, 1);
-    assert.equal(
-      current.firstChild,
-      originalTile,
-      'unchanged photo tile remains mounted'
-    );
+    assert.equal(current.firstChild, originalTile, 'unchanged photo tile remains mounted');
     assert.deepEqual(
-      current.firstChild.childNodes.map(child =>
-        child.getAttribute('data-act')),
+      current.firstChild.childNodes.map(child => child.getAttribute('data-act')),
       ['open-photo', 'photo-editor-open', 'delete-photo', null]
     );
-    assert.equal(
-      current.firstChild.childNodes[1],
-      originalEdit,
-      'photo editor button survives refresh'
-    );
+    assert.equal(current.firstChild.childNodes[1], originalEdit, 'photo editor button survives refresh');
   }
 );

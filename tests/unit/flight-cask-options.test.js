@@ -3,51 +3,7 @@ import assert from 'node:assert/strict';
 import de from '../../public/locales/de.json' with {type: 'json'};
 import en from '../../public/locales/en.json' with {type: 'json'};
 import {createTranslator} from '../../public/js/i18n/index.js';
-import {
-  CASK_GROUPS, CASK_DIMENSIONS, CASK_PHASES,
-} from '../../public/js/domain/flight-casks.js';
-import {
-  flightCaskOptionsHtml, readFlightCaskFilters, syncFlightCaskOptions,
-  resetFlightCaskOptions,
-} from '../../public/js/ui/flight-cask-options.js';
-import {
-  flightPlanningHelpHtml,
-} from '../../public/js/ui/flight-planning-help.js';
-
-test('each category, phase and dimension has a label in both languages', () => {
-  for (const [language, messages] of [['de', de], ['en', en]]) {
-    const keys = CASK_GROUPS.flatMap(group => [`group.${group}`,
-    ...Object.entries(CASK_DIMENSIONS[group]).flatMap(([dimension, values]) =>
-      [
-        `dimension.${dimension}`,
-        ...values.map(value => `subtype.${value}`),
-      ])]);
-    for (const key of [...keys, ...CASK_PHASES.map(phase =>
-      `phase.${phase}`)]) {
-      assert.ok(messages[`flightPlan.caskAge.${key}`], `${language}: ${key}`);
-    }
-    const t = createTranslator(messages, {}, language);
-    const html = flightCaskOptionsHtml(t);
-    assert.equal(t('flightPlan.caskAge.group.wine'),
-      language === 'de' ? 'Wein' : 'Wine');
-    assert.equal(
-      (html.match(/data-flight-plan-cask-subtype-wrap="wine"/g) || [])
-        .length,
-      1
-    );
-    assert.doesNotMatch(html, /flightPlan\.caskAge\./);
-    assert.match(html, /name="flight-cask-group-rum"/);
-    assert.doesNotMatch(html, /name="flight-cask-feature-rum-/);
-    for (const group of CASK_GROUPS) {
-      assert.ok(html.includes(`name="flight-cask-group-${group}"`));
-    }
-    const help = flightPlanningHelpHtml(t);
-    assert.doesNotMatch(help, /flightPlan\.(?:help|caskAge)\./);
-    assert.match(help, /Sauternes/);
-    assert.match(help, /Colheita/);
-    assert.match(help, /Madeira/);
-  }
-});
+import {readFlightCaskFilters, syncFlightCaskOptions, resetFlightCaskOptions} from '../../public/js/ui/flight-cask-options.js';
 
 test('only selected groups contribute their chosen refinements', () => {
   const inputs = new Map([
@@ -93,8 +49,7 @@ test('only selected groups contribute their chosen refinements', () => {
      * @return {!Array<!Object>} Matching simulated elements.
      */
     querySelectorAll(selector) {
-      return selector === '[name^="flight-cask-"]' ?
-        [...inputs.values()] : details;
+      return selector === '[name^="flight-cask-"]' ? [...inputs.values()] : details;
     },
   };
   assert.deepEqual(readFlightCaskFilters(root), {

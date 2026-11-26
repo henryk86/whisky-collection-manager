@@ -11,8 +11,7 @@ import {detachTastings} from '../../shared/tasting-flights.js';
  * @param {*} bottling Bottling record being inspected or updated.
  */
 function checkDistilleries(collection, bottling) {
-  const knownIds = new Set(collection.distilleries.map(distillery =>
-    distillery.id));
+  const knownIds = new Set(collection.distilleries.map(distillery => distillery.id));
   if (bottling.distilleryIds.some(id => !knownIds.has(id))) {
     throw fail('Unbekannte Destillerie', 400, "api.errors.unknownDistillery");
   }
@@ -22,7 +21,7 @@ function checkDistilleries(collection, bottling) {
  * Create a bottling and its first physical bottle in one transaction.
  *
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Created bottling and its first physical bottle.
  */
 export function createBottling(input) {
   return change(collection => {
@@ -44,8 +43,7 @@ export function createBottling(input) {
       createdAt: timestamp,
       updatedAt: timestamp,
     };
-    if (bottle.volumeType === 'standard' && bottle.volumeMl == null &&
-      bottling.volumeMl != null) {
+    if (bottle.volumeType === 'standard' && bottle.volumeMl == null && bottling.volumeMl != null) {
       bottle.volumeMl = bottling.volumeMl;
     }
     markNumber(collection, bottle.inventoryNumber);
@@ -58,12 +56,11 @@ export function createBottling(input) {
 }
 
 /**
- * Updates bottling for bottlings.
+ * Updates bottling metadata while rejecting edits to tasting-only fields.
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<!Bottling>} Promise fulfilled when the operation
- * completes.
+ * @return {Promise<import('../../shared/types.js').Bottling>} Updated bottling after the collection change is persisted.
  */
 export function updateBottling(id, input) {
   return change(collection => {
@@ -85,9 +82,7 @@ export function updateBottling(id, input) {
       );
     const updated = normalizeBottling(input, bottling);
     checkDistilleries(collection, updated);
-    Object.assign(bottling, updated, {
-      updatedAt: now(),
-    });
+    Object.assign(bottling, updated, {updatedAt: now(), });
     return bottling;
   });
 }
@@ -96,7 +91,7 @@ export function updateBottling(id, input) {
  * Clears bottling for bottlings.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after deleting the bottling.
  */
 export function deleteBottling(id) {
   return change(collection => {
@@ -105,19 +100,10 @@ export function deleteBottling(id) {
       throw fail('Abfüllung nicht gefunden', 404, "api.errors.bottlingNotFound");
     }
     if (collection.bottlings[index].bottles.length) {
-      throw fail(
-        'Zuerst alle zugeordneten Flaschen löschen',
-        409,
-        "api.errors.deleteAllAssignedBottlesFirst"
-      );
+      throw fail('Zuerst alle zugeordneten Flaschen löschen', 409, "api.errors.deleteAllAssignedBottlesFirst");
     }
-    detachTastings(
-      collection,
-      (collection.bottlings[index].tastings || []).map(t => t.id)
-    );
+    detachTastings(collection, (collection.bottlings[index].tastings || []).map(t => t.id));
     collection.bottlings.splice(index, 1);
-    return {
-      ok: true,
-    };
+    return {ok: true, };
   });
 }

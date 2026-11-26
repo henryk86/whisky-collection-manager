@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {verifyDeploymentConfiguration} from '../../scripts/check-deployment-config.js';
+import {verifyDeploymentConfiguration}
+  from '../../scripts/check-deployment-config.js';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta
-  .url)), '../..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 /**
  * Reads load data from the local filesystem.
  *
@@ -103,13 +103,9 @@ for (const [description, file, search, replacement] of [
 ]) {
   test(`configuration validation ${description}`, () => {
     const original = load(file);
-    assert.ok(
-      original.includes(search),
-      `test fixture prerequisite: ${description}`
-    );
+    assert.ok(original.includes(search), `test fixture prerequisite: ${description}`);
     assert.throws(
-      () => verifyDeploymentConfiguration(name => name === file ?
-        original.replace(search, replacement) : load(name)),
+      () => verifyDeploymentConfiguration(name => name === file ? original.replace(search, replacement) : load(name)),
       /Deployment contract:/
     );
   });

@@ -27,9 +27,9 @@ jobs:
       - name: Check project, Google JavaScript style and JSDoc
         run: npm run check
       - run: npm test
+      - run: npx playwright-core install --with-deps chromium
       - name: Test visual approval controller
         run: python3 -B -m unittest discover -s tests/unit -p visual_approval_test.py
-      - run: npx playwright-core install --with-deps chromium
       - run: npm run test:browser
       - name: Upload browser regression artifacts on failure
         if: failure() && github.event_name == 'pull_request'

@@ -7,12 +7,7 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const room = (await api(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Raum', width: 8, height: 5}
-      )).data;
+      const room = (await api(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Raum', width: 8, height: 5})).data;
       const furniture = (await api(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -46,7 +41,10 @@ test(
         {from: 3, to: 5, front: 'glass', doorLeaves: 2, glassFrame: true},
       ];
       const endpoint = `/api/warehouse/furniture/${furniture.id}`;
-      const updated = await api(ctx.base, endpoint, 'PATCH', {...furniture, doorRanges: ranges});
+      const updated = await api(ctx.base, endpoint, 'PATCH', {
+        ...furniture,
+        doorRanges: ranges,
+      });
       assert.equal(updated.status, 200);
       assert.deepEqual(updated.data.doorRanges, ranges);
       const invalid = await api(
@@ -59,26 +57,15 @@ test(
         }
       );
       assert.equal(invalid.status, 400);
-      const outOfRange = await api(
-        ctx.base,
-        endpoint,
-        'PATCH',
-        {...updated.data, doorRanges: [{from: 1, to: 6, front: 'glass'}]}
-      );
+      const outOfRange = await api(ctx.base, endpoint, 'PATCH', {...updated.data, doorRanges: [{from: 1, to: 6, front: 'glass'}]});
       assert.equal(outOfRange.status, 400);
       const copy = await api(ctx.base, `${endpoint}/copy`, 'POST', {withShelves: true});
       assert.equal(copy.status, 201);
       assert.deepEqual(copy.data.doorRanges, ranges);
-      const deleteShelf =
-        await api(ctx.base, `/api/warehouse/shelves/${shelves[1]
-          .id}`, 'DELETE');
+      const deleteShelf = await api(ctx.base, `/api/warehouse/shelves/${shelves[1].id}`, 'DELETE');
       assert.equal(deleteShelf.status, 200);
-      const after = (await api(ctx.base, '/api/warehouse')).data.rooms[0]
-        .furniture.find(f => f.id === furniture.id);
-      assert.deepEqual(
-        after.doorRanges.map(r => [r.from, r.to]),
-        [[1, 1], [2, 4]]
-      );
+      const after = (await api(ctx.base, '/api/warehouse')).data.rooms[0].furniture.find(f => f.id === furniture.id);
+      assert.deepEqual(after.doorRanges.map(r => [r.from, r.to]), [[1, 1], [2, 4]]);
     } finally {await ctx.stop();}
   }
 );

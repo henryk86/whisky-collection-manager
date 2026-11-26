@@ -13,26 +13,30 @@ export const ADJUSTMENT_LIMITS = Object.freeze({
   sharpen: [0, 100],
 });
 /**
- * Validates adjustment values for photo adjustments.
+ * Complete normalized editing state; exposure is in stops, other adjustments
+ * use the signed slider range (sharpen is non-negative).
+ * @typedef {Record<keyof typeof ADJUSTMENT_LIMITS, number>} PhotoAdjustments
+ */
+/**
+ * Validates the adjustment object against the supported slider limits.
  *
- * @param {*} value Input value to process.
- * @return {!Object} Structured result for the caller.
+ * @param {*} value Untrusted adjustment object; omitted fields default to zero.
+ * @return {PhotoAdjustments} Complete finite, range-checked adjustment values.
+ * @throws {RangeError} For a non-object, an unknown key or an out-of-range field.
  */
 export function validateAdjustmentValues(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value) ||
     Object.keys(value).some(key => !Object.hasOwn(ADJUSTMENT_LIMITS, key))) {
-    const error = new RangeError('Invalid photo adjustments'); error.code =
-      'INVALID_ADJUSTMENTS'; throw error;
+    throw Object.assign(new RangeError('Invalid photo adjustments'), {code: 'INVALID_ADJUSTMENTS'});
   }
   const normalized = {};
   for (const [key, [min, max]] of Object.entries(ADJUSTMENT_LIMITS)) {
     const number = value[key] ?? 0;
-    if (typeof number !== 'number' || !Number.isFinite(number) || number <
-      min || number > max) {
-      const error = new RangeError('Invalid adjustment value');
-      error.code = 'INVALID_ADJUSTMENT_FIELD'; error.field = key; throw error;
+    if (typeof number !== 'number' || !Number.isFinite(number) || number < min || number > max) {
+      throw Object.assign(new RangeError('Invalid adjustment value'), {code: 'INVALID_ADJUSTMENT_FIELD', field: key});
     }
     normalized[key] = number;
   }
-  return normalized;
+  // The loop assigns every key in ADJUSTMENT_LIMITS before returning.
+  return /** @type {PhotoAdjustments} */ (normalized);
 }

@@ -3,61 +3,39 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
-const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
+const image =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=';
 
 test(
   'Whiskybase image is physically copied to an individual bottle only on approval',
   async () => {
     const ctx = await startTestServer();
     try {
-      const created = await requestJson(
-        ctx.base,
-        '/api/bottlings',
-        'POST',
-        {name: 'Islay Release'}
-      );
+      const created = await requestJson(ctx.base, '/api/bottlings', 'POST', {name: 'Islay Release'});
       assert.equal(created.status, 201);
       const bottle = created.data.bottle;
       const staged = await requestJson(ctx.base, '/api/import-image/stage', 'POST', {image});
       assert.equal(staged.status, 201, JSON.stringify(staged.data));
       assert.match(staged.data.token, /^[0-9a-f-]{36}$/);
-      const before = (await requestJson(ctx.base, '/api/collection')).data
-        .bottlings[0].bottles[0];
+      const before = (await requestJson(ctx.base, '/api/collection')).data.bottlings[0].bottles[0];
       assert.deepEqual(before.photos, []);
       const preview = await fetch(`${ctx.base}/api/import-image/stage/${staged.data.token}`);
       assert.equal(preview.status, 200);
       assert.equal(preview.headers.get('content-type'), 'image/png');
       assert.ok((await preview.arrayBuffer()).byteLength > 0);
-      const saved = await requestJson(
-        ctx.base,
-        `/api/bottles/${bottle.id}/photos/from-stage`,
-        'POST',
-        {token: staged.data.token}
-      );
+      const saved = await requestJson(ctx.base, `/api/bottles/${bottle.id}/photos/from-stage`, 'POST', {token: staged.data.token});
       assert.equal(saved.status, 201, JSON.stringify(saved.data));
       assert.equal(saved.data.source, 'whiskybase');
       assert.ok(saved.data.path.startsWith(`images/${bottle.id}/`));
       assert.ok(fs.existsSync(path.join(ctx.dir, saved.data.path)));
-      const after = (await requestJson(ctx.base, '/api/collection')).data
-        .bottlings[0].bottles[0];
+      const after = (await requestJson(ctx.base, '/api/collection')).data.bottlings[0].bottles[0];
       assert.equal(after.photos.length, 1);
       assert.equal(after.photos[0].path, saved.data.path);
       assert.equal(after.photos[0].source, 'whiskybase');
-      assert.equal(
-        JSON.stringify(after).includes('static.whiskybase.com'),
-        false
-      );
-      const twice = await requestJson(
-        ctx.base,
-        `/api/bottles/${bottle.id}/photos/from-stage`,
-        'POST',
-        {token: staged.data.token}
-      );
+      assert.equal(JSON.stringify(after).includes('static.whiskybase.com'), false);
+      const twice = await requestJson(ctx.base, `/api/bottles/${bottle.id}/photos/from-stage`, 'POST', {token: staged.data.token});
       assert.equal(twice.status, 404);
-      const zipResponse = await fetch(
-        ctx.base + '/api/export/zip',
-        {headers: {'X-Backup-Admin-Token': 'a'.repeat(64)}}
-      );
+      const zipResponse = await fetch(ctx.base + '/api/export/zip', {headers: {'X-Backup-Admin-Token': 'a'.repeat(64)}});
       assert.equal(zipResponse.status, 200);
       const zipBytes = Buffer.from(await zipResponse.arrayBuffer());
       assert.ok(zipBytes.includes(Buffer.from(saved.data.path)));
@@ -70,44 +48,18 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const created = await requestJson(
-        ctx.base,
-        '/api/bottlings',
-        'POST',
-        {name: 'Generic Import'}
-      );
+      const created = await requestJson(ctx.base, '/api/bottlings', 'POST', {name: 'Generic Import'});
       const id = created.data.bottle.id;
-      const staged = await requestJson(
-        ctx.base,
-        '/api/import-image/stage',
-        'POST',
-        {image, source: null}
-      );
+      const staged = await requestJson(ctx.base, '/api/import-image/stage', 'POST', {image, source: null});
       assert.equal(staged.status, 201);
-      const attached = await requestJson(
-        ctx.base,
-        `/api/bottles/${id}/photos/from-stage`,
-        'POST',
-        {token: staged.data.token}
-      );
+      const attached = await requestJson(ctx.base, `/api/bottles/${id}/photos/from-stage`, 'POST', {token: staged.data.token});
       assert.equal(attached.status, 201);
       assert.equal(Object.hasOwn(attached.data, 'source'), false);
-      const photos = (await requestJson(ctx.base, '/api/collection')).data
-        .bottlings[0].bottles[0].photos;
+      const photos = (await requestJson(ctx.base, '/api/collection')).data.bottlings[0].bottles[0].photos;
       assert.equal(Object.hasOwn(photos[0], 'source'), false);
-      const otherSource = await requestJson(
-        ctx.base,
-        '/api/import-image/stage',
-        'POST',
-        {image, source: 'other-catalog'}
-      );
+      const otherSource = await requestJson(ctx.base, '/api/import-image/stage', 'POST', {image, source: 'other-catalog'});
       assert.equal(otherSource.status, 201);
-      const otherPhoto = await requestJson(
-        ctx.base,
-        `/api/bottles/${id}/photos/from-stage`,
-        'POST',
-        {token: otherSource.data.token}
-      );
+      const otherPhoto = await requestJson(ctx.base, `/api/bottles/${id}/photos/from-stage`, 'POST', {token: otherSource.data.token});
       assert.equal(otherPhoto.status, 201);
       assert.equal(Object.hasOwn(otherPhoto.data, 'source'), false);
     } finally {await ctx.stop();}
@@ -124,26 +76,15 @@ test(
         'data:text/html;base64,PGh0bWw+',
         'https://static.whiskybase.com/a.png',
       ]) {
-        const response = await requestJson(
-          ctx.base,
-          '/api/import-image/stage',
-          'POST',
-          {image: bad}
-        );
+        const response = await requestJson(ctx.base, '/api/import-image/stage', 'POST', {image: bad});
         assert.equal(response.status, 400);
       }
       const stage = await requestJson(ctx.base, '/api/import-image/stage', 'POST', {image});
       assert.equal(stage.status, 201);
-      const invalid = await requestJson(
-        ctx.base,
-        '/api/bottles/nonexistent/photos/from-stage',
-        'POST',
-        {token: stage.data.token}
-      );
+      const invalid = await requestJson(ctx.base, '/api/bottles/nonexistent/photos/from-stage', 'POST', {token: stage.data.token});
       assert.equal(invalid.status, 404);
       // Failed association must not consume the staged image.
-      const preview = await fetch(ctx.base +
-        `/api/import-image/stage/${stage.data.token}`);
+      const preview = await fetch(ctx.base + `/api/import-image/stage/${stage.data.token}`);
       assert.equal(preview.status, 200);
     } finally {await ctx.stop();}
   }
@@ -154,23 +95,13 @@ test(
   async () => {
     const ctx = await startTestServer();
     try {
-      const created = await requestJson(
-        ctx.base,
-        '/api/bottlings',
-        'POST',
-        {name: 'Photo Order'}
-      );
+      const created = await requestJson(ctx.base, '/api/bottlings', 'POST', {name: 'Photo Order'});
       const id = created.data.bottle.id;
       const first = await requestJson(ctx.base, `/api/bottles/${id}/photos`, 'POST', {image});
       const second = await requestJson(ctx.base, `/api/bottles/${id}/photos`, 'POST', {image});
       const third = await requestJson(ctx.base, `/api/bottles/${id}/photos`, 'POST', {image});
       const order = [third.data.id, first.data.id, second.data.id];
-      const res = await requestJson(
-        ctx.base,
-        `/api/bottles/${id}/photos/order`,
-        'PUT',
-        {photoIds: order}
-      );
+      const res = await requestJson(ctx.base, `/api/bottles/${id}/photos/order`, 'PUT', {photoIds: order});
       assert.equal(res.status, 200, JSON.stringify(res.data));
       assert.deepEqual(res.data.map(photo => photo.id), order);
       assert.equal(res.data[0].path, third.data.path);
@@ -181,12 +112,7 @@ test(
         {photoIds: [third.data.id, third.data.id, second.data.id]}
       );
       assert.equal(duplicate.status, 409);
-      const missing = await requestJson(
-        ctx.base,
-        `/api/bottles/${id}/photos/order`,
-        'PUT',
-        {photoIds: [third.data.id, first.data.id]}
-      );
+      const missing = await requestJson(ctx.base, `/api/bottles/${id}/photos/order`, 'PUT', {photoIds: [third.data.id, first.data.id]});
       assert.equal(missing.status, 409);
       const injection = await requestJson(
         ctx.base,
@@ -196,10 +122,7 @@ test(
       );
       assert.equal(injection.status, 409);
       const collection = (await requestJson(ctx.base, '/api/collection')).data;
-      assert.deepEqual(
-        collection.bottlings[0].bottles[0].photos.map(p => p.id),
-        order
-      );
+      assert.deepEqual(collection.bottlings[0].bottles[0].photos.map(p => p.id), order);
       assert.equal(fs.existsSync(path.join(ctx.dir, first.data.path)), true);
     } finally {await ctx.stop();}
   }

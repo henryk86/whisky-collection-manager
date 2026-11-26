@@ -10,41 +10,37 @@ import crypto from 'node:crypto';
 const BLOCK = 128 * 1024;
 const MAX32 = 0xffffffff;
 const OVERHEAD = 16 + 2 + 10; // salt + verifier + HMAC-SHA1/10
-const AES_EXTRA = Buffer.from([0x01, 0x99, 0x07, 0x00, 0x02, 0x00, 0x41, 0x45, 0x03, 0x00, 0x00]);
+const AES_EXTRA = Buffer.from([0x01, 0x99, 0x07, 0x00, 0x02, 0x00, 0x41, 0x45,
+  0x03, 0x00, 0x00]);
 const TABLE = Array.from({length: 256}, (_, start) => {
   let value = start;
-  for (let i = 0; i < 8; i++) value = (value & 1) ? (0xedb88320 ^ (value >>>
-    1)) : (value >>> 1);
+  for (let i = 0; i < 8; i++) value = (value & 1) ? (0xedb88320 ^ (value >>> 1)) : (value >>> 1);
   return value >>> 0;
 });
 /**
- * Derives the crc32 result from the supplied values.
- *
- * @param {*} buffer Value used by this operation.
- * @param {number=} previous Value used by this operation.
- * @return {number} Calculated numeric value.
+ * Updates a running ZIP CRC-32 checksum over the supplied bytes.
+ * @param {Uint8Array} buffer Bytes to incorporate.
+ * @param {number=} previous Previous unfinalized CRC state.
+ * @return {number} Unsigned updated CRC state.
  */
 function crc32(buffer, previous = 0xffffffff) {
   let value = previous;
-  for (const byte of buffer) value = TABLE[(value ^ byte) & 255] ^
-    (value >>> 8);
+  for (const byte of buffer) value = TABLE[(value ^ byte) & 255] ^ (value >>> 8);
   return value >>> 0;
 }
 
 /**
- * Updates the write state for its caller.
- *
- * @param {*} fd Value used by this operation.
- * @param {*} buffer Value used by this operation.
+ * Writes all bytes to a file descriptor, including retrying partial writes.
+ * @param {number} fd Open file descriptor.
+ * @param {Buffer} buffer Bytes to write.
  */
 function write(fd, buffer) {
   let position = 0;
-  while (position < buffer.length) position +=
-    fs.writeSync(fd, buffer, position, buffer.length - position);
+  while (position < buffer.length) position += fs.writeSync(fd, buffer, position, buffer.length - position);
 }
 
 /**
- * Updates the file content state for its caller.
+ * Streams a file to the supplied callback in bounded blocks, closing the descriptor even on failure.
  *
  * @param {*} file File resource to read, write or inspect.
  * @param {function(...*): *} callback Callback invoked by the operation.
@@ -54,20 +50,18 @@ function fileContent(file, callback) {
   try {
     const buffer = Buffer.allocUnsafe(BLOCK);
     let count;
-    while ((count = fs.readSync(fd, buffer, 0, BLOCK, null)) >
-      0) callback(buffer.subarray(0, count));
+    while ((count = fs.readSync(fd, buffer, 0, BLOCK, null)) > 0) callback(buffer.subarray(0, count));
   } finally {fs.closeSync(fd);}
 }
 
 /**
- * Tests input text against the safe name pattern.
+ * Rejects unsafe or out-of-scope archive entry names.
  *
  * @param {*} name Environment variable or setting name.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True only for allowed relative backup entry names.
  */
 function safeName(name) {
-  return typeof name === 'string' && name.length <= 1024 &&
-    !name.includes('\\') && !name.includes('\0') &&
+  return typeof name === 'string' && name.length <= 1024 && !name.includes('\\') && !name.includes('\0') &&
     !name.startsWith('/') && !name.endsWith('/') &&
     name.split('/').every(part => part && part !== '.' && part !== '..') &&
     (name === 'README.txt' || /^(data|images|documents)\/.+/.test(name));
@@ -83,7 +77,7 @@ function safeName(name) {
 function walk(root, relative) {
   const files = [];
   /**
-   * Validates the visit state and rejects invalid inputs.
+   * Recursively enumerates backup files and rejects symbolic links.
    *
    * @param {*} name Environment variable or setting name.
    */
@@ -94,21 +88,22 @@ function walk(root, relative) {
       const child = `${name}/${entry.name}`;
       if (!safeName(child)) throw Error('Ungültiger Dateiname in der Sicherung');
       if (entry.isDirectory()) visit(child);
-      else if (entry.isFile()) files.push({name: child, source: path.join(root, child)});
+      else if (entry.isFile()) files.push({
+        name: child, source: path.join(root, child),
+      });
       else throw Error('Unbekannter Dateityp in der Sicherung');
     }
   };
   for (const folder of relative) if (fs.existsSync(path.join(root, folder))) visit(folder);
-  if (!files.some(f => f.name ===
-    'data/collection.json')) throw Error('Sammlung fehlt in Sicherungsquelle');
+  if (!files.some(f => f.name === 'data/collection.json')) throw Error('Sammlung fehlt in Sicherungsquelle');
   return files.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /**
- * Validates the required password state and rejects invalid inputs.
+ * Rejects missing or insufficiently long ZIP encryption passwords.
  *
  * @param {*} password Password or secret supplied by the caller.
- * @return {string} Resulting text.
+ * @return {string} Unmodified password meeting the minimum length of 14 characters.
  */
 function requiredPassword(password) {
   if (typeof password !== 'string' || password.length < 14) {
@@ -118,11 +113,10 @@ function requiredPassword(password) {
 }
 
 /**
- * Calculates the aes numeric value.
- *
- * @param {*} password Password or secret supplied by the caller.
- * @param {*} salt Value used by this operation.
- * @return {!Object} Structured result assembled from the input data.
+ * Derives WinZip AES encryption and authentication keys from a password and salt.
+ * @param {string} password Backup password.
+ * @param {Buffer} salt Per-entry random salt.
+ * @return {Object} Encryption and authentication state for the ZIP entry.
  */
 function aes(password, salt) {
   const keys = crypto.pbkdf2Sync(Buffer.from(password, 'utf8'), salt, 1000, 66, 'sha1');
@@ -133,10 +127,10 @@ function aes(password, salt) {
   const counter = Buffer.alloc(16);
   let unused = Buffer.alloc(0);
   /**
-   * Calculates the xor numeric value.
+   * Applies the current AES counter-mode keystream to a block of input bytes.
    *
    * @param {*} data Input data to process.
-   * @return {*} Calculated numeric result.
+   * @return {*} Output bytes with the same length as the input.
    */
   const xor = data => {
     const output = Buffer.allocUnsafe(data.length);
@@ -154,15 +148,13 @@ function aes(password, salt) {
       for (let b = 0; b < count; b++) {
         // WinZip AES uses a little-endian counter starting at 1.
         for (let i = 0; i < 16; i++) {
-          counter[i]++; if (counter[i] !==
-            0) break;
+          counter[i]++; if (counter[i] !== 0) break;
         }
         counter.copy(counters, b * 16);
       }
       const stream = cipher.update(counters);
       const needed = data.length - index;
-      for (let j = 0; j < needed; j++) output[index + j] = data[index + j] ^
-        stream[j];
+      for (let j = 0; j < needed; j++) output[index + j] = data[index + j] ^ stream[j];
       unused = stream.subarray(needed);
     }
     return output;
@@ -171,24 +163,19 @@ function aes(password, salt) {
 }
 
 /**
- * Validates the aes extra state and rejects invalid inputs.
+ * Parses the WinZip AES extra field and rejects malformed metadata.
  *
  * @param {*} extra Additional context or configuration.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} Decoded AES metadata, or null if the field is absent.
  */
 function aesExtra(extra) {
   let offset = 0;
   while (offset + 4 <= extra.length) {
-    const key = extra.readUInt16LE(offset), size =
-      extra.readUInt16LE(offset + 2);
-    if (offset + 4 + size >
-      extra.length) throw Error('Ungültiges ZIP-Zusatzfeld');
+    const key = extra.readUInt16LE(offset), size = extra.readUInt16LE(offset + 2);
+    if (offset + 4 + size > extra.length) throw Error('Ungültiges ZIP-Zusatzfeld');
     if (key === 0x9901) {
       const field = extra.subarray(offset + 4, offset + 4 + size);
-      if (size !== 7 || field.readUInt16LE(0) !== 2 ||
-        field.toString('ascii', 2, 4) !== 'AE' ||
-        field[4] !== 3 || field.readUInt16LE(5) !==
-        0) throw Error('Nicht unterstützte ZIP-Verschlüsselung');
+      if (size !== 7 || field.readUInt16LE(0) !== 2 || field.toString('ascii', 2, 4) !== 'AE' || field[4] !== 3 || field.readUInt16LE(5) !== 0) throw Error('Nicht unterstützte ZIP-Verschlüsselung');
       return true;
     }
     offset += 4 + size;
@@ -199,13 +186,14 @@ function aesExtra(extra) {
 /**
  * Requires a password. No plaintext ZIP can be produced by this writer.
  *
- * @param {*} sourceRoot Source root used by this operation.
- * @param {*} destination Destination used by this operation.
+ * @param {string} sourceRoot Snapshot directory containing data, images and documents.
+ * @param {string} destination Path of the new encrypted ZIP; must not already exist.
  * @param {*} password Secret supplied for authentication or encryption.
- * @param {string=} timestamp Timestamp used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {string=} timestamp ISO timestamp written to the archive README.
+ * @return {!Object} Written archive statistics and encryption information.
  */
-export function writeReadableZip(sourceRoot, destination, password, timestamp = new Date().toISOString()) {
+export function writeReadableZip(sourceRoot, destination, password, timestamp =
+  new Date().toISOString()) {
   requiredPassword(password);
   const files = walk(sourceRoot, ['data', 'images', 'documents']);
   files.unshift({
@@ -224,10 +212,8 @@ export function writeReadableZip(sourceRoot, destination, password, timestamp = 
     for (const entry of files) {
       const name = Buffer.from(entry.name, 'utf8');
       if (name.length > 65535) throw Error('Dateiname zu lang');
-      const stat = entry.source ? fs.lstatSync(entry.source) :
-        {size: entry.contents.length};
-      if (entry.source &&
-        !stat.isFile()) throw Error('Backup-Quelle hat sich verändert');
+      const stat = entry.source ? fs.lstatSync(entry.source) : {size: entry.contents.length};
+      if ('isFile' in stat && !stat.isFile()) throw Error('Backup-Quelle hat sich verändert');
       const size = stat.size, encryptedSize = size + OVERHEAD;
       const localSize = 30 + name.length + AES_EXTRA.length;
       if (encryptedSize > MAX32 || offset + encryptedSize + localSize > MAX32) {
@@ -247,7 +233,7 @@ export function writeReadableZip(sourceRoot, destination, password, timestamp = 
       const salt = crypto.randomBytes(16), context = aes(password, salt);
       write(fd, salt); write(fd, context.verifier);
       /**
-       * Updates the encrypt state for its caller.
+       * Encrypts archive data, updates its authentication code and writes ciphertext.
        *
        * @param {*} data Input data to process.
        */
@@ -275,8 +261,7 @@ export function writeReadableZip(sourceRoot, destination, password, timestamp = 
       offset += localSize + encryptedSize;
     }
     const directorySize = central.reduce((sum, item) => sum + item.length, 0);
-    if (files.length > 65535 || offset + directorySize + 22 >
-      MAX32) throw Error('ZIP-Archiv zu groß');
+    if (files.length > 65535 || offset + directorySize + 22 > MAX32) throw Error('ZIP-Archiv zu groß');
     for (const chunk of central) write(fd, chunk);
     const end = Buffer.alloc(22);
     end.writeUInt32LE(0x06054b50, 0);
@@ -298,17 +283,15 @@ export function writeReadableZip(sourceRoot, destination, password, timestamp = 
 }
 
 /**
- * Retrieves at from the available state.
- *
- * @param {*} fd Value used by this operation.
- * @param {*} length Value used by this operation.
- * @param {*} offset Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Reads exactly the requested byte range or rejects a truncated ZIP archive.
+ * @param {number} fd Open archive file descriptor.
+ * @param {number} length Number of bytes to read.
+ * @param {number} offset Absolute byte offset.
+ * @return {Buffer} Requested archive bytes.
  */
 function readAt(fd, length, offset) {
   const buffer = Buffer.alloc(length);
-  if (fs.readSync(fd, buffer, 0, length, offset) !==
-    length) throw Error('Unvollständiges ZIP-Archiv');
+  if (fs.readSync(fd, buffer, 0, length, offset) !== length) throw Error('Unvollständiges ZIP-Archiv');
   return buffer;
 }
 
@@ -316,10 +299,10 @@ function readAt(fd, length, offset) {
  * Authenticates all AES-256 entries before accepting a backup. Supports old
  * plain ZIPs for restore.
  *
- * @param {*} archive Archive used by this operation.
- * @param {null=} extractTo Extract to used by this operation.
+ * @param {string} archive Path of the ZIP file to verify.
+ * @param {?string=} extractTo Destination directory for extraction, or null for verification only.
  * @param {string=} password Secret supplied for authentication or encryption.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Verified archive entry count, byte count and encryption flag.
  */
 export function inspectReadableZip(archive, extractTo = null, password = '') {
   const fd = fs.openSync(archive, 'r');
@@ -329,64 +312,46 @@ export function inspectReadableZip(archive, extractTo = null, password = '') {
     const fileSize = fs.fstatSync(fd).size;
     if (fileSize < 22) throw Error('Unvollständiges ZIP');
     const end = readAt(fd, 22, fileSize - 22);
-    if (end.readUInt32LE(0) !== 0x06054b50 || end.readUInt16LE(20) !==
-      0) throw Error('ZIP-Ende fehlt');
+    if (end.readUInt32LE(0) !== 0x06054b50 || end.readUInt16LE(20) !== 0) throw Error('ZIP-Ende fehlt');
     const count = end.readUInt16LE(10);
-    const centralSize = end.readUInt32LE(12), centralOffset =
-      end.readUInt32LE(16);
-    if (count > 20000 || centralOffset + centralSize !== fileSize -
-      22) throw Error('ZIP-Verzeichnis ungültig');
+    const centralSize = end.readUInt32LE(12), centralOffset = end.readUInt32LE(16);
+    if (count > 20000 || centralOffset + centralSize !== fileSize - 22) throw Error('ZIP-Verzeichnis ungültig');
     let offset = centralOffset, totalSize = 0;
     for (let i = 0; i < count; i++) {
       const head = readAt(fd, 46, offset);
-      if (head.readUInt32LE(0) !==
-        0x02014b50) throw Error('ZIP-Eintrag ungültig');
+      if (head.readUInt32LE(0) !== 0x02014b50) throw Error('ZIP-Eintrag ungültig');
       const flags = head.readUInt16LE(8), method = head.readUInt16LE(10);
       const isAes = flags === 0x0801 && method === 99;
-      if (!isAes && (![0, 0x0800].includes(flags) || method !==
-        0)) throw Error('Nicht unterstützte ZIP-Verschlüsselung oder Kompression');
-      const length = head.readUInt16LE(28), extraLen =
-        head.readUInt16LE(30), comment = head.readUInt16LE(32);
+      if (!isAes && (![0, 0x0800].includes(flags) || method !== 0)) throw Error('Nicht unterstützte ZIP-Verschlüsselung oder Kompression');
+      const length = head.readUInt16LE(28), extraLen = head.readUInt16LE(30), comment = head.readUInt16LE(32);
       const name = readAt(fd, length, offset + 46).toString('utf8');
       const extra = readAt(fd, extraLen, offset + 46 + length);
       if (isAes !== aesExtra(extra)) throw Error('ZIP-AES-Feld fehlt oder ist ungültig');
-      const size = head.readUInt32LE(24), compressed =
-        head.readUInt32LE(20), crc = head.readUInt32LE(16);
-      if (!safeName(name) ||
-        seen.has(name)) throw Error('Unsicherer oder doppelter ZIP-Dateiname');
-      if (isAes && (compressed !== size + OVERHEAD || crc !==
-        0)) throw Error('ZIP-AES-Größe ungültig');
+      const size = head.readUInt32LE(24), compressed = head.readUInt32LE(20), crc = head.readUInt32LE(16);
+      if (!safeName(name) || seen.has(name)) throw Error('Unsicherer oder doppelter ZIP-Dateiname');
+      if (isAes && (compressed !== size + OVERHEAD || crc !== 0)) throw Error('ZIP-AES-Größe ungültig');
       if (!isAes && compressed !== size) throw Error('ZIP-Größe ungültig');
       seen.add(name);
       totalSize += size;
-      if (totalSize > 16 * 1024 * 1024 *
-        1024) throw Error('ZIP zu groß für die Prüfung');
+      if (totalSize > 16 * 1024 * 1024 * 1024) throw Error('ZIP zu groß für die Prüfung');
       const localOffset = head.readUInt32LE(42);
-      if (localOffset + 30 + length + extraLen + compressed >
-        centralOffset) throw Error('ZIP-Datenbereich ungültig');
+      if (localOffset + 30 + length + extraLen + compressed > centralOffset) throw Error('ZIP-Datenbereich ungültig');
       const local = readAt(fd, 30, localOffset);
-      if (local.readUInt32LE(0) !== 0x04034b50 || local.readUInt16LE(6) !==
-        flags ||
-        local.readUInt16LE(8) !== method || local.readUInt16LE(26) !== length ||
-        local.readUInt32LE(14) !== crc || local.readUInt32LE(18) !==
-        compressed ||
-        local.readUInt32LE(22) !== size || local.readUInt16LE(28) !==
-        extraLen) throw Error('ZIP-Kopf stimmt nicht überein');
+      if (local.readUInt32LE(0) !== 0x04034b50 || local.readUInt16LE(6) !== flags || local.readUInt16LE(8) !== method || local.readUInt16LE(26) !== length ||
+        local.readUInt32LE(14) !== crc || local.readUInt32LE(18) !== compressed ||
+        local.readUInt32LE(22) !== size || local.readUInt16LE(28) !== extraLen) throw Error('ZIP-Kopf stimmt nicht überein');
       const localName = readAt(fd, length, localOffset + 30).toString('utf8');
       const localExtra = readAt(fd, extraLen, localOffset + 30 + length);
-      if (localName !== name || isAes !==
-        aesExtra(localExtra)) throw Error('ZIP-Dateiname oder AES-Feld ungültig');
+      if (localName !== name || isAes !== aesExtra(localExtra)) throw Error('ZIP-Dateiname oder AES-Feld ungültig');
       const start = localOffset + 30 + length + extraLen;
       entries.push({name, size, crc, start, isAes});
       encrypted ||= isAes;
       offset += 46 + length + extraLen + comment;
     }
-    if (offset !== centralOffset + centralSize ||
-      !seen.has('data/collection.json')) throw Error('ZIP-Verzeichnis unvollständig');
+    if (offset !== centralOffset + centralSize || !seen.has('data/collection.json')) throw Error('ZIP-Verzeichnis unvollständig');
     if (extractTo) fs.mkdirSync(extractTo, {recursive: true, mode: 0o700});
     for (const entry of entries) {
-      let current = 0xffffffff, remaining = entry.size, position =
-        entry.start, context;
+      let current = 0xffffffff, remaining = entry.size, position = entry.start, context;
       if (entry.isAes) {
         if (!password) throw Error('ZIP ist mit AES-256 geschützt. Bitte das Backup-Passwort eingeben.');
         const salt = readAt(fd, 16, position);
@@ -405,19 +370,16 @@ export function inspectReadableZip(archive, extractTo = null, password = '') {
         while (remaining) {
           const bytes = Math.min(BLOCK, remaining);
           const chunk = readAt(fd, bytes, position);
-          const plain = entry.isAes ? (context.mac.update(chunk),
-            context.xor(chunk)) : chunk;
+          const plain = entry.isAes ? (context.mac.update(chunk), context.xor(chunk)) : chunk;
           if (!entry.isAes) current = crc32(plain, current);
           if (out !== undefined) write(out, plain);
           position += bytes; remaining -= bytes;
         }
       } finally {if (out !== undefined) fs.closeSync(out);}
       if (entry.isAes) {
-        const expected = readAt(fd, 10, position), actual = context.mac
-          .digest().subarray(0, 10);
+        const expected = readAt(fd, 10, position), actual = context.mac.digest().subarray(0, 10);
         if (!crypto.timingSafeEqual(actual, expected)) throw Error(`ZIP-Authentifizierung fehlgeschlagen: ${entry.name}`);
-      } else if (((current ^ 0xffffffff) >>> 0) !==
-        entry.crc) throw Error(`ZIP-Prüfsumme ungültig: ${entry.name}`);
+      } else if (((current ^ 0xffffffff) >>> 0) !== entry.crc) throw Error(`ZIP-Prüfsumme ungültig: ${entry.name}`);
     }
     if (extractTo) {
       JSON.parse(fs.readFileSync(path.join(extractTo, 'data/collection.json'), 'utf8'));
@@ -426,6 +388,9 @@ export function inspectReadableZip(archive, extractTo = null, password = '') {
     return {files: entries.length, bytes: fileSize, encrypted};
   } finally {
     fs.closeSync(fd);
-    if (extractTo && !extracted) fs.rmSync(extractTo, {recursive: true, force: true});
+    if (extractTo && !extracted) fs.rmSync(extractTo, {
+      recursive: true,
+      force: true,
+    });
   }
 }

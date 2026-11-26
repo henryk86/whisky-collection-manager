@@ -19,10 +19,7 @@ test(
       ]));
       const extracted = path.join(dir, 'extracted');
       assert.equal(inspectReadableZip(file, extracted).files, 3);
-      assert.equal(
-        fs.readFileSync(path.join(extracted, 'images/bottle.jpg'), 'utf8'),
-        'jpg'
-      );
+      assert.equal(fs.readFileSync(path.join(extracted, 'images/bottle.jpg'), 'utf8'), 'jpg');
     } finally {fs.rmSync(dir, {recursive: true, force: true});}
   }
 );

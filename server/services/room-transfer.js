@@ -9,8 +9,8 @@ import {fail} from '../domain/errors.js';
 const FORMAT = 'wcm-room-transfer';
 const VERSION = 1;
 /**
- * Derives the id result from the supplied values.
- * @return {*} Result computed from the supplied inputs.
+ * Generates an identifier for a transferred storage record.
+ * @return {string} Random UUID.
  */
 const id = () => crypto.randomUUID();
 const furnitureKeys = [
@@ -29,50 +29,41 @@ const furnitureKeys = [
   'doorLeaves',
   'glassFrame',
 ];
-const shelfKeys = ['name', 'capacity', 'front', 'heightCm', 'doorLeaves', 'glassFrame'];
+const shelfKeys = ['name', 'capacity', 'front', 'heightCm', 'doorLeaves',
+  'glassFrame'];
 /**
- * Selects and transforms the pick records.
- *
- * @param {*} source Input source to inspect.
- * @param {*} keys Value used by this operation.
- * @return {!Object} Entries that meet the selection criteria.
+ * Copies permitted own properties for room-transfer serialization.
+ * @param {Object} source Source record.
+ * @param {string[]} keys Permitted property names.
+ * @return {Object} Selected own fields.
  */
-const pick = (source, keys) => Object.fromEntries(keys.filter(key =>
-  Object.hasOwn(source, key)).map(key => [key, source[key]]));
+const pick = (source, keys) => Object.fromEntries(keys.filter(key => Object.hasOwn(source, key)).map(key => [key, source[key]]));
 
 /**
  * Normalizes the key text for subsequent processing.
  *
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {string} Trimmed, lowercase German matching key for a transferred name.
  */
 const key = value => String(value || '').trim().toLocaleLowerCase('de');
 
 /**
- * Derives the source id result from the supplied values.
- *
- * @param {*} room Warehouse room being inspected or modified.
- * @return {*} Result computed from the supplied inputs.
+ * Resolves the original transferred-room identity rather than a newly generated local ID when available.
+ * @param {Object} room Room with optional transfer source ID.
+ * @return {string} Original source ID or the current room ID.
  */
 const sourceId = room => room.transferSourceId || room.id;
 
 /**
- * Enforces the ids precondition.
- *
- * @param {*} ids Identifiers in their current order.
- * @param {*} allIds Value used by this operation.
- * @return {*} Whether the requested condition is met.
+ * Validates the selected room IDs and expands the all-rooms selection.
+ * @param {*} ids The all token or requested room ID array.
+ * @param {string[]} allIds IDs available in the transfer.
+ * @return {string[]} Validated requested IDs.
  */
 function assertIds(ids, allIds) {
   if (ids === 'all') return allIds;
-  if (!Array.isArray(ids) || !ids.length || ids.length > 200 ||
-    !ids.every(item => typeof item === 'string') || new Set(ids).size !==
-    ids.length || ids.some(item => !allIds.includes(item))) {
-    throw fail(
-      'Invalid room selection',
-      400,
-      "api.errors.roomTransferInvalidRoomSelection"
-    );
+  if (!Array.isArray(ids) || !ids.length || ids.length > 200 || !ids.every(item => typeof item === 'string') || new Set(ids).size !== ids.length || ids.some(item => !allIds.includes(item))) {
+    throw fail('Invalid room selection', 400, "api.errors.roomTransferInvalidRoomSelection");
   }
   return ids;
 }
@@ -81,47 +72,35 @@ function assertIds(ids, allIds) {
  * Store portable properties only, not server-side collection metadata.
  *
  * @param {*} room Room model containing dimensions and furniture.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Portable room layout without instance-specific collection metadata.
  */
 function exportLayout(room) {
   return {
     id: sourceId(room), name: room.name, width: room.width, height: room.height,
     furniture: room.furniture.map(f => ({
       id: f.id, ...pick(f, furnitureKeys),
-      doorRanges: (f.doorRanges || []).map(range =>
-        pick(range, ['from', 'to', 'front', 'doorLeaves', 'glassFrame'])),
+      doorRanges: (f.doorRanges || []).map(range => pick(range, ['from', 'to', 'front', 'doorLeaves', 'glassFrame'])),
       shelves: f.shelves.map(s => ({id: s.id, ...pick(s, shelfKeys)})),
     })),
   };
 }
 
 /**
- * Creates room export for room transfer.
+ * Builds an export of selected warehouse rooms with optional bottle assignments.
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {!Array<*>} ids Identifiers in their current order.
- * @param {boolean=} includeAssignments Include assignments used by this
- * operation.
- * @return {!Object} Structured result for the caller.
+ * @param {boolean=} includeAssignments Whether the export includes physical-bottle assignments for the selected rooms.
+ * @return {!Object} Transfer document containing the selected room data.
  */
 export function createRoomExport(warehouse, ids, includeAssignments = false) {
-  if (typeof includeAssignments !== 'boolean') throw fail(
-    'Invalid assignment option',
-    400,
-    "api.errors.roomTransferInvalidAssignmentOption"
-  );
-  const selected = new Set(assertIds(ids, warehouse.rooms.map(room =>
-    room.id)));
-  const rooms = warehouse.rooms.filter(room => selected.has(room.id))
-    .map(exportLayout);
-  const shelfIds = new Set(warehouse.rooms.filter(room =>
-    selected.has(room.id)).flatMap(room => room.furniture.flatMap(f =>
-      f.shelves.map(s => s.id))));
+  if (typeof includeAssignments !== 'boolean') throw fail('Invalid assignment option', 400, "api.errors.roomTransferInvalidAssignmentOption");
+  const selected = new Set(assertIds(ids, warehouse.rooms.map(room => room.id)));
+  const rooms = warehouse.rooms.filter(room => selected.has(room.id)).map(exportLayout);
+  const shelfIds = new Set(warehouse.rooms.filter(room => selected.has(room.id)).flatMap(room => room.furniture.flatMap(f => f.shelves.map(s => s.id))));
   const bottles = new Map((warehouse.bottles || []).map(b => [b.id, b]));
   const assignments = includeAssignments ?
-    Object.entries(warehouse.assignments || {})
-      .filter(([bottleId, shelfId]) => shelfIds.has(shelfId) &&
-        bottles.has(bottleId))
+    Object.entries(warehouse.assignments || {}).filter(([bottleId, shelfId]) => shelfIds.has(shelfId) && bottles.has(bottleId))
       .map(([bottleId, shelfId]) => ({
         bottleId,
         shelfId,
@@ -140,53 +119,26 @@ export function createRoomExport(warehouse, ids, includeAssignments = false) {
 /**
  * Validates bundle for room transfer.
  *
- * @param {*} bundle Bundle used by this operation.
- * @return {*} Entries transformed for the consuming code.
+ * @param {*} bundle Untrusted room-transfer payload to validate before planning an import.
+ * @return {*} Validated room-transfer document.
  */
 function validateBundle(bundle) {
-  if (!bundle || typeof bundle !== 'object' || Array.isArray(bundle) ||
-    bundle.format !== FORMAT || bundle.formatVersion !== VERSION ||
-    !Array.isArray(bundle.rooms) || !bundle.rooms.length || bundle.rooms
-      .length > 200 || !Array.isArray(bundle.assignments) ||
+  if (!bundle || typeof bundle !== 'object' || Array.isArray(bundle) || bundle.format !== FORMAT || bundle.formatVersion !== VERSION ||
+    !Array.isArray(bundle.rooms) || !bundle.rooms.length || bundle.rooms.length > 200 || !Array.isArray(bundle.assignments) ||
     bundle.assignments.length > 100000 ||
-    typeof bundle.includesAssignments !== 'boolean') throw fail(
-      'Invalid or unsupported room transfer file',
-      400,
-      "api.errors.roomTransferInvalidFile"
-    );
+    typeof bundle.includesAssignments !== 'boolean') throw fail('Invalid or unsupported room transfer file', 400, "api.errors.roomTransferInvalidFile");
   const json = JSON.stringify(bundle);
-  if (json.length > 12 * 1024 * 1024) throw fail(
-    'Room transfer file is too large',
-    413,
-    "api.errors.roomTransferTooLarge"
-  );
-  if (bundle.rooms.reduce((sum, r) => sum + (r.furniture?.length || 0), 0) >
-    5000 || bundle.rooms.reduce(
-      (sum, r) => sum + (r.furniture || []).reduce((n, f) => n +
-        (f.shelves?.length || 0), 0),
-      0
-    ) > 20000) throw fail(
-      'Room transfer file exceeds the supported size',
-      413,
-      "api.errors.roomTransferTooManyItems"
-    );
+  if (json.length > 12 * 1024 * 1024) throw fail('Room transfer file is too large', 413, "api.errors.roomTransferTooLarge");
+  if (bundle.rooms.reduce((sum, r) => sum + (r.furniture?.length || 0), 0) > 5000 || bundle.rooms.reduce((sum, r) => sum + (r.furniture || []).reduce((n, f) => n + (f.shelves?.length || 0), 0), 0) > 20000) throw fail('Room transfer file exceeds the supported size', 413, "api.errors.roomTransferTooManyItems");
   // Validation also checks unique IDs, dimensions, furniture boundaries,
   // shelves, doors, etc.
   validateWarehouse({schemaVersion: 1, rooms: bundle.rooms, assignments: {}});
-  const shelves = new Set(bundle.rooms.flatMap(r => r.furniture.flatMap(f =>
-    f.shelves.map(s => s.id))));
+  const shelves = new Set(bundle.rooms.flatMap(r => r.furniture.flatMap(f => f.shelves.map(s => s.id))));
   const seen = new Set();
   for (const item of bundle.assignments) {
-    if (!item || typeof item !== 'object' || typeof item.bottleId !==
-      'string' || item.bottleId.length > 120 ||
-      !shelves.has(item.shelfId) || (item.inventoryNumber != null &&
-        (typeof item.inventoryNumber !== 'string' || item.inventoryNumber
-          .length > 120)) ||
-      seen.has(item.bottleId)) throw fail(
-        'Invalid bottle reference in room transfer file',
-        400,
-        "api.errors.roomTransferInvalidBottle"
-      );
+    if (!item || typeof item !== 'object' || typeof item.bottleId !== 'string' || item.bottleId.length > 120 ||
+      !shelves.has(item.shelfId) || (item.inventoryNumber != null && (typeof item.inventoryNumber !== 'string' || item.inventoryNumber.length > 120)) ||
+      seen.has(item.bottleId)) throw fail('Invalid bottle reference in room transfer file', 400, "api.errors.roomTransferInvalidBottle");
     seen.add(item.bottleId);
   }
   return bundle;
@@ -196,9 +148,9 @@ function validateBundle(bundle) {
  * Dry run and real import use this same calculation, avoiding divergent rules.
  *
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {*} rawBundle Raw bundle used by this operation.
+ * @param {*} rawBundle Untrusted room-transfer JSON; validated before IDs and assignments are mapped.
  * @param {!Object=} options3 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Proposed room additions, replacements, assignment transfers and import summary.
  */
 export function planRoomImport(
   warehouse,
@@ -206,71 +158,69 @@ export function planRoomImport(
   {includeAssignments = true, conflictPolicy = 'skip'} = {}
 ) {
   const bundle = validateBundle(rawBundle);
-  if (typeof includeAssignments !== 'boolean' || !['skip', 'replace']
-    .includes(conflictPolicy)) throw fail(
-      'Invalid room import options',
-      400,
-      "api.errors.roomTransferInvalidOptions"
-    );
+  if (typeof includeAssignments !== 'boolean' || !['skip', 'replace'].includes(conflictPolicy)) throw fail('Invalid room import options', 400, "api.errors.roomTransferInvalidOptions");
   const existing = warehouse.rooms || [];
   const roomActions = [];
   const plannedNames = new Set(existing.map(r => key(r.name)));
-  const destinationIds = new Set(existing.flatMap(room => [
-    room.id,
-    ...room.furniture.flatMap(f => [f.id, ...f.shelves.map(s => s.id)]),
-  ]));
+  const destinationIds = new Set(existing.flatMap(room => [room.id, ...room.furniture.flatMap(f => [f.id, ...f.shelves.map(s => s.id)]),]));
   const remap = new Map();
   let skippedRooms = 0, replacedRooms = 0, blockedRooms = 0;
   const toAdd = [], toReplace = [];
   for (const source of bundle.rooms) {
-    const match = existing.find(room => sourceId(room) === source.id ||
-      room.id === source.id) || existing.find(room => key(room.name) ===
-        key(source.name));
-    if (match && conflictPolicy ===
-      'skip') {skippedRooms++; roomActions.push({name: source.name, action: 'skip'}); continue;}
-    if (!match && plannedNames.has(key(source.name))) {skippedRooms++; roomActions.push({name: source.name, action: 'skip'}); continue;}
+    const match = existing.find(room => sourceId(room) === source.id || room.id === source.id) || existing.find(room => key(room.name) === key(source.name));
+    if (match && conflictPolicy === 'skip') {
+      skippedRooms++; roomActions.push({
+        name: source.name,
+        action: 'skip',
+      }); continue;
+    }
+    if (!match && plannedNames.has(key(source.name))) {
+      skippedRooms++;
+      roomActions.push({name: source.name, action: 'skip'}); continue;
+    }
     if (match && Object.values(warehouse.assignments || {}).some(shelfId =>
       match.furniture.some(f => f.shelves.some(s => s.id === shelfId)))) {
-      blockedRooms++; roomActions.push({name: source.name, action: 'blocked'}); continue;
+      blockedRooms++; roomActions.push({name: source.name, action: 'blocked'});
+      continue;
     }
     /**
-     * Constructs id from the supplied data.
-     * @return {*} Result computed from the supplied inputs.
+     * Allocates an unused UUID and reserves it in the destination ID set.
+     * @return {string} Newly reserved identifier.
      */
     const makeId = () => {
       let fresh; do {
-        fresh =
-          id();
-      } while (destinationIds.has(fresh)); destinationIds.add(fresh); return fresh;
+        fresh = id();
+      } while (destinationIds.has(fresh)); destinationIds.add(fresh);
+      return fresh;
     };
     const target = {
       id: match ? match.id : makeId(), transferSourceId: source.id,
       name: source.name, width: source.width, height: source.height,
       furniture: source.furniture.map(f => ({
         id: makeId(), ...pick(f, furnitureKeys),
-        doorRanges: (f.doorRanges || []).map(range =>
-          pick(range, ['from', 'to', 'front', 'doorLeaves', 'glassFrame'])),
+        doorRanges: (f.doorRanges || []).map(range => pick(range, ['from', 'to', 'front', 'doorLeaves', 'glassFrame'])),
         shelves: f.shelves.map(s => {
-          const newShelf =
-            {id: makeId(), ...pick(s, shelfKeys)}; remap.set(s.id, newShelf.id); return newShelf;
+          const newShelf = {id: makeId(), ...pick(s, shelfKeys)}; remap.set(s.id, newShelf.id); return newShelf;
         }),
       })),
     };
-    if (match) {toReplace.push(target); replacedRooms++; roomActions.push({name: source.name, action: 'replace'});}
-    else {toAdd.push(target); plannedNames.add(key(source.name)); roomActions.push({name: source.name, action: 'add'});}
+    if (match) {
+      toReplace.push(target); replacedRooms++; roomActions.push({
+        name: source.name, action: 'replace',
+      });
+    }
+    else {
+      toAdd.push(target); plannedNames.add(key(source.name));
+      roomActions.push({name: source.name, action: 'add'});
+    }
   }
   const matchingIds = new Map((warehouse.bottles || []).map(b => [b.id, b]));
   const matchingInventory = new Map();
-  for (const b of warehouse.bottles ||
-    []) if (key(b.number)) matchingInventory.set(
-      key(b.number),
-      [...(matchingInventory.get(key(b.number)) || []), b]
-    );
+  for (const b of warehouse.bottles || []) if (key(b.number)) matchingInventory.set(key(b.number), [...(matchingInventory.get(key(b.number)) || []), b]);
   const transfers = [];
   const selectedBottles = new Set();
   const newOccupancy = new Map();
-  const capacities = new Map([...toAdd, ...toReplace].flatMap(r =>
-    r.furniture.flatMap(f => f.shelves.map(s => [s.id, s.capacity]))));
+  const capacities = new Map([...toAdd, ...toReplace].flatMap(r => r.furniture.flatMap(f => f.shelves.map(s => [s.id, s.capacity]))));
   const assignmentStats = {
     inFile: bundle.assignments.length,
     assigned: 0,
@@ -280,26 +230,26 @@ export function planRoomImport(
     capacityExceeded: 0,
     skippedRoom: 0,
   };
-  if (includeAssignments &&
-    bundle.includesAssignments) for (const link of bundle.assignments) {
-      const shelfId = remap.get(link.shelfId);
-      if (!shelfId) {assignmentStats.skippedRoom++; continue;}
-      let bottle = matchingIds.get(link.bottleId);
-      if (!bottle && key(link.inventoryNumber)) {
-        const matches = matchingInventory.get(key(link.inventoryNumber)) || [];
-        if (matches.length > 1) {assignmentStats.ambiguous++; continue;}
-        bottle = matches[0];
-      }
-      if (!bottle) {assignmentStats.unmatched++; continue;}
-      if (selectedBottles.has(bottle.id) ||
-        warehouse.assignments?.[bottle.id]) {assignmentStats.alreadyAssigned++; continue;}
-      const nextCount = (newOccupancy.get(shelfId) || 0) + 1;
-      const limit = capacities.get(shelfId);
-      if (limit !== null && nextCount >
-        limit) {assignmentStats.capacityExceeded++; continue;}
-      selectedBottles.add(bottle.id); newOccupancy.set(shelfId, nextCount);
-      transfers.push([bottle.id, shelfId]); assignmentStats.assigned++;
+  if (includeAssignments && bundle.includesAssignments) for (const link of bundle.assignments) {
+    const shelfId = remap.get(link.shelfId);
+    if (!shelfId) {assignmentStats.skippedRoom++; continue;}
+    let bottle = matchingIds.get(link.bottleId);
+    if (!bottle && key(link.inventoryNumber)) {
+      const matches = matchingInventory.get(key(link.inventoryNumber)) || [];
+      if (matches.length > 1) {assignmentStats.ambiguous++; continue;}
+      bottle = matches[0];
     }
+    if (!bottle) {assignmentStats.unmatched++; continue;}
+    if (selectedBottles.has(bottle.id) || warehouse.assignments?.[bottle.id]) {
+      assignmentStats.alreadyAssigned++;
+      continue;
+    }
+    const nextCount = (newOccupancy.get(shelfId) || 0) + 1;
+    const limit = capacities.get(shelfId);
+    if (limit !== null && nextCount > limit) {assignmentStats.capacityExceeded++; continue;}
+    selectedBottles.add(bottle.id); newOccupancy.set(shelfId, nextCount);
+    transfers.push([bottle.id, shelfId]); assignmentStats.assigned++;
+  }
   return {
     summary: {
       roomsInFile: bundle.rooms.length,

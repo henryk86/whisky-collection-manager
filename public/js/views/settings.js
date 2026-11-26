@@ -1,117 +1,123 @@
+import {createSettingsViewModel} from './models/settings.js';
+import {composeMarkup} from '../ui/render-plan.js';
 import {actionButton} from '../ui/buttons.js';
 import {headingTitle, pageHeader} from '../ui/headers.js';
 import {addActionLabel} from '../ui/action-icons.js';
-import {escapeHtml} from '../ui/dom.js';
-import {availableLanguages, currentLanguage, t} from '../i18n/index.js';
+import {t} from '../i18n/index.js';
 import {renderBackupSection} from './backups.js';
 import {backToCollectionButton} from '../ui/navigation-controls.js';
 import {sectionWorkspace} from '../ui/section-navigation.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates('settings/settings.html');
+
 /**
- * Creates settings view for settings.
+ * Creates the settings renderer with optional user-management content.
  *
  * @param {!Object} state Current application state.
- * @param {!Object=} auth Auth used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {!Object=} auth Authentication state and actions used to render the security settings.
+ * @return {!Object} Settings view rendering operations.
  */
 export function createSettingsView(state, auth = {
   /**
-   * Derives the users section result from the supplied values.
-   * @return {string} Resulting text.
+   * Omits the user-management section from this settings view.
+   * @return {string} Empty section; this view does not render a user-management section.
    */
   usersSection: () => '',
 }) {
   /**
-   * Selects and transforms the settings records.
-   * @return {string} Resulting text.
+   * Prepares settings workspace with navigation and active panel.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Settings workspace with navigation and active panel.
    */
   function settings() {
-    const tabs = [
-      ...['general', 'backups', 'transfer', 'distilleries'],
-      ...(state.auth?.canManageUsers ? ['users'] : []),
-    ].map(id => ({
-      id,
-      label: id === 'users' ? t('auth.users') : t(`settings.navigation.${id}`),
-    }));
-    const active = tabs.some(item => item.id === state.settingsSection) ?
-      state.settingsSection : 'general';
+    const {tabs, active, languages, distillerySearch, distilleries,
+      matchCount, establishedYear} = createSettingsViewModel(state);
     /**
-     * Builds the localized panel text for the current language.
+     * Prepares settings section with visibility derived from the selected tab.
      *
      * @param {*} id Identifier of the affected record.
      * @param {*} content Content to render, store or examine.
-     * @return {string} Resulting text.
+     * @return {!import('../ui/render-plan.js').RenderPlan} Settings section with visibility derived from the selected tab.
      */
     const panel = (id, content) =>
-      `<section class="settings-section" data-settings-panel="${id}"${id ===
-        active ? '' : ' hidden'}>${headingTitle({
+      renderTemplate('settingsSection', {
+        id: id,
+        hiddenAttributes: id === active ? {} : {"hidden": true},
+        headingTitle: headingTitle({
           title: t(`settings.navigation.${id}`),
           level: 2,
           className: 'analytics-section-title',
-        })}${content}</section>`;
-    const general = `    <div class="panel section">${headingTitle({title: t('settings.language.label')})}<label class="form-field" for="ui-language">${t("settings.language.choose")}<select id="ui-language" aria-label="${t("settings.language.label")}">${Object.entries(availableLanguages()).map(([code, name]) => `<option value="${escapeHtml(code)}" ${code === currentLanguage() ? 'selected' : ''}>${escapeHtml(name)}</option>`).join('')}</select></label></div>
-    <form id="collection-settings-form" class="panel section collection-settings">
-    ${headingTitle({title: t('settings.collection.title')})}
-    <label class="form-field" for="established-year">${t("settings.collection.foundingYearLabel")}
-    <input type="number" inputmode="numeric" id="established-year" name="establishedYear" min="1600" max="${new Date().getFullYear()}" step="1" placeholder="z. B. 2018" value="${state.collection.settings?.establishedYear ?? ''}">
-    </label>
-    <button type="submit" class="btn primary">${t("settings.collection.saveFoundingYear")}</button>
-    </form>
-`;
+        }),
+        content: content,
+      });
+    const general = renderTemplate('panel', {
+      headingTitle: headingTitle({title: t('settings.language.label'), }),
+      entries: composeMarkup(languages.map(({code, name, selected}) =>
+        renderTemplate('generalOption', {
+          code, selectedAttributes: selected ? {"selected": true} : {}, name,
+        }))),
+      collectionHeading: headingTitle({title: t('settings.collection.title')}),
+      fullYear: new Date().getFullYear(),
+      establishedYear,
+    });
     const backups = renderBackupSection(state);
-    const transfer = `    <div class="panel section">
-      ${headingTitle({title: t('settings.exports.additionalExports')})}
-      <p class="muted">${t("settings.exports.notFullBackupWarning")}</p>
-      <div class="actions"><a class="btn" href="/api/export/json" download>${t("settings.exports.downloadJson")}</a><a class="btn" href="/api/export/csv" download>${t("settings.exports.downloadCsv")}</a></div>
-      <details class="settings-legacy-import"><summary>${t("settings.imports.legacyJsonImport")}</summary>
-      <p class="warning">${t("settings.imports.jsonDoesNotIncludeAttachments")}</p>
-      <input type="file" id="import-file" accept="application/json,.json">
-      ${actionButton({
-      label: t("settings.imports.importJson"),
-      action: 'import',
-      variant: 'destructive',
-    })}</details>
-    </div>
-`;
-    const distilleries = `    <div class="panel section">
-    <div class="distillery-tools">
-    <input type="search" class="distillery-search" id="distillery-search" value="${escapeHtml(state.distillerySearch || '')}" placeholder="${t("settings.distilleries.searchPlaceholder")}" aria-label="${t("settings.distilleries.search")}" autocomplete="off">
-    <span class="distillery-count" id="distillery-count" role="status" aria-live="polite">${state.collection.distilleries.filter(d => d.name.toLocaleLowerCase('de').includes((state.distillerySearch || '').trim().toLocaleLowerCase('de'))).length} von ${state.collection.distilleries.length}</span>
-    ${actionButton({
-      trustedContent: addActionLabel(t("settings.distilleries.add")),
-      action: 'add-distillery',
-    })}
-    </div>
-    <div class="distillery-list" role="list" aria-label="${t("backups.summary.distilleriesLabel")}">${state.collection.distilleries.slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).map(distillery => `<div class="distillery-row" role="listitem" ${distillery.name.toLocaleLowerCase('de').includes((state.distillerySearch || '').trim().toLocaleLowerCase('de')) ? '' : 'hidden'}>
-    <strong data-i18n-ignore>${escapeHtml(distillery.name)}</strong>
-    <button type="button" class="btn small" data-act="rename-distillery" data-id="${escapeHtml(distillery.id)}" aria-label="${escapeHtml(distillery.name)} umbenennen">${t("common.actions.edit")}</button>
-    </div>`).join('')}<p class="distillery-no-results" ${state.collection
-        .distilleries.some(d => d.name.toLocaleLowerCase('de')
-          .includes((state.distillerySearch || '').trim()
-            .toLocaleLowerCase('de'))) ? 'hidden' :
-        ''}>${t("settings.distilleries.noMatches")}</p></div>
-    </div>`;
+    const transfer = renderTemplate('panel2', {
+      headingTitle: headingTitle({title: t('settings.exports.additionalExports'), }),
+      importButton: actionButton({
+        label: t("settings.imports.importJson"),
+        action: 'import',
+        variant: 'destructive',
+      }),
+    });
+    const distilleryPanel = renderTemplate('distillerySearch', {
+      distillerySearch,
+      length: matchCount,
+      distilleryCount: distilleries.length,
+      addDistilleryButton: actionButton({
+        trustedContent: addActionLabel(t("settings.distilleries.add")),
+        action: 'add-distillery',
+      }),
+      sort: composeMarkup(distilleries.map(distillery =>
+        renderTemplate('distilleryRow', {
+          hiddenAttributes: distillery.visible ? {} : {"hidden": true},
+          name: distillery.name, id: distillery.id, ariaLabel: distillery.name,
+        }))),
+      hiddenAttributes: matchCount ? {"hidden": true} : {},
+
+    });
     const workspace = sectionWorkspace(
       {
         sections: tabs, activeId: active,
         action: 'settings-section', itemAttribute: 'data-settings-section',
         label: t('settings.navigation.label'), switchKind: 'settings',
       },
-      panel('general', general) + panel('backups', backups) +
-      panel('transfer', transfer) + panel('distilleries', distilleries) +
-      (state.auth?.canManageUsers ?
-        `<section class="settings-section" data-settings-panel="users"${active === 'users' ? '' : ' hidden'}>${headingTitle({
-          title: t('auth.users'),
-          level: 2,
-          className: 'analytics-section-title',
-        })}<div id="auth-users-content">${auth.usersSection()}</div></section>` : '')
+      composeMarkup(
+        panel('general', general),
+        panel('backups', backups),
+        panel('transfer', transfer),
+        panel('distilleries', distilleryPanel),
+        (state.auth?.canManageUsers ?
+          renderTemplate('settingsSection2', {
+            usersAttributes: active === 'users' ? {} : {"hidden": true},
+            headingTitle: headingTitle({
+              title: t('auth.users'),
+              level: 2,
+              className: 'analytics-section-title',
+            }),
+            usersSection: auth.usersSection(),
+          }) : '')
+      )
     );
-    return `<div class="analytics-page settings-page">${pageHeader({
-      title: t('settings.page.title'),
-      eyebrow: t('settings.page.eyebrow'),
-      intro: t('settings.page.intro'),
-      className: 'settings-heading',
-      actions: String(backToCollectionButton),
-    })}${workspace}</div>`;
+    return renderTemplate('analyticsPage', {
+      pageHeader: pageHeader({
+        title: t('settings.page.title'),
+        eyebrow: t('settings.page.eyebrow'),
+        intro: t('settings.page.intro'),
+        className: 'settings-heading',
+        actions: backToCollectionButton(),
+      }),
+      workspace: workspace,
+    });
   }
   return settings;
 }
@@ -120,12 +126,11 @@ export function createSettingsView(state, auth = {
  * Show a settings area without replacing forms or losing unsaved field values.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @param {*} container Container used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} container Settings workspace containing section navigation and panels.
+ * @return {boolean} True if the requested settings section was found and activated.
  */
 export function activateSettingsSection(id, container) {
-  if (!['general', 'backups', 'transfer', 'distilleries', 'users']
-    .includes(id) || !container ||
+  if (!['general', 'backups', 'transfer', 'distilleries', 'users'].includes(id) || !container ||
     !container.querySelector(`[data-settings-panel="${id}"]`)) return false;
   for (const button of container.querySelectorAll('[data-settings-section]')) {
     const active = button.dataset.settingsSection === id;
@@ -135,6 +140,7 @@ export function activateSettingsSection(id, container) {
   }
   const select = container.querySelector('[data-section-switch="settings"]');
   if (select) select.value = id;
-  for (const panel of container.querySelectorAll('[data-settings-panel]')) panel.hidden = panel.dataset.settingsPanel !== id;
+  for (const panel of container.querySelectorAll('[data-settings-panel]'))
+    panel.hidden = panel.dataset.settingsPanel !== id;
   return true;
 }

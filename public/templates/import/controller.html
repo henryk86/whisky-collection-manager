@@ -1,0 +1,67 @@
+<!-- wcm-template:importStatus -->
+<p class="hint" id="import-status">{{text:message}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:hint -->
+<p class="hint">{{t:imports.images.physicalBottleOnlyNotice}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:importImage -->
+<label><input id="import-image" type="checkbox" checked> {{t:imports.images.attachAsLocalFirstBottle}}</label>
+<!-- /wcm-template -->
+
+<!-- wcm-template:openPhoto -->
+<div class="import-photo"><button
+    type="button"
+    class="import-preview-photo-open"
+    data-act="open-photo"
+    title="{{t:imports.images.enlarge}}"
+    aria-label="{{attr:openOverlay}}"><img src="/api/import-image/stage/{{attr:imageToken}}" alt="{{attr:reference}}"></button>{{content:hint}}<small class="hint">{{content:referenceNotOwnership}}</small>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:panel -->
+<div class="panel import-preview">
+  <h3>{{content:title}}</h3>
+  <p class="hint">{{t:imports.import.sourceAndSaveInstructions}}</p>{{content:openPhoto}}
+  <div class="import-choice-list" role="group" aria-label="{{t:imports.import.selectFields}}">
+    {{content:distilleryChoice}}{{content:fieldChoices}}
+  </div>
+  <div class="actions import-preview-actions">
+    <button type="button" class="btn primary" data-act="import-apply">{{t:imports.import.applySelectedFields}}</button>
+  </div>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:importFromExtensionP -->
+<p>{{content:unsavedDialogNotice}}</p>
+<div class="actions">
+  <button class="btn" type="button" data-act="close-modal">{{t:imports.import.keepCurrentInput}}</button>
+  <button class="btn primary" type="button" data-act="import-continue">{{t:imports.import.discardPreviousDialog}}</button>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:processExtensionImportOption -->
+<option value="{{text:id}}">{{text:inventoryNumber}} · {{content:volumeType}}</option>
+<!-- /wcm-template -->
+
+<!-- wcm-template:formField -->
+<label class="form-field">{{t:imports.images.attachExistingBottle}}<select id="import-existing-photo-bottle">{{content:bottles}}</select></label><button class="btn small" type="button" data-act="import-existing-photo">{{t:imports.images.copyToSelectedBottle}}</button>
+<!-- /wcm-template -->
+
+<!-- wcm-template:importExistingPhoto -->
+<div class="import-existing-photo">
+  <p><strong>{{content:preparedLocally}}</strong> {{t:imports.images.addExistingOrNewNotice}}</p>{{content:formField}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:panel2 -->
+<div class="panel">
+  <p>{{content:existingBottlingPrefix}} <strong>{{text:name}}</strong> {{t:imports.import.existingBottlingSuffix}}</p>
+  <p class="hint">{{t:imports.import.existingBottlingOptions}}</p>{{content:importExistingPhoto}}
+  <div class="actions">
+    <button class="btn primary" data-act="import-existing-bottle">{{t:imports.bottles.addAnother}}</button>
+    <button class="btn" data-act="import-existing-edit">{{t:imports.import.reviewMasterData}}</button>
+    <button class="btn" data-act="close-modal">{{t:common.actions.cancel}}</button>
+  </div>
+</div>
+<!-- /wcm-template -->

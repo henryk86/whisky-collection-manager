@@ -78,11 +78,7 @@ test(
       collection,
       'persisted collection remains visible after a different resource fails'
     );
-    assert.deepEqual(
-      state.warehouse,
-      {rooms: []},
-      'failed resource keeps its prior state'
-    );
+    assert.deepEqual(state.warehouse, {rooms: []}, 'failed resource keeps its prior state');
   }
 );
 

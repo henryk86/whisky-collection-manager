@@ -2,7 +2,7 @@
 
 ## Schnellstart
 
-Node.js ≥ 20. `npm start` startet den Setup-/Starthelfer; `npm run dev` startet den Node-Server im Watch-Modus. Für Browser-Tests zusätzlich Chromium installieren:
+Node.js ≥ 20. `npm start` startet den Setup-/Starthelfer; `npm run dev` startet den Node-Server im Watch-Modus. Unit- und Integrationstests benötigen kein Chromium. Chromium nur für die Browser- und visuellen Tests installieren:
 
 ```bash
 npm ci
@@ -18,7 +18,7 @@ npm run test:visual
 ## Wo ist die Änderung richtig?
 
 - UI-Views und Ereignisse: `public/js/views/`, `public/js/events.js`; Zuständigkeiten des Designsystems in [Designsystem-Entwicklung](DESIGNSYSTEM_ENTWICKLUNG.md).
-- API und serverseitige Anwendungsfälle: `server/routes.js`, `server/services/`, `server/domain/`; JSON-Zugriff: `server/storage/`.
+- API und serverseitige Anwendungsfälle: `server/routes/` (fachbezogene Endpunktdefinitionen), `server/services/`, `server/domain/`; JSON-Zugriff: `server/storage/`. Neue Endpunkte im zuständigen Fachmodul definieren und neue Module in `server/routes/index.js` registrieren. Sicherheitsprüfungen und allgemeine HTTP-Antwortlogik bleiben zentral.
 - Domänenreine Logik: `shared/` und `public/js/domain/`; kein DOM in `shared/`.
 - Sprachtexte: `public/locales/de.json` und `en.json`, im Renderer `t(key)`; Benutzereingaben für HTML escapen, keine fest einkodierten deutschen GUI-Texte.
 - CSS: gemeinsame Komponenten/Tokens unter `public/styles/`, Fachstile nur für spezielle Ansichten. Den äußeren Seitenrahmen nicht pro Fachansicht redefinieren.
@@ -33,14 +33,27 @@ Für JavaScript gilt verbindlich der [Google JavaScript Style Guide](https://goo
 ```bash
 npm run format:js
 npm run format:check
-npm run check:line-width
 npm run check:jsdoc
 npm run check
 ```
 
-Jede benannte Funktion, auch interne Funktionen, benannte Arrow-Funktionen, Klassenmethoden, Accessors und benannte Objekthandler, benötigt **vollständige, typisierte JSDoc** ohne Alt-Ausnahmen. In sämtlichen JavaScript-Dateien gelten dieselben Regeln: aussagekräftiger Zweck, jeder Parameter mit korrektem Namen, Typ und Erklärung, `@return` bei einem Rückgabewert, bei Bedarf `@throws`, Nebenwirkungen und Vertrauensgrenzen. Dies gilt auch für Server- und Testcode. Anonyme Inline-Callbacks ohne eigene Schnittstelle benötigen keine separaten JSDoc-Blöcke. Keine erfundenen Typen oder Kommentare, die nur den Namen wiederholen. `check:jsdoc` prüft **sämtliche JavaScript-Dateien** auf fehlende oder unvollständige JSDoc-Verträge für alle benannten Funktionen sowie die öffentlichen Exportverträge. Funktionen und Methoden werden durch Leerzeilen getrennt. Neue oder veränderte JavaScript-Zeilen überschreiten 80 Zeichen nicht (mit den offiziellen Ausnahmen). Unveränderte Altzeilen sind in `scripts/style-width-legacy.json` erfasst und müssen bei Bearbeitung bereinigt werden.
+Jede benannte Funktion im Produktiv- und Werkzeugcode, auch interne Funktionen, benannte Arrow-Funktionen, Klassenmethoden, Accessors und benannte Objekthandler, benötigt **vollständige, typisierte JSDoc**: aussagekräftiger Zweck, jeder Parameter mit korrektem Namen, Typ und Erklärung, `@return` bei einem Rückgabewert, bei Bedarf `@throws`, Nebenwirkungen und Vertrauensgrenzen. Dies gilt insbesondere auch für Server, Worker und Shared Modules. Unter `tests/` darf die JSDoc für lokale Hilfsfunktionen und Test-Doubles kurz oder ganz entfallen; vorhandene Tags müssen syntaktisch gültig sein und dürfen keine doppelten oder eindeutig falschen Parameternamen enthalten. Wiederverwendbare Test-Helfer mit nicht offensichtlichem Verhalten sollen dokumentiert werden. Die Anforderungen an Assertions, Testabdeckung und Testverhalten bleiben unverändert. Anonyme Inline-Callbacks ohne eigene Schnittstelle benötigen keine separaten JSDoc-Blöcke. Keine erfundenen Typen oder Kommentare, die nur den Namen wiederholen. JSDoc auf Englisch schreiben. Typen an tatsächlichen Rückgabepfaden und Aufrufstellen prüfen; RenderPläne sind kein HTML-String. Fachliche Strukturen mit wiederverwendbaren Typen am zuständigen Modul dokumentieren. Defaults als optionale Parameter kennzeichnen und Einheiten, Nullwerte, relevante Nebenwirkungen und Fehler beschreiben. Keine Mindestlänge für Kommentare und keine Platzhaltertexte. Die statische Prüfung erfasst nur eindeutig erkennbare Vertragsverletzungen, nicht die vollständige fachliche Korrektheit. `check:jsdoc` prüft vollständige Verträge und bekannte Platzhaltermuster im Produktiv- und Werkzeugcode, die öffentlichen Exportverträge sowie vorhandene Testdokumentation nach den erleichterten Kriterien. `check-js-types.js` prüft mit TypeScript `checkJs` sämtliche projekteigenen Produktiv- und Werkzeugmodule. Neue Module in allen Quellverzeichnissen werden automatisch erfasst; `npm run check:jsdoc:all` führt dieselbe verbindliche Prüfung aus. Node-Typen werden über die festgelegten Entwicklungsabhängigkeiten bezogen. Für die im Browser über absolute URLs eingebundenen Fremdbibliotheken beschränkt `types/browser-vendors.d.ts` die Typverträge auf die tatsächlich genutzten APIs. Diese Deklarationen sind bei einer Aktualisierung der Bibliotheken mitzuprüfen. Tests sind nicht Bestandteil der semantischen Typprüfung. Funktionen und Methoden werden durch Leerzeilen getrennt. Es gibt kein verbindliches Zeichenlimit für JavaScript-Zeilen. Lesbarkeit hat Vorrang; lange Ausdrücke bei Bedarf fachlich sinnvoll gliedern. Strings, Übersetzungsschlüssel, URLs, Selektoren, RegExps und Template-Literale niemals zur Einhaltung einer Zeilenlänge durch Zeilenfortsetzungen zerreißen.
 
-Der bereits vorhandene TypeScript-Formatter wird zusammen mit syntaxbewussten Umbruch- und Leerzeilenregeln nur zur **Formatierung** eingesetzt. HTML-Templates, RegExps und lange Literale dürfen nicht blind aufgeteilt werden. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
+Der bereits vorhandene TypeScript-Formatter wird zusammen mit syntaxbewussten Abstandsregeln nur zur **Formatierung** eingesetzt. Der Formatter erzwingt keine Zeilenlänge und teilt keine Literale auf. Bei nicht automatisch prüfbaren Google-Konventionen ist die Code-Review-Prüfung verpflichtend.
+
+## Zeilenenden
+
+Alle Textdateien verwenden plattformübergreifend LF. `.gitattributes` erzwingt LF beim Git-Checkout, auch unter Windows. Die VS-Code-Workspace-Einstellung `files.eol` und `.editorconfig` geben LF für neue Dateien vor. Bereits geöffnete CRLF-Dateien bei Bedarf über die Statusleiste von CRLF auf LF umstellen und speichern. Binärdateien werden von Git nicht als Text normalisiert.
+
+## HTML-Template-Formatierung
+
+Externe HTML-Templates liegen zentral und fachlich gruppiert unter
+`public/templates/`. Module laden sie mit einem relativen Namen wie
+`loadTemplates('warehouse/warehouse.html')`. Sie werden mit `npm run format:html` formatiert und mit
+`npm run format:html:check` geprüft. Die Formatierung bewahrt Inline-Text,
+Attributwerte, Platzhalter und whitespace-sensitive Elemente. Sie wird auch
+in `npm run check` geprüft. Neue dynamische HTML-Strings sind unzulässig;
+Views kombinieren RenderPläne und montieren native DOM-Nodes.
 
 ## CSS-Formatierung
 
@@ -62,8 +75,8 @@ Der statische `npm run check` prüft Dokumentationslinks und ausgewählte Inkons
 ## Tests
 
 - `npm run check`: Syntax, Imports, Sprachdateien, Links, Deploymentregeln.
-- `npm test`: Unit- und Integrationstests (OpenSSL für einzelne TLS-Tests).
-- `npm run test:browser`: Playwright/Chromium einschließlich echter History/Reload (nicht im DOM-only-Modus).
+- `npm test`: Unit- und Integrationstests ohne Browser (OpenSSL für einzelne TLS-Tests).
+- `npm run test:browser`: Playwright/Chromium für isolierte UI-Komponenten und die vollständige Anwendung einschließlich echter History/Reload (nicht im DOM-only-Modus).
 - `npm run test:visual`: lokale Aufnahmen mit Überlauf- und Interaktionsprüfungen. PR-CI vergleicht Basis und Merge-Kandidat mit demselben Browser; Geometrie- und Pixeländerungen benötigen eine gezielte Freigabe. Details: [Visuelle Tests](DESIGNSYSTEM_VISUELLE_TESTS.md).
 - `npm run verify`: `npm run check && npm test`.
 

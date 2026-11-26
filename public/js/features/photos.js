@@ -4,14 +4,13 @@ import {request} from '../api.js';
  * Reads image dimensions or pixel data for photo processing.
  *
  * @param {*} file Source file or file name being processed.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Decoded image dimensions and RGBA pixel data.
  */
 export async function imageData(file) {
   if (file.size > 10000000) {
     throw Error(t('features.validation.photoTooLarge'));
   }
-  if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    .includes(file.type)) {
+  if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
     throw Error(t('features.validation.photoUnsupported'));
   }
   return new Promise((resolve, reject) => {
@@ -31,9 +30,7 @@ export async function imageData(file) {
 export async function uploadPhotos(bottleId, files) {
   for (const file of files) {
     await request(`/api/bottles/${bottleId}/photos`, {
-      method: 'POST', body: JSON.stringify({
-        image: await imageData(file),
-      }),
+      method: 'POST', body: JSON.stringify({image: await imageData(file), }),
     });
   }
 }

@@ -23,26 +23,21 @@ const MANIFEST_FILES = [
   'public/ai/licenses/ONNX-Runtime-Web-NOTICE.txt',
 ];
 /**
- * Tests input text against the valid sha pattern.
+ * Recognizes lowercase hexadecimal SHA-256 digests.
  *
  * @param {*} value Value to process.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True for a 64-character lowercase hexadecimal digest.
  */
-const validSha = value => typeof value === 'string' && /^[0-9a-f]{64}$/
-  .test(value);
+const validSha = value => typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
 
 /**
- * Validates the safe path state and rejects invalid inputs.
- *
- * @param {*} root Root node or directory for the operation.
- * @param {*} relative Relative path or position to resolve.
- * @return {*} Combined text from the input values.
+ * Resolves a bundle member beneath its root and rejects traversal or absolute paths.
+ * @param {string} root Bundle root directory.
+ * @param {string} relative Untrusted relative member name.
+ * @return {string} Resolved path within the root.
  */
 function safePath(root, relative) {
-  if (typeof relative !== 'string' || !relative || path.posix
-    .isAbsolute(relative)
-    || relative.includes('\\') || relative.split('/').some(part => !part ||
-      part === '.' || part === '..')) {
+  if (typeof relative !== 'string' || !relative || path.posix.isAbsolute(relative) || relative.includes('\\') || relative.split('/').some(part => !part || part === '.' || part === '..')) {
     throw new Error(`Unsafe offline archive path: ${relative}`);
   }
   const target = path.join(root, relative);
@@ -58,10 +53,9 @@ function safePath(root, relative) {
 }
 
 /**
- * Derives the hash file result from the supplied values.
- *
- * @param {*} filename File path or name to process.
- * @return {*} Result computed from the supplied inputs.
+ * Streams a file into SHA-256 without loading the entire bundle member into memory.
+ * @param {string} filename File path to hash.
+ * @return {string} Lowercase hexadecimal SHA-256 digest.
  */
 function hashFile(filename) {
   const hash = crypto.createHash('sha256');
@@ -87,8 +81,7 @@ function hashFile(filename) {
 function allFiles(root, relative) {
   const directory = safePath(root, relative);
   if (!fs.existsSync(directory)) throw new Error(`Missing offline npm cache: ${relative}`);
-  const entries = fs.readdirSync(directory, {withFileTypes: true})
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const entries = fs.readdirSync(directory, {withFileTypes: true}).sort((a, b) => a.name.localeCompare(b.name));
   return entries.flatMap(entry => {
     const name = `${relative}/${entry.name}`;
     if (entry.isSymbolicLink()) throw new Error(`Symlink in offline npm cache: ${name}`);
@@ -102,7 +95,7 @@ function allFiles(root, relative) {
  * Packages a release for offline installation with integrity metadata.
  *
  * @param {*=} root Root element or directory.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Manifest of sealed offline installation files and their checksums.
  */
 export function sealOfflineBundle(root = ROOT) {
   const cachePath = path.join(root, '.offline', 'npm-cache');
@@ -119,12 +112,14 @@ export function sealOfflineBundle(root = ROOT) {
   const files = [...MANIFEST_FILES, ...cached];
   const hashes = Object.fromEntries(files.sort().map(name => {
     const filename = safePath(root, name);
-    if (!fs.statSync(filename)
-      .isFile()) throw new Error(`Missing required offline asset: ${name}`);
+    if (!fs.statSync(filename).isFile()) throw new Error(`Missing required offline asset: ${name}`);
     return [name, hashFile(filename)];
   }));
   const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
-  const manifest = {schema: 1, version, npm: 'locked npm ci --offline', assets: hashes};
+  const manifest = {
+    schema: 1, version, npm: 'locked npm ci --offline',
+    assets: hashes,
+  };
   const destination = path.join(root, OFFLINE_MANIFEST);
   fs.mkdirSync(path.dirname(destination), {recursive: true});
   fs.writeFileSync(destination, JSON.stringify(manifest, null, 2) + '\n');
@@ -142,45 +137,37 @@ export function verifyOfflineBundle(root = ROOT) {
   if (!fs.existsSync(name)) throw new Error('Offline bundle manifest missing.');
   const manifest = JSON.parse(fs.readFileSync(name, 'utf8'));
   const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
-  if (manifest.schema !== 1 || manifest.version !== version ||
-    !manifest.assets || Array.isArray(manifest.assets)
-    || typeof manifest.assets !==
-    'object') throw new Error('Offline bundle metadata/version invalid.');
+  if (manifest.schema !== 1 || manifest.version !== version || !manifest.assets || Array.isArray(manifest.assets)
+    || typeof manifest.assets !== 'object') throw new Error('Offline bundle metadata/version invalid.');
   for (const required of MANIFEST_FILES) {
     if (!validSha(manifest.assets[required])) throw new Error(`Offline bundle missing required hash: ${required}`);
   }
   const entries = Object.entries(manifest.assets);
-  if (!entries.some(([name]) =>
-    name.startsWith('.offline/npm-cache/_cacache/content-v2/'))) {
+  if (!entries.some(([name]) => name.startsWith('.offline/npm-cache/_cacache/content-v2/'))) {
     throw new Error('Offline bundle has no npm tarball content.');
   }
   for (const [relative, checksum] of entries) {
-    if (!MANIFEST_FILES.includes(relative) &&
-      !relative.startsWith('.offline/npm-cache/_cacache/')) {
+    if (!MANIFEST_FILES.includes(relative) && !relative.startsWith('.offline/npm-cache/_cacache/')) {
       throw new Error(`Unexpected file in offline manifest: ${relative}`);
     }
     if (!validSha(checksum)) throw new Error(`Invalid checksum in offline manifest: ${relative}`);
     const filename = safePath(root, relative);
-    if (!fs.existsSync(filename) || !fs.statSync(filename).isFile() ||
-      hashFile(filename) !== checksum) {
+    if (!fs.existsSync(filename) || !fs.statSync(filename).isFile() || hashFile(filename) !== checksum) {
       throw new Error(`Offline asset missing or modified: ${relative}`);
     }
   }
   return manifest;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) ===
-  fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const command = process.argv[2];
     if (command === 'seal') {
       const manifest = sealOfflineBundle();
-      console.log(`Offline archive sealed: ${Object.keys(manifest.assets)
-        .length} verified files (v${manifest.version}).`);
+      console.log(`Offline archive sealed: ${Object.keys(manifest.assets).length} verified files (v${manifest.version}).`);
     } else if (command === 'verify') {
       const manifest = verifyOfflineBundle();
-      console.log(`Offline archive valid: ${Object.keys(manifest.assets)
-        .length} SHA-256 checks (v${manifest.version}).`);
+      console.log(`Offline archive valid: ${Object.keys(manifest.assets).length} SHA-256 checks (v${manifest.version}).`);
     } else throw new Error('Usage: node scripts/offline-bundle.js seal|verify');
   } catch (error) {console.error(error.message); process.exitCode = 1;}
 }

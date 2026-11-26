@@ -53,7 +53,10 @@ const createProject = (envContent = null, legacyEnv = null) => {
     /**
      * Updates the cleanup state for its caller.
      */
-    cleanup: () => {fs.rmSync(root, {recursive: true, force: true}); fs.rmSync(home, {recursive: true, force: true});},
+    cleanup: () => {
+      fs.rmSync(root, {recursive: true, force: true});
+      fs.rmSync(home, {recursive: true, force: true});
+    },
   };
 };
 
@@ -86,7 +89,8 @@ test(
       run();
       assert.equal(
         fs.readFileSync(path.join(root, '.env'), 'utf8'),
-        template + `\n# Persistente Laufzeitdaten (ausserhalb des Git-Repositories)\nWCM_DATA_DIR=${path.dirname(cert).split('/secrets/certs')[0]}\n`
+        template +
+        `\n# Persistente Laufzeitdaten (ausserhalb des Git-Repositories)\nWCM_DATA_DIR=${path.dirname(cert).split('/secrets/certs')[0]}\n`
       );
       const token = path.join(path.dirname(cert), '../backup-admin-token');
       const tokenBefore = fs.readFileSync(token);
@@ -101,23 +105,15 @@ test(
         certificateHas(cert, '-checkhost', name);
       }
       for (const ip of ['127.0.0.1', '192.168.178.40']) certificateHas(cert, '-checkip', ip);
-      assert.equal(
-        fs.statSync(path.join(path.dirname(cert), 'server-key.pem'))
-          .mode & 0o777,
-        0o600
-      );
+      assert.equal(fs.statSync(path.join(path.dirname(cert), 'server-key.pem')).mode & 0o777, 0o600);
       run(); // Regular setup must never overwrite the existing certificate.
       assert.deepEqual(fs.readFileSync(cert), firstCert);
       run(['--renew-cert']);
       assert.notDeepEqual(fs.readFileSync(cert), firstCert);
       assert.deepEqual(fs.readFileSync(token), tokenBefore);
-      const backups = fs.readdirSync(path.dirname(cert)).filter(name =>
-        name.startsWith('previous.'));
+      const backups = fs.readdirSync(path.dirname(cert)).filter(name => name.startsWith('previous.'));
       assert.equal(backups.length, 1);
-      assert.deepEqual(
-        fs.readFileSync(path.join(path.dirname(cert), backups[0], 'server-cert.pem')),
-        firstCert
-      );
+      assert.deepEqual(fs.readFileSync(path.join(path.dirname(cert), backups[0], 'server-cert.pem')), firstCert);
     } finally {
       cleanup();
     }
@@ -140,19 +136,10 @@ test(
       certificateHas(project.cert, '-checkhost', 'backup.lan', false);
       certificateHas(project.cert, '-checkip', '10.20.30.40', false);
       const initialCert = fs.readFileSync(project.cert);
-      const changedEnv = initialEnv
-        .replace(
-          'home-pi, home-pi.local',
-          'home-pi, home-pi.local, backup.lan, office-pi.local'
-        )
-        .replace('192.168.178.40', '192.168.178.40, 10.20.30.40');
+      const changedEnv = initialEnv.replace('home-pi, home-pi.local', 'home-pi, home-pi.local, backup.lan, office-pi.local').replace('192.168.178.40', '192.168.178.40, 10.20.30.40');
       fs.writeFileSync(path.join(project.root, '.env'), changedEnv);
       project.run();
-      assert.deepEqual(
-        fs.readFileSync(project.cert),
-        initialCert,
-        'Only --renew-cert may replace certificate'
-      );
+      assert.deepEqual(fs.readFileSync(project.cert), initialCert, 'Only --renew-cert may replace certificate');
       project.run(['--renew-cert']);
       certificateHas(project.cert, '-checkhost', 'backup.lan');
       certificateHas(project.cert, '-checkhost', 'office-pi.local');
@@ -160,10 +147,7 @@ test(
       certificateHas(project.cert, '-checkhost', 'whisky-pi.local', false);
       certificateHas(project.cert, '-checkip', '10.20.30.40');
       certificateHas(project.cert, '-checkip', '127.0.0.1');
-      assert.match(
-        fs.readFileSync(path.join(project.root, '.env'), 'utf8'),
-        /WCM_DATA_DIR=/
-      );
+      assert.match(fs.readFileSync(path.join(project.root, '.env'), 'utf8'), /WCM_DATA_DIR=/);
     } finally {
       project.cleanup();
     }
@@ -214,22 +198,13 @@ test('Legacy directories are untouched and never migrated', () => {
   const project = createProject();
   try {
     fs.mkdirSync(path.join(project.deploy, 'storage/data'), {recursive: true});
-    fs.writeFileSync(
-      path.join(project.deploy, 'storage/data/collection.json'),
-      '{"legacy":true}'
-    );
+    fs.writeFileSync(path.join(project.deploy, 'storage/data/collection.json'), '{"legacy":true}');
     project.run();
     assert.equal(
-      fs.readFileSync(
-        path.join(project.deploy, 'storage/data/collection.json'),
-        'utf8'
-      ),
+      fs.readFileSync(path.join(project.deploy, 'storage/data/collection.json'), 'utf8'),
       '{"legacy":true}'
     );
-    assert.equal(
-      fs.existsSync(path.join(project.dataDir, 'storage/data/collection.json')),
-      false
-    );
+    assert.equal(fs.existsSync(path.join(project.dataDir, 'storage/data/collection.json')), false);
     assert.throws(() => project.run(['--migrate-data']));
   } finally {project.cleanup();}
 });

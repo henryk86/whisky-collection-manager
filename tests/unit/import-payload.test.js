@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {normalizeImportPayload} from '../../public/js/features/import/payload.js';
-import {validateExtensionPayload} from '../../public/js/features/whiskybase/payload.js';
+import {normalizeImportPayload}
+  from '../../public/js/features/import/payload.js';
+import {validateExtensionPayload}
+  from '../../public/js/features/whiskybase/payload.js';
 
 test(
   'a provider-neutral payload retains allowed fields and strips unknown data',
@@ -35,19 +37,13 @@ test(
         whiskybaseUrl: 'https://whiskybase.com/whiskies/whisky/15/example',
       },
     };
-    assert.equal(
-      Object.hasOwn(
-        normalizeImportPayload(raw, {referenceId: 'EX-15'}).fields,
-        'whiskybaseId'
-      ),
-      false
-    );
+    assert.equal(Object.hasOwn(normalizeImportPayload(raw, {referenceId: 'EX-15'}).fields, 'whiskybaseId'), false);
     assert.equal(validateExtensionPayload(raw).fields.whiskybaseId, '15');
-    assert.equal(
-      validateExtensionPayload(raw).fields.whiskybaseUrl,
-      raw.fields.whiskybaseUrl
-    );
-    assert.throws(() => validateExtensionPayload({...raw, fields: {...raw.fields, whiskybaseUrl: 'https://evil.invalid/'}}));
+    assert.equal(validateExtensionPayload(raw).fields.whiskybaseUrl, raw.fields.whiskybaseUrl);
+    assert.throws(() => validateExtensionPayload({
+      ...raw,
+      fields: {...raw.fields, whiskybaseUrl: 'https://evil.invalid/'},
+    }));
   }
 );
 
@@ -56,26 +52,14 @@ test(
   () => {
     const raw = {version: 2, source: 'external', fields: {name: 'Example'}};
     assert.throws(
-      () => normalizeImportPayload(
-        {...raw, imageToken: '../../../bad'},
-        {referenceId: 'EXT-1'}
-      ),
+      () => normalizeImportPayload({...raw, imageToken: '../../../bad'}, {referenceId: 'EXT-1'}),
       /Bild-Token/
     );
     assert.throws(
-      () => normalizeImportPayload(
-        {...raw, fields: {name: '  '}},
-        {referenceId: 'EXT-1'}
-      ),
+      () => normalizeImportPayload({...raw, fields: {name: '  '}}, {referenceId: 'EXT-1'}),
       /Whiskyname/
     );
-    assert.throws(
-      () => normalizeImportPayload({...raw, fields: []}, {referenceId: 'EXT-1'}),
-      /Importdaten/
-    );
-    assert.throws(
-      () => normalizeImportPayload(raw, {referenceId: ''}),
-      /Importdaten/
-    );
+    assert.throws(() => normalizeImportPayload({...raw, fields: []}, {referenceId: 'EXT-1', }), /Importdaten/);
+    assert.throws(() => normalizeImportPayload(raw, {referenceId: ''}), /Importdaten/);
   }
 );

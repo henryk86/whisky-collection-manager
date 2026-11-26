@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FURNITURE_TYPES, SHELF_FRONTS} from '../../shared/warehouse-compartments.js';
-import {name, capacity, shelfFront, ensureShelfHeights, layout} from '../../server/domain/warehouse-fields.js';
+import {FURNITURE_TYPES, SHELF_FRONTS}
+  from '../../shared/warehouse-compartments.js';
+import {name, capacity, shelfFront, ensureShelfHeights, layout}
+  from '../../server/domain/warehouse-fields.js';
 import {validateWarehouse} from '../../server/storage/warehouse-store.js';
 
 const room = {id: 'room-1', name: 'Test', width: 4, height: 3, furniture: []};
@@ -35,10 +37,7 @@ test(
         assignments: {},
       }));
     }
-    assert.equal(
-      layout({name: 'Sonstiges', type: 'unknown'}, room).type,
-      'sonstiges'
-    );
+    assert.equal(layout({name: 'Sonstiges', type: 'unknown'}, room).type, 'sonstiges');
   }
 );
 
@@ -54,10 +53,7 @@ test(
     assert.throws(() => shelfFront('unsupported'), /Fachfront/);
     assert.equal(name('  Regal  '), 'Regal');
     assert.throws(() => name('  '), /Name/);
-    assert.throws(
-      () => layout({name: 'Grenze', x: 3.8, width: 1}, room),
-      /Raumgrenzen/
-    );
+    assert.throws(() => layout({name: 'Grenze', x: 3.8, width: 1}, room), /Raumgrenzen/);
   }
 );
 
@@ -71,7 +67,9 @@ test(
     };
     assert.doesNotThrow(() => ensureShelfHeights(furniture));
     assert.throws(
-      () => ensureShelfHeights({...furniture, shelves: [{heightCm: 180}, {heightCm: null}]}),
+      () => ensureShelfHeights({
+        ...furniture, shelves: [{heightCm: 180}, {heightCm: null}],
+      }),
       /5 cm/
     );
     assert.throws(
@@ -79,7 +77,10 @@ test(
         {
           name: 'Schrank',
           type: 'schrank',
-          doorRanges: [{from: 1, to: 2, front: 'glass'}, {from: 2, to: 3, front: 'door'}],
+          doorRanges: [{from: 1, to: 2, front: 'glass'}, {
+            from: 2, to: 3,
+            front: 'door',
+          }],
           shelves: [{}, {}, {}],
         },
         room

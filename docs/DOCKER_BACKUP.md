@@ -13,7 +13,7 @@ Der WhiskyCollectionManager verwendet standardmäßig **einen Docker-Service `ap
 
 Alle neuen Backups verwenden **ein einziges passwortgeschütztes ZIP-Format mit AES-256 (WinZip AE-2)**, unabhängig davon, ob sie manuell oder per Zeitplan auf USB, NAS oder Cloud erstellt werden. Das ZIP enthält den vollständigen `data/`-Ordner mit `collection.json` und `warehouse.json`, Bilder in `images/` und Dokumente in `documents/`. Die Inhalte sind verschlüsselt, Dateinamen im ZIP jedoch sichtbar. Zum Öffnen auf Windows/macOS/Linux z. B. **7-Zip** oder ein anderes WinZip-AES-kompatibles Programm verwenden. Alte unverschlüsselte ZIP-Archive können weiterhin eingespielt werden, werden aber nicht nachträglich verschlüsselt.
 
-**Sicherheit:** Die Loginpflicht ist standardmäßig aus und kann von einem angemeldeten Administrator in der Nutzerverwaltung aktiviert werden. Bei Internetzugriff Loginpflicht, HTTPS und vorzugsweise zusätzliche Netzabsicherung verwenden. Siehe [Anmeldung](ANMELDUNG.md).
+**Sicherheit:** Die Loginpflicht ist standardmäßig aus und kann von einem angemeldeten Administrator in der Nutzerverwaltung aktiviert werden. WCM ausschließlich im vertrauenswürdigen privaten LAN oder über VPN betreiben. Bei gemeinsam genutzten Netzen Loginpflicht und HTTPS verwenden. Keine direkte Internetfreigabe, auch nicht bei aktivierter Anmeldung. Siehe [Anmeldung](ANMELDUNG.md).
 
 ## Installation und Update
 
@@ -66,7 +66,7 @@ Der Server akzeptiert als HTTP-Host standardmaessig `localhost`, `127.0.0.1`,
 Weitere Namen (z. B. eine interne Reverse-Proxy-Adresse) in der Compose-`.env`
 als `ALLOWED_HOSTS=name1,192.168.1.40` eintragen und dann
 `docker compose up -d` ausfuehren. Ein unbekannter Host liefert HTTP 421.
-Die `ALLOWED_HOSTS`-Liste ergaenzt die Zertifikatsnamen und erlaubt keine Wildcards.
+Die `ALLOWED_HOSTS`-Liste ergaenzt die Zertifikatsnamen und erlaubt keine Wildcards. Sie prueft Hostnamen, nicht die Zugriffsberechtigung eines Clients. Die Compose-Portfreigaben lauschen standardmaessig auf allen Host-Schnittstellen. Den Zugriff per Host-Firewall, Router und gegebenenfalls VPN auf das private Netz begrenzen; auch IPv6 und den optionalen NGINX-Port beruecksichtigen.
 
 **Vor einem Upgrade bestehender Installationen:** In `.env` die tatsaechlich
 benutzten IP-Adressen und DNS-/Router-Namen (z. B. `whisky.fritz.box`)
@@ -89,7 +89,7 @@ erlaubt sein. Ein Proxy, der TLS nur auf seiner oeffentlichen Seite beendet
 und per HTTP zum WCM weiterleitet, verursacht fuer Browser-Schreibzugriffe
 **403** (Origin `https:` vs. Backend `http:`). `X-Forwarded-Proto` wird
 aus Sicherheitsgruenden nicht ausgewertet. Das Backend-Zertifikat muss vom
-Proxy vertraut werden; unsichere TLS-Pruefung ist keine Ersatzloesung.
+Proxy vertraut werden; unsichere TLS-Pruefung ist keine Ersatzloesung. Die Login-Versuchsbegrenzung verwendet die direkte Peer-IP; mehrere Clients hinter demselben Proxy teilen sich daher das IP-Limit.
 
 Schreibzugriffe von fremden Webseiten werden per Origin/Fetch Metadata verweigert.
 JSON-Endpunkte erfordern `Content-Type: application/json` und liefern sonst 415.
@@ -188,11 +188,13 @@ Pro Ziel sind stündliche, tägliche oder wöchentliche Backups möglich. Aufbew
 ## 3. Backup wiederherstellen
 
 1. **Datensicherung → Backup einspielen** öffnen und eine Whisky-ZIP-Datei auswählen. Alternativ bei einem gespeicherten USB-/Cloud-Stand **Einspielen** klicken.
-2. **Passwort des jeweiligen ZIPs** eingeben. Der Server prüft ZIP-Struktur und AES-Authentifizierung, entschlüsselt die Sicherung zunächst in einen geschützten Prüfbereich und validiert `collection.json`. Die laufende Sammlung bleibt unverändert. Für alte, unverschlüsselte Archive bleibt das Passwortfeld leer.
-3. Die App zeigt Abfüllungen, Flaschen, Destillerien und Dateianzahl als Vorschau. Erst nach einer zusätzlichen Bestätigung wird die vollständige Sammlung einschließlich Bildern und Dokumenten übernommen.
-4. Zuvor erstellt die Anwendung automatisch ein AES-256-geschütztes Sicherheits-ZIP unter `${WCM_DATA_DIR}/storage/backups/pre-restore-*.zip`. Bei einem Fehler beim Dateiaustausch wird der vorherige Zustand wiederhergestellt.
+2. **Passwort des jeweiligen ZIPs** eingeben. Der Server prüft ZIP-Struktur und AES-Authentifizierung, entschlüsselt die Sicherung zunächst in einen geschützten Prüfbereich und validiert Sammlung, Lager- und Benutzerdatei (falls im ZIP enthalten), sämtliche referenzierten Bilder anhand ihres Formats sowie die Größen und SHA-256-Prüfsummen der referenzierten Dokumente. Fehlende oder ungültige referenzierte Medien verhindern die Übernahme. Nicht referenzierte Dateien bleiben erhalten. Die laufende Sammlung bleibt unverändert. Für alte, unverschlüsselte Archive bleibt das Passwortfeld leer.
+3. Die App zeigt Abfüllungen, Flaschen, Destillerien und Dateianzahl als Vorschau. Erst nach einer zusätzlichen Bestätigung wird das exakt geprüfte Archiv erneut authentifiziert, extrahiert und validiert. Wurde es seit der Vorschau verändert, muss es erneut entsperrt werden.
+4. Zuvor erstellt die Anwendung automatisch ein AES-256-geschütztes Sicherheits-ZIP unter `${WCM_DATA_DIR}/storage/backups/pre-restore-*.zip`. Laufende Anfragen werden vor dem Austausch abgeschlossen; neue Anfragen erhalten währenddessen HTTP 503. Die Anwendung übernimmt `data/`, `images/` und `documents/` mit einem dauerhaften Transaktionsprotokoll. Bei einer Unterbrechung vor dem Commit wird der alte Zustand beim nächsten Start wiederhergestellt; nach dem Commit bleiben die neuen Daten erhalten.
 
-Für die Wiederherstellung ist der Backup-Administrator-Schlüssel erforderlich. Dieser steht bei der Pi-Installation unter `${WCM_DATA_DIR}/secrets/backup-admin-token`; er wird nur im Speicher der aktuellen Browserseite gehalten. Große Backups brauchen Platz unter `${WCM_DATA_DIR}/backup-control/imports/` und für das Sicherheits-ZIP unter `${WCM_DATA_DIR}/storage/backups/`.
+Für die Wiederherstellung ist der Backup-Administrator-Schlüssel erforderlich. Dieser steht bei der Pi-Installation unter `${WCM_DATA_DIR}/secrets/backup-admin-token`; er wird nur im Speicher der aktuellen Browserseite gehalten. Große Backups brauchen Platz unter `${WCM_DATA_DIR}/backup-control/imports/`, für den entpackten neuen Stand unter `${WCM_DATA_DIR}/storage/` und für das Sicherheits-ZIP unter `${WCM_DATA_DIR}/storage/backups/`.
+
+**Ausfallsicherheit:** Auf Linux werden Dateien und Verzeichniseinträge vor der Veröffentlichung synchronisiert (`fsync`). Die Datenverzeichnisse und Restore-Arbeitsverzeichnisse müssen auf demselben lokalen Dateisystem liegen. Nur eine App-Instanz darf diesen Datenbestand verändern; manuelle Dateiänderungen und administrative Offline-Skripte erfordern eine gestoppte App. Bei beschädigtem Transaktionsprotokoll oder nicht eindeutig zuordenbaren Altverzeichnissen verweigert die Anwendung den Start, anstatt Daten zu überschreiben. In diesem Fall das gesamte Datenverzeichnis einschließlich `.restore-*` sichern und erst danach manuell untersuchen. Keine Restore-Arbeitsverzeichnisse auf Verdacht löschen. Unter Windows ist Verzeichnis-`fsync` über Node.js nicht verfügbar; dort besteht keine gleichwertige Zusicherung bei Stromverlust. Auch unter Linux hängen die Garantien von Dateisystem, Speichermedium und dessen Schreibcache ab. Eine USV und unabhängige Backups bleiben sinnvoll.
 
 ### Bestehende Restic-Backups aus älteren Versionen
 
@@ -243,7 +245,7 @@ Der Release-Workflow validiert die Paketdatei im veröffentlichten AMD64-/ARM64-
 
 `$WCM_DATA_DIR/storage/data/warehouse.json` liegt auf dem Host neben `collection.json` **außerhalb des Git-Checkouts** (im Container unter `/srv/whisky/data/warehouse.json`). Der bestehende Docker-Bind-Mount auf das persistente Datenverzeichnis ist ausreichend; **kein zusätzlicher Container-Mount** ist erforderlich. Beim ersten Start erzeugt die Anwendung die leere Lagerdatei.
 
-Ein vollständiges verschlüsseltes ZIP sichert den gesamten `data/`-Ordner einschließlich `warehouse.json`. JSON-Einzelexporte enthalten dagegen ausschließlich die Sammlung. Wird eine ältere vollständige Sicherung ohne Lagerdatei zurückgespielt, entsteht beim nächsten Start ein leeres Lager. Ein aktuelles Vollbackup vor Restore ist deshalb erforderlich. Siehe [LAGER.md](LAGER.md).
+Ein vollständiges verschlüsseltes ZIP sichert den gesamten `data/`-Ordner einschließlich `warehouse.json`. JSON-Einzelexporte enthalten dagegen ausschließlich die Sammlung. Wird eine ältere vollständige Sicherung ohne Lagerdatei zurückgespielt, wird bei der Wiederherstellung ein leeres Lager angelegt. Fehlt die Benutzerdatei, bleibt dagegen die bestehende Konten- und Login-Konfiguration erhalten. Ein aktuelles Vollbackup vor Restore ist deshalb erforderlich. Siehe [LAGER.md](LAGER.md).
 
 ## KI-Freistellung (lokale Modell-Dateien)
 

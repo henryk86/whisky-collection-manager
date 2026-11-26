@@ -45,11 +45,10 @@ const bottleFields = [
   'comment',
 ];
 /**
- * Derives the filtered result from the supplied values.
- *
- * @param {*} source Input source to inspect.
- * @param {*} keys Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Copies only the permitted own properties of an input record.
+ * @param {Object} source Untrusted record.
+ * @param {string[]} keys Allowed property names.
+ * @return {Object} New record containing allowed fields.
  */
 function filtered(source, keys) {
   const obj = {};
@@ -65,8 +64,8 @@ function filtered(source, keys) {
  * Normalizes bottling for normalization.
  *
  * @param {*} input Input to process.
- * @param {!Object=} old Old used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {!Object=} old Previously stored bottling fields retained unless explicitly replaced.
+ * @return {!Object} Normalized bottling fields merged with existing data where permitted.
  */
 export function normalizeBottling(input, old = {}) {
   if (Object.hasOwn(input, 'volumeType')) {
@@ -82,11 +81,7 @@ export function normalizeBottling(input, old = {}) {
   value.name = requireField(value.name, 'name');
   if (Object.hasOwn(input, 'distilleryIds')) {
     if (!Array.isArray(input.distilleryIds)) {
-      throw fail(
-        'Destillerien müssen eine Liste sein',
-        400,
-        "api.errors.distilleriesMustBeAList"
-      );
+      throw fail('Destillerien müssen eine Liste sein', 400, "api.errors.distilleriesMustBeAList");
     }
     value.distilleryIds = input.distilleryIds;
   }
@@ -101,11 +96,7 @@ export function normalizeBottling(input, old = {}) {
     value.whiskyType = null;
   }
   if (value.whiskyType != null && !WHISKY_TYPES.includes(value.whiskyType)) {
-    throw fail(
-      'Ungültige Whisky-Kategorie',
-      400,
-      "api.errors.invalidWhiskyCategory"
-    );
+    throw fail('Ungültige Whisky-Kategorie', 400, "api.errors.invalidWhiskyCategory");
   }
   if (value.brand === '') {
     value.brand = null;
@@ -114,14 +105,9 @@ export function normalizeBottling(input, old = {}) {
     value.compositionComplete = false;
   }
   if (typeof value.compositionComplete !== 'boolean') {
-    throw fail(
-      'Ungültiger Zusammensetzungsstatus',
-      400,
-      "api.errors.invalidCompositionStatus"
-    );
+    throw fail('Ungültiger Zusammensetzungsstatus', 400, "api.errors.invalidCompositionStatus");
   }
-  if (['single_malt', 'single_grain'].includes(value.whiskyType) &&
-    value.distilleryIds.length > 1) {
+  if (['single_malt', 'single_grain'].includes(value.whiskyType) && value.distilleryIds.length > 1) {
     throw fail(
       'Für Single Whisky darf maximal eine Destillerie gewählt werden',
       400,
@@ -166,8 +152,7 @@ export function normalizeBottling(input, old = {}) {
       400,
       "api.errors.tastingDataRequiresTasting"
     );
-  value.completionStatus = value.completionStatus === 'complete' ?
-    'complete' : 'incomplete';
+  value.completionStatus = value.completionStatus === 'complete' ? 'complete' : 'incomplete';
   return value;
 }
 
@@ -175,8 +160,8 @@ export function normalizeBottling(input, old = {}) {
  * Normalizes bottle for normalization.
  *
  * @param {*} input Input to process.
- * @param {!Object=} old Old used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {!Object=} old Previously stored physical bottle fields retained unless explicitly replaced.
+ * @return {!Object} Normalized physical-bottle fields merged with existing data where permitted.
  */
 export function normalizeBottle(input, old = {}) {
   if (Object.hasOwn(input, 'labelCode')) {
@@ -193,22 +178,15 @@ export function normalizeBottle(input, old = {}) {
   // callers.
   delete val.rating;
   delete val.tastingNotes;
-  val.status = ['closed', 'open', 'empty'].includes(val.status) ?
-    val.status : 'closed';
-  if (val.volumeType != null && !['sample', 'standard']
-    .includes(val.volumeType)) {
+  val.status = ['closed', 'open', 'empty'].includes(val.status) ? val.status : 'closed';
+  if (val.volumeType != null && !['sample', 'standard'].includes(val.volumeType)) {
     throw fail('Ungültiger Flaschentyp', 400, "api.errors.invalidBottleType");
   }
   val.volumeType = val.volumeType || 'standard';
   if (val.volumeMl === '' || val.volumeMl === undefined) val.volumeMl = null;
   if (val.volumeMl != null) {
-    if (!Number.isFinite(Number(val.volumeMl)) || Number(val.volumeMl) <=
-      0 || Number(val.volumeMl) > 100000) {
-      throw fail(
-        'Ungültige Flaschengröße (ml)',
-        400,
-        "api.errors.invalidBottleSizeMl"
-      );
+    if (!Number.isFinite(Number(val.volumeMl)) || Number(val.volumeMl) <= 0 || Number(val.volumeMl) > 100000) {
+      throw fail('Ungültige Flaschengröße (ml)', 400, "api.errors.invalidBottleSizeMl");
     }
     val.volumeMl = Number(val.volumeMl);
   }
@@ -218,9 +196,7 @@ export function normalizeBottle(input, old = {}) {
   if (val.purchasePrice === '') {
     val.purchasePrice = null;
   }
-  if (val.purchasePrice != null &&
-    (!Number.isFinite(Number(val.purchasePrice)) ||
-      Number(val.purchasePrice) < 0)) {
+  if (val.purchasePrice != null && (!Number.isFinite(Number(val.purchasePrice)) || Number(val.purchasePrice) < 0)) {
     throw fail('Ungültiger Kaufpreis', 400, "api.errors.invalidPurchasePrice");
   }
   return val;

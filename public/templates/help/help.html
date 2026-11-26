@@ -1,0 +1,32 @@
+<!-- wcm-template:helpDescription -->
+<p class="help-description muted">{{text:description}}</p>
+<!-- /wcm-template -->
+
+<!-- wcm-template:li -->
+<li>{{text:t}}</li>
+<!-- /wcm-template -->
+
+<!-- wcm-template:helpSection -->
+
+<section
+  class="help-section"
+  id="help-panel-{{attr:id}}"
+  aria-labelledby="help-title-{{attr:ariaLabelledby}}"{{attrs:hiddenAttributes}}>
+  {{content:headingTitle}}
+  <div class="help-content-panel">
+    {{content:helpDescription}}
+    <ol class="help-steps">{{content:from}}</ol>{{content:helpGuides}}
+  </div>
+</section>
+<!-- /wcm-template -->
+
+<!-- wcm-template:helpPanels -->
+<div class="help-panels">{{content:panels}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:analyticsPage -->
+<div class="analytics-page help-page">
+  {{content:pageHeader}}
+  {{content:workspace}}
+</div>
+<!-- /wcm-template -->

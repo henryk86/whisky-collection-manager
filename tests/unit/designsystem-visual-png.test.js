@@ -5,16 +5,8 @@ import {decodePNG, comparePNG, encodeRGB} from '../../scripts/visual-png.js';
 test(
   'visual comparison detects a changed pixel and yields an actual PNG diff',
   () => {
-    const first = encodeRGB(
-      2,
-      2,
-      Buffer.from([255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255])
-    );
-    const second = encodeRGB(
-      2,
-      2,
-      Buffer.from([255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255])
-    );
+    const first = encodeRGB(2, 2, Buffer.from([255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]));
+    const second = encodeRGB(2, 2, Buffer.from([255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255]));
     const result = comparePNG(first, second);
     assert.equal(result.changed, 1);
     assert.equal(result.percent, 25);

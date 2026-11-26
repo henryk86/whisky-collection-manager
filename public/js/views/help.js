@@ -1,10 +1,15 @@
+import {createHelpViewModel} from './models/help.js';
+import {composeMarkup} from '../ui/render-plan.js';
 import {headingTitle, pageHeader} from '../ui/headers.js';
 /** Contextual guidance belongs on this page, not on everyday work screens. */
 import {t} from '../i18n/index.js';
-import {escapeHtml} from '../ui/dom.js';
 import {backToCollectionButton} from '../ui/navigation-controls.js';
 import {sectionWorkspace} from '../ui/section-navigation.js';
 import {helpGuides} from './help-guides.js';
+import {loadTemplates} from '../ui/templates.js';
+
+const renderTemplate = await loadTemplates('help/help.html');
+
 
 export const HELP_TOPICS = Object.freeze([
   {id: 'basics', items: 4},
@@ -22,65 +27,54 @@ export const HELP_TOPICS = Object.freeze([
 /**
  * Help and Analytics share the same sidebar / mobile-selector layout.
  *
- * @param {string=} activeTopic Active topic used by this operation.
- * @return {string} Resulting text.
+ * @param {string=} activeTopic Identifier of the help topic initially shown.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Help topic navigation and localized content panels.
  */
 export function helpView(activeTopic = 'basics') {
-  const current = HELP_TOPICS.some(topic => topic.id === activeTopic) ?
-    activeTopic : 'basics';
-  /**
-   * Builds the localized title text for the current language.
-   *
-   * @param {*} id Identifier of the affected record.
-   * @return {string} Resulting text.
-   */
-  const title = id => escapeHtml(t(`help.${id}.title`));
-  const panels = HELP_TOPICS.map(topic => `
-        <section class="help-section" id="help-panel-${topic.id}" aria-labelledby="help-title-${topic.id}"${topic.id === current ? '' : ' hidden'}>
-            ${headingTitle({
-    title: t(`help.${topic.id}.title`),
-    level: 2,
-    className: 'analytics-section-title',
-    id: `help-title-${topic.id}`,
-  })}
-            <div class="help-content-panel">
-                ${topic.id === 'basics' ?
-      `<p class="help-description muted">${escapeHtml(t('help.description'))}</p>` : ''}
-                <ol class="help-steps">${Array.from(
-        {length: topic.items},
-        (_, index) =>
-          `<li>${escapeHtml(t(`help.${topic.id}.${index + 1}`))}</li>`
-      ).join('')}</ol>${helpGuides(topic.id)}
-            </div>
-        </section>`).join('');
+  const {current, topics} = createHelpViewModel(HELP_TOPICS, activeTopic);
+  const panels = composeMarkup(topics.map(topic => renderTemplate(
+    'helpSection',
+    {
+      id: topic.id,
+      ariaLabelledby: topic.id,
+      hiddenAttributes: topic.id === current ? {} : {"hidden": true},
+      headingTitle: headingTitle({
+        title: topic.label,
+        level: 2,
+        className: 'analytics-section-title',
+        id: `help-title-${topic.id}`,
+      }),
+      helpDescription: topic.id === 'basics' ? renderTemplate('helpDescription', {description: t('help.description'), }) : '',
+      from: composeMarkup(topic.entries.map(entry => renderTemplate('li', {t: entry}))),
+      helpGuides: helpGuides(topic.id),
+    }
+  )));
   const workspace = sectionWorkspace({
-    sections: HELP_TOPICS.map(topic =>
-      ({id: topic.id, label: t(`help.${topic.id}.title`)})),
+    sections: topics,
     activeId: current, action: 'help-tab', itemAttribute: 'data-help-topic',
     label: t('help.contents'), switchKind: 'help',
-  }, `<div class="help-panels">${panels}</div>`);
-  return `<div class="analytics-page help-page">
-        ${pageHeader({
-    title: t('navigation.help'),
-    eyebrow: t('help.eyebrow'),
-    intro: t('help.intro'),
-    className: 'help-heading',
-    actions: String(backToCollectionButton),
-  })}
-        ${workspace}
-    </div>`;
+  }, renderTemplate('helpPanels', {panels: panels, }));
+  return renderTemplate('analyticsPage', {
+    pageHeader: pageHeader({
+      title: t('navigation.help'),
+      eyebrow: t('help.eyebrow'),
+      intro: t('help.intro'),
+      className: 'help-heading',
+      actions: backToCollectionButton(),
+    }),
+    workspace: workspace,
+  });
 }
 
 /**
  * Switch the visible help topic without losing the current page or scroll.
  *
- * @param {*} topicId Topic id used by this operation.
- * @param {*} container Container used by this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {string} topicId Identifier of the help topic to activate.
+ * @param {*} container Help workspace containing the topic navigation and content panels.
+ * @return {boolean} True if the requested help topic was found and activated.
  */
 export function activateHelpTopic(topicId, container) {
-  if (!HELP_TOPICS.some(topic => topic.id === topicId) ||
-    !container) return false;
+  if (!HELP_TOPICS.some(topic => topic.id === topicId) || !container) return false;
   for (const button of container.querySelectorAll('.section-nav-item[data-help-topic]')) {
     const active = button.dataset.helpTopic === topicId;
     button.classList.toggle('active', active);

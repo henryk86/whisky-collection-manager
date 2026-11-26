@@ -12,18 +12,17 @@ const pending = new Map();
 const MAX_PENDING = 8;
 const TTL = 15 * 60 * 1000;
 /**
- * Updates the cleanup state for its caller.
+ * Removes expired staged-image tokens from the in-memory map.
  */
 function cleanup() {
-  for (const [token, entry] of pending) if (Date.now() >
-    entry.expires) pending.delete(token);
+  for (const [token, entry] of pending) if (Date.now() > entry.expires) pending.delete(token);
 }
 
 /**
  * Stages an uploaded image for validation and later confirmation.
  *
  * @param {*} input Input to process.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Staged-image token and remaining lifetime in seconds.
  */
 export function stageImage(input) {
   cleanup();
@@ -37,13 +36,9 @@ export function stageImage(input) {
   // Legacy browser-extension uploads have no source property and originate from
   // Whiskybase. New import adapters can explicitly use null for unlabelled
   // photos.
-  const source = input.source === undefined || input.source === 'whiskybase'
-    ? 'whiskybase' : null; // Unknown import providers must never be mislabelled.
+  const source = input.source === undefined || input.source === 'whiskybase' ? 'whiskybase' : null; // Unknown import providers must never be mislabelled.
   const token = crypto.randomUUID();
-  pending.set(
-    token,
-    {image: input.image, bytes, mediaType, source, expires: Date.now() + TTL}
-  );
+  pending.set(token, {image: input.image, bytes, mediaType, source, expires: Date.now() + TTL});
   setTimeout(() => pending.delete(token), TTL).unref();
   return {token, expiresInSeconds: TTL / 1000};
 }
@@ -51,17 +46,13 @@ export function stageImage(input) {
 /**
  * Returns a preview of an image awaiting confirmation.
  *
- * @param {*} token Token used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {string} token Temporary image-preview token issued by the staging service.
+ * @return {!Object} Staged image bytes and media type.
  */
 export function previewImage(token) {
   cleanup();
   const entry = pending.get(token);
-  if (!entry) throw fail(
-    'Vorschau abgelaufen oder Bild nicht vorhanden',
-    404,
-    "api.errors.previewExpiredOrImageIsMissing"
-  );
+  if (!entry) throw fail('Vorschau abgelaufen oder Bild nicht vorhanden', 404, "api.errors.previewExpiredOrImageIsMissing");
   return {bytes: entry.bytes, type: entry.mediaType};
 }
 
@@ -70,22 +61,18 @@ export function previewImage(token) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Metadata for the imported image attached to the selected physical bottle.
  */
 export async function attachImageToBottle(bottleId, input) {
   cleanup();
-  if (typeof input.token !== 'string' || !/^[0-9a-f-]{36}$/i
-    .test(input.token)) throw fail('Ungültiger Bild-Token', 400, "api.errors.invalidImageToken");
+  if (typeof input.token !== 'string' || !/^[0-9a-f-]{36}$/i.test(input.token)) throw fail('Ungültiger Bild-Token', 400, "api.errors.invalidImageToken");
   const entry = pending.get(input.token);
   if (!entry) throw fail(
     'Importiertes Bild nicht mehr verfügbar. Bitte erneut importieren.',
     404,
     "api.errors.importImageIsNoLongerAvailablePleaseImportItAgain"
   );
-  const photo = await addPhoto(
-    bottleId,
-    {image: entry.image, ...(entry.source ? {source: entry.source} : {})}
-  );
+  const photo = await addPhoto(bottleId, {image: entry.image, ...(entry.source ? {source: entry.source} : {})});
   pending.delete(input.token);
   return photo;
 }

@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import http from 'node:http';
+import {once} from 'node:events';
 import {startTestServer} from '../helpers/server.js';
 
 const token = 'a'.repeat(64), workerToken = 'b'.repeat(64);
@@ -56,12 +58,10 @@ async function fixture({withTargets = false} = {}) {
   process.env.BACKUP_ADMIN_TOKEN = token;
   process.env.BACKUP_WORKER_TOKEN = workerToken;
   process.env.BACKUP_CONTROL_DIR = control;
-  if (withTargets) process.env.BACKUP_TARGET_ROOT =
-    path.join(control, 'targets');
+  if (withTargets) process.env.BACKUP_TARGET_ROOT = path.join(control, 'targets');
   const server = await startTestServer();
   for (const [k, v] of Object.entries(env)) {
-    if (v ===
-      undefined) delete process.env[k]; else process.env[k] = v;
+    if (v === undefined) delete process.env[k]; else process.env[k] = v;
   }
   return {
     ...server,
@@ -70,7 +70,11 @@ async function fixture({withTargets = false} = {}) {
      * Performs the stop lifecycle action.
      * @return {!Promise<*>} Promise for the asynchronous operation.
      */
-    stop: async () => {await server.stop(); fs.rmSync(control, {recursive: true, force: true});},
+    stop: async () => {
+      await server.stop(); fs.rmSync(control, {
+        recursive: true, force: true,
+      });
+    },
   };
 }
 test(
@@ -80,42 +84,20 @@ test(
     try {
       const passwordFile = path.join(ctx.control, 'backup-zip-password');
       fs.unlinkSync(passwordFile);
+      assert.equal((await request(ctx.base, '/api/backups')).data.passwordConfigured, false);
       assert.equal(
-        (await request(ctx.base, '/api/backups')).data.passwordConfigured,
-        false
-      );
-      assert.equal(
-        (await fetch(
-          ctx.base + '/api/export/zip',
-          {headers: {'X-Backup-Admin-Token': token}}
-        )).status,
+        (await fetch(ctx.base + '/api/export/zip', {headers: {'X-Backup-Admin-Token': token}})).status,
         409
       );
-      const denied = await request(
-        ctx.base,
-        '/api/backups/password',
-        'POST',
-        {password: zipPass, confirm: zipPass},
-        'bad'
-      );
+      const denied = await request(ctx.base, '/api/backups/password', 'POST', {password: zipPass, confirm: zipPass}, 'bad');
       assert.equal(denied.status, 401);
       assert.equal(fs.existsSync(passwordFile), false);
       assert.equal(
-        (await request(
-          ctx.base,
-          '/api/backups/password',
-          'POST',
-          {password: 'short', confirm: 'short'}
-        )).status,
+        (await request(ctx.base, '/api/backups/password', 'POST', {password: 'short', confirm: 'short'})).status,
         400
       );
       assert.equal(
-        (await request(
-          ctx.base,
-          '/api/backups/password',
-          'POST',
-          {password: zipPass, confirm: zipPass}
-        )).status,
+        (await request(ctx.base, '/api/backups/password', 'POST', {password: zipPass, confirm: zipPass})).status,
         200
       );
       assert.equal(fs.readFileSync(passwordFile, 'utf8').trim(), zipPass);
@@ -133,26 +115,13 @@ test(
         confirm: 'NeuesBackupPasswort-weitere-2026',
         previous: zipPass,
       })).status, 200);
-      const response = await fetch(
-        ctx.base + '/api/export/zip',
-        {headers: {'X-Backup-Admin-Token': token}}
-      );
+      const response = await fetch(ctx.base + '/api/export/zip', {headers: {'X-Backup-Admin-Token': token}});
       assert.equal(response.status, 200);
       const archive = path.join(ctx.control, 'password-test.zip');
       fs.writeFileSync(archive, Buffer.from(await response.arrayBuffer()));
       const {inspectReadableZip} = await import('../../shared/backup-zip.js');
-      assert.throws(
-        () => inspectReadableZip(archive, null, zipPass),
-        /Passwort/
-      );
-      assert.equal(
-        inspectReadableZip(
-          archive,
-          null,
-          'NeuesBackupPasswort-weitere-2026'
-        ).encrypted,
-        true
-      );
+      assert.throws(() => inspectReadableZip(archive, null, zipPass), /Passwort/);
+      assert.equal(inspectReadableZip(archive, null, 'NeuesBackupPasswort-weitere-2026').encrypted, true);
     } finally {await ctx.stop();}
   }
 );
@@ -162,14 +131,8 @@ test(
   async () => {
     const ctx = await fixture();
     try {
-      assert.equal(
-        (await request(ctx.base, '/api/backups', 'GET', null, '')).status,
-        401
-      );
-      assert.equal(
-        (await request(ctx.base, '/api/backups', 'GET', null, 'wrong')).status,
-        401
-      );
+      assert.equal((await request(ctx.base, '/api/backups', 'GET', null, '')).status, 401);
+      assert.equal((await request(ctx.base, '/api/backups', 'GET', null, 'wrong')).status, 401);
       const original = fs.readFileSync(path.join(ctx.dir, 'data/collection.json'));
       const first = await request(ctx.base, '/api/backups', 'POST', validProfile);
       assert.equal(first.status, 201);
@@ -187,12 +150,7 @@ test(
         }
       );
       assert.equal(second.status, 201);
-      const duplicateRepo = await request(
-        ctx.base,
-        '/api/backups',
-        'POST',
-        {...validProfile, name: 'Gleicher USB-Ordner'}
-      );
+      const duplicateRepo = await request(ctx.base, '/api/backups', 'POST', {...validProfile, name: 'Gleicher USB-Ordner'});
       assert.equal(duplicateRepo.status, 409);
       const duplicateRemote = await request(
         ctx.base,
@@ -219,60 +177,25 @@ test(
         }
       );
       assert.equal(newZip.status, 201);
-      assert.equal(
-        newZip.data.format,
-        'zip',
-        'new profiles default to readable ZIP'
-      );
+      assert.equal(newZip.data.format, 'zip', 'new profiles default to readable ZIP');
       const dash = await request(ctx.base, '/api/backups');
       assert.equal(dash.data.profiles.length, 3);
       assert.equal(dash.data.worker.online, false);
-      assert.deepEqual(
-        fs.readFileSync(path.join(ctx.dir, 'data/collection.json')),
-        original
-      );
-      const updated = await request(
-        ctx.base,
-        `/api/backups/${first.data.id}`,
-        'PUT',
-        {...validProfile, enabled: false}
-      );
+      assert.deepEqual(fs.readFileSync(path.join(ctx.dir, 'data/collection.json')), original);
+      const updated = await request(ctx.base, `/api/backups/${first.data.id}`, 'PUT', {...validProfile, enabled: false});
       assert.equal(updated.data.enabled, false);
-      const bad = await request(
-        ctx.base,
-        '/api/backups',
-        'POST',
-        {...validProfile, targetPath: '../escape'}
-      );
+      const bad = await request(ctx.base, '/api/backups', 'POST', {...validProfile, targetPath: '../escape'});
       assert.equal(bad.status, 400);
-      const run = await request(ctx.base, `/api/backups/${first.data
-        .id}/run`, 'POST', {});
+      const run = await request(ctx.base, `/api/backups/${first.data.id}/run`, 'POST', {});
       assert.equal(run.status, 202);
-      assert.equal(
-        fs.existsSync(path.join(ctx.control, 'jobs', `${run.data.id}.json`)),
-        true
-      );
-      const invalidRestore = await request(
-        ctx.base,
-        `/api/backups/${first.data.id}/prepare`,
-        'POST',
-        {snapshotId: '../../secret'}
-      );
+      assert.equal(fs.existsSync(path.join(ctx.control, 'jobs', `${run.data.id}.json`)), true);
+      const invalidRestore = await request(ctx.base, `/api/backups/${first.data.id}/prepare`, 'POST', {snapshotId: '../../secret'});
       assert.equal(invalidRestore.status, 400);
-      const restore = await request(
-        ctx.base,
-        `/api/backups/${first.data.id}/prepare`,
-        'POST',
-        {snapshotId: 'latest'}
-      );
+      const restore = await request(ctx.base, `/api/backups/${first.data.id}/prepare`, 'POST', {snapshotId: 'latest'});
       assert.equal(restore.status, 202);
-      const deleted = await request(ctx.base, `/api/backups/${second.data
-        .id}`, 'DELETE');
+      const deleted = await request(ctx.base, `/api/backups/${second.data.id}`, 'DELETE');
       assert.equal(deleted.data.repositoryDeleted, false);
-      assert.equal(
-        (await request(ctx.base, '/api/backups')).data.profiles.length,
-        2
-      );
+      assert.equal((await request(ctx.base, '/api/backups')).data.profiles.length, 2);
     } finally {await ctx.stop();}
   }
 );
@@ -310,14 +233,8 @@ test(
       );
       assert.equal(res.status, 200);
       const folder = path.join(ctx.control, 'staging', id);
-      assert.equal(
-        fs.readFileSync(path.join(folder, 'images', 'test.jpg'), 'utf8'),
-        'picture'
-      );
-      assert.equal(
-        fs.readFileSync(path.join(folder, 'documents', 'invoice.pdf'), 'utf8'),
-        'receipt'
-      );
+      assert.equal(fs.readFileSync(path.join(folder, 'images', 'test.jpg'), 'utf8'), 'picture');
+      assert.equal(fs.readFileSync(path.join(folder, 'documents', 'invoice.pdf'), 'utf8'), 'receipt');
       assert.deepEqual(
         JSON.parse(fs.readFileSync(path.join(folder, 'data', 'collection.json'))),
         JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data', 'collection.json')))
@@ -347,10 +264,7 @@ test(
       const targetRoot = path.join(ctx.control, 'targets');
       const target = path.join(targetRoot, 'usb', 'whisky-zip');
       fs.mkdirSync(target, {recursive: true});
-      fs.writeFileSync(
-        path.join(targetRoot, 'usb', '.whisky-backup-target'),
-        'mounted'
-      );
+      fs.writeFileSync(path.join(targetRoot, 'usb', '.whisky-backup-target'), 'mounted');
       const input = {
         ...validProfile,
         format: 'zip',
@@ -360,27 +274,16 @@ test(
       const profile = await request(ctx.base, '/api/backups', 'POST', input);
       assert.equal(profile.status, 201);
       const filename = 'whisky-backup-2026-11-07T12-00-00-000-12345678.zip';
-      fs.writeFileSync(
-        path.join(target, filename),
-        Buffer.from('dummy-zip-for-stream-test')
-      );
+      fs.writeFileSync(path.join(target, filename), Buffer.from('dummy-zip-for-stream-test'));
       const dashboard = await request(ctx.base, '/api/backups');
-      assert.deepEqual(
-        dashboard.data.targets,
-        [{name: 'usb', label: 'USB-Stick'}]
-      );
-      const url = `${ctx.base}/api/backups/${profile.data
-        .id}/files/${filename}`;
+      assert.deepEqual(dashboard.data.targets, [{name: 'usb', label: 'USB-Stick'}]);
+      const url = `${ctx.base}/api/backups/${profile.data.id}/files/${filename}`;
       assert.equal((await fetch(url)).status, 401);
-      const downloaded =
-        await fetch(url, {headers: {'X-Backup-Admin-Token': token}});
+      const downloaded = await fetch(url, {headers: {'X-Backup-Admin-Token': token}});
       assert.equal(downloaded.status, 200);
       assert.match(downloaded.headers.get('content-disposition'), /attachment/);
       assert.equal(downloaded.headers.get('content-type'), 'application/zip');
-      assert.equal(
-        Buffer.from(await downloaded.arrayBuffer()).toString(),
-        'dummy-zip-for-stream-test'
-      );
+      assert.equal(Buffer.from(await downloaded.arrayBuffer()).toString(), 'dummy-zip-for-stream-test');
       assert.equal(
         (await fetch(
           `${ctx.base}/api/backups/${profile.data.id}/files/not-valid.zip`,
@@ -401,31 +304,18 @@ test(
   async () => {
     const ctx = await fixture();
     try {
-      const {writeReadableZip, inspectReadableZip} =
-        await import('../../shared/backup-zip.js');
+      const {writeReadableZip, inspectReadableZip} = await import('../../shared/backup-zip.js');
       fs.mkdirSync(path.join(ctx.dir, 'images'), {recursive: true});
       fs.mkdirSync(path.join(ctx.dir, 'documents'), {recursive: true});
-      fs.writeFileSync(
-        path.join(ctx.dir, 'images', 'existing.png'),
-        Buffer.from([1, 2, 3])
-      );
+      fs.writeFileSync(path.join(ctx.dir, 'images', 'existing.png'), Buffer.from([1, 2, 3]));
       const original = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json'), 'utf8'));
       const archive = path.join(ctx.control, 'my-backup.zip');
       writeReadableZip(ctx.dir, archive, zipPass);
-      const added = await request(
-        ctx.base,
-        '/api/bottlings',
-        'POST',
-        {name: 'Only in current collection'},
-        ''
-      );
+      const added = await request(ctx.base, '/api/bottlings', 'POST', {name: 'Only in current collection'}, '');
       // Above API isn't admin-gated; request helper sends the extra header
       // harmlessly.
       assert.equal(added.status, 201);
-      assert.equal(
-        (await request(ctx.base, '/api/collection')).data.bottlings.length,
-        1
-      );
+      assert.equal((await request(ctx.base, '/api/collection')).data.bottlings.length, 1);
       const uploadUrl = `${ctx.base}/api/backups/import-zip`;
       assert.equal(
         (await fetch(
@@ -472,37 +362,23 @@ test(
         'preview must not replace live data'
       );
       const endpoint = `/api/backups/import-zip/${preview.id}/apply`;
-      const denied = await request(ctx.base, endpoint, 'POST', {acknowledge: false});
+      const denied = await request(ctx.base, endpoint, 'POST', {acknowledge: false, });
       assert.equal(denied.status, 400);
-      const wrongApply = await request(
-        ctx.base,
-        endpoint,
-        'POST',
-        {acknowledge: true, password: 'wrong'}
-      );
+      const wrongApply = await request(ctx.base, endpoint, 'POST', {acknowledge: true, password: 'wrong'});
       assert.equal(wrongApply.status, 400);
-      const applied = await request(
-        ctx.base,
-        endpoint,
-        'POST',
-        {acknowledge: true, password: zipPass}
-      );
+      const applied = await request(ctx.base, endpoint, 'POST', {acknowledge: true, password: zipPass});
       assert.equal(applied.status, 200, JSON.stringify(applied.data));
+      assert.equal(applied.data.applied, true);
+      assert.equal(applied.data.cleanupStatus, 'complete');
       const restored = (await request(ctx.base, '/api/collection')).data;
       assert.deepEqual(restored, original);
-      assert.equal(
-        fs.readFileSync(path.join(ctx.dir, 'images', 'existing.png')).length,
-        3
-      );
+      assert.equal(fs.readFileSync(path.join(ctx.dir, 'images', 'existing.png')).length, 3);
       const safety = path.join(ctx.dir, applied.data.safetyBackup);
       assert.equal(inspectReadableZip(safety, null, zipPass).files >= 3, true);
       const oldCollection = path.join(ctx.control, 'old-collection');
       inspectReadableZip(safety, oldCollection, zipPass);
       assert.equal(
-        JSON.parse(fs.readFileSync(
-          path.join(oldCollection, 'data/collection.json'),
-          'utf8'
-        )).bottlings.length,
+        JSON.parse(fs.readFileSync(path.join(oldCollection, 'data/collection.json'), 'utf8')).bottlings.length,
         1
       );
     } finally {await ctx.stop();}
@@ -523,12 +399,7 @@ test(
       });
       assert.equal(created.status, 201);
       const bottleId = created.data.bottle.id;
-      const room = (await request(
-        ctx.base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Storage', width: 5, height: 3}
-      )).data;
+      const room = (await request(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Storage', width: 5, height: 3})).data;
       const furniture = (await request(
         ctx.base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -537,49 +408,22 @@ test(
           name: 'Rack', type: 'regal', x: 0, y: 0, width: 1, depth: 0.5,
         }
       )).data;
-      const shelf = (await request(
-        ctx.base,
-        `/api/warehouse/furniture/${furniture.id}/shelves`,
-        'POST',
-        {name: 'Shelf'}
-      )).data;
+      const shelf = (await request(ctx.base, `/api/warehouse/furniture/${furniture.id}/shelves`, 'POST', {name: 'Shelf'})).data;
       assert.equal(
-        (await request(
-          ctx.base,
-          `/api/warehouse/bottles/${bottleId}`,
-          'PUT',
-          {shelfId: shelf.id}
-        )).status,
+        (await request(ctx.base, `/api/warehouse/bottles/${bottleId}`, 'PUT', {shelfId: shelf.id})).status,
         200
       );
-      const collection =
-        JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json'), 'utf8'));
+      const collection = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json'), 'utf8'));
       collection.schemaVersion = 4;
       collection.bottlings[0].tastings = [{id: 'demo-score'}];
       collection.bottlings[0].rating = 88;
       const warehouse = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'), 'utf8'));
-      for (const folder of ['data', 'images', 'documents']) fs.cpSync(
-        path.join(ctx.dir, folder),
-        path.join(legacyDir, folder),
-        {recursive: true}
-      );
-      fs.writeFileSync(
-        path.join(legacyDir, 'data/collection.json'),
-        JSON.stringify(collection)
-      );
+      for (const folder of ['data', 'images', 'documents']) fs.cpSync(path.join(ctx.dir, folder), path.join(legacyDir, folder), {recursive: true});
+      fs.writeFileSync(path.join(legacyDir, 'data/collection.json'), JSON.stringify(collection));
       fs.mkdirSync(path.join(legacyDir, 'images', bottleId), {recursive: true});
-      fs.writeFileSync(
-        path.join(legacyDir, 'images', bottleId, 'preserve.png'),
-        'picture content'
-      );
-      fs.mkdirSync(
-        path.join(legacyDir, 'documents', bottleId),
-        {recursive: true}
-      );
-      fs.writeFileSync(
-        path.join(legacyDir, 'documents', bottleId, 'preserve.pdf'),
-        'receipt content'
-      );
+      fs.writeFileSync(path.join(legacyDir, 'images', bottleId, 'preserve.png'), 'picture content');
+      fs.mkdirSync(path.join(legacyDir, 'documents', bottleId), {recursive: true});
+      fs.writeFileSync(path.join(legacyDir, 'documents', bottleId, 'preserve.pdf'), 'receipt content');
       const archive = path.join(ctx.control, 'schema4-backup.zip');
       writeReadableZip(legacyDir, archive, zipPass);
       const uploaded = await fetch(ctx.base + '/api/backups/import-zip', {
@@ -607,24 +451,20 @@ test(
       assert.equal(upgraded.bottlings[0].bottles[0].comment, 'Do not discard');
       assert.deepEqual(upgraded.bottlings[0].tastings, []);
       assert.equal(upgraded.bottlings[0].rating, undefined);
-      const warehouseAfter =
-        JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'), 'utf8'));
+      const warehouseAfter = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'), 'utf8'));
       assert.deepEqual(warehouseAfter, warehouse);
       assert.equal(
-        fs.readFileSync(
-          path.join(ctx.dir, 'images', bottleId, 'preserve.png'),
-          'utf8'
-        ),
+        fs.readFileSync(path.join(ctx.dir, 'images', bottleId, 'preserve.png'), 'utf8'),
         'picture content'
       );
       assert.equal(
-        fs.readFileSync(
-          path.join(ctx.dir, 'documents', bottleId, 'preserve.pdf'),
-          'utf8'
-        ),
+        fs.readFileSync(path.join(ctx.dir, 'documents', bottleId, 'preserve.pdf'), 'utf8'),
         'receipt content'
       );
-    } finally {fs.rmSync(legacyDir, {recursive: true, force: true}); await ctx.stop();}
+    } finally {
+      fs.rmSync(legacyDir, {recursive: true, force: true});
+      await ctx.stop();
+    }
   }
 );
 
@@ -639,15 +479,8 @@ test(
       fs.mkdirSync(path.dirname(doc), {recursive: true});
       fs.writeFileSync(img, Buffer.from([1, 2, 3, 255]));
       fs.writeFileSync(doc, 'evidence');
-      const response = await fetch(
-        ctx.base + '/api/export/zip',
-        {headers: {'X-Backup-Admin-Token': token}}
-      );
-      assert.equal(
-        response.status,
-        200,
-        await response.clone().text().then(s => s.slice(0, 150))
-      );
+      const response = await fetch(ctx.base + '/api/export/zip', {headers: {'X-Backup-Admin-Token': token}});
+      assert.equal(response.status, 200, await response.clone().text().then(s => s.slice(0, 150)));
       assert.match(response.headers.get('content-disposition'), /attachment/);
       const content = Buffer.from(await response.arrayBuffer());
       const archive = path.join(ctx.control, 'manual.zip');
@@ -655,17 +488,8 @@ test(
       const {inspectReadableZip} = await import('../../shared/backup-zip.js');
       const restored = path.join(ctx.control, 'inspect');
       inspectReadableZip(archive, restored, zipPass);
-      assert.deepEqual(
-        fs.readFileSync(path.join(restored, 'images', 'manual-photo.png')),
-        Buffer.from([1, 2, 3, 255])
-      );
-      assert.equal(
-        fs.readFileSync(
-          path.join(restored, 'documents', 'manual-invoice.pdf'),
-          'utf8'
-        ),
-        'evidence'
-      );
+      assert.deepEqual(fs.readFileSync(path.join(restored, 'images', 'manual-photo.png')), Buffer.from([1, 2, 3, 255]));
+      assert.equal(fs.readFileSync(path.join(restored, 'documents', 'manual-invoice.pdf'), 'utf8'), 'evidence');
       assert.deepEqual(
         JSON.parse(fs.readFileSync(path.join(restored, 'data/collection.json'))),
         JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json')))
@@ -674,16 +498,187 @@ test(
       // streaming pipeline resolves and removes its temporary file.
       let pending = 1;
       for (let attempt = 0; attempt < 40; attempt++) {
-        pending = fs.readdirSync(path.join(ctx.dir, 'backups')).filter(name =>
-          name.startsWith('.download-')).length;
+        pending = fs.readdirSync(path.join(ctx.dir, 'backups')).filter(name => name.startsWith('.download-')).length;
         if (!pending) break;
         await new Promise(resolve => setTimeout(resolve, 25));
       }
-      assert.equal(
-        pending,
-        0,
-        'temporary download file should be removed after streaming'
-      );
+      assert.equal(pending, 0, 'temporary download file should be removed after streaming');
     } finally {await ctx.stop();}
   }
 );
+
+
+async function uploadRestore(ctx, archive) {
+  const response = await fetch(ctx.base + '/api/backups/import-zip', {
+    method: 'POST', headers: {
+      'Content-Type': 'application/zip', 'X-Backup-Admin-Token': token,
+      'X-Backup-Zip-Password': encodeURIComponent(zipPass),
+    }, body: fs.readFileSync(archive),
+  });
+  return {status: response.status, data: await response.json()};
+}
+
+test('restore rejects invalid warehouse and account schemas, invalid image signatures and missing or changed media before touching live data', async () => {
+  const ctx = await fixture();
+  const source = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-restore-validation-'));
+  try {
+    const {writeReadableZip} = await import('../../shared/backup-zip.js');
+    const created = await request(ctx.base, '/api/bottlings', 'POST', {name: 'Restore validation'});
+    assert.equal(created.status, 201);
+    const id = created.data.bottle.id;
+    const photo = await request(ctx.base, `/api/bottles/${id}/photos`, 'POST', {image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII='});
+    const document = await request(ctx.base, `/api/bottles/${id}/files`, 'POST', {filename: 'receipt.pdf', data: `data:application/pdf;base64,${Buffer.from('%PDF-1.4 receipt').toString('base64')}`});
+    assert.equal(photo.status, 201);
+    assert.equal(document.status, 201);
+    const tracked = ['data/collection.json', 'data/warehouse.json', 'data/user.json', photo.data.path, document.data.path];
+    const original = tracked.map(name => fs.readFileSync(path.join(ctx.dir, name)));
+    const cases = [
+      ['data/warehouse.json', JSON.stringify({schemaVersion: 999, rooms: [], assignments: {}}), 'api.errors.invalidStorageFile'],
+      ['data/warehouse.json', JSON.stringify({schemaVersion: 1, rooms: [], assignments: {[id]: 'missing-shelf'}}), 'api.errors.invalidStorageFile'],
+      ['data/user.json', '{', 'api.errors.invalidRestoreUsers'],
+      ['data/user.json', JSON.stringify({schemaVersion: 1, loginRequired: true, users: []}), 'api.errors.invalidRestoreUsers'],
+      [photo.data.path, null, 'api.errors.invalidRestoreMedia'],
+      [photo.data.path, 'invalid image bytes', 'api.errors.invalidRestoreMedia'],
+      [document.data.path, null, 'api.errors.invalidRestoreMedia'],
+      [document.data.path, '%PDF-1.4 changed', 'api.errors.invalidRestoreMedia'],
+    ];
+    for (const [index, [name, replacement, code]] of cases.entries()) {
+      for (const folder of ['data', 'images', 'documents']) {
+        fs.rmSync(path.join(source, folder), {recursive: true, force: true});
+        fs.cpSync(path.join(ctx.dir, folder), path.join(source, folder), {recursive: true});
+      }
+      if (replacement === null) fs.unlinkSync(path.join(source, name));
+      else fs.writeFileSync(path.join(source, name), replacement);
+      const archive = path.join(ctx.control, `invalid-${index}.zip`);
+      writeReadableZip(source, archive, zipPass);
+      const uploaded = await uploadRestore(ctx, archive);
+      assert.equal(uploaded.status, 400, JSON.stringify(uploaded.data));
+      assert.equal(uploaded.data.errorCode, code, name);
+      assert.deepEqual(tracked.map(file => fs.readFileSync(path.join(ctx.dir, file))), original);
+    }
+    assert.deepEqual(fs.readdirSync(path.join(ctx.control, 'imports')), []);
+    assert.equal(fs.readdirSync(path.join(ctx.dir, 'backups')).some(name => name.startsWith('pre-restore-')), false);
+    const valid = path.join(ctx.control, 'valid-with-media.zip');
+    writeReadableZip(ctx.dir, valid, zipPass);
+    const uploaded = await uploadRestore(ctx, valid);
+    assert.equal(uploaded.status, 201, JSON.stringify(uploaded.data));
+    const endpoint = `/api/backups/import-zip/${uploaded.data.id}/apply`;
+    const applied = await request(ctx.base, endpoint, 'POST', {acknowledge: true, password: zipPass});
+    assert.equal(applied.status, 200, JSON.stringify(applied.data));
+    assert.deepEqual(tracked.map(file => fs.readFileSync(path.join(ctx.dir, file))), original);
+  } finally {
+    fs.rmSync(source, {recursive: true, force: true});
+    await ctx.stop();
+  }
+});
+
+test('restore binds the confirmation to the exact verified ZIP and unlock validates saved archives again', async () => {
+  const ctx = await fixture();
+  try {
+    const {writeReadableZip} = await import('../../shared/backup-zip.js');
+    const first = path.join(ctx.control, 'first.zip');
+    writeReadableZip(ctx.dir, first, zipPass);
+    const uploaded = await uploadRestore(ctx, first);
+    assert.equal(uploaded.status, 201);
+    const id = uploaded.data.id;
+    const importDir = path.join(ctx.control, 'imports', id);
+    const prefix = `/api/backups/import-zip/${id}`;
+    const get = await fetch(ctx.base + prefix, {headers: {'X-Backup-Admin-Token': token, 'X-Backup-Zip-Password': encodeURIComponent(zipPass)}});
+    assert.equal(get.status, 200);
+    assert.equal((await get.json()).bottlings, 0);
+    assert.equal(fs.existsSync(path.join(importDir, 'preview')), false, 'decrypted preview must not persist');
+    const added = await request(ctx.base, '/api/bottlings', 'POST', {name: 'Newer archive'});
+    assert.equal(added.status, 201);
+    const second = path.join(ctx.control, 'second.zip');
+    writeReadableZip(ctx.dir, second, zipPass);
+    fs.copyFileSync(second, path.join(importDir, 'uploaded.zip'));
+    const refused = await request(ctx.base, prefix + '/apply', 'POST', {acknowledge: true, password: zipPass});
+    assert.equal(refused.status, 409);
+    assert.equal(refused.data.errorCode, 'api.errors.restorePreviewChanged');
+    assert.equal((await request(ctx.base, '/api/collection')).data.bottlings.length, 1);
+    const unlocked = await request(ctx.base, prefix + '/unlock', 'POST', {password: zipPass});
+    assert.equal(unlocked.status, 200);
+    assert.equal(unlocked.data.bottlings, 1);
+    // Any leftover preview folder is not the restore source.
+    fs.mkdirSync(path.join(importDir, 'preview', 'data'), {recursive: true});
+    fs.writeFileSync(path.join(importDir, 'preview/data/collection.json'), '{invalid');
+    const applied = await request(ctx.base, prefix + '/apply', 'POST', {acknowledge: true, password: zipPass});
+    assert.equal(applied.status, 200, JSON.stringify(applied.data));
+    assert.equal((await request(ctx.base, '/api/collection')).data.bottlings[0].name, 'Newer archive');
+  } finally {await ctx.stop();}
+});
+
+test('legacy ZIP without a warehouse or account file creates an empty warehouse and preserves current accounts', async () => {
+  const ctx = await fixture();
+  const legacy = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-old-restore-'));
+  try {
+    const {writeReadableZip} = await import('../../shared/backup-zip.js');
+    const room = await request(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Current room', width: 4, height: 3});
+    assert.equal(room.status, 201);
+    const accounts = fs.readFileSync(path.join(ctx.dir, 'data/user.json'));
+    fs.mkdirSync(path.join(legacy, 'data'));
+    fs.copyFileSync(path.join(ctx.dir, 'data/collection.json'), path.join(legacy, 'data/collection.json'));
+    const archive = path.join(ctx.control, 'legacy.zip');
+    writeReadableZip(legacy, archive, zipPass);
+    const uploaded = await uploadRestore(ctx, archive);
+    assert.equal(uploaded.status, 201, JSON.stringify(uploaded.data));
+    const applied = await request(ctx.base, `/api/backups/import-zip/${uploaded.data.id}/apply`, 'POST', {acknowledge: true, password: zipPass});
+    assert.equal(applied.status, 200, JSON.stringify(applied.data));
+    assert.deepEqual(fs.readFileSync(path.join(ctx.dir, 'data/user.json')), accounts);
+    const warehouse = await request(ctx.base, '/api/warehouse');
+    assert.equal(warehouse.status, 200);
+    assert.deepEqual(warehouse.data.rooms, []);
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'))), {schemaVersion: 1, rooms: [], assignments: {}});
+  } finally {
+    fs.rmSync(legacy, {recursive: true, force: true});
+    await ctx.stop();
+  }
+});
+
+test('confirmed restore waits for a suspended mutation and rejects new requests until the consistent replacement finishes', {timeout: 15000}, async () => {
+  const ctx = await fixture();
+  let pending;
+  try {
+    const {writeReadableZip, inspectReadableZip} = await import('../../shared/backup-zip.js');
+    const archive = path.join(ctx.control, 'before-mutation.zip');
+    writeReadableZip(ctx.dir, archive, zipPass);
+    const uploaded = await uploadRestore(ctx, archive);
+    assert.equal(uploaded.status, 201);
+    const body = JSON.stringify({name: 'Mutation before restore'});
+    pending = http.request(ctx.base + '/api/bottlings', {
+      method: 'POST', headers: {'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body), Expect: '100-continue'},
+    });
+    const continued = once(pending, 'continue');
+    const result = new Promise((resolve, reject) => {
+      pending.once('error', reject);
+      pending.once('response', response => {response.resume(); response.once('end', () => resolve(response.statusCode));});
+    });
+    // Prevent an unhandled rejection if the test fails before the socket is released.
+    result.catch(() => {});
+    pending.flushHeaders();
+    await continued;
+    let completed = false;
+    const restoring = request(ctx.base, `/api/backups/import-zip/${uploaded.data.id}/apply`, 'POST', {acknowledge: true, password: zipPass});
+    restoring.then(() => {completed = true;}, () => {completed = true;});
+    let rejected;
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const response = await request(ctx.base, '/api/version');
+      if (response.status === 503) {rejected = response; break;}
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    assert.equal(rejected?.data.errorCode, 'api.errors.restoreInProgress');
+    assert.equal(completed, false);
+    pending.end(body);
+    assert.equal(await result, 201);
+    const applied = await restoring;
+    assert.equal(applied.status, 200, JSON.stringify(applied.data));
+    assert.equal((await request(ctx.base, '/api/collection')).data.bottlings.length, 0);
+    const safety = path.join(ctx.control, 'safety-inspection');
+    inspectReadableZip(path.join(ctx.dir, applied.data.safetyBackup), safety, zipPass);
+    const saved = JSON.parse(fs.readFileSync(path.join(safety, 'data/collection.json')));
+    assert.equal(saved.bottlings[0].name, 'Mutation before restore');
+  } finally {
+    pending?.destroy();
+    await ctx.stop();
+  }
+});

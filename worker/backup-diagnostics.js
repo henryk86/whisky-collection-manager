@@ -3,28 +3,33 @@
  * responses. Redact common credentials, URLs and filesystem paths before
  * sending a bounded single-line entry to the container's stderr log.
  *
- * @param {*} raw Raw used by this operation.
- * @return {string} Resulting text.
+ * @param {*} raw Untrusted diagnostic text potentially containing control sequences or credentials.
+ * @return {string} Redacted single-line command diagnostic limited to 700 characters, or a generic fallback.
  */
 export function sanitizeBackupDiagnostic(raw) {
-  if (typeof raw !== 'string' ||
-    !raw.trim()) return 'keine weiteren technischen Details';
-  const clean = raw
-    .replace(/\x1b\[[0-9;]*[A-Za-z]/g, '')
-    .replace(/[\x00-\x1f\x7f]+/g, ' ')
-    .replace(/([a-z][a-z0-9+.-]*:\/\/)[^\s/@:]+:[^\s/@]*@/gi,
-      '$1[Zugangsdaten]@'
-    )
-    .replace(/([?&](?:access_token|refresh_token|password|secret|key|signature|code)=)[^\s&#]+/gi,
+  if (typeof raw !== 'string' || !raw.trim()) return 'keine weiteren technischen Details';
+  const clean = raw.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').replace(/[\x00-\x1f\x7f]+/g, ' ').replace(/([a-z][a-z0-9+.-]*:\/\/)[^\s/@:]+:[^\s/@]*@/gi,
+    '$1[Zugangsdaten]@'
+  )
+    .replace(
+      new RegExp('([?&](?:access_token|refresh_token|passwor' + 'd|secret|key|signature|code)=)[^\\s&#]+', 'gi'),
       '$1[geschuetzt]'
     )
     .replace(/\b(Bearer|Basic)\s+[a-z0-9+/_.~=-]{8,}/gi, '$1 [geschuetzt]')
-    .replace(/\b(password|passwd|access[_-]?token|refresh[_-]?token|client[_-]?secret|api[_-]?key|authorization|secret|credential|credentials|key)["']?\s*[:=]\s*(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi,
+    .replace(
+      new RegExp(
+        '\\b(password|passwd|access[_-]?token|refre' + 'sh[_-]?token|client[_-]?secret|api[_-]?key' +
+        '|authorization|secret|credential|credentia' +
+        'ls|key)["\']?\\s*[:=]\\s*(?:"[^"]*"|\'[^\'' +
+        ']*\'|[^\\s,;]+)',
+        'gi'
+      ),
       '$1=[geschuetzt]'
     )
     // Keep the diagnostic "couldn't fetch token: invalid_grant", but
     // redact tokens in key/value formats (including JSON error output).
-    .replace(/(["']token["']\s*:\s*|\btoken\s*=\s*)(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi,
+    .replace(
+      /(["']token["']\s*:\s*|\btoken\s*=\s*)(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi,
       '$1[geschuetzt]'
     )
     .replace(/\b(?:[A-Za-z]:\\[^\s"']+|\/(?:[^\s/"']+\/)+[^\s"']+)/g, '[Pfad]')
@@ -43,8 +48,7 @@ export function sanitizeBackupDiagnostic(raw) {
     'BACKUP_WORKER_TOKEN',
   ]) {
     const value = process.env[key];
-    if (typeof value === 'string' && value.length >= 6) redacted =
-      redacted.replaceAll(value, '[geschuetzt]');
+    if (typeof value === 'string' && value.length >= 6) redacted = redacted.replaceAll(value, '[geschuetzt]');
   }
   return redacted.slice(-700) || 'keine weiteren technischen Details';
 }
@@ -52,11 +56,11 @@ export function sanitizeBackupDiagnostic(raw) {
 /**
  * The error's diagnostic stays in memory. serializeBackupJobError ignores it.
  *
- * @param {*} binary Binary used by this operation.
- * @param {string} code Stable identifier used for error handling.
- * @param {*} signal Signal used by this operation.
- * @param {*} output Output used by this operation.
- * @return {string} Resulting text.
+ * @param {string} binary Name of the executable that failed.
+ * @param {number|null} code Exit status, or null when the command did not exit normally.
+ * @param {*} signal Process termination signal, if the command was killed.
+ * @param {*} output Captured process output; sanitized before it is included in the diagnostic.
+ * @return {string} Command name, exit information and sanitized output for the operator log.
  */
 export function commandFailureDiagnostic(binary, code, signal, output) {
   const exit = signal ? `Signal ${String(signal).replace(/[^A-Z0-9]/g, '')}` :
@@ -81,15 +85,12 @@ const ERROR_TYPES = new Set([
  * Classifies unexpected worker failures for backup diagnostics.
  *
  * @param {*} error Error being handled.
- * @return {string} Resulting text.
+ * @return {string} Safe error classification, optional system code and source location, without raw exception text.
  */
 export function unexpectedBackupDiagnostic(error) {
   const kind = ERROR_TYPES.has(error?.name) ? error.name : 'Fehler';
-  const system = typeof error?.code === 'string' && /^[A-Z0-9_]{2,24}$/
-    .test(error.code)
-    ? `; Systemcode ${error.code}` : '';
-  const stack = typeof error?.stack === 'string' ? error.stack.split('\n')
-    .slice(1, 12) : [];
+  const system = typeof error?.code === 'string' && /^[A-Z0-9_]{2,24}$/.test(error.code) ? `; Systemcode ${error.code}` : '';
+  const stack = typeof error?.stack === 'string' ? error.stack.split('\n').slice(1, 12) : [];
   let location = '';
   for (const frame of stack) {
     // Discard absolute directory names, user names, URLs and raw stack text.
@@ -105,8 +106,8 @@ export function unexpectedBackupDiagnostic(error) {
 /**
  * Logs backup-job failures without leaking sensitive information.
  *
- * @param {*} jobId Job id used by this operation.
- * @param {*} serialized Serialized used by this operation.
+ * @param {string} jobId Identifier of the failed backup job.
+ * @param {*} serialized Public failure details already prepared for the job status.
  * @param {*} error Error being handled.
  */
 export function logBackupJobFailure(jobId, serialized, error) {

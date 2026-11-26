@@ -8,22 +8,23 @@ import path from 'node:path';
 
 const catalog = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
 /**
- * Derives the walk result from the supplied values.
- *
- * @param {*} directory Directory containing the requested data.
- * @return {*} Combined text from the input values.
+ * Discovers JavaScript and HTML files whose translation references must be checked.
+ * @param {string} directory Directory to search recursively.
+ * @return {string[]} Discovered source paths.
  */
-const walk = directory => fs.readdirSync(directory, {withFileTypes: true})
-  .flatMap(entry => {
-    const file = path.join(directory, entry.name);
-    return entry.isDirectory() ? walk(file) : file.endsWith('.js') ?
-      [file] : [];
-  });
-const files = walk('public/js').concat('public/app.js');
+const walk = directory => fs.readdirSync(directory, {withFileTypes: true}).flatMap(entry => {
+  const file = path.join(directory, entry.name);
+  return entry.isDirectory() ? walk(file) : (/\.(?:js|html)$/.test(file)) ? [file] : [];
+});
+const files = walk('public/js').concat(walk('public/templates'), 'public/app.js');
 const keys = new Set();
 for (const file of files) {
   if (file.includes(`${path.sep}i18n${path.sep}`)) continue;
-  const source = fs.readFileSync(file, 'utf8');
+  // A JavaScript line continuation does not change a literal key.
+  const source = fs.readFileSync(file, 'utf8').replace(/\\\r?\n/g, '');
+  for (const [, key] of source.matchAll(/\{\{t:([\w.]+)\}\}/g)) {
+    keys.add(key);
+  }
   // Translation identifiers are domain keys, never concatenated pieces of
   // source text.
   if (/\bt\(\s*['"][^'"]+['"]\s*\+/u.test(source)) {
@@ -40,15 +41,15 @@ for (const key of Object.keys(catalog)) {
   if (!/^[a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9]+)+$/u.test(key)) {
     throw new Error(`Invalid translation key: ${key}`);
   }
-  if (/[äöüß]/iu.test(key) || /(?:\.[a-z]{1,2}){3,}/u.test(key) ||
-    /\.[a-z0-9]{40,}/u.test(key)) {
+  if (/[äöüß]/iu.test(key) || /(?:\.[a-z]{1,2}){3,}/u.test(key) || /\.[a-z0-9]{40,}/u.test(key)) {
     throw new Error(`Unstable/generated translation key: ${key}`);
   }
 }
 // Explicit lookup tables for persisted type/front/camera IDs must also point to
 // valid keys.
-const warehouseSource = fs.readFileSync('public/js/views/warehouse.js', 'utf8');
-for (const [, key] of warehouseSource.matchAll(/['"](warehouse\.(?:furniture\.types|front|camera|navigation)\.[a-zA-Z]+)['"]/gu)) {
+const warehouseSource = fs.readFileSync('public/js/views/warehouse.js', 'utf8').replace(/\\\r?\n/g, '');
+for (const [, key] of warehouseSource.matchAll(
+  new RegExp('[\'"](warehouse\\.(?:furniture\\.types|fro' + 'nt|camera|navigation)\\.[a-zA-Z]+)[\'"]', 'gu'))) {
   if (!Object.hasOwn(catalog, key)) throw new Error(`Missing dynamic warehouse translation key: ${key}`);
 }
 const registry = JSON.parse(fs.readFileSync('public/locales/index.json', 'utf8'));
@@ -70,12 +71,11 @@ for (const code of Object.keys(registry)) {
      * Orders the params records using the configured comparison.
      *
      * @param {*} message Message to display or use for diagnostics.
-     * @return {string} Resulting text.
+     * @return {string} Sorted comma-separated placeholder names, including plural selectors.
      */
     const params = message => [
       ...[...message.matchAll(/\{([a-zA-Z]\w*)\}/gu)].map(match => match[1]),
-      ...[...message.matchAll(/\{([a-zA-Z]\w*),\s*plural,/gu)].map(match =>
-        match[1]),
+      ...[...message.matchAll(/\{([a-zA-Z]\w*),\s*plural,/gu)].map(match => match[1]),
     ].sort().join(',');
     if (params(value) !== params(catalog[key])) {
       throw new Error(`Translation placeholders differ (${code}): ${key}`);

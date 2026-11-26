@@ -1,33 +1,34 @@
+import {replaceContent} from '../ui/dom-renderer.js';
 import {t} from '../i18n/index.js';
 import {getThemePreference, effectiveTheme, nextTheme} from './preference.js';
 import {themeSunIcon, themeMoonIcon} from '../ui/action-icons.js';
 /**
  * Theme is a local browser preference, not collection data.
  *
- * @return {!Object} Structured result for the caller.
+ * @param {function(!Element, *): void=} mountContent Content mount boundary.
+ * @return {!Object} Theme application and switching operations.
  */
-export function createThemeController() {
+export function createThemeController(mountContent = replaceContent) {
   const themeMedia = window.matchMedia('(prefers-color-scheme: dark)');
   let themePreference = getThemePreference();
   /**
-   * Updates theme in the current state.
+   * Applies the effective theme to the document and updates the theme-switching control.
    */
   function applyTheme() {
     const active = effectiveTheme(themePreference, themeMedia.matches);
     document.documentElement.dataset.theme = active;
     document.documentElement.style.colorScheme = active;
-    const button = document.querySelector('[data-act=toggle-theme]');
+    const button = /** @type {HTMLButtonElement|null} */ (document.querySelector('[data-act=toggle-theme]'));
     if (button) {
-      button.innerHTML = active === 'dark' ? themeSunIcon : themeMoonIcon;
-      button.title = active === 'dark' ? t("ui.theme.enableLight") :
-        t("ui.theme.enableDark");
+      mountContent(button, active === 'dark' ? themeSunIcon : themeMoonIcon);
+      button.title = active === 'dark' ? t("ui.theme.enableLight") : t("ui.theme.enableDark");
       button.setAttribute('aria-label', button.title);
       button.setAttribute('aria-pressed', String(active === 'dark'));
     }
   }
 
   /**
-   * Updates the toggle theme state for its caller.
+   * Persists the next theme preference and applies it immediately.
    */
   function toggleTheme() {
     themePreference = nextTheme(effectiveTheme(themePreference, themeMedia.matches));

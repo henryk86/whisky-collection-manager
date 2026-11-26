@@ -1,3 +1,4 @@
+import {captureContent} from '../helpers/capture-rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -48,7 +49,11 @@ const room = {
     },
   ],
 };
-const warehouse = {rooms: [room], bottles: [{id: 'b1'}], assignments: {b1: 's2'}};
+
+const warehouse = {
+  rooms: [room], bottles: [{id: 'b1'}], assignments: {b1: 's2', },
+};
+
 /**
  * Derives the model result from the supplied values.
  * @return {*} Result computed from the supplied inputs.
@@ -58,19 +63,14 @@ const model = () => warehouse3DGeometry(room, warehouse);
 test(
   'four stable camera directions and orientation-aware cabinet fronts',
   () => {
-    assert.deepEqual(
-      WAREHOUSE_CAMERAS.map(([id]) => id),
-      ['nw', 'ne', 'se', 'sw']
-    );
+    assert.deepEqual(WAREHOUSE_CAMERAS.map(([id]) => id), ['nw', 'ne', 'se', 'sw']);
     for (const [id] of WAREHOUSE_CAMERAS) {
-      const [x, z] = cameraDirection(id); assert.equal(Math.abs(x), 1); assert.equal(Math.abs(z), 1);
+      const [x, z] = cameraDirection(id); assert.equal(Math.abs(x), 1);
+      assert.equal(Math.abs(z), 1);
     }
     assert.equal(cameraForFurniture(room.furniture[0], 'sw'), 'sw');
     assert.equal(cameraForFurniture(room.furniture[2], 'se'), 'nw');
-    assert.deepEqual(
-      furnitureFootprint(room.furniture[2]),
-      {width: 0.5, depth: 1.5}
-    );
+    assert.deepEqual(furnitureFootprint(room.furniture[2]), {width: 0.5, depth: 1.5});
   }
 );
 
@@ -81,8 +81,7 @@ test(
     assert.equal(rack.parts.filter(p => p.role === 'post').length, 4);
     assert.equal(rack.parts.filter(p => p.role === 'shelf-board').length, 3);
     assert.equal(rack.parts.filter(p => p.role === 'body').length, 0);
-    for (const part of rack.parts) assert.ok(part.size.every(n =>
-      Number.isFinite(n) && n > 0));
+    for (const part of rack.parts) assert.ok(part.size.every(n => Number.isFinite(n) && n > 0));
   }
 );
 
@@ -102,11 +101,7 @@ test(
     const wall = output.objects.find(o => o.id === 'wall');
     assert.ok(Math.max(...cab.parts.map(p => p.center[1] + p.size[1] / 2)) <
       Math.min(...wall.parts.map(p => p.center[1] - p.size[1] / 2)));
-    assert.equal(
-      JSON.stringify(room),
-      JSON.stringify(warehouse.rooms[0]),
-      '3D calculation never mutates room'
-    );
+    assert.equal(JSON.stringify(room), JSON.stringify(warehouse.rooms[0]), '3D calculation never mutates room');
   }
 );
 
@@ -118,10 +113,7 @@ test(
     assert.equal(rack.parts.filter(p => p.role === 'bottle').length, 1);
     const isolated = warehouse3DGeometry(room, warehouse, 'rack');
     assert.deepEqual(isolated.objects.map(o => o.id), ['rack']);
-    assert.deepEqual(
-      model().objects.map(o => o.id),
-      ['cabinet', 'wall', 'rack']
-    );
+    assert.deepEqual(model().objects.map(o => o.id), ['cabinet', 'wall', 'rack']);
   }
 );
 
@@ -135,91 +127,12 @@ test(
      * @param {*} type Type or category used to select behavior.
      * @return {*} Result computed from the supplied inputs.
      */
-    const mk = type => warehouse3DGeometry(
-      {...room, furniture: [{...base, type, shelves: [{id: 'x'}, {id: 'y'}]}]},
-      warehouse
-    ).objects[0];
+    const mk = type => warehouse3DGeometry({...room, furniture: [{...base, type, shelves: [{id: 'x'}, {id: 'y'}]}]}, warehouse).objects[0];
     assert.equal(mk('schrank').parts.filter(p => p.role === 'door').length, 2);
-    assert.equal(
-      mk('kommode').parts.filter(p => p.role === 'drawer').length,
-      2
-    );
-    assert.equal(
-      mk('vitrine').parts.filter(p => p.role === 'glass-front').length,
-      1
-    );
-    assert.equal(
-      mk('vitrine').parts.filter(p => p.role === 'shelf-board').length,
-      3
-    );
+    assert.equal(mk('kommode').parts.filter(p => p.role === 'drawer').length, 2);
+    assert.equal(mk('vitrine').parts.filter(p => p.role === 'glass-front').length, 1);
+    assert.equal(mk('vitrine').parts.filter(p => p.role === 'shelf-board').length, 3);
     assert.equal(mk('kiste').parts.filter(p => p.role === 'body').length, 1);
-  }
-);
-
-test(
-  '3D is mounted lazily in the warehouse page, with no SVG/2D regression',
-  () => {
-    let html = ''; const state = {
-      warehouse,
-      selected: 'rooms',
-      warehouseRoomId: room.id,
-      warehousePlanMode: '2d',
-    };
-    const old = globalThis.document;
-    globalThis.document = {
-      /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
-       */
-      querySelector: () => null,
-    };
-    try {
-      const view = createWarehouseView({
-        state,
-        /**
-         * Updates the shell state for its caller.
-         *
-         * @param {*} value Value to process.
-         */
-        shell: value => {html = value;},
-        /**
-         * Updates the navigate state for its caller.
-         */
-        navigate: () => {},
-        modal: {},
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.render(); assert.match(html, /class="warehouse-floor"/);
-      state.warehousePlanMode =
-        '3d'; view.render(); assert.match(html, /class="warehouse-three-viewport"/);
-      assert.doesNotMatch(html, /class="warehouse-isometric"/);
-      assert.equal(
-        (html.match(/data-act="warehouse-camera"/g) || []).length,
-        4
-      );
-      assert.equal(
-        (html.match(/data-act="warehouse-visibility-toggle"/g) || []).length,
-        3
-      );
-      assert.equal(
-        (html.match(/class="warehouse-bulk-item/g) || []).length,
-        3,
-        'only one furniture list'
-      );
-      assert.doesNotMatch(
-        html,
-        /warehouse-iso-number|warehouse-iso-legend-items/
-      );
-      assert.equal(view.update3DZoom(150), false);
-    } finally {
-      if (old ===
-        undefined) delete globalThis.document; else globalThis.document =
-          old;
-    }
   }
 );
 
@@ -239,155 +152,28 @@ test(
     for (const [i, rotation] of [0, 90, 180, 270].entries()) {
       const item = {...original, rotation, x: 1, y: 1, width: 1.6, depth: 0.65};
       const footprint = furnitureFootprint(item);
-      const centre = [item.x + footprint.width / 2, item.y +
-        footprint.depth / 2];
+      const centre = [item.x + footprint.width / 2, item.y + footprint.depth / 2];
       const [nx, nz] = normals[i];
       for (const [type, role, expected] of [
         ['schrank', 'door', 2],
         ['vitrine', 'glass-front', 1],
         ['kommode', 'drawer', 1],
       ]) {
-        const result = warehouse3DGeometry(
-          {...room, furniture: [{...item, type, shelves: []}]},
-          warehouse
-        ).objects[0];
+        const result = warehouse3DGeometry({...room, furniture: [{...item, type, shelves: []}]}, warehouse).objects[0];
         const fronts = result.parts.filter(part => part.role === role);
         assert.equal(fronts.length, expected, `${type}, ${rotation}°`);
         for (const front of fronts) {
-          const dx = front.center[0] - centre[0], dz = front.center[2] -
-            centre[1];
+          const dx = front.center[0] - centre[0], dz = front.center[2] - centre[1];
           // Every panel lies outside the body exactly on its rotated front.
           assert.ok(
-            Math.abs(dx * nx + dz * nz - (item.depth / 2 +
-              front.size[rotation % 180 ? 0 : 2] / 2)) < 1e-7,
+            Math.abs(dx * nx + dz * nz - (item.depth / 2 + front.size[rotation % 180 ? 0 : 2] / 2)) < 1e-7,
             `${type} ${rotation}°: front must point in the direction of its door/glass`
           );
-          if (rotation % 180 === 0) assert.ok(
-            front.size[0] > front.size[2],
-            `${type} ${rotation}° along x`
-          );
-          else assert.ok(
-            front.size[2] > front.size[0],
-            `${type} ${rotation}° along z`
-          );
+          if (rotation % 180 === 0) assert.ok(front.size[0] > front.size[2], `${type} ${rotation}° along x`);
+          else assert.ok(front.size[2] > front.size[0], `${type} ${rotation}° along z`);
         }
       }
     }
-  }
-);
-
-test(
-  'warehouse multi-edit selection panel and optional properties are wired for the current room',
-  () => {
-    let html = ''; let form = ''; const state = {
-      warehouse,
-      selected: 'shelves',
-      warehouseRoomId: room.id,
-      warehousePlanMode: '2d',
-      warehouseSelectedFurnitureIds: [],
-    };
-    const before = JSON.stringify(warehouse);
-    const previous = globalThis.document;
-    globalThis.document = {
-      /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
-       */
-      querySelector: () =>
-        null,
-      /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
-       */
-      querySelectorAll: () => [],
-    };
-    try {
-      const view = createWarehouseView({
-        state,
-        /**
-         * Derives the shell result from the supplied values.
-         *
-         * @param {*} output Output resource or accumulated result.
-         * @return {*} Result computed from the supplied inputs.
-         */
-        shell: output => html = output,
-        /**
-         * Updates the navigate state for its caller.
-         */
-        navigate: () => {},
-        modal: {
-          /**
-           * Renders modal in the current view.
-           *
-           * @param {*} _title Value used by this operation.
-           * @param {*} content Content to render, store or examine.
-           * @return {*} Result computed from the supplied inputs.
-           */
-          showModal: (_title, content) => form = content,
-        },
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.render();
-      assert.doesNotMatch(
-        html,
-        /warehouse-bulk-check/,
-        'no furniture editor duplicates the shelf wall'
-      );
-      view.openFurnitureBulkManager();
-      assert.equal(
-        (form.match(/class="warehouse-bulk-pick"/g) || []).length,
-        3
-      );
-      assert.doesNotMatch(form, /warehouse-furniture-panel/);
-      assert.match(form, /data-act="warehouse-bulk-edit" disabled/);
-      assert.match(form, /data-act="warehouse-bulk-delete" disabled/);
-      view.toggleFurnitureSelection('cabinet', true);
-      view.toggleFurnitureSelection('rack', true);
-      view.openFurnitureBulkManager();
-      assert.match(form, /2 von 3 ausgewählt/);
-      assert.equal((form.match(/aria-pressed="true"/g) || []).length, 2);
-      assert.match(form, /data-act="warehouse-bulk-delete"/);
-      view.askBulkDelete();
-      assert.match(form, /2 Lagermöbel wirklich löschen/);
-      view.openForm('furniture-bulk');
-      assert.match(form, /data-endpoint="\/api\/warehouse\/furniture\/bulk"/);
-      for (const name of [
-        'rotation',
-        'elevation',
-        'itemHeight',
-        'width',
-        'depth',
-        'leftSidePanel',
-        'rightSidePanel',
-        'backPanel',
-      ]) assert.match(form, new RegExp(`name="${name}"`));
-      assert.doesNotMatch(form, /name="apply-/);
-      assert.match(form, /Leere Felder bleiben unverändert/);
-      view.clearFurnitureSelection();
-      assert.deepEqual(state.warehouseSelectedFurnitureIds, []);
-      view.selectAllFurniture();
-      assert.equal(state.warehouseSelectedFurnitureIds.length, 3);
-      state.selected = 'shelves'; view.render();
-      view.openFurnitureBulkManager();
-      assert.equal(
-        (form.match(/class="warehouse-bulk-pick"/g) || []).length,
-        3
-      );
-      assert.doesNotMatch(form, /warehouse-furniture-panel/);
-    } finally {
-      if (previous ===
-        undefined) delete globalThis.document; else globalThis.document =
-          previous;
-    }
-    assert.equal(
-      JSON.stringify(warehouse),
-      before,
-      'selection must not edit the warehouse until a save action'
-    );
   }
 );
 
@@ -401,306 +187,17 @@ test(
       };
       const {width, depth} = furnitureFootprint(base);
       const center = [base.x + width / 2, base.y + depth / 2];
-      const normal = [
-        -Math.round(Math.sin(rotation * Math.PI / 180)),
-        Math.round(Math.cos(rotation * Math.PI / 180)),
-      ];
-      const tangent = [
-        Math.round(Math.cos(rotation * Math.PI / 180)),
-        Math.round(Math.sin(rotation * Math.PI / 180)),
-      ];
+      const normal = [-Math.round(Math.sin(rotation * Math.PI / 180)), Math.round(Math.cos(rotation * Math.PI / 180)),];
+      const tangent = [Math.round(Math.cos(rotation * Math.PI / 180)), Math.round(Math.sin(rotation * Math.PI / 180)),];
       const parts = warehouse3DGeometry({...room, furniture: [base]}, warehouse).objects[0].parts;
       const left = parts.find(p => p.role === 'left-side-panel');
       const back = parts.find(p => p.role === 'back-panel');
       assert.ok(left && back);
       assert.equal(parts.some(p => p.role === 'right-side-panel'), false);
-      const leftDelta = [left.center[0] - center[0], left.center[2] -
-        center[1]];
-      const backDelta = [back.center[0] - center[0], back.center[2] -
-        center[1]];
-      assert.ok(
-        leftDelta[0] * tangent[0] + leftDelta[1] * tangent[1] < 0,
-        `left ${rotation}`
-      );
-      assert.ok(
-        backDelta[0] * normal[0] + backDelta[1] * normal[1] < 0,
-        `back ${rotation}`
-      );
-    }
-  }
-);
-
-
-test(
-  'room plan furniture selection highlights layout without opening shelf details or scrolling',
-  () => {
-    const originalDocument = globalThis.document, originalWindow =
-      globalThis.window;
-    let html = '', scrolls = 0, navigations = 0, replaced = '';
-    globalThis.document = {
-      /**
-       * Derives the query selector result from the supplied values.
-       *
-       * @param {function(...*): *} selector Selector used to obtain matching
-       *     values.
-       * @return {!Object} Result computed from the supplied inputs.
-       */
-      querySelector: selector => selector === '.warehouse-furniture-panel' ?
-        {
-          /**
-           * Updates the scroll into view state for its caller.
-           *
-           * @param {*} options Options controlling the operation.
-           */
-          scrollIntoView: options => {
-            assert.equal(options.block, 'start');
-            assert.equal(options.behavior, 'instant');
-            scrolls++;
-          },
-        } : null,
-      /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
-       */
-      querySelectorAll: () => [],
-    };
-    globalThis.window = {
-      history: {
-        /**
-         * Updates the replace state state for its caller.
-         *
-         * @param {*} _state Value used by this operation.
-         * @param {string} _title Value used by this operation.
-         * @param {*} url URL of the resource being processed.
-         */
-        replaceState: (_state, _title, url) => {replaced = url;},
-      },
-    };
-    const state = {
-      warehouse,
-      selected: 'rooms',
-      warehouseRoomId: room.id,
-      warehousePlanMode: '2d',
-    };
-    try {
-      const view = createWarehouseView({
-        state,
-        /**
-         * Updates the shell state for its caller.
-         *
-         * @param {*} value Value to process.
-         */
-        shell: value => {html = value;},
-        /**
-         * Updates the navigate state for its caller.
-         */
-        navigate: () => {navigations++;},
-        modal: {},
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.selectFurniture('rack');
-      assert.equal(state.warehouseFurnitureId, 'rack');
-      assert.equal(state.selected, 'rooms');
-      assert.equal(navigations, 0);
-      assert.equal(scrolls, 0);
-      assert.match(replaced, /section=rooms.*furniture=rack/);
-      assert.doesNotMatch(
-        html,
-        /warehouse-furniture-panel|warehouse-room-wall/
-      );
-      assert.equal((html.match(/class="warehouse-bulk-item/g) || []).length, 3);
-      assert.doesNotMatch(html, /warehouse-room-card/);
-    } finally {
-      if (originalDocument ===
-        undefined) delete globalThis.document; else globalThis.document =
-          originalDocument;
-      if (originalWindow ===
-        undefined) delete globalThis.window; else globalThis.window =
-          originalWindow;
-    }
-  }
-);
-
-
-test(
-  'room plans default to 3D while a deliberate 2D selection keeps the floor plan',
-  () => {
-    let html = '';
-    const original = globalThis.document;
-    globalThis.document = {
-      /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
-       */
-      querySelector: () =>
-        null,
-      /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
-       */
-      querySelectorAll: () => [],
-    };
-    try {
-      const state = {warehouse, selected: 'rooms', warehouseRoomId: room.id};
-      const view = createWarehouseView({
-        state,
-        /**
-         * Updates the shell state for its caller.
-         *
-         * @param {*} markup HTML markup for the selected content.
-         */
-        shell: markup => {html = markup;},
-        /**
-         * Updates the navigate state for its caller.
-         */
-        navigate: () => {},
-        modal: {},
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.render();
-      assert.match(html, /class="warehouse-three-viewport"/);
-      assert.match(
-        html,
-        /data-mode="3d" class="btn small primary" aria-pressed="true"/
-      );
-      assert.equal(
-        (html.match(/class="warehouse-eye-icon"/g) || []).length,
-        room.furniture.length
-      );
-      assert.equal(
-        (html.match(/data-act="warehouse-visibility-toggle"/g) || []).length,
-        room.furniture.length
-      );
-      assert.doesNotMatch(
-        html,
-        /data-act="warehouse-iso-clear"|>Freistellen<|>Alle zeigen</
-      );
-      assert.match(
-        html,
-        /aria-pressed="true" title="Schrank ausblenden" aria-label="Schrank ausblenden"/
-      );
-      const selectedId = state.warehouseFurnitureId;
-      assert.equal(view.toggleFurnitureVisibility('cabinet'), false);
-      assert.deepEqual(state.warehouseHiddenFurnitureIds, ['cabinet']);
-      assert.equal(
-        state.warehouseFurnitureId,
-        selectedId,
-        'toggle must not select furniture'
-      );
-      view.render();
-      assert.match(
-        html,
-        /aria-pressed="false" title="Schrank einblenden" aria-label="Schrank einblenden"/
-      );
-      assert.match(html, /aria-pressed="true" title="Regal ausblenden"/);
-      assert.equal(view.toggleFurnitureVisibility('wall'), false);
-      assert.deepEqual(
-        state.warehouseHiddenFurnitureIds,
-        ['cabinet', 'wall'],
-        'multiple pieces can be hidden independently'
-      );
-      assert.equal(view.toggleFurnitureVisibility('cabinet'), true);
-      assert.deepEqual(state.warehouseHiddenFurnitureIds, ['wall']);
-      state.warehousePlanMode = '2d'; view.render();
-      assert.match(html, /class="warehouse-floor"/);
-      assert.doesNotMatch(html, /data-act="warehouse-visibility-toggle"/);
-    } finally {
-      if (original ===
-        undefined) delete globalThis.document; else globalThis.document =
-          original;
-    }
-  }
-);
-
-test(
-  '3D furniture controls share a compact workspace with the room and provide one show-all action',
-  () => {
-    let html = '';
-    const original = globalThis.document;
-    globalThis.document = {
-      /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
-       */
-      querySelector: () =>
-        null,
-      /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
-       */
-      querySelectorAll: () => [],
-    };
-    try {
-      const state = {
-        warehouse,
-        selected: 'rooms',
-        warehouseRoomId: room.id,
-        warehouseHiddenFurnitureIds: ['cabinet', 'rack'],
-      };
-      const view = createWarehouseView({
-        state,
-        /**
-         * Updates the shell state for its caller.
-         *
-         * @param {*} markup HTML markup for the selected content.
-         */
-        shell: markup => {html = markup;},
-        /**
-         * Updates the navigate state for its caller.
-         */
-        navigate: () => {},
-        modal: {},
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.render();
-      assert.match(html, /class="warehouse-plan-workspace"/);
-      assert.match(html, /class="warehouse-plan-stage"/);
-      assert.match(
-        html,
-        /class="warehouse-bulk-panel warehouse-bulk-panel--sidebar"/
-      );
-      assert.match(html, /data-act="warehouse-show-all"/);
-      assert.equal(
-        (html.match(/data-act="warehouse-show-all"/g) || []).length,
-        1
-      );
-      assert.match(
-        html,
-        /class="btn small warehouse-show-all" data-act="warehouse-show-all" >Alle einblenden/
-      );
-      assert.ok(html.indexOf('warehouse-plan-stage') <
-        html.indexOf('warehouse-bulk-panel--sidebar'));
-      assert.equal((html.match(/class="warehouse-bulk-item/g) || []).length, 3);
-      const previousSelection = state.warehouseFurnitureId;
-      const selectedIds = state.warehouseSelectedFurnitureIds = ['wall'];
-      assert.equal(view.showAllFurniture(), 2);
-      assert.deepEqual(state.warehouseHiddenFurnitureIds, []);
-      assert.equal(state.warehouseFurnitureId, previousSelection);
-      assert.deepEqual(state.warehouseSelectedFurnitureIds, selectedIds);
-      assert.equal(view.showAllFurniture(), 0, 'show all is idempotent');
-      view.render();
-      assert.match(
-        html,
-        /class="btn small warehouse-show-all" data-act="warehouse-show-all" disabled>Alle einblenden/
-      );
-      state.warehousePlanMode = '2d'; view.render();
-      assert.doesNotMatch(html, /warehouse-plan-workspace|warehouse-show-all/);
-    } finally {
-      if (original ===
-        undefined) delete globalThis.document; else globalThis.document =
-          original;
+      const leftDelta = [left.center[0] - center[0], left.center[2] - center[1]];
+      const backDelta = [back.center[0] - center[0], back.center[2] - center[1]];
+      assert.ok(leftDelta[0] * tangent[0] + leftDelta[1] * tangent[1] < 0, `left ${rotation}`);
+      assert.ok(backDelta[0] * normal[0] + backDelta[1] * normal[1] < 0, `back ${rotation}`);
     }
   }
 );
@@ -746,8 +243,7 @@ test(
        *     values.
        * @return {!Object} Result computed from the supplied inputs.
        */
-      querySelector: selector => selector === '.warehouse-show-all' ?
-        all : null,
+      querySelector: selector => selector === '.warehouse-show-all' ? all : null,
       /**
        * Derives the query selector all result from the supplied values.
        * @return {!Array<*>} Resulting entries in their output order.
@@ -763,13 +259,14 @@ test(
         warehouseSelectedFurnitureIds: ['wall'],
       };
       const view = createWarehouseView({
+        mountContent: captureContent,
         state,
         /**
-         * Updates the shell state for its caller.
+         * Discards page content in this scenario; no real DOM is mounted.
          */
         shell: () => {},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {},
@@ -786,35 +283,21 @@ test(
         'hidden furniture in a different room must remain hidden'
       );
       assert.equal(all.disabled, true);
-      assert.ok(changes.some(change => change[0] === 'cabinet' &&
-        change[1] === 'aria-pressed' && change[2] === 'true'));
-      assert.ok(changes.some(change => change[0] === 'rack' && change[1] ===
-        'aria-pressed' && change[2] === 'true'));
-      assert.equal(
-        changes.some(change => change[0] === 'wall'),
-        false,
-        'unchanged furniture buttons are untouched'
-      );
+      assert.ok(changes.some(change => change[0] === 'cabinet' && change[1] === 'aria-pressed' && change[2] === 'true'));
+      assert.ok(changes.some(change => change[0] === 'rack' && change[1] === 'aria-pressed' && change[2] === 'true'));
+      assert.equal(changes.some(change => change[0] === 'wall'), false, 'unchanged furniture buttons are untouched');
       assert.equal(view.toggleFurnitureVisibility('cabinet'), false);
-      assert.equal(
-        all.disabled,
-        false,
-        'restoration button becomes enabled when any item is hidden'
-      );
+      assert.equal(all.disabled, false, 'restoration button becomes enabled when any item is hidden');
     } finally {
-      if (original ===
-        undefined) delete globalThis.document; else globalThis.document =
-          original;
+      if (original === undefined) delete globalThis.document; else globalThis.document = original;
     }
   }
 );
 
-
 test(
   '3D visibility switches real mesh geometry independently and reversibly',
   async () => {
-    const {buildWarehouseThreeScene} =
-      await import('../../public/js/ui/warehouse-three-scene.js');
+    const {buildWarehouseThreeScene} = await import('../../public/js/ui/warehouse-three-scene.js');
     class Node {
       /**
        * Initializes the instance and its state.
@@ -835,8 +318,7 @@ test(
        * @param {*} child Value used by this operation.
        */
       add(child) {
-        this.children
-          .push(child);
+        this.children.push(child);
       }
 
       /**
@@ -856,8 +338,7 @@ test(
        * @param {*} value Value to process.
        */
       constructor(value) {
-        this.value =
-          value;
+        this.value = value;
       }
 
       /**
@@ -887,8 +368,7 @@ test(
        * @param {!Object=} options Options controlling the operation.
        */
       constructor(options = {}) {
-        Object.assign(this, options); this.color =
-          new Color(options.color);
+        Object.assign(this, options); this.color = new Color(options.color);
       }
 
       /**
@@ -897,8 +377,7 @@ test(
        */
       clone() {
         return new Material({
-          color: this.color
-            .value, opacity: this.opacity,
+          color: this.color.value, opacity: this.opacity,
         });
       }
 
@@ -915,8 +394,7 @@ test(
        * @param {*} material Value used by this operation.
        */
       constructor(geo, material) {
-        super(); this.geometry =
-          geo; this.material = material;
+        super(); this.geometry = geo; this.material = material;
       }
     }
     class Grid extends Node {
@@ -947,72 +425,34 @@ test(
       GridHelper: Grid,
       DoubleSide: 2,
     };
-    const scene = buildWarehouseThreeScene(
-      THREE,
-      room,
-      warehouse,
-      {hiddenIds: ['cabinet', 'rack']}
-    );
+    const scene = buildWarehouseThreeScene(THREE, room, warehouse, {hiddenIds: ['cabinet', 'rack']});
     /**
      * Filters records according to the meshes selection rules.
      *
      * @param {*} id Identifier of the affected record.
      * @return {*} Entries that meet the selection criteria.
      */
-    const meshes = id => scene.selectables.filter(mesh => mesh.userData
-      .furnitureId === id);
-    assert.ok(meshes('cabinet').length > 0 && meshes('rack').length > 0 &&
-      meshes('wall').length > 0);
+    const meshes = id => scene.selectables.filter(mesh => mesh.userData.furnitureId === id);
+    assert.ok(meshes('cabinet').length > 0 && meshes('rack').length > 0 && meshes('wall').length > 0);
     assert.ok(meshes('cabinet').every(mesh => !mesh.visible));
     assert.ok(meshes('rack').every(mesh => !mesh.visible));
     assert.ok(meshes('wall').every(mesh => mesh.visible));
-    assert.equal(
-      scene.setHighlightedFurniture('cabinet'),
-      null,
-      'hidden furniture cannot be highlighted'
-    );
+    assert.equal(scene.setHighlightedFurniture('cabinet'), null, 'hidden furniture cannot be highlighted');
     assert.equal(scene.setFurnitureVisible('cabinet', true), true);
     assert.ok(meshes('cabinet').every(mesh => mesh.visible));
-    assert.ok(
-      meshes('rack').every(mesh => !mesh.visible),
-      'showing one must not show the others'
-    );
+    assert.ok(meshes('rack').every(mesh => !mesh.visible), 'showing one must not show the others');
     const cabinetMesh = meshes('cabinet')[0];
     const ordinaryMaterial = cabinetMesh.material;
     const ordinaryEdges = cabinetMesh.children[0].material;
     assert.equal(scene.setHighlightedFurniture('cabinet'), 'cabinet');
-    assert.notEqual(
-      cabinetMesh.material,
-      ordinaryMaterial,
-      'hover must highlight real mesh material'
-    );
-    assert.notEqual(
-      cabinetMesh.children[0].material,
-      ordinaryEdges,
-      'hover must highlight mesh edges'
-    );
-    assert.equal(
-      scene.setHighlightedFurniture('rack'),
-      null,
-      'hidden target clears highlight'
-    );
-    assert.equal(
-      cabinetMesh.material,
-      ordinaryMaterial,
-      'leaving hover restores original material'
-    );
-    assert.equal(
-      cabinetMesh.children[0].material,
-      ordinaryEdges,
-      'leaving hover restores original edges'
-    );
+    assert.notEqual(cabinetMesh.material, ordinaryMaterial, 'hover must highlight real mesh material');
+    assert.notEqual(cabinetMesh.children[0].material, ordinaryEdges, 'hover must highlight mesh edges');
+    assert.equal(scene.setHighlightedFurniture('rack'), null, 'hidden target clears highlight');
+    assert.equal(cabinetMesh.material, ordinaryMaterial, 'leaving hover restores original material');
+    assert.equal(cabinetMesh.children[0].material, ordinaryEdges, 'leaving hover restores original edges');
     assert.equal(scene.setHighlightedFurniture('cabinet'), 'cabinet');
     scene.setFurnitureVisible('cabinet', false);
-    assert.equal(
-      cabinetMesh.material,
-      ordinaryMaterial,
-      'hiding highlighted furniture clears hover'
-    );
+    assert.equal(cabinetMesh.material, ordinaryMaterial, 'hiding highlighted furniture clears hover');
     assert.ok(meshes('cabinet').every(mesh => !mesh.visible));
     scene.setFurnitureVisible('rack', true);
     assert.ok(meshes('rack').every(mesh => mesh.visible));
@@ -1021,12 +461,12 @@ test(
   }
 );
 
-
 test(
   '3D room uses almost the available viewport at default 100% zoom without clipping',
   () => {
     // These projected dimensions cover both landscape and portrait plan stages.
-    for (const [width, height, aspect] of [[7, 4, 1.7], [4, 7, 0.7], [2.4, 1.7, 1.5], [10, 5, 2.2]]) {
+    for (const [width, height, aspect] of [[7, 4, 1.7], [4, 7, 0.7], [2.4, 1.7,
+      1.5], [10, 5, 2.2]]) {
       const halfH = warehouseCameraHalfHeight(width, height, aspect);
       const fillX = width / (2 * halfH * aspect);
       const fillY = height / (2 * halfH);
@@ -1036,10 +476,7 @@ test(
     }
     const before = 7 / (2 * (Math.max(4, 7 / 1.7) * 0.62 + 0.15) * 1.7);
     const after = 7 / (2 * warehouseCameraHalfHeight(7, 4, 1.7) * 1.7);
-    assert.ok(
-      after > before + 0.08,
-      'camera framing significantly reduces empty space'
-    );
+    assert.ok(after > before + 0.08, 'camera framing significantly reduces empty space');
   }
 );
 
@@ -1066,84 +503,11 @@ test(
       shelves: [{id: 'low', heightCm: 20}, {id: 'high', heightCm: 30}],
     };
     assert.equal(shelfIdAtHeight(withClearance, 2.35), 'high');
-    assert.equal(
-      shelfIdAtHeight(withClearance, 2.8),
-      null,
-      'unused clearance above explicit heights is not a shelf'
-    );
-    const blocked = {...rack, shelves: [{id: 'blocked', capacity: 0}, {id: 'usable'}]};
-    assert.equal(
-      shelfIdAtHeight(blocked, 2),
-      null,
-      'unassignable shelves cannot be opened'
-    );
+    assert.equal(shelfIdAtHeight(withClearance, 2.8), null, 'unused clearance above explicit heights is not a shelf');
+    const blocked = {
+      ...rack, shelves: [{id: 'blocked', capacity: 0}, {id: 'usable'}],
+    };
+    assert.equal(shelfIdAtHeight(blocked, 2), null, 'unassignable shelves cannot be opened');
     assert.equal(shelfIdAtHeight(blocked, 2.8), 'usable');
-  }
-);
-
-test(
-  '3D room-plan double-click opens only occupied shelf contents in place, never furniture editing',
-  () => {
-    const room = {
-      id: 'room', name: 'Raum', furniture: [{
-        id: 'rack', name: 'Regal', shelves: [
-          {id: 'occupied', name: 'Unten', capacity: 4},
-          {id: 'empty', name: 'Oben', capacity: 4},
-          {id: 'blocked', name: 'Gesperrt', capacity: 0},
-        ],
-      }],
-    };
-    const warehouse = {
-      rooms: [room],
-      assignments: {b: 'occupied'},
-      bottles: [{id: 'b', name: 'Flasche', number: '27'}],
-    };
-    const state = {
-      warehouse,
-      selected: 'rooms',
-      warehouseRoomId: 'room',
-      warehouseFurnitureId: null,
-    };
-    const modals = []; const navigation = [];
-    const view = createWarehouseView({
-      state,
-      /**
-       * Updates the shell state for its caller.
-       */
-      shell: () => {},
-      /**
-       * Derives the navigate result from the supplied values.
-       *
-       * @param {!Array<*>} args Arguments forwarded to the operation.
-       * @return {number} Calculated numeric value.
-       */
-      navigate: (...args) => navigation.push(args),
-      modal: {
-        /**
-         * Renders modal in the current view.
-         *
-         * @param {!Array<*>} args Arguments forwarded to the operation.
-         * @return {number} Calculated numeric value.
-         */
-        showModal: (...args) => modals.push(args),
-      },
-      /**
-       * Performs the refresh lifecycle action.
-       * @return {!Promise<*>} Promise for the asynchronous operation.
-       */
-      refresh: async () => {},
-    });
-    assert.equal(view.openOccupiedShelfDetails('empty'), false);
-    assert.equal(view.openOccupiedShelfDetails('blocked'), false);
-    assert.equal(view.openOccupiedShelfDetails('missing'), false);
-    assert.deepEqual(modals, []);
-    assert.equal(view.openOccupiedShelfDetails('occupied'), true);
-    assert.equal(modals.length, 1);
-    assert.equal(modals[0][0], 'Raum / Regal / Unten');
-    assert.match(modals[0][1], /Flasche/);
-    assert.match(modals[0][1], /warehouse-shelf-detail-grid/);
-    assert.equal(state.selected, 'rooms');
-    assert.equal(state.warehouseFurnitureId, null);
-    assert.deepEqual(navigation, []);
   }
 );

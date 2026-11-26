@@ -19,15 +19,15 @@ function delegatedEvents() {
      */
     addEventListener: (name, fn) => listeners.set(name, fn),
     /**
-     * Derives the query selector all result from the supplied values.
-     * @return {!Array<*>} Resulting entries in their output order.
+     * Simulates an element query with no matches.
+     * @return {Array<never>} Empty match list; the simulated root has no matching elements.
      */
     querySelectorAll: () => [],
   };
   const previousDocument = globalThis.document;
   globalThis.document = {
     /**
-     * Updates the add event listener state for its caller.
+     * Ignores listener registration in this DOM-free test double.
      */
     addEventListener: () => {},
   };
@@ -39,11 +39,11 @@ function delegatedEvents() {
        */
       render: () => {},
       /**
-       * Updates the action state for its caller.
+       * Suppresses action execution in this rendering-only scenario.
        */
       action: () => {},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate: () => {},
       editors: {},
@@ -124,9 +124,9 @@ function delegatedEvents() {
      * @return {!Object} Computed value, or null when the input has no match.
      */
     closest(selector) {
-      if (selector === '[data-act]' || selector ===
-        'button, a, input, select, textarea' ||
-        selector.startsWith('.warehouse-room-wall .warehouse-bottle-symbol')) return this;
+      if (selector === '[data-act]' || selector === 'button, a, input, select, textarea' ||
+        selector.startsWith('.warehouse-room-wall .warehouse-bottle-symbol'))
+        return this;
       if (selector.includes('.warehouse-wall-bay')) return bay;
       return null;
     },
@@ -156,9 +156,9 @@ function delegatedEvents() {
      * @return {!Object} Computed value, or null when the input has no match.
      */
     closest(selector) {
-      if (selector === '[data-act]' || selector ===
-        'button, a, input, select, textarea') return this;
-      if (selector.includes('.warehouse-furniture-manager')) return managerShelf;
+      if (selector === '[data-act]' || selector === 'button, a, input, select, textarea') return this;
+      if (selector.includes('.warehouse-furniture-manager'))
+        return managerShelf;
       return null;
     },
   };

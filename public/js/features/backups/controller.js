@@ -1,44 +1,49 @@
+import {composeMarkup} from '../../ui/render-plan.js';
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
 /**
  * Backup admin key is intentionally held in memory only, never in localStorage.
  */
-import {query, escapeHtml as h} from '../../ui/dom.js';
+import {query} from '../../ui/dom.js';
 import {request, httpResponseError} from '../../api.js';
 import {jobErrorText} from '../../i18n/job-errors.js';
 import {toast} from '../../ui/notifications.js';
 import {profileForm} from '../../views/backups.js';
+import {loadTemplates} from '../../ui/templates.js';
+
+const renderTemplate = await loadTemplates('backups/controller.html');
+
 /**
- * Creates backup controller for controller.
+ * Creates the backup-management controller with an in-memory administrator token and restore state.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Backup settings, job, password and restore operations.
  */
 export function createBackupController({state, render, showModal, closeModal}) {
   let token = '';
   let restorePassword = '';
   let pollTimer = null;
   /**
-   * Derives the get result from the supplied values.
+   * Sends a backup API request with the current administrator token.
    *
    * @param {*} url URL of the resource being processed.
    * @param {!Object=} options Options controlling the operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Decoded API response for the administrator-authorized backup request.
    */
   const get = (url, options = {}) => request(url, {
     ...options, headers: {...options.headers, 'X-Backup-Admin-Token': token},
   });
 
   /**
-   * Updates the redraw state for its caller.
+   * Rerenders the settings page only when no modal is open.
    */
   function redraw() {if (state.page === 'settings' && !state.modal) render();}
 
   /**
-   * Performs the refresh lifecycle action.
+   * Reloads the backup dashboard and locks management if the server rejects the token.
    *
-   * @param {boolean=} quiet Value used by this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @param {boolean=} quiet Suppress the success notification during automatic refreshes.
+   * @return {!Promise<*>} Completion of the dashboard refresh attempt.
    */
   async function refresh(quiet = false) {
     if (!token) return;
@@ -51,21 +56,20 @@ export function createBackupController({state, render, showModal, closeModal}) {
     } catch (err) {
       if (err.code === 'api.errors.backupManagementIsLockedAdministratorKeyRequired' || err.status === 401) lock();
       else {
-        state.backupError =
-          err.message; if (!quiet) toast(err.message, true);
+        state.backupError = err.message; if (!quiet) toast(err.message, true);
       }
     }
   }
 
   /**
-   * Coordinates asynchronous work for unlock.
+   * Verifies an entered administrator token and opens the backup dashboard on success.
    *
    * @param {!Event} event Event that triggered this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the unlock attempt.
    */
   async function unlock(event) {
     event.preventDefault();
-    const entered = event.target.elements.token.value;
+    const entered = /** @type {HTMLFormElement & {elements: {token: HTMLInputElement}}} */ (event.target).elements.token.value;
     if (!entered) return;
     token = entered;
     try {
@@ -82,7 +86,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
   }
 
   /**
-   * Updates the lock state for its caller.
+   * Clears backup credentials and dashboard data and stops job polling.
    */
   function lock() {
     token = '';
@@ -95,30 +99,26 @@ export function createBackupController({state, render, showModal, closeModal}) {
   }
 
   /**
-   * Locates the DOM elements used by edit.
+   * Opens the profile editor for an existing or new backup destination.
    *
    * @param {*} id Identifier of the affected record.
-      * @return {*} Result of this expression.
-*/
+   * @return {*} Notification if the requested profile no longer exists; otherwise opens the editor.
+   */
   function edit(id) {
     const profile = state.backupDashboard?.profiles.find(p => p.id === id);
     if (id && !profile) return toast(t("backups.profiles.notFound"), true);
     showModal(
       profile ? t("backups.profiles.edit") : t("backups.profiles.add"),
-      profileForm(
-        profile,
-        state.backupDashboard?.remotes || [],
-        state.backupDashboard?.targets || []
-      ),
+      profileForm(profile, state.backupDashboard?.remotes || [], state.backupDashboard?.targets || []),
       true
     );
     toggleFields(document.querySelector('#backup-profile-form'));
   }
 
   /**
-   * Derives the toggle fields result from the supplied values.
+   * Shows and enables only the storage fields relevant to the selected backup provider.
    *
-   * @param {*} form Value used by this operation.
+   * @param {*} form Backup profile form containing provider-specific fields.
    */
   function toggleFields(form) {
     if (!form) return;
@@ -137,20 +137,19 @@ export function createBackupController({state, render, showModal, closeModal}) {
    */
   async function save(event) {
     event.preventDefault();
-    const form = event.target;
+    const form = /** @type {HTMLFormElement} */ (event.target);
     /**
-     * Derives the el result from the supplied values.
+     * Looks up a named input in the backup profile form.
      *
      * @param {*} name Environment variable or setting name.
-     * @return {*} Result computed from the supplied inputs.
+     * @return {*} Named form control used to collect backup settings.
      */
     const el = name => form.elements[name];
     const id = form.dataset.id;
     const input = {
       name: el('name').value.trim(), provider: el('provider').value,
       remote: el('provider').value === 'local' ? '' : el('remote').value.trim(),
-      targetPath: el('provider').value === 'local' ? el('localTargetPath')
-        .value : el('cloudTargetPath').value.trim(),
+      targetPath: el('provider').value === 'local' ? el('localTargetPath').value : el('cloudTargetPath').value.trim(),
       enabled: el('enabled').checked,
       schedule: {
         frequency: el('frequency').value,
@@ -164,7 +163,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
         monthly: Number(el('monthly').value),
       },
     };
-    const button = form.querySelector('[type="submit"]');
+    const button = /** @type {HTMLButtonElement} */ (form.querySelector('[type="submit"]'));
     if (button.disabled) return;
     button.disabled = true;
     try {
@@ -181,18 +180,18 @@ export function createBackupController({state, render, showModal, closeModal}) {
   }
 
   /**
-   * Updates password in the current state.
+   * Validates password confirmation and submits the backup encryption password.
    *
    * @param {!Event} event Event that triggered this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the password update attempt.
    */
   async function setPassword(event) {
     event.preventDefault();
-    const form = event.target;
+    const form = /** @type {HTMLFormElement & {elements: {password: HTMLInputElement, confirm: HTMLInputElement, previous?: HTMLInputElement}}} */ (event.target);
     const password = form.elements.password.value;
     const confirm = form.elements.confirm.value;
     if (password !== confirm) return toast(t("backups.password.mismatch"), true);
-    const button = form.querySelector('[type="submit"]');
+    const button = /** @type {HTMLButtonElement} */ (form.querySelector('[type="submit"]'));
     button.disabled = true;
     try {
       await get('/api/backups/password', {
@@ -208,7 +207,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
   /**
    * Loads manual for controller.
    *
-   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   * @return {!Promise<void>} Completion of requesting the manual backup archive and initiating its download.
    */
   async function downloadManual() {
     if (!token) return toast(t("backups.security.openManagementFirst"), true);
@@ -221,14 +220,12 @@ export function createBackupController({state, render, showModal, closeModal}) {
         throw httpResponseError(response.status, body);
       }
       const disposition = response.headers.get('content-disposition') || '';
-      const name = disposition.match(/filename="?([^";]+)"?/i)?.[1] ||
-        'whisky-backup.zip';
+      const name = disposition.match(/filename="?([^";]+)"?/i)?.[1] || 'whisky-backup.zip';
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       try {
         const link = document.createElement('a');
-        link.href = url; link.download = name; document.body
-          .append(link); link.click(); link.remove();
+        link.href = url; link.download = name; document.body.append(link); link.click(); link.remove();
       } finally {setTimeout(() => URL.revokeObjectURL(url), 60000);}
     } catch (error) {toast(error.message, true);}
   }
@@ -239,7 +236,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
    * @param {*} id Identifier of the affected record.
    * @param {*} type Type or category used to select behavior.
    * @param {!Object=} body Body content to validate or process.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of queueing the backup job and starting its status polling.
    */
   async function job(id, type, body = {}) {
     try {
@@ -256,7 +253,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
   }
 
   /**
-   * Builds the localized watch job text for the current language.
+   * Polls a backup job until completion and opens prepared-archive handling when required.
    *
    * @param {*} id Identifier of the affected record.
    */
@@ -277,8 +274,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
             catch (error) {toast(error.message, true);}
           } else {
             toast(
-              found.state === 'success' ? (found.message ||
-                t("backups.jobs.succeeded")) : jobErrorText(found),
+              found.state === 'success' ? (found.message || t("backups.jobs.succeeded")) : jobErrorText(found),
               found.state === 'failed'
             );
           }
@@ -295,7 +291,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
    *
    * @param {string} id Identifier used to select the relevant record.
    * @param {string} filename File name used to locate the resource.
-   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   * @return {!Promise<void>} Completion of requesting the backup file and initiating its download.
    */
   async function download(id, filename) {
     if (!token) return toast(t("backups.security.unlockFirst"), true);
@@ -327,30 +323,25 @@ export function createBackupController({state, render, showModal, closeModal}) {
   function showZipPreview(result, filename) {
     showModal(
       t("backups.actions.validateAndRestoreZip"),
-      `<form id="backup-apply-zip-form" data-id="${h(result.id)}">
-          <p>${t("backups.summary.backupLabel")} <strong>${h(filename ||
-        t("backups.page.backupTitle"))}</strong></p>
-          <p><strong>${result.bottlings}</strong> ${t("backups.summary.bottlingsLabel")} <strong>${result.bottles}</strong> ${t("backups.summary.bottlesLabel")} <strong>${result.distilleries}</strong> ${t("backups.summary.distilleriesLabel")}</p>
-          <p>${t(
-          "features.backups.restoredAssets",
-          {count: result.files, size: (result.bytes / 1048576).toFixed(1)}
-        )}</p>
-          <p class="warning">${t("backups.restore.replaceIncludesAttachments")}</p>
-          <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> ${t("backups.restore.confirmReplaceCollection")}</label>
-          <div class="actions ds-modal-footer ds-modal-footer--compact">
-            <button class="btn" type="button" data-act="backup-download-prepared" data-id="${h(result.id)}">${t("backups.actions.downloadZip")}</button>
-            ${actionButton({
+      renderTemplate('backupApplyZipForm', {
+        id: result.id,
+        filename: filename || t("backups.page.backupTitle"),
+        bottlings: result.bottlings,
+        bottles: result.bottles,
+        distilleries: result.distilleries,
+        restoredAssets: t("features.backups.restoredAssets", {count: result.files, size: (result.bytes / 1048576).toFixed(1)}),
+        restoreId: result.id,
+        closeModalButton: actionButton({
           label: t("common.actions.cancel"),
           action: 'close-modal',
-        })}
-            <button class="btn danger" type="submit">${t("backups.actions.importBackup")}</button>
-          </div></form>`,
+        }),
+      }),
       true
     );
   }
 
   /**
-   * Builds the localized prompt prepared zip text for the current language.
+   * Prompts for the encryption password of a prepared restore archive.
    *
    * @param {*} id Identifier of the affected record.
    * @param {*} filename File path or name to process.
@@ -358,35 +349,34 @@ export function createBackupController({state, render, showModal, closeModal}) {
   function promptPreparedZip(id, filename) {
     showModal(
       t("backups.password.zipEnter"),
-      `<form id="backup-unlock-zip-form" data-id="${h(id)}" data-filename="${h(filename || 'Sicherung.zip')}">
-          <p>${t("backups.restore.savedArchive")} <strong>${h(filename ||
-        '')}</strong> ${t("backups.restore.openForPreview")}</p>
-          <label class="form-field">${t("backups.password.archiveLabel")}<input type="password" name="password" autocomplete="off" placeholder="${t("backups.password.optionalForLegacy")}"></label>
-          <div class="actions">${actionButton({
+      renderTemplate('backupUnlockZipForm', {
+        id: id,
+        filename: filename || 'Sicherung.zip',
+        displayFilename: filename || '',
+        closeModalButton: actionButton({
           label: t("common.actions.cancel"),
           action: 'close-modal',
-        })}
-          <button type="submit" class="btn primary">${t("backups.actions.validateZip")}</button></div></form>`,
+        }),
+      }),
       true
     );
   }
 
   /**
-   * Locates the DOM elements used by unlock prepared.
+   * Submits the archive password and displays the verified import preview.
    *
    * @param {!Event} event Event that triggered this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the archive-unlock attempt.
    */
   async function unlockPrepared(event) {
     event.preventDefault();
-    const form = event.target;
+    const form = /** @type {HTMLFormElement & {elements: {password: HTMLInputElement}}} */ (event.target);
     const password = form.elements.password.value;
-    const button = form.querySelector('[type="submit"]');
+    const button = /** @type {HTMLButtonElement} */ (form.querySelector('[type="submit"]'));
     button.disabled = true;
     try {
       const result = await get(
-        `/api/backups/import-zip/${encodeURIComponent(form.dataset
-          .id)}/unlock`,
+        `/api/backups/import-zip/${encodeURIComponent(form.dataset.id)}/unlock`,
         {
           method: 'POST', body: JSON.stringify({password}),
         }
@@ -409,32 +399,28 @@ export function createBackupController({state, render, showModal, closeModal}) {
         headers: {'X-Backup-Admin-Token': token}, cache: 'no-store',
       }
     );
-    if (!response.ok) throw httpResponseError(
-      response.status,
-      await response.json().catch(() => ({}))
-    );
+    if (!response.ok) throw httpResponseError(response.status, await response.json().catch(() => ({})));
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
     try {
-      const a = document.createElement('a'); a.href = url; a.download =
-        'whisky-backup-wiederherstellung.zip';
+      const a = document.createElement('a'); a.href = url; a.download = 'whisky-backup-wiederherstellung.zip';
       document.body.append(a); a.click(); a.remove();
     } finally {setTimeout(() => URL.revokeObjectURL(url), 60000);}
   }
 
   /**
-   * Locates the DOM elements used by upload zip.
+   * Uploads a selected ZIP archive for validation using the administrator token.
    *
    * @param {!Event} event Event that triggered this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the upload and preview attempt.
    */
   async function uploadZip(event) {
     event.preventDefault();
     if (!token) return toast(t("backups.security.unlockFirst"), true);
-    const form = event.target;
+    const form = /** @type {HTMLFormElement & {elements: {archive: HTMLInputElement, password: HTMLInputElement}}} */ (event.target);
     const file = form.elements.archive.files?.[0];
     if (!file) return;
-    const button = form.querySelector('[type="submit"]');
+    const button = /** @type {HTMLButtonElement} */ (form.querySelector('[type="submit"]'));
     button.disabled = true;
     try {
       const response = await fetch('/api/backups/import-zip', {
@@ -442,8 +428,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
         headers: {
           'Content-Type': 'application/zip',
           'X-Backup-Admin-Token': token,
-          'X-Backup-Zip-Password': encodeURIComponent(form.elements
-            .password.value),
+          'X-Backup-Zip-Password': encodeURIComponent(form.elements.password.value),
         },
         body: file,
       });
@@ -456,33 +441,38 @@ export function createBackupController({state, render, showModal, closeModal}) {
   }
 
   /**
-   * Updates zip in the current state.
+   * Applies the verified archive, then reloads or reports a committed restore that needs cleanup.
    *
    * @param {!Event} event Event that triggered this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the restore request.
    */
   async function applyZip(event) {
     event.preventDefault();
-    const form = event.target;
+    const form = /** @type {HTMLFormElement & {elements: {acknowledge: HTMLInputElement}}} */ (event.target);
     if (!form.elements.acknowledge.checked) return;
-    const button = form.querySelector('[type="submit"]');
+    const button = /** @type {HTMLButtonElement} */ (form.querySelector('[type="submit"]'));
     button.disabled = true;
     try {
-      await get(
-        `/api/backups/import-zip/${encodeURIComponent(form.dataset
-          .id)}/apply`,
+      const result = await get(
+        `/api/backups/import-zip/${encodeURIComponent(form.dataset.id)}/apply`,
         {
           method: 'POST',
           body: JSON.stringify({acknowledge: true, password: restorePassword}),
         }
       );
-      restorePassword = ''; closeModal();
+      restorePassword = ''; closeModal(true);
+      if (['pending', 'syncUnconfirmed'].includes(result.cleanupStatus)) {
+        showModal(t('backups.restore.committedTitle'), renderTemplate('backupCommittedCleanupPending', {
+          closeModalButton: actionButton({label: t('common.actions.close'), action: 'close-modal'}),
+        }));
+        return;
+      }
       window.location.reload();
     } catch (error) {toast(error.message, true); button.disabled = false;}
   }
 
   /**
-   * Builds the localized remove text for the current language.
+   * Opens confirmation for deleting a backup profile without deleting its archives.
    *
    * @param {*} id Identifier of the affected record.
    */
@@ -491,32 +481,33 @@ export function createBackupController({state, render, showModal, closeModal}) {
     if (!profile) return;
     showModal(
       t("backups.profiles.delete"),
-      `<p>${t("backups.schedule.should")} <strong>${h(profile.name)}</strong> ${t("backups.confirmation.deleteSuffix")}</p>
-        <p class="warning">${t("backups.profiles.deleteDoesNotDeleteArchives")}</p>
-        <div class="actions ds-modal-footer ds-modal-footer--spaced">
-        ${actionButton({
-        label: t("common.actions.cancel"),
-        action: 'close-modal',
-      })}
-        <button type="button" class="btn danger" data-act="backup-confirm-delete" data-id="${h(id)}">${t("backups.profiles.deleteAction")}</button></div>`
+      renderTemplate('removeP', {
+        name: profile.name,
+        closeModalButton: actionButton({
+          label: t("common.actions.cancel"),
+          action: 'close-modal',
+        }),
+        id: id,
+      })
     );
   }
 
   /**
-   * Builds the localized confirm delete text for the current language.
+   * Deletes the selected profile, refreshes the dashboard and reports the result.
    *
    * @param {*} id Identifier of the affected record.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the profile-deletion attempt.
    */
   async function confirmDelete(id) {
     try {
       await get(`/api/backups/${encodeURIComponent(id)}`, {method: 'DELETE'});
-      closeModal(); await refresh(true); toast(t("backups.profiles.deletedArchivesKept"));
+      closeModal(); await refresh(true);
+      toast(t("backups.profiles.deletedArchivesKept"));
     } catch (err) {toast(err.message, true);}
   }
 
   /**
-   * Transforms the entries used by restore.
+   * Opens the restore dialog with available snapshots and format-specific warnings.
    *
    * @param {*} id Identifier of the affected record.
    */
@@ -527,37 +518,36 @@ export function createBackupController({state, render, showModal, closeModal}) {
     const zip = profile.format === 'zip';
     showModal(
       t("backups.actions.restoreBackup"),
-      `<form id="backup-restore-form" data-id="${h(id)}">
-        <p>${t("backups.profiles.label")} <strong>${h(profile.name)}</strong></p>
-        <p class="muted">${zip ?
-        t("backups.restore.validationBeforeOverwrite") :
-        t("backups.legacy.resticConvertExplanation")}</p>
-        <label class="form-field">${t("backups.archives.snapshot")}
-        <select name="snapshotId" required>${snapshots.length ?
-        snapshots.map(s =>
-          `<option value="${h(s.id)}">${h(s.shortId)} · ${h(new Date(s.time)
-            .toLocaleString('de-DE'))}</option>`).join('') :
-        `<option value="latest">${t("backups.legacy.latestSnapshot")}</option>`}</select></label>
-        <label class="backup-checkbox"><input type="checkbox" name="acknowledge" required> ${t("backups.restore.confirmInspectBackup")}</label>
-        <div class="actions ds-modal-footer ds-modal-footer--spaced">
-        ${actionButton({
+      renderTemplate('backupRestoreForm', {
+        id: id,
+        name: profile.name,
+        zip: zip ? t("backups.restore.validationBeforeOverwrite") : t("backups.legacy.resticConvertExplanation"),
+        length: snapshots.length ?
+          composeMarkup(snapshots.map(s =>
+            renderTemplate('restoreOption', {
+              id: s.id,
+              shortId: s.shortId,
+              toLocaleString: new Date(s.time).toLocaleString('de-DE'),
+            }))) :
+          renderTemplate('restoreOption2'),
+        closeModalButton: actionButton({
           label: t("common.actions.cancel"),
           action: 'close-modal',
-        })}
-        <button type="submit" class="btn primary">${t("backups.restore.preparePreview")}</button></div></form>`,
+        }),
+      }),
       true
     );
   }
 
   /**
-   * Performs the submit restore lifecycle action.
+   * Queues preparation of the selected snapshot after overwrite acknowledgment.
    *
    * @param {!Event} event Event that triggered this operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the prepare-job request.
    */
   async function submitRestore(event) {
     event.preventDefault();
-    const form = event.target;
+    const form = /** @type {HTMLFormElement & {elements: {acknowledge: HTMLInputElement, snapshotId: HTMLInputElement}}} */ (event.target);
     if (!form.elements.acknowledge.checked) return;
     const id = form.dataset.id;
     const snapshotId = form.elements.snapshotId.value;

@@ -1,19 +1,21 @@
 import {t} from '../i18n/index.js';
 import {parseRoute, routeUrl} from './routes.js';
-import {homePageUrl, pageFromSearch, overviewModeFromSearch} from '../domain/pagination.js';
+import {homePageUrl, pageFromSearch, overviewModeFromSearch}
+  from '../domain/pagination.js';
 /**
  * History changes navigate to the page top; a scanned bottle is highlighted,
  * not focused.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Route navigation and history restoration operations.
  */
-export function createNavigation({state, render, closeModal, browser = window}) {
+export function createNavigation({state, render, closeModal,
+  browser = window}) {
   /**
    * Controls the controller state.
    *
-   * @param {*} page Page used by this operation.
-   * @param {null=} selected Selected used by this operation.
+   * @param {string} page Target application page.
+   * @param {?string=} selected Selected record or section identifier for that page.
    * @param {!Object=} options3 Destructured options for this operation.
    */
   function navigate(
@@ -26,38 +28,32 @@ export function createNavigation({state, render, closeModal, browser = window}) 
       flightId = null
     } = {}
   ) {
-    const url = page === 'home' ? homePageUrl(state.pageNumber ||
-      1, state.overviewMode) : routeUrl(
-        page,
-        selected,
-        page === 'warehouse' ?
-          {
-            roomId: state.warehouseRoomId,
-            furnitureId: state.warehouseFurnitureId,
-          } : ['tasting', 'external-tasting'].includes(page) ?
-            {tastingId, flightId} : state.analyticsFilters
-      );
+    const url = page === 'home' ? homePageUrl(state.pageNumber || 1, state.overviewMode) : routeUrl(
+      page,
+      selected,
+      page === 'warehouse' ?
+        {
+          roomId: state.warehouseRoomId,
+          furnitureId: state.warehouseFurnitureId,
+        } : ['tasting', 'external-tasting'].includes(page) ? {tastingId, flightId} : state.analyticsFilters
+    );
     if (browser.location.pathname + browser.location.search !== url) {
-      browser.history[replace ? 'replaceState' : 'pushState']({
-        whiskyRoute: true,
-      }, '', url);
+      browser.history[replace ? 'replaceState' : 'pushState']({whiskyRoute: true, }, '', url);
     }
     if (state.modal) {
       closeModal(true);
     }
     state.page = page;
     state.selected = selected;
-    state.tastingId = ['tasting', 'external-tasting'].includes(page) ?
-      tastingId : null;
-    state.flightId = ['tasting', 'external-tasting'].includes(page) ?
-      flightId : null;
+    state.tastingId = ['tasting', 'external-tasting'].includes(page) ? tastingId : null;
+    state.flightId = ['tasting', 'external-tasting'].includes(page) ? flightId : null;
     state.highlightBottleId = highlightBottleId;
     render();
     browser.scrollTo({top: 0, left: 0, behavior: 'instant'});
   }
 
   /**
-   * Updates the restore route state for its caller.
+   * Restores the application route from the browser URL, closing any open modal first.
    */
   function restoreRoute() {
     if (state.modal) {
@@ -70,8 +66,7 @@ export function createNavigation({state, render, closeModal, browser = window}) 
     state.flightId = route.flightId || null;
     if (route.page === 'analytics') state.analyticsFilters = route.filters;
     if (route.page === 'warehouse') {
-      state.warehouseRoomId =
-        route.roomId; state.warehouseFurnitureId = route.furnitureId;
+      state.warehouseRoomId = route.roomId; state.warehouseFurnitureId = route.furnitureId;
     }
     if (route.page === 'home') {
       state.pageNumber = pageFromSearch(browser.location.search);

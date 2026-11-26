@@ -3,29 +3,28 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {HELP_TOPICS} from '../../public/js/views/help.js';
 import {startTestServer, requestJson} from '../helpers/server.js';
-import {domOnly, chromium, session, openSettingsFromMenu, openSettingsSection, seed, mockDecoder} from './support.js';
+import {
+  domOnly, chromium, session, openSettingsFromMenu, openSettingsSection,
+  seed, mockDecoder
+} from './support.js';
 test(
   'browser: flight help icon stays inline with its heading and never shows a hover badge',
   async () => {
     await session(async ({page, open}) => {
       await open();
       await page.locator('header [data-act="toggle-menu"]').click();
-      await page.locator('#site-drawer [data-act="goto-tastings-home"]')
-        .click();
+      await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();
       const title = page.locator('.tasting-flight-home h3.flight-plan-heading-title');
       const help = page.locator('.tasting-flight-home [data-act="flight-plan-help"]');
       await help.waitFor({state: 'visible'});
       const aligned = await help.evaluate(button => {
         const heading = button.closest('h3');
-        const nextPanelHeading =
-          document.querySelector('.tasting-home-recent .tasting-panel-heading h3');
+        const nextPanelHeading = document.querySelector('.tasting-home-recent .tasting-panel-heading h3');
         const a = heading.getBoundingClientRect();
         const b = button.getBoundingClientRect();
         const reference = nextPanelHeading.getBoundingClientRect();
-        const panel = heading.closest('.analytics-panel')
-          .getBoundingClientRect();
-        const nextPanel = nextPanelHeading.closest('.analytics-panel')
-          .getBoundingClientRect();
+        const panel = heading.closest('.analytics-panel').getBoundingClientRect();
+        const nextPanel = nextPanelHeading.closest('.analytics-panel').getBoundingClientRect();
         return {
           titleMargin: getComputedStyle(heading).marginBottom,
           expectedMargin: getComputedStyle(nextPanelHeading).marginBottom,
@@ -45,14 +44,8 @@ test(
         Math.abs(aligned.titleTop - aligned.expectedTop) <= 1,
         `the heading must stay at the same position as other panel headings: ${JSON.stringify(aligned)}`
       );
-      assert.ok(
-        aligned.distance <= 2,
-        `help icon must be vertically centered: ${JSON.stringify(aligned)}`
-      );
-      assert.ok(
-        aligned.width <= 20,
-        'the icon must not grow into a full action button'
-      );
+      assert.ok(aligned.distance <= 2, `help icon must be vertically centered: ${JSON.stringify(aligned)}`);
+      assert.ok(aligned.width <= 20, 'the icon must not grow into a full action button');
       assert.equal(aligned.background, 'rgba(0, 0, 0, 0)');
       await help.hover();
       assert.equal(
@@ -61,10 +54,7 @@ test(
         'hovering the icon must not create a round background badge'
       );
       await help.click();
-      assert.ok(
-        await page.locator('.flight-plan-help-formula').count() > 0,
-        'the modal remains accessible'
-      );
+      assert.ok(await page.locator('.flight-plan-help-formula').count() > 0, 'the modal remains accessible');
     });
   }
 );
@@ -76,10 +66,8 @@ test(
     await session(async ({page, open}) => {
       await open();
       await page.locator('header [data-act="toggle-menu"]').click();
-      await page.locator('#site-drawer [data-act="goto-tastings-home"]')
-        .click();
-      await page.locator('.tasting-flight-home [data-act="flight-plan-new"]')
-        .click();
+      await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();
+      await page.locator('.tasting-flight-home [data-act="flight-plan-new"]').click();
       const form = page.locator('#modal-root .flight-plan-form');
       await form.waitFor({state: 'visible'});
       await form.locator('[data-flight-name]').fill('Draft remains unchanged');
@@ -87,27 +75,20 @@ test(
       await form.locator('[data-flight-plan-style]').selectOption('similar');
       await form.locator('[data-flight-plan-focus]').selectOption('smoky');
       await form.locator('.flight-plan-advanced > summary').click();
-      await form.locator('[data-flight-plan-cask-mode]')
-        .selectOption('specific');
+      await form.locator('[data-flight-plan-cask-mode]').selectOption('specific');
       await form.locator('[name="flight-cask-group-sherry"]').check();
       await form.locator('[name="flight-cask-group-port"]').check();
-      const sherry = form.locator(
-        '[data-flight-plan-cask-subtype-wrap="sherry"]');
+      const sherry = form.locator('[data-flight-plan-cask-subtype-wrap="sherry"]');
       assert.ok(await sherry.evaluate(el => el.open));
-      await form.locator('[name="flight-cask-feature-sherry-style-px"]')
-        .check();
-      const port = form.locator(
-        '[data-flight-plan-cask-subtype-wrap="port"]');
+      await form.locator('[name="flight-cask-feature-sherry-style-px"]').check();
+      const port = form.locator('[data-flight-plan-cask-subtype-wrap="port"]');
       assert.ok(await port.evaluate(el => el.open));
-      await form.locator('[name="flight-cask-feature-port-style-tawny"]')
-        .check();
-      assert.equal(await sherry.locator('[data-flight-plan-cask-count]')
-        .textContent(), '1 ausgewählt');
+      await form.locator('[name="flight-cask-feature-port-style-tawny"]').check();
+      assert.equal(await sherry.locator('[data-flight-plan-cask-count]').textContent(), '1 ausgewählt');
       await sherry.locator('summary').click();
       assert.equal(await sherry.evaluate(el => el.open), false);
       await sherry.locator('summary').click();
-      assert.match(await form.locator('[data-flight-plan-cask-selection]')
-        .textContent(), /Sherry.*Portwein/);
+      assert.match(await form.locator('[data-flight-plan-cask-selection]').textContent(), /Sherry.*Portwein/);
       await form.locator('[data-flight-plan-style]').selectOption('discover');
       const strict = form.locator('[name="flight-plan-strict"]');
       await strict.check();
@@ -116,26 +97,20 @@ test(
         {width: 1366, height: 900}, {width: 390, height: 844},
       ]) {
         await page.setViewportSize(viewport);
-        const layout = await form.locator('label.ds-checkbox-field:visible')
-          .evaluateAll(labels =>
-            labels.map(label => {
-              const box = label.getBoundingClientRect();
-              const input = label.querySelector('input')
-                .getBoundingClientRect();
-              const text = label.querySelector('span').getBoundingClientRect();
-              const size = parseFloat(getComputedStyle(label)
-                .getPropertyValue('--ds-checkbox-size'));
-              return {
-                name: label.querySelector('input').name,
-                inline: text.left >= input.right && Math.abs(
-                  input.top + input.height / 2 - text.top - text.height / 2
-                ) <= 2,
-                fits: text.right <= box.right + 1,
-                compact: Math.abs(input.width - size) <= 1 &&
-                  Math.abs(input.height - size) <= 1,
-              };
-            })
-          );
+        const layout = await form.locator('label.ds-checkbox-field:visible').evaluateAll(labels =>
+          labels.map(label => {
+            const box = label.getBoundingClientRect();
+            const input = label.querySelector('input').getBoundingClientRect();
+            const text = label.querySelector('span').getBoundingClientRect();
+            const size = parseFloat(getComputedStyle(label).getPropertyValue('--ds-checkbox-size'));
+            return {
+              name: label.querySelector('input').name,
+              inline: text.left >= input.right && Math.abs(input.top + input.height / 2 - text.top - text.height / 2) <= 2,
+              fits: text.right <= box.right + 1,
+              compact: Math.abs(input.width - size) <= 1 && Math.abs(input.height - size) <= 1,
+            };
+          })
+        );
         assert.ok(layout.some(item => item.name === 'flight-plan-strict'),
           'Hard filter checkbox must be covered by layout checks');
         assert.ok(layout.some(item => item.name === 'flight-plan-unfamiliar'),
@@ -150,48 +125,25 @@ test(
       await strict.uncheck();
       await form.locator('[data-flight-plan-style]').selectOption('similar');
       await form.locator('[data-flight-plan-focus]').selectOption('smoky');
-      await form.locator('[data-flight-plan-cask-phase]')
-        .selectOption('finish');
+      await form.locator('[data-flight-plan-cask-phase]').selectOption('finish');
       const help = page.locator('#modal-root .dialog-head [data-act="flight-plan-help"]');
       await help.waitFor({state: 'visible'});
-      assert.equal(
-        await help.getAttribute('aria-label'),
-        'So wird ein Flight geplant'
-      );
+      assert.equal(await help.getAttribute('aria-label'), 'So wird ein Flight geplant');
       const alignment = await help.evaluate(button => {
-        const title = button.closest('h2').getBoundingClientRect(), rect =
-          button.getBoundingClientRect();
-        return Math.abs(title.top + title.height / 2 - rect.top -
-          rect.height / 2);
+        const title = button.closest('h2').getBoundingClientRect(), rect = button.getBoundingClientRect();
+        return Math.abs(title.top + title.height / 2 - rect.top - rect.height / 2);
       });
-      assert.ok(
-        alignment <= 2,
-        `help icon must be aligned with the dialog heading: ${alignment}`
-      );
+      assert.ok(alignment <= 2, `help icon must be aligned with the dialog heading: ${alignment}`);
       await help.click();
       const explanation = page.locator('#modal-root .flight-plan-help');
       await explanation.waitFor({state: 'visible'});
-      assert.ok(await explanation.locator('.flight-plan-help-formula')
-        .count() > 0);
-      await page.locator('#modal-root .dialog-head [data-act="close-modal"]')
-        .click();
+      assert.ok(await explanation.locator('.flight-plan-help-formula').count() > 0);
+      await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
       await form.waitFor({state: 'visible'});
-      assert.equal(
-        await form.locator('[data-flight-name]').inputValue(),
-        'Draft remains unchanged'
-      );
-      assert.equal(
-        await form.locator('[data-flight-notes]').inputValue(),
-        'Notes stay on reopening'
-      );
-      assert.equal(
-        await form.locator('[data-flight-plan-style]').inputValue(),
-        'similar'
-      );
-      assert.equal(
-        await form.locator('[data-flight-plan-focus]').inputValue(),
-        'smoky'
-      );
+      assert.equal(await form.locator('[data-flight-name]').inputValue(), 'Draft remains unchanged');
+      assert.equal(await form.locator('[data-flight-notes]').inputValue(), 'Notes stay on reopening');
+      assert.equal(await form.locator('[data-flight-plan-style]').inputValue(), 'similar');
+      assert.equal(await form.locator('[data-flight-plan-focus]').inputValue(), 'smoky');
       for (const name of [
         'flight-cask-group-sherry',
         'flight-cask-group-port',
@@ -199,39 +151,18 @@ test(
         'flight-cask-feature-port-style-tawny',
       ])
         assert.ok(await form.locator(`[name="${name}"]`).isChecked(), name);
-      assert.equal(
-        await form.locator('[data-flight-plan-cask-phase]').inputValue(),
-        'finish'
-      );
+      assert.equal(await form.locator('[data-flight-plan-cask-phase]').inputValue(), 'finish');
       await form.locator('[name="flight-cask-group-port"]').uncheck();
-      assert.equal(
-        await form.locator('[data-flight-plan-cask-subtype-wrap="port"]')
-          .isVisible(),
-        false
-      );
+      assert.equal(await form.locator('[data-flight-plan-cask-subtype-wrap="port"]').isVisible(), false);
       await form.locator('[name="flight-cask-group-rum"]').check();
-      assert.equal(
-        await form.locator('[data-flight-plan-cask-subtype-wrap="rum"]')
-          .count(),
-        0
-      );
+      assert.equal(await form.locator('[data-flight-plan-cask-subtype-wrap="rum"]').count(), 0);
       await form.locator('[data-act="flight-plan-cask-reset"]').click();
-      assert.equal(await form.locator('[name^="flight-cask-"]:checked')
-        .count(), 0);
-      assert.equal(await form.locator('[data-flight-plan-cask-phase]')
-        .inputValue(), 'any');
-      assert.equal(await form.locator('[data-flight-plan-cask-selection]')
-        .textContent(), 'Alle Fassgruppen');
-      assert.equal(await form.locator('[data-flight-name]').inputValue(),
-        'Draft remains unchanged');
-      assert.equal(
-        await form.locator('.flight-plan-advanced').evaluate(el => el.open),
-        true
-      );
-      assert.equal(
-        await page.locator('#modal-root .dialog-head [data-act="flight-plan-help"]').count(),
-        1
-      );
+      assert.equal(await form.locator('[name^="flight-cask-"]:checked').count(), 0);
+      assert.equal(await form.locator('[data-flight-plan-cask-phase]').inputValue(), 'any');
+      assert.equal(await form.locator('[data-flight-plan-cask-selection]').textContent(), 'Alle Fassgruppen');
+      assert.equal(await form.locator('[data-flight-name]').inputValue(), 'Draft remains unchanged');
+      assert.equal(await form.locator('.flight-plan-advanced').evaluate(el => el.open), true);
+      assert.equal(await page.locator('#modal-root .dialog-head [data-act="flight-plan-help"]').count(), 1);
     });
   }
 );
@@ -252,19 +183,11 @@ test(
       await page.locator('[data-act="tasting-edit-start"]').click();
       const section = page.locator('[data-flavor-detail]');
       await section.waitFor({state: 'visible'});
-      assert.match(
-        await section.locator('.flavor-chart').textContent(),
-        /Alkoholisch/
-      );
+      assert.match(await section.locator('.flavor-chart').textContent(), /Alkoholisch/);
       for (const label of ['Rauchig', 'Medizinisch'])
-        assert.ok((await section.locator('.flavor-chart').textContent())
-          .includes(label));
+        assert.ok((await section.locator('.flavor-chart').textContent()).includes(label));
       assert.equal(await section.locator('[data-flavor-range]').count(), 10);
-      assert.equal(
-        (await section.locator('.flavor-chart').textContent())
-          .includes('Brennend'),
-        false
-      );
+      assert.equal((await section.locator('.flavor-chart').textContent()).includes('Brennend'), false);
       await section.locator('[data-flavor-range="8"]').evaluate(input => {
         input.value = '8'; input.dispatchEvent(new Event('input', {bubbles: true}));
         input.dispatchEvent(new Event('change', {bubbles: true}));
@@ -274,48 +197,30 @@ test(
         input.dispatchEvent(new Event('change', {bubbles: true}));
       });
       await section.locator('[data-rating-points="80"]').click();
-      assert.equal(
-        await section.locator('[data-tasting-rating]')
-          .getAttribute('data-rating-value'),
-        '80'
-      );
+      assert.equal(await section.locator('[data-tasting-rating]').getAttribute('data-rating-value'), '80');
       const note = section.locator('[data-tasting-note="nose"]');
       await note.fill('Sherry and vanilla');
       await note.press('Tab');
-      assert.equal(
-        await section.locator('[data-flavor-value="8"]').textContent(),
-        '8'
-      );
+      assert.equal(await section.locator('[data-flavor-value="8"]').textContent(), '8');
       await page.waitForFunction(async () => {
         const response = await fetch('/api/collection');
         const data = await response.json();
         const b = data.bottlings?.[0];
         const last = b?.tastings?.at(-1);
-        return last?.rating === 80 && last?.flavorProfile?.feinty === 8 &&
-          last?.flavorProfile?.medicinal === 4 &&
+        return last?.rating === 80 && last?.flavorProfile?.feinty === 8 && last?.flavorProfile?.medicinal === 4 &&
           last?.tastingNotes?.nose === 'Sherry and vanilla';
       });
-      const saved = (await requestJson(base, '/api/collection')).data
-        .bottlings[0];
+      const saved = (await requestJson(base, '/api/collection')).data.bottlings[0];
       assert.equal(saved.bottles[0].rating, undefined);
       assert.equal(saved.bottles[0].tastingNotes, undefined);
       await section.locator('[data-act="flavor-detail-undo"]').click();
-      assert.equal(
-        await section.locator('[data-tasting-note="nose"]').inputValue(),
-        ''
-      );
+      assert.equal(await section.locator('[data-tasting-note="nose"]').inputValue(), '');
       await section.locator('[data-act="flavor-detail-redo"]').click();
-      assert.equal(
-        await section.locator('[data-tasting-note="nose"]').inputValue(),
-        'Sherry and vanilla'
-      );
+      assert.equal(await section.locator('[data-tasting-note="nose"]').inputValue(), 'Sherry and vanilla');
       await page.locator('[data-act="tastings-back-list"]').click();
       await page.locator('[data-act="tastings-back-detail"]').click();
       await page.locator('[data-act="edit-bottling"]').click();
-      assert.equal(
-        await page.locator('#bottling-form [data-flavor-range]').count(),
-        0
-      );
+      assert.equal(await page.locator('#bottling-form [data-flavor-range]').count(), 0);
     });
   }
 );
@@ -328,29 +233,17 @@ test(
     await session(async ({page, base, open}) => {
       await open();
       await page.locator('[data-act="new"]').first().click();
-      await page.locator('#bottling-form [name="name"]')
-        .fill('Custom colour picker test');
+      await page.locator('#bottling-form [name="name"]').fill('Custom colour picker test');
       await page.locator('#bottling-form button[type="submit"]').click();
       await page.locator('[data-act="tastings-new"]').click();
       await page.locator('[data-act="tasting-create"]').click();
       await page.locator('[data-act="tasting-edit-start"]').click();
       const section = page.locator('[data-flavor-detail]');
       const panel = section.locator('.tasting-color-panel');
-      assert.equal(
-        await panel.locator('.whisky-color-grid .whisky-color-choice').count(),
-        12
-      );
+      assert.equal(await panel.locator('.whisky-color-grid .whisky-color-choice').count(), 12);
       assert.equal(await panel.locator('.whisky-custom-row').count(), 1);
-      assert.equal(
-        await panel.locator('input[type="text"]').count(),
-        0,
-        'no visible HEX text field'
-      );
-      assert.equal(
-        await panel.locator('text=HEX').count(),
-        0,
-        'no HEX caption'
-      );
+      assert.equal(await panel.locator('input[type="text"]').count(), 0, 'no visible HEX text field');
+      assert.equal(await panel.locator('text=HEX').count(), 0, 'no HEX caption');
       const picker = panel.locator('[data-whisky-picker-area]');
       // The picker can be below the viewport. Element-relative clicks scroll it
       // into view; page.mouse.click with off-screen coordinates hits the page
@@ -372,45 +265,24 @@ test(
         const collection = await (await fetch('/api/collection')).json();
         return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
       });
-      const chosen = (await requestJson(base, '/api/collection')).data
-        .bottlings[0].tastings.at(-1).whiskyColor;
-      const hiddenDraft =
-        panel.locator('input[type="hidden"][data-whisky-custom-hex]');
+      const chosen = (await requestJson(base, '/api/collection')).data.bottlings[0].tastings.at(-1).whiskyColor;
+      const hiddenDraft = panel.locator('input[type="hidden"][data-whisky-custom-hex]');
       const name = panel.locator('[data-whisky-custom-name]');
-      assert.ok(
-        (await name.textContent()).trim().length > 0,
-        'selected custom colour has a name'
-      );
-      assert.equal(
-        (await hiddenDraft.inputValue()).toLowerCase(),
-        chosen.slice('custom:'.length).toLowerCase()
-      );
+      assert.ok((await name.textContent()).trim().length > 0, 'selected custom colour has a name');
+      assert.equal((await hiddenDraft.inputValue()).toLowerCase(), chosen.slice('custom:'.length).toLowerCase());
       await panel.locator('[data-color-key="honey"]').click();
       await page.waitForFunction(async () => {
         const collection = await (await fetch('/api/collection')).json();
-        return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor ===
-          'honey';
+        return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor === 'honey';
       });
       assert.equal(await hiddenDraft.inputValue(), '');
+      assert.equal(await name.textContent(), '', 'a standard colour must clear the old custom name');
+      assert.equal(await panel.locator('.whisky-custom-row').getAttribute('class'), 'whisky-custom-row');
       assert.equal(
-        await name.textContent(),
-        '',
-        'a standard colour must clear the old custom name'
-      );
-      assert.equal(
-        await panel.locator('.whisky-custom-row').getAttribute('class'),
-        'whisky-custom-row'
-      );
-      assert.equal(
-        await panel.locator('.whisky-custom-preview .glencairn-liquid')
-          .getAttribute('style'),
+        await panel.locator('.whisky-custom-preview .glencairn-liquid').getAttribute('style'),
         'fill:transparent'
       );
-      assert.equal(
-        await panel.locator('.whisky-custom-cursor').evaluate(el =>
-          getComputedStyle(el).display),
-        'none'
-      );
+      assert.equal(await panel.locator('.whisky-custom-cursor').evaluate(el => getComputedStyle(el).display), 'none');
       // The next interaction picks a new shade; no previous custom colour is
       // reused.
       await clickPicker(0.80, 0.40);
@@ -418,25 +290,15 @@ test(
         const collection = await (await fetch('/api/collection')).json();
         return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
       });
-      assert.notEqual(
-        (await hiddenDraft.inputValue()).toLowerCase(),
-        chosen.slice('custom:'.length)
-      );
-      assert.ok(
-        (await name.textContent()).trim().length > 0,
-        'newly selected shade is named'
-      );
+      assert.notEqual((await hiddenDraft.inputValue()).toLowerCase(), chosen.slice('custom:'.length));
+      assert.ok((await name.textContent()).trim().length > 0, 'newly selected shade is named');
       await panel.locator('[data-act="tasting-color-clear"]').click();
       await page.waitForFunction(async () => {
         const collection = await (await fetch('/api/collection')).json();
         return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor === null;
       });
       assert.equal(await hiddenDraft.inputValue(), '');
-      assert.equal(
-        await name.textContent(),
-        '',
-        'clearing the colour also clears the name'
-      );
+      assert.equal(await name.textContent(), '', 'clearing the colour also clears the name');
       // Saved custom colour appears with its curated name, never a HEX label.
       await clickPicker(0.32, 0.26);
       await page.waitForFunction(async () => {
@@ -444,16 +306,11 @@ test(
         return collection.bottlings?.[0]?.tastings?.at(-1)?.whiskyColor?.startsWith('custom:#');
       });
       await page.locator('[data-act="tasting-edit-done"]').click();
-      const readonlyName =
-        await page.locator('.tasting-readonly-color strong').textContent();
+      const readonlyName = await page.locator('.tasting-readonly-color strong').textContent();
       assert.ok(readonlyName?.length > 0 && readonlyName !== 'Eigene Farbe');
       assert.doesNotMatch(readonlyName, /#/);
       await page.setViewportSize({width: 390, height: 844});
-      assert.equal(
-        await page.evaluate(() => document.documentElement.scrollWidth <=
-          innerWidth + 1),
-        true
-      );
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
     });
   }
 );
@@ -462,12 +319,7 @@ test(
   'browser: v0.24 shelf editor saves capacity in suspended manager and switches with three-way confirmation',
   async () => {
     await session(async ({page, base, open}) => {
-      const room = (await requestJson(
-        base,
-        '/api/warehouse/rooms',
-        'POST',
-        {name: 'Dialograum', width: 4, height: 4}
-      )).data;
+      const room = (await requestJson(base, '/api/warehouse/rooms', 'POST', {name: 'Dialograum', width: 4, height: 4})).data;
       const furniture = (await requestJson(
         base,
         `/api/warehouse/rooms/${room.id}/furniture`,
@@ -483,18 +335,8 @@ test(
           itemHeight: 1.8,
         }
       )).data;
-      const shelf1 = (await requestJson(
-        base,
-        `/api/warehouse/furniture/${furniture.id}/shelves`,
-        'POST',
-        {name: 'Fach unten', capacity: 4}
-      )).data;
-      const shelf2 = (await requestJson(
-        base,
-        `/api/warehouse/furniture/${furniture.id}/shelves`,
-        'POST',
-        {name: 'Fach oben', capacity: 6}
-      )).data;
+      const shelf1 = (await requestJson(base, `/api/warehouse/furniture/${furniture.id}/shelves`, 'POST', {name: 'Fach unten', capacity: 4})).data;
+      const shelf2 = (await requestJson(base, `/api/warehouse/furniture/${furniture.id}/shelves`, 'POST', {name: 'Fach oben', capacity: 6})).data;
       await open();
       await page.locator('header [data-act="toggle-menu"]').click();
       await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
@@ -506,87 +348,48 @@ test(
       await page.locator('#warehouse-form [name="capacity"]').fill('12');
       await page.locator('#warehouse-form [data-act="warehouse-shelf-switch"]').filter({hasText: 'Nächstes'}).click();
       await page.locator('[data-choice="cancel"]').click();
-      assert.equal(
-        await page.locator('#warehouse-form [name="capacity"]').inputValue(),
-        '12'
-      );
+      assert.equal(await page.locator('#warehouse-form [name="capacity"]').inputValue(), '12');
       await page.locator('#warehouse-form [data-act="warehouse-shelf-switch"]').filter({hasText: 'Nächstes'}).click();
       await page.locator('[data-choice="save"]').click();
       await page.locator(`#warehouse-form[data-endpoint="/api/warehouse/shelves/${shelf1.id}"]`).waitFor();
-      await page.locator('#modal-root .dialog-head [data-act="close-modal"]')
-        .click();
+      await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
       const updated = manager.locator(`.warehouse-shelf[data-shelf-id="${shelf2.id}"]`);
-      assert.match(
-        await updated.locator('.warehouse-shelf-meta').textContent(),
-        /12/
-      );
-      assert.equal(
-        (await requestJson(base, '/api/warehouse')).data.rooms[0]
-          .furniture[0].shelves[1].capacity,
-        12
-      );
-      await manager.locator('input[data-furniture-photos]:not([capture])')
-        .setInputFiles({
-          name: 'shelf.png', mimeType: 'image/png',
-          buffer: Buffer.from(
-            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAOfb9AcAAAAASUVORK5CYII=',
-            'base64'
-          ),
-        });
+      assert.match(await updated.locator('.warehouse-shelf-meta').textContent(), /12/);
+      assert.equal((await requestJson(base, '/api/warehouse')).data.rooms[0].furniture[0].shelves[1].capacity, 12);
+      await manager.locator('input[data-furniture-photos]:not([capture])').setInputFiles({
+        name: 'shelf.png', mimeType: 'image/png',
+        buffer: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAOfb9AcAAAAASUVORK5CYII=',
+          'base64'
+        ),
+      });
       await manager.locator('.warehouse-furniture-photo').waitFor();
-      const thumbnail = await manager.locator('.warehouse-furniture-photo')
-        .evaluate(tile => {
-          const photo = tile.querySelector('.photo-open');
-          const tileStyle = tile.getBoundingClientRect(), photoStyle =
-            photo.getBoundingClientRect();
-          return {
-            width: tileStyle.width, height: tileStyle.height,
-            contentHeight: tile.clientHeight, photoHeight: photoStyle.height,
-            editButtons: tile.querySelectorAll('.photo-edit-trigger').length,
-            removeButtons: tile.querySelectorAll('.photo-remove').length,
-            moveButtons: tile.querySelectorAll('.photo-move').length,
-          };
-        });
-      assert.ok(
-        Math.abs(thumbnail.width - 84) <= 1,
-        'furniture thumbnail matches bottle gallery width'
-      );
-      assert.ok(
-        Math.abs(thumbnail.height - 122) <= 1,
-        'furniture thumbnail matches bottle gallery height'
-      );
+      const thumbnail = await manager.locator('.warehouse-furniture-photo').evaluate(tile => {
+        const photo = tile.querySelector('.photo-open');
+        const tileStyle = tile.getBoundingClientRect(), photoStyle = photo.getBoundingClientRect();
+        return {
+          width: tileStyle.width, height: tileStyle.height,
+          contentHeight: tile.clientHeight, photoHeight: photoStyle.height,
+          editButtons: tile.querySelectorAll('.photo-edit-trigger').length,
+          removeButtons: tile.querySelectorAll('.photo-remove').length,
+          moveButtons: tile.querySelectorAll('.photo-move').length,
+        };
+      });
+      assert.ok(Math.abs(thumbnail.width - 84) <= 1, 'furniture thumbnail matches bottle gallery width');
+      assert.ok(Math.abs(thumbnail.height - 122) <= 1, 'furniture thumbnail matches bottle gallery height');
       // The 1px tile border on each edge is NOT part of its content box.
       assert.ok(
         Math.abs(thumbnail.photoHeight - thumbnail.contentHeight) <= 1,
         'photo fills the tile content without the removed arrows'
       );
-      assert.ok(
-        thumbnail.photoHeight > 107,
-        'photo no longer reserves the former arrow-control area'
-      );
-      assert.equal(
-        thumbnail.editButtons,
-        0,
-        'no photo edit icon on furniture photos'
-      );
-      assert.equal(
-        thumbnail.removeButtons,
-        1,
-        'same overlay remove control as bottle photos'
-      );
-      assert.equal(
-        thumbnail.moveButtons,
-        0,
-        'furniture photos have no left/right reorder arrows'
-      );
+      assert.ok(thumbnail.photoHeight > 107, 'photo no longer reserves the former arrow-control area');
+      assert.equal(thumbnail.editButtons, 0, 'no photo edit icon on furniture photos');
+      assert.equal(thumbnail.removeButtons, 1, 'same overlay remove control as bottle photos');
+      assert.equal(thumbnail.moveButtons, 0, 'furniture photos have no left/right reorder arrows');
       await manager.locator('[data-act="warehouse-photo-open"]').click();
       await page.locator('.warehouse-photo-lightbox img').waitFor();
-      await page.locator('#modal-root .dialog-head [data-act="close-modal"]')
-        .click();
-      assert.equal(
-        await manager.locator('.warehouse-furniture-photo').count(),
-        1
-      );
+      await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+      assert.equal(await manager.locator('.warehouse-furniture-photo').count(), 1);
     });
   }
 );
@@ -600,37 +403,23 @@ test(
       await page.setViewportSize({width: 390, height: 844});
       await open();
       await page.locator('[data-act="new"]').first().click();
-      assert.equal(
-        await page.evaluate(() => document.body.style.position),
-        'fixed'
-      );
-      assert.equal(
-        await page.evaluate(() => document.documentElement.style.overflowY),
-        'scroll'
-      );
+      assert.equal(await page.evaluate(() => document.body.style.position), 'fixed');
+      assert.equal(await page.evaluate(() => document.documentElement.style.overflowY), 'scroll');
       const scrollable = await page.locator('.dialog').evaluate(el => ({
         touchAction: getComputedStyle(el).touchAction,
         overflow: getComputedStyle(el).overflowY,
       }));
       assert.match(scrollable.touchAction, /pan-y/);
       assert.match(scrollable.overflow, /auto/);
-      await page.locator('#modal-root .dialog-head [data-act="close-modal"]')
-        .click();
-      assert.notEqual(
-        await page.evaluate(() => document.body.style.position),
-        'fixed'
-      );
+      await page.locator('#modal-root .dialog-head [data-act="close-modal"]').click();
+      assert.notEqual(await page.evaluate(() => document.body.style.position), 'fixed');
       await page.locator('header [data-act="toggle-menu"]').click();
       await page.locator('#site-drawer [data-act="goto-help"]').click();
-      await page.locator('[data-section-switch="help"]')
-        .selectOption('backups');
+      await page.locator('[data-section-switch="help"]').selectOption('backups');
       const technical = page.locator('#help-panel-backups .help-technical-guides');
       assert.ok(await technical.isVisible());
       await technical.locator('details').first().locator('summary').click();
-      assert.match(
-        await technical.locator('details').first().textContent(),
-        /Backup-Administrator-Schlüssel/
-      );
+      assert.match(await technical.locator('details').first().textContent(), /Backup-Administrator-Schlüssel/);
     });
   }
 );
@@ -643,16 +432,13 @@ test(
     await session(async ({page, base, open}) => {
       await open();
       await page.locator('[data-act="new"]').first().click();
-      await page.locator('#bottling-form [name="name"]')
-        .fill('Color and Glencairn test');
+      await page.locator('#bottling-form [name="name"]').fill('Color and Glencairn test');
       await page.locator('#bottling-form button[type="submit"]').click();
       const summary = page.locator('.detail-summary-grid');
       await page.setViewportSize({width: 1440, height: 900});
       const row = await summary.evaluate(el => {
-        const image = el.querySelector('.detail-summary-photo > .hero-photo')
-          .getBoundingClientRect();
-        const facts = el.querySelector(':scope > .panel')
-          .getBoundingClientRect();
+        const image = el.querySelector('.detail-summary-photo > .hero-photo').getBoundingClientRect();
+        const facts = el.querySelector(':scope > .panel').getBoundingClientRect();
         return {imageHeight: image.height, factsHeight: facts.height};
       });
       assert.ok(
@@ -665,47 +451,35 @@ test(
       const section = page.locator('[data-flavor-detail]');
       await section.waitFor({state: 'visible'});
       assert.equal(await section.locator('.whisky-color-choice').count(), 12);
-      const columns = await section.locator('.flavor-sliders').evaluate(el =>
-        getComputedStyle(el).gridTemplateColumns.split(' ').length);
-      assert.equal(
-        columns,
-        2,
-        'two grouped slider columns beside the radar chart'
-      );
+      const columns = await section.locator('.flavor-sliders').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+      assert.equal(columns, 2, 'two grouped slider columns beside the radar chart');
       await section.locator('[data-act="tasting-color"][data-color-key="amber"]').click();
-      await section.screenshot({path: 'test-artifacts/wcm_0251_tasting_light.png'});
+      await section.screenshot({path: 'test-artifacts/wcm_0251_tasting_light.png', });
       const color = section.locator('[data-color-key="amber"] .glencairn-liquid');
       const before = await color.evaluate(el => getComputedStyle(el).fill);
       await page.locator('[data-act="toggle-theme"]').click();
       const after = await section.locator('[data-color-key="amber"] .glencairn-liquid').evaluate(el => getComputedStyle(el).fill);
-      assert.equal(
-        before,
-        after,
-        'whisky colour must not follow the light/dark theme'
-      );
-      await section.screenshot({path: 'test-artifacts/wcm_0251_tasting_dark.png'});
+      assert.equal(before, after, 'whisky colour must not follow the light/dark theme');
+      await section.screenshot({path: 'test-artifacts/wcm_0251_tasting_dark.png', });
       const score = section.locator('[data-tasting-score]');
       await score.fill('101');
       await score.press('Tab');
       assert.equal(await score.getAttribute('aria-invalid'), 'true');
       assert.equal(
-        (await requestJson(base, '/api/collection')).data.bottlings[0]
-          .tastings?.at(-1)?.rating ?? null,
+        (await requestJson(base, '/api/collection')).data.bottlings[0].tastings?.at(-1)?.rating ?? null,
         null,
         'invalid scores cannot be persisted'
       );
       await score.fill('87,5');
       assert.equal(
-        await section.locator('[data-tasting-rating]')
-          .getAttribute('data-rating-value'),
+        await section.locator('[data-tasting-rating]').getAttribute('data-rating-value'),
         '87.5',
         'the Glencairn visualization should update immediately, without waiting for blur'
       );
       await score.press('Tab');
       assert.equal(await score.getAttribute('aria-invalid'), null);
       assert.equal(
-        await section.locator('[data-tasting-rating]')
-          .getAttribute('data-rating-value'),
+        await section.locator('[data-tasting-rating]').getAttribute('data-rating-value'),
         '87.5',
         'the preview and persisted score must agree'
       );
@@ -715,37 +489,18 @@ test(
         const last = b?.tastings?.at(-1);
         return last?.whiskyColor === 'amber' && last?.rating === 87.5;
       });
-      assert.equal(
-        (await requestJson(base, '/api/collection')).data.bottlings[0]
-          .tastings.at(-1).rating,
-        87.5
-      );
+      assert.equal((await requestJson(base, '/api/collection')).data.bottlings[0].tastings.at(-1).rating, 87.5);
       await section.locator('[data-act="flavor-detail-undo"]').click();
-      assert.equal(
-        await section.locator('[data-tasting-score]').inputValue(),
-        ''
-      );
+      assert.equal(await section.locator('[data-tasting-score]').inputValue(), '');
       await section.locator('[data-act="flavor-detail-redo"]').click();
-      assert.equal(
-        await section.locator('[data-tasting-score]').inputValue(),
-        '87,5'
-      );
-      const labels = await section.locator('.flavor-history-actions button')
-        .count();
+      assert.equal(await section.locator('[data-tasting-score]').inputValue(), '87,5');
+      const labels = await section.locator('.flavor-history-actions button').count();
       assert.equal(labels, 2);
-      assert.equal(
-        await section.locator('[data-act="flavor-detail-undo"] svg').count(),
-        1
-      );
-      assert.equal(
-        await page.evaluate(() => document.documentElement.scrollWidth <=
-          innerWidth + 1),
-        true
-      );
+      assert.equal(await section.locator('[data-act="flavor-detail-undo"] svg').count(), 1);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
       await page.setViewportSize({width: 390, height: 844});
       assert.equal(
-        await page.evaluate(() => document.documentElement.scrollWidth <=
-          innerWidth + 1),
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
         true,
         'color selectors and rating controls must not overflow on mobile'
       );
@@ -762,8 +517,7 @@ test(
       await page.setViewportSize({width: 1920, height: 1080});
       await open();
       await page.locator('[data-act="new"]').first().click();
-      await page.locator('#bottling-form [name="name"]')
-        .fill('Full HD Geschmacksprofil');
+      await page.locator('#bottling-form [name="name"]').fill('Full HD Geschmacksprofil');
       await page.locator('#bottling-form button[type="submit"]').click();
       await page.locator('[data-act="tastings-new"]').click();
       await page.locator('[data-act="tasting-create"]').click();
@@ -793,16 +547,13 @@ test(
          * @return {!Object} Structured result assembled from the input data.
          */
         const rect = selector => {
-          const {x, y, width, height} = el.querySelector(selector)
-            .getBoundingClientRect(); return {x, y, width, height};
+          const {x, y, width, height} = el.querySelector(selector).getBoundingClientRect(); return {x, y, width, height};
         };
         return {
           outer: css('.tasting-top-row').gridTemplateColumns.split(' ').length,
           inner: css('.flavor-editor').gridTemplateColumns.split(' ').length,
-          colorColumns: css('.whisky-color-grid').gridTemplateColumns
-            .split(' ').length,
-          sliderColumns: css('.flavor-sliders').gridTemplateColumns
-            .split(' ').length,
+          colorColumns: css('.whisky-color-grid').gridTemplateColumns.split(' ').length,
+          sliderColumns: css('.flavor-sliders').gridTemplateColumns.split(' ').length,
           color: rect('.tasting-color-panel'),
           flavor: rect('.tasting-senses-section'),
           chart: rect('.flavor-chart'),
@@ -810,64 +561,31 @@ test(
           scrollbar: document.documentElement.scrollWidth - innerWidth,
         };
       });
-      assert.equal(
-        metrics.outer,
-        2,
-        `two sibling panels at Full HD: ${JSON.stringify(metrics)}`
-      );
-      assert.equal(
-        metrics.inner,
-        2,
-        'radar and sliders share the same flavor panel'
-      );
-      assert.equal(
-        metrics.colorColumns,
-        3,
-        'palette must show 3 columns and 4 rows'
-      );
-      assert.equal(
-        metrics.sliderColumns,
-        2,
-        'ten sliders must remain in two columns'
-      );
+      assert.equal(metrics.outer, 2, `two sibling panels at Full HD: ${JSON.stringify(metrics)}`);
+      assert.equal(metrics.inner, 2, 'radar and sliders share the same flavor panel');
+      assert.equal(metrics.colorColumns, 3, 'palette must show 3 columns and 4 rows');
+      assert.equal(metrics.sliderColumns, 2, 'ten sliders must remain in two columns');
       assert.ok(metrics.color.x + metrics.color.width <= metrics.flavor.x + 2);
       assert.ok(metrics.chart.x + metrics.chart.width <= metrics.bars.x + 2);
-      assert.ok(
-        metrics.scrollbar <= 1,
-        'Full HD layout must not create horizontal overflow'
-      );
-      assert.equal(
-        await sliders.locator('input[data-flavor-range]').count(),
-        10
-      );
+      assert.ok(metrics.scrollbar <= 1, 'Full HD layout must not create horizontal overflow');
+      assert.equal(await sliders.locator('input[data-flavor-range]').count(), 10);
       await page.setViewportSize({width: 1040, height: 900});
       assert.equal(
-        await panel.locator('.tasting-top-row').evaluate(el =>
-          getComputedStyle(el).gridTemplateColumns.split(' ').length),
+        await panel.locator('.tasting-top-row').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length),
         1
       );
       assert.equal(
-        await panel.locator('.flavor-editor').evaluate(el =>
-          getComputedStyle(el).gridTemplateColumns.split(' ').length),
+        await panel.locator('.flavor-editor').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length),
         2
       );
       await page.setViewportSize({width: 390, height: 844});
       assert.equal(
-        await panel.locator('.flavor-editor').evaluate(el =>
-          getComputedStyle(el).gridTemplateColumns.split(' ').length),
+        await panel.locator('.flavor-editor').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length),
         1
       );
-      assert.equal(
-        await page.evaluate(() => document.documentElement.scrollWidth <=
-          innerWidth + 1),
-        true
-      );
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
       await color.locator('[data-color-key="amber"]').click();
-      assert.equal(
-        await color.locator('[data-color-key="amber"]')
-          .getAttribute('aria-pressed'),
-        'true'
-      );
+      assert.equal(await color.locator('[data-color-key="amber"]').getAttribute('aria-pressed'), 'true');
     });
   }
 );
@@ -881,8 +599,7 @@ test(
       await page.setViewportSize({width: 1440, height: 900});
       await open();
       await page.locator('[data-act="new"]').first().click();
-      await page.locator('#bottling-form [name="name"]')
-        .fill('Tasting panel consistency');
+      await page.locator('#bottling-form [name="name"]').fill('Tasting panel consistency');
       await page.locator('#bottling-form button[type="submit"]').click();
       await page.locator('[data-act="tastings-new"]').click();
       await page.locator('[data-act="tasting-create"]').click();
@@ -895,32 +612,18 @@ test(
         5,
         'date/title, color, profile, notes, and rating use separate analytics-style panels'
       );
+      assert.equal(await section.locator('.tasting-color-panel h3').textContent(), 'Farbe');
+      assert.equal(await section.locator('.tasting-senses-section h3').textContent(), 'Geschmacksprofil');
       assert.equal(
-        await section.locator('.tasting-color-panel h3').textContent(),
-        'Farbe'
-      );
-      assert.equal(
-        await section.locator('.tasting-senses-section h3').textContent(),
-        'Geschmacksprofil'
-      );
-      assert.equal(
-        await section.locator('.tasting-panel > section.analytics-panel h3')
-          .first().textContent(),
+        await section.locator('.tasting-panel > section.analytics-panel h3').first().textContent(),
         'Verkostungsnotizen'
       );
       assert.equal(
-        await section.locator('.tasting-panel > section.analytics-panel h3')
-          .last().textContent(),
+        await section.locator('.tasting-panel > section.analytics-panel h3').last().textContent(),
         'Gesamtbewertung'
       );
-      assert.equal(
-        await section.locator(':scope > .section-head h3').textContent(),
-        'Eindrücke'
-      );
-      assert.equal(
-        await section.locator('svg[aria-label*="Bewertung kann"]').count(),
-        0
-      );
+      assert.equal(await section.locator(':scope > .section-head h3').textContent(), 'Eindrücke');
+      assert.equal(await section.locator('svg[aria-label*="Bewertung kann"]').count(), 0);
       const appearance = await panels.first().evaluate(el => {
         const style = getComputedStyle(el);
         return {
@@ -937,18 +640,9 @@ test(
       assert.ok(appearance.header.length > 0);
       const colorPanel = section.locator('.tasting-color-panel');
       const ratingPanel = section.locator('.tasting-rating-panel');
-      assert.equal(
-        await colorPanel.locator('.whisky-color-current, .whisky-color-footer').count(),
-        0
-      );
-      assert.equal(
-        await colorPanel.locator('[data-act="tasting-color-clear"]').count(),
-        1
-      );
-      assert.equal(
-        await ratingPanel.locator('[data-act="tasting-rating-clear"]').count(),
-        1
-      );
+      assert.equal(await colorPanel.locator('.whisky-color-current, .whisky-color-footer').count(), 0);
+      assert.equal(await colorPanel.locator('[data-act="tasting-color-clear"]').count(), 1);
+      assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').count(), 1);
       assert.equal(
         await colorPanel.locator('.tasting-panel-heading [data-act="tasting-color-clear"]').isDisabled(),
         true
@@ -967,10 +661,8 @@ test(
          */
         const positions = selector => {
           const panel = document.querySelector(selector);
-          const head = panel.querySelector('.tasting-panel-heading h3')
-            .getBoundingClientRect();
-          const button = panel.querySelector('.tasting-panel-heading button')
-            .getBoundingClientRect();
+          const head = panel.querySelector('.tasting-panel-heading h3').getBoundingClientRect();
+          const button = panel.querySelector('.tasting-panel-heading button').getBoundingClientRect();
           const bounds = panel.getBoundingClientRect();
           return {
             headingY: head.y,
@@ -979,46 +671,21 @@ test(
             panelRight: bounds.right,
           };
         };
-        return [
-          positions('.tasting-color-panel'),
-          positions('.tasting-rating-panel'),
-        ];
+        return [positions('.tasting-color-panel'), positions('.tasting-rating-panel'),];
       });
       for (const pos of headerPositions) {
-        assert.ok(
-          Math.abs(pos.headingY - pos.buttonY) < 24,
-          'remove control belongs to the section heading row'
-        );
-        assert.ok(
-          pos.panelRight - pos.buttonRight < 35,
-          'remove control is right-aligned'
-        );
+        assert.ok(Math.abs(pos.headingY - pos.buttonY) < 24, 'remove control belongs to the section heading row');
+        assert.ok(pos.panelRight - pos.buttonRight < 35, 'remove control is right-aligned');
       }
       await colorPanel.locator('[data-color-key="butter"]').click();
-      assert.equal(
-        await colorPanel.locator('[data-color-key="butter"]')
-          .getAttribute('aria-pressed'),
-        'true'
-      );
-      assert.ok(await colorPanel.locator('[data-color-key="butter"]')
-        .evaluate(el => getComputedStyle(el, '::after').content.includes('✓')));
-      assert.equal(
-        await colorPanel.locator('[data-act="tasting-color-clear"]')
-          .isEnabled(),
-        true
-      );
+      assert.equal(await colorPanel.locator('[data-color-key="butter"]').getAttribute('aria-pressed'), 'true');
+      assert.ok(await colorPanel.locator('[data-color-key="butter"]').evaluate(el => getComputedStyle(el, '::after').content.includes('✓')));
+      assert.equal(await colorPanel.locator('[data-act="tasting-color-clear"]').isEnabled(), true);
       await colorPanel.locator('[data-act="tasting-color-clear"]').click();
       assert.equal(await colorPanel.locator('.is-selected').count(), 0);
-      assert.equal(
-        await colorPanel.locator('[data-act="tasting-color-clear"]')
-          .isDisabled(),
-        true
-      );
+      assert.equal(await colorPanel.locator('[data-act="tasting-color-clear"]').isDisabled(), true);
       const rating = section.locator('[data-tasting-rating]');
-      assert.equal(
-        await rating.locator('.glencairn-rating-outline').count(),
-        5
-      );
+      assert.equal(await rating.locator('.glencairn-rating-outline').count(), 5);
       assert.equal(await rating.locator('.glencairn-rating-fill').count(), 5);
       assert.equal(
         await rating.locator('.glencairn-rating-fill[clip-path]').count(),
@@ -1026,73 +693,37 @@ test(
         'filled bowls are clipped to the original glass shape'
       );
       await rating.locator('[data-tasting-score]').fill('87,5');
-      assert.equal(
-        await rating.locator('[data-tasting-score]').inputValue(),
-        '87,5'
-      );
+      assert.equal(await rating.locator('[data-tasting-score]').inputValue(), '87,5');
       assert.equal(
         await rating.locator('[data-tasting-rating-total]').count(),
         0,
         'rating is displayed only in the editable input'
       );
-      assert.equal(
-        await rating.locator('[data-glass-state="full"]').count(),
-        4
-      );
-      assert.equal(
-        await rating.locator('[data-glass-state="partial"]').count(),
-        1
-      );
-      const fifthFill = await rating.locator('[data-glass-state="partial"] [data-rating-fill]').evaluate(node => ({y: +node.getAttribute('y'), height: +node.getAttribute('height')}));
+      assert.equal(await rating.locator('[data-glass-state="full"]').count(), 4);
+      assert.equal(await rating.locator('[data-glass-state="partial"]').count(), 1);
+      const fifthFill = await rating.locator('[data-glass-state="partial"] [data-rating-fill]').evaluate(node =>
+        ({y: +node.getAttribute('y'), height: +node.getAttribute('height')}));
       assert.ok(
         Math.abs(fifthFill.height - 94.875) < 0.001,
         '87.5 points fill 37.5% of the fifth glass from the bottom'
       );
       assert.ok(Math.abs(fifthFill.y - (331 - 94.875)) < 0.001);
       await rating.locator('[data-tasting-score]').press('Tab');
-      assert.equal(
-        await ratingPanel.locator('[data-act="tasting-rating-clear"]')
-          .isEnabled(),
-        true
-      );
+      assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').isEnabled(), true);
       await ratingPanel.locator('[data-act="tasting-rating-clear"]').click();
-      assert.equal(
-        await rating.locator('[data-tasting-score]').inputValue(),
-        ''
-      );
-      assert.equal(
-        await rating.locator('[data-glass-state="empty"]').count(),
-        5
-      );
-      assert.equal(
-        await ratingPanel.locator('[data-act="tasting-rating-clear"]')
-          .isDisabled(),
-        true
-      );
+      assert.equal(await rating.locator('[data-tasting-score]').inputValue(), '');
+      assert.equal(await rating.locator('[data-glass-state="empty"]').count(), 5);
+      assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').isDisabled(), true);
       await section.locator('[data-act="flavor-detail-undo"]').click();
-      assert.equal(
-        await rating.locator('[data-tasting-score]').inputValue(),
-        '87,5'
-      );
-      assert.equal(
-        await ratingPanel.locator('[data-act="tasting-rating-clear"]')
-          .isEnabled(),
-        true
-      );
-      await section.screenshot({path: 'test-artifacts/wcm_0253_tasting_light.png'});
+      assert.equal(await rating.locator('[data-tasting-score]').inputValue(), '87,5');
+      assert.equal(await ratingPanel.locator('[data-act="tasting-rating-clear"]').isEnabled(), true);
+      await section.screenshot({path: 'test-artifacts/wcm_0253_tasting_light.png', });
       await page.locator('[data-act="toggle-theme"]').click();
       assert.equal(await rating.locator('.glencairn-rating-fill').count(), 5);
-      assert.equal(
-        await rating.locator('[data-tasting-score]').inputValue(),
-        '87,5'
-      );
-      await section.screenshot({path: 'test-artifacts/wcm_0253_tasting_dark.png'});
+      assert.equal(await rating.locator('[data-tasting-score]').inputValue(), '87,5');
+      await section.screenshot({path: 'test-artifacts/wcm_0253_tasting_dark.png', });
       await page.setViewportSize({width: 390, height: 844});
-      assert.equal(
-        await page.evaluate(() => document.documentElement.scrollWidth <=
-          innerWidth + 1),
-        true
-      );
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
     });
   }
 );
@@ -1108,21 +739,12 @@ test(
         firstBottle: {inventoryNumber: '998170'},
       })).data.bottling;
       await open();
-      await page.locator(`[data-act="open"][data-id="${bottling.id}"]`)
-        .first().click();
-      assert.equal(
-        await page.locator('[data-flavor-detail]').count(),
-        0,
-        'no editor on master details'
-      );
-      assert.match(
-        await page.locator('.tasting-summary').innerText(),
-        /Noch keine Verkostung/
-      );
+      await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
+      assert.equal(await page.locator('[data-flavor-detail]').count(), 0, 'no editor on master details');
+      assert.match(await page.locator('.tasting-summary').innerText(), /Noch keine Verkostung/);
       await page.locator('[data-act="tastings-new"]').click();
       assert.equal(
-        (await requestJson(base, '/api/collection')).data.bottlings[0]
-          .tastings.length,
+        (await requestJson(base, '/api/collection')).data.bottlings[0].tastings.length,
         0,
         'opening draft never persists it'
       );
@@ -1146,12 +768,9 @@ test(
         /Nicht bewertet/,
         'latest tasting without score must not fall back to 81'
       );
-      const latestRecord = (await requestJson(base, '/api/collection')).data
-        .bottlings
-        .find(entry => entry.id === bottling.id).tastings.find(entry =>
-          entry.tastedOn === '2026-11-12');
-      const previewButton =
-        page.locator('.tasting-summary-card [data-act="tastings-open"]');
+      const latestRecord = (await requestJson(base, '/api/collection')).data.bottlings.find(entry => entry.id === bottling.id).tastings.find(entry =>
+        entry.tastedOn === '2026-11-12');
+      const previewButton = page.locator('.tasting-summary-card [data-act="tastings-open"]');
       assert.equal(
         await previewButton.getAttribute('data-tasting-id'),
         latestRecord.id,
@@ -1163,52 +782,31 @@ test(
         1,
         'the preview opens the individual tasting instead of the list'
       );
-      assert.equal(
-        await page.locator('[data-tasting-score]').count(),
-        0,
-        'saved tasting is read-only on opening'
-      );
+      assert.equal(await page.locator('[data-tasting-score]').count(), 0, 'saved tasting is read-only on opening');
       await page.locator('[data-act="tasting-edit-start"]').click();
       await page.locator('[data-tasting-score]').fill('87,5');
       await page.locator('[data-tasting-score]').press('Tab');
       await page.waitForFunction(async id => {
         const data = await (await fetch('/api/collection')).json();
-        return data.bottlings.find(b => b.id === id)?.tastings?.some(t =>
-          t.rating === 87.5);
+        return data.bottlings.find(b => b.id === id)?.tastings?.some(t => t.rating === 87.5);
       }, bottling.id);
       await page.locator('[data-act="tastings-back-list"]').click();
       await page.locator('[data-act="tasting-delete"]').first().click();
-      assert.equal(
-        await page.locator('[data-act="confirm-action"]').count(),
-        1
-      );
+      assert.equal(await page.locator('[data-act="confirm-action"]').count(), 1);
       await page.getByRole('button', {name: 'Abbrechen', exact: true}).click();
-      assert.equal(
-        await page.locator('.tasting-list-row').count(),
-        2,
-        'cancel preserves record'
-      );
+      assert.equal(await page.locator('.tasting-list-row').count(), 2, 'cancel preserves record');
       await page.locator('[data-act="tasting-delete"]').first().click();
       await page.locator('[data-act="confirm-action"]').click();
-      await page.waitForFunction(() =>
-        document.querySelectorAll('.tasting-list-row').length === 1);
+      await page.waitForFunction(() => document.querySelectorAll('.tasting-list-row').length === 1);
       assert.equal(await page.locator('.tasting-list-row').count(), 1);
       await page.locator('[data-act="tastings-back-detail"]').click();
-      assert.match(
-        await page.locator('.tasting-summary-rating').innerText(),
-        /81 \/ 100/
-      );
+      assert.match(await page.locator('.tasting-summary-rating').innerText(), /81 \/ 100/);
       await page.setViewportSize({width: 320, height: 720});
-      assert.ok(await page.evaluate(() => document.documentElement
-        .scrollWidth <= innerWidth + 1));
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
       if (!domOnly) {
         await page.goto(base + `/?bottling=${bottling.id}&view=tastings`);
         await page.locator('.tasting-list-row').waitFor();
-        assert.equal(
-          await page.locator('.tasting-list-row').count(),
-          1,
-          'direct route can reload'
-        );
+        assert.equal(await page.locator('.tasting-list-row').count(), 1, 'direct route can reload');
       }
     });
   }
@@ -1233,8 +831,7 @@ test(
         }
       )).data;
       await open();
-      await page.locator(`[data-act="open"][data-id="${bottling.id}"]`)
-        .first().click();
+      await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
       await page.locator('[data-act="tastings-open"]').first().click();
       // Existing tastings open read-only; deletion is available after Edit.
       await page.locator('[data-act="tasting-edit-start"]').click();
@@ -1260,11 +857,7 @@ test(
       await page.locator('[data-act="close-modal"]').last().click();
       assert.equal(await page.locator('[data-act="tasting-delete"]').count(), 1,
         'failed deletion must not navigate away from the tasting');
-      assert.equal(
-        (await requestJson(base, '/api/collection')).data.bottlings[0]
-          .tastings.length,
-        1
-      );
+      assert.equal((await requestJson(base, '/api/collection')).data.bottlings[0].tastings.length, 1);
     });
   }
 );
@@ -1284,37 +877,25 @@ test(
       )).data;
       await open();
       await page.locator('header [data-act="toggle-menu"]').click();
-      await page.locator('#site-drawer [data-act="goto-tastings-home"]')
-        .click();
+      await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();
       await page.locator('[data-act="tasting-flight-new"]').click();
-      await page.locator('#modal-root [data-flight-name]')
-        .fill('Islay comparison');
-      await page.locator('#modal-root [data-flight-notes]')
-        .fill('Peat gets stronger near the end');
+      await page.locator('#modal-root [data-flight-name]').fill('Islay comparison');
+      await page.locator('#modal-root [data-flight-notes]').fill('Peat gets stronger near the end');
       await page.locator('#modal-root [data-act="tasting-flight-create-confirm"]').click();
       await page.locator('.tasting-flight-page').waitFor();
-      assert.match(
-        await page.locator('.tasting-flight-summary').innerText(),
-        /Islay comparison/
-      );
+      assert.match(await page.locator('.tasting-flight-summary').innerText(), /Islay comparison/);
       await page.locator('[data-act="tasting-flight-toggle-add"]').click();
       await page.locator('[data-flight-tasting-option]').selectOption(first.id);
       await page.locator('[data-act="tasting-flight-attach"]').click();
-      await page.waitForFunction(() =>
-        document.querySelectorAll('.tasting-flight-member').length === 1);
+      await page.waitForFunction(() => document.querySelectorAll('.tasting-flight-member').length === 1);
       await page.locator('[data-act="tasting-flight-new-external"]').click();
-      await page.locator('[data-external-field="name"]')
-        .fill('A whisky outside the collection');
+      await page.locator('[data-external-field="name"]').fill('A whisky outside the collection');
       await page.locator('[data-tasting-title]').fill('Second glass');
       await page.locator('[data-act="tasting-create"]').click();
       await page.locator('[data-tasting-readonly="true"]').waitFor();
-      assert.match(
-        await page.locator('.tasting-flight-context').innerText(),
-        /Position 2 von 2/
-      );
+      assert.match(await page.locator('.tasting-flight-context').innerText(), /Position 2 von 2/);
       await page.locator('[data-act="tasting-back-flight"]').click();
-      await page.waitForFunction(() =>
-        document.querySelectorAll('.tasting-flight-member').length === 2);
+      await page.waitForFunction(() => document.querySelectorAll('.tasting-flight-member').length === 2);
       assert.equal(
         await page.locator('.tasting-flight-add').count(),
         0,
@@ -1326,39 +907,27 @@ test(
       assert.equal(before.tastingFlights[0].tastingIds.length, 2);
       await page.locator('[data-act="tasting-flight-move"][data-index="1"][data-direction="-1"]').click();
       await page.waitForFunction(
-        id => document.querySelector('.tasting-flight-member')?.dataset
-          .tastingId === id,
+        id => document.querySelector('.tasting-flight-member')?.dataset.tastingId === id,
         before.externalTastings[0].id
       );
       const after = (await requestJson(base, '/api/collection')).data;
-      assert.deepEqual(
-        after.tastingFlights[0].tastingIds,
-        [before.externalTastings[0].id, first.id]
-      );
+      assert.deepEqual(after.tastingFlights[0].tastingIds, [before.externalTastings[0].id, first.id]);
       assert.equal(after.externalTastings[0].title, 'Second glass');
       // The drag grip reorders notes without opening their detail view. The
       // glass/score columns must remain aligned for differing score lengths.
       const ratingCoordinates =
-        await page.locator('.tasting-flight-member-score')
-          .evaluateAll(items => items.map(item => ({
-            glasses: item.querySelector('.tasting-list-glasses')
-              .getBoundingClientRect().x,
-            score: item.querySelector('strong').getBoundingClientRect().x,
-          })));
-      assert.ok(ratingCoordinates.every(item => item.glasses ===
-        ratingCoordinates[0].glasses && item.score === ratingCoordinates[0]
-          .score));
-      const dragGrip = await page.locator('[data-flight-drag]').first()
-        .boundingBox();
-      const dropRow = await page.locator('.tasting-flight-member').last()
-        .boundingBox();
+        await page.locator('.tasting-flight-member-score').evaluateAll(items => items.map(item => ({
+          glasses: item.querySelector('.tasting-list-glasses').getBoundingClientRect().x,
+          score: item.querySelector('strong').getBoundingClientRect().x,
+        })));
+      assert.ok(ratingCoordinates.every(item => item.glasses === ratingCoordinates[0].glasses && item.score === ratingCoordinates[0].score));
+      const dragGrip = await page.locator('[data-flight-drag]').first().boundingBox();
+      const dropRow = await page.locator('.tasting-flight-member').last().boundingBox();
       const origin = {
-        x: dragGrip.x + dragGrip.width / 2, y: dragGrip.y +
-          dragGrip.height / 2,
+        x: dragGrip.x + dragGrip.width / 2, y: dragGrip.y + dragGrip.height / 2,
       };
       const end = {
-        x: dropRow.x + dropRow.width / 2, y: dropRow.y +
-          dropRow.height - 5,
+        x: dropRow.x + dropRow.width / 2, y: dropRow.y + dropRow.height - 5,
       };
       await page.mouse.move(origin.x, origin.y);
       await page.mouse.down();
@@ -1369,8 +938,7 @@ test(
         after.externalTastings[0].id
       );
       assert.deepEqual(
-        (await requestJson(base, '/api/collection')).data.tastingFlights[0]
-          .tastingIds,
+        (await requestJson(base, '/api/collection')).data.tastingFlights[0].tastingIds,
         [first.id, before.externalTastings[0].id]
       );
       assert.equal(
@@ -1378,7 +946,10 @@ test(
         1,
         'drag does not navigate into tasting details'
       );
-      await page.screenshot({path: 'test-artifacts/flight-desktop.png', fullPage: true});
+      await page.screenshot({
+        path: 'test-artifacts/flight-desktop.png',
+        fullPage: true,
+      });
       for (const width of [390, 320]) {
         await page.setViewportSize({width, height: 812});
         const dimensions = await page.evaluate(() => ({
@@ -1389,7 +960,9 @@ test(
           dimensions.scroll <= dimensions.viewport + 2,
           `flight page overflows at ${width}: ${JSON.stringify(dimensions)}`
         );
-        if (width === 390) await page.screenshot({path: 'test-artifacts/flight-mobile.png', fullPage: true});
+        if (width === 390) await page.screenshot({
+          path: 'test-artifacts/flight-mobile.png', fullPage: true,
+        });
       }
     });
   }
@@ -1420,16 +993,14 @@ test(
       for (const width of [390, 320]) {
         await page.setViewportSize({width, height: 812});
         const actual = await page.evaluate(() => {
-          const headings =
-            [...document.querySelectorAll('.tasting-entry-info strong')];
+          const headings = [...document.querySelectorAll('.tasting-entry-info strong')];
           const top = headings.find(el => el.textContent === 'MixMontag');
           return {
             scroll: document.documentElement.scrollWidth,
             viewport: window.innerWidth,
             titleHeight: top?.getBoundingClientRect().height || 0,
             fontSize: top ? parseFloat(getComputedStyle(top).fontSize) : 0,
-            ratings: [...document.querySelectorAll('.tasting-list-rating')]
-              .map(el => el.textContent),
+            ratings: [...document.querySelectorAll('.tasting-list-rating')].map(el => el.textContent),
           };
         });
         assert.ok(
@@ -1440,10 +1011,7 @@ test(
           actual.titleHeight <= actual.fontSize * 1.45,
           `MixMontag wraps unexpectedly at ${width}: ${JSON.stringify(actual)}`
         );
-        assert.deepEqual(
-          actual.ratings.sort(),
-          ['80 / 100', '80 / 100', '82 / 100']
-        );
+        assert.deepEqual(actual.ratings.sort(), ['80 / 100', '80 / 100', '82 / 100']);
       }
     });
   }
@@ -1463,13 +1031,9 @@ test(
       for (let i = 0; i < 3; i++) {
         await page.locator('[data-act="edit-bottling"]').click();
         await page.locator('#bottling-form').waitFor();
-        await page.locator('#bottling-form [name="name"]')
-          .fill(`Upload Probe ${i}`);
+        await page.locator('#bottling-form [name="name"]').fill(`Upload Probe ${i}`);
         await page.locator('#bottling-form [type="submit"], #bottling-form button.primary').first().click();
-        await page.waitForFunction(
-          name => document.querySelector('main h2')?.textContent.includes(name),
-          `Upload Probe ${i}`
-        );
+        await page.waitForFunction(name => document.querySelector('main h2')?.textContent.includes(name), `Upload Probe ${i}`);
       }
       const posts = {photos: 0, files: 0};
       page.on('request', request => {
@@ -1482,8 +1046,7 @@ test(
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII=',
         'base64'
       );
-      await page.locator('[data-bottle-photos]').first()
-        .setInputFiles({name: 'probe.png', mimeType: 'image/png', buffer: png});
+      await page.locator('[data-bottle-photos]').first().setInputFiles({name: 'probe.png', mimeType: 'image/png', buffer: png});
       await page.locator('.photo-tile').first().waitFor();
       await page.locator('[data-bottle-files]').setInputFiles({
         name: 'probe.pdf', mimeType: 'application/pdf',
@@ -1491,14 +1054,9 @@ test(
       });
       await page.locator('.document-list a').waitFor();
       await page.waitForTimeout(300);
-      const stored = (await requestJson(base, '/api/collection')).data.bottlings
-        .find(entry => entry.id === bottling.id).bottles.find(entry =>
-          entry.id === bottle.id);
-      assert.deepEqual(
-        posts,
-        {photos: 1, files: 1},
-        'one selection must trigger exactly one upload request each'
-      );
+      const stored = (await requestJson(base, '/api/collection')).data.bottlings.find(entry => entry.id === bottling.id).bottles.find(entry =>
+        entry.id === bottle.id);
+      assert.deepEqual(posts, {photos: 1, files: 1}, 'one selection must trigger exactly one upload request each');
       assert.equal(stored.photos.length, 1);
       assert.equal(stored.files.length, 1);
     });
@@ -1512,8 +1070,7 @@ test(
     await session(async ({page, base, open}) => {
       await open();
       await page.locator('header [data-act="toggle-menu"]').click();
-      await page.locator('#site-drawer [data-act="goto-tastings-home"]')
-        .click();
+      await page.locator('#site-drawer [data-act="goto-tastings-home"]').click();
       const heading = page.locator('.tasting-home-page .analytics-page-heading');
       await heading.waitFor();
       await heading.evaluate(node => {window.__tastingHeading = node;});
@@ -1531,22 +1088,15 @@ test(
       );
       const warehouseGets = [];
       page.on('request', req => {
-        if (req.method() === 'GET' && new URL(req.url()).pathname ===
-          '/api/warehouse') warehouseGets.push(req.url());
+        if (req.method() === 'GET' && new URL(req.url()).pathname === '/api/warehouse') warehouseGets.push(req.url());
       });
       await page.locator('[data-act="tasting-flight-new"]').click();
-      await page.locator('#modal-root [data-flight-name]')
-        .fill('Scoped flight refresh');
+      await page.locator('#modal-root [data-flight-name]').fill('Scoped flight refresh');
       await page.locator('#modal-root [data-act="tasting-flight-create-confirm"]').click();
       await page.locator('.tasting-flight-page').waitFor();
-      assert.equal(
-        warehouseGets.length,
-        0,
-        'A flight mutation must not reload the warehouse'
-      );
+      assert.equal(warehouseGets.length, 0, 'A flight mutation must not reload the warehouse');
       const result = await requestJson(base, '/api/collection');
-      assert.ok(result.data.tastingFlights.some(item => item.name ===
-        'Scoped flight refresh'));
+      assert.ok(result.data.tastingFlights.some(item => item.name === 'Scoped flight refresh'));
     });
   }
 );
@@ -1563,8 +1113,7 @@ test(
         tastedOn: '2026-10-10', rating: 81,
       })).status, 201);
       await open();
-      await page.locator(`[data-act="open"][data-id="${bottling.id}"]`)
-        .first().click();
+      await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
       await page.locator('[data-act="tastings-new"]').click();
       await page.locator('[data-tasting-date]').fill('2026-11-12');
       await page.locator('[data-tasting-title]').fill('Delayed second tasting');
@@ -1584,29 +1133,17 @@ test(
         await postStarted;
         // A second click/back must not navigate while the POST is still
         // pending.
-        assert.equal(
-          await page.locator('[data-act="tastings-back-list"]').isDisabled(),
-          true
-        );
-        assert.equal(
-          await page.locator('[data-act="tasting-create"]').isDisabled(),
-          true
-        );
+        assert.equal(await page.locator('[data-act="tastings-back-list"]').isDisabled(), true);
+        assert.equal(await page.locator('[data-act="tasting-create"]').isDisabled(), true);
       } finally {
         releasePost?.();
       }
       await page.locator('[data-act="tastings-back-list"]').click();
       await page.locator('.tasting-list-row').nth(1).waitFor();
       assert.equal(await page.locator('.tasting-list-row').count(), 2);
-      assert.match(
-        await page.locator('.tasting-list-row').first().innerText(),
-        /Delayed second tasting/
-      );
+      assert.match(await page.locator('.tasting-list-row').first().innerText(), /Delayed second tasting/);
       const collection = (await requestJson(base, '/api/collection')).data;
-      assert.equal(
-        collection.bottlings.find(b => b.id === bottling.id).tastings.length,
-        2
-      );
+      assert.equal(collection.bottlings.find(b => b.id === bottling.id).tastings.length, 2);
     });
   }
 );
@@ -1619,8 +1156,7 @@ test(
         name: 'Retriable tasting', firstBottle: {inventoryNumber: '995212'},
       })).data.bottling;
       await open();
-      await page.locator(`[data-act="open"][data-id="${bottling.id}"]`)
-        .first().click();
+      await page.locator(`[data-act="open"][data-id="${bottling.id}"]`).first().click();
       await page.locator('[data-act="tastings-new"]').click();
       await page.locator('[data-tasting-date]').fill('2026-11-12');
       await page.locator('[data-tasting-title]').fill('Keep unsaved title');
@@ -1639,28 +1175,13 @@ test(
         }
       );
       await page.locator('[data-act="tasting-create"]').click();
-      await page.waitForFunction(() =>
-        document.querySelector('[data-act="tasting-create"]')?.disabled === false);
-      assert.equal(
-        await page.locator('[data-act="tastings-back-list"]').isEnabled(),
-        true
-      );
-      assert.equal(
-        await page.locator('[data-tasting-title]').inputValue(),
-        'Keep unsaved title'
-      );
-      assert.equal(
-        (await requestJson(base, '/api/collection')).data.bottlings[0]
-          .tastings.length,
-        0
-      );
+      await page.waitForFunction(() => document.querySelector('[data-act="tasting-create"]')?.disabled === false);
+      assert.equal(await page.locator('[data-act="tastings-back-list"]').isEnabled(), true);
+      assert.equal(await page.locator('[data-tasting-title]').inputValue(), 'Keep unsaved title');
+      assert.equal((await requestJson(base, '/api/collection')).data.bottlings[0].tastings.length, 0);
       await page.locator('[data-act="tasting-create"]').click();
       await page.locator('[data-act="tasting-edit-start"]').waitFor();
-      assert.equal(
-        (await requestJson(base, '/api/collection')).data.bottlings[0]
-          .tastings.length,
-        1
-      );
+      assert.equal((await requestJson(base, '/api/collection')).data.bottlings[0].tastings.length, 1);
     });
   }
 );

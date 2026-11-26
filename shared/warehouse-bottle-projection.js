@@ -1,12 +1,13 @@
 /** One collection -> warehouse-bottle projection on client and server.
- * Pure function: changing tasting notes never alters room or shelf assignments. */
+ * Pure function: changing tasting notes never alters room or shelf assignments.
+ */
 import {displayPhotoPath} from './photo-images.js';
 /**
  * Computes warehouse bottle entries from the current collection state.
  * projection.
  *
  * @param {!Object} collection Collection data being processed.
- * @return {*} Entries transformed for the consuming code.
+ * @return {*} Physical-bottle descriptors projected from collection bottlings for warehouse display.
  */
 export function projectedWarehouseBottles(collection) {
   return (collection?.bottlings || []).flatMap(bottling =>
@@ -21,18 +22,15 @@ export function projectedWarehouseBottles(collection) {
       releaseYear: bottling.releaseYear ?? null,
       caskType: bottling.caskType || null,
       volumeMl: bottle.volumeMl ?? bottling.volumeMl ?? null,
-      photoPath: displayPhotoPath(bottle.photos?.find(entry =>
-        typeof entry?.path === 'string' && entry.path)) || null,
+      photoPath: displayPhotoPath(bottle.photos?.find(entry => typeof entry?.path === 'string' && entry.path)) || null,
     })));
 }
 
 /**
- * Updates derived warehouse bottle information from collection changes.
- * projection.
- *
- * @param {!Object} warehouse Warehouse model being processed.
- * @param {!Object} collection Collection data being processed.
- * @return {*} Structured result assembled from the input data.
+ * Rebuilds the warehouse's bottle projection and removes assignments to missing physical bottles.
+ * @param {Object|null|undefined} warehouse Current warehouse data, if available.
+ * @param {import('./types.js').Collection} collection Current collection with physical inventory.
+ * @return {Object|null|undefined} Warehouse projection, or the original nullish input when no warehouse is supplied.
  */
 export function synchronizeWarehouseProjection(warehouse, collection) {
   if (!warehouse) return warehouse;
@@ -40,9 +38,7 @@ export function synchronizeWarehouseProjection(warehouse, collection) {
   const known = new Set(bottles.map(b => b.id));
   return {
     ...warehouse, bottles,
-    assignments: Object.fromEntries(Object.entries(warehouse.assignments ||
-      {}).filter(([id]) => known.has(id))),
-    staleAssignments: Object.keys(warehouse.assignments || {}).filter(id =>
-      !known.has(id)).length,
+    assignments: Object.fromEntries(Object.entries(warehouse.assignments || {}).filter(([id]) => known.has(id))),
+    staleAssignments: Object.keys(warehouse.assignments || {}).filter(id => !known.has(id)).length,
   };
 }

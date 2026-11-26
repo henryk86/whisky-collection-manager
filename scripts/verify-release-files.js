@@ -6,12 +6,11 @@ import fs from 'node:fs';
  * Checks a source path against the release exclusion rules.
  *
  * @param {string} name Name of the item.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the path must be excluded from a release archive.
  */
 export function prohibitedReleasePath(name) {
   const path = name.replaceAll('\\', '/').replace(/^\.\//, '');
-  if (!path || path.includes('..') || path.startsWith('/') || /[\x00-\x1f]/
-    .test(path)) return true;
+  if (!path || path.includes('..') || path.startsWith('/') || /[\x00-\x1f]/.test(path)) return true;
   const parts = path.replace(/\/$/, '').split('/');
   if (parts.some(part =>
     [
@@ -22,15 +21,15 @@ export function prohibitedReleasePath(name) {
       'test-artifacts',
       'coverage',
     ].includes(part))) return true;
-  if (['data', 'images', 'documents', 'backups']
-    .includes(parts[0])) return true;
-  if (parts[0] === 'deploy' &&
-    ['storage', 'secrets', 'rclone', 'backup-control', 'backup-targets']
-      .includes(parts[1])) return true;
-  if (parts.some(part => part === '.env' || (part.startsWith('.env.') &&
-    part !== '.env.example'))) return true;
+  if (['data', 'images', 'documents', 'backups'].includes(parts[0])) return true;
+  if (parts[0] === 'deploy' && ['storage', 'secrets', 'rclone', 'backup-control', 'backup-targets'].includes(parts[1])) return true;
+  if (parts.some(part => part === '.env' || (part.startsWith('.env.') && part !== '.env.example'))) return true;
   if (parts.some(part =>
-    /^(?:collection\.json|rclone\.conf|restic-password|backup-admin-token|backup-worker-token|server-key\.pem)$/i.test(part))) return true;
+    new RegExp(
+      '^(?:collection\\.json|rclone\\.conf|restic' + '-password|backup-admin-token|backup-worker' +
+      '-token|server-key\\.pem)$',
+      'i'
+    ).test(part))) return true;
   return false;
 }
 
@@ -42,10 +41,7 @@ if (process.argv[1]?.endsWith('/verify-release-files.js')) {
   }
   const unsafe = lines.filter(prohibitedReleasePath);
   if (unsafe.length) {
-    console.error(
-      'Private or unsafe files found in release ZIP:',
-      unsafe.join(', ')
-    );
+    console.error('Private or unsafe files found in release ZIP:', unsafe.join(', '));
     process.exit(1);
   }
   for (const required of [

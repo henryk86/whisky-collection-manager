@@ -9,11 +9,10 @@ export const whiskyTypeLabels = {
   blended_scotch: 'Blended Scotch Whisky',
 };
 /**
- * Resolves a stored whisky category into the localized display name.
+ * Resolves the stored whisky category to its display label.
  *
- * @param {*} b Second value to compare.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} b Release with a whisky category.
+ * @return {*} Category label or the missing-value label.
  */
-export const whiskyTypeName = b => whiskyTypeLabels[b.whiskyType] ||
-  'Nicht angegeben';
+export const whiskyTypeName = b => whiskyTypeLabels[b.whiskyType] || 'Nicht angegeben';
 export const photoAccept = 'image/jpeg,image/png,image/webp,image/gif';
