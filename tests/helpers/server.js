@@ -10,8 +10,8 @@ import path from 'node:path';
  *
  * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
-export async function startTestServer() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-test-'));
+export async function startTestServer({parentDirectory = os.tmpdir()} = {}) {
+  const dir = fs.mkdtempSync(path.join(parentDirectory, 'whisky-test-'));
   const backupControl = process.env.BACKUP_CONTROL_DIR || path.join(dir, 'backup-control');
   fs.mkdirSync(backupControl, {recursive: true});
   const passfile = path.join(backupControl, 'backup-zip-password');

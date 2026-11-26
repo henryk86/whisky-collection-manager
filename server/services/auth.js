@@ -8,6 +8,7 @@ import crypto from 'node:crypto';
 import {promisify} from 'node:util';
 import {DATA_DIR} from '../storage/paths.js';
 import {fail} from '../domain/errors.js';
+import {LoginAttemptLimiter} from '../domain/login-attempts.js';
 
 /** @typedef {import('node:http').IncomingMessage} AuthRequest */
 /** @typedef {import('node:http').ServerResponse} AuthResponse */
@@ -28,7 +29,7 @@ const COOKIE = 'wcm_session';
 const SESSION_AGE = 12 * 60 * 60 * 1000;
 const IDLE_AGE = 2 * 60 * 60 * 1000;
 const sessions = new Map();
-const attempts = new Map();
+const loginAttempts = new LoginAttemptLimiter();
 let current = null;
 let fileIdentity = null;
 /** @type {Promise<unknown>} */
@@ -36,11 +37,11 @@ let queue = Promise.resolve();
 /**
  * Creates a localized HTTP authentication error without exposing secret values.
  *
- * @param {string} key Stable authentication error key.
+ * @param {string} code Full stable authentication error identifier.
  * @param {number} status HTTP status code.
  * @return {import('../domain/errors.js').HttpError} Error object to be thrown by the caller.
  */
-const authError = (key, status) => fail(key, status, `api.errors.${key}`);
+const authError = (code, status) => fail(code, status, code);
 
 /**
  * Reads the authentication file metadata used to detect replacement or edits.
@@ -128,7 +129,7 @@ function serialize(task) {
  */
 function passwordCheck(password) {
   if (typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password, 'utf8') > 256 ||
-    /[\u0000-\u001f\u007f]/u.test(password)) throw authError('invalidPassword', 400);
+    /[\u0000-\u001f\u007f]/u.test(password)) throw authError('api.errors.invalidPassword', 400);
 }
 
 /**
@@ -138,7 +139,7 @@ function passwordCheck(password) {
  * @throws {import('../domain/errors.js').HttpError} If the username does not meet the account policy.
  */
 function usernameCheck(username) {
-  if (typeof username !== 'string' || !/^[a-z0-9._-]{3,32}$/.test(username)) throw authError('invalidUsername', 400);
+  if (typeof username !== 'string' || !/^[a-z0-9._-]{3,32}$/.test(username)) throw authError('api.errors.invalidUsername', 400);
 }
 
 /**
@@ -199,12 +200,11 @@ function cookieHeaders(request, token = '', maxAge = 0) {
 }
 
 /**
- * Removes expired and idle sessions and rate-limit entries older than five minutes.
+ * Removes expired and idle sessions.
  */
 function prune() {
   const now = Date.now();
   for (const [token, record] of sessions) if (record.expires <= now || record.lastSeen + IDLE_AGE <= now) sessions.delete(token);
-  for (const [key, record] of attempts) if (record.at + 5 * 60000 < now) attempts.delete(key);
 }
 
 /**
@@ -245,9 +245,11 @@ export function sessionUser(req) {
   const token = sessionToken(req);
   if (!/^[a-f0-9]{64}$/.test(token)) return null;
   prune();
+  // Reload before looking up the token: a changed file revokes all sessions.
+  const data = store();
   const record = sessions.get(token);
   if (!record) return null;
-  const user = store().users.find(item => item.id === record.id);
+  const user = data.users.find(item => item.id === record.id);
   if (!user) {sessions.delete(token); return null;}
   record.lastSeen = Date.now();
   return user;
@@ -295,9 +297,9 @@ export function sessionInfo(req) {
  */
 function requireUser(req, admin = false, allowChange = false) {
   const user = sessionUser(req);
-  if (!user) throw authError('loginRequired', 401);
-  if (user.mustChangePassword && !allowChange) throw authError('passwordChangeRequired', 403);
-  if (admin && user.role !== 'admin') throw authError('adminRequired', 403);
+  if (!user) throw authError('api.errors.loginRequired', 401);
+  if (user.mustChangePassword && !allowChange) throw authError('api.errors.passwordChangeRequired', 403);
+  if (admin && user.role !== 'admin') throw authError('api.errors.adminRequired', 403);
   return user;
 }
 
@@ -337,45 +339,40 @@ export function authorizeRequest(req, url) {
 export async function login(req, body, response) {
   const username = typeof body?.username === 'string' ? body.username.toLowerCase().trim() : '';
   const password = body?.password;
-  if (!/^[a-z0-9._-]{3,32}$/.test(username) || typeof password !== 'string' || password.length > 256 || Buffer.byteLength(password, 'utf8') > 256) throw authError('invalidCredentials', 401);
+  if (!/^[a-z0-9._-]{3,32}$/.test(username) || typeof password !== 'string' || password.length > 256 || Buffer.byteLength(password, 'utf8') > 256) throw authError('api.errors.invalidCredentials', 401);
   prune();
   const address = (req.socket?.remoteAddress || '').slice(0, 60);
-  const key = `${address}:${username}`;
-  const ipKey = `ip:${address}`;
-  const prior = attempts.get(key);
-  const ipPrior = attempts.get(ipKey);
-  if (ipPrior?.until > Date.now() || prior?.until > Date.now()) throw authError('tooManyAttempts', 429);
-  const user = store().users.find(item => item.username === username);
-  // Verify against a valid dummy hash even for unknown accounts.
-  const check = user || {...hashDummy, username};
-  const computed = await scrypt(password, Buffer.from(check.salt, 'hex'), 64, SCRYPT_OPTIONS);
-  const equal = crypto.timingSafeEqual(computed, Buffer.from(check.passwordHash, 'hex'));
-  if (!user || !equal) {
-    const failures = (prior?.failures || 0) + 1;
-    attempts.set(
-      key,
-      {
-        failures, at: Date.now(), until: failures >= 5 ? Date.now() + 60000 : 0,
-      }
-    );
-    const addressFailures = (ipPrior?.failures || 0) + 1;
-    attempts.set(
-      ipKey,
-      {
-        failures: addressFailures,
-        at: Date.now(),
-        until: addressFailures >= 20 ? Date.now() + 60000 : 0,
-      }
-    );
-    throw authError('invalidCredentials', 401);
+  const finish = loginAttempts.reserve(address, username);
+  if (!finish) throw authError('api.errors.tooManyAttempts', 429);
+  /** @type {import('../domain/login-attempts.js').AttemptOutcome} */
+  let outcome = 'aborted';
+  try {
+    const user = store().users.find(item => item.username === username);
+    // Verify against a valid dummy hash even for unknown accounts.
+    const check = user || hashDummy;
+    const computed = await scrypt(password, Buffer.from(check.salt, 'hex'), 64, SCRYPT_OPTIONS);
+    const equal = crypto.timingSafeEqual(computed, Buffer.from(check.passwordHash, 'hex'));
+    if (!user || !equal) {
+      outcome = 'failed';
+      throw authError('api.errors.invalidCredentials', 401);
+    }
+    // Password changes, account deletion and external restores may occur while
+    // scrypt is running. Never establish a session from obsolete credentials.
+    const verifiedUser = store().users.find(item => item.id === user.id && item.username === username);
+    if (!verifiedUser || verifiedUser.salt !== user.salt || verifiedUser.passwordHash !== user.passwordHash) {
+      outcome = 'failed';
+      throw authError('api.errors.invalidCredentials', 401);
+    }
+    outcome = 'accepted';
+    const token = crypto.randomBytes(32).toString('hex');
+    sessions.set(token, {id: verifiedUser.id, expires: Date.now() + SESSION_AGE, lastSeen: Date.now()});
+    // Bound in-memory state; sessions never persist to the user store.
+    while (sessions.size > 2048) sessions.delete(sessions.keys().next().value);
+    response.setHeader('Set-Cookie', cookieHeaders(req, token, Math.floor(SESSION_AGE / 1000)));
+    return sessionInfoWithUser(verifiedUser);
+  } finally {
+    finish(outcome);
   }
-  attempts.delete(key);
-  const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, {id: user.id, expires: Date.now() + SESSION_AGE, lastSeen: Date.now()});
-  // Bound in-memory state; sessions never persist to the user store.
-  while (sessions.size > 2048) sessions.delete(sessions.keys().next().value);
-  response.setHeader('Set-Cookie', cookieHeaders(req, token, Math.floor(SESSION_AGE / 1000)));
-  return sessionInfoWithUser(user);
 }
 // A constant valid scrypt value. No separate KDF for invalid usernames.
 const hashDummy = {
@@ -428,11 +425,13 @@ function invalidateUser(id) {
 export async function changePassword(req, body, response) {
   return serialize(async () => {
     const user = requireUser(req, false, true);
-    if (typeof body?.currentPassword !== 'string' || typeof body?.newPassword !== 'string') throw authError('invalidPassword', 400);
+    if (typeof body?.currentPassword !== 'string' || typeof body?.newPassword !== 'string') throw authError('api.errors.invalidPassword', 400);
+    if (body.currentPassword.length > 256 || Buffer.byteLength(body.currentPassword, 'utf8') > 256) throw authError('api.errors.invalidCredentials', 401);
     const candidate = await scrypt(body.currentPassword, Buffer.from(user.salt, 'hex'), 64, SCRYPT_OPTIONS);
-    if (!crypto.timingSafeEqual(candidate, Buffer.from(user.passwordHash, 'hex'))) throw authError('invalidCredentials', 401);
-    if (body.currentPassword === body.newPassword) throw authError('newPasswordMustDiffer', 400);
+    if (!crypto.timingSafeEqual(candidate, Buffer.from(user.passwordHash, 'hex'))) throw authError('api.errors.invalidCredentials', 401);
+    if (body.currentPassword === body.newPassword) throw authError('api.errors.newPasswordMustDiffer', 400);
     const change = await hashPassword(body.newPassword);
+    requireUser(req, false, true);
     const data = structuredClone(store());
     const updated = data.users.find(item => item.id === user.id);
     Object.assign(updated, change, {mustChangePassword: false});
@@ -473,9 +472,10 @@ export async function createUser(req, body) {
     const username = typeof body?.username === 'string' ? body.username.trim().toLowerCase() : body?.username;
     usernameCheck(username);
     const data = structuredClone(store());
-    if (data.users.some(item => item.username === username)) throw authError('usernameExists', 409);
-    if (data.users.length >= 200) throw authError('tooManyUsers', 409);
+    if (data.users.some(item => item.username === username)) throw authError('api.errors.usernameExists', 409);
+    if (data.users.length >= 200) throw authError('api.errors.tooManyUsers', 409);
     const credential = await hashPassword(body?.password);
+    requireUser(req, true);
     /** @type {StoredUser} */
     const user = {
       id: crypto.randomUUID(),
@@ -503,9 +503,11 @@ export async function resetPassword(req, id, body) {
     const admin = requireUser(req, true);
     const data = structuredClone(store());
     const user = data.users.find(item => item.id === id);
-    if (!user) throw authError('userNotFound', 404);
-    if (user.id === admin.id) throw authError('changeOwnPassword', 400);
-    Object.assign(user, await hashPassword(body?.password), {mustChangePassword: true});
+    if (!user) throw authError('api.errors.userNotFound', 404);
+    if (user.id === admin.id) throw authError('api.errors.changeOwnPassword', 400);
+    const credential = await hashPassword(body?.password);
+    requireUser(req, true);
+    Object.assign(user, credential, {mustChangePassword: true});
     save(data);
     invalidateUser(id);
     return publicUser(user);
@@ -522,11 +524,11 @@ export async function resetPassword(req, id, body) {
 export function removeUser(req, id) {
   return serialize(() => {
     const admin = requireUser(req, true);
-    if (id === admin.id) throw authError('cannotDeleteSelf', 400);
+    if (id === admin.id) throw authError('api.errors.cannotDeleteSelf', 400);
     const data = structuredClone(store());
     const before = data.users.length;
     data.users = data.users.filter(item => item.id !== id || item.role === 'admin');
-    if (before === data.users.length) throw authError('userNotFound', 404);
+    if (before === data.users.length) throw authError('api.errors.userNotFound', 404);
     save(data);
     invalidateUser(id);
     return {success: true};
@@ -543,7 +545,7 @@ export function removeUser(req, id) {
 export function setLoginRequired(req, body) {
   return serialize(() => {
     requireUser(req, true);
-    if (typeof body?.required !== 'boolean') throw authError('invalidLoginSetting', 400);
+    if (typeof body?.required !== 'boolean') throw authError('api.errors.invalidLoginSetting', 400);
     const data = structuredClone(store());
     data.loginRequired = body.required;
     save(data);

@@ -99,7 +99,7 @@ Slot-Bindungen und Übersetzungsschlüssel.
 
 ## Sicherheit und Betrieb
 
-Optionale Anmeldung mit Administrator-/Nutzerrollen und Passwörtern als scrypt-Hashes; Sitzungen über HTTP-Cookies. Host-/CSRF-Prüfungen und HTTPS schützen schreibende Operationen. Backup-Schlüssel und Datenverzeichnis getrennt vom Checkout halten. Siehe [Anmeldung](ANMELDUNG.md), [Docker/Backup](DOCKER_BACKUP.md) und [Release-Workflow](RELEASE_WORKFLOW.md).
+Optionale Anmeldung mit Administrator-/Nutzerrollen und Passwörtern als scrypt-Hashes; Sitzungen über HTTP-Cookies. Host-/CSRF-Prüfungen und HTTPS schützen schreibende Operationen. `server/domain/login-attempts.js` reserviert die Kapazität für asynchrone Passwortprüfungen je Konto und direkter Peer-IP. Der Dispatcher prüft die Autorisierung nach dem JSON-Parsing erneut. Statische Dateien werden über kanonische Pfade auf ihren Auslieferungsbereich begrenzt; private Datenverzeichnisse bleiben von der öffentlichen Dateiauslieferung ausgeschlossen. Fotos werden ausschließlich als Rasterdateien mit privatem Cache ausgeliefert. WCM ist für privates LAN oder VPN vorgesehen, nicht für direkte Internetfreigaben. Backup-Schlüssel und Datenverzeichnis getrennt vom Checkout halten. Siehe [Anmeldung](ANMELDUNG.md), [Docker/Backup](DOCKER_BACKUP.md) und [Release-Workflow](RELEASE_WORKFLOW.md).
 
 ## Änderungen sicher einbauen
 

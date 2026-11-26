@@ -13,7 +13,7 @@ Der WhiskyCollectionManager verwendet standardmäßig **einen Docker-Service `ap
 
 Alle neuen Backups verwenden **ein einziges passwortgeschütztes ZIP-Format mit AES-256 (WinZip AE-2)**, unabhängig davon, ob sie manuell oder per Zeitplan auf USB, NAS oder Cloud erstellt werden. Das ZIP enthält den vollständigen `data/`-Ordner mit `collection.json` und `warehouse.json`, Bilder in `images/` und Dokumente in `documents/`. Die Inhalte sind verschlüsselt, Dateinamen im ZIP jedoch sichtbar. Zum Öffnen auf Windows/macOS/Linux z. B. **7-Zip** oder ein anderes WinZip-AES-kompatibles Programm verwenden. Alte unverschlüsselte ZIP-Archive können weiterhin eingespielt werden, werden aber nicht nachträglich verschlüsselt.
 
-**Sicherheit:** Die Loginpflicht ist standardmäßig aus und kann von einem angemeldeten Administrator in der Nutzerverwaltung aktiviert werden. Bei Internetzugriff Loginpflicht, HTTPS und vorzugsweise zusätzliche Netzabsicherung verwenden. Siehe [Anmeldung](ANMELDUNG.md).
+**Sicherheit:** Die Loginpflicht ist standardmäßig aus und kann von einem angemeldeten Administrator in der Nutzerverwaltung aktiviert werden. WCM ausschließlich im vertrauenswürdigen privaten LAN oder über VPN betreiben. Bei gemeinsam genutzten Netzen Loginpflicht und HTTPS verwenden. Keine direkte Internetfreigabe, auch nicht bei aktivierter Anmeldung. Siehe [Anmeldung](ANMELDUNG.md).
 
 ## Installation und Update
 
@@ -66,7 +66,7 @@ Der Server akzeptiert als HTTP-Host standardmaessig `localhost`, `127.0.0.1`,
 Weitere Namen (z. B. eine interne Reverse-Proxy-Adresse) in der Compose-`.env`
 als `ALLOWED_HOSTS=name1,192.168.1.40` eintragen und dann
 `docker compose up -d` ausfuehren. Ein unbekannter Host liefert HTTP 421.
-Die `ALLOWED_HOSTS`-Liste ergaenzt die Zertifikatsnamen und erlaubt keine Wildcards.
+Die `ALLOWED_HOSTS`-Liste ergaenzt die Zertifikatsnamen und erlaubt keine Wildcards. Sie prueft Hostnamen, nicht die Zugriffsberechtigung eines Clients. Die Compose-Portfreigaben lauschen standardmaessig auf allen Host-Schnittstellen. Den Zugriff per Host-Firewall, Router und gegebenenfalls VPN auf das private Netz begrenzen; auch IPv6 und den optionalen NGINX-Port beruecksichtigen.
 
 **Vor einem Upgrade bestehender Installationen:** In `.env` die tatsaechlich
 benutzten IP-Adressen und DNS-/Router-Namen (z. B. `whisky.fritz.box`)
@@ -89,7 +89,7 @@ erlaubt sein. Ein Proxy, der TLS nur auf seiner oeffentlichen Seite beendet
 und per HTTP zum WCM weiterleitet, verursacht fuer Browser-Schreibzugriffe
 **403** (Origin `https:` vs. Backend `http:`). `X-Forwarded-Proto` wird
 aus Sicherheitsgruenden nicht ausgewertet. Das Backend-Zertifikat muss vom
-Proxy vertraut werden; unsichere TLS-Pruefung ist keine Ersatzloesung.
+Proxy vertraut werden; unsichere TLS-Pruefung ist keine Ersatzloesung. Die Login-Versuchsbegrenzung verwendet die direkte Peer-IP; mehrere Clients hinter demselben Proxy teilen sich daher das IP-Limit.
 
 Schreibzugriffe von fremden Webseiten werden per Origin/Fetch Metadata verweigert.
 JSON-Endpunkte erfordern `Content-Type: application/json` und liefern sonst 415.

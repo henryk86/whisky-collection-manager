@@ -313,3 +313,45 @@ test(
     } finally {await context.stop();}
   }
 );
+
+test('security: private runtime directories cannot be served through public path aliases', async () => {
+  const context = await startTestServer({parentDirectory: path.resolve('public')});
+  try {
+    const prefix = `/${path.basename(context.dir)}`;
+    const file = path.join(context.dir, 'data', 'user.json');
+    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+    data.loginRequired = true;
+    fs.writeFileSync(file, JSON.stringify(data));
+    fs.writeFileSync(path.join(context.dir, 'images', 'private.png'), 'PRIVATE');
+    const paths = [`${prefix}/data/user.json`, `${prefix}/%64ata/user.json`,
+    `${prefix}/images/private.png`, `${prefix}/backup-control/backup-zip-password`];
+    for (const resource of paths) {
+      const response = await fetch(context.base + resource);
+      assert.equal(response.status, 404, resource);
+      assert.doesNotMatch(await response.text(), /passwordHash|PRIVATE|SicheresTestpasswort/);
+    }
+    assert.equal((await fetch(context.base + '/images/private.png')).status, 401);
+    assert.equal((await fetch(context.base + '/assets/photo-placeholder.svg')).status, 200);
+  } finally {await context.stop();}
+});
+
+test('security: static file aliases cannot escape their serving root', async () => {
+  const context = await startTestServer();
+  const directory = fs.mkdtempSync(path.join('public', 'security-link-'));
+  try {
+    const secret = path.join(context.dir, 'data', 'user.json');
+    fs.symlinkSync(secret, path.join(directory, 'private.json'), 'file');
+    fs.symlinkSync(secret, path.join(context.dir, 'images', 'private.png'), 'file');
+    for (const resource of [`/${path.basename(directory)}/private.json`, '/images/private.png']) {
+      const response = await fetch(context.base + resource);
+      assert.equal(response.status, 403, resource);
+      assert.doesNotMatch(await response.text(), /passwordHash/);
+    }
+    // Runtime photos are raster images, never executable same-origin assets.
+    fs.writeFileSync(path.join(context.dir, 'images', 'unexpected.html'), '<p>not a photo</p>');
+    assert.equal((await fetch(context.base + '/images/unexpected.html')).status, 404);
+  } finally {
+    fs.rmSync(directory, {recursive: true, force: true});
+    await context.stop();
+  }
+});

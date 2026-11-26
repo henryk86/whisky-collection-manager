@@ -1,13 +1,13 @@
 # Lokale HTTP-API
 
-Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 6`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Die **optionale Loginpflicht** kann ein Administrator in der Nutzerverwaltung aktivieren. Dann benötigen Sammlungs-API, Bilder und Downloads eine gültige Sitzung; administrative Backup-Operationen behalten ihre separate Sicherheitsprüfung. Bei Internetzugriff sind HTTPS, Loginpflicht und vorzugsweise zusätzliche Netzabsicherung erforderlich.
+Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 6`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Die **optionale Loginpflicht** kann ein Administrator in der Nutzerverwaltung aktivieren. Dann benötigen Sammlungs-API, Bilder und Downloads eine gültige Sitzung; administrative Backup-Operationen behalten ihre separate Sicherheitsprüfung. Die API ist für den Zugriff im privaten LAN oder per VPN vorgesehen; eine direkte Internetfreigabe wird auch bei aktivierter Loginpflicht nicht empfohlen.
 
 POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB Anfrageinhalt. Ungültiges JSON und Nicht-Objekte werden mit 400 abgewiesen. Fehlerantwort für bekannte Fehler: `{ "error": "Invalid path.", "errorCode": "api.errors.invalidPath" }`; der `error`-Text ist als sicherer, englischer Fallback gedacht. Der Browser übersetzt `errorCode` mittels der Sprachkataloge `public/locales/de.json` und `en.json`. Bei bestimmten dynamischen Validierungen kann zusätzlich `errorParams` (z. B. `{ "field": "abv" }`) mitgeliefert werden. Für unbekannte Fehler liefert die API ausschließlich eine neutrale englische Meldung einschließlich HTTP-Status, ohne interne Fehlermeldungen offenzulegen. Bekannte Konflikte verwenden 409, nicht gefundene Ressourcen 404. Die Endpunktdefinitionen stehen fachlich gruppiert unter `server/routes/`; beschreibbare Felder und deren Normalisierung in `server/domain/normalization.js`.
 
 ### Anmeldung und Nutzerverwaltung
 
 - `GET /api/auth/session`: öffentlich; Status `{required, user, canManageUsers}` (ohne Passwort-Hashes)
-- `POST /api/auth/login`: JSON `{username, password}`; setzt HttpOnly-/SameSite-Cookie, Secure bei HTTPS
+- `POST /api/auth/login`: JSON `{username, password}`; setzt HttpOnly-/SameSite-Cookie, Secure bei HTTPS; 401 bei ungültigen Zugangsdaten, 429 bei ausgeschöpftem Loginversuchs- oder Nebenläufigkeitslimit
 - `POST /api/auth/logout`: beendet die Sitzung; kein JSON-Body erforderlich
 - `POST /api/auth/password`: angemeldet, JSON `{currentPassword, newPassword}`; erzwingt nach Erstlogin einen Passwortwechsel und rotiert das Sitzungstoken
 - `GET /api/auth/users`: Administrator; gibt nur öffentliche Nutzerinformationen zurück

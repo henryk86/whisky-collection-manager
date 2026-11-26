@@ -6,6 +6,7 @@ import path from 'node:path';
 import {fork, execFileSync} from 'node:child_process';
 import {once} from 'node:events';
 import {fileURLToPath} from 'node:url';
+import {startTestServer, requestJson} from '../helpers/server.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -133,7 +134,13 @@ test(
       assert.equal(userChanged.status, 200);
       const userCookie = userChanged.cookie;
       assert.equal((await call('/api/collection', 'GET', undefined, userCookie)).status, 200);
-      assert.equal((await call('/images/secret.png', 'GET', undefined, userCookie)).status, 200);
+      const privatePhoto = await fetch(base + '/images/secret.png', {headers: {Cookie: userCookie}});
+      assert.equal(privatePhoto.status, 200);
+      assert.equal(privatePhoto.headers.get('cache-control'), 'private, no-cache');
+      const imageETag = privatePhoto.headers.get('etag');
+      await privatePhoto.arrayBuffer();
+      const anonymousCache = await fetch(base + '/images/secret.png', {headers: {'If-None-Match': imageETag}});
+      assert.equal(anonymousCache.status, 401, 'conditional requests still require authorization');
       assert.equal((await call('/api/auth/users', 'GET', undefined, userCookie)).status, 403);
       assert.equal((await call('/api/auth/config', 'PATCH', {required: false}, userCookie)).status, 403);
       const reset = await call(`/api/auth/users/${added.value.id}/reset-password`, 'POST', {password: 'NewTempPassword-2026'}, adminCookie);
@@ -214,3 +221,59 @@ test(
     } finally {fs.rmSync(data, {recursive: true, force: true});}
   }
 );
+
+
+test('concurrent failed HTTP logins reserve the last account slot before scrypt', async () => {
+  const context = await startTestServer();
+  try {
+    const login = () => requestJson(context.base, '/api/auth/login', 'POST', {
+      username: 'admin', password: 'wrong-password',
+    });
+    const initial = await Promise.all(Array.from({length: 4}, login));
+    assert.deepEqual(initial.map(result => result.status), [401, 401, 401, 401]);
+    const last = await Promise.all([login(), login()]);
+    assert.deepEqual(last.map(result => result.status).sort(), [401, 429]);
+    const blocked = await login();
+    assert.equal(blocked.status, 429);
+    assert.equal(blocked.data.errorCode, 'api.errors.tooManyAttempts');
+    assert.equal((await fetch(context.base + '/api/version')).status, 200);
+  } finally {await context.stop();}
+});
+
+test('the first privileged request after external account-store replacement is rejected', async () => {
+  const context = await startTestServer();
+  try {
+    const file = path.join(context.dir, 'data', 'user.json');
+    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const {scryptSync, randomBytes} = await import('node:crypto');
+    const password = 'KnownLocalTestPassword-2026';
+    const salt = randomBytes(16).toString('hex');
+    const passwordHash = scryptSync(password, Buffer.from(salt, 'hex'), 64,
+      {N: 131072, r: 8, p: 1, maxmem: 256 * 1024 * 1024}).toString('hex');
+    Object.assign(data.users[0], {salt, passwordHash, mustChangePassword: false});
+    data.loginRequired = true;
+    const replace = () => {
+      const temporary = file + '.replacement';
+      fs.writeFileSync(temporary, JSON.stringify(data), {mode: 0o600});
+      fs.renameSync(temporary, file);
+    };
+    replace();
+    const response = await fetch(context.base + '/api/auth/login', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username: 'admin', password}),
+    });
+    assert.equal(response.status, 200);
+    const cookie = response.headers.get('set-cookie').split(';')[0];
+    await response.json();
+    const headers = {Cookie: cookie};
+    assert.equal((await fetch(context.base + '/api/auth/users', {headers})).status, 200);
+    // Replace with the same account identity, but different credentials. The
+    // first subsequent request, not merely the second one, must fail closed.
+    data.users[0].passwordHash = 'a'.repeat(128);
+    replace();
+    const denied = await fetch(context.base + '/api/auth/users', {headers});
+    assert.equal(denied.status, 401);
+    assert.equal((await denied.json()).errorCode, 'api.errors.loginRequired');
+    assert.equal((await fetch(context.base + '/api/collection', {headers})).status, 401);
+  } finally {await context.stop();}
+});

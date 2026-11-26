@@ -3,10 +3,43 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import {pipeline} from 'node:stream/promises';
 import {fileURLToPath} from 'node:url';
-import {ROOT, IMAGE_DIR} from '../storage/paths.js';
+import {ROOT, DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR} from '../storage/paths.js';
+import {HTTPS_KEY_FILE} from '../config.js';
 import {fail} from '../domain/errors.js';
 const WEB = path.resolve(fileURLToPath(new URL('../../public/', import.meta.url)));
 const SHARED = path.resolve(WEB, '../shared');
+const RASTER_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
+const PRIVATE_LOCATIONS = [
+  DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR, path.join(ROOT, 'secrets'),
+  ...['data', 'images', 'documents', 'backups', 'secrets'].map(name => path.join(WEB, name)),
+  HTTPS_KEY_FILE,
+  ...['BACKUP_CONTROL_DIR', 'BACKUP_TARGET_ROOT', 'RCLONE_CONFIG',
+    'BACKUP_ADMIN_TOKEN_FILE', 'BACKUP_WORKER_TOKEN_FILE', 'RESTIC_PASSWORD_FILE']
+    .map(name => process.env[name]).filter(Boolean).map(name => path.resolve(name)),
+];
+
+/**
+ * Checks containment using path components, including Windows path semantics.
+ * @param {string} location Allowed directory or exact file path.
+ * @param {string} file Candidate absolute path.
+ * @return {boolean} Whether the file is the location itself or a descendant.
+ */
+function containsPath(location, file) {
+  const relative = path.relative(location, file);
+  return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+
+/**
+ * Rejects private storage exposed through misplaced or aliased public paths.
+ * @param {string} file Lexically resolved public file path.
+ * @param {string} realFile Canonical filesystem path after resolving links.
+ * @return {boolean} Whether the requested file belongs to configured private storage.
+ */
+function isPrivateLocation(file, realFile) {
+  return PRIVATE_LOCATIONS.some(location => containsPath(location, file) ||
+    (fs.existsSync(location) && containsPath(fs.realpathSync(location), realFile)));
+}
+
 // Only browser-safe shared modules are served. Node-only backup modules stay
 // private.
 export const SHARED_BROWSER_FILES = new Set([
@@ -34,7 +67,11 @@ export const SHARED_BROWSER_FILES = new Set([
  * @return {string} Decoded path.
  */
 function decodePath(encoded) {
-  try {return decodeURIComponent(encoded);}
+  try {
+    const decoded = decodeURIComponent(encoded);
+    if (decoded.includes('\0')) throw new URIError('NUL in path');
+    return decoded;
+  }
   catch (error) {
     if (error instanceof URIError) throw fail('Ungültiger Pfad', 400, "api.errors.invalidPath");
     throw error;
@@ -129,6 +166,7 @@ export async function serveStatic(req, res, url) {
     throw fail('Datei nicht gefunden', 404, 'api.errors.fileNotFound');
   }
   let file;
+  let base;
   if (url.pathname === '/vendor/html5-qrcode.min.js') {
     const vendor = path.resolve(WEB, '../node_modules/html5-qrcode/html5-qrcode.min.js');
     if (!fs.existsSync(vendor)) throw fail(
@@ -153,18 +191,33 @@ export async function serveStatic(req, res, url) {
   if (url.pathname.startsWith('/shared/')) {
     const name = decodePath(url.pathname.slice('/shared/'.length));
     if (!SHARED_BROWSER_FILES.has(name)) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
+    base = SHARED;
     file = path.join(SHARED, name);
   } else if (url.pathname.startsWith('/images/')) {
     const name = decodePath(url.pathname.slice(1));
+    base = IMAGE_DIR;
     file = path.resolve(ROOT, name);
-    if (!file.startsWith(IMAGE_DIR + path.sep)) throw fail('Ungültiger Bildpfad', 403, "api.errors.invalidImagePath");
+    if (!containsPath(base, file)) throw fail('Ungültiger Bildpfad', 403, "api.errors.invalidImagePath");
   } else {
     const name = url.pathname === '/' ? 'index.html' : decodePath(url.pathname.slice(1));
+    base = WEB;
     file = path.resolve(WEB, name);
-    if (file !== WEB && !file.startsWith(WEB + path.sep)) throw fail('Ungültiger Pfad', 403, "api.errors.invalidPath");
+    if (!containsPath(base, file)) throw fail('Ungültiger Pfad', 403, "api.errors.invalidPath");
   }
   if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
-  const ext = path.extname(file).toLowerCase();
+  const realFile = fs.realpathSync(file);
+  if (!containsPath(fs.realpathSync(base), realFile)) {
+    throw fail('Ungültiger Pfad', 403, "api.errors.invalidPath");
+  }
+  if (base !== IMAGE_DIR && isPrivateLocation(file, realFile)) {
+    throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
+  }
+  const ext = path.extname(realFile).toLowerCase();
+  if (base === IMAGE_DIR && !RASTER_EXTENSIONS.has(ext)) {
+    throw fail('Datei nicht gefunden', 404, "api.errors.fileNotFound");
+  }
+  // Open the checked canonical path, not the unchecked symlink alias.
+  file = realFile;
   const types = {
     '.webmanifest': 'application/manifest+json; charset=utf-8',
     '.wasm': 'application/wasm',
@@ -185,7 +238,8 @@ export async function serveStatic(req, res, url) {
   // have no version/hash in the URL. They MUST revalidate before reuse.
   const versionedAi = url.pathname.startsWith('/ai/') &&
     /(?:^|\/)(?:v?\d+\.\d+\.\d+|[a-f0-9]{16,})(?:\/|[-.])/i.test(url.pathname.slice(4));
-  const cacheControl = versionedAi ? 'public, max-age=31536000, immutable' : 'no-cache';
+  const cacheControl = base === IMAGE_DIR ? 'private, no-cache' :
+    versionedAi ? 'public, max-age=31536000, immutable' : 'no-cache';
   return streamStatic(
     req,
     res,

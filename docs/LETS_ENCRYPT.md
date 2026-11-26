@@ -26,12 +26,12 @@ Docker-Container. Es benötigt weder eingehenden HTTP-/HTTPS-Traffic noch Port 8
   [`certbot-dns-netcup`](https://github.com/coldfix/certbot-dns-netcup) v2.1.0.
 - Für Zugriff nur im Heimnetz muss der Domainname im Heimnetz auf die private
   IP des Pi zeigen (z. B. interner DNS-Eintrag). Eine Weiterleitung von
-  Router-Port 443 ins Internet ist **nicht** erforderlich und sollte ohne
-  zusätzliche Authentifizierung **nicht** eingerichtet werden.
+  Router-Port 443 ins Internet ist **nicht** erforderlich und wird auch mit
+  aktivierter Anmeldung **nicht empfohlen**.
 
-> Ein gültiges TLS-Zertifikat ist keine Zugangskontrolle. WCM hat keinen
-> allgemeinen Login. Der Internetzugriff ohne VPN oder vorgelagerte
-> Authentifizierung ist nicht vorgesehen.
+> Ein gültiges TLS-Zertifikat ist keine Zugangskontrolle. WCM besitzt eine
+> optionale Loginpflicht und ist für private Netze oder VPN vorgesehen,
+> nicht für die direkte Veröffentlichung im Internet.
 
 ## Konfiguration
 

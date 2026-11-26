@@ -5,6 +5,7 @@ import {fail} from '../domain/errors.js';
 import {collectionETag} from '../storage/collection-store.js';
 import {warehouseETag} from '../storage/warehouse-store.js';
 import {withMutationTracking} from '../domain/mutation-tracker.js';
+import {authorizeRequest} from '../services/auth.js';
 import {systemRoutes} from './system.js';
 import {authRoutes} from './auth.js';
 import {warehouseRoutes} from './warehouse.js';
@@ -70,6 +71,10 @@ export async function handleApi(request, response, url) {
     }
     const body = ['POST', 'PATCH', 'PUT'].includes(request.method) && !route.binaryUpload && !route.skipBody ? await readJson(request) :
       undefined;
+    // Reading an untrusted request body can suspend the handler while a
+    // session is revoked or the login requirement changes. Recheck before
+    // dispatching the mutation; the initial gate still runs before body I/O.
+    if (body !== undefined) authorizeRequest(request, url);
     // Opt-in response envelope keeps the existing external API unchanged.
     // Only successfully committed store writes appear in the response.
     const wantsDelta = request.headers['x-wcm-state-delta'] === '1' && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
