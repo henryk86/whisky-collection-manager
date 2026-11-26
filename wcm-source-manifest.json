@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.14.0",
+  "version": "1.14.1",
   "files": {
     "public/js/api.js": "1befce7f3cfa4dba4e3532893cc42a864da059e132c030ebdf915dabdee09f34",
     "public/js/domain/analytics-period.js": "d7e46af51d0c658b3b4558bc5bb7a45d842e6636a1c172bc2828e7dccfcf3046",
@@ -139,7 +139,7 @@
     "public/js/views/help-guides.js": "8a51934c6fe7b00debf5952bb7e6bef83598f3657618e3628a9fcc2dda3f4f7a",
     "public/js/views/help.js": "4e0446ad4d50a3b7e730eb99e825dbb6a47f8873339fef73714b203c91d6cbbc",
     "public/js/views/home.js": "4ab12764af776674d082a22294a2828767a51f71577031aa35a17741019cc87b",
-    "public/js/views/insurance.js": "9e1365419e4ac7ac84f4660c86ad7f65484778d2c51cf1515b9904164a8bc956",
+    "public/js/views/insurance.js": "edb1d53f43fafd63c73816abdd69983394adc71f0dbbe91218a20752649f9c52",
     "public/js/views/map.js": "2eda28132a7b42aa26f270c02e378b301842ca2dd83d0df47d8e6719ea0e36a0",
     "public/js/views/models/analytics.js": "6eee2ecd9f10d05464faa3763ee70ecc2621774adf63efcd9834bb569fc3a77b",
     "public/js/views/models/backups.js": "883d546c14bdc29f522c1fa2641e2de0c4f73b98891887fb55f8914d2365ad70",
