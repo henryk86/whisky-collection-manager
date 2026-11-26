@@ -34,13 +34,13 @@ export function insuranceSection(state) {
       }))),
     }), t('insurance.evidenceNote')),
     panel(missing === 'all' ? t('insurance.outstanding') : `${t('insurance.outstanding')} – ${t(evidenceKeys[missing])}`, composeMarkup(
-      actionToolbar(actionButton({label: t('insurance.showAllMissing'), action: 'insurance-missing', data: {key: 'all'}, size: 'small', attributes: {'aria-pressed': String(missing === 'all')}})),
+      actionToolbar(actionButton({label: t('insurance.showAllMissing'), action: 'insurance-missing', data: {key: 'all'}, size: 'small', attributes: {'aria-pressed': String(missing === 'all')}}), {className: 'analytics-insurance-filter-actions'}),
       detailsTable([t('insurance.number'), t('analytics.table.bottle'), t('insurance.outstanding')], outstanding.map(row => [row.bottle.inventoryNumber || '–', bottlingLink({id: row.bottlingId, bottleId: row.bottle.id, name: row.name}), Object.keys(evidenceKeys).filter(key => !row.checks[key]).map(key => t(evidenceKeys[key])).join(', ')]))
     )),
     panel(t('insurance.export'), actionToolbar(composeMarkup([
       actionButton({label: t('insurance.summaryPdf'), action: 'insurance-export', data: {format: 'summary'}, variant: 'primary', disabled: !count}),
       actionButton({label: t('insurance.detailPdf'), action: 'insurance-export', data: {format: 'detail'}, disabled: !count}),
       actionButton({label: t('insurance.packageZip'), action: 'insurance-export', data: {format: 'zip'}, disabled: !count}),
-    ])), t('insurance.exportNote'))
+    ]), {className: 'analytics-insurance-export-actions'}), t('insurance.exportNote'))
   );
 }
