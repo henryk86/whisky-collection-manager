@@ -4,7 +4,7 @@ import {analyzeCollection, analyticsFilterOptions}
 /**
  * Prepares analytics presentation data without rendering or mutating state.
  * @param {!Object} state Current analytics filters.
- * @param {!Array<!Object>} pages Available analytics pages.
+ * @param {!ReadonlyArray<!Object>} pages Available analytics pages.
  * @return {!Object} Prepared presentation data.
  */
 export function createAnalyticsViewModel(state, pages) {

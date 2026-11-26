@@ -14,7 +14,7 @@ export const OVERVIEW_MODES = Object.freeze(['bottlings', 'bottles']);
  * Offer only known distilleries referenced by at least one recorded bottling.
  *
  * @param {!Object} collection Collection data being processed.
- * @return {*} Entries that meet the selection criteria.
+ * @return {*} Known distilleries referenced by recorded bottlings.
  */
 export function availableOverviewDistilleries(collection) {
   const usedIds = new Set((collection.bottlings || []).flatMap(bottling =>
@@ -40,7 +40,7 @@ function isMatchingBottleType(bottle, volumeType) {
  *
  * @param {!Object} bottling Bottling record being processed.
  * @param {string=} filter Rating bucket from one to five, 'unrated', or 'all'.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the latest tasting meets the selected rating criterion.
  */
 export function matchesOverviewRating(bottling, filter = 'all') {
   if (filter === 'all') return true;
@@ -89,7 +89,7 @@ function matchingBottleText(bottle) {
  * All sort criteria use the underlying saved data, not formatted card labels.
  *
  * @param {*} entry Entry to include in the calculation.
- * @return {?Object} Computed value, or null when the input has no match.
+ * @return {?Object} Mean purchase price and its currency, or null for missing or mixed-currency prices.
  */
 export function purchasePrice(entry) {
   const bottles = entry.bottle ? [entry.bottle] : entry.bottling.bottles || [];
@@ -109,7 +109,7 @@ export function purchasePrice(entry) {
  * Finds the most recent timestamp across the collection entries.
  *
  * @param {*} entry Entry to include in the calculation.
- * @return {*} Entries that meet the selection criteria.
+ * @return {*} Most recent update or creation timestamp, or null if none is available.
  */
 export function latestUpdate(entry) {
   const times = [entry.bottling.updatedAt || entry.bottling.createdAt];
@@ -209,7 +209,7 @@ function compareEntries(left, right, sort, distilleryNames) {
  * @param {!Array<*>=} criteria Flavor-axis ranges to match against the most recent available profile.
  * @param {boolean=} profileMissing Require the absence of a flavor profile.
  * @param {boolean=} profilePresent Require an existing flavor profile.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the latest tasting matches the requested flavor-profile criteria and presence filter.
  */
 export function matchesFlavorCriteria(bottling, criteria = [], profileMissing =
   false, profilePresent = false) {
@@ -226,7 +226,7 @@ export function matchesFlavorCriteria(bottling, criteria = [], profileMissing =
  *
  * @param {!Object} collection Collection data being processed.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {!Array<!Object>} Resulting list of values.
+ * @return {!Array<!Object>} Filtered overview records before pagination, in the requested sort order.
  */
 export function collectionOverviewEntries(collection, {
   mode = 'bottlings',

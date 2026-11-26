@@ -11,10 +11,10 @@ import {loadTemplates} from '../../ui/templates.js';
 const renderTemplate = await loadTemplates('forms/bottle.html');
 
 /**
- * Creates bottle form for bottle.
+ * Creates a bottle-form builder bound to the collection state and selectors.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {Function} Structured result assembled from the input data.
+ * @return {Function} Function that renders the physical-bottle editor for a selected parent bottling.
  */
 export function createBottleForm({state, selectors}) {
   const {distilleryNames} = selectors;
@@ -22,11 +22,11 @@ export function createBottleForm({state, selectors}) {
    * Prepares bottle editor for an existing parent bottling, with inventory, purchase and photo controls.
    *
    * @param {!Object=} bottle Physical bottle record under consideration.
-   * @param {string} bottlingId Identifier of the parent bottling for the physical-bottle form.
+   * @param {string=} bottlingId Identifier of the parent bottling; omitted when the caller has no owner.
    * @param {!Object=} options3 Opening context and reference photo option.
    * @return {!import('../../ui/render-plan.js').RenderPlan} Bottle editor for an existing parent bottling, with inventory, purchase and photo controls.
    */
-  function bottleForm(bottle = {}, bottlingId,
+  function bottleForm(bottle = {}, bottlingId = undefined,
     {fromOverview = false, importPhoto = false} = {}) {
     const owner = state.collection.bottlings.find(entry => entry.id === bottlingId);
     if (!owner) {

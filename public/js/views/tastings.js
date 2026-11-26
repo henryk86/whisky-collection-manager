@@ -21,7 +21,7 @@ const renderTemplate = await loadTemplates('tastings/tastings.html');
  * notes.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Tasting and flight rendering, editor and navigation operations.
  */
 export function createTastingsView({
   state,
@@ -99,12 +99,12 @@ export function createTastingsView({
   }
 
   /**
-   * Updates the toggle create choice state for its caller.
+   * Toggles the tasting creation chooser and refreshes the tasting overview.
    */
   function toggleCreateChoice() {createChoiceOpen = !createChoiceOpen; home();}
 
   /**
-   * Transforms the entries used by list.
+   * Renders the selected bottling's tasting list after resetting the editor session.
    */
   function list() {
     resetEditor();
@@ -174,21 +174,21 @@ export function createTastingsView({
     startEditing,
     finishEditing,
     /**
-     * Performs the start external edit lifecycle action.
-          * @return {*} Result of this expression.
-*/
+     * Enables editing of the external bottling associated with the active tasting.
+     * @return {*} No return value; enables editing of the external bottling fields.
+     */
     startExternalEdit: () => showExternalEdit(true),
     cancelExternalEdit,
     persistExternalDetails,
     /**
-     * Performs the undo flavor lifecycle action.
-          * @return {*} Result of this expression.
-*/
+     * Restores the preceding flavor-history snapshot.
+     * @return {*} No return value; requests the preceding tasting history snapshot.
+     */
     undoFlavor: () => stepFlavor(-1),
     /**
-     * Performs the redo flavor lifecycle action.
-          * @return {*} Result of this expression.
-*/
+     * Restores the following flavor-history snapshot.
+     * @return {*} No return value; requests the following tasting history snapshot.
+     */
     redoFlavor: () => stepFlavor(1),
   };
 }

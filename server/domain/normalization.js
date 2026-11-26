@@ -65,7 +65,7 @@ function filtered(source, keys) {
  *
  * @param {*} input Input to process.
  * @param {!Object=} old Previously stored bottling fields retained unless explicitly replaced.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Normalized bottling fields merged with existing data where permitted.
  */
 export function normalizeBottling(input, old = {}) {
   if (Object.hasOwn(input, 'volumeType')) {
@@ -161,7 +161,7 @@ export function normalizeBottling(input, old = {}) {
  *
  * @param {*} input Input to process.
  * @param {!Object=} old Previously stored physical bottle fields retained unless explicitly replaced.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Normalized physical-bottle fields merged with existing data where permitted.
  */
 export function normalizeBottle(input, old = {}) {
   if (Object.hasOwn(input, 'labelCode')) {

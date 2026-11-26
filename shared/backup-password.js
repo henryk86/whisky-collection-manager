@@ -52,7 +52,7 @@ export function readBackupPassword() {
 /**
  * Checks whether backup password applies in backup password.
  *
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if a valid backup password is configured.
  */
 export function hasBackupPassword() {
   try {readBackupPassword(); return true;}

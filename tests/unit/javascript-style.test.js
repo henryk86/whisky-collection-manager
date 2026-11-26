@@ -290,6 +290,9 @@ test('JavaScript style: rejects a known return-description placeholder', () => {
  */
 function label() {return 'label';}`;
   assert.ok(jsdocViolations('sample.js', source).some(issue => issue.includes('known placeholder')));
+  const generic = source.replace('Resulting text.', 'Structured result for the caller.');
+  assert.ok(jsdocViolations('server/sample.js', generic).some(issue => issue.includes('known placeholder')));
+  assert.deepEqual(jsdocViolations('tests/helpers/sample.js', generic), []);
 });
 
 test('JavaScript style: a template factory return cannot be documented as a string', () => {
@@ -315,10 +318,15 @@ test('Semantic JSDoc: rejects incompatible return types and unknown types', () =
 export function label() { return 42; }
 /** @param {UnknownRecord} record Incoming record. */
 export function read(record) { return record; }
+export async function renderer() {
+  const THREE = await import('/vendor/three.module.js');
+  return new THREE.WebGLRenderer({canvas: 42});
+}
 `);
     const issues = semanticTypeDiagnostics([file]);
     assert.ok(issues.some(issue => issue.includes('TS2322')));
     assert.ok(issues.some(issue => issue.includes('TS2304')));
+    assert.ok(issues.some(issue => issue.includes('HTMLCanvasElement') && issue.includes('TS2322')));
   } finally {
     rmSync(dir, {recursive: true, force: true});
   }
@@ -368,12 +376,12 @@ function fakeResponse(value) {return value;}`;
 test('Semantic JSDoc: audit covers all production and tooling roots but no test roots', () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'wcm-jsdoc-scope-'));
   try {
-    for (const folder of ['public/js/domain', 'server', 'shared', 'worker', 'scripts', 'docker', 'tests/unit']) {
+    for (const folder of ['public/js/domain', 'server', 'shared', 'worker', 'scripts', 'docker', 'extension', 'tests/unit']) {
       mkdirSync(path.join(dir, folder), {recursive: true});
       writeFileSync(path.join(dir, folder, 'example.js'), '');
     }
     const files = auditContractFiles(dir).map(file => file.replaceAll('\\', '/'));
-    assert.deepEqual(files.sort(), ['docker/example.js', 'public/js/domain/example.js', 'scripts/example.js', 'server/example.js', 'shared/example.js', 'worker/example.js']);
-    assert.ok(checkedContractFiles(dir).some(file => file.replaceAll('\\', '/') === 'shared/example.js'));
+    assert.deepEqual(files.sort(), ['docker/example.js', 'extension/example.js', 'public/js/domain/example.js', 'scripts/example.js', 'server/example.js', 'shared/example.js', 'worker/example.js']);
+    assert.deepEqual(checkedContractFiles(dir).map(file => file.replaceAll('\\', '/')).sort(), files.sort());
   } finally {rmSync(dir, {recursive: true, force: true});}
 });

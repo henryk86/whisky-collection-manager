@@ -37,7 +37,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
  *
  * @param {*} name Environment variable or setting name.
  * @param {string} script Path to the Node entry point to launch.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Spawned container child process.
  */
 function launch(name, script) {
   const child = spawn(process.execPath, [script], {cwd: process.cwd(), env: process.env, stdio: 'inherit'});
@@ -61,7 +61,7 @@ function launch(name, script) {
 
 /**
  * Reads https ready data from the local filesystem.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Promise resolved when HTTPS readiness has been determined.
  */
 function httpsReady() {
   const ca = fs.readFileSync(process.env.HTTPS_CERT_FILE || '/run/certs/server-cert.pem');
@@ -81,7 +81,7 @@ function httpsReady() {
 
 /**
  * Runs the entry point and coordinates its operations.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Completion of the container startup sequence.
  */
 async function main() {
   launch('app', 'server/index.js');

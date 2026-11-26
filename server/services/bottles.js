@@ -17,7 +17,7 @@ import {fail} from '../domain/errors.js';
  * Checks whether correction image applies.
  *
  * @param {*} data Input data to process.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True for a PNG or WebP base64 image data URL used as an edited derivative.
  */
 const isCorrectionImage = data => typeof data === 'string' && /^data:image\/(?:webp|png);base64,/.test(data);
 
@@ -36,10 +36,10 @@ function requireBottle(collection, id) {
 }
 
 /**
- * Creates bottle for bottles.
+ * Creates a normalized physical bottle under its existing bottling in a collection transaction.
  *
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Created physical bottle record.
  */
 export function createBottle(input) {
   return change(collection => {
@@ -69,7 +69,7 @@ export function createBottle(input) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Updated physical bottle record.
  */
 export function updateBottle(id, input) {
   return change(collection => {
@@ -87,7 +87,7 @@ export function updateBottle(id, input) {
  * Clears bottle for bottles.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Confirmation of deletion of the physical bottle.
  */
 export function deleteBottle(id) {
   return change(collection => {
@@ -108,7 +108,7 @@ export function deleteBottle(id) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Metadata for the newly stored photo.
  */
 export async function addPhoto(id, input) {
   requireBottle(read(), id);
@@ -139,7 +139,7 @@ export async function addPhoto(id, input) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Persisted ordered photo metadata for the bottle.
  */
 export async function reorderPhotos(bottleId, input) {
   if (!Array.isArray(input.photoIds) || input.photoIds.some(id => typeof id !== 'string')) {
@@ -169,7 +169,7 @@ export async function reorderPhotos(bottleId, input) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {string} photoId Identifier of the photo.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after removing the photo and its stored image.
  */
 export async function removePhoto(bottleId, photoId) {
   const removed = await change(collection => {
@@ -196,7 +196,7 @@ export async function removePhoto(bottleId, photoId) {
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {string} photoId Identifier of the photo.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Updated photo metadata referencing the saved cutout.
  */
 export async function savePhotoCutout(bottleId, photoId, input) {
   const photo = requireBottle(read(), bottleId).bottle.photos?.find(item => item.id === photoId);
@@ -265,7 +265,7 @@ export async function savePhotoCutout(bottleId, photoId, input) {
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {string} photoId Identifier of the photo.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Photo metadata reflecting the selected original or cutout source.
  */
 export function selectPhotoCutout(bottleId, photoId, input) {
   if (typeof input?.selected !== 'boolean') throw fail('Ungültige Bildauswahl', 400, "api.errors.invalidImageSelection");
@@ -285,7 +285,7 @@ export function selectPhotoCutout(bottleId, photoId, input) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {string} photoId Identifier of the photo.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after removing the cutout and its derivatives.
  */
 export async function removePhotoCutout(bottleId, photoId) {
   const old = await change(collection => {
@@ -314,7 +314,7 @@ export async function removePhotoCutout(bottleId, photoId) {
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {string} photoId Identifier of the photo.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Updated photo metadata including adjustment settings and rendered derivative.
  */
 export async function savePhotoAdjustments(bottleId, photoId, input) {
   const photo = requireBottle(read(), bottleId).bottle.photos?.find(item => item.id === photoId);
@@ -367,7 +367,7 @@ export async function savePhotoAdjustments(bottleId, photoId, input) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {string} photoId Identifier of the photo.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after resetting and removing the adjustment derivative.
  */
 export async function removePhotoAdjustments(bottleId, photoId) {
   const old = await change(collection => {
@@ -396,7 +396,7 @@ export async function removePhotoAdjustments(bottleId, photoId) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Metadata for the newly stored attachment.
  */
 export async function addFile(bottleId, input) {
   requireBottle(read(), bottleId);
@@ -421,7 +421,7 @@ export async function addFile(bottleId, input) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {string} fileId Identifier of the attachment belonging to the bottle.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Authorized attachment download descriptor.
  */
 export function downloadFile(bottleId, fileId) {
   const {bottle} = requireBottle(read(), bottleId);
@@ -440,7 +440,7 @@ export function downloadFile(bottleId, fileId) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {string} fileId Identifier of the attachment to validate as a PDF.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Authorized PDF file descriptor with application/pdf media type.
  */
 export function previewPdf(bottleId, fileId) {
   const file = downloadFile(bottleId, fileId);
@@ -455,7 +455,7 @@ export function previewPdf(bottleId, fileId) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {string} fileId Identifier of the attachment to remove from the bottle and storage.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after deleting the attachment reference and stored file.
  */
 export async function removeFile(bottleId, fileId) {
   const removed = await change(collection => {

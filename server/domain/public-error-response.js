@@ -28,7 +28,7 @@ function safeParams(value) {
  * internal detail.
  *
  * @param {*} error Error being handled.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Public HTTP error code and safe translation parameters or generic fallback.
  */
 export function publicErrorResponse(error) {
   const status = Number.isInteger(error?.status) ? error.status : 500;

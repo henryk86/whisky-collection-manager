@@ -6,13 +6,13 @@
  */
 export class HttpError extends Error {
   /**
- * Creates an API error with a stable code and internal diagnostic message.
- *
- * @param {string} message Internal message, never exposed verbatim.
- * @param {number=} status HTTP response status.
- * @param {?string=} code Localizable error identifier.
- * @param {!Object=} params Safe structured translation arguments.
- */
+   * Creates an API error with a stable code and internal diagnostic message.
+   *
+   * @param {string} message Internal message, never exposed verbatim.
+   * @param {number=} status HTTP response status.
+   * @param {?string=} code Localizable error identifier.
+   * @param {!Object=} params Safe structured translation arguments.
+   */
   constructor(message, status = 400, code = null, params = {}) {
     super(message);
     this.name = 'HttpError';
@@ -37,7 +37,7 @@ export function fail(message, status = 400, code = null, params = {}) {
 /**
  * Throws a coded HTTP error when a precondition is false.
  *
- * @param {boolean} condition Whether the precondition is satisfied.
+ * @param {unknown} condition Truthy value when the precondition is satisfied.
  * @param {string} message Internal diagnostic message.
  * @param {number=} status HTTP status code.
  * @param {?string=} code Stable error identifier for localization.

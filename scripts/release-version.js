@@ -34,7 +34,7 @@ const write = (name, value) => fs.writeFileSync(path.join(ROOT, name), value);
  * Parses version for release version.
  *
  * @param {*} value Input value to process.
- * @return {!Array<number>} Resulting list of values.
+ * @return {!Array<number>} Numeric major, minor and patch components of the validated version.
  */
 export function parseVersion(value) {
   const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(value || '');
@@ -47,7 +47,7 @@ export function parseVersion(value) {
  *
  * @param {string} left First semantic version to compare.
  * @param {string} right Second semantic version to compare.
- * @return {number} Calculated numeric result.
+ * @return {number} Negative, zero or positive value according to semantic version ordering.
  */
 export function compareVersions(left, right) {
   const a = parseVersion(left);
@@ -78,7 +78,7 @@ export function nextVersion(current, part) {
  *
  * @param {*=} root Root element or directory.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Verified release version and corresponding Git tag.
  */
 export function verifyReleaseMetadata(root = ROOT, {allowReadmeMismatch =
   false} = {}) {
@@ -149,7 +149,7 @@ export function updateReadmeTitle(source, version) {
 }
 
 /**
- * Updates the sync readme state for its caller.
+ * Synchronizes the README title with the release metadata and verifies the resulting version.
  */
 function syncReadme() {
   const {version} = verifyReleaseMetadata(ROOT, {allowReadmeMismatch: true});

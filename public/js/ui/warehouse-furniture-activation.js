@@ -5,7 +5,7 @@
  * @param {Function} onSelect Called when furniture is selected.
  * @param {Function} onEdit Called when furniture is activated for editing.
  * @param {number=} delay Time in milliseconds allowed between successive activations.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Furniture click, double-click and cancellation operations.
  */
 export function createFurnitureActivation(onSelect, onEdit, delay = 330) {
   let pending = null;
@@ -35,7 +35,7 @@ export function createFurnitureActivation(onSelect, onEdit, delay = 330) {
       }, delay);
     },
     /**
-     * Performs the cancel lifecycle action.
+     * Cancels the delayed single-click activation of a furniture item.
      */
     cancel() {
       if (pending) clearTimeout(pending.timer);

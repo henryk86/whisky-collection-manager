@@ -7,7 +7,7 @@ import {getCollectionViewPreference}
  * mutations.
  *
  * @param {*} route Parsed initial navigation route, including selected records and filter state.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Initial application UI state for the supplied route.
  */
 export function createState(route) {
   return {

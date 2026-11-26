@@ -60,7 +60,7 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
    * Persists views to its backing store.
    *
    * @param {import('../../../shared/collection-saved-views.js').SavedView[]} views Updated saved-view records to persist in collection settings.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of persisting the saved-view list and refreshing its controls.
    */
   async function storeViews(views) {
     try {
@@ -71,7 +71,7 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
   }
 
   /**
-   * Performs the open save view lifecycle action.
+   * Opens the dialog for saving the current collection view under a name.
    */
   function openSaveView() {
     showModal(
@@ -94,7 +94,7 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
 
   /**
    * Persists current view to its backing store.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of creating the named saved collection view.
    */
   async function saveCurrentView() {
     const field = /** @type {HTMLInputElement|null} */ (document.querySelector('[data-view-name]'));
@@ -110,8 +110,8 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
   }
 
   /**
-   * Updates current view in the current state.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Replaces the active saved view's settings with the current collection view.
+   * @return {!Promise<*>} Completion of the saved-view update.
    */
   async function updateCurrentView() {
     const id = state.activeSavedViewId;
@@ -120,7 +120,7 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
   }
 
   /**
-   * Builds the localized rename current view text for the current language.
+   * Opens the rename dialog for the active saved view.
    */
   function renameCurrentView() {
     const item = savedViews().find(view => view.id === state.activeSavedViewId);
@@ -144,8 +144,8 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
   }
 
   /**
-   * Locates the DOM elements used by confirm rename view.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Validates the new name and persists it for the active saved view.
+   * @return {!Promise<*>} Completion of the saved-view rename.
    */
   async function confirmRenameView() {
     const name = /** @type {HTMLInputElement|null} */ (document.querySelector('[data-view-name]'));
@@ -158,7 +158,7 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
 
   /**
    * Removes or resets current view.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of deleting the active saved collection view.
    */
   async function deleteCurrentView() {
     const id = state.activeSavedViewId;
@@ -173,7 +173,7 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
   }
 
   /**
-   * Updates saved view in the current state.
+   * Applies the selected saved view, or resets to the standard view when no ID is supplied.
    *
    * @param {*} id Identifier of the affected record.
    */
@@ -211,7 +211,7 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
 
   /**
    * Serializes active view changed data to JSON.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * @return {boolean} True if the current collection preferences differ from the saved view.
    */
   function activeViewChanged() {
     const saved = savedViews().find(item => item.id === state.activeSavedViewId);

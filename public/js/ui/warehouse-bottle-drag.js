@@ -7,7 +7,7 @@
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {*} targetShelfId Identifier of the shelf under the proposed drop.
- * @return {(string)} Entries that meet the selection criteria.
+ * @return {(string)} Drop status indicating valid, expandable or invalid shelf assignment.
  */
 export function shelfDropStatus(warehouse, bottleId, targetShelfId) {
   const selected = Array.isArray(bottleId) ? bottleId : [bottleId];
@@ -32,7 +32,7 @@ export function shelfDropStatus(warehouse, bottleId, targetShelfId) {
  *
  * @param {*} panel Warehouse panel receiving the bottle drag-and-drop handlers.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Mounted bottle-drag interaction and its cleanup operation.
  */
 export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
   onInvalidDrop, getDraggedIds} = {}) {
@@ -55,7 +55,7 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
   }
 
   /**
-   * Updates the end state for its caller.
+   * Ends the active drag, clears target highlighting and releases pointer capture.
    */
   function end() {
     clearInterval(scrollTimer);
@@ -78,7 +78,7 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
    *
    * @param {*} x Horizontal coordinate.
    * @param {*} y Vertical coordinate.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Eligible shelf element at the supplied viewport coordinates, or no destination.
    */
   function destinationAt(x, y) {
     const node = panel.ownerDocument?.elementFromPoint?.(x, y)?.closest?.('.warehouse-shelf');
@@ -86,7 +86,7 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
   }
 
   /**
-   * Updates element attributes used by mark destination.
+   * Highlights the shelf beneath the pointer according to its drop validity and capacity.
    *
    * @param {*} x Horizontal coordinate.
    * @param {*} y Vertical coordinate.
@@ -133,13 +133,13 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
   }
 
   /**
-   * Updates element attributes used by down.
+   * Initializes a drag candidate from a primary pointer on a bottle symbol.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!PointerEvent} event Event that triggered this operation.
    */
   const down = event => {
     if (busy || active || !event.isPrimary || event.button !== 0) return;
-    const button = event.target.closest?.('.warehouse-bottle-symbol');
+    const button = /** @type {HTMLElement|SVGElement} */ (/** @type {Element} */ (event.target).closest?.('.warehouse-bottle-symbol'));
     if (!button || !panel.contains(button)) return;
     active = {
       button,
@@ -156,9 +156,9 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
   };
 
   /**
-   * Calculates the move numeric value.
+   * Starts a drag after the movement threshold, updates its ghost and marks the current drop destination.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!PointerEvent} event Event that triggered this operation.
    */
   const move = event => {
     if (!active || event.pointerId !== active.pointerId) return;
@@ -191,9 +191,9 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
   };
 
   /**
-   * Updates element attributes used by up.
+   * Revalidates the drop destination at pointer release and completes the bottle assignment when allowed.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!PointerEvent} event Event that triggered this operation.
    */
   const up = event => {
     if (!active || event.pointerId !== active.pointerId) return;
@@ -219,18 +219,18 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
   };
 
   /**
-   * Performs the cancel lifecycle action.
-      * @return {*} Result of this expression.
-*/
+   * Cancels the current bottle drag and cleans up its transient state.
+   * @return {*} No return value; clears transient drag state.
+   */
   const cancel = () => end();
 
   /**
-   * Updates element attributes used by click.
+   * Suppresses the click generated after a completed drag so it cannot toggle bottle selection.
    *
    * @param {!Event} event Event that triggered this operation.
    */
   const click = event => {
-    const button = event.target.closest?.('.warehouse-bottle-symbol');
+    const button = /** @type {HTMLElement|SVGElement} */ (/** @type {Element} */ (event.target).closest?.('.warehouse-bottle-symbol'));
     if (button && button.dataset.id === suppressClickFor) {
       event.preventDefault();
       event.stopImmediatePropagation?.();

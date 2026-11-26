@@ -12,11 +12,11 @@ import {loadTemplates} from '../ui/templates.js';
 const renderTemplate = await loadTemplates('settings/settings.html');
 
 /**
- * Creates settings view for settings.
+ * Creates the settings renderer with optional user-management content.
  *
  * @param {!Object} state Current application state.
  * @param {!Object=} auth Authentication state and actions used to render the security settings.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Settings view rendering operations.
  */
 export function createSettingsView(state, auth = {
   /**
@@ -127,7 +127,7 @@ export function createSettingsView(state, auth = {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} container Settings workspace containing section navigation and panels.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the requested settings section was found and activated.
  */
 export function activateSettingsSection(id, container) {
   if (!['general', 'backups', 'transfer', 'distilleries', 'users'].includes(id) || !container ||

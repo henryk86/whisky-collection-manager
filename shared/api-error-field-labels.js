@@ -38,7 +38,7 @@ export const apiErrorFieldLabels = Object.freeze({
  *
  * @param {*} params Named values used when formatting the message.
  * @param {Function=} translate Looks up the localized label for a known API field key.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Error parameters with known field keys translated for display.
  */
 export function displayErrorParams(
   params,

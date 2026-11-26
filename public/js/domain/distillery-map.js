@@ -118,7 +118,7 @@ export function buildDistilleryMap(collection, {includeAllDistilleries =
  * without covering half an island. 1 -> 31px, 10 -> 43px, 100 -> 59px.
  *
  * @param {*} bottleCount Number of physical bottles represented.
- * @return {number} Calculated numeric result.
+ * @return {number} Site marker diameter in CSS pixels.
  */
 export function markerDiameter(bottleCount) {
   return Math.round(Math.min(62, 26 + 5 * Math.log2(1 + Math.max(0, bottleCount))));
@@ -129,7 +129,7 @@ export function markerDiameter(bottleCount) {
  * Shared by the interactive map and its exact-size legend examples.
  *
  * @param {*} bottleCount Number of physical bottles represented.
- * @return {number} Calculated numeric result.
+ * @return {number} Cluster marker diameter in CSS pixels, including its additional ring.
  */
 export function clusterMarkerDiameter(bottleCount) {
   return Math.max(38, Math.min(66, markerDiameter(bottleCount) + 7));
@@ -143,7 +143,7 @@ export const MAX_MAP_ZOOM = 16;
  * Restricts map zoom to the supported minimum and maximum.
  *
  * @param {*} z Requested zoom level.
- * @return {number} Calculated numeric result.
+ * @return {number} Rounded zoom level within the supported range.
  */
 export const clampZoom = z => Math.max(2, Math.min(MAX_MAP_ZOOM, Math.round(z)));
 
@@ -153,7 +153,7 @@ export const clampZoom = z => Math.max(2, Math.min(MAX_MAP_ZOOM, Math.round(z)))
  * @param {*} lat Latitude in decimal degrees.
  * @param {*} lon Longitude in decimal degrees.
  * @param {*} zoom Map scale used for projection.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Projected world-pixel x and y coordinates at the specified zoom.
  */
 export function project(lat, lon, zoom) {
   const scale = tileSize * 2 ** zoom;
@@ -170,7 +170,7 @@ export function project(lat, lon, zoom) {
  * @param {number} x Horizontal coordinate in the current coordinate system.
  * @param {number} y Vertical coordinate in the current coordinate system.
  * @param {*} zoom Map scale used for projection.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Latitude and longitude corresponding to the world-pixel coordinates.
  */
 export function unproject(x, y, zoom) {
   const scale = tileSize * 2 ** zoom;
@@ -217,7 +217,7 @@ export function zoomAroundPoint(
  * @param {*} sites Geographic sites to include in the map.
  * @param {number} width Width in pixels.
  * @param {number} height Height in pixels.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Map center and zoom fitted to the supplied sites and viewport.
  */
 export function fitMapToSites(sites, width, height) {
   const points = sites.filter(site => site.location).map(site => site.location);

@@ -105,7 +105,7 @@ export function authorizeWorker(req) {
 }
 
 /**
- * Retrieves json from the available state.
+ * Reads a backup control JSON file, returning the supplied fallback if it is absent.
  *
  * @param {string} name Environment variable or setting name.
  * @param {*} fallback Value used when the requested data is unavailable.
@@ -236,7 +236,7 @@ export function validateProfile(input) {
   }
   const result = {
     name: string(input.name, 'Profilname'),
-    provider,
+    provider: /** @type {import('../../shared/backup-profile-types.js').BackupProvider} */ (provider),
     format,
     remote,
     targetPath: validateRelativePath(input.targetPath),
@@ -252,7 +252,7 @@ export function validateProfile(input) {
  *
  * @param {!Object} req Incoming HTTP request.
  * @param {*} input Input to process.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Current backup-password configuration status after the update.
  */
 export function setZipPassword(req, input) {
   authorizeAdmin(req);
@@ -271,7 +271,7 @@ export function setZipPassword(req, input) {
  * Retrieves dashboard for backups.
  *
  * @param {!Object} req Incoming HTTP request.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Backup dashboard including profiles, worker jobs, targets and status.
  */
 export function getDashboard(req) {
   authorizeAdmin(req);
@@ -332,11 +332,11 @@ function assertDistinctTarget(existing, candidate, excludeId = null) {
 }
 
 /**
- * Creates profile for backups.
+ * Authorizes and validates a new backup profile, then persists it with a generated ID and timestamps.
  *
  * @param {!Object} req Incoming HTTP request.
  * @param {*} input Input to process.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Created backup profile.
  */
 export function createProfile(req, input) {
   authorizeAdmin(req);
@@ -374,7 +374,7 @@ function findProfile(data, id) {
  * @param {!Object} req Incoming HTTP request.
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Updated and persisted backup profile.
  */
 export function updateProfile(req, id, input) {
   authorizeAdmin(req);
@@ -405,7 +405,7 @@ export function updateProfile(req, id, input) {
  *
  * @param {!Object} req Incoming HTTP request.
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Deletion confirmation with repositoryDeleted false to indicate archives were retained.
  */
 export function deleteProfile(req, id) {
   authorizeAdmin(req);
@@ -424,7 +424,7 @@ export function deleteProfile(req, id) {
  * @param {string} profileId Identifier of the configured backup profile.
  * @param {string} type Requested backup job operation; checked against the supported operation list.
  * @param {!Object=} body Request or response body.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Queued job descriptor with its generated identifier and queued flag.
  */
 export function queueJob(req, profileId, type, body = {}) {
   authorizeAdmin(req);
@@ -464,7 +464,7 @@ export function queueJob(req, profileId, type, body = {}) {
  *
  * @param {!Object} req Incoming HTTP request.
  * @param {string} jobId Worker job identifier used to name the staging directory.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Source-snapshot job identifier and creation status.
  */
 export function createSourceSnapshot(req, jobId) {
   authorizeWorker(req);
@@ -509,7 +509,7 @@ export function createSourceSnapshot(req, jobId) {
  * @param {!Object} req Incoming HTTP request.
  * @param {string} profileId Identifier of the local ZIP backup profile.
  * @param {string} filename File name used to locate the resource.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Authorized local archive path, download filename and ZIP media type.
  */
 export function downloadLocalZip(req, profileId, filename) {
   authorizeAdmin(req);

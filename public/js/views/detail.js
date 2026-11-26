@@ -18,7 +18,7 @@ const renderTemplate = await loadTemplates('detail/detail.html');
  * Returns the localized label of a physical bottle's current inventory status.
  *
  * @param {*} status Status value determining the next action.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Localized label for the physical bottle's inventory status.
  */
 const bottleStatusText = status => t(({
   closed: 'home.status.closed',
@@ -48,7 +48,7 @@ const FACT_KEYS = Object.freeze({
  * Resolves the localized label of a bottling detail field.
  *
  * @param {*} label Label shown to the user.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Localized field label, falling back to the supplied label.
  */
 const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
 import {
@@ -66,10 +66,10 @@ import {uploadFiles, fileAccept, formatFileSize} from '../features/files.js';
 import {toast} from '../ui/notifications.js';
 import {attachPhotoSorting} from '../features/photo-order.js';
 /**
- * Creates detail view for detail.
+ * Creates the detail-view controller bound to collection selection and navigation.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Detail rendering, bottle navigation and photo operations.
  */
 export function createDetailView({state, selectors, shell, navigate, action}) {
   /**
@@ -404,7 +404,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
    * @return {!Promise<boolean>} Whether the event was handled successfully.
    */
   detail.handleUploadChange = async function handleUploadChange(event) {
-    const input = event.target;
+    const input = /** @type {HTMLInputElement} */ (event.target);
     if (input.matches?.('input[data-bottle-files]')) {
       const selected = [...input.files];
       input.value = '';

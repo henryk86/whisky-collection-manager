@@ -6,7 +6,7 @@ import fs from 'node:fs';
  * Checks a source path against the release exclusion rules.
  *
  * @param {string} name Name of the item.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the path must be excluded from a release archive.
  */
 export function prohibitedReleasePath(name) {
   const path = name.replaceAll('\\', '/').replace(/^\.\//, '');

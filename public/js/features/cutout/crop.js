@@ -233,7 +233,7 @@ export function analyzeBottleMask(mask, maskWidth, maskHeight, sourceWidth,
  * @param {number} maskHeight Height of the segmentation mask in pixels.
  * @param {number} sourceWidth Width of the source image in pixels.
  * @param {number} sourceHeight Height of the source image in pixels.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Source-image crop rectangle calculated from the segmentation mask.
  */
 export function bottleCropRect(mask, maskWidth, maskHeight, sourceWidth,
   sourceHeight) {
@@ -245,7 +245,7 @@ export function bottleCropRect(mask, maskWidth, maskHeight, sourceWidth,
  *
  * @param {*} crop Crop rectangle expressed in source-image pixels.
  * @param {number} maxSide Maximum output side length in pixels.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Output width and height in pixels with an exact two-to-three ratio.
  */
 export function cutoutOutputSize(crop, maxSide) {
   if (!(crop?.height > 0) || !(maxSide > 0)) throw new Error(t('errors.images.invalidCrop'));
@@ -261,7 +261,7 @@ export function cutoutOutputSize(crop, maxSide) {
  * @param {number} width Width in pixels.
  * @param {number} height Height in pixels.
  * @param {number=} minAlpha Minimum alpha value considered visible.
- * @return {?Object} Calculated numeric result.
+ * @return {?Object} Inclusive first and last visible alpha rows, or null for a transparent image.
  */
 export function visibleAlphaRows(rgba, width, height, minAlpha = FEATHER_ALPHA
 ) {
@@ -283,10 +283,10 @@ export function visibleAlphaRows(rgba, width, height, minAlpha = FEATHER_ALPHA
  * margin.
  *
  * @param {*} crop Original crop rectangle in source coordinates.
- * @param {number} size Size of the input or target.
+ * @param {{width: number, height: number}} size Output canvas dimensions in pixels.
  * @param {?{top: number, bottom: number}} visible First and last visible output rows, or null for an empty mask.
  * @param {number} objectWidth Width of the segmented object in source pixels.
- * @return {*} Structured result assembled from the input data.
+ * @return {*} Original or tightened crop rectangle that still fits the bottle's width.
  */
 export function tightenedCrop(crop, size, visible, objectWidth) {
   if (!visible || (visible.top === 0 && visible.bottom === size.height - 1)) return crop;

@@ -31,19 +31,19 @@ export function createPhotoSave({session, root, findPhoto, endpoint, syncSliders
       const cutoutEndpoint = endpoint().replace(/\/adjustments$/, '/cutout');
       /**
        * Selects for save matching the input.
-       * @return {!Promise<*>} Promise for the asynchronous operation.
+       * @return {!Promise<*>} API response after selecting the intended original or cutout source.
        */
       const selectForSave = () => request(cutoutEndpoint, {
         method: 'PATCH', body: JSON.stringify({selected: session.previewCutout}),
       });
 
       /**
-       * Performs the commit lifecycle action.
+       * Commits source selection before running the optional image-save callback.
        *
-       * @param {function(...*): *} callback Callback invoked by the operation.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {function(): *=} callback Optional operation performed after saving the edited photo.
+       * @return {*} Result of the guarded source-selection and save operation.
        */
-      const commit = callback => action(async () => {
+      const commit = (callback = undefined) => action(async () => {
         // The API selects the image separately from its adjustments;
         // synchronize
         // the source before saving an edited derivative of that source.
@@ -52,7 +52,7 @@ export function createPhotoSave({session, root, findPhoto, endpoint, syncSliders
       });
 
       /**
-       * Builds the localized finish save text for the current language.
+       * Handles save completion only for the still-active editor, displaying an error or closing it on success.
        *
        * @param {*} result Result from the preceding operation.
        */

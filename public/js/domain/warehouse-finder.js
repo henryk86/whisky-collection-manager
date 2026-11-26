@@ -16,7 +16,7 @@ const normalize = value => String(value ?? '').normalize('NFKC').toLocaleLowerCa
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Filtered bottle search page with location labels, total count and pagination metadata.
  */
 export function findWarehouseBottles(
   warehouse,

@@ -443,7 +443,7 @@ export function caskMatches(profile, filters, phase = 'any') {
  * Parses age for flight casks.
  *
  * @param {*} value Input value to process.
- * @return {?number} Calculated numeric result.
+ * @return {?number} Age in years between zero and 200, or null for missing or invalid input.
  */
 export function readAge(value) {
   if (value === null || value === undefined || value === '') return null;
@@ -456,7 +456,7 @@ export function readAge(value) {
  *
  * @param {*} a First value to compare.
  * @param {*} b Second value to compare.
- * @return {?number} Calculated numeric result.
+ * @return {?number} Age difference normalized to the range zero through one, or null if either age is unknown.
  */
 export const ageDistance = (a, b) => a === null || b === null ? null : Math.min(Math.abs(a - b) / 15, 1);
 
@@ -474,6 +474,6 @@ export const ageClass = age => age === null ? null : age <= 5 ? '0-5' : age <= 1
  * @param {*} age Age in years, or a value to validate.
  * @param {*} min Minimum permitted value.
  * @param {*} max Maximum permitted value.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True for a known age within the optional inclusive bounds.
  */
 export const ageMatches = (age, min, max) => age !== null && (min === null || age >= min) && (max === null || age <= max);

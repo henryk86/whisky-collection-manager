@@ -56,14 +56,14 @@ export function bindEvents(
   }
 ) {
   /**
-   * Coordinates asynchronous work for suggest number.
+   * Requests the next inventory number and fills the named input if still mounted.
    *
    * @param {string} fieldName Name of the inventory-number input receiving the suggestion.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the inventory-number request and field update.
    */
   const suggestNumber = async (fieldName) => {
     const result = await request('/api/suggest-number');
-    const field = query(`[name=${fieldName}]`);
+    const field = /** @type {HTMLInputElement} */ (query(`[name=${fieldName}]`));
     if (field) {
       field.value = result.number;
     }
@@ -71,7 +71,7 @@ export function bindEvents(
   let pendingConfirmation = null;
   let confirmationBusy = false;
   /**
-   * Builds the localized confirm in modal text for the current language.
+   * Opens a destructive-action confirmation and stores the callback until confirmation.
    *
    * @param {*} title Title displayed or stored by this operation.
    * @param {*} message Message to display or use for diagnostics.
@@ -95,19 +95,19 @@ export function bindEvents(
   }
 
   /**
-   * Updates menu in the current state.
+   * Shows or hides the navigation drawer and moves focus to the appropriate control.
    *
    * @param {boolean} open Whether to display the navigation drawer and backdrop.
    */
   function setMenu(open) {
     const drawer = document.getElementById('site-drawer');
-    const backdrop = document.querySelector('.site-drawer-backdrop');
+    const backdrop = /** @type {HTMLElement} */ (document.querySelector('.site-drawer-backdrop'));
     const button = document.getElementById('menu-button');
     if (!drawer || !backdrop || !button) return;
     drawer.hidden = !open;
     backdrop.hidden = !open;
     button.setAttribute('aria-expanded', String(open));
-    if (open) drawer.querySelector('[data-act="close-menu"]')?.focus();
+    if (open) /** @type {HTMLElement} */ (drawer.querySelector('[data-act="close-menu"]'))?.focus();
     else button.focus();
   }
   const handlers = {
@@ -120,14 +120,14 @@ export function bindEvents(
     ...createPhotoEditorActions({photoEditor}),
     /**
      * Handles the toggle menu interaction.
-          * @return {*} Result of this expression.
-*/
+     * @return {*} No return value; toggles the navigation drawer.
+     */
     'toggle-menu': () =>
       setMenu(document.getElementById('site-drawer')?.hidden !== false),
     /**
      * Handles the close menu interaction.
-          * @return {*} Result of this expression.
-*/
+     * @return {*} No return value; hides the navigation drawer.
+     */
     'close-menu': () => setMenu(false),
     /**
      * Navigates to the collection overview.
@@ -153,7 +153,7 @@ export function bindEvents(
      * Handles the help tab interaction.
      *
      * @param {*} button Button control involved in the interaction.
-     * @return {boolean} Whether the operation matched or succeeded.
+     * @return {boolean} True if the requested help topic was activated.
      */
     'help-tab': button => activateHelpTopic(button.dataset.helpTopic, button.closest('.help-page')),
     /**
@@ -175,7 +175,7 @@ export function bindEvents(
      * Handles the settings section interaction.
      *
      * @param {*} button Button control involved in the interaction.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @return {!Promise<*>} Completion of settings-section navigation and any required data load.
      */
     'settings-section': async button => {
       if (activateSettingsSection(button.dataset.settingsSection, button.closest('.settings-page'))) {
@@ -195,7 +195,7 @@ export function bindEvents(
     'flavor-detail-redo': () => tastingsView.redoFlavor(),
     /**
      * Handles the goto settings menu interaction.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @return {!Promise<*>} Completion of opening the settings page and closing the navigation drawer.
      */
     'goto-settings-menu': async () => {
       navigate('settings');
@@ -220,12 +220,12 @@ export function bindEvents(
     'toggle-theme': () => theme.toggleTheme(),
     /**
      * Handles the suggest first interaction.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @return {!Promise<*>} Completion of filling the first-bottle inventory-number suggestion.
      */
     'suggest-first': () => suggestNumber('firstInventoryNumber'),
     /**
      * Handles the suggest bottle interaction.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @return {!Promise<*>} Completion of filling the physical-bottle inventory-number suggestion.
      */
     'suggest-bottle': () => suggestNumber('inventoryNumber'),
     /**
@@ -321,10 +321,10 @@ export function bindEvents(
      * @param {!HTMLElement} button Action element carrying data-assign.
      * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
-    'submit-code': button => resolveCode(query('[name=manualCode]').value, button.dataset.assign === '1'),
+    'submit-code': button => resolveCode(/** @type {HTMLInputElement} */(query('[name=manualCode]')).value, button.dataset.assign === '1'),
     /**
      * Handles the confirm action interaction.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @return {!Promise<*>} Completion of the pending confirmed action, if one exists.
      */
     'confirm-action': async () => {
       const task = pendingConfirmation;
@@ -350,8 +350,8 @@ export function bindEvents(
      * Handles the delete file interaction.
      *
      * @param {*} button Button control involved in the interaction.
-          * @return {*} Result of this expression.
-*/
+     * @return {*} No return value; opens a file-deletion confirmation.
+     */
     'delete-file': button => confirmInModal(
       t("ui.confirmations.deleteAttachment"),
       t("ui.confirmations.deleteAttachmentQuestion"),
@@ -408,15 +408,15 @@ export function bindEvents(
      * Handles the move photo interaction.
      *
      * @param {*} button Button control involved in the interaction.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @return {!Promise<*>} Completion of the requested photo reordering operation.
      */
     'move-photo': button => movePhoto(button.dataset.id, button.dataset.photoId, Number(button.dataset.dir), action),
     /**
      * Handles the delete photo interaction.
      *
      * @param {*} button Button control involved in the interaction.
-          * @return {*} Result of this expression.
-*/
+     * @return {*} No return value; opens a photo-deletion confirmation.
+     */
     'delete-photo': button => confirmInModal(
       t("ui.confirmations.deletePhoto"),
       t("ui.confirmations.deletePhotoQuestion"),
@@ -436,8 +436,8 @@ export function bindEvents(
      * Handles the delete bottle interaction.
      *
      * @param {*} button Button control involved in the interaction.
-          * @return {*} Result of this expression.
-*/
+     * @return {*} No return value; opens a physical-bottle deletion confirmation.
+     */
     'delete-bottle': button => confirmInModal(
       t("ui.confirmations.deleteBottle"),
       t("ui.confirmations.deleteBottleQuestion"),
@@ -449,8 +449,8 @@ export function bindEvents(
     ),
     /**
      * Handles the delete bottling interaction.
-          * @return {*} Result of this expression.
-*/
+     * @return {*} No return value; opens a bottling-deletion confirmation.
+     */
     'delete-bottling': () => confirmInModal(
       t("ui.confirmations.deleteBottling"),
       t("ui.confirmations.deleteBottlingQuestion"),
@@ -470,18 +470,19 @@ export function bindEvents(
     import: () => settings.importJSON(),
   };
   bindFlightSorting(root, (from, to, after) => tastingsView.reorderFlightMember(from, to, after));
-  root.addEventListener('click', async (event) => {
+  root.addEventListener('click', async (/** @type {MouseEvent} */ event) => {
+    const target = /** @type {Element} */ (event.target);
     // Treat the flavor and saved-view pickers like anchored menus: clicking
     // elsewhere closes them without affecting the document layout.
-    for (const picker of root.querySelectorAll('.collection-saved-menu[open], .collection-flavor-picker[open]')) {
-      if (!picker.contains(event.target)) picker.open = false;
+    for (const picker of /** @type {Iterable<HTMLDetailsElement>} */ (root.querySelectorAll('.collection-saved-menu[open], .collection-flavor-picker[open]'))) {
+      if (!picker.contains(target)) picker.open = false;
     }
-    const mapButton = event.target.closest?.('[data-map-focus], [data-map-page], [data-map-bottling], [data-map-edit]');
+    const mapButton = target.closest?.('[data-map-focus], [data-map-page], [data-map-bottling], [data-map-edit]');
     if (state.page === 'map' && mapButton) {mapView.handleClick(mapButton); return;}
-    const overviewButton = event.target.closest?.(
+    const overviewButton = target.closest?.(
       '[data-collection-mode], [data-page-to], [data-act="toggle-collection-filters"], [data-act="collection-sort-column"], [data-act="collection-columns-default"], [data-reset-collection-filter], [data-reset-collection-flavor-axis]');
     if (overviewButton && state.page === 'home') {home.handleClick(overviewButton); return;}
-    const button = event.target.closest('[data-act]');
+    const button = /** @type {(HTMLElement|SVGElement) & {disabled?: boolean}} */ (target.closest('[data-act]'));
     if (!button || button.disabled) {
       return;
     }
@@ -503,35 +504,36 @@ export function bindEvents(
     }
   });
   root.addEventListener('dblclick', event => {
+    const target = /** @type {Element} */ (event.target);
     // A bottle in the room-wide rack opens its own details on double-click.
     // Single clicks still toggle bulk selection; the surrounding bay must
     // never interpret this as a compartment double-click.
-    const bottle = event.target.closest?.('.warehouse-room-wall .warehouse-bottle-symbol[data-act="warehouse-bottle-select"]');
+    const bottle = /** @type {HTMLElement|SVGElement} */ (target.closest?.('.warehouse-room-wall .warehouse-bottle-symbol[data-act="warehouse-bottle-select"]'));
     if (bottle?.dataset?.id) {
       try {warehouseView.openBottlePreview(bottle.dataset.id);}
       catch (error) {toast(error.message, true);}
       return;
     }
-    const shelf = event.target.closest?.(
-      '.warehouse-wall-bay[data-shelf-id], .warehouse-furniture-manager .warehouse-shelf[data-shelf-id]');
+    const shelf = /** @type {HTMLElement} */ (target.closest?.(
+      '.warehouse-wall-bay[data-shelf-id], .warehouse-furniture-manager .warehouse-shelf[data-shelf-id]'));
     if (!shelf || shelf.dataset?.capacity === '0') return;
     // A bottle is independently selectable and draggable. Double-clicks
     // on bottle symbols or explicit buttons must not also open the shelf.
-    const action = event.target.closest?.('[data-act]');
+    const action = target.closest?.('[data-act]');
     if (action && action !== shelf) return;
-    if (event.target.closest?.('button, a, input, select, textarea')) return;
+    if (target.closest?.('button, a, input, select, textarea')) return;
     try {warehouseView.openShelfDetails(shelf.dataset.shelfId);}
     catch (error) {toast(error.message, true);}
   });
-  root.addEventListener('keydown', event => {
-    if (event.target.matches?.('[data-whisky-picker-area]') && ['Enter', ' '].includes(event.key)) {
+  root.addEventListener('keydown', (/** @type {KeyboardEvent} */ event) => {
+    if (/** @type {Element} */ (event.target).matches?.('[data-whisky-picker-area]') && ['Enter', ' '].includes(event.key)) {
       event.preventDefault();
       tastingsView?.commitCustomPreview?.();
       return;
     }
     if (tastingsView?.nudgeCustomColor?.(event)) return;
     if (!['Enter', ' '].includes(event.key)) return;
-    const bay = event.target.closest?.('.warehouse-wall-bay[data-act="warehouse-shelf-view"]');
+    const bay = /** @type {HTMLElement} */ (/** @type {Element} */ (event.target).closest?.('.warehouse-wall-bay[data-act="warehouse-shelf-view"]'));
     if (bay && bay.dataset?.capacity !== '0' && event.target === bay) {
       event.preventDefault();
       warehouseView.openShelfDetails(bay.dataset.shelfId);
@@ -539,34 +541,34 @@ export function bindEvents(
   });
   root.addEventListener('input', event => {
     handleFlavorRange(event);
-    if (event.target.matches?.('[data-flavor-detail] [data-tasting-score]'))
+    if (/** @type {Element} */ (event.target).matches?.('[data-flavor-detail] [data-tasting-score]'))
       tastingsView.previewRating();
   });
   root.addEventListener('change', event => {
-    if (event.target.matches?.(
+    if (/** @type {Element} */ (event.target).matches?.(
       '[data-flavor-detail] [data-flavor-range], [data-flavor-detail] [data-tasting-note], [data-flavor-detail] [data-tasting-score], [data-flavor-detail] [data-tasting-rating-comment]')) tastingsView.commitFlavor();
-    if (event.target.matches?.('[data-flavor-detail] [data-tasting-date], [data-flavor-detail] [data-tasting-title]')) void tastingsView.persistMeta();
+    if (/** @type {Element} */ (event.target).matches?.('[data-flavor-detail] [data-tasting-date], [data-flavor-detail] [data-tasting-title]')) void tastingsView.persistMeta();
   });
   let flavorPointer = null;
   let customColorPointer = null;
-  root.addEventListener('pointerdown', event => {
-    const picker = event.target?.closest?.('[data-whisky-picker-area]');
+  root.addEventListener('pointerdown', (/** @type {PointerEvent} */ event) => {
+    const picker = /** @type {Element} */ (event.target)?.closest?.('[data-whisky-picker-area]');
     if (picker) {
       customColorPointer = event.pointerId;
       picker.setPointerCapture?.(event.pointerId);
       tastingsView.previewCustomFromPointer(event);
       return;
     }
-    const hit = event.target?.closest?.('[data-flavor-hit]');
+    const hit = /** @type {Element} */ (event.target)?.closest?.('[data-flavor-hit]');
     if (!hit) return;
     flavorPointer = event.pointerId; hit.setPointerCapture?.(event.pointerId);
     setFlavorFromPointer(event);
   });
-  root.addEventListener('pointermove', event => {
+  root.addEventListener('pointermove', (/** @type {PointerEvent} */ event) => {
     if (customColorPointer === event.pointerId) tastingsView.previewCustomFromPointer(event);
     if (flavorPointer === event.pointerId) setFlavorFromPointer(event);
   });
-  root.addEventListener('pointerup', event => {
+  root.addEventListener('pointerup', (/** @type {PointerEvent} */ event) => {
     if (customColorPointer === event.pointerId) {
       customColorPointer = null;
       tastingsView.previewCustomFromPointer(event);
@@ -574,67 +576,69 @@ export function bindEvents(
       return;
     }
     if (flavorPointer === event.pointerId) {
-      flavorPointer = null; if (event.target.closest?.('[data-flavor-detail]')) tastingsView.commitFlavor();
+      flavorPointer = null; if (/** @type {Element} */ (event.target).closest?.('[data-flavor-detail]')) tastingsView.commitFlavor();
     }
   });
-  root.addEventListener('pointercancel', event => {
+  root.addEventListener('pointercancel', (/** @type {PointerEvent} */ event) => {
     if (customColorPointer === event.pointerId) {
       customColorPointer = null; tastingsView.resetCustomPreview();
     }
     if (flavorPointer === event.pointerId) flavorPointer = null;
   });
-  root.addEventListener('keyup', event => {
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) && event.target.matches?.('[data-whisky-picker-area]'))
+  root.addEventListener('keyup', (/** @type {KeyboardEvent} */ event) => {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) && /** @type {Element} */ (event.target).matches?.('[data-whisky-picker-area]'))
       tastingsView.commitCustomPreview();
   });
   root.addEventListener('submit', event => {
+    const target = /** @type {HTMLFormElement} */ (event.target);
     if (auth.handleSubmit(event)) return;
-    if (event.target.id === 'new-bottle-choice-form') {
+    if (target.id === 'new-bottle-choice-form') {
       event.preventDefault();
       try {
-        editors.chooseExistingBottling(event.target.elements.bottlingId.value);
+        editors.chooseExistingBottling(/** @type {HTMLFormElement & {elements: {bottlingId: HTMLSelectElement}}} */(target).elements.bottlingId.value);
       }
       catch (error) {toast(error.message, true);}
       return;
     }
-    if (event.target.id === 'warehouse-form') {
+    if (target.id === 'warehouse-form') {
       warehouseView.submit(event);
       return;
-    } else if (event.target.id === 'backup-password-form') {
+    } else if (target.id === 'backup-password-form') {
       backup.setPassword(event).catch(error => toast(error.message, true));
-    } else if (event.target.id === 'backup-unlock-zip-form') {
+    } else if (target.id === 'backup-unlock-zip-form') {
       backup.unlockPrepared(event).catch(error => toast(error.message, true));
-    } else if (event.target.id === 'backup-import-zip-form') {
+    } else if (target.id === 'backup-import-zip-form') {
       backup.uploadZip(event).catch(error => toast(error.message, true));
-    } else if (event.target.id === 'backup-apply-zip-form') {
+    } else if (target.id === 'backup-apply-zip-form') {
       backup.applyZip(event).catch(error => toast(error.message, true));
-    } else if (event.target.id === 'backup-unlock-form') {
+    } else if (target.id === 'backup-unlock-form') {
       backup.unlock(event).catch(error => toast(error.message, true));
-    } else if (event.target.id === 'backup-profile-form') {
+    } else if (target.id === 'backup-profile-form') {
       backup.save(event).catch(error => toast(error.message, true));
-    } else if (event.target.id === 'backup-restore-form') {
+    } else if (target.id === 'backup-restore-form') {
       backup.submitRestore(event).catch(error => toast(error.message, true));
-    } else if (event.target.id === 'collection-settings-form') {
+    } else if (target.id === 'collection-settings-form') {
       settings.saveCollectionSettings(event).catch(error => toast(error.message, true));
-    } else if (event.target.id === 'distillery-form') {
+    } else if (target.id === 'distillery-form') {
       settings.saveDistillery(event).catch(error => toast(error.message, true));
     } else {
       editors.handleForm(event).catch(error => toast(error.message, true));
     }
   });
   root.addEventListener('change', event => {
-    if (state.page === 'map' && event.target.matches?.('#map-site-select, #map-all-distilleries')) {
-      mapView.handleChange(event.target); return;
+    const target = /** @type {HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement} */ (event.target);
+    if (state.page === 'map' && target.matches?.('#map-site-select, #map-all-distilleries')) {
+      mapView.handleChange(target); return;
     }
-    if (state.page === 'home' && event.target.matches?.(
-      '#pagination-size, [id^=filter-], [data-collection-column], #collection-add-flavor-axis, [data-flavor-profile-status], [data-flavor-axis]')) {home.handleChange(event.target); return;}
-    if (event.target.matches?.('input[data-bottle-files], input[data-bottle-photos]')) {
+    if (state.page === 'home' && target.matches?.(
+      '#pagination-size, [id^=filter-], [data-collection-column], #collection-add-flavor-axis, [data-flavor-profile-status], [data-flavor-axis]')) {home.handleChange(target); return;}
+    if (target.matches?.('input[data-bottle-files], input[data-bottle-photos]')) {
       void detail.handleUploadChange(event); return;
     }
-    if (event.target.matches?.('input[data-furniture-photos]')) {
-      warehouseView.uploadFurniturePhotos(event.target.dataset.furniturePhotos, [...event.target.files]); return;
+    if (target.matches?.('input[data-furniture-photos]')) {
+      warehouseView.uploadFurniturePhotos(target.dataset.furniturePhotos, [.../** @type {HTMLInputElement} */ (target).files]); return;
     }
-    if (event.target.matches?.([
+    if (target.matches?.([
       '[data-flight-plan-style]', '[data-flight-plan-count]',
       '[data-flight-plan-availability]', '[data-flight-plan-focus]',
       '[name="flight-plan-unfamiliar"]', '[data-flight-plan-cask-mode]',
@@ -644,125 +648,127 @@ export function bindEvents(
     ].join(', '))) {
       tastingsView.invalidateFlightPlan(); return;
     }
-    if (event.target.id === 'ui-language') {
-      chooseLanguage(event.target.value); return;
+    if (target.id === 'ui-language') {
+      chooseLanguage(target.value); return;
     }
-    if (event.target.dataset.sectionSwitch === 'analytics') {
-      navigate('analytics', event.target.value);
+    if (target.dataset.sectionSwitch === 'analytics') {
+      navigate('analytics', target.value);
       return;
     }
-    if (event.target.dataset.sectionSwitch === 'warehouse') {
-      navigate('warehouse', event.target.value);
+    if (target.dataset.sectionSwitch === 'warehouse') {
+      navigate('warehouse', target.value);
       return;
     }
-    if (event.target.dataset.sectionSwitch === 'settings') {
-      if (activateSettingsSection(event.target.value, event.target.closest('.settings-page'))) state.settingsSection = event.target.value;
+    if (target.dataset.sectionSwitch === 'settings') {
+      if (activateSettingsSection(target.value, target.closest('.settings-page'))) state.settingsSection = target.value;
       return;
     }
-    if (event.target.dataset.sectionSwitch === 'help') {
-      activateHelpTopic(event.target.value, event.target.closest('.help-page'));
+    if (target.dataset.sectionSwitch === 'help') {
+      activateHelpTopic(target.value, target.closest('.help-page'));
       return;
     }
-    if (event.target.name === 'type' && event.target.closest?.('#warehouse-form')?.dataset.newFurniture === 'true') {
-      const form = event.target.closest('#warehouse-form');
-      const bottom = form.querySelector('[name="elevation"]');
-      const height = form.querySelector('[name="itemHeight"]');
+    if (target.name === 'type' && /** @type {HTMLElement} */ (target.closest?.('#warehouse-form'))?.dataset.newFurniture === 'true') {
+      const form = target.closest('#warehouse-form');
+      const bottom = /** @type {HTMLInputElement} */ (form.querySelector('[name="elevation"]'));
+      const height = /** @type {HTMLInputElement} */ (form.querySelector('[name="itemHeight"]'));
       if (bottom && height) {
-        if (event.target.value === 'haengeregal' && Number(bottom.value) === 0 && Number(height.value) === 1.8) {
+        if (target.value === 'haengeregal' && Number(bottom.value) === 0 && Number(height.value) === 1.8) {
           bottom.value = '1.9'; height.value = '0.4';
-        } else if (event.target.value !== 'haengeregal' && Number(bottom.value) === 1.9 && Number(height.value) === 0.4) {
+        } else if (target.value !== 'haengeregal' && Number(bottom.value) === 1.9 && Number(height.value) === 0.4) {
           bottom.value = '0'; height.value = '1.8';
         }
       }
       return;
     }
-    if (event.target.matches('.warehouse-bottle-check')) {
-      warehouseView.toggleBottleSelection(event.target.dataset.id, event.target.checked); return;
+    if (target.matches('.warehouse-bottle-check')) {
+      warehouseView.toggleBottleSelection(target.dataset.id, /** @type {HTMLInputElement} */(target).checked); return;
     }
-    if (event.target.id === 'warehouse-room-select') {
-      warehouseView.selectRoom(event.target.value, state.selected === 'shelves' ? 'shelves' : 'rooms'); return;
+    if (target.id === 'warehouse-room-select') {
+      warehouseView.selectRoom(target.value, state.selected === 'shelves' ? 'shelves' : 'rooms'); return;
     }
-    if (event.target.id === 'warehouse-plan-layer') {
-      state.warehousePlanLevel = event.target.value; render(); return;
+    if (target.id === 'warehouse-plan-layer') {
+      state.warehousePlanLevel = target.value; render(); return;
     }
-    if (event.target.id === 'warehouse-plan-zoom') {
-      state.warehousePlanZoom = [100, 150, 200].includes(Number(event.target.value)) ? Number(event.target.value) : 100; warehouseView.update3DZoom(state.warehousePlanZoom);
+    if (target.id === 'warehouse-plan-zoom') {
+      state.warehousePlanZoom = [100, 150, 200].includes(Number(target.value)) ? Number(target.value) : 100; warehouseView.update3DZoom(state.warehousePlanZoom);
       return;
     }
-    if (event.target.name === 'warehouse-find-placement') {
-      warehouseView.setFinderPlacement(event.target.value); return;
+    if (target.name === 'warehouse-find-placement') {
+      warehouseView.setFinderPlacement(target.value); return;
     }
-    const filter = event.target.dataset.analyticsFilter;
+    const filter = target.dataset.analyticsFilter;
     if (filter && ['distillery', 'country', 'volumeType', 'status'].includes(filter)) {
-      state.analyticsFilters[filter] = event.target.value;
+      state.analyticsFilters[filter] = target.value;
       history.replaceState({whiskyRoute: true}, '', routeUrl('analytics', state.selected, state.analyticsFilters));
       render();
       return;
     }
-    if (event.target.id === 'analytics-period') {
-      state.analyticsPeriod = event.target.value === 'year' ? 'year' : 'month'; render(); return;
+    if (target.id === 'analytics-period') {
+      state.analyticsPeriod = target.value === 'year' ? 'year' : 'month'; render(); return;
     }
-    if (event.target.dataset.analyticsBoundary) {
-      const boundary = event.target.dataset.analyticsBoundary;
+    if (target.dataset.analyticsBoundary) {
+      const boundary = target.dataset.analyticsBoundary;
       if (boundary === 'start' || boundary === 'end') {
         const key = boundary === 'start' ? 'analyticsStartDate' : 'analyticsEndDate';
-        state[key] = readAnalyticsDate(event.target.value);
+        state[key] = readAnalyticsDate(target.value);
         render();
         return;
       }
     }
-    if (event.target.matches('#backup-profile-form [name=provider]')) backup.toggleFields(event.target.form);
-    if (event.target.id === 'scan-file') {
-      scanner.scanImage(event.target.files?.[0]);
+    if (target.matches('#backup-profile-form [name=provider]')) backup.toggleFields(target.form);
+    if (target.id === 'scan-file') {
+      scanner.scanImage(/** @type {HTMLInputElement} */(target).files?.[0]);
     }
   });
   root.addEventListener('input', event => {
-    if (state.page === 'map' && event.target.matches?.('#map-bottling-search, #map-missing-search')) {
-      mapView.handleInput(event.target); return;
+    const target = /** @type {HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement} */ (event.target);
+    if (state.page === 'map' && target.matches?.('#map-bottling-search, #map-missing-search')) {
+      mapView.handleInput(target); return;
     }
-    if (state.page === 'home' && event.target.id === 'search') {home.handleInput(event.target); return;}
-    if (event.target.id === 'warehouse-unassigned-wall-search') {
-      warehouseView.setUnassignedWallSearch(event.target.value); return;
+    if (state.page === 'home' && target.id === 'search') {home.handleInput(target); return;}
+    if (target.id === 'warehouse-unassigned-wall-search') {
+      warehouseView.setUnassignedWallSearch(target.value); return;
     }
-    if (event.target.id === 'warehouse-search') {
-      warehouseView.setFinderQuery(event.target.value); return;
+    if (target.id === 'warehouse-search') {
+      warehouseView.setFinderQuery(target.value); return;
     }
-    if (event.target.id === 'bottling-choice-search') {
-      editors.filterExistingBottlings(event.target.value);
+    if (target.id === 'bottling-choice-search') {
+      editors.filterExistingBottlings(target.value);
     }
-    if (event.target.id === 'distillery-search') {
-      state.distillerySearch = event.target.value;
+    if (target.id === 'distillery-search') {
+      state.distillerySearch = target.value;
       const term = state.distillerySearch.trim().toLocaleLowerCase('de');
       const list = query('.distillery-list');
       if (!list) return;
       let count = 0;
       const rows = queryAll('.distillery-row', list);
-      for (const row of rows) {
+      for (const row of /** @type {Iterable<HTMLElement>} */ (rows)) {
         const match = row.querySelector('strong').textContent.toLocaleLowerCase('de').includes(term);
         row.hidden = !match;
         if (match) count++;
       }
       const counter = query('#distillery-count');
       if (counter) counter.textContent = `${count} von ${rows.length}`;
-      const empty = query('.distillery-no-results', list);
+      const empty = /** @type {HTMLElement} */ (query('.distillery-no-results', list));
       if (empty) empty.hidden = count > 0;
       list.scrollTop = 0;
     }
-    if (event.target.matches('.distillery-filter')) {
-      const term = event.target.value.trim().toLocaleLowerCase('de');
-      const panel = event.target.parentElement;
-      queryAll('.distillery-option', panel).forEach(label => {
+    if (target.matches('.distillery-filter')) {
+      const term = target.value.trim().toLocaleLowerCase('de');
+      const panel = target.parentElement;
+      queryAll('.distillery-option', panel).forEach((/** @type {HTMLElement} */ label) => {
         const checked = label.querySelector('input').checked;
         label.hidden = !checked && !label.textContent.toLocaleLowerCase('de').includes(term);
       });
     }
   });
   document.addEventListener('keydown', event => {
+    const target = /** @type {Element} */ (event.target);
     // Sidebar buttons are native buttons: Tab and Enter/Space work without
     // special handling. ArrowUp/Down and Home/End offer fast navigation.
-    if (event.target.matches?.('.section-nav-desktop .section-nav-item')) {
-      const items = [...event.target.closest('.section-nav-desktop').querySelectorAll('.section-nav-item')];
-      const current = items.indexOf(event.target);
+    if (target.matches?.('.section-nav-desktop .section-nav-item')) {
+      const items = [...target.closest('.section-nav-desktop').querySelectorAll('.section-nav-item')];
+      const current = items.indexOf(target);
       let next = current;
       if (event.key === 'ArrowDown') next = (current + 1) % items.length;
       else if (event.key === 'ArrowUp') next = (current - 1 + items.length) % items.length;
@@ -770,13 +776,13 @@ export function bindEvents(
       else if (event.key === 'End') next = items.length - 1;
       if (next !== current) {
         event.preventDefault();
-        items[next].click();
-        document.querySelector(`.section-nav-desktop .section-nav-item:nth-child(${next + 1})`)?.focus();
+        /** @type {HTMLElement} */ (items[next]).click();
+        /** @type {HTMLElement} */ (document.querySelector(`.section-nav-desktop .section-nav-item:nth-child(${next + 1})`))?.focus();
         return;
       }
     }
     if (event.key === 'Escape' && state.page === 'home' && !state.modal) {
-      const openPicker = document.querySelector('.collection-flavor-picker[open], .collection-saved-menu[open]');
+      const openPicker = /** @type {HTMLDetailsElement} */ (document.querySelector('.collection-flavor-picker[open], .collection-saved-menu[open]'));
       if (openPicker) {
         openPicker.open = false; openPicker.querySelector('summary')?.focus(); return;
       }
@@ -794,10 +800,10 @@ export function bindEvents(
       photoViewer.step(1);
     }
     // Non-button cards/brand elements also support keyboard activation.
-    if (['Enter', ' '].includes(event.key) && event.target.matches('.whisky-card, .brand, tr.clickable[data-act], .warehouse-iso-object')
+    if (['Enter', ' '].includes(event.key) && target.matches('.whisky-card, .brand, tr.clickable[data-act], .warehouse-iso-object')
     ) {
       event.preventDefault();
-      event.target.click();
+      /** @type {HTMLElement} */ (target).click();
     }
   });
 }

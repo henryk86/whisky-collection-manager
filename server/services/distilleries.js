@@ -38,7 +38,7 @@ function uniqueName(collection, value, currentId = null) {
 }
 
 /**
- * Validates the valid status state and rejects invalid inputs.
+ * Rejects unrecognized distillery operating statuses.
  *
  * @param {*} value Value to process.
  * @return {*} Whether the requested condition is met.
@@ -49,11 +49,10 @@ function validStatus(value) {
 }
 
 /**
- * Creates distillery for distilleries.
+ * Creates a distillery with a unique name, validated status and normalized location.
  *
  * @param {*} input Input to process.
- * @return {!Promise<(!Object)>} Promise fulfilled when the operation
- * completes.
+ * @return {!Promise<(!Object)>} Newly created distillery, including its unique ID.
  */
 export function createDistillery(input) {
   return change(collection => {
@@ -69,12 +68,11 @@ export function createDistillery(input) {
 }
 
 /**
- * Updates distillery for distilleries.
+ * Updates the name, status and supplied location of an existing distillery.
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {Promise<import('../../shared/types.js').Distillery>} Promise fulfilled when the operation
- * completes.
+ * @return {Promise<import('../../shared/types.js').Distillery>} Updated distillery after the collection change is persisted.
  */
 export function updateDistillery(id, input) {
   return change(collection => {

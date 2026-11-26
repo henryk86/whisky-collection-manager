@@ -5,7 +5,7 @@ import {t} from '../i18n/index.js';
  * Parses route for routes.
  *
  * @param {*} search URL query string or search parameters containing the current application route.
- * @return {(!Object)} Structured result assembled from the input data.
+ * @return {(!Object)} Parsed page, selected identifiers and route-specific options.
  */
 export function parseRoute(search) {
   const params = new URLSearchParams(search);
@@ -60,10 +60,10 @@ export function parseRoute(search) {
   if (params.get('view') === 'warehouse') {
     const section = params.get('section');
     /**
-     * Tests input text against the id pattern.
+     * Accepts only route identifiers containing up to 100 letters, digits or hyphens.
      *
      * @param {*} value Value to process.
-     * @return {*} Result computed from the supplied inputs.
+     * @return {*} Validated route identifier, or null for an invalid identifier.
      */
     const id = value => value && /^[a-zA-Z0-9-]{1,100}$/.test(value) ? value : null;
     return {

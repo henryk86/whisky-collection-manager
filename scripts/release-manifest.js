@@ -20,7 +20,7 @@ const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).d
  * Computes the reproducible source manifest for a release.
  *
  * @param {*} root Root element or directory.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Source-release manifest with paths and content checksums.
  */
 export function sourceManifest(root) {
   const files = {};

@@ -18,10 +18,10 @@ const renderTemplate = await loadTemplates('warehouse/warehouse.html');
  */
 export function createWarehousePhotoController({w, modal, refresh, attachBottlePhotos}) {
   /**
-   * Performs the refresh furniture modal lifecycle action.
+   * Refreshes the open furniture manager after its photo collection changes.
    */
   function refreshFurnitureModal() {
-    const manager = document.querySelector('#modal-root .warehouse-furniture-manager');
+    const manager = /** @type {HTMLElement} */ (document.querySelector('#modal-root .warehouse-furniture-manager'));
     if (!manager) return;
     const found = findFurniture(w(), manager.dataset.furnitureId);
     if (!found) return;
@@ -38,7 +38,7 @@ export function createWarehousePhotoController({w, modal, refresh, attachBottleP
    *
    * @param {*} id Identifier of the affected record.
    * @param {*} files Selected image files to upload as furniture photographs.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of uploading the selected furniture photos.
    */
   async function uploadFurniturePhotos(id, files) {
     if (!files.length) return;
@@ -62,7 +62,7 @@ export function createWarehousePhotoController({w, modal, refresh, attachBottleP
    * @param {*} id Identifier of the affected record.
    * @param {string} photoId Identifier of the furniture photo to move within its gallery.
    * @param {*} direction Direction used for traversal or movement.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of persisting the requested furniture-photo order change.
    */
   async function moveFurniturePhoto(id, photoId, direction) {
     const found = findFurniture(w(), id); if (!found) return;
@@ -82,7 +82,7 @@ export function createWarehousePhotoController({w, modal, refresh, attachBottleP
   }
 
   /**
-   * Performs the open furniture photo lifecycle action.
+   * Opens a furniture photo only when its path matches the permitted image namespace.
    *
    * @param {*} path Path to the target resource.
    * @param {*} title Title displayed or stored by this operation.
@@ -104,7 +104,7 @@ export function createWarehousePhotoController({w, modal, refresh, attachBottleP
    *
    * @param {*} id Identifier of the affected record.
    * @param {string} photoId Identifier of the furniture photo to delete.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of deleting the furniture photo and refreshing its manager.
    */
   async function deleteFurniturePhoto(id, photoId) {
     if (!await modal.confirm(t('warehouse.photos.remove'), t('warehouse.photos.removeConfirm'), t('common.actions.remove'))) return;

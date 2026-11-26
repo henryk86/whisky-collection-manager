@@ -52,7 +52,7 @@ export async function request(url, options = {}) {
  *
  * @param {number} status HTTP or entity status used for validation.
  * @param {!Object} data Input data for the operation.
- * @return {!Error} Entries that meet the selection criteria.
+ * @return {Error & {status: number, code?: string}} Localized HTTP error with status and optional translation key.
  */
 export function httpResponseError(status, data) {
   const key = typeof data?.errorCode === 'string' && /^api\.errors\.[a-zA-Z0-9]+$/.test(data.errorCode) ? data.errorCode : null;
@@ -62,8 +62,8 @@ export function httpResponseError(status, data) {
   const translated = key && t(key, displayErrorParams(params, key => t(key)));
   // Do not show untrusted or untranslated backend error strings.
   const message = translated && translated !== key ? translated : t('errors.api.generic', {status});
-  const error = new Error(message);
-  error.status = status;
+  /** @type {Error & {status: number, code?: string}} */
+  const error = Object.assign(new Error(message), {status});
   if (translated && translated !== key) error.code = key;
   return error;
 }
@@ -125,7 +125,7 @@ export function takeMutationUpdates() {
  *
  * @param {string} kind Resource kind selecting the relevant schema.
  * @param {*} applied Set of resource kinds whose mutation updates have already been applied.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Independent copy of the validated cached collection or warehouse data, or null when no matching mutation was applied.
  */
 export function takeUpdatedResource(kind, applied) {
   const url = kind === 'collection' ? '/api/collection' : '/api/warehouse';
@@ -136,7 +136,7 @@ export function takeUpdatedResource(kind, applied) {
  * Loads cached json for api.
  *
  * @param {string} url URL of the requested resource.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Decoded resource data, reusing the validated cache for an unchanged response.
  */
 export async function requestCachedJson(url) {
   const previous = validatedResponses.get(url);

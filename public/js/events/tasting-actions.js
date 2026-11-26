@@ -192,8 +192,8 @@ export function createTastingActions({tastingsView, warehouseView, state, naviga
 
     /**
      * Handles the tasting flight delete interaction.
-          * @return {*} Result of this expression.
-*/
+     * @return {*} No return value; opens a flight-deletion confirmation.
+     */
     'tasting-flight-delete': () => confirmInModal(
       t('tastingFlights.plural'),
       t('tastingFlights.deleteConfirm'),
@@ -241,7 +241,7 @@ export function createTastingActions({tastingsView, warehouseView, state, naviga
      * Handles the tasting flight new owned interaction.
      */
     'tasting-flight-new-owned': () => {
-      const id = document.querySelector('[data-flight-owned-bottling]')?.value;
+      const id = /** @type {HTMLSelectElement} */ (document.querySelector('[data-flight-owned-bottling]'))?.value;
       if (id && state.collection.bottlings.some(b => b.id === id)) navigate('tasting', id, {tastingId: 'new', flightId: state.selected});
     },
 
@@ -296,7 +296,7 @@ export function createTastingActions({tastingsView, warehouseView, state, naviga
      * Handles the tastings start owned interaction.
      */
     'tastings-start-owned': () => {
-      const id = document.querySelector('[data-owned-tasting-bottling]')?.value;
+      const id = /** @type {HTMLSelectElement} */ (document.querySelector('[data-owned-tasting-bottling]'))?.value;
       if (id && state.collection.bottlings.some(b => b.id === id)) navigate('tasting', id, {tastingId: 'new'});
     },
 
@@ -374,8 +374,8 @@ export function createTastingActions({tastingsView, warehouseView, state, naviga
      * Handles the tasting delete interaction.
      *
      * @param {*} button Button control involved in the interaction.
-          * @return {*} Result of this expression.
-*/
+     * @return {*} No return value; opens a tasting-deletion confirmation.
+     */
     'tasting-delete': button => confirmInModal(
       t('tastings.delete'),
       t('tastings.deleteConfirm'),

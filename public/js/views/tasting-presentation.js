@@ -121,7 +121,7 @@ export function createTastingPresentation({state, selectors}) {
    * Looks up the flight associated with the tasting, if any.
    *
    * @param {*} record Record to validate or persist.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Flight associated with the tasting, or null when no association exists.
    */
   const associatedFlight = record => record?.id ? flightForTasting(state.collection, record.id) : null;
 
@@ -143,7 +143,7 @@ export function createTastingPresentation({state, selectors}) {
   };
 
   /**
-   * Builds the localized tasting rating text for the current language.
+   * Formats a tasting score out of 100 or the localized unrated label.
    *
    * @param {*} record Record to validate or persist.
    * @return {string} Localized unrated label or formatted rating followed by the 100-point scale.
@@ -294,6 +294,7 @@ export function createTastingPresentation({state, selectors}) {
  * @return {import('../ui/render-plan.js').RenderPlan|string} Fields for an external whisky's release metadata (or scalar/empty text when no plan is needed).
  */
 export function externalFields(info = {}) {
+  /** @type {Array<[string, string, "text"|"number", number|null, boolean]>} */
   const fields = [
     ['name', 'tastings.externalName', 'text', 180, true],
     ['distillery', 'tastings.externalDistillery', 'text', 140, false],
@@ -316,10 +317,10 @@ export function externalFields(info = {}) {
 }
 
 /**
- * Retrieves external fields from the available state.
+ * Validates and collects external-bottling form fields, converting numeric fields.
  *
  * @param {*} node Node to inspect or update.
- * @return {*} Computed value, or null when the input has no match.
+ * @return {*} External-bottling values, or null when validation fails.
  */
 export function readExternalFields(node) {
   const data = {};

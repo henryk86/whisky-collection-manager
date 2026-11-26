@@ -17,7 +17,7 @@ const FIELDS = Object.freeze({
  *
  * @param {*} a First entry or operand in the calculation.
  * @param {*} b Second entry or operand in the calculation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True when both values have identical JSON representations.
  */
 const identical = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -27,7 +27,7 @@ const identical = (a, b) => JSON.stringify(a) === JSON.stringify(b);
  * @param {string} kind Resource kind selecting the relevant schema.
  * @param {*} before Resource data before the mutation.
  * @param {*} after Resource data after the mutation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Resource kind and changed scalar values and array entries.
  */
 export function resourceDelta(kind, before, after) {
   const spec = FIELDS[kind];
@@ -58,7 +58,7 @@ export function resourceDelta(kind, before, after) {
  *
  * @param {*} current Current resource data to update.
  * @param {*} delta Validated changes to apply to the resource.
- * @return {*} Entries transformed for the consuming code.
+ * @return {*} New resource snapshot with the validated delta applied.
  */
 export function applyResourceDelta(current, delta) {
   const spec = FIELDS[delta?.kind];

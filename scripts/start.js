@@ -13,10 +13,10 @@ import {verifyOfflineBundle} from './offline-bundle.js';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
- * Retrieves json from the available state.
+ * Reads and parses a local JSON file, tolerating missing or malformed input.
  *
  * @param {*} file File resource to read, write or inspect.
- * @return {*} Computed value, or null when the input has no match.
+ * @return {*} Parsed JSON content, or null if it cannot be read or parsed.
  */
 function readJson(file) {
   try {return JSON.parse(fs.readFileSync(file, 'utf8'));}
@@ -30,7 +30,7 @@ function readJson(file) {
  *
  * @param {*} root Root element or directory.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if installed npm packages are missing or differ from the lockfile.
  */
 export function needsNpmCi(root, {production = false} = {}) {
   const wanted = readJson(path.join(root, 'package-lock.json'));
@@ -50,6 +50,7 @@ export function needsNpmCi(root, {production = false} = {}) {
  * @return {Object<string,string>} Parsed assignments; empty when no file exists.
  */
 function readEnvFile(root) {
+  /** @type {Record<string, string>} */
   const result = {};
   const file = path.join(root, '.env');
   if (!fs.existsSync(file)) return result;
@@ -92,7 +93,7 @@ export function localTlsStatus(root, env = process.env) {
    * Checks whether ready applies.
    *
    * @param {*} file File resource to read, write or inspect.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * @return {boolean} True if the expected startup file exists and is nonempty.
    */
   const isReady = file => {
     const location = path.resolve(root, file);
@@ -119,7 +120,7 @@ function npmCommand(env) {
 }
 
 /**
- * Validates the default execute state and rejects invalid inputs.
+ * Runs a startup subprocess in the repository environment and propagates launch or exit failures.
  *
  * @param {string} command Executable to invoke for startup.
  * @param {*} args Arguments forwarded to the operation.
@@ -200,11 +201,11 @@ export function prepareStartup({root = ROOT, env = process.env,
  * Starts the configured server process using the selected runtime.
  *
  * @param {!Object=} options Optional configuration for the operation.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Spawned application server process.
  */
 export function launchServer({root = ROOT, env = process.env} = {}) {
   const server = spawn(process.execPath, ['server/index.js'], {cwd: root, env, stdio: 'inherit'});
-  for (const signal of ['SIGINT', 'SIGTERM']) {
+  for (const signal of /** @type {NodeJS.Signals[]} */ (['SIGINT', 'SIGTERM'])) {
     process.on(signal, () => server.kill(signal));
   }
   server.on(

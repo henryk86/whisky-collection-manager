@@ -36,7 +36,7 @@ export function deleteImage(p) {
  * Validates image data for photos.
  *
  * @param {*} base64 Untrusted data URL containing base64-encoded image bytes.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Validated image bytes, normalized file extension and media type.
  */
 export function validateImageData(base64) {
   assert(

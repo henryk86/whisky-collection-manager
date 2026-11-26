@@ -17,7 +17,7 @@ const DEFAULT_URL = 'https://nominatim.openstreetmap.org/search';
  *
  * @param {*} input Input to process.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Matching distillery-location candidates from the cache or geocoding service.
  */
 export async function findDistilleryLocations(input, {now = Date.now,
   fetchImpl = fetch} = {}) {

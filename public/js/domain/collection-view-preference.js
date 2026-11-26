@@ -21,7 +21,7 @@ export function getCollectionViewPreference(storage) {
  *
  * @param {*} view Requested collection presentation, accepted only for cards or table.
  * @param {*} storage Storage adapter used to load or save preferences.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the collection view preference was saved successfully.
  */
 export function saveCollectionViewPreference(view, storage) {
   if (view !== 'cards' && view !== 'table') return false;

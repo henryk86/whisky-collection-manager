@@ -69,8 +69,9 @@ for (const filename of files) {
       }
       used.add(name.text);
       const slots = new Set([...templates.get(name.text).matchAll(/\{\{(?:content|attr|attrs|text|tag):([\w.]+)\}\}/g)].map(match => match[1]));
-      const supplied = new Set(bindings && ts.isObjectLiteralExpression(bindings) ? bindings.properties.map(prop => prop.name?.getText(source)) : []);
-      if (supplied.size !== (bindings?.properties?.length || 0) || slots.size !== supplied.size || [...slots].some(slot => !supplied.has(slot))) {
+      const properties = bindings && ts.isObjectLiteralExpression(bindings) ? bindings.properties : [];
+      const supplied = new Set(properties.map(prop => prop.name?.getText(source)));
+      if (supplied.size !== properties.length || slots.size !== supplied.size || [...slots].some(slot => !supplied.has(slot))) {
         throw new Error(`${file}: incorrect bindings for ${name.text}`);
       }
     }

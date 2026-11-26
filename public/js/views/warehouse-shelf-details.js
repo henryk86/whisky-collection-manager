@@ -22,7 +22,7 @@ const STATUS_KEYS = {
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {*} shelfId Identifier of the shelf whose contents are being inspected.
  * @param {!Array<*>=} bottlings Bottling catalog used to enrich the physical bottle details.
- * @return {?Object} Computed value, or null when the input has no match.
+ * @return {?Object} Shelf contents, title and availability information, or null for a missing shelf.
  */
 export function shelfContents(warehouse, shelfId, bottlings = []) {
   const model = createShelfContentsModel(warehouse, shelfId, bottlings);

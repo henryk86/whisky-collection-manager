@@ -21,7 +21,7 @@ function checkDistilleries(collection, bottling) {
  * Create a bottling and its first physical bottle in one transaction.
  *
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Created bottling and its first physical bottle.
  */
 export function createBottling(input) {
   return change(collection => {
@@ -56,12 +56,11 @@ export function createBottling(input) {
 }
 
 /**
- * Updates bottling for bottlings.
+ * Updates bottling metadata while rejecting edits to tasting-only fields.
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {Promise<import('../../shared/types.js').Bottling>} Promise fulfilled when the operation
- * completes.
+ * @return {Promise<import('../../shared/types.js').Bottling>} Updated bottling after the collection change is persisted.
  */
 export function updateBottling(id, input) {
   return change(collection => {
@@ -92,7 +91,7 @@ export function updateBottling(id, input) {
  * Clears bottling for bottlings.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after deleting the bottling.
  */
 export function deleteBottling(id) {
   return change(collection => {

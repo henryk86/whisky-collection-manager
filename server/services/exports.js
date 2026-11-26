@@ -14,7 +14,7 @@ const statusCodes = {
 /**
  * Serializes the collection for JSON download.
  *
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} JSON download filename, media type and serialized collection content.
  */
 export function exportJson() {
   return {
@@ -27,11 +27,12 @@ export function exportJson() {
 /**
  * Serializes selected collection records as a CSV download.
  *
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} CSV download filename, media type and serialized rows.
  */
 export function exportCsv() {
   const db = read();
   const ds = new Map(db.distilleries.map(d => [d.id, d.name]));
+  /** @type {Array<Array<string|number|boolean|null|undefined>>} */
   const rows = [[
     'Inventarnummer',
     'Status',
@@ -107,7 +108,7 @@ export function exportCsv() {
  * scheduler.
  *
  * @param {!Object} req Incoming HTTP request.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Temporary ZIP file descriptor marked for cleanup after download.
  */
 export function exportZip(req) {
   authorizeAdmin(req);

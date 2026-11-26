@@ -36,7 +36,7 @@ export function allBottles(db) {
  *
  * @param {*} db Collection containing the bottlings and their physical bottle records.
  * @param {string} id Identifier used to select the relevant record.
- * @return {?Object} Computed value, or null when the input has no match.
+ * @return {?Object} Physical bottle and its owning bottling, or null when the ID is unknown.
  */
 export function findBottle(db, id) {
   for (const bottling of db.bottlings) {

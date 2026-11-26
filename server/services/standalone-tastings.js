@@ -35,7 +35,7 @@ function find(collection, id) {
 /**
  * Returns standalone tasting records under the active filters.
  *
- * @return {!Array<!Object>} Resulting list of values.
+ * @return {!Array<!Object>} All saved standalone tasting records.
  */
 export function list() {return read().externalTastings || [];}
 
@@ -43,7 +43,7 @@ export function list() {return read().externalTastings || [];}
  * Retrieves the standalone tastings state.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {*} Value returned by the delegated operation.
+ * @return {*} Standalone tasting with the requested identifier.
  */
 export function get(id) {return find(read(), id);}
 
@@ -51,7 +51,7 @@ export function get(id) {return find(read(), id);}
  * Creates the standalone tastings state.
  *
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Newly created standalone tasting record.
  */
 export function create(input) {
   return change(collection => {
@@ -71,7 +71,7 @@ export function create(input) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Updated standalone tasting record.
  */
 export function update(id, input) {
   return change(collection => {
@@ -85,7 +85,7 @@ export function update(id, input) {
  * Clears the standalone tastings state.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after removing the standalone tasting.
  */
 export function remove(id) {
   return change(collection => {
@@ -103,7 +103,7 @@ export function remove(id) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Destination bottling ID and transferred tasting ID.
  */
 export function assignToBottling(id, input) {
   if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length !== 1 || typeof input.bottlingId !== 'string' || !input.bottlingId.trim())

@@ -52,7 +52,7 @@ export function invalidateCollectionCache() {
 }
 
 /**
- * Retrieves current from the available state.
+ * Reloads and validates collection data when the backing file identity changes, invalidating the cached revision.
  */
 function loadCurrent() {
   const current = identity();
@@ -143,6 +143,7 @@ export function atomicWrite(value) {
     }
   }
 }
+/** @type {Promise<unknown>} */
 let queue = Promise.resolve();
 /**
  * Serializes mutations against the latest committed collection.

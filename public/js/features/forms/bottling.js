@@ -11,10 +11,10 @@ import {loadTemplates} from '../../ui/templates.js';
 const renderTemplate = await loadTemplates('forms/bottling.html');
 
 /**
- * Creates bottling form for bottling.
+ * Creates a bottling-form builder with distillery-selection helpers.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {Function} Structured result assembled from the input data.
+ * @return {Function} Functions for rendering the bottling editor and its distillery picker.
  */
 export function createBottlingForm({state, selectors}) {
   const {distilleryIds} = selectors;

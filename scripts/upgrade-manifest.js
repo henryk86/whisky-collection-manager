@@ -14,11 +14,11 @@ import {readSourceManifest, verifySourceManifest} from './release-manifest.js';
 const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 
 /**
- * Validates the safe path state and rejects invalid inputs.
+ * Resolves a manifest file beneath its root without traversing symbolic links.
  *
  * @param {*} root Root node or directory for the operation.
  * @param {*} filename File path or name to process.
- * @return {*} Computed value, or null when the input has no match.
+ * @return {*} Resolved manifest file path, or null if missing or unsafe.
  */
 function safePath(root, filename) {
   let current = fs.realpathSync(root);
@@ -38,7 +38,7 @@ function safePath(root, filename) {
  * @param {string} newRelease Directory containing the verified new release manifest.
  * @param {string} installation Existing installation containing the previous manifest.
  * @param {boolean=} prune Whether to remove obsolete files whose content still matches the previous manifest.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Upgrade report comparing the installation against the supplied manifests.
  */
 export function inspectManifestUpgrade(newRelease, installation,
   prune = false) {

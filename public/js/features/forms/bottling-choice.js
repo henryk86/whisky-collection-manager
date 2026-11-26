@@ -11,7 +11,7 @@ const renderTemplate = await loadTemplates('forms/bottling-choice.html');
  *
  * @param {!Object} collection Collection data being processed.
  * @param {string=} value Input value to process.
- * @return {*} Entries that meet the selection criteria.
+ * @return {*} Existing bottlings matching the normalized search text.
  */
 export function matchingBottlings(collection, value = '') {
   const distilleries = new Map((collection.distilleries || []).map(item => [item.id, item.name]));

@@ -20,15 +20,15 @@ const renderTemplate = await loadTemplates('backups/backups.html');
  * Formats time for presentation.
  *
  * @param {*} value Value to process.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Localized timestamp, or the not-yet-executed label.
  */
 const labelTime = value => value ? new Date(value).toLocaleString(currentLanguage()) : t("backups.status.notYet");
 
 /**
- * Builds the localized schedule text text for the current language.
+ * Formats a backup schedule according to its frequency, time and weekday.
  *
  * @param {*} p Point or data value used in the calculation.
- * @return {*} Value returned by the delegated operation.
+ * @return {*} Localized schedule description for the backup profile.
  */
 const scheduleText = p => {
   const s = p.schedule || {};

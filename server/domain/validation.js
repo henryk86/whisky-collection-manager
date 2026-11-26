@@ -18,7 +18,7 @@ import {isDocumentPath} from '../storage/documents.js';
  * Checks whether object applies.
  *
  * @param {*} value Value to process.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True for a non-null, non-array object.
  */
 const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
 
@@ -26,7 +26,7 @@ const isObject = value => !!value && typeof value === 'object' && !Array.isArray
  * Checks whether string applies.
  *
  * @param {*} value Value to process.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True for a JavaScript string.
  */
 const isString = value => typeof value === 'string';
 
@@ -41,7 +41,7 @@ const optionalString = value => value == null || isString(value);
  * Checks whether optional number applies.
  *
  * @param {*} value Value to process.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True for null, undefined or a finite number.
  */
 const isOptionalNumber = value => value == null || (typeof value === 'number' && Number.isFinite(value));
 
@@ -49,7 +49,7 @@ const isOptionalNumber = value => value == null || (typeof value === 'number' &&
  * Derives the valid day numeric value from its input.
  *
  * @param {*} value Value to process.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True for an actual calendar date within the supported year range.
  */
 const validDay = value => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -58,10 +58,10 @@ const validDay = value => {
 };
 
 /**
- * Tests input text against the valid image path pattern.
+ * Checks whether a path identifies an image within the collection image namespace.
  *
  * @param {*} p Point or data value used in the calculation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True for a supported image path.
  */
 const validImagePath = p => typeof p === 'string' && /^images\/[a-f0-9-]{36}\/[\w-]+\.(jpg|png|webp|gif)$/i.test(p);
 
@@ -69,7 +69,7 @@ const validImagePath = p => typeof p === 'string' && /^images\/[a-f0-9-]{36}\/[\
  * Validates the validation state.
  *
  * @param {!Object} collection Collection data being processed.
- * @return {*} Entries that meet the selection criteria.
+ * @return {*} The validated collection document.
  */
 export function validate(collection) {
   assert(

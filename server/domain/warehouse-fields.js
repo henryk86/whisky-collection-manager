@@ -25,7 +25,7 @@ export function name(value) {
  * @param {string} field API field name included in validation errors.
  * @param {*} min Minimum permitted value.
  * @param {*} max Maximum permitted value.
- * @return {number} Calculated numeric result.
+ * @return {number} Validated number rounded to two decimal places.
  */
 export function number(value, field, min, max) {
   const n = Number(value);
@@ -34,10 +34,10 @@ export function number(value, field, min, max) {
 }
 
 /**
- * Validates the rotation state and rejects invalid inputs.
+ * Normalizes furniture rotation and rejects angles outside the four supported orientations.
  *
  * @param {*} value Value to process.
- * @return {number} Calculated numeric value.
+ * @return {number} Rotation in degrees: 0, 90, 180 or 270.
  */
 function rotation(value) {
   const n = Number(value ?? 0);
@@ -49,7 +49,7 @@ function rotation(value) {
  * Validates a shelf's physical bottle capacity.
  *
  * @param {*} value Input value to process.
- * @return {?number} Calculated numeric result.
+ * @return {?number} Validated finite shelf capacity, or null for unlimited capacity.
  */
 export function capacity(value) {
   if (value === null || value === '' || value === undefined) return null;
@@ -66,7 +66,7 @@ export function capacity(value) {
  * Validates the front-edge configuration of a shelf.
  *
  * @param {*} value Input value to process.
- * @return {*} Computed value, or null when the input has no match.
+ * @return {*} Supported shelf-front style, or null when not explicitly set.
  */
 export function shelfFront(value) {
   if (value === '' || value === null || value === undefined) return null;
@@ -78,7 +78,7 @@ export function shelfFront(value) {
  * Validates the number and geometry of door leaves.
  *
  * @param {*} value Input value to process.
- * @return {*} Computed value, or null when the input has no match.
+ * @return {*} Validated door-leaf count, or null when not explicitly set.
  */
 export function doorLeaves(value) {
   if (value === undefined || value === null || value === '') return null;
@@ -90,7 +90,7 @@ export function doorLeaves(value) {
  * Validates a glass-door frame specification.
  *
  * @param {*} value Input value to process.
- * @return {?boolean} Computed value, or null when the input has no match.
+ * @return {?boolean} Validated frame flag, or null when not explicitly set.
  */
 export function glassFrame(value) {
   if (value === undefined || value === null || value === '') return null;
@@ -103,7 +103,7 @@ export function glassFrame(value) {
  *
  * @param {*} value Input value to process.
  * @param {*} shelves Furniture shelf list defining the order and valid endpoints of door ranges.
- * @return {!Array<!Object>} Resulting list of values.
+ * @return {!Array<!Object>} Validated door ranges referencing the existing shelf sequence.
  */
 export function doorRanges(value, shelves) {
   if (value == null) return [];
@@ -135,7 +135,7 @@ export function doorRanges(value, shelves) {
  * Validates the available height for a storage shelf.
  *
  * @param {*} value Input value to process.
- * @return {?number} Calculated numeric result.
+ * @return {?number} Shelf height in centimeters, or null for automatic height.
  */
 export function shelfHeight(value) {
   if (value === '' || value === null || value === undefined) return null;
@@ -168,11 +168,11 @@ export function ensureShelfHeights(
 }
 
 /**
- * Validates the panel option state and rejects invalid inputs.
+ * Defaults an omitted panel flag to false and rejects non-boolean values.
  *
  * @param {*} value Value to process.
  * @param {*} label Label shown to the user.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} Validated panel visibility flag.
  */
 function panelOption(value, label) {
   if (value === undefined) return false;
@@ -185,7 +185,7 @@ function panelOption(value, label) {
  *
  * @param {*} input Input to process.
  * @param {*} room Room model containing dimensions and furniture.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Validated furniture dimensions, position and layout fields.
  */
 export function layout(input, room) {
   const furniture = {

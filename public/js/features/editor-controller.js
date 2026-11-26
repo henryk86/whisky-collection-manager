@@ -14,7 +14,7 @@ import {bottlingChoiceDialog, bottlingChoiceOptions, matchingBottlings}
  * modules.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Bottling and bottle editor operations and guarded form submission.
  */
 export function createEditors({
   state,
@@ -30,10 +30,10 @@ export function createEditors({
 }) {
   const {findBottle} = selectors;
   /**
- * The global New Bottle action can reuse an existing bottling.
- *
- * @return {void} Value returned by the delegated operation.
- */
+   * The global New Bottle action can reuse an existing bottling.
+   *
+   * @return {void} No return value; opens the existing or new bottling chooser.
+   */
   function newBottling() {
     if (!(state.collection.bottlings || []).length) return createBottling();
     showModal(t("features.bottles.new"), bottlingChoiceDialog(state.collection), true);
@@ -52,7 +52,7 @@ export function createEditors({
    * @param {string} term Search text for filtering existing bottlings in the selector.
    */
   function filterExistingBottlings(term) {
-    const select = query('#bottling-choice-select');
+    const select = /** @type {HTMLSelectElement} */ (query('#bottling-choice-select'));
     if (!select) return;
     const previous = select.value;
     const matches = matchingBottlings(state.collection, term);
@@ -63,8 +63,7 @@ export function createEditors({
   }
 
   /**
-   * Builds the localized choose existing bottling text for the current
-   * language.
+   * Opens the new-bottle editor for a known bottling, returning to the collection on completion.
    *
    * @param {*} id Identifier of the affected record.
    */
@@ -75,7 +74,7 @@ export function createEditors({
   }
 
   /**
-   * Builds the localized edit bottling text for the current language.
+   * Opens the editor for the selected bottling.
    */
   function editBottling() {
     const b = state.collection.bottlings.find(x => x.id === state.selected);
@@ -99,7 +98,7 @@ export function createEditors({
   }
 
   /**
-   * Builds the localized new bottle text for the current language.
+   * Opens a new physical-bottle editor for the selected bottling.
    *
    * @param {boolean=} fromImport Whether the new-bottle editor follows an import operation.
    */
@@ -110,11 +109,11 @@ export function createEditors({
   }
 
   /**
-   * Builds the localized edit bottle text for the current language.
+   * Opens the requested bottle editor and reports a missing bottle.
    *
    * @param {*} id Identifier of the affected record.
-      * @return {*} Result of this expression.
-*/
+   * @return {*} Notification when the requested bottle cannot be resolved.
+   */
   function editBottle(id) {
     const found = findBottle(id);
     if (!found) {
@@ -122,14 +121,14 @@ export function createEditors({
     }
     const {bottle: b, bottling} = found;
     showModal(`Flasche ${b.inventoryNumber || ''} bearbeiten`, bottleForm(b, bottling.id), true);
-    query('#bottle-form').dataset.id = id;
+    /** @type {HTMLElement} */ (query('#bottle-form')).dataset.id = id;
   }
 
   /**
-   * Handles form for editor controller.
+   * Dispatches editor form submission while preventing overlapping saves.
    *
    * @param {*} ev Submit event whose target is the bottling or physical-bottle form.
-   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   * @return {!Promise<void>} Completion of the guarded editor operation.
    */
   async function handleForm(ev) {
     const form = ev.target;
@@ -155,10 +154,10 @@ export function createEditors({
   }
 
   /**
-   * Performs the submit form lifecycle action.
+   * Persists edited or newly created bottlings and physical bottles, then updates the view.
    *
    * @param {*} ev Submit event from the validated editor form.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the applicable save operation.
    */
   async function submitForm(ev) {
     if (ev.target.id === 'bottling-form') {
@@ -176,14 +175,14 @@ export function createEditors({
           id = b.id;
         }
         else {
-          data.firstBottle = {
+          const firstBottle = {
             inventoryNumber: data.firstInventoryNumber || '',
             status: data.firstStatus || 'closed',
             volumeType: data.firstVolumeType || 'standard',
             volumeMl: data.firstVolumeMl,
           };
           const result = await request('/api/bottlings', {
-            method: 'POST', body: JSON.stringify(data),
+            method: 'POST', body: JSON.stringify({...data, firstBottle}),
           });
           id = result.bottling.id;
           firstBottleId = result.bottle.id;

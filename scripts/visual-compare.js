@@ -14,7 +14,7 @@ import {comparePNG, decodePNG} from './visual-png.js';
  * @return {!Object} Capture metadata and images indexed by ID.
  */
 export function loadCaptures(directory) {
-  const report = JSON.parse(readFileSync(path.join(directory, 'report.json')));
+  const report = JSON.parse(readFileSync(path.join(directory, 'report.json'), 'utf8'));
   if (report.failed !== 0 || !report.browser || !report.results?.length) {
     throw new Error('Capture failed or is empty');
   }
@@ -24,7 +24,7 @@ export function loadCaptures(directory) {
       throw new Error(`Invalid or duplicate screenshot ID: ${id}`);
     }
     const image = readFileSync(path.join(directory, `${id}.png`));
-    const geometry = JSON.parse(readFileSync(path.join(directory, `${id}.json`)));
+    const geometry = JSON.parse(readFileSync(path.join(directory, `${id}.json`), 'utf8'));
     const decoded = decodePNG(image);
     const expectedHeight = id.startsWith('modal-flight-expanded__') ? geometry.captureHeight : 1100;
     if (decoded.width !== Number(id.split('__')[1]) || !Number.isInteger(expectedHeight) || expectedHeight < 1100 ||

@@ -98,50 +98,50 @@ const formValue = value => Number(value).toLocaleString('de-DE', {maximumFractio
 
 /**
  * Applies prepared control values and availability to the mounted dialog.
- * @param {?Element} host Editor dialog root.
+ * @param {?HTMLElement} host Editor dialog root.
  * @param {!Object} model Prepared editor control state.
  */
 export function syncPhotoEditorControls(host, model) {
   if (!host) return;
-  for (const tab of host.querySelectorAll('[data-photo-editor-tab]')) {
+  for (const tab of /** @type {Iterable<HTMLElement>} */ (host.querySelectorAll('[data-photo-editor-tab]'))) {
     const selected = tab.dataset.photoEditorTab === model.activeTab;
     tab.setAttribute('aria-selected', String(selected));
     tab.tabIndex = selected ? 0 : -1;
   }
-  for (const panel of host.querySelectorAll('[data-photo-editor-panel]'))
+  for (const panel of /** @type {Iterable<HTMLElement>} */ (host.querySelectorAll('[data-photo-editor-panel]')))
     panel.hidden = panel.dataset.photoEditorPanel !== model.activeTab;
-  for (const input of host.querySelectorAll('[data-photo-slider]')) {
+  for (const input of /** @type {Iterable<HTMLInputElement>} */ (host.querySelectorAll('[data-photo-slider]'))) {
     const value = model.values[input.dataset.photoSlider];
     input.value = String(value);
     host.querySelector(`[data-photo-output="${input.dataset.photoSlider}"]`).textContent = formValue(value);
     input.disabled = model.busy || !model.sourceData;
   }
-  for (const button of host.querySelectorAll('[data-photo-editor-ready]'))
+  for (const button of /** @type {Iterable<HTMLButtonElement>} */ (host.querySelectorAll('[data-photo-editor-ready]')))
     button.disabled = model.busy || !model.sourceData;
-  const generateButton = host.querySelector('[data-act="photo-editor-cutout"]');
+  const generateButton = /** @type {HTMLButtonElement} */ (host.querySelector('[data-act="photo-editor-cutout"]'));
   if (generateButton) generateButton.disabled = model.busy || !model.sourceData;
-  for (const button of host.querySelectorAll('[data-photo-editor-existing-cutout]')) {
+  for (const button of /** @type {Iterable<HTMLButtonElement>} */ (host.querySelectorAll('[data-photo-editor-existing-cutout]'))) {
     button.disabled = model.busy || Boolean(model.pendingCutout) || !model.sourceData;
     button.textContent = model.previewCutout ? t('cutout.showOriginal') : t('cutout.showCutout');
   }
   host.dataset.photoPreviewSource = model.previewCutout ? 'cutout' : 'original';
-  const undoCutout = host.querySelector('[data-act="photo-editor-remove-cutout"]');
+  const undoCutout = /** @type {HTMLButtonElement} */ (host.querySelector('[data-act="photo-editor-remove-cutout"]'));
   if (undoCutout) {
     undoCutout.hidden = !model.pendingCutout && !model.hasSavedCutout;
     undoCutout.disabled = model.busy;
   }
   const picker = host.querySelector('[data-act="photo-editor-pick-white"]');
   if (picker) picker.setAttribute('aria-pressed', String(model.whitePicking));
-  const maskTools = host.querySelector('[data-photo-editor-mask-tools]');
+  const maskTools = /** @type {HTMLElement} */ (host.querySelector('[data-photo-editor-mask-tools]'));
   if (maskTools) {
     maskTools.hidden = !model.maskBaseData;
-    for (const button of maskTools.querySelectorAll('[data-photo-brush-mode]')) {
+    for (const button of /** @type {Iterable<HTMLButtonElement>} */ (maskTools.querySelectorAll('[data-photo-brush-mode]'))) {
       button.setAttribute('aria-pressed', String(model.brushMode === button.dataset.photoBrushMode));
       button.disabled = model.busy;
     }
-    const undo = maskTools.querySelector('[data-act="photo-editor-brush-undo"]');
+    const undo = /** @type {HTMLButtonElement} */ (maskTools.querySelector('[data-act="photo-editor-brush-undo"]'));
     if (undo) undo.disabled = model.busy || !model.maskStrokes.length;
-    const size = maskTools.querySelector('[data-photo-brush-size]');
+    const size = /** @type {HTMLInputElement} */ (maskTools.querySelector('[data-photo-brush-size]'));
     if (size) {size.disabled = model.busy; size.value = String(model.brushSize);}
     maskTools.querySelector('[data-photo-brush-size-value]').textContent = `${model.brushSize} %`;
   }

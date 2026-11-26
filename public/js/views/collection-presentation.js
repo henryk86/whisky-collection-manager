@@ -47,7 +47,7 @@ export function overviewField(value, suffix = '') {
 }
 
 /**
- * Filters records according to the overview facts selection rules.
+ * Collects the available age and alcohol-strength facts for a bottling card.
  *
  * @param {*} bottling Bottling record being inspected or updated.
  * @return {!Array<*>} Resulting entries in their output order.
@@ -69,6 +69,7 @@ export function overviewFacts(bottling) {
  */
 export function collectionTableCell(columnId, model) {
   const {bottling, bottle, displayedBottles, origin, score, price, updated, tasted} = model;
+  /** @type {import('../ui/render-plan.js').RenderPlan|string} */
   let value = '';
   switch (columnId) {
     case 'name': value = renderTemplate('strong', {name: bottling.name, }); break;

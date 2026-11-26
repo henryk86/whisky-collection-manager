@@ -7,7 +7,7 @@
  */
 export function csv(rows) {
   /**
-   * Tests input text against the safe cell pattern.
+   * Quotes a CSV cell and neutralizes formula-like user strings while preserving numeric values.
    *
    * @param {*} value Value to process.
    * @return {string} Quoted and escaped CSV cell with formula-like text neutralized.

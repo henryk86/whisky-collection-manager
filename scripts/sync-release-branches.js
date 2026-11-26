@@ -60,7 +60,7 @@ const versionAt = ref => JSON.parse(git('show', `${ref}:package.json`)).version;
  * Reject stale, moved or unrelated refs before attempting any remote update.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Release snapshot commit and develop parent at the release merge.
  */
 export function releaseRefs({tag, merge}) {
   if (!/^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(tag))
@@ -79,7 +79,7 @@ export function releaseRefs({tag, merge}) {
  * Writes prepare diverged develop data to the local filesystem.
  *
  * @param {!Object} options Options controlling the operation.
- * @return {*} Entries that meet the selection criteria.
+ * @return {*} Commit ID of the prepared develop synchronization result.
  */
 function prepareDivergedDevelop({tip, base, snapshot, tag}) {
   if (!ancestor(base, tip)) throw new Error('develop was rewritten after the approved merge; refusing synchronization');
@@ -123,7 +123,7 @@ function prepareDivergedDevelop({tip, base, snapshot, tag}) {
  * A version PR can only contain the tested, immutable release snapshot.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Synchronization branch, release references and already-merged status.
  */
 export function prepareSyncPR({tag, merge}) {
   const {snapshot} = releaseRefs({tag, merge});
@@ -147,7 +147,7 @@ export function prepareSyncPR({tag, merge}) {
  * Validate that GitHub merged the exact tagged release commit through a PR.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True when main already contains the expected release synchronization merge.
  */
 function isCompletedMainSync({tag, merge, main, snapshot}) {
   const mainParents = parents(main);
@@ -160,7 +160,7 @@ function isCompletedMainSync({tag, merge, main, snapshot}) {
  * ref.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Final main and develop references and whether develop was unchanged.
  */
 export function finishSync({tag, merge}) {
   const {snapshot, developAtMerge} = releaseRefs({tag, merge});

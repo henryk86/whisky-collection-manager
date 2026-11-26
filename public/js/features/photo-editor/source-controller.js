@@ -15,7 +15,7 @@ import {canvasFromImage, imageDataFromCanvas, clonePixels, MAX_PREVIEW_SIDE} fro
 export function createPhotoSources({session, root, findPhoto, syncSliders, stopPicking, stopBrush, resetViewport, showPreviewNow, schedulePreview, action, closeModal}) {
   /**
    * Updates the DOM elements managed by cutout.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of local bottle segmentation and preview preparation.
    */
   async function cutout() {
     if (session.busy || !session.selection || !session.sourceData || !root()) return;

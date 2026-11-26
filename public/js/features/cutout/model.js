@@ -7,13 +7,14 @@ export const MODEL_SIZE = 320;
 const PIXELS = MODEL_SIZE * MODEL_SIZE;
 const MEAN = [0.485, 0.456, 0.406];
 const STD = [0.229, 0.224, 0.225];
+/** @type {Promise<{ort: typeof import('/ai/vendor/ort.wasm.min.mjs'), engine: import('/ai/vendor/ort.wasm.min.mjs').InferenceSession}>|null|undefined} */
 let inferenceSession;
 
 /**
  * NCHW float32, RGB in [0,1], ImageNet normalization used by U2Netp.
  *
- * @param {*} imageData RGBA image data at the segmentation model's required input size.
- * @return {!Object} Structured result for the caller.
+ * @param {{width: number, height: number, data: ArrayLike<number>}} imageData RGBA pixels at the model's required input size.
+ * @return {Float32Array} Channel-first normalized RGB values.
  */
 export function modelInput(imageData) {
   if (!imageData || imageData.width !== MODEL_SIZE || imageData.height !== MODEL_SIZE)
@@ -31,8 +32,8 @@ export function modelInput(imageData) {
 /**
  * U2Netp output d0 is normalized like rembg and interpreted as alpha.
  *
- * @param {*} raw Model output containing at least one finite confidence value per mask pixel.
- * @return {!Object} Structured result for the caller.
+ * @param {ArrayLike<number>|undefined} raw Model output containing one finite confidence value per mask pixel.
+ * @return {Uint8ClampedArray} Alpha values scaled to the range 0 through 255.
  */
 export function normalizedMask(raw) {
   if (!raw || raw.length < PIXELS) throw new Error(t('errors.cutout.invalidModelMask'));
@@ -50,8 +51,8 @@ export function normalizedMask(raw) {
 }
 
 /**
- * Validates the session state and rejects invalid inputs.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Lazily initializes the local WASM inference engine and retries after initialization failures.
+ * @return {Promise<{ort: typeof import('/ai/vendor/ort.wasm.min.mjs'), engine: import('/ai/vendor/ort.wasm.min.mjs').InferenceSession}>} Loaded runtime and session.
  */
 async function session() {
   if (!inferenceSession) {
@@ -78,8 +79,8 @@ async function session() {
 /**
  * Runs bottle segmentation and normalizes the resulting mask.
  *
- * @param {*} imageData RGBA image data at the segmentation model's required input size.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @param {{width: number, height: number, data: ArrayLike<number>}} imageData RGBA pixels at the model's required input size.
+ * @return {Promise<Uint8ClampedArray>} Normalized segmentation alpha mask.
  */
 export async function segment(imageData) {
   const {ort, engine} = await session();

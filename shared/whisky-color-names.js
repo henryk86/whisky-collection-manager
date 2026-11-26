@@ -69,7 +69,7 @@ export const WHISKY_COLOR_REFERENCES = Object.freeze([
  * warm shades than raw RGB or hue distances.
  *
  * @param {string} hex Six-digit sRGB color, including the leading hash.
- * @return {!Array<number>} Resulting list of values.
+ * @return {!Array<number>} OKLab coordinates used to compare whisky-color distances.
  */
 function oklab(hex) {
   const rgb = [1, 3, 5].map(i => {

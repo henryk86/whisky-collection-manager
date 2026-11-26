@@ -13,7 +13,7 @@ const internationalSeed = JSON.parse(fs.readFileSync(new URL('../../seed/distill
  * Moves legacy physical bottles into their parent bottlings.
  *
  * @param {*} db Legacy collection modified in place to nest physical bottles under their bottlings.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if any legacy bottle nesting or redundant ownership fields changed.
  */
 export function migrateNestedBottles(db) {
   let changed = false;
@@ -62,7 +62,7 @@ export function migrateNestedBottles(db) {
  * Normalizes inventory numbering from earlier collection schemas.
  *
  * @param {*} db Legacy collection whose inventory numbers and old label codes are reconciled in place.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Whether inventory numbering changed, together with detected conflicts.
  */
 export function migrateInventoryNumbers(db) {
   let changed = false;
@@ -117,13 +117,13 @@ export function migrateInventoryNumbers(db) {
  * Upgrades legacy bottle-category labels to current values.
  *
  * @param {*} db Collection whose physical bottles may still contain the obsolete labelType field.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if obsolete bottle label-type fields were removed.
  */
 export function migrateLabelTypes(db) {
   let changed = false;
   for (const bottle of allBottles(db)) {
     if (Object.hasOwn(bottle, 'labelType')) {
-      delete bottle.labelType;
+      delete /** @type {import('../../shared/types.js').Bottle & {labelType?: string}} */ (bottle).labelType;
       changed = true;
     }
   }
@@ -134,7 +134,7 @@ export function migrateLabelTypes(db) {
  * Updates legacy distillery references to the current record structure.
  *
  * @param {*} db Collection whose bottlings may still refer to a single legacy distilleryId.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if any distillery references were migrated.
  */
 export function migrateDistilleries(db) {
   let changed = false;
@@ -155,7 +155,7 @@ export function migrateDistilleries(db) {
  * Normalizes stored photo metadata when upgrading older collections.
  *
  * @param {*} db Collection whose image metadata must be moved to physical bottle photo lists.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if any legacy photo metadata was migrated.
  */
 export function migratePhotos(db) {
   let changed = false;
@@ -193,7 +193,7 @@ export function migratePhotos(db) {
  * bottle additionally receives its own actual size when known.
  *
  * @param {*} db Collection whose legacy bottling-level bottle type is propagated to physical bottles.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if bottle volume fields or the associated schema version changed.
  */
 export function migrateBottleTypes(db) {
   let changed = false;
@@ -225,7 +225,7 @@ export function migrateBottleTypes(db) {
  * Existing collections can gain the optional document list without data loss.
  *
  * @param {*} db Collection whose physical bottle records may lack a files array.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if missing bottle document lists were added.
  */
 export function migrateDocumentLists(db) {
   let changed = false;
@@ -242,7 +242,7 @@ export function migrateDocumentLists(db) {
  * Add newly published international sites without overwriting user changes.
  *
  * @param {*} db Collection whose distillery catalog is augmented from the international seed.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if any new international distilleries were added.
  */
 export function migrateInternationalDistilleries(db) {
   if (!Array.isArray(db.distilleries)) return false;
@@ -265,7 +265,7 @@ export function migrateInternationalDistilleries(db) {
  * Country/region belong to distilleries, not to individual bottlings.
  *
  * @param {*} db Collection whose existing distilleries are matched against known origin metadata.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if any missing or legacy origin metadata was updated.
  */
 export function migrateDistilleryOrigins(db) {
   if (!Array.isArray(db.distilleries)) return false;
@@ -297,7 +297,7 @@ export function migrateDistilleryOrigins(db) {
  * validation.
  *
  * @param {!Object} collection Collection data being processed.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Migration change flag and inventory-number conflicts.
  */
 export function migrateCollection(collection) {
   assert(
@@ -337,7 +337,7 @@ export function migrateCollection(collection) {
  * before any file is replaced.
  *
  * @param {*} source Untrusted collection document, validated for a supported schema before migration.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Independent upgraded collection, change flag and detected inventory conflicts.
  */
 export function migrateCollectionToCurrent(source) {
   assert(

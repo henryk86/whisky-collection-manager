@@ -13,7 +13,7 @@ import {classifyCommit} from './release-automation.js';
  * Validates message for validate commit message.
  *
  * @param {string} contents Complete commit message, including optional body and trailers.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Validated conventional commit classification.
  */
 export function validateMessage(contents) {
   const [subject = '', ...body] = contents.replace(/\r\n/g, '\n').split('\n');

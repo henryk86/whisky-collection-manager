@@ -11,17 +11,17 @@ import {loadTemplates} from './templates.js';
 const renderTemplate = await loadTemplates('components/shell.html');
 
 /**
- * Creates shell for shell.
+ * Creates the route-aware application shell and preserves the mounted modal during data refreshes.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {Function} Entries transformed for the consuming code.
+ * @return {function(import("./render-plan.js").RenderContent): void} Function that mounts or reconciles the active view.
  */
 export function createShell({root, state, applyTheme, renderModal, mountContent = replaceContent}) {
   let displayedRoute = null;
   /**
-   * Transforms the entries used by shell.
+   * Mounts a new route or reconciles the existing main content.
    *
-   * @param {*} content Content to render, store or examine.
+   * @param {import("./render-plan.js").RenderContent} content Prepared view content.
    */
   function shell(content) {
     // Data updates must not tear down the header, page scroll container and

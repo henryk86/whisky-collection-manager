@@ -45,14 +45,14 @@ export function glencairnRating(rating) {
 /**
  * Preview fractional glass fills without replacing the focused numeric input.
  *
- * @param {!Element} node DOM or syntax node to process.
+ * @param {!HTMLElement} node DOM or syntax node to process.
  * @param {*} value Input value to process.
  */
 export function syncGlencairnRating(node, value) {
   if (!node) return;
   const safe = value == null ? null : Math.max(0, Math.min(100, Number(value)));
   node.dataset.ratingValue = safe == null ? '' : String(safe);
-  node.querySelectorAll('[data-rating-points]').forEach((button, i) => {
+  node.querySelectorAll('[data-rating-points]').forEach((/** @type {HTMLElement} */ button, i) => {
     const fill = safe == null ? 0 : Math.max(0, Math.min(100, (safe - i * 20) * 5));
     const rect = button.querySelector('[data-rating-fill]');
     if (rect) {

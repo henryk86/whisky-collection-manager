@@ -71,7 +71,7 @@ export function helpView(activeTopic = 'basics') {
  *
  * @param {string} topicId Identifier of the help topic to activate.
  * @param {*} container Help workspace containing the topic navigation and content panels.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the requested help topic was found and activated.
  */
 export function activateHelpTopic(topicId, container) {
   if (!HELP_TOPICS.some(topic => topic.id === topicId) || !container) return false;

@@ -89,7 +89,7 @@ function fileLocation(relativePath) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {!Object} options2 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Stored document ID, name, path, byte count, MIME type, SHA-256 and upload timestamp.
  */
 export function saveDocument(bottleId, {filename, data}) {
   assert(

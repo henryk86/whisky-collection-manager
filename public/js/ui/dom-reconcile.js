@@ -5,7 +5,7 @@
  * direct event binding.
  *
  * @param {!Element} node DOM or syntax node to process.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Stable reconciliation key for a keyed element, or no key for an unkeyed node.
  */
 // Only photo *tiles* are keyed by photo ID. Their edit, delete and move
 // controls share the same data-photo-id but must never be reconciled as
@@ -20,7 +20,7 @@ const keyFor = node => node.nodeType === 1
  *
  * @param {*} a First entry or operand in the calculation.
  * @param {*} b Second entry or operand in the calculation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True when the existing node can be reused for the incoming node.
  */
 function compatible(a, b) {
   return a?.nodeType === b?.nodeType && (a.nodeType !== 1 || (a.tagName === b.tagName && keyFor(a) === keyFor(b)));
@@ -55,7 +55,7 @@ function reconcileNode(current, next) {
   for (const attr of [...next.attributes]) if (current.getAttribute(attr.name) !== attr.value) current.setAttribute(attr.name, attr.value);
   if (changingImage && container && priorHeight) {
     /**
-     * Updates the done state for its caller.
+     * Restores the container's original minimum height after reconciliation.
      */
     const done = () => {container.style.minHeight = priorMinHeight;};
     if (current.complete && current.naturalWidth) requestAnimationFrame(done);

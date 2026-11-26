@@ -3,21 +3,15 @@ import {queryAll} from '../../ui/dom.js';
  * Reads and normalizes current form-control values for saving.
  *
  * @param {HTMLFormElement} form Editor form whose controls are converted to an API payload.
- * @return {!Object} Structured result for the caller.
+ * @return {Record<string, string|number|boolean|string[]|null>} Normalized editor values; files are excluded.
  */
 export function formValues(form) {
-  const data = Object.fromEntries(new FormData(form).entries());
-  for (const [k, v] of Object.entries(data)) {
-    if (v instanceof File) {
-      delete data[k];
-      continue;
-    }
-    if (v === '') {
-      data[k] = null;
-    }
-  }
+  const entries = Object.entries(Object.fromEntries(new FormData(form).entries()));
+  /** @type {Record<string, string|number|boolean|string[]|null>} */
+  const data = Object.fromEntries(entries.flatMap(([key, value]) =>
+    value instanceof File ? [] : [[key, value === '' ? null : value]]));
   if (form.id === 'bottling-form') {
-    data.distilleryIds = queryAll('input[name=distilleryIds]:checked', form).map(x => x.value);
+    data.distilleryIds = queryAll('input[name=distilleryIds]:checked', form).map((/** @type {HTMLInputElement} */ x) => x.value);
     data.compositionComplete = data.compositionComplete === 'true';
   }
   for (const key of [

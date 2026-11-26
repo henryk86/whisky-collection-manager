@@ -16,7 +16,7 @@ const renderTemplate = await loadTemplates('import/controller.html');
  * its own records.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} External-import, preview and image-attachment operations.
  */
 export function createExternalImport({
   state, navigate, showModal, closeModal, action, createBottling, editBottling,
@@ -47,7 +47,7 @@ export function createExternalImport({
   let importDetails = null;
   let pendingExtensionImport = null;
   /**
-   * Updates the import message state for its caller.
+   * Updates or inserts the import status in the mounted preview panel.
    *
    * @param {*} message Message to display or use for diagnostics.
    */
@@ -61,11 +61,11 @@ export function createExternalImport({
   }
 
   /**
- * The editor has no import UI until an external payload is received.
- *
- * @param {*} form Editor form whose import preview area is found or created.
- * @return {*} Computed value, or null when the input has no match.
- */
+   * The editor has no import UI until an external payload is received.
+   *
+   * @param {*} form Editor form whose import preview area is found or created.
+   * @return {*} Existing or newly inserted import panel, or null if the form has no field container.
+   */
   function ensurePreviewPanel(form) {
     const previous = query('#import-panel', form);
     if (previous) return previous;
@@ -88,14 +88,14 @@ export function createExternalImport({
    */
   function previewImport(data) {
     importDetails = validatePayload(data);
-    const form = query('#bottling-form');
+    const form = /** @type {HTMLFormElement} */ (query('#bottling-form'));
     if (!form) return;
     const panel = ensurePreviewPanel(form);
     if (!panel) {
       return;
     }
     const distilleries = matchImportedDistilleries(importDetails.distilleryName, state.collection.distilleries);
-    const selectedDistilleries = new Set(queryAll('input[name=distilleryIds]:checked', form).map(input => input.value));
+    const selectedDistilleries = new Set(queryAll('input[name=distilleryIds]:checked', form).map((/** @type {HTMLInputElement} */ input) => input.value));
     const values = Object.entries(importDetails.fields).filter(([k, v]) => v !== null && v !== undefined && v !== '');
     const distilleryChoice = composeMarkup(distilleries.map(distillery =>
       importChoice({
@@ -130,7 +130,7 @@ export function createExternalImport({
   }
 
   /**
-   * Builds the localized import from extension text for the current language.
+   * Consumes an import fragment from the URL and defers it if an unsaved editor is open.
    */
   function importFromExtension() {
     const prefix = '#wcm-import=';
@@ -167,7 +167,7 @@ export function createExternalImport({
   }
 
   /**
-   * Handles extension import for controller.
+   * Validates the extension payload and opens the appropriate existing or new bottling workflow.
    *
    * @param {string} raw URL-encoded JSON payload from the browser extension.
    */
@@ -208,21 +208,21 @@ export function createExternalImport({
   }
 
   /**
-   * Updates import in the current state.
+   * Applies the selected imported fields and distilleries to the mounted bottling form.
    */
   function applyImport() {
-    const form = query('#bottling-form');
+    const form = /** @type {HTMLFormElement} */ (query('#bottling-form'));
     if (!form || !importDetails) {
       return;
     }
-    for (const checkbox of queryAll('[data-import-field]:checked', query('#import-panel'))) {
+    for (const checkbox of /** @type {Iterable<HTMLElement>} */ (queryAll('[data-import-field]:checked', query('#import-panel')))) {
       const k = checkbox.dataset.importField;
       if (form.elements[k] && importDetails.fields[k] != null) {
         form.elements[k].value = importDetails.fields[k];
       }
     }
-    const selectedIds = new Set(queryAll('[name=import-distillery]:checked', query('#import-panel')).map(input => input.value));
-    for (const choice of queryAll('input[name=distilleryIds]', form)) {
+    const selectedIds = new Set(queryAll('[name=import-distillery]:checked', query('#import-panel')).map((/** @type {HTMLInputElement} */ input) => input.value));
+    for (const choice of /** @type {Iterable<HTMLInputElement>} */ (queryAll('input[name=distilleryIds]', form))) {
       if (selectedIds.has(choice.value)) choice.checked = true;
     }
     importMessage(t('imports.import.selectedApplied'));
@@ -230,7 +230,7 @@ export function createExternalImport({
   }
 
   /**
-   * Updates the edit existing state for its caller.
+   * Opens the existing bottling editor while retaining its incoming import preview.
    */
   function editExisting() {
     const incoming = importDetails;
@@ -239,17 +239,17 @@ export function createExternalImport({
   }
 
   /**
-   * Retrieves pending image token from the available state.
-   * @return {*} Computed value, or null when the input has no match.
+   * Returns the staged image token only when the import-image option remains enabled.
+   * @return {*} Selected staged-image token, or null if no attachment is requested.
    */
   function getPendingImageToken() {
     if (!importDetails?.imageToken) return null;
-    const choice = query('#import-image');
+    const choice = /** @type {HTMLInputElement} */ (query('#import-image'));
     return choice && !choice.checked ? null : importDetails.imageToken;
   }
 
   /**
-   * Updates the mark image attached state for its caller.
+   * Clears the staged image token after it has been attached.
    */
   function markImageAttached() {
     if (importDetails) importDetails.imageToken = null;
@@ -258,10 +258,10 @@ export function createExternalImport({
   /**
    * Registers to existing bottle for controller.
    *
-   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   * @return {!Promise<void>} Completion of attaching the staged imported image to an existing bottle.
    */
   async function attachToExistingBottle() {
-    const id = query('#import-existing-photo-bottle')?.value;
+    const id = /** @type {HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement} */ (query('#import-existing-photo-bottle'))?.value;
     const token = getPendingImageToken();
     if (!id || !token) return toast(t("imports.validation.selectBottle"), true);
     const found = state.collection.bottlings.some(b => (b.bottles || []).some(p => p.id === id));

@@ -4,7 +4,7 @@ import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
  * Copies a flavour profile without sharing mutable nested values.
  *
  * @param {*} value Input value to process.
- * @return {?Object} Entries transformed for the consuming code.
+ * @return {?Object} Independent copy of the flavor axes, or null for an unset profile.
  */
 export const cloneFlavor = value => value == null ? null : Object.fromEntries(FLAVOR_AXES.map(key => [key, value[key]]));
 
@@ -13,7 +13,7 @@ export const cloneFlavor = value => value == null ? null : Object.fromEntries(FL
  *
  * @param {*} left First flavor profile, or null when absent.
  * @param {*} right Second flavor profile, or null when absent.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True when both profiles contain equal values on every flavor axis or are both null.
  */
 export const sameFlavor = (left, right) => left === null || right === null ? left === right : FLAVOR_AXES.every(axis => left[axis] === right[axis]);
 
@@ -21,25 +21,25 @@ export const sameFlavor = (left, right) => left === null || right === null ? lef
  * A single-page undo/redo stack; redo is discarded when a new edit is made.
  *
  * @param {*} initial Starting flavor profile or null; cloned into the undo history.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} History operations and accessors for the selected flavor-profile snapshot.
  */
 export function createFlavorHistory(initial) {
   const entries = [cloneFlavor(initial)];
   let cursor = 0;
   return {
     /**
-     * Reads the value property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Returns a defensive copy of the current flavor-profile history entry.
+     * @return {*} Independent copy of the selected flavor profile.
      */
     get value() {return cloneFlavor(entries[cursor]);},
     /**
      * Checks whether undo applies.
-     * @return {boolean} Whether the operation matched or succeeded.
+     * @return {boolean} True when an earlier history entry exists.
      */
     get canUndo() {return cursor > 0;},
     /**
      * Checks whether redo applies.
-     * @return {boolean} Whether the operation matched or succeeded.
+     * @return {boolean} True when a later history entry exists.
      */
     get canRedo() {return cursor < entries.length - 1;},
     /**
@@ -56,13 +56,13 @@ export function createFlavorHistory(initial) {
       return true;
     },
     /**
-     * Performs the undo lifecycle action.
-     * @return {boolean} Whether the operation matched or succeeded.
+     * Moves the flavor-history cursor back by one entry.
+     * @return {boolean} True if an earlier history entry was selected.
      */
     undo() {if (cursor === 0) return false; cursor--; return true;},
     /**
-     * Performs the redo lifecycle action.
-     * @return {boolean} Whether the operation matched or succeeded.
+     * Moves the flavor-history cursor forward by one entry.
+     * @return {boolean} True if a later history entry was selected.
      */
     redo() {
       if (cursor >= entries.length - 1) return false; cursor++; return true;

@@ -37,7 +37,7 @@ const normalize = (body, old) => {
 /**
  * Lists saved tasting flights for the requesting user.
  *
- * @return {import('../../shared/types.js').TastingFlight[]} Resulting list of values.
+ * @return {import('../../shared/types.js').TastingFlight[]} All saved tasting flights.
  */
 export function list() {return read().tastingFlights || [];}
 
@@ -45,7 +45,7 @@ export function list() {return read().tastingFlights || [];}
  * Retrieves the tasting flights state.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {*} Value returned by the delegated operation.
+ * @return {*} Flight with the requested identifier.
  */
 export function get(id) {return find(read(), id);}
 
@@ -53,7 +53,7 @@ export function get(id) {return find(read(), id);}
  * Creates the tasting flights state.
  *
  * @param {*} body Request or response body.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Newly created tasting flight.
  */
 export function create(body) {
   return change(collection => {
@@ -87,7 +87,7 @@ export function create(body) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} body Request or response body.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Updated tasting flight.
  */
 export function update(id, body) {
   return change(collection => {
@@ -120,7 +120,7 @@ export function update(id, body) {
  * Clears the tasting flights state.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after removing the flight without deleting its tastings.
  */
 export function remove(id) {
   return change(collection => {
@@ -154,7 +154,7 @@ function assertAvailable(collection, flight, ids) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} body Request or response body.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Updated flight containing its ordered tasting references.
  */
 export function setTastings(id, body) {
   if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length !== 1 ||
@@ -183,7 +183,7 @@ export function setTastings(id, body) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} body Request or response body.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Created tasting record and its owning bottling ID, or null for an external tasting.
  */
 export function createTasting(id, body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw fail('Ungültige Verkostungsdaten', 400, "api.errors.invalidTastingData");
@@ -194,7 +194,7 @@ export function createTasting(id, body) {
     const {bottlingId, bottling, ...data} = body;
     if ((bottlingId == null) === (bottling == null)) throw fail('Abfüllung muss eindeutig gewählt werden', 400, "api.errors.bottlingSelectionRequired");
     if (flight.phase === 'inProgress' && (bottling || !flight.planItems.some(item => item.bottlingId === bottlingId) ||
-      allTastingReferences(collection).some(item => flight.tastingIds.includes(item.record.id) && item.bottling?.id === bottlingId)))
+      allTastingReferences(collection).some(item => flight.tastingIds.includes(item.record.id) && item.bottling && 'id' in item.bottling && item.bottling.id === bottlingId)))
       throw fail('Abfüllung ist nicht Teil des Plans oder wurde bereits verkostet', 400, 'api.errors.invalidFlight');
     let normalized, owned;
     try {
@@ -216,7 +216,7 @@ export function createTasting(id, body) {
       (owned.tastings ||= []).push(record);
 
       owned.updatedAt = timestamp;
-    } else (collection.externalTastings ||= []).push(record);
+    } else (collection.externalTastings ||= []).push(/** @type {import('../../shared/types.js').StandaloneTasting} */(record));
     flight.tastingIds.push(record.id);
     flight.updatedAt = timestamp;
     return {record, bottlingId: owned?.id || null};

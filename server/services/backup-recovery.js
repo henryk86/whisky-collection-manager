@@ -20,7 +20,7 @@ const LIMIT = 2 * 1024 * 1024 * 1024; // streamed to disk, not buffered in memor
 const CONTROL = process.env.BACKUP_CONTROL_DIR ? path.resolve(process.env.BACKUP_CONTROL_DIR) : null;
 const FOLDERS = ['data', 'images', 'documents'];
 /**
- * Validates the supplied password state and rejects invalid inputs.
+ * Decodes the ZIP-password header and rejects malformed URI encoding.
  *
  * @param {*} req Incoming request to authorize.
  * @return {string} URI-decoded ZIP password header, or empty text when absent.
@@ -48,7 +48,7 @@ function pathFor(id) {
  *
  * @param {string} dir Directory containing the extracted collection and associated files.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Validated backup-preview metadata including collection and warehouse information.
  */
 function validatePreview(dir, {writeMigrated = false} = {}) {
   const filename = path.join(dir, 'data', 'collection.json');
@@ -89,7 +89,7 @@ function removeOldImports() {
  * Validates and stages an incoming backup ZIP for restoration.
  *
  * @param {!Object} req Incoming HTTP request.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Staged archive identifier and validated restore-preview information.
  */
 export async function receiveZip(req) {
   authorizeAdmin(req);
@@ -137,7 +137,7 @@ export async function receiveZip(req) {
  * @param {!Object} req Incoming HTTP request.
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Confirmation of successful application of the validated restore archive.
  */
 export async function applyZip(req, id, input) {
   authorizeAdmin(req);
@@ -220,7 +220,7 @@ export async function applyZip(req, id, input) {
  *
  * @param {!Object} req Incoming HTTP request.
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Prepared archive metadata and current validated restore preview.
  */
 export function previewZip(req, id) {
   authorizeAdmin(req);
@@ -239,7 +239,7 @@ export function previewZip(req, id) {
  * @param {!Object} req Incoming HTTP request.
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Unlocked archive metadata and validated restore preview.
  */
 export function unlockPreparedZip(req, id, input) {
   authorizeAdmin(req);
@@ -262,7 +262,7 @@ export function unlockPreparedZip(req, id, input) {
  *
  * @param {!Object} req Incoming HTTP request.
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} File-download descriptor for the prepared portable ZIP archive.
  */
 export function downloadPreparedZip(req, id) {
   authorizeAdmin(req);

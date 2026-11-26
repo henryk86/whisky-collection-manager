@@ -125,7 +125,7 @@ const routes = [
     /**
      * Sets a temporary password for another account and invalidates its sessions.
      *
-     * @param {[string]} items Captured user identifier or route value.
+     * @param {string[]} items Captured user identifier or route value.
      * @param {*} body Untrusted JSON: Replacement password.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof auth.resetPassword>} Updated public account.
@@ -138,7 +138,7 @@ const routes = [
     /**
      * Removes a non-admin account and invalidates its sessions.
      *
-     * @param {[string]} items Captured user identifier or route value.
+     * @param {string[]} items Captured user identifier or route value.
      * @param {*} _body Unused parsed request body.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof auth.removeUser>} Deletion confirmation.
@@ -222,7 +222,7 @@ const routes = [
     /**
      * Updates the selected room while retaining layout constraints.
      *
-     * @param {[string]} items Captured room identifier or route value.
+     * @param {string[]} items Captured room identifier or route value.
      * @param {*} body Untrusted JSON: Room changes.
      * @return {ReturnType<typeof warehouse.updateRoom>} Updated room.
      */
@@ -234,7 +234,7 @@ const routes = [
     /**
      * Deletes the selected room; the query option controls whether assigned bottles may be unassigned.
      *
-     * @param {[string]} items Captured room identifier or route value.
+     * @param {string[]} items Captured room identifier or route value.
      * @param {*} _body Unused parsed request body.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof warehouse.deleteRoom>} Room deletion result.
@@ -253,7 +253,7 @@ const routes = [
     /**
      * Creates a furniture item inside the identified room.
      *
-     * @param {[string]} items Captured room identifier or route value.
+     * @param {string[]} items Captured room identifier or route value.
      * @param {*} body Untrusted JSON: Furniture layout fields.
      * @return {ReturnType<typeof warehouse.createFurniture>} Created furniture item.
      */
@@ -289,7 +289,7 @@ const routes = [
     /**
      * Updates the selected furniture layout and configuration.
      *
-     * @param {[string]} items Captured furniture identifier or route value.
+     * @param {string[]} items Captured furniture identifier or route value.
      * @param {*} body Untrusted JSON: Furniture changes.
      * @return {ReturnType<typeof warehouse.updateFurniture>} Updated furniture item.
      */
@@ -301,7 +301,7 @@ const routes = [
     /**
      * Deletes the selected furniture subject to assignment constraints.
      *
-     * @param {[string]} items Captured furniture identifier or route value.
+     * @param {string[]} items Captured furniture identifier or route value.
      * @return {ReturnType<typeof warehouse.deleteFurniture>} Furniture deletion result.
      */
     run: ([id]) => warehouse.deleteFurniture(id),
@@ -313,7 +313,7 @@ const routes = [
     /**
      * Stores a photo for the selected furniture item.
      *
-     * @param {[string]} items Captured furniture identifier or route value.
+     * @param {string[]} items Captured furniture identifier or route value.
      * @param {*} body Untrusted JSON: Encoded image data.
      * @return {ReturnType<typeof warehouse.addFurniturePhoto>} Added furniture photo.
      */
@@ -325,7 +325,7 @@ const routes = [
     /**
      * Persists the requested order of existing furniture photos.
      *
-     * @param {[string]} items Captured furniture identifier or route value.
+     * @param {string[]} items Captured furniture identifier or route value.
      * @param {*} body Untrusted JSON: Ordered photo IDs.
      * @return {ReturnType<typeof warehouse.reorderFurniturePhotos>} Updated photo order.
      */
@@ -337,7 +337,7 @@ const routes = [
     /**
      * Removes a specified photo from its owning furniture item.
      *
-     * @param {[string, string]} items Captured furniture and photo identifiers or route values, in that order.
+     * @param {string[]} items Captured furniture and photo identifiers or route values, in that order.
      * @return {ReturnType<typeof warehouse.deleteFurniturePhoto>} Furniture photo deletion result.
      */
     run: ([id, photoId]) => warehouse.deleteFurniturePhoto(id, photoId),
@@ -349,7 +349,7 @@ const routes = [
     /**
      * Copies the selected furniture into the requested storage location.
      *
-     * @param {[string]} items Captured furniture identifier or route value.
+     * @param {string[]} items Captured furniture identifier or route value.
      * @param {*} body Untrusted JSON: Copy destination and options.
      * @return {ReturnType<typeof warehouse.copyFurniture>} Copied furniture item.
      */
@@ -362,7 +362,7 @@ const routes = [
     /**
      * Creates a compartment in the selected furniture item.
      *
-     * @param {[string]} items Captured furniture identifier or route value.
+     * @param {string[]} items Captured furniture identifier or route value.
      * @param {*} body Untrusted JSON: Shelf configuration.
      * @return {ReturnType<typeof warehouse.createShelf>} Created shelf.
      */
@@ -374,7 +374,7 @@ const routes = [
     /**
      * Moves a shelf according to the requested target and ordering.
      *
-     * @param {[string]} items Captured shelf identifier or route value.
+     * @param {string[]} items Captured shelf identifier or route value.
      * @param {*} body Untrusted JSON: Target compartment position.
      * @return {ReturnType<typeof warehouse.moveShelf>} Shelf movement result.
      */
@@ -386,7 +386,7 @@ const routes = [
     /**
      * Updates a shelf’s name, capacity or front and height settings.
      *
-     * @param {[string]} items Captured shelf identifier or route value.
+     * @param {string[]} items Captured shelf identifier or route value.
      * @param {*} body Untrusted JSON: Shelf changes.
      * @return {ReturnType<typeof warehouse.updateShelf>} Updated shelf.
      */
@@ -398,7 +398,7 @@ const routes = [
     /**
      * Removes the selected shelf subject to storage constraints.
      *
-     * @param {[string]} items Captured shelf identifier or route value.
+     * @param {string[]} items Captured shelf identifier or route value.
      * @return {ReturnType<typeof warehouse.deleteShelf>} Shelf deletion result.
      */
     run: ([id]) => warehouse.deleteShelf(id),
@@ -410,7 +410,7 @@ const routes = [
     /**
      * Copies the selected shelf to the requested furniture or position.
      *
-     * @param {[string]} items Captured shelf identifier or route value.
+     * @param {string[]} items Captured shelf identifier or route value.
      * @param {*} body Untrusted JSON: Copy destination and options.
      * @return {ReturnType<typeof warehouse.copyShelf>} Copied shelf.
      */
@@ -434,7 +434,7 @@ const routes = [
     /**
      * Assigns or unassigns the selected physical bottle.
      *
-     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {string[]} items Captured bottle identifier or route value.
      * @param {*} body Untrusted JSON: Requested storage location.
      * @return {ReturnType<typeof warehouse.assignBottle>} Updated bottle assignment.
      */
@@ -523,7 +523,7 @@ const routes = [
     /**
      * Unlocks a staged archive using the supplied password.
      *
-     * @param {[string]} items Captured prepared archive identifier or route value.
+     * @param {string[]} items Captured prepared archive identifier or route value.
      * @param {*} body Untrusted JSON: Archive password.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof recovery.unlockPreparedZip>} Prepared archive status after validation.
@@ -536,7 +536,7 @@ const routes = [
     /**
      * Loads the preview of a prepared recovery archive.
      *
-     * @param {[string]} items Captured prepared archive identifier or route value.
+     * @param {string[]} items Captured prepared archive identifier or route value.
      * @param {*} _body Unused parsed request body.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof recovery.previewZip>} Recovery preview.
@@ -550,7 +550,7 @@ const routes = [
     /**
      * Returns a prepared ZIP archive as a download.
      *
-     * @param {[string]} items Captured prepared archive identifier or route value.
+     * @param {string[]} items Captured prepared archive identifier or route value.
      * @param {*} _body Unused parsed request body.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof recovery.downloadPreparedZip>} Archive download descriptor.
@@ -563,7 +563,7 @@ const routes = [
     /**
      * Applies the selected prepared archive using the requested recovery options.
      *
-     * @param {[string]} items Captured prepared archive identifier or route value.
+     * @param {string[]} items Captured prepared archive identifier or route value.
      * @param {*} body Untrusted JSON: Restore options and confirmation.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof recovery.applyZip>} Recovery result.
@@ -590,7 +590,7 @@ const routes = [
     /**
      * Updates the selected backup profile.
      *
-     * @param {[string]} items Captured backup profile identifier or route value.
+     * @param {string[]} items Captured backup profile identifier or route value.
      * @param {*} body Untrusted JSON: Backup profile fields.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof backups.updateProfile>} Updated profile.
@@ -603,7 +603,7 @@ const routes = [
     /**
      * Deletes the selected backup profile through the authorized service.
      *
-     * @param {[string]} items Captured backup profile identifier or route value.
+     * @param {string[]} items Captured backup profile identifier or route value.
      * @param {*} _body Unused parsed request body.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof backups.deleteProfile>} Profile deletion result.
@@ -617,7 +617,7 @@ const routes = [
     /**
      * Queues the requested worker operation for the selected backup profile.
      *
-     * @param {[string, string]} items Captured backup profile and job type identifiers or route values, in that order.
+     * @param {string[]} items Captured backup profile and job type identifiers or route values, in that order.
      * @param {*} body Untrusted JSON: Operation-specific arguments.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof backups.queueJob>} Queued job status.
@@ -631,7 +631,7 @@ const routes = [
     /**
      * Resolves a local ZIP download belonging to the selected profile.
      *
-     * @param {[string, string]} items Captured backup profile and archive filename identifiers or route values, in that order.
+     * @param {string[]} items Captured backup profile and archive filename identifiers or route values, in that order.
      * @param {*} _body Unused parsed request body.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof backups.downloadLocalZip>} Local archive download descriptor.
@@ -645,7 +645,7 @@ const routes = [
     /**
      * Creates the consistent collection snapshot for an authenticated backup worker.
      *
-     * @param {[string]} items Captured snapshot job identifier or route value.
+     * @param {string[]} items Captured snapshot job identifier or route value.
      * @param {*} _body Unused parsed request body.
      * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
      * @return {ReturnType<typeof backups.createSourceSnapshot>} Snapshot descriptor.
@@ -673,7 +673,7 @@ const routes = [
     /**
      * Returns the temporary image represented by the staging token.
      *
-     * @param {[string]} items Captured staged image token identifier or route value.
+     * @param {string[]} items Captured staged image token identifier or route value.
      * @return {ReturnType<typeof stagedImages.previewImage>} Staged image response.
      */
     run: ([token]) => stagedImages.previewImage(token),
@@ -685,7 +685,7 @@ const routes = [
     /**
      * Attaches the staged image to the selected physical bottle.
      *
-     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {string[]} items Captured bottle identifier or route value.
      * @param {*} body Untrusted JSON: Staging token.
      * @return {ReturnType<typeof stagedImages.attachImageToBottle>} Created photo and attachment status.
      */
@@ -728,7 +728,7 @@ const routes = [
     /**
      * Updates metadata of the identified release.
      *
-     * @param {[string]} items Captured bottling identifier or route value.
+     * @param {string[]} items Captured bottling identifier or route value.
      * @param {*} body Untrusted JSON: Bottling changes.
      * @return {ReturnType<typeof bottlings.updateBottling>} Updated bottling.
      */
@@ -740,7 +740,7 @@ const routes = [
     /**
      * Deletes the identified release through the collection service.
      *
-     * @param {[string]} items Captured bottling identifier or route value.
+     * @param {string[]} items Captured bottling identifier or route value.
      * @return {ReturnType<typeof bottlings.deleteBottling>} Bottling deletion result.
      */
     run: ([id]) => bottlings.deleteBottling(id),
@@ -773,7 +773,7 @@ const routes = [
     /**
      * Looks up the identified tasting session.
      *
-     * @param {[string]} items Captured flight identifier or route value.
+     * @param {string[]} items Captured flight identifier or route value.
      * @return {ReturnType<typeof tastingFlights.get>} Requested flight.
      */
     run: ([id]) => tastingFlights.get(id),
@@ -784,7 +784,7 @@ const routes = [
     /**
      * Updates the identified session metadata, lifecycle or planned members.
      *
-     * @param {[string]} items Captured flight identifier or route value.
+     * @param {string[]} items Captured flight identifier or route value.
      * @param {*} body Untrusted JSON: Flight changes.
      * @return {ReturnType<typeof tastingFlights.update>} Updated flight.
      */
@@ -796,7 +796,7 @@ const routes = [
     /**
      * Removes the session grouping without duplicating or deleting individual tasting notes.
      *
-     * @param {[string]} items Captured flight identifier or route value.
+     * @param {string[]} items Captured flight identifier or route value.
      * @return {ReturnType<typeof tastingFlights.remove>} Flight deletion result.
      */
     run: ([id]) => tastingFlights.remove(id),
@@ -807,7 +807,7 @@ const routes = [
     /**
      * Replaces the ordered tasting references of the selected flight.
      *
-     * @param {[string]} items Captured flight identifier or route value.
+     * @param {string[]} items Captured flight identifier or route value.
      * @param {*} body Untrusted JSON: Ordered tasting IDs.
      * @return {ReturnType<typeof tastingFlights.setTastings>} Updated flight membership.
      */
@@ -820,7 +820,7 @@ const routes = [
     /**
      * Creates a new tasting and associates it with the selected flight.
      *
-     * @param {[string]} items Captured flight identifier or route value.
+     * @param {string[]} items Captured flight identifier or route value.
      * @param {*} body Untrusted JSON: Tasting data and subject selection.
      * @return {ReturnType<typeof tastingFlights.createTasting>} Created tasting and flight update.
      */
@@ -841,7 +841,7 @@ const routes = [
     /**
      * Loads the standalone tasting with its embedded whisky reference.
      *
-     * @param {[string]} items Captured standalone tasting identifier or route value.
+     * @param {string[]} items Captured standalone tasting identifier or route value.
      * @return {ReturnType<typeof standaloneTastings.get>} Requested standalone tasting.
      */
     run: ([id]) => standaloneTastings.get(id),
@@ -865,7 +865,7 @@ const routes = [
     /**
      * Updates an external tasting and its embedded whisky metadata.
      *
-     * @param {[string]} items Captured standalone tasting identifier or route value.
+     * @param {string[]} items Captured standalone tasting identifier or route value.
      * @param {*} body Untrusted JSON: Tasting or subject changes.
      * @return {ReturnType<typeof standaloneTastings.update>} Updated standalone tasting.
      */
@@ -877,7 +877,7 @@ const routes = [
     /**
      * Removes the selected standalone tasting.
      *
-     * @param {[string]} items Captured standalone tasting identifier or route value.
+     * @param {string[]} items Captured standalone tasting identifier or route value.
      * @return {ReturnType<typeof standaloneTastings.remove>} Standalone tasting deletion result.
      */
     run: ([id]) => standaloneTastings.remove(id),
@@ -888,7 +888,7 @@ const routes = [
     /**
      * Moves the standalone tasting to the selected owned bottling.
      *
-     * @param {[string]} items Captured standalone tasting identifier or route value.
+     * @param {string[]} items Captured standalone tasting identifier or route value.
      * @param {*} body Untrusted JSON: Target bottling identifier.
      * @return {ReturnType<typeof standaloneTastings.assignToBottling>} Assignment result.
      */
@@ -900,7 +900,7 @@ const routes = [
     /**
      * Lists recorded tastings of the selected owned release.
      *
-     * @param {[string]} items Captured bottling identifier or route value.
+     * @param {string[]} items Captured bottling identifier or route value.
      * @return {ReturnType<typeof tastings.listTastings>} Owned tastings for the bottling.
      */
     run: ([id]) => tastings.listTastings(id),
@@ -911,7 +911,7 @@ const routes = [
     /**
      * Loads an individual tasting from its owning bottling.
      *
-     * @param {[string, string]} items Captured bottling and tasting identifiers or route values, in that order.
+     * @param {string[]} items Captured bottling and tasting identifiers or route values, in that order.
      * @return {ReturnType<typeof tastings.getTasting>} Requested tasting.
      */
     run: ([id, tastingId]) => tastings.getTasting(id, tastingId),
@@ -923,7 +923,7 @@ const routes = [
     /**
      * Creates an independent dated tasting on the selected release.
      *
-     * @param {[string]} items Captured bottling identifier or route value.
+     * @param {string[]} items Captured bottling identifier or route value.
      * @param {*} body Untrusted JSON: Tasting fields.
      * @return {ReturnType<typeof tastings.createTasting>} Created tasting.
      */
@@ -935,7 +935,7 @@ const routes = [
     /**
      * Updates the specified tasting without changing its owning release.
      *
-     * @param {[string, string]} items Captured bottling and tasting identifiers or route values, in that order.
+     * @param {string[]} items Captured bottling and tasting identifiers or route values, in that order.
      * @param {*} body Untrusted JSON: Tasting changes.
      * @return {ReturnType<typeof tastings.updateTasting>} Updated tasting.
      */
@@ -947,7 +947,7 @@ const routes = [
     /**
      * Removes the specified owned tasting and its flight references.
      *
-     * @param {[string, string]} items Captured bottling and tasting identifiers or route values, in that order.
+     * @param {string[]} items Captured bottling and tasting identifiers or route values, in that order.
      * @return {ReturnType<typeof tastings.deleteTasting>} Tasting deletion result.
      */
     run: ([id, tastingId]) => tastings.deleteTasting(id, tastingId),
@@ -971,7 +971,7 @@ const routes = [
     /**
      * Updates the selected physical bottle’s inventory metadata.
      *
-     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {string[]} items Captured bottle identifier or route value.
      * @param {*} body Untrusted JSON: Bottle changes.
      * @return {ReturnType<typeof bottles.updateBottle>} Updated physical bottle.
      */
@@ -983,7 +983,7 @@ const routes = [
     /**
      * Removes the selected physical bottle and associated inventory resources.
      *
-     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {string[]} items Captured bottle identifier or route value.
      * @return {ReturnType<typeof bottles.deleteBottle>} Bottle deletion result.
      */
     run: ([id]) => bottles.deleteBottle(id),
@@ -995,7 +995,7 @@ const routes = [
     /**
      * Stores an original image for the selected physical bottle.
      *
-     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {string[]} items Captured bottle identifier or route value.
      * @param {*} body Untrusted JSON: Encoded image data.
      * @return {ReturnType<typeof bottles.addPhoto>} Created photo.
      */
@@ -1007,7 +1007,7 @@ const routes = [
     /**
      * Persists the requested order of the physical bottle’s photos.
      *
-     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {string[]} items Captured bottle identifier or route value.
      * @param {*} body Untrusted JSON: Ordered photo IDs.
      * @return {ReturnType<typeof bottles.reorderPhotos>} Updated photo order.
      */
@@ -1019,7 +1019,7 @@ const routes = [
     /**
      * Stores a transparent cutout derivative without replacing the original image.
      *
-     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @param {string[]} items Captured bottle and photo identifiers or route values, in that order.
      * @param {*} body Untrusted JSON: Cutout image data and options.
      * @return {ReturnType<typeof bottles.savePhotoCutout>} Updated photo derivative state.
      */
@@ -1031,7 +1031,7 @@ const routes = [
     /**
      * Changes whether the transparent cutout is the active image source.
      *
-     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @param {string[]} items Captured bottle and photo identifiers or route values, in that order.
      * @param {*} body Untrusted JSON: Cutout selection state.
      * @return {ReturnType<typeof bottles.selectPhotoCutout>} Updated photo selection.
      */
@@ -1043,7 +1043,7 @@ const routes = [
     /**
      * Removes the generated cutout while retaining the original image.
      *
-     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @param {string[]} items Captured bottle and photo identifiers or route values, in that order.
      * @return {ReturnType<typeof bottles.removePhotoCutout>} Updated photo state.
      */
     run: ([id, photoId]) => bottles.removePhotoCutout(id, photoId),
@@ -1054,7 +1054,7 @@ const routes = [
     /**
      * Stores edited image data and slider settings for the chosen source.
      *
-     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @param {string[]} items Captured bottle and photo identifiers or route values, in that order.
      * @param {*} body Untrusted JSON: Adjusted image data and settings.
      * @return {ReturnType<typeof bottles.savePhotoAdjustments>} Updated adjustment state.
      */
@@ -1067,7 +1067,7 @@ const routes = [
     /**
      * Removes saved photo adjustments while retaining the base image.
      *
-     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @param {string[]} items Captured bottle and photo identifiers or route values, in that order.
      * @return {ReturnType<typeof bottles.removePhotoAdjustments>} Updated photo state.
      */
     run: ([id, photoId]) => bottles.removePhotoAdjustments(id, photoId),
@@ -1078,7 +1078,7 @@ const routes = [
     /**
      * Deletes the selected photo and its generated derivatives.
      *
-     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @param {string[]} items Captured bottle and photo identifiers or route values, in that order.
      * @return {ReturnType<typeof bottles.removePhoto>} Photo deletion result.
      */
     run: ([id, photoId]) => bottles.removePhoto(id, photoId),
@@ -1090,7 +1090,7 @@ const routes = [
     /**
      * Stores a supporting document for a physical bottle.
      *
-     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {string[]} items Captured bottle identifier or route value.
      * @param {*} body Untrusted JSON: Document name and encoded bytes.
      * @return {ReturnType<typeof bottles.addFile>} Created document metadata.
      */
@@ -1103,7 +1103,7 @@ const routes = [
     /**
      * Resolves a stored PDF for inline preview.
      *
-     * @param {[string, string]} items Captured bottle and attachment identifiers or route values, in that order.
+     * @param {string[]} items Captured bottle and attachment identifiers or route values, in that order.
      * @return {ReturnType<typeof bottles.previewPdf>} PDF response descriptor.
      */
     run: ([id, fileId]) => bottles.previewPdf(id, fileId),
@@ -1115,7 +1115,7 @@ const routes = [
     /**
      * Resolves the selected supporting document for download.
      *
-     * @param {[string, string]} items Captured bottle and attachment identifiers or route values, in that order.
+     * @param {string[]} items Captured bottle and attachment identifiers or route values, in that order.
      * @return {ReturnType<typeof bottles.downloadFile>} Document download descriptor.
      */
     run: ([id, fileId]) => bottles.downloadFile(id, fileId),
@@ -1126,7 +1126,7 @@ const routes = [
     /**
      * Removes the selected supporting document from inventory.
      *
-     * @param {[string, string]} items Captured bottle and attachment identifiers or route values, in that order.
+     * @param {string[]} items Captured bottle and attachment identifiers or route values, in that order.
      * @return {ReturnType<typeof bottles.removeFile>} Attachment deletion result.
      */
     run: ([id, fileId]) => bottles.removeFile(id, fileId),
@@ -1150,7 +1150,7 @@ const routes = [
     /**
      * Updates the metadata of the selected distillery reference.
      *
-     * @param {[string]} items Captured distillery identifier or route value.
+     * @param {string[]} items Captured distillery identifier or route value.
      * @param {*} body Untrusted JSON: Distillery changes.
      * @return {ReturnType<typeof distilleries.updateDistillery>} Updated distillery.
      */
@@ -1204,12 +1204,12 @@ const routes = [
   },
 ];
 /**
- * Handles api for routes.
+ * Matches and dispatches API routes, including authorization, conditional caching and response handling.
  *
  * @param {!Object} request Incoming request.
  * @param {!Object} response Outgoing response.
- * @param {string} url URL of the requested resource.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @param {URL} url Parsed request URL.
+ * @return {!Promise<*>} Completion after dispatching or rejecting the API request.
  */
 export async function handleApi(request, response, url) {
   for (const route of routes) {

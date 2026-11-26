@@ -45,7 +45,7 @@ function clean(input, old) {
  * Returns tastings associated with the requested collection scope.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Array<*>} Resulting list of values.
+ * @return {!Array<*>} Saved tastings of the specified bottling in display order.
  */
 export function listTastings(id) {
   return sortedTastings(requireBottling(read(), id));
@@ -56,18 +56,18 @@ export function listTastings(id) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {string} tastingId Identifier of the tasting within the selected bottling.
- * @return {*} Value returned by the delegated operation.
+ * @return {*} Tasting record under the specified bottling.
  */
 export function getTasting(id, tastingId) {
   return requireTasting(requireBottling(read(), id), tastingId);
 }
 
 /**
- * Creates tasting for tastings.
+ * Creates and timestamps a tasting within the specified bottling.
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Created tasting record.
  */
 export function createTasting(id, input) {
   return change(collection => {
@@ -91,7 +91,7 @@ export function createTasting(id, input) {
  * @param {string} id Identifier used to select the relevant record.
  * @param {string} tastingId Identifier of the tasting to update within the selected bottling.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Updated tasting record.
  */
 export function updateTasting(id, tastingId, input) {
   return change(collection => {
@@ -110,7 +110,7 @@ export function updateTasting(id, tastingId, input) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {string} tastingId Identifier of the tasting to remove from the selected bottling.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after deleting the tasting.
  */
 export function deleteTasting(id, tastingId) {
   return change(collection => {

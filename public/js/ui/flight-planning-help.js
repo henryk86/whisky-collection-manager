@@ -50,7 +50,7 @@ const FORMULAS = Object.freeze({
  */
 export function flightPlanningHelpHtml(t) {
   /**
-   * Builds the localized tx text for the current language.
+   * Resolves a translation key in the flight-planning help catalog.
    *
    * @param {*} key Key used to select or group values.
    * @return {string} Literal translation of the requested flight-planning help entry.

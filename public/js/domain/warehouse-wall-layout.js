@@ -14,7 +14,7 @@ const natural = new Intl.Collator(undefined, {
  *
  * @param {*} value Value to process.
  * @param {number=} fallback Value used when the requested data is unavailable.
- * @return {number} Calculated numeric value.
+ * @return {number} Finite numeric conversion, or the supplied fallback.
  */
 const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 
@@ -27,11 +27,11 @@ const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(
 const angle = furniture => ((finite(furniture.rotation) % 360) + 360) % 360;
 
 /**
- * Calculates the overlap numeric value.
+ * Calculates the length shared by two one-dimensional intervals.
  *
  * @param {*} a First entry or operand in the calculation.
  * @param {*} b Second entry or operand in the calculation.
- * @return {number} Calculated numeric value.
+ * @return {number} Intersection length, or zero for disjoint intervals.
  */
 const overlap = (a, b) => Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0]));
 
@@ -75,11 +75,11 @@ function verticallySeparate(a, b) {
 }
 
 /**
- * Calculates the same footprint numeric value.
+ * Determines whether two oriented furniture footprints overlap sufficiently to share a wall bay.
  *
  * @param {*} a First entry or operand in the calculation.
  * @param {*} b Second entry or operand in the calculation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True when both footprints are positioned, aligned and overlap at least sixty percent on each axis.
  */
 function sameFootprint(a, b) {
   if (!a.hasPosition || !b.hasPosition || a.orientation !== b.orientation) return false;
@@ -95,7 +95,7 @@ function sameFootprint(a, b) {
  *
  * @param {*} a First entry or operand in the calculation.
  * @param {*} b Second entry or operand in the calculation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True when furniture footprints overlap sufficiently and their vertical ranges are separate.
  */
 function shouldStack(a, b) {
   return sameFootprint(a, b) && verticallySeparate(a, b);
@@ -106,7 +106,7 @@ function shouldStack(a, b) {
  * and physical bottom/top. No mutation of warehouse furniture or assignments.
  *
  * @param {*} room Room model containing dimensions and furniture.
- * @return {!Array<!Object>} Resulting list of values.
+ * @return {!Array<!Object>} Groups of furniture ordered by wall projection and vertical arrangement.
  */
 export function wallFurnitureGroups(room) {
   const entries = (room?.furniture || []).filter(furniture => furniture.shelves?.length).map(position);

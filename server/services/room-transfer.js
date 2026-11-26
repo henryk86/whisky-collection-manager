@@ -72,7 +72,7 @@ function assertIds(ids, allIds) {
  * Store portable properties only, not server-side collection metadata.
  *
  * @param {*} room Room model containing dimensions and furniture.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Portable room layout without instance-specific collection metadata.
  */
 function exportLayout(room) {
   return {
@@ -86,13 +86,12 @@ function exportLayout(room) {
 }
 
 /**
- * Creates room export for room transfer.
+ * Builds an export of selected warehouse rooms with optional bottle assignments.
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {!Array<*>} ids Identifiers in their current order.
- * @param {boolean=} includeAssignments Include assignments used by this
- * operation.
- * @return {!Object} Structured result for the caller.
+ * @param {boolean=} includeAssignments Whether the export includes physical-bottle assignments for the selected rooms.
+ * @return {!Object} Transfer document containing the selected room data.
  */
 export function createRoomExport(warehouse, ids, includeAssignments = false) {
   if (typeof includeAssignments !== 'boolean') throw fail('Invalid assignment option', 400, "api.errors.roomTransferInvalidAssignmentOption");
@@ -121,7 +120,7 @@ export function createRoomExport(warehouse, ids, includeAssignments = false) {
  * Validates bundle for room transfer.
  *
  * @param {*} bundle Untrusted room-transfer payload to validate before planning an import.
- * @return {*} Entries transformed for the consuming code.
+ * @return {*} Validated room-transfer document.
  */
 function validateBundle(bundle) {
   if (!bundle || typeof bundle !== 'object' || Array.isArray(bundle) || bundle.format !== FORMAT || bundle.formatVersion !== VERSION ||
@@ -151,7 +150,7 @@ function validateBundle(bundle) {
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {*} rawBundle Untrusted room-transfer JSON; validated before IDs and assignments are mapped.
  * @param {!Object=} options3 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Proposed room additions, replacements, assignment transfers and import summary.
  */
 export function planRoomImport(
   warehouse,

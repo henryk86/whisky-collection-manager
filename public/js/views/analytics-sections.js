@@ -194,7 +194,7 @@ export function finance(analytics, state) {
          * Formats a monetary chart value in the currency of this group.
          *
          * @param {*} v Value to evaluate.
-         * @return {*} Result computed from the supplied inputs.
+         * @return {*} Localized monetary label in the group's currency.
          */
         format: v =>
           money(v, currency), limit: 20, drill: true,
@@ -252,10 +252,10 @@ export function finance(analytics, state) {
 export function timeline(analytics, state) {
   const timelineData = analytics.timeline, rating = analytics.tasting, duration = analytics.consumption;
   /**
-   * Builds the localized days text for the current language.
+   * Formats a consumption interval as days, preserving missing values as a dash.
    *
    * @param {*} value Value to process.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Localized number of days, or a dash for missing data.
    */
   const days = value => value == null ? '–' : t('analytics.consumption.days', {count: number(value)});
   return composeMarkup(
@@ -381,7 +381,7 @@ function sectionCard(page, stat) {
  * Prepares analytics overview with key metrics and section navigation.
  *
  * @param {*} analytics Calculated analytics data for this view.
- * @param {!Array<!Object>} pages Available analytics pages.
+ * @param {!ReadonlyArray<!Object>} pages Available analytics pages.
  * @return {!import('../ui/render-plan.js').RenderPlan} Analytics overview with key metrics and section navigation.
  */
 export function overview(analytics, pages) {

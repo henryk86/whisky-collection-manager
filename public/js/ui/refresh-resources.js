@@ -9,7 +9,7 @@ import {synchronizeWarehouseProjection}
  * @param {!Object} state Current application state.
  * @param {*} getJson Asynchronous JSON request function used to fetch missing or invalidated resources.
  * @param {string=} scope Resource domain affected by the operation.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Completion after loading the requested resources into application state.
  */
 export async function loadResources(state, getJson, scope = 'all') {
   if (!['all', 'collection', 'warehouse'].includes(scope)) throw new Error(`Unknown refresh scope: ${scope}`);

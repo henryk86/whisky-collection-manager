@@ -17,7 +17,7 @@ const renderTemplate = await loadTemplates('warehouse/warehouse-assignment.html'
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {*} shelfId Identifier of the assigned shelf to resolve into a room and furniture path.
- * @return {?Object} Value returned by the delegated operation.
+ * @return {?Object} Room, furniture and shelf location, or null when the shelf cannot be resolved.
  */
 export function assignmentLocation(warehouse, shelfId) {
   return storagePath(warehouse, shelfId);
@@ -30,7 +30,7 @@ export function assignmentLocation(warehouse, shelfId) {
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {*} shelf Destination shelf whose configured capacity is checked.
  * @param {*} bottleIds Identifiers of physical bottles to assign to that shelf.
- * @return {?Object} Computed value, or null when the input has no match.
+ * @return {?Object} Required capacity increase and blocking status, or null if no increase is needed.
  */
 export function shelfCapacityIncrease(warehouse, shelf, bottleIds) {
   if (!shelf || shelf.capacity === null || shelf.capacity === undefined) return null;
@@ -53,7 +53,7 @@ export function shelfCapacityIncrease(warehouse, shelf, bottleIds) {
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {*} shelf Shelf whose assignment count and capacity are displayed.
  * @param {string} bottleId Identifier of the physical bottle.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Shelf occupancy and assignment availability for the proposed bottle placement.
  */
 export function assignmentShelfInfo(warehouse, shelf, bottleId) {
   const ids = Array.isArray(bottleId) ? bottleId : [bottleId];
@@ -74,7 +74,7 @@ export function assignmentShelfInfo(warehouse, shelf, bottleId) {
  * @param {*} shelfId Identifier of the destination shelf.
  * @param {*} bottleIds Bottle identifiers included in the proposed assignment.
  * @param {*} confirmAction Confirmation callback used when the requested assignment needs more capacity.
- * @return {!Promise<?Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<?Object>} Approved capacity information, or null if the user declines or the increase is blocked.
  */
 export async function approveShelfCapacityIncrease(warehouse, shelfId,
   bottleIds, confirmAction) {
@@ -156,12 +156,12 @@ function shelfOptions(warehouse, furniture, bottleId, selected) {
 }
 
 /**
- * Builds the localized occupancy message text for the current language.
+ * Formats shelf occupancy while accounting for the bottle currently being assigned.
  *
  * @param {*} warehouse Warehouse containing current shelf assignments.
  * @param {*} shelfId Identifier of the selected destination shelf.
  * @param {*} bottleId Identifier of the bottle being reassigned.
- * @return {*} Value returned by the delegated operation.
+ * @return {*} Localized shelf capacity or selection hint.
  */
 function occupancyMessage(warehouse, shelfId, bottleId) {
   const place = assignmentLocation(warehouse, shelfId);
@@ -238,24 +238,24 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
   if (!room || !furniture || !shelf || !feedback || !choices) return;
   /**
    * Resolves the selected room from the current room control.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Room referenced by the current selection, or undefined if none matches.
    */
   const selectedRoom = () => (warehouse.rooms || []).find(entry => entry.id === room.value);
 
   /**
    * Resolves the selected furniture from the current room and furniture controls.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Furniture in the selected room, or undefined if none matches.
    */
   const selectedFurniture = () => selectedRoom()?.furniture.find(entry => entry.id === furniture.value);
 
   /**
-   * Locates the DOM elements used by mode.
+   * Reads the assignment mode selected in the form.
    * @return {*} Matching DOM element, if present.
    */
   const mode = () => form.querySelector('[name="warehouseAssignmentMode"]:checked')?.value || 'shelf';
 
   /**
-   * Updates feedback in the current state.
+   * Shows the capacity, expansion or unassigned-state feedback for the current shelf choice.
    */
   const updateFeedback = () => {
     const id = mode() === 'none' ? null : shelf.value;
@@ -271,7 +271,7 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
   };
 
   /**
-   * Updates mode in the current state.
+   * Enables or disables location controls and their required flags according to the assignment mode.
    */
   const updateMode = () => {
     const off = mode() === 'none';
@@ -303,7 +303,7 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
  * @param {*} mode Requested display mode or configuration variant.
  * @param {*} shelfId Selected destination shelf identifier, or an empty value when unassigning.
  * @param {!Object} warehouse Warehouse model being processed.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Validated single-bottle assignment data for the chosen mode and destination.
  */
 export function assignmentPayload(mode, shelfId, warehouse) {
   if (mode === 'none') return {shelfId: null};
@@ -320,7 +320,7 @@ export function assignmentPayload(mode, shelfId, warehouse) {
  * @param {*} mode Requested display mode or configuration variant.
  * @param {*} shelfId Selected destination shelf identifier, or an empty value when unassigning.
  * @param {!Object} warehouse Warehouse model being processed.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Validated bulk-assignment data containing bottle IDs and the destination.
  */
 export function bulkAssignmentPayload(ids, mode, shelfId, warehouse) {
   const valid = new Set((warehouse?.bottles || []).map(item => item.id));

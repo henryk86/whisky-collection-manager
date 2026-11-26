@@ -34,19 +34,19 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
 
   /**
    * Checks whether external applies.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * @return {boolean} True when the current page edits an external tasting.
    */
   const isExternal = () => state.page === 'external-tasting';
 
   /**
    * Checks whether the editor is working with a standalone tasting.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Standalone tasting records in the loaded collection.
    */
   const standalone = () => allStandaloneTastings(state.collection || {});
 
   /**
    * Resolves the current editor's tasting subject.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Selected collection bottling, or undefined when not found.
    */
   const subject = () => state.collection?.bottlings?.find(b => b.id === state.selected);
 
@@ -54,7 +54,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
    * Selects the tasting editor page appropriate to the subject.
    *
    * @param {boolean=} external Whether the tasting is external rather than attached to an owned bottling.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Route name for the external or collection tasting editor.
    */
   const editPage = (external = isExternal()) => external ? 'external-tasting' : 'tasting';
 
@@ -64,15 +64,15 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
 
   /**
    * Finds the flavor editor section in the current tasting form.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Mounted flavor-editor element, if present.
    */
   function flavorNode() {
     return globalThis.document?.querySelector?.('[data-flavor-detail]') || null;
   }
 
   /**
-   * Retrieves tasting editor from the available state.
-   * @return {!Object} Structured result assembled from the input data.
+   * Reads flavor axes, tasting notes, score and other editable tasting fields from the mounted editor.
+   * @return {!Object} Current tasting editor values.
    */
   function readTastingEditor() {
     const node = flavorNode();
@@ -106,7 +106,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Locates the DOM elements used by redraw tasting.
+   * Restores the tasting controls and visualizations from the active history snapshot.
    */
   function redrawTasting() {
     const node = flavorNode();
@@ -129,7 +129,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   /**
    * Updates tasting for tastings.
    *
-   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   * @return {!Promise<void>} Completion of the queued tasting persistence operation.
    */
   function persistTasting() {
     const session = flavorSession;
@@ -158,8 +158,8 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Performs the commit tasting lifecycle action.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * Validates and commits the current tasting editor values to its history and persistence queue.
+   * @return {boolean} Whether the edit could be committed; false on invalid input.
    */
   function commitTasting() {
     if (!flavorSession?.editing) return true;
@@ -194,7 +194,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Locates the DOM elements used by preview rating.
+   * Previews a valid numeric tasting score in the Glencairn rating widget without saving it.
    */
   function previewRating() {
     const widget = flavorNode()?.querySelector('[data-tasting-rating]');
@@ -208,7 +208,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Locates the DOM elements used by choose rating.
+   * Sets the selected tasting score in the editor and commits the change.
    *
    * @param {*} value Value to process.
    */
@@ -226,13 +226,13 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
- * Update the preview during pointer movement without saving every intermediate
- * colour.
- *
- * @param {*} hex Custom whisky color to preview in the editor.
- * @param {number} x Horizontal coordinate in the current coordinate system.
- * @param {number} y Vertical coordinate in the current coordinate system.
- */
+   * Update the preview during pointer movement without saving every intermediate
+   * colour.
+   *
+   * @param {*} hex Custom whisky color to preview in the editor.
+   * @param {number} x Horizontal coordinate in the current coordinate system.
+   * @param {number} y Vertical coordinate in the current coordinate system.
+   */
   function previewCustomColor(hex, x, y) {
     if (!flavorSession?.editing || !isAllowedWhiskyHex(hex)) return;
     const color = flavorNode()?.querySelector('.whisky-custom-row');
@@ -258,13 +258,13 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Calculates the preview custom from pointer numeric value.
+   * Converts a pointer position in the custom-color picker to a live color preview.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!MouseEvent} event Event that triggered this operation.
    */
   function previewCustomFromPointer(event) {
     if (!flavorSession?.editing) return;
-    const picker = event.target.closest?.('[data-whisky-picker-area]');
+    const picker = /** @type {Element} */ (event.target).closest?.('[data-whisky-picker-area]');
     if (!picker) return;
     const rect = picker.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
@@ -274,15 +274,15 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
- * Arrow keys are a keyboard-accessible alternative to dragging the
- * two-dimensional picker.
- *
- * @param {!KeyboardEvent} event Event that triggered the handler.
- * @return {boolean} Whether the condition is satisfied.
- */
+   * Arrow keys are a keyboard-accessible alternative to dragging the
+   * two-dimensional picker.
+   *
+   * @param {!KeyboardEvent} event Event that triggered the handler.
+   * @return {boolean} True when the key event was handled by the custom-color picker.
+   */
   function nudgeCustomColor(event) {
     if (!flavorSession?.editing || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return false;
-    const picker = event.target.closest?.('[data-whisky-picker-area]');
+    const picker = /** @type {HTMLElement} */ (/** @type {Element} */ (event.target).closest?.('[data-whisky-picker-area]'));
     if (!picker) return false;
     event.preventDefault();
     const input = flavorNode()?.querySelector('[data-whisky-custom-hex]');
@@ -298,12 +298,12 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
- * Validate the internal HEX draft; the same restriction is enforced during API
- * normalization.
- *
- * @param {*} raw Untrusted custom color input to normalize and validate before selecting.
- * @return {boolean} Whether the condition is satisfied.
- */
+   * Validate the internal HEX draft; the same restriction is enforced during API
+   * normalization.
+   *
+   * @param {*} raw Untrusted custom color input to normalize and validate before selecting.
+   * @return {boolean} True when the custom hex color passed validation and was applied.
+   */
   function chooseCustomHex(raw) {
     if (!flavorSession?.editing) return false;
     let value;
@@ -314,8 +314,8 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Performs the commit custom preview lifecycle action.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * Commits the currently previewed custom whisky color when a hex value is present.
+   * @return {boolean} Whether the custom color could be applied.
    */
   function commitCustomPreview() {
     const hex = flavorNode()?.querySelector('[data-whisky-custom-hex]')?.value;
@@ -328,23 +328,23 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   function resetCustomPreview() {redrawTasting();}
 
   /**
- * Discard the custom draft itself, not only its visible HEX label.
- *
- * @param {!Element} node DOM or syntax node to process.
- */
+   * Discard the custom draft itself, not only its visible HEX label.
+   *
+   * @param {!Element} node DOM or syntax node to process.
+   */
   function clearCustomDraft(node) {
     const row = node.querySelector('.whisky-custom-row');
     if (!row) return;
-    const hex = row.querySelector('[data-whisky-custom-hex]');
+    const hex = /** @type {HTMLInputElement} */ (row.querySelector('[data-whisky-custom-hex]'));
     if (hex) {
       hex.value = '';
       hex.defaultValue = '';
     }
     const label = row.querySelector('[data-whisky-custom-name]');
     if (label) label.textContent = '';
-    const liquid = row.querySelector('.whisky-custom-preview .glencairn-liquid');
+    const liquid = /** @type {HTMLElement|SVGElement} */ (row.querySelector('.whisky-custom-preview .glencairn-liquid'));
     if (liquid) liquid.style.fill = 'transparent';
-    const picker = row.querySelector('[data-whisky-picker-area]');
+    const picker = /** @type {HTMLElement} */ (row.querySelector('[data-whisky-picker-area]'));
     if (picker) {
       picker.style.removeProperty('--picker-x');
       picker.style.removeProperty('--picker-y');
@@ -355,7 +355,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Locates the DOM elements used by choose color.
+   * Applies a fixed or custom whisky-color selection, clearing obsolete custom values.
    *
    * @param {*} value Value to process.
    */
@@ -401,7 +401,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Transforms the entries used by editor.
+   * Resolves the active tasting or draft, then mounts its editor with the appropriate back navigation.
    */
   function editor() {
     // Returning from a tasting should show the compact flight list, not the
@@ -522,7 +522,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   /**
    * Updates draft for tastings.
    *
-   * @return {!Promise<*>} Promise fulfilled when the operation completes.
+   * @return {!Promise<*>} Completion of saving the active tasting draft.
    */
   async function saveDraft() {
     // A save can outlive the click that started it. While the POST and its
@@ -631,7 +631,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Performs the start editing lifecycle action.
+   * Enables editing for a saved tasting and focuses the date field.
    */
   function startEditing() {
     if (!flavorSession || flavorSession.draft) return;
@@ -641,8 +641,8 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Locates the DOM elements used by finish editing.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Commits the editor, waits for queued saves and exits editing only if the session is still active.
+   * @return {!Promise<*>} Completion of committing queued edits and closing the active editor mode.
    */
   async function finishEditing() {
     if (!flavorSession?.editing || flavorSession.draft) return;
@@ -672,7 +672,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Performs the cancel external edit lifecycle action.
+   * Restores saved external-bottling fields and exits their edit mode.
    */
   function cancelExternalEdit() {
     const record = standalone().find(item => item.id === flavorSession?.id);
@@ -748,20 +748,20 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Locates the DOM elements used by assign external to bottling.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Validates the selected collection bottling and assigns the external tasting to it.
+   * @return {!Promise<*>} Completion of assigning the external tasting and refreshing the collection.
    */
   async function assignExternalToBottling() {
     const session = flavorSession;
     if (!session?.external || session.draft) return;
-    const select = document.querySelector('[data-tasting-assign-target]');
+    const select = /** @type {HTMLSelectElement} */ (document.querySelector('[data-tasting-assign-target]'));
     if (!select?.checkValidity()) {select?.reportValidity(); return;}
     const bottlingId = select.value;
     if (!(state.collection?.bottlings || []).some(b => b.id === bottlingId)) return;
     // A pending notes/rating autosave must finish before the record moves.
     if (!commitTasting()) return;
     await flavorSaveQueue;
-    const confirmButton = document.querySelector('[data-act="tasting-external-assign-confirm"]');
+    const confirmButton = /** @type {HTMLButtonElement} */ (document.querySelector('[data-act="tasting-external-assign-confirm"]'));
     if (confirmButton) confirmButton.disabled = true;
     try {
       const result = await request(

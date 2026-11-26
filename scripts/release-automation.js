@@ -44,7 +44,7 @@ const LABELS = {
  *
  * @param {string} subject Conventional Commit subject line.
  * @param {string=} body Request or response body.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Conventional commit type, scope, description and inferred release level.
  */
 export function classifyCommit(subject, body = '') {
   const match = /^([a-z]+)(?:\(([a-z\d._/-]+)\))?(!)?: (\S.+|\S)$/.exec(subject.trim());
@@ -60,7 +60,7 @@ export function classifyCommit(subject, body = '') {
  * Aggregates commit classifications for the release proposal.
  *
  * @param {*} commits Commit records containing subject, body and SHA in the release range.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Highest required release level and parsed commit records.
  */
 export function analyzeCommits(commits) {
   if (!commits.length) throw new Error('Seit dem letzten Release sind keine neuen Commits vorhanden.');
@@ -73,7 +73,7 @@ export function analyzeCommits(commits) {
  * Parses git log for release automation.
  *
  * @param {string} output NUL-delimited git log output containing SHA, subject and body triples.
- * @return {!Array<!Object>} Resulting list of values.
+ * @return {!Array<!Object>} Commit records decoded from the Git log output.
  */
 export function parseGitLog(output) {
   const parts = output.split('\0');
@@ -159,7 +159,7 @@ const hasFileAt = (ref, name) => {
  * main merge.
  *
  * @param {string} head Git revision against which existing release tags are inspected.
- * @return {*} Entries that meet the selection criteria.
+ * @return {*} Known release tags and their reachable snapshots and merge anchors.
  */
 function knownReleases(head) {
   const refs = git('tag', '--list', 'v*').split(/\s+/).filter(x => /^v\d+\.\d+\.\d+$/.test(x));
@@ -176,7 +176,7 @@ function knownReleases(head) {
  * Computes the next release version and required operations.
  *
  * @param {!Object=} options Optional configuration for the operation.
- * @return {(!Object)} Structured result assembled from the input data.
+ * @return {(!Object)} Release plan including the proposed version and commits since the release anchor.
  */
 export function planRelease({head = 'HEAD', requireMerge = true} = {}) {
   const sha = git('rev-parse', head);

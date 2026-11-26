@@ -28,7 +28,7 @@ export function createModal({state, onClose, mountContent = replaceContent}) {
    * Freezes page scrolling and marks the siblings of the modal host inert while
    * saving their previous states.
    *
-   * @param {?HTMLElement} host Container that holds the active modal.
+   * @param {?Element} host Container that holds the active modal.
    */
   function lockBackground(host) {
     if (scrollLock || typeof document === 'undefined') return;
@@ -47,8 +47,8 @@ export function createModal({state, onClose, mountContent = replaceContent}) {
     html.style.overflowY = 'scroll';
     html.style.overscrollBehavior = 'none';
     // Keep application content out of the keyboard and accessibility tree.
-    pageSiblings = [...(host?.parentElement?.children || [])].filter(element => element !== host).map(element => ({element, wasInert: element.inert}));
-    for (const {element} of pageSiblings) element.inert = true;
+    pageSiblings = [...(host?.parentElement?.children || [])].filter(element => element !== host).map((/** @type {HTMLElement} */ element) => ({element, wasInert: element.inert}));
+    for (const {element} of pageSiblings) /** @type {HTMLElement} */ (element).inert = true;
   }
 
   /**
@@ -70,26 +70,27 @@ export function createModal({state, onClose, mountContent = replaceContent}) {
   /**
    * Focuses a connected element without scrolling the page or dialog.
    *
-   * @param {?HTMLElement} element Candidate to focus; absent elements are
+   * @param {?Element} element Candidate to focus; absent elements are
    *     ignored.
    */
   function focusElement(element) {
-    if (element?.isConnected !== false && typeof element?.focus === 'function')
-      element.focus({preventScroll: true});
+    const control = /** @type {HTMLElement|SVGElement} */ (element);
+    if (control?.isConnected !== false && typeof control?.focus === 'function')
+      control.focus({preventScroll: true});
   }
 
   /**
    * Finds visible, enabled controls in the active dialog that can receive
    * keyboard focus.
    *
-   * @param {?HTMLElement} dialog Dialog whose descendants are inspected.
+   * @param {?Element} dialog Dialog whose descendants are inspected.
    * @return {!Array<!HTMLElement>} Focusable controls in DOM order.
    */
   function focusable(dialog) {
     if (!dialog?.querySelectorAll) return [];
-    return [...dialog.querySelectorAll(
-      'a[href],button:not(:disabled),input:not([type="hidden"]):not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])')]
-      .filter(element => !element.inert && element.getClientRects?.().length !== 0 && element.getAttribute('aria-hidden') !== 'true' &&
+    return [.../** @type {NodeListOf<HTMLElement>} */ (dialog.querySelectorAll(
+      'a[href],button:not(:disabled),input:not([type="hidden"]):not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])'))]
+      .filter((/** @type {HTMLElement} */ element) => !element.inert && element.getClientRects?.().length !== 0 && element.getAttribute('aria-hidden') !== 'true' &&
         element.closest('[hidden]') === null && getComputedStyle(element).visibility !== 'hidden');
   }
 
@@ -97,7 +98,7 @@ export function createModal({state, onClose, mountContent = replaceContent}) {
    * Focuses the autofocus control, first form field, first focusable control or
    * the dialog itself, in that order.
    *
-   * @param {?HTMLElement} dialog Newly rendered or restored dialog.
+   * @param {?Element} dialog Newly rendered or restored dialog.
    */
   function focusFirst(dialog) {
     if (!dialog) return;
@@ -118,14 +119,14 @@ export function createModal({state, onClose, mountContent = replaceContent}) {
       event.preventDefault(); event.stopPropagation(); closeModal(); return;
     }
     if (event.key !== 'Tab') return;
-    const dialog = event.currentTarget.querySelector?.('.dialog');
+    const dialog = /** @type {Element} */ (event.currentTarget).querySelector?.('.dialog');
     const controls = focusable(dialog);
     if (!controls.length) {
       event.preventDefault(); focusElement(dialog);
       return;
     }
     const active = document.activeElement;
-    const i = controls.indexOf(active);
+    const i = controls.indexOf(/** @type {HTMLElement} */(active));
     if (event.shiftKey && (i <= 0)) {event.preventDefault(); focusElement(controls.at(-1));}
     else if (!event.shiftKey && (i < 0 || i === controls.length - 1)) {event.preventDefault(); focusElement(controls[0]);}
   }
@@ -184,20 +185,20 @@ export function createModal({state, onClose, mountContent = replaceContent}) {
     const host = query('#modal-root');
     if (!host || !state.modal) return;
     // Refreshes of the background view must never reset an open edit form.
-    if (host.firstElementChild?.__dsModalState === state.modal) return;
+    if (/** @type {Element & {__dsModalState?: Object}} */ (host.firstElementChild)?.__dsModalState === state.modal) return;
     mountContent(host, modalFrame({
       ...state.modal, closeLabel: t('common.actions.close'),
     }));
-    const overlay = host.querySelector('.overlay');
+    const overlay = /** @type {HTMLElement & {__dsModalState?: Object}} */ (host.querySelector('.overlay'));
     if (!overlay) return;
     overlay.__dsModalState = state.modal;
     // A drag from a form field can dispatch click on the common ancestor.
     // Dismiss only when the primary pointer starts and ends on the backdrop.
     let backdropPressed = false;
-    overlay.addEventListener('pointerdown', event => {
+    overlay.addEventListener('pointerdown', (/** @type {PointerEvent} */ event) => {
       backdropPressed = event.isPrimary && event.button === 0 && event.target === overlay;
     }, true);
-    overlay.addEventListener('pointerup', event => {
+    overlay.addEventListener('pointerup', (/** @type {PointerEvent} */ event) => {
       backdropPressed = backdropPressed && event.isPrimary && event.target === overlay;
     }, true);
     overlay.addEventListener('pointercancel', () => {
@@ -210,7 +211,7 @@ export function createModal({state, onClose, mountContent = replaceContent}) {
     });
     overlay.addEventListener('keydown', trapKeys);
     overlay.addEventListener('touchmove', event => {
-      if (!event.target.closest('.dialog')) event.preventDefault();
+      if (!/** @type {Element} */ (event.target).closest('.dialog')) event.preventDefault();
     }, {passive: false});
     focusFirst(host.querySelector('.dialog'));
   }

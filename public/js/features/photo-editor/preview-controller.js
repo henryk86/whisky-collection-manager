@@ -7,7 +7,7 @@ import {adjustPhotoPixels} from './adjustments.js';
  */
 export function createPhotoPreview({session, root}) {
   /**
-   * Locates the DOM elements used by paint preview.
+   * Paints the active original or adjusted pixel buffer before updating comparison controls.
    */
   function paintPreview() {
     const host = root();
@@ -31,7 +31,7 @@ export function createPhotoPreview({session, root}) {
   }
 
   /**
-   * Updates the schedule preview state for its caller.
+   * Schedules a preview frame for the current editor generation and cancels the previous request.
    */
   function schedulePreview() {
     const thisGeneration = session.generation;

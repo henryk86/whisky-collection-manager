@@ -10,6 +10,7 @@
  * Selected transparent derivative, retained independently of the original.
  * @typedef {Object} PhotoCutout
  * @property {string} path Relative path of the generated cutout.
+ * @property {string} [model] Identifier of the segmentation model used for the derivative.
  * @property {boolean} selected Whether the cutout is the active base image.
  * @property {PhotoAdjustment} [adjustment] Settings specific to the cutout.
  */

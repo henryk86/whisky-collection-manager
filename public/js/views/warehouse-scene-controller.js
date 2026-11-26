@@ -62,7 +62,7 @@ export function createWarehouseSceneController({state, currentRoom, selectFurnit
               if (initialHidden.has(furniture.id) !== nowHidden) handle?.setFurnitureVisible?.(furniture.id, !nowHidden);
             }
             const hovered = document.querySelector('.warehouse-bulk-item:hover');
-            if (hovered) handle?.setHighlightedFurniture?.(hovered.querySelector('.warehouse-bulk-open')?.dataset.id);
+            if (hovered) handle?.setHighlightedFurniture?.(/** @type {HTMLElement} */(hovered.querySelector('.warehouse-bulk-open'))?.dataset.id);
           }
           else handle?.dispose?.();
         })
@@ -86,26 +86,26 @@ export function createWarehouseSceneController({state, currentRoom, selectFurnit
     const list = document.querySelector('.warehouse-bulk-list');
     if (!list?.querySelectorAll) return;
     /**
-     * Updates element attributes used by highlight.
+     * Highlights the same furniture in the 3D scene and the 2D plan.
      *
      * @param {*} id Identifier of the affected record.
      */
     function highlight(id) {
       if (withPlan) {
         threeHandle?.setHighlightedFurniture?.(id);
-        document.querySelectorAll('.warehouse-drag').forEach(node => {
+        document.querySelectorAll('.warehouse-drag').forEach((/** @type {SVGGElement} */ node) => {
           node.classList.toggle('warehouse-hovered', node.dataset.id === id);
         });
       }
     }
     for (const tile of list.querySelectorAll('.warehouse-bulk-item')) {
-      const id = tile.querySelector('.warehouse-bulk-open')?.dataset.id;
+      const id = /** @type {HTMLElement} */ (tile.querySelector('.warehouse-bulk-open'))?.dataset.id;
       if (!id) continue;
       tile.addEventListener('pointerenter', () => highlight(id));
       tile.addEventListener('pointerleave', () => highlight(null));
       tile.addEventListener('focusin', () => highlight(id));
-      tile.addEventListener('focusout', event => {
-        if (!tile.contains(event.relatedTarget)) highlight(null);
+      tile.addEventListener('focusout', (/** @type {MouseEvent} */ event) => {
+        if (!tile.contains(/** @type {Node} */(event.relatedTarget))) highlight(null);
       });
     }
   }
@@ -114,7 +114,7 @@ export function createWarehouseSceneController({state, currentRoom, selectFurnit
    * Applies the requested zoom to the mounted WebGL scene, if available.
    *
    * @param {*} value Value to process.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} True if the mounted scene accepted the requested zoom.
    */
   function update3DZoom(value) {return threeHandle?.setZoom(value) ?? false;}
 

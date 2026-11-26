@@ -5,7 +5,7 @@
  *
  * @param {*} room Room model containing dimensions and furniture.
  * @param {!Object} warehouse Warehouse model being processed.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Room occupancy, finite capacity, unlimited compartment count and total compartment count.
  */
 export function roomCapacity(room, warehouse) {
   const shelves = (room?.furniture || []).flatMap(furniture => furniture.shelves || []);

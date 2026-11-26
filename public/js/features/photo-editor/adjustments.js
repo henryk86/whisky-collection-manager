@@ -28,12 +28,12 @@ export const PHOTO_ADJUSTMENT_GROUPS = Object.freeze([
 export const PHOTO_ADJUSTMENT_FIELDS = Object.freeze(PHOTO_ADJUSTMENT_GROUPS.flatMap(group => group.sliders));
 export const EMPTY_PHOTO_ADJUSTMENTS = Object.freeze(Object.fromEntries(PHOTO_ADJUSTMENT_FIELDS.map(({key}) => [key, 0])));
 /**
- * Calculates the clip numeric value.
+ * Clamps a photo-adjustment value to its allowed interval.
  *
  * @param {*} value Value to process.
  * @param {number=} min Minimum accepted value.
  * @param {number=} max Maximum accepted value.
- * @return {number} Calculated numeric value.
+ * @return {number} Value bounded by the supplied minimum and maximum.
  */
 const clip = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
 
@@ -41,7 +41,7 @@ const clip = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
  * Reject unknown keys and non-finite numeric values at the server boundary.
  *
  * @param {*} value Input value to process.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Normalized values for all supported photo-adjustment controls.
  */
 export function validatePhotoAdjustments(value) {
   try {return validateAdjustmentValues(value);}
@@ -56,7 +56,7 @@ export function validatePhotoAdjustments(value) {
  * Checks whether photo edits differ from the saved adjustments.
  *
  * @param {*} value Input value to process.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True when at least one supported adjustment differs from zero.
  */
 export const photoAdjustmentsChanged = value => PHOTO_ADJUSTMENT_FIELDS.some(({key}) => Number(value?.[key] || 0) !== 0);
 
@@ -65,7 +65,7 @@ export const photoAdjustmentsChanged = value => PHOTO_ADJUSTMENT_FIELDS.some(({k
  *
  * @param {*} current Current resource data to update.
  * @param {string} groupKey Key of the adjustment group whose sliders are reset.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Adjustment values with only the requested editor group reset.
  */
 export function resetPhotoAdjustmentGroup(current, groupKey) {
   const group = PHOTO_ADJUSTMENT_GROUPS.find(entry => entry.key === groupKey);
@@ -84,7 +84,7 @@ export function resetPhotoAdjustmentGroup(current, groupKey) {
  * @param {*} source Source RGBA image data with pixel dimensions.
  * @param {*} area Rectangle selected in source-image pixel coordinates for white-balance sampling.
  * @param {!Object=} current Current resource data to update.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} White-balance adjustment values derived from valid selected source pixels.
  */
 export function whiteBalanceFromArea(source, area,
   current = EMPTY_PHOTO_ADJUSTMENTS) {
@@ -137,7 +137,7 @@ export function whiteBalanceFromArea(source, area,
  * @param {number} width Width in pixels.
  * @param {number} height Height in pixels.
  * @param {number} radius Blur kernel radius in pixels.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Alpha-weighted blurred luminance values, one per pixel.
  */
 function blurLuma(data, width, height, radius) {
   const count = width * height;
@@ -178,7 +178,7 @@ function blurLuma(data, width, height, radius) {
  *
  * @param {*} source Source RGBA image data with pixel dimensions; read without mutation.
  * @param {!Array<*>} values Values to aggregate or compare.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} New RGBA image data with the requested adjustments and original alpha values.
  */
 export function adjustPhotoPixels(source, values) {
   const settings = validatePhotoAdjustments(values);
@@ -237,7 +237,7 @@ export function adjustPhotoPixels(source, values) {
  * Conservative automatic correction from opaque image samples only.
  *
  * @param {*} source RGBA pixels sampled to estimate automatic exposure and color adjustments.
- * @return {(!Object)} Structured result assembled from the input data.
+ * @return {(!Object)} Estimated automatic correction values, or the defaults when no usable samples exist.
  */
 export function autoPhotoAdjustments(source) {
   const {data} = source;

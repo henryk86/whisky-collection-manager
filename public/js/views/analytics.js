@@ -20,13 +20,13 @@ export const ANALYSIS_PAGES = Object.freeze([
   {
     id: 'overview',
     /**
-     * Reads the title property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the analytics overview heading in the active language.
+     * @return {*} Localized overview heading.
      */
     get title() {return t("analytics.navigation.overview");},
     /**
-     * Reads the sub property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the analytics highlights description in the active language.
+     * @return {*} Localized highlights description.
      */
     get sub() {return t("analytics.summary.highlights");},
     icon: analysisOverviewIcon,
@@ -34,13 +34,13 @@ export const ANALYSIS_PAGES = Object.freeze([
   {
     id: 'inventory',
     /**
-     * Reads the title property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the inventory analytics heading in the active language.
+     * @return {*} Localized inventory heading.
      */
     get title() {return t("analytics.inventory.collectionStock");},
     /**
-     * Reads the sub property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the inventory analytics description in the active language.
+     * @return {*} Localized inventory description.
      */
     get sub() {return t("analytics.inventory.sectionDescription");},
     icon: analysisInventoryIcon,
@@ -48,13 +48,13 @@ export const ANALYSIS_PAGES = Object.freeze([
   {
     id: 'origins',
     /**
-     * Reads the title property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the origin analytics heading in the active language.
+     * @return {*} Localized origin heading.
      */
     get title() {return t("analytics.origin.title");},
     /**
-     * Reads the sub property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the origin analytics description in the active language.
+     * @return {*} Localized origin description.
      */
     get sub() {return t("analytics.origin.sectionDescription");},
     icon: analysisOriginsIcon,
@@ -62,13 +62,13 @@ export const ANALYSIS_PAGES = Object.freeze([
   {
     id: 'profile',
     /**
-     * Reads the title property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the flavor-profile analytics heading in the active language.
+     * @return {*} Localized profile heading.
      */
     get title() {return t("analytics.profile.title");},
     /**
-     * Reads the sub property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the flavor-profile analytics description in the active language.
+     * @return {*} Localized profile description.
      */
     get sub() {return t("analytics.profile.sectionDescription");},
     icon: analysisProfileIcon,
@@ -76,13 +76,13 @@ export const ANALYSIS_PAGES = Object.freeze([
   {
     id: 'finance',
     /**
-     * Reads the title property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the finance analytics heading in the active language.
+     * @return {*} Localized finance heading.
      */
     get title() {return t("analytics.finance.title");},
     /**
-     * Reads the sub property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the description of prices and retailers in the active language.
+     * @return {*} Localized finance description.
      */
     get sub() {return t("analytics.finance.pricesAndRetailers");},
     icon: analysisFinanceIcon,
@@ -90,13 +90,13 @@ export const ANALYSIS_PAGES = Object.freeze([
   {
     id: 'timeline',
     /**
-     * Reads the title property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the tasting analytics heading in the active language.
+     * @return {*} Localized tasting heading.
      */
     get title() {return t("analytics.trends.tastingSection");},
     /**
-     * Reads the sub property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the tasting trends description in the active language.
+     * @return {*} Localized tasting trends description.
      */
     get sub() {return t("analytics.trends.sectionDescription");},
     icon: analysisTimelineIcon,
@@ -104,13 +104,13 @@ export const ANALYSIS_PAGES = Object.freeze([
   {
     id: 'quality',
     /**
-     * Reads the title property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the quality analytics heading in the active language.
+     * @return {*} Localized quality heading.
      */
     get title() {return t("analytics.quality.title");},
     /**
-     * Reads the sub property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the quality analytics description in the active language.
+     * @return {*} Localized quality description.
      */
     get sub() {return t("analytics.quality.sectionDescription");},
     icon: analysisQualityIcon,

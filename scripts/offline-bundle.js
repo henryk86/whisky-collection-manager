@@ -23,10 +23,10 @@ const MANIFEST_FILES = [
   'public/ai/licenses/ONNX-Runtime-Web-NOTICE.txt',
 ];
 /**
- * Tests input text against the valid sha pattern.
+ * Recognizes lowercase hexadecimal SHA-256 digests.
  *
  * @param {*} value Value to process.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True for a 64-character lowercase hexadecimal digest.
  */
 const validSha = value => typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
 
@@ -95,7 +95,7 @@ function allFiles(root, relative) {
  * Packages a release for offline installation with integrity metadata.
  *
  * @param {*=} root Root element or directory.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Manifest of sealed offline installation files and their checksums.
  */
 export function sealOfflineBundle(root = ROOT) {
   const cachePath = path.join(root, '.offline', 'npm-cache');

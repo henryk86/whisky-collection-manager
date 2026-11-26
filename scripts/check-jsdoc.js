@@ -42,18 +42,18 @@ function returnsValue(func) {
  * Destructured parameters count once; their dotted property tags are optional.
  *
  * @param {!ts.Node} owner Statement holding the JSDoc comment.
- * @param {!ts.Node} func Function/class described by the comment.
+ * @param {ts.FunctionLikeDeclaration|ts.ClassDeclaration} func Function or class described by the comment.
  * @return {boolean} Whether the public API has a complete typed contract.
  */
 function hasTypedJSDoc(owner, func) {
-  const comment = owner.jsDoc?.find(doc => typeof doc.comment === 'string' && doc.comment.trim().length > 0);
+  const comment = (/** @type {ts.Node & {jsDoc?: readonly ts.JSDoc[]}} */ (owner)).jsDoc?.find(doc => typeof doc.comment === 'string' && doc.comment.trim().length > 0);
   if (!comment) return false;
   if (ts.isClassDeclaration(func)) {
     return func.members.filter(ts.isConstructorDeclaration).every(ctor =>
       !ctor.parameters.length || hasTypedJSDoc(ctor, ctor));
   }
   const tags = ts.getJSDocTags(owner);
-  const params = tags.filter(tag => tag.tagName.text === 'param' && tag.typeExpression && tag.name && !tag.name.getText().includes('.'));
+  const params = tags.filter(ts.isJSDocParameterTag).filter(tag => tag.typeExpression && tag.name && !tag.name.getText().includes('.'));
   const names = new Set(params.map(tag => tag.name.getText()));
   const declarations = func.parameters ?? [];
   if (names.size !== declarations.length) return false;
@@ -63,7 +63,7 @@ function hasTypedJSDoc(owner, func) {
     // name, which is not available as a JavaScript AST identifier.
     if (!ts.isIdentifier(parameter.name) && !params[index]) return false;
   }
-  const returns = tags.filter(tag => tag.tagName.text === 'return');
+  const returns = tags.filter(ts.isJSDocReturnTag).filter(tag => tag.tagName.text === 'return');
   if (returnsValue(func)) return returns.some(tag => tag.typeExpression);
   return returns.length === 0 || returns.some(tag => tag.typeExpression);
 }
@@ -84,14 +84,14 @@ export function inspectExports(file, source) {
    *
    * @param {string} name Exported identifier.
    * @param {!ts.Node} statement Syntax node holding the JSDoc.
-   * @param {!ts.Node} func Exported function or class declaration.
+   * @param {ts.FunctionLikeDeclaration|ts.ClassDeclaration} func Exported function or class declaration.
    */
   function add(name, statement, func) {
     const key = `${file}#${name}`;
     entries.push({key, documented: hasTypedJSDoc(statement, func)});
   }
   for (const statement of syntax.statements) {
-    if (!statement.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)) continue;
+    if (!(ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined)?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)) continue;
     if (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) {
       if (statement.name) add(statement.name.text, statement, statement);
     } else if (ts.isVariableStatement(statement)) {

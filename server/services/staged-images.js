@@ -12,7 +12,7 @@ const pending = new Map();
 const MAX_PENDING = 8;
 const TTL = 15 * 60 * 1000;
 /**
- * Updates the cleanup state for its caller.
+ * Removes expired staged-image tokens from the in-memory map.
  */
 function cleanup() {
   for (const [token, entry] of pending) if (Date.now() > entry.expires) pending.delete(token);
@@ -22,7 +22,7 @@ function cleanup() {
  * Stages an uploaded image for validation and later confirmation.
  *
  * @param {*} input Input to process.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Staged-image token and remaining lifetime in seconds.
  */
 export function stageImage(input) {
   cleanup();
@@ -47,7 +47,7 @@ export function stageImage(input) {
  * Returns a preview of an image awaiting confirmation.
  *
  * @param {string} token Temporary image-preview token issued by the staging service.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Staged image bytes and media type.
  */
 export function previewImage(token) {
   cleanup();
@@ -61,7 +61,7 @@ export function previewImage(token) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Metadata for the imported image attached to the selected physical bottle.
  */
 export async function attachImageToBottle(bottleId, input) {
   cleanup();

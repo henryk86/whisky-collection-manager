@@ -16,7 +16,7 @@ const git = (...args) => execFileSync('git', args, {encoding: 'utf8'}).trim();
  * Validates version pr for verify version pr.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Verified version tag and changed paths in the version pull request.
  */
 export function verifyVersionPR({branch, head, base, author}) {
   const match = /^release\/version-(v\d+\.\d+\.\d+)$/.exec(branch || '');

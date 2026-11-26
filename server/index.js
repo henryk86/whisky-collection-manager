@@ -13,7 +13,7 @@ export {createServer} from './app.js';
 /**
  * Initializes and starts the configured HTTP and HTTPS listeners.
  *
- * @return {!Array<*>} Resulting list of values.
+ * @return {!Array<*>} Started HTTP and HTTPS server instances.
  */
 export function startServers() {
   let tlsOptions;

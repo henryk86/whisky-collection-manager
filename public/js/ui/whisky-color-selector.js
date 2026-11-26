@@ -32,7 +32,7 @@ const COLOR_LABEL_KEYS = Object.freeze({
  * its HEX value internally.
  *
  * @param {*} hex Candidate custom whisky color in CSS hexadecimal notation.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Display name for the supplied custom whisky-color hex value.
  */
 export function whiskyCustomColorName(hex) {
   const key = whiskyColorNameKey(hex);

@@ -7,7 +7,7 @@ import {homePageUrl, pageFromSearch, overviewModeFromSearch}
  * not focused.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Route navigation and history restoration operations.
  */
 export function createNavigation({state, render, closeModal,
   browser = window}) {
@@ -53,7 +53,7 @@ export function createNavigation({state, render, closeModal,
   }
 
   /**
-   * Updates the restore route state for its caller.
+   * Restores the application route from the browser URL, closing any open modal first.
    */
   function restoreRoute() {
     if (state.modal) {

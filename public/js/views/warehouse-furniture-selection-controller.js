@@ -8,21 +8,21 @@ import {eyeIcon, eyeOffIcon} from '../ui/action-icons.js';
  */
 export function createWarehouseFurnitureSelection({state, currentRoom, mountContent, setSceneVisibility}) {
   /**
-   * Filters records according to the selected furniture selection rules.
+   * Returns selected furniture IDs that still exist in the supplied room.
    *
    * @param {*} room Warehouse room being inspected or modified.
-   * @return {*} Entries that meet the selection criteria.
+   * @return {*} Valid selected furniture IDs in that room.
    */
   const selectedFurniture = room => (state.warehouseSelectedFurnitureIds || []).filter(id => room?.furniture.some(f => f.id === id));
 
   /**
-   * Updates furniture visibility in the current state.
+   * Synchronizes the furniture visibility controls and the visible room scene.
    *
    * @param {*} furniture Warehouse furniture record being modified.
    * @param {boolean} visible Whether the selected furniture is visible in the room views.
    */
   function setFurnitureVisibility(furniture, visible) {
-    for (const button of document.querySelectorAll('.warehouse-bulk-visibility')) {
+    for (const button of /** @type {Iterable<HTMLElement>} */ (document.querySelectorAll('.warehouse-bulk-visibility'))) {
       if (button.dataset.id !== furniture.id) continue;
       const label = t(
         "warehouse.visibility.accessibleLabel",
@@ -41,12 +41,12 @@ export function createWarehouseFurnitureSelection({state, currentRoom, mountCont
   }
 
   /**
-   * Updates show all button in the current state.
+   * Enables the show-all action only if the current room contains hidden furniture.
    *
    * @param {*} room Warehouse room being inspected or modified.
    */
   function updateShowAllButton(room) {
-    const button = document.querySelector?.('.warehouse-show-all');
+    const button = /** @type {HTMLButtonElement} */ (document.querySelector?.('.warehouse-show-all'));
     if (button) button.disabled = !room.furniture.some(item => (state.warehouseHiddenFurnitureIds || []).includes(item.id));
   }
 
@@ -54,7 +54,7 @@ export function createWarehouseFurnitureSelection({state, currentRoom, mountCont
    * Switches the visibility of the specified furniture and updates the room presentation.
    *
    * @param {*} id Identifier of the affected record.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * @return {boolean} True if the specified furniture visibility was toggled.
    */
   function toggleFurnitureVisibility(id) {
     const room = currentRoom();
@@ -71,7 +71,7 @@ export function createWarehouseFurnitureSelection({state, currentRoom, mountCont
 
   /**
    * Renders all furniture in the current view.
-   * @return {*} Entries that meet the selection criteria.
+   * @return {*} Visibility update for all hidden furniture in the current room.
    */
   function showAllFurniture() {
     const room = currentRoom();
@@ -96,18 +96,18 @@ export function createWarehouseFurnitureSelection({state, currentRoom, mountCont
     const count = selectedFurniture(room).length;
     const label = document.querySelector('.warehouse-bulk-count');
     if (label) label.textContent = t("warehouse.selection.count", {selected: count, total: room?.furniture.length ?? 0});
-    const edit = document.querySelector('.warehouse-bulk-edit-btn');
+    const edit = /** @type {HTMLButtonElement} */ (document.querySelector('.warehouse-bulk-edit-btn'));
     if (edit) {
       edit.disabled = count === 0; edit.textContent = t("warehouse.bulk.editAction", {count});
     }
-    const remove = document.querySelector('.warehouse-bulk-delete-btn');
+    const remove = /** @type {HTMLButtonElement} */ (document.querySelector('.warehouse-bulk-delete-btn'));
     if (remove) {
       remove.disabled = count === 0; remove.textContent = t("warehouse.bulk.deleteAction", {count});
     }
-    const clear = document.querySelector('.warehouse-bulk-clear-btn');
+    const clear = /** @type {HTMLButtonElement} */ (document.querySelector('.warehouse-bulk-clear-btn'));
     if (clear) clear.disabled = count === 0;
     const selected = new Set(selectedFurniture(room));
-    document.querySelectorAll('.warehouse-bulk-pick').forEach(button => {
+    document.querySelectorAll('.warehouse-bulk-pick').forEach((/** @type {HTMLElement} */ button) => {
       const pressed = selected.has(button.dataset.id);
       button.setAttribute('aria-pressed', String(pressed));
       button.closest('.warehouse-bulk-item')?.classList.toggle('is-selected', pressed);
@@ -130,7 +130,7 @@ export function createWarehouseFurnitureSelection({state, currentRoom, mountCont
   }
 
   /**
-   * Updates the toggle furniture bulk selection state for its caller.
+   * Toggles the specified furniture item in the current room selection.
    *
    * @param {*} id Identifier of the affected record.
    */

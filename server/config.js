@@ -35,7 +35,7 @@ export const DATA_ROOT = path.resolve(process.env.WHISKY_DATA_DIR || process.cwd
  *
  * @param {*} name Environment variable or setting name.
  * @param {*} fallback Value used when the requested data is unavailable.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} Parsed configuration flag, using the supplied default when absent.
  */
 function boolConfig(name, fallback) {
   const value = String(process.env[name] ?? fallback).toLowerCase();
@@ -50,7 +50,7 @@ function boolConfig(name, fallback) {
  *
  * @param {*} name Environment variable or setting name.
  * @param {*} fallback Value used when the requested data is unavailable.
- * @return {number} Calculated numeric value.
+ * @return {number} Validated TCP port number from the environment or the supplied default.
  */
 function portConfig(name, fallback) {
   const p = Number(process.env[name] ?? fallback);

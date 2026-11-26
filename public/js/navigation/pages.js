@@ -13,8 +13,8 @@ export const MAIN_PAGES = Object.freeze([
   {
     id: 'home',
     /**
-     * Reads the label property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the collection navigation label in the active language.
+     * @return {*} Localized collection label.
      */
     get label() {return t("navigation.collection");},
     url: '/',
@@ -24,8 +24,8 @@ export const MAIN_PAGES = Object.freeze([
   {
     id: 'tastings-home',
     /**
-     * Reads the label property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the tasting navigation label in the active language.
+     * @return {*} Localized tasting label.
      */
     get label() {return t('tastings.homeTitle');},
     url: '/?view=tastings',
@@ -38,8 +38,8 @@ export const MAIN_PAGES = Object.freeze([
   {
     id: 'analytics',
     /**
-     * Reads the label property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the analytics navigation label in the active language.
+     * @return {*} Localized analytics label.
      */
     get label() {return t("navigation.analytics");},
     url: '/?view=analysis',
@@ -49,8 +49,8 @@ export const MAIN_PAGES = Object.freeze([
   {
     id: 'warehouse',
     /**
-     * Reads the label property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the warehouse navigation label in the active language.
+     * @return {*} Localized warehouse label.
      */
     get label() {return t("navigation.warehouse");},
     url: '/?view=warehouse',
@@ -60,8 +60,8 @@ export const MAIN_PAGES = Object.freeze([
   {
     id: 'map',
     /**
-     * Reads the label property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the map navigation label in the active language.
+     * @return {*} Localized map label.
      */
     get label() {return t("navigation.map");},
     url: '/?view=map',
@@ -71,8 +71,8 @@ export const MAIN_PAGES = Object.freeze([
   {
     id: 'help',
     /**
-     * Reads the label property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the help navigation label in the active language.
+     * @return {*} Localized help label.
      */
     get label() {return t("navigation.help");},
     url: '/?view=help',
@@ -82,8 +82,8 @@ export const MAIN_PAGES = Object.freeze([
   {
     id: 'settings',
     /**
-     * Reads the label property from the current state.
-     * @return {*} Value returned by the delegated operation.
+     * Resolves the settings navigation label in the active language.
+     * @return {*} Localized settings label.
      */
     get label() {return t("navigation.settings");},
     url: '/?view=settings',

@@ -113,27 +113,27 @@ export function createTastingFlightController({state, selectors, shell, navigate
    */
   function syncFlightPlanOptions() {
     const box = globalThis.document?.querySelector?.('#modal-root');
-    const style = box?.querySelector('[data-flight-plan-style]')?.value;
-    const similar = box?.querySelector('[data-flight-plan-focus-wrap]');
-    const discover = box?.querySelector('[data-flight-plan-unfamiliar-wrap]');
-    const caskMode = box?.querySelector('[data-flight-plan-cask-mode]')?.value;
+    const style = /** @type {HTMLSelectElement} */ (box?.querySelector('[data-flight-plan-style]'))?.value;
+    const similar = /** @type {HTMLElement} */ (box?.querySelector('[data-flight-plan-focus-wrap]'));
+    const discover = /** @type {HTMLElement} */ (box?.querySelector('[data-flight-plan-unfamiliar-wrap]'));
+    const caskMode = /** @type {HTMLSelectElement} */ (box?.querySelector('[data-flight-plan-cask-mode]'))?.value;
     syncFlightCaskOptions(box, caskMode === 'specific', t);
-    const ageMode = box?.querySelector('[data-flight-plan-age-mode]')?.value;
+    const ageMode = /** @type {HTMLSelectElement} */ (box?.querySelector('[data-flight-plan-age-mode]'))?.value;
     if (similar) similar.hidden = style !== 'similar';
     if (discover) discover.hidden = style !== 'discover';
-    for (const [selector, visible] of [
+    for (const [selector, visible] of /** @type {Array<[string, boolean]>} */ ([
       ['[data-flight-plan-age-range-wrap]', ageMode === 'range'],
       [
         '[data-flight-plan-strict-wrap]',
         caskMode === 'specific' || ageMode === 'range',
       ],
-    ]) {
-      const element = box?.querySelector(selector); if (element) element.hidden = !visible;
+    ])) {
+      const element = /** @type {HTMLElement} */ (box?.querySelector(selector)); if (element) element.hidden = !visible;
     }
   }
 
   /**
-   * Performs the start planned flight lifecycle action.
+   * Opens the flight-planning dialog with a fresh draft and any collection candidates.
    */
   function startPlannedFlight() {
     flightPlanDraft = null;
@@ -212,7 +212,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
     syncFlightPlanOptions();
     flightPlanDraft = null;
     const box = globalThis.document?.querySelector?.('#modal-root');
-    const button = box?.querySelector('[data-act="flight-plan-create"]');
+    const button = /** @type {HTMLButtonElement} */ (box?.querySelector('[data-act="flight-plan-create"]'));
     if (button) button.disabled = true;
     const view = box?.querySelector('.flight-plan-preview');
     if (view) view.replaceChildren();
@@ -231,38 +231,37 @@ export function createTastingFlightController({state, selectors, shell, navigate
    */
   function generateFlightPlan() {
     const box = document.querySelector('#modal-root');
-    const style = box?.querySelector('[data-flight-plan-style]')?.value || 'balanced';
-    const count = Number(box?.querySelector('[data-flight-plan-count]')?.value || 5);
-    const availability = box?.querySelector('[data-flight-plan-availability]')?.value || 'open';
-    const focus = style === 'similar' ? (box?.querySelector('[data-flight-plan-focus]')?.value || 'any') : 'any';
-    const preferUnfamiliar = style === 'discover' ? Boolean(box?.querySelector('[name="flight-plan-unfamiliar"]')?.checked) : false;
-    const caskMode = box?.querySelector('[data-flight-plan-cask-mode]')?.value || 'auto';
+    const style = /** @type {HTMLSelectElement} */ (box?.querySelector('[data-flight-plan-style]'))?.value || 'balanced';
+    const count = Number(/** @type {HTMLSelectElement} */(box?.querySelector('[data-flight-plan-count]'))?.value || 5);
+    const availability = /** @type {HTMLSelectElement} */ (box?.querySelector('[data-flight-plan-availability]'))?.value || 'open';
+    const focus = style === 'similar' ? (/** @type {HTMLSelectElement} */ (box?.querySelector('[data-flight-plan-focus]'))?.value || 'any') : 'any';
+    const preferUnfamiliar = style === 'discover' ? Boolean(/** @type {HTMLInputElement} */(box?.querySelector('[name="flight-plan-unfamiliar"]'))?.checked) : false;
+    const caskMode = /** @type {HTMLSelectElement} */ (box?.querySelector('[data-flight-plan-cask-mode]'))?.value || 'auto';
     const caskFilters = caskMode === 'specific' ? readFlightCaskFilters(box) : {};
-    const caskPhase = caskMode === 'specific' ? box?.querySelector('[data-flight-plan-cask-phase]')?.value || 'any' : 'any';
-    const ageMode = box?.querySelector('[data-flight-plan-age-mode]')?.value || 'auto';
+    const caskPhase = caskMode === 'specific' ? /** @type {HTMLSelectElement} */ (box?.querySelector('[data-flight-plan-cask-phase]'))?.value || 'any' : 'any';
+    const ageMode = /** @type {HTMLSelectElement} */ (box?.querySelector('[data-flight-plan-age-mode]'))?.value || 'auto';
     // Clear any stale cross-field error before validating a corrected range.
-    box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.('');
+    /** @type {HTMLInputElement} */ (box?.querySelector('[data-flight-plan-age-max]'))?.setCustomValidity?.('');
     /**
      * Parses age from its input.
      *
-     * @param {function(...*): *} selector Selector used to obtain matching
-     *     values.
-     * @return {number} Calculated numeric value.
+     * @param {string} selector Selector of the age-limit number input.
+     * @return {number|null|undefined} Parsed age, null for an empty field or undefined for invalid input.
      */
     const parseAge = (selector) => {
-      const field = box?.querySelector(selector); if (!field || field.value === '') return null;
+      const field = /** @type {HTMLInputElement} */ (box?.querySelector(selector)); if (!field || field.value === '') return null;
       if (!field.reportValidity()) return undefined; return Number(field.value);
     };
     const ageMin = ageMode === 'range' ? parseAge('[data-flight-plan-age-min]') : null;
     const ageMax = ageMode === 'range' ? parseAge('[data-flight-plan-age-max]') : null;
     if (ageMin === undefined || ageMax === undefined) return;
     if (ageMin !== null && ageMax !== null && ageMin > ageMax) {
-      box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.(t('flightPlan.caskAge.invalidRange'));
-      box?.querySelector('[data-flight-plan-age-max]')?.reportValidity?.();
+      /** @type {HTMLInputElement} */ (box?.querySelector('[data-flight-plan-age-max]'))?.setCustomValidity?.(t('flightPlan.caskAge.invalidRange'));
+      /** @type {HTMLInputElement} */ (box?.querySelector('[data-flight-plan-age-max]'))?.reportValidity?.();
       return;
     }
-    box?.querySelector('[data-flight-plan-age-max]')?.setCustomValidity?.('');
-    const strictMatches = Boolean(box?.querySelector('[name="flight-plan-strict"]')?.checked);
+    /** @type {HTMLInputElement} */ (box?.querySelector('[data-flight-plan-age-max]'))?.setCustomValidity?.('');
+    const strictMatches = Boolean(/** @type {HTMLInputElement} */(box?.querySelector('[name="flight-plan-strict"]'))?.checked);
     const options = {
       style,
       count,
@@ -306,7 +305,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
       if (counts.excludedScope) messages.push(t('flightPlan.excludedScope', counts));
       mountAppend(view, composeMarkup(messages.map(message => renderTemplate('hint6', {message: message, }))));
     }
-    const button = box?.querySelector('[data-act="flight-plan-create"]');
+    const button = /** @type {HTMLButtonElement} */ (box?.querySelector('[data-act="flight-plan-create"]'));
     if (button) button.disabled = !draft.length;
   }
 
@@ -314,7 +313,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
   let flightPlanSourceIds = null;
 
   /**
-   * Performs the open planned flight lifecycle action.
+   * Captures the current collection candidate restriction and opens flight planning.
    */
   function openPlannedFlight() {
     flightPlanSourceIds = Array.isArray(state.flightCandidateIds) ? [...state.flightCandidateIds] : null;
@@ -322,12 +321,12 @@ export function createTastingFlightController({state, selectors, shell, navigate
   }
 
   /**
-   * Creates planned flight for tastings.
+   * Validates the plan and metadata, then creates a planned tasting flight once.
    */
   async function createPlannedFlight() {
     const box = document.querySelector('#modal-root');
-    const name = box?.querySelector('[data-flight-name]');
-    const date = box?.querySelector('[data-flight-date]');
+    const name = /** @type {HTMLInputElement} */ (box?.querySelector('[data-flight-name]'));
+    const date = /** @type {HTMLInputElement} */ (box?.querySelector('[data-flight-date]'));
     if (!name?.reportValidity() || !date?.reportValidity() || !flightPlanDraft?.items.length || flightCreating) return;
     flightCreating = true;
     try {
@@ -335,7 +334,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
         method: 'POST', body: JSON.stringify({
           name: name.value,
           date: date.value,
-          notes: box.querySelector('[data-flight-notes]')?.value || '',
+          notes: /** @type {HTMLTextAreaElement} */ (box.querySelector('[data-flight-notes]'))?.value || '',
           phase: 'planned',
           planItems: flightPlanDraft.items,
         }),
@@ -361,7 +360,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
      * Selects and transforms the choices records.
      *
      * @param {string=} excludeId Identifier of the tasting to omit from the flight-member choices.
-     * @return {*} Entries that meet the selection criteria.
+     * @return {*} Render plan containing eligible flight-member option elements.
      */
     const choices = (excludeId = '') => composeMarkup(choicesFor(excludeId).map(x => renderTemplate('choicesOption', {
       id: x.bottle.id,
@@ -414,10 +413,10 @@ export function createTastingFlightController({state, selectors, shell, navigate
   }
 
   /**
-   * Updates plan in the current state.
+   * Persists a changed member list for the selected planned flight and reloads collection data.
    *
    * @param {*} items Entries to process.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of persisting the revised planned flight and refreshing collection data.
    */
   async function updatePlan(items) {
     const current = state.collection?.tastingFlights?.find(f => f.id === state.selected);
@@ -432,12 +431,12 @@ export function createTastingFlightController({state, selectors, shell, navigate
   }
 
   /**
-   * Updates planned member in the current state.
+   * Moves, adds, replaces or removes a member of the current planned flight.
    *
    * @param {*} index Zero-based index of the selected entry.
    * @param {*} action Operation or action callback to invoke.
    * @param {number=} step Relative movement or step size.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the planned-member update when a supported change was requested.
    */
   function changePlannedMember(index, action, step = 0) {
     const current = state.collection?.tastingFlights?.find(f => f.id === state.selected);
@@ -447,7 +446,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
       [items[index], items[index + step]] = [items[index + step], items[index]];
     } else if (action === 'remove' && index >= 0 && index < items.length) items.splice(index, 1);
     else if (action === 'replace' || action === 'add') {
-      const value = document.querySelector(action === 'add' ? '[data-flight-manual-add]' : `[data-flight-replace="${index}"]`)?.value;
+      const value = /** @type {HTMLSelectElement} */ (document.querySelector(action === 'add' ? '[data-flight-manual-add]' : `[data-flight-replace="${index}"]`))?.value;
       const selected = state.collection.bottlings.find(b => b.bottles?.some(x => x.id === value && x.status !== 'empty'));
       if (!selected || items.some(x => x.bottlingId === selected.id)) return;
       const replacement = {bottlingId: selected.id, bottleId: value, reason: 'manual'};
@@ -463,7 +462,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
    * Serializes transition planned flight data to JSON.
    *
    * @param {*} target Target of the operation.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the planned-flight phase transition.
    */
   async function transitionPlannedFlight(target) {
     const current = state.collection?.tastingFlights?.find(f => f.id === state.selected);
@@ -480,7 +479,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
   }
 
   /**
-   * Performs the start flight lifecycle action.
+   * Opens the dialog for creating a tasting flight with date, name and notes.
    */
   function startFlight() {
     showModal(t('tastingFlights.create'), renderTemplate('tastingFlightForm2', {
@@ -502,12 +501,12 @@ export function createTastingFlightController({state, selectors, shell, navigate
   }
 
   /**
-   * Creates flight for tastings.
+   * Validates the dialog and creates a new tasting flight once.
    */
   async function createFlight() {
     const box = document.querySelector('#modal-root');
-    const name = box?.querySelector('[data-flight-name]');
-    const date = box?.querySelector('[data-flight-date]');
+    const name = /** @type {HTMLInputElement} */ (box?.querySelector('[data-flight-name]'));
+    const date = /** @type {HTMLInputElement} */ (box?.querySelector('[data-flight-date]'));
     if (!name?.reportValidity() || !date?.reportValidity() || flightCreating) return;
     flightCreating = true;
     try {
@@ -518,7 +517,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
           body: JSON.stringify({
             name: name.value,
             date: date.value,
-            notes: box.querySelector('[data-flight-notes]')?.value || '',
+            notes: /** @type {HTMLTextAreaElement} */ (box.querySelector('[data-flight-notes]'))?.value || '',
           }),
         }
       );
@@ -686,26 +685,26 @@ export function createTastingFlightController({state, selectors, shell, navigate
   }
 
   /**
-   * Updates the toggle flight edit state for its caller.
+   * Sets the flight metadata edit mode and redraws the flight.
    *
    * @param {boolean} editing Whether to enter or leave flight-edit mode.
    */
   function toggleFlightEdit(editing) {flightEditing = editing; flight();}
 
   /**
-   * Updates the toggle flight add state for its caller.
+   * Toggles the flight member chooser and redraws the flight.
    */
   function toggleFlightAdd() {flightAdding = !flightAdding; flight();}
 
   /**
    * Persists flight to its backing store.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of saving the selected flight's metadata.
    */
   async function saveFlight() {
-    const name = document.querySelector('.tasting-flight-page [data-flight-name]');
-    const date = document.querySelector('.tasting-flight-page [data-flight-date]');
+    const name = /** @type {HTMLInputElement} */ (document.querySelector('.tasting-flight-page [data-flight-name]'));
+    const date = /** @type {HTMLInputElement} */ (document.querySelector('.tasting-flight-page [data-flight-date]'));
     if (!name?.reportValidity() || !date?.reportValidity()) return;
-    const notes = document.querySelector('.tasting-flight-page [data-flight-notes]')?.value || '';
+    const notes = /** @type {HTMLTextAreaElement} */ (document.querySelector('.tasting-flight-page [data-flight-notes]'))?.value || '';
     try {
       await request(
         `/api/tasting-flights/${encodeURIComponent(state.selected)}`,
@@ -720,10 +719,10 @@ export function createTastingFlightController({state, selectors, shell, navigate
   }
 
   /**
-   * Updates flight members in the current state.
+   * Replaces the selected flight's ordered tasting IDs on the server and refreshes the collection.
    *
    * @param {*} ids Identifiers in their current order.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of saving the ordered flight membership and refreshing collection data.
    */
   async function updateFlightMembers(ids) {
     try {
@@ -741,7 +740,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
    * @param {string} sourceId Identifier of the moved tasting.
    * @param {string} targetId Identifier of the destination tasting.
    * @param {boolean} after Whether to insert after rather than before the destination.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of saving the reordered flight members, if the order changed.
    */
   function reorderFlightMember(sourceId, targetId, after) {
     const record = (state.collection?.tastingFlights || []).find(x => x.id === state.selected);
@@ -754,7 +753,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
    *
    * @param {*} index Zero-based index of the selected entry.
    * @param {*} step Relative movement or step size.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of moving the requested flight member when the new index is valid.
    */
   function moveFlightMember(index, step) {
     const record = (state.collection?.tastingFlights || []).find(x => x.id === state.selected);
@@ -767,19 +766,19 @@ export function createTastingFlightController({state, selectors, shell, navigate
 
   /**
    * Registers flight member behavior.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of attaching the selected tasting to the flight.
    */
   function attachFlightMember() {
-    const id = document.querySelector('[data-flight-tasting-option]')?.value;
+    const id = /** @type {HTMLSelectElement} */ (document.querySelector('[data-flight-tasting-option]'))?.value;
     const current = (state.collection?.tastingFlights || []).find(x => x.id === state.selected);
     if (id && current) return updateFlightMembers([...current.tastingIds, id]);
   }
 
   /**
-   * Filters records according to the detach flight member selection rules.
+   * Removes the specified tasting from the selected flight if it is a member.
    *
    * @param {*} id Identifier of the affected record.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the member update, or undefined when no matching member exists.
    */
   function detachFlightMember(id) {
     const current = (state.collection?.tastingFlights || []).find(x => x.id === state.selected);
@@ -788,7 +787,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
 
   /**
    * Removes or resets flight.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of deleting the selected flight.
    */
   async function deleteFlight() {
     try {

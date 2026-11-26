@@ -57,11 +57,15 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
    * @param {string} kind Resource kind selecting the relevant schema.
    * @param {string} id Identifier used to select the relevant record.
    * @param {!Object=} options3 Destructured options for this operation.
-   * @return {void} Structured result assembled from the input data.
+   * @return {void} No return value; opens the requested warehouse form.
    */
   function openForm(kind, id, {replaceCurrent = false} = {}) {
     const data = w();
-    let endpoint = '', method = 'POST', title = '', fields = '', shelfNavigation = '';
+    let endpoint = '', method = 'POST', title = '';
+    /** @type {import('../ui/render-plan.js').RenderPlan|string} */
+    let fields = '';
+    /** @type {import('../ui/render-plan.js').RenderPlan|string} */
+    let shelfNavigation = '';
     if (kind === 'room') {
       const item = data.rooms.find(r => r.id === id);
       title = item ? t("warehouse.rooms.edit") : t("warehouse.rooms.create");
@@ -332,7 +336,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
       '',
       ['assign', 'assign-bulk'].includes(kind) ? 'assignment' : ''
     );
-    const formElement = document.querySelector('#warehouse-form');
+    const formElement = /** @type {HTMLFormElement} */ (document.querySelector('#warehouse-form'));
     if (formElement?.tagName === 'FORM') formElement.dataset.initialValues = JSON.stringify([...new FormData(formElement).entries()]);
     if (kind === 'assign' || kind === 'assign-bulk') mountWarehouseAssignment(
       document.querySelector('#warehouse-form'),
@@ -341,8 +345,8 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
     );
     const editor = document.querySelector('.warehouse-door-ranges');
     if (editor) editor.addEventListener('click', event => {
-      if (event.target.closest('.warehouse-door-range-remove')) event.target.closest('.warehouse-door-range')?.remove();
-      if (event.target.closest('.warehouse-door-range-add')) {
+      if (/** @type {Element} */ (event.target).closest('.warehouse-door-range-remove')) /** @type {Element} */ (event.target).closest('.warehouse-door-range')?.remove();
+      if (/** @type {Element} */ (event.target).closest('.warehouse-door-range-add')) {
         const list = editor.querySelector('.warehouse-door-range-list');
         const shelfCount = findFurniture(w(), id)?.furniture.shelves.length || 0;
         appendContent(list, doorRangeRow({}, shelfCount));

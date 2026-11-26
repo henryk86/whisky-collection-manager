@@ -7,7 +7,7 @@ const storage = new AsyncLocalStorage();
  * Runs a collection mutation while tracking affected resources.
  *
  * @param {*} task Operation executed with an isolated asynchronous mutation log.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Task result and the resource updates recorded during its execution.
  */
 export async function withMutationTracking(task) {
   const updates = [];

@@ -3,7 +3,7 @@
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {*} shelfId Identifier of the shelf whose room and furniture path is requested.
- * @return {?Object} Computed value, or null when the input has no match.
+ * @return {?Object} Room, furniture, shelf and display label, or null if the shelf is unknown.
  */
 export function storagePath(warehouse, shelfId) {
   for (const room of warehouse?.rooms || []) for (const furniture of room.furniture) for (const shelf of furniture.shelves) {

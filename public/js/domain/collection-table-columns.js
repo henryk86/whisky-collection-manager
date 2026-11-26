@@ -172,7 +172,7 @@ export function normalizeTableColumns(mode, value) {
  * Loads table columns for collection table columns.
  *
  * @param {*} storage Storage adapter used to load or save preferences.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Validated column-visibility and ordering preferences.
  */
 export function loadTableColumns(storage) {
   try {
@@ -195,7 +195,7 @@ export function loadTableColumns(storage) {
  *
  * @param {*} preferences Preferences to read, normalize or persist.
  * @param {*} storage Storage adapter used to load or save preferences.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the column preferences were saved successfully.
  */
 export function saveTableColumns(preferences, storage) {
   try {

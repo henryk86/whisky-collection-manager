@@ -2,7 +2,7 @@ import {t} from '../../i18n/index.js';
 
 /**
  * Prepares localized help topics and the active selection.
- * @param {!Array<!Object>} topics Available help topics.
+ * @param {!ReadonlyArray<!Object>} topics Available help topics.
  * @param {string} activeTopic Requested topic identifier.
  * @return {!Object} Selected topic and translated entries.
  */

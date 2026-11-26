@@ -22,7 +22,7 @@ export function allowedExtensionOrigin(origin, configuredIds = process.env.EXTEN
  * Reject cross-origin mutations even when the request is CORS-simple.
  *
  * @param {!Object} request Incoming request.
- * @param {string} url URL of the requested resource.
+ * @param {URL} url Parsed request URL.
  * @param {!Object=} options3 Destructured options for this operation.
  */
 export function requireSameOriginMutation(request, url, {extensionStage =

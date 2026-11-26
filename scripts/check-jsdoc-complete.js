@@ -92,6 +92,7 @@ function directlyReturnsPlan(fn, renderers) {
   }
   // Restrict the check to module-level declarations or variable initializers,
   // so outer local bindings cannot be mistaken for the imported factory.
+  /** @type {ts.Node} */
   let owner = fn;
   if (ts.isVariableDeclaration(owner.parent)) owner = owner.parent.parent.parent;
   if (!ts.isSourceFile(owner.parent)) return false;
@@ -134,13 +135,14 @@ function directlyReturnsPlan(fn, renderers) {
 export function jsdocViolations(filename, source) {
   const file = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   const issues = [];
-  for (const diagnostic of file.jsDocDiagnostics ?? []) {
+  for (const diagnostic of (/** @type {ts.SourceFile & {jsDocDiagnostics?: readonly ts.Diagnostic[]}} */ (file)).jsDocDiagnostics ?? []) {
     const {line} = file.getLineAndCharacterOfPosition(diagnostic.start ?? 0);
     issues.push(`${filename}:${line + 1}: invalid JSDoc syntax: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ')}`);
   }
   const requireComplete = !filename.replaceAll('\\', '/').startsWith('tests/');
   const renderers = templateRenderers(file);
-  const placeholder = /^(?:Derives the .+ result from the supplied values\.|Combined text from the input values\.|Resulting (?:value|text)\.|Data used for the comparison\.)$|\bused by this operation\.$/;
+  // Match known generated boilerplate, not arbitrary wording or comment length.
+  const placeholder = /^(?:Derives the .+ result from the supplied values\.|Combined text from the input values\.|Resulting (?:value|text|list of values)\.|Data used for the comparison\.|Structured result (?:for the caller|assembled from the input data)\.|Result (?:computed from the supplied inputs|of this expression)\.|Value returned by the delegated operation\.|Promise (?:fulfilled when the operation completes|for the asynchronous operation)\.|Calculated numeric (?:result|value)\.|Whether the (?:operation matched or succeeded|condition is satisfied)\.|Entries (?:that meet the selection criteria|transformed for the consuming code)\.|Computed value, or null when the input has no match\.|Performs the .+ lifecycle action\.|Updates the .+ state for its caller\.|Builds the localized .+ text for the current language\.|Calculates the .+ numeric value\.|Coordinates asynchronous work for .+\.)$|\bused by this operation\.$/;
 
   /**
    * Checks the declared interface against the function syntax.
@@ -149,7 +151,7 @@ export function jsdocViolations(filename, source) {
    * @param {!ts.FunctionLikeDeclaration} fn Function or method being documented.
    */
   function inspect(owner, fn) {
-    const docs = owner.jsDoc ?? [];
+    const docs = (/** @type {ts.Node & {jsDoc?: readonly ts.JSDoc[]}} */ (owner)).jsDoc ?? [];
     const position = file.getLineAndCharacterOfPosition(owner.getStart(file));
     const prefix = `${filename}:${position.line + 1}`;
     if (!docs.length) {
@@ -162,18 +164,18 @@ export function jsdocViolations(filename, source) {
     if (requireComplete && !description) {
       issues.push(`${prefix}: missing meaningful JSDoc description`);
     }
-    if (requireComplete && (placeholder.test(description ?? '') || tags.some(tag =>
-      ['param', 'return', 'returns'].includes(tag.tagName.text) && typeof tag.comment === 'string' && placeholder.test(tag.comment.trim())))) {
+    if (requireComplete && (placeholder.test((description ?? '').replace(/\s+/g, ' ')) || tags.some(tag =>
+      ['param', 'return', 'returns'].includes(tag.tagName.text) && typeof tag.comment === 'string' && placeholder.test(tag.comment.trim().replace(/\s+/g, ' '))))) {
       issues.push(`${prefix}: JSDoc uses a known placeholder instead of explaining the contract`);
     }
     const params = fn.parameters ?? [];
-    const documented = tags.filter(tag => tag.tagName.text === 'param' && tag.name && !tag.name.getText(file).includes('.'));
-    const allParams = tags.filter(tag => tag.tagName.text === 'param' && tag.name);
+    const documented = tags.filter(ts.isJSDocParameterTag).filter(tag => tag.name && !tag.name.getText(file).includes('.'));
+    const allParams = tags.filter(ts.isJSDocParameterTag).filter(tag => tag.name);
     // The TypeScript parser nests dotted property tags under object parameters.
     // Walk that representation as well as standalone dotted tags.
     for (const tag of allParams) {
       const type = tag.typeExpression?.type;
-      if (type && ts.isJSDocTypeLiteral(type)) allParams.push(...type.jsDocPropertyTags);
+      if (type && ts.isJSDocTypeLiteral(type)) allParams.push(...type.jsDocPropertyTags.filter(ts.isJSDocParameterTag));
     }
     const seen = new Set();
     for (const tag of allParams) {
@@ -214,7 +216,7 @@ export function jsdocViolations(filename, source) {
     if (requireComplete && tags.some(tag => tag.tagName.text === 'returns')) {
       issues.push(`${prefix}: use Google JSDoc @return, not @returns`);
     }
-    const result = tags.filter(tag => tag.tagName.text === 'return' || tag.tagName.text === 'returns');
+    const result = tags.filter(ts.isJSDocReturnTag);
     if (requireComplete && returnsValue(fn) && (result.length !== 1 || !result[0].typeExpression?.type)) {
       issues.push(`${prefix}: non-void function requires typed @return`);
     }

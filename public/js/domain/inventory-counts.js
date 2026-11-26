@@ -5,7 +5,7 @@
  * contributes to exactly one group.
  *
  * @param {!Array<*>} bottles Physical bottle records to include.
- * @return {!Array<!Object>} Resulting list of values.
+ * @return {!Array<!Object>} Mutually exclusive groups of nonempty physical bottles with inventory counts.
  */
 export function inventoryCountGroups(bottles) {
   const categories = [

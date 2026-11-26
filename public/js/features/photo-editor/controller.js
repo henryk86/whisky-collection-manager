@@ -19,7 +19,7 @@ import {createPhotoViewport} from './viewport-controller.js';
 import {DEFAULT_MASK_BRUSH_SIZE} from './mask-brush.js';
 
 /**
- * Locates the DOM elements used by root.
+ * Finds the currently mounted photo-editor host.
  * @return {*} Matching DOM element, if present.
  */
 const root = () => document.querySelector('[data-photo-editor]');
@@ -30,7 +30,7 @@ const root = () => document.querySelector('[data-photo-editor]');
  * cumulatively.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Photo-editor lifecycle, preview, adjustment, brush and save operations.
  */
 export function createPhotoEditor({state, showModal, closeModal, action}) {
   const session = createPhotoEditorSession();
@@ -57,7 +57,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
    *
    * @param {string} bottleId Identifier of the physical bottle containing the photo.
    * @param {string} photoId Identifier of the photo within that bottle.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Matching photo of the specified physical bottle, or undefined if absent.
    */
   const findPhoto = (bottleId, photoId) => state.collection?.bottlings.flatMap(bottling => bottling.bottles || []).find(bottle => bottle.id === bottleId)?.photos?.find(photo =>
     photo.id === photoId);
@@ -200,7 +200,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   }
 
   /**
-   * Updates values in the current state.
+   * Normalizes photo adjustments, stores them for the active source and refreshes controls and preview.
    *
    * @param {*} next Next candidate state or entry.
    */
@@ -215,7 +215,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   }
 
   /**
-   * Updates the reset state for its caller.
+   * Restores the default photo-adjustment values.
    */
   function reset() {setValues(EMPTY_PHOTO_ADJUSTMENTS);}
 
@@ -230,7 +230,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   }
 
   /**
-   * Updates the auto state for its caller.
+   * Calculates automatic adjustments from the current source pixels and applies them.
    */
   function auto() {if (session.sourceData) setValues(autoPhotoAdjustments(session.sourceData));}
 

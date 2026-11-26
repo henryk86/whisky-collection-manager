@@ -21,9 +21,9 @@ export function createWarehouseDeleteController({currentRoom, selectedFurniture,
   let pendingDelete = null;
 
   /**
-   * Transforms the entries used by ask bulk delete.
-      * @return {*} Result of this expression.
-*/
+   * Asks for confirmation before deleting the furniture selected in the current room.
+   * @return {*} Notification if no furniture is selected; otherwise opens deletion confirmation.
+   */
   function askBulkDelete() {
     const room = currentRoom();
     const ids = selectedFurniture(room);

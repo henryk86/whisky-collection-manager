@@ -6,7 +6,7 @@ import {normalizeImportPayload} from '../import/payload.js';
  * importer.
  *
  * @param {!Object} data Input data for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Normalized provider-validated payload for the generic importer.
  */
 export function validateExtensionPayload(data) {
   const id = data?.fields?.whiskybaseId;

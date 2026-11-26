@@ -5,7 +5,7 @@ export const PHOTO_ZOOM_MAX = 6;
  * Limits photo-viewer zoom to its configured bounds.
  *
  * @param {*} zoom Map scale used for projection.
- * @return {number} Calculated numeric result.
+ * @return {number} Zoom factor clamped to the viewer's configured range.
  */
 export const clampPhotoZoom = zoom => Math.max(PHOTO_ZOOM_MIN, Math.min(PHOTO_ZOOM_MAX, zoom));
 
@@ -15,7 +15,7 @@ export const clampPhotoZoom = zoom => Math.max(PHOTO_ZOOM_MIN, Math.min(PHOTO_ZO
  * @param {*} view Current zoom scale and pan offsets in CSS pixels.
  * @param {*} stage Viewport width and height in CSS pixels.
  * @param {*} image Unscaled image width and height in CSS pixels.
- * @return {*} Structured result assembled from the input data.
+ * @return {*} Zoom and pan state with both offsets constrained to the visible image bounds.
  */
 export function constrainPhotoPan(view, stage, image) {
   const maxX = Math.max(0, (image.width * view.zoom - stage.width) / 2);
@@ -35,7 +35,7 @@ export function constrainPhotoPan(view, stage, image) {
  * @param {*} point Zoom anchor relative to the viewport in CSS pixels.
  * @param {*} stage Viewport width and height in CSS pixels.
  * @param {*} image Unscaled image width and height in CSS pixels.
- * @return {*} Value returned by the delegated operation.
+ * @return {*} Constrained zoom and pan state retaining the specified interaction point where possible.
  */
 export function zoomPhotoAt(view, requestedZoom, point, stage, image) {
   const zoom = clampPhotoZoom(requestedZoom);
@@ -48,9 +48,9 @@ export function zoomPhotoAt(view, requestedZoom, point, stage, image) {
 }
 
 /**
- * Creates photo zoom for photo zoom.
+ * Creates a zoom and pan controller for an image displayed in a viewport.
  *
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Image mounting, navigation and zoom operations.
  */
 export function createPhotoZoom() {
   let stage = null;
@@ -61,7 +61,7 @@ export function createPhotoZoom() {
 
   /**
    * Reads the viewport and unscaled image layout dimensions for pan constraints.
-   * @return {!Object} Structured result assembled from the input data.
+   * @return {!Object} Viewport and unscaled image dimensions in CSS pixels.
    */
   function dimensions() {
     return {
@@ -94,8 +94,8 @@ export function createPhotoZoom() {
   /**
    * Converts pointer client coordinates to coordinates relative to the photo viewport.
    *
-   * @param {!Event} event Event that triggered this operation.
-   * @return {!Object} Structured result assembled from the input data.
+   * @param {{clientX: number, clientY: number}} event Native or synthesized pointer coordinates.
+   * @return {!Object} Pointer coordinates relative to the image viewport.
    */
   function pointOf(event) {
     const rect = stage.getBoundingClientRect();
@@ -116,7 +116,7 @@ export function createPhotoZoom() {
   }
 
   /**
-   * Updates the zoom state for its caller.
+   * Resets zoom or multiplies the current zoom by the supplied factor.
    *
    * @param {*} direction Direction used for traversal or movement.
    */
@@ -126,7 +126,7 @@ export function createPhotoZoom() {
   }
 
   /**
-   * Updates the reset state for its caller.
+   * Resets zoom, pan and tracked pointer gestures to the initial view.
    */
   function reset() {
     view = {zoom: 1, x: 0, y: 0};
@@ -144,21 +144,21 @@ export function createPhotoZoom() {
     if (!stage || !image) return;
     reset();
     image.addEventListener('load', render);
-    stage.addEventListener('wheel', event => {
+    stage.addEventListener('wheel', (/** @type {WheelEvent} */ event) => {
       event.preventDefault();
       zoomTo(view.zoom * (event.deltaY < 0 ? 1.2 : 1 / 1.2), pointOf(event));
     }, {passive: false});
-    stage.addEventListener('dblclick', event => {
+    stage.addEventListener('dblclick', (/** @type {MouseEvent} */ event) => {
       event.preventDefault();
       zoomTo(view.zoom > 1 ? 1 : 2, pointOf(event));
     });
-    stage.addEventListener('pointerdown', event => {
+    stage.addEventListener('pointerdown', (/** @type {PointerEvent} */ event) => {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
       pointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
       stage.setPointerCapture?.(event.pointerId);
       lastPinchDistance = null;
     });
-    stage.addEventListener('pointermove', event => {
+    stage.addEventListener('pointermove', (/** @type {PointerEvent} */ event) => {
       const previous = pointers.get(event.pointerId);
       if (!previous) return;
       pointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
@@ -182,9 +182,9 @@ export function createPhotoZoom() {
       }
     });
     /**
-     * Updates the end pointer state for its caller.
+     * Removes the released pointer and resets the pinch-distance baseline.
      *
-     * @param {!Event} event Event that triggered this operation.
+     * @param {!PointerEvent} event Event that triggered this operation.
      */
     const endPointer = event => {
       pointers.delete(event.pointerId);

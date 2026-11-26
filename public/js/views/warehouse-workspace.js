@@ -19,6 +19,7 @@ const renderTemplate = await loadTemplates('warehouse/warehouse.html');
 export function renderWarehouseWorkspace(model) {
   const {data, summary, roomModel, room, furniture, section, selection, selectedBottleIds, tray, focus, withoutShelves, finder} = model;
   const {total, assigned, overallCapacity, roomCount, furnitureCount} = summary;
+  /** @type {import('../ui/render-plan.js').RenderPlan|string} */
   let content = '';
   if (section === 'overview') {
     content =

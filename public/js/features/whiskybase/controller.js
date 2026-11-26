@@ -7,7 +7,7 @@ import {t} from '../../i18n/index.js';
  * ../import/.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Provider-specific external-import operations for Whiskybase.
  */
 export function createWhiskybase({state, ...dependencies}) {
   return createExternalImport({
@@ -23,7 +23,7 @@ export function createWhiskybase({state, ...dependencies}) {
      *
      * @param {*} collection Collection data to process.
      * @param {*} incoming Imported Whiskybase metadata used to find a matching existing bottling.
-     * @return {*} Result computed from the supplied inputs.
+     * @return {*} Existing bottling with the imported Whiskybase identifier, or undefined.
      */
     findExistingBottling: (collection, incoming) => collection.bottlings.find(bottling => bottling.whiskybaseId === incoming.fields.whiskybaseId),
   });

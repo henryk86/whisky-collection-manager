@@ -14,8 +14,8 @@ export function createPhotoViewport({root, canZoom, canPan, picking}) {
   let panStart = null;
   let pinchStart = null;
   /**
-   * Locates the DOM elements used by viewport size.
-   * @return {!Object} Structured result assembled from the input data.
+   * Reads the mounted preview canvas dimensions, using nonzero defaults.
+   * @return {!Object} Viewport width and height in CSS pixels.
    */
   function viewportSize() {
     const canvas = root()?.querySelector('[data-photo-editor-preview]');
@@ -70,8 +70,8 @@ export function createPhotoViewport({root, canZoom, canPan, picking}) {
       // Canvas coordinates must be relative to its untransformed layout box.
       const stageRect = stage.getBoundingClientRect();
       const point = {
-        x: event.clientX - stageRect.left - stage.clientLeft - parseFloat(getComputedStyle(stage).paddingLeft || 0),
-        y: event.clientY - stageRect.top - stage.clientTop - parseFloat(getComputedStyle(stage).paddingTop || 0),
+        x: event.clientX - stageRect.left - stage.clientLeft - parseFloat(getComputedStyle(stage).paddingLeft || '0'),
+        y: event.clientY - stageRect.top - stage.clientTop - parseFloat(getComputedStyle(stage).paddingTop || '0'),
       };
       zoom(event.deltaY < 0 ? 1.15 : 1 / 1.15, point);
     }, {passive: false});
@@ -101,8 +101,8 @@ export function createPhotoViewport({root, canZoom, canPan, picking}) {
         const [a, b] = [...panPointers.values()];
         const stageRect = stage.getBoundingClientRect();
         const point = {
-          x: (a.x + b.x) / 2 - stageRect.left - stage.clientLeft - parseFloat(getComputedStyle(stage).paddingLeft || 0),
-          y: (a.y + b.y) / 2 - stageRect.top - stage.clientTop - parseFloat(getComputedStyle(stage).paddingTop || 0),
+          x: (a.x + b.x) / 2 - stageRect.left - stage.clientLeft - parseFloat(getComputedStyle(stage).paddingLeft || '0'),
+          y: (a.y + b.y) / 2 - stageRect.top - stage.clientTop - parseFloat(getComputedStyle(stage).paddingTop || '0'),
         };
         // Finger distance is proportional to preview magnification.
         viewport = zoomAroundPoint(
@@ -125,7 +125,7 @@ export function createPhotoViewport({root, canZoom, canPan, picking}) {
     /**
      * Releases a pan pointer and resets the pinch or remaining single-pointer gesture.
      *
-     * @param {!Event} event Event that triggered this operation.
+     * @param {!PointerEvent} event Event that triggered this operation.
      */
     const release = event => {
       if (!panPointers.delete(event.pointerId)) return;

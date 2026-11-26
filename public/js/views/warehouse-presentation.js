@@ -42,7 +42,7 @@ const ROOM_SECTION_KEYS = Object.freeze({
 });
 const TYPES = Object.keys(FURNITURE_TYPE_KEYS);
 /**
- * Transforms the entries used by type choices.
+ * Builds localized choices for the supported furniture types.
  * @return {!Array<*>} Resulting entries in their output order.
  */
 const typeChoices = () => TYPES.map(type => [type, t(FURNITURE_TYPE_KEYS[type])]);
@@ -64,10 +64,10 @@ const typeName = type => TYPES.includes(type) ? t(FURNITURE_TYPE_KEYS[type]) : t
 const num = value => formatNumber(Number(value), {maximumFractionDigits: 2});
 
 /**
- * Builds the localized capacity label text for the current language.
+ * Formats defined and unlimited shelf capacity for display.
  *
  * @param {*} s Source value to transform.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Localized furniture capacity summary.
  */
 const capacityLabel = s => s.shelves === 0 ?
   t('warehouse.capacity.noShelves') : s.unlimited === 0 ?
@@ -75,11 +75,11 @@ const capacityLabel = s => s.shelves === 0 ?
       t('warehouse.capacity.onlyUnlimited', {count: s.unlimited}) : t('warehouse.capacity.partialUnlimited', {count: s.unlimited, places: s.defined});
 
 /**
- * Filters records according to the count selection rules.
+ * Counts physical bottles assigned to the specified shelf.
  *
  * @param {*} w Width or value used by the calculation.
  * @param {*} shelfId Identifier of the shelf whose assigned bottles are counted.
- * @return {number} Calculated numeric value.
+ * @return {number} Number of matching bottle-to-shelf assignments.
  */
 const count = (w, shelfId) => Object.values(w.assignments).filter(id => id === shelfId).length;
 
@@ -208,7 +208,7 @@ function bottleRow(w, bottle, selected = false) {
  *
  * @param {*} w Width or value used by the calculation.
  * @param {*} roomId Identifier of the requested room.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Room with the specified identifier, or undefined when absent.
  */
 function roomOptions(w, roomId) {
   return w.rooms.find(room => room.id === roomId);
@@ -219,7 +219,7 @@ function roomOptions(w, roomId) {
  *
  * @param {*} w Width or value used by the calculation.
  * @param {*} furnitureId Identifier of the furniture to locate across warehouse rooms.
- * @return {!Object} Computed value, or null when the input has no match.
+ * @return {!Object} Room and furniture pair, or null if the furniture cannot be resolved.
  */
 function findFurniture(w, furnitureId) {
   for (const room of w.rooms) {

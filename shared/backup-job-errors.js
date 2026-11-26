@@ -12,7 +12,7 @@ export function backupJobError(code, params = {}) {
  * Serializes backup job error for backup job errors.
  *
  * @param {*} error Error being handled.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Stable backup-job error code and any safe translation parameters.
  */
 export function serializeBackupJobError(error) {
   if (typeof error?.backupJobCode === 'string' && /^backup\.errors\.[a-zA-Z0-9]+$/.test(error.backupJobCode)) {

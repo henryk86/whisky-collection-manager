@@ -12,7 +12,7 @@ const renderTemplate = await loadTemplates('dialogs/file-preview.html');
  * service.
  *
  * @param {string} name Name of the item.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Preview kind and MIME type, with null MIME type for unsupported files.
  */
 export function documentPreviewKind(name) {
   const ext = String(name || '').split('.').pop()?.toLowerCase();
@@ -34,13 +34,13 @@ export function documentPreviewKind(name) {
  * endpoint. Object URLs are revoked when the application closes the modal.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Attachment preview operations and object-URL cleanup.
  */
 export function createFilePreview({modal, state}) {
   let blobUrl = null;
   let sequence = 0;
   /**
-   * Performs the close lifecycle action.
+   * Invalidates pending preview requests and revokes the active object URL.
    */
   function close() {
     sequence++;

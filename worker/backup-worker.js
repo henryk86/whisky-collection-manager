@@ -51,7 +51,7 @@ const timeFormatter = new Intl.DateTimeFormat('en-CA', {
  * Formats the worker's current time in its configured time zone.
  *
  * @param {!Date=} now Current time used by the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Local date and time fields used for backup scheduling.
  */
 export function localClock(now = new Date()) {
   const parts = Object.fromEntries(timeFormatter.formatToParts(now).map(part => [part.type, part.value]));
@@ -65,7 +65,7 @@ export function localClock(now = new Date()) {
 /**
  * Determines which backup schedule slot is currently due.
  *
- * @param {*} profile Profile data used for the comparison.
+ * @param {*} profile Backup configuration selecting the repository, format and retention settings.
  * @param {!Date=} now Current time used by the operation.
  * @return {?string} Local date or date-and-hour slot identifier when due, or null.
  */
@@ -81,7 +81,7 @@ export function dueSlot(profile, now = new Date()) {
 }
 
 /**
- * Retrieves json from the available state.
+ * Reads a worker control JSON file and uses the supplied fallback only when the file is absent.
  *
  * @param {*} name Environment variable or setting name.
  * @param {*} fallback Value used when the requested data is unavailable.
@@ -177,7 +177,7 @@ function jobEnv() {
  * @param {string} binary Executable to launch without a shell.
  * @param {string[]} args Individual command-line arguments.
  * @param {!Object=} options3 Destructured options for this operation.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Captured subprocess standard output; rejects on failure or timeout.
  */
 export function runCommand(binary, args, {cwd, timeout = 3600000} = {}) {
   return new Promise((resolve, reject) => {
@@ -196,17 +196,18 @@ export function runCommand(binary, args, {cwd, timeout = 3600000} = {}) {
     const timer = setTimeout(() => child.kill('SIGKILL'), timeout);
     child.on('error', err => {
       clearTimeout(timer);
-      err.backupCommand = binary;
-      err.backupDiagnostic = commandFailureDiagnostic(binary, null, null, err.code || 'Startfehler');
-      reject(err);
+      const failure = /** @type {NodeJS.ErrnoException} */ (err);
+      reject(Object.assign(failure, {
+        backupCommand: binary,
+        backupDiagnostic: commandFailureDiagnostic(binary, null, null, failure.code || 'Startfehler'),
+      }));
     });
     child.on('close', (code, signal) => {
       clearTimeout(timer);
       if (code === 0) resolve(output);
       else {
         const error = backupJobError(binary === 'rclone' ? 'backup.errors.rcloneFailed' : 'backup.errors.resticFailed');
-        error.backupDiagnostic = commandFailureDiagnostic(binary, code, signal, stderr || output.slice(-6000));
-        reject(error);
+        reject(Object.assign(error, {backupDiagnostic: commandFailureDiagnostic(binary, code, signal, stderr || output.slice(-6000))}));
       }
     });
   });
@@ -225,7 +226,7 @@ const restic = (repo, args, options) => runCommand('restic', ['-r', repo, ...arg
  * Parses snapshots data from JSON input.
  *
  * @param {*} repo Repository used for the check.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Recent backup snapshot descriptors, newest first.
  */
 async function snapshots(repo) {
   const raw = await restic(repo, ['snapshots', '--json'], {timeout: 120000});
@@ -306,23 +307,23 @@ function weekBucket(time) {
   d.setUTCHours(0, 0, 0, 0);
   const day = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - day);
-  return `${d.getUTCFullYear()}-${Math.ceil((((d - Date.UTC(d.getUTCFullYear(), 0, 1)) / 86400000) + 1) / 7)}`;
+  return `${d.getUTCFullYear()}-${Math.ceil((((d.getTime() - Date.UTC(d.getUTCFullYear(), 0, 1)) / 86400000) + 1) / 7)}`;
 }
 
 /**
  * Retrieves zip retention for backup worker.
  *
- * @param {!Array<*>} items Archives ordered newest first, each with an id and ISO timestamp.
- * @param {*} retention Daily, weekly and monthly retention limits.
- * @return {!Object} Structured result for the caller.
+ * @param {Array<{id: string, time: string}>} items Archives ordered newest first, each with an id and ISO timestamp.
+ * @param {{daily?: number, weekly?: number, monthly?: number}} retention Daily, weekly and monthly retention limits.
+ * @return {Set<string>} IDs of retained archives, always including the newest archive.
  */
 export function selectZipRetention(items, retention) {
   const keep = new Set(items.length ? [items[0].id] : []);
-  for (const [rule, keyOf] of [
+  for (const [rule, keyOf] of /** @type {Array<['daily'|'weekly'|'monthly', (item: {id: string, time: string}) => string]>} */ ([
     ['daily', item => item.time.slice(0, 10)],
     ['weekly', item => weekBucket(item.time)],
     ['monthly', item => item.time.slice(0, 7)],
-  ]) {
+  ])) {
     const seen = new Set();
     for (const item of items) {
       const key = keyOf(item);
@@ -335,12 +336,12 @@ export function selectZipRetention(items, retention) {
 }
 
 /**
- * Filters records according to the zip prune selection rules.
+ * Applies the configured ZIP retention policy and deletes expired local or remote archives.
  *
  * @param {*} profile Backup profile specifying the storage provider and retention limits.
  * @param {*} repo Repository used for the check.
  * @param {*} items Entries to process.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Completion of retention pruning.
  */
 async function zipPrune(profile, repo, items) {
   const keep = selectZipRetention(items, profile.retention);
@@ -353,13 +354,13 @@ async function zipPrune(profile, repo, items) {
 }
 
 /**
- * Validates the run zip backup state and rejects invalid inputs.
+ * Creates and verifies an encrypted ZIP backup from a consistent source snapshot, then applies retention.
  *
  * @param {*} job Queued backup job and its snapshot identifier.
  * @param {*} profile Backup profile specifying destination provider and retention.
  * @param {*} repo Repository used for the check.
  * @param {*} status Status value determining the next action.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Backup-job result containing the archive information.
  */
 async function runZipBackup(job, profile, repo, status) {
   const folder = await ensureSourceSnapshot(job);
@@ -398,7 +399,7 @@ async function runZipBackup(job, profile, repo, status) {
  *
  * @param {*} job Restore job containing the requested restic snapshot identifier.
  * @param {string} repo Restic repository path or remote location.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Prepared portable ZIP restore metadata from the legacy snapshot.
  */
 async function prepareLegacyRestore(job, repo) {
   if (!/^(latest|[0-9a-f]{8,64})$/i.test(job.snapshotId || '')) throw backupJobError('backup.errors.invalidSnapshotId');
@@ -429,7 +430,7 @@ async function prepareLegacyRestore(job, repo) {
  * @param {*} job Restore job containing the requested ZIP snapshot identifier.
  * @param {*} profile Profile data used for the comparison.
  * @param {string} repo Local directory or remote ZIP repository location.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Prepared ZIP restore metadata from the selected backup archive.
  */
 async function prepareZipRestore(job, profile, repo) {
   const archives = await zipFilesFor(profile, repo);
@@ -488,7 +489,7 @@ async function ensureSourceSnapshot(job) {
 }
 
 /**
- * Validates the verify zip archive state and rejects invalid inputs.
+ * Verifies that the ZIP archive can be read using the configured password and maps validation failures to job errors.
  *
  * @param {*} file File resource to read, write or inspect.
  * @param {*=} password Password or secret supplied by the caller.
@@ -502,8 +503,8 @@ function verifyZipArchive(file, password = backupPassword()) {
 }
 
 /**
- * Validates the backup password state and rejects invalid inputs.
- * @return {*} Value returned by the delegated operation.
+ * Loads the configured backup password and maps missing or too-short passwords to worker error codes.
+ * @return {*} Validated configured backup password.
  */
 function backupPassword() {
   try {return readBackupPassword();}
@@ -525,8 +526,7 @@ function backupPassword() {
  * @param {*} job Queued job with its operation type and snapshot selection.
  * @param {*} profile Profile data used for the comparison.
  * @param {*} status HTTP or entity status used for validation.
- * @return {!Promise<(!Object)>} Promise fulfilled when the operation
- * completes.
+ * @return {!Promise<(!Object)>} Job result containing a message and any snapshot or restore metadata.
  */
 export async function executeJob(job, profile, status) {
   const repo = repositoryFor(profile);
@@ -604,9 +604,9 @@ const EMPTY_STATUS = {
   remotes: [],
 };
 /**
- * Creates worker for backup worker.
+ * Creates the backup worker, recovering interrupted jobs and maintaining queue state.
  *
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Worker startup and queue-processing operations.
  */
 export function createWorker() {
   const status = readJson('worker-status.json', EMPTY_STATUS);
@@ -633,8 +633,8 @@ export function createWorker() {
   }
 
   /**
-   * Retrieves remotes from the available state.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Refreshes configured rclone remote names, clearing the list if discovery fails.
+   * @return {!Promise<*>} Completion of remote discovery.
    */
   async function loadRemotes() {
     try {
@@ -666,7 +666,7 @@ export function createWorker() {
   }
 
   /**
-   * Handles queue for backup worker.
+   * Processes due schedules and queued jobs serially, skipping overlapping queue runs.
    */
   async function processQueue() {
     if (busy) return;
@@ -719,8 +719,8 @@ export function createWorker() {
   }
 
   /**
-   * Performs the start lifecycle action.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Loads remote configuration, processes initial jobs and starts periodic worker timers.
+   * @return {!Promise<*>} Completion of initial worker startup.
    */
   async function start() {
     await loadRemotes();

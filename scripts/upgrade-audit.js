@@ -34,7 +34,7 @@ function containedFile(root, relative) {
  * Recursively collects repository files eligible for an installation upgrade.
  *
  * @param {*} directory Directory containing the requested data.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Discovered source files relative to the inspected release root.
  */
 function sourceFiles(directory) {
   const found = new Set();
@@ -58,11 +58,11 @@ function sourceFiles(directory) {
 }
 
 /**
- * Validates the safe installed file state and rejects invalid inputs.
+ * Resolves an installed file path without following symbolic links or absent path components.
  *
  * @param {*} root Root node or directory for the operation.
  * @param {*} relative Relative path or position to resolve.
- * @return {*} Computed value, or null when the input has no match.
+ * @return {*} Resolved installed file path, or null if missing or unsafe.
  */
 function safeInstalledFile(root, relative) {
   let next = path.resolve(root);
@@ -84,7 +84,7 @@ function safeInstalledFile(root, relative) {
  * @param {string} previousRoot Directory containing the old release source.
  * @param {string} nextRoot Directory containing the replacement release source.
  * @param {string} installedRoot Live installation directory to compare with the old release.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Lists of obsolete, locally changed and absent installed files.
  */
 export function auditUpgrade(previousRoot, nextRoot, installedRoot) {
   const previous = sourceFiles(previousRoot);
@@ -109,7 +109,7 @@ export function auditUpgrade(previousRoot, nextRoot, installedRoot) {
  * @param {string} previousRoot Directory containing the old release source.
  * @param {string} nextRoot Directory containing the replacement release source.
  * @param {string} installedRoot Live installation directory from which unmodified obsolete files may be removed.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Upgrade report after removing only unchanged obsolete files.
  */
 export function pruneObsolete(previousRoot, nextRoot, installedRoot) {
   const report = auditUpgrade(previousRoot, nextRoot, installedRoot);

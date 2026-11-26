@@ -9,7 +9,7 @@ export const UNASSIGNED_WALL_PAGE_SIZE = 24;
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Unassigned bottle totals, filtered count, valid page and bottle records on that page.
  */
 export function unassignedWallPage(
   warehouse,

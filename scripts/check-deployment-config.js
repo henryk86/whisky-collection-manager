@@ -11,7 +11,7 @@ import {fileURLToPath} from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /**
- * Validates the check state and rejects invalid inputs.
+ * Throws a descriptive deployment-contract failure if the asserted condition is false.
  *
  * @param {*} value Value to process.
  * @param {*} message Message to display or use for diagnostics.
@@ -42,7 +42,7 @@ const noText = (text, snippet, message) => check(!text.includes(snippet), messag
  * Validates deployment configuration for check deployment config.
  *
  * @param {Function=} read Reads a repository-relative configuration file as UTF-8 text.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Deployment configuration verification summary.
  */
 export function verifyDeploymentConfiguration(read = name =>
   fs.readFileSync(path.join(ROOT, name), 'utf8')) {

@@ -57,7 +57,7 @@ export function sanitizeBackupDiagnostic(raw) {
  * The error's diagnostic stays in memory. serializeBackupJobError ignores it.
  *
  * @param {string} binary Name of the executable that failed.
- * @param {string} code Stable identifier used for error handling.
+ * @param {number|null} code Exit status, or null when the command did not exit normally.
  * @param {*} signal Process termination signal, if the command was killed.
  * @param {*} output Captured process output; sanitized before it is included in the diagnostic.
  * @return {string} Command name, exit information and sanitized output for the operator log.

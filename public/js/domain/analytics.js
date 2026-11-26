@@ -58,7 +58,7 @@ const idsOf = bottlingDistilleryIds;
 const amount = v => isNumber(v) && v >= 0 ? v : null;
 
 /**
- * Tests input text against the date month pattern.
+ * Extracts a valid year-month key from an ISO-style date.
  *
  * @param {*} value Value to process.
  * @return {?string} YYYY-MM month key, or null if the value has no supported month.
@@ -98,7 +98,7 @@ const avg = values => values.length ? sum(values) / values.length : null;
  *
  * @param {*} rows Input records to process.
  * @param {function(...*): *} getter Function selecting a value from a record.
- * @return {*} Entries that meet the selection criteria.
+ * @return {*} Finite numeric values extracted by the supplied getter.
  */
 const validNumbers = (rows, getter) => rows.map(getter).filter(isNumber);
 
@@ -129,10 +129,10 @@ const grouped = (rows, key, {unknown = 'Unbekannt'} = {}) => {
 const rank = (rows, limit = 10) => rows.slice(0, limit);
 
 /**
- * Calculates the stats numeric value.
+ * Summarizes the count, mean and extrema of numeric observations.
  *
  * @param {*} values Values to process.
- * @return {!Object} Calculated numeric result.
+ * @return {!Object} Count, arithmetic mean, minimum and maximum; empty extrema are null.
  */
 const stats = values => ({
   count: values.length,
@@ -166,7 +166,7 @@ const statusLabels = {closed: 'Geschlossen', open: 'Geöffnet', empty: 'Leer'};
  *
  * @param {!Object} collection Collection data being processed.
  * @param {!Object=} filters Filters restricting the input records.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Matching bottlings and matching physical bottles, with filters applied to the same bottle.
  */
 export function filterAnalyticsCollection(collection, filters = {}) {
   const distillery = filters.distillery || 'all';
@@ -198,7 +198,7 @@ export function filterAnalyticsCollection(collection, filters = {}) {
  * Collects the available distillery, country and bottle filters.
  *
  * @param {!Object} collection Collection data being processed.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Available distilleries, countries, volumes and bottle-status choices.
  */
 export function analyticsFilterOptions(collection) {
   const used = new Set((collection.bottlings || []).flatMap(idsOf));
@@ -218,7 +218,7 @@ export function analyticsFilterOptions(collection) {
  *
  * @param {!Object} collection Collection data being processed.
  * @param {!Object=} filters Filters restricting the input records.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Aggregated inventory, acquisition, origin, flavor and tasting statistics.
  */
 export function analyzeCollection(collection, filters = {}) {
   const {bottlings, bottleEntries, bottles} = filterAnalyticsCollection(collection, filters);

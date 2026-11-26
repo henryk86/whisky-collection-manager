@@ -35,8 +35,7 @@ export function assertVersionPR(pr, branch, snapshot) {
  * Verifies and merges the workflow-generated version pull request.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Promise<(!Object)>} Promise fulfilled when the operation
- * completes.
+ * @return {!Promise<(!Object)>} Release tag and branch, with a flag indicating a completed or previously merged PR.
  */
 export async function mergeVersionPR({tag, merge, repo = process.env.GITHUB_REPOSITORY}) {
   if (!repo || !/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('GITHUB_REPOSITORY must be set');

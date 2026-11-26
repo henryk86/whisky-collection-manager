@@ -14,7 +14,7 @@ const renderTemplate = await loadTemplates('dialogs/photo-viewer.html');
  * open new tabs. Nested mode preserves unsaved editor form DOM nodes.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Photo lightbox opening, navigation and lifecycle operations.
  */
 export function createPhotoViewer({state, showModal}) {
   let photos = [];
@@ -22,10 +22,10 @@ export function createPhotoViewer({state, showModal}) {
   const photoZoom = createPhotoZoom();
 
   /**
-   * Locates the DOM elements used by photo from.
+   * Extracts a local image URL and alternative text from a photo control.
    *
    * @param {*} button Button control involved in the interaction.
-   * @return {!Object} Computed value, or null when the input has no match.
+   * @return {!Object} Local photo descriptor, or null for an unsupported or missing URL.
    */
   function photoFrom(button) {
     const img = button?.querySelector('img');
@@ -83,12 +83,12 @@ export function createPhotoViewer({state, showModal}) {
       }) : '',
     }), true, Boolean(state.modal), '', 'photo');
     photoZoom.attach();
-    query('.dialog .dialog-head [data-act="close-modal"]')?.focus();
+    /** @type {HTMLElement} */ (query('.dialog .dialog-head [data-act="close-modal"]'))?.focus();
   }
 
   /**
    * Checks whether open applies.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * @return {boolean} True while the photo lightbox is mounted.
    */
   function isOpen() {
     return Boolean(query('.photo-lightbox'));
@@ -103,7 +103,7 @@ export function createPhotoViewer({state, showModal}) {
     if (!isOpen() || photos.length < 2) return;
     active = (active + (direction < 0 ? -1 : 1) + photos.length) % photos.length;
     const photo = photos[active];
-    const image = query('.photo-lightbox-image');
+    const image = /** @type {HTMLImageElement} */ (query('.photo-lightbox-image'));
     const caption = query('.photo-lightbox-caption');
     const counter = query('.photo-lightbox-count');
     if (image) {

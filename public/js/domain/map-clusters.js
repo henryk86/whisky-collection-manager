@@ -12,7 +12,7 @@ export const CLUSTER_DISTANCE_PX = 58;
  * @param {*} sites Geographic sites to include in the map.
  * @param {*} zoom Map scale used for projection.
  * @param {!Object=} options3 Destructured options for this operation.
- * @return {!Array<!Object>} Resulting list of values.
+ * @return {!Array<!Object>} Map marker clusters and single sites at the requested zoom.
  */
 export function clusterMapSites(sites, zoom, {pinnedId = null} = {}) {
   const groups = [];

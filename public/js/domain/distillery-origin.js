@@ -63,7 +63,7 @@ export function countryLabel(value) {
  * Collects the distillery IDs attributed to a bottling.
  *
  * @param {!Object} bottling Bottling record being processed.
- * @return {!Array<*>} Resulting list of values.
+ * @return {!Array<*>} Distinct distillery identifiers attributed to the bottling.
  */
 export function bottlingDistilleryIds(bottling) {
   return [...new Set(Array.isArray(bottling.distilleryIds) ?
@@ -104,7 +104,7 @@ export function bottlingOrigins(bottling, distilleries = []) {
  *
  * @param {!Object} bottling Bottling record being processed.
  * @param {*} distilleries Distillery catalog used to resolve the bottling's origin countries.
- * @return {!Array<*>} Resulting list of values.
+ * @return {!Array<*>} Distinct known country names attributed to the bottling.
  */
 export function bottlingCountryNames(bottling, distilleries) {
   return bottlingOrigins(bottling, distilleries).countries;

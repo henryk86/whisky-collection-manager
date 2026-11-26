@@ -66,7 +66,7 @@ function shelfById(data, id) {
 /**
  * Removes stale bottle assignments, then rejects deletion of any still occupied compartment.
  * @param {Object} data Mutable warehouse document.
- * @param {string[]} shelfIds Compartment IDs scheduled for deletion.
+ * @param {Set<string>} shelfIds Compartment IDs scheduled for deletion.
  */
 function refuseOccupied(data, shelfIds) {
   // Deleting a physical bottle only changes collection.json. Old warehouse
@@ -89,7 +89,7 @@ function physicalBottles() {return projectedWarehouseBottles(read());}
 /**
  * Retrieves warehouse for warehouse.
  *
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Warehouse snapshot with projected collection bottles.
  */
 export function getWarehouse() {
   const data = readWarehouse();
@@ -105,10 +105,10 @@ export function getWarehouse() {
 }
 
 /**
- * Creates room for warehouse.
+ * Validates and creates a room with an empty furniture list.
  *
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Created room record.
  */
 export const createRoom = input => changeWarehouse(data => {
   const item = {
@@ -126,7 +126,7 @@ export const createRoom = input => changeWarehouse(data => {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Persisted room with the validated name and dimensions.
  */
 export const updateRoom = (id, input) => changeWarehouse(data => {
   const room = roomById(data, id);
@@ -146,7 +146,7 @@ export const updateRoom = (id, input) => changeWarehouse(data => {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after removing the room and its photos.
  */
 export const deleteRoom = async (id, {unassignBottles = false} = {}) => {
   let deletedPhotos = [];
@@ -171,11 +171,11 @@ export const deleteRoom = async (id, {unassignBottles = false} = {}) => {
 };
 
 /**
- * Creates furniture for warehouse.
+ * Validates furniture dimensions and position, checks collisions, then adds it to the room.
  *
  * @param {string} roomId Identifier of the room receiving the new furniture.
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Created furniture record.
  */
 export const createFurniture = (roomId, input) => changeWarehouse(data => {
   const room = roomById(data, roomId);
@@ -191,7 +191,7 @@ export const createFurniture = (roomId, input) => changeWarehouse(data => {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Persisted furniture with the revised layout.
  */
 export const updateFurniture = (id, input) => changeWarehouse(data => {
   const {room, furniture} = furnishingById(data, id);
@@ -213,7 +213,7 @@ export const updateFurniture = (id, input) => changeWarehouse(data => {
  * mutation.
  *
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Identifiers and count of furniture items updated atomically.
  */
 export const bulkUpdateFurniture = input => changeWarehouse(data => {
   const ids = input?.ids;
@@ -273,7 +273,7 @@ export const bulkUpdateFurniture = input => changeWarehouse(data => {
  * anything.
  *
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success flag, deleted furniture IDs and deletion count.
  */
 export const bulkDeleteFurniture = async input => {
   let deletedPhotos = [];
@@ -301,7 +301,7 @@ export const bulkDeleteFurniture = async input => {
  * Clears furniture for warehouse.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after removing the furniture and its photos.
  */
 export const deleteFurniture = async id => {
   let removedPhotos = [];
@@ -320,7 +320,7 @@ export const deleteFurniture = async id => {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Metadata for the newly stored furniture photo.
  */
 export async function addFurniturePhoto(id, input) {
   furnishingById(readWarehouse(), id);
@@ -345,7 +345,7 @@ export async function addFurniturePhoto(id, input) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Persisted ordered furniture-photo metadata.
  */
 export const reorderFurniturePhotos = (id, input) => changeWarehouse(data => {
   const {furniture} = furnishingById(data, id);
@@ -362,7 +362,7 @@ export const reorderFurniturePhotos = (id, input) => changeWarehouse(data => {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {string} photoId Identifier of the photo.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after removing the furniture photo and image.
  */
 export async function deleteFurniturePhoto(id, photoId) {
   const result = await changeWarehouse(data => {
@@ -376,11 +376,11 @@ export async function deleteFurniturePhoto(id, photoId) {
 }
 
 /**
- * Creates shelf for warehouse.
+ * Validates shelf capacity and front geometry, then adds the shelf to its furniture.
  *
  * @param {string} furnitureId Identifier of the furniture receiving the new shelf.
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Created shelf record.
  */
 export const createShelf = (furnitureId, input) => changeWarehouse(data => {
   const {furniture} = furnishingById(data, furnitureId);
@@ -402,7 +402,7 @@ export const createShelf = (furnitureId, input) => changeWarehouse(data => {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Updated shelf, including validated capacity and front geometry.
  */
 export const updateShelf = (id, input) => changeWarehouse(data => {
   const {furniture, shelf} = shelfById(data, id);
@@ -429,7 +429,7 @@ export const updateShelf = (id, input) => changeWarehouse(data => {
  * Clears shelf for warehouse.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Success confirmation after removing the shelf and adjusting door ranges.
  */
 export const deleteShelf = id => changeWarehouse(data => {
   const {furniture, shelf} = shelfById(data, id);
@@ -451,7 +451,7 @@ export const deleteShelf = id => changeWarehouse(data => {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Moved shelf ID and its new zero-based position.
  */
 export const moveShelf = (id, input) => changeWarehouse(data => {
   const {furniture, shelf} = shelfById(data, id);
@@ -504,16 +504,16 @@ function ensureNoFurnitureCollision(room, item, others = room.furniture) {
  *
  * @param {*} room Room model containing dimensions and furniture.
  * @param {*} template Furniture to copy, including dimensions, orientation and original position.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Non-overlapping coordinates for the copied furniture in the target room.
  */
 function copyPosition(room, template) {
   const r = furnitureBounds(template);
   if (r.w > room.width || r.h > room.height) throw fail('Die Kopie passt nicht in den Zielraum', 409, "api.errors.theCopyDoesNotFitInTheDestinationRoom");
   /**
-   * Calculates the round numeric value.
+   * Rounds a warehouse dimension to two decimal places.
    *
    * @param {*} v Value to evaluate.
-   * @return {number} Calculated numeric value.
+   * @return {number} Dimension rounded to two decimal places.
    */
   const round = v => Math.round(v * 100) / 100;
   const xs = new Set([
@@ -552,7 +552,7 @@ function copyPosition(room, template) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {!Object=} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} New furniture record, with optional copied shelf configuration and independent IDs.
  */
 export const copyFurniture = (id, input = {}) => changeWarehouse(data => {
   const source = furnishingById(data, id);
@@ -580,7 +580,7 @@ export const copyFurniture = (id, input = {}) => changeWarehouse(data => {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {!Object=} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} New shelf record with copied configuration and its own identifier.
  */
 export const copyShelf = (id, input = {}) => changeWarehouse(data => {
   const source = shelfById(data, id);
@@ -631,8 +631,7 @@ function enforceAssignmentCapacity(data, shelf, shelfId, selectedIds, known,
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {*} input Input to process.
- * @return {!Promise<(!Object)>} Promise fulfilled when the operation
- * completes.
+ * @return {!Promise<(!Object)>} Bottle ID and destination shelf ID, or null shelf ID when unassigned.
  */
 export const assignBottle = (bottleId, input) => changeWarehouse(data => {
   const known = new Set(physicalBottles().map(item => item.id));
@@ -656,7 +655,7 @@ export const assignBottle = (bottleId, input) => changeWarehouse(data => {
  * The final occupancy is checked before any warehouse assignments are mutated.
  *
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Number of assigned bottles and destination shelf ID, or null for unassignment.
  */
 export const assignBottles = input => changeWarehouse(data => {
   const ids = input?.ids;
@@ -682,7 +681,7 @@ export const assignBottles = input => changeWarehouse(data => {
  * Export is read-only and portable across independently initialized instances.
  *
  * @param {*} input Input to process.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Portable export document containing selected rooms and requested assignments.
  */
 export function exportRooms(input) {
   return createRoomExport(getWarehouse(), input?.roomIds, input?.includeAssignments ?? false);
@@ -692,7 +691,7 @@ export function exportRooms(input) {
  * Validates a room-model import and prepares its preview.
  *
  * @param {*} input Input to process.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Summary of the proposed import without modifying stored warehouse data.
  */
 export function previewRoomImport(input) {
   return planRoomImport(getWarehouse(), input?.document, {
@@ -706,7 +705,7 @@ export function previewRoomImport(input) {
  * import.
  *
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Summary of the applied atomic room import.
  */
 export const importRooms = input => changeWarehouse(data => {
   const plan = planRoomImport(

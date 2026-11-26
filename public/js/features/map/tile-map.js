@@ -19,14 +19,14 @@ const renderTemplate = await loadTemplates('map/tile-map.html');
 
 const TILE_BASE = 'https://tile.openstreetmap.org';
 /**
- * Creates tile map for tile map.
+ * Mounts a tile-based map with selectable sites, pan and zoom gestures, and cleanup.
  *
  * @param {!Element} element Element to process.
  * @param {*} initialSites Distillery records used to initialize map markers.
  * @param {Function} onSelect Receives the identifier of the selected distillery marker.
  * @param {?string=} selectedId Initially selected distillery identifier, or null.
  * @param {!Object=} options5 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Map navigation, data-update and disposal operations.
  */
 export function createTileMap(
   element,
@@ -35,7 +35,7 @@ export function createTileMap(
   selectedId = null,
   {showAllDistilleries = false, focusSiteIds = [], initialView = null} = {}
 ) {
-  const layer = element.querySelector('.map-movable');
+  const layer = /** @type {HTMLElement} */ (element.querySelector('.map-movable'));
   const tiles = element.querySelector('.map-tiles');
   const markers = element.querySelector('.map-markers');
   const viewport = element.querySelector('.map-viewport');
@@ -48,7 +48,7 @@ export function createTileMap(
 
   /**
    * Reads the map viewport's current CSS pixel dimensions.
-   * @return {!Object} Structured result assembled from the input data.
+   * @return {!Object} Current viewport width and height in CSS pixels.
    */
   function dimensions() {
     return {
@@ -165,7 +165,7 @@ export function createTileMap(
   }
 
   /**
-   * Updates the fit state for its caller.
+   * Fits the viewport to all available sites and clears the manually pinned view.
    */
   function fit() {
     center = fitMapToSites(sites, dimensions().width || 680, dimensions().height || 420);
@@ -176,7 +176,7 @@ export function createTileMap(
   }
 
   /**
-   * Filters records according to the fit sites selection rules.
+   * Fits the viewport to the requested located sites without changing the full site catalog.
    *
    * @param {*} ids Identifiers in their current order.
    */
@@ -193,7 +193,7 @@ export function createTileMap(
   }
 
   /**
-   * Calculates the pan by numeric value.
+   * Moves the map center by the specified screen-pixel delta.
    *
    * @param {*} dx Horizontal position difference.
    * @param {*} dy Vertical position difference.
@@ -208,7 +208,7 @@ export function createTileMap(
   }
 
   /**
-   * Updates zoom in the current state.
+   * Changes map zoom around the anchor point and records a manually adjusted view.
    *
    * @param {*} next Next candidate state or entry.
    * @param {*} anchor Optional pixel coordinate about which to zoom; otherwise use the map center.
@@ -239,7 +239,7 @@ export function createTileMap(
   }
 
   /**
-   * Calculates the focus numeric value.
+   * Centers the map on a located site at a useful minimum zoom.
    *
    * @param {*} site Distillery record to center on at a minimum zoom level of ten.
    */
@@ -250,12 +250,12 @@ export function createTileMap(
   }
 
   /**
-   * Calculates the down numeric value.
+   * Tracks a pointer and initializes drag or pinch state unless it started on a control.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!PointerEvent} event Event that triggered this operation.
    */
   const down = event => {
-    if (event.target.closest('button,a')) return;
+    if (/** @type {Element} */ (event.target).closest('button,a')) return;
     pointers.set(event.pointerId, {x: event.clientX, y: event.clientY});
     viewport.setPointerCapture?.(event.pointerId);
     if (pointers.size === 1) drag = {x: event.clientX, y: event.clientY, moved: false};
@@ -267,9 +267,9 @@ export function createTileMap(
   };
 
   /**
-   * Calculates the move numeric value.
+   * Updates a drag or pinch gesture and applies the corresponding map pan or zoom.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!PointerEvent} event Event that triggered this operation.
    */
   const move = event => {
     if (!pointers.has(event.pointerId)) return;
@@ -298,7 +298,7 @@ export function createTileMap(
   /**
    * Finishes pointer panning and commits the accumulated map displacement.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!PointerEvent} event Event that triggered this operation.
    */
   const up = event => {
     if (!pointers.has(event.pointerId)) return;
@@ -316,7 +316,7 @@ export function createTileMap(
   /**
    * Handles mouse-wheel zoom around the pointer inside the map viewport.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!WheelEvent} event Event that triggered this operation.
    */
   const wheel = event => {
     if (!event.deltaY) return;
@@ -331,13 +331,14 @@ export function createTileMap(
   /**
    * Handles keyboard zoom and arrow-key panning when the viewport has focus.
    *
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!KeyboardEvent} event Event that triggered this operation.
    */
   const keyboard = event => {
     if (event.target !== viewport) return;
     if (event.key === '+' || event.key === '=') {event.preventDefault(); setZoom(zoom + 1);}
     else if (event.key === '-') {event.preventDefault(); setZoom(zoom - 1);}
     else if (event.key.startsWith('Arrow')) {
+      /** @type {Record<string, [number, number]>} */
       const offsets = {
         ArrowUp: [0, 90],
         ArrowDown: [0, -90],
@@ -359,7 +360,7 @@ export function createTileMap(
    * @param {!Event} event Event that triggered this operation.
    */
   const handleZoom = event => {
-    const action = event.target.closest('[data-map-control]')?.dataset.mapControl;
+    const action = /** @type {HTMLElement} */ (/** @type {Element} */ (event.target).closest('[data-map-control]'))?.dataset.mapControl;
     if (action === 'in') setZoom(zoom + 1);
     else if (action === 'out') setZoom(zoom - 1);
     else if (action === 'fit') fit();
@@ -384,7 +385,7 @@ export function createTileMap(
   return {
     focus, centerOn, fitSites,
     /**
-     * Updates sites in the current state.
+     * Updates site data, selection and display mode without resetting the camera.
      *
      * @param {*} nextSites Replacement distillery marker catalog.
      * @param {*} nextSelectedId Identifier of the selected marker in the replacement catalog.
@@ -405,21 +406,21 @@ export function createTileMap(
       update();
     },
     /**
-     * Retrieves view from the available state.
-     * @return {!Object} Result computed from the supplied inputs.
+     * Reads the current map camera state for later restoration.
+     * @return {!Object} Latitude, longitude and zoom, or null before the camera is initialized.
      */
     getView() {
       return center ? {lat: center.lat, lon: center.lon, zoom} : null;
     },
     /**
-     * Updates the select state for its caller.
+     * Highlights the specified map site and updates markers.
      *
      * @param {*} id Identifier of the affected record.
      */
     select(id) {selectedId = id; update();},
     fit,
     /**
-     * Performs the destroy lifecycle action.
+     * Disconnects the resize observer and removes the map gesture and control listeners.
      */
     destroy() {
       destroyed = true;

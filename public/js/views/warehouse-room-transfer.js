@@ -69,10 +69,10 @@ export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
 }
 
 /**
- * Creates warehouse room transfer for warehouse room transfer.
+ * Creates the room import and export controller with validation-preview and apply workflows.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Room transfer dialog and event-handling operations.
  */
 export function createWarehouseRoomTransfer({modal, request, getWarehouse,
   refresh, toast}) {
@@ -97,17 +97,17 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
      */
     const switchTab = next => {
       if (next === 'export' && !rooms.length) return;
-      for (const tab of tabs) {
+      for (const tab of /** @type {Iterable<HTMLElement>} */ (tabs)) {
         const active = tab.dataset.transferTab === next;
         tab.classList.toggle('active', active);
         tab.setAttribute('aria-selected', String(active));
         tab.tabIndex = active ? 0 : -1;
-        host.querySelector(`#warehouse-transfer-panel-${tab.dataset.transferTab}`).hidden = !active;
+        /** @type {HTMLElement} */ (host.querySelector(`#warehouse-transfer-panel-${tab.dataset.transferTab}`)).hidden = !active;
       }
     };
-    tabs.forEach(tab => {
+    tabs.forEach((/** @type {HTMLElement} */ tab) => {
       tab.addEventListener('click', () => switchTab(tab.dataset.transferTab));
-      tab.addEventListener('keydown', event => {
+      tab.addEventListener('keydown', (/** @type {KeyboardEvent} */ event) => {
         if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
         event.preventDefault();
         const names = rooms.length ? ['export', 'import'] : ['import'];
@@ -115,25 +115,25 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
         const next = event.key === 'Home' ? names[0] : event.key === 'End' ?
           names.at(-1) : names[(index + (event.key === 'ArrowRight' ? 1 : -1) + names.length) % names.length];
         switchTab(next);
-        host.querySelector(`[data-transfer-tab="${next}"]`)?.focus();
+        /** @type {HTMLElement} */ (host.querySelector(`[data-transfer-tab="${next}"]`))?.focus();
       });
     });
-    const all = exportForm.querySelector('#warehouse-transfer-all');
+    const all = /** @type {HTMLInputElement} */ (exportForm.querySelector('#warehouse-transfer-all'));
     const choices = [...exportForm.querySelectorAll('.warehouse-transfer-room'),];
     /**
-     * Updates choices in the current state.
-          * @return {*} Result of this expression.
-*/
-    const updateChoices = () => choices.forEach(input => {
+     * Disables individual room choices and selects them all when all-rooms export is enabled.
+     * @return {*} No return value; synchronizes individual export checkboxes.
+     */
+    const updateChoices = () => choices.forEach((/** @type {HTMLInputElement} */ input) => {
       input.disabled = all.checked; input.checked = all.checked || input.checked;
     });
     all.addEventListener('change', updateChoices);
     updateChoices();
     exportForm.addEventListener('submit', async event => {
       event.preventDefault(); event.stopPropagation();
-      const ids = all.checked ? 'all' : choices.filter(input => input.checked).map(input => input.value);
+      const ids = all.checked ? 'all' : choices.filter((/** @type {HTMLInputElement} */ input) => input.checked).map((/** @type {HTMLInputElement} */ input) => input.value);
       if (Array.isArray(ids) && !ids.length) return toast(t('warehouse.transfer.selectRoom'), true);
-      const submit = exportForm.querySelector('[type="submit"]');
+      const submit = /** @type {HTMLButtonElement} */ (exportForm.querySelector('[type="submit"]'));
       submit.disabled = true;
       try {
         const bundle = await request(
@@ -142,7 +142,7 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
             method: 'POST',
             body: JSON.stringify({
               roomIds: ids,
-              includeAssignments: exportForm.querySelector('#warehouse-transfer-assignments').checked,
+              includeAssignments: /** @type {HTMLInputElement} */ (exportForm.querySelector('#warehouse-transfer-assignments')).checked,
             }),
           }
         );
@@ -158,9 +158,9 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
       }
     });
     const preview = importForm.querySelector('#warehouse-transfer-preview');
-    const apply = importForm.querySelector('#warehouse-transfer-apply');
+    const apply = /** @type {HTMLButtonElement} */ (importForm.querySelector('#warehouse-transfer-apply'));
     /**
-     * Updates the invalidate state for its caller.
+     * Invalidates the import preview and disables apply until validation is repeated.
      */
     const invalidate = () => {apply.disabled = true; preview.textContent = '';};
     importForm.querySelector('#warehouse-transfer-file').addEventListener('change',
@@ -169,19 +169,19 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
     importForm.querySelector('#warehouse-transfer-import-assignments').addEventListener('change', invalidate);
     importForm.querySelector('#warehouse-transfer-conflict-policy').addEventListener('change', invalidate);
     /**
-     * Locates the DOM elements used by options.
+     * Reads assignment-import and conflict-resolution choices from the transfer form.
      * @return {!Object} Matching DOM element, if present.
      */
     const options = () => ({
-      includeAssignments: importForm.querySelector('#warehouse-transfer-import-assignments').checked,
-      conflictPolicy: importForm.querySelector('#warehouse-transfer-conflict-policy').value,
+      includeAssignments: /** @type {HTMLInputElement} */ (importForm.querySelector('#warehouse-transfer-import-assignments')).checked,
+      conflictPolicy: /** @type {HTMLSelectElement} */ (importForm.querySelector('#warehouse-transfer-conflict-policy')).value,
     });
     importForm.addEventListener('submit', async event => {
       event.preventDefault(); event.stopPropagation(); invalidate();
-      const file = importForm.querySelector('#warehouse-transfer-file').files[0];
+      const file = /** @type {HTMLInputElement} */ (importForm.querySelector('#warehouse-transfer-file')).files[0];
       if (!file) return toast(t('warehouse.transfer.selectFile'), true);
       if (file.size > 12 * 1024 * 1024) return toast(t('warehouse.transfer.tooLarge'), true);
-      const submit = importForm.querySelector('[type="submit"]');
+      const submit = /** @type {HTMLButtonElement} */ (importForm.querySelector('[type="submit"]'));
       submit.disabled = true;
       try {
         importedFile = JSON.parse(await file.text());

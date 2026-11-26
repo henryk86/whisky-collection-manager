@@ -40,7 +40,7 @@ function write(fd, buffer) {
 }
 
 /**
- * Updates the file content state for its caller.
+ * Streams a file to the supplied callback in bounded blocks, closing the descriptor even on failure.
  *
  * @param {*} file File resource to read, write or inspect.
  * @param {function(...*): *} callback Callback invoked by the operation.
@@ -55,10 +55,10 @@ function fileContent(file, callback) {
 }
 
 /**
- * Tests input text against the safe name pattern.
+ * Rejects unsafe or out-of-scope archive entry names.
  *
  * @param {*} name Environment variable or setting name.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True only for allowed relative backup entry names.
  */
 function safeName(name) {
   return typeof name === 'string' && name.length <= 1024 && !name.includes('\\') && !name.includes('\0') &&
@@ -77,7 +77,7 @@ function safeName(name) {
 function walk(root, relative) {
   const files = [];
   /**
-   * Validates the visit state and rejects invalid inputs.
+   * Recursively enumerates backup files and rejects symbolic links.
    *
    * @param {*} name Environment variable or setting name.
    */
@@ -100,7 +100,7 @@ function walk(root, relative) {
 }
 
 /**
- * Validates the required password state and rejects invalid inputs.
+ * Rejects missing or insufficiently long ZIP encryption passwords.
  *
  * @param {*} password Password or secret supplied by the caller.
  * @return {string} Unmodified password meeting the minimum length of 14 characters.
@@ -127,10 +127,10 @@ function aes(password, salt) {
   const counter = Buffer.alloc(16);
   let unused = Buffer.alloc(0);
   /**
-   * Calculates the xor numeric value.
+   * Applies the current AES counter-mode keystream to a block of input bytes.
    *
    * @param {*} data Input data to process.
-   * @return {*} Calculated numeric result.
+   * @return {*} Output bytes with the same length as the input.
    */
   const xor = data => {
     const output = Buffer.allocUnsafe(data.length);
@@ -163,10 +163,10 @@ function aes(password, salt) {
 }
 
 /**
- * Validates the aes extra state and rejects invalid inputs.
+ * Parses the WinZip AES extra field and rejects malformed metadata.
  *
  * @param {*} extra Additional context or configuration.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} Decoded AES metadata, or null if the field is absent.
  */
 function aesExtra(extra) {
   let offset = 0;
@@ -190,7 +190,7 @@ function aesExtra(extra) {
  * @param {string} destination Path of the new encrypted ZIP; must not already exist.
  * @param {*} password Secret supplied for authentication or encryption.
  * @param {string=} timestamp ISO timestamp written to the archive README.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Written archive statistics and encryption information.
  */
 export function writeReadableZip(sourceRoot, destination, password, timestamp =
   new Date().toISOString()) {
@@ -213,7 +213,7 @@ export function writeReadableZip(sourceRoot, destination, password, timestamp =
       const name = Buffer.from(entry.name, 'utf8');
       if (name.length > 65535) throw Error('Dateiname zu lang');
       const stat = entry.source ? fs.lstatSync(entry.source) : {size: entry.contents.length};
-      if (entry.source && !stat.isFile()) throw Error('Backup-Quelle hat sich verändert');
+      if ('isFile' in stat && !stat.isFile()) throw Error('Backup-Quelle hat sich verändert');
       const size = stat.size, encryptedSize = size + OVERHEAD;
       const localSize = 30 + name.length + AES_EXTRA.length;
       if (encryptedSize > MAX32 || offset + encryptedSize + localSize > MAX32) {
@@ -233,7 +233,7 @@ export function writeReadableZip(sourceRoot, destination, password, timestamp =
       const salt = crypto.randomBytes(16), context = aes(password, salt);
       write(fd, salt); write(fd, context.verifier);
       /**
-       * Updates the encrypt state for its caller.
+       * Encrypts archive data, updates its authentication code and writes ciphertext.
        *
        * @param {*} data Input data to process.
        */
@@ -302,7 +302,7 @@ function readAt(fd, length, offset) {
  * @param {string} archive Path of the ZIP file to verify.
  * @param {?string=} extractTo Destination directory for extraction, or null for verification only.
  * @param {string=} password Secret supplied for authentication or encryption.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Verified archive entry count, byte count and encryption flag.
  */
 export function inspectReadableZip(archive, extractTo = null, password = '') {
   const fd = fs.openSync(archive, 'r');

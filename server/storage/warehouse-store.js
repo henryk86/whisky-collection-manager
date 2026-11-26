@@ -24,7 +24,7 @@ export const emptyWarehouse = () => ({schemaVersion: 1, rooms: [], assignments: 
  *
  * @param {*} value Value to process.
  * @param {number=} max Maximum accepted value.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True for nonempty trimmed text within the permitted maximum length.
  */
 function validText(value, max = 100) {
   return typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max;
@@ -36,7 +36,7 @@ function validText(value, max = 100) {
  * @param {*} value Value to process.
  * @param {*} min Minimum accepted value.
  * @param {*} max Maximum accepted value.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True for a finite numeric value within the inclusive bounds.
  */
 function validNumber(value, min, max) {
   return typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
@@ -142,7 +142,7 @@ export function invalidateWarehouseCache() {
 }
 
 /**
- * Retrieves warehouse from the available state.
+ * Reloads and validates the warehouse data when its backing file identity changes.
  */
 function loadWarehouse() {
   const current = identity();
@@ -202,6 +202,7 @@ function writeWarehouse(data) {
     warehouseRevision = crypto.randomUUID();
   } finally {if (fs.existsSync(temporary)) fs.rmSync(temporary);}
 }
+/** @type {Promise<unknown>} */
 let pending = Promise.resolve();
 /**
  * Serializes warehouse updates and commits each successful mutation.

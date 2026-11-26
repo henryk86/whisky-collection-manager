@@ -6,7 +6,7 @@ import {bottlingOrigins} from './distillery-origin.js';
  * page.
  *
  * @param {*} value Input value to process.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the supplied value belongs on the read-only detail page.
  */
 export function hasBottlingDetail(value) {
   if (value == null) return false;
@@ -39,7 +39,7 @@ function humanDate(date, year) {
  * @param {!Object} bottling Bottling record being processed.
  * @param {*} distilleryNames Lookup of distillery display names by identifier.
  * @param {!Array<*>=} distilleries Distillery catalog used to resolve origin information.
- * @return {!Array<!Array<*>>} Resulting list of values.
+ * @return {!Array<!Array<*>>} Nonempty label-value pairs for the bottling details.
  */
 export function bottlingDetails(bottling, distilleryNames, distilleries = []) {
   const ids = Array.isArray(bottling.distilleryIds)

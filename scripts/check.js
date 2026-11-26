@@ -98,7 +98,7 @@ const {SHARED_BROWSER_FILES} = await import('../server/http/static-files.js');
 const browserVisited = new Set();
 const browserShared = new Set();
 /**
- * Validates the verify browser imports state and rejects invalid inputs.
+ * Traverses browser imports and rejects non-allowlisted shared modules or invalid dependencies.
  *
  * @param {*} file File resource to read, write or inspect.
  */

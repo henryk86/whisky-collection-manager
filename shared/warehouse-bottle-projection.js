@@ -7,7 +7,7 @@ import {displayPhotoPath} from './photo-images.js';
  * projection.
  *
  * @param {!Object} collection Collection data being processed.
- * @return {*} Entries transformed for the consuming code.
+ * @return {*} Physical-bottle descriptors projected from collection bottlings for warehouse display.
  */
 export function projectedWarehouseBottles(collection) {
   return (collection?.bottlings || []).flatMap(bottling =>

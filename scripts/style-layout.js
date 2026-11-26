@@ -43,7 +43,7 @@ export function separateFunctions(filename, text) {
 
   /**
    * Finds missing blank lines between adjacent documented functions in a syntax-node list.
-   * @param {import('typescript').NodeArray<import('typescript').Node>} nodes Sibling syntax nodes to inspect.
+   * @param {readonly import('typescript').Node[]} nodes Sibling syntax nodes to inspect.
    */
   function examine(nodes) {
     for (let i = 1; i < nodes.length; i++) {
@@ -64,7 +64,7 @@ export function separateFunctions(filename, text) {
   }
 
   /**
-   * Updates the visit state for its caller.
+   * Visits statement and class-member lists to collect required function-separating whitespace edits.
    *
    * @param {*} node Node to inspect or update.
    */
@@ -94,7 +94,7 @@ export function insertTrailingCommas(filename, source) {
   const parsed = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   const insertions = [];
   /**
-   * Tests input text against the visit pattern.
+   * Visits object and array literals to collect safe trailing-comma edits.
    *
    * @param {*} node Node to inspect or update.
    */

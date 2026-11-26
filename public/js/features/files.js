@@ -37,7 +37,7 @@ function validateFile(file) {
  * Converts the input into data url.
  *
  * @param {*} file File resource to read, write or inspect.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} File contents encoded as a data URL.
  */
 function toDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -53,7 +53,7 @@ function toDataUrl(file) {
  *
  * @param {string} bottleId Identifier of the physical bottle.
  * @param {!Array<*>} files Files selected for the operation.
- * @return {!Promise<number>} Promise fulfilled when the operation completes.
+ * @return {!Promise<number>} Number of files uploaded successfully.
  */
 export async function uploadFiles(bottleId, files) {
   for (const file of files) validateFile(file);

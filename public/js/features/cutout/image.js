@@ -5,10 +5,10 @@ import {analyzeBottleMask, cutoutOutputSize, tightenedCrop, visibleAlphaRows}
 import {sharpenCutoutAlpha} from './edge.js';
 
 /**
- * Retrieves image from the available state.
+ * Loads and decodes an image for local pixel processing.
  *
  * @param {*} url URL of the resource being processed.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Decoded image element with nonzero intrinsic dimensions.
  */
 async function loadImage(url) {
   const image = new Image();
@@ -42,7 +42,7 @@ function canvas(width, height) {
  * huge camera sources and only step down if the PNG exceeds upload limits.
  *
  * @param {number} cropHeight Height of the source crop in pixels.
- * @return {!Array<number>} Resulting list of values.
+ * @return {!Array<number>} Candidate maximum side lengths in pixels, ordered from largest to smallest.
  */
 export function cutoutExportSizes(cropHeight) {
   const native = Math.max(1, Math.min(4096, Math.ceil(cropHeight)));
@@ -72,8 +72,8 @@ export function composeCutout(image, rawMask) {
    * Renders the image state.
    *
    * @param {*} crop Source-image crop rectangle to draw into the output canvas.
-   * @param {number} size Size of the input or target.
-   * @return {!HTMLCanvasElement} Result computed from the supplied inputs.
+   * @param {{width: number, height: number}} size Output canvas dimensions in pixels.
+   * @return {!HTMLCanvasElement} Canvas containing the rendered bottle cutout at the requested output size.
    */
   function render(crop, size) {
     const result = canvas(size.width, size.height);
@@ -136,7 +136,7 @@ export function composeCutout(image, rawMask) {
  * @param {string} url URL of the requested resource.
  * @param {Function=} onProgress Receives processing stage names for the progress indicator.
  * @param {!Object=} options3 Destructured options for this operation.
- * @return {!Promise<string>} Promise fulfilled when the operation completes.
+ * @return {!Promise<string>} Data URL of the locally segmented and composited PNG image.
  */
 export async function cutoutImage(url, onProgress = () => {},
   {segmentationUrl} = {}) {

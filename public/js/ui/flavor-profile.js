@@ -10,7 +10,7 @@ const renderTemplate = await loadTemplates('components/flavor-profile.html');
  * Resolves the localized label for a flavour-profile axis.
  *
  * @param {string} axis Flavor-axis identifier used to resolve the localized title.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Localized title for the requested flavor axis.
  */
 export const flavorAxisTitle = axis => t(`flavor.axis.${axis}`);
 const radius = 118, cx = 230, cy = 195;
@@ -19,7 +19,7 @@ const step = 2 * Math.PI / FLAVOR_AXES.length;
  * Calculates the radar-axis angle in radians, starting at the top of the chart.
  *
  * @param {*} index Zero-based index of the selected entry.
- * @return {number} Calculated numeric value.
+ * @return {number} Axis angle in radians relative to the positive x-axis.
  */
 const angleAt = index => -Math.PI / 2 + index * step;
 
@@ -39,12 +39,12 @@ const point = (index, value) => {
  * Calculates present from the inputs.
  *
  * @param {*} value Value to process.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @return {boolean} True for an integer flavor score from zero to ten.
  */
 const scorePresent = value => Number.isInteger(value) && value >= 0 && value <= 10;
 
 /**
- * Locates the DOM elements used by scores from editor.
+ * Reads the flavor-axis scores from the editor, preserving unset axes as null.
  *
  * @param {*} section Flavor editor section containing one score control per axis.
  * @return {!Object} Array of values selected for the caller.
@@ -57,7 +57,7 @@ const scoresFromEditor = section => Object.fromEntries(FLAVOR_AXES.map(axis => {
 /**
  * Calculates radar-chart polygon points from flavour scores.
  *
- * @param {!Array<*>} values Values to aggregate or compare.
+ * @param {?Record<string, number|null>} values Recorded scores by flavor axis; null denotes an unrecorded profile.
  * @return {string} SVG polygon point list containing only assessed axes.
  */
 export function flavorPolygon(values) {
@@ -70,7 +70,7 @@ export function flavorPolygon(values) {
 /**
  * Prepares taste radar and its labels, or the unrecorded-profile hint.
  *
- * @param {!Array<*>} values Values to aggregate or compare.
+ * @param {?Record<string, number|null>} values Recorded scores by flavor axis; null denotes an unrecorded profile.
  * @param {!Object=} options2 Destructured options for this operation.
  * @return {!import('./render-plan.js').RenderPlan} Taste radar and its labels, or the unrecorded-profile hint.
  */
@@ -148,7 +148,7 @@ export function flavorChart(values, {editable = false, colorSection = null,
  * Parses flavor profile for flavor profile.
  *
  * @param {*} form Form containing the optional flavor editor and its current set/unset state.
- * @return {?Object} Computed value, or null when the input has no match.
+ * @return {?Object} Profile keyed by flavor axis, or null when no flavor profile has been set.
  */
 export function readFlavorProfile(form) {
   const section = form?.querySelector('[data-flavor-editor]');
@@ -157,15 +157,15 @@ export function readFlavorProfile(form) {
 }
 
 /**
- * Handles flavor range for flavor profile.
+ * Handles a flavor slider change and synchronizes the profile visualization.
  *
- * @param {!Event} event Event that triggered the handler.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {{target: EventTarget|null}} event Native or synthetic event identifying the changed flavor slider.
+ * @return {boolean} True if the event belongs to a mounted flavor editor.
  */
 export function handleFlavorRange(event) {
-  const range = event.target.closest?.('[data-flavor-range]');
+  const range = /** @type {HTMLElement} */ (/** @type {Element} */ (event.target).closest?.('[data-flavor-range]'));
   if (!range) return false;
-  const container = range.closest('[data-flavor-editor]');
+  const container = /** @type {HTMLElement} */ (range.closest('[data-flavor-editor]'));
   if (!container) return false;
   if (range.dataset) delete range.dataset.flavorUnset;
   container.dataset.flavorSet = '1';
@@ -175,7 +175,7 @@ export function handleFlavorRange(event) {
     const present = scorePresent(values[axis]);
     const [x, y] = point(i, present ? values[axis] : 0);
     const marker = container.querySelector(`[data-flavor-point="${i}"]`);
-    marker?.setAttribute('cx', x); marker?.setAttribute('cy', y);
+    marker?.setAttribute('cx', String(x)); marker?.setAttribute('cy', String(y));
     marker?.setAttribute('visibility', present ? 'visible' : 'hidden');
     const out = container.querySelector(`[data-flavor-value="${i}"]`);
     if (out) out.textContent = present ? String(values[axis]) : '–';
@@ -188,10 +188,10 @@ export function handleFlavorRange(event) {
  * touch targets.
  *
  * @param {!PointerEvent} event Event that triggered the handler.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True if the pointer event updated a flavor axis.
  */
 export function setFlavorFromPointer(event) {
-  const hit = event.target.closest?.('[data-flavor-hit]');
+  const hit = /** @type {SVGElement} */ (/** @type {Element} */ (event.target).closest?.('[data-flavor-hit]'));
   if (!hit) return false;
   const svg = hit.ownerSVGElement;
   const pointInSvg = svg.createSVGPoint(); pointInSvg.x = event.clientX; pointInSvg.y = event.clientY;
@@ -201,7 +201,7 @@ export function setFlavorFromPointer(event) {
   const index = ((Math.round((rawAngle + Math.PI / 2) / step) % FLAVOR_AXES.length) + FLAVOR_AXES.length) % FLAVOR_AXES.length;
   const angle = angleAt(index);
   const projected = (pos.x - cx) * Math.cos(angle) + (pos.y - cy) * Math.sin(angle);
-  const slider = hit.closest('[data-flavor-editor]').querySelector(`[data-flavor-range="${index}"]`);
+  const slider = /** @type {HTMLInputElement} */ (hit.closest('[data-flavor-editor]').querySelector(`[data-flavor-range="${index}"]`));
   slider.value = String(Math.max(0, Math.min(10, Math.round(projected / radius * 10))));
   handleFlavorRange({target: slider}); return true;
 }
@@ -211,7 +211,7 @@ export function setFlavorFromPointer(event) {
  * undo/redo.
  *
  * @param {*} container Flavor editor container whose inputs, score labels and chart are updated.
- * @param {!Array<*>} values Values to aggregate or compare.
+ * @param {?Record<string, number|null>} values Recorded scores by flavor axis; null denotes an unrecorded profile.
  */
 export function displayFlavorProfile(container, values) {
   if (!container) return;

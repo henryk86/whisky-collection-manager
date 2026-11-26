@@ -7,7 +7,7 @@ const EPSILON = 0.00001;
  * Computes the occupied rectangle of a furniture item.
  *
  * @param {*} furniture Furniture configuration including its dimensions.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Rotated room-space furniture bounds, including vertical extent.
  */
 export function furnitureBounds(furniture) {
   const swapped = Number(furniture.rotation ?? 0) % 180 !== 0;
@@ -25,7 +25,7 @@ export function furnitureBounds(furniture) {
  *
  * @param {*} first First furniture record, including position and dimensions.
  * @param {*} second Second furniture record to test for three-dimensional intersection.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True when the two furniture bounding volumes overlap.
  */
 export function furnitureOverlap(first, second) {
   const a = furnitureBounds(first), b = furnitureBounds(second);
@@ -52,7 +52,7 @@ export function furnitureCollision(room, candidate, otherFurniture =
  *
  * @param {*} room Room model containing dimensions and furniture.
  * @param {*} item Warehouse item or record being evaluated.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True when the rotated furniture footprint is fully within the room bounds.
  */
 export function furnitureFitsRoom(room, item) {
   const b = furnitureBounds(item);
@@ -70,7 +70,7 @@ export function furnitureFitsRoom(room, item) {
  * @param {number} fromY Starting depth position in metres.
  * @param {number} toX Requested horizontal position in metres.
  * @param {number} toY Requested depth position in metres.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Furthest valid rounded position toward the requested destination, or the original position.
  */
 export function moveFurnitureTowards(room, item, fromX, fromY, toX, toY) {
   const dx = toX - fromX, dy = toY - fromY;

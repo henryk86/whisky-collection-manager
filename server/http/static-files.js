@@ -46,7 +46,7 @@ function decodePath(encoded) {
  * scripts.
  *
  * @param {string} html Static HTML document whose inline scripts require CSP hashes.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Security headers containing the exact inline-script hashes and restrictive CSP.
  */
 function htmlSecurityHeaders(html) {
   // HTML parsing normalizes CRLF and CR before CSP checks inline scripts.
@@ -119,8 +119,8 @@ function streamStatic(req, res, file, contentType, cacheControl,
  *
  * @param {!Object} req Incoming HTTP request.
  * @param {!Object} res Outgoing HTTP response.
- * @param {string} url URL of the requested resource.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @param {URL} url Parsed request URL.
+ * @return {!Promise<*>} Completion of serving or rejecting the requested public resource.
  */
 export async function serveStatic(req, res, url) {
   // Runtime data must never become static assets, even if DATA_ROOT was

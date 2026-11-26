@@ -2,7 +2,7 @@
  * Imported data can list multiple distilleries in a single field.
  *
  * @param {*} raw Untrusted distillery name text; non-string inputs yield an empty list.
- * @return {!Array<*>} Resulting list of values.
+ * @return {!Array<*>} Trimmed nonempty distillery names parsed from the source text.
  */
 export function splitDistilleryNames(raw) {
   if (typeof raw !== 'string') return [];
@@ -40,9 +40,8 @@ export function splitDistilleryNames(raw) {
  * silently discarded.
  *
  * @param {*} raw Imported distillery name text to split and match against the catalog.
- * @param {!Array<*>=} knownDistilleries Known distilleries used by this
- * operation.
- * @return {!Array<!Object>} Resulting list of values.
+ * @param {!Array<*>=} knownDistilleries Existing catalog entries with names and IDs for case-insensitive matching.
+ * @return {!Array<!Object>} One choice per imported distillery name, retaining unmatched entries.
  */
 export function matchImportedDistilleries(raw, knownDistilleries = []) {
   const known = new Map(knownDistilleries.map(distillery => [

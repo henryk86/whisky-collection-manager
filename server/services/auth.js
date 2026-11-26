@@ -20,7 +20,8 @@ import {fail} from '../domain/errors.js';
 /** @typedef {{schemaVersion: 1, loginRequired: boolean, users: StoredUser[]}} AuthStore */
 /** @typedef {{required: boolean, user: PublicUser|null, canManageUsers: boolean}} SessionInfo */
 
-const scrypt = promisify(crypto.scrypt);
+// Node's promisify declaration selects the overload without ScryptOptions.
+const scrypt = /** @type {(password: import('node:crypto').BinaryLike, salt: import('node:crypto').BinaryLike, keylen: number, options: import('node:crypto').ScryptOptions) => Promise<Buffer>} */ (promisify(crypto.scrypt));
 const FILE = path.join(DATA_DIR, 'user.json');
 const SCRYPT_OPTIONS = {N: 131072, r: 8, p: 1, maxmem: 256 * 1024 * 1024};
 const COOKIE = 'wcm_session';
@@ -30,6 +31,7 @@ const sessions = new Map();
 const attempts = new Map();
 let current = null;
 let fileIdentity = null;
+/** @type {Promise<unknown>} */
 let queue = Promise.resolve();
 /**
  * Creates a localized HTTP authentication error without exposing secret values.
@@ -192,7 +194,7 @@ function sessionToken(request) {
  */
 function cookieHeaders(request, token = '', maxAge = 0) {
   // TLS is provided by the app even when behind its optional TLS reverse proxy.
-  const secure = request.socket?.encrypted ? '; Secure' : '';
+  const secure = /** @type {import("node:tls").TLSSocket} */ (request.socket)?.encrypted ? '; Secure' : '';
   return `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict${secure}; Max-Age=${maxAge}`;
 }
 
@@ -474,6 +476,7 @@ export async function createUser(req, body) {
     if (data.users.some(item => item.username === username)) throw authError('usernameExists', 409);
     if (data.users.length >= 200) throw authError('tooManyUsers', 409);
     const credential = await hashPassword(body?.password);
+    /** @type {StoredUser} */
     const user = {
       id: crypto.randomUUID(),
       username,

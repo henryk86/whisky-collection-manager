@@ -5,7 +5,7 @@ import {lookupInventoryNumber} from '../../domain/selectors.js';
  * A scan navigates or fills the inventory field. It never opens an editor.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {Function} Result computed from the supplied inputs.
+ * @return {Function} Function that resolves a scanned inventory code or fills the assignment field.
  */
 export function createCodeResolver({state, navigate, toast, closeModal,
   renderModal, query = select}) {

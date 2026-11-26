@@ -15,7 +15,7 @@ const renderTemplate = await loadTemplates('auth/controller.html');
  * collection UI.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Authentication lifecycle, user-management rendering and action handlers.
  */
 export function createAuthController({root, state, render, refresh, applyTheme,
   showModal, closeModal}) {
@@ -23,10 +23,10 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   let pendingDelete = null;
   let pendingRequired = null;
   /**
-   * Builds the localized tr text for the current language.
+   * Resolves an authentication translation key.
    *
    * @param {*} key Key used to select or group values.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Localized text from the authentication catalog.
    */
   const tr = key => t(`auth.${key}`);
 
@@ -186,8 +186,8 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   }
 
   /**
-   * Coordinates asynchronous work for init.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Loads the session and opens login or password-change UI when access is blocked.
+   * @return {!Promise<*>} True if collection initialization may proceed.
    */
   async function init() {
     state.auth = await request('/api/auth/session');
@@ -201,18 +201,18 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   }
 
   /**
-   * Performs the open login lifecycle action.
+   * Opens the authentication dialog in login mode.
    */
   function openLogin() {mode = 'login'; show();}
 
   /**
-   * Performs the open change lifecycle action.
+   * Opens the authentication dialog in password-change mode.
    */
   function openChange() {mode = 'change'; show();}
 
   /**
-   * Coordinates asynchronous work for resume.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Clears cached resources and resumes the app only if the session allows access.
+   * @return {!Promise<*>} Completion of the session-dependent resource refresh.
    */
   async function resume() {
     clearResourceCache();
@@ -224,8 +224,8 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   }
 
   /**
-   * Coordinates asynchronous work for logout.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Ends the server session, clears sensitive client state and resumes the appropriate view.
+   * @return {!Promise<*>} Completion of logout and subsequent access handling.
    */
   async function logout() {
     state.auth = await request('/api/auth/logout', {method: 'POST'});
@@ -235,7 +235,7 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   }
 
   /**
-   * Updates setting in the current state.
+   * Asks for confirmation before changing whether authentication is required.
    *
    * @param {boolean} required Whether authentication should become mandatory.
    */
@@ -259,8 +259,8 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   }
 
   /**
-   * Retrieves users from the available state.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Fetches user management data when the current session has administrator permission.
+   * @return {!Promise<*>} Completion of the user-list refresh.
    */
   async function loadUsers() {
     if (!state.auth?.canManageUsers) return;
@@ -310,7 +310,7 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   }
 
   /**
-   * Handles action for controller.
+   * Dispatches authentication actions based on the clicked control's action name.
    *
    * @param {*} button Clicked authentication action control with a data-act attribute.
    */
@@ -322,7 +322,7 @@ export function createAuthController({root, state, render, refresh, applyTheme,
     else if (act === 'auth-cancel') await resume();
     else if (act === 'auth-toggle-required') changeSetting(!state.auth.required);
     else if (act === 'auth-toggle-password') {
-      const input = document.getElementById(button.dataset.target || '');
+      const input = /** @type {HTMLInputElement} */ (document.getElementById(button.dataset.target || ''));
       if (!input) return;
       const hidden = input.type === 'password';
       input.type = hidden ? 'text' : 'password';
@@ -380,13 +380,13 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   }
 
   /**
-   * Handles submit for controller.
+   * Intercepts authentication forms and submits the corresponding login or user-management operation.
    *
-   * @param {!KeyboardEvent} event Event that triggered the handler.
-   * @return {boolean} Whether the condition is satisfied.
+   * @param {!Event} event Submission from an authentication form.
+   * @return {boolean} Whether the authentication controller handled the submission.
    */
   function handleSubmit(event) {
-    const form = event.target;
+    const form = /** @type {HTMLFormElement & {elements: {username?: HTMLInputElement, password?: HTMLInputElement, currentPassword?: HTMLInputElement, newPassword?: HTMLInputElement, confirmPassword?: HTMLInputElement}}} */ (event.target);
     if (![
       'auth-login-form',
       'auth-change-form',
@@ -394,10 +394,10 @@ export function createAuthController({root, state, render, refresh, applyTheme,
       'auth-reset-form',
     ].includes(form.id)) return false;
     event.preventDefault();
-    const submit = form.querySelector('button[type="submit"]');
+    const submit = /** @type {HTMLButtonElement} */ (form.querySelector('button[type="submit"]'));
     if (submit?.disabled) return true;
     if (submit) submit.disabled = true;
-    const output = form.querySelector('.auth-error');
+    const output = /** @type {HTMLElement} */ (form.querySelector('.auth-error'));
     if (output) {output.hidden = true; output.textContent = '';}
     (async () => {
       if (form.id === 'auth-login-form') {

@@ -29,7 +29,7 @@ const COMMON_IMPORT_FIELDS = Object.freeze([
  *
  * @param {!Object} data Input data for the operation.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Normalized import fields and staged-image information from the validated provider payload.
  */
 export function normalizeImportPayload(data, {referenceId, extraFields = []} =
   {}) {

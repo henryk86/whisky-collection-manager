@@ -13,7 +13,7 @@
  */
 export function pixelMode(args = [], env = {}) {
   const requested = args.includes('--strict-pixels') ? 'strict' : (env.WCM_VISUAL_PIXEL_MODE || 'diagnostic');
-  if (!['diagnostic', 'strict'].includes(requested)) {
+  if (requested !== 'diagnostic' && requested !== 'strict') {
     throw new Error(`Invalid pixel mode "${requested}"; use diagnostic or strict.`);
   }
   return requested;

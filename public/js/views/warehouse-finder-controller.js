@@ -17,7 +17,7 @@ export function createWarehouseFinderController({w, state, mountContent, navigat
 
   /**
    * Computes matching warehouse bottles for the current search and placement filter.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Current matching bottle page with location and pagination metadata.
    */
   function finderResults() {
     const result = findWarehouseBottles(w(), {
@@ -30,7 +30,7 @@ export function createWarehouseFinderController({w, state, mountContent, navigat
   }
 
   /**
-   * Performs the refresh finder results lifecycle action.
+   * Replaces the mounted bottle-finder results with the current filtered page.
    */
   function refreshFinderResults() {
     const host = typeof document === 'undefined' ? null : document.querySelector?.('.warehouse-finder-results');
@@ -40,7 +40,7 @@ export function createWarehouseFinderController({w, state, mountContent, navigat
   }
 
   /**
-   * Updates finder query in the current state.
+   * Changes the finder search term and resets its pagination.
    *
    * @param {*} value Value to process.
    */
@@ -51,7 +51,7 @@ export function createWarehouseFinderController({w, state, mountContent, navigat
   }
 
   /**
-   * Updates finder placement in the current state.
+   * Changes the finder placement filter and resets its pagination.
    *
    * @param {*} value Value to process.
    */
@@ -63,7 +63,7 @@ export function createWarehouseFinderController({w, state, mountContent, navigat
   }
 
   /**
-   * Updates the step finder page state for its caller.
+   * Moves the finder page by the requested delta and refreshes its results.
    *
    * @param {number} delta Signed number of pages to move through the finder results.
    */
@@ -77,8 +77,8 @@ export function createWarehouseFinderController({w, state, mountContent, navigat
    *
    * @param {*} id Identifier of the affected record.
    * @param {!Object=} options Options controlling the operation.
-      * @return {*} Result of this expression.
-*/
+   * @return {*} Notification if the requested bottle cannot be located; otherwise opens its storage location.
+   */
   function showBottleLocation(id, {returnToBottlingId = null,
     returnToFlightId = null} = {}) {
     const bottle = w()?.bottles?.find(item => item.id === id);
@@ -114,7 +114,7 @@ export function createWarehouseFinderController({w, state, mountContent, navigat
   }
 
   /**
-   * Updates element attributes used by return to finder.
+   * Returns to the view that initiated the warehouse bottle lookup and clears temporary focus state.
    */
   function returnToFinder() {
     const id = state.warehouseFindFocusBottleId;
@@ -142,7 +142,7 @@ export function createWarehouseFinderController({w, state, mountContent, navigat
     // selected search result after that navigation, when it is still listed.
     if (id && typeof requestAnimationFrame === 'function') requestAnimationFrame(() => {
       if (state.page !== 'warehouse' || state.selected !== 'find') return;
-      const target = [...(document.querySelectorAll?.('.warehouse-finder-card') || [])].find(node => node.dataset.bottleId === id);
+      const target = [...(document.querySelectorAll?.('.warehouse-finder-card') || [])].find((/** @type {HTMLElement} */ node) => node.dataset.bottleId === id);
       target?.scrollIntoView?.({
         block: 'center', inline: 'nearest',
         behavior: 'instant',
@@ -160,7 +160,7 @@ export function createWarehouseFinderController({w, state, mountContent, navigat
     if (!id || typeof requestAnimationFrame !== 'function') return;
     requestAnimationFrame(() => {
       if (state.page !== 'warehouse' || state.selected !== 'shelves') return;
-      const target = [...(document.querySelectorAll?.('.warehouse-wall-bottle.is-find-focus') || [])].find(node => node.querySelector?.('.warehouse-bottle-symbol')?.dataset.id === id);
+      const target = [...(document.querySelectorAll?.('.warehouse-wall-bottle.is-find-focus') || [])].find(node => /** @type {HTMLElement|SVGElement} */(node.querySelector?.('.warehouse-bottle-symbol'))?.dataset.id === id);
       if (!target?.isConnected) return;
       const scroller = target.closest?.('.warehouse-wall-scroll');
       if (scroller?.getBoundingClientRect && target.getBoundingClientRect) {

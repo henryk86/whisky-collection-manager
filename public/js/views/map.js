@@ -18,8 +18,8 @@ const renderTemplate = await loadTemplates('map/map.html');
 const PAGE_LIMIT = 12;
 const ALL_SITES_PREF = 'wcm-map-all-distilleries';
 /**
- * Retrieves all sites preference from the available state.
- * @return {boolean} Whether the operation matched or succeeded.
+ * Reads the persisted preference for showing all distilleries on the map.
+ * @return {boolean} True if all distilleries should be shown; false when storage is unavailable.
  */
 const readAllSitesPreference = () => {
   try {return localStorage.getItem(ALL_SITES_PREF) === '1';}
@@ -41,15 +41,14 @@ const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
  * interactive marker dimensions. Relative stock sizes stay distinguishable.
  *
  * @param {number} count Number of items to process.
- * @return {number} Calculated numeric result.
+ * @return {number} Legend marker diameter in CSS pixels.
  */
 export const legendMarkerDiameter = count => Math.max(21, Math.round(markerDiameter(count) * 0.62));
 const LEGEND_CLUSTER_DIAMETER = 27;
 /**
  * Prepares map marker and stock-count legend.
  *
- * @param {boolean=} showAllDistilleries Show all distilleries used by this
- * operation.
+ * @param {boolean=} showAllDistilleries Whether the legend includes distilleries without any bottles.
  * @return {!import('../ui/render-plan.js').RenderPlan} Map marker and stock-count legend.
  */
 export function mapLegendHtml(showAllDistilleries = false) {
@@ -90,7 +89,7 @@ export function mapLegendHtml(showAllDistilleries = false) {
  * levels.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Map view rendering, site selection and interactive-map lifecycle operations.
  */
 export function createMapView({state, shell, navigate, settings}) {
   let tileMap = null;
@@ -224,7 +223,7 @@ export function createMapView({state, shell, navigate, settings}) {
     if (!sidebar) return;
     replaceContent(sidebar, composeMarkup(sidebarHtml(), (missing.length > 0 ? missingHtml() : '')));
     if (focusSearch) {
-      const field = document.getElementById('map-bottling-search');
+      const field = /** @type {HTMLInputElement} */ (document.getElementById('map-bottling-search'));
       field?.focus();
       field?.setSelectionRange(field.value.length, field.value.length);
     }
@@ -248,14 +247,14 @@ export function createMapView({state, shell, navigate, settings}) {
   }
 
   /**
-   * Updates the sync sites state for its caller.
+   * Rebuilds map site data and resolves the current and previous focus against it.
    */
   function syncSites() {
     ({sites, missing, relatedBottling, relatedSites, selectedId, priorFocusId, bottleTotal} = createMapDataModel(state, showAllDistilleries, selectedId, priorFocusId));
   }
 
   /**
-   * Performs the refresh data lifecycle action.
+   * Refreshes site metadata in the existing map to preserve camera and gesture state.
    */
   function refreshData() {
     // A saved distillery edit must not tear down the interactive map:
@@ -284,7 +283,7 @@ export function createMapView({state, shell, navigate, settings}) {
     const bottleCount = summary?.querySelector('[data-map-stat="bottles"] strong');
     if (locatedCount) locatedCount.textContent = String(sites.length);
     if (bottleCount) bottleCount.textContent = String(bottleTotal);
-    let missingCount = summary?.querySelector('[data-map-stat="missing"]');
+    let missingCount = /** @type {HTMLElement} */ (summary?.querySelector('[data-map-stat="missing"]'));
     if (!missing.length) missingCount?.remove();
     else {
       if (!missingCount) {
@@ -403,7 +402,7 @@ export function createMapView({state, shell, navigate, settings}) {
   }
 
   /**
-   * Performs the destroy lifecycle action.
+   * Disposes the current tile-map instance and clears its reference.
    */
   function destroy() {tileMap?.destroy(); tileMap = null;}
   return {

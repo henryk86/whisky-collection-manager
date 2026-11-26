@@ -140,7 +140,7 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
   }
 
   /**
-   * Performs the open flavor filter lifecycle action.
+   * Opens the flavor-filter dialog with a draft of the active criteria.
    */
   function openFlavorFilter() {
     flavorDraft = newFlavorDraft();
@@ -148,7 +148,7 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
   }
 
   /**
-   * Locates the DOM elements used by add flavor criterion.
+   * Adds the selected unused flavor axis to the filter draft.
    */
   function addFlavorCriterion() {
     const axis = /** @type {HTMLSelectElement|null} */ (document.querySelector('[data-collection-flavor-editor] #collection-add-flavor-axis'))?.value;
@@ -170,7 +170,7 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
   }
 
   /**
-   * Updates flavor criterion in the current state.
+   * Updates a flavor criterion from its editor control and redraws the draft.
    *
    * @param {*} input Input element or value to inspect.
    */
@@ -186,7 +186,7 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
   }
 
   /**
-   * Updates flavor status in the current state.
+   * Changes the draft's profile-presence filter and redraws its controls.
    *
    * @param {*} value Value to process.
    */
@@ -205,7 +205,7 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
   }
 
   /**
-   * Updates flavor draft in the current state.
+   * Commits the flavor-filter draft to the collection filters and refreshes the overview.
    */
   function applyFlavorDraft() {
     if (!flavorDraft) return;

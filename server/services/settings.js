@@ -9,7 +9,7 @@ import {normalizeSavedViews} from '../../shared/collection-saved-views.js';
  * Updates settings for settings.
  *
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Persisted collection settings.
  */
 export async function updateSettings(input) {
   assert(
@@ -36,8 +36,7 @@ export async function updateSettings(input) {
  * it.
  *
  * @param {*} input Input to process.
- * @return {!Promise<(undefined|!Object)>} Promise fulfilled when the
- * operation completes.
+ * @return {!Promise<(undefined|!Object)>} Updated collection settings containing the normalized saved views.
  */
 export async function updateSavedViews(input) {
   assert(

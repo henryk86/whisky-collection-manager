@@ -40,6 +40,7 @@
  * @property {string} [openedAt] YYYY-MM-DD opening date.
  * @property {string|null} [emptiedAt] YYYY-MM-DD date bottle became empty;
  * optional for legacy bottles.
+ * @property {string|null} [merchant] Seller or merchant of the physical bottle.
  * @property {number|null} [purchasePrice]
  * @property {string} [currency]
  * @property {string} [createdAt]
@@ -62,6 +63,8 @@
  * @typedef {Object} Bottling
  * @property {string} id
  * @property {string} name
+ * @property {string|null} [distilleryId] Legacy single-distillery reference.
+ * @property {string|null} [whiskybaseUrl] External Whiskybase reference URL.
  * @property {string[]} distilleryIds Zero, one, or multiple known contributors.
  * @property {string|null} [whiskyType]
  * @property {string|null} [brand]

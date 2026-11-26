@@ -32,7 +32,7 @@ import {
  * listeners.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Collection overview rendering, filtering, navigation and display-preference operations.
  */
 export function createHomeView({
   state,
@@ -54,7 +54,7 @@ export function createHomeView({
   const {flavorEditorHtml, openFlavorFilter, addFlavorCriterion, removeFlavorCriterion, changeFlavorCriterion, changeFlavorStatus, resetFlavorDraft, applyFlavorDraft, toggleFlavorPicker, closeFlavorFilter} = createCollectionFlavorController({state, showModal, closeModal, home});
 
   /**
-   * Updates page url in the current state.
+   * Synchronizes collection pagination and display mode with browser history.
    *
    * @param {boolean=} replace Replace the current history entry rather than creating a new one.
    */
@@ -66,7 +66,7 @@ export function createHomeView({
   }
 
   /**
-   * Updates page in the current state.
+   * Clamps the requested page, updates the URL and scrolls the refreshed collection to its heading.
    *
    * @param {*} target Target of the operation.
    */
@@ -82,7 +82,7 @@ export function createHomeView({
   }
 
   /**
-   * Transforms the entries used by plan from selection.
+   * Uses the filtered collection's unique bottlings as candidates for a new tasting flight.
    */
   function planFromSelection() {
     state.flightCandidateIds = [...new Set(activeList.map(item => item.bottling.id))];
@@ -90,7 +90,7 @@ export function createHomeView({
   }
 
   /**
-   * Handles click for home.
+   * Dispatches collection toolbar, pagination and column controls.
    *
    * @param {*} button Collection action control carrying its data-act and record identifiers.
    */
@@ -98,7 +98,7 @@ export function createHomeView({
     if (state.page !== 'home') return;
     if (button.dataset.act === 'toggle-collection-filters') {
       filtersExpanded = !filtersExpanded;
-      const toolbar = document.querySelector('.collection-filters');
+      const toolbar = /** @type {HTMLElement} */ (document.querySelector('.collection-filters'));
       if (toolbar) toolbar.dataset.expanded = String(filtersExpanded);
       button.setAttribute('aria-expanded', String(filtersExpanded));
       return;
@@ -160,7 +160,7 @@ export function createHomeView({
   }
 
   /**
-   * Handles change for home.
+   * Applies changes to collection filters, display preferences and column selection.
    *
    * @param {*} input Input to process.
    */
@@ -223,7 +223,7 @@ export function createHomeView({
     updatePageUrl(true);
     const cursor = input.selectionStart;
     home();
-    const node = document.getElementById('search');
+    const node = /** @type {HTMLInputElement} */ (document.getElementById('search'));
     if (node) {node.focus(); node.setSelectionRange(cursor, cursor);}
   }
 
@@ -513,19 +513,19 @@ export function createHomeView({
       'filter-rating': state.rating,
       'filter-volume-type': state.volumeType,
     })) {
-      const field = typeof document !== 'undefined' ? document.getElementById?.(id) : null;
+      const field = /** @type {HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement} */ (typeof document !== 'undefined' ? document.getElementById?.(id) : null);
       if (field && field.value !== String(value)) field.value = String(value);
     }
 
     // A <details> element toggles natively when its summary is clicked.
     // Keep the view state aligned with the actual open/closed state, so a
     // subsequent table sort or filter render cannot reopen a closed picker.
-    const flavorPicker = typeof document === 'undefined' ? null : document.querySelector?.('[data-collection-flavor-picker]');
+    const flavorPicker = /** @type {HTMLDetailsElement} */ (typeof document === 'undefined' ? null : document.querySelector?.('[data-collection-flavor-picker]'));
     flavorPicker?.addEventListener?.('toggle', () => {
       if (flavorPicker.isConnected === false) return;
       toggleFlavorPicker(flavorPicker.open);
     });
-    const picker = typeof document === 'undefined' ? null : document.querySelector?.('.collection-table-columns');
+    const picker = /** @type {HTMLDetailsElement} */ (typeof document === 'undefined' ? null : document.querySelector?.('.collection-table-columns'));
     picker?.addEventListener?.('toggle', () => {
       if (picker.isConnected === false) return; // Ignore retired render trees.
       columnPickerOpen = picker.open;

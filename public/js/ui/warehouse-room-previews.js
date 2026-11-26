@@ -14,19 +14,19 @@ const snapshots = new WeakMap();
  * OrbitControls, pointer handlers or permanent WebGL canvases are created.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Room-preview lifecycle handle with a disposal operation.
  */
 export function mountWarehouseRoomPreviews({rooms, warehouse}) {
   if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return {
     /**
-     * Performs the dispose lifecycle action.
+     * No resources require disposal when room previews are not mounted.
      */
     dispose() {},
   };
   const previews = [...document.querySelectorAll('.warehouse-room-preview[data-preview-room-id]')];
   if (!previews.length) return {
     /**
-     * Performs the dispose lifecycle action.
+     * No resources require disposal when room previews are unavailable.
      */
     dispose() {},
   };
@@ -39,7 +39,7 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
   let themeObserver;
   /**
    * Reads the active application theme for rendering the room preview.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Current light or dark theme name.
    */
   const theme = () => document.documentElement?.dataset?.theme === 'dark' ? 'dark' : 'light';
 
@@ -63,7 +63,7 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
   }
 
   /**
-   * Builds the localized unavailable text for the current language.
+   * Marks a connected room-preview placeholder as unavailable.
    *
    * @param {*} node Node to inspect or update.
    */
@@ -74,7 +74,7 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
   }
 
   /**
-   * Updates element attributes used by enqueue.
+   * Displays a matching cached room preview or queues the placeholder for rendering.
    *
    * @param {*} node Node to inspect or update.
    */
@@ -93,8 +93,8 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
   }
 
   /**
-   * Coordinates asynchronous work for flush.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * Processes queued room previews with a shared WebGL renderer.
+   * @return {!Promise<*>} Completion of rendering the pending room previews and releasing temporary renderer resources.
    */
   async function flush() {
     if (rendering || disposed || queue.size === 0) return;
@@ -177,7 +177,7 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
   }
   return {
     /**
-     * Performs the dispose lifecycle action.
+     * Stops pending previews and disconnects their visibility and theme observers.
      */
     dispose() {
       disposed = true;

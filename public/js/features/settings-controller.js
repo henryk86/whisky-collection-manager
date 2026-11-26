@@ -15,16 +15,16 @@ const renderTemplate = await loadTemplates('settings/settings-controller.html');
  * prompt/confirm.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Collection settings, distillery editing and import workflows.
  */
 export function createSettingsController({state, action, navigate, closeModal,
   showModal, onDistilleryLocationChanged}) {
   /**
-   * Transforms the entries used by prompt distillery.
+   * Opens the create or edit distillery dialog, preserving an underlying bottling form if present.
    *
    * @param {*=} id Identifier of the affected record.
-      * @return {*} Result of this expression.
-*/
+   * @return {*} Notification if the requested distillery is missing; otherwise opens the dialog.
+   */
   function promptDistillery(id = null) {
     const current = id ? state.collection.distilleries.find(entry => entry.id === id) : null;
     if (id && !current) return toast(t("features.errors.distilleryNotFound"), true);
@@ -62,26 +62,26 @@ export function createSettingsController({state, action, navigate, closeModal,
       false,
       nested
     );
-    query('#distillery-name')?.focus();
+    /** @type {HTMLElement} */ (query('#distillery-name'))?.focus();
   }
 
   /**
    * Updates distillery for settings controller.
    *
    * @param {!KeyboardEvent} event Event that triggered the handler.
-   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   * @return {!Promise<void>} Completion of the distillery form save and view update.
    */
   async function saveDistillery(event) {
     event.preventDefault();
-    const form = event.target;
-    const name = form.querySelector('[name="name"]').value.trim();
+    const form = /** @type {HTMLFormElement} */ (event.target);
+    const name = /** @type {HTMLInputElement} */ (form.querySelector('[name="name"]')).value.trim();
     const id = form.dataset.id;
     const previousDistillery = id ? state.collection.distilleries.find(entry => entry.id === id) : null;
     const previousLocation = previousDistillery ? locationFor(previousDistillery) : null;
-    const status = form.elements.namedItem('status').value;
+    const status = /** @type {HTMLSelectElement} */ (form.elements.namedItem('status')).value;
     if (!name) return toast(t("features.validation.distilleryNameRequired"), true);
-    const rawLat = form.elements.namedItem('latitude').value.trim().replace(',', '.');
-    const rawLon = form.elements.namedItem('longitude').value.trim().replace(',', '.');
+    const rawLat = /** @type {HTMLInputElement} */ (form.elements.namedItem('latitude')).value.trim().replace(',', '.');
+    const rawLon = /** @type {HTMLInputElement} */ (form.elements.namedItem('longitude')).value.trim().replace(',', '.');
     if ((rawLat === '') !== (rawLon === '')) return toast(t("features.validation.coordinatesBothOrNone"), true);
     const latitude = rawLat === '' ? null : Number(rawLat);
     const longitude = rawLon === '' ? null : Number(rawLon);
@@ -89,7 +89,7 @@ export function createSettingsController({state, action, navigate, closeModal,
       (latitude !== null && Math.abs(latitude) > 90) || (longitude !== null && Math.abs(longitude) > 180)) {
       return toast(t("features.validation.invalidCoordinates"), true);
     }
-    const submit = form.querySelector('[type="submit"]');
+    const submit = /** @type {HTMLButtonElement} */ (form.querySelector('[type="submit"]'));
     if (submit.disabled) return;
     submit.disabled = true;
     const saved = await action(async () => request(
@@ -110,7 +110,7 @@ export function createSettingsController({state, action, navigate, closeModal,
     const parentForm = query('#bottling-form');
     if (!id && parentForm) {
       const options = parentForm.querySelector('.distillery-options');
-      if (options && ![...options.querySelectorAll('input[name="distilleryIds"]')].some(input => input.value === saved.value.id)) {
+      if (options && ![...options.querySelectorAll('input[name="distilleryIds"]')].some((/** @type {HTMLInputElement} */ input) => input.value === saved.value.id)) {
         const label = document.createElement('label');
         label.className = 'distillery-option';
         replaceContent(label, renderTemplate('saveDistilleryInput', {
@@ -128,13 +128,13 @@ export function createSettingsController({state, action, navigate, closeModal,
   /**
    * Retrieves distillery location for settings controller.
    *
-   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   * @return {!Promise<void>} Completion of the distillery-location search and result display.
    */
   async function findDistilleryLocation() {
-    const name = query('#distillery-name')?.value.trim();
+    const name = /** @type {HTMLInputElement} */ (query('#distillery-name'))?.value.trim();
     if (!name) return toast(t("features.validation.distilleryNameRequiredForSearch"), true);
-    const output = query('#distillery-location-results');
-    const button = query('[data-act="find-distillery-location"]');
+    const output = /** @type {HTMLElement & {_candidates?: Array<{name: string, latitude: number, longitude: number}>}} */ (query('#distillery-location-results'));
+    const button = /** @type {HTMLButtonElement} */ (query('[data-act="find-distillery-location"]'));
     if (!output || !button) return;
     button.disabled = true;
     replaceContent(output, renderTemplate('hint'));
@@ -163,25 +163,25 @@ export function createSettingsController({state, action, navigate, closeModal,
   }
 
   /**
-   * Updates distillery location in the current state.
+   * Copies coordinates from the chosen location-search result into the distillery form.
    *
    * @param {*} button Button control involved in the interaction.
    */
   function applyDistilleryLocation(button) {
-    const output = query('#distillery-location-results');
+    const output = /** @type {HTMLElement & {_candidates?: Array<{name: string, latitude: number, longitude: number}>}} */ (query('#distillery-location-results'));
     const item = output?._candidates?.[Number(button.dataset.index)];
     if (!item) return;
-    query('#distillery-latitude').value = String(item.latitude);
-    query('#distillery-longitude').value = String(item.longitude);
+    /** @type {HTMLInputElement} */ (query('#distillery-latitude')).value = String(item.latitude);
+    /** @type {HTMLInputElement} */ (query('#distillery-longitude')).value = String(item.longitude);
     replaceContent(output, renderTemplate('hint4'));
   }
 
   /**
    * Parses import json data from JSON input.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of reading and validating the selected JSON import file.
    */
   async function importJSON() {
-    const file = query('#import-file')?.files?.[0];
+    const file = /** @type {HTMLInputElement} */ (query('#import-file'))?.files?.[0];
     if (!file) return toast(t("features.validation.selectJsonFile"), true);
     try {
       JSON.parse(await file.text());
@@ -206,12 +206,12 @@ export function createSettingsController({state, action, navigate, closeModal,
 
   /**
    * Parses confirm import data from JSON input.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the confirmed collection import.
    */
   async function confirmImport() {
-    const file = query('#import-file')?.files?.[0];
+    const file = /** @type {HTMLInputElement} */ (query('#import-file'))?.files?.[0];
     if (!file) return toast(t("features.validation.selectJsonFile"), true);
-    const button = query('[data-act="confirm-import"]');
+    const button = /** @type {HTMLButtonElement} */ (query('[data-act="confirm-import"]'));
     if (button.disabled) return;
     button.disabled = true;
     const data = JSON.parse(await file.text());
@@ -232,17 +232,17 @@ export function createSettingsController({state, action, navigate, closeModal,
    * Updates collection settings for settings controller.
    *
    * @param {!Event} event Event that triggered the handler.
-   * @return {!Promise<void>} Promise fulfilled when the operation completes.
+   * @return {!Promise<void>} Completion of persisting collection settings.
    */
   async function saveCollectionSettings(event) {
     event.preventDefault();
-    const field = event.target.elements.namedItem('establishedYear');
+    const field = /** @type {HTMLInputElement} */ (/** @type {HTMLFormElement} */ (event.target).elements.namedItem('establishedYear'));
     const raw = String(field.value).trim();
     const year = raw === '' ? null : Number(raw);
     if (raw !== '' && (!/^\d{4}$/.test(raw) || !Number.isSafeInteger(year) || year < 1600 || year > new Date().getFullYear())) {
       return toast(t("features.validation.invalidFoundingYear"), true);
     }
-    const button = event.target.querySelector('[type="submit"]');
+    const button = /** @type {HTMLButtonElement} */ (/** @type {Element} */ (event.target).querySelector('[type="submit"]'));
     if (button.disabled) return;
     button.disabled = true;
     const saved = await action(() => request('/api/settings', {

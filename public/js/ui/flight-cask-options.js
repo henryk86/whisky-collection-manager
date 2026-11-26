@@ -101,13 +101,13 @@ export function flightCaskOptionsHtml(t) {
 export function readFlightCaskFilters(root) {
   const filters = {};
   for (const group of CASK_GROUPS) {
-    if (!root?.querySelector(`[name="${groupField(group)}"]`)?.checked)
+    if (!/** @type {HTMLInputElement} */ (root?.querySelector(`[name="${groupField(group)}"]`))?.checked)
       continue;
     const dimensions = {};
     for (const [dimension, values] of Object.entries(CASK_DIMENSIONS[group])) {
       const selected = values.filter(value => {
         const name = featureField(group, dimension, value);
-        return root.querySelector(`[name="${name}"]`)?.checked;
+        return /** @type {HTMLInputElement} */ (root.querySelector(`[name="${name}"]`))?.checked;
       });
       if (selected.length) dimensions[dimension] = selected;
     }
@@ -123,12 +123,12 @@ export function readFlightCaskFilters(root) {
  * @param {function(string, Object=): string} t Translation lookup.
  */
 export function syncFlightCaskOptions(root, specific, t) {
-  const wrapper = root?.querySelector('[data-flight-plan-cask-group-wrap]');
+  const wrapper = /** @type {HTMLElement} */ (root?.querySelector('[data-flight-plan-cask-group-wrap]'));
   if (wrapper) wrapper.hidden = !specific;
   const selected = readFlightCaskFilters(root);
   const details = root?.querySelectorAll('[data-flight-plan-cask-subtype-wrap]');
   let hasDetails = false;
-  for (const detail of details || []) {
+  for (const detail of /** @type {Iterable<HTMLDetailsElement>} */ (details || [])) {
     const group = detail.dataset.flightPlanCaskSubtypeWrap;
     const visible = specific && Object.hasOwn(selected, group);
     if (visible && detail.hidden) detail.open = true;
@@ -138,7 +138,7 @@ export function syncFlightCaskOptions(root, specific, t) {
     const counter = detail.querySelector?.('[data-flight-plan-cask-count]');
     if (counter) counter.textContent = count ? t('flightPlan.caskAge.selectedCount', {count}) : t('flightPlan.caskAge.allTypes');
   }
-  const detailGroup = root?.querySelector('[data-flight-plan-cask-details]');
+  const detailGroup = /** @type {HTMLElement} */ (root?.querySelector('[data-flight-plan-cask-details]'));
   if (detailGroup) detailGroup.hidden = !hasDetails;
   const summary = root?.querySelector('[data-flight-plan-cask-selection]');
   if (summary) {
@@ -156,9 +156,9 @@ export function syncFlightCaskOptions(root, specific, t) {
  * @param {?Element} root Planner dialog root, if mounted.
  */
 export function resetFlightCaskOptions(root) {
-  for (const input of root?.querySelectorAll('[name^="flight-cask-"]') || []) {
+  for (const input of /** @type {Iterable<HTMLInputElement>} */ (root?.querySelectorAll('[name^="flight-cask-"]') || [])) {
     input.checked = false;
   }
-  const phase = root?.querySelector('[data-flight-plan-cask-phase]');
+  const phase = /** @type {HTMLSelectElement} */ (root?.querySelector('[data-flight-plan-cask-phase]'));
   if (phase) phase.value = 'any';
 }

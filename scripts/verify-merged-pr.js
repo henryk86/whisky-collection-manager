@@ -12,7 +12,7 @@ import path from 'node:path';
  * @param {*} pr GitHub pull-request metadata to compare with the approved merge.
  * @param {string} sha Expected merge commit SHA.
  * @param {string} repo Expected owner/repository name.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True when the merged pull request satisfies the release approval requirements.
  */
 export function isApprovedReleaseMerge(pr, sha, repo) {
   return /^[a-f0-9]{40}$/.test(sha || '') && typeof repo === 'string' && repo.includes('/') && pr?.merged_at != null
@@ -27,7 +27,7 @@ export function isApprovedReleaseMerge(pr, sha, repo) {
  * @param {*} prs Pull requests associated with the main-branch commit.
  * @param {string} sha Expected merge commit SHA.
  * @param {string} repo Expected owner/repository name.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True after at least one eligible merged pull request has been verified.
  */
 export function verifyMergedPRs(prs, sha, repo) {
   if (!Array.isArray(prs) || !prs.some(pr => isApprovedReleaseMerge(pr, sha, repo)))
@@ -41,7 +41,7 @@ export function verifyMergedPRs(prs, sha, repo) {
  * @param {*} pr GitHub pull-request metadata for a release-version branch.
  * @param {string} sha Expected merge commit SHA.
  * @param {string} repo Expected owner/repository name.
- * @return {boolean} Whether the condition is satisfied.
+ * @return {boolean} True when the pull request is the expected approved version merge into main.
  */
 export function approvedVersionMerge(pr, sha, repo) {
   return /^[a-f0-9]{40}$/.test(sha || '') && pr?.merged_at != null && pr.merge_commit_sha === sha && pr.base?.ref === 'main'

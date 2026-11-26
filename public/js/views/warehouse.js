@@ -33,7 +33,7 @@ export {storagePath} from './warehouse-presentation.js';
  */
 function attachBottlePhotos() {
   if (typeof document === 'undefined' || !document.querySelectorAll) return;
-  document.querySelectorAll('.warehouse-bottle-photo').forEach(img => {
+  document.querySelectorAll('.warehouse-bottle-photo').forEach((/** @type {HTMLImageElement} */ img) => {
     /**
      * Renders if loaded in the current view.
      */
@@ -46,10 +46,10 @@ function attachBottlePhotos() {
 }
 
 /**
- * Creates warehouse view for warehouse.
+ * Creates the warehouse view and coordinates its room, shelf and bottle controllers.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Warehouse rendering and interaction operations.
  */
 export function createWarehouseView({state, shell, navigate, modal, refresh, mountContent = replaceContent}) {
   let unmountBottleDrag = null;
@@ -61,17 +61,17 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
    * Derives the remember wall scroll numeric value from its input.
    */
   function rememberWallScroll() {
-    const viewport = typeof document === 'undefined' ? null : document.querySelector?.('.warehouse-wall-scroll');
+    const viewport = /** @type {HTMLElement} */ (typeof document === 'undefined' ? null : document.querySelector?.('.warehouse-wall-scroll'));
     if (viewport?.dataset?.roomId && Number.isFinite(viewport.scrollLeft)) {
       wallScrollByRoom.set(viewport.dataset.roomId, viewport.scrollLeft);
     }
   }
 
   /**
-   * Updates element attributes used by restore wall scroll.
+   * Restores the saved horizontal scroll position for the current room's shelf wall.
    */
   function restoreWallScroll() {
-    const viewport = typeof document === 'undefined' ? null : document.querySelector?.('.warehouse-wall-scroll');
+    const viewport = /** @type {HTMLElement} */ (typeof document === 'undefined' ? null : document.querySelector?.('.warehouse-wall-scroll'));
     if (!viewport?.dataset?.roomId) return;
     const offset = wallScrollByRoom.get(viewport.dataset.roomId);
     if (offset === undefined) return;
@@ -84,7 +84,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
 
   /**
    * Reads the current warehouse state from the application store.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Warehouse snapshot currently loaded in application state.
    */
   const w = () => state.warehouse;
   const roomTransfer = createWarehouseRoomTransfer({
@@ -93,7 +93,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
   });
   /**
    * Resolves the selected room, falling back to the first room.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Selected warehouse room, or the first room when the selection is unavailable.
    */
   const currentRoom = () => roomOptions(w(), state.warehouseRoomId) || w().rooms[0];
 
@@ -151,7 +151,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
         getWarehouse: w,
         onDrop: relocateBottle,
         /**
-         * Retrieves dragged ids from the available state.
+         * Returns all selected bottle IDs when dragging a selected bottle, otherwise only the dragged bottle.
          *
          * @param {*} bottleId Identifier of the dragged physical bottle; uses the bulk selection when it includes this bottle.
          * @return {*} Whether the requested condition is met.
@@ -174,14 +174,14 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
   const openForm = createWarehouseFormController({w, currentRoom, selectedFurniture, selectedBottleIds, modal});
 
   /**
-   * Locates the DOM elements used by switch shelf.
+   * Switches the shelf editor after checking for and handling unsaved form changes.
    *
    * @param {*} id Identifier of the affected record.
-   * @return {!Promise<*>} Promise for the asynchronous operation.
+   * @return {!Promise<*>} Completion of the shelf switch or cancellation.
    */
   async function switchShelf(id) {
     if (!id) return;
-    const form = document.querySelector('#warehouse-form[data-endpoint^="/api/warehouse/shelves/"]');
+    const form = /** @type {HTMLFormElement} */ (document.querySelector('#warehouse-form[data-endpoint^="/api/warehouse/shelves/"]'));
     if (!form) return;
     const modified = JSON.stringify([...new FormData(form).entries()]) !== form.dataset.initialValues;
     if (modified) {
@@ -195,7 +195,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
       if (answer === 'save') {
         if (!(await submit({
           /**
-           * Updates the prevent default state for its caller.
+           * Provides the no-op event method required by programmatic form submission.
            */
           preventDefault() {}, target: form,
         }))) return;
@@ -259,7 +259,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
    * Selects search matching the input.
    */
   function filterSearch() {
-    setFinderQuery(document.getElementById('warehouse-search')?.value || '');
+    setFinderQuery(/** @type {HTMLInputElement} */(document.getElementById('warehouse-search'))?.value || '');
   }
 
   return {
@@ -267,8 +267,8 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
     openShelfDetails,
     openOccupiedShelfDetails,
     /**
-     * Performs the open room transfer lifecycle action.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the room transfer dialog with the current room preselected when applicable.
+     * @return {*} No return value; the transfer dialog is opened.
      */
     openRoomTransfer: () => roomTransfer.openTransfer(state.selected === 'rooms' ? currentRoom()?.id : undefined),
     update3DZoom: scene.update3DZoom,

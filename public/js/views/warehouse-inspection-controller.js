@@ -15,12 +15,12 @@ const renderTemplate = await loadTemplates('warehouse/warehouse.html');
  */
 export function createWarehouseInspectionController({w, state, currentRoom, modal, attachBottlePhotos}) {
   /**
- * The single-furniture dialog deliberately has no navigation or bulk
- * selection.
- *
- * @param {string=} id Identifier used to select the relevant record.
- * @return {boolean} Whether the condition is satisfied.
- */
+   * The single-furniture dialog deliberately has no navigation or bulk
+   * selection.
+   *
+   * @param {string=} id Identifier used to select the relevant record.
+   * @return {boolean} True if the requested furniture manager could be opened.
+   */
   function openFurnitureManager(id = state.warehouseFurnitureId) {
     const data = w();
     const found = id ? findFurniture(data, id) : null;
@@ -40,10 +40,10 @@ export function createWarehouseInspectionController({w, state, currentRoom, moda
   }
 
   /**
- * Batch changes are a separate workflow, never part of the shelf editor.
- *
- * @return {boolean} Whether the condition is satisfied.
- */
+   * Batch changes are a separate workflow, never part of the shelf editor.
+   *
+   * @return {boolean} True if bulk management could be opened for the selected furniture.
+   */
   function openFurnitureBulkManager() {
     const room = currentRoom();
     if (!room) return false;
@@ -56,7 +56,7 @@ export function createWarehouseInspectionController({w, state, currentRoom, moda
   }
 
   /**
-   * Performs the open shelf details lifecycle action.
+   * Opens the shelf contents dialog and attaches its bottle photos.
    *
    * @param {*} id Identifier of the affected record.
    * @return {*} Whether the required condition is satisfied.
@@ -71,13 +71,13 @@ export function createWarehouseInspectionController({w, state, currentRoom, moda
   }
 
   /**
- * In the 3D room plan, only occupied bays open the existing shelf modal. In
- * particular, this must neither navigate nor open furniture editing.
- *
- * @param {string} id Identifier used to select the relevant record.
- * @return {(boolean|void)} Result of the open occupied shelf details
- * operation.
- */
+   * In the 3D room plan, only occupied bays open the existing shelf modal. In
+   * particular, this must neither navigate nor open furniture editing.
+   *
+   * @param {string} id Identifier used to select the relevant record.
+   * @return {(boolean|void)} Result of the open occupied shelf details
+   * operation.
+   */
   function openOccupiedShelfDetails(id) {
     const contents = shelfContents(w(), id, state.collection?.bottlings);
     if (!contents || contents.unavailable || contents.count === 0) return false;
@@ -85,11 +85,11 @@ export function createWarehouseInspectionController({w, state, currentRoom, moda
   }
 
   /**
-   * Performs the open bottle preview lifecycle action.
+   * Resolves a physical bottle and opens its detailed warehouse preview.
    *
    * @param {*} id Identifier of the affected record.
-      * @return {*} Result of this expression.
-*/
+   * @return {*} Notification if the bottle or its bottling is missing; otherwise opens its preview.
+   */
   function openBottlePreview(id) {
     const bottle = w()?.bottles.find(entry => entry.id === id);
     if (!bottle) return toast(t('features.errors.bottleNotFound'), true);

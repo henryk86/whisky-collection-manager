@@ -51,12 +51,12 @@ function format(file, original) {
     source = wrapped;
     const host = {
       /**
-       * Retrieves script file names from the available state.
+       * Reports the single source file managed by the formatter's TypeScript host.
        * @return {!Array<string>} Resulting entries in their output order.
        */
       getScriptFileNames: () => [file],
       /**
-       * Retrieves script version from the available state.
+       * Reports the immutable source version for the formatter's one-shot language-service host.
        * @return {string} Constant host version string; the formatter processes one immutable source snapshot.
        */
       getScriptVersion: () => '0',

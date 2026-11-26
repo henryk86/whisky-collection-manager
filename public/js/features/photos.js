@@ -4,7 +4,7 @@ import {request} from '../api.js';
  * Reads image dimensions or pixel data for photo processing.
  *
  * @param {*} file Source file or file name being processed.
- * @return {!Promise<*>} Promise fulfilled when the operation completes.
+ * @return {!Promise<*>} Decoded image dimensions and RGBA pixel data.
  */
 export async function imageData(file) {
   if (file.size > 10000000) {

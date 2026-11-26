@@ -61,7 +61,13 @@ const scenarios = [
   ['bottling-long', null, '.bottle-entry-facts'],
 ];
 
-let browser, socket, server, browserVersion;
+/** @type {import('node:child_process').ChildProcess|undefined} */
+let browser;
+/** @type {WebSocket|undefined} */
+let socket;
+/** @type {{base: string, stop: () => Promise<void>}|undefined} */
+let server;
+let browserVersion;
 let seq = 0;
 const pending = new Map();
 const problems = [];
@@ -85,7 +91,7 @@ function command(method, params = {}) {
       id,
       {
         /**
-         * Updates the resolve state for its caller.
+         * Settles a pending browser protocol command and cancels its response timeout.
          *
          * @param {*} v Value to evaluate.
          */
@@ -131,7 +137,7 @@ async function until(expression, label, tries = 80) {
  * Requests intercept data from the configured remote endpoint.
  *
  * @param {!Object} options Options controlling the operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Completion of handling the intercepted browser request.
  */
 async function intercept({requestId, request}) {
   try {
@@ -177,7 +183,7 @@ function absoluteChromium() {
 const scratch = mkdtempSync(path.join(tmpdir(), 'wcm-visual-'));
 /**
  * Parses boot data from JSON input.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Completion of launching and preparing the visual-test browser session.
  */
 async function boot() {
   server = await startTestServer();
@@ -233,8 +239,8 @@ async function boot() {
  * Renders the designsystem visual state.
  *
  * @param {string} route Application route to open for the visual scenario.
- * @param {Function} selector Callback identifying the rendered region that must be ready before capture.
- * @param {Function} action Mutation or UI action callback.
+ * @param {string} selector CSS selector of the rendered region that must be ready before capture.
+ * @param {?string[]} action Ordered CSS selectors of controls to activate before capture.
  * @param {string} scenarioName Name used to identify the visual scenario in diagnostics.
  */
 async function render(route, selector, action, scenarioName) {
@@ -351,7 +357,7 @@ async function fitFlightPlanner(width) {
 }
 
 /**
- * Locates the DOM elements used by geometry expression.
+ * Builds the browser expression used to measure viewport overflow and element geometry.
  * @return {string} JavaScript expression that serializes page geometry for the visual test runner.
  */
 function geometryExpression() {
@@ -376,13 +382,13 @@ function geometryExpression() {
 }
 
 /**
- * Coordinates asynchronous work for key.
+ * Sends matching key-down and key-up protocol events for the requested key.
  *
  * @param {*} key Key used to select or group values.
  * @param {*} code Code used to identify a specific outcome.
  * @param {*} windowsVirtualKeyCode Windows virtual key code input for this
  * operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Completion after dispatching both keyboard events.
  */
 async function key(key, code, windowsVirtualKeyCode) {
   for (const type of ['keyDown', 'keyUp']) await command('Input.dispatchKeyEvent', {type, key, code, windowsVirtualKeyCode});
@@ -435,8 +441,8 @@ async function checkModalInteractions(name) {
 }
 
 /**
- * Validates the seed fixtures state and rejects invalid inputs.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Seeds the collection and warehouse fixtures used by the visual regression scenarios.
+ * @return {!Promise<*>} Identifiers of the seeded collection and warehouse fixtures.
  */
 async function seedFixtures() {
   const partial = await requestJson(server.base, '/api/bottlings', 'POST', {

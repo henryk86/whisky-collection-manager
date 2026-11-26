@@ -3,7 +3,7 @@
  * midpoint.
  *
  * @param {!Object} bottling Bottling record being processed.
- * @return {!Array<*>} Resulting list of values.
+ * @return {!Array<*>} Distinct constituent distillery identifiers.
  */
 export function bottlingDistilleryIds(bottling) {
   if (!bottling) return [];
@@ -18,7 +18,7 @@ export function bottlingDistilleryIds(bottling) {
  * @param {!Object} bottling Bottling record being processed.
  * @param {*} located Known geographic sites available for selection.
  * @param {!Array<*>=} missing Referenced distilleries without coordinates, included alongside located sites.
- * @return {!Array<*>} Resulting list of values.
+ * @return {!Array<*>} Located or unresolved sites associated with the bottling's distilleries.
  */
 export function matchingBottlingSites(bottling, located, missing = []) {
   const ids = new Set(bottlingDistilleryIds(bottling));

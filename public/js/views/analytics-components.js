@@ -16,7 +16,7 @@ const renderTemplate = await loadTemplates('analytics/analytics.html');
 export const number = v => Number.isFinite(v) ? new Intl.NumberFormat(currentLanguage(), {maximumFractionDigits: 1}).format(v) : '–';
 
 /**
- * Builds the localized money text for the current language.
+ * Formats an amount in the requested currency or uses the unknown-currency fallback.
  *
  * @param {*} v Value to evaluate.
  * @param {*} currency Currency code appended to the formatted monetary amount.
@@ -79,7 +79,7 @@ const CATEGORY_KEYS = Object.freeze({
  * Resolves the localized analytics category label.
  *
  * @param {*} label Label shown to the user.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Localized category name, falling back to the supplied label.
  */
 export const categoryLabel = label => CATEGORY_KEYS[label] ? t(CATEGORY_KEYS[label]) : label;
 
@@ -122,7 +122,7 @@ const COUNTRY_KEYS = Object.freeze({
  * Resolves a country name for the current interface language.
  *
  * @param {*} name Environment variable or setting name.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Localized country name, falling back to the category label.
  */
 export const countryName = name => COUNTRY_KEYS[name] ? t(COUNTRY_KEYS[name]) : categoryLabel(name);
 

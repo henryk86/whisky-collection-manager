@@ -23,7 +23,7 @@ const PALETTE = {
  * @param {*} room Room model containing dimensions and furniture.
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {!Object=} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Scene, furniture meshes, room bounds and material, visibility and cleanup operations.
  */
 export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   const theme = options.theme === 'dark' ? 'dark' : 'light';
@@ -39,7 +39,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
    * Creates or reuses the material matching a scene part's color and appearance.
    *
    * @param {*} style Visual style or rendering properties.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Cached or newly created mesh material for the scene style.
    */
   function material(style) {
     if (!materials.has(style)) materials.set(
@@ -64,7 +64,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
    * Creates or reuses the material used to highlight a selected scene part.
    *
    * @param {*} style Visual style or rendering properties.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Cached or newly created highlighted mesh material for the scene style.
    */
   function highlightedMaterial(style) {
     if (!highlightMaterials.has(style)) {
@@ -77,16 +77,16 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   }
   let highlightedId = null;
   /**
-   * Updates highlighted furniture in the current state.
+   * Highlights a visible furniture item and restores the previous selection's materials.
    *
    * @param {*} id Identifier of the affected record.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} Identifier of the highlighted item, or null when none is eligible.
    */
   function setHighlightedFurniture(id) {
     const next = byFurniture.has(id) && !hiddenFurniture.has(id) ? id : null;
     if (highlightedId === next) return highlightedId;
     /**
-     * Updates the apply state for its caller.
+     * Switches the meshes and edge materials belonging to a furniture item between normal and highlighted colors.
      *
      * @param {*} owner Furniture owner identifier whose meshes should be highlighted.
      * @param {*} active Whether the owner is currently highlighted.
@@ -105,7 +105,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   }
 
   /**
-   * Updates the piece state for its caller.
+   * Adds a box mesh and edge geometry, recording its furniture owner and scene role.
    *
    * @param {*} part Geometry descriptor for a single room or furniture part.
    * @param {*} owner Identifier of the furniture owning the mesh.
@@ -127,11 +127,11 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   }
   for (const item of objects) for (const part of item.parts) piece(part, item.id);
   /**
-   * Updates furniture visible in the current state.
+   * Changes a furniture item's visibility and clears its highlight when hidden.
    *
    * @param {*} id Identifier of the affected record.
    * @param {boolean} visible Whether meshes belonging to the furniture are shown.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * @return {boolean} True if the scene contains the requested furniture item.
    */
   function setFurnitureVisible(id, visible) {
     if (!byFurniture.has(id)) return false;
@@ -155,7 +155,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   // bounded.
   all.add(grid);
   /**
-   * Updates theme in the current state.
+   * Updates the scene background, furniture materials, floor and grid for the selected color scheme.
    *
    * @param {*} next Next candidate state or entry.
    */
@@ -172,7 +172,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   };
 
   /**
-   * Performs the dispose lifecycle action.
+   * Releases the geometries and materials allocated by the room scene.
    */
   const dispose = () => {
     all.traverse(obj => {if (obj.geometry) obj.geometry.dispose();});
@@ -202,7 +202,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
  * @param {number} projectedWidth Scene width projected onto the camera plane.
  * @param {number} projectedHeight Scene height projected onto the camera plane.
  * @param {number} aspect Viewport width divided by height.
- * @return {number} Calculated numeric result.
+ * @return {number} Required vertical half-extent of the orthographic frustum.
  */
 export function warehouseCameraHalfHeight(projectedWidth, projectedHeight,
   aspect) {
@@ -221,7 +221,7 @@ export function warehouseCameraHalfHeight(projectedWidth, projectedHeight,
  * @param {*} corner Corner of the furniture footprint.
  * @param {number} aspect Viewport width divided by height.
  * @param {number=} zoom Map scale used for projection.
- * @return {*} Structured result assembled from the input data.
+ * @return {*} World-space center vector used as the camera target.
  */
 export function frameWarehouseCamera(
   THREE,
@@ -246,10 +246,10 @@ export function frameWarehouseCamera(
     projected.push(new THREE.Vector3(x, y, z).applyMatrix4(camera.matrixWorldInverse));
   }
   /**
-   * Transforms the entries used by range.
+   * Measures the projected extent along one camera-plane axis.
    *
    * @param {*} axis Coordinate axis used to determine the projected scene bounds.
-   * @return {number} Calculated numeric value.
+   * @return {number} Difference between the maximum and minimum projected coordinates.
    */
   const range = (axis) => Math.max(...projected.map(p => p[axis])) - Math.min(...projected.map(p => p[axis]));
   const halfH = warehouseCameraHalfHeight(range('x'), range('y'), aspect);
@@ -267,8 +267,7 @@ export function frameWarehouseCamera(
  *
  * @param {*} viewport DOM element that hosts the WebGL canvas.
  * @param {!Object} options2 Destructured options for this operation.
- * @return {!Promise<(!Object)>} Promise fulfilled when the operation
- * completes.
+ * @return {!Promise<(!Object)>} Scene handle for disposal, zoom and highlighting, or an inactive handle if the viewport is disconnected.
  */
 export async function mountWarehouseThree(
   viewport,
@@ -284,32 +283,32 @@ export async function mountWarehouseThree(
 ) {
   if (!viewport || !viewport.isConnected) return {
     /**
-     * Performs the dispose lifecycle action.
+     * No scene resources require disposal when the viewport is not connected.
      */
     dispose() {},
     /**
-     * Updates zoom in the current state.
-     * @return {boolean} Whether the operation matched or succeeded.
+     * Rejects zoom changes when no scene is mounted.
+     * @return {boolean} Always false because no camera is available.
      */
     setZoom() {return false;},
     /**
-     * Updates highlighted furniture in the current state.
+     * Ignores furniture highlights when no scene is mounted.
      */
     setHighlightedFurniture() {},
   };
   const [THREE, {OrbitControls}] = await Promise.all([import('/vendor/three.module.js'), import('/vendor/three/addons/controls/OrbitControls.js'),]);
   if (!viewport.isConnected) return {
     /**
-     * Performs the dispose lifecycle action.
+     * No scene resources require disposal when WebGL is unavailable.
      */
     dispose() {},
     /**
-     * Updates zoom in the current state.
-     * @return {boolean} Whether the operation matched or succeeded.
+     * Rejects zoom changes when WebGL is unavailable.
+     * @return {boolean} Always false because no camera is available.
      */
     setZoom() {return false;},
     /**
-     * Updates highlighted furniture in the current state.
+     * Ignores furniture highlights when WebGL is unavailable.
      */
     setHighlightedFurniture() {},
   };
@@ -328,16 +327,16 @@ export async function mountWarehouseThree(
   catch (error) {
     viewport.textContent = t('warehouse.view.webglUnavailable'); return {
       /**
-       * Performs the dispose lifecycle action.
+       * No scene resources require disposal after renderer initialization fails.
        */
       dispose() {},
       /**
-       * Updates zoom in the current state.
-       * @return {boolean} Whether the operation matched or succeeded.
+       * Rejects zoom changes after renderer initialization fails.
+       * @return {boolean} Always false because no camera is available.
        */
       setZoom() {return false;},
       /**
-       * Updates highlighted furniture in the current state.
+       * Ignores furniture highlights after renderer initialization fails.
        */
       setHighlightedFurniture() {},
     };
@@ -357,14 +356,14 @@ export async function mountWarehouseThree(
   controls.minPolarAngle = 0.15; controls.maxPolarAngle = Math.PI * 0.48;
   let cameraZoom = Number(zoom) || 100;
   /**
-   * Updates the render state for its caller.
+   * Renders the current room scene and records its camera zoom percentage.
    */
   function render() {
     cameraZoom = camera.zoom * 100; renderer.render(model.scene, camera);
   }
 
   /**
-   * Calculates the resize numeric value.
+   * Resizes the renderer, reframes the orthographic camera and updates the controls.
    */
   function resize() {
     const width = Math.max(1, viewport.clientWidth), height = Math.max(1, viewport.clientHeight);
@@ -397,14 +396,14 @@ export async function mountWarehouseThree(
   );
   const furnitureById = new Map((room.furniture || []).map(item => [item.id, item]));
   /**
-   * Updates the pointer down state for its caller.
+   * Records the initial pointer position for distinguishing clicks from camera gestures.
    *
    * @param {*} e Pointer-down event used to record the initial picking position.
    */
   function pointerDown(e) {down = {x: e.clientX, y: e.clientY};}
 
   /**
-   * Filters records according to the pointer up selection rules.
+   * Raycasts a stationary pointer release into selectable furniture meshes and dispatches activation.
    *
    * @param {*} e Pointer-up event used to distinguish a click from camera movement.
    */
@@ -440,7 +439,7 @@ export async function mountWarehouseThree(
   // The renderer must be disposed on every tab switch and DOM removal.
   const handle = {
     /**
-     * Performs the dispose lifecycle action.
+     * Releases the mounted room scene, observers, pointer listeners, controls and renderer.
      */
     dispose() {
       if (disposed) return; disposed = true; activation.cancel(); removalObserver?.disconnect();
@@ -453,11 +452,11 @@ export async function mountWarehouseThree(
       canvas.remove();
     },
     /**
-     * Updates furniture visible in the current state.
+     * Updates furniture visibility and refreshes the canvas's hidden-item metadata.
      *
      * @param {*} id Identifier of the affected record.
      * @param {boolean} visible Whether the furniture should remain visible in the scene.
-     * @return {boolean} Whether the operation matched or succeeded.
+     * @return {boolean} True if the requested furniture visibility was applied.
      */
     setFurnitureVisible(id, visible) {
       if (disposed || !model.setFurnitureVisible(id, visible)) return false;
@@ -468,7 +467,7 @@ export async function mountWarehouseThree(
       return true;
     },
     /**
-     * Updates highlighted furniture in the current state.
+     * Updates the room highlight and redraws the canvas unless disposed.
      *
      * @param {*} id Identifier of the affected record.
      */
@@ -479,10 +478,10 @@ export async function mountWarehouseThree(
       render();
     },
     /**
-     * Updates zoom in the current state.
+     * Applies a supported zoom percentage without changing the canvas dimensions.
      *
      * @param {*} value Value to process.
-     * @return {boolean} Whether the operation matched or succeeded.
+     * @return {boolean} True for a supported zoom percentage.
      */
     setZoom(value) {
       const next = Number(value); if (![100, 150, 200].includes(next)) return false;

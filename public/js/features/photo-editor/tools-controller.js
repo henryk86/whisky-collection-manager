@@ -9,7 +9,7 @@ import {paintMaskSegment, applyMaskStrokes} from './mask-brush.js';
  */
 export function createPhotoTools({session, root, setValues, syncSliders, schedulePreview}) {
   /**
-   * Performs the stop picking lifecycle action.
+   * Leaves white-balance picking mode and hides the selection overlay.
    */
   function stopPicking() {
     session.whitePicking = false;
@@ -25,10 +25,10 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
   // contain).
   // Translate pointer positions through the actual rendered image rectangle.
   /**
-   * Calculates the image geometry numeric value.
+   * Calculates the fitted image rectangle within the preview canvas.
    *
    * @param {*} canvas Canvas used by the rendering operation.
-   * @return {!Object} Structured result assembled from the input data.
+   * @return {!Object} Image offset, displayed dimensions and source-to-screen scale.
    */
   function imageGeometry(canvas) {
     const rect = canvas.getBoundingClientRect();
@@ -41,12 +41,12 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
   }
 
   /**
-   * Calculates the image point numeric value.
+   * Converts a pointer position into source-image coordinates.
    *
    * @param {*} canvas Canvas used by the rendering operation.
-   * @param {!Event} event Event that triggered this operation.
+   * @param {{clientX: number, clientY: number}} event Pointer position in viewport pixels.
    * @param {boolean=} clampToImage Clamp pointer coordinates to the image bounds instead of rejecting outside points.
-   * @return {!Object} Computed value, or null when the input has no match.
+   * @return {!Object} Source-pixel coordinates, or null for an outside point when clamping is disabled.
    */
   function imagePoint(canvas, event, clampToImage = false) {
     const frame = imageGeometry(canvas);
@@ -60,7 +60,7 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
   }
 
   /**
-   * Locates the DOM elements used by mark selection.
+   * Positions the white-balance selection overlay over the sampled source rectangle.
    *
    * @param {*} canvas Canvas used by the rendering operation.
    * @param {*} start Starting corner of the selected area in source-image pixels.
@@ -132,7 +132,7 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
   }
 
   /**
-   * Performs the stop brush lifecycle action.
+   * Exits brush mode and hides the brush cursor.
    */
   function stopBrush() {
     session.brushMode = null;
@@ -141,7 +141,7 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
   }
 
   /**
-   * Performs the refresh mask preview lifecycle action.
+   * Reapplies mask strokes to the base image and schedules an updated preview.
    */
   function refreshMaskPreview() {
     if (!session.maskBaseData) return;
@@ -171,7 +171,7 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
   }
 
   /**
-   * Performs the undo brush lifecycle action.
+   * Removes the most recent completed mask stroke when no brush gesture is active.
    */
   function undoBrush() {
     if (session.busy || session.activeBrush || !session.maskStrokes.length) return;
@@ -183,8 +183,8 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
    * Converts a pointer position into normalized image coordinates for mask strokes.
    *
    * @param {*} canvas Canvas used by the rendering operation.
-   * @param {!Event} event Event that triggered this operation.
-   * @return {!Object} Result computed from the supplied inputs.
+   * @param {!PointerEvent} event Pointer event supplying the current brush position.
+   * @return {!Object} Normalized image point used by a mask stroke.
    */
   function brushPoint(canvas, event) {
     const point = imagePoint(canvas, event);
@@ -194,10 +194,10 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
   }
 
   /**
-   * Updates brush cursor in the current state.
+   * Positions and sizes the brush cursor for the current pointer and image scale.
    *
    * @param {*} canvas Canvas used by the rendering operation.
-   * @param {!Event} event Event that triggered this operation.
+   * @param {!PointerEvent} event Pointer event supplying the current brush position.
    */
   function updateBrushCursor(canvas, event) {
     const cursor = root()?.querySelector('[data-photo-editor-brush-cursor]');
@@ -273,7 +273,7 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
     /**
      * Finishes or cancels the active mask stroke and releases pointer capture.
      *
-     * @param {!Event} event Event that triggered this operation.
+     * @param {!PointerEvent} event Event that triggered this operation.
      */
     const release = event => {
       if (!session.activeBrush || session.activeBrush.pointerId !== event.pointerId) return;

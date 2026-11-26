@@ -9,11 +9,11 @@ import {findFurniture} from './warehouse-presentation.js';
  * @param {!Object} options Warehouse access and interaction callbacks.
  */
 export function attachWarehousePlanDrag({w, selectFurniture, editFurnitureFromPlan, openForm, refresh, render}) {
-  const svg = document.querySelector('.warehouse-floor'); if (!svg) return;
+  const svg = /** @type {SVGSVGElement} */ (document.querySelector('.warehouse-floor')); if (!svg) return;
   let drag = null;
   const activation = createFurnitureActivation(selectFurniture, editFurnitureFromPlan);
-  svg.addEventListener('keydown', event => {
-    const furniture = event.target.closest?.('.warehouse-drag');
+  svg.addEventListener('keydown', (/** @type {KeyboardEvent} */ event) => {
+    const furniture = /** @type {SVGGElement} */ (/** @type {Element} */ (event.target).closest?.('.warehouse-drag'));
     if (!furniture) return;
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -21,8 +21,8 @@ export function attachWarehousePlanDrag({w, selectFurniture, editFurnitureFromPl
       else selectFurniture(furniture.dataset.id);
     }
   });
-  svg.addEventListener('pointerdown', e => {
-    const g = e.target.closest('.warehouse-drag'); if (!g || e.button !== 0) return;
+  svg.addEventListener('pointerdown', (/** @type {PointerEvent} */ e) => {
+    const g = /** @type {SVGGElement} */ (/** @type {Element} */ (e.target).closest('.warehouse-drag')); if (!g || e.button !== 0) return;
     const found = findFurniture(w(), g.dataset.id); if (!found) return;
     drag = {
       id: g.dataset.id,
@@ -37,7 +37,7 @@ export function attachWarehousePlanDrag({w, selectFurniture, editFurnitureFromPl
     };
     svg.setPointerCapture(e.pointerId); e.preventDefault();
   });
-  svg.addEventListener('pointermove', e => {
+  svg.addEventListener('pointermove', (/** @type {PointerEvent} */ e) => {
     if (!drag) return;
     const rect = svg.getBoundingClientRect(); if (rect.width === 0 || rect.height === 0) return;
     const item = findFurniture(w(), drag.id)?.furniture; if (!item) return;

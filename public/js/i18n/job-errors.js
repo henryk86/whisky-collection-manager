@@ -6,7 +6,7 @@ import {apiErrorCode} from '../../../shared/api-error-codes.js';
  * rendering their untrusted diagnostic text.
  *
  * @param {*} job Backup job status containing a public error code and optional diagnostic details.
- * @return {*} Entries that meet the selection criteria.
+ * @return {*} Localized backup-job error message, without raw legacy diagnostic text.
  */
 export function jobErrorText(job) {
   if (job && typeof job === 'object') {

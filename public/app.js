@@ -115,13 +115,13 @@ let externalImport;
 const editors = createEditors({
   state, selectors, bottlingForm, bottleForm, ...modal, navigate, action,
   /**
-   * Retrieves pending image token from the available state.
-   * @return {*} Result computed from the supplied inputs.
+   * Returns the staged image token selected for attachment to the new bottle.
+   * @return {*} Selected import-image token, or null or undefined when no image is pending.
    */
   getPendingImageToken: () => externalImport?.getPendingImageToken(),
   /**
    * Notifies the import controller that its staged image has been attached.
-   * @return {*} Result computed from the supplied inputs.
+   * @return {*} No return value; clears the staged import-image token.
    */
   markImageAttached: () => externalImport?.markImageAttached(),
 });
@@ -188,10 +188,10 @@ function render() {
 }
 
 /**
- * Performs the refresh lifecycle action.
+ * Reloads the requested resource scope and updates the active view.
  *
  * @param {string=} scope Resource scope to refresh: all, collection or warehouse.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Completion after refreshing the view and version information.
  */
 async function refresh(scope = 'all') {
   const [_, meta] = await Promise.all([
@@ -204,11 +204,11 @@ async function refresh(scope = 'all') {
 }
 
 /**
- * Builds the localized action text for the current language.
+ * Executes a user action and refreshes resources, reporting action and refresh failures separately.
  *
  * @param {*} task Task to execute or examine.
  * @param {!Object=} options Options controlling the operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @return {!Promise<*>} Action outcome, including any refresh error after a successful write.
  */
 async function action(task, {scope = 'all'} = {}) {
   return runAction(

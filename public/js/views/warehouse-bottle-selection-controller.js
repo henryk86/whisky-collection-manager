@@ -14,20 +14,20 @@ export function createWarehouseBottleSelection({state, w, attachBottlePhotos, op
   let unassignedWallPageNumber = 1;
   let unassignedWallExpanded = false;
   /**
-   * Filters records according to the selected bottle ids selection rules.
-   * @return {*} Entries that meet the selection criteria.
+   * Removes stale bottle IDs from the current warehouse selection.
+   * @return {*} Selected IDs that still identify physical bottles in the warehouse.
    */
   const selectedBottleIds = () => (state.warehouseSelectedBottleIds || []).filter(id => w()?.bottles?.some(b => b.id === id));
 
   /**
-   * Builds the localized sync bottle selection text for the current language.
+   * Synchronizes bottle checkboxes, pressed states, selection labels and bulk-action availability.
    */
   function syncBottleSelection() {
     const selected = new Set(selectedBottleIds());
-    document.querySelectorAll('.warehouse-bottle-check').forEach(input => {
+    document.querySelectorAll('.warehouse-bottle-check').forEach((/** @type {HTMLInputElement} */ input) => {
       input.checked = selected.has(input.dataset.id);
     });
-    document.querySelectorAll('.warehouse-wall-bottle .warehouse-bottle-symbol').forEach(button => {
+    document.querySelectorAll('.warehouse-wall-bottle .warehouse-bottle-symbol').forEach((/** @type {HTMLElement} */ button) => {
       const checked = selected.has(button.dataset.id);
       button.setAttribute('aria-pressed', String(checked));
       const label = checked ? button.dataset.deselectLabel : button.dataset.selectLabel;
@@ -36,14 +36,14 @@ export function createWarehouseBottleSelection({state, w, attachBottlePhotos, op
       }
       button.closest('.warehouse-wall-bottle')?.classList.toggle('is-selected', checked);
     });
-    document.querySelectorAll('.warehouse-bottles-preview-selected').forEach(button => {
+    document.querySelectorAll('.warehouse-bottles-preview-selected').forEach((/** @type {HTMLButtonElement} */ button) => {
       button.disabled = selected.size !== 1;
       button.textContent = t('warehouse.bottles.detailsTitle');
     });
     document.querySelectorAll('.warehouse-bottle-selection-count').forEach(label => {
       label.textContent = t('warehouse.bottles.bulkSelected', {count: selected.size});
     });
-    document.querySelectorAll('.warehouse-bottles-select-clear,.warehouse-bottles-assign-selected').forEach(button => {
+    document.querySelectorAll('.warehouse-bottles-select-clear,.warehouse-bottles-assign-selected').forEach((/** @type {HTMLButtonElement} */ button) => {
       button.disabled = selected.size === 0;
     });
   }
@@ -63,14 +63,14 @@ export function createWarehouseBottleSelection({state, w, attachBottlePhotos, op
   }
 
   /**
-   * Performs the refresh unassigned tray lifecycle action.
+   * Refreshes only the unassigned-tray results and pagination, preserving its search input and focus.
    */
   function refreshUnassignedTray() {
     const results = typeof document === 'undefined' ? null : document.querySelector?.('.warehouse-unassigned-results');
     if (!results || !w()) return;
     const data = unassignedWallPage(w(), {query: unassignedWallQuery, page: unassignedWallPageNumber});
     unassignedWallPageNumber = data.page;
-    const template = materialize(renderUnassignedTrayPage(w(), selectedBottleIds(), {query: unassignedWallQuery, page: data.page}), document);
+    const template = /** @type {DocumentFragment} */ (materialize(renderUnassignedTrayPage(w(), selectedBottleIds(), {query: unassignedWallQuery, page: data.page}), document));
     const updated = template.firstElementChild;
     // Patch only the changing results and pagination. The search input stays
     // mounted, so typing does not lose focus or its caret position.
@@ -86,7 +86,7 @@ export function createWarehouseBottleSelection({state, w, attachBottlePhotos, op
   }
 
   /**
-   * Updates unassigned wall search in the current state.
+   * Updates the unassigned-bottle search term and resets its results to the first page.
    *
    * @param {*} query Search query or filter conditions.
    */
@@ -97,7 +97,7 @@ export function createWarehouseBottleSelection({state, w, attachBottlePhotos, op
   }
 
   /**
-   * Calculates the step unassigned wall page numeric value.
+   * Moves the unassigned tray to an adjacent valid page and refreshes its results.
    *
    * @param {number} delta Signed number of pages to move in the unassigned bottle tray.
    */
@@ -108,7 +108,7 @@ export function createWarehouseBottleSelection({state, w, attachBottlePhotos, op
   }
 
   /**
-   * Updates the toggle wall bottle selection state for its caller.
+   * Toggles the specified bottle in the current selection.
    *
    * @param {*} id Identifier of the affected record.
    */
@@ -140,14 +140,14 @@ export function createWarehouseBottleSelection({state, w, attachBottlePhotos, op
   function selectAllBottles() {
     state.warehouseSelectedBottleIds = [...new Set([...selectedBottleIds(),
     ...[...document.querySelectorAll('.warehouse-bottle-row:not([hidden]) .warehouse-bottle-check')].map(
-      input => input.dataset.id)])];
+      (/** @type {HTMLElement} */ input) => input.dataset.id)])];
     syncBottleSelection();
   }
 
   /**
-   * Builds the localized assign selected bottles text for the current language.
-      * @return {*} Result of this expression.
-*/
+   * Opens bulk location assignment for the selected bottles, or reports an empty selection.
+   * @return {*} Notification if no bottles are selected; otherwise opens bulk assignment.
+   */
   function assignSelectedBottles() {
     if (!selectedBottleIds().length) return toast(t('warehouse.bottles.bulkNothingSelected'), true);
     openForm('assign-bulk');
@@ -158,8 +158,8 @@ export function createWarehouseBottleSelection({state, w, attachBottlePhotos, op
   function attachUnassignedTray() {
     document.querySelector('.warehouse-unassigned-toggle')?.addEventListener('click', event => {
       unassignedWallExpanded = !unassignedWallExpanded;
-      event.currentTarget.setAttribute('aria-expanded', String(unassignedWallExpanded));
-      const tray = document.querySelector('.warehouse-unassigned-tray--embedded');
+      /** @type {Element} */ (event.currentTarget).setAttribute('aria-expanded', String(unassignedWallExpanded));
+      const tray = /** @type {HTMLElement} */ (document.querySelector('.warehouse-unassigned-tray--embedded'));
       if (tray) tray.hidden = !unassignedWallExpanded;
     });
   }

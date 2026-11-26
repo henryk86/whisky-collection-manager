@@ -19,7 +19,7 @@ const rotate = item => ((Number(item.rotation) || 0) % 360 + 360) % 360;
  * Computes the room-space footprint of a furniture item.
  *
  * @param {*} item Warehouse item or record being evaluated.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Room-space width and depth, swapped for quarter-turn furniture orientations.
  */
 export const furnitureFootprint = item => rotate(item) % 180 === 0
   ? {width: Number(item.width), depth: Number(item.depth)}
@@ -30,7 +30,7 @@ export const furnitureFootprint = item => rotate(item) % 180 === 0
  *
  * @param {*} item Warehouse item or record being evaluated.
  * @param {string=} previous Previously selected camera direction, retained if it faces the furniture front.
- * @return {*} Entries transformed for the consuming code.
+ * @return {*} Camera corner facing the furniture, retaining the previous corner when possible.
  */
 export function cameraForFurniture(item, previous = 'nw') {
   const faces = {
@@ -52,12 +52,12 @@ export const cameraDirection = corner => ({
 })[corner] || [-1, -1];
 
 /**
- * Calculates the limit numeric value.
+ * Clamps a coordinate or dimension to the supplied bounds.
  *
  * @param {*} x Horizontal coordinate.
  * @param {*} min Minimum accepted value.
  * @param {*} max Maximum accepted value.
- * @return {number} Calculated numeric value.
+ * @return {number} Value within the inclusive bounds.
  */
 const limit = (x, min, max) => Math.max(min, Math.min(max, x));
 
@@ -66,7 +66,7 @@ const limit = (x, min, max) => Math.max(min, Math.min(max, x));
  * The footprint is axis-aligned, but front elements must rotate with it.
  *
  * @param {*} item Warehouse item or record being evaluated.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Unit normal and tangent vectors of the rotated furniture front.
  */
 export function furnitureFront(item) {
   const angle = rotate(item) * Math.PI / 180;
@@ -85,7 +85,7 @@ export function furnitureFront(item) {
  *
  * @param {*} furniture Furniture configuration including its dimensions.
  * @param {number} height Height in pixels.
- * @return {*} Computed value, or null when the input has no match.
+ * @return {*} Identifier of the accessible shelf at the given height, or null outside a shelf.
  */
 export function shelfIdAtHeight(furniture, height) {
   if (!furniture) return null;
@@ -105,7 +105,7 @@ export function shelfIdAtHeight(furniture, height) {
  * @param {*} room Room model containing dimensions and furniture.
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {?string=} isolatedId Identifier of furniture to isolate, or null to show the whole room.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Room bounds and furniture part descriptors for the 3D scene.
  */
 export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
   const objects = [];
@@ -161,7 +161,7 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
     const board = level => box(x, level, z, width, t, depth, 'board', 'shelf-board');
 
     /**
-     * Updates the frame state for its caller.
+     * Adds the four vertical frame posts to the furniture geometry.
      */
     const frame = () => {
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
@@ -216,7 +216,7 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
       const boardLevels = [base, ...levels.map(level => level.top)];
       for (const level of boardLevels) board(Math.min(top - t / 2, level + t / 2));
       /**
-       * Creates front for warehouse 3d model.
+       * Builds door, glass or drawer geometry for the vertical span of a furniture front.
        *
        * @param {*} front Front-facing side of the shelf or room.
        * @param {*} bottom Lower boundary of the geometry.

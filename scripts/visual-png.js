@@ -30,7 +30,7 @@ function chunk(type, data) {
  * Parses png for visual png.
  *
  * @param {Buffer} bytes PNG screenshot bytes, including the PNG signature and chunks.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Decoded image width, height, channel count and pixel buffer.
  */
 export function decodePNG(bytes) {
   if (!bytes.subarray(0, 8).equals(sig)) throw new Error('Not a PNG screenshot');
@@ -97,7 +97,7 @@ export function encodeRGB(width, height, rgb) {
  * @param {Buffer} beforeBytes Baseline PNG screenshot.
  * @param {Buffer} afterBytes Candidate PNG screenshot.
  * @param {number=} delta Validated changes to apply to the resource.
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Pixel comparison statistics for the two PNG images.
  */
 export function comparePNG(beforeBytes, afterBytes, delta = 36) {
   const a = decodePNG(beforeBytes), b = decodePNG(afterBytes);

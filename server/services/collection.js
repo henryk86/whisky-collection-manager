@@ -4,7 +4,7 @@ import {suggestNumber} from '../domain/inventory.js';
 /**
  * Retrieves collection for collection.
  *
- * @return {import('../../shared/types.js').Collection} Value returned by the delegated operation.
+ * @return {import('../../shared/types.js').Collection} Current validated collection snapshot.
  */
 export function getCollection() {
   return read();
@@ -13,7 +13,7 @@ export function getCollection() {
 /**
  * Retrieves next inventory number for collection.
  *
- * @return {!Object} Structured result for the caller.
+ * @return {!Object} Next available inventory number in the number property.
  */
 export function getNextInventoryNumber() {
   return {number: suggestNumber(read()), };
@@ -24,7 +24,7 @@ export function getNextInventoryNumber() {
  * deletions.
  *
  * @param {*} input Input to process.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {!Promise<!Object>} Import confirmation and resulting collection statistics.
  */
 export async function importCollection(input) {
   const migrated = migrateCollectionToCurrent(input).collection;
