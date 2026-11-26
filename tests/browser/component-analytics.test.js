@@ -11,7 +11,7 @@ import {MAIN_PAGES} from '../../public/js/navigation/pages.js';
  * @return {!Array<*>} Resulting entries in their output order.
  */
 const collection = () => ({
-  schemaVersion: 8,
+  schemaVersion: 9,
   distilleries: [
     {id: 'a', name: 'Alpha', country: 'Schottland', region: 'Islay'},
     {id: 'b', name: 'Beta', country: 'Irland'},
@@ -99,7 +99,7 @@ test(
   'analytics page headline keeps its overview punchline on every tab',
   async () => {
     const state = {
-      collection: {schemaVersion: 8, distilleries: [], bottlings: []},
+      collection: {schemaVersion: 9, distilleries: [], bottlings: []},
       analyticsFilters: {},
       analyticsPeriod: 'month',
       analyticsStartDate: '',

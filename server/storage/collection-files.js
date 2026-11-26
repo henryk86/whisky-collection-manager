@@ -5,26 +5,44 @@ import {validate} from '../domain/validation.js';
 import {migrateCollectionToCurrent} from './migrations.js';
 import {PublishedWriteError, syncDirectory, writeDurableFile} from '../../shared/durable-files.js';
 
-export const COLLECTION_FILES = Object.freeze(['collection.json', 'settings.json', 'externalTastings.json', 'tastingFlights.json']);
 const JOURNAL = '.collection-transaction.json';
-const PARTS = /** @type {const} */ (['settings', 'externalTastings', 'tastingFlights']);
+const LEGACY_PARTS = /** @type {const} */ (['settings', 'externalTastings', 'tastingFlights']);
+const PARTS = /** @type {const} */ ([...LEGACY_PARTS, 'distilleries']);
+export const COLLECTION_FILES = Object.freeze(['collection.json', ...PARTS.map(key => `${key}.json`)]);
 /** @typedef {import('../../shared/types.js').Collection} Collection */
 /** @typedef {{[filename: string]: string}} SerializedFiles */
+/** @typedef {'complete'|'pending'|'syncUnconfirmed'} CleanupStatus */
+
+/** A visible write is not safe to repeat blindly; its final state may require recovery. */
+export class CollectionCommitError extends PublishedWriteError {
+  /**
+   * Creates a localized HTTP error without implying that a published change was rolled back.
+   * @param {string} filename Published file or journal.
+   * @param {unknown} cause Underlying storage failure.
+   * @param {'pending'|'unconfirmed'} outcome Whether the redo commit is durable or its persistence is uncertain.
+   */
+  constructor(filename, cause, outcome) {
+    super(filename, cause);
+    this.status = 503;
+    this.code = outcome === 'pending' ? 'api.errors.collectionCommitPending' : 'api.errors.collectionCommitUnconfirmed';
+  }
+}
 
 /**
- * Serializes a validated API snapshot into four independently versioned documents.
+ * Serializes a validated logical snapshot, including the older four-file layout for recovery of a schema-8 journal.
  * @param {Collection} collection Complete logical collection.
+ * @param {8|9=} version Physical layout version.
  * @return {SerializedFiles} Complete physical layout with newline-terminated JSON.
  */
-export function serializeCollectionFiles(collection) {
+export function serializeCollectionFiles(collection, version = 9) {
   validate(collection);
-  const {settings, externalTastings, tastingFlights, ...core} = collection;
-  return Object.fromEntries(Object.entries({
-    'collection.json': core,
-    'settings.json': {schemaVersion: 1, settings: settings ?? null},
-    'externalTastings.json': {schemaVersion: 1, externalTastings},
-    'tastingFlights.json': {schemaVersion: 1, tastingFlights},
-  }).map(([name, value]) => [name, JSON.stringify(value, null, 2) + '\n']));
+  const core = {...collection, schemaVersion: Number(version)};
+  const files = {};
+  for (const key of version === 8 ? LEGACY_PARTS : PARTS) {
+    files[`${key}.json`] = {schemaVersion: 1, [key]: core[key] ?? null};
+    delete core[key];
+  }
+  return Object.fromEntries(Object.entries({'collection.json': core, ...files}).map(([name, value]) => [name, JSON.stringify(value, null, 2) + '\n']));
 }
 
 /**
@@ -38,20 +56,22 @@ function readJson(filename) {
 }
 
 /**
- * Loads either a complete legacy collection or all four current documents. Missing or conflicting sidecars are errors, not empty defaults.
+ * Loads the complete legacy or split collection. Missing or conflicting sidecars are errors, not empty defaults.
  * @param {string} directory Data directory.
- * @return {{collection: Collection, changed: boolean, conflicts: Array<*>}} Validated logical snapshot and migration information.
+ * @return {{collection: Collection, changed: boolean, conflicts: Array<*>, legacySnapshot?: string}} Validated snapshot, migration information and complete legacy schema-8 export if applicable.
  */
 export function loadCollectionFiles(directory) {
   if (hasCollectionTransaction(directory)) throw Error('Unfinished collection transaction');
   const core = readJson(path.join(directory, 'collection.json'));
-  if (core?.schemaVersion !== 8) {
+  if (![8, 9].includes(core?.schemaVersion)) {
     if (PARTS.some(key => fs.existsSync(path.join(directory, `${key}.json`)))) {
       throw Error('Legacy collection has conflicting separate data files');
     }
     return migrateCollectionToCurrent(core);
   }
-  for (const key of PARTS) {
+  const legacy = core.schemaVersion === 8;
+  if (legacy && fs.existsSync(path.join(directory, 'distilleries.json'))) throw Error('Legacy collection has conflicting separate data files');
+  for (const key of legacy ? LEGACY_PARTS : PARTS) {
     if (Object.hasOwn(core, key)) throw Error(`Duplicate collection data: ${key}`);
     const part = readJson(path.join(directory, `${key}.json`));
     if (part?.schemaVersion !== 1 || !Object.hasOwn(part, key) || Object.keys(part).length !== 2) {
@@ -59,6 +79,7 @@ export function loadCollectionFiles(directory) {
     }
     if (key !== 'settings' || part[key] !== null) core[key] = part[key];
   }
+  if (legacy) return {...migrateCollectionToCurrent(core), legacySnapshot: JSON.stringify(core, null, 2) + '\n'};
   validate(core);
   return {collection: core, changed: false, conflicts: []};
 }
@@ -87,23 +108,57 @@ function matchesContent(filename, content) {
 }
 
 /**
+ * Removes the redo record after all destinations are durable. A cleanup failure cannot undo the commit.
+ * @param {string} directory Data directory.
+ * @return {CleanupStatus} Cleanup state after one retry.
+ */
+function cleanup(directory) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      if (hasCollectionTransaction(directory)) fs.unlinkSync(path.join(directory, JOURNAL));
+      syncDirectory(directory);
+      return 'complete';
+    } catch (error) {
+      if (attempt === 1) console.warn('Committed collection: journal cleanup failed.', error);
+    }
+  }
+  try {return hasCollectionTransaction(directory) ? 'pending' : 'syncUnconfirmed';}
+  catch {return 'pending';}
+}
+
+/**
  * Replays an already published full snapshot. All destinations are derived from the validated data, never from journal-supplied paths.
  * @param {string} directory Data directory.
+ * @return {CleanupStatus} Cleanup outcome; throws only if the journal or data cannot be confirmed durable.
  */
 export function recoverCollectionTransaction(directory) {
-  if (!hasCollectionTransaction(directory)) return;
+  if (!hasCollectionTransaction(directory)) return 'complete';
   const filename = path.join(directory, JOURNAL);
   const journal = readJson(filename);
-  if (journal?.version !== 1) throw Error('Unsupported collection transaction');
-  const files = serializeCollectionFiles(journal.collection);
-  // Do not act on a visible journal until its directory entry is durable.
+  if (journal?.version !== 1 || ![8, 9].includes(journal.collection?.schemaVersion)) throw Error('Unsupported collection transaction');
+  const files = serializeCollectionFiles(migrateCollectionToCurrent(journal.collection).collection, journal.collection.schemaVersion);
+  // Persist a visible journal before replay, including any earlier published file renames.
   syncDirectory(directory);
-  for (const name of COLLECTION_FILES) {
+  for (const [name, content] of Object.entries(files)) {
     const destination = path.join(directory, name);
-    if (!matchesContent(destination, files[name])) writeDurableFile(destination, files[name]);
+    if (!matchesContent(destination, content)) writeDurableFile(destination, content);
   }
-  fs.unlinkSync(filename);
-  syncDirectory(directory);
+  return cleanup(directory);
+}
+
+/**
+ * Confirms publication of a file whose bytes have already been flushed. Never reports a definite rollback of a visible write.
+ * @param {string} directory Data directory.
+ * @param {string} filename Published file path.
+ * @param {string} content New contents.
+ */
+function publish(directory, filename, content) {
+  try {writeDurableFile(filename, content);}
+  catch (error) {
+    if (!(error instanceof PublishedWriteError)) throw error;
+    try {syncDirectory(directory);}
+    catch (cause) {throw new CollectionCommitError(filename, cause, 'unconfirmed');}
+  }
 }
 
 /**
@@ -111,23 +166,24 @@ export function recoverCollectionTransaction(directory) {
  * @param {string} directory Data directory.
  * @param {Collection} collection Validated target state.
  * @param {Collection|null=} previous Previously committed snapshot, or null for initialization and migration.
+ * @return {CleanupStatus} Acknowledged commit and cleanup state. A durable redo that cannot yet be replayed raises a pending-commit error.
  */
 export function writeCollectionFiles(directory, collection, previous = null) {
   if (hasCollectionTransaction(directory)) throw Error('Unfinished collection transaction');
   const files = serializeCollectionFiles(collection);
   const before = previous ? serializeCollectionFiles(previous) : {};
   const changed = COLLECTION_FILES.filter(name => files[name] !== before[name]);
-  if (!changed.length) return;
+  if (!changed.length) return 'complete';
   if (changed.length === 1) {
     const name = changed[0];
-    writeDurableFile(path.join(directory, name), files[name]);
-    return;
+    publish(directory, path.join(directory, name), files[name]);
+    return 'complete';
   }
   const journal = path.join(directory, JOURNAL);
-  writeDurableFile(journal, JSON.stringify({version: 1, collection}) + '\n');
-  try {recoverCollectionTransaction(directory);}
-  catch (error) {
-    // The journal is committed, so callers must retain any newly referenced media.
-    throw new PublishedWriteError(journal, error);
+  publish(directory, journal, JSON.stringify({version: 1, collection}) + '\n');
+  try {return recoverCollectionTransaction(directory);}
+  catch {
+    try {return recoverCollectionTransaction(directory);}
+    catch (error) {throw new CollectionCommitError(journal, error, 'pending');}
   }
 }

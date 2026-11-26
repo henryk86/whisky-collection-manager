@@ -5,7 +5,7 @@ import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {startTestServer, requestJson as api} from '../helpers/server.js';
 import {removeSeparateCollectionFiles} from '../helpers/fixtures.js';
-import {loadCollectionFiles} from '../../server/storage/collection-files.js';
+import {loadCollectionFiles, serializeCollectionFiles} from '../../server/storage/collection-files.js';
 import {writeReadableZip, inspectReadableZip} from '../../shared/backup-zip.js';
 import {validatePreview} from '../../server/storage/restore-validation.js';
 
@@ -32,16 +32,16 @@ test('schema 7 startup migration preserves all records and produces independentl
     assert.equal(migration.status, 0, migration.stderr);
     assert.deepEqual(loadCollectionFiles(directory).collection, snapshot);
     const stored = JSON.parse(fs.readFileSync(core));
-    for (const key of ['settings', 'externalTastings', 'tastingFlights']) {
+    for (const key of ['settings', 'externalTastings', 'tastingFlights', 'distilleries']) {
       assert.equal(Object.hasOwn(stored, key), false);
       assert.deepEqual(JSON.parse(fs.readFileSync(path.join(directory, `${key}.json`))), {schemaVersion: 1, [key]: snapshot[key]});
     }
     const backupDir = path.join(ctx.dir, 'backups');
-    const backups = fs.readdirSync(backupDir).filter(name => name.startsWith('pre-schema8-'));
+    const backups = fs.readdirSync(backupDir).filter(name => name.startsWith('pre-schema9-'));
     assert.equal(backups.length, 1);
     assert.deepEqual(fs.readFileSync(path.join(backupDir, backups[0])), original);
     assert.equal(spawnSync(process.execPath, args, options).status, 0);
-    assert.deepEqual(fs.readdirSync(backupDir).filter(name => name.startsWith('pre-schema8-')), backups);
+    assert.deepEqual(fs.readdirSync(backupDir).filter(name => name.startsWith('pre-schema9-')), backups);
     const download = await fetch(ctx.base + '/api/export/json');
     assert.equal(download.status, 200);
     assert.deepEqual(await download.json(), snapshot);
@@ -67,5 +67,43 @@ test('schema 7 startup migration preserves all records and produces independentl
     const after = loadCollectionFiles(directory).collection;
     assert.deepEqual(after.externalTastings, []);
     assert.deepEqual(after.tastingFlights[0].tastingIds, [note.id]);
+  } finally {await ctx.stop();}
+});
+
+
+test('schema 8 split storage and unfinished schema 8 journal migrate losslessly to schema 9', async () => {
+  const ctx = await startTestServer();
+  try {
+    const directory = path.join(ctx.dir, 'data');
+    const snapshot = (await api(ctx.base, '/api/collection')).data;
+    const chosen = snapshot.distilleries[0];
+    assert.ok(chosen);
+    const updated = {...snapshot, settings: {establishedYear: 1988}};
+    const oldFiles = serializeCollectionFiles(snapshot, 8);
+    removeSeparateCollectionFiles(directory);
+    for (const [name, content] of Object.entries(oldFiles)) fs.writeFileSync(path.join(directory, name), content);
+    fs.writeFileSync(path.join(directory, '.collection-transaction.json'), JSON.stringify({version: 1, collection: {...updated, schemaVersion: 8}}));
+    const args = ['--input-type=module', '-e', "import {initialize} from './server/storage/collection-store.js';initialize();"];
+    const result = spawnSync(process.execPath, args, {env: {...process.env, WHISKY_DATA_DIR: ctx.dir}, encoding: 'utf8'});
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(loadCollectionFiles(directory).collection, updated);
+    const backupDir = path.join(ctx.dir, 'backups');
+    const backups = fs.readdirSync(backupDir).filter(name => name.startsWith('pre-schema9-'));
+    assert.equal(backups.length, 1);
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(backupDir, backups[0]))), {...updated, schemaVersion: 8});
+    assert.equal(Object.hasOwn(JSON.parse(fs.readFileSync(path.join(directory, 'collection.json'))), 'distilleries'), false);
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(directory, 'distilleries.json'))), {schemaVersion: 1, distilleries: updated.distilleries});
+    const legacyRoot = path.join(ctx.dir, 'legacy8');
+    fs.mkdirSync(path.join(legacyRoot, 'data'), {recursive: true});
+    for (const [name, content] of Object.entries(serializeCollectionFiles(updated, 8))) fs.writeFileSync(path.join(legacyRoot, 'data', name), content);
+    const archive = path.join(backupDir, 'legacy8.zip');
+    const extracted = path.join(ctx.dir, 'legacy8-extracted');
+    const password = 'test-passphrase-123456';
+    writeReadableZip(legacyRoot, archive, password);
+    inspectReadableZip(archive, extracted, password);
+    validatePreview(extracted, {writeMigrated: true});
+    assert.deepEqual(loadCollectionFiles(path.join(extracted, 'data')).collection, updated);
+    fs.unlinkSync(path.join(extracted, 'data', 'distilleries.json'));
+    assert.throws(() => validatePreview(extracted), {status: 400});
   } finally {await ctx.stop();}
 });

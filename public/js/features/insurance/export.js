@@ -1,7 +1,7 @@
 import {insuranceInventory, evidenceKeys} from '../../domain/insurance.js';
 import {currentLanguage, t} from '../../i18n/index.js';
 import {httpResponseError} from '../../api.js';
-import {ImagePdf, wrapReportText} from './pdf.js';
+import {TextPdf, wrapReportText} from './pdf.js';
 import {EvidenceArchive} from './archive.js';
 
 /**
@@ -39,15 +39,50 @@ function amount(value, currency) {
 }
 
 /**
- * Encodes a white-background canvas as a JPEG page.
- * @param {HTMLCanvasElement} canvas Rendered page.
- * @return {Promise<Blob>} JPEG page image.
+ * Encodes a white-background photo thumbnail as JPEG.
+ * @param {HTMLCanvasElement} canvas Rendered photograph.
+ * @return {Promise<Blob>} JPEG thumbnail.
  */
-function pageImage(canvas) {
+function photoImage(canvas) {
   return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(Error(t('insurance.exportFailed'))), 'image/jpeg', 0.92));
 }
 
-/** Renders document pages using local browser fonts and original photographs. */
+/**
+ * Renders a missing Base-14 grapheme as a reusable monochrome glyph mask.
+ * The PDF maps that glyph back to the original Unicode sequence for text extraction.
+ * @param {string} character Unicode grapheme.
+ * @param {boolean} bold Font weight.
+ * @return {{width: number, height: number, left: number, bottom: number, advance: number, units: number, mask: Uint8Array}} Glyph metrics and packed one-bit mask.
+ */
+function renderGlyph(character, bold) {
+  const units = 96;
+  const font = `${bold ? 'bold ' : ''}${units}px Arial, sans-serif`;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', {willReadFrequently: true});
+  if (!ctx) throw Error(t('insurance.exportFailed'));
+  ctx.font = font;
+  const metrics = ctx.measureText(character);
+  const left = Math.floor(-metrics.actualBoundingBoxLeft) - 2;
+  const bottom = Math.floor(-metrics.actualBoundingBoxDescent) - 2;
+  const top = Math.ceil(metrics.actualBoundingBoxAscent) + 2;
+  const width = Math.max(1, Math.ceil(metrics.actualBoundingBoxRight) - left + 2);
+  const height = Math.max(1, top - bottom);
+  canvas.width = width; canvas.height = height;
+  ctx.font = font;
+  ctx.fillStyle = '#000';
+  ctx.fillText(character, -left, top);
+  const data = ctx.getImageData(0, 0, width, height).data;
+  const stride = Math.ceil(width / 8);
+  const mask = new Uint8Array(stride * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (data[(y * width + x) * 4 + 3] >= 128) mask[y * stride + (x >> 3)] |= 128 >> (x % 8);
+    }
+  }
+  return {width, height, left, bottom, advance: metrics.width, units, mask};
+}
+
+/** Lays out native PDF text and original photographs in a paginated report. */
 class Report {
   /**
    * Initializes a paginated A4 report with a fixed snapshot time.
@@ -55,11 +90,9 @@ class Report {
    */
   constructor(timestamp) {
     this.timestamp = timestamp;
-    this.pdf = new ImagePdf();
+    this.pdf = new TextPdf();
     this.canvas = document.createElement('canvas');
-    this.canvas.width = 1240;
-    this.canvas.height = 1754;
-    const ctx = this.canvas.getContext('2d', {alpha: false});
+    const ctx = this.canvas.getContext('2d');
     if (!ctx) throw Error(t('insurance.exportFailed'));
     this.ctx = ctx;
     this.page = 0;
@@ -73,16 +106,23 @@ class Report {
   async next() {
     if (this.page) await this.flush();
     this.page++;
-    const ctx = this.ctx;
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    ctx.fillStyle = '#222';
-    ctx.font = 'bold 38px sans-serif';
-    ctx.fillText(t('insurance.title'), 70, 82);
-    ctx.font = '24px sans-serif';
-    ctx.fillText(`${t('insurance.snapshot')}: ${this.timestamp}`, 70, 122);
-    ctx.fillText(`WCM | ${this.page}`, 70, 1705);
+    this.text(t('insurance.title'), 70, 82, 38, true);
+    this.text(`${t('insurance.snapshot')}: ${this.timestamp}`, 70, 122, 24);
+    this.text(`WCM | ${this.page}`, 70, 1705, 24);
     this.y = 185;
+  }
+
+  /**
+   * Adds native PDF text using browser measurements for line layout.
+   * @param {string} text Plain report content.
+   * @param {number} x Horizontal position in logical pixels.
+   * @param {number} y Top-origin baseline.
+   * @param {number} size Font size in logical pixels.
+   * @param {boolean=} bold Use the heading font.
+   */
+  text(text, x, y, size, bold = false) {
+    this.ctx.font = `${bold ? 'bold ' : ''}${size}px Arial, sans-serif`;
+    this.pdf.text(text, x, y, size, bold, value => this.ctx.measureText(value).width, renderGlyph);
   }
 
   /**
@@ -93,11 +133,11 @@ class Report {
    */
   async line(text, bold = false) {
     const ctx = this.ctx;
-    const font = `${bold ? 'bold ' : ''}26px sans-serif`;
+    const font = `${bold ? 'bold ' : ''}26px Arial, sans-serif`;
     ctx.font = font;
     for (const line of wrapReportText(text, 1100, value => ctx.measureText(value).width)) {
       if (this.y > 1630) {await this.next(); ctx.font = font;}
-      ctx.fillText(line, 70, this.y);
+      this.text(line, 70, this.y, 26, bold);
       this.y += 36;
     }
   }
@@ -113,17 +153,25 @@ class Report {
       const scale = Math.min(540 / bitmap.width, 550 / bitmap.height);
       const w = bitmap.width * scale, h = bitmap.height * scale;
       if (this.y + h > 1620) await this.next();
-      this.ctx.drawImage(bitmap, 70, this.y, w, h);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.ceil(w));
+      canvas.height = Math.max(1, Math.ceil(h));
+      const ctx = canvas.getContext('2d', {alpha: false});
+      if (!ctx) throw Error(t('insurance.exportFailed'));
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      this.pdf.image(await photoImage(canvas), canvas.width, canvas.height, 70, this.y, w, h);
       this.y += h + 45;
     } finally {bitmap.close();}
   }
 
   /**
-   * Encodes the current page and appends it to the PDF.
+   * Appends the current page and its text and image resources to the PDF.
    * @return {Promise<void>} Page stored in the document.
    */
   async flush() {
-    this.pdf.addPage(await pageImage(this.canvas), this.canvas.width, this.canvas.height);
+    this.pdf.addPage();
   }
 
   /**

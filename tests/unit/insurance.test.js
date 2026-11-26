@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {insuranceInventory} from '../../public/js/domain/insurance.js';
 import {EvidenceArchive, crc32} from '../../public/js/features/insurance/archive.js';
-import {ImagePdf, wrapReportText} from '../../public/js/features/insurance/pdf.js';
+import {TextPdf, wrapReportText} from '../../public/js/features/insurance/pdf.js';
 
 const bottle = (id, overrides = {}) => ({id, inventoryNumber: id, volumeType: 'standard', status: 'closed', purchasePrice: 10, currency: 'EUR', purchaseDate: '2026-01-01', ...overrides});
 
@@ -58,13 +58,23 @@ test('insurance ZIP preserves original bytes, CRC, UTF-8 names and central direc
 });
 
 test('insurance PDF contains each page and byte-accurate cross-reference offsets', async () => {
-  const pdf = new ImagePdf();
-  pdf.addPage(new Blob([new Uint8Array([255, 216, 255, 217])]), 1240, 1754);
-  pdf.addPage(new Blob([new Uint8Array([255, 216, 255, 217])]), 1240, 1754);
+  const pdf = new TextPdf();
+  const measure = text => text.length * 12;
+
+  const glyph = () => ({width: 8, height: 1, left: 0, bottom: 0, advance: 12, units: 26, mask: new Uint8Array([255])});
+  pdf.text('Inventar 000123 – 42 € (Größe)', 70, 82, 26, true, measure, glyph);
+  pdf.addPage();
+  pdf.text('山崎', 70, 82, 26, false, measure, glyph);
+  pdf.image(new Blob([new Uint8Array([255, 216, 255, 217])]), 1, 1, 70, 120, 200, 200);
+  pdf.addPage();
   const bytes = Buffer.from(await pdf.finish().arrayBuffer());
   const text = bytes.toString('latin1');
   assert.match(text, /^%PDF-1\.4/);
   assert.match(text, /\/Count 2 /);
+  assert.match(text, /<496e76656e746172203030303132332096203432208020284772f6df6529> Tj/);
+  assert.match(text, /<01> <5c71>/);
+  assert.match(text, /<01> <5d0e>/);
+  assert.equal((text.match(/\/Subtype \/Image/g) || []).length, 1);
   const offset = Number(text.match(/startxref\n(\d+)/)[1]);
   assert.equal(text.slice(offset, offset + 4), 'xref');
   const lines = text.slice(offset).split('\n');

@@ -85,6 +85,6 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Test durable file operations and collection migration on Windows
-        run: node --test tests/unit/durable-files.test.js tests/unit/collection-files.test.js tests/integration/documents.test.js tests/integration/collection-files.test.js
+        run: node --test tests/unit/durable-files.test.js tests/unit/collection-files.test.js tests/integration/documents.test.js tests/integration/collection-files.test.js tests/integration/collection-outcome.test.js
       - name: Test legacy ZIP restore on Windows
         run: node --test --test-name-pattern="schema 6 ZIP restore" tests/integration/backups.test.js

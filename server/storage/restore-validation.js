@@ -115,7 +115,9 @@ export function validatePreview(root, {writeMigrated = false} = {}) {
   }
   const db = migration.collection;
   validateMedia(root, db, warehouse);
-  if (writeMigrated && migration.changed) writeCollectionFiles(directory, db);
+  if (writeMigrated && migration.changed) {
+    if (writeCollectionFiles(directory, db) !== 'complete') throw Error('Migrated restore journal cleanup not confirmed');
+  }
   return {
     bottlings: db.bottlings.length,
     bottles: db.bottlings.reduce((sum, item) => sum + item.bottles.length, 0),

@@ -9,7 +9,7 @@ const receipt = Buffer.from('%PDF-1.4\nEvidence fixture\n%%EOF\n');
 
 test('browser: insurance checklist, purchase evidence and local PDF/ZIP downloads', async () => {
   await session(async ({base, page, open}) => {
-    const created = await requestJson(base, '/api/bottlings', 'POST', {name: 'Insurance Whisky', firstBottle: {inventoryNumber: '000123', purchasePrice: 25, currency: 'EUR', purchaseDate: '2026-11-01'}});
+    const created = await requestJson(base, '/api/bottlings', 'POST', {name: 'Insurance Whisky – Größe 山崎', firstBottle: {inventoryNumber: '000123', purchasePrice: 25, currency: 'EUR', purchaseDate: '2026-11-01'}});
     assert.equal(created.status, 201);
     const id = created.data.bottle.id;
     assert.equal((await requestJson(base, `/api/bottles/${id}/photos`, 'POST', {image: `data:image/png;base64,${original.toString('base64')}`})).status, 201);
@@ -43,7 +43,19 @@ test('browser: insurance checklist, purchase evidence and local PDF/ZIP download
           assert.ok(bytes.includes(original));
           assert.ok(bytes.includes(receipt));
           assert.ok(bytes.includes(Buffer.from('manifest.json')));
-        } else assert.equal(bytes.subarray(0, 8).toString(), '%PDF-1.4');
+        } else {
+          assert.equal(bytes.subarray(0, 8).toString(), '%PDF-1.4');
+          const pdf = bytes.toString('latin1');
+          assert.match(pdf, /BT \/F\d+ /);
+          assert.ok(pdf.includes(Buffer.from('Versicherungsdokumentation').toString('hex')));
+          if (format === 'summary') assert.doesNotMatch(pdf, /\/Subtype \/Image/);
+          else {
+            assert.ok(pdf.includes(Buffer.from('Insurance Whisky').toString('hex')));
+            assert.match(pdf, /<01> <5c71>/);
+            assert.match(pdf, /<01> <5d0e>/);
+            assert.match(pdf, /\/Subtype \/Image/);
+          }
+        }
       }
     }
   });

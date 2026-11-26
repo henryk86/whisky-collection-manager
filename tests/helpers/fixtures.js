@@ -8,7 +8,7 @@ import path from 'node:path';
  */
 export function collectionFixture() {
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     nextInventoryNumber: 124,
     reservedInventoryNumbers: ['000123'],
     distilleries: [{
@@ -39,5 +39,5 @@ export function collectionFixture() {
 
 /** Recreates the legacy monolithic on-disk layout in an isolated test directory. */
 export function removeSeparateCollectionFiles(directory) {
-  for (const name of ['settings.json', 'externalTastings.json', 'tastingFlights.json']) fs.rmSync(path.join(directory, name), {force: true});
+  for (const name of ['settings.json', 'externalTastings.json', 'tastingFlights.json', 'distilleries.json']) fs.rmSync(path.join(directory, name), {force: true});
 }
