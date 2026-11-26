@@ -37,7 +37,7 @@ export function createPhotoViewer({state, showModal}) {
   /**
    * Controls the photo viewer state.
    *
-   * @param {*} button Button used by this operation.
+   * @param {*} button Photo action control used to determine the active gallery and image.
    */
   function open(button) {
     if (!button) return;
@@ -95,7 +95,7 @@ export function createPhotoViewer({state, showModal}) {
   }
 
   /**
-   * Derives the step result from the supplied values.
+   * Moves to the previous or next photo, wrapping at either end of the gallery.
    *
    * @param {*} direction Direction used for traversal or movement.
    */

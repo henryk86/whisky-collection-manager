@@ -12,7 +12,7 @@ import {classifyCommit} from './release-automation.js';
 /**
  * Validates message for validate commit message.
  *
- * @param {*} contents Contents used by this operation.
+ * @param {string} contents Complete commit message, including optional body and trailers.
  * @return {!Object} Structured result for the caller.
  */
 export function validateMessage(contents) {

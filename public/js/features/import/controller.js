@@ -63,7 +63,7 @@ export function createExternalImport({
   /**
  * The editor has no import UI until an external payload is received.
  *
- * @param {*} form Form used by this operation.
+ * @param {*} form Editor form whose import preview area is found or created.
  * @return {*} Computed value, or null when the input has no match.
  */
   function ensurePreviewPanel(form) {
@@ -156,7 +156,7 @@ export function createExternalImport({
   }
 
   /**
-   * Derives the confirm pending import result from the supplied values.
+   * Consumes the pending extension payload after the user confirms the import.
    */
   function confirmPendingImport() {
     if (pendingExtensionImport == null) return;
@@ -169,7 +169,7 @@ export function createExternalImport({
   /**
    * Handles extension import for controller.
    *
-   * @param {*} raw Raw used by this operation.
+   * @param {string} raw URL-encoded JSON payload from the browser extension.
    */
   function processExtensionImport(raw) {
     try {

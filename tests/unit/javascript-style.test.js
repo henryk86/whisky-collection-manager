@@ -8,7 +8,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {checkJSDoc, undocumentedExports} from '../../scripts/check-jsdoc.js';
-import {semanticTypeDiagnostics} from '../../scripts/check-js-types.js';
+import {semanticTypeDiagnostics, auditContractFiles, checkedContractFiles} from '../../scripts/check-js-types.js';
 import {jsdocViolations} from '../../scripts/check-jsdoc-complete.js';
 import {
   separateFunctions, insertTrailingCommas
@@ -336,4 +336,44 @@ export function label(count) { return String(count); }
   } finally {
     rmSync(dir, {recursive: true, force: true});
   }
+});
+
+
+test('JavaScript style: production contracts reject generic descriptions and parameters', () => {
+  const source = `/**
+ * Derives the count result from the supplied values.
+ * @param {number} n N used by this operation.
+ * @return {number} Count of bottles.
+ */
+function count(n) {return n;}`;
+  assert.ok(jsdocViolations('public/js/count.js', source).some(issue => issue.includes('known placeholder')));
+  assert.deepEqual(jsdocViolations('public/js/count.js', source.replace('Derives the count result from the supplied values.', 'Returns the inventory count.').replace('N used by this operation.', 'Number of physical bottles.')), []);
+});
+
+test('JavaScript style: local test doubles may omit full JSDoc contracts', () => {
+  const source = 'function fakeResponse(value) {return value;}';
+  assert.deepEqual(jsdocViolations('tests/unit/example.test.js', source), []);
+  assert.ok(jsdocViolations('server/example.js', source).some(issue => issue.includes('missing JSDoc')));
+  assert.deepEqual(jsdocViolations('tests/helpers/example.js', '/** Returns a fake response. */\n' + source), []);
+});
+
+test('JavaScript style: relaxed test documentation still rejects contradictory names', () => {
+  const source = `/** Test helper.
+ * @param {number} missing Value to return.
+ */
+function fakeResponse(value) {return value;}`;
+  assert.ok(jsdocViolations('tests/helpers/example.js', source).some(issue => issue.includes('does not name a parameter')));
+});
+
+test('Semantic JSDoc: audit covers all production and tooling roots but no test roots', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'wcm-jsdoc-scope-'));
+  try {
+    for (const folder of ['public/js/domain', 'server', 'shared', 'worker', 'scripts', 'docker', 'tests/unit']) {
+      mkdirSync(path.join(dir, folder), {recursive: true});
+      writeFileSync(path.join(dir, folder, 'example.js'), '');
+    }
+    const files = auditContractFiles(dir).map(file => file.replaceAll('\\', '/'));
+    assert.deepEqual(files.sort(), ['docker/example.js', 'public/js/domain/example.js', 'scripts/example.js', 'server/example.js', 'shared/example.js', 'worker/example.js']);
+    assert.ok(checkedContractFiles(dir).some(file => file.replaceAll('\\', '/') === 'shared/example.js'));
+  } finally {rmSync(dir, {recursive: true, force: true});}
 });

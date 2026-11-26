@@ -31,7 +31,7 @@ function containedFile(root, relative) {
 }
 
 /**
- * Derives the source files result from the supplied values.
+ * Recursively collects repository files eligible for an installation upgrade.
  *
  * @param {*} directory Directory containing the requested data.
  * @return {*} Result computed from the supplied inputs.
@@ -81,9 +81,9 @@ function safeInstalledFile(root, relative) {
 /**
  * Audits dependencies and deployment inputs for an upgrade.
  *
- * @param {*} previousRoot Previous root used by this operation.
- * @param {*} nextRoot Next root used by this operation.
- * @param {*} installedRoot Installed root used by this operation.
+ * @param {string} previousRoot Directory containing the old release source.
+ * @param {string} nextRoot Directory containing the replacement release source.
+ * @param {string} installedRoot Live installation directory to compare with the old release.
  * @return {!Object} Structured result for the caller.
  */
 export function auditUpgrade(previousRoot, nextRoot, installedRoot) {
@@ -106,9 +106,9 @@ export function auditUpgrade(previousRoot, nextRoot, installedRoot) {
 /**
  * Identifies obsolete files safe to remove during upgrade.
  *
- * @param {*} previousRoot Previous root used by this operation.
- * @param {*} nextRoot Next root used by this operation.
- * @param {*} installedRoot Installed root used by this operation.
+ * @param {string} previousRoot Directory containing the old release source.
+ * @param {string} nextRoot Directory containing the replacement release source.
+ * @param {string} installedRoot Live installation directory from which unmodified obsolete files may be removed.
  * @return {!Object} Structured result for the caller.
  */
 export function pruneObsolete(previousRoot, nextRoot, installedRoot) {

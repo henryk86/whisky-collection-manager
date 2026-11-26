@@ -24,7 +24,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
   let restorePassword = '';
   let pollTimer = null;
   /**
-   * Derives the get result from the supplied values.
+   * Sends a backup API request with the current administrator token.
    *
    * @param {*} url URL of the resource being processed.
    * @param {!Object=} options Options controlling the operation.
@@ -42,7 +42,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
   /**
    * Performs the refresh lifecycle action.
    *
-   * @param {boolean=} quiet Value used by this operation.
+   * @param {boolean=} quiet Suppress the success notification during automatic refreshes.
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   async function refresh(quiet = false) {
@@ -116,9 +116,9 @@ export function createBackupController({state, render, showModal, closeModal}) {
   }
 
   /**
-   * Derives the toggle fields result from the supplied values.
+   * Shows and enables only the storage fields relevant to the selected backup provider.
    *
-   * @param {*} form Value used by this operation.
+   * @param {*} form Backup profile form containing provider-specific fields.
    */
   function toggleFields(form) {
     if (!form) return;
@@ -139,7 +139,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
     event.preventDefault();
     const form = event.target;
     /**
-     * Derives the el result from the supplied values.
+     * Looks up a named input in the backup profile form.
      *
      * @param {*} name Environment variable or setting name.
      * @return {*} Result computed from the supplied inputs.

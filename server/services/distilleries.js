@@ -73,7 +73,7 @@ export function createDistillery(input) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<!Distillery>} Promise fulfilled when the operation
+ * @return {Promise<import('../../shared/types.js').Distillery>} Promise fulfilled when the operation
  * completes.
  */
 export function updateDistillery(id, input) {

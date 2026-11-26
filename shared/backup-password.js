@@ -66,7 +66,7 @@ export function hasBackupPassword() {
  * Updates backup password for backup password.
  *
  * @param {*} password Secret supplied for authentication or encryption.
- * @param {string=} previous Previous used by this operation.
+ * @param {string=} previous Current backup password, required when a password has already been configured.
  */
 export function saveBackupPassword(password, previous = '') {
   if (typeof password !== 'string' || password.length < 14 || password.length > 256 || !password.trim()) {

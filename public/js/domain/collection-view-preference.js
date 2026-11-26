@@ -19,7 +19,7 @@ export function getCollectionViewPreference(storage) {
 /**
  * Updates collection view preference for collection view preference.
  *
- * @param {*} view View used by this operation.
+ * @param {*} view Requested collection presentation, accepted only for cards or table.
  * @param {*} storage Storage adapter used to load or save preferences.
  * @return {boolean} Whether the condition is satisfied.
  */

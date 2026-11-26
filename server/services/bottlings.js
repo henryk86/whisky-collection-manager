@@ -60,7 +60,7 @@ export function createBottling(input) {
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {*} input Input to process.
- * @return {!Promise<!Bottling>} Promise fulfilled when the operation
+ * @return {Promise<import('../../shared/types.js').Bottling>} Promise fulfilled when the operation
  * completes.
  */
 export function updateBottling(id, input) {

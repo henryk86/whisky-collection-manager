@@ -16,7 +16,7 @@ export function createWarehouseFinderController({w, state, mountContent, navigat
   let pendingFindFocusScroll = false;
 
   /**
-   * Derives the finder results result from the supplied values.
+   * Computes matching warehouse bottles for the current search and placement filter.
    * @return {*} Result computed from the supplied inputs.
    */
   function finderResults() {
@@ -65,7 +65,7 @@ export function createWarehouseFinderController({w, state, mountContent, navigat
   /**
    * Updates the step finder page state for its caller.
    *
-   * @param {*} delta Value used by this operation.
+   * @param {number} delta Signed number of pages to move through the finder results.
    */
   function stepFinderPage(delta) {
     state.warehouseFinderPage = (state.warehouseFinderPage || 1) + delta;

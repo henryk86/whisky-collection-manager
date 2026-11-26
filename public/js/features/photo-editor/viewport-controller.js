@@ -40,10 +40,10 @@ export function createPhotoViewport({root, canZoom, canPan, picking}) {
   }
 
   /**
-   * Derives the zoom result from the supplied values.
+   * Updates the preview zoom around an optional anchor; zero resets the scale.
    *
    * @param {*} direction Direction used for traversal or movement.
-   * @param {*=} pointer Value used by this operation.
+   * @param {*=} pointer Optional zoom anchor in viewport pixels; defaults to the center.
    */
   function zoom(direction, pointer = null) {
     if (!root() || !canZoom()) return;
@@ -60,7 +60,7 @@ export function createPhotoViewport({root, canZoom, canPan, picking}) {
   /**
    * Registers viewport for controller.
    *
-   * @param {*} canvas Canvas used by this operation.
+   * @param {*} canvas Preview canvas receiving wheel, pan and pinch gestures.
    */
   function attachViewport(canvas) {
     const stage = canvas.closest('.photo-editor-image');
@@ -123,7 +123,7 @@ export function createPhotoViewport({root, canZoom, canPan, picking}) {
       }
     });
     /**
-     * Derives the release result from the supplied values.
+     * Releases a pan pointer and resets the pinch or remaining single-pointer gesture.
      *
      * @param {!Event} event Event that triggered this operation.
      */

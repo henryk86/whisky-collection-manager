@@ -38,7 +38,7 @@ export function mountWarehouseRoomPreviews({rooms, warehouse}) {
   let observer;
   let themeObserver;
   /**
-   * Derives the theme result from the supplied values.
+   * Reads the active application theme for rendering the room preview.
    * @return {*} Result computed from the supplied inputs.
    */
   const theme = () => document.documentElement?.dataset?.theme === 'dark' ? 'dark' : 'light';

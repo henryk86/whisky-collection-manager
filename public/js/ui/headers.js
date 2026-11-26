@@ -13,7 +13,7 @@ const renderTemplate = await loadTemplates('components/headers.html');
  * Renders a shared action container, leaving event delegation untouched.
  *
  * @param {import('./render-plan.js').RenderContent} content Composed button content.
- * @param {{className: string}=} options2 Optional additional CSS class.
+ * @param {{className?: string}=} options2 Optional additional CSS class.
  * @return {import('./render-plan.js').RenderPlan|string} Action container, or empty text when no actions are supplied.
  */
 export function headerActions(content, {className = ''} = {}) {

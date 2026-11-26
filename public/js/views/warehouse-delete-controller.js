@@ -47,7 +47,7 @@ export function createWarehouseDeleteController({currentRoom, selectedFurniture,
   /**
    * Selects and transforms the ask delete records.
    *
-   * @param {*} kind Value used by this operation.
+   * @param {string} kind Warehouse entity type to delete, used to choose the confirmation.
    * @param {*} id Identifier of the affected record.
    */
   function askDelete(kind, id) {
@@ -107,7 +107,7 @@ export function createWarehouseDeleteController({currentRoom, selectedFurniture,
   /**
    * Clears confirmed for warehouse.
    *
-   * @param {boolean=} unassignBottles Unassign bottles used by this operation.
+   * @param {boolean=} unassignBottles Whether assigned bottles should be unassigned when deleting the warehouse entity.
    */
   async function deleteConfirmed(unassignBottles = false) {
     if (!pendingDelete) return;

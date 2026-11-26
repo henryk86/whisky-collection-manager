@@ -4,7 +4,7 @@ import {suggestNumber} from '../domain/inventory.js';
 /**
  * Retrieves collection for collection.
  *
- * @return {!Collection} Value returned by the delegated operation.
+ * @return {import('../../shared/types.js').Collection} Value returned by the delegated operation.
  */
 export function getCollection() {
   return read();

@@ -37,7 +37,7 @@ export function createWarehousePhotoController({w, modal, refresh, attachBottleP
    * Serializes upload furniture photos data to JSON.
    *
    * @param {*} id Identifier of the affected record.
-   * @param {*} files Value used by this operation.
+   * @param {*} files Selected image files to upload as furniture photographs.
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   async function uploadFurniturePhotos(id, files) {
@@ -60,7 +60,7 @@ export function createWarehousePhotoController({w, modal, refresh, attachBottleP
    * Serializes move furniture photo data to JSON.
    *
    * @param {*} id Identifier of the affected record.
-   * @param {*} photoId Value used by this operation.
+   * @param {string} photoId Identifier of the furniture photo to move within its gallery.
    * @param {*} direction Direction used for traversal or movement.
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
@@ -103,7 +103,7 @@ export function createWarehousePhotoController({w, modal, refresh, attachBottleP
    * Removes or resets furniture photo.
    *
    * @param {*} id Identifier of the affected record.
-   * @param {*} photoId Value used by this operation.
+   * @param {string} photoId Identifier of the furniture photo to delete.
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   async function deleteFurniturePhoto(id, photoId) {

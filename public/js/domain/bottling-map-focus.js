@@ -17,7 +17,7 @@ export function bottlingDistilleryIds(bottling) {
  *
  * @param {!Object} bottling Bottling record being processed.
  * @param {*} located Known geographic sites available for selection.
- * @param {!Array<*>=} missing Missing used by this operation.
+ * @param {!Array<*>=} missing Referenced distilleries without coordinates, included alongside located sites.
  * @return {!Array<*>} Resulting list of values.
  */
 export function matchingBottlingSites(bottling, located, missing = []) {

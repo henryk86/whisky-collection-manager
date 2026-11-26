@@ -19,7 +19,7 @@ export function createWarehouseFurnitureSelection({state, currentRoom, mountCont
    * Updates furniture visibility in the current state.
    *
    * @param {*} furniture Warehouse furniture record being modified.
-   * @param {*} visible Value used by this operation.
+   * @param {boolean} visible Whether the selected furniture is visible in the room views.
    */
   function setFurnitureVisibility(furniture, visible) {
     for (const button of document.querySelectorAll('.warehouse-bulk-visibility')) {
@@ -51,7 +51,7 @@ export function createWarehouseFurnitureSelection({state, currentRoom, mountCont
   }
 
   /**
-   * Derives the toggle furniture visibility result from the supplied values.
+   * Switches the visibility of the specified furniture and updates the room presentation.
    *
    * @param {*} id Identifier of the affected record.
    * @return {boolean} Whether the operation matched or succeeded.
@@ -115,10 +115,10 @@ export function createWarehouseFurnitureSelection({state, currentRoom, mountCont
   }
 
   /**
-   * Derives the toggle furniture selection result from the supplied values.
+   * Updates the bulk furniture selection and synchronizes the selection panel.
    *
    * @param {*} id Identifier of the affected record.
-   * @param {*} checked Value used by this operation.
+   * @param {boolean} checked Whether the furniture should be included in the selection.
    */
   function toggleFurnitureSelection(id, checked) {
     const room = currentRoom();

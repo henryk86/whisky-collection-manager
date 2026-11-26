@@ -22,16 +22,16 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
   let flavorDraft = null;
 
   /**
-   * Derives the profile status result from the supplied values.
-   * @return {*} Result computed from the supplied inputs.
+   * Derives the profile-presence filter from the current collection filter flags.
+   * @return {'without'|'with'|'all'} Selected profile-presence filter.
    */
   function profileStatus() {
     return state.profileMissing ? 'without' : state.profilePresent ? 'with' : 'all';
   }
 
   /**
-   * Derives the new flavor draft result from the supplied values.
-   * @return {!Array<*>} Resulting entries in their output order.
+   * Creates an independent draft of the active flavor filter settings.
+   * @return {{status: 'without'|'with'|'all', criteria: import('../../../shared/collection-saved-views.js').FlavorCriterion[]}} Editable filter state.
    */
   function newFlavorDraft() {
     return {
@@ -127,7 +127,7 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
   /**
    * Updates the DOM elements managed by redraw flavor editor.
    *
-   * @param {*=} focusSelector Value used by this operation.
+   * @param {*=} focusSelector Optional selector to restore keyboard focus to after redrawing the editor.
    */
   function redrawFlavorEditor(focusSelector = null) {
     const editor = document.querySelector('[data-collection-flavor-editor]');
@@ -151,7 +151,7 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
    * Locates the DOM elements used by add flavor criterion.
    */
   function addFlavorCriterion() {
-    const axis = document.querySelector('[data-collection-flavor-editor] #collection-add-flavor-axis')?.value;
+    const axis = /** @type {HTMLSelectElement|null} */ (document.querySelector('[data-collection-flavor-editor] #collection-add-flavor-axis'))?.value;
     if (!flavorDraft || !FLAVOR_AXES.includes(axis) || flavorDraft.criteria.some(item => item.axis === axis)) return;
     flavorDraft.criteria.push({axis, min: 0, max: 10});
     if (flavorDraft.status === 'without') flavorDraft.status = 'with';
@@ -161,7 +161,7 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
   /**
    * Removes or resets flavor criterion.
    *
-   * @param {*} axis Value used by this operation.
+   * @param {string} axis Identifier of the flavor criterion to remove from the draft.
    */
   function removeFlavorCriterion(axis) {
     if (!flavorDraft) return;
@@ -230,7 +230,7 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
 
   /** Closes the inline flavor picker and discards its draft. */
   function closeFlavorFilter() {
-    const picker = document.querySelector('[data-collection-flavor-picker]');
+    const picker = /** @type {HTMLDetailsElement|null} */ (document.querySelector('[data-collection-flavor-picker]'));
     if (picker) picker.open = false;
     flavorDraft = null;
   }

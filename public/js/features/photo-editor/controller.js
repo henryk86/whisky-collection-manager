@@ -55,8 +55,8 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   /**
    * Selects photo matching the input.
    *
-   * @param {*} bottleId Value used by this operation.
-   * @param {*} photoId Value used by this operation.
+   * @param {string} bottleId Identifier of the physical bottle containing the photo.
+   * @param {string} photoId Identifier of the photo within that bottle.
    * @return {*} Result computed from the supplied inputs.
    */
   const findPhoto = (bottleId, photoId) => state.collection?.bottlings.flatMap(bottling => bottling.bottles || []).find(bottle => bottle.id === bottleId)?.photos?.find(photo =>
@@ -84,7 +84,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   /**
    * Selects tab matching the input.
    *
-   * @param {*} tab Value used by this operation.
+   * @param {string} tab Editor tab key, either adjustments or cutout.
    */
   function selectTab(tab) {
     if (tab !== 'adjustments' && tab !== 'cutout') return;
@@ -97,7 +97,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   /**
    * Controls the controller state.
    *
-   * @param {*} button Button used by this operation.
+   * @param {*} button Photo action control carrying the bottle and photo identifiers.
    */
   async function open(button) {
     const bottleId = button?.dataset.id;
@@ -222,7 +222,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
   /**
    * Removes or resets group.
    *
-   * @param {*} groupKey Value used by this operation.
+   * @param {string} groupKey Adjustment group whose slider values are reset.
    */
   function resetGroup(groupKey) {
     if (!PHOTO_ADJUSTMENT_GROUPS.some(group => group.key === groupKey)) return;

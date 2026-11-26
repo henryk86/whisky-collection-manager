@@ -15,7 +15,7 @@ const renderTemplate = await loadTemplates('settings/settings.html');
  * Creates settings view for settings.
  *
  * @param {!Object} state Current application state.
- * @param {!Object=} auth Auth used by this operation.
+ * @param {!Object=} auth Authentication state and actions used to render the security settings.
  * @return {!Object} Structured result for the caller.
  */
 export function createSettingsView(state, auth = {
@@ -126,7 +126,7 @@ export function createSettingsView(state, auth = {
  * Show a settings area without replacing forms or losing unsaved field values.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @param {*} container Container used by this operation.
+ * @param {*} container Settings workspace containing section navigation and panels.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function activateSettingsSection(id, container) {

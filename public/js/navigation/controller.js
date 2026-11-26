@@ -14,8 +14,8 @@ export function createNavigation({state, render, closeModal,
   /**
    * Controls the controller state.
    *
-   * @param {*} page Page used by this operation.
-   * @param {null=} selected Selected used by this operation.
+   * @param {string} page Target application page.
+   * @param {?string=} selected Selected record or section identifier for that page.
    * @param {!Object=} options3 Destructured options for this operation.
    */
   function navigate(

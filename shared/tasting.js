@@ -20,7 +20,7 @@ export function normalizeTastingNotes(notes) {
     Object.keys(notes).some(key => !NOTE_FIELDS.includes(key)) ||
     NOTE_FIELDS.some(key => notes[key] != null && typeof notes[key] !== 'string'))
     throw new Error('Ungültige Verkostungsnotizen');
-  return Object.fromEntries(NOTE_FIELDS.map(key => [key, notes[key] || '']));
+  return {nose: notes.nose || '', palate: notes.palate || '', finish: notes.finish || ''};
 }
 
 /**

@@ -29,7 +29,7 @@ function chunk(type, data) {
 /**
  * Parses png for visual png.
  *
- * @param {*} bytes Bytes used by this operation.
+ * @param {Buffer} bytes PNG screenshot bytes, including the PNG signature and chunks.
  * @return {!Object} Structured result for the caller.
  */
 export function decodePNG(bytes) {
@@ -94,8 +94,8 @@ export function encodeRGB(width, height, rgb) {
 /**
  * Compares PNG dimensions and changed pixels for screenshot diagnosis.
  *
- * @param {*} beforeBytes Before bytes used by this operation.
- * @param {*} afterBytes After bytes used by this operation.
+ * @param {Buffer} beforeBytes Baseline PNG screenshot.
+ * @param {Buffer} afterBytes Candidate PNG screenshot.
  * @param {number=} delta Validated changes to apply to the resource.
  * @return {!Object} Structured result for the caller.
  */

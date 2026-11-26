@@ -7,8 +7,8 @@ const EXTENSION_ORIGIN = /^chrome-extension:\/\/([a-p]{32})$/;
 /**
  * Checks whether an extension origin is allowed for the request.
  *
- * @param {*} origin Origin used by this operation.
- * @param {*=} configuredIds Configured ids used by this operation.
+ * @param {*} origin Origin header presented by the browser extension.
+ * @param {string=} configuredIds Comma-separated extension IDs; an empty list allows any valid extension ID.
  * @return {*} Value, or false when the operation cannot proceed.
  */
 export function allowedExtensionOrigin(origin, configuredIds = process.env.EXTENSION_IDS || '') {
@@ -68,8 +68,8 @@ const HOST_REJECTION_MESSAGE =
 /**
  * Transforms the reject host text with the required substitutions.
  *
- * @param {*} raw Value used by this operation.
- * @param {*} hostname Value used by this operation.
+ * @param {*} raw Original Host header, used for diagnostics if hostname parsing failed.
+ * @param {*} hostname Parsed hostname rejected by the host allowlist.
  */
 function rejectHost(raw, hostname) {
   // Log once per rejected hostname, with a hard limit to prevent noisy requests

@@ -24,7 +24,7 @@ export function createTastingPresentation({state, selectors}) {
    * Selects and transforms the distillery meta records.
    *
    * @param {*} bottling Bottling record being inspected or updated.
-   * @param {boolean=} owned Value used by this operation.
+   * @param {boolean=} owned Whether the distillery metadata belongs to an owned bottling.
    * @return {string} Available distillery, age and other release metadata joined for display.
    */
   const distilleryMeta = (bottling, owned = true) => [
@@ -52,8 +52,8 @@ export function createTastingPresentation({state, selectors}) {
    * Prepares tasting page heading with optional introduction and eyebrow.
    *
    * @param {*} title Title displayed or stored by this operation.
-   * @param {*} intro Value used by this operation.
-   * @param {*=} eyebrow Value used by this operation.
+   * @param {*} intro Introductory content shown beneath the page title.
+   * @param {*=} eyebrow Optional eyebrow content above the heading.
    * @return {!import('../ui/render-plan.js').RenderPlan} Tasting page heading with optional introduction and eyebrow.
    */
   const pageTitle = (title, intro, eyebrow = t('tastings.childEyebrow')) =>
@@ -65,8 +65,8 @@ export function createTastingPresentation({state, selectors}) {
    * Prepares owned or external bottling summary with photo when available.
    *
    * @param {*} bottling Bottling record being inspected or updated.
-   * @param {boolean=} external Value used by this operation.
-   * @param {boolean=} draft Value used by this operation.
+   * @param {boolean=} external Whether the subject is an external bottling.
+   * @param {boolean=} draft Whether the subject is still an unsaved draft.
    * @return {!import('../ui/render-plan.js').RenderPlan} Owned or external bottling summary with photo when available.
    */
   const bottlingInfo = (bottling, external = false, draft = false) => {
@@ -118,7 +118,7 @@ export function createTastingPresentation({state, selectors}) {
   };
 
   /**
-   * Derives the associated flight result from the supplied values.
+   * Looks up the flight associated with the tasting, if any.
    *
    * @param {*} record Record to validate or persist.
    * @return {*} Result computed from the supplied inputs.
@@ -290,7 +290,7 @@ export function createTastingPresentation({state, selectors}) {
 /**
  * Prepares fields for an external whisky's release metadata.
  *
- * @param {!Object=} info Value used by this operation.
+ * @param {!Object=} info External bottling metadata used to initialize the editor fields.
  * @return {import('../ui/render-plan.js').RenderPlan|string} Fields for an external whisky's release metadata (or scalar/empty text when no plan is needed).
  */
 export function externalFields(info = {}) {

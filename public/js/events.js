@@ -58,7 +58,7 @@ export function bindEvents(
   /**
    * Coordinates asynchronous work for suggest number.
    *
-   * @param {*} fieldName Value used by this operation.
+   * @param {string} fieldName Name of the inventory-number input receiving the suggestion.
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   const suggestNumber = async (fieldName) => {
@@ -76,7 +76,7 @@ export function bindEvents(
    * @param {*} title Title displayed or stored by this operation.
    * @param {*} message Message to display or use for diagnostics.
    * @param {*} task Task to execute or examine.
-   * @param {string=} buttonLabel Value used by this operation.
+   * @param {string=} buttonLabel Text of the destructive confirmation button.
    */
   function confirmInModal(title, message, task, buttonLabel =
     'Endgültig löschen') {
@@ -97,7 +97,7 @@ export function bindEvents(
   /**
    * Updates menu in the current state.
    *
-   * @param {*} open Value used by this operation.
+   * @param {boolean} open Whether to display the navigation drawer and backdrop.
    */
   function setMenu(open) {
     const drawer = document.getElementById('site-drawer');

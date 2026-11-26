@@ -4,6 +4,19 @@ import {loadTemplates} from './templates.js';
 const renderTemplate = await loadTemplates('components/fields.html');
 
 /**
+ * Options shared by the design-system form controls.
+ * @typedef {Object} FieldOptions
+ * @property {boolean} [required] Require a value before native form submission.
+ * @property {boolean} [disabled] Disable the control.
+ * @property {boolean} [full] Use the full grid width.
+ * @property {string} [description] Accessible field hint.
+ * @property {string} [error] Validation error linked to the control.
+ * @property {string} [type] Native input type (text input only).
+ * @property {string|number} [step] Numeric step (text input only).
+ * @property {string} [placeholder] Empty text-input placeholder.
+ */
+
+/**
  * Builds accessible input attributes with stable hint and error references.
  *
  * @param {string} name Form field name, used literally for binding.

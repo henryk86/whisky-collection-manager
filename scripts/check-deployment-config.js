@@ -41,7 +41,7 @@ const noText = (text, snippet, message) => check(!text.includes(snippet), messag
 /**
  * Validates deployment configuration for check deployment config.
  *
- * @param {Function=} read Read used by this operation.
+ * @param {Function=} read Reads a repository-relative configuration file as UTF-8 text.
  * @return {!Object} Structured result for the caller.
  */
 export function verifyDeploymentConfiguration(read = name =>

@@ -18,7 +18,7 @@ export function createThemeController(mountContent = replaceContent) {
     const active = effectiveTheme(themePreference, themeMedia.matches);
     document.documentElement.dataset.theme = active;
     document.documentElement.style.colorScheme = active;
-    const button = document.querySelector('[data-act=toggle-theme]');
+    const button = /** @type {HTMLButtonElement|null} */ (document.querySelector('[data-act=toggle-theme]'));
     if (button) {
       mountContent(button, active === 'dark' ? themeSunIcon : themeMoonIcon);
       button.title = active === 'dark' ? t("ui.theme.enableLight") : t("ui.theme.enableDark");

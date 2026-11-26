@@ -8,6 +8,7 @@ const DEFAULT_LANGUAGE = 'de';
 const STORAGE_KEY = 'whisky-language';
 const PRESENTATION_ATTRIBUTES = ['aria-label', 'aria-description', 'title', 'placeholder', 'alt'];
 let language = DEFAULT_LANGUAGE;
+/** @type {Readonly<Record<string, string>>} */
 let languages = Object.freeze({de: 'Deutsch'});
 let translator = createTranslator(german, english);
 
@@ -49,7 +50,7 @@ function formatMessage(template, params, locale) {
  * @param {!Object<string, string>=} fallback Catalog used for missing or empty
  *     entries.
  * @param {string=} locale Locale used for plural and number formatting.
- * @return {Function} Lookup function accepting a key and optional values.
+ * @return {function(string, Object<string, *>=): string} Lookup function accepting a catalog key and optional interpolation values.
  */
 export function createTranslator(messages = {}, fallback = english,
   locale = DEFAULT_LANGUAGE) {
@@ -164,7 +165,7 @@ export async function initializeLanguage(fetcher = globalThis.fetch) {
   if (typeof document !== 'undefined') {
     document.documentElement.lang = language;
     document.title = t('app.meta.title');
-    const description = document.querySelector('meta[name="description"]');
+    const description = /** @type {HTMLMetaElement|null} */ (document.querySelector('meta[name="description"]'));
     if (description) description.content = t('app.meta.description');
   }
   return language;

@@ -24,7 +24,7 @@ async function loadImage(url) {
 }
 
 /**
- * Derives the canvas result from the supplied values.
+ * Creates a canvas with the requested pixel dimensions.
  *
  * @param {*} width Width in pixels.
  * @param {*} height Height in pixels.
@@ -41,7 +41,7 @@ function canvas(width, height) {
  * Keep native crop resolution whenever feasible. Limit canvas memory/bytes for
  * huge camera sources and only step down if the PNG exceeds upload limits.
  *
- * @param {*} cropHeight Crop height used by this operation.
+ * @param {number} cropHeight Height of the source crop in pixels.
  * @return {!Array<number>} Resulting list of values.
  */
 export function cutoutExportSizes(cropHeight) {
@@ -53,8 +53,8 @@ export function cutoutExportSizes(cropHeight) {
  * Composite a precomputed segmentation mask; keeps inference separate from
  * image geometry.
  *
- * @param {*} image Image used by this operation.
- * @param {*} rawMask Raw mask used by this operation.
+ * @param {HTMLImageElement} image Decoded source photograph with natural dimensions.
+ * @param {*} rawMask Model segmentation mask, before normalization and compositing.
  * @return {string} Transparent PNG data URL of the composited and cropped image.
  */
 export function composeCutout(image, rawMask) {
@@ -71,7 +71,7 @@ export function composeCutout(image, rawMask) {
   /**
    * Renders the image state.
    *
-   * @param {*} crop Crop used by this operation.
+   * @param {*} crop Source-image crop rectangle to draw into the output canvas.
    * @param {number} size Size of the input or target.
    * @return {!HTMLCanvasElement} Result computed from the supplied inputs.
    */
@@ -134,7 +134,7 @@ export function composeCutout(image, rawMask) {
  * photo.
  *
  * @param {string} url URL of the requested resource.
- * @param {Function=} onProgress On progress used by this operation.
+ * @param {Function=} onProgress Receives processing stage names for the progress indicator.
  * @param {!Object=} options3 Destructured options for this operation.
  * @return {!Promise<string>} Promise fulfilled when the operation completes.
  */

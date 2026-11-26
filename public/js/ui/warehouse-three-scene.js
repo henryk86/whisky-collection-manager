@@ -19,7 +19,7 @@ const PALETTE = {
 /**
  * Create a new real 3D scene. No SVG, painter sorting or custom depth masks.
  *
- * @param {*} THREE Three used by this operation.
+ * @param {*} THREE Loaded Three.js module providing scene, mesh and material constructors.
  * @param {*} room Room model containing dimensions and furniture.
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {!Object=} options Optional configuration for the operation.
@@ -36,7 +36,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   const selectables = [];
   const materials = new Map();
   /**
-   * Derives the material result from the supplied values.
+   * Creates or reuses the material matching a scene part's color and appearance.
    *
    * @param {*} style Visual style or rendering properties.
    * @return {*} Result computed from the supplied inputs.
@@ -61,7 +61,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   const byFurniture = new Map();
   const hiddenFurniture = new Set(options.hiddenIds || []);
   /**
-   * Derives the highlighted material result from the supplied values.
+   * Creates or reuses the material used to highlight a selected scene part.
    *
    * @param {*} style Visual style or rendering properties.
    * @return {*} Result computed from the supplied inputs.
@@ -88,8 +88,8 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
     /**
      * Updates the apply state for its caller.
      *
-     * @param {*} owner Value used by this operation.
-     * @param {*} active Value used by this operation.
+     * @param {*} owner Furniture owner identifier whose meshes should be highlighted.
+     * @param {*} active Whether the owner is currently highlighted.
      */
     function apply(owner, active) {
       for (const mesh of byFurniture.get(owner) || []) {
@@ -107,8 +107,8 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
   /**
    * Updates the piece state for its caller.
    *
-   * @param {*} part Value used by this operation.
-   * @param {*} owner Value used by this operation.
+   * @param {*} part Geometry descriptor for a single room or furniture part.
+   * @param {*} owner Identifier of the furniture owning the mesh.
    */
   function piece(part, owner) {
     const geo = new THREE.BoxGeometry(...part.size);
@@ -130,7 +130,7 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
    * Updates furniture visible in the current state.
    *
    * @param {*} id Identifier of the affected record.
-   * @param {*} visible Value used by this operation.
+   * @param {boolean} visible Whether meshes belonging to the furniture are shown.
    * @return {boolean} Whether the operation matched or succeeded.
    */
   function setFurnitureVisible(id, visible) {
@@ -199,9 +199,9 @@ export function buildWarehouseThreeScene(THREE, room, warehouse, options = {}) {
  * Orthographic framing with a small, predictable margin. The dominant
  * projected dimension uses about 92% of the available viewport at 100% zoom.
  *
- * @param {*} projectedWidth Projected width used by this operation.
- * @param {*} projectedHeight Projected height used by this operation.
- * @param {*} aspect Aspect used by this operation.
+ * @param {number} projectedWidth Scene width projected onto the camera plane.
+ * @param {number} projectedHeight Scene height projected onto the camera plane.
+ * @param {number} aspect Viewport width divided by height.
  * @return {number} Calculated numeric result.
  */
 export function warehouseCameraHalfHeight(projectedWidth, projectedHeight,
@@ -213,13 +213,13 @@ export function warehouseCameraHalfHeight(projectedWidth, projectedHeight,
 /**
  * Fit projected room bounds to the orthographic frustum, independent of zoom.
  *
- * @param {*} THREE Three used by this operation.
- * @param {*} camera Camera used by this operation.
- * @param {*} roomWidth Room width used by this operation.
- * @param {*} roomDepth Room depth used by this operation.
- * @param {*} maxHeight Max height used by this operation.
+ * @param {*} THREE Loaded Three.js module providing vector and camera helpers.
+ * @param {*} camera Orthographic camera to position and frame.
+ * @param {number} roomWidth Room width in metres.
+ * @param {number} roomDepth Room depth in metres.
+ * @param {number} maxHeight Maximum scene height in metres.
  * @param {*} corner Corner of the furniture footprint.
- * @param {*} aspect Aspect used by this operation.
+ * @param {number} aspect Viewport width divided by height.
  * @param {number=} zoom Map scale used for projection.
  * @return {*} Structured result assembled from the input data.
  */
@@ -248,7 +248,7 @@ export function frameWarehouseCamera(
   /**
    * Transforms the entries used by range.
    *
-   * @param {*} axis Value used by this operation.
+   * @param {*} axis Coordinate axis used to determine the projected scene bounds.
    * @return {number} Calculated numeric value.
    */
   const range = (axis) => Math.max(...projected.map(p => p[axis])) - Math.min(...projected.map(p => p[axis]));
@@ -265,7 +265,7 @@ export function frameWarehouseCamera(
  * Mount only when the 3D tab is visible. All imports load from local npm
  * files.
  *
- * @param {*} viewport Viewport used by this operation.
+ * @param {*} viewport DOM element that hosts the WebGL canvas.
  * @param {!Object} options2 Destructured options for this operation.
  * @return {!Promise<(!Object)>} Promise fulfilled when the operation
  * completes.
@@ -399,14 +399,14 @@ export async function mountWarehouseThree(
   /**
    * Updates the pointer down state for its caller.
    *
-   * @param {*} e Value used by this operation.
+   * @param {*} e Pointer-down event used to record the initial picking position.
    */
   function pointerDown(e) {down = {x: e.clientX, y: e.clientY};}
 
   /**
    * Filters records according to the pointer up selection rules.
    *
-   * @param {*} e Value used by this operation.
+   * @param {*} e Pointer-up event used to distinguish a click from camera movement.
    */
   function pointerUp(e) {
     if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 7) {down = null; return;}
@@ -456,7 +456,7 @@ export async function mountWarehouseThree(
      * Updates furniture visible in the current state.
      *
      * @param {*} id Identifier of the affected record.
-     * @param {*} visible Value used by this operation.
+     * @param {boolean} visible Whether the furniture should remain visible in the scene.
      * @return {boolean} Whether the operation matched or succeeded.
      */
     setFurnitureVisible(id, visible) {

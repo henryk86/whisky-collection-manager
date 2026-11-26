@@ -10,7 +10,7 @@ const renderTemplate = await loadTemplates('analytics/analytics.html');
 /**
  * Prepares reporting date boundary input.
  *
- * @param {*} boundary Value used by this operation.
+ * @param {string} boundary Date-range endpoint, either start or end.
  * @param {*} value Value to process.
  * @return {!import('../ui/render-plan.js').RenderPlan} Reporting date boundary input.
  */
@@ -54,7 +54,7 @@ export function filterControls(state, options) {
    * Prepares labeled analytics filter select.
    *
    * @param {*} name Environment variable or setting name.
-   * @param {*} caption Value used by this operation.
+   * @param {*} caption Localized caption used as the accessible name of the filter control.
    * @param {*} options Options controlling the operation.
    * @param {*} selected Currently selected item or identifier.
    * @return {!import('../ui/render-plan.js').RenderPlan} Labeled analytics filter select.

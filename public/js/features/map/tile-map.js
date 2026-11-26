@@ -22,9 +22,9 @@ const TILE_BASE = 'https://tile.openstreetmap.org';
  * Creates tile map for tile map.
  *
  * @param {!Element} element Element to process.
- * @param {*} initialSites Initial sites used by this operation.
- * @param {Function} onSelect On select used by this operation.
- * @param {null=} selectedId Selected id used by this operation.
+ * @param {*} initialSites Distillery records used to initialize map markers.
+ * @param {Function} onSelect Receives the identifier of the selected distillery marker.
+ * @param {?string=} selectedId Initially selected distillery identifier, or null.
  * @param {!Object=} options5 Destructured options for this operation.
  * @return {!Object} Structured result for the caller.
  */
@@ -47,7 +47,7 @@ export function createTileMap(
   let drag = null, pinch = null, lastDrag = 0;
 
   /**
-   * Derives the dimensions result from the supplied values.
+   * Reads the map viewport's current CSS pixel dimensions.
    * @return {!Object} Structured result assembled from the input data.
    */
   function dimensions() {
@@ -211,7 +211,7 @@ export function createTileMap(
    * Updates zoom in the current state.
    *
    * @param {*} next Next candidate state or entry.
-   * @param {*} anchor Value used by this operation.
+   * @param {*} anchor Optional pixel coordinate about which to zoom; otherwise use the map center.
    */
   function setZoom(next, anchor) {
     const {width, height} = dimensions();
@@ -225,9 +225,9 @@ export function createTileMap(
   }
 
   /**
-   * Derives the center on result from the supplied values.
+   * Centers the map on the selected distillery and pins its marker.
    *
-   * @param {*} site Value used by this operation.
+   * @param {*} site Distillery record with geographic coordinates.
    */
   function centerOn(site) {
     if (!site?.location) return;
@@ -241,7 +241,7 @@ export function createTileMap(
   /**
    * Calculates the focus numeric value.
    *
-   * @param {*} site Value used by this operation.
+   * @param {*} site Distillery record to center on at a minimum zoom level of ten.
    */
   function focus(site) {
     if (!site?.location) return;
@@ -296,7 +296,7 @@ export function createTileMap(
   };
 
   /**
-   * Derives the up result from the supplied values.
+   * Finishes pointer panning and commits the accumulated map displacement.
    *
    * @param {!Event} event Event that triggered this operation.
    */
@@ -314,7 +314,7 @@ export function createTileMap(
   };
 
   /**
-   * Derives the wheel result from the supplied values.
+   * Handles mouse-wheel zoom around the pointer inside the map viewport.
    *
    * @param {!Event} event Event that triggered this operation.
    */
@@ -329,7 +329,7 @@ export function createTileMap(
   };
 
   /**
-   * Derives the keyboard result from the supplied values.
+   * Handles keyboard zoom and arrow-key panning when the viewport has focus.
    *
    * @param {!Event} event Event that triggered this operation.
    */
@@ -386,8 +386,8 @@ export function createTileMap(
     /**
      * Updates sites in the current state.
      *
-     * @param {*} nextSites Value used by this operation.
-     * @param {*} nextSelectedId Value used by this operation.
+     * @param {*} nextSites Replacement distillery marker catalog.
+     * @param {*} nextSelectedId Identifier of the selected marker in the replacement catalog.
      * @param {*=} nextShowAllDistilleries Next show all distilleries input for
      * this operation.
      */

@@ -45,7 +45,7 @@ function decodePath(encoded) {
  * Hash the actual inline theme bootstrap and import map; no unsafe-inline
  * scripts.
  *
- * @param {*} html Html used by this operation.
+ * @param {string} html Static HTML document whose inline scripts require CSP hashes.
  * @return {!Object} Structured result for the caller.
  */
 function htmlSecurityHeaders(html) {
@@ -80,9 +80,9 @@ function htmlSecurityHeaders(html) {
  * @param {!Object} req Incoming HTTP request.
  * @param {!Object} res Outgoing HTTP response.
  * @param {*} file Source file or file name being processed.
- * @param {*} contentType Content type used by this operation.
- * @param {*} cacheControl Cache control used by this operation.
- * @param {!Object=} securityHeaders Security headers used by this operation.
+ * @param {string} contentType Media type of the static file.
+ * @param {string} cacheControl Cache policy for the resource.
+ * @param {!Object=} securityHeaders Additional security headers, including CSP for HTML documents.
  * @return {*} Whether the requested condition is met.
  */
 function streamStatic(req, res, file, contentType, cacheControl,

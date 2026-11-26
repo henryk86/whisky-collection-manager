@@ -7,7 +7,7 @@ import {synchronizeWarehouseProjection}
  * revalidation semantics for every resource actually requested.
  *
  * @param {!Object} state Current application state.
- * @param {*} getJson Get json used by this operation.
+ * @param {*} getJson Asynchronous JSON request function used to fetch missing or invalidated resources.
  * @param {string=} scope Resource domain affected by the operation.
  * @return {!Promise<*>} Promise fulfilled when the operation completes.
  */

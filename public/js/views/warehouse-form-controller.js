@@ -18,7 +18,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
   /**
    * Prepares door compartment-range controls.
    *
-   * @param {!Object=} range Value used by this operation.
+   * @param {!Object=} range Door range whose selected shelf endpoints and front options initialize the row.
    * @param {number=} count Number of requested or available entries.
    * @return {!import('../ui/render-plan.js').RenderPlan} Door compartment-range controls.
    */
@@ -26,7 +26,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
     /**
      * Prepares numbered compartment choices with the chosen value selected.
      *
-     * @param {*} chosen Value used by this operation.
+     * @param {number} chosen One-based shelf number selected in the endpoint control.
      * @return {import('../ui/render-plan.js').RenderPlan|string} Numbered compartment choices with the chosen value selected (or scalar/empty text when no plan is needed).
      */
     const opts = (chosen) => composeMarkup(Array.from(
@@ -139,7 +139,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
       /**
        * Prepares bulk-edit field wrapper.
        *
-       * @param {*} control Value used by this operation.
+       * @param {*} control Form control content paired with the bulk-edit field activation checkbox.
        * @return {!import('../ui/render-plan.js').RenderPlan} Bulk-edit field wrapper.
        */
       const bulkField = (control) => renderTemplate('warehouseBulkField', {control: control, });
@@ -149,7 +149,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
        *
        * @param {*} key Key used to select or group values.
        * @param {*} label Label shown to the user.
-       * @param {*} constraints Value used by this operation.
+       * @param {*} constraints Input constraints defining the allowed numeric range and step.
        * @return {!import('../ui/render-plan.js').RenderPlan} Optional numeric bulk-edit input with the supplied constraints.
        */
       const optionalNumber = (key, label, constraints) =>

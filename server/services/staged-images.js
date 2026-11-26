@@ -46,7 +46,7 @@ export function stageImage(input) {
 /**
  * Returns a preview of an image awaiting confirmation.
  *
- * @param {*} token Token used by this operation.
+ * @param {string} token Temporary image-preview token issued by the staging service.
  * @return {!Object} Structured result for the caller.
  */
 export function previewImage(token) {

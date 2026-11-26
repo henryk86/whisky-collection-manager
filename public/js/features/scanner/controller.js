@@ -19,7 +19,7 @@ export function createScanner({state, showModal, resolveCode}) {
    * Updates element attributes used by scan status.
    *
    * @param {*} message Message to display or use for diagnostics.
-   * @param {string=} kind Value used by this operation.
+   * @param {string=} kind Visual status category for the scanner message.
    */
   function scanStatus(message, kind = 'info') {
     const element = query('#scan-error');
@@ -103,7 +103,7 @@ export function createScanner({state, showModal, resolveCode}) {
   /**
    * Builds the localized scan code text for the current language.
    *
-   * @param {boolean=} assign Value used by this operation.
+   * @param {boolean=} assign Whether to assign the scanned bottle to a warehouse shelf.
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   async function scanCode(assign = false) {

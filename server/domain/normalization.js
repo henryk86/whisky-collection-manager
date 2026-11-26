@@ -64,7 +64,7 @@ function filtered(source, keys) {
  * Normalizes bottling for normalization.
  *
  * @param {*} input Input to process.
- * @param {!Object=} old Old used by this operation.
+ * @param {!Object=} old Previously stored bottling fields retained unless explicitly replaced.
  * @return {!Object} Structured result for the caller.
  */
 export function normalizeBottling(input, old = {}) {
@@ -160,7 +160,7 @@ export function normalizeBottling(input, old = {}) {
  * Normalizes bottle for normalization.
  *
  * @param {*} input Input to process.
- * @param {!Object=} old Old used by this operation.
+ * @param {!Object=} old Previously stored physical bottle fields retained unless explicitly replaced.
  * @return {!Object} Structured result for the caller.
  */
 export function normalizeBottle(input, old = {}) {

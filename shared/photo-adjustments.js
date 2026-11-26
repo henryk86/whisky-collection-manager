@@ -27,16 +27,16 @@ export const ADJUSTMENT_LIMITS = Object.freeze({
 export function validateAdjustmentValues(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value) ||
     Object.keys(value).some(key => !Object.hasOwn(ADJUSTMENT_LIMITS, key))) {
-    const error = new RangeError('Invalid photo adjustments'); error.code = 'INVALID_ADJUSTMENTS'; throw error;
+    throw Object.assign(new RangeError('Invalid photo adjustments'), {code: 'INVALID_ADJUSTMENTS'});
   }
   const normalized = {};
   for (const [key, [min, max]] of Object.entries(ADJUSTMENT_LIMITS)) {
     const number = value[key] ?? 0;
     if (typeof number !== 'number' || !Number.isFinite(number) || number < min || number > max) {
-      const error = new RangeError('Invalid adjustment value');
-      error.code = 'INVALID_ADJUSTMENT_FIELD'; error.field = key; throw error;
+      throw Object.assign(new RangeError('Invalid adjustment value'), {code: 'INVALID_ADJUSTMENT_FIELD', field: key});
     }
     normalized[key] = number;
   }
-  return normalized;
+  // The loop assigns every key in ADJUSTMENT_LIMITS before returning.
+  return /** @type {PhotoAdjustments} */ (normalized);
 }

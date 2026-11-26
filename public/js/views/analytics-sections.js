@@ -191,7 +191,7 @@ export function finance(analytics, state) {
       {
         value: 'total',
         /**
-         * Derives the format result from the supplied values.
+         * Formats a monetary chart value in the currency of this group.
          *
          * @param {*} v Value to evaluate.
          * @return {*} Result computed from the supplied inputs.
@@ -323,7 +323,7 @@ export function quality(analytics) {
   /**
    * Prepares table rows for the supplied overview data.
    *
-   * @param {*} entries Value used by this operation.
+   * @param {*} entries Missing-field summary entries, each with a count and optional example bottling identifiers.
    * @return {!import('../ui/render-plan.js').RenderPlan} Table rows for the supplied overview data.
    */
   const rows = entries => detailsTable(
@@ -364,7 +364,7 @@ export function quality(analytics) {
  * Prepares overview navigation card for an analysis section.
  *
  * @param {*} page Page or view being rendered or selected.
- * @param {*} stat Value used by this operation.
+ * @param {*} stat Statistics supplied for the section-card call; currently not read by the renderer.
  * @return {!import('../ui/render-plan.js').RenderPlan} Overview navigation card for an analysis section.
  */
 function sectionCard(page, stat) {

@@ -45,7 +45,7 @@ const FORMULAS = Object.freeze({
 /**
  * Renders the explanatory content used by the flight planner.
  *
- * @param {*} t T used by this operation.
+ * @param {*} t Translation function for flight-planning help keys.
  * @return {!import('./render-plan.js').RenderPlan} Flight planning explanations, formulas and strategy descriptions.
  */
 export function flightPlanningHelpHtml(t) {
@@ -61,7 +61,7 @@ export function flightPlanningHelpHtml(t) {
    * Prepares localized help paragraph with an optional CSS class.
    *
    * @param {*} key Key used to select or group values.
-   * @param {string=} extraClass Value used by this operation.
+   * @param {string=} extraClass Optional CSS class on the help paragraph.
    * @return {!import('./render-plan.js').RenderPlan} Localized help paragraph with an optional CSS class.
    */
   const p = (key, extraClass = '') => renderTemplate('p', {
@@ -88,7 +88,7 @@ export function flightPlanningHelpHtml(t) {
   /**
    * Prepares definition of the supplied formula symbol.
    *
-   * @param {*} symbol Value used by this operation.
+   * @param {*} symbol Mathematical variable symbol displayed alongside its translated definition.
    * @param {*} key Key used to select or group values.
    * @return {!import('./render-plan.js').RenderPlan} Definition of the supplied formula symbol.
    */

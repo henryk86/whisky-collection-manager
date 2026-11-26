@@ -45,7 +45,7 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
    *
    * @param {*} canvas Canvas used by the rendering operation.
    * @param {!Event} event Event that triggered this operation.
-   * @param {boolean=} clampToImage Value used by this operation.
+   * @param {boolean=} clampToImage Clamp pointer coordinates to the image bounds instead of rejecting outside points.
    * @return {!Object} Computed value, or null when the input has no match.
    */
   function imagePoint(canvas, event, clampToImage = false) {
@@ -63,8 +63,8 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
    * Locates the DOM elements used by mark selection.
    *
    * @param {*} canvas Canvas used by the rendering operation.
-   * @param {*} start Value used by this operation.
-   * @param {*} end Value used by this operation.
+   * @param {*} start Starting corner of the selected area in source-image pixels.
+   * @param {*} end Ending corner of the selected area in source-image pixels.
    */
   function markSelection(canvas, start, end) {
     const host = root();
@@ -82,7 +82,7 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
   /**
    * Registers white picker for controller.
    *
-   * @param {*} canvas Canvas used by this operation.
+   * @param {*} canvas Canvas on which the white-balance sampling gestures are registered.
    */
   function attachWhitePicker(canvas) {
     canvas.addEventListener('pointerdown', event => {
@@ -180,7 +180,7 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
   }
 
   /**
-   * Derives the brush point result from the supplied values.
+   * Converts a pointer position into normalized image coordinates for mask strokes.
    *
    * @param {*} canvas Canvas used by the rendering operation.
    * @param {!Event} event Event that triggered this operation.
@@ -217,7 +217,7 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
   /**
    * Registers mask brush for controller.
    *
-   * @param {*} canvas Canvas used by this operation.
+   * @param {*} canvas Canvas on which mask painting gestures are registered.
    */
   function attachMaskBrush(canvas) {
     canvas.addEventListener('pointerdown', event => {
@@ -271,7 +271,7 @@ export function createPhotoTools({session, root, setValues, syncSliders, schedul
       schedulePreview();
     });
     /**
-     * Derives the release result from the supplied values.
+     * Finishes or cancels the active mask stroke and releases pointer capture.
      *
      * @param {!Event} event Event that triggered this operation.
      */

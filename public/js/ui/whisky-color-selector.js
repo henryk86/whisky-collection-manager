@@ -31,7 +31,7 @@ const COLOR_LABEL_KEYS = Object.freeze({
  * The original twelve shades remain unchanged. The additional picker stores
  * its HEX value internally.
  *
- * @param {*} hex Hex used by this operation.
+ * @param {*} hex Candidate custom whisky color in CSS hexadecimal notation.
  * @return {*} Result computed from the supplied inputs.
  */
 export function whiskyCustomColorName(hex) {
@@ -42,7 +42,7 @@ export function whiskyCustomColorName(hex) {
 /**
  * Renders the selectable whisky-colour samples and selected glass.
  *
- * @param {*} selected Selected used by this operation.
+ * @param {*} selected Selected standard color code or custom hexadecimal color.
  * @return {!import('./render-plan.js').RenderPlan} Whisky color samples, selected glass and custom-color controls.
  */
 export function whiskyColorSelector(selected) {
@@ -83,7 +83,7 @@ export function whiskyColorSelector(selected) {
 /**
  * Non-interactive display of the recorded colour for a saved tasting.
  *
- * @param {*} selected Selected used by this operation.
+ * @param {*} selected Selected standard color code or custom hexadecimal color, if available.
  * @return {import('./render-plan.js').RenderPlan|string} Read-only glass for the recorded whisky color (or scalar/empty text when no plan is needed).
  */
 export function whiskyColorDisplay(selected) {

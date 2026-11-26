@@ -120,7 +120,7 @@ const editors = createEditors({
    */
   getPendingImageToken: () => externalImport?.getPendingImageToken(),
   /**
-   * Derives the mark image attached result from the supplied values.
+   * Notifies the import controller that its staged image has been attached.
    * @return {*} Result computed from the supplied inputs.
    */
   markImageAttached: () => externalImport?.markImageAttached(),
@@ -190,7 +190,7 @@ function render() {
 /**
  * Performs the refresh lifecycle action.
  *
- * @param {string=} scope Value used by this operation.
+ * @param {string=} scope Resource scope to refresh: all, collection or warehouse.
  * @return {!Promise<*>} Promise for the asynchronous operation.
  */
 async function refresh(scope = 'all') {

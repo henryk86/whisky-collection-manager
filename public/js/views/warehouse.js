@@ -83,7 +83,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
   }
 
   /**
-   * Derives the w result from the supplied values.
+   * Reads the current warehouse state from the application store.
    * @return {*} Result computed from the supplied inputs.
    */
   const w = () => state.warehouse;
@@ -92,7 +92,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
     getWarehouse: w, refresh, toast,
   });
   /**
-   * Derives the current room result from the supplied values.
+   * Resolves the selected room, falling back to the first room.
    * @return {*} Result computed from the supplied inputs.
    */
   const currentRoom = () => roomOptions(w(), state.warehouseRoomId) || w().rooms[0];
@@ -153,14 +153,14 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
         /**
          * Retrieves dragged ids from the available state.
          *
-         * @param {*} bottleId Value used by this operation.
+         * @param {*} bottleId Identifier of the dragged physical bottle; uses the bulk selection when it includes this bottle.
          * @return {*} Whether the requested condition is met.
          */
         getDraggedIds: bottleId => selectedBottleIds().includes(bottleId) ? selectedBottleIds() : [bottleId],
         /**
          * Handles the invalid drop interaction.
          *
-         * @param {*} reason Value used by this operation.
+         * @param {*} reason Drop rejection reason; a full shelf triggers a notification.
          */
         onInvalidDrop: reason => {
           if (reason === 'full') toast(t('warehouse.shelves.dragFull'), true);
@@ -210,7 +210,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
    * Selects room matching the input.
    *
    * @param {*} id Identifier of the affected record.
-   * @param {string=} section Value used by this operation.
+   * @param {string=} section Warehouse section to navigate to after selecting the room.
    */
   function selectRoom(id, section = 'rooms') {
     state.warehouseSelectedFurnitureIds = []; state.warehouseRoomId = id;
@@ -218,7 +218,7 @@ export function createWarehouseView({state, shell, navigate, modal, refresh, mou
   }
 
   /**
-   * Derives the edit furniture from plan result from the supplied values.
+   * Navigates to the selected furniture and opens its editing dialog from the room plan.
    *
    * @param {*} id Identifier of the affected record.
    */

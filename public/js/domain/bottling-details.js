@@ -37,8 +37,8 @@ function humanDate(date, year) {
  * an empty field.
  *
  * @param {!Object} bottling Bottling record being processed.
- * @param {*} distilleryNames Distillery names used by this operation.
- * @param {!Array<*>=} distilleries Distilleries used by this operation.
+ * @param {*} distilleryNames Lookup of distillery display names by identifier.
+ * @param {!Array<*>=} distilleries Distillery catalog used to resolve origin information.
  * @return {!Array<!Array<*>>} Resulting list of values.
  */
 export function bottlingDetails(bottling, distilleryNames, distilleries = []) {

@@ -48,7 +48,7 @@ const TYPES = Object.keys(FURNITURE_TYPE_KEYS);
 const typeChoices = () => TYPES.map(type => [type, t(FURNITURE_TYPE_KEYS[type])]);
 
 /**
- * Derives the type name result from the supplied values.
+ * Resolves the localized display name of a warehouse furniture type.
  *
  * @param {*} type Type or category used to select behavior.
  * @return {*} Whether the requested condition is met.
@@ -56,7 +56,7 @@ const typeChoices = () => TYPES.map(type => [type, t(FURNITURE_TYPE_KEYS[type])]
 const typeName = type => TYPES.includes(type) ? t(FURNITURE_TYPE_KEYS[type]) : type;
 
 /**
- * Derives the num result from the supplied values.
+ * Formats a warehouse dimension for display.
  *
  * @param {*} value Value to process.
  * @return {string} Localized numeric value with at most two decimal places.
@@ -78,7 +78,7 @@ const capacityLabel = s => s.shelves === 0 ?
  * Filters records according to the count selection rules.
  *
  * @param {*} w Width or value used by the calculation.
- * @param {*} shelfId Value used by this operation.
+ * @param {*} shelfId Identifier of the shelf whose assigned bottles are counted.
  * @return {number} Calculated numeric value.
  */
 const count = (w, shelfId) => Object.values(w.assignments).filter(id => id === shelfId).length;
@@ -109,7 +109,7 @@ function field(name, label, value = '', type = 'text', options = {}) {
  * @param {*} name Environment variable or setting name.
  * @param {*} label Label shown to the user.
  * @param {*} options Options controlling the operation.
- * @param {string=} chosen Value used by this operation.
+ * @param {string=} chosen Currently selected value in the generated option list.
  * @return {!import('../ui/render-plan.js').RenderPlan} Labeled warehouse select with the current value selected.
  */
 function choices(name, label, options, chosen = '') {
@@ -204,10 +204,10 @@ function bottleRow(w, bottle, selected = false) {
 }
 
 /**
- * Derives the room options result from the supplied values.
+ * Resolves a room by identifier in the current warehouse.
  *
  * @param {*} w Width or value used by the calculation.
- * @param {*} roomId Value used by this operation.
+ * @param {*} roomId Identifier of the requested room.
  * @return {*} Result computed from the supplied inputs.
  */
 function roomOptions(w, roomId) {
@@ -218,7 +218,7 @@ function roomOptions(w, roomId) {
  * Selects furniture matching the input.
  *
  * @param {*} w Width or value used by the calculation.
- * @param {*} furnitureId Value used by this operation.
+ * @param {*} furnitureId Identifier of the furniture to locate across warehouse rooms.
  * @return {!Object} Computed value, or null when the input has no match.
  */
 function findFurniture(w, furnitureId) {
@@ -233,7 +233,7 @@ function findFurniture(w, furnitureId) {
  *
  * @param {*} room Warehouse room being inspected or modified.
  * @param {*} w Width or value used by the calculation.
- * @param {string=} layer Value used by this operation.
+ * @param {string=} layer Room-diagram layer to render, controlling which objects are displayed.
  * @return {!import('../ui/render-plan.js').RenderPlan} Scaled SVG room plan including its grid and furniture geometry.
  */
 function roomDiagram(room, w, layer = 'all') {
@@ -344,10 +344,10 @@ function bottleActionButtons(bottle, {detailLabelKey =
 /**
  * Read-only summary for an unassigned bottle (a compartment has none to show).
  *
- * @param {*} w W used by this operation.
+ * @param {*} w Warehouse state used to resolve the bottle's current storage location.
  * @param {!Object} bottle Physical bottle record being processed.
  * @param {!Object} bottling Bottling record being processed.
- * @param {*} physicalBottle Physical bottle used by this operation.
+ * @param {*} physicalBottle Physical bottle metadata used for the detailed preview facts.
  * @return {!import('../ui/render-plan.js').RenderPlan} Read-only bottle preview with facts, photo and placement actions.
  */
 function bottlePreview(w, bottle, bottling, physicalBottle) {

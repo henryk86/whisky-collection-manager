@@ -15,7 +15,7 @@ import {loadTemplates} from '../ui/templates.js';
 const renderTemplate = await loadTemplates('detail/detail.html');
 
 /**
- * Derives the bottle status text result from the supplied values.
+ * Returns the localized label of a physical bottle's current inventory status.
  *
  * @param {*} status Status value determining the next action.
  * @return {*} Result computed from the supplied inputs.
@@ -45,7 +45,7 @@ const FACT_KEYS = Object.freeze({
   'Whiskybase-ID': 'forms.bottling.whiskybaseId',
 });
 /**
- * Derives the fact label result from the supplied values.
+ * Resolves the localized label of a bottling detail field.
  *
  * @param {*} label Label shown to the user.
  * @return {*} Result computed from the supplied inputs.

@@ -9,14 +9,14 @@ const renderTemplate = await loadTemplates('components/flavor-profile.html');
 /**
  * Resolves the localized label for a flavour-profile axis.
  *
- * @param {*} axis Axis used by this operation.
+ * @param {string} axis Flavor-axis identifier used to resolve the localized title.
  * @return {*} Result computed from the supplied inputs.
  */
 export const flavorAxisTitle = axis => t(`flavor.axis.${axis}`);
 const radius = 118, cx = 230, cy = 195;
 const step = 2 * Math.PI / FLAVOR_AXES.length;
 /**
- * Derives the angle at result from the supplied values.
+ * Calculates the radar-axis angle in radians, starting at the top of the chart.
  *
  * @param {*} index Zero-based index of the selected entry.
  * @return {number} Calculated numeric value.
@@ -24,7 +24,7 @@ const step = 2 * Math.PI / FLAVOR_AXES.length;
 const angleAt = index => -Math.PI / 2 + index * step;
 
 /**
- * Derives the point result from the supplied values.
+ * Converts an axis index and score into Cartesian radar-chart coordinates.
  *
  * @param {*} index Zero-based index of the selected entry.
  * @param {*} value Value to process.
@@ -46,7 +46,7 @@ const scorePresent = value => Number.isInteger(value) && value >= 0 && value <= 
 /**
  * Locates the DOM elements used by scores from editor.
  *
- * @param {*} section Value used by this operation.
+ * @param {*} section Flavor editor section containing one score control per axis.
  * @return {!Object} Array of values selected for the caller.
  */
 const scoresFromEditor = section => Object.fromEntries(FLAVOR_AXES.map(axis => {
@@ -147,7 +147,7 @@ export function flavorChart(values, {editable = false, colorSection = null,
 /**
  * Parses flavor profile for flavor profile.
  *
- * @param {*} form Form used by this operation.
+ * @param {*} form Form containing the optional flavor editor and its current set/unset state.
  * @return {?Object} Computed value, or null when the input has no match.
  */
 export function readFlavorProfile(form) {
@@ -210,7 +210,7 @@ export function setFlavorFromPointer(event) {
  * Keep the SVG, native sliders and accessibility labels in sync after
  * undo/redo.
  *
- * @param {*} container Container used by this operation.
+ * @param {*} container Flavor editor container whose inputs, score labels and chart are updated.
  * @param {!Array<*>} values Values to aggregate or compare.
  */
 export function displayFlavorProfile(container, values) {

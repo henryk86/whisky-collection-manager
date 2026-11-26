@@ -12,7 +12,7 @@ let inferenceSession;
 /**
  * NCHW float32, RGB in [0,1], ImageNet normalization used by U2Netp.
  *
- * @param {*} imageData Image data used by this operation.
+ * @param {*} imageData RGBA image data at the segmentation model's required input size.
  * @return {!Object} Structured result for the caller.
  */
 export function modelInput(imageData) {
@@ -31,7 +31,7 @@ export function modelInput(imageData) {
 /**
  * U2Netp output d0 is normalized like rembg and interpreted as alpha.
  *
- * @param {*} raw Raw used by this operation.
+ * @param {*} raw Model output containing at least one finite confidence value per mask pixel.
  * @return {!Object} Structured result for the caller.
  */
 export function normalizedMask(raw) {
@@ -78,7 +78,7 @@ async function session() {
 /**
  * Runs bottle segmentation and normalizes the resulting mask.
  *
- * @param {*} imageData Image data used by this operation.
+ * @param {*} imageData RGBA image data at the segmentation model's required input size.
  * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 export async function segment(imageData) {

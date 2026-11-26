@@ -55,7 +55,7 @@ export function listTastings(id) {
  * Retrieves tasting for tastings.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @param {*} tastingId Tasting id used by this operation.
+ * @param {string} tastingId Identifier of the tasting within the selected bottling.
  * @return {*} Value returned by the delegated operation.
  */
 export function getTasting(id, tastingId) {
@@ -89,7 +89,7 @@ export function createTasting(id, input) {
  * Updates tasting for tastings.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @param {*} tastingId Tasting id used by this operation.
+ * @param {string} tastingId Identifier of the tasting to update within the selected bottling.
  * @param {*} input Input to process.
  * @return {!Promise<*>} Promise fulfilled when the operation completes.
  */
@@ -109,7 +109,7 @@ export function updateTasting(id, tastingId, input) {
  * Clears tasting for tastings.
  *
  * @param {string} id Identifier used to select the relevant record.
- * @param {*} tastingId Tasting id used by this operation.
+ * @param {string} tastingId Identifier of the tasting to remove from the selected bottling.
  * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 export function deleteTasting(id, tastingId) {

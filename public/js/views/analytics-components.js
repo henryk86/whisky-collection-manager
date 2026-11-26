@@ -19,7 +19,7 @@ export const number = v => Number.isFinite(v) ? new Intl.NumberFormat(currentLan
  * Builds the localized money text for the current language.
  *
  * @param {*} v Value to evaluate.
- * @param {*} currency Value used by this operation.
+ * @param {*} currency Currency code appended to the formatted monetary amount.
  * @return {*} New instance constructed from the inputs.
  */
 export const money = (v, currency) => {
@@ -76,7 +76,7 @@ const CATEGORY_KEYS = Object.freeze({
 });
 
 /**
- * Derives the category label result from the supplied values.
+ * Resolves the localized analytics category label.
  *
  * @param {*} label Label shown to the user.
  * @return {*} Result computed from the supplied inputs.
@@ -119,7 +119,7 @@ const COUNTRY_KEYS = Object.freeze({
 });
 
 /**
- * Derives the country name result from the supplied values.
+ * Resolves a country name for the current interface language.
  *
  * @param {*} name Environment variable or setting name.
  * @return {*} Result computed from the supplied inputs.
@@ -139,7 +139,7 @@ export const empty = () => emptyState({
  *
  * @param {*} title Title displayed or stored by this operation.
  * @param {*} content Content to render, store or examine.
- * @param {string=} note Value used by this operation.
+ * @param {string=} note Optional explanatory text shown below the panel heading.
  * @param {string=} extra Additional context or configuration.
  * @return {!import('../ui/render-plan.js').RenderPlan} Analytics section with a heading, content and optional explanatory note.
  */
@@ -155,7 +155,7 @@ export function panel(title, content, note = '', extra = '') {
  *
  * @param {*} label Label shown to the user.
  * @param {*} value Value to process.
- * @param {string=} detail Value used by this operation.
+ * @param {string=} detail Optional secondary text providing context for the metric.
  * @return {!import('../ui/render-plan.js').RenderPlan} Analytics metric card with a value and optional detail.
  */
 export function metric(label, value, detail = '') {
@@ -172,7 +172,7 @@ export function metric(label, value, detail = '') {
 /**
  * Prepares grid of metric cards.
  *
- * @param {*} cards Value used by this operation.
+ * @param {*} cards Rendered metric cards to arrange in a grid.
  * @return {!import('../ui/render-plan.js').RenderPlan} Grid of metric cards.
  */
 export function metricGrid(cards) {
@@ -287,7 +287,7 @@ export function composition(rows, {drill = null} = {}) {
 /**
  * Prepares analytics table with column headings and supplied cell content.
  *
- * @param {*} headings Value used by this operation.
+ * @param {*} headings Column headings in display order for the detail rows.
  * @param {*} rows Input records to process.
  * @return {!import('../ui/render-plan.js').RenderPlan} Analytics table with column headings and supplied cell content.
  */
@@ -333,7 +333,7 @@ export function distilleryLink(item) {
  *
  * @param {*} rows Input records to process.
  * @param {string=} field Field definition or input value to handle.
- * @param {string=} currency Value used by this operation.
+ * @param {string=} currency Optional currency code for formatting monetary period values.
  * @return {!import('../ui/render-plan.js').RenderPlan} Chronologically sorted period bars with optional currency formatting.
  */
 function periodRows(rows, field = 'count', currency = '') {

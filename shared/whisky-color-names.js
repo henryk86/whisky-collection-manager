@@ -68,7 +68,7 @@ export const WHISKY_COLOR_REFERENCES = Object.freeze([
  * sRGB -> OKLab. Perceptual distance is much more useful for naming adjacent
  * warm shades than raw RGB or hue distances.
  *
- * @param {*} hex Hex used by this operation.
+ * @param {string} hex Six-digit sRGB color, including the leading hash.
  * @return {!Array<number>} Resulting list of values.
  */
 function oklab(hex) {
@@ -115,7 +115,7 @@ function namingDistance(lab, chroma, reference) {
  * Stable, locale-independent name key. The original HEX is never rounded or
  * changed.
  *
- * @param {*} hex Hex used by this operation.
+ * @param {*} hex Candidate whisky color; invalid colors return null.
  * @return {?string} Translation key of the closest named whisky color, or null for disallowed colors.
  */
 export function whiskyColorNameKey(hex) {

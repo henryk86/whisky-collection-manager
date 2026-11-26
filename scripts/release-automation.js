@@ -42,7 +42,7 @@ const LABELS = {
 /**
  * Classifies a conventional commit by its required release impact.
  *
- * @param {*} subject Subject used by this operation.
+ * @param {string} subject Conventional Commit subject line.
  * @param {string=} body Request or response body.
  * @return {!Object} Structured result for the caller.
  */
@@ -59,7 +59,7 @@ export function classifyCommit(subject, body = '') {
 /**
  * Aggregates commit classifications for the release proposal.
  *
- * @param {*} commits Commits used by this operation.
+ * @param {*} commits Commit records containing subject, body and SHA in the release range.
  * @return {!Object} Structured result for the caller.
  */
 export function analyzeCommits(commits) {
@@ -72,7 +72,7 @@ export function analyzeCommits(commits) {
 /**
  * Parses git log for release automation.
  *
- * @param {*} output Output used by this operation.
+ * @param {string} output NUL-delimited git log output containing SHA, subject and body triples.
  * @return {!Array<!Object>} Resulting list of values.
  */
 export function parseGitLog(output) {
@@ -88,7 +88,7 @@ export function parseGitLog(output) {
 /**
  * Builds release notes from the approved release plan.
  *
- * @param {*} plan Plan used by this operation.
+ * @param {*} plan Release plan with the next tag, previous tag and classified commits.
  * @return {string} Markdown release notes grouped from the planned commit range.
  */
 export function notesForPlan(plan) {
@@ -158,7 +158,7 @@ const hasFileAt = (ref, name) => {
  * A release-snapshot tag has an off-branch commit whose sole parent is the
  * main merge.
  *
- * @param {*} head Head used by this operation.
+ * @param {string} head Git revision against which existing release tags are inspected.
  * @return {*} Entries that meet the selection criteria.
  */
 function knownReleases(head) {
@@ -289,7 +289,7 @@ function parseOption(args, name) {
 /**
  * Validates range against its constraints.
  *
- * @param {*} range Value used by this operation.
+ * @param {string} range Git BASE..HEAD revision range whose commit messages must be valid.
  */
 function validateRange(range) {
   if (!range || !/^[a-zA-Z0-9_./~^{}-]+\.\.[a-zA-Z0-9_./~^{}-]+$/.test(range))

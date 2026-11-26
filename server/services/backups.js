@@ -421,8 +421,8 @@ export function deleteProfile(req, id) {
  * Schedules a backup job using the configured backup profile.
  *
  * @param {!Object} req Incoming HTTP request.
- * @param {*} profileId Profile id used by this operation.
- * @param {*} type Type used by this operation.
+ * @param {string} profileId Identifier of the configured backup profile.
+ * @param {string} type Requested backup job operation; checked against the supported operation list.
  * @param {!Object=} body Request or response body.
  * @return {!Object} Structured result for the caller.
  */
@@ -463,7 +463,7 @@ export function queueJob(req, profileId, type, body = {}) {
  * progress.
  *
  * @param {!Object} req Incoming HTTP request.
- * @param {*} jobId Job id used by this operation.
+ * @param {string} jobId Worker job identifier used to name the staging directory.
  * @return {!Object} Structured result for the caller.
  */
 export function createSourceSnapshot(req, jobId) {
@@ -507,7 +507,7 @@ export function createSourceSnapshot(req, jobId) {
  * path.
  *
  * @param {!Object} req Incoming HTTP request.
- * @param {*} profileId Profile id used by this operation.
+ * @param {string} profileId Identifier of the local ZIP backup profile.
  * @param {string} filename File name used to locate the resource.
  * @return {!Object} Structured result for the caller.
  */

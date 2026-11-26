@@ -39,7 +39,7 @@ function isMatchingBottleType(bottle, volumeType) {
  * One rating range per Glencairn; the newest tasting is the sole source.
  *
  * @param {!Object} bottling Bottling record being processed.
- * @param {string=} filter Filter used by this operation.
+ * @param {string=} filter Rating bucket from one to five, 'unrated', or 'all'.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function matchesOverviewRating(bottling, filter = 'all') {
@@ -206,9 +206,9 @@ function compareEntries(left, right, sort, distilleryNames) {
  * to zero.
  *
  * @param {!Object} bottling Bottling record being processed.
- * @param {!Array<*>=} criteria Criteria used by this operation.
- * @param {boolean=} profileMissing Profile missing used by this operation.
- * @param {boolean=} profilePresent Profile present used by this operation.
+ * @param {!Array<*>=} criteria Flavor-axis ranges to match against the most recent available profile.
+ * @param {boolean=} profileMissing Require the absence of a flavor profile.
+ * @param {boolean=} profilePresent Require an existing flavor profile.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function matchesFlavorCriteria(bottling, criteria = [], profileMissing =

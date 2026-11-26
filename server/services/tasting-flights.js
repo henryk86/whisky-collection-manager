@@ -37,7 +37,7 @@ const normalize = (body, old) => {
 /**
  * Lists saved tasting flights for the requesting user.
  *
- * @return {!Array<!TastingFlight>} Resulting list of values.
+ * @return {import('../../shared/types.js').TastingFlight[]} Resulting list of values.
  */
 export function list() {return read().tastingFlights || [];}
 
@@ -134,7 +134,7 @@ export function remove(id) {
  * Validates available for tasting flights.
  *
  * @param {!Object} collection Collection data being processed.
- * @param {*} flight Flight used by this operation.
+ * @param {*} flight Flight being edited; its existing members may remain assigned to it.
  * @param {!Array<*>} ids Identifiers in their current order.
  */
 function assertAvailable(collection, flight, ids) {

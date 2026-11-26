@@ -9,9 +9,9 @@ import path from 'node:path';
 /**
  * Checks whether approved release merge applies in verify merged pr.
  *
- * @param {*} pr Pr used by this operation.
- * @param {*} sha Sha used by this operation.
- * @param {*} repo Repo used by this operation.
+ * @param {*} pr GitHub pull-request metadata to compare with the approved merge.
+ * @param {string} sha Expected merge commit SHA.
+ * @param {string} repo Expected owner/repository name.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function isApprovedReleaseMerge(pr, sha, repo) {
@@ -24,9 +24,9 @@ export function isApprovedReleaseMerge(pr, sha, repo) {
 /**
  * Validates merged p rs for verify merged pr.
  *
- * @param {*} prs Prs used by this operation.
- * @param {*} sha Sha used by this operation.
- * @param {*} repo Repo used by this operation.
+ * @param {*} prs Pull requests associated with the main-branch commit.
+ * @param {string} sha Expected merge commit SHA.
+ * @param {string} repo Expected owner/repository name.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function verifyMergedPRs(prs, sha, repo) {
@@ -38,9 +38,9 @@ export function verifyMergedPRs(prs, sha, repo) {
 /**
  * Checks whether a merged pull request is the authorized version PR.
  *
- * @param {*} pr Pr used by this operation.
- * @param {*} sha Sha used by this operation.
- * @param {*} repo Repo used by this operation.
+ * @param {*} pr GitHub pull-request metadata for a release-version branch.
+ * @param {string} sha Expected merge commit SHA.
+ * @param {string} repo Expected owner/repository name.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function approvedVersionMerge(pr, sha, repo) {
@@ -54,9 +54,9 @@ export function approvedVersionMerge(pr, sha, repo) {
 /**
  * Validates main merge for verify merged pr.
  *
- * @param {*} prs Prs used by this operation.
- * @param {*} sha Sha used by this operation.
- * @param {*} repo Repo used by this operation.
+ * @param {*} prs Pull requests associated with the main-branch push.
+ * @param {string} sha Expected merge commit SHA.
+ * @param {string} repo Expected owner/repository name.
  * @return {(string)} Whether the requested condition is met.
  */
 export function verifyMainMerge(prs, sha, repo) {

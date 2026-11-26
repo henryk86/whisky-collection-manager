@@ -10,7 +10,7 @@ const renderTemplate = await loadTemplates('components/glencairn-rating.html');
  * Five Glencairn silhouettes with bottom-up gold liquid fill and precise 0-100
  * manual entry.
  *
- * @param {*} rating Rating used by this operation.
+ * @param {*} rating Tasting score on the zero-to-100 scale, or null when not rated.
  * @return {!import('./render-plan.js').RenderPlan} Five-glass rating control and precise numeric score input.
  */
 export function glencairnRating(rating) {

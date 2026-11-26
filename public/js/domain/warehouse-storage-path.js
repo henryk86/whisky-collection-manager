@@ -2,7 +2,7 @@
  * Finds the room and shelf path for a stored bottle.
  *
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {*} shelfId Shelf id used by this operation.
+ * @param {*} shelfId Identifier of the shelf whose room and furniture path is requested.
  * @return {?Object} Computed value, or null when the input has no match.
  */
 export function storagePath(warehouse, shelfId) {

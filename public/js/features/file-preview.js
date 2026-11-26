@@ -51,7 +51,7 @@ export function createFilePreview({modal, state}) {
   /**
    * Controls the file preview state.
    *
-   * @param {*} button Button used by this operation.
+   * @param {*} button Attachment preview control containing bottle ID, file ID and filename.
    */
   async function open(button) {
     close();

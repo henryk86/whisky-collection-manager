@@ -103,7 +103,7 @@ export function bottlingOrigins(bottling, distilleries = []) {
  * Lists the distinct country names associated with a bottling.
  *
  * @param {!Object} bottling Bottling record being processed.
- * @param {*} distilleries Distilleries used by this operation.
+ * @param {*} distilleries Distillery catalog used to resolve the bottling's origin countries.
  * @return {!Array<*>} Resulting list of values.
  */
 export function bottlingCountryNames(bottling, distilleries) {

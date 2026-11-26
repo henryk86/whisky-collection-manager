@@ -420,7 +420,7 @@ export async function addFile(bottleId, input) {
  * Only an attachment referenced by the requested bottle can be downloaded.
  *
  * @param {string} bottleId Identifier of the physical bottle.
- * @param {*} fileId File id used by this operation.
+ * @param {string} fileId Identifier of the attachment belonging to the bottle.
  * @return {!Object} Structured result for the caller.
  */
 export function downloadFile(bottleId, fileId) {
@@ -439,7 +439,7 @@ export function downloadFile(bottleId, fileId) {
  * This avoids framing blob: URLs, which may be denied by a stricter CSP.
  *
  * @param {string} bottleId Identifier of the physical bottle.
- * @param {*} fileId File id used by this operation.
+ * @param {string} fileId Identifier of the attachment to validate as a PDF.
  * @return {!Object} Structured result for the caller.
  */
 export function previewPdf(bottleId, fileId) {
@@ -454,7 +454,7 @@ export function previewPdf(bottleId, fileId) {
  * Clears file for bottles.
  *
  * @param {string} bottleId Identifier of the physical bottle.
- * @param {*} fileId File id used by this operation.
+ * @param {string} fileId Identifier of the attachment to remove from the bottle and storage.
  * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 export async function removeFile(bottleId, fileId) {

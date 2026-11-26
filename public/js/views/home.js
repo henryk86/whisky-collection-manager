@@ -56,7 +56,7 @@ export function createHomeView({
   /**
    * Updates page url in the current state.
    *
-   * @param {boolean=} replace Value used by this operation.
+   * @param {boolean=} replace Replace the current history entry rather than creating a new one.
    */
   function updatePageUrl(replace = false) {
     const url = homePageUrl(state.pageNumber, state.overviewMode);
@@ -92,7 +92,7 @@ export function createHomeView({
   /**
    * Handles click for home.
    *
-   * @param {*} button Button used by this operation.
+   * @param {*} button Collection action control carrying its data-act and record identifiers.
    */
   function handleClick(button) {
     if (state.page !== 'home') return;

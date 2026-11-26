@@ -24,7 +24,7 @@ export const HELP_GUIDES = Object.freeze({
 /**
  * Prepares technical guides for the selected help topic.
  *
- * @param {*} topic Topic used by this operation.
+ * @param {*} topic Help topic identifier used to select the relevant guide content.
  * @return {import('../ui/render-plan.js').RenderPlan|string} Technical guides for the selected help topic (or scalar/empty text when no plan is needed).
  */
 export function helpGuides(topic) {

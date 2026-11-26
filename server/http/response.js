@@ -4,8 +4,8 @@
  * @param {!Object} res Outgoing HTTP response.
  * @param {*} status HTTP or entity status used for validation.
  * @param {!Object} data Input data for the operation.
- * @param {string=} type Type used by this operation.
- * @param {!Object=} extraHeaders Extra headers used by this operation.
+ * @param {string=} type Response media type; determines whether the body is JSON-encoded.
+ * @param {!Object=} extraHeaders Additional response headers, merged with the defaults.
  */
 export function send(
   res,

@@ -2,7 +2,7 @@ import {queryAll} from '../../ui/dom.js';
 /**
  * Reads and normalizes current form-control values for saving.
  *
- * @param {*} form Form used by this operation.
+ * @param {HTMLFormElement} form Editor form whose controls are converted to an API payload.
  * @return {!Object} Structured result for the caller.
  */
 export function formValues(form) {

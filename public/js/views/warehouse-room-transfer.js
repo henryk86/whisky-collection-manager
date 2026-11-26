@@ -17,9 +17,9 @@ const FORM_IMPORT = 'warehouse-room-import-form';
 /**
  * Renders the warehouse-room transfer interface.
  *
- * @param {*} rooms Rooms used by this operation.
- * @param {*} selectedRoomId Selected room id used by this operation.
- * @param {string=} initialMode Initial mode used by this operation.
+ * @param {*} rooms Warehouse rooms offered for export.
+ * @param {*} selectedRoomId Identifier of the initially selected room for export.
+ * @param {string=} initialMode Requested initial tab, export or import; falls back to import if there are no rooms.
  * @return {!import('../ui/render-plan.js').RenderPlan} Room import and export dialog with the appropriate initial tab.
  */
 export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
@@ -79,7 +79,7 @@ export function createWarehouseRoomTransfer({modal, request, getWarehouse,
   /**
    * Controls transfer for warehouse room transfer.
    *
-   * @param {*} selectedRoomId Selected room id used by this operation.
+   * @param {*} selectedRoomId Identifier of the room initially selected in the transfer dialog.
    */
   function openTransfer(selectedRoomId) {
     const rooms = getWarehouse()?.rooms || [];

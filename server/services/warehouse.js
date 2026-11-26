@@ -173,7 +173,7 @@ export const deleteRoom = async (id, {unassignBottles = false} = {}) => {
 /**
  * Creates furniture for warehouse.
  *
- * @param {*} roomId Room id used by this operation.
+ * @param {string} roomId Identifier of the room receiving the new furniture.
  * @param {*} input Input to process.
  * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
@@ -378,7 +378,7 @@ export async function deleteFurniturePhoto(id, photoId) {
 /**
  * Creates shelf for warehouse.
  *
- * @param {*} furnitureId Furniture id used by this operation.
+ * @param {string} furnitureId Identifier of the furniture receiving the new shelf.
  * @param {*} input Input to process.
  * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
@@ -467,8 +467,8 @@ export const moveShelf = (id, input) => changeWarehouse(data => {
  * Copies are new locations, never new assignments to existing physical
  * bottles.
  *
- * @param {*} source Source used by this operation.
- * @param {*} siblings Siblings used by this operation.
+ * @param {string} source Original name before adding a copy suffix.
+ * @param {*} siblings Sibling items whose names must not collide with the copy.
  * @return {string} First noncolliding copy name, keeping the 100-character name limit.
  */
 function copiedName(source, siblings) {
@@ -503,7 +503,7 @@ function ensureNoFurnitureCollision(room, item, others = room.furniture) {
  * hand.
  *
  * @param {*} room Room model containing dimensions and furniture.
- * @param {*} template Template used by this operation.
+ * @param {*} template Furniture to copy, including dimensions, orientation and original position.
  * @return {!Object} Structured result for the caller.
  */
 function copyPosition(room, template) {
@@ -605,11 +605,11 @@ export const copyShelf = (id, input = {}) => changeWarehouse(data => {
  * no-storage designation and can never be overridden by this operation.
  *
  * @param {!Object} data Input data for the operation.
- * @param {*} shelf Shelf used by this operation.
- * @param {*} shelfId Shelf id used by this operation.
- * @param {*} selectedIds Selected ids used by this operation.
- * @param {*} known Known used by this operation.
- * @param {*} increaseCapacityTo Increase capacity to used by this operation.
+ * @param {*} shelf Destination shelf with its current capacity.
+ * @param {string} shelfId Identifier of the destination shelf.
+ * @param {string[]} selectedIds Bottle identifiers included in this assignment.
+ * @param {Set<string>} known Identifiers of bottles that still exist in the collection.
+ * @param {*} increaseCapacityTo Requested new capacity, when the caller permits a capacity increase.
  */
 function enforceAssignmentCapacity(data, shelf, shelfId, selectedIds, known,
   increaseCapacityTo) {

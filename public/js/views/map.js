@@ -30,8 +30,8 @@ const readAllSitesPreference = () => {
  * Produces the plural text used by the caller.
  *
  * @param {*} count Number of requested or available entries.
- * @param {*} one Value used by this operation.
- * @param {*} many Value used by this operation.
+ * @param {*} one Localized singular noun used when the count is one.
+ * @param {*} many Localized plural noun used for all other counts.
  * @return {string} Number followed by the singular label for one, otherwise the plural label.
  */
 const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
@@ -57,7 +57,7 @@ export function mapLegendHtml(showAllDistilleries = false) {
    * Prepares legend marker demonstrating the size for a bottle count.
    *
    * @param {*} count Number of requested or available entries.
-   * @param {string=} extraClass Value used by this operation.
+   * @param {string=} extraClass Optional CSS class for the map stock-legend example.
    * @return {!import('../ui/render-plan.js').RenderPlan} Legend marker demonstrating the size for a bottle count.
    */
   const stockExample = (count, extraClass = '') =>
@@ -232,10 +232,10 @@ export function createMapView({state, shell, navigate, settings}) {
   }
 
   /**
-   * Derives the select result from the supplied values.
+   * Selects a distillery and refreshes the map detail and selection indicators.
    *
    * @param {*} id Identifier of the affected record.
-   * @param {boolean=} focusMap Value used by this operation.
+   * @param {boolean=} focusMap Whether to center the live map on the selected distillery.
    */
   function select(id, focusMap = false) {
     if (!sites.some(site => site.id === id)) return;
@@ -387,7 +387,7 @@ export function createMapView({state, shell, navigate, settings}) {
   }
 
   /**
-   * Derives the center on updated location result from the supplied values.
+   * Recenters the live map after a selected distillery's coordinates are updated.
    *
    * @param {*} id Identifier of the affected record.
    */

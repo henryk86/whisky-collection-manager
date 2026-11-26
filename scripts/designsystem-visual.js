@@ -232,10 +232,10 @@ async function boot() {
 /**
  * Renders the designsystem visual state.
  *
- * @param {*} route Route used by this operation.
- * @param {Function} selector Selector used by this operation.
+ * @param {string} route Application route to open for the visual scenario.
+ * @param {Function} selector Callback identifying the rendered region that must be ready before capture.
  * @param {Function} action Mutation or UI action callback.
- * @param {*} scenarioName Scenario name used by this operation.
+ * @param {string} scenarioName Name used to identify the visual scenario in diagnostics.
  */
 async function render(route, selector, action, scenarioName) {
   // The project DOM-only browser harness uses the same intercepted HTTP assets.

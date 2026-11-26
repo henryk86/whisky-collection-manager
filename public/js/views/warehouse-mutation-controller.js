@@ -19,7 +19,7 @@ export function createWarehouseMutationController({w, modal, selectedFurniture, 
    * language.
    *
    * @param {*} ids Identifiers in their current order.
-   * @param {*} shelfId Value used by this operation.
+   * @param {*} shelfId Identifier of the destination shelf whose capacity may need to increase.
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   const approveCapacityIncrease = (ids, shelfId) =>
@@ -154,8 +154,8 @@ export function createWarehouseMutationController({w, modal, selectedFurniture, 
   /**
    * Serializes relocate bottle data to JSON.
    *
-   * @param {*} bottleId Value used by this operation.
-   * @param {*} shelfId Value used by this operation.
+   * @param {string} bottleId Identifier of the physical bottle to move.
+   * @param {*} shelfId Identifier of the destination shelf, or an empty value to remove the assignment.
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   async function relocateBottle(bottleId, shelfId) {

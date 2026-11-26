@@ -16,7 +16,7 @@ const keyFor = node => node.nodeType === 1
   : null;
 
 /**
- * Derives the compatible result from the supplied values.
+ * Checks node type, element tag and reconciliation key before reusing an existing node.
  *
  * @param {*} a First entry or operand in the calculation.
  * @param {*} b Second entry or operand in the calculation.
@@ -29,7 +29,7 @@ function compatible(a, b) {
 /**
  * Installs event listeners for reconcile node interactions.
  *
- * @param {*} current Value used by this operation.
+ * @param {*} current Existing DOM node to update in place or replace for an imperative widget.
  * @param {*} next Next candidate state or entry.
  */
 function reconcileNode(current, next) {
@@ -73,7 +73,7 @@ function reconcileNode(current, next) {
  * Reorder keyed items by stable IDs, and patch unkeyed nodes by position.
  *
  * @param {*} current Current resource data to update.
- * @param {*} next Next used by this operation.
+ * @param {*} next Desired DOM container whose children define the target order and content.
  */
 export function reconcileChildren(current, next) {
   const desired = [...next.childNodes];

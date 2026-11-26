@@ -33,7 +33,7 @@ export function matchingBottlings(collection, value = '') {
  * Builds selectable bottling choices from the current collection.
  *
  * @param {!Object} collection Collection data being processed.
- * @param {string=} search Search used by this operation.
+ * @param {string=} search Search text used to narrow the selectable bottlings.
  * @return {import('../../ui/render-plan.js').RenderPlan|string} Filtered bottling options with a placeholder reflecting whether matches exist (or scalar/empty text when no plan is needed).
  */
 export function bottlingChoiceOptions(collection, search = '') {

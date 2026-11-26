@@ -22,7 +22,7 @@ export function createWhiskybase({state, ...dependencies}) {
      * Selects existing bottling matching the input.
      *
      * @param {*} collection Collection data to process.
-     * @param {*} incoming Value used by this operation.
+     * @param {*} incoming Imported Whiskybase metadata used to find a matching existing bottling.
      * @return {*} Result computed from the supplied inputs.
      */
     findExistingBottling: (collection, incoming) => collection.bottlings.find(bottling => bottling.whiskybaseId === incoming.fields.whiskybaseId),

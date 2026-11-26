@@ -46,7 +46,7 @@ function pathFor(id) {
 /**
  * Validates preview for backup recovery.
  *
- * @param {*} dir Dir used by this operation.
+ * @param {string} dir Directory containing the extracted collection and associated files.
  * @param {!Object=} options2 Destructured options for this operation.
  * @return {!Object} Structured result for the caller.
  */

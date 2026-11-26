@@ -14,11 +14,11 @@ const MAX_AUTO_ROTATION = 20 * Math.PI / 180;
 /**
  * Validates mask against its constraints.
  *
- * @param {*} mask Value used by this operation.
- * @param {*} maskWidth Value used by this operation.
- * @param {*} maskHeight Value used by this operation.
- * @param {*} sourceWidth Value used by this operation.
- * @param {*} sourceHeight Value used by this operation.
+ * @param {*} mask Segmentation mask with one sample per model pixel.
+ * @param {number} maskWidth Mask width in pixels.
+ * @param {number} maskHeight Mask height in pixels.
+ * @param {number} sourceWidth Original image width in pixels.
+ * @param {number} sourceHeight Original image height in pixels.
  */
 function validateMask(mask, maskWidth, maskHeight, sourceWidth, sourceHeight) {
   if (!mask || mask.length !== maskWidth * maskHeight || !Number.isInteger(maskWidth) || !Number.isInteger(maskHeight)
@@ -243,8 +243,8 @@ export function bottleCropRect(mask, maskWidth, maskHeight, sourceWidth,
 /**
  * Output dimensions preserve an exact 2:3 ratio (without needless upscaling).
  *
- * @param {*} crop Crop used by this operation.
- * @param {number} maxSide Max side used by this operation.
+ * @param {*} crop Crop rectangle expressed in source-image pixels.
+ * @param {number} maxSide Maximum output side length in pixels.
  * @return {!Object} Structured result for the caller.
  */
 export function cutoutOutputSize(crop, maxSide) {
@@ -257,7 +257,7 @@ export function cutoutOutputSize(crop, maxSide) {
  * Visible vertical bounds of a rasterized alpha mask; both endpoints are
  * inclusive.
  *
- * @param {*} rgba Rgba used by this operation.
+ * @param {*} rgba Row-major RGBA pixels containing the alpha channel to inspect.
  * @param {number} width Width in pixels.
  * @param {number} height Height in pixels.
  * @param {number=} minAlpha Minimum alpha value considered visible.
@@ -282,10 +282,10 @@ export function visibleAlphaRows(rgba, width, height, minAlpha = FEATHER_ALPHA
  * Reframe a rendered mask, never clip its sides simply to remove a vertical
  * margin.
  *
- * @param {*} crop Crop used by this operation.
+ * @param {*} crop Original crop rectangle in source coordinates.
  * @param {number} size Size of the input or target.
- * @param {boolean} visible Visible used by this operation.
- * @param {*} objectWidth Object width used by this operation.
+ * @param {?{top: number, bottom: number}} visible First and last visible output rows, or null for an empty mask.
+ * @param {number} objectWidth Width of the segmented object in source pixels.
  * @return {*} Structured result assembled from the input data.
  */
 export function tightenedCrop(crop, size, visible, objectWidth) {

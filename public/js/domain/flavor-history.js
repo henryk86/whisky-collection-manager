@@ -11,8 +11,8 @@ export const cloneFlavor = value => value == null ? null : Object.fromEntries(FL
 /**
  * Compares flavour profiles for equivalent values.
  *
- * @param {*} left Left used by this operation.
- * @param {*} right Right used by this operation.
+ * @param {*} left First flavor profile, or null when absent.
+ * @param {*} right Second flavor profile, or null when absent.
  * @return {boolean} Whether the condition is satisfied.
  */
 export const sameFlavor = (left, right) => left === null || right === null ? left === right : FLAVOR_AXES.every(axis => left[axis] === right[axis]);
@@ -20,7 +20,7 @@ export const sameFlavor = (left, right) => left === null || right === null ? lef
 /**
  * A single-page undo/redo stack; redo is discarded when a new edit is made.
  *
- * @param {*} initial Initial used by this operation.
+ * @param {*} initial Starting flavor profile or null; cloned into the undo history.
  * @return {!Object} Structured result for the caller.
  */
 export function createFlavorHistory(initial) {

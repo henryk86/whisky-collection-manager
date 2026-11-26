@@ -3,19 +3,23 @@ import {t} from '../../i18n/index.js';
 export const MASK_BRUSH_MODES = Object.freeze(['erase', 'restore']);
 export const DEFAULT_MASK_BRUSH_SIZE = 4;
 
+/** @typedef {{x: number, y: number}} MaskPoint */
+/** @typedef {{points: MaskPoint[], size: number, mode: 'erase'|'restore'}} MaskStroke */
+/** @typedef {{data: Uint8ClampedArray, width: number, height: number}} MaskImageData */
+
 /**
  * A stroke position/radius is relative to the smaller image side, not the
  * screen zoom.
  *
- * @param {*} current Current resource data to update.
- * @param {*} reference Reference used by this operation.
+ * @param {Uint8ClampedArray} current Mutable RGBA pixels to update.
+ * @param {Uint8ClampedArray} reference Original RGBA pixels used to restore erased mask areas.
  * @param {number} width Width in pixels.
  * @param {number} height Height in pixels.
- * @param {*} from From used by this operation.
- * @param {*} to To used by this operation.
- * @param {*} sizePercent Size percent used by this operation.
- * @param {*} mode Requested display mode or configuration variant.
- * @return {*} Whether the requested condition is met.
+ * @param {MaskPoint} from Normalized starting brush point within the image.
+ * @param {MaskPoint} to Normalized ending brush point within the image.
+ * @param {number} sizePercent Brush diameter as a percentage of the smaller image side.
+ * @param {'erase'|'restore'} mode Whether to reduce or restore the original alpha.
+ * @return {Uint8ClampedArray} The same pixel buffer, with only its alpha channel modified.
  */
 export function paintMaskSegment(current, reference, width, height, from, to,
   sizePercent, mode) {
@@ -49,9 +53,9 @@ export function paintMaskSegment(current, reference, width, height, from, to,
  * Rebuild at any resolution. A restore stroke cannot resurrect pixels removed
  * by the AI mask.
  *
- * @param {*} imageData Image data used by this operation.
- * @param {*} strokes Strokes used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {MaskImageData} imageData Source RGBA image data, copied before applying the strokes.
+ * @param {MaskStroke[]} strokes Ordered brush strokes with normalized points, size and paint mode.
+ * @return {MaskImageData} New RGBA data at the original pixel dimensions.
  */
 export function applyMaskStrokes(imageData, strokes) {
   const output = new Uint8ClampedArray(imageData.data);

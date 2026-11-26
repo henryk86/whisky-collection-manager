@@ -16,7 +16,7 @@ const renderTemplate = await loadTemplates('warehouse/warehouse-assignment.html'
  * Resolves the current shelf location of a physical bottle.
  *
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {*} shelfId Shelf id used by this operation.
+ * @param {*} shelfId Identifier of the assigned shelf to resolve into a room and furniture path.
  * @return {?Object} Value returned by the delegated operation.
  */
 export function assignmentLocation(warehouse, shelfId) {
@@ -28,8 +28,8 @@ export function assignmentLocation(warehouse, shelfId) {
  * Live bottles only: stale assignment references must not consume space.
  *
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {*} shelf Shelf used by this operation.
- * @param {*} bottleIds Bottle ids used by this operation.
+ * @param {*} shelf Destination shelf whose configured capacity is checked.
+ * @param {*} bottleIds Identifiers of physical bottles to assign to that shelf.
  * @return {?Object} Computed value, or null when the input has no match.
  */
 export function shelfCapacityIncrease(warehouse, shelf, bottleIds) {
@@ -51,7 +51,7 @@ export function shelfCapacityIncrease(warehouse, shelf, bottleIds) {
  * Looks up the destination shelf's capacity and location details.
  *
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {*} shelf Shelf used by this operation.
+ * @param {*} shelf Shelf whose assignment count and capacity are displayed.
  * @param {string} bottleId Identifier of the physical bottle.
  * @return {!Object} Structured result for the caller.
  */
@@ -71,9 +71,9 @@ export function assignmentShelfInfo(warehouse, shelf, bottleId) {
  * capacity beyond the number explicitly accepted by the user.
  *
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {*} shelfId Shelf id used by this operation.
- * @param {*} bottleIds Bottle ids used by this operation.
- * @param {*} confirmAction Confirm action used by this operation.
+ * @param {*} shelfId Identifier of the destination shelf.
+ * @param {*} bottleIds Bottle identifiers included in the proposed assignment.
+ * @param {*} confirmAction Confirmation callback used when the requested assignment needs more capacity.
  * @return {!Promise<?Object>} Promise fulfilled when the operation completes.
  */
 export async function approveShelfCapacityIncrease(warehouse, shelfId,
@@ -108,7 +108,7 @@ function option(value, label, {selected = false, disabled = false} = {}) {
 /**
  * Prepares room choices beginning with the unselected placeholder.
  *
- * @param {*} warehouse Value used by this operation.
+ * @param {*} warehouse Warehouse containing the rooms offered in the assignment selector.
  * @param {*} selected Currently selected item or identifier.
  * @return {import('./render-plan.js').RenderPlan|string} Room choices beginning with the unselected placeholder (or scalar/empty text when no plan is needed).
  */
@@ -136,9 +136,9 @@ function furnitureOptions(room, selected) {
 /**
  * Prepares shelf choices including availability and capacity restrictions.
  *
- * @param {*} warehouse Value used by this operation.
+ * @param {*} warehouse Warehouse containing rooms, furniture, shelves and assignments.
  * @param {*} furniture Warehouse furniture record being modified.
- * @param {*} bottleId Value used by this operation.
+ * @param {*} bottleId Identifier of the bottle whose existing assignment is considered.
  * @param {*} selected Currently selected item or identifier.
  * @return {import('./render-plan.js').RenderPlan|string} Shelf choices including availability and capacity restrictions (or scalar/empty text when no plan is needed).
  */
@@ -158,9 +158,9 @@ function shelfOptions(warehouse, furniture, bottleId, selected) {
 /**
  * Builds the localized occupancy message text for the current language.
  *
- * @param {*} warehouse Value used by this operation.
- * @param {*} shelfId Value used by this operation.
- * @param {*} bottleId Value used by this operation.
+ * @param {*} warehouse Warehouse containing current shelf assignments.
+ * @param {*} shelfId Identifier of the selected destination shelf.
+ * @param {*} bottleId Identifier of the bottle being reassigned.
  * @return {*} Value returned by the delegated operation.
  */
 function occupancyMessage(warehouse, shelfId, bottleId) {
@@ -224,7 +224,7 @@ export function renderWarehouseAssignment(warehouse, bottle) {
  * Mount only on the assignment dialog; unrelated warehouse forms are
  * untouched.
  *
- * @param {*} form Form used by this operation.
+ * @param {*} form Assignment form containing the cascading room, furniture and shelf selectors.
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {string} bottleId Identifier of the physical bottle.
  */
@@ -237,13 +237,13 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
   const choices = form.querySelector('.warehouse-assignment-selectors');
   if (!room || !furniture || !shelf || !feedback || !choices) return;
   /**
-   * Derives the selected room result from the supplied values.
+   * Resolves the selected room from the current room control.
    * @return {*} Result computed from the supplied inputs.
    */
   const selectedRoom = () => (warehouse.rooms || []).find(entry => entry.id === room.value);
 
   /**
-   * Derives the selected furniture result from the supplied values.
+   * Resolves the selected furniture from the current room and furniture controls.
    * @return {*} Result computed from the supplied inputs.
    */
   const selectedFurniture = () => selectedRoom()?.furniture.find(entry => entry.id === furniture.value);
@@ -301,7 +301,7 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
  * Builds a single-bottle shelf assignment request.
  *
  * @param {*} mode Requested display mode or configuration variant.
- * @param {*} shelfId Shelf id used by this operation.
+ * @param {*} shelfId Selected destination shelf identifier, or an empty value when unassigning.
  * @param {!Object} warehouse Warehouse model being processed.
  * @return {!Object} Structured result for the caller.
  */
@@ -318,7 +318,7 @@ export function assignmentPayload(mode, shelfId, warehouse) {
  *
  * @param {!Array<*>} ids Identifiers in their current order.
  * @param {*} mode Requested display mode or configuration variant.
- * @param {*} shelfId Shelf id used by this operation.
+ * @param {*} shelfId Selected destination shelf identifier, or an empty value when unassigning.
  * @param {!Object} warehouse Warehouse model being processed.
  * @return {!Object} Structured result for the caller.
  */

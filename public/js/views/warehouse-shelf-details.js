@@ -20,8 +20,8 @@ const STATUS_KEYS = {
  * intentionally do not duplicate bottling data in their storage schema.
  *
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {*} shelfId Shelf id used by this operation.
- * @param {!Array<*>=} bottlings Bottlings used by this operation.
+ * @param {*} shelfId Identifier of the shelf whose contents are being inspected.
+ * @param {!Array<*>=} bottlings Bottling catalog used to enrich the physical bottle details.
  * @return {?Object} Computed value, or null when the input has no match.
  */
 export function shelfContents(warehouse, shelfId, bottlings = []) {

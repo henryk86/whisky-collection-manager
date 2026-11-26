@@ -22,8 +22,8 @@ export const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024;
  * Checks whether document path applies in documents.
  *
  * @param {*} value Input value to process.
- * @param {string} bottleId Identifier of the physical bottle.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {string=} bottleId Optional physical-bottle identifier to restrict the path.
+ * @return {boolean} True for an allowed document path and matching owner.
  */
 export function isDocumentPath(value, bottleId) {
   if (typeof value !== 'string' || !/^documents\/[\w-]+\/[a-f0-9-]{36}\.[a-z0-9]+$/i.test(value)) {
@@ -38,9 +38,9 @@ export function isDocumentPath(value, bottleId) {
 /**
  * Checks whether valid content applies in documents.
  *
- * @param {*} extension Extension used by this operation.
- * @param {*} bytes Bytes used by this operation.
- * @return {*} Whether the required condition is satisfied.
+ * @param {string} extension Lowercase attachment extension without the leading dot.
+ * @param {Buffer} bytes Attachment bytes to inspect for the expected file signature.
+ * @return {boolean} Whether the bytes match the declared allowed document type.
  */
 function isValidContent(extension, bytes) {
   if (extension === 'pdf') return bytes.subarray(0, 5).toString('ascii') === '%PDF-';
@@ -160,7 +160,7 @@ export function readDocument(relativePath) {
 /**
  * Clears document for documents.
  *
- * @param {*} relativePath Relative path used by this operation.
+ * @param {string} relativePath Stored document path relative to the application data root.
  */
 export function deleteDocument(relativePath) {
   const file = fileLocation(relativePath);

@@ -49,10 +49,10 @@ export function createWarehouseBottleSelection({state, w, attachBottlePhotos, op
   }
 
   /**
-   * Derives the toggle bottle selection result from the supplied values.
+   * Updates the selected-bottle set and refreshes selection controls.
    *
    * @param {*} id Identifier of the affected record.
-   * @param {*} checked Value used by this operation.
+   * @param {boolean} checked Whether the physical bottle should be selected.
    */
   function toggleBottleSelection(id, checked) {
     if (!w()?.bottles?.some(bottle => bottle.id === id)) return;
@@ -99,7 +99,7 @@ export function createWarehouseBottleSelection({state, w, attachBottlePhotos, op
   /**
    * Calculates the step unassigned wall page numeric value.
    *
-   * @param {*} delta Value used by this operation.
+   * @param {number} delta Signed number of pages to move in the unassigned bottle tray.
    */
   function stepUnassignedWallPage(delta) {
     const data = unassignedWallPage(w(), {query: unassignedWallQuery, page: unassignedWallPageNumber});
@@ -117,7 +117,7 @@ export function createWarehouseBottleSelection({state, w, attachBottlePhotos, op
   }
 
   /**
-   * Derives the preview selected bottle result from the supplied values.
+   * Opens the inspection view for the currently selected bottle when available.
    */
   function previewSelectedBottle() {
     if (selectedBottleIds().length !== 1) return;

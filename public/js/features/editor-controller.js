@@ -49,7 +49,7 @@ export function createEditors({
   /**
    * Selects existing bottlings matching the input.
    *
-   * @param {*} term Value used by this operation.
+   * @param {string} term Search text for filtering existing bottlings in the selector.
    */
   function filterExistingBottlings(term) {
     const select = query('#bottling-choice-select');
@@ -101,7 +101,7 @@ export function createEditors({
   /**
    * Builds the localized new bottle text for the current language.
    *
-   * @param {boolean=} fromImport Value used by this operation.
+   * @param {boolean=} fromImport Whether the new-bottle editor follows an import operation.
    */
   function newBottle(fromImport = false) {
     const bottling = state.collection.bottlings.find(item => item.id === state.selected);
@@ -128,7 +128,7 @@ export function createEditors({
   /**
    * Handles form for editor controller.
    *
-   * @param {*} ev Ev used by this operation.
+   * @param {*} ev Submit event whose target is the bottling or physical-bottle form.
    * @return {!Promise<void>} Promise fulfilled when the operation completes.
    */
   async function handleForm(ev) {
@@ -157,7 +157,7 @@ export function createEditors({
   /**
    * Performs the submit form lifecycle action.
    *
-   * @param {*} ev Value used by this operation.
+   * @param {*} ev Submit event from the validated editor form.
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   async function submitForm(ev) {

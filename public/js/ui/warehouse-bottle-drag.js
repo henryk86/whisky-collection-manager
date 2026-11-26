@@ -6,7 +6,7 @@
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {string} bottleId Identifier of the physical bottle.
- * @param {*} targetShelfId Target shelf id used by this operation.
+ * @param {*} targetShelfId Identifier of the shelf under the proposed drop.
  * @return {(string)} Entries that meet the selection criteria.
  */
 export function shelfDropStatus(warehouse, bottleId, targetShelfId) {
@@ -30,7 +30,7 @@ export function shelfDropStatus(warehouse, bottleId, targetShelfId) {
 /**
  * Registers the drag interaction for placing bottles in warehouse shelves.
  *
- * @param {*} panel Panel used by this operation.
+ * @param {*} panel Warehouse panel receiving the bottle drag-and-drop handlers.
  * @param {!Object=} options2 Destructured options for this operation.
  * @return {!Object} Structured result for the caller.
  */
@@ -74,7 +74,7 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
   }
 
   /**
-   * Derives the destination at result from the supplied values.
+   * Finds the eligible shelf drop target under the viewport pointer coordinates.
    *
    * @param {*} x Horizontal coordinate.
    * @param {*} y Vertical coordinate.
@@ -121,7 +121,7 @@ export function mountWarehouseBottleDrag(panel, {getWarehouse, onDrop,
     scrollDirection = directionX;
     if (!directionX) return;
     /**
-     * Derives the tick result from the supplied values.
+     * Advances drag autoscrolling while the pointer remains near a scroll boundary.
      */
     const tick = () => {
       if (!active?.moved) return;

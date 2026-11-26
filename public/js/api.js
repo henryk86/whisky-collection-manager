@@ -124,7 +124,7 @@ export function takeMutationUpdates() {
  * mutation. Normal refreshes still revalidate with HTTP on the next request.
  *
  * @param {string} kind Resource kind selecting the relevant schema.
- * @param {*} applied Applied used by this operation.
+ * @param {*} applied Set of resource kinds whose mutation updates have already been applied.
  * @return {*} Result computed from the supplied inputs.
  */
 export function takeUpdatedResource(kind, applied) {

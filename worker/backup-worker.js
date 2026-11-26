@@ -174,8 +174,8 @@ function jobEnv() {
 /**
  * Executes a backup command and captures its result.
  *
- * @param {*} binary Binary used by this operation.
- * @param {*} args Args used by this operation.
+ * @param {string} binary Executable to launch without a shell.
+ * @param {string[]} args Individual command-line arguments.
  * @param {!Object=} options3 Destructured options for this operation.
  * @return {!Promise<*>} Promise fulfilled when the operation completes.
  */
@@ -312,8 +312,8 @@ function weekBucket(time) {
 /**
  * Retrieves zip retention for backup worker.
  *
- * @param {!Array<*>} items Items used by this operation.
- * @param {*} retention Retention used by this operation.
+ * @param {!Array<*>} items Archives ordered newest first, each with an id and ISO timestamp.
+ * @param {*} retention Daily, weekly and monthly retention limits.
  * @return {!Object} Structured result for the caller.
  */
 export function selectZipRetention(items, retention) {
@@ -337,7 +337,7 @@ export function selectZipRetention(items, retention) {
 /**
  * Filters records according to the zip prune selection rules.
  *
- * @param {*} profile Value used by this operation.
+ * @param {*} profile Backup profile specifying the storage provider and retention limits.
  * @param {*} repo Repository used for the check.
  * @param {*} items Entries to process.
  * @return {!Promise<*>} Promise for the asynchronous operation.
@@ -355,8 +355,8 @@ async function zipPrune(profile, repo, items) {
 /**
  * Validates the run zip backup state and rejects invalid inputs.
  *
- * @param {*} job Value used by this operation.
- * @param {*} profile Value used by this operation.
+ * @param {*} job Queued backup job and its snapshot identifier.
+ * @param {*} profile Backup profile specifying destination provider and retention.
  * @param {*} repo Repository used for the check.
  * @param {*} status Status value determining the next action.
  * @return {!Promise<*>} Promise for the asynchronous operation.
@@ -396,8 +396,8 @@ async function runZipBackup(job, profile, repo, status) {
  * Legacy Restic is read-only: convert an old snapshot into the same ZIP format
  * for preview/apply.
  *
- * @param {*} job Job used by this operation.
- * @param {*} repo Repo used by this operation.
+ * @param {*} job Restore job containing the requested restic snapshot identifier.
+ * @param {string} repo Restic repository path or remote location.
  * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 async function prepareLegacyRestore(job, repo) {
@@ -426,9 +426,9 @@ async function prepareLegacyRestore(job, repo) {
  * Prepare a selected saved ZIP for the same preview/confirmation used by
  * browser uploads.
  *
- * @param {*} job Job used by this operation.
+ * @param {*} job Restore job containing the requested ZIP snapshot identifier.
  * @param {*} profile Profile data used for the comparison.
- * @param {*} repo Repo used by this operation.
+ * @param {string} repo Local directory or remote ZIP repository location.
  * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 async function prepareZipRestore(job, profile, repo) {
@@ -522,7 +522,7 @@ function backupPassword() {
 /**
  * Executes a queued backup job and records its completion state.
  *
- * @param {*} job Job used by this operation.
+ * @param {*} job Queued job with its operation type and snapshot selection.
  * @param {*} profile Profile data used for the comparison.
  * @param {*} status HTTP or entity status used for validation.
  * @return {!Promise<(!Object)>} Promise fulfilled when the operation

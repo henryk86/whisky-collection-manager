@@ -8,7 +8,7 @@ const renderTemplate = await loadTemplates('components/section-navigation.html')
  * Shared desktop sidebar and mobile selector for multi-section content pages.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @param {*} content Content used by this operation.
+ * @param {*} content Render content of the active workspace section.
  * @return {!import('./render-plan.js').RenderPlan} Section workspace with desktop navigation and a mobile selector.
  */
 export function sectionWorkspace(

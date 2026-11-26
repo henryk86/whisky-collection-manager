@@ -3,7 +3,7 @@
  * navigation is redrawn. Adjust only the tab strip scroll position; leave the
  * document's vertical scroll unchanged.
  *
- * @param {*} nav Nav used by this operation.
+ * @param {*} nav Tab navigation container whose active tab should be scrolled into view.
  */
 export function revealActiveTab(nav) {
   const active = nav?.querySelector?.('.analytics-tab.active');

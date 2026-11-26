@@ -1,5 +1,13 @@
 import {FLAVOR_AXES} from './flavor-profile.js';
 
+/** @typedef {{axis: string, min: number, max: number}} FlavorCriterion */
+/**
+ * Collection filter and display state stored by a saved view.
+ * @typedef {Object} SavedViewConfig
+ * @property {{search: string, status: string, completion: string, distillery: string, rating: string, volumeType: string, flavorCriteria: FlavorCriterion[], profileMissing: boolean, profilePresent?: boolean}} filters
+ * @property {{sort: string, view: 'cards'|'table', mode: 'bottlings'|'bottles', columns: {bottlings: string[], bottles: string[]}}} display
+ */
+/** @typedef {SavedViewConfig & {id: string, name: string}} SavedView */
 export const VIEW_LIMIT = 40;
 export const FLAVOR_CRITERIA_LIMIT = FLAVOR_AXES.length;
 export const VIEW_FILTER_KEYS = Object.freeze([
@@ -16,10 +24,10 @@ export const VIEW_FILTER_KEYS = Object.freeze([
 export const VIEW_DISPLAY_KEYS = Object.freeze(['sort', 'view', 'mode', 'columns']);
 
 /**
- * Normalizes flavor criteria for collection saved views.
+ * Validates unique sensory axes and their inclusive score ranges.
  *
- * @param {!Array<*>=} criteria Criteria used by this operation.
- * @return {!Array<!Object>} Resulting list of values.
+ * @param {!Array<*>=} criteria Submitted axis ranges, with unique axes and integer bounds between zero and ten.
+ * @return {FlavorCriterion[]} Validated criteria in their original order.
  */
 export function normalizeFlavorCriteria(criteria = []) {
   if (!Array.isArray(criteria) || criteria.length > FLAVOR_CRITERIA_LIMIT) throw new Error('Invalid flavor criteria');
@@ -37,10 +45,10 @@ export function normalizeFlavorCriteria(criteria = []) {
 }
 
 /**
- * Normalizes saved views for collection saved views.
+ * Validates saved collection presets and copies their nested column lists.
  *
- * @param {*} input Input to process.
- * @return {!Array<!Object>} Resulting list of values.
+ * @param {*} input Untrusted saved-view array.
+ * @return {SavedView[]} Validated presets with normalized names and flavor criteria.
  */
 export function normalizeSavedViews(input) {
   if (!Array.isArray(input) || input.length > VIEW_LIMIT) throw new Error('Invalid saved views');

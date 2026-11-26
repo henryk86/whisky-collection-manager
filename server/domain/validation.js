@@ -519,8 +519,8 @@ export function validate(collection) {
       /**
        * Validates adjustment for validation.
        *
-       * @param {*} edit Edit used by this operation.
-       * @param {*} expectedSource Expected source used by this operation.
+       * @param {*} edit Stored edited-image metadata to validate.
+       * @param {string} expectedSource Path of the original or cutout image being edited.
        */
       const verifyAdjustment = (edit, expectedSource) => {
         assert(

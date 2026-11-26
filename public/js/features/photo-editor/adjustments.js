@@ -64,7 +64,7 @@ export const photoAdjustmentsChanged = value => PHOTO_ADJUSTMENT_FIELDS.some(({k
  * Reset only one editor group; all other adjustments remain untouched.
  *
  * @param {*} current Current resource data to update.
- * @param {*} groupKey Group key used by this operation.
+ * @param {string} groupKey Key of the adjustment group whose sliders are reset.
  * @return {!Object} Structured result for the caller.
  */
 export function resetPhotoAdjustmentGroup(current, groupKey) {
@@ -81,8 +81,8 @@ export function resetPhotoAdjustmentGroup(current, groupKey) {
  * pixels are never changed. Transparent, nearly black and clipped pixels
  * cannot provide reliable color information.
  *
- * @param {*} source Source used by this operation.
- * @param {*} area Area used by this operation.
+ * @param {*} source Source RGBA image data with pixel dimensions.
+ * @param {*} area Rectangle selected in source-image pixel coordinates for white-balance sampling.
  * @param {!Object=} current Current resource data to update.
  * @return {!Object} Structured result for the caller.
  */
@@ -136,7 +136,7 @@ export function whiteBalanceFromArea(source, area,
  * @param {!Object} data Input data for the operation.
  * @param {number} width Width in pixels.
  * @param {number} height Height in pixels.
- * @param {*} radius Radius used by this operation.
+ * @param {number} radius Blur kernel radius in pixels.
  * @return {!Object} Structured result for the caller.
  */
 function blurLuma(data, width, height, radius) {
@@ -176,7 +176,7 @@ function blurLuma(data, width, height, radius) {
  * Pure image processing, independent of Canvas/DOM. Preserves every alpha
  * byte.
  *
- * @param {*} source Source used by this operation.
+ * @param {*} source Source RGBA image data with pixel dimensions; read without mutation.
  * @param {!Array<*>} values Values to aggregate or compare.
  * @return {!Object} Structured result for the caller.
  */
@@ -236,7 +236,7 @@ export function adjustPhotoPixels(source, values) {
 /**
  * Conservative automatic correction from opaque image samples only.
  *
- * @param {*} source Source used by this operation.
+ * @param {*} source RGBA pixels sampled to estimate automatic exposure and color adjustments.
  * @return {(!Object)} Structured result assembled from the input data.
  */
 export function autoPhotoAdjustments(source) {

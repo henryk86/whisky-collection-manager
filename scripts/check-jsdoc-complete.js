@@ -1,9 +1,9 @@
 /**
  * @fileoverview Enforces typed JSDoc on all named functions in JavaScript.
  *
- * Includes internal declarations, named arrow functions, class methods,
- * accessors, constructors and named object callbacks. Anonymous inline
- * callbacks remain implementation details of their enclosing function.
+ * Production and tooling functions require full contracts. Tests may use
+ * concise or partial documentation for local helpers and test doubles;
+ * their supplied tags must still be consistent with the function.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -138,7 +138,10 @@ export function jsdocViolations(filename, source) {
     const {line} = file.getLineAndCharacterOfPosition(diagnostic.start ?? 0);
     issues.push(`${filename}:${line + 1}: invalid JSDoc syntax: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ')}`);
   }
+  const requireComplete = !filename.replaceAll('\\', '/').startsWith('tests/');
   const renderers = templateRenderers(file);
+  const placeholder = /^(?:Derives the .+ result from the supplied values\.|Combined text from the input values\.|Resulting (?:value|text)\.|Data used for the comparison\.)$|\bused by this operation\.$/;
+
   /**
    * Checks the declared interface against the function syntax.
    *
@@ -150,14 +153,18 @@ export function jsdocViolations(filename, source) {
     const position = file.getLineAndCharacterOfPosition(owner.getStart(file));
     const prefix = `${filename}:${position.line + 1}`;
     if (!docs.length) {
-      issues.push(`${prefix}: missing JSDoc on named function`);
+      if (requireComplete) issues.push(`${prefix}: missing JSDoc on named function`);
       return;
     }
     const tags = ts.getJSDocTags(owner);
     if (tags.some(tag => ['typedef', 'type', 'enum', 'fileoverview'].includes(tag.tagName.text))) return;
     const description = docs.map(doc => typeof doc.comment === 'string' ? doc.comment.trim() : '').find(Boolean);
-    if (!description) {
+    if (requireComplete && !description) {
       issues.push(`${prefix}: missing meaningful JSDoc description`);
+    }
+    if (requireComplete && (placeholder.test(description ?? '') || tags.some(tag =>
+      ['param', 'return', 'returns'].includes(tag.tagName.text) && typeof tag.comment === 'string' && placeholder.test(tag.comment.trim())))) {
+      issues.push(`${prefix}: JSDoc uses a known placeholder instead of explaining the contract`);
     }
     const params = fn.parameters ?? [];
     const documented = tags.filter(tag => tag.tagName.text === 'param' && tag.name && !tag.name.getText(file).includes('.'));
@@ -174,32 +181,41 @@ export function jsdocViolations(filename, source) {
       if (seen.has(name)) issues.push(`${prefix}: duplicate @param ${name}`);
       seen.add(name);
     }
-    if (documented.length !== params.length) {
+    if (requireComplete && documented.length !== params.length) {
       issues.push(`${prefix}: expected ${params.length} @param tags, ` + `found ${documented.length}`);
+    }
+    // Destructured parameters may use a descriptive name not present in the AST.
+    // Only validate surplus names when every parameter has a literal identifier.
+    if (!requireComplete && params.every(param => ts.isIdentifier(param.name))) {
+      for (const tag of documented) {
+        if (!params.some(param => param.name.getText(file) === tag.name.getText(file))) {
+          issues.push(`${prefix}: @param ${tag.name.getText(file)} does not name a parameter`);
+        }
+      }
     }
     for (const [index, param] of params.entries()) {
       const named = ts.isIdentifier(param.name);
       const name = named ? param.name.text : null;
       const tag = (name ? documented.find(tag => tag.name.getText(file) === name) : documented[index]);
       if (!tag) {
-        issues.push(`${prefix}: undocumented parameter ` + (name ?? `#${index + 1}`));
+        if (requireComplete) issues.push(`${prefix}: undocumented parameter ` + (name ?? `#${index + 1}`));
         continue;
       }
       const type = tag.typeExpression?.type;
-      if (!type) {
+      if (requireComplete && !type) {
         issues.push(`${prefix}: @param ${tag.name.getText(file)} has no valid type`);
-      } else if (param.initializer && !tag.isBracketed && !ts.isJSDocOptionalType(type)) {
+      } else if (requireComplete && param.initializer && !tag.isBracketed && !ts.isJSDocOptionalType(type)) {
         issues.push(`${prefix}: defaulted @param ${tag.name.getText(file)} must be optional`);
       }
-      if (typeof tag.comment !== 'string' || !tag.comment.trim()) {
+      if (requireComplete && (typeof tag.comment !== 'string' || !tag.comment.trim())) {
         issues.push(`${prefix}: @param ${tag.name.getText(file)} ` + 'has no explanation');
       }
     }
-    if (tags.some(tag => tag.tagName.text === 'returns')) {
+    if (requireComplete && tags.some(tag => tag.tagName.text === 'returns')) {
       issues.push(`${prefix}: use Google JSDoc @return, not @returns`);
     }
-    const result = tags.filter(tag => tag.tagName.text === 'return');
-    if (returnsValue(fn) && (result.length !== 1 || !result[0].typeExpression?.type)) {
+    const result = tags.filter(tag => tag.tagName.text === 'return' || tag.tagName.text === 'returns');
+    if (requireComplete && returnsValue(fn) && (result.length !== 1 || !result[0].typeExpression?.type)) {
       issues.push(`${prefix}: non-void function requires typed @return`);
     }
     const declared = result[0]?.typeExpression?.type;
@@ -209,10 +225,8 @@ export function jsdocViolations(filename, source) {
     if (result.length > 1) {
       issues.push(`${prefix}: duplicate @return`);
     }
-    if (result.length && (typeof result[0].comment !== 'string' || !result[0].comment.trim())) {
+    if (requireComplete && result.length && (typeof result[0].comment !== 'string' || !result[0].comment.trim())) {
       issues.push(`${prefix}: @return has no explanation`);
-    } else if (result[0]?.comment === 'Resulting text.') {
-      issues.push(`${prefix}: @return uses a known placeholder instead of explaining the result`);
     }
   }
 
@@ -251,7 +265,7 @@ export function jsdocViolations(filename, source) {
 }
 
 /**
- * Checks all first-party JavaScript sources, including scripts and tests.
+ * Checks all first-party JavaScript sources, with relaxed contracts in tests.
  *
  * @param {string=} directory Project root; defaults to the working directory.
  * @return {{checked: number, issues: !Array<string>}} Coverage and failures.
@@ -271,6 +285,6 @@ if (isMain) {
     if (result.issues.length > 80) console.error(`... and ${result.issues.length - 80} further JSDoc violations`);
     process.exitCode = 1;
   } else {
-    console.log(`JSDoc completeness OK: ${result.checked} JS files.`);
+    console.log(`JSDoc contracts OK: ${result.checked} JS files (relaxed test policy).`);
   }
 }

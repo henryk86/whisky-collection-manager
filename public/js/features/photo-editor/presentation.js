@@ -88,7 +88,7 @@ export function renderPhotoEditor(photo) {
 }
 
 /**
- * Derives the form value result from the supplied values.
+ * Formats an adjustment value for display using the German decimal convention.
  *
  * @param {*} value Value to process.
  * @return {string} German-formatted numeric field value with at most two fraction digits.

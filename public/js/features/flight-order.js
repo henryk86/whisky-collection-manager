@@ -2,7 +2,7 @@
  * Reorder a flight only when the drop changes its sequence. No record copies.
  *
  * @param {!Array<*>} ids Identifiers in their current order.
- * @param {*} sourceId Source id used by this operation.
+ * @param {string} sourceId Identifier of the flight member being moved.
  * @param {string} targetId Identifier of the destination photo.
  * @param {boolean=} after Resource data after the mutation.
  * @return {?Array<*>} Resulting list of values.
@@ -25,7 +25,7 @@ export function reorderFlightIds(ids, sourceId, targetId, after = false) {
  * its tasting note.
  *
  * @param {!Element} root Root element or directory.
- * @param {Function} onReorder On reorder used by this operation.
+ * @param {Function} onReorder Called with the updated member order after a valid drag-and-drop operation.
  */
 export function bindFlightSorting(root, onReorder) {
   let drag = null;
@@ -41,7 +41,7 @@ export function bindFlightSorting(root, onReorder) {
   };
 
   /**
-   * Derives the row under pointer result from the supplied values.
+   * Finds the flight member under the viewport coordinates if it belongs to this list.
    *
    * @param {*} x Horizontal coordinate.
    * @param {*} y Vertical coordinate.
@@ -54,7 +54,7 @@ export function bindFlightSorting(root, onReorder) {
   };
 
   /**
-   * Derives the destination result from the supplied values.
+   * Determines the destination row and whether insertion is before or after its midpoint.
    *
    * @param {*} x Horizontal coordinate.
    * @param {*} y Vertical coordinate.
@@ -69,7 +69,7 @@ export function bindFlightSorting(root, onReorder) {
   };
 
   /**
-   * Derives the release result from the supplied values.
+   * Clears the active drag state and releases the captured pointer.
    */
   function release() {
     if (!drag) return;

@@ -16,7 +16,7 @@ import {statusText, createCollectionRatingModel} from './models/home.js';
  * The count labels represent mutually exclusive bottle types. Sample bottles
  * are not displayed again in the Standardflaschen count.
  *
- * @param {*} physicalBottles Physical bottles used by this operation.
+ * @param {*} physicalBottles Physical bottle records grouped by standard/sample type and opened/closed status.
  * @return {import('../ui/render-plan.js').RenderPlan|string} Inventory status and quantity badges for the represented bottles (or scalar/empty text when no plan is needed).
  */
 export function inventoryBadges(physicalBottles) {
@@ -39,7 +39,7 @@ export function inventoryBadges(physicalBottles) {
  * Only supplied details are shown on cards and in the overview table.
  *
  * @param {*} value Input value to process.
- * @param {string=} suffix Suffix used by this operation.
+ * @param {string=} suffix Text appended only when a value is available, such as a unit.
  * @return {string} Known metadata with its supplied suffix, or empty text when missing.
  */
 export function overviewField(value, suffix = '') {
@@ -63,7 +63,7 @@ export function overviewFacts(bottling) {
  * Render a single table cell. The same field definitions power both table
  * modes.
  *
- * @param {*} columnId Column id used by this operation.
+ * @param {string} columnId Identifier of the configured collection table column.
  * @param {!Object} model Prepared inventory row.
  * @return {!Object} Table cell render plan.
  */
@@ -139,7 +139,7 @@ export function collectionCardRating(bottling, photoId = null) {
  * JSON.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @param {*} selectedSize Selected size used by this operation.
+ * @param {*} selectedSize Current number of items displayed per page.
  * @param {string=} mode Requested display mode or configuration variant.
  * @return {!import('../ui/render-plan.js').RenderPlan} Collection pagination, result range and page-size controls.
  */
@@ -153,7 +153,7 @@ export function pagerHtml({page, pageCount, total, from, to}, selectedSize,
    * @param {*} target Target of the operation.
    * @param {*} label Label shown to the user.
    * @param {*} title Title displayed or stored by this operation.
-   * @param {boolean=} disabled Value used by this operation.
+   * @param {boolean=} disabled Whether the pagination action is unavailable at the current page boundary.
    * @return {!import('../ui/render-plan.js').RenderPlan} Pagination button with target page and disabled state.
    */
   const button = (target, label, title, disabled = false) =>

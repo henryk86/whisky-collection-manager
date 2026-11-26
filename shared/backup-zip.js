@@ -186,10 +186,10 @@ function aesExtra(extra) {
 /**
  * Requires a password. No plaintext ZIP can be produced by this writer.
  *
- * @param {*} sourceRoot Source root used by this operation.
- * @param {*} destination Destination used by this operation.
+ * @param {string} sourceRoot Snapshot directory containing data, images and documents.
+ * @param {string} destination Path of the new encrypted ZIP; must not already exist.
  * @param {*} password Secret supplied for authentication or encryption.
- * @param {string=} timestamp Timestamp used by this operation.
+ * @param {string=} timestamp ISO timestamp written to the archive README.
  * @return {!Object} Structured result for the caller.
  */
 export function writeReadableZip(sourceRoot, destination, password, timestamp =
@@ -299,8 +299,8 @@ function readAt(fd, length, offset) {
  * Authenticates all AES-256 entries before accepting a backup. Supports old
  * plain ZIPs for restore.
  *
- * @param {*} archive Archive used by this operation.
- * @param {null=} extractTo Extract to used by this operation.
+ * @param {string} archive Path of the ZIP file to verify.
+ * @param {?string=} extractTo Destination directory for extraction, or null for verification only.
  * @param {string=} password Secret supplied for authentication or encryption.
  * @return {!Object} Structured result for the caller.
  */

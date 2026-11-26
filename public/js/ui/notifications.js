@@ -9,7 +9,7 @@ const renderTemplate = await loadTemplates('components/notifications.html');
 /**
  * Shows a transient status notification in the application shell.
  *
- * @param {*} message Message used by this operation.
+ * @param {*} message Notification text or render content to display temporarily.
  * @param {boolean=} error Whether the notification reports an error.
  * @param {function(!Element, *): void=} mountContent Content mount boundary.
  */

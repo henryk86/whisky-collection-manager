@@ -23,17 +23,20 @@ export function normalizeTastingSubject(input, previous = {}) {
     ...previous,
     ...input,
   };
-  for (const [key, length] of [['name', 180], ['distillery', 140], ['bottler',
-    140]]) {
+  /** @type {Array<['name'|'distillery'|'bottler', number]>} */
+  const textLimits = [['name', 180], ['distillery', 140], ['bottler', 140]];
+  for (const [key, length] of textLimits) {
     if (typeof value[key] !== 'string' || value[key].length > length || (key === 'name' && !value[key].trim()))
       throw new Error('Ungültiges Feld: ' + key);
     value[key] = value[key].trim();
   }
-  for (const [key, min, max, integer] of [
+  /** @type {Array<['ageYears'|'abv'|'releaseYear', number, number, boolean]>} */
+  const numberLimits = [
     ['ageYears', 0, 200, true],
     ['abv', 0, 100, false],
     ['releaseYear', 1800, 2200, true],
-  ]) {
+  ];
+  for (const [key, min, max, integer] of numberLimits) {
     if (value[key] === null) continue;
     if (typeof value[key] !== 'number' || !Number.isFinite(value[key]) || value[key] < min || value[key] > max || (integer && !Number.isInteger(value[key])))
       throw new Error('Ungültiges Feld: ' + key);

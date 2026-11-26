@@ -22,7 +22,7 @@ export function createBottleForm({state, selectors}) {
    * Prepares bottle editor for an existing parent bottling, with inventory, purchase and photo controls.
    *
    * @param {!Object=} bottle Physical bottle record under consideration.
-   * @param {*} bottlingId Value used by this operation.
+   * @param {string} bottlingId Identifier of the parent bottling for the physical-bottle form.
    * @param {!Object=} options3 Opening context and reference photo option.
    * @return {!import('../../ui/render-plan.js').RenderPlan} Bottle editor for an existing parent bottling, with inventory, purchase and photo controls.
    */

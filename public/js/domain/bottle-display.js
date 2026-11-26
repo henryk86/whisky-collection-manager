@@ -3,7 +3,7 @@
  * values.
  *
  * @param {!Object} bottle Physical bottle record being processed.
- * @param {Function=} formatDate Format date used by this operation.
+ * @param {Function=} formatDate Formats the purchase date for the metadata line; defaults to the original date.
  * @return {string} Available purchase date, purchase price and other physical-bottle metadata joined for display.
  */
 export function bottleMeta(bottle, formatDate = (date) => date) {

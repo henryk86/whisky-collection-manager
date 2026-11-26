@@ -351,7 +351,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
   /**
    * Prepares planned flight details, editable member list and available actions.
    *
-   * @param {*} current Value used by this operation.
+   * @param {*} current Current flight record whose planned details are displayed.
    * @return {!import('../ui/render-plan.js').RenderPlan} Planned flight details, editable member list and available actions.
    */
   function plannedFlightDetail(current) {
@@ -360,7 +360,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
     /**
      * Selects and transforms the choices records.
      *
-     * @param {string=} excludeId Value used by this operation.
+     * @param {string=} excludeId Identifier of the tasting to omit from the flight-member choices.
      * @return {*} Entries that meet the selection criteria.
      */
     const choices = (excludeId = '') => composeMarkup(choicesFor(excludeId).map(x => renderTemplate('choicesOption', {
@@ -688,7 +688,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
   /**
    * Updates the toggle flight edit state for its caller.
    *
-   * @param {*} editing Value used by this operation.
+   * @param {boolean} editing Whether to enter or leave flight-edit mode.
    */
   function toggleFlightEdit(editing) {flightEditing = editing; flight();}
 
@@ -736,11 +736,11 @@ export function createTastingFlightController({state, selectors, shell, navigate
   }
 
   /**
-   * Derives the reorder flight member result from the supplied values.
+   * Reorders a member of the current flight and persists the new member order.
    *
-   * @param {*} sourceId Value used by this operation.
-   * @param {*} targetId Value used by this operation.
-   * @param {*} after Value used by this operation.
+   * @param {string} sourceId Identifier of the moved tasting.
+   * @param {string} targetId Identifier of the destination tasting.
+   * @param {boolean} after Whether to insert after rather than before the destination.
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   function reorderFlightMember(sourceId, targetId, after) {

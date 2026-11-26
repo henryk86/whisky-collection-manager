@@ -55,7 +55,7 @@ const scheduleText = p => {
 /**
  * Prepares manual backup and restore controls.
  *
- * @param {*} unlocked Value used by this operation.
+ * @param {boolean} unlocked Whether the administrator may access the manual backup download.
  * @return {!import('../ui/render-plan.js').RenderPlan} Manual backup and restore controls.
  */
 const manual = unlocked =>

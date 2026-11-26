@@ -131,7 +131,7 @@
  * @property {number} nextInventoryNumber
  * @property {string[]} reservedInventoryNumbers Historical numbers skipped
  * by automatic suggestions; may be manually reassigned once free.
- * @property {{establishedYear: number|null}} [settings] Optional
+ * @property {{establishedYear: number|null, savedViews?: import('./collection-saved-views.js').SavedView[]}} [settings] Optional
  * collection-wide preferences; older archives omit this.
  * @property {Distillery[]} distilleries
  * @property {Bottling[]} bottlings

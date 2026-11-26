@@ -39,21 +39,21 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   const isExternal = () => state.page === 'external-tasting';
 
   /**
-   * Derives the standalone result from the supplied values.
+   * Checks whether the editor is working with a standalone tasting.
    * @return {*} Result computed from the supplied inputs.
    */
   const standalone = () => allStandaloneTastings(state.collection || {});
 
   /**
-   * Derives the subject result from the supplied values.
+   * Resolves the current editor's tasting subject.
    * @return {*} Result computed from the supplied inputs.
    */
   const subject = () => state.collection?.bottlings?.find(b => b.id === state.selected);
 
   /**
-   * Derives the edit page result from the supplied values.
+   * Selects the tasting editor page appropriate to the subject.
    *
-   * @param {boolean=} external Value used by this operation.
+   * @param {boolean=} external Whether the tasting is external rather than attached to an owned bottling.
    * @return {*} Result computed from the supplied inputs.
    */
   const editPage = (external = isExternal()) => external ? 'external-tasting' : 'tasting';
@@ -63,7 +63,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   let draftSavePending = null;
 
   /**
-   * Derives the flavor node result from the supplied values.
+   * Finds the flavor editor section in the current tasting form.
    * @return {*} Result computed from the supplied inputs.
    */
   function flavorNode() {
@@ -229,7 +229,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
  * Update the preview during pointer movement without saving every intermediate
  * colour.
  *
- * @param {*} hex Hex used by this operation.
+ * @param {*} hex Custom whisky color to preview in the editor.
  * @param {number} x Horizontal coordinate in the current coordinate system.
  * @param {number} y Vertical coordinate in the current coordinate system.
  */
@@ -301,7 +301,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
  * Validate the internal HEX draft; the same restriction is enforced during API
  * normalization.
  *
- * @param {*} raw Raw used by this operation.
+ * @param {*} raw Untrusted custom color input to normalize and validate before selecting.
  * @return {boolean} Whether the condition is satisfied.
  */
   function chooseCustomHex(raw) {
@@ -390,7 +390,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   }
 
   /**
-   * Derives the step flavor result from the supplied values.
+   * Moves the flavor editing history to the adjacent available snapshot.
    *
    * @param {*} direction Direction used for traversal or movement.
    */
@@ -658,7 +658,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   /**
    * Renders external edit in the current view.
    *
-   * @param {*} editing Value used by this operation.
+   * @param {boolean} editing Whether the external tasting fields should be editable.
    */
   function showExternalEdit(editing) {
     if (!flavorSession?.external || flavorSession.draft) return;

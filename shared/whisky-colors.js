@@ -41,7 +41,7 @@ function hexToHsl(hex) {
 /**
  * Validate real HEX shades in the warm whisky range, including red and rose.
  *
- * @param {*} hex Hex used by this operation.
+ * @param {*} hex Untrusted candidate color in six-digit CSS hexadecimal notation.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function isAllowedWhiskyHex(hex) {
@@ -91,7 +91,7 @@ export function whiskyPickerHex(x, y) {
 /**
  * Position the picker marker when editing a previously saved HEX colour.
  *
- * @param {*} hex Hex used by this operation.
+ * @param {string} hex Whisky color to map onto the picker gradient.
  * @return {!Object} Structured result for the caller.
  */
 export function whiskyPickerPosition(hex) {

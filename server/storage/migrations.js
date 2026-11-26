@@ -12,7 +12,7 @@ const internationalSeed = JSON.parse(fs.readFileSync(new URL('../../seed/distill
 /**
  * Moves legacy physical bottles into their parent bottlings.
  *
- * @param {*} db Db used by this operation.
+ * @param {*} db Legacy collection modified in place to nest physical bottles under their bottlings.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function migrateNestedBottles(db) {
@@ -61,7 +61,7 @@ export function migrateNestedBottles(db) {
 /**
  * Normalizes inventory numbering from earlier collection schemas.
  *
- * @param {*} db Db used by this operation.
+ * @param {*} db Legacy collection whose inventory numbers and old label codes are reconciled in place.
  * @return {!Object} Structured result for the caller.
  */
 export function migrateInventoryNumbers(db) {
@@ -116,7 +116,7 @@ export function migrateInventoryNumbers(db) {
 /**
  * Upgrades legacy bottle-category labels to current values.
  *
- * @param {*} db Db used by this operation.
+ * @param {*} db Collection whose physical bottles may still contain the obsolete labelType field.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function migrateLabelTypes(db) {
@@ -133,7 +133,7 @@ export function migrateLabelTypes(db) {
 /**
  * Updates legacy distillery references to the current record structure.
  *
- * @param {*} db Db used by this operation.
+ * @param {*} db Collection whose bottlings may still refer to a single legacy distilleryId.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function migrateDistilleries(db) {
@@ -154,7 +154,7 @@ export function migrateDistilleries(db) {
 /**
  * Normalizes stored photo metadata when upgrading older collections.
  *
- * @param {*} db Db used by this operation.
+ * @param {*} db Collection whose image metadata must be moved to physical bottle photo lists.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function migratePhotos(db) {
@@ -192,7 +192,7 @@ export function migratePhotos(db) {
  * Keep bottling.volumeMl as the nominal size published by the producer; each
  * bottle additionally receives its own actual size when known.
  *
- * @param {*} db Db used by this operation.
+ * @param {*} db Collection whose legacy bottling-level bottle type is propagated to physical bottles.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function migrateBottleTypes(db) {
@@ -224,7 +224,7 @@ export function migrateBottleTypes(db) {
 /**
  * Existing collections can gain the optional document list without data loss.
  *
- * @param {*} db Db used by this operation.
+ * @param {*} db Collection whose physical bottle records may lack a files array.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function migrateDocumentLists(db) {
@@ -241,7 +241,7 @@ export function migrateDocumentLists(db) {
 /**
  * Add newly published international sites without overwriting user changes.
  *
- * @param {*} db Db used by this operation.
+ * @param {*} db Collection whose distillery catalog is augmented from the international seed.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function migrateInternationalDistilleries(db) {
@@ -264,7 +264,7 @@ export function migrateInternationalDistilleries(db) {
  * change user-set status, coordinates or explicit geographic fields.
  * Country/region belong to distilleries, not to individual bottlings.
  *
- * @param {*} db Db used by this operation.
+ * @param {*} db Collection whose existing distilleries are matched against known origin metadata.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function migrateDistilleryOrigins(db) {
@@ -336,7 +336,7 @@ export function migrateCollection(collection) {
  * upgraded losslessly to schema 6. The input is never changed; validation runs
  * before any file is replaced.
  *
- * @param {*} source Source used by this operation.
+ * @param {*} source Untrusted collection document, validated for a supported schema before migration.
  * @return {!Object} Structured result for the caller.
  */
 export function migrateCollectionToCurrent(source) {

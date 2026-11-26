@@ -42,8 +42,8 @@ export function normalizeFlightFields(input, previous = {}) {
  */
 export function allTastingReferences(collection) {
   return [
-    ...(collection.bottlings || []).flatMap(b => (b.tastings || []).map(record => ({record, bottling: b, external: false}))),
-    ...(collection.externalTastings || []).map(record => ({record, bottling: record.bottling, external: true})),
+    ...(collection.bottlings || []).flatMap(b => (b.tastings || []).map(record => ({record, bottling: b, external: /** @type {const} */ (false)}))),
+    ...(collection.externalTastings || []).map(record => ({record, bottling: record.bottling, external: /** @type {const} */ (true)})),
   ];
 }
 

@@ -27,6 +27,7 @@
     "format:js": "node scripts/format-js.js --write",
     "format:check": "node scripts/format-js.js",
     "check:jsdoc": "node scripts/check-jsdoc.js && node scripts/check-jsdoc-complete.js && node scripts/check-js-types.js",
+    "check:jsdoc:all": "node scripts/check-js-types.js --all",
     "format:css": "node scripts/format-css.js --write",
     "format:css:check": "node scripts/format-css.js",
     "format:html": "node scripts/format-html-templates.js --write",

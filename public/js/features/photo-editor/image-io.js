@@ -5,11 +5,11 @@ export const MAX_PREVIEW_SIDE = 1050;
 export const MAX_EXPORT_SIDE = 4096;
 export const MAX_IMAGE_BYTES = 9_400_000; // Allow room for JSON/base64 request overhead.
 /**
- * Builds the localized canvas from image text for the current language.
+ * Draws the source photograph to a size-limited canvas.
  *
- * @param {*} image Value used by this operation.
- * @param {*} maxSide Value used by this operation.
- * @return {*} Calculated numeric result.
+ * @param {HTMLImageElement} image Decoded photograph to draw at its natural aspect ratio.
+ * @param {number} maxSide Maximum canvas side length in pixels; never upscales the image.
+ * @return {HTMLCanvasElement} Canvas containing the scaled photograph.
  */
 export const canvasFromImage = (image, maxSide) => {
   const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
@@ -25,54 +25,55 @@ export const canvasFromImage = (image, maxSide) => {
 };
 
 /**
- * Derives the image data from canvas result from the supplied values.
+ * Reads a copy of all RGBA pixels from the canvas.
  *
- * @param {*} canvas Canvas used by the rendering operation.
- * @return {*} Result computed from the supplied inputs.
+ * @param {HTMLCanvasElement} canvas Canvas containing the image to read.
+ * @return {ImageData} Independent pixel data for the complete canvas.
  */
 export const imageDataFromCanvas = canvas =>
   canvas.getContext('2d', {willReadFrequently: true}).getImageData(0, 0, canvas.width, canvas.height);
 
 /**
- * Derives the clone pixels result from the supplied values.
+ * Copies RGBA pixel storage so editing the result cannot mutate the input.
  *
- * @param {*} pixels Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * @param {{data: Uint8ClampedArray, width: number, height: number}} pixels Image data to copy.
+ * @return {ImageData} Independent image and pixel buffer.
  */
 export const clonePixels = pixels => new ImageData(new Uint8ClampedArray(pixels.data), pixels.width, pixels.height);
 // Browsers may return image/png here when WebP encoding is unavailable; the API
 // accepts that safe fallback and stores the real extension from the bytes.
 
 /**
- * Builds the localized blob from canvas text for the current language.
+ * Encodes the canvas as a WebP image, allowing the browser PNG fallback.
  *
- * @param {*} canvas Canvas used by the rendering operation.
- * @param {number=} quality Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @param {HTMLCanvasElement} canvas Canvas to encode.
+ * @param {number=} quality WebP encoder quality between zero and one.
+ * @return {Promise<Blob>} Encoded image, rejecting if encoding fails.
  */
 export const blobFromCanvas = (canvas, quality = .97) =>
   new Promise((resolve, reject) =>
     canvas.toBlob(blob => blob ? resolve(blob) : reject(Error(t('photoEditor.error'))), 'image/webp', quality));
 
 /**
- * Builds the localized blob as data url text for the current language.
+ * Reads an encoded image as a data URL for upload.
  *
- * @param {*} blob Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @param {Blob} blob Binary image data to encode as a data URL.
+ * @return {Promise<string>} Data URL, rejecting if the read fails.
  */
 export const blobAsDataUrl = blob => new Promise((resolve, reject) => {
   const reader = new FileReader();
-  reader.onload = () => resolve(reader.result);
+  // readAsDataURL produces a string on successful completion.
+  reader.onload = () => resolve(/** @type {string} */(reader.result));
   reader.onerror = () => reject(Error(t('photoEditor.error')));
   reader.readAsDataURL(blob);
 });
 
 
 /**
- * Retrieves source image from the available state.
+ * Loads and decodes the stored source image for canvas editing.
  *
- * @param {*} path Path to the target resource.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @param {string} path Stored relative image path.
+ * @return {Promise<HTMLImageElement>} Decoded source image, rejecting if loading fails.
  */
 export async function loadSourceImage(path) {
   const loaded = new Image();

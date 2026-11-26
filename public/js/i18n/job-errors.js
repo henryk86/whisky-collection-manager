@@ -5,7 +5,7 @@ import {apiErrorCode} from '../../../shared/api-error-codes.js';
  * New jobs use stable keys; legacy status files remain readable without
  * rendering their untrusted diagnostic text.
  *
- * @param {*} job Job used by this operation.
+ * @param {*} job Backup job status containing a public error code and optional diagnostic details.
  * @return {*} Entries that meet the selection criteria.
  */
 export function jobErrorText(job) {

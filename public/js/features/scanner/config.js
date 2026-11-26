@@ -18,7 +18,7 @@ export const scannerFormatNames = [
 /**
  * Returns barcode formats supported by the scanner configuration.
  *
- * @param {!Object=} supported Supported used by this operation.
+ * @param {!Object=} supported Scanner library's mapping of barcode-format names to numeric constants.
  * @return {!Array<*>} Resulting list of values.
  */
 export function supportedFormats(supported = {}) {

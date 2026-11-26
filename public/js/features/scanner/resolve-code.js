@@ -13,7 +13,7 @@ export function createCodeResolver({state, navigate, toast, closeModal,
    * Retrieves code for resolve code.
    *
    * @param {*} value Input value to process.
-   * @param {boolean=} assign Assign used by this operation.
+   * @param {boolean=} assign Whether the caller requests warehouse assignment rather than ordinary navigation.
    */
   async function resolveCode(value, assign = false) {
     value = value.trim();

@@ -3,7 +3,7 @@
  * responses. Redact common credentials, URLs and filesystem paths before
  * sending a bounded single-line entry to the container's stderr log.
  *
- * @param {*} raw Raw used by this operation.
+ * @param {*} raw Untrusted diagnostic text potentially containing control sequences or credentials.
  * @return {string} Redacted single-line command diagnostic limited to 700 characters, or a generic fallback.
  */
 export function sanitizeBackupDiagnostic(raw) {
@@ -56,10 +56,10 @@ export function sanitizeBackupDiagnostic(raw) {
 /**
  * The error's diagnostic stays in memory. serializeBackupJobError ignores it.
  *
- * @param {*} binary Binary used by this operation.
+ * @param {string} binary Name of the executable that failed.
  * @param {string} code Stable identifier used for error handling.
- * @param {*} signal Signal used by this operation.
- * @param {*} output Output used by this operation.
+ * @param {*} signal Process termination signal, if the command was killed.
+ * @param {*} output Captured process output; sanitized before it is included in the diagnostic.
  * @return {string} Command name, exit information and sanitized output for the operator log.
  */
 export function commandFailureDiagnostic(binary, code, signal, output) {
@@ -106,8 +106,8 @@ export function unexpectedBackupDiagnostic(error) {
 /**
  * Logs backup-job failures without leaking sensitive information.
  *
- * @param {*} jobId Job id used by this operation.
- * @param {*} serialized Serialized used by this operation.
+ * @param {string} jobId Identifier of the failed backup job.
+ * @param {*} serialized Public failure details already prepared for the job status.
  * @param {*} error Error being handled.
  */
 export function logBackupJobFailure(jobId, serialized, error) {

@@ -4,7 +4,7 @@ import {t} from '../i18n/index.js';
 /**
  * Parses route for routes.
  *
- * @param {*} search Search used by this operation.
+ * @param {*} search URL query string or search parameters containing the current application route.
  * @return {(!Object)} Structured result assembled from the input data.
  */
 export function parseRoute(search) {
@@ -94,8 +94,8 @@ export function parseRoute(search) {
 /**
  * Builds the browser URL for an application route and its state.
  *
- * @param {*} page Page used by this operation.
- * @param {*} selected Selected used by this operation.
+ * @param {string} page Target application page.
+ * @param {*} selected Selected record or section identifier required by the target page.
  * @param {!Object=} filters Filters restricting the input records.
  * @return {string} Relative application URL, including valid selection and filter query parameters.
  */

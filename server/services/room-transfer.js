@@ -120,7 +120,7 @@ export function createRoomExport(warehouse, ids, includeAssignments = false) {
 /**
  * Validates bundle for room transfer.
  *
- * @param {*} bundle Bundle used by this operation.
+ * @param {*} bundle Untrusted room-transfer payload to validate before planning an import.
  * @return {*} Entries transformed for the consuming code.
  */
 function validateBundle(bundle) {
@@ -149,7 +149,7 @@ function validateBundle(bundle) {
  * Dry run and real import use this same calculation, avoiding divergent rules.
  *
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {*} rawBundle Raw bundle used by this operation.
+ * @param {*} rawBundle Untrusted room-transfer JSON; validated before IDs and assignments are mapped.
  * @param {!Object=} options3 Destructured options for this operation.
  * @return {!Object} Structured result for the caller.
  */

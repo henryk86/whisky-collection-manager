@@ -35,9 +35,9 @@ function safePath(root, filename) {
 /**
  * Compares current files with a prior release manifest for upgrades.
  *
- * @param {*} newRelease New release used by this operation.
- * @param {*} installation Installation used by this operation.
- * @param {boolean=} prune Prune used by this operation.
+ * @param {string} newRelease Directory containing the verified new release manifest.
+ * @param {string} installation Existing installation containing the previous manifest.
+ * @param {boolean=} prune Whether to remove obsolete files whose content still matches the previous manifest.
  * @return {!Object} Structured result for the caller.
  */
 export function inspectManifestUpgrade(newRelease, installation,

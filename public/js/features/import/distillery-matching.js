@@ -1,7 +1,7 @@
 /**
  * Imported data can list multiple distilleries in a single field.
  *
- * @param {*} raw Raw used by this operation.
+ * @param {*} raw Untrusted distillery name text; non-string inputs yield an empty list.
  * @return {!Array<*>} Resulting list of values.
  */
 export function splitDistilleryNames(raw) {
@@ -39,7 +39,7 @@ export function splitDistilleryNames(raw) {
  * Return one choice per name; unmatched distilleries remain visible, not
  * silently discarded.
  *
- * @param {*} raw Raw used by this operation.
+ * @param {*} raw Imported distillery name text to split and match against the catalog.
  * @param {!Array<*>=} knownDistilleries Known distilleries used by this
  * operation.
  * @return {!Array<!Object>} Resulting list of values.

@@ -12,9 +12,9 @@ export const clampPhotoZoom = zoom => Math.max(PHOTO_ZOOM_MIN, Math.min(PHOTO_ZO
 /**
  * Keeps the zoomed photo within its allowable pan area.
  *
- * @param {*} view View used by this operation.
- * @param {*} stage Stage used by this operation.
- * @param {*} image Image used by this operation.
+ * @param {*} view Current zoom scale and pan offsets in CSS pixels.
+ * @param {*} stage Viewport width and height in CSS pixels.
+ * @param {*} image Unscaled image width and height in CSS pixels.
  * @return {*} Structured result assembled from the input data.
  */
 export function constrainPhotoPan(view, stage, image) {
@@ -30,11 +30,11 @@ export function constrainPhotoPan(view, stage, image) {
 /**
  * Changes photo zoom around a fixed interaction point.
  *
- * @param {*} view View used by this operation.
+ * @param {*} view Current zoom scale and pan offsets in CSS pixels.
  * @param {*} requestedZoom New zoom level requested by the user.
- * @param {*} point Point used by this operation.
- * @param {*} stage Stage used by this operation.
- * @param {*} image Image used by this operation.
+ * @param {*} point Zoom anchor relative to the viewport in CSS pixels.
+ * @param {*} stage Viewport width and height in CSS pixels.
+ * @param {*} image Unscaled image width and height in CSS pixels.
  * @return {*} Value returned by the delegated operation.
  */
 export function zoomPhotoAt(view, requestedZoom, point, stage, image) {
@@ -60,7 +60,7 @@ export function createPhotoZoom() {
   let lastPinchDistance = null;
 
   /**
-   * Derives the dimensions result from the supplied values.
+   * Reads the viewport and unscaled image layout dimensions for pan constraints.
    * @return {!Object} Structured result assembled from the input data.
    */
   function dimensions() {
@@ -92,7 +92,7 @@ export function createPhotoZoom() {
   }
 
   /**
-   * Derives the point of result from the supplied values.
+   * Converts pointer client coordinates to coordinates relative to the photo viewport.
    *
    * @param {!Event} event Event that triggered this operation.
    * @return {!Object} Structured result assembled from the input data.
@@ -103,10 +103,10 @@ export function createPhotoZoom() {
   }
 
   /**
-   * Derives the zoom to result from the supplied values.
+   * Changes the photo zoom while preserving the selected point and constraining pan.
    *
    * @param {*} next Next candidate state or entry.
-   * @param {*} point Value used by this operation.
+   * @param {*} point Optional anchor in viewport pixels; defaults to the viewport center.
    */
   function zoomTo(next, point) {
     if (!stage?.isConnected || !image) return;

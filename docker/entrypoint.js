@@ -33,10 +33,10 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 }
 
 /**
- * Derives the launch result from the supplied values.
+ * Starts a child Node process and registers shutdown handling for it.
  *
  * @param {*} name Environment variable or setting name.
- * @param {*} script Value used by this operation.
+ * @param {string} script Path to the Node entry point to launch.
  * @return {*} Result computed from the supplied inputs.
  */
 function launch(name, script) {

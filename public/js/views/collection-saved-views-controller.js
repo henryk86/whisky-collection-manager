@@ -24,14 +24,14 @@ const renderTemplate = await loadTemplates('collection/home.html');
  */
 export function createSavedViewsController({state, columnSelection, refresh, home, showModal, closeModal, confirmModal, updatePageUrl}) {
   /**
-   * Derives the saved views result from the supplied values.
-   * @return {*} Result computed from the supplied inputs.
+   * Reads the currently stored collection views from settings.
+   * @return {import('../../../shared/collection-saved-views.js').SavedView[]} Current presets, or an empty list before collection data is loaded.
    */
   const savedViews = () => state.collection?.settings?.savedViews || [];
 
   /**
-   * Derives the capture view result from the supplied values.
-   * @return {!Array<*>} Resulting entries in their output order.
+   * Captures the current collection filters, sorting and display configuration for saving.
+   * @return {import('../../../shared/collection-saved-views.js').SavedViewConfig} Current filter and display configuration, without a preset name or ID.
    */
   function captureView() {
     return {
@@ -59,7 +59,7 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
   /**
    * Persists views to its backing store.
    *
-   * @param {*} views Value used by this operation.
+   * @param {import('../../../shared/collection-saved-views.js').SavedView[]} views Updated saved-view records to persist in collection settings.
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   async function storeViews(views) {
@@ -97,7 +97,7 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   async function saveCurrentView() {
-    const field = document.querySelector('[data-view-name]');
+    const field = /** @type {HTMLInputElement|null} */ (document.querySelector('[data-view-name]'));
     if (!field?.reportValidity() || !field.value.trim()) return;
     const id = globalThis.crypto?.randomUUID?.() || `view-${Date.now()}`;
     const views = [...savedViews(), {
@@ -148,7 +148,7 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
    * @return {!Promise<*>} Promise for the asynchronous operation.
    */
   async function confirmRenameView() {
-    const name = document.querySelector('[data-view-name]');
+    const name = /** @type {HTMLInputElement|null} */ (document.querySelector('[data-view-name]'));
     if (!name?.reportValidity() || !name.value.trim()) return;
     const id = state.activeSavedViewId;
     if (!savedViews().some(view => view.id === id)) return;

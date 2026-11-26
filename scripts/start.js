@@ -71,7 +71,7 @@ function readEnvFile(root) {
  * Checks whether locally configured TLS certificates are usable.
  *
  * @param {*} root Root element or directory.
- * @param {*=} env Env used by this operation.
+ * @param {*=} env Environment overrides read before values from the local environment file.
  * @return {(string)} Value, or false when the operation cannot proceed.
  */
 export function localTlsStatus(root, env = process.env) {
@@ -121,7 +121,7 @@ function npmCommand(env) {
 /**
  * Validates the default execute state and rejects invalid inputs.
  *
- * @param {*} command Value used by this operation.
+ * @param {string} command Executable to invoke for startup.
  * @param {*} args Arguments forwarded to the operation.
  * @param {!Object} options Options controlling the operation.
  */

@@ -76,7 +76,7 @@ export function createWarehouseSceneController({state, currentRoom, selectFurnit
   /**
    * Registers furniture hover for warehouse.
    *
-   * @param {*} withPlan With plan used by this operation.
+   * @param {*} withPlan Whether the room plan is mounted and can reflect hover state.
    */
   function attachFurnitureHover(withPlan) {
     // The list is re-created on render; keep hover handlers local to its
@@ -111,7 +111,7 @@ export function createWarehouseSceneController({state, currentRoom, selectFurnit
   }
 
   /**
-   * Derives the update3dzoom result from the supplied values.
+   * Applies the requested zoom to the mounted WebGL scene, if available.
    *
    * @param {*} value Value to process.
    * @return {*} Result computed from the supplied inputs.

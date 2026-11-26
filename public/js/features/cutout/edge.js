@@ -12,7 +12,7 @@ export const EDGE_ALPHA_HIGH = 190;
 /**
  * Refines alpha transitions around an extracted bottle silhouette.
  *
- * @param {*} rgba Rgba used by this operation.
+ * @param {*} rgba Mutable RGBA pixel array; only alpha samples are changed.
  * @return {*} Calculated numeric result.
  */
 export function sharpenCutoutAlpha(rgba) {

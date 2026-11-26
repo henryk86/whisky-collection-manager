@@ -26,7 +26,7 @@ const read = (name) => fs.readFileSync(path.join(ROOT, name), 'utf8');
  *
  * @param {*} name Environment variable or setting name.
  * @param {*} value Value to process.
- * @return {*} Combined text from the input values.
+ * @return {void} Writes the file synchronously.
  */
 const write = (name, value) => fs.writeFileSync(path.join(ROOT, name), value);
 
@@ -45,8 +45,8 @@ export function parseVersion(value) {
 /**
  * Compares semantic version components in release order.
  *
- * @param {*} left Left used by this operation.
- * @param {*} right Right used by this operation.
+ * @param {string} left First semantic version to compare.
+ * @param {string} right Second semantic version to compare.
  * @return {number} Calculated numeric result.
  */
 export function compareVersions(left, right) {
@@ -62,7 +62,7 @@ export function compareVersions(left, right) {
  * Calculates the next semantic version for the chosen release level.
  *
  * @param {*} current Current resource data to update.
- * @param {*} part Part used by this operation.
+ * @param {string} part Version component to increment: major, minor or patch.
  * @return {string} Semantic version after incrementing the selected component and resetting lower components.
  */
 export function nextVersion(current, part) {
@@ -131,8 +131,8 @@ function validateFreshVersion(version) {
 /**
  * Updates readme title for release version.
  *
- * @param {*} source Source used by this operation.
- * @param {*} version Version used by this operation.
+ * @param {string} source Current README Markdown.
+ * @param {string} version Semantic version to include in the heading.
  * @return {*} Text assembled for the caller.
  */
 export function updateReadmeTitle(source, version) {
@@ -164,8 +164,8 @@ function syncReadme() {
  * A version bump starts a new test cycle. Never inherit passed checks from an
  * old release.
  *
- * @param {*} version Version used by this operation.
- * @param {*} note Note used by this operation.
+ * @param {string} version Release version awaiting verification.
+ * @param {string} note Changelog description of the release being tested.
  * @param {*} date Date value to process.
  * @return {string} Markdown status document recording that checks for the new release are pending.
  */
@@ -192,8 +192,8 @@ Nach Durchfuehrung der Pruefungen die Ergebnisse und ihre Grenzen hier dokumenti
 /**
  * Parses bump data from JSON input.
  *
- * @param {*} part Value used by this operation.
- * @param {*} note Value used by this operation.
+ * @param {string} part Requested semantic version increment.
+ * @param {string} note Single-line changelog entry for the new version.
  */
 function bump(part, note) {
   if (!note?.trim() || note.length > 500 || /[\r\n]/.test(note)) {
@@ -222,10 +222,10 @@ function bump(part, note) {
  * Create the versioned release snapshot; a later verified step synchronizes
  * both branches.
  *
- * @param {*} version Version used by this operation.
- * @param {*} commits Commits used by this operation.
- * @param {*} mergeSha Merge sha used by this operation.
- * @param {*} previousTag Previous tag used by this operation.
+ * @param {string} version New semantic version approved by the release plan.
+ * @param {*} commits Classified commits included in the release changelog.
+ * @param {string} mergeSha SHA of the approved merge commit.
+ * @param {string} previousTag Previous release tag used as the changelog boundary.
  */
 export function applyAutomatedRelease(version, commits, mergeSha, previousTag) {
   parseVersion(version);

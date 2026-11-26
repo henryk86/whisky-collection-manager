@@ -5,10 +5,7 @@
  * @return {Error & {backupJobCode: string, backupJobParams: Object}} Error carrying structured backup details.
  */
 export function backupJobError(code, params = {}) {
-  const error = new Error(code);
-  error.backupJobCode = code;
-  error.backupJobParams = params;
-  return error;
+  return Object.assign(new Error(code), {backupJobCode: code, backupJobParams: params});
 }
 
 /**

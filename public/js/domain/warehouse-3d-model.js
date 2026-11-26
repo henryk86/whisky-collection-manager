@@ -29,7 +29,7 @@ export const furnitureFootprint = item => rotate(item) % 180 === 0
  * Selects the camera position and target for a furniture view.
  *
  * @param {*} item Warehouse item or record being evaluated.
- * @param {string=} previous Previous used by this operation.
+ * @param {string=} previous Previously selected camera direction, retained if it faces the furniture front.
  * @return {*} Entries transformed for the consuming code.
  */
 export function cameraForFurniture(item, previous = 'nw') {
@@ -104,7 +104,7 @@ export function shelfIdAtHeight(furniture, height) {
  *
  * @param {*} room Room model containing dimensions and furniture.
  * @param {!Object} warehouse Warehouse model being processed.
- * @param {null=} isolatedId Isolated id used by this operation.
+ * @param {?string=} isolatedId Identifier of furniture to isolate, or null to show the whole room.
  * @return {!Object} Structured result for the caller.
  */
 export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
@@ -221,8 +221,8 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
        * @param {*} front Front-facing side of the shelf or room.
        * @param {*} bottom Lower boundary of the geometry.
        * @param {*} upper Upper boundary of the geometry.
-       * @param {*} leavesOverride Leaves override used by this operation.
-       * @param {*} frameOverride Frame override used by this operation.
+       * @param {*} leavesOverride Optional override for the number of door leaves.
+       * @param {*} frameOverride Optional override for the front frame thickness.
        */
       const makeFront = (front, bottom, upper, leavesOverride,
         frameOverride) => {

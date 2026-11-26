@@ -22,7 +22,7 @@ export function name(value) {
  * Validates a finite numeric warehouse field against bounds.
  *
  * @param {*} value Input value to process.
- * @param {*} field Field used by this operation.
+ * @param {string} field API field name included in validation errors.
  * @param {*} min Minimum permitted value.
  * @param {*} max Maximum permitted value.
  * @return {number} Calculated numeric result.
@@ -102,7 +102,7 @@ export function glassFrame(value) {
  * Validates shelf ranges covered by furniture doors.
  *
  * @param {*} value Input value to process.
- * @param {*} shelves Shelves used by this operation.
+ * @param {*} shelves Furniture shelf list defining the order and valid endpoints of door ranges.
  * @return {!Array<!Object>} Resulting list of values.
  */
 export function doorRanges(value, shelves) {
@@ -146,7 +146,7 @@ export function shelfHeight(value) {
  * Verifies all configured shelf heights fit the furniture.
  *
  * @param {*} furniture Furniture configuration including its dimensions.
- * @param {*=} shelves Shelves used by this operation.
+ * @param {*=} shelves Shelves whose explicitly configured heights must fit within the furniture height.
  * @param {number=} height Height in pixels.
  */
 export function ensureShelfHeights(

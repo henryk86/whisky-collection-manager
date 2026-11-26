@@ -27,7 +27,7 @@ export const HELP_TOPICS = Object.freeze([
 /**
  * Help and Analytics share the same sidebar / mobile-selector layout.
  *
- * @param {string=} activeTopic Active topic used by this operation.
+ * @param {string=} activeTopic Identifier of the help topic initially shown.
  * @return {!import('../ui/render-plan.js').RenderPlan} Help topic navigation and localized content panels.
  */
 export function helpView(activeTopic = 'basics') {
@@ -69,8 +69,8 @@ export function helpView(activeTopic = 'basics') {
 /**
  * Switch the visible help topic without losing the current page or scroll.
  *
- * @param {*} topicId Topic id used by this operation.
- * @param {*} container Container used by this operation.
+ * @param {string} topicId Identifier of the help topic to activate.
+ * @param {*} container Help workspace containing the topic navigation and content panels.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function activateHelpTopic(topicId, container) {

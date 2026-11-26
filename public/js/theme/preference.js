@@ -2,7 +2,7 @@
  * Browser preference only; never persisted in the collection JSON.
  *
  * @param {*} storage Storage adapter used to load or save preferences.
- * @return {*} Text assembled for the caller.
+ * @return {'dark'|'light'|'system'} Stored preference or system when absent or inaccessible.
  */
 export function getThemePreference(storage) {
   try {
@@ -19,9 +19,9 @@ export function getThemePreference(storage) {
 /**
  * Resolves the visible theme from the stored preference and system setting.
  *
- * @param {*} preference Preference used by this operation.
- * @param {boolean=} systemDark System dark used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} preference Stored theme preference; any value other than light or dark follows the system.
+ * @param {boolean=} systemDark Whether the operating system currently prefers dark mode.
+ * @return {'dark'|'light'} Effective browser theme.
  */
 export function effectiveTheme(preference, systemDark = false) {
   if (preference === 'light' || preference === 'dark') {
@@ -33,8 +33,8 @@ export function effectiveTheme(preference, systemDark = false) {
 /**
  * Selects the next theme preference in the user's cycle.
  *
- * @param {boolean} active Active used by this operation.
- * @return {(string)} Result computed from the supplied inputs.
+ * @param {string} active Currently effective theme, light or dark.
+ * @return {'dark'|'light'} Alternate theme to activate.
  */
 export function nextTheme(active) {
   return active === 'dark' ? 'light' : 'dark';

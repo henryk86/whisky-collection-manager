@@ -11,7 +11,7 @@ import {assert} from '../domain/errors.js';
  *
  * @param {string} id Identifier used to select the relevant record.
  * @param {string} kind Resource kind selecting the relevant schema.
- * @param {*} ext Ext used by this operation.
+ * @param {string} ext Image extension without the leading dot.
  * @return {string} Relative stored-image path for the selected owner, derivative kind and extension.
  */
 export function imagePath(id, kind, ext) {
@@ -21,7 +21,7 @@ export function imagePath(id, kind, ext) {
 /**
  * Clears image for photos.
  *
- * @param {*} p P used by this operation.
+ * @param {*} p Stored relative image path, or an empty value when no image needs removal.
  */
 export function deleteImage(p) {
   if (p) {
@@ -35,7 +35,7 @@ export function deleteImage(p) {
 /**
  * Validates image data for photos.
  *
- * @param {*} base64 Base64 used by this operation.
+ * @param {*} base64 Untrusted data URL containing base64-encoded image bytes.
  * @return {!Object} Structured result for the caller.
  */
 export function validateImageData(base64) {
@@ -79,7 +79,7 @@ export function validateImageData(base64) {
 /**
  * Updates image for photos.
  *
- * @param {*} base64 Base64 used by this operation.
+ * @param {*} base64 Image data URL to validate and decode before writing to storage.
  * @param {string} id Identifier used to select the relevant record.
  * @param {string} kind Resource kind selecting the relevant schema.
  * @return {string} Relative path to the validated image written to disk.

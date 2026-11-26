@@ -65,5 +65,6 @@ export function normalizeFlavorProfile(value) {
       throw new Error('Geschmacksprofil: Werte müssen ganze Zahlen von 0 bis 10 sein');
     }
   }
-  return result;
+  // Every current axis was assigned a validated value or the permitted null.
+  return /** @type {FlavorProfile} */ (result);
 }

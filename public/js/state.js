@@ -6,7 +6,7 @@ import {getCollectionViewPreference}
  * UI state only. Persistent data is replaced by GET /api/collection after
  * mutations.
  *
- * @param {*} route Route used by this operation.
+ * @param {*} route Parsed initial navigation route, including selected records and filter state.
  * @return {!Object} Structured result for the caller.
  */
 export function createState(route) {

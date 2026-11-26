@@ -23,8 +23,8 @@ export function furnitureBounds(furniture) {
 /**
  * Tests whether two furniture footprints overlap.
  *
- * @param {*} first First used by this operation.
- * @param {*} second Second used by this operation.
+ * @param {*} first First furniture record, including position and dimensions.
+ * @param {*} second Second furniture record to test for three-dimensional intersection.
  * @return {boolean} Whether the condition is satisfied.
  */
 export function furnitureOverlap(first, second) {
@@ -66,10 +66,10 @@ export function furnitureFitsRoom(room, item) {
  *
  * @param {*} room Room model containing dimensions and furniture.
  * @param {*} item Warehouse item or record being evaluated.
- * @param {*} fromX From x used by this operation.
- * @param {*} fromY From y used by this operation.
- * @param {*} toX To x used by this operation.
- * @param {*} toY To y used by this operation.
+ * @param {number} fromX Starting horizontal position in metres.
+ * @param {number} fromY Starting depth position in metres.
+ * @param {number} toX Requested horizontal position in metres.
+ * @param {number} toY Requested depth position in metres.
  * @return {!Object} Structured result for the caller.
  */
 export function moveFurnitureTowards(room, item, fromX, fromY, toX, toY) {

@@ -21,9 +21,9 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 /**
  * Validates version pr for merge version pr.
  *
- * @param {*} pr Pr used by this operation.
- * @param {*} branch Branch used by this operation.
- * @param {*} snapshot Snapshot used by this operation.
+ * @param {*} pr Pull-request metadata returned by the GitHub CLI.
+ * @param {string} branch Expected release-version branch name.
+ * @param {string} snapshot Expected immutable head commit SHA.
  */
 export function assertVersionPR(pr, branch, snapshot) {
   if (pr?.baseRefName !== 'main' || pr.headRefName !== branch || pr.headRefOid !== snapshot ||

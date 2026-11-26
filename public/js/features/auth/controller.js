@@ -34,7 +34,7 @@ export function createAuthController({root, state, render, refresh, applyTheme,
    * Prepares password visibility toggle associated with the target input.
    *
    * @param {*} id Identifier of the affected record.
-   * @param {boolean=} hidden Value used by this operation.
+   * @param {boolean=} hidden Whether the password is currently concealed.
    * @return {!import('../../ui/render-plan.js').RenderPlan} Password visibility toggle associated with the target input.
    */
   const passwordToggle = (id, hidden = true) =>
@@ -170,8 +170,8 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   /**
    * Updates the DOM elements managed by error.
    *
-   * @param {*} form Value used by this operation.
-   * @param {*} reason Value used by this operation.
+   * @param {*} form Login or password form containing the error output.
+   * @param {*} reason Request failure carrying status and API error code, when available.
    */
   function error(form, reason) {
     const output = form.querySelector('.auth-error');
@@ -237,7 +237,7 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   /**
    * Updates setting in the current state.
    *
-   * @param {*} required Value used by this operation.
+   * @param {boolean} required Whether authentication should become mandatory.
    */
   function changeSetting(required) {
     pendingRequired = required;
@@ -312,7 +312,7 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   /**
    * Handles action for controller.
    *
-   * @param {*} button Button used by this operation.
+   * @param {*} button Clicked authentication action control with a data-act attribute.
    */
   async function handleAction(button) {
     const act = button.dataset.act;
