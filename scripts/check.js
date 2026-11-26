@@ -58,6 +58,20 @@ for (const [file, imports] of graph) {
       }
     }
   }
+  if (/^server\/(?:services|domain|storage|http)\//.test(relative)) {
+    for (const dependency of imports) {
+      if (path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('server/routes/')) {
+        throw new Error(`Backend layers must not import route definitions: ${relative} -> ${dependency}`);
+      }
+    }
+  }
+  if (relative.startsWith('server/routes/') && relative !== 'server/routes/index.js') {
+    for (const dependency of imports) {
+      if (path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('server/storage/')) {
+        throw new Error(`Feature routes must delegate persistence to services: ${relative} -> ${dependency}`);
+      }
+    }
+  }
   if (relative.startsWith('shared/')) {
     for (const dependency of imports) {
       if (path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('public/')) {

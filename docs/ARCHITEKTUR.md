@@ -12,12 +12,34 @@ WhiskyCollectionManager besteht aus einem Node.js-Server und nativen Browser-ES-
 | `public/js/ui/`, `public/styles/` | Designsystem, Dialoge, Widgets, 3D-Renderer, Fachstyles |
 | `public/js/domain/` | Abgeleitete Anzeige-/Analyseberechnungen |
 | `public/locales/de.json`, `en.json` | Übersetzungsschlüssel und Sprachvarianten |
-| `server/routes.js`, `server/http/` | HTTP-Routen, Header, Sicherheit, statische Dateien |
+| `server/app.js`, `server/http/` | Zentraler HTTP-Einstieg, Sicherheitsprüfungen, Header, statische Dateien |
+| `server/routes/` | Fachlich gruppierte HTTP-Endpunkte und gemeinsamer API-Dispatcher |
 | `server/services/` | Server-Anwendungsfälle und Schreibabläufe |
 | `server/domain/`, `shared/` | Validierung und DOM-freie Fachlogik |
 | `server/storage/` | JSON-Dateien, atomare Schreibvorgänge, Migration beim Laden |
 | `worker/` | Geplante Backups |
 | `scripts/`, `tests/` | Setup, CI, Release, Unit-/Integration-/Browsertests |
+
+## Backend-Routen und Vertrauensgrenzen
+
+`server/app.js` prüft Host, Herkunft schreibender Anfragen und Sitzungsberechtigung vor der API-Weiterleitung. Version, Sitzungsstatus, Login und Logout sind wie dokumentiert öffentlich; der Passwortwechsel und die Benutzerverwaltung unterliegen ihren eigenen Sitzungsregeln. Die CORS-Ausnahme für den Bildimport umgeht die Loginpflicht nicht. Der interne Backup-Worker wird über seinen eigenen Token im Backup-Service autorisiert.
+
+`server/routes/index.js` registriert die Fachmodule und führt die erste zu HTTP-Methode und Pfad passende Route aus. Literalpfade wie `/api/warehouse/furniture/bulk` stehen vor konkurrierenden ID-Pfaden. Die Routen sind nach Anwendungsfall aufgeteilt:
+
+| Modul in `server/routes/` | Zuständigkeit |
+|---|---|
+| `system.js` | Version und Healthcheck |
+| `auth.js` | Sitzungen, Passwörter, Benutzerverwaltung |
+| `collection.js` | Sammlung, Abfüllungen, Flaschen, Fotos, Dokumente und JSON-/CSV-Transfer |
+| `tastings.js` | Verkostungen, externe Verkostungen und Flights |
+| `warehouse.js` | Räume, Möbel, Fächer, Raumtransfer und Flaschenzuweisungen |
+| `distilleries.js` | Destillerieverzeichnis und Geokodierung |
+| `settings.js` | Sammlungseinstellungen und gespeicherte Ansichten |
+| `staged-images.js` | Temporärer Bildimport aus der Browser-Erweiterung |
+| `backups.js` | Backup-Profile, Aufträge, ZIP-Export, Archivdownloads und interner Worker-Endpunkt |
+| `recovery.js` | ZIP-Upload, Entsperren, Vorschau, Download und Wiederherstellung |
+
+Die Fachmodule definieren Pfad, Methode, Metadaten und Serviceaufruf gemäß `contract.js`. Der Dispatcher verarbeitet JSON, lässt binäre Uploads direkt zum zuständigen Service durch, setzt ETags und State-Delta-Antworten und behandelt JSON-, Inline- und Download-Antworten einheitlich. Fachvalidierung, Berechtigungen für administrative Backup-/Kontenoperationen und Persistenz verbleiben in den Services und den darunterliegenden Schichten. Nur der Dispatcher liest Revisionskennungen direkt aus den Stores. Fachrouten schreiben keine Daten selbst. Services, Domain-, Storage- und HTTP-Hilfsmodule importieren keine Routen.
 
 ## Persistenz
 

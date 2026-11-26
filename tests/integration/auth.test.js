@@ -87,6 +87,12 @@ test(
       assert.equal((await call('/api/collection')).status, 401);
       assert.equal((await call('/api/warehouse')).status, 401);
       assert.equal((await call('/api/export/json')).status, 401);
+      assert.equal((await call('/api/tasting-flights')).status, 401);
+      assert.equal((await call('/api/external-tastings')).status, 401);
+      assert.equal((await call('/api/settings/saved-views', 'PUT', {savedViews: []})).status, 401);
+      assert.equal((await call('/api/map/find-distillery', 'POST', {})).status, 401);
+      assert.equal((await call('/api/backups')).status, 401);
+      assert.equal((await call('/api/backups/import-zip/test-archive')).status, 401);
       fs.writeFileSync(path.join(data, 'images', 'secret.png'), 'PRIVATE');
       assert.equal((await call('/images/secret.png')).status, 401);
       const png =

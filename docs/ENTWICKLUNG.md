@@ -18,7 +18,7 @@ npm run test:visual
 ## Wo ist die Änderung richtig?
 
 - UI-Views und Ereignisse: `public/js/views/`, `public/js/events.js`; Zuständigkeiten des Designsystems in [Designsystem-Entwicklung](DESIGNSYSTEM_ENTWICKLUNG.md).
-- API und serverseitige Anwendungsfälle: `server/routes.js`, `server/services/`, `server/domain/`; JSON-Zugriff: `server/storage/`.
+- API und serverseitige Anwendungsfälle: `server/routes/` (fachbezogene Endpunktdefinitionen), `server/services/`, `server/domain/`; JSON-Zugriff: `server/storage/`. Neue Endpunkte im zuständigen Fachmodul definieren und neue Module in `server/routes/index.js` registrieren. Sicherheitsprüfungen und allgemeine HTTP-Antwortlogik bleiben zentral.
 - Domänenreine Logik: `shared/` und `public/js/domain/`; kein DOM in `shared/`.
 - Sprachtexte: `public/locales/de.json` und `en.json`, im Renderer `t(key)`; Benutzereingaben für HTML escapen, keine fest einkodierten deutschen GUI-Texte.
 - CSS: gemeinsame Komponenten/Tokens unter `public/styles/`, Fachstile nur für spezielle Ansichten. Den äußeren Seitenrahmen nicht pro Fachansicht redefinieren.

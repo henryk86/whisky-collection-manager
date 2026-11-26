@@ -20,6 +20,8 @@
 
 - ViewModels bereiten Filter, Sortierung, fachliche Kennzahlen und Geometrie ohne DOM- oder Zustandsmutation auf. Views binden und formatieren diese Daten; Controller steuern Navigation, Seiteneffekte und Komponentenlebenszyklen. Module nach fachlicher Verantwortung trennen, nicht nach starren Längengrenzen.
 
+- Backend-Endpunkte in `server/routes/` fachlich gruppieren und im zentralen Dispatcher registrieren. Die Fachrouten delegieren an Services und importieren keine Persistenzmodule. Host-, Herkunfts- und Sitzungsprüfungen bleiben in `server/app.js`; gemeinsame Body-, Cache-, State-Delta- und Antwortverarbeitung im Dispatcher. Dienstspezifische Autorisierung und Validierung verbleiben in den Services. Spezifische Literalpfade vor überlappenden ID-Pfaden registrieren; bestehende HTTP-Verträge bei reinen Refactorings bewahren.
+
 ## Dokumentation bei Änderungen
 
 1. Jede Änderung darauf prüfen, ob sie Bedienung, Datenformat, API, Konfiguration, Installation, Sicherheit, Tests oder Entwicklerabläufe betrifft.

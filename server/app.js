@@ -1,5 +1,5 @@
 import http from 'node:http';
-import {handleApi} from './routes.js';
+import {handleApi} from './routes/index.js';
 import {serveStatic} from './http/static-files.js';
 import {send} from './http/response.js';
 import {fail} from './domain/errors.js';
