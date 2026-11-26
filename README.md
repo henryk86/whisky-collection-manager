@@ -1,7 +1,7 @@
 # Whisky Collection Manager v1.14.0
 
 <p align="center">
-  <img src="docs/images/wcm-logo.svg" width="96" alt="Whisky Collection Manager logo">
+  <img src="public/assets/icon-512.png" width="96" alt="Whisky Collection Manager logo">
 </p>
 
 <p align="center"><strong>Deine Sammlung. Deine Nachweise. Deine Daten.</strong></p>
