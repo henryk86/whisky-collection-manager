@@ -781,6 +781,27 @@ test(
       await page.locator('#site-drawer [data-act="goto-analysis"]').click();
       await page.locator('.analytics-metric').first().waitFor();
       assert.equal(await page.locator('.analytics-section-card').count(), 7);
+      // The long German insurance title must wrap within the card rather
+      // than pushing its trailing chevron outside the responsive grid.
+      for (const width of [390, 768, 851, 981, 1024, 1180, 1366]) {
+        await page.setViewportSize({width, height: 900});
+        const cards = await page.locator('.analytics-section-card').evaluateAll(elements => elements.map(card => {
+          const [icon, copy, chevron] = card.children;
+          const bounds = card.getBoundingClientRect();
+          const style = getComputedStyle(card);
+          return {
+            section: card.dataset.section,
+            textOverflow: copy.scrollWidth - copy.clientWidth,
+            iconOverlap: icon.getBoundingClientRect().right - copy.getBoundingClientRect().left,
+            chevronOverlap: copy.getBoundingClientRect().right - chevron.getBoundingClientRect().left,
+            chevronOverflow: chevron.getBoundingClientRect().right - (bounds.right - parseFloat(style.paddingRight) - parseFloat(style.borderRightWidth)),
+          };
+        }));
+        for (const card of cards) {
+          assert.ok(card.textOverflow <= 1 && card.iconOverlap <= 1 && card.chevronOverlap <= 1 && card.chevronOverflow <= 1,
+            `${width}px: analysis card content must fit: ${JSON.stringify(card)}`);
+        }
+      }
       // Hovering any part of the final Top-Destillerien row must underline its
       // link.
       const lastTopRow = page.locator('.analytics-panel').filter({has: page.locator('h3', {hasText: 'Top-Destillerien'})}).locator('.analytics-bar-row').last();
