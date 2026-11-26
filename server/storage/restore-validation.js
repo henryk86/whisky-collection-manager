@@ -3,11 +3,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {fail} from '../domain/errors.js';
-import {migrateCollectionToCurrent} from './migrations.js';
+import {loadCollectionFiles, writeCollectionFiles, hasCollectionTransaction} from './collection-files.js';
 import {validateWarehouse, emptyWarehouse} from './warehouse-store.js';
 import {validateStore} from '../domain/auth-store.js';
 import {imageSignatureMatches} from './photos.js';
-import {writeDurableFile} from '../../shared/durable-files.js';
 
 /**
  * Computes SHA-256 with bounded memory, including for large backup archives.
@@ -96,9 +95,12 @@ function validateMedia(root, collection, warehouse) {
  * @return {{bottlings: number, bottles: number, distilleries: number}} Collection preview counts.
  */
 export function validatePreview(root, {writeMigrated = false} = {}) {
-  const filename = path.join(root, 'data', 'collection.json');
+  const directory = path.join(root, 'data');
   let migration;
-  try {migration = migrateCollectionToCurrent(JSON.parse(fs.readFileSync(filename, 'utf8')));}
+  try {
+    if (hasCollectionTransaction(directory)) throw Error('Unfinished collection transaction in backup');
+    migration = loadCollectionFiles(directory);
+  }
   catch {throw fail('ZIP enthält keine gültige Whisky-Sammlung', 400, 'api.errors.zipDoesNotContainAValidWhiskyCollection');}
   const warehouseFile = path.join(root, 'data', 'warehouse.json');
   let warehouse = emptyWarehouse();
@@ -113,7 +115,9 @@ export function validatePreview(root, {writeMigrated = false} = {}) {
   }
   const db = migration.collection;
   validateMedia(root, db, warehouse);
-  if (writeMigrated && migration.changed) writeDurableFile(filename, JSON.stringify(db, null, 2) + '\n');
+  if (writeMigrated && migration.changed) {
+    if (writeCollectionFiles(directory, db) !== 'complete') throw Error('Migrated restore journal cleanup not confirmed');
+  }
   return {
     bottlings: db.bottlings.length,
     bottles: db.bottlings.reduce((sum, item) => sum + item.bottles.length, 0),

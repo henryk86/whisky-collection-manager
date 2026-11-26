@@ -1,6 +1,6 @@
 # Lokale HTTP-API
 
-Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 6`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Die **optionale Loginpflicht** kann ein Administrator in der Nutzerverwaltung aktivieren. Dann benötigen Sammlungs-API, Bilder und Downloads eine gültige Sitzung; administrative Backup-Operationen behalten ihre separate Sicherheitsprüfung. Die API ist für den Zugriff im privaten LAN oder per VPN vorgesehen; eine direkte Internetfreigabe wird auch bei aktivierter Loginpflicht nicht empfohlen.
+Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 9`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Die **optionale Loginpflicht** kann ein Administrator in der Nutzerverwaltung aktivieren. Dann benötigen Sammlungs-API, Bilder und Downloads eine gültige Sitzung; administrative Backup-Operationen behalten ihre separate Sicherheitsprüfung. Die API ist für den Zugriff im privaten LAN oder per VPN vorgesehen; eine direkte Internetfreigabe wird auch bei aktivierter Loginpflicht nicht empfohlen.
 
 POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB Anfrageinhalt. Ungültiges JSON und Nicht-Objekte werden mit 400 abgewiesen. Fehlerantwort für bekannte Fehler: `{ "error": "Invalid path.", "errorCode": "api.errors.invalidPath" }`; der `error`-Text ist als sicherer, englischer Fallback gedacht. Der Browser übersetzt `errorCode` mittels der Sprachkataloge `public/locales/de.json` und `en.json`. Bei bestimmten dynamischen Validierungen kann zusätzlich `errorParams` (z. B. `{ "field": "abv" }`) mitgeliefert werden. Für unbekannte Fehler liefert die API ausschließlich eine neutrale englische Meldung einschließlich HTTP-Status, ohne interne Fehlermeldungen offenzulegen. Bekannte Konflikte verwenden 409, nicht gefundene Ressourcen 404. Die Endpunktdefinitionen stehen fachlich gruppiert unter `server/routes/`; beschreibbare Felder und deren Normalisierung in `server/domain/normalization.js`.
 
@@ -35,7 +35,7 @@ Der Browser kann bei `POST`, `PUT`, `PATCH` und `DELETE` den optionalen Header `
 
 | Methode | Pfad | Ergebnis |
 | --- | --- | --- |
-| GET | `/api/collection` | Vollständige Sammlung, Schema 6, einschließlich optionaler `settings.establishedYear`; `ETag`, `If-None-Match` → HTTP 304 |
+| GET | `/api/collection` | Vollständige Sammlung, Schema 9, einschließlich optionaler `settings.establishedYear`; `ETag`, `If-None-Match` → HTTP 304 |
 | PATCH | `/api/settings` | Gründungsjahr als `{ "establishedYear": 1992 }` speichern oder mit `null` entfernen; ganze Zahl von 1600 bis zum aktuellen Jahr |
 | GET | `/api/suggest-number` | `{ "number": "000001" }` als Vorschlag; noch nicht reserviert |
 | POST | `/api/bottlings` | Abfüllung mit erster physischer Flasche, Status 201 |
@@ -54,6 +54,7 @@ Der Browser kann bei `POST`, `PUT`, `PATCH` und `DELETE` den optionalen Header `
 | DELETE | `/api/bottles/:id/photos/:photoId` | Einzelnes Foto entfernt |
 | POST | `/api/bottles/:id/files` | Anhang zu einer physischen Flasche, Status 201 |
 | GET | `/api/bottles/:id/files/:fileId` | Anhang als Datei herunterladen, nicht inline anzeigen |
+| PATCH | `/api/bottles/:id/files/:fileId` | Kaufnachweis-Markierung (`purchaseEvidence`: Boolean) setzen oder entfernen |
 | DELETE | `/api/bottles/:id/files/:fileId` | Anhang entfernen und zugehörige Datei löschen |
 | POST | `/api/distilleries` | Neue Destillerie, Status 201 |
 | PATCH | `/api/distilleries/:id` | Destillerie-Stammdaten (Name, Status, Herkunft, Koordinaten) aktualisieren |
@@ -65,7 +66,7 @@ Der Browser kann bei `POST`, `PUT`, `PATCH` und `DELETE` den optionalen Header `
 ### Eigenständige Verkostungen je Abfüllung
 
 Eine Abfüllung kann 0–n unabhängige Verkostungen in `bottlings[].tastings[]`
-führen (`schemaVersion: 6`). Dieses Array ist Pflicht; historische
+führen (`schemaVersion: 9`). Dieses Array ist Pflicht; historische
 Verkostungsformate werden weder angenommen noch migriert.
 
 | Methode | Endpunkt | Funktion |
@@ -116,7 +117,7 @@ Abfüllungsdetailseite und der globale App-Header bleiben unverändert.
 
 Die zweite Variante erzeugt **keine externe Abfüllung** und erlaubt keine
 Mehrfachverkostungen zu einem externen Whisky. Alle Informationen stehen in
-**einem** `externalTastings[]`-Eintrag (weiterhin `schemaVersion: 6`):
+**einem** `externalTastings[]`-Eintrag (weiterhin `schemaVersion: 9`):
 Tasting-Felder (Datum, Titel, Farbe, Profil, Nase, Geschmack, Abgang, Bewertung),
 `id`, `createdAt`, `updatedAt` und ein eingebettetes `bottling`-Objekt mit
 `name` (Pflicht), optional `distillery`, `bottler`, `ageYears`, `abv`,
@@ -149,8 +150,8 @@ speichert `flavorProfile: null`, wiederherstellbar über Rückgängig.
 ## Tasting-Flights
 
 Tasting-Flights sind optionale, nur für die Verkostungsorganisation verwendete
-Gruppen in `collection.json`. Sie verändern weder Sammlungsbestand noch
-Bewertungszusammenfassungen. Die Daten liegen in `schemaVersion: 6`.
+Gruppen in `tastingFlights.json`. Sie verändern weder Sammlungsbestand noch
+Bewertungszusammenfassungen. Die Flight-Datei nutzt Schema 1; die zusammengesetzte API-Sammlung nutzt Schema 9.
 
 | Methode | Endpunkt | Wirkung |
 | --- | --- | --- |
@@ -268,7 +269,7 @@ Der Foto-Endpunkt akzeptiert `{ "image": "data:image/jpeg;base64,..." }`. Das is
 
 ## Dateien & Nachweise
 
-`POST /api/bottles/:id/files` benötigt ein JSON-Objekt mit `filename` (Originaldateiname) und `data` (Data-URL mit Base64-Kodierung, beispielsweise `data:application/pdf;base64,...`). Das Uploadformat ist **nicht** das Speicherformat. Die Datei liegt nach der Übertragung als normale Binärdatei in `documents/<bottleId>/`, in `collection.json` bleibt nur eine Referenz (`id`, `name`, `path`, `size`, `mimeType`, `sha256`, `uploadedAt`). Maximal 15 MiB pro Datei, bis 26 MiB JSON-Anfragegröße. Unterstützte Dateitypen: PDF, JPG/JPEG, PNG, WebP, GIF, HEIC/HEIF, TXT, CSV, EML, DOCX, XLSX, ODT und ODS. Der Server prüft Dateiname, Erweiterung und grundlegende Dateisignaturen.
+`POST /api/bottles/:id/files` benötigt ein JSON-Objekt mit `filename` (Originaldateiname) und `data` (Data-URL mit Base64-Kodierung, beispielsweise `data:application/pdf;base64,...`). Das Uploadformat ist **nicht** das Speicherformat. Die Datei liegt nach der Übertragung als normale Binärdatei in `documents/<bottleId>/`, in `collection.json` bleibt nur eine Referenz (`id`, `name`, `path`, `size`, `mimeType`, `sha256`, `uploadedAt`, optional `purchaseEvidence`). `PATCH /api/bottles/:id/files/:fileId` setzt mit `{"purchaseEvidence":true}` bzw. `false` ausschließlich die Benutzer-Kennzeichnung des Anhangs, ohne die Originaldatei zu verändern. Fehlende Kennzeichnung gilt als unklassifiziert. Maximal 15 MiB pro Datei, bis 26 MiB JSON-Anfragegröße. Unterstützte Dateitypen: PDF, JPG/JPEG, PNG, WebP, GIF, HEIC/HEIF, TXT, CSV, EML, DOCX, XLSX, ODT und ODS. Der Server prüft Dateiname, Erweiterung und grundlegende Dateisignaturen.
 
 Nur Dateien, die genau dieser physischen Flasche zugeordnet sind, können über den Download-Endpunkt geladen werden. Sie werden mit `Content-Disposition: attachment` und `application/octet-stream` ausgeliefert, nicht als öffentliches statisches HTML. Nach erfolgreichem Löschen wird die Datei vom Dateisystem entfernt. Beim Löschen der gesamten Flasche bleiben die Dateien aus Gründen der Wiederherstellbarkeit wie Fotos vorerst auf dem Datenträger, aber ohne aktiven JSON-Verweis.
 
@@ -276,7 +277,7 @@ Nur Dateien, die genau dieser physischen Flasche zugeordnet sind, können über 
 
 ## Kompatibilität
 
-Inventarnummern sind Strings, nicht Zahlen. Veraltetes `labelCode` wird bei neuen API-Anfragen abgewiesen. `labelType` gehört nicht zu den beschreibbaren Feldern. Alte Sammlungen werden beim Import/Start einschließlich Schema 3 durch den Migrationspfad auf Schema 6 angehoben; neue Daten verwenden ausschließlich `inventoryNumber`.
+Inventarnummern sind Strings, nicht Zahlen. Veraltetes `labelCode` wird bei neuen API-Anfragen abgewiesen. `labelType` gehört nicht zu den beschreibbaren Feldern. Alte Sammlungen werden beim Import/Start einschließlich Schema 3 durch den Migrationspfad auf Schema 9 angehoben; neue Daten verwenden ausschließlich `inventoryNumber`.
 
 ## Kartenseite und Destilleriestandorte
 
@@ -338,7 +339,21 @@ Alle drei Endpunkte sind normale schreibende JSON-/Origin-geschützte APIs. Die 
 
 ### Schema-Upgrade 5 → 6
 
-Beim Laden und beim JSON-/ZIP-Import werden Collection-Dateien aus Schema 5 nach Schema 6 angehoben.
+Der historische Upgrade-Schritt von Schema 5 auf Schema 6 ergänzt das Feld `ratingComment`.
 Dabei bleiben alle Verkostungen, externen Verkostungen, Flights und bereits gespeicherten `ratingComment`-Felder erhalten.
 Das optionale Textfeld `ratingComment` darf bei eigenen und externen Verkostungen bis zu 10.000 Zeichen enthalten.
-Vor einer automatischen Migration wird eine Originalkopie unter `backups/pre-schema6-…json` abgelegt; unbekannte neuere Schemata werden weiterhin abgewiesen.
+Beim direkten Upgrade auf das aktuelle Schema 9 wird dieser Schritt verlustfrei mit den folgenden Upgrades kombiniert.
+
+### Schema-Upgrade 6 → 7
+
+Schema 7 ergänzt das optionale boolesche Feld `bottles[].files[].purchaseEvidence`. Beim Start sowie beim JSON- und ZIP-Import wird Schema 6 verlustfrei angehoben. Nicht gekennzeichnete Anhänge bleiben unklassifiziert; bereits vorhandene explizite Kennzeichnungen bleiben erhalten. Fotos, Originaldokumente, Prüfsummen, Verkostungen und Lagerzuordnungen werden nicht verändert. Vor einer automatischen Migration beim Start wird die Originaldatei unter `backups/pre-schema9-…json` gesichert; unbekannte neuere Schemata werden abgewiesen.
+
+### Schema-Upgrade 7 → 8
+
+Die physische Sammlung wird auf vier Dateien aufgeteilt: `collection.json` (Schema 8), `settings.json`, `externalTastings.json` und `tastingFlights.json` (je Schema 1). API und JSON-Export enthalten weiterhin alle Felder gemeinsam. JSON-Import akzeptiert vollständige Sammlungen der unterstützten Schemata; damalige Schema-8-ZIP-Backups enthalten alle vier Dateien. Fehlende oder widersprüchliche Teildateien eines Schema-8-Backups werden abgewiesen. Die Migration erhält alle IDs, Einstellungen, Verkostungen und Flight-Zuordnungen.
+
+### Schema-Upgrade 8 → 9
+
+`distilleries.json` (Schema 1) ergänzt die vier bisherigen Dateien; die Destillerien einschließlich IDs und individuellen Metadaten werden verlustfrei übernommen. Die API und der JSON-Export liefern weiterhin eine vollständige Sammlung, jetzt mit Schema 9. Schema-8-ZIPs mit vier Dateien und vollständige ältere JSON-Exporte bleiben importierbar. Vor einer automatischen Migration der vier Schema-8-Dateien wird eine vollständige logische Schema-8-Sammlung als JSON unter `backups/pre-schema9-…json` gesichert. Unterbrochene Schema-8-Journale werden vor dem Upgrade wiederholt.
+
+Bei dateiübergreifenden Änderungen bestätigt ein erfolgreicher HTTP-Status den dauerhaft geschriebenen Datenbestand, auch wenn das Entfernen des Journals noch aussteht. Weitere Zugriffe prüfen die Recovery. HTTP 503 mit `api.errors.collectionCommitPending` bezeichnet eine dauerhaft vorgemerkte Änderung mit ausstehender Veröffentlichung; `api.errors.collectionCommitUnconfirmed` bezeichnet eine sichtbare Änderung, deren Dauerhaftigkeit nicht bestätigt werden konnte. In beiden Fällen die Änderung nicht blind wiederholen. Wenn eine frühere Änderung den nächsten Zugriff blockiert, meldet HTTP 503 `api.errors.collectionRecoveryRequired`; die neue Anfrage hat dann keine Änderung durchgeführt.

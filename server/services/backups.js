@@ -5,6 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {fail} from '../domain/errors.js';
+import {read} from '../storage/collection-store.js';
+import {loadCollectionFiles} from '../storage/collection-files.js';
 import {DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, DATA_FILE}
   from '../storage/paths.js';
 import {hasBackupPassword, saveBackupPassword}
@@ -478,6 +480,7 @@ export function createSourceSnapshot(req, jobId) {
   fs.mkdirSync(temporary, {mode: 0o700});
   try {
     if (!fs.existsSync(DATA_FILE)) throw fail('Sammlungsdatei fehlt', 503, "api.errors.collectionFileIsMissing");
+    read(); // Finish any pending multi-file commit before copying.
     for (const [from, name] of [[DATA_DIR, 'data'], [IMAGE_DIR, 'images'],
     [DOCUMENT_DIR, 'documents']]) {
       const dest = path.join(temporary, name);
@@ -487,8 +490,8 @@ export function createSourceSnapshot(req, jobId) {
         fs.mkdirSync(dest);
       }
     }
-    // The atomic JSON writer guarantees the source file is always complete.
-    JSON.parse(fs.readFileSync(path.join(temporary, 'data/collection.json'), 'utf8'));
+    // Validate the complete frozen logical snapshot, including all sidecars.
+    loadCollectionFiles(path.join(temporary, 'data'));
     syncTree(temporary);
     fs.renameSync(temporary, folder);
     syncDirectory(path.dirname(folder));

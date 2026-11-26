@@ -25,7 +25,7 @@ test(
       const colTag = initialCollection.headers.get('etag');
       assert.match(colTag, /^W\/"collection-[\w-]+"$/);
       assert.equal(initialCollection.headers.get('cache-control'), 'private, no-cache');
-      assert.equal((await initialCollection.json()).schemaVersion, 6);
+      assert.equal((await initialCollection.json()).schemaVersion, 9);
       const initialWarehouse = await get(ctx.base, '/api/warehouse');
       const whTag = initialWarehouse.headers.get('etag');
       assert.ok(whTag);
@@ -75,14 +75,24 @@ test(
       assert.equal((await get(ctx.base, '/api/collection', colTag)).status, 304);
       // Same-process cache must observe an atomic replacement by a restore or
       // another writer.
+      const core = path.join(ctx.dir, 'data', 'collection.json');
+      const coreData = JSON.parse(fs.readFileSync(core));
+      coreData.nextInventoryNumber++;
+      fs.writeFileSync(core + '.replacement', JSON.stringify(coreData));
+      fs.renameSync(core + '.replacement', core);
+      const changedCore = await get(ctx.base, '/api/collection', colTag);
+      assert.equal(changedCore.status, 200);
+      const changedCoreTag = changedCore.headers.get('etag');
+      assert.notEqual(changedCoreTag, colTag);
+      assert.equal((await changedCore.json()).nextInventoryNumber, coreData.nextInventoryNumber);
       snapshot.settings = {...snapshot.settings, establishedYear: 2020};
-      const originalFile = path.join(ctx.dir, 'data', 'collection.json');
+      const originalFile = path.join(ctx.dir, 'data', 'settings.json');
       const replacement = originalFile + '.replacement';
-      fs.writeFileSync(replacement, JSON.stringify(snapshot));
+      fs.writeFileSync(replacement, JSON.stringify({schemaVersion: 1, settings: snapshot.settings}));
       fs.renameSync(replacement, originalFile);
-      const changed = await get(ctx.base, '/api/collection', colTag);
+      const changed = await get(ctx.base, '/api/collection', changedCoreTag);
       assert.equal(changed.status, 200);
-      assert.notEqual(changed.headers.get('etag'), colTag);
+      assert.notEqual(changed.headers.get('etag'), changedCoreTag);
       assert.equal((await changed.json()).settings.establishedYear, 2020);
     } finally {await ctx.stop();}
   }

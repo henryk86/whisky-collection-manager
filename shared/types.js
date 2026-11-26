@@ -1,5 +1,5 @@
 /**
- * Documentation contracts for the JSON format (schemaVersion 6).
+ * Documentation contracts for the JSON format (schemaVersion 9).
  * These JSDoc types do not add runtime validation or a build step.
  * Runtime validation lives in server/domain/validation.js.
  * Optional metadata is intentionally omitted from minimal examples.
@@ -22,6 +22,7 @@
  * @property {string} mimeType MIME type derived from the allowed extension.
  * @property {string} sha256 SHA-256 checksum of the stored bytes.
  * @property {string} uploadedAt ISO timestamp.
+ * @property {boolean} [purchaseEvidence] User-designated purchase evidence, not independently verified.
  *
  * @typedef {Object} Bottle
  * @property {string} id Stable UUID, independent of the inventory number.
@@ -130,7 +131,7 @@
  * @property {string} updatedAt
  *
  * @typedef {Object} Collection
- * @property {6} schemaVersion
+ * @property {9} schemaVersion
  * @property {number} nextInventoryNumber
  * @property {string[]} reservedInventoryNumbers Historical numbers skipped
  * by automatic suggestions; may be manually reassigned once free.
@@ -138,9 +139,9 @@
  * collection-wide preferences; older archives omit this.
  * @property {Distillery[]} distilleries
  * @property {Bottling[]} bottlings
- * @property {StandaloneTasting[]} [externalTastings] Standalone
+ * @property {StandaloneTasting[]} externalTastings Standalone
  * tastings of unowned whisky, excluded from inventory and analytics.
- * @property {TastingFlight[]} [tastingFlights] Optional ordered session
+ * @property {TastingFlight[]} tastingFlights Ordered session
  * groups; no duplication of individual notes.
  */
 export {};

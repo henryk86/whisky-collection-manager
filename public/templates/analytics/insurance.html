@@ -1,0 +1,32 @@
+<!-- wcm-template:scope -->
+<p class="analytics-intro">{{t:insurance.scope}}</p>
+<div class="actions analytics-insurance-scope">{{content:button}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:checks -->
+<div class="analytics-bars">{{content:rows}}</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:check -->
+<div class="analytics-bar-row">
+  {{content:label}}
+  <div class="analytics-bar-track"><span style="width:{{attr:percent}}%"></span>
+  </div>
+  <strong>{{content:count}}</strong>
+</div>
+<!-- /wcm-template -->
+
+<!-- wcm-template:checkLabel -->
+<span class="analytics-bar-label">{{content:label}}</span>
+<!-- /wcm-template -->
+
+<!-- wcm-template:checkAction -->
+<button
+  type="button"
+  class="analytics-bar-label analytics-link"
+  data-act="insurance-missing"
+  data-key="{{attr:key}}"
+  aria-pressed="{{attr:pressed}}"
+  aria-label="{{attr:description}}"
+  title="{{attr:description}}">{{content:label}}</button>
+<!-- /wcm-template -->

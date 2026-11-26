@@ -43,15 +43,18 @@ Die Fachmodule definieren Pfad, Methode, Metadaten und Serviceaufruf gemäß `co
 
 ## Persistenz
 
-- `collection.json`: **Schema 6**, Abfüllungen, physische Flaschen, Fotos/Nachweise als Metadaten, unabhängige `tastings[]`, externe Verkostungen und Tasting-Flights.
+- `collection.json`: **Schema 9**, Abfüllungen, physische Flaschen, Fotos/Nachweise als Metadaten, unabhängige `tastings[]`.
+- `settings.json`, `externalTastings.json`, `tastingFlights.json`, `distilleries.json`: jeweils **Schema 1**, Sammlungseinstellungen, externe Verkostungen Flights und Destillerien als getrennte Dateien. Die API und der JSON-Export führen die fünf Dateien zu einer vollständigen Sammlung zusammen.
 - `warehouse.json`: **Schema 1**, Räume, Möbel, Fächer und Zuweisungen anhand stabiler IDs; getrennt von der Sammlung.
 - `user.json`: optionale Login- und Kontenverwaltung; nicht im Repository veröffentlichen.
 - Fotos, Dokumente und lokale Modell-Dateien liegen in eigenen Verzeichnissen. Ein einfacher Collection-JSON-Export enthält keine Bildbytes; vollständige ZIP-Backups umfassen die gespeicherten Dateien.
 - Schreibzugriffe werden validiert und serialisiert; Bestandsdateien werden über `shared/durable-files.js` atomar aktualisiert: temporäre Datei schreiben, Datei synchronisieren, veröffentlichen, Elternverzeichnis synchronisieren (POSIX). Referenzierte Medien werden vor den zugehörigen JSON-Metadaten veröffentlicht. Bei einer nachträglichen Synchronisationsstörung dürfen bereits referenzierte neue Dateien nicht gelöscht werden. API-Clients können ETags für Revalidierung und optionale State-Deltas verwenden (siehe [API](API.md)).
 
+- Dateiübergreifende Sammlungsänderungen verwenden ein dauerhaftes Redo-Journal (`.collection-transaction.json`). Vor weiteren Zugriffen wird eine unterbrochene Veröffentlichung vollständig wiederholt. Fehlende oder widersprüchliche Teildateien werden nicht durch leere Daten ersetzt. Einzeldateiänderungen benötigen kein Journal. Ein bestätigter Daten-Commit bleibt auch bei fehlgeschlagener Journalbereinigung erfolgreich; fehlende Dauerhaftigkeit und ausstehende Veröffentlichung werden separat gemeldet.
+
 - Die vollständige Wiederherstellung nutzt `restore-validation.js`, eine exklusive Anfrage-Sperre (`restore-gate.js`) und ein persistentes Zwei-Phasen-Protokoll (`restore-transaction.js`). Vor Initialisierung der Stores wird eine unterbrochene Transaktion entweder zurückgesetzt oder abgeschlossen. Der Commit-Marker wird erst nach Veröffentlichung und Synchronisation aller drei Datenverzeichnisse geschrieben. Die ursprünglichen Daten bleiben bis dahin erhalten. Voraussetzung ist ein lokales Dateisystem mit unterstütztem Verzeichnis-`fsync` und genau eine schreibende App-Instanz.
 
-**Aktuelle Datenkompatibilität:** Schema 6 ist das gegenwärtige Format. Der Upgrader in `server/storage/migrations.js` unterstützt ältere Schemas. Bei Schema 1–4 werden frühere sensorische/Verkostungsdaten **nicht** in `tastings[]` übernommen; bei Schema 5 bleiben vorhandene Verkostungen erhalten. Der Quellstand enthält dazu Tests. Es gibt nach Projektvorgabe **keine erhaltenswerten produktiven Altbestände**, für die eine verlustfreie Migration von Schema 1–4 vorgesehen wäre. Bei späterer Produktivnutzung Datenmigration und Restore ausdrücklich neu bewerten.
+**Aktuelle Datenkompatibilität:** Schema 9 ist das gegenwärtige Format. Der Upgrader in `server/storage/migrations.js` unterstützt ältere Schemas. Bei Schema 1–4 werden frühere sensorische/Verkostungsdaten **nicht** in `tastings[]` übernommen; bei Schema 5 bis 8 bleiben vorhandene Verkostungen und Metadaten erhalten. Schema 9 lagert Destillerien aus. Schema 7 ergänzt `purchaseEvidence` als optionale Kennzeichnung von Kaufnachweisen. Der Quellstand enthält dazu Tests. Es gibt nach Projektvorgabe **keine erhaltenswerten produktiven Altbestände**, für die eine verlustfreie Migration von Schema 1–4 vorgesehen wäre. Bei späterer Produktivnutzung Datenmigration und Restore ausdrücklich neu bewerten.
 
 ## Browser und Datenfluss
 

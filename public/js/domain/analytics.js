@@ -1,7 +1,7 @@
 import {displayedTastingRating, latestTasting}
   from '../../../shared/tasting-records.js';
 /**
- * Pure analytics over the current schema-6 collection. No storage writes, no
+ * Pure analytics over the current schema-9 collection. No storage writes, no
  * inferred market values.
  */
 import {whiskyTypeName} from './labels.js';

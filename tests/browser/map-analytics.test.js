@@ -780,7 +780,7 @@ test(
       await page.locator('header [data-act="toggle-menu"]').click();
       await page.locator('#site-drawer [data-act="goto-analysis"]').click();
       await page.locator('.analytics-metric').first().waitFor();
-      assert.equal(await page.locator('.analytics-section-card').count(), 6);
+      assert.equal(await page.locator('.analytics-section-card').count(), 7);
       // Hovering any part of the final Top-Destillerien row must underline its
       // link.
       const lastTopRow = page.locator('.analytics-panel').filter({has: page.locator('h3', {hasText: 'Top-Destillerien'})}).locator('.analytics-bar-row').last();

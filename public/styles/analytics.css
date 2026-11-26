@@ -260,6 +260,10 @@
   margin: 0;
 }
 
+.analytics-insurance-scope {
+  margin-bottom: 16px;
+}
+
 .analytics-intro {
   color: var(--muted);
   font-size: 14px;

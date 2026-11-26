@@ -2,7 +2,7 @@
 
 ## Zuordnung und Navigation
 
-Eine Sammlungsabfüllung hat 0–n eigenständige, datierte Verkostungen in `bottlings[].tastings[]` (Collection-Schema 6). Die Verkostung gehört zur **Abfüllung**, nicht zu einer physischen Flasche. Eine externe, nicht besessene Whisky-Verkostung ist ein eigener Eintrag ohne verwaltete Abfüllung. Einzelverkostung und Liste unterstützen direkte URLs und Browser-History. Bestehende Einträge öffnen lesend und werden über die Bearbeiten-Aktion editierbar; neue Einträge werden explizit gespeichert.
+Eine Sammlungsabfüllung hat 0–n eigenständige, datierte Verkostungen in `bottlings[].tastings[]` (Collection-Schema 9). Die Verkostung gehört zur **Abfüllung**, nicht zu einer physischen Flasche. Eine externe, nicht besessene Whisky-Verkostung ist ein eigener Eintrag ohne verwaltete Abfüllung. Einzelverkostung und Liste unterstützen direkte URLs und Browser-History. Bestehende Einträge öffnen lesend und werden über die Bearbeiten-Aktion editierbar; neue Einträge werden explizit gespeichert.
 
 Für die **letzte Bewertung** ist das neueste Verkostungsdatum entscheidend, bei Gleichstand Erstellungszeit und ID. Ist dieser Eintrag unbewertet, bleibt die Abfüllung unbewertet, auch wenn frühere Bewertungen vorliegen. Analysen zählen nicht mehrfach pro Abfüllung.
 

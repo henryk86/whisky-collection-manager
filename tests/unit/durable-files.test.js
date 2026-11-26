@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {PublishedWriteError, writeDurableFile} from '../../shared/durable-files.js';
+import {PublishedWriteError, syncFile, syncTree, writeDurableFile} from '../../shared/durable-files.js';
 import {RestoreGate} from '../../server/storage/restore-gate.js';
 
 test('durable file publication flushes bytes before renaming, then flushes directory metadata', t => {
@@ -20,6 +20,51 @@ test('durable file publication flushes bytes before renaming, then flushes direc
     assert.deepEqual(calls, process.platform === 'win32' ? ['file', 'rename'] : ['file', 'rename', 'directory']);
     assert.deepEqual(fs.readdirSync(root), ['data.json']);
   } finally {fs.rmSync(root, {recursive: true, force: true});}
+});
+
+test('existing files and directory trees can be flushed without changing their contents', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-durable-'));
+  const filename = path.join(root, 'data.json');
+  const bytes = Buffer.from('original bytes');
+  try {
+    fs.writeFileSync(filename, bytes);
+    syncFile(filename);
+    syncTree(root);
+    assert.deepEqual(fs.readFileSync(filename), bytes);
+    const missing = path.join(root, 'missing.json');
+    assert.throws(() => syncFile(missing), {code: 'ENOENT'});
+    assert.equal(fs.existsSync(missing), false);
+  } finally {fs.rmSync(root, {recursive: true, force: true});}
+});
+
+test('Windows flushes an existing file using a write-capable handle and propagates real flush errors', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-durable-'));
+  const filename = path.join(root, 'data.json');
+  const platform = Object.getOwnPropertyDescriptor(process, 'platform');
+  const open = fs.openSync;
+  const sync = fs.fsyncSync;
+  const handles = new Map();
+  let fail = false;
+  try {
+    fs.writeFileSync(filename, 'original');
+    Object.defineProperty(process, 'platform', {...platform, value: 'win32'});
+    t.mock.method(fs, 'openSync', (file, flags, ...args) => {
+      const fd = open(file, flags, ...args);
+      handles.set(fd, flags);
+      return fd;
+    });
+    t.mock.method(fs, 'fsyncSync', fd => {
+      if (handles.get(fd) !== 'r+' || fail) throw Object.assign(Error('operation not permitted, fsync'), {code: 'EPERM'});
+      return sync(fd);
+    });
+    syncFile(filename);
+    fail = true;
+    assert.throws(() => syncFile(filename), {code: 'EPERM'});
+    assert.equal(fs.readFileSync(filename, 'utf8'), 'original');
+  } finally {
+    Object.defineProperty(process, 'platform', platform);
+    fs.rmSync(root, {recursive: true, force: true});
+  }
 });
 
 test('a failed file flush preserves the old file and removes the incomplete temporary file', t => {

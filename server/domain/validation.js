@@ -73,7 +73,7 @@ const validImagePath = p => typeof p === 'string' && /^images\/[a-f0-9-]{36}\/[\
  */
 export function validate(collection) {
   assert(
-    isObject(collection) && collection.schemaVersion === 6,
+    isObject(collection) && collection.schemaVersion === 9,
     'Ungültige oder nicht unterstützte JSON-Schemaversion',
     400,
     "api.errors.invalidOrUnsupportedJSONSchemaVersion"
@@ -603,6 +603,10 @@ export function validate(collection) {
         'Ungueltiges Upload-Datum',
         400,
         "api.errors.invalidUploadDate"
+      );
+      assert(
+        file.purchaseEvidence === undefined || typeof file.purchaseEvidence === 'boolean',
+        'Ungueltiger Dateianhang', 400, 'api.errors.invalidFileAttachment'
       );
       assert(
         !fileIds.has(file.id) && !documentPaths.has(file.path),

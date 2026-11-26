@@ -28,7 +28,7 @@ test(
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-readable-zip-'));
     try {
       const source = path.join(root, 'source');
-      create(source, 'data/collection.json', JSON.stringify({schemaVersion: 6}));
+      create(source, 'data/collection.json', JSON.stringify({schemaVersion: 7}));
       create(source, 'images/subfolder/photo.jpg', Buffer.from([0, 1, 2, 3, 255]));
       create(source, 'documents/rechnung.pdf', '%PDF-1.4 test');
       const archive = path.join(root, 'backup.zip');
@@ -37,10 +37,10 @@ test(
       assert.throws(() => inspectReadableZip(archive), /Passwort/);
       assert.throws(() => inspectReadableZip(archive, null, 'falsch'), /Passwort/);
       assert.equal(inspectReadableZip(archive, null, zipPass).files, 4);
-      assert.equal(fs.readFileSync(archive).includes(Buffer.from('\"schemaVersion\":6')), false);
+      assert.equal(fs.readFileSync(archive).includes(Buffer.from('\"schemaVersion\":7')), false);
       const extract = path.join(root, 'extracted');
       inspectReadableZip(archive, extract, zipPass);
-      assert.equal(fs.readFileSync(path.join(extract, 'data/collection.json'), 'utf8'), '{"schemaVersion":6}');
+      assert.equal(fs.readFileSync(path.join(extract, 'data/collection.json'), 'utf8'), '{"schemaVersion":7}');
       assert.deepEqual(
         fs.readFileSync(path.join(extract, 'images/subfolder/photo.jpg')),
         Buffer.from([0, 1, 2, 3, 255])
@@ -91,7 +91,7 @@ test(
           res.writeHead(403); return res.end('{}');
         }
         const id = req.url.split('/').at(-1);
-        create(control, `staging/${id}/data/collection.json`, '{"schemaVersion":6}');
+        create(control, `staging/${id}/data/collection.json`, '{"schemaVersion":7}');
         create(control, `staging/${id}/images/pic.png`, 'photo');
         create(control, `staging/${id}/documents/bill.pdf`, 'invoice');
         res.setHeader('Content-Type', 'application/json'); res.end('{}');

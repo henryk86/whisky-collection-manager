@@ -5,7 +5,7 @@ import path from 'node:path';
 import {startTestServer, requestJson} from '../helpers/server.js';
 
 test(
-  'founding year persists in collection.json, is included in API data and can be cleared',
+  'founding year persists in settings.json, is included in API data and can be cleared',
   async () => {
     const server = await startTestServer();
     try {
@@ -16,7 +16,7 @@ test(
       assert.equal(response.data.establishedYear, 1996);
       const current = await requestJson(server.base, '/api/collection');
       assert.equal(current.data.settings.establishedYear, 1996);
-      const stored = JSON.parse(fs.readFileSync(path.join(server.dir, 'data/collection.json'), 'utf8'));
+      const stored = JSON.parse(fs.readFileSync(path.join(server.dir, 'data/settings.json'), 'utf8'));
       assert.equal(stored.settings.establishedYear, 1996);
       for (const year of ['1997', 1599, 2100, 2010.5, false, {}, undefined]) {
         const invalid = await requestJson(server.base, '/api/settings', 'PATCH', {establishedYear: year});
@@ -28,7 +28,7 @@ test(
       assert.equal(cleared.status, 200);
       assert.equal((await requestJson(server.base, '/api/collection')).data.settings.establishedYear, null);
       // Older pre-settings backups remain valid in the same schema version.
-      const legacy = {...stored};
+      const legacy = {...current.data, schemaVersion: 7};
       delete legacy.settings;
       const imported = await requestJson(server.base, '/api/import/json', 'POST', legacy);
       assert.equal(imported.status, 200);

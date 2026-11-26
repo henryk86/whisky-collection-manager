@@ -1,6 +1,6 @@
 # Whisky Collection Manager v1.13.1
 
-Webanwendung zur lokalen Verwaltung einer Whisky-Sammlung mit einzelnen Flaschen, Verkostungen und Lagerplätzen. Die Anwendung basiert auf Node.js und Browser-ES-Modulen, benötigt keine Datenbank und keinen Frontend-Build. Sammlung und Lager werden bewusst in JSON-Dateien gespeichert.
+Webanwendung zur lokalen Verwaltung einer Whisky-Sammlung mit einzelnen Flaschen, Verkostungen und Lagerplätzen. Sie dient insbesondere der nachvollziehbaren Bestands- und Kaufdokumentation für die eigene Versicherung. Die Anwendung basiert auf Node.js und Browser-ES-Modulen, benötigt keine Datenbank und keinen Frontend-Build. Alle Daten insbesondere Sammlung und Lager werden in JSON-Dateien gespeichert.
 
 
 ## Funktionen
@@ -10,6 +10,7 @@ Webanwendung zur lokalen Verwaltung einer Whisky-Sammlung mit einzelnen Flaschen
 - **Intelligente Tasting-Flight-Planung:** Vier Strategien kombinieren Geschmacksprofile, Fassarten und Alter und optimieren die Verkostungsreihenfolge. [Planungslogik und Formeln](docs/FLIGHT_PLANUNG.md).
 - **Fotos und Nachweise:** Flaschenfotos bearbeiten und sortieren, optionale lokale KI-Freistellung; Dokumente je physischer Flasche mit Vorschau und Download.
 - **Lager:** Räume, Möbel und Fächer, Umlagerungen, Flaschensuche und Raumpläne in 2D und 3D.
+- **Versicherungsdokumentation:** Nachweisvollständigkeit pro physischer Flasche, Kaufnachweis-Markierungen, PDF-Berichte und ZIP-Paket mit Originalen.
 - **Analysen und Karte:** Sammlungs- und Wertauswertungen sowie eine Destilleriekarte mit OpenStreetMap.
 - **Datensicherung:** Verschlüsselte Backups mit geplanten Sicherungen, verschiedenen Speicherzielen und Wiederherstellung.
 - **Oberfläche und Zugriff:** Responsive, Deutsch/Englisch, Hell-/Dunkelmodus und optionale Anmeldung mit Nutzerverwaltung.

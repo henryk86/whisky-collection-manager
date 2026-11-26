@@ -232,6 +232,17 @@ export const collectionRoutes = [
     run: ([id, fileId]) => bottles.downloadFile(id, fileId),
   },
   {
+    method: 'PATCH',
+    path: /^\/api\/bottles\/([\w-]+)\/files\/([\w-]+)$/,
+    /**
+     * Updates the user-designated purpose of an attachment without changing its bytes.
+     * @param {string[]} items Bottle and attachment identifiers.
+     * @param {*} body Untrusted designation.
+     * @return {ReturnType<typeof bottles.markPurchaseEvidence>} Updated attachment metadata.
+     */
+    run: ([id, fileId], body) => bottles.markPurchaseEvidence(id, fileId, body),
+  },
+  {
     method: 'DELETE',
     path: /^\/api\/bottles\/([\w-]+)\/files\/([\w-]+)$/,
     /**

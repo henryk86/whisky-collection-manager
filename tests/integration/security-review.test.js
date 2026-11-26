@@ -16,7 +16,7 @@ test(
       const response = await fetch(context.base + '/api/import/json', {
         method: 'POST',
         headers: {'Content-Type': 'text/plain'},
-        body: JSON.stringify({schemaVersion: 6, bottlings: []}),
+        body: JSON.stringify({schemaVersion: 9, bottlings: []}),
       });
       assert.equal(response.status, 415);
       assert.equal(fs.readFileSync(file, 'utf8'), before);
@@ -46,7 +46,7 @@ test(
         const response = await fetch(context.base + '/api/import/json', {
           method: 'POST',
           headers: {'Content-Type': 'application/json', ...extraHeaders},
-          body: JSON.stringify({schemaVersion: 6, bottlings: []}),
+          body: JSON.stringify({schemaVersion: 9, bottlings: []}),
         });
         assert.equal(response.status, 403, JSON.stringify(extraHeaders));
         assert.equal(fs.readFileSync(file, 'utf8'), original);
@@ -300,7 +300,7 @@ test(
         request.once('close', resolve);
         // Send an incomplete body, then drop the socket while readJson is
         // waiting.
-        request.write('{"schemaVersion":6,"bottlings":[');
+        request.write('{"schemaVersion":7,"bottlings":[');
         setTimeout(() => request.destroy(), 70);
       });
       await new Promise(resolve => setTimeout(resolve, 110));

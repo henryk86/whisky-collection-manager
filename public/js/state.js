@@ -52,6 +52,8 @@ export function createState(route) {
     pageNumber: 1,
     pageSize: getPageSizePreference(),
     analyticsFilters: route.filters || {distillery: 'all', country: 'all', status: 'all', volumeType: 'all'},
+    insuranceIncludeSamples: false,
+    insuranceMissing: 'all',
     analyticsPeriod: 'month',
     analyticsStartDate: '',
     analyticsEndDate: '',

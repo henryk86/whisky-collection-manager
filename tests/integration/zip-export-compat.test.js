@@ -13,7 +13,7 @@ test(
     try {
       const file = path.join(dir, 'export.zip');
       fs.writeFileSync(file, zipFiles([
-        ['data/collection.json', Buffer.from('{"schemaVersion":6}')],
+        ['data/collection.json', Buffer.from('{"schemaVersion":7}')],
         ['images/bottle.jpg', Buffer.from('jpg')],
         ['documents/invoice.pdf', Buffer.from('pdf')],
       ]));
