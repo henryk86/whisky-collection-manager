@@ -59,7 +59,7 @@ test(
       });
       assert.equal(sibling.status, 201);
       const current = (await requestJson(ctx.base, '/api/collection')).data;
-      assert.equal(current.schemaVersion, 6);
+      assert.equal(current.schemaVersion, 7);
       assert.equal(current.bottlings[0].bottles[0].files.length, 2);
       assert.deepEqual(current.bottlings[0].bottles[1].files, []);
       assert.ok(!Object.hasOwn(current.bottlings[0], 'files'));
@@ -176,7 +176,7 @@ test(
       const result = await requestJson(ctx.base, '/api/import/json', 'POST', old);
       assert.equal(result.status, 200);
       const after = (await requestJson(ctx.base, '/api/collection')).data;
-      assert.equal(after.schemaVersion, 6);
+      assert.equal(after.schemaVersion, 7);
       assert.equal(after.bottlings[0].id, created.data.bottling.id);
       assert.equal(after.bottlings[0].bottles[0].id, created.data.bottle.id);
       assert.equal(after.bottlings[0].bottles[0].inventoryNumber, '009009');
@@ -186,3 +186,51 @@ test(
     } finally {await ctx.stop();}
   }
 );
+
+test('schema 6 startup and JSON import preserve original attachments and explicit purchase evidence', async () => {
+  const ctx = await startTestServer();
+  try {
+    const created = await requestJson(ctx.base, '/api/bottlings', 'POST', {name: 'Legacy evidence'});
+    const bottleId = created.data.bottle.id;
+    const attachments = [];
+    for (const name of ['receipt.pdf', 'certificate.pdf', 'unclassified.pdf']) {
+      const result = await requestJson(ctx.base, `/api/bottles/${bottleId}/files`, 'POST', {filename: name, data: dataUrl(pdf, 'application/pdf')});
+      assert.equal(result.status, 201);
+      attachments.push(result.data);
+    }
+    const legacy = (await requestJson(ctx.base, '/api/collection')).data;
+    legacy.schemaVersion = 6;
+    const files = legacy.bottlings[0].bottles[0].files;
+    files[0].purchaseEvidence = true;
+    files[1].purchaseEvidence = false;
+    assert.equal(files[2].purchaseEvidence, undefined);
+    const expected = {...legacy, schemaVersion: 7};
+    const stored = path.join(ctx.dir, 'data/collection.json');
+    const warehouse = path.join(ctx.dir, 'data/warehouse.json');
+    const warehouseBytes = fs.readFileSync(warehouse);
+    const bytes = Buffer.from(JSON.stringify(legacy, null, 2) + '\n');
+    fs.writeFileSync(stored, bytes);
+    const {spawnSync} = await import('node:child_process');
+    const args = ['--input-type=module', '-e', "import {initialize} from './server/storage/collection-store.js';initialize();"];
+    const options = {cwd: process.cwd(), env: {...process.env, WHISKY_DATA_DIR: ctx.dir}, encoding: 'utf8'};
+    const migrated = spawnSync(process.execPath, args, options);
+    assert.equal(migrated.status, 0, migrated.stderr);
+    assert.deepEqual(JSON.parse(fs.readFileSync(stored, 'utf8')), expected);
+    const backupDir = path.join(ctx.dir, 'backups');
+    const backups = fs.readdirSync(backupDir).filter(name => name.startsWith('pre-schema7-'));
+    assert.equal(backups.length, 1);
+    assert.deepEqual(fs.readFileSync(path.join(backupDir, backups[0])), bytes);
+    const second = spawnSync(process.execPath, args, options);
+    assert.equal(second.status, 0, second.stderr);
+    assert.deepEqual(fs.readdirSync(backupDir).filter(name => name.startsWith('pre-schema7-')), backups);
+    assert.equal((await requestJson(ctx.base, '/api/import/json', 'POST', legacy)).status, 200);
+    assert.deepEqual((await requestJson(ctx.base, '/api/collection')).data, expected);
+    for (const attachment of attachments) assert.deepEqual(fs.readFileSync(path.join(ctx.dir, attachment.path)), pdf);
+    assert.deepEqual(fs.readFileSync(warehouse), warehouseBytes);
+    const invalid = structuredClone(legacy);
+    invalid.bottlings[0].bottles[0].files[0].purchaseEvidence = 'true';
+    assert.equal((await requestJson(ctx.base, '/api/import/json', 'POST', invalid)).status, 400);
+    assert.equal((await requestJson(ctx.base, '/api/import/json', 'POST', {...expected, schemaVersion: 8})).status, 400);
+    assert.deepEqual((await requestJson(ctx.base, '/api/collection')).data, expected);
+  } finally {await ctx.stop();}
+});

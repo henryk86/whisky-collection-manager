@@ -14,13 +14,13 @@ import {migrateCollectionToCurrent} from './migrations.js';
 const seedFile = new URL('../../seed/distillery.json', import.meta.url);
 
 /**
- * Creates the initial schema-6 collection with curated distilleries.
+ * Creates the initial schema-7 collection with curated distilleries.
  *
  * @return {import('../../shared/types.js').Collection} New collection state;
  * the seed catalog is loaded from disk.
  */
 export const empty = () => ({
-  schemaVersion: 6,
+  schemaVersion: 7,
   nextInventoryNumber: 1,
   reservedInventoryNumbers: [],
   settings: {establishedYear: null, },
@@ -92,7 +92,7 @@ export function initialize() {
   const migration = migrateCollectionToCurrent(original);
   if (migration.changed) {
     // No modifications until the migration is valid AND an exact copy is safe.
-    const backup = path.join(BACKUP_DIR, `pre-schema6-${Date.now()}-${crypto.randomUUID()}.json`);
+    const backup = path.join(BACKUP_DIR, `pre-schema7-${Date.now()}-${crypto.randomUUID()}.json`);
     fs.copyFileSync(DATA_FILE, backup, fs.constants.COPYFILE_EXCL);
     syncFile(backup);
     syncDirectory(BACKUP_DIR);

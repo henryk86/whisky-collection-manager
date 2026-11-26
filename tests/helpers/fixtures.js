@@ -5,7 +5,7 @@
  */
 export function collectionFixture() {
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     nextInventoryNumber: 124,
     reservedInventoryNumbers: ['000123'],
     distilleries: [{

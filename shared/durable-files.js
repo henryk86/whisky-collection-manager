@@ -51,7 +51,8 @@ export function ensureDurableDirectory(directory, mode = 0o700) {
  * @param {string} filename File to synchronize.
  */
 export function syncFile(filename) {
-  const fd = fs.openSync(filename, 'r');
+  // Windows FlushFileBuffers requires a write-capable handle, even when no bytes are changed.
+  const fd = fs.openSync(filename, process.platform === 'win32' ? 'r+' : 'r');
   try {fs.fsyncSync(fd);}
   finally {fs.closeSync(fd);}
 }

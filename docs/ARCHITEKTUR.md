@@ -43,7 +43,7 @@ Die Fachmodule definieren Pfad, Methode, Metadaten und Serviceaufruf gemäß `co
 
 ## Persistenz
 
-- `collection.json`: **Schema 6**, Abfüllungen, physische Flaschen, Fotos/Nachweise als Metadaten, unabhängige `tastings[]`, externe Verkostungen und Tasting-Flights.
+- `collection.json`: **Schema 7**, Abfüllungen, physische Flaschen, Fotos/Nachweise als Metadaten, unabhängige `tastings[]`, externe Verkostungen und Tasting-Flights.
 - `warehouse.json`: **Schema 1**, Räume, Möbel, Fächer und Zuweisungen anhand stabiler IDs; getrennt von der Sammlung.
 - `user.json`: optionale Login- und Kontenverwaltung; nicht im Repository veröffentlichen.
 - Fotos, Dokumente und lokale Modell-Dateien liegen in eigenen Verzeichnissen. Ein einfacher Collection-JSON-Export enthält keine Bildbytes; vollständige ZIP-Backups umfassen die gespeicherten Dateien.
@@ -51,7 +51,7 @@ Die Fachmodule definieren Pfad, Methode, Metadaten und Serviceaufruf gemäß `co
 
 - Die vollständige Wiederherstellung nutzt `restore-validation.js`, eine exklusive Anfrage-Sperre (`restore-gate.js`) und ein persistentes Zwei-Phasen-Protokoll (`restore-transaction.js`). Vor Initialisierung der Stores wird eine unterbrochene Transaktion entweder zurückgesetzt oder abgeschlossen. Der Commit-Marker wird erst nach Veröffentlichung und Synchronisation aller drei Datenverzeichnisse geschrieben. Die ursprünglichen Daten bleiben bis dahin erhalten. Voraussetzung ist ein lokales Dateisystem mit unterstütztem Verzeichnis-`fsync` und genau eine schreibende App-Instanz.
 
-**Aktuelle Datenkompatibilität:** Schema 6 ist das gegenwärtige Format. Der Upgrader in `server/storage/migrations.js` unterstützt ältere Schemas. Bei Schema 1–4 werden frühere sensorische/Verkostungsdaten **nicht** in `tastings[]` übernommen; bei Schema 5 bleiben vorhandene Verkostungen erhalten. Der Quellstand enthält dazu Tests. Es gibt nach Projektvorgabe **keine erhaltenswerten produktiven Altbestände**, für die eine verlustfreie Migration von Schema 1–4 vorgesehen wäre. Bei späterer Produktivnutzung Datenmigration und Restore ausdrücklich neu bewerten.
+**Aktuelle Datenkompatibilität:** Schema 7 ist das gegenwärtige Format. Der Upgrader in `server/storage/migrations.js` unterstützt ältere Schemas. Bei Schema 1–4 werden frühere sensorische/Verkostungsdaten **nicht** in `tastings[]` übernommen; bei Schema 5 und 6 bleiben vorhandene Verkostungen und Metadaten erhalten. Schema 7 ergänzt `purchaseEvidence` als optionale Kennzeichnung von Kaufnachweisen. Der Quellstand enthält dazu Tests. Es gibt nach Projektvorgabe **keine erhaltenswerten produktiven Altbestände**, für die eine verlustfreie Migration von Schema 1–4 vorgesehen wäre. Bei späterer Produktivnutzung Datenmigration und Restore ausdrücklich neu bewerten.
 
 ## Browser und Datenfluss
 

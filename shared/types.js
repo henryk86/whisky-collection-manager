@@ -1,5 +1,5 @@
 /**
- * Documentation contracts for the JSON format (schemaVersion 6).
+ * Documentation contracts for the JSON format (schemaVersion 7).
  * These JSDoc types do not add runtime validation or a build step.
  * Runtime validation lives in server/domain/validation.js.
  * Optional metadata is intentionally omitted from minimal examples.
@@ -131,7 +131,7 @@
  * @property {string} updatedAt
  *
  * @typedef {Object} Collection
- * @property {6} schemaVersion
+ * @property {7} schemaVersion
  * @property {number} nextInventoryNumber
  * @property {string[]} reservedInventoryNumbers Historical numbers skipped
  * by automatic suggestions; may be manually reassigned once free.

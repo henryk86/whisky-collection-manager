@@ -224,7 +224,7 @@ test(
       assert.equal(changed.status, 200);
       assert.equal(changed.data.volumeMl, 50);
       const db = (await api(ctx.base, '/api/collection')).data;
-      assert.equal(db.schemaVersion, 6);
+      assert.equal(db.schemaVersion, 7);
       assert.equal(db.bottlings[0].volumeType, undefined);
       assert.deepEqual(db.bottlings[0].bottles.map(x => x.volumeType), ['standard', 'sample']);
       const csv = await fetch(ctx.base + '/api/export/csv');
@@ -296,7 +296,7 @@ test(
       assert.ok(csvText.includes('Inventarnummer'));
       assert.ok(!csvText.includes('Etikettencode'));
       const db = JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/collection.json')));
-      assert.equal(db.schemaVersion, 6);
+      assert.equal(db.schemaVersion, 7);
       assert.equal(db.bottlings[0].bottles[0].inventoryNumber, '000123');
       assert.equal(db.bottlings[0].bottles[0].labelCode, undefined);
     }
@@ -389,7 +389,7 @@ test(
         let out = '', err = ''; child.stdout.on('data', c => out += c); child.stderr.on('data', c => err += c);
         child.on('close', code => code === 0 ? resolve(JSON.parse(out)) : reject(Error(err)));
       });
-      assert.equal(upgraded.collection.schemaVersion, 6);
+      assert.equal(upgraded.collection.schemaVersion, 7);
       assert.deepEqual(upgraded.collection.distilleries, before.distilleries);
       assert.deepEqual(upgraded.collection.settings, before.settings);
       assert.deepEqual(upgraded.collection.reservedInventoryNumbers, before.reservedInventoryNumbers);
@@ -416,7 +416,7 @@ test(
       );
       assert.equal(upgraded.warehouse.assignments[bottleId], shelf.id);
       assert.deepEqual(upgraded.warehouse.rooms[0].furniture[0].shelves[0].id, shelf.id);
-      const backups = fs.readdirSync(path.join(ctx.dir, 'backups')).filter(n => n.startsWith('pre-schema6-'));
+      const backups = fs.readdirSync(path.join(ctx.dir, 'backups')).filter(n => n.startsWith('pre-schema7-'));
       assert.equal(backups.length, 1);
       assert.deepEqual(fs.readFileSync(path.join(ctx.dir, 'backups', backups[0])), originalBytes);
       // A second launch MUST NOT create another backup or alter the migrated
@@ -427,7 +427,7 @@ test(
   }
 );
 test(
-  'schema 5 to 6 preserves existing tastings, rating comments, flights, and warehouse data',
+  'schema 5 to 7 preserves existing tastings, rating comments, flights, and warehouse data',
   async () => {
     const ctx = await start();
     try {
@@ -470,11 +470,11 @@ test(
         let out = '', err = ''; child.stdout.on('data', c => out += c); child.stderr.on('data', c => err += c);
         child.on('close', code => code === 0 ? resolve(JSON.parse(out)) : reject(Error(err)));
       });
-      assert.equal(upgraded.schemaVersion, 6);
-      assert.deepEqual({...upgraded, schemaVersion: 5}, before, 'schema 5 -> 6 must change only the schemaVersion');
+      assert.equal(upgraded.schemaVersion, 7);
+      assert.deepEqual({...upgraded, schemaVersion: 5}, before, 'schema 5 -> 7 must change only the schemaVersion');
       assert.equal(upgraded.bottlings[0].tastings[0].ratingComment, 'Must survive upgrade');
       assert.deepEqual(fs.readFileSync(warehouse), warehouseBefore);
-      const backups = fs.readdirSync(path.join(ctx.dir, 'backups')).filter(n => n.startsWith('pre-schema6-'));
+      const backups = fs.readdirSync(path.join(ctx.dir, 'backups')).filter(n => n.startsWith('pre-schema7-'));
       assert.equal(backups.length, 1);
       assert.deepEqual(fs.readFileSync(path.join(ctx.dir, 'backups', backups[0])), original);
       const {migrateCollectionToCurrent} = await import('../../server/storage/migrations.js');
@@ -484,7 +484,7 @@ test(
 );
 
 test(
-  'schema 5 JSON import retains tasting commentary and upgrades to 6',
+  'schema 5 JSON import retains tasting commentary and upgrades to 7',
   async () => {
     const ctx = await start();
     try {
@@ -508,7 +508,7 @@ test(
       const imported = await api(ctx.base, '/api/import/json', 'POST', older);
       assert.equal(imported.status, 200);
       const after = (await api(ctx.base, '/api/collection')).data;
-      assert.equal(after.schemaVersion, 6);
+      assert.equal(after.schemaVersion, 7);
       assert.deepEqual({...after, schemaVersion: 5}, older, 'import changes only the schema version');
       assert.equal(after.bottlings.find(item => item.id === id).tastings[0].ratingComment, 'Ein klarer Gesamteindruck');
     } finally {await ctx.stop();}
@@ -544,12 +544,12 @@ test(
       assert.notEqual(code, 0);
       assert.deepEqual(fs.readFileSync(stored), bytes);
       assert.deepEqual(fs.readFileSync(warehouse), warehouseBefore);
-      assert.equal(fs.readdirSync(path.join(ctx.dir, 'backups')).filter(n => n.startsWith('pre-schema6-')).length, 0);
+      assert.equal(fs.readdirSync(path.join(ctx.dir, 'backups')).filter(n => n.startsWith('pre-schema7-')).length, 0);
     } finally {await ctx.stop();}
   }
 );
 test(
-  'JSON import upgrades old schema without retaining old tastings and rejects stale summary fields in schema 6',
+  'JSON import upgrades old schema without retaining old tastings and rejects stale summary fields in schema 7',
   async () => {
     const ctx = await start();
     try {

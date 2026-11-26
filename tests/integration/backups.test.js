@@ -445,7 +445,7 @@ test(
       );
       assert.equal(apply.status, 200, JSON.stringify(apply.data));
       const upgraded = (await request(ctx.base, '/api/collection')).data;
-      assert.equal(upgraded.schemaVersion, 6);
+      assert.equal(upgraded.schemaVersion, 7);
       assert.equal(upgraded.bottlings[0].id, created.data.bottling.id);
       assert.equal(upgraded.bottlings[0].bottles[0].id, bottleId);
       assert.equal(upgraded.bottlings[0].bottles[0].comment, 'Do not discard');
@@ -679,6 +679,41 @@ test('confirmed restore waits for a suspended mutation and rejects new requests 
     assert.equal(saved.bottlings[0].name, 'Mutation before restore');
   } finally {
     pending?.destroy();
+    await ctx.stop();
+  }
+});
+
+test('schema 6 ZIP restore upgrades to 7 without modifying evidence files or warehouse', async () => {
+  const ctx = await fixture();
+  const legacyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-v6-restore-'));
+  try {
+    const {writeReadableZip} = await import('../../shared/backup-zip.js');
+    const created = await request(ctx.base, '/api/bottlings', 'POST', {name: 'Legacy evidence'});
+    const id = created.data.bottle.id;
+    const pdf = Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n');
+    for (const filename of ['invoice.pdf', 'unclassified.pdf']) {
+      const result = await request(ctx.base, `/api/bottles/${id}/files`, 'POST', {filename, data: `data:application/pdf;base64,${pdf.toString('base64')}`});
+      assert.equal(result.status, 201);
+    }
+    const collection = (await request(ctx.base, '/api/collection')).data;
+    const files = collection.bottlings[0].bottles[0].files;
+    files[0].purchaseEvidence = true;
+    assert.equal(files[1].purchaseEvidence, undefined);
+    const warehouse = fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'));
+    for (const folder of ['data', 'images', 'documents']) fs.cpSync(path.join(ctx.dir, folder), path.join(legacyDir, folder), {recursive: true});
+    fs.writeFileSync(path.join(legacyDir, 'data/collection.json'), JSON.stringify({...collection, schemaVersion: 6}));
+    const archive = path.join(ctx.control, 'schema6-backup.zip');
+    writeReadableZip(legacyDir, archive, zipPass);
+    const uploaded = await fetch(ctx.base + '/api/backups/import-zip', {method: 'POST', headers: {'Content-Type': 'application/zip', 'X-Backup-Admin-Token': token, 'X-Backup-Zip-Password': encodeURIComponent(zipPass)}, body: fs.readFileSync(archive)});
+    assert.equal(uploaded.status, 201, await uploaded.clone().text());
+    const preview = await uploaded.json();
+    const apply = await request(ctx.base, `/api/backups/import-zip/${preview.id}/apply`, 'POST', {acknowledge: true, password: zipPass});
+    assert.equal(apply.status, 200, JSON.stringify(apply.data));
+    assert.deepEqual((await request(ctx.base, '/api/collection')).data, collection);
+    for (const file of files) assert.deepEqual(fs.readFileSync(path.join(ctx.dir, file.path)), pdf);
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'))), JSON.parse(warehouse));
+  } finally {
+    fs.rmSync(legacyDir, {recursive: true, force: true});
     await ctx.stop();
   }
 });

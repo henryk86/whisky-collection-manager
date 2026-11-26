@@ -73,7 +73,7 @@ const validImagePath = p => typeof p === 'string' && /^images\/[a-f0-9-]{36}\/[\
  */
 export function validate(collection) {
   assert(
-    isObject(collection) && collection.schemaVersion === 6,
+    isObject(collection) && collection.schemaVersion === 7,
     'Ungültige oder nicht unterstützte JSON-Schemaversion',
     400,
     "api.errors.invalidOrUnsupportedJSONSchemaVersion"
