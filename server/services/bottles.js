@@ -1,3 +1,4 @@
+import {PublishedWriteError} from '../../shared/durable-files.js';
 import {read, change} from '../storage/collection-store.js';
 import {saveImage, deleteImage, validateImageData} from '../storage/photos.js';
 import {basePhotoPath} from '../../shared/photo-images.js';
@@ -129,7 +130,7 @@ export async function addPhoto(id, input) {
   }
   catch (error) {
     // Compensate the file write if the collection transaction was rejected.
-    deleteImage(imagePath);
+    if (!(error instanceof PublishedWriteError)) deleteImage(imagePath);
     throw error;
   }
 }
@@ -223,9 +224,9 @@ export async function savePhotoCutout(bottleId, photoId, input) {
   try {
     if (settings) edited = saveImage(input.adjustment.image, bottleId, `photo-${photoId}-edit-${uid()}`);
   } catch (error) {deleteImage(stored); throw error;}
-  let previous, previousAdjusted, legacyAdjusted;
+  let previous, previousAdjusted, legacyAdjusted, updated;
   try {
-    const updated = await change(collection => {
+    updated = await change(collection => {
       const {bottle} = requireBottle(collection, bottleId);
       const item = (bottle.photos || []).find(p => p.id === photoId);
       if (!item) throw fail('Foto nicht gefunden', 404, "api.errors.photoNotFound");
@@ -249,14 +250,16 @@ export async function savePhotoCutout(bottleId, photoId, input) {
       bottle.updatedAt = now();
       return item;
     });
-    for (const file of [previous, previousAdjusted, legacyAdjusted]) if (
-      file && file !== stored && file !== edited) deleteImage(file);
-    return updated;
   } catch (error) {
-    deleteImage(stored);
-    deleteImage(edited);
+    if (!(error instanceof PublishedWriteError)) {
+      deleteImage(stored);
+      deleteImage(edited);
+    }
     throw error;
   }
+  for (const file of [previous, previousAdjusted, legacyAdjusted]) if (
+    file && file !== stored && file !== edited) deleteImage(file);
+  return updated;
 }
 
 /**
@@ -331,9 +334,9 @@ export async function savePhotoAdjustments(bottleId, photoId, input) {
   validateImageData(input.image);
   const stored = saveImage(input.image, bottleId, `photo-${photoId}-edit-${uid()}`);
   const sourcePath = basePhotoPath(photo);
-  let previous;
+  let previous, result;
   try {
-    const result = await change(collection => {
+    result = await change(collection => {
       const {bottle} = requireBottle(collection, bottleId);
       const item = (bottle.photos || []).find(entry => entry.id === photoId);
       if (!item || basePhotoPath(item) !== sourcePath) throw fail('Bildquelle hat sich geändert', 409, "api.errors.imageSourceHasChanged");
@@ -354,12 +357,12 @@ export async function savePhotoAdjustments(bottleId, photoId, input) {
       bottle.updatedAt = now();
       return item;
     });
-    if (previous) deleteImage(previous);
-    return result;
   } catch (error) {
-    deleteImage(stored);
+    if (!(error instanceof PublishedWriteError)) deleteImage(stored);
     throw error;
   }
+  if (previous) deleteImage(previous);
+  return result;
 }
 
 /**
@@ -411,7 +414,7 @@ export async function addFile(bottleId, input) {
     });
   }
   catch (error) {
-    deleteDocument(file.path);
+    if (!(error instanceof PublishedWriteError)) deleteDocument(file.path);
     throw error;
   }
 }

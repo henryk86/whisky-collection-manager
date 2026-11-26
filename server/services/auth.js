@@ -9,16 +9,15 @@ import {promisify} from 'node:util';
 import {DATA_DIR} from '../storage/paths.js';
 import {fail} from '../domain/errors.js';
 import {LoginAttemptLimiter} from '../domain/login-attempts.js';
+import {validateStore} from '../domain/auth-store.js';
+import {ensureDurableDirectory, writeDurableFile} from '../../shared/durable-files.js';
 
 /** @typedef {import('node:http').IncomingMessage} AuthRequest */
 /** @typedef {import('node:http').ServerResponse} AuthResponse */
-/**
- * Safe account metadata sent to clients; no password hash or salt.
- * @typedef {{id: string, username: string, role: 'admin'|'user', mustChangePassword: boolean}} PublicUser
- */
-/** @typedef {{salt: string, passwordHash: string}} PasswordCredential */
-/** @typedef {PublicUser & PasswordCredential} StoredUser */
-/** @typedef {{schemaVersion: 1, loginRequired: boolean, users: StoredUser[]}} AuthStore */
+/** @typedef {import('../domain/auth-store.js').PublicUser} PublicUser */
+/** @typedef {import('../domain/auth-store.js').PasswordCredential} PasswordCredential */
+/** @typedef {import('../domain/auth-store.js').StoredUser} StoredUser */
+/** @typedef {import('../domain/auth-store.js').AuthStore} AuthStore */
 /** @typedef {{required: boolean, user: PublicUser|null, canManageUsers: boolean}} SessionInfo */
 
 // Node's promisify declaration selects the overload without ScryptOptions.
@@ -54,25 +53,6 @@ const identity = () => {
 };
 
 /**
- * Validates authentication records and requires at least one administrator; rejects duplicate IDs and usernames.
- *
- * @param {*} value Untrusted parsed user.json data.
- * @return {AuthStore} Validated store, preserving its existing object identity.
- * @throws {Error} If schema, credentials or uniqueness constraints are invalid.
- */
-function validateStore(value) {
-  if (!value || value.schemaVersion !== 1 || typeof value.loginRequired !== 'boolean' || !Array.isArray(value.users) || !value.users.some(u => u.role === 'admin') ||
-    value.users.length > 200 || value.users.some(u => !u || typeof u.id !== 'string' || !/^[a-z0-9._-]{3,32}$/.test(u.username) || !['admin', 'user'].includes(u.role) ||
-      typeof u.mustChangePassword !== 'boolean' || !/^[a-f0-9]{32}$/.test(u.salt) ||
-      !/^[a-f0-9]{128}$/.test(u.passwordHash))) {
-    throw Error('user.json ist ungueltig. Der Anmeldeschutz wird nicht abgeschaltet.');
-  }
-  if (new Set(value.users.map(u => u.username)).size !== value.users.length ||
-    new Set(value.users.map(u => u.id)).size !== value.users.length) throw Error('Doppelte Benutzer in user.json.');
-  return value;
-}
-
-/**
  * Reads and caches user.json; a file replacement or manual edit invalidates every active session.
  *
  * @return {AuthStore} Validated current account store.
@@ -99,13 +79,9 @@ function store() {
  */
 function save(value) {
   validateStore(value);
-  const temporary = `${FILE}.${process.pid}.${crypto.randomUUID()}.tmp`;
-  try {
-    fs.writeFileSync(temporary, JSON.stringify(value, null, 2) + '\n', {flag: 'wx', mode: 0o600});
-    fs.renameSync(temporary, FILE);
-    current = value;
-    fileIdentity = identity();
-  } finally {fs.rmSync(temporary, {force: true});}
+  writeDurableFile(FILE, JSON.stringify(value, null, 2) + '\n');
+  current = value;
+  fileIdentity = identity();
 }
 
 /**
@@ -213,19 +189,19 @@ function prune() {
  * @throws {Error} If the store cannot be initialized or validated.
  */
 export function initializeAuth() {
-  fs.mkdirSync(DATA_DIR, {recursive: true});
+  ensureDurableDirectory(DATA_DIR);
   if (!fs.existsSync(FILE)) {
     const password = crypto.randomBytes(18).toString('base64url');
     const user = {
       id: crypto.randomUUID(), username: 'admin', role: 'admin',
       ...hashPasswordSync(password), mustChangePassword: true,
     };
-    // O_EXCL: simultaneous startup never overwrites an existing account store.
+    // Exclusive atomic publication: simultaneous startup never overwrites an existing account store.
     try {
-      fs.writeFileSync(
+      writeDurableFile(
         FILE,
         JSON.stringify({schemaVersion: 1, loginRequired: false, users: [user]}, null, 2) + '\n',
-        {flag: 'wx', mode: 0o600}
+        {exclusive: true}
       );
       console.log(`WCM Erstzugang: Benutzer admin, einmaliges Startpasswort: ${password}`);
       console.log('Das Passwort muss bei der ersten Anmeldung geaendert werden. Es wird nicht erneut angezeigt.');

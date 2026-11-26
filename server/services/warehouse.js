@@ -1,3 +1,4 @@
+import {PublishedWriteError} from '../../shared/durable-files.js';
 /**
  * Physical storage locations and individual bottle allocations. No collection
  * mutations.
@@ -337,7 +338,10 @@ export async function addFurniturePhoto(id, input) {
       furniture.photos.push(photo);
       return photo;
     });
-  } catch (error) {deleteImage(photoPath); throw error;}
+  } catch (error) {
+    if (!(error instanceof PublishedWriteError)) deleteImage(photoPath);
+    throw error;
+  }
 }
 
 /**

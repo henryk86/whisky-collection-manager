@@ -22,6 +22,8 @@
 
 - Backend-Endpunkte in `server/routes/` fachlich gruppieren und im zentralen Dispatcher registrieren. Die Fachrouten delegieren an Services und importieren keine Persistenzmodule. Host-, Herkunfts- und Sitzungsprüfungen bleiben in `server/app.js`; gemeinsame Body-, Cache-, State-Delta- und Antwortverarbeitung im Dispatcher. Dienstspezifische Autorisierung und Validierung verbleiben in den Services. Spezifische Literalpfade vor überlappenden ID-Pfaden registrieren; bestehende HTTP-Verträge bei reinen Refactorings bewahren.
 
+- Persistenz: Neue beständige Dateien und JSON-Metadaten über `shared/durable-files.js` veröffentlichen. Medien vor ihren Referenzen synchronisieren. Vollständige Restores müssen das Anfrage-Gate und das persistente Restore-Protokoll verwenden; keine konkurrierenden externen Schreibvorgänge unterstützen.
+
 ## Dokumentation bei Änderungen
 
 1. Jede Änderung darauf prüfen, ob sie Bedienung, Datenformat, API, Konfiguration, Installation, Sicherheit, Tests oder Entwicklerabläufe betrifft.

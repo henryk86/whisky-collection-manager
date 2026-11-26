@@ -323,8 +323,13 @@ test('security: private runtime directories cannot be served through public path
     data.loginRequired = true;
     fs.writeFileSync(file, JSON.stringify(data));
     fs.writeFileSync(path.join(context.dir, 'images', 'private.png'), 'PRIVATE');
+    const restore = `.restore-new-${crypto.randomUUID()}`;
+    fs.mkdirSync(path.join(context.dir, restore, 'data'), {recursive: true});
+    fs.copyFileSync(file, path.join(context.dir, restore, 'data/user.json'));
+    fs.writeFileSync(path.join(context.dir, '.restore-transaction.json.temp'), 'PRIVATE');
     const paths = [`${prefix}/data/user.json`, `${prefix}/%64ata/user.json`,
-    `${prefix}/images/private.png`, `${prefix}/backup-control/backup-zip-password`];
+    `${prefix}/images/private.png`, `${prefix}/backup-control/backup-zip-password`,
+    `${prefix}/${restore}/data/user.json`, `${prefix}/.restore-transaction.json.temp`];
     for (const resource of paths) {
       const response = await fetch(context.base + resource);
       assert.equal(response.status, 404, resource);

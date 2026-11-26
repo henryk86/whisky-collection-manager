@@ -10,6 +10,7 @@ import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {writeReadableZip, inspectReadableZip} from '../shared/backup-zip.js';
 import {readBackupPassword} from '../shared/backup-password.js';
+import {writeDurableFile, syncDirectory, ensureDurableDirectory, syncFile} from '../shared/durable-files.js';
 import {backupJobError, serializeBackupJobError}
   from '../shared/backup-job-errors.js';
 import {BACKUP_PASSWORD_FAILURE} from '../shared/backup-password.js';
@@ -99,13 +100,7 @@ function readJson(name, fallback) {
  * @param {*} value Value to process.
  */
 function writeJson(name, value) {
-  fs.mkdirSync(CONTROL, {recursive: true, mode: 0o700});
-  const to = path.join(CONTROL, name);
-  const temp = `${to}.${crypto.randomUUID()}.tmp`;
-  try {
-    fs.writeFileSync(temp, JSON.stringify(value, null, 2) + '\n', {flag: 'wx', mode: 0o600});
-    fs.renameSync(temp, to);
-  } finally {if (fs.existsSync(temp)) fs.unlinkSync(temp);}
+  writeDurableFile(path.join(CONTROL, name), JSON.stringify(value, null, 2) + '\n');
 }
 
 /**
@@ -368,7 +363,7 @@ async function runZipBackup(job, profile, repo, status) {
   const filename = archiveName(job);
   if (local && fs.existsSync(path.join(repo, 'config'))) throw backupJobError('backup.errors.legacyTargetForZip');
   const tempFolder = local ? repo : path.join(CONTROL, 'zip-temp', job.id);
-  fs.mkdirSync(tempFolder, {recursive: true, mode: 0o700});
+  ensureDurableDirectory(tempFolder);
   const temporary = path.join(tempFolder, `.${filename}.part`);
   const finished = path.join(tempFolder, filename);
   try {
@@ -376,9 +371,9 @@ async function runZipBackup(job, profile, repo, status) {
     writeReadableZip(folder, temporary, password);
     // Authenticate every AES-256 entry before publishing to the target.
     verifyZipArchive(temporary, password);
-    if (local) fs.renameSync(temporary, finished);
-    else {
-      fs.renameSync(temporary, finished);
+    fs.renameSync(temporary, finished);
+    syncDirectory(tempFolder);
+    if (!local) {
       await runCommand('rclone', ['copyto', finished, `${repo}/${filename}`], {timeout: 3600000});
     }
     status.snapshots[profile.id] = await zipPrune(profile, repo, await zipFilesFor(profile, repo));
@@ -405,13 +400,14 @@ async function prepareLegacyRestore(job, repo) {
   if (!/^(latest|[0-9a-f]{8,64})$/i.test(job.snapshotId || '')) throw backupJobError('backup.errors.invalidSnapshotId');
   const folder = path.join(CONTROL, 'imports', job.id);
   const extracted = path.join(folder, 'preview');
-  fs.mkdirSync(extracted, {recursive: true, mode: 0o700});
+  ensureDurableDirectory(extracted);
   try {
     await restic(repo, ['restore', job.snapshotId, '--target', extracted], {timeout: 3600000});
     const archive = path.join(folder, 'uploaded.zip');
     const password = backupPassword();
     writeReadableZip(extracted, archive, password);
     verifyZipArchive(archive, password);
+    syncDirectory(folder);
     return {
       message: 'Altes Restic-Backup in prüfbares ZIP umgewandelt',
       importId: job.id,
@@ -437,7 +433,7 @@ async function prepareZipRestore(job, profile, repo) {
   const selected = job.snapshotId === 'latest' ? archives[0] : archives.find(item => item.id === job.snapshotId);
   if (!selected) throw backupJobError('backup.errors.snapshotNotFound');
   const folder = path.join(CONTROL, 'imports', job.id);
-  fs.mkdirSync(folder, {recursive: true, mode: 0o700});
+  ensureDurableDirectory(folder);
   const target = path.join(folder, 'uploaded.zip');
   try {
     if (profile.provider === 'local') {
@@ -447,6 +443,8 @@ async function prepareZipRestore(job, profile, repo) {
     } else {
       await runCommand('rclone', ['copyto', `${repo}/${selected.filename}`, target], {timeout: 3600000});
     }
+    syncFile(target);
+    syncDirectory(folder);
     // Password supplied later via the authenticated browser; never store it in
     // queue/status files.
     return {
@@ -534,7 +532,7 @@ export async function executeJob(job, profile, status) {
     // Test writes, not just read-only directory listings.
     const probe = `.whisky-write-test-${job.id}`;
     if (profile.provider === 'local') {
-      fs.mkdirSync(repo, {recursive: true, mode: 0o700});
+      ensureDurableDirectory(repo);
       const testFile = path.join(repo, probe);
       fs.writeFileSync(testFile, 'test', {flag: 'wx', mode: 0o600});
       fs.unlinkSync(testFile);
@@ -658,8 +656,7 @@ export function createWorker() {
         scheduled: true,
       };
       const file = path.join(CONTROL, 'jobs', `${job.id}.json`);
-      fs.mkdirSync(path.dirname(file), {recursive: true, mode: 0o700});
-      fs.writeFileSync(file, JSON.stringify(job), {flag: 'wx', mode: 0o600});
+      writeDurableFile(file, JSON.stringify(job), {exclusive: true});
       schedule[profile.id] = slot;
       writeJson('schedule-state.json', schedule);
     }
@@ -674,7 +671,7 @@ export function createWorker() {
     try {
       scheduleDue();
       const dir = path.join(CONTROL, 'jobs');
-      fs.mkdirSync(dir, {recursive: true, mode: 0o700});
+      ensureDurableDirectory(dir);
       const files = fs.readdirSync(dir).filter(f => SAFE_ID.test(f.replace(/\.json$/, '')) && f.endsWith('.json')).sort();
       for (const file of files) {
         const full = path.join(dir, file);

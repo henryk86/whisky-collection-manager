@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {ROOT, IMAGE_DIR} from './paths.js';
 import {assert} from '../domain/errors.js';
+import {writeDurableFile} from '../../shared/durable-files.js';
 /**
  * Resolves an image's storage location under the configured photo root.
  *
@@ -30,6 +31,23 @@ export function deleteImage(p) {
       fs.unlinkSync(file);
     }
   }
+}
+
+/**
+ * Checks the supported raster signatures without requiring the full image in memory.
+ * @param {string} extension Lowercase image extension (jpg, jpeg, png, webp or gif).
+ * @param {Buffer} bytes First bytes of the image.
+ * @return {boolean} True if the file starts with the expected raster signature.
+ */
+export function imageSignatureMatches(extension, bytes) {
+  const jpeg = bytes[0] === 0xff && bytes[1] === 0xd8;
+  const signatures = {
+    jpg: jpeg, jpeg,
+    png: bytes.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex')),
+    webp: bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP',
+    gif: bytes.toString('ascii', 0, 3) === 'GIF',
+  };
+  return Object.hasOwn(signatures, extension) && signatures[extension];
 }
 
 /**
@@ -59,14 +77,8 @@ export function validateImageData(base64) {
     400,
     "api.errors.imageIsTooLargeOrEmpty"
   );
-  const signatures = {
-    jpeg: bytes[0] === 0xff && bytes[1] === 0xd8,
-    png: bytes.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex')),
-    webp: bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP',
-    gif: bytes.toString('ascii', 0, 3) === 'GIF',
-  };
   assert(
-    signatures[m[1]],
+    imageSignatureMatches(m[1], bytes),
     'Bildinhalt entspricht nicht dem Dateiformat',
     400,
     "api.errors.imageContentsDoNotMatchTheFileFormat"
@@ -87,10 +99,7 @@ export function validateImageData(base64) {
 export function saveImage(base64, id, kind) {
   const {bytes, ext} = validateImageData(base64);
   const dir = path.join(IMAGE_DIR, id);
-  fs.mkdirSync(dir, {recursive: true, });
   const target = path.join(dir, `${kind}.${ext}`);
-  fs.writeFileSync(target, bytes, {
-    flag: 'w', mode: 0o600,
-  });
+  writeDurableFile(target, bytes);
   return imagePath(id, kind, ext);
 }

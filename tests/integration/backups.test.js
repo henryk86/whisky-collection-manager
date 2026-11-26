@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import http from 'node:http';
+import {once} from 'node:events';
 import {startTestServer} from '../helpers/server.js';
 
 const token = 'a'.repeat(64), workerToken = 'b'.repeat(64);
@@ -502,3 +504,179 @@ test(
     } finally {await ctx.stop();}
   }
 );
+
+
+async function uploadRestore(ctx, archive) {
+  const response = await fetch(ctx.base + '/api/backups/import-zip', {
+    method: 'POST', headers: {
+      'Content-Type': 'application/zip', 'X-Backup-Admin-Token': token,
+      'X-Backup-Zip-Password': encodeURIComponent(zipPass),
+    }, body: fs.readFileSync(archive),
+  });
+  return {status: response.status, data: await response.json()};
+}
+
+test('restore rejects invalid warehouse and account schemas, invalid image signatures and missing or changed media before touching live data', async () => {
+  const ctx = await fixture();
+  const source = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-restore-validation-'));
+  try {
+    const {writeReadableZip} = await import('../../shared/backup-zip.js');
+    const created = await request(ctx.base, '/api/bottlings', 'POST', {name: 'Restore validation'});
+    assert.equal(created.status, 201);
+    const id = created.data.bottle.id;
+    const photo = await request(ctx.base, `/api/bottles/${id}/photos`, 'POST', {image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/fG8AAAAASUVORK5CYII='});
+    const document = await request(ctx.base, `/api/bottles/${id}/files`, 'POST', {filename: 'receipt.pdf', data: `data:application/pdf;base64,${Buffer.from('%PDF-1.4 receipt').toString('base64')}`});
+    assert.equal(photo.status, 201);
+    assert.equal(document.status, 201);
+    const tracked = ['data/collection.json', 'data/warehouse.json', 'data/user.json', photo.data.path, document.data.path];
+    const original = tracked.map(name => fs.readFileSync(path.join(ctx.dir, name)));
+    const cases = [
+      ['data/warehouse.json', JSON.stringify({schemaVersion: 999, rooms: [], assignments: {}}), 'api.errors.invalidStorageFile'],
+      ['data/warehouse.json', JSON.stringify({schemaVersion: 1, rooms: [], assignments: {[id]: 'missing-shelf'}}), 'api.errors.invalidStorageFile'],
+      ['data/user.json', '{', 'api.errors.invalidRestoreUsers'],
+      ['data/user.json', JSON.stringify({schemaVersion: 1, loginRequired: true, users: []}), 'api.errors.invalidRestoreUsers'],
+      [photo.data.path, null, 'api.errors.invalidRestoreMedia'],
+      [photo.data.path, 'invalid image bytes', 'api.errors.invalidRestoreMedia'],
+      [document.data.path, null, 'api.errors.invalidRestoreMedia'],
+      [document.data.path, '%PDF-1.4 changed', 'api.errors.invalidRestoreMedia'],
+    ];
+    for (const [index, [name, replacement, code]] of cases.entries()) {
+      for (const folder of ['data', 'images', 'documents']) {
+        fs.rmSync(path.join(source, folder), {recursive: true, force: true});
+        fs.cpSync(path.join(ctx.dir, folder), path.join(source, folder), {recursive: true});
+      }
+      if (replacement === null) fs.unlinkSync(path.join(source, name));
+      else fs.writeFileSync(path.join(source, name), replacement);
+      const archive = path.join(ctx.control, `invalid-${index}.zip`);
+      writeReadableZip(source, archive, zipPass);
+      const uploaded = await uploadRestore(ctx, archive);
+      assert.equal(uploaded.status, 400, JSON.stringify(uploaded.data));
+      assert.equal(uploaded.data.errorCode, code, name);
+      assert.deepEqual(tracked.map(file => fs.readFileSync(path.join(ctx.dir, file))), original);
+    }
+    assert.deepEqual(fs.readdirSync(path.join(ctx.control, 'imports')), []);
+    assert.equal(fs.readdirSync(path.join(ctx.dir, 'backups')).some(name => name.startsWith('pre-restore-')), false);
+    const valid = path.join(ctx.control, 'valid-with-media.zip');
+    writeReadableZip(ctx.dir, valid, zipPass);
+    const uploaded = await uploadRestore(ctx, valid);
+    assert.equal(uploaded.status, 201, JSON.stringify(uploaded.data));
+    const endpoint = `/api/backups/import-zip/${uploaded.data.id}/apply`;
+    const applied = await request(ctx.base, endpoint, 'POST', {acknowledge: true, password: zipPass});
+    assert.equal(applied.status, 200, JSON.stringify(applied.data));
+    assert.deepEqual(tracked.map(file => fs.readFileSync(path.join(ctx.dir, file))), original);
+  } finally {
+    fs.rmSync(source, {recursive: true, force: true});
+    await ctx.stop();
+  }
+});
+
+test('restore binds the confirmation to the exact verified ZIP and unlock validates saved archives again', async () => {
+  const ctx = await fixture();
+  try {
+    const {writeReadableZip} = await import('../../shared/backup-zip.js');
+    const first = path.join(ctx.control, 'first.zip');
+    writeReadableZip(ctx.dir, first, zipPass);
+    const uploaded = await uploadRestore(ctx, first);
+    assert.equal(uploaded.status, 201);
+    const id = uploaded.data.id;
+    const importDir = path.join(ctx.control, 'imports', id);
+    const prefix = `/api/backups/import-zip/${id}`;
+    const get = await fetch(ctx.base + prefix, {headers: {'X-Backup-Admin-Token': token, 'X-Backup-Zip-Password': encodeURIComponent(zipPass)}});
+    assert.equal(get.status, 200);
+    assert.equal((await get.json()).bottlings, 0);
+    assert.equal(fs.existsSync(path.join(importDir, 'preview')), false, 'decrypted preview must not persist');
+    const added = await request(ctx.base, '/api/bottlings', 'POST', {name: 'Newer archive'});
+    assert.equal(added.status, 201);
+    const second = path.join(ctx.control, 'second.zip');
+    writeReadableZip(ctx.dir, second, zipPass);
+    fs.copyFileSync(second, path.join(importDir, 'uploaded.zip'));
+    const refused = await request(ctx.base, prefix + '/apply', 'POST', {acknowledge: true, password: zipPass});
+    assert.equal(refused.status, 409);
+    assert.equal(refused.data.errorCode, 'api.errors.restorePreviewChanged');
+    assert.equal((await request(ctx.base, '/api/collection')).data.bottlings.length, 1);
+    const unlocked = await request(ctx.base, prefix + '/unlock', 'POST', {password: zipPass});
+    assert.equal(unlocked.status, 200);
+    assert.equal(unlocked.data.bottlings, 1);
+    // Any leftover preview folder is not the restore source.
+    fs.mkdirSync(path.join(importDir, 'preview', 'data'), {recursive: true});
+    fs.writeFileSync(path.join(importDir, 'preview/data/collection.json'), '{invalid');
+    const applied = await request(ctx.base, prefix + '/apply', 'POST', {acknowledge: true, password: zipPass});
+    assert.equal(applied.status, 200, JSON.stringify(applied.data));
+    assert.equal((await request(ctx.base, '/api/collection')).data.bottlings[0].name, 'Newer archive');
+  } finally {await ctx.stop();}
+});
+
+test('legacy ZIP without a warehouse or account file creates an empty warehouse and preserves current accounts', async () => {
+  const ctx = await fixture();
+  const legacy = fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-old-restore-'));
+  try {
+    const {writeReadableZip} = await import('../../shared/backup-zip.js');
+    const room = await request(ctx.base, '/api/warehouse/rooms', 'POST', {name: 'Current room', width: 4, height: 3});
+    assert.equal(room.status, 201);
+    const accounts = fs.readFileSync(path.join(ctx.dir, 'data/user.json'));
+    fs.mkdirSync(path.join(legacy, 'data'));
+    fs.copyFileSync(path.join(ctx.dir, 'data/collection.json'), path.join(legacy, 'data/collection.json'));
+    const archive = path.join(ctx.control, 'legacy.zip');
+    writeReadableZip(legacy, archive, zipPass);
+    const uploaded = await uploadRestore(ctx, archive);
+    assert.equal(uploaded.status, 201, JSON.stringify(uploaded.data));
+    const applied = await request(ctx.base, `/api/backups/import-zip/${uploaded.data.id}/apply`, 'POST', {acknowledge: true, password: zipPass});
+    assert.equal(applied.status, 200, JSON.stringify(applied.data));
+    assert.deepEqual(fs.readFileSync(path.join(ctx.dir, 'data/user.json')), accounts);
+    const warehouse = await request(ctx.base, '/api/warehouse');
+    assert.equal(warehouse.status, 200);
+    assert.deepEqual(warehouse.data.rooms, []);
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'))), {schemaVersion: 1, rooms: [], assignments: {}});
+  } finally {
+    fs.rmSync(legacy, {recursive: true, force: true});
+    await ctx.stop();
+  }
+});
+
+test('confirmed restore waits for a suspended mutation and rejects new requests until the consistent replacement finishes', {timeout: 15000}, async () => {
+  const ctx = await fixture();
+  let pending;
+  try {
+    const {writeReadableZip, inspectReadableZip} = await import('../../shared/backup-zip.js');
+    const archive = path.join(ctx.control, 'before-mutation.zip');
+    writeReadableZip(ctx.dir, archive, zipPass);
+    const uploaded = await uploadRestore(ctx, archive);
+    assert.equal(uploaded.status, 201);
+    const body = JSON.stringify({name: 'Mutation before restore'});
+    pending = http.request(ctx.base + '/api/bottlings', {
+      method: 'POST', headers: {'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body), Expect: '100-continue'},
+    });
+    const continued = once(pending, 'continue');
+    const result = new Promise((resolve, reject) => {
+      pending.once('error', reject);
+      pending.once('response', response => {response.resume(); response.once('end', () => resolve(response.statusCode));});
+    });
+    // Prevent an unhandled rejection if the test fails before the socket is released.
+    result.catch(() => {});
+    pending.flushHeaders();
+    await continued;
+    let completed = false;
+    const restoring = request(ctx.base, `/api/backups/import-zip/${uploaded.data.id}/apply`, 'POST', {acknowledge: true, password: zipPass});
+    restoring.then(() => {completed = true;}, () => {completed = true;});
+    let rejected;
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const response = await request(ctx.base, '/api/version');
+      if (response.status === 503) {rejected = response; break;}
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    assert.equal(rejected?.data.errorCode, 'api.errors.restoreInProgress');
+    assert.equal(completed, false);
+    pending.end(body);
+    assert.equal(await result, 201);
+    const applied = await restoring;
+    assert.equal(applied.status, 200, JSON.stringify(applied.data));
+    assert.equal((await request(ctx.base, '/api/collection')).data.bottlings.length, 0);
+    const safety = path.join(ctx.control, 'safety-inspection');
+    inspectReadableZip(path.join(ctx.dir, applied.data.safetyBackup), safety, zipPass);
+    const saved = JSON.parse(fs.readFileSync(path.join(safety, 'data/collection.json')));
+    assert.equal(saved.bottlings[0].name, 'Mutation before restore');
+  } finally {
+    pending?.destroy();
+    await ctx.stop();
+  }
+});

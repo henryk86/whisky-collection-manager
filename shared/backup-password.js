@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import {writeDurableFile} from './durable-files.js';
 
 export const BACKUP_PASSWORD_FAILURE = Object.freeze({
   missing: 'BACKUP_PASSWORD_MISSING',
@@ -80,11 +81,5 @@ export function saveBackupPassword(password, previous = '') {
     }
   }
   const to = passwordPath();
-  fs.mkdirSync(path.dirname(to), {recursive: true, mode: 0o700});
-  const temp = `${to}.${crypto.randomUUID()}.tmp`;
-  try {
-    fs.writeFileSync(temp, `${password}\n`, {flag: 'wx', mode: 0o600});
-    fs.renameSync(temp, to);
-    fs.chmodSync(to, 0o600);
-  } finally {fs.rmSync(temp, {force: true});}
+  writeDurableFile(to, `${password}\n`);
 }

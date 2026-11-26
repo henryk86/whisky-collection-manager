@@ -30,14 +30,26 @@ function containsPath(location, file) {
 }
 
 /**
+ * Checks the private restore journal, temporary files and staged storage directories below the data root.
+ * @param {string} root Lexical or canonical application data root.
+ * @param {string} file Candidate public file path.
+ * @return {boolean} True when the first path component belongs to a restore transaction.
+ */
+function isRestoreArtifact(root, file) {
+  return containsPath(root, file) && /^\.restore-/i.test(path.relative(root, file).split(path.sep)[0]);
+}
+
+/**
  * Rejects private storage exposed through misplaced or aliased public paths.
  * @param {string} file Lexically resolved public file path.
  * @param {string} realFile Canonical filesystem path after resolving links.
  * @return {boolean} Whether the requested file belongs to configured private storage.
  */
 function isPrivateLocation(file, realFile) {
-  return PRIVATE_LOCATIONS.some(location => containsPath(location, file) ||
-    (fs.existsSync(location) && containsPath(fs.realpathSync(location), realFile)));
+  return isRestoreArtifact(ROOT, file) ||
+    (fs.existsSync(ROOT) && isRestoreArtifact(fs.realpathSync(ROOT), realFile)) ||
+    PRIVATE_LOCATIONS.some(location => containsPath(location, file) ||
+      (fs.existsSync(location) && containsPath(fs.realpathSync(location), realFile)));
 }
 
 // Only browser-safe shared modules are served. Node-only backup modules stay

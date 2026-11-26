@@ -8,6 +8,7 @@ import crypto from 'node:crypto';
 import {DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR, DATA_FILE}
   from './paths.js';
 import {validate} from '../domain/validation.js';
+import {PublishedWriteError, ensureDurableDirectory, syncFile, syncDirectory, writeDurableFile} from '../../shared/durable-files.js';
 import {trackMutation} from '../domain/mutation-tracker.js';
 import {migrateCollectionToCurrent} from './migrations.js';
 const seedFile = new URL('../../seed/distillery.json', import.meta.url);
@@ -82,7 +83,7 @@ export function collectionETag() {
 export function initialize() {
   invalidateCollectionCache();
   for (const directory of [DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR]) {
-    fs.mkdirSync(directory, {recursive: true, });
+    ensureDurableDirectory(directory);
   }
   if (!fs.existsSync(DATA_FILE)) {
     atomicWrite(empty());
@@ -93,9 +94,11 @@ export function initialize() {
     // No modifications until the migration is valid AND an exact copy is safe.
     const backup = path.join(BACKUP_DIR, `pre-schema6-${Date.now()}-${crypto.randomUUID()}.json`);
     fs.copyFileSync(DATA_FILE, backup, fs.constants.COPYFILE_EXCL);
+    syncFile(backup);
+    syncDirectory(BACKUP_DIR);
     if (migration.conflicts.length) {
       const report = path.join(BACKUP_DIR, `inventory-conflicts-${Date.now()}-${crypto.randomUUID()}.json`);
-      fs.writeFileSync(report, JSON.stringify(migration.conflicts, null, 2) + '\n');
+      writeDurableFile(report, JSON.stringify(migration.conflicts, null, 2) + '\n');
       console.warn(`Inventarnummern-Migration: ${migration.conflicts.length} Konflikte. Bericht: ${report}`);
     }
     // warehouse.json, including rooms, furniture and bottle assignments,
@@ -126,21 +129,16 @@ export function read() {
  */
 export function atomicWrite(value) {
   validate(value);
-  fs.mkdirSync(DATA_DIR, {recursive: true, });
-  const temporaryFile = `${DATA_FILE}.${process.pid}.${crypto.randomUUID()}.tmp`;
+  let published = false;
   try {
-    fs.writeFileSync(temporaryFile, JSON.stringify(value, null, 2) + '\n', {
-      flag: 'wx', mode: 0o600,
-    });
-    fs.renameSync(temporaryFile, DATA_FILE);
+    writeDurableFile(DATA_FILE, JSON.stringify(value, null, 2) + '\n');
+    published = true;
     cached = structuredClone(value);
     cachedIdentity = identity();
     revision = crypto.randomUUID();
-  }
-  finally {
-    if (fs.existsSync(temporaryFile)) {
-      fs.unlinkSync(temporaryFile);
-    }
+  } catch (error) {
+    invalidateCollectionCache();
+    throw published ? new PublishedWriteError(DATA_FILE, error) : error;
   }
 }
 /** @type {Promise<unknown>} */

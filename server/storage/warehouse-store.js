@@ -6,6 +6,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {DATA_DIR} from './paths.js';
 import {fail} from '../domain/errors.js';
+import {PublishedWriteError, ensureDurableDirectory, writeDurableFile} from '../../shared/durable-files.js';
 import {trackMutation} from '../domain/mutation-tracker.js';
 import {FURNITURE_TYPES, SHELF_FRONTS, totalExplicitHeightCm}
   from '../../shared/warehouse-compartments.js';
@@ -169,7 +170,7 @@ export function warehouseETag() {
  * Creates an empty file only when the file does not already exist.
  */
 export function initWarehouse() {
-  fs.mkdirSync(DATA_DIR, {recursive: true});
+  ensureDurableDirectory(DATA_DIR);
   if (!fs.existsSync(WAREHOUSE_FILE)) writeWarehouse(emptyWarehouse());
   loadWarehouse();
 }
@@ -192,15 +193,17 @@ export function readWarehouse() {
  */
 function writeWarehouse(data) {
   validateWarehouse(data);
-  fs.mkdirSync(DATA_DIR, {recursive: true});
-  const temporary = `${WAREHOUSE_FILE}.${process.pid}.${crypto.randomUUID()}.tmp`;
+  let published = false;
   try {
-    fs.writeFileSync(temporary, JSON.stringify(data, null, 2) + '\n', {mode: 0o600, flag: 'wx'});
-    fs.renameSync(temporary, WAREHOUSE_FILE);
+    writeDurableFile(WAREHOUSE_FILE, JSON.stringify(data, null, 2) + '\n');
+    published = true;
     warehouseCache = structuredClone(data);
     warehouseIdentity = identity();
     warehouseRevision = crypto.randomUUID();
-  } finally {if (fs.existsSync(temporary)) fs.rmSync(temporary);}
+  } catch (error) {
+    invalidateWarehouseCache();
+    throw published ? new PublishedWriteError(WAREHOUSE_FILE, error) : error;
+  }
 }
 /** @type {Promise<unknown>} */
 let pending = Promise.resolve();

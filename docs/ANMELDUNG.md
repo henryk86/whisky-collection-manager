@@ -26,7 +26,7 @@ Nach einer externen Änderung oder Wiederherstellung von `user.json` werden vorh
 
 Die Authentifizierung ersetzt nicht HTTPS. WCM ist für ein vertrauenswürdiges privates LAN oder VPN vorgesehen, nicht für den direkten öffentlichen Internetzugriff. Die Loginpflicht ist bei gemeinsam genutzten Netzen zu aktivieren. Eine Host-Allowlist oder ein gültiges Zertifikat ersetzt keine Netzwerk-Zugriffskontrolle. Router-Portfreigaben und unbeschränkte IPv4-/IPv6-Erreichbarkeit vermeiden. Auch angemeldete normale Nutzer dürfen die gemeinsame Sammlung verändern; getrennte Mandanten oder feinere Rollen sind nicht vorgesehen.
 
-Die bestehende AES-verschlüsselte ZIP-Sicherung enthält auch `data/user.json` mit den Passwort-Hashes. Bei einer Wiederherstellung können die damaligen Nutzer und Passwörter wieder aktiv werden. Backups daher nur verschlüsselt aufbewahren. Der bestehende Backup-Worker nutzt weiterhin seine eigene Administrator-/Worker-Authentifizierung.
+Die bestehende AES-verschlüsselte ZIP-Sicherung enthält auch `data/user.json` mit den Passwort-Hashes. Bei einer Wiederherstellung können die damaligen Nutzer und Passwörter wieder aktiv werden. Fehlt `user.json` in einem älteren ZIP, bleiben die aktuellen Konten und Login-Einstellungen erhalten. Backups daher nur verschlüsselt aufbewahren. Der bestehende Backup-Worker nutzt weiterhin seine eigene Administrator-/Worker-Authentifizierung.
 
 **Whiskybase-Browsererweiterung:** Mit der separaten Browser-Erweiterung funktioniert die Bildübernahme auch bei aktivierter Loginpflicht. Die Extension nutzt einen bestehenden oder neu geöffneten Collection-Manager-Tab für einen gleichursprünglichen Upload mit dessen Sitzung; Zugangsdaten und Sitzungscookie werden nicht in der Extension abgelegt. Der Benutzer muss im Manager angemeldet sein und den ersten Passwortwechsel abgeschlossen haben. Andernfalls den Manager-Tab öffnen, anmelden und den Import erneut auslösen. Bildübertragungen ohne gültige Sitzung sind bei aktivierter Loginpflicht gesperrt. `EXTENSION_IDS` ist für den neuen Tab-basierten Upload nicht nötig.
 
@@ -34,7 +34,9 @@ Die bestehende AES-verschlüsselte ZIP-Sicherung enthält auch `data/user.json` 
 
 Für die Wiederherstellung ist Schreibzugriff auf das lokale Datenverzeichnis erforderlich. Das erzeugte Passwort erscheint nur im Terminal; der nächste Login erzwingt wieder einen Passwortwechsel. Andere Nutzer, Sammlungsdaten und der Login-Schalter bleiben erhalten.
 
-Lokal im Projektverzeichnis:
+Vor dem Zurücksetzen die Anwendung vollständig stoppen, damit kein laufender Schreibvorgang oder Restore den Kontenbestand gleichzeitig verändert. Ein unterbrochener Restore muss zuerst durch einen normalen Anwendungsstart abgeschlossen werden.
+
+Lokal im Projektverzeichnis (bei gestopptem Server):
 
 ```bash
 npm run auth:reset-admin
@@ -43,7 +45,9 @@ npm run auth:reset-admin
 Im Docker-Setup im Verzeichnis der `docker-compose.yml`:
 
 ```bash
-docker compose exec app node scripts/reset-admin-password.js
+docker compose stop app
+docker compose run --rm --no-deps app node scripts/reset-admin-password.js
+docker compose start app
 ```
 
 Nach dem Zurücksetzen werden vorhandene Admin-Sitzungen beim nächsten Zugriff ungültig. `user.json` darf **nicht** gelöscht oder manuell umgeschrieben werden, um die Anmeldung zu umgehen. Eine beschädigte Datei verhindert den Serverstart; wenn sie im laufenden Betrieb fehlt, werden Zugriffe aus Sicherheitsgründen verweigert. Beim Neustart ohne Datei würde eine neue Ersteinrichtung beginnen und die Loginpflicht wäre zunächst deaktiviert. Deshalb `user.json` nicht löschen, sondern das Wiederherstellungsskript verwenden.

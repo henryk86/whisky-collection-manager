@@ -233,6 +233,8 @@ Die JSON-Datei benutzt `format: "wcm-room-transfer"` und `formatVersion: 1`; die
 
 Das AES-256-geschützte ZIP ist mit geeignetem ZIP-Entpacker und Passwort lesbar (Sammlung, `data/warehouse.json`, Bilder und Dokumente). Archivdateien und die Rückfallkopie werden nicht in der Sammlungs-JSON gespeichert. Das alte JSON-Importformat bleibt für Datenmigrationen erhalten, ist jedoch **keine vollständige Wiederherstellung**, weil Medien nicht enthalten sind. Neue Sicherungsprofile speichern ausschließlich ZIPs; alte Restic-Profile erzeugen keine neuen Restic-Backups mehr.
 
+Die Vorschau prüft die Sammlung, vorhandene Lager- und Benutzerdateien sowie referenzierte Medien (Bildformat, Dokumentgröße und SHA-256). Die Bestätigung bezieht sich auf das geprüfte ZIP; bei geändertem Archiv oder fehlendem Prüfnachweis ist erneutes Entsperren erforderlich (409). Während einer bestätigten Wiederherstellung werden bestehende Anfragen abgeschlossen und neue mit 503 abgewiesen. Ein persistentes Restore-Protokoll ermöglicht beim Neustart Rollback oder Abschluss des bereits bestätigten Dateiaustauschs. Alte ZIPs ohne Lagerdatei ergeben ein leeres Lager; ohne Benutzerdatei bleiben die aktuellen Konten und Login-Einstellungen erhalten.
+
 ## Abfüllung erstellen
 
 ```json

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {DOCUMENT_DIR, ROOT} from './paths.js';
 import {assert, fail} from '../domain/errors.js';
+import {writeDurableFile} from '../../shared/durable-files.js';
 
 // Whitelist file types used for invoices, photographs, and supporting records.
 const fileTypes = {
@@ -131,8 +132,7 @@ export function saveDocument(bottleId, {filename, data}) {
   const documentId = crypto.randomUUID();
   const relativePath = `documents/${bottleId}/${documentId}.${ext}`;
   const target = fileLocation(relativePath);
-  fs.mkdirSync(path.dirname(target), {recursive: true});
-  fs.writeFileSync(target, bytes, {flag: 'wx', mode: 0o600});
+  writeDurableFile(target, bytes, {exclusive: true});
   return {
     id: documentId,
     name: filename,

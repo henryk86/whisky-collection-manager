@@ -9,6 +9,7 @@ import {DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, DATA_FILE}
   from '../storage/paths.js';
 import {hasBackupPassword, saveBackupPassword}
   from '../../shared/backup-password.js';
+import {ensureDurableDirectory, writeDurableFile, syncDirectory, syncTree} from '../../shared/durable-files.js';
 
 const CONTROL = process.env.BACKUP_CONTROL_DIR ? path.resolve(process.env.BACKUP_CONTROL_DIR) : null;
 const PROVIDERS = new Set([
@@ -127,13 +128,7 @@ function readJson(name, fallback) {
  * @param {*} value Value to process.
  */
 function atomicJson(name, value) {
-  fs.mkdirSync(CONTROL, {recursive: true, mode: 0o700});
-  const destination = path.join(CONTROL, name);
-  const temp = `${destination}.${process.pid}.${crypto.randomUUID()}.tmp`;
-  try {
-    fs.writeFileSync(temp, JSON.stringify(value, null, 2) + '\n', {flag: 'wx', mode: 0o600});
-    fs.renameSync(temp, destination);
-  } finally {if (fs.existsSync(temp)) fs.unlinkSync(temp);}
+  writeDurableFile(path.join(CONTROL, name), JSON.stringify(value, null, 2) + '\n');
 }
 
 /**
@@ -450,10 +445,8 @@ export function queueJob(req, profileId, type, body = {}) {
     job.snapshotId = body.snapshotId;
   }
   const dir = path.join(CONTROL, 'jobs');
-  fs.mkdirSync(dir, {recursive: true, mode: 0o700});
-  const temp = path.join(dir, `.${job.id}.tmp`);
-  fs.writeFileSync(temp, JSON.stringify(job) + '\n', {flag: 'wx', mode: 0o600});
-  fs.renameSync(temp, path.join(dir, `${job.id}.json`));
+  ensureDurableDirectory(dir);
+  writeDurableFile(path.join(dir, `${job.id}.json`), JSON.stringify(job) + '\n');
   return {...job, queued: true};
 }
 
@@ -470,7 +463,7 @@ export function createSourceSnapshot(req, jobId) {
   authorizeWorker(req);
   if (!ID.test(jobId)) throw fail('Ungültige Backup-Auftrags-ID', 400, "api.errors.invalidBackupJobID");
   const stagingRoot = path.join(CONTROL, 'staging');
-  fs.mkdirSync(stagingRoot, {recursive: true, mode: 0o700});
+  ensureDurableDirectory(stagingRoot);
   const folder = path.join(stagingRoot, jobId);
   // Reuse an already frozen snapshot when a worker was interrupted mid-job.
   if (fs.existsSync(folder)) {
@@ -480,6 +473,8 @@ export function createSourceSnapshot(req, jobId) {
     throw fail('Unvollständiges Backup-Staging vorhanden', 409, "api.errors.incompleteBackupStagingIsPresent");
   }
   const temporary = `${folder}.tmp`;
+  // A previous process may have stopped before publishing this snapshot.
+  fs.rmSync(temporary, {recursive: true, force: true});
   fs.mkdirSync(temporary, {mode: 0o700});
   try {
     if (!fs.existsSync(DATA_FILE)) throw fail('Sammlungsdatei fehlt', 503, "api.errors.collectionFileIsMissing");
@@ -494,7 +489,9 @@ export function createSourceSnapshot(req, jobId) {
     }
     // The atomic JSON writer guarantees the source file is always complete.
     JSON.parse(fs.readFileSync(path.join(temporary, 'data/collection.json'), 'utf8'));
+    syncTree(temporary);
     fs.renameSync(temporary, folder);
+    syncDirectory(path.dirname(folder));
   } catch (error) {
     fs.rmSync(temporary, {recursive: true, force: true});
     throw error;

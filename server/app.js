@@ -9,11 +9,18 @@ import {allowedExtensionOrigin, requireSameOriginMutation, requireAllowedHost}
 import {initialize} from './storage/collection-store.js';
 import {initWarehouse} from './storage/warehouse-store.js';
 import {initializeAuth, authorizeRequest} from './services/auth.js';
+import {authorizeAdmin} from './services/backups.js';
+import {RestoreGate} from './storage/restore-gate.js';
+import {hasInterruptedRestore, recoverInterruptedRestore} from './storage/restore-transaction.js';
+import {ROOT} from './storage/paths.js';
 /**
  * Initializes persisted stores and returns the secured HTTP request dispatcher.
  * @return {function(import('node:http').IncomingMessage, import('node:http').ServerResponse): Promise<void>} Asynchronous request handler.
  */
 export function createRequestHandler() {
+  // Recovery must precede initialization: a missing live directory may be temporarily parked.
+  recoverInterruptedRestore(ROOT);
+  const restoreGate = new RestoreGate();
   initialize();
   initWarehouse();
   initializeAuth();
@@ -51,14 +58,20 @@ export function createRequestHandler() {
           return;
         }
         requireSameOriginMutation(request, url, {extensionStage: url.pathname === '/api/import-image/stage'});
+        if (hasInterruptedRestore(ROOT)) throw fail('Wiederherstellung muss vor weiteren Zugriffen abgeschlossen werden', 503, 'api.errors.restoreRecoveryRequired');
         authorizeRequest(request, url);
-        if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/internal/backup/')) {
-          return await handleApi(request, response, url);
-        }
-        if (request.method !== 'GET') {
-          throw fail('Methode nicht erlaubt', 405, 'api.errors.methodNotAllowed');
-        }
-        await serveStatic(request, response, url);
+        const exclusiveRestore = request.method === 'POST' && /^\/api\/backups\/import-zip\/[\w-]+\/apply$/.test(url.pathname);
+        if (exclusiveRestore) authorizeAdmin(request);
+        return await restoreGate.run(exclusiveRestore, async () => {
+          authorizeRequest(request, url);
+          if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/internal/backup/')) {
+            return await handleApi(request, response, url);
+          }
+          if (request.method !== 'GET') {
+            throw fail('Methode nicht erlaubt', 405, 'api.errors.methodNotAllowed');
+          }
+          await serveStatic(request, response, url);
+        });
       }
       catch (error) {
         // Closing a download (navigation, mobile connectivity, etc.) is not
