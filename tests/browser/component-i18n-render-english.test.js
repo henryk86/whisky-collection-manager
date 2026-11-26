@@ -50,7 +50,7 @@ const room = {
 };
 
 const collection = {
-  schemaVersion: 7,
+  schemaVersion: 8,
   settings: {},
   distilleries: [{id: 'd1', name: 'Ardbeg', country: 'Schottland'}],
   bottlings: [{

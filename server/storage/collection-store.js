@@ -1,6 +1,5 @@
 /**
- * The only writer of collection.json. Serialize mutations and commit by atomic
- * rename.
+ * The only writer of the logical collection and its four physical JSON files.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,17 +9,17 @@ import {DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR, DATA_FILE}
 import {validate} from '../domain/validation.js';
 import {PublishedWriteError, ensureDurableDirectory, syncFile, syncDirectory, writeDurableFile} from '../../shared/durable-files.js';
 import {trackMutation} from '../domain/mutation-tracker.js';
-import {migrateCollectionToCurrent} from './migrations.js';
+import {COLLECTION_FILES, loadCollectionFiles, recoverCollectionTransaction, writeCollectionFiles, hasCollectionTransaction} from './collection-files.js';
 const seedFile = new URL('../../seed/distillery.json', import.meta.url);
 
 /**
- * Creates the initial schema-7 collection with curated distilleries.
+ * Creates the initial schema-8 collection with curated distilleries.
  *
  * @return {import('../../shared/types.js').Collection} New collection state;
  * the seed catalog is loaded from disk.
  */
 export const empty = () => ({
-  schemaVersion: 7,
+  schemaVersion: 8,
   nextInventoryNumber: 1,
   reservedInventoryNumbers: [],
   settings: {establishedYear: null, },
@@ -32,14 +31,17 @@ export const empty = () => ({
 
 let cached = null;
 let cachedIdentity = null;
+let pendingSync = false;
 let revision = crypto.randomUUID();
 /**
  * Produces the identity text used by the caller.
  * @return {string} Collection file metadata fingerprint for cache invalidation.
  */
 const identity = () => {
-  const {dev, ino, size, mtimeMs, ctimeMs} = fs.statSync(DATA_FILE);
-  return `${dev}:${ino}:${size}:${mtimeMs}:${ctimeMs}`;
+  return COLLECTION_FILES.map(name => {
+    const {dev, ino, size, mtimeMs, ctimeMs} = fs.statSync(path.join(DATA_DIR, name));
+    return `${dev}:${ino}:${size}:${mtimeMs}:${ctimeMs}`;
+  }).join('|');
 };
 
 /**
@@ -56,10 +58,16 @@ export function invalidateCollectionCache() {
  * Reloads and validates collection data when the backing file identity changes, invalidating the cached revision.
  */
 function loadCurrent() {
+  if (hasCollectionTransaction(DATA_DIR)) {
+    invalidateCollectionCache();
+    pendingSync = true;
+    recoverCollectionTransaction(DATA_DIR);
+  }
+  if (pendingSync) {syncDirectory(DATA_DIR); pendingSync = false;}
   const current = identity();
   if (cached === null || cachedIdentity !== current) {
     // A foreign file replacement or restore is never silently reused.
-    cached = structuredClone(validate(JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'))));
+    cached = structuredClone(loadCollectionFiles(DATA_DIR).collection);
     cachedIdentity = current;
     revision = crypto.randomUUID();
   }
@@ -85,14 +93,15 @@ export function initialize() {
   for (const directory of [DATA_DIR, IMAGE_DIR, DOCUMENT_DIR, BACKUP_DIR]) {
     ensureDurableDirectory(directory);
   }
+  recoverCollectionTransaction(DATA_DIR);
   if (!fs.existsSync(DATA_FILE)) {
+    if (COLLECTION_FILES.some(name => fs.existsSync(path.join(DATA_DIR, name)))) throw Error('Collection file missing but separate data exists');
     atomicWrite(empty());
   }
-  const original = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-  const migration = migrateCollectionToCurrent(original);
+  const migration = loadCollectionFiles(DATA_DIR);
   if (migration.changed) {
     // No modifications until the migration is valid AND an exact copy is safe.
-    const backup = path.join(BACKUP_DIR, `pre-schema7-${Date.now()}-${crypto.randomUUID()}.json`);
+    const backup = path.join(BACKUP_DIR, `pre-schema8-${Date.now()}-${crypto.randomUUID()}.json`);
     fs.copyFileSync(DATA_FILE, backup, fs.constants.COPYFILE_EXCL);
     syncFile(backup);
     syncDirectory(BACKUP_DIR);
@@ -119,9 +128,8 @@ export function read() {
 }
 
 /**
- * Validates and atomically replaces the persisted collection file.
- * Writes via a temporary file and rename; refreshes cache and revision only on
- * success.
+ * Validates and commits the changed collection documents.
+ * Uses atomic file publication and a durable redo journal for multi-file changes; refreshes cache and revision only on success.
  *
  * @param {import('../../shared/types.js').Collection} value Complete new
  * state.
@@ -131,12 +139,13 @@ export function atomicWrite(value) {
   validate(value);
   let published = false;
   try {
-    writeDurableFile(DATA_FILE, JSON.stringify(value, null, 2) + '\n');
+    writeCollectionFiles(DATA_DIR, value, cached);
     published = true;
     cached = structuredClone(value);
     cachedIdentity = identity();
     revision = crypto.randomUUID();
   } catch (error) {
+    if (error instanceof PublishedWriteError || published) pendingSync = true;
     invalidateCollectionCache();
     throw published ? new PublishedWriteError(DATA_FILE, error) : error;
   }
@@ -176,7 +185,7 @@ export function change(mutator) {
  * @return {!Promise<T>} Operation result when its turn completes.
  */
 export function runExclusive(task) {
-  const work = queue.then(task);
+  const work = queue.then(() => {loadCurrent(); return task();});
   queue = work.catch(() => {});
   return work;
 }

@@ -97,7 +97,7 @@ test(
   async () => {
     let html = '';
     const state = {
-      collection: {schemaVersion: 7, bottlings: [], distilleries: []},
+      collection: {schemaVersion: 8, bottlings: [], distilleries: []},
       selected: 'overview', analyticsFilters: {}, analyticsPeriod: 'month',
     };
     createAnalyticsView({

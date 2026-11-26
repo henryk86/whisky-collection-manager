@@ -46,7 +46,7 @@ test(
   'analysis and help render the same workspace and preserve their own content',
   async () => {
     const state = {
-      collection: {schemaVersion: 7, distilleries: [], bottlings: []},
+      collection: {schemaVersion: 8, distilleries: [], bottlings: []},
       analyticsFilters: {}, analyticsPeriod: 'month', selected: 'overview',
     };
     let analysis = '';

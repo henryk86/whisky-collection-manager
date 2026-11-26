@@ -725,7 +725,7 @@ test(
       tastings: [],
     };
     const collection = {
-      schemaVersion: 7,
+      schemaVersion: 8,
       bottlings: [bottling],
       distilleries: [],
       externalTastings: [],

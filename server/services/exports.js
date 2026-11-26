@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {read} from '../storage/collection-store.js';
-import {ROOT, DATA_FILE, BACKUP_DIR} from '../storage/paths.js';
+import {ROOT, BACKUP_DIR} from '../storage/paths.js';
 import {csv} from '../exports/csv.js';
 import crypto from 'node:crypto';
 import {writeReadableZip, inspectReadableZip} from '../../shared/backup-zip.js';
@@ -20,7 +20,7 @@ export function exportJson() {
   return {
     filename: 'collection.json',
     type: 'application/json; charset=utf-8',
-    bytes: fs.readFileSync(DATA_FILE),
+    bytes: Buffer.from(JSON.stringify(read(), null, 2) + '\n'),
   };
 }
 
@@ -123,6 +123,7 @@ export function exportZip(req) {
   const filename = `whisky-backup-${timestamp}-${id.slice(0, 8)}.zip`;
   const temporary = path.join(BACKUP_DIR, `.download-${id}.zip`);
   try {
+    read(); // Resolve pending multi-file commits before archiving.
     writeReadableZip(ROOT, temporary, password);
     inspectReadableZip(temporary, null, password);
     return {filename, type: 'application/zip', path: temporary, cleanup: true};

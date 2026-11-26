@@ -17,7 +17,7 @@ WhiskyCollectionManager ist eine lokale, responsive Whisky-Sammlungsverwaltung m
 ## Grundregeln
 
 - Eine **Abfüllung** ist kein physischer Lagergegenstand; ein Lagerplatz referenziert eine konkrete Flasche.
-- `collection.json` nutzt **Schema 7**, `warehouse.json` **Schema 1**. Eigene Verkostungen liegen in `bottlings[].tastings[]`; externe Verkostungen und Flights sind getrennte Datensätze.
+- `collection.json` nutzt **Schema 8**, `warehouse.json` **Schema 1**. Eigene Verkostungen liegen in `bottlings[].tastings[]`; externe Verkostungen, Flights und Einstellungen werden in `externalTastings.json`, `tastingFlights.json` und `settings.json` (je Schema 1) gespeichert.
 - Die Abfüllungsbewertung stammt ausschließlich aus der Verkostung mit dem neuesten Datum. Fehlt deren Bewertung, wird keine ältere als Ersatz verwendet.
 - Fehlende Profilachsen und unbekannte Analyse-/Preiswerte werden nicht stillschweigend als 0 interpretiert.
 - Formulare validieren Eingaben; schreibende Operationen validieren zusätzlich serverseitig. Bestätigungen erfolgen als Anwendungsmodals, nicht in nativen Browserdialogen.

@@ -1,5 +1,5 @@
 /**
- * Collection-wide preferences are part of collection.json and its full backups.
+ * Collection-wide preferences are stored in settings.json and its full backups.
  */
 import {change} from '../storage/collection-store.js';
 import {assert} from '../domain/errors.js';
@@ -32,7 +32,7 @@ export async function updateSettings(input) {
 }
 
 /**
- * Saved collection views live in collection.json; validated and backed up with
+ * Saved collection views live in settings.json; validated and backed up with
  * it.
  *
  * @param {*} input Input to process.

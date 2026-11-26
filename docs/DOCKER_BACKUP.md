@@ -11,7 +11,7 @@ gelesen werden. Die Sammlung und die Backupdaten bleiben unveraendert.
 
 Der WhiskyCollectionManager verwendet standardmäßig **einen Docker-Service `app`** mit HTTPS auf internem Port **3543** (extern über `HTTPS_PUBLIC_PORT`, Standard 3543, auch 443 möglich). Der Webserver und der zeitgesteuerte Backup-Prozess laufen im selben Container. Port 3100 ist deaktiviert; kein SSH-Tunnel und kein zusätzlicher Backup-Container sind nötig. Das **optionale**, nur per Compose-Profil aktivierte Let's-Encrypt-TLS-Gateway ist in [LETS_ENCRYPT.md](LETS_ENCRYPT.md) dokumentiert.
 
-Alle neuen Backups verwenden **ein einziges passwortgeschütztes ZIP-Format mit AES-256 (WinZip AE-2)**, unabhängig davon, ob sie manuell oder per Zeitplan auf USB, NAS oder Cloud erstellt werden. Das ZIP enthält den vollständigen `data/`-Ordner mit `collection.json` und `warehouse.json`, Bilder in `images/` und Dokumente in `documents/`. Die Inhalte sind verschlüsselt, Dateinamen im ZIP jedoch sichtbar. Zum Öffnen auf Windows/macOS/Linux z. B. **7-Zip** oder ein anderes WinZip-AES-kompatibles Programm verwenden. Alte unverschlüsselte ZIP-Archive können weiterhin eingespielt werden, werden aber nicht nachträglich verschlüsselt.
+Alle neuen Backups verwenden **ein einziges passwortgeschütztes ZIP-Format mit AES-256 (WinZip AE-2)**, unabhängig davon, ob sie manuell oder per Zeitplan auf USB, NAS oder Cloud erstellt werden. Das ZIP enthält den vollständigen `data/`-Ordner mit `collection.json`, `settings.json`, `externalTastings.json`, `tastingFlights.json`, `warehouse.json` und `user.json`, Bilder in `images/` und Dokumente in `documents/`. Die Inhalte sind verschlüsselt, Dateinamen im ZIP jedoch sichtbar. Zum Öffnen auf Windows/macOS/Linux z. B. **7-Zip** oder ein anderes WinZip-AES-kompatibles Programm verwenden. Alte unverschlüsselte ZIP-Archive können weiterhin eingespielt werden, werden aber nicht nachträglich verschlüsselt.
 
 **Sicherheit:** Die Loginpflicht ist standardmäßig aus und kann von einem angemeldeten Administrator in der Nutzerverwaltung aktiviert werden. WCM ausschließlich im vertrauenswürdigen privaten LAN oder über VPN betreiben. Bei gemeinsam genutzten Netzen Loginpflicht und HTTPS verwenden. Keine direkte Internetfreigabe, auch nicht bei aktivierter Anmeldung. Siehe [Anmeldung](ANMELDUNG.md).
 
@@ -206,6 +206,9 @@ Vor der Umstellung eines bestehenden Restic-Profils auf ZIP schlägt die App aus
 
 ```text
 ${WCM_DATA_DIR}/storage/data/collection.json     Sammlungsdaten
+${WCM_DATA_DIR}/storage/data/settings.json       Sammlungseinstellungen
+${WCM_DATA_DIR}/storage/data/externalTastings.json Externe Verkostungen
+${WCM_DATA_DIR}/storage/data/tastingFlights.json Tasting-Flights
 ${WCM_DATA_DIR}/storage/images/                  Fotos
 ${WCM_DATA_DIR}/storage/documents/               Anhänge
 ${WCM_DATA_DIR}/storage/backups/                 Sicherheits-ZIPs und historische Migrationen

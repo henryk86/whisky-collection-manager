@@ -1,6 +1,6 @@
 # Lokale HTTP-API
 
-Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 7`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Die **optionale Loginpflicht** kann ein Administrator in der Nutzerverwaltung aktivieren. Dann benötigen Sammlungs-API, Bilder und Downloads eine gültige Sitzung; administrative Backup-Operationen behalten ihre separate Sicherheitsprüfung. Die API ist für den Zugriff im privaten LAN oder per VPN vorgesehen; eine direkte Internetfreigabe wird auch bei aktivierter Loginpflicht nicht empfohlen.
+Basisadresse im Standardbetrieb: `https://<SERVER-IP>:3543` (z. B. Raspberry Pi 4). Die API arbeitet mit `schemaVersion: 8`; Abfüllungen können mehreren Destillerien zugeordnet sein, während Fotos, Nachweise und Flaschentyp an physischen Flaschen liegen. Die **optionale Loginpflicht** kann ein Administrator in der Nutzerverwaltung aktivieren. Dann benötigen Sammlungs-API, Bilder und Downloads eine gültige Sitzung; administrative Backup-Operationen behalten ihre separate Sicherheitsprüfung. Die API ist für den Zugriff im privaten LAN oder per VPN vorgesehen; eine direkte Internetfreigabe wird auch bei aktivierter Loginpflicht nicht empfohlen.
 
 POST/PATCH: `Content-Type: application/json` und ein JSON-Objekt. Maximal 26 MiB Anfrageinhalt. Ungültiges JSON und Nicht-Objekte werden mit 400 abgewiesen. Fehlerantwort für bekannte Fehler: `{ "error": "Invalid path.", "errorCode": "api.errors.invalidPath" }`; der `error`-Text ist als sicherer, englischer Fallback gedacht. Der Browser übersetzt `errorCode` mittels der Sprachkataloge `public/locales/de.json` und `en.json`. Bei bestimmten dynamischen Validierungen kann zusätzlich `errorParams` (z. B. `{ "field": "abv" }`) mitgeliefert werden. Für unbekannte Fehler liefert die API ausschließlich eine neutrale englische Meldung einschließlich HTTP-Status, ohne interne Fehlermeldungen offenzulegen. Bekannte Konflikte verwenden 409, nicht gefundene Ressourcen 404. Die Endpunktdefinitionen stehen fachlich gruppiert unter `server/routes/`; beschreibbare Felder und deren Normalisierung in `server/domain/normalization.js`.
 
@@ -35,7 +35,7 @@ Der Browser kann bei `POST`, `PUT`, `PATCH` und `DELETE` den optionalen Header `
 
 | Methode | Pfad | Ergebnis |
 | --- | --- | --- |
-| GET | `/api/collection` | Vollständige Sammlung, Schema 7, einschließlich optionaler `settings.establishedYear`; `ETag`, `If-None-Match` → HTTP 304 |
+| GET | `/api/collection` | Vollständige Sammlung, Schema 8, einschließlich optionaler `settings.establishedYear`; `ETag`, `If-None-Match` → HTTP 304 |
 | PATCH | `/api/settings` | Gründungsjahr als `{ "establishedYear": 1992 }` speichern oder mit `null` entfernen; ganze Zahl von 1600 bis zum aktuellen Jahr |
 | GET | `/api/suggest-number` | `{ "number": "000001" }` als Vorschlag; noch nicht reserviert |
 | POST | `/api/bottlings` | Abfüllung mit erster physischer Flasche, Status 201 |
@@ -66,7 +66,7 @@ Der Browser kann bei `POST`, `PUT`, `PATCH` und `DELETE` den optionalen Header `
 ### Eigenständige Verkostungen je Abfüllung
 
 Eine Abfüllung kann 0–n unabhängige Verkostungen in `bottlings[].tastings[]`
-führen (`schemaVersion: 7`). Dieses Array ist Pflicht; historische
+führen (`schemaVersion: 8`). Dieses Array ist Pflicht; historische
 Verkostungsformate werden weder angenommen noch migriert.
 
 | Methode | Endpunkt | Funktion |
@@ -117,7 +117,7 @@ Abfüllungsdetailseite und der globale App-Header bleiben unverändert.
 
 Die zweite Variante erzeugt **keine externe Abfüllung** und erlaubt keine
 Mehrfachverkostungen zu einem externen Whisky. Alle Informationen stehen in
-**einem** `externalTastings[]`-Eintrag (weiterhin `schemaVersion: 7`):
+**einem** `externalTastings[]`-Eintrag (weiterhin `schemaVersion: 8`):
 Tasting-Felder (Datum, Titel, Farbe, Profil, Nase, Geschmack, Abgang, Bewertung),
 `id`, `createdAt`, `updatedAt` und ein eingebettetes `bottling`-Objekt mit
 `name` (Pflicht), optional `distillery`, `bottler`, `ageYears`, `abv`,
@@ -150,8 +150,8 @@ speichert `flavorProfile: null`, wiederherstellbar über Rückgängig.
 ## Tasting-Flights
 
 Tasting-Flights sind optionale, nur für die Verkostungsorganisation verwendete
-Gruppen in `collection.json`. Sie verändern weder Sammlungsbestand noch
-Bewertungszusammenfassungen. Die Daten liegen in `schemaVersion: 7`.
+Gruppen in `tastingFlights.json`. Sie verändern weder Sammlungsbestand noch
+Bewertungszusammenfassungen. Die Flight-Datei nutzt Schema 1; die zusammengesetzte API-Sammlung nutzt Schema 8.
 
 | Methode | Endpunkt | Wirkung |
 | --- | --- | --- |
@@ -277,7 +277,7 @@ Nur Dateien, die genau dieser physischen Flasche zugeordnet sind, können über 
 
 ## Kompatibilität
 
-Inventarnummern sind Strings, nicht Zahlen. Veraltetes `labelCode` wird bei neuen API-Anfragen abgewiesen. `labelType` gehört nicht zu den beschreibbaren Feldern. Alte Sammlungen werden beim Import/Start einschließlich Schema 3 durch den Migrationspfad auf Schema 7 angehoben; neue Daten verwenden ausschließlich `inventoryNumber`.
+Inventarnummern sind Strings, nicht Zahlen. Veraltetes `labelCode` wird bei neuen API-Anfragen abgewiesen. `labelType` gehört nicht zu den beschreibbaren Feldern. Alte Sammlungen werden beim Import/Start einschließlich Schema 3 durch den Migrationspfad auf Schema 8 angehoben; neue Daten verwenden ausschließlich `inventoryNumber`.
 
 ## Kartenseite und Destilleriestandorte
 
@@ -342,8 +342,12 @@ Alle drei Endpunkte sind normale schreibende JSON-/Origin-geschützte APIs. Die 
 Der historische Upgrade-Schritt von Schema 5 auf Schema 6 ergänzt das Feld `ratingComment`.
 Dabei bleiben alle Verkostungen, externen Verkostungen, Flights und bereits gespeicherten `ratingComment`-Felder erhalten.
 Das optionale Textfeld `ratingComment` darf bei eigenen und externen Verkostungen bis zu 10.000 Zeichen enthalten.
-Beim direkten Upgrade auf das aktuelle Schema 7 wird dieser Schritt verlustfrei mit dem folgenden Upgrade kombiniert.
+Beim direkten Upgrade auf das aktuelle Schema 8 wird dieser Schritt verlustfrei mit den folgenden Upgrades kombiniert.
 
 ### Schema-Upgrade 6 → 7
 
-Schema 7 ergänzt das optionale boolesche Feld `bottles[].files[].purchaseEvidence`. Beim Start sowie beim JSON- und ZIP-Import wird Schema 6 verlustfrei angehoben. Nicht gekennzeichnete Anhänge bleiben unklassifiziert; bereits vorhandene explizite Kennzeichnungen bleiben erhalten. Fotos, Originaldokumente, Prüfsummen, Verkostungen und Lagerzuordnungen werden nicht verändert. Vor einer automatischen Migration beim Start wird die Originaldatei unter `backups/pre-schema7-…json` gesichert; unbekannte neuere Schemata werden abgewiesen.
+Schema 7 ergänzt das optionale boolesche Feld `bottles[].files[].purchaseEvidence`. Beim Start sowie beim JSON- und ZIP-Import wird Schema 6 verlustfrei angehoben. Nicht gekennzeichnete Anhänge bleiben unklassifiziert; bereits vorhandene explizite Kennzeichnungen bleiben erhalten. Fotos, Originaldokumente, Prüfsummen, Verkostungen und Lagerzuordnungen werden nicht verändert. Vor einer automatischen Migration beim Start wird die Originaldatei unter `backups/pre-schema8-…json` gesichert; unbekannte neuere Schemata werden abgewiesen.
+
+### Schema-Upgrade 7 → 8
+
+Die physische Sammlung wird auf vier Dateien aufgeteilt: `collection.json` (Schema 8), `settings.json`, `externalTastings.json` und `tastingFlights.json` (je Schema 1). API und JSON-Export enthalten weiterhin alle Felder gemeinsam. JSON-Import akzeptiert vollständige Sammlungen der unterstützten Schemata, ZIP-Backups enthalten alle vier Dateien. Fehlende oder widersprüchliche Teildateien eines Schema-8-Backups werden abgewiesen. Die Migration erhält alle IDs, Einstellungen, Verkostungen und Flight-Zuordnungen.

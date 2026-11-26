@@ -13,7 +13,7 @@ import {analyzeCollection} from '../../public/js/domain/analytics.js';
 const notes = nose => ({nose, palate: '', finish: ''});
 
 test(
-  'schema 7 rejects legacy tasting fields on a bottling; bottles do not store sensory data',
+  'schema 8 rejects legacy tasting fields on a bottling; bottles do not store sensory data',
   () => {
     for (const field of [
       'rating',
@@ -72,7 +72,7 @@ test(
   'analytics counts only the latest dated tasting, independent of physical bottle count',
   () => {
     const collection = {
-      schemaVersion: 7, distilleries: [], bottlings: [{
+      schemaVersion: 8, distilleries: [], bottlings: [{
         id: 'x', name: 'Release', distilleryIds: [], tastings: [{
           id: 't1',
           tastedOn: '2026-10-01',
