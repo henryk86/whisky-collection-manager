@@ -1,4 +1,4 @@
-# Whisky Collection Manager v1.14.0
+# Whisky Collection Manager
 
 <p align="center">
   <img src="public/assets/icon-512.png" width="96" alt="Whisky Collection Manager logo">
@@ -44,29 +44,29 @@ All data is stored locally in versioned JSON files. WCM is especially useful for
 
 ## Screenshots
 
-The screenshots show example data only. The storage views use a demo whisky room with a reduced capacity of **50 bottle slots**.
+The screenshots show example data only and use the English interface. The storage views illustrate demo layouts with a capacity of **50 bottle slots**. The 3D model and map are cropped from existing demo captures to show the visualisations without language-specific controls.
 
 | Collection – light | Collection – dark |
 | --- | --- |
-| ![Collection overview in the light theme](docs/images/collection-desktop-light.png) | ![Collection overview in the dark theme](docs/images/collection-desktop-dark.png) |
+| ![Collection overview in the light theme](docs/images/collection-desktop-light-en.png) | ![Collection overview in the dark theme](docs/images/collection-desktop-dark-en.png) |
 
 <details>
 <summary>Mobile collection view</summary>
 
-![Collection overview on a smartphone in dark mode](docs/images/collection-mobile-dark.png)
+![Collection overview on a smartphone in dark mode](docs/images/collection-mobile-dark-en.png)
 
 </details>
 
 **Whisky room – 3D view**
 
-![3D room view of the whisky room with 50 bottle slots](docs/images/warehouse-plan-3d.png)
+![3D room view of the whisky room with 50 bottle slots](docs/images/warehouse-plan-3d-en.png)
 
 <details>
 <summary>Show the 2D room plan and shelf view</summary>
 
 | Room plan (2D) | Shelves |
 | --- | --- |
-| ![Reduced 2D room plan of the whisky room](docs/images/warehouse-plan-2d.png) | ![Storage shelves in dark mode](docs/images/warehouse-wall.png) |
+| ![Reduced 2D room plan of the whisky room](docs/images/warehouse-plan-2d-en.png) | ![Storage shelves in dark mode](docs/images/warehouse-wall-en.png) |
 
 </details>
 
@@ -74,23 +74,25 @@ The screenshots show example data only. The storage views use a demo whisky room
 
 | Bottle finder | Analytics |
 | --- | --- |
-| ![Bottle finder with inventory numbers and storage locations](docs/images/warehouse-find.png) | ![Analytics for the whisky collection](docs/images/analytics-overview.png) |
+| ![Bottle finder with inventory numbers and storage locations](docs/images/warehouse-find-en.png) | ![Analytics for the whisky collection](docs/images/analytics-overview-en.png) |
 
 **Insurance documentation**
 
 | Evidence review | Insurance report |
 | --- | --- |
-| ![Insurance documentation with missing evidence overview](docs/images/insurance-documentation.png) | ![Searchable insurance PDF report preview](docs/images/insurance-report-summary.png) |
+| ![Insurance documentation with missing evidence overview](docs/images/insurance-documentation-en.png) | ![Searchable insurance PDF report preview](docs/images/insurance-report-summary-en.png) |
 
 **Tasting and flight planning**
 
 | Tasting notes | Tasting-flight planning |
 | --- | --- |
-| ![Tasting note with colour and note sections](docs/images/tasting-notes.png) | ![Planning a tasting flight in the dialog](docs/images/tasting-flight-planning.png) |
+| ![Tasting note with colour and note sections](docs/images/tasting-notes-en.png) | ![Planning a tasting flight in the dialog](docs/images/tasting-flight-planning-en.png) |
 
 **Distillery map**
 
-![OpenStreetMap view of distillery locations](docs/images/map-distilleries.png)
+![OpenStreetMap view of distillery locations](docs/images/map-distilleries-en.png)
+
+Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright).
 
 ## Installation and operation
 
