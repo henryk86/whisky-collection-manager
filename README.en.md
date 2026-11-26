@@ -1,7 +1,7 @@
 # Whisky Collection Manager
 
 <p align="center">
-  <img src="public/assets/icon-512.png" width="96" alt="Whisky Collection Manager logo">
+  <img src="public/assets/logo-original.svg" width="96" alt="Whisky Collection Manager logo">
 </p>
 
 <p align="center"><strong>Your whisky. Your records. Your data.</strong></p>
@@ -12,8 +12,6 @@
 
 <p align="center">
   <a href="https://github.com/henryk86/whisky-collection-manager/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/henryk86/whisky-collection-manager?display_name=release&label=Release"></a>
-  <a href="https://github.com/henryk86/whisky-collection-manager/actions/workflows/check.yml"><img alt="Checks workflow" src="https://img.shields.io/github/actions/workflow/status/henryk86/whisky-collection-manager/check.yml?branch=main&label=Checks"></a>
-  <a href="https://github.com/henryk86/whisky-collection-manager/actions/workflows/visual-regression.yml"><img alt="Visual comparison workflow" src="https://img.shields.io/github/actions/workflow/status/henryk86/whisky-collection-manager/visual-regression.yml?branch=main&label=Visual%20comparison"></a>
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/henryk86/whisky-collection-manager"></a>
 </p>
 
@@ -84,9 +82,14 @@ The screenshots show example data only and use the English interface. The storag
 
 **Tasting and flight planning**
 
-| Tasting notes | Tasting-flight planning |
-| --- | --- |
-| ![Tasting note with colour and note sections](docs/images/tasting-notes-en.png) | ![Planning a tasting flight in the dialog](docs/images/tasting-flight-planning-en.png) |
+![Tasting editor with colour selection, completed flavor radar, tasting notes and rating](docs/images/tasting-notes-en.png)
+
+<details>
+<summary>Show tasting-flight planning</summary>
+
+![Planning a tasting flight in the dialog](docs/images/tasting-flight-planning-en.png)
+
+</details>
 
 **Distillery map**
 

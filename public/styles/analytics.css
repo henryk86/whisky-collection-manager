@@ -456,6 +456,7 @@ button.analytics-pie-item {
   color: var(--ink);
   background: var(--paper);
   border-radius: 0;
+  min-width: 0;
   min-height: 100px;
   padding: 18px;
   text-align: left;
@@ -467,8 +468,12 @@ button.analytics-pie-item {
 
 .analytics-section-card > span:nth-child(2) {
   display: flex;
+  flex: 1;
   flex-direction: column;
+  min-width: 0;
   gap: 6px;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .analytics-section-card strong {
@@ -482,6 +487,7 @@ button.analytics-pie-item {
 
 .analytics-section-icon {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   color: var(--gold);
@@ -495,6 +501,7 @@ button.analytics-pie-item {
 
 .analytics-section-chevron {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   color: var(--muted);
   margin-left: auto;
